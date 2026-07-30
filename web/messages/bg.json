@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Помощ и поддръжка",
+    "online": "В момента сме на линия",
+    "offline": "Обикновено отговаряме в рамките на един работен ден",
+    "laden": "Зарежда се …",
+    "zurueck": "Назад",
+    "schliessen": "Затваряне",
+    "neueUnterhaltung": "Нов разговор",
+    "statusGeloest": "Решено",
+    "absenderSelbst": "Вие",
+    "team": "Екип",
+    "begruessung": "Здравейте! Как можем да помогнем?",
+    "begruessungText": "Пишете ни за обекти, резервации, плащания или всичко друго в myNextDays.",
+    "platzhalterNeu": "Вашето съобщение …",
+    "platzhalterAntwort": "Напишете съобщение …",
+    "senden": "Изпращане",
+    "tippt": "Екипът пише …",
+    "gelesen": "Прочетено",
+    "hilfeCenter": "Търсене в центъра за помощ",
+    "bewertungFrage": "Колко доволни бяхте от поддръжката?",
+    "bewertungDanke": "Благодарим за обратната връзка.",
+    "bewertungStufe": "Оценка {stufe} от 5"
   }
 }

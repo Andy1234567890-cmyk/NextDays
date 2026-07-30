@@ -22,6 +22,71 @@ class PlatformMe(BaseModel):
     can_write: bool
 
 
+class TeamMember(BaseModel):
+    """Ein Mitglied des Betreiber-Teams (Zeile in platform_admins).
+
+    Die E-Mail kommt aus GoTrue, nicht aus public.users: ein Backoffice-Nutzer
+    gehört zu KEINEM Betrieb und hat dort deshalb keine Zeile.
+    """
+
+    user_id: str
+    email: str | None = None
+    platform_role: str
+    active: bool
+    note: str | None = None
+    created_at: datetime
+    granted_by_email: str | None = None
+    last_sign_in_at: datetime | None = None
+    # Einladung verschickt, aber noch nicht angenommen (Passwort nicht gesetzt).
+    invite_pending: bool = False
+    invite_expires_at: datetime | None = None
+
+
+class TeamList(BaseModel):
+    items: list[TeamMember]
+    total: int
+
+
+class TeamInvite(BaseModel):
+    """Kolleg:in ins Backoffice einladen."""
+
+    email: str = Field(min_length=5, max_length=200)
+    platform_role: str = Field(pattern="^(platform_admin|platform_support)$")
+    note: str | None = Field(default=None, max_length=200)
+
+
+class TeamInviteResult(BaseModel):
+    """Ergebnis der Einladung — ehrlich darüber, was wirklich passiert ist."""
+
+    member: TeamMember
+    # 'freigeschaltet' = bestehendes Konto bekam den Zugang (kein Link nötig),
+    # 'eingeladen'     = neues Konto + Einladungslink erzeugt.
+    ergebnis: str
+    mail_versendet: bool = False
+    # Nur gefüllt, wenn die Mail NICHT versendet werden konnte: dann muss der
+    # einladende Admin den Link selbst weitergeben. Kein stiller „Erfolg".
+    invite_link: str | None = None
+    hinweis: str | None = None
+
+
+class TeamUpdate(BaseModel):
+    """Rolle, Notiz oder Aktiv-Status eines Team-Mitglieds ändern."""
+
+    platform_role: str | None = Field(
+        default=None, pattern="^(platform_admin|platform_support)$"
+    )
+    active: bool | None = None
+    note: str | None = Field(default=None, max_length=200)
+
+
+class TeamInviteAccept(BaseModel):
+    """Einladung annehmen: Token aus dem Link + eigenes Passwort."""
+
+    token: str = Field(min_length=20, max_length=200)
+    # 12 Zeichen Minimum: dieser Zugang sieht ALLE Mandanten.
+    password: str = Field(min_length=12, max_length=200)
+
+
 class AuditEntry(BaseModel):
     """Ein Eintrag des Backoffice-Protokolls."""
 
@@ -204,6 +269,8 @@ class SupportMessage(BaseModel):
     # Interne Team-Notiz — wird dem Melder NIE ausgeliefert.
     internal: bool = False
     created_at: datetime
+    # Vom Client erzeugte ID (Idempotenz + Ersetzen der optimistischen Zeile).
+    client_msg_id: str | None = None
 
 
 class SupportTicket(BaseModel):
@@ -223,6 +290,16 @@ class SupportTicket(BaseModel):
     property_id: str | None = None
     created_at: datetime
     last_message_at: datetime | None = None
+    # 'form' = Formular-Anfrage, 'chat' = Live-Chat aus dem Dashboard-Widget.
+    source: str = "form"
+    last_message_preview: str | None = None
+    last_message_kind: str | None = None
+    # Lese-Cursor des Teams; daraus wird die Ungelesen-Markierung abgeleitet.
+    agent_last_read_at: datetime | None = None
+    # Ungelesene Melder-Nachrichten (Agenten-Sicht).
+    unread: int = 0
+    rating: int | None = None
+    rating_comment: str | None = None
 
 
 class SupportTicketDetail(SupportTicket):
@@ -242,6 +319,15 @@ class SupportReply(BaseModel):
     body: str = Field(min_length=1, max_length=5000)
     # true = nur fürs Team sichtbar.
     internal: bool = False
+    # Vom Client erzeugte UUID: Doppelklick/Retry darf keine zweite Antwort
+    # erzeugen (Wurzel 2).
+    client_msg_id: str | None = Field(default=None, max_length=64)
+
+
+class PlatformOk(BaseModel):
+    """Schlichte Bestätigung (z. B. gesetzter Lese-Cursor)."""
+
+    ok: bool = True
 
 
 class SupportTicketUpdate(BaseModel):

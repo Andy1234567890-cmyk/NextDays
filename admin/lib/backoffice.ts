@@ -238,6 +238,39 @@ export async function getFinanzen(limit = 50): Promise<FinanzUebersicht> {
 
 // --- Support ----------------------------------------------------------------
 
+// --- Backoffice-Team ---------------------------------------------------------
+
+export type PlatformRole = "platform_admin" | "platform_support";
+
+export interface TeamMember {
+  user_id: string;
+  email: string | null;
+  platform_role: PlatformRole;
+  active: boolean;
+  note: string | null;
+  created_at: string;
+  granted_by_email: string | null;
+  last_sign_in_at: string | null;
+  /** Eingeladen, aber Passwort noch nicht gesetzt. */
+  invite_pending: boolean;
+  invite_expires_at: string | null;
+}
+
+export interface TeamList {
+  items: TeamMember[];
+  total: number;
+}
+
+export interface TeamInviteResult {
+  member: TeamMember;
+  /** 'freigeschaltet' (Konto existierte) oder 'eingeladen' (neu + Link). */
+  ergebnis: string;
+  mail_versendet: boolean;
+  /** Nur gesetzt, wenn die Mail NICHT rausging — dann selbst weitergeben. */
+  invite_link: string | null;
+  hinweis: string | null;
+}
+
 export type TicketStatus = "open" | "waiting" | "resolved" | "closed";
 
 export interface SupportMessage {
@@ -248,6 +281,7 @@ export interface SupportMessage {
   body: string;
   internal: boolean;
   created_at: string;
+  client_msg_id: string | null;
 }
 
 export interface SupportTicket {
@@ -265,6 +299,15 @@ export interface SupportTicket {
   property_id: string | null;
   created_at: string;
   last_message_at: string | null;
+  /** 'chat' = Live-Chat aus dem Dashboard des Betriebs, 'form' = Formular. */
+  source: "form" | "chat";
+  last_message_preview: string | null;
+  last_message_kind: "reporter" | "agent" | null;
+  agent_last_read_at: string | null;
+  /** Ungelesene Nachrichten des Melders (Team-Sicht). */
+  unread: number;
+  rating: number | null;
+  rating_comment: string | null;
 }
 
 export interface SupportTicketDetail extends SupportTicket {
@@ -279,11 +322,16 @@ export interface SupportTicketList {
 /** Support-Tickets, zuletzt aktive zuerst. */
 export async function getTickets(params?: {
   status?: TicketStatus;
+  source?: "form" | "chat";
+  /** Nur mir zugewiesene Konversationen. */
+  mine?: boolean;
   limit?: number;
   offset?: number;
 }): Promise<SupportTicketList> {
   const q = new URLSearchParams();
   if (params?.status) q.set("status_filter", params.status);
+  if (params?.source) q.set("source", params.source);
+  if (params?.mine) q.set("mine", "true");
   if (params?.limit) q.set("limit", String(params.limit));
   if (params?.offset) q.set("offset", String(params.offset));
   const suffix = q.toString() ? `?${q}` : "";

@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Hulp en ondersteuning",
+    "online": "We zijn nu bereikbaar",
+    "offline": "We reageren meestal binnen één werkdag",
+    "laden": "Laden …",
+    "zurueck": "Terug",
+    "schliessen": "Sluiten",
+    "neueUnterhaltung": "Nieuw gesprek",
+    "statusGeloest": "Opgelost",
+    "absenderSelbst": "U",
+    "team": "Team",
+    "begruessung": "Hallo! Waarmee kunnen we helpen?",
+    "begruessungText": "Schrijf ons over accommodaties, boekingen, betalingen of alles rondom myNextDays.",
+    "platzhalterNeu": "Uw bericht …",
+    "platzhalterAntwort": "Bericht schrijven …",
+    "senden": "Verzenden",
+    "tippt": "Het team is aan het typen …",
+    "gelesen": "Gelezen",
+    "hilfeCenter": "Zoeken in het helpcentrum",
+    "bewertungFrage": "Hoe tevreden was u met de ondersteuning?",
+    "bewertungDanke": "Bedankt voor uw feedback.",
+    "bewertungStufe": "Beoordeling {stufe} van 5"
   }
 }

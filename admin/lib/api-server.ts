@@ -26,6 +26,9 @@ interface CallOpts {
   clientUserAgent?: string;
   /** Echte Browser-IP (nur beim Login, für den Geräteverlauf). */
   clientIp?: string;
+  /** Öffentlicher Endpunkt (kein Login nötig) → ohne Bearer. Genutzt für die
+   *  Annahme einer Backoffice-Einladung: dort gibt es noch keine Sitzung. */
+  isPublic?: boolean;
 }
 
 /** Access-Token des eingeloggten Backoffice-Nutzers (oder null). */
@@ -43,6 +46,7 @@ export async function api<T>(path: string, opts: CallOpts = {}): Promise<T> {
     cache: opts.cache,
     revalidate: opts.revalidate,
     accessCookie: ADMIN_COOKIES.access,
+    isPublic: opts.isPublic,
     clientUserAgent: opts.clientUserAgent,
     clientIp: opts.clientIp,
   });

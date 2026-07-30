@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Cabhair agus tacaíocht",
+    "online": "Táimid ar fáil anois",
+    "offline": "Freagraímid de ghnáth laistigh de lá oibre amháin",
+    "laden": "Á lódáil …",
+    "zurueck": "Ar ais",
+    "schliessen": "Dún",
+    "neueUnterhaltung": "Comhrá nua",
+    "statusGeloest": "Réitithe",
+    "absenderSelbst": "Tusa",
+    "team": "Foireann",
+    "begruessung": "Dia duit! Conas is féidir linn cabhrú?",
+    "begruessungText": "Scríobh chugainn faoi mhaoin, áirithintí, íocaíochtaí nó rud ar bith eile ar myNextDays.",
+    "platzhalterNeu": "Do theachtaireacht …",
+    "platzhalterAntwort": "Scríobh teachtaireacht …",
+    "senden": "Seol",
+    "tippt": "Tá an fhoireann ag scríobh …",
+    "gelesen": "Feicthe",
+    "hilfeCenter": "Cuardaigh an t-ionad cabhrach",
+    "bewertungFrage": "Cé chomh sásta a bhí tú leis an tacaíocht?",
+    "bewertungDanke": "Go raibh maith agat as an aiseolas.",
+    "bewertungStufe": "Rátáil {stufe} as 5"
   }
 }

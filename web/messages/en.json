@@ -17,13 +17,12 @@
     "helpfulThanks": "Thanks for your feedback!",
     "related": "More articles in {category}",
     "searchTitle": "Search",
-    "results": "{count, plural, one {# result for \u201c{query}\u201d} other {# results for \u201c{query}\u201d}}",
+    "results": "{count, plural, one {# result for “{query}”} other {# results for “{query}”}}",
     "noResultsTitle": "No articles found",
     "noResultsHintPre": "Try different search terms or ",
     "noResultsHintLink": "browse the categories",
     "browseCategories": "Browse categories"
   },
-
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -4762,5 +4761,28 @@
     "needScope": "Select at least one permission.",
     "docsHint": "See the API documentation for how to authenticate with these credentials.",
     "loadErr": "Could not load."
+  },
+  "supportChat": {
+    "titel": "Help & support",
+    "online": "We're here right now",
+    "offline": "We usually reply within one business day",
+    "laden": "Loading …",
+    "zurueck": "Back",
+    "schliessen": "Close",
+    "neueUnterhaltung": "New conversation",
+    "statusGeloest": "Resolved",
+    "absenderSelbst": "You",
+    "team": "Team",
+    "begruessung": "Hi! How can we help?",
+    "begruessungText": "Message us about properties, bookings, payments or anything else on myNextDays.",
+    "platzhalterNeu": "Your message …",
+    "platzhalterAntwort": "Write a message …",
+    "senden": "Send",
+    "tippt": "The team is typing …",
+    "gelesen": "Seen",
+    "hilfeCenter": "Search the help center",
+    "bewertungFrage": "How satisfied were you with the support?",
+    "bewertungDanke": "Thanks for your feedback.",
+    "bewertungStufe": "Rating {stufe} of 5"
   }
 }

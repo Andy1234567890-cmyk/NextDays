@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.features.support.schemas import TicketCreate
+from src.features.support.schemas import ChatStart, TicketCreate
 from src.features.support.service import SupportError, SupportService
 
 
@@ -21,6 +21,18 @@ def _ticket_rows(mock: MagicMock, rows: list[dict]) -> None:
     """Die gescopte Ticket-Abfrage (select→eq(id)→eq(scope)→limit) belegen."""
     kette = mock.select.return_value.eq.return_value.eq.return_value.limit.return_value
     kette.execute.return_value.data = rows
+
+
+def _verlauf_rows(mock: MagicMock, rows: list[dict]) -> None:
+    """Die Verlaufs-Abfrage (select→eq(ticket)→eq(internal)→order→limit)."""
+    kette = mock.select.return_value.eq.return_value.eq.return_value
+    kette.order.return_value.limit.return_value.execute.return_value.data = rows
+
+
+def _ungelesen_rows(mock: MagicMock, rows: list[dict]) -> None:
+    """Die Ungelesen-Abfrage (select→in_→eq→eq→order→limit)."""
+    kette = mock.select.return_value.in_.return_value.eq.return_value.eq.return_value
+    kette.order.return_value.limit.return_value.execute.return_value.data = rows
 
 
 # --- Interne Notizen ---------------------------------------------------------
@@ -42,8 +54,7 @@ def test_detail_filtert_interne_notizen() -> None:
         }
     ])
     messages = MagicMock()
-    kette = messages.select.return_value.eq.return_value.eq.return_value.order.return_value
-    kette.execute.return_value.data = []
+    _verlauf_rows(messages, [])
 
     db.table.side_effect = lambda n: tickets if n == "support_tickets" else messages
     SupportService(db=db).detail("tk1", user_id="u1")
@@ -64,13 +75,12 @@ def test_detail_liefert_nur_sichtbare_nachrichten() -> None:
         }
     ])
     messages = MagicMock()
-    kette = messages.select.return_value.eq.return_value.eq.return_value.order.return_value
-    kette.execute.return_value.data = [
+    _verlauf_rows(messages, [
         {
             "id": "m1", "author_kind": "reporter", "body": "Sichtbar",
             "created_at": "2026-01-01T00:00:00+00:00",
         }
-    ]
+    ])
     db.table.side_effect = lambda n: tickets if n == "support_tickets" else messages
 
     res = SupportService(db=db).detail("tk1", user_id="u1")
@@ -160,8 +170,7 @@ def test_create_schreibt_eroeffnungstext_nicht_intern() -> None:
         }
     ])
     messages = MagicMock()
-    m_kette = messages.select.return_value.eq.return_value.eq.return_value.order.return_value
-    m_kette.execute.return_value.data = []
+    _verlauf_rows(messages, [])
     db.table.side_effect = lambda n: tickets if n == "support_tickets" else messages
 
     SupportService(db=db).create(
@@ -206,8 +215,7 @@ def test_create_schreibt_abgeleitete_prioritaet() -> None:
         }
     ])
     messages = MagicMock()
-    m_kette = messages.select.return_value.eq.return_value.eq.return_value.order.return_value
-    m_kette.execute.return_value.data = []
+    _verlauf_rows(messages, [])
     db.table.side_effect = lambda n: tickets if n == "support_tickets" else messages
 
     SupportService(db=db).create(
@@ -250,10 +258,84 @@ def test_detail_liefert_uebersetzten_status() -> None:
         }
     ])
     messages = MagicMock()
-    m_kette = messages.select.return_value.eq.return_value.eq.return_value.order.return_value
-    m_kette.execute.return_value.data = []
+    _verlauf_rows(messages, [])
     db.table.side_effect = lambda n: tickets if n == "support_tickets" else messages
 
     res = SupportService(db=db).detail("tk1", user_id="u1")
     assert res is not None
     assert res.status == "wartet_auf_dich"
+
+
+# --- Live-Chat (0236) --------------------------------------------------------
+
+
+def test_chat_betreff_wird_aus_erster_nachricht_abgeleitet() -> None:
+    """Ein Chat hat keinen Betreff — die Agenten-Liste braucht trotzdem einen."""
+    from src.features.support.service import _betreff_aus_nachricht
+
+    assert _betreff_aus_nachricht("Hallo, kurze Frage") == "Hallo, kurze Frage"
+    assert _betreff_aus_nachricht("  mehrere\n  Zeilen  ") == "mehrere Zeilen"
+    lang = _betreff_aus_nachricht("A" * 200)
+    assert len(lang) == 80 and lang.endswith("…")
+
+
+def test_chat_start_ist_idempotent() -> None:
+    """Doppelklick/Retry darf keine zweite Konversation eröffnen (Wurzel 2)."""
+    db = _db()
+    tickets = MagicMock()
+    _ticket_rows(tickets, [
+        {
+            "id": "tk1", "subject": "Hallo", "category": None, "status": "open",
+            "priority": "normal", "created_at": "2026-01-01T00:00:00+00:00",
+            "last_message_at": None, "source": "chat",
+        }
+    ])
+    messages = MagicMock()
+    # Treffer auf die bereits gespeicherte client_msg_id.
+    kette = messages.select.return_value.eq.return_value.limit.return_value
+    kette.execute.return_value.data = [{"ticket_id": "tk1"}]
+    _verlauf_rows(messages, [])
+    db.table.side_effect = lambda n: tickets if n == "support_tickets" else messages
+
+    res = SupportService(db=db).start_chat(
+        ChatStart(body="Hallo", client_msg_id="c1"), user_id="u1", tenant_id="t1"
+    )
+    assert res is not None and res.id == "tk1"
+    # Keine zweite Konversation angelegt.
+    tickets.insert.assert_not_called()
+
+
+def test_ungelesen_zaehlt_nur_neuere_teamnachrichten() -> None:
+    """Ungelesen = sichtbare Team-Nachrichten jünger als der eigene Cursor."""
+    db = _db()
+    messages = MagicMock()
+    _ungelesen_rows(messages, [
+        {"ticket_id": "tk1", "created_at": "2026-01-02T10:00:00+00:00"},
+        {"ticket_id": "tk1", "created_at": "2026-01-01T10:00:00+00:00"},
+        {"ticket_id": "tk2", "created_at": "2026-01-02T10:00:00+00:00"},
+    ])
+    db.table.side_effect = lambda n: messages
+
+    svc = SupportService(db=db)
+    gezaehlt = svc._ungelesen_je_ticket([  # noqa: SLF001 — interne Rechnung
+        {"id": "tk1", "reporter_last_read_at": "2026-01-02T00:00:00+00:00"},
+        {"id": "tk2", "reporter_last_read_at": None},
+    ])
+    assert gezaehlt == {"tk1": 1, "tk2": 1}
+
+
+def test_bewertung_nur_nach_abschluss() -> None:
+    """Eine Note auf einen laufenden Vorgang misst nichts → 409."""
+    db = _db()
+    tickets = MagicMock()
+    _ticket_rows(tickets, [
+        {
+            "id": "tk1", "subject": "Hilfe", "category": None, "status": "open",
+            "priority": "normal", "created_at": "2026-01-01T00:00:00+00:00",
+            "last_message_at": None,
+        }
+    ])
+    db.table.return_value = tickets
+    with pytest.raises(SupportError) as exc:
+        SupportService(db=db).rate("tk1", rating=5, comment=None, user_id="u1")
+    assert exc.value.status_code == 409

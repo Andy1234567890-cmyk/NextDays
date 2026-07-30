@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Ohje ja tuki",
+    "online": "Olemme juuri nyt paikalla",
+    "offline": "Vastaamme yleensä yhden arkipäivän kuluessa",
+    "laden": "Ladataan …",
+    "zurueck": "Takaisin",
+    "schliessen": "Sulje",
+    "neueUnterhaltung": "Uusi keskustelu",
+    "statusGeloest": "Ratkaistu",
+    "absenderSelbst": "Sinä",
+    "team": "Tiimi",
+    "begruessung": "Hei! Miten voimme auttaa?",
+    "begruessungText": "Kirjoita meille kohteista, varauksista, maksuista tai mistä tahansa muusta myNextDaysiin liittyvästä.",
+    "platzhalterNeu": "Viestisi …",
+    "platzhalterAntwort": "Kirjoita viesti …",
+    "senden": "Lähetä",
+    "tippt": "Tiimi kirjoittaa …",
+    "gelesen": "Luettu",
+    "hilfeCenter": "Hae ohjekeskuksesta",
+    "bewertungFrage": "Kuinka tyytyväinen olit tukeen?",
+    "bewertungDanke": "Kiitos palautteesta.",
+    "bewertungStufe": "Arvio {stufe}/5"
   }
 }

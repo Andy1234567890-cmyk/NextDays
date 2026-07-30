@@ -77,6 +77,10 @@ _AUTH_PATHS = (
     "/guest-auth/register",
     "/guest-auth/refresh",
     "/guest-auth/password-reset",
+    # Einladung ins Backoffice annehmen: öffentlich (die eingeladene Person hat
+    # noch keine Sitzung) und setzt ein Passwort — also derselbe strenge Bucket
+    # wie ein Login, sonst wäre der Token-Raum durchprobierbar.
+    "/platform/team/accept",
 )
 
 # Endpunkte, die eine KOSTENPFLICHTIGE Fremd-API anstoßen (Groq bzw. Google

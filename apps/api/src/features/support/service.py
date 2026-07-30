@@ -1,4 +1,4 @@
-"""Support-Tickets aus Sicht des MELDERS.
+"""Support-Konversationen aus Sicht des MELDERS (Formular-Anfrage UND Chat).
 
 Zwei getrennte Zugänge auf dieselben Tabellen:
   • dieser Slice  — der Melder (Betriebs-Nutzer ODER Plattform-Gast)
@@ -12,22 +12,26 @@ Zwei Regeln, die hier immer gelten und den Unterschied ausmachen:
 2. INTERNE NOTIZEN: support_messages.internal = true ist eine Team-Notiz und
    wird hier IMMER herausgefiltert. Das ist der sensibelste Punkt des Slice —
    eine vergessene Filterung würde interne Einschätzungen an den Melder
-   ausliefern.
+   ausliefern. Das gilt auch für die abgeleitete Vorschau
+   (last_message_preview): sie wird nur aus SICHTBAREN Nachrichten gesetzt.
 """
 from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
 
 from .schemas import (
+    ChatStart,
     Ticket,
     TicketCreate,
     TicketDetail,
     TicketList,
     TicketMessage,
+    UnreadSummary,
 )
 
 log = get_logger("nextdays.support")
@@ -35,10 +39,25 @@ log = get_logger("nextdays.support")
 # Harte Obergrenze je Abfrage (Wurzel 8).
 _MAX_LIMIT = 100
 
+# Wie viele Nachrichten für die Ungelesen-Zählung höchstens betrachtet werden.
+# Die Zahl steht im Badge — eine exakte Zählung über Jahre alter Verläufe wäre
+# teuer und für die Anzeige belanglos (Wurzel 8: jeder Bereich bekommt ein Dach).
+_UNREAD_SCAN = 500
+
+# Länge der Vorschau in Liste und Widget.
+_PREVIEW_LEN = 160
+
+# Länge des aus der ersten Chat-Nachricht abgeleiteten Betreffs.
+_SUBJECT_LEN = 80
+
 # Spalten, die der Melder sehen darf. Bewusst OHNE assignee_user_id und
 # reporter_*: wer intern zuständig ist, geht den Melder nichts an.
+# reporter_last_read_at ist sein EIGENER Lese-Cursor und wird nur intern für die
+# Ungelesen-Zählung gebraucht (vor der Ausgabe entfernt).
 _TICKET_COLUMNS = (
-    "id, subject, category, status, priority, created_at, last_message_at"
+    "id, subject, category, status, priority, created_at, last_message_at, "
+    "source, last_message_preview, last_message_kind, agent_last_read_at, "
+    "reporter_last_read_at, rating"
 )
 
 # Priorität je Thema. Sie wird SERVERSEITIG abgeleitet und ist bewusst KEIN
@@ -87,6 +106,31 @@ def _melder_status(intern: str | None) -> str:
     return _MELDER_STATUS.get(intern or "", "in_bearbeitung")
 
 
+def _vorschau(text: str) -> str:
+    """Einzeilige Vorschau der letzten Nachricht (für Liste und Badge)."""
+    flach = " ".join(text.split())
+    if len(flach) <= _PREVIEW_LEN:
+        return flach
+    return flach[: _PREVIEW_LEN - 1].rstrip() + "…"
+
+
+def _betreff_aus_nachricht(text: str) -> str:
+    """Betreff einer Chat-Konversation aus der ersten Nachricht ableiten.
+
+    Ein Chat hat keinen Betreff — die Agenten-Liste braucht aber eine
+    Überschrift. Intercom erzeugt sie inzwischen per KI; hier reicht der Anfang
+    der ersten Nachricht, weil daneben ohnehin die Vorschau steht.
+    """
+    flach = " ".join(text.split())
+    if not flach:
+        # Kann nicht passieren (min_length=1), aber ein leerer Betreff würde
+        # gegen NOT NULL laufen — lieber ein sprechender Ersatz als ein 500.
+        return "Chat"
+    if len(flach) <= _SUBJECT_LEN:
+        return flach
+    return flach[: _SUBJECT_LEN - 1].rstrip() + "…"
+
+
 class SupportError(Exception):
     """Fachlicher Fehler; vom Router auf HTTP-Status gemappt."""
 
@@ -108,10 +152,71 @@ class SupportService:
         guest_id: str | None = None,
         tenant_id: str | None = None,
     ) -> TicketDetail:
-        """Ein Ticket eröffnen. Genau EINE Melder-Identität ist erlaubt.
+        """Ein Ticket über das Formular eröffnen (Betreff + Text)."""
+        return self._eroeffnen(
+            subject=req.subject,
+            body=req.body,
+            category=req.category,
+            source="form",
+            reservation_id=req.reservation_id,
+            property_id=req.property_id,
+            client_msg_id=None,
+            user_id=user_id,
+            guest_id=guest_id,
+            tenant_id=tenant_id,
+        )
 
-        Der DB-Check support_tickets_genau_ein_melder erzwingt dasselbe — hier
-        wird es zusätzlich früh und mit klarer Meldung abgefangen.
+    def start_chat(
+        self,
+        req: ChatStart,
+        *,
+        user_id: str | None = None,
+        guest_id: str | None = None,
+        tenant_id: str | None = None,
+    ) -> TicketDetail:
+        """Eine Chat-Konversation eröffnen (nur Text, Betreff abgeleitet).
+
+        Idempotent über client_msg_id (Wurzel 2): schickt der Client dieselbe
+        Eröffnung zweimal (Doppelklick, Retry nach Timeout), wird die bereits
+        angelegte Konversation zurückgegeben statt einer zweiten.
+        """
+        if req.client_msg_id:
+            vorhanden = self._chat_zu_client_id(
+                req.client_msg_id, user_id=user_id, guest_id=guest_id
+            )
+            if vorhanden is not None:
+                return vorhanden
+        return self._eroeffnen(
+            subject=_betreff_aus_nachricht(req.body),
+            body=req.body,
+            category=req.category,
+            source="chat",
+            reservation_id=None,
+            property_id=None,
+            client_msg_id=req.client_msg_id,
+            user_id=user_id,
+            guest_id=guest_id,
+            tenant_id=tenant_id,
+        )
+
+    def _eroeffnen(  # noqa: PLR0913 — ein Ticket hat nun einmal viele Felder
+        self,
+        *,
+        subject: str,
+        body: str,
+        category: str | None,
+        source: str,
+        reservation_id: str | None,
+        property_id: str | None,
+        client_msg_id: str | None,
+        user_id: str | None,
+        guest_id: str | None,
+        tenant_id: str | None,
+    ) -> TicketDetail:
+        """Gemeinsamer Eröffnungspfad für Formular und Chat.
+
+        Der DB-Check support_tickets_genau_ein_melder erzwingt dieselbe Regel —
+        hier wird sie zusätzlich früh und mit klarer Meldung abgefangen.
         """
         if bool(user_id) == bool(guest_id):
             raise SupportError(
@@ -126,13 +231,19 @@ class SupportService:
                     "reporter_user_id": user_id,
                     "reporter_guest_id": guest_id,
                     "tenant_id": tenant_id,
-                    "subject": req.subject,
-                    "category": req.category,
+                    "subject": subject,
+                    "category": category,
                     # Serverseitig abgeleitet — der Melder kann sie nicht setzen.
-                    "priority": _prioritaet_fuer(req.category),
-                    "reservation_id": req.reservation_id,
-                    "property_id": req.property_id,
+                    "priority": _prioritaet_fuer(category),
+                    "source": source,
+                    "reservation_id": reservation_id,
+                    "property_id": property_id,
                     "last_message_at": jetzt,
+                    "last_message_preview": _vorschau(body),
+                    "last_message_kind": "reporter",
+                    # Der Melder hat seine eigene Nachricht selbstverständlich
+                    # gelesen — sonst zeigte das Widget sofort „1 ungelesen".
+                    "reporter_last_read_at": jetzt,
                 }
             )
             .execute()
@@ -147,8 +258,9 @@ class SupportService:
                 "ticket_id": ticket["id"],
                 "author_kind": "reporter",
                 "author_user_id": user_id,
-                "body": req.body,
+                "body": body,
                 "internal": False,
+                "client_msg_id": client_msg_id,
             }
         ).execute()
 
@@ -156,6 +268,7 @@ class SupportService:
             "support_ticket_created",
             ticket_id=ticket["id"],
             tenant_id=tenant_id,
+            quelle=source,
             von_gast=bool(guest_id),
         )
         return self.detail(
@@ -181,11 +294,10 @@ class SupportService:
         )
         query = self._scope(query, user_id=user_id, guest_id=guest_id)
         res = query.range(offset, offset + limit - 1).execute()
+        rows = res.data or []
+        ungelesen = self._ungelesen_je_ticket(rows)
         return TicketList(
-            items=[
-                Ticket(**{**r, "status": _melder_status(r.get("status"))})
-                for r in (res.data or [])
-            ],
+            items=[self._ticket(r, ungelesen) for r in rows],
             total=res.count or 0,
         )
 
@@ -202,26 +314,24 @@ class SupportService:
         in der Liste) — ein fremdes Ticket ist von einem nicht existierenden
         nicht unterscheidbar.
         """
-        query = self._db.table("support_tickets").select(_TICKET_COLUMNS).eq(
-            "id", ticket_id
-        )
-        query = self._scope(query, user_id=user_id, guest_id=guest_id)
-        rows = query.limit(1).execute().data or []
-        if not rows:
+        rows = self._eigene_zeile(ticket_id, user_id=user_id, guest_id=guest_id)
+        if rows is None:
             return None
 
         # INTERNE NOTIZEN AUSSCHLIESSEN — der Kern dieses Slice.
         msgs = (
             self._db.table("support_messages")
-            .select("id, author_kind, body, created_at")
+            .select("id, author_kind, body, created_at, client_msg_id")
             .eq("ticket_id", ticket_id)
             .eq("internal", False)
             .order("created_at", desc=False)
+            .limit(_UNREAD_SCAN)
             .execute()
         ).data or []
 
+        basis = self._ticket(rows, self._ungelesen_je_ticket([rows]))
         return TicketDetail(
-            **{**rows[0], "status": _melder_status(rows[0].get("status"))},
+            **basis.model_dump(),
             messages=[TicketMessage(**m) for m in msgs],
         )
 
@@ -232,40 +342,213 @@ class SupportService:
         *,
         user_id: str | None = None,
         guest_id: str | None = None,
+        client_msg_id: str | None = None,
     ) -> TicketMessage | None:
         """Auf das EIGENE Ticket antworten. None = fremd/unbekannt.
 
         Eine Antwort des Melders öffnet ein gelöstes Ticket wieder — sonst ginge
         eine Rückfrage nach dem Schließen unter.
+
+        Idempotent (Wurzel 2): derselbe client_msg_id wird nicht zweimal
+        eingefügt. Der partielle UNIQUE-Index (0236) ist der Backstop; die
+        23505-Verletzung eines Retrys ist der ERFOLGSPFAD, nicht ein Fehler —
+        es wird die bereits gespeicherte Zeile zurückgegeben.
         """
-        eigenes = self.detail(ticket_id, user_id=user_id, guest_id=guest_id)
-        if eigenes is None:
+        zeile = self._eigene_zeile(ticket_id, user_id=user_id, guest_id=guest_id)
+        if zeile is None:
             return None
 
+        try:
+            res = (
+                self._db.table("support_messages")
+                .insert(
+                    {
+                        "ticket_id": ticket_id,
+                        "author_kind": "reporter",
+                        "author_user_id": user_id,
+                        "body": body,
+                        "internal": False,
+                        "client_msg_id": client_msg_id,
+                    }
+                )
+                .execute()
+            ).data
+        except APIError as exc:
+            if getattr(exc, "code", None) != "23505" or not client_msg_id:
+                raise
+            bestehend = self._nachricht_zu_client_id(ticket_id, client_msg_id)
+            if bestehend is None:
+                raise
+            return bestehend
+
         jetzt = datetime.now(UTC).isoformat()
-        res = (
-            self._db.table("support_messages")
-            .insert(
-                {
-                    "ticket_id": ticket_id,
-                    "author_kind": "reporter",
-                    "author_user_id": user_id,
-                    "body": body,
-                    "internal": False,
-                }
-            )
-            .execute()
-        ).data
-        felder: dict[str, str] = {"last_message_at": jetzt, "updated_at": jetzt}
-        # ACHTUNG: eigenes.status ist bereits die MELDER-Sicht (übersetzt) —
-        # 'resolved' und 'closed' erscheinen dort beide als 'geloest'. Deshalb
-        # hier gegen den übersetzten Wert prüfen, nicht gegen den internen.
-        if eigenes.status == "geloest":
+        felder: dict[str, str] = {
+            "last_message_at": jetzt,
+            "updated_at": jetzt,
+            "last_message_preview": _vorschau(body),
+            "last_message_kind": "reporter",
+            # Wer selbst schreibt, hat den Verlauf offen — Cursor mitziehen.
+            "reporter_last_read_at": jetzt,
+        }
+        # ACHTUNG: der Status in der Zeile ist der INTERNE Wert.
+        if (zeile.get("status") or "") in ("resolved", "closed"):
             felder["status"] = "open"
         self._db.table("support_tickets").update(felder).eq(
             "id", ticket_id
         ).execute()
         return TicketMessage(**res[0])
+
+    def mark_read(
+        self,
+        ticket_id: str,
+        *,
+        user_id: str | None = None,
+        guest_id: str | None = None,
+    ) -> bool:
+        """Lese-Cursor des Melders auf jetzt setzen. False = fremd/unbekannt."""
+        if self._eigene_zeile(ticket_id, user_id=user_id, guest_id=guest_id) is None:
+            return False
+        self._db.table("support_tickets").update(
+            {"reporter_last_read_at": datetime.now(UTC).isoformat()}
+        ).eq("id", ticket_id).execute()
+        return True
+
+    def rate(
+        self,
+        ticket_id: str,
+        *,
+        rating: int,
+        comment: str | None,
+        user_id: str | None = None,
+        guest_id: str | None = None,
+    ) -> bool:
+        """Abgeschlossene Konversation bewerten. False = fremd/unbekannt.
+
+        Bewertet wird nur, was abgeschlossen ist (Intercom fragt beim Schließen)
+        — eine Note auf einen laufenden Vorgang misst nichts.
+        """
+        zeile = self._eigene_zeile(ticket_id, user_id=user_id, guest_id=guest_id)
+        if zeile is None:
+            return False
+        if (zeile.get("status") or "") not in ("resolved", "closed"):
+            raise SupportError(
+                "Bewertung erst nach Abschluss der Konversation möglich.",
+                status_code=409,
+            )
+        self._db.table("support_tickets").update(
+            {
+                "rating": rating,
+                "rating_comment": comment,
+                "rated_at": datetime.now(UTC).isoformat(),
+            }
+        ).eq("id", ticket_id).execute()
+        return True
+
+    def unread(
+        self, *, user_id: str | None = None, guest_id: str | None = None
+    ) -> UnreadSummary:
+        """Ungelesene Team-Antworten über alle eigenen Konversationen.
+
+        Gezählt werden Konversationen (Badge-Zahl) UND Nachrichten. Intercom
+        zeigt im Launcher die Zahl der Konversationen — vier Antworten in einem
+        Thread sind eine offene Sache, nicht vier.
+        """
+        query = (
+            self._db.table("support_tickets")
+            .select("id, reporter_last_read_at, last_message_kind")
+            .order("last_message_at", desc=True)
+        )
+        query = self._scope(query, user_id=user_id, guest_id=guest_id)
+        rows = query.limit(_MAX_LIMIT).execute().data or []
+        ungelesen = self._ungelesen_je_ticket(rows)
+        return UnreadSummary(
+            conversations=sum(1 for n in ungelesen.values() if n > 0),
+            messages=sum(ungelesen.values()),
+        )
+
+    # -- intern ---------------------------------------------------------------
+
+    def _ticket(self, row: dict, ungelesen: dict[str, int]) -> Ticket:
+        """DB-Zeile in die Melder-Sicht übersetzen."""
+        daten = {k: v for k, v in row.items() if k != "reporter_last_read_at"}
+        daten["status"] = _melder_status(row.get("status"))
+        return Ticket(**daten, unread=ungelesen.get(row["id"], 0))
+
+    def _eigene_zeile(
+        self, ticket_id: str, *, user_id: str | None, guest_id: str | None
+    ) -> dict | None:
+        """Ticket-Zeile im Melder-Scope laden (inkl. internem Status)."""
+        query = (
+            self._db.table("support_tickets")
+            .select(_TICKET_COLUMNS)
+            .eq("id", ticket_id)
+        )
+        query = self._scope(query, user_id=user_id, guest_id=guest_id)
+        rows = query.limit(1).execute().data or []
+        return rows[0] if rows else None
+
+    def _ungelesen_je_ticket(self, rows: list[dict]) -> dict[str, int]:
+        """Ungelesene Team-Nachrichten je Ticket zählen.
+
+        Eine Abfrage für alle übergebenen Tickets (kein N+1). Gezählt werden nur
+        SICHTBARE Nachrichten des Teams, die jünger sind als der eigene
+        Lese-Cursor. Ohne Cursor gilt alles vom Team als ungelesen.
+        """
+        ids = [r["id"] for r in rows]
+        if not ids:
+            return {}
+        msgs = (
+            self._db.table("support_messages")
+            .select("ticket_id, created_at")
+            .in_("ticket_id", ids)
+            .eq("author_kind", "agent")
+            .eq("internal", False)
+            .order("created_at", desc=True)
+            .limit(_UNREAD_SCAN)
+            .execute()
+        ).data or []
+
+        cursor = {r["id"]: r.get("reporter_last_read_at") for r in rows}
+        gezaehlt: dict[str, int] = {tid: 0 for tid in ids}
+        for m in msgs:
+            gelesen_bis = cursor.get(m["ticket_id"])
+            if gelesen_bis is None or m["created_at"] > gelesen_bis:
+                gezaehlt[m["ticket_id"]] += 1
+        return gezaehlt
+
+    def _nachricht_zu_client_id(
+        self, ticket_id: str, client_msg_id: str
+    ) -> TicketMessage | None:
+        """Bereits gespeicherte Nachricht zu einer client_msg_id."""
+        rows = (
+            self._db.table("support_messages")
+            .select("id, author_kind, body, created_at, client_msg_id")
+            .eq("ticket_id", ticket_id)
+            .eq("client_msg_id", client_msg_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        return TicketMessage(**rows[0]) if rows else None
+
+    def _chat_zu_client_id(
+        self, client_msg_id: str, *, user_id: str | None, guest_id: str | None
+    ) -> TicketDetail | None:
+        """Konversation, die bereits mit dieser client_msg_id eröffnet wurde.
+
+        Der Treffer wird über die NACHRICHT gesucht und dann im Melder-Scope
+        geladen — nie umgekehrt (Wurzel 3: eine fremde client_msg_id darf keine
+        fremde Konversation aufschließen).
+        """
+        rows = (
+            self._db.table("support_messages")
+            .select("ticket_id")
+            .eq("client_msg_id", client_msg_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return None
+        return self.detail(rows[0]["ticket_id"], user_id=user_id, guest_id=guest_id)
 
     @staticmethod
     def _scope(query, *, user_id: str | None, guest_id: str | None):  # noqa: ANN001, ANN205

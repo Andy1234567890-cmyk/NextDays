@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Aide et assistance",
+    "online": "Nous sommes disponibles",
+    "offline": "Nous répondons généralement sous un jour ouvré",
+    "laden": "Chargement …",
+    "zurueck": "Retour",
+    "schliessen": "Fermer",
+    "neueUnterhaltung": "Nouvelle conversation",
+    "statusGeloest": "Résolu",
+    "absenderSelbst": "Vous",
+    "team": "Équipe",
+    "begruessung": "Bonjour ! Comment pouvons-nous vous aider ?",
+    "begruessungText": "Écrivez-nous au sujet des hébergements, des réservations, des paiements ou de tout autre sujet myNextDays.",
+    "platzhalterNeu": "Votre message …",
+    "platzhalterAntwort": "Écrire un message …",
+    "senden": "Envoyer",
+    "tippt": "L'équipe écrit …",
+    "gelesen": "Vu",
+    "hilfeCenter": "Rechercher dans le centre d'aide",
+    "bewertungFrage": "Êtes-vous satisfait de notre assistance ?",
+    "bewertungDanke": "Merci pour votre retour.",
+    "bewertungStufe": "Note {stufe} sur 5"
   }
 }

@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Palīdzība un atbalsts",
+    "online": "Šobrīd esam sasniedzami",
+    "offline": "Parasti atbildam vienas darba dienas laikā",
+    "laden": "Notiek ielāde …",
+    "zurueck": "Atpakaļ",
+    "schliessen": "Aizvērt",
+    "neueUnterhaltung": "Jauna saruna",
+    "statusGeloest": "Atrisināts",
+    "absenderSelbst": "Jūs",
+    "team": "Komanda",
+    "begruessung": "Sveiki! Kā varam palīdzēt?",
+    "begruessungText": "Rakstiet mums par objektiem, rezervācijām, maksājumiem vai jebko citu myNextDays.",
+    "platzhalterNeu": "Jūsu ziņa …",
+    "platzhalterAntwort": "Rakstiet ziņu …",
+    "senden": "Sūtīt",
+    "tippt": "Komanda raksta …",
+    "gelesen": "Izlasīts",
+    "hilfeCenter": "Meklēt palīdzības centrā",
+    "bewertungFrage": "Cik apmierināts bijāt ar atbalstu?",
+    "bewertungDanke": "Paldies par atsauksmi.",
+    "bewertungStufe": "Vērtējums {stufe} no 5"
   }
 }

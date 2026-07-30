@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Hjælp og support",
+    "online": "Vi er her lige nu",
+    "offline": "Vi svarer normalt inden for en hverdag",
+    "laden": "Indlæser …",
+    "zurueck": "Tilbage",
+    "schliessen": "Luk",
+    "neueUnterhaltung": "Ny samtale",
+    "statusGeloest": "Løst",
+    "absenderSelbst": "Dig",
+    "team": "Team",
+    "begruessung": "Hej! Hvordan kan vi hjælpe?",
+    "begruessungText": "Skriv til os om boliger, bookinger, betalinger eller alt andet i myNextDays.",
+    "platzhalterNeu": "Din besked …",
+    "platzhalterAntwort": "Skriv en besked …",
+    "senden": "Send",
+    "tippt": "Teamet skriver …",
+    "gelesen": "Set",
+    "hilfeCenter": "Søg i hjælpecenteret",
+    "bewertungFrage": "Hvor tilfreds var du med supporten?",
+    "bewertungDanke": "Tak for din tilbagemelding.",
+    "bewertungStufe": "Vurdering {stufe} af 5"
   }
 }

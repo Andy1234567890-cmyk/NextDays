@@ -8,6 +8,7 @@ from fastapi import Depends
 from src.core.supabase import get_service_client
 
 from .service import PlatformAdminService
+from .team_service import TeamService
 
 
 def get_platform_admin_service() -> PlatformAdminService:
@@ -20,3 +21,13 @@ def get_platform_admin_service() -> PlatformAdminService:
 PlatformAdminServiceDep = Annotated[
     PlatformAdminService, Depends(get_platform_admin_service)
 ]
+
+
+def get_team_service() -> TeamService:
+    # Ebenfalls service_role: die Tabelle platform_admins ist für anon und
+    # authenticated hart gesperrt, und die GoTrue-Admin-API (Konto anlegen,
+    # Passwort setzen) gibt es nur mit dem Service-Client.
+    return TeamService(db=get_service_client())
+
+
+TeamServiceDep = Annotated[TeamService, Depends(get_team_service)]

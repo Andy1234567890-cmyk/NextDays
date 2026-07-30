@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Pomoč in podpora",
+    "online": "Trenutno smo na voljo",
+    "offline": "Običajno odgovorimo v enem delovnem dnevu",
+    "laden": "Nalaganje …",
+    "zurueck": "Nazaj",
+    "schliessen": "Zapri",
+    "neueUnterhaltung": "Nov pogovor",
+    "statusGeloest": "Rešeno",
+    "absenderSelbst": "Vi",
+    "team": "Ekipa",
+    "begruessung": "Pozdravljeni! Kako vam lahko pomagamo?",
+    "begruessungText": "Pišite nam o nastanitvah, rezervacijah, plačilih ali čemer koli drugem v myNextDays.",
+    "platzhalterNeu": "Vaše sporočilo …",
+    "platzhalterAntwort": "Napišite sporočilo …",
+    "senden": "Pošlji",
+    "tippt": "Ekipa piše …",
+    "gelesen": "Prebrano",
+    "hilfeCenter": "Iskanje v središču za pomoč",
+    "bewertungFrage": "Kako zadovoljni ste bili s podporo?",
+    "bewertungDanke": "Hvala za povratno informacijo.",
+    "bewertungStufe": "Ocena {stufe} od 5"
   }
 }

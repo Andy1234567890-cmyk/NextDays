@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Ajutor și asistență",
+    "online": "Suntem disponibili acum",
+    "offline": "De obicei răspundem într-o zi lucrătoare",
+    "laden": "Se încarcă …",
+    "zurueck": "Înapoi",
+    "schliessen": "Închide",
+    "neueUnterhaltung": "Conversație nouă",
+    "statusGeloest": "Rezolvat",
+    "absenderSelbst": "Dvs.",
+    "team": "Echipa",
+    "begruessung": "Bună! Cu ce vă putem ajuta?",
+    "begruessungText": "Scrieți-ne despre proprietăți, rezervări, plăți sau orice altceva legat de myNextDays.",
+    "platzhalterNeu": "Mesajul dvs. …",
+    "platzhalterAntwort": "Scrieți un mesaj …",
+    "senden": "Trimite",
+    "tippt": "Echipa scrie …",
+    "gelesen": "Citit",
+    "hilfeCenter": "Căutați în centrul de ajutor",
+    "bewertungFrage": "Cât de mulțumit ați fost de asistență?",
+    "bewertungDanke": "Vă mulțumim pentru feedback.",
+    "bewertungStufe": "Evaluare {stufe} din 5"
   }
 }

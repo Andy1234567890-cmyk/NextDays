@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Hjälp och support",
+    "online": "Vi är här just nu",
+    "offline": "Vi svarar oftast inom en arbetsdag",
+    "laden": "Laddar …",
+    "zurueck": "Tillbaka",
+    "schliessen": "Stäng",
+    "neueUnterhaltung": "Ny konversation",
+    "statusGeloest": "Löst",
+    "absenderSelbst": "Du",
+    "team": "Team",
+    "begruessung": "Hej! Hur kan vi hjälpa till?",
+    "begruessungText": "Skriv till oss om objekt, bokningar, betalningar eller annat i myNextDays.",
+    "platzhalterNeu": "Ditt meddelande …",
+    "platzhalterAntwort": "Skriv ett meddelande …",
+    "senden": "Skicka",
+    "tippt": "Teamet skriver …",
+    "gelesen": "Läst",
+    "hilfeCenter": "Sök i hjälpcentret",
+    "bewertungFrage": "Hur nöjd var du med supporten?",
+    "bewertungDanke": "Tack för din återkoppling.",
+    "bewertungStufe": "Betyg {stufe} av 5"
   }
 }

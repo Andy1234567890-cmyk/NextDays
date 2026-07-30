@@ -15,11 +15,15 @@ from src.core.security import CurrentGuest, CurrentUser
 
 from .dependencies import SupportServiceDep
 from .schemas import (
+    ChatStart,
+    SupportOk,
     TicketCreate,
     TicketDetail,
     TicketList,
     TicketMessage,
+    TicketRating,
     TicketReply,
+    UnreadSummary,
 )
 from .service import SupportError
 
@@ -58,6 +62,30 @@ def list_tickets(
         raise _map(exc) from exc
 
 
+@router.post(
+    "/chat", response_model=TicketDetail, status_code=status.HTTP_201_CREATED
+)
+def start_chat(
+    req: ChatStart, ctx: CurrentUser, service: SupportServiceDep
+) -> TicketDetail:
+    """Eine Chat-Konversation aus dem Widget eröffnen (ohne Betreff)."""
+    try:
+        return service.start_chat(
+            req, user_id=ctx.user_id, tenant_id=ctx.tenant_id
+        )
+    except SupportError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/unread", response_model=UnreadSummary)
+def unread(ctx: CurrentUser, service: SupportServiceDep) -> UnreadSummary:
+    """Ungelesene Team-Antworten (Badge am Hilfe-Eintrag)."""
+    try:
+        return service.unread(user_id=ctx.user_id)
+    except SupportError as exc:
+        raise _map(exc) from exc
+
+
 @router.get("/{ticket_id}", response_model=TicketDetail)
 def get_ticket(
     ticket_id: str, ctx: CurrentUser, service: SupportServiceDep
@@ -79,12 +107,53 @@ def reply_ticket(
     service: SupportServiceDep,
 ) -> TicketMessage:
     """Auf das eigene Ticket antworten."""
-    res = service.reply(ticket_id, antwort.body, user_id=ctx.user_id)
+    res = service.reply(
+        ticket_id,
+        antwort.body,
+        user_id=ctx.user_id,
+        client_msg_id=antwort.client_msg_id,
+    )
     if res is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Ticket nicht gefunden."
         )
     return res
+
+
+@router.post("/{ticket_id}/read", response_model=SupportOk)
+def mark_read(
+    ticket_id: str, ctx: CurrentUser, service: SupportServiceDep
+) -> SupportOk:
+    """Lese-Cursor setzen (Verlauf geöffnet)."""
+    if not service.mark_read(ticket_id, user_id=ctx.user_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Ticket nicht gefunden."
+        )
+    return SupportOk()
+
+
+@router.post("/{ticket_id}/rating", response_model=SupportOk)
+def rate_ticket(
+    ticket_id: str,
+    bewertung: TicketRating,
+    ctx: CurrentUser,
+    service: SupportServiceDep,
+) -> SupportOk:
+    """Abgeschlossene Konversation bewerten."""
+    try:
+        ok = service.rate(
+            ticket_id,
+            rating=bewertung.rating,
+            comment=bewertung.comment,
+            user_id=ctx.user_id,
+        )
+    except SupportError as exc:
+        raise _map(exc) from exc
+    if not ok:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Ticket nicht gefunden."
+        )
+    return SupportOk()
 
 
 # --- Plattform-Gäste ---------------------------------------------------------
@@ -138,7 +207,12 @@ def reply_guest_ticket(
     service: SupportServiceDep,
 ) -> TicketMessage:
     """Auf das eigene Gast-Ticket antworten."""
-    res = service.reply(ticket_id, antwort.body, guest_id=ctx.guest_id)
+    res = service.reply(
+        ticket_id,
+        antwort.body,
+        guest_id=ctx.guest_id,
+        client_msg_id=antwort.client_msg_id,
+    )
     if res is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Ticket nicht gefunden."

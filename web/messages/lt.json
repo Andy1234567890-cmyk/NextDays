@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Pagalba ir palaikymas",
+    "online": "Šiuo metu esame čia",
+    "offline": "Paprastai atsakome per vieną darbo dieną",
+    "laden": "Įkeliama …",
+    "zurueck": "Atgal",
+    "schliessen": "Uždaryti",
+    "neueUnterhaltung": "Naujas pokalbis",
+    "statusGeloest": "Išspręsta",
+    "absenderSelbst": "Jūs",
+    "team": "Komanda",
+    "begruessung": "Sveiki! Kuo galime padėti?",
+    "begruessungText": "Rašykite mums apie objektus, rezervacijas, mokėjimus ar bet ką kitą myNextDays sistemoje.",
+    "platzhalterNeu": "Jūsų žinutė …",
+    "platzhalterAntwort": "Parašykite žinutę …",
+    "senden": "Siųsti",
+    "tippt": "Komanda rašo …",
+    "gelesen": "Perskaityta",
+    "hilfeCenter": "Ieškoti pagalbos centre",
+    "bewertungFrage": "Kaip vertinate mūsų pagalbą?",
+    "bewertungDanke": "Ačiū už atsiliepimą.",
+    "bewertungStufe": "Įvertinimas {stufe} iš 5"
   }
 }

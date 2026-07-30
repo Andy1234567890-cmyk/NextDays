@@ -23,7 +23,6 @@
     "noResultsHintLink": "durchstöbern Sie die Kategorien",
     "browseCategories": "Kategorien durchstöbern"
   },
-
   "common": {
     "save": "Speichern",
     "cancel": "Abbrechen",
@@ -4762,5 +4761,28 @@
     "needScope": "Wähle mindestens eine Berechtigung.",
     "docsHint": "Wie du dich mit diesen Zugangsdaten authentifizierst, steht in der API-Dokumentation.",
     "loadErr": "Konnte nicht geladen werden."
+  },
+  "supportChat": {
+    "titel": "Hilfe & Support",
+    "online": "Wir sind gerade da",
+    "offline": "Wir antworten meist innerhalb eines Werktags",
+    "laden": "Wird geladen …",
+    "zurueck": "Zurück",
+    "schliessen": "Schließen",
+    "neueUnterhaltung": "Neue Unterhaltung",
+    "statusGeloest": "Erledigt",
+    "absenderSelbst": "Sie",
+    "team": "Team",
+    "begruessung": "Hallo! Wie können wir helfen?",
+    "begruessungText": "Schreiben Sie uns zu Objekten, Buchungen, Zahlungen oder allem anderen rund um myNextDays.",
+    "platzhalterNeu": "Ihre Nachricht …",
+    "platzhalterAntwort": "Nachricht schreiben …",
+    "senden": "Senden",
+    "tippt": "Das Team schreibt …",
+    "gelesen": "Gelesen",
+    "hilfeCenter": "Hilfe-Center durchsuchen",
+    "bewertungFrage": "Wie zufrieden waren Sie mit der Unterstützung?",
+    "bewertungDanke": "Danke für Ihre Rückmeldung.",
+    "bewertungStufe": "Bewertung {stufe} von 5"
   }
 }

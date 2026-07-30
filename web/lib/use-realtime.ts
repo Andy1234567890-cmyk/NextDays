@@ -37,6 +37,13 @@ function realtimeClient(): SupabaseClient {
   return rtClient;
 }
 
+/** Derselbe Realtime-Client für andere Kanalarten (Broadcast/Presence).
+ *  Bewusst geteilt: ein zweiter Client wäre eine zweite WebSocket-Verbindung
+ *  für dieselbe Sitzung. */
+export function getRealtimeClient(): SupabaseClient {
+  return realtimeClient();
+}
+
 // Modul-globaler Zähler für eindeutige Channel-Namen. Mehrere Komponenten dürfen
 // dieselbe Tabelle abonnieren (z. B. Timeline + Listenansicht gleichzeitig);
 // ohne eindeutigen Namen teilten sie sich EINEN Supabase-Channel und der zweite

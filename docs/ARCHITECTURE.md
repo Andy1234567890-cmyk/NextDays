@@ -1323,6 +1323,56 @@ Fallback bei fehlendem Ankerdatum (übersprungen). Beide Tabellen sind in der
 Realtime-Publication. Kanäle sind OTAs **und** die eigene Plattform „myNextDays"
 (gleichwertiger Buchungskanal, kein „Direkt").
 
+### Backoffice-Team (wer darf ins Backoffice?)
+
+`platform_admins` (0202) ist die einzige Tabelle, die mandantenübergreifende
+Rechte vergibt — geprüft wird sie bei JEDEM Request frisch (Wurzel 7), nie aus
+dem JWT. Bis `0237` gab es dafür jedoch keinen Vergabeweg: ein neuer Kollege
+brauchte einen GoTrue-Nutzer (Selbstregistrierung ist aus) UND eine Zeile per
+psql. Seitdem läuft es über `/api/v1/platform/team` und die Seite
+`admin/app/(backoffice)/team`:
+
+- **Bestehendes Konto** → sofort freischalten (RPC `auth_user_id_by_email`, nur
+  `service_role`, gibt ausschließlich eine uuid zurück).
+- **Neue Person** → Konto mit Zufallspasswort + Einmal-Token; in der DB liegt
+  nur der SHA-256, der Klartext steht nur im Link. Versand über unseren SMTP
+  (`core.mail`) — GoTrue selbst hat keinen Mailzugang. Die eingeladene Person
+  setzt ihr Passwort selbst unter `admin/app/einladung` (ohne Anmeldung
+  erreichbar, Berechtigung ist der Token).
+- **Aussperr-Schutz:** keine Selbst-Änderung der eigenen Rolle/Aktivität, und
+  der letzte aktive `platform_admin` bleibt bestehen (409).
+
+Rollen: `platform_admin` (voll, inkl. Freigaben/Sperren/Team) und
+`platform_support` (lesend + Support-Konversationen). Durchgesetzt wird das über
+`require_platform_write`, nicht über die Navigation.
+
+### Support-Live-Chat (Kunde ↔ Backoffice)
+
+Der Hilfe-Eintrag im Konto-Menü des Dashboards öffnet einen **Live-Chat mit dem
+myNextDays-Team** (`web/components/support/support-chat.tsx`); die Gegenstelle
+ist die Agenten-Konsole im Backoffice (`admin/components/support-konsole.tsx`,
+Route `/support`). Kein eigener Chat-Stack: eine Konversation ist ein Eintrag in
+`support_tickets` mit ihren `support_messages` (Migrationen `0204`–`0206`,
+Chat-Erweiterung `0236`) — dasselbe Vorgehen wie bei Intercom/Chatwoot, wo
+Widget-Chat, E-Mail und Formular in EINEM Konversations-Stream liegen.
+
+Drei Kanäle, drei Zuständigkeiten:
+
+- **Nachrichten** über `postgres_changes` (RLS aus `0205`/`0206` entscheidet,
+  wer welche Zeile sieht — interne Notizen sind für den Melder ausgeschlossen).
+- **Tippt-Anzeige** über Supabase **Broadcast** auf dem privaten Topic
+  `support:<ticket_id>` — flüchtig, ohne DB-Schreiblast, gedrosselt auf 2 s.
+- **Anwesenheit** („Wir sind gerade da") über Supabase **Presence** auf
+  `support:presence`. Autorisiert wird beides per RLS auf `realtime.messages`
+  (`0236`): zuhören darf, wer Teilnehmer ist; **eintragen** nur ein aktiver
+  Plattform-Admin — ein Kunde kann sich nicht als Team ausgeben.
+
+Lese-Cursor je Seite (`reporter_last_read_at`/`agent_last_read_at`) statt einer
+Lesebestätigungs-Tabelle (Chatwoot-Muster, zwei Parteien), Vorschau der letzten
+SICHTBAREN Nachricht auf der Konversation, und `client_msg_id` mit partiellem
+UNIQUE-Index als Idempotenz-Backstop (Wurzel 2) — derselbe Schlüssel ersetzt im
+Frontend die optimistisch angezeigte Nachricht beim Realtime-Echo.
+
 ---
 
 ## 12. Page-Builder

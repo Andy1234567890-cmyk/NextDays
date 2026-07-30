@@ -1250,3 +1250,97 @@ JWT rendern lassen, ohne unveröffentlichte Inhalte öffentlich zu machen.
 `lib/site-config.ts` (u. a. `syncBlocks()` als Diff-Orchestrator des Editors —
 es gibt bewusst keinen Bulk-Endpunkt); der `builder/`-Renderer ruft den
 öffentlichen Resolver über seinen eigenen Proxy (`builder/app/api/v1/[...path]/route.ts`).
+
+---
+
+## platform_admin — Backoffice-Team (`/api/v1/platform/team`)
+
+Der einzige mandantenübergreifende Zugang der Plattform (`platform_admins`,
+Migration `0202`) hatte bis `0237` keinen Vergabeweg: Selbstregistrierung ist
+aus (`GOTRUE_DISABLE_SIGNUP`), GoTrue hat keinen SMTP-Zugang, also musste jeder
+neue Kollege per psql eingetragen werden. Diese Endpunkte schließen das.
+
+| Methode | Pfad                          | Zweck                                                                            |
+| ------- | ----------------------------- | -------------------------------------------------------------------------------- |
+| `GET`   | `/api/v1/platform/team`       | Alle Zugänge inkl. entzogener (Historie), E-Mail + letzter Login aus GoTrue        |
+| `POST`  | `/api/v1/platform/team`       | Einladen/Freischalten (`require_platform_write`)                                   |
+| `PATCH` | `/api/v1/platform/team/{id}`  | Rolle, Notiz, Aktiv-Status (`require_platform_write`)                              |
+| `POST`  | `/api/v1/platform/team/accept`| Einladung annehmen + eigenes Passwort setzen — **öffentlich**, auth-Rate-Limit     |
+
+**Einladung:** existiert zur E-Mail schon ein Konto (RPC `auth_user_id_by_email`,
+nur `service_role`), wird es sofort freigeschaltet — kein Link, kein
+Passwortvorgang. Sonst legt der Server ein GoTrue-Konto mit Zufallspasswort an
+(das niemand kennt) und erzeugt einen Einmal-Token: in der DB liegt nur dessen
+SHA-256, der Klartext existiert nur im Link. Versendet wird über `core.mail`
+(unser SMTP), 72 h gültig, einmal verwendbar. Scheitert der Versand, wird der
+Link an den einladenden Admin zurückgegeben — mit dem echten Grund, nie als
+stiller Erfolg.
+
+**Aussperr-Schutz (im Service, gilt für jeden Aufrufer):** niemand ändert die
+eigene Rolle oder den eigenen Zugang; der letzte aktive `platform_admin` kann
+nicht herabgestuft oder deaktiviert werden (`409`). Jede Aktion landet im
+Backoffice-Protokoll (`team.list` / `team.invite` / `team.update`).
+
+**Frontend:** `admin/app/(backoffice)/team` + `admin/components/team-verwaltung.tsx`;
+die Annahme läuft über `admin/app/einladung` (ohne Anmeldung erreichbar, siehe
+`admin/middleware.ts`).
+
+---
+
+## support (Live-Chat & Anfragen — implementiert)
+
+Der Support-Kanal zwischen **Kunde** und **myNextDays-Backoffice**. Ein Chat ist
+KEIN eigenes Datenmodell, sondern eine Konversation im vorhandenen
+`support_tickets`/`support_messages`-Modell (Migrationen `0204`–`0206`, Chat-Teil
+`0236`) — genau wie Intercom, Chatwoot und Zendesk Widget-Chat, E-Mail und
+Formular in einem Konversations-Stream führen.
+
+Zwei getrennte Melder-Welten (ADR-0015/0017), ein Service:
+`/support/*` für Betriebs-Nutzer (JWT mit `tenant_id`), `/support/guest/*` für
+Plattform-Gäste. Interne Team-Notizen (`support_messages.internal`) werden
+serverseitig herausgefiltert **und** per RLS (0205) vom DB-Direktpfad
+ausgeschlossen; auch die Vorschau `last_message_preview` wird nie aus einer
+internen Notiz gesetzt.
+
+### Melder (`/api/v1/support`)
+
+| Methode | Pfad                                | Zweck                                                                                              |
+| ------- | ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `POST`  | `/api/v1/support`                   | Formular-Anfrage (Betreff + Text + Thema)                                                          |
+| `POST`  | `/api/v1/support/chat`              | Chat eröffnen (nur Text; Betreff wird serverseitig abgeleitet). Idempotent über `client_msg_id`     |
+| `GET`   | `/api/v1/support?limit&offset`      | Eigene Konversationen inkl. `unread`, `last_message_preview`, `source`                              |
+| `GET`   | `/api/v1/support/unread`            | `{conversations, messages}` — Badge-Zahl ist `conversations` (Intercom-Semantik)                    |
+| `GET`   | `/api/v1/support/{id}`              | Konversation mit Verlauf (ohne interne Notizen)                                                     |
+| `POST`  | `/api/v1/support/{id}/reply`        | Antworten (idempotent über `client_msg_id`); öffnet eine gelöste Konversation wieder                |
+| `POST`  | `/api/v1/support/{id}/read`         | Lese-Cursor des Melders setzen                                                                      |
+| `POST`  | `/api/v1/support/{id}/rating`       | Bewertung 1–5 (+ Kommentar) — nur nach Abschluss, sonst `409`                                        |
+
+Gast-Zweig identisch unter `/api/v1/support/guest`, `…/guest/list`,
+`…/guest/{id}`, `…/guest/{id}/reply`.
+
+### Backoffice (`/api/v1/platform/support`)
+
+| Methode | Pfad                                             | Zweck                                                                     |
+| ------- | ------------------------------------------------ | ------------------------------------------------------------------------- |
+| `GET`   | `…/support?status_filter&source&mine&limit`      | Konversationsliste inkl. `unread` (Team-Sicht), Kanal- und Zuweisungsfilter |
+| `GET`   | `…/support/{id}`                                 | Verlauf **inkl.** interner Notizen                                         |
+| `POST`  | `…/support/{id}/reply`                           | Antwort oder interne Notiz (`internal: true`), idempotent                  |
+| `POST`  | `…/support/{id}/read`                            | Lese-Cursor des Teams                                                     |
+| `PATCH` | `…/support/{id}`                                 | Status, Priorität, Zuweisung                                              |
+
+### Live-Verhalten
+
+- **Nachrichten**: Supabase-Realtime (`postgres_changes`) auf
+  `support_messages`/`support_tickets`; die RLS-Policies aus `0205`/`0206`
+  entscheiden, wer welche Zeile sieht. Kein Polling, kein Reload.
+- **Tippt-Anzeige & Anwesenheit**: flüchtig über Supabase **Broadcast/Presence**
+  auf den privaten Topics `support:<ticket_id>` und `support:presence`.
+  Autorisierung per RLS auf `realtime.messages` (`0236`): Teilnehmer der
+  Konversation bzw. Backoffice; **eintragen** in den Anwesenheits-Kanal darf nur
+  ein Plattform-Admin — ein Kunde kann sich nicht als „Team" ausgeben.
+- **Idempotenz (Wurzel 2)**: `client_msg_id` + partieller UNIQUE-Index
+  `(ticket_id, client_msg_id)`; ein Retry liefert die bestehende Nachricht.
+
+**Frontend:** Kunden-Widget `web/components/support/support-chat.tsx`
+(geöffnet über „Hilfe erhalten" im Konto-Menü), Agenten-Konsole
+`admin/components/support-konsole.tsx` (`/support`).

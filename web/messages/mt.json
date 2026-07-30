@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Għajnuna u appoġġ",
+    "online": "Bħalissa ninsabu hawn",
+    "offline": "Normalment inwieġbu fi żmien ġurnata tax-xogħol",
+    "laden": "Qed jitgħabba …",
+    "zurueck": "Lura",
+    "schliessen": "Agħlaq",
+    "neueUnterhaltung": "Konversazzjoni ġdida",
+    "statusGeloest": "Solvut",
+    "absenderSelbst": "Int",
+    "team": "Tim",
+    "begruessung": "Bonġu! Kif nistgħu ngħinu?",
+    "begruessungText": "Iktbilna dwar proprjetajiet, prenotazzjonijiet, pagamenti jew kwalunkwe ħaġa oħra fuq myNextDays.",
+    "platzhalterNeu": "Il-messaġġ tiegħek …",
+    "platzhalterAntwort": "Ikteb messaġġ …",
+    "senden": "Ibgħat",
+    "tippt": "It-tim qed jikteb …",
+    "gelesen": "Moqri",
+    "hilfeCenter": "Fittex fiċ-ċentru tal-għajnuna",
+    "bewertungFrage": "Kemm kont sodisfatt bl-appoġġ?",
+    "bewertungDanke": "Grazzi tal-feedback tiegħek.",
+    "bewertungStufe": "Klassifikazzjoni {stufe} minn 5"
   }
 }

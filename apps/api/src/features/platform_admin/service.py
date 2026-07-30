@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 from fastapi import Request
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
@@ -57,6 +58,20 @@ log = get_logger("nextdays.platform_admin")
 
 # Harte Obergrenze je Abfrage (Wurzel 8: kein unbegrenzter Bereich).
 _MAX_LIMIT = 200
+
+# Wie viele Nachrichten die Ungelesen-Zählung höchstens betrachtet.
+_UNREAD_SCAN = 500
+
+# Länge der Vorschau der letzten Nachricht (Liste + Melder-Widget).
+_PREVIEW_LEN = 160
+
+
+def _vorschau(text: str) -> str:
+    """Einzeilige Vorschau der letzten sichtbaren Nachricht."""
+    flach = " ".join(text.split())
+    if len(flach) <= _PREVIEW_LEN:
+        return flach
+    return flach[: _PREVIEW_LEN - 1].rstrip() + "…"
 
 # Obergrenze für die Finanz-Aggregation. Python-seitige Summen sind nur bis zu
 # dieser Größe vertretbar; darüber gehört die Aggregation in die DB (View/RPC).
@@ -565,9 +580,20 @@ class PlatformAdminService:
     # -- Support ------------------------------------------------------------
 
     def tickets(
-        self, *, status_filter: str | None = None, limit: int = 50, offset: int = 0
+        self,
+        *,
+        status_filter: str | None = None,
+        source: str | None = None,
+        assignee_user_id: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
     ) -> SupportTicketList:
-        """Support-Tickets, zuletzt aktive zuerst."""
+        """Support-Konversationen, zuletzt aktive zuerst.
+
+        `unread` ist die Zahl der Melder-Nachrichten, die jünger sind als der
+        Lese-Cursor des Teams (agent_last_read_at) — dieselbe Rechnung wie beim
+        Melder, nur aus der Gegenrichtung.
+        """
         limit = max(1, min(_MAX_LIMIT, limit))
         offset = max(0, offset)
 
@@ -578,16 +604,57 @@ class PlatformAdminService:
         )
         if status_filter:
             query = query.eq("status", status_filter)
+        if source:
+            query = query.eq("source", source)
+        if assignee_user_id:
+            query = query.eq("assignee_user_id", assignee_user_id)
         res = query.range(offset, offset + limit - 1).execute()
         rows = res.data or []
         namen = self._tenant_names([r.get("tenant_id") for r in rows])
+        ungelesen = self._ungelesen_je_ticket(rows)
         return SupportTicketList(
             items=[
-                SupportTicket(**r, tenant_name=namen.get(r.get("tenant_id") or ""))
+                SupportTicket(
+                    **r,
+                    tenant_name=namen.get(r.get("tenant_id") or ""),
+                    unread=ungelesen.get(r["id"], 0),
+                )
                 for r in rows
             ],
             total=res.count or 0,
         )
+
+    def _ungelesen_je_ticket(self, rows: list[dict]) -> dict[str, int]:
+        """Ungelesene Melder-Nachrichten je Konversation (eine Abfrage)."""
+        ids = [r["id"] for r in rows]
+        if not ids:
+            return {}
+        msgs = (
+            self._db.table("support_messages")
+            .select("ticket_id, created_at")
+            .in_("ticket_id", ids)
+            .eq("author_kind", "reporter")
+            .order("created_at", desc=True)
+            .limit(_UNREAD_SCAN)
+            .execute()
+        ).data or []
+        cursor = {r["id"]: r.get("agent_last_read_at") for r in rows}
+        gezaehlt: dict[str, int] = {tid: 0 for tid in ids}
+        for m in msgs:
+            gelesen_bis = cursor.get(m["ticket_id"])
+            if gelesen_bis is None or m["created_at"] > gelesen_bis:
+                gezaehlt[m["ticket_id"]] += 1
+        return gezaehlt
+
+    def mark_ticket_read(self, ticket_id: str) -> bool:
+        """Lese-Cursor des Teams setzen. False = Ticket unbekannt."""
+        upd = (
+            self._db.table("support_tickets")
+            .update({"agent_last_read_at": datetime.now(UTC).isoformat()})
+            .eq("id", ticket_id)
+            .execute()
+        ).data
+        return bool(upd)
 
     def ticket(self, ticket_id: str) -> SupportTicketDetail | None:
         """Ein Ticket mit vollem Verlauf. None = unbekannt.
@@ -616,17 +683,29 @@ class PlatformAdminService:
         return SupportTicketDetail(
             **row,
             tenant_name=namen.get(row.get("tenant_id") or ""),
+            unread=self._ungelesen_je_ticket([row]).get(row["id"], 0),
             messages=[SupportMessage(**m) for m in msgs],
         )
 
     def reply(
-        self, ticket_id: str, *, author_user_id: str, body: str, internal: bool
+        self,
+        ticket_id: str,
+        *,
+        author_user_id: str,
+        body: str,
+        internal: bool,
+        client_msg_id: str | None = None,
     ) -> SupportMessage | None:
         """Antwort oder interne Notiz anhängen. None = Ticket unbekannt.
 
         Aktualisiert last_message_at, damit die Liste nach echter Aktivität
         sortiert. Eine INTERNE Notiz zählt bewusst auch als Aktivität — für das
-        Team ist sie relevant, für den Melder bleibt sie unsichtbar.
+        Team ist sie relevant, für den Melder bleibt sie unsichtbar. Genau
+        deshalb wird die VORSCHAU (last_message_preview) bei internen Notizen
+        NICHT gesetzt: der Melder liest die Spalte per RLS mit (0205/0236).
+
+        Idempotent über client_msg_id (Wurzel 2): der partielle UNIQUE-Index ist
+        der Backstop, eine 23505 beim Retry ist der Erfolgspfad.
         """
         vorhanden = (
             self._db.table("support_tickets")
@@ -639,22 +718,48 @@ class PlatformAdminService:
             return None
 
         jetzt = datetime.now(UTC).isoformat()
-        res = (
-            self._db.table("support_messages")
-            .insert(
-                {
-                    "ticket_id": ticket_id,
-                    "author_kind": "agent",
-                    "author_user_id": author_user_id,
-                    "body": body,
-                    "internal": internal,
-                }
-            )
-            .execute()
-        ).data
-        self._db.table("support_tickets").update(
-            {"last_message_at": jetzt, "updated_at": jetzt}
-        ).eq("id", ticket_id).execute()
+        try:
+            res = (
+                self._db.table("support_messages")
+                .insert(
+                    {
+                        "ticket_id": ticket_id,
+                        "author_kind": "agent",
+                        "author_user_id": author_user_id,
+                        "body": body,
+                        "internal": internal,
+                        "client_msg_id": client_msg_id,
+                    }
+                )
+                .execute()
+            ).data
+        except APIError as exc:
+            if getattr(exc, "code", None) != "23505" or not client_msg_id:
+                raise
+            bestehend = (
+                self._db.table("support_messages")
+                .select("*")
+                .eq("ticket_id", ticket_id)
+                .eq("client_msg_id", client_msg_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            if not bestehend:
+                raise
+            return SupportMessage(**bestehend[0])
+
+        felder: dict[str, str | None] = {
+            "last_message_at": jetzt,
+            "updated_at": jetzt,
+            # Wer schreibt, hat gelesen.
+            "agent_last_read_at": jetzt,
+        }
+        if not internal:
+            felder["last_message_preview"] = _vorschau(body)
+            felder["last_message_kind"] = "agent"
+        self._db.table("support_tickets").update(felder).eq(
+            "id", ticket_id
+        ).execute()
         return SupportMessage(**res[0])
 
     def update_ticket(

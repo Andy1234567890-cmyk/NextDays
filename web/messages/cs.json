@@ -4583,5 +4583,28 @@
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found."
+  },
+  "supportChat": {
+    "titel": "Nápověda a podpora",
+    "online": "Právě jsme tu",
+    "offline": "Obvykle odpovídáme do jednoho pracovního dne",
+    "laden": "Načítá se …",
+    "zurueck": "Zpět",
+    "schliessen": "Zavřít",
+    "neueUnterhaltung": "Nová konverzace",
+    "statusGeloest": "Vyřešeno",
+    "absenderSelbst": "Vy",
+    "team": "Tým",
+    "begruessung": "Dobrý den! Jak můžeme pomoci?",
+    "begruessungText": "Napište nám ohledně objektů, rezervací, plateb nebo čehokoli dalšího v myNextDays.",
+    "platzhalterNeu": "Vaše zpráva …",
+    "platzhalterAntwort": "Napsat zprávu …",
+    "senden": "Odeslat",
+    "tippt": "Tým píše …",
+    "gelesen": "Přečteno",
+    "hilfeCenter": "Prohledat centrum nápovědy",
+    "bewertungFrage": "Jak jste byli s podporou spokojeni?",
+    "bewertungDanke": "Děkujeme za zpětnou vazbu.",
+    "bewertungStufe": "Hodnocení {stufe} z 5"
   }
 }

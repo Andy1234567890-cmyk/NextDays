@@ -14,7 +14,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from src.core.security import CurrentPlatformAdmin, require_platform_write
 
-from .dependencies import PlatformAdminServiceDep
+from .dependencies import PlatformAdminServiceDep, TeamServiceDep
 from .schemas import (
     AuditList,
     BuchungDetail,
@@ -25,6 +25,7 @@ from .schemas import (
     ModerationProperty,
     PlatformGuestList,
     PlatformMe,
+    PlatformOk,
     PlatformUserList,
     SteuerUebersicht,
     SupportMessage,
@@ -33,10 +34,17 @@ from .schemas import (
     SupportTicketDetail,
     SupportTicketList,
     SupportTicketUpdate,
+    TeamInvite,
+    TeamInviteAccept,
+    TeamInviteResult,
+    TeamList,
+    TeamMember,
+    TeamUpdate,
     TenantDetail,
     TenantList,
     VorgangList,
 )
+from .team_service import TeamError
 
 router = APIRouter(prefix="/platform", tags=["platform-admin"])
 
@@ -281,6 +289,105 @@ def finanzen(
     return result
 
 
+# --- Backoffice-Team ---------------------------------------------------------
+#
+# Wer hier Zugriff bekommt, sieht ALLE Mandanten. Deshalb: Lesen für das ganze
+# Backoffice, JEDE Änderung nur mit require_platform_write, und alles im
+# Protokoll. Der Aussperr-Schutz (keine Selbst-Änderung, letzter Admin bleibt)
+# sitzt im Service, damit er auch für künftige Aufrufer gilt.
+
+
+def _map_team(exc: TeamError) -> HTTPException:
+    return HTTPException(status_code=exc.status_code, detail=exc.message)
+
+
+@router.get("/team", response_model=TeamList)
+def list_team(
+    ctx: CurrentPlatformAdmin,
+    service: TeamServiceDep,
+    haupt: PlatformAdminServiceDep,
+    request: Request,
+) -> TeamList:
+    """Alle Backoffice-Zugänge (auch entzogene — sie sind die Historie)."""
+    try:
+        result = service.list()
+    except TeamError as exc:
+        raise _map_team(exc) from exc
+    haupt.log_action(ctx, "team.list", request=request)
+    return result
+
+
+@router.post(
+    "/team", response_model=TeamInviteResult, status_code=status.HTTP_201_CREATED
+)
+def invite_team_member(
+    req: TeamInvite,
+    ctx: CurrentPlatformAdmin,
+    service: TeamServiceDep,
+    haupt: PlatformAdminServiceDep,
+    request: Request,
+) -> TeamInviteResult:
+    """Kolleg:in einladen oder ein bestehendes Konto freischalten."""
+    require_platform_write(ctx)
+    try:
+        result = service.invite(req, actor=ctx)
+    except TeamError as exc:
+        raise _map_team(exc) from exc
+    haupt.log_action(
+        ctx,
+        "team.invite",
+        target_type="platform_admin",
+        target_id=result.member.user_id,
+        detail={"role": req.platform_role, "ergebnis": result.ergebnis},
+        request=request,
+    )
+    return result
+
+
+@router.patch("/team/{user_id}", response_model=TeamMember)
+def update_team_member(
+    user_id: str,
+    req: TeamUpdate,
+    ctx: CurrentPlatformAdmin,
+    service: TeamServiceDep,
+    haupt: PlatformAdminServiceDep,
+    request: Request,
+) -> TeamMember:
+    """Rolle, Notiz oder Aktiv-Status eines Zugangs ändern."""
+    require_platform_write(ctx)
+    try:
+        result = service.update(user_id, req, actor=ctx)
+    except TeamError as exc:
+        raise _map_team(exc) from exc
+    haupt.log_action(
+        ctx,
+        "team.update",
+        target_type="platform_admin",
+        target_id=user_id,
+        detail=req.model_dump(exclude_none=True),
+        request=request,
+    )
+    return result
+
+
+@router.post("/team/accept", response_model=PlatformOk)
+def accept_team_invite(
+    req: TeamInviteAccept, service: TeamServiceDep
+) -> PlatformOk:
+    """Einladung annehmen und eigenes Passwort setzen.
+
+    Bewusst OHNE Guard: die eingeladene Person hat noch keine Sitzung. Der
+    Einmal-Token IST die Berechtigung — er ist nur als Hash gespeichert, 72 h
+    gültig und danach verbraucht. Fehlerfälle antworten absichtlich gleich,
+    damit die Existenz eines Tokens nicht ableitbar ist.
+    """
+    try:
+        service.accept(req)
+    except TeamError as exc:
+        raise _map_team(exc) from exc
+    return PlatformOk()
+
+
 # --- Support -----------------------------------------------------------------
 
 
@@ -292,12 +399,18 @@ def list_tickets(
     status_filter: str | None = Query(
         None, pattern="^(open|waiting|resolved|closed)$"
     ),
+    source: str | None = Query(None, pattern="^(form|chat)$"),
+    mine: bool = Query(False, description="Nur mir zugewiesene Konversationen."),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ) -> SupportTicketList:
-    """Support-Tickets, zuletzt aktive zuerst."""
+    """Support-Konversationen, zuletzt aktive zuerst."""
     result = service.tickets(
-        status_filter=status_filter, limit=limit, offset=offset
+        status_filter=status_filter,
+        source=source,
+        assignee_user_id=ctx.user_id if mine else None,
+        limit=limit,
+        offset=offset,
     )
     service.log_action(
         ctx, "support.list", detail={"status": status_filter}, request=request
@@ -348,6 +461,7 @@ def reply_ticket(
         author_user_id=ctx.user_id,
         body=antwort.body,
         internal=antwort.internal,
+        client_msg_id=antwort.client_msg_id,
     )
     if result is None:
         raise HTTPException(
@@ -362,6 +476,25 @@ def reply_ticket(
         request=request,
     )
     return result
+
+
+@router.post("/support/{ticket_id}/read", response_model=PlatformOk)
+def mark_ticket_read(
+    ticket_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+) -> PlatformOk:
+    """Lese-Cursor des Teams setzen (Konversation geöffnet).
+
+    Bewusst OHNE Audit-Eintrag: das Öffnen protokolliert bereits
+    `support.view`; ein zweiter Eintrag pro Scroll-Vorgang würde das Protokoll
+    zumüllen, ohne etwas Neues auszusagen.
+    """
+    if not service.mark_ticket_read(ticket_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Ticket nicht gefunden."
+        )
+    return PlatformOk()
 
 
 @router.patch("/support/{ticket_id}", response_model=SupportTicket)

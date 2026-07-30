@@ -28,6 +28,9 @@ const PUNKTE: Punkt[] = [
   { href: "/support", label: "Support", icon: "ph:lifebuoy" },
   { href: "/diagnose", label: "Diagnose", icon: "ph:activity" },
   { href: "/protokoll", label: "Protokoll", icon: "ph:list-checks" },
+  // Sichtbar für alle im Backoffice — wer Zugriff hat, soll nachsehen können,
+  // wer sonst noch Zugriff hat. Ändern darf trotzdem nur platform_admin.
+  { href: "/team", label: "Team", icon: "ph:users-three" },
 ];
 
 export function BackofficeNav({

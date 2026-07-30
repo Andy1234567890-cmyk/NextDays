@@ -237,6 +237,11 @@ class Settings(BaseSettings):
     # ohne Mailserver). Im Prod IMMER false, sonst würde nichts real versendet.
     mail_sandbox: bool = False
 
+    # Öffentliche Adresse des Plattform-Backoffice (admin/). Wird für die
+    # Einladungslinks des Backoffice-Teams gebraucht; fehlt sie, schlägt die
+    # Einladung klar fehl, statt eine erfundene URL zu verschicken (Wurzel 4).
+    admin_base_url: str = ""
+
     @property
     def mail_configured(self) -> bool:
         """Versand ist nutzbar, wenn Server UND Absender gesetzt sind. Fehlt eins,

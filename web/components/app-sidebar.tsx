@@ -9,6 +9,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { Logo } from "@/components/logo";
+import { useSupportChat } from "@/components/support/support-chat";
 import { logout } from "@/lib/auth";
 
 import {
@@ -171,9 +172,17 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
         { key: "websiteBuilder", href: "/website", icon: "ph:globe", req: "access_homepage_builder" },
       ],
     },
-    ...STATIC_GROUPS,
+    ...STATIC_GROUPS.filter((g) => !HIDDEN_AT_LAUNCH.has(g.groupKey)),
   ];
 }
+
+// Zum ersten Launch nicht angebotene Bereiche: Gruppen bleiben im Code, sind
+// aber unverlinkt. Zum Freischalten den jeweiligen groupKey hier entfernen.
+const HIDDEN_AT_LAUNCH: ReadonlySet<string> = new Set([
+  "marketplace",
+  "staff",
+  "jobs",
+]);
 
 // Betriebsart-unabhängige Gruppen (Marktplatz/HR/Jobs).
 // `groupKey` = i18n-Schlüssel (Namespace "nav.groups").
@@ -257,6 +266,7 @@ export function AppSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("nav");
+  const supportChat = useSupportChat();
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -457,13 +467,27 @@ export function AppSidebar({
                   {t("account.billing")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5">
-                  <Icon icon="ph:question" />
+                {/* Live-Chat mit dem myNextDays-Team (Widget im Layout). */}
+                <DropdownMenuItem
+                  className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5"
+                  onSelect={() => supportChat.oeffnen()}
+                >
+                  <Icon icon="ph:chat-circle-dots" />
                   {t("account.getHelp")}
+                  {supportChat.ungelesen > 0 && (
+                    <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+                      {supportChat.ungelesen}
+                    </span>
+                  )}
                 </DropdownMenuItem>
-                <DropdownMenuItem className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5">
-                  <Icon icon="ph:lifebuoy" />
-                  {t("account.helpCenter")}
+                <DropdownMenuItem
+                  asChild
+                  className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5"
+                >
+                  <Link href="/hilfe" target="_blank" rel="noopener noreferrer">
+                    <Icon icon="ph:lifebuoy" />
+                    {t("account.helpCenter")}
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

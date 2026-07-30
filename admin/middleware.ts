@@ -9,8 +9,11 @@ import { type NextRequest, NextResponse } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Anmeldung bleibt frei.
-  if (pathname.startsWith("/anmelden")) {
+  // Anmeldung und Einladung bleiben frei: wer eingeladen wurde, hat noch kein
+  // Passwort und damit auch kein Cookie — die Einladungsseite muss ohne
+  // Sitzung erreichbar sein. Ihre Berechtigung ist der Einmal-Token im Link,
+  // geprüft vom Server.
+  if (pathname.startsWith("/anmelden") || pathname.startsWith("/einladung")) {
     return NextResponse.next();
   }
 

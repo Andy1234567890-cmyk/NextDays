@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { DashboardVoiceAssistant } from "@/components/dashboard/voice-assistant";
 import { RealtimeDebugPanel } from "@/components/realtime-debug-panel";
 import { Topbar } from "@/components/topbar";
+import { SupportChatProvider } from "@/components/support/support-chat";
 import { SidebarInset, SidebarProvider } from "@nextdays/ui/sidebar";
 import { getMe } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -45,23 +46,29 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider>
-      {/* Technischer Fehler-Reporter (kein Verhaltens-Tracking). */}
-      <DiagnoseStarter />
-      <AppSidebar
-        email={email}
-        role={role}
-        permissions={permissions}
-        capabilities={capabilities}
-        accommodationType={accommodationType}
-      />
-      <SidebarInset>
-        <Topbar />
-        {/* Inhaltsbereich — hier kommen später KPI-Kacheln & Charts hinein. */}
-        <main className="flex min-w-0 flex-1 flex-col p-4 md:p-6">{children}</main>
-      </SidebarInset>
-      {/* Andy lebt im Layout → bleibt beim Navigieren auf jeder Seite bestehen
+      {/* Live-Chat mit dem Team: liegt im Layout, damit die Unterhaltung beim
+          Navigieren offen bleibt und der Ungelesen-Zähler überall stimmt. */}
+      <SupportChatProvider>
+        {/* Technischer Fehler-Reporter (kein Verhaltens-Tracking). */}
+        <DiagnoseStarter />
+        <AppSidebar
+          email={email}
+          role={role}
+          permissions={permissions}
+          capabilities={capabilities}
+          accommodationType={accommodationType}
+        />
+        <SidebarInset>
+          <Topbar />
+          {/* Inhaltsbereich — hier kommen später KPI-Kacheln & Charts hinein. */}
+          <main className="flex min-w-0 flex-1 flex-col p-4 md:p-6">
+            {children}
+          </main>
+        </SidebarInset>
+        {/* Andy lebt im Layout → bleibt beim Navigieren auf jeder Seite bestehen
           und laedt seine Daten selbst. */}
-      <DashboardVoiceAssistant userLabel={email || null} />
+        <DashboardVoiceAssistant userLabel={email || null} />
+      </SupportChatProvider>
     </SidebarProvider>
   );
 }

@@ -34,6 +34,11 @@ function realtimeClient(): SupabaseClient {
   return rtClient;
 }
 
+/** Derselbe Realtime-Client für Broadcast-/Presence-Kanäle (eine Verbindung). */
+export function getRealtimeClient(): SupabaseClient {
+  return realtimeClient();
+}
+
 // Eindeutige Channel-Namen: mehrere Komponenten dürfen dieselbe Tabelle
 // abonnieren; ohne eindeutigen Namen teilten sie EINEN Channel und der zweite
 // .on() nach subscribe() würde werfen.
