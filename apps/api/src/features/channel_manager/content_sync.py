@@ -38,6 +38,11 @@ class ContentSyncMixin:
     # Objekt-Anlage NICHT scheitern — wir loggen, merken den Fehler und können
     # später erneut synchronisieren. tenant_id kommt vom vertrauenswürdigen
     # Aufrufer (nicht aus User-Input).
+    # Die vielen Rückgaben sind hier Absicht: jeder Fehlerpfad (nicht
+    # konfiguriert, kein Tenant-Name, Channex-Fehler, Mapping-Fehler mit
+    # Kompensation) endet nicht-blockierend mit None. Zusammenfassen würde die
+    # Kompensationslogik verschleiern.
+    # pylint: disable-next=too-many-return-statements
     def ensure_group(self, tenant_id: str) -> str | None:
         """Stellt sicher, dass für den Tenant eine Channex-Group existiert.
         Gibt die channex_group_id zurück (oder None, wenn nicht konfiguriert/Fehler).
