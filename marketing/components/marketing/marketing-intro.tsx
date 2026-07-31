@@ -72,18 +72,18 @@ export function MarketingIntro() {
       <div className="border-t border-border">
         <div className="mx-auto max-w-7xl px-6 py-16">
           <SectionHeading eyebrow={t("typenEyebrow")} heading={t("reichweite")} />
-          {/* Kacheln statt Text-Pills: jedes Objekt bekommt ein eigenes
-              Piktogramm, damit die Bandbreite (Zelt bis Hotel) sichtbar wird
-              und nicht nur gelesen werden muss. */}
-          <ul className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          {/* Kacheln mit eigenem Piktogramm je Objekttyp. Fünf Spalten, weil
+              genau zehn Typen aufgehen — in drei Spalten bliebe unten eine
+              einzelne Kachel als Waise stehen. */}
+          <ul className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {PROPERTY_TYPES.map((type) => {
               const TypeIcon = TYPE_ICONS[type];
               return (
                 <li
                   key={type}
-                  className="flex flex-col items-center gap-3 rounded-2xl bg-surface-warm px-4 py-6 text-center transition-colors hover:bg-surface-accent"
+                  className="flex flex-col items-center gap-2.5 rounded-2xl bg-surface-warm px-3 py-5 text-center transition-colors hover:bg-surface-accent"
                 >
-                  <TypeIcon className="size-10 text-accent" />
+                  <TypeIcon className="size-9 text-accent" />
                   <span className="text-sm font-medium">{t(`typen.${type}`)}</span>
                 </li>
               );

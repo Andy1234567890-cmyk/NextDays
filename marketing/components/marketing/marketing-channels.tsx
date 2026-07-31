@@ -8,8 +8,6 @@
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 
-import { SectionHeading } from "@/components/marketing/section-kit";
-
 const CHANNELS = [
   { src: "/marketing/channels/booking-com.svg", alt: "Booking.com" },
   { src: "/marketing/channels/airbnb.png", alt: "Airbnb" },
@@ -23,33 +21,35 @@ export function MarketingChannels() {
   const t = useTranslations("hero");
 
   return (
-    <section id="kanaele" className="bg-background">
-      <div className="mx-auto max-w-7xl px-6 py-16">
-        {/* Nur Eyebrow + Überschrift: der erklärende Text zu Reichweite und
-            Zwei-Wege-Sync steht in der Orbit-Sektion (marketing-integrations),
-            hier soll die Logo-Reihe ruhig als Beleg unter dem Hero stehen. */}
-        <SectionHeading eyebrow={t("kanaeleEyebrow")} heading={t("kanaeleLabel")} />
+    // Teil des ersten Bildschirms (eingehängt im Hero): flache Abstände, damit
+    // Botschaft, CTAs und Logos zusammen ohne Scrollen sichtbar bleiben.
+    <div id="kanaele" className="w-full">
+      <div className="mx-auto max-w-7xl px-6 pb-8">
+        {/* Nur die Eyebrow-Zeile: die Überschrift hätte den ersten Bildschirm
+            gesprengt, der erklärende Text steht ohnehin in der Orbit-Sektion
+            (marketing-integrations). */}
+        <p className="eyebrow text-center">{t("kanaeleLabel")}</p>
 
         {/* Karten mit Original-Logofarben: die Exporte bringen eigene weiße
             Hintergrundflächen mit — jeder CSS-Filter würde sie als Blöcke
             sichtbar machen. */}
-        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-5 grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-6">
           {CHANNELS.map((ch) => (
             <div
               key={ch.alt}
-              className="flex h-20 items-center justify-center rounded-xl border border-border bg-card px-5 shadow-card transition hover:shadow-soft"
+              className="flex h-16 items-center justify-center rounded-xl border border-border bg-card px-4 shadow-card transition hover:shadow-soft"
             >
               <Image
                 src={ch.src}
                 alt={ch.alt}
                 width={181}
                 height={68}
-                className="h-full w-auto object-contain py-4"
+                className="h-full w-auto object-contain py-3"
               />
             </div>
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }

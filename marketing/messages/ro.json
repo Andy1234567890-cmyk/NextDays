@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "title": "myNextDays – Platforma pentru proprietarii de cazări de vacanță",
+    "description": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc. Construită în Danemarca, găzduită în UE. De la 19,90 €/lună. 30 de zile gratuit."
+  },
+  "nav": {
+    "funktionen": "Funcții",
+    "preise": "Prețuri",
+    "kanaele": "Canale",
+    "kunden": "Clienți",
+    "ressourcen": "Resurse",
+    "sprache": "Limbă",
+    "spracheWaehlen": "Alege limba",
+    "anmelden": "Autentificare",
+    "kostenlosStarten": "Începe gratuit",
+    "sprachModalTitel": "Limbă și regiune",
+    "sprachModalHeading": "Alege o limbă",
+    "sprachModalHinweis": "Alegerea ta se aplică acestui site și este preluată în contul tău.",
+    "schliessen": "Închide",
+    "suche": "Caută o limbă",
+    "keinTreffer": "Nicio limbă găsită."
+  },
+  "hero": {
+    "trustNeu": "Nou în 2026",
+    "trustVermieter": "de la proprietari pentru proprietari",
+    "trustAirsmil": "powered by AirSmil",
+    "trustEu": "Găzduită în UE (GDPR)",
+    "headlinePre": "Mai multe",
+    "headlineHighlight": "rezervări",
+    "headlinePost": "mai puțin efort.",
+    "subline": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc, construită de proprietari care cunosc munca de zi cu zi.",
+    "ctaTrial": "Încearcă 30 de zile gratuit",
+    "ctaDemo": "Vezi demonstrația",
+    "kanaeleLabel": "Conectată la marile platforme de rezervări",
+    "eyebrow": "Platforma pentru proprietarii de cazări de vacanță",
+    "kanaeleEyebrow": "Canale de distribuție",
+    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+  },
+  "intro": {
+    "heading": "Bine ai venit la myNextDays.",
+    "p1": "Un property management system complet, plus channel manager, pentru hoteluri, agenții și proprietari de cazări de vacanță. Independent și corect, fără complexitatea și prețurile enterprise ale marilor corporații.",
+    "p2": "Crește-ți gradul de ocupare, simplifică-ți munca de zi cu zi și oferă experiențe memorabile oaspeților, fără complexitatea și prețurile enterprise ale sistemelor mari.",
+    "p3": "Totul într-un singur loc, automatizare inteligentă și conexiune la toate canalele importante, plus propriul tău portal de rezervări cu comision mic. Afacerea ta crește cu mai mult control și mai puțin efort.",
+    "cta": "Descoperă funcțiile",
+    "reichweite": "Făcută pentru fiecare cazare mică.",
+    "typen": {
+      "hotel": "Hotel",
+      "bnb": "B&B",
+      "gaestehaus": "Casă de oaspeți",
+      "motel": "Motel",
+      "lodge": "Lodge",
+      "ferienwohnung": "Apartament de vacanță",
+      "resort": "Resort",
+      "huette": "Cabană",
+      "pension": "Pensiune",
+      "campingplatz": "Camping"
+    },
+    "belegeHeading": "Pe ce te poți baza",
+    "belege": {
+      "neu": "Nou în 2026: dezvoltată de proprietari activi, powered by AirSmil",
+      "eu": "Construită în Danemarca, găzduită în UE și conformă cu GDPR",
+      "kanaele": "56 de platforme de rezervări prin partenerul nostru de conectivitate Channex",
+      "start": "Lansare pe 1 septembrie 2026 în 27 de țări europene și 24 de limbi"
+    },
+    "eyebrow": "Platforma",
+    "typenEyebrow": "Pentru cine este"
+  },
+  "benefits": {
+    "eyebrow": "De ce myNextDays",
+    "sub": "Trei lucruri care contează cu adevărat în activitatea zilnică de închiriere: pentru ele a fost construită platforma.",
+    "heading": "Mai multe rezervări. Mai puțină muncă.",
+    "buchungen": {
+      "title": "Câștigă mai multe rezervări",
+      "text": "Fii vizibil pe toate canalele mari și pe propriul site. Un calendar central menține totul sincronizat: gata cu rezervările duble."
+    },
+    "betrieb": {
+      "title": "Simplifică operarea",
+      "text": "Gestionează proprietăți, rezervări, curățenie și facturare dintr-un singur loc, de la birou sau din mers."
+    },
+    "fair": {
+      "title": "Corectă și europeană",
+      "text": "Un preț transparent, fără bariere enterprise, construită în Danemarca și găzduită în UE conform GDPR. Suport personal de la echipa care folosește ea însăși software-ul."
+    },
+    "preisBanner": {
+      "eyebrow": "Preț",
+      "heading": "Tot ce îi trebuie cazării tale, într-un singur loc",
+      "text": "30 de zile gratuit. Fără perioadă minimă. Anulezi oricând (cu 4 săptămâni înainte de sfârșitul lunii).",
+      "preis": "19,90 €",
+      "proMonat": "pe lună",
+      "tarif": "Un singur tarif pentru toți, include 1 proprietate",
+      "objekte": "Fiecare proprietate suplimentară +6/5/4 € (tarif degresiv)",
+      "provision": "Canale externe 1 % · portal propriu 8 %",
+      "cta": "Vezi prețurile"
+    }
+  },
+  "trial": {
+    "eyebrow": "Test gratuit",
+    "heading": "Încearcă myNextDays 30 de zile gratuit.",
+    "sub": "Fără perioadă minimă. Anulezi oricând. Completează doar acest formular scurt:",
+    "seitenHeading": "Tot ce îi trebuie cazării tale într-un singur loc: mai mult control, mai puțin efort.",
+    "perks": {
+      "buchungen": {
+        "title": "Mai multe rezervări",
+        "text": "pe toate canalele mari și pe propriul tău portal, fără rezervări duble."
+      },
+      "kontrolle": {
+        "title": "Control total",
+        "text": "asupra check-in-urilor, rezervărilor și facturilor, într-un singur loc."
+      },
+      "freiheit": {
+        "title": "Mai multă libertate",
+        "text": "gestionează-ți cazarea de pe telefon, de oriunde te-ai afla."
+      }
+    },
+    "vorname": "Prenume",
+    "nachname": "Nume",
+    "email": "E-mail",
+    "emailPlatzhalter": "nume@exemplu.ro",
+    "einwilligung": "Da, vreau să primesc ocazional noutăți, invitații la webinare și oferte de la myNextDays. Îți poți retrage consimțământul oricând.",
+    "absenden": "Începe acum",
+    "dankeTitel": "Mulțumim!",
+    "dankeText": "Revenim la tine în cel mai scurt timp."
+  },
+  "features": {
+    "heading": "Un sistem. Un singur cont.",
+    "baldBadge": "În curând",
+    "hinweis": "Facturarea de bază este inclusă de la lansare. Contabilitatea avansată (export DATEV), gestionarea angajaților, marketplace-ul de furnizori și funcțiile hoteliere sunt module suplimentare.",
+    "eyebrow": "Funcții",
+    "sub": "Un singur acces pentru unitate, proprietari, oaspeți și curățenie: fiecare rol vede exact zona sa.",
+    "alleAnsehen": "Descoperă toate funcțiile în perioada de test",
+    "neu": {
+      "title": "myNextDays AI și avatar",
+      "text": "Avatar și comandă vocală, concierge AI pentru întrebările oaspeților și tarife care urmăresc sezonul și cererea."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property management",
+        "items": "Multicalendar central, plan de ocupare, rezervări, sarcini, date despre proprietate și dotări"
+      },
+      "channel": {
+        "title": "Channel manager",
+        "items": "56 de platforme de rezervări prin Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, sincronizare bidirecțională în timp real"
+      },
+      "direkt": {
+        "title": "Rezervare directă",
+        "items": "Portal de rezervări propriu, widget de rezervare, constructor de site-uri, domeniu propriu, 1 % în loc de 15–18 % comision OTA"
+      },
+      "preise": {
+        "title": "Tarife și venituri",
+        "items": "Prețuri dinamice cu min./max., rate plans pe proprietate, logică de sezon și ocupare, tarifele manuale au prioritate"
+      },
+      "gaeste": {
+        "title": "Experiența oaspetelui",
+        "items": "Ghid digital al oaspetelui, concierge AI, check-in online, mesaje automate, 24 de limbi"
+      },
+      "zahlungen": {
+        "title": "Plăți și facturare",
+        "items": "Plăți online, avansuri, garanții, facturare de bază, exporturi pregătite pentru contabilitate"
+      },
+      "team": {
+        "title": "Echipă și roluri",
+        "items": "Cont de proprietar cu plăți, cont de curățenie cu liste de verificare foto, sarcini, drepturi separate"
+      },
+      "app": {
+        "title": "Aplicație mobilă",
+        "items": "Aplicație nativă cu conturi separate pentru proprietari, oaspeți și curățenie, conduci activitatea din mers"
+      },
+      "auswertungen": {
+        "title": "Analize",
+        "items": "Grad de ocupare, venituri, ADR, rapoarte automate, comparație între canale, metacăutare în curând"
+      }
+    }
+  },
+  "ki": {
+    "eyebrow": "AI și voce",
+    "heading": "Platforma îți ia rutina de pe umeri.",
+    "sub": "Controlezi totul fără mâini, întrebările oaspeților primesc răspuns singure, tarifele se mișcă odată cu piața, fără să înveți niciun traseu de clicuri.",
+    "voice": {
+      "title": "Avatar / comandă vocală",
+      "text": "Controlează totul prin voce și lasă un avatar să răspundă: verifică ocuparea, gestionează rezervări și sarcini, schimbă tarife, în timp ce ești pe drum sau pregătești o proprietate."
+    },
+    "concierge": {
+      "title": "Un concierge AI pentru oaspeții tăi",
+      "text": "Ghidul digital al oaspetelui răspunde singur despre parola Wi-Fi, cutia de chei, gunoi și recomandările locale, în 24 de limbi, non-stop."
+    },
+    "preise": {
+      "title": "Tarife care gândesc odată cu tine",
+      "text": "Stabilește un preț de bază cu minim și maxim pe proprietate; prețurile pe noapte urmăresc sezonul, gradul de ocupare și cererea. Tarifele manuale au întotdeauna prioritate."
+    },
+    "cta": "Vezi funcțiile",
+    "blaseFrage": "Cum stă gradul de ocupare săptămâna viitoare?",
+    "blaseAntwort": "18 din 24 de nopți ocupate. Două goluri în weekend, scădem prețul?",
+    "eingabe": "Întreabă myNextDays …",
+    "baldBadge": "În curând"
+  },
+  "integrationen": {
+    "eyebrow": "Acoperire",
+    "heading": "56 de platforme de rezervări, o singură interfață.",
+    "p1": "Prin partenerul nostru de conectivitate Channex distribui disponibilitatea, tarifele și restricțiile către 56 de platforme de rezervări, printre care Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda și Tripadvisor. Sincronizare bidirecțională în timp real: o rezervare pe un portal blochează noaptea respectivă peste tot.",
+    "p2": "La asta se adaugă distribuția ta proprie: portalul de rezervări cu comision mic de pe myNextDays, un widget de rezervare pentru site-ul tău și canale regionale pe care le activezi individual. Fiecare canal se controlează separat: tu decizi unde este vizibilă o proprietate.",
+    "cta": "Conectează canale în perioada de test"
+  },
+  "testimonials": {
+    "eyebrow": "În spatele platformei",
+    "heading": "De ce am construit myNextDays.",
+    "gruenderin": {
+      "quote": "myNextDays s-a născut din propria noastră activitate de închiriere de la AirSmil: construim exact software-ul de care noi înșine am fi avut nevoie.",
+      "name": "Jeanine Ågaard",
+      "location": "Fondatoare myNextDays / AirSmil"
+    }
+  },
+  "stimmen": {
+    "eyebrow": "Voci din teren",
+    "heading": "Ce povestesc gazdele.",
+    "vorschauHinweis": "Previzualizare de layout cu texte de exemplu: aici vor apărea citate reale și aprobate.",
+    "zurueck": "Testimonialul anterior",
+    "vor": "Testimonialul următor",
+    "zeigeStimme": "Arată testimonialul {nummer}"
+  },
+  "stats": {
+    "eyebrow": "Cifre pe care le putem dovedi",
+    "heading": "Platforma de închiriere, construită de oameni care închiriază ei înșiși.",
+    "sub": "Lansare pe 1 septembrie 2026 în 27 de țări.",
+    "laender": {
+      "value": "27",
+      "label": "Țări",
+      "text": "Țări europene la lansare"
+    },
+    "sprachen": {
+      "value": "24",
+      "label": "Limbi",
+      "text": "Interfață și comunicare cu oaspeții"
+    },
+    "kanaele": {
+      "value": "56",
+      "label": "Platforme",
+      "text": "Platforme de rezervări prin Channex"
+    },
+    "hosting": {
+      "value": "100 %",
+      "label": "Găzduire în UE",
+      "text": "Construită în Danemarca, conformă cu GDPR"
+    },
+    "vermieter": {
+      "label": "Construită de proprietari",
+      "text": "Din activitatea reală de închiriere de la AirSmil"
+    }
+  },
+  "usecases": {
+    "eyebrow": "Pentru cine construim",
+    "heading": "Trei tipuri de activitate, o singură platformă.",
+    "sub": "O cazare de vacanță, o cameră de hotel sau un portofoliu întreg: aceeași interfață, compusă diferit pentru fiecare activitate.",
+    "ferienobjekt": {
+      "label": "Cazare de vacanță",
+      "title": "Case și apartamente de vacanță",
+      "text": "Una sau mai multe proprietăți pe care le închiriezi singur: fără recepție, dar cu predări de chei, curățenie și întrebări de la oaspeți.",
+      "punkte": {
+        "kanaele": "Portalurile și propriul site într-un singur calendar",
+        "kalender": "Planifică curățenia și predările pentru fiecare proprietate",
+        "gaeste": "Check-in online și ghid digital al oaspetelui în 24 de limbi"
+      }
+    },
+    "hotel": {
+      "label": "Hotel și pensiune",
+      "title": "Camere, nu containere",
+      "text": "Fiecare cameră este o unitate rezervabilă de sine stătătoare, cu tarifele ei: fără ocolul prin categorii de camere cu cantități.",
+      "punkte": {
+        "zimmer": "Disponibilitate la nivel de cameră pe toate portalurile",
+        "raten": "Rate plans pe cameră, derivate sau manuale",
+        "rezeption": "Vedere zilnică a sosirilor și plecărilor"
+      }
+    },
+    "agentur": {
+      "label": "Agenție și administrare",
+      "title": "Un portofoliu cu mai mulți proprietari",
+      "text": "Administrezi proprietăți ale altora: decontări separate, un cont pentru fiecare proprietar și cifre clare pentru fiecare proprietate.",
+      "punkte": {
+        "portfolio": "Toate proprietățile într-un singur plan de ocupare",
+        "eigentuemer": "Cont de proprietar cu ocupare și plăți",
+        "abrechnung": "Extrase și comisioane pentru fiecare proprietate"
+      }
+    }
+  },
+  "footer": {
+    "claim": "Platforma pentru proprietarii de cazări de vacanță: mai multe rezervări, mai puțin efort.",
+    "appLaden": "Descarcă aplicația",
+    "spalten": {
+      "produkt": "Produs",
+      "loesungen": "Soluții",
+      "ressourcen": "Resurse",
+      "unternehmen": "Companie"
+    },
+    "produkt": {
+      "pms": "Property management",
+      "channelManager": "Channel manager",
+      "direktbuchung": "Rezervare directă",
+      "zahlungen": "Plăți",
+      "mobileApp": "Aplicație mobilă"
+    },
+    "loesungen": {
+      "hotels": "Hoteluri",
+      "bnb": "B&B",
+      "gaestehaeuser": "Case de oaspeți",
+      "ferienwohnungen": "Apartamente de vacanță",
+      "campingplaetze": "Campinguri"
+    },
+    "ressourcen": {
+      "blog": "Blog",
+      "hilfeCenter": "Centru de ajutor",
+      "webinare": "Webinare",
+      "leitfaeden": "Ghiduri",
+      "api": "Documentație API"
+    },
+    "unternehmen": {
+      "ueberUns": "Despre noi",
+      "karriere": "Cariere",
+      "partner": "Parteneri",
+      "kontakt": "Contact",
+      "presse": "Presă"
+    },
+    "copyright": "© 2026 myNextDays. Toate drepturile rezervate.",
+    "agb": "Termeni și condiții",
+    "datenschutz": "Confidențialitate",
+    "impressum": "Informații legale",
+    "cookies": "Politica de cookie-uri",
+    "avv": "Prelucrarea datelor"
+  },
+  "abschluss": {
+    "heading": "Ești gata să îți conduci cazarea dintr-un singur loc?",
+    "sub": "Încearcă 30 de zile gratuit: fără perioadă minimă, fără taxă de instalare, anulezi oricând.",
+    "ctaPrimaer": "Încearcă 30 de zile gratuit",
+    "ctaSekundaer": "Vezi prețurile"
+  },
+  "chat": {
+    "titel": "Întrebări? Suntem aici.",
+    "untertitel": "De obicei răspundem în câteva ore.",
+    "name": "Nume",
+    "email": "E-mail",
+    "telefon": "Telefon (opțional)",
+    "nachricht": "Mesajul tău",
+    "absenden": "Trimite mesajul",
+    "sendet": "Se trimite …",
+    "platzhalter": "Scrie un mesaj …",
+    "senden": "Trimite",
+    "oeffnen": "Deschide chatul",
+    "schliessen": "Închide chatul",
+    "hinweis": "Folosim datele tale doar pentru a răspunde la această solicitare.",
+    "fehler": "Nu a funcționat. Te rugăm să încerci din nou mai târziu."
+  },
+  "einblicke": {
+    "eyebrow": "Inside the product",
+    "heading": "How myNextDays actually works",
+    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "hotel": {
+      "title": "Hotels and holiday rentals in one interface",
+      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+    },
+    "objekte": {
+      "title": "Visibility per channel, not one switch for everything",
+      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+    },
+    "kanaele": {
+      "title": "Connect portals and keep your own direct channel",
+      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+    }
+  }
+}

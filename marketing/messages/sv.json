@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "title": "myNextDays – Plattformen för uthyrare av semesterboenden",
+    "description": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe. Byggd i Danmark, driftad inom EU. Från 19,90 € per månad. Testa gratis i 30 dagar."
+  },
+  "nav": {
+    "funktionen": "Funktioner",
+    "preise": "Priser",
+    "kanaele": "Kanaler",
+    "kunden": "Kunder",
+    "ressourcen": "Resurser",
+    "sprache": "Språk",
+    "spracheWaehlen": "Välj språk",
+    "anmelden": "Logga in",
+    "kostenlosStarten": "Kom igång gratis",
+    "sprachModalTitel": "Språk och region",
+    "sprachModalHeading": "Välj ett språk",
+    "sprachModalHinweis": "Ditt val gäller den här webbplatsen och följer med till ditt konto.",
+    "schliessen": "Stäng",
+    "suche": "Sök efter ett språk",
+    "keinTreffer": "Inget språk hittades."
+  },
+  "hero": {
+    "trustNeu": "Nytt 2026",
+    "trustVermieter": "av uthyrare, för uthyrare",
+    "trustAirsmil": "powered by AirSmil",
+    "trustEu": "Driftad inom EU (GDPR)",
+    "headlinePre": "Fler",
+    "headlineHighlight": "bokningar",
+    "headlinePost": "mindre jobb.",
+    "subline": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe – byggd av uthyrare som känner vardagen.",
+    "ctaTrial": "Testa gratis i 30 dagar",
+    "ctaDemo": "Se demo",
+    "kanaeleLabel": "Kopplad till de stora bokningsplattformarna",
+    "eyebrow": "Plattformen för uthyrare av semesterboenden",
+    "kanaeleEyebrow": "Försäljningskanaler",
+    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+  },
+  "intro": {
+    "heading": "Välkommen till myNextDays.",
+    "p1": "Ett fullvärdigt property management system plus channel manager – för hotell, förmedlare och uthyrare av semesterboenden. Oberoende och schyst i stället för koncernkrångel och enterprise-priser.",
+    "p2": "Öka din beläggning, förenkla vardagen och skapa fantastiska gästupplevelser – utan komplexiteten och enterprise-priserna hos de stora systemen.",
+    "p3": "Allt på ett ställe, smart automatisering och koppling till alla viktiga kanaler – plus din egen bokningsportal med låg provision. Så växer din verksamhet med mer kontroll och mindre jobb.",
+    "cta": "Utforska funktionerna",
+    "reichweite": "Gjord för varje litet boende.",
+    "typen": {
+      "hotel": "Hotell",
+      "bnb": "B&B",
+      "gaestehaus": "Gästhus",
+      "motel": "Motell",
+      "lodge": "Lodge",
+      "ferienwohnung": "Semesterlägenhet",
+      "resort": "Resort",
+      "huette": "Stuga",
+      "pension": "Pensionat",
+      "campingplatz": "Camping"
+    },
+    "belegeHeading": "Det här kan du lita på",
+    "belege": {
+      "neu": "Nytt 2026 – utvecklat av aktiva uthyrare, powered by AirSmil",
+      "eu": "Byggd i Danmark, driftad inom EU och GDPR-anpassad",
+      "kanaele": "56 bokningsplattformar via vår connectivity-partner Channex",
+      "start": "Lansering den 1 september 2026 i 27 europeiska länder, 24 språk"
+    },
+    "eyebrow": "Plattformen",
+    "typenEyebrow": "Vem den är för"
+  },
+  "benefits": {
+    "eyebrow": "Därför myNextDays",
+    "sub": "Tre saker som verkligen betyder något i uthyrningsvardagen – det är det plattformen är byggd för.",
+    "heading": "Fler bokningar. Mindre jobb.",
+    "buchungen": {
+      "title": "Ta fler bokningar",
+      "text": "Syns på alla stora kanaler och på din egen webbplats. En central kalender håller allt synkroniserat – slut på dubbelbokningar."
+    },
+    "betrieb": {
+      "title": "Förenkla driften",
+      "text": "Sköt objekt, bokningar, städning och fakturering på ett ställe – vid skrivbordet eller på språng."
+    },
+    "fair": {
+      "title": "Schyst & europeisk",
+      "text": "Ett transparent pris utan enterprise-trösklar, byggd i Danmark, driftad inom EU enligt GDPR. Personlig support från teamet som själv använder programvaran."
+    },
+    "preisBanner": {
+      "eyebrow": "Pris",
+      "heading": "Allt för ditt boende på ett ställe",
+      "text": "30 dagar gratis. Ingen bindningstid. Säg upp när du vill (4 veckor till månadsskiftet).",
+      "preis": "19,90 €",
+      "proMonat": "per månad",
+      "tarif": "Ett pris för alla, inkl. 1 objekt",
+      "objekte": "Varje ytterligare objekt +6/5/4 € (fallande skala)",
+      "provision": "Externa kanaler 1 % · egen portal 8 %",
+      "cta": "Se priser"
+    }
+  },
+  "trial": {
+    "eyebrow": "Testa gratis",
+    "heading": "Testa myNextDays gratis i 30 dagar.",
+    "sub": "Ingen bindningstid. Säg upp när du vill. Fyll bara i det här korta formuläret:",
+    "seitenHeading": "Allt för ditt boende på ett ställe – mer kontroll, mindre jobb.",
+    "perks": {
+      "buchungen": {
+        "title": "Fler bokningar",
+        "text": "via alla stora kanaler och din egen portal, utan dubbelbokningar."
+      },
+      "kontrolle": {
+        "title": "Full kontroll",
+        "text": "över incheckningar, bokningar och fakturor på ett ställe."
+      },
+      "freiheit": {
+        "title": "Mer frihet",
+        "text": "sköt ditt boende från mobilen, var du än är."
+      }
+    },
+    "vorname": "Förnamn",
+    "nachname": "Efternamn",
+    "email": "E-post",
+    "emailPlatzhalter": "namn@exempel.se",
+    "einwilligung": "Ja, jag vill då och då få nyheter, webbinarieinbjudningar och erbjudanden från myNextDays. Du kan när som helst återkalla ditt samtycke.",
+    "absenden": "Kom igång",
+    "dankeTitel": "Tack så mycket!",
+    "dankeText": "Vi hör av oss inom kort."
+  },
+  "features": {
+    "heading": "Ett system. En inloggning.",
+    "baldBadge": "Kommer snart",
+    "hinweis": "Grundläggande fakturering ingår från lanseringen. Utökad bokföring (DATEV-export), personalhantering, marknadsplatsen för tjänsteleverantörer och hotellfunktioner är tilläggsmoduler.",
+    "eyebrow": "Funktioner",
+    "sub": "En inloggning för verksamheten, ägarna, gästerna och städningen – varje roll ser exakt sitt eget område.",
+    "alleAnsehen": "Upptäck alla funktioner i den kostnadsfria testperioden",
+    "neu": {
+      "title": "myNextDays AI & avatar",
+      "text": "Avatar och röststyrning, en AI-concierge för gästernas frågor och priser som följer säsong och efterfrågan."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property management",
+        "items": "Central multikalender, beläggningsöversikt, bokningar, uppgifter, objekt- och utrustningsdata"
+      },
+      "channel": {
+        "title": "Channel manager",
+        "items": "56 bokningsplattformar via Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, tvåvägssynk i realtid"
+      },
+      "direkt": {
+        "title": "Direktbokning",
+        "items": "Egen bokningsportal, bokningswidget, webbplatsbyggare, egen domän, 1 % i stället för 15–18 % OTA-provision"
+      },
+      "preise": {
+        "title": "Priser & intäkter",
+        "items": "Dynamiska priser med min/max, rate plans per objekt, säsongs- och beläggningslogik, manuella priser går före"
+      },
+      "gaeste": {
+        "title": "Gästupplevelse",
+        "items": "Digital gästpärm, AI-concierge, incheckning online, automatiska meddelanden, 24 språk"
+      },
+      "zahlungen": {
+        "title": "Betalningar & fakturering",
+        "items": "Onlinebetalningar, handpenning, deposition, grundfakturor, bokföringsklara exporter"
+      },
+      "team": {
+        "title": "Team & roller",
+        "items": "Ägarinloggning med utbetalningar, städinloggning med fotochecklistor, uppgifter, separerade rättigheter"
+      },
+      "app": {
+        "title": "Mobilapp",
+        "items": "Nativ app med egna inloggningar för ägare, gäster och städning – sköt driften på språng"
+      },
+      "auswertungen": {
+        "title": "Analyser",
+        "items": "Beläggning, intäkter, ADR, automatiska rapporter, kanaljämförelse, metasök kommer snart"
+      }
+    }
+  },
+  "ki": {
+    "eyebrow": "AI & röst",
+    "heading": "Plattformen tar rutinen ifrån dig.",
+    "sub": "Styr handsfree, låt gästernas frågor besvara sig själva, låt priserna följa med – utan att du behöver lära dig en enda klickväg.",
+    "voice": {
+      "title": "Avatar / röststyrning",
+      "text": "Styr handsfree med rösten och låt en avatar svara: kolla beläggningen, hantera bokningar och uppgifter, ändra priser – medan du är på väg eller gör i ordning ett objekt."
+    },
+    "concierge": {
+      "title": "En AI-concierge för dina gäster",
+      "text": "Den digitala gästpärmen svarar själv på wifi-lösenord, nyckelskåp, sophantering och lokala tips – på 24 språk, dygnet runt."
+    },
+    "preise": {
+      "title": "Priser som tänker med",
+      "text": "Sätt ett grundpris med minimum och maximum per objekt; dygnspriserna följer säsong, beläggning och efterfrågan. Manuella priser går alltid före."
+    },
+    "cta": "Se funktionerna",
+    "blaseFrage": "Hur ser beläggningen ut nästa vecka?",
+    "blaseAntwort": "18 av 24 nätter bokade. Två luckor i helgen – sänka priset?",
+    "eingabe": "Fråga myNextDays …",
+    "baldBadge": "Kommer snart"
+  },
+  "integrationen": {
+    "eyebrow": "Räckvidd",
+    "heading": "56 bokningsplattformar – ett gränssnitt.",
+    "p1": "Via vår connectivity-partner Channex distribuerar du tillgänglighet, priser och restriktioner till 56 bokningsplattformar – bland andra Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda och Tripadvisor. Tvåvägssynk i realtid: en bokning på en portal spärrar natten överallt annars.",
+    "p2": "Till det kommer din egen försäljning: bokningsportalen med låg provision på myNextDays, en bokningswidget för din webbplats och regionala kanaler som du kan slå på var för sig. Varje kanal styrs separat – du bestämmer var ett objekt syns.",
+    "cta": "Koppla kanaler i testperioden"
+  },
+  "testimonials": {
+    "eyebrow": "Bakom plattformen",
+    "heading": "Därför byggde vi myNextDays.",
+    "gruenderin": {
+      "quote": "myNextDays växte fram ur vår egen uthyrningsvardag på AirSmil – vi bygger precis den programvara vi själva hade behövt.",
+      "name": "Jeanine Ågaard",
+      "location": "Grundare, myNextDays / AirSmil"
+    }
+  },
+  "stimmen": {
+    "eyebrow": "Röster från verkligheten",
+    "heading": "Vad värdarna berättar.",
+    "vorschauHinweis": "Layoutförhandsvisning med exempeltext – här kommer senare riktiga, godkända citat.",
+    "zurueck": "Föregående omdöme",
+    "vor": "Nästa omdöme",
+    "zeigeStimme": "Visa omdöme {nummer}"
+  },
+  "stats": {
+    "eyebrow": "Siffror vi kan belägga",
+    "heading": "Uthyrningsplattformen, byggd av människor som hyr ut själva.",
+    "sub": "Lansering den 1 september 2026 i 27 länder.",
+    "laender": {
+      "value": "27",
+      "label": "Länder",
+      "text": "Europeiska länder vid lanseringen"
+    },
+    "sprachen": {
+      "value": "24",
+      "label": "Språk",
+      "text": "Gränssnitt och gästkommunikation"
+    },
+    "kanaele": {
+      "value": "56",
+      "label": "Plattformar",
+      "text": "Bokningsplattformar via Channex"
+    },
+    "hosting": {
+      "value": "100 %",
+      "label": "EU-drift",
+      "text": "Byggd i Danmark, GDPR-anpassad"
+    },
+    "vermieter": {
+      "label": "Utvecklad av uthyrare",
+      "text": "Ur den verkliga uthyrningsvardagen på AirSmil"
+    }
+  },
+  "usecases": {
+    "eyebrow": "Dem vi bygger för",
+    "heading": "Tre sorters verksamheter, en plattform.",
+    "sub": "Ett semesterboende, ett hotellrum eller en hel portfölj – samma gränssnitt, olika hopsatt beroende på verksamhet.",
+    "ferienobjekt": {
+      "label": "Semesterboende",
+      "title": "Semesterhus & semesterlägenhet",
+      "text": "Ett eller flera objekt som du hyr ut själv – utan reception, men med nyckelöverlämning, städning och gästfrågor.",
+      "punkte": {
+        "kanaele": "Portaler och din egen webbplats i en kalender",
+        "kalender": "Planera städning och överlämningar per objekt",
+        "gaeste": "Incheckning online och digital gästpärm på 24 språk"
+      }
+    },
+    "hotel": {
+      "label": "Hotell & pensionat",
+      "title": "Rum, inte behållare",
+      "text": "Varje rum är en egen bokningsbar enhet med egna priser – ingen omväg via rumskategorier med antal.",
+      "punkte": {
+        "zimmer": "Tillgänglighet per rum ut till alla portaler",
+        "raten": "Rate plans per rum, härledda eller manuella",
+        "rezeption": "Dagsöversikt över ankomster och avresor"
+      }
+    },
+    "agentur": {
+      "label": "Förmedling & förvaltning",
+      "title": "Portfölj med flera ägare",
+      "text": "Du förvaltar andras objekt: separat avräkning, egen inloggning per ägare, tydliga siffror per objekt.",
+      "punkte": {
+        "portfolio": "Alla objekt i en beläggningsöversikt",
+        "eigentuemer": "Ägarinloggning med beläggning och utbetalningar",
+        "abrechnung": "Avräkningar och provisioner per objekt"
+      }
+    }
+  },
+  "footer": {
+    "claim": "Plattformen för uthyrare av semesterboenden – fler bokningar, mindre jobb.",
+    "appLaden": "Ladda ner appen",
+    "spalten": {
+      "produkt": "Produkt",
+      "loesungen": "Lösningar",
+      "ressourcen": "Resurser",
+      "unternehmen": "Företag"
+    },
+    "produkt": {
+      "pms": "Property management",
+      "channelManager": "Channel manager",
+      "direktbuchung": "Direktbokning",
+      "zahlungen": "Betalningar",
+      "mobileApp": "Mobilapp"
+    },
+    "loesungen": {
+      "hotels": "Hotell",
+      "bnb": "B&B",
+      "gaestehaeuser": "Gästhus",
+      "ferienwohnungen": "Semesterboenden",
+      "campingplaetze": "Campingplatser"
+    },
+    "ressourcen": {
+      "blog": "Blogg",
+      "hilfeCenter": "Hjälpcenter",
+      "webinare": "Webbinarier",
+      "leitfaeden": "Guider",
+      "api": "API-dokumentation"
+    },
+    "unternehmen": {
+      "ueberUns": "Om oss",
+      "karriere": "Karriär",
+      "partner": "Partner",
+      "kontakt": "Kontakt",
+      "presse": "Press"
+    },
+    "copyright": "© 2026 myNextDays. Med ensamrätt.",
+    "agb": "Villkor",
+    "datenschutz": "Integritet",
+    "impressum": "Juridisk information",
+    "cookies": "Cookiepolicy",
+    "avv": "Personuppgiftsbiträde"
+  },
+  "abschluss": {
+    "heading": "Redo att sköta ditt boende från ett ställe?",
+    "sub": "Testa gratis i 30 dagar – ingen bindningstid, ingen startavgift, säg upp när du vill.",
+    "ctaPrimaer": "Testa gratis i 30 dagar",
+    "ctaSekundaer": "Se priser"
+  },
+  "chat": {
+    "titel": "Frågor? Vi finns här.",
+    "untertitel": "Svar oftast inom några timmar.",
+    "name": "Namn",
+    "email": "E-post",
+    "telefon": "Telefon (valfritt)",
+    "nachricht": "Ditt meddelande",
+    "absenden": "Skicka meddelande",
+    "sendet": "Skickar …",
+    "platzhalter": "Skriv ett meddelande …",
+    "senden": "Skicka",
+    "oeffnen": "Öppna chatten",
+    "schliessen": "Stäng chatten",
+    "hinweis": "Vi använder dina uppgifter enbart för att svara på den här förfrågan.",
+    "fehler": "Det gick inte. Försök igen senare."
+  },
+  "einblicke": {
+    "eyebrow": "Inside the product",
+    "heading": "How myNextDays actually works",
+    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "hotel": {
+      "title": "Hotels and holiday rentals in one interface",
+      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+    },
+    "objekte": {
+      "title": "Visibility per channel, not one switch for everything",
+      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+    },
+    "kanaele": {
+      "title": "Connect portals and keep your own direct channel",
+      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+    }
+  }
+}

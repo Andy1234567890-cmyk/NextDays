@@ -12,7 +12,8 @@ import { Icon } from "@/components/ui/icon";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
-import { ProductMockup } from "@/components/marketing/product-mockup";
+import { AppAufnahme } from "@/components/marketing/app-aufnahme";
+import { MarketingChannels } from "@/components/marketing/marketing-channels";
 import { Button } from "@/components/ui/button";
 import { SIGNUP_URL } from "@/lib/app-url";
 
@@ -23,13 +24,17 @@ export function MarketingHero() {
   const t = useTranslations("hero");
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-surface-warm to-background">
-      <div className="mx-auto grid max-w-7xl items-center gap-16 px-6 py-20 lg:grid-cols-[1fr_1.1fr] lg:gap-12 lg:py-28">
+    // 100svh minus Nav (h-18 = 4.5rem): Botschaft, CTAs UND die Kanal-Reihe
+    // sollen ohne Scrollen sichtbar sein. Deshalb ist die Kanal-Sektion hier
+    // eingehängt (nicht als eigene Sektion darunter) und die Abstände sind
+    // enger als in den übrigen Sektionen.
+    <section className="relative flex min-h-[calc(100svh-4.5rem)] flex-col overflow-hidden bg-gradient-to-b from-surface-warm to-background">
+      <div className="mx-auto grid w-full max-w-7xl flex-1 items-center gap-10 px-6 py-10 lg:grid-cols-[1fr_1.1fr] lg:gap-12 lg:py-14">
         {/* Links: Botschaft */}
         <div>
           <p className="eyebrow">{t("eyebrow")}</p>
 
-          <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">
             {t("headlinePre")}{" "}
             <span className="relative text-accent">
               {t("headlineHighlight")}
@@ -52,25 +57,28 @@ export function MarketingHero() {
             {t("headlinePost")}
           </h1>
 
-          <p className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground">
+          <p className="mt-6 max-w-xl leading-relaxed text-muted-foreground">
             {t("subline")}
           </p>
 
           {/* Trust-Streifen — belegbare Aussagen statt Bewertungssterne: das
               Produkt startet erst am 01.09.2026, es gibt noch keine Reviews. */}
-          <ul className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2">
+          {/* Eine Zeile ab lg: die vier Belege gehören zusammengelesen. Dafür
+              kleinere Schrift, engere Abstände und kein Umbruch INNERHALB eines
+              Eintrags; auf schmalen Schirmen darf die Liste weiter umbrechen. */}
+          <ul className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 lg:flex-nowrap">
             {TRUST.map((key) => (
               <li
                 key={key}
-                className="flex items-center gap-2 text-sm font-medium text-foreground"
+                className="flex items-center gap-1.5 whitespace-nowrap text-xs font-medium tracking-tight text-foreground"
               >
-                <Icon icon="ph:check-circle-fill" className="size-4 text-accent" />
+                <Icon icon="ph:check-circle-fill" className="size-3.5 shrink-0 text-accent" />
                 {t(key)}
               </li>
             ))}
           </ul>
 
-          <div className="mt-10 flex flex-wrap items-center gap-4">
+          <div className="mt-7 flex flex-wrap items-center gap-4">
             <Button asChild size="lg" variant="accent" className="min-w-48 text-base">
               <Link href={SIGNUP_URL}>{t("ctaTrial")}</Link>
             </Button>
@@ -83,11 +91,16 @@ export function MarketingHero() {
           </div>
         </div>
 
-        {/* Rechts: Produkt */}
+        {/* Rechts: Produkt — echter Belegungsplan aus dem Demo-Betrieb.
+            Der frühere DOM-Nachbau (ProductMockup) zeigte nur farbige Balken;
+            hier sehen Interessenten die Software, die sie kaufen sollen. */}
         <div className="pb-12 lg:pb-0">
-          <ProductMockup />
+          <AppAufnahme name="belegungsplan" alt={t("aufnahmeBelegungsplan")} priority />
         </div>
       </div>
+
+      {/* Kanal-Reihe schließt den ersten Bildschirm ab. */}
+      <MarketingChannels />
     </section>
   );
 }

@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "title": "myNextDays – Het platform voor verhuurders van vakantieaccommodaties",
+    "description": "Het platform voor hotels, agentschappen en verhuurders van vakantieaccommodaties: channel manager, kalender, directe boekingen, gastcommunicatie en facturatie op één plek. Gebouwd in Denemarken, gehost in de EU. Vanaf € 19,90 per maand. 30 dagen gratis proberen."
+  },
+  "nav": {
+    "funktionen": "Functies",
+    "preise": "Prijzen",
+    "kanaele": "Kanalen",
+    "kunden": "Klanten",
+    "ressourcen": "Bronnen",
+    "sprache": "Taal",
+    "spracheWaehlen": "Taal kiezen",
+    "anmelden": "Inloggen",
+    "kostenlosStarten": "Gratis starten",
+    "sprachModalTitel": "Taal en regio",
+    "sprachModalHeading": "Kies een taal",
+    "sprachModalHinweis": "Je keuze geldt voor deze website en wordt overgenomen in je account.",
+    "schliessen": "Sluiten",
+    "suche": "Zoek een taal",
+    "keinTreffer": "Geen taal gevonden."
+  },
+  "hero": {
+    "trustNeu": "Nieuw in 2026",
+    "trustVermieter": "door verhuurders, voor verhuurders",
+    "trustAirsmil": "powered by AirSmil",
+    "trustEu": "Gehost in de EU (AVG)",
+    "headlinePre": "Meer",
+    "headlineHighlight": "boekingen",
+    "headlinePost": "minder werk.",
+    "subline": "Het platform voor hotels, agentschappen en verhuurders van vakantieaccommodaties: channel manager, kalender, directe boekingen, gastcommunicatie en facturatie op één plek – gebouwd door verhuurders die de dagelijkse praktijk kennen.",
+    "ctaTrial": "30 dagen gratis proberen",
+    "ctaDemo": "Demo bekijken",
+    "kanaeleLabel": "Verbonden met de grote boekingsplatforms",
+    "eyebrow": "Het platform voor verhuurders van vakantieaccommodaties",
+    "kanaeleEyebrow": "Verkoopkanalen",
+    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+  },
+  "intro": {
+    "heading": "Welkom bij myNextDays.",
+    "p1": "Een volwaardig property-management-systeem plus channel manager – voor hotels, agentschappen en verhuurders van vakantieaccommodaties. Onafhankelijk en eerlijk, in plaats van complexiteit en enterprise-prijzen van grote concerns.",
+    "p2": "Verhoog je bezetting, vereenvoudig je werkdag en zorg voor geweldige gastervaringen – zonder de complexiteit en de enterprise-prijzen van de grote systemen.",
+    "p3": "Alles op één plek, slimme automatisering en koppelingen met alle belangrijke kanalen – plus je eigen boekingsportaal met lage commissie. Zo groeit je bedrijf met meer controle en minder werk.",
+    "cta": "Functies ontdekken",
+    "reichweite": "Gemaakt voor elke kleine accommodatie.",
+    "typen": {
+      "hotel": "Hotel",
+      "bnb": "B&B",
+      "gaestehaus": "Pension",
+      "motel": "Motel",
+      "lodge": "Lodge",
+      "ferienwohnung": "Vakantiewoning",
+      "resort": "Resort",
+      "huette": "Chalet",
+      "pension": "Herberg",
+      "campingplatz": "Camping"
+    },
+    "belegeHeading": "Waar je op kunt rekenen",
+    "belege": {
+      "neu": "Nieuw in 2026 – ontwikkeld door actieve verhuurders, powered by AirSmil",
+      "eu": "Gebouwd in Denemarken, gehost in de EU en AVG-conform",
+      "kanaele": "56 boekingsplatforms via onze connectiviteitspartner Channex",
+      "start": "Start op 1 september 2026 in 27 Europese landen, 24 talen"
+    },
+    "eyebrow": "Het platform",
+    "typenEyebrow": "Voor wie het is"
+  },
+  "benefits": {
+    "eyebrow": "Waarom myNextDays",
+    "sub": "Drie dingen die er in de dagelijkse verhuurpraktijk echt toe doen – daarvoor is dit platform gebouwd.",
+    "heading": "Meer boekingen. Minder werk.",
+    "buchungen": {
+      "title": "Meer boekingen binnenhalen",
+      "text": "Wees zichtbaar op alle grote kanalen én op je eigen website. Eén centrale kalender houdt alles synchroon – geen dubbele boekingen meer."
+    },
+    "betrieb": {
+      "title": "Je bedrijf vereenvoudigen",
+      "text": "Beheer accommodaties, boekingen, schoonmaak en facturatie op één plek – achter je bureau of onderweg."
+    },
+    "fair": {
+      "title": "Eerlijk & Europees",
+      "text": "Een transparante prijs zonder enterprise-drempels, gebouwd in Denemarken, gehost in de EU volgens de AVG. Persoonlijke ondersteuning van het team dat de software zelf gebruikt."
+    },
+    "preisBanner": {
+      "eyebrow": "Prijs",
+      "heading": "Alles voor je accommodatie op één plek",
+      "text": "30 dagen gratis. Geen minimale looptijd. Altijd opzegbaar (4 weken tegen het einde van de maand).",
+      "preis": "€ 19,90",
+      "proMonat": "per maand",
+      "tarif": "Eén tarief voor iedereen, incl. 1 accommodatie",
+      "objekte": "Elke extra accommodatie +€ 6/5/4 (aflopend)",
+      "provision": "Externe kanalen 1 % · eigen portaal 8 %",
+      "cta": "Prijzen bekijken"
+    }
+  },
+  "trial": {
+    "eyebrow": "Gratis proberen",
+    "heading": "Probeer myNextDays 30 dagen gratis.",
+    "sub": "Geen minimale looptijd. Altijd opzegbaar. Vul gewoon dit korte formulier in:",
+    "seitenHeading": "Alles voor je accommodatie op één plek – meer controle, minder werk.",
+    "perks": {
+      "buchungen": {
+        "title": "Meer boekingen",
+        "text": "via alle grote kanalen en je eigen portaal, zonder dubbele boekingen."
+      },
+      "kontrolle": {
+        "title": "Volledige controle",
+        "text": "over check-ins, boekingen en facturen op één plek."
+      },
+      "freiheit": {
+        "title": "Meer vrijheid",
+        "text": "beheer je accommodatie mobiel, waar je ook bent."
+      }
+    },
+    "vorname": "Voornaam",
+    "nachname": "Achternaam",
+    "email": "E-mail",
+    "emailPlatzhalter": "naam@voorbeeld.nl",
+    "einwilligung": "Ja, ik ontvang graag af en toe nieuws, webinaruitnodigingen en aanbiedingen van myNextDays. Je kunt je toestemming op elk moment intrekken.",
+    "absenden": "Aan de slag",
+    "dankeTitel": "Hartelijk dank!",
+    "dankeText": "We nemen binnenkort contact met je op."
+  },
+  "features": {
+    "heading": "Eén systeem. Eén login.",
+    "baldBadge": "Binnenkort",
+    "hinweis": "Basisfacturatie zit er vanaf de lancering in. Uitgebreide boekhouding (DATEV-export), personeelsbeheer, de marktplaats voor dienstverleners en hotelfuncties zijn aanvullende modules.",
+    "eyebrow": "Functies",
+    "sub": "Eén toegang voor het bedrijf, eigenaren, gasten en schoonmaak – elke rol ziet precies het eigen gedeelte.",
+    "alleAnsehen": "Ontdek alle functies in de gratis proefperiode",
+    "neu": {
+      "title": "myNextDays AI & avatar",
+      "text": "Avatar en spraakbesturing, een AI-conciërge voor gastvragen en prijzen die meebewegen met seizoen en vraag."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property management",
+        "items": "Centrale multikalender, bezettingsoverzicht, reserveringen, taken, accommodatie- en voorzieningengegevens"
+      },
+      "channel": {
+        "title": "Channel manager",
+        "items": "56 boekingsplatforms via Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, tweerichtingssynchronisatie in realtime"
+      },
+      "direkt": {
+        "title": "Directe boekingen",
+        "items": "Eigen boekingsportaal, boekingswidget, websitebouwer, eigen domein, 1 % in plaats van 15–18 % OTA-commissie"
+      },
+      "preise": {
+        "title": "Prijzen & omzet",
+        "items": "Dynamische prijzen met min./max., rate plans per accommodatie, seizoens- en bezettingslogica, handmatige prijzen gaan voor"
+      },
+      "gaeste": {
+        "title": "Gastbeleving",
+        "items": "Digitale gastenmap, AI-conciërge, online check-in, automatische berichten, 24 talen"
+      },
+      "zahlungen": {
+        "title": "Betalingen & facturatie",
+        "items": "Online betalingen, aanbetalingen, borgsommen, basisfacturen, boekhoudklare exports"
+      },
+      "team": {
+        "title": "Team & rollen",
+        "items": "Eigenarenlogin met uitbetalingen, schoonmaaklogin met fotochecklists, taken, gescheiden rechten"
+      },
+      "app": {
+        "title": "Mobiele app",
+        "items": "Native app met aparte logins voor eigenaren, gasten en schoonmaak, je bedrijf onderweg aansturen"
+      },
+      "auswertungen": {
+        "title": "Analyses",
+        "items": "Bezetting, omzet, ADR, automatische rapporten, kanaalvergelijking, metasearch binnenkort"
+      }
+    }
+  },
+  "ki": {
+    "eyebrow": "AI & spraak",
+    "heading": "Het platform neemt je de routine uit handen.",
+    "sub": "Handsfree bedienen, gastvragen automatisch laten beantwoorden, prijzen laten meelopen – zonder dat je klikpaden hoeft te leren.",
+    "voice": {
+      "title": "Avatar / spraakbesturing",
+      "text": "Bedien alles handsfree met je stem en laat een avatar antwoorden: bezetting opvragen, boekingen en taken beheren, prijzen aanpassen – terwijl je onderweg bent of een accommodatie klaarmaakt."
+    },
+    "concierge": {
+      "title": "Een AI-conciërge voor je gasten",
+      "text": "De digitale gastenmap beantwoordt zelf vragen over het wifiwachtwoord, de sleutelkluis, de vuilnisbakken en lokale tips – in 24 talen, dag en nacht."
+    },
+    "preise": {
+      "title": "Prijzen die meedenken",
+      "text": "Stel een basisprijs met minimum en maximum per accommodatie in; de nachtprijzen passen zich aan seizoen, bezetting en vraag aan. Handmatige prijzen gaan altijd voor."
+    },
+    "cta": "Functies bekijken",
+    "blaseFrage": "Hoe is de bezetting volgende week?",
+    "blaseAntwort": "18 van de 24 nachten bezet. Twee gaten in het weekend – prijs verlagen?",
+    "eingabe": "Vraag het myNextDays …",
+    "baldBadge": "Binnenkort"
+  },
+  "integrationen": {
+    "eyebrow": "Bereik",
+    "heading": "56 boekingsplatforms – één interface.",
+    "p1": "Via onze connectiviteitspartner Channex verdeel je beschikbaarheid, prijzen en restricties over 56 boekingsplatforms – waaronder Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda en Tripadvisor. Tweerichtingssynchronisatie in realtime: een boeking op één portaal blokkeert die nacht overal elders.",
+    "p2": "Daar komt je eigen verkoop bij: het boekingsportaal met lage commissie op myNextDays, een boekingswidget voor je website en regionale kanalen die je afzonderlijk kunt inschakelen. Elk kanaal is apart te sturen – jij bepaalt waar een accommodatie zichtbaar is.",
+    "cta": "Kanalen koppelen in de proefperiode"
+  },
+  "testimonials": {
+    "eyebrow": "Achter het platform",
+    "heading": "Waarom we myNextDays hebben gebouwd.",
+    "gruenderin": {
+      "quote": "myNextDays is ontstaan uit onze eigen verhuurpraktijk bij AirSmil – we bouwen precies de software die we zelf hadden willen hebben.",
+      "name": "Jeanine Ågaard",
+      "location": "Oprichter myNextDays / AirSmil"
+    }
+  },
+  "stimmen": {
+    "eyebrow": "Stemmen uit de praktijk",
+    "heading": "Wat gastheren en gastvrouwen vertellen.",
+    "vorschauHinweis": "Lay-outvoorbeeld met voorbeeldteksten – hier komen later echte, goedgekeurde citaten.",
+    "zurueck": "Vorige ervaring",
+    "vor": "Volgende ervaring",
+    "zeigeStimme": "Ervaring {nummer} tonen"
+  },
+  "stats": {
+    "eyebrow": "Cijfers die we kunnen onderbouwen",
+    "heading": "Het verhuurplatform, gebouwd door mensen die zelf verhuren.",
+    "sub": "Start op 1 september 2026 in 27 landen.",
+    "laender": {
+      "value": "27",
+      "label": "Landen",
+      "text": "Europese landen bij de start"
+    },
+    "sprachen": {
+      "value": "24",
+      "label": "Talen",
+      "text": "Interface en gastcommunicatie"
+    },
+    "kanaele": {
+      "value": "56",
+      "label": "Platforms",
+      "text": "Boekingsplatforms via Channex"
+    },
+    "hosting": {
+      "value": "100 %",
+      "label": "EU-hosting",
+      "text": "Gebouwd in Denemarken, AVG-conform"
+    },
+    "vermieter": {
+      "label": "Door verhuurders ontwikkeld",
+      "text": "Uit de echte verhuurpraktijk bij AirSmil"
+    }
+  },
+  "usecases": {
+    "eyebrow": "Voor wie we bouwen",
+    "heading": "Drie soorten bedrijven, één platform.",
+    "sub": "Een vakantiewoning, een hotelkamer of een hele portefeuille – dezelfde interface, per bedrijf anders samengesteld.",
+    "ferienobjekt": {
+      "label": "Vakantieaccommodatie",
+      "title": "Vakantiehuis & vakantiewoning",
+      "text": "Eén of meerdere accommodaties die je zelf verhuurt – zonder receptie, maar met sleuteloverdrachten, schoonmaak en gastvragen.",
+      "punkte": {
+        "kanaele": "Portalen en je eigen website in één kalender",
+        "kalender": "Schoonmaak en overdrachten per accommodatie plannen",
+        "gaeste": "Online check-in en digitale gastenmap in 24 talen"
+      }
+    },
+    "hotel": {
+      "label": "Hotel & pension",
+      "title": "Kamers, geen containers",
+      "text": "Elke kamer is een eigen boekbare eenheid met eigen tarieven – geen omweg via kamercategorieën met aantallen.",
+      "punkte": {
+        "zimmer": "Beschikbaarheid per kamer naar alle portalen",
+        "raten": "Rate plans per kamer, afgeleid of handmatig",
+        "rezeption": "Dagoverzicht van aankomsten en vertrekken"
+      }
+    },
+    "agentur": {
+      "label": "Agentschap & beheer",
+      "title": "Portefeuille van meerdere eigenaren",
+      "text": "Je beheert accommodaties van anderen: gescheiden afrekeningen, een eigen login per eigenaar, heldere cijfers per accommodatie.",
+      "punkte": {
+        "portfolio": "Alle accommodaties in één bezettingsoverzicht",
+        "eigentuemer": "Eigenarenlogin met bezetting en uitbetalingen",
+        "abrechnung": "Afrekeningen en commissies per accommodatie"
+      }
+    }
+  },
+  "footer": {
+    "claim": "Het platform voor verhuurders van vakantieaccommodaties – meer boekingen, minder werk.",
+    "appLaden": "App downloaden",
+    "spalten": {
+      "produkt": "Product",
+      "loesungen": "Oplossingen",
+      "ressourcen": "Bronnen",
+      "unternehmen": "Bedrijf"
+    },
+    "produkt": {
+      "pms": "Property management",
+      "channelManager": "Channel manager",
+      "direktbuchung": "Directe boekingen",
+      "zahlungen": "Betalingen",
+      "mobileApp": "Mobiele app"
+    },
+    "loesungen": {
+      "hotels": "Hotels",
+      "bnb": "B&B's",
+      "gaestehaeuser": "Pensions",
+      "ferienwohnungen": "Vakantiewoningen",
+      "campingplaetze": "Campings"
+    },
+    "ressourcen": {
+      "blog": "Blog",
+      "hilfeCenter": "Helpcentrum",
+      "webinare": "Webinars",
+      "leitfaeden": "Handleidingen",
+      "api": "API-documentatie"
+    },
+    "unternehmen": {
+      "ueberUns": "Over ons",
+      "karriere": "Werken bij",
+      "partner": "Partners",
+      "kontakt": "Contact",
+      "presse": "Pers"
+    },
+    "copyright": "© 2026 myNextDays. Alle rechten voorbehouden.",
+    "agb": "Voorwaarden",
+    "datenschutz": "Privacy",
+    "impressum": "Colofon",
+    "cookies": "Cookiebeleid",
+    "avv": "Verwerkersovereenkomst"
+  },
+  "abschluss": {
+    "heading": "Klaar om je accommodatie vanaf één plek te sturen?",
+    "sub": "30 dagen gratis proberen – geen minimale looptijd, geen instelkosten, altijd opzegbaar.",
+    "ctaPrimaer": "30 dagen gratis proberen",
+    "ctaSekundaer": "Prijzen bekijken"
+  },
+  "chat": {
+    "titel": "Vragen? We zijn er voor je.",
+    "untertitel": "Meestal binnen enkele uren antwoord.",
+    "name": "Naam",
+    "email": "E-mail",
+    "telefon": "Telefoon (optioneel)",
+    "nachricht": "Je bericht",
+    "absenden": "Bericht versturen",
+    "sendet": "Wordt verstuurd …",
+    "platzhalter": "Schrijf een bericht …",
+    "senden": "Versturen",
+    "oeffnen": "Chat openen",
+    "schliessen": "Chat sluiten",
+    "hinweis": "We gebruiken je gegevens alleen om op deze vraag te antwoorden.",
+    "fehler": "Dat is niet gelukt. Probeer het later opnieuw."
+  },
+  "einblicke": {
+    "eyebrow": "Inside the product",
+    "heading": "How myNextDays actually works",
+    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "hotel": {
+      "title": "Hotels and holiday rentals in one interface",
+      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+    },
+    "objekte": {
+      "title": "Visibility per channel, not one switch for everything",
+      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+    },
+    "kanaele": {
+      "title": "Connect portals and keep your own direct channel",
+      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+    }
+  }
+}

@@ -6,8 +6,9 @@
 // hell/warm trennt die Abschnitte, flache Wellen lösen die harten Kanten auf.
 // Umgesetzt im NextDays-Design-System (Schwarz/Rot, Fraunces/Inter, Pill-Buttons).
 import { MarketingBenefits } from "@/components/marketing/marketing-benefits";
-import { MarketingChannels } from "@/components/marketing/marketing-channels";
+
 import { MarketingCta } from "@/components/marketing/marketing-cta";
+import { MarketingEinblicke } from "@/components/marketing/marketing-einblicke";
 import { MarketingFeatures } from "@/components/marketing/marketing-features";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingHero } from "@/components/marketing/marketing-hero";
@@ -29,18 +30,25 @@ export default function MarketingPage() {
       <MarketingNav />
       <main className="flex-1">
         <MarketingHero />
-        <MarketingChannels />
         {/* Welle: löst die Kante zur warmen Nutzen-/Preis-Fläche auf. */}
         <SectionWave from="text-background" to="bg-surface-warm" />
         <MarketingBenefits />
         <MarketingIntro />
         <MarketingFeatures />
+        {/* Beweis nach der Funktionsliste: echte Aufnahmen aus der Software. */}
+        <MarketingEinblicke />
         <MarketingKi />
         <MarketingIntegrations />
         <MarketingStats />
         <SectionWave from="text-background" to="bg-surface-warm" />
         <MarketingUsecases />
         <MarketingTestimonials />
+        {/* Kundenstimmen-Sektion ist GEBAUT, aber bewusst NICHT eingebunden:
+            zum Marketing-Start gibt es noch keine Kunden, deren Zitate man
+            zeigen könnte. Sobald echte, freigegebene Stimmen vorliegen, in
+            content/stimmen.ts eintragen und <MarketingStimmen /> hier
+            aktivieren (Komponente: components/marketing/marketing-stimmen.tsx,
+            braucht eine Suspense-Grenze wegen useSearchParams). */}
         <MarketingTrial />
         <SectionWave from="text-background" to="bg-surface-warm" />
         <MarketingCta />

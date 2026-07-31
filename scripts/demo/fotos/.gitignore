@@ -1,0 +1,5 @@
+# Die heruntergeladenen Objektfotos sind ein Cache, keine Quelle: die Wahrheit
+# steht in ../fotos_kuratiert.json (Pexels-IDs) und manifest.json (Herkunft je
+# Datei). `python scripts/demo/fotos.py` baut den Cache jederzeit neu auf.
+*/
+!manifest.json

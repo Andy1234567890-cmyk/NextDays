@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "title": "myNextDays – La piattaforma per chi affitta case vacanza",
+    "description": "La piattaforma per hotel, agenzie e host di case vacanza: channel manager, calendario, prenotazione diretta, comunicazione con gli ospiti e fatturazione in un unico posto. Sviluppata in Danimarca, ospitata nell'UE. Da 19,90 €/mese. 30 giorni di prova gratuita."
+  },
+  "nav": {
+    "funktionen": "Funzioni",
+    "preise": "Prezzi",
+    "kanaele": "Canali",
+    "kunden": "Clienti",
+    "ressourcen": "Risorse",
+    "sprache": "Lingua",
+    "spracheWaehlen": "Scegli la lingua",
+    "anmelden": "Accedi",
+    "kostenlosStarten": "Inizia gratis",
+    "sprachModalTitel": "Lingua e regione",
+    "sprachModalHeading": "Scegli una lingua",
+    "sprachModalHinweis": "La tua scelta vale per questo sito e viene applicata anche al tuo account.",
+    "schliessen": "Chiudi",
+    "suche": "Cerca una lingua",
+    "keinTreffer": "Nessuna lingua trovata."
+  },
+  "hero": {
+    "trustNeu": "Novità 2026",
+    "trustVermieter": "da host per host",
+    "trustAirsmil": "powered by AirSmil",
+    "trustEu": "Ospitata nell'UE (GDPR)",
+    "headlinePre": "Più",
+    "headlineHighlight": "prenotazioni",
+    "headlinePost": "meno fatica.",
+    "subline": "La piattaforma per hotel, agenzie e host di case vacanza: channel manager, calendario, prenotazione diretta, comunicazione con gli ospiti e fatturazione in un unico posto, creata da host che vivono questo lavoro ogni giorno.",
+    "ctaTrial": "Prova 30 giorni gratis",
+    "ctaDemo": "Guarda la demo",
+    "kanaeleLabel": "Collegata ai grandi portali di prenotazione",
+    "eyebrow": "La piattaforma per chi affitta case vacanza",
+    "kanaeleEyebrow": "Canali di vendita",
+    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+  },
+  "intro": {
+    "heading": "Benvenuto in myNextDays.",
+    "p1": "Un property management system completo con channel manager integrato, per hotel, agenzie e host di case vacanza. Indipendente ed equo, senza la complessità e i prezzi enterprise dei grandi gruppi.",
+    "p2": "Aumenta l'occupazione, semplifica la gestione quotidiana e offri soggiorni indimenticabili, senza la complessità e i prezzi enterprise dei grandi sistemi.",
+    "p3": "Tutto in un unico posto, automazioni intelligenti e collegamento a tutti i canali che contano, più il tuo portale di prenotazione a bassa commissione. La tua attività cresce con più controllo e meno fatica.",
+    "cta": "Scopri le funzioni",
+    "reichweite": "Pensata per ogni piccola struttura.",
+    "typen": {
+      "hotel": "Hotel",
+      "bnb": "B&B",
+      "gaestehaus": "Casa per ospiti",
+      "motel": "Motel",
+      "lodge": "Lodge",
+      "ferienwohnung": "Casa vacanza",
+      "resort": "Resort",
+      "huette": "Baita",
+      "pension": "Pensione",
+      "campingplatz": "Campeggio"
+    },
+    "belegeHeading": "Su cosa puoi contare",
+    "belege": {
+      "neu": "Novità 2026: sviluppata da host in attività, powered by AirSmil",
+      "eu": "Sviluppata in Danimarca, ospitata nell'UE e conforme al GDPR",
+      "kanaele": "56 portali di prenotazione tramite il nostro partner di connettività Channex",
+      "start": "Lancio il 1° settembre 2026 in 27 Paesi europei e 24 lingue"
+    },
+    "eyebrow": "La piattaforma",
+    "typenEyebrow": "A chi è dedicata"
+  },
+  "benefits": {
+    "eyebrow": "Perché myNextDays",
+    "sub": "Tre cose che nella gestione quotidiana contano davvero: la piattaforma è nata per quelle.",
+    "heading": "Più prenotazioni. Meno lavoro.",
+    "buchungen": {
+      "title": "Conquista più prenotazioni",
+      "text": "Sii visibile su tutti i grandi canali e sul tuo sito. Un calendario centrale tiene tutto sincronizzato: basta overbooking."
+    },
+    "betrieb": {
+      "title": "Semplifica la gestione",
+      "text": "Gestisci strutture, prenotazioni, pulizie e fatturazione da un unico posto, alla scrivania o in movimento."
+    },
+    "fair": {
+      "title": "Equa ed europea",
+      "text": "Un prezzo trasparente senza barriere enterprise, sviluppata in Danimarca e ospitata nell'UE secondo il GDPR. Assistenza personale dal team che usa il software in prima persona."
+    },
+    "preisBanner": {
+      "eyebrow": "Prezzo",
+      "heading": "Tutto ciò che serve alla tua struttura, in un unico posto",
+      "text": "30 giorni gratis. Nessun vincolo di durata. Disdici quando vuoi (4 settimane prima della fine del mese).",
+      "preis": "19,90 €",
+      "proMonat": "al mese",
+      "tarif": "Una sola tariffa per tutti, 1 struttura inclusa",
+      "objekte": "Ogni struttura aggiuntiva +6/5/4 € (tariffa decrescente)",
+      "provision": "Canali esterni 1 % · portale proprio 8 %",
+      "cta": "Guarda i prezzi"
+    }
+  },
+  "trial": {
+    "eyebrow": "Prova gratuita",
+    "heading": "Prova myNextDays per 30 giorni gratis.",
+    "sub": "Nessun vincolo di durata. Disdici quando vuoi. Compila solo questo breve modulo:",
+    "seitenHeading": "Tutto ciò che serve alla tua struttura in un unico posto: più controllo, meno fatica.",
+    "perks": {
+      "buchungen": {
+        "title": "Più prenotazioni",
+        "text": "su tutti i grandi canali e sul tuo portale, senza doppie prenotazioni."
+      },
+      "kontrolle": {
+        "title": "Controllo totale",
+        "text": "su check-in, prenotazioni e fatture in un unico posto."
+      },
+      "freiheit": {
+        "title": "Più libertà",
+        "text": "gestisci la tua struttura dallo smartphone, ovunque tu sia."
+      }
+    },
+    "vorname": "Nome",
+    "nachname": "Cognome",
+    "email": "E-mail",
+    "emailPlatzhalter": "nome@esempio.it",
+    "einwilligung": "Sì, desidero ricevere di tanto in tanto novità, inviti a webinar e offerte da myNextDays. Puoi revocare il consenso in qualsiasi momento.",
+    "absenden": "Inizia ora",
+    "dankeTitel": "Grazie mille!",
+    "dankeText": "Ti ricontattiamo a brevissimo."
+  },
+  "features": {
+    "heading": "Un sistema. Un accesso.",
+    "baldBadge": "In arrivo",
+    "hinweis": "La fatturazione base è inclusa dal lancio. La contabilità avanzata (esportazione DATEV), la gestione del personale, il marketplace dei fornitori e le funzioni per hotel sono moduli aggiuntivi.",
+    "eyebrow": "Funzioni",
+    "sub": "Un accesso per la struttura, i proprietari, gli ospiti e le pulizie: ogni ruolo vede esattamente la sua area.",
+    "alleAnsehen": "Scopri tutte le funzioni nella prova gratuita",
+    "neu": {
+      "title": "myNextDays IA e avatar",
+      "text": "Avatar e comandi vocali, concierge IA per le domande degli ospiti e tariffe che seguono stagione e domanda."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property management",
+        "items": "Multicalendario centrale, planning di occupazione, prenotazioni, attività, dati di struttura e servizi"
+      },
+      "channel": {
+        "title": "Channel manager",
+        "items": "56 portali di prenotazione tramite Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, sincronizzazione bidirezionale in tempo reale"
+      },
+      "direkt": {
+        "title": "Prenotazione diretta",
+        "items": "Portale di prenotazione tuo, widget di prenotazione, creatore di siti, dominio proprio, 1 % invece del 15–18 % di commissione OTA"
+      },
+      "preise": {
+        "title": "Tariffe e ricavi",
+        "items": "Prezzi dinamici con min./max., rate plan per struttura, logica di stagione e occupazione, le tariffe manuali hanno la precedenza"
+      },
+      "gaeste": {
+        "title": "Esperienza dell'ospite",
+        "items": "Guida digitale dell'ospite, concierge IA, check-in online, messaggi automatici, 24 lingue"
+      },
+      "zahlungen": {
+        "title": "Pagamenti e fatturazione",
+        "items": "Pagamenti online, acconti, cauzioni, fatturazione base, esportazioni pronte per la contabilità"
+      },
+      "team": {
+        "title": "Team e ruoli",
+        "items": "Accesso proprietario con i pagamenti, accesso pulizie con checklist fotografiche, attività, permessi separati"
+      },
+      "app": {
+        "title": "App mobile",
+        "items": "App nativa con accessi dedicati per proprietari, ospiti e pulizie, gestisci l'attività ovunque tu sia"
+      },
+      "auswertungen": {
+        "title": "Analisi",
+        "items": "Occupazione, ricavi, ADR, report automatici, confronto tra canali, metamotori in arrivo"
+      }
+    }
+  },
+  "ki": {
+    "eyebrow": "IA e voce",
+    "heading": "La piattaforma ti toglie la routine dalle mani.",
+    "sub": "Gestisci tutto a mani libere, lascia che le domande degli ospiti trovino risposta da sole e che le tariffe seguano il mercato, senza imparare nemmeno un percorso di clic.",
+    "voice": {
+      "title": "Avatar / comandi vocali",
+      "text": "Gestisci tutto con la voce e lascia rispondere un avatar: controlla l'occupazione, gestisci prenotazioni e attività, cambia le tariffe, mentre sei in viaggio o stai preparando una struttura."
+    },
+    "concierge": {
+      "title": "Un concierge IA per i tuoi ospiti",
+      "text": "La guida digitale dell'ospite risponde da sola su password Wi-Fi, cassetta delle chiavi, raccolta rifiuti e consigli locali, in 24 lingue e 24 ore su 24."
+    },
+    "preise": {
+      "title": "Tariffe che ragionano con te",
+      "text": "Imposta un prezzo base con minimo e massimo per struttura; i prezzi per notte seguono stagione, occupazione e domanda. Le tariffe manuali hanno sempre la precedenza."
+    },
+    "cta": "Guarda le funzioni",
+    "blaseFrage": "Com'è l'occupazione la prossima settimana?",
+    "blaseAntwort": "18 notti occupate su 24. Due buchi nel fine settimana: abbassiamo il prezzo?",
+    "eingabe": "Chiedi a myNextDays …",
+    "baldBadge": "In arrivo"
+  },
+  "integrationen": {
+    "eyebrow": "Portata",
+    "heading": "56 portali di prenotazione, una sola schermata.",
+    "p1": "Tramite il nostro partner di connettività Channex distribuisci disponibilità, tariffe e restrizioni su 56 portali di prenotazione, tra cui Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda e Tripadvisor. Sincronizzazione bidirezionale in tempo reale: una prenotazione su un portale blocca quella notte ovunque.",
+    "p2": "A questo si aggiunge la tua vendita diretta: il portale di prenotazione a bassa commissione su myNextDays, un widget di prenotazione per il tuo sito e canali regionali che puoi attivare uno per uno. Ogni canale si comanda separatamente: sei tu a decidere dove una struttura è visibile.",
+    "cta": "Collega i canali nella prova gratuita"
+  },
+  "testimonials": {
+    "eyebrow": "Dietro la piattaforma",
+    "heading": "Perché abbiamo creato myNextDays.",
+    "gruenderin": {
+      "quote": "myNextDays è nata dalla nostra attività di affitto quotidiana in AirSmil: stiamo costruendo esattamente il software che ci sarebbe servito.",
+      "name": "Jeanine Ågaard",
+      "location": "Fondatrice di myNextDays / AirSmil"
+    }
+  },
+  "stimmen": {
+    "eyebrow": "Voci dal campo",
+    "heading": "Cosa raccontano gli host.",
+    "vorschauHinweis": "Anteprima di layout con testi di esempio: qui compariranno citazioni reali e approvate.",
+    "zurueck": "Testimonianza precedente",
+    "vor": "Testimonianza successiva",
+    "zeigeStimme": "Mostra la testimonianza {nummer}"
+  },
+  "stats": {
+    "eyebrow": "Numeri che possiamo dimostrare",
+    "heading": "La piattaforma per chi affitta, creata da chi affitta davvero.",
+    "sub": "Lancio il 1° settembre 2026 in 27 Paesi.",
+    "laender": {
+      "value": "27",
+      "label": "Paesi",
+      "text": "Paesi europei al lancio"
+    },
+    "sprachen": {
+      "value": "24",
+      "label": "Lingue",
+      "text": "Interfaccia e comunicazione con gli ospiti"
+    },
+    "kanaele": {
+      "value": "56",
+      "label": "Portali",
+      "text": "Portali di prenotazione tramite Channex"
+    },
+    "hosting": {
+      "value": "100 %",
+      "label": "Hosting UE",
+      "text": "Sviluppata in Danimarca, conforme al GDPR"
+    },
+    "vermieter": {
+      "label": "Creata da host",
+      "text": "Nata dalla gestione quotidiana reale degli affitti in AirSmil"
+    }
+  },
+  "usecases": {
+    "eyebrow": "Per chi costruiamo",
+    "heading": "Tre tipi di attività, una piattaforma.",
+    "sub": "Una casa vacanza, una camera d'albergo o un intero portafoglio: la stessa interfaccia, composta in modo diverso per ogni attività.",
+    "ferienobjekt": {
+      "label": "Casa vacanza",
+      "title": "Case e appartamenti per vacanze",
+      "text": "Una o più strutture che affitti in prima persona: niente reception, ma consegne delle chiavi, pulizie e domande degli ospiti.",
+      "punkte": {
+        "kanaele": "Portali e sito tuo in un unico calendario",
+        "kalender": "Pianifica pulizie e consegne per ogni struttura",
+        "gaeste": "Check-in online e guida digitale dell'ospite in 24 lingue"
+      }
+    },
+    "hotel": {
+      "label": "Hotel e pensione",
+      "title": "Camere, non contenitori",
+      "text": "Ogni camera è un'unità prenotabile a sé con le sue tariffe: niente giri attraverso categorie di camere con quantità.",
+      "punkte": {
+        "zimmer": "Disponibilità camera per camera su tutti i portali",
+        "raten": "Rate plan per camera, derivati o manuali",
+        "rezeption": "Panoramica giornaliera di arrivi e partenze"
+      }
+    },
+    "agentur": {
+      "label": "Agenzia e gestione",
+      "title": "Un portafoglio con più proprietari",
+      "text": "Gestisci strutture di terzi: rendiconti separati, un accesso per ogni proprietario e numeri chiari per ogni struttura.",
+      "punkte": {
+        "portfolio": "Tutte le strutture in un unico planning di occupazione",
+        "eigentuemer": "Accesso proprietario con occupazione e pagamenti",
+        "abrechnung": "Estratti conto e provvigioni per struttura"
+      }
+    }
+  },
+  "footer": {
+    "claim": "La piattaforma per chi affitta case vacanza: più prenotazioni, meno fatica.",
+    "appLaden": "Scarica l'app",
+    "spalten": {
+      "produkt": "Prodotto",
+      "loesungen": "Soluzioni",
+      "ressourcen": "Risorse",
+      "unternehmen": "Azienda"
+    },
+    "produkt": {
+      "pms": "Property management",
+      "channelManager": "Channel manager",
+      "direktbuchung": "Prenotazione diretta",
+      "zahlungen": "Pagamenti",
+      "mobileApp": "App mobile"
+    },
+    "loesungen": {
+      "hotels": "Hotel",
+      "bnb": "B&B",
+      "gaestehaeuser": "Case per ospiti",
+      "ferienwohnungen": "Case vacanza",
+      "campingplaetze": "Campeggi"
+    },
+    "ressourcen": {
+      "blog": "Blog",
+      "hilfeCenter": "Centro assistenza",
+      "webinare": "Webinar",
+      "leitfaeden": "Guide",
+      "api": "Documentazione API"
+    },
+    "unternehmen": {
+      "ueberUns": "Chi siamo",
+      "karriere": "Lavora con noi",
+      "partner": "Partner",
+      "kontakt": "Contatti",
+      "presse": "Stampa"
+    },
+    "copyright": "© 2026 myNextDays. Tutti i diritti riservati.",
+    "agb": "Termini e condizioni",
+    "datenschutz": "Privacy",
+    "impressum": "Note legali",
+    "cookies": "Informativa sui cookie",
+    "avv": "Trattamento dei dati"
+  },
+  "abschluss": {
+    "heading": "Pronto a gestire la tua struttura da un unico posto?",
+    "sub": "Provala gratis per 30 giorni: nessun vincolo di durata, nessun costo di attivazione, disdici quando vuoi.",
+    "ctaPrimaer": "Prova 30 giorni gratis",
+    "ctaSekundaer": "Guarda i prezzi"
+  },
+  "chat": {
+    "titel": "Domande? Siamo qui.",
+    "untertitel": "Di solito rispondiamo entro poche ore.",
+    "name": "Nome",
+    "email": "E-mail",
+    "telefon": "Telefono (facoltativo)",
+    "nachricht": "Il tuo messaggio",
+    "absenden": "Invia messaggio",
+    "sendet": "Invio in corso …",
+    "platzhalter": "Scrivi un messaggio …",
+    "senden": "Invia",
+    "oeffnen": "Apri la chat",
+    "schliessen": "Chiudi la chat",
+    "hinweis": "Usiamo i tuoi dati solo per rispondere a questa richiesta.",
+    "fehler": "Non ha funzionato. Riprova più tardi."
+  },
+  "einblicke": {
+    "eyebrow": "Inside the product",
+    "heading": "How myNextDays actually works",
+    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "hotel": {
+      "title": "Hotels and holiday rentals in one interface",
+      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+    },
+    "objekte": {
+      "title": "Visibility per channel, not one switch for everything",
+      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+    },
+    "kanaele": {
+      "title": "Connect portals and keep your own direct channel",
+      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+    }
+  }
+}

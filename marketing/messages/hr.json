@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "title": "myNextDays – platforma za iznajmljivače smještaja",
+    "description": "Platforma za hotele, agencije i iznajmljivače apartmana: channel manager, kalendar, izravne rezervacije, komunikacija s gostima i obračun na jednom mjestu. Razvijeno u Danskoj, hostano u EU. Od 19,90 € mjesečno. 30 dana besplatno."
+  },
+  "nav": {
+    "funktionen": "Funkcije",
+    "preise": "Cijene",
+    "kanaele": "Kanali",
+    "kunden": "Korisnici",
+    "ressourcen": "Resursi",
+    "sprache": "Jezik",
+    "spracheWaehlen": "Odaberite jezik",
+    "anmelden": "Prijava",
+    "kostenlosStarten": "Započnite besplatno",
+    "sprachModalTitel": "Jezik i regija",
+    "sprachModalHeading": "Odaberite jezik",
+    "sprachModalHinweis": "Odabir vrijedi za ovu stranicu i prenosi se na vaš račun.",
+    "schliessen": "Zatvori",
+    "suche": "Pretraži jezike",
+    "keinTreffer": "Jezik nije pronađen."
+  },
+  "hero": {
+    "trustNeu": "Novo 2026.",
+    "trustVermieter": "od iznajmljivača za iznajmljivače",
+    "trustAirsmil": "powered by AirSmil",
+    "trustEu": "Hosting u EU (GDPR)",
+    "headlinePre": "Više",
+    "headlineHighlight": "rezervacija",
+    "headlinePost": "manje truda.",
+    "subline": "Platforma za hotele, agencije i iznajmljivače apartmana: channel manager, kalendar, izravne rezervacije, komunikacija s gostima i obračun na jednom mjestu – razvijena od iznajmljivača koji poznaju svakodnevicu.",
+    "ctaTrial": "30 dana besplatno",
+    "ctaDemo": "Pogledajte demo",
+    "kanaeleLabel": "Povezano s velikim platformama za rezervacije",
+    "eyebrow": "Platforma za iznajmljivače smještaja",
+    "kanaeleEyebrow": "Prodajni kanali",
+    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+  },
+  "intro": {
+    "heading": "Dobrodošli u myNextDays.",
+    "p1": "Potpuni Property Management System uz channel manager – za hotele, agencije i iznajmljivače apartmana. Neovisno i pošteno, umjesto korporativne složenosti i enterprise cijena.",
+    "p2": "Povećajte popunjenost, pojednostavnite svakodnevicu i pružite izvrsna iskustva gostima – bez složenosti i enterprise cijena velikih sustava.",
+    "p3": "Sve na jednom mjestu, pametna automatizacija i povezanost sa svim važnim kanalima – uz vlastiti portal za rezervacije s niskom provizijom. Tako vaš posao raste uz više kontrole i manje truda.",
+    "cta": "Otkrijte funkcije",
+    "reichweite": "Napravljeno za svaki mali smještaj.",
+    "typen": {
+      "hotel": "Hotel",
+      "bnb": "B&B",
+      "gaestehaus": "Kuća za goste",
+      "motel": "Motel",
+      "lodge": "Lodge",
+      "ferienwohnung": "Apartman",
+      "resort": "Resort",
+      "huette": "Kućica",
+      "pension": "Pansion",
+      "campingplatz": "Kamp"
+    },
+    "belegeHeading": "Na što se možete osloniti",
+    "belege": {
+      "neu": "Novo 2026. – razvijeno od aktivnih iznajmljivača, powered by AirSmil",
+      "eu": "Razvijeno u Danskoj, hostano u EU i usklađeno s GDPR-om",
+      "kanaele": "56 platformi za rezervacije preko našeg partnera za povezivost Channex",
+      "start": "Početak 1. rujna 2026. u 27 europskih zemalja, 24 jezika"
+    },
+    "eyebrow": "Platforma",
+    "typenEyebrow": "Za koga je"
+  },
+  "benefits": {
+    "eyebrow": "Zašto myNextDays",
+    "sub": "Tri stvari koje uistinu čine razliku u svakodnevici iznajmljivanja — upravo za njih je platforma napravljena.",
+    "heading": "Više rezervacija. Manje posla.",
+    "buchungen": {
+      "title": "Ostvarite više rezervacija",
+      "text": "Budite vidljivi na svim velikim kanalima i na vlastitoj web-stranici. Jedan središnji kalendar drži sve usklađeno – kraj dvostrukim rezervacijama."
+    },
+    "betrieb": {
+      "title": "Pojednostavnite poslovanje",
+      "text": "Vodite objekte, rezervacije, čišćenje i obračun s jednog mjesta – za radnim stolom ili u pokretu."
+    },
+    "fair": {
+      "title": "Pošteno i europski",
+      "text": "Transparentna cijena bez enterprise prepreka, razvijeno u Danskoj, hostano u EU prema GDPR-u. Osobna podrška tima koji sam koristi softver."
+    },
+    "preisBanner": {
+      "eyebrow": "Cijena",
+      "heading": "Sve za vaš smještaj na jednom mjestu",
+      "text": "30 dana besplatno. Bez minimalnog trajanja. Otkaz u svakom trenutku (4 tjedna do kraja mjeseca).",
+      "preis": "19,90 €",
+      "proMonat": "mjesečno",
+      "tarif": "Jedan paket za sve, uklj. 1 objekt",
+      "objekte": "Svaki sljedeći objekt +6/5/4 € (padajuća skala)",
+      "provision": "Vanjski kanali 1 % · vlastiti portal 8 %",
+      "cta": "Pogledajte cijene"
+    }
+  },
+  "trial": {
+    "eyebrow": "Besplatno isprobajte",
+    "heading": "Isprobajte myNextDays 30 dana besplatno.",
+    "sub": "Bez minimalnog trajanja. Otkaz u svakom trenutku. Ispunite samo ovaj kratki obrazac:",
+    "seitenHeading": "Sve za vaš smještaj na jednom mjestu – više kontrole, manje truda.",
+    "perks": {
+      "buchungen": {
+        "title": "Više rezervacija",
+        "text": "preko svih velikih kanala i vlastitog portala, bez dvostrukih rezervacija."
+      },
+      "kontrolle": {
+        "title": "Potpuna kontrola",
+        "text": "nad check-inom, rezervacijama i računima na jednom mjestu."
+      },
+      "freiheit": {
+        "title": "Više slobode",
+        "text": "upravljajte smještajem s mobitela, gdje god bili."
+      }
+    },
+    "vorname": "Ime",
+    "nachname": "Prezime",
+    "email": "E-pošta",
+    "emailPlatzhalter": "ime@primjer.hr",
+    "einwilligung": "Da, želim povremeno primati novosti, pozivnice na webinare i ponude od myNextDays. Privolu možete povući u svakom trenutku.",
+    "absenden": "Krenite odmah",
+    "dankeTitel": "Hvala vam!",
+    "dankeText": "Javljamo vam se u najkraćem roku."
+  },
+  "features": {
+    "heading": "Jedan sustav. Jedna prijava.",
+    "baldBadge": "Uskoro",
+    "hinweis": "Osnovni računi uključeni su od samog početka. Napredno računovodstvo (DATEV izvoz), upravljanje djelatnicima, tržište pružatelja usluga i hotelske funkcije dodatni su moduli.",
+    "eyebrow": "Funkcije",
+    "sub": "Jedan pristup za tvrtku, vlasnike, goste i čišćenje — svaka uloga vidi točno svoje područje.",
+    "alleAnsehen": "Otkrijte sve funkcije u besplatnom probnom razdoblju",
+    "neu": {
+      "title": "myNextDays AI i avatar",
+      "text": "Avatar i glasovno upravljanje, AI concierge za pitanja gostiju i cijene koje prate sezonu i potražnju."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property Management",
+        "items": "Središnji višestruki kalendar, plan popunjenosti, rezervacije, zadaci, podaci o objektima i opremi"
+      },
+      "channel": {
+        "title": "Channel manager",
+        "items": "56 platformi za rezervacije preko Channexa, Airbnb, Booking.com, Expedia, Vrbo, Google, dvosmjerna sinkronizacija u stvarnom vremenu"
+      },
+      "direkt": {
+        "title": "Izravna rezervacija",
+        "items": "Vlastiti portal za rezervacije, widget za rezervacije, alat za izradu stranica, vlastita domena, 1 % umjesto 15–18 % OTA provizije"
+      },
+      "preise": {
+        "title": "Cijene i prihod",
+        "items": "Dinamične cijene s min./maks., rate planovi po objektu, logika sezone i popunjenosti, ručne cijene imaju prednost"
+      },
+      "gaeste": {
+        "title": "Iskustvo gostiju",
+        "items": "Digitalna mapa za goste, AI concierge, online check-in, automatske poruke, 24 jezika"
+      },
+      "zahlungen": {
+        "title": "Plaćanja i obračun",
+        "items": "Online plaćanja, predujmovi, jamčevine, osnovni računi, izvozi spremni za knjigovodstvo"
+      },
+      "team": {
+        "title": "Tim i uloge",
+        "items": "Prijava za vlasnike s isplatama, prijava za čišćenje s foto-checklistama, zadaci, odvojena prava"
+      },
+      "app": {
+        "title": "Mobilna aplikacija",
+        "items": "Nativna aplikacija s vlastitim prijavama za vlasnike, goste i čišćenje, vodite posao u pokretu"
+      },
+      "auswertungen": {
+        "title": "Analitika",
+        "items": "Popunjenost, prihod, ADR, automatska izvješća, usporedba kanala, metapretraživanje uskoro"
+      }
+    }
+  },
+  "ki": {
+    "eyebrow": "AI i glas",
+    "heading": "Platforma preuzima rutinu umjesto vas.",
+    "sub": "Upravljajte glasom, pustite da pitanja gostiju sama dobiju odgovor, a cijene same prate tržište — bez učenja ijednog klika.",
+    "voice": {
+      "title": "Avatar / glasovno upravljanje",
+      "text": "Upravljajte glasom i pustite avatar da odgovori: provjerite popunjenost, upravljajte rezervacijama i zadacima, mijenjajte cijene – dok ste na putu ili pripremate objekt."
+    },
+    "concierge": {
+      "title": "AI concierge za vaše goste",
+      "text": "Digitalna mapa za goste sama odgovara na pitanja o Wi-Fi lozinci, kutiji s ključevima, kantama za smeće i lokalnim savjetima — na 24 jezika, 24 sata dnevno."
+    },
+    "preise": {
+      "title": "Cijene koje razmišljaju s vama",
+      "text": "Odredite osnovnu cijenu s min. i maks. po objektu; cijene noćenja prate sezonu, popunjenost i potražnju. Ručne cijene uvijek imaju prednost."
+    },
+    "cta": "Pogledajte funkcije",
+    "blaseFrage": "Kakva je popunjenost sljedeći tjedan?",
+    "blaseAntwort": "18 od 24 noćenja zauzeto. Dvije rupe za vikend – da spustimo cijenu?",
+    "eingabe": "Pitajte myNextDays …",
+    "baldBadge": "Uskoro"
+  },
+  "integrationen": {
+    "eyebrow": "Doseg",
+    "heading": "56 platformi za rezervacije – jedno sučelje.",
+    "p1": "Preko našeg partnera za povezivost Channex raspoređujete dostupnost, cijene i restrikcije na 56 platformi za rezervacije – među njima Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda i Tripadvisor. Dvosmjerna sinkronizacija u stvarnom vremenu: rezervacija na jednom portalu blokira tu noć svugdje drugdje.",
+    "p2": "Uz to dolazi i vaša vlastita prodaja: portal za rezervacije s niskom provizijom na myNextDays, widget za rezervacije za vašu stranicu i regionalni kanali koje uključujete pojedinačno. Svaki se kanal vodi zasebno – vi odlučujete gdje je objekt vidljiv.",
+    "cta": "Povežite kanale u besplatnom probnom razdoblju"
+  },
+  "testimonials": {
+    "eyebrow": "Iza platforme",
+    "heading": "Zašto smo napravili myNextDays.",
+    "gruenderin": {
+      "quote": "myNextDays je nastao iz naše vlastite svakodnevice iznajmljivanja u AirSmilu – gradimo točno onaj softver koji bi nama samima trebao.",
+      "name": "Jeanine Ågaard",
+      "location": "Osnivačica myNextDays / AirSmil"
+    }
+  },
+  "stimmen": {
+    "eyebrow": "Glasovi iz prakse",
+    "heading": "Što kažu domaćini.",
+    "vorschauHinweis": "Pregled izgleda s primjerima teksta – ovdje će kasnije stajati stvarni, odobreni citati.",
+    "zurueck": "Prethodni dojam",
+    "vor": "Sljedeći dojam",
+    "zeigeStimme": "Prikaži dojam {nummer}"
+  },
+  "stats": {
+    "eyebrow": "Brojke koje možemo dokazati",
+    "heading": "Platforma za iznajmljivače, koju su izgradili ljudi koji i sami iznajmljuju.",
+    "sub": "Početak 1. rujna 2026. u 27 zemalja.",
+    "laender": {
+      "value": "27",
+      "label": "Zemalja",
+      "text": "Europskih zemalja na startu"
+    },
+    "sprachen": {
+      "value": "24",
+      "label": "Jezika",
+      "text": "Sučelje i komunikacija s gostima"
+    },
+    "kanaele": {
+      "value": "56",
+      "label": "Platformi",
+      "text": "Platformi za rezervacije preko Channexa"
+    },
+    "hosting": {
+      "value": "100 %",
+      "label": "EU hosting",
+      "text": "Razvijeno u Danskoj, usklađeno s GDPR-om"
+    },
+    "vermieter": {
+      "label": "Razvili iznajmljivači",
+      "text": "Iz stvarne svakodnevice iznajmljivanja u AirSmilu"
+    }
+  },
+  "usecases": {
+    "eyebrow": "Za koga gradimo",
+    "heading": "Tri vrste poslovanja, jedna platforma.",
+    "sub": "Apartman, hotelska soba ili cijeli portfelj — isto sučelje, drukčije posloženo za svaki posao.",
+    "ferienobjekt": {
+      "label": "Turistički smještaj",
+      "title": "Kuće za odmor i apartmani",
+      "text": "Jedan ili više objekata koje sami iznajmljujete — bez recepcije, ali s primopredajama, čišćenjem i pitanjima gostiju.",
+      "punkte": {
+        "kanaele": "Portali i vlastita stranica u jednom kalendaru",
+        "kalender": "Planiranje čišćenja i primopredaja po objektu",
+        "gaeste": "Online check-in i digitalna mapa za goste na 24 jezika"
+      }
+    },
+    "hotel": {
+      "label": "Hotel i pansion",
+      "title": "Sobe, a ne kontejneri",
+      "text": "Svaka je soba zasebna jedinica za rezervaciju s vlastitim cijenama — bez zaobilaznice preko kategorija soba s količinama.",
+      "punkte": {
+        "zimmer": "Dostupnost po sobi na svim portalima",
+        "raten": "Rate planovi po sobi, izvedeni ili ručni",
+        "rezeption": "Dnevni pregled dolazaka i odlazaka"
+      }
+    },
+    "agentur": {
+      "label": "Agencija i upravljanje",
+      "title": "Portfelj više vlasnika",
+      "text": "Upravljate tuđim objektima: odvojeni obračun, vlastiti pristup za svakog vlasnika, jasne brojke po objektu.",
+      "punkte": {
+        "portfolio": "Svi objekti u jednom planu popunjenosti",
+        "eigentuemer": "Prijava za vlasnike s popunjenošću i isplatama",
+        "abrechnung": "Izvodi i provizije po objektu"
+      }
+    }
+  },
+  "footer": {
+    "claim": "Platforma za iznajmljivače smještaja – više rezervacija, manje truda.",
+    "appLaden": "Preuzmite aplikaciju",
+    "spalten": {
+      "produkt": "Proizvod",
+      "loesungen": "Rješenja",
+      "ressourcen": "Resursi",
+      "unternehmen": "Tvrtka"
+    },
+    "produkt": {
+      "pms": "Property Management",
+      "channelManager": "Channel manager",
+      "direktbuchung": "Izravna rezervacija",
+      "zahlungen": "Plaćanja",
+      "mobileApp": "Mobilna aplikacija"
+    },
+    "loesungen": {
+      "hotels": "Hoteli",
+      "bnb": "B&B",
+      "gaestehaeuser": "Kuće za goste",
+      "ferienwohnungen": "Apartmani",
+      "campingplaetze": "Kampovi"
+    },
+    "ressourcen": {
+      "blog": "Blog",
+      "hilfeCenter": "Centar za pomoć",
+      "webinare": "Webinari",
+      "leitfaeden": "Vodiči",
+      "api": "API dokumentacija"
+    },
+    "unternehmen": {
+      "ueberUns": "O nama",
+      "karriere": "Karijere",
+      "partner": "Partneri",
+      "kontakt": "Kontakt",
+      "presse": "Za medije"
+    },
+    "copyright": "© 2026 myNextDays. Sva prava pridržana.",
+    "agb": "Uvjeti",
+    "datenschutz": "Privatnost",
+    "impressum": "Pravne informacije",
+    "cookies": "Pravila o kolačićima",
+    "avv": "Obrada podataka"
+  },
+  "abschluss": {
+    "heading": "Spremni voditi svoj smještaj s jednog mjesta?",
+    "sub": "30 dana besplatno — bez minimalnog trajanja, bez naknade za postavljanje, otkaz u svakom trenutku.",
+    "ctaPrimaer": "30 dana besplatno",
+    "ctaSekundaer": "Pogledajte cijene"
+  },
+  "chat": {
+    "titel": "Pitanja? Tu smo.",
+    "untertitel": "Obično odgovaramo unutar nekoliko sati.",
+    "name": "Ime",
+    "email": "E-pošta",
+    "telefon": "Telefon (nije obavezno)",
+    "nachricht": "Vaša poruka",
+    "absenden": "Pošaljite poruku",
+    "sendet": "Šalje se …",
+    "platzhalter": "Napišite poruku …",
+    "senden": "Pošalji",
+    "oeffnen": "Otvori chat",
+    "schliessen": "Zatvori chat",
+    "hinweis": "Vaše podatke koristimo isključivo za odgovor na ovaj upit.",
+    "fehler": "Nešto je pošlo po zlu. Pokušajte ponovno kasnije."
+  },
+  "einblicke": {
+    "eyebrow": "Inside the product",
+    "heading": "How myNextDays actually works",
+    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "hotel": {
+      "title": "Hotels and holiday rentals in one interface",
+      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+    },
+    "objekte": {
+      "title": "Visibility per channel, not one switch for everything",
+      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+    },
+    "kanaele": {
+      "title": "Connect portals and keep your own direct channel",
+      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+    }
+  }
+}

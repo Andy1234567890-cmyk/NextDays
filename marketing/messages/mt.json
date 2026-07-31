@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "title": "myNextDays – Il-pjattaforma għal min jikri akkomodazzjoni tal-vaganzi",
+    "description": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed. Mibnija fid-Danimarka, ospitata fl-UE. Minn €19.90 fix-xahar. B'xejn għal 30 jum."
+  },
+  "nav": {
+    "funktionen": "Funzjonijiet",
+    "preise": "Prezzijiet",
+    "kanaele": "Kanali",
+    "kunden": "Klijenti",
+    "ressourcen": "Riżorsi",
+    "sprache": "Lingwa",
+    "spracheWaehlen": "Agħżel lingwa",
+    "anmelden": "Idħol",
+    "kostenlosStarten": "Ibda b'xejn",
+    "sprachModalTitel": "Lingwa u reġjun",
+    "sprachModalHeading": "Agħżel lingwa",
+    "sprachModalHinweis": "L-għażla tiegħek tapplika għal dan is-sit u tinżamm fil-kont tiegħek.",
+    "schliessen": "Agħlaq",
+    "suche": "Fittex lingwa",
+    "keinTreffer": "Ma nstabet ebda lingwa."
+  },
+  "hero": {
+    "trustNeu": "Ġdid fl-2026",
+    "trustVermieter": "minn sidien, għal sidien",
+    "trustAirsmil": "powered by AirSmil",
+    "trustEu": "Ospitata fl-UE (GDPR)",
+    "headlinePre": "Aktar",
+    "headlineHighlight": "bookings",
+    "headlinePost": "inqas xogħol.",
+    "subline": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed – mibnija minn sidien li jafu x'inhi r-rutina ta' kuljum.",
+    "ctaTrial": "Ipprova 30 jum b'xejn",
+    "ctaDemo": "Ara d-demo",
+    "kanaeleLabel": "Konnessa mal-akbar pjattaformi tal-booking",
+    "eyebrow": "Il-pjattaforma għal min jikri akkomodazzjoni tal-vaganzi",
+    "kanaeleEyebrow": "Kanali ta' distribuzzjoni",
+    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+  },
+  "intro": {
+    "heading": "Merħba f'myNextDays.",
+    "p1": "Property management system sħiħ flimkien ma' channel manager – għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi. Indipendenti u ġust, minflok il-kumplessità korporattiva u l-prezzijiet enterprise.",
+    "p2": "Żid l-okkupanza tiegħek, issimplifika x-xogħol ta' kuljum u offri esperjenzi mill-aqwa lill-mistednin – mingħajr il-kumplessità u l-prezzijiet enterprise tas-sistemi l-kbar.",
+    "p3": "Għodod ċentrali, awtomazzjoni intelliġenti u konnessjoni ma' kull kanal importanti – flimkien mal-portal tal-booking tiegħek stess b'kummissjoni baxxa. Hekk in-negozju tiegħek jikber b'aktar kontroll u inqas xogħol.",
+    "cta": "Skopri l-funzjonijiet",
+    "reichweite": "Maħluqa għal kull akkomodazzjoni żgħira.",
+    "typen": {
+      "hotel": "Lukanda",
+      "bnb": "B&B",
+      "gaestehaus": "Guest house",
+      "motel": "Motel",
+      "lodge": "Lodge",
+      "ferienwohnung": "Appartament tal-vaganzi",
+      "resort": "Resort",
+      "huette": "Għarix",
+      "pension": "Pensjon",
+      "campingplatz": "Sit tal-camping"
+    },
+    "belegeHeading": "Fuq xiex tista' toqgħod",
+    "belege": {
+      "neu": "Ġdid fl-2026 – żviluppata minn sidien attivi, powered by AirSmil",
+      "eu": "Mibnija fid-Danimarka, ospitata fl-UE u konformi mal-GDPR",
+      "kanaele": "56 pjattaforma tal-booking permezz tas-sieħeb tal-konnettività tagħna Channex",
+      "start": "Tnedija fl-1 ta' Settembru 2026 f'27 pajjiż Ewropew, bi 24 lingwa"
+    },
+    "eyebrow": "Il-pjattaforma",
+    "typenEyebrow": "Għal min hi"
+  },
+  "benefits": {
+    "eyebrow": "Għaliex myNextDays",
+    "sub": "Tliet affarijiet li tassew jgħoddu fir-rutina ta' kuljum tal-kiri — għalihom inbniet il-pjattaforma.",
+    "heading": "Aktar bookings. Inqas xogħol.",
+    "buchungen": {
+      "title": "Aqla' aktar bookings",
+      "text": "Kun viżibbli fuq kull kanal ewlieni u fuq is-sit tiegħek stess. Kalendarju ċentrali wieħed iżomm kollox sinkronizzat – tmiem għad-double bookings."
+    },
+    "betrieb": {
+      "title": "Issimplifika l-operat",
+      "text": "Immaniġġja propjetajiet, bookings, tindif u kontabilità minn post wieħed – fl-uffiċċju jew waqt li tkun barra."
+    },
+    "fair": {
+      "title": "Ġusta u Ewropea",
+      "text": "Prezz trasparenti mingħajr ostakli enterprise, mibnija fid-Danimarka, ospitata fl-UE skont il-GDPR. Appoġġ personali mit-tim li juża s-softwer huwa stess."
+    },
+    "preisBanner": {
+      "eyebrow": "Prezz",
+      "heading": "Dak kollu li teħtieġ il-propjetà tiegħek, f'post wieħed",
+      "text": "30 jum b'xejn. Bla perjodu minimu. Ikkanċella meta trid (4 ġimgħat sa tmiem ix-xahar).",
+      "preis": "€19.90",
+      "proMonat": "fix-xahar",
+      "tarif": "Pjan wieħed għal kulħadd, inkluża propjetà waħda",
+      "objekte": "Kull propjetà addizzjonali +€6/5/4 (skala dixxendenti)",
+      "provision": "Kanali esterni 1 % · il-portal tiegħek 8 %",
+      "cta": "Ara l-prezzijiet"
+    }
+  },
+  "trial": {
+    "eyebrow": "Prova b'xejn",
+    "heading": "Ipprova myNextDays b'xejn għal 30 jum.",
+    "sub": "Bla perjodu minimu. Ikkanċella meta trid. Sempliċement imla din il-formola qasira:",
+    "seitenHeading": "Dak kollu li teħtieġ il-propjetà tiegħek f'post wieħed – aktar kontroll, inqas xogħol.",
+    "perks": {
+      "buchungen": {
+        "title": "Aktar bookings",
+        "text": "fuq kull kanal ewlieni u fuq il-portal tiegħek, mingħajr double bookings."
+      },
+      "kontrolle": {
+        "title": "Kontroll sħiħ",
+        "text": "fuq check-ins, bookings u fatturi f'post wieħed."
+      },
+      "freiheit": {
+        "title": "Aktar libertà",
+        "text": "immaniġġja l-propjetà tiegħek mill-mowbajl, minn kullimkien."
+      }
+    },
+    "vorname": "Isem",
+    "nachname": "Kunjom",
+    "email": "Email",
+    "emailPlatzhalter": "isem@ezempju.com",
+    "einwilligung": "Iva, nixtieq nirċievi kultant aħbarijiet, stediniet għal webinars u offerti mingħand myNextDays. Tista' tirtira l-kunsens tiegħek meta trid.",
+    "absenden": "Ibda issa",
+    "dankeTitel": "Grazzi ħafna!",
+    "dankeText": "Nikkuntattjawk dalwaqt."
+  },
+  "features": {
+    "heading": "Sistema waħda. Login wieħed.",
+    "baldBadge": "Dalwaqt",
+    "hinweis": "Il-fatturar bażiku huwa inkluż mit-tnedija. Il-kontabilità avvanzata (esportazzjoni DATEV), il-ġestjoni tal-persunal, is-suq tal-fornituri tas-servizzi u l-funzjonijiet tal-lukandi huma moduli addizzjonali.",
+    "eyebrow": "Funzjonijiet",
+    "sub": "Aċċess wieħed għan-negozju, għas-sidien, għall-mistednin u għat-tindif — kull rwol jara eżattament il-qasam tiegħu.",
+    "alleAnsehen": "Skopri l-funzjonijiet kollha fil-prova",
+    "neu": {
+      "title": "myNextDays AI u avatar",
+      "text": "Avatar u kontroll bil-vuċi, AI concierge għall-mistoqsijiet tal-mistednin, u prezzijiet li jimxu mal-istaġun u mad-domanda."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property management",
+        "items": "Multi-kalendarju ċentrali, pjan tal-okkupanza, riżervazzjonijiet, kompiti, dejta tal-propjetà u tal-faċilitajiet"
+      },
+      "channel": {
+        "title": "Channel manager",
+        "items": "56 pjattaforma tal-booking permezz ta' Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, sinkronizzazzjoni fiż-żewġ direzzjonijiet f'ħin reali"
+      },
+      "direkt": {
+        "title": "Booking dirett",
+        "items": "Portal tal-booking tiegħek, widget tal-booking, website builder, dominju tiegħek, 1 % minflok 15–18 % kummissjoni OTA"
+      },
+      "preise": {
+        "title": "Prezzijiet u dħul",
+        "items": "Prezzijiet dinamiċi b'min./max., rate plans għal kull propjetà, loġika tal-istaġun u tal-okkupanza, prijorità lill-prezzijiet manwali"
+      },
+      "gaeste": {
+        "title": "Esperjenza tal-mistednin",
+        "items": "Gwida diġitali għall-mistednin, AI concierge, check-in online, messaġġi awtomatiċi, 24 lingwa"
+      },
+      "zahlungen": {
+        "title": "Ħlasijiet u fatturar",
+        "items": "Ħlasijiet online, depożiti, garanziji, fatturi bażiċi, esportazzjonijiet lesti għall-kontabilità"
+      },
+      "team": {
+        "title": "Tim u rwoli",
+        "items": "Login għas-sid bil-pagamenti, login għat-tindif b'checklists bir-ritratti, kompiti, permessi separati"
+      },
+      "app": {
+        "title": "App mobbli",
+        "items": "App nattiva b'logins separati għas-sidien, għall-mistednin u għat-tindif, mexxi n-negozju waqt li tkun barra"
+      },
+      "auswertungen": {
+        "title": "Analiżi",
+        "items": "Okkupanza, dħul, ADR, rapporti awtomatiċi, tqabbil bejn il-kanali, metasearch dalwaqt"
+      }
+    }
+  },
+  "ki": {
+    "eyebrow": "AI u vuċi",
+    "heading": "Il-pjattaforma tieħdlek ir-rutina minn idejk.",
+    "sub": "Mexxi kollox bla ma tmiss xejn, ħalli l-mistoqsijiet tal-mistednin iwieġbu lilhom infushom, żomm il-prezzijiet jimxu — mingħajr ma titgħallem ebda triq ta' clicks.",
+    "voice": {
+      "title": "Avatar / kontroll bil-vuċi",
+      "text": "Mexxi kollox bil-vuċi u ħalli avatar iwieġbek: iċċekkja l-okkupanza, immaniġġja bookings u kompiti, ibdel il-prezzijiet – waqt li tkun fit-triq jew tkun qed tħejji propjetà."
+    },
+    "concierge": {
+      "title": "AI concierge għall-mistednin tiegħek",
+      "text": "Il-gwida diġitali tal-mistednin twieġeb waħedha dwar il-password tal-Wi-Fi, il-key box, il-boroż taż-żibel u l-pariri lokali — bi 24 lingwa, madwar il-ħin kollu."
+    },
+    "preise": {
+      "title": "Prezzijiet li jaħsbu miegħek",
+      "text": "Issettja prezz bażi b'minimu u massimu għal kull propjetà; il-prezzijiet ta' kull lejl jimxu mal-istaġun, mal-okkupanza u mad-domanda. Il-prezzijiet manwali dejjem jieħdu prijorità."
+    },
+    "cta": "Ara l-funzjonijiet",
+    "blaseFrage": "Kif inhi l-okkupanza l-ġimgħa d-dieħla?",
+    "blaseAntwort": "18 minn 24 lejl mibbukjati. Żewġ vojt fi tmiem il-ġimgħa – tbaxxi l-prezz?",
+    "eingabe": "Staqsi lil myNextDays …",
+    "baldBadge": "Dalwaqt"
+  },
+  "integrationen": {
+    "eyebrow": "Firxa",
+    "heading": "56 pjattaforma tal-booking – interfaċċa waħda.",
+    "p1": "Permezz tas-sieħeb tal-konnettività tagħna Channex tqassam id-disponibbiltà, il-prezzijiet u r-restrizzjonijiet lil 56 pjattaforma tal-booking – fosthom Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda u Tripadvisor. Sinkronizzazzjoni fiż-żewġ direzzjonijiet f'ħin reali: booking fuq portal wieħed jimblokka dak il-lejl kullimkien ieħor.",
+    "p2": "Ma' dan jiżdied id-distribuzzjoni tiegħek stess: il-portal tal-booking b'kummissjoni baxxa fuq myNextDays, widget tal-booking għas-sit tiegħek u kanali reġjonali li tista' tixgħel wieħed wieħed. Kull kanal jinkontrolla separatament – int tiddeċiedi fejn tidher propjetà.",
+    "cta": "Qabbad il-kanali fil-prova"
+  },
+  "testimonials": {
+    "eyebrow": "Wara l-pjattaforma",
+    "heading": "Għaliex bnejna myNextDays.",
+    "gruenderin": {
+      "quote": "myNextDays twieldet mir-rutina tagħna stess tal-kiri f'AirSmil – qed nibnu eżattament is-softwer li konna nixtiequ li kellna.",
+      "name": "Jeanine Ågaard",
+      "location": "Fundatriċi myNextDays / AirSmil"
+    }
+  },
+  "stimmen": {
+    "eyebrow": "Vuċijiet mill-prattika",
+    "heading": "X'jgħidulna s-sidien li jilqgħu l-mistednin.",
+    "vorschauHinweis": "Previżjoni tal-layout b'testi ta' eżempju – hawn aktar tard jidhru kwotazzjonijiet veri u approvati.",
+    "zurueck": "Xhieda ta' qabel",
+    "vor": "Xhieda li jmiss",
+    "zeigeStimme": "Uri x-xhieda {nummer}"
+  },
+  "stats": {
+    "eyebrow": "Numri li nistgħu nippruvaw",
+    "heading": "Il-pjattaforma tal-kiri, mibnija minn nies li jikru huma stess.",
+    "sub": "Tnedija fl-1 ta' Settembru 2026 f'27 pajjiż.",
+    "laender": {
+      "value": "27",
+      "label": "Pajjiżi",
+      "text": "Pajjiżi Ewropej mat-tnedija"
+    },
+    "sprachen": {
+      "value": "24",
+      "label": "Lingwi",
+      "text": "Interfaċċa u komunikazzjoni mal-mistednin"
+    },
+    "kanaele": {
+      "value": "56",
+      "label": "Pjattaformi",
+      "text": "Pjattaformi tal-booking permezz ta' Channex"
+    },
+    "hosting": {
+      "value": "100 %",
+      "label": "Hosting fl-UE",
+      "text": "Mibnija fid-Danimarka, konformi mal-GDPR"
+    },
+    "vermieter": {
+      "label": "Żviluppata minn sidien",
+      "text": "Mir-rutina reali tal-kiri f'AirSmil"
+    }
+  },
+  "usecases": {
+    "eyebrow": "Għal min nibnu",
+    "heading": "Tliet tipi ta' negozju, pjattaforma waħda.",
+    "sub": "Akkomodazzjoni tal-vaganzi, kamra ta' lukanda jew portafoll sħiħ — l-istess interfaċċa, imqiegħda flimkien b'mod differenti għal kull operat.",
+    "ferienobjekt": {
+      "label": "Akkomodazzjoni tal-vaganzi",
+      "title": "Djar u appartamenti tal-vaganzi",
+      "text": "Propjetà waħda jew aktar li tikri int stess — bla reception, imma bi tqassim taċ-ċwievet, tindif u mistoqsijiet tal-mistednin.",
+      "punkte": {
+        "kanaele": "Portali u s-sit tiegħek f'kalendarju wieħed",
+        "kalender": "Ippjana t-tindif u t-tqassim taċ-ċwievet għal kull propjetà",
+        "gaeste": "Check-in online u gwida diġitali għall-mistednin bi 24 lingwa"
+      }
+    },
+    "hotel": {
+      "label": "Lukanda u pensjon",
+      "title": "Kmamar, mhux kontenituri",
+      "text": "Kull kamra hija unità bbukkjabbli għaliha b'rati tagħha — bla ma tgħaddi minn kategoriji ta' kmamar b'kwantitajiet.",
+      "punkte": {
+        "zimmer": "Disponibbiltà għal kull kamra fuq il-portali kollha",
+        "raten": "Rate plans għal kull kamra, derivati jew manwali",
+        "rezeption": "Ħarsa ġenerali ta' kuljum tal-wasliet u t-tluq"
+      }
+    },
+    "agentur": {
+      "label": "Aġenzija u ġestjoni",
+      "title": "Portafoll ta' diversi sidien",
+      "text": "Timmaniġġja propjetajiet ta' ħaddieħor: kontabilità separata, aċċess għal kull sid, ċifri ċari għal kull propjetà.",
+      "punkte": {
+        "portfolio": "Il-propjetajiet kollha fi pjan wieħed tal-okkupanza",
+        "eigentuemer": "Login għas-sid bl-okkupanza u l-pagamenti",
+        "abrechnung": "Rendikonti u kummissjonijiet għal kull propjetà"
+      }
+    }
+  },
+  "footer": {
+    "claim": "Il-pjattaforma għal min jikri akkomodazzjoni tal-vaganzi – aktar bookings, inqas xogħol.",
+    "appLaden": "Niżżel l-app",
+    "spalten": {
+      "produkt": "Prodott",
+      "loesungen": "Soluzzjonijiet",
+      "ressourcen": "Riżorsi",
+      "unternehmen": "Kumpanija"
+    },
+    "produkt": {
+      "pms": "Property management",
+      "channelManager": "Channel manager",
+      "direktbuchung": "Booking dirett",
+      "zahlungen": "Ħlasijiet",
+      "mobileApp": "App mobbli"
+    },
+    "loesungen": {
+      "hotels": "Lukandi",
+      "bnb": "B&Bs",
+      "gaestehaeuser": "Guest houses",
+      "ferienwohnungen": "Akkomodazzjoni tal-vaganzi",
+      "campingplaetze": "Siti tal-camping"
+    },
+    "ressourcen": {
+      "blog": "Blog",
+      "hilfeCenter": "Ċentru tal-għajnuna",
+      "webinare": "Webinars",
+      "leitfaeden": "Gwidi",
+      "api": "Dokumentazzjoni API"
+    },
+    "unternehmen": {
+      "ueberUns": "Dwarna",
+      "karriere": "Karrieri",
+      "partner": "Sħab",
+      "kontakt": "Kuntatt",
+      "presse": "Stampa"
+    },
+    "copyright": "© 2026 myNextDays. Id-drittijiet kollha riżervati.",
+    "agb": "Termini",
+    "datenschutz": "Privatezza",
+    "impressum": "Avviż legali",
+    "cookies": "Politika tal-cookies",
+    "avv": "Ipproċessar tad-dejta"
+  },
+  "abschluss": {
+    "heading": "Lest biex tmexxi l-propjetà tiegħek minn post wieħed?",
+    "sub": "Ipprova b'xejn għal 30 jum — bla perjodu minimu, bla ħlas ta' setup, ikkanċella meta trid.",
+    "ctaPrimaer": "Ipprova 30 jum b'xejn",
+    "ctaSekundaer": "Ara l-prezzijiet"
+  },
+  "chat": {
+    "titel": "Mistoqsijiet? Aħna hawn.",
+    "untertitel": "Normalment inwieġbu fi ftit sigħat.",
+    "name": "Isem",
+    "email": "Email",
+    "telefon": "Telefown (mhux obbligatorju)",
+    "nachricht": "Il-messaġġ tiegħek",
+    "absenden": "Ibgħat il-messaġġ",
+    "sendet": "Qed jintbagħat …",
+    "platzhalter": "Ikteb messaġġ …",
+    "senden": "Ibgħat",
+    "oeffnen": "Iftaħ iċ-chat",
+    "schliessen": "Agħlaq iċ-chat",
+    "hinweis": "Nużaw id-dettalji tiegħek biss biex inwieġbu din it-talba.",
+    "fehler": "Dan ma rnexxiex. Erġa' pprova aktar tard."
+  },
+  "einblicke": {
+    "eyebrow": "Inside the product",
+    "heading": "How myNextDays actually works",
+    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "hotel": {
+      "title": "Hotels and holiday rentals in one interface",
+      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+    },
+    "objekte": {
+      "title": "Visibility per channel, not one switch for everything",
+      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+    },
+    "kanaele": {
+      "title": "Connect portals and keep your own direct channel",
+      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+    }
+  }
+}

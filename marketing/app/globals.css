@@ -239,6 +239,110 @@ h1, h2, h3 {
   }
 }
 
+/* Sprechblasen der KI-Szene: erscheinen von unten, schweben danach leicht.
+   Zwei getrennte Animationen, damit das Erscheinen einmal läuft und das
+   Schweben danach endlos weitergeht. */
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bubble-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.45rem);
+  }
+}
+
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-0.2rem);
+  }
+}
+
+.bubble-in {
+  animation:
+    bubble-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both,
+    bubble-float 6s ease-in-out 0.45s infinite;
+}
+
+/* Zweite Blase schwebt langsamer und gegenläufig — sonst wippen beide im
+   Gleichtakt und es wirkt mechanisch. */
+.bubble-in-slow {
+  animation:
+    bubble-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both,
+    bubble-float 7.5s ease-in-out 1.2s infinite reverse;
+}
+
+.typing-dot {
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble-in,
+  .bubble-in-slow {
+    animation: bubble-in 0.01s both;
+  }
+
+  .typing-dot {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* Kanal-Orbit: JEDER Planet läuft auf einer eigenen Bahn mit eigener Dauer
+   (Kepler: je weiter außen, desto langsamer) — deshalb steht hier nur die
+   Bewegung, die Dauer setzt die Komponente je Blase. Ein starrer Ring, auf dem
+   alle im Gleichschritt wandern, sieht aus wie ein Karussell; erst die
+   unterschiedlichen Umlaufzeiten lassen die Abstände driften.
+
+   Die Blase dreht mit DERSELBEN Dauer zurück, sonst stünden die Logos nach
+   einer halben Umdrehung auf dem Kopf. */
+@keyframes orbit-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.orbit-bahn {
+  animation: orbit-spin linear infinite;
+}
+
+.orbit-gegen {
+  animation: orbit-spin linear infinite reverse;
+}
+
+.orbit-punkte {
+  animation: orbit-spin 140s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-bahn,
+  .orbit-gegen,
+  .orbit-punkte {
+    animation: none;
+  }
+}
+
 /* Eyebrow — die kleine Zeile ÜBER jeder Sektions-Überschrift. Gibt der
    Landingpage einen gleichmäßigen Lese-Rhythmus (Kategorie → Aussage →
    Erklärung). Gesperrte Versalien, Inter, nicht die Display-Schrift. */

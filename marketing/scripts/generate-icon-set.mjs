@@ -20,7 +20,13 @@ function walk(dir) {
   });
 }
 
-const sources = ROOTS.flatMap(walk).filter((p) => /\.tsx?$/.test(p));
+// Die Zieldatei selbst NICHT mitlesen: sie enthält jeden Icon-Namen als
+// Schlüssel und würde sich sonst selbst am Leben halten — ein einmal
+// aufgenommenes Icon ließe sich nie wieder entfernen, auch wenn es keine
+// Komponente mehr verwendet.
+const sources = ROOTS.flatMap(walk).filter(
+  (p) => /\.tsx?$/.test(p) && p !== OUT,
+);
 const used = new Set();
 for (const file of sources) {
   for (const match of readFileSync(file, "utf8").matchAll(/"ph:([a-z0-9-]+)"/g)) {

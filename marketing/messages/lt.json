@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "title": "myNextDays – nuomotojų platforma atostogų būstams",
+    "description": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje. Sukurta Danijoje, talpinama ES. Nuo 19,90 € per mėnesį. 30 dienų nemokamai."
+  },
+  "nav": {
+    "funktionen": "Funkcijos",
+    "preise": "Kainos",
+    "kanaele": "Kanalai",
+    "kunden": "Klientai",
+    "ressourcen": "Ištekliai",
+    "sprache": "Kalba",
+    "spracheWaehlen": "Pasirinkite kalbą",
+    "anmelden": "Prisijungti",
+    "kostenlosStarten": "Pradėkite nemokamai",
+    "sprachModalTitel": "Kalba ir regionas",
+    "sprachModalHeading": "Pasirinkite kalbą",
+    "sprachModalHinweis": "Pasirinkimas galioja šiai svetainei ir perkeliamas į jūsų paskyrą.",
+    "schliessen": "Uždaryti",
+    "suche": "Ieškoti kalbos",
+    "keinTreffer": "Kalbų nerasta."
+  },
+  "hero": {
+    "trustNeu": "Nauja 2026 m.",
+    "trustVermieter": "nuomotojų sukurta nuomotojams",
+    "trustAirsmil": "powered by AirSmil",
+    "trustEu": "Talpinama ES (BDAR)",
+    "headlinePre": "Daugiau",
+    "headlineHighlight": "rezervacijų",
+    "headlinePost": "mažiau darbo.",
+    "subline": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje – sukurta nuomotojų, kurie žino kasdienybę.",
+    "ctaTrial": "30 dienų nemokamai",
+    "ctaDemo": "Peržiūrėkite demonstraciją",
+    "kanaeleLabel": "Prijungta prie didžiausių rezervacijų platformų",
+    "eyebrow": "Nuomotojų platforma atostogų būstams",
+    "kanaeleEyebrow": "Pardavimo kanalai",
+    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+  },
+  "intro": {
+    "heading": "Sveiki atvykę į myNextDays.",
+    "p1": "Visavertė Property Management sistema kartu su kanalų valdymo sistema – viešbučiams, agentūroms ir atostogų būstų nuomotojams. Nepriklausoma ir sąžininga, be korporacijų sudėtingumo ir enterprise kainų.",
+    "p2": "Padidinkite užimtumą, supaprastinkite kasdienybę ir suteikite svečiams puikių įspūdžių – be didelių sistemų sudėtingumo ir enterprise kainų.",
+    "p3": "Viskas vienoje vietoje, išmanus automatizavimas ir ryšys su visais svarbiais kanalais – prie to dar ir savas rezervacijų portalas su maža komisija. Taip jūsų verslas auga su didesne kontrole ir mažesnėmis pastangomis.",
+    "cta": "Susipažinkite su funkcijomis",
+    "reichweite": "Sukurta kiekvienam mažam apgyvendinimo objektui.",
+    "typen": {
+      "hotel": "Viešbutis",
+      "bnb": "B&B",
+      "gaestehaus": "Svečių namai",
+      "motel": "Motelis",
+      "lodge": "Lodge",
+      "ferienwohnung": "Atostogų butas",
+      "resort": "Kurortas",
+      "huette": "Namelis",
+      "pension": "Pensionas",
+      "campingplatz": "Kempingas"
+    },
+    "belegeHeading": "Kuo galite pasikliauti",
+    "belege": {
+      "neu": "Nauja 2026 m. – sukurta aktyvių nuomotojų, powered by AirSmil",
+      "eu": "Sukurta Danijoje, talpinama ES ir atitinka BDAR",
+      "kanaele": "56 rezervacijų platformos per mūsų jungiamumo partnerį Channex",
+      "start": "Startas 2026 m. rugsėjo 1 d. 27 Europos šalyse, 24 kalbomis"
+    },
+    "eyebrow": "Platforma",
+    "typenEyebrow": "Kam ji skirta"
+  },
+  "benefits": {
+    "eyebrow": "Kodėl myNextDays",
+    "sub": "Trys dalykai, kurie nuomos kasdienybėje iš tiesų svarbūs — būtent jiems platforma ir sukurta.",
+    "heading": "Daugiau rezervacijų. Mažiau darbo.",
+    "buchungen": {
+      "title": "Gaukite daugiau rezervacijų",
+      "text": "Būkite matomi visuose pagrindiniuose kanaluose ir savo svetainėje. Vienas centrinis kalendorius viską sinchronizuoja – dvigubų rezervacijų nebelieka."
+    },
+    "betrieb": {
+      "title": "Supaprastinkite veiklą",
+      "text": "Valdykite objektus, rezervacijas, valymą ir apskaitą vienoje vietoje – prie darbo stalo arba kelyje."
+    },
+    "fair": {
+      "title": "Sąžininga ir europietiška",
+      "text": "Skaidri kaina be enterprise barjerų, sukurta Danijoje, talpinama ES pagal BDAR. Asmeninė pagalba iš komandos, kuri pati naudoja šią programinę įrangą."
+    },
+    "preisBanner": {
+      "eyebrow": "Kaina",
+      "heading": "Viskas jūsų apgyvendinimo objektui vienoje vietoje",
+      "text": "30 dienų nemokamai. Be minimalaus termino. Nutraukiama bet kada (4 savaitės iki mėnesio pabaigos).",
+      "preis": "19,90 €",
+      "proMonat": "per mėnesį",
+      "tarif": "Vienas planas visiems, įskaitant 1 objektą",
+      "objekte": "Kiekvienas papildomas objektas +6/5/4 € (mažėjanti skalė)",
+      "provision": "Išoriniai kanalai 1 % · savas portalas 8 %",
+      "cta": "Žiūrėti kainas"
+    }
+  },
+  "trial": {
+    "eyebrow": "Nemokamas bandymas",
+    "heading": "Išbandykite myNextDays 30 dienų nemokamai.",
+    "sub": "Be minimalaus termino. Nutraukiama bet kada. Tiesiog užpildykite šią trumpą formą:",
+    "seitenHeading": "Viskas jūsų apgyvendinimo objektui vienoje vietoje – daugiau kontrolės, mažiau darbo.",
+    "perks": {
+      "buchungen": {
+        "title": "Daugiau rezervacijų",
+        "text": "per visus pagrindinius kanalus ir savo portalą, be dvigubų rezervacijų."
+      },
+      "kontrolle": {
+        "title": "Visiška kontrolė",
+        "text": "svečių registracijai, rezervacijoms ir sąskaitoms vienoje vietoje."
+      },
+      "freiheit": {
+        "title": "Daugiau laisvės",
+        "text": "valdykite savo objektą telefonu, kad ir kur būtumėte."
+      }
+    },
+    "vorname": "Vardas",
+    "nachname": "Pavardė",
+    "email": "El. paštas",
+    "emailPlatzhalter": "vardas@pavyzdys.lt",
+    "einwilligung": "Taip, noriu retkarčiais gauti naujienas, kvietimus į internetinius seminarus ir myNextDays pasiūlymus. Sutikimą galite atšaukti bet kada.",
+    "absenden": "Pradėkite dabar",
+    "dankeTitel": "Ačiū!",
+    "dankeText": "Netrukus su jumis susisieksime."
+  },
+  "features": {
+    "heading": "Viena sistema. Vienas prisijungimas.",
+    "baldBadge": "Netrukus",
+    "hinweis": "Pagrindinės sąskaitos įtrauktos jau nuo starto. Išplėstinė buhalterija (DATEV eksportas), darbuotojų valdymas, paslaugų teikėjų prekyvietė ir viešbučių funkcijos yra papildomi moduliai.",
+    "eyebrow": "Funkcijos",
+    "sub": "Viena prieiga verslui, savininkams, svečiams ir valymo tarnybai — kiekvienas vaidmuo mato tiksliai savo sritį.",
+    "alleAnsehen": "Išbandykite visas funkcijas nemokamo bandymo metu",
+    "neu": {
+      "title": "myNextDays DI ir avataras",
+      "text": "Avataras ir balso valdymas, DI konsjeržas svečių klausimams ir kainos, kurios prisitaiko prie sezono ir paklausos."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property Management",
+        "items": "Centrinis daugiaobjektis kalendorius, užimtumo planas, rezervacijos, užduotys, objektų ir įrangos duomenys"
+      },
+      "channel": {
+        "title": "Kanalų valdymo sistema",
+        "items": "56 rezervacijų platformos per Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, dvipusis sinchronizavimas realiuoju laiku"
+      },
+      "direkt": {
+        "title": "Tiesioginė rezervacija",
+        "items": "Savas rezervacijų portalas, rezervacijų valdiklis, svetainių kūrimo įrankis, savas domenas, 1 % vietoj 15–18 % OTA komisijos"
+      },
+      "preise": {
+        "title": "Kainos ir pajamos",
+        "items": "Dinaminės kainos su min. ir maks., kainų planai kiekvienam objektui, sezono ir užimtumo logika, rankinės kainos turi pirmenybę"
+      },
+      "gaeste": {
+        "title": "Svečių patirtis",
+        "items": "Skaitmeninis svečio aplankas, DI konsjeržas, registracija internetu, automatinės žinutės, 24 kalbos"
+      },
+      "zahlungen": {
+        "title": "Mokėjimai ir apskaita",
+        "items": "Mokėjimai internetu, avansai, užstatai, pagrindinės sąskaitos, buhalterijai paruošti eksportai"
+      },
+      "team": {
+        "title": "Komanda ir vaidmenys",
+        "items": "Savininko prisijungimas su išmokomis, valymo prisijungimas su nuotraukų kontroliniais sąrašais, užduotys, atskirtos teisės"
+      },
+      "app": {
+        "title": "Mobilioji programėlė",
+        "items": "Vietinė programėlė su atskirais prisijungimais savininkams, svečiams ir valymo tarnybai, valdykite verslą kelyje"
+      },
+      "auswertungen": {
+        "title": "Analitika",
+        "items": "Užimtumas, pajamos, ADR, automatinės ataskaitos, kanalų palyginimas, metapaieška netrukus"
+      }
+    }
+  },
+  "ki": {
+    "eyebrow": "DI ir balsas",
+    "heading": "Platforma perima rutiną už jus.",
+    "sub": "Valdykite balsu, leiskite svečių klausimams atsakyti patiems, o kainoms sekti rinką — nemokydamiesi nė vieno paspaudimo.",
+    "voice": {
+      "title": "Avataras / balso valdymas",
+      "text": "Valdykite balsu ir leiskite avatarui atsakyti: patikrinkite užimtumą, tvarkykite rezervacijas ir užduotis, keiskite kainas – kai esate kelyje arba ruošiate objektą."
+    },
+    "concierge": {
+      "title": "DI konsjeržas jūsų svečiams",
+      "text": "Skaitmeninis svečio aplankas pats atsako apie Wi-Fi slaptažodį, raktų dėžutę, šiukšlių konteinerius ir vietinius patarimus — 24 kalbomis, visą parą."
+    },
+    "preise": {
+      "title": "Kainos, kurios mąsto kartu",
+      "text": "Nustatykite bazinę kainą su min. ir maks. kiekvienam objektui; nakvynės kainos prisitaiko prie sezono, užimtumo ir paklausos. Rankinės kainos visada turi pirmenybę."
+    },
+    "cta": "Peržiūrėkite funkcijas",
+    "blaseFrage": "Koks užimtumas kitą savaitę?",
+    "blaseAntwort": "Užimtos 18 iš 24 naktų. Dvi spragos savaitgalį – gal sumažinti kainą?",
+    "eingabe": "Klauskite myNextDays …",
+    "baldBadge": "Netrukus"
+  },
+  "integrationen": {
+    "eyebrow": "Pasiekiamumas",
+    "heading": "56 rezervacijų platformos – viena sąsaja.",
+    "p1": "Per mūsų jungiamumo partnerį Channex paskirstote laisvas vietas, kainas ir apribojimus 56 rezervacijų platformoms – tarp jų Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda ir Tripadvisor. Dvipusis sinchronizavimas realiuoju laiku: rezervacija viename portale užblokuoja tą naktį visur kitur.",
+    "p2": "Prie to prisideda ir jūsų pačių pardavimai: mažos komisijos rezervacijų portalas myNextDays platformoje, rezervacijų valdiklis jūsų svetainei ir regioniniai kanalai, kuriuos įjungiate po vieną. Kiekvienas kanalas valdomas atskirai – jūs sprendžiate, kur objektas matomas.",
+    "cta": "Prijunkite kanalus nemokamo bandymo metu"
+  },
+  "testimonials": {
+    "eyebrow": "Už platformos",
+    "heading": "Kodėl sukūrėme myNextDays.",
+    "gruenderin": {
+      "quote": "myNextDays gimė iš mūsų pačių nuomos kasdienybės AirSmil – kuriame būtent tokią programinę įrangą, kokios patys būtume norėję.",
+      "name": "Jeanine Ågaard",
+      "location": "myNextDays / AirSmil įkūrėja"
+    }
+  },
+  "stimmen": {
+    "eyebrow": "Balsai iš praktikos",
+    "heading": "Ką pasakoja šeimininkai.",
+    "vorschauHinweis": "Maketo peržiūra su pavyzdiniais tekstais – vėliau čia bus tikros, patvirtintos citatos.",
+    "zurueck": "Ankstesnis atsiliepimas",
+    "vor": "Kitas atsiliepimas",
+    "zeigeStimme": "Rodyti atsiliepimą {nummer}"
+  },
+  "stats": {
+    "eyebrow": "Skaičiai, kuriuos galime pagrįsti",
+    "heading": "Nuomotojų platforma, sukurta žmonių, kurie patys nuomoja.",
+    "sub": "Startas 2026 m. rugsėjo 1 d. 27 šalyse.",
+    "laender": {
+      "value": "27",
+      "label": "Šalys",
+      "text": "Europos šalys starto metu"
+    },
+    "sprachen": {
+      "value": "24",
+      "label": "Kalbos",
+      "text": "Sąsaja ir bendravimas su svečiais"
+    },
+    "kanaele": {
+      "value": "56",
+      "label": "Platformos",
+      "text": "Rezervacijų platformos per Channex"
+    },
+    "hosting": {
+      "value": "100 %",
+      "label": "Talpinimas ES",
+      "text": "Sukurta Danijoje, atitinka BDAR"
+    },
+    "vermieter": {
+      "label": "Sukurta nuomotojų",
+      "text": "Iš tikros nuomos kasdienybės AirSmil"
+    }
+  },
+  "usecases": {
+    "eyebrow": "Kam kuriame",
+    "heading": "Trys veiklos rūšys, viena platforma.",
+    "sub": "Atostogų būstas, viešbučio kambarys ar visas portfelis — ta pati sąsaja, kiekvienai veiklai sudėliota kitaip.",
+    "ferienobjekt": {
+      "label": "Atostogų būstas",
+      "title": "Atostogų namai ir butai",
+      "text": "Vienas ar keli objektai, kuriuos nuomojate patys — be registratūros, bet su raktų perdavimais, valymu ir svečių klausimais.",
+      "punkte": {
+        "kanaele": "Portalai ir sava svetainė viename kalendoriuje",
+        "kalender": "Valymo ir perdavimų planavimas kiekvienam objektui",
+        "gaeste": "Registracija internetu ir skaitmeninis svečio aplankas 24 kalbomis"
+      }
+    },
+    "hotel": {
+      "label": "Viešbutis ir pensionas",
+      "title": "Kambariai, o ne konteineriai",
+      "text": "Kiekvienas kambarys yra atskiras rezervuojamas vienetas su savo kainomis — jokių aplinkkelių per kambarių kategorijas su kiekiais.",
+      "punkte": {
+        "zimmer": "Laisvos vietos kambario tikslumu visuose portaluose",
+        "raten": "Kainų planai kiekvienam kambariui, išvestiniai arba rankiniai",
+        "rezeption": "Dienos apžvalga: atvykimai ir išvykimai"
+      }
+    },
+    "agentur": {
+      "label": "Agentūra ir valdymas",
+      "title": "Kelių savininkų portfelis",
+      "text": "Valdote svetimus objektus: atskira apskaita, sava prieiga kiekvienam savininkui, aiškūs skaičiai kiekvienam objektui.",
+      "punkte": {
+        "portfolio": "Visi objektai viename užimtumo plane",
+        "eigentuemer": "Savininko prisijungimas su užimtumu ir išmokomis",
+        "abrechnung": "Sąskaitų išrašai ir komisiniai kiekvienam objektui"
+      }
+    }
+  },
+  "footer": {
+    "claim": "Nuomotojų platforma atostogų būstams – daugiau rezervacijų, mažiau darbo.",
+    "appLaden": "Atsisiųskite programėlę",
+    "spalten": {
+      "produkt": "Produktas",
+      "loesungen": "Sprendimai",
+      "ressourcen": "Ištekliai",
+      "unternehmen": "Įmonė"
+    },
+    "produkt": {
+      "pms": "Property Management",
+      "channelManager": "Kanalų valdymo sistema",
+      "direktbuchung": "Tiesioginė rezervacija",
+      "zahlungen": "Mokėjimai",
+      "mobileApp": "Mobilioji programėlė"
+    },
+    "loesungen": {
+      "hotels": "Viešbučiai",
+      "bnb": "B&B",
+      "gaestehaeuser": "Svečių namai",
+      "ferienwohnungen": "Atostogų butai",
+      "campingplaetze": "Kempingai"
+    },
+    "ressourcen": {
+      "blog": "Tinklaraštis",
+      "hilfeCenter": "Pagalbos centras",
+      "webinare": "Internetiniai seminarai",
+      "leitfaeden": "Vadovai",
+      "api": "API dokumentacija"
+    },
+    "unternehmen": {
+      "ueberUns": "Apie mus",
+      "karriere": "Karjera",
+      "partner": "Partneriai",
+      "kontakt": "Kontaktai",
+      "presse": "Spaudai"
+    },
+    "copyright": "© 2026 myNextDays. Visos teisės saugomos.",
+    "agb": "Sąlygos",
+    "datenschutz": "Privatumas",
+    "impressum": "Teisinė informacija",
+    "cookies": "Slapukų politika",
+    "avv": "Duomenų tvarkymas"
+  },
+  "abschluss": {
+    "heading": "Pasiruošę valdyti savo objektą iš vienos vietos?",
+    "sub": "30 dienų nemokamai — be minimalaus termino, be įdiegimo mokesčio, nutraukiama bet kada.",
+    "ctaPrimaer": "30 dienų nemokamai",
+    "ctaSekundaer": "Žiūrėti kainas"
+  },
+  "chat": {
+    "titel": "Klausimų? Mes čia.",
+    "untertitel": "Paprastai atsakome per kelias valandas.",
+    "name": "Vardas",
+    "email": "El. paštas",
+    "telefon": "Telefonas (nebūtina)",
+    "nachricht": "Jūsų žinutė",
+    "absenden": "Siųsti žinutę",
+    "sendet": "Siunčiama …",
+    "platzhalter": "Parašykite žinutę …",
+    "senden": "Siųsti",
+    "oeffnen": "Atidaryti pokalbį",
+    "schliessen": "Uždaryti pokalbį",
+    "hinweis": "Jūsų duomenis naudojame tik tam, kad atsakytume į šią užklausą.",
+    "fehler": "Nepavyko. Bandykite dar kartą vėliau."
+  },
+  "einblicke": {
+    "eyebrow": "Inside the product",
+    "heading": "How myNextDays actually works",
+    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "hotel": {
+      "title": "Hotels and holiday rentals in one interface",
+      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+    },
+    "objekte": {
+      "title": "Visibility per channel, not one switch for everything",
+      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+    },
+    "kanaele": {
+      "title": "Connect portals and keep your own direct channel",
+      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+    }
+  }
+}

@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "title": "myNextDays – An t-ardán d'óstaigh cíosanna saoire",
+    "description": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin. Tógtha sa Danmhairg, óstáilte san AE. Ó €19,90 sa mhí. Saor in aisce ar feadh 30 lá."
+  },
+  "nav": {
+    "funktionen": "Gnéithe",
+    "preise": "Praghsáil",
+    "kanaele": "Cainéil",
+    "kunden": "Custaiméirí",
+    "ressourcen": "Acmhainní",
+    "sprache": "Teanga",
+    "spracheWaehlen": "Roghnaigh teanga",
+    "anmelden": "Logáil isteach",
+    "kostenlosStarten": "Tosaigh saor in aisce",
+    "sprachModalTitel": "Teanga agus réigiún",
+    "sprachModalHeading": "Roghnaigh teanga",
+    "sprachModalHinweis": "Baineann do rogha leis an suíomh seo agus leanann sí ar aghaidh chuig do chuntas.",
+    "schliessen": "Dún",
+    "suche": "Cuardaigh teanga",
+    "keinTreffer": "Níor aimsíodh aon teanga."
+  },
+  "hero": {
+    "trustNeu": "Nua in 2026",
+    "trustVermieter": "ó óstaigh, d'óstaigh",
+    "trustAirsmil": "powered by AirSmil",
+    "trustEu": "Óstáilte san AE (GDPR)",
+    "headlinePre": "Níos mó",
+    "headlineHighlight": "áirithintí",
+    "headlinePost": "níos lú stró.",
+    "subline": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin – tógtha ag óstaigh a bhfuil aithne acu ar an obair laethúil.",
+    "ctaTrial": "Bain triail as 30 lá saor in aisce",
+    "ctaDemo": "Féach ar an taispeántas",
+    "kanaeleLabel": "Ceangailte leis na mórardáin áirithinte",
+    "eyebrow": "An t-ardán d'óstaigh cíosanna saoire",
+    "kanaeleEyebrow": "Cainéil dáileacháin",
+    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+  },
+  "intro": {
+    "heading": "Fáilte chuig myNextDays.",
+    "p1": "Property management system iomlán chomh maith le channel manager – d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire. Neamhspleách agus cothrom, in ionad chastacht na gcorparáidí agus praghsanna enterprise.",
+    "p2": "Ardaigh do ráta áitíochta, simpligh an obair laethúil agus cuir eispéiris den scoth ar fáil do na haíonna – gan chastacht ná praghsanna enterprise na gcóras mór.",
+    "p3": "Uirlisí lárnacha, uathoibriú cliste agus nasc le gach cainéal tábhachtach – móide do thairseach áirithinte féin le coimisiún íseal. Fásann do ghnó le níos mó smachta agus níos lú stró.",
+    "cta": "Faigh amach faoi na gnéithe",
+    "reichweite": "Déanta do gach áit chónaithe bheag.",
+    "typen": {
+      "hotel": "Óstán",
+      "bnb": "B&B",
+      "gaestehaus": "Teach aíochta",
+      "motel": "Móitéal",
+      "lodge": "Lóiste",
+      "ferienwohnung": "Árasán saoire",
+      "resort": "Ionad saoire",
+      "huette": "Bothán",
+      "pension": "Teach lóistín",
+      "campingplatz": "Láithreán campála"
+    },
+    "belegeHeading": "Cad air ar féidir leat brath",
+    "belege": {
+      "neu": "Nua in 2026 – forbartha ag óstaigh ghníomhacha, powered by AirSmil",
+      "eu": "Tógtha sa Danmhairg, óstáilte san AE agus i gcomhréir le GDPR",
+      "kanaele": "56 ardán áirithinte trínár bpáirtí nascachta Channex",
+      "start": "Seoladh ar an 1 Meán Fómhair 2026 i 27 dtír Eorpacha, i 24 teanga"
+    },
+    "eyebrow": "An t-ardán",
+    "typenEyebrow": "Cé dó é"
+  },
+  "benefits": {
+    "eyebrow": "Cén fáth myNextDays",
+    "sub": "Trí rud a bhfuil tábhacht dháiríre leo in obair laethúil an chíosa — sin an fáth ar tógadh an t-ardán.",
+    "heading": "Níos mó áirithintí. Níos lú oibre.",
+    "buchungen": {
+      "title": "Faigh níos mó áirithintí",
+      "text": "Bí le feiceáil ar gach mórchainéal agus ar do shuíomh gréasáin féin. Coinníonn féilire lárnach amháin gach rud sioncronaithe – deireadh le háirithintí dúbailte."
+    },
+    "betrieb": {
+      "title": "Simpligh an oibríocht",
+      "text": "Bainistigh áitribh, áirithintí, glantachán agus cuntasaíocht ó aon áit amháin – ag an deasc nó agus tú ar an mbóthar."
+    },
+    "fair": {
+      "title": "Cothrom & Eorpach",
+      "text": "Praghas trédhearcach gan chonstaicí enterprise, tógtha sa Danmhairg, óstáilte san AE faoi GDPR. Tacaíocht phearsanta ón bhfoireann a úsáideann an bogearra í féin."
+    },
+    "preisBanner": {
+      "eyebrow": "Praghsáil",
+      "heading": "Gach a bhfuil de dhíth ar d'áitreabh, in aon áit amháin",
+      "text": "30 lá saor in aisce. Gan íostréimhse. Cealaigh am ar bith (4 seachtaine roimh dheireadh na míosa).",
+      "preis": "€19,90",
+      "proMonat": "sa mhí",
+      "tarif": "Plean amháin do chách, 1 áitreabh san áireamh",
+      "objekte": "Gach áitreabh breise +€6/5/4 (scála íslitheach)",
+      "provision": "Cainéil sheachtracha 1 % · do thairseach féin 8 %",
+      "cta": "Féach ar na praghsanna"
+    }
+  },
+  "trial": {
+    "eyebrow": "Triail saor in aisce",
+    "heading": "Bain triail as myNextDays saor in aisce ar feadh 30 lá.",
+    "sub": "Gan íostréimhse. Cealaigh am ar bith. Níl le déanamh ach an fhoirm ghairid seo a líonadh:",
+    "seitenHeading": "Gach a bhfuil de dhíth ar d'áitreabh in aon áit amháin – níos mó smachta, níos lú stró.",
+    "perks": {
+      "buchungen": {
+        "title": "Níos mó áirithintí",
+        "text": "ar gach mórchainéal agus ar do thairseach féin, gan áirithintí dúbailte."
+      },
+      "kontrolle": {
+        "title": "Smacht iomlán",
+        "text": "ar check-in, ar áirithintí agus ar shonraisc in aon áit amháin."
+      },
+      "freiheit": {
+        "title": "Níos mó saoirse",
+        "text": "bainistigh d'áitreabh ó do ghuthán, cibé áit a bhfuil tú."
+      }
+    },
+    "vorname": "Céadainm",
+    "nachname": "Sloinne",
+    "email": "Ríomhphost",
+    "emailPlatzhalter": "ainm@sampla.ie",
+    "einwilligung": "Ba mhaith liom nuacht, cuirí chuig webinars agus tairiscintí ó myNextDays a fháil ó am go chéile. Is féidir leat do thoiliú a tharraingt siar am ar bith.",
+    "absenden": "Tosaigh anois",
+    "dankeTitel": "Go raibh míle maith agat!",
+    "dankeText": "Beimid i dteagmháil leat go luath."
+  },
+  "features": {
+    "heading": "Córas amháin. Logáil isteach amháin.",
+    "baldBadge": "Ag teacht go luath",
+    "hinweis": "Tá bunsonrascadh san áireamh ón seoladh. Is modúil bhreise iad cuntasaíocht ardleibhéil (easpórtáil DATEV), bainistíocht foirne, margadh na soláthraithe seirbhíse agus gnéithe óstáin.",
+    "eyebrow": "Gnéithe",
+    "sub": "Logáil isteach amháin don ghnó, do na húinéirí, do na haíonna agus don ghlantachán — feiceann gach ról a réimse féin go beacht.",
+    "alleAnsehen": "Faigh amach faoi gach gné sa triail saor in aisce",
+    "neu": {
+      "title": "myNextDays AI & avatar",
+      "text": "Avatar agus rialú gutha, AI concierge do cheisteanna aíonna, agus rátaí a leanann an séasúr agus an t-éileamh."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property management",
+        "items": "Ilfhéilire lárnach, plean áitíochta, áirithintí, tascanna, sonraí áitribh agus áiseanna"
+      },
+      "channel": {
+        "title": "Channel manager",
+        "items": "56 ardán áirithinte trí Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, sioncronú déthreoch fíor-ama"
+      },
+      "direkt": {
+        "title": "Áirithint dhíreach",
+        "items": "Do thairseach áirithinte féin, giuirléid áirithinte, tógálaí suímh, d'fhearann féin, 1 % in ionad coimisiún OTA de 15–18 %"
+      },
+      "preise": {
+        "title": "Rátaí & ioncam",
+        "items": "Praghsáil dhinimiciúil le híos/uas, rate plans in aghaidh an áitribh, loighic séasúir agus áitíochta, tosaíocht ag rátaí láimhe"
+      },
+      "gaeste": {
+        "title": "Eispéireas na n-aíonna",
+        "items": "Treoirleabhar digiteach aíonna, AI concierge, check-in ar líne, teachtaireachtaí uathoibríocha, 24 teanga"
+      },
+      "zahlungen": {
+        "title": "Íocaíochtaí & billeáil",
+        "items": "Íocaíochtaí ar líne, éarlaisí, taiscí slándála, bunsonraisc, easpórtálacha réidh don chuntasóir"
+      },
+      "team": {
+        "title": "Foireann & róil",
+        "items": "Logáil isteach úinéara le híocaíochtaí amach, logáil isteach glantacháin le seicliostaí grianghraf, tascanna, ceadanna scartha"
+      },
+      "app": {
+        "title": "Aip mhóibíleach",
+        "items": "Aip dhúchasach le logálacha isteach ar leith d'úinéirí, d'aíonna agus don ghlantachán, an gnó a rith agus tú ar an mbóthar"
+      },
+      "auswertungen": {
+        "title": "Léargais",
+        "items": "Áitíocht, ioncam, ADR, tuarascálacha uathoibríocha, comparáid cainéal, meiticuardach ag teacht go luath"
+      }
+    }
+  },
+  "ki": {
+    "eyebrow": "AI & guth",
+    "heading": "Tógann an t-ardán an ghnáthobair de do lámha.",
+    "sub": "Rith é gan lámh a leagan air, lig do cheisteanna na n-aíonna iad féin a fhreagairt, coinnigh na rátaí ag bogadh — gan aon chonair chliceála a fhoghlaim.",
+    "voice": {
+      "title": "Avatar / rialú gutha",
+      "text": "Rith gach rud le do ghuth agus lig d'avatar freagra a thabhairt: seiceáil an áitíocht, bainistigh áirithintí agus tascanna, athraigh rátaí – agus tú ar an mbóthar nó ag cur áitribh i gcóir."
+    },
+    "concierge": {
+      "title": "AI concierge do do chuid aíonna",
+      "text": "Freagraíonn an treoirleabhar digiteach aíonna focal faire an Wi-Fi, an bosca eochrach, na boscaí bruscair agus na leideanna áitiúla é féin — i 24 teanga, timpeall an chloig."
+    },
+    "preise": {
+      "title": "Rátaí a smaoiníonn leat",
+      "text": "Socraigh bunráta le híosmhéid agus uasmhéid in aghaidh an áitribh; leanann rátaí na hoíche an séasúr, an áitíocht agus an t-éileamh. Bíonn tosaíocht i gcónaí ag rátaí a shocraíonn tú de láimh."
+    },
+    "cta": "Féach ar na gnéithe",
+    "blaseFrage": "Conas atá an áitíocht an tseachtain seo chugainn?",
+    "blaseAntwort": "18 as 24 oíche áirithithe. Dhá bhearna ag an deireadh seachtaine – an ráta a ísliú?",
+    "eingabe": "Cuir ceist ar myNextDays …",
+    "baldBadge": "Ag teacht go luath"
+  },
+  "integrationen": {
+    "eyebrow": "Raon",
+    "heading": "56 ardán áirithinte – comhéadan amháin.",
+    "p1": "Trínár bpáirtí nascachta Channex dáileann tú infhaighteacht, rátaí agus srianta ar 56 ardán áirithinte – ina measc Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda agus Tripadvisor. Sioncronú déthreoch fíor-ama: cuireann áirithint ar thairseach amháin bac ar an oíche sin i ngach áit eile.",
+    "p2": "Anuas air sin tagann do dháileachán féin: an tairseach áirithinte le coimisiún íseal ar myNextDays, giuirléid áirithinte do do shuíomh gréasáin agus cainéil réigiúnacha is féidir leat a chur ar siúl ceann ar cheann. Rialaítear gach cainéal ar leithligh – is tusa a shocraíonn cá bhfuil áitreabh le feiceáil.",
+    "cta": "Ceangail cainéil sa triail saor in aisce"
+  },
+  "testimonials": {
+    "eyebrow": "Taobh thiar den ardán",
+    "heading": "Cén fáth ar thógamar myNextDays.",
+    "gruenderin": {
+      "quote": "D'fhás myNextDays as ár ngnó cíosa féin in AirSmil – táimid ag tógáil go díreach na mbogearraí ar mhaith linn a bheith againn.",
+      "name": "Jeanine Ågaard",
+      "location": "Bunaitheoir myNextDays / AirSmil"
+    }
+  },
+  "stimmen": {
+    "eyebrow": "Guthanna ón bhfíorshaol",
+    "heading": "Cad a deir óstaigh linn.",
+    "vorschauHinweis": "Réamhamharc leagan amach le téacs samplach – tiocfaidh fíorluanna faofa anseo níos déanaí.",
+    "zurueck": "An teistiméireacht roimhe seo",
+    "vor": "An chéad teistiméireacht eile",
+    "zeigeStimme": "Taispeáin teistiméireacht {nummer}"
+  },
+  "stats": {
+    "eyebrow": "Uimhreacha ar féidir linn a chruthú",
+    "heading": "An t-ardán cíosa, tógtha ag daoine a ligeann ar cíos iad féin.",
+    "sub": "Seoladh ar an 1 Meán Fómhair 2026 i 27 dtír.",
+    "laender": {
+      "value": "27",
+      "label": "Tíortha",
+      "text": "Tíortha Eorpacha ag an seoladh"
+    },
+    "sprachen": {
+      "value": "24",
+      "label": "Teangacha",
+      "text": "Comhéadan agus teachtaireachtaí aíonna"
+    },
+    "kanaele": {
+      "value": "56",
+      "label": "Ardáin",
+      "text": "Ardáin áirithinte trí Channex"
+    },
+    "hosting": {
+      "value": "100 %",
+      "label": "Óstáil san AE",
+      "text": "Tógtha sa Danmhairg, i gcomhréir le GDPR"
+    },
+    "vermieter": {
+      "label": "Tógtha ag óstaigh",
+      "text": "As fíorobair laethúil an chíosa in AirSmil"
+    }
+  },
+  "usecases": {
+    "eyebrow": "Cé dó a dtógaimid",
+    "heading": "Trí chineál gnó, ardán amháin.",
+    "sub": "Cíos saoire, seomra óstáin nó punann iomlán — an comhéadan céanna, curtha le chéile ar bhealach difriúil do gach oibríocht.",
+    "ferienobjekt": {
+      "label": "Cíos saoire",
+      "title": "Tithe saoire & árasáin",
+      "text": "Áitreabh amháin nó níos mó a ligeann tú ar cíos tú féin — gan deasc tosaigh, ach le heochracha a thabhairt uait, glantachán agus ceisteanna aíonna.",
+      "punkte": {
+        "kanaele": "Tairseacha agus do shuíomh féin in aon fhéilire amháin",
+        "kalender": "Pleanáil glantacháin agus tabhairt eochracha in aghaidh an áitribh",
+        "gaeste": "Check-in ar líne agus treoirleabhar digiteach aíonna i 24 teanga"
+      }
+    },
+    "hotel": {
+      "label": "Óstán & teach lóistín",
+      "title": "Seomraí, ní coimeádáin",
+      "text": "Is aonad inairithe ann féin gach seomra lena rátaí féin — gan timpeall a chur ar chatagóirí seomraí le cainníochtaí.",
+      "punkte": {
+        "zimmer": "Infhaighteacht ar leibhéal an tseomra ar gach tairseach",
+        "raten": "Rate plans in aghaidh an tseomra, díorthaithe nó de láimh",
+        "rezeption": "Forbhreathnú laethúil ar theachtaí agus imeachtaí"
+      }
+    },
+    "agentur": {
+      "label": "Gníomhaireacht & bainistíocht",
+      "title": "Punann le roinnt úinéirí",
+      "text": "Bainistíonn tú áitribh daoine eile: ráitis ar leith, logáil isteach ar leith do gach úinéir, figiúirí soiléire in aghaidh an áitribh.",
+      "punkte": {
+        "portfolio": "Gach áitreabh in aon phlean áitíochta amháin",
+        "eigentuemer": "Logáil isteach úinéara le háitíocht agus íocaíochtaí amach",
+        "abrechnung": "Ráitis agus coimisiúin in aghaidh an áitribh"
+      }
+    }
+  },
+  "footer": {
+    "claim": "An t-ardán d'óstaigh cíosanna saoire – níos mó áirithintí, níos lú stró.",
+    "appLaden": "Íoslódáil an aip",
+    "spalten": {
+      "produkt": "Táirge",
+      "loesungen": "Réitigh",
+      "ressourcen": "Acmhainní",
+      "unternehmen": "Comhlacht"
+    },
+    "produkt": {
+      "pms": "Property management",
+      "channelManager": "Channel manager",
+      "direktbuchung": "Áirithint dhíreach",
+      "zahlungen": "Íocaíochtaí",
+      "mobileApp": "Aip mhóibíleach"
+    },
+    "loesungen": {
+      "hotels": "Óstáin",
+      "bnb": "Tithe B&B",
+      "gaestehaeuser": "Tithe aíochta",
+      "ferienwohnungen": "Cíosanna saoire",
+      "campingplaetze": "Láithreáin champála"
+    },
+    "ressourcen": {
+      "blog": "Blag",
+      "hilfeCenter": "Ionad cabhrach",
+      "webinare": "Webinars",
+      "leitfaeden": "Treoracha",
+      "api": "Doiciméadú API"
+    },
+    "unternehmen": {
+      "ueberUns": "Fúinn",
+      "karriere": "Gairmeacha",
+      "partner": "Comhpháirtithe",
+      "kontakt": "Teagmháil",
+      "presse": "Preas"
+    },
+    "copyright": "© 2026 myNextDays. Gach ceart ar cosaint.",
+    "agb": "Téarmaí",
+    "datenschutz": "Príobháideacht",
+    "impressum": "Fógra dlíthiúil",
+    "cookies": "Beartas fianán",
+    "avv": "Próiseáil sonraí"
+  },
+  "abschluss": {
+    "heading": "Réidh le d'áitreabh a rith ó aon áit amháin?",
+    "sub": "Bain triail as saor in aisce ar feadh 30 lá — gan íostréimhse, gan táille socraithe, cealaigh am ar bith.",
+    "ctaPrimaer": "Bain triail as 30 lá saor in aisce",
+    "ctaSekundaer": "Féach ar na praghsanna"
+  },
+  "chat": {
+    "titel": "Ceisteanna? Táimid anseo.",
+    "untertitel": "Freagra de ghnáth taobh istigh de chúpla uair an chloig.",
+    "name": "Ainm",
+    "email": "Ríomhphost",
+    "telefon": "Guthán (roghnach)",
+    "nachricht": "Do theachtaireacht",
+    "absenden": "Seol teachtaireacht",
+    "sendet": "Á seoladh …",
+    "platzhalter": "Scríobh teachtaireacht …",
+    "senden": "Seol",
+    "oeffnen": "Oscail an comhrá",
+    "schliessen": "Dún an comhrá",
+    "hinweis": "Ní úsáidimid do chuid sonraí ach chun freagra a thabhairt ar an bhfiosrúchán seo.",
+    "fehler": "Níor éirigh leis sin. Bain triail eile as níos déanaí."
+  },
+  "einblicke": {
+    "eyebrow": "Inside the product",
+    "heading": "How myNextDays actually works",
+    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "hotel": {
+      "title": "Hotels and holiday rentals in one interface",
+      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+    },
+    "objekte": {
+      "title": "Visibility per channel, not one switch for everything",
+      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+    },
+    "kanaele": {
+      "title": "Connect portals and keep your own direct channel",
+      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+    }
+  }
+}

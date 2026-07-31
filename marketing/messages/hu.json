@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "title": "myNextDays – A platform nyaralószállás-kiadóknak",
+    "description": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. 19,90 €/hó-tól. 30 napig ingyenes."
+  },
+  "nav": {
+    "funktionen": "Funkciók",
+    "preise": "Árak",
+    "kanaele": "Csatornák",
+    "kunden": "Ügyfelek",
+    "ressourcen": "Források",
+    "sprache": "Nyelv",
+    "spracheWaehlen": "Nyelv kiválasztása",
+    "anmelden": "Bejelentkezés",
+    "kostenlosStarten": "Kezdje ingyen",
+    "sprachModalTitel": "Nyelv és régió",
+    "sprachModalHeading": "Válasszon nyelvet",
+    "sprachModalHinweis": "A választás erre a weboldalra érvényes, és átkerül a fiókjába is.",
+    "schliessen": "Bezárás",
+    "suche": "Nyelv keresése",
+    "keinTreffer": "Nincs találat."
+  },
+  "hero": {
+    "trustNeu": "Újdonság 2026",
+    "trustVermieter": "kiadóktól kiadóknak",
+    "trustAirsmil": "powered by AirSmil",
+    "trustEu": "EU-s tárhely (GDPR)",
+    "headlinePre": "Több",
+    "headlineHighlight": "foglalás",
+    "headlinePost": "kevesebb munkával.",
+    "subline": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen – olyan kiadók fejlesztették, akik ismerik a mindennapokat.",
+    "ctaTrial": "30 napig ingyen kipróbálom",
+    "ctaDemo": "Demó megtekintése",
+    "kanaeleLabel": "Összekötve a nagy foglalási platformokkal",
+    "eyebrow": "Platform nyaralószállás-kiadóknak",
+    "kanaeleEyebrow": "Értékesítési csatornák",
+    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+  },
+  "intro": {
+    "heading": "Üdvözöljük a myNextDays világában.",
+    "p1": "Teljes értékű Property Management System és channel manager egyben – szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak. Függetlenül és tisztességesen, vállalati bonyolultság és enterprise árak nélkül.",
+    "p2": "Növelje a kihasználtságot, egyszerűsítse a mindennapokat, és nyújtson kiváló vendégélményt – a nagy rendszerek bonyolultsága és enterprise árai nélkül.",
+    "p3": "Minden eszköz egy helyen, okos automatizálás és kapcsolat minden fontos csatornával – ráadásul saját, alacsony jutalékú foglalási portál. Így nő a vállalkozása több kontrollal és kevesebb ráfordítással.",
+    "cta": "Funkciók felfedezése",
+    "reichweite": "Minden kisebb szálláshelyre megalkotva.",
+    "typen": {
+      "hotel": "Szálloda",
+      "bnb": "B&B",
+      "gaestehaus": "Vendégház",
+      "motel": "Motel",
+      "lodge": "Lodge",
+      "ferienwohnung": "Nyaralóapartman",
+      "resort": "Resort",
+      "huette": "Faház",
+      "pension": "Panzió",
+      "campingplatz": "Kemping"
+    },
+    "belegeHeading": "Amire számíthat",
+    "belege": {
+      "neu": "Újdonság 2026 – aktív kiadók fejlesztik, powered by AirSmil",
+      "eu": "Dániában fejlesztve, EU-s tárhelyen és GDPR-megfelelően",
+      "kanaele": "56 foglalási platform Channex konnektivitási partnerünkön keresztül",
+      "start": "Indulás 2026. szeptember 1-jén, 27 európai országban, 24 nyelven"
+    },
+    "eyebrow": "A platform",
+    "typenEyebrow": "Kinek szól"
+  },
+  "benefits": {
+    "eyebrow": "Miért a myNextDays",
+    "sub": "Három dolog, ami a szálláskiadás mindennapjaiban igazán számít — pontosan ezekre épül a platform.",
+    "heading": "Több foglalás. Kevesebb munka.",
+    "buchungen": {
+      "title": "Szerezzen több foglalást",
+      "text": "Legyen látható minden nagy csatornán és a saját weboldalán is. Egy központi naptár mindent szinkronban tart – vége a dupla foglalásoknak."
+    },
+    "betrieb": {
+      "title": "Egyszerűsítse a működést",
+      "text": "Kezelje a szálláshelyeket, foglalásokat, takarítást és számlázást egy helyről – az íróasztalnál vagy mobilon útközben."
+    },
+    "fair": {
+      "title": "Tisztességes és európai",
+      "text": "Átlátható ár enterprise akadályok nélkül, Dániában fejlesztve, EU-s tárhelyen, GDPR szerint. Személyes támogatás attól a csapattól, amely maga is használja a szoftvert."
+    },
+    "preisBanner": {
+      "eyebrow": "Ár",
+      "heading": "Minden a szálláshelyéhez, egy helyen",
+      "text": "30 napig ingyenes. Nincs minimális futamidő. Bármikor felmondható (4 hét a hónap végére).",
+      "preis": "19,90 €",
+      "proMonat": "havonta",
+      "tarif": "Egy csomag mindenkinek, 1 szálláshellyel",
+      "objekte": "Minden további szálláshely +6/5/4 € (sávosan csökkenő)",
+      "provision": "Külső csatornák 1 % · saját portál 8 %",
+      "cta": "Árak megtekintése"
+    }
+  },
+  "trial": {
+    "eyebrow": "Ingyenes próba",
+    "heading": "Próbálja ki a myNextDayst 30 napig ingyen.",
+    "sub": "Nincs minimális futamidő. Bármikor felmondható. Csak töltse ki ezt a rövid űrlapot:",
+    "seitenHeading": "Minden a szálláshelyéhez egy helyen – több kontroll, kevesebb munka.",
+    "perks": {
+      "buchungen": {
+        "title": "Több foglalás",
+        "text": "minden nagy csatornán és a saját portálján, dupla foglalások nélkül."
+      },
+      "kontrolle": {
+        "title": "Teljes kontroll",
+        "text": "a check-inek, foglalások és számlák felett, egy helyen."
+      },
+      "freiheit": {
+        "title": "Több szabadság",
+        "text": "kezelje szálláshelyét mobilról, bárhonnan."
+      }
+    },
+    "vorname": "Keresztnév",
+    "nachname": "Vezetéknév",
+    "email": "E-mail",
+    "emailPlatzhalter": "nev@pelda.hu",
+    "einwilligung": "Igen, szeretnék alkalmanként híreket, webinárium-meghívókat és ajánlatokat kapni a myNextDaystől. Hozzájárulását bármikor visszavonhatja.",
+    "absenden": "Vágjunk bele",
+    "dankeTitel": "Köszönjük!",
+    "dankeText": "Hamarosan jelentkezünk Önnél."
+  },
+  "features": {
+    "heading": "Egy rendszer. Egy belépés.",
+    "baldBadge": "Hamarosan",
+    "hinweis": "Az alapszámlázás induláskor elérhető. A kibővített könyvelés (DATEV-export), a munkatárs-kezelés, a szolgáltatói piactér és a szállodai funkciók kiegészítő modulok.",
+    "eyebrow": "Funkciók",
+    "sub": "Egy belépés az üzemeltetésnek, a tulajdonosoknak, a vendégeknek és a takarításnak — minden szerep pontosan a saját területét látja.",
+    "alleAnsehen": "Fedezze fel az összes funkciót a próbaidőszakban",
+    "neu": {
+      "title": "myNextDays MI és avatar",
+      "text": "Avatar és hangvezérlés, MI-concierge a vendégkérdésekre, és árak, amelyek követik a szezont és a keresletet."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property Management",
+        "items": "Központi multinaptár, foglaltsági terv, foglalások, feladatok, szálláshely- és felszereltségi adatok"
+      },
+      "channel": {
+        "title": "Channel manager",
+        "items": "56 foglalási platform a Channexen keresztül, Airbnb, Booking.com, Expedia, Vrbo, Google, valós idejű kétirányú szinkron"
+      },
+      "direkt": {
+        "title": "Közvetlen foglalás",
+        "items": "Saját foglalási portál, foglalási widget, weboldal-építő, saját domain, 1 % a 15–18 %-os OTA-jutalék helyett"
+      },
+      "preise": {
+        "title": "Árak és bevétel",
+        "items": "Dinamikus árazás min./max. értékkel, rate plan szálláshelyenként, szezon- és kihasználtsági logika, a kézi árak elsőbbséget élveznek"
+      },
+      "gaeste": {
+        "title": "Vendégélmény",
+        "items": "Digitális vendégkönyv, MI-concierge, online check-in, automatikus üzenetek, 24 nyelv"
+      },
+      "zahlungen": {
+        "title": "Fizetés és számlázás",
+        "items": "Online fizetés, előlegek, kauciók, alapszámlák, könyvelésre kész exportok"
+      },
+      "team": {
+        "title": "Csapat és szerepek",
+        "items": "Tulajdonosi belépés kifizetésekkel, takarítói belépés fotós ellenőrzőlistákkal, feladatok, elkülönített jogosultságok"
+      },
+      "app": {
+        "title": "Mobilalkalmazás",
+        "items": "Natív alkalmazás külön belépéssel tulajdonosoknak, vendégeknek és takarításnak, üzemeltetés útközben is"
+      },
+      "auswertungen": {
+        "title": "Kimutatások",
+        "items": "Kihasználtság, bevétel, ADR, automatikus riportok, csatorna-összehasonlítás, metakeresés hamarosan"
+      }
+    }
+  },
+  "ki": {
+    "eyebrow": "MI és hang",
+    "heading": "A platform leveszi a válláról a rutint.",
+    "sub": "Vezérelje kézhasználat nélkül, hagyja, hogy a vendégkérdések maguktól megválaszolódjanak, tartsa mozgásban az árakat — anélkül, hogy kattintási útvonalakat kellene megtanulnia.",
+    "voice": {
+      "title": "Avatar / hangvezérlés",
+      "text": "Vezérelje hanggal, kézhasználat nélkül, és hagyja, hogy egy avatar válaszoljon: kérdezze le a foglaltságot, kezelje a foglalásokat és feladatokat, módosítsa az árakat – útközben vagy éppen amikor egy szálláshelyet készít elő."
+    },
+    "concierge": {
+      "title": "MI-concierge a vendégeinek",
+      "text": "A digitális vendégkönyv magától megválaszolja a Wi-Fi-jelszót, a kulcsdobozt, a szemetesek kérdését és a helyi tippeket — 24 nyelven, a nap 24 órájában."
+    },
+    "preise": {
+      "title": "Árak, amelyek együtt gondolkodnak",
+      "text": "Állítson be alapárat min./max. értékkel szálláshelyenként; az éjszakai árak követik a szezont, a kihasználtságot és a keresletet. A kézi árak mindig elsőbbséget élveznek."
+    },
+    "cta": "Funkciók megtekintése",
+    "blaseFrage": "Milyen a kihasználtság jövő héten?",
+    "blaseAntwort": "24 éjszakából 18 foglalt. Két rés a hétvégén – csökkentsük az árat?",
+    "eingabe": "Kérdezze a myNextDayst …",
+    "baldBadge": "Hamarosan"
+  },
+  "integrationen": {
+    "eyebrow": "Elérés",
+    "heading": "56 foglalási platform – egyetlen felület.",
+    "p1": "Channex konnektivitási partnerünkön keresztül szabad kapacitást, árakat és korlátozásokat oszt szét 56 foglalási platformra – köztük az Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda és Tripadvisor felé. Valós idejű kétirányú szinkron: egy foglalás az egyik portálon mindenhol máshol lezárja az adott éjszakát.",
+    "p2": "Ehhez jön a saját értékesítése: az alacsony jutalékú foglalási portál a myNextDaysen, egy foglalási widget a weboldalára, valamint regionális csatornák, amelyeket egyenként kapcsolhat be. Minden csatorna külön vezérelhető – Ön dönti el, hol legyen látható egy szálláshely.",
+    "cta": "Csatornák összekötése a próbaidőszakban"
+  },
+  "testimonials": {
+    "eyebrow": "A platform mögött",
+    "heading": "Miért építettük a myNextDayst.",
+    "gruenderin": {
+      "quote": "A myNextDays a saját, AirSmilnél szerzett szálláskiadói mindennapjainkból nőtt ki – pontosan azt a szoftvert építjük, amelyre nekünk is szükségünk lett volna.",
+      "name": "Jeanine Ågaard",
+      "location": "A myNextDays / AirSmil alapítója"
+    }
+  },
+  "stimmen": {
+    "eyebrow": "Hangok a gyakorlatból",
+    "heading": "Mit mondanak a szállásadók.",
+    "vorschauHinweis": "Elrendezés-előnézet mintaszövegekkel – itt később valódi, jóváhagyott idézetek szerepelnek.",
+    "zurueck": "Előző vélemény",
+    "vor": "Következő vélemény",
+    "zeigeStimme": "{nummer}. vélemény megjelenítése"
+  },
+  "stats": {
+    "eyebrow": "Számok, amelyeket bizonyítani tudunk",
+    "heading": "A kiadói platform, amelyet olyan emberek építettek, akik maguk is szállást adnak ki.",
+    "sub": "Indulás 2026. szeptember 1-jén, 27 országban.",
+    "laender": {
+      "value": "27",
+      "label": "Ország",
+      "text": "Európai ország az induláskor"
+    },
+    "sprachen": {
+      "value": "24",
+      "label": "Nyelv",
+      "text": "Felület és vendégkommunikáció"
+    },
+    "kanaele": {
+      "value": "56",
+      "label": "Platform",
+      "text": "Foglalási platform a Channexen keresztül"
+    },
+    "hosting": {
+      "value": "100 %",
+      "label": "EU-s tárhely",
+      "text": "Dániában fejlesztve, GDPR-megfelelően"
+    },
+    "vermieter": {
+      "label": "Kiadók fejlesztették",
+      "text": "Az AirSmil valódi szálláskiadói mindennapjaiból"
+    }
+  },
+  "usecases": {
+    "eyebrow": "Kiknek építjük",
+    "heading": "Háromféle működés, egy platform.",
+    "sub": "Nyaralószállás, szállodai szoba vagy teljes portfólió — ugyanaz a felület, működési formánként másképp összeállítva.",
+    "ferienobjekt": {
+      "label": "Nyaralószállás",
+      "title": "Nyaralóházak és apartmanok",
+      "text": "Egy vagy több szálláshely, amelyet Ön ad ki — recepció nélkül, viszont átadásokkal, takarítással és vendégkérdésekkel.",
+      "punkte": {
+        "kanaele": "Portálok és a saját weboldal egyetlen naptárban",
+        "kalender": "Takarítás és átadás tervezése szálláshelyenként",
+        "gaeste": "Online check-in és digitális vendégkönyv 24 nyelven"
+      }
+    },
+    "hotel": {
+      "label": "Szálloda és panzió",
+      "title": "Szobák, nem konténerek",
+      "text": "Minden szoba önálló foglalható egység saját árakkal — nincs kerülőút darabszámos szobakategóriákon át.",
+      "punkte": {
+        "zimmer": "Szobaszintű elérhetőség minden portálra",
+        "raten": "Rate plan szobánként, származtatva vagy kézzel",
+        "rezeption": "Napi áttekintés az érkezésekről és távozásokról"
+      }
+    },
+    "agentur": {
+      "label": "Ügynökség és kezelés",
+      "title": "Több tulajdonos portfóliója",
+      "text": "Mások szálláshelyeit kezeli: elkülönített elszámolás, saját belépés minden tulajdonosnak, világos számok szálláshelyenként.",
+      "punkte": {
+        "portfolio": "Minden szálláshely egyetlen foglaltsági tervben",
+        "eigentuemer": "Tulajdonosi belépés foglaltsággal és kifizetésekkel",
+        "abrechnung": "Kimutatások és jutalékok szálláshelyenként"
+      }
+    }
+  },
+  "footer": {
+    "claim": "A platform nyaralószállás-kiadóknak – több foglalás, kevesebb munka.",
+    "appLaden": "Alkalmazás letöltése",
+    "spalten": {
+      "produkt": "Termék",
+      "loesungen": "Megoldások",
+      "ressourcen": "Források",
+      "unternehmen": "Vállalat"
+    },
+    "produkt": {
+      "pms": "Property Management",
+      "channelManager": "Channel manager",
+      "direktbuchung": "Közvetlen foglalás",
+      "zahlungen": "Fizetés",
+      "mobileApp": "Mobilalkalmazás"
+    },
+    "loesungen": {
+      "hotels": "Szállodák",
+      "bnb": "B&B-k",
+      "gaestehaeuser": "Vendégházak",
+      "ferienwohnungen": "Nyaralóapartmanok",
+      "campingplaetze": "Kempingek"
+    },
+    "ressourcen": {
+      "blog": "Blog",
+      "hilfeCenter": "Súgóközpont",
+      "webinare": "Webináriumok",
+      "leitfaeden": "Útmutatók",
+      "api": "API-dokumentáció"
+    },
+    "unternehmen": {
+      "ueberUns": "Rólunk",
+      "karriere": "Karrier",
+      "partner": "Partnerek",
+      "kontakt": "Kapcsolat",
+      "presse": "Sajtó"
+    },
+    "copyright": "© 2026 myNextDays. Minden jog fenntartva.",
+    "agb": "ÁSZF",
+    "datenschutz": "Adatvédelem",
+    "impressum": "Impresszum",
+    "cookies": "Cookie-szabályzat",
+    "avv": "Adatfeldolgozás"
+  },
+  "abschluss": {
+    "heading": "Készen áll, hogy egy helyről irányítsa a szálláshelyét?",
+    "sub": "Próbálja ki 30 napig ingyen — nincs minimális futamidő, nincs beállítási díj, bármikor felmondható.",
+    "ctaPrimaer": "30 napig ingyen kipróbálom",
+    "ctaSekundaer": "Árak megtekintése"
+  },
+  "chat": {
+    "titel": "Kérdése van? Itt vagyunk.",
+    "untertitel": "Általában néhány órán belül válaszolunk.",
+    "name": "Név",
+    "email": "E-mail",
+    "telefon": "Telefon (nem kötelező)",
+    "nachricht": "Az Ön üzenete",
+    "absenden": "Üzenet küldése",
+    "sendet": "Küldés folyamatban …",
+    "platzhalter": "Írjon üzenetet …",
+    "senden": "Küldés",
+    "oeffnen": "Csevegés megnyitása",
+    "schliessen": "Csevegés bezárása",
+    "hinweis": "Adatait kizárólag arra használjuk, hogy válaszoljunk erre a megkeresésre.",
+    "fehler": "Ez nem sikerült. Kérjük, próbálja meg később újra."
+  },
+  "einblicke": {
+    "eyebrow": "Inside the product",
+    "heading": "How myNextDays actually works",
+    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "hotel": {
+      "title": "Hotels and holiday rentals in one interface",
+      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+    },
+    "objekte": {
+      "title": "Visibility per channel, not one switch for everything",
+      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+    },
+    "kanaele": {
+      "title": "Connect portals and keep your own direct channel",
+      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+    }
+  }
+}

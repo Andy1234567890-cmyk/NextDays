@@ -16,11 +16,9 @@
     "sprachModalTitel": "Sprache und Region",
     "sprachModalHeading": "Sprache wählen",
     "sprachModalHinweis": "Die Auswahl gilt für diese Website und wird in deinem Konto übernommen.",
-    "schliessen": "Schließen"
-  },
-  "sprachen": {
-    "de": "Deutsch",
-    "en": "Englisch"
+    "schliessen": "Schließen",
+    "suche": "Sprache suchen",
+    "keinTreffer": "Keine Sprache gefunden."
   },
   "hero": {
     "trustNeu": "Neu 2026",
@@ -35,7 +33,11 @@
     "ctaDemo": "Demo ansehen",
     "kanaeleLabel": "Verbunden mit den großen Buchungsplattformen",
     "eyebrow": "Vermieter-Plattform für Ferienunterkünfte",
-    "kanaeleEyebrow": "Vertriebskanäle"
+    "kanaeleEyebrow": "Vertriebskanäle",
+    "aufnahmeBelegungsplan": "Belegungsplan von myNextDays: acht Ferienobjekte mit Buchungen aus Booking.com, Airbnb, Vrbo, der Plattform und Direktbuchungen",
+    "aufnahmeHotel": "Belegungsplan eines Hotels in myNextDays: zwölf Zimmer, jedes als eigene buchbare Einheit",
+    "aufnahmeObjekte": "Objektübersicht in myNextDays mit Fotos, Status und Kanal-Sichtbarkeit je Objekt",
+    "aufnahmeKanaele": "Kanalverwaltung in myNextDays: verbundene Buchungsportale und der eigene Marktplatz"
   },
   "intro": {
     "heading": "Willkommen bei myNextDays.",
@@ -124,90 +126,61 @@
   },
   "features": {
     "heading": "Ein System. Ein Login.",
-    "mehrErfahren": "Mehr erfahren",
     "baldBadge": "In Kürze",
     "hinweis": "Basis-Rechnungen sind zum Launch dabei. Erweiterte Buchhaltung (DATEV-Export), Mitarbeiter-Management, Dienstleister-Marktplatz und Hotel-Funktionen sind Zusatzmodule.",
-    "calendar": {
-      "label": "Kalender",
-      "title": "Kalender",
-      "text": "Ein zentraler Multi-Kalender über alle Objekte und Kanäle. Live-Belegung, An-/Abreisen und tägliche Abläufe auf einen Blick – farblich nach Kanal und Status."
-    },
-    "channel": {
-      "label": "Channel-Manager",
-      "title": "Channel-Manager",
-      "text": "Zwei-Wege-Sync von Verfügbarkeit, Preisen und Buchungen mit 56 Buchungsplattformen über unseren Connectivity-Partner Channex. Preise und Kalender aktualisieren sich automatisch überall."
-    },
-    "booking": {
-      "label": "Direktbuchung",
-      "title": "Direktbuchung",
-      "text": "Provisionsarme Direktbuchungen über dein eigenes Buchungsportal und ein Buchungs-Widget für deine Website – nur 1 % statt 15–18 % OTA-Provision."
-    },
-    "insights": {
-      "label": "Auswertungen",
-      "title": "Auswertungen",
-      "text": "Automatische Berichte und Analytics: Auslastung, Umsatz, ADR – buchhaltungsfertige Exporte inklusive."
-    },
-    "channelsPlus": {
-      "label": "Kanäle Plus",
-      "title": "Kanäle Plus",
-      "text": "Zusätzliche und regionale Kanäle über Channex zuschalten – maximale Reichweite in 27 europäischen Ländern."
-    },
-    "revenue": {
-      "label": "Dynamische Preise",
-      "title": "Dynamische Preise",
-      "text": "Basispreis mit Min./Max. je Objekt festlegen; die Nachtpreise passen sich automatisch an Saison, Auslastung und Nachfrage an. Manuelle Preise haben immer Vorrang."
-    },
-    "guest": {
-      "label": "Gästeerlebnis",
-      "title": "Gästeerlebnis",
-      "text": "Digitale Gästemappe und KI-Concierge (WLAN, Schlüsselbox, „Wo stehen die Mülltonnen?“, Tipps), Online-Check-in und automatische Nachrichten – mehrsprachig, in 24 Sprachen."
-    },
-    "website": {
-      "label": "Website-Baukasten",
-      "title": "Website-Baukasten",
-      "text": "Erstelle per Drag-and-drop deine eigene, gebrandete Buchungswebsite – responsiv für Desktop, Tablet und Smartphone, ganz ohne Code."
-    },
-    "payments": {
-      "label": "Zahlungen",
-      "title": "Zahlungen",
-      "text": "Sichere Online-Zahlungen, Anzahlungen und Kautionen direkt in der Plattform."
-    },
-    "app": {
-      "label": "Mobile App",
-      "title": "Mobile App",
-      "text": "Native App mit eigenen Logins für Eigentümer, Gäste und Reinigungspersonal – jeder sieht genau seinen Bereich. Betrieb steuern, wo immer du bist."
-    },
-    "owner": {
-      "label": "Eigentümer-Login",
-      "title": "Eigentümer-Login",
-      "text": "Eigentümer sehen Belegung, Auszahlungen und Kontoauszüge ihres Objekts, tragen Eigennutzung ein und laden Belege hoch – ohne Zugriff auf fremde Objekte."
-    },
-    "cleaning": {
-      "label": "Reinigungs-Login",
-      "title": "Reinigungs-Login",
-      "text": "Reinigungskräfte sehen nur ihre zugewiesenen Objekte und Termine, arbeiten Foto-Checklisten ab und melden Schäden oder Materialbedarf – keine Finanzdaten."
-    },
-    "voice": {
-      "label": "Voice-Steuerung",
-      "title": "Voice-Steuerung",
-      "text": "Steuere myNextDays freihändig per Sprache: Belegung abfragen, Buchungen und Aufgaben verwalten, Preise ändern – ohne Klickwege."
-    },
-    "metasearch": {
-      "label": "Metasuche",
-      "title": "Metasuche",
-      "text": "Werde auf Metasuch-Plattformen sichtbar und gewinne mehr Direktbuchungen. Diese Funktion kommt in Kürze."
-    },
     "eyebrow": "Funktionen",
     "sub": "Ein Zugang für Betrieb, Eigentümer, Gäste und Reinigung — jede Rolle sieht genau ihren Bereich.",
-    "alleAnsehen": "Alle Funktionen im Test entdecken"
+    "alleAnsehen": "Alle Funktionen im Test entdecken",
+    "neu": {
+      "title": "myNextDays KI & Avatar",
+      "text": "Avatar und Sprachsteuerung, KI-Concierge für Gästefragen und Preise, die sich an Saison und Nachfrage anpassen."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property-Management",
+        "items": "Zentraler Multi-Kalender, Belegungsplan, Reservierungen, Aufgaben, Objekt- und Ausstattungsdaten"
+      },
+      "channel": {
+        "title": "Channel-Manager",
+        "items": "56 Buchungsplattformen über Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, Zwei-Wege-Sync in Echtzeit"
+      },
+      "direkt": {
+        "title": "Direktbuchung",
+        "items": "Eigenes Buchungsportal, Buchungs-Widget, Website-Baukasten, eigene Domain, 1 % statt 15–18 % OTA-Provision"
+      },
+      "preise": {
+        "title": "Preise & Umsatz",
+        "items": "Dynamische Preise mit Min./Max., Rate-Pläne je Objekt, Saison- und Auslastungslogik, manuelle Preise mit Vorrang"
+      },
+      "gaeste": {
+        "title": "Gästeerlebnis",
+        "items": "Digitale Gästemappe, KI-Concierge, Online-Check-in, automatische Nachrichten, 24 Sprachen"
+      },
+      "zahlungen": {
+        "title": "Zahlungen & Abrechnung",
+        "items": "Online-Zahlungen, Anzahlungen, Kautionen, Basis-Rechnungen, buchhaltungsfertige Exporte"
+      },
+      "team": {
+        "title": "Team & Rollen",
+        "items": "Eigentümer-Login mit Auszahlungen, Reinigungs-Login mit Foto-Checklisten, Aufgaben, getrennte Rechte"
+      },
+      "app": {
+        "title": "Mobile App",
+        "items": "Native App mit eigenen Logins für Eigentümer, Gäste und Reinigung, Betrieb von unterwegs steuern"
+      },
+      "auswertungen": {
+        "title": "Auswertungen",
+        "items": "Auslastung, Umsatz, ADR, automatische Berichte, Kanalvergleich, Metasuche in Kürze"
+      }
+    }
   },
   "ki": {
     "eyebrow": "KI & Sprache",
     "heading": "Die Plattform nimmt dir die Routine ab.",
     "sub": "Freihändig steuern, Gästefragen automatisch beantworten, Preise mitlaufen lassen — ohne dass du Klickwege lernen musst.",
     "voice": {
-      "title": "Voice-Steuerung",
-      "text": "Steuere myNextDays per Sprache: Belegung abfragen, Buchungen und Aufgaben verwalten, Preise ändern — freihändig, während du unterwegs bist oder ein Objekt herrichtest."
+      "title": "Avatar / Voice-Steuerung",
+      "text": "Freihändig per Sprache steuern und einen Avatar antworten lassen: Belegung abfragen, Buchungen und Aufgaben verwalten, Preise ändern – während du unterwegs bist oder ein Objekt herrichtest."
     },
     "concierge": {
       "title": "KI-Concierge für deine Gäste",
@@ -220,7 +193,8 @@
     "cta": "Funktionen ansehen",
     "blaseFrage": "Wie ist die Auslastung nächste Woche?",
     "blaseAntwort": "18 von 24 Nächten belegt. Zwei Lücken am Wochenende – Preis senken?",
-    "eingabe": "Frag myNextDays …"
+    "eingabe": "Frag myNextDays …",
+    "baldBadge": "In Kürze"
   },
   "integrationen": {
     "eyebrow": "Reichweite",
@@ -237,6 +211,14 @@
       "name": "Jeanine Ågaard",
       "location": "Gründerin myNextDays / AirSmil"
     }
+  },
+  "stimmen": {
+    "eyebrow": "Stimmen aus der Praxis",
+    "heading": "Was Gastgeberinnen und Gastgeber berichten.",
+    "vorschauHinweis": "Layout-Vorschau mit Beispieltexten – hier stehen später echte, freigegebene Zitate.",
+    "zurueck": "Vorherige Stimme",
+    "vor": "Nächste Stimme",
+    "zeigeStimme": "Stimme {nummer} anzeigen"
   },
   "stats": {
     "eyebrow": "Zahlen, die wir belegen können",
@@ -367,5 +349,22 @@
     "schliessen": "Chat schließen",
     "hinweis": "Wir nutzen deine Angaben nur, um auf diese Anfrage zu antworten.",
     "fehler": "Das hat nicht geklappt. Bitte versuche es später erneut."
+  },
+  "einblicke": {
+    "eyebrow": "Einblicke",
+    "heading": "So arbeitet myNextDays wirklich",
+    "sub": "Keine gezeichneten Ansichten — Aufnahmen aus einem laufenden Betrieb mit echten Buchungen aus allen Kanälen.",
+    "hotel": {
+      "title": "Hotel und Ferienobjekt in einer Oberfläche",
+      "text": "Jedes Zimmer ist eine eigene buchbare Einheit — dasselbe Modell wie beim Ferienhaus. Der Belegungsplan zeigt Anreisen, Aufenthalte und Abreisen je Einheit, mit Auslastung, Umsatz und Durchschnittspreis über dem Zeitraum."
+    },
+    "objekte": {
+      "title": "Sichtbarkeit pro Kanal, nicht ein Schalter für alles",
+      "text": "Website, Plattform und Buchungsportale sind drei getrennte Achsen. Ein Objekt kann auf der eigenen Seite laufen, während es bei den Portalen pausiert — sichtbar auf einen Blick, umschaltbar in einem Klick."
+    },
+    "kanaele": {
+      "title": "Portale anbinden und dabei die eigene Strecke behalten",
+      "text": "Booking.com, Airbnb und weitere Portale hängen an derselben Verfügbarkeit wie die Direktbuchung. Eine gebuchte Nacht sperrt überall — ohne Doppelbuchung, ohne Nachpflege von Hand."
+    }
   }
 }

@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "title": "myNextDays – Alusta lomamajoituksen vuokraajille",
+    "description": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa. Rakennettu Tanskassa, isännöity EU:ssa. Alkaen 19,90 € kuukaudessa. Kokeile 30 päivää maksutta."
+  },
+  "nav": {
+    "funktionen": "Ominaisuudet",
+    "preise": "Hinnat",
+    "kanaele": "Kanavat",
+    "kunden": "Asiakkaat",
+    "ressourcen": "Aineistot",
+    "sprache": "Kieli",
+    "spracheWaehlen": "Valitse kieli",
+    "anmelden": "Kirjaudu sisään",
+    "kostenlosStarten": "Aloita maksutta",
+    "sprachModalTitel": "Kieli ja alue",
+    "sprachModalHeading": "Valitse kieli",
+    "sprachModalHinweis": "Valintasi koskee tätä sivustoa ja siirtyy myös tilillesi.",
+    "schliessen": "Sulje",
+    "suche": "Hae kieltä",
+    "keinTreffer": "Kieltä ei löytynyt."
+  },
+  "hero": {
+    "trustNeu": "Uutta 2026",
+    "trustVermieter": "vuokraajilta vuokraajille",
+    "trustAirsmil": "powered by AirSmil",
+    "trustEu": "Isännöity EU:ssa (GDPR)",
+    "headlinePre": "Enemmän",
+    "headlineHighlight": "varauksia",
+    "headlinePost": "vähemmän vaivaa.",
+    "subline": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa – rakennettu vuokraajilta, jotka tuntevat arjen.",
+    "ctaTrial": "Kokeile 30 päivää maksutta",
+    "ctaDemo": "Katso demo",
+    "kanaeleLabel": "Yhteydessä suuriin varausalustoihin",
+    "eyebrow": "Alusta lomamajoituksen vuokraajille",
+    "kanaeleEyebrow": "Myyntikanavat",
+    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+  },
+  "intro": {
+    "heading": "Tervetuloa myNextDaysiin.",
+    "p1": "Täysiverinen property management -järjestelmä ja channel manager – hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille. Riippumaton ja reilu konsernimonimutkaisuuden ja enterprise-hintojen sijaan.",
+    "p2": "Nosta käyttöastettasi, helpota arkeasi ja tarjoa upeita vieraskokemuksia – ilman suurten järjestelmien monimutkaisuutta ja enterprise-hintoja.",
+    "p3": "Kaikki yhdessä paikassa, älykäs automaatio ja yhteydet kaikkiin tärkeisiin kanaviin – lisäksi oma matalan provision varausportaalisi. Näin liiketoimintasi kasvaa suuremmalla hallinnalla ja pienemmällä vaivalla.",
+    "cta": "Tutustu ominaisuuksiin",
+    "reichweite": "Tehty jokaiselle pienelle majoituskohteelle.",
+    "typen": {
+      "hotel": "Hotelli",
+      "bnb": "B&B",
+      "gaestehaus": "Vierastalo",
+      "motel": "Motelli",
+      "lodge": "Lodge",
+      "ferienwohnung": "Loma-asunto",
+      "resort": "Lomakeskus",
+      "huette": "Mökki",
+      "pension": "Täysihoitola",
+      "campingplatz": "Leirintäalue"
+    },
+    "belegeHeading": "Tähän voit luottaa",
+    "belege": {
+      "neu": "Uutta 2026 – kehitetty aktiivisten vuokraajien voimin, powered by AirSmil",
+      "eu": "Rakennettu Tanskassa, isännöity EU:ssa ja GDPR-yhteensopiva",
+      "kanaele": "56 varausalustaa yhteyskumppanimme Channexin kautta",
+      "start": "Julkaisu 1. syyskuuta 2026 27 Euroopan maassa, 24 kielellä"
+    },
+    "eyebrow": "Alusta",
+    "typenEyebrow": "Kenelle se on"
+  },
+  "benefits": {
+    "eyebrow": "Miksi myNextDays",
+    "sub": "Kolme asiaa, joilla on vuokrausarjessa oikeasti merkitystä – juuri niitä varten alusta on rakennettu.",
+    "heading": "Enemmän varauksia. Vähemmän työtä.",
+    "buchungen": {
+      "title": "Saat enemmän varauksia",
+      "text": "Näy kaikissa suurissa kanavissa ja omilla verkkosivuillasi. Yksi keskitetty kalenteri pitää kaiken synkassa – päällekkäiset varaukset jäävät historiaan."
+    },
+    "betrieb": {
+      "title": "Yksinkertaista toiminta",
+      "text": "Hallitse kohteita, varauksia, siivousta ja laskutusta yhdessä paikassa – työpöydän ääressä tai liikkeellä."
+    },
+    "fair": {
+      "title": "Reilu & eurooppalainen",
+      "text": "Läpinäkyvä hinta ilman enterprise-kynnyksiä, rakennettu Tanskassa, isännöity EU:ssa GDPR:n mukaisesti. Henkilökohtainen tuki tiimiltä, joka käyttää ohjelmistoa itse."
+    },
+    "preisBanner": {
+      "eyebrow": "Hinta",
+      "heading": "Kaikki majoituskohteellesi yhdessä paikassa",
+      "text": "30 päivää maksutta. Ei määräaikaa. Irtisanottavissa milloin tahansa (4 viikkoa kuukauden loppuun).",
+      "preis": "19,90 €",
+      "proMonat": "kuukaudessa",
+      "tarif": "Yksi hinta kaikille, sis. 1 kohteen",
+      "objekte": "Jokainen lisäkohde +6/5/4 € (aleneva)",
+      "provision": "Ulkoiset kanavat 1 % · oma portaali 8 %",
+      "cta": "Katso hinnat"
+    }
+  },
+  "trial": {
+    "eyebrow": "Kokeile maksutta",
+    "heading": "Kokeile myNextDaysia 30 päivää maksutta.",
+    "sub": "Ei määräaikaa. Irtisanottavissa milloin tahansa. Täytä vain tämä lyhyt lomake:",
+    "seitenHeading": "Kaikki majoituskohteellesi yhdessä paikassa – enemmän hallintaa, vähemmän vaivaa.",
+    "perks": {
+      "buchungen": {
+        "title": "Enemmän varauksia",
+        "text": "kaikkien suurten kanavien ja oman portaalisi kautta, ilman päällekkäisiä varauksia."
+      },
+      "kontrolle": {
+        "title": "Täysi hallinta",
+        "text": "sisäänkirjautumisista, varauksista ja laskuista yhdessä paikassa."
+      },
+      "freiheit": {
+        "title": "Enemmän vapautta",
+        "text": "hallitse kohdettasi puhelimella, missä ikinä oletkin."
+      }
+    },
+    "vorname": "Etunimi",
+    "nachname": "Sukunimi",
+    "email": "Sähköposti",
+    "emailPlatzhalter": "nimi@esimerkki.fi",
+    "einwilligung": "Kyllä, haluan saada silloin tällöin uutisia, webinaarikutsuja ja tarjouksia myNextDaysilta. Voit peruuttaa suostumuksesi milloin tahansa.",
+    "absenden": "Aloita nyt",
+    "dankeTitel": "Kiitos!",
+    "dankeText": "Olemme sinuun pian yhteydessä."
+  },
+  "features": {
+    "heading": "Yksi järjestelmä. Yksi kirjautuminen.",
+    "baldBadge": "Pian saatavilla",
+    "hinweis": "Peruslaskutus on mukana heti julkaisussa. Laajennettu kirjanpito (DATEV-vienti), henkilöstöhallinta, palveluntarjoajien markkinapaikka ja hotelliominaisuudet ovat lisämoduuleja.",
+    "eyebrow": "Ominaisuudet",
+    "sub": "Yksi kirjautuminen yritykselle, omistajille, vieraille ja siivoukselle – jokainen rooli näkee täsmälleen oman alueensa.",
+    "alleAnsehen": "Tutustu kaikkiin ominaisuuksiin maksuttomalla kokeilujaksolla",
+    "neu": {
+      "title": "myNextDays-tekoäly & avatar",
+      "text": "Avatar ja ääniohjaus, tekoälyconcierge vieraiden kysymyksiin sekä hinnat, jotka mukautuvat sesonkiin ja kysyntään."
+    },
+    "gruppen": {
+      "pms": {
+        "title": "Property management",
+        "items": "Keskitetty monikalenteri, varaustilanne, varaukset, tehtävät, kohde- ja varustetiedot"
+      },
+      "channel": {
+        "title": "Channel manager",
+        "items": "56 varausalustaa Channexin kautta, Airbnb, Booking.com, Expedia, Vrbo, Google, kaksisuuntainen synkronointi reaaliajassa"
+      },
+      "direkt": {
+        "title": "Suoravaraus",
+        "items": "Oma varausportaali, varaus-widget, verkkosivueditori, oma verkkotunnus, 1 % OTA-provision 15–18 %:n sijaan"
+      },
+      "preise": {
+        "title": "Hinnat & myynti",
+        "items": "Dynaamiset hinnat min./maks.-rajoin, rate plan -hinnastot kohteittain, sesonki- ja käyttöastelogiikka, manuaaliset hinnat etusijalla"
+      },
+      "gaeste": {
+        "title": "Vieraskokemus",
+        "items": "Digitaalinen vieraskansio, tekoälyconcierge, verkkosisäänkirjautuminen, automaattiset viestit, 24 kieltä"
+      },
+      "zahlungen": {
+        "title": "Maksut & laskutus",
+        "items": "Verkkomaksut, ennakkomaksut, vakuudet, peruslaskut, kirjanpitovalmiit viennit"
+      },
+      "team": {
+        "title": "Tiimi & roolit",
+        "items": "Omistajan kirjautuminen tilityksineen, siivouksen kirjautuminen kuvatarkistuslistoineen, tehtävät, eriytetyt oikeudet"
+      },
+      "app": {
+        "title": "Mobiilisovellus",
+        "items": "Natiivi sovellus omine kirjautumisineen omistajille, vieraille ja siivoukselle – hoida toimintaa liikkeellä"
+      },
+      "auswertungen": {
+        "title": "Raportit",
+        "items": "Käyttöaste, myynti, ADR, automaattiset raportit, kanavavertailu, metahaku pian"
+      }
+    }
+  },
+  "ki": {
+    "eyebrow": "Tekoäly & ääni",
+    "heading": "Alusta hoitaa rutiinit puolestasi.",
+    "sub": "Ohjaa kädet vapaina, anna vieraiden kysymysten vastata itsensä, pidä hinnat liikkeessä – ilman että opettelet yhtäkään klikkauspolkua.",
+    "voice": {
+      "title": "Avatar / ääniohjaus",
+      "text": "Ohjaa kädet vapaina äänelläsi ja anna avatarin vastata: tarkista käyttöaste, hallitse varauksia ja tehtäviä, muuta hintoja – vaikka olisit matkalla tai laittaisit kohdetta kuntoon."
+    },
+    "concierge": {
+      "title": "Tekoälyconcierge vieraillesi",
+      "text": "Digitaalinen vieraskansio vastaa itse wifi-salasanaa, avainlokeroa, jäteastioita ja paikallisia vinkkejä koskeviin kysymyksiin – 24 kielellä, ympäri vuorokauden."
+    },
+    "preise": {
+      "title": "Hinnat, jotka ajattelevat mukana",
+      "text": "Aseta perushinta sekä minimi ja maksimi kohteittain; yöhinnat mukautuvat sesonkiin, käyttöasteeseen ja kysyntään. Manuaaliset hinnat ovat aina etusijalla."
+    },
+    "cta": "Katso ominaisuudet",
+    "blaseFrage": "Mikä on ensi viikon käyttöaste?",
+    "blaseAntwort": "18 yötä 24:stä varattu. Kaksi aukkoa viikonloppuna – lasketaanko hintaa?",
+    "eingabe": "Kysy myNextDaysilta …",
+    "baldBadge": "Pian saatavilla"
+  },
+  "integrationen": {
+    "eyebrow": "Näkyvyys",
+    "heading": "56 varausalustaa – yksi näkymä.",
+    "p1": "Yhteyskumppanimme Channexin kautta jaat saatavuuden, hinnat ja rajoitukset 56 varausalustalle – mukaan lukien Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda ja Tripadvisor. Kaksisuuntainen synkronointi reaaliajassa: yhdessä portaalissa tehty varaus sulkee yön kaikkialta muualta.",
+    "p2": "Lisäksi oma myyntisi: matalan provision varausportaali myNextDaysissa, varaus-widget verkkosivuillesi ja alueelliset kanavat, jotka voit kytkeä päälle yksitellen. Jokaista kanavaa ohjataan erikseen – sinä päätät, missä kohde näkyy.",
+    "cta": "Yhdistä kanavat kokeilujaksolla"
+  },
+  "testimonials": {
+    "eyebrow": "Alustan takana",
+    "heading": "Miksi rakensimme myNextDaysin.",
+    "gruenderin": {
+      "quote": "myNextDays syntyi omasta vuokrausarjestamme AirSmilissä – rakennamme juuri sen ohjelmiston, jota olisimme itse tarvinneet.",
+      "name": "Jeanine Ågaard",
+      "location": "Perustaja, myNextDays / AirSmil"
+    }
+  },
+  "stimmen": {
+    "eyebrow": "Ääniä kentältä",
+    "heading": "Mitä majoittajat kertovat.",
+    "vorschauHinweis": "Asettelun esikatselu esimerkkiteksteillä – tähän tulevat myöhemmin aidot, hyväksytyt lainaukset.",
+    "zurueck": "Edellinen kokemus",
+    "vor": "Seuraava kokemus",
+    "zeigeStimme": "Näytä kokemus {nummer}"
+  },
+  "stats": {
+    "eyebrow": "Lukuja, jotka voimme todistaa",
+    "heading": "Vuokrausalusta, jonka rakensivat ihmiset, jotka vuokraavat itse.",
+    "sub": "Julkaisu 1. syyskuuta 2026 27 maassa.",
+    "laender": {
+      "value": "27",
+      "label": "Maata",
+      "text": "Euroopan maata julkaisussa"
+    },
+    "sprachen": {
+      "value": "24",
+      "label": "Kieltä",
+      "text": "Käyttöliittymä ja vierasviestintä"
+    },
+    "kanaele": {
+      "value": "56",
+      "label": "Alustaa",
+      "text": "Varausalustaa Channexin kautta"
+    },
+    "hosting": {
+      "value": "100 %",
+      "label": "EU-isännöinti",
+      "text": "Rakennettu Tanskassa, GDPR-yhteensopiva"
+    },
+    "vermieter": {
+      "label": "Vuokraajien kehittämä",
+      "text": "Aidosta vuokrausarjesta AirSmilissä"
+    }
+  },
+  "usecases": {
+    "eyebrow": "Kenelle rakennamme",
+    "heading": "Kolme toimintamallia, yksi alusta.",
+    "sub": "Lomakohde, hotellihuone tai kokonainen portfolio – sama käyttöliittymä, kullekin toiminnalle eri tavoin koottuna.",
+    "ferienobjekt": {
+      "label": "Lomamajoitus",
+      "title": "Lomamökki & loma-asunto",
+      "text": "Yksi tai useampi kohde, jota vuokraat itse – ei vastaanottoa, mutta avainten luovutuksia, siivousta ja vieraiden kysymyksiä.",
+      "punkte": {
+        "kanaele": "Portaalit ja omat verkkosivusi yhdessä kalenterissa",
+        "kalender": "Suunnittele siivoukset ja luovutukset kohteittain",
+        "gaeste": "Verkkosisäänkirjautuminen ja digitaalinen vieraskansio 24 kielellä"
+      }
+    },
+    "hotel": {
+      "label": "Hotelli & täysihoitola",
+      "title": "Huoneita, ei säiliöitä",
+      "text": "Jokainen huone on oma varattava yksikkönsä omine hintoineen – ei kiertotietä huoneluokkien ja kappalemäärien kautta.",
+      "punkte": {
+        "zimmer": "Huonekohtainen saatavuus kaikkiin portaaleihin",
+        "raten": "Rate plan -hinnastot huoneittain, johdettuina tai manuaalisina",
+        "rezeption": "Päivänäkymä saapumisista ja lähdöistä"
+      }
+    },
+    "agentur": {
+      "label": "Välitys & isännöinti",
+      "title": "Usean omistajan portfolio",
+      "text": "Hallinnoit muiden kohteita: eriytetty tilitys, oma kirjautuminen jokaiselle omistajalle, selkeät luvut kohteittain.",
+      "punkte": {
+        "portfolio": "Kaikki kohteet yhdessä varaustilanteessa",
+        "eigentuemer": "Omistajan kirjautuminen varaustilanteineen ja tilityksineen",
+        "abrechnung": "Tiliotteet ja provisiot kohteittain"
+      }
+    }
+  },
+  "footer": {
+    "claim": "Alusta lomamajoituksen vuokraajille – enemmän varauksia, vähemmän vaivaa.",
+    "appLaden": "Lataa sovellus",
+    "spalten": {
+      "produkt": "Tuote",
+      "loesungen": "Ratkaisut",
+      "ressourcen": "Aineistot",
+      "unternehmen": "Yritys"
+    },
+    "produkt": {
+      "pms": "Property management",
+      "channelManager": "Channel manager",
+      "direktbuchung": "Suoravaraus",
+      "zahlungen": "Maksut",
+      "mobileApp": "Mobiilisovellus"
+    },
+    "loesungen": {
+      "hotels": "Hotellit",
+      "bnb": "B&B-kohteet",
+      "gaestehaeuser": "Vierastalot",
+      "ferienwohnungen": "Loma-asunnot",
+      "campingplaetze": "Leirintäalueet"
+    },
+    "ressourcen": {
+      "blog": "Blogi",
+      "hilfeCenter": "Ohjekeskus",
+      "webinare": "Webinaarit",
+      "leitfaeden": "Oppaat",
+      "api": "API-dokumentaatio"
+    },
+    "unternehmen": {
+      "ueberUns": "Tietoa meistä",
+      "karriere": "Ura",
+      "partner": "Kumppanit",
+      "kontakt": "Yhteystiedot",
+      "presse": "Media"
+    },
+    "copyright": "© 2026 myNextDays. Kaikki oikeudet pidätetään.",
+    "agb": "Käyttöehdot",
+    "datenschutz": "Tietosuoja",
+    "impressum": "Oikeudelliset tiedot",
+    "cookies": "Evästekäytäntö",
+    "avv": "Tietojenkäsittely"
+  },
+  "abschluss": {
+    "heading": "Valmis hoitamaan majoituskohteesi yhdestä paikasta?",
+    "sub": "Kokeile 30 päivää maksutta – ei määräaikaa, ei käyttöönottomaksua, irtisanottavissa milloin tahansa.",
+    "ctaPrimaer": "Kokeile 30 päivää maksutta",
+    "ctaSekundaer": "Katso hinnat"
+  },
+  "chat": {
+    "titel": "Kysyttävää? Olemme täällä.",
+    "untertitel": "Vastaamme yleensä muutamassa tunnissa.",
+    "name": "Nimi",
+    "email": "Sähköposti",
+    "telefon": "Puhelin (valinnainen)",
+    "nachricht": "Viestisi",
+    "absenden": "Lähetä viesti",
+    "sendet": "Lähetetään …",
+    "platzhalter": "Kirjoita viesti …",
+    "senden": "Lähetä",
+    "oeffnen": "Avaa chat",
+    "schliessen": "Sulje chat",
+    "hinweis": "Käytämme tietojasi vain vastataksemme tähän yhteydenottoon.",
+    "fehler": "Tämä ei onnistunut. Yritä myöhemmin uudelleen."
+  },
+  "einblicke": {
+    "eyebrow": "Inside the product",
+    "heading": "How myNextDays actually works",
+    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "hotel": {
+      "title": "Hotels and holiday rentals in one interface",
+      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+    },
+    "objekte": {
+      "title": "Visibility per channel, not one switch for everything",
+      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+    },
+    "kanaele": {
+      "title": "Connect portals and keep your own direct channel",
+      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+    }
+  }
+}
