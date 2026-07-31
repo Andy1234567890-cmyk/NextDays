@@ -21,7 +21,7 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { voranmeldungTexte } from "@/content/voranmeldung";
-import { APP_URL } from "@/lib/app-url";
+import { VORANMELDUNG_ZIEL } from "@/lib/app-url";
 import { voranmelden } from "@/lib/newsletter";
 
 // Vor dem Start: Klicks auf Login/Registrierung öffnen das Popup.
@@ -29,10 +29,16 @@ import { voranmelden } from "@/lib/newsletter";
 // ohne dass ein einziger Marketing-Baustein angefasst werden muss.
 const VOR_DEM_START = true;
 
-/** Zeigt der Link in die App (Login/Registrierung)? */
-function zeigtInDieApp(href: string | null): boolean {
-  if (!href) return false;
-  return href.startsWith(APP_URL);
+/**
+ * Ist das ein Voranmelde-Knopf?
+ *
+ * Erkennung über das feste Marker-Ziel, NICHT über die App-Domain: Eine
+ * Domain-Prüfung (`href.startsWith(APP_URL)`) fiel still aus, sobald die
+ * Dashboard-URL wechselte — die Knöpfe hätten Besucher dann ungewollt in ein
+ * Login geschickt, das sie vor dem Start gar nicht benutzen können.
+ */
+function istVoranmeldeKnopf(href: string | null): boolean {
+  return href === VORANMELDUNG_ZIEL;
 }
 
 export function VoranmeldungPopup() {
@@ -57,7 +63,7 @@ export function VoranmeldungPopup() {
         return;
       }
       const ziel = (e.target as HTMLElement | null)?.closest("a");
-      if (!ziel || !zeigtInDieApp(ziel.getAttribute("href"))) return;
+      if (!ziel || !istVoranmeldeKnopf(ziel.getAttribute("href"))) return;
       e.preventDefault();
       // Woher der Klick kam, wandert als Quelle mit (Auswertung später).
       setQuelle(

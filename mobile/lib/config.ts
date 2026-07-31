@@ -2,8 +2,9 @@
 // EINZIGE Quelle für URLs/Umgebung — keine URL darf außerhalb dieser Datei
 // stehen (CLAUDE.md Wurzel 4 sinngemäß). Umschaltung über __DEV__:
 //   Dev  = lokales Backend (iOS-Sim: localhost, Android-Emu: 10.0.2.2)
-//   Prod = self-hosted sslip.io (Übergangs-Domain bis zum Domain-Cutover;
-//          dann NUR diese Datei anfassen).
+//   Prod = api.mynextdays.com (seit dem Domain-Cutover 31.07.2026).
+// Supabase/Kong bleibt bewusst auf der sslip.io-Adresse — bewusste
+// Sicherheitsentscheidung, die DB bekommt KEINE öffentliche Marken-Domain.
 import { Platform } from "react-native";
 
 // Öffentlicher anon-Key aus der gitignorierten config.secrets.ts (im Repo nur
@@ -31,7 +32,7 @@ const DEV: AppConfig = {
   // Ansage Andy (13.07.): auch Dev läuft gegen die ECHTE API/DB (sslip.io) —
   // kein lokales Backend nötig. Wer bewusst lokal testen will, kommentiert
   // die localhost-Zeile ein (DEV_HOST: iOS-Sim localhost, Android 10.0.2.2).
-  apiUrl: "https://nextdays-api.65.21.144.136.sslip.io",
+  apiUrl: "https://api.mynextdays.com",
   // apiUrl: `http://${DEV_HOST}:8000`,
   // Muss zur Supabase gehören, gegen die das lokale Backend läuft
   // (apps/api/.env → SUPABASE_URL) — Realtime-Events kommen aus DERSELBEN DB
@@ -45,7 +46,7 @@ const DEV: AppConfig = {
 };
 
 const PROD: AppConfig = {
-  apiUrl: "https://nextdays-api.65.21.144.136.sslip.io",
+  apiUrl: "https://api.mynextdays.com",
   supabaseUrl: "https://supabase-kong.65.21.144.136.sslip.io",
   // Öffentlicher anon-Key (derselbe Kong wie Dev). RLS schützt die Daten.
   // Wert aus der gitignorierten config.secrets.ts (kein echter Token im Repo).

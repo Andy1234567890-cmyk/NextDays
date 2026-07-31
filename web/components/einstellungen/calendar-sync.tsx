@@ -31,8 +31,10 @@ import {
 } from "@/lib/external-calendar";
 
 // Eigene, öffentliche API-Referenz (eigenständige Doku-Site, KEINE Session/kein
-// Login — reiner externer Link). Staging-URL; beim Domain-Cutover auf die echte
-// docs-Domain umstellen.
+// Login — reiner externer Link). Bewusst noch die sslip.io-Adresse: beim
+// Domain-Cutover (31.07.2026) wurden nur mynextdays.com/app/api umgestellt,
+// eine docs-Subdomain existiert im DNS noch nicht. Erst anlegen, dann hier
+// ändern — vorher wäre der Link tot.
 const API_DOCS_URL = "https://docs.65.21.144.136.sslip.io";
 
 export function CalendarSync({ overview }: { overview: PropertyCalendars[] }) {

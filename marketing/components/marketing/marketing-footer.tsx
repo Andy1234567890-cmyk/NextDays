@@ -50,11 +50,14 @@ export function MarketingFooter() {
   const t = useTranslations("footer");
 
   // AGB/Hilfe liegen in der Haupt-App (web) → absolute Links (lib/app-url).
+  // Vor dem Start ist das Dashboard nicht öffentlich; dann ist AGB_URL leer und
+  // der Eintrag entfällt, statt auf eine Adresse zu zeigen, die niemand
+  // aufrufen kann.
   // Alle übrigen Rechtsdokumente sind eigene Routen IN dieser App und kommen
   // aus der Registry (content/legal), damit Footer und Seiten nicht
   // auseinanderlaufen.
   const rechtlich = [
-    { label: t("agb"), href: AGB_URL },
+    ...(AGB_URL ? [{ label: t("agb"), href: AGB_URL }] : []),
     ...RECHTSDOKUMENTE.map((eintrag) => ({
       label: t(RECHTS_KEYS[eintrag.doc.slug]),
       href: `/${eintrag.doc.slug}`,
@@ -91,7 +94,9 @@ export function MarketingFooter() {
               <ul className="mt-4 flex flex-col gap-3">
                 {col.links.map((link) => {
                   // Nur echte Ziele verlinken; alles andere bleibt Platzhalter (#).
-                  const href = link === "hilfeCenter" ? HILFE_URL : "#";
+                  // HILFE_URL ist vor dem Start leer (Dashboard nicht öffentlich).
+                  const href =
+                    link === "hilfeCenter" && HILFE_URL ? HILFE_URL : "#";
                   return (
                     <li key={link}>
                       <Link
