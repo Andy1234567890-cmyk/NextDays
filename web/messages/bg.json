@@ -3753,13 +3753,13 @@
   "objects": {
     "channelChips": {
       "website": "Website",
-      "platform": "Plattform",
-      "portals": "Portale",
+      "platform": "Platform",
+      "portals": "Portals",
       "state": {
-        "active": "Aktiv",
-        "paused": "Pausiert",
-        "not_connected": "Nicht eingerichtet",
-        "error": "Fehler"
+        "active": "Active",
+        "paused": "Paused",
+        "not_connected": "Not set up",
+        "error": "Error"
       }
     },
     "channelsTab": {
@@ -3831,7 +3831,24 @@
       "setUpPayments": "Настройка на плащания",
       "creating": "Създава се…",
       "createRoom": "Създай стая",
-      "createProperty": "Създай обект"
+      "createProperty": "Създай обект",
+      "stepOf": "Step {schritt} of {gesamt}",
+      "next": "Continue",
+      "back": "Back",
+      "channelsHint": "Where should this property be sold? You can change this at any time.",
+      "channelPortals": "Booking portals",
+      "channelPortalsHint": "Airbnb, Booking.com and others. Portals require complete details — see below.",
+      "channelPlatform": "myBestDays",
+      "channelPlatformHint": "Our own marketplace with a low commission.",
+      "channelWebsite": "Your own website",
+      "channelWebsiteHint": "Your booking site and the booking widget.",
+      "readinessTitle": "Still missing for the portals:",
+      "readinessPhotos": "at least one photo",
+      "readinessPrice": "a rate",
+      "readinessAddress": "full address with coordinates",
+      "readinessPolicies": "check-in times and house rules",
+      "readinessCancellation": "cancellation policy",
+      "readinessFooter": "You can create the property anyway — it only goes to the portals once everything is in place."
     },
     "contactForm": {
       "title": "Контакт",
@@ -4344,6 +4361,27 @@
       "cancel": "Отказ",
       "save": "Създай",
       "saving": "Създава се …"
+    },
+    "meta": {
+      "status": {
+        "draft": "Draft",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "type": {
+        "ferienhaus": "Holiday home",
+        "appartement": "Apartment",
+        "glamping": "Glamping",
+        "tiny_house": "Tiny house",
+        "stellplatz": "Pitch",
+        "hausboot": "Houseboat",
+        "einzelzimmer": "Single room",
+        "doppelzimmer": "Double room",
+        "zweibettzimmer": "Twin room",
+        "familienzimmer": "Family room",
+        "junior_suite": "Junior suite",
+        "suite": "Suite"
+      }
     }
   },
   "calendar": {
@@ -4615,5 +4653,75 @@
     "bewertungFrage": "Колко доволни бяхте от поддръжката?",
     "bewertungDanke": "Благодарим за обратната връзка.",
     "bewertungStufe": "Оценка {stufe} от 5"
+  },
+  "kanalFelder": {
+    "titel": "Where does this field go?",
+    "gruende": {
+      "vollsync": "only with a full connection",
+      "festbetrag": "fixed amount only",
+      "nurProzent": "percentage values only",
+      "imPortal": "must be maintained in the portal",
+      "kennsNicht": "not available there",
+      "eigeneStrecke": "for your own distribution only",
+      "nurBelegungspreise": "only with occupancy pricing in the portal",
+      "nichtUebertragbar": "the portal supports it, our route does not transfer it",
+      "laengenlimit": "mind the portal length limit",
+      "nurErstExport": "on first export only",
+      "nurMitEntsprechung": "only features with a match in the portal",
+      "nichtDeckungsgleich": "categories do not fully match",
+      "ohneBeleg": "not confirmed — we are checking"
+    },
+    "status": {
+      "voll": "transferred",
+      "bedingt": "limited",
+      "portal": "maintain in portal",
+      "nein": "not supported",
+      "unklar": "still open"
+    },
+    "felder": {
+      "titel": "Name",
+      "beschreibung": "Description",
+      "plattformBeschreibung": "Description for your own distribution",
+      "objekttyp": "Property type",
+      "adresse": "Address",
+      "geokoordinaten": "Coordinates",
+      "belegung": "Occupancy",
+      "groesseQm": "Size (m²)",
+      "ausstattung": "Amenities",
+      "fotos": "Photos",
+      "raeume": "Rooms and beds",
+      "grundpreis": "Base rate",
+      "saisonpreise": "Season rates",
+      "zusatzgast": "Extra guest fee",
+      "reinigungsgebuehr": "Cleaning fee",
+      "weitereGebuehren": "Other fees",
+      "steuern": "Taxes",
+      "zusatzleistungen": "Add-ons",
+      "verfuegbarkeit": "Availability",
+      "anAbreisetage": "Arrival and departure days",
+      "aufenthaltsdauer": "Minimum and maximum stay",
+      "vorlaufzeit": "Lead time",
+      "buchungsfenster": "Booking window",
+      "stopSell": "Stop sell",
+      "checkinZeiten": "Check-in and check-out times",
+      "hausregeln": "House rules",
+      "stornobedingungen": "Cancellation policy",
+      "kaution": "Security deposit",
+      "lizenznummer": "Licence/registration number",
+      "mietvertrag": "Rental agreement"
+    },
+    "gruppen": {
+      "stammdaten": "Basic data",
+      "ausstattung": "Amenities and images",
+      "preise": "Rates and fees",
+      "verfuegbarkeit": "Availability",
+      "richtlinien": "Policies"
+    },
+    "seite": {
+      "titel": "What gets synchronised?",
+      "sub": "Field by field: what goes to the portals, what has to be maintained there, and what only lives here.",
+      "feldSpalte": "Field",
+      "hinweis": "This overview describes what the platform actually transfers — not what a portal could do in theory."
+    }
   }
 }

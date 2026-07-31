@@ -12,8 +12,8 @@ import { useMemo, useState } from "react";
 import { Button } from "@nextdays/ui/button";
 import { Checkbox } from "@nextdays/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@nextdays/ui/popover";
-import { TYPE_LABELS } from "@/lib/property-meta";
 import type { PropertyType } from "@/lib/properties";
+import { usePropertyLabels } from "@/lib/use-property-labels";
 
 export type FilterProp = { id: string; title: string; property_type: PropertyType };
 
@@ -99,10 +99,11 @@ export function BookingsFilter({
 }) {
   // Ressourcen-Optionen = die tatsächlich vorkommenden Unterkunftsarten (aus den
   // Objekten abgeleitet, keine feste Liste — nur was es real gibt).
+  const { typeLabel } = usePropertyLabels();
   const typeOptions = useMemo(() => {
     const present = Array.from(new Set(properties.map((p) => p.property_type)));
-    return present.map((pt) => ({ value: pt, label: TYPE_LABELS[pt] ?? pt }));
-  }, [properties]);
+    return present.map((pt) => ({ value: pt, label: typeLabel(pt) }));
+  }, [properties, typeLabel]);
 
   const hasFilter = selectedProps.length > 0 || selectedTypes.length > 0;
   const t = useTranslations("reservations");

@@ -1,5 +1,15 @@
-// Anzeige-Metadaten für Objekte: Typ-/Status-Labels + Standard-Ausstattung.
+// Anzeige-Metadaten für Objekte: Typ-Listen je Betriebsart + Ausstattung.
 // Wird von Liste, Detailseite und Editoren gemeinsam genutzt.
+//
+// Die ANZEIGE-Namen kommen ab jetzt aus dem i18n-Namensraum `objects.meta`
+// über `lib/use-property-labels.ts`. Grund: als deutsche Festwerte erzeugten
+// sie in den 23 anderen Sprachen gemischte Oberflächen — im englischen
+// Objekt-Screenshot stand neben „8 objects" ein Badge „Aktiv".
+//
+// Die deutschen Konstanten unten bleiben vorerst als Übergang stehen: zwei
+// Dateien (property-overview, new-property-button) hängen an einer parallel
+// entstehenden Kanalfeld-Erweiterung und können erst danach mitziehen.
+// TODO(i18n): nach deren Merge diese vier Exporte entfernen.
 import type { PropertyStatus, PropertyType } from "@/lib/properties";
 
 export const TYPE_LABELS: Record<PropertyType, string> = {
@@ -18,10 +28,26 @@ export const TYPE_LABELS: Record<PropertyType, string> = {
   suite: "Suite",
 };
 
+export const STATUS_LABELS: Record<PropertyStatus, string> = {
+  draft: "Entwurf",
+  active: "Aktiv",
+  inactive: "Inaktiv",
+};
+
+export const STATUS_OPTIONS = Object.entries(STATUS_LABELS).map(
+  ([value, label]) => ({ value: value as PropertyStatus, label }),
+);
+
+export function typeOptionsFor(
+  accommodationType: "vacation_rental" | "hotel" | null | undefined,
+): { value: PropertyType; label: string }[] {
+  const types = accommodationType === "hotel" ? HOTEL_TYPES : VR_TYPES;
+  return types.map((value) => ({ value, label: TYPE_LABELS[value] }));
+}
+
 // Typen je Betriebsart (0090): Ferienvermietung sieht Ferienobjekt-Typen,
 // Hotel sieht Zimmertypen — Filter und Anlage-Dialoge zeigen NUR die passende
-// Liste (typeOptionsFor). TYPE_OPTIONS bleibt die Gesamtliste (für die
-// Anzeige von Bestandsdaten, egal welcher Typ).
+// Liste (usePropertyLabels().typeOptionsFor).
 export const VR_TYPES: PropertyType[] = [
   "ferienhaus",
   "appartement",
@@ -40,27 +66,9 @@ export const HOTEL_TYPES: PropertyType[] = [
   "suite",
 ];
 
-export function typeOptionsFor(
-  accommodationType: "vacation_rental" | "hotel" | null | undefined,
-): { value: PropertyType; label: string }[] {
-  const types = accommodationType === "hotel" ? HOTEL_TYPES : VR_TYPES;
-  return types.map((value) => ({ value, label: TYPE_LABELS[value] }));
-}
 
-export const TYPE_OPTIONS = Object.entries(TYPE_LABELS).map(([value, label]) => ({
-  value: value as PropertyType,
-  label,
-}));
 
-export const STATUS_LABELS: Record<PropertyStatus, string> = {
-  draft: "Entwurf",
-  active: "Aktiv",
-  inactive: "Inaktiv",
-};
 
-export const STATUS_OPTIONS = Object.entries(STATUS_LABELS).map(
-  ([value, label]) => ({ value: value as PropertyStatus, label }),
-);
 
 // Channex-Facility-Katalog (301, live abgerufen): die Ausstattungs-Auswahl im
 // Objekt-Editor IST dieser Katalog — 1:1 mit Channex. Jeder Eintrag geht über

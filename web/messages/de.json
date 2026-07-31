@@ -3898,7 +3898,24 @@
       "setUpPayments": "Zahlungen einrichten",
       "creating": "Anlegen…",
       "createRoom": "Zimmer anlegen",
-      "createProperty": "Objekt anlegen"
+      "createProperty": "Objekt anlegen",
+      "stepOf": "Schritt {schritt} von {gesamt}",
+      "next": "Weiter",
+      "back": "Zurück",
+      "channelsHint": "Wo soll dieses Objekt verkauft werden? Das lässt sich jederzeit ändern.",
+      "channelPortals": "Buchungsportale",
+      "channelPortalsHint": "Airbnb, Booking.com und weitere. Portale verlangen vollständige Angaben — siehe unten.",
+      "channelPlatform": "myBestDays",
+      "channelPlatformHint": "Unser eigener Marktplatz mit niedriger Provision.",
+      "channelWebsite": "Eigene Website",
+      "channelWebsiteHint": "Deine Buchungsseite und das Buchungs-Widget.",
+      "readinessTitle": "Für die Portale fehlt danach noch:",
+      "readinessPhotos": "mindestens ein Foto",
+      "readinessPrice": "ein Preis",
+      "readinessAddress": "vollständige Adresse mit Koordinaten",
+      "readinessPolicies": "Check-in-Zeiten und Hausregeln",
+      "readinessCancellation": "Stornobedingungen",
+      "readinessFooter": "Du kannst das Objekt trotzdem anlegen — es geht erst an die Portale, wenn alles vorliegt."
     },
     "contactForm": {
       "title": "Kontakt",
@@ -4413,6 +4430,27 @@
       "cancel": "Abbrechen",
       "save": "Anlegen",
       "saving": "Wird angelegt …"
+    },
+    "meta": {
+      "status": {
+        "draft": "Entwurf",
+        "active": "Aktiv",
+        "inactive": "Inaktiv"
+      },
+      "type": {
+        "ferienhaus": "Ferienhaus",
+        "appartement": "Appartement",
+        "glamping": "Glamping",
+        "tiny_house": "Tiny House",
+        "stellplatz": "Stellplatz",
+        "hausboot": "Hausboot",
+        "einzelzimmer": "Einzelzimmer",
+        "doppelzimmer": "Doppelzimmer",
+        "zweibettzimmer": "Zweibettzimmer",
+        "familienzimmer": "Familienzimmer",
+        "junior_suite": "Junior Suite",
+        "suite": "Suite"
+      }
     }
   },
   "calendar": {
@@ -4793,5 +4831,75 @@
     "bewertungFrage": "Wie zufrieden waren Sie mit der Unterstützung?",
     "bewertungDanke": "Danke für Ihre Rückmeldung.",
     "bewertungStufe": "Bewertung {stufe} von 5"
+  },
+  "kanalFelder": {
+    "titel": "Wohin geht dieses Feld?",
+    "gruende": {
+      "vollsync": "nur bei vollständiger Anbindung",
+      "festbetrag": "nur als Festbetrag",
+      "nurProzent": "nur prozentuale Werte",
+      "imPortal": "muss im Portal gepflegt werden",
+      "kennsNicht": "dort nicht vorgesehen",
+      "eigeneStrecke": "nur für deine eigene Strecke",
+      "nurBelegungspreise": "nur mit Belegungspreisen im Portal",
+      "nichtUebertragbar": "Portal kennt es, unser Weg überträgt es nicht",
+      "laengenlimit": "Längenbegrenzung des Portals beachten",
+      "nurErstExport": "nur beim ersten Export",
+      "nurMitEntsprechung": "nur Merkmale mit Entsprechung im Portal",
+      "nichtDeckungsgleich": "Kategorien decken sich nicht vollständig",
+      "ohneBeleg": "nicht belegt — wir prüfen das"
+    },
+    "status": {
+      "voll": "wird übertragen",
+      "bedingt": "eingeschränkt",
+      "portal": "im Portal pflegen",
+      "nein": "nicht unterstützt",
+      "unklar": "noch offen"
+    },
+    "felder": {
+      "titel": "Name",
+      "beschreibung": "Beschreibung",
+      "plattformBeschreibung": "Beschreibung für die eigene Strecke",
+      "objekttyp": "Objekttyp",
+      "adresse": "Adresse",
+      "geokoordinaten": "Koordinaten",
+      "belegung": "Belegung",
+      "groesseQm": "Größe (m²)",
+      "ausstattung": "Ausstattung",
+      "fotos": "Fotos",
+      "raeume": "Räume und Betten",
+      "grundpreis": "Grundpreis",
+      "saisonpreise": "Saisonpreise",
+      "zusatzgast": "Zusatzgast-Aufschlag",
+      "reinigungsgebuehr": "Reinigungsgebühr",
+      "weitereGebuehren": "Weitere Gebühren",
+      "steuern": "Steuern",
+      "zusatzleistungen": "Zusatzleistungen",
+      "verfuegbarkeit": "Verfügbarkeit",
+      "anAbreisetage": "An- und Abreisetage",
+      "aufenthaltsdauer": "Mindest- und Höchstaufenthalt",
+      "vorlaufzeit": "Vorlaufzeit",
+      "buchungsfenster": "Buchungsfenster",
+      "stopSell": "Stop-Sell",
+      "checkinZeiten": "Check-in- und Check-out-Zeiten",
+      "hausregeln": "Hausregeln",
+      "stornobedingungen": "Stornobedingungen",
+      "kaution": "Kaution",
+      "lizenznummer": "Lizenz-/Registriernummer",
+      "mietvertrag": "Mietvertrag"
+    },
+    "gruppen": {
+      "stammdaten": "Stammdaten",
+      "ausstattung": "Ausstattung und Bilder",
+      "preise": "Preise und Gebühren",
+      "verfuegbarkeit": "Verfügbarkeit",
+      "richtlinien": "Richtlinien"
+    },
+    "seite": {
+      "titel": "Was wird synchronisiert?",
+      "sub": "Feld für Feld: was an die Portale geht, was dort gepflegt werden muss und was nur bei uns lebt.",
+      "feldSpalte": "Feld",
+      "hinweis": "Diese Übersicht beschreibt, was die Plattform tatsächlich überträgt — nicht, was ein Portal theoretisch könnte."
+    }
   }
 }

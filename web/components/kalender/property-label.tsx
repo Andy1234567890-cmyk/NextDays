@@ -7,8 +7,8 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
-import { TYPE_LABELS } from "@/lib/property-meta";
 import type { PropertyType } from "@/lib/properties";
+import { usePropertyLabels } from "@/lib/use-property-labels";
 
 export type LabelProp = {
   id: string;
@@ -42,6 +42,7 @@ export function PropertyLabel({
   isHotel: boolean;
 }) {
   const t = useTranslations("calendar");
+  const { typeLabel } = usePropertyLabels();
   return (
     <Link
       href={`/objekte/${p.id}`}
@@ -82,7 +83,7 @@ export function PropertyLabel({
           </span>
         )}
         <span className="truncate text-xs text-muted-foreground">
-          {isHotel ? TYPE_LABELS[p.type] : p.address || TYPE_LABELS[p.type]}
+          {isHotel ? typeLabel(p.type) : p.address || typeLabel(p.type)}
         </span>
         {!isHotel && p.city && (
           <span className="truncate text-xs text-muted-foreground">{p.city}</span>

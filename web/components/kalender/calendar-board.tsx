@@ -39,7 +39,7 @@ import {
   reservationStatus,
 } from "@/lib/calendar-status";
 import type { PropertyType } from "@/lib/properties";
-import { typeOptionsFor } from "@/lib/property-meta";
+import { usePropertyLabels } from "@/lib/use-property-labels";
 import { getRateGrid } from "@/lib/rates";
 import { Input } from "@nextdays/ui/input";
 import {
@@ -446,6 +446,7 @@ export function CalendarBoard({
   accommodationType?: "vacation_rental" | "hotel" | null;
 }) {
   const t = useTranslations("calendar");
+  const { typeOptionsFor } = usePropertyLabels();
   // Startdatum (rollierend). null bis der Client das heutige Datum kennt.
   const [start, setStart] = useState<Date | null>(null);
   const [todayKey, setTodayKey] = useState("");

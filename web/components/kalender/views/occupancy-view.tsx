@@ -21,7 +21,7 @@ import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { Segmented } from "@nextdays/ui/segmented";
 import { getBoard } from "@/lib/calendar";
-import { TYPE_LABELS } from "@/lib/property-meta";
+import { usePropertyLabels } from "@/lib/use-property-labels";
 import {
   addDays,
   dateKey,
@@ -80,6 +80,7 @@ function bookedRuns(
 
 export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
   const t = useTranslations("calendar");
+  const { typeLabel } = usePropertyLabels();
   const locale = useLocale();
   const WINDOWS = useMemo(
     () =>
@@ -513,7 +514,7 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
                     <span className="flex min-w-0 flex-1 flex-col leading-tight">
                       <span className="truncate text-sm font-semibold">{p.title}</span>
                       <span className="truncate text-xs text-muted-foreground">
-                        {p.city || TYPE_LABELS[p.type]}
+                        {p.city || typeLabel(p.type)}
                       </span>
                     </span>
                     <span

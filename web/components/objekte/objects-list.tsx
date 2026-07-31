@@ -29,11 +29,9 @@ import {
   type Property,
 } from "@/lib/properties";
 import {
-  STATUS_LABELS,
-  STATUS_OPTIONS,
-  TYPE_LABELS,
-  typeOptionsFor,
 } from "@/lib/property-meta";
+
+import { usePropertyLabels } from "@/lib/use-property-labels";
 
 export function ObjectsList({
   items,
@@ -43,6 +41,7 @@ export function ObjectsList({
   accommodationType: "vacation_rental" | "hotel" | null;
 }) {
   const t = useTranslations("objects");
+  const { typeLabel, statusLabel, statusOptions, typeOptionsFor } = usePropertyLabels();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [type, setType] = useState("");
@@ -124,7 +123,7 @@ export function ObjectsList({
           className="w-auto min-w-36"
         >
           <option value="">{t("objektePage.filterAllStatus")}</option>
-          {STATUS_OPTIONS.map((o) => (
+          {statusOptions.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>
@@ -193,7 +192,7 @@ export function ObjectsList({
                     />
                   )}
                   <span className="absolute left-2 top-2 rounded-full bg-background/90 px-2 py-0.5 text-xs font-medium">
-                    {STATUS_LABELS[p.status]}
+                    {statusLabel(p.status)}
                   </span>
                   {/* Aktionsmenü (Lodgify-Stil) oben rechts. Trigger darf die
                       Karten-Navigation nicht auslösen → preventDefault. */}
@@ -260,7 +259,7 @@ export function ObjectsList({
                 <div className="flex flex-col gap-1 p-4">
                   <span className="truncate font-semibold">{p.title}</span>
                   <span className="text-sm text-muted-foreground">
-                    {TYPE_LABELS[p.property_type]} ·{" "}
+                    {typeLabel(p.property_type)} ·{" "}
                     {t("objektePage.guestsCount", { count: p.max_guests })}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">

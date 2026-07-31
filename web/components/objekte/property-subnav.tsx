@@ -4,10 +4,11 @@
 // zwei Gruppen „Objektdetails" und „Reservierung". Aktiver Punkt hervorgehoben.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
+
+import { usePropertyLabels } from "@/lib/use-property-labels";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { STATUS_LABELS } from "@/lib/property-meta";
 import type { PropertyStatus } from "@/lib/properties";
 
 type SubnavItem = { slug: string; titleKey: string; icon: string };
@@ -50,6 +51,7 @@ export function PropertySubnav({
   status: PropertyStatus;
 }) {
   const t = useTranslations("objects");
+  const { statusLabel } = usePropertyLabels();
   const pathname = usePathname();
   const base = `/objekte/${id}`;
 
@@ -73,7 +75,7 @@ export function PropertySubnav({
         <div className="flex min-w-0 flex-col">
           <span className="truncate text-sm font-semibold">{title}</span>
           <span className="text-xs text-muted-foreground">
-            {STATUS_LABELS[status]}
+            {statusLabel(status)}
           </span>
         </div>
       </div>
