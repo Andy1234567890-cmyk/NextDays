@@ -4480,7 +4480,16 @@
       "statusBooked": "belagt",
       "statusFree": "ledig",
       "legendDayTotal": "Dagens belægning",
-      "legendBookedProperty": "Bolig belagt"
+      "legendBookedProperty": "Bolig belagt",
+      "kpiBookedNights": "Belagte enhedsnætter",
+      "kpiOfNights": "af {count} mulige",
+      "kpiBestDay": "Travleste dag",
+      "kpiNoBookings": "Ingen belægning",
+      "propertyOccupancyTitle": "Belægning i perioden",
+      "loading": "Indlæser…",
+      "legendWeekend": "Weekend",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# nat} other {# nætter}} belagt",
+      "jumpToday": "I dag"
     },
     "reservationAddonsSection": {
       "title": "Tillægsydelser",

@@ -4480,7 +4480,16 @@
       "statusBooked": "zasedeno",
       "statusFree": "prosto",
       "legendDayTotal": "Dnevna zasedenost",
-      "legendBookedProperty": "Nastanitev zasedena"
+      "legendBookedProperty": "Nastanitev zasedena",
+      "kpiBookedNights": "Zasedene nočitve",
+      "kpiOfNights": "od {count} možnih",
+      "kpiBestDay": "Najbolj zaseden dan",
+      "kpiNoBookings": "Ni zasedenosti",
+      "propertyOccupancyTitle": "Zasedenost v obdobju",
+      "loading": "Nalaganje…",
+      "legendWeekend": "Vikend",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# noč} two {# noči} few {# noči} other {# noči}} zasedeno",
+      "jumpToday": "Danes"
     },
     "reservationAddonsSection": {
       "title": "Dodatne storitve",

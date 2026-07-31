@@ -4480,7 +4480,16 @@
       "statusBooked": "belagd",
       "statusFree": "ledig",
       "legendDayTotal": "Daglig beläggning",
-      "legendBookedProperty": "Objekt belagt"
+      "legendBookedProperty": "Objekt belagt",
+      "kpiBookedNights": "Belagda objektnätter",
+      "kpiOfNights": "av {count} möjliga",
+      "kpiBestDay": "Mest belagda dag",
+      "kpiNoBookings": "Ingen beläggning",
+      "propertyOccupancyTitle": "Beläggning under perioden",
+      "loading": "Laddar…",
+      "legendWeekend": "Helg",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# natt} other {# nätter}} belagd",
+      "jumpToday": "Idag"
     },
     "reservationAddonsSection": {
       "title": "Tilläggstjänster",

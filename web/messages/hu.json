@@ -4480,7 +4480,16 @@
       "statusBooked": "foglalt",
       "statusFree": "szabad",
       "legendDayTotal": "Napi kihasználtság",
-      "legendBookedProperty": "Szálláshely foglalt"
+      "legendBookedProperty": "Szálláshely foglalt",
+      "kpiBookedNights": "Foglalt egységéjszakák",
+      "kpiOfNights": "{count} lehetségesből",
+      "kpiBestDay": "Legterheltebb nap",
+      "kpiNoBookings": "Nincs kihasználtság",
+      "propertyOccupancyTitle": "Kihasználtság az időszakban",
+      "loading": "Betöltés…",
+      "legendWeekend": "Hétvége",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# éjszaka} other {# éjszaka}} foglalt",
+      "jumpToday": "Ma"
     },
     "reservationAddonsSection": {
       "title": "Extra szolgáltatások",

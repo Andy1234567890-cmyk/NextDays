@@ -4480,7 +4480,16 @@
       "statusBooked": "okkupat",
       "statusFree": "ħieles",
       "legendDayTotal": "Okkupazzjoni ta' kuljum",
-      "legendBookedProperty": "Proprjetà okkupata"
+      "legendBookedProperty": "Proprjetà okkupata",
+      "kpiBookedNights": "Iljieli okkupati",
+      "kpiOfNights": "minn {count} possibbli",
+      "kpiBestDay": "L-aktar jum mimli",
+      "kpiNoBookings": "Ebda okkupazzjoni",
+      "propertyOccupancyTitle": "Okkupazzjoni fil-perjodu",
+      "loading": "Qed jitniżżel…",
+      "legendWeekend": "Tmiem il-ġimgħa",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# lejl} two {# iljieli} few {# iljieli} many {# iljieli} other {# lejl}} okkupat",
+      "jumpToday": "Illum"
     },
     "reservationAddonsSection": {
       "title": "Servizzi addizzjonali",

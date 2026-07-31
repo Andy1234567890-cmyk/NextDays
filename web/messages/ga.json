@@ -4480,7 +4480,16 @@
       "statusBooked": "áitithe",
       "statusFree": "saor",
       "legendDayTotal": "Áitiú laethúil",
-      "legendBookedProperty": "Áit áitithe"
+      "legendBookedProperty": "Áit áitithe",
+      "kpiBookedNights": "Oícheanta áitithe",
+      "kpiOfNights": "as {count} féideartha",
+      "kpiBestDay": "An lá is gnóthaí",
+      "kpiNoBookings": "Gan áitiú",
+      "propertyOccupancyTitle": "Áitiú sa tréimhse",
+      "loading": "Á lódáil…",
+      "legendWeekend": "Deireadh seachtaine",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# oíche} two {# oíche} few {# oíche} many {# oíche} other {# oíche}} áitithe",
+      "jumpToday": "Inniu"
     },
     "reservationAddonsSection": {
       "title": "Seirbhísí breise",

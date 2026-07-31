@@ -4480,7 +4480,16 @@
       "statusBooked": "ocupat",
       "statusFree": "liber",
       "legendDayTotal": "Grad de ocupare zilnic",
-      "legendBookedProperty": "Proprietate ocupată"
+      "legendBookedProperty": "Proprietate ocupată",
+      "kpiBookedNights": "Nopți ocupate",
+      "kpiOfNights": "din {count} posibile",
+      "kpiBestDay": "Cea mai ocupată zi",
+      "kpiNoBookings": "Fără ocupare",
+      "propertyOccupancyTitle": "Grad de ocupare în perioadă",
+      "loading": "Se încarcă…",
+      "legendWeekend": "Weekend",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# noapte} few {# nopți} other {# de nopți}} ocupat",
+      "jumpToday": "Astăzi"
     },
     "reservationAddonsSection": {
       "title": "Servicii suplimentare",

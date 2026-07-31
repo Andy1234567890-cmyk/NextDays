@@ -4480,7 +4480,16 @@
       "statusBooked": "заето",
       "statusFree": "свободно",
       "legendDayTotal": "Дневна заетост",
-      "legendBookedProperty": "Обект зает"
+      "legendBookedProperty": "Обект зает",
+      "kpiBookedNights": "Заети нощувки",
+      "kpiOfNights": "от {count} възможни",
+      "kpiBestDay": "Най-натоварен ден",
+      "kpiNoBookings": "Няма заетост",
+      "propertyOccupancyTitle": "Заетост за периода",
+      "loading": "Зарежда…",
+      "legendWeekend": "Уикенд",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# нощувка} other {# нощувки}} заето",
+      "jumpToday": "Днес"
     },
     "reservationAddonsSection": {
       "title": "Допълнителни услуги",

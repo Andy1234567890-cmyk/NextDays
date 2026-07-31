@@ -4549,7 +4549,16 @@
       "statusBooked": "belegt",
       "statusFree": "frei",
       "legendDayTotal": "Tages-Auslastung",
-      "legendBookedProperty": "Objekt belegt"
+      "legendBookedProperty": "Objekt belegt",
+      "kpiBookedNights": "Belegte Objektnächte",
+      "kpiOfNights": "von {count} möglichen",
+      "kpiBestDay": "Stärkster Tag",
+      "kpiNoBookings": "Keine Belegung",
+      "propertyOccupancyTitle": "Auslastung im Zeitraum",
+      "loading": "Lädt …",
+      "legendWeekend": "Wochenende",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# Nacht} other {# Nächte}} belegt",
+      "jumpToday": "Heute"
     },
     "reservationAddonsSection": {
       "title": "Zusatzleistungen",

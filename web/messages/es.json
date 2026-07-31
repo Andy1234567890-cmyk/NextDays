@@ -4480,7 +4480,16 @@
       "statusBooked": "ocupado",
       "statusFree": "libre",
       "legendDayTotal": "Ocupación diaria",
-      "legendBookedProperty": "Alojamiento ocupado"
+      "legendBookedProperty": "Alojamiento ocupado",
+      "kpiBookedNights": "Noches ocupadas",
+      "kpiOfNights": "de {count} posibles",
+      "kpiBestDay": "Día más ocupado",
+      "kpiNoBookings": "Sin ocupación",
+      "propertyOccupancyTitle": "Ocupación en el periodo",
+      "loading": "Cargando…",
+      "legendWeekend": "Fin de semana",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# noche} other {# noches}} ocupado",
+      "jumpToday": "Hoy"
     },
     "reservationAddonsSection": {
       "title": "Extras",

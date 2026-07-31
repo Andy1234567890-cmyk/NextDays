@@ -4480,7 +4480,16 @@
       "statusBooked": "aizņemts",
       "statusFree": "brīvs",
       "legendDayTotal": "Dienas noslogojums",
-      "legendBookedProperty": "Objekts aizņemts"
+      "legendBookedProperty": "Objekts aizņemts",
+      "kpiBookedNights": "Aizņemtās objektu naktis",
+      "kpiOfNights": "no {count} iespējamām",
+      "kpiBestDay": "Noslogotākā diena",
+      "kpiNoBookings": "Nav noslogojuma",
+      "propertyOccupancyTitle": "Noslogojums periodā",
+      "loading": "Ielādē…",
+      "legendWeekend": "Nedēļas nogale",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, zero {# nakšu} one {# nakts} other {# naktis}} aizņemts",
+      "jumpToday": "Šodien"
     },
     "reservationAddonsSection": {
       "title": "Papildpakalpojumi",

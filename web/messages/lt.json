@@ -4480,7 +4480,16 @@
       "statusBooked": "užimta",
       "statusFree": "laisva",
       "legendDayTotal": "Dienos užimtumas",
-      "legendBookedProperty": "Objektas užimtas"
+      "legendBookedProperty": "Objektas užimtas",
+      "kpiBookedNights": "Užimtos objektų naktys",
+      "kpiOfNights": "iš {count} galimų",
+      "kpiBestDay": "Užimčiausia diena",
+      "kpiNoBookings": "Užimtumo nėra",
+      "propertyOccupancyTitle": "Užimtumas laikotarpiu",
+      "loading": "Įkeliama…",
+      "legendWeekend": "Savaitgalis",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# naktis} few {# naktys} many {# nakties} other {# naktų}} užimta",
+      "jumpToday": "Šiandien"
     },
     "reservationAddonsSection": {
       "title": "Papildomos paslaugos",

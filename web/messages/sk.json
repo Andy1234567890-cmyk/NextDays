@@ -4480,7 +4480,16 @@
       "statusBooked": "obsadené",
       "statusFree": "voľné",
       "legendDayTotal": "Obsadenosť dňa",
-      "legendBookedProperty": "Objekt obsadený"
+      "legendBookedProperty": "Objekt obsadený",
+      "kpiBookedNights": "Obsadené noci objektov",
+      "kpiOfNights": "z {count} možných",
+      "kpiBestDay": "Najvyťaženejší deň",
+      "kpiNoBookings": "Žiadna obsadenosť",
+      "propertyOccupancyTitle": "Obsadenosť v období",
+      "loading": "Načítava sa…",
+      "legendWeekend": "Víkend",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# noc} few {# noci} many {# noci} other {# nocí}} obsadené",
+      "jumpToday": "Dnes"
     },
     "reservationAddonsSection": {
       "title": "Doplnkové služby",

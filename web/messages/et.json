@@ -4480,7 +4480,16 @@
       "statusBooked": "täidetud",
       "statusFree": "vaba",
       "legendDayTotal": "Päeva täituvus",
-      "legendBookedProperty": "Majutus täidetud"
+      "legendBookedProperty": "Majutus täidetud",
+      "kpiBookedNights": "Hõivatud objektiööd",
+      "kpiOfNights": "{count} võimalikust",
+      "kpiBestDay": "Kõige täidetum päev",
+      "kpiNoBookings": "Täituvus puudub",
+      "propertyOccupancyTitle": "Täituvus perioodil",
+      "loading": "Laadib…",
+      "legendWeekend": "Nädalavahetus",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# öö} other {# ööd}} täidetud",
+      "jumpToday": "Täna"
     },
     "reservationAddonsSection": {
       "title": "Lisateenused",

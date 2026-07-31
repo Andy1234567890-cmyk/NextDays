@@ -110,12 +110,18 @@ export function occupancyMatrix(
     }
   };
 
+  // Index-Arithmetik statt Scan über alle Tage: der Zeitraum kann über zwei
+  // Jahre laufen (endlos scrollende Auslastung), da wäre res × days zu teuer.
+  const startMs = start.getTime();
+  const idx = (k: string): number =>
+    Math.round((parseKey(k).getTime() - startMs) / 86_400_000);
+
   for (const res of reservations) {
     if (res.status === "cancelled") continue;
     if (!idSet.has(res.property_id)) continue;
-    for (const k of dayKeys) {
-      if (res.check_in <= k && k < res.check_out) markBooked(res.property_id, k);
-    }
+    const from = Math.max(0, idx(res.check_in));
+    const to = Math.min(days, idx(res.check_out)); // check_out exklusiv
+    for (let i = from; i < to; i += 1) markBooked(res.property_id, dayKeys[i]);
   }
 
   // Blocks/Stop-Sell/OTA-Belegung (availability=0) ebenfalls als belegt zählen —
@@ -123,8 +129,9 @@ export function occupancyMatrix(
   for (const pid of propertyIds) {
     const blocked = blockedByProp[pid];
     if (!blocked) continue;
-    for (const k of dayKeys) {
-      if (blocked.has(k)) markBooked(pid, k);
+    for (const k of blocked) {
+      const i = idx(k);
+      if (i >= 0 && i < days) markBooked(pid, dayKeys[i]);
     }
   }
 
@@ -136,18 +143,4 @@ export function occupancyMatrix(
   }
 
   return { dayKeys, perProperty, perDay };
-}
-
-/**
- * Token-Klasse für eine Auslastungszelle (Heatmap). Stufen statt Farbverlauf,
- * damit Tailwind die Klassen sicher kompiliert (keine arbitrary Werte). Nutzt
- * die Erfolg-/Warn-Tokens des Designsystems.
- */
-export function occupancyClass(ratio: number): string {
-  if (ratio <= 0) return "bg-secondary";
-  if (ratio < 0.25) return "bg-success/20";
-  if (ratio < 0.5) return "bg-success/40";
-  if (ratio < 0.75) return "bg-success/60";
-  if (ratio < 1) return "bg-success/80";
-  return "bg-success";
 }

@@ -4480,7 +4480,16 @@
       "statusBooked": "zauzeto",
       "statusFree": "slobodno",
       "legendDayTotal": "Dnevna popunjenost",
-      "legendBookedProperty": "Objekt zauzet"
+      "legendBookedProperty": "Objekt zauzet",
+      "kpiBookedNights": "Zauzete noći objekata",
+      "kpiOfNights": "od {count} mogućih",
+      "kpiBestDay": "Najopterećeniji dan",
+      "kpiNoBookings": "Nema popunjenosti",
+      "propertyOccupancyTitle": "Popunjenost u razdoblju",
+      "loading": "Učitavanje…",
+      "legendWeekend": "Vikend",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# noć} few {# noći} other {# noći}} zauzeto",
+      "jumpToday": "Danas"
     },
     "reservationAddonsSection": {
       "title": "Dodatne usluge",

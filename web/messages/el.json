@@ -4480,7 +4480,16 @@
       "statusBooked": "κλεισμένο",
       "statusFree": "ελεύθερο",
       "legendDayTotal": "Πληρότητα ημέρας",
-      "legendBookedProperty": "Κατάλυμα κλεισμένο"
+      "legendBookedProperty": "Κατάλυμα κλεισμένο",
+      "kpiBookedNights": "Κλεισμένες διανυκτερεύσεις",
+      "kpiOfNights": "από {count} δυνατές",
+      "kpiBestDay": "Ημέρα με τη μεγαλύτερη πληρότητα",
+      "kpiNoBookings": "Καμία πληρότητα",
+      "propertyOccupancyTitle": "Πληρότητα στην περίοδο",
+      "loading": "Φόρτωση…",
+      "legendWeekend": "Σαββατοκύριακο",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# διανυκτέρευση} other {# διανυκτερεύσεις}} κλεισμένο",
+      "jumpToday": "Σήμερα"
     },
     "reservationAddonsSection": {
       "title": "Πρόσθετες υπηρεσίες",

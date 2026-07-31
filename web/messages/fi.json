@@ -4480,7 +4480,16 @@
       "statusBooked": "varattu",
       "statusFree": "vapaa",
       "legendDayTotal": "Päivän käyttöaste",
-      "legendBookedProperty": "Kohde varattu"
+      "legendBookedProperty": "Kohde varattu",
+      "kpiBookedNights": "Varatut kohdeyöt",
+      "kpiOfNights": "{count} mahdollisesta",
+      "kpiBestDay": "Vilkkain päivä",
+      "kpiNoBookings": "Ei varauksia",
+      "propertyOccupancyTitle": "Käyttöaste jaksolla",
+      "loading": "Ladataan…",
+      "legendWeekend": "Viikonloppu",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# yö} other {# yötä}} varattu",
+      "jumpToday": "Tänään"
     },
     "reservationAddonsSection": {
       "title": "Lisäpalvelut",

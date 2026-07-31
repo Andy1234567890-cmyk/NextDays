@@ -4480,7 +4480,16 @@
       "statusBooked": "bezet",
       "statusFree": "vrij",
       "legendDayTotal": "Bezetting per dag",
-      "legendBookedProperty": "Object bezet"
+      "legendBookedProperty": "Object bezet",
+      "kpiBookedNights": "Bezette objectnachten",
+      "kpiOfNights": "van {count} mogelijke",
+      "kpiBestDay": "Drukste dag",
+      "kpiNoBookings": "Geen bezetting",
+      "propertyOccupancyTitle": "Bezetting in de periode",
+      "loading": "Laden…",
+      "legendWeekend": "Weekend",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# nacht} other {# nachten}} bezet",
+      "jumpToday": "Vandaag"
     },
     "reservationAddonsSection": {
       "title": "Extra services",

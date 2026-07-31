@@ -4480,7 +4480,16 @@
       "statusBooked": "zajęte",
       "statusFree": "wolne",
       "legendDayTotal": "Obłożenie dnia",
-      "legendBookedProperty": "Obiekt zajęty"
+      "legendBookedProperty": "Obiekt zajęty",
+      "kpiBookedNights": "Zajęte noclegi obiektów",
+      "kpiOfNights": "z {count} możliwych",
+      "kpiBestDay": "Najbardziej obłożony dzień",
+      "kpiNoBookings": "Brak obłożenia",
+      "propertyOccupancyTitle": "Obłożenie w okresie",
+      "loading": "Ładowanie…",
+      "legendWeekend": "Weekend",
+      "barTooltip": "{property} · {from} – {to} · {count, plural, one {# noc} few {# noce} many {# nocy} other {# nocy}} zajęte",
+      "jumpToday": "Dziś"
     },
     "reservationAddonsSection": {
       "title": "Usługi dodatkowe",
