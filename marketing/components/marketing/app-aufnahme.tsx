@@ -32,10 +32,10 @@ const HOEHE = 2000;
 function datei(name: string, thema: "light" | "dark", sprache: string): string | null {
   const gegenthema = thema === "light" ? "dark" : "light";
   const kandidaten = [
-    ...[sprache, ...ERSATZSPRACHEN].map((s) => `${name}-${thema}-${s}@2x.png`),
+    ...[sprache, ...ERSATZSPRACHEN].map((s) => `${name}-${thema}-${s}@2x.webp`),
     // Erst wenn es das Motiv im gewünschten Thema in KEINER Sprache gibt, das
     // andere Thema nehmen — lieber die falsche Helligkeit als kein Bild.
-    ...[sprache, ...ERSATZSPRACHEN].map((s) => `${name}-${gegenthema}-${s}@2x.png`),
+    ...[sprache, ...ERSATZSPRACHEN].map((s) => `${name}-${gegenthema}-${s}@2x.webp`),
   ];
   const treffer = kandidaten.find((k) => (VORHANDEN as string[]).includes(k));
   return treffer ? `/marketing/app/${treffer}` : null;

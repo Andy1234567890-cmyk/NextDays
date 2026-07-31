@@ -19,6 +19,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright-core";
+import sharp from "sharp";
 
 const HIER = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HIER, "..", "..");
@@ -241,8 +242,13 @@ async function aufnehmen(browser, zustand, aufnahme, sprache, thema) {
     }
   });
 
-  const datei = path.join(ZIEL, `${aufnahme.name}-${thema}-${sprache}@2x.png`);
-  await seite.screenshot({ path: datei, animations: "disabled" });
+  // Als WebP ablegen statt als PNG: die Objektliste zeigt acht Fotos
+  // nebeneinander, das komprimiert PNG schlecht (2,6 MB gegen 0,6 MB bei
+  // sichtbar gleicher Schaerfe). Die Bilder liegen im Repo — jede Aufnahmerunde
+  // wuerde sonst rund 20 MB Historie anlegen.
+  const rohdaten = await seite.screenshot({ animations: "disabled" });
+  const datei = path.join(ZIEL, `${aufnahme.name}-${thema}-${sprache}@2x.webp`);
+  await sharp(rohdaten).webp({ quality: 92 }).toFile(datei);
   await kontext.close();
   return datei;
 }
@@ -314,7 +320,7 @@ async function main() {
   // beste vorhandene Variante — so bleibt die Seite heil, auch wenn eine
   // Sprach-/Theme-Kombination (noch) fehlt, statt ein 404-Bild zu zeigen.
   const vorhanden = (await readdir(ZIEL))
-    .filter((datei) => datei.endsWith("@2x.png"))
+    .filter((datei) => datei.endsWith("@2x.webp"))
     .sort();
   await writeFile(
     path.join(REPO, "marketing", "lib", "app-aufnahmen.json"),
