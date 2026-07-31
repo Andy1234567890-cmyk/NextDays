@@ -13,6 +13,7 @@
 //   Groq (features/inbox/ai.py), Google Cloud Translation (features/content)
 //   Cloudflare (features/site_config/cloudflare_client.py)
 //   Meta/WhatsApp (features/whatsapp/client.py → graph.facebook.com)
+//   Brevo/Sendinblue (features/newsletter/brevo_client.py → api.brevo.com)
 //   Iconify (marketing lädt Icons zur Laufzeit von api.iconify.design)
 // Neuer ausgehender Dienst mit Personenbezug → hier nachtragen, sonst ist die
 // Erklärung unvollständig (Art. 13 Abs. 1 lit. e DSGVO).
@@ -35,7 +36,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Diese Erklärung beschreibt, wie die ${ANBIETER.firma} personenbezogene Daten verarbeitet — beim Besuch dieser Website, bei der Nutzung der Plattform myNextDays (Dashboard, Marktplatz und mobile App) und im Rahmen der Geschäftsbeziehung mit unseren Kunden.`,
-    "Grundlage ist die Verordnung (EU) 2016/679 (DSGVO) sowie das dänische Datenschutzgesetz (databeskyttelsesloven). Wir verarbeiten keine Daten zu Werbezwecken, verkaufen keine Daten und setzen keine Tracking- oder Profiling-Dienste ein.",
+    "Grundlage ist die Verordnung (EU) 2016/679 (DSGVO) sowie das dänische Datenschutzgesetz (databeskyttelsesloven). Wir verkaufen keine Daten, erstellen keine Profile und setzen auf unseren Websites keine Analyse-, Tracking- oder Werbedienste ein. Werblich verarbeiten wir Daten ausschließlich dort, wo Sie ausdrücklich eingewilligt haben — nämlich für unseren Newsletter (siehe Abschnitt Kommunikation), den Sie jederzeit mit einem Klick wieder abbestellen können.",
   ],
   sections: [
     {
@@ -161,7 +162,18 @@ export const datenschutz: LegalDoc = {
         {
           titel: "E-Mail",
           paragraphs: [
-            "E-Mails (Buchungsbestätigungen, Systemnachrichten, Support) versenden und empfangen wir über einen eigenen Mailserver, den wir selbst betreiben. Ein externer Newsletter- oder Versanddienst ist nicht eingebunden.",
+            "E-Mails im Rahmen der Nutzung (Buchungsbestätigungen, Systemnachrichten, Support, Bestätigungs- und Einladungslinks) versenden und empfangen wir über einen eigenen Mailserver, den wir selbst betreiben. Für diese Nachrichten ist kein externer Versanddienst eingebunden.",
+          ],
+        },
+        {
+          titel: "Newsletter und Voranmeldung",
+          paragraphs: [
+            "Auf unserer Website können Sie sich für Neuigkeiten zu myNextDays eintragen (Voranmeldung/Newsletter). Verarbeitet werden dabei Ihre E-Mail-Adresse, die Sprache und die Stelle, an der Sie sich eingetragen haben.",
+            "Die Anmeldung läuft im Double-Opt-in-Verfahren: Nach dem Eintragen erhalten Sie eine E-Mail mit einem Bestätigungslink; erst mit dem Klick darauf ist die Anmeldung wirksam. Zum Nachweis der Einwilligung speichern wir den Zeitpunkt der Anmeldung und der Bestätigung, die dabei verwendete IP-Adresse, die Browserkennung sowie den Wortlaut, dem Sie zugestimmt haben. Diese Angaben dienen ausschließlich dem Nachweis nach Art. 7 Abs. 1 DSGVO und werden nicht für Werbung ausgewertet.",
+            "Rechtsgrundlage ist Ihre Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO; die Speicherung des Nachweises stützen wir auf Art. 6 Abs. 1 lit. c in Verbindung mit Art. 7 Abs. 1 DSGVO. Sie können die Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen — über den Abmeldelink in jeder Newsletter-Mail oder formlos per E-Mail an uns. Der Widerruf berührt die Rechtmäßigkeit der bis dahin erfolgten Verarbeitung nicht.",
+            "Für Verwaltung und Versand der Newsletter setzen wir Brevo (Sendinblue SAS, 106 boulevard Haussmann, 75008 Paris, Frankreich; deutsche Niederlassung: Brevo GmbH, Köpenicker Straße 126, 10179 Berlin) als Auftragsverarbeiter ein. Übermittelt werden Ihre E-Mail-Adresse und die genannten Zusatzangaben (Sprache, Quelle). Die Daten werden auf Servern innerhalb der Europäischen Union (Frankreich und Deutschland) verarbeitet; mit Brevo besteht ein Auftragsverarbeitungsvertrag nach Art. 28 DSGVO. Es gilt die [Datenschutzerklärung von Brevo](https://www.brevo.com/legal/privacypolicy/).",
+            "Versenden wir einen Newsletter, misst Brevo in unserem Auftrag, ob die Nachricht geöffnet und ob enthaltene Links angeklickt wurden. Diese Messung hilft uns, Inhalt und Häufigkeit anzupassen; sie ist Teil der Einwilligung und endet mit Ihrer Abmeldung. Eine Zusammenführung mit anderen Datenquellen oder eine Profilbildung findet nicht statt.",
+            "Solange die Bestätigung aussteht, wird Ihre Adresse nicht angeschrieben und nicht an Brevo übermittelt; ein nicht bestätigter Eintrag verfällt nach sieben Tagen. Nach einer Abmeldung sperren wir die Adresse für den Versand und bewahren den Einwilligungs- und Abmeldenachweis auf, solange Ansprüche daraus geltend gemacht werden können; auf Verlangen löschen wir ihn vollständig.",
           ],
         },
         {
@@ -226,6 +238,7 @@ export const datenschutz: LegalDoc = {
         "PayPal (Europe) S.à r.l. et Cie, S.C.A. (Luxemburg) — Zahlungen, sofern aktiviert",
         "Channex.io Ltd (Vereinigtes Königreich) — Anbindung an Buchungsportale",
         "Meta Platforms Ireland Limited (Irland) — WhatsApp-Nachrichten, sofern aktiviert",
+        "Sendinblue SAS / Brevo (Frankreich, Deutschland) — Newsletter-Verwaltung und -Versand, nur bei Einwilligung",
         "Google Ireland Limited (Irland) — Übersetzungen; Anmeldung mit Google, sofern genutzt",
         "Groq, Inc. (USA) — Antwortvorschläge, sofern aktiviert",
         "Cloudflare, Inc. (USA) — DNS-Verwaltung für Kunden-Domains",
@@ -246,6 +259,7 @@ export const datenschutz: LegalDoc = {
         "Kontodaten: für die Dauer der Geschäftsbeziehung; danach Löschung, soweit keine Aufbewahrungspflicht besteht.",
         "Buchungs-, Rechnungs- und Zahlungsdaten: nach dänischem Buchführungsgesetz fünf Jahre nach Ende des Geschäftsjahres, dem sie zuzuordnen sind; bei Kunden mit Sitz in Deutschland können längere handels- und steuerrechtliche Fristen greifen.",
         "Nachrichten und Gästedaten in der Plattform: nach Weisung des verantwortlichen Betriebs, längstens bis zur Löschung durch diesen bzw. bis zum Ende des Vertrags.",
+        "Newsletter: bis zum Widerruf der Einwilligung; unbestätigte Anmeldungen verfallen nach sieben Tagen. Der Einwilligungs- und Abmeldenachweis bleibt darüber hinaus erhalten, solange er als Nachweis benötigt wird.",
         "Anmeldeprotokolle und Sicherheitsereignisse: kurzfristig zur Angriffserkennung.",
         "Server-Logfiles: nur so lange, wie es für Betrieb und Sicherheit erforderlich ist.",
         "Sicherungskopien: rollierend, bis sie durch neuere Sicherungen ersetzt werden.",
