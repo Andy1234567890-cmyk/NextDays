@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "The website builder creates your own booking website for you — an additional sales channel alongside portals and the myNextDays marketplace. You keep full control over structure, content, and branding.",
+              text: "The website builder creates your own booking website for you — an additional sales channel alongside portals and the myBestDays marketplace. You keep full control over structure, content, and branding.",
             },
             { type: "h2", text: "How to create a website" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "For a property to appear on your website, website visibility must be switched on for that property. This toggle is independent of visibility on the myNextDays marketplace or on portals.",
+              text: "For a property to appear on your website, website visibility must be switched on for that property. This toggle is independent of visibility on the myBestDays marketplace or on portals.",
             },
             { type: "h2", text: "Enable a property for the website" },
             {

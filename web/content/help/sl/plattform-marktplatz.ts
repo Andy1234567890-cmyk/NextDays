@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platforma (tržnica)",
-  description: "Prodaja na tržnici myNextDays.",
+  description: "Prodaja na tržnici myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "Tržnica myNextDays",
-          excerpt: "Globalna tržnica myNextDays je lasten rezervacijski kanal poleg portalov in spletne strani.",
+          title: "Tržnica myBestDays",
+          excerpt: "Globalna tržnica myBestDays je lasten rezervacijski kanal poleg portalov in spletne strani.",
           updated: "Posodobljeno: julij 2026",
           body: [
             {
               type: "p",
-              text: "Tržnica myNextDays (/plattform) je globalni rezervacijski kanal samega myNextDays — primerljiv z Booking ali Airbnb, vendar del iste platforme. Gostje tam brskajo po objektih vseh povezanih obratov in rezervirajo neposredno.",
+              text: "Tržnica myBestDays (/plattform) je globalni rezervacijski kanal samega myBestDays — primerljiv z Booking ali Airbnb, vendar del iste platforme. Gostje tam brskajo po objektih vseh povezanih obratov in rezervirajo neposredno.",
             },
             { type: "h2", text: "Ne „neposredno“, temveč enakovreden kanal" },
             {
               type: "p",
-              text: "Tržnica ne nadomešča neposredne rezervacije prek vaše lastne spletne strani. Je samostojna, tretja prodajna pot z lastno osjo vidnosti, lastnim naborom gostov in lastno provizijo — povsem tako kot portal, le da jo upravlja sam myNextDays.",
+              text: "Tržnica ne nadomešča neposredne rezervacije prek vaše lastne spletne strani. Je samostojna, tretja prodajna pot z lastno osjo vidnosti, lastnim naborom gostov in lastno provizijo — povsem tako kot portal, le da jo upravlja sam myBestDays.",
             },
             { type: "h2", text: "Kako objekti pridejo na tržnico" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Tako kot pri vsakem rezervacijskem portalu se tudi za rezervacije, sklenjene prek tržnice myNextDays, obračuna provizija. Izračuna se za vsako rezervacijo posebej in je neodvisna od morebitnih provizij za portale.",
+              text: "Tako kot pri vsakem rezervacijskem portalu se tudi za rezervacije, sklenjene prek tržnice myBestDays, obračuna provizija. Izračuna se za vsako rezervacijo posebej in je neodvisna od morebitnih provizij za portale.",
             },
             { type: "h2", text: "Kako se izračuna provizija" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Provizija tržnice velja izključno za rezervacije prek tržnice myNextDays.",
+                "Provizija tržnice velja izključno za rezervacije prek tržnice myBestDays.",
                 "Rezervacije s portalov (Booking, Airbnb in drugi) so podvržene pogojem posameznega portala.",
                 "Rezervacije prek spletne strani so podvržene pogojem, navedenim v vaši tarifi, brez provizije tržnice.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Gostje, ki rezervirajo prek tržnice myNextDays, ustvarijo svoj profil gosta. V njem se zbirajo njihove rezervacije, sporočila z obrati in oddane ocene — podobno kot pri portalskem računu gosta.",
+              text: "Gostje, ki rezervirajo prek tržnice myBestDays, ustvarijo svoj profil gosta. V njem se zbirajo njihove rezervacije, sporočila z obrati in oddane ocene — podobno kot pri portalskem računu gosta.",
             },
             { type: "h2", text: "Kaj vidite kot obrat" },
             {

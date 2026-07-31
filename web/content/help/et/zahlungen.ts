@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Turuplatsi vahendustasu: kohaldub myNextDays platvormi kaudu tehtud broneeringutele",
+                "Turuplatsi vahendustasu: kohaldub myBestDays platvormi kaudu tehtud broneeringutele",
                 "Portaali vahendustasu: arvutab vastav portaal oma tingimuste alusel",
                 "Otsebroneeringuid Teie enda veebilehe kaudu tuleb vaadelda neist sõltumatult",
               ],

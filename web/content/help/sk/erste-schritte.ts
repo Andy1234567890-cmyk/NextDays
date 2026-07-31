@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (systém správy nehnuteľností): objekty, kalendár, ceny, rezervácie, úlohy a platby.",
                 "Kanálový manažér: prepojenie s portálmi ako Booking, Airbnb a ďalšie — jeden zápis, mnoho portálov synchronizovaných.",
-                "Trhovisko platformy: vlastné trhovisko myNextDays, rovnocenný rezervačný kanál popri portáloch.",
+                "Trhovisko platformy: vlastné trhovisko myBestDays, rovnocenný rezervačný kanál popri portáloch.",
                 "Aplikácia: mobilná aplikácia pre hostí, vlastníkov a zamestnancov s rovnakými údajmi ako na webe.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Webová stránka: viditeľnosť na vašej vlastnej webovej stránke myNextDays",
-                "Trhovisko platformy: viditeľnosť na globálnom trhovisku myNextDays",
+                "Trhovisko platformy: viditeľnosť na globálnom trhovisku myBestDays",
                 "Portály: viditeľnosť na Booking, Airbnb a ďalších",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Trhovisko platformy" },
             {
               type: "p",
-              text: "Trhovisko myNextDays je vlastný, globálny rezervačný kanál — porovnateľný s Booking alebo Airbnb, no je súčasťou tej istej platformy. Nie je náhradou „priamych rezervácií“, ale rovnocenným kanálom s vlastnou osou viditeľnosti.",
+              text: "Trhovisko myBestDays je vlastný, globálny rezervačný kanál — porovnateľný s Booking alebo Airbnb, no je súčasťou tej istej platformy. Nie je náhradou „priamych rezervácií“, ale rovnocenným kanálom s vlastnou osou viditeľnosti.",
             },
             { type: "h2", text: "Aplikácia" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Webová stránka — vaša vlastná webová stránka myNextDays",
-                "Trhovisko platformy — globálne trhovisko myNextDays",
+                "Trhovisko platformy — globálne trhovisko myBestDays",
                 "Portály — Booking, Airbnb a ďalšie cez kanálového manažéra",
               ],
             },

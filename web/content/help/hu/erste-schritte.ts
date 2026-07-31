@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (ingatlankezelő rendszer): objektumok, naptár, árak, foglalások, feladatok és fizetések.",
                 "Csatornakezelő: kapcsolat portálokkal, mint a Booking, Airbnb és társaik — egy bevitel, sok szinkronizált portál.",
-                "Platform-piactér: a saját myNextDays piactér, egyenrangú foglalási csatorna a portálok mellett.",
+                "Platform-piactér: a saját myBestDays piactér, egyenrangú foglalási csatorna a portálok mellett.",
                 "Alkalmazás: a mobilalkalmazás vendégeknek, tulajdonosoknak és munkatársaknak, ugyanazokkal az adatokkal, mint a weben.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Weboldal: láthatóság saját myNextDays weboldalán",
-                "Platform-piactér: láthatóság a globális myNextDays piactéren",
+                "Platform-piactér: láthatóság a globális myBestDays piactéren",
                 "Portálok: láthatóság a Bookingon, Airbnbn és társaikon",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Platform-piactér" },
             {
               type: "p",
-              text: "A myNextDays piactér önálló, globális foglalási csatorna — összehasonlítható a Bookinggal vagy az Airbnbvel, mégis ugyanannak a platformnak a része. Nem „közvetlen foglalási” helyettesítő, hanem egyenrangú csatorna saját láthatósági tengellyel.",
+              text: "A myBestDays piactér önálló, globális foglalási csatorna — összehasonlítható a Bookinggal vagy az Airbnbvel, mégis ugyanannak a platformnak a része. Nem „közvetlen foglalási” helyettesítő, hanem egyenrangú csatorna saját láthatósági tengellyel.",
             },
             { type: "h2", text: "Alkalmazás" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Weboldal — saját myNextDays weboldala",
-                "Platform-piactér — a globális myNextDays piactér",
+                "Platform-piactér — a globális myBestDays piactér",
                 "Portálok — Booking, Airbnb és társaik a csatornakezelőn keresztül",
               ],
             },

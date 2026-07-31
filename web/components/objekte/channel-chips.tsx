@@ -1,7 +1,7 @@
 "use client";
 
 // Drei gleichrangige Vertriebskanal-Chips auf der Objektkarte:
-//   Website (eigene Kunden-Website) · Plattform (myNextDays-Marktplatz) · Portale
+//   Website (eigene Kunden-Website) · Plattform (myBestDays-Marktplatz) · Portale
 //   (Channex → OTAs, im Kundentext NIE „Channex").
 // Ebene B (pro-Kanal-Sichtbarkeit), getrennt vom Lebenszyklus-Badge (status).
 // Zustandsmodell branchen-recherchiert (Guesty/Cloudbeds/SiteMinder): active

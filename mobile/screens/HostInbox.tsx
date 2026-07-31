@@ -203,7 +203,9 @@ function channelKeyOf(ota: string | null): "direct" | "portal" | "booking" | "ai
   if (s.includes("booking")) return "booking";
   if (s.includes("airbnb")) return "airbnb";
   if (s.includes("vrbo") || s.includes("expedia")) return "vrbo";
-  if (s.includes("mynextdays") || s.includes("nextdays")) return "portal";
+  // Altbestand trägt noch „myNextDays" als ota_name, neue Buchungen „myBestDays".
+  if (s.includes("mybestdays") || s.includes("mynextdays") || s.includes("nextdays"))
+    return "portal";
   return "direct";
 }
 

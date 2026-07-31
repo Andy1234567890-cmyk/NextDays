@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platformă (Piață)",
-  description: "Vindeți pe piața myNextDays.",
+  description: "Vindeți pe piața myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "Piața myNextDays",
-          excerpt: "Piața globală myNextDays este un canal de rezervare propriu, alături de portaluri și site-ul web.",
+          title: "Piața myBestDays",
+          excerpt: "Piața globală myBestDays este un canal de rezervare propriu, alături de portaluri și site-ul web.",
           updated: "Actualizat: iulie 2026",
           body: [
             {
               type: "p",
-              text: "Piața myNextDays (/plattform) este canalul global de rezervare al myNextDays însuși — comparabil cu Booking sau Airbnb, dar parte a aceleiași platforme. Aici oaspeții caută obiecte de la toate companiile conectate și rezervă direct.",
+              text: "Piața myBestDays (/plattform) este canalul global de rezervare al myBestDays însuși — comparabil cu Booking sau Airbnb, dar parte a aceleiași platforme. Aici oaspeții caută obiecte de la toate companiile conectate și rezervă direct.",
             },
             { type: "h2", text: "Nu este „direct”, ci un canal de rang egal" },
             {
               type: "p",
-              text: "Piața nu înlocuiește rezervarea directă prin propriul dvs. site web. Este o a treia cale de vânzare de sine stătătoare, cu propria axă de vizibilitate, propria bază de oaspeți și propriul comision — exact ca un portal, doar că este operată chiar de myNextDays.",
+              text: "Piața nu înlocuiește rezervarea directă prin propriul dvs. site web. Este o a treia cale de vânzare de sine stătătoare, cu propria axă de vizibilitate, propria bază de oaspeți și propriul comision — exact ca un portal, doar că este operată chiar de myBestDays.",
             },
             { type: "h2", text: "Cum ajung obiectele pe piață" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Ca la orice portal de rezervare, pentru rezervările realizate prin piața myNextDays se aplică un comision. Acesta se calculează per rezervare și este independent de eventualele comisioane pentru portaluri.",
+              text: "Ca la orice portal de rezervare, pentru rezervările realizate prin piața myBestDays se aplică un comision. Acesta se calculează per rezervare și este independent de eventualele comisioane pentru portaluri.",
             },
             { type: "h2", text: "Cum se calculează comisionul" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Comisionul pieței se aplică exclusiv rezervărilor prin piața myNextDays.",
+                "Comisionul pieței se aplică exclusiv rezervărilor prin piața myBestDays.",
                 "Rezervările prin portal (Booking, Airbnb & Co.) se supun condițiilor portalului respectiv.",
                 "Rezervările prin site web se supun condițiilor înregistrate pentru tariful dvs., fără comisionul pieței.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Oaspeții care rezervă prin piața myNextDays își creează un profil propriu de oaspete. Acolo se adună rezervările lor, mesajele cu companiile și recenziile lăsate — similar unui cont de oaspete de portal.",
+              text: "Oaspeții care rezervă prin piața myBestDays își creează un profil propriu de oaspete. Acolo se adună rezervările lor, mesajele cu companiile și recenziile lăsate — similar unui cont de oaspete de portal.",
             },
             { type: "h2", text: "Ce vedeți dvs. ca și companie" },
             {

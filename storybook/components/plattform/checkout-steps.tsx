@@ -1,5 +1,5 @@
 // Checkout-Schritte (links): Zahlungszeitpunkt mit Auswahl, dann Zahlungsart
-// und Buchungs-Prüfung als Folge-Schritte. Eigenes myNextDays-Design.
+// und Buchungs-Prüfung als Folge-Schritte. Eigenes myBestDays-Design.
 "use client";
 
 import { Icon } from "@iconify/react";

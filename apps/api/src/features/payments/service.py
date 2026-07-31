@@ -747,7 +747,7 @@ class PaymentsService:
             name = res.get("ota_name") or channel or "OTA"
             raise PaymentsError(
                 f"Diese Buchung kam über {name}. Die Zahlung wickelt {name} ab — "
-                "über myNextDays ist hier keine Zahlung möglich.",
+                "über myBestDays ist hier keine Zahlung möglich.",
                 status_code=409,
             )
 
@@ -798,14 +798,14 @@ class PaymentsService:
         return bool(row[0].get(column)) if row else False
 
     # Buchungen über unseren Marktplatz. Preisliste §2: „Eigenes
-    # myNextDays-Portal (Direktbuchung) 8,0 % all-in". Alles andere ist
+    # myBestDays-Portal (Direktbuchung) 8,0 % all-in". Alles andere ist
     # provisionsfrei am Charge — Direktbuchungen über die Website des Betriebs
     # ausdrücklich („provisionsfreie Direktbuchungen zusätzlich", §5), OTA-
     # Buchungen laufen gar nicht über uns (1 % wird monatlich fakturiert).
     _PORTAL_CHANNELS = frozenset({"portal"})
 
     def _ist_portal_buchung(self, res: dict) -> bool:
-        """Kam diese Buchung über unser myNextDays-Portal (8 % all-in)?
+        """Kam diese Buchung über unser myBestDays-Portal (8 % all-in)?
 
         Die Provision hängt am KANAL, nicht am Kontotyp: Die Preisliste kennt
         „Ein Tarif für alle. Kein Privat- oder Agentur-Modell." Derselbe Betrieb
@@ -848,7 +848,7 @@ class PaymentsService:
         """Provision (Basispunkte) für DIESE Buchung — die einzige Fee-Quelle.
 
         Maßgeblich ist der KANAL, nicht der Kontotyp (Preisliste §2: „Eigenes
-        myNextDays-Portal (Direktbuchung) 8,0 % all-in"). Derselbe Betrieb
+        myBestDays-Portal (Direktbuchung) 8,0 % all-in"). Derselbe Betrieb
         verkauft über den Marktplatz mit 8 %, über seine eigene Website
         provisionsfrei und über OTAs mit 1 %, die monatlich fakturiert wird.
 

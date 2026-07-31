@@ -102,7 +102,7 @@ export default async function KontoPage() {
             </p>
             <p className="mt-1 max-w-md text-sm text-white/85">
               Hier verwaltest du deine Reisen, Nachrichten und gemerkten
-              Unterkünfte bei myNextDays.
+              Unterkünfte bei myBestDays.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link

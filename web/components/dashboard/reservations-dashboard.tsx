@@ -15,7 +15,7 @@ import type {
 
 const CHANNEL_LABEL: Record<ReservationChannel, string> = {
   direct: "Direkt",
-  portal: "Portal",
+  portal: "myBestDays",
   booking: "Booking.com",
   airbnb: "Airbnb",
   vrbo: "Vrbo",

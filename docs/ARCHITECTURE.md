@@ -32,6 +32,13 @@ Kanäle andocken. Der gemeinsame Nenner ist die **`availability`-Tabelle**: eine
 pro `(property_id, date)` mit `UNIQUE`-Constraint — die _eine Wahrheit_ und der
 strukturelle Schutz gegen Double-Bookings über alle Kanäle hinweg.
 
+**Marken:** derselbe Kern trägt zwei Marken. **myNextDays** ist die Supply-Seite
+(PMS `web`, `apps/api`, Channel Manager, Marketing, Backoffice `admin`,
+White-Label-Sites `builder`). **myBestDays** ist die Demand-Seite: der globale
+Marktplatz `plattform`, das Gastgeber-Dashboard `gastgeber` und die App
+`mobile` — sowie der Kanal „Plattform" im PMS
+(`reservations.channel='portal'`, `ota_name='myBestDays'`, Migration `0239`).
+
 ---
 
 ## 2. System Context (C4 Level 1)
@@ -1320,7 +1327,7 @@ alle, **UND-verknüpft**: Haus UND Kanal). Bei jedem Booking-Import plant
 `automation_scheduled_message` (Dedup über `(automation_id, thread_id)`); der Cron
 `POST /inbox/internal/dispatch-automations` versendet fällige (Channex). Kein
 Fallback bei fehlendem Ankerdatum (übersprungen). Beide Tabellen sind in der
-Realtime-Publication. Kanäle sind OTAs **und** die eigene Plattform „myNextDays"
+Realtime-Publication. Kanäle sind OTAs **und** der eigene Marktplatz „myBestDays"
 (gleichwertiger Buchungskanal, kein „Direkt").
 
 ### Backoffice-Team (wer darf ins Backoffice?)

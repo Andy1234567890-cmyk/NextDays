@@ -249,7 +249,7 @@ export const objekte: HelpCategory = {
               type: "ul",
               items: [
                 "Site web — vizibilitate pe propriul dvs. site myNextDays",
-                "Piață — vizibilitate pe piața globală myNextDays",
+                "Piață — vizibilitate pe piața globală myBestDays",
                 "Portaluri — vizibilitate pe Booking, Airbnb & Co.",
               ],
             },

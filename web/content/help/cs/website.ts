@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Editor webových stránek vám vytvoří vlastní rezervační web — další distribuční kanál vedle portálů a tržiště myNextDays. Zachováváte si plnou kontrolu nad strukturou, obsahem i vizuální identitou.",
+              text: "Editor webových stránek vám vytvoří vlastní rezervační web — další distribuční kanál vedle portálů a tržiště myBestDays. Zachováváte si plnou kontrolu nad strukturou, obsahem i vizuální identitou.",
             },
             { type: "h2", text: "Jak vytvořit web" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Aby se objekt zobrazil na vašem webu, musí být pro tento objekt zapnuta viditelnost na webu. Tento přepínač je nezávislý na viditelnosti na tržišti myNextDays nebo na portálech.",
+              text: "Aby se objekt zobrazil na vašem webu, musí být pro tento objekt zapnuta viditelnost na webu. Tento přepínač je nezávislý na viditelnosti na tržišti myBestDays nebo na portálech.",
             },
             { type: "h2", text: "Zpřístupnění objektu pro web" },
             {

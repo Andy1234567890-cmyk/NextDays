@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Kreator strony internetowej tworzy dla Ciebie własną stronę rezerwacyjną — dodatkowy kanał sprzedaży obok portali i platformy myNextDays. Zachowujesz pełną kontrolę nad strukturą, treścią i brandingiem.",
+              text: "Kreator strony internetowej tworzy dla Ciebie własną stronę rezerwacyjną — dodatkowy kanał sprzedaży obok portali i platformy myBestDays. Zachowujesz pełną kontrolę nad strukturą, treścią i brandingiem.",
             },
             { type: "h2", text: "Jak utworzyć stronę internetową" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Aby obiekt pojawił się na Twojej stronie internetowej, musi być dla niego włączona widoczność na stronie internetowej. Ten przełącznik jest niezależny od widoczności na platformie myNextDays lub na portalach.",
+              text: "Aby obiekt pojawił się na Twojej stronie internetowej, musi być dla niego włączona widoczność na stronie internetowej. Ten przełącznik jest niezależny od widoczności na platformie myBestDays lub na portalach.",
             },
             { type: "h2", text: "Udostępnianie obiektu na stronie internetowej" },
             {

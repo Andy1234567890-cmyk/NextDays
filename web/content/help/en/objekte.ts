@@ -249,7 +249,7 @@ export const objekte: HelpCategory = {
               type: "ul",
               items: [
                 "Website — visibility on your own myNextDays website",
-                "Marketplace — visibility on the global myNextDays marketplace",
+                "Marketplace — visibility on the global myBestDays marketplace",
                 "Portals — visibility on Booking, Airbnb & Co.",
               ],
             },

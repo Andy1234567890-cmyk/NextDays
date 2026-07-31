@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Három független értékesítési út" },
             {
               type: "p",
-              text: "Egy objektumot egyidejűleg több úton is értékesíthet: a portálokon (Booking, Airbnb és társaik), a myNextDays platform-piactéren és saját weboldalán keresztül. Minden útnak saját láthatósági kapcsolója van — ezek teljesen függetlenek egymástól.",
+              text: "Egy objektumot egyidejűleg több úton is értékesíthet: a portálokon (Booking, Airbnb és társaik), a myBestDays platform-piactéren és saját weboldalán keresztül. Minden útnak saját láthatósági kapcsolója van — ezek teljesen függetlenek egymástól.",
             },
             { type: "h2", text: "Láthatóság portálonkénti vezérlése" },
             {

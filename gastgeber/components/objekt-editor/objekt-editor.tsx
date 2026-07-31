@@ -1,6 +1,6 @@
 "use client";
 
-// Objekt-Editor im Airbnb-„Listing editor"-Look, aber mit myNextDays-Farben.
+// Objekt-Editor im Airbnb-„Listing editor"-Look, aber mit myBestDays-Farben.
 // Zweispaltig: links die Abschnitts-Karten (Vorschauwert je Abschnitt), rechts
 // der Detailbereich des gewählten Abschnitts. Typografie im Airbnb-Stil (große,
 // fette Sans-Überschriften). Nur echte Property-Daten — fehlende Angaben werden

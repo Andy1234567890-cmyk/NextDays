@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platform (Marketplace)",
-  description: "Selling on the myNextDays marketplace.",
+  description: "Selling on the myBestDays marketplace.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "The myNextDays Marketplace",
-          excerpt: "The global myNextDays marketplace is its own booking channel alongside portals and website.",
+          title: "The myBestDays Marketplace",
+          excerpt: "The global myBestDays marketplace is its own booking channel alongside portals and website.",
           updated: "Last updated: July 2026",
           body: [
             {
               type: "p",
-              text: "The myNextDays Marketplace (/plattform) is myNextDays' own global booking channel — comparable to Booking or Airbnb, yet part of the same platform. Guests search properties from all connected businesses there and book directly.",
+              text: "The myBestDays Marketplace (/plattform) is myBestDays' own global booking channel — comparable to Booking or Airbnb, yet part of the same platform. Guests search properties from all connected businesses there and book directly.",
             },
             { type: "h2", text: "Not “Direct”, but an Equal Channel" },
             {
               type: "p",
-              text: "The marketplace does not replace direct bookings via your own website. It is an independent, third sales channel with its own visibility axis, its own guest base, and its own commission — just like a portal, only operated by myNextDays itself.",
+              text: "The marketplace does not replace direct bookings via your own website. It is an independent, third sales channel with its own visibility axis, its own guest base, and its own commission — just like a portal, only operated by myBestDays itself.",
             },
             { type: "h2", text: "How Properties Get onto the Marketplace" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "As with any booking portal, a commission applies to bookings made through the myNextDays Marketplace. It is calculated per booking and is independent of any commissions for portals.",
+              text: "As with any booking portal, a commission applies to bookings made through the myBestDays Marketplace. It is calculated per booking and is independent of any commissions for portals.",
             },
             { type: "h2", text: "How the Commission Is Calculated" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Marketplace commission applies exclusively to bookings via the myNextDays Marketplace.",
+                "Marketplace commission applies exclusively to bookings via the myBestDays Marketplace.",
                 "Portal bookings (Booking, Airbnb & Co.) are subject to the respective portal's terms.",
                 "Website bookings are subject to the terms stored for your plan, without a marketplace commission.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Guests who book via the myNextDays Marketplace create their own guest profile. It collects their bookings, messages with businesses, and reviews they have submitted — similar to a portal guest account.",
+              text: "Guests who book via the myBestDays Marketplace create their own guest profile. It collects their bookings, messages with businesses, and reviews they have submitted — similar to a portal guest account.",
             },
             { type: "h2", text: "What You See as a Business" },
             {

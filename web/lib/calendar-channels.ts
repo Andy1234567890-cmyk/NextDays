@@ -62,7 +62,8 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     textFg: "text-channel-vrbo",
   },
   portal: {
-    label: "Portal",
+    // Eigener Marktplatz — heißt seit der Umbenennung myBestDays (wie in mobile).
+    label: "myBestDays",
     logo: { kind: "icon", icon: "ph:globe-hemisphere-west-fill" },
     barBg: "bg-channel-portal",
     barFg: "text-white",

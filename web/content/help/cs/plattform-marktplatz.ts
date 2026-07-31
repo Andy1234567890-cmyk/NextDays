@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platforma (marketplace)",
-  description: "Prodávejte na marketplace myNextDays.",
+  description: "Prodávejte na marketplace myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "Marketplace myNextDays",
-          excerpt: "Globální marketplace myNextDays je samostatný rezervační kanál vedle portálů a webu.",
+          title: "Marketplace myBestDays",
+          excerpt: "Globální marketplace myBestDays je samostatný rezervační kanál vedle portálů a webu.",
           updated: "Aktualizováno: červenec 2026",
           body: [
             {
               type: "p",
-              text: "Marketplace myNextDays (/plattform) je globální rezervační kanál samotného myNextDays — srovnatelný s Booking nebo Airbnb, přesto je součástí téže platformy. Hosté zde procházejí objekty všech napojených provozů a rezervují přímo.",
+              text: "Marketplace myBestDays (/plattform) je globální rezervační kanál samotného myBestDays — srovnatelný s Booking nebo Airbnb, přesto je součástí téže platformy. Hosté zde procházejí objekty všech napojených provozů a rezervují přímo.",
             },
             { type: "h2", text: "Ne „přímý“ prodej, ale rovnocenný kanál" },
             {
               type: "p",
-              text: "Marketplace nenahrazuje přímou rezervaci přes váš vlastní web. Je to samostatná, třetí prodejní cesta s vlastní osou viditelnosti, vlastní hostovskou základnou a vlastní provizí — přesně jako portál, jen provozovaná samotným myNextDays.",
+              text: "Marketplace nenahrazuje přímou rezervaci přes váš vlastní web. Je to samostatná, třetí prodejní cesta s vlastní osou viditelnosti, vlastní hostovskou základnou a vlastní provizí — přesně jako portál, jen provozovaná samotným myBestDays.",
             },
             { type: "h2", text: "Jak se objekty dostanou na marketplace" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Stejně jako u každého rezervačního portálu se i za rezervace vzniklé přes marketplace myNextDays účtuje provize. Počítá se za každou rezervaci a je nezávislá na případných provizích za portály.",
+              text: "Stejně jako u každého rezervačního portálu se i za rezervace vzniklé přes marketplace myBestDays účtuje provize. Počítá se za každou rezervaci a je nezávislá na případných provizích za portály.",
             },
             { type: "h2", text: "Jak se provize počítá" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Provize marketplace platí výhradně pro rezervace přes marketplace myNextDays.",
+                "Provize marketplace platí výhradně pro rezervace přes marketplace myBestDays.",
                 "Rezervace z portálů (Booking, Airbnb a další) podléhají podmínkám daného portálu.",
                 "Rezervace z webu podléhají podmínkám uvedeným ve vašem tarifu bez provize marketplace.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Hosté, kteří rezervují přes marketplace myNextDays, si zakládají vlastní profil hosta. Shromažďují se v něm jejich rezervace, zprávy s provozy a odevzdané recenze — podobně jako u hostovského účtu na portálu.",
+              text: "Hosté, kteří rezervují přes marketplace myBestDays, si zakládají vlastní profil hosta. Shromažďují se v něm jejich rezervace, zprávy s provozy a odevzdané recenze — podobně jako u hostovského účtu na portálu.",
             },
             { type: "h2", text: "Co jako provoz vidíte" },
             {

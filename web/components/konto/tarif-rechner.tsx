@@ -357,7 +357,7 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
                   hinweis="ab 101 Objekten 0,5 %"
                 />
                 <KanalZeile
-                  kanal="myNextDays-Marktplatz"
+                  kanal="myBestDays-Marktplatz"
                   satz="8 %"
                   hinweis="nur wenn wir Ihnen den Gast bringen"
                 />

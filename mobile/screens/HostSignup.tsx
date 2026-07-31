@@ -117,7 +117,7 @@ export default function HostSignup() {
       <Col gap={8}>
         <Txt v="display">Unternehmen anlegen</Txt>
         <Txt v="body" soft>
-          Erstelle dein myNextDays-Konto — dieselbe Anmeldung wie im Dashboard.
+          Erstelle dein myBestDays-Konto — dieselbe Anmeldung wie im Dashboard.
         </Txt>
       </Col>
 

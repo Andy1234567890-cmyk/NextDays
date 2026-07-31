@@ -1,5 +1,5 @@
 // Schlanker, neutraler Footer der white-label Agentur-Site. Zeigt den Marken-
-// namen der Agentur (aus dem Branding) — KEIN myNextDays-Marktplatz-Inhalt,
+// namen der Agentur (aus dem Branding) — KEIN myBestDays-Marktplatz-Inhalt,
 // keine festen Reiseziele. Inhalte gehören in einen Kontakt-/Text-Block der Seite.
 export function SiteFooter({ siteName }: { siteName?: string | null }) {
   const year = 2026;

@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { AuthForm } from "@/components/auth-form";
+import { Logo } from "@/components/logo";
 import { getMe } from "@/lib/me";
 
 // Provisionssatz steht an einer Stelle, nicht doppelt in Text und Logik —
@@ -26,7 +27,7 @@ export default async function AnmeldenPage({
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <div className="relative hidden flex-1 flex-col justify-between bg-primary p-12 text-primary-foreground md:flex">
-        <span className="font-display text-2xl font-semibold">myNextDays</span>
+        <Logo variant="light" heightRem={2.25} />
         <div>
           <h1 className="font-display text-4xl font-semibold leading-tight">
             {t("heldTitel")}
@@ -43,7 +44,7 @@ export default async function AnmeldenPage({
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
         <div className="mb-8 md:hidden">
-          <span className="font-display text-2xl font-semibold">myNextDays</span>
+          <Logo heightRem={2.25} />
         </div>
         <AuthForm weiter={ziel} />
         <p className="mt-8 max-w-md text-center text-xs text-muted-foreground">

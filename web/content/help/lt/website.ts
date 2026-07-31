@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Svetainių kūrimo įrankis sukuria jums nuosavą rezervacijų svetainę — papildomą pardavimo kanalą šalia portalų ir myNextDays prekyvietės. Jūs išlaikote visišką struktūros, turinio ir prekės ženklo kontrolę.",
+              text: "Svetainių kūrimo įrankis sukuria jums nuosavą rezervacijų svetainę — papildomą pardavimo kanalą šalia portalų ir myBestDays prekyvietės. Jūs išlaikote visišką struktūros, turinio ir prekės ženklo kontrolę.",
             },
             { type: "h2", text: "Kaip sukurti svetainę" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Kad objektas pasirodytų jūsų svetainėje, šiam objektui turi būti įjungtas svetainės matomumas. Šis jungiklis nepriklauso nuo matomumo myNextDays prekyvietėje ar portaluose.",
+              text: "Kad objektas pasirodytų jūsų svetainėje, šiam objektui turi būti įjungtas svetainės matomumas. Šis jungiklis nepriklauso nuo matomumo myBestDays prekyvietėje ar portaluose.",
             },
             { type: "h2", text: "Objekto aktyvavimas svetainei" },
             {

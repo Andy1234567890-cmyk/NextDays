@@ -1,6 +1,6 @@
 // Wiederkehrende Layout-Muster der App — Struktur nach dem Airbnb-App-Vorbild
 // (Such-Pill, Kategorie-Tabs, Sektion mit Pfeil-Button, Bottom-Sheet,
-// Listenzeile, Bild-Kachel), Farben/Typo aus den myNextDays-Tokens.
+// Listenzeile, Bild-Kachel), Farben/Typo aus den myBestDays-Tokens.
 //
 // Diese Datei enthält NUR Darstellung: keine Datenbeschaffung, keine Preis-
 // oder Währungslogik. Beträge kommen fertig formatiert von außen.

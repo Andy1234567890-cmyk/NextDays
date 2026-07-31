@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Plattform (Marktplatz)",
-  description: "Auf dem myNextDays-Marktplatz verkaufen.",
+  description: "Auf dem myBestDays-Marktplatz verkaufen.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "Der myNextDays-Marktplatz",
-          excerpt: "Der globale myNextDays-Marktplatz ist ein eigener Buchungskanal neben Portalen und Website.",
+          title: "Der myBestDays-Marktplatz",
+          excerpt: "Der globale myBestDays-Marktplatz ist ein eigener Buchungskanal neben Portalen und Website.",
           updated: "Stand: Juli 2026",
           body: [
             {
               type: "p",
-              text: "Der myNextDays-Marktplatz (/plattform) ist der globale Buchungskanal von myNextDays selbst — vergleichbar mit Booking oder Airbnb, jedoch Teil derselben Plattform. Gäste durchsuchen dort Objekte aller angeschlossenen Betriebe und buchen direkt.",
+              text: "Der myBestDays-Marktplatz (/plattform) ist der globale Buchungskanal von myBestDays selbst — vergleichbar mit Booking oder Airbnb, jedoch Teil derselben Plattform. Gäste durchsuchen dort Objekte aller angeschlossenen Betriebe und buchen direkt.",
             },
             { type: "h2", text: "Kein „Direkt“, sondern ein gleichrangiger Kanal" },
             {
               type: "p",
-              text: "Der Marktplatz ersetzt keine Direktbuchung über Ihre eigene Website. Er ist ein eigenständiger, dritter Vertriebsweg mit eigener Sichtbarkeits-Achse, eigenem Gästestamm und eigener Provision — genau wie ein Portal, nur eben von myNextDays selbst betrieben.",
+              text: "Der Marktplatz ersetzt keine Direktbuchung über Ihre eigene Website. Er ist ein eigenständiger, dritter Vertriebsweg mit eigener Sichtbarkeits-Achse, eigenem Gästestamm und eigener Provision — genau wie ein Portal, nur eben von myBestDays selbst betrieben.",
             },
             { type: "h2", text: "Wie Objekte auf den Marktplatz kommen" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Wie bei jedem Buchungsportal fällt für Buchungen, die über den myNextDays-Marktplatz zustande kommen, eine Provision an. Sie wird pro Buchung berechnet und ist unabhängig von etwaigen Provisionen für Portale.",
+              text: "Wie bei jedem Buchungsportal fällt für Buchungen, die über den myBestDays-Marktplatz zustande kommen, eine Provision an. Sie wird pro Buchung berechnet und ist unabhängig von etwaigen Provisionen für Portale.",
             },
             { type: "h2", text: "Wie die Provision berechnet wird" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Marktplatz-Provision gilt ausschließlich für Buchungen über den myNextDays-Marktplatz.",
+                "Marktplatz-Provision gilt ausschließlich für Buchungen über den myBestDays-Marktplatz.",
                 "Portal-Buchungen (Booking, Airbnb & Co.) unterliegen den Konditionen des jeweiligen Portals.",
                 "Website-Buchungen unterliegen der für Ihren Tarif hinterlegten Konditionen ohne Marktplatz-Provision.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Gäste, die über den myNextDays-Marktplatz buchen, legen ein eigenes Gästeprofil an. Darin sammeln sich ihre Buchungen, Nachrichten mit Betrieben und abgegebene Bewertungen — ähnlich wie bei einem Portal-Gästekonto.",
+              text: "Gäste, die über den myBestDays-Marktplatz buchen, legen ein eigenes Gästeprofil an. Darin sammeln sich ihre Buchungen, Nachrichten mit Betrieben und abgegebene Bewertungen — ähnlich wie bei einem Portal-Gästekonto.",
             },
             { type: "h2", text: "Was Sie als Betrieb sehen" },
             {

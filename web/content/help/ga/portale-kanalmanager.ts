@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Trí bhealach dhíolacháin neamhspleácha" },
             {
               type: "p",
-              text: "Is féidir maoin a dhíol trí roinnt bealaí ag an am céanna: trí na tairseacha (Booking, Airbnb agus a leithéidí), tríd an Ardán Margaidh myNextDays agus trí do shuíomh gréasáin féin. Tá lasc infheictheachta dá cuid féin ag gach bealach — tá siad go hiomlán neamhspleách óna chéile.",
+              text: "Is féidir maoin a dhíol trí roinnt bealaí ag an am céanna: trí na tairseacha (Booking, Airbnb agus a leithéidí), tríd an Ardán Margaidh myBestDays agus trí do shuíomh gréasáin féin. Tá lasc infheictheachta dá cuid féin ag gach bealach — tá siad go hiomlán neamhspleách óna chéile.",
             },
             { type: "h2", text: "Infheictheacht a rialú in aghaidh na tairsí" },
             {

@@ -6,8 +6,8 @@ export const agb: LegalDoc = {
   title: "Kasutustingimused külalistele (üldtingimused)",
   stand: "Seisuga: 3. juuli 2026",
   intro: [
-    "Käesolevad kasutustingimused reguleerivad broneerimisportaali myNextDays (edaspidi „platvorm“) kasutamist reisijate ja broneerijate (edaspidi „külaline“) poolt.",
-    "Platvormi käitaja on [käitaja täielik ärinimi, õiguslik vorm, aadress ja registriandmed — täiendada enne avaldamist] (edaspidi „myNextDays“ või „meie“).",
+    "Käesolevad kasutustingimused reguleerivad broneerimisportaali myBestDays (edaspidi „platvorm“) kasutamist reisijate ja broneerijate (edaspidi „külaline“) poolt.",
+    "Platvormi käitaja on [käitaja täielik ärinimi, õiguslik vorm, aadress ja registriandmed — täiendada enne avaldamist] (edaspidi „myBestDays“ või „meie“).",
   ],
   sections: [
     {
@@ -18,9 +18,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 myNextDaysi roll; lepingu sõlmimine",
+      heading: "§ 2 myBestDaysi roll; lepingu sõlmimine",
       paragraphs: [
-        "myNextDays vahendab majutusteenuseid, mida pakuvad vastavad pakkujad (agentuurid, üürileandjad või omanikud, edaspidi „pakkuja“). Majutusleping sõlmitakse üksnes külalise ja vastava pakkuja vahel. myNextDays ei saa majutuslepingu pooleks.",
+        "myBestDays vahendab majutusteenuseid, mida pakuvad vastavad pakkujad (agentuurid, üürileandjad või omanikud, edaspidi „pakkuja“). Majutusleping sõlmitakse üksnes külalise ja vastava pakkuja vahel. myBestDays ei saa majutuslepingu pooleks.",
         "Vastav pakkuja on nimetatud pakkumises ja broneeringukinnituses.",
       ],
     },
@@ -36,7 +36,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Hinnad ja maksmine",
       paragraphs: [
         "Kehtivad broneerimise hetkel pakkumises esitatud hinnad, sealhulgas seal esitatud maksud, tasud ja lisakulud. Hinnad kuvatakse pakkumises märgitud valuutas. Kohapeal võivad lisanduda täiendavad kohalikud lõivud (nt kuurordimaks), kui see on pakkumises märgitud.",
-        "Makse töödeldakse makseteenuse pakkuja Stripe kaudu. Makseandmeid (nt kaardiandmeid) kogub ja töötleb otse Stripe; myNextDays ei salvesta täielikke kaardiandmeid. Stripe töötleb isikuandmeid vastavalt [Stripe’i privaatsuspoliitikale](https://stripe.com/privacy).",
+        "Makse töödeldakse makseteenuse pakkuja Stripe kaudu. Makseandmeid (nt kaardiandmeid) kogub ja töötleb otse Stripe; myBestDays ei salvesta täielikke kaardiandmeid. Stripe töötleb isikuandmeid vastavalt [Stripe’i privaatsuspoliitikale](https://stripe.com/privacy).",
         "Kui pakkumises on märgitud tagatisraha, võidakse see broneerimisel või saabumisel eelautoriseerida ja kahju korral täielikult või osaliselt kinni pidada; määravad on pakkumises esitatud andmed.",
       ],
     },
@@ -55,30 +55,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 myNextDaysi vastutus",
+      heading: "§ 7 myBestDaysi vastutus",
       paragraphs: [
-        "Majutusteenuse osutamise eest vastutab üksnes pakkuja. myNextDays ei vastuta pakkujate esitatud pakkumiste sisu õigsuse eest, kuid teostab vahendamist ja maksete töötlemist hoolsa ettevõtja hoolsusega.",
-        "myNextDays vastutab piiramatult tahtluse ja raske hooletuse eest ning elu, keha või tervise kahjustamisest tuleneva kahju eest. Kerge hooletuse korral vastutab myNextDays üksnes oluliste lepinguliste kohustuste (kardinaalkohustuste) rikkumise eest, piirdudes lepingule tüüpilise ettenähtava kahjuga. Imperatiivsed seadusjärgsed vastutusnormid jäävad puutumata.",
+        "Majutusteenuse osutamise eest vastutab üksnes pakkuja. myBestDays ei vastuta pakkujate esitatud pakkumiste sisu õigsuse eest, kuid teostab vahendamist ja maksete töötlemist hoolsa ettevõtja hoolsusega.",
+        "myBestDays vastutab piiramatult tahtluse ja raske hooletuse eest ning elu, keha või tervise kahjustamisest tuleneva kahju eest. Kerge hooletuse korral vastutab myBestDays üksnes oluliste lepinguliste kohustuste (kardinaalkohustuste) rikkumise eest, piirdudes lepingule tüüpilise ettenähtava kahjuga. Imperatiivsed seadusjärgsed vastutusnormid jäävad puutumata.",
       ],
     },
     {
       heading: "§ 8 Andmekaitse",
       paragraphs: [
-        "myNextDays töötleb külalise isikuandmeid vahendamise ja broneerimise läbiviimiseks. Broneeringuandmed edastatakse vastavale pakkujale, kui see on vajalik majutuslepingu täitmiseks. Maksete töötlemise suhtes kehtib § 4.",
+        "myBestDays töötleb külalise isikuandmeid vahendamise ja broneerimise läbiviimiseks. Broneeringuandmed edastatakse vastavale pakkujale, kui see on vajalik majutuslepingu täitmiseks. Maksete töötlemise suhtes kehtib § 4.",
         "Üksikasjad on esitatud platvormi andmekaitseteabes.",
       ],
     },
     {
       heading: "§ 9 Kaebused ja vaidluste lahendamine",
       paragraphs: [
-        "Majutust puudutavad pretensioonid esitab külaline kõigepealt pakkujale; broneeringu või maksega seotud küsimustes aitab myNextDaysi kasutajatugi platvormil märgitud kontaktkanalite kaudu.",
-        "myNextDays ei ole kohustatud ega valmis osalema vaidluste lahendamise menetluses tarbijavaidlusi lahendavas üksuses, kui seadusest ei tulene sellekohast kohustust.",
+        "Majutust puudutavad pretensioonid esitab külaline kõigepealt pakkujale; broneeringu või maksega seotud küsimustes aitab myBestDaysi kasutajatugi platvormil märgitud kontaktkanalite kaudu.",
+        "myBestDays ei ole kohustatud ega valmis osalema vaidluste lahendamise menetluses tarbijavaidlusi lahendavas üksuses, kui seadusest ei tulene sellekohast kohustust.",
       ],
     },
     {
       heading: "§ 10 Käesolevate tingimuste muutmine",
       paragraphs: [
-        "myNextDays võib käesolevaid tingimusi tulevikku suunatud mõjuga muuta, kui see on mõjuvatel põhjustel vajalik (eelkõige õigusaktide või kohtupraktika muutumine) ja külalist ei seata sellega ebamõistlikult ebasoodsasse olukorda. Juba tehtud broneeringute suhtes kehtib broneerimise ajal kehtinud redaktsioon.",
+        "myBestDays võib käesolevaid tingimusi tulevikku suunatud mõjuga muuta, kui see on mõjuvatel põhjustel vajalik (eelkõige õigusaktide või kohtupraktika muutumine) ja külalist ei seata sellega ebamõistlikult ebasoodsasse olukorda. Juba tehtud broneeringute suhtes kehtib broneerimise ajal kehtinud redaktsioon.",
       ],
     },
     {

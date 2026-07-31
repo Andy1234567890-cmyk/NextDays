@@ -6,8 +6,8 @@ export const agb: LegalDoc = {
   title: "Vieraiden käyttöehdot",
   stand: "Päivitetty: 3. heinäkuuta 2026",
   intro: [
-    "Nämä käyttöehdot sääntelevät sitä, miten matkustajat ja varaajat (jäljempänä ”vieras”) käyttävät myNextDays-varausportaalia (jäljempänä ”alusta”).",
-    "Alustaa ylläpitää [ylläpitäjän täydellinen toiminimi, yhtiömuoto, osoite ja rekisteritiedot — täydennettävä ennen julkaisua] (jäljempänä ”myNextDays” tai ”me”).",
+    "Nämä käyttöehdot sääntelevät sitä, miten matkustajat ja varaajat (jäljempänä ”vieras”) käyttävät myBestDays-varausportaalia (jäljempänä ”alusta”).",
+    "Alustaa ylläpitää [ylläpitäjän täydellinen toiminimi, yhtiömuoto, osoite ja rekisteritiedot — täydennettävä ennen julkaisua] (jäljempänä ”myBestDays” tai ”me”).",
   ],
   sections: [
     {
@@ -18,9 +18,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 myNextDaysin rooli; sopimuksen syntyminen",
+      heading: "§ 2 myBestDaysin rooli; sopimuksen syntyminen",
       paragraphs: [
-        "myNextDays välittää majoituspalveluja, joita tarjoavat kulloisetkin palveluntarjoajat (välitystoimistot, vuokranantajat tai omistajat, jäljempänä ”palveluntarjoaja”). Sopimus majoituksesta syntyy yksinomaan vieraan ja kulloisenkin palveluntarjoajan välillä. myNextDays ei ole majoitussopimuksen osapuoli.",
+        "myBestDays välittää majoituspalveluja, joita tarjoavat kulloisetkin palveluntarjoajat (välitystoimistot, vuokranantajat tai omistajat, jäljempänä ”palveluntarjoaja”). Sopimus majoituksesta syntyy yksinomaan vieraan ja kulloisenkin palveluntarjoajan välillä. myBestDays ei ole majoitussopimuksen osapuoli.",
         "Kulloinenkin palveluntarjoaja nimetään ilmoituksessa ja varausvahvistuksessa.",
       ],
     },
@@ -36,7 +36,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Hinnat ja maksaminen",
       paragraphs: [
         "Sovelletaan ilmoituksessa varaushetkellä ilmoitettuja hintoja, mukaan lukien siinä ilmoitetut verot, maksut ja lisäkulut. Hinnat näytetään ilmoituksessa mainitussa valuutassa. Paikan päällä voidaan periä paikallisia lisämaksuja (esim. matkailijavero), jos tästä on mainittu ilmoituksessa.",
-        "Maksu käsitellään maksupalveluntarjoaja Stripen kautta. Stripe kerää ja käsittelee maksutiedot (esim. korttitiedot) suoraan; myNextDays ei tallenna täydellisiä korttitietoja. Stripe käsittelee henkilötietoja [Stripen tietosuojaselosteen](https://stripe.com/privacy) mukaisesti.",
+        "Maksu käsitellään maksupalveluntarjoaja Stripen kautta. Stripe kerää ja käsittelee maksutiedot (esim. korttitiedot) suoraan; myBestDays ei tallenna täydellisiä korttitietoja. Stripe käsittelee henkilötietoja [Stripen tietosuojaselosteen](https://stripe.com/privacy) mukaisesti.",
         "Jos ilmoituksessa on mainittu vakuus, se voidaan esivaltuuttaa varauksen tai saapumisen yhteydessä ja pidättää vahinkotapauksessa kokonaan tai osittain; ratkaisevia ovat ilmoituksessa annetut tiedot.",
       ],
     },
@@ -55,30 +55,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 myNextDaysin vastuu",
+      heading: "§ 7 myBestDaysin vastuu",
       paragraphs: [
-        "Majoituspalvelun tuottamisesta vastaa yksin palveluntarjoaja. myNextDays ei vastaa palveluntarjoajien julkaisemien ilmoitussisältöjen oikeellisuudesta, mutta hoitaa välityksen ja maksujen käsittelyn huolellisen elinkeinonharjoittajan huolellisuutta noudattaen.",
-        "myNextDays vastaa rajoituksetta tahallisuudesta ja törkeästä huolimattomuudesta sekä vahingoista, jotka johtuvat hengen, kehon tai terveyden vahingoittamisesta. Lievän huolimattomuuden tapauksissa myNextDays vastaa vain olennaisten sopimusvelvoitteiden (kardinaalivelvoitteiden) rikkomisesta, ja vastuu rajoittuu sopimukselle tyypilliseen, ennakoitavissa olevaan vahinkoon. Pakottavat lakisääteiset vastuusäännökset jäävät voimaan.",
+        "Majoituspalvelun tuottamisesta vastaa yksin palveluntarjoaja. myBestDays ei vastaa palveluntarjoajien julkaisemien ilmoitussisältöjen oikeellisuudesta, mutta hoitaa välityksen ja maksujen käsittelyn huolellisen elinkeinonharjoittajan huolellisuutta noudattaen.",
+        "myBestDays vastaa rajoituksetta tahallisuudesta ja törkeästä huolimattomuudesta sekä vahingoista, jotka johtuvat hengen, kehon tai terveyden vahingoittamisesta. Lievän huolimattomuuden tapauksissa myBestDays vastaa vain olennaisten sopimusvelvoitteiden (kardinaalivelvoitteiden) rikkomisesta, ja vastuu rajoittuu sopimukselle tyypilliseen, ennakoitavissa olevaan vahinkoon. Pakottavat lakisääteiset vastuusäännökset jäävät voimaan.",
       ],
     },
     {
       heading: "§ 8 Tietosuoja",
       paragraphs: [
-        "myNextDays käsittelee vieraan henkilötietoja välityksen ja varauksen toteuttamiseksi. Varaustiedot välitetään kulloisellekin palveluntarjoajalle siltä osin kuin se on tarpeen majoitussopimuksen täyttämiseksi. Maksujen käsittelyyn sovelletaan § 4:ää.",
+        "myBestDays käsittelee vieraan henkilötietoja välityksen ja varauksen toteuttamiseksi. Varaustiedot välitetään kulloisellekin palveluntarjoajalle siltä osin kuin se on tarpeen majoitussopimuksen täyttämiseksi. Maksujen käsittelyyn sovelletaan § 4:ää.",
         "Yksityiskohdat ilmenevät alustan tietosuojatiedoista.",
       ],
     },
     {
       heading: "§ 9 Valitukset ja riidanratkaisu",
       paragraphs: [
-        "Majoitusta koskevat huomautukset vieras osoittaa ensin palveluntarjoajalle; varausta tai maksua koskevissa kysymyksissä auttaa myNextDaysin tuki alustalla ilmoitettujen yhteydenottokanavien kautta.",
-        "myNextDays ei ole velvollinen eikä halukas osallistumaan riidanratkaisumenettelyihin kuluttajariitoja käsittelevässä sovitteluelimessä, ellei siihen ole lakisääteistä velvollisuutta.",
+        "Majoitusta koskevat huomautukset vieras osoittaa ensin palveluntarjoajalle; varausta tai maksua koskevissa kysymyksissä auttaa myBestDaysin tuki alustalla ilmoitettujen yhteydenottokanavien kautta.",
+        "myBestDays ei ole velvollinen eikä halukas osallistumaan riidanratkaisumenettelyihin kuluttajariitoja käsittelevässä sovitteluelimessä, ellei siihen ole lakisääteistä velvollisuutta.",
       ],
     },
     {
       heading: "§ 10 Näiden ehtojen muuttaminen",
       paragraphs: [
-        "myNextDays voi muuttaa näitä ehtoja tulevaisuutta koskevin vaikutuksin, jos se on tarpeen painavista syistä (erityisesti lainsäädännön tai oikeuskäytännön muutokset) eikä muutos aseta vierasta kohtuuttomasti epäedulliseen asemaan. Jo tehtyihin varauksiin sovelletaan varaushetkellä voimassa ollutta versiota.",
+        "myBestDays voi muuttaa näitä ehtoja tulevaisuutta koskevin vaikutuksin, jos se on tarpeen painavista syistä (erityisesti lainsäädännön tai oikeuskäytännön muutokset) eikä muutos aseta vierasta kohtuuttomasti epäedulliseen asemaan. Jo tehtyihin varauksiin sovelletaan varaushetkellä voimassa ollutta versiota.",
       ],
     },
     {

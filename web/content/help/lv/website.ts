@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Vietnes konstruktors izveido jums pašu rezervāciju vietni — papildu pārdošanas kanālu blakus portāliem un myNextDays tirgum. Jūs saglabājat pilnu kontroli pār struktūru, saturu un zīmola noformējumu.",
+              text: "Vietnes konstruktors izveido jums pašu rezervāciju vietni — papildu pārdošanas kanālu blakus portāliem un myBestDays tirgum. Jūs saglabājat pilnu kontroli pār struktūru, saturu un zīmola noformējumu.",
             },
             { type: "h2", text: "Kā izveidot vietni" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Lai objekts parādītos jūsu vietnē, jābūt ieslēgtai vietnes redzamībai šim objektam. Šis slēdzis nav atkarīgs no redzamības myNextDays tirgū vai portālos.",
+              text: "Lai objekts parādītos jūsu vietnē, jābūt ieslēgtai vietnes redzamībai šim objektam. Šis slēdzis nav atkarīgs no redzamības myBestDays tirgū vai portālos.",
             },
             { type: "h2", text: "Objekta aktivizēšana vietnei" },
             {

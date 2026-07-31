@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "El constructor de sitios web le crea su propio sitio web de reservas — un canal de venta adicional junto a los portales y el marketplace de myNextDays. Usted mantiene el control total sobre la estructura, los contenidos y la marca.",
+              text: "El constructor de sitios web le crea su propio sitio web de reservas — un canal de venta adicional junto a los portales y el marketplace de myBestDays. Usted mantiene el control total sobre la estructura, los contenidos y la marca.",
             },
             { type: "h2", text: "Así crea un sitio web" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Para que un alojamiento aparezca en su sitio web, la visibilidad web debe estar activada para ese alojamiento. Este interruptor es independiente de la visibilidad en el marketplace de myNextDays o en los portales.",
+              text: "Para que un alojamiento aparezca en su sitio web, la visibilidad web debe estar activada para ese alojamiento. Este interruptor es independiente de la visibilidad en el marketplace de myBestDays o en los portales.",
             },
             { type: "h2", text: "Habilitar un alojamiento para el sitio web" },
             {

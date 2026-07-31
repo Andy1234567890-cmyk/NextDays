@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "Córas Bainistíochta Maoine (PMS): maoine, féilirí, praghsanna, áirithintí, tascanna agus íocaíochtaí.",
                 "Bainisteoir Cainéal: nasc le tairseacha ar nós Booking, Airbnb agus a leithéidí — iontráil amháin, go leor tairseacha sioncrónaithe.",
-                "Ardán Margaidh: margadh féin myNextDays, cainéal áirithinte comhchéime le hais na dtairseach.",
+                "Ardán Margaidh: margadh féin myBestDays, cainéal áirithinte comhchéime le hais na dtairseach.",
                 "Aip: an fheidhmchlár soghluaiste d'aíonna, d'úinéirí agus d'fhoireann leis na sonraí céanna atá ar an ngréasán.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Suíomh Gréasáin: infheictheacht ar do shuíomh gréasáin myNextDays féin",
-                "Ardán Margaidh: infheictheacht ar mhargadh domhanda myNextDays",
+                "Ardán Margaidh: infheictheacht ar mhargadh domhanda myBestDays",
                 "Tairseacha: infheictheacht ar Booking, Airbnb agus a leithéidí",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Ardán Margaidh" },
             {
               type: "p",
-              text: "Is cainéal áirithinte domhanda dá chuid féin é margadh myNextDays — inchomparáide le Booking nó Airbnb, ach mar chuid den ardán céanna. Ní ionadaí é ar “áirithint dhíreach”, ach cainéal comhchéime le hais na dtairseach.",
+              text: "Is cainéal áirithinte domhanda dá chuid féin é margadh myBestDays — inchomparáide le Booking nó Airbnb, ach mar chuid den ardán céanna. Ní ionadaí é ar “áirithint dhíreach”, ach cainéal comhchéime le hais na dtairseach.",
             },
             { type: "h2", text: "Aip" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Suíomh Gréasáin — do shuíomh gréasáin myNextDays féin",
-                "Ardán Margaidh — margadh domhanda myNextDays",
+                "Ardán Margaidh — margadh domhanda myBestDays",
                 "Tairseacha — Booking, Airbnb agus a leithéidí tríd an mBainisteoir Cainéal",
               ],
             },

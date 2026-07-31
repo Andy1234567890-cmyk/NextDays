@@ -1,4 +1,4 @@
-# NextDays — Mobile-App (bare React Native)
+# myBestDays — Mobile-App (bare React Native)
 
 Native App für **Gäste** (Buchen & Aufenthalt) und **Gastgeber** (Verwaltung).
 Teilt sich das FastAPI-Backend (`apps/api`) mit der Web-App.

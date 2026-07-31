@@ -6,8 +6,8 @@ export const agb: LegalDoc = {
   title: "Podmínky užívání pro hosty (VOP)",
   stand: "Stav ke dni: 3. července 2026",
   intro: [
-    "Tyto podmínky užívání upravují užívání rezervačního portálu myNextDays (dále jen „platforma“) cestujícími a objednateli (dále jen „host“).",
-    "Provozovatelem platformy je [úplný název společnosti, právní forma, adresa a údaje o zápisu provozovatele do rejstříku — doplnit před zveřejněním] (dále jen „myNextDays“ nebo „my“).",
+    "Tyto podmínky užívání upravují užívání rezervačního portálu myBestDays (dále jen „platforma“) cestujícími a objednateli (dále jen „host“).",
+    "Provozovatelem platformy je [úplný název společnosti, právní forma, adresa a údaje o zápisu provozovatele do rejstříku — doplnit před zveřejněním] (dále jen „myBestDays“ nebo „my“).",
   ],
   sections: [
     {
@@ -18,9 +18,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 Role myNextDays; uzavření smlouvy",
+      heading: "§ 2 Role myBestDays; uzavření smlouvy",
       paragraphs: [
-        "myNextDays zprostředkovává ubytovací služby, které nabízejí příslušní poskytovatelé (agentury, pronajímatelé nebo vlastníci, dále jen „poskytovatel“). Smlouva o ubytování se uzavírá výhradně mezi hostem a příslušným poskytovatelem. myNextDays se nestává smluvní stranou smlouvy o ubytování.",
+        "myBestDays zprostředkovává ubytovací služby, které nabízejí příslušní poskytovatelé (agentury, pronajímatelé nebo vlastníci, dále jen „poskytovatel“). Smlouva o ubytování se uzavírá výhradně mezi hostem a příslušným poskytovatelem. myBestDays se nestává smluvní stranou smlouvy o ubytování.",
         "Příslušný poskytovatel je uveden v nabídce a v potvrzení rezervace.",
       ],
     },
@@ -36,7 +36,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Ceny a platba",
       paragraphs: [
         "Platí ceny uvedené v nabídce v okamžiku rezervace včetně tam uvedených daní, poplatků a dodatečných nákladů. Ceny se zobrazují v měně uvedené v nabídce. Na místě mohou být účtovány další místní poplatky (např. pobytový poplatek), pokud je to uvedeno v nabídce.",
-        "Platba je zpracovávána prostřednictvím poskytovatele platebních služeb Stripe. Platební údaje (např. údaje o platební kartě) shromažďuje a zpracovává přímo Stripe; myNextDays neukládá úplné údaje o platebních kartách. Stripe zpracovává osobní údaje v souladu se [zásadami ochrany osobních údajů společnosti Stripe](https://stripe.com/privacy).",
+        "Platba je zpracovávána prostřednictvím poskytovatele platebních služeb Stripe. Platební údaje (např. údaje o platební kartě) shromažďuje a zpracovává přímo Stripe; myBestDays neukládá úplné údaje o platebních kartách. Stripe zpracovává osobní údaje v souladu se [zásadami ochrany osobních údajů společnosti Stripe](https://stripe.com/privacy).",
         "Je-li v nabídce uvedena kauce, může být při rezervaci nebo při příjezdu předautorizována a v případě škody zcela nebo zčásti zadržena; rozhodující jsou údaje uvedené v nabídce.",
       ],
     },
@@ -55,30 +55,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 Odpovědnost myNextDays",
+      heading: "§ 7 Odpovědnost myBestDays",
       paragraphs: [
-        "Za poskytnutí ubytovací služby odpovídá výhradně poskytovatel. myNextDays neodpovídá za správnost obsahu nabídek vloženého poskytovateli, zprostředkování a zpracování plateb však provádí s péčí řádného hospodáře.",
-        "myNextDays odpovídá neomezeně za úmysl a hrubou nedbalost, jakož i za škody způsobené újmou na životě, těle nebo zdraví. V případě prosté nedbalosti odpovídá myNextDays pouze za porušení podstatných smluvních povinností (kardinálních povinností), a to v rozsahu omezeném na předvídatelnou škodu typickou pro daný typ smlouvy. Kogentní zákonná pravidla odpovědnosti zůstávají nedotčena.",
+        "Za poskytnutí ubytovací služby odpovídá výhradně poskytovatel. myBestDays neodpovídá za správnost obsahu nabídek vloženého poskytovateli, zprostředkování a zpracování plateb však provádí s péčí řádného hospodáře.",
+        "myBestDays odpovídá neomezeně za úmysl a hrubou nedbalost, jakož i za škody způsobené újmou na životě, těle nebo zdraví. V případě prosté nedbalosti odpovídá myBestDays pouze za porušení podstatných smluvních povinností (kardinálních povinností), a to v rozsahu omezeném na předvídatelnou škodu typickou pro daný typ smlouvy. Kogentní zákonná pravidla odpovědnosti zůstávají nedotčena.",
       ],
     },
     {
       heading: "§ 8 Ochrana osobních údajů",
       paragraphs: [
-        "myNextDays zpracovává osobní údaje hosta za účelem provedení zprostředkování a rezervace. Rezervační údaje jsou předávány příslušnému poskytovateli v rozsahu nezbytném pro plnění smlouvy o ubytování. Pro zpracování plateb platí § 4.",
+        "myBestDays zpracovává osobní údaje hosta za účelem provedení zprostředkování a rezervace. Rezervační údaje jsou předávány příslušnému poskytovateli v rozsahu nezbytném pro plnění smlouvy o ubytování. Pro zpracování plateb platí § 4.",
         "Podrobnosti vyplývají z informací o ochraně osobních údajů platformy.",
       ],
     },
     {
       heading: "§ 9 Stížnosti a řešení sporů",
       paragraphs: [
-        "Reklamace týkající se ubytování směřuje host nejprve na poskytovatele; s dotazy k rezervaci nebo platbě pomůže podpora myNextDays prostřednictvím kontaktních kanálů uvedených na platformě.",
-        "myNextDays není povinna ani ochotna účastnit se řízení o řešení sporů před subjektem mimosoudního řešení spotřebitelských sporů, ledaže taková povinnost vyplývá ze zákona.",
+        "Reklamace týkající se ubytování směřuje host nejprve na poskytovatele; s dotazy k rezervaci nebo platbě pomůže podpora myBestDays prostřednictvím kontaktních kanálů uvedených na platformě.",
+        "myBestDays není povinna ani ochotna účastnit se řízení o řešení sporů před subjektem mimosoudního řešení spotřebitelských sporů, ledaže taková povinnost vyplývá ze zákona.",
       ],
     },
     {
       heading: "§ 10 Změny těchto podmínek",
       paragraphs: [
-        "myNextDays může tyto podmínky měnit s účinností do budoucna, pokud je to nezbytné ze závažných důvodů (zejména kvůli změnám právních předpisů nebo změnám judikatury) a host tím není nepřiměřeně znevýhodněn. Pro již uzavřené rezervace platí znění účinné v okamžiku rezervace.",
+        "myBestDays může tyto podmínky měnit s účinností do budoucna, pokud je to nezbytné ze závažných důvodů (zejména kvůli změnám právních předpisů nebo změnám judikatury) a host tím není nepřiměřeně znevýhodněn. Pro již uzavřené rezervace platí znění účinné v okamžiku rezervace.",
       ],
     },
     {

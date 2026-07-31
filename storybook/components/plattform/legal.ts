@@ -35,7 +35,7 @@ export const DEMO_LEGAL_DOC: LegalDoc = {
   title: "Allgemeine Geschäftsbedingungen für Gäste",
   stand: "Stand: 3. Juli 2026",
   intro: [
-    "Diese Bedingungen regeln die Nutzung der myNextDays-Plattform durch Gäste.",
+    "Diese Bedingungen regeln die Nutzung der myBestDays-Plattform durch Gäste.",
     "Mit einer Buchung akzeptierst du diese Bedingungen sowie die " +
       "[Datenschutzhinweise](https://mynextdays.com/datenschutz).",
   ],
@@ -44,7 +44,7 @@ export const DEMO_LEGAL_DOC: LegalDoc = {
       heading: "1. Buchung und Vertragsschluss",
       paragraphs: [
         "Der Vertrag über die Unterkunft kommt zwischen dir und dem Gastgeber " +
-          "zustande. myNextDays vermittelt lediglich die Buchung.",
+          "zustande. myBestDays vermittelt lediglich die Buchung.",
       ],
       list: [
         "Die Buchung ist verbindlich, sobald die Zahlung bestätigt wurde.",

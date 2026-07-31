@@ -215,7 +215,7 @@ class BookingEngineService:
             .eq("status", "active")
         )
         # Marktplatz-Sichtbarkeit ist ein eigener Kanal (0159): der zentrale
-        # myNextDays-Marktplatz (tenant=None) zeigt NUR Objekte mit
+        # myBestDays-Marktplatz (tenant=None) zeigt NUR Objekte mit
         # listed_on_marketplace=true — getrennt von der OTA-Distribution
         # (status='active' allein reicht nicht mehr). White-Label-Agentur-Seiten
         # (tenant gesetzt) und der explizite Featured-Block (property_ids) sind
@@ -224,7 +224,7 @@ class BookingEngineService:
         if tenant is None and property_ids is None:
             query = query.eq("listed_on_marketplace", True)
             # Freigabe des Betreibers (0203): auf dem EIGENEN Marktplatz tritt
-            # myNextDays als Anbieter auf, darum erscheint ein Objekt dort erst
+            # myBestDays als Anbieter auf, darum erscheint ein Objekt dort erst
             # nach Prüfung. OTA/Website sind davon bewusst NICHT betroffen —
             # deshalb steht diese Bedingung nur in diesem Zweig.
             query = query.eq("moderation_status", "approved")
@@ -768,13 +768,13 @@ class BookingEngineService:
                             "guest_phone": req.contact.phone or None,
                             # Unser Marktplatz ist ein EIGENER Kanal, nicht
                             # "direct". Die Preisliste unterscheidet genau hier:
-                            # eigenes myNextDays-Portal = 8 % all-in, während
+                            # eigenes myBestDays-Portal = 8 % all-in, während
                             # Direktbuchungen über die Website des Betriebs
                             # provisionsfrei sind ("provisionsfreie
                             # Direktbuchungen zusätzlich", Preisliste §5).
                             # Mit "direct" entginge uns die Provision.
                             "channel": "portal",
-                            "ota_name": "myNextDays",  # Herkunft für Kalender/Posteingang
+                            "ota_name": "myBestDays",  # Herkunft für Kalender/Posteingang
                             "check_in": req.check_in.isoformat(),
                             "check_out": req.check_out.isoformat(),
                             # Gästezahl MITSCHREIBEN: sie floss bisher nur in den

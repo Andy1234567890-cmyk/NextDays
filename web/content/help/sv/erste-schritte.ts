@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (fastighetsförvaltningssystem): objekt, kalender, priser, bokningar, uppgifter och betalningar.",
                 "Kanalhanterare: koppling till portaler som Booking, Airbnb & Co. — en inmatning, många portaler synkroniserade.",
-                "Plattformens marknadsplats: myNextDays egen marknadsplats, en likvärdig bokningskanal vid sidan av portalerna.",
+                "Plattformens marknadsplats: myBestDays egen marknadsplats, en likvärdig bokningskanal vid sidan av portalerna.",
                 "App: mobilapplikationen för gäster, ägare och medarbetare med samma data som på webben.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Webbplats: synlighet på din egen myNextDays-webbplats",
-                "Plattformens marknadsplats: synlighet på den globala myNextDays-marknadsplatsen",
+                "Plattformens marknadsplats: synlighet på den globala myBestDays-marknadsplatsen",
                 "Portaler: synlighet på Booking, Airbnb & Co.",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Plattformens marknadsplats" },
             {
               type: "p",
-              text: "myNextDays-marknadsplatsen är en egen, global bokningskanal — jämförbar med Booking eller Airbnb, men del av samma plattform. Den är inget ersättningsnamn för ”direktbokning”, utan en likvärdig kanal med egen synlighetsaxel.",
+              text: "myBestDays-marknadsplatsen är en egen, global bokningskanal — jämförbar med Booking eller Airbnb, men del av samma plattform. Den är inget ersättningsnamn för ”direktbokning”, utan en likvärdig kanal med egen synlighetsaxel.",
             },
             { type: "h2", text: "App" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Webbplats — din egen myNextDays-webbplats",
-                "Plattformens marknadsplats — den globala myNextDays-marknadsplatsen",
+                "Plattformens marknadsplats — den globala myBestDays-marknadsplatsen",
                 "Portaler — Booking, Airbnb & Co. via kanalhanteraren",
               ],
             },

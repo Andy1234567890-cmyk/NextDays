@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (système de gestion immobilière) : objets, calendrier, prix, réservations, tâches et paiements.",
                 "Gestionnaire de canaux : connexion à des portails comme Booking, Airbnb & Co. — une seule saisie, plusieurs portails synchronisés.",
-                "Marketplace de la plateforme : la marketplace myNextDays propre, un canal de réservation à part entière aux côtés des portails.",
+                "Marketplace de la plateforme : la marketplace myBestDays propre, un canal de réservation à part entière aux côtés des portails.",
                 "Application : l'application mobile pour voyageurs, propriétaires et employés, avec les mêmes données que sur le web.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Site web : visibilité sur votre propre site myNextDays",
-                "Marketplace de la plateforme : visibilité sur la marketplace globale myNextDays",
+                "Marketplace de la plateforme : visibilité sur la marketplace globale myBestDays",
                 "Portails : visibilité sur Booking, Airbnb & Co.",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Marketplace de la plateforme" },
             {
               type: "p",
-              text: "La marketplace myNextDays est un canal de réservation propre et global — comparable à Booking ou Airbnb, mais faisant partie de la même plateforme. Ce n'est pas un substitut de « réservation directe », mais un canal à part entière avec son propre axe de visibilité.",
+              text: "La marketplace myBestDays est un canal de réservation propre et global — comparable à Booking ou Airbnb, mais faisant partie de la même plateforme. Ce n'est pas un substitut de « réservation directe », mais un canal à part entière avec son propre axe de visibilité.",
             },
             { type: "h2", text: "Application" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Site web — votre propre site myNextDays",
-                "Marketplace de la plateforme — la marketplace globale myNextDays",
+                "Marketplace de la plateforme — la marketplace globale myBestDays",
                 "Portails — Booking, Airbnb & Co. via le gestionnaire de canaux",
               ],
             },

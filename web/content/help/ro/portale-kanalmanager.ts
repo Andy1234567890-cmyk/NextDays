@@ -297,7 +297,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Trei căi de vânzare independente" },
             {
               type: "p",
-              text: "Un obiect poate fi vândut simultan prin mai multe căi: prin portaluri (Booking, Airbnb & Co.), prin piața myNextDays și prin propriul dvs. site web. Fiecare cale are propriul comutator de vizibilitate — acestea sunt complet independente unul de celălalt.",
+              text: "Un obiect poate fi vândut simultan prin mai multe căi: prin portaluri (Booking, Airbnb & Co.), prin piața myBestDays și prin propriul dvs. site web. Fiecare cale are propriul comutator de vizibilitate — acestea sunt complet independente unul de celălalt.",
             },
             { type: "h2", text: "Controlul vizibilității per portal" },
             {

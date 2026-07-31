@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Le créateur de site web vous permet de créer votre propre site de réservation — un canal de vente supplémentaire en plus des portails et du marketplace myNextDays. Vous gardez un contrôle total sur la structure, le contenu et l'identité visuelle.",
+              text: "Le créateur de site web vous permet de créer votre propre site de réservation — un canal de vente supplémentaire en plus des portails et du marketplace myBestDays. Vous gardez un contrôle total sur la structure, le contenu et l'identité visuelle.",
             },
             { type: "h2", text: "Comment créer un site web" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Pour qu'un bien apparaisse sur votre site web, la visibilité Site web doit être activée pour ce bien. Ce réglage est indépendant de la visibilité sur le marketplace myNextDays ou sur les portails.",
+              text: "Pour qu'un bien apparaisse sur votre site web, la visibilité Site web doit être activée pour ce bien. Ce réglage est indépendant de la visibilité sur le marketplace myBestDays ou sur les portails.",
             },
             { type: "h2", text: "Activer un bien pour le site web" },
             {

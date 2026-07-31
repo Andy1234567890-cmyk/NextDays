@@ -8,8 +8,8 @@ export const agb: LegalDoc = {
   title: "Nutzungsbedingungen für Gäste (AGB)",
   stand: "Stand: 3. Juli 2026",
   intro: [
-    "Diese Nutzungsbedingungen regeln die Nutzung des Buchungsportals myNextDays (nachfolgend „Plattform“) durch Reisende und Bucher (nachfolgend „Gast“).",
-    "Betreiberin der Plattform ist [vollständige Firmierung, Rechtsform, Anschrift und Registerangaben des Betreibers — vor Veröffentlichung ergänzen] (nachfolgend „myNextDays“ oder „wir“).",
+    "Diese Nutzungsbedingungen regeln die Nutzung des Buchungsportals myBestDays (nachfolgend „Plattform“) durch Reisende und Bucher (nachfolgend „Gast“).",
+    "Betreiberin der Plattform ist [vollständige Firmierung, Rechtsform, Anschrift und Registerangaben des Betreibers — vor Veröffentlichung ergänzen] (nachfolgend „myBestDays“ oder „wir“).",
   ],
   sections: [
     {
@@ -20,9 +20,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 Rolle von myNextDays; Vertragsschluss",
+      heading: "§ 2 Rolle von myBestDays; Vertragsschluss",
       paragraphs: [
-        "myNextDays vermittelt Beherbergungsleistungen, die von den jeweiligen Anbietern (Agenturen, Vermieter oder Eigentümer, nachfolgend „Anbieter“) angeboten werden. Der Vertrag über die Unterkunft kommt ausschließlich zwischen dem Gast und dem jeweiligen Anbieter zustande. myNextDays wird nicht Vertragspartei des Beherbergungsvertrags.",
+        "myBestDays vermittelt Beherbergungsleistungen, die von den jeweiligen Anbietern (Agenturen, Vermieter oder Eigentümer, nachfolgend „Anbieter“) angeboten werden. Der Vertrag über die Unterkunft kommt ausschließlich zwischen dem Gast und dem jeweiligen Anbieter zustande. myBestDays wird nicht Vertragspartei des Beherbergungsvertrags.",
         "Der jeweilige Anbieter wird im Angebot und in der Buchungsbestätigung benannt.",
       ],
     },
@@ -38,7 +38,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Preise und Zahlung",
       paragraphs: [
         "Es gelten die im Angebot zum Zeitpunkt der Buchung ausgewiesenen Preise einschließlich der dort ausgewiesenen Steuern, Gebühren und Zusatzkosten. Preise werden in der im Angebot ausgewiesenen Währung angezeigt. Vor Ort können zusätzliche örtliche Abgaben (z. B. Kurtaxe) anfallen, soweit dies im Angebot ausgewiesen ist.",
-        "Die Zahlung wird über den Zahlungsdienstleister Stripe abgewickelt. Zahlungsdaten (z. B. Kartendaten) werden direkt von Stripe erhoben und verarbeitet; myNextDays speichert keine vollständigen Kartendaten. Stripe verarbeitet personenbezogene Daten gemäß der [Stripe-Datenschutzerklärung](https://stripe.com/privacy).",
+        "Die Zahlung wird über den Zahlungsdienstleister Stripe abgewickelt. Zahlungsdaten (z. B. Kartendaten) werden direkt von Stripe erhoben und verarbeitet; myBestDays speichert keine vollständigen Kartendaten. Stripe verarbeitet personenbezogene Daten gemäß der [Stripe-Datenschutzerklärung](https://stripe.com/privacy).",
         "Sofern im Angebot eine Kaution ausgewiesen ist, kann diese bei Buchung oder Anreise vorautorisiert und im Schadensfall ganz oder teilweise einbehalten werden; maßgeblich sind die Angaben im Angebot.",
       ],
     },
@@ -57,30 +57,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 Haftung von myNextDays",
+      heading: "§ 7 Haftung von myBestDays",
       paragraphs: [
-        "Für die Erbringung der Beherbergungsleistung ist allein der Anbieter verantwortlich. myNextDays haftet nicht für die Richtigkeit der von Anbietern eingestellten Angebotsinhalte, übernimmt jedoch die Vermittlung und Zahlungsabwicklung mit der Sorgfalt eines ordentlichen Kaufmanns.",
-        "myNextDays haftet unbeschränkt für Vorsatz und grobe Fahrlässigkeit sowie für Schäden aus der Verletzung von Leben, Körper oder Gesundheit. Bei einfacher Fahrlässigkeit haftet myNextDays nur für die Verletzung wesentlicher Vertragspflichten (Kardinalpflichten), begrenzt auf den vertragstypischen, vorhersehbaren Schaden. Zwingende gesetzliche Haftungsregeln bleiben unberührt.",
+        "Für die Erbringung der Beherbergungsleistung ist allein der Anbieter verantwortlich. myBestDays haftet nicht für die Richtigkeit der von Anbietern eingestellten Angebotsinhalte, übernimmt jedoch die Vermittlung und Zahlungsabwicklung mit der Sorgfalt eines ordentlichen Kaufmanns.",
+        "myBestDays haftet unbeschränkt für Vorsatz und grobe Fahrlässigkeit sowie für Schäden aus der Verletzung von Leben, Körper oder Gesundheit. Bei einfacher Fahrlässigkeit haftet myBestDays nur für die Verletzung wesentlicher Vertragspflichten (Kardinalpflichten), begrenzt auf den vertragstypischen, vorhersehbaren Schaden. Zwingende gesetzliche Haftungsregeln bleiben unberührt.",
       ],
     },
     {
       heading: "§ 8 Datenschutz",
       paragraphs: [
-        "myNextDays verarbeitet personenbezogene Daten des Gastes zur Durchführung der Vermittlung und Buchung. Buchungsdaten werden an den jeweiligen Anbieter übermittelt, soweit dies zur Durchführung des Beherbergungsvertrags erforderlich ist. Für die Zahlungsabwicklung gilt § 4.",
+        "myBestDays verarbeitet personenbezogene Daten des Gastes zur Durchführung der Vermittlung und Buchung. Buchungsdaten werden an den jeweiligen Anbieter übermittelt, soweit dies zur Durchführung des Beherbergungsvertrags erforderlich ist. Für die Zahlungsabwicklung gilt § 4.",
         "Einzelheiten ergeben sich aus den Datenschutzinformationen der Plattform.",
       ],
     },
     {
       heading: "§ 9 Beschwerden und Streitbeilegung",
       paragraphs: [
-        "Beanstandungen zur Unterkunft richtet der Gast zunächst an den Anbieter; bei Fragen zur Buchung oder Zahlung hilft der Support von myNextDays über die auf der Plattform angegebenen Kontaktwege.",
-        "myNextDays ist nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen, soweit keine gesetzliche Pflicht besteht.",
+        "Beanstandungen zur Unterkunft richtet der Gast zunächst an den Anbieter; bei Fragen zur Buchung oder Zahlung hilft der Support von myBestDays über die auf der Plattform angegebenen Kontaktwege.",
+        "myBestDays ist nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen, soweit keine gesetzliche Pflicht besteht.",
       ],
     },
     {
       heading: "§ 10 Änderungen dieser Bedingungen",
       paragraphs: [
-        "myNextDays kann diese Bedingungen mit Wirkung für die Zukunft ändern, soweit dies aus triftigen Gründen erforderlich ist (insbesondere Gesetzesänderungen oder Änderungen der Rechtsprechung) und der Gast dadurch nicht unangemessen benachteiligt wird. Für bereits abgeschlossene Buchungen gilt die bei Buchung wirksame Fassung.",
+        "myBestDays kann diese Bedingungen mit Wirkung für die Zukunft ändern, soweit dies aus triftigen Gründen erforderlich ist (insbesondere Gesetzesänderungen oder Änderungen der Rechtsprechung) und der Gast dadurch nicht unangemessen benachteiligt wird. Für bereits abgeschlossene Buchungen gilt die bei Buchung wirksame Fassung.",
       ],
     },
     {

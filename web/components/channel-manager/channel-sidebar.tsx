@@ -223,7 +223,7 @@ export function ChannelSidebar({
       <Category>{labels.categoryMarketplace}</Category>
       <ChannelRow
         href="/objekte"
-        logo={{ src: "/marketing/brand/mynextdays-logo.png" }}
+        logo={{ src: "/marketing/brand/mybestdays-logo.png" }}
         label={overview.marketplace.label}
         connected={overview.marketplace.listed_count > 0}
         active={false}

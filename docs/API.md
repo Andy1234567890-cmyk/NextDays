@@ -746,7 +746,7 @@ nicht der Kontotyp (Preisliste §1: „Ein Tarif für alle"):
 
 | Kanal | Provision | Charge | Haftung |
 |---|---|---|---|
-| `portal` | 8 % all-in | über die Plattform | myNextDays |
+| `portal` | 8 % all-in | über die Plattform | myBestDays |
 | `direct` | 0 % | Direct Charge (`Stripe-Account`) | Betrieb |
 | OTA | 0 % am Charge (1 % monatlich) | kein Charge (409) | — |
 

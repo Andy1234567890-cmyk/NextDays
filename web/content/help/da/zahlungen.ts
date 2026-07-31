@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Markedsplads-provision: opstår ved reservationer via myNextDays-platformen",
+                "Markedsplads-provision: opstår ved reservationer via myBestDays-platformen",
                 "Portal-provision: beregnes af det pågældende portal i henhold til dets egne vilkår",
                 "Direkte reservationer via din egen hjemmeside skal betragtes uafhængigt heraf",
               ],

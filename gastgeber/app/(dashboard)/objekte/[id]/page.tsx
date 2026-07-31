@@ -1,5 +1,5 @@
 // Objekt-Editor (Server Component lädt das gescopte Objekt, Client rendert den
-// Airbnb-„Listing editor"-Look mit myNextDays-Farben). Der Data-Layer
+// Airbnb-„Listing editor"-Look mit myBestDays-Farben). Der Data-Layer
 // (getProperty) ist tenant-/owner-gescopet — fremde Objekte → 404 im Backend.
 import { notFound } from "next/navigation";
 

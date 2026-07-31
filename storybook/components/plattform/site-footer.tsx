@@ -27,7 +27,7 @@ const SPALTEN = [
     ],
   },
   {
-    titel: "myNextDays",
+    titel: "myBestDays",
     links: [
       "Neuigkeiten",
       "Pressebereich",
@@ -79,7 +79,7 @@ export function SiteFooter() {
 
         <div className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-x-1 gap-y-2 text-sm text-muted-foreground">
-            <span>© 2026 myNextDays</span>
+            <span>© 2026 myBestDays</span>
             {RECHTLICH.map((link) => (
               <span key={link.label} className="flex items-center gap-1">
                 <span aria-hidden>·</span>

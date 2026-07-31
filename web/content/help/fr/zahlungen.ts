@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Commission de marketplace : s'applique aux réservations via la plateforme myNextDays",
+                "Commission de marketplace : s'applique aux réservations via la plateforme myBestDays",
                 "Commission de portail : calculée par le portail concerné selon ses propres conditions",
                 "Les réservations directes via votre propre site web sont à considérer indépendamment",
               ],

@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Editor webových stránok vám vytvorí vlastnú rezervačnú webovú stránku — ďalší predajný kanál popri portáloch a trhovisku myNextDays. Zachovávate si plnú kontrolu nad štruktúrou, obsahom a brandingom.",
+              text: "Editor webových stránok vám vytvorí vlastnú rezervačnú webovú stránku — ďalší predajný kanál popri portáloch a trhovisku myBestDays. Zachovávate si plnú kontrolu nad štruktúrou, obsahom a brandingom.",
             },
             { type: "h2", text: "Ako vytvoriť webovú stránku" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Aby sa objekt zobrazoval na vašej webovej stránke, musí byť pre tento objekt zapnutá viditeľnosť na webovej stránke. Tento prepínač je nezávislý od viditeľnosti na trhovisku myNextDays alebo na portáloch.",
+              text: "Aby sa objekt zobrazoval na vašej webovej stránke, musí byť pre tento objekt zapnutá viditeľnosť na webovej stránke. Tento prepínač je nezávislý od viditeľnosti na trhovisku myBestDays alebo na portáloch.",
             },
             { type: "h2", text: "Aktivácia objektu pre webovú stránku" },
             {

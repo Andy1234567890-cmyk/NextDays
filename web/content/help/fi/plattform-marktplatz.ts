@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Alusta (markkinapaikka)",
-  description: "Myynti myNextDays-markkinapaikalla.",
+  description: "Myynti myBestDays-markkinapaikalla.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "myNextDays-markkinapaikka",
-          excerpt: "Globaali myNextDays-markkinapaikka on oma varauskanava portaalien ja verkkosivuston rinnalla.",
+          title: "myBestDays-markkinapaikka",
+          excerpt: "Globaali myBestDays-markkinapaikka on oma varauskanava portaalien ja verkkosivuston rinnalla.",
           updated: "Päivitetty: heinäkuu 2026",
           body: [
             {
               type: "p",
-              text: "myNextDays-markkinapaikka (/plattform) on myNextDaysin oma globaali varauskanava — verrattavissa Bookingiin tai Airbnbhin, mutta osa samaa alustaa. Vieraat selaavat siellä kaikkien liittyneiden yritysten kohteita ja varaavat suoraan.",
+              text: "myBestDays-markkinapaikka (/plattform) on myBestDaysin oma globaali varauskanava — verrattavissa Bookingiin tai Airbnbhin, mutta osa samaa alustaa. Vieraat selaavat siellä kaikkien liittyneiden yritysten kohteita ja varaavat suoraan.",
             },
             { type: "h2", text: "Ei ”suoravaraus”, vaan tasavertainen kanava" },
             {
               type: "p",
-              text: "Markkinapaikka ei korvaa suoravarausta omalla verkkosivustollasi. Se on itsenäinen, kolmas myyntiväylä omalla näkyvyysakselillaan, omalla vieraskunnallaan ja omalla provisiollaan — aivan kuten portaali, mutta myNextDaysin itsensä ylläpitämä.",
+              text: "Markkinapaikka ei korvaa suoravarausta omalla verkkosivustollasi. Se on itsenäinen, kolmas myyntiväylä omalla näkyvyysakselillaan, omalla vieraskunnallaan ja omalla provisiollaan — aivan kuten portaali, mutta myBestDaysin itsensä ylläpitämä.",
             },
             { type: "h2", text: "Miten kohteet päätyvät markkinapaikalle" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Kuten missä tahansa varausportaalissa, myNextDays-markkinapaikan kautta syntyneistä varauksista peritään provisio. Se lasketaan varauskohtaisesti ja on riippumaton mahdollisista portaaliprovisioista.",
+              text: "Kuten missä tahansa varausportaalissa, myBestDays-markkinapaikan kautta syntyneistä varauksista peritään provisio. Se lasketaan varauskohtaisesti ja on riippumaton mahdollisista portaaliprovisioista.",
             },
             { type: "h2", text: "Miten provisio lasketaan" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Markkinapaikan provisio koskee yksinomaan myNextDays-markkinapaikan kautta tehtyjä varauksia.",
+                "Markkinapaikan provisio koskee yksinomaan myBestDays-markkinapaikan kautta tehtyjä varauksia.",
                 "Portaalivaraukset (Booking, Airbnb ja muut) noudattavat kyseisen portaalin ehtoja.",
                 "Verkkosivustovaraukset noudattavat hinnastosi ehtoja ilman markkinapaikan provisiota.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Vieraat, jotka varaavat myNextDays-markkinapaikan kautta, luovat oman vierasprofiilinsa. Siihen kertyy heidän varauksensa, viestinsä yritysten kanssa ja antamansa arvostelut — samaan tapaan kuin portaalin vierastilillä.",
+              text: "Vieraat, jotka varaavat myBestDays-markkinapaikan kautta, luovat oman vierasprofiilinsa. Siihen kertyy heidän varauksensa, viestinsä yritysten kanssa ja antamansa arvostelut — samaan tapaan kuin portaalin vierastilillä.",
             },
             { type: "h2", text: "Mitä näet yrityksenä" },
             {

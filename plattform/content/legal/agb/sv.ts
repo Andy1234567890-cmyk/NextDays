@@ -7,8 +7,8 @@ export const agb: LegalDoc = {
   title: "Användarvillkor för gäster",
   stand: "Senast uppdaterad: 3 juli 2026",
   intro: [
-    "Dessa användarvillkor reglerar resandes och bokares (nedan ”gästen”) användning av bokningsportalen myNextDays (nedan ”plattformen”).",
-    "Plattformen drivs av [fullständigt företagsnamn, bolagsform, adress och registeruppgifter för operatören — kompletteras före publicering] (nedan ”myNextDays” eller ”vi”).",
+    "Dessa användarvillkor reglerar resandes och bokares (nedan ”gästen”) användning av bokningsportalen myBestDays (nedan ”plattformen”).",
+    "Plattformen drivs av [fullständigt företagsnamn, bolagsform, adress och registeruppgifter för operatören — kompletteras före publicering] (nedan ”myBestDays” eller ”vi”).",
   ],
   sections: [
     {
@@ -19,9 +19,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 myNextDays roll; avtalets ingående",
+      heading: "§ 2 myBestDays roll; avtalets ingående",
       paragraphs: [
-        "myNextDays förmedlar logitjänster som erbjuds av respektive leverantör (byråer, uthyrare eller ägare, nedan ”leverantören”). Avtalet om boendet ingås uteslutande mellan gästen och den aktuella leverantören. myNextDays blir inte part i inkvarteringsavtalet.",
+        "myBestDays förmedlar logitjänster som erbjuds av respektive leverantör (byråer, uthyrare eller ägare, nedan ”leverantören”). Avtalet om boendet ingås uteslutande mellan gästen och den aktuella leverantören. myBestDays blir inte part i inkvarteringsavtalet.",
         "Respektive leverantör anges i erbjudandet och i bokningsbekräftelsen.",
       ],
     },
@@ -37,7 +37,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Priser och betalning",
       paragraphs: [
         "De priser som anges i erbjudandet vid bokningstillfället gäller, inklusive de skatter, avgifter och tilläggskostnader som anges där. Priser visas i den valuta som anges i erbjudandet. På plats kan ytterligare lokala avgifter (t.ex. turistskatt) tillkomma, i den mån detta anges i erbjudandet.",
-        "Betalningen hanteras via betaltjänstleverantören Stripe. Betalningsuppgifter (t.ex. kortuppgifter) samlas in och behandlas direkt av Stripe; myNextDays lagrar inga fullständiga kortuppgifter. Stripe behandlar personuppgifter i enlighet med [Stripes integritetspolicy](https://stripe.com/privacy).",
+        "Betalningen hanteras via betaltjänstleverantören Stripe. Betalningsuppgifter (t.ex. kortuppgifter) samlas in och behandlas direkt av Stripe; myBestDays lagrar inga fullständiga kortuppgifter. Stripe behandlar personuppgifter i enlighet med [Stripes integritetspolicy](https://stripe.com/privacy).",
         "Om en deposition anges i erbjudandet kan den förauktoriseras vid bokning eller ankomst och vid skada helt eller delvis hållas inne; uppgifterna i erbjudandet är avgörande.",
       ],
     },
@@ -56,30 +56,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 myNextDays ansvar",
+      heading: "§ 7 myBestDays ansvar",
       paragraphs: [
-        "För utförandet av logitjänsten ansvarar enbart leverantören. myNextDays ansvarar inte för riktigheten i det erbjudandeinnehåll som leverantörer lägger in, men utför förmedlingen och betalningshanteringen med den omsorg som krävs av en ansvarsfull näringsidkare.",
-        "myNextDays ansvarar obegränsat vid uppsåt och grov vårdslöshet samt för skador till följd av skada på liv, kropp eller hälsa. Vid ringa vårdslöshet ansvarar myNextDays endast för åsidosättande av väsentliga avtalsförpliktelser (kardinalförpliktelser), begränsat till den för avtalet typiska, förutsebara skadan. Tvingande lagstadgade ansvarsregler påverkas inte.",
+        "För utförandet av logitjänsten ansvarar enbart leverantören. myBestDays ansvarar inte för riktigheten i det erbjudandeinnehåll som leverantörer lägger in, men utför förmedlingen och betalningshanteringen med den omsorg som krävs av en ansvarsfull näringsidkare.",
+        "myBestDays ansvarar obegränsat vid uppsåt och grov vårdslöshet samt för skador till följd av skada på liv, kropp eller hälsa. Vid ringa vårdslöshet ansvarar myBestDays endast för åsidosättande av väsentliga avtalsförpliktelser (kardinalförpliktelser), begränsat till den för avtalet typiska, förutsebara skadan. Tvingande lagstadgade ansvarsregler påverkas inte.",
       ],
     },
     {
       heading: "§ 8 Dataskydd",
       paragraphs: [
-        "myNextDays behandlar gästens personuppgifter för att genomföra förmedlingen och bokningen. Bokningsuppgifter överförs till den aktuella leverantören i den mån det är nödvändigt för att fullgöra inkvarteringsavtalet. För betalningshanteringen gäller § 4.",
+        "myBestDays behandlar gästens personuppgifter för att genomföra förmedlingen och bokningen. Bokningsuppgifter överförs till den aktuella leverantören i den mån det är nödvändigt för att fullgöra inkvarteringsavtalet. För betalningshanteringen gäller § 4.",
         "Närmare uppgifter framgår av plattformens dataskyddsinformation.",
       ],
     },
     {
       heading: "§ 9 Klagomål och tvistlösning",
       paragraphs: [
-        "Klagomål som rör boendet riktar gästen i första hand till leverantören; vid frågor om bokningen eller betalningen hjälper myNextDays support till via de kontaktvägar som anges på plattformen.",
-        "myNextDays är varken skyldigt eller villigt att delta i tvistlösningsförfaranden inför en konsumenttvistenämnd, såvida ingen lagstadgad skyldighet föreligger.",
+        "Klagomål som rör boendet riktar gästen i första hand till leverantören; vid frågor om bokningen eller betalningen hjälper myBestDays support till via de kontaktvägar som anges på plattformen.",
+        "myBestDays är varken skyldigt eller villigt att delta i tvistlösningsförfaranden inför en konsumenttvistenämnd, såvida ingen lagstadgad skyldighet föreligger.",
       ],
     },
     {
       heading: "§ 10 Ändringar av dessa villkor",
       paragraphs: [
-        "myNextDays kan ändra dessa villkor med verkan för framtiden, i den mån detta är nödvändigt av godtagbara skäl (i synnerhet lagändringar eller ändringar i rättspraxis) och gästen inte missgynnas oskäligt av detta. För redan genomförda bokningar gäller den version som var i kraft vid bokningstillfället.",
+        "myBestDays kan ändra dessa villkor med verkan för framtiden, i den mån detta är nödvändigt av godtagbara skäl (i synnerhet lagändringar eller ändringar i rättspraxis) och gästen inte missgynnas oskäligt av detta. För redan genomförda bokningar gäller den version som var i kraft vid bokningstillfället.",
       ],
     },
     {

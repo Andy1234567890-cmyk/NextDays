@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Prekyvietės komisinis mokestis: taikomas rezervacijoms per myNextDays platformą",
+                "Prekyvietės komisinis mokestis: taikomas rezervacijoms per myBestDays platformą",
                 "Portalo komisinis mokestis: apskaičiuojamas atitinkamo portalo pagal jo pačio sąlygas",
                 "Tiesioginės rezervacijos per jūsų nuosavą svetainę nagrinėjamos nepriklausomai nuo to",
               ],

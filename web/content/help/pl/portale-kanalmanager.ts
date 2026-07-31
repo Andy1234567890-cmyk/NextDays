@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Trzy niezależne drogi sprzedaży" },
             {
               type: "p",
-              text: "Obiekt może być sprzedawany jednocześnie kilkoma drogami: przez portale (Booking, Airbnb i inne), przez platformę myNextDays oraz przez Twoją własną stronę internetową. Każda droga ma własny przełącznik widoczności — są one całkowicie niezależne od siebie.",
+              text: "Obiekt może być sprzedawany jednocześnie kilkoma drogami: przez portale (Booking, Airbnb i inne), przez platformę myBestDays oraz przez Twoją własną stronę internetową. Każda droga ma własny przełącznik widoczności — są one całkowicie niezależne od siebie.",
             },
             { type: "h2", text: "Sterowanie widocznością dla każdego portalu" },
             {

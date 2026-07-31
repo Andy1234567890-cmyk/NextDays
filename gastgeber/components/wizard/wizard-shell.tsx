@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { Logo } from "@/components/logo";
+
 export function WizardShell({
   step,
   total,
@@ -34,8 +36,8 @@ export function WizardShell({
     <div className="flex min-h-screen flex-col">
       {/* Kopf: Logo + Save&Exit / Questions? */}
       <header className="flex items-center justify-between px-6 py-5 sm:px-10">
-        <Link href="/" className="font-display text-lg font-semibold">
-          myNextDays
+        <Link href="/" aria-label="myBestDays">
+          <Logo heightRem={1.75} />
         </Link>
         <div className="flex items-center gap-2">
           <button

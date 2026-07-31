@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Trys nepriklausomi pardavimo kanalai" },
             {
               type: "p",
-              text: "Objektas gali būti parduodamas vienu metu keliais keliais: per portalus (Booking, Airbnb ir kt.), per myNextDays platformos prekyvietę ir per jūsų nuosavą svetainę. Kiekvienas kelias turi savo matomumo jungiklį — jie visiškai nepriklauso vienas nuo kito.",
+              text: "Objektas gali būti parduodamas vienu metu keliais keliais: per portalus (Booking, Airbnb ir kt.), per myBestDays platformos prekyvietę ir per jūsų nuosavą svetainę. Kiekvienas kelias turi savo matomumo jungiklį — jie visiškai nepriklauso vienas nuo kito.",
             },
             { type: "h2", text: "Matomumo valdymas kiekviename portale" },
             {

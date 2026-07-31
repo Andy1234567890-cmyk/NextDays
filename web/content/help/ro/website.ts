@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Constructorul de site-uri web vă creează propriul site web de rezervări — un canal de vânzare suplimentar, alături de portaluri și piața myNextDays. Păstrați controlul deplin asupra structurii, conținutului și brandingului.",
+              text: "Constructorul de site-uri web vă creează propriul site web de rezervări — un canal de vânzare suplimentar, alături de portaluri și piața myBestDays. Păstrați controlul deplin asupra structurii, conținutului și brandingului.",
             },
             { type: "h2", text: "Cum creați un site web" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Pentru ca un obiect să apară pe site-ul dvs. web, vizibilitatea pe site-ul web trebuie activată pentru acest obiect. Acest comutator este independent de vizibilitatea pe piața myNextDays sau pe portaluri.",
+              text: "Pentru ca un obiect să apară pe site-ul dvs. web, vizibilitatea pe site-ul web trebuie activată pentru acest obiect. Acest comutator este independent de vizibilitatea pe piața myBestDays sau pe portaluri.",
             },
             { type: "h2", text: "Activarea unui obiect pentru site-ul web" },
             {

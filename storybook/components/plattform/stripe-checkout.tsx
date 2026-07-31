@@ -1,7 +1,7 @@
 // Storybook-Attrappe des Stripe-Bezahlschritts. Das echte plattform/-Pendant
 // lädt einen PaymentIntent (Destination Charge) und rendert das Stripe Payment
 // Element. In der Werkstatt gibt es kein Stripe/Backend — hier wird nur das
-// myNextDays-Branding um das (hier statische) Zahlungsfeld gezeigt, damit das
+// myBestDays-Branding um das (hier statische) Zahlungsfeld gezeigt, damit das
 // visuelle Design geprüft werden kann.
 "use client";
 

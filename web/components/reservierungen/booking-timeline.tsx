@@ -59,7 +59,7 @@ function useFilters(t: T): { key: Category; label: string }[] {
 function channelLabel(t: T, channel: string): string {
   const map: Record<string, string> = {
     direct: t("bookingTimeline.channel.direct"),
-    portal: "myNextDays",
+    portal: "myBestDays",
     booking: "Booking.com",
     airbnb: "Airbnb",
     vrbo: "Vrbo",

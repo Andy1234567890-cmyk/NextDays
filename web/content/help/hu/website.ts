@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "A weboldal-szerkesztő saját foglalási weboldalt hoz létre Önnek — egy további értékesítési csatornát a portálok és a myNextDays piactér mellett. Ön megőrzi a teljes irányítást a felépítés, a tartalmak és a márkaépítés felett.",
+              text: "A weboldal-szerkesztő saját foglalási weboldalt hoz létre Önnek — egy további értékesítési csatornát a portálok és a myBestDays piactér mellett. Ön megőrzi a teljes irányítást a felépítés, a tartalmak és a márkaépítés felett.",
             },
             { type: "h2", text: "Így hozhat létre egy weboldalt" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Ahhoz, hogy egy objektum megjelenjen weboldalán, a weboldal-láthatóságot be kell kapcsolni ehhez az objektumhoz. Ez a kapcsoló független a myNextDays piactéren vagy a portálokon való láthatóságtól.",
+              text: "Ahhoz, hogy egy objektum megjelenjen weboldalán, a weboldal-láthatóságot be kell kapcsolni ehhez az objektumhoz. Ez a kapcsoló független a myBestDays piactéren vagy a portálokon való láthatóságtól.",
             },
             { type: "h2", text: "Objektum engedélyezése a weboldalhoz" },
             {

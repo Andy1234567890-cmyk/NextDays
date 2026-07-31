@@ -4,7 +4,7 @@
 // Kopf mit Titel + Raster-/Hinzufügen-Buttons, darunter eine Tabelle
 // (Objekt · Typ · Ort · Status). Status als farbiger Punkt — aktiv = grün,
 // sonst „Aktion nötig" in unserem Akzent (nicht Airbnb-Rot). Farben aus den
-// myNextDays-Tokens. Realtime auf properties (kein Polling).
+// myBestDays-Tokens. Realtime auf properties (kein Polling).
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -145,7 +145,7 @@ function Th({ children, className = "" }: { children: React.ReactNode; className
   );
 }
 
-// Status-Punkt: aktiv = grün, sonst „Aktion nötig" im Akzent (myNextDays-Rot).
+// Status-Punkt: aktiv = grün, sonst „Aktion nötig" im Akzent (myBestDays-Rot).
 function StatusZelle({ status, label }: { status: PropertyStatus; label: string }) {
   const farbe = status === "active" ? "bg-emerald-500" : "bg-accent";
   return (

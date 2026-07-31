@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Comision de piață: se aplică la rezervările prin platforma myNextDays",
+                "Comision de piață: se aplică la rezervările prin platforma myBestDays",
                 "Comision de portal: este calculat de portalul respectiv, conform propriilor condiții",
                 "Rezervările directe prin propriul dvs. site web trebuie privite independent de acestea",
               ],

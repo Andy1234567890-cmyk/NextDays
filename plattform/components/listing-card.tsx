@@ -1,4 +1,4 @@
-// Inserat-Karte für das Suche-Grid — eigenes myNextDays-Design im Booking/Airbnb-
+// Inserat-Karte für das Suche-Grid — eigenes myBestDays-Design im Booking/Airbnb-
 // Stil: Foto (oder Platzhalter), funktionales Merken-Herz, Score-Badge NUR bei
 // echter Bewertung (nie erfunden), „ab"-Preis (oder „auf Anfrage").
 import Link from "next/link";

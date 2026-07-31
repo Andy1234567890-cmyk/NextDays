@@ -6,8 +6,8 @@ export const agb: LegalDoc = {
   title: "Uvjeti korištenja za goste (Opći uvjeti)",
   stand: "Posljednje ažuriranje: 3. srpnja 2026.",
   intro: [
-    "Ovi Uvjeti korištenja uređuju korištenje portala za rezervacije myNextDays (u daljnjem tekstu „Platforma”) od strane putnika i osoba koje rezerviraju (u daljnjem tekstu „Gost”).",
-    "Operater Platforme je [puni naziv tvrtke, pravni oblik, adresa i registarski podaci operatera — dopuniti prije objave] (u daljnjem tekstu „myNextDays” ili „mi”).",
+    "Ovi Uvjeti korištenja uređuju korištenje portala za rezervacije myBestDays (u daljnjem tekstu „Platforma”) od strane putnika i osoba koje rezerviraju (u daljnjem tekstu „Gost”).",
+    "Operater Platforme je [puni naziv tvrtke, pravni oblik, adresa i registarski podaci operatera — dopuniti prije objave] (u daljnjem tekstu „myBestDays” ili „mi”).",
   ],
   sections: [
     {
@@ -18,9 +18,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 Uloga platforme myNextDays; sklapanje ugovora",
+      heading: "§ 2 Uloga platforme myBestDays; sklapanje ugovora",
       paragraphs: [
-        "myNextDays posreduje pri pružanju usluga smještaja koje nude dotični pružatelji (agencije, iznajmljivači ili vlasnici, u daljnjem tekstu „Pružatelj”). Ugovor o smještaju sklapa se isključivo između Gosta i dotičnog Pružatelja. myNextDays ne postaje ugovorna strana ugovora o smještaju.",
+        "myBestDays posreduje pri pružanju usluga smještaja koje nude dotični pružatelji (agencije, iznajmljivači ili vlasnici, u daljnjem tekstu „Pružatelj”). Ugovor o smještaju sklapa se isključivo između Gosta i dotičnog Pružatelja. myBestDays ne postaje ugovorna strana ugovora o smještaju.",
         "Dotični Pružatelj naveden je u ponudi i u potvrdi rezervacije.",
       ],
     },
@@ -36,7 +36,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Cijene i plaćanje",
       paragraphs: [
         "Vrijede cijene navedene u ponudi u trenutku rezervacije, uključujući ondje navedene poreze, naknade i dodatne troškove. Cijene se prikazuju u valuti navedenoj u ponudi. Na licu mjesta mogu se naplatiti dodatne lokalne pristojbe (npr. boravišna pristojba), ako je to navedeno u ponudi.",
-        "Plaćanje se obrađuje putem pružatelja platnih usluga Stripe. Podatke o plaćanju (npr. podatke o kartici) izravno prikuplja i obrađuje Stripe; myNextDays ne pohranjuje potpune podatke o kartici. Stripe obrađuje osobne podatke u skladu s [pravilima o privatnosti Stripea](https://stripe.com/privacy).",
+        "Plaćanje se obrađuje putem pružatelja platnih usluga Stripe. Podatke o plaćanju (npr. podatke o kartici) izravno prikuplja i obrađuje Stripe; myBestDays ne pohranjuje potpune podatke o kartici. Stripe obrađuje osobne podatke u skladu s [pravilima o privatnosti Stripea](https://stripe.com/privacy).",
         "Ako je u ponudi naveden sigurnosni polog, on može biti predautoriziran prilikom rezervacije ili dolaska te u slučaju štete u cijelosti ili djelomično zadržan; mjerodavni su podaci navedeni u ponudi.",
       ],
     },
@@ -55,30 +55,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 Odgovornost platforme myNextDays",
+      heading: "§ 7 Odgovornost platforme myBestDays",
       paragraphs: [
-        "Za pružanje usluge smještaja odgovoran je isključivo Pružatelj. myNextDays ne odgovara za točnost sadržaja ponuda koje objavljuju Pružatelji, ali posredovanje i obradu plaćanja obavlja s pažnjom urednog gospodarstvenika.",
-        "myNextDays odgovara neograničeno za namjeru i grubu nepažnju te za štete nastale povredom života, tijela ili zdravlja. Kod obične nepažnje myNextDays odgovara samo za povredu bitnih ugovornih obveza (kardinalnih obveza), ograničeno na predvidivu štetu tipičnu za ugovor. Prisilna zakonska pravila o odgovornosti ostaju netaknuta.",
+        "Za pružanje usluge smještaja odgovoran je isključivo Pružatelj. myBestDays ne odgovara za točnost sadržaja ponuda koje objavljuju Pružatelji, ali posredovanje i obradu plaćanja obavlja s pažnjom urednog gospodarstvenika.",
+        "myBestDays odgovara neograničeno za namjeru i grubu nepažnju te za štete nastale povredom života, tijela ili zdravlja. Kod obične nepažnje myBestDays odgovara samo za povredu bitnih ugovornih obveza (kardinalnih obveza), ograničeno na predvidivu štetu tipičnu za ugovor. Prisilna zakonska pravila o odgovornosti ostaju netaknuta.",
       ],
     },
     {
       heading: "§ 8 Zaštita podataka",
       paragraphs: [
-        "myNextDays obrađuje osobne podatke Gosta radi provedbe posredovanja i rezervacije. Podaci o rezervaciji prosljeđuju se dotičnom Pružatelju u mjeri u kojoj je to potrebno za izvršenje ugovora o smještaju. Za obradu plaćanja vrijedi § 4.",
+        "myBestDays obrađuje osobne podatke Gosta radi provedbe posredovanja i rezervacije. Podaci o rezervaciji prosljeđuju se dotičnom Pružatelju u mjeri u kojoj je to potrebno za izvršenje ugovora o smještaju. Za obradu plaćanja vrijedi § 4.",
         "Pojedinosti proizlaze iz informacija o zaštiti podataka Platforme.",
       ],
     },
     {
       heading: "§ 9 Prigovori i rješavanje sporova",
       paragraphs: [
-        "Prigovore u vezi sa smještajem Gost najprije upućuje Pružatelju; za pitanja o rezervaciji ili plaćanju podrška platforme myNextDays dostupna je putem kontaktnih kanala navedenih na Platformi.",
-        "myNextDays nije obvezan niti voljan sudjelovati u postupcima rješavanja sporova pred tijelom za alternativno rješavanje potrošačkih sporova, osim ako postoji zakonska obveza.",
+        "Prigovore u vezi sa smještajem Gost najprije upućuje Pružatelju; za pitanja o rezervaciji ili plaćanju podrška platforme myBestDays dostupna je putem kontaktnih kanala navedenih na Platformi.",
+        "myBestDays nije obvezan niti voljan sudjelovati u postupcima rješavanja sporova pred tijelom za alternativno rješavanje potrošačkih sporova, osim ako postoji zakonska obveza.",
       ],
     },
     {
       heading: "§ 10 Izmjene ovih uvjeta",
       paragraphs: [
-        "myNextDays može izmijeniti ove uvjete s učinkom za budućnost ako je to potrebno iz opravdanih razloga (osobito zbog izmjena zakonodavstva ili promjena sudske prakse) i ako Gost time nije nerazmjerno stavljen u nepovoljniji položaj. Za već sklopljene rezervacije vrijedi verzija važeća u trenutku rezervacije.",
+        "myBestDays može izmijeniti ove uvjete s učinkom za budućnost ako je to potrebno iz opravdanih razloga (osobito zbog izmjena zakonodavstva ili promjena sudske prakse) i ako Gost time nije nerazmjerno stavljen u nepovoljniji položaj. Za već sklopljene rezervacije vrijedi verzija važeća u trenutku rezervacije.",
       ],
     },
     {

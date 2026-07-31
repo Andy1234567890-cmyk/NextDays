@@ -249,7 +249,7 @@ export const objekte: HelpCategory = {
               type: "ul",
               items: [
                 "Weboldal — láthatóság saját myNextDays weboldalán",
-                "Platform-piactér — láthatóság a globális myNextDays piactéren",
+                "Platform-piactér — láthatóság a globális myBestDays piactéren",
                 "Portálok — láthatóság a Bookingon, Airbnbn és társaikon",
               ],
             },

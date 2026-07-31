@@ -1,4 +1,4 @@
-// Suche / Startseite — Inserate-Übersicht (Karten-Grid). Eigenes myNextDays-
+// Suche / Startseite — Inserate-Übersicht (Karten-Grid). Eigenes myBestDays-
 // Design; Daten kommen aus dem Backend (booking_engine, nur active Objekte).
 import { KontoMenu } from "@/components/konto-menu";
 import { ListingReihe } from "@/components/listing-reihe";

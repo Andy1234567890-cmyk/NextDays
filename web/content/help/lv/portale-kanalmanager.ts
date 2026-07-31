@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Trīs neatkarīgi pārdošanas veidi" },
             {
               type: "p",
-              text: "Objektu var vienlaikus pārdot vairākos veidos: caur portāliem (Booking, Airbnb un citi), caur myNextDays platformas tirgu un caur savu vietni. Katram veidam ir savs redzamības slēdzis — tie ir pilnībā neatkarīgi vienam no otra.",
+              text: "Objektu var vienlaikus pārdot vairākos veidos: caur portāliem (Booking, Airbnb un citi), caur myBestDays platformas tirgu un caur savu vietni. Katram veidam ir savs redzamības slēdzis — tie ir pilnībā neatkarīgi vienam no otra.",
             },
             { type: "h2", text: "Redzamības pārvaldība katram portālam" },
             {

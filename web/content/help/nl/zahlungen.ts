@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Platform-marktplaatsprovisie: geldt bij boekingen via het myNextDays-platform",
+                "Platform-marktplaatsprovisie: geldt bij boekingen via het myBestDays-platform",
                 "Portaalprovisie: wordt door het betreffende portaal volgens diens eigen voorwaarden berekend",
                 "Directe boekingen via uw eigen website staan hier los van",
               ],

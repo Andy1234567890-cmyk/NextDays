@@ -1,6 +1,6 @@
 "use client";
 
-// Objekttyp-Editor im Airbnb-„Property type"-Stil (mit myNextDays-Farben). Drei
+// Objekttyp-Editor im Airbnb-„Property type"-Stil (mit myBestDays-Farben). Drei
 // ABHÄNGIGE Dropdowns als umrandete Cards mit schwebendem Label:
 //   Kategorie ("Welcher Ort ähnelt Ihrem am meisten?")
 //     → Immobilientyp (gefiltert nach Kategorie)

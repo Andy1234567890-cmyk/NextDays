@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (Property-Management-System): Objekte, Kalender, Preise, Reservierungen, Aufgaben und Zahlungen.",
                 "Kanalmanager: Verbindung zu Portalen wie Booking, Airbnb & Co. — eine Eingabe, viele Portale synchron.",
-                "Plattform-Marktplatz: der eigene myNextDays-Marktplatz, ein gleichrangiger Buchungskanal neben den Portalen.",
+                "Plattform-Marktplatz: der eigene myBestDays-Marktplatz, ein gleichrangiger Buchungskanal neben den Portalen.",
                 "App: die mobile Anwendung für Gäste, Eigentümer und Mitarbeiter mit denselben Daten wie im Web.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Website: Sichtbarkeit auf Ihrer eigenen myNextDays-Website",
-                "Plattform-Marktplatz: Sichtbarkeit auf dem globalen myNextDays-Marktplatz",
+                "Plattform-Marktplatz: Sichtbarkeit auf dem globalen myBestDays-Marktplatz",
                 "Portale: Sichtbarkeit auf Booking, Airbnb & Co.",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Plattform-Marktplatz" },
             {
               type: "p",
-              text: "Der myNextDays-Marktplatz ist ein eigener, globaler Buchungskanal — vergleichbar mit Booking oder Airbnb, jedoch Teil derselben Plattform. Er ist kein „Direktbuchungs“-Ersatz, sondern ein gleichrangiger Kanal mit eigener Sichtbarkeits-Achse.",
+              text: "Der myBestDays-Marktplatz ist ein eigener, globaler Buchungskanal — vergleichbar mit Booking oder Airbnb, jedoch Teil derselben Plattform. Er ist kein „Direktbuchungs“-Ersatz, sondern ein gleichrangiger Kanal mit eigener Sichtbarkeits-Achse.",
             },
             { type: "h2", text: "App" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Website — Ihre eigene myNextDays-Website",
-                "Plattform-Marktplatz — der globale myNextDays-Marktplatz",
+                "Plattform-Marktplatz — der globale myBestDays-Marktplatz",
                 "Portale — Booking, Airbnb & Co. über den Kanalmanager",
               ],
             },

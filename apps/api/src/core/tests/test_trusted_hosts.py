@@ -8,8 +8,8 @@ Die TrustedHostMiddleware antwortete deshalb auf JEDEN Channex-Webhook mit
 """
 from src.core.config import Settings
 
-_CALLBACK = "https://nextdays-api.65.21.144.136.sslip.io"
-_HOST = "nextdays-api.65.21.144.136.sslip.io"
+_CALLBACK = "https://api.mynextdays.com"
+_HOST = "api.mynextdays.com"
 
 
 def test_callback_host_wird_ergaenzt_wenn_liste_ihn_vergisst() -> None:

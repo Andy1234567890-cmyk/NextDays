@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Three independent sales channels" },
             {
               type: "p",
-              text: "A property can be sold through several channels at the same time: through the portals (Booking, Airbnb & Co.), through the myNextDays platform marketplace, and through your own website. Each channel has its own visibility switch — they are fully independent of one another.",
+              text: "A property can be sold through several channels at the same time: through the portals (Booking, Airbnb & Co.), through the myBestDays platform marketplace, and through your own website. Each channel has its own visibility switch — they are fully independent of one another.",
             },
             { type: "h2", text: "Controlling visibility per portal" },
             {

@@ -34,7 +34,7 @@ export type Property = {
   // Getrennt vom internen property_type; null = nicht gesetzt.
   booking_property_type: number | null;
   status: PropertyStatus;
-  // Sichtbarkeit auf dem eigenen myNextDays-Marktplatz (/plattform) als eigener
+  // Sichtbarkeit auf dem eigenen myBestDays-Marktplatz (/plattform) als eigener
   // Buchungskanal — getrennt von status und der OTA-Distribution (Migration 0159).
   listed_on_marketplace: boolean;
   // Sichtbarkeit auf der eigenen Kunden-Website (Page-Builder) als eigener

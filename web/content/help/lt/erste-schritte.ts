@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (turto valdymo sistema): objektai, kalendorius, kainos, rezervacijos, užduotys ir mokėjimai.",
                 "Kanalų valdiklis: ryšys su portalais, tokiais kaip Booking, Airbnb ir kt. — vienas įvedimas, daug portalų sinchronizuota.",
-                "Platformos prekyvietė: nuosava myNextDays prekyvietė — lygiavertis rezervacijų kanalas šalia portalų.",
+                "Platformos prekyvietė: nuosava myBestDays prekyvietė — lygiavertis rezervacijų kanalas šalia portalų.",
                 "Programėlė: mobilioji programa svečiams, savininkams ir darbuotojams su tais pačiais duomenimis kaip internete.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Svetainė: matomumas jūsų nuosavoje myNextDays svetainėje",
-                "Platformos prekyvietė: matomumas visuotinėje myNextDays prekyvietėje",
+                "Platformos prekyvietė: matomumas visuotinėje myBestDays prekyvietėje",
                 "Portalai: matomumas Booking, Airbnb ir kituose portaluose",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Platformos prekyvietė" },
             {
               type: "p",
-              text: "myNextDays prekyvietė yra atskiras, visuotinis rezervacijų kanalas — panašus į Booking ar Airbnb, tačiau priklausantis tai pačiai platformai. Tai nėra „tiesioginių rezervacijų“ pakaitalas, o lygiavertis kanalas su savo atskira matomumo ašimi.",
+              text: "myBestDays prekyvietė yra atskiras, visuotinis rezervacijų kanalas — panašus į Booking ar Airbnb, tačiau priklausantis tai pačiai platformai. Tai nėra „tiesioginių rezervacijų“ pakaitalas, o lygiavertis kanalas su savo atskira matomumo ašimi.",
             },
             { type: "h2", text: "Programėlė" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Svetainė — jūsų nuosava myNextDays svetainė",
-                "Platformos prekyvietė — visuotinė myNextDays prekyvietė",
+                "Platformos prekyvietė — visuotinė myBestDays prekyvietė",
                 "Portalai — Booking, Airbnb ir kt. per kanalų valdiklį",
               ],
             },

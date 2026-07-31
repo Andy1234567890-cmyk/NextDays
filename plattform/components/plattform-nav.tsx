@@ -13,10 +13,10 @@ import { Logo } from "./logo";
 import { SprachWaehrungModal } from "./sprach-waehrung-modal";
 import { SuchLeiste } from "./such-leiste";
 
-// Ziel des "myNextDays für Gastgeber"-Buttons: die Marketing-/Gastgeber-Seite.
+// Ziel des "myBestDays für Gastgeber"-Buttons: die Marketing-/Gastgeber-Seite.
 const GASTGEBER_URL =
   process.env.NEXT_PUBLIC_GASTGEBER_URL ??
-  "https://y13cm245vlmvq3yv38gdbtat.65.21.144.136.sslip.io";
+  "https://mynextdays.com";
 
 // Tab-Zeile wie Airbnb (All / Homes / Experiences / Services) mit Icon.
 const TABS = [
@@ -124,7 +124,7 @@ export function PlattformNav({ kontoSlot }: { kontoSlot?: React.ReactNode }) {
             href={GASTGEBER_URL}
             className="hidden rounded-full px-4 py-2 text-sm font-medium hover:bg-secondary sm:block"
           >
-            myNextDays für Gastgeber
+            myBestDays für Gastgeber
           </Link>
           {/* Globus: Sprache & Währung (wie Airbnb). */}
           <SprachWaehrungModal />

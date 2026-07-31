@@ -249,7 +249,7 @@ export const objekte: HelpCategory = {
               type: "ul",
               items: [
                 "Suíomh Gréasáin — infheictheacht ar do shuíomh gréasáin myNextDays féin",
-                "Ardán Margaidh — infheictheacht ar mhargadh domhanda myNextDays",
+                "Ardán Margaidh — infheictheacht ar mhargadh domhanda myBestDays",
                 "Tairseacha — infheictheacht ar Booking, Airbnb agus a leithéidí",
               ],
             },

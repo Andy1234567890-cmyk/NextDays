@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Tri nezávislé predajné cesty" },
             {
               type: "p",
-              text: "Objekt možno predávať súčasne viacerými spôsobmi: cez portály (Booking, Airbnb a ďalšie), cez trhovisko platformy myNextDays a cez vašu vlastnú webovú stránku. Každá cesta má vlastný prepínač viditeľnosti — sú navzájom úplne nezávislé.",
+              text: "Objekt možno predávať súčasne viacerými spôsobmi: cez portály (Booking, Airbnb a ďalšie), cez trhovisko platformy myBestDays a cez vašu vlastnú webovú stránku. Každá cesta má vlastný prepínač viditeľnosti — sú navzájom úplne nezávislé.",
             },
             { type: "h2", text: "Riadenie viditeľnosti podľa portálu" },
             {

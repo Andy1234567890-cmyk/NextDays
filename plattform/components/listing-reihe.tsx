@@ -1,6 +1,6 @@
 // Themen-Reihe für die Suchseite — Überschrift + horizontal scrollbares Band
 // aus Inserat-Karten + Pfeil-Buttons zum Durchblättern + "Alle anzeigen".
-// Eigenes myNextDays-Design.
+// Eigenes myBestDays-Design.
 "use client";
 
 import { Icon } from "@iconify/react";

@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Tre uafhængige salgskanaler" },
             {
               type: "p",
-              text: "En bolig kan sælges via flere veje samtidig: via portalerne (Booking, Airbnb & Co.), via myNextDays-Platform-markedspladsen og via din egen hjemmeside. Hver vej har sin egen synligheds-kontakt — de er fuldstændig uafhængige af hinanden.",
+              text: "En bolig kan sælges via flere veje samtidig: via portalerne (Booking, Airbnb & Co.), via myBestDays-Platform-markedspladsen og via din egen hjemmeside. Hver vej har sin egen synligheds-kontakt — de er fuldstændig uafhængige af hinanden.",
             },
             { type: "h2", text: "Styr synlighed pr. portal" },
             {

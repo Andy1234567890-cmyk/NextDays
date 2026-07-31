@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Cruthaíonn an Tógálaí Suímh Ghréasáin suíomh gréasáin áirithinte dá chuid féin duit — cainéal díolacháin breise le hais na dtairseach agus Ardán Margaidh myNextDays. Coinníonn tú lánsmacht ar struchtúr, ábhar agus branda.",
+              text: "Cruthaíonn an Tógálaí Suímh Ghréasáin suíomh gréasáin áirithinte dá chuid féin duit — cainéal díolacháin breise le hais na dtairseach agus Ardán Margaidh myBestDays. Coinníonn tú lánsmacht ar struchtúr, ábhar agus branda.",
             },
             { type: "h2", text: "Mar seo a chruthaíonn tú suíomh gréasáin" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Chun maoin a bheith le feiceáil ar do shuíomh gréasáin, caithfidh infheictheacht an tsuímh ghréasáin a bheith gníomhachtaithe don mhaoin sin. Tá an lasc seo neamhspleách ar infheictheacht ar Ardán Margaidh myNextDays nó ar thairseacha.",
+              text: "Chun maoin a bheith le feiceáil ar do shuíomh gréasáin, caithfidh infheictheacht an tsuímh ghréasáin a bheith gníomhachtaithe don mhaoin sin. Tá an lasc seo neamhspleách ar infheictheacht ar Ardán Margaidh myBestDays nó ar thairseacha.",
             },
             { type: "h2", text: "Maoin a ghníomhachtú don suíomh gréasáin" },
             {

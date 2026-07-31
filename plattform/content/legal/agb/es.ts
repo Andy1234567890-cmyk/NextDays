@@ -6,8 +6,8 @@ export const agb: LegalDoc = {
   title: "Condiciones de uso para huéspedes (CGC)",
   stand: "Última actualización: 3 de julio de 2026",
   intro: [
-    "Las presentes Condiciones de uso regulan la utilización del portal de reservas myNextDays (en adelante, la «Plataforma») por parte de viajeros y personas que efectúan reservas (en adelante, el «Huésped»).",
-    "La Plataforma es operada por [razón social completa, forma jurídica, dirección y datos registrales del operador — completar antes de la publicación] (en adelante, «myNextDays» o «nosotros»).",
+    "Las presentes Condiciones de uso regulan la utilización del portal de reservas myBestDays (en adelante, la «Plataforma») por parte de viajeros y personas que efectúan reservas (en adelante, el «Huésped»).",
+    "La Plataforma es operada por [razón social completa, forma jurídica, dirección y datos registrales del operador — completar antes de la publicación] (en adelante, «myBestDays» o «nosotros»).",
   ],
   sections: [
     {
@@ -18,9 +18,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 Papel de myNextDays; celebración del contrato",
+      heading: "§ 2 Papel de myBestDays; celebración del contrato",
       paragraphs: [
-        "myNextDays actúa como intermediaria de los servicios de hospedaje ofrecidos por los respectivos proveedores (agencias, arrendadores o propietarios, en adelante, el «Proveedor»). El contrato sobre el alojamiento se celebra exclusivamente entre el Huésped y el respectivo Proveedor. myNextDays no es parte del contrato de hospedaje.",
+        "myBestDays actúa como intermediaria de los servicios de hospedaje ofrecidos por los respectivos proveedores (agencias, arrendadores o propietarios, en adelante, el «Proveedor»). El contrato sobre el alojamiento se celebra exclusivamente entre el Huésped y el respectivo Proveedor. myBestDays no es parte del contrato de hospedaje.",
         "El respectivo Proveedor se identifica en la oferta y en la confirmación de la reserva.",
       ],
     },
@@ -36,7 +36,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Precios y pago",
       paragraphs: [
         "Se aplican los precios indicados en la oferta en el momento de la reserva, incluidos los impuestos, las tasas y los costes adicionales allí indicados. Los precios se muestran en la moneda indicada en la oferta. En el lugar del alojamiento pueden aplicarse tasas locales adicionales (p. ej., la tasa turística), siempre que así se indique en la oferta.",
-        "El pago se procesa a través del proveedor de servicios de pago Stripe. Los datos de pago (p. ej., los datos de la tarjeta) son recogidos y tratados directamente por Stripe; myNextDays no almacena datos completos de tarjetas. Stripe trata los datos personales de conformidad con la [política de privacidad de Stripe](https://stripe.com/privacy).",
+        "El pago se procesa a través del proveedor de servicios de pago Stripe. Los datos de pago (p. ej., los datos de la tarjeta) son recogidos y tratados directamente por Stripe; myBestDays no almacena datos completos de tarjetas. Stripe trata los datos personales de conformidad con la [política de privacidad de Stripe](https://stripe.com/privacy).",
         "Si en la oferta se indica una fianza, esta podrá preautorizarse en el momento de la reserva o de la llegada y retenerse total o parcialmente en caso de daños; serán determinantes las indicaciones de la oferta.",
       ],
     },
@@ -55,30 +55,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 Responsabilidad de myNextDays",
+      heading: "§ 7 Responsabilidad de myBestDays",
       paragraphs: [
-        "El Proveedor es el único responsable de la prestación del servicio de hospedaje. myNextDays no responde de la exactitud de los contenidos de las ofertas publicados por los Proveedores, pero realiza la intermediación y el procesamiento de los pagos con la diligencia de un ordenado comerciante.",
-        "myNextDays responde de forma ilimitada en caso de dolo y negligencia grave, así como de los daños derivados de lesiones a la vida, la integridad física o la salud. En caso de negligencia leve, myNextDays solo responde por el incumplimiento de obligaciones contractuales esenciales (obligaciones cardinales), limitándose a los daños previsibles y típicos del contrato. Las normas legales imperativas en materia de responsabilidad permanecen inalteradas.",
+        "El Proveedor es el único responsable de la prestación del servicio de hospedaje. myBestDays no responde de la exactitud de los contenidos de las ofertas publicados por los Proveedores, pero realiza la intermediación y el procesamiento de los pagos con la diligencia de un ordenado comerciante.",
+        "myBestDays responde de forma ilimitada en caso de dolo y negligencia grave, así como de los daños derivados de lesiones a la vida, la integridad física o la salud. En caso de negligencia leve, myBestDays solo responde por el incumplimiento de obligaciones contractuales esenciales (obligaciones cardinales), limitándose a los daños previsibles y típicos del contrato. Las normas legales imperativas en materia de responsabilidad permanecen inalteradas.",
       ],
     },
     {
       heading: "§ 8 Protección de datos",
       paragraphs: [
-        "myNextDays trata datos personales del Huésped para llevar a cabo la intermediación y la reserva. Los datos de la reserva se transmiten al respectivo Proveedor en la medida en que ello sea necesario para la ejecución del contrato de hospedaje. Al procesamiento de pagos se aplica el § 4.",
+        "myBestDays trata datos personales del Huésped para llevar a cabo la intermediación y la reserva. Los datos de la reserva se transmiten al respectivo Proveedor en la medida en que ello sea necesario para la ejecución del contrato de hospedaje. Al procesamiento de pagos se aplica el § 4.",
         "Los detalles se recogen en la información de protección de datos de la Plataforma.",
       ],
     },
     {
       heading: "§ 9 Reclamaciones y resolución de litigios",
       paragraphs: [
-        "Las reclamaciones relativas al alojamiento las dirigirá el Huésped en primer lugar al Proveedor; para cuestiones sobre la reserva o el pago, el soporte de myNextDays está disponible a través de los canales de contacto indicados en la Plataforma.",
-        "myNextDays no está obligada ni dispuesta a participar en procedimientos de resolución de litigios ante una junta arbitral de consumo, salvo que exista una obligación legal.",
+        "Las reclamaciones relativas al alojamiento las dirigirá el Huésped en primer lugar al Proveedor; para cuestiones sobre la reserva o el pago, el soporte de myBestDays está disponible a través de los canales de contacto indicados en la Plataforma.",
+        "myBestDays no está obligada ni dispuesta a participar en procedimientos de resolución de litigios ante una junta arbitral de consumo, salvo que exista una obligación legal.",
       ],
     },
     {
       heading: "§ 10 Modificaciones de las presentes condiciones",
       paragraphs: [
-        "myNextDays podrá modificar las presentes condiciones con efectos para el futuro, siempre que ello sea necesario por motivos justificados (en particular, cambios legislativos o cambios en la jurisprudencia) y el Huésped no resulte perjudicado de forma desproporcionada. A las reservas ya celebradas se les aplica la versión vigente en el momento de la reserva.",
+        "myBestDays podrá modificar las presentes condiciones con efectos para el futuro, siempre que ello sea necesario por motivos justificados (en particular, cambios legislativos o cambios en la jurisprudencia) y el Huésped no resulte perjudicado de forma desproporcionada. A las reservas ya celebradas se les aplica la versión vigente en el momento de la reserva.",
       ],
     },
     {

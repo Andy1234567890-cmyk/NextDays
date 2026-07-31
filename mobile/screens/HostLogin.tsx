@@ -64,12 +64,12 @@ export default function HostLogin() {
     >
       <Col gap={10}>
         <Image
-          source={require("@/assets/img/Logo_transparent.png")}
+          source={require("@/assets/img/mybestdays-logo.png")}
           style={{ height: 44, width: 160, resizeMode: "contain", alignSelf: "flex-start" }}
         />
         <Txt v="display">Gastgeber-Login</Txt>
         <Txt v="body" soft>
-          Melde dich mit deinem myNextDays-Konto an — dasselbe wie im Dashboard.
+          Melde dich mit deinem myBestDays-Konto an — dasselbe wie im Dashboard.
         </Txt>
       </Col>
 

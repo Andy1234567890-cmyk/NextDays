@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platform (piactér)",
-  description: "Értékesítés a myNextDays piactéren.",
+  description: "Értékesítés a myBestDays piactéren.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "A myNextDays piactér",
-          excerpt: "A globális myNextDays piactér önálló foglalási csatorna a portálok és a weboldal mellett.",
+          title: "A myBestDays piactér",
+          excerpt: "A globális myBestDays piactér önálló foglalási csatorna a portálok és a weboldal mellett.",
           updated: "Frissítve: 2026. július",
           body: [
             {
               type: "p",
-              text: "A myNextDays piactér (/plattform) magának a myNextDaysnek a globális foglalási csatornája — összehasonlítható a Booking vagy az Airbnb szolgáltatással, mégis ugyanannak a platformnak a része. A vendégek itt az összes csatlakoztatott vállalkozás objektumai között böngésznek, és közvetlenül foglalnak.",
+              text: "A myBestDays piactér (/plattform) magának a myBestDaysnek a globális foglalási csatornája — összehasonlítható a Booking vagy az Airbnb szolgáltatással, mégis ugyanannak a platformnak a része. A vendégek itt az összes csatlakoztatott vállalkozás objektumai között böngésznek, és közvetlenül foglalnak.",
             },
             { type: "h2", text: "Nem „közvetlen”, hanem egyenrangú csatorna" },
             {
               type: "p",
-              text: "A piactér nem helyettesíti a saját weboldalán keresztüli közvetlen foglalást. Önálló, harmadik értékesítési út, saját láthatósági tengellyel, saját vendégkörrel és saját jutalékkal — pontosan úgy, mint egy portál, csak éppen magát a myNextDays üzemelteti.",
+              text: "A piactér nem helyettesíti a saját weboldalán keresztüli közvetlen foglalást. Önálló, harmadik értékesítési út, saját láthatósági tengellyel, saját vendégkörrel és saját jutalékkal — pontosan úgy, mint egy portál, csak éppen magát a myBestDays üzemelteti.",
             },
             { type: "h2", text: "Hogyan kerülnek objektumok a piactérre" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Mint minden foglalási portál esetében, a myNextDays piactéren keresztül létrejövő foglalásokért jutalék terheli. Ezt foglalásonként számítják, és független a portálokra vonatkozó esetleges jutalékoktól.",
+              text: "Mint minden foglalási portál esetében, a myBestDays piactéren keresztül létrejövő foglalásokért jutalék terheli. Ezt foglalásonként számítják, és független a portálokra vonatkozó esetleges jutalékoktól.",
             },
             { type: "h2", text: "Hogyan számítják a jutalékot" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "A piactéri jutalék kizárólag a myNextDays piactéren keresztüli foglalásokra vonatkozik.",
+                "A piactéri jutalék kizárólag a myBestDays piactéren keresztüli foglalásokra vonatkozik.",
                 "A portálfoglalások (Booking, Airbnb és társaik) az adott portál feltételei alá tartoznak.",
                 "A weboldali foglalásokra a csomagjához rögzített feltételek vonatkoznak, piactéri jutalék nélkül.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "A myNextDays piactéren keresztül foglaló vendégek saját vendégprofilt hoznak létre. Ebben gyűlnek össze foglalásaik, a vállalkozásokkal folytatott üzenetváltásaik és leadott értékeléseik — hasonlóan egy portál vendégfiókjához.",
+              text: "A myBestDays piactéren keresztül foglaló vendégek saját vendégprofilt hoznak létre. Ebben gyűlnek össze foglalásaik, a vállalkozásokkal folytatott üzenetváltásaik és leadott értékeléseik — hasonlóan egy portál vendégfiókjához.",
             },
             { type: "h2", text: "Mit lát vállalkozásként" },
             {

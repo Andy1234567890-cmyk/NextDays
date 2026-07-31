@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (Property-Management-System): boliger, kalender, priser, reservationer, opgaver og betalinger.",
                 "Kanalstyring: forbindelse til portaler som Booking, Airbnb & Co. — én indtastning, mange portaler synkront.",
-                "Platform-Markedsplads: myNextDays' egen markedsplads, en ligeværdig bookingkanal ved siden af portalerne.",
+                "Platform-Markedsplads: myBestDays' egen markedsplads, en ligeværdig bookingkanal ved siden af portalerne.",
                 "App: mobilapplikationen til gæster, ejere og medarbejdere med de samme data som på nettet.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Hjemmeside: synlighed på din egen myNextDays-hjemmeside",
-                "Platform-Markedsplads: synlighed på den globale myNextDays-markedsplads",
+                "Platform-Markedsplads: synlighed på den globale myBestDays-markedsplads",
                 "Portaler: synlighed på Booking, Airbnb & Co.",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Platform-Markedsplads" },
             {
               type: "p",
-              text: "myNextDays-markedspladsen er en egen, global bookingkanal — sammenlignelig med Booking eller Airbnb, men en del af samme platform. Den er ikke en erstatning for »direkte booking«, men en ligeværdig kanal med sin egen synligheds-akse.",
+              text: "myBestDays-markedspladsen er en egen, global bookingkanal — sammenlignelig med Booking eller Airbnb, men en del af samme platform. Den er ikke en erstatning for »direkte booking«, men en ligeværdig kanal med sin egen synligheds-akse.",
             },
             { type: "h2", text: "App" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Hjemmeside — din egen myNextDays-hjemmeside",
-                "Platform-Markedsplads — den globale myNextDays-markedsplads",
+                "Platform-Markedsplads — den globale myBestDays-markedsplads",
                 "Portaler — Booking, Airbnb & Co. via kanalstyringen",
               ],
             },

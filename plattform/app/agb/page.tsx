@@ -1,4 +1,4 @@
-// Gast-AGB der myNextDays-Plattform. EU-weit abrufbar in allen 24
+// Gast-AGB der myBestDays-Plattform. EU-weit abrufbar in allen 24
 // Amtssprachen über ?sprache=<code>; ohne Parameter Deutsch. Unbekannte
 // Sprachcodes führen bewusst zu 404 (kein stiller Fallback).
 import { notFound } from "next/navigation";
@@ -33,7 +33,7 @@ export async function generateMetadata({
 }) {
   const locale = await resolveLocale(searchParams);
   const doc = await loadAgb(locale);
-  return { title: `${doc.title} — myNextDays` };
+  return { title: `${doc.title} — myBestDays` };
 }
 
 export default async function AgbPage({

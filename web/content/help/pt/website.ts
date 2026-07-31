@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "O construtor de sites cria para si o seu próprio site de reservas — um canal de vendas adicional, ao lado dos portais e do mercado myNextDays. Mantém o controlo total sobre a estrutura, os conteúdos e a identidade visual.",
+              text: "O construtor de sites cria para si o seu próprio site de reservas — um canal de vendas adicional, ao lado dos portais e do mercado myBestDays. Mantém o controlo total sobre a estrutura, os conteúdos e a identidade visual.",
             },
             { type: "h2", text: "Como criar um site" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Para que um imóvel apareça no seu site, a visibilidade no site tem de estar ativada para esse imóvel. Este interruptor é independente da visibilidade no mercado myNextDays ou nos portais.",
+              text: "Para que um imóvel apareça no seu site, a visibilidade no site tem de estar ativada para esse imóvel. Este interruptor é independente da visibilidade no mercado myBestDays ou nos portais.",
             },
             { type: "h2", text: "Ativar o imóvel para o site" },
             {

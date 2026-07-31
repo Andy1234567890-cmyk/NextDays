@@ -5,8 +5,8 @@ export const agb: LegalDoc = {
   title: "Terms of Use for Guests",
   stand: "Last updated: 3 July 2026",
   intro: [
-    "These Terms of Use govern the use of the myNextDays booking portal (the “Platform”) by travellers and bookers (the “Guest”).",
-    "The Platform is operated by [full legal name, legal form, address and register details of the operating company — to be completed before publication] (“myNextDays”, “we”).",
+    "These Terms of Use govern the use of the myBestDays booking portal (the “Platform”) by travellers and bookers (the “Guest”).",
+    "The Platform is operated by [full legal name, legal form, address and register details of the operating company — to be completed before publication] (“myBestDays”, “we”).",
   ],
   sections: [
     {
@@ -17,9 +17,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 Role of myNextDays; conclusion of contract",
+      heading: "§ 2 Role of myBestDays; conclusion of contract",
       paragraphs: [
-        "myNextDays acts as an intermediary for accommodation services offered by the respective providers (agencies, property managers or owners, the “Provider”). The contract for the accommodation is concluded exclusively between the Guest and the respective Provider. myNextDays does not become a party to the accommodation contract.",
+        "myBestDays acts as an intermediary for accommodation services offered by the respective providers (agencies, property managers or owners, the “Provider”). The contract for the accommodation is concluded exclusively between the Guest and the respective Provider. myBestDays does not become a party to the accommodation contract.",
         "The respective Provider is named in the listing and in the booking confirmation.",
       ],
     },
@@ -35,7 +35,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Prices and payment",
       paragraphs: [
         "The prices stated in the listing at the time of booking apply, including the taxes, fees and additional costs stated there. Prices are displayed in the currency stated in the listing. Additional local charges (e.g. tourist tax) may apply on site where stated in the listing.",
-        "Payment is processed via the payment service provider Stripe. Payment data (e.g. card details) are collected and processed directly by Stripe; myNextDays does not store complete card details. Stripe processes personal data in accordance with the [Stripe Privacy Policy](https://stripe.com/privacy).",
+        "Payment is processed via the payment service provider Stripe. Payment data (e.g. card details) are collected and processed directly by Stripe; myBestDays does not store complete card details. Stripe processes personal data in accordance with the [Stripe Privacy Policy](https://stripe.com/privacy).",
         "If a security deposit is stated in the listing, it may be pre-authorised at the time of booking or arrival and retained in whole or in part in the event of damage; the details in the listing are decisive.",
       ],
     },
@@ -54,30 +54,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 Liability of myNextDays",
+      heading: "§ 7 Liability of myBestDays",
       paragraphs: [
-        "The Provider alone is responsible for providing the accommodation service. myNextDays is not liable for the accuracy of listing content posted by Providers, but performs the intermediation and payment processing with the diligence of a prudent business.",
-        "myNextDays is liable without limitation for intent and gross negligence and for damage resulting from injury to life, body or health. In cases of simple negligence, myNextDays is only liable for the breach of essential contractual obligations (cardinal obligations), limited to the foreseeable damage typical for the contract. Mandatory statutory liability rules remain unaffected.",
+        "The Provider alone is responsible for providing the accommodation service. myBestDays is not liable for the accuracy of listing content posted by Providers, but performs the intermediation and payment processing with the diligence of a prudent business.",
+        "myBestDays is liable without limitation for intent and gross negligence and for damage resulting from injury to life, body or health. In cases of simple negligence, myBestDays is only liable for the breach of essential contractual obligations (cardinal obligations), limited to the foreseeable damage typical for the contract. Mandatory statutory liability rules remain unaffected.",
       ],
     },
     {
       heading: "§ 8 Data protection",
       paragraphs: [
-        "myNextDays processes the Guest’s personal data to perform the intermediation and booking. Booking data are transmitted to the respective Provider to the extent necessary to perform the accommodation contract. § 4 applies to payment processing.",
+        "myBestDays processes the Guest’s personal data to perform the intermediation and booking. Booking data are transmitted to the respective Provider to the extent necessary to perform the accommodation contract. § 4 applies to payment processing.",
         "Details are set out in the Platform’s privacy information.",
       ],
     },
     {
       heading: "§ 9 Complaints and dispute resolution",
       paragraphs: [
-        "The Guest should first address complaints about the accommodation to the Provider; for questions about the booking or payment, myNextDays support can be reached via the contact channels stated on the Platform.",
-        "myNextDays is neither obliged nor willing to participate in dispute resolution proceedings before a consumer arbitration board, unless required by law.",
+        "The Guest should first address complaints about the accommodation to the Provider; for questions about the booking or payment, myBestDays support can be reached via the contact channels stated on the Platform.",
+        "myBestDays is neither obliged nor willing to participate in dispute resolution proceedings before a consumer arbitration board, unless required by law.",
       ],
     },
     {
       heading: "§ 10 Changes to these terms",
       paragraphs: [
-        "myNextDays may amend these terms with effect for the future where this is necessary for valid reasons (in particular changes in legislation or case law) and the Guest is not unreasonably disadvantaged as a result. Bookings already concluded are governed by the version in force at the time of booking.",
+        "myBestDays may amend these terms with effect for the future where this is necessary for valid reasons (in particular changes in legislation or case law) and the Guest is not unreasonably disadvantaged as a result. Bookings already concluded are governed by the version in force at the time of booking.",
       ],
     },
     {

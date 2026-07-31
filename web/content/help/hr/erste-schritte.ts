@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (sustav za upravljanje objektima): objekti, kalendar, cijene, rezervacije, zadaci i plaćanja.",
                 "Upravitelj kanala: povezivanje s portalima poput Bookinga, Airbnb-a i drugih — jedan unos, svi portali sinkronizirano.",
-                "Tržište platforme: vlastito myNextDays tržište, ravnopravan kanal rezervacija uz portale.",
+                "Tržište platforme: vlastito myBestDays tržište, ravnopravan kanal rezervacija uz portale.",
                 "Aplikacija: mobilna aplikacija za goste, vlasnike i zaposlenike s istim podacima kao na webu.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Web-stranica: vidljivost na vašoj vlastitoj myNextDays web-stranici",
-                "Tržište platforme: vidljivost na globalnom myNextDays tržištu",
+                "Tržište platforme: vidljivost na globalnom myBestDays tržištu",
                 "Portali: vidljivost na Bookingu, Airbnb-u i drugima",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Tržište platforme" },
             {
               type: "p",
-              text: "myNextDays tržište vlastiti je, globalni kanal za rezervacije — usporediv s Bookingom ili Airbnb-om, ali dio je iste platforme. Nije zamjena za „izravno rezerviranje”, nego ravnopravan kanal s vlastitom osi vidljivosti.",
+              text: "myBestDays tržište vlastiti je, globalni kanal za rezervacije — usporediv s Bookingom ili Airbnb-om, ali dio je iste platforme. Nije zamjena za „izravno rezerviranje”, nego ravnopravan kanal s vlastitom osi vidljivosti.",
             },
             { type: "h2", text: "Aplikacija" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Web-stranica — vaša vlastita myNextDays web-stranica",
-                "Tržište platforme — globalno myNextDays tržište",
+                "Tržište platforme — globalno myBestDays tržište",
                 "Portali — Booking, Airbnb i drugi preko upravitelja kanala",
               ],
             },

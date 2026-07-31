@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Verkkosivustotyökalu luo sinulle oman varausverkkosivuston — lisämyyntikanavan portaalien ja myNextDays-markkinapaikan rinnalle. Säilytät täyden hallinnan rakenteesta, sisällöstä ja brändistä.",
+              text: "Verkkosivustotyökalu luo sinulle oman varausverkkosivuston — lisämyyntikanavan portaalien ja myBestDays-markkinapaikan rinnalle. Säilytät täyden hallinnan rakenteesta, sisällöstä ja brändistä.",
             },
             { type: "h2", text: "Näin luot verkkosivuston" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Jotta kohde näkyy verkkosivustollasi, kyseisen kohteen verkkosivustonäkyvyyden on oltava päällä. Tämä kytkin on riippumaton näkyvyydestä myNextDays-markkinapaikalla tai portaaleissa.",
+              text: "Jotta kohde näkyy verkkosivustollasi, kyseisen kohteen verkkosivustonäkyvyyden on oltava päällä. Tämä kytkin on riippumaton näkyvyydestä myBestDays-markkinapaikalla tai portaaleissa.",
             },
             { type: "h2", text: "Kohteen avaaminen verkkosivustolle" },
             {

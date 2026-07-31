@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (īpašumu pārvaldības sistēma): objekti, kalendārs, cenas, rezervācijas, uzdevumi un maksājumi.",
                 "Kanālu pārvaldnieks: savienojums ar portāliem, piemēram, Booking, Airbnb un citiem — viena ievade, daudzi portāli sinhroni.",
-                "Platformas tirgus: pašu myNextDays tirgus, vienlīdzīgs rezervāciju kanāls blakus portāliem.",
+                "Platformas tirgus: pašu myBestDays tirgus, vienlīdzīgs rezervāciju kanāls blakus portāliem.",
                 "Lietotne: mobilā lietojumprogramma viesiem, īpašniekiem un darbiniekiem ar tiem pašiem datiem, kas tīmeklī.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Vietne: redzamība jūsu pašu myNextDays vietnē",
-                "Platformas tirgus: redzamība globālajā myNextDays tirgū",
+                "Platformas tirgus: redzamība globālajā myBestDays tirgū",
                 "Portāli: redzamība Booking, Airbnb un citos",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Platformas tirgus" },
             {
               type: "p",
-              text: "myNextDays tirgus ir pašu, globāls rezervāciju kanāls — salīdzināms ar Booking vai Airbnb, taču ir daļa no tās pašas platformas. Tas nav „tiešās rezervācijas“ aizstājējs, bet gan vienlīdzīgs kanāls ar savu redzamības asi.",
+              text: "myBestDays tirgus ir pašu, globāls rezervāciju kanāls — salīdzināms ar Booking vai Airbnb, taču ir daļa no tās pašas platformas. Tas nav „tiešās rezervācijas“ aizstājējs, bet gan vienlīdzīgs kanāls ar savu redzamības asi.",
             },
             { type: "h2", text: "Lietotne" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Vietne — jūsu pašu myNextDays vietne",
-                "Platformas tirgus — globālais myNextDays tirgus",
+                "Platformas tirgus — globālais myBestDays tirgus",
                 "Portāli — Booking, Airbnb un citi caur kanālu pārvaldnieku",
               ],
             },

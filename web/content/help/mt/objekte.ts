@@ -249,7 +249,7 @@ export const objekte: HelpCategory = {
               type: "ul",
               items: [
                 "Websajt — viżibbiltà fuq il-websajt proprja tiegħek ta' myNextDays",
-                "Suq tal-Pjattaforma — viżibbiltà fuq is-suq globali ta' myNextDays",
+                "Suq tal-Pjattaforma — viżibbiltà fuq is-suq globali ta' myBestDays",
                 "Portali — viżibbiltà fuq Booking, Airbnb u oħrajn",
               ],
             },

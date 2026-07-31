@@ -1,4 +1,4 @@
-// Icon-Set der NextDays-App — 1:1 portiert aus dem Design-Kit (app-kit.jsx NIC).
+// Icon-Set der myBestDays-App — 1:1 portiert aus dem Design-Kit (app-kit.jsx NIC).
 // Jeder Eintrag ist ein SVG-Pfad-String; bei mehreren Subpaths wird an "M"
 // gesplittet (wie im Original). Stroke-Icons (fill=none), 24×24-Viewbox.
 import type { ColorValue } from "react-native";

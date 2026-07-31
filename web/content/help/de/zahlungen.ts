@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Marktplatzprovision: fällt bei Buchungen über die myNextDays-Plattform an",
+                "Marktplatzprovision: fällt bei Buchungen über die myBestDays-Plattform an",
                 "Portalprovision: wird vom jeweiligen Portal gemäß dessen eigenen Konditionen berechnet",
                 "Direktbuchungen über Ihre eigene Website sind davon unabhängig zu betrachten",
               ],

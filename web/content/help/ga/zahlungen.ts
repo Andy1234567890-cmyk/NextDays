@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Coimisiún an mhargaidh: baineann sé le háirithintí tríd an ardán myNextDays",
+                "Coimisiún an mhargaidh: baineann sé le háirithintí tríd an ardán myBestDays",
                 "Coimisiún tairsí: ríomhtar é ag an tairseach faoi seach de réir a coinníollacha féin",
                 "Ba cheart áirithintí díreacha trí do shuíomh gréasáin féin a mheas go neamhspleách air seo",
               ],

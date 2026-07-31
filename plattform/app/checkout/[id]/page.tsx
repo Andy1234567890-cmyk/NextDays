@@ -1,5 +1,5 @@
 // Checkout — dreistufiger Buchungsabschluss (Zahlungszeitpunkt → Zahlungsart →
-// Prüfen) mit Buchungs-Zusammenfassung seitlich. Eigenes myNextDays-Design;
+// Prüfen) mit Buchungs-Zusammenfassung seitlich. Eigenes myBestDays-Design;
 // Daten aus dem Backend (booking_engine, nur active Objekte).
 import { notFound } from "next/navigation";
 

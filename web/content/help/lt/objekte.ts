@@ -249,7 +249,7 @@ export const objekte: HelpCategory = {
               type: "ul",
               items: [
                 "Svetainė — matomumas jūsų nuosavoje myNextDays svetainėje",
-                "Platformos prekyvietė — matomumas visuotinėje myNextDays prekyvietėje",
+                "Platformos prekyvietė — matomumas visuotinėje myBestDays prekyvietėje",
                 "Portalai — matomumas Booking, Airbnb ir kituose portaluose",
               ],
             },

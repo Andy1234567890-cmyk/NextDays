@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Drei unabhängige Vertriebswege" },
             {
               type: "p",
-              text: "Ein Objekt kann gleichzeitig über mehrere Wege verkauft werden: über die Portale (Booking, Airbnb & Co.), über den myNextDays-Plattform-Marktplatz und über Ihre eigene Website. Jeder Weg hat einen eigenen Sichtbarkeits-Schalter — sie sind vollständig unabhängig voneinander.",
+              text: "Ein Objekt kann gleichzeitig über mehrere Wege verkauft werden: über die Portale (Booking, Airbnb & Co.), über den myBestDays-Plattform-Marktplatz und über Ihre eigene Website. Jeder Weg hat einen eigenen Sichtbarkeits-Schalter — sie sind vollständig unabhängig voneinander.",
             },
             { type: "h2", text: "Sichtbarkeit je Portal steuern" },
             {

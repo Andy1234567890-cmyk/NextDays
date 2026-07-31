@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { Logo } from "@/components/logo";
 import { getMe } from "@/lib/me";
 
 export default async function KontoLayout({
@@ -17,11 +18,8 @@ export default async function KontoLayout({
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="flex h-20 items-center justify-between px-8">
-          <Link
-            href="/"
-            className="font-display text-2xl font-bold tracking-tight text-foreground"
-          >
-            myNextDays
+          <Link href="/" aria-label="myBestDays">
+            <Logo heightRem={2} />
           </Link>
           <Link
             href="/"

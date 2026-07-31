@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Marketplace commission: applies to bookings made through the myNextDays platform",
+                "Marketplace commission: applies to bookings made through the myBestDays platform",
                 "Portal commission: charged by the respective portal according to its own terms",
                 "Direct bookings through your own website are to be considered independently of these",
               ],

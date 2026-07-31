@@ -6,8 +6,8 @@ export const agb: LegalDoc = {
   title: "Felhasználási feltételek vendégek részére (ÁSZF)",
   stand: "Utolsó frissítés: 2026. július 3.",
   intro: [
-    "Jelen felhasználási feltételek a myNextDays foglalási portál (a továbbiakban: „Platform”) utazók és foglalók (a továbbiakban: „Vendég”) általi használatát szabályozzák.",
-    "A Platform üzemeltetője: [az üzemeltető teljes cégneve, cégformája, címe és cégjegyzékadatai — közzététel előtt kiegészítendő] (a továbbiakban: „myNextDays” vagy „mi”).",
+    "Jelen felhasználási feltételek a myBestDays foglalási portál (a továbbiakban: „Platform”) utazók és foglalók (a továbbiakban: „Vendég”) általi használatát szabályozzák.",
+    "A Platform üzemeltetője: [az üzemeltető teljes cégneve, cégformája, címe és cégjegyzékadatai — közzététel előtt kiegészítendő] (a továbbiakban: „myBestDays” vagy „mi”).",
   ],
   sections: [
     {
@@ -18,9 +18,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 A myNextDays szerepe; a szerződés létrejötte",
+      heading: "§ 2 A myBestDays szerepe; a szerződés létrejötte",
       paragraphs: [
-        "A myNextDays az adott szolgáltatók (ügynökségek, szállásadók vagy tulajdonosok, a továbbiakban: „Szolgáltató”) által kínált szálláshely-szolgáltatásokat közvetíti. A szállásra vonatkozó szerződés kizárólag a Vendég és az adott Szolgáltató között jön létre. A myNextDays nem válik a szálláshely-szolgáltatási szerződés szerződő felévé.",
+        "A myBestDays az adott szolgáltatók (ügynökségek, szállásadók vagy tulajdonosok, a továbbiakban: „Szolgáltató”) által kínált szálláshely-szolgáltatásokat közvetíti. A szállásra vonatkozó szerződés kizárólag a Vendég és az adott Szolgáltató között jön létre. A myBestDays nem válik a szálláshely-szolgáltatási szerződés szerződő felévé.",
         "Az adott Szolgáltató az ajánlatban és a foglalási visszaigazolásban kerül megnevezésre.",
       ],
     },
@@ -36,7 +36,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Árak és fizetés",
       paragraphs: [
         "Az ajánlatban a foglalás időpontjában feltüntetett árak érvényesek, az ott feltüntetett adókkal, díjakkal és többletköltségekkel együtt. Az árak az ajánlatban megjelölt pénznemben jelennek meg. A helyszínen további helyi díjak (pl. idegenforgalmi adó) merülhetnek fel, amennyiben ezt az ajánlat feltünteti.",
-        "A fizetés a Stripe pénzforgalmi szolgáltatón keresztül történik. A fizetési adatokat (pl. kártyaadatok) közvetlenül a Stripe gyűjti és kezeli; a myNextDays nem tárol teljes kártyaadatokat. A Stripe a személyes adatokat a [Stripe adatvédelmi nyilatkozata](https://stripe.com/privacy) szerint kezeli.",
+        "A fizetés a Stripe pénzforgalmi szolgáltatón keresztül történik. A fizetési adatokat (pl. kártyaadatok) közvetlenül a Stripe gyűjti és kezeli; a myBestDays nem tárol teljes kártyaadatokat. A Stripe a személyes adatokat a [Stripe adatvédelmi nyilatkozata](https://stripe.com/privacy) szerint kezeli.",
         "Amennyiben az ajánlat kauciót tüntet fel, az a foglaláskor vagy az érkezéskor előzetesen zárolható, és kár esetén részben vagy egészben visszatartható; az ajánlatban szereplő adatok az irányadók.",
       ],
     },
@@ -55,30 +55,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 A myNextDays felelőssége",
+      heading: "§ 7 A myBestDays felelőssége",
       paragraphs: [
-        "A szálláshely-szolgáltatás nyújtásáért kizárólag a Szolgáltató felel. A myNextDays nem felel a Szolgáltatók által közzétett ajánlati tartalmak helytállóságáért, a közvetítést és a fizetésfeldolgozást azonban a gondos kereskedőtől elvárható gondossággal végzi.",
-        "A myNextDays korlátlanul felel szándékosság és súlyos gondatlanság esetén, valamint az élet, a testi épség vagy az egészség megsértéséből eredő károkért. Enyhe gondatlanság esetén a myNextDays csak a lényeges szerződéses kötelezettségek (kardinális kötelezettségek) megszegéséért felel, a szerződésre jellemző, előre látható kár mértékéig. A kógens törvényes felelősségi szabályok érintetlenek maradnak.",
+        "A szálláshely-szolgáltatás nyújtásáért kizárólag a Szolgáltató felel. A myBestDays nem felel a Szolgáltatók által közzétett ajánlati tartalmak helytállóságáért, a közvetítést és a fizetésfeldolgozást azonban a gondos kereskedőtől elvárható gondossággal végzi.",
+        "A myBestDays korlátlanul felel szándékosság és súlyos gondatlanság esetén, valamint az élet, a testi épség vagy az egészség megsértéséből eredő károkért. Enyhe gondatlanság esetén a myBestDays csak a lényeges szerződéses kötelezettségek (kardinális kötelezettségek) megszegéséért felel, a szerződésre jellemző, előre látható kár mértékéig. A kógens törvényes felelősségi szabályok érintetlenek maradnak.",
       ],
     },
     {
       heading: "§ 8 Adatvédelem",
       paragraphs: [
-        "A myNextDays a Vendég személyes adatait a közvetítés és a foglalás lebonyolítása céljából kezeli. A foglalási adatok az adott Szolgáltató részére kerülnek továbbításra, amennyiben ez a szálláshely-szolgáltatási szerződés teljesítéséhez szükséges. A fizetésfeldolgozásra a § 4 alkalmazandó.",
+        "A myBestDays a Vendég személyes adatait a közvetítés és a foglalás lebonyolítása céljából kezeli. A foglalási adatok az adott Szolgáltató részére kerülnek továbbításra, amennyiben ez a szálláshely-szolgáltatási szerződés teljesítéséhez szükséges. A fizetésfeldolgozásra a § 4 alkalmazandó.",
         "A részleteket a Platform adatvédelmi tájékoztatója tartalmazza.",
       ],
     },
     {
       heading: "§ 9 Panaszok és vitarendezés",
       paragraphs: [
-        "A szállással kapcsolatos kifogásokkal a Vendég először a Szolgáltatóhoz fordul; a foglalással vagy a fizetéssel kapcsolatos kérdésekben a myNextDays ügyfélszolgálata segít a Platformon megadott elérhetőségeken.",
-        "A myNextDays nem köteles és nem hajlandó fogyasztói békéltető testület előtti vitarendezési eljárásban részt venni, amennyiben erre jogszabályi kötelezettség nem áll fenn.",
+        "A szállással kapcsolatos kifogásokkal a Vendég először a Szolgáltatóhoz fordul; a foglalással vagy a fizetéssel kapcsolatos kérdésekben a myBestDays ügyfélszolgálata segít a Platformon megadott elérhetőségeken.",
+        "A myBestDays nem köteles és nem hajlandó fogyasztói békéltető testület előtti vitarendezési eljárásban részt venni, amennyiben erre jogszabályi kötelezettség nem áll fenn.",
       ],
     },
     {
       heading: "§ 10 A jelen feltételek módosítása",
       paragraphs: [
-        "A myNextDays a jövőre nézve módosíthatja a jelen feltételeket, amennyiben ez alapos okból szükséges (különösen jogszabályváltozások vagy a bírói gyakorlat változásai miatt), és a Vendéget ezáltal nem éri méltánytalan hátrány. A már megkötött foglalásokra a foglaláskor hatályos változat alkalmazandó.",
+        "A myBestDays a jövőre nézve módosíthatja a jelen feltételeket, amennyiben ez alapos okból szükséges (különösen jogszabályváltozások vagy a bírói gyakorlat változásai miatt), és a Vendéget ezáltal nem éri méltánytalan hátrány. A már megkötött foglalásokra a foglaláskor hatályos változat alkalmazandó.",
       ],
     },
     {

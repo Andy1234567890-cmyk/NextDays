@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platform (Markedsplads)",
-  description: "Sælg på myNextDays-markedspladsen.",
+  description: "Sælg på myBestDays-markedspladsen.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "myNextDays-markedspladsen",
-          excerpt: "Den globale myNextDays-markedsplads er en selvstændig bookingkanal ved siden af portaler og hjemmeside.",
+          title: "myBestDays-markedspladsen",
+          excerpt: "Den globale myBestDays-markedsplads er en selvstændig bookingkanal ved siden af portaler og hjemmeside.",
           updated: "Opdateret: juli 2026",
           body: [
             {
               type: "p",
-              text: "myNextDays-markedspladsen (/plattform) er myNextDays' egen globale bookingkanal — sammenlignelig med Booking eller Airbnb, men en del af samme platform. Her gennemsøger gæster boliger fra alle tilsluttede virksomheder og booker direkte.",
+              text: "myBestDays-markedspladsen (/plattform) er myBestDays' egen globale bookingkanal — sammenlignelig med Booking eller Airbnb, men en del af samme platform. Her gennemsøger gæster boliger fra alle tilsluttede virksomheder og booker direkte.",
             },
             { type: "h2", text: "Ikke »direkte«, men en ligestillet kanal" },
             {
               type: "p",
-              text: "Markedspladsen erstatter ikke direkte booking via din egen hjemmeside. Den er en selvstændig, tredje salgskanal med sin egen synlighedsakse, sin egen gæstebase og sin egen provision — ligesom et portal, blot drevet af myNextDays selv.",
+              text: "Markedspladsen erstatter ikke direkte booking via din egen hjemmeside. Den er en selvstændig, tredje salgskanal med sin egen synlighedsakse, sin egen gæstebase og sin egen provision — ligesom et portal, blot drevet af myBestDays selv.",
             },
             { type: "h2", text: "Sådan kommer boliger på markedspladsen" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Ligesom hos ethvert bookingportal opkræves der provision for reservationer, der kommer i stand via myNextDays-markedspladsen. Den beregnes pr. reservation og er uafhængig af eventuelle provisioner for portaler.",
+              text: "Ligesom hos ethvert bookingportal opkræves der provision for reservationer, der kommer i stand via myBestDays-markedspladsen. Den beregnes pr. reservation og er uafhængig af eventuelle provisioner for portaler.",
             },
             { type: "h2", text: "Sådan beregnes provisionen" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Markedsplads-provision gælder udelukkende for reservationer via myNextDays-markedspladsen.",
+                "Markedsplads-provision gælder udelukkende for reservationer via myBestDays-markedspladsen.",
                 "Portal-reservationer (Booking, Airbnb m.fl.) følger vilkårene for det pågældende portal.",
                 "Reservationer via hjemmesiden følger de vilkår, der er angivet i dit abonnement, uden markedsplads-provision.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Gæster, der booker via myNextDays-markedspladsen, opretter deres egen gæsteprofil. Her samles deres reservationer, beskeder med virksomheder og afgivne anmeldelser — ligesom ved en portal-gæstekonto.",
+              text: "Gæster, der booker via myBestDays-markedspladsen, opretter deres egen gæsteprofil. Her samles deres reservationer, beskeder med virksomheder og afgivne anmeldelser — ligesom ved en portal-gæstekonto.",
             },
             { type: "h2", text: "Hvad du som virksomhed ser" },
             {

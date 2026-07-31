@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platforma (prekyvietė)",
-  description: "Parduoti myNextDays prekyvietėje.",
+  description: "Parduoti myBestDays prekyvietėje.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "myNextDays prekyvietė",
-          excerpt: "Visuotinė myNextDays prekyvietė yra atskiras rezervacijų kanalas šalia portalų ir svetainės.",
+          title: "myBestDays prekyvietė",
+          excerpt: "Visuotinė myBestDays prekyvietė yra atskiras rezervacijų kanalas šalia portalų ir svetainės.",
           updated: "Atnaujinta: 2026 m. liepa",
           body: [
             {
               type: "p",
-              text: "myNextDays prekyvietė (/plattform) yra paties myNextDays visuotinis rezervacijų kanalas — panašus į Booking ar Airbnb, tačiau priklausantis tai pačiai platformai. Ten svečiai naršo visų prijungtų įmonių objektus ir rezervuoja tiesiogiai.",
+              text: "myBestDays prekyvietė (/plattform) yra paties myBestDays visuotinis rezervacijų kanalas — panašus į Booking ar Airbnb, tačiau priklausantis tai pačiai platformai. Ten svečiai naršo visų prijungtų įmonių objektus ir rezervuoja tiesiogiai.",
             },
             { type: "h2", text: "Ne „tiesioginis kanalas“, o lygiavertis kanalas" },
             {
               type: "p",
-              text: "Prekyvietė nepakeičia tiesioginės rezervacijos per jūsų nuosavą svetainę. Tai savarankiškas, trečiasis pardavimo kelias su sava matomumo ašimi, savu svečių ratu ir savu komisiniu mokesčiu — lygiai kaip portalas, tik jį valdo pats myNextDays.",
+              text: "Prekyvietė nepakeičia tiesioginės rezervacijos per jūsų nuosavą svetainę. Tai savarankiškas, trečiasis pardavimo kelias su sava matomumo ašimi, savu svečių ratu ir savu komisiniu mokesčiu — lygiai kaip portalas, tik jį valdo pats myBestDays.",
             },
             { type: "h2", text: "Kaip objektai atsiranda prekyvietėje" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Kaip ir bet kuriame rezervacijų portale, už per myNextDays prekyvietę įvykusias rezervacijas taikomas komisinis mokestis. Jis apskaičiuojamas kiekvienai rezervacijai ir nepriklauso nuo galimų portalų komisinių mokesčių.",
+              text: "Kaip ir bet kuriame rezervacijų portale, už per myBestDays prekyvietę įvykusias rezervacijas taikomas komisinis mokestis. Jis apskaičiuojamas kiekvienai rezervacijai ir nepriklauso nuo galimų portalų komisinių mokesčių.",
             },
             { type: "h2", text: "Kaip apskaičiuojamas komisinis mokestis" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Prekyvietės komisinis mokestis galioja išimtinai rezervacijoms per myNextDays prekyvietę.",
+                "Prekyvietės komisinis mokestis galioja išimtinai rezervacijoms per myBestDays prekyvietę.",
                 "Portalo rezervacijoms (Booking, Airbnb ir kt.) galioja atitinkamo portalo sąlygos.",
                 "Svetainės rezervacijoms galioja jūsų tarife nurodytos sąlygos be prekyvietės komisinio mokesčio.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Svečiai, kurie rezervuoja per myNextDays prekyvietę, susikuria savo svečio profilį. Jame kaupiasi jų rezervacijos, žinutės su įmonėmis ir palikti vertinimai — panašiai kaip portalo svečio paskyroje.",
+              text: "Svečiai, kurie rezervuoja per myBestDays prekyvietę, susikuria savo svečio profilį. Jame kaupiasi jų rezervacijos, žinutės su įmonėmis ir palikti vertinimai — panašiai kaip portalo svečio paskyroje.",
             },
             { type: "h2", text: "Ką matote kaip įmonė" },
             {

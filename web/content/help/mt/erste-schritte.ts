@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (Sistema tal-Ġestjoni tal-Proprjetà): proprjetajiet, kalendarju, prezzijiet, riżervazzjonijiet, kompiti u ħlasijiet.",
                 "Maniġer tal-Kanali: konnessjoni ma' portali bħal Booking, Airbnb u oħrajn — dħul wieħed, ħafna portali sinkronizzati.",
-                "Suq tal-Pjattaforma: is-suq proprju ta' myNextDays, kanal ta' prenotazzjoni fl-istess livell tal-portali.",
+                "Suq tal-Pjattaforma: is-suq proprju ta' myBestDays, kanal ta' prenotazzjoni fl-istess livell tal-portali.",
                 "App: l-applikazzjoni mobbli għall-mistiedna, is-sidien u l-impjegati bl-istess dejta tal-verżjoni tal-web.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Websajt: viżibbiltà fuq il-websajt proprja tiegħek ta' myNextDays",
-                "Suq tal-Pjattaforma: viżibbiltà fuq is-suq globali ta' myNextDays",
+                "Suq tal-Pjattaforma: viżibbiltà fuq is-suq globali ta' myBestDays",
                 "Portali: viżibbiltà fuq Booking, Airbnb u oħrajn",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Suq tal-Pjattaforma" },
             {
               type: "p",
-              text: "Is-suq ta' myNextDays huwa kanal ta' prenotazzjoni globali proprju — komparabbli ma' Booking jew Airbnb, iżda parti mill-istess pjattaforma. Mhuwiex sostitut għal ‘prenotazzjoni diretta’, imma kanal fl-istess livell b'assi ta' viżibbiltà tiegħu stess.",
+              text: "Is-suq ta' myBestDays huwa kanal ta' prenotazzjoni globali proprju — komparabbli ma' Booking jew Airbnb, iżda parti mill-istess pjattaforma. Mhuwiex sostitut għal ‘prenotazzjoni diretta’, imma kanal fl-istess livell b'assi ta' viżibbiltà tiegħu stess.",
             },
             { type: "h2", text: "App" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Websajt — il-websajt proprja tiegħek ta' myNextDays",
-                "Suq tal-Pjattaforma — is-suq globali ta' myNextDays",
+                "Suq tal-Pjattaforma — is-suq globali ta' myBestDays",
                 "Portali — Booking, Airbnb u oħrajn permezz tal-maniġer tal-kanali",
               ],
             },

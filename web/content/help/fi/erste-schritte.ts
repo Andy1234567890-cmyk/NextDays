@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (kiinteistönhallintajärjestelmä): kohteet, kalenteri, hinnat, varaukset, tehtävät ja maksut.",
                 "Kanavanhallinta: yhteys portaaleihin kuten Booking, Airbnb ja muut — yksi syöttö, monta portaalia synkronoituna.",
-                "Alustan markkinapaikka: oma myNextDays-markkinapaikka, tasavertainen varauskanava portaalien rinnalla.",
+                "Alustan markkinapaikka: oma myBestDays-markkinapaikka, tasavertainen varauskanava portaalien rinnalla.",
                 "Sovellus: mobiilisovellus vieraille, omistajille ja työntekijöille, samoilla tiedoilla kuin verkossa.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Verkkosivusto: näkyvyys omalla myNextDays-verkkosivustollasi",
-                "Alustan markkinapaikka: näkyvyys globaalilla myNextDays-markkinapaikalla",
+                "Alustan markkinapaikka: näkyvyys globaalilla myBestDays-markkinapaikalla",
                 "Portaalit: näkyvyys palveluissa Booking, Airbnb ja muut",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Alustan markkinapaikka" },
             {
               type: "p",
-              text: "myNextDays-markkinapaikka on oma, globaali varauskanava — verrattavissa Bookingiin tai Airbnbhin, mutta osa samaa alustaa. Se ei ole ”suoravarauksen” korvike, vaan tasavertainen kanava, jolla on oma näkyvyysakselinsa.",
+              text: "myBestDays-markkinapaikka on oma, globaali varauskanava — verrattavissa Bookingiin tai Airbnbhin, mutta osa samaa alustaa. Se ei ole ”suoravarauksen” korvike, vaan tasavertainen kanava, jolla on oma näkyvyysakselinsa.",
             },
             { type: "h2", text: "Sovellus" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Verkkosivusto — oma myNextDays-verkkosivustosi",
-                "Alustan markkinapaikka — globaali myNextDays-markkinapaikka",
+                "Alustan markkinapaikka — globaali myBestDays-markkinapaikka",
                 "Portaalit — Booking, Airbnb ja muut kanavanhallinnan kautta",
               ],
             },

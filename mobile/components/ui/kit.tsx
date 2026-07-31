@@ -1,4 +1,4 @@
-// Kern-UI-Komponenten der NextDays-App — portiert aus dem Design-Kit
+// Kern-UI-Komponenten der myBestDays-App — portiert aus dem Design-Kit
 // (app-kit.jsx). CSS-Klassen → RN-Komponenten mit Theme-Tokens.
 //  Txt, Btn, Chip, Card, Flat, Divider, Star, Avatar, Toggle, Photo, Badge,
 //  Progress, Segmented, IconBtn.

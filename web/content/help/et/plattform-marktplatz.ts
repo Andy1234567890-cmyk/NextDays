@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platvorm (turuplats)",
-  description: "Müüge myNextDays turuplatsil.",
+  description: "Müüge myBestDays turuplatsil.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "myNextDays turuplats",
-          excerpt: "Globaalne myNextDays turuplats on oma broneerimiskanal koos portaalide ja veebilehega.",
+          title: "myBestDays turuplats",
+          excerpt: "Globaalne myBestDays turuplats on oma broneerimiskanal koos portaalide ja veebilehega.",
           updated: "Uuendatud: juuli 2026",
           body: [
             {
               type: "p",
-              text: "myNextDays turuplats (/plattform) on myNextDays'i enda globaalne broneerimiskanal — võrreldav Bookingu või Airbnb'ga, kuid osa samast platvormist. Külalised sirvivad seal kõikide liitunud ettevõtete objekte ja broneerivad otse.",
+              text: "myBestDays turuplats (/plattform) on myBestDays'i enda globaalne broneerimiskanal — võrreldav Bookingu või Airbnb'ga, kuid osa samast platvormist. Külalised sirvivad seal kõikide liitunud ettevõtete objekte ja broneerivad otse.",
             },
             { type: "h2", text: "Mitte „otse“, vaid võrdväärne kanal" },
             {
               type: "p",
-              text: "Turuplats ei asenda otsebroneerimist Teie enda veebilehe kaudu. See on iseseisev, kolmas müügitee oma nähtavuse teljega, oma külaliste baasiga ja oma vahendustasuga — täpselt nagu portaal, ainult et myNextDays haldab seda ise.",
+              text: "Turuplats ei asenda otsebroneerimist Teie enda veebilehe kaudu. See on iseseisev, kolmas müügitee oma nähtavuse teljega, oma külaliste baasiga ja oma vahendustasuga — täpselt nagu portaal, ainult et myBestDays haldab seda ise.",
             },
             { type: "h2", text: "Kuidas objektid jõuavad turuplatsile" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Nagu iga broneerimisportaali puhul, kohaldub ka myNextDays turuplatsi kaudu tehtud broneeringutele vahendustasu. See arvutatakse broneeringu kohta ja on sõltumatu portaalide võimalikest vahendustasudest.",
+              text: "Nagu iga broneerimisportaali puhul, kohaldub ka myBestDays turuplatsi kaudu tehtud broneeringutele vahendustasu. See arvutatakse broneeringu kohta ja on sõltumatu portaalide võimalikest vahendustasudest.",
             },
             { type: "h2", text: "Kuidas vahendustasu arvutatakse" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Turuplatsi vahendustasu kehtib ainult myNextDays turuplatsi kaudu tehtud broneeringutele.",
+                "Turuplatsi vahendustasu kehtib ainult myBestDays turuplatsi kaudu tehtud broneeringutele.",
                 "Portaali broneeringutele (Booking, Airbnb & Co.) kehtivad vastava portaali tingimused.",
                 "Veebilehe broneeringutele kehtivad Teie tariifi tingimused ilma turuplatsi vahendustasuta.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Külalised, kes broneerivad myNextDays turuplatsi kaudu, loovad oma külalise profiili. Sinna koguneb nende broneeringute, ettevõtetega peetud sõnumite ja jäetud hinnangute ajalugu — sarnaselt portaali külaliskontoga.",
+              text: "Külalised, kes broneerivad myBestDays turuplatsi kaudu, loovad oma külalise profiili. Sinna koguneb nende broneeringute, ettevõtetega peetud sõnumite ja jäetud hinnangute ajalugu — sarnaselt portaali külaliskontoga.",
             },
             { type: "h2", text: "Mida Teie ettevõttena näete" },
             {

@@ -55,6 +55,19 @@ Verfügbarkeit/Kapazität dieses Modell zugrunde legen; im Zweifel den Nutzer
 fragen statt eine Container-/Kategorie-Ebene zu erfinden. Dieser Fehler ist
 mehrfach passiert und hat falsche Kapazitäten/Buchungen erzeugt.
 
+## Zwei Marken (UNVERHANDELBAR) — myNextDays ≠ myBestDays
+- **myNextDays** = das PMS, der Channel-Manager und die Marketing-Seite
+  (`web`, `apps/api`, `marketing`, `admin`, `builder`, `storybook`). Der Betrieb
+  ist hier Kunde, zahlt Abo + Provision.
+- **myBestDays** = der Marktplatz und alles, was Gast und Gastgeber dort sehen:
+  `plattform` (Gäste-Marktplatz), `gastgeber` (Gastgeber-Dashboard), `mobile`
+  (App) und die Marktplatz-Bausteine im PMS (Kanal „Plattform", `ota_name`,
+  Kanal-Karte im Kanalmanager, Hilfe-Artikel „Plattform-Marktplatz").
+Regel vor jedem neuen Text/Label: Sieht das ein Gast oder ein Marktplatz-
+Gastgeber bzw. beschreibt es den Buchungskanal Marktplatz → **myBestDays**.
+Beschreibt es Verwaltung/Kanalmanager/Abrechnung des Betriebs → **myNextDays**.
+Logo-Dateien: `mybestdays-logo.png` (+ `-light` für dunkle Flächen).
+
 ## Vertriebskanäle & Frontends (UNVERHANDELBAR) — drei Wege, drei Oberflächen
 Jedes Objekt wird über MEHRERE Kanäle verkauft; Kanal-Sichtbarkeit ist PRO KANAL
 schaltbar, NICHT ein globales „veröffentlicht"-Flag (Industrie-Standard, belegt:
@@ -62,10 +75,12 @@ Channex/SiteMinder/Cloudbeds/Shopify). Die drei Vertriebskanäle:
 - **Channex → OTAs**: Booking.com, Airbnb, Expedia & Co. (Channel-Aggregator
   Channex, `apps/api/.../channel_manager`; Distribution = `channex_property_map`
   `sync_enabled` + verbundener Kanal). Im Kundentext nie „Channex" — „Portale".
-- **Plattform**: unser EIGENER globaler Marktplatz (`/plattform`), ein
-  gleichrangiger Buchungskanal wie Booking/Airbnb, NICHT „Direkt". Sichtbarkeit =
-  eigene Achse `properties.listed_on_marketplace` (0159), getrennt von OTA.
-- **App**: die mobile Plattform (`mobile`, React Native) — gleichwertiges
+- **Plattform**: unser EIGENER globaler Marktplatz **myBestDays** (`/plattform`),
+  ein gleichrangiger Buchungskanal wie Booking/Airbnb, NICHT „Direkt".
+  Sichtbarkeit = eigene Achse `properties.listed_on_marketplace` (0159),
+  getrennt von OTA. Buchungen tragen `channel='portal'` +
+  `ota_name='myBestDays'` (Altbestand per 0239 nachgezogen).
+- **App**: die mobile myBestDays-App (`mobile`, React Native) — gleichwertiges
   Frontend derselben FastAPI (Gast · Agentur · Owner · Mitarbeiter), siehe
   „Mobile"-Abschnitt unten.
 Regel: auf einem Kanal sichtbar = Objekt-Status erlaubt Verkauf (`status='active'`)

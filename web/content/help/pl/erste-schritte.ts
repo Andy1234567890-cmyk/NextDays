@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (system zarządzania obiektem): obiekty, kalendarz, ceny, rezerwacje, zadania i płatności.",
                 "Menedżer kanałów: połączenie z portalami takimi jak Booking, Airbnb i inne — jedno wprowadzenie danych, wiele portali zsynchronizowanych.",
-                "Platforma myNextDays: własny rynek myNextDays, równorzędny kanał rezerwacji obok portali.",
+                "Platforma myBestDays: własny rynek myBestDays, równorzędny kanał rezerwacji obok portali.",
                 "Aplikacja: aplikacja mobilna dla gości, właścicieli i pracowników z tymi samymi danymi co w wersji webowej.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Strona internetowa: widoczność na Twojej własnej stronie myNextDays",
-                "Platforma myNextDays: widoczność na globalnej platformie myNextDays",
+                "Platforma myBestDays: widoczność na globalnej platformie myBestDays",
                 "Portale: widoczność na Booking, Airbnb i innych",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Platforma myNextDays" },
             {
               type: "p",
-              text: "Platforma myNextDays to własny, globalny kanał rezerwacji — porównywalny z Booking czy Airbnb, ale będący częścią tej samej platformy. Nie jest to zamiennik „rezerwacji bezpośredniej”, lecz równorzędny kanał z własną osią widoczności.",
+              text: "Platforma myBestDays to własny, globalny kanał rezerwacji — porównywalny z Booking czy Airbnb, ale będący częścią tej samej platformy. Nie jest to zamiennik „rezerwacji bezpośredniej”, lecz równorzędny kanał z własną osią widoczności.",
             },
             { type: "h2", text: "Aplikacja" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Strona internetowa — Twoja własna strona myNextDays",
-                "Platforma myNextDays — globalna platforma myNextDays",
+                "Platforma myBestDays — globalna platforma myBestDays",
                 "Portale — Booking, Airbnb i inne poprzez menedżera kanałów",
               ],
             },

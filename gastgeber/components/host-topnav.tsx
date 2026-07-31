@@ -20,6 +20,7 @@ import {
   SheetTrigger,
 } from "@nextdays/ui/sheet";
 
+import { Logo } from "@/components/logo";
 import { logout } from "@/lib/auth";
 
 // Haupt-Tabs (mittig). `dot` = roter Ungelesen-Punkt (Nachrichten).
@@ -45,11 +46,8 @@ export function HostTopNav({ email }: { email: string | null }) {
     <header className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="grid h-20 grid-cols-[1fr_auto_1fr] items-center px-8">
         {/* Links: Logo, bündig am Rand */}
-        <Link
-          href="/"
-          className="justify-self-start font-display text-2xl font-bold tracking-tight text-foreground"
-        >
-          myNextDays
+        <Link href="/" className="justify-self-start" aria-label="myBestDays">
+          <Logo heightRem={2} />
         </Link>
 
         {/* Mitte: schlichte Text-Tabs, aktiver Tab dunkel + kurze Unterlinie */}

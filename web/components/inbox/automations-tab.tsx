@@ -25,10 +25,10 @@ import { listProperties } from "@/lib/properties";
 
 const TRIGGERS = ["booking_new", "before_checkin", "after_checkout"];
 const ANCHORS = ["arrival", "departure", "booking"];
-// Kanal-Werte = ota_name-Herkunft (Backend matcht case-insensitive). Die eigene
-// Plattform „myNextDays" ist ein eigener Kanal wie die OTAs (booking_engine setzt
-// ota_name="myNextDays"), NICHT „Direkt".
-const CHANNELS = ["myNextDays", "Booking.com", "Airbnb", "Vrbo", "Expedia"];
+// Kanal-Werte = ota_name-Herkunft (Backend matcht case-insensitive). Der eigene
+// Marktplatz „myBestDays" ist ein eigener Kanal wie die OTAs (booking_engine setzt
+// ota_name="myBestDays"), NICHT „Direkt". Altbestand wurde mit 0239 nachgezogen.
+const CHANNELS = ["myBestDays", "Booking.com", "Airbnb", "Vrbo", "Expedia"];
 
 type Prop = { id: string; title: string };
 

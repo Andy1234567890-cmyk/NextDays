@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Drie onafhankelijke verkoopwegen" },
             {
               type: "p",
-              text: "Een object kan tegelijkertijd via meerdere wegen worden verkocht: via de portalen (Booking, Airbnb & co.), via de myNextDays-platform-marktplaats en via uw eigen website. Elke weg heeft een eigen zichtbaarheidsschakelaar — ze zijn volledig onafhankelijk van elkaar.",
+              text: "Een object kan tegelijkertijd via meerdere wegen worden verkocht: via de portalen (Booking, Airbnb & co.), via de myBestDays-platform-marktplaats en via uw eigen website. Elke weg heeft een eigen zichtbaarheidsschakelaar — ze zijn volledig onafhankelijk van elkaar.",
             },
             { type: "h2", text: "Zichtbaarheid per portaal beheren" },
             {

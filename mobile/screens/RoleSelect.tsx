@@ -1,4 +1,4 @@
-// Start-/Rollen-Auswahl: NextDays-Mockup hat Gäste- und Gastgeber-App. Hier
+// Start-/Rollen-Auswahl: myBestDays-Mockup hat Gäste- und Gastgeber-App. Hier
 // wählt man den Bereich (im echten Login käme die Rolle aus dem Konto).
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -54,7 +54,7 @@ export default function RoleSelect() {
     >
       <Col gap={12}>
         <Image
-          source={require("@/assets/img/Logo_transparent.png")}
+          source={require("@/assets/img/mybestdays-logo.png")}
           style={{ height: 44, width: 160, resizeMode: "contain", alignSelf: "flex-start" }}
         />
         <Txt v="display">

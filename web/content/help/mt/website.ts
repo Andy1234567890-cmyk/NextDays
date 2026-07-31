@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Il-bennej tal-websajt joħloqlok websajt tal-prenotazzjoni proprja — kanal ta' distribuzzjoni addizzjonali flimkien mal-portali u s-suq ta' myNextDays. Iżżomm kontroll sħiħ fuq l-istruttura, il-kontenut u l-branding.",
+              text: "Il-bennej tal-websajt joħloqlok websajt tal-prenotazzjoni proprja — kanal ta' distribuzzjoni addizzjonali flimkien mal-portali u s-suq ta' myBestDays. Iżżomm kontroll sħiħ fuq l-istruttura, il-kontenut u l-branding.",
             },
             { type: "h2", text: "Kif toħloq websajt" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Sabiex proprjetà tidher fuq il-websajt tiegħek, il-viżibbiltà tal-websajt għal din il-proprjetà trid tkun attivata. Dan is-swiċċ huwa indipendenti mill-viżibbiltà fuq is-suq ta' myNextDays jew fuq il-portali.",
+              text: "Sabiex proprjetà tidher fuq il-websajt tiegħek, il-viżibbiltà tal-websajt għal din il-proprjetà trid tkun attivata. Dan is-swiċċ huwa indipendenti mill-viżibbiltà fuq is-suq ta' myBestDays jew fuq il-portali.",
             },
             { type: "h2", text: "Attiva proprjetà għall-websajt" },
             {

@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Plateforme (marketplace)",
-  description: "Vendre sur la marketplace myNextDays.",
+  description: "Vendre sur la marketplace myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,19 +12,19 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "La marketplace myNextDays",
+          title: "La marketplace myBestDays",
           excerpt:
-            "La marketplace mondiale myNextDays est un canal de réservation à part entière, aux côtés des portails et du site web.",
+            "La marketplace mondiale myBestDays est un canal de réservation à part entière, aux côtés des portails et du site web.",
           updated: "Mise à jour : juillet 2026",
           body: [
             {
               type: "p",
-              text: "La marketplace myNextDays (/plattform) est le canal de réservation mondial de myNextDays lui-même — comparable à Booking ou Airbnb, mais faisant partie de la même plateforme. Les clients y parcourent les objets de tous les établissements affiliés et réservent directement.",
+              text: "La marketplace myBestDays (/plattform) est le canal de réservation mondial de myBestDays lui-même — comparable à Booking ou Airbnb, mais faisant partie de la même plateforme. Les clients y parcourent les objets de tous les établissements affiliés et réservent directement.",
             },
             { type: "h2", text: "Pas un canal « direct », mais un canal à part entière" },
             {
               type: "p",
-              text: "La marketplace ne remplace pas la réservation directe via votre propre site web. Elle constitue un troisième canal de distribution autonome, avec son propre axe de visibilité, sa propre clientèle et sa propre commission — exactement comme un portail, à ceci près qu'elle est exploitée par myNextDays lui-même.",
+              text: "La marketplace ne remplace pas la réservation directe via votre propre site web. Elle constitue un troisième canal de distribution autonome, avec son propre axe de visibilité, sa propre clientèle et sa propre commission — exactement comme un portail, à ceci près qu'elle est exploitée par myBestDays lui-même.",
             },
             { type: "h2", text: "Comment les objets arrivent sur la marketplace" },
             {
@@ -105,7 +105,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Comme pour tout portail de réservation, une commission s'applique aux réservations conclues via la marketplace myNextDays. Elle est calculée par réservation et indépendante des commissions éventuelles appliquées aux portails.",
+              text: "Comme pour tout portail de réservation, une commission s'applique aux réservations conclues via la marketplace myBestDays. Elle est calculée par réservation et indépendante des commissions éventuelles appliquées aux portails.",
             },
             { type: "h2", text: "Comment la commission est calculée" },
             {
@@ -126,7 +126,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "La commission marketplace s'applique exclusivement aux réservations via la marketplace myNextDays.",
+                "La commission marketplace s'applique exclusivement aux réservations via la marketplace myBestDays.",
                 "Les réservations via portail (Booking, Airbnb & Co.) sont soumises aux conditions du portail concerné.",
                 "Les réservations via le site web sont soumises aux conditions définies pour votre tarif, sans commission marketplace.",
               ],
@@ -146,7 +146,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Les clients qui réservent via la marketplace myNextDays créent leur propre profil client. Celui-ci rassemble leurs réservations, leurs messages avec les établissements et les avis qu'ils ont déposés — comme pour un compte client de portail.",
+              text: "Les clients qui réservent via la marketplace myBestDays créent leur propre profil client. Celui-ci rassemble leurs réservations, leurs messages avec les établissements et les avis qu'ils ont déposés — comme pour un compte client de portail.",
             },
             { type: "h2", text: "Ce que vous voyez en tant qu'établissement" },
             {

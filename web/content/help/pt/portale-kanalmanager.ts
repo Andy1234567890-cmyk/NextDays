@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Três caminhos de vendas independentes" },
             {
               type: "p",
-              text: "Um imóvel pode ser vendido simultaneamente por vários caminhos: através dos portais (Booking, Airbnb e outros), através do mercado da plataforma myNextDays e através do seu próprio site. Cada caminho tem o seu próprio interruptor de visibilidade — são totalmente independentes uns dos outros.",
+              text: "Um imóvel pode ser vendido simultaneamente por vários caminhos: através dos portais (Booking, Airbnb e outros), através do mercado da plataforma myBestDays e através do seu próprio site. Cada caminho tem o seu próprio interruptor de visibilidade — são totalmente independentes uns dos outros.",
             },
             { type: "h2", text: "Controlar a visibilidade por portal" },
             {

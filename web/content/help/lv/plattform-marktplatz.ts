@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platforma (tirgus)",
-  description: "Pārdodiet myNextDays tirgū.",
+  description: "Pārdodiet myBestDays tirgū.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "myNextDays tirgus",
-          excerpt: "Globālais myNextDays tirgus ir savs rezervāciju kanāls blakus portāliem un vietnei.",
+          title: "myBestDays tirgus",
+          excerpt: "Globālais myBestDays tirgus ir savs rezervāciju kanāls blakus portāliem un vietnei.",
           updated: "Atjaunināts: 2026. gada jūlijs",
           body: [
             {
               type: "p",
-              text: "myNextDays tirgus (/plattform) ir paša myNextDays globālais rezervāciju kanāls — salīdzināms ar Booking vai Airbnb, taču ir daļa no tās pašas platformas. Viesi tur meklē visu pievienoto uzņēmumu objektus un rezervē tieši.",
+              text: "myBestDays tirgus (/plattform) ir paša myBestDays globālais rezervāciju kanāls — salīdzināms ar Booking vai Airbnb, taču ir daļa no tās pašas platformas. Viesi tur meklē visu pievienoto uzņēmumu objektus un rezervē tieši.",
             },
             { type: "h2", text: "Nevis „tiešais“, bet gan vienlīdzīgs kanāls" },
             {
               type: "p",
-              text: "Tirgus neaizstāj tiešo rezervēšanu jūsu pašu vietnē. Tas ir patstāvīgs, trešais pārdošanas veids ar savu redzamības asi, savu viesu bāzi un savu komisiju — tieši tāpat kā portāls, tikai to pārvalda pats myNextDays.",
+              text: "Tirgus neaizstāj tiešo rezervēšanu jūsu pašu vietnē. Tas ir patstāvīgs, trešais pārdošanas veids ar savu redzamības asi, savu viesu bāzi un savu komisiju — tieši tāpat kā portāls, tikai to pārvalda pats myBestDays.",
             },
             { type: "h2", text: "Kā objekti nonāk tirgū" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Tāpat kā jebkurā rezervāciju portālā, par rezervācijām, kas noslēgtas caur myNextDays tirgu, tiek piemērota komisija. Tā tiek aprēķināta par katru rezervāciju un ir neatkarīga no jebkādām portālu komisijām.",
+              text: "Tāpat kā jebkurā rezervāciju portālā, par rezervācijām, kas noslēgtas caur myBestDays tirgu, tiek piemērota komisija. Tā tiek aprēķināta par katru rezervāciju un ir neatkarīga no jebkādām portālu komisijām.",
             },
             { type: "h2", text: "Kā tiek aprēķināta komisija" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Tirgus komisija attiecas tikai uz rezervācijām caur myNextDays tirgu.",
+                "Tirgus komisija attiecas tikai uz rezervācijām caur myBestDays tirgu.",
                 "Portālu rezervācijas (Booking, Airbnb un citi) pakļautas attiecīgā portāla nosacījumiem.",
                 "Vietnes rezervācijas pakļautas jūsu tarifam noteiktajiem nosacījumiem bez tirgus komisijas.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Viesi, kas rezervē caur myNextDays tirgu, izveido savu viesa profilu. Tajā apkopotas viņu rezervācijas, saziņa ar uzņēmumiem un sniegtās atsauksmes — līdzīgi kā portāla viesu kontā.",
+              text: "Viesi, kas rezervē caur myBestDays tirgu, izveido savu viesa profilu. Tajā apkopotas viņu rezervācijas, saziņa ar uzņēmumiem un sniegtās atsauksmes — līdzīgi kā portāla viesu kontā.",
             },
             { type: "h2", text: "Ko jūs kā uzņēmums redzat" },
             {

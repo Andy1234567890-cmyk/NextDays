@@ -6,8 +6,8 @@ export const agb: LegalDoc = {
   title: "Termini tal-Użu għall-Mistednin",
   stand: "L-aħħar aġġornament: 3 ta' Lulju 2026",
   intro: [
-    "Dawn it-Termini tal-Użu jirregolaw l-użu tal-portal tal-prenotazzjonijiet myNextDays (minn hawn 'il quddiem il-“Pjattaforma”) mill-vjaġġaturi u minn min jagħmel il-prenotazzjonijiet (minn hawn 'il quddiem il-“Mistieden”).",
-    "Il-Pjattaforma hija operata minn [isem legali sħiħ, forma legali, indirizz u dettalji tar-reġistru tal-operatur — għandhom jiżdiedu qabel il-pubblikazzjoni] (minn hawn 'il quddiem “myNextDays” jew “aħna”).",
+    "Dawn it-Termini tal-Użu jirregolaw l-użu tal-portal tal-prenotazzjonijiet myBestDays (minn hawn 'il quddiem il-“Pjattaforma”) mill-vjaġġaturi u minn min jagħmel il-prenotazzjonijiet (minn hawn 'il quddiem il-“Mistieden”).",
+    "Il-Pjattaforma hija operata minn [isem legali sħiħ, forma legali, indirizz u dettalji tar-reġistru tal-operatur — għandhom jiżdiedu qabel il-pubblikazzjoni] (minn hawn 'il quddiem “myBestDays” jew “aħna”).",
   ],
   sections: [
     {
@@ -18,9 +18,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 Ir-rwol ta' myNextDays; konklużjoni tal-kuntratt",
+      heading: "§ 2 Ir-rwol ta' myBestDays; konklużjoni tal-kuntratt",
       paragraphs: [
-        "myNextDays taġixxi bħala intermedjarja għal servizzi ta' akkomodazzjoni offruti mill-fornituri rispettivi (aġenziji, sidien il-kera jew sidien, minn hawn 'il quddiem il-“Fornitur”). Il-kuntratt għall-akkomodazzjoni jiġi konkluż esklussivament bejn il-Mistieden u l-Fornitur rispettiv. myNextDays ma ssirx parti mill-kuntratt ta' akkomodazzjoni.",
+        "myBestDays taġixxi bħala intermedjarja għal servizzi ta' akkomodazzjoni offruti mill-fornituri rispettivi (aġenziji, sidien il-kera jew sidien, minn hawn 'il quddiem il-“Fornitur”). Il-kuntratt għall-akkomodazzjoni jiġi konkluż esklussivament bejn il-Mistieden u l-Fornitur rispettiv. myBestDays ma ssirx parti mill-kuntratt ta' akkomodazzjoni.",
         "Il-Fornitur rispettiv jissemma fl-offerta u fil-konferma tal-prenotazzjoni.",
       ],
     },
@@ -36,7 +36,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Prezzijiet u ħlas",
       paragraphs: [
         "Japplikaw il-prezzijiet indikati fl-offerta fil-mument tal-prenotazzjoni, inklużi t-taxxi, it-tariffi u l-ispejjeż addizzjonali indikati fiha. Il-prezzijiet jintwerew fil-munita indikata fl-offerta. Fuq il-post jistgħu japplikaw imposti lokali addizzjonali (eż. taxxa turistika), sa fejn dan ikun indikat fl-offerta.",
-        "Il-ħlas jiġi pproċessat permezz tal-fornitur tas-servizzi ta' ħlas Stripe. Id-data tal-ħlas (eż. id-dettalji tal-kard) tinġabar u tiġi pproċessata direttament minn Stripe; myNextDays ma taħżinx dettalji kompluti tal-kards. Stripe tipproċessa data personali skont il-[Politika tal-Privatezza ta' Stripe](https://stripe.com/privacy).",
+        "Il-ħlas jiġi pproċessat permezz tal-fornitur tas-servizzi ta' ħlas Stripe. Id-data tal-ħlas (eż. id-dettalji tal-kard) tinġabar u tiġi pproċessata direttament minn Stripe; myBestDays ma taħżinx dettalji kompluti tal-kards. Stripe tipproċessa data personali skont il-[Politika tal-Privatezza ta' Stripe](https://stripe.com/privacy).",
         "Jekk fl-offerta jkun indikat depożitu ta' garanzija, dan jista' jiġi awtorizzat minn qabel mal-prenotazzjoni jew mal-wasla u jinżamm kollu kemm hu jew parzjalment f'każ ta' ħsara; jgħoddu d-dettalji indikati fl-offerta.",
       ],
     },
@@ -55,30 +55,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 Responsabbiltà ta' myNextDays",
+      heading: "§ 7 Responsabbiltà ta' myBestDays",
       paragraphs: [
-        "Il-Fornitur waħdu huwa responsabbli għall-provvista tas-servizz tal-akkomodazzjoni. myNextDays mhijiex responsabbli għall-korrettezza tal-kontenut tal-offerti mdaħħal mill-Fornituri, iżda twettaq l-intermedjazzjoni u l-ipproċessar tal-ħlasijiet bid-diliġenza ta' negozjant prudenti.",
-        "myNextDays hija responsabbli mingħajr limitu għal intenzjoni u negliġenza serja, kif ukoll għal danni li jirriżultaw minn ħsara lill-ħajja, lill-ġisem jew lis-saħħa. F'każ ta' negliġenza sempliċi, myNextDays hija responsabbli biss għall-ksur ta' obbligi kuntrattwali essenzjali (obbligi kardinali), limitatament għad-dannu prevedibbli u tipiku għall-kuntratt. Ir-regoli statutorji mandatorji dwar ir-responsabbiltà jibqgħu mhux affettwati.",
+        "Il-Fornitur waħdu huwa responsabbli għall-provvista tas-servizz tal-akkomodazzjoni. myBestDays mhijiex responsabbli għall-korrettezza tal-kontenut tal-offerti mdaħħal mill-Fornituri, iżda twettaq l-intermedjazzjoni u l-ipproċessar tal-ħlasijiet bid-diliġenza ta' negozjant prudenti.",
+        "myBestDays hija responsabbli mingħajr limitu għal intenzjoni u negliġenza serja, kif ukoll għal danni li jirriżultaw minn ħsara lill-ħajja, lill-ġisem jew lis-saħħa. F'każ ta' negliġenza sempliċi, myBestDays hija responsabbli biss għall-ksur ta' obbligi kuntrattwali essenzjali (obbligi kardinali), limitatament għad-dannu prevedibbli u tipiku għall-kuntratt. Ir-regoli statutorji mandatorji dwar ir-responsabbiltà jibqgħu mhux affettwati.",
       ],
     },
     {
       heading: "§ 8 Protezzjoni tad-data",
       paragraphs: [
-        "myNextDays tipproċessa d-data personali tal-Mistieden għat-twettiq tal-intermedjazzjoni u tal-prenotazzjoni. Id-data tal-prenotazzjoni tiġi trażmessa lill-Fornitur rispettiv sa fejn dan ikun meħtieġ għat-twettiq tal-kuntratt ta' akkomodazzjoni. Għall-ipproċessar tal-ħlasijiet japplika § 4.",
+        "myBestDays tipproċessa d-data personali tal-Mistieden għat-twettiq tal-intermedjazzjoni u tal-prenotazzjoni. Id-data tal-prenotazzjoni tiġi trażmessa lill-Fornitur rispettiv sa fejn dan ikun meħtieġ għat-twettiq tal-kuntratt ta' akkomodazzjoni. Għall-ipproċessar tal-ħlasijiet japplika § 4.",
         "Id-dettalji jinsabu fl-informazzjoni dwar il-protezzjoni tad-data tal-Pjattaforma.",
       ],
     },
     {
       heading: "§ 9 Ilmenti u soluzzjoni tat-tilwim",
       paragraphs: [
-        "Il-Mistieden għandu l-ewwel jindirizza l-ilmenti dwar l-akkomodazzjoni lill-Fornitur; għal mistoqsijiet dwar il-prenotazzjoni jew il-ħlas, is-support ta' myNextDays jgħin permezz tal-mezzi ta' kuntatt indikati fuq il-Pjattaforma.",
-        "myNextDays la hija obbligata u lanqas lesta tipparteċipa fi proċeduri ta' soluzzjoni tat-tilwim quddiem korp għas-soluzzjoni tat-tilwim tal-konsumaturi, sakemm ma jkunx hemm obbligu legali.",
+        "Il-Mistieden għandu l-ewwel jindirizza l-ilmenti dwar l-akkomodazzjoni lill-Fornitur; għal mistoqsijiet dwar il-prenotazzjoni jew il-ħlas, is-support ta' myBestDays jgħin permezz tal-mezzi ta' kuntatt indikati fuq il-Pjattaforma.",
+        "myBestDays la hija obbligata u lanqas lesta tipparteċipa fi proċeduri ta' soluzzjoni tat-tilwim quddiem korp għas-soluzzjoni tat-tilwim tal-konsumaturi, sakemm ma jkunx hemm obbligu legali.",
       ],
     },
     {
       heading: "§ 10 Bidliet f'dawn il-kundizzjonijiet",
       paragraphs: [
-        "myNextDays tista' temenda dawn il-kundizzjonijiet b'effett għall-futur meta dan ikun meħtieġ għal raġunijiet validi (b'mod partikolari bidliet fil-leġiżlazzjoni jew fil-ġurisprudenza) u l-Mistieden ma jiġix żvantaġġat b'mod mhux raġonevoli b'riżultat ta' dan. Għall-prenotazzjonijiet diġà konklużi tapplika l-verżjoni fis-seħħ fil-mument tal-prenotazzjoni.",
+        "myBestDays tista' temenda dawn il-kundizzjonijiet b'effett għall-futur meta dan ikun meħtieġ għal raġunijiet validi (b'mod partikolari bidliet fil-leġiżlazzjoni jew fil-ġurisprudenza) u l-Mistieden ma jiġix żvantaġġat b'mod mhux raġonevoli b'riżultat ta' dan. Għall-prenotazzjonijiet diġà konklużi tapplika l-verżjoni fis-seħħ fil-mument tal-prenotazzjoni.",
       ],
     },
     {

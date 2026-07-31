@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Webbplatsbyggaren skapar en egen bokningswebbplats åt dig — en ytterligare försäljningskanal vid sidan av portaler och myNextDays-marknadsplatsen. Du behåller full kontroll över uppbyggnad, innehåll och varumärke.",
+              text: "Webbplatsbyggaren skapar en egen bokningswebbplats åt dig — en ytterligare försäljningskanal vid sidan av portaler och myBestDays-marknadsplatsen. Du behåller full kontroll över uppbyggnad, innehåll och varumärke.",
             },
             { type: "h2", text: "Så skapar du en webbplats" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "För att ett objekt ska visas på din webbplats måste webbplatssynligheten för objektet vara påslagen. Detta reglage är oberoende av synligheten på myNextDays-marknadsplatsen eller på portaler.",
+              text: "För att ett objekt ska visas på din webbplats måste webbplatssynligheten för objektet vara påslagen. Detta reglage är oberoende av synligheten på myBestDays-marknadsplatsen eller på portaler.",
             },
             { type: "h2", text: "Aktivera objekt för webbplatsen" },
             {

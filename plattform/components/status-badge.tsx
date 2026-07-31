@@ -66,10 +66,10 @@ export function PaymentBadge({ status }: { status: string }) {
 // Kanal-Badge: eigene Plattform vs. OTA (Booking/Airbnb & Co.) klar labeln.
 const CHANNEL_LABEL: Record<string, string> = {
   // Der Kanal, den das Backend für Marktplatz-Buchungen setzt.
-  portal: "myNextDays",
-  platform: "myNextDays",
-  marketplace: "myNextDays",
-  // 'direct' ist die EIGENE Seite des Betriebs — nicht myNextDays.
+  portal: "myBestDays",
+  platform: "myBestDays",
+  marketplace: "myBestDays",
+  // 'direct' ist die EIGENE Seite des Betriebs — nicht myBestDays.
   direct: "Direktbuchung",
   ota_other: "Portal",
   booking: "Booking.com",

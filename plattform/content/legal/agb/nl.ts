@@ -6,8 +6,8 @@ export const agb: LegalDoc = {
   title: "Gebruiksvoorwaarden voor gasten (algemene voorwaarden)",
   stand: "Laatst bijgewerkt: 3 juli 2026",
   intro: [
-    "Deze gebruiksvoorwaarden regelen het gebruik van het boekingsportaal myNextDays (hierna “Platform”) door reizigers en boekers (hierna “Gast”).",
-    "Het Platform wordt geëxploiteerd door [volledige bedrijfsnaam, rechtsvorm, adres en registergegevens van de exploitant — vóór publicatie aanvullen] (hierna “myNextDays” of “wij”).",
+    "Deze gebruiksvoorwaarden regelen het gebruik van het boekingsportaal myBestDays (hierna “Platform”) door reizigers en boekers (hierna “Gast”).",
+    "Het Platform wordt geëxploiteerd door [volledige bedrijfsnaam, rechtsvorm, adres en registergegevens van de exploitant — vóór publicatie aanvullen] (hierna “myBestDays” of “wij”).",
   ],
   sections: [
     {
@@ -18,9 +18,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 Rol van myNextDays; totstandkoming van de overeenkomst",
+      heading: "§ 2 Rol van myBestDays; totstandkoming van de overeenkomst",
       paragraphs: [
-        "myNextDays bemiddelt bij logiesdiensten die door de betreffende aanbieders (agentschappen, verhuurders of eigenaren, hierna “Aanbieder”) worden aangeboden. De overeenkomst over de accommodatie komt uitsluitend tot stand tussen de Gast en de betreffende Aanbieder. myNextDays wordt geen partij bij de logiesovereenkomst.",
+        "myBestDays bemiddelt bij logiesdiensten die door de betreffende aanbieders (agentschappen, verhuurders of eigenaren, hierna “Aanbieder”) worden aangeboden. De overeenkomst over de accommodatie komt uitsluitend tot stand tussen de Gast en de betreffende Aanbieder. myBestDays wordt geen partij bij de logiesovereenkomst.",
         "De betreffende Aanbieder wordt in de aanbieding en in de boekingsbevestiging genoemd.",
       ],
     },
@@ -36,7 +36,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Prijzen en betaling",
       paragraphs: [
         "Er gelden de prijzen die op het moment van de boeking in de aanbieding zijn vermeld, inclusief de daar vermelde belastingen, kosten en bijkomende kosten. Prijzen worden weergegeven in de valuta die in de aanbieding is vermeld. Ter plaatse kunnen aanvullende lokale heffingen (bijv. toeristenbelasting) verschuldigd zijn, voor zover dit in de aanbieding is vermeld.",
-        "De betaling wordt afgewikkeld via de betaaldienstverlener Stripe. Betaalgegevens (bijv. kaartgegevens) worden rechtstreeks door Stripe verzameld en verwerkt; myNextDays slaat geen volledige kaartgegevens op. Stripe verwerkt persoonsgegevens overeenkomstig de [privacyverklaring van Stripe](https://stripe.com/privacy).",
+        "De betaling wordt afgewikkeld via de betaaldienstverlener Stripe. Betaalgegevens (bijv. kaartgegevens) worden rechtstreeks door Stripe verzameld en verwerkt; myBestDays slaat geen volledige kaartgegevens op. Stripe verwerkt persoonsgegevens overeenkomstig de [privacyverklaring van Stripe](https://stripe.com/privacy).",
         "Voor zover in de aanbieding een borgsom is vermeld, kan deze bij de boeking of bij aankomst vooraf worden geautoriseerd en bij schade geheel of gedeeltelijk worden ingehouden; bepalend zijn de gegevens in de aanbieding.",
       ],
     },
@@ -55,30 +55,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 Aansprakelijkheid van myNextDays",
+      heading: "§ 7 Aansprakelijkheid van myBestDays",
       paragraphs: [
-        "Voor het verlenen van de logiesdienst is uitsluitend de Aanbieder verantwoordelijk. myNextDays is niet aansprakelijk voor de juistheid van de door Aanbieders geplaatste aanbiedingsinhoud, maar verzorgt de bemiddeling en de betalingsverwerking met de zorgvuldigheid van een goed ondernemer.",
-        "myNextDays is onbeperkt aansprakelijk voor opzet en grove nalatigheid alsmede voor schade als gevolg van letsel aan leven, lichaam of gezondheid. Bij lichte nalatigheid is myNextDays alleen aansprakelijk voor de schending van wezenlijke contractuele verplichtingen (kardinale verplichtingen), beperkt tot de voor de overeenkomst typische, voorzienbare schade. Dwingende wettelijke aansprakelijkheidsregels blijven onverlet.",
+        "Voor het verlenen van de logiesdienst is uitsluitend de Aanbieder verantwoordelijk. myBestDays is niet aansprakelijk voor de juistheid van de door Aanbieders geplaatste aanbiedingsinhoud, maar verzorgt de bemiddeling en de betalingsverwerking met de zorgvuldigheid van een goed ondernemer.",
+        "myBestDays is onbeperkt aansprakelijk voor opzet en grove nalatigheid alsmede voor schade als gevolg van letsel aan leven, lichaam of gezondheid. Bij lichte nalatigheid is myBestDays alleen aansprakelijk voor de schending van wezenlijke contractuele verplichtingen (kardinale verplichtingen), beperkt tot de voor de overeenkomst typische, voorzienbare schade. Dwingende wettelijke aansprakelijkheidsregels blijven onverlet.",
       ],
     },
     {
       heading: "§ 8 Gegevensbescherming",
       paragraphs: [
-        "myNextDays verwerkt persoonsgegevens van de Gast voor de uitvoering van de bemiddeling en de boeking. Boekingsgegevens worden aan de betreffende Aanbieder doorgegeven voor zover dit voor de uitvoering van de logiesovereenkomst noodzakelijk is. Voor de betalingsverwerking geldt § 4.",
+        "myBestDays verwerkt persoonsgegevens van de Gast voor de uitvoering van de bemiddeling en de boeking. Boekingsgegevens worden aan de betreffende Aanbieder doorgegeven voor zover dit voor de uitvoering van de logiesovereenkomst noodzakelijk is. Voor de betalingsverwerking geldt § 4.",
         "Details blijken uit de privacy-informatie van het Platform.",
       ],
     },
     {
       heading: "§ 9 Klachten en geschillenbeslechting",
       paragraphs: [
-        "Klachten over de accommodatie richt de Gast eerst aan de Aanbieder; bij vragen over de boeking of de betaling helpt de support van myNextDays via de op het Platform vermelde contactkanalen.",
-        "myNextDays is niet verplicht en niet bereid deel te nemen aan geschillenbeslechtingsprocedures voor een geschillencommissie voor consumentenzaken, voor zover er geen wettelijke verplichting bestaat.",
+        "Klachten over de accommodatie richt de Gast eerst aan de Aanbieder; bij vragen over de boeking of de betaling helpt de support van myBestDays via de op het Platform vermelde contactkanalen.",
+        "myBestDays is niet verplicht en niet bereid deel te nemen aan geschillenbeslechtingsprocedures voor een geschillencommissie voor consumentenzaken, voor zover er geen wettelijke verplichting bestaat.",
       ],
     },
     {
       heading: "§ 10 Wijzigingen van deze voorwaarden",
       paragraphs: [
-        "myNextDays kan deze voorwaarden met werking voor de toekomst wijzigen, voor zover dit om gegronde redenen noodzakelijk is (in het bijzonder wetswijzigingen of wijzigingen in de rechtspraak) en de Gast daardoor niet onredelijk wordt benadeeld. Voor reeds gesloten boekingen geldt de versie die op het moment van de boeking van kracht was.",
+        "myBestDays kan deze voorwaarden met werking voor de toekomst wijzigen, voor zover dit om gegronde redenen noodzakelijk is (in het bijzonder wetswijzigingen of wijzigingen in de rechtspraak) en de Gast daardoor niet onredelijk wordt benadeeld. Voor reeds gesloten boekingen geldt de versie die op het moment van de boeking van kracht was.",
       ],
     },
     {

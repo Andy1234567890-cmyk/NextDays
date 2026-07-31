@@ -1,4 +1,4 @@
-// Root-Layout der entkoppelten Plattform-App (myNextDays-Buchungsplattform).
+// Root-Layout der entkoppelten Plattform-App (myBestDays-Buchungsplattform).
 import type { Metadata } from "next";
 
 import "./globals.css";
@@ -6,9 +6,9 @@ import "./globals.css";
 import { DiagnoseStarter } from "@/components/diagnose-starter";
 
 export const metadata: Metadata = {
-  title: "myNextDays — Unterkünfte finden & buchen",
+  title: "myBestDays — Unterkünfte finden & buchen",
   description:
-    "Finde und buche Ferienunterkünfte direkt bei den Gastgebern — die Buchungsplattform von myNextDays.",
+    "Finde und buche Ferienunterkünfte direkt bei den Gastgebern — die Buchungsplattform von myBestDays.",
 };
 
 export default function RootLayout({

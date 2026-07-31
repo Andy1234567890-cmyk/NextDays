@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "De website-bouwer maakt voor u een eigen boekingswebsite — een extra verkoopkanaal naast portalen en de myNextDays-platform-marktplaats. U behoudt volledige controle over opbouw, inhoud en branding.",
+              text: "De website-bouwer maakt voor u een eigen boekingswebsite — een extra verkoopkanaal naast portalen en de myBestDays-platform-marktplaats. U behoudt volledige controle over opbouw, inhoud en branding.",
             },
             { type: "h2", text: "Zo maakt u een website aan" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Om een object op uw website te tonen, moet de websitezichtbaarheid voor dit object zijn ingeschakeld. Deze schakelaar staat los van de zichtbaarheid op de myNextDays-platform-marktplaats of op portalen.",
+              text: "Om een object op uw website te tonen, moet de websitezichtbaarheid voor dit object zijn ingeschakeld. Deze schakelaar staat los van de zichtbaarheid op de myBestDays-platform-marktplaats of op portalen.",
             },
             { type: "h2", text: "Object vrijgeven voor de website" },
             {

@@ -230,6 +230,17 @@ async function aufnehmen(browser, zustand, aufnahme, sprache, thema) {
     }, text);
   }
 
+  // Die Dev-Overlay-Plakette von Next.js („N · 1 Issue") liegt unten links über
+  // dem Profil und landete so mitten im Verkaufsbild. Sie gehört zum Dev-Server,
+  // nicht zur App — vor dem Auslösen entfernen.
+  await seite.evaluate(() => {
+    for (const el of document.querySelectorAll(
+      "nextjs-portal, [data-nextjs-toast], #__next-build-watcher",
+    )) {
+      el.remove();
+    }
+  });
+
   const datei = path.join(ZIEL, `${aufnahme.name}-${thema}-${sprache}@2x.png`);
   await seite.screenshot({ path: datei, animations: "disabled" });
   await kontext.close();

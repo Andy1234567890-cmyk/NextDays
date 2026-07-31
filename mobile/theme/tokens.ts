@@ -1,6 +1,6 @@
-// Design-Tokens der NextDays-App. Struktur/Dichte folgen dem Airbnb-App-Muster
+// Design-Tokens der myBestDays-App. Struktur/Dichte folgen dem Airbnb-App-Muster
 // (weiße Fläche, feine Trennlinien, flache Bildradien, randlose Karten), die
-// Farbwelt bleibt myNextDays. Light + Dark.
+// Farbwelt bleibt myBestDays. Light + Dark.
 // Akzentfarbe ist konfigurierbar (Tweak „Akzent" im Mockup → hier Default).
 
 import type { TextStyle, ViewStyle } from "react-native";
@@ -40,7 +40,7 @@ export function lightPalette(accent: string): Palette {
   };
 }
 
-// Dark-Palette (aus den Dark-Mode-Overrides im NextDays App.html).
+// Dark-Palette (aus den Dark-Mode-Overrides im myBestDays App.html).
 export function darkPalette(accent: string): Palette {
   return {
     bg: "#141210",

@@ -1003,7 +1003,7 @@ function layoutBars(segments: BarSegment[]): {
 function Legend() {
   const items: { label: string; color: string }[] = [
     { label: "Direkt", color: "#2F6F4F" },
-    { label: "myNextDays", color: "#8A5CF6" },
+    { label: "myBestDays", color: "#8A5CF6" },
     { label: "Booking", color: "#1B4E9B" },
     { label: "Airbnb", color: "#E24E5B" },
     { label: "Vrbo", color: "#2E7DB5" },

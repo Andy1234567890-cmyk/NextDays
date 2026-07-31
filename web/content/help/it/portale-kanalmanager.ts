@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Tre canali di vendita indipendenti" },
             {
               type: "p",
-              text: "Un oggetto può essere venduto contemporaneamente tramite più canali: i portali (Booking, Airbnb & Co.), il marketplace della piattaforma myNextDays e il tuo sito web personale. Ogni canale ha un proprio interruttore di visibilità — sono completamente indipendenti tra loro.",
+              text: "Un oggetto può essere venduto contemporaneamente tramite più canali: i portali (Booking, Airbnb & Co.), il marketplace della piattaforma myBestDays e il tuo sito web personale. Ogni canale ha un proprio interruttore di visibilità — sono completamente indipendenti tra loro.",
             },
             { type: "h2", text: "Gestire la visibilità per portale" },
             {

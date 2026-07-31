@@ -249,7 +249,7 @@ export const objekte: HelpCategory = {
               type: "ul",
               items: [
                 "Webová stránka — viditeľnosť na vašej vlastnej webovej stránke myNextDays",
-                "Trhovisko platformy — viditeľnosť na globálnom trhovisku myNextDays",
+                "Trhovisko platformy — viditeľnosť na globálnom trhovisku myBestDays",
                 "Portály — viditeľnosť na Booking, Airbnb a ďalších",
               ],
             },

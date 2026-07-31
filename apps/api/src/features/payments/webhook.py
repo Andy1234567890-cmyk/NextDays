@@ -639,7 +639,7 @@ def _zahlungs_typ(db: Client, payment_intent_id: str) -> str | None:
 
 
 def _ist_portal_buchung(res: dict) -> bool:
-    """Kam die Buchung über unser myNextDays-Portal (8 % all-in)?
+    """Kam die Buchung über unser myBestDays-Portal (8 % all-in)?
 
     Gleiche Regel wie ``PaymentsService._ist_portal_buchung``: Der KANAL
     entscheidet, nicht der Kontotyp (Preisliste §2). Nur Portal-Buchungen

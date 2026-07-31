@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Piactéri jutalék: a myNextDays platformon keresztüli foglalásoknál merül fel",
+                "Piactéri jutalék: a myBestDays platformon keresztüli foglalásoknál merül fel",
                 "Portáljutalék: az adott portál saját feltételei szerint kerül kiszámításra",
                 "A saját weboldalán keresztüli közvetlen foglalások ettől függetlenül tekintendők",
               ],

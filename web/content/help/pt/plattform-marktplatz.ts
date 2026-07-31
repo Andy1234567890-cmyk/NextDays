@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Plataforma (mercado)",
-  description: "Vender no mercado myNextDays.",
+  description: "Vender no mercado myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "O mercado myNextDays",
-          excerpt: "O mercado global myNextDays é um canal de reserva próprio, ao lado dos portais e do site.",
+          title: "O mercado myBestDays",
+          excerpt: "O mercado global myBestDays é um canal de reserva próprio, ao lado dos portais e do site.",
           updated: "Atualizado: julho de 2026",
           body: [
             {
               type: "p",
-              text: "O mercado myNextDays (/plattform) é o canal de reserva global do próprio myNextDays — comparável ao Booking ou ao Airbnb, mas fazendo parte da mesma plataforma. Os hóspedes pesquisam ali imóveis de todos os negócios associados e reservam diretamente.",
+              text: "O mercado myBestDays (/plattform) é o canal de reserva global do próprio myBestDays — comparável ao Booking ou ao Airbnb, mas fazendo parte da mesma plataforma. Os hóspedes pesquisam ali imóveis de todos os negócios associados e reservam diretamente.",
             },
             { type: "h2", text: "Não é “direto”, mas sim um canal ao mesmo nível" },
             {
               type: "p",
-              text: "O mercado não substitui uma reserva direta através do seu próprio site. É um terceiro canal de vendas independente, com o seu próprio eixo de visibilidade, a sua própria base de hóspedes e a sua própria comissão — exatamente como um portal, apenas operado pelo próprio myNextDays.",
+              text: "O mercado não substitui uma reserva direta através do seu próprio site. É um terceiro canal de vendas independente, com o seu próprio eixo de visibilidade, a sua própria base de hóspedes e a sua própria comissão — exatamente como um portal, apenas operado pelo próprio myBestDays.",
             },
             { type: "h2", text: "Como os imóveis chegam ao mercado" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Tal como em qualquer portal de reservas, é cobrada uma comissão para as reservas concretizadas através do mercado myNextDays. É calculada por reserva e é independente de eventuais comissões dos portais.",
+              text: "Tal como em qualquer portal de reservas, é cobrada uma comissão para as reservas concretizadas através do mercado myBestDays. É calculada por reserva e é independente de eventuais comissões dos portais.",
             },
             { type: "h2", text: "Como a comissão é calculada" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "A comissão do mercado aplica-se exclusivamente a reservas feitas através do mercado myNextDays.",
+                "A comissão do mercado aplica-se exclusivamente a reservas feitas através do mercado myBestDays.",
                 "As reservas de portal (Booking, Airbnb e outros) estão sujeitas às condições do respetivo portal.",
                 "As reservas do site estão sujeitas às condições definidas no seu plano, sem comissão de mercado.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Os hóspedes que reservam através do mercado myNextDays criam um perfil de hóspede próprio. Nele reúnem-se as suas reservas, mensagens com negócios e avaliações feitas — de forma semelhante a uma conta de hóspede num portal.",
+              text: "Os hóspedes que reservam através do mercado myBestDays criam um perfil de hóspede próprio. Nele reúnem-se as suas reservas, mensagens com negócios e avaliações feitas — de forma semelhante a uma conta de hóspede num portal.",
             },
             { type: "h2", text: "O que vê como negócio" },
             {

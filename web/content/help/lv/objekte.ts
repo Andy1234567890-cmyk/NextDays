@@ -249,7 +249,7 @@ export const objekte: HelpCategory = {
               type: "ul",
               items: [
                 "Vietne — redzamība jūsu pašu myNextDays vietnē",
-                "Platformas tirgus — redzamība globālajā myNextDays tirgū",
+                "Platformas tirgus — redzamība globālajā myBestDays tirgū",
                 "Portāli — redzamība Booking, Airbnb un citos",
               ],
             },

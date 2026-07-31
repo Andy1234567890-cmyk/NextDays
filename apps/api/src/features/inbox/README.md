@@ -5,8 +5,8 @@ Vorlagen, KI-Antworten, geplante Nachrichten und **planbare Automails**.
 Enthält: router.py, service.py, schemas.py, scheduler.py, ai.py, tests/.
 
 Threads werden aus den importierten Buchungen (`channex_booking`) abgeleitet —
-egal ob OTA (Channex) oder eigene Plattform „myNextDays" (booking_engine setzt
-`ota_name='myNextDays'`). Versand läuft aktuell über die Channex-Messaging-API.
+egal ob OTA (Channex) oder eigene Plattform „myBestDays" (booking_engine setzt
+`ota_name='myBestDays'`). Versand läuft aktuell über die Channex-Messaging-API.
 
 ## Threads & Filter
 
@@ -28,7 +28,7 @@ Zeitplan und Zuweisung. Tabelle `message_automation` (0037, erweitert in 0072):
 - `send_time`: Uhrzeit (z. B. 07:45). Genau EIN Zeitpunkt je Regel.
 - `property_ids[]` / `channels[]`: Zuweisung nach Unterkunft UND Kanal,
   **UND-verknüpft**; leer = alle. Kanal matcht case-insensitive auf `ota_name`
-  (inkl. „myNextDays").
+  (inkl. „myBestDays").
 - `template_id` oder inline `message`: der Text.
 
 ### Engine

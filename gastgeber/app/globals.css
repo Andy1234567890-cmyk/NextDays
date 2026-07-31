@@ -7,7 +7,7 @@
 @source "../components";
 @source "../../packages/ui/src";
 
-/* myNextDays-Design-Tokens — übernommen aus apps/web (eine Markenfarbwelt über
+/* myBestDays-Design-Tokens — übernommen aus apps/web (eine Markenfarbwelt über
    alle Apps: Schwarz #0a0a0a primär, Rot #b82028 Akzent). Bewusst entkoppelte
    Kopie, keine Laufzeit-Abhängigkeit zu apps/web. */
 @theme inline {

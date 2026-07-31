@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (kinnisvarahaldussüsteem): objektid, kalender, hinnad, broneeringud, ülesanded ja maksed.",
                 "Kanalihaldur: ühendus portaalidega nagu Booking, Airbnb & Co. — üks sisestus, mitu portaali sünkroonis.",
-                "Platvormi turuplats: oma myNextDays'i turuplats, võrdväärne broneerimiskanal koos portaalidega.",
+                "Platvormi turuplats: oma myBestDays'i turuplats, võrdväärne broneerimiskanal koos portaalidega.",
                 "Rakendus: mobiilirakendus külalistele, omanikele ja töötajatele — samade andmetega mis veebis.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Veebileht: nähtavus Teie enda myNextDays veebilehel",
-                "Platvormi turuplats: nähtavus globaalsel myNextDays turuplatsil",
+                "Platvormi turuplats: nähtavus globaalsel myBestDays turuplatsil",
                 "Portaalid: nähtavus Booking, Airbnb & Co. juures",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Platvormi turuplats" },
             {
               type: "p",
-              text: "myNextDays'i turuplats on oma, globaalne broneerimiskanal — võrreldav Bookingu või Airbnb'ga, kuid osa samast platvormist. See ei ole „otsebroneerimise“ asendaja, vaid võrdväärne kanal oma nähtavuse teljega.",
+              text: "myBestDays'i turuplats on oma, globaalne broneerimiskanal — võrreldav Bookingu või Airbnb'ga, kuid osa samast platvormist. See ei ole „otsebroneerimise“ asendaja, vaid võrdväärne kanal oma nähtavuse teljega.",
             },
             { type: "h2", text: "Rakendus" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Veebileht — Teie enda myNextDays veebileht",
-                "Platvormi turuplats — globaalne myNextDays turuplats",
+                "Platvormi turuplats — globaalne myBestDays turuplats",
                 "Portaalid — Booking, Airbnb & Co. kanalihalduri kaudu",
               ],
             },

@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Provizija tržišta: nastaje kod rezervacija preko myNextDays platforme",
+                "Provizija tržišta: nastaje kod rezervacija preko myBestDays platforme",
                 "Provizija portala: izračunava dotični portal prema vlastitim uvjetima",
                 "Izravne rezervacije preko vaše vlastite web-stranice treba promatrati neovisno o tome",
               ],

@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (systém pro správu objektů): objekty, kalendář, ceny, rezervace, úkoly a platby.",
                 "Kanálový manažer: propojení s portály jako Booking, Airbnb a další — jedno zadání, více portálů synchronně.",
-                "Tržiště platformy: vlastní tržiště myNextDays, rovnocenný rezervační kanál vedle portálů.",
+                "Tržiště platformy: vlastní tržiště myBestDays, rovnocenný rezervační kanál vedle portálů.",
                 "Aplikace: mobilní aplikace pro hosty, vlastníky a zaměstnance se stejnými daty jako na webu.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Web: viditelnost na vašem vlastním webu myNextDays",
-                "Tržiště platformy: viditelnost na globálním tržišti myNextDays",
+                "Tržiště platformy: viditelnost na globálním tržišti myBestDays",
                 "Portály: viditelnost na Booking, Airbnb a dalších",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Tržiště platformy" },
             {
               type: "p",
-              text: "Tržiště myNextDays je vlastní, globální rezervační kanál — srovnatelný s Booking nebo Airbnb, avšak součást téže platformy. Není náhradou za „přímou rezervaci“, ale rovnocenným kanálem s vlastní osou viditelnosti.",
+              text: "Tržiště myBestDays je vlastní, globální rezervační kanál — srovnatelný s Booking nebo Airbnb, avšak součást téže platformy. Není náhradou za „přímou rezervaci“, ale rovnocenným kanálem s vlastní osou viditelnosti.",
             },
             { type: "h2", text: "Aplikace" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Web — váš vlastní web myNextDays",
-                "Tržiště platformy — globální tržiště myNextDays",
+                "Tržiště platformy — globální tržiště myBestDays",
                 "Portály — Booking, Airbnb a další prostřednictvím kanálového manažeru",
               ],
             },

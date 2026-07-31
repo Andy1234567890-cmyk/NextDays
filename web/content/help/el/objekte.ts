@@ -249,7 +249,7 @@ export const objekte: HelpCategory = {
               type: "ul",
               items: [
                 "Ιστότοπος — ορατότητα στον δικό σας ιστότοπο myNextDays",
-                "Αγορά της πλατφόρμας — ορατότητα στην παγκόσμια αγορά myNextDays",
+                "Αγορά της πλατφόρμας — ορατότητα στην παγκόσμια αγορά myBestDays",
                 "Πύλες — ορατότητα στα Booking, Airbnb & Co.",
               ],
             },

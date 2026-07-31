@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Pjattaforma (Suq)",
-  description: "Biegħ fuq is-suq ta' myNextDays.",
+  description: "Biegħ fuq is-suq ta' myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "Is-Suq ta' myNextDays",
-          excerpt: "Is-suq globali ta' myNextDays huwa kanal ta' prenotazzjoni proprju flimkien mal-portali u l-websajt.",
+          title: "Is-Suq ta' myBestDays",
+          excerpt: "Is-suq globali ta' myBestDays huwa kanal ta' prenotazzjoni proprju flimkien mal-portali u l-websajt.",
           updated: "Aġġornat: Lulju 2026",
           body: [
             {
               type: "p",
-              text: "Is-suq ta' myNextDays (/plattform) huwa l-kanal globali ta' prenotazzjoni ta' myNextDays stess — komparabbli ma' Booking jew Airbnb, iżda parti mill-istess pjattaforma. Hemmhekk il-mistiedna jfittxu proprjetajiet tan-negozji kollha konnessi u jipprenotaw direttament.",
+              text: "Is-suq ta' myBestDays (/plattform) huwa l-kanal globali ta' prenotazzjoni ta' myBestDays stess — komparabbli ma' Booking jew Airbnb, iżda parti mill-istess pjattaforma. Hemmhekk il-mistiedna jfittxu proprjetajiet tan-negozji kollha konnessi u jipprenotaw direttament.",
             },
             { type: "h2", text: "Mhux ‘dirett’, imma kanal fl-istess livell" },
             {
               type: "p",
-              text: "Is-suq ma jissostitwixxix il-prenotazzjoni diretta permezz tal-websajt proprja tiegħek. Huwa t-tielet mogħdija ta' distribuzzjoni indipendenti b'assi ta' viżibbiltà tagħha stess, bażi ta' mistiedna tagħha stess u kummissjoni tagħha stess — eżattament bħal portal, biss operat minn myNextDays stess.",
+              text: "Is-suq ma jissostitwixxix il-prenotazzjoni diretta permezz tal-websajt proprja tiegħek. Huwa t-tielet mogħdija ta' distribuzzjoni indipendenti b'assi ta' viżibbiltà tagħha stess, bażi ta' mistiedna tagħha stess u kummissjoni tagħha stess — eżattament bħal portal, biss operat minn myBestDays stess.",
             },
             { type: "h2", text: "Kif il-proprjetajiet jaslu fis-suq" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Bħal ma jiġri ma' kull portal ta' prenotazzjoni, tapplika kummissjoni għall-prenotazzjonijiet li jsiru permezz tas-suq ta' myNextDays. Tiġi kkalkulata għal kull prenotazzjoni u hija indipendenti minn kwalunkwe kummissjoni għall-portali.",
+              text: "Bħal ma jiġri ma' kull portal ta' prenotazzjoni, tapplika kummissjoni għall-prenotazzjonijiet li jsiru permezz tas-suq ta' myBestDays. Tiġi kkalkulata għal kull prenotazzjoni u hija indipendenti minn kwalunkwe kummissjoni għall-portali.",
             },
             { type: "h2", text: "Kif tiġi kkalkulata l-kummissjoni" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Il-kummissjoni tas-suq tapplika esklussivament għal prenotazzjonijiet permezz tas-suq ta' myNextDays.",
+                "Il-kummissjoni tas-suq tapplika esklussivament għal prenotazzjonijiet permezz tas-suq ta' myBestDays.",
                 "Il-prenotazzjonijiet minn portali (Booking, Airbnb u oħrajn) huma suġġetti għall-kundizzjonijiet tal-portal rispettiv.",
                 "Il-prenotazzjonijiet mill-websajt huma suġġetti għall-kundizzjonijiet irreġistrati għat-tariffa tiegħek mingħajr kummissjoni tas-suq.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Il-mistiedna li jipprenotaw permezz tas-suq ta' myNextDays joħolqu profil ta' mistieden tagħhom stess. Fih jinġabru l-prenotazzjonijiet tagħhom, il-messaġġi man-negozji u r-reviżjonijiet mogħtija — b'mod simili għal kont ta' mistieden f'portal.",
+              text: "Il-mistiedna li jipprenotaw permezz tas-suq ta' myBestDays joħolqu profil ta' mistieden tagħhom stess. Fih jinġabru l-prenotazzjonijiet tagħhom, il-messaġġi man-negozji u r-reviżjonijiet mogħtija — b'mod simili għal kont ta' mistieden f'portal.",
             },
             { type: "h2", text: "X'tara bħala negozju" },
             {

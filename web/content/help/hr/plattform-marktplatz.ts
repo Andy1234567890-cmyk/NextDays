@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platforma (tržište)",
-  description: "Prodaja na myNextDays tržištu.",
+  description: "Prodaja na myBestDays tržištu.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "myNextDays tržište",
-          excerpt: "Globalno myNextDays tržište vlastiti je kanal za rezervacije uz portale i web-stranicu.",
+          title: "myBestDays tržište",
+          excerpt: "Globalno myBestDays tržište vlastiti je kanal za rezervacije uz portale i web-stranicu.",
           updated: "Ažurirano: srpanj 2026.",
           body: [
             {
               type: "p",
-              text: "myNextDays tržište (/plattform) globalni je kanal rezervacija samog myNextDays — usporediv s Bookingom ili Airbnb-om, ali dio je iste platforme. Gosti tamo pretražuju objekte svih povezanih poslovanja i izravno rezerviraju.",
+              text: "myBestDays tržište (/plattform) globalni je kanal rezervacija samog myBestDays — usporediv s Bookingom ili Airbnb-om, ali dio je iste platforme. Gosti tamo pretražuju objekte svih povezanih poslovanja i izravno rezerviraju.",
             },
             { type: "h2", text: "Ne „izravno”, nego ravnopravan kanal" },
             {
               type: "p",
-              text: "Tržište ne zamjenjuje izravnu rezervaciju preko vaše vlastite web-stranice. To je samostalan, treći prodajni put s vlastitom osi vidljivosti, vlastitom bazom gostiju i vlastitom provizijom — baš kao portal, samo što njime upravlja sam myNextDays.",
+              text: "Tržište ne zamjenjuje izravnu rezervaciju preko vaše vlastite web-stranice. To je samostalan, treći prodajni put s vlastitom osi vidljivosti, vlastitom bazom gostiju i vlastitom provizijom — baš kao portal, samo što njime upravlja sam myBestDays.",
             },
             { type: "h2", text: "Kako objekti dolaze na tržište" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Kao i kod svakog portala za rezervacije, za rezervacije ostvarene preko myNextDays tržišta obračunava se provizija. Izračunava se po rezervaciji i neovisna je o eventualnim provizijama za portale.",
+              text: "Kao i kod svakog portala za rezervacije, za rezervacije ostvarene preko myBestDays tržišta obračunava se provizija. Izračunava se po rezervaciji i neovisna je o eventualnim provizijama za portale.",
             },
             { type: "h2", text: "Kako se izračunava provizija" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Provizija tržišta vrijedi isključivo za rezervacije preko myNextDays tržišta.",
+                "Provizija tržišta vrijedi isključivo za rezervacije preko myBestDays tržišta.",
                 "Rezervacije s portala (Booking, Airbnb i drugi) podliježu uvjetima dotičnog portala.",
                 "Rezervacije s web-stranice podliježu uvjetima određenim vašom tarifom, bez provizije tržišta.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Gosti koji rezerviraju preko myNextDays tržišta izrađuju vlastiti profil gosta. U njemu se prikupljaju njihove rezervacije, poruke s poslovanjima i ostavljene recenzije — slično kao kod korisničkog računa na portalu.",
+              text: "Gosti koji rezerviraju preko myBestDays tržišta izrađuju vlastiti profil gosta. U njemu se prikupljaju njihove rezervacije, poruke s poslovanjima i ostavljene recenzije — slično kao kod korisničkog računa na portalu.",
             },
             { type: "h2", text: "Što vidite kao poslovanje" },
             {

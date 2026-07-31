@@ -143,7 +143,7 @@ class PropertyBase(BaseModel):
     # (booking-property-types.ts). None = nicht gesetzt (kein erfundener Default).
     booking_property_type: int | None = None
     status: PropertyStatus = PropertyStatus.draft
-    # Sichtbarkeit auf dem eigenen myNextDays-Marktplatz (/plattform) als eigener
+    # Sichtbarkeit auf dem eigenen myBestDays-Marktplatz (/plattform) als eigener
     # Buchungskanal — getrennt von status (Lebenszyklus) und OTA-Distribution
     # (channex_property_map.sync_enabled). Marktplatz-Listung = status='active'
     # UND listed_on_marketplace (Migration 0159). Default an (Publish listet).

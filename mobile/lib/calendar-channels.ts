@@ -13,7 +13,7 @@ export type ChannelMeta = {
 
 const CHANNELS: Record<ReservationChannel, ChannelMeta> = {
   direct: { label: "Direkt", bar: "#2F6F4F", text: "#FFFFFF" },
-  portal: { label: "myNextDays", bar: "#8A5CF6", text: "#FFFFFF" },
+  portal: { label: "myBestDays", bar: "#8A5CF6", text: "#FFFFFF" },
   booking: { label: "Booking", bar: "#1B4E9B", text: "#FFFFFF" },
   airbnb: { label: "Airbnb", bar: "#E24E5B", text: "#FFFFFF" },
   vrbo: { label: "Vrbo", bar: "#2E7DB5", text: "#FFFFFF" },

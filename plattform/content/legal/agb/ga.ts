@@ -5,8 +5,8 @@ export const agb: LegalDoc = {
   title: "Téarmaí Úsáide d’Aíonna",
   stand: "Arna nuashonrú: 3 Iúil 2026",
   intro: [
-    "Rialaíonn na Téarmaí Úsáide seo úsáid thairseach áirithinte myNextDays (an “tArdán” anseo feasta) ag taistealaithe agus ag daoine a dhéanann áirithintí (an “tAoi” anseo feasta).",
-    "Is é [ainm dlíthiúil iomlán, foirm dhlíthiúil, seoladh agus sonraí cláir na cuideachta oibriúcháin — le comhlánú roimh fhoilsiú] a oibríonn an tArdán (“myNextDays” nó “muidne” anseo feasta).",
+    "Rialaíonn na Téarmaí Úsáide seo úsáid thairseach áirithinte myBestDays (an “tArdán” anseo feasta) ag taistealaithe agus ag daoine a dhéanann áirithintí (an “tAoi” anseo feasta).",
+    "Is é [ainm dlíthiúil iomlán, foirm dhlíthiúil, seoladh agus sonraí cláir na cuideachta oibriúcháin — le comhlánú roimh fhoilsiú] a oibríonn an tArdán (“myBestDays” nó “muidne” anseo feasta).",
   ],
   sections: [
     {
@@ -17,9 +17,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 Ról myNextDays; tabhairt i gcrích an chonartha",
+      heading: "§ 2 Ról myBestDays; tabhairt i gcrích an chonartha",
       paragraphs: [
-        "Feidhmíonn myNextDays mar idirghabhálaí do sheirbhísí lóistín a thairgeann na soláthraithe faoi seach (gníomhaireachtaí, bainisteoirí réadmhaoine nó úinéirí, an “Soláthraí” anseo feasta). Is idir an tAoi agus an Soláthraí faoi seach amháin a thugtar an conradh don chóiríocht i gcrích. Ní thagann myNextDays chun bheith ina pháirtí sa chonradh lóistín.",
+        "Feidhmíonn myBestDays mar idirghabhálaí do sheirbhísí lóistín a thairgeann na soláthraithe faoi seach (gníomhaireachtaí, bainisteoirí réadmhaoine nó úinéirí, an “Soláthraí” anseo feasta). Is idir an tAoi agus an Soláthraí faoi seach amháin a thugtar an conradh don chóiríocht i gcrích. Ní thagann myBestDays chun bheith ina pháirtí sa chonradh lóistín.",
         "Ainmnítear an Soláthraí faoi seach san fhógra agus sa deimhniú áirithinte.",
       ],
     },
@@ -35,7 +35,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Praghsanna agus íocaíocht",
       paragraphs: [
         "Beidh feidhm ag na praghsanna atá luaite san fhógra tráth na háirithinte, lena n-áirítear na cánacha, na táillí agus na costais bhreise atá luaite ann. Taispeántar praghsanna san airgeadra atá luaite san fhógra. Féadfaidh muirir áitiúla bhreise (m.sh. cáin turasóireachta) a bheith le híoc ar an láthair i gcás ina luaitear sin san fhógra.",
-        "Próiseáiltear an íocaíocht tríd an soláthraí seirbhíse íocaíochta Stripe. Is é Stripe a bhailíonn agus a phróiseálann sonraí íocaíochta (m.sh. sonraí cárta) go díreach; ní stórálann myNextDays sonraí cárta iomlána. Próiseálann Stripe sonraí pearsanta de réir [Pholasaí Príobháideachais Stripe](https://stripe.com/privacy).",
+        "Próiseáiltear an íocaíocht tríd an soláthraí seirbhíse íocaíochta Stripe. Is é Stripe a bhailíonn agus a phróiseálann sonraí íocaíochta (m.sh. sonraí cárta) go díreach; ní stórálann myBestDays sonraí cárta iomlána. Próiseálann Stripe sonraí pearsanta de réir [Pholasaí Príobháideachais Stripe](https://stripe.com/privacy).",
         "Má tá éarlais slándála luaite san fhógra, féadfar í a réamhúdarú tráth na háirithinte nó tráth an teachta agus í a choinneáil go hiomlán nó go páirteach i gcás damáiste; is iad na sonraí san fhógra atá cinntitheach.",
       ],
     },
@@ -54,30 +54,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 Dliteanas myNextDays",
+      heading: "§ 7 Dliteanas myBestDays",
       paragraphs: [
-        "Is é an Soláthraí amháin atá freagrach as an tseirbhís lóistín a sholáthar. Níl myNextDays faoi dhliteanas as cruinneas ábhar na bhfógraí a phostálann Soláthraithe, ach déanann sé an idirghabháil agus an phróiseáil íocaíochtaí le dúthracht gnó stuama.",
-        "Tá myNextDays faoi dhliteanas gan teorainn i leith intinne agus mórfhaillí agus i leith damáiste a eascraíonn as díobháil don bheatha, don chorp nó don tsláinte. I gcásanna gnáthfhaillí, níl myNextDays faoi dhliteanas ach amháin i leith shárú oibleagáidí conarthacha bunriachtanacha (oibleagáidí cairdinéalta), teoranta don damáiste intuartha is gnách don chonradh. Ní dhéantar difear do rialacha dliteanais reachtúla sainordaitheacha.",
+        "Is é an Soláthraí amháin atá freagrach as an tseirbhís lóistín a sholáthar. Níl myBestDays faoi dhliteanas as cruinneas ábhar na bhfógraí a phostálann Soláthraithe, ach déanann sé an idirghabháil agus an phróiseáil íocaíochtaí le dúthracht gnó stuama.",
+        "Tá myBestDays faoi dhliteanas gan teorainn i leith intinne agus mórfhaillí agus i leith damáiste a eascraíonn as díobháil don bheatha, don chorp nó don tsláinte. I gcásanna gnáthfhaillí, níl myBestDays faoi dhliteanas ach amháin i leith shárú oibleagáidí conarthacha bunriachtanacha (oibleagáidí cairdinéalta), teoranta don damáiste intuartha is gnách don chonradh. Ní dhéantar difear do rialacha dliteanais reachtúla sainordaitheacha.",
       ],
     },
     {
       heading: "§ 8 Cosaint sonraí",
       paragraphs: [
-        "Próiseálann myNextDays sonraí pearsanta an Aoi chun an idirghabháil agus an áirithint a chur i gcrích. Tarchuirtear sonraí áirithinte chuig an Soláthraí faoi seach a mhéid is gá chun an conradh lóistín a chomhlíonadh. Baineann § 4 leis an bpróiseáil íocaíochtaí.",
+        "Próiseálann myBestDays sonraí pearsanta an Aoi chun an idirghabháil agus an áirithint a chur i gcrích. Tarchuirtear sonraí áirithinte chuig an Soláthraí faoi seach a mhéid is gá chun an conradh lóistín a chomhlíonadh. Baineann § 4 leis an bpróiseáil íocaíochtaí.",
         "Leagtar amach na mionsonraí i bhfaisnéis phríobháideachais an Ardáin.",
       ],
     },
     {
       heading: "§ 9 Gearáin agus réiteach díospóidí",
       paragraphs: [
-        "Ba cheart don Aoi gearáin faoin gcóiríocht a dhíriú ar an Soláthraí ar dtús; maidir le ceisteanna faoin áirithint nó faoin íocaíocht, is féidir teagmháil a dhéanamh le tacaíocht myNextDays trí na bealaí teagmhála atá luaite ar an Ardán.",
-        "Níl myNextDays faoi oibleagáid ná toilteanach páirt a ghlacadh in imeachtaí réitigh díospóidí os comhair bord eadrána tomhaltóirí, mura n-éilítear sin le dlí.",
+        "Ba cheart don Aoi gearáin faoin gcóiríocht a dhíriú ar an Soláthraí ar dtús; maidir le ceisteanna faoin áirithint nó faoin íocaíocht, is féidir teagmháil a dhéanamh le tacaíocht myBestDays trí na bealaí teagmhála atá luaite ar an Ardán.",
+        "Níl myBestDays faoi oibleagáid ná toilteanach páirt a ghlacadh in imeachtaí réitigh díospóidí os comhair bord eadrána tomhaltóirí, mura n-éilítear sin le dlí.",
       ],
     },
     {
       heading: "§ 10 Athruithe ar na téarmaí seo",
       paragraphs: [
-        "Féadfaidh myNextDays na téarmaí seo a leasú le héifeacht don todhchaí más gá sin ar chúiseanna bailí (go háirithe athruithe ar an reachtaíocht nó ar an gcásdlí) agus mura gcuirtear an tAoi faoi mhíbhuntáiste míréasúnta dá bharr. Maidir le háirithintí atá tugtha i gcrích cheana, is é an leagan a bhí i bhfeidhm tráth na háirithinte a bheidh i bhfeidhm.",
+        "Féadfaidh myBestDays na téarmaí seo a leasú le héifeacht don todhchaí más gá sin ar chúiseanna bailí (go háirithe athruithe ar an reachtaíocht nó ar an gcásdlí) agus mura gcuirtear an tAoi faoi mhíbhuntáiste míréasúnta dá bharr. Maidir le háirithintí atá tugtha i gcrích cheana, is é an leagan a bhí i bhfeidhm tráth na háirithinte a bheidh i bhfeidhm.",
       ],
     },
     {

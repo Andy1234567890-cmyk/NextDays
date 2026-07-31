@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (sistema de gestión de propiedades): alojamientos, calendario, precios, reservas, tareas y pagos.",
                 "Gestor de canales: conexión con portales como Booking, Airbnb y otros — una sola entrada, muchos portales sincronizados.",
-                "Marketplace de la plataforma: el propio marketplace de myNextDays, un canal de reserva del mismo rango que los portales.",
+                "Marketplace de la plataforma: el propio marketplace de myBestDays, un canal de reserva del mismo rango que los portales.",
                 "App: la aplicación móvil para huéspedes, propietarios y empleados con los mismos datos que en la web.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Web: visibilidad en su propia web de myNextDays",
-                "Marketplace de la plataforma: visibilidad en el marketplace global de myNextDays",
+                "Marketplace de la plataforma: visibilidad en el marketplace global de myBestDays",
                 "Portales: visibilidad en Booking, Airbnb y otros",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Marketplace de la plataforma" },
             {
               type: "p",
-              text: "El marketplace de myNextDays es un canal de reserva propio y global, comparable a Booking o Airbnb, pero parte de la misma plataforma. No es un sustituto de la «reserva directa», sino un canal del mismo rango con su propio eje de visibilidad.",
+              text: "El marketplace de myBestDays es un canal de reserva propio y global, comparable a Booking o Airbnb, pero parte de la misma plataforma. No es un sustituto de la «reserva directa», sino un canal del mismo rango con su propio eje de visibilidad.",
             },
             { type: "h2", text: "App" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Web — su propia web de myNextDays",
-                "Marketplace de la plataforma — el marketplace global de myNextDays",
+                "Marketplace de la plataforma — el marketplace global de myBestDays",
                 "Portales — Booking, Airbnb y otros a través del gestor de canales",
               ],
             },

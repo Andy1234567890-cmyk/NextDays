@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Provize tržiště: vzniká u rezervací přes platformu myNextDays",
+                "Provize tržiště: vzniká u rezervací přes platformu myBestDays",
                 "Provize portálu: počítá příslušný portál podle vlastních podmínek",
                 "Přímé rezervace přes váš vlastní web je třeba posuzovat nezávisle na tom",
               ],

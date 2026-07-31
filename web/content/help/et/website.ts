@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Veebilehe koostaja loob Teile oma broneerimisveebilehe — täiendava müügikanali koos portaalide ja myNextDays turuplatsiga. Teil säilib täielik kontroll ülesehituse, sisu ja brändingu üle.",
+              text: "Veebilehe koostaja loob Teile oma broneerimisveebilehe — täiendava müügikanali koos portaalide ja myBestDays turuplatsiga. Teil säilib täielik kontroll ülesehituse, sisu ja brändingu üle.",
             },
             { type: "h2", text: "Kuidas luua veebileht" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Selleks et objekt ilmuks Teie veebilehele, peab selle objekti veebilehe nähtavus olema sisse lülitatud. See lüliti on sõltumatu nähtavusest myNextDays turuplatsil või portaalidel.",
+              text: "Selleks et objekt ilmuks Teie veebilehele, peab selle objekti veebilehe nähtavus olema sisse lülitatud. See lüliti on sõltumatu nähtavusest myBestDays turuplatsil või portaalidel.",
             },
             { type: "h2", text: "Objekti aktiveerimine veebilehe jaoks" },
             {

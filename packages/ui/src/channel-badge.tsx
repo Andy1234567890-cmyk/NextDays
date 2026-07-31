@@ -1,7 +1,7 @@
 "use client";
 
 // Kennzeichnung je Formularfeld: Geht dieses Feld an die Buchungsportale
-// (Booking.com, Airbnb & Co.) oder lebt es nur auf der eigenen myNextDays-
+// (Booking.com, Airbnb & Co.) oder lebt es nur auf der eigenen myBestDays-
 // Plattform? Der Channel-Manager dahinter (Channex) wird bewusst NIE erwähnt —
 // der Kunde sieht nur die Portale. Kleines Badge + Info-Tooltip mit dem Warum.
 import { Icon } from "@iconify/react";
@@ -23,8 +23,8 @@ const DEFAULTS: Record<Channel, { label: string; hint: string; icon: string }> =
     icon: "ph:globe-hemisphere-west",
   },
   local: {
-    label: "Nur myNextDays",
-    hint: "Dieses Feld gilt nur auf Ihrer myNextDays-Plattform und für Direktbuchungen — es wird nicht an die Buchungsportale übertragen.",
+    label: "Nur myBestDays",
+    hint: "Dieses Feld gilt nur auf Ihrer myBestDays-Plattform und für Direktbuchungen — es wird nicht an die Buchungsportale übertragen.",
     icon: "ph:house-line",
   },
 };

@@ -1,6 +1,6 @@
 // Preis-Ableitungen (Airbnb-Pricing-Modell), rein funktional & testbar.
 // KEINE erfundenen Ersatzwerte (Wurzel 4): fehlt der Grundpreis, gibt es keine
-// Ableitung. Die Marktplatz-Provision (myNextDays-Modell, 0182) ist ein fester
+// Ableitung. Die Marktplatz-Provision (myBestDays-Modell, 0182) ist ein fester
 // Systemwert von 8 % — NICHT Airbnbs 15,5 %. Sie steckt hart im Buchungsengine
 // (payments, 800 bps); hier als benannte Konstante gespiegelt, nicht geraten.
 export const MARKTPLATZ_FEE_PCT = 8;

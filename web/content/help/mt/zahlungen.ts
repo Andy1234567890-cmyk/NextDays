@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Kummissjoni tas-suq: tapplika għal prenotazzjonijiet permezz tal-pjattaforma ta' myNextDays",
+                "Kummissjoni tas-suq: tapplika għal prenotazzjonijiet permezz tal-pjattaforma ta' myBestDays",
                 "Kummissjoni tal-portal: tiġi kkalkulata mill-portal rispettiv skont il-kundizzjonijiet tiegħu stess",
                 "Il-prenotazzjonijiet diretti permezz tal-websajt proprja tiegħek jitqiesu indipendenti minn dan",
               ],

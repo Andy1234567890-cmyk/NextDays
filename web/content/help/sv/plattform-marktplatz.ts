@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Plattformen (marknadsplats)",
-  description: "Sälja på myNextDays-marknadsplatsen.",
+  description: "Sälja på myBestDays-marknadsplatsen.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "myNextDays-marknadsplatsen",
-          excerpt: "Den globala myNextDays-marknadsplatsen är en egen bokningskanal vid sidan av portaler och webbplats.",
+          title: "myBestDays-marknadsplatsen",
+          excerpt: "Den globala myBestDays-marknadsplatsen är en egen bokningskanal vid sidan av portaler och webbplats.",
           updated: "Uppdaterad: juli 2026",
           body: [
             {
               type: "p",
-              text: "myNextDays-marknadsplatsen (/plattform) är myNextDays egen globala bokningskanal — jämförbar med Booking eller Airbnb, men del av samma plattform. Där söker gäster bland objekt från alla anslutna verksamheter och bokar direkt.",
+              text: "myBestDays-marknadsplatsen (/plattform) är myBestDays egen globala bokningskanal — jämförbar med Booking eller Airbnb, men del av samma plattform. Där söker gäster bland objekt från alla anslutna verksamheter och bokar direkt.",
             },
             { type: "h2", text: "Inte ”direkt”, utan en likvärdig kanal" },
             {
               type: "p",
-              text: "Marknadsplatsen ersätter inte direktbokning via din egen webbplats. Den är en fristående, tredje försäljningsväg med egen synlighetsaxel, egen gästbas och egen provision — precis som en portal, bara driven av myNextDays själv.",
+              text: "Marknadsplatsen ersätter inte direktbokning via din egen webbplats. Den är en fristående, tredje försäljningsväg med egen synlighetsaxel, egen gästbas och egen provision — precis som en portal, bara driven av myBestDays själv.",
             },
             { type: "h2", text: "Hur objekt kommer till marknadsplatsen" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Precis som på varje bokningsportal tas en provision ut för bokningar som kommer till via myNextDays-marknadsplatsen. Den beräknas per bokning och är oberoende av eventuella provisioner för portaler.",
+              text: "Precis som på varje bokningsportal tas en provision ut för bokningar som kommer till via myBestDays-marknadsplatsen. Den beräknas per bokning och är oberoende av eventuella provisioner för portaler.",
             },
             { type: "h2", text: "Hur provisionen beräknas" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Marknadsplatsprovisionen gäller uteslutande för bokningar via myNextDays-marknadsplatsen.",
+                "Marknadsplatsprovisionen gäller uteslutande för bokningar via myBestDays-marknadsplatsen.",
                 "Portalbokningar (Booking, Airbnb & Co.) lyder under respektive portals villkor.",
                 "Webbplatsbokningar lyder under de villkor som anges för din tariff, utan marknadsplatsprovision.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Gäster som bokar via myNextDays-marknadsplatsen skapar en egen gästprofil. Där samlas deras bokningar, meddelanden med verksamheter och lämnade recensioner — på liknande sätt som ett portalgästkonto.",
+              text: "Gäster som bokar via myBestDays-marknadsplatsen skapar en egen gästprofil. Där samlas deras bokningar, meddelanden med verksamheter och lämnade recensioner — på liknande sätt som ett portalgästkonto.",
             },
             { type: "h2", text: "Vad du som verksamhet ser" },
             {

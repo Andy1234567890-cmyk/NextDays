@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Plataforma (marketplace)",
-  description: "Vender en el marketplace de myNextDays.",
+  description: "Vender en el marketplace de myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "El marketplace de myNextDays",
-          excerpt: "El marketplace global de myNextDays es un canal de reserva propio junto a los portales y la web.",
+          title: "El marketplace de myBestDays",
+          excerpt: "El marketplace global de myBestDays es un canal de reserva propio junto a los portales y la web.",
           updated: "Actualizado: julio de 2026",
           body: [
             {
               type: "p",
-              text: "El marketplace de myNextDays (/plattform) es el canal de reserva global de la propia myNextDays — comparable a Booking o Airbnb, pero parte de la misma plataforma. Ahí los huéspedes buscan alojamientos de todos los negocios conectados y reservan directamente.",
+              text: "El marketplace de myBestDays (/plattform) es el canal de reserva global de la propia myBestDays — comparable a Booking o Airbnb, pero parte de la misma plataforma. Ahí los huéspedes buscan alojamientos de todos los negocios conectados y reservan directamente.",
             },
             { type: "h2", text: "Ningún «directo», sino un canal del mismo rango" },
             {
               type: "p",
-              text: "El marketplace no sustituye a la reserva directa a través de su propia web. Es una tercera vía de venta independiente con su propio eje de visibilidad, su propia base de huéspedes y su propia comisión — igual que un portal, solo que gestionado por la propia myNextDays.",
+              text: "El marketplace no sustituye a la reserva directa a través de su propia web. Es una tercera vía de venta independiente con su propio eje de visibilidad, su propia base de huéspedes y su propia comisión — igual que un portal, solo que gestionado por la propia myBestDays.",
             },
             { type: "h2", text: "Cómo llegan los alojamientos al marketplace" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Como en cualquier portal de reservas, se aplica una comisión por las reservas realizadas a través del marketplace de myNextDays. Se calcula por reserva y es independiente de las comisiones que pudieran aplicar los portales.",
+              text: "Como en cualquier portal de reservas, se aplica una comisión por las reservas realizadas a través del marketplace de myBestDays. Se calcula por reserva y es independiente de las comisiones que pudieran aplicar los portales.",
             },
             { type: "h2", text: "Cómo se calcula la comisión" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "La comisión del marketplace se aplica exclusivamente a reservas a través del marketplace de myNextDays.",
+                "La comisión del marketplace se aplica exclusivamente a reservas a través del marketplace de myBestDays.",
                 "Las reservas de portales (Booking, Airbnb y otros) están sujetas a las condiciones del portal correspondiente.",
                 "Las reservas de la web están sujetas a las condiciones registradas para su tarifa, sin comisión de marketplace.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Los huéspedes que reservan a través del marketplace de myNextDays crean un perfil de huésped propio. En él se acumulan sus reservas, los mensajes con los negocios y las reseñas realizadas — de forma similar a una cuenta de huésped de un portal.",
+              text: "Los huéspedes que reservan a través del marketplace de myBestDays crean un perfil de huésped propio. En él se acumulan sus reservas, los mensajes con los negocios y las reseñas realizadas — de forma similar a una cuenta de huésped de un portal.",
             },
             { type: "h2", text: "Lo que usted ve como negocio" },
             {

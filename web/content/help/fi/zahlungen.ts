@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Markkinapaikan provisio: peritään myNextDays-alustan kautta tehdyistä varauksista",
+                "Markkinapaikan provisio: peritään myBestDays-alustan kautta tehdyistä varauksista",
                 "Portaaliprovisio: kyseisen portaalin omien ehtojen mukaan laskettu",
                 "Suoravaraukset omalla verkkosivustollasi ovat näistä riippumattomia",
               ],

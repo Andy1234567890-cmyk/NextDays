@@ -31,7 +31,7 @@ import { guestPasswordReset } from "@/lib/guestAuth";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
-const logoImg = require("../assets/img/Logo_transparent.png");
+const logoImg = require("../assets/img/mybestdays-logo.png");
 
 function istEmail(wert: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(wert.trim());

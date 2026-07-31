@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Alat za izradu web-stranica izrađuje vam vlastitu web-stranicu za rezervacije — dodatni prodajni kanal uz portale i myNextDays tržište. Zadržavate potpunu kontrolu nad strukturom, sadržajem i brendiranjem.",
+              text: "Alat za izradu web-stranica izrađuje vam vlastitu web-stranicu za rezervacije — dodatni prodajni kanal uz portale i myBestDays tržište. Zadržavate potpunu kontrolu nad strukturom, sadržajem i brendiranjem.",
             },
             { type: "h2", text: "Kako izraditi web-stranicu" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Kako bi se objekt pojavio na vašoj web-stranici, vidljivost web-stranice za taj objekt mora biti uključena. Taj je prekidač neovisan o vidljivosti na myNextDays tržištu ili portalima.",
+              text: "Kako bi se objekt pojavio na vašoj web-stranici, vidljivost web-stranice za taj objekt mora biti uključena. Taj je prekidač neovisan o vidljivosti na myBestDays tržištu ili portalima.",
             },
             { type: "h2", text: "Aktivacija objekta za web-stranicu" },
             {

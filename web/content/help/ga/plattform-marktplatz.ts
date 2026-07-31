@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Ardán (Margadh)",
-  description: "Díol ar Ardán Margaidh myNextDays.",
+  description: "Díol ar Ardán Margaidh myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "Ardán Margaidh myNextDays",
-          excerpt: "Is cainéal áirithinte dá chuid féin é Ardán Margaidh domhanda myNextDays le hais na dtairseach agus an tsuímh ghréasáin.",
+          title: "Ardán Margaidh myBestDays",
+          excerpt: "Is cainéal áirithinte dá chuid féin é Ardán Margaidh domhanda myBestDays le hais na dtairseach agus an tsuímh ghréasáin.",
           updated: "Nuashonraithe: Iúil 2026",
           body: [
             {
               type: "p",
-              text: "Is é Ardán Margaidh myNextDays (/plattform) cainéal áirithinte domhanda myNextDays féin — inchomparáide le Booking nó Airbnb, ach mar chuid den ardán céanna. Cuardaíonn aíonna ansin maoine gach gnó nasctha agus déanann siad áirithint go díreach.",
+              text: "Is é Ardán Margaidh myBestDays (/plattform) cainéal áirithinte domhanda myBestDays féin — inchomparáide le Booking nó Airbnb, ach mar chuid den ardán céanna. Cuardaíonn aíonna ansin maoine gach gnó nasctha agus déanann siad áirithint go díreach.",
             },
             { type: "h2", text: "Ní “Díreach”, ach cainéal comhchéime" },
             {
               type: "p",
-              text: "Ní ionadaí é an tArdán Margaidh ar áirithint dhíreach trí do shuíomh gréasáin féin. Is tríú bealach dáilte neamhspleách é le hais infheictheachta dá chuid féin, bunachar aíonna dá chuid féin agus coimisiún dá chuid féin — díreach cosúil le tairseach, ach á rith ag myNextDays féin.",
+              text: "Ní ionadaí é an tArdán Margaidh ar áirithint dhíreach trí do shuíomh gréasáin féin. Is tríú bealach dáilte neamhspleách é le hais infheictheachta dá chuid féin, bunachar aíonna dá chuid féin agus coimisiún dá chuid féin — díreach cosúil le tairseach, ach á rith ag myBestDays féin.",
             },
             { type: "h2", text: "Conas a thagann maoine ar an margadh" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Cosúil le gach tairseach áirithinte, baineann coimisiún le háirithintí a thagann tríd an Ardán Margaidh myNextDays. Ríomhtar é de réir gach áirithint ar leith agus tá sé neamhspleách ar aon choimisiún ó thairseacha.",
+              text: "Cosúil le gach tairseach áirithinte, baineann coimisiún le háirithintí a thagann tríd an Ardán Margaidh myBestDays. Ríomhtar é de réir gach áirithint ar leith agus tá sé neamhspleách ar aon choimisiún ó thairseacha.",
             },
             { type: "h2", text: "Conas a ríomhtar an coimisiún" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Baineann coimisiún an mhargaidh go heisiach le háirithintí trí Ardán Margaidh myNextDays.",
+                "Baineann coimisiún an mhargaidh go heisiach le háirithintí trí Ardán Margaidh myBestDays.",
                 "Bíonn áirithintí ó thairseach (Booking, Airbnb agus a leithéidí) faoi choinníollacha na tairsí faoi seach.",
                 "Bíonn áirithintí ón suíomh gréasáin faoi na coinníollacha atá curtha isteach do do phlean, gan coimisiún margaidh.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Cruthaíonn aíonna a chuireann áirithint in áirithe tríd an Ardán Margaidh myNextDays próifíl aoi dá gcuid féin. Bailítear ansin a gcuid áirithintí, teachtaireachtaí le gnóthaí agus léirmheasanna a tugadh — cosúil le cuntas aoi ar thairseach.",
+              text: "Cruthaíonn aíonna a chuireann áirithint in áirithe tríd an Ardán Margaidh myBestDays próifíl aoi dá gcuid féin. Bailítear ansin a gcuid áirithintí, teachtaireachtaí le gnóthaí agus léirmheasanna a tugadh — cosúil le cuntas aoi ar thairseach.",
             },
             { type: "h2", text: "Cad a fheiceann tú mar ghnó" },
             {

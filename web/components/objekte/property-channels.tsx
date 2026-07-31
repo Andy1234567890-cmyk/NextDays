@@ -3,7 +3,7 @@
 // Kanäle-Tab EINES Objekts (Lodgify: Kanäle global UND pro Objekt).
 // Drei gleichrangige Gruppen, je Zeile ein Kanal:
 //   Website (eigene Kundenseite)  · listed_on_website
-//   Plattform (myNextDays-Markt)  · listed_on_marketplace
+//   Plattform (myBestDays-Markt)  · listed_on_marketplace
 //   Portale (Channex → OTAs)      · pro OTA Mapping + Sync-Status
 // Zwei getrennte Achsen (OwnerRez): Sichtbarkeit (an/pausiert) vs. Sync (ok/Fehler).
 // „Portale" im Kundentext, NIE „Channex". Markup kommt in Phase 2.

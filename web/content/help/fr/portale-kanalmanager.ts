@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Trois canaux de vente indépendants" },
             {
               type: "p",
-              text: "Un objet peut être vendu simultanément par plusieurs voies : par les portails (Booking, Airbnb & Co.), par le marché de la plateforme myNextDays et par votre propre site web. Chaque voie dispose de son propre interrupteur de visibilité — ils sont totalement indépendants les uns des autres.",
+              text: "Un objet peut être vendu simultanément par plusieurs voies : par les portails (Booking, Airbnb & Co.), par le marché de la plateforme myBestDays et par votre propre site web. Chaque voie dispose de son propre interrupteur de visibilité — ils sont totalement indépendants les uns des autres.",
             },
             { type: "h2", text: "Piloter la visibilité par portail" },
             {

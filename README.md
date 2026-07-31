@@ -23,6 +23,12 @@ NextDays kombiniert **zwei Geschäftsmodelle auf einem gemeinsamen Datenkern**:
 1. **Vermieter-Werkzeug (Supply-Seite)** — PMS + Channel Manager + **Page-Builder**: jeder Mandant bekommt eine eigene white-label Buchungs-Website unter eigener Custom-Domain, visuell bearbeitbar im Framer-artigen Editor (Spec: [docs/FRAMER-FEATURES.md](docs/FRAMER-FEATURES.md)). Vergleichbar mit .., aber einfacher, fairer, stabiler.
 2. **Eigenes Buchungsportal (Demand-Seite)** — ein zweiseitiger Marktplatz, auf dem Gäste Unterkünfte suchen und direkt buchen.
 
+**Zwei Marken, ein Datenkern:** Die Supply-Seite (PMS, Channel Manager,
+Marketing-Seite: `web`, `apps/api`, `marketing`, `admin`, `builder`) heißt
+**myNextDays**. Die Demand-Seite — Marktplatz `plattform`, Gastgeber-Dashboard
+`gastgeber` und die App `mobile` — heißt **myBestDays**; ebenso der Kanal
+„Plattform" im PMS (`reservations.ota_name = 'myBestDays'`).
+
 myNextDays bedient dabei **zwei Betriebsarten** pro Mandant: klassische
 Ferienvermietung und Hotels (`tenants.accommodation_type`, Migration 0090) —
 die Betriebsart wird im 5-Schritte-Onboarding gewählt und steuert Navigation

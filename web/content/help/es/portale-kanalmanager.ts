@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Tres vías de venta independientes" },
             {
               type: "p",
-              text: "Un alojamiento puede venderse simultáneamente por varias vías: a través de los portales (Booking, Airbnb y otros), a través del marketplace de la plataforma de myNextDays y a través de su propia web. Cada vía tiene un interruptor de visibilidad propio — son totalmente independientes entre sí.",
+              text: "Un alojamiento puede venderse simultáneamente por varias vías: a través de los portales (Booking, Airbnb y otros), a través del marketplace de la plataforma de myBestDays y a través de su propia web. Cada vía tiene un interruptor de visibilidad propio — son totalmente independientes entre sí.",
             },
             { type: "h2", text: "Controlar la visibilidad por portal" },
             {

@@ -43,7 +43,7 @@ export default async function FreigabenSeite({
           Schreibpfad ist seit 0207 auch für Betriebe geschlossen). */}
       <RealtimeRefresh table="properties" />
       <p className="mt-2 max-w-2xl text-[0.9375rem] text-muted-foreground">
-        Objekte erscheinen auf dem myNextDays-Marktplatz erst nach Freigabe.
+        Objekte erscheinen auf dem myBestDays-Marktplatz erst nach Freigabe.
         Der Vertrieb über Portale und die eigene Website des Betriebs läuft
         unabhängig davon weiter.
       </p>

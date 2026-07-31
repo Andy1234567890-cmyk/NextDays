@@ -1,4 +1,4 @@
-// Plattform-Kopfzeile (myNextDays-Buchungsplattform). Portiert aus plattform/ —
+// Plattform-Kopfzeile (myBestDays-Buchungsplattform). Portiert aus plattform/ —
 // schlanke Leiste mit Logo-Wortmarke, Such-Pille und Konto-Aktion.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
@@ -36,7 +36,7 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
             href={GASTGEBER_URL}
             className="hidden rounded-full px-4 py-2 text-sm font-medium hover:bg-secondary sm:block"
           >
-            myNextDays für Gastgeber
+            myBestDays für Gastgeber
           </Link>
           <button
             type="button"

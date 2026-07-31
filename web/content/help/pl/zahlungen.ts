@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Prowizja platformy: naliczana przy rezerwacjach przez platformę myNextDays",
+                "Prowizja platformy: naliczana przy rezerwacjach przez platformę myBestDays",
                 "Prowizja portalu: obliczana przez dany portal zgodnie z jego własnymi warunkami",
                 "Rezerwacje bezpośrednie przez Twoją własną stronę internetową należy traktować niezależnie od tego",
               ],

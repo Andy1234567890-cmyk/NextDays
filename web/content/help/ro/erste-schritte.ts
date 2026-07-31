@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (sistem de management al proprietăților): obiecte, calendar, prețuri, rezervări, sarcini și plăți.",
                 "Managerul de canale: conexiunea cu portaluri precum Booking, Airbnb & Co. — o singură introducere de date, sincronizată cu multe portaluri.",
-                "Piața myNextDays: propria piață myNextDays, un canal de rezervare de rang egal alături de portaluri.",
+                "Piața myBestDays: propria piață myBestDays, un canal de rezervare de rang egal alături de portaluri.",
                 "Aplicația: aplicația mobilă pentru oaspeți, proprietari și angajați, cu aceleași date ca pe web.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Site web: vizibilitate pe propriul dvs. site myNextDays",
-                "Piață: vizibilitate pe piața globală myNextDays",
+                "Piață: vizibilitate pe piața globală myBestDays",
                 "Portaluri: vizibilitate pe Booking, Airbnb & Co.",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Piața" },
             {
               type: "p",
-              text: "Piața myNextDays este un canal de rezervare propriu, global — comparabil cu Booking sau Airbnb, dar parte a aceleiași platforme. Nu este un înlocuitor pentru „rezervarea directă”, ci un canal de rang egal, cu propria axă de vizibilitate.",
+              text: "Piața myBestDays este un canal de rezervare propriu, global — comparabil cu Booking sau Airbnb, dar parte a aceleiași platforme. Nu este un înlocuitor pentru „rezervarea directă”, ci un canal de rang egal, cu propria axă de vizibilitate.",
             },
             { type: "h2", text: "Aplicația" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Site web — propriul dvs. site myNextDays",
-                "Piață — piața globală myNextDays",
+                "Piață — piața globală myBestDays",
                 "Portaluri — Booking, Airbnb & Co. prin managerul de canale",
               ],
             },

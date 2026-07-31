@@ -66,7 +66,7 @@ export function KontoButton({
             <a
               href={
                 process.env.NEXT_PUBLIC_GASTGEBER_URL ??
-                "https://y13cm245vlmvq3yv38gdbtat.65.21.144.136.sslip.io"
+                "https://mynextdays.com"
               }
               className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-secondary"
             >

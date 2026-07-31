@@ -30,7 +30,7 @@ Vertical Slice für Online-Zahlungen über **Stripe** (primäres Gateway) und
 
   | `reservations.channel` | Provision | Charge-Typ | Haftung |
   |---|---|---|---|
-  | `portal` (unser Marktplatz) | **8 % all-in** | über die Plattform | myNextDays |
+  | `portal` (unser Marktplatz) | **8 % all-in** | über die Plattform | myBestDays |
   | `direct` (eigene Website) | **0 %** (§5) | **Direct Charge** | Betrieb |
   | `booking`/`airbnb`/`vrbo` | 0 % am Charge (1 % monatlich) | kein Charge (409) | — |
 

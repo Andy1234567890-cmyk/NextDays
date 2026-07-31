@@ -1,4 +1,4 @@
-// NextDays Mobile — Einstiegspunkt (bare React Native). Eine App, vier
+// myBestDays Mobile — Einstiegspunkt (bare React Native). Eine App, vier
 // Erlebnisse (Gast · Agentur · Owner · Mitarbeiter); das Erlebnis kommt aus dem
 // Konto (experienceFor(me)), nicht aus manueller Auswahl.
 // GestureHandler → SafeArea → Theme → AuthProvider → NavigationContainer.

@@ -272,8 +272,8 @@ export function ChannelGrid({ overview }: { overview: ChannelOverview | null }) 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ChannelCard
             logo={{
-              src: "/marketing/brand/mynextdays-logo.png",
-              srcDark: "/marketing/brand/mynextdays-logo-light.png",
+              src: "/marketing/brand/mybestdays-logo.png",
+              srcDark: "/marketing/brand/mybestdays-logo-light.png",
             }}
             alt={overview.marketplace.label}
             connected={overview.marketplace.listed_count > 0}

@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Gradnik spletnih strani vam ustvari lastno rezervacijsko spletno stran — dodaten prodajni kanal poleg portalov in tržnice myNextDays. Ohranite popoln nadzor nad zgradbo, vsebino in blagovno znamko.",
+              text: "Gradnik spletnih strani vam ustvari lastno rezervacijsko spletno stran — dodaten prodajni kanal poleg portalov in tržnice myBestDays. Ohranite popoln nadzor nad zgradbo, vsebino in blagovno znamko.",
             },
             { type: "h2", text: "Tako ustvarite spletno stran" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Da se objekt prikaže na vaši spletni strani, mora biti zanj vklopljena vidnost na spletni strani. To stikalo je neodvisno od vidnosti na tržnici myNextDays ali na portalih.",
+              text: "Da se objekt prikaže na vaši spletni strani, mora biti zanj vklopljena vidnost na spletni strani. To stikalo je neodvisno od vidnosti na tržnici myBestDays ali na portalih.",
             },
             { type: "h2", text: "Odpiranje objekta za spletno stran" },
             {

@@ -1,7 +1,7 @@
 {
   "name": "nextdays-mobile",
   "version": "0.1.0",
-  "description": "NextDays — Mobile-App (Gäste & Gastgeber) auf bare React Native",
+  "description": "myBestDays — Mobile-App (Gäste & Gastgeber) auf bare React Native",
   "private": true,
   "scripts": {
     "android": "react-native run-android",

@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Tirgus komisija: rodas rezervācijām caur myNextDays platformu",
+                "Tirgus komisija: rodas rezervācijām caur myBestDays platformu",
                 "Portāla komisija: to aprēķina attiecīgais portāls pēc saviem noteikumiem",
                 "Tiešās rezervācijas jūsu pašu vietnē jāaplūko neatkarīgi no tā",
               ],

@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "L'editor del sito web vi crea un vostro sito web di prenotazione — un canale di vendita aggiuntivo accanto ai portali e al marketplace myNextDays. Mantenete il pieno controllo su struttura, contenuti e branding.",
+              text: "L'editor del sito web vi crea un vostro sito web di prenotazione — un canale di vendita aggiuntivo accanto ai portali e al marketplace myBestDays. Mantenete il pieno controllo su struttura, contenuti e branding.",
             },
             { type: "h2", text: "Come creare un sito web" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Perché una struttura compaia sul vostro sito web, la visibilità sul sito web per questa struttura deve essere attivata. Questo interruttore è indipendente dalla visibilità sul marketplace myNextDays o sui portali.",
+              text: "Perché una struttura compaia sul vostro sito web, la visibilità sul sito web per questa struttura deve essere attivata. Questo interruttore è indipendente dalla visibilità sul marketplace myBestDays o sui portali.",
             },
             { type: "h2", text: "Attivare una struttura per il sito web" },
             {

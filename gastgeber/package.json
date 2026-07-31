@@ -2,7 +2,7 @@
   "name": "nextdays-gastgeber",
   "version": "0.1.0",
   "private": true,
-  "description": "myNextDays — Gastgeber-Dashboard (Supply-Seite, eigene Subdomain host.). Eigenständiges Projekt, getrennt von der Gast-App plattform/ (ADR-0015).",
+  "description": "myBestDays — Gastgeber-Dashboard (Supply-Seite, eigene Subdomain host.). Eigenständiges Projekt, getrennt von der Gast-App plattform/ (ADR-0015).",
   "scripts": {
     "dev": "next dev --port 3200",
     "build": "next build",

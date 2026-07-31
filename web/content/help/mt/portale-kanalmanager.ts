@@ -294,7 +294,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Tliet mogħdijiet ta' distribuzzjoni indipendenti" },
             {
               type: "p",
-              text: "Proprjetà tista' tinbiegħ permezz ta' diversi mogħdijiet fl-istess ħin: permezz tal-portali (Booking, Airbnb u oħrajn), permezz tas-Suq tal-Pjattaforma ta' myNextDays u permezz tal-websajt proprja tiegħek. Kull mogħdija għandha s-swiċċ tal-viżibbiltà tagħha stess — huma kompletament indipendenti minn xulxin.",
+              text: "Proprjetà tista' tinbiegħ permezz ta' diversi mogħdijiet fl-istess ħin: permezz tal-portali (Booking, Airbnb u oħrajn), permezz tas-Suq tal-Pjattaforma ta' myBestDays u permezz tal-websajt proprja tiegħek. Kull mogħdija għandha s-swiċċ tal-viżibbiltà tagħha stess — huma kompletament indipendenti minn xulxin.",
             },
             { type: "h2", text: "Ikkontrolla l-viżibbiltà għal kull portal" },
             {

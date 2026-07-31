@@ -6,8 +6,8 @@ export const agb: LegalDoc = {
   title: "Podmienky používania pre hostí (VOP)",
   stand: "Stav ku dňu: 3. júla 2026",
   intro: [
-    "Tieto podmienky používania upravujú používanie rezervačného portálu myNextDays (ďalej len „platforma“) cestujúcimi a objednávateľmi (ďalej len „hosť“).",
-    "Prevádzkovateľom platformy je [úplné obchodné meno, právna forma, adresa a registrové údaje prevádzkovateľa — doplniť pred zverejnením] (ďalej len „myNextDays“ alebo „my“).",
+    "Tieto podmienky používania upravujú používanie rezervačného portálu myBestDays (ďalej len „platforma“) cestujúcimi a objednávateľmi (ďalej len „hosť“).",
+    "Prevádzkovateľom platformy je [úplné obchodné meno, právna forma, adresa a registrové údaje prevádzkovateľa — doplniť pred zverejnením] (ďalej len „myBestDays“ alebo „my“).",
   ],
   sections: [
     {
@@ -18,9 +18,9 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 2 Úloha myNextDays; uzavretie zmluvy",
+      heading: "§ 2 Úloha myBestDays; uzavretie zmluvy",
       paragraphs: [
-        "myNextDays sprostredkúva ubytovacie služby, ktoré ponúkajú príslušní poskytovatelia (agentúry, prenajímatelia alebo vlastníci, ďalej len „poskytovateľ“). Zmluva o ubytovaní sa uzatvára výlučne medzi hosťom a príslušným poskytovateľom. myNextDays sa nestáva zmluvnou stranou zmluvy o ubytovaní.",
+        "myBestDays sprostredkúva ubytovacie služby, ktoré ponúkajú príslušní poskytovatelia (agentúry, prenajímatelia alebo vlastníci, ďalej len „poskytovateľ“). Zmluva o ubytovaní sa uzatvára výlučne medzi hosťom a príslušným poskytovateľom. myBestDays sa nestáva zmluvnou stranou zmluvy o ubytovaní.",
         "Príslušný poskytovateľ je uvedený v ponuke a v potvrdení rezervácie.",
       ],
     },
@@ -36,7 +36,7 @@ export const agb: LegalDoc = {
       heading: "§ 4 Ceny a platba",
       paragraphs: [
         "Platia ceny uvedené v ponuke v čase rezervácie vrátane daní, poplatkov a dodatočných nákladov, ktoré sú v nej uvedené. Ceny sa zobrazujú v mene uvedenej v ponuke. Na mieste môžu vzniknúť ďalšie miestne poplatky (napr. miestna daň za ubytovanie), pokiaľ je to uvedené v ponuke.",
-        "Platba sa spracúva prostredníctvom poskytovateľa platobných služieb Stripe. Platobné údaje (napr. údaje o karte) získava a spracúva priamo Stripe; myNextDays neukladá úplné údaje o karte. Stripe spracúva osobné údaje v súlade so [zásadami ochrany osobných údajov spoločnosti Stripe](https://stripe.com/privacy).",
+        "Platba sa spracúva prostredníctvom poskytovateľa platobných služieb Stripe. Platobné údaje (napr. údaje o karte) získava a spracúva priamo Stripe; myBestDays neukladá úplné údaje o karte. Stripe spracúva osobné údaje v súlade so [zásadami ochrany osobných údajov spoločnosti Stripe](https://stripe.com/privacy).",
         "Ak je v ponuke uvedená kaucia, môže byť pri rezervácii alebo pri príchode predautorizovaná a v prípade škody úplne alebo čiastočne zadržaná; rozhodujúce sú údaje uvedené v ponuke.",
       ],
     },
@@ -55,30 +55,30 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 7 Zodpovednosť myNextDays",
+      heading: "§ 7 Zodpovednosť myBestDays",
       paragraphs: [
-        "Za poskytnutie ubytovacej služby zodpovedá výlučne poskytovateľ. myNextDays nezodpovedá za správnosť obsahu ponúk vložených poskytovateľmi, sprostredkovanie a spracovanie platieb však vykonáva so starostlivosťou riadneho obchodníka.",
-        "myNextDays zodpovedá neobmedzene za úmysel a hrubú nedbanlivosť, ako aj za škody vzniknuté ujmou na živote, tele alebo zdraví. Pri ľahkej nedbanlivosti zodpovedá myNextDays len za porušenie podstatných zmluvných povinností (kardinálnych povinností), a to v rozsahu obmedzenom na predvídateľnú škodu typickú pre daný typ zmluvy. Kogentné zákonné pravidlá zodpovednosti zostávajú nedotknuté.",
+        "Za poskytnutie ubytovacej služby zodpovedá výlučne poskytovateľ. myBestDays nezodpovedá za správnosť obsahu ponúk vložených poskytovateľmi, sprostredkovanie a spracovanie platieb však vykonáva so starostlivosťou riadneho obchodníka.",
+        "myBestDays zodpovedá neobmedzene za úmysel a hrubú nedbanlivosť, ako aj za škody vzniknuté ujmou na živote, tele alebo zdraví. Pri ľahkej nedbanlivosti zodpovedá myBestDays len za porušenie podstatných zmluvných povinností (kardinálnych povinností), a to v rozsahu obmedzenom na predvídateľnú škodu typickú pre daný typ zmluvy. Kogentné zákonné pravidlá zodpovednosti zostávajú nedotknuté.",
       ],
     },
     {
       heading: "§ 8 Ochrana osobných údajov",
       paragraphs: [
-        "myNextDays spracúva osobné údaje hosťa na účely sprostredkovania a rezervácie. Rezervačné údaje sa odovzdávajú príslušnému poskytovateľovi v rozsahu potrebnom na plnenie zmluvy o ubytovaní. Na spracovanie platieb sa vzťahuje § 4.",
+        "myBestDays spracúva osobné údaje hosťa na účely sprostredkovania a rezervácie. Rezervačné údaje sa odovzdávajú príslušnému poskytovateľovi v rozsahu potrebnom na plnenie zmluvy o ubytovaní. Na spracovanie platieb sa vzťahuje § 4.",
         "Podrobnosti vyplývajú z informácií o ochrane osobných údajov platformy.",
       ],
     },
     {
       heading: "§ 9 Reklamácie a riešenie sporov",
       paragraphs: [
-        "Výhrady týkajúce sa ubytovania adresuje hosť najprv poskytovateľovi; pri otázkach k rezervácii alebo platbe pomôže podpora myNextDays prostredníctvom kontaktných kanálov uvedených na platforme.",
-        "myNextDays nie je povinná ani ochotná zúčastňovať sa na riešení sporov pred subjektom alternatívneho riešenia spotrebiteľských sporov, pokiaľ jej takáto povinnosť nevyplýva zo zákona.",
+        "Výhrady týkajúce sa ubytovania adresuje hosť najprv poskytovateľovi; pri otázkach k rezervácii alebo platbe pomôže podpora myBestDays prostredníctvom kontaktných kanálov uvedených na platforme.",
+        "myBestDays nie je povinná ani ochotná zúčastňovať sa na riešení sporov pred subjektom alternatívneho riešenia spotrebiteľských sporov, pokiaľ jej takáto povinnosť nevyplýva zo zákona.",
       ],
     },
     {
       heading: "§ 10 Zmeny týchto podmienok",
       paragraphs: [
-        "myNextDays môže tieto podmienky zmeniť s účinnosťou do budúcnosti, pokiaľ je to potrebné zo závažných dôvodov (najmä pri zmenách právnych predpisov alebo judikatúry) a hosť tým nie je neprimerane znevýhodnený. Na už uzavreté rezervácie sa vzťahuje znenie účinné v čase rezervácie.",
+        "myBestDays môže tieto podmienky zmeniť s účinnosťou do budúcnosti, pokiaľ je to potrebné zo závažných dôvodov (najmä pri zmenách právnych predpisov alebo judikatúry) a hosť tým nie je neprimerane znevýhodnený. Na už uzavreté rezervácie sa vzťahuje znenie účinné v čase rezervácie.",
       ],
     },
     {

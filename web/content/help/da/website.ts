@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Hjemmesidebyggeren opretter din egen bookinghjemmeside — en ekstra salgskanal ved siden af portaler og myNextDays-markedspladsen. Du bevarer fuld kontrol over opbygning, indhold og branding.",
+              text: "Hjemmesidebyggeren opretter din egen bookinghjemmeside — en ekstra salgskanal ved siden af portaler og myBestDays-markedspladsen. Du bevarer fuld kontrol over opbygning, indhold og branding.",
             },
             { type: "h2", text: "Sådan opretter du en hjemmeside" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "For at en bolig skal vises på din hjemmeside, skal hjemmeside-synligheden for denne bolig være slået til. Denne kontakt er uafhængig af synligheden på myNextDays-markedspladsen eller på portaler.",
+              text: "For at en bolig skal vises på din hjemmeside, skal hjemmeside-synligheden for denne bolig være slået til. Denne kontakt er uafhængig af synligheden på myBestDays-markedspladsen eller på portaler.",
             },
             { type: "h2", text: "Frigiv bolig til hjemmesiden" },
             {

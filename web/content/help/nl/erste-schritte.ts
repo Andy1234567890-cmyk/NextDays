@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (property management system): objecten, kalender, prijzen, reserveringen, taken en betalingen.",
                 "Kanaalbeheer: koppeling met portalen zoals Booking, Airbnb & Co. — één invoer, veel portalen synchroon.",
-                "Platform-marktplaats: de eigen myNextDays-marktplaats, een gelijkwaardig boekingskanaal naast de portalen.",
+                "Platform-marktplaats: de eigen myBestDays-marktplaats, een gelijkwaardig boekingskanaal naast de portalen.",
                 "App: de mobiele applicatie voor gasten, eigenaren en medewerkers met dezelfde gegevens als op het web.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Website: zichtbaarheid op uw eigen myNextDays-website",
-                "Platform-marktplaats: zichtbaarheid op de wereldwijde myNextDays-marktplaats",
+                "Platform-marktplaats: zichtbaarheid op de wereldwijde myBestDays-marktplaats",
                 "Portalen: zichtbaarheid op Booking, Airbnb & Co.",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Platform-marktplaats" },
             {
               type: "p",
-              text: "De myNextDays-marktplaats is een eigen, wereldwijd boekingskanaal — vergelijkbaar met Booking of Airbnb, maar onderdeel van hetzelfde platform. Het is geen vervanging voor “directe boeking”, maar een gelijkwaardig kanaal met een eigen zichtbaarheidsas.",
+              text: "De myBestDays-marktplaats is een eigen, wereldwijd boekingskanaal — vergelijkbaar met Booking of Airbnb, maar onderdeel van hetzelfde platform. Het is geen vervanging voor “directe boeking”, maar een gelijkwaardig kanaal met een eigen zichtbaarheidsas.",
             },
             { type: "h2", text: "App" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Website — uw eigen myNextDays-website",
-                "Platform-marktplaats — de wereldwijde myNextDays-marktplaats",
+                "Platform-marktplaats — de wereldwijde myBestDays-marktplaats",
                 "Portalen — Booking, Airbnb & Co. via het kanaalbeheer",
               ],
             },

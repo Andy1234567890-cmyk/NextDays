@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Provízia z trhoviska: vzniká pri rezerváciách cez platformu myNextDays",
+                "Provízia z trhoviska: vzniká pri rezerváciách cez platformu myBestDays",
                 "Provízia z portálu: počíta ju príslušný portál podľa svojich vlastných podmienok",
                 "Priame rezervácie cez vašu vlastnú webovú stránku treba posudzovať nezávisle od toho",
               ],

@@ -13,7 +13,7 @@ export type InboxThread = {
   guest_id: string | null; // verknüpfter Gast (Resolver) → Link zur Gästekarte
   property_id: string | null;    // zugeordnetes Objekt (Filter/Anzeige)
   property_title: string | null;
-  ota_name: string | null;       // Kanal (myNextDays, Booking.com, Airbnb, …)
+  ota_name: string | null;       // Kanal (myBestDays, Booking.com, Airbnb, …)
   ota_reservation_code: string | null;
   guest_name: string | null;
   guest_email: string | null;

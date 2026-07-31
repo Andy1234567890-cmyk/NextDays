@@ -296,7 +296,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
 
 // --- Bausteine -------------------------------------------------------------
 
-// Label eines Formularfelds mit Kanal-Kennzeichnung (OTA vs. nur myNextDays).
+// Label eines Formularfelds mit Kanal-Kennzeichnung (OTA vs. nur myBestDays).
 function FieldLabel({
   htmlFor,
   channel,

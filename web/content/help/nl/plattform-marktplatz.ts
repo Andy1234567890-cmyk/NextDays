@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platform (marktplaats)",
-  description: "Verkopen op de myNextDays-marktplaats.",
+  description: "Verkopen op de myBestDays-marktplaats.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "De myNextDays-marktplaats",
-          excerpt: "De wereldwijde myNextDays-marktplaats is een eigen boekingskanaal naast portalen en website.",
+          title: "De myBestDays-marktplaats",
+          excerpt: "De wereldwijde myBestDays-marktplaats is een eigen boekingskanaal naast portalen en website.",
           updated: "Bijgewerkt: juli 2026",
           body: [
             {
               type: "p",
-              text: "De myNextDays-marktplaats (/plattform) is het wereldwijde boekingskanaal van myNextDays zelf — vergelijkbaar met Booking of Airbnb, maar onderdeel van hetzelfde platform. Gasten doorzoeken daar objecten van alle aangesloten bedrijven en boeken rechtstreeks.",
+              text: "De myBestDays-marktplaats (/plattform) is het wereldwijde boekingskanaal van myBestDays zelf — vergelijkbaar met Booking of Airbnb, maar onderdeel van hetzelfde platform. Gasten doorzoeken daar objecten van alle aangesloten bedrijven en boeken rechtstreeks.",
             },
             { type: "h2", text: "Geen “direct”, maar een gelijkwaardig kanaal" },
             {
               type: "p",
-              text: "De marktplaats vervangt geen directe boeking via uw eigen website. Het is een zelfstandige, derde verkoopweg met een eigen zichtbaarheidsas, eigen gastenbestand en eigen commissie — net als een portaal, alleen wordt deze door myNextDays zelf beheerd.",
+              text: "De marktplaats vervangt geen directe boeking via uw eigen website. Het is een zelfstandige, derde verkoopweg met een eigen zichtbaarheidsas, eigen gastenbestand en eigen commissie — net als een portaal, alleen wordt deze door myBestDays zelf beheerd.",
             },
             { type: "h2", text: "Hoe objecten op de marktplaats komen" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Zoals bij elk boekingsportaal geldt voor boekingen die via de myNextDays-marktplaats tot stand komen een commissie. Deze wordt per boeking berekend en staat los van eventuele commissies voor portalen.",
+              text: "Zoals bij elk boekingsportaal geldt voor boekingen die via de myBestDays-marktplaats tot stand komen een commissie. Deze wordt per boeking berekend en staat los van eventuele commissies voor portalen.",
             },
             { type: "h2", text: "Hoe de commissie wordt berekend" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Marktplaatscommissie geldt uitsluitend voor boekingen via de myNextDays-marktplaats.",
+                "Marktplaatscommissie geldt uitsluitend voor boekingen via de myBestDays-marktplaats.",
                 "Portaalboekingen (Booking, Airbnb & co.) vallen onder de voorwaarden van het betreffende portaal.",
                 "Websiteboekingen vallen onder de voor uw tarief vastgelegde voorwaarden, zonder marktplaatscommissie.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Gasten die via de myNextDays-marktplaats boeken, maken een eigen gastprofiel aan. Daarin verzamelen zich hun boekingen, berichten met bedrijven en geplaatste beoordelingen — vergelijkbaar met een portaalgastaccount.",
+              text: "Gasten die via de myBestDays-marktplaats boeken, maken een eigen gastprofiel aan. Daarin verzamelen zich hun boekingen, berichten met bedrijven en geplaatste beoordelingen — vergelijkbaar met een portaalgastaccount.",
             },
             { type: "h2", text: "Wat u als bedrijf ziet" },
             {

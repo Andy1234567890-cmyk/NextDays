@@ -1,6 +1,6 @@
 // "Inspirationen für zukünftige Reisen" — Tab-Filter + Raster aus Reiseziel-
 // Vorschlägen (Ort + Unterkunftstyp). Struktur angelehnt an gängige Plattform-
-// Sektionen, Design = myNextDays. Daten sind Platzhalter bis Backend.
+// Sektionen, Design = myBestDays. Daten sind Platzhalter bis Backend.
 "use client";
 
 import { useState } from "react";

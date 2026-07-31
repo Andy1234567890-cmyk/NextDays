@@ -432,10 +432,10 @@ class OtaChannelOverview(BaseModel):
 
 
 class MarketplaceChannelOverview(BaseModel):
-    """Eigener myNextDays-Marktplatz als Kanal (gleichrangig zu OTAs)."""
+    """Eigener myBestDays-Marktplatz als Kanal (gleichrangig zu OTAs)."""
 
     kind: str = "marketplace"
-    code: str = "myNextDays"
+    code: str = "myBestDays"
     label: str
     listed_count: int
 

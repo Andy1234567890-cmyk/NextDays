@@ -20,14 +20,14 @@ export default async function AnmeldenPage({
     <div className="flex min-h-screen flex-col md:flex-row">
       {/* Markenspalte */}
       <div className="relative hidden flex-1 flex-col justify-between bg-primary p-12 text-primary-foreground md:flex">
-        <span className="font-display text-2xl font-semibold">myNextDays</span>
+        <Logo variant="light" />
         <div>
           <h1 className="font-display text-4xl font-semibold leading-tight">
             Deine Reisen an einem Ort.
           </h1>
           <p className="mt-4 max-w-md text-primary-foreground/70">
             Buchungen verwalten, mit Gastgebern chatten, Check-in-Infos abrufen
-            und Lieblingsunterkünfte merken — alles in deinem myNextDays-Konto.
+            und Lieblingsunterkünfte merken — alles in deinem myBestDays-Konto.
           </p>
         </div>
         <div className="flex items-center gap-6 text-sm text-primary-foreground/60">
@@ -73,7 +73,7 @@ export default async function AnmeldenPage({
         <AnmeldenForm weiter={ziel} />
         <p className="mt-8 max-w-md text-center text-xs text-muted-foreground">
           Mit der Anmeldung stimmst du den Nutzungsbedingungen und der
-          Datenschutzerklärung von myNextDays zu.
+          Datenschutzerklärung von myBestDays zu.
         </p>
       </div>
     </div>

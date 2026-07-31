@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Kolm sõltumatut müügiteed" },
             {
               type: "p",
-              text: "Objekti saab korraga müüa mitme tee kaudu: portaalide (Booking, Airbnb & Co.), myNextDays platvormi turuplatsi ja Teie enda veebilehe kaudu. Igal teel on oma nähtavuse lüliti — need on üksteisest täiesti sõltumatud.",
+              text: "Objekti saab korraga müüa mitme tee kaudu: portaalide (Booking, Airbnb & Co.), myBestDays platvormi turuplatsi ja Teie enda veebilehe kaudu. Igal teel on oma nähtavuse lüliti — need on üksteisest täiesti sõltumatud.",
             },
             { type: "h2", text: "Nähtavuse juhtimine portaali kaupa" },
             {

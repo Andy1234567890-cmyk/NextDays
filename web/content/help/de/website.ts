@@ -18,7 +18,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Der Website-Baukasten erstellt Ihnen eine eigene Buchungs-Website — ein zusätzlicher Vertriebskanal neben Portalen und dem myNextDays-Marktplatz. Sie behalten die volle Kontrolle über Aufbau, Inhalte und Branding.",
+              text: "Der Website-Baukasten erstellt Ihnen eine eigene Buchungs-Website — ein zusätzlicher Vertriebskanal neben Portalen und dem myBestDays-Marktplatz. Sie behalten die volle Kontrolle über Aufbau, Inhalte und Branding.",
             },
             { type: "h2", text: "So legen Sie eine Website an" },
             {
@@ -140,7 +140,7 @@ export const website: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Damit ein Objekt auf Ihrer Website erscheint, muss die Website-Sichtbarkeit für dieses Objekt eingeschaltet sein. Dieser Schalter ist unabhängig von der Sichtbarkeit auf dem myNextDays-Marktplatz oder auf Portalen.",
+              text: "Damit ein Objekt auf Ihrer Website erscheint, muss die Website-Sichtbarkeit für dieses Objekt eingeschaltet sein. Dieser Schalter ist unabhängig von der Sichtbarkeit auf dem myBestDays-Marktplatz oder auf Portalen.",
             },
             { type: "h2", text: "Objekt für die Website freischalten" },
             {

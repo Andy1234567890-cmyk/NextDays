@@ -15,7 +15,7 @@ class InboxThread(BaseModel):
     guest_id: str | None = None            # verknüpfter Gast (Resolver) → Gästekarte
     property_id: str | None = None         # zugeordnetes Objekt (für Filter/Anzeige)
     property_title: str | None = None
-    ota_name: str | None = None     # Kanal (myNextDays, Booking.com, Airbnb, …)
+    ota_name: str | None = None     # Kanal (myBestDays, Booking.com, Airbnb, …)
     ota_reservation_code: str | None = None
     guest_name: str | None = None
     guest_email: str | None = None

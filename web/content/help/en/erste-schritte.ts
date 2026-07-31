@@ -26,7 +26,7 @@ export const ersteSchritte: HelpCategory = {
               items: [
                 "PMS (Property Management System): properties, calendar, pricing, reservations, tasks, and payments.",
                 "Channel manager: connection to portals such as Booking, Airbnb & Co. — enter data once, keep many portals in sync.",
-                "Platform marketplace: the myNextDays marketplace itself, an equal booking channel alongside the portals.",
+                "Platform marketplace: the myBestDays marketplace itself, an equal booking channel alongside the portals.",
                 "App: the mobile application for guests, owners, and staff, working from the same data as the web app.",
               ],
             },
@@ -177,7 +177,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Website: visibility on your own myNextDays website",
-                "Platform marketplace: visibility on the global myNextDays marketplace",
+                "Platform marketplace: visibility on the global myBestDays marketplace",
                 "Portals: visibility on Booking, Airbnb & Co.",
               ],
             },
@@ -211,7 +211,7 @@ export const ersteSchritte: HelpCategory = {
             { type: "h2", text: "Platform marketplace" },
             {
               type: "p",
-              text: "The myNextDays marketplace is its own, global booking channel — comparable to Booking or Airbnb, yet part of the same platform. It is not a “direct booking” substitute, but an equal channel with its own visibility axis.",
+              text: "The myBestDays marketplace is its own, global booking channel — comparable to Booking or Airbnb, yet part of the same platform. It is not a “direct booking” substitute, but an equal channel with its own visibility axis.",
             },
             { type: "h2", text: "App" },
             {
@@ -223,7 +223,7 @@ export const ersteSchritte: HelpCategory = {
               type: "ul",
               items: [
                 "Website — your own myNextDays website",
-                "Platform marketplace — the global myNextDays marketplace",
+                "Platform marketplace — the global myBestDays marketplace",
                 "Portals — Booking, Airbnb & Co. via the channel manager",
               ],
             },

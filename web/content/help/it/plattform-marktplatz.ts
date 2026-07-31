@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Piattaforma (Marketplace)",
-  description: "Vendere sul marketplace di myNextDays.",
+  description: "Vendere sul marketplace di myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "Il marketplace di myNextDays",
-          excerpt: "Il marketplace globale di myNextDays è un canale di prenotazione a sé stante, accanto ai portali e al sito web.",
+          title: "Il marketplace di myBestDays",
+          excerpt: "Il marketplace globale di myBestDays è un canale di prenotazione a sé stante, accanto ai portali e al sito web.",
           updated: "Ultimo aggiornamento: luglio 2026",
           body: [
             {
               type: "p",
-              text: "Il marketplace di myNextDays (/plattform) è il canale di prenotazione globale di myNextDays stesso — paragonabile a Booking o Airbnb, ma parte della stessa piattaforma. Qui gli ospiti cercano tra le strutture di tutte le attività collegate e prenotano direttamente.",
+              text: "Il marketplace di myBestDays (/plattform) è il canale di prenotazione globale di myBestDays stesso — paragonabile a Booking o Airbnb, ma parte della stessa piattaforma. Qui gli ospiti cercano tra le strutture di tutte le attività collegate e prenotano direttamente.",
             },
             { type: "h2", text: "Non «diretto», ma un canale di pari livello" },
             {
               type: "p",
-              text: "Il marketplace non sostituisce la prenotazione diretta tramite il vostro sito web. È un terzo canale di vendita autonomo, con un proprio asse di visibilità, una propria base di ospiti e una propria commissione — esattamente come un portale, solo che è gestito da myNextDays stesso.",
+              text: "Il marketplace non sostituisce la prenotazione diretta tramite il vostro sito web. È un terzo canale di vendita autonomo, con un proprio asse di visibilità, una propria base di ospiti e una propria commissione — esattamente come un portale, solo che è gestito da myBestDays stesso.",
             },
             { type: "h2", text: "Come le strutture arrivano sul marketplace" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Come per qualsiasi portale di prenotazione, per le prenotazioni concluse tramite il marketplace di myNextDays si applica una commissione. Viene calcolata per ogni prenotazione ed è indipendente da eventuali commissioni per i portali.",
+              text: "Come per qualsiasi portale di prenotazione, per le prenotazioni concluse tramite il marketplace di myBestDays si applica una commissione. Viene calcolata per ogni prenotazione ed è indipendente da eventuali commissioni per i portali.",
             },
             { type: "h2", text: "Come viene calcolata la commissione" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "La commissione del marketplace si applica esclusivamente alle prenotazioni tramite il marketplace di myNextDays.",
+                "La commissione del marketplace si applica esclusivamente alle prenotazioni tramite il marketplace di myBestDays.",
                 "Le prenotazioni da portale (Booking, Airbnb e altri) sono soggette alle condizioni del rispettivo portale.",
                 "Le prenotazioni dal sito web sono soggette alle condizioni previste dal vostro piano tariffario, senza commissione del marketplace.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Gli ospiti che prenotano tramite il marketplace di myNextDays creano un proprio profilo ospite. Al suo interno si raccolgono le loro prenotazioni, i messaggi con le attività e le recensioni rilasciate — in modo simile a un account ospite su un portale.",
+              text: "Gli ospiti che prenotano tramite il marketplace di myBestDays creano un proprio profilo ospite. Al suo interno si raccolgono le loro prenotazioni, i messaggi con le attività e le recensioni rilasciate — in modo simile a un account ospite su un portale.",
             },
             { type: "h2", text: "Cosa vedete come attività" },
             {

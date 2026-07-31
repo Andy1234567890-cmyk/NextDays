@@ -295,7 +295,7 @@ export const portaleKanalmanager: HelpCategory = {
             { type: "h2", text: "Kolme riippumatonta myyntikanavaa" },
             {
               type: "p",
-              text: "Kohdetta voidaan myydä samanaikaisesti useaa väylää pitkin: portaalien (Booking, Airbnb ja muut) kautta, myNextDays-alustan markkinapaikan kautta ja oman verkkosivustosi kautta. Jokaisella väylällä on oma näkyvyyskytkimensä — ne ovat täysin riippumattomia toisistaan.",
+              text: "Kohdetta voidaan myydä samanaikaisesti useaa väylää pitkin: portaalien (Booking, Airbnb ja muut) kautta, myBestDays-alustan markkinapaikan kautta ja oman verkkosivustosi kautta. Jokaisella väylällä on oma näkyvyyskytkimensä — ne ovat täysin riippumattomia toisistaan.",
             },
             { type: "h2", text: "Näkyvyyden ohjaaminen portaaleittain" },
             {

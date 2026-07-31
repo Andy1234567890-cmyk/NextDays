@@ -1,4 +1,4 @@
-// Splash-Overlay: zeigt beim App-Start das NextDays-Logo auf cremigem Grund
+// Splash-Overlay: zeigt beim App-Start das myBestDays-Logo auf cremigem Grund
 // und blendet sich nach kurzer Zeit sanft aus (über dem nativen LaunchScreen,
 // damit der Übergang ins App-UI ohne Flackern wirkt).
 import { useEffect, useRef, useState } from "react";
@@ -24,7 +24,7 @@ export function Splash() {
   return (
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.wrap, { opacity }]}>
       <View style={styles.center}>
-        <Image source={require("@/assets/img/Logo_transparent.png")} style={styles.logo} resizeMode="contain" />
+        <Image source={require("@/assets/img/mybestdays-logo.png")} style={styles.logo} resizeMode="contain" />
       </View>
     </Animated.View>
   );

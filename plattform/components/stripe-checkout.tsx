@@ -1,4 +1,4 @@
-// Stripe-Bezahlschritt im myNextDays-Branding (eigenes UI, kein Stripe-Redirect).
+// Stripe-Bezahlschritt im myBestDays-Branding (eigenes UI, kein Stripe-Redirect).
 // Lädt für eine angelegte Reservierung den PaymentIntent (Destination Charge),
 // rendert das Payment Element (Karten + lokale Methoden, 3DS automatisch) und
 // bestätigt clientseitig. Der finale „bezahlt"-Status kommt serverseitig über den

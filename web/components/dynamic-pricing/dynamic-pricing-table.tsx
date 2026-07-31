@@ -51,7 +51,7 @@ const STATUS_BADGE: Record<
 // Verteilkanal-Code → Marken-Logo (Original-Logos, white-label-konform) + Label.
 // Codes: eigene Plattform + Channex-OTA-Portal-Codes (BookingCom/AirBNB/VRBO/…).
 const CHANNEL_LOGO: Record<string, { label: string; icon: string }> = {
-  platform: { label: "myNextDays-Plattform", icon: "ph:house-line-fill" },
+  platform: { label: "myBestDays", icon: "ph:house-line-fill" },
   BookingCom: { label: "Booking.com", icon: "simple-icons:bookingdotcom" },
   AirBNB: { label: "Airbnb", icon: "simple-icons:airbnb" },
   Expedia: { label: "Expedia", icon: "simple-icons:expedia" },

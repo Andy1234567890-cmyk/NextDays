@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platforma (rynek)",
-  description: "Sprzedawaj na platformie myNextDays.",
+  description: "Sprzedawaj na platformie myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "Platforma myNextDays",
-          excerpt: "Globalna platforma myNextDays to własny kanał rezerwacji obok portali i strony internetowej.",
+          title: "Platforma myBestDays",
+          excerpt: "Globalna platforma myBestDays to własny kanał rezerwacji obok portali i strony internetowej.",
           updated: "Zaktualizowano: lipiec 2026",
           body: [
             {
               type: "p",
-              text: "Platforma myNextDays (/plattform) to globalny kanał rezerwacji samego myNextDays — porównywalny z Booking czy Airbnb, ale będący częścią tej samej platformy. Goście przeglądają tam obiekty wszystkich podłączonych firm i rezerwują bezpośrednio.",
+              text: "Platforma myBestDays (/plattform) to globalny kanał rezerwacji samego myBestDays — porównywalny z Booking czy Airbnb, ale będący częścią tej samej platformy. Goście przeglądają tam obiekty wszystkich podłączonych firm i rezerwują bezpośrednio.",
             },
             { type: "h2", text: "Nie „bezpośrednio”, lecz równorzędny kanał" },
             {
               type: "p",
-              text: "Platforma nie zastępuje rezerwacji bezpośredniej przez Twoją własną stronę internetową. Jest to samodzielna, trzecia droga sprzedaży z własną osią widoczności, własną bazą gości i własną prowizją — dokładnie jak portal, tylko prowadzona przez samo myNextDays.",
+              text: "Platforma nie zastępuje rezerwacji bezpośredniej przez Twoją własną stronę internetową. Jest to samodzielna, trzecia droga sprzedaży z własną osią widoczności, własną bazą gości i własną prowizją — dokładnie jak portal, tylko prowadzona przez samo myBestDays.",
             },
             { type: "h2", text: "Jak obiekty trafiają na platformę" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Podobnie jak w przypadku każdego portalu rezerwacyjnego, za rezerwacje zawierane przez platformę myNextDays naliczana jest prowizja. Jest ona obliczana dla każdej rezerwacji i jest niezależna od ewentualnych prowizji dla portali.",
+              text: "Podobnie jak w przypadku każdego portalu rezerwacyjnego, za rezerwacje zawierane przez platformę myBestDays naliczana jest prowizja. Jest ona obliczana dla każdej rezerwacji i jest niezależna od ewentualnych prowizji dla portali.",
             },
             { type: "h2", text: "Jak obliczana jest prowizja" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Prowizja platformy dotyczy wyłącznie rezerwacji przez platformę myNextDays.",
+                "Prowizja platformy dotyczy wyłącznie rezerwacji przez platformę myBestDays.",
                 "Rezerwacje z portali (Booking, Airbnb i inne) podlegają warunkom danego portalu.",
                 "Rezerwacje ze strony internetowej podlegają warunkom zapisanym dla Twojej taryfy, bez prowizji platformy.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Goście, którzy rezerwują przez platformę myNextDays, tworzą własny profil gościa. Gromadzą się w nim ich rezerwacje, wiadomości z firmami i wystawione opinie — podobnie jak w przypadku konta gościa na portalu.",
+              text: "Goście, którzy rezerwują przez platformę myBestDays, tworzą własny profil gościa. Gromadzą się w nim ich rezerwacje, wiadomości z firmami i wystawione opinie — podobnie jak w przypadku konta gościa na portalu.",
             },
             { type: "h2", text: "Co widzisz jako firma" },
             {

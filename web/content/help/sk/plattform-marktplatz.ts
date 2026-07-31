@@ -3,7 +3,7 @@ import type { HelpCategory } from "../types";
 export const plattformMarktplatz: HelpCategory = {
   slug: "plattform-marktplatz",
   title: "Platforma (trhovisko)",
-  description: "Predaj na trhovisku myNextDays.",
+  description: "Predaj na trhovisku myBestDays.",
   icon: "ph:storefront",
   collection: "kb",
   sections: [
@@ -12,18 +12,18 @@ export const plattformMarktplatz: HelpCategory = {
       articles: [
         {
           slug: "der-marktplatz",
-          title: "Trhovisko myNextDays",
-          excerpt: "Globálne trhovisko myNextDays je vlastný rezervačný kanál popri portáloch a webovej stránke.",
+          title: "Trhovisko myBestDays",
+          excerpt: "Globálne trhovisko myBestDays je vlastný rezervačný kanál popri portáloch a webovej stránke.",
           updated: "Aktualizované: júl 2026",
           body: [
             {
               type: "p",
-              text: "Trhovisko myNextDays (/plattform) je globálny rezervačný kanál samotného myNextDays — porovnateľný s Booking alebo Airbnb, no je súčasťou tej istej platformy. Hostia tam prehľadávajú objekty všetkých pripojených prevádzok a rezervujú priamo.",
+              text: "Trhovisko myBestDays (/plattform) je globálny rezervačný kanál samotného myBestDays — porovnateľný s Booking alebo Airbnb, no je súčasťou tej istej platformy. Hostia tam prehľadávajú objekty všetkých pripojených prevádzok a rezervujú priamo.",
             },
             { type: "h2", text: "Nie „priamo“, ale rovnocenný kanál" },
             {
               type: "p",
-              text: "Trhovisko nenahrádza priamu rezerváciu cez vašu vlastnú webovú stránku. Je to samostatná, tretia predajná cesta s vlastnou osou viditeľnosti, vlastnou základňou hostí a vlastnou províziou — presne ako portál, len ho prevádzkuje samotný myNextDays.",
+              text: "Trhovisko nenahrádza priamu rezerváciu cez vašu vlastnú webovú stránku. Je to samostatná, tretia predajná cesta s vlastnou osou viditeľnosti, vlastnou základňou hostí a vlastnou províziou — presne ako portál, len ho prevádzkuje samotný myBestDays.",
             },
             { type: "h2", text: "Ako sa objekty dostanú na trhovisko" },
             {
@@ -104,7 +104,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Rovnako ako pri každom rezervačnom portáli sa aj za rezervácie uskutočnené cez trhovisko myNextDays účtuje provízia. Počíta sa za jednotlivú rezerváciu a je nezávislá od prípadných provízií za portály.",
+              text: "Rovnako ako pri každom rezervačnom portáli sa aj za rezervácie uskutočnené cez trhovisko myBestDays účtuje provízia. Počíta sa za jednotlivú rezerváciu a je nezávislá od prípadných provízií za portály.",
             },
             { type: "h2", text: "Ako sa provízia počíta" },
             {
@@ -125,7 +125,7 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Provízia z trhoviska platí výhradne pre rezervácie cez trhovisko myNextDays.",
+                "Provízia z trhoviska platí výhradne pre rezervácie cez trhovisko myBestDays.",
                 "Rezervácie z portálov (Booking, Airbnb a ďalšie) podliehajú podmienkam príslušného portálu.",
                 "Rezervácie z webovej stránky podliehajú podmienkam uloženým pre váš tarif bez provízie z trhoviska.",
               ],
@@ -145,7 +145,7 @@ export const plattformMarktplatz: HelpCategory = {
           body: [
             {
               type: "p",
-              text: "Hostia, ktorí rezervujú cez trhovisko myNextDays, si vytvárajú vlastný profil hosťa. V ňom sa zhromažďujú ich rezervácie, správy s prevádzkami a udelené hodnotenia — podobne ako pri portálovom konte hosťa.",
+              text: "Hostia, ktorí rezervujú cez trhovisko myBestDays, si vytvárajú vlastný profil hosťa. V ňom sa zhromažďujú ich rezervácie, správy s prevádzkami a udelené hodnotenia — podobne ako pri portálovom konte hosťa.",
             },
             { type: "h2", text: "Čo vidíte ako prevádzka" },
             {

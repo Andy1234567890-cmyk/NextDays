@@ -253,7 +253,7 @@ export const zahlungen: HelpCategory = {
             {
               type: "ul",
               items: [
-                "Comissão de mercado: aplica-se a reservas feitas através da plataforma myNextDays",
+                "Comissão de mercado: aplica-se a reservas feitas através da plataforma myBestDays",
                 "Comissão de portal: é calculada pelo respetivo portal, de acordo com as suas próprias condições",
                 "As reservas diretas através do seu próprio site devem ser vistas de forma independente",
               ],
