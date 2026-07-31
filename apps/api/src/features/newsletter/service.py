@@ -63,28 +63,390 @@ def _hash(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-# Betreff/Text der Bestätigungsmail. Zwei gepflegte Sprachen; jede andere
-# Oberflächensprache bekommt Englisch — bewusst, statt maschinell erzeugter
-# Texte in 24 Sprachen (die niemand gegengelesen hat).
+# Betreff und Text der Bestätigungsmail in allen 24 EU-Amtssprachen (dieselbe
+# Liste wie marketing/i18n/locales.ts). Die Sprache kommt aus dem Popup mit;
+# eine unbekannte Sprache bekommt Englisch — kein Mischtext.
 _MAILTEXTE = {
+    "bg": {
+        "subject": "Моля, потвърдете записването си",
+        "body": (
+            "Здравейте,\n"
+            "\n"
+            "записахте се за новини от myNextDays. Моля, потвърдете адреса си с "
+            "едно кликване:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Връзката е валидна 7 дни и може да се използва само веднъж. Ако не "
+            "сте се записвали, просто игнорирайте това писмо — без потвърждение не "
+            "се случва нищо.\n"
+            "\n"
+        ),
+    },
+    "cs": {
+        "subject": "Potvrďte prosím své přihlášení",
+        "body": (
+            "Dobrý den,\n"
+            "\n"
+            "přihlásili jste se k odběru novinek od myNextDays. Potvrďte prosím "
+            "svou adresu jedním kliknutím:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Odkaz platí 7 dní a lze jej použít pouze jednou. Pokud jste se "
+            "nepřihlašovali, tento e-mail ignorujte — bez potvrzení se nic "
+            "nestane.\n"
+            "\n"
+        ),
+    },
+    "da": {
+        "subject": "Bekræft venligst din tilmelding",
+        "body": (
+            "Hej,\n"
+            "\n"
+            "du har tilmeldt dig nyheder fra myNextDays. Bekræft venligst din "
+            "adresse med ét klik:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Linket gælder i 7 dage og kan kun bruges én gang. Har du ikke "
+            "tilmeldt dig, så se bort fra denne mail — uden bekræftelse sker der "
+            "ingenting.\n"
+            "\n"
+        ),
+    },
     "de": {
         "subject": "Bitte bestätige deine Anmeldung",
         "body": (
-            "Hallo,\n\n"
+            "Hallo,\n"
+            "\n"
             "du hast dich für Neuigkeiten von myNextDays angemeldet. Bitte "
-            "bestätige deine Adresse mit einem Klick:\n\n{link}\n\n"
-            "Der Link ist 7 Tage gültig. Wenn du dich nicht angemeldet hast, "
-            "ignoriere diese Mail einfach — ohne Bestätigung passiert nichts.\n"
+            "bestätige deine Adresse mit einem Klick:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Der Link ist 7 Tage gültig und nur einmal verwendbar. Wenn du dich "
+            "nicht angemeldet hast, ignoriere diese Mail einfach — ohne "
+            "Bestätigung passiert nichts.\n"
+            "\n"
+        ),
+    },
+    "el": {
+        "subject": "Επιβεβαιώστε την εγγραφή σας",
+        "body": (
+            "Γεια σας,\n"
+            "\n"
+            "εγγραφήκατε για να λαμβάνετε νέα από το myNextDays. Επιβεβαιώστε τη "
+            "διεύθυνσή σας με ένα κλικ:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Ο σύνδεσμος ισχύει για 7 ημέρες και μπορεί να χρησιμοποιηθεί μία "
+            "φορά. Αν δεν κάνατε εσείς την εγγραφή, αγνοήστε αυτό το μήνυμα — "
+            "χωρίς επιβεβαίωση δεν συμβαίνει τίποτα.\n"
+            "\n"
         ),
     },
     "en": {
         "subject": "Please confirm your subscription",
         "body": (
-            "Hi,\n\n"
-            "you signed up for news from myNextDays. Please confirm your "
-            "address with one click:\n\n{link}\n\n"
-            "The link is valid for 7 days. If you didn't sign up, just ignore "
-            "this email — nothing happens without confirmation.\n"
+            "Hi,\n"
+            "\n"
+            "you signed up for news from myNextDays. Please confirm your address "
+            "with one click:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "The link is valid for 7 days and can be used once. If you did not "
+            "sign up, just ignore this email — nothing happens without "
+            "confirmation.\n"
+            "\n"
+        ),
+    },
+    "es": {
+        "subject": "Confirma tu suscripción",
+        "body": (
+            "Hola:\n"
+            "\n"
+            "te has apuntado para recibir novedades de myNextDays. Confirma tu "
+            "dirección con un clic:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "El enlace es válido durante 7 días y solo se puede usar una vez. Si "
+            "no te has apuntado, ignora este correo: sin confirmación no ocurre "
+            "nada.\n"
+            "\n"
+        ),
+    },
+    "et": {
+        "subject": "Palun kinnita oma registreerumine",
+        "body": (
+            "Tere,\n"
+            "\n"
+            "registreerusid myNextDaysi uudiste saamiseks. Palun kinnita oma "
+            "aadress ühe klikiga:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Link kehtib 7 päeva ja seda saab kasutada üks kord. Kui sa ei "
+            "registreerunud, jäta see kiri lihtsalt tähelepanuta — ilma "
+            "kinnituseta ei juhtu midagi.\n"
+            "\n"
+        ),
+    },
+    "fi": {
+        "subject": "Vahvista tilauksesi",
+        "body": (
+            "Hei,\n"
+            "\n"
+            "olet tilannut uutisia myNextDaysilta. Vahvista osoitteesi yhdellä "
+            "klikkauksella:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Linkki on voimassa 7 päivää ja sen voi käyttää kerran. Jos et ole "
+            "tilannut, jätä tämä viesti huomiotta — ilman vahvistusta ei tapahdu "
+            "mitään.\n"
+            "\n"
+        ),
+    },
+    "fr": {
+        "subject": "Merci de confirmer votre inscription",
+        "body": (
+            "Bonjour,\n"
+            "\n"
+            "vous vous êtes inscrit aux nouvelles de myNextDays. Merci de "
+            "confirmer votre adresse en un clic :\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Le lien est valable 7 jours et utilisable une seule fois. Si vous "
+            "n'êtes pas à l'origine de cette inscription, ignorez simplement ce "
+            "message — sans confirmation, rien ne se passe.\n"
+            "\n"
+        ),
+    },
+    "ga": {
+        "subject": "Deimhnigh do chlárú, le do thoil",
+        "body": (
+            "Dia duit,\n"
+            "\n"
+            "chláraigh tú le haghaidh nuachta ó myNextDays. Deimhnigh do sheoladh "
+            "le cliceáil amháin, le do thoil:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Tá an nasc bailí ar feadh 7 lá agus is féidir é a úsáid uair amháin. "
+            "Mura ndearna tú clárú, déan neamhaird den ríomhphost seo — ní "
+            "tharlaíonn aon rud gan deimhniú.\n"
+            "\n"
+        ),
+    },
+    "hr": {
+        "subject": "Potvrdite svoju prijavu",
+        "body": (
+            "Pozdrav,\n"
+            "\n"
+            "prijavili ste se na novosti od myNextDaysa. Potvrdite svoju adresu "
+            "jednim klikom:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Poveznica vrijedi 7 dana i može se upotrijebiti jednom. Ako se niste "
+            "prijavili, jednostavno zanemarite ovu poruku — bez potvrde se ništa "
+            "ne događa.\n"
+            "\n"
+        ),
+    },
+    "hu": {
+        "subject": "Kérjük, erősítse meg a feliratkozását",
+        "body": (
+            "Üdvözöljük,\n"
+            "\n"
+            "feliratkozott a myNextDays híreire. Kérjük, erősítse meg a címét "
+            "egyetlen kattintással:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "A link 7 napig érvényes, és egyszer használható. Ha nem Ön iratkozott "
+            "fel, egyszerűen hagyja figyelmen kívül ezt a levelet — megerősítés "
+            "nélkül nem történik semmi.\n"
+            "\n"
+        ),
+    },
+    "it": {
+        "subject": "Conferma la tua iscrizione",
+        "body": (
+            "Ciao,\n"
+            "\n"
+            "ti sei iscritto alle novità di myNextDays. Conferma il tuo indirizzo "
+            "con un clic:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Il link è valido 7 giorni e può essere usato una sola volta. Se non "
+            "ti sei iscritto, ignora questa e-mail: senza conferma non succede "
+            "nulla.\n"
+            "\n"
+        ),
+    },
+    "lt": {
+        "subject": "Patvirtinkite savo registraciją",
+        "body": (
+            "Sveiki,\n"
+            "\n"
+            "užsiregistravote gauti myNextDays naujienas. Patvirtinkite savo "
+            "adresą vienu spustelėjimu:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Nuoroda galioja 7 dienas ir gali būti panaudota vieną kartą. Jei "
+            "neužsiregistravote, tiesiog nepaisykite šio laiško — be patvirtinimo "
+            "niekas neįvyks.\n"
+            "\n"
+        ),
+    },
+    "lv": {
+        "subject": "Lūdzu, apstipriniet savu pieteikšanos",
+        "body": (
+            "Sveiki!\n"
+            "\n"
+            "Jūs pieteicāties myNextDays jaunumiem. Lūdzu, apstipriniet savu "
+            "adresi ar vienu klikšķi:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Saite ir derīga 7 dienas un izmantojama vienu reizi. Ja "
+            "nepieteicāties, vienkārši ignorējiet šo vēstuli — bez apstiprinājuma "
+            "nekas nenotiek.\n"
+            "\n"
+        ),
+    },
+    "mt": {
+        "subject": "Jekk jogħġbok ikkonferma r-reġistrazzjoni tiegħek",
+        "body": (
+            "Bonġu,\n"
+            "\n"
+            "irreġistrajt għall-aħbarijiet ta' myNextDays. Jekk jogħġbok "
+            "ikkonferma l-indirizz tiegħek bi klikk waħda:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Il-link tgħodd għal 7 ijiem u tista' tintuża darba. Jekk ma "
+            "rreġistrajtx int, sempliċiment injora din l-email — mingħajr konferma "
+            "ma jiġri xejn.\n"
+            "\n"
+        ),
+    },
+    "nl": {
+        "subject": "Bevestig je aanmelding",
+        "body": (
+            "Hallo,\n"
+            "\n"
+            "je hebt je aangemeld voor nieuws van myNextDays. Bevestig je adres "
+            "met één klik:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "De link is 7 dagen geldig en kan één keer worden gebruikt. Heb je je "
+            "niet aangemeld, negeer dan deze e-mail — zonder bevestiging gebeurt "
+            "er niets.\n"
+            "\n"
+        ),
+    },
+    "pl": {
+        "subject": "Potwierdź swój zapis",
+        "body": (
+            "Dzień dobry,\n"
+            "\n"
+            "zapisałeś się na nowości od myNextDays. Potwierdź swój adres jednym "
+            "kliknięciem:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Link jest ważny 7 dni i można go użyć raz. Jeśli to nie Ty się "
+            "zapisywałeś, po prostu zignoruj tę wiadomość — bez potwierdzenia nic "
+            "się nie dzieje.\n"
+            "\n"
+        ),
+    },
+    "pt": {
+        "subject": "Confirme a sua inscrição",
+        "body": (
+            "Olá,\n"
+            "\n"
+            "inscreveu-se para receber novidades do myNextDays. Confirme o seu "
+            "endereço com um clique:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "A ligação é válida durante 7 dias e pode ser usada uma vez. Se não se "
+            "inscreveu, ignore este e-mail — sem confirmação não acontece nada.\n"
+            "\n"
+        ),
+    },
+    "ro": {
+        "subject": "Vă rugăm să confirmați înscrierea",
+        "body": (
+            "Bună ziua,\n"
+            "\n"
+            "v-ați înscris pentru noutăți de la myNextDays. Vă rugăm să confirmați "
+            "adresa cu un clic:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Linkul este valabil 7 zile și poate fi folosit o singură dată. Dacă "
+            "nu v-ați înscris, ignorați acest e-mail — fără confirmare nu se "
+            "întâmplă nimic.\n"
+            "\n"
+        ),
+    },
+    "sk": {
+        "subject": "Potvrďte prosím svoje prihlásenie",
+        "body": (
+            "Dobrý deň,\n"
+            "\n"
+            "prihlásili ste sa na odber noviniek od myNextDays. Potvrďte prosím "
+            "svoju adresu jedným kliknutím:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Odkaz platí 7 dní a možno ho použiť raz. Ak ste sa neprihlasovali, "
+            "tento e-mail jednoducho ignorujte — bez potvrdenia sa nič nestane.\n"
+            "\n"
+        ),
+    },
+    "sl": {
+        "subject": "Potrdite svojo prijavo",
+        "body": (
+            "Pozdravljeni,\n"
+            "\n"
+            "prijavili ste se na novice myNextDays. Potrdite svoj naslov z enim "
+            "klikom:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Povezava velja 7 dni in jo je mogoče uporabiti enkrat. Če se niste "
+            "prijavili, to sporočilo preprosto prezrite — brez potrditve se ne "
+            "zgodi nič.\n"
+            "\n"
+        ),
+    },
+    "sv": {
+        "subject": "Bekräfta din anmälan",
+        "body": (
+            "Hej,\n"
+            "\n"
+            "du har anmält dig till nyheter från myNextDays. Bekräfta din adress "
+            "med ett klick:\n"
+            "\n"
+            "{link}\n"
+            "\n"
+            "Länken gäller i 7 dagar och kan användas en gång. Har du inte anmält "
+            "dig kan du bortse från det här mejlet — utan bekräftelse händer "
+            "ingenting.\n"
+            "\n"
         ),
     },
 }
