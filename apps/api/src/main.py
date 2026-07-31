@@ -48,6 +48,7 @@ from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
 from .features.login_devices.router import router as login_devices_router
 from .features.media.router import router as media_router
+from .features.newsletter.router import router as newsletter_router
 from .features.notification_settings.router import (
     router as notification_settings_router,
 )
@@ -111,6 +112,7 @@ _SLICE_ROUTERS = [
     # Guard CurrentPlatformAdmin, DB-geprüfte Rolle, vollständiges Audit-Log).
     platform_admin_router,
     subscriptions_router,
+    newsletter_router,
     support_router,
     property_taxes_router,
     taxpayer_router,

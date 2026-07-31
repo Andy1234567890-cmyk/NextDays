@@ -247,6 +247,24 @@ class Settings(BaseSettings):
     # Einladung klar fehl, statt eine erfundene URL zu verschicken (Wurzel 4).
     admin_base_url: str = ""
 
+    # Öffentliche Adresse der Marketing-Seite (marketing/). Ziel der Bestätigungs-
+    # und Abmelde-Links aus den Newsletter-Mails. Fehlt sie, wird keine
+    # Voranmeldung angenommen — ein Link auf eine geratene Domain wäre wertlos.
+    marketing_base_url: str = ""
+
+    # --- Brevo (Newsletter/Marketing, getrennt vom eigenen Mailserver) --------
+    # Der eigene Mailcow bleibt für Transaktionsmails zuständig; Brevo ist NUR
+    # der Marketing-Kanal (Listenpflege, Kampagnen). Ohne Schlüssel läuft die
+    # Voranmeldung trotzdem: die Adresse liegt bei uns, der Brevo-Abgleich
+    # bleibt sichtbar offen (brevo_last_error), statt still zu „gelingen".
+    # ACHTUNG Betrieb: Brevo blockt Aufrufe von nicht autorisierten IPs — die
+    # Server-IP muss im Brevo-Konto unter Authorized IPs stehen.
+    brevo_api_key: SecretStr = SecretStr("")
+    brevo_base_url: str = "https://api.brevo.com/v3"
+    # Ziel-Liste der Voranmeldungen. Keine Vorgabe: eine geratene Listen-ID
+    # schriebe Kontakte in eine fremde Liste (Wurzel 4).
+    brevo_list_id: int | None = None
+
     @property
     def mail_configured(self) -> bool:
         """Versand ist nutzbar, wenn Server UND Absender gesetzt sind. Fehlt eins,

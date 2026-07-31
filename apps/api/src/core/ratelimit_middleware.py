@@ -97,6 +97,12 @@ _AI_PATHS = ("/dashboard/voice", "/content/translate")
 # Anfrage abweisen als bei Redis-Ausfall die Schleusen öffnen.
 _PUBLIC_SUPPORT_PATHS = ("/support/public",)
 
+# Öffentliche Newsletter-Endpunkte der Marketing-Seite: jede Anfrage kann eine
+# Mail an eine FREMDE Adresse auslösen bzw. probiert einen Token durch — daher
+# derselbe strenge Bucket wie beim öffentlichen Support-Chat.
+_NEWSLETTER_PATHS = ("/newsletter/subscribe", "/newsletter/confirm",
+                     "/newsletter/unsubscribe")
+
 # Öffentliche Such-/Kalender-Endpunkte → Scraper-Schutz pro IP. Der iCal-Export
 # ist nicht eingeloggt (ein Kalender-Client schickt kein JWT).
 _LISTINGS_PATHS = (
@@ -137,6 +143,7 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("auth", _AUTH_PATHS, "auth", True),
     ("payments", ("/payments/",), "payments", True),
     ("public_support", _PUBLIC_SUPPORT_PATHS, "public_support", True),
+    ("public_support", _NEWSLETTER_PATHS, "public_support", True),
     ("ai", _AI_PATHS, "ai", False),
     ("listings", _LISTINGS_PATHS, "listings", False),
 )

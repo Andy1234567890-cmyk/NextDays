@@ -8,6 +8,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 
 import { SupportChat } from "@/components/support-chat";
+import { VoranmeldungPopup } from "@/components/voranmeldung-popup";
 
 import type { Metadata } from "next";
 
@@ -44,6 +45,9 @@ export default async function RootLayout({
           {children}
           {/* Auf JEDER Seite erreichbar, auch in den Rechtsdokumenten. */}
           <SupportChat />
+          {/* Fängt vor dem Start die Klicks auf „Anmelden"/„Kostenlos starten"
+              ab und sammelt stattdessen Voranmeldungen. */}
+          <VoranmeldungPopup />
         </NextIntlClientProvider>
       </body>
     </html>
