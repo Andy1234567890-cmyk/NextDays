@@ -252,3 +252,186 @@ Threads. Backend: stop_sell-Endpunkte im `calendar`-Slice, Threads im `inbox`-Sl
 
 **Migrationen:** 0031 (reservations `source_channex_booking_id`/`external_ref`/
 `ota_name`), 0032 (`stop_sell`-Tabelle).
+
+---
+
+# Vollständige Endpunkt- und Feld-Inventur (Stand 2026-07-31)
+
+Jeder unten genannte Endpunkt wurde live gegen `staging.channex.io/api/v1`
+aufgerufen; die Feldnamen stammen aus den echten Antworten, nichts abgeschrieben.
+
+**Geltungsbereich:** Die Inventur zeigt, was unser Staging-Konto sieht
+(`acc_channels_count: 0` — kein aktiv verbundener OTA-Kanal). Felder hinter einer
+Freischaltung (Whitelabel, Channel-API, aktiver Kanal) würden hier nicht
+erscheinen. Die Liste belegt also, was es GIBT — nicht, was es nicht gibt.
+
+## Endpunkte mit Antwort (17)
+
+| Endpunkt | Inhalt |
+|---|---|
+| `/properties` | Objekt (Betrieb/Unterkunft) |
+| `/room_types` | Zimmertyp = buchbare Einheit |
+| `/rate_plans` | Ratenpläne |
+| `/groups` | Kontogruppen (`group_id` beim Kanal-Anlegen) |
+| `/channels` | verbundene OTA-Kanäle |
+| `/webhooks` | Rückruf-Registrierungen |
+| `/property_facilities` | Ausstattungskatalog Objekt (301 Einträge) |
+| `/room_facilities` | Ausstattungskatalog Zimmer (191 Einträge) |
+| `/currencies` | Währungsliste |
+| `/photos` | Bilder |
+| `/cancellation_policies` | Stornoregeln |
+| `/tax_sets` | Steuersätze (Gruppen) |
+| `/taxes` | Steuersätze (einzeln) |
+| `/hotel_policies` | Hausregeln |
+| `/bookings` | Buchungen |
+| `/booking_revisions/feed` | Eingang neuer/geänderter Buchungen |
+| `/applications` | Zusatz-Apps des Kontos |
+
+## Endpunkte ohne Antwort — 404 (19)
+
+`/facilities`, `/bed_types`, `/property_types`, `/property_attributes`,
+`/room_type_attributes`, `/rate_plan_attributes`, `/attributes`, `/room_kinds`,
+`/languages`, `/countries`, `/listings`, `/airbnb_listings`, `/content`,
+`/room_type_content`, `/property_content`, `/descriptions`, `/amenities`,
+`/meal_types`, `/users`
+
+## Feldnamen je Endpunkt
+
+### `/properties` — 32 Felder
+
+```
+acc_channels_count, address, city, content, country, currency,
+default_cancellation_policy_id, default_tax_set_id, email,
+expected_removal_date, hotel_policy_id, id, is_active, latitude,
+location_precision, logo_url, longitude, max_count_of_occupancies,
+max_count_of_rate_plans, max_count_of_room_types, max_count_of_users,
+min_stay_type, phone, property_category, property_type, settings, state,
+timezone, title, website, zip_code
+```
+
+Verschachtelt:
+- `content` → `description`, `photos[]`, `important_information`
+- `settings` → `min_stay_type`, `allow_availability_autoupdate`,
+  `allow_availability_autoupdate_on_cancellation`,
+  `allow_availability_autoupdate_on_confirmation`,
+  `allow_availability_autoupdate_on_modification`, `cut_off_days`,
+  `cut_off_time`, `max_day_advance`, `max_price`, `min_price`, `state_length`
+- `relationships` → `users`, `groups`
+
+### `/room_types` — 13 Felder
+
+```
+capacity, codes, content, count_of_rooms, default_occupancy, id, meta,
+occ_adults, occ_children, occ_infants, position, room_kind, title
+```
+
+Verschachtelt:
+- `content` → `description`, `photos[]`
+- `relationships` → `property`, `facilities`
+
+Belegungsbezogene Felder (Bedeutung laut Channex-Doku):
+
+| Feld | Bedeutung |
+|---|---|
+| `occ_adults` | Anzahl der Betten für Erwachsene |
+| `occ_children` | Anzahl der Kinderbetten |
+| `occ_infants` | Anzahl der verfügbaren Babybetten |
+| `default_occupancy` | Standardbelegung, muss ≤ `occ_adults` sein |
+| `capacity` | Anzahl Betten im physischen Zimmer (nur `room_kind: dorm`) |
+| `count_of_rooms` | Anzahl gleichartiger Zimmer dieses Typs |
+
+### `/rate_plans` — 29 Felder
+
+```
+auto_rate_settings, cancellation_policy_id, children_fee, closed_to_arrival,
+closed_to_departure, currency, id, infant_fee, inherit_availability_offset,
+inherit_closed_to_arrival, inherit_closed_to_departure,
+inherit_max_availability, inherit_max_stay, inherit_min_stay_arrival,
+inherit_min_stay_through, inherit_rate, inherit_stop_sell, max_stay, meal_type,
+meta, min_stay_arrival, min_stay_through, options, rate_mode, sell_mode,
+stop_sell, tax_set_id, title, ui_read_only
+```
+
+### `/channels` — 12 Felder
+
+```
+actions, channel, currency, expected_removal_date, id, inserted_at, is_active,
+properties, rate_plans, settings, title, updated_at
+```
+
+### `/webhooks` — 9 Felder
+
+```
+callback_url, event_mask, headers, id, is_active, is_global, protected,
+request_params, send_data
+```
+
+### `/property_facilities` und `/room_facilities` — je 3 Felder
+
+```
+category, id, title
+```
+
+Kategorien Zimmer: `bathroom`, `general`, `in_room`, `kitchen`, `outside`,
+`security`, `view`
+Kategorien Objekt: `activites`, `food_and_drink`, `general`, `outdoors`,
+`parking`, `pets`, `safety_and_security`, `services`, `sustainable_practice`
+
+Der Katalog kennt keine Mengenangabe — jeder Eintrag ist ein Ja/Nein-Merkmal.
+Betten kommen darin nur als Merkmal vor, nicht als Anzahl oder Typ: `Sofa bed`,
+`Rollaway bed`, `Children crib/cots`, `Extra long beds`, `Socket near the bed`.
+
+### `/photos` — 8 Felder
+
+```
+author, description, id, kind, position, property_id, room_type_id, url
+```
+
+### `/applications` — 9 Felder
+
+```
+code, description, id, is_configurable, logo_url, price,
+representation_settings, title, vr_price
+```
+
+### `/groups` — 2 Felder · `/currencies` — 2 Felder
+
+```
+id, title                    code, label
+```
+
+## Schreibbarkeit einzelner Felder (live geprüft 2026-08-01)
+
+Ein `200` von Channex heißt NICHT, dass der Wert gespeichert wurde — mehrere
+Felder quittieren freundlich und verwerfen still. Jede Zeile hier wurde per
+PUT/POST gesetzt und danach zurückgelesen.
+
+| Feld | Ebene | schreibbar? | Befund |
+|---|---|---|---|
+| `facilities` | room_type | **ja** | Relationship; ein PUT mit einer UUID entfernt die übrigen (Wurzel-1-konform) |
+| `facilities` | property | **ja** | seit jeher genutzt |
+| `property_category` | property | **nein** | `hotel`, `vacation_rental`, `hostel`, `apartment`, `villa` je HTTP 200 → Wert blieb unverändert. Channex leitet ihn selbst aus `property_type` ab. Nicht senden. |
+| `room_size`, `size`, `square_meters` | room_type | nein | 200, nicht gespeichert |
+| `beds`, `bed_configuration`, `bedrooms`, `bathrooms` | room_type | nein | 201/200, verworfen |
+
+Konsequenz für uns: die Zimmergröße und die Bettenaufstellung sind lokale
+Felder (eigene Strecke + myBestDays), `property_category` senden wir nicht.
+
+## Zimmergröße und Bettentypen
+
+Kein Endpunkt und kein Feld dieser Inventur trägt eine **Zimmergröße in m²** oder
+eine **Bettentyp-Liste mit Stückzahl** (z. B. 1 Doppelbett + 2 Einzelbetten).
+Bettenzahlen erscheinen ausschließlich als Belegungszahlen (`occ_adults`,
+`occ_children`, `occ_infants`, `capacity`).
+
+Das gilt für unser Staging-Konto zum genannten Datum. Der `facilities`-Bezug am
+Zimmertyp ist bei uns leer und `acc_channels_count` steht auf 0 — ob Channex
+weitere Content-Felder freischaltet, sobald ein OTA-Kanal aktiv verbunden ist,
+lässt sich von hier aus nicht feststellen.
+
+## Reproduzieren
+
+```bash
+curl -s -H "user-api-key: $CHANNEX_API_KEY" \
+  "$CHANNEX_BASE_URL/room_types" | jq '.data[0].attributes | keys'
+```
