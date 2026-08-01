@@ -4,78 +4,112 @@
 // Rollen für den Wizard — die `value`s sind exakt die DB-UserRoles
 // (admin | co_admin | owner | staff | cleaner), damit die Zuweisung beim
 // Anlegen 1:1 ins Backend geht.
+// Die Bezeichnung kommt aus i18n (account.roles.<value>); hier nur der Wert,
+// der 1:1 die DB-Rolle ist.
 export const ROLES = [
-  { value: "admin", label: "Admin" },
-  { value: "co_admin", label: "Co-Admin" },
-  { value: "owner", label: "Unterkunftseigentümer" },
-  { value: "staff", label: "Mitarbeiter" },
-  { value: "cleaner", label: "Reinigungspersonal" },
+  { value: "admin" },
+  { value: "co_admin" },
+  { value: "owner" },
+  { value: "staff" },
+  { value: "cleaner" },
 ] as const;
 
+// Gesprochene Sprachen: gespeichert wird weiterhin der deutsche Name (Altbestand
+// in users.spoken_languages), angezeigt wird er über Intl.DisplayNames in der
+// Sprache der Oberfläche — deshalb der ISO-Code daneben (useLanguageOptions).
 export const LANGUAGES = [
-  "Arabisch", "Baskisch", "Bulgarisch", "Catalan", "Chinesisch",
-  "Chinesisch (Traditionell)", "Deutsch", "Dänisch", "Englisch", "Finnisch",
-  "Französisch", "Griechisch", "Hebräisch", "Holländisch", "Italienisch",
-  "Japanisch", "Koreanisch", "Kroatisch", "Litauisch", "Norwegisch",
-  "Polnisch", "Portugiesisch", "Rumänisch", "Russisch", "Schwedisch",
-  "Slowakisch", "Slowenisch", "Spanisch", "Thai", "Tschechisch",
-  "Türkisch", "Ungarisch", "Vietnamesisch", "Serbisch",
+  { value: "Arabisch", code: "ar" },
+  { value: "Baskisch", code: "eu" },
+  { value: "Bulgarisch", code: "bg" },
+  { value: "Catalan", code: "ca" },
+  { value: "Chinesisch", code: "zh" },
+  { value: "Chinesisch (Traditionell)", code: "zh-Hant" },
+  { value: "Deutsch", code: "de" },
+  { value: "Dänisch", code: "da" },
+  { value: "Englisch", code: "en" },
+  { value: "Finnisch", code: "fi" },
+  { value: "Französisch", code: "fr" },
+  { value: "Griechisch", code: "el" },
+  { value: "Hebräisch", code: "he" },
+  { value: "Holländisch", code: "nl" },
+  { value: "Italienisch", code: "it" },
+  { value: "Japanisch", code: "ja" },
+  { value: "Koreanisch", code: "ko" },
+  { value: "Kroatisch", code: "hr" },
+  { value: "Litauisch", code: "lt" },
+  { value: "Norwegisch", code: "no" },
+  { value: "Polnisch", code: "pl" },
+  { value: "Portugiesisch", code: "pt" },
+  { value: "Rumänisch", code: "ro" },
+  { value: "Russisch", code: "ru" },
+  { value: "Schwedisch", code: "sv" },
+  { value: "Slowakisch", code: "sk" },
+  { value: "Slowenisch", code: "sl" },
+  { value: "Spanisch", code: "es" },
+  { value: "Thai", code: "th" },
+  { value: "Tschechisch", code: "cs" },
+  { value: "Türkisch", code: "tr" },
+  { value: "Ungarisch", code: "hu" },
+  { value: "Vietnamesisch", code: "vi" },
+  { value: "Serbisch", code: "sr" },
 ] as const;
 
-export type Permission = { id: string; label: string; hint: string };
+// Bezeichnung und Hinweis liegen in i18n (permissions.<id>.label/.hint);
+// hier steht nur die Backend-Permission-ID.
+export type Permission = { id: string };
 
 // Allgemeine Berechtigungen.
 export const GENERAL_PERMISSIONS: Permission[] = [
-  { id: "edit_property", label: "Unterkunft bearbeiten", hint: "Zugang zu Unterkunftsdetails zum Bearbeiten gewähren." },
-  { id: "edit_property_contact", label: "Kontaktdaten der Unterkunft bearbeiten", hint: "Erlauben, Kontaktinformationen zu bearbeiten. Erfordert die Berechtigung, Unterkünfte zu bearbeiten." },
-  { id: "manage_property_settings", label: "Unterkunft-Einstellungen verwalten", hint: "Ermöglicht das Zuweisen von Aktionsangeboten und Extras. Erfordert die Berechtigung, Unterkünfte zu bearbeiten." },
-  { id: "manage_property_conditions", label: "Unterkunftskonditionen verwalten", hint: "Erlauben, Konditionen über die Einstellungen zu erstellen/bearbeiten." },
-  { id: "edit_calendar_bookings", label: "Kalender und Buchungen bearbeiten", hint: "Erlauben, den Kalender und Buchungen zu bearbeiten. Erfordert Berechtigungen für Gastinformationen, Name und Berichte." },
-  { id: "view_guest_name", label: "Gastnamen anzeigen", hint: "Erlauben, den Gastnamen in der Buchung zu sehen. Erforderlich für den Posteingangszugriff." },
-  { id: "view_guest_contact", label: "Gast-Kontaktdaten anzeigen", hint: "Zugriff auf Gastinformationen erlauben. Erforderlich für den Posteingangszugriff." },
-  { id: "view_guest_id_docs", label: "Ausweisdokumente anzeigen", hint: "Erlauben, Ausweis-/Passnummern in der Gästekarte vollständig zu sehen (DSGVO-sensibel). Ohne diese Berechtigung werden Nummern maskiert." },
-  { id: "edit_guest", label: "Gästekarte bearbeiten", hint: "Erlauben, Gäste anzulegen, Stammdaten zu ändern und Adressen/Kontakte/Ausweise/Notizen/Einwilligungen zu pflegen. Ohne diese Berechtigung ist die Gästekarte nur lesbar." },
-  { id: "view_booking_source", label: "Buchungsquelle anzeigen", hint: "Erlauben, die Buchungsherkunft zu sehen, z.B. Airbnb, Booking.com." },
-  { id: "sync_ical", label: "Kalender über iCal synchronisieren", hint: "Zugriff auf Einstellungen gewähren, um den Kalender über iCal zu synchronisieren." },
-  { id: "download_booking_report", label: "Bericht über Buchungen herunterladen", hint: "Erlauben Sie den Download des Buchungsberichts der Unterkunft." },
-  { id: "access_homepage_builder", label: "Zugriff auf den Homepage Baukasten", hint: "Gewähren Sie Zugriff auf Website-Tools, mit Ausnahme der Veröffentlichungsberechtigung. Begrenzter Zugriff auf Dashboard, Buchungen, Kalender und Eigentümer-Zahlungszugang." },
-  { id: "hide_prices", label: "Entfernen Sie Buchungspreise und Angebotsdetails", hint: "Entfernt Preis- und Angebotsdetails in Buchungen und Kalender." },
-  { id: "manage_closed_periods", label: "Nur geschlossene Zeiträume verwalten", hint: "Gewährt Zugriff nur auf die Verwaltung von geschlossenen Zeiträumen. Wenn ausgewählt, werden die Berechtigungen zum Anzeigen von Gast-Kontaktdaten, Gästenamen, Bearbeiten des Kalenders und Buchungen, Anzeigen der Buchungsquelle und Herunterladen des Buchungsberichts deaktiviert." },
-  { id: "access_pm_features", label: "Auf PM-Module-Funktionen zugreifen", hint: "Ermöglicht den Zugriff auf PM-Module vom Hauptmenü aus. Um den Zugriff auf bestimmte Funktionen der PM-Module zu gewähren, weisen Sie die entsprechenden Berechtigungen zu." },
-  { id: "owner_reporting", label: "Zugriff auf Reporting für Eigentümer", hint: "Bietet Zugang zu Finanzberichten für Unterkunftseigentümer." },
-  { id: "manage_partners", label: "Reisebüros & Partner verwalten", hint: "Erlaubt, die Reisebüro-Kartei zu verwalten: Stammdaten, Kontakte, Verträge und vereinbarte Preise von Reisebüros und Reiseveranstaltern." },
+  { id: "edit_property" },
+  { id: "edit_property_contact" },
+  { id: "manage_property_settings" },
+  { id: "manage_property_conditions" },
+  { id: "edit_calendar_bookings" },
+  { id: "view_guest_name" },
+  { id: "view_guest_contact" },
+  { id: "view_guest_id_docs" },
+  { id: "edit_guest" },
+  { id: "view_booking_source" },
+  { id: "sync_ical" },
+  { id: "download_booking_report" },
+  { id: "access_homepage_builder" },
+  { id: "hide_prices" },
+  { id: "manage_closed_periods" },
+  { id: "access_pm_features" },
+  { id: "owner_reporting" },
+  { id: "manage_partners" },
 ];
 
 // PM-Module-Berechtigungen.
 export const PM_PERMISSIONS: Permission[] = [
-  { id: "pm_manage_booking_images", label: "Buchungsbilder hinzufügen und löschen", hint: "Ermöglicht das Hochladen und Entfernen von Bildern, die mit Buchungen verknüpft sind." },
-  { id: "pm_manage_property_images", label: "Unterkunftsbilder hinzufügen und löschen", hint: "Ermöglicht das Hinzufügen oder Löschen von Bildern der Unterkünfte." },
-  { id: "pm_checkout_alerts", label: "Warnungen sehen, die anzeigen, wenn Gäste Check-out machen", hint: "Benachrichtigt den Benutzer, wenn ein Gast ausgecheckt hat und die Unterkunft verlassen hat." },
-  { id: "pm_deposit_alerts", label: "Warnung erhalten, wenn eine Kaution fehlt", hint: "Zeigt Warnungen für Buchungen an, bei denen eine Kaution fehlt." },
-  { id: "pm_payment_alerts", label: "Warnungen sehen, wenn eine Zahlung fehlt", hint: "Benachrichtigt den Benutzer über unbezahlte Buchungen." },
-  { id: "pm_alert_icons", label: "Warnungssymbole sehen", hint: "Gewährt Sichtbarkeit von Warnungsindikatoren." },
-  { id: "pm_chat", label: "Auf den Chat in der PM-Module-App zugreifen", hint: "Ermöglicht dem Benutzer die Kommunikation über die Chat-Funktion in der PM-Module-App." },
-  { id: "pm_edit_comments", label: "Buchungskommentare bearbeiten und löschen", hint: "Erteilt die Erlaubnis, Buchungskommentare zu ändern oder zu entfernen." },
-  { id: "pm_edit_checkin_times", label: "Check-in- und Check-out-Zeiten bearbeiten", hint: "Ermöglicht die Änderung der Ankunfts- und Abreisezeiten des Gastes." },
-  { id: "pm_guest_module", label: "Zugriff auf das Gastmodul", hint: "Gewährt die Berechtigung für den Zugriff auf das Gastmodul." },
-  { id: "pm_guest_portal_settings", label: "Das Gästeportal-Einstellungen bearbeiten", hint: "Erteilt die Berechtigung, das Gästeportal zu konfigurieren." },
-  { id: "pm_revenue_charts", label: "Umsatzbezogene Diagramme anzeigen", hint: "Gewährt Zugriff auf Diagramme, die die finanzielle Leistung anzeigen." },
-  { id: "pm_nonrevenue_charts", label: "Nicht-Umsatz-bezogene Diagramme anzeigen", hint: "Ermöglicht die Ansicht von Analysen zu Operationen und Belegung." },
-  { id: "pm_photo_album", label: "Fotoalbum sehen", hint: "Ermöglicht den Zugriff auf Fotogalerien." },
-  { id: "pm_property_area", label: "Zugriff auf den Unterkunftsbereich", hint: "Erteilt die Berechtigung, die Unterkünfte anzusehen." },
-  { id: "pm_guest_details", label: "Gastdetails anzeigen", hint: "Ermöglicht den Zugriff auf die Kontaktdaten des Gastes." },
-  { id: "pm_booking_total", label: "Buchungssumme sehen", hint: "Zeigt die Aufschlüsselung der Gesamtkosten von Buchungen." },
-  { id: "pm_owner_email", label: "E-Mail-Adresse des Unterkunftseigentümers sehen", hint: "Bietet Zugriff auf die E-Mail-Adresse des Unterkunft-Eigentümers." },
-  { id: "pm_booking_payments", label: "Auf Buchungszahlungen zugreifen", hint: "Ermöglicht die Anzeige von Zahlungen für Buchungen." },
-  { id: "pm_share_alerts", label: "Warnungen teilen", hint: "Ermöglicht die Benachrichtigung anderer über System-Warnungen." },
-  { id: "pm_share_images", label: "Bilder in der mobilen App teilen", hint: "Ermöglicht das Teilen von Fotos über die mobile App." },
-  { id: "pm_view_add_comments", label: "Buchungskommentare anzeigen und hinzufügen", hint: "Ermöglicht Benutzern, Kommentare zu Buchungen zu sehen und zu hinterlassen." },
-  { id: "pm_view_notes", label: "Buchungsnotizen anzeigen", hint: "Ermöglicht die Anzeige von Notizen, die zu Buchungen hinzugefügt wurden." },
-  { id: "pm_view_booking_images", label: "Buchungsbilder sehen", hint: "Gewährt Zugriff auf Fotos, die mit Buchungen verbunden sind." },
-  { id: "pm_detailed_payments", label: "Detaillierte Zahlungsinformationen sehen", hint: "Bietet eine detaillierte Aufschlüsselung der Buchungszahlungen." },
-  { id: "pm_owner_details", label: "Details des Unterkunftseigentümers sehen", hint: "Ermöglicht das Anzeigen von Details über den Unterkunftseigentümer." },
-  { id: "pm_view_property_images", label: "Unterkunftsbilder ansehen", hint: "Ermöglicht den Zugriff auf Fotos der Unterkünfte." },
-  { id: "pm_website_access", label: "PM-Module Website aufrufen", hint: "Gewährt Zugang zur PM-Module Website. Wenn deaktiviert, können Benutzer nur auf die mobile App zugreifen." },
+  { id: "pm_manage_booking_images" },
+  { id: "pm_manage_property_images" },
+  { id: "pm_checkout_alerts" },
+  { id: "pm_deposit_alerts" },
+  { id: "pm_payment_alerts" },
+  { id: "pm_alert_icons" },
+  { id: "pm_chat" },
+  { id: "pm_edit_comments" },
+  { id: "pm_edit_checkin_times" },
+  { id: "pm_guest_module" },
+  { id: "pm_guest_portal_settings" },
+  { id: "pm_revenue_charts" },
+  { id: "pm_nonrevenue_charts" },
+  { id: "pm_photo_album" },
+  { id: "pm_property_area" },
+  { id: "pm_guest_details" },
+  { id: "pm_booking_total" },
+  { id: "pm_owner_email" },
+  { id: "pm_booking_payments" },
+  { id: "pm_share_alerts" },
+  { id: "pm_share_images" },
+  { id: "pm_view_add_comments" },
+  { id: "pm_view_notes" },
+  { id: "pm_view_booking_images" },
+  { id: "pm_detailed_payments" },
+  { id: "pm_owner_details" },
+  { id: "pm_view_property_images" },
+  { id: "pm_website_access" },
 ];
 
 // Posteingang-Berechtigungen (Enterprise: Scope + Aktionen getrennt steuerbar).
@@ -83,17 +117,19 @@ export const PM_PERMISSIONS: Permission[] = [
 // Zugriff selbst = pm_chat (oben). Diese vier steuern, was der Nutzer im
 // Posteingang sehen und tun darf.
 export const INBOX_PERMISSIONS: Permission[] = [
-  { id: "inbox_view_all", label: "Alle Konversationen sehen", hint: "Sieht alle Posteingang-Konversationen des Kontos. Ohne diese Berechtigung sieht der Nutzer nur die ihm zugewiesenen Konversationen. Erfordert den Posteingang-Zugriff (Chat)." },
-  { id: "inbox_reply", label: "Auf Gäste antworten", hint: "Erlaubt, ausgehende Nachrichten an Gäste zu senden. Ohne diese Berechtigung ist der Posteingang nur lesbar." },
-  { id: "inbox_assign", label: "Konversationen zuweisen", hint: "Erlaubt, Konversationen an Team-Mitglieder zuzuweisen oder die Zuweisung zu ändern." },
-  { id: "inbox_manage_config", label: "Posteingang konfigurieren", hint: "Erlaubt, Nachrichtenvorlagen, Automatisierungen und KI-Einstellungen zu verwalten." },
+  { id: "inbox_view_all" },
+  { id: "inbox_reply" },
+  { id: "inbox_assign" },
+  { id: "inbox_manage_config" },
 ];
 
+// Schritt-Beschriftungen kommen aus i18n (account.userWizard.step*); hier nur
+// die stabilen Schlüssel in der Reihenfolge des Wizards.
 export const WIZARD_STEPS = [
-  "Kontakt",
-  "Zusatzinfos",
-  "Rolle & Rechte",
-  "Objekte",
+  "stepContact",
+  "stepExtra",
+  "stepRole",
+  "stepProperties",
 ] as const;
 
 // Default-Berechtigungen je Rolle (gespiegelt aus dem Backend

@@ -34,10 +34,10 @@
     "kanaeleLabel": "Ühendatud suurte broneerimisplatvormidega",
     "eyebrow": "Platvorm puhkemajutuse väljaüürijatele",
     "kanaeleEyebrow": "Müügikanalid",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "myNextDaysi täituvusplaan: kaheksa puhkeobjekti broneeringutega Booking.comist, Airbnb-st, Vrbo-st, turuplatsilt ja otsebroneeringud",
+    "aufnahmeHotel": "Hotelli täituvusplaan myNextDaysis: kaksteist tuba, igaüks omaette broneeritava üksusena",
+    "aufnahmeObjekte": "Objektide ülevaade myNextDaysis koos fotode, oleku ja kanalipõhise nähtavusega",
+    "aufnahmeKanaele": "Kanalite haldus myNextDaysis: ühendatud broneerimisportaalid ja oma turuplats"
   },
   "intro": {
     "heading": "Tere tulemast myNextDaysi.",
@@ -351,20 +351,20 @@
     "fehler": "See ei õnnestunud. Palun proovi hiljem uuesti."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Sissevaade",
+    "heading": "Kuidas myNextDays tegelikult töötab",
+    "sub": "Mitte joonistatud vaated — pildid töötavast ettevõttest, kus on päris broneeringud kõigist kanalitest.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Hotell ja puhkeobjekt ühes liideses",
+      "text": "Iga tuba on omaette broneeritav üksus — sama mudel nagu puhkemajal. Täituvusplaan näitab saabumisi, viibimisi ja lahkumisi üksuse kaupa koos täituvuse, käibe ja keskmise öö hinnaga perioodil."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Nähtavus kanalite kaupa, mitte üks lüliti kõigele",
+      "text": "Veebisait, turuplats ja broneerimisportaalid on kolm eraldi telge. Objekt võib jääda oma saidil aktiivseks, samal ajal kui portaalides on see pausil — näha ühe pilguga, lülitatav ühe klikiga."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Ühenda portaalid ja säilita oma müügikanal",
+      "text": "Booking.com, Airbnb ja teised portaalid toetuvad samale saadavusele nagu otsebroneering. Broneeritud öö sulgeb kõikjal — ilma topeltbroneeringu ja käsitsi järeltööta."
     }
   }
 }

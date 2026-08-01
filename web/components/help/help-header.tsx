@@ -14,7 +14,7 @@ export async function HelpHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-6">
-        <Link href="/hilfe" aria-label="myNextDays Hilfe" className="flex shrink-0 items-center">
+        <Link href="/hilfe" aria-label={t("brandTitle")} className="flex shrink-0 items-center">
           {/* Hilfe-Center ist immer hell → dunkles Logo auf hellem Header. */}
           <Logo heightRem={2} />
         </Link>

@@ -3,6 +3,7 @@
 // Layout-Sektion (Framer Auto-Layout: Stack/Grid) und Filter-Sektion
 // (Blur/Helligkeit/… als Zusatz-Stil einbettbar via headless).
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useVariables } from "../variables-context";
 import {
@@ -25,6 +26,7 @@ import { VarActionPopover } from "./variables-ui";
 // (3 Icons) · Wickeln · Lücke (Feld+Slider) · Polsterung (Feld+Modus). Jede Zeile
 // außer Typ/Wickeln hat ein ⊕-Bind-Badge.
 export function LayoutSection({ props, set }: InspProps) {
+  const t = useTranslations("website");
   const mode = (props.layoutMode as string | undefined) ?? "none";
   const s = (k: string, d: string) => (typeof props[k] === "string" ? (props[k] as string) : d);
   const nn = (k: string, d: number) => (typeof props[k] === "number" ? (props[k] as number) : d);
@@ -112,9 +114,9 @@ export function LayoutSection({ props, set }: InspProps) {
                 <option value="start">Start</option>
                 <option value="center">Center</option>
                 <option value="end">End</option>
-                <option value="space-between">Space Between</option>
-                <option value="space-around">Space Around</option>
-                <option value="space-evenly">Space Evenly</option>
+                <option value="space-between">{t("editor.spaceBetween")}</option>
+                <option value="space-around">{t("editor.spaceAround")}</option>
+                <option value="space-evenly">{t("editor.spaceEvenly")}</option>
               </Select>
             </Row>
             {bindPopover("dist", enumVar("stackDistributeVar"))}
@@ -136,7 +138,7 @@ export function LayoutSection({ props, set }: InspProps) {
             </div>
           </Row>
           <div ref={bindRow("gap")} className="relative">
-            <Row label="Lücke" bound={!!numVar("stackGapVar", nn("stackGap", 0), "px").bound} onVarClick={() => setOpenBind((k) => (k === "gap" ? null : "gap"))}>
+            <Row label={t("editor.gap")} bound={!!numVar("stackGapVar", nn("stackGap", 0), "px").bound} onVarClick={() => setOpenBind((k) => (k === "gap" ? null : "gap"))}>
               <div className="w-16 shrink-0"><NumStepper value={nn("stackGap", 0)} onChange={(v) => set((p) => { p.stackGap = Math.max(0, v); })} /></div>
               <RangeSlider value={nn("stackGap", 0)} min={0} max={100} step={1} onChange={(v) => set((p) => { p.stackGap = v; })} />
             </Row>
@@ -158,7 +160,7 @@ export function LayoutSection({ props, set }: InspProps) {
             {bindPopover("rows", numVar("gridRowsVar", nn("gridRows", 0), "none"), "number")}
           </div>
           <div ref={bindRow("ggap")} className="relative">
-            <Row label="Lücke" bound={!!numVar("gridGapVar", nn("gridGap", 0), "px").bound} onVarClick={() => setOpenBind((k) => (k === "ggap" ? null : "ggap"))}>
+            <Row label={t("editor.gap")} bound={!!numVar("gridGapVar", nn("gridGap", 0), "px").bound} onVarClick={() => setOpenBind((k) => (k === "ggap" ? null : "ggap"))}>
               <div className="w-16 shrink-0"><NumStepper value={nn("gridGap", 0)} onChange={(v) => set((p) => { p.gridGap = Math.max(0, v); })} /></div>
               <RangeSlider value={nn("gridGap", 0)} min={0} max={100} step={1} onChange={(v) => set((p) => { p.gridGap = v; })} />
             </Row>
@@ -175,8 +177,8 @@ export function LayoutSection({ props, set }: InspProps) {
             <NumStepper value={nn("padTop", 0)} onChange={(v) => set((p) => { p.padTop = v; p.padRight = v; p.padBottom = v; p.padLeft = v; })} />
           )}
           <div className="flex shrink-0 items-center gap-1">
-            <RadiusModeBtn label="Alle Seiten" active={!padPerSide} icon="ph:square" onClick={() => set((p) => { p.padPerSide = false; })} />
-            <RadiusModeBtn label="Seiten einzeln" active={padPerSide} icon="ph:frame-corners" onClick={() => set((p) => { p.padPerSide = true; })} />
+            <RadiusModeBtn label={t("editor.allSides")} active={!padPerSide} icon="ph:square" onClick={() => set((p) => { p.padPerSide = false; })} />
+            <RadiusModeBtn label={t("editor.sidesSeparate")} active={padPerSide} icon="ph:frame-corners" onClick={() => set((p) => { p.padPerSide = true; })} />
           </div>
         </Row>
         {bindPopover("pad", numVar("padVar", nn("padTop", 0), "px"), "number")}

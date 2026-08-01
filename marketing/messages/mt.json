@@ -34,10 +34,10 @@
     "kanaeleLabel": "Konnessa mal-akbar pjattaformi tal-booking",
     "eyebrow": "Il-pjattaforma għal min jikri akkomodazzjoni tal-vaganzi",
     "kanaeleEyebrow": "Kanali ta' distribuzzjoni",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "Pjan tal-okkupazzjoni ta' myNextDays: tmien proprjetajiet tal-vaganzi bi prenotazzjonijiet minn Booking.com, Airbnb, Vrbo, mis-suq u prenotazzjonijiet diretti",
+    "aufnahmeHotel": "Pjan tal-okkupazzjoni ta' lukanda f'myNextDays: tnax-il kamra, kull waħda bħala unità li tista' tiġi prenotata għaliha",
+    "aufnahmeObjekte": "Ħarsa ġenerali tal-proprjetajiet f'myNextDays b'ritratti, stat u viżibbiltà għal kull kanal",
+    "aufnahmeKanaele": "Ġestjoni tal-kanali f'myNextDays: portali tal-prenotazzjonijiet konnessi u s-suq tagħna stess"
   },
   "intro": {
     "heading": "Merħba f'myNextDays.",
@@ -351,20 +351,20 @@
     "fehler": "Dan ma rnexxiex. Erġa' pprova aktar tard."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Minn ġewwa",
+    "heading": "Kif jaħdem tassew myNextDays",
+    "sub": "L-ebda veduta mpinġija — ritratti minn operazzjoni li qed taħdem bi prenotazzjonijiet veri mill-kanali kollha.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Lukanda u proprjetà tal-vaganzi f'interfaċċa waħda",
+      "text": "Kull kamra hija unità li tista' tiġi prenotata għaliha — l-istess mudell bħal dar tal-vaganzi. Il-pjan tal-okkupazzjoni juri l-wasliet, is-soġġorni u t-tluq għal kull unità, flimkien mal-okkupazzjoni, id-dħul u l-prezz medju bil-lejl għall-perjodu."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Viżibbiltà għal kull kanal, mhux swiċċ wieħed għal kollox",
+      "text": "Is-sit web, is-suq u l-portali tal-prenotazzjonijiet huma tliet assi separati. Proprjetà tista' tibqa' attiva fuq is-sit tiegħek stess filwaqt li fuq il-portali tkun sospiża — tidher f'daqqa t'għajn, tinbidel bi klikk waħda."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Qabbad il-portali u żomm il-kanal tiegħek stess",
+      "text": "Booking.com, Airbnb u portali oħra jistrieħu fuq l-istess disponibbiltà bħall-prenotazzjoni diretta. Lejl prenotat jimblokka kullimkien — mingħajr prenotazzjoni doppja, mingħajr xogħol manwali wara."
     }
   }
 }

@@ -4,6 +4,7 @@
 // echte Konto-Daten, E-Mail/Name/Passwort ändern, TOTP-2FA (Authenticator-App).
 // SMS-2FA folgt erst mit einem SMS-Provider — Karte zeigt „demnächst".
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -32,6 +33,7 @@ import {
 type Panel = null | "email" | "name" | "password" | "totp" | "totp-disable";
 
 export default function SicherheitPage() {
+  const t = useTranslations("account");
   const [account, setAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
   const [panel, setPanel] = useState<Panel>(null);
@@ -50,7 +52,7 @@ export default function SicherheitPage() {
       <h2 className="font-display text-2xl font-extrabold">Sicherheit</h2>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Lädt …</p>
+        <p className="text-sm text-muted-foreground">{t("security.loading")}</p>
       ) : !account ? (
         <Card className="p-5 text-sm text-destructive">
           Konto-Daten konnten nicht geladen werden. Ist das Backend erreichbar?
@@ -75,11 +77,11 @@ export default function SicherheitPage() {
               </div>
               <div className="flex gap-1">
                 <EditButton
-                  label="Benutzername bearbeiten"
+                  label={t("security.editUsername")}
                   onClick={() => setPanel("name")}
                 />
                 <EditButton
-                  label="E-Mail bearbeiten"
+                  label={t("security.editEmail")}
                   icon="ph:envelope-simple"
                   onClick={() => setPanel("email")}
                 />
@@ -94,7 +96,7 @@ export default function SicherheitPage() {
                 </span>
               </div>
               <EditButton
-                label="Passwort bearbeiten"
+                label={t("security.editPassword")}
                 onClick={() => setPanel("password")}
               />
             </Card>
@@ -265,6 +267,7 @@ function NameSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("account");
   const [value, setValue] = useState(current);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -282,7 +285,7 @@ function NameSheet({
   }
 
   return (
-    <PanelShell open={open} onClose={onClose} title="Benutzername bearbeiten">
+    <PanelShell open={open} onClose={onClose} title={t("security.editUsername")}>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="name">Name</Label>
         <Input id="name" value={value} onChange={(e) => setValue(e.target.value)} />
@@ -306,6 +309,7 @@ function EmailSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("account");
   const [value, setValue] = useState(current);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -326,8 +330,8 @@ function EmailSheet({
     <PanelShell
       open={open}
       onClose={onClose}
-      title="E-Mail bearbeiten"
-      description="Die neue Adresse wird sofort übernommen."
+      title={t("security.editEmail")}
+      description={t("security.emailAppliesNow")}
     >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="email">E-Mail</Label>
@@ -357,6 +361,7 @@ function PasswordSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("account");
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [busy, setBusy] = useState(false);
@@ -379,10 +384,10 @@ function PasswordSheet({
   }
 
   return (
-    <PanelShell open={open} onClose={onClose} title="Passwort bearbeiten">
+    <PanelShell open={open} onClose={onClose} title={t("security.editPassword")}>
       {needsCurrent && (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="cur">Aktuelles Passwort</Label>
+          <Label htmlFor="cur">{t("security.currentPassword")}</Label>
           <Input
             id="cur"
             type="password"
@@ -393,7 +398,7 @@ function PasswordSheet({
         </div>
       )}
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="new">Neues Passwort</Label>
+        <Label htmlFor="new">{t("security.newPassword")}</Label>
         <Input
           id="new"
           type="password"
@@ -422,6 +427,7 @@ function TotpSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("account");
   const [enroll, setEnroll] = useState<TotpEnroll | null>(null);
   const [code, setCode] = useState("");
   const [recovery, setRecovery] = useState<string[] | null>(null);
@@ -459,8 +465,8 @@ function TotpSheet({
     <PanelShell
       open={open}
       onClose={onClose}
-      title="Authentifizierungs-App einrichten"
-      description="Scanne den QR-Code mit deiner Authenticator-App und gib den 6-stelligen Code ein."
+      title={t("security.setupAuthApp")}
+      description={t("security.setupAuthAppHint")}
     >
       {recovery ? (
         <div className="flex flex-col gap-3">
@@ -481,7 +487,7 @@ function TotpSheet({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={enroll.qr_data_url}
-            alt="QR-Code für die Authenticator-App"
+            alt={t("security.qrAlt")}
             className="mx-auto size-44 rounded-(--radius) border bg-white p-2"
           />
           <div className="flex flex-col gap-1">
@@ -493,7 +499,7 @@ function TotpSheet({
             </code>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="code">6-stelliger Code</Label>
+            <Label htmlFor="code">{t("security.sixDigitCode")}</Label>
             <Input
               id="code"
               inputMode="numeric"
@@ -525,6 +531,7 @@ function TotpDisableSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("account");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -548,8 +555,8 @@ function TotpDisableSheet({
     <PanelShell
       open={open}
       onClose={onClose}
-      title="2FA deaktivieren"
-      description="Gib einen aktuellen Code (oder einen Wiederherstellungscode) ein, um die 2FA abzuschalten."
+      title={t("security.disable2fa")}
+      description={t("security.disable2faHint")}
     >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="dcode">Code</Label>
@@ -566,7 +573,7 @@ function TotpDisableSheet({
         onClick={disable}
         disabled={busy || code.length < 6}
       >
-        {busy ? "…" : "2FA deaktivieren"}
+        {busy ? "…" : t("security.disable2fa")}
       </Button>
     </PanelShell>
   );

@@ -4,6 +4,7 @@
 // Beträge kommen mit ihrer Währung aus Stripe und werden mit formatCurrency
 // gerendert (kein €-Hardcode, Wurzel 4).
 import { Icon } from "@iconify/react";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { formatCurrency } from "@/lib/currency";
@@ -20,6 +21,8 @@ const STATUS: Record<string, { label: string; klasse: string }> = {
 };
 
 export function Rechnungsverlauf({ onBack }: { onBack: () => void }) {
+  const t = useTranslations("account");
+  const locale = useLocale();
   const [rows, setRows] = useState<InvoiceRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,7 +77,7 @@ export function Rechnungsverlauf({ onBack }: { onBack: () => void }) {
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="px-4 py-3 font-medium">ID</th>
-                <th className="px-4 py-3 font-medium">Gebühren</th>
+                <th className="px-4 py-3 font-medium">{t("invoices.fees")}</th>
                 <th className="px-4 py-3 font-medium">Ausstellungsdatum</th>
                 <th className="px-4 py-3 font-medium">Gesamt</th>
                 <th className="px-4 py-3 font-medium">Status</th>
@@ -97,7 +100,7 @@ export function Rechnungsverlauf({ onBack }: { onBack: () => void }) {
                           className="size-3.5 text-muted-foreground"
                         />
                         <span className="font-medium">
-                          {new Date(r.created).toLocaleDateString("de-DE", {
+                          {new Date(r.created).toLocaleDateString(locale, {
                             day: "numeric",
                             month: "long",
                             year: "numeric",

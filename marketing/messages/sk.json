@@ -34,10 +34,10 @@
     "kanaeleLabel": "Prepojené s veľkými rezervačnými portálmi",
     "eyebrow": "Platforma pre prenajímateľov rekreačných ubytovaní",
     "kanaeleEyebrow": "Predajné kanály",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "Plán obsadenosti v myNextDays: osem rekreačných objektov s rezerváciami z Booking.com, Airbnb, Vrbo, trhoviska a priamymi rezerváciami",
+    "aufnahmeHotel": "Plán obsadenosti hotela v myNextDays: dvanásť izieb, každá ako vlastná rezervovateľná jednotka",
+    "aufnahmeObjekte": "Prehľad objektov v myNextDays s fotkami, stavom a viditeľnosťou podľa kanála",
+    "aufnahmeKanaele": "Správa kanálov v myNextDays: prepojené rezervačné portály a vlastné trhovisko"
   },
   "intro": {
     "heading": "Vitajte v myNextDays.",
@@ -351,20 +351,20 @@
     "fehler": "Toto sa nepodarilo. Skúste to prosím neskôr znova."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Pohľad dovnútra",
+    "heading": "Ako myNextDays skutočne funguje",
+    "sub": "Žiadne kreslené náhľady — zábery z bežiacej prevádzky so skutočnými rezerváciami zo všetkých kanálov.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Hotel a rekreačný objekt v jednom rozhraní",
+      "text": "Každá izba je vlastná rezervovateľná jednotka — rovnaký model ako pri rekreačnom dome. Plán obsadenosti ukazuje príchody, pobyty a odchody pre každú jednotku, vrátane obsadenosti, tržieb a priemernej ceny za noc v danom období."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Viditeľnosť podľa kanála, nie jeden vypínač na všetko",
+      "text": "Web, trhovisko a rezervačné portály sú tri oddelené osi. Objekt môže bežať na vlastnom webe, kým je na portáloch pozastavený — vidno to na prvý pohľad a prepnete jedným kliknutím."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Napojiť portály a zároveň si udržať vlastnú cestu",
+      "text": "Booking.com, Airbnb a ďalšie portály visia na tej istej dostupnosti ako priama rezervácia. Rezervovaná noc uzavrie termín všade — bez dvojitej rezervácie, bez ručného dohľadávania."
     }
   }
 }

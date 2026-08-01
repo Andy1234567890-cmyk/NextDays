@@ -10,12 +10,13 @@ export { cn } from "@nextdays/ui/utils";
 export { formatCurrency } from "./currency";
 
 /**
- * Datum auf deutsches Locale formatieren.
+ * Datum in der übergebenen Sprache formatieren (Oberfläche oder Dokument —
+ * der Aufrufer weiß, welche gilt; hier wird keine geraten).
  * Robust für YYYY-MM-DD (HTML date input) und DD.MM.YYYY.
  */
-export function formatDate(dateString: string | undefined | null): string {
+export function formatDate(dateString: string | undefined | null, locale: string): string {
   if (!dateString) {
-    return new Date().toLocaleDateString("de-DE");
+    return new Date().toLocaleDateString(locale);
   }
 
   let date: Date;
@@ -34,20 +35,20 @@ export function formatDate(dateString: string | undefined | null): string {
   }
 
   if (Number.isNaN(date.getTime())) {
-    return new Date().toLocaleDateString("de-DE");
+    return new Date().toLocaleDateString(locale);
   }
 
-  return new Intl.DateTimeFormat("de-DE", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(date);
 }
 
-/** Datum + Uhrzeit auf deutsches Locale formatieren. */
-export function formatDateTime(dateString: string): string {
+/** Datum + Uhrzeit in der übergebenen Sprache formatieren. */
+export function formatDateTime(dateString: string, locale: string): string {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat("de-DE", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",

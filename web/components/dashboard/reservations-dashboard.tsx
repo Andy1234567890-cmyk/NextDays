@@ -3,6 +3,7 @@
 // Alle Werte stammen aus echten Reservierungen (Backend /reservations/dashboard);
 // fehlt etwas, zeigt die Karte ehrlich „nichts" statt erfundener Zahlen.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@nextdays/ui/card";
 import { formatCurrency } from "@/lib/currency";
@@ -87,6 +88,7 @@ function ListCard({
   entries?: DashboardEntry[];
   empty: string;
 }) {
+  const t = useTranslations("reservations");
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 p-6">
@@ -131,6 +133,7 @@ function KpiCard({
   display: string;
   unitLabel: string;
 }) {
+  const t = useTranslations("reservations");
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 p-6">
@@ -140,7 +143,7 @@ function KpiCard({
             <h3 className="font-semibold text-foreground">{title}</h3>
           </div>
           <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">
-            Letzte 30 Tage
+            {t("dashboard.last30Days")}
           </span>
         </div>
         <div className="flex items-end justify-between">
@@ -158,34 +161,35 @@ function KpiCard({
 }
 
 export function ReservationsDashboard({ data }: { data: Dashboard }) {
+  const t = useTranslations("reservations");
   return (
     <div className="flex flex-col gap-6">
       {/* Obere Reihe: Check-outs (mit Liste) · Check-ins · Anstehend */}
       <div className="grid gap-6 lg:grid-cols-2">
         <ListCard
           icon="ph:calendar-x"
-          title="Heutige Check-outs"
+          title={t("dashboard.todayCheckouts")}
           count={data.checkouts_today.length}
-          countLabel="Check-outs heute"
+          countLabel={t("dashboard.checkoutsTodayLabel")}
           entries={data.checkouts_today}
-          empty="Heute keine Abreisen."
+          empty={t("dashboard.noDeparturesToday")}
         />
         <div className="flex flex-col gap-6">
           <ListCard
             icon="ph:calendar-check"
-            title="Heutige Check-ins"
+            title={t("dashboard.todayCheckins")}
             count={data.checkins_today.length}
-            countLabel="Check-ins heute"
+            countLabel={t("dashboard.checkinsTodayLabel")}
             entries={data.checkins_today}
-            empty="Heute keine Anreisen."
+            empty={t("dashboard.noArrivalsToday")}
           />
           <ListCard
             icon="ph:calendar-dots"
-            title="Anstehende Reservierungen"
+            title={t("dashboard.upcoming")}
             count={data.upcoming.length}
-            countLabel="Anstehende Reservierungen"
+            countLabel={t("dashboard.upcoming")}
             entries={data.upcoming}
-            empty="Keine anstehenden Reservierungen."
+            empty={t("dashboard.noUpcoming")}
           />
         </div>
       </div>
@@ -194,28 +198,28 @@ export function ReservationsDashboard({ data }: { data: Dashboard }) {
       <div className="grid gap-6 md:grid-cols-3">
         <KpiCard
           icon="ph:sign-in"
-          title="Check-in"
+          title={t("dashboard.checkIn")}
           kpi={data.checkins_30d}
           display={String(data.checkins_30d.value)}
-          unitLabel="Gäste-Check-ins"
+          unitLabel={t("dashboard.guestCheckins")}
         />
         {/* Umsatz-Kachel nur, wenn der Nutzer Beträge sehen darf. Für einen Owner
             ohne PM_BOOKING_TOTAL liefert das Backend revenue_30d=null (§4.2). */}
         {data.revenue_30d && (
           <KpiCard
             icon="ph:currency-circle-dollar"
-            title="Umsatz"
+            title={t("dashboard.revenue")}
             kpi={data.revenue_30d}
             display={formatCurrency(data.revenue_30d.value, data.currency)}
-            unitLabel="Gesamtumsatz"
+            unitLabel={t("dashboard.totalRevenue")}
           />
         )}
         <KpiCard
           icon="ph:check-circle"
-          title="Bestätigt"
+          title={t("dashboard.confirmed")}
           kpi={data.confirmed_30d}
           display={String(data.confirmed_30d.value)}
-          unitLabel="Bestätigte Reservierungen"
+          unitLabel={t("dashboard.confirmedReservations")}
         />
       </div>
     </div>

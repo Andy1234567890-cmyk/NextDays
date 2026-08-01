@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useTranslations } from "next-intl";
 import { useDocumentTranslation } from '@/hooks/pdf/useDocumentTranslation';
 import type { DocumentSettings, ProcessedPDFData } from '@/hooks/pdf/usePDFTemplateData';
 import type { DocumentType } from '@/lib/document-utils';
@@ -34,7 +35,8 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
   const companyLogo = typeof data.companyLogo === 'string' ? data.companyLogo : undefined;
 
   // Übersetzungsfunktion
-  const { t } = useDocumentTranslation(documentSettings?.language || 'de');
+  const { t, dateLocale: locale } = useDocumentTranslation(documentSettings?.language || 'de');
+  const tUi = useTranslations("finance");
 
   // Berechne, ob eine zweite Seite benötigt wird
   // STANDARD: Immer einseitig, außer der Inhalt ist zu lang
@@ -209,10 +211,10 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
               </div>
               <div className="space-y-2">
                 <div>
-                  <span className="font-medium">{t('date')}:</span> {formatDate(data.invoiceDate)}
+                  <span className="font-medium">{t('date')}:</span> {formatDate(data.invoiceDate, locale)}
                 </div>
                 <div>
-                  <span className="font-medium">{t('dueDate')}:</span> {formatDate(data.dueDate)}
+                  <span className="font-medium">{t('dueDate')}:</span> {formatDate(data.dueDate, locale)}
                 </div>
                 <div>
                   <span className="font-medium">{t('paymentTerms')}:</span> {data.paymentTerms}
@@ -230,7 +232,7 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
                 <div className="mt-3">
                   <img
                     src={documentSettings.qrCodeUrl}
-                    alt="QR Code"
+                    alt={tUi("pdf.qrCode")}
                     className="h-12 w-12 rounded-lg border border-gray-300"
                   />
                 </div>
@@ -461,11 +463,11 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
                   </div>
                   <div className="space-y-2">
                     <div>
-                      <span className="font-medium">{t('date')}:</span> {formatDate(data.invoiceDate)}
+                      <span className="font-medium">{t('date')}:</span> {formatDate(data.invoiceDate, locale)}
                     </div>
                     <div>
                       <span className="font-medium">{t('dueDate')}:</span>{' '}
-                      {formatDate(data.dueDate)}
+                      {formatDate(data.dueDate, locale)}
                     </div>
                     <div>
                       <span className="font-medium">{t('paymentTerms')}:</span> {data.paymentTerms}
@@ -494,7 +496,7 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
               )}
 
               <div className="mb-8">
-                <div className="mb-2 font-semibold text-sm">Fortsetzung - Seite 2</div>
+                <div className="mb-2 font-semibold text-sm">{tUi("pdf.continuationPage2")}</div>
                 <div className="mb-4 text-gray-600 text-xs">
                   Weitere Details und Zusammenfassung
                 </div>

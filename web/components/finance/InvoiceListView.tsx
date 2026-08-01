@@ -25,7 +25,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@tasko/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -79,6 +79,7 @@ export function InvoiceListView({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const router = useRouter();
   const t = useTranslations('finance');
+  const locale = useLocale();
 
   // Lade verknüpfte Rechnungen beim Initialisieren
   useEffect(() => {
@@ -700,11 +701,11 @@ export function InvoiceListView({
                       <TableCell>{invoice.customerName}</TableCell>
                       <TableCell>
                         {invoice.date
-                          ? new Date(invoice.date).toLocaleDateString('de-DE')
+                          ? new Date(invoice.date).toLocaleDateString(locale)
                           : invoice.issueDate
-                            ? new Date(invoice.issueDate).toLocaleDateString('de-DE')
+                            ? new Date(invoice.issueDate).toLocaleDateString(locale)
                             : invoice.createdAt
-                              ? new Date(invoice.createdAt).toLocaleDateString('de-DE')
+                              ? new Date(invoice.createdAt).toLocaleDateString(locale)
                               : '-'}
                       </TableCell>
                       <TableCell className="text-right">

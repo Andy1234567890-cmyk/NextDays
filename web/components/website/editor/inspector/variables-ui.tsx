@@ -4,6 +4,7 @@
 // Set Variable → Variable → Bedingung), Conditional-Value-Dialog und der
 // große Variablen-Editor.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import type { PageVariable } from "../variables-context";
@@ -38,6 +39,7 @@ export function VarChip({
   onOpen: () => void;
   onUnbind: () => void;
 }) {
+  const t = useTranslations("website");
   // Framer-Look: Typ-Icon in einem abgesetzten, dunkleren Kästchen links, Name
   // in normalem Gewicht, „×" rechts. Kompakt auf FIELD_H.
   return (
@@ -48,7 +50,7 @@ export function VarChip({
       <button type="button" onClick={onOpen} className="min-w-0 flex-1 truncate text-left text-xs">
         {name}
       </button>
-      <button type="button" aria-label="Variable lösen" onClick={onUnbind} className="flex size-4 shrink-0 items-center justify-center rounded opacity-80 hover:bg-black/15 hover:opacity-100">
+      <button type="button" aria-label={t("editor.detachVariable")} onClick={onUnbind} className="flex size-4 shrink-0 items-center justify-center rounded opacity-80 hover:bg-black/15 hover:opacity-100">
         <Icon icon="ph:x" className="size-3" />
       </button>
     </div>
@@ -103,6 +105,7 @@ export function VarActionPopover({
   onBind: (id: string, condition?: VarCondition) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("website");
   const [q, setQ] = useState("");
   // Kaskaden-Stufe: null = Hauptmenü, "set" = Variablenliste, sonst = Bedingungs-
   // liste für die zuvor gewählte Variable.
@@ -122,7 +125,7 @@ export function VarActionPopover({
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Type to search..."
+            placeholder={t("editor.typeToSearch")}
             className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -157,7 +160,7 @@ export function VarActionPopover({
                 </button>
               ))
             ) : (
-              <p className="px-2 py-3 text-center text-xs text-muted-foreground">Keine Variablen</p>
+              <p className="px-2 py-3 text-center text-xs text-muted-foreground">{t("editor.noVariables")}</p>
             )}
           </div>
         ) : (
@@ -167,11 +170,11 @@ export function VarActionPopover({
               Create Variable
             </button>
             <button type="button" onClick={() => setStage("set")} className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition hover:bg-secondary">
-              <span className="flex-1">Set Variable</span>
+              <span className="flex-1">{t("editor.setVariable")}</span>
               <Icon icon="ph:caret-right" className="size-3 text-muted-foreground/60" />
             </button>
-            <button type="button" className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-muted-foreground transition hover:bg-secondary" title="Bald verfügbar">
-              <span className="flex-1">Add Transform</span>
+            <button type="button" className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-muted-foreground transition hover:bg-secondary" title={t("editor.comingSoon")}>
+              <span className="flex-1">{t("editor.addTransform")}</span>
               <Icon icon="ph:caret-right" className="size-3 text-muted-foreground/60" />
             </button>
           </div>
@@ -217,6 +220,7 @@ export function ConditionalValueDialog({
   onChange: (b: PropBinding) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("website");
   const set = (patch: Partial<PropBinding>) => onChange({ ...binding, ...patch });
   const ValueSelect = ({ value, onPick }: { value: string; onPick: (v: string) => void }) => (
     <Select value={value} onChange={onPick}>
@@ -231,7 +235,7 @@ export function ConditionalValueDialog({
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/20">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <span className="text-[0.8125rem] font-semibold">{title}</span>
-          <button type="button" aria-label="schließen" onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground">
+          <button type="button" aria-label={t("editor.closeLower")} onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground">
             <Icon icon="ph:x" className="size-3.5" />
           </button>
         </div>
@@ -262,9 +266,9 @@ export function ConditionalValueDialog({
           <div className="my-1 h-px bg-border" />
           {/* Ergebnis-Branches */}
           <Row label="Dann"><ValueSelect value={binding.ifYes} onPick={(v) => set({ ifYes: v })} /></Row>
-          <Row label="Wenn Nein"><ValueSelect value={binding.ifNo} onPick={(v) => set({ ifNo: v })} /></Row>
+          <Row label={t("editor.ifNo")}><ValueSelect value={binding.ifNo} onPick={(v) => set({ ifNo: v })} /></Row>
           <div className="my-1 h-px bg-border" />
-          <Row label="Zurückgreifen"><ValueSelect value={binding.fallback} onPick={(v) => set({ fallback: v })} /></Row>
+          <Row label={t("editor.fallback")}><ValueSelect value={binding.fallback} onPick={(v) => set({ fallback: v })} /></Row>
         </div>
       </div>
     </AnchoredPopover>
@@ -287,6 +291,7 @@ export function VariablesEditor({
   onUpdate: (id: string, patch: Partial<PageVariable>) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("website");
   const [selId, setSelId] = useState(selectedId);
   const sel = variables.find((v) => v.id === selId) ?? variables.find((v) => v.id === selectedId);
   if (!sel) return null;
@@ -295,8 +300,8 @@ export function VariablesEditor({
     <AnchoredPopover anchorRef={anchorRef} onClose={onClose} width={620} placement="center">
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/20">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <span className="text-[0.8125rem] font-semibold">Home Page Variables</span>
-          <button type="button" aria-label="schließen" onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground">
+          <span className="text-[0.8125rem] font-semibold">{t("editor.homePageVariables")}</span>
+          <button type="button" aria-label={t("editor.closeLower")} onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground">
             <Icon icon="ph:x" className="size-3.5" />
           </button>
         </div>
@@ -391,7 +396,7 @@ export function VariablesEditor({
                   </Row>
                 </>
               )}
-              <Row wide label="Query Param">
+              <Row wide label={t("editor.queryParam")}>
                 <TextField value={sel.queryParam} placeholder="opacity" onChange={(val) => patch({ queryParam: val })} />
               </Row>
             </div>

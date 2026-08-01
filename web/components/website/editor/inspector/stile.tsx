@@ -3,6 +3,7 @@
 // Stile-Bausteine: Zusatz-Stile-Katalog (⊕ neben „Stile"), Border-/Shadow-
 // Popups, Fill-Control (Farbe/Verlauf/Bild) — 1:1 nach Framer.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
 import { FiltersSection } from "./layout-section";
@@ -81,6 +82,7 @@ export function AddStilePopover({
   onToggle: (id: StilId) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("website");
   const [q, setQ] = useState("");
   const suche = q.trim().toLowerCase();
   const items = suche
@@ -95,7 +97,7 @@ export function AddStilePopover({
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Type to search..."
+            placeholder={t("editor.typeToSearch")}
             className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -120,7 +122,7 @@ export function AddStilePopover({
             );
           })}
           {items.length === 0 ? (
-            <p className="px-2 py-3 text-center text-xs text-muted-foreground">Keine Treffer</p>
+            <p className="px-2 py-3 text-center text-xs text-muted-foreground">{t("editor.noMatches")}</p>
           ) : null}
         </div>
       </div>
@@ -142,6 +144,7 @@ export function ZusatzStilRow({
   set: (mut: (p: Record<string, unknown>) => void) => void;
   onRemove: () => void;
 }) {
+  const t = useTranslations("website");
   const s = (k: string, d: string) => (typeof props[k] === "string" ? (props[k] as string) : d);
   const n = (k: string, d: number) => (typeof props[k] === "number" ? (props[k] as number) : d);
   const bb = (k: string, d: boolean) => (typeof props[k] === "boolean" ? (props[k] as boolean) : d);
@@ -156,7 +159,7 @@ export function ZusatzStilRow({
       <div className="flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-foreground">Filter</span>
-          <button type="button" aria-label="Filter entfernen" onClick={onRemove} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"><Icon icon="ph:x" className="size-3" /></button>
+          <button type="button" aria-label={t("editor.removeFilter")} onClick={onRemove} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"><Icon icon="ph:x" className="size-3" /></button>
         </div>
         <FiltersSection props={props} set={set} headless />
       </div>
@@ -181,7 +184,7 @@ export function ZusatzStilRow({
       { id: "perspective", label: "Perspective" },
       { id: "origin", label: "Origin" },
       { id: "backface", label: "Backface" },
-      { id: "preserve3d", label: "Preserve 3D" },
+      { id: "preserve3d", label: t("editor.preserve3d") },
     ];
     return (
       <div className="flex flex-col gap-2.5">
@@ -189,7 +192,7 @@ export function ZusatzStilRow({
           <span className="text-xs font-medium text-foreground">Transform</span>
           <div className="flex items-center gap-1">
             <AddInlineBtn onClick={() => setTfMenu((v) => !v)} />
-            <button type="button" aria-label="Transform entfernen" onClick={onRemove} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"><Icon icon="ph:x" className="size-3" /></button>
+            <button type="button" aria-label={t("editor.removeTransform")} onClick={onRemove} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"><Icon icon="ph:x" className="size-3" /></button>
           </div>
           {tfMenu ? (
             <AnchoredPopover anchorRef={tfMenuRef} onClose={() => setTfMenu(false)} width={180} placement="left">
@@ -213,8 +216,8 @@ export function ZusatzStilRow({
         ) : null}
         {active.has("skew") ? (
           <>
-            <Row label="Neigen X"><NumStepper value={n("skewX", 0)} onChange={(v) => set((p) => { p.skewX = v; })} /></Row>
-            <Row label="Neigen Y"><NumStepper value={n("skewY", 0)} onChange={(v) => set((p) => { p.skewY = v; })} /></Row>
+            <Row label={t("editor.skewX")}><NumStepper value={n("skewX", 0)} onChange={(v) => set((p) => { p.skewX = v; })} /></Row>
+            <Row label={t("editor.skewY")}><NumStepper value={n("skewY", 0)} onChange={(v) => set((p) => { p.skewY = v; })} /></Row>
           </>
         ) : null}
         {active.has("rotate") ? (
@@ -241,7 +244,7 @@ export function ZusatzStilRow({
           </Row>
         ) : null}
         {active.has("preserve3d") ? (
-          <Row label="Preserve 3D">
+          <Row label={t("editor.preserve3d")}>
             <div className={`flex ${FIELD_H} flex-1 overflow-hidden rounded-md border border-border`}>
               <button type="button" onClick={() => set((p) => { p.preserve3d = true; })}
                 className={"flex-1 text-xs transition " + (bb("preserve3d", false) ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary")}>Ja</button>
@@ -267,15 +270,15 @@ export function ZusatzStilRow({
   let control: React.ReactNode = null;
   switch (id) {
     case "overflowX":
-      label = "Überlauf X";
+      label = t("editor.overflowX");
       control = <Select value={s("overflowX", "visible")} onChange={(v) => set((p) => { p.overflowX = v; })}>{overflowOpts}</Select>;
       break;
     case "overflowY":
-      label = "Überlauf Y";
+      label = t("editor.overflowY");
       control = <Select value={s("overflowY", "visible")} onChange={(v) => set((p) => { p.overflowY = v; })}>{overflowOpts}</Select>;
       break;
     case "zIndex":
-      label = "Z Index";
+      label = t("editor.zIndex");
       control = <NumStepper value={n("zIndex", 0)} onChange={(nv) => set((p) => { p.zIndex = nv; })} />;
       break;
     case "blending":
@@ -293,7 +296,7 @@ export function ZusatzStilRow({
       );
       break;
     case "pointerEvents":
-      label = "Pointer Events";
+      label = t("editor.pointerEvents");
       control = (
         <Select value={s("pointerEvents", "auto")} onChange={(v) => set((p) => { p.pointerEvents = v; })}>
           <option value="auto">Auto</option>
@@ -302,7 +305,7 @@ export function ZusatzStilRow({
       );
       break;
     case "userSelect":
-      label = "User Select";
+      label = t("editor.userSelect");
       control = (
         <Select value={s("userSelect", "auto")} onChange={(v) => set((p) => { p.userSelect = v; })}>
           <option value="auto">Auto</option>
@@ -312,12 +315,12 @@ export function ZusatzStilRow({
       );
       break;
     case "imageRendering":
-      label = "Image Rendering";
+      label = t("editor.imageRendering");
       control = (
         <Select value={s("imageRendering", "auto")} onChange={(v) => set((p) => { p.imageRendering = v; })}>
           <option value="auto">Auto</option>
           <option value="pixelated">Pixelated</option>
-          <option value="crisp-edges">Crisp Edges</option>
+          <option value="crisp-edges">{t("editor.crispEdges")}</option>
         </Select>
       );
       break;
@@ -331,7 +334,7 @@ export function ZusatzStilRow({
       );
       break;
     case "tapColor":
-      label = "Tap Color";
+      label = t("editor.tapColor");
       control = <Swatch color={s("tapColor", "#00000000")} onColor={(hex) => set((p) => { p.tapColor = hex; })} />;
       break;
     case "selection":
@@ -362,7 +365,7 @@ export function ZusatzStilRow({
       break;
     case "mask":
       label = "Mask";
-      control = <TextField value={s("mask", "")} placeholder="url(#…) / linear-gradient(…)" onChange={(v) => set((p) => { p.mask = v; })} />;
+      control = <TextField value={s("mask", "")} placeholder={t("editor.gradientPlaceholder")} onChange={(v) => set((p) => { p.mask = v; })} />;
       break;
     default:
       control = <TextField value="" placeholder="Add..." onChange={() => undefined} />;
@@ -411,13 +414,14 @@ export function BorderPopup({
   onChange: (mut: (b: BorderVal) => void) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("website");
   const perSide = border.mode === "sides";
   return (
     <AnchoredPopover anchorRef={anchorRef} onClose={onClose} width={288}>
       <div className="rounded-xl border border-border bg-card p-3 shadow-xl shadow-black/10">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-[0.8125rem] font-semibold">Border</span>
-          <button type="button" aria-label="schließen" onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground">
+          <button type="button" aria-label={t("editor.closeLower")} onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground">
             <Icon icon="ph:x" className="size-3.5" />
           </button>
         </div>
@@ -434,8 +438,8 @@ export function BorderPopup({
               <NumStepper value={border.width} onChange={(nv) => onChange((b) => { b.width = Math.max(0, nv); })} />
             )}
             <div className="flex shrink-0 items-center gap-1">
-              <RadiusModeBtn label="Alle Seiten" active={!perSide} icon="ph:square" onClick={() => onChange((b) => { b.mode = "all"; })} />
-              <RadiusModeBtn label="Seiten einzeln" active={perSide} icon="ph:frame-corners" onClick={() => onChange((b) => { b.mode = "sides"; })} />
+              <RadiusModeBtn label={t("editor.allSides")} active={!perSide} icon="ph:square" onClick={() => onChange((b) => { b.mode = "all"; })} />
+              <RadiusModeBtn label={t("editor.sidesSeparate")} active={perSide} icon="ph:frame-corners" onClick={() => onChange((b) => { b.mode = "sides"; })} />
             </div>
           </Row>
           {perSide ? (
@@ -463,6 +467,7 @@ export function BorderPopup({
 // + ×; darunter „Add…". Jede Zeile öffnet ein Popup (Typ/Position/Farbe/X/Y/
 // Verwischen/Verbreiten) — 1:1 wie Framer.
 export function ShadowsRow({ props, set }: InspProps) {
+  const t = useTranslations("website");
   const shadows = (props.shadows as FrameShadow[] | undefined) ?? [];
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   // Stabile RefObjects pro Zeile (nicht bei jedem Render neu erzeugen, sonst
@@ -504,7 +509,7 @@ export function ShadowsRow({ props, set }: InspProps) {
               <span className="size-3.5 shrink-0 rounded" style={{ backgroundColor: sh.color, boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.1)" }} />
               <span className="truncate tabular-nums">{sh.x}, {sh.y}, {sh.blur}</span>
             </button>
-            <button type="button" onClick={() => remove(i)} className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-secondary hover:text-foreground" aria-label="Schatten entfernen"><Icon icon="ph:x" className="size-3.5" /></button>
+            <button type="button" onClick={() => remove(i)} className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-secondary hover:text-foreground" aria-label={t("editor.removeShadow")}><Icon icon="ph:x" className="size-3.5" /></button>
           </Row>
           {openIdx === i ? (
             <ShadowPopup anchorRef={rowRef(i)} shadow={sh} onChange={(mut) => patch(i, mut)} onClose={() => setOpenIdx(null)} />
@@ -534,6 +539,7 @@ export function ShadowPopup({
   onChange: (mut: (s: FrameShadow) => void) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("website");
   const alpha = shadow.alpha ?? alphaPctOf(shadow.color);
   const setColor = (hex: string, a: number) => onChange((s) => { s.color = rgbaFrom(hex, a); s.alpha = a; });
   const StepRow = ({ label, value, onSet }: { label: string; value: number; onSet: (v: number) => void }) => (
@@ -552,7 +558,7 @@ export function ShadowPopup({
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/20">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <span className="text-[0.8125rem] font-semibold">Shadow</span>
-          <button type="button" aria-label="schließen" onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"><Icon icon="ph:x" className="size-3.5" /></button>
+          <button type="button" aria-label={t("editor.closeLower")} onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"><Icon icon="ph:x" className="size-3.5" /></button>
         </div>
         <div className="flex flex-col gap-3 p-4">
           <Row label="Typ">
@@ -590,6 +596,7 @@ export function ShadowPopup({
 export type FrameGradient = { kind: "linear" | "radial" | "conic"; angle: number; stops: { color: string; pos: number }[] };
 
 export function FillControl({ props, set }: InspProps) {
+  const t = useTranslations("website");
   const [gradOpen, setGradOpen] = useState(false);
   const anchor = useRef<HTMLDivElement>(null);
   const fillType = (props.fillType as string | undefined) ?? "color";
@@ -653,7 +660,7 @@ export function FillControl({ props, set }: InspProps) {
                     <span className="pr-2 text-[0.625rem] text-muted-foreground">%</span>
                   </div>
                   {grad.stops.length > 2 ? (
-                    <button type="button" onClick={() => patchGrad((g) => { g.stops.splice(i, 1); })} className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-secondary" aria-label="Stop entfernen"><Icon icon="ph:x" className="size-3" /></button>
+                    <button type="button" onClick={() => patchGrad((g) => { g.stops.splice(i, 1); })} className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-secondary" aria-label={t("editor.removeStop")}><Icon icon="ph:x" className="size-3" /></button>
                   ) : null}
                 </div>
               ))}

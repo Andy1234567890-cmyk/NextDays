@@ -12,7 +12,7 @@
 // ([[realtime-kein-manuelles-reload]] / [[realtime-websocket-pflicht]]).
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import { LearnButton } from "@/components/reservierungen/learn-dialog";
@@ -83,10 +83,10 @@ function metaFor(t: T, kind: string) {
 const s = (v: unknown): string | null => (typeof v === "string" && v ? v : null);
 const n = (v: unknown): number | null => (typeof v === "number" ? v : null);
 
-function fmtDate(iso: string, withTime = false): string {
+function fmtDate(iso: string, locale: string, withTime = false): string {
   const d = new Date(iso.length <= 10 ? `${iso}T00:00:00` : iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("de-DE", {
+  return d.toLocaleString(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -95,10 +95,10 @@ function fmtDate(iso: string, withTime = false): string {
 }
 
 // Ausführliche Fußzeile (Wochentag, Datum, Uhrzeit) — wie .. unter der Karte.
-function fmtFooter(iso: string): string {
+function fmtFooter(iso: string, locale: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString("de-DE", {
+  return d.toLocaleString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -145,7 +145,7 @@ function cardTitle(t: T, ev: TimelineEvent, propertyTitle: string): string {
 }
 
 // Detailzeilen (Label: Wert) je Ereignis — nur vorhandene Felder (Wurzel 4).
-function cardRows(t: T, ev: TimelineEvent, currency: string): [string, string][] {
+function cardRows(t: T, ev: TimelineEvent, currency: string, locale: string): [string, string][] {
   const d = ev.detail || {};
   const cur = s(d.currency) ?? currency;
   const money = (v: unknown) =>
@@ -156,8 +156,8 @@ function cardRows(t: T, ev: TimelineEvent, currency: string): [string, string][]
   };
   switch (ev.kind) {
     case "created":
-      push(t("bookingTimeline.row.checkIn"), s(d.check_in) ? fmtDate(s(d.check_in) as string) : null);
-      push(t("bookingTimeline.row.checkOut"), s(d.check_out) ? fmtDate(s(d.check_out) as string) : null);
+      push(t("bookingTimeline.row.checkIn"), s(d.check_in) ? fmtDate(s(d.check_in) as string, locale) : null);
+      push(t("bookingTimeline.row.checkOut"), s(d.check_out) ? fmtDate(s(d.check_out) as string, locale) : null);
       push(t("bookingTimeline.row.guests"), n(d.num_guests) != null ? String(n(d.num_guests)) : null);
       push(t("bookingTimeline.row.price"), money(d.total_amount));
       break;
@@ -166,7 +166,7 @@ function cardRows(t: T, ev: TimelineEvent, currency: string): [string, string][]
       push(t("bookingTimeline.row.assignee"), s(d.assignee));
       push(
         t("bookingTimeline.row.dueAt"),
-        s(d.due_at) ? fmtDate(s(d.due_at) as string, true) : null,
+        s(d.due_at) ? fmtDate(s(d.due_at) as string, locale, true) : null,
       );
       break;
     case "moved":
@@ -176,8 +176,8 @@ function cardRows(t: T, ev: TimelineEvent, currency: string): [string, string][]
           ? t("bookingTimeline.row.periodChanged")
           : t("bookingTimeline.row.movedToOtherProperty"),
       );
-      push(t("bookingTimeline.row.checkIn"), s(d.check_in) ? fmtDate(s(d.check_in) as string) : null);
-      push(t("bookingTimeline.row.checkOut"), s(d.check_out) ? fmtDate(s(d.check_out) as string) : null);
+      push(t("bookingTimeline.row.checkIn"), s(d.check_in) ? fmtDate(s(d.check_in) as string, locale) : null);
+      push(t("bookingTimeline.row.checkOut"), s(d.check_out) ? fmtDate(s(d.check_out) as string, locale) : null);
       break;
     case "repriced":
       push(t("bookingTimeline.row.newPrice"), money(d.total_amount) ?? t("bookingTimeline.row.recalculated"));
@@ -218,6 +218,7 @@ export function BookingTimeline({
   variant?: "tab" | "compact";
 }) {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const FILTERS = useFilters(t);
   const [tl, setTl] = useState<Timeline | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -366,7 +367,7 @@ export function BookingTimeline({
         <ol className="flex flex-col">
           {shown.map((ev, i) => {
             const m = metaFor(t, ev.kind);
-            const rows = cardRows(t, ev, currency);
+            const rows = cardRows(t, ev, currency, locale);
             const last = i === shown.length - 1;
             return (
               <li key={ev.id} className="flex gap-5">
@@ -438,7 +439,7 @@ export function BookingTimeline({
 
                       {/* Datums-Fußzeile (fett), wie .. unter der Karte. */}
                       <p className="mt-3 text-xs font-bold text-foreground">
-                        {fmtFooter(ev.at)}
+                        {fmtFooter(ev.at, locale)}
                       </p>
                     </div>
                   </div>

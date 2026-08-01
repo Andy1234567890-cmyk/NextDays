@@ -40,9 +40,9 @@ export function nights(checkIn: string, checkOut: string): number {
   return Math.max(0, Math.round(ms / 86_400_000));
 }
 
-/** Kurzes deutsches Datum „Mi, 26. Jun" aus YYYY-MM-DD. */
-export function fmtDayShort(k: string): string {
-  return parseKey(k).toLocaleDateString("de-DE", {
+/** Kurzes Datum „Mi, 26. Jun" aus YYYY-MM-DD, in der Oberflächensprache. */
+export function fmtDayShort(k: string, locale: string): string {
+  return parseKey(k).toLocaleDateString(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",

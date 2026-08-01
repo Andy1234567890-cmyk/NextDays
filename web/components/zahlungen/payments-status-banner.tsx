@@ -9,6 +9,7 @@
 // Wichtig: ein fehlgeschlagener Status-Call darf NICHT wie "alles ok" wirken —
 // sonst bliebe ein kaputter/nicht konfigurierter Stripe-Pfad unsichtbar.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { getConnectStatus, getStoredConnectAccountId } from "@/lib/payments";
@@ -37,22 +38,11 @@ export async function PaymentsStatusBanner() {
   return <Banner variant="incomplete" />;
 }
 
-const COPY: Record<Variant, { color: string; title: string; body: string }> = {
-  missing: {
-    color: "amber",
-    title: "Zahlungen noch nicht eingerichtet",
-    body: "Richte deine Auszahlungen ein, um Objekte anzulegen und Buchungen zu empfangen.",
-  },
-  incomplete: {
-    color: "amber",
-    title: "Zahlungen noch nicht aktiviert",
-    body: "Es fehlen noch Angaben zur Zahlungsfreischaltung. Schließe die Einrichtung ab, um Objekte anzulegen.",
-  },
-  error: {
-    color: "red",
-    title: "Zahlungs-Status nicht abrufbar",
-    body: "Der Stripe-Status konnte nicht geladen werden. Bitte Einrichtung prüfen.",
-  },
+// Farbe je Variante; die Texte kommen aus i18n (payments.banner.*).
+const COPY: Record<Variant, { color: string; key: string }> = {
+  missing: { color: "amber", key: "missing" },
+  incomplete: { color: "amber", key: "incomplete" },
+  error: { color: "red", key: "error" },
 };
 
 const STYLES = {
@@ -73,6 +63,7 @@ const STYLES = {
 } as const;
 
 function Banner({ variant, detail }: { variant: Variant; detail?: string }) {
+  const t = useTranslations("payments");
   const copy = COPY[variant];
   const s = STYLES[copy.color as keyof typeof STYLES];
   return (
@@ -85,8 +76,8 @@ function Banner({ variant, detail }: { variant: Variant; detail?: string }) {
           className={`mt-0.5 size-5 shrink-0 ${s.icon}`}
         />
         <div className="flex flex-col">
-          <span className={`font-semibold ${s.title}`}>{copy.title}</span>
-          <span className={`text-sm ${s.body}`}>{copy.body}</span>
+          <span className={`font-semibold ${s.title}`}>{t(`banner.${copy.key}Title`)}</span>
+          <span className={`text-sm ${s.body}`}>{t(`banner.${copy.key}Body`)}</span>
           {detail ? (
             <span className={`mt-1 text-xs ${s.body}`}>{detail}</span>
           ) : null}
@@ -97,7 +88,7 @@ function Banner({ variant, detail }: { variant: Variant; detail?: string }) {
         className={`flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 ${s.btn}`}
       >
         <Icon icon="ph:credit-card" className="size-4" />
-        Jetzt einrichten
+        {t("banner.setUpNow")}
       </Link>
     </div>
   );

@@ -1,11 +1,13 @@
 // Hero — Credibility-Banner, Headline mit Kurven-Akzent, CTA-Buttons, Visual.
 // Figma: zweispaltig (Text links, Produkt-Mockup rechts).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { Button } from "@nextdays/ui/button";
 
 export function MarketingHero() {
+  const t = useTranslations("marketingSite");
   return (
     <section className="relative overflow-hidden bg-secondary/40">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 lg:grid-cols-2 lg:py-28">
@@ -19,8 +21,8 @@ export function MarketingHero() {
                 ))}
                 <Icon icon="ph:star-half-fill" className="size-4" />
               </div>
-              <span className="text-sm font-semibold">4,5 Sterne</span>
-              <span className="text-sm text-muted-foreground">· 921 Bewertungen</span>
+              <span className="text-sm font-semibold">{t("stars")}</span>
+              <span className="text-sm text-muted-foreground">{t("reviews")}</span>
             </div>
             <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
               Empfohlen von 53.000+ Gastgebern
@@ -56,7 +58,7 @@ export function MarketingHero() {
 
           <div className="mt-9 flex flex-wrap items-center gap-4">
             <Button asChild variant="accent" size="lg">
-              <Link href="/register">30 Tage kostenlos testen</Link>
+              <Link href="/register">{t("trial30")}</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="#demo" className="gap-2">

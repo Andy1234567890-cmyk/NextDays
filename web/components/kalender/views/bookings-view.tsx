@@ -6,7 +6,7 @@
 // und denselben Detail-Slider — kein doppeltes Laden. Ersetzt die zwei vorher
 // getrennten Ansichten „Liste" und „An-/Abreisen".
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Prop } from "@/components/kalender/calendar-board";
@@ -47,6 +47,7 @@ function statusFilters(
 
 export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
   const t = useTranslations("calendar");
+  const locale = useLocale();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<string | null>(null);
@@ -88,7 +89,7 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
     () => active.filter((r) => occupiesNight(r, day) && r.check_in !== day),
     [active, day],
   );
-  const dayLabel = parseKey(day).toLocaleDateString("de-DE", {
+  const dayLabel = parseKey(day).toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -258,7 +259,7 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
                       </td>
                       <td className="px-4 py-3">{r.guest_name}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                        {fmtDayShort(r.check_in)} – {fmtDayShort(r.check_out)}
+                        {fmtDayShort(r.check_in, locale)} – {fmtDayShort(r.check_out, locale)}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">
                         {nights(r.check_in, r.check_out)}

@@ -8,6 +8,7 @@ import { useEditor } from "@craftjs/core";
 import type { NodeTree } from "@craftjs/core";
 import { getRandomId } from "@craftjs/utils";
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 type Rect = { top: number; left: number; width: number; height: number };
@@ -20,6 +21,7 @@ export function SelectionOverlay({
   // Ändert sich mit Kamera (Pan/Zoom) → erzwingt Neuvermessung der Rechtecke.
   revision?: number;
 }) {
+  const t = useTranslations("website");
   const { selectedId, hoveredId, dom, hoveredDom, displayName, isFrame, actions, query, canMoveUp, canMoveDown } =
     useEditor((state) => {
       const selected = state.events.selected.values().next().value as string | undefined;
@@ -141,10 +143,10 @@ export function SelectionOverlay({
         >
           <div className="pointer-events-auto absolute -top-9 left-0 flex items-center gap-0.5 rounded-full bg-primary px-1 py-1 text-primary-foreground shadow-lg">
             <span className="px-2 text-xs font-medium">{displayName}</span>
-            <ToolbarButton label="nach oben" icon="ph:arrow-up" disabled={!canMoveUp} onClick={() => move(-1)} />
-            <ToolbarButton label="nach unten" icon="ph:arrow-down" disabled={!canMoveDown} onClick={() => move(1)} />
+            <ToolbarButton label={t("editor.moveUp")} icon="ph:arrow-up" disabled={!canMoveUp} onClick={() => move(-1)} />
+            <ToolbarButton label={t("editor.moveDown")} icon="ph:arrow-down" disabled={!canMoveDown} onClick={() => move(1)} />
             <ToolbarButton label="duplizieren" icon="ph:copy" onClick={duplicate} />
-            <ToolbarButton label="löschen" icon="ph:trash" onClick={remove} />
+            <ToolbarButton label={t("editor.deleteLower")} icon="ph:trash" onClick={remove} />
           </div>
         </div>
       ) : null}

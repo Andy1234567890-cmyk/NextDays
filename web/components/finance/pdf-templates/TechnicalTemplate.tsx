@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import type { DocumentSettings, ProcessedPDFData } from '@/hooks/pdf/usePDFTemplateData';
 import type { DocumentType } from '@/lib/document-utils';
 import { detectDocumentType, getDocumentTypeConfig } from '@/lib/document-utils';
@@ -30,6 +30,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
   documentSettings,
 }) => {
   const t = useTranslations('finance');
+  const locale = useLocale();
   // Dokumenttyp-Konfiguration
   const detectedType = documentType || detectDocumentType(data) || 'invoice';
   const config = getDocumentTypeConfig(detectedType, color);
@@ -107,7 +108,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
               {config.title}
             </div>
             <div className="text-xs">#{data.invoiceNumber}</div>
-            <div className="text-xs">{formatDate(data.invoiceDate)}</div>
+            <div className="text-xs">{formatDate(data.invoiceDate, locale)}</div>
           </div>
         </div>
 
@@ -144,8 +145,8 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
               </div>
               <div className="space-y-1">
                 <div>{t('TechnicalTemplate.docNum', { value: data.invoiceNumber })}</div>
-                <div>{t('TechnicalTemplate.issued', { value: formatDate(data.invoiceDate) })}</div>
-                <div>{t('TechnicalTemplate.dueDate', { value: formatDate(data.dueDate) })}</div>
+                <div>{t('TechnicalTemplate.issued', { value: formatDate(data.invoiceDate, locale) })}</div>
+                <div>{t('TechnicalTemplate.dueDate', { value: formatDate(data.dueDate, locale) })}</div>
                 <div>{t('TechnicalTemplate.terms', { value: data.paymentTerms || '' })}</div>
                 {data.customerOrderNumber && (
                   <div>{t('TechnicalTemplate.ref', { value: data.customerOrderNumber })}</div>
@@ -370,8 +371,8 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
                   </div>
                   <div className="space-y-1">
                     <div>{t('TechnicalTemplate.docNum', { value: data.invoiceNumber })}</div>
-                    <div>{t('TechnicalTemplate.issued', { value: formatDate(data.invoiceDate) })}</div>
-                    <div>{t('TechnicalTemplate.dueDate', { value: formatDate(data.dueDate) })}</div>
+                    <div>{t('TechnicalTemplate.issued', { value: formatDate(data.invoiceDate, locale) })}</div>
+                    <div>{t('TechnicalTemplate.dueDate', { value: formatDate(data.dueDate, locale) })}</div>
                     <div>{t('TechnicalTemplate.terms', { value: data.paymentTerms || '' })}</div>
                   </div>
                 </div>

@@ -14,7 +14,7 @@ import {
   Input,
   Label,
 } from '@tasko/ui';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -74,6 +74,8 @@ export function LivePreviewModal({
   };
 
   const t = useTranslations('finance');
+
+  const locale = useLocale();
   const { user } = useNewAuth(); // User-Daten aus Auth Context
   const [sending, setSending] = useState(false);
   const [showCompanySettings, setShowCompanySettings] = useState(false);
@@ -1113,8 +1115,7 @@ export function LivePreviewModal({
                               {formatDate(
                                 typeof eInvoiceData.createdAt === 'string'
                                   ? eInvoiceData.createdAt
-                                  : undefined,
-                              )}
+                                  : undefined, locale)}
                             </div>
                           </div>
                         </div>
@@ -1127,7 +1128,7 @@ export function LivePreviewModal({
                             </div>
                             <img
                               src={qrCodeUrl}
-                              alt="E-Invoice QR Code"
+                              alt={t("pdf.eInvoiceQrCode")}
                               className="mx-auto h-24 w-24 rounded border"
                             />
 

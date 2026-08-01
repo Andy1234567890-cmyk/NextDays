@@ -1,4 +1,6 @@
 // Platzhalter-System für Textvorlagen
+import { documentTranslations } from '@/hooks/pdf/document-translations';
+import { resolveDocumentLanguage } from '@/hooks/pdf/useDocumentTranslation';
 import { formatCurrency } from '@/lib/utils';
 
 interface PlaceholderData {
@@ -80,6 +82,11 @@ interface PlaceholderData {
   currentDate?: string;
   currentYear?: string;
   currentMonth?: string;
+}
+
+// Datumsformat des DOKUMENTS aus der Dokumentsprache (kein festes de-DE).
+function docDateLocale(language: string): string {
+  return documentTranslations[resolveDocumentLanguage(language)].dateLocale;
 }
 
 export function replacePlaceholders(
@@ -282,7 +289,7 @@ export function replacePlaceholders(
       }
 
       if (!Number.isNaN(date.getTime())) {
-        documentDateFormatted = date.toLocaleDateString('de-DE');
+        documentDateFormatted = date.toLocaleDateString(docDateLocale(language));
       } else {
         // Falls alles fehlschlägt, verwende den ursprünglichen String
         documentDateFormatted = String(data.documentDate);
@@ -343,7 +350,7 @@ export function replacePlaceholders(
       }
 
       if (!Number.isNaN(dueDate.getTime())) {
-        formattedDueDate = dueDate.toLocaleDateString('de-DE');
+        formattedDueDate = dueDate.toLocaleDateString(docDateLocale(language));
       } else {
         formattedDueDate = String(gueltigBis);
       }
@@ -392,7 +399,7 @@ export function replacePlaceholders(
           : String(leistungsDatum);
       const serviceDate = new Date(serviceDateInput);
       if (!Number.isNaN(serviceDate.getTime())) {
-        formattedServiceDate = serviceDate.toLocaleDateString('de-DE');
+        formattedServiceDate = serviceDate.toLocaleDateString(docDateLocale(language));
       } else {
         formattedServiceDate = String(leistungsDatum);
       }
@@ -498,7 +505,7 @@ export function replacePlaceholders(
 
     const dueDate = new Date(baseDate);
     dueDate.setDate(dueDate.getDate() + days);
-    return dueDate.toLocaleDateString('de-DE');
+    return dueDate.toLocaleDateString(docDateLocale(language));
   };
 
   result = result.replace(/\[%ZAHLUNGSZIEL%\]/g, calculatePaymentDue());
@@ -559,7 +566,7 @@ export function replacePlaceholders(
 
   // Erweiterte Datums-Platzhalter
   const now = new Date();
-  const currentDate = now.toLocaleDateString('de-DE');
+  const currentDate = now.toLocaleDateString(docDateLocale(language));
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
   const currentDay = now.getDate();
@@ -639,7 +646,7 @@ export function replacePlaceholders(
 
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
-  result = result.replace(/\[%DATUM\.VORTAG%\]/g, yesterday.toLocaleDateString('de-DE'));
+  result = result.replace(/\[%DATUM\.VORTAG%\]/g, yesterday.toLocaleDateString(docDateLocale(language)));
   result = result.replace(/\[%WOCHENTAG\.VORTAG%\]/g, dayNames[yesterday.getDay()]);
 
   // Quartal-Platzhalter
@@ -811,7 +818,7 @@ export function replacePlaceholders(
 
     const dueDate = new Date(baseDate);
     dueDate.setDate(dueDate.getDate() + days);
-    return dueDate.toLocaleDateString('de-DE');
+    return dueDate.toLocaleDateString(docDateLocale(language));
   };
   result = result.replace(/\[%ZAHLUNGSZIEL%\]/g, calculatePaymentDue2());
 

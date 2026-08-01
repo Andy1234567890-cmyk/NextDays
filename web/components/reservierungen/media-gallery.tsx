@@ -6,7 +6,7 @@
 // Live via useRealtime auf property_photos + checklist_photos.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -17,6 +17,7 @@ import { useRealtime } from "@/lib/use-realtime";
 
 export function MediaGallery() {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const KIND_LABEL: Record<string, string> = {
     booking: t("mediaGallery.kindBooking"),
     property: t("mediaGallery.kindProperty"),
@@ -51,7 +52,7 @@ export function MediaGallery() {
 
   const fmt = (iso: string | null) =>
     iso
-      ? new Date(iso).toLocaleDateString("de-DE", {
+      ? new Date(iso).toLocaleDateString(locale, {
         day: "numeric",
         month: "long",
       })

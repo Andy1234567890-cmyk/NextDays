@@ -34,10 +34,10 @@
     "kanaeleLabel": "Savienots ar lielākajām rezervāciju platformām",
     "eyebrow": "Platforma brīvdienu mājokļu iznomātājiem",
     "kanaeleEyebrow": "Pārdošanas kanāli",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "myNextDays noslogojuma plāns: astoņi brīvdienu objekti ar rezervācijām no Booking.com, Airbnb, Vrbo, tirgus laukuma un tiešajām rezervācijām",
+    "aufnahmeHotel": "Viesnīcas noslogojuma plāns myNextDays: divpadsmit numuri, katrs kā atsevišķa rezervējama vienība",
+    "aufnahmeObjekte": "Objektu pārskats myNextDays ar fotoattēliem, statusu un redzamību pa kanāliem",
+    "aufnahmeKanaele": "Kanālu pārvaldība myNextDays: pievienotie rezervāciju portāli un pašu tirgus laukums"
   },
   "intro": {
     "heading": "Laipni lūdzam myNextDays.",
@@ -351,20 +351,20 @@
     "fehler": "Neizdevās. Lūdzu, mēģiniet vēlreiz vēlāk."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Ieskats",
+    "heading": "Kā myNextDays patiešām strādā",
+    "sub": "Nekādu zīmētu skatu — uzņēmumi no reāli strādājoša objekta ar īstām rezervācijām no visiem kanāliem.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Viesnīca un brīvdienu objekts vienā saskarnē",
+      "text": "Katrs numurs ir atsevišķa rezervējama vienība — tāds pats modelis kā brīvdienu mājai. Noslogojuma plāns rāda ierašanās, uzturēšanās un izbraukšanas pa vienībām, kā arī noslogojumu, apgrozījumu un vidējo cenu par nakti periodā."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Redzamība katram kanālam atsevišķi, nevis viens slēdzis visam",
+      "text": "Tīmekļa vietne, tirgus laukums un rezervāciju portāli ir trīs atsevišķas asis. Objekts var palikt aktīvs jūsu pašu vietnē, kamēr portālos tas ir apturēts — redzams uzreiz, pārslēdzams ar vienu klikšķi."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Pievienojiet portālus un saglabājiet savu pārdošanas kanālu",
+      "text": "Booking.com, Airbnb un citi portāli balstās uz to pašu pieejamību, kas tiešā rezervācija. Rezervēta nakts bloķē visur — bez dubultām rezervācijām un bez manuāla darba pēc tam."
     }
   }
 }

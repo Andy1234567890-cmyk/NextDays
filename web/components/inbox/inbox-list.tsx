@@ -10,7 +10,7 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 import { AiSettingsTab } from "@/components/inbox/ai-settings-tab";
 import { AutomationsTab } from "@/components/inbox/automations-tab";
@@ -131,10 +131,10 @@ function otaIcon(name: string | null): string {
   return OTA_ICON[name.trim().toLowerCase()] ?? "ph:globe";
 }
 
-function fmtRange(a: string | null, b: string | null): string {
+function fmtRange(a: string | null, b: string | null, locale: string): string {
   if (!a) return "";
   const f = (s: string) =>
-    new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
+    new Date(`${s}T00:00:00`).toLocaleDateString(locale, {
       day: "2-digit",
       month: "short",
       year: "2-digit",
@@ -152,6 +152,7 @@ export function InboxList({
   access: InboxAccess;
 }) {
   const t = useTranslations("inbox");
+  const locale = useLocale();
   const [query, setQuery] = useState("");
   // Lokale Thread-Liste, damit Archivieren/Ungelesen sofort sichtbar werden.
   const [rows, setRows] = useState<InboxThread[]>(threads);
@@ -635,7 +636,7 @@ export function InboxList({
                             )}
                           </span>
                           <span className="truncate text-xs text-muted-foreground">
-                            {fmtRange(th.arrival_date, th.departure_date)}
+                            {fmtRange(th.arrival_date, th.departure_date, locale)}
                           </span>
                           {th.last_message && (
                             <span className="truncate text-xs text-muted-foreground/80">
@@ -754,6 +755,7 @@ function Conversation({
   onAssigned: (userId: string | null, name: string | null) => void;
 }) {
   const t = useTranslations("inbox");
+  const locale = useLocale();
   const [messages, setMessages] = useState<InboxMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
@@ -1069,7 +1071,7 @@ function Conversation({
                 </div>
                 {m.sent_at && (
                   <span className="text-[0.65rem] text-muted-foreground">
-                    {new Date(m.sent_at).toLocaleString("de-DE")}
+                    {new Date(m.sent_at).toLocaleString(locale)}
                   </span>
                 )}
               </div>
@@ -1093,7 +1095,7 @@ function Conversation({
                 </div>
                 {m.sent_at && (
                   <span className="text-[0.65rem] text-muted-foreground">
-                    {new Date(m.sent_at).toLocaleString("de-DE")}
+                    {new Date(m.sent_at).toLocaleString(locale)}
                   </span>
                 )}
               </div>
@@ -1184,7 +1186,7 @@ function Conversation({
             {scheduled.map((s) => (
               <li key={s.id} className="flex items-center gap-2 text-sm">
                 <span className="text-xs text-muted-foreground">
-                  {new Date(s.send_at).toLocaleString("de-DE")}
+                  {new Date(s.send_at).toLocaleString(locale)}
                 </span>
                 <span className="min-w-0 flex-1 truncate">{s.body}</span>
                 <button
@@ -1322,6 +1324,7 @@ function ReservationPanel({
   onWhatsApp: (phone: string) => void;
 }) {
   const t = useTranslations("inbox");
+  const locale = useLocale();
   const [res, setRes] = useState<ReservationDetail | null>(null);
   const [noteEdit, setNoteEdit] = useState(false);
   const [note, setNote] = useState("");
@@ -1358,13 +1361,13 @@ function ReservationPanel({
       ? null
       : res.currency
         ? formatCurrency(v, res.currency)
-        : v.toLocaleString("de-DE");
+        : v.toLocaleString(locale);
   const total = money(res.total_amount);
   const due = money(res.total_amount);
   const paid = money(res.paid_amount ?? 0);
   const fmtDay = (s: string | null) =>
     s
-      ? new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
+      ? new Date(`${s}T00:00:00`).toLocaleDateString(locale, {
         weekday: "short",
         day: "2-digit",
         month: "short",
@@ -1569,6 +1572,7 @@ function StayCalendar({
   checkIn: string;
   checkOut: string | null;
 }) {
+  const locale = useLocale();
   const ci = new Date(`${checkIn}T00:00:00`);
   const co = checkOut ? new Date(`${checkOut}T00:00:00`) : null;
   const [month, setMonth] = useState(
@@ -1577,7 +1581,7 @@ function StayCalendar({
 
   const year = month.getFullYear();
   const mon = month.getMonth();
-  const monthLabel = month.toLocaleDateString("de-DE", {
+  const monthLabel = month.toLocaleDateString(locale, {
     month: "long",
     year: "numeric",
   });

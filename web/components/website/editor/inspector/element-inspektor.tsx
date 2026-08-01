@@ -4,6 +4,7 @@
 // Stile (Opazität/Sichtbar/Füllen/Radius/Drehen) + block-spezifische Felder
 // (Hero/Bild/Button/Text/Kontakt/Abstand).
 import { useEditor } from "@craftjs/core";
+import { useTranslations } from "next-intl";
 
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
@@ -21,6 +22,7 @@ import {
 
 // --- Element-Inspektor (Block gewählt) --------------------------------------
 export function ElementInspektor({ id }: { id: string }) {
+  const t = useTranslations("website");
   const { name, props, dom, actions } = useEditor((state) => {
     const node = state.nodes[id];
     return {
@@ -47,7 +49,7 @@ export function ElementInspektor({ id }: { id: string }) {
           <NumBox value={Math.round(rect?.left ?? 0)} unit="x" disabled />
           <NumBox value={Math.round(rect?.top ?? 0)} unit="y" disabled />
         </Row>
-        <Row label="Größe">
+        <Row label={t("editor.size")}>
           <NumBox value={Math.round(rect?.width ?? 0)} unit="w" disabled />
           <NumBox value={Math.round(rect?.height ?? 0)} unit="h" disabled />
         </Row>
@@ -55,7 +57,7 @@ export function ElementInspektor({ id }: { id: string }) {
 
       {/* Stile */}
       <Section title="Stile">
-        <Row label="Opazität">
+        <Row label={t("editor.opacity")}>
           <input
             type="range"
             min={0}
@@ -85,7 +87,7 @@ export function ElementInspektor({ id }: { id: string }) {
             </button>
           </div>
         </Row>
-        <Row label="Füllen">
+        <Row label={t("editor.fill")}>
           <Swatch
             color={fill}
             onColor={(hex) => set((p) => { p.background_color = hex; })}
@@ -138,6 +140,7 @@ export function BlockFelder({
   props: Record<string, unknown>;
   set: (mut: (p: Record<string, unknown>) => void) => void;
 }) {
+  const t = useTranslations("website");
   const str = (k: string) => (typeof props[k] === "string" ? (props[k] as string) : "");
   const fontPicker = (
     <Row label="Schrift">
@@ -145,7 +148,7 @@ export function BlockFelder({
         value={str("font_family") || ""}
         onChange={(e) => set((p) => { p.font_family = e.target.value || null; })}
       >
-        <option value="">Standard (Marke)</option>
+        <option value="">{t("editor.brandDefault")}</option>
         {FONT_CATALOG.map((f) => (
           <option key={f.family} value={f.family}>{f.label}</option>
         ))}
@@ -195,7 +198,7 @@ export function BlockFelder({
         </Row>
         <Row label="Stil">
           <NativeSelect value={str("variant") || "primary"} onChange={(e) => set((p) => { p.variant = e.target.value; })}>
-            <option value="primary">Gefüllt</option>
+            <option value="primary">{t("editor.filled")}</option>
             <option value="secondary">Umrandet</option>
           </NativeSelect>
         </Row>
@@ -230,12 +233,12 @@ export function BlockFelder({
   if (name === "Abstand") {
     return (
       <Section title="Abstand">
-        <Row label="Größe">
+        <Row label={t("editor.size")}>
           <NativeSelect value={str("size") || "md"} onChange={(e) => set((p) => { p.size = e.target.value; })}>
             <option value="sm">Klein</option>
             <option value="md">Mittel</option>
-            <option value="lg">Groß</option>
-            <option value="xl">Sehr groß</option>
+            <option value="lg">{t("editor.large")}</option>
+            <option value="xl">{t("editor.xlarge")}</option>
           </NativeSelect>
         </Row>
       </Section>

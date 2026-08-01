@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useTranslations } from "next-intl";
 import { useDocumentTranslation } from '@/hooks/pdf/useDocumentTranslation';
 import type { DocumentSettings, ProcessedPDFData } from '@/hooks/pdf/usePDFTemplateData';
 import type { DocumentType } from '@/lib/document-utils';
@@ -28,7 +29,8 @@ export const NeutralTemplate: React.FC<NeutralTemplateProps> = ({
   documentSettings,
 }) => {
   // 🌍 ÜBERSETZUNGSSYSTEM
-  const { t } = useDocumentTranslation(documentSettings?.language || 'de');
+  const { t, dateLocale: locale } = useDocumentTranslation(documentSettings?.language || 'de');
+  const tUi = useTranslations("finance");
 
   // Berechne, ob eine zweite Seite benötigt wird
   // STANDARD: Immer einseitig, außer der Inhalt ist zu lang
@@ -186,7 +188,7 @@ export const NeutralTemplate: React.FC<NeutralTemplateProps> = ({
                   <div className="shrink-0">
                     <img
                       src={qrCodeUrl}
-                      alt="QR Code"
+                      alt={tUi("pdf.qrCode")}
                       className="h-12 w-12 border border-gray-300"
                     />
                   </div>
@@ -267,22 +269,20 @@ export const NeutralTemplate: React.FC<NeutralTemplateProps> = ({
                           data.date ||
                           data.invoiceDate ||
                           new Date().toISOString().split('T')[0]
-                      : data.invoiceDate || data.date || new Date().toISOString().split('T')[0],
-                  )}
+                      : data.invoiceDate || data.date || new Date().toISOString().split('T')[0], locale)}
                 </div>
                 {config.showDueDate && (
                   <div>
                     {config.dueDateLabel}: {(() => {
                       const fallbackDate = formatDate(
-                        new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                      );
+                        new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], locale);
                       const targetDate: string =
                         detectedType === 'quote'
                           ? data.validUntil || data.dueDate || fallbackDate
                           : data.dueDate || data.validUntil || fallbackDate;
                       // Wenn es wie YYYY-MM-DD aussieht, nochmals formatieren, ansonsten direkt verwenden
                       return targetDate.match(/^\d{4}-\d{2}-\d{2}$/)
-                        ? formatDate(targetDate)
+                        ? formatDate(targetDate, locale)
                         : targetDate;
                     })()}
                   </div>
@@ -398,7 +398,7 @@ export const NeutralTemplate: React.FC<NeutralTemplateProps> = ({
           >
             {/* Seitenzahl Seite 2 */}
             {documentSettings?.showPageNumbers && (
-              <div className="absolute right-6 bottom-4 z-10 text-gray-500 text-xs">Seite 2</div>
+              <div className="absolute right-6 bottom-4 z-10 text-gray-500 text-xs">{tUi("pdf.page2")}</div>
             )}
             {/* Header Seite 2 */}
             <div className="p-6 pb-4">
@@ -481,8 +481,7 @@ export const NeutralTemplate: React.FC<NeutralTemplateProps> = ({
                               data.date ||
                               data.invoiceDate ||
                               new Date().toISOString().split('T')[0]
-                          : data.invoiceDate || data.date || new Date().toISOString().split('T')[0],
-                      )}
+                          : data.invoiceDate || data.date || new Date().toISOString().split('T')[0], locale)}
                     </div>
                     {config.showDueDate && (
                       <div>
@@ -490,15 +489,14 @@ export const NeutralTemplate: React.FC<NeutralTemplateProps> = ({
                           const fallbackDate = formatDate(
                             new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
                               .toISOString()
-                              .split('T')[0],
-                          );
+                              .split('T')[0], locale);
                           const targetDate: string =
                             detectedType === 'quote'
                               ? data.validUntil || data.dueDate || fallbackDate
                               : data.dueDate || data.validUntil || fallbackDate;
                           // Wenn es wie YYYY-MM-DD aussieht, nochmals formatieren, ansonsten direkt verwenden
                           return targetDate.match(/^\d{4}-\d{2}-\d{2}$/)
-                            ? formatDate(targetDate)
+                            ? formatDate(targetDate, locale)
                             : targetDate;
                         })()}
                       </div>
@@ -521,7 +519,7 @@ export const NeutralTemplate: React.FC<NeutralTemplateProps> = ({
             {/* Fortsetzung + Totals Seite 2 */}
             <div className="flex-1 px-6">
               <div className="mb-8">
-                <div className="mb-2 font-semibold text-sm">Fortsetzung - Seite 2</div>
+                <div className="mb-2 font-semibold text-sm">{tUi("pdf.continuationPage2")}</div>
                 <div className="mb-4 text-gray-600 text-xs">
                   Weitere Details und Zusammenfassung
                 </div>

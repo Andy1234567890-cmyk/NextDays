@@ -1,6 +1,7 @@
 'use client';
 
 import * as SelectPrimitive from '@radix-ui/react-select';
+import { useTranslations } from "next-intl";
 import type * as React from 'react';
 import { cn } from '../lib/cn';
 
@@ -155,6 +156,7 @@ function SelectScrollUpButton({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
+  const t = useTranslations("common");
   return (
     <SelectPrimitive.ScrollUpButton
       data-slot="select-scroll-up-button"
@@ -171,7 +173,7 @@ function SelectScrollUpButton({
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <title>Scroll up</title>
+        <title>{t("scrollUp")}</title>
         <path d="M5 15l7-7 7 7" />
       </svg>
     </SelectPrimitive.ScrollUpButton>
@@ -182,6 +184,7 @@ function SelectScrollDownButton({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
+  const t = useTranslations("common");
   return (
     <SelectPrimitive.ScrollDownButton
       data-slot="select-scroll-down-button"
@@ -198,7 +201,7 @@ function SelectScrollDownButton({
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <title>Scroll down</title>
+        <title>{t("scrollDown")}</title>
         <path d="M19 9l-7 7-7-7" />
       </svg>
     </SelectPrimitive.ScrollDownButton>

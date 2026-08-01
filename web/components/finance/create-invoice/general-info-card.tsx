@@ -39,7 +39,7 @@ import { toast } from 'sonner';
 import type { Customer as CustomerType } from '@/components/finance/AddCustomerModal';
 import InvoiceHeaderTextSection from '@/components/finance/InvoiceHeaderTextSection';
 import { formatDateDE } from '@/components/finance/create-invoice/calc';
-import { COUNTRIES } from '@/constants/countries';
+import { useCountryOptions } from '@/lib/use-country-options';
 import type { CreateInvoiceFormData } from '@/types/formData';
 
 // Header-Bar oben: Titel, E-Rechnung-Toggle, Entwurf/Vorschau/Erstellen-Aktionen
@@ -239,6 +239,7 @@ export default function GeneralInfoCard({
   const [showAddressAddition, setShowAddressAddition] = useState(false);
   const [deliveryDatePopoverOpen, setDeliveryDatePopoverOpen] = useState(false);
   const t = useTranslations('finance');
+  const countryOptions = useCountryOptions();
 
   return (
     <>
@@ -613,7 +614,7 @@ export default function GeneralInfoCard({
                       <SelectValue placeholder={t('generalInfoCard.pleaseSelect')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {COUNTRIES.map(country => (
+                      {countryOptions.map(country => (
                         <SelectItem key={country.value} value={country.value}>
                           {country.label}
                         </SelectItem>

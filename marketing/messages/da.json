@@ -34,10 +34,10 @@
     "kanaeleLabel": "Forbundet med de store bookingplatforme",
     "eyebrow": "Platformen for udlejere af ferieboliger",
     "kanaeleEyebrow": "Salgskanaler",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "Belægningsplan i myNextDays: otte ferieboliger med bookinger fra Booking.com, Airbnb, Vrbo, markedspladsen og direkte bookinger",
+    "aufnahmeHotel": "Belægningsplan for et hotel i myNextDays: tolv værelser, hvert som sin egen bookbare enhed",
+    "aufnahmeObjekte": "Boligoversigt i myNextDays med billeder, status og synlighed pr. kanal",
+    "aufnahmeKanaele": "Kanalstyring i myNextDays: forbundne bookingportaler og den egne markedsplads"
   },
   "intro": {
     "heading": "Velkommen til myNextDays.",
@@ -351,20 +351,20 @@
     "fehler": "Det gik ikke. Prøv venligst igen senere."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Indblik",
+    "heading": "Sådan arbejder myNextDays i virkeligheden",
+    "sub": "Ingen tegnede visninger — optagelser fra en kørende drift med rigtige bookinger fra alle kanaler.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Hotel og feriebolig i én grænseflade",
+      "text": "Hvert værelse er sin egen bookbare enhed — samme model som ved et feriehus. Belægningsplanen viser ankomster, ophold og afrejser pr. enhed, med belægning, omsætning og gennemsnitspris pr. nat i perioden."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Synlighed pr. kanal, ikke én kontakt til det hele",
+      "text": "Website, markedsplads og bookingportaler er tre adskilte akser. En bolig kan køre videre på dit eget site, mens den er sat på pause på portalerne — synligt på et øjeblik, skiftes med ét klik."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Tilslut portaler og behold din egen kanal",
+      "text": "Booking.com, Airbnb og andre portaler hænger på den samme tilgængelighed som den direkte booking. En booket nat spærrer alle steder — uden dobbeltbooking, uden manuel efterbehandling."
     }
   }
 }

@@ -34,10 +34,10 @@
     "kanaeleLabel": "Yhteydessä suuriin varausalustoihin",
     "eyebrow": "Alusta lomamajoituksen vuokraajille",
     "kanaeleEyebrow": "Myyntikanavat",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "myNextDaysin varaustilanne: kahdeksan lomakohdetta, joissa varauksia Booking.comista, Airbnb:stä, Vrbo:sta, markkinapaikalta ja suoraan",
+    "aufnahmeHotel": "Hotellin varaustilanne myNextDaysissa: kaksitoista huonetta, kukin omana varattavana yksikkönään",
+    "aufnahmeObjekte": "Kohdeyhteenveto myNextDaysissa kuvien, tilan ja kanavakohtaisen näkyvyyden kanssa",
+    "aufnahmeKanaele": "Kanavien hallinta myNextDaysissa: yhdistetyt varausportaalit ja oma markkinapaikka"
   },
   "intro": {
     "heading": "Tervetuloa myNextDaysiin.",
@@ -351,20 +351,20 @@
     "fehler": "Tämä ei onnistunut. Yritä myöhemmin uudelleen."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Sisältä katsottuna",
+    "heading": "Näin myNextDays oikeasti toimii",
+    "sub": "Ei piirrettyjä näkymiä — kuvia toimivasta yrityksestä, joissa on aitoja varauksia kaikista kanavista.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Hotelli ja lomakohde samassa käyttöliittymässä",
+      "text": "Jokainen huone on oma varattava yksikkönsä — sama malli kuin lomamökillä. Varaustilanne näyttää saapumiset, oleskelut ja lähdöt yksikkökohtaisesti sekä käyttöasteen, liikevaihdon ja keskihinnan jaksolta."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Näkyvyys kanavakohtaisesti, ei yhtä kytkintä kaikkeen",
+      "text": "Verkkosivu, markkinapaikka ja varausportaalit ovat kolme erillistä akselia. Kohde voi olla käytössä omalla sivustollasi, vaikka se on portaaleissa tauolla — näet sen yhdellä silmäyksellä ja vaihdat yhdellä klikkauksella."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Yhdistä portaalit ja säilytä oma myyntikanavasi",
+      "text": "Booking.com, Airbnb ja muut portaalit nojaavat samaan saatavuuteen kuin suora varaus. Varattu yö sulkee kaikkialla — ei päällekkäisvarauksia eikä käsityötä jälkikäteen."
     }
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { Icon } from '@iconify/react';
+import { useTranslations } from "next-intl";
 import {
   Button,
   Dialog,
@@ -79,6 +80,7 @@ export default function NewProductModal({
   companyId,
   onSaved,
 }: NewProductModalProps) {
+  const t = useTranslations("inventory");
   const [values, setValues] = useState<NewProductValues>(DEFAULT_VALUES);
   const [stockEnabled, setStockEnabled] = useState<boolean>(false);
   const [reorderEnabled, setReorderEnabled] = useState<boolean>(false);
@@ -128,20 +130,20 @@ export default function NewProductModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] w-full max-w-3xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Neues Produkt</DialogTitle>
+          <DialogTitle>{t("newProduct")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Produktname *</Label>
+              <Label>{t("productName")}</Label>
               <Input
                 value={values.name}
                 onChange={e => setValues(p => ({ ...p, name: e.target.value }))}
-                placeholder="z. B. Beratungspaket"
+                placeholder={t("productNamePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Art.-Nr. (SKU)</Label>
+              <Label>{t("sku")}</Label>
               <Input
                 value={values.sku}
                 onChange={e => setValues(p => ({ ...p, sku: e.target.value }))}
@@ -155,7 +157,7 @@ export default function NewProductModal({
                 onValueChange={val => setValues(p => ({ ...p, category: val }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Kategorie wählen" />
+                  <SelectValue placeholder={t("chooseCategory")} />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
                   {categoryOptions.map(cat => (
@@ -167,7 +169,7 @@ export default function NewProductModal({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Einkaufspreis (Netto)</Label>
+              <Label>{t("purchaseNet")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -184,7 +186,7 @@ export default function NewProductModal({
               />
             </div>
             <div className="space-y-2">
-              <Label>Einkaufspreis (Brutto)</Label>
+              <Label>{t("purchaseGross")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -219,7 +221,7 @@ export default function NewProductModal({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Bestand (Stk)</Label>
+              <Label>{t("stockPcs")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -229,7 +231,7 @@ export default function NewProductModal({
               />
             </div>
             <div className="space-y-2">
-              <Label>Umsatzsteuer in %</Label>
+              <Label>{t("vatPercent")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -247,7 +249,7 @@ export default function NewProductModal({
               />
             </div>
             <div className="space-y-2">
-              <Label>Verkaufspreis (Netto)</Label>
+              <Label>{t("sellNet")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -264,7 +266,7 @@ export default function NewProductModal({
               />
             </div>
             <div className="space-y-2">
-              <Label>Verkaufspreis (Brutto)</Label>
+              <Label>{t("sellGross")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -288,8 +290,8 @@ export default function NewProductModal({
           <Tabs defaultValue="desc" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="desc">Beschreibung</TabsTrigger>
-              <TabsTrigger value="units">Weitere Einheiten</TabsTrigger>
-              <TabsTrigger value="settings">Weitere Einstellungen</TabsTrigger>
+              <TabsTrigger value="units">{t("moreUnits")}</TabsTrigger>
+              <TabsTrigger value="settings">{t("moreSettings")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="desc" className="mt-4">
@@ -305,12 +307,12 @@ export default function NewProductModal({
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label>Interne Bemerkung</Label>
+                    <Label>{t("internalNote")}</Label>
                   </div>
                   <Textarea
                     value={values.internalNote}
                     onChange={e => setValues(p => ({ ...p, internalNote: e.target.value }))}
-                    placeholder="Nur intern sichtbar"
+                    placeholder={t("internalOnly")}
                     rows={3}
                   />
                 </div>
@@ -327,7 +329,7 @@ export default function NewProductModal({
                   <div>Einheit</div>
                   <div>Faktor</div>
                   <div className="invisible text-center">×</div>
-                  <div>Preis (Netto)</div>
+                  <div>{t("priceNet")}</div>
                   <div className="invisible text-right">=</div>
                   <div />
                 </div>
@@ -405,7 +407,7 @@ export default function NewProductModal({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        aria-label="Einheit entfernen"
+                        aria-label={t("removeUnit")}
                         onClick={() => setPartUnities(list => list.filter((_, i) => i !== idx))}
                       >
                         <Icon icon="lucide:trash2" className="h-4 w-4" />
@@ -441,7 +443,7 @@ export default function NewProductModal({
             <TabsContent value="settings" className="mt-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between rounded-md border p-3">
-                  <Label className="font-medium">Bestand aktiviert</Label>
+                  <Label className="font-medium">{t("stockEnabled")}</Label>
                   <Switch checked={stockEnabled} onCheckedChange={setStockEnabled} />
                 </div>
                 <div className="flex items-center justify-between rounded-md border p-3">

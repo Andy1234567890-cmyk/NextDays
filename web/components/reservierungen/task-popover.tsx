@@ -5,7 +5,7 @@
 // (öffnet das Detail-Modal mit Checkliste) + „Löschen".
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
@@ -38,6 +38,7 @@ export function TaskPopover({
   onPhotos: () => void;
 }) {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   // „Ansehen" führt zum Objekt. Bei Zusatzleistungs-Aufgaben direkt zum
   // Zusatzleistungen-Reiter, sonst zur Objektübersicht. Ohne Objekt kein Link.
   const viewHref = task.property_id
@@ -47,7 +48,7 @@ export function TaskPopover({
     : null;
   const fmt = (iso: string | null) =>
     iso
-      ? new Date(iso).toLocaleString("de-DE", {
+      ? new Date(iso).toLocaleString(locale, {
           day: "numeric",
           month: "numeric",
           year: "numeric",

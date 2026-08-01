@@ -37,6 +37,7 @@ export function OwnerDetail({
   embedded?: boolean;
 }) {
   const t = useTranslations("owners");
+  const tCountry = useTranslations("countries");
   const router = useRouter();
   const [owner, setOwner] = useState<Owner>(initial);
   const [busy, setBusy] = useState(false);
@@ -202,7 +203,7 @@ export function OwnerDetail({
               <option value="">—</option>
               {COUNTRIES.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {c.name}
+                  {tCountry(c.code)}
                 </option>
               ))}
             </NativeSelect>

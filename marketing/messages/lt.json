@@ -34,10 +34,10 @@
     "kanaeleLabel": "Prijungta prie didžiausių rezervacijų platformų",
     "eyebrow": "Nuomotojų platforma atostogų būstams",
     "kanaeleEyebrow": "Pardavimo kanalai",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "myNextDays užimtumo planas: aštuoni poilsio objektai su rezervacijomis iš Booking.com, Airbnb, Vrbo, prekyvietės ir tiesioginėmis rezervacijomis",
+    "aufnahmeHotel": "Viešbučio užimtumo planas myNextDays: dvylika kambarių, kiekvienas kaip atskiras rezervuojamas vienetas",
+    "aufnahmeObjekte": "Objektų apžvalga myNextDays su nuotraukomis, būsena ir matomumu pagal kanalą",
+    "aufnahmeKanaele": "Kanalų valdymas myNextDays: prijungti rezervacijų portalai ir sava prekyvietė"
   },
   "intro": {
     "heading": "Sveiki atvykę į myNextDays.",
@@ -351,20 +351,20 @@
     "fehler": "Nepavyko. Bandykite dar kartą vėliau."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Žvilgsnis iš vidaus",
+    "heading": "Kaip myNextDays iš tikrųjų veikia",
+    "sub": "Jokių pieštų vaizdų — kadrai iš veikiančio objekto su tikromis rezervacijomis iš visų kanalų.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Viešbutis ir poilsio objektas vienoje sąsajoje",
+      "text": "Kiekvienas kambarys yra atskiras rezervuojamas vienetas — tas pats modelis kaip poilsio namo atveju. Užimtumo planas rodo atvykimus, apsistojimus ir išvykimus kiekvienam vienetui, kartu su užimtumu, apyvarta ir vidutine nakties kaina per laikotarpį."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Matomumas pagal kanalą, o ne vienas jungiklis viskam",
+      "text": "Svetainė, prekyvietė ir rezervacijų portalai yra trys atskiros ašys. Objektas gali veikti jūsų svetainėje, kol portaluose jis pristabdytas — matoma iš karto, perjungiama vienu spustelėjimu."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Prijunkite portalus ir išsaugokite savo pardavimo kanalą",
+      "text": "Booking.com, Airbnb ir kiti portalai remiasi tuo pačiu laisvų dienų sąrašu kaip ir tiesioginė rezervacija. Rezervuota naktis užblokuoja visur — jokių dvigubų rezervacijų, jokio rankinio tvarkymo."
     }
   }
 }

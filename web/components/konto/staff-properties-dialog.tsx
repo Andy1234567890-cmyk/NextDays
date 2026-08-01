@@ -5,6 +5,7 @@
 // bearbeiten darf. Lädt beim Öffnen die Objekte + aktuelle Freigabe, speichert
 // per PUT (Replace-Semantik).
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
 import { Checkbox } from "@nextdays/ui/checkbox";
@@ -27,6 +28,7 @@ export function StaffPropertiesDialog({
   userName: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("account");
   const [props, setProps] = useState<Property[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -73,7 +75,7 @@ export function StaffPropertiesDialog({
     <Sheet open onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Objekte freigeben</SheetTitle>
+          <SheetTitle>{t("staffProperties.title")}</SheetTitle>
           <SheetDescription>
             {userName} kann nur die hier gewählten Objekte operativ bearbeiten.
           </SheetDescription>
@@ -83,7 +85,7 @@ export function StaffPropertiesDialog({
           <p className="px-4 text-sm text-destructive">{loadError}</p>
         )}
         {!props && !loadError && (
-          <p className="px-4 text-sm text-muted-foreground">Lädt…</p>
+          <p className="px-4 text-sm text-muted-foreground">{t("propertiesDialog.loading")}</p>
         )}
 
         {props && (

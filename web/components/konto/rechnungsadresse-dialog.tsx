@@ -55,6 +55,7 @@ export function RechnungsadresseDialog({
   address,
   onSaved,
 }: Props) {
+  const t = useTranslations("account");
   const tCountry = useTranslations("countries");
   const [form, setForm] = useState<BillingAddress>(address ?? LEER);
   const [zeile2, setZeile2] = useState(false);
@@ -100,7 +101,7 @@ export function RechnungsadresseDialog({
       }
       onSaved(res.data);
       onOpenChange(false);
-      toast.success("Rechnungsadresse aktualisiert.");
+      toast.success(t("billing.updated"));
     } finally {
       setBusy(false);
     }
@@ -139,7 +140,7 @@ export function RechnungsadresseDialog({
           </Feld>
 
           {zeile2 || form.line2 ? (
-            <Feld label="Adresszeile 2">
+            <Feld label={t("billing.addressLine2")}>
               <Input
                 value={form.line2 ?? ""}
                 onChange={(e) => setzen("line2", e.target.value)}
@@ -160,7 +161,7 @@ export function RechnungsadresseDialog({
               value={form.country ?? ""}
               onChange={(e) => setzen("country", e.target.value || null)}
             >
-              <option value="">Bitte wählen</option>
+              <option value="">{t("billing.pleaseChoose")}</option>
               {LAENDER.map((l) => (
                 <option key={l.code} value={l.code}>
                   {tCountry(l.code)}
@@ -172,7 +173,7 @@ export function RechnungsadresseDialog({
           <Feld label="Bundesland">
             <Input
               value={form.state ?? ""}
-              placeholder="z.B.: Kalifornien"
+              placeholder={t("billing.statePlaceholder")}
               onChange={(e) => setzen("state", e.target.value)}
             />
           </Feld>
@@ -231,7 +232,7 @@ export function RechnungsadresseDialog({
 
           {istFirma && (
             <>
-              <Feld label="Name des Unternehmens" pflicht>
+              <Feld label={t("billing.companyName")} pflicht>
                 <Input
                   value={form.company_name ?? ""}
                   onChange={(e) => setzen("company_name", e.target.value)}

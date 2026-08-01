@@ -324,7 +324,7 @@ export class XRechnungParserService {
       tax: xrechnung.taxAmount,
       total: xrechnung.total,
       paymentTerms: xrechnung.paymentTerms || 'Zahlbar binnen 14 Tagen',
-      notes: `Importiert aus E-Rechnung am ${new Date().toLocaleDateString('de-DE')}`,
+      notes: `Importiert aus E-Rechnung am ${new Date().toISOString().split('T')[0]}`,
 
       // Customer data from E-Invoice
       customerName: xrechnung.buyerName || '',
@@ -434,7 +434,7 @@ export class XRechnungParserService {
       contactPhone: '', // Nicht in E-Rechnung Standard
 
       // Hinweis auf Import
-      notes: `Importiert aus E-Rechnung am ${new Date().toLocaleDateString('de-DE')}`,
+      notes: `Importiert aus E-Rechnung am ${new Date().toISOString().split('T')[0]}`,
     };
   }
 }

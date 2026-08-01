@@ -2,7 +2,7 @@
 
 import { Icon } from '@iconify/react';
 import { Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input } from '@tasko/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import { useNewAuth } from '@/contexts/NewAuthContext';
@@ -74,6 +74,7 @@ export default function SelectBankingTransactionModal({
   onSelect,
 }: SelectBankingTransactionModalProps) {
   const t = useTranslations('finance');
+  const locale = useLocale();
   const { user } = useNewAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -372,7 +373,7 @@ export default function SelectBankingTransactionModal({
     // Symbol, kein Intl-Crash), analog lib/currency.ts.
     const code = typeof currency === 'string' ? currency.trim().toUpperCase() : '';
     const valid = /^[A-Z]{3}$/.test(code);
-    return new Intl.NumberFormat('de-DE', {
+    return new Intl.NumberFormat(locale, {
       ...(valid ? { style: 'currency' as const, currency: code } : {}),
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -405,7 +406,7 @@ export default function SelectBankingTransactionModal({
       return t('SelectBankingTransactionModal.invalidDate');
     }
 
-    return date.toLocaleDateString('de-DE', {
+    return date.toLocaleDateString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

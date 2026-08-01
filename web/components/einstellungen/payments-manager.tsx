@@ -8,6 +8,7 @@
 // Zahlungs-Spalten. Keine Realtime-Subscription (Tabelle ist gegen den anon-
 // Direktpfad gesperrt) — der State wird nach eigenem Speichern aktualisiert.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -39,6 +40,7 @@ export function PaymentsManager({
 }: {
   initial: PaymentSettingsResponse;
 }) {
+  const t = useTranslations("settings");
   const [settings, setSettings] = useState<PaymentSettingsResponse>(initial);
   const [form, setForm] = useState<PaymentSettings>(toInput(initial));
   const [pending, startTransition] = useTransition();
@@ -145,7 +147,7 @@ export function PaymentsManager({
               </Button>
             ) : (
               <Button size="sm" variant="outline" asChild>
-                <a href="/konto">Stripe verbinden</a>
+                <a href="/konto">{t("payments.connectStripe")}</a>
               </Button>
             )}
           </div>
@@ -171,35 +173,35 @@ export function PaymentsManager({
             <>
               <div className="flex flex-col divide-y divide-border border-t border-border pt-1">
                 <ToggleRow
-                  label="Kreditkarte automatisch für die erste Anzahlung belasten"
+                  label={t("payments.autoChargeFirst")}
                   hint="Die erste (Sofort-)Anzahlung wird beim Buchen direkt von der Karte eingezogen. Aus: der Gast erhält stattdessen einen Zahlungslink."
                   checked={form.auto_charge_first_deposit}
                   disabled={pending}
                   onChange={(v) => save({ auto_charge_first_deposit: v })}
                 />
                 <ToggleRow
-                  label="Kautionen automatisch entsprechend der definierten Richtlinie vorautorisieren"
+                  label={t("payments.autoPreauthDeposit")}
                   hint="Die Kaution wird gemäß der Kondition vorautorisiert (Betrag wird auf der Karte reserviert, nicht abgebucht). Vorautorisierungen können oft nur ~7 Tage garantiert werden."
                   checked={form.auto_preauth_deposits}
                   disabled={pending}
                   onChange={(v) => save({ auto_preauth_deposits: v })}
                 />
                 <ToggleRow
-                  label="Kreditkarte automatisch für alle zukünftigen, geplanten Anzahlungen belasten"
+                  label={t("payments.autoChargeFuture")}
                   hint="Die für die Anzahlung gespeicherte Karte wird zur fälligen Restzahlung automatisch belastet. Aus: der Gast erhält stattdessen einen Zahlungslink."
                   checked={form.auto_charge_scheduled}
                   disabled={pending}
                   onChange={(v) => save({ auto_charge_scheduled: v })}
                 />
                 <ToggleRow
-                  label="Kreditkarte vor der Buchung überprüfen"
+                  label={t("payments.verifyCard")}
                   hint="Die Karte wird vor Bestätigung geprüft und hinterlegt (ohne Belastung), z. B. bei Buchungsanfragen."
                   checked={form.verify_card_before_booking}
                   disabled={pending}
                   onChange={(v) => save({ verify_card_before_booking: v })}
                 />
                 <ToggleRow
-                  label="Kreditkartenzahlungen automatisch erstatten, wenn eine Stornierungsrichtlinie eine geplante Rückerstattung auslöst"
+                  label={t("payments.autoRefund")}
                   hint="Löst eine Stornierungsbedingung eine geplante Rückerstattung aus, wird sie automatisch über Stripe erstattet. Aus: der Betrag wird nur berechnet und ist manuell auszulösen."
                   checked={form.auto_refund_on_cancel}
                   disabled={pending}
@@ -209,14 +211,14 @@ export function PaymentsManager({
 
               {/* Name des Händlers (Statement-Descriptor) */}
               <div className="flex flex-col gap-1.5 border-t border-border pt-4">
-                <span className="text-sm font-medium">Name des Händlers</span>
+                <span className="text-sm font-medium">{t("payments.merchantName")}</span>
                 <p className="text-xs text-muted-foreground">
                   Geben Sie den Namen Ihres Unternehmens ein, der dem Gast auf der
                   Kartenabrechnung erscheint und Ihre Zahlungen sicher verifiziert.
                 </p>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="z. B. Ihr Firmenname"
+                    placeholder={t("payments.merchantNamePlaceholder")}
                     value={form.merchant_name ?? ""}
                     disabled={pending}
                     onChange={(e) =>
@@ -239,7 +241,7 @@ export function PaymentsManager({
 
       {/* Alternative Methoden ---------------------------------------------- */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Alternative Methoden</h2>
+        <h2 className="text-lg font-semibold">{t("payments.alternativeMethods")}</h2>
 
         {/* PayPal — eigenes Geschäftskonto verbinden (Multiparty) */}
         <Card className="flex flex-col gap-4 p-5">
@@ -312,7 +314,7 @@ export function PaymentsManager({
                 <Icon icon="ph:bank" className="size-5 text-foreground" />
               </span>
               <div className="flex flex-col">
-                <span className="font-medium">Manuelle Zahlungen</span>
+                <span className="font-medium">{t("payments.manualPayments")}</span>
                 <span className="text-xs text-muted-foreground">
                   Banküberweisung, Bargeld, POS. Erfordert manuelle Erfassung —
                   keine automatischen Folgezahlungen oder Rückerstattungen.
@@ -325,7 +327,7 @@ export function PaymentsManager({
               onCheckedChange={(v) =>
                 save({ manual_payments_enabled: v })
               }
-              aria-label="Manuelle Zahlungen aktivieren"
+              aria-label={t("payments.enableManual")}
             />
           </div>
 
@@ -338,19 +340,19 @@ export function PaymentsManager({
                 onChange={(v) => set("iban", v)}
               />
               <BankField
-                label="BIC / SWIFT"
+                label={t("payments.bic")}
                 value={form.bic}
                 disabled={pending}
                 onChange={(v) => set("bic", v)}
               />
               <BankField
-                label="Name der Bank"
+                label={t("payments.bankName")}
                 value={form.bank_name}
                 disabled={pending}
                 onChange={(v) => set("bank_name", v)}
               />
               <BankField
-                label="Name des Empfängers"
+                label={t("payments.recipientName")}
                 value={form.account_holder}
                 disabled={pending}
                 onChange={(v) => set("account_holder", v)}

@@ -9,6 +9,7 @@
 // (Wurzel 4). Die Staffel wird exakt so gerechnet, wie Stripe sie als
 // `graduated` abrechnet: jeder Tier gilt nur für die Objekte IN seiner Spanne.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -152,6 +153,7 @@ function rechnungsPosten(
 }
 
 export function TarifRechner({ onBack }: { onBack: () => void }) {
+  const t = useTranslations("account");
   const [pricing, setPricing] = useState<Pricing | null>(null);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -266,7 +268,7 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
                 type="button"
                 onClick={() => setAnzahl((n) => Math.max(1, n - 1))}
                 disabled={anzahl <= 1}
-                aria-label="Ein Objekt weniger"
+                aria-label={t("tariff.oneLess")}
                 className="inline-flex size-10 items-center justify-center rounded-full border border-border hover:bg-muted disabled:opacity-40"
               >
                 <Icon icon="lucide:minus" className="size-4" />
@@ -286,13 +288,13 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
                 // Plus/Minus-Buttons daneben geändert, zwei Bedienelemente
                 // fürs selbe wären verwirrend.
                 className="w-20 rounded-full border border-border bg-card px-3 py-2 text-center font-display text-lg font-extrabold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                aria-label="Anzahl Objekte"
+                aria-label={t("tariff.propertyCount")}
               />
               <button
                 type="button"
                 onClick={() => setAnzahl((n) => Math.min(MAX_OBJEKTE, n + 1))}
                 disabled={anzahl >= MAX_OBJEKTE}
-                aria-label="Ein Objekt mehr"
+                aria-label={t("tariff.oneMore")}
                 className="inline-flex size-10 items-center justify-center rounded-full border border-border hover:bg-muted disabled:opacity-40"
               >
                 <Icon icon="lucide:plus" className="size-4" />
@@ -344,7 +346,7 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
                   _platform_fee_bps). Alle drei Sätze offen ausweisen — die 8 %
                   auf dem Marktplatz zu verschweigen wäre irreführend. */}
               <div className="mt-4 flex flex-col gap-2 rounded-xl bg-muted/50 p-3 text-sm">
-                <div className="font-medium">Provision je Buchungskanal</div>
+                <div className="font-medium">{t("tariff.commissionPerChannel")}</div>
                 <KanalZeile
                   kanal="Eigene Website"
                   satz="0 %"
@@ -409,7 +411,7 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
             </div>
 
             <div className="mt-6 border-t border-border pt-5">
-              <div className="mb-3 text-sm font-semibold">Was ist enthalten</div>
+              <div className="mb-3 text-sm font-semibold">{t("tariff.included")}</div>
               <ul className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                 {ENTHALTEN.map((f) => (
                   <li key={f.text} className="flex items-center gap-2">
@@ -442,7 +444,7 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
               ))}
               {monatlich != null && (
                 <div className="mt-1 flex justify-between gap-4 border-t border-border pt-2 font-semibold">
-                  <dt>Gesamt monatlich</dt>
+                  <dt>{t("tariff.totalMonthly")}</dt>
                   <dd className="shrink-0 tabular-nums">
                     {formatCurrency(monatlich / 100, pricing.currency)}
                   </dd>

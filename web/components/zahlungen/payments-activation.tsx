@@ -162,6 +162,7 @@ export function PaymentsActivation({
   syncError,
 }: Props) {
   const t = useTranslations("legal");
+  const tp = useTranslations("payments");
   const [status, setStatus] = useState<ConnectStatus | null>(initialStatus);
   const [statusError, setStatusError] = useState<string | null>(
     initialStatusError,
@@ -239,11 +240,11 @@ export function PaymentsActivation({
       // Nur „aktiviert" melden, wenn Stripe wirklich freigeschaltet hat — sonst
       // sagt der Toast „fertig", während der Account weiter gesperrt ist.
       if (res.data.charges_enabled) {
-        toast.success("Zahlungen aktiviert.");
+        toast.success(tp("activated"));
       } else if (typeof abgelehnt === "string") {
         toast.error(abgelehnt);
       } else {
-        toast.info("Angaben übertragen — der Zahlungsanbieter prüft sie noch.");
+        toast.info(tp("submitted"));
       }
     });
   }
@@ -284,9 +285,9 @@ export function PaymentsActivation({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2">
-        <StatusBadge label="Zahlungen aktiv" on={status.charges_enabled} />
-        <StatusBadge label="Auszahlungen aktiv" on={status.payouts_enabled} />
-        <StatusBadge label="Angaben vollständig" on={status.details_submitted} />
+        <StatusBadge label={tp("paymentsActive")} on={status.charges_enabled} />
+        <StatusBadge label={tp("payoutsActive")} on={status.payouts_enabled} />
+        <StatusBadge label={tp("detailsComplete")} on={status.details_submitted} />
       </div>
 
       {syncHinweis && !status.charges_enabled && (
@@ -375,7 +376,7 @@ export function PaymentsActivation({
                 size="icon"
                 onClick={() => setConsentOpen(false)}
                 disabled={accepting}
-                aria-label="Schließen"
+                aria-label={tp("close")}
               >
                 <Icon icon="ph:x" className="size-4" />
               </Button>

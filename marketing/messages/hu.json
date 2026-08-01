@@ -34,10 +34,10 @@
     "kanaeleLabel": "Összekötve a nagy foglalási platformokkal",
     "eyebrow": "Platform nyaralószállás-kiadóknak",
     "kanaeleEyebrow": "Értékesítési csatornák",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "A myNextDays foglaltsági terve: nyolc nyaralóingatlan foglalásokkal a Booking.comról, az Airbnb-ről, a Vrbóról, a piactérről és közvetlen foglalásokkal",
+    "aufnahmeHotel": "Egy szálloda foglaltsági terve a myNextDaysben: tizenkét szoba, mindegyik önálló foglalható egységként",
+    "aufnahmeObjekte": "Szálláshely-áttekintés a myNextDaysben fotókkal, állapottal és csatornánkénti láthatósággal",
+    "aufnahmeKanaele": "Csatornakezelés a myNextDaysben: összekapcsolt foglalási portálok és a saját piactér"
   },
   "intro": {
     "heading": "Üdvözöljük a myNextDays világában.",
@@ -351,20 +351,20 @@
     "fehler": "Ez nem sikerült. Kérjük, próbálja meg később újra."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Belülről",
+    "heading": "Így működik valójában a myNextDays",
+    "sub": "Semmilyen rajzolt nézet — felvételek egy működő üzemből, valódi foglalásokkal minden csatornáról.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Szálloda és nyaralóingatlan egyetlen felületen",
+      "text": "Minden szoba önálló foglalható egység — ugyanaz a modell, mint a nyaralóháznál. A foglaltsági terv egységenként mutatja az érkezéseket, tartózkodásokat és távozásokat, a kihasználtsággal, a bevétellel és az időszak átlagos éjszakai árával együtt."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Csatornánkénti láthatóság, nem egyetlen kapcsoló mindenre",
+      "text": "A weboldal, a piactér és a foglalási portálok három külön tengely. Egy szálláshely futhat a saját oldalán, miközben a portálokon szünetel — egy pillantásra látszik, egy kattintással átkapcsolható."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Kösse be a portálokat, és tartsa meg a saját értékesítési útvonalát",
+      "text": "A Booking.com, az Airbnb és a többi portál ugyanarra a szabad kapacitásra épül, mint a közvetlen foglalás. Egy lefoglalt éjszaka mindenhol zárol — túlfoglalás nélkül, kézi utómunka nélkül."
     }
   }
 }

@@ -1130,7 +1130,7 @@ export default function NewCustomerModal({
                         <Input
                           value={formData.street}
                           onChange={e => handleInputChange('street', e.target.value)}
-                          placeholder="Musterstraße 123"
+                          placeholder={t("NewCustomerModal.streetPlaceholder")}
                         />
                       </div>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -1592,9 +1592,9 @@ export default function NewCustomerModal({
                         <SelectValue placeholder={t('NewCustomerModal.currencyPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="EUR">EUR (€)</SelectItem>
-                        <SelectItem value="USD">USD ($)</SelectItem>
-                        <SelectItem value="GBP">GBP (£)</SelectItem>
+                        <SelectItem value="EUR">EUR ({currencySymbol("EUR")})</SelectItem>
+                        <SelectItem value="USD">USD ({currencySymbol("USD")})</SelectItem>
+                        <SelectItem value="GBP">GBP ({currencySymbol("GBP")})</SelectItem>
                         <SelectItem value="CHF">CHF</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1613,7 +1613,7 @@ export default function NewCustomerModal({
                     <Input
                       value={formData.bankName}
                       onChange={e => handleInputChange('bankName', e.target.value)}
-                      placeholder="Deutsche Bank"
+                      placeholder={t("NewCustomerModal.bankPlaceholder")}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1621,7 +1621,7 @@ export default function NewCustomerModal({
                     <Input
                       value={formData.accountHolder}
                       onChange={e => handleInputChange('accountHolder', e.target.value)}
-                      placeholder="Max Mustermann"
+                      placeholder={t("NewCustomerModal.holderPlaceholder")}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1635,7 +1635,7 @@ export default function NewCustomerModal({
                     <Input
                       value={formData.iban}
                       onChange={e => handleInputChange('iban', e.target.value)}
-                      placeholder="DE89 3704 0044 0532 0130 00"
+                      placeholder={t("NewCustomerModal.ibanPlaceholder")}
                     />
                   </div>
                   <div className="space-y-2">

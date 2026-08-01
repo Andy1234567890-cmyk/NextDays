@@ -16,7 +16,7 @@ import {
   Label,
 } from '@tasko/ui';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -239,6 +239,7 @@ export function SendDocumentModal({
   redirectAfterAction,
 }: SendDocumentModalProps) {
   const t = useTranslations('finance');
+  const locale = useLocale();
   const router = useRouter();
   const [sending, setSending] = useState(false);
   const [showCompanySettings, setShowCompanySettings] = useState(false);
@@ -1172,10 +1173,10 @@ export function SendDocumentModal({
 ${t('SendDocumentModal.emailBodyIntro', {
         documentLabelLower,
         documentNumber: document.invoiceNumber || document.number,
-        date: formatDate(dateStr),
+        date: formatDate(dateStr, locale),
       })}
 
-${documentType === 'invoice' ? t('SendDocumentModal.emailBodyDueDate', { documentLabelLower, dueDate: formatDate(dueDateStr) }) : ''}
+${documentType === 'invoice' ? t('SendDocumentModal.emailBodyDueDate', { documentLabelLower, dueDate: formatDate(dueDateStr, locale) }) : ''}
 
 ${t('SendDocumentModal.emailBodyQuestions')}
 
@@ -2530,7 +2531,7 @@ ${document.companyName || t('SendDocumentModal.emailFallbackCompanyName')}`;
                             <div className="space-y-1 text-gray-600 text-xs">
                               <div>{t('SendDocumentModal.eInvoiceFormatLine', { format: eInvoiceData.format?.toUpperCase() || 'ZUGFeRD' })}</div>
                               <div>{t('SendDocumentModal.eInvoiceGuidLine', { guid: eInvoiceData.guid })}</div>
-                              <div>{t('SendDocumentModal.eInvoiceCreatedLine', { date: formatDate(eInvoiceData.createdAt) })}</div>
+                              <div>{t('SendDocumentModal.eInvoiceCreatedLine', { date: formatDate(eInvoiceData.createdAt, locale) })}</div>
                             </div>
                           </div>
 

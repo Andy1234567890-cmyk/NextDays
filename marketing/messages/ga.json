@@ -34,10 +34,10 @@
     "kanaeleLabel": "Ceangailte leis na mórardáin áirithinte",
     "eyebrow": "An t-ardán d'óstaigh cíosanna saoire",
     "kanaeleEyebrow": "Cainéil dáileacháin",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "Clár áitíochta myNextDays: ocht n-áit saoire le háirithintí ó Booking.com, Airbnb, Vrbo, ón margadh agus áirithintí díreacha",
+    "aufnahmeHotel": "Clár áitíochta óstáin i myNextDays: dhá sheomra dhéag, gach ceann acu ina aonad áirithinte dá chuid féin",
+    "aufnahmeObjekte": "Forbhreathnú ar na háiteanna i myNextDays le grianghraif, stádas agus infheictheacht de réir cainéil",
+    "aufnahmeKanaele": "Bainistiú cainéal i myNextDays: tairseacha áirithinte nasctha agus an margadh dár gcuid féin"
   },
   "intro": {
     "heading": "Fáilte chuig myNextDays.",
@@ -351,20 +351,20 @@
     "fehler": "Níor éirigh leis sin. Bain triail eile as níos déanaí."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Taobh istigh",
+    "heading": "Mar a oibríonn myNextDays i ndáiríre",
+    "sub": "Gan aon amhairc tarraingthe — grianghraif ó ghnó atá ag rith le fíor-áirithintí ó gach cainéal.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Óstán agus áit saoire in aon chomhéadan amháin",
+      "text": "Is aonad áirithinte ar leith gach seomra — an tsamhail chéanna le teach saoire. Taispeánann an clár áitíochta na teachtaí, na fanachtaí agus na himeachtaí de réir aonaid, mar aon leis an áitíocht, an t-ioncam agus an meánphraghas oíche don tréimhse."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Infheictheacht de réir cainéil, ní lasc amháin do gach rud",
+      "text": "Is trí ais ar leith iad an suíomh gréasáin, an margadh agus na tairseacha áirithinte. Is féidir le háit fanacht beo ar do shuíomh féin agus í ar sos ar na tairseacha — le feiceáil ar an toirt, athraithe le cliceáil amháin."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Nasc na tairseacha agus coinnigh do bhealach díolacháin féin",
+      "text": "Braitheann Booking.com, Airbnb agus tairseacha eile ar an infhaighteacht chéanna leis an áirithint dhíreach. Cuireann oíche áirithe bac i ngach áit — gan áirithint dhúbailte, gan obair láimhe ina dhiaidh."
     }
   }
 }

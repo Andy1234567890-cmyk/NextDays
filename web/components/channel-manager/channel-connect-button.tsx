@@ -6,6 +6,7 @@
 //   2) Zimmer/Raten des Portals den eigenen Preisplänen zuordnen
 //   3) Verbinden — Backend legt an + aktiviert (Schritt prepare→connect)
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
@@ -83,7 +84,7 @@ function buildMappingRows(
 }
 
 export function ChannelConnectButton({
-  label = "Kanäle verbinden",
+  label,
   variant = "default",
   presetPortalCode,
   presetPropertyId,
@@ -105,6 +106,7 @@ export function ChannelConnectButton({
   // Callback nach erfolgreicher Verbindung (z.B. Route refreshen).
   onDone?: () => void;
 }) {
+  const t = useTranslations("channels");
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [step, setStep] = useState<Step>("portal");
@@ -433,7 +435,7 @@ export function ChannelConnectButton({
     <>
       <Button type="button" variant={variant} onClick={() => setOpen(true)}>
         <Icon icon="ph:plugs-connected" className="size-4" />
-        {label}
+        {label ?? t("connectChannels")}
       </Button>
 
       {open && (
@@ -447,7 +449,7 @@ export function ChannelConnectButton({
                 type="button"
                 onClick={close}
                 className="text-muted-foreground hover:text-foreground"
-                aria-label="Schließen"
+                aria-label={t("close")}
               >
                 <Icon icon="ph:x" className="size-5" />
               </button>
@@ -686,7 +688,7 @@ export function ChannelConnectButton({
                             }
                             className="sm:w-56"
                           >
-                            <option value="">— nicht zuordnen —</option>
+                            <option value="">{t("noMapping")}</option>
                             {localRooms.map((room) => (
                               <option
                                 key={room.local_property_id}

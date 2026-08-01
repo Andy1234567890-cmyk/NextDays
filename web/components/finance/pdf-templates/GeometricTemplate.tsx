@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useTranslations } from "next-intl";
 import { useDocumentTranslation } from '@/hooks/pdf/useDocumentTranslation';
 import type { DocumentSettings, ProcessedPDFData } from '@/hooks/pdf/usePDFTemplateData';
 import type { DocumentType } from '@/lib/document-utils';
@@ -34,7 +35,8 @@ export const GeometricTemplate: React.FC<GeometricTemplateProps> = ({
   const companyLogo = typeof data.companyLogo === 'string' ? data.companyLogo : undefined;
 
   // Übersetzungsfunktion
-  const { t } = useDocumentTranslation(documentSettings?.language || 'de');
+  const { t, dateLocale: locale } = useDocumentTranslation(documentSettings?.language || 'de');
+  const tUi = useTranslations("finance");
 
   // Berechne, ob eine zweite Seite benötigt wird
   // STANDARD: Immer einseitig, außer der Inhalt ist zu lang
@@ -116,7 +118,7 @@ export const GeometricTemplate: React.FC<GeometricTemplateProps> = ({
                     {data.documentLabel}
                   </div>
                   <div className="text-gray-600 text-sm">Nr. {data.invoiceNumber}</div>
-                  <div className="text-gray-600 text-sm">{t('date')}: {formatDate(data.invoiceDate)}</div>
+                  <div className="text-gray-600 text-sm">{t('date')}: {formatDate(data.invoiceDate, locale)}</div>
                 </div>
               </div>
 
@@ -168,10 +170,10 @@ export const GeometricTemplate: React.FC<GeometricTemplateProps> = ({
                   {config.numberLabel}: {data.invoiceNumber}
                 </div>
                 <div>
-                  {t('date')}: {formatDate(data.invoiceDate)}
+                  {t('date')}: {formatDate(data.invoiceDate, locale)}
                 </div>
                 <div>
-                  {t('dueDate')}: {formatDate(data.dueDate)}
+                  {t('dueDate')}: {formatDate(data.dueDate, locale)}
                 </div>
                 <div>
                   {t('paymentTerms')}: {data.paymentTerms}
@@ -188,7 +190,7 @@ export const GeometricTemplate: React.FC<GeometricTemplateProps> = ({
                 <div className="mt-3">
                   <img
                     src={documentSettings.qrCodeUrl}
-                    alt="QR Code"
+                    alt={tUi("pdf.qrCode")}
                     className="h-12 w-12 border border-gray-300"
                   />
                 </div>
@@ -375,8 +377,8 @@ export const GeometricTemplate: React.FC<GeometricTemplateProps> = ({
                   </div>
                   <div className="space-y-2">
                     <div>{t('invoiceNumber')}: {data.invoiceNumber}</div>
-                    <div>{t('date')}: {formatDate(data.invoiceDate)}</div>
-                    <div>{t('dueDate')}: {formatDate(data.dueDate)}</div>
+                    <div>{t('date')}: {formatDate(data.invoiceDate, locale)}</div>
+                    <div>{t('dueDate')}: {formatDate(data.dueDate, locale)}</div>
                     <div>{t('paymentTerms')}: {data.paymentTerms}</div>
                   </div>
                 </div>
@@ -394,7 +396,7 @@ export const GeometricTemplate: React.FC<GeometricTemplateProps> = ({
               )}
 
               <div className="mb-8">
-                <div className="mb-2 font-semibold text-sm">Fortsetzung - Seite 2</div>
+                <div className="mb-2 font-semibold text-sm">{tUi("pdf.continuationPage2")}</div>
                 <div className="mb-4 text-gray-600 text-xs">
                   Weitere Details und Zusammenfassung
                 </div>

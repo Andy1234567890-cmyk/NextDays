@@ -6,6 +6,7 @@
 // (staff/cleaner) „Objekte freigeben" (§4.3). „…"-Menü: Bearbeiten/Löschen
 // (der Kontoinhaber/Admin ist geschützt — Backend erzwingt das ebenfalls).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -40,6 +41,7 @@ function initials(user: TenantUser): string {
 }
 
 export function UserList({ users }: { users: TenantUser[] }) {
+  const t = useTranslations("account");
   // Welcher Eigentümer gerade die Objekt-Zuordnung offen hat (null = keiner).
   const [assigning, setAssigning] = useState<TenantUser | null>(null);
   // Welcher Mitarbeiter gerade die Objekt-Freigabe offen hat (null = keiner).
@@ -57,7 +59,7 @@ export function UserList({ users }: { users: TenantUser[] }) {
     setDeletingId(user.user_id);
     const res = await deleteManagedUser(user.user_id);
     setDeletingId(null);
-    if (res.ok) toast.success("Nutzer gelöscht.");
+    if (res.ok) toast.success(t("users.deleted"));
     else toast.error(res.error);
   }
 

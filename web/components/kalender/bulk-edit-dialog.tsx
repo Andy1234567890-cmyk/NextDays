@@ -5,6 +5,7 @@
 // Rechter Slider im gleichen Muster wie der Reservierungs-Assistent. Nur gesetzte
 // Felder werden gesendet (leer = unverändert).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -57,6 +58,7 @@ export function BulkEditDialog({
   // Modus: „simple" = ein Wert über die Objektauswahl (bestehend); „rows" =
   // mehrere heterogene Zeilen (versch. Zeiträume/Preise/Restriktionen) für DIESES
   // Objekt in EINEM Channex-Call (Zertifizierung Test 3-8).
+  const t = useTranslations("calendar");
   const [mode, setMode] = useState<DialogMode>("simple");
   const [rows, setRows] = useState<RestrictionRow[]>([
     { start, end, price: undefined },
@@ -107,13 +109,13 @@ export function BulkEditDialog({
     const emptyIdx = rows.findIndex((r) => !hasValue(r));
     if (emptyIdx >= 0 && rows.length > 1) {
       toast.error(
-        `Zeile ${emptyIdx + 1} hat keinen Wert (Preis/Min/Max/CTA/CTD/Stop). Bitte ausfüllen oder die Zeile entfernen.`,
+        t("bulk.errRowEmpty", { row: emptyIdx + 1 }),
       );
       return;
     }
     const clean = rows.filter(hasValue);
     if (clean.length === 0) {
-      toast.error("Mindestens eine Zeile mit einem Wert.");
+      toast.error(t("bulk.errNoRow"));
       return;
     }
     // Hotel: eine Zeile ohne Preisplan gilt objekt-weit und erscheint NICHT
@@ -123,7 +125,7 @@ export function BulkEditDialog({
       const noPlan = clean.findIndex((r) => !r.rate_plan_id);
       if (noPlan >= 0) {
         toast.error(
-          `Zeile ${noPlan + 1}: bitte eine Zimmerkategorie/Preisplan wählen — „Alle Preispläne" erscheint nicht plan-genau im Kalender.`,
+          t("bulk.errNoPlan", { row: noPlan + 1 }),
         );
         return;
       }
@@ -134,7 +136,7 @@ export function BulkEditDialog({
     const badRange = clean.findIndex((r) => !r.start || !r.end || r.end <= r.start);
     if (badRange >= 0) {
       toast.error(
-        `Zeile ${badRange + 1}: „Bis (einschl.)" darf nicht vor „Von" liegen — für einen einzelnen Tag denselben Tag wählen.`,
+        t("bulk.errBadRange", { row: badRange + 1 }),
       );
       return;
     }
@@ -159,21 +161,21 @@ export function BulkEditDialog({
       : await bulkRestrictions(primaryProperty.id, clean);
     setSaving(false);
     if (res.ok) {
-      toast.success(`${res.data.rows} Zeile(n) an die Portale gesendet.`);
+      toast.success(t("bulk.rowsSent", { rows: res.data.rows }));
       onApplied();
       onClose();
     } else {
-      toast.error(res.error || "Senden fehlgeschlagen.");
+      toast.error(res.error || t("bulk.errSendFailed"));
     }
   }
 
   async function apply() {
     if (targetIds.length === 0) {
-      toast.error("Mindestens ein Objekt wählen.");
+      toast.error(t("bulk.errNoProperty"));
       return;
     }
     if (!hasChange) {
-      toast.error("Mindestens eine Änderung wählen.");
+      toast.error(t("bulk.errNoChange"));
       return;
     }
     setSaving(true);
@@ -197,12 +199,12 @@ export function BulkEditDialog({
     setSaving(false);
     if (res.ok) {
       toast.success(
-        `Auf ${res.data.properties} Objekt(e) × ${res.data.days} Tag(e) angewendet.`,
+        t("bulk.applied", { properties: res.data.properties, days: res.data.days }),
       );
       onApplied();
       onClose();
     } else {
-      toast.error(res.error || "Bulk-Bearbeitung fehlgeschlagen.");
+      toast.error(res.error || t("bulk.errBulkFailed"));
     }
   }
 
@@ -216,10 +218,10 @@ export function BulkEditDialog({
       <div className="relative z-10 flex h-full w-full max-w-[26rem] flex-col bg-card shadow-xl">
         <div className="flex items-start justify-between gap-4 border-b px-5 py-4">
           <div>
-            <h2 className="font-display text-xl font-extrabold">Mehrfach bearbeiten</h2>
+            <h2 className="font-display text-xl font-extrabold">{t("bulk.title")}</h2>
             <p className="mt-0.5 text-sm text-muted-foreground">{rangeLabel}</p>
           </div>
-          <Button variant="outline" size="icon" onClick={onClose} aria-label="Schließen">
+          <Button variant="outline" size="icon" onClick={onClose} aria-label={t("bulk.close")}>
             <Icon icon="ph:x" className="size-4" />
           </Button>
         </div>
@@ -230,8 +232,8 @@ export function BulkEditDialog({
           <Segmented
             value={mode}
             options={[
-              { value: "simple", label: "Ein Wert" },
-              { value: "rows", label: "Mehrere Zeiträume" },
+              { value: "simple", label: t("bulk.modeSimple") },
+              { value: "rows", label: t("bulk.modeRows") },
             ]}
             onChange={(v) => setMode(v as DialogMode)}
           />
@@ -240,6 +242,7 @@ export function BulkEditDialog({
         {mode === "rows" ? (
           <RowsEditor
             propertyTitle={primaryProperty.title}
+            t={t}
             ratePlans={ratePlans}
             rows={rows}
             setRows={setRows}
@@ -252,25 +255,25 @@ export function BulkEditDialog({
                 der Aufrufer verlangt mindestens ein Objekt (Scope-Sicherheit). */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Objekte</Label>
+                <Label className="text-sm font-medium">{t("bulk.properties")}</Label>
                 <button
                   type="button"
                   className="text-xs text-accent hover:underline"
                   onClick={() => setSelectedIds(allProperties.map((p) => p.id))}
                 >
-                  Alle auswählen
+                  {t("bulk.selectAll")}
                 </button>
               </div>
               <MultiSelect
                 options={allProperties.map((p) => ({ value: p.id, label: p.title }))}
                 selected={selectedIds}
                 onChange={setSelectedIds}
-                placeholder="Objekte wählen …"
-                searchPlaceholder="Objekt suchen …"
-                allLabel="Leeren"
+                placeholder={t("bulk.selectPlaceholder")}
+                searchPlaceholder={t("bulk.searchPlaceholder")}
+                allLabel={t("bulk.clear")}
               />
               <p className="text-xs text-muted-foreground">
-                {selectedIds.length} Objekt(e) ausgewählt
+                {t("bulk.selectedCount", { count: selectedIds.length })}
               </p>
             </div>
 
@@ -281,27 +284,27 @@ export function BulkEditDialog({
                   checked={setPrice}
                   onCheckedChange={(v) => setSetPrice(v === true)}
                 />
-                Preis pro Nacht setzen
+                {t("bulk.setPrice")}
               </label>
               {setPrice && (
                 <div className="ml-7 flex flex-col gap-2">
                   <Segmented
                     value={priceMode}
                     options={[
-                      { value: "fixed", label: "Fester Preis" },
-                      { value: "pct", label: "Prozentual" },
+                      { value: "fixed", label: t("bulk.priceFixed") },
+                      { value: "pct", label: t("bulk.pricePercent") },
                     ]}
                     onChange={(v) => setPriceMode(v as "fixed" | "pct")}
                   />
                   {priceMode === "fixed" ? (
                     <div>
-                      <Label htmlFor="bulk-price" className="sr-only">Preis</Label>
+                      <Label htmlFor="bulk-price" className="sr-only">{t("bulk.price")}</Label>
                       <Input
                         id="bulk-price"
                         type="number"
                         min={0}
                         inputMode="decimal"
-                        placeholder="z. B. 120"
+                        placeholder={t("bulk.pricePlaceholder")}
                         value={price}
                         onChange={(e) => setPrice2(e.target.value)}
                       />
@@ -315,7 +318,7 @@ export function BulkEditDialog({
                         id="bulk-price-pct"
                         type="number"
                         inputMode="decimal"
-                        placeholder="z. B. +10 oder -15"
+                        placeholder={t("bulk.pricePctPlaceholder")}
                         value={pricePct}
                         onChange={(e) => setPricePct(e.target.value)}
                       />
@@ -335,16 +338,16 @@ export function BulkEditDialog({
                   checked={setMinStay}
                   onCheckedChange={(v) => setSetMinStay(v === true)}
                 />
-                Mindestaufenthalt setzen
+                {t("bulk.setMinStay")}
               </label>
               {setMinStay && (
                 <div className="ml-7">
-                  <Label htmlFor="bulk-minstay" className="sr-only">Min-Stay</Label>
+                  <Label htmlFor="bulk-minstay" className="sr-only">{t("bulk.minStay")}</Label>
                   <Input
                     id="bulk-minstay"
                     type="number"
                     min={1}
-                    placeholder="Nächte, z. B. 2"
+                    placeholder={t("bulk.minStayPlaceholder")}
                     value={minStay}
                     onChange={(e) => setMinStay2(e.target.value)}
                   />
@@ -359,16 +362,16 @@ export function BulkEditDialog({
                   checked={setMaxStay}
                   onCheckedChange={(v) => setSetMaxStay(v === true)}
                 />
-                Maximalaufenthalt setzen
+                {t("bulk.setMaxStay")}
               </label>
               {setMaxStay && (
                 <div className="ml-7">
-                  <Label htmlFor="bulk-maxstay" className="sr-only">Max-Stay</Label>
+                  <Label htmlFor="bulk-maxstay" className="sr-only">{t("bulk.maxStay")}</Label>
                   <Input
                     id="bulk-maxstay"
                     type="number"
                     min={0}
-                    placeholder="Nächte, z. B. 14 (0 = keine Obergrenze)"
+                    placeholder={t("bulk.maxStayPlaceholder")}
                     value={maxStay}
                     onChange={(e) => setMaxStay2(e.target.value)}
                   />
@@ -378,13 +381,13 @@ export function BulkEditDialog({
 
             {/* Sperre */}
             <fieldset className="flex flex-col gap-2">
-              <legend className="text-sm font-medium">Verfügbarkeit</legend>
+              <legend className="text-sm font-medium">{t("bulk.availability")}</legend>
               <Segmented
                 value={blockMode}
                 options={[
-                  { value: "none", label: "Unverändert" },
-                  { value: "block", label: "Sperren" },
-                  { value: "unblock", label: "Entsperren" },
+                  { value: "none", label: t("bulk.unchanged") },
+                  { value: "block", label: t("bulk.block") },
+                  { value: "unblock", label: t("bulk.unblock") },
                 ]}
                 onChange={(v) => setBlockMode(v as BlockMode)}
               />
@@ -392,13 +395,13 @@ export function BulkEditDialog({
 
             {/* Stop-Sell */}
             <fieldset className="flex flex-col gap-2">
-              <legend className="text-sm font-medium">Stop-Sell (OTA)</legend>
+              <legend className="text-sm font-medium">{t("bulk.stopSell")}</legend>
               <Segmented
                 value={stopMode}
                 options={[
-                  { value: "none", label: "Unverändert" },
-                  { value: "stop", label: "Stop" },
-                  { value: "clear", label: "Aufheben" },
+                  { value: "none", label: t("bulk.unchanged") },
+                  { value: "stop", label: t("bulk.stop") },
+                  { value: "clear", label: t("bulk.clearStop") },
                 ]}
                 onChange={(v) => setStopMode(v as StopMode)}
               />
@@ -406,13 +409,13 @@ export function BulkEditDialog({
 
             {/* Anreise gesperrt (CTA) */}
             <fieldset className="flex flex-col gap-2">
-              <legend className="text-sm font-medium">Anreise gesperrt (CTA)</legend>
+              <legend className="text-sm font-medium">{t("bulk.cta")}</legend>
               <Segmented
                 value={ctaMode}
                 options={[
-                  { value: "none", label: "Unverändert" },
-                  { value: "on", label: "An" },
-                  { value: "off", label: "Aus" },
+                  { value: "none", label: t("bulk.unchanged") },
+                  { value: "on", label: t("bulk.on") },
+                  { value: "off", label: t("bulk.off") },
                 ]}
                 onChange={(v) => setCtaMode(v as RestrictMode)}
               />
@@ -420,13 +423,13 @@ export function BulkEditDialog({
 
             {/* Abreise gesperrt (CTD) */}
             <fieldset className="flex flex-col gap-2">
-              <legend className="text-sm font-medium">Abreise gesperrt (CTD)</legend>
+              <legend className="text-sm font-medium">{t("bulk.ctd")}</legend>
               <Segmented
                 value={ctdMode}
                 options={[
-                  { value: "none", label: "Unverändert" },
-                  { value: "on", label: "An" },
-                  { value: "off", label: "Aus" },
+                  { value: "none", label: t("bulk.unchanged") },
+                  { value: "on", label: t("bulk.on") },
+                  { value: "off", label: t("bulk.off") },
                 ]}
                 onChange={(v) => setCtdMode(v as RestrictMode)}
               />
@@ -437,15 +440,15 @@ export function BulkEditDialog({
 
         <div className="flex items-center justify-end gap-2 border-t px-5 py-4">
           <Button variant="outline" onClick={onClose} disabled={saving}>
-            Abbrechen
+            {t("bulk.cancel")}
           </Button>
           {mode === "rows" ? (
             <Button onClick={applyRows} disabled={saving}>
-              {saving ? "Senden…" : "An Portale senden"}
+              {saving ? t("bulk.sending") : t("bulk.sendToPortals")}
             </Button>
           ) : (
             <Button onClick={apply} disabled={saving || !hasChange}>
-              {saving ? "Anwenden…" : "Anwenden"}
+              {saving ? t("bulk.applying") : t("bulk.apply")}
             </Button>
           )}
         </div>
@@ -457,11 +460,13 @@ export function BulkEditDialog({
 // Mehrere Zeitraum-Zeilen mit eigenen Werten (Preis/min/max/CTA/CTD/Stop-Sell) —
 // alles in EINEM Portale-Call. Für Häuser mit vielen Zimmern/Saisons (Hotel-Fall).
 function RowsEditor({
+  t,
   propertyTitle,
   ratePlans,
   rows,
   setRows,
 }: {
+  t: ReturnType<typeof useTranslations>;
   propertyTitle: string;
   ratePlans?: { id: string; label: string }[];
   rows: RestrictionRow[];
@@ -508,23 +513,24 @@ function RowsEditor({
     const nights = Math.round((e.getTime() - s.getTime()) / 86_400_000);
     if (nights < 1) return null;
     const lastNight = new Date(e.getTime() - 86_400_000); // Bis exklusiv
-    return `${fmt.format(s)} – ${fmt.format(lastNight)} · ${nights} ${
-      nights === 1 ? "Nacht" : "Nächte"
-    }`;
+    return t("bulk.nightsRange", {
+      from: fmt.format(s),
+      to: fmt.format(lastNight),
+      nights,
+    });
   };
 
   return (
     <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
       <p className="text-xs text-muted-foreground">
-        Objekt: {propertyTitle}. Mehrere Zeiträume mit eigenen Werten — alles
-        zusammen in einem Zug an alle Buchungsportale.
+        {t("bulk.rowsIntro", { title: propertyTitle })}
       </p>
       {rows.map((r, i) => (
         <div key={i} className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 flex-col">
               <span className="text-xs font-medium text-muted-foreground">
-                Zeitraum {i + 1}
+                {t("bulk.rangeIndex", { index: i + 1 })}
               </span>
               {/* Monat in Worten — der Anker gegen den „November-wird-Oktober"-Fehler. */}
               {spellRange(r.start, r.end) ? (
@@ -533,14 +539,14 @@ function RowsEditor({
                 </span>
               ) : (
                 <span className="text-xs text-destructive">
-                  Zeitraum unvollständig
+                  {t("bulk.rangeIncomplete")}
                 </span>
               )}
             </div>
             {rows.length > 1 && (
               <button
                 type="button"
-                aria-label="Zeile entfernen"
+                aria-label={t("bulk.removeRow")}
                 className="shrink-0 text-muted-foreground hover:text-destructive"
                 onClick={() => removeRow(i)}
               >
@@ -550,14 +556,14 @@ function RowsEditor({
           </div>
           {hasPlans && (
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">Preisplan</Label>
+              <Label className="text-xs">{t("bulk.ratePlan")}</Label>
               <NativeSelect
                 value={r.rate_plan_id ?? ""}
                 onChange={(e) =>
                   patch(i, { rate_plan_id: e.target.value || undefined })
                 }
               >
-                <option value="">Alle Preispläne</option>
+                <option value="">{t("bulk.allRatePlans")}</option>
                 {(ratePlans ?? []).map((p) => {
                   const taken = usedElsewhere(i, p.id);
                   return (
@@ -572,7 +578,7 @@ function RowsEditor({
           )}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">Von</Label>
+              <Label className="text-xs">{t("bulk.from")}</Label>
               <Input
                 type="date"
                 value={r.start}
@@ -584,7 +590,7 @@ function RowsEditor({
                   (so wie man „bis einschließlich" denkt), intern wird +1 Tag als
                   exklusives `end` gespeichert. Das schließt den Off-by-one-Fehler
                   („bis 01.05." vergisst den 01.05.) an der Wurzel aus. */}
-              <Label className="text-xs">Bis (einschl.)</Label>
+              <Label className="text-xs">{t("bulk.to")}</Label>
               <Input
                 type="date"
                 value={r.end ? isoPlus(r.end, -1) : ""}
@@ -598,7 +604,7 @@ function RowsEditor({
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">Preis</Label>
+              <Label className="text-xs">{t("bulk.price")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -612,7 +618,7 @@ function RowsEditor({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">Min-Stay</Label>
+              <Label className="text-xs">{t("bulk.minStay")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -627,7 +633,7 @@ function RowsEditor({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">Max-Stay</Label>
+              <Label className="text-xs">{t("bulk.maxStay")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -644,37 +650,37 @@ function RowsEditor({
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
-              <Label className="text-xs">Anreise gesperrt</Label>
+              <Label className="text-xs">{t("bulk.ctaShort")}</Label>
               <Segmented
                 value={triState(r.closed_to_arrival)}
                 options={[
                   { value: "none", label: "—" },
-                  { value: "on", label: "An" },
-                  { value: "off", label: "Aus" },
+                  { value: "on", label: t("bulk.on") },
+                  { value: "off", label: t("bulk.off") },
                 ]}
                 onChange={(v) => patch(i, { closed_to_arrival: fromTri(v) })}
               />
             </div>
             <div className="flex items-center justify-between gap-2">
-              <Label className="text-xs">Abreise gesperrt</Label>
+              <Label className="text-xs">{t("bulk.ctdShort")}</Label>
               <Segmented
                 value={triState(r.closed_to_departure)}
                 options={[
                   { value: "none", label: "—" },
-                  { value: "on", label: "An" },
-                  { value: "off", label: "Aus" },
+                  { value: "on", label: t("bulk.on") },
+                  { value: "off", label: t("bulk.off") },
                 ]}
                 onChange={(v) => patch(i, { closed_to_departure: fromTri(v) })}
               />
             </div>
             <div className="flex items-center justify-between gap-2">
-              <Label className="text-xs">Verkaufsstopp</Label>
+              <Label className="text-xs">{t("bulk.stopShort")}</Label>
               <Segmented
                 value={triState(r.stop_sell)}
                 options={[
                   { value: "none", label: "—" },
-                  { value: "on", label: "An" },
-                  { value: "off", label: "Aus" },
+                  { value: "on", label: t("bulk.on") },
+                  { value: "off", label: t("bulk.off") },
                 ]}
                 onChange={(v) => patch(i, { stop_sell: fromTri(v) })}
               />
@@ -684,7 +690,7 @@ function RowsEditor({
       ))}
       <Button variant="outline" onClick={addRow} className="gap-2">
         <Icon icon="ph:plus" className="size-4" />
-        Zeitraum hinzufügen
+        {t("bulk.addRange")}
       </Button>
     </div>
   );

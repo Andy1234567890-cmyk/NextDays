@@ -189,9 +189,9 @@ export function readPricing(typeAttributes: Record<string, unknown> | undefined)
   };
 }
 
-// Preis formatieren (z. B. "kr 450").
-export function fmtPrice(amount: number, currency: Currency | ""): string {
+// Preis formatieren (z. B. "kr 450") in der Sprache der Oberfläche.
+export function fmtPrice(amount: number, currency: Currency | "", locale: string): string {
   const sym = currencySymbol(currency);
   // Ohne Währung nur die Zahl (kein führendes Leerzeichen/Symbol).
-  return sym ? `${sym} ${amount.toLocaleString("de-DE")}` : amount.toLocaleString("de-DE");
+  return sym ? `${sym} ${amount.toLocaleString(locale)}` : amount.toLocaleString(locale);
 }

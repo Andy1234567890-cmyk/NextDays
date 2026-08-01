@@ -7,6 +7,7 @@
 // und Ziel ist durchgehend das Firmenprofil (tenant_billing_profile); ein
 // Speichern schreibt alles und löst den Stripe-Auto-Connect aus.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -46,6 +47,9 @@ import {
 } from "@/lib/firmenprofil";
 
 export default function ProfilPage() {
+  const t = useTranslations("account");
+  const tCountry = useTranslations("countries");
+  const tCommon = useTranslations("common");
   // --- Stammdaten / Person ---
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -235,7 +239,7 @@ export default function ProfilPage() {
       toast.error(res.error);
       return;
     }
-    toast.success("Daten gespeichert.");
+    toast.success(t("company.saved"));
   }
 
   async function onPickLogo(e: React.ChangeEvent<HTMLInputElement>) {
@@ -251,7 +255,7 @@ export default function ProfilPage() {
     }
     const url = res.data.companyLogo;
     if (typeof url === "string") setLogoUrl(url);
-    toast.success("Logo gespeichert.");
+    toast.success(t("company.logoSaved"));
   }
 
   return (
@@ -297,7 +301,7 @@ export default function ProfilPage() {
             ) : (
               <>
                 <Icon icon="ph:upload-simple" className="size-6" />
-                <span className="text-xs">Logo hochladen</span>
+                <span className="text-xs">{t("company.uploadLogo")}</span>
               </>
             )}
             {uploading && (
@@ -358,7 +362,7 @@ export default function ProfilPage() {
                 value={legalForm}
                 onChange={(e) => setLegalForm(e.target.value)}
               >
-                <option value="">Bitte wählen …</option>
+                <option value="">{t("company.pleaseChoose")}</option>
                 {legalFormsForCountry(country).map((f) => (
                   <option key={f.key} value={f.key}>
                     {f.label}
@@ -443,7 +447,7 @@ export default function ProfilPage() {
           </p>
           <div className="grid gap-5 sm:grid-cols-3">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <Label htmlFor="street">Straße</Label>
+              <Label htmlFor="street">{t("company.street")}</Label>
               {/* Places-Autocomplete direkt AM Straßenfeld: manuell tippbar,
                   und bei Auswahl eines Vorschlags werden Hausnummer, PLZ,
                   Stadt, Bundesland und Land strukturiert mitgefüllt (keine
@@ -492,12 +496,12 @@ export default function ProfilPage() {
           </div>
 
           <div className="flex flex-col gap-1.5 sm:max-w-sm">
-            <Label htmlFor="companyState">Bundesland / Region</Label>
+            <Label htmlFor="companyState">{t("company.state")}</Label>
             <Input
               id="companyState"
               value={companyState}
               onChange={(e) => setCompanyState(e.target.value)}
-              placeholder="z. B. Bayern"
+              placeholder={t("company.statePlaceholder")}
             />
           </div>
 
@@ -517,7 +521,7 @@ export default function ProfilPage() {
             >
               {COUNTRIES.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {c.name}
+                  {tCountry(c.code)}
                 </option>
               ))}
             </NativeSelect>
@@ -641,7 +645,7 @@ export default function ProfilPage() {
                   <Input
                     id="companyRegister"
                     value={companyRegister}
-                    placeholder="HRB 12345"
+                    placeholder={t("company.hrbPlaceholder")}
                     onChange={(e) => setCompanyRegister(e.target.value)}
                   />
                 </div>
@@ -650,7 +654,7 @@ export default function ProfilPage() {
                   <Input
                     id="districtCourt"
                     value={districtCourt}
-                    placeholder="z. B. Berlin (Charlottenburg)"
+                    placeholder={t("company.courtPlaceholder")}
                     onChange={(e) => setDistrictCourt(e.target.value)}
                   />
                 </div>
@@ -671,7 +675,7 @@ export default function ProfilPage() {
                 step="0.1"
                 value={lodgingTaxRate}
                 onChange={(e) => setLodgingTaxRate(e.target.value)}
-                placeholder="z. B. 7"
+                placeholder={t("company.employeesPlaceholder")}
               />
             </div>
           </div>
@@ -721,7 +725,7 @@ export default function ProfilPage() {
               <Label htmlFor="iban">IBAN</Label>
               <Input
                 id="iban"
-                placeholder="DE00 0000 0000 0000 0000 00"
+                placeholder={t("company.ibanPlaceholder")}
                 autoComplete="off"
                 value={iban}
                 onChange={(e) => setIban(e.target.value)}
@@ -733,15 +737,15 @@ export default function ProfilPage() {
 
           {/* 7) Sonstiges */}
           <div className="flex flex-col gap-1.5 sm:max-w-sm">
-            <Label htmlFor="language">Bevorzugte Sprache</Label>
+            <Label htmlFor="language">{t("company.preferredLanguage")}</Label>
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger id="language">
-                <SelectValue placeholder="Sprache wählen" />
+                <SelectValue placeholder={t("company.chooseLanguage")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="de">Deutsch</SelectItem>
-                <SelectItem value="da">Dänisch</SelectItem>
-                <SelectItem value="en">Englisch</SelectItem>
+                <SelectItem value="de">{tCommon("languages.de")}</SelectItem>
+                <SelectItem value="da">{tCommon("languages.da")}</SelectItem>
+                <SelectItem value="en">{tCommon("languages.en")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -751,7 +755,7 @@ export default function ProfilPage() {
             <RichTextEditor
               value={description}
               onChange={setDescription}
-              placeholder="Kurze Beschreibung deines Unternehmens…"
+              placeholder={t("company.descriptionPlaceholder")}
             />
           </div>
         </section>

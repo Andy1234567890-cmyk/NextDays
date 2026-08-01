@@ -4,6 +4,7 @@
 // Typography (Google-Fonts-Picker + Basisgröße), Overlays/Cursor/Effects,
 // Stile (Füllen/Überlauf) — deckungsgleich zu Framers Style-Panel.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
 import { anyFontStack } from "@/lib/website-fonts";
@@ -35,6 +36,7 @@ import {
 // Modus-Dropdowns + Padlock), Layout, Typography (Stepper), Overlays, Cursor,
 // Effects, Stile (Füllen/Überlauf), Selection, Codeüberschreibungen.
 export function SeitenInspektor() {
+  const t = useTranslations("website");
   const frame = useFrame();
   const [locked, setLocked] = useState(false);
   const [base, setBase] = useState(16);
@@ -69,7 +71,7 @@ export function SeitenInspektor() {
             onValue={(v) => { const n = Number(v); if (n) frame?.setWidth(n); }}
           />
         </Row>
-        <Row label="Höhe">
+        <Row label={t("editor.height")}>
           <span className="w-5 shrink-0" aria-hidden />
           <SizeField
             value={isFixed ? heightValue : heightValue || "Auto"}
@@ -125,16 +127,16 @@ export function SeitenInspektor() {
             <span className="flex size-4 shrink-0 items-center justify-center rounded bg-primary text-primary-foreground">
               <Icon icon="ph:sparkle" className="size-2.5" />
             </span>
-            <span className="truncate">Alle Seiten</span>
+            <span className="truncate">{t("editor.allSides")}</span>
           </span>
         </Row>
       </Section>
 
       <Section title="Stile" action={<MinusBtn />}>
-        <Row label="Füllen">
+        <Row label={t("editor.fill")}>
           <Swatch color={fill} onColor={setFill} />
         </Row>
-        <Row label="Überlauf">
+        <Row label={t("editor.overflow")}>
           <Select value={overflow} onChange={setOverflow}>
             <option value="clip">Clip</option>
             <option value="visible">Visible</option>
@@ -154,12 +156,12 @@ export function SeitenInspektor() {
         </Row>
       </Section>
 
-      <Section title="Codeüberschreibungen" action={<MinusBtn />}>
+      <Section title={t("editor.codeOverrides")} action={<MinusBtn />}>
         <Row label="Datei">
           <Select defaultValue="">
-            <option value="" disabled>Auswählen …</option>
+            <option value="" disabled>{t("editor.choose")}</option>
             <option value="examples">Beispiele</option>
-            <option value="new">Neue Datei …</option>
+            <option value="new">{t("editor.newFile")}</option>
           </Select>
         </Row>
       </Section>

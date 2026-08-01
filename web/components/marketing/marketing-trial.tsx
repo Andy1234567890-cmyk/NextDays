@@ -3,6 +3,7 @@
 "use client";
 
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -28,6 +29,7 @@ const PERKS = [
 ];
 
 export function MarketingTrial() {
+  const t = useTranslations("marketingSite");
   const [submitted, setSubmitted] = useState(false);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -73,7 +75,7 @@ export function MarketingTrial() {
             {submitted ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
                 <Icon icon="ph:check-circle-fill" className="size-12 text-success" />
-                <p className="font-display text-xl font-semibold">Vielen Dank!</p>
+                <p className="font-display text-xl font-semibold">{t("thankYou")}</p>
                 <p className="text-sm text-muted-foreground">
                   Wir melden uns in Kürze bei dir.
                 </p>

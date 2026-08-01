@@ -6,7 +6,7 @@
 // Filterleiste (Monat ← →, Nutzer, Objekt, Alles zurücksetzen). Live via
 // useRealtime auf tasks + reservations.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { BookingPopover } from "@/components/reservierungen/booking-popover";
@@ -110,10 +110,10 @@ function channelMeta(b: CalendarBooking) {
   return CHANNEL_META[key] ?? CHANNEL_META.direct;
 }
 
-// „13. Juli 2026 – 19. Juli 2026" (deutsch, wie ..).
-function bookingRange(b: CalendarBooking): string {
+// „13. Juli 2026 – 19. Juli 2026" in der Sprache der Oberfläche.
+function bookingRange(b: CalendarBooking, locale: string): string {
   const fmt = (iso: string) =>
-    new Date(`${iso}T00:00:00`).toLocaleDateString("de-DE", {
+    new Date(`${iso}T00:00:00`).toLocaleDateString(locale, {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -149,6 +149,7 @@ function dayIndex(iso: string, firstDay: Date, days: number): number {
 
 export function TasksCalendar() {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const MONTHS = t.raw("tasksCalendar.months") as string[];
   const WEEKDAYS = t.raw("tasksCalendar.weekdays") as string[];
   const now = new Date();
@@ -555,7 +556,7 @@ export function TasksCalendar() {
                             title={t("tasksCalendar.bookingBarTitle", {
                               guests: b.guests,
                               channel: meta.label,
-                              range: bookingRange(b),
+                              range: bookingRange(b, locale),
                             })}
                           >
                             <span className="flex items-center gap-1 truncate font-medium leading-tight">
@@ -566,7 +567,7 @@ export function TasksCalendar() {
                               })}
                             </span>
                             <span className="truncate text-[0.7rem] leading-tight opacity-90">
-                              {bookingRange(b)}
+                              {bookingRange(b, locale)}
                             </span>
                           </button>
                         );

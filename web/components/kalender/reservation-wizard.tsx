@@ -6,6 +6,7 @@
 //  3) Richtlinien: Policy-Automation + Übersicht, dann Bestätigen
 // Speichert über createReservation; das Backend belegt die Kalendertage.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -70,6 +71,7 @@ export function ReservationWizard({
   guestId?: string;
   editableDates?: boolean;
 }) {
+  const t = useTranslations("calendar");
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -201,7 +203,7 @@ export function ReservationWizard({
       {/* Overlay */}
       <button
         type="button"
-        aria-label="Schließen"
+        aria-label={t("wizard.close")}
         className="absolute inset-0 bg-black/30"
         onClick={onClose}
       />
@@ -218,7 +220,7 @@ export function ReservationWizard({
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">{rangeLabel}</p>
           </div>
-          <Button variant="outline" size="icon" onClick={onClose} aria-label="Schließen">
+          <Button variant="outline" size="icon" onClick={onClose} aria-label={t("wizard.close")}>
             <Icon icon="ph:x" className="size-4" />
           </Button>
         </div>
@@ -252,7 +254,7 @@ export function ReservationWizard({
                 <Field label="Objekt">
                   <Select value={propertyId} onValueChange={setPropertyId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Objekt wählen" />
+                      <SelectValue placeholder={t("wizard.chooseProperty")} />
                     </SelectTrigger>
                     <SelectContent>
                       {properties.map((p) => (
@@ -302,23 +304,23 @@ export function ReservationWizard({
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field label="Notiz zur Quelle (optional)">
+                <Field label={t("wizard.sourceNote")}>
                   <Input
                     value={source}
                     onChange={(e) => setSource(e.target.value)}
-                    placeholder="z. B. Telefon, Stammgast …"
+                    placeholder={t("wizard.sourceNotePlaceholder")}
                   />
                 </Field>
               </Section>
 
-              <Section title="Gäste">
+              <Section title={t("wizard.guestsLabel")}>
                 <Counter label="Erwachsene" hint="ab 13 Jahre" value={guests.adults} min={1} onChange={(v) => setGuests((g) => ({ ...g, adults: v }))} />
                 <Counter label="Kinder" hint="2–12 Jahre" value={guests.children} onChange={(v) => setGuests((g) => ({ ...g, children: v }))} />
                 <Counter label="Kleinkinder" hint="unter 2" value={guests.infants} onChange={(v) => setGuests((g) => ({ ...g, infants: v }))} />
                 <Counter label="Haustiere" value={guests.pets} onChange={(v) => setGuests((g) => ({ ...g, pets: v }))} />
               </Section>
 
-              <Section title="Kontaktdaten des Gastes">
+              <Section title={t("wizard.guestContact")}>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Vorname">
                     <Input value={contact.first_name} onChange={(e) => setContact((c) => ({ ...c, first_name: e.target.value }))} />
@@ -365,12 +367,12 @@ export function ReservationWizard({
                 value={roomRate}
                 onChange={(v) => { setTouched(true); setRoomRate(v); }}
               />
-              <PriceRow label="Aktion / Rabatt" value={promotion} onChange={(v) => { setTouched(true); setPromotion(v); }} negative />
-              <PriceRow label="Gebühren" hint="Reinigung etc." value={fees} onChange={(v) => { setTouched(true); setFees(v); }} />
+              <PriceRow label={t("wizard.actionDiscount")} value={promotion} onChange={(v) => { setTouched(true); setPromotion(v); }} negative />
+              <PriceRow label={t("wizard.fees")} hint={t("wizard.feesHint")} value={fees} onChange={(v) => { setTouched(true); setFees(v); }} />
               <PriceRow label="Steuern" hint="USt." value={taxes} onChange={(v) => { setTouched(true); setTaxes(v); }} />
               {quote && !touched && quote.lines.length > 0 && (
                 <div className="mt-1 flex flex-col gap-1 rounded-(--radius) border bg-muted/30 p-3">
-                  <p className="mb-1 text-xs font-semibold text-muted-foreground">Aufschlüsselung</p>
+                  <p className="mb-1 text-xs font-semibold text-muted-foreground">{t("wizard.breakdown")}</p>
                   {quote.lines.map((l) => (
                     <div key={l.label} className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">{l.label}</span>
@@ -386,7 +388,7 @@ export function ReservationWizard({
             <div className="flex flex-col gap-5">
               <Section title="Richtlinien-Automatik">
                 <label className="flex cursor-pointer items-center justify-between gap-3 rounded-(--radius) border p-3 text-sm">
-                  <span>Angebots- und Richtlinien-Verwaltung</span>
+                  <span>{t("wizard.quotePolicyAdmin")}</span>
                   <Switch checked={policyOn} onCheckedChange={setPolicyOn} />
                 </label>
                 <p className="text-xs leading-relaxed text-muted-foreground">
@@ -396,10 +398,10 @@ export function ReservationWizard({
                 </p>
               </Section>
 
-              <Section title="Übersicht">
+              <Section title={t("wizard.overview")}>
                 <SummaryRow label="Objekt" value={properties.find((p) => p.id === propertyId)?.title ?? "—"} />
                 <SummaryRow label="Zeitraum" value={`${fmt(checkInState)} – ${fmt(checkOutState)}`} />
-                <SummaryRow label="Gäste" value={`${guests.adults + guests.children} Pers.`} />
+                <SummaryRow label={t("wizard.guests")} value={t("wizard.personsValue", { count: guests.adults + guests.children })} />
                 <SummaryRow label="Gast" value={`${contact.first_name} ${contact.last_name}`.trim() || "—"} />
               </Section>
             </div>

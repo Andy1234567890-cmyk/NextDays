@@ -1,4 +1,5 @@
 import { Button, Input } from '@tasko/ui';
+import { useTranslations } from "next-intl";
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -27,6 +28,7 @@ interface ProductCreateResponse {
 }
 
 export function QuickAddService({ companyId, onServiceAdded }: QuickAddServiceProps) {
+  const t = useTranslations("common");
   const [serviceName, setServiceName] = useState('');
   const [servicePrice, setServicePrice] = useState('');
   const [saving, setSaving] = useState(false);
@@ -77,7 +79,7 @@ export function QuickAddService({ companyId, onServiceAdded }: QuickAddServicePr
   return (
     <div className="flex items-center gap-2">
       <Input
-        placeholder="Neue Dienstleistung (z.B. Beratung)"
+        placeholder={t("newServicePlaceholder")}
         value={serviceName}
         onChange={e => setServiceName(e.target.value)}
         className="min-w-50"

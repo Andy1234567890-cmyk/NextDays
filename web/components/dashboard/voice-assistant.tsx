@@ -13,6 +13,7 @@
 
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -765,14 +766,16 @@ export function DashboardVoiceAssistant({
   const [transcript, setTranscript] = useState("");
   const [reply, setReply] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations("voice");
+  const locale = useLocale();
   const [debugOpen, setDebugOpen] = useState(false);
   const [debugLines, setDebugLines] = useState<string[]>([]);
 
   const appendDebug = useCallback((label: string, value?: unknown) => {
-    const stamp = new Date().toLocaleTimeString("de-DE", { hour12: false });
+    const stamp = new Date().toLocaleTimeString(locale, { hour12: false });
     const line = value === undefined ? `[${stamp}] ${label}` : `[${stamp}] ${label}: ${debugValue(value)}`;
     setDebugLines((prev) => [line, ...prev].slice(0, 40));
-  }, []);
+  }, [locale]);
 
   const setPhaseBoth = useCallback((p: AndyPhase) => {
     phaseRef.current = p;
@@ -1049,7 +1052,7 @@ export function DashboardVoiceAssistant({
             | { items?: PricingItemLite[] }
             | null;
           if (!res.ok) {
-            throw new Error("Bereich nicht erreichbar.");
+            throw new Error(t("unreachable"));
           }
           const { spoken, targets } = buildActionConfirmation(
             command.action,
@@ -1086,7 +1089,7 @@ export function DashboardVoiceAssistant({
           });
           const payload = await res.json().catch(() => null);
           if (!res.ok) {
-            throw new Error("Bereich nicht erreichbar.");
+            throw new Error(t("unreachable"));
           }
           say(toUiText(command.skill.summarize(payload), "Keine klare Antwort verfügbar."));
         } catch (err) {
@@ -1230,7 +1233,7 @@ export function DashboardVoiceAssistant({
         }
         const answer = data?.reply?.trim() || "";
         if (!answer) {
-          throw new Error("Leere Antwort von Andy.");
+          throw new Error(t("emptyReply"));
         }
         appendDebug("BACKEND_REPLY", answer);
         say(answer);
@@ -1574,8 +1577,8 @@ export function DashboardVoiceAssistant({
     return (
       <button
         type="button"
-        aria-label="Andy einschalten"
-        title="Andy einschalten"
+        aria-label={t("turnOn")}
+        title={t("turnOn")}
         onClick={activateAndy}
         className="fixed bottom-6 right-6 z-50 flex size-10 items-center justify-center rounded-full border bg-card text-muted-foreground shadow-md transition hover:text-foreground"
       >
@@ -1593,7 +1596,7 @@ export function DashboardVoiceAssistant({
             <Icon icon="ph:waveform" className="size-5" />
           </span>
           <div className="min-w-0">
-            <p className="font-display text-sm font-semibold">Andy, dein Sprach-Assistent</p>
+            <p className="font-display text-sm font-semibold">{t("subtitle")}</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Sag einfach „Hallo Andy" und stell deine Frage — freihändig, wie bei
               Siri. Andy braucht dafür Mikrofon-Zugriff.
@@ -1630,7 +1633,7 @@ export function DashboardVoiceAssistant({
     return (
       <button
         type="button"
-        aria-label="Andy öffnen"
+        aria-label={t("open")}
         onClick={() => setOpen(true)}
         className="fixed bottom-6 right-6 z-50 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl transition hover:scale-105"
       >
@@ -1675,7 +1678,7 @@ export function DashboardVoiceAssistant({
         <div className="flex items-center gap-1">
           <button
             type="button"
-            aria-label="Andy einklappen"
+            aria-label={t("collapse")}
             onClick={() => setOpen(false)}
             className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-foreground"
           >
@@ -1683,8 +1686,8 @@ export function DashboardVoiceAssistant({
           </button>
           <button
             type="button"
-            aria-label="Andy ausschalten"
-            title="Andy ausschalten"
+            aria-label={t("turnOff")}
+            title={t("turnOff")}
             onClick={deactivateAndy}
             className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-foreground"
           >

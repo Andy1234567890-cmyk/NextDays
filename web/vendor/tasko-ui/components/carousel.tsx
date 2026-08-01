@@ -1,4 +1,5 @@
 import { Icon } from '@iconify/react';
+import { useTranslations } from "next-intl";
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
 import * as React from 'react';
 
@@ -164,6 +165,7 @@ function CarouselPrevious({
   size = 'icon',
   ...props
 }: React.ComponentProps<typeof Button>) {
+  const t = useTranslations("common");
   const { orientation, scrollPrev, canScrollPrev } = useCarousel();
 
   return (
@@ -183,7 +185,7 @@ function CarouselPrevious({
       {...props}
     >
       <Icon icon="lucide:arrow-left" />
-      <span className="sr-only">Previous slide</span>
+      <span className="sr-only">{t("previousSlide")}</span>
     </Button>
   );
 }
@@ -194,6 +196,7 @@ function CarouselNext({
   size = 'icon',
   ...props
 }: React.ComponentProps<typeof Button>) {
+  const t = useTranslations("common");
   const { orientation, scrollNext, canScrollNext } = useCarousel();
 
   return (
@@ -213,7 +216,7 @@ function CarouselNext({
       {...props}
     >
       <Icon icon="lucide:arrow-right" />
-      <span className="sr-only">Next slide</span>
+      <span className="sr-only">{t("nextSlide")}</span>
     </Button>
   );
 }

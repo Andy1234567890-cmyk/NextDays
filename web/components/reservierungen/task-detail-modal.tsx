@@ -5,7 +5,7 @@
 // serverseitig 422). Für cleaner: Kopf zeigt nur Objekt + Zeitfenster, KEINE
 // Gast-PII/Beträge (Housekeeping-Masking, §4.3).
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -28,6 +28,7 @@ export function TaskDetailModal({
   onChanged?: () => void;
 }) {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const [detail, setDetail] = useState<TaskDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -94,7 +95,7 @@ export function TaskDetailModal({
 
   const fmt = (iso: string | null) =>
     iso
-      ? new Date(iso).toLocaleString("de-DE", {
+      ? new Date(iso).toLocaleString(locale, {
           day: "numeric",
           month: "short",
           hour: "2-digit",

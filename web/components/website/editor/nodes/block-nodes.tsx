@@ -5,6 +5,7 @@
 // spiegeln das site_blocks-content-Schema (locale-Maps), Text wird INLINE
 // editiert (InlineText).
 import { useNode } from "@craftjs/core";
+import { useTranslations } from "next-intl";
 import { Icon } from "@iconify/react";
 
 import { fontStack } from "@/lib/website-fonts";
@@ -28,6 +29,7 @@ export type HeroProps = {
 };
 
 export function HeroNode(props: Partial<HeroProps>) {
+  const t = useTranslations("website");
   const {
     connectors: { connect },
     actions: { setProp },
@@ -65,7 +67,7 @@ export function HeroNode(props: Partial<HeroProps>) {
           <InlineText
             as="h1"
             value={heading}
-            placeholder="Überschrift"
+            placeholder={t("editor.heading")}
             style={hStyle}
             onChange={(v) => setProp((p: HeroProps) => { p.heading = put(p.heading, v); })}
             className="font-display text-4xl font-semibold leading-[1.05] tracking-tight text-foreground md:text-5xl empty:before:text-muted-foreground empty:before:content-[attr(data-placeholder)]"
@@ -73,7 +75,7 @@ export function HeroNode(props: Partial<HeroProps>) {
           <InlineText
             as="p"
             value={subheading}
-            placeholder="Unterzeile …"
+            placeholder={t("editor.subline")}
             onChange={(v) => setProp((p: HeroProps) => { p.subheading = put(p.subheading, v); })}
             className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground empty:before:content-[attr(data-placeholder)]"
           />
@@ -107,7 +109,7 @@ export function HeroNode(props: Partial<HeroProps>) {
           <InlineText
             as="h1"
             value={heading}
-            placeholder="Große Überschrift"
+            placeholder={t("editor.bigHeading")}
             style={hStyle}
             onChange={(v) => setProp((p: HeroProps) => { p.heading = put(p.heading, v); })}
             className="font-display text-5xl font-semibold leading-[1.02] tracking-tight text-white drop-shadow-sm md:text-7xl empty:before:text-white/60 empty:before:content-[attr(data-placeholder)]"
@@ -115,7 +117,7 @@ export function HeroNode(props: Partial<HeroProps>) {
           <InlineText
             as="p"
             value={subheading}
-            placeholder="Unterzeile …"
+            placeholder={t("editor.subline")}
             onChange={(v) => setProp((p: HeroProps) => { p.subheading = put(p.subheading, v); })}
             className={"mt-5 text-lg leading-relaxed text-white/90 md:text-xl empty:before:text-white/60 empty:before:content-[attr(data-placeholder)] " + (centered ? "mx-auto max-w-2xl" : "max-w-2xl")}
           />
@@ -147,6 +149,7 @@ HeroNode.craft = {
 // RICH TEXT (einfacher Absatz, inline)
 // =============================================================================
 export function TextNode(props: { html?: LocaleMap; align?: "left" | "center" }) {
+  const t = useTranslations("website");
   const {
     connectors: { connect },
     actions: { setProp },
@@ -157,7 +160,7 @@ export function TextNode(props: { html?: LocaleMap; align?: "left" | "center" })
       <InlineText
         as="p"
         value={text}
-        placeholder="Schreiben Sie hier Ihren Text …"
+        placeholder={t("editor.writeYourText")}
         onChange={(v) => setProp((p: { html: LocaleMap }) => { p.html = put(p.html, `<p>${v}</p>`); })}
         className={"text-lg leading-relaxed text-foreground/90 empty:before:text-muted-foreground empty:before:content-[attr(data-placeholder)] " + (props.align === "center" ? "text-center" : "")}
       />
@@ -173,6 +176,7 @@ TextNode.craft = {
 // OBJEKT-GRID (Buchung) — im Editor mit Demo-Karten, im Renderer echte Objekte
 // =============================================================================
 export function PropertiesGridNode(props: { headline?: LocaleMap }) {
+  const t = useTranslations("website");
   const {
     connectors: { connect },
     actions: { setProp },
@@ -186,7 +190,7 @@ export function PropertiesGridNode(props: { headline?: LocaleMap }) {
         <InlineText
           as="h2"
           value={headline}
-          placeholder="Unsere Unterkünfte"
+          placeholder={t("editor.ourProperties")}
           onChange={(v) => setProp((p: { headline: LocaleMap }) => { p.headline = put(p.headline, v); })}
           className="font-display text-3xl font-semibold tracking-tight empty:before:text-muted-foreground empty:before:content-[attr(data-placeholder)]"
         />
@@ -206,7 +210,7 @@ export function PropertiesGridNode(props: { headline?: LocaleMap }) {
               <span className="flex items-center gap-1 text-sm"><Icon icon="ph:star-fill" className="size-3.5" />4,9</span>
             </div>
             <p className="text-sm text-muted-foreground">Musterort</p>
-            <p className="mt-1 text-sm"><span className="font-semibold">ab 120 €</span> <span className="text-muted-foreground">Nacht</span></p>
+            <p className="mt-1 text-sm"><span className="font-semibold">{t("editor.fromPrice")}</span> <span className="text-muted-foreground">Nacht</span></p>
           </div>
         ))}
       </div>
@@ -258,6 +262,7 @@ SearchNode.craft = {
 // BILD
 // =============================================================================
 export function ImageNode(props: { url?: string; alt?: LocaleMap }) {
+  const t = useTranslations("website");
   const {
     connectors: { connect },
   } = useNode();
@@ -269,7 +274,7 @@ export function ImageNode(props: { url?: string; alt?: LocaleMap }) {
         <img src={url} alt={pick(props.alt)} className="w-full rounded-2xl object-cover" />
       ) : (
         <div className="flex aspect-[16/9] w-full items-center justify-center rounded-2xl border border-dashed border-border bg-secondary/40 text-muted-foreground">
-          <span className="flex items-center gap-2"><Icon icon="ph:image" className="size-6" /> Bild wählen (rechts)</span>
+          <span className="flex items-center gap-2"><Icon icon="ph:image" className="size-6" /> {t("editor.chooseImage")}</span>
         </div>
       )}
     </figure>

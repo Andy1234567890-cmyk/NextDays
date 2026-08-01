@@ -6,6 +6,7 @@
 // erweiterten Regeln (Wochenende/Auslastung/Last-Minute/Orphan/Markt). Lädt die
 // vollständigen Einstellungen beim Öffnen und speichert per PUT.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -71,6 +72,7 @@ export function DpEditSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("dynamicPricing");
   const [s, setS] = useState<DpSettings | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -134,7 +136,7 @@ export function DpEditSheet({
     <Sheet open onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>Basispreis festlegen</SheetTitle>
+          <SheetTitle>{t("setBasePrice")}</SheetTitle>
           <SheetDescription>{item.title}</SheetDescription>
         </SheetHeader>
 
@@ -143,7 +145,7 @@ export function DpEditSheet({
         )}
 
         {!s && !loadError && (
-          <p className="px-4 text-sm text-muted-foreground">Lädt…</p>
+          <p className="px-4 text-sm text-muted-foreground">{t("loading")}</p>
         )}
 
         {s && (
@@ -232,7 +234,7 @@ export function DpEditSheet({
                     <NumInput
                       value={s.manual_base_price}
                       onChange={(n) => set("manual_base_price", n)}
-                      placeholder="z. B. 150"
+                      placeholder={t("pricePlaceholder")}
                     />
                   </Field>
                 </div>
@@ -248,7 +250,7 @@ export function DpEditSheet({
                 <NumInput
                   value={s.min_price}
                   onChange={(n) => set("min_price", n)}
-                  placeholder="kein Limit"
+                  placeholder={t("noLimit")}
                 />
               </Field>
               <Field
@@ -258,7 +260,7 @@ export function DpEditSheet({
                 <NumInput
                   value={s.max_price}
                   onChange={(n) => set("max_price", n)}
-                  placeholder="kein Limit"
+                  placeholder={t("noLimit")}
                 />
               </Field>
             </div>
@@ -280,7 +282,7 @@ export function DpEditSheet({
                 <div className="flex flex-col gap-5">
                   <div className="grid grid-cols-2 gap-4">
                     <Field
-                      label="Wochenend-Aufschlag (%)"
+                      label={t("weekendSurcharge")}
                       hint="So viel Prozent teurer werden Freitag und Samstag automatisch. Beispiel: 15 % macht aus 200 € → 230 € am Wochenende."
                     >
                       <NumInput
@@ -289,7 +291,7 @@ export function DpEditSheet({
                       />
                     </Field>
                     <Field
-                      label="Auslastungs-Empfindlichkeit (%)"
+                      label={t("occupancySensitivity")}
                       hint="Wie stark der Preis auf die Buchungslage reagiert. Sind viele Nächte rundherum schon belegt, steigt der Preis; ist viel frei, sinkt er. Höherer Wert = stärkere Reaktion."
                     >
                       <NumInput
@@ -300,7 +302,7 @@ export function DpEditSheet({
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Field
-                      label="Lücken-Rabatt 1–2 Nächte (%)"
+                      label={t("gapDiscount")}
                       hint="Rabatt für einzelne freie Nächte, die zwischen zwei Buchungen eingeklemmt sind (z. B. nur Mi frei zwischen Di und Do). Solche Lücken sind schwer zu füllen — ein Rabatt macht sie attraktiver."
                     >
                       <NumInput
@@ -309,7 +311,7 @@ export function DpEditSheet({
                       />
                     </Field>
                     <Field
-                      label="Min-Stay-Spanne (Tage)"
+                      label={t("minStayRange")}
                       hint="Mindestaufenthalt je nach Nachfrage: bei schwacher Buchungslage gilt der kleinere Wert (links), bei starker der größere (rechts). Beispiel 1–7: normal 1 Nacht, an gefragten Terminen bis zu 7 Nächte."
                     >
                       <div className="flex items-center gap-2">
@@ -355,7 +357,7 @@ export function DpEditSheet({
                   {s.weather_enabled && (
                     <div className="ml-0">
                       <Field
-                        label="Max. Wetter-Korrektur (±%)"
+                        label={t("maxWeatherAdjust")}
                         hint="Obergrenze, wie weit gutes/schlechtes Wetter den Preis verschieben darf. Beispiel 10 %: höchstens ein Zehntel Auf- oder Abschlag durch das Wetter."
                       >
                         <NumInput
@@ -387,7 +389,7 @@ export function DpEditSheet({
                     <>
                       <div className="grid grid-cols-2 gap-4">
                         <Field
-                          label="Markt-Empfindlichkeit (%)"
+                          label={t("marketSensitivity")}
                           hint="Wie stark sich dein Preis an den Marktpreisen vergleichbarer Objekte orientiert. Höherer Wert = dein Preis zieht stärker Richtung Marktdurchschnitt."
                         >
                           <NumInput
@@ -396,7 +398,7 @@ export function DpEditSheet({
                           />
                         </Field>
                         <Field
-                          label="Max. Markt-Korrektur (±%)"
+                          label={t("maxMarketAdjust")}
                           hint="Obergrenze, wie weit der Markt deinen Preis nach oben oder unten verschieben darf. Beispiel 25 %: höchstens ein Viertel Auf- oder Abschlag durch Marktdaten."
                         >
                           <NumInput
@@ -406,24 +408,24 @@ export function DpEditSheet({
                         </Field>
                       </div>
                       <Field
-                        label="Markt-Schlüssel (Region/Markt)"
+                        label={t("marketKey")}
                         hint="Kennung des Marktes/der Region, aus der die Vergleichsdaten kommen (von deiner Marktdaten-Quelle vorgegeben). Beispiel: de-muenchen."
                       >
                         <Input
                           value={s.market_key ?? ""}
-                          placeholder="z. B. de-muenchen"
+                          placeholder={t("marketKeyPlaceholder")}
                           onChange={(e) =>
                             set("market_key", e.target.value || null)
                           }
                         />
                       </Field>
                       <Field
-                        label="Vergleichsobjekte (Comp-Set, kommagetrennt)"
+                        label={t("compSet")}
                         hint="Liste vergleichbarer Objekte (Comp-Set), an deren Preisen sich die Engine orientiert. Kennungen kommagetrennt eintragen. Leer = die Engine nutzt den allgemeinen Marktdurchschnitt der Region."
                       >
                         <Input
                           value={s.comp_refs.join(", ")}
-                          placeholder="ref-1, ref-2, …"
+                          placeholder={t("compSetPlaceholder")}
                           onChange={(e) =>
                             set(
                               "comp_refs",
@@ -518,6 +520,7 @@ function LastMinuteEditor({
   rules: LastMinuteRule[];
   onChange: (rules: LastMinuteRule[]) => void;
 }) {
+  const t = useTranslations("dynamicPricing");
   return (
     <div className="flex flex-col gap-2">
       <Label className="flex items-center gap-1.5">
@@ -555,7 +558,7 @@ function LastMinuteEditor({
             }
             className="w-20"
           />
-          <span className="text-muted-foreground">% Rabatt</span>
+          <span className="text-muted-foreground">{t("percentDiscount")}</span>
           <Button
             variant="ghost"
             size="icon"
@@ -597,6 +600,7 @@ function RateRulesEditor({
   rules: RateRule[];
   onChange: (rules: RateRule[]) => void;
 }) {
+  const t = useTranslations("dynamicPricing");
   function toggleWeekday(i: number, day: number) {
     const cur = rules[i].match.weekday;
     const arr = Array.isArray(cur) ? [...cur] : cur === undefined ? [] : [cur];
@@ -617,7 +621,7 @@ function RateRulesEditor({
         <InfoHint text="Deine manuellen Regeln zusätzlich zur Automatik (z. B. „sonntags +15 %“). Wähle die Wochentage und den Auf- oder Abschlag in Prozent. Diese Regeln gelten bewusst obendrauf — sie werden nicht von der automatischen Rabatt-Begrenzung verrechnet." />
       </Label>
       {rules.length === 0 && (
-        <p className="text-sm text-muted-foreground">Noch keine eigenen Regeln.</p>
+        <p className="text-sm text-muted-foreground">{t("noOwnRules")}</p>
       )}
       {rules.map((r, i) => (
         <div
@@ -724,13 +728,14 @@ function NumInputSigned({
 // Hilfetext — damit die Fachbegriffe (Auslastung, Comp-Set, …) niemanden
 // ratlos lassen. type=button, damit es im Formular nichts auslöst.
 function InfoHint({ text }: { text: string }) {
+  const t = useTranslations("dynamicPricing");
   return (
     <TooltipProvider delayDuration={150}>
       <Tooltip>
         <TooltipTrigger asChild>
           <button
             type="button"
-            aria-label="Erklärung"
+            aria-label={t("explanation")}
             className="text-muted-foreground/70 transition-colors hover:text-foreground"
           >
             <Icon icon="ph:question" className="size-4" />

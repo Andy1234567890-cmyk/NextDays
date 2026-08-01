@@ -4,6 +4,7 @@
 // ◀ Zurück · ▶ Vor · 📅 Heute, rechts ⚙️ Ansicht-anpassen (Drawer) und
 // ＋ Erstellen (Menü). Eigenständiges Element, steuert das Raster über Props.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -86,6 +87,7 @@ export function CalendarHeader({
   // damit Ansicht + Titel + Navigation in EINER Kopfzeile sitzen.
   viewSwitcher?: ReactNode;
 }) {
+  const t = useTranslations("calendar");
   const set = <K extends keyof ViewOptions>(k: K, v: ViewOptions[K]) =>
     onView({ ...view, [k]: v });
 
@@ -105,7 +107,7 @@ export function CalendarHeader({
         <NativeSelect
           value={view.rangeDays}
           onChange={(e) => set("rangeDays", Number(e.target.value) as RangeDays)}
-          aria-label="Zeitfenster"
+          aria-label={t("header.timeframe")}
           className="h-9 w-auto rounded-full"
         >
           <option value="" disabled>
@@ -123,17 +125,17 @@ export function CalendarHeader({
           type="date"
           value={jumpValue}
           onChange={(e) => e.target.value && onJump(e.target.value)}
-          aria-label="Zu Datum springen"
+          aria-label={t("header.jumpToDate")}
           className="h-9 rounded-full border bg-background px-3 text-sm"
         />
 
-        <Button variant="outline" size="icon" onClick={onPrev} aria-label="Zurück">
+        <Button variant="outline" size="icon" onClick={onPrev} aria-label={t("header.back")}>
           <Icon icon="ph:caret-left" className="size-4" />
         </Button>
-        <Button variant="outline" size="icon" onClick={onNext} aria-label="Vor">
+        <Button variant="outline" size="icon" onClick={onNext} aria-label={t("header.next")}>
           <Icon icon="ph:caret-right" className="size-4" />
         </Button>
-        <Button variant="outline" size="icon" onClick={onToday} aria-label="Heute">
+        <Button variant="outline" size="icon" onClick={onToday} aria-label={t("header.today")}>
           <Icon icon="ph:calendar-dot" className="size-4" />
         </Button>
 
@@ -143,8 +145,8 @@ export function CalendarHeader({
           variant="outline"
           size="icon"
           onClick={() => set("showDebug", !view.showDebug)}
-          aria-label="Debug: Herkunft der Sperren"
-          title="Debug: Herkunft der Sperren anzeigen"
+          aria-label={t("header.debugBlocks")}
+          title={t("header.debugBlocksShow")}
           className={
             view.showDebug
               ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -157,13 +159,13 @@ export function CalendarHeader({
         {/* Ansicht anpassen (Drawer) */}
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Ansicht anpassen">
+            <Button variant="outline" size="icon" aria-label={t("header.adjustView")}>
               <Icon icon="ph:sliders-horizontal" className="size-4" />
             </Button>
           </SheetTrigger>
           <SheetContent className="flex flex-col">
             <SheetHeader>
-              <SheetTitle>Ansicht anpassen</SheetTitle>
+              <SheetTitle>{t("header.adjustView")}</SheetTitle>
               <SheetDescription>
                 Wähle, welche Details im Kalender erscheinen.
               </SheetDescription>
@@ -172,24 +174,24 @@ export function CalendarHeader({
             <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4">
               <section className="flex flex-col gap-3">
                 <p className="text-sm font-semibold">Objekt-Details</p>
-                <ToggleRow label="Foto zeigen" checked={view.showPicture} onChange={(v) => set("showPicture", v)} />
-                <ToggleRow label="Internen Namen zeigen" checked={view.showInternalName} onChange={(v) => set("showInternalName", v)} />
-                <ToggleRow label="ID-Nummer zeigen" checked={view.showId} onChange={(v) => set("showId", v)} />
+                <ToggleRow label={t("header.showPhoto")} checked={view.showPicture} onChange={(v) => set("showPicture", v)} />
+                <ToggleRow label={t("header.showInternalName")} checked={view.showInternalName} onChange={(v) => set("showInternalName", v)} />
+                <ToggleRow label={t("header.showId")} checked={view.showId} onChange={(v) => set("showId", v)} />
               </section>
 
               <div className="h-px bg-border" />
 
               <section className="flex flex-col gap-3">
                 <p className="text-sm font-semibold">Nacht-Details</p>
-                <ToggleRow label="Preis zeigen" checked={view.showPrice} onChange={(v) => set("showPrice", v)} />
-                <ToggleRow label="Mindestaufenthalt zeigen" checked={view.showMinStay} onChange={(v) => set("showMinStay", v)} />
-                <ToggleRow label="Debug: Herkunft der Sperren" checked={view.showDebug} onChange={(v) => set("showDebug", v)} />
+                <ToggleRow label={t("header.showPrice")} checked={view.showPrice} onChange={(v) => set("showPrice", v)} />
+                <ToggleRow label={t("header.showMinStay")} checked={view.showMinStay} onChange={(v) => set("showMinStay", v)} />
+                <ToggleRow label={t("header.debugBlocks")} checked={view.showDebug} onChange={(v) => set("showDebug", v)} />
               </section>
 
               <div className="h-px bg-border" />
 
               <section className="flex flex-col gap-3">
-                <p className="text-sm font-semibold">Erster Wochentag</p>
+                <p className="text-sm font-semibold">{t("header.firstWeekday")}</p>
                 <div className="flex gap-2">
                   <WeekBtn active={view.weekStart === "mon"} onClick={() => set("weekStart", "mon")}>Montag</WeekBtn>
                   <WeekBtn active={view.weekStart === "sun"} onClick={() => set("weekStart", "sun")}>Sonntag</WeekBtn>
@@ -208,7 +210,7 @@ export function CalendarHeader({
         {/* Erstellen (Menü) */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="icon" aria-label="Erstellen">
+            <Button size="icon" aria-label={t("header.create")}>
               <Icon icon="ph:plus" className="size-4" />
             </Button>
           </DropdownMenuTrigger>

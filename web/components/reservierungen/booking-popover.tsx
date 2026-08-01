@@ -5,7 +5,7 @@
 // „Ansehen" (zur Buchungsdetailseite) + „Aufgabe erstellen" (verknüpft mit
 // dieser Buchung). Keine Beträge/Gast-PII (§4.3).
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
 import { CHANNEL_META } from "@/lib/calendar-channels";
@@ -26,10 +26,11 @@ export function BookingPopover({
   onCreateTask: () => void;
 }) {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const meta =
     CHANNEL_META[booking.channel as AvailabilitySource] ?? CHANNEL_META.direct;
   const fmt = (iso: string) =>
-    new Date(`${iso}T00:00:00`).toLocaleDateString("de-DE", {
+    new Date(`${iso}T00:00:00`).toLocaleDateString(locale, {
       day: "numeric",
       month: "long",
       year: "numeric",

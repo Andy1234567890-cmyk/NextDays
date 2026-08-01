@@ -7,7 +7,7 @@
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 
 import { useRealtime } from "@/lib/use-realtime";
@@ -427,6 +427,7 @@ function OverviewTab({
   onNewReservation: () => void;
 }) {
   const t = useTranslations("guests");
+  const locale = useLocale();
   const router = useRouter();
   const [pending, start] = useTransition();
   // Editierbare Felder (Strings; null → "").
@@ -511,10 +512,10 @@ function OverviewTab({
     }
   };
   const fmtMoney = (v: number) =>
-    displayCurrency ? formatCurrency(v, displayCurrency) : v.toLocaleString("de-DE");
+    displayCurrency ? formatCurrency(v, displayCurrency) : v.toLocaleString(locale);
   const fmtDay = (s: string | null) =>
     s
-      ? new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
+      ? new Date(`${s}T00:00:00`).toLocaleDateString(locale, {
           day: "2-digit",
           month: "2-digit",
           year: "numeric",
@@ -1327,6 +1328,7 @@ function ReservationList({
   reload?: () => void;
 }) {
   const t = useTranslations("guests");
+  const locale = useLocale();
   const managed = itemsProp !== undefined;
   const [ownItems, setOwnItems] = useState<GuestReservation[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -1350,10 +1352,10 @@ function ReservationList({
 
   const todayKey = new Date().toISOString().slice(0, 10);
   const money = (v: number, cur: string | null) =>
-    cur ? formatCurrency(v, cur) : v.toLocaleString("de-DE");
+    cur ? formatCurrency(v, cur) : v.toLocaleString(locale);
   const fmtDay = (s: string | null) =>
     s
-      ? new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
+      ? new Date(`${s}T00:00:00`).toLocaleDateString(locale, {
           day: "2-digit",
           month: "2-digit",
           year: "numeric",
@@ -1431,6 +1433,7 @@ function ReservationsTab({ guestId, access }: { guestId: string; access: GuestAc
 
 function InvoicesTab({ guestId }: { guestId: string }) {
   const t = useTranslations("guests");
+  const locale = useLocale();
   const [items, setItems] = useState<GuestInvoice[] | null>(null);
   const load = useCallback(() => {
     listGuestInvoices(guestId).then((r) => r.ok && setItems(r.data.items));
@@ -1449,7 +1452,7 @@ function InvoicesTab({ guestId }: { guestId: string }) {
             <span className="text-muted-foreground">{i.status ?? "—"}</span>
             <span className="font-medium">
               {i.gross_amount != null
-                ? `${i.gross_amount.toLocaleString("de-DE")} ${i.currency ?? ""}`
+                ? `${i.gross_amount.toLocaleString(locale)} ${i.currency ?? ""}`
                 : "—"}
             </span>
           </li>

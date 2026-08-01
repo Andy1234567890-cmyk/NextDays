@@ -4,7 +4,7 @@
 // und lädt die Seite serverseitig neu (router.refresh), damit next-intl die neue
 // Sprache anwendet. Icons via Iconify (ph:*).
 import { Icon } from "@iconify/react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
@@ -19,6 +19,7 @@ import {
 } from "@nextdays/ui/dropdown-menu";
 
 export function LanguageToggle() {
+  const t = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -37,7 +38,7 @@ export function LanguageToggle() {
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Sprache wählen"
+          aria-label={t("chooseLanguage")}
           disabled={pending}
         >
           <Icon icon="ph:translate" className="size-5" />

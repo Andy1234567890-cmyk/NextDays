@@ -4,6 +4,7 @@
 // pro Tag der empfohlene Preis oben rechts, Tageszahl unten links, „Heute“-
 // Marker. Bei dynamischem Preis ein Blitz + „Warum dieser Preis?"-Tooltip.
 // Read-only — manuelle Tagespreise setzt man im Kalender (gewinnen immer).
+import { useLocale } from "next-intl";
 import { useState } from "react";
 
 import type { DayAvailability } from "@/lib/calendar";
@@ -16,9 +17,9 @@ const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
 // Preis in der OBJEKT-Währung (aus dem Rate-Plan) — kein €-Hardcode (27 EU-Länder).
 // 0 Nachkommastellen für die kompakte Rasteranzeige.
-function fmt(value: number | null, currency: string | null): string {
+function fmt(value: number | null, currency: string | null, locale: string): string {
   if (value === null) return "—";
-  return formatCurrency(value, currency, "de-DE", 0);
+  return formatCurrency(value, currency, locale, 0);
 }
 
 // Mo=0 … So=6 (JS getDay: So=0).
@@ -41,6 +42,7 @@ export function DpPreviewGrid({
   propertyId: string;
   currency: string | null;
 }) {
+  const locale = useLocale();
   // Geladene KI-Erklärung je Tag (ISO → Text | "…" beim Laden | Fehlertext).
   const [explained, setExplained] = useState<Record<string, string>>({});
   const [loadingDay, setLoadingDay] = useState<string | null>(null);
@@ -120,7 +122,7 @@ export function DpPreviewGrid({
                       ⚡
                     </span>
                   )}
-                  {fmt(d.price, currency)}
+                  {fmt(d.price, currency, locale)}
                 </span>
               </div>
               {/* KI-Erklärung: bei dynamischem Preis on-demand abrufbar */}

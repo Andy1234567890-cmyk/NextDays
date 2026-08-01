@@ -4,7 +4,7 @@
 // (task_rules kind=template|auto|recurring). Live via useRealtime auf
 // task_rules. Anlegen/Bearbeiten über das Regel-Editor-Modal.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -21,6 +21,7 @@ import { useRealtime } from "@/lib/use-realtime";
 
 export function RuleList({ kind }: { kind: RuleKind }) {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const CONFIG: Record<
     RuleKind,
     { title: string; scheduleCol: boolean; scheduleLabel: string }
@@ -71,7 +72,7 @@ export function RuleList({ kind }: { kind: RuleKind }) {
 
   const fmt = (iso: string | null) =>
     iso
-      ? new Date(iso).toLocaleDateString("de-DE", {
+      ? new Date(iso).toLocaleDateString(locale, {
           day: "numeric",
           month: "short",
           year: "numeric",

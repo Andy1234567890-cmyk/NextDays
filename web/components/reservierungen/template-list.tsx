@@ -5,7 +5,7 @@
 // Lernen-Dialog, Breadcrumb. Editor ist eine eigene Seite (/vorlagen/[id]).
 // Live via useRealtime auf task_rules.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -17,6 +17,7 @@ const BASE = "/reservierungen/aufgaben/vorlagen";
 
 export function TemplateList() {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const [rows, setRows] = useState<RuleListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,7 +36,7 @@ export function TemplateList() {
 
   const fmt = (iso: string | null) =>
     iso
-      ? new Date(iso).toLocaleDateString("de-DE", {
+      ? new Date(iso).toLocaleDateString(locale, {
         day: "numeric",
         month: "short",
         year: "numeric",

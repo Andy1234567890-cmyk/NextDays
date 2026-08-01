@@ -5,7 +5,7 @@
 // bidirektional senden/empfangen, neue Nachrichten kommen live (Realtime).
 import { Icon } from "@iconify/react";
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
 import {
@@ -27,6 +27,7 @@ export function WhatsAppChat({
   onSent: () => void;
 }) {
   const t = useTranslations("whatsapp");
+  const locale = useLocale();
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +108,7 @@ export function WhatsAppChat({
               </div>
               {m.sent_at && (
                 <span className="text-[0.65rem] text-muted-foreground">
-                  {new Date(m.sent_at).toLocaleString("de-DE")}
+                  {new Date(m.sent_at).toLocaleString(locale)}
                   {m.direction === "out" ? ` · ${m.status}` : ""}
                 </span>
               )}

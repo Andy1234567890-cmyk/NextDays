@@ -6,6 +6,7 @@
 // werden weggelassen, nichts erfunden. Check-in/Check-out (0091) laufen hier:
 // der Check-out erzeugt serverseitig verpflichtend die finale Rechnung (0092).
 import { Icon } from "@iconify/react";
+import { useLocale, useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -101,8 +102,10 @@ export function ReservationDetailSlider({
     : null;
   const meta = data ? channelMeta(data.channel as AvailabilitySource) : null;
 
+  const t = useTranslations("calendar");
+  const locale = useLocale();
   const fmtDateTime = (iso: string) =>
-    new Date(iso).toLocaleString("de-DE", {
+    new Date(iso).toLocaleString(locale, {
       day: "numeric",
       month: "short",
       hour: "2-digit",
@@ -110,7 +113,7 @@ export function ReservationDetailSlider({
     });
 
   const fmtDate = (s: string) =>
-    new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
+    new Date(`${s}T00:00:00`).toLocaleDateString(locale, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -143,7 +146,7 @@ export function ReservationDetailSlider({
               </p>
             )}
           </div>
-          <Button variant="outline" size="icon" onClick={onClose} aria-label="Schließen">
+          <Button variant="outline" size="icon" onClick={onClose} aria-label={t("slider.close")}>
             <Icon icon="ph:x" className="size-4" />
           </Button>
         </div>
@@ -353,7 +356,7 @@ export function ReservationDetailSlider({
               {/* Umsatz & Rechnung (Layout-Referenz Casona: Aufschlüsselung,
                   Gesamt, in Rechnung gestellt/bezahlt/noch offen, Aktionen).
                   Vorab-Rechnung erst NACH Check-in (fachliche Regel). */}
-              <Section title="Umsatz & Rechnung">
+              <Section title={t("slider.revenueInvoice")}>
                 <dl className="flex flex-col gap-1.5 text-sm">
                   {data.quote_items.map((q, i) => (
                     <div key={i} className="flex justify-between">
@@ -368,7 +371,7 @@ export function ReservationDetailSlider({
                     </dd>
                   </div>
                   <div className="flex justify-between border-t pt-2">
-                    <dt className="text-muted-foreground">In Rechnung gestellt</dt>
+                    <dt className="text-muted-foreground">{t("slider.invoiced")}</dt>
                     <dd>
                       {data.invoice && data.invoice.gross_amount != null
                         ? formatCurrency(
@@ -383,7 +386,7 @@ export function ReservationDetailSlider({
                     <dd>{money(data.paid_amount, data.currency)}</dd>
                   </div>
                   <div className="flex items-center justify-between">
-                    <dt className="text-muted-foreground">Noch offen</dt>
+                    <dt className="text-muted-foreground">{t("slider.stillOpen")}</dt>
                     <dd
                       className={
                         (data.due_amount ?? 0) > 0
@@ -549,7 +552,7 @@ export function ReservationDetailSlider({
                         onChange={(e) => setReason(e.target.value)}
                         rows={3}
                         autoFocus
-                        placeholder="Grund der Stornierung (wird dokumentiert) …"
+                        placeholder={t("slider.cancelReasonPlaceholder")}
                         className="w-full rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-destructive/40"
                       />
                       {d.actionError && (

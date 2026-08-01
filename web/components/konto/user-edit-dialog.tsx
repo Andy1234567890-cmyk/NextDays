@@ -7,6 +7,7 @@
 // überschreibt die Auswahl aber nicht hart — der Admin kann sie frei anpassen.
 // Das Backend klemmt jede Rechtevergabe auf die eigenen Rechte des Bearbeitenden.
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
@@ -29,12 +30,9 @@ import {
 import { PermissionGroups } from "./permission-groups";
 import { ROLE_DEFAULT_PERMISSIONS } from "./user-wizard-data";
 
-const EDITABLE_ROLES: { value: UserRole; label: string }[] = [
-  { value: "co_admin", label: "Co-Admin" },
-  { value: "owner", label: "Eigentümer" },
-  { value: "staff", label: "Mitarbeiter" },
-  { value: "cleaner", label: "Reinigungspersonal" },
-];
+// Rollen, die ein Admin vergeben darf. Das Label kommt aus i18n
+// (account.roles.*); der Wert ist die DB-Rolle und bleibt unübersetzt.
+const EDITABLE_ROLES: UserRole[] = ["co_admin", "owner", "staff", "cleaner"];
 
 export function UserEditDialog({
   user,
@@ -43,6 +41,7 @@ export function UserEditDialog({
   user: TenantUser;
   onClose: () => void;
 }) {
+  const t = useTranslations("account");
   const isAdmin = user.role === "admin";
   const [fullName, setFullName] = useState(user.full_name ?? "");
   const [role, setRole] = useState<UserRole>(user.role ?? "staff");
@@ -77,7 +76,7 @@ export function UserEditDialog({
     });
     setBusy(false);
     if (res.ok) {
-      toast.success("Nutzer aktualisiert.");
+      toast.success(t("users.updated"));
       onClose();
     } else {
       toast.error(res.error);
@@ -130,14 +129,13 @@ export function UserEditDialog({
                   }
                 >
                   {EDITABLE_ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>
-                      {r.label}
+                    <option key={r} value={r}>
+                      {r === "owner" ? t("roles.ownerShort") : t(`roles.${r}`)}
                     </option>
                   ))}
                 </NativeSelect>
                 <p className="text-xs text-muted-foreground">
-                  Ein Rollenwechsel schlägt passende Rechte vor. Du kannst sie
-                  danach einzeln anpassen.
+                  {t("users.roleChangeHint")}
                 </p>
               </div>
 

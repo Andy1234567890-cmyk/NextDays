@@ -18,7 +18,7 @@ export default async function ApiZugangPage() {
   if (!clientsRes.ok && clientsRes.status === 403) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-        <h2 className="font-display text-lg font-extrabold">Kein Zugriff</h2>
+        <h2 className="font-display text-lg font-extrabold">{t("noAccess")}</h2>
         <p className="text-sm text-muted-foreground">
           Nur Administratoren und Kontoinhaber können den API-Zugang verwalten.
         </p>

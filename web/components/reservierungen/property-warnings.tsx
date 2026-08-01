@@ -7,7 +7,7 @@
 //   • Bereits abgereist: Check-out-Tag vorbei, aber nicht ausgecheckt/abgeschlossen
 // Filter-Umschalter wie im Screenshot. Live über useRealtime auf reservations.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -28,6 +28,7 @@ type Warning = {
 
 export function PropertyWarnings({ propertyId }: { propertyId: string }) {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +87,7 @@ export function PropertyWarnings({ propertyId }: { propertyId: string }) {
           kind: "already_departed",
           label: t("propertyWarnings.alreadyDepartedLabel"),
           detail: t("propertyWarnings.alreadyDepartedDetail", {
-            date: new Date(`${r.check_out}T00:00:00`).toLocaleDateString("de-DE"),
+            date: new Date(`${r.check_out}T00:00:00`).toLocaleDateString(locale),
           }),
         });
       }

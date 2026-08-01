@@ -5,6 +5,7 @@
 // exakt die Backend-Permission-IDs (user-wizard-data.ts). `perms` ist der
 // aktuelle Auswahl-Zustand, `toggle` schaltet eine einzelne ID um.
 import { Checkbox } from "@nextdays/ui/checkbox";
+import { useTranslations } from "next-intl";
 
 import {
   GENERAL_PERMISSIONS,
@@ -24,6 +25,9 @@ export function PermissionGroup({
   perms: Set<string>;
   toggle: (id: string) => void;
 }) {
+  // Bezeichnung und Hinweis kommen aus i18n (permissions.<id>.label/.hint);
+  // die ID ist die Backend-Permission und bleibt unübersetzt.
+  const tPerm = useTranslations("permissions");
   return (
     <div className="flex flex-col gap-2">
       <h4 className="font-display text-sm font-extrabold">{title}</h4>
@@ -34,8 +38,8 @@ export function PermissionGroup({
             className="flex cursor-pointer items-start justify-between gap-3 p-3 hover:bg-secondary/40"
           >
             <span className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">{perm.label}</span>
-              <span className="text-xs text-muted-foreground">{perm.hint}</span>
+              <span className="text-sm font-medium">{tPerm(`${perm.id}.label`)}</span>
+              <span className="text-xs text-muted-foreground">{tPerm(`${perm.id}.hint`)}</span>
             </span>
             <Checkbox
               className="mt-0.5 shrink-0"
@@ -57,10 +61,11 @@ export function PermissionGroups({
   perms: Set<string>;
   toggle: (id: string) => void;
 }) {
+  const t = useTranslations("account");
   return (
     <>
       <PermissionGroup
-        title="Allgemeine Berechtigungen"
+        title={t("users.generalPermissions")}
         items={GENERAL_PERMISSIONS}
         perms={perms}
         toggle={toggle}

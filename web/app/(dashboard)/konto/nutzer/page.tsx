@@ -2,6 +2,7 @@
 // Zeigt den Account-Inhaber und alle Mitglieder; Leerzustand nur, wenn wirklich
 // keine Nutzer existieren („Benutzer").
 import { Icon } from "@iconify/react";
+import { getTranslations } from "next-intl/server";
 
 import { UserWizard } from "@/components/konto/user-wizard";
 import { UserList } from "@/components/konto/user-list";
@@ -10,6 +11,7 @@ import { Button } from "@nextdays/ui/button";
 import { listManagedUsers } from "@/lib/account";
 
 export default async function NutzerPage() {
+  const t = await getTranslations("account");
   const res = await listManagedUsers();
   const users = res.ok ? res.data : [];
   const forbidden = !res.ok && res.status === 403;
@@ -18,7 +20,7 @@ export default async function NutzerPage() {
   if (forbidden) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-        <h2 className="font-display text-lg font-extrabold">Kein Zugriff</h2>
+        <h2 className="font-display text-lg font-extrabold">{t("users.noAccess")}</h2>
         <p className="text-sm text-muted-foreground">
           Nur Administratoren und Kontoinhaber können Benutzer verwalten.
         </p>
@@ -39,7 +41,7 @@ export default async function NutzerPage() {
           </p>
         </div>
         {users.length > 0 && (
-          <UserWizard trigger={<Button className="shrink-0">Benutzer erstellen</Button>} />
+          <UserWizard trigger={<Button className="shrink-0">{t("users.createUser")}</Button>} />
         )}
       </div>
 
@@ -56,7 +58,7 @@ export default async function NutzerPage() {
                 : "Benutzer konnten nicht geladen werden."}
             </p>
           </div>
-          <UserWizard trigger={<Button>Benutzer erstellen</Button>} />
+          <UserWizard trigger={<Button>{t("users.createUser")}</Button>} />
         </div>
       ) : (
         <UserList users={users} />

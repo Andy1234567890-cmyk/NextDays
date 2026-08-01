@@ -32,7 +32,15 @@ export const useDocumentTranslation = (language: string = 'de') => {
     };
   }, [language]);
 
-  return { t };
+  // Datums-/Zahlenformat des DOKUMENTS (nicht der Oberfläche): eine Rechnung in
+  // Französisch trägt auch französische Datumsangaben.
+  const dateLocale = useMemo(
+    () =>
+      (translations[resolveDocumentLanguage(language)] || translations.de).dateLocale,
+    [language],
+  );
+
+  return { t, dateLocale };
 };
 
 /**

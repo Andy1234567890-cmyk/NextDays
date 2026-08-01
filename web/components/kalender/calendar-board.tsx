@@ -6,7 +6,7 @@
 // Zeiträume als Balken. Scrollt INNERHALB des Containers (kein Seiten-Overflow).
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -193,11 +193,11 @@ function barDragTarget(d: BarDrag): { ci: string; co: string; pid: string } {
 // Währung wird durchgereicht (kein €-Hardcode, 27 EU-Länder); ein leerer/ungültiger
 // Code ergibt eine reine Zahl (kein falsches Symbol, kein Crash) — analog zu
 // lib/currency.ts::formatCurrency, hier aber ohne Nachkommastellen fürs Raster.
-function fmtPrice(price: number | null | undefined, currency: string | null | undefined): string {
+function fmtPrice(price: number | null | undefined, currency: string | null | undefined, locale: string): string {
   if (price == null) return "–";
   const code = typeof currency === "string" ? currency.trim().toUpperCase() : "";
   const valid = /^[A-Z]{3}$/.test(code);
-  return price.toLocaleString("de-DE", {
+  return price.toLocaleString(locale, {
     ...(valid ? { style: "currency", currency: code } : {}),
     maximumFractionDigits: 0,
   });
@@ -446,6 +446,7 @@ export function CalendarBoard({
   accommodationType?: "vacation_rental" | "hotel" | null;
 }) {
   const t = useTranslations("calendar");
+  const locale = useLocale();
   const { typeOptionsFor } = usePropertyLabels();
   // Startdatum (rollierend). null bis der Client das heutige Datum kennt.
   const [start, setStart] = useState<Date | null>(null);
@@ -656,13 +657,13 @@ export function CalendarBoard({
         if (snapResByProp) setResByProp(snapResByProp);
         if (snapAvail) setAvail(snapAvail);
         if (snapSources) setSources(snapSources);
-        toast.error(res.error || "Verschieben nicht möglich.");
+        toast.error(res.error || t("board.moveFailed"));
       }
     } catch (err) {
       if (snapResByProp) setResByProp(snapResByProp);
       if (snapAvail) setAvail(snapAvail);
       if (snapSources) setSources(snapSources);
-      toast.error("Verschieben nicht möglich.");
+      toast.error(t("board.moveFailed"));
       throw err;
     } finally {
       setSaving(false);
@@ -1430,12 +1431,12 @@ export function CalendarBoard({
           <span className="flex size-14 items-center justify-center rounded-full bg-secondary">
             <Icon icon="ph:calendar-blank" className="size-7 text-muted-foreground" />
           </span>
-          <p className="font-display text-lg font-extrabold">Noch keine Objekte</p>
+          <p className="font-display text-lg font-extrabold">{t("board.noProperties")}</p>
           <p className="text-sm text-muted-foreground">
             Lege zuerst ein Objekt an, dann erscheint hier der Kalender.
           </p>
           <Button asChild>
-            <Link href="/objekte">Zu den Objekten</Link>
+            <Link href="/objekte">{t("board.toProperties")}</Link>
           </Button>
         </Card>
       </div>
@@ -1516,7 +1517,7 @@ export function CalendarBoard({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Objekt oder Gast suchen…"
+            placeholder={t("board.searchPlaceholder")}
             className="h-9 w-56 rounded-full pl-9"
             aria-label="Suche"
           />
@@ -1588,13 +1589,13 @@ export function CalendarBoard({
         <span className="h-3 w-px bg-border" aria-hidden />
         <span className="flex items-center gap-1.5">
           <Icon icon="ph:sign-in" className="size-3.5 text-destructive/80" />
-          Anreise gesperrt (CTA)
+          {t("board.ctaBlocked")}
         </span>
         <span className="flex items-center gap-1.5">
           <Icon icon="ph:sign-out" className="size-3.5 text-destructive/80" />
-          Abreise gesperrt (CTD)
+          {t("board.ctdBlocked")}
         </span>
-        {loading && <span>· lädt …</span>}
+        {loading && <span>{t("board.loading")}</span>}
       </div>
 
       {/* Aktionsmenü am Cursor nach dem Ziehen (eigene Komponente) */}
@@ -1653,7 +1654,7 @@ export function CalendarBoard({
               !metrics.currency ||
               (metrics.amountsHidden && metrics.revenue === 0)
               ? "—"
-              : metrics.revenue.toLocaleString("de-DE", {
+              : metrics.revenue.toLocaleString(locale, {
                 style: "currency",
                 currency: metrics.currency,
                 maximumFractionDigits: 0,
@@ -1673,7 +1674,7 @@ export function CalendarBoard({
           value={
             metrics.mixedCurrency || metrics.adr == null || !metrics.currency
               ? "—"
-              : metrics.adr.toLocaleString("de-DE", {
+              : metrics.adr.toLocaleString(locale, {
                 style: "currency",
                 currency: metrics.currency,
                 maximumFractionDigits: 0,
@@ -1813,14 +1814,14 @@ export function CalendarBoard({
                                     der Ansicht „Preise" gepflegt. */}
                                 {view.showPrice && (
                                   <span className={`flex items-center gap-1 ${inSel ? "text-white" : "text-muted-foreground"}`}>
-                                    {fmtPrice(priceMap[key(d)], propCurrency)}
+                                    {fmtPrice(priceMap[key(d)], propCurrency, locale)}
                                     {priceSrcMap[key(d)] === "dynamic" && (
                                       <span
                                         title={
                                           explainFactors(factorsMap[key(d)]) ||
-                                          "Dynamischer Preis (automatisch berechnet)"
+                                          t("board.dynamicPriceTitle")
                                         }
-                                        aria-label="Dynamischer Preis"
+                                        aria-label={t("board.dynamicPrice")}
                                         className={`flex cursor-help items-center rounded px-0.5 leading-tight ${inSel ? "text-white" : "text-accent"}`}
                                       >
                                         <Icon icon="ph:lightning-fill" className="size-2.5" />
@@ -1839,7 +1840,7 @@ export function CalendarBoard({
                                   restrictMap[key(d)]?.[1]) && (
                                     <span className="flex items-center gap-0.5">
                                       {restrictMap[key(d)]?.[0] && (
-                                        <span title="Anreise gesperrt (CTA)" className="flex">
+                                        <span title={t("board.ctaBlocked")} className="flex">
                                           <Icon
                                             icon="ph:sign-in"
                                             className={`size-3 ${inSel ? "text-white/90" : "text-destructive/80"}`}
@@ -1847,7 +1848,7 @@ export function CalendarBoard({
                                         </span>
                                       )}
                                       {restrictMap[key(d)]?.[1] && (
-                                        <span title="Abreise gesperrt (CTD)" className="flex">
+                                        <span title={t("board.ctdBlocked")} className="flex">
                                           <Icon
                                             icon="ph:sign-out"
                                             className={`size-3 ${inSel ? "text-white/90" : "text-destructive/80"}`}
@@ -2011,7 +2012,7 @@ export function CalendarBoard({
                             <button
                               key={i}
                               type="button"
-                              title="Sperre aufheben"
+                              title={t("board.unblock")}
                               onClick={(ev) => {
                                 ev.stopPropagation();
                                 setUnblockAt({
@@ -2171,13 +2172,13 @@ export function CalendarBoard({
           <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl">
             <div className="mb-2 flex items-center gap-2">
               <Icon icon="ph:lock-simple-open" className="size-5 text-accent" />
-              <h3 className="font-display text-lg font-extrabold">Sperre aufheben?</h3>
+              <h3 className="font-display text-lg font-extrabold">{t("board.unblockTitle")}</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{unblockAt.title}</span>{" "}
-              wird ab {unblockAt.start} wieder freigegeben. Nur die tatsächlich
-              offenen Tage gehen als verfügbar an die Portale (gebuchte Tage bleiben
-              gesperrt).
+              {t("board.unblockText", {
+                title: unblockAt.title,
+                start: unblockAt.start,
+              })}
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <Button
@@ -2185,10 +2186,10 @@ export function CalendarBoard({
                 onClick={() => setUnblockAt(null)}
                 disabled={saving}
               >
-                Abbrechen
+                {t("board.cancel")}
               </Button>
               <Button onClick={confirmUnblock} disabled={saving}>
-                {saving ? "Hebe auf…" : "Sperre aufheben"}
+                {saving ? t("board.unblocking") : t("board.unblock")}
               </Button>
             </div>
           </div>
@@ -2202,19 +2203,19 @@ export function CalendarBoard({
               <Icon icon="ph:arrows-left-right" className="size-5 text-accent" />
               <h3 className="font-display text-lg font-extrabold">
                 {pendingMove.mode === "move"
-                  ? "Reservierung verschieben?"
-                  : "Zeitraum ändern?"}
+                  ? t("board.moveTitle")
+                  : t("board.resizeTitle")}
               </h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              {pendingMove.res.guest_name?.trim() || "Buchung"} →{" "}
+              {pendingMove.res.guest_name?.trim() || t("board.bookingFallback")} →{" "}
               <span className="font-medium text-foreground">
-                {properties.find((p) => p.id === pendingMove.targetPid)?.title ?? "Objekt"}
+                {properties.find((p) => p.id === pendingMove.targetPid)?.title ?? t("board.propertyFallback")}
               </span>
               , {pendingMove.ci} – {pendingMove.co}.
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Es wird erneut auf Doppelbuchung geprüft.
+              {t("board.moveRecheck")}
             </p>
             {/* Preisverhalten bei echtem OBJEKTWECHSEL (nicht Resize): protel-Modell
                 — „Preis behalten" (kostenloses Upgrade / vereinbarter Preis bleibt
@@ -2224,27 +2225,27 @@ export function CalendarBoard({
             {pendingMove.targetPid !== pendingMove.res.property_id ? (
               <>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Der Preis der Buchung ist vereinbart. Bei einem Zimmerwechsel:
-                  entweder den vereinbarten Preis <b>behalten</b> (kostenloses
-                  Upgrade) oder für das neue Objekt <b>neu berechnen</b> (Upsell).
+                  {t.rich("board.movePriceHint", {
+                    b: (c) => <b>{c}</b>,
+                  })}
                 </p>
                 <div className="mt-5 flex flex-col gap-2">
                   <Button onClick={() => confirmMove(false)} disabled={saving}>
-                    {saving ? "Verschiebe…" : "Verschieben · Preis behalten"}
+                    {saving ? t("board.moving") : t("board.moveKeepPrice")}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => confirmMove(true)}
                     disabled={saving}
                   >
-                    {saving ? "Verschiebe…" : "Verschieben · Preis neu berechnen"}
+                    {saving ? t("board.moving") : t("board.moveRecalcPrice")}
                   </Button>
                   <Button
                     variant="ghost"
                     onClick={() => setPendingMove(null)}
                     disabled={saving}
                   >
-                    Abbrechen
+                    {t("board.cancel")}
                   </Button>
                 </div>
               </>
@@ -2255,7 +2256,7 @@ export function CalendarBoard({
                   onClick={() => setPendingMove(null)}
                   disabled={saving}
                 >
-                  Abbrechen
+                  {t("board.cancel")}
                 </Button>
                 <Button onClick={() => confirmMove(false)} disabled={saving}>
                   {saving ? "Verschiebe…" : "Verschieben"}

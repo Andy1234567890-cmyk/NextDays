@@ -28,7 +28,7 @@ import {
   Label,
   Textarea,
 } from '@tasko/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -45,6 +45,7 @@ interface StornoInvoiceProps {
 
 export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoiceProps) {
   const t = useTranslations('finance');
+  const locale = useLocale();
   const [isCreatingStorno, setIsCreatingStorno] = useState(false);
   const [stornoReason, setStornoReason] = useState('');
   const [stornoInvoice, setStornoInvoice] = useState<InvoiceData | null>(null);
@@ -57,7 +58,7 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
   const { user } = useNewAuth();
 
   const formatDate = (date: string | Date) => {
-    return new Date(date).toLocaleDateString('de-DE');
+    return new Date(date).toLocaleDateString(locale);
   };
 
   const getStatusBadge = (status: string) => {

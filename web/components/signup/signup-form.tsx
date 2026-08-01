@@ -16,6 +16,7 @@ import { LAENDER, currencyForCountry } from "@/lib/laender";
 
 export function SignupForm({ onBack }: { onBack: () => void }) {
   const router = useRouter();
+  const t = useTranslations("signup");
   const tCountry = useTranslations("countries");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +70,7 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
           type="button"
           onClick={onBack}
           className="text-muted-foreground transition-colors hover:text-foreground"
-          aria-label="Zurück"
+          aria-label={t("back")}
         >
           <Icon icon="ph:arrow-left" className="size-5" />
         </button>
@@ -86,7 +87,7 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
           id="hotelName"
           value={hotelName}
           onChange={(e) => setHotelName(e.target.value)}
-          placeholder="z. B. Hotel Seeblick"
+          placeholder={t("companyPlaceholder")}
           required
           maxLength={200}
         />
@@ -100,7 +101,7 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
           id="fullName"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          placeholder="Vor- und Nachname"
+          placeholder={t("namePlaceholder")}
           required
           maxLength={200}
         />
@@ -131,7 +132,7 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
             type={showPw ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mindestens 8 Zeichen"
+            placeholder={t("passwordHint")}
             required
             minLength={8}
             autoComplete="new-password"
@@ -158,7 +159,7 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
             type={showPw ? "text" : "password"}
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
-            placeholder="Passwort wiederholen"
+            placeholder={t("passwordRepeat")}
             required
             minLength={8}
             autoComplete="new-password"

@@ -6,6 +6,7 @@
 // eingehenden Buchungen dieses Kanals + Verlauf. Alle Aktionen über den
 // Backend-Slice (lib/channex.ts); Realtime-Pflicht (Route abonniert die Tabellen).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -198,6 +199,7 @@ function MappingTable({
   connectedCount: number;
   totalCount: number;
 }) {
+  const t = useTranslations("channels");
   const router = useRouter();
   // Hotel-ID einer BEREITS verbundenen Zeile: bei Hotels teilen alle Zimmer eine
   // Hotel-ID. Weitere Zimmer müssen sie NICHT erneut eingeben — der Assistent
@@ -229,7 +231,7 @@ function MappingTable({
         <table className="w-full min-w-[36rem] text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="p-3 font-medium">Objekt bei myNextDays</th>
+              <th className="p-3 font-medium">{t("propertyAtBrand")}</th>
               <th className="p-3 font-medium">Objekt bei {portalLabel}</th>
               <th className="p-3 font-medium">Status</th>
               <th className="p-3 font-medium text-right">Aktion</th>
@@ -266,6 +268,7 @@ function MappingRow({
   connectedHotelId: string | null;
   onConnected: () => void;
 }) {
+  const t = useTranslations("channels");
   const [pending, startTransition] = useTransition();
   // Optimistischer An/Aus-Zustand; der Realtime-Refresh der Route korrigiert bei
   // Fehler ohnehin. setConnectionActive erwartet property_id + portal_code —
@@ -347,7 +350,7 @@ function MappingRow({
                 size="sm"
                 onClick={fullSync}
                 disabled={pending || !mapId || !active}
-                title="Verfügbarkeit, Preise und Restriktionen komplett neu übertragen"
+                title={t("fullResync")}
               >
                 <Icon
                   icon={pending ? "ph:spinner" : "ph:arrows-counter-clockwise"}

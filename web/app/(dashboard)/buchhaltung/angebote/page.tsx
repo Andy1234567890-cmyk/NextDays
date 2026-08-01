@@ -1,7 +1,7 @@
 // Buchhaltung → Angebote: Liste aller Angebote des Tenants.
 // Server Component — lädt über die Server-Action, rendert Tabelle + Anlegen.
 import { Icon } from "@iconify/react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { NewQuoteButton } from "@/components/buchhaltung/new-quote-button";
@@ -38,13 +38,14 @@ function formatMoney(amount: string, currency: string): string {
   return formatCurrency(Number.isFinite(n) ? n : 0, currency);
 }
 
-function formatDate(iso: string | null): string {
+function formatDate(iso: string | null, locale: string): string {
   if (!iso) return "—";
-  return new Intl.DateTimeFormat("de-DE").format(new Date(iso));
+  return new Intl.DateTimeFormat(locale).format(new Date(iso));
 }
 
 export default async function AngebotePage() {
   const t = await getTranslations("finance");
+  const locale = await getLocale();
   const statusLabels = getStatusLabels(t);
   const [res, customersRes] = await Promise.all([listQuotes(), listCustomers()]);
   const customers: Customer[] = customersRes.ok ? customersRes.data.items : [];
@@ -97,10 +98,10 @@ export default async function AngebotePage() {
                     {(q.customer_id && customerName.get(q.customer_id)) || "—"}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {formatDate(q.issue_date)}
+                    {formatDate(q.issue_date, locale)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {formatDate(q.valid_until)}
+                    {formatDate(q.valid_until, locale)}
                   </td>
                   <td className="px-4 py-3 text-right font-medium">
                     {formatMoney(q.gross_amount, q.currency)}

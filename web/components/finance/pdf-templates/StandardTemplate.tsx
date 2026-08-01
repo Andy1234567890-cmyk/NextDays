@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useTranslations } from "next-intl";
 import { useDocumentTranslation } from '@/hooks/pdf/useDocumentTranslation';
 import type { DocumentSettings, ProcessedPDFData } from '@/hooks/pdf/usePDFTemplateData';
 import type { DocumentType } from '@/lib/document-utils';
@@ -29,7 +30,8 @@ export const StandardTemplate: React.FC<StandardTemplateProps> = ({
   documentSettings,
 }) => {
   // 🌍 ÜBERSETZUNGSSYSTEM
-  const { t } = useDocumentTranslation(documentSettings?.language || 'de');
+  const { t, dateLocale: locale } = useDocumentTranslation(documentSettings?.language || 'de');
+  const tUi = useTranslations("finance");
 
   // Berechne, ob eine zweite Seite benötigt wird
   // STANDARD: Immer einseitig, außer der Inhalt ist zu lang
@@ -194,11 +196,11 @@ export const StandardTemplate: React.FC<StandardTemplateProps> = ({
                     {config.numberLabel}: {data.invoiceNumber}
                   </div>
                   <div>
-                    {config.dateLabel}: {formatDate(data.invoiceDate)}
+                    {config.dateLabel}: {formatDate(data.invoiceDate, locale)}
                   </div>
                   {config.showDueDate && data.dueDate && (
                     <div>
-                      {config.dueDateLabel}: {formatDate(data.dueDate)}
+                      {config.dueDateLabel}: {formatDate(data.dueDate, locale)}
                     </div>
                   )}
                   {data.customerOrderNumber && (
@@ -214,7 +216,7 @@ export const StandardTemplate: React.FC<StandardTemplateProps> = ({
                 <div className="shrink-0">
                   <img
                     src={documentSettings.qrCodeUrl}
-                    alt="QR Code"
+                    alt={tUi("pdf.qrCode")}
                     className="h-12 w-12 border border-gray-300"
                   />
                 </div>
@@ -286,7 +288,7 @@ export const StandardTemplate: React.FC<StandardTemplateProps> = ({
                     {documentSettings?.epcQrCodeUrl ? (
                       <img
                         src={documentSettings.epcQrCodeUrl}
-                        alt="EPC QR Code (Girocode)"
+                        alt={tUi("pdf.epcQrCode")}
                         className="h-12 w-12 border border-gray-300"
                       />
                     ) : (
@@ -406,11 +408,11 @@ export const StandardTemplate: React.FC<StandardTemplateProps> = ({
                       {config.numberLabel}: {data.invoiceNumber}
                     </div>
                     <div>
-                      {config.dateLabel}: {formatDate(data.invoiceDate)}
+                      {config.dateLabel}: {formatDate(data.invoiceDate, locale)}
                     </div>
                     {config.showDueDate && data.dueDate && (
                       <div>
-                        {config.dueDateLabel}: {formatDate(data.dueDate)}
+                        {config.dueDateLabel}: {formatDate(data.dueDate, locale)}
                       </div>
                     )}
                   </div>
@@ -432,7 +434,7 @@ export const StandardTemplate: React.FC<StandardTemplateProps> = ({
 
               {/* Fortsetzung Tabelle falls nötig - für Test sichtbarer Inhalt */}
               <div className="mb-8">
-                <div className="mb-2 font-semibold text-sm">Fortsetzung - Seite 2</div>
+                <div className="mb-2 font-semibold text-sm">{tUi("pdf.continuationPage2")}</div>
                 <div className="mb-4 text-gray-600 text-xs">
                   Weitere Details und Zusammenfassung
                 </div>
@@ -464,7 +466,7 @@ export const StandardTemplate: React.FC<StandardTemplateProps> = ({
                     {documentSettings?.epcQrCodeUrl ? (
                       <img
                         src={documentSettings.epcQrCodeUrl}
-                        alt="EPC QR Code (Girocode)"
+                        alt={tUi("pdf.epcQrCode")}
                         className="h-12 w-12 border border-gray-300"
                       />
                     ) : (

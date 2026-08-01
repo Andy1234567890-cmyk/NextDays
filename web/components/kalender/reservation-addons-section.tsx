@@ -6,7 +6,7 @@
 // auch OTA (z. B. Booking): die Hausverwaltung bucht ein Extra-Angebot
 // (z. B. Erstausstattung/Einkauf) provisionsfrei am OTA vorbei dazu.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -41,6 +41,7 @@ export function ReservationAddonsSection({
   onChanged?: () => void;
 }) {
   const t = useTranslations("calendar");
+  const locale = useLocale();
   const STATUS_LABEL: Record<ReservationAddon["status"], string> = {
     pending: t("reservationAddonsSection.statusPending"),
     paid: t("reservationAddonsSection.statusPaid"),
@@ -55,7 +56,7 @@ export function ReservationAddonsSection({
   const [busy, setBusy] = useState(false);
 
   const money = (v: number) =>
-    cur ? formatCurrency(v, cur) : v.toLocaleString("de-DE");
+    cur ? formatCurrency(v, cur) : v.toLocaleString(locale);
 
   async function reload() {
     const [bought, avail] = await Promise.all([

@@ -4,6 +4,7 @@
 // Sidebar in den Insert-Modus, Auswahl öffnet das Einfügen-Menü), Titel mittig,
 // rechts Device-Umschalter + Veröffentlichen.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { Button } from "@nextdays/ui/button";
@@ -42,6 +43,7 @@ export function EditorTopBar({
   saving: boolean;
   onSave: () => void;
 }) {
+  const t = useTranslations("website");
   return (
     <header className="flex h-12 items-center justify-between gap-3 border-b border-border px-3">
       <div className="flex items-center gap-2">
@@ -59,8 +61,8 @@ export function EditorTopBar({
         <div className="ml-1 flex items-center gap-0.5">
           <button
             type="button"
-            aria-label="Block hinzufügen"
-            title="Block hinzufügen"
+            aria-label={t("editor.addBlock")}
+            title={t("editor.addBlock")}
             onClick={onToggleInsert}
             className={
               "flex size-8 items-center justify-center rounded-md transition " +
@@ -75,8 +77,8 @@ export function EditorTopBar({
           <div className="relative">
             <button
               type="button"
-              aria-label="Einfügen"
-              title="Einfügen"
+              aria-label={t("editor.insert")}
+              title={t("editor.insert")}
               onClick={onToggleInsertMenu}
               className={
                 "flex size-8 items-center justify-center rounded-md transition " +
@@ -92,7 +94,7 @@ export function EditorTopBar({
                 {/* Klick daneben schließt das Menü. */}
                 <button
                   type="button"
-                  aria-label="Menü schließen"
+                  aria-label={t("editor.closeMenu")}
                   onClick={onCloseInsertMenu}
                   className="fixed inset-0 z-40 cursor-default"
                 />

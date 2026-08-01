@@ -1,6 +1,7 @@
 'use client';
 
 import { Icon } from '@iconify/react';
+import { useTranslations } from "next-intl";
 import {
   Badge,
   Button,
@@ -40,6 +41,7 @@ export default function InventorySelector({
   quickAddOnClick = false,
   currency,
 }: InventorySelectorProps) {
+  const t = useTranslations("quotes");
   const [isOpen, setIsOpen] = useState(false);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
@@ -171,7 +173,7 @@ export default function InventorySelector({
               className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400"
             />
             <Input
-              placeholder="Artikel suchen (Name, SKU, Beschreibung...)"
+              placeholder={t("searchItems")}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="pl-10 focus:border-accent focus:ring-accent"
@@ -182,7 +184,7 @@ export default function InventorySelector({
           {loading && (
             <div className="flex items-center justify-center py-8">
               <Icon icon="lucide:loader2" className="h-6 w-6 animate-spin text-accent" />
-              <span className="ml-2 text-gray-600">Lade Inventar...</span>
+              <span className="ml-2 text-gray-600">{t("loadingInventory")}</span>
             </div>
           )}
 
@@ -216,7 +218,7 @@ export default function InventorySelector({
                       <TableHead className="w-75 min-w-75">Artikel</TableHead>
                       <TableHead className="w-35 min-w-35">SKU</TableHead>
                       <TableHead className="w-37 min-w-37">Kategorie</TableHead>
-                      <TableHead className="w-45 min-w-45">Verfügbar</TableHead>
+                      <TableHead className="w-45 min-w-45">{t("available")}</TableHead>
                       <TableHead className="w-30 min-w-30">Preis</TableHead>
                       <TableHead className="w-25 min-w-25">Menge</TableHead>
                       <TableHead className="w-37 min-w-37">Aktion</TableHead>
@@ -265,19 +267,19 @@ export default function InventorySelector({
                                 >
                                   {availableStock}
                                 </span>
-                                <span className="text-gray-500 text-xs">verfügbar</span>
+                                <span className="text-gray-500 text-xs">{t("availableLower")}</span>
                                 {availableStock <= 0 && (
                                   <Icon
                                     icon="lucide:alert-circle"
                                     className="h-3 w-3 text-red-500"
-                                    aria-label="Nicht verfügbar"
+                                    aria-label={t("notAvailable")}
                                   />
                                 )}
                                 {availableStock > 0 && availableStock <= item.minStock && (
                                   <Icon
                                     icon="lucide:alert-circle"
                                     className="h-3 w-3 text-orange-500"
-                                    aria-label="Niedriger Lagerbestand"
+                                    aria-label={t("lowStock")}
                                   />
                                 )}
                               </div>
@@ -312,7 +314,7 @@ export default function InventorySelector({
                             {selectedItems.includes(item.id) ? (
                               <div className="flex items-center gap-1 text-green-600">
                                 <Icon icon="lucide:check" className="h-4 w-4" />
-                                <span className="text-xs">Hinzugefügt</span>
+                                <span className="text-xs">{t("added")}</span>
                               </div>
                             ) : (
                               <Button
@@ -342,11 +344,11 @@ export default function InventorySelector({
               <div>
                 <p className="font-medium text-blue-800">Hinweise:</p>
                 <ul className="mt-1 list-inside list-disc space-y-1">
-                  <li>Alle Artikel aus Ihrem Inventar werden angezeigt</li>
-                  <li>Artikel ohne verfügbaren Lagerbestand sind deaktiviert</li>
-                  <li>Der Verkaufspreis wird automatisch als Einzelpreis übernommen</li>
-                  <li>Die Menge kann nach dem Hinzufügen noch angepasst werden</li>
-                  <li>Reservierte Mengen werden bei Angeboten berücksichtigt</li>
+                  <li>{t("hint1")}</li>
+                  <li>{t("hint2")}</li>
+                  <li>{t("hint3")}</li>
+                  <li>{t("hint4")}</li>
+                  <li>{t("hint5")}</li>
                 </ul>
               </div>
             </div>

@@ -3,6 +3,7 @@
 // Position-Bausteine: Pin-Kreuz (T/L/R/B + Constraint-Widget) und die
 // Ausrichtungs-Leiste (6 Align-Buttons, aktives blau umrandet) wie Framer.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { FIELD_H } from "./ui";
@@ -21,6 +22,7 @@ export function PinField({
   muted?: boolean;
   onChange?: (v: number) => void;
 }) {
+  const t = useTranslations("website");
   const editable = !!onChange;
   function startScrub(e: React.MouseEvent) {
     if (!editable) return;
@@ -47,7 +49,7 @@ export function PinField({
       />
       <span
         onMouseDown={startScrub}
-        title={editable ? "Ziehen zum Ändern" : undefined}
+        title={editable ? t("editor.dragToChange") : undefined}
         className={`pr-1 text-[0.625rem] uppercase text-muted-foreground ${editable ? "cursor-ew-resize select-none" : ""}`}
       >
         {axis}
@@ -55,7 +57,7 @@ export function PinField({
       {/* Sichtbare ↑↓-Stepper (wie Framer). Nur wenn editierbar. */}
       {editable ? (
         <div className="flex h-full flex-col border-l border-border/60">
-          <button type="button" tabIndex={-1} aria-label="erhöhen" onClick={() => onChange?.(value + 1)} className="flex w-4 flex-1 items-center justify-center text-muted-foreground hover:text-foreground">
+          <button type="button" tabIndex={-1} aria-label={t("editor.increase")} onClick={() => onChange?.(value + 1)} className="flex w-4 flex-1 items-center justify-center text-muted-foreground hover:text-foreground">
             <Icon icon="ph:caret-up" className="size-2.5" />
           </button>
           <button type="button" tabIndex={-1} aria-label="verringern" onClick={() => onChange?.(value - 1)} className="flex w-4 flex-1 items-center justify-center text-muted-foreground hover:text-foreground">
@@ -76,30 +78,31 @@ export function PinConstraint({
   pins: { t: boolean; l: boolean; r: boolean; b: boolean };
   onToggle: (k: "t" | "l" | "r" | "b") => void;
 }) {
+  const t = useTranslations("website");
   const on = "bg-primary";
   const off = "bg-muted-foreground/30 hover:bg-muted-foreground/60";
   return (
     <div className="relative flex size-9 items-center justify-center">
       {/* Pin Top */}
-      <button type="button" title="Pin Top" aria-label="Pin oben" aria-pressed={pins.t}
+      <button type="button" title={t("editor.pinTopEn")} aria-label={t("editor.pinTop")} aria-pressed={pins.t}
         onClick={() => onToggle("t")}
         className="absolute left-1/2 top-0 flex h-2.5 w-3 -translate-x-1/2 items-center justify-center">
         <span className={`block h-2 w-[0.1875rem] rounded-full ${pins.t ? on : off}`} />
       </button>
       {/* Pin Bottom */}
-      <button type="button" title="Pin Bottom" aria-label="Pin unten" aria-pressed={pins.b}
+      <button type="button" title={t("editor.pinBottomEn")} aria-label={t("editor.pinBottom")} aria-pressed={pins.b}
         onClick={() => onToggle("b")}
         className="absolute bottom-0 left-1/2 flex h-2.5 w-3 -translate-x-1/2 items-center justify-center">
         <span className={`block h-2 w-[0.1875rem] rounded-full ${pins.b ? on : off}`} />
       </button>
       {/* Pin Left */}
-      <button type="button" title="Pin Left" aria-label="Pin links" aria-pressed={pins.l}
+      <button type="button" title={t("editor.pinLeftEn")} aria-label={t("editor.pinLeft")} aria-pressed={pins.l}
         onClick={() => onToggle("l")}
         className="absolute left-0 top-1/2 flex h-3 w-2.5 -translate-y-1/2 items-center justify-center">
         <span className={`block h-[0.1875rem] w-2 rounded-full ${pins.l ? on : off}`} />
       </button>
       {/* Pin Right */}
-      <button type="button" title="Pin Right" aria-label="Pin rechts" aria-pressed={pins.r}
+      <button type="button" title={t("editor.pinRightEn")} aria-label={t("editor.pinRight")} aria-pressed={pins.r}
         onClick={() => onToggle("r")}
         className="absolute right-0 top-1/2 flex h-3 w-2.5 -translate-y-1/2 items-center justify-center">
         <span className={`block h-[0.1875rem] w-2 rounded-full ${pins.r ? on : off}`} />
@@ -107,8 +110,8 @@ export function PinConstraint({
       {/* Weißes Toggle-Quadrat (Mitte) — größer, klar gerundet (wie Framer). */}
       <button
         type="button"
-        title="Toggle Pins"
-        aria-label="Pins umschalten"
+        title={t("editor.togglePinsEn")}
+        aria-label={t("editor.togglePins")}
         className="size-4 rounded-[4px] border border-border bg-background shadow-sm"
       />
     </div>

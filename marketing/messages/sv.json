@@ -34,10 +34,10 @@
     "kanaeleLabel": "Kopplad till de stora bokningsplattformarna",
     "eyebrow": "Plattformen för uthyrare av semesterboenden",
     "kanaeleEyebrow": "Försäljningskanaler",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "Beläggningsplan i myNextDays: åtta semesterobjekt med bokningar från Booking.com, Airbnb, Vrbo, marknadsplatsen och direktbokningar",
+    "aufnahmeHotel": "Beläggningsplan för ett hotell i myNextDays: tolv rum, vart och ett som en egen bokningsbar enhet",
+    "aufnahmeObjekte": "Objektöversikt i myNextDays med foton, status och synlighet per kanal",
+    "aufnahmeKanaele": "Kanalhantering i myNextDays: anslutna bokningsportaler och den egna marknadsplatsen"
   },
   "intro": {
     "heading": "Välkommen till myNextDays.",
@@ -351,20 +351,20 @@
     "fehler": "Det gick inte. Försök igen senare."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Inblick",
+    "heading": "Så fungerar myNextDays på riktigt",
+    "sub": "Inga ritade vyer — bilder från en pågående verksamhet med riktiga bokningar från alla kanaler.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Hotell och semesterobjekt i ett och samma gränssnitt",
+      "text": "Varje rum är en egen bokningsbar enhet — samma modell som för ett semesterhus. Beläggningsplanen visar ankomster, vistelser och avresor per enhet, med beläggning, omsättning och genomsnittspris per natt under perioden."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Synlighet per kanal, inte en enda strömbrytare för allt",
+      "text": "Webbplats, marknadsplats och bokningsportaler är tre separata axlar. Ett objekt kan ligga kvar live på din egen sida medan det är pausat på portalerna — synligt på en gång, växlas med ett klick."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Anslut portaler och behåll din egen kanal",
+      "text": "Booking.com, Airbnb och andra portaler hänger på samma tillgänglighet som direktbokningen. En bokad natt spärrar överallt — utan dubbelbokning, utan manuellt efterarbete."
     }
   }
 }

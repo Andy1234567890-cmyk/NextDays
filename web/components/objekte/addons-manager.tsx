@@ -6,7 +6,7 @@
 // „wann anzeigen", aktiv, Reihenfolge. Echtes Realtime (Supabase WebSocket,
 // kein Polling) auf property_addons.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -82,6 +82,7 @@ export function AddonsManager({
   currency: string | null;
 }) {
   const t = useTranslations("objects");
+  const locale = useLocale();
   const router = useRouter();
   const [items, setItems] = useState<Addon[]>(initial);
   const [editing, setEditing] = useState<string | null>(null);
@@ -93,7 +94,7 @@ export function AddonsManager({
   // Betrag in Objekt-Währung; ohne hinterlegte Währung nur der nackte Wert
   // (nie € erfinden — Mehrwährung über 27 EU-Länder).
   const money = (v: number) =>
-    currency ? formatCurrency(v, currency) : v.toLocaleString("de-DE");
+    currency ? formatCurrency(v, currency) : v.toLocaleString(locale);
 
   // Echtes Realtime (Supabase WebSocket): bei jeder Änderung an property_addons
   // die Liste direkt aus dem Backend neu in den State laden (kein Reload-Flackern).

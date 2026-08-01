@@ -1,6 +1,7 @@
 // Benefits — "Mehr Buchungen. Weniger Arbeit." mit 3 Statistik-Karten
 // und anschließendem Preis-CTA-Banner (Akzent-Hintergrund).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { Button } from "@nextdays/ui/button";
@@ -31,6 +32,7 @@ const BENEFITS = [
 ];
 
 export function MarketingBenefits() {
+  const t = useTranslations("marketingSite");
   return (
     <section id="funktionen" className="bg-secondary/40">
       <div className="mx-auto max-w-7xl px-6 py-20">
@@ -81,9 +83,9 @@ export function MarketingBenefits() {
                   pro Monat
                 </span>
               </p>
-              <p className="text-sm text-foreground">+1 % Buchungswert</p>
+              <p className="text-sm text-foreground">{t("bookingValue")}</p>
               <Button asChild className="mt-3">
-                <Link href="#preise">Preise ansehen</Link>
+                <Link href="#preise">{t("seePrices")}</Link>
               </Button>
             </div>
           </div>

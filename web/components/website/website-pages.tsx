@@ -3,6 +3,7 @@
 // Seitenliste des Website-Baukastens: Seiten anlegen, Home setzen, veröffentlichen/
 // zurückziehen, löschen, in den Editor öffnen + Start-Templates anwenden.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -27,6 +28,7 @@ const TEMPLATES = [
 ];
 
 export function WebsitePages({ pages }: { pages: Page[] }) {
+  const t = useTranslations("website");
   const router = useRouter();
   const [pending, start] = useTransition();
   const [title, setTitle] = useState("");
@@ -60,7 +62,7 @@ export function WebsitePages({ pages }: { pages: Page[] }) {
 
       {pages.length === 0 ? (
         <div className="rounded-(--radius) border border-border p-6">
-          <p className="font-medium">Mit einer Vorlage starten</p>
+          <p className="font-medium">{t("pages.startFromTemplate")}</p>
           <p className="mb-4 text-sm text-muted-foreground">
             Wählen Sie eine Vorlage als Ausgangspunkt — alles bleibt anpassbar.
           </p>
@@ -81,14 +83,14 @@ export function WebsitePages({ pages }: { pages: Page[] }) {
         </div>
       ) : null}
 
-      {/* Neue Seite anlegen */}
+      {/* {t("pages.newPage")} anlegen */}
       <form onSubmit={onCreate} className="flex items-end gap-2">
         <label className="flex flex-1 flex-col gap-1 text-sm">
-          <span className="font-medium">Neue Seite</span>
+          <span className="font-medium">{t("pages.newPage")}</span>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Seitentitel (z. B. Über uns)"
+            placeholder={t("pages.titlePlaceholder")}
           />
         </label>
         <Button type="submit" disabled={pending || !title.trim()}>
@@ -129,7 +131,7 @@ export function WebsitePages({ pages }: { pages: Page[] }) {
                   size="sm"
                   disabled={pending}
                   onClick={() => run(() => setHomePage(p.id))}
-                  title="Als Startseite setzen"
+                  title={t("pages.setHomepage")}
                 >
                   <Icon icon="ph:house" className="size-4" />
                 </Button>
@@ -158,7 +160,7 @@ export function WebsitePages({ pages }: { pages: Page[] }) {
                 size="sm"
                 disabled={pending}
                 onClick={() => run(() => deletePage(p.id))}
-                title="Löschen"
+                title={t("pages.delete")}
               >
                 <Icon icon="ph:trash" className="size-4" />
               </Button>

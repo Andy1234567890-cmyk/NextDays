@@ -7,6 +7,7 @@
 // Zahlungsmethode eingezogen; `charge_date` kommt fertig vom Server, damit im
 // Frontend keine zweite Datumsrechnung entsteht.
 import { Icon } from "@iconify/react";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { formatCurrency } from "@/lib/currency";
@@ -21,16 +22,18 @@ const STATUS: Record<
   mixed: { label: "Teilweise offen", klasse: "bg-sky-500/15 text-sky-600" },
 };
 
-function monatsName(period: string): string {
+function monatsName(period: string, locale: string): string {
   const [jahr, monat] = period.split("-").map(Number);
   // Tag 1 ist willkürlich — es geht nur um Monat + Jahr in der Anzeige.
-  return new Date(jahr, monat - 1, 1).toLocaleDateString("de-DE", {
+  return new Date(jahr, monat - 1, 1).toLocaleDateString(locale, {
     month: "long",
     year: "numeric",
   });
 }
 
 export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
+  const t = useTranslations("account");
+  const locale = useLocale();
   const [rows, setRows] = useState<CommissionMonth[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,7 +96,7 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
                 <th className="px-4 py-3 font-medium">Buchungen</th>
                 <th className="px-4 py-3 font-medium">Buchungsumsatz</th>
                 <th className="px-4 py-3 font-medium">Provision</th>
-                <th className="px-4 py-3 font-medium">Einzug am</th>
+                <th className="px-4 py-3 font-medium">{t("commissions.chargedOn")}</th>
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
@@ -106,7 +109,7 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
                     className="border-b border-border last:border-0"
                   >
                     <td className="px-4 py-3 font-medium">
-                      {monatsName(r.period)}
+                      {monatsName(r.period, locale)}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {r.booking_count}
@@ -125,7 +128,7 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
                           icon="lucide:calendar"
                           className="size-3.5 text-muted-foreground"
                         />
-                        {new Date(r.charge_date).toLocaleDateString("de-DE", {
+                        {new Date(r.charge_date).toLocaleDateString(locale, {
                           day: "numeric",
                           month: "long",
                           year: "numeric",

@@ -1,5 +1,6 @@
 'use client';
 import { Icon } from '@iconify/react';
+import { useTranslations } from "next-intl";
 import * as React from 'react';
 import { cn } from '../lib/cn';
 import { Button } from './button';
@@ -33,6 +34,7 @@ export function MultiSelect({
   placeholder = 'Select items...',
   className,
 }: MultiSelectProps) {
+  const t = useTranslations("common");
   const [open, setOpen] = React.useState(false);
 
   const _handleUnselect = (item: string) => {
@@ -67,7 +69,7 @@ export function MultiSelect({
         <Command>
           <CommandInput placeholder="Suchen..." />
           <CommandList>
-            <CommandEmpty>Keine Ergebnisse gefunden.</CommandEmpty>
+            <CommandEmpty>{t("noResults")}</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
               {options.map(option => (
                 <CommandItem

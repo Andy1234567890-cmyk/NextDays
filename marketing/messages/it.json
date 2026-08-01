@@ -34,10 +34,10 @@
     "kanaeleLabel": "Collegata ai grandi portali di prenotazione",
     "eyebrow": "La piattaforma per chi affitta case vacanza",
     "kanaeleEyebrow": "Canali di vendita",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "Piano di occupazione di myNextDays: otto case vacanza con prenotazioni da Booking.com, Airbnb, Vrbo, dal marketplace e dirette",
+    "aufnahmeHotel": "Piano di occupazione di un hotel in myNextDays: dodici camere, ognuna come unità prenotabile a sé",
+    "aufnahmeObjekte": "Panoramica delle strutture in myNextDays con foto, stato e visibilità per canale",
+    "aufnahmeKanaele": "Gestione dei canali in myNextDays: portali di prenotazione collegati e marketplace proprio"
   },
   "intro": {
     "heading": "Benvenuto in myNextDays.",
@@ -351,20 +351,20 @@
     "fehler": "Non ha funzionato. Riprova più tardi."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Dentro il prodotto",
+    "heading": "Come funziona davvero myNextDays",
+    "sub": "Nessuna schermata disegnata: immagini di un'attività reale con prenotazioni vere da tutti i canali.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Hotel e casa vacanza in un'unica interfaccia",
+      "text": "Ogni camera è un'unità prenotabile a sé — lo stesso modello della casa vacanza. Il piano di occupazione mostra arrivi, soggiorni e partenze per unità, con occupazione, fatturato e prezzo medio per notte nel periodo."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Visibilità per canale, non un unico interruttore",
+      "text": "Sito web, marketplace e portali di prenotazione sono tre assi distinti. Una struttura può restare online sul tuo sito mentre è in pausa sui portali: visibile a colpo d'occhio, commutabile in un clic."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Collegare i portali mantenendo il proprio canale diretto",
+      "text": "Booking.com, Airbnb e gli altri portali attingono alla stessa disponibilità della prenotazione diretta. Una notte prenotata blocca ovunque — niente overbooking, niente correzioni a mano."
     }
   }
 }

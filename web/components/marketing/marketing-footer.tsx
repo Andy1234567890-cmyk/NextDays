@@ -40,6 +40,7 @@ const SOCIALS = [
 
 export async function MarketingFooter() {
   const t = await getTranslations("legal");
+  const tm = await getTranslations("marketingSite");
   // Rechtslinks: nur echte Ziele verlinken. AGB gibt es (24-sprachig unter
   // /agb); Impressum/Datenschutz/Cookie folgen noch → als Label ohne href
   // (keine toten "#"-Links).
@@ -60,7 +61,7 @@ export async function MarketingFooter() {
               weniger Arbeit.
             </p>
             <div className="mt-6 flex flex-col gap-3">
-              <p className="text-sm font-medium">App herunterladen</p>
+              <p className="text-sm font-medium">{tm("downloadApp")}</p>
               <div className="flex flex-wrap gap-3">
                 <span className="flex items-center gap-2 rounded-lg border border-primary-foreground/20 px-3 py-2 text-xs">
                   <Icon icon="ph:apple-logo-fill" className="size-5" />
@@ -99,7 +100,7 @@ export async function MarketingFooter() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-primary-foreground/15 pt-8 sm:flex-row">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-primary-foreground/60">
-            <span>© 2026 myNextDays. Alle Rechte vorbehalten.</span>
+            <span>{tm("copyright")}</span>
             {rechtlich.map((r) => (
               <span key={r.label} className="flex items-center gap-2">
                 <span aria-hidden>·</span>

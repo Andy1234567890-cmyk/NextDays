@@ -1,6 +1,7 @@
 'use client';
 
 import { Icon } from '@iconify/react';
+import { useTranslations } from "next-intl";
 import {
   Badge,
   Button,
@@ -101,6 +102,7 @@ export default function TextTemplateModal({
   companyId,
   userId,
 }: TextTemplateModalProps) {
+  const t = useTranslations("settings");
   const [formData, setFormData] = useState<{
     name: string;
     category: TextTemplateCategory;
@@ -226,7 +228,7 @@ export default function TextTemplateModal({
                 </div>
                 <Input
                   id="name"
-                  placeholder="z.B. Angebot Standardtext, Mahnung Stufe 1..."
+                  placeholder={t("textTemplate.namePlaceholder")}
                   value={formData.name}
                   onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   className="h-11 border-gray-300 text-base focus-visible:ring-accent"
@@ -277,7 +279,7 @@ export default function TextTemplateModal({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Label className="font-semibold text-gray-900 text-sm">Verwenden für</Label>
+                  <Label className="font-semibold text-gray-900 text-sm">{t("textTemplate.useFor")}</Label>
                   <InfoTooltip content="Legen Sie fest, für welche Dokumentart diese Vorlage verwendet werden soll." />
                 </div>
                 {formData.category === 'DOCUMENT' ? (
@@ -425,7 +427,7 @@ vielen Dank für Ihre Anfrage. Anbei erhalten Sie unser Angebot..."
               <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
                 <div className="flex items-center gap-3">
                   <div>
-                    <span className="font-medium text-gray-900 text-sm">Nur für mich sichtbar</span>
+                    <span className="font-medium text-gray-900 text-sm">{t("textTemplate.onlyForMe")}</span>
                     <p className="text-gray-500 text-xs">
                       Private Vorlage, andere Teammitglieder sehen sie nicht
                     </p>

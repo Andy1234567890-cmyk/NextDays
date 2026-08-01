@@ -4,7 +4,7 @@
 // zugewiesenen Aufgaben (echte Daten, live über useRealtime auf tasks).
 // Status umschaltbar; ehrlicher Leerzustand statt Fake.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -19,6 +19,7 @@ import { useRealtime } from "@/lib/use-realtime";
 
 export function MyTasksList() {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const STATUS_LABEL: Record<TaskStatus, string> = {
     open: t("myTasksList.statusOpen"),
     in_progress: t("myTasksList.statusInProgress"),
@@ -49,7 +50,7 @@ export function MyTasksList() {
 
   const fmtDue = (iso: string | null) =>
     iso
-      ? new Date(iso).toLocaleDateString("de-DE", {
+      ? new Date(iso).toLocaleDateString(locale, {
           day: "numeric",
           month: "short",
           year: "numeric",

@@ -5,7 +5,7 @@
 // flache, einklappbare Sektionen (Data / Summary / Rental activity / Expenses &
 // extras / Attachments / Grand total). Daten echt aus dem Backend.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -67,6 +67,7 @@ export function StatementEditor({
   }) => void;
 }) {
   const t = useTranslations("ownerStatements");
+  const locale = useLocale();
   const [st, setSt] = useState<Statement>(statement);
   const [busy, setBusy] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -232,7 +233,7 @@ export function StatementEditor({
             disabled={busy}
             onClick={() => {
               setBusy(true);
-              void downloadStatementPdf(st)
+              void downloadStatementPdf(st, locale)
                 .catch(() => toast.error(t("downloadFailed")))
                 .finally(() => setBusy(false));
             }}

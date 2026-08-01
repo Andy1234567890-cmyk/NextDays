@@ -3,13 +3,15 @@
 // Auftrag — hier steht der Reiter mit ehrlichem Hinweis, damit „Klick führt
 // dahin" stimmt, ohne Fake-Inhalt.
 import { ModulePlaceholder } from "@/components/reservierungen/module-placeholder";
+import { useTranslations } from "next-intl";
 
 export default function GastmodulPage() {
+  const t = useTranslations("reservations");
   return (
     <ModulePlaceholder
       title="Gastmodul"
       icon="ph:identification-card"
-      description="Mit dem Pre-Check-in-Formular erfassen Sie vor der Anreise alle Daten Ihrer Gäste (Ausweis, Adresse, Mitreisende, Ankunftszeit). Diese Fläche wird als eigener Schritt aufgebaut."
+      description={t("guestModuleHint")}
     />
   );
 }

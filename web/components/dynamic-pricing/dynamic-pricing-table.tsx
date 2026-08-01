@@ -5,6 +5,7 @@
 // den Basispreis-Slider) und 30-Tage-Vorschau. Live-Aktualisierung über die
 // dp_settings-/rate_plans-Tabellen.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -73,6 +74,7 @@ function Th({
   hint?: string;
   className?: string;
 }) {
+  const t = useTranslations("dynamicPricing");
   return (
     <th className={`px-4 py-3 font-medium ${className ?? ""}`}>
       {hint ? (
@@ -83,7 +85,7 @@ function Th({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  aria-label="Erklärung"
+                  aria-label={t("tableExplanation")}
                   className="text-muted-foreground/70 transition-colors hover:text-foreground"
                 >
                   <Icon icon="ph:question" className="size-3.5" />
@@ -108,6 +110,7 @@ function fmtMoney(value: number | null, currency: string | null): string {
 }
 
 export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {
+  const t = useTranslations("dynamicPricing");
   const router = useRouter();
   const [editing, setEditing] = useState<DpOverviewItem | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -256,7 +259,7 @@ export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {
                         checked={it.enabled}
                         disabled={busyId === it.property_id}
                         onCheckedChange={(c) => toggleActive(it, c)}
-                        aria-label="Dynamic Pricing aktiv"
+                        aria-label={t("active")}
                       />
                     </div>
                   </td>

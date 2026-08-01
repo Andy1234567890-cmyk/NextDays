@@ -185,7 +185,7 @@ export const CURRENCY_CODES: string[] = [
 
 export type CurrencyInfo = { code: string; name: string };
 
-export function getAllCurrencies(locale: string = 'de-DE'): CurrencyInfo[] {
+export function getAllCurrencies(locale: string): CurrencyInfo[] {
   let dn: Intl.DisplayNames | null = null;
   try {
     dn = new Intl.DisplayNames(locale, { type: 'currency' });

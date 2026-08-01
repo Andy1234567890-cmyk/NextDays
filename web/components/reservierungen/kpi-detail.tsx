@@ -6,7 +6,7 @@
 // (Tageswerte je Periode) plus „Exportieren". Daten aus getMetricDetail; live
 // über useRealtime. Geldmetrik ohne Sicht → maskiert (kein erfundener Wert).
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -42,9 +42,9 @@ function useMetricLabel(): Record<StatMetric, string> {
   };
 }
 
-function dayLabel(iso: string): string {
+function dayLabel(iso: string, locale: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString("de-DE", { day: "numeric", month: "short" });
+  return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
 }
 
 // Ergebnis der Detail-Ladefunktion: das Aggregat + eine Unterzeile (Objektname
@@ -65,6 +65,7 @@ export function KpiDetailView({
   realtimeFilter?: string;
 }) {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const METRIC_LABEL = useMetricLabel();
   const router = useRouter();
   const [detail, setDetail] = useState<StatMetricDetail | null>(null);
@@ -108,7 +109,7 @@ export function KpiDetailView({
     if (!detail) return [];
     return detail.series.map((p, i) => {
       const row: Record<string, number | string> = {
-        label: dayLabel(p.date),
+        label: dayLabel(p.date, locale),
         current: p.value,
       };
       shown.forEach((idx) => {
@@ -117,7 +118,7 @@ export function KpiDetailView({
       });
       return row;
     });
-  }, [detail, shown]);
+  }, [detail, shown, locale]);
 
   const config = useMemo<ChartConfig>(() => {
     const c: ChartConfig = {
@@ -252,7 +253,7 @@ export function KpiDetailView({
                     // formatCurrency setzt Symbol + Position je Währung korrekt
                     // (0 Nachkommastellen für die Achse), kein hartes € / feste
                     // Position — gilt für alle Währungen (Wurzel 4).
-                    isMoney ? formatCurrency(v, cur, "de-DE", 0) : `${Math.round(v)}`
+                    isMoney ? formatCurrency(v, cur, locale, 0) : `${Math.round(v)}`
                   }
                 />
                 <ChartTooltip
@@ -290,7 +291,7 @@ export function KpiDetailView({
           {/* Perioden-Kacheln: aktuelle Periode + vier Vergleichsperioden. */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <PeriodCard
-              label={`${dayLabel(detail.date_from)} – ${dayLabel(detail.date_to)}`}
+              label={`${dayLabel(detail.date_from, locale)} – ${dayLabel(detail.date_to, locale)}`}
               value={total}
               changePct={null}
               fmt={fmt}
@@ -366,10 +367,11 @@ function BreakoutTable({
   fmt: (v: number) => string;
 }) {
   const t = useTranslations("reservations");
+  const locale = useLocale();
   const cols = detail.series.length;
   const rowLabel = (i: number) =>
     i === 0
-      ? `${dayLabel(detail.date_from)} – ${dayLabel(detail.date_to)}`
+      ? `${dayLabel(detail.date_from, locale)} – ${dayLabel(detail.date_to, locale)}`
       : (detail.periods[i - 1]?.label ?? t("kpiDetail.periodFallback", { number: i }));
 
   return (
@@ -383,7 +385,7 @@ function BreakoutTable({
               </th>
               {detail.series.map((p) => (
                 <th key={p.date} className="whitespace-nowrap px-3 py-2 text-right font-medium">
-                  {dayLabel(p.date)}
+                  {dayLabel(p.date, locale)}
                 </th>
               ))}
             </tr>

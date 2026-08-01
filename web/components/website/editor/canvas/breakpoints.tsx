@@ -2,8 +2,9 @@
 
 // Breakpoint-Flächen (wie Framer): Typ, Live-Spiegel der inaktiven Flächen
 // (DOM-Klon des aktiven Frames), das ⊕-Menü am rechten Frame-Rand und der
-// „Neuer Haltepunkt"-Dialog (Custom…).
+// „{t("editor.newBreakpoint")}"-Dialog (Custom…).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 // Ein Breakpoint = eine Device-Fläche auf der Canvas (Framer). `x` ist die
@@ -40,6 +41,7 @@ export function BreakpointMirror({
   onAddBreakpoint: (name: string, width: number) => void;
   onMoveStart: (e: React.MouseEvent, bpId: string) => void;
 }) {
+  const t = useTranslations("website");
   const [menu, setMenu] = useState(false);
   // Eigene Höhe dieses Breakpoints: fixed → Wert; auto → der geklonte Inhalt
   // bestimmt die Höhe (so ist jede Fläche unterschiedlich lang, wie in Framer).
@@ -68,7 +70,7 @@ export function BreakpointMirror({
         <div className="relative">
           <button
             type="button"
-            aria-label="Haltepunkt hinzufügen"
+            aria-label={t("editor.addBreakpoint")}
             onClick={() => setMenu((v) => !v)}
             className={"flex size-6 items-center justify-center rounded-md transition " + (menu ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-primary/10")}
           >
@@ -76,7 +78,7 @@ export function BreakpointMirror({
           </button>
           {menu ? (
             <>
-              <button type="button" aria-label="Menü schließen" onClick={() => setMenu(false)} className="fixed inset-0 z-40 cursor-default" />
+              <button type="button" aria-label={t("editor.closeMenu")} onClick={() => setMenu(false)} className="fixed inset-0 z-40 cursor-default" />
               <div role="menu" className="absolute right-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-xl border border-border bg-card p-1 shadow-xl shadow-black/10">
                 <button type="button" role="menuitem" onClick={() => { onAddBreakpoint("Tablet", 810); setMenu(false); }} className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-sm transition hover:bg-secondary"><span>Tablet</span><span className="text-xs text-muted-foreground">810</span></button>
                 <button type="button" role="menuitem" onClick={() => { onAddBreakpoint("Phone", 390); setMenu(false); }} className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-sm transition hover:bg-secondary"><span>Phone</span><span className="text-xs text-muted-foreground">390</span></button>
@@ -167,6 +169,7 @@ export function BreakpointPlusMenu({
   onAdd: (name: string, width: number) => void;
   onCustom: () => void;
 }) {
+  const t = useTranslations("website");
   return (
     <div
       style={{
@@ -182,7 +185,7 @@ export function BreakpointPlusMenu({
       <div className="relative">
         <button
           type="button"
-          aria-label="Haltepunkt hinzufügen"
+          aria-label={t("editor.addBreakpoint")}
           onClick={onToggle}
           className={
             "flex size-6 items-center justify-center rounded-md transition " +
@@ -196,7 +199,7 @@ export function BreakpointPlusMenu({
             {/* Klick daneben schließt. */}
             <button
               type="button"
-              aria-label="Menü schließen"
+              aria-label={t("editor.closeMenu")}
               onClick={onClose}
               className="fixed inset-0 z-40 cursor-default"
             />
@@ -248,7 +251,7 @@ export function BreakpointPlusMenu({
   );
 }
 
-// „Neuer Haltepunkt"-Dialog (Framer „New Breakpoint"): zentriertes Modal mit
+// „{t("editor.newBreakpoint")}"-Dialog (Framer „New Breakpoint"): zentriertes Modal mit
 // Name + Width, Erklärtext, Stornieren/Hinzufügen. „Hinzufügen" erst aktiv, wenn
 // eine gültige Breite eingegeben ist.
 export function BreakpointDialog({
@@ -258,6 +261,7 @@ export function BreakpointDialog({
   onCancel: () => void;
   onAdd: (name: string, width: number) => void;
 }) {
+  const t = useTranslations("website");
   const [name, setName] = useState("");
   const [width, setWidth] = useState("");
   const w = parseInt(width, 10);
@@ -269,9 +273,9 @@ export function BreakpointDialog({
   }, [onCancel]);
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <button type="button" aria-label="Schließen" onClick={onCancel} className="absolute inset-0 cursor-default bg-black/10" />
+      <button type="button" aria-label={t("editor.close")} onClick={onCancel} className="absolute inset-0 cursor-default bg-black/10" />
       <div className="relative w-80 rounded-2xl border border-border bg-card p-4 shadow-2xl shadow-black/20">
-        <p className="mb-3 text-sm font-semibold">Neuer Haltepunkt</p>
+        <p className="mb-3 text-sm font-semibold">{t("editor.newBreakpoint")}</p>
         <div className="flex gap-2">
           <input
             autoFocus

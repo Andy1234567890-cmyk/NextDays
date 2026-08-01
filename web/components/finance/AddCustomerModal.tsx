@@ -113,6 +113,7 @@ function AddCustomerModal({
   nextSupplierNumber = 'LF-001',
 }: AddCustomerModalProps) {
   const t = useTranslations('finance');
+  const tCountry = useTranslations('countries');
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [contactType, setContactType] = useState<'customer' | 'supplier'>('customer');
@@ -691,16 +692,16 @@ function AddCustomerModal({
                     className="w-full"
                     required
                   >
-                    <option value="Deutschland">Deutschland</option>
-                    <option value="Österreich">Österreich</option>
-                    <option value="Schweiz">Schweiz</option>
-                    <option value="Niederlande">Niederlande</option>
-                    <option value="Belgien">Belgien</option>
-                    <option value="Frankreich">Frankreich</option>
-                    <option value="Italien">Italien</option>
-                    <option value="Spanien">Spanien</option>
-                    <option value="Polen">Polen</option>
-                    <option value="Tschechien">Tschechien</option>
+                    <option value="Deutschland">{tCountry("DE")}</option>
+                    <option value="Österreich">{tCountry("AT")}</option>
+                    <option value="Schweiz">{tCountry("CH")}</option>
+                    <option value="Niederlande">{tCountry("NL")}</option>
+                    <option value="Belgien">{tCountry("BE")}</option>
+                    <option value="Frankreich">{tCountry("FR")}</option>
+                    <option value="Italien">{tCountry("IT")}</option>
+                    <option value="Spanien">{tCountry("ES")}</option>
+                    <option value="Polen">{tCountry("PL")}</option>
+                    <option value="Tschechien">{tCountry("CZ")}</option>
                     <option value="Andere">Andere</option>
                   </NativeSelect>
                 </div>

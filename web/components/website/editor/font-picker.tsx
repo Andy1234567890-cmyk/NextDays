@@ -5,6 +5,7 @@
 // zur Laufzeit geladen (ensureGoogleFontLoaded) und der Wert nach oben gemeldet.
 // Wird sowohl global (Typography) als auch je Element (FrameInspektor) genutzt.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -31,6 +32,7 @@ export function FontPicker({
   onChange: (family: string) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("website");
   const [catalog, setCatalog] = useState<GoogleFontEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -69,10 +71,10 @@ export function FontPicker({
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Schrift suchen …"
+          placeholder={t("editor.searchFont")}
           className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground"
         />
-        <button type="button" aria-label="schließen" onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground">
+        <button type="button" aria-label={t("editor.closeLower")} onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground">
           <Icon icon="ph:x" className="size-3.5" />
         </button>
       </div>
@@ -92,9 +94,9 @@ export function FontPicker({
         {error ? (
           <p className="px-2 py-6 text-center text-xs text-muted-foreground">{error}</p>
         ) : !catalog ? (
-          <p className="px-2 py-6 text-center text-xs text-muted-foreground">Lade Katalog …</p>
+          <p className="px-2 py-6 text-center text-xs text-muted-foreground">{t("editor.loadingCatalog")}</p>
         ) : filtered.length === 0 ? (
-          <p className="px-2 py-6 text-center text-xs text-muted-foreground">Keine Treffer</p>
+          <p className="px-2 py-6 text-center text-xs text-muted-foreground">{t("editor.noMatches")}</p>
         ) : (
           filtered.map((f) => {
             const on = f.family === value;

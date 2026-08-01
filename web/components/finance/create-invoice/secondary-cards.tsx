@@ -21,15 +21,13 @@ import {
   Switch,
   Textarea,
 } from '@tasko/ui';
-import { useTranslations } from 'next-intl';
-import { type Dispatch, type SetStateAction, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { type Dispatch, type SetStateAction, useState, useMemo } from 'react';
 import FooterTextEditor from '@/components/finance/FooterTextEditor';
 import { TaxRuleSelector } from '@/components/finance/TaxRuleSelector';
 import { getAllCurrencies } from '@/data/currencies';
 import type { CreateInvoiceFormData } from '@/types/formData';
 
-// Währungen: alle ISO-4217 Codes mit lokalisierten Namen (deps-frei → Modul-Konstante)
-const allCurrencies = getAllCurrencies('de-DE');
 
 type SecondaryCardsProps = {
   uid: string;
@@ -75,6 +73,9 @@ export default function SecondaryCards({
   // Lokaler UI-State: Ein-/Ausblenden der weiteren Optionen
   const [showDetailedOptions, setShowDetailedOptions] = useState(false);
   const t = useTranslations('finance');
+  const locale = useLocale();
+  // Währungsnamen in der Sprache der Oberfläche (kein festes de-DE).
+  const allCurrencies = useMemo(() => getAllCurrencies(locale), [locale]);
 
   return (
     <>

@@ -181,7 +181,7 @@ export class CustomerService {
   /**
    * Exportiert Kunden als CSV
    */
-  static async exportCustomersCSV(companyId: string): Promise<string> {
+  static async exportCustomersCSV(companyId: string, locale: string): Promise<string> {
     try {
       const customers = await CustomerService.getCustomers(companyId);
 
@@ -219,7 +219,7 @@ export class CustomerService {
             customer.vatId || '',
             customer.totalInvoices?.toString() || '0',
             customer.totalAmount?.toFixed(2) || '0.00',
-            new Date(String(customer.createdAt)).toLocaleDateString('de-DE'),
+            new Date(String(customer.createdAt)).toLocaleDateString(locale),
           ].join(','),
         ),
       ];

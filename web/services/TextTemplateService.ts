@@ -1,5 +1,7 @@
 'use client';
 
+import { documentTranslations } from '@/hooks/pdf/document-translations';
+import { resolveDocumentLanguage } from '@/hooks/pdf/useDocumentTranslation';
 import { api } from '@/lib/api-client';
 import { currencySymbol, formatCurrency } from '@/lib/currency';
 import type { TextTemplate } from '@/types/textTemplates';
@@ -181,10 +183,12 @@ export class TextTemplateService {
     const fmtCurrency = (value?: number) =>
       typeof value === 'number' ? formatCurrency(value, data.currency) : '';
 
+    // Datumsformat des DOKUMENTS: dieselbe Sprache wie der Textbaustein.
+    const dateLocale = documentTranslations[resolveDocumentLanguage(language)].dateLocale;
     const formatDate = (date?: Date | string) => {
       if (!date) return '';
       const d = typeof date === 'string' ? new Date(date) : date;
-      return d.toLocaleDateString('de-DE');
+      return d.toLocaleDateString(dateLocale);
     };
 
     const getFullSalutation = () => {

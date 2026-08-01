@@ -6,7 +6,7 @@
 // Bearbeitung je Block über einen Sheet-Editor; gespeichert wird per
 // updateProperty() in das flexible Feld type_attributes.policies.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 
 import {
@@ -62,10 +62,10 @@ type Section =
 
 // Betrag mit Objekt-Währung formatieren; ohne gültigen Code reine Zahl (kein
 // erfundenes € — Projektregel: keine Fallback-Ersatzwerte, kein €-Hardcode).
-function money(amount: number, currency: string | null | undefined): string {
+function money(amount: number, currency: string | null | undefined, locale: string): string {
   const code = typeof currency === "string" ? currency.trim().toUpperCase() : "";
   const valid = /^[A-Z]{3}$/.test(code);
-  return amount.toLocaleString("de-DE", valid ? { style: "currency", currency: code } : {});
+  return amount.toLocaleString(locale, valid ? { style: "currency", currency: code } : {});
 }
 
 export function PoliciesForm({
@@ -76,6 +76,7 @@ export function PoliciesForm({
   currency: string | null;
 }) {
   const t = useTranslations("objects");
+  const locale = useLocale();
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
   const pol = readPolicies(p.type_attributes);
@@ -112,7 +113,7 @@ export function PoliciesForm({
               <Summary title={t("policiesForm.paymentPlanLabel")} text={paymentSummary(pol.policy, t)} />
               <Summary title={t("policiesForm.cancellationLabel")} text={CANCELLATION_OPTIONS.find((o) => o.value === pol.policy.cancellationType)?.info ?? ""} />
               {pol.policy.depositMode === "amount" && (
-                <Summary title={t("policiesForm.depositLabel")} text={t("policiesForm.depositWithheldText", { amount: money(pol.policy.depositAmount, currency) })} />
+                <Summary title={t("policiesForm.depositLabel")} text={t("policiesForm.depositWithheldText", { amount: money(pol.policy.depositAmount, currency, locale) })} />
               )}
             </div>
           ) : (
@@ -231,6 +232,7 @@ function PolicyEditor({
   currency: string | null;
   t: ReturnType<typeof useTranslations>;
 }) {
+  const locale = useLocale();
   const [creating, setCreating] = useState(false);
   const [v, setV] = useState<Policy>(pol.policy);
   const { busy, error, run } = useSaver(onSave);
@@ -354,7 +356,7 @@ function PolicyEditor({
             <Summary title={t("policiesForm.paymentPlanLabel")} text={paymentSummary(p, t)} />
             <Summary title={t("policiesForm.cancellationLabel")} text={CANCELLATION_OPTIONS.find((o) => o.value === p.cancellationType)?.info ?? ""} />
             {p.depositMode === "amount" && (
-              <Summary title={t("policiesForm.depositLabel")} text={t("policiesForm.depositWithheldText", { amount: money(p.depositAmount, currency) })} />
+              <Summary title={t("policiesForm.depositLabel")} text={t("policiesForm.depositWithheldText", { amount: money(p.depositAmount, currency, locale) })} />
             )}
           </div>
         </div>

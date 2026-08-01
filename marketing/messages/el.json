@@ -34,10 +34,10 @@
     "kanaeleLabel": "Συνδεδεμένη με τις μεγάλες πλατφόρμες κρατήσεων",
     "eyebrow": "Η πλατφόρμα για ιδιοκτήτες τουριστικών καταλυμάτων",
     "kanaeleEyebrow": "Κανάλια διάθεσης",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+    "aufnahmeBelegungsplan": "Πίνακας πληρότητας του myNextDays: οκτώ καταλύματα διακοπών με κρατήσεις από Booking.com, Airbnb, Vrbo, την αγορά και απευθείας κρατήσεις",
+    "aufnahmeHotel": "Πίνακας πληρότητας ξενοδοχείου στο myNextDays: δώδεκα δωμάτια, το καθένα ως ξεχωριστή κρατήσιμη μονάδα",
+    "aufnahmeObjekte": "Επισκόπηση καταλυμάτων στο myNextDays με φωτογραφίες, κατάσταση και ορατότητα ανά κανάλι",
+    "aufnahmeKanaele": "Διαχείριση καναλιών στο myNextDays: συνδεδεμένες πύλες κρατήσεων και η δική μας αγορά"
   },
   "intro": {
     "heading": "Καλώς ήρθατε στη myNextDays.",
@@ -351,20 +351,20 @@
     "fehler": "Κάτι δεν πήγε καλά. Δοκιμάστε ξανά αργότερα."
   },
   "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+    "eyebrow": "Μέσα στο προϊόν",
+    "heading": "Πώς λειτουργεί πραγματικά το myNextDays",
+    "sub": "Καμία σχεδιασμένη προβολή — στιγμιότυπα από μια επιχείρηση σε λειτουργία με πραγματικές κρατήσεις από όλα τα κανάλια.",
     "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+      "title": "Ξενοδοχείο και κατάλυμα διακοπών σε ένα περιβάλλον",
+      "text": "Κάθε δωμάτιο είναι δική του κρατήσιμη μονάδα — το ίδιο μοντέλο με την εξοχική κατοικία. Ο πίνακας πληρότητας δείχνει αφίξεις, διαμονές και αναχωρήσεις ανά μονάδα, μαζί με πληρότητα, τζίρο και μέση τιμή ανά διανυκτέρευση για την περίοδο."
     },
     "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+      "title": "Ορατότητα ανά κανάλι, όχι ένας διακόπτης για όλα",
+      "text": "Ο ιστότοπος, η αγορά και οι πύλες κρατήσεων είναι τρεις ξεχωριστοί άξονες. Ένα κατάλυμα μπορεί να παραμένει ενεργό στη δική σας σελίδα ενώ στις πύλες είναι σε παύση — φαίνεται με μια ματιά, αλλάζει με ένα κλικ."
     },
     "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+      "title": "Συνδέστε πύλες και κρατήστε τη δική σας διάθεση",
+      "text": "Το Booking.com, το Airbnb και άλλες πύλες βασίζονται στην ίδια διαθεσιμότητα με την απευθείας κράτηση. Μια κρατημένη νύχτα κλείνει παντού — χωρίς διπλή κράτηση, χωρίς χειροκίνητη διόρθωση."
     }
   }
 }

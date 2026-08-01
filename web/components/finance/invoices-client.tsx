@@ -6,7 +6,7 @@
 // aus der NextDays-Session (tenant_id) statt aus einem URL-Parameter.
 import { Icon } from "@iconify/react";
 import { Button } from "@tasko/ui";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -19,6 +19,7 @@ import type { InvoiceData } from "@/types/invoiceTypes";
 
 export function InvoicesClient({ companyId }: { companyId: string }) {
   const t = useTranslations("finance");
+  const locale = useLocale();
   // Fokus-Rechnung (?invoice=<id>): Ziel des Redirects nach dem Check-out im
   // Kalender („Rechnung ansehen & versenden") — wird oben hervorgehoben.
   const searchParams = useSearchParams();
@@ -98,7 +99,7 @@ export function InvoicesClient({ companyId }: { companyId: string }) {
               <p className="text-xs text-muted-foreground">
                 {focused.customerName}
                 {focused.total != null && focused.currency
-                  ? ` · ${focused.total.toLocaleString("de-DE", { style: "currency", currency: focused.currency })}`
+                  ? ` · ${focused.total.toLocaleString(locale, { style: "currency", currency: focused.currency })}`
                   : ""}
                 {` · ${t("invoicesClient.statusLabel", { status: focused.status })}`}
               </p>

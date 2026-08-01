@@ -6,7 +6,7 @@
 // Icons. Objektauswahl + Monats-Navigation oben. Realtime auf den relevanten
 // Tabellen (availability/reservations/price_overrides), kein Polling.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Prop } from "@/components/kalender/calendar-board";
@@ -48,6 +48,7 @@ export function CalendarMonthGridView({
   initialPropertyId?: string | null;
 }) {
   const t = useTranslations("calendar");
+  const locale = useLocale();
   const today = useMemo(() => new Date(), []);
   const [propertyId, setPropertyId] = useState<string>(
     initialPropertyId || properties[0]?.id || "",
@@ -185,7 +186,7 @@ export function CalendarMonthGridView({
     if (price == null) return "–";
     return currency
       ? formatCurrency(price, currency)
-      : price.toLocaleString("de-DE", { maximumFractionDigits: 0 });
+      : price.toLocaleString(locale, { maximumFractionDigits: 0 });
   }
 
   return (

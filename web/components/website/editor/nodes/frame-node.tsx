@@ -4,6 +4,7 @@
 // motion.div (Auswirkungen/Overrides wirken real), Auswahl-Chrome mit 8 Zieh-
 // griffen, Radius-Griffen und Abstands-Indikatoren.
 import { useNode } from "@craftjs/core";
+import { useTranslations } from "next-intl";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useLayoutEffect, useRef, useState } from "react";
 
@@ -142,6 +143,7 @@ export function FrameBody({ p, children }: { p: FrameProps; children: React.Reac
 }
 
 export function FrameNode(props: Partial<FrameProps> & { children?: React.ReactNode }) {
+  const t = useTranslations("website");
   const {
     connectors: { connect },
     actions: { setProp },
@@ -388,7 +390,7 @@ export function FrameNode(props: Partial<FrameProps> & { children?: React.ReactN
               <span
                 key={`r-${cx}-${cy}`}
                 onMouseDown={(e) => startRadius(e, cx, cy)}
-                title="Ecken abrunden"
+                title={t("editor.roundCorners")}
                 style={{
                   position: "absolute",
                   left: cx === -1 ? off : undefined,

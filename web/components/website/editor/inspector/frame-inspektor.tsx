@@ -5,6 +5,7 @@
 // Overlays, Cursor, Stile (mit ⊕-Variablen-Bindung), Scrollabschnitt,
 // Zugänglichkeit, Codeüberschreibungen.
 import { useEditor } from "@craftjs/core";
+import { useTranslations } from "next-intl";
 import { Icon } from "@iconify/react";
 import { useRef, useState } from "react";
 
@@ -63,6 +64,7 @@ import {
 // Vollständig wie Framer: bearbeitet die echten Frame-Props (x/y/w/h/fill/…)
 // live über setProp. Jede Änderung wirkt sofort auf das Objekt der Canvas.
 export function FrameInspektor({ id }: { id: string }) {
+  const t = useTranslations("website");
   const { props, dom, actions } = useEditor((state) => ({
     props: (state.nodes[id]?.data.props ?? {}) as Record<string, unknown>,
     dom: state.nodes[id]?.dom ?? null,
@@ -297,8 +299,8 @@ export function FrameInspektor({ id }: { id: string }) {
       <Section title="Wechselwirkungen" action={<PlusBtn />} />
 
       <Section title="Link" action={<PlusBtn />}>
-        <Row label="Link zu">
-          <TextField value={s("href", "")} placeholder="Seite oder URL …" onChange={(v) => set((p) => { p.href = v; })} />
+        <Row label={t("editor.linkTo")}>
+          <TextField value={s("href", "")} placeholder={t("editor.pageOrUrl")} onChange={(v) => set((p) => { p.href = v; })} />
         </Row>
       </Section>
 
@@ -326,7 +328,7 @@ export function FrameInspektor({ id }: { id: string }) {
         </Row>
       </Section>
 
-      <Section title="Größe" action={<PlusBtn />}>
+      <Section title={t("editor.size")} action={<PlusBtn />}>
         <Row label="Breite">
           <Padlock locked={locked} onToggle={() => setLocked((v) => !v)} />
           <NumStepper value={w} disabled={s("widthMode", "fixed") !== "fixed" && s("widthMode", "fixed") !== "relative"} onChange={(nv) => set((p) => {
@@ -338,10 +340,10 @@ export function FrameInspektor({ id }: { id: string }) {
             <option value="fixed">Fixed</option>
             <option value="relative">Relative</option>
             <option value="fill">Fill</option>
-            <option value="fit">Fit Content</option>
+            <option value="fit">{t("editor.fitContent")}</option>
           </Select>
         </Row>
-        <Row label="Höhe">
+        <Row label={t("editor.height")}>
           <span className="w-5 shrink-0" aria-hidden />
           <NumStepper value={h} disabled={s("heightMode", "fixed") !== "fixed" && s("heightMode", "fixed") !== "relative"} onChange={(nv) => set((p) => {
             const nh = Math.max(20, nv);
@@ -352,11 +354,11 @@ export function FrameInspektor({ id }: { id: string }) {
             <option value="fixed">Fixed</option>
             <option value="relative">Relative</option>
             <option value="fill">Fill</option>
-            <option value="fit">Fit Content</option>
+            <option value="fit">{t("editor.fitContent")}</option>
             <option value="viewport">Viewport</option>
           </Select>
         </Row>
-        <Row label="Min Max">
+        <Row label={t("editor.minMax")}>
           <button
             type="button"
             onClick={() => setMinMaxOpen((v) => !v)}
@@ -368,10 +370,10 @@ export function FrameInspektor({ id }: { id: string }) {
         </Row>
         {minMaxOpen ? (
           <>
-            <Row label="Min B"><NumStepper value={n("minW", 0)} onChange={(v) => set((p) => { p.minW = Math.max(0, v); })} /></Row>
-            <Row label="Max B"><NumStepper value={n("maxW", 0)} onChange={(v) => set((p) => { p.maxW = Math.max(0, v); })} /></Row>
-            <Row label="Min H"><NumStepper value={n("minH", 0)} onChange={(v) => set((p) => { p.minH = Math.max(0, v); })} /></Row>
-            <Row label="Max H"><NumStepper value={n("maxH", 0)} onChange={(v) => set((p) => { p.maxH = Math.max(0, v); })} /></Row>
+            <Row label={t("editor.minW")}><NumStepper value={n("minW", 0)} onChange={(v) => set((p) => { p.minW = Math.max(0, v); })} /></Row>
+            <Row label={t("editor.maxW")}><NumStepper value={n("maxW", 0)} onChange={(v) => set((p) => { p.maxW = Math.max(0, v); })} /></Row>
+            <Row label={t("editor.minH")}><NumStepper value={n("minH", 0)} onChange={(v) => set((p) => { p.minH = Math.max(0, v); })} /></Row>
+            <Row label={t("editor.maxH")}><NumStepper value={n("maxH", 0)} onChange={(v) => set((p) => { p.maxH = Math.max(0, v); })} /></Row>
           </>
         ) : null}
       </Section>
@@ -406,7 +408,7 @@ export function FrameInspektor({ id }: { id: string }) {
           {/* Spalte 1: ⊕-Badge (eigene schmale Spalte, klaut keinen Label-Platz).
               Spalte 2: Label „Opazität" (voll lesbar). Spalte 3: Wert/Slider. */}
           <VarBadge bound={!!boundVar} onClick={() => (boundVar ? setVarEditor(true) : setVarMenu((v) => !v))} />
-          <Label className={"truncate text-xs " + (boundVar ? "text-primary" : "text-muted-foreground")}>Opazität</Label>
+          <Label className={"truncate text-xs " + (boundVar ? "text-primary" : "text-muted-foreground")}>{t("editor.opacity")}</Label>
           <div className="flex min-w-0 items-center gap-2">
             {boundVar ? (
               <VarChip name={boundVar.name} onOpen={() => setVarEditor(true)} onUnbind={unbindOpacityVar} />
@@ -480,7 +482,7 @@ export function FrameInspektor({ id }: { id: string }) {
         </div>
         <div ref={fillRowRef} className="relative">
           <Row
-            label="Füllen"
+            label={t("editor.fill")}
             bound={!!boundFillVar}
             onVarClick={() => (boundFillVar ? setFillVarEditor(true) : setFillVarMenu((v) => !v))}
           >
@@ -505,7 +507,7 @@ export function FrameInspektor({ id }: { id: string }) {
         </div>
         <div ref={overflowRowRef} className="relative">
           <Row
-            label="Überlauf"
+            label={t("editor.overflow")}
             bound={!!boundOverflowVar}
             onVarClick={() => (boundOverflowVar ? setOverflowCondDialog(true) : setOverflowVarMenu((v) => !v))}
           >
@@ -561,7 +563,7 @@ export function FrameInspektor({ id }: { id: string }) {
                 {s("fontFamily", "") || "Erben"}
               </span>
               {s("fontFamily", "") ? (
-                <button type="button" onClick={(e) => { e.stopPropagation(); set((p) => { p.fontFamily = null; }); }} className="ml-auto flex size-4 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-secondary" aria-label="Schrift zurücksetzen"><Icon icon="ph:x" className="size-3" /></button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); set((p) => { p.fontFamily = null; }); }} className="ml-auto flex size-4 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-secondary" aria-label={t("editor.resetFont")}><Icon icon="ph:x" className="size-3" /></button>
               ) : (
                 <Icon icon="ph:caret-down" className="ml-auto size-3 shrink-0 text-muted-foreground" />
               )}
@@ -598,8 +600,8 @@ export function FrameInspektor({ id }: { id: string }) {
                   <NumStepper value={n("radius", 0)} onChange={(nv) => set((p) => { p.radius = Math.max(0, nv); })} />
                 )}
                 <div className="flex shrink-0 items-center gap-1">
-                  <RadiusModeBtn label="Alle Ecken" active={!radiusPerCorner} icon="ph:square" onClick={() => setRadiusPerCorner(false)} />
-                  <RadiusModeBtn label="Ecken einzeln" active={radiusPerCorner} icon="ph:frame-corners" onClick={() => setRadiusPerCorner(true)} />
+                  <RadiusModeBtn label={t("editor.allCorners")} active={!radiusPerCorner} icon="ph:square" onClick={() => setRadiusPerCorner(false)} />
+                  <RadiusModeBtn label={t("editor.cornersSeparate")} active={radiusPerCorner} icon="ph:frame-corners" onClick={() => setRadiusPerCorner(true)} />
                 </div>
               </>
             )}
@@ -666,7 +668,7 @@ export function FrameInspektor({ id }: { id: string }) {
             {border ? (
               <button
                 type="button"
-                aria-label="Grenze entfernen"
+                aria-label={t("editor.removeBorder")}
                 onClick={() => { set((p) => { p.border = undefined; }); setBorderPopup(false); }}
                 className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"
               >
@@ -711,7 +713,7 @@ export function FrameInspektor({ id }: { id: string }) {
               />
             </div>
           </Row>
-          <Row label="Offset Y">
+          <Row label={t("editor.offsetY")}>
             <NumStepper value={n("scrollSectionOffsetY", 0)} onChange={(v) => set((p) => { p.scrollSectionOffsetY = v; })} />
           </Row>
         </Section>
@@ -721,11 +723,11 @@ export function FrameInspektor({ id }: { id: string }) {
 
       {/* Zugänglichkeit (Framer): Google Bot — Skip (data-nosnippet) wird real
           als Attribut am Frame gerendert. */}
-      <Section title="Zugänglichkeit" action={<PlusBtn />}>
-        <Row label="Google Bot">
+      <Section title={t("editor.accessibility")} action={<PlusBtn />}>
+        <Row label={t("editor.googleBot")}>
           <Select value={s("googleBot", "none")} onChange={(v) => set((p) => { p.googleBot = v; })}>
-            <option value="no-snippet">Skip (data-nosnippet)</option>
-            <option value="none">Include (default)</option>
+            <option value="no-snippet">{t("editor.botSkip")}</option>
+            <option value="none">{t("editor.botInclude")}</option>
           </Select>
         </Row>
       </Section>
@@ -733,7 +735,7 @@ export function FrameInspektor({ id }: { id: string }) {
       {/* Codeüberschreibungen (Framer „Code Overrides"): Datei wählen/anlegen
           (neue Datei = Beispiel-Template), Override-Funktion wählen (aus den
           Exporten geparst), „Edit Code" öffnet den Code-Editor in der Mitte. */}
-      <Section title="Codeüberschreibungen" action={<PlusBtn />}>
+      <Section title={t("editor.codeOverrides")} action={<PlusBtn />}>
         <Row label="Datei">
           <Select
             value={s("codeOverrideFile", "") || ""}
@@ -745,10 +747,10 @@ export function FrameInspektor({ id }: { id: string }) {
             {s("codeOverrideFile", "") ? (
               <option value={s("codeOverrideFile", "")}>{s("codeOverrideFile", "")}</option>
             ) : (
-              <option value="" disabled>Auswählen …</option>
+              <option value="" disabled>{t("editor.choose")}</option>
             )}
             <hr />
-            <option value="__new__">Neue Datei …</option>
+            <option value="__new__">{t("editor.newFile")}</option>
           </Select>
         </Row>
         {newCodeFile ? (
@@ -756,7 +758,7 @@ export function FrameInspektor({ id }: { id: string }) {
             <TextField value={codeFileName} placeholder="Overrides.tsx" onChange={setCodeFileName} />
             <button
               type="button"
-              aria-label="Datei anlegen"
+              aria-label={t("editor.createFile")}
               onClick={() => {
                 const name = codeFileName.trim();
                 if (!name) return;
@@ -776,7 +778,7 @@ export function FrameInspektor({ id }: { id: string }) {
         ) : null}
         {s("codeOverrideFile", "") ? (
           <>
-            <Row label="Überschreiben">
+            <Row label={t("editor.override")}>
               <Select value={s("codeOverride", "") || ""} onChange={(v) => set((p) => { p.codeOverride = v || null; })}>
                 <option value="" disabled>Select…</option>
                 <hr />

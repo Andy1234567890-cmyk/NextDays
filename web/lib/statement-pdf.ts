@@ -6,12 +6,12 @@
 // (Vermietungs-Aktivität + Auszahlungen) als eine klassische Positions-Rechnung.
 import type { Statement } from "@/lib/owner-statements";
 
-function fmt(amount: number, currency: string): string {
+function fmt(amount: number, currency: string, locale: string): string {
   // Ungültige/leere Währung: reine Zahl OHNE Symbol (kein erfundenes EUR, kein
   // Intl-Crash) — konsistent zu lib/currency.formatCurrency, keine EUR-Erfindung.
   const code = typeof currency === "string" ? currency.trim().toUpperCase() : "";
   const valid = /^[A-Z]{3}$/.test(code);
-  return new Intl.NumberFormat("de-DE", {
+  return new Intl.NumberFormat(locale, {
     ...(valid ? { style: "currency" as const, currency: code } : {}),
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -32,7 +32,7 @@ function line(value: string | null | undefined, strong = false): string {
   return strong ? `<p><strong>${v}</strong></p>` : `<p>${v}</p>`;
 }
 
-export function buildStatementHtml(st: Statement): string {
+export function buildStatementHtml(st: Statement, locale: string): string {
   const h = st.header;
   const cur = st.summary.currency;
   const ownerCur = st.summary.owner_currency || cur;
@@ -50,16 +50,16 @@ export function buildStatementHtml(st: Statement): string {
       // Owner-Auszahlung umgerechnet + Kurs-Hinweis, wenn Währung abweicht.
       const conv =
         rc !== ownerCur
-          ? `${fmt(r.owner_payout_converted, ownerCur)}<br><span style="color:#999;font-size:9px">${fmt(r.owner_payout, rc)} · Kurs ${r.fx_rate} (${esc(r.fx_date)})</span>`
-          : fmt(r.owner_payout, ownerCur);
+          ? `${fmt(r.owner_payout_converted, ownerCur, locale)}<br><span style="color:#999;font-size:9px">${fmt(r.owner_payout, rc, locale)} · Kurs ${r.fx_rate} (${esc(r.fx_date)})</span>`
+          : fmt(r.owner_payout, ownerCur, locale);
       return `
       <tr>
         <td>${esc(r.guest) || "—"}</td>
         <td>${r.nights}</td>
         <td>${esc(r.listing) || "—"}</td>
         <td style="text-transform:capitalize">${esc(r.channel)}</td>
-        <td class="num">${fmt(r.total_price, rc)}</td>
-        <td class="num">${fmt(r.total_payout, rc)}</td>
+        <td class="num">${fmt(r.total_price, rc, locale)}</td>
+        <td class="num">${fmt(r.total_payout, rc, locale)}</td>
         <td class="num">${conv}</td>
       </tr>`;
     })
@@ -72,14 +72,14 @@ export function buildStatementHtml(st: Statement): string {
         <td>${esc(e.concept)}</td>
         <td>${esc(e.date)}</td>
         <td>${esc(e.category) || "—"}</td>
-        <td class="num">${fmt(e.amount, cur)}</td>
+        <td class="num">${fmt(e.amount, cur, locale)}</td>
       </tr>`,
     )
     .join("");
 
   const taxLine =
     st.tax.category === "S"
-      ? `<div class="row"><span>Umsatzsteuer (${st.tax.rate}%)</span><span>${fmt(st.tax.tax, cur)}</span></div>`
+      ? `<div class="row"><span>Umsatzsteuer (${st.tax.rate}%)</span><span>${fmt(st.tax.tax, cur, locale)}</span></div>`
       : `<div class="row"><span>Umsatzsteuer</span><span>${esc(st.tax.exemption_reason) || "0,00"}</span></div>`;
 
   return `<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
@@ -155,24 +155,24 @@ export function buildStatementHtml(st: Statement): string {
       ${st.summary.totals_by_currency
         .map(
           (c) =>
-            `<div class="row"><span>Auszahlung (${esc(c.currency)})</span><span>${fmt(c.amount, c.currency)}</span></div>`,
+            `<div class="row"><span>Auszahlung (${esc(c.currency)})</span><span>${fmt(c.amount, c.currency, locale)}</span></div>`,
         )
         .join("")}
       ${st.summary.pm_payout_by_currency
         .map(
           (c) =>
-            `<div class="row"><span>Verwaltungs-Auszahlung (${esc(c.currency)})</span><span>${fmt(c.amount, c.currency)}</span></div>`,
+            `<div class="row"><span>Verwaltungs-Auszahlung (${esc(c.currency)})</span><span>${fmt(c.amount, c.currency, locale)}</span></div>`,
         )
         .join("")}
-      <div class="row grand"><span>Eigentümer-Auszahlung (${esc(ownerCur)})</span><span>${fmt(st.summary.owner_payout, ownerCur)}</span></div>
+      <div class="row grand"><span>Eigentümer-Auszahlung (${esc(ownerCur)})</span><span>${fmt(st.summary.owner_payout, ownerCur, locale)}</span></div>
     </div>`
         : `<div class="totals">
-      <div class="row"><span>Mieteinnahmen</span><span>${fmt(st.summary.total_price, cur)}</span></div>
-      <div class="row"><span>Gesamt-Auszahlung</span><span>${fmt(st.summary.total_payout, cur)}</span></div>
-      <div class="row"><span>Ausgaben</span><span>${fmt(st.summary.expenses_total, cur)}</span></div>
+      <div class="row"><span>Mieteinnahmen</span><span>${fmt(st.summary.total_price, cur, locale)}</span></div>
+      <div class="row"><span>Gesamt-Auszahlung</span><span>${fmt(st.summary.total_payout, cur, locale)}</span></div>
+      <div class="row"><span>Ausgaben</span><span>${fmt(st.summary.expenses_total, cur, locale)}</span></div>
       ${st.tax.gross ? taxLine : ""}
-      <div class="row grand"><span>Eigentümer-Auszahlung</span><span>${fmt(st.summary.owner_payout, ownerCur)}</span></div>
-      <div class="row"><span>Verwaltungs-Auszahlung</span><span>${fmt(st.summary.pm_payout, cur)}</span></div>
+      <div class="row grand"><span>Eigentümer-Auszahlung</span><span>${fmt(st.summary.owner_payout, ownerCur, locale)}</span></div>
+      <div class="row"><span>Verwaltungs-Auszahlung</span><span>${fmt(st.summary.pm_payout, cur, locale)}</span></div>
     </div>`
     }
 
@@ -182,11 +182,11 @@ export function buildStatementHtml(st: Statement): string {
 }
 
 /** Erzeugt das PDF über den Render-Dienst und stößt den Download an. */
-export async function downloadStatementPdf(st: Statement): Promise<void> {
+export async function downloadStatementPdf(st: Statement, locale: string): Promise<void> {
   const res = await fetch("/api/v1/generate-pdf-single", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ htmlContent: buildStatementHtml(st) }),
+    body: JSON.stringify({ htmlContent: buildStatementHtml(st, locale) }),
   });
   if (!res.ok) throw new Error("PDF-Generierung fehlgeschlagen.");
   const data = await res.json();

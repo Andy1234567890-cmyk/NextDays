@@ -3,6 +3,7 @@
 // Dashboard den Setup-Assistenten (ersetzt den Inhalt). Danach erscheint das
 // Reservierungs-Dashboard (echte Kennzahlen aus dem Backend).
 import { Icon } from "@iconify/react";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -18,6 +19,7 @@ import { getDashboard } from "@/lib/reservations";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const t = await getTranslations("nav");
   const [onboarding, me] = await Promise.all([
     getOnboarding(),
     getMe(),
@@ -51,7 +53,7 @@ export default async function DashboardPage() {
             <Icon icon="ph:warning-circle" className="size-6" />
           </span>
           <div>
-            <p className="font-medium">Dashboard konnte nicht geladen werden</p>
+            <p className="font-medium">{t("dashboardLoadFailed")}</p>
             <p className="text-sm text-muted-foreground">{dashboard.error}</p>
           </div>
         </CardContent>

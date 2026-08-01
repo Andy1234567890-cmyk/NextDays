@@ -11,7 +11,7 @@ import {
   Label,
   Textarea,
 } from '@tasko/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import { formatCurrency } from '@/lib/currency';
@@ -26,6 +26,7 @@ interface EmailDialogProps {
 
 export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialogProps) {
   const t = useTranslations('finance');
+  const locale = useLocale();
   const [emailTo, setEmailTo] = useState('');
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
@@ -41,7 +42,7 @@ export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialog
         t('EmailDialog.bodyPrefill', {
           invoiceNumber,
           amount: formatCurrency(invoice.total, invoice.currency),
-          dueDate: new Date(invoice.dueDate).toLocaleDateString('de-DE'),
+          dueDate: new Date(invoice.dueDate).toLocaleDateString(locale),
           companyName: invoice.companyName || t('EmailDialog.yourCompanyFallback'),
         }),
       );

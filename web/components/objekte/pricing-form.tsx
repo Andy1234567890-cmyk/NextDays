@@ -6,7 +6,7 @@
 //  Length of stay: Wochen-/Monats-/eigene Längenpreise.
 // Gespeichert per updateProperty() in type_attributes.pricing.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -86,6 +86,7 @@ type Section =
 
 export function PricingForm({ initial }: { initial: Property }) {
   const t = useTranslations("objects");
+  const locale = useLocale();
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -189,7 +190,7 @@ export function PricingForm({ initial }: { initial: Property }) {
             hint={t("pricingForm.basePriceHint")}
             onEdit={() => setSection("base")}
           >
-            <Pill>{fmtPrice(shownBasePrice, cur)}</Pill>
+            <Pill>{fmtPrice(shownBasePrice, cur, locale)}</Pill>
           </BlockCard>
         )}
 
@@ -223,7 +224,7 @@ export function PricingForm({ initial }: { initial: Property }) {
           onEdit={() => setSection("extraGuest")}
         >
           {pr.extraGuestCharge > 0 ? (
-            <Pill>{t("pricingForm.extraGuestPill", { price: fmtPrice(pr.extraGuestCharge, cur), guest: pr.extraGuestFrom + 1 })}</Pill>
+            <Pill>{t("pricingForm.extraGuestPill", { price: fmtPrice(pr.extraGuestCharge, cur, locale), guest: pr.extraGuestFrom + 1 })}</Pill>
           ) : null}
         </BlockCard>
 
@@ -235,7 +236,7 @@ export function PricingForm({ initial }: { initial: Property }) {
           localOnly
         >
           {pr.shortStayMaxNights > 0 ? (
-            <Pill>{t("pricingForm.shortStayPill", { price: fmtPrice(pr.shortStaySurcharge, cur), nights: pr.shortStayMaxNights })}</Pill>
+            <Pill>{t("pricingForm.shortStayPill", { price: fmtPrice(pr.shortStaySurcharge, cur, locale), nights: pr.shortStayMaxNights })}</Pill>
           ) : null}
         </BlockCard>
       </section>
@@ -295,7 +296,7 @@ export function PricingForm({ initial }: { initial: Property }) {
                 <p className="font-semibold">{STAY_KIND_LABELS[lp.kind]}</p>
                 <p className="text-sm text-muted-foreground">{t("pricingForm.minNightsOrMore", { nights: lp.minNights })}</p>
                 <span className="mt-2 inline-flex w-fit items-center rounded-full bg-muted/60 px-3 py-1.5 text-sm">
-                  {t("pricingForm.pricePerNight", { price: fmtPrice(lp.pricePerNight, cur) })}
+                  {t("pricingForm.pricePerNight", { price: fmtPrice(lp.pricePerNight, cur, locale) })}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -327,7 +328,7 @@ export function PricingForm({ initial }: { initial: Property }) {
           <ListRow
             key={f.id}
             title={f.name}
-            pill={`${fmtPrice(f.amount, cur)} · ${FEE_BASIS_LABELS[f.basis]}${f.taxRate != null ? ` · ${t("pricingForm.taxRateSuffix", { rate: f.taxRate })}` : ""
+            pill={`${fmtPrice(f.amount, cur, locale)} · ${FEE_BASIS_LABELS[f.basis]}${f.taxRate != null ? ` · ${t("pricingForm.taxRateSuffix", { rate: f.taxRate })}` : ""
               }${f.optional ? ` · ${t("pricingForm.optionalSuffix")}` : ""}`}
             onEdit={() => setSection({ fee: f.id })}
             onDelete={() => save({ ...pr, fees: pr.fees.filter((x) => x.id !== f.id) })}
@@ -373,7 +374,7 @@ export function PricingForm({ initial }: { initial: Property }) {
             <ListRow
               key={tx.id}
               title={tx.name || TAX_KIND_LABELS[tx.kind]}
-              pill={`${tx.mode === "percent" ? `${tx.value}%` : fmtPrice(tx.value, cur)}${tx.includedInPrice ? ` · ${t("pricingForm.includedInPriceSuffix")}` : ""}`}
+              pill={`${tx.mode === "percent" ? `${tx.value}%` : fmtPrice(tx.value, cur, locale)}${tx.includedInPrice ? ` · ${t("pricingForm.includedInPriceSuffix")}` : ""}`}
               onEdit={() => setSection({ tax: tx.kind, id: tx.id })}
               onDelete={() => save({ ...pr, taxes: pr.taxes.filter((x) => x.id !== tx.id) })}
             />
@@ -413,7 +414,7 @@ export function PricingForm({ initial }: { initial: Property }) {
             key={a.id}
             title={a.name}
             badge={a.active ? t("pricingForm.activated") : undefined}
-            pill={`${fmtPrice(a.amount, cur)} · ${FEE_BASIS_LABELS[a.basis]}`}
+            pill={`${fmtPrice(a.amount, cur, locale)} · ${FEE_BASIS_LABELS[a.basis]}`}
             onEdit={() => setSection({ addon: a.id })}
             onDelete={() => save({ ...pr, addOns: pr.addOns.filter((x) => x.id !== a.id) })}
           />
@@ -1258,13 +1259,14 @@ function RatePlanList({
   onDeleted: () => void;
 }) {
   const t = useTranslations("objects");
+  const locale = useLocale();
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   const offsetLabel = (p: RatePlan): string => {
     const parts: string[] = [];
     if (p.offset_amount != null && p.offset_amount !== 0) {
-      parts.push(`${p.offset_amount > 0 ? "+" : ""}${fmtPrice(p.offset_amount, currency)}`);
+      parts.push(`${p.offset_amount > 0 ? "+" : ""}${fmtPrice(p.offset_amount, currency, locale)}`);
     }
     if (p.offset_percent != null && p.offset_percent !== 0) {
       parts.push(`${p.offset_percent > 0 ? "+" : ""}${p.offset_percent} %`);
@@ -1330,7 +1332,7 @@ function RatePlanList({
             <span className="w-24 shrink-0 text-right text-sm tabular-nums">
               {p.rate_mode === "derived"
                 ? t("pricingForm.planDerivedPrice")
-                : fmtPrice(p.base_price, (p.currency || "") as Currency | "")}
+                : fmtPrice(p.base_price, (p.currency || "") as Currency | "", locale)}
             </span>
             <span className="w-28 shrink-0 text-right text-xs text-muted-foreground">
               {t("pricingForm.planMinStay", { nights: p.min_stay })}

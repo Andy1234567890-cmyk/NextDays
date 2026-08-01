@@ -4,7 +4,7 @@
 // und Objekt-Spalte. Tabs AKTUELL/BEVORSTEHENDE/ABGESCHLOSSEN. Live via
 // useRealtime auf tasks. Klick öffnet das Detail-Modal.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
@@ -14,6 +14,7 @@ import { useRealtime } from "@/lib/use-realtime";
 
 export function TeamTasks() {
   const t = useTranslations("reservations");
+  const locale = useLocale();
 
   const TABS: { key: string; bucket: string; label: string }[] = [
     { key: "current", bucket: "current", label: t("teamTasks.tabs.current") },
@@ -48,7 +49,7 @@ export function TeamTasks() {
 
   const fmt = (iso: string | null) =>
     iso
-      ? new Date(iso).toLocaleDateString("de-DE", {
+      ? new Date(iso).toLocaleDateString(locale, {
         day: "numeric",
         month: "short",
         year: "numeric",

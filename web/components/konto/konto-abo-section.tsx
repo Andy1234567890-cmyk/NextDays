@@ -10,7 +10,7 @@
 // tenant_subscription + commission_ledger, damit Webhook-Änderungen sofort
 // erscheinen.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -86,6 +86,7 @@ function tierLines(pricing: Pricing): string[] {
 }
 
 export function KontoAboSection() {
+  const locale = useLocale();
   const [state, setState] = useState<Loaded | null>(null);
   const [busy, setBusy] = useState(false);
   const [adresseOffen, setAdresseOffen] = useState(false);
@@ -93,6 +94,7 @@ export function KontoAboSection() {
   const [zeigeTarife, setZeigeTarife] = useState(false);
   const [zeigeProvisionen, setZeigeProvisionen] = useState(false);
   // Ländercode → Klarname. Muss VOR den frühen returns stehen (Hook-Regel).
+  const t = useTranslations("account");
   const tCountry = useTranslations("countries");
   const adressZeilen = adresseZeilen(state?.address ?? null, (c) => tCountry(c));
 
@@ -275,7 +277,7 @@ export function KontoAboSection() {
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      aria-label="Weitere Aktionen"
+                      aria-label={t("subscription.moreActions")}
                       className="inline-flex size-9 items-center justify-center rounded-full hover:bg-muted"
                     >
                       <Icon icon="lucide:more-horizontal" className="size-5" />
@@ -310,10 +312,10 @@ export function KontoAboSection() {
         {/* Kennzahlen nebeneinander, durch Trennstriche geteilt */}
         <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
           <Kennzahl
-            label="Nächstes Abrechnungsdatum"
+            label={t("subscription.nextBilling")}
             wert={
               s?.current_period_end
-                ? new Date(s.current_period_end).toLocaleDateString("de-DE", {
+                ? new Date(s.current_period_end).toLocaleDateString(locale, {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
@@ -322,10 +324,10 @@ export function KontoAboSection() {
             }
           />
           <Kennzahl
-            label="Buchungsgebühr"
+            label={t("subscription.bookingFee")}
             wert={
               state.commissions
-                ? `${(state.commissions.current_rate * 100).toLocaleString("de-DE", {
+                ? `${(state.commissions.current_rate * 100).toLocaleString(locale, {
                     maximumFractionDigits: 2,
                   })} %`
                 : "—"
@@ -379,7 +381,7 @@ export function KontoAboSection() {
           <button
             type="button"
             onClick={() => setAdresseOffen(true)}
-            aria-label="Rechnungsadresse bearbeiten"
+            aria-label={t("subscription.editBillingAddress")}
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-muted"
           >
             <Icon icon="lucide:pencil" className="size-4" />
@@ -396,7 +398,7 @@ export function KontoAboSection() {
           <p className="text-sm text-muted-foreground">
             Booking, Airbnb &amp; Co.:{" "}
             {(state.commissions.current_rate * 100)
-              .toLocaleString("de-DE", { maximumFractionDigits: 2 })}{" "}
+              .toLocaleString(locale, { maximumFractionDigits: 2 })}{" "}
             % vom Buchungsumsatz. Wird monatlich abgerechnet.
           </p>
           {state.commissions.pending_count > 0 ? (

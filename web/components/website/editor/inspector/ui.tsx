@@ -4,6 +4,7 @@
 // Textfelder, Stepper, Slider, Popover-Hüllen und Header-Buttons. Reine UI-
 // Primitive ohne Editor-Zustand — von allen Inspektor-Dateien importiert.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Label } from "@nextdays/ui/label";
@@ -171,6 +172,7 @@ export function NumStepper({
   disabled?: boolean;
   onChange?: (v: number) => void;
 }) {
+  const t = useTranslations("website");
   // Nachkommastellen an die Schrittweite koppeln (step<1 → Dezimalwerte erhalten).
   const round = (v: number) => (step < 1 ? Math.round(v / step) * step : Math.round(v));
   const commit = (v: number) => onChange?.(round(v));
@@ -206,7 +208,7 @@ export function NumStepper({
       {axis || unit ? (
         <span
           onMouseDown={startScrub}
-          title="Ziehen zum Ändern"
+          title={t("editor.dragToChange")}
           className="cursor-ew-resize select-none pr-1 text-[0.625rem] uppercase text-muted-foreground"
         >
           {axis ?? unit}
@@ -215,7 +217,7 @@ export function NumStepper({
       {/* Caret-Stepper (wie Framer) */}
       {!disabled ? (
         <div className="flex h-full flex-col border-l border-border">
-          <button type="button" aria-label="erhöhen" onClick={() => bump(1)} className="flex flex-1 w-5 items-center justify-center text-muted-foreground hover:text-foreground">
+          <button type="button" aria-label={t("editor.increase")} onClick={() => bump(1)} className="flex flex-1 w-5 items-center justify-center text-muted-foreground hover:text-foreground">
             <Icon icon="ph:caret-up" className="size-2.5" />
           </button>
           <button type="button" aria-label="verringern" onClick={() => bump(-1)} className="flex flex-1 w-5 items-center justify-center border-t border-border text-muted-foreground hover:text-foreground">
@@ -338,12 +340,13 @@ export function SizeField({
 
 // Padlock (Lock-Aspect-Ratio) — schmal, stiehlt keine Feldbreite.
 export function Padlock({ locked, onToggle }: { locked: boolean; onToggle: () => void }) {
+  const t = useTranslations("website");
   return (
     <button
       type="button"
       onClick={onToggle}
-      title="Seitenverhältnis sperren"
-      aria-label="Seitenverhältnis sperren"
+      title={t("editor.lockAspect")}
+      aria-label={t("editor.lockAspect")}
       aria-pressed={locked}
       className={
         `flex ${FIELD_H} w-5 shrink-0 items-center justify-center rounded transition ` +
@@ -365,6 +368,7 @@ export function Stepper({
   unit?: string;
   onChange: (v: number) => void;
 }) {
+  const t = useTranslations("website");
   return (
     <div className={`${FIELD_BOX} ${FIELD_H} min-w-0 flex-1`}>
       <input
@@ -377,7 +381,7 @@ export function Stepper({
         <button type="button" aria-label="kleiner" onClick={() => onChange(value - 1)} className="flex h-full w-6 items-center justify-center text-muted-foreground hover:text-foreground">
           <Icon icon="ph:minus" className="size-3" />
         </button>
-        <button type="button" aria-label="größer" onClick={() => onChange(value + 1)} className="flex h-full w-6 items-center justify-center border-l border-border text-muted-foreground hover:text-foreground">
+        <button type="button" aria-label={t("editor.zoomIn")} onClick={() => onChange(value + 1)} className="flex h-full w-6 items-center justify-center border-l border-border text-muted-foreground hover:text-foreground">
           <Icon icon="ph:plus" className="size-3" />
         </button>
       </div>
@@ -666,10 +670,11 @@ export function VarBadge({ bound, onClick }: { bound: boolean; onClick: () => vo
 
 // Section-Header mit „+“, das ein Popover öffnet (statt bloßem Icon-Button).
 export function AddBtn({ onClick, active }: { onClick: () => void; active?: boolean }) {
+  const t = useTranslations("website");
   return (
     <button
       type="button"
-      aria-label="Stil hinzufügen"
+      aria-label={t("editor.addStyle")}
       aria-expanded={active}
       onClick={onClick}
       className={
@@ -697,12 +702,12 @@ export const WIDTH_MODES = [
   { value: "fixed", label: "Fixed" },
   { value: "relative", label: "Relative" },
   { value: "fill", label: "Fill" },
-  { value: "fit", label: "Fit Content" },
+  { value: "fit", label: "Fit" },
 ];
 
 export const HEIGHT_MODES = [
   { value: "fixed", label: "Fixed" },
-  { value: "auto", label: "Fit Content" },
+  { value: "auto", label: "Fit" },
 ];
 
 // Gemeinsamer Typ für die Inspektor-Helper (props lesen, set schreiben).
@@ -723,10 +728,11 @@ export function IconSeg({ active, onClick, icon, label, first }: { active: boole
 }
 
 export function PlusBtn() {
+  const t = useTranslations("website");
   return (
     <button
       type="button"
-      aria-label="hinzufügen"
+      aria-label={t("editor.add")}
       className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"
     >
       <Icon icon="ph:plus" className="size-3.5" />
@@ -736,10 +742,11 @@ export function PlusBtn() {
 
 // Wie PlusBtn, aber mit echter Aktion (z. B. „+" in der Auswirkungen-Sektion).
 export function AddInlineBtn({ onClick }: { onClick: () => void }) {
+  const t = useTranslations("website");
   return (
     <button
       type="button"
-      aria-label="hinzufügen"
+      aria-label={t("editor.add")}
       onClick={onClick}
       className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"
     >

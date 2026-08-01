@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { translateStandardFooterText } from '@/hooks/pdf/useDocumentTranslation';
 import { api } from '@/lib/api-client';
 import { type DocumentType, detectDocumentType, getDocumentTypeConfig } from '@/lib/document-utils';
+import { documentTranslations } from './document-translations';
+import { resolveDocumentLanguage } from './useDocumentTranslation';
 import { formatDate } from '@/lib/utils';
 import { type InvoiceData, type InvoiceItem, TaxRuleType } from '@/types/invoiceTypes';
 import { type PlaceholderData, replacePlaceholders } from '@/utils/placeholderSystem';
@@ -339,6 +341,8 @@ function normalizeTaxGrouped(
 export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
   const { document: documentData, logoUrl, logoSize, documentSettings, userData } = props;
   const language = documentSettings?.language || documentData.language || 'de';
+  // Datums-/Zahlenformat des Dokuments — aus derselben Tabelle wie die Texte.
+  const locale = documentTranslations[resolveDocumentLanguage(language)].dateLocale;
 
   // Kundendaten-Anreicherung via API - DEFENSIVE PROGRAMMIERUNG
   const companyId =
@@ -484,9 +488,8 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
 
     // Datumsformatierung mit korrigierter formatDate Funktion
     const formattedInvoiceDate = formatDate(
-      documentData.date || documentData.issueDate || documentData.invoiceDate || '',
-    );
-    const formattedDueDate = formatDate(documentData.dueDate || documentData.validUntil || '');
+      documentData.date || documentData.issueDate || documentData.invoiceDate || '', locale);
+    const formattedDueDate = formatDate(documentData.dueDate || documentData.validUntil || '', locale);
 
     // Benutzerfreundlichere Bezeichnungen
 
@@ -500,9 +503,8 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
       documentData.title ||
       'INV-001';
     const invoiceDate = formatDate(
-      documentData.date || documentData.issueDate || documentData.invoiceDate || '',
-    );
-    const dueDate = formatDate(documentData.dueDate || documentData.validUntil || '');
+      documentData.date || documentData.issueDate || documentData.invoiceDate || '', locale);
+    const dueDate = formatDate(documentData.dueDate || documentData.validUntil || '', locale);
     const sequentialNumber = documentData.sequentialNumber || '';
 
     // Kundendaten
@@ -606,20 +608,19 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
       invoiceNumber: invoiceNumber, // Für RECHNUNGSNUMMER
       quoteNumber: documentData.quoteNumber || invoiceNumber,
       documentDate:
-        invoiceDate || formatDate(String(documentData.date || documentData.createdAt || '')), // Für RECHNUNGSDATUM
+        invoiceDate || formatDate(String(documentData.date || documentData.createdAt || ''), locale), // Für RECHNUNGSDATUM
       dueDate: dueDate, // Nur wenn vorhanden
-      validUntil: dueDate || formatDate(documentData.validUntil || documentData.expiryDate || ''), // Für GUELTIG_BIS
+      validUntil: dueDate || formatDate(documentData.validUntil || documentData.expiryDate || '', locale), // Für GUELTIG_BIS
       expiryDate:
-        formatDate(documentData.expiryDate || '') ||
+        formatDate(documentData.expiryDate || '', locale) ||
         dueDate ||
-        formatDate(documentData.validUntil || ''),
+        formatDate(documentData.validUntil || '', locale),
       serviceDate:
         formatDate(
           documentData.serviceDate ||
             documentData.performanceDate ||
             documentData.deliveryDate ||
-            '',
-        ) ||
+            '', locale) ||
         invoiceDate ||
         '', // Für LEISTUNGSDATUM
       servicePeriod: documentData.servicePeriod || '',
@@ -691,9 +692,9 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
       // Projekt-Informationen bereits oben definiert
 
       // Aktuelle Zeit-Informationen (für Datumsplatzhalter)
-      currentDate: new Date().toLocaleDateString(language === 'de' ? 'de-DE' : 'en-US'),
+      currentDate: new Date().toLocaleDateString(locale),
       currentYear: new Date().getFullYear().toString(),
-      currentMonth: new Date().toLocaleDateString(language === 'de' ? 'de-DE' : 'en-US', {
+      currentMonth: new Date().toLocaleDateString(locale, {
         month: 'long',
       }),
     };

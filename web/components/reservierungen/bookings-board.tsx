@@ -12,7 +12,7 @@
 // CLAUDE.md) hält sie live. Beträge kommen bereits maskiert aus dem Backend
 // (null → „—", kein 0-Fallback); Bezahlt-% nur wenn ein Betrag sichtbar ist.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -302,6 +302,7 @@ function BookingRow({
   onOpen: () => void;
   t: ReturnType<typeof useTranslations>;
 }) {
+  const locale = useLocale();
   const ds = displayStatusOf(r, todayKey);
   const sm = STATUS_META[ds];
   const cm = channelMeta(channelSource(r));
@@ -331,7 +332,7 @@ function BookingRow({
       </td>
       <td className="px-4 py-3 font-medium">{title}</td>
       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-        {fmtDayShort(r.check_in)} – {fmtDayShort(r.check_out)}
+        {fmtDayShort(r.check_in, locale)} – {fmtDayShort(r.check_out, locale)}
         <span className="ml-2 text-xs">
           ({t("bookingsBoard.nights", { count: nights(r.check_in, r.check_out) })})
         </span>

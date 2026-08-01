@@ -3,6 +3,7 @@
 // Auswirkungen (Framer „Effects" via Framer Motion): Effekt-Liste + Popup
 // (Auslöser · Zielzustand · Übergang Tween/Spring).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
 import {
@@ -63,6 +64,7 @@ export function effectSummary(e: FrameEffect): string {
 // ein Popup (Trigger + Ziel-Delta + Transition). „+" fügt einen Hover-Effekt
 // hinzu und öffnet ihn direkt (wie Framers leerer „+"-Zustand).
 export function EffectsSection({ props, set }: InspProps) {
+  const t = useTranslations("website");
   const effects = (props.effects as FrameEffect[] | undefined) ?? [];
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const rowRefsMap = useRef<Map<number, React.RefObject<HTMLDivElement | null>>>(new Map());
@@ -112,7 +114,7 @@ export function EffectsSection({ props, set }: InspProps) {
                 <span className="shrink-0 font-medium">{trig?.label ?? fx.trigger}</span>
                 <span className="truncate text-muted-foreground">{effectSummary(fx)}</span>
               </button>
-              <button type="button" onClick={() => remove(i)} className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-secondary hover:text-foreground" aria-label="Effekt entfernen"><Icon icon="ph:x" className="size-3.5" /></button>
+              <button type="button" onClick={() => remove(i)} className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-secondary hover:text-foreground" aria-label={t("editor.removeEffect")}><Icon icon="ph:x" className="size-3.5" /></button>
             </Row>
             {openIdx === i ? (
               <EffectPopup anchorRef={rowRef(i)} effect={fx} onChange={(mut) => patch(i, mut)} onClose={() => setOpenIdx(null)} />
@@ -145,6 +147,7 @@ export function EffectPopup({
   onChange: (mut: (e: FrameEffect) => void) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("website");
   // Delta-Zeile: Toggle (aktiv/inaktiv) + NumStepper. Inaktiv = Feld undefined
   // (Achse wirkt nicht), aktiv = konkreter Wert.
   const DeltaRow = ({ label, field, step = 1, unit, defaultVal }: { label: string; field: keyof FrameEffect; step?: number; unit?: string; defaultVal: number }) => {
@@ -169,11 +172,11 @@ export function EffectPopup({
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/20">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <span className="text-[0.8125rem] font-semibold">Effekt</span>
-          <button type="button" aria-label="schließen" onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"><Icon icon="ph:x" className="size-3.5" /></button>
+          <button type="button" aria-label={t("editor.closeLower")} onClick={onClose} className="flex size-5 items-center justify-center rounded text-muted-foreground transition hover:bg-secondary hover:text-foreground"><Icon icon="ph:x" className="size-3.5" /></button>
         </div>
         <div className="flex flex-col gap-3 p-4">
           {/* Trigger-Auswahl (5 Icon-Segmente) */}
-          <Row label="Auslöser">
+          <Row label={t("editor.trigger")}>
             <div className={`flex ${FIELD_H} flex-1 overflow-hidden rounded-md border border-border`}>
               {EFFECT_TRIGGERS.map((t, i) => (
                 <button key={t.id} type="button" title={`${t.label} — ${t.hint}`} onClick={() => onChange((e) => { e.trigger = t.id; })}
@@ -202,7 +205,7 @@ export function EffectPopup({
           )}
 
           {/* Transition */}
-          <div className="mt-1 border-t border-border pt-3 text-[0.6875rem] font-medium uppercase tracking-wide text-muted-foreground">Übergang</div>
+          <div className="mt-1 border-t border-border pt-3 text-[0.6875rem] font-medium uppercase tracking-wide text-muted-foreground">{t("editor.transition")}</div>
           <Row label="Typ">
             <div className={`flex ${FIELD_H} flex-1 overflow-hidden rounded-md border border-border`}>
               <button type="button" onClick={() => onChange((e) => { e.transitionType = "tween"; })} className={"flex-1 text-xs transition " + (!isSpring ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary")}>Tween</button>
@@ -212,7 +215,7 @@ export function EffectPopup({
           {isSpring ? (
             <>
               <Row label="Steifigkeit"><NumStepper value={effect.stiffness ?? 300} onChange={(v) => onChange((e) => { e.stiffness = Math.max(1, v); })} /></Row>
-              <Row label="Dämpfung"><NumStepper value={effect.damping ?? 20} onChange={(v) => onChange((e) => { e.damping = Math.max(0, v); })} /></Row>
+              <Row label={t("editor.damping")}><NumStepper value={effect.damping ?? 20} onChange={(v) => onChange((e) => { e.damping = Math.max(0, v); })} /></Row>
               <Row label="Masse"><NumStepper value={effect.mass ?? 1} step={0.1} onChange={(v) => onChange((e) => { e.mass = Math.max(0.1, v); })} /></Row>
             </>
           ) : (
@@ -221,14 +224,14 @@ export function EffectPopup({
               <Row label="Beschleunigung">
                 <Select value={effect.ease ?? "easeInOut"} onChange={(v) => onChange((e) => { e.ease = v as FrameEffect["ease"]; })}>
                   <option value="linear">Linear</option>
-                  <option value="easeIn">Ease In</option>
-                  <option value="easeOut">Ease Out</option>
-                  <option value="easeInOut">Ease In-Out</option>
+                  <option value="easeIn">{t("editor.easeIn")}</option>
+                  <option value="easeOut">{t("editor.easeOut")}</option>
+                  <option value="easeInOut">{t("editor.easeInOut")}</option>
                 </Select>
               </Row>
             </>
           )}
-          <Row label="Verzögerung"><NumStepper value={effect.delay ?? 0} step={0.05} unit="s" onChange={(v) => onChange((e) => { e.delay = Math.max(0, v); })} /></Row>
+          <Row label={t("editor.delay")}><NumStepper value={effect.delay ?? 0} step={0.05} unit="s" onChange={(v) => onChange((e) => { e.delay = Math.max(0, v); })} /></Row>
         </div>
       </div>
     </AnchoredPopover>

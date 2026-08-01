@@ -6,7 +6,7 @@
 // oder finalisiert wird. Radix-Dialog im myNextDays-Stil (abgerundet, Tokens).
 import { Icon } from "@iconify/react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -24,8 +24,9 @@ export function StatementPreviewModal({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("ownerStatements");
+  const locale = useLocale();
   const [busy, setBusy] = useState(false);
-  const html = buildStatementHtml(statement);
+  const html = buildStatementHtml(statement, locale);
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -43,7 +44,7 @@ export function StatementPreviewModal({
                 disabled={busy}
                 onClick={() => {
                   setBusy(true);
-                  void downloadStatementPdf(statement)
+                  void downloadStatementPdf(statement, locale)
                     .catch(() => toast.error(t("downloadFailed")))
                     .finally(() => setBusy(false));
                 }}

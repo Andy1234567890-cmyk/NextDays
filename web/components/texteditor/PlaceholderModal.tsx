@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from "next-intl";
 import {
   Button,
   Dialog,
@@ -39,6 +40,7 @@ export default function PlaceholderModal({
   onInsert,
   objectType = 'INVOICE',
 }: PlaceholderModalProps) {
+  const t = useTranslations("common");
   const [selectedTokens, setSelectedTokens] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState('datetime');
 
@@ -188,7 +190,7 @@ export default function PlaceholderModal({
       <DialogContent className="flex max-h-[80vh] max-w-4xl flex-col p-0">
         {/* Header */}
         <DialogHeader className="border-b px-6 py-4">
-          <DialogTitle className="font-semibold text-xl">Platzhalter auswählen</DialogTitle>
+          <DialogTitle className="font-semibold text-xl">{t("choosePlaceholder")}</DialogTitle>
         </DialogHeader>
 
         {/* Content */}

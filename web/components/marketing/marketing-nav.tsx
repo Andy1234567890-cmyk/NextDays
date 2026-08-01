@@ -4,6 +4,7 @@
 "use client";
 
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { Logo } from "@/components/logo";
@@ -18,6 +19,7 @@ const NAV_LINKS = [
 ];
 
 export function MarketingNav() {
+  const t = useTranslations("marketingSite");
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6">
@@ -53,7 +55,7 @@ export function MarketingNav() {
             Anmelden
           </Link>
           <Button asChild variant="accent" size="sm">
-            <Link href="/register">Kostenlos starten</Link>
+            <Link href="/register">{t("startFree")}</Link>
           </Button>
         </div>
       </nav>

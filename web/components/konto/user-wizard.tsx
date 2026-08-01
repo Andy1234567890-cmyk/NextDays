@@ -5,6 +5,9 @@
 // 4 Objektzuweisung. Beim Erstellen wird der Nutzer mit Rolle + Berechtigungen
 // über /auth/invite angelegt; ein Sofort-Passwort wird generiert und angezeigt.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
+
+import { useLanguageOptions } from "@/lib/use-language-options";
 import { useEffect, useState } from "react";
 
 import {
@@ -37,7 +40,6 @@ import { cn } from "@/lib/utils";
 
 import { PermissionGroups } from "./permission-groups";
 import {
-  LANGUAGES,
   ROLE_DEFAULT_PERMISSIONS,
   ROLES,
   WIZARD_STEPS,
@@ -276,13 +278,14 @@ const STEP_HINTS = [
 ];
 
 function Stepper({ current }: { current: number }) {
+  const t = useTranslations("account");
   return (
     <div className="flex items-center pt-2">
-      {WIZARD_STEPS.map((label, i) => {
+      {WIZARD_STEPS.map((schluessel, i) => {
         const done = i < current;
         const active = i === current;
         return (
-          <div key={label} className="flex flex-1 items-center last:flex-none">
+          <div key={schluessel} className="flex flex-1 items-center last:flex-none">
             <div className="flex flex-col items-center gap-1">
               <span
                 className={cn(
@@ -317,14 +320,16 @@ function StepContact(p: {
   email: string; setEmail: (v: string) => void;
   hidePhones: boolean; setHidePhones: (v: boolean) => void;
 }) {
+  const t = useTranslations("account");
+  const tCommon = useTranslations("common");
   return (
     <div className="flex flex-col gap-5">
-      <FieldText label="Vorname" required value={p.firstName} onChange={p.setFirstName} />
-      <FieldText label="Nachname" required value={p.lastName} onChange={p.setLastName} />
-      <FieldText label="E-Mail" required type="email" value={p.email} onChange={p.setEmail} />
+      <FieldText label={t("userWizard.firstName")} required value={p.firstName} onChange={p.setFirstName} />
+      <FieldText label={t("userWizard.lastName")} required value={p.lastName} onChange={p.setLastName} />
+      <FieldText label={t("userWizard.email")} required type="email" value={p.email} onChange={p.setEmail} />
 
       <div className="flex flex-col gap-1.5">
-        <Label>Telefonnummer</Label>
+        <Label>{t("userWizard.phone")}</Label>
         <div className="flex gap-2">
           <PhoneCountry />
           <Input type="tel" placeholder="+49 1525 1239026" className="flex-1" />
@@ -332,7 +337,7 @@ function StepContact(p: {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label>Zusätzliche Telefonnummer</Label>
+        <Label>{t("userWizard.extraPhone")}</Label>
         <div className="flex gap-2">
           <PhoneCountry />
           <Input type="tel" placeholder="+1 2015550123" className="flex-1" />
@@ -373,6 +378,9 @@ function StepExtra(p: {
   spoken: string[]; setSpoken: (v: string[]) => void;
   notes: string; setNotes: (v: string) => void;
 }) {
+  const t = useTranslations("account");
+  const tCommon = useTranslations("common");
+  const sprachen = useLanguageOptions();
   const [search, setSearch] = useState("");
 
   const toggle = (lang: string) =>
@@ -382,30 +390,30 @@ function StepExtra(p: {
         : [...p.spoken, lang],
     );
 
-  const filtered = LANGUAGES.filter((l) =>
-    l.toLowerCase().includes(search.trim().toLowerCase()),
+  const filtered = sprachen.filter((l) =>
+    l.label.toLowerCase().includes(search.trim().toLowerCase()),
   );
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="w-lang">
-          Bevorzugte Sprache <span className="text-destructive">*</span>
+          {t("userWizard.preferredLanguage")} <span className="text-destructive">*</span>
         </Label>
         <Select value={p.language} onValueChange={p.setLanguage}>
           <SelectTrigger id="w-lang">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="de">Deutsch</SelectItem>
-            <SelectItem value="da">Dänisch</SelectItem>
-            <SelectItem value="en">Englisch</SelectItem>
+            <SelectItem value="de">{tCommon("languages.de")}</SelectItem>
+            <SelectItem value="da">{tCommon("languages.da")}</SelectItem>
+            <SelectItem value="en">{tCommon("languages.en")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label>Gesprochene Sprachen</Label>
+        <Label>{t("userWizard.spokenLanguages")}</Label>
         {p.spoken.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {p.spoken.map((l) => (
@@ -432,7 +440,7 @@ function StepExtra(p: {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Sprache suchen…"
+              placeholder={t("userWizard.searchLanguage")}
               className="w-full bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
@@ -440,19 +448,19 @@ function StepExtra(p: {
           <div className="max-h-48 overflow-y-auto">
             {filtered.length === 0 ? (
               <p className="px-3 py-4 text-sm text-muted-foreground">
-                Keine Sprache gefunden.
+                {t("userWizard.noLanguageFound")}
               </p>
             ) : (
               filtered.map((l) => (
                 <label
-                  key={l}
+                  key={l.value}
                   className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-secondary/50"
                 >
                   <Checkbox
-                    checked={p.spoken.includes(l)}
-                    onCheckedChange={() => toggle(l)}
+                    checked={p.spoken.includes(l.value)}
+                    onCheckedChange={() => toggle(l.value)}
                   />
-                  {l}
+                  {l.label}
                 </label>
               ))
             )}
@@ -461,7 +469,7 @@ function StepExtra(p: {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="w-notes">Anmerkungen</Label>
+        <Label htmlFor="w-notes">{t("userWizard.notes")}</Label>
         <Input
           id="w-notes"
           value={p.notes}
@@ -477,6 +485,7 @@ function StepRole(p: {
   role: string; setRole: (v: string) => void;
   perms: Set<string>; togglePerm: (id: string) => void;
 }) {
+  const t = useTranslations("account");
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
@@ -485,12 +494,12 @@ function StepRole(p: {
         </Label>
         <Select value={p.role} onValueChange={p.setRole}>
           <SelectTrigger id="w-role">
-            <SelectValue placeholder="Rolle wählen…" />
+            <SelectValue placeholder={t("userWizard.chooseRole")} />
           </SelectTrigger>
           <SelectContent>
             {ROLES.map((r) => (
               <SelectItem key={r.value} value={r.value}>
-                {r.label}
+                {t(`roles.${r.value}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -583,21 +592,21 @@ function StepProperties({
 
 /* ---------- Erfolg: Zugangsdaten ---------- */
 function StepSuccess({ email, password }: { email: string; password: string }) {
+  const t = useTranslations("account");
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col items-center gap-2 py-4 text-center">
         <span className="flex size-12 items-center justify-center rounded-full bg-accent/10">
           <Icon icon="ph:check-circle" className="size-7 text-accent" />
         </span>
-        <p className="font-display text-lg font-extrabold">Benutzer erstellt</p>
+        <p className="font-display text-lg font-extrabold">{t("userWizard.userCreated")}</p>
         <p className="text-sm text-muted-foreground">
-          Geben Sie diese Zugangsdaten an den neuen Benutzer weiter. Das Passwort
-          wird nur jetzt angezeigt.
+          {t("userWizard.credentialsHint")}
         </p>
       </div>
       <div className="flex flex-col gap-2 rounded-(--radius) border border-input p-3">
-        <Field label="E-Mail" value={email} />
-        <Field label="Passwort" value={password} mono />
+        <Field label={t("userWizard.email")} value={email} />
+        <Field label={t("userWizard.password")} value={password} mono />
       </div>
     </div>
   );
