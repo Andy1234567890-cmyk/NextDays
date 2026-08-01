@@ -1120,6 +1120,7 @@ class BookingsSyncMixin:
         tenant_id: str,
         channex_property_id: str,
         *,
+        property_id: str | None = None,
         days_ahead: int = 365,
         today: date | None = None,
     ) -> dict[str, int]:
@@ -1131,20 +1132,28 @@ class BookingsSyncMixin:
         Geteilte Channex-Property (Hotel, 0158): jedes Zimmer wird GETRENNT
         importiert — Verfügbarkeit nur aus dem EIGENEN Room-Type, Stop-Sell nur
         aus den EIGENEN Rate-Plans. Ein Aggregat über alle Room-Types wäre bei
-        Geschwister-Zimmern falsch (Twin-Wert überschriebe den Double-Kalender)."""
+        Geschwister-Zimmern falsch (Twin-Wert überschriebe den Double-Kalender).
+
+        `property_id` grenzt den Lauf auf GENAU EIN Zimmer ein. Der Job wird je
+        Zimmer eingereiht, weil ein Lauf über ein ganzes Hotel mehr Anfragen
+        braucht (gemessen: 3 Zimmer = 30 Calls), als das Property-Budget je
+        Minute hergibt (20) — der Import brach dann jedes Mal beim selben Stand
+        ab und begann von vorn: er wurde NIE fertig (live: Jobs vom 30.07. liefen
+        am 01.08. noch im Kreis)."""
         result = {"prices": 0, "availability": 0, "stop_sell": 0}
         if not self._channex.is_configured or self._db is None:
             return result
         db = self._db
-        pms = (
+        abfrage = (
             db.table("channex_property_map")
             .select("id, property_id")
             .eq("tenant_id", tenant_id)
             .eq("channex_property_id", channex_property_id)
             .is_("deleted_at", "null")
-            .order("created_at")
-            .execute()
-        ).data or []
+        )
+        if property_id:
+            abfrage = abfrage.eq("property_id", property_id)
+        pms = (abfrage.order("created_at").execute()).data or []
         for pm in pms:
             rt_rows = (
                 db.table("channex_room_type_map")

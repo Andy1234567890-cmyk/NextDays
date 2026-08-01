@@ -190,15 +190,33 @@ export async function pushAri(input: {
 }
 
 // --- Kanäle (OTA) inhouse: Portale + verbundene Kanäle ----------------------
+// Wert eines Portalfelds: Text/Passwort/Auswahl (string), Schalter (boolean)
+// oder Zahl — je nach Feldtyp aus dem Kanal-Katalog.
+export type PortalValue = string | boolean | number | null;
+
+// Sichtbarkeitsregel aus dem Katalog: `apply` ("hidden") greift, sobald
+// `influence_field` den Wert `when` hat (z.B. E-Mail nur bei aktiver
+// Benachrichtigung).
+export type PortalFieldRule = {
+  apply: string;
+  when: PortalValue;
+  influence_field: string;
+};
+
 export type PortalField = {
   key: string;
   label: string;
   placeholder: string;
   required: boolean;
-  // UI-Hinweis für das Frontend: "text" (Standard) oder "email".
-  type: "text" | "email";
-  // Vorbelegung des Felds (z.B. Betriebs-E-Mail); null = leer.
-  default: string | null;
+  // Render-Hinweis aus dem Kanal-Katalog.
+  type: "text" | "email" | "password" | "checkbox" | "select" | "switch" | "number";
+  // Vorbelegung aus dem Katalog (bzw. vorbefüllte Betriebs-E-Mail); null = leer.
+  default: PortalValue;
+  // Auswahlwerte bei select/switch.
+  options: string[];
+  // Optionale Einstellung → Bereich „Erweiterte Einstellungen".
+  advanced: boolean;
+  rules: PortalFieldRule[];
 };
 
 export type SupportedPortal = {
@@ -212,6 +230,12 @@ export type SupportedPortal = {
   // Kuratierte Vorab-Anleitung (was zuerst im OTA-Extranet zu tun ist), oder
   // null, wenn wir für diesen Kanal keinen belegten Prozess kennen.
   setup_hint: string | null;
+  // Zuordnungsart des Kanals (Katalog): steuert, ob/wie zugeordnet wird.
+  mapping_mode: string | null;
+  mapping_required: boolean;
+  // Bezugswährung des Mindestpreises (keine Pflichtwährung des Kanals).
+  min_price_currency: string | null;
+  min_price: number | null;
 };
 
 export type ChannelConnection = {
@@ -324,8 +348,21 @@ export type ChannelDetail = {
   // Channex-Kanal-ID des Portals (Hotels: alle Zimmer teilen einen Kanal); für
   // „Verbindung trennen". null = nicht verbunden.
   channel_id: string | null;
+  // Kanal-eigene Aktionen aus dem Katalog (z.B. "load_future_reservations").
+  actions: string[];
   mappings: ChannelMappingRow[];
 };
+
+// Eine kanal-eigene Aktion auslösen. Welche es gibt, sagt `ChannelDetail.actions`.
+export async function runChannelAction(
+  channelId: string,
+  action: string,
+): Promise<Result<{ status: string; action: string }>> {
+  return call<{ status: string; action: string }>(
+    `/channels/${channelId}/actions/${action}`,
+    { method: "POST" },
+  );
+}
 
 export async function channelDetail(
   portalCode: string,
@@ -368,7 +405,7 @@ export async function listChannels(): Promise<
 export async function prepareChannel(input: {
   property_id: string;
   portal_code: string;
-  settings: Record<string, string>;
+  settings: Record<string, PortalValue>;
 }): Promise<Result<PrepareResult>> {
   return call<PrepareResult>("/channels/prepare", {
     method: "POST",
@@ -381,7 +418,7 @@ export async function connectChannel(input: {
   property_id: string;
   portal_code: string;
   title?: string;
-  settings?: Record<string, string>;
+  settings?: Record<string, PortalValue>;
   mappings: ChannelMapping[];
 }): Promise<Result<ChannelConnection>> {
   return call<ChannelConnection>("/channels", { method: "POST", body: input });

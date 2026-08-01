@@ -441,9 +441,20 @@ class ChannexClient:
             payload=detail,
         )
 
-    @staticmethod
-    def _extract_message(detail: object) -> str | None:
+    @classmethod
+    def _extract_message(cls, detail: object) -> str | None:
+        """Die AUSSAGEKRÄFTIGSTE Meldung aus einem Channex-Fehler ziehen.
+
+        Channex antwortet auf Validierungsfehler mit
+        {"code": …, "title": "Validation Error", "details": {"settings":
+        ["channel with the same settings already exists"]}} — der Titel ist
+        immer derselbe und sagt nichts. Deshalb zuerst in `details` schauen,
+        sonst wäre jede Ursache dieselbe nichtssagende Zeile (und unsere
+        Sonderbehandlungen, die auf den Text prüfen, griffen nie)."""
         if isinstance(detail, dict):
+            aus_details = cls._extract_message(detail.get("details"))
+            if aus_details:
+                return aus_details
             for key in ("title", "message", "detail"):
                 val = detail.get(key)
                 if isinstance(val, str):
@@ -452,6 +463,8 @@ class ChannexClient:
             for val in detail.values():
                 if isinstance(val, list) and val and isinstance(val[0], str):
                     return val[0]
+        if isinstance(detail, list) and detail and isinstance(detail[0], str):
+            return detail[0]
         if isinstance(detail, str):
             return detail
         return None
@@ -788,6 +801,14 @@ class ChannexClient:
     def delete_channel(self, channel_id: str) -> dict[str, Any]:
         """Kanal löschen — muss vorher inaktiv sein (deactivate_channel)."""
         return self.delete(f"channels/{channel_id}")
+
+    def run_channel_action(self, channel_id: str, action: str) -> dict[str, Any]:
+        """Eine kanal-eigene Aktion auslösen (Katalogfeld `actions`, z.B.
+        `load_future_reservations` = Buchungen holen, die VOR der Verbindung
+        entstanden sind). Pfad live verifiziert (01.08.2026): GET auf
+        channels/{id}/action/{name} → 200; die anderen Schreibweisen antworten
+        mit 404."""
+        return self.get(f"channels/{channel_id}/action/{action}")
 
     def list_groups(self) -> dict[str, Any]:
         """Groups, auf die der Key Zugriff hat (für die group_id beim Channel-Create)."""

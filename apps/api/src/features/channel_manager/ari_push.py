@@ -17,7 +17,7 @@ from supabase import Client
 from src.core.security import AuthContext
 
 from .channex_client import ChannexError
-from .common import log
+from .common import ist_demo_mapping, log
 from .schemas import (
     AriPushRequest,
     AriPushResponse,
@@ -475,17 +475,23 @@ class AriPushMixin:
         „mindestens ein aktiver Kanal" war ein Deadlock: ohne OTA kein Push →
         Channex meldet availability=0 → Objekt überall „gesperrt". Tenant-Scope
         explizit, da der Service-Role-Key die RLS umgeht. `sync_enabled` wird stets
-        gemeinsam mit `deleted_at` gesetzt → `deleted_at IS NULL` genügt."""
+        gemeinsam mit `deleted_at` gesetzt → `deleted_at IS NULL` genügt.
+
+        Ein Platzhalter statt einer echten Channex-ID (Demo-Betriebe der
+        Marketing-Screenshots) zählt NICHT als gemanagt: sonst geht jeder Preis-/
+        Restriktions-Push mit einer erfundenen ID raus, Channex antwortet „Bad
+        Request", und der Job läuft zehnmal in den Retry — auf Kosten des
+        kontoweiten Anfrage-Budgets aller echten Betriebe."""
         res = (
             db.table("channex_property_map")
-            .select("id")
+            .select("channex_property_id")
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
             .is_("deleted_at", "null")
             .limit(1)
             .execute()
         ).data
-        return bool(res)
+        return bool(res) and not ist_demo_mapping(res[0].get("channex_property_id"))
 
     def _property_id_for_map(
         self, db: Client, tenant_id: str, property_map_id: str
@@ -879,6 +885,16 @@ class AriPushMixin:
             )
             self._mark_restriction_outbox(outbox_id, "done")
             if sent is not None:
+                # Ist-Spiegel fortschreiben (0246) — GENAU wie im Batch-Pfad.
+                # Ohne das bliebe der Schatten auf dem alten Wert stehen und der
+                # nächste Abgleich hielte den gerade gepushten Preis für eine
+                # Differenz und schickte ihn ein zweites Mal (unnötiger Verkehr
+                # gegen die Auflage „nur Änderungen senden"). Live gesehen am
+                # 01.08.2026: Tagespreis 333 kam an, der Schatten stand weiter
+                # auf 103,20.
+                self._write_ari_shadow_for_range(
+                    tenant_id, property_id, fields, date_from, date_to
+                )
                 log.info(
                     log_event, tenant_id=tenant_id, property_id=property_id, days=sent,
                 )
@@ -1500,6 +1516,11 @@ class AriPushMixin:
                         "property_id": property_id,
                         "rate_plan_id": plan_id,
                         "date": iso,
+                        # Beim UPDATE-Zweig des Upserts greift der Spalten-Default
+                        # (now()) nicht — ohne dieses Feld trüge ein aktualisierter
+                        # Spiegel-Eintrag für immer seinen Anlage-Zeitpunkt und
+                        # wäre als Diagnose („wann zuletzt gepusht?") wertlos.
+                        "updated_at": datetime.now(UTC).isoformat(),
                     }
                     if rate_cents is not None:
                         rate_rows.append({**key, "rate_cents": int(rate_cents)})
@@ -1519,6 +1540,33 @@ class AriPushMixin:
                         error=str(exc)[:200],
                     )
                     return
+
+    def _write_ari_shadow_for_range(
+        self, tenant_id: str, property_id: str, fields: dict[str, Any],
+        date_from: date, date_to: date,
+    ) -> None:
+        """Den Ist-Spiegel für einen SOFORT gepushten Zeitraum fortschreiben.
+
+        `fields` sind die Channex-Restriction-Felder des Pushes; interessant für
+        den Spiegel sind nur Preis (`rate`) und Mindestaufenthalt
+        (`min_stay_arrival`). Alles andere (CTA/CTD, max_stay) führt der Spiegel
+        nicht. `date_to` ist inklusiv — genau wie in den push_*-Methoden und in
+        `_iso_days`, das der Spiegel-Schreiber benutzt."""
+        rate_cents = fields.get("rate")
+        min_stay = fields.get("min_stay_arrival")
+        if rate_cents is None and min_stay is None or self._db is None:
+            return
+        plans = self._resolve_channex_rate_plans(self._db, tenant_id, property_id)
+        lokale = [p["local_rate_plan_id"] for p in plans if p.get("local_rate_plan_id")]
+        if not lokale:
+            return
+        segment = {
+            "date_from": date_from.isoformat(),
+            "date_to": date_to.isoformat(),
+            "rate_cents": rate_cents,
+            "min_stay": min_stay,
+        }
+        self._write_ari_shadow(tenant_id, property_id, [segment], lokale)
 
     def _write_rate_plan_sync_state(
         self, db: Client, rate_plan_id: str, drift_count: int

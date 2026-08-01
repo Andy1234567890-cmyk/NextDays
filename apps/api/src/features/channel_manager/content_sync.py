@@ -25,6 +25,7 @@ from .common import (
     _channex_type_from_pct,
     _channex_type_from_subtype,
     _timezone_for_country,
+    ist_demo_mapping,
     log,
 )
 
@@ -190,6 +191,28 @@ class ContentSyncMixin:
         Channex (Dependency-Reihenfolge) und pflegt die Mapping-Tabellen.
         Sicher wiederholbar (idempotent). Gibt die Channex-IDs zurück."""
         db = self._require_db()
+
+        # Demo-Betriebe (Marketing-Screenshots) tragen einen Platzhalter statt
+        # einer echten Channex-ID in der Property-Map. Solche Objekte gehören
+        # NICHT an Channex: der Push kassiert „Bad Request", der Job läuft
+        # zehnmal in den Retry und verbrennt dabei das kontoweite Anfrage-Budget,
+        # das sich alle echten Betriebe teilen. Echter No-op statt Dauerfehler.
+        bestehend = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        vorhandene_id = bestehend[0]["channex_property_id"] if bestehend else None
+        if ist_demo_mapping(vorhandene_id):
+            log.info(
+                "content_sync_uebersprungen_demo_mapping",
+                tenant_id=tenant_id, property_id=property_id,
+            )
+            return {"channex_property_id": vorhandene_id}
 
         # Lokale Property MIT allen Channex-relevanten Feldern laden (Tenant-Scope).
         prop = (
@@ -884,29 +907,6 @@ class ContentSyncMixin:
             ).eq("id", child["id"]).execute()
         return ok
 
-    @staticmethod
-    def _zimmer_ausstattung(db: Client, property_id: str) -> set[str]:
-        """Ausstattungs-Slugs über alle Zimmer des Objekts (property_rooms, 0246).
-
-        Best-effort: fehlt die Tabelle (alter Stand) oder hakt die Abfrage, geht
-        die objektweite Zimmer-Ausstattung trotzdem raus — ein Content-Sync darf
-        daran nicht scheitern."""
-        try:
-            rows = (
-                db.table("property_rooms")
-                .select("ausstattung")
-                .eq("property_id", property_id)
-                .execute()
-            ).data or []
-        except Exception as exc:  # noqa: BLE001 — Zusatzquelle, kein Hauptpfad
-            log.warning(
-                "channex_zimmer_ausstattung_unlesbar",
-                property_id=property_id,
-                error=str(exc),
-            )
-            return set()
-        return {slug for r in rows for slug in (r.get("ausstattung") or [])}
-
     def _upsert_channex_room_type(
         self, db: Client, tenant_id: str, property_map_id: str,
         channex_property_id: str, property_id: str, title: str,
@@ -937,18 +937,12 @@ class ContentSyncMixin:
         # kennt, IMMER setzen (auch []), damit ein Entfernen die Facilities bei
         # Channex/den OTAs synchron leert (Wurzel 1 — live verifiziert: ein PUT
         # mit einer UUID entfernt die übrigen).
-        #
-        # Zwei Quellen, EINE Menge: die objektweite Zimmer-Ausstattung
-        # (properties.room_amenities) und die je Zimmer gepflegte
-        # (property_rooms.ausstattung, 0246). Channex kennt je Objekt genau
-        # EINEN Room-Type — die Zimmer-Auflösung kann er nicht abbilden, also
-        # geht die Vereinigung hinaus. Zusammengeführt wird erst hier beim
-        # Senden, nicht in der Spalte: sonst hätte room_amenities zwei
-        # Schreibpfade und der eine überschriebe still den anderen.
+        # Zimmer-Ausstattung haengt seit 0251 wieder ausschliesslich am Objekt
+        # (properties.room_amenities) — eine Quelle, ein Schreibpfad. Channex
+        # kennt je Objekt ohnehin genau EINEN Room-Type.
         if prop_row is not None and "room_amenities" in prop_row:
-            aus_zimmern = self._zimmer_ausstattung(db, property_id)
             attrs["facilities"] = _channex_room_facility_ids(
-                sorted({*(prop_row.get("room_amenities") or []), *aus_zimmern})
+                sorted(prop_row.get("room_amenities") or [])
             )
         # Room-Type-Content (Beschreibung + Fotos, KEIN important_information).
         # Beim 1-Zimmer-Modell teilt der Room-Type die Property-Inhalte.

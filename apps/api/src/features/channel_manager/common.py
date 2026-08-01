@@ -766,6 +766,24 @@ def _channex_facility_ids(local: list[str] | None) -> list[str]:
     return list(out)
 
 
+# Präfix, mit dem der Demo-Seed (scripts/demo/seed_demo.py) seine Platzhalter
+# markiert — z. B. ``demo-6c92f630-721b-5112``. Die Demo-Betriebe existieren nur
+# für die Marketing-Screenshots und haben bei Channex KEIN Gegenstück.
+_DEMO_PRAEFIX = "demo-"
+
+
+def ist_demo_mapping(channex_id: str | None) -> bool:
+    """Ist `channex_id` ein Platzhalter des Demo-Seeds statt einer echten
+    Channex-ID?
+
+    Ohne diese Prüfung schickt jeder Content-/ARI-Push den Platzhalter an
+    Channex, kassiert „Bad Request", läuft zehnmal in den Retry und verbrennt
+    dabei das kontoweite Anfrage-Budget, das sich alle ECHTEN Betriebe teilen
+    (live am 01.08.2026: 20 solcher Zeilen, zwei Jobs seit Stunden im Retry).
+    """
+    return bool(channex_id) and str(channex_id).startswith(_DEMO_PRAEFIX)
+
+
 class ChannelManagerError(Exception):
     """Fehler im channel_manager-Slice (an die API weitergereicht)."""
 

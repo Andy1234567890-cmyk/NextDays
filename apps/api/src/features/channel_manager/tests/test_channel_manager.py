@@ -11,6 +11,25 @@ from src.main import create_app
 
 client = TestClient(create_app())
 
+# Regel-/Raten-Parameter-Formen genau wie im echten Kanal-Katalog (live gegen
+# channels/list gemessen): `rules` ist eine Liste von Bedingungen, `rate_params`
+# beschreibt die Felder EINER Zuordnungszeile.
+_EMAIL_RULES = [
+    {"apply": "hidden", "when": False,
+     "influence_field": "send_email_notifications", "with_value": ""}
+]
+_ROOM_RATE_PARAMS = {
+    "rate_plan_code": {"type": "string", "title": "Rate", "position": 0},
+    "room_type_code": {"type": "string", "title": "Room", "position": 1},
+    "occupancy": {"type": "integer", "title": "Occupancy", "position": 2},
+    "pricing_type": {"type": "select", "title": "Pricing Type",
+                     "default": "Standart", "options": ["Standard", "OBP"],
+                     "position": 3},
+    "primary_occ": {"type": "boolean", "title": "Primary Occupancy",
+                    "position": 4},
+    "readonly": {"type": "boolean", "title": "Read Only", "position": 5},
+}
+
 
 def test_channel_manager_health() -> None:
     resp = client.get("/api/v1/channel-manager/health")
@@ -638,6 +657,7 @@ class _ImportChannex:
         self.created_properties: list[dict] = []
         self.created_room_types: list[dict] = []
         self.created_rate_plans: list[dict] = []
+        self.updated_properties: list[tuple] = []
         self.updated_rate_plans: list[tuple[str, dict]] = []
         self.deleted_room_types: list[str] = []
         self.deleted_rate_plans: list[str] = []
@@ -648,13 +668,25 @@ class _ImportChannex:
         # Live-Portal-Katalog (channels/list): die real verbindbaren Kern-OTAs.
         # _portal_catalog() leitet daraus die angebotenen Kanäle ab.
         return {"data": [
-            {"code": "BookingCom", "params": {
+            {"code": "BookingCom", "mapping_mode": "room_rate_multioccupancy",
+             "property_mapping": "single", "rate_params": _ROOM_RATE_PARAMS,
+             "params": {
                 "hotel_id": {"type": "string", "title": "Hotel ID", "position": 0},
             }},
-            {"code": "AirBNB", "params": {
+            {"code": "AirBNB", "mapping_mode": "listing",
+             "property_mapping": "multiple",
+             "rate_params": {
+                 "listing_id": {"type": "integer", "title": "Listing",
+                                "position": 0},
+                 "airbnb_rate_plan_id": {"type": "integer", "title": "Rate Plan",
+                                         "position": 1},
+             },
+             "params": {
                 "code": {"type": "hidden", "title": "Token Code", "position": 0},
             }},
-            {"code": "Expedia", "params": {
+            {"code": "Expedia", "mapping_mode": "room_rate_multioccupancy",
+             "property_mapping": "single", "rate_params": _ROOM_RATE_PARAMS,
+             "params": {
                 "hotel_id": {"type": "string", "title": "Hotel ID", "position": 0},
             }},
         ]}
@@ -723,6 +755,7 @@ class _ImportChannex:
         return {"data": {"id": "cx-prop"}}
 
     def update_property(self, channex_id, attrs):  # noqa: ANN001, ANN201
+        self.updated_properties.append((channex_id, attrs))
         return {"data": {"id": channex_id}}
 
     def create_room_type(self, attrs):  # noqa: ANN001, ANN201
@@ -1858,6 +1891,38 @@ def test_shadow_written_after_push_and_second_run_is_silent() -> None:
     assert len(channex.restrictions_pushed) == 1  # kein zweiter Push
 
 
+def test_direkter_preis_push_schreibt_den_schatten() -> None:
+    """Ein Sofort-Push (Tagespreis aus dem Kalender) MUSS den Ist-Spiegel
+    fortschreiben. Sonst hält der nächste Abgleich denselben Preis für eine
+    Differenz und schickt ihn ein zweites Mal — genau der Verkehr, den die
+    Auflage „nur Änderungen senden" verbietet. Live gesehen am 01.08.2026:
+    Tagespreis 333 kam bei Channex an, der Schatten stand weiter auf 103,20."""
+    from datetime import date as _date
+
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    tag = _date.fromisoformat(_future_iso(30))
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    failed = svc.push_rate_for_property("t1", "p1", tag, tag, rate_cents=33300)
+    assert failed is False
+    assert channex.restrictions_pushed  # ging wirklich raus
+    schatten = [
+        r for r in db.tables["channex_ari_shadow"]
+        if r["date"] == tag.isoformat()
+    ]
+    assert schatten, "Schatten wurde nach dem Push nicht fortgeschrieben"
+    assert all(r["rate_cents"] == 33300 for r in schatten)
+    # Und der nächste Abgleich sendet deshalb NICHTS mehr für diesen Tag.
+    vorher = len(channex.restrictions_pushed)
+    svc.reconcile_rate_plan_prices("t1", "p1")
+    nachher = [
+        v for v in channex.restrictions_pushed[vorher:]
+        if v.get("date") == tag.isoformat()
+    ]
+    assert nachher == []
+
+
 def test_seed_ari_shadow_fills_without_pushing() -> None:
     # Umstellungsschritt zu 0246: der Schatten wird aus dem Soll befüllt, OHNE
     # etwas zu senden — sonst ginge bei der Umstellung die ganze Preiskurve raus.
@@ -2057,6 +2122,73 @@ def test_full_sync_shared_property_is_two_calls() -> None:
     for v in channex.restrictions_pushed:
         for key in declared:
             assert key in v
+
+
+def test_ari_import_wird_je_zimmer_eingereiht() -> None:
+    """Ein Hotel teilt sich EINE Channex-Property. Ein ARI-Import über alle
+    Zimmer braucht mehr Anfragen (gemessen: 3 Zimmer = 30), als das
+    Property-Budget je Minute hergibt (20) — er brach jedes Mal ab und begann
+    von vorn. Deshalb: ein Job JE ZIMMER, Dedup ohne Zeit-Bucket."""
+    db = _ImportDB()
+    for i in (1, 2, 3):
+        db.tables["channex_property_map"].append({
+            "id": f"m{i}", "tenant_id": "t1", "property_id": f"p{i}",
+            "channex_property_id": "cx-shared", "deleted_at": None,
+        })
+    eingereiht: list[dict] = []
+
+    def _fake_enqueue(_db, job_type, **kw):  # noqa: ANN001, ANN202
+        eingereiht.append({"job_type": job_type, **kw})
+
+    import src.jobs.queue as queue_modul
+
+    original = queue_modul.enqueue
+    queue_modul.enqueue = _fake_enqueue
+    try:
+        _import_svc(_ImportChannex(), db)._enqueue_ari_import("t1", "cx-shared")
+    finally:
+        queue_modul.enqueue = original
+
+    assert len(eingereiht) == 3
+    assert {e["payload"]["property_id"] for e in eingereiht} == {"p1", "p2", "p3"}
+    assert {e["dedup_key"] for e in eingereiht} == {
+        "ari_import:cx-shared:p1", "ari_import:cx-shared:p2", "ari_import:cx-shared:p3",
+    }
+
+
+def test_sync_content_ueberspringt_demo_mapping() -> None:
+    """Die Demo-Betriebe (Marketing-Screenshots) tragen einen Platzhalter statt
+    einer echten Channex-ID. Ein Push damit endet bei Channex in „Bad Request",
+    läuft zehnmal in den Retry und verbrennt das kontoweite Anfrage-Budget, das
+    sich alle ECHTEN Betriebe teilen (live gesehen am 01.08.2026: 20 solche
+    Zeilen, ein Job seit Stunden im Retry). Erwartung: echter No-op."""
+    db = _ImportDB()
+    db.tables["properties"].append({
+        "id": "p1", "tenant_id": "t1", "title": "Demo-Chalet",
+        "property_type": "ferienhaus", "country": "DE", "city": "Kitzbühel",
+        "max_guests": 4,
+    })
+    db.tables["rate_plans"].append({
+        "id": "rp1", "property_id": "p1", "name": "Standard", "base_price": 120.0,
+        "currency": "EUR", "min_stay": 1, "created_at": "2026-01-01T00:00:00Z",
+    })
+    db.tables["channex_property_map"].append({
+        "id": "m1", "tenant_id": "t1", "property_id": "p1",
+        "channex_property_id": "demo-6c92f630-721b-5112", "deleted_at": None,
+    })
+    channex = _ImportChannex()
+    out = _import_svc(channex, db).sync_content("t1", property_id="p1")
+    assert out == {"channex_property_id": "demo-6c92f630-721b-5112"}
+    assert channex.created_properties == []
+    assert channex.updated_properties == []
+    # Und auch kein Preis-/Restriktions-Push: der ARI-Pfad hält ein
+    # Demo-Mapping ebenfalls für „nicht bei Channex gemanagt".
+    from datetime import date as _date
+
+    assert _import_svc(channex, db).push_rate_for_property(
+        "t1", "p1", _date(2099, 6, 1), _date(2099, 6, 1), rate_cents=12300
+    ) is False
+    assert channex.restrictions_pushed == []
 
 
 def test_sync_content_single_vacation_object_creates_full_mapping() -> None:
@@ -2608,6 +2740,29 @@ def test_set_connection_active_on_activates_channex_channel() -> None:
     assert db.tables["channex_channel_connection"][0]["is_active"] is True
 
 
+def test_set_connection_active_on_ohne_kanal_409() -> None:
+    """Nach dem Trennen bleibt die Zeile (mit Hotel-ID) stehen, der Kanal beim
+    Provider ist aber weg. „Aktivieren" darf dann NICHT still unsere Zeile auf
+    aktiv drehen — sonst zeigt die Oberfläche „Synchronisiert", ohne dass ein
+    Kanal existiert (live passiert, 01.08.2026)."""
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _deactivate_all(db)
+    db.tables["channex_channel_connection"][0]["channex_channel_id"] = None
+    channex = _ImportChannex()
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    try:
+        _import_svc(channex, db).set_connection_active(
+            ctx, property_id="p1", portal_code="BookingCom", is_active=True
+        )
+    except ChannelManagerError as exc:
+        assert exc.status_code == 409
+    else:
+        raise AssertionError("Aktivieren ohne Kanal muss 409 liefern")
+    assert channex.activated == []
+    assert db.tables["channex_channel_connection"][0]["is_active"] is False
+
+
 def test_set_connection_active_unknown_connection_404() -> None:
     db = _ImportDB()
     _seed_with_room_type(db)
@@ -3157,6 +3312,12 @@ class _OAuthChannex(_ImportChannex):
     def get_channel(self, channel_id):  # noqa: ANN001, ANN201
         return {"data": {"attributes": {"settings": self._channel_settings or {}}}}
 
+    def list_channels(self, *, property_id=None):  # noqa: ANN001, ANN201
+        return {"data": [
+            {"id": c_id, "attributes": {**attrs, "id": c_id}}
+            for c_id, attrs in [("cx-airbnb", a) for a in self.created_channels]
+        ]}
+
     def get_channel_mapping_details(self, *, channel, settings):  # noqa: ANN001, ANN201
         # OTA-Zimmer mit je einer Rate — die Zuordnung ist zimmer-basiert, die
         # Rate wird serverseitig expandiert.
@@ -3187,15 +3348,38 @@ class _OAuthChannex(_ImportChannex):
         # (beide Pflicht); ein fiktiver Mehrfeld-Kanal (zwei IDs, wie die
         # Autovermieter) prüft, dass ALLE Credential-Felder abgefragt werden.
         return {"data": [
-            {"code": "AirBNB", "params": {
+            {"code": "AirBNB", "mapping_mode": "listing",
+             "property_mapping": "multiple",
+             "channel_restrictions": {"currency": "USD", "min_price": 1000},
+             "rate_params": {
+                 "listing_id": {"type": "integer", "title": "Listing",
+                                "position": 0},
+                 "airbnb_rate_plan_id": {"type": "integer", "title": "Rate Plan",
+                                         "position": 1},
+             },
+             "params": {
                 "code": {"type": "hidden", "title": "Token Code", "position": 0},
                 "email": {"type": "string", "title": "Property Email",
-                          "rules": True, "position": 3},
+                          "rules": _EMAIL_RULES, "position": 3},
+                "send_email_notifications": {
+                    "type": "boolean", "title": "Send Property Notification",
+                    "default": False, "position": 2},
+                "min_stay_type": {"type": "switch", "title": "Min Stay Type",
+                                  "default": "Arrival",
+                                  "options": ["Arrival", "Through"],
+                                  "position": 1},
             }},
-            {"code": "BookingCom", "params": {
+            {"code": "BookingCom", "mapping_mode": "room_rate_multioccupancy",
+             "property_mapping": "single",
+             "channel_restrictions": {"currency": "EUR", "min_price": 500},
+             "rate_params": _ROOM_RATE_PARAMS,
+             "params": {
                 "hotel_id": {"type": "string", "title": "Hotel ID", "position": 0},
                 "email": {"type": "string", "title": "Property Email",
-                          "rules": True, "position": 3},
+                          "rules": _EMAIL_RULES, "position": 3},
+                "send_email_notifications": {
+                    "type": "boolean", "title": "Send Property Notification",
+                    "default": False, "position": 2},
                 "machine_account": {"type": "hidden", "title": "Machine Account",
                                     "position": 1},
             }},
@@ -3232,6 +3416,90 @@ def _seed_oauth(db, tenant_id="t1"):  # noqa: ANN001, ANN201
     )
 
 
+def test_connect_channel_erlaubt_fremde_waehrung() -> None:
+    """`channel_restrictions.currency` ist NICHT die Pflichtwährung des Kanals,
+    sondern die Bezugswährung des Mindestpreises. Live belegt: Booking.com nahm
+    ein GBP-Testhotel an einem EUR-Objekt mit HTTP 201 an (01.08.2026). Eine
+    Sperre an dieser Stelle wäre eine erfundene Regel und würde gültige
+    Verbindungen verhindern."""
+    db = _ImportDB()
+    _seed_oauth(db)
+    db.tables["properties"][0]["currency"] = "USD"
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    channex = _OAuthChannex()
+    res = _import_svc(channex, db).connect_channel(
+        ctx, property_id="p1", portal_code="BookingCom", title=None,
+        settings={"hotel_id": "4372137"},
+        mappings=[{"local_property_id": "p1", "room_type_code": 11}],
+    )
+    assert res["is_active"] is True
+    assert channex.created_channels[0]["settings"]["hotel_id"] == "4372137"
+
+
+def test_connect_channel_ohne_zuordnung_wenn_kanal_keine_braucht() -> None:
+    # Kanäle mit `mapping_is_not_required` (Mietwagen & Co.) haben keine
+    # Zimmer-Zuordnung — früher brach der Connect dort mit 422 ab.
+    class _NoMapChannex(_OAuthChannex):
+        def list_channel_catalog(self):  # noqa: ANN201
+            return {"data": [{"code": "Hertz", "mapping_is_not_required": True,
+                              "params": {"agent_id": {"type": "string",
+                                                      "title": "Agent ID",
+                                                      "position": 0}}}]}
+
+    db = _ImportDB()
+    _seed_oauth(db)
+    channex = _NoMapChannex()
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    res = _import_svc(channex, db).connect_channel(
+        ctx, property_id="p1", portal_code="Hertz", title=None,
+        settings={"agent_id": "A-1"}, mappings=[],
+    )
+    assert res["is_active"] is True
+    assert channex.created_channels[0]["rate_plans"] == []
+
+
+def test_connect_channel_direct_modus_sendet_nur_preisplan() -> None:
+    # `direct` (z.B. Google): der Kanal deklariert keine rate_params — es geht
+    # nur die eigene Preisplan-ID mit, keine erfundenen OTA-Codes.
+    class _DirectChannex(_OAuthChannex):
+        def list_channel_catalog(self):  # noqa: ANN201
+            return {"data": [{"code": "GoogleHotelARI", "mapping_mode": "direct",
+                              "rate_params": None,
+                              "params": {"booking_link": {"type": "string",
+                                                          "title": "Booking Link",
+                                                          "position": 0}}}]}
+
+    db = _ImportDB()
+    _seed_oauth(db)
+    channex = _DirectChannex()
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    _import_svc(channex, db).connect_channel(
+        ctx, property_id="p1", portal_code="GoogleHotelARI", title=None,
+        settings={"booking_link": "https://example.org"},
+        mappings=[{"local_property_id": "p1", "room_type_code": 11}],
+    )
+    assert channex.created_channels[0]["rate_plans"] == [{"rate_plan_id": "cx-rate"}]
+
+
+def test_channex_fehlermeldung_nennt_die_ursache() -> None:
+    """Channex betitelt JEDEN Validierungsfehler mit „Validation Error"; die
+    Ursache steht in `details`. Ohne diese Auswertung sah der Kunde nur den
+    nichtssagenden Titel — und unsere Sonderbehandlung (belegte Hotel-ID → 409)
+    griff nie, weil sie auf den Text prüft."""
+    from src.features.channel_manager.channex_client import ChannexClient
+
+    detail = {
+        "code": "validation_error",
+        "title": "Validation Error",
+        "details": {"settings": ["channel with the same settings already exists"]},
+    }
+    assert ChannexClient._extract_message(detail) == (
+        "channel with the same settings already exists"
+    )
+    # Ohne `details` bleibt der Titel die beste verfügbare Aussage.
+    assert ChannexClient._extract_message({"title": "Unauthorized"}) == "Unauthorized"
+
+
 def test_supported_portals_marks_airbnb_oauth() -> None:
     db = _ImportDB()
     svc = _import_svc(_OAuthChannex(), db)
@@ -3242,12 +3510,54 @@ def test_supported_portals_marks_airbnb_oauth() -> None:
     # Booking.com: credential-basiert. ALLE sichtbaren Pflichtfelder werden
     # abgefragt — hotel_id UND Property-E-Mail (früher fiel email raus).
     assert portals["BookingCom"]["connection_type"] == "credential"
+    felder = {f["key"]: f for f in portals["BookingCom"]["fields"]}
     keys = [f["key"] for f in portals["BookingCom"]["fields"]]
-    assert keys == ["hotel_id", "email"]  # nach Position sortiert
-    email_field = next(f for f in portals["BookingCom"]["fields"] if f["key"] == "email")
-    assert email_field["type"] == "email"
+    # Nach Position sortiert, inkl. der optionalen Einstellungen des Kanals.
+    assert keys == ["hotel_id", "send_email_notifications", "email"]
+    assert felder["email"]["type"] == "email"
+    # Pflicht ist nur, was der Katalog OHNE Default führt; alles mit Default ist
+    # eine optionale Einstellung und landet im Bereich „Erweitert".
+    assert felder["hotel_id"]["required"] is True
+    assert felder["hotel_id"]["advanced"] is False
+    assert felder["send_email_notifications"]["type"] == "checkbox"
+    assert felder["send_email_notifications"]["required"] is False
+    assert felder["send_email_notifications"]["advanced"] is True
+    # Die Sichtbarkeitsregel des Katalogs wird durchgereicht (E-Mail nur, wenn
+    # die Benachrichtigung an ist) — sonst fragen wir ein totes Feld ab.
+    assert felder["email"]["rules"] == [
+        {"apply": "hidden", "when": False,
+         "influence_field": "send_email_notifications"}
+    ]
+    # Kanal-Metadaten aus dem Katalog (steuern Zuordnung + Währungsprüfung).
+    assert portals["BookingCom"]["mapping_mode"] == "room_rate_multioccupancy"
+    assert portals["BookingCom"]["mapping_required"] is True
+    # Bezugswährung des Mindestpreises (keine Pflichtwährung, siehe
+    # test_connect_channel_erlaubt_fremde_waehrung).
+    assert portals["BookingCom"]["min_price_currency"] == "EUR"
+    assert portals["BookingCom"]["min_price"] == 500
     # `machine_account` ist hidden → nie abgefragt.
     assert "machine_account" not in keys
+
+
+def test_supported_portals_bietet_passwortfelder_an() -> None:
+    # Kanäle mit API-Schlüssel (Katalog-Typ `password`) fielen früher komplett
+    # aus der Maske — sie waren damit gar nicht verbindbar.
+    class _PwChannex(_OAuthChannex):
+        def list_channel_catalog(self):  # noqa: ANN201
+            return {"data": [{"code": "GuruHotel", "params": {
+                "api_key": {"type": "password", "title": "API Key", "position": 0},
+                "hotel_code": {"type": "string", "title": "Hotel Code",
+                               "position": 1},
+            }}]}
+
+    portals = {
+        p["code"]: p
+        for p in _import_svc(_PwChannex(), _ImportDB()).list_supported_portals()
+    }
+    felder = {f["key"]: f for f in portals["GuruHotel"]["fields"]}
+    assert felder["api_key"]["type"] == "password"
+    assert felder["api_key"]["required"] is True
+    assert portals["GuruHotel"]["connection_type"] == "credential"
 
 
 def test_supported_portals_asks_all_credential_fields() -> None:
@@ -3379,7 +3689,12 @@ def test_finalize_oauth_channel_maps_and_activates() -> None:
     assert res["is_active"] is True
     # Mapping per update_channel auf den BESTEHENDEN Channel + activate.
     assert channex.updated_channels[0][0] == "cx-airbnb"
-    assert channex.updated_channels[0][1]["rate_plans"][0]["rate_plan_id"] == "cx-rate"
+    eintrag = channex.updated_channels[0][1]["rate_plans"][0]
+    assert eintrag["rate_plan_id"] == "cx-rate"
+    # Airbnb ist ein `listing`-Kanal: die Zuordnung heißt dort listing_id +
+    # airbnb_rate_plan_id. Früher gingen hier Booking-Feldnamen raus
+    # (room_type_code/rate_plan_code) — die kennt Airbnb nicht.
+    assert eintrag["settings"] == {"listing_id": 11, "airbnb_rate_plan_id": 22}
     assert channex.activated == ["cx-airbnb"]
     # Erst jetzt is_active true.
     assert db.tables["channex_channel_connection"][0]["is_active"] is True

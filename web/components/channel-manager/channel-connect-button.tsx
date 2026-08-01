@@ -18,6 +18,8 @@ import {
   type ChannelMapping,
   type LocalRoomOption,
   type OtaRoom,
+  type PortalField,
+  type PortalValue,
   type StoredChannelConnection,
   type SupportedPortal,
   beginChannelOAuth,
@@ -46,6 +48,46 @@ type MappingRow = {
   occupancy: number;
   local_property_id: string; // gewähltes eigenes Zimmer (Objekt)
 };
+
+// Der aktuelle Wert eines Portalfelds: Eingabe des Nutzers, sonst der Default
+// aus dem Kanal-Katalog (nie ein erfundener Ersatzwert).
+function feldWert(
+  field: PortalField,
+  values: Record<string, PortalValue>,
+): PortalValue {
+  const v = values[field.key];
+  return v === undefined ? field.default : v;
+}
+
+// Sichtbarkeit nach den Regeln des Kanal-Katalogs: `apply: "hidden"` greift,
+// sobald das Einflussfeld den Wert `when` trägt (z.B. Objekt-E-Mail nur, wenn
+// die Buchungsbenachrichtigung an ist). Ohne diese Auswertung fragen wir Felder
+// ab, die der Kanal in dieser Konstellation gar nicht kennt.
+function istSichtbar(
+  field: PortalField,
+  fields: PortalField[],
+  values: Record<string, PortalValue>,
+): boolean {
+  return !field.rules.some((rule) => {
+    if (rule.apply !== "hidden") return false;
+    const quelle = fields.find((f) => f.key === rule.influence_field);
+    if (!quelle) return false;
+    return feldWert(quelle, values) === rule.when;
+  });
+}
+
+// Fehlt eine sichtbare Pflichtangabe? Dann bleibt „Weiter" gesperrt.
+function pflichtErfuellt(
+  fields: PortalField[],
+  values: Record<string, PortalValue>,
+): boolean {
+  return fields
+    .filter((f) => f.required && istSichtbar(f, fields, values))
+    .every((f) => {
+      const v = feldWert(f, values);
+      return v !== null && v !== undefined && String(v).trim() !== "";
+    });
+}
 
 // Vorbelegung: EINE Zeile je OTA-Zimmer (nicht je Rate). Wo möglich wird das
 // passende eigene Zimmer VORGEWÄHLT — anhand des aus property_type abgeleiteten
@@ -114,7 +156,11 @@ export function ChannelConnectButton({
   const [portals, setPortals] = useState<SupportedPortal[]>([]);
   const [propertyId, setPropertyId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SupportedPortal | null>(null);
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, PortalValue>>({});
+  // Freier Kanal-Titel (wie in der Referenz-Oberfläche); leer = Portalname.
+  const [title, setTitle] = useState("");
+  // Optionale Einstellungen des Kanals eingeklappt (Advanced Settings).
+  const [erweitertOffen, setErweitertOffen] = useState(false);
   // Bereits gespeicherte Verbindungen des gewählten Objekts (für Vorbefüllung
   // der Hotel-ID + Status-Hinweis pro Portal).
   const [connections, setConnections] = useState<StoredChannelConnection[]>([]);
@@ -194,6 +240,8 @@ export function ChannelConnectButton({
     setStep("portal");
     setSelected(null);
     setValues({});
+    setTitle("");
+    setErweitertOffen(false);
     setOtaRooms([]);
     setLocalRooms([]);
     setRows([]);
@@ -213,10 +261,10 @@ export function ChannelConnectButton({
   // Feld-Defaults aus dem Portal-Katalog (z.B. Betriebs-E-Mail, vom Backend
   // vorbefüllt), damit E-Mail & Co. nicht leer sind und der Kunde sie nicht
   // abtippen muss. Nur nicht-leere Defaults übernehmen (kein leerer Wert).
-  function fieldDefaults(portal: SupportedPortal): Record<string, string> {
-    const out: Record<string, string> = {};
+  function fieldDefaults(portal: SupportedPortal): Record<string, PortalValue> {
+    const out: Record<string, PortalValue> = {};
     for (const f of portal.fields) {
-      if (f.default) out[f.key] = f.default;
+      if (f.default !== null && f.default !== undefined) out[f.key] = f.default;
     }
     return out;
   }
@@ -354,7 +402,7 @@ export function ChannelConnectButton({
   // noch nicht gesetzt, weil setState asynchron ist).
   function loadMapping(
     portalOverride?: SupportedPortal,
-    valuesOverride?: Record<string, string>,
+    valuesOverride?: Record<string, PortalValue>,
   ) {
     const portal = portalOverride ?? selected;
     const settings = valuesOverride ?? values;
@@ -391,7 +439,9 @@ export function ChannelConnectButton({
         occupancy: r.occupancy,
         pricing_type: r.pricing_type,
       }));
-    if (mappings.length === 0) {
+    // Kanäle ohne Zimmerbegriff (Katalog: mapping_required=false) werden ohne
+    // Zuordnung verbunden — bei allen anderen ist sie Pflicht.
+    if (mappings.length === 0 && selected.mapping_required) {
       setError("Bitte mindestens ein Zimmer zuordnen.");
       return;
     }
@@ -418,6 +468,7 @@ export function ChannelConnectButton({
         : await connectChannel({
             property_id: propertyId,
             portal_code: selected.code,
+            title: title.trim() || undefined,
             settings: values,
             mappings,
           });
@@ -594,28 +645,87 @@ export function ChannelConnectButton({
                     <p className="whitespace-pre-line">{selected.setup_hint}</p>
                   </div>
                 )}
+                {/* Freier Name der Verbindung (leer = Portalname). */}
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="kanal-titel" className="text-sm font-medium">
+                    Bezeichnung
+                  </label>
+                  <Input
+                    id="kanal-titel"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder={selected.label}
+                  />
+                </div>
+
                 {selected.fields.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Für dieses Portal sind keine weiteren Angaben nötig.
                   </p>
                 ) : (
-                  selected.fields.map((f) => (
-                    <div key={f.key} className="flex flex-col gap-1.5">
-                      <label htmlFor={f.key} className="text-sm font-medium">
-                        {f.label}
-                      </label>
-                      <Input
-                        id={f.key}
-                        type={f.type === "email" ? "email" : "text"}
-                        value={values[f.key] ?? ""}
-                        onChange={(e) =>
-                          setValues((v) => ({ ...v, [f.key]: e.target.value }))
-                        }
-                        placeholder={f.placeholder}
-                        required={f.required}
-                      />
-                    </div>
-                  ))
+                  <>
+                    {selected.fields
+                      .filter(
+                        (f) =>
+                          !f.advanced &&
+                          istSichtbar(f, selected.fields, values),
+                      )
+                      .map((f) => (
+                        <PortalFeld
+                          key={f.key}
+                          field={f}
+                          value={feldWert(f, values)}
+                          onChange={(v) =>
+                            setValues((prev) => ({ ...prev, [f.key]: v }))
+                          }
+                        />
+                      ))}
+
+                    {selected.fields.some((f) => f.advanced) && (
+                      <div className="flex flex-col gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setErweitertOffen((o) => !o)}
+                          className="flex items-center gap-1 self-start text-sm font-medium text-muted-foreground hover:text-foreground"
+                        >
+                          <Icon
+                            icon={
+                              erweitertOffen ? "ph:caret-down" : "ph:caret-right"
+                            }
+                            className="size-4"
+                          />
+                          Erweiterte Einstellungen
+                        </button>
+                        {erweitertOffen &&
+                          selected.fields
+                            .filter(
+                              (f) =>
+                                f.advanced &&
+                                istSichtbar(f, selected.fields, values),
+                            )
+                            .map((f) => (
+                              <PortalFeld
+                                key={f.key}
+                                field={f}
+                                value={feldWert(f, values)}
+                                onChange={(v) =>
+                                  setValues((prev) => ({ ...prev, [f.key]: v }))
+                                }
+                              />
+                            ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {selected.min_price !== null && selected.min_price_currency && (
+                  <p className="text-sm text-muted-foreground">
+                    Mindestpreis dieses Portals:{" "}
+                    {(selected.min_price / 100).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}{" "}
+                    {selected.min_price_currency} pro Nacht.
+                  </p>
                 )}
                 {error && (
                   <ErrorBox
@@ -635,8 +745,15 @@ export function ChannelConnectButton({
                     }
                   />
                 )}
-                <Button onClick={() => loadMapping()} disabled={pending}>
-                  {pending ? <Spinner text="Prüfe Zugang …" /> : "Weiter"}
+                <Button
+                  onClick={() => loadMapping()}
+                  disabled={pending || !pflichtErfuellt(selected.fields, values)}
+                >
+                  {pending ? (
+                    <Spinner text="Prüfe Zugang …" />
+                  ) : (
+                    "Verbindung prüfen & weiter"
+                  )}
                 </Button>
               </div>
             ) : step === "mapping" && selected ? (
@@ -647,7 +764,22 @@ export function ChannelConnectButton({
                   text="Zugangsdaten"
                 />
                 <PortalHead portal={selected} />
-                {localRooms.length === 0 ? (
+                {!selected.mapping_required ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      Dieses Portal arbeitet ohne Zimmer-Zuordnung. Du kannst die
+                      Verbindung direkt herstellen.
+                    </p>
+                    {error && <ErrorBox text={error} />}
+                    <Button onClick={connect} disabled={pending}>
+                      {pending ? (
+                        <Spinner text="Verbinde …" />
+                      ) : (
+                        "Verbinden & aktivieren"
+                      )}
+                    </Button>
+                  </>
+                ) : localRooms.length === 0 ? (
                   <ErrorBox text="Für dieses Konto sind noch keine Zimmer mit Preis angelegt. Lege zuerst ein Zimmer mit Grundpreis an." />
                 ) : rows.length === 0 ? (
                   <ErrorBox text="Das Portal liefert keine Zimmer. Prüfe die Zugangsdaten." />
@@ -720,6 +852,77 @@ export function ChannelConnectButton({
   );
 }
 
+// Ein Portalfeld rendern — die Art kommt aus dem Kanal-Katalog, nicht aus einer
+// eigenen Liste: Text/E-Mail/Passwort, Schalter, Auswahl, Zahl.
+function PortalFeld({
+  field,
+  value,
+  onChange,
+}: {
+  field: PortalField;
+  value: PortalValue;
+  onChange: (value: PortalValue) => void;
+}) {
+  if (field.type === "checkbox") {
+    return (
+      <label className="flex items-center gap-2 text-sm font-medium">
+        <input
+          type="checkbox"
+          checked={value === true}
+          onChange={(e) => onChange(e.target.checked)}
+          className="size-4 rounded border-border accent-foreground"
+        />
+        {field.label}
+      </label>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={field.key} className="text-sm font-medium">
+        {field.label}
+      </label>
+      {field.type === "select" || field.type === "switch" ? (
+        <NativeSelect
+          id={field.key}
+          value={value === null || value === undefined ? "" : String(value)}
+          onChange={(e) => onChange(e.target.value)}
+        >
+          {field.options.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </NativeSelect>
+      ) : (
+        <Input
+          id={field.key}
+          type={
+            field.type === "email"
+              ? "email"
+              : field.type === "password"
+                ? "password"
+                : field.type === "number"
+                  ? "number"
+                  : "text"
+          }
+          value={value === null || value === undefined ? "" : String(value)}
+          onChange={(e) =>
+            onChange(
+              field.type === "number"
+                ? e.target.value === ""
+                  ? null
+                  : Number(e.target.value)
+                : e.target.value,
+            )
+          }
+          placeholder={field.placeholder}
+          required={field.required}
+        />
+      )}
+    </div>
+  );
+}
+
 function StepBack({ onClick, text }: { onClick: () => void; text: string }) {
   return (
     <button
@@ -747,6 +950,9 @@ function PortalLogo({ code, size }: { code: string; size: number }) {
       style={{ height: size, width: size * 2.5 }}
     >
       <Image
+        // Marken-Logos liegen als SVG vor; der Bild-Optimierer lehnt SVG ab
+        // (HTTP 400) — deshalb unverändert ausliefern.
+        unoptimized
         src={src}
         alt=""
         width={size * 2.5}

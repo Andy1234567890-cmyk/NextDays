@@ -417,6 +417,79 @@ PUT/POST gesetzt und danach zurückgelesen.
 Konsequenz für uns: die Zimmergröße und die Bettenaufstellung sind lokale
 Felder (eigene Strecke + myBestDays), `property_category` senden wir nicht.
 
+## Nachmessung 01.08.2026 — gibt es IRGENDWO ein Größenfeld?
+
+Anlass: Lodgify zeigt in „Details zur Unterkunft" eine Größe in m²/ft² und
+verteilt sie. Die Frage war, ob wir das über den Aggregator auch können.
+Gemessen mit `scripts/channex/feld_sonde.py` (PUT je Kandidat, danach frisches
+GET und Vergleich; jeder veränderte Wert wurde wieder zurückgesetzt).
+
+**Vollständige Attributliste der Property** (GET, Staging-Konto):
+
+```
+acc_channels_count, address, city, content, country, currency,
+default_cancellation_policy_id, default_tax_set_id, email,
+expected_removal_date, hotel_policy_id, id, is_active, latitude,
+location_precision, logo_url, longitude, max_count_of_occupancies,
+max_count_of_rate_plans, max_count_of_room_types, max_count_of_users,
+min_stay_type, phone, property_category, property_type, settings, state,
+timezone, title, website, zip_code
+```
+
+**Vollständige Attributliste des Room-Type:**
+
+```
+capacity, codes, content, count_of_rooms, default_occupancy, id, meta,
+occ_adults, occ_children, occ_infants, position, room_kind, title
+```
+
+`content` trägt an der Property `description`, `important_information`, `photos`;
+am Room-Type `description`, `photos`. Sonst nichts.
+
+| Kandidat | Ebene | Ergebnis |
+|---|---|---|
+| `property_size`, `size`, `square_meters`, `area`, `living_area`, `size_unit` | property | HTTP 200, Feld existiert nicht — nichts gespeichert |
+| `room_size`, `size`, `square_meters`, `area` | room_type | HTTP 200, Feld existiert nicht — nichts gespeichert |
+| `property_type` | property | **schreibbar und gespeichert** (`apartment` → `villa` → zurückgesetzt) |
+| `room_kind` | room_type | existiert, akzeptiert **ausschließlich `room` und `dorm`** — `apartment`, `house`, `villa`, `studio`, `bed`, `entire_place`, `private_room`, `shared_room`, `unit`, `suite` je HTTP 422 „is invalid" |
+| `GET /property_types` | — | HTTP 404, kein Katalog-Endpunkt |
+
+### Gegenprobe: ignoriert Channex den Schlüssel oder reicht er ihn durch?
+
+Ein Feld, das Channex annimmt und an das Portal weiterreicht, ohne es im GET
+zurückzugeben, wäre mit „schreiben → zurücklesen" nicht zu sehen. Deshalb die
+Gegenprobe mit einem TYPWIDRIGEN Wert:
+
+| Probe | Ergebnis |
+|---|---|
+| `property_type = "###"` | **HTTP 422** — bekanntes Feld, Wert validiert |
+| `room_kind = "###"` | **HTTP 422** — bekanntes Feld, Wert validiert |
+| `size`, `property_size`, `square_meters`, `area`, `living_area`, `size_unit` (property) = `"###"` | HTTP 200 — Schlüssel wird still verworfen |
+| `size`, `room_size`, `square_meters`, `area` (room_type) = `"###"` | HTTP 200 — Schlüssel wird still verworfen |
+
+Die beiden ersten Zeilen sind die Kontrollprobe: Channex validiert Felder, die
+es kennt. Ein durchgereichtes Größenfeld müsste seinen Typ prüfen und `"###"`
+ablehnen. Es tut es nicht → unter diesen Namen existiert kein Feld, auch kein
+write-only.
+
+### Was damit NICHT bewiesen ist
+
+1. Ein Feld unter einem Namen, den diese Sonde nicht geraten hat.
+2. Felder, die Channex erst freischaltet, wenn ein Kanal **wirklich verbunden**
+   ist. Unser Airbnb-Kanal (`be7cb291-…`, Property `Smoke-Testhaus`) steht auf
+   `is_active: false`, `settings: null`, `known_mappings: []`. Das Verbinden
+   verlangt Airbnb-OAuth und ist eine Aktion am Konto des Betriebs.
+3. Ein anderes Channex-Produkt. `GET /applications` listet: `apaleo`,
+   `booking_crs`, `channex_messages`, `channex_payments`, `channex_pci`, `mews`,
+   `stripe_tokenization` — keine Content-/Listing-Anwendung in unserem Konto.
+
+**Stand der Aussage:** Über die uns zugängliche Channex-Oberfläche geht die
+Größe nicht hinaus. Ob Channex sie über einen verbundenen Kanal oder ein hier
+nicht sichtbares Produkt doch überträgt, ist offen — dazu gibt es eine
+gegenteilige Aussage vom Channex-CEO, die noch nicht gegengeprüft werden konnte.
+Das Kanal-Badge „Nur myBestDays" an der Größe bildet den gemessenen Stand ab und
+ist zu korrigieren, sobald der Weg belegt ist.
+
 ## Zimmergröße und Bettentypen
 
 Kein Endpunkt und kein Feld dieser Inventur trägt eine **Zimmergröße in m²** oder
@@ -459,3 +532,106 @@ Umgesetzt seit `0251_channex_ari_shadow.sql`:
 
 Prüffrage vor jeder Änderung am Channel-Manager: *Löst das einen Lesezugriff auf
 ARI/Verfügbarkeit/Preise aus?* Wenn ja: nicht bauen.
+
+---
+
+# Kanal-Anlage: der vollständige Vertrag (live gemessen 01.08.2026)
+
+Anlass: unser Kanalmanager (`/channels`) muss dasselbe können wie die
+Referenz-Maske `/channels/create` des Aggregators. Die Doku-Seite „Channel API"
+beschreibt nur, DASS es die API gibt (Zugang nur für Whitelabel-Konten — das
+sind wir). Der belastbare Vertrag steht im Katalog `GET channels/list`.
+
+## Was `channels/list` je Kanal liefert (52 Kanäle)
+
+| Feld | Bedeutung | Werte im Bestand |
+| --- | --- | --- |
+| `params` | die Eingabemaske des Kanals | Typen: `string` (110), `boolean` (66), `select` (17), `hidden` (13), `password` (8), `switch` (3), `number` (3), `integer` (2), `slug` (1) |
+| `params[].rules` | bedingte Sichtbarkeit | `{apply:"hidden", when:<Wert>, influence_field:"<feld>"}` — z. B. `email` ist versteckt, solange `send_email_notifications=false` |
+| `params[].default` | Vorbelegung | vorhanden ⇒ optionale Einstellung, fehlt ⇒ Pflichtangabe des Kunden |
+| `mapping_mode` | Art der Zuordnung | `room_rate_multioccupancy` (39), `direct` (5), `listing` (2), `tree` (1, Yatra), keins (5) |
+| `mapping_is_not_required` | Kanal ohne Zimmerbegriff | Avis, Budget, Europcar, Hertz, Payless, HopperHomes |
+| `rate_params` | die Felder EINER Zuordnungszeile | Booking/Expedia: `room_type_code`, `rate_plan_code`, `occupancy`, `pricing_type`, `primary_occ`, `readonly` · Airbnb: `listing_id`, `airbnb_rate_plan_id` · `null` bei `direct` |
+| `property_mapping` | ein Kanal, mehrere Objekte? | `single` (45), `multiple` (2: Airbnb, HopperHomes) |
+| `actions` | Kanal-Aktionen | nur `load_future_reservations` |
+| `channel_restrictions` | Mindestpreis + dessen Währung | Booking `{EUR, 500}`, Airbnb `{USD, 1000}`, HopperHomes `{USD}` |
+
+**`channel_restrictions.currency` ist NICHT die Pflichtwährung des Kanals.**
+Gegenprobe: ein Booking.com-Kanal auf das GBP-Testhotel `11140466` an einem
+EUR-Objekt wurde mit **HTTP 201** angelegt; die Referenz-Maske bietet für
+Booking.com selbst Testhotels in GBP/JPY/USD an und lässt die Währung frei
+(„Auto"). Eine Sperre an dieser Stelle wäre eine erfundene Regel.
+
+## Kanal-Aktion auslösen
+
+`GET channels/{id}/action/{name}` → 200. Die Schreibweisen
+`channels/{id}/{name}`, `channels/{id}/actions/{name}` und `channels/{id}/pull_bookings`
+antworten mit 404. Genutzt für „Bestehende Buchungen laden".
+
+## Fehlerformat
+
+Validierungsfehler tragen IMMER den Titel „Validation Error"; die Ursache steht
+in `details`:
+
+```json
+{"errors":{"code":"validation_error","title":"Validation Error",
+  "details":{"settings":["channel with the same settings already exists"]}}}
+```
+
+Wer nur `title` liest, zeigt dem Kunden bei jeder Ursache dieselbe leere Zeile
+(und textbasierte Sonderbehandlungen greifen nie) — `details` hat Vorrang.
+
+## End-to-End-Beweis (01.08.2026)
+
+Über UNSERE Maske verbunden: Objekt „Smoke-Testhaus" → Booking.com-Testhotel
+`11140466`, Zimmer „Five-Bedroom House" (`1114046602`), Rate `40564345`.
+Ergebnis bei Channex: Kanal `is_active: true`, `rate_plans[0].settings =
+{room_type_code, rate_plan_code, occupancy, pricing_type:"Standard",
+primary_occ:true, readonly:false}`, dazu von Channex ergänzt
+`mappingSettings.rooms`. In der Aggregator-Oberfläche stand der Kanal als
+„Booking.com — Active". Danach wieder getrennt (deactivate + delete), Konto
+enthält nur noch den inaktiven Airbnb-Kanal.
+
+Nicht end-to-end bewiesen (kein Konto/keine Zugangsdaten): `direct` (Google),
+`tree` (Yatra) und die Kanäle ohne Zuordnung (Mietwagen). Deren Zuordnungs-
+Aufbau folgt dem Katalog, ist aber nur durch Unit-Tests abgedeckt.
+
+---
+
+# End-to-End-Nachweis der laufenden Synchronisierung (01.08.2026)
+
+Aufbau: Objekt „Smoke-Testhaus" (Tenant Andy Staudinger) ↔ Booking.com-Testhotel
+`11140466` (Staging), Kanal über unsere eigene Maske angelegt und aktiviert.
+
+| Kette | Nachweis |
+| --- | --- |
+| Objekt → Channex (Inhalt) | Kanal `f57c6bca…` aktiv, Zimmer „Five-Bedroom House" gemappt |
+| Preise/Verfügbarkeit → Channex | Inventar-Ansicht des Aggregators zeigt unsere Tageswerte |
+| Preisänderung → Portal | Tagespreis 20.08. auf 333 gesetzt → Job in 3 s durch den Worker → Wert steht im Inventar (ebenso 222 am 21.08., 244 am 22.08.) |
+| Portal → Reservierung | 20 Buchungen des Testhotels importiert, in `reservations` projiziert (`channel=ota_other`, `ota_name=BookingCom`) |
+| Reservierung → Kalender | 40 Nächte auf `booked` |
+| Kalender → Portal (Gegenrichtung) | dieselben Nächte stehen im Inventar auf AVL 0 |
+| Dauerbetrieb | in 2 h: 27× `sync_bookings_feed`, je 24× `process_ari_outbox` / `process_restriction_outbox`, alle `done`; Webhook global registriert, aktiv, mit Secret-Header |
+
+Offen (nur mit Karteneingabe möglich, deshalb beim Betreiber): eine FRISCHE
+Buchung über `https://secure.booking.com/book.html?hotel_id=11140466&test=1`,
+um den Webhook-Auslöser selbst zu sehen. Der Import-Pfad dahinter ist mit den
+20 echten Buchungen belegt.
+
+## Dabei gefundene Defekte (alle behoben)
+
+1. **`availability_source` kannte `ota_other` nicht** → jede Buchung eines
+   „sonstigen" Portals (Expedia, Agoda …) war nicht importierbar, die Nacht
+   blieb lokal frei und doppelt verkaufbar. Migration `0253`.
+2. **Sofort-Push schrieb den Ist-Spiegel nicht fort** → der nächste Abgleich
+   hielt den gerade gesendeten Preis für eine Differenz und schickte ihn erneut
+   (verstößt gegen die Auflage „nur Änderungen senden"). Gemessen: 333 kam an,
+   der Spiegel stand weiter auf 103,20.
+3. **ARI-Import eines Hotels wurde nie fertig** → eine geteilte Hotel-Property
+   braucht 30 Anfragen (gemessen), das Property-Budget gibt 20/Minute her; der
+   Job brach ab, begann von vorn und lief seit dem 30.07. im Kreis, während er
+   Budget verbrannte. Jetzt ein Job JE ZIMMER (≈10 Anfragen) und Dedup ohne
+   Zeit-Bucket, damit sich die Jobs nicht mehr gegenseitig verhungern lassen.
+4. **Demo-Betriebe wurden an Channex gepusht** → ihre Property-Map trägt einen
+   Platzhalter (`demo-…`); jeder Content-/ARI-Push kassierte „Bad Request" und
+   lief zehnmal in den Retry. Solche Mappings gelten jetzt als nicht gemanagt.

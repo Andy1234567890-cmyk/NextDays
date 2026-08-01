@@ -53,6 +53,9 @@ function ChannelLogo({
     return (
       <>
         <Image
+          // Marken-Logos liegen als SVG vor; der Bild-Optimierer lehnt SVG ab
+          // (HTTP 400) — deshalb unverändert ausliefern.
+          unoptimized
           src={src}
           alt={alt}
           width={200}
@@ -65,6 +68,9 @@ function ChannelLogo({
         />
         {srcDark && (
           <Image
+            // Marken-Logos liegen als SVG vor; der Bild-Optimierer lehnt SVG ab
+            // (HTTP 400) — deshalb unverändert ausliefern.
+            unoptimized
             src={srcDark}
             alt={alt}
             width={200}
@@ -202,6 +208,9 @@ function AddChannelCard({
                 >
                   {otaLogo(c).src && (
                     <Image
+                      // Marken-Logos liegen als SVG vor; der Bild-Optimierer lehnt SVG ab
+                      // (HTTP 400) — deshalb unverändert ausliefern.
+                      unoptimized
                       src={otaLogo(c).src as string}
                       alt={c.label}
                       width={24}

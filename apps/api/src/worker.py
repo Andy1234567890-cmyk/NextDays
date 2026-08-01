@@ -334,8 +334,12 @@ def _handle_import_ari_property(
     'ari'-Webhook (jemand hat Preise/Verfügbarkeit außerhalb unseres PMS
     geändert). Webhook = nur Trigger, Daten werden gepullt (Channex-Doku:
     Webhooks können out-of-order kommen)."""
+    # `property_id` grenzt auf EIN Zimmer ein (ein Lauf über ein ganzes Hotel
+    # sprengt das Property-Budget und wurde nie fertig). Ältere Jobs ohne das
+    # Feld laufen unverändert über alle Zimmer.
     _svc(db, budget).import_ari_for_property(
-        payload["tenant_id"], payload["channex_property_id"]
+        payload["tenant_id"], payload["channex_property_id"],
+        property_id=payload.get("property_id"),
     )
 
 

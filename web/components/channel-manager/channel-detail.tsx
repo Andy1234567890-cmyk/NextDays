@@ -8,7 +8,7 @@
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
 import { Button } from "@nextdays/ui/button";
@@ -20,6 +20,7 @@ import type {
 } from "@/lib/channex";
 import {
   disconnectChannel,
+  runChannelAction,
   setConnectionActive,
   syncChannexBookings,
   triggerFullSync,
@@ -175,6 +176,13 @@ export function ChannelDetail({
         bookings={portalBookings}
         configured={configured}
         portalLabel={meta.label}
+        channelId={channelId}
+        // „Zukünftige Buchungen laden" bietet nicht jedes Portal an — der
+        // Kanal-Katalog sagt, was geht (kein geratener Knopf).
+        canPullFuture={
+          (detail?.actions ?? []).includes("load_future_reservations") &&
+          isConnected
+        }
       />
     </div>
   );
@@ -274,6 +282,13 @@ function MappingRow({
   // Fehler ohnehin. setConnectionActive erwartet property_id + portal_code —
   // den Code liefert die Route (dieselbe Kanal-Detailseite).
   const [active, setActive] = useState(row.is_active);
+  // Der optimistische Zustand darf den echten nicht überdauern: nach dem
+  // Verbinden liefert der Realtime-Refresh eine frische Zeile — ohne diesen
+  // Abgleich bliebe die Zeile auf dem Stand des ERSTEN Renders („Pausiert",
+  // obwohl der Kanal längst aktiv ist).
+  useEffect(() => {
+    setActive(row.is_active);
+  }, [row.is_active]);
 
   const statusLabel = !active
     ? "Pausiert"
@@ -391,10 +406,14 @@ function BookingsSection({
   bookings,
   configured,
   portalLabel,
+  channelId,
+  canPullFuture,
 }: {
   bookings: ChannexBooking[];
   configured: boolean;
   portalLabel: string;
+  channelId: string | null;
+  canPullFuture: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
@@ -416,6 +435,21 @@ function BookingsSection({
     });
   }
 
+  // Buchungen holen, die VOR dem Verbinden im Portal entstanden sind.
+  function pullFuture() {
+    if (!channelId) return;
+    setMessage(null);
+    startTransition(async () => {
+      const res = await runChannelAction(channelId, "load_future_reservations");
+      setIsError(!res.ok);
+      setMessage(
+        res.ok
+          ? "Bestehende Buchungen werden geladen — das kann einen Moment dauern."
+          : res.error,
+      );
+    });
+  }
+
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
@@ -423,6 +457,18 @@ function BookingsSection({
           Buchungen von {portalLabel}{" "}
           <span className="text-muted-foreground">({bookings.length})</span>
         </h2>
+        {canPullFuture && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={pullFuture}
+            disabled={pending}
+          >
+            <Icon icon="ph:clock-counter-clockwise" className="size-4" />
+            Bestehende Buchungen laden
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"

@@ -103,6 +103,20 @@ class ChannelsMixin:
         meta = self._CURATED_META.get(code)
         return meta["label"] if meta else code
 
+    def _channel_spec(self, code: str) -> dict[str, Any]:
+        """Katalog-Eintrag eines Kanals (params, mapping_mode, rate_params,
+        channel_restrictions …). Leeres Dict, wenn der Katalog nicht erreichbar
+        ist — die Aufrufer behandeln das als „keine Zusatzangaben", statt sich
+        etwas auszudenken."""
+        try:
+            raw = self._channex.list_channel_catalog().get("data") or []
+        except ChannexError:
+            return {}
+        for entry in raw:
+            if entry.get("code") == code:
+                return entry
+        return {}
+
     def _is_known_portal(self, code: str) -> bool:
         """Ist `code` ein real verbindbarer Kanal? Gegen den LIVE-Katalog geprüft
         (alle vom Account unterstützten Kanäle, nicht nur die kuratierten). Bei
@@ -155,14 +169,35 @@ class ChannelsMixin:
         ),
     }
 
+    # Katalog-Feldtyp → Render-Hinweis fürs Frontend. `hidden` erscheint nie in
+    # der Maske (Channex setzt diese Felder selbst), `slug` ist ein Textfeld.
+    _FIELD_TYPES: dict[str, str] = {
+        "string": "text",
+        "slug": "text",
+        "password": "password",
+        "boolean": "checkbox",
+        "select": "select",
+        "switch": "switch",
+        "number": "number",
+        "integer": "number",
+    }
+    # Feldtypen, die als ZUGANGSDATEN zählen: hat ein Kanal keines davon (außer
+    # der reinen Benachrichtigungs-E-Mail), läuft er über OAuth.
+    _CREDENTIAL_TYPES: frozenset[str] = frozenset({"text", "password"})
+
     def list_supported_portals(
         self, ctx: AuthContext | None = None
     ) -> list[dict[str, Any]]:
-        """Verbindbare Portale + die Eingabefelder, die der Kunde ausfüllt.
-        Felder werden aus dem Channex-Channel-Katalog (`params`, ohne `hidden`)
-        abgeleitet — so raten wir nichts und bleiben aktuell. ALLE sichtbaren
-        String-Pflichtfelder werden abgefragt (z.B. Hotel-ID UND Property-E-Mail;
-        Autovermieter mehrere IDs), nicht nur ein Hauptfeld.
+        """Verbindbare Portale + die komplette Eingabemaske je Portal.
+
+        Die Felder kommen 1:1 aus `params` des Kanal-Katalogs — ALLE Typen
+        (Text, Passwort, Auswahl, Schalter, Zahl), nicht nur Text. `hidden`
+        bleibt außen vor (das setzt der Provider selbst). Pflicht ist ein Feld
+        genau dann, wenn es keinen Katalog-Default hat; Felder MIT Default sind
+        optionale Einstellungen und landen im Bereich „Erweitert". Die
+        Sichtbarkeitsregeln (`rules`) reicht der Server durch, das Frontend
+        wertet sie live aus — sonst fragen wir Felder ab, die der Kanal in
+        dieser Konstellation gar nicht kennt.
 
         Mit ctx wird das E-Mail-Feld mit der hinterlegten Betriebs-E-Mail
         vorbefüllt (`default`), damit der Kunde sie nicht abtippen muss. Fehlt
@@ -176,62 +211,93 @@ class ChannelsMixin:
 
         out: list[dict[str, Any]] = []
         for portal in self._portal_catalog():
+            spec = by_code.get(portal["code"]) or {}
+            restrictions = spec.get("channel_restrictions") or {}
+            base = {
+                "code": portal["code"],
+                "label": portal["label"],
+                "icon": portal["icon"],
+                "setup_hint": self._SETUP_HINTS.get(portal["code"]),
+                "mapping_mode": spec.get("mapping_mode"),
+                "mapping_required": not spec.get("mapping_is_not_required", False),
+                "min_price_currency": restrictions.get("currency"),
+                "min_price": restrictions.get("min_price"),
+            }
             # Sandbox-Testkanal: keine Eingaben — Service setzt alles selbst
             # (credential-Flow, Service injiziert endpoint/hotel_code/api_key).
             if portal["code"] == self._SANDBOX_CODE:
-                out.append(
-                    {**portal, "fields": [], "connection_type": "credential",
-                     "setup_hint": None}
-                )
+                out.append({**base, "fields": [], "connection_type": "credential"})
                 continue
-            spec = by_code.get(portal["code"]) or {}
-            params = spec.get("params") or {}
-            # ALLE sichtbaren String-Pflichtfelder (ohne `default`), nach Position
-            # sortiert. `rules` (Validierungsregeln, z.B. bei E-Mail) schließt ein
-            # Feld NICHT mehr aus — es ist trotzdem Pflicht und muss abgefragt
-            # werden, sonst lehnt Channex die Verbindung ab.
-            essential = sorted(
-                (
-                    (key, meta)
-                    for key, meta in params.items()
-                    if meta.get("type") == "string" and "default" not in meta
-                ),
-                key=lambda kv: kv[1].get("position", 99),
+
+            fields = self._portal_fields(
+                spec.get("params") or {}, portal["label"], default_email
             )
-            fields = [
-                {
-                    "key": key,
-                    "label": self._humanize_field(meta.get("title"), portal["label"]),
-                    "placeholder": "",
-                    "required": True,
-                    # E-Mail-Felder als solche kennzeichnen (Frontend: type=email);
-                    # sonst normales Textfeld. Der Katalog liefert nur "string".
-                    "type": "email" if "email" in key.lower() else "text",
-                    # E-Mail-Felder mit der Betriebs-E-Mail vorbefüllen (sonst
-                    # leer). Kein Default für Hotel-ID o.ä. — die ist kundenspezifisch.
-                    "default": (
-                        default_email if "email" in key.lower() and default_email
-                        else None
-                    ),
-                }
-                for key, meta in essential
-            ]
-            # OAuth ⇔ kein abfragbares Credential-Feld außer der Property-E-Mail
+            # OAuth ⇔ kein abfragbares Zugangsdaten-Feld außer der Property-E-Mail
             # (z.B. Airbnb) ODER explizit in der Allowlist. E-Mail allein ist kein
             # Credential-Login → solche Kanäle laufen über die OAuth-URL.
-            credential_fields = [f for f in fields if "email" not in f["key"].lower()]
+            credential_fields = [
+                f for f in fields
+                if f["required"]
+                and f["type"] in self._CREDENTIAL_TYPES
+                and "email" not in f["key"].lower()
+            ]
             is_oauth = portal["code"] in self._OAUTH_PORTALS or not credential_fields
             out.append(
                 {
-                    "code": portal["code"],
-                    "label": portal["label"],
-                    "icon": portal["icon"],
+                    **base,
                     "fields": [] if is_oauth else fields,
                     "connection_type": "oauth" if is_oauth else "credential",
-                    "setup_hint": self._SETUP_HINTS.get(portal["code"]),
                 }
             )
         return out
+
+    def _portal_fields(
+        self, params: dict[str, Any], portal_label: str, default_email: str | None
+    ) -> list[dict[str, Any]]:
+        """`params` des Katalogs in unsere Maske übersetzen (siehe
+        list_supported_portals). Reihenfolge wie im Katalog (`position`)."""
+        fields: list[dict[str, Any]] = []
+        for key, meta in sorted(
+            params.items(), key=lambda kv: kv[1].get("position", 99)
+        ):
+            render = self._FIELD_TYPES.get(meta.get("type") or "")
+            if render is None:  # hidden & unbekannte Typen: nicht abfragen
+                continue
+            if render == "text" and "email" in key.lower():
+                render = "email"
+            has_default = "default" in meta
+            default = meta.get("default")
+            if render == "email" and default_email and not default:
+                default = default_email
+            fields.append(
+                {
+                    "key": key,
+                    "label": self._humanize_field(
+                        meta.get("title"), portal_label, key
+                    ),
+                    "placeholder": "",
+                    # Ohne Katalog-Default ist das Feld eine Pflichtangabe des
+                    # Kunden; mit Default eine optionale Einstellung.
+                    "required": not has_default,
+                    "type": render,
+                    "default": default,
+                    "options": list(meta.get("options") or []),
+                    "advanced": has_default,
+                    "rules": [
+                        {
+                            "apply": r.get("apply", "hidden"),
+                            "when": r.get("when"),
+                            "influence_field": r.get("influence_field", ""),
+                        }
+                        for r in meta.get("rules") or []
+                        # Ältere Katalog-Einträge tragen an dieser Stelle keinen
+                        # Regelsatz, sondern nur ein Flag — dann gibt es nichts
+                        # auszuwerten.
+                        if isinstance(r, dict) and r.get("influence_field")
+                    ],
+                }
+            )
+        return fields
 
     def _tenant_company_email(self, ctx: AuthContext) -> str | None:
         """Hinterlegte Betriebs-E-Mail des Tenants (tenant_billing_profile.email)
@@ -252,10 +318,32 @@ class ChannelsMixin:
         ).data
         return (row[0].get("email") if row else None) or None
 
-    @staticmethod
-    def _humanize_field(title: str | None, portal_label: str) -> str:
+    # Wiederkehrende Katalog-Felder in Klartext (der Katalog liefert englische
+    # Titel). Nur belegte Schlüssel — unbekannte behalten ihren Katalog-Titel,
+    # statt dass wir eine Bedeutung erfinden (Wurzel 4).
+    _FIELD_LABELS: dict[str, str] = {
+        "send_email_notifications": "Buchungsbenachrichtigung per E-Mail senden",
+        "min_stay_type": "Mindestaufenthalt gilt für",
+        "booking_amount_settings": "Buchungsbetrag",
+        "booking_tax_settings": "Steuerbetrag",
+        "rate_plans_enabled": "Preispläne verwenden",
+        "pricing_type": "Preisart",
+        "api_key": "API-Schlüssel",
+        "access_token": "Zugriffs-Token",
+        "endpoint": "API-Adresse",
+        "hotel_code": "Hotel-Code",
+        "cohost_payout_calculations": "Auszahlung des Co-Gastgebers berechnen",
+    }
+
+    @classmethod
+    def _humanize_field(
+        cls, title: str | None, portal_label: str, key: str = ""
+    ) -> str:
         """Channex-Feldtitel ggf. white-label machen (z.B. 'Hotel ID' →
         'Booking.com Hotel-ID'). Kein Provider-Name durchsickern lassen."""
+        known = cls._FIELD_LABELS.get(key)
+        if known:
+            return known
         t = (title or "").strip() or "Wert"
         low = t.lower()
         if low in ("hotel id", "hotel_id", "hotel code"):
@@ -427,10 +515,19 @@ class ChannelsMixin:
                  mappings=mappings, settings_keys=list((settings or {}).keys()))
         if not self._is_known_portal(portal_code):
             raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
-        if not mappings:
+        spec = self._channel_spec(portal_code)
+        # Manche Kanäle (Mietwagen & Co.) kennen gar keine Zimmer-Zuordnung —
+        # der Katalog sagt das über `mapping_is_not_required`. Nur dort ist ein
+        # leeres Mapping erlaubt.
+        mapping_required = not spec.get("mapping_is_not_required", False)
+        if mapping_required and not mappings:
             raise ChannelManagerError(
                 "Mindestens eine Zimmer/Raten-Zuordnung ist nötig.", status_code=422
             )
+        # KEINE Währungsprüfung: `channel_restrictions.currency` ist NICHT die
+        # Pflichtwährung des Kanals, sondern die Bezugswährung des Mindestpreises.
+        # Live belegt — ein Booking.com-Kanal auf ein GBP-Testhotel an einem
+        # EUR-Objekt wurde mit HTTP 201 angelegt (01.08.2026).
 
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
         log.info("connect_debug_property_mapping",
@@ -483,8 +580,10 @@ class ChannelsMixin:
         # rate_plans-Array bauen: je zugeordnetem Zimmer werden die OTA-Raten des
         # zugewiesenen OTA-Zimmers auf die Rate-Plans des Objekts gemappt (Primary
         # zuerst). Echte OTAs INTEGER-Codes, Sandbox String-Codes — Helfer trennt das.
-        rate_plans = self._build_rate_plans(
-            db, tenant_id, portal_code, mappings, ota_rooms
+        rate_plans = (
+            self._build_rate_plans(db, tenant_id, portal_code, mappings, ota_rooms)
+            if mapping_required
+            else []
         )
 
         # Mehrere Zimmer, EINE Hotel-ID = EIN Channex-Kanal (live+Doku verifiziert:
@@ -640,8 +739,20 @@ class ChannelsMixin:
         Standard-Rate; hat das OTA-Zimmer mehr Raten als das Objekt Rate-Plans,
         laufen die überzähligen ebenfalls auf die Primary (Standard-Verhalten, s.
         Booking „derived rate plan"). Wirft, wenn ein zugeordnetes Objekt keinen
-        Rate-Plan hat oder ein OTA-Zimmer keine Rate liefert."""
+        Rate-Plan hat oder ein OTA-Zimmer keine Rate liefert.
+
+        Die Feldnamen der Zuordnung sind NICHT fix: jeder Kanal deklariert sie im
+        Katalog unter `rate_params` (Booking/Expedia: room_type_code +
+        rate_plan_code + occupancy …, Airbnb: listing_id + airbnb_rate_plan_id).
+        Gebaut wird deshalb genau das, was der Kanal deklariert."""
         is_sandbox = portal_code == self._SANDBOX_CODE
+        spec = self._channel_spec(portal_code)
+        rate_params: dict[str, Any] = spec.get("rate_params") or {}
+        # `direct` (z.B. Google): der Kanal kennt keine OTA-Codes, die Zuordnung
+        # macht der Provider selbst — es geht nur die Rate-Plan-ID mit.
+        direct_mode = spec.get("mapping_mode") == "direct" or not rate_params
+        if direct_mode:
+            return self._build_rate_plans_direct(db, tenant_id, mappings)
         rooms_by_code = {str(r.get("id")): r for r in ota_rooms}
         seen_local: set[str] = set()
         # Channex/Booking-Eindeutigkeit gilt auf dem OTA-Paar (room_type_code,
@@ -677,31 +788,17 @@ class ChannelsMixin:
                     "Das Portal-Zimmer liefert keine Rate.", status_code=422
                 )
 
-            local_rate_maps = self._rate_plan_maps_for_property(
-                db, tenant_id, local_property_id
-            )
-            if not local_rate_maps:
-                raise ChannelManagerError(
-                    "Das zugeordnete Zimmer hat keinen Preisplan.", status_code=422
-                )
-            channex_rate_plan_ids = [
-                self._channex_rate_plan_id_for_map(db, tenant_id, mid)
-                for mid in local_rate_maps
-            ]
-            channex_rate_plan_ids = [c for c in channex_rate_plan_ids if c]
-            if not channex_rate_plan_ids:
-                raise ChannelManagerError(
-                    "Preisplan des Zimmers nicht bei den Portalen registriert.",
-                    status_code=422,
-                )
+            # Standard ist der GRUNDPREIS: der erste (Standard-)Preis des Zimmers
+            # geht immer an die Portale; zusätzliche Preise nur, wenn der Kunde sie
+            # je Preis freigeschaltet hat (rate_plans.send_to_portals, 0177).
+            selected = self._selected_rate_plan_ids(db, tenant_id, local_property_id)
             log.info(
                 "build_rate_plans_debug_row",
                 local_property_id=local_property_id,
                 mapping_room_type_code=m.get("room_type_code"),
                 ota_room_title=ota_room.get("title"),
                 ota_rate_ids=[r.get("id") for r in ota_rates],
-                local_rate_map_ids=local_rate_maps,
-                channex_rate_plan_ids=channex_rate_plan_ids,
+                channex_rate_plan_ids=selected,
             )
 
             room_code = (
@@ -711,20 +808,6 @@ class ChannelsMixin:
             occupancy = self._as_int(m.get("occupancy")) or 2
             pricing_type = m.get("pricing_type") or "Standard"
 
-            # Standard ist der GRUNDPREIS: der erste (Standard-)Preis des Zimmers
-            # geht immer an die Portale — pro Zimmer GENAU EIN Eintrag auf die
-            # Standard-Rate (erste OTA-Rate). Zusätzliche Preise gehen NUR mit, wenn
-            # der Kunde sie je Preis freigeschaltet hat (rate_plans.send_to_portals,
-            # 0177). channex_rate_plan_ids ist bereits nach Alter sortiert (der erste
-            # = Grundpreis); der Filter behält den ersten IMMER und von den weiteren
-            # nur die freigeschalteten.
-            portal_ids = self._portal_enabled_rate_plan_ids(
-                db, tenant_id, local_property_id
-            )
-            selected = [
-                cid for i, cid in enumerate(channex_rate_plan_ids)
-                if i == 0 or cid in portal_ids
-            ]
             # Jede gewählte Rate auf eine eigene OTA-Rate paaren (Standard zuerst).
             pairs = list(zip(ota_rates, selected, strict=False))
 
@@ -745,15 +828,15 @@ class ChannelsMixin:
                 rate_plans.append(
                     {
                         "rate_plan_id": channex_rate_plan_id,
-                        "settings": {
-                            "room_type_code": room_code,
-                            "rate_plan_code": rate_code,
-                            "occupancy": occupancy,
-                            "pricing_type": pricing_type,
-                            # Nur der erste Eintrag trägt die Restriktionen.
-                            "primary_occ": not primary_used,
-                            "readonly": False,
-                        },
+                        "settings": self._rate_plan_settings(
+                            rate_params,
+                            portal_code=portal_code,
+                            room_code=room_code,
+                            rate_code=rate_code,
+                            occupancy=occupancy,
+                            pricing_type=pricing_type,
+                            primary=not primary_used,
+                        ),
                     }
                 )
                 primary_used = True
@@ -762,6 +845,114 @@ class ChannelsMixin:
                 "Bitte mindestens ein Zimmer zuordnen.", status_code=422
             )
         return rate_plans
+
+    # Bedeutung der Katalog-Felder aus `rate_params` — welcher unserer Werte in
+    # welches Feld gehört. Nur belegte Schlüssel; alles andere lassen wir weg,
+    # statt einen Wert zu erfinden (Wurzel 4).
+    _RATE_PARAM_ROOM_KEYS: frozenset[str] = frozenset({"room_type_code", "listing_id"})
+    _RATE_PARAM_RATE_KEYS: frozenset[str] = frozenset(
+        {"rate_plan_code", "airbnb_rate_plan_id"}
+    )
+
+    def _rate_plan_settings(
+        self, rate_params: dict[str, Any], *, portal_code: str,
+        room_code: int | str, rate_code: int | str, occupancy: int,
+        pricing_type: str,
+        primary: bool,
+    ) -> dict[str, Any]:
+        """Die Zuordnungs-Settings EINES Eintrags — gebaut aus den Feldern, die
+        der Kanal im Katalog deklariert. Booking/Expedia bekommen so
+        room_type_code/rate_plan_code/occupancy/pricing_type/primary_occ,
+        Airbnb listing_id/airbnb_rate_plan_id. Felder, deren Bedeutung wir nicht
+        kennen, bleiben leer (der Kanal setzt seinen Katalog-Default)."""
+        settings: dict[str, Any] = {}
+        unbekannt: list[str] = []
+        for key, meta in rate_params.items():
+            if key in self._RATE_PARAM_ROOM_KEYS:
+                settings[key] = room_code
+            elif key in self._RATE_PARAM_RATE_KEYS:
+                settings[key] = rate_code
+            elif key == "occupancy":
+                settings[key] = occupancy
+            elif key == "primary_occ":
+                settings[key] = primary
+            elif key == "readonly":
+                settings[key] = False
+            elif key == "pricing_type":
+                options = list(meta.get("options") or [])
+                # Nur einen vom Kanal angebotenen Wert senden; sonst dessen
+                # eigenen Default (der Katalog-Default ist bei Booking.com
+                # nachweislich verschrieben, „Standart" — dann lieber der erste
+                # angebotene Wert, statt einen ungültigen zu senden).
+                if not options or pricing_type in options:
+                    settings[key] = pricing_type
+                else:
+                    settings[key] = options[0]
+            else:
+                unbekannt.append(key)
+        if unbekannt:
+            log.info(
+                "channex_rate_param_unbekannt",
+                portal_code=portal_code, fields=sorted(unbekannt),
+            )
+        return settings
+
+    def _build_rate_plans_direct(
+        self, db: Client, tenant_id: str, mappings: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Zuordnung für Kanäle ohne OTA-Codes (`mapping_mode: direct`, z.B.
+        Google): es gehen nur die eigenen Preispläne mit, die Zuordnung macht
+        der Kanal selbst. Ein `settings`-Objekt gibt es hier nicht — der Katalog
+        deklariert für diese Kanäle keine `rate_params`."""
+        rate_plans: list[dict[str, Any]] = []
+        gesehen: set[str] = set()
+        for m in mappings:
+            local_property_id = m.get("local_property_id")
+            if not local_property_id:
+                continue
+            for channex_rate_plan_id in self._selected_rate_plan_ids(
+                db, tenant_id, local_property_id
+            ):
+                if channex_rate_plan_id in gesehen:
+                    continue
+                gesehen.add(channex_rate_plan_id)
+                rate_plans.append({"rate_plan_id": channex_rate_plan_id})
+        if not rate_plans:
+            raise ChannelManagerError(
+                "Bitte mindestens ein Zimmer zuordnen.", status_code=422
+            )
+        return rate_plans
+
+    def _selected_rate_plan_ids(
+        self, db: Client, tenant_id: str, local_property_id: str
+    ) -> list[str]:
+        """Die Channex-Rate-Plan-IDs eines Objekts, die an das Portal gehen:
+        immer der Grundpreis (der erste) und zusätzlich jeder Preis, den der
+        Kunde ausdrücklich freigeschaltet hat (send_to_portals, 0177)."""
+        local_rate_maps = self._rate_plan_maps_for_property(
+            db, tenant_id, local_property_id
+        )
+        if not local_rate_maps:
+            raise ChannelManagerError(
+                "Das zugeordnete Zimmer hat keinen Preisplan.", status_code=422
+            )
+        ids = [
+            cid
+            for cid in (
+                self._channex_rate_plan_id_for_map(db, tenant_id, mid)
+                for mid in local_rate_maps
+            )
+            if cid
+        ]
+        if not ids:
+            raise ChannelManagerError(
+                "Preisplan des Zimmers nicht bei den Portalen registriert.",
+                status_code=422,
+            )
+        portal_ids = self._portal_enabled_rate_plan_ids(
+            db, tenant_id, local_property_id
+        )
+        return [cid for i, cid in enumerate(ids) if i == 0 or cid in portal_ids]
 
     def _portal_enabled_rate_plan_ids(
         self, db: Client, tenant_id: str, property_id: str
@@ -820,6 +1011,56 @@ class ChannelsMixin:
             "hotel_code": property_id,
             "api_key": cfg.channex_webhook_secret.get_secret_value(),
         }
+
+    def run_channel_action(
+        self, ctx: AuthContext, *, channel_id: str, action: str
+    ) -> dict[str, Any]:
+        """Eine kanal-eigene Aktion auslösen — z.B. „zukünftige Buchungen laden"
+        (`load_future_reservations`) bei einem Objekt, das VOR der Verbindung
+        schon Buchungen im Portal hatte.
+
+        Scope wie beim Trennen (Wurzel 3/9): die channel_id kommt aus dem Pfad,
+        also erst Eigentum am Kanal prüfen. Erlaubt sind NUR Aktionen, die der
+        Katalog für diesen Kanal ausweist — keine geratenen Aktionsnamen."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        owns = (
+            db.table("channex_channel_connection")
+            .select("id, ota_portal_code, channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("channex_channel_id", channel_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not owns:
+            raise ChannelManagerError("Kanal nicht gefunden.", status_code=404)
+        portal_code = owns[0].get("ota_portal_code") or ""
+        erlaubt = self._channel_spec(portal_code).get("actions") or []
+        if action not in erlaubt:
+            raise ChannelManagerError(
+                "Diese Aktion bietet das Portal nicht an.", status_code=422
+            )
+        try:
+            self._channex.run_channel_action(channel_id, action)
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
+        # „Zukünftige Buchungen laden" holt die Buchungen bei Channex ab — in
+        # UNSERE Datenbank kommen sie erst mit dem Buchungs-Import (Wurzel 1:
+        # der zweite Zustand muss mitgepflegt werden, sonst sieht der Kunde die
+        # Buchungen im Portal, aber nicht bei uns).
+        channex_property_id = owns[0].get("channex_property_id")
+        if channex_property_id:
+            try:
+                self.import_bookings_for_property(tenant_id, channex_property_id)
+            except (ChannexError, ChannelManagerError) as exc:
+                log.warning(
+                    "channex_action_import_failed",
+                    channel_id=channel_id, action=action,
+                    error=getattr(exc, "message", str(exc)),
+                )
+        log.info("channex_channel_action", channel_id=channel_id, action=action)
+        return {"status": "ok", "action": action}
 
     def disconnect_channel(self, ctx: AuthContext, channel_id: str) -> None:
         """Kanal trennen: erst deaktivieren (sonst 422 'is active'), dann löschen."""
@@ -881,6 +1122,16 @@ class ChannelsMixin:
             raise ChannelManagerError("Kanal-Verbindung nicht gefunden.", status_code=404)
 
         channel_id = row[0].get("channex_channel_id")
+        # Ohne Kanal beim Provider gibt es nichts zu aktivieren. Würden wir hier
+        # nur unsere Zeile auf `true` drehen, zeigte die Oberfläche
+        # „Synchronisiert", während gar kein Kanal existiert — ein fail-open-
+        # Geisterzustand (Wurzel 5). Nach dem Trennen bleibt die Zeile bewusst
+        # mit der Hotel-ID stehen, damit der Re-Connect sie vorbefüllt.
+        if is_active and not channel_id:
+            raise ChannelManagerError(
+                "Diese Verbindung wurde getrennt. Bitte das Portal neu verbinden.",
+                status_code=409,
+            )
         if channel_id:
             try:
                 if is_active:
@@ -1421,6 +1672,7 @@ class ChannelsMixin:
             "connected_count": sum(1 for m in mappings if m["is_active"]),
             "total_count": len(mappings),
             "channel_id": channel_id,
+            "actions": self._channel_spec(portal_code).get("actions") or [],
             "mappings": mappings,
         }
 
@@ -1941,20 +2193,43 @@ class ChannelsMixin:
             log.warning("webhook_bookings_enqueue_failed", error=str(exc)[:200])
 
     def _enqueue_ari_import(self, tenant_id: str, channex_property_id: str) -> None:
-        """import_ari_property-Job einreihen (coalesced je Property+5-min-Bucket)."""
+        """import_ari_property-Job einreihen — EIN Job JE ZIMMER.
+
+        Ein Lauf über eine geteilte Hotel-Property braucht mehr Channex-Anfragen,
+        als das Property-Budget je Minute hergibt (gemessen: 3 Zimmer = 30 Calls
+        gegen 20/Minute). Der Job brach deshalb immer beim selben Stand ab, begann
+        beim nächsten Versuch von vorn und wurde NIE fertig — Jobs vom 30.07.
+        liefen am 01.08. noch im Kreis und verbrannten dabei Budget. Je Zimmer
+        bleibt ein Lauf unter der Grenze und geht durch.
+
+        Der Dedup-Schlüssel trägt bewusst KEINEN Zeit-Bucket mehr: sonst
+        sammelten sich mit jedem Webhook neue Jobs desselben Zimmers an, die
+        einander das Budget wegnahmen. Coalescing greift nur auf `queued` —
+        ein Webhook während eines laufenden Imports erzeugt weiterhin einen
+        frischen Job."""
         if self._db is None:
             return
         try:
-            import time as _time
-
             from src.jobs.queue import enqueue
 
-            bucket = int(_time.time() // 300)
-            enqueue(
-                self._db, "import_ari_property", tenant_id=tenant_id,
-                payload={"tenant_id": tenant_id,
-                         "channex_property_id": channex_property_id},
-                dedup_key=f"ari_import:{channex_property_id}:{bucket}",
-            )
+            zimmer = (
+                self._db.table("channex_property_map")
+                .select("property_id")
+                .eq("tenant_id", tenant_id)
+                .eq("channex_property_id", channex_property_id)
+                .is_("deleted_at", "null")
+                .execute()
+            ).data or []
+            for row in zimmer:
+                property_id = row.get("property_id")
+                if not property_id:
+                    continue
+                enqueue(
+                    self._db, "import_ari_property", tenant_id=tenant_id,
+                    payload={"tenant_id": tenant_id,
+                             "channex_property_id": channex_property_id,
+                             "property_id": property_id},
+                    dedup_key=f"ari_import:{channex_property_id}:{property_id}",
+                )
         except Exception as exc:  # noqa: BLE001 — Reconcile-Tick holt es nach
             log.warning("webhook_ari_enqueue_failed", error=str(exc)[:200])

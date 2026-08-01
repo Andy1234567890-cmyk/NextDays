@@ -378,6 +378,18 @@ def connect_channel(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/channels/{channel_id}/actions/{action}")
+def run_channel_action(
+    channel_id: str, action: str, service: ChannelManagerServiceDep, ctx: _write
+) -> dict[str, str]:
+    """Kanal-eigene Aktion auslösen (z.B. zukünftige Buchungen laden). Welche
+    Aktionen es gibt, sagt der Kanal selbst — der Service prüft das."""
+    try:
+        return service.run_channel_action(ctx, channel_id=channel_id, action=action)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.delete("/channels/{channel_id}", status_code=status.HTTP_204_NO_CONTENT)
 def disconnect_channel(
     channel_id: str, service: ChannelManagerServiceDep, ctx: _write

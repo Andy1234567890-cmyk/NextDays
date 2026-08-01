@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -156,17 +157,40 @@ class LodgifyImportRequest(BaseModel):
 
 
 # --- Kanäle (OTA-Verbindungen, inhouse) -------------------------------------
+class PortalFieldRule(BaseModel):
+    """Sichtbarkeitsregel eines Portalfelds, 1:1 aus dem Kanal-Katalog.
+
+    Lesart (live gegen den Katalog geprüft): `apply` ("hidden") greift, sobald
+    das Feld `influence_field` den Wert `when` hat — z.B. E-Mail nur zeigen,
+    wenn `send_email_notifications` NICHT false ist."""
+
+    apply: str
+    when: Any = None
+    influence_field: str
+
+
 class PortalField(BaseModel):
-    """Ein Eingabefeld für die Verbinden-Maske eines Portals."""
+    """Ein Eingabefeld für die Verbinden-Maske eines Portals.
+
+    Abgeleitet aus `params` des Kanal-Katalogs — NICHT geraten. `type` ist der
+    Render-Hinweis fürs Frontend, `default`/`options` kommen aus dem Katalog."""
 
     key: str
     label: str
     placeholder: str = ""
     required: bool = True
-    # UI-Hinweis für das Frontend: "text" (Standard) oder "email".
+    # Render-Hinweis: text | email | password | checkbox | select | switch | number
     type: str = "text"
-    # Vorbelegung des Felds (z.B. Betriebs-E-Mail); None = leer lassen.
-    default: str | None = None
+    # Vorbelegung aus dem Katalog (Zahl/Bool/Text) bzw. vorbefüllte Betriebs-
+    # E-Mail; None = leer lassen (nie ein erfundener Ersatzwert).
+    default: Any = None
+    # Auswahlwerte bei select/switch (aus dem Katalog).
+    options: list[str] = Field(default_factory=list)
+    # Optionales Feld mit Katalog-Default → im eingeklappten Bereich
+    # „Erweiterte Einstellungen" (entspricht Advanced Settings der Referenz).
+    advanced: bool = False
+    # Bedingte Sichtbarkeit; das Frontend wertet sie live aus.
+    rules: list[PortalFieldRule] = Field(default_factory=list)
 
 
 class SupportedPortal(BaseModel):
@@ -183,6 +207,16 @@ class SupportedPortal(BaseModel):
     # Kuratierte Vorab-Anleitung (was zuerst im OTA-Extranet zu tun ist), oder
     # None, wenn wir für diesen Kanal keinen belegten Prozess kennen.
     setup_hint: str | None = None
+    # Zuordnungsart des Kanals (Katalog): room_rate_multioccupancy | listing |
+    # direct | tree | None. Steuert, ob und wie die UI zuordnen lässt.
+    mapping_mode: str | None = None
+    # Braucht dieser Kanal überhaupt eine Zuordnung? (Mietwagen & Co. nicht.)
+    mapping_required: bool = True
+    # Bezugswährung des Mindestpreises (Katalog `channel_restrictions`) — KEINE
+    # Pflichtwährung des Kanals (live belegt: Booking.com nimmt auch GBP/USD).
+    min_price_currency: str | None = None
+    # Kleinster vom Kanal akzeptierter Preis in Minor Units (z.B. 500 = 5,00).
+    min_price: int | None = None
 
 
 class ChannelResponse(BaseModel):
@@ -505,4 +539,7 @@ class ChannelDetailResponse(BaseModel):
     # Channex-Kanal-ID des Portals (bei Hotels teilen sich alle Zimmer einen Kanal
     # = eine Hotel-ID). Für „Verbindung trennen" auf Portal-Ebene. None = nicht verbunden.
     channel_id: str | None = None
+    # Kanal-eigene Aktionen aus dem Katalog (z.B. load_future_reservations).
+    # Die UI bietet nur an, was der Kanal wirklich kann.
+    actions: list[str] = Field(default_factory=list)
     mappings: list[ChannelMappingRow]

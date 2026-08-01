@@ -42,6 +42,9 @@ function SmallLogo({
   if (!logo.src) return null;
   return (
     <Image
+      // Marken-Logos liegen als SVG vor; der Bild-Optimierer lehnt SVG ab
+      // (HTTP 400) — deshalb unverändert ausliefern.
+      unoptimized
       src={logo.src}
       alt={alt}
       width={28}
