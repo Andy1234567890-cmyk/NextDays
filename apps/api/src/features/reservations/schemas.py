@@ -187,6 +187,12 @@ class ReservationDetail(BaseModel):
     ota_name: str | None = None
     external_ref: str | None = None
     external_url: str | None = None
+    # Zahlungsweg laut Portal (0240): 'property' = wir ziehen ein, 'ota' = das
+    # Portal hat bereits kassiert, None = nicht geliefert (NICHT „wir").
+    payment_collect: str | None = None
+    payment_method_ota: str | None = None
+    # Vom Portal einbehaltene Provision in Buchungswährung.
+    ota_commission: float | None = None
     check_in: date
     check_out: date
     nights: int

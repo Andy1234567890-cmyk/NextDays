@@ -841,6 +841,12 @@ class BookingsSyncMixin:
             "checkout_time": attrs.get("checkout_time"),
             "quote_items": self._booking_quote_items(attrs),
             "external_url": attrs.get("ota_url") or attrs.get("external_url"),
+            # Zahlungsweg + Portalprovision (0240). Ohne payment_collect weiß
+            # niemand, ob noch Geld einzuziehen ist — die Rezeption fragt sonst
+            # beim Gast nach, obwohl das Portal längst kassiert hat.
+            "payment_collect": self._payment_collect(attrs),
+            "payment_method_ota": self._payment_method(attrs),
+            "ota_commission": self._to_float(attrs.get("ota_commission")),
         }
         if existing:
             if already_checked_out:
@@ -997,6 +1003,24 @@ class BookingsSyncMixin:
             )
         total = self._as_int(occ) or self._as_int(attrs.get("number_of_guests"))
         return (total or 1, 0, 0)
+
+    @staticmethod
+    def _payment_collect(attrs: dict[str, Any]) -> str | None:
+        """Wer zieht ein? Nur die dokumentierten Werte übernehmen.
+
+        Ein unbekannter Wert wird zu None statt zu einem Constraint-Fehler:
+        der Aggregator kann die Liste erweitern, und ein neuer Wert darf den
+        Buchungsimport nicht kippen (Wurzel 5). None heißt „nicht geliefert" —
+        ausdrücklich NICHT „wir kassieren".
+        """
+        wert = (attrs.get("payment_collect") or "").strip().lower()
+        return wert if wert in ("property", "ota") else None
+
+    @staticmethod
+    def _payment_method(attrs: dict[str, Any]) -> str | None:
+        """Zahlungsart laut Portal; unbekannte Werte → None (siehe oben)."""
+        wert = (attrs.get("payment_type") or "").strip().lower()
+        return wert if wert in ("credit_card", "bank_transfer") else None
 
     def _booking_quote_items(self, attrs: dict[str, Any]) -> list[dict[str, Any]]:
         """Preisaufschlüsselung [{label, amount, kind}] aus einem Channex-Booking.

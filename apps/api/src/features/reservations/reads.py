@@ -512,6 +512,16 @@ class ReadsMixin(ReservationsBase):
             ota_name=mask.source_value(r.get("ota_name")),
             external_ref=r.get("external_ref"),
             external_url=r.get("external_url"),
+            # Zahlungsweg des Portals (0240). Die Provision ist ein Geldbetrag
+            # und folgt derselben Maskierung wie alle übrigen Beträge — Rollen
+            # ohne Finanzeinblick (§4.3) sehen sie nicht.
+            payment_collect=r.get("payment_collect"),
+            payment_method_ota=r.get("payment_method_ota"),
+            ota_commission=(
+                float(r["ota_commission"])
+                if mask.amounts and r.get("ota_commission") is not None
+                else None
+            ),
             check_in=ci,
             check_out=co,
             nights=(co - ci).days,

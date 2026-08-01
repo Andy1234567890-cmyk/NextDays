@@ -99,6 +99,12 @@ export type ReservationDetail = {
   ota_name: string | null;
   external_ref: string | null;
   external_url: string | null;
+  /** Wer zieht ein: 'property' = wir, 'ota' = Portal hat kassiert, null = das
+   *  Portal hat dazu nichts geliefert (NICHT „wir"). */
+  payment_collect: "property" | "ota" | null;
+  payment_method_ota: "credit_card" | "bank_transfer" | null;
+  /** Vom Portal einbehaltene Provision in Buchungswährung. */
+  ota_commission: number | null;
   check_in: string;
   check_out: string;
   nights: number;

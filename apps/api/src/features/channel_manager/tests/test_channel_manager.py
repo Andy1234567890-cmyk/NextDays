@@ -944,6 +944,34 @@ def test_property_attrs_includes_facilities() -> None:
     assert "facilities" not in attrs_none
 
 
+def test_room_facility_ids_uses_own_catalogue() -> None:
+    """Zimmer-Facilities haben EIGENE UUIDs — der Objekt-Katalog gilt hier nicht.
+
+    Live gegen /room_facilities verifiziert: 30 Titel kommen in beiden Katalogen
+    vor, alle 30 mit unterschiedlicher UUID. Eine Objekt-UUID an einem Room-Type
+    wäre ungültig, deshalb sind es zwei getrennte Maps."""
+    from src.features.channel_manager.common import (
+        _CHANNEX_FACILITY,
+        _CHANNEX_ROOM_FACILITY,
+        _channex_room_facility_ids,
+    )
+
+    klima = "9f5726e2-f979-4b6b-a69e-cbca387bc7ea"  # Airconditioning (Zimmer)
+    balkon = "363c2057-2cdf-4cbc-af98-069c2d573952"  # Balcony (Zimmer)
+    assert _channex_room_facility_ids(["airconditioning"]) == [klima]
+    assert _channex_room_facility_ids(["airconditioning", "balcony"]) == [klima, balkon]
+    # Unbekannt → weglassen statt 422 zu riskieren.
+    assert _channex_room_facility_ids(["gibt_es_nicht"]) == []
+    assert _channex_room_facility_ids([]) == []
+    assert _channex_room_facility_ids(None) == []
+    # Duplikate entfernt, Reihenfolge stabil.
+    assert _channex_room_facility_ids(["balcony", "balcony"]) == [balkon]
+    # Kein gemeinsamer Slug darf dieselbe UUID tragen wie im Objekt-Katalog.
+    gemeinsam = set(_CHANNEX_FACILITY) & set(_CHANNEX_ROOM_FACILITY)
+    assert gemeinsam, "Erwartet: einige Slugs gibt es in beiden Katalogen"
+    assert all(_CHANNEX_FACILITY[s] != _CHANNEX_ROOM_FACILITY[s] for s in gemeinsam)
+
+
 def test_availability_settings_maps_valid_channex_keys() -> None:
     from src.features.channel_manager.service import _availability_settings
 
