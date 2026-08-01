@@ -147,7 +147,6 @@ export default function FooterTextEditor({
           onChange(footTemplate.text || '');
           setSelectedTemplate(footTemplate);
         }
-      } else {
       }
     }
   }, [objectType, textTemplates, mounted, onChange, value]); // Nur auf objectType und textTemplates ändern reagieren

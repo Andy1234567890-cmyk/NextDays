@@ -33,6 +33,54 @@
 2. **Zimmer als eigene Entität** (0245–0250) samt Slice `properties/rooms.py`,
    Objekt-Übersicht, Kartei-Stepper, Kanal-Matrix und Übersetzungen — committet.
    `count_of_rooms` geht jetzt fest als 1 nach außen (1 property = 1 buchbare Einheit).
+3. **Kanal-Enum-Drift geschlossen** (Bug: `MISSING_MESSAGE calendar.channel.ota_other`
+   im Kalender). `ota_other` (Sammelkanal für Expedia/Agoda/unbekannte OTA-Namen,
+   Migration 0222/0253, live 22 Reservierungen + 38 availability-Nächte) existierte nur
+   im Backend; die Frontend-Unions sind handgepflegte Kopien und kannten ihn nicht.
+   Folge war nicht nur das fehlende Label: `channelMeta()` fiel still auf `portal`
+   zurück — eine Expedia-Buchung sah im Kalender aus wie myBestDays — und der
+   Kanalfilter fand sie nie. Nachgezogen in web (Union, `CHANNEL_META`,
+   `CHANNEL_SOURCES`, Token `--channel-ota-other`, 24 Sprachdateien),
+   mobile-nextdays (3 Unions, Kanal-Meta, Filterliste, `channelKeyOf` mappte Expedia
+   fälschlich auf Vrbo), plattform, admin, storybook. Die doppelte `CHANNEL_LABEL`/
+   `CHANNEL_ICON`-Kopie im Reservierungs-Dashboard ist raus (nutzt jetzt
+   `useCalendarLabels` + neuen `components/channel-logo.tsx`, aus calendar-board
+   herausgezogen). Dabei fiel ein zweiter, noch unentdeckter Wert derselben Klasse auf:
+   `availability_source` trägt in der DB seit 0119 `'ical'` (iCal-Import schreibt
+   `status='blocked', source='ical'`), das Pydantic-Enum kannte ihn nicht — die erste
+   iCal-Sperre hätte die Kalender-Antwort an der Validierung zerlegt (heute 0 Zeilen).
+   Ebenfalls nachgezogen. Dauerhafter Schutz: `scripts/i18n/kanal-enums-pruefen.mjs`
+   prüft die ganze Kette DB-Enum (aus den Migrationen) → Pydantic → Frontend-Unions →
+   Kanal-Meta → `calendar.channel.*` aller 24 Sprachen; hängt im i18n-Gate und als
+   eigener CI-Job `kanal-enums` in der `needs`-Kette vor dem Deploy.
+4. **ESLint gab es in der CI überhaupt nicht** (Andys Beobachtung). Stand vorher:
+   KEINE der sieben Next-Apps hatte eine ESLint-Config; vier trugen ein
+   `lint: next lint`-Skript, das ohne Config nur interaktiv nachfragt — geprüft
+   wurde also allein `tsc`. Nur die beiden Mobile-Apps hatten Lint (ESLint 8,
+   `@react-native/eslint-config`). Neu: geteilte Flat-Config
+   `packages/eslint-config` (ESLint 10, typescript-eslint, react-hooks,
+   @next/next; `react`/`jsx-a11y` nur REGISTRIERT, damit bestehende
+   `eslint-disable`-Kommentare nicht selbst zum Fehler werden), pro App eine
+   dreizeilige `eslint.config.mjs` für App-eigene Ausnahmen, `lint`-Skript auf
+   `eslint .` umgestellt, plus `packages/eslint.config.mjs` für den geteilten
+   Code. In CI hängt der Lint-Schritt in `frontends` und `packages` — Fehler
+   brechen ab, Warnungen (292 in web: `any` + `<img>`) noch nicht.
+   Der erste Lauf fand 150 Fehler, alle behoben — darunter echte Bugs, die
+   `tsc` nicht sieht: ein `useMemo` HINTER dem frühen Return für „keine Objekte"
+   im Kalender-Board (Hook-Reihenfolge kippt, sobald der Betrieb sein erstes
+   Objekt anlegt), zweimal `` `${a} ${b}` || 'Fallback' `` (Template-String ist
+   immer truthy → ohne Namen stand ein Leerzeichen im GoBD-Sperrprotokoll statt
+   „Unbekannter Nutzer"), `setProperty(…) ?? setProperty(…)` im Aufnahme-Skript
+   (der zweite Zweig lief immer), 16 `throw new Error(msg)` in den
+   Rechnungs-Services ohne `{ cause }` (Ursache war weg — Wurzel 5), sieben
+   leere `catch`/`else`-Blöcke, 34 unvollständige Hook-Dependencies (u. a. fehlte
+   `t`/`locale` → übersetzte Texte blieben nach Sprachwechsel stehen) und ~20
+   tote Variablen/Importe/Komponenten. Gelöscht: `web/_dbg_run.mjs` (getrackt,
+   aber syntaktisch kaputt: `import { import..Properties }`).
+   Zwei Lücken beim Aufräumen SICHTBAR gemacht statt versteckt: die
+   Inventar-Reservierung bei Rechnungserstellung berechnete ihre Positionen und
+   rief nichts damit auf (kein Bestand wird reserviert), und der
+   „fehlt"-Marker der Lage-Zeilen im Gastgeber-Editor wurde nie gerendert.
 
 ## Angefangen, unfertig
 

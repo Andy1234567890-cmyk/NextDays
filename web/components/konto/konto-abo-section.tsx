@@ -88,7 +88,8 @@ function tierLines(pricing: Pricing): string[] {
 export function KontoAboSection() {
   const locale = useLocale();
   const [state, setState] = useState<Loaded | null>(null);
-  const [busy, setBusy] = useState(false);
+  // Nur der Setter: der Ladezustand wird aktuell nirgends angezeigt.
+  const [, setBusy] = useState(false);
   const [adresseOffen, setAdresseOffen] = useState(false);
   const [zeigeVerlauf, setZeigeVerlauf] = useState(false);
   const [zeigeTarife, setZeigeTarife] = useState(false);

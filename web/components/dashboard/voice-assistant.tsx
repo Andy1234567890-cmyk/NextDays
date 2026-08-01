@@ -1244,7 +1244,7 @@ export function DashboardVoiceAssistant({
         enterFollowUp();
       }
     },
-    [dashboard, setPhaseBoth, router, enterFollowUp, appendDebug],
+    [dashboard, setPhaseBoth, router, enterFollowUp, appendDebug, t],
   );
 
   // askAndy-Ref immer auf die aktuelle Version zeigen lassen.

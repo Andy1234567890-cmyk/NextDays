@@ -6,6 +6,7 @@
 //  Length of stay: Wochen-/Monats-/eigene Längenpreise.
 // Gespeichert per updateProperty() in type_attributes.pricing.
 import { Icon } from "@iconify/react";
+import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -728,9 +729,9 @@ function BaseEditor({
         <span>
           {t.rich("pricingForm.dynamicPricingHint", {
             link: (chunks) => (
-              <a href="/dynamic-pricing" className="font-semibold text-accent underline">
+              <Link href="/dynamic-pricing" className="font-semibold text-accent underline">
                 {chunks}
-              </a>
+              </Link>
             ),
           })}
         </span>

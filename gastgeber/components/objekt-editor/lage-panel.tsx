@@ -83,7 +83,6 @@ export function LagePanel({
           <ZeileButton
             titel={t("lageAdresse")}
             wert={adresse || t("hinzufuegen")}
-            fehlt={!adresse}
             onClick={() => setDetail("adresse")}
           />
           <ZeileButton
@@ -98,19 +97,16 @@ export function LagePanel({
                 ? t("lageAnzahlGewaehlt", { n: loc.features.length })
                 : t("hinzufuegen")
             }
-            fehlt={!loc.features?.length}
             onClick={() => setDetail("features")}
           />
           <ZeileButton
             titel={t("lageNeighborhood")}
             wert={loc.neighborhood || t("hinzufuegen")}
-            fehlt={!loc.neighborhood}
             onClick={() => setDetail("neighborhood")}
           />
           <ZeileButton
             titel={t("lageGettingAround")}
             wert={loc.gettingAround || t("hinzufuegen")}
-            fehlt={!loc.gettingAround}
             onClick={() => setDetail("gettingAround")}
           />
           <ZeileButton
@@ -120,7 +116,6 @@ export function LagePanel({
                 ? t("lageAnzahlGewaehlt", { n: loc.views.length })
                 : t("hinzufuegen")
             }
-            fehlt={!loc.views?.length}
             onClick={() => setDetail("views")}
           />
         </div>
@@ -550,12 +545,10 @@ function SidebarRahmen({
 function ZeileButton({
   titel,
   wert,
-  fehlt,
   onClick,
 }: {
   titel: string;
   wert: string;
-  fehlt?: boolean;
   onClick: () => void;
 }) {
   return (

@@ -30,7 +30,7 @@ existiert nur in Storybook).
   `apps/web/app/globals.css`, die in `apps/storybook/styles/globals.css` fehlen —
   insbesondere: alle Kanalfarben `--channel-airbnb`, `--channel-booking`,
   `--channel-vrbo`, `--channel-expedia`, `--channel-google`, `--channel-direct`,
-  `--channel-portal` samt zugehöriger `--color-channel-*`, sowie `--font-display`,
+  `--channel-portal`, `--channel-ota-other` samt zugehöriger `--color-channel-*`, sowie `--font-display`,
   `--font-sans`, `--thumb`, `--track-h` und alle weiteren nur in Web vorhandenen.
 - Token-Namen und Werte exakt aus Web übernehmen. Keine Tokens erfinden, keine
   aus Storybook entfernen.

@@ -47,7 +47,7 @@ export class TextTemplateService {
       return await api.post<TextTemplate>(`/api/v1/text-templates/${companyId}`, templateData);
     } catch (error) {
       console.error('Fehler beim Erstellen der Textvorlage:', error);
-      throw new Error('Fehler beim Erstellen der Textvorlage');
+      throw new Error('Fehler beim Erstellen der Textvorlage', { cause: error });
     }
   }
 
@@ -63,7 +63,7 @@ export class TextTemplateService {
       await api.patch(`/api/v1/text-templates/${companyId}/${templateId}`, templateData);
     } catch (error) {
       console.error('Fehler beim Aktualisieren der Textvorlage:', error);
-      throw new Error('Fehler beim Aktualisieren der Textvorlage');
+      throw new Error('Fehler beim Aktualisieren der Textvorlage', { cause: error });
     }
   }
 
@@ -75,7 +75,7 @@ export class TextTemplateService {
       await api.delete(`/api/v1/text-templates/${companyId}/${templateId}`);
     } catch (error) {
       console.error('Fehler beim Löschen der Textvorlage:', error);
-      throw new Error('Fehler beim Löschen der Textvorlage');
+      throw new Error('Fehler beim Löschen der Textvorlage', { cause: error });
     }
   }
 
@@ -87,7 +87,7 @@ export class TextTemplateService {
       return await api.get<TextTemplate[]>(`/api/v1/text-templates/${companyId}`);
     } catch (error) {
       console.error('Fehler beim Laden der Textvorlagen:', error);
-      throw new Error('Fehler beim Laden der Textvorlagen');
+      throw new Error('Fehler beim Laden der Textvorlagen', { cause: error });
     }
   }
 
@@ -105,7 +105,7 @@ export class TextTemplateService {
       return await api.get<TextTemplate[]>(`/api/v1/text-templates/${companyId}?${params}`);
     } catch (error) {
       console.error('Fehler beim Laden der gefilterten Textvorlagen:', error);
-      throw new Error('Fehler beim Laden der gefilterten Textvorlagen');
+      throw new Error('Fehler beim Laden der gefilterten Textvorlagen', { cause: error });
     }
   }
 
@@ -123,7 +123,7 @@ export class TextTemplateService {
       return await api.get<TextTemplate[]>(`/api/v1/text-templates/${companyId}?${params}`);
     } catch (error) {
       console.error('Fehler beim Laden der E-Mail-Textvorlagen:', error);
-      throw new Error('Fehler beim Laden der E-Mail-Textvorlagen');
+      throw new Error('Fehler beim Laden der E-Mail-Textvorlagen', { cause: error });
     }
   }
 
@@ -154,7 +154,7 @@ export class TextTemplateService {
       console.log(`✅ Templates initialized for ${companyId}`);
     } catch (error) {
       console.error('Fehler beim Erstellen der Standard-Textvorlagen:', error);
-      throw new Error('Fehler beim Erstellen der Standard-Textvorlagen');
+      throw new Error('Fehler beim Erstellen der Standard-Textvorlagen', { cause: error });
     }
   }
 

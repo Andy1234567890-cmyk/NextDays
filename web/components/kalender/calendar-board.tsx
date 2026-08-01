@@ -32,6 +32,7 @@ import {
   getBoard,
 } from "@/lib/calendar";
 import { CHANNEL_META, CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
+import { ChannelLogo } from "@/components/channel-logo";
 import { explainFactors } from "@/lib/dp-factors";
 import {
   type DisplayStatus,
@@ -252,27 +253,6 @@ function debugOrigin(seg: Segment): string {
 }
 
 // Kanal-Logo eines Balkens (Iconify-Brand-Icon ODER lokales SVG).
-function ChannelLogo({
-  source,
-  className = "size-3",
-}: {
-  source: AvailabilitySource;
-  className?: string;
-}) {
-  const logo = channelMeta(source).logo;
-  if (logo.kind === "img") {
-    // eslint-disable-next-line @next/next/no-img-element
-    return (
-      <img
-        src={logo.src}
-        alt={source}
-        className={`${className} shrink-0 rounded-[0.125rem]`}
-      />
-    );
-  }
-  return <Icon icon={logo.icon} className={`${className} shrink-0`} />;
-}
-
 // Aufeinanderfolgende Tage gleichen (nicht-offenen) Status+Quelle bündeln.
 // resByDay ordnet jedem belegten Tag die zugehörige Buchung zu (für Gastname +
 // Detail-Popover); ein Segmentwechsel erfolgt auch bei einem Buchungswechsel.
@@ -669,7 +649,7 @@ export function CalendarBoard({
     } finally {
       setSaving(false);
     }
-  }, [pendingMove]);
+  }, [pendingMove, t]);
 
   // Hervorhebung: während des Ziehens die Vorschau, sonst die fertige Auswahl.
   const isSelected = useCallback(
@@ -793,7 +773,7 @@ export function CalendarBoard({
     };
     window.addEventListener("mousemove", onMove);
     return () => window.removeEventListener("mousemove", onMove);
-  }, [barDrag, COL]);
+  }, [barDrag]);
 
   // Maus loslassen beendet das Ziehen. Ein laufender BALKEN-Zug (move/resize)
   // hat Vorrang und wird an den Server geschickt; sonst Vorschau→Auswahl und
@@ -871,13 +851,13 @@ export function CalendarBoard({
       if (!el) return;
       el.scrollTo({ left: Math.max(0, di * COL * remPx()), behavior });
     },
-    [COL, remPx],
+    [remPx],
   );
   const currentLeftIndex = useCallback((): number => {
     const el = scrollRef.current;
     if (!el) return todayIndex;
     return Math.round(el.scrollLeft / (COL * remPx()));
-  }, [COL, remPx, todayIndex]);
+  }, [remPx, todayIndex]);
 
   // --- Virtualisierung: nur das sichtbare Index-Fenster (+Overscan) rendern ---
   // scrollLeft + clientWidth → [visFrom, visTo). Per rAF gedrosselt.
@@ -1038,7 +1018,7 @@ export function CalendarBoard({
       currency: singleCur,
       mixedCurrency: currencies.length > 1,
     };
-  }, [start, shown, dates, avail, resByProp, visFrom, view.rangeDays]);
+  }, [start, shown, dates, avail, resByProp, visFrom, view.rangeDays, totalDays]);
 
   // Geladenes Index-Intervall [from, to) der Tagesdaten (chunked). Ref, weil der
   // Scroll-Handler es liest, ohne ein Neu-Rendern auszulösen.
@@ -1202,7 +1182,7 @@ export function CalendarBoard({
         void loadDays(cur.to, Math.min(totalDays, cur.to + CHUNK_DAYS));
       }
     },
-    [loadDays],
+    [loadDays, totalDays],
   );
 
   // Realtime-/Erst-Reload: Buchungen frisch + den AKTUELL geladenen Tagesbereich
@@ -1424,6 +1404,29 @@ export function CalendarBoard({
     scrollToIndex(Math.min(totalDays - 1, Math.max(0, di)));
   }
 
+  // Monatsbänder für den Spaltenkopf: MUSS vor dem frühen Return für „keine
+  // Objekte" stehen — ein Hook hinter einem Return ändert die Hook-Reihenfolge,
+  // sobald das erste Objekt existiert (React-Fehler, Zustandssalat).
+  // Segmente je Kalendermonat: zusammenhängende Segmente je Kalendermonat
+  // (Label + Spaltenanzahl), damit das Band die volle Monatsbreite überspannt.
+  const monthBands = useMemo(() => {
+    const out: { key: string; label: string; span: number }[] = [];
+    for (const d of dates) {
+      const k = `${d.getFullYear()}-${d.getMonth()}`;
+      const last = out[out.length - 1];
+      if (last && last.key === k) {
+        last.span += 1;
+      } else {
+        out.push({
+          key: k,
+          label: `${monthLabels(t)[d.getMonth()]} ${d.getFullYear()}`,
+          span: 1,
+        });
+      }
+    }
+    return out;
+  }, [dates, t]);
+
   if (properties.length === 0) {
     return (
       <div className="flex flex-col gap-6">
@@ -1453,26 +1456,6 @@ export function CalendarBoard({
     dates[Math.min(dates.length - 1, Math.max(0, leftIndex))] ?? start ?? null;
   const titleMonth = visibleDay ? monthLabels(t)[visibleDay.getMonth()] : "";
   const titleYear = visibleDay ? `${visibleDay.getFullYear()}` : "";
-
-  // Monatsbänder für den Spaltenkopf: zusammenhängende Segmente je Kalendermonat
-  // (Label + Spaltenanzahl), damit das Band die volle Monatsbreite überspannt.
-  const monthBands = useMemo(() => {
-    const out: { key: string; label: string; span: number }[] = [];
-    for (const d of dates) {
-      const k = `${d.getFullYear()}-${d.getMonth()}`;
-      const last = out[out.length - 1];
-      if (last && last.key === k) {
-        last.span += 1;
-      } else {
-        out.push({
-          key: k,
-          label: `${monthLabels(t)[d.getMonth()]} ${d.getFullYear()}`,
-          span: 1,
-        });
-      }
-    }
-    return out;
-  }, [dates, t]);
 
   // „Erstellen"-Menü im Kopf: Sperren geschieht im Raster per Ziehen;
   // „Reservierung" öffnet den Assistenten mit dem ersten Objekt ab morgen.

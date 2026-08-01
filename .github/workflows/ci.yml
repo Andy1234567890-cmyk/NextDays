@@ -61,7 +61,7 @@ jobs:
   # Geteilte Pakete (packages/@nextdays/*): die Frontends prüfen nur, was sie
   # importieren — ungenutzter geteilter Code bliebe sonst ungeprüft.
   packages:
-    name: Packages (Typprüfung)
+    name: Packages (Typprüfung + Lint)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -76,6 +76,9 @@ jobs:
 
       - name: Typprüfung
         run: bunx tsc -p packages
+
+      - name: Lint (eslint)
+        run: bun run lint:packages
 
   # Typprüfung je Frontend — schnelles, präzises Signal VOR den langsamen
   # Image-Builds. Der Produktions-Build läuft für die deployten Apps im
@@ -103,6 +106,15 @@ jobs:
         working-directory: ${{ matrix.app }}
         run: bun run typecheck
 
+      - name: Lint (eslint)
+        # Fängt, was `tsc` NICHT sieht: toter Code, Hooks hinter einem frühen
+        # Return, vergessene Hook-Abhängigkeiten, verschluckte Fehler ohne
+        # `cause`. Regeln zentral in packages/eslint-config; Warnungen brechen
+        # nicht ab (`--max-warnings` bewusst offen, solange der Bestand noch
+        # `any`s und <img> trägt), Fehler schon.
+        working-directory: ${{ matrix.app }}
+        run: bun run lint
+
       - name: Produktions-Build
         # Nur builder: die App hat (noch) keine Coolify-Resource, ihr Build wird
         # also nirgends sonst geprüft. Alle übrigen Frontends bauen im
@@ -110,6 +122,21 @@ jobs:
         if: matrix.app == 'builder'
         working-directory: ${{ matrix.app }}
         run: bun run build
+
+  # Die Kanal-Enums (ReservationChannel/AvailabilitySource) liegen in jedem
+  # Frontend als handgepflegte Kopie des Pydantic-Contracts. `tsc` prüft nur
+  # gegen die Kopie und sieht einen neuen Backend-Wert deshalb NIE — die UI
+  # kippt erst bei der ersten echten Buchung dieses Kanals (fehlendes Label,
+  # Farb-Fallback auf einen fremden Kanal, Filter ohne Treffer). Genau das ist
+  # mit `ota_other` passiert.
+  kanal-enums:
+    name: Kanal-Enums (Backend ↔ Frontends)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Enums und Labels deckungsgleich
+        run: node scripts/i18n/kanal-enums-pruefen.mjs
 
   # Die beiden Mobile-Apps (ADR-0019) hängen nicht am Wurzel-Workspace (React
   # Native braucht sein eigenes, nicht gehobenes node_modules — deshalb hat jede
@@ -310,7 +337,7 @@ jobs:
   # ────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Coolify
-    needs: [api, packages, frontends, mobile, mobile-konsistenz, images]
+    needs: [api, packages, frontends, kanal-enums, mobile, mobile-konsistenz, images]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

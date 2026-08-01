@@ -358,15 +358,22 @@ export default function SelectBankingTransactionModal({
     setTransactions(updatedTransactions);
   };
 
+  // Bewusst NUR an `isOpen`: die beiden Ladefunktionen hängen über
+  // updateTransactionStatus an `transactions`/`transactionLinks`, die sie selbst
+  // setzen. Als Dependencies geführt würden sie sich nach jedem Laden neu
+  // erzeugen und den Effect endlos neu starten. Gewollt ist genau einmal Laden
+  // beim Öffnen — deshalb die begründete Ausnahme an der Dependency-Liste
+  // (dort meldet die Regel).
   useEffect(() => {
     if (isOpen) {
-      loadTransactions();
-      // Load transaction links nach dem Laden der Transaktionen
+      void loadTransactions();
+      // Verknüpfungen erst nach den Transaktionen laden.
       setTimeout(() => {
-        loadTransactionLinks();
+        void loadTransactionLinks();
       }, 500);
     }
-  }, [isOpen]); // load-Funktionen nicht memoized → aus Deps genommen (Loop-Schutz)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const formatCurrency = (amount: number, currency?: string) => {
     // Kein €-Hardcode: ungültiger/fehlender ISO-Code → reine Zahl (kein falsches

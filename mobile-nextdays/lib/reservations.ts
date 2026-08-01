@@ -9,7 +9,15 @@
 // null als „—" (nie 0/Fantasiewert).
 import { call, type Result } from "@/lib/api";
 
-export type ReservationChannel = "direct" | "portal" | "booking" | "airbnb" | "vrbo";
+// Spiegelt apps/api/.../reservations/schemas.py:ReservationChannel.
+// „ota_other" = Sammelkanal für OTAs ohne eigenen Wert (Expedia, Agoda …).
+export type ReservationChannel =
+  | "direct"
+  | "portal"
+  | "booking"
+  | "airbnb"
+  | "vrbo"
+  | "ota_other";
 export type ReservationStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
 export type Reservation = {

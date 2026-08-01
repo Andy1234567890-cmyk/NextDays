@@ -18,7 +18,7 @@ import {
   Textarea,
 } from '@tasko/ui';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { currencySymbol, formatCurrency } from '@/lib/currency';
@@ -362,7 +362,19 @@ export default function NewCustomerModal({
   ];
 
   // Generate next customer number using NumberSequenceService
-  const generateNextCustomerNumber = async () => {
+  // Stabil und VOR generateNextCustomerNumber definiert: nur so kann die
+  // Nummern-Generierung sie als Dependency führen (const wird nicht gehoistet).
+  const handleInputChange = useCallback(
+    (field: string, value: string | number | boolean | string[]) => {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value,
+      }));
+    },
+    [],
+  );
+
+  const generateNextCustomerNumber = useCallback(async () => {
     try {
       if (!companyId) return;
 
@@ -411,13 +423,13 @@ export default function NewCustomerModal({
 
       console.warn(`⚠️ Emergency Fallback Kundennummer: ${emergencyNumber}`);
     }
-  };
+  }, [companyId, handleInputChange]);
 
   useEffect(() => {
     if (open) {
-      generateNextCustomerNumber();
+      void generateNextCustomerNumber();
     }
-  }, [open]); // Funktionen nicht memoized → aus Deps genommen (Loop-Schutz)
+  }, [open, generateNextCustomerNumber]);
 
   // Separater Effect für Form-Daten basierend auf defaultValues - NUR beim ersten Öffnen
   const [defaultValuesApplied, setDefaultValuesApplied] = useState(false);
@@ -469,17 +481,6 @@ export default function NewCustomerModal({
   ]);
 
   // Input Handler
-  const handleInputChange = (field: string, value: string | number | boolean | string[]) => {
-    // Debug-Logging für organizationType Änderungen
-    if (field === 'organizationType') {
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
   // Update isSupplier and customer number when organizationType changes
   useEffect(() => {
     const isSupplier = formData.organizationType === 'Lieferant';

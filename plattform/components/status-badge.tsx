@@ -71,7 +71,9 @@ const CHANNEL_LABEL: Record<string, string> = {
   marketplace: "myBestDays",
   // 'direct' ist die EIGENE Seite des Betriebs — nicht myBestDays.
   direct: "Direktbuchung",
-  ota_other: "Portal",
+  // Sammelkanal des PMS für Portale ohne eigenen Wert (Expedia, Agoda …).
+  // Nicht schlicht „Portal": das Badge stellt ohnehin „Portal · <Name>" voran.
+  ota_other: "Anderes Portal",
   booking: "Booking.com",
   "booking.com": "Booking.com",
   airbnb: "Airbnb",

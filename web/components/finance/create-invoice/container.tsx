@@ -78,7 +78,9 @@ export default function CreateQuotePage() {
     price: '',
     unit: 'Stk',
   });
-  const [savingService, setSavingService] = useState(false);
+  // Nur der Setter geht nach unten (Leistung-Speichern); den Zustand liest
+  // aktuell keine Oberfläche.
+  const [, setSavingService] = useState(false);
 
   const { settings } = useCompanySettings(uid);
 

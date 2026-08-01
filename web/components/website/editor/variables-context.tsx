@@ -99,7 +99,7 @@ export function resolveConditionalBinding(
   const bool = v.defaultBool;
   const cmp = b.compareValue;
   const isSet = v.kind === "boolean" ? true : num != null;
-  let cond = false;
+  let cond: boolean;
   switch (b.condition) {
     case "is_set": cond = isSet; break;
     case "isnt_set": cond = !isSet; break;

@@ -8,7 +8,6 @@ import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
-import { CHANNEL_META } from "@/lib/calendar-channels";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import type { AvailabilitySource } from "@/lib/calendar";
 import type { CalendarBooking } from "@/lib/tasks";
@@ -29,8 +28,6 @@ export function BookingPopover({
   const t = useTranslations("reservations");
   const { channelLabel } = useCalendarLabels();
   const locale = useLocale();
-  const meta =
-    CHANNEL_META[booking.channel as AvailabilitySource] ?? CHANNEL_META.direct;
   const fmt = (iso: string) =>
     new Date(`${iso}T00:00:00`).toLocaleDateString(locale, {
       day: "numeric",

@@ -43,7 +43,7 @@ async function json<T>(res: Response): Promise<T> {
     try {
       detail = ((await res.json()) as { detail?: string }).detail ?? "";
     } catch {
-      detail = "";
+      // Kein JSON im Body (z. B. 502 vom Proxy) → Fallback auf den Status.
     }
     throw new Error(detail || `HTTP ${res.status}`);
   }

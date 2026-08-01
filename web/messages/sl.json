@@ -351,7 +351,8 @@
     "SK": "Slovaška",
     "SI": "Slovenija",
     "ES": "Španija",
-    "SE": "Švedska"
+    "SE": "Švedska",
+    "GB": "Združeno kraljestvo"
   },
   "stopSell": {
     "title": "Stop-Sell",
@@ -4877,7 +4878,9 @@
       "airbnb": "Airbnb",
       "booking": "Booking.com",
       "direct": "Neposredno",
+      "ical": "Zunanji koledar",
       "manual": "Ročno",
+      "ota_other": "Drug portal",
       "portal": "myBestDays",
       "vrbo": "Vrbo"
     },

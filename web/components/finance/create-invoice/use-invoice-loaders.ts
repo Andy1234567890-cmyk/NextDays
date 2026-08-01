@@ -173,7 +173,7 @@ export function useInvoiceLoaders({
     if (uid) {
       loadEInvoiceSettings();
     }
-  }, [uid]);
+  }, [uid, setEInvoiceEnabled, setEInvoiceSettings]);
 
   // Kunden laden - direkt aus Firebase Subcollection
   useEffect(() => {
@@ -257,7 +257,7 @@ export function useInvoiceLoaders({
     };
 
     loadPrefillCustomer();
-  }, [prefillCustomerId, uid]);
+  }, [prefillCustomerId, uid, setFormData]);
 
   // Firma laden (für Vorschau: Name, Adresse, Logo/Profilbild, Kontakt, Steuer/Bank)
   // Wichtig: settings als Dependency, damit Template-Daten automatisch aktualisiert werden
@@ -364,7 +364,7 @@ export function useInvoiceLoaders({
     };
 
     loadNumberingSettings();
-  }, [uid]);
+  }, [uid, setFormData, setNextNumber, setNumberingFormat]);
 
   // Steuerlogik aus der Auswahl ableiten (berücksichtigt Standard-Steuersatz aus Einstellungen)
   useEffect(() => {
@@ -437,7 +437,7 @@ export function useInvoiceLoaders({
     };
 
     loadTextTemplates();
-  }, [uid, formData.headTextHtml, formData.footerText]);
+  }, [uid, formData.headTextHtml, formData.footerText, setFormData]);
 
   useEffect(() => {
     if (!settings) return;
@@ -471,7 +471,7 @@ export function useInvoiceLoaders({
 
       return next;
     });
-  }, [settings, company?.defaultCurrency]);
+  }, [settings, company?.defaultCurrency, setFormData, setShowNet]);
 
   // Skonto-Defaults aus Einstellungen übernehmen (separat, damit Basis-Text nicht dupliziert wird)
   useEffect(() => {
@@ -490,7 +490,7 @@ export function useInvoiceLoaders({
     );
     setSkontoPercentage(typeof d.skontoPercentage === 'number' ? d.skontoPercentage : undefined);
     setSkontoText(typeof d.skontoText === 'string' ? d.skontoText : '');
-  }, [settings?.defaultPaymentTerms]);
+  }, [settings?.defaultPaymentTerms, setSkontoDays, setSkontoEnabled, setSkontoPercentage, setSkontoText]);
 
   // E-Rechnung Einstellungen laden
   // Hinweis: bewusst zweiter, fast identischer Loader (siehe oben) — Race-Verhalten unverändert lassen
@@ -519,7 +519,7 @@ export function useInvoiceLoaders({
       }
     };
     loadEInvoiceSettings();
-  }, [uid]);
+  }, [uid, setEInvoiceEnabled, setEInvoiceSettings]);
 
   return {
     customers,

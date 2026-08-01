@@ -44,8 +44,7 @@ export function PhoneInput({
     const p = splitPhone(value);
     if (p.dial) setDial(p.dial);
     setRest(p.rest);
-    // Nur auf Wertänderung reagieren.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Nur auf Wertänderung reagieren; die Setter sind stabil.
   }, [value]);
 
   function emit(nextDial: string, nextRest: string) {

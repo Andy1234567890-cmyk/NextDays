@@ -8,6 +8,7 @@
 import { Icon } from "@iconify/react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -95,12 +96,12 @@ export function EinladungAnsicht({
             : t("einladungAbgelehntText")}
         </p>
         {erledigt === "an" && (
-          <a
+          <Link
             href="/objekte"
             className="mt-8 rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
             {t("einladungZuDenObjekten")}
-          </a>
+          </Link>
         )}
       </main>
     );

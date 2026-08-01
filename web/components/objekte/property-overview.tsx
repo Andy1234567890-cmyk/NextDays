@@ -85,16 +85,6 @@ const KATEGORIE_ICON: Record<string, string> = {
   sonstiges: "ph:dots-three-circle",
 };
 
-// Typsichere Helfer für die flexiblen type_attributes.
-function attrList(p: Property, key: string): string[] {
-  const v = p.type_attributes?.[key];
-  return Array.isArray(v) ? (v as string[]) : [];
-}
-function attrNum(p: Property, key: string): number | "" {
-  const v = p.type_attributes?.[key];
-  return typeof v === "number" ? v : "";
-}
-
 export function PropertyOverview({ initial }: { initial: Property }) {
   const { typeLabel } = usePropertyLabels();
   const { amenityLabel } = useAmenityLabels();
@@ -760,51 +750,6 @@ function InfoEditor({
           })
         }
       />
-    </EditorShell>
-  );
-}
-
-function ListEditor({
-  open,
-  title,
-  options,
-  selected,
-  onClose,
-  onSave,
-}: {
-  open: boolean;
-  title: string;
-  options: string[];
-  selected: string[];
-  onClose: () => void;
-  onSave: (vals: string[]) => Promise<true | string>;
-}) {
-  const [vals, setVals] = useState<string[]>(selected);
-  const { busy, error, run } = useSaver(onSave);
-
-  function toggle(v: string) {
-    setVals((s) => (s.includes(v) ? s.filter((x) => x !== v) : [...s, v]));
-  }
-
-  return (
-    <EditorShell open={open} onClose={onClose} title={title}>
-      <div className="flex flex-col gap-2">
-        {options.map((o) => (
-          <label
-            key={o}
-            className="flex cursor-pointer items-center gap-3 rounded-(--radius) border p-3 text-sm"
-          >
-            <input
-              type="checkbox"
-              checked={vals.includes(o)}
-              onChange={() => toggle(o)}
-              className="size-4"
-            />
-            {o}
-          </label>
-        ))}
-      </div>
-      <SaveBar busy={busy} error={error} onSave={() => run(vals)} />
     </EditorShell>
   );
 }

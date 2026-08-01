@@ -279,7 +279,7 @@ export class XRechnungParserService {
       };
     } catch (error) {
       console.error('XRechnung Parsing Error:', error);
-      throw new Error('Fehler beim Parsen der E-Rechnung. Bitte überprüfen Sie das XML-Format.');
+      throw new Error('Fehler beim Parsen der E-Rechnung. Bitte überprüfen Sie das XML-Format.', { cause: error });
     }
   }
 

@@ -8,13 +8,15 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
 // Echte Enum-Werte aus supabase/migrations (BUILD_REFERENCE):
-// reservation_channel: direct | portal | booking | airbnb | vrbo
+// reservation_channel: direct | portal | booking | airbnb | vrbo | ota_other
 export type ReservationChannel =
   | "direct"
   | "portal"
   | "booking"
   | "airbnb"
-  | "vrbo";
+  | "vrbo"
+  // Sammelkanal für Portale ohne eigenen Wert (Expedia, Agoda …).
+  | "ota_other";
 
 // Zuordnung Kanal -> ph-Icon + deutsches Label.
 const CHANNEL_CONFIG: Record<
@@ -26,6 +28,7 @@ const CHANNEL_CONFIG: Record<
   booking: { icon: "ph:buildings", label: "Booking.com" },
   airbnb: { icon: "ph:bed", label: "Airbnb" },
   vrbo: { icon: "ph:key", label: "Vrbo" },
+  ota_other: { icon: "ph:globe-hemisphere-east", label: "Anderes Portal" },
 };
 
 const channelIconVariants = cva(

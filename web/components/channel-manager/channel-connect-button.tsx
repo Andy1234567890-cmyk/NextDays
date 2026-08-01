@@ -165,7 +165,9 @@ export function ChannelConnectButton({
   // der Hotel-ID + Status-Hinweis pro Portal).
   const [connections, setConnections] = useState<StoredChannelConnection[]>([]);
 
-  const [otaRooms, setOtaRooms] = useState<OtaRoom[]>([]);
+  // Nur der Setter wird gebraucht: die Portal-Zimmer landen direkt in `rows`,
+  // der rohe Stand wird nirgends gerendert.
+  const [, setOtaRooms] = useState<OtaRoom[]>([]);
   const [localRooms, setLocalRooms] = useState<LocalRoomOption[]>([]);
   const [rows, setRows] = useState<MappingRow[]>([]);
 
@@ -192,7 +194,7 @@ export function ChannelConnectButton({
         setPropertyId(preset?.id ?? props.data.items[0].id);
       }
     });
-  }, [open]);
+  }, [open, presetPropertyId]);
 
   // Kanal-Detailseite: direkt auf das gewählte Portal springen, sobald Portale
   // UND (falls Credential-Portal) die gespeicherten Verbindungen geladen sind —

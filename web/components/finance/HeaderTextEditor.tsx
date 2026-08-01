@@ -161,9 +161,7 @@ export default function HeaderTextEditor({
         if (isEmptyOrWrongType && headTemplate.text && headTemplate.text !== currentValue) {
           onChange(headTemplate.text);
           setSelectedTemplate(headTemplate);
-        } else {
         }
-      } else {
       }
     }
   }, [objectType, textTemplates, mounted, value, onChange]); // value hinzugefügt für bessere Reaktivität

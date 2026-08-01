@@ -68,6 +68,9 @@ export default function AdminPage() {
           <p style={{ color: "#a1a1a1" }}>
             Nur Administratoren dürfen Nutzer verwalten.
           </p>
+          {/* /sb ist der statische Storybook-Build, keine Next-Route —
+              <Link> würde clientseitig navigieren und ins Leere laufen. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/sb/" style={{ color: "#b82028" }}>
             ← Zurück zum Storybook
           </a>
@@ -81,6 +84,7 @@ export default function AdminPage() {
       <div style={{ width: "100%", maxWidth: "44rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
           <h1 style={{ margin: 0 }}>Nutzer verwalten</h1>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/sb/" style={{ color: "#b82028", fontSize: "0.9rem" }}>
             ← Storybook
           </a>

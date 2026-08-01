@@ -13,5 +13,12 @@
     "storybook",
     "packages/*"
   ],
-  "packageManager": "bun@1.3.9"
+  "packageManager": "bun@1.3.9",
+  "scripts": {
+    "lint:packages": "eslint packages"
+  },
+  "devDependencies": {
+    "@nextdays/eslint-config": "workspace:*",
+    "eslint": "10.8.0"
+  }
 }

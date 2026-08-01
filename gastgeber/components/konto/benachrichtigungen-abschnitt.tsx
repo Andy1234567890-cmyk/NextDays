@@ -21,7 +21,6 @@ import { Dialog, DialogContent } from "@nextdays/ui/dialog";
 import { Switch } from "@nextdays/ui/switch";
 
 import type {
-  KanalInfo,
   KategorieInfo,
   NotificationOverview,
 } from "@/lib/benachrichtigungen";

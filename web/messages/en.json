@@ -351,7 +351,8 @@
     "SK": "Slovakia",
     "SI": "Slovenia",
     "ES": "Spain",
-    "SE": "Sweden"
+    "SE": "Sweden",
+    "GB": "United Kingdom"
   },
   "stopSell": {
     "title": "Stop-Sell",
@@ -4899,8 +4900,10 @@
       "booking": "Booking.com",
       "airbnb": "Airbnb",
       "vrbo": "Vrbo",
+      "ota_other": "Other portal",
       "portal": "myBestDays",
-      "manual": "Manual"
+      "manual": "Manual",
+      "ical": "External calendar"
     },
     "resStatus": {
       "pending": "Option / tentative",

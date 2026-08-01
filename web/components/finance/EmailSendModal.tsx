@@ -688,7 +688,8 @@ export function EmailSendModal({
               companyId || 'unknown',
               document.id,
               user.uid,
-              `${user.first_name} ${user.last_name}` || 'Unknown User',
+              [user.first_name, user.last_name].filter(Boolean).join(' ') ||
+                'Unknown User',
             );
 
             if (lockSuccess) {

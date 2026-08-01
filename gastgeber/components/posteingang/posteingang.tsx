@@ -8,7 +8,7 @@
 // Realtime (Supabase WebSocket, kein Polling): neue guest_messages/Thread-Updates
 // pflegen den State inkrementell. Nach eigenen Aktionen wird NICHT neu geladen —
 // nur das Event bzw. die Action-Antwort pflegt den State (Muster use-realtime).
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { useRealtime } from "@/lib/use-realtime";
 import type {
@@ -147,11 +147,6 @@ export function Posteingang({
     setDetail((d) => (d ? { ...d, is_blocked: true } : d));
   }
 
-  const aktiverThread = useMemo(
-    () => threads.find((t) => t.id === aktivId) ?? null,
-    [threads, aktivId],
-  );
-
   if (zugriffFehlt) {
     return (
       <div className="mx-auto max-w-md px-8 py-24 text-center text-muted-foreground">
@@ -174,7 +169,6 @@ export function Posteingang({
 
       <ChatSpalte
         detail={detail}
-        thread={aktiverThread}
         quickReplies={quickReplies}
         onGesendet={nachrichtGesendet}
         onArchiviert={threadArchiviert}

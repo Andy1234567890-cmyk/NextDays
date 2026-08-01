@@ -2,7 +2,6 @@
 // und Buchungs-Prüfung als Folge-Schritte. Eigenes myBestDays-Design.
 "use client";
 
-import { Icon } from "@iconify/react";
 import { useState } from "react";
 
 export function CheckoutSteps({ gesamt }: { gesamt: string }) {

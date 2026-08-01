@@ -188,7 +188,9 @@ export default function HostReservations({ navigation }: { navigation: any }) {
               active={channelFilter === "all"}
               onPress={() => setChannelFilter("all")}
             />
-            {(["direct", "portal", "booking", "airbnb", "vrbo"] as ReservationChannel[]).map((c) => (
+            {(
+              ["direct", "portal", "booking", "airbnb", "vrbo", "ota_other"] as ReservationChannel[]
+            ).map((c) => (
               <FilterChip
                 key={c}
                 label={channelMeta(c).label}

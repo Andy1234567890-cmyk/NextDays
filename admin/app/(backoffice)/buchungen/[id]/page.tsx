@@ -34,6 +34,8 @@ const KANAL: Record<string, string> = {
   booking: "Booking.com",
   airbnb: "Airbnb",
   expedia: "Expedia",
+  // Sammelkanal des PMS für Portale ohne eigenen Wert (Expedia, Agoda …).
+  ota_other: "Anderes Portal",
   ota: "Portale",
 };
 

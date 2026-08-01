@@ -3,7 +3,7 @@
 import { Icon } from '@iconify/react';
 import { Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input } from '@tasko/ui';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { formatCurrency } from '@/lib/currency';
 import { type BookingAccount, BookingAccountService } from '@/services/bookingAccountService';
@@ -34,14 +34,10 @@ export default function BookingAccountSelectionModal({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAccount, setSelectedAccount] = useState<BookingAccount | null>(null);
 
-  // Load booking accounts
-  useEffect(() => {
-    if (isOpen && companyId) {
-      loadBookingAccounts();
-    }
-  }, [isOpen, companyId]); // load-Funktion nicht memoized → aus Deps genommen (Loop-Schutz)
-
-  async function loadBookingAccounts() {
+  // Laden per useCallback stabil halten — nur so darf die Funktion in die Deps
+  // des Effects, ohne bei jedem Rendern neu zu laden (das war der Grund, warum
+  // sie vorher aus der Liste genommen wurde).
+  const loadBookingAccounts = useCallback(async () => {
     try {
       setLoading(true);
       const accounts = await BookingAccountService.getBookingAccounts(companyId);
@@ -51,7 +47,13 @@ export default function BookingAccountSelectionModal({
     } finally {
       setLoading(false);
     }
-  }
+  }, [companyId]);
+
+  useEffect(() => {
+    if (isOpen && companyId) {
+      void loadBookingAccounts();
+    }
+  }, [isOpen, companyId, loadBookingAccounts]);
 
   // Filter accounts based on document type
   const getSuggestedAccounts = () => {

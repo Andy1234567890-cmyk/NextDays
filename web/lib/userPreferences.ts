@@ -93,7 +93,7 @@ export class UserPreferencesService {
       await api.patch(`/api/v1/users/${userId}/preferences`, clean);
     } catch (error) {
       console.error('updateUserPreferences error:', error);
-      throw new Error('User-Preferences konnten nicht gespeichert werden');
+      throw new Error('User-Preferences konnten nicht gespeichert werden', { cause: error });
     }
   }
 

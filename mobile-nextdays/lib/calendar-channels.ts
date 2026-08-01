@@ -17,6 +17,10 @@ const CHANNELS: Record<ReservationChannel, ChannelMeta> = {
   booking: { label: "Booking", bar: "#1B4E9B", text: "#FFFFFF" },
   airbnb: { label: "Airbnb", bar: "#E24E5B", text: "#FFFFFF" },
   vrbo: { label: "Vrbo", bar: "#2E7DB5", text: "#FFFFFF" },
+  // Sammelkanal fremder Portale ohne eigenen Wert (Expedia, Agoda …) — keine
+  // Marke, also neutrales Grau und kein geratenes Logo. Wo ein `ota_name`
+  // vorliegt, zeigt die UI den Klarnamen statt dieses Sammellabels.
+  ota_other: { label: "Anderes Portal", bar: "#52525B", text: "#FFFFFF" },
 };
 
 export function channelMeta(channel: ReservationChannel): ChannelMeta {

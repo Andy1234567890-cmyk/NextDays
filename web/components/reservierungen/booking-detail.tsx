@@ -9,7 +9,6 @@
 import { Icon } from "@iconify/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 
@@ -38,10 +37,8 @@ const SendDocumentModal = dynamic(
 
 export function BookingDetail({ reservationId }: { reservationId: string }) {
   const t = useTranslations("reservations");
-  const { channelLabel } = useCalendarLabels();
-  const { statusLabel } = useCalendarLabels();
+  const { channelLabel, statusLabel } = useCalendarLabels();
   const locale = useLocale();
-  const router = useRouter();
   const d = useReservationDetail(reservationId);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);

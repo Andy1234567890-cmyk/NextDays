@@ -6,7 +6,13 @@
 // bleibt nullable (revenue_30d = null ohne Betrags-Sichtbarkeit, §4.2).
 import { call, type Result } from "@/lib/api";
 
-export type ReservationChannel = "direct" | "portal" | "booking" | "airbnb" | "vrbo";
+export type ReservationChannel =
+  | "direct"
+  | "portal"
+  | "booking"
+  | "airbnb"
+  | "vrbo"
+  | "ota_other";
 export type ReservationStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
 // Eine Zeile in den Anreise-/Abreise-/Anstehend-Listen.

@@ -351,7 +351,8 @@
     "SK": "Σλοβακία",
     "SI": "Σλοβενία",
     "ES": "Ισπανία",
-    "SE": "Σουηδία"
+    "SE": "Σουηδία",
+    "GB": "Ηνωμένο Βασίλειο"
   },
   "stopSell": {
     "title": "Stop-Sell",
@@ -4877,7 +4878,9 @@
       "airbnb": "Airbnb",
       "booking": "Booking.com",
       "direct": "Απευθείας",
+      "ical": "Εξωτερικό ημερολόγιο",
       "manual": "Χειροκίνητα",
+      "ota_other": "Άλλη πλατφόρμα",
       "portal": "myBestDays",
       "vrbo": "Vrbo"
     },

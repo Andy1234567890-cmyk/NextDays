@@ -760,7 +760,7 @@ Phase 2) vorgesehen.
 
 **OTA-Gate (nur eigene Kanäle):** Ein PaymentIntent (Buchung **und** Kaution) wird
 **nur** für eigene Kanäle erzeugt — `channel` ∈ {`direct`, `portal`} **ohne**
-`source_channex_booking_id`. OTA-Buchungen (`booking`/`airbnb`/`vrbo` oder über
+`source_channex_booking_id`. OTA-Buchungen (`booking`/`airbnb`/`vrbo`/`ota_other` oder über
 Channex importiert) kassiert die OTA selbst und zahlt den Vermieter direkt aus →
 `booking/.../intent` und `deposit/.../hold` antworten dafür mit **409** (keine
 doppelte Belastung). Add-ons/Upsells am OTA vorbei sind separat (addons-Slice).

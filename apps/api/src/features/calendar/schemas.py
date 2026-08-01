@@ -25,6 +25,11 @@ class AvailabilitySource(StrEnum):
     # 1 % monatlich, kein Charge über uns (Preisliste §2).
     ota_other = "ota_other"
     manual = "manual"
+    # Sperre aus einem abonnierten Fremdkalender (external_calendar/service.py
+    # schreibt status='blocked', source='ical'; DB-Enum seit 0119). Kein
+    # Vertriebskanal, sondern eine Herkunft wie 'manual' — fehlte hier, womit
+    # jede Antwort mit einer iCal-Sperre an der Validierung gescheitert wäre.
+    ical = "ical"
 
 
 class DateRange(BaseModel):

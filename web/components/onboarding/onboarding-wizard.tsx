@@ -31,7 +31,6 @@ import {
   befreiungFuerLand,
   rechtsformLabel,
   rechtsformenFuerLand,
-  timezoneForCountry,
   vatBeispielFuerLand,
 } from "@/lib/laender";
 import type { OnboardingStatus } from "@/lib/onboarding";

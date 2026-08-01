@@ -11,7 +11,11 @@ export type AvailabilitySource =
   | "booking"
   | "airbnb"
   | "vrbo"
-  | "manual";
+  // Sammelkanal für OTAs ohne eigenen Wert (Expedia, Agoda, Namensvarianten).
+  | "ota_other"
+  | "manual"
+  // Sperre aus einem abonnierten Fremdkalender (iCal-Import).
+  | "ical";
 
 export type DayAvailability = {
   date: string; // YYYY-MM-DD

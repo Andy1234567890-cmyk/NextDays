@@ -351,7 +351,8 @@
     "SK": "Словакия",
     "SI": "Словения",
     "ES": "Испания",
-    "SE": "Швеция"
+    "SE": "Швеция",
+    "GB": "Обединено кралство"
   },
   "stopSell": {
     "title": "Stop-Sell",
@@ -4877,7 +4878,9 @@
       "airbnb": "Airbnb",
       "booking": "Booking.com",
       "direct": "Директно",
+      "ical": "Външен календар",
       "manual": "Ръчно",
+      "ota_other": "Друг портал",
       "portal": "myBestDays",
       "vrbo": "Vrbo"
     },

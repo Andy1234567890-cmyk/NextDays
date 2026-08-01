@@ -53,7 +53,10 @@ const ENTHALTEN: readonly { icon: string; text: string }[] = [
 // Referenz ist bewusst der Tarif, der UNSEREN Funktionsumfang abdeckt: bei
 // Lodgify ist das Ultimate (Reinigung/Aufgaben + Eigentümer-Reporting stecken
 // erst dort), nicht Starter für 68 € ohne Channel Manager.
-const WETTBEWERB: readonly {
+// NOCH NICHT GERENDERT: die Vergleichstabelle fehlt in der Oberfläche, die
+// recherchierten Zahlen stehen aber bereits belegt hier. Unterstrich = bewusst
+// (noch) unbenutzt, kein Versehen.
+const _WETTBEWERB: readonly {
   name: string;
   tarif: string;
   preis20: number | null; // EUR/Monat bei 20 Objekten, null = nicht veröffentlicht

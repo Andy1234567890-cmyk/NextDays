@@ -85,7 +85,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
     } finally {
       setLoading(false);
     }
-  }, [companyId]);
+  }, [companyId, t]);
 
   useEffect(() => {
     loadDocuments();
@@ -129,7 +129,8 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
           companyId,
           docId,
           user?.uid || 'unknown',
-          `${user?.first_name} ${user?.last_name}` || t('ManualLockManager.unknownUser'),
+          [user?.first_name, user?.last_name].filter(Boolean).join(' ') ||
+            t('ManualLockManager.unknownUser'),
           t('ManualLockManager.manualLockReason'),
         ),
       );

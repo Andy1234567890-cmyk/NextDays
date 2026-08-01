@@ -23,7 +23,6 @@ import {
   deleteSeason,
   listSeasons,
   unassignSeason,
-  updateSeason,
 } from "@/lib/calendar";
 import { formatCurrency } from "@/lib/currency";
 import type { Property } from "@/lib/properties";
@@ -172,7 +171,7 @@ export function SeasonCalendar({
     } else {
       toast.error(res.error);
     }
-  }, [activeSeasonId, initial.id, load]);
+  }, [activeSeasonId, initial.id, load, t]);
 
   // Maus-Loslassen global abfangen (auch außerhalb einer Kachel).
   useEffect(() => {

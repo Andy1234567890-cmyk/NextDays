@@ -93,7 +93,7 @@ export function PropertyWarnings({ propertyId }: { propertyId: string }) {
       }
     }
     return out;
-  }, [reservations, todayKey, t]);
+  }, [reservations, todayKey, t, locale]);
 
   const filtered = warnings.filter(
     (w) =>

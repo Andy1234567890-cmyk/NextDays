@@ -5,7 +5,6 @@
 // (attrappierten) Bezahlschritt, damit der visuelle Flow prüfbar ist.
 "use client";
 
-import { Icon } from "@iconify/react";
 import { useState } from "react";
 
 import { type Listing, formatEuro } from "./_fixtures";

@@ -56,7 +56,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
     } finally {
       setLoading(false);
     }
-  }, [companyId, selectedPeriod]);
+  }, [companyId, selectedPeriod, t]);
 
   useEffect(() => {
     loadReport();

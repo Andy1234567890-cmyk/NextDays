@@ -1,0 +1,23 @@
+{
+  "name": "@nextdays/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Geteilte ESLint-Flat-Config für alle Next-Frontends (web, plattform, gastgeber, admin, marketing, builder, storybook). Eine Regelbasis statt sieben Kopien (ADR-0016). Die Mobile-Apps bleiben bei @react-native/eslint-config (eigenes node_modules, ESLint 8).",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "dependencies": {
+    "@eslint/compat": "2.1.0",
+    "@eslint/js": "10.0.1",
+    "@next/eslint-plugin-next": "15.5.19",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.8.0",
+    "typescript-eslint": "8.65.0"
+  },
+  "peerDependencies": {
+    "eslint": ">=9.0.0"
+  }
+}

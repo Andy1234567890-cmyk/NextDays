@@ -351,7 +351,8 @@
     "SK": "is-Slovakkja",
     "SI": "is-Slovenja",
     "ES": "Spanja",
-    "SE": "l-Iżvezja"
+    "SE": "l-Iżvezja",
+    "GB": "Ir-Renju Unit"
   },
   "stopSell": {
     "title": "Stop-Sell",
@@ -4877,7 +4878,9 @@
       "airbnb": "Airbnb",
       "booking": "Booking.com",
       "direct": "Dirett",
+      "ical": "Kalendarju estern",
       "manual": "Manwali",
+      "ota_other": "Portal ieħor",
       "portal": "myBestDays",
       "vrbo": "Vrbo"
     },

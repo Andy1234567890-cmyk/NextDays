@@ -6,29 +6,11 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@nextdays/ui/card";
+import { ChannelLogo } from "@/components/channel-logo";
+import type { AvailabilitySource } from "@/lib/calendar";
 import { formatCurrency } from "@/lib/currency";
-import type {
-  Dashboard,
-  DashboardEntry,
-  DashboardKpi,
-  ReservationChannel,
-} from "@/lib/reservations";
-
-const CHANNEL_LABEL: Record<ReservationChannel, string> = {
-  direct: "Direkt",
-  portal: "myBestDays",
-  booking: "Booking.com",
-  airbnb: "Airbnb",
-  vrbo: "Vrbo",
-};
-
-const CHANNEL_ICON: Record<ReservationChannel, string> = {
-  direct: "ph:link-simple",
-  portal: "ph:globe",
-  booking: "simple-icons:bookingdotcom",
-  airbnb: "simple-icons:airbnb",
-  vrbo: "ph:house-line",
-};
+import { useCalendarLabels } from "@/lib/use-calendar-labels";
+import type { Dashboard, DashboardEntry, DashboardKpi } from "@/lib/reservations";
 
 function fmtDate(iso: string): string {
   // 2026-07-01 → 01.07.26
@@ -52,11 +34,14 @@ function ChangeBadge({ change }: { change: number | null }) {
 }
 
 function EntryRow({ entry }: { entry: DashboardEntry }) {
-  const channel = entry.ota_name ?? CHANNEL_LABEL[entry.channel];
+  const { channelLabel } = useCalendarLabels();
+  // Der Klarname des Portals ist genauer als das Sammellabel des Kanals
+  // („Expedia" statt „Anderes Portal"), also hat er Vorrang.
+  const channel = entry.ota_name ?? channelLabel(entry.channel as AvailabilitySource);
   return (
     <li className="flex items-center gap-3 py-2">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-        <Icon icon={CHANNEL_ICON[entry.channel]} className="size-4" />
+        <ChannelLogo source={entry.channel as AvailabilitySource} className="size-4" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">
@@ -88,7 +73,6 @@ function ListCard({
   entries?: DashboardEntry[];
   empty: string;
 }) {
-  const t = useTranslations("reservations");
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 p-6">

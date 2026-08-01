@@ -77,6 +77,7 @@ export class AutoEInvoiceService {
         console.error('❌ XML-Generierung fehlgeschlagen:', xmlError);
         throw new Error(
           `XML-Generierung fehlgeschlagen: ${xmlError instanceof Error ? xmlError.message : 'Unbekannter Fehler'}`,
+          { cause: xmlError },
         );
       }
 

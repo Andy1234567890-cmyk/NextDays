@@ -210,7 +210,8 @@ export function FrameInspektor({ id }: { id: string }) {
   const overflowVarId = s("overflowVar", "") || null;
   const boundOverflowVar = vars?.get(overflowVarId) ?? null;
   const [overflowVarMenu, setOverflowVarMenu] = useState(false);
-  const [overflowVarEditor, setOverflowVarEditor] = useState(false);
+  // Nur der Setter: der Editor-Zustand wird an dieser Stelle nicht gerendert.
+  const [, setOverflowVarEditor] = useState(false);
   const [overflowCondDialog, setOverflowCondDialog] = useState(false);
   const overflowRowRef = useRef<HTMLDivElement>(null);
   // Aktuelles Conditional-Binding der Überlauf-Property (JSON in der Prop).

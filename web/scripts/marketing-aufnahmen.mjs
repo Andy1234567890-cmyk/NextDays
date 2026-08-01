@@ -225,8 +225,8 @@ async function aufnehmen(browser, zustand, aufnahme, sprache, thema) {
         .filter((el) => el.textContent?.includes(gesucht))
         .sort((a, b) => a.textContent.length - b.textContent.length);
       if (treffer.length > 0) {
-        treffer[0].closest("[class*='border']")?.style.setProperty("display", "none")
-          ?? treffer[0].style.setProperty("display", "none");
+        const rahmen = treffer[0].closest("[class*='border']");
+        (rahmen ?? treffer[0]).style.setProperty("display", "none");
       }
     }, text);
   }

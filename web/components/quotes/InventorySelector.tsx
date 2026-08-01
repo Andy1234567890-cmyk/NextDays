@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@tasko/ui';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { formatCurrency } from '@/lib/currency';
 import { type InventoryItem, InventoryService } from '@/services/inventoryService';
@@ -50,7 +50,8 @@ export default function InventorySelector({
   const [selectedQuantities, setSelectedQuantities] = useState<{ [key: string]: number }>({});
 
   // Inventar-Items laden
-  const loadInventoryItems = async () => {
+  // Stabil per useCallback, damit die Funktion in die Effect-Deps darf.
+  const loadInventoryItems = useCallback(async () => {
     if (!companyId) return;
 
     setLoading(true);
@@ -59,14 +60,17 @@ export default function InventorySelector({
       // Debug-Log
       // Alle Items anzeigen, nur discontinued ausschließen
       const availableItems = items.filter(item => item.status !== 'discontinued');
-      // Debug-Log
       setInventoryItems(availableItems);
       setFilteredItems(availableItems);
-    } catch {
+    } catch (fehler) {
+      // Bestand konnte nicht geladen werden: die Liste bleibt leer. Nicht
+      // stillschweigend verschlucken — sonst sieht ein Ladefehler aus wie
+      // "kein Inventar vorhanden".
+      console.error('Inventar konnte nicht geladen werden:', fehler);
     } finally {
       setLoading(false);
     }
-  };
+  }, [companyId]);
 
   // Items filtern basierend auf Suchbegriff
   useEffect(() => {
@@ -88,9 +92,9 @@ export default function InventorySelector({
   // Items laden wenn Modal geöffnet wird
   useEffect(() => {
     if (isOpen && inventoryItems.length === 0) {
-      loadInventoryItems();
+      void loadInventoryItems();
     }
-  }, [isOpen, inventoryItems.length]); // load-Funktion nicht memoized → aus Deps (Loop-Schutz)
+  }, [isOpen, inventoryItems.length, loadInventoryItems]);
 
   // Item zur Auswahl hinzufügen
   const handleSelectItem = (item: InventoryItem) => {

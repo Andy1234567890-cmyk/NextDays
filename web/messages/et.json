@@ -351,7 +351,8 @@
     "SK": "Slovakkia",
     "SI": "Sloveenia",
     "ES": "Hispaania",
-    "SE": "Rootsi"
+    "SE": "Rootsi",
+    "GB": "Ühendkuningriik"
   },
   "stopSell": {
     "title": "Stop-Sell",
@@ -4877,7 +4878,9 @@
       "airbnb": "Airbnb",
       "booking": "Booking.com",
       "direct": "Otse",
+      "ical": "Väline kalender",
       "manual": "Käsitsi",
+      "ota_other": "Muu portaal",
       "portal": "myBestDays",
       "vrbo": "Vrbo"
     },

@@ -11,7 +11,6 @@ import {
   type ChatMessage,
   type MessageThread,
   ladeThread,
-  ladeThreads,
   sendeNachricht,
 } from "@/lib/guest-messages";
 import { useRealtime } from "@/lib/use-realtime";

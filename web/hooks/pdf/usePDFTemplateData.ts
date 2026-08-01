@@ -818,6 +818,7 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
     userData,
     enrichedCustomerNumber,
     language,
+    locale,
     props.documentType,
   ]);
 }

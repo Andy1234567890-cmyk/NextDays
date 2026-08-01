@@ -12,7 +12,6 @@ import { Button } from "@nextdays/ui/button";
 import type {
   HostMessage,
   HostThreadDetail,
-  HostThreadSummary,
   QuickReply,
 } from "@/lib/posteingang";
 import {
@@ -24,7 +23,6 @@ import {
 
 export function ChatSpalte({
   detail,
-  thread,
   quickReplies,
   onGesendet,
   onArchiviert,
@@ -33,7 +31,6 @@ export function ChatSpalte({
   panelOffen,
 }: {
   detail: HostThreadDetail | null;
-  thread: HostThreadSummary | null;
   quickReplies: QuickReply[];
   onGesendet: (msg: HostMessage) => void;
   onArchiviert: (id: string, archiviert: boolean) => void;

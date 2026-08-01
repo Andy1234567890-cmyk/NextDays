@@ -81,7 +81,7 @@ export function useBreakpoints({
     ro.observe(el);
     setFrameHeight(Math.round(el.getBoundingClientRect().height / zoom));
     return () => ro.disconnect();
-  }, [zoom, frameWidth]);
+  }, [zoom, frameWidth, frameRef]);
 
   const applyWidth = (w: number) =>
     setFrameWidth(Math.round(Math.min(FRAME_MAX, Math.max(FRAME_MIN, w))));

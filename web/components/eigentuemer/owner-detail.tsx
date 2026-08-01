@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { Input } from "@nextdays/ui/input";
-import { Label } from "@nextdays/ui/label";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
 import { COUNTRIES, vatIdLabel } from "@nextdays/ui/countries";

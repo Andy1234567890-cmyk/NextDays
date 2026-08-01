@@ -78,7 +78,6 @@ export function GuestDetail({
   access: GuestAccess;
 }) {
   const t = useTranslations("guests");
-  const { statusLabel } = useCalendarLabels();
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>("overview");
   const [editing, setEditing] = useState(false);

@@ -107,6 +107,7 @@ export class EInvoiceService {
       console.error('❌ Failed to create E-Invoice:', error);
       throw new Error(
         `E-Rechnung konnte nicht erstellt werden: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`,
+        { cause: error },
       );
     }
   }
@@ -225,6 +226,7 @@ export class EInvoiceService {
       console.error('ZUGFeRD XML Generation Error:', error);
       throw new Error(
         `ZUGFeRD XML konnte nicht generiert werden: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
       );
     }
   }
@@ -460,7 +462,7 @@ export class EInvoiceService {
       return await api.get<EInvoiceSettings>(`/api/v1/einvoice/${companyId}/settings`);
     } catch (error) {
       console.error('Fehler beim Laden der E-Rechnungs-Einstellungen:', error);
-      throw new Error('E-Rechnungs-Einstellungen konnten nicht geladen werden');
+      throw new Error('E-Rechnungs-Einstellungen konnten nicht geladen werden', { cause: error });
     }
   }
 
@@ -660,7 +662,7 @@ export class EInvoiceService {
       return builder.build(parsedXML);
     } catch (error) {
       console.error('Fehler beim Generieren der ZUGFeRD XML mit TSE:', error);
-      throw new Error('ZUGFeRD XML mit TSE konnte nicht generiert werden');
+      throw new Error('ZUGFeRD XML mit TSE konnte nicht generiert werden', { cause: error });
     }
   }
 
@@ -712,7 +714,7 @@ export class EInvoiceService {
           ) as ArrayBuffer);
     } catch (error) {
       console.error('Fehler beim Erstellen der PDF/A-3 Datei:', error);
-      throw new Error('PDF/A-3 Datei konnte nicht erstellt werden');
+      throw new Error('PDF/A-3 Datei konnte nicht erstellt werden', { cause: error });
     }
   }
 
@@ -748,7 +750,7 @@ export class EInvoiceService {
       throw new Error(`Konvertierung von ${fromFormat} zu ${toFormat} nicht unterstützt`);
     } catch (error) {
       console.error('Fehler bei XML-Konvertierung:', error);
-      throw new Error('XML-Konvertierung fehlgeschlagen');
+      throw new Error('XML-Konvertierung fehlgeschlagen', { cause: error });
     }
   }
 

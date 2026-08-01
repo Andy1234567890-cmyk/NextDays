@@ -2,6 +2,7 @@
 // read-only-Monatsraster mit dem empfohlenen Tagespreis (Resolver: Override >
 // dynamisch > Wochentag > Basis). Manuelle Tagespreise setzt man im normalen
 // Kalender (sie gewinnen immer). Server Component lädt 35 Tage Verfügbarkeit.
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DpPreviewGrid } from "@/components/dynamic-pricing/dp-preview-grid";
@@ -64,12 +65,12 @@ export default async function Page({
         ]}
       />
       <header className="flex flex-col gap-1">
-        <a
+        <Link
           href="/dynamic-pricing"
           className="text-sm text-accent hover:underline"
         >
           ← Dynamic Pricing
-        </a>
+        </Link>
         <h1 className="font-display text-2xl font-extrabold">
           {prop.data.title} — Vorschau
         </h1>

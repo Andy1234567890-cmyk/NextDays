@@ -43,7 +43,7 @@ function waehrungsName(code: string, sprache: string): string {
     maximumFractionDigits: 0,
   })
     .format(0)
-    .replace(/[\d\s .,]/g, "");
+    .replace(/[\d\s\u00a0.,]/g, "");
 
   return symbol && symbol !== code ? `${name} (${symbol})` : `${name} (${code})`;
 }

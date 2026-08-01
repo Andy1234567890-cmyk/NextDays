@@ -30,6 +30,7 @@ import {
   type InboxThread,
 } from "@/lib/inbox";
 import { useRealtime } from "@/lib/realtime";
+import type { ReservationChannel } from "@/lib/reservations";
 import type { HostTabParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -197,16 +198,20 @@ function fmtShortDate(iso: string | null): string {
   return `${Number(d)}.${m}.${y}`;
 }
 
-// ota_name (Freitext) → Kanal-Key für die Badge-Farbe. Unbekannt → Direkt.
-function channelKeyOf(ota: string | null): "direct" | "portal" | "booking" | "airbnb" | "vrbo" {
-  const s = (ota ?? "").toLowerCase();
+// ota_name (Freitext) → Kanal-Key für die Badge-Farbe. Spiegelt die Zuordnung
+// des Backends (channel_manager/bookings_sync.py:_channel_of): ein Portal ohne
+// eigenen Kanalwert — Expedia, Agoda und alles Unbekannte — ist `ota_other`,
+// NICHT „Direkt". Ohne ota_name ist es eine echte Direktbuchung.
+function channelKeyOf(ota: string | null): ReservationChannel {
+  const s = (ota ?? "").trim().toLowerCase();
+  if (!s) return "direct";
   if (s.includes("booking")) return "booking";
   if (s.includes("airbnb")) return "airbnb";
-  if (s.includes("vrbo") || s.includes("expedia")) return "vrbo";
+  if (s.includes("vrbo")) return "vrbo";
   // Altbestand trägt noch „myNextDays" als ota_name, neue Buchungen „myBestDays".
   if (s.includes("mybestdays") || s.includes("mynextdays") || s.includes("nextdays"))
     return "portal";
-  return "direct";
+  return "ota_other";
 }
 
 const STATUS_LABEL: Record<string, string> = {

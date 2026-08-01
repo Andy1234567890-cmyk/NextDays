@@ -28,7 +28,9 @@ export type ReservationChannel =
   | "portal"
   | "booking"
   | "airbnb"
-  | "vrbo";
+  | "vrbo"
+  // Sammelkanal für Portale ohne eigenen Wert (Expedia, Agoda …).
+  | "ota_other";
 
 // Unterstützte Währungen (glatte Beträge, keine Cent — Lastenheft §5).
 export type ReservationCurrency = "EUR" | "DKK";
@@ -66,6 +68,7 @@ const CHANNEL_CONFIG: Record<
   booking: { label: "Booking.com", icon: "ph:bed" },
   airbnb: { label: "Airbnb", icon: "ph:house-line" },
   vrbo: { label: "Vrbo", icon: "ph:buildings" },
+  ota_other: { label: "Anderes Portal", icon: "ph:globe-hemisphere-east" },
 };
 
 function ChannelIcon({ channel }: { channel: ReservationChannel }) {

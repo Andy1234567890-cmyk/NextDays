@@ -351,7 +351,8 @@
     "SK": "Szlovákia",
     "SI": "Szlovénia",
     "ES": "Spanyolország",
-    "SE": "Svédország"
+    "SE": "Svédország",
+    "GB": "Egyesült Királyság"
   },
   "stopSell": {
     "title": "Stop-Sell",
@@ -4877,7 +4878,9 @@
       "airbnb": "Airbnb",
       "booking": "Booking.com",
       "direct": "Közvetlen",
+      "ical": "Külső naptár",
       "manual": "Manuális",
+      "ota_other": "Egyéb portál",
       "portal": "myBestDays",
       "vrbo": "Vrbo"
     },

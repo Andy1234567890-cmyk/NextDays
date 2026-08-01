@@ -351,7 +351,8 @@
     "SK": "an tSlóvaic",
     "SI": "an tSlóivéin",
     "ES": "an Spáinn",
-    "SE": "an tSualainn"
+    "SE": "an tSualainn",
+    "GB": "An Ríocht Aontaithe"
   },
   "stopSell": {
     "title": "Stop-Sell",
@@ -4877,7 +4878,9 @@
       "airbnb": "Airbnb",
       "booking": "Booking.com",
       "direct": "Díreach",
+      "ical": "Féilire seachtrach",
       "manual": "De láimh",
+      "ota_other": "Tairseach eile",
       "portal": "myBestDays",
       "vrbo": "Vrbo"
     },

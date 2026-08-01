@@ -563,9 +563,9 @@ export default function GeneralInfoCard({
                     <Input
                       placeholder={t('generalInfoCard.postalCodePlaceholder')}
                       value={
-                        formData.customerAddress
-                          ?.split('\n')
-                        [showAddressAddition ? 2 : 1]?.split(' ')[0] || ''
+                        formData.customerAddress?.split('\n')[
+                          showAddressAddition ? 2 : 1
+                        ]?.split(' ')[0] || ''
                       }
                       onChange={e => {
                         const lines = formData.customerAddress?.split('\n') || ['', '', '', ''];
@@ -580,9 +580,10 @@ export default function GeneralInfoCard({
                     <Input
                       placeholder={t('generalInfoCard.cityPlaceholder')}
                       value={
-                        formData.customerAddress
-                          ?.split('\n')
-                        [showAddressAddition ? 2 : 1]?.split(' ')
+                        formData.customerAddress?.split('\n')[
+                          showAddressAddition ? 2 : 1
+                        ]
+                          ?.split(' ')
                           .slice(1)
                           .join(' ') || ''
                       }

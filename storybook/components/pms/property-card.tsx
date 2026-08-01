@@ -38,7 +38,9 @@ export type ReservationChannel =
   | "portal"
   | "booking"
   | "airbnb"
-  | "vrbo";
+  | "vrbo"
+  // Sammelkanal für Portale ohne eigenen Wert (Expedia, Agoda …).
+  | "ota_other";
 
 // Anzeige-Labels (Deutsch) für property_type.
 const PROPERTY_TYPE_LABEL: Record<PropertyType, string> = {
@@ -80,6 +82,7 @@ const CHANNEL_META: Record<
   booking: { label: "Booking.com", icon: "ph:bed" },
   airbnb: { label: "Airbnb", icon: "ph:house-simple" },
   vrbo: { label: "Vrbo", icon: "ph:buildings" },
+  ota_other: { label: "Anderes Portal", icon: "ph:globe-hemisphere-east" },
 };
 
 // Nächste Buchung: Eigentümer sieht nur Vorname + Channel (Lastenheft §6).

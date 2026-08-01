@@ -1,7 +1,7 @@
 // Zentrales Mapping Kanal-/Plattform-Herkunft → Label, Logo, Farbakzent.
 // EINE Wahrheit für die Kanal-Darstellung im Multikalender (Balken-Badge,
 // Legende, Filter). Quelle ist der AvailabilitySource-/Reservation-Channel-Wert
-// aus dem Backend (direct/portal/booking/airbnb/vrbo/manual). Farben kommen aus
+// aus dem Backend (direct/portal/booking/airbnb/vrbo/ota_other/manual). Farben kommen aus
 // den --channel-*-Tokens (globals.css), nicht aus bg-[#…]-Arbitraries.
 import type { AvailabilitySource } from "@/lib/calendar";
 
@@ -18,9 +18,10 @@ export type ChannelMeta = {
   textFg: string;
 };
 
-// `manual` ist keine echte Plattform, sondern eine intern gesperrte/gepflegte
-// Quelle — sie erscheint nicht als „Kanal", taucht aber bei Bedarf als Fallback
-// auf. Reihenfolge = Anzeigereihenfolge in Legende/Filter.
+// `manual` und `ical` sind keine echten Plattformen, sondern gesperrte Nächte
+// (von Hand bzw. aus einem abonnierten Fremdkalender) — sie erscheinen nicht
+// als „Kanal", brauchen aber Farbe und Label.
+// Reihenfolge = Anzeigereihenfolge in Legende/Filter.
 // Logos: echte Markenformen. Airbnb gibt es als farbiges Iconify-Logo
 // (logos:airbnb); Booking/Expedia/Vrbo nur als monochrome simple-icons —
 // die werden auf dem (farbigen) Balken in Weiß und als Legenden-Punkt in der
@@ -63,11 +64,31 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     dotBg: "bg-channel-portal",
     textFg: "text-channel-portal",
   },
+  ota_other: {
+    // Sammelkanal (Expedia, Agoda, unbekannte Namensvarianten) — keine Marke,
+    // also KEIN Markenlogo raten (Regel „Portal-Logos nur echt"): neutrales
+    // Portal-Symbol in neutralem Grau. Wo eine Reservierung dranhängt, zeigt
+    // die UI ohnehin den echten `ota_name` statt des Sammellabels.
+    logo: { kind: "icon", icon: "ph:globe-hemisphere-east-fill" },
+    barBg: "bg-channel-ota-other",
+    barFg: "text-white",
+    dotBg: "bg-channel-ota-other",
+    textFg: "text-channel-ota-other",
+  },
   manual: {
     logo: { kind: "icon", icon: "ph:lock-simple-fill" },
     barBg: "bg-neutral-700",
     barFg: "text-white",
     dotBg: "bg-neutral-700",
+    textFg: "text-foreground",
+  },
+  ical: {
+    // Sperre aus einem abonnierten Fremdkalender — wie `manual` kein
+    // Vertriebskanal, deshalb neutral und nicht in CHANNEL_SOURCES.
+    logo: { kind: "icon", icon: "ph:calendar-x-fill" },
+    barBg: "bg-neutral-600",
+    barFg: "text-white",
+    dotBg: "bg-neutral-600",
     textFg: "text-foreground",
   },
 };
@@ -78,6 +99,7 @@ export const CHANNEL_SOURCES: AvailabilitySource[] = [
   "booking",
   "airbnb",
   "vrbo",
+  "ota_other",
   "portal",
 ];
 

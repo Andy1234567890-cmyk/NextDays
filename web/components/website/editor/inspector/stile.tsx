@@ -267,7 +267,7 @@ export function ZusatzStilRow({
   );
 
   let label = id as string;
-  let control: React.ReactNode = null;
+  let control: React.ReactNode;
   switch (id) {
     case "overflowX":
       label = t("editor.overflowX");

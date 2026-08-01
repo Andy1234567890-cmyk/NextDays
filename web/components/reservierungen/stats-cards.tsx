@@ -23,7 +23,6 @@ import {
 } from "@nextdays/ui/chart";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
-import { channelMeta } from "@/lib/calendar-channels";
 import type { PropertyStats, StatKpi, StatMetric, StatPoint } from "@/lib/reservations";
 
 // Kanal-Segmentfarben aus dem Chart-Token-System (var(--chart-1..5)).
@@ -201,7 +200,7 @@ function ChannelDonut({
         fill: CHART_VARS[i % CHART_VARS.length],
       }))
       .filter((d) => d.value > 0);
-  }, [stats.by_channel, metric]);
+  }, [stats.by_channel, metric, channelLabel]);
 
   const config = useMemo<ChartConfig>(() => {
     const c: ChartConfig = {};

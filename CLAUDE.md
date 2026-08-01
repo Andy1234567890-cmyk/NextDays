@@ -171,6 +171,17 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
 ## Qualitätsgate (vor „fertig")
 - `pytest` grün; `ruff check` sauber; `pylint` 10.00/10 auf geänderten Modulen.
 - Frontend: `tsc --noEmit` in apps/web UND builder ohne Fehler.
+- Frontend: `bun run lint` (ESLint) in jeder berührten App **fehlerfrei** —
+  Regeln zentral in `packages/eslint-config`, App-Ausnahmen in der jeweiligen
+  `eslint.config.mjs`. Findet, was `tsc` nicht sieht: toter Code, Hooks hinter
+  einem frühen Return, unvollständige Hook-Dependencies, verschluckte Fehler
+  ohne `cause`. Warnungen (`any`, `<img>`) brechen noch nicht ab — neue keine
+  dazu. Geteilte Pakete: `bun run lint:packages`.
+- Kanal/Enum berührt? `node scripts/i18n/kanal-enums-pruefen.mjs` — hält
+  DB-Enum → Pydantic → Frontend-Unions → Kanal-Meta → `calendar.channel.*`
+  aller 24 Sprachen deckungsgleich. Ein neuer Backend-Kanalwert ohne diese
+  Kette ist ein `MISSING_MESSAGE` plus stiller Farb-Fallback auf einen FREMDEN
+  Kanal (so sah eine Expedia-Buchung aus wie myBestDays).
 - Mobile berührt? `tsc --noEmit` + Jest grün in JEDER betroffenen App
   (`mobile-bestdays`, `mobile-nextdays`); geteilte Dateien in beiden gleich.
 - DB-Änderung? Migration schreiben und via `supabase/apply-migrations.sh` live

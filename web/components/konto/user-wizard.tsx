@@ -155,7 +155,8 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
   const togglePerm = (id: string) =>
     setPerms((prev) => {
       const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
       return n;
     });
 
@@ -278,7 +279,6 @@ const STEP_HINTS = [
 ];
 
 function Stepper({ current }: { current: number }) {
-  const t = useTranslations("account");
   return (
     <div className="flex items-center pt-2">
       {WIZARD_STEPS.map((schluessel, i) => {
@@ -321,7 +321,6 @@ function StepContact(p: {
   hidePhones: boolean; setHidePhones: (v: boolean) => void;
 }) {
   const t = useTranslations("account");
-  const tCommon = useTranslations("common");
   return (
     <div className="flex flex-col gap-5">
       <FieldText label={t("userWizard.firstName")} required value={p.firstName} onChange={p.setFirstName} />

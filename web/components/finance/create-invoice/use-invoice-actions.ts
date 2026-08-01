@@ -162,7 +162,7 @@ export function useInvoiceActions({
       validUntil: dueDateString,
       paymentTerms: `Zahlbar binnen ${paymentDays} Tagen ohne Abzug`,
     }));
-  }, [paymentDays, formData.invoiceDate]);
+  }, [paymentDays, formData.invoiceDate, setFormData]);
 
   // Initiale Berechnung: Setze paymentDays aus validUntil beim Laden
   useEffect(() => {
@@ -182,7 +182,7 @@ export function useInvoiceActions({
         paymentTerms: 'Zahlbar binnen 14 Tagen ohne Abzug',
       }));
     }
-  }, [formData.invoiceDate, formData.validUntil]);
+  }, [formData.invoiceDate, formData.validUntil, setFormData]);
 
   // Handler für manuelle Änderung des Fälligkeitsdatums → berechne paymentDays zurück
   const handleValidUntilChange = useCallback(
@@ -216,7 +216,7 @@ export function useInvoiceActions({
         }));
       }
     },
-    [formData.invoiceDate],
+    [formData.invoiceDate, setFormData, setPaymentDays],
   );
 
   // Customer helper functions
@@ -741,18 +741,10 @@ export function useInvoiceActions({
         console.warn('Usage-Tracking fehlgeschlagen:', trackingError);
       }
 
-      // Inventory Management
-      try {
-        const inventoryItems = (items || [])
-          .filter(it => it.inventoryItemId && it.quantity > 0 && it.category !== 'discount')
-          .map(it => ({ itemId: it.inventoryItemId as string, quantity: it.quantity }));
-
-        if (inventoryItems.length > 0) {
-        }
-      } catch (reserveErr: unknown) {
-        console.error('Inventory reservation failed:', reserveErr);
-        // Continue anyway - inventory reservation is not critical for invoice creation
-      }
+      // Inventar-Reservierung: OFFENE LÜCKE. Der Block berechnete die zu
+      // reservierenden Positionen und rief nichts damit auf — bei Rechnungs-
+      // erstellung wird also kein Bestand reserviert. Bewusst als Lücke
+      // benannt statt toten Code stehen zu lassen.
 
       // ✅ Invoice number sequence is now automatically managed by NumberSequenceService
       // ❌ REMOVED: setNextNumber manipulation - causes race conditions!
@@ -798,7 +790,6 @@ export function useInvoiceActions({
               await api.patch(`/api/v1/invoices/${createdInvoiceId}`, updateData);
 
               toast.success('E-Rechnung erfolgreich generiert');
-            } else {
             }
           }
         } catch (eInvoiceError) {

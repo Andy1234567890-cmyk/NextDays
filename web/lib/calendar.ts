@@ -7,13 +7,21 @@ import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
 export type AvailabilityStatus = "open" | "booked" | "blocked";
+// Spiegelt apps/api/.../calendar/schemas.py:AvailabilitySource — jeder neue
+// Backend-Wert MUSS hier, in CHANNEL_META und in calendar.channel.* aller
+// Locales landen (scripts/i18n/kanal-enums-pruefen.mjs erzwingt das).
 export type AvailabilitySource =
   | "direct"
   | "portal"
   | "booking"
   | "airbnb"
   | "vrbo"
-  | "manual";
+  // Sammelkanal für OTAs ohne eigenen Wert (Expedia, Agoda, Namensvarianten).
+  | "ota_other"
+  | "manual"
+  // Sperre aus einem abonnierten Fremdkalender (iCal-Import) — kein
+  // Vertriebskanal, nur eine Herkunft der Sperre.
+  | "ical";
 
 export type DayAvailability = {
   date: string; // YYYY-MM-DD

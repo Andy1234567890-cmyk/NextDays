@@ -16,7 +16,7 @@ import {
 } from '@tasko/ui';
 import { useTranslations, useLocale } from 'next-intl';
 import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { NativeSelect } from '@nextdays/ui/native-select';
@@ -151,7 +151,7 @@ export function LivePreviewModal({
   // Template Page Detection
 
   // Document type labels
-  const documentLabels: Record<DocumentType, string> = {
+  const documentLabels: Record<DocumentType, string> = useMemo(() => ({
     invoice: t('LivePreviewModal.docType.invoice'),
     quote: t('LivePreviewModal.docType.quote'),
     reminder: t('LivePreviewModal.docType.reminder'),
@@ -161,7 +161,7 @@ export function LivePreviewModal({
     deliveryNote: t('LivePreviewModal.docType.deliveryNote'),
     'order-confirmation': t('LivePreviewModal.docType.orderConfirmation'),
     orderConfirmation: t('LivePreviewModal.docType.orderConfirmation'),
-  };
+  }), [t]);
 
   // Funktion zum Anreichern der Dokumentdaten mit Kundennummer und Kontaktperson
   const enrichDocumentWithCustomerData = useCallback(
@@ -344,7 +344,7 @@ export function LivePreviewModal({
     };
 
     loadRealInvoiceData();
-  }, [isOpen, companyId, document, documentLabels, documentType, generateQRCode]); // enrichDocumentWithCustomerData entfernt
+  }, [isOpen, companyId, document, documentLabels, documentType, generateQRCode, t]); // enrichDocumentWithCustomerData entfernt
 
   // ✅ Reload document data when customer-related settings change
   useEffect(() => {

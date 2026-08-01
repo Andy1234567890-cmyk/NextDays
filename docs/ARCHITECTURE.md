@@ -320,7 +320,7 @@ erDiagram
         uuid property_id FK
         date day "UNIQUE(property_id, day)"
         enum status "open|booked|blocked"
-        enum source "direct|portal|booking|airbnb|vrbo|manual"
+        enum source "direct|portal|booking|airbnb|vrbo|ota_other|manual|ical"
     }
     GUEST {
         uuid id PK
@@ -333,7 +333,7 @@ erDiagram
         uuid tenant_id FK
         uuid property_id FK
         uuid guest_id FK
-        enum channel "direct|portal|booking|airbnb|vrbo"
+        enum channel "direct|portal|booking|airbnb|vrbo|ota_other"
         date check_in
         date check_out
         enum status "pending|confirmed|cancelled|completed"
@@ -779,7 +779,7 @@ Gast-AGB für den Marktplatz: `plattform/app/agb` (`?sprache=<code>`).
 
 **Geldfluss-Regel (OTA-Gate):** Ein PaymentIntent (Buchung/Kaution) entsteht
 **nur** für eigene Kanäle (`channel` ∈ {`direct`,`portal`} ohne
-`source_channex_booking_id`). OTA-Buchungen (`booking`/`airbnb`/`vrbo`) zahlt der
+`source_channex_booking_id`). OTA-Buchungen (`booking`/`airbnb`/`vrbo`/`ota_other`) zahlt der
 Gast bei der OTA — die zahlt den Vermieter direkt aus, kein Stripe (409). **0%
 Buchungsgebühr** auf eigene Buchungen (ADR-0006); Provision nur im
 Phase-2-Marktplatz (`commissions`).

@@ -47,7 +47,7 @@ export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialog
         }),
       );
     }
-  }, [isOpen, invoice, t]);
+  }, [isOpen, invoice, t, locale]);
 
   const handleSendEmail = async () => {
     if (!emailTo || !emailSubject || !emailBody) {

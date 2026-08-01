@@ -65,6 +65,7 @@
   --color-channel-vrbo: var(--channel-vrbo);
   --color-channel-expedia: var(--channel-expedia);
   --color-channel-google: var(--channel-google);
+  --color-channel-ota-other: var(--channel-ota-other);
   --color-channel-portal: var(--channel-portal);
 
   /* Sidebar (Dashboard-Navigation). */
@@ -130,7 +131,11 @@
   --channel-vrbo: #1668e3;     /* Vrbo-Blau */
   --channel-expedia: #fbcb1c;  /* Expedia-Gelb */
   --channel-google: #4285f4;   /* Google-Blau */
-  --channel-portal: #71717a;   /* sonstige Portale = neutral */
+  /* Sammelkanal fremder Portale ohne eigenen Wert — keine Marke, also neutral.
+     Bewusst dunkler als --channel-portal, sonst sind der eigene Marktplatz und
+     ein Fremdportal in der Kalender-Legende nicht unterscheidbar. */
+  --channel-ota-other: #52525b;
+  --channel-portal: #71717a;   /* eigener Marktplatz myBestDays */
 
   --sidebar: #fafafa;
   --sidebar-foreground: #0a0a0a;

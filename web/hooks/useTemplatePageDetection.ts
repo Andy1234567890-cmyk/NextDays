@@ -222,5 +222,5 @@ export function useTemplateRecommendations(documentData?: { items?: Array<any> }
     });
 
     return recommendations;
-  }, [documentData?.items?.length, documentData]);
+  }, [documentData]);
 }

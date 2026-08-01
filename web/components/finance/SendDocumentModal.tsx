@@ -19,7 +19,7 @@ import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useNewAuth } from '@/contexts/NewAuthContext';
@@ -458,13 +458,13 @@ export function SendDocumentModal({
   }, []);
 
   // Document type labels
-  const documentLabels: Record<SendDocumentModalProps['documentType'], string> = {
+  const documentLabels: Record<SendDocumentModalProps['documentType'], string> = useMemo(() => ({
     invoice: t('SendDocumentModal.documentTypeInvoice'),
     quote: t('SendDocumentModal.documentTypeQuote'),
     reminder: t('SendDocumentModal.documentTypeReminder'),
     'credit-note': t('SendDocumentModal.documentTypeCreditNote'),
     cancellation: t('SendDocumentModal.documentTypeCancellation'),
-  };
+  }), [t]);
 
   // Load real invoice data from database when modal opens
   useEffect(() => {
@@ -551,7 +551,7 @@ export function SendDocumentModal({
     };
 
     loadRealDocumentData();
-  }, [isOpen, document?.id, document, documentType, companyId, generateQRCode]);
+  }, [isOpen, document?.id, document, documentType, companyId, generateQRCode, documentLabels, t]);
 
   // Dokumentsprache aus dem übergebenen Beleg nachziehen (0099). Nötig, weil
   // das Modal im Erstell-Flow „immer gemountet" ist und beim ersten Render ein
@@ -1082,7 +1082,10 @@ export function SendDocumentModal({
 
           allStyles.push(css);
         }
-      } catch {}
+      } catch {
+        // Stylesheet einer fremden Herkunft (CORS) — `cssRules` wirft dort.
+        // Best-effort: dieses Blatt auslassen, der Rest wird trotzdem eingebettet.
+      }
     });
 
     // Create complete HTML with ALL styles
@@ -1201,7 +1204,7 @@ ${document.companyName || t('SendDocumentModal.emailFallbackCompanyName')}`;
       setLogoUrl(null);
       setLogoSize(50);
     }
-  }, [isOpen, document, documentType, documentLabel, documentLabelLower, logoUrl, t]);
+  }, [isOpen, document, documentType, documentLabel, documentLabelLower, logoUrl, t, locale]);
 
   // ✅ Extract rendered HTML from the current template with ALL EXISTING STYLES
   // Check if template is ready - simplified version
@@ -1345,9 +1348,9 @@ ${document.companyName || t('SendDocumentModal.emailFallbackCompanyName')}`;
 
     let pdfBlob: Blob | null = null;
 
-    // Für "print" verwenden wir die dedizierte Print-Seite direkt (kein PDF-Blob nötig)
-    // Für "print" verwenden wir die dedizierte Print-Seite direkt (kein PDF-Blob nötig)
     if (method === 'print') {
+      // Drucken läuft über die dedizierte Print-Seite — hier ist bewusst nichts
+      // zu tun, es wird kein PDF-Blob gebraucht.
     } else if (method === 'download' || method === 'email') {
       // Für Download/Email: Nutze die bestehende PDF-API anstatt html2pdf
 

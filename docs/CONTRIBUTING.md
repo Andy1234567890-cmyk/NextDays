@@ -74,6 +74,34 @@ ruff check src
 pytest
 ```
 
+## Lint (Frontends)
+
+Jede Next-App und der geteilte Code werden mit **ESLint 10 (Flat Config)**
+geprüft; die Regeln stehen EINMAL in `packages/eslint-config`, jede App hat nur
+eine dreizeilige `eslint.config.mjs` für eigene Ausnahmen. Der Lint-Schritt
+läuft in CI (`frontends` + `packages`) und muss **fehlerfrei** sein — Warnungen
+(`any`, `<img>` statt `next/image`) brechen noch nicht ab, es sollen aber keine
+neuen dazukommen.
+
+Scharf geschaltet ist bewusst nur, was ein echter Fehler ist: toter Code,
+`react-hooks/rules-of-hooks` und `exhaustive-deps`, `preserve-caught-error`
+(kein `throw` ohne `{ cause }`), leere Blöcke, konstante Bedingungen.
+Stil-Regeln sind draußen. `react`/`jsx-a11y` sind nur registriert (damit
+bestehende `eslint-disable`-Kommentare gültig bleiben), ihre Regelsätze aus.
+
+```bash
+cd web && bun run lint      # je App
+bun run lint:packages       # geteilte Pakete (aus der Repo-Wurzel)
+```
+
+ESLint selbst und die geteilte Config stehen NUR in der Wurzel-`package.json`
+(bun hoistet sie, `bun run lint` findet sie in jeder App). Die App-Manifeste
+bleiben damit frei von Werkzeug-Abhängigkeiten — wichtig, weil die Dockerfiles
+mit einem minimalen Root-Manifest bauen (ADR-0016 P6).
+
+Die Mobile-Apps bleiben bei `@react-native/eslint-config` (ESLint 8, eigenes
+`node_modules`): `cd mobile-nextdays && bun run lint`.
+
 ## Architektur-Entscheidungen (ADRs)
 
 Größere oder schwer reversible Entscheidungen werden als **ADR** in
