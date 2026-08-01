@@ -528,6 +528,231 @@ _CHANNEX_FACILITY: dict[str, str] = {
 }
 
 
+# Channex-ZIMMER-Facility-Katalog: lokaler Slug → Channex-room_facility-UUID.
+# Vollständiger /room_facilities-Katalog (191, live abgerufen). BEWUSST getrennt
+# vom Objekt-Katalog oben: Channex führt zwei Kataloge mit EIGENEN UUIDs, und sie
+# überschneiden sich nur zu einem Bruchteil (30 gleichlautende Titel — alle mit
+# unterschiedlicher UUID). Die Zimmer-Merkmale, nach denen Gäste auf Booking und
+# Airbnb filtern (Klimaanlage, Balkon, Küche, Aussicht, Bad), gibt es AUSSCHLIESS-
+# LICH hier. Die Objekt-UUID an einem Room-Type wäre ungültig — nie mischen.
+# "Kitchen" führt Channex doppelt (zwei UUIDs); der zweite trägt das Suffix _2.
+_CHANNEX_ROOM_FACILITY: dict[str, str] = {
+    # --- in_room (104) ------------------------------------------------
+    "accessible_by_lift": "91387c6b-ac21-46f1-ab1b-1147550d8fe1",  # Accessible by Lift
+    "adapter": "8634a6bd-c39a-4605-9086-00f557d00976",  # Adapter
+    "air_purifiers_available": "09233650-f44a-479a-8d8b-ba8efbf1f4bd",  # Air purifiers available
+    "airconditioning": "9f5726e2-f979-4b6b-a69e-cbca387bc7ea",  # Airconditioning
+    "alarm_clock": "d178a656-7a19-4746-b4dc-51cee4dc972f",  # Alarm Clock
+    "allergy_free": "8f3a1651-61b8-4a59-b784-d705a82c5942",  # Allergy-Free
+    "blu_ray_player": "f051a21f-3502-42fe-8b3e-4cbbe3d4284f",  # Blu-ray player
+    "board_games_puzzles": "60fd8f18-6f70-4f31-9c8a-ea97ef7f1044",  # Board games/puzzles
+    "book_dvd_music_library_for_children": "d93edfee-5982-4383-8894-dba0ce19fa4c",  # Book/DVD/Music
+    "bottle_of_water": "9f24a2a3-f9ae-4148-86c4-e98d30595bd0",  # Bottle of water
+    "cable_channels": "5df87db0-20dd-4b61-aa5d-fc747f1fd131",  # Cable channels
+    "carpeted_floor": "76f91345-8533-4229-af7c-e02a16d58326",  # Carpeted Floor
+    "cd_player": "fe401975-d69f-492b-9235-05d988591f5a",  # CD-Player
+    "children_crib_cots": "8800f0e8-ab2f-44da-b03e-18f10634094f",  # Children crib/cots
+    "chocolate_cookies": "45f637e0-1603-4d2e-a40a-6bff922d0b67",  # Chocolate/cookies
+    "clothes_drying_rack": "dd5a9eee-10b0-49a0-90b5-60834b2449b8",  # Clothes drying rack
+    "clothes_rack": "68189e53-293b-4451-b5ce-289de9dffd78",  # Clothes Rack
+    "clothing_iron": "2432ffaa-c4a1-4ef1-a567-551bb506d01a",  # Clothing Iron
+    "coffee_machine": "25b7cd4a-ce28-4806-a198-8d00e55b3ef8",  # Coffee Machine
+    "coffee_tea_maker": "1ef9743d-1c68-4655-b09d-22486655d317",  # Coffee/Tea maker
+    "computer": "57e1258a-811a-4e4f-abf4-8865fb7c1c2c",  # Computer
+    "desk": "3eb5450a-df8b-4d3e-9262-b57fc3e6b8f8",  # Desk
+    "detached": "1b881f9e-185a-4f8d-a7c1-942bb8e40b4e",  # Detached
+    "dining_area": "34295a62-f21e-4d10-b68f-1acdc890e1ae",  # Dining Area
+    "dining_table": "fb5c935f-aeb5-47f7-8a47-6ca6a9482f34",  # Dining table
+    "dressing_room": "1fb5e30b-60ed-46be-be56-48516b9b9751",  # Dressing room
+    "dvd_player": "f54eaa9b-e4ce-464d-b11b-8321b12425cd",  # DVD-Player
+    "earplugs": "edb07472-eb22-4dfe-adc7-989b13567a3b",  # Earplugs
+    "electric_blankets": "80ff0812-967b-4d9b-973e-4abeaed1f203",  # Electric blankets
+    "electric_kettle": "dc2f15c1-2f6a-4985-80a9-6228acd0ae18",  # Electric Kettle
+    "entire_property_on_ground_floor": "a2a0746e-7848-4869-8bc6-cb29cd3e4a65",  # Entire property on
+    "entire_unit_wheelchair_accessible": "1f39462f-0cdd-489f-854a-db06485271c6",  # Entire unit whee
+    "executive_lounge_access": "ee5bd5e0-0c4b-45c0-8051-f66e2e5cc849",  # Executive Lounge Access
+    "fan": "1a5e21d0-6682-44c0-875c-90a5d933e9e8",  # Fan
+    "fax": "5d0f6cd3-05a5-446e-9d29-a10a6767aeb9",  # Fax
+    "feather_pillow": "b3e1b973-e8ee-48b2-b6d4-ffe1c7f40b91",  # Feather pillow
+    "fireplace": "feffe2ff-67eb-4162-bcd8-01907c5500c6",  # Fireplace
+    "flat_screen_tv": "adcc9a15-1aaf-4e02-836a-829ae41f2585",  # Flat-screen TV
+    "fruits": "adb7b6f5-d128-4bba-af55-d60c214386e8",  # Fruits
+    "game_console": "2bbd0abf-582f-4bdb-803f-28dff73d4347",  # Game Console
+    "game_console_nintendo_wii": "7c2b3edf-8c84-4650-a4e8-6fa395b4fd80",  # Game Console - Nintendo
+    "game_console_ps2": "33361884-d382-474e-9490-5078955ee840",  # Game Console - PS2
+    "game_console_ps3": "cf65a800-96ce-4279-95c7-8a9f69916d12",  # Game Console - PS3
+    "game_console_ps4": "706025e2-7287-4c6f-b813-9da1ec2b2cd4",  # Game console - PS4
+    "game_console_wii_u": "2c60d416-4f89-44bd-a130-a2ba37e93f14",  # Game console - Wii U
+    "game_console_xbox_360": "e87b74f3-0c7e-447e-adaa-37115199c5f5",  # Game Console - Xbox 360
+    "game_console_xbox_one": "68defca6-26ea-4bf3-b014-1478eab8ea2c",  # Game console - Xbox One
+    "hair_dryer": "36a4bcae-e011-4552-9088-7ebb9905ead1",  # Hair Dryer
+    "hand_sanitiser": "049b2bd9-1df1-4a98-bda2-b064b8dacd81",  # Hand sanitiser
+    "heating": "85dd90ff-d582-45a2-b6f9-b86155709deb",  # Heating
+    "hypoallergenic_pillow": "a461c536-8b45-4495-b0be-3684a962fe19",  # Hypoallergenic pillow
+    "interconnecting_room_s_available": "149cab67-c1d1-4941-b293-ada358266088",  # Interconnecting R
+    "internet_facilities": "5e359056-5a69-4876-9aef-7a961db18d79",  # Internet facilities
+    "ipad": "fa1d3fb6-9dc1-487e-aa54-3ff80dd7deb8",  # iPad
+    "ipod_docking_station": "da57d6ff-f6e4-4e61-a0e2-2a99c7b7b389",  # iPod Docking Station
+    "ironing_facilities": "734d5dfe-808e-43ef-82bd-54e7899da670",  # Ironing facilities
+    "kitchen_2": "ed24b421-9355-49e7-9a07-624c3c14b2d2",  # Kitchen
+    "kitchenware": "95999f89-538b-487c-b483-bcb4512f7d89",  # Kitchenware
+    "laptop": "59facc8c-3c35-4850-b2b2-09d3486e366e",  # Laptop
+    "linen": "0b23cbf0-146c-4946-9010-33461db44b05",  # Linen
+    "mini_bar": "6d03ddf6-2bed-4a39-bae2-55f5f5a87d1e",  # Mini-bar
+    "mosquito_net": "767c0199-ed22-427d-a881-4d47fdb5604e",  # Mosquito Net
+    "non_feather_pillow": "7580470f-aae3-4b0a-9bb3-69fe5020f2a5",  # Non-feather pillow
+    "outdoor_dining_area": "2d6a0bee-c2e2-4218-a1f4-4fc6d0b93e99",  # Outdoor dining area
+    "outdoor_furniture": "7eac1383-5c6b-438f-b478-4bad6740bb3a",  # Outdoor furniture
+    "pajamas": "01780dda-5833-40b5-8525-287a756d2523",  # Pajamas
+    "patio": "e80dcf2d-c9c5-4619-89da-c628d260e841",  # Patio
+    "pay_per_view_channels": "0a2f07c4-e448-4b7e-b9af-aca76ec09b2a",  # Pay-per-view Channels
+    "portable_wifi": "c3bff477-2af5-4c39-b248-ff0f66f931ce",  # Portable Wifi
+    "private_curtain": "3d2243ce-5482-491a-99fd-d25d2c2c3427",  # Private curtain
+    "private_entrance": "fbae965b-e7f6-4233-8d06-4281be9b8de6",  # Private Entrance
+    "private_flat_in_block_of_flats": "3843e479-7c37-4620-86d1-cba820259d3b",  # Private flat in blo
+    "radio": "d7a28169-c126-4c47-81c7-31929cb9200e",  # Radio
+    "reading_light": "896ed74e-6171-4271-a7b8-289345d6b48d",  # Reading light
+    "rollaway_bed": "5b9d9717-6c9d-4c2e-84ed-1af3ed2dc583",  # Rollaway bed
+    "satellite_channels": "35083174-001d-4994-a668-c09e0e4936e1",  # Satellite Channels
+    "seating_area": "66be0b40-6e0f-4335-84a8-08073947d52b",  # Seating area
+    "semi_detached": "2bd661ad-3383-4407-b8dd-371c9c8a3d67",  # Semi-detached
+    "single_room_air_conditioning_for_guest_accommodation": "b8957812-40db-4739-b456-8798464d7f6f",
+    "slippers": "e779da1e-e497-4e41-9c39-0f7590b123b0",  # Slippers
+    "smartphone": "8d30f1a3-4ba7-4535-a4ea-40a8d0d41170",  # Smartphone
+    "socket_near_the_bed": "d5cca542-3e66-4b6a-9495-7724ac4ed2e2",  # Socket near the bed
+    "sofa": "b57f3bc2-a1c5-4e2c-8b20-07fdd2eab0ed",  # Sofa
+    "sofa_bed": "96be8ba8-d046-4720-91b8-0b4078cb2a30",  # Sofa bed
+    "soundproofing": "5c2db353-cb7b-4f74-82a2-b965dc97b2b0",  # Soundproofing
+    "streaming_service_such_as_netflix": "68102d87-507b-40c8-bdae-a0689c33b3d3",  # Streaming servic
+    "telephone": "3a5ef7dd-2915-4be5-b4b0-e13d15574321",  # Telephone
+    "terrace": "692964cb-c34d-40c2-bc9a-57704995cbb2",  # Terrace
+    "tiled_marble_floor": "84377e63-ee27-469e-9a2d-c45eeb6bf098",  # Tiled / Marble floor
+    "towels_linens_at_surcharge": "5d6bdfaa-ec91-4916-b6fc-6e95ba1349da",  # Towels/Linens at surcha
+    "trash_cans": "53c2ee74-3fa4-40e8-9323-7a3323d28c4d",  # Trash cans
+    "trouser_press": "e238d254-3127-48ae-af9f-3ddc3cee0f95",  # Trouser Press
+    "tv": "724b54ce-57d3-4751-9c10-76844a6fa2ed",  # TV
+    "upper_floor_reachable_by_lift": "79293955-571f-441c-8f78-3e06de6ca2fe",  # Upper floor reachabl
+    "upper_floor_reachable_by_stairs_only": "9a52fb40-af99-4446-b7d6-f2c33eb1420a",  # Upper floor r
+    "video": "aa5ef885-76b5-4a25-a418-48a496178272",  # Video
+    "video_games": "fd7d9a39-c94f-4226-9146-328ad99f833c",  # Video Games
+    "wake_up_service": "a28b42c9-b6af-4b03-a559-017ab0dab443",  # Wake Up Service
+    "wake_up_service_alarm_clock": "de2300fd-b800-428d-8ca4-82413d0c1e0b",  # Wake Up Service/Alarm-
+    "wardrobe_closet": "c8f2272d-412b-455f-b38a-b7c99ddf96c0",  # Wardrobe/Closet
+    "wine_champagne": "0bb8cfc9-da4e-49df-952c-065e5a3b3637",  # Wine/champagne
+    "wireless_internet": "6556b81d-62e2-454b-bdb7-b9b11f6bf57c",  # Wireless internet
+    "wooden_parquet_floor": "6881538d-f9bf-48b4-9db8-f5ceb13439ec",  # Wooden / Parquet floor
+    "yukata": "c3bb9a7c-89a1-4a5a-ba0d-c0b33a339447",  # Yukata
+    # --- bathroom (29) ------------------------------------------------
+    "adapted_bath": "4e4d755c-53b4-454f-a7ed-7d3219990a8d",  # Adapted bath
+    "additional_bathroom": "d6ba30e9-f1af-46c9-8280-26c2713c8887",  # Additional Bathroom
+    "additional_toilet": "2a0b62db-a859-4b8e-9258-f26bb0496368",  # Additional Toilet
+    "bath": "b90c4165-fd52-4136-a822-3b7365530272",  # Bath
+    "bath_or_shower": "93d62abc-cafb-4976-9ee0-b825b826fe91",  # Bath or Shower
+    "bath_robe": "05ecc6c3-a84b-4f2f-97f0-f91444d6928b",  # Bath-robe
+    "bathroom": "cd7b1937-8405-45a5-9800-28c91235f528",  # Bathroom
+    "bidet": "dced3634-738b-4c97-ba87-97b0c54c788e",  # Bidet
+    "body_soap": "015971a8-f7ac-4c49-8830-bc1c2a04235e",  # Body soap
+    "conditioner": "09db5951-b023-44a6-8b39-e6772605b9ab",  # Conditioner
+    "free_toiletries": "dc403823-544e-4f17-8a35-541ddb639b15",  # Free Toiletries
+    "guest_toilet": "a5f3b37f-fa7d-4fc5-8525-ea4f9f775f06",  # Guest toilet
+    "higher_level_toilet": "000df3c4-9b1f-481f-b9b4-366ae3259020",  # Higher level toilet
+    "hot_tub": "2b85eb67-c28a-45a9-a7d6-147f0e2391db",  # Hot Tub
+    "kitchen": "50460002-dfb9-48c1-89bb-39cd817886e3",  # Kitchen
+    "low_bathroom_sink": "0ac1b55e-316f-40d7-88b5-32deece6cd21",  # Low bathroom sink
+    "roll_in_shower": "0a79bbec-98f4-4158-9b5a-4439b627bc8a",  # Roll in shower
+    "sauna": "2a0ccd2b-d60f-4867-9f0c-0efd64458e21",  # Sauna
+    "shampoo": "bfada419-fc0e-45ca-a165-1e786d8b9827",  # Shampoo
+    "shower": "179c91be-836f-497f-9329-3acb333c85b1",  # Shower
+    "shower_cap": "5a4b53af-7528-4968-8840-e048d65c4156",  # Shower cap
+    "shower_chair": "f31c84b7-9ef5-409e-97c8-1bc24d481a7d",  # Shower chair
+    "spa_bath": "d3a8da55-c2b8-472d-9837-899c992ed2db",  # Spa Bath
+    "toilet": "eaae277c-1319-4f06-8431-d80fccd56d9b",  # Toilet
+    "toilet_paper": "a59ddfed-93eb-4bcf-b52e-efc1c3119298",  # Toilet paper
+    "toilet_with_grab_rails": "06121f37-605b-409d-a532-75f1d8a55837",  # Toilet with grab rails
+    "toothbrush": "89502560-0080-4ca5-8169-ef4dc8e7bd64",  # Toothbrush
+    "towels": "bb81debf-dbe5-43ab-912d-33e20c09e856",  # Towels
+    "walk_in_shower": "f4bdd30f-16ca-4a65-adbb-75ba8eff33c0",  # Walk in shower
+    # --- kitchen (14) -------------------------------------------------
+    "barbecue": "2b9c558b-929c-46cc-9fc8-f7ce00fadd74",  # Barbecue
+    "children_highchair": "22fc45ad-d19f-403a-93d0-4bc8d376c72a",  # Children highchair
+    "cleaning_products": "287ad07a-6bcd-43eb-b67a-2e05a12ca565",  # Cleaning products
+    "dishwasher": "3efbafc4-8452-4550-a09e-fe11158323e3",  # Dishwasher
+    "kitchenette": "ee13f1e7-3cd6-43a1-91de-d94bad4761fe",  # Kitchenette
+    "microwave": "a78e66d0-627e-4137-b23a-0c5ffcb4bc00",  # Microwave
+    "oven": "dd69d2c1-4db1-47f1-8972-1ada843cf71f",  # Oven
+    "refrigerator": "ea4cb7eb-44b0-439f-94ff-ddf23ae201c0",  # Refrigerator
+    "shared_bathroom": "ddeaa4d8-4326-44bb-8bd4-622082167bcb",  # Shared Bathroom
+    "stove": "048c0626-42fb-459c-bf3e-4364f516a1c1",  # Stove
+    "toaster": "229ee913-a5a4-4a43-a317-18c28943c632",  # Toaster
+    "tumble_dryer_machine": "59243f96-a974-41b0-a9ee-ca474b42b288",  # Tumble dryer (machine)
+    "washing_machine": "e6e819a8-004e-498e-a578-c400a7171702",  # Washing machine
+    "wine_glasses": "2b2c3104-af84-4c11-bcaf-1d621c1e5735",  # Wine glasses
+    # --- view (12) ----------------------------------------------------
+    "city_view": "65b3dc4b-2aac-4d42-b58e-1086b858919d",  # City View
+    "extra_long_beds_2_meter": "32458d03-ae85-4de4-96ee-2578733d7332",  # Extra long beds (> 2 meter
+    "garden_view": "8111bbfc-1894-45bd-bd90-bf5bc9b0b464",  # Garden View
+    "inner_courtyard_view": "d55f1956-d789-4808-b0fa-adeeefe018fd",  # Inner courtyard view
+    "lake_view": "d1aa2806-0228-4ed0-b482-1da9d8c9b5c2",  # Lake View
+    "landmark_view": "15ed9ede-0c7f-4999-9041-d34ee776b8c5",  # Landmark View
+    "mountain_view": "217a3ec9-9950-4063-9252-af2df78f36d0",  # Mountain View
+    "pool_view": "be8d5cde-f04a-415d-9183-13f5373c40bb",  # Pool View
+    "quiet_street_view": "abe5192f-3d79-4c59-84de-9e6909c2e1db",  # Quiet street view
+    "river_view": "36217e86-01c2-424c-8d81-b7573cf192c0",  # River View
+    "sea_view": "e1d990b0-683c-4d1f-9151-c46c21aa6801",  # Sea View
+    "view": "368b09d5-0216-4e56-a059-773aee692293",  # View
+    # --- outside (11) -------------------------------------------------
+    "balcony": "363c2057-2cdf-4cbc-af98-069c2d573952",  # Balcony
+    "heated_pool": "c8326e3f-a604-4005-9d88-d1ed73d55b51",  # Heated pool
+    "infinity_pool": "59a07ade-8295-4986-aed9-77061f98bd86",  # Infinity pool
+    "plunge_pool": "68aa269b-e6d6-4c81-984b-a90cf06eed05",  # Plunge pool
+    "pool_cover": "80a22363-42da-444d-9320-99d29f2a435c",  # Pool cover
+    "pool_towels": "77d508fa-b24a-4cc3-b652-fa4db6bcbf4a",  # Pool towels
+    "pool_with_view": "4be6a43b-a2ec-49d3-8360-dcb35a89503b",  # Pool with view
+    "private_pool": "0f209b31-10cf-43cc-84b9-711de0af3de4",  # Private Pool
+    "rooftop_pool": "42c5fe02-42c7-4010-a1a2-a1b93dc8db5a",  # Rooftop pool
+    "salt_water_pool": "a1ad93b4-9bc8-4b29-9d44-159ba5560fa1",  # Salt-water pool
+    "shallow_end": "828e1b0d-9332-460c-9ce3-5d36da51667d",  # Shallow end
+    # --- general (9) --------------------------------------------------
+    "100_amps": "24a71bda-9f95-4615-b1b4-ba168df9d0bb",  # 100 Amps
+    "20_amps": "bd554c55-65b8-4276-acc7-47ca59cebe51",  # 20 Amps
+    "30_amps": "ef79dabf-ad63-496b-be2e-3fc9afb04059",  # 30 Amps
+    "50_amps": "52ce6b74-98e3-4921-b4eb-9df84940e1bb",  # 50 Amps
+    "big_rig_friendly": "fd73b4af-5ab9-496c-b8e2-8c89670753e1",  # Big Rig Friendly
+    "dump_station": "e1af325c-df9d-46aa-99d8-c50460483017",  # Dump Station
+    "sewer_hookups": "247a0561-f8d6-43b9-a8a1-4744504afbc3",  # Sewer Hookups
+    "slide_outs": "c938c7f9-89a1-4b99-8d1c-b03edad030b4",  # Slide Outs
+    "water_hookups": "93ac2f6a-e4ec-4835-9718-f9b148a0c857",  # Water Hookups
+    # --- security (12) ------------------------------------------------
+    "baby_safety_gates": "4d7cc1cd-d79f-407b-9be4-eb0af95e1bd5",  # Baby safety gates
+    "bathroom_emergency_pull_cord": "1c3938ff-69f5-45cd-82ab-73f3f3c415a4",  # Bathroom emergency pu
+    "carbon_monoxide_detector": "cbcc34e6-e55e-4490-a8e3-366d241a622d",  # Carbon monoxide detector
+    "carbon_monoxide_source": "153222e6-8979-4471-85f7-542d9b7e2028",  # Carbon monoxide source
+    "child_safety_socket_covers": "d7c42a62-a657-4bc8-99f1-abc23b473dbc",  # Child safety socket cov
+    "electronic_key_card_access": "65ba915e-675c-462b-95b3-4fa91640a7a4",  # Electronic key card acc
+    "fire_alarms_or_smoke_detectors": "f611ff99-75d8-4f47-8533-9c120f6af02a",  # Fire alarms or smok
+    "fire_extinguishers": "553eb001-7395-4b20-82fa-912ede48fd81",  # Fire extinguishers
+    "laptop_safe_box": "a1de83fe-e26c-494c-afb4-5dab9f003d56",  # Laptop Safe Box
+    "lockers": "b7e1e7f9-58e7-462e-8d3a-b037bee370e9",  # Lockers
+    "metal_keys_access": "a277b76c-d5e4-46d3-ba3e-5aa68a3a2664",  # Metal keys access
+    "safe_deposit_box": "6e174877-c6e7-4ee7-a7af-abaaf07d72be",  # Safe Deposit Box
+}
+
+
+def _channex_room_facility_ids(local: list[str] | None) -> list[str]:
+    """Zimmer-Ausstattungs-Slugs auf Channex-room_facility-UUIDs abbilden.
+
+    Gleiche Regeln wie beim Objekt-Katalog: unbekannt → weglassen (kein
+    ungültiger Wert an Channex, sonst 422), Reihenfolge stabil, Duplikate weg.
+    Der Room-Type-facilities-Bezug ist die eine Wahrheit; ein leeres Ergebnis
+    leert die Zimmer-Facilities bei Channex/den OTAs synchron (Wurzel 1)."""
+    out: dict[str, None] = {}
+    for slug in local or []:
+        uid = _CHANNEX_ROOM_FACILITY.get(str(slug).lower())
+        if uid is not None:
+            out[uid] = None
+    return list(out)
+
+
 def _channex_facility_ids(local: list[str] | None) -> list[str]:
     """Lokale Ausstattungs-Slugs auf gültige Channex-Facility-UUIDs abbilden.
     Unbekannt → weglassen (kein ungültiger Wert an Channex, sonst 422). Reihen-

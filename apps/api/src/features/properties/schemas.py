@@ -186,8 +186,10 @@ class PropertyBase(BaseModel):
     # max_guests, type_attributes.size_m2) — keine zweite Wahrheit.
     bfe_number: str | None = None
 
-    # Listen.
+    # Listen. amenities = Objekt-Ausstattung, room_amenities = Zimmer-Ausstattung:
+    # Channex führt dafür zwei Kataloge mit eigenen UUIDs (0243), nie mischen.
     amenities: list[str] = Field(default_factory=list)
+    room_amenities: list[str] = Field(default_factory=list)
     photos: list[str] = Field(default_factory=list)
 
     # Flexible Sektionen (Rooms, Sleeping arrangements, m², Einheiten …).
@@ -245,6 +247,7 @@ class PropertyUpdate(BaseModel):
     # Objektkartei (Lastenheft §6) — nur bfe_number, kein OTA-Sync (nicht in _CONTENT_FIELDS).
     bfe_number: str | None = None
     amenities: list[str] | None = None
+    room_amenities: list[str] | None = None
 
     _norm_country = field_validator("country")(_validate_country_iso2)
     _norm_currency = field_validator("currency")(_validate_currency)

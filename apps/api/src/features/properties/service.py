@@ -56,7 +56,10 @@ _CONTENT_FIELDS = frozenset({
     # gesendeten Channex-property_type → content-relevant.
     "subtype_slug", "booking_property_type",
     "street", "house_number", "postal_code", "city", "country",
-    "lat", "lng", "amenities", "max_guests", "type_attributes",
+    # amenities → Property.facilities, room_amenities → Room-Type.facilities
+    # (zwei getrennte Channex-Kataloge, 0243). Ohne room_amenities hier bliebe
+    # eine Änderung der Zimmer-Ausstattung bei den Portalen für immer liegen.
+    "lat", "lng", "amenities", "room_amenities", "max_guests", "type_attributes",
 })
 
 # Beim Veröffentlichen abzudeckender Horizont (Tage). Deckt sich bewusst mit

@@ -56,7 +56,10 @@ export type Property = {
   // echtes neues Kartei-Feld. Name/Typ/Adresse/Kapazität kommen aus dem Bestand
   // (title, property_type, house_number, max_guests, type_attributes.size_m2).
   bfe_number: string | null;
+  // amenities = Objekt-Ausstattung, room_amenities = Zimmer-Ausstattung.
+  // Channex führt dafür zwei Kataloge mit eigenen UUIDs (0243) — nie mischen.
   amenities: string[];
+  room_amenities: string[];
   photos: string[];
   // Flexible Sektionen (Rooms, Sleeping arrangements, m², Einheiten …).
   type_attributes: Record<string, unknown>;

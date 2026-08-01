@@ -7,6 +7,7 @@
 //  type_attributes.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
+
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -14,6 +15,8 @@ import { useSaver } from "@/components/objekte/editor-primitives";
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { ChannelBadge } from "@nextdays/ui/channel-badge";
+
+import { useKanalZeilen } from "@/lib/use-kanal-felder";
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
 import {
@@ -31,16 +34,31 @@ import {
   SheetTitle,
 } from "@nextdays/ui/sheet";
 import { Textarea } from "@nextdays/ui/textarea";
+import { BETT_ILLUSTRATION } from "@/components/objekte/bett-illustrationen";
 import {
-  AMENITY_SLUGS,
-  amenityLabel,
-  BED_OPTIONS,
+  AIRBNB_MERKMALE,
+  AMENITY_CATALOG,
+  AUSSTATTUNG_DUBLETTEN,
+  AUSSTATTUNG_KATEGORIEN,
+  AUSSTATTUNG_VON_SLUG,
+  bedCount,
+  EIGENE_AUSSTATTUNG,
+  BED_SLUGS,
   HOTEL_TYPES,
-  ROOM_OPTIONS,
+  readBeds,
+  ROOM_AMENITY_CATALOG,
+  readZimmer,
+  ROOM_AMENITY_SLUGS,
   STATUS_OPTIONS,
-  TYPE_LABELS,
-  typeOptionsFor,
+  type ZimmerZaehlwerk,
+  ZIMMER_SLUGS,
+  zimmerAnzahl,
 } from "@/lib/property-meta";
+import {
+  useAmenityLabels,
+  useRoomAmenityLabels,
+} from "@/lib/use-amenity-labels";
+import { usePropertyLabels } from "@/lib/use-property-labels";
 import {
   type Property,
   type PropertyInput,
@@ -58,6 +76,23 @@ type Section =
   | "beds"
   | "amenities";
 
+// Icon je Ausstattungs-Kategorie (die 13 aus AUSSTATTUNG_KATEGORIEN).
+const KATEGORIE_ICON: Record<string, string> = {
+  wesentliches: "ph:star",
+  bad_waschkueche: "ph:shower",
+  unterhaltung: "ph:television-simple",
+  heizung_klima: "ph:thermometer-simple",
+  sicherheit: "ph:shield-check",
+  internet_buero: "ph:wifi-high",
+  kueche_esszimmer: "ph:cooking-pot",
+  standort: "ph:map-pin",
+  parkplaetze: "ph:car",
+  konditionen: "ph:clipboard-text",
+  pool_spa: "ph:swimming-pool",
+  dienstleistungen: "ph:bell",
+  sonstiges: "ph:dots-three-circle",
+};
+
 // Typsichere Helfer für die flexiblen type_attributes.
 function attrList(p: Property, key: string): string[] {
   const v = p.type_attributes?.[key];
@@ -69,7 +104,12 @@ function attrNum(p: Property, key: string): number | "" {
 }
 
 export function PropertyOverview({ initial }: { initial: Property }) {
+  const { typeLabel } = usePropertyLabels();
+  const { amenityLabel } = useAmenityLabels();
+  const { roomAmenityLabel } = useRoomAmenityLabels();
   const t = useTranslations("objects");
+  const tb = useTranslations("beds");
+  const tz = useTranslations("zimmer");
   const router = useRouter();
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
@@ -116,8 +156,15 @@ export function PropertyOverview({ initial }: { initial: Property }) {
 
   const sizeM2 = attrNum(p, "size_m2");
   const units = attrNum(p, "units");
-  const rooms = attrList(p, "rooms");
-  const beds = attrList(p, "beds");
+  // rooms ist {privat, gemeinschaftlich}; readZimmer liest auch das Altformat
+  // (string[] aus der alten Mehrfachauswahl).
+  const zimmer = readZimmer(p.type_attributes?.rooms);
+  // beds ist {slug: anzahl}; readBeds liest zusätzlich die beiden Altformate
+  // (string[] aus der alten Auswahl, blanke Zahl aus einer früheren Wizard-Version).
+  const beds = readBeds(p.type_attributes?.beds);
+  const bedEintraege = Object.entries(beds);
+  // Altbestand kennt die Spalte noch nicht (0243) → leer statt Absturz.
+  const roomAmenities = p.room_amenities ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -177,7 +224,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
         onEdit={() => setSection("info")}
       >
         <ul className="text-sm text-muted-foreground">
-          <li>{TYPE_LABELS[p.property_type]}</li>
+          <li>{typeLabel(p.property_type)}</li>
           <li>
             {sizeM2 ? t("propertyOverview.sizeM2Prefix", { size: sizeM2 }) : ""}
             {t("propertyOverview.guestsCount", { count: p.max_guests })}
@@ -190,14 +237,20 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       <SectionCard
         title={t("propertyOverview.roomsCardTitle")}
         hint={t("propertyOverview.roomsCardHint")}
-        channel="local"
         onEdit={() => setSection("rooms")}
       >
-        {rooms.length ? (
-          <ul className="text-sm text-muted-foreground">
-            {rooms.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
+        {zimmerAnzahl(zimmer) ? (
+          <ul className="flex flex-col gap-1 text-muted-foreground text-sm">
+            {(["privat", "gemeinschaftlich"] as const).flatMap((ebene) =>
+              Object.entries(zimmer[ebene]).map(([slug, anzahl]) => (
+                <li key={`${ebene}:${slug}`}>
+                  {anzahl}× {tz(slug)}
+                  {ebene === "gemeinschaftlich"
+                    ? ` (${t("propertyOverview.zimmerGemeinschaftlich")})`
+                    : ""}
+                </li>
+              )),
+            )}
           </ul>
         ) : (
           <p className="text-sm text-muted-foreground">
@@ -210,14 +263,21 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       <SectionCard
         title={t("propertyOverview.bedsCardTitle")}
         hint={t("propertyOverview.bedsCardHint")}
-        channel="local"
         onEdit={() => setSection("beds")}
       >
-        {beds.length ? (
-          <ul className="text-sm text-muted-foreground">
-            {beds.map((b) => (
-              <li key={b}>{b}</li>
-            ))}
+        {bedEintraege.length ? (
+          <ul className="flex flex-col gap-2 text-muted-foreground text-sm">
+            {bedEintraege.map(([slug, anzahl]) => {
+              const Illustration = BETT_ILLUSTRATION[slug];
+              return (
+                <li key={slug} className="flex items-center gap-2">
+                  {Illustration ? <Illustration className="size-4" /> : null}
+                  <span>
+                    {anzahl}× {tb(slug)}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className="text-sm text-muted-foreground">
@@ -226,15 +286,24 @@ export function PropertyOverview({ initial }: { initial: Property }) {
         )}
       </SectionCard>
 
-      {/* Amenities */}
+      {/* Amenities — ohne Kanal-Badge: welches Portal ein Merkmal kennt, steht
+          im Editor an jeder einzelnen Zeile als Logo. Ein pauschaler Hinweis
+          über der ganzen Karte sagte dasselbe unschärfer. */}
       <SectionCard
         title={t("propertyOverview.amenitiesCardTitle")}
         hint={t("propertyOverview.amenitiesCardHint")}
-        channel="ota"
         onEdit={() => setSection("amenities")}
       >
-        {p.amenities.length ? (
+        {p.amenities.length + roomAmenities.length ? (
           <div className="flex flex-wrap gap-2">
+            {roomAmenities.map((a) => (
+              <span
+                key={`room:${a}`}
+                className="rounded-full bg-secondary px-3 py-1 text-xs"
+              >
+                {roomAmenityLabel(a)}
+              </span>
+            ))}
             {p.amenities.map((a) => (
               <span
                 key={a}
@@ -264,21 +333,17 @@ export function PropertyOverview({ initial }: { initial: Property }) {
         onClose={() => setSection(null)}
         onSave={save}
       />
-      <ListEditor
+      <ZimmerEditor
         open={section === "rooms"}
-        title={t("propertyOverview.roomsEditorTitle")}
-        options={ROOM_OPTIONS}
-        selected={rooms}
+        zimmer={zimmer}
         onClose={() => setSection(null)}
         onSave={(vals) =>
           save({ type_attributes: { ...p.type_attributes, rooms: vals } })
         }
       />
-      <ListEditor
+      <BedsEditor
         open={section === "beds"}
-        title={t("propertyOverview.bedsEditorTitle")}
-        options={BED_OPTIONS}
-        selected={beds}
+        beds={beds}
         onClose={() => setSection(null)}
         onSave={(vals) =>
           save({ type_attributes: { ...p.type_attributes, beds: vals } })
@@ -287,8 +352,11 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       <AmenitiesEditor
         open={section === "amenities"}
         selected={p.amenities}
+        selectedRoom={roomAmenities}
         onClose={() => setSection(null)}
-        onSave={(vals) => save({ amenities: vals })}
+        onSave={(vals, roomVals) =>
+          save({ amenities: vals, room_amenities: roomVals })
+        }
       />
     </div>
   );
@@ -296,20 +364,27 @@ export function PropertyOverview({ initial }: { initial: Property }) {
 
 // --- Bausteine -------------------------------------------------------------
 
-// Label eines Formularfelds mit Kanal-Kennzeichnung (OTA vs. nur myBestDays).
+// Label eines Formularfelds mit Kanal-Kennzeichnung.
+//
+// `feld` ist der Schlüssel aus lib/kanal-felder.ts: dann zeigt der Tooltip die
+// Aufschlüsselung je Portal (Airbnb, Booking.com, myBestDays) statt nur „geht an
+// die Portale". Ohne `feld` bleibt es beim groben Badge.
 function FieldLabel({
   htmlFor,
   channel,
+  feld,
   children,
 }: {
   htmlFor?: string;
   channel: "ota" | "local";
+  feld?: string;
   children: React.ReactNode;
 }) {
+  const kanaele = useKanalZeilen(feld ?? "");
   return (
     <span className="flex flex-wrap items-center gap-2">
       <Label htmlFor={htmlFor}>{children}</Label>
-      <ChannelBadge channel={channel} />
+      <ChannelBadge channel={channel} kanaele={kanaele} />
     </span>
   );
 }
@@ -319,22 +394,25 @@ function SectionCard({
   hint,
   onEdit,
   channel,
+  feld,
   children,
 }: {
   title: string;
   hint: string;
   onEdit: () => void;
   channel?: "ota" | "local";
+  feld?: string;
   children: React.ReactNode;
 }) {
   const t = useTranslations("objects");
+  const kanaele = useKanalZeilen(feld ?? "");
   return (
     <Card className="flex flex-col gap-3 p-5">
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-display text-lg font-extrabold">{title}</h3>
-            {channel && <ChannelBadge channel={channel} />}
+            {channel && <ChannelBadge channel={channel} kanaele={kanaele} />}
           </div>
           <p className="text-sm text-muted-foreground">{hint}</p>
         </div>
@@ -414,6 +492,7 @@ function NameEditor({
   onClose: () => void;
   onSave: SaveFn;
 }) {
+  const { typeOptionsFor } = usePropertyLabels();
   const t = useTranslations("objects");
   const [title, setTitle] = useState(p.title);
   const [desc, setDesc] = useState(p.description ?? "");
@@ -434,7 +513,7 @@ function NameEditor({
       title={t("propertyOverview.nameCardTitle")}
     >
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-title" channel="ota">
+        <FieldLabel htmlFor="e-title" channel="ota" feld="titel">
           {t("propertyOverview.nameFieldLabel")}
         </FieldLabel>
         <Input
@@ -461,7 +540,7 @@ function NameEditor({
         </Select>
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-desc" channel="ota">
+        <FieldLabel htmlFor="e-desc" channel="ota" feld="beschreibung">
           {t("propertyOverview.descriptionFieldLabel")}
         </FieldLabel>
         <Textarea
@@ -475,7 +554,7 @@ function NameEditor({
         </p>
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-platform-desc" channel="local">
+        <FieldLabel htmlFor="e-platform-desc" channel="local" feld="plattformBeschreibung">
           {t("propertyOverview.platformDescriptionFieldLabel")}
         </FieldLabel>
         <Textarea
@@ -530,6 +609,7 @@ function InfoEditor({
   const [status, setStatus] = useState<PropertyStatus>(p.status);
   const { busy, error, run } = useSaver(onSave);
   const t = useTranslations("objects");
+  const belegungKanaele = useKanalZeilen("belegung");
 
   return (
     <EditorShell
@@ -538,7 +618,7 @@ function InfoEditor({
       title={t("propertyOverview.infoCardTitle")}
     >
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-guests" channel="ota">
+        <FieldLabel htmlFor="e-guests" channel="ota" feld="belegung">
           {t("propertyOverview.maxGuestsFieldLabel")}
         </FieldLabel>
         <Input
@@ -558,7 +638,7 @@ function InfoEditor({
           <span className="font-semibold">
             {t("propertyOverview.occupancyTitle")}
           </span>
-          <ChannelBadge channel="ota" />
+          <ChannelBadge channel="ota" kanaele={belegungKanaele} />
         </div>
         <p className="text-xs text-muted-foreground">
           {t("propertyOverview.occupancyHint")}
@@ -607,7 +687,7 @@ function InfoEditor({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-size" channel="local">
+        <FieldLabel htmlFor="e-size" channel="local" feld="groesseQm">
           {t("propertyOverview.sizeFieldLabel")}
         </FieldLabel>
         <Input
@@ -719,37 +799,397 @@ function ListEditor({
   );
 }
 
+/** Zimmer: Zähler je Zimmerart, getrennt nach privat und gemeinschaftlich.
+ *  Eine Wohnung hat 2 Schlafzimmer, nicht "Schlafzimmer ja/nein" — und in einer
+ *  Anlage ist ein Gemeinschaftsbad etwas anderes als ein eigenes. */
+function ZimmerEditor({
+  open,
+  zimmer,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  zimmer: ZimmerZaehlwerk;
+  onClose: () => void;
+  onSave: (vals: ZimmerZaehlwerk) => Promise<true | string>;
+}) {
+  const t = useTranslations("objects");
+  const tz = useTranslations("zimmer");
+  const [vals, setVals] = useState<ZimmerZaehlwerk>(zimmer);
+  const [offen, setOffen] = useState<"privat" | "gemeinschaftlich" | null>(
+    "privat",
+  );
+  const { busy, error, run } = useSaver(onSave);
+
+  useEffect(() => {
+    if (open) {
+      setVals(zimmer);
+      setOffen("privat");
+    }
+  }, [open, zimmer]);
+
+  function setzen(
+    ebene: "privat" | "gemeinschaftlich",
+    slug: string,
+    delta: number,
+  ) {
+    setVals((s) => {
+      const next = Math.max(0, (s[ebene][slug] ?? 0) + delta);
+      const kopie = { ...s[ebene] };
+      if (next === 0) delete kopie[slug];
+      else kopie[slug] = next;
+      return { ...s, [ebene]: kopie };
+    });
+  }
+
+  const ebenen = [
+    { key: "privat" as const, icon: "ph:user" },
+    { key: "gemeinschaftlich" as const, icon: "ph:users" },
+  ];
+
+  return (
+    <EditorShell
+      open={open}
+      onClose={onClose}
+      title={t("propertyOverview.roomsEditorTitle")}
+    >
+      <p className="mb-4 text-muted-foreground text-sm">
+        {t("propertyOverview.zimmerHinweis")}
+      </p>
+      <div className="flex flex-col divide-y rounded-2xl border">
+        {ebenen.map(({ key, icon }) => {
+          const auf = offen === key;
+          return (
+            <div key={key}>
+              <button
+                type="button"
+                onClick={() => setOffen(auf ? null : key)}
+                aria-expanded={auf}
+                className="flex w-full items-center gap-4 px-5 py-4 text-left"
+              >
+                <Icon
+                  icon={icon}
+                  className="size-[1.375rem] shrink-0 text-foreground"
+                />
+                <span className="flex-1 font-semibold text-[0.9375rem]">
+                  {t(`propertyOverview.zimmer${key === "privat" ? "Privat" : "Gemeinschaftlich"}`)}
+                </span>
+                <Icon
+                  icon={auf ? "ph:caret-up" : "ph:caret-down"}
+                  className="size-[1.125rem] shrink-0 text-muted-foreground"
+                />
+              </button>
+              {auf && (
+                <div className="flex flex-col divide-y border-t">
+                  {ZIMMER_SLUGS.map((slug) => {
+                    const anzahl = vals[key][slug] ?? 0;
+                    return (
+                      <div
+                        key={slug}
+                        className="flex items-center gap-4 px-5 py-3"
+                      >
+                        <span className="flex-1 text-[0.9375rem]">
+                          {tz(slug)}
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 bg-secondary text-secondary-foreground disabled:opacity-40"
+                            disabled={anzahl === 0}
+                            aria-label={t("propertyOverview.zimmerWeniger", {
+                              room: tz(slug),
+                            })}
+                            onClick={() => setzen(key, slug, -1)}
+                          >
+                            <Icon icon="ph:minus" className="size-4" />
+                          </Button>
+                          <span
+                            className="w-5 text-center text-[0.9375rem] tabular-nums"
+                            aria-live="polite"
+                          >
+                            {anzahl}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 bg-secondary text-secondary-foreground"
+                            aria-label={t("propertyOverview.zimmerMehr", {
+                              room: tz(slug),
+                            })}
+                            onClick={() => setzen(key, slug, 1)}
+                          >
+                            <Icon icon="ph:plus" className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <SaveBar busy={busy} error={error} onSave={() => run(vals)} />
+    </EditorShell>
+  );
+}
+
+/** Schlafgelegenheiten: Zähler je Bettentyp statt Ja/Nein-Auswahl — ein Objekt
+ *  hat oft mehrere gleiche Betten (2 Einzelbetten), das trägt eine Checkbox nicht. */
+function BedsEditor({
+  open,
+  beds,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  beds: Record<string, number>;
+  onClose: () => void;
+  onSave: (vals: Record<string, number>) => Promise<true | string>;
+}) {
+  const t = useTranslations("objects");
+  const tb = useTranslations("beds");
+  const tz = useTranslations("zimmer");
+  const [vals, setVals] = useState<Record<string, number>>(beds);
+  const { busy, error, run } = useSaver(onSave);
+
+  // Beim Öffnen den gespeicherten Stand übernehmen — der Editor bleibt gemountet,
+  // sonst zeigt er nach einem Abbrechen weiter die verworfenen Zahlen.
+  useEffect(() => {
+    if (open) setVals(beds);
+  }, [open, beds]);
+
+  function setzen(slug: string, delta: number) {
+    setVals((s) => {
+      const next = Math.max(0, (s[slug] ?? 0) + delta);
+      const kopie = { ...s };
+      if (next === 0) delete kopie[slug];
+      else kopie[slug] = next;
+      return kopie;
+    });
+  }
+
+  const plaetze = bedCount(vals);
+
+  return (
+    <EditorShell
+      open={open}
+      onClose={onClose}
+      title={t("propertyOverview.bedsEditorTitle")}
+    >
+      <p className="mb-4 text-muted-foreground text-sm">
+        {t("propertyOverview.bedsEditorHint")}
+      </p>
+      <div className="flex flex-col divide-y rounded-(--radius) border">
+        {BED_SLUGS.map((slug) => {
+          const Illustration = BETT_ILLUSTRATION[slug];
+          const anzahl = vals[slug] ?? 0;
+          return (
+            <div key={slug} className="flex items-center gap-4 p-4">
+              <Illustration className="size-6 shrink-0 text-muted-foreground" />
+              <span className="flex-1 text-sm">{tb(slug)}</span>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="size-8"
+                  disabled={anzahl === 0}
+                  aria-label={t("propertyOverview.bedsDecrease", {
+                    bed: tb(slug),
+                  })}
+                  onClick={() => setzen(slug, -1)}
+                >
+                  <Icon icon="ph:minus" className="size-4" />
+                </Button>
+                <span
+                  className="w-6 text-center text-sm tabular-nums"
+                  aria-live="polite"
+                >
+                  {anzahl}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="size-8"
+                  aria-label={t("propertyOverview.bedsIncrease", {
+                    bed: tb(slug),
+                  })}
+                  onClick={() => setzen(slug, 1)}
+                >
+                  <Icon icon="ph:plus" className="size-4" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {plaetze > 0 && (
+        <p className="mt-3 text-muted-foreground text-sm">
+          {t("propertyOverview.bedsSleeps", { count: plaetze })}
+        </p>
+      )}
+      <SaveBar busy={busy} error={error} onSave={() => run(vals)} />
+    </EditorShell>
+  );
+}
+
+/** Zimmer-Ausstattung: eigener Katalog (Channex /room_facilities), nach
+ *  Kategorien gegliedert. Anders als beim Objekt-Katalog keine Suchleiste —
+ *  191 Merkmale in 7 klaren Kategorien blättert man schneller durch, als man
+ *  „Klimaanlage" tippt, und man sieht dabei, was es überhaupt gibt. */
+/** Ein Merkmal im Ausstattungs-Editor. `quelle` = der Channex-Katalog, aus dem
+ *  es stammt; er entscheidet beim Speichern, ob es an die Property oder an den
+ *  Room-Type geht. Für den Nutzer ist das unsichtbar. */
+type AusstattungsEintrag = {
+  slug: string;
+  label: string;
+  quelle: "room" | "property";
+};
+
+/** Ausstattung — EIN Editor für beide Channex-Kataloge.
+ *
+ *  Channex führt zwei Kataloge mit eigenen UUIDs: /property_facilities (301,
+ *  hängt am Objekt) und /room_facilities (191, hängt am Zimmer). Für den Nutzer
+ *  ist das EINE Ausstattung: er hakt "Klimaanlage" an, wir entscheiden, an
+ *  welchen der beiden Kataloge das geht. Deshalb eine Karte, ein Editor, und
+ *  die Katalog-Trennung passiert unsichtbar beim Speichern.
+ *
+ *  Aufbau nach Airbnb-Vorbild: Suchfeld, aufklappbare Kategorien, Checkboxen,
+ *  Portal-Logo an den Merkmalen, die das Portal kennt. */
 function AmenitiesEditor({
   open,
   selected,
+  selectedRoom,
   onClose,
   onSave,
 }: {
   open: boolean;
   selected: string[];
+  selectedRoom: string[];
   onClose: () => void;
-  onSave: (vals: string[]) => Promise<true | string>;
+  onSave: (
+    vals: string[],
+    roomVals: string[],
+  ) => Promise<true | string>;
 }) {
   const t = useTranslations("objects");
+  const { amenityLabel } = useAmenityLabels();
+  const { roomAmenityLabel } = useRoomAmenityLabels();
+  const tk = useTranslations("amenityCategories");
+  const teigen = useTranslations("eigeneAusstattung");
   const [vals, setVals] = useState<string[]>(selected);
+  const [roomVals, setRoomVals] = useState<string[]>(selectedRoom);
   const [query, setQuery] = useState("");
-  const { busy, error, run } = useSaver(onSave);
+  const [offen, setOffen] = useState<string | null>(null);
+  const { busy, error, run } = useSaver(
+    (paar: [string[], string[]]) => onSave(paar[0], paar[1]),
+  );
 
-  function add(v: string) {
-    setVals((s) => (s.includes(v) ? s : [...s, v]));
-    setQuery("");
-  }
-  function remove(v: string) {
-    setVals((s) => s.filter((x) => x !== v));
+  useEffect(() => {
+    if (open) {
+      setVals(selected);
+      setRoomVals(selectedRoom);
+      setQuery("");
+      setOffen(null);
+    }
+  }, [open, selected, selectedRoom]);
+
+  // Beide Kataloge in EINER Liste. `quelle` merkt sich, in welchen Channex-
+  // Katalog ein Merkmal gehört — der Nutzer sieht davon nichts.
+  // Gliederung nach den 13 Kategorien. Beide Channex-Kataloge speisen dieselbe
+  // Liste; ein Merkmal, das in beiden vorkommt (30 Titel), erscheint genau
+  // EINMAL — der Zimmer-Katalog gewinnt, weil er näher am Zimmer liegt.
+  const gruppen: {
+    key: string;
+    titel: string;
+    icon: string;
+    eintraege: AusstattungsEintrag[];
+  }[] = (() => {
+    const gesehen = new Set<string>();
+    const nachKategorie = new Map<string, AusstattungsEintrag[]>();
+    const einsortieren = (
+      slug: string,
+      label: string,
+      quelle: "room" | "property",
+    ) => {
+      // Dublette (gleiches Merkmal in beiden Channex-Katalogen) → überspringen.
+      // Feste Slug-Paarung statt Namensvergleich: beim ersten Render sind die
+      // Übersetzungen noch nicht da, dann wäre der Name der Slug selbst.
+      if (AUSSTATTUNG_DUBLETTEN[slug]) return;
+      if (gesehen.has(slug)) return;
+      gesehen.add(slug);
+      const kat = AUSSTATTUNG_VON_SLUG[slug] ?? "sonstiges";
+      const liste = nachKategorie.get(kat) ?? [];
+      liste.push({ slug, label, quelle });
+      nachKategorie.set(kat, liste);
+    };
+    for (const g of ROOM_AMENITY_CATALOG) {
+      for (const slug of g.slugs) {
+        einsortieren(slug, roomAmenityLabel(slug), "room");
+      }
+    }
+    for (const g of AMENITY_CATALOG) {
+      for (const slug of g.slugs) {
+        einsortieren(slug, amenityLabel(slug), "property");
+      }
+    }
+    // Eigene Merkmale (kein Channex-Gegenstück) — landen beim Speichern in
+    // room_amenities, gehen aber nicht an die Portale.
+    for (const slug of EIGENE_AUSSTATTUNG) {
+      einsortieren(slug, teigen(slug), "room");
+    }
+    return AUSSTATTUNG_KATEGORIEN.filter((k) => nachKategorie.get(k)?.length)
+      .map((k) => ({
+        key: k,
+        titel: tk(k),
+        icon: KATEGORIE_ICON[k] ?? "ph:squares-four",
+        eintraege: (nachKategorie.get(k) ?? []).sort((a, b) =>
+          a.label.localeCompare(b.label),
+        ),
+      }));
+  })();
+
+  function gewaehlt(e: AusstattungsEintrag) {
+    return e.quelle === "room"
+      ? roomVals.includes(e.slug)
+      : vals.includes(e.slug);
   }
 
-  // Suchleisten-Muster: Vorschläge erscheinen NUR bei aktiver Suche (301 auf
-  // einmal wäre unübersichtlich). Bereits Gewähltes wird nicht vorgeschlagen.
+  function toggle(e: AusstattungsEintrag) {
+    const an = !gewaehlt(e);
+    const umschalten = (liste: string[], slug: string) =>
+      an
+        ? liste.includes(slug)
+          ? liste
+          : [...liste, slug]
+        : liste.filter((x) => x !== slug);
+    const setzen = e.quelle === "room" ? setRoomVals : setVals;
+    setzen((liste) => umschalten(liste, e.slug));
+    // Der ausgeblendete Zwilling (gleiches Merkmal im anderen Channex-Katalog)
+    // wird mitgeschaltet — sonst ginge seine UUID beim Sync verloren und das
+    // Merkmal käme nur auf einer der beiden Ebenen bei den Portalen an.
+    for (const [dublette, haupt] of Object.entries(AUSSTATTUNG_DUBLETTEN)) {
+      if (haupt !== e.slug) continue;
+      const imZimmer = ROOM_AMENITY_SLUGS.includes(dublette);
+      const mit = imZimmer ? setRoomVals : setVals;
+      mit((liste) => umschalten(liste, dublette));
+    }
+  }
+
+  // Suche blendet die Kategorien aus und zeigt die Treffer flach — wie im
+  // Vorbild. Ohne Suche bleiben die Kategorien zugeklappt.
   const q = query.trim().toLowerCase();
-  const suggestions = q
-    ? AMENITY_SLUGS.filter(
-      (s) => !vals.includes(s) && amenityLabel(s).toLowerCase().includes(q),
-    ).slice(0, 30)
+  const treffer = q
+    ? gruppen
+      .flatMap((g) => g.eintraege)
+      .filter((e) => e.label.toLowerCase().includes(q))
+      .slice(0, 60)
     : [];
 
   return (
@@ -758,74 +1198,128 @@ function AmenitiesEditor({
       onClose={onClose}
       title={t("propertyOverview.amenitiesEditorTitle")}
     >
-      <p className="text-xs text-muted-foreground">
-        {t("propertyOverview.amenitiesOtaHint")}
-      </p>
-
-      {/* Gewählte Ausstattung — kompakt oben, mit ✕ zum Entfernen */}
-      {vals.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {vals.map((slug) => (
-            <span
-              key={slug}
-              className="inline-flex items-center gap-1.5 rounded-full border border-accent bg-accent px-3 py-1 text-xs text-accent-foreground"
-            >
-              {amenityLabel(slug)}
-              <span className="rounded-full bg-accent-foreground/20 px-1 text-[0.6rem] font-semibold">
-                OTA
-              </span>
-              <button
-                type="button"
-                onClick={() => remove(slug)}
-                aria-label={t("propertyOverview.removeAmenityAriaLabel", {
-                  amenity: amenityLabel(slug),
-                })}
-                className="text-accent-foreground/70 hover:text-accent-foreground"
-              >
-                <Icon icon="ph:x" className="size-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Suchleiste + Vorschlagsliste (Zeilen, keine Chip-Wolke) */}
-      <div className="flex flex-col gap-0">
+      <div className="relative">
+        <Icon
+          icon="ph:magnifying-glass"
+          className="-translate-y-1/2 absolute top-1/2 left-3 size-4 text-muted-foreground"
+        />
         <Input
+          className="pl-9"
           placeholder={t("propertyOverview.amenitiesSearchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        {q && (
-          <div className="mt-1 max-h-64 overflow-y-auto rounded-2xl border">
-            {suggestions.length === 0 ? (
-              <p className="px-3 py-2 text-sm text-muted-foreground">
-                {t("propertyOverview.noSearchResults")}
-              </p>
-            ) : (
-              suggestions.map((slug) => (
-                <button
-                  key={slug}
-                  type="button"
-                  onClick={() => add(slug)}
-                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-secondary"
-                >
-                  <span className="flex items-center gap-2">
-                    <Icon icon="ph:plus" className="size-3.5 text-muted-foreground" />
-                    {amenityLabel(slug)}
-                  </span>
-                  <span className="rounded-full bg-secondary px-1.5 text-[0.6rem] font-semibold text-muted-foreground">
-                    OTA
-                  </span>
-                </button>
-              ))
-            )}
-          </div>
-        )}
       </div>
 
-      <SaveBar busy={busy} error={error} onSave={() => run(vals)} />
+      {q ? (
+        <div className="flex flex-col divide-y rounded-2xl border">
+          {treffer.length === 0 ? (
+            <p className="px-4 py-3 text-muted-foreground text-sm">
+              {t("propertyOverview.noSearchResults")}
+            </p>
+          ) : (
+            treffer.map((e) => (
+              <AusstattungZeile
+                key={`${e.quelle}:${e.slug}`}
+                label={e.label}
+                checked={gewaehlt(e)}
+                airbnb={AIRBNB_MERKMALE.has(e.slug)}
+                onToggle={() => toggle(e)}
+              />
+            ))
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col divide-y rounded-2xl border">
+          {gruppen.map((g) => {
+            const anzahl = g.eintraege.filter(gewaehlt).length;
+            const auf = offen === g.key;
+            return (
+              <div key={g.key}>
+                <button
+                  type="button"
+                  onClick={() => setOffen(auf ? null : g.key)}
+                  aria-expanded={auf}
+                  className="flex w-full items-center gap-4 px-5 py-4 text-left"
+                >
+                  <Icon
+                    icon={g.icon}
+                    className="size-[1.375rem] shrink-0 text-foreground"
+                  />
+                  <span className="flex-1 font-semibold text-[0.9375rem]">
+                    {g.titel}
+                    {anzahl > 0 && (
+                      <span className="ml-2 font-normal text-muted-foreground">
+                        {anzahl}
+                      </span>
+                    )}
+                  </span>
+                  <Icon
+                    icon={auf ? "ph:caret-up" : "ph:caret-down"}
+                    className="size-[1.125rem] shrink-0 text-muted-foreground"
+                  />
+                </button>
+                {auf && (
+                  <div className="flex flex-col divide-y border-t">
+                    {g.eintraege.map((e) => (
+                      <AusstattungZeile
+                        key={`${e.quelle}:${e.slug}`}
+                        label={e.label}
+                        checked={gewaehlt(e)}
+                        airbnb={AIRBNB_MERKMALE.has(e.slug)}
+                        onToggle={() => toggle(e)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <SaveBar
+        busy={busy}
+        error={error}
+        onSave={() => run([vals, roomVals])}
+      />
     </EditorShell>
+  );
+}
+
+/** Eine Ausstattungs-Zeile: Checkbox links, Label, Portal-Logos rechts.
+ *  Die Logos zeigen, welches Portal das Merkmal kennt — jedes Channex-Merkmal
+ *  geht an beide, deshalb stehen beide Logos an jeder Zeile. */
+function AusstattungZeile({
+  label,
+  checked,
+  airbnb,
+  onToggle,
+}: {
+  label: string;
+  checked: boolean;
+  airbnb: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-4 px-5 py-3.5 hover:bg-secondary/50">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onToggle}
+        className="size-[1.125rem] shrink-0 accent-foreground"
+      />
+      <span className="flex-1 font-medium text-[0.9375rem]">{label}</span>
+      {/* Airbnb-Zeichen nur an den Merkmalen, die Airbnb kennt (Vorgabe). */}
+      {airbnb && (
+        <img
+          src="/channels/airbnb-mark.svg"
+          alt="Airbnb"
+          title="Airbnb"
+          className="size-4 shrink-0"
+        />
+      )}
+    </label>
   );
 }
 

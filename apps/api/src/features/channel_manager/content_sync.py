@@ -21,6 +21,7 @@ from .common import (
     _availability_settings,
     _channex_facility_ids,
     _channex_property_type,
+    _channex_room_facility_ids,
     _channex_type_from_pct,
     _channex_type_from_subtype,
     _timezone_for_country,
@@ -201,7 +202,7 @@ class ContentSyncMixin:
                 "property_subtypes(channex_property_type), "
                 "street, house_number, "
                 "postal_code, city, country, lat, lng, max_guests, amenities, "
-                "type_attributes, currency"
+                "room_amenities, type_attributes, currency"
             )
             .eq("id", property_id)
             .eq("tenant_id", tenant_id)
@@ -899,6 +900,15 @@ class ContentSyncMixin:
             **self._room_type_occupancy(prop_row),
             "room_kind": "room",
         }
+        # Zimmer-Ausstattung → Channex-room_facilities (eigener Katalog mit
+        # EIGENEN UUIDs, nicht der Objekt-Katalog). Sobald das Objekt das Feld
+        # kennt, IMMER setzen (auch []), damit ein Entfernen die Facilities bei
+        # Channex/den OTAs synchron leert (Wurzel 1 — live verifiziert: ein PUT
+        # mit einer UUID entfernt die übrigen).
+        if prop_row is not None and "room_amenities" in prop_row:
+            attrs["facilities"] = _channex_room_facility_ids(
+                prop_row.get("room_amenities")
+            )
         # Room-Type-Content (Beschreibung + Fotos, KEIN important_information).
         # Beim 1-Zimmer-Modell teilt der Room-Type die Property-Inhalte.
         if prop_row is not None:
