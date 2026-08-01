@@ -141,6 +141,14 @@ class DaySignals:
 
     day: date
     # Saison-/Event-Aufschlag in Prozent (0 = kein Aufschlag).
+    #
+    # ACHTUNG season_pct: der Recompute-Service setzt das Feld seit 0252 NICHT
+    # mehr. Die benannten Saisons des Objekts (property_seasons) wirken auf einem
+    # anderen Weg — calendar._materialize schreibt ihre Tagespreise direkt nach
+    # price_overrides. Wer sie ZUSAETZLICH hier einspeist, zaehlt denselben
+    # Aufschlag doppelt. Das Feld bleibt als Engine-Eingang erhalten (die Engine
+    # ist eine reine Funktion und wird so getestet), hat aber derzeit keinen
+    # Produzenten.
     season_pct: float = 0.0
     event_pct: float = 0.0
     # Auslastung im Horizont (0..1): Anteil belegter Tage. None = unbekannt.

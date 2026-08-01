@@ -64,7 +64,7 @@ class _DB:
         return _Q(self, name)
 
 
-def _db(*, enabled: bool, base: float | None, seasons: bool = False) -> _DB:
+def _db(*, enabled: bool, base: float | None) -> _DB:
     tables: dict[str, list[dict]] = {
         "dp_settings": [
             {
@@ -87,13 +87,6 @@ def _db(*, enabled: bool, base: float | None, seasons: bool = False) -> _DB:
         ),
         "properties": [{"id": "p1", "tenant_id": "t1"}],
         "availability": [],
-        "season_assignments": [{"template_id": "tmpl1"}] if seasons else [],
-        "seasons": [{"id": "s1", "percent": 50}] if seasons else [],
-        "season_periods": (
-            [{"season_id": "s1", "start_date": "2026-07-01", "end_date": "2026-07-31"}]
-            if seasons
-            else []
-        ),
         "events": [],
         "event_periods": [],
     }
@@ -142,14 +135,6 @@ def test_recompute_no_base_no_price() -> None:
     n = svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 4))
     assert n == 0  # kein Basispreis → kein erfundener Preis
     assert db.writes == {}
-
-
-def test_recompute_applies_season_uplift() -> None:
-    db = _db(enabled=True, base=100.0, seasons=True)
-    svc = DynamicPricingRecompute(service_client=db)
-    svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 2))
-    # Saison +50 % → 150.
-    assert db.writes["dynamic_prices"][0]["price"] == 150.0
 
 
 def test_recompute_all_only_enabled() -> None:
@@ -209,9 +194,6 @@ def _db_full(**settings_overrides: object) -> _DB:
             "rate_plans": [{"property_id": "p1", "base_price": 100.0, "currency": "EUR"}],
             "properties": [{"id": "p1", "tenant_id": "t1", "lat": None, "lng": None}],
             "availability": [],
-            "season_assignments": [],
-            "seasons": [],
-            "season_periods": [],
             "events": [],
             "event_periods": [],
             "dp_pickup_snapshots": [],

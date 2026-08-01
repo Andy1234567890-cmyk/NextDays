@@ -161,7 +161,6 @@ class DynamicPricingRecompute:
         + compute_day), OHNE zu speichern. Geteilt von recompute_property (schreibt)
         und suggest_range (nur lesen). EINE Rechenwahrheit."""
         tenant_id = self._tenant_for_property(property_id)
-        season_pct = self._season_pct_by_date(property_id, rng_start, rng_end)
         event_pct = self._event_pct_by_date(tenant_id, rng_start, rng_end)
         booked = self._booked_dates(property_id, rng_start, rng_end)
         market = self._market_by_date(settings, tenant_id, rng_start, rng_end)
@@ -185,7 +184,6 @@ class DynamicPricingRecompute:
             md = market.get(cur.isoformat())
             signals = DaySignals(
                 day=cur,
-                season_pct=season_pct.get(cur.isoformat(), 0.0),
                 event_pct=event_pct.get(cur.isoformat(), 0.0),
                 occupancy=self._occupancy_signal(cur, booked, today),
                 days_before=(cur - today).days,
@@ -509,42 +507,6 @@ class DynamicPricingRecompute:
             .execute()
         ).data or []
         return res[0].get("tenant_id") if res else None
-
-    def _season_pct_by_date(
-        self, property_id: str, start: date, end: date
-    ) -> dict[str, float]:
-        """Saison-Aufschlag je Tag aus den dem Objekt zugewiesenen Templates.
-        season_assignments(property) → seasons(template) → season_periods."""
-        assigns = (
-            self._db()
-            .table("season_assignments")
-            .select("template_id")
-            .eq("property_id", property_id)
-            .execute()
-        ).data or []
-        template_ids = [a["template_id"] for a in assigns if a.get("template_id")]
-        if not template_ids:
-            return {}
-        seasons = (
-            self._db()
-            .table("seasons")
-            .select("id, percent")
-            .in_("template_id", template_ids)
-            .execute()
-        ).data or []
-        pct_by_season = {s["id"]: float(s.get("percent") or 0) for s in seasons}
-        if not pct_by_season:
-            return {}
-        periods = (
-            self._db()
-            .table("season_periods")
-            .select("season_id, start_date, end_date")
-            .in_("season_id", list(pct_by_season.keys()))
-            .execute()
-        ).data or []
-        return self._spread_periods(
-            periods, pct_by_season, "season_id", start, end
-        )
 
     def _event_pct_by_date(
         self, tenant_id: str | None, start: date, end: date
