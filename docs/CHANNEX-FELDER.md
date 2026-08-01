@@ -435,3 +435,27 @@ lässt sich von hier aus nicht feststellen.
 curl -s -H "user-api-key: $CHANNEX_API_KEY" \
   "$CHANNEX_BASE_URL/room_types" | jq '.data[0].attributes | keys'
 ```
+
+## ARI wird NICHT zurückgelesen (Auflage des Aggregators, 01.08.2026)
+
+Der Betreiber hat uns schriftlich untersagt, die ARI zyklisch zurückzulesen:
+wir sind die Quelle der Wahrheit, es dürfen nur ÄNDERUNGEN gepusht werden.
+Umgesetzt seit `0251_channex_ari_shadow.sql`:
+
+- `channex_ari_shadow` hält den zuletzt ERFOLGREICH gepushten Preis/Min-Stay je
+  lokalem Rate-Plan und Tag. `reconcile_rate_plan_prices` diffed das Soll
+  (Pricing-Resolver) gegen diesen Schatten — **kein `get_restrictions` mehr**.
+  Fortgeschrieben wird der Schatten erst NACH dem erfolgreichen Push, ein
+  gescheiterter Push bleibt damit Differenz und wird wiederholt.
+- `import_ari_for_property` läuft nur noch beim Verbinden/Re-Aktivieren eines
+  Objekts, nicht mehr periodisch.
+- Reconcile-Tick: täglich statt alle 15 min; kein Enqueue mehr am Seitenaufruf.
+- Eigener 5-Minuten-Tick nur für die ausgehenden Outboxen (Retry) und den
+  nächtlichen Full-Sync-Push.
+- Einmaliger Umstellungsschritt: `POST /api/v1/channel-manager/internal/seed-ari-shadow`
+  füllt den Schatten aus dem Soll, ohne zu senden (am 01.08.2026 gelaufen:
+  27 Objekte, 9 Rate-Plans, 3886 Werte). Ein anschließender voller Reconcile
+  über alle 4 Tenants erzeugte 0 Lesezugriffe und 0 Pushes.
+
+Prüffrage vor jeder Änderung am Channel-Manager: *Löst das einen Lesezugriff auf
+ARI/Verfügbarkeit/Preise aus?* Wenn ja: nicht bauen.
