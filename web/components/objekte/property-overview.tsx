@@ -35,7 +35,10 @@ import {
   SheetTitle,
 } from "@nextdays/ui/sheet";
 import { Textarea } from "@nextdays/ui/textarea";
-import { ZimmerSektion } from "@/components/objekte/zimmer-sektion";
+import {
+  BettenSektion,
+  ZimmerSektion,
+} from "@/components/objekte/zimmer-sektion";
 import {
   AIRBNB_MERKMALE,
   AMENITY_CATALOG,
@@ -46,6 +49,7 @@ import {
   HOTEL_TYPES,
   ROOM_AMENITY_CATALOG,
   ROOM_AMENITY_SLUGS,
+  readBeds,
   STATUS_OPTIONS,
 } from "@/lib/property-meta";
 import {
@@ -217,10 +221,18 @@ export function PropertyOverview({ initial }: { initial: Property }) {
         </ul>
       </SectionCard>
 
-      {/* Zimmer — eigene Entitäten seit 0246, deshalb eigene Komponente mit
-          eigenem Laden und Realtime-Abo statt einer Sektion über
-          type_attributes. */}
+      {/* Zimmer — eigene Zeilen in property_rooms (0246), deshalb eigene
+          Komponente mit eigenem Laden und Realtime-Abo statt einer Sektion
+          über type_attributes. Die Schlafgelegenheiten liegen dagegen am
+          Objekt und speichern über dasselbe save() wie die übrigen Karten
+          (0251). */}
       <ZimmerSektion propertyId={p.id} />
+      <BettenSektion
+        beds={readBeds(p.type_attributes?.beds)}
+        onSave={(beds) =>
+          save({ type_attributes: { ...p.type_attributes, beds } })
+        }
+      />
 
       {/* Amenities — ohne Kanal-Badge: welches Portal ein Merkmal kennt, steht
           im Editor an jeder einzelnen Zeile als Logo. Ein pauschaler Hinweis
@@ -293,17 +305,22 @@ function FieldLabel({
   htmlFor,
   channel,
   feld,
+  required,
   children,
 }: {
   htmlFor?: string;
   channel: "ota" | "local";
   feld?: string;
+  required?: boolean;
   children: React.ReactNode;
 }) {
   const kanaele = useKanalZeilen(feld ?? "");
   return (
     <span className="flex flex-wrap items-center gap-2">
-      <Label htmlFor={htmlFor}>{children}</Label>
+      <Label htmlFor={htmlFor}>
+        {children}
+        {required && <span className="ml-0.5 text-destructive">*</span>}
+      </Label>
       <ChannelBadge channel={channel} kanaele={kanaele} />
     </span>
   );
@@ -415,11 +432,13 @@ function EditorShell({
   open,
   onClose,
   title,
+  subtitle,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  subtitle?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -429,7 +448,9 @@ function EditorShell({
           <SheetTitle className="font-display text-xl font-extrabold">
             {title}
           </SheetTitle>
-          <SheetDescription className="sr-only">{title}</SheetDescription>
+          <SheetDescription className={subtitle ? "" : "sr-only"}>
+            {subtitle ?? title}
+          </SheetDescription>
         </SheetHeader>
         <div className="flex flex-col gap-4 p-4">{children}</div>
       </SheetContent>
@@ -472,19 +493,11 @@ function NameEditor({
   onClose: () => void;
   onSave: SaveFn;
 }) {
-  const { typeOptionsFor } = usePropertyLabels();
   const t = useTranslations("objects");
   const [title, setTitle] = useState(p.title);
   const [desc, setDesc] = useState(p.description ?? "");
   const [platformDesc, setPlatformDesc] = useState(p.platform_description ?? "");
-  const [type, setType] = useState<PropertyType>(p.property_type);
   const { busy, error, run } = useSaver(onSave);
-  // Typ-Liste passend zur Objektwelt (0098): ein Zimmer bleibt in den
-  // Zimmertypen, ein Ferienobjekt in den Ferienobjekt-Typen — kein
-  // versehentlicher Wechsel zwischen den Welten.
-  const typeOptions = typeOptionsFor(
-    HOTEL_TYPES.includes(p.property_type) ? "hotel" : "vacation_rental",
-  );
 
   return (
     <EditorShell
@@ -501,23 +514,6 @@ function NameEditor({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <FieldLabel channel="ota">
-          {t("propertyOverview.typeFieldLabel")}
-        </FieldLabel>
-        <Select value={type} onValueChange={(v) => setType(v as PropertyType)}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {typeOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
       <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor="e-desc" channel="ota" feld="beschreibung">
@@ -556,7 +552,6 @@ function NameEditor({
             title,
             description: desc,
             platform_description: platformDesc || null,
-            property_type: type,
           })
         }
       />
@@ -579,6 +574,8 @@ function InfoEditor({
     children?: number;
     infants?: number;
   };
+  const { typeOptionsFor } = usePropertyLabels();
+  const [type, setType] = useState<PropertyType>(p.property_type);
   const [guests, setGuests] = useState(p.max_guests);
   const [children, setChildren] = useState<number>(occ.children ?? 0);
   const [infants, setInfants] = useState<number>(occ.infants ?? 0);
@@ -593,13 +590,73 @@ function InfoEditor({
   const { busy, error, run } = useSaver(onSave);
   const t = useTranslations("objects");
   const belegungKanaele = useKanalZeilen("belegung");
+  // Typ-Liste passend zur Objektwelt (0098): ein Zimmer bleibt in den
+  // Zimmertypen, ein Ferienobjekt in den Ferienobjekt-Typen — kein
+  // versehentlicher Wechsel zwischen den Welten.
+  const typeOptions = typeOptionsFor(
+    HOTEL_TYPES.includes(p.property_type) ? "hotel" : "vacation_rental",
+  );
 
   return (
     <EditorShell
       open={open}
       onClose={onClose}
-      title={t("propertyOverview.infoCardTitle")}
+      title={t("propertyOverview.infoEditorTitle")}
+      subtitle={t("propertyOverview.infoEditorSubtitle")}
     >
+      {/* Reihenfolge wie im Vorbild: Typ → Maßeinheit → Größe → Gäste. Der
+          Unterkunftstyp stand vorher in der Namens-Karte; er gehört zu den
+          Eckdaten, nicht zum Text. */}
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel channel="ota">
+          {t("propertyOverview.typeFieldLabel")}
+        </FieldLabel>
+        <Select value={type} onValueChange={(v) => setType(v as PropertyType)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {typeOptions.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel htmlFor="e-unit" channel="local">
+          {t("propertyOverview.masseinheitLabel")}
+        </FieldLabel>
+        <NativeSelect
+          id="e-unit"
+          value={einheit}
+          onChange={(e) => setEinheit(e.target.value as FlaechenEinheit)}
+        >
+          <option value="sqm">{t("propertyOverview.masseinheitQm")}</option>
+          <option value="sqft">{t("propertyOverview.masseinheitQft")}</option>
+        </NativeSelect>
+      </div>
+
+      {/* Größe ist Pflicht — ohne sie kann weder die eigene Strecke noch der
+          Marktplatz das Objekt sauber ausweisen. Leer lassen heißt hier NICHT
+          „0", sondern „nicht speicherbar" (Wurzel 4). */}
+      <div className="flex flex-col gap-1.5">
+        <FieldLabel htmlFor="e-size" channel="local" feld="groesseQm" required>
+          {t("propertyOverview.sizeFieldLabel")}
+        </FieldLabel>
+        <Input
+          id="e-size"
+          type="number"
+          min={1}
+          value={size}
+          onChange={(e) =>
+            setSize(e.target.value === "" ? "" : Number(e.target.value))
+          }
+        />
+      </div>
+
       <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor="e-guests" channel="ota" feld="belegung">
           {t("propertyOverview.maxGuestsFieldLabel")}
@@ -661,40 +718,17 @@ function InfoEditor({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-size" channel="local" feld="groesseQm">
-          {t("propertyOverview.sizeFieldLabel")}
-        </FieldLabel>
-        <div className="flex gap-2">
-          <Input
-            id="e-size"
-            type="number"
-            min={0}
-            className="flex-1"
-            value={size}
-            onChange={(e) =>
-              setSize(e.target.value === "" ? "" : Number(e.target.value))
-            }
-          />
-          <NativeSelect
-            aria-label={t("propertyOverview.masseinheitLabel")}
-            className="w-28"
-            value={einheit}
-            onChange={(e) => setEinheit(e.target.value as FlaechenEinheit)}
-          >
-            <option value="sqm">{t("propertyOverview.masseinheitQm")}</option>
-            <option value="sqft">{t("propertyOverview.masseinheitQft")}</option>
-          </NativeSelect>
-        </div>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <FieldLabel channel="local">
+        <Label htmlFor="e-status">
           {t("propertyOverview.statusFieldLabel")}
-        </FieldLabel>
+        </Label>
+        <p className="text-xs text-muted-foreground">
+          {t("propertyOverview.statusFieldHint")}
+        </p>
         <Select
           value={status}
           onValueChange={(v) => setStatus(v as PropertyStatus)}
         >
-          <SelectTrigger>
+          <SelectTrigger id="e-status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -709,10 +743,12 @@ function InfoEditor({
       <SaveBar
         busy={busy}
         error={error}
+        disabled={size === "" || size <= 0}
         onSave={() =>
           run({
+            property_type: type,
             max_guests: guests,
-            status,
+            ...(status === p.status ? {} : { status }),
             size_value: size === "" ? null : size,
             // Einheit nur mit einer Fläche — eine Einheit ohne Wert ist keine
             // Aussage (Wurzel 4).

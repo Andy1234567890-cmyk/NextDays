@@ -22,10 +22,8 @@ import {
 import { type Locale, DEFAULT_LOCALE, isLocale } from "@/i18n/locales";
 import {
   type PropertyPhoto,
-  type PropertyRoom,
   deletePropertyPhoto,
   listPropertyPhotos,
-  listPropertyRooms,
   reorderPropertyPhotos,
   updatePropertyPhoto,
   uploadPropertyPhoto,
@@ -115,36 +113,6 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
   // kein eigener Selektor. Fallback auf die Basissprache, falls untypisiert.
   const activeLocale = useLocale();
   const lang: Locale = isLocale(activeLocale) ? activeLocale : DEFAULT_LOCALE;
-
-  // Zimmer des Objekts für die Zuordnung (0248). Ein Ladefehler lässt die
-  // Liste leer — dann fehlt der Menüpunkt, statt eine leere Auswahl zu zeigen.
-  const [zimmer, setZimmer] = useState<PropertyRoom[]>([]);
-  const tz = useTranslations("zimmer");
-  // Ansicht: alle Fotos oder nach Zimmern gruppiert (wie im Vorbild).
-  const [ansicht, setAnsicht] = useState<"alle" | "zimmer">("alle");
-
-  const zimmerLaden = useCallback(async () => {
-    const res = await listPropertyRooms(propertyId);
-    if (res.ok) setZimmer(res.data.items);
-  }, [propertyId]);
-
-  useEffect(() => {
-    void zimmerLaden();
-  }, [zimmerLaden]);
-
-  useRealtime({
-    table: "property_rooms",
-    filter: `property_id=eq.${propertyId}`,
-    onChange: () => void zimmerLaden(),
-  });
-
-  async function assignRoom(photo: PropertyPhoto, roomId: string) {
-    const res = await updatePropertyPhoto(propertyId, photo.id, {
-      room_id: roomId,
-    });
-    // Kein manuelles Nachladen — das property_photos-Abo pflegt den Stand.
-    if (!res.ok) toast.error(res.error);
-  }
 
   const reload = useCallback(async () => {
     const res = await listPropertyPhotos(propertyId);
@@ -400,22 +368,6 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      {/* Ansicht: alle Fotos oder nach Zimmern. Ohne angelegte Zimmer gäbe es
-          nichts zu gruppieren — dann bleibt der Umschalter weg. */}
-      {zimmer.length > 0 && (
-        <div className="flex gap-2">
-          {(["alle", "zimmer"] as const).map((wert) => (
-            <Button
-              key={wert}
-              variant={ansicht === wert ? "default" : "ghost"}
-              onClick={() => setAnsicht(wert)}
-            >
-              {t(wert === "alle" ? "ansichtAlle" : "ansichtNachZimmern")}
-            </Button>
-          ))}
-        </div>
-      )}
-
       {/* Multi-Upload-Zone */}
       <button
         type="button"
@@ -540,63 +492,6 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
             {t("emptyHint")}
           </p>
         </div>
-      ) : ansicht === "zimmer" ? (
-        /* Nach Zimmern: jedes Zimmer mit seinen Fotos, am Ende die noch nicht
-           zugeordneten. Dieselben Karten wie in der Gesamtansicht — nur anders
-           gruppiert, damit es keine zweite Foto-Oberfläche gibt. */
-        <div className="flex flex-col gap-8">
-          {[
-            ...zimmer.map((r) => ({
-              key: r.id,
-              titel: r.name || tz(r.raum_typ),
-              fotos: photos.filter((f) => f.room_id === r.id),
-            })),
-            {
-              key: "ohne",
-              titel: t("zimmerOhneZuordnung"),
-              fotos: photos.filter((f) => !f.room_id),
-            },
-          ]
-            .filter((g) => g.fotos.length > 0 || g.key !== "ohne")
-            .map((g) => (
-              <section key={g.key} className="flex flex-col gap-3">
-                <h2 className="font-display text-lg font-extrabold">
-                  {g.titel}{" "}
-                  <span className="font-normal text-muted-foreground text-sm">
-                    {g.fotos.length}
-                  </span>
-                </h2>
-                {g.fotos.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t("zimmerOhneFotos")}
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {g.fotos.map((photo) => (
-                      <PhotoCard
-                        key={photo.id}
-                        photo={photo}
-                        lang={lang}
-                        t={t}
-                        dragId={dragId}
-                        overId={overId}
-                        setDragId={setDragId}
-                        setOverId={setOverId}
-                        onDropReorder={onDropReorder}
-                        onSetCover={setCover}
-                        onRemove={removePhoto}
-                        onSaveCaption={saveCaption}
-                        onSaveAuthor={saveAuthor}
-                        zimmer={zimmer}
-                        zimmerLabel={(typ) => tz(typ)}
-                        onAssignRoom={assignRoom}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-            ))}
-        </div>
       ) : (
         <div className="flex flex-col gap-6">
           {/* Großes Titelbild (Cover) — volle Breite. */}
@@ -615,9 +510,6 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
               onRemove={removePhoto}
               onSaveCaption={saveCaption}
               onSaveAuthor={saveAuthor}
-              zimmer={zimmer}
-              zimmerLabel={(typ) => tz(typ)}
-              onAssignRoom={assignRoom}
             />
           )}
 
@@ -639,9 +531,6 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
                   onRemove={removePhoto}
                   onSaveCaption={saveCaption}
                   onSaveAuthor={saveAuthor}
-                  zimmer={zimmer}
-                  zimmerLabel={(typ) => tz(typ)}
-                  onAssignRoom={assignRoom}
                 />
               ))}
             </div>
@@ -668,9 +557,6 @@ function PhotoCard({
   onRemove,
   onSaveCaption,
   onSaveAuthor,
-  zimmer,
-  zimmerLabel,
-  onAssignRoom,
 }: {
   photo: PropertyPhoto;
   lang: Locale;
@@ -685,9 +571,6 @@ function PhotoCard({
   onRemove: (photo: PropertyPhoto) => void;
   onSaveCaption: (photo: PropertyPhoto, text: string) => void;
   onSaveAuthor: (photo: PropertyPhoto, text: string) => void;
-  zimmer: PropertyRoom[];
-  zimmerLabel: (raumTyp: string) => string;
-  onAssignRoom: (photo: PropertyPhoto, roomId: string) => void;
 }) {
   // Lokaler Entwurf, damit der Zähler live mitläuft; gespeichert wird onBlur.
   const [value, setValue] = useState(photo.caption[lang] ?? "");
@@ -761,34 +644,6 @@ function PhotoCard({
                 <Icon icon="ph:star" />
                 {t("setCover")}
               </DropdownMenuItem>
-            )}
-            {zimmer.length > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                {/* Zimmer-Zuordnung (0248): genau EIN Zimmer je Foto — ein Bild,
-                    das zu drei Zimmern gehört, gehört zu keinem. */}
-                {zimmer.map((r) => (
-                  <DropdownMenuItem
-                    key={r.id}
-                    onSelect={() =>
-                      onAssignRoom(photo, photo.room_id === r.id ? "" : r.id)
-                    }
-                  >
-                    <Icon
-                      icon={
-                        photo.room_id === r.id ? "ph:check-circle" : "ph:door"
-                      }
-                    />
-                    {r.name || zimmerLabel(r.raum_typ)}
-                  </DropdownMenuItem>
-                ))}
-                {photo.room_id ? (
-                  <DropdownMenuItem onSelect={() => onAssignRoom(photo, "")}>
-                    <Icon icon="ph:x-circle" />
-                    {t("zimmerZuordnungLoesen")}
-                  </DropdownMenuItem>
-                ) : null}
-              </>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem

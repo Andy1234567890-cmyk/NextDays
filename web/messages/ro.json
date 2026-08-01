@@ -741,12 +741,7 @@
     "authorPlaceholder": "Autor / fotograf (opțional)",
     "errorDialogTitle": "Unele fotografii nu au putut fi încărcate",
     "errorDialogHint": "Te rugăm să corectezi fișierele și să le încarci din nou.",
-    "errorDialogClose": "Închide",
-    "ansichtAlle": "Alle Fotos",
-    "ansichtNachZimmern": "Nach Zimmern",
-    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
-    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
-    "zimmerZuordnungLoesen": "Zuordnung aufheben"
+    "errorDialogClose": "Închide"
   },
   "owners": {
     "title": "Proprietari",
@@ -4201,21 +4196,8 @@
       "noSearchResults": "Niciun rezultat.",
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerZurueck": "Zurück",
       "zimmerFertig": "Fertig",
-      "zimmerNameLabel": "Name (optional)",
-      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
-      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
       "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
-      "zimmerEnSuite": "En suite",
-      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
-      "zimmerEnSuiteZiel": "Gehört zu",
-      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
-      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
-      "zimmerLoeschen": "Zimmer löschen",
-      "zimmerAusstattung": "Ausstattung dieses Zimmers",
-      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
-      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -4226,9 +4208,10 @@
       "zimmerSuffixGemeinschaftlich": "comun",
       "zimmerErhoehen": "Adăugați {room}",
       "zimmerVerringern": "Eliminați {room}",
-      "zimmerDetailsOeffnen": "Editează {room}",
       "zimmerAnzahl": "Număr de {room}",
-      "zimmerNummeriert": "{room} {index}"
+      "infoEditorTitle": "Detalii despre proprietate",
+      "infoEditorSubtitle": "Indicați tipul proprietății, suprafața și capacitatea de oaspeți.",
+      "statusFieldHint": "„Activ” înseamnă că proprietatea este vândută — pe portaluri, pe myBestDays și la rezervări directe. „Ciornă” nu este vizibilă nicăieri."
     },
     "availabilityForm": {
       "title": "Disponibilitate",

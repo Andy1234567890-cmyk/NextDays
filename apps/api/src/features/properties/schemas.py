@@ -345,8 +345,6 @@ class PropertyPhoto(BaseModel):
     caption: dict[str, str] = Field(default_factory=dict)
     # Urheber/Fotograf (an die Buchungsportale mitgesendet). Leer = kein Autor.
     author: str | None = None
-    # Zimmer, zu dem das Foto gehört (0248). None = keinem zugeordnet.
-    room_id: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
 
@@ -369,30 +367,20 @@ class PhotoUpdateRequest(BaseModel):
     ``caption`` ersetzt die gesamte Locale-Map (nicht gesetzt = unverändert).
     ``is_cover=true`` macht dieses Foto zum alleinigen Cover des Objekts.
     ``author`` setzt den Urheber (leerer String = Autor entfernen).
-    ``room_id`` ordnet das Foto einem Zimmer zu; leerer String löst die
-    Zuordnung (None = unverändert — sonst könnte man sie nie entfernen).
     """
 
     caption: dict[str, str] | None = None
     is_cover: bool | None = None
     author: str | None = None
-    room_id: str | None = None
 
 
-# --- Zimmer (property_rooms, 0246) ------------------------------------------
-# Ein Zimmer ist eine eigene Zeile, kein Zählwerk: nur so lässt sich sagen,
-# WELCHES Schlafzimmer welche Betten hat und welches Bad an welches grenzt.
-# Nichts davon geht an Channex (Room-Type verwirft beds/bedrooms/bathrooms,
-# live gemessen) — außer der Zimmer-Ausstattung, die als Vereinigungsmenge in
-# room_type.facilities landet.
-
-# Raumtypen, die Schlafmöglichkeiten tragen können. Lodgify erlaubt es genau
-# hier (Schlafzimmer, Wohnzimmer, Schlafbereich); ein Bett im Badezimmer wäre
-# ein Eingabefehler, kein Sonderfall.
-BETT_RAUMTYPEN = frozenset({"schlafzimmer", "wohnzimmer", "schlafbereich"})
-
-# Raumtypen, für die „en suite" überhaupt eine Aussage ist.
-ENSUITE_RAUMTYPEN = frozenset({"badezimmer", "wc"})
+# --- Zimmer (property_rooms, 0246 · Zuschnitt 0251) --------------------------
+# Ein Zimmer ist eine gezaehlte Einheit: Typ und Gruppe (privat/gemeinschaftlich),
+# sonst nichts. Betten und Ausstattung haengen am OBJEKT
+# (properties.type_attributes.beds bzw. properties.room_amenities) — so haelt es
+# auch Lodgify in seiner Oberflaeche (live abgeglichen 01.08.2026).
+# An Channex geht davon ohnehin nichts: der Room-Type verwirft beds, bedrooms
+# und bathrooms (live gemessen, docs/CHANNEX-FELDER.md).
 
 
 class PropertyRoom(BaseModel):
@@ -402,13 +390,7 @@ class PropertyRoom(BaseModel):
     property_id: str
     raum_typ: str
     privat: bool = True
-    name: str | None = None
     position: int = 0
-    # {slug: anzahl}, z. B. {"doppelbett": 1, "einzelbett": 2}
-    betten: dict[str, int] = Field(default_factory=dict)
-    ausstattung: list[str] = Field(default_factory=list)
-    en_suite: bool = False
-    en_suite_schlafzimmer_id: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
 
@@ -423,18 +405,6 @@ class PropertyRoomCreate(BaseModel):
 
     raum_typ: str = Field(min_length=1, max_length=64)
     privat: bool = True
-    name: str | None = Field(default=None, max_length=120)
-    betten: dict[str, int] = Field(default_factory=dict)
-    ausstattung: list[str] = Field(default_factory=list)
-    en_suite: bool = False
-    en_suite_schlafzimmer_id: str | None = None
-
-    @field_validator("betten")
-    @classmethod
-    def _betten_positiv(cls, value: dict[str, int]) -> dict[str, int]:
-        """Nur echte Stückzahlen. 0 oder negativ ist kein Bett, sondern Müll —
-        er würde als „vorhanden" durch die Zählung laufen (Wurzel 4)."""
-        return {slug: n for slug, n in value.items() if isinstance(n, int) and n > 0}
 
 
 class PropertyRoomUpdate(BaseModel):
@@ -442,18 +412,6 @@ class PropertyRoomUpdate(BaseModel):
 
     raum_typ: str | None = Field(default=None, min_length=1, max_length=64)
     privat: bool | None = None
-    name: str | None = Field(default=None, max_length=120)
-    betten: dict[str, int] | None = None
-    ausstattung: list[str] | None = None
-    en_suite: bool | None = None
-    en_suite_schlafzimmer_id: str | None = None
-
-    @field_validator("betten")
-    @classmethod
-    def _betten_positiv(cls, value: dict[str, int] | None) -> dict[str, int] | None:
-        if value is None:
-            return None
-        return {slug: n for slug, n in value.items() if isinstance(n, int) and n > 0}
 
 
 class RoomReorderRequest(BaseModel):

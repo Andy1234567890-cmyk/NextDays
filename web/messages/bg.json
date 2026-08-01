@@ -741,12 +741,7 @@
     "authorPlaceholder": "Автор / фотограф (по избор)",
     "errorDialogTitle": "Някои снимки не можаха да бъдат качени",
     "errorDialogHint": "Моля, коригирайте файловете и ги качете отново.",
-    "errorDialogClose": "Затвори",
-    "ansichtAlle": "Alle Fotos",
-    "ansichtNachZimmern": "Nach Zimmern",
-    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
-    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
-    "zimmerZuordnungLoesen": "Zuordnung aufheben"
+    "errorDialogClose": "Затвори"
   },
   "owners": {
     "title": "Собственици",
@@ -4201,21 +4196,8 @@
       "noSearchResults": "Няма резултати.",
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerZurueck": "Zurück",
       "zimmerFertig": "Fertig",
-      "zimmerNameLabel": "Name (optional)",
-      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
-      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
       "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
-      "zimmerEnSuite": "En suite",
-      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
-      "zimmerEnSuiteZiel": "Gehört zu",
-      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
-      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
-      "zimmerLoeschen": "Zimmer löschen",
-      "zimmerAusstattung": "Ausstattung dieses Zimmers",
-      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
-      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -4226,9 +4208,10 @@
       "zimmerSuffixGemeinschaftlich": "общо",
       "zimmerErhoehen": "Добавяне на {room}",
       "zimmerVerringern": "Премахване на {room}",
-      "zimmerDetailsOeffnen": "Редактиране на {room}",
       "zimmerAnzahl": "Брой {room}",
-      "zimmerNummeriert": "{room} {index}"
+      "infoEditorTitle": "Детайли за обекта",
+      "infoEditorSubtitle": "Посочете типа на обекта, размера и капацитета за гости.",
+      "statusFieldHint": "„Активен“ означава, че обектът се продава — по портали, на myBestDays и при директни резервации. „Чернова“ не се показва никъде."
     },
     "availabilityForm": {
       "title": "Наличност",

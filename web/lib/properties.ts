@@ -218,8 +218,6 @@ export type PropertyPhoto = {
   caption: Record<string, string>;
   // Urheber/Fotograf (an die Buchungsportale mitgesendet). null = kein Autor.
   author: string | null;
-  // Zimmer, zu dem das Foto gehört (0248). null = keinem zugeordnet.
-  room_id: string | null;
   created_at: string | null;
   updated_at: string | null;
 };
@@ -285,8 +283,6 @@ export async function updatePropertyPhoto(
     caption?: Record<string, string>;
     is_cover?: boolean;
     author?: string;
-    /** Zimmer-ID, oder "" um die Zuordnung zu lösen. */
-    room_id?: string;
   },
 ): Promise<Result<PropertyPhoto>> {
   return call(`/properties/${id}/photos/${photoId}`, {
@@ -316,13 +312,7 @@ export type PropertyRoom = {
   /** Slug wie ZIMMER_SLUGS in lib/property-meta. */
   raum_typ: string;
   privat: boolean;
-  name: string | null;
   position: number;
-  /** {slug: anzahl}, z. B. { doppelbett: 1, einzelbett: 2 } */
-  betten: Record<string, number>;
-  ausstattung: string[];
-  en_suite: boolean;
-  en_suite_schlafzimmer_id: string | null;
   created_at: string | null;
   updated_at: string | null;
 };
@@ -330,11 +320,6 @@ export type PropertyRoom = {
 export type PropertyRoomInput = {
   raum_typ?: string;
   privat?: boolean;
-  name?: string | null;
-  betten?: Record<string, number>;
-  ausstattung?: string[];
-  en_suite?: boolean;
-  en_suite_schlafzimmer_id?: string | null;
 };
 
 /** Zimmer eines Objekts in Anzeigereihenfolge. */

@@ -206,11 +206,10 @@ export const FELD_GRUPPEN: { gruppe: string; felder: Feldregel[] }[] = [
       },
       {
         // content_sync._upsert_channex_room_type → room_type.facilities
-        // (eigener Katalog /room_facilities, eigene UUIDs). Gesendet wird die
-        // Vereinigung aus objektweiter (properties.room_amenities) und je
-        // Zimmer gepflegter Ausstattung — der Aggregator kennt je Objekt nur
-        // EINEN Room-Type, die Zuordnung zum einzelnen Zimmer geht dabei
-        // verloren. Genau das muss am Feld stehen.
+        // (eigener Katalog /room_facilities, eigene UUIDs). Gepflegt wird die
+        // Zimmer-Ausstattung objektweit (properties.room_amenities) — der
+        // Aggregator kennt je Objekt ohnehin nur EINEN Room-Type, eine
+        // Zuordnung zum einzelnen Zimmer könnte er nicht abbilden.
         feld: "zimmerAusstattung",
         kanaele: {
           airbnb: { status: "bedingt", grund: "nurMitEntsprechung" },

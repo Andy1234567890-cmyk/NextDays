@@ -33,17 +33,27 @@ Kanal-Badges an den Feldern kommen aus `web/lib/kanal-felder.ts`; die Übersicht
 
 ## Was Lodgify hat und wir nicht
 
-**1. Zimmer sind bei Lodgify eigene Entitäten, bei uns ein Zählwerk.**
-Lodgify: „Add room" legt ein Zimmer an, mit Typ (Schlafzimmer, Badezimmer, Toilette,
-Wohnzimmer, Schlafbereich, …) und einem Schalter privat/gemeinschaftlich. Je Zimmer
-gibt es dann Zusatzangaben:
-* Bad/Toilette → **en suite** (ja/nein) und, wenn ja, **an welches Schlafzimmer** gekoppelt
-* Schlafzimmer / Wohnzimmer / Schlafbereich → **Schlafmöglichkeiten pro Zimmer**
-* alle außer Schlafbereich → **eigene Ausstattung pro Zimmer**
-* **Fotos pro Zimmer** (Foto-Bereich hat einen Reiter „nach Zimmern"; ein Foto hängt
-  an genau einem Zimmer, dasselbe Bild darf mehrfach hochgeladen werden)
+**1. Zimmer sind bei Lodgify ein Zählwerk — KORREKTUR vom 01.08.2026.**
 
-Bei uns hängen Betten und Zimmer-Ausstattung am ganzen Objekt, nicht am Zimmer.
+> Die ursprüngliche Fassung dieses Abschnitts stand hier falsch. Sie stammte aus
+> den Lodgify-Hilfeartikeln („Add room", en suite, Betten je Zimmer, Foto-Reiter
+> „nach Zimmern"). Die **echte Oberfläche** wurde am 01.08.2026 durchgeklickt
+> (`/rental/573936/overview`, Konto airsmil@airsmil.dk) — dort gibt es nichts
+> davon:
+>
+> * **Zimmer** = ein Slide-over mit zwei aufklappbaren Gruppen (Privat ·
+>   Gemeinschaftlich), darin je Zimmertyp ein Zähler „− Zahl +" (Zahl ist ein
+>   Eingabefeld). Kein Detail, kein Eigenname, kein en suite, keine Ausstattung
+>   je Zimmer. Die Karte fasst zusammen: „2 Schlafzimmer (privat)".
+> * **Schlafgelegenheiten** = eigenes Slide-over, **objektweiter** Zähler je
+>   Bettentyp (Babybett, Kinderbett, Doppelbett, Schrankbett, …) mit Icon.
+> * **Ausstattung der Unterkunft** = objektweit, eigene Karte.
+> * **Fotos** = flache Liste, **kein** Reiter „nach Zimmern".
+>
+> Konsequenz: P1 bleibt (Zimmer als Zeile, damit der Zähler etwas zu zählen
+> hat), **P2/P3/P4/P5 sind erledigt durch Rückbau** — siehe Migration 0251.
+> Betten liegen wieder in `type_attributes.beds`, Zimmer-Ausstattung in
+> `properties.room_amenities`, Fotos ohne Zimmerbezug.
 
 **2. Objekt-Infos-Slide-over.** Lodgify fragt dort: Unterkunftstyp · Maßeinheit
 (m²/ft²) · Größe (Pflichtfeld) · Gäste (Stepper) · Einheiten (Stepper).
@@ -131,25 +141,14 @@ UI: Karte „Zimmer" listet die Zimmer, Slide-over legt an/bearbeitet/sortiert.
 Realtime: neue Tabelle abonnieren — Grant und Publikation live gegenprüfen, sonst ist
 das Abo eine stumme Attrappe.
 
-**P2 — Schlafmöglichkeiten pro Zimmer.**
-Betten-Zählwerk vom Objekt an das Zimmer hängen (Schlafzimmer, Wohnzimmer,
-Schlafbereich). Objekt-Ebene bleibt als Summe lesbar, damit Listing und Suche nicht
-brechen. Bettentyp-Katalog aus `ZIMMER_SLUGS`/Betten-Slugs weiterverwenden, keine
-zweite Liste anlegen.
-
-**P3 — Ausstattung pro Zimmer.**
-`room_amenities` (0243) von der Objekt- auf die Zimmer-Ebene heben. Was an Channex
-geht, ist die Vereinigungsmenge über alle Zimmer — der Aggregator kennt nur einen
-Room-Type. Das muss die UI sagen, sonst erwartet der Nutzer eine Zimmer-Auflösung,
-die es bei den Portalen nicht gibt.
-
-**P4 — en suite.**
-Bad/Toilette bekommt „en suite" plus optionale Kopplung an ein Schlafzimmer
-(Fremdschlüssel auf dasselbe Objekt, serverseitig prüfen). Badge: rein lokal.
-
-**P5 — Fotos pro Zimmer.**
-Zuordnung Foto → Zimmer (ein Foto genau ein Zimmer), Reiter „nach Zimmern" im
-Foto-Bereich, Zuweisen aus der Foto-Liste heraus.
+**P2–P5 — entfallen (Rückbau 0251).**
+Betten je Zimmer, Ausstattung je Zimmer, en suite und Fotos je Zimmer wurden am
+01.08.2026 gebaut (0247/0248) und noch am selben Tag zurückgebaut, nachdem die
+echte Lodgify-Oberfläche geprüft war: dort gibt es all das nicht (siehe
+Korrektur oben). 0251 summiert die Zimmer-Betten verlustfrei zurück nach
+`type_attributes.beds`, entfernt `property_photos.room_id` und die Spalten
+`betten`, `ausstattung`, `name`, `en_suite`, `en_suite_schlafzimmer_id` an
+`property_rooms`. Ein Zimmer trägt seither nur noch Typ, Gruppe und Position.
 
 **P0 — Verkaufsobergrenze schließen (zuerst, unabhängig von allem anderen).**
 `type_attributes.units` entfernen (Feld, Label, i18n-Keys, Anzeige `unitsSuffix`).
@@ -163,8 +162,8 @@ damit Channex den Room-Type nachzieht. Danach gegen Channex zurücklesen, dass
 Maßeinheit m²/ft² ergänzen (gespeicherter Wert, keine Umrechnung raten), Größe als
 Pflichtfeld, Gäste als Stepper. Kein Einheiten-Feld (siehe P0).
 
-Reihenfolge: P0 → P1 → P2 → P3 → P6 → P4 → P5. P0 schließt die Überbuchungstür,
-P1 trägt alles Weitere.
+Reihenfolge: P0 → P1 → P6. P0 schließt die Überbuchungstür, P1 trägt den
+Zimmer-Zähler. P2–P5 sind vom Tisch (Rückbau 0251).
 
 ## Regeln (gelten für jedes Paket)
 

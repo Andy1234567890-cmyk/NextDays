@@ -1,15 +1,15 @@
-"""Zimmer eines Objekts (property_rooms, 0246).
+"""Zimmer eines Objekts (property_rooms, 0246 · Zuschnitt 0251).
 
-Eigenes Modul, weil Zimmer eine eigene Entitaet sind: Typ, privat/gemeinschaftlich,
-Schlafmoeglichkeiten, eigene Ausstattung, en-suite-Kopplung. Der Service bindet
-sie ueber ``RoomsMixin`` ein.
+Eigenes Modul, weil Zimmer eine eigene Entitaet sind — aber eine schmale: Typ
+und Gruppe (privat/gemeinschaftlich), sonst nichts. Eine Zeile = ein Zimmer,
+die Oberflaeche zaehlt sie nur (wie Lodgify, live abgeglichen 01.08.2026).
+Der Service bindet das Modul ueber ``RoomsMixin`` ein.
 
-ABGRENZUNG ZUM AGGREGATOR: Channex nimmt Zimmerstruktur nicht an — beds,
-bed_configuration, bedrooms und bathrooms am Room-Type werden verworfen
-(live gemessen, docs/CHANNEX-FELDER.md). Diese Daten sind lokal (eigene Strecke
-+ myBestDays). Nur die Zimmer-Ausstattung geht hinaus, und zwar als
-Vereinigungsmenge ueber alle Zimmer in properties.room_amenities — der
-Aggregator kennt je Objekt genau EINEN Room-Type.
+ABGRENZUNG: Betten und Ausstattung haengen am OBJEKT
+(properties.type_attributes.beds bzw. properties.room_amenities), nicht am
+Zimmer — 0251 hat 0247/0248 dahin zurueckgebaut. An Channex geht von der
+Zimmerstruktur ohnehin nichts: beds, bed_configuration, bedrooms und bathrooms
+am Room-Type werden verworfen (live gemessen, docs/CHANNEX-FELDER.md).
 """
 from __future__ import annotations
 
@@ -20,8 +20,6 @@ from src.core.security import AuthContext
 
 from .errors import PropertyError
 from .schemas import (
-    BETT_RAUMTYPEN,
-    ENSUITE_RAUMTYPEN,
     PropertyRoom,
     PropertyRoomCreate,
     PropertyRoomListResponse,
@@ -38,18 +36,12 @@ log = get_logger("nextdays.properties.rooms")
 
 def room_row(r: dict) -> dict:
     """property_rooms-Zeile in das PropertyRoom-Schema ueberfuehren."""
-    kopplung = r.get("en_suite_schlafzimmer_id")
     return {
         "id": str(r["id"]),
         "property_id": str(r["property_id"]),
         "raum_typ": r["raum_typ"],
         "privat": bool(r.get("privat", True)),
-        "name": r.get("name") or None,
         "position": int(r.get("position") or 0),
-        "betten": r.get("betten") or {},
-        "ausstattung": r.get("ausstattung") or [],
-        "en_suite": bool(r.get("en_suite")),
-        "en_suite_schlafzimmer_id": str(kopplung) if kopplung else None,
         "created_at": str(r["created_at"]) if r.get("created_at") else None,
         "updated_at": str(r["updated_at"]) if r.get("updated_at") else None,
     }
@@ -93,68 +85,12 @@ class RoomsMixin:
         items = [PropertyRoom(**room_row(r)) for r in rows]
         return PropertyRoomListResponse(items=items, total=len(items))
 
-    def _validate_room(
-        self,
-        property_id: str,
-        *,
-        raum_typ: str,
-        betten: dict[str, int],
-        en_suite: bool,
-        kopplung: str | None,
-        eigene_id: str | None = None,
-    ) -> None:
-        """Fachliche Regeln, die die DB nicht erzwingt — jeweils mit klarer 422
-        statt eines stillen Ersatzwerts (Wurzel 4/5)."""
-        if betten and raum_typ not in BETT_RAUMTYPEN:
-            raise PropertyError(
-                "Schlafmöglichkeiten gibt es nur in Schlafzimmer, Wohnzimmer "
-                "und Schlafbereich.",
-                status_code=422,
-            )
-        if en_suite and raum_typ not in ENSUITE_RAUMTYPEN:
-            raise PropertyError(
-                "„En suite“ gilt nur für Badezimmer und WC.", status_code=422
-            )
-        if kopplung and not en_suite:
-            raise PropertyError(
-                "Eine Zuordnung zum Schlafzimmer setzt „en suite“ voraus.",
-                status_code=422,
-            )
-        if not kopplung:
-            return
-        if kopplung == eigene_id:
-            raise PropertyError(
-                "Ein Zimmer kann nicht an sich selbst grenzen.", status_code=422
-            )
-        # Das gekoppelte Schlafzimmer muss zum SELBEN Objekt gehören — sonst
-        # zeigte ein Bad auf ein Schlafzimmer eines fremden Objekts.
-        ziel = (
-            self._db.table("property_rooms")
-            .select("id, raum_typ")
-            .eq("id", kopplung)
-            .eq("property_id", property_id)
-            .execute()
-        ).data
-        if not ziel:
-            raise PropertyError("Schlafzimmer nicht gefunden.", status_code=404)
-        if ziel[0]["raum_typ"] != "schlafzimmer":
-            raise PropertyError(
-                "„En suite“ verweist auf ein Schlafzimmer.", status_code=422
-            )
-
     def add_room(
         self, ctx: AuthContext, property_id: str, req: PropertyRoomCreate
     ) -> PropertyRoom:
         """Zimmer anlegen, ans Ende der Reihenfolge."""
         tenant_id = self._require_tenant(ctx)
         self.get(ctx, property_id)
-        self._validate_room(
-            property_id,
-            raum_typ=req.raum_typ,
-            betten=req.betten,
-            en_suite=req.en_suite,
-            kopplung=req.en_suite_schlafzimmer_id,
-        )
         vorhanden = (
             self._db.table("property_rooms")
             .select("position")
@@ -172,12 +108,7 @@ class RoomsMixin:
                     "property_id": property_id,
                     "raum_typ": req.raum_typ,
                     "privat": req.privat,
-                    "name": req.name,
                     "position": naechste,
-                    "betten": req.betten,
-                    "ausstattung": req.ausstattung,
-                    "en_suite": req.en_suite,
-                    "en_suite_schlafzimmer_id": req.en_suite_schlafzimmer_id,
                 }
             )
             .execute()
@@ -198,38 +129,9 @@ class RoomsMixin:
         """Zimmer ändern. Nicht gesetzte Felder bleiben, wie sie sind."""
         tenant_id = self._require_tenant(ctx)
         self.get(ctx, property_id)
-        vorhanden = (
-            self._db.table("property_rooms")
-            .select("*")
-            .eq("id", room_id)
-            .eq("property_id", property_id)
-            .execute()
-        ).data
-        if not vorhanden:
-            raise PropertyError("Zimmer nicht gefunden.", status_code=404)
-        alt = vorhanden[0]
-
         daten = req.model_dump(exclude_unset=True)
-        raum_typ = daten.get("raum_typ", alt["raum_typ"])
-        betten = daten.get("betten", alt.get("betten") or {})
-        en_suite = daten.get("en_suite", bool(alt.get("en_suite")))
-        kopplung = daten.get(
-            "en_suite_schlafzimmer_id", alt.get("en_suite_schlafzimmer_id")
-        )
-        kopplung = str(kopplung) if kopplung else None
-        self._validate_room(
-            property_id,
-            raum_typ=raum_typ,
-            betten=betten,
-            en_suite=en_suite,
-            kopplung=kopplung,
-            eigene_id=room_id,
-        )
-        # Gegenzustand (Wurzel 1): wird „en suite" abgewählt, muss die Kopplung
-        # mitgehen — sonst bliebe ein Verweis stehen, den niemand mehr sieht.
-        if not en_suite:
-            daten["en_suite_schlafzimmer_id"] = None
-
+        if not daten:
+            raise PropertyError("Keine Änderung angegeben.", status_code=422)
         res = (
             self._db.table("property_rooms")
             .update(daten)
@@ -243,9 +145,7 @@ class RoomsMixin:
         return PropertyRoom(**room_row(res.data[0]))
 
     def delete_room(self, ctx: AuthContext, property_id: str, room_id: str) -> None:
-        """Zimmer löschen. Verweist ein Bad per „en suite" darauf, wird die
-        Kopplung mitgelöst (Wurzel 1) — die DB setzt sie über ON DELETE SET NULL
-        auf NULL, das würde aber ein `en_suite = true` ohne Ziel zurücklassen."""
+        """Zimmer löschen."""
         tenant_id = self._require_tenant(ctx)
         self.get(ctx, property_id)
         vorhanden = (
@@ -257,11 +157,6 @@ class RoomsMixin:
         ).data
         if not vorhanden:
             raise PropertyError("Zimmer nicht gefunden.", status_code=404)
-        self._db.table("property_rooms").update(
-            {"en_suite_schlafzimmer_id": None}
-        ).eq("property_id", property_id).eq(
-            "en_suite_schlafzimmer_id", room_id
-        ).execute()
         self._db.table("property_rooms").delete().eq("id", room_id).eq(
             "property_id", property_id
         ).execute()
@@ -292,16 +187,11 @@ class RoomsMixin:
             ).eq("property_id", property_id).execute()
         return self.list_rooms(ctx, property_id)
 
-    # Kein Spiegel nach properties.room_amenities: die Spalte gehoert dem
-    # objektweiten Ausstattungs-Editor. Zwei Schreibpfade auf ein Feld heisst,
-    # dass einer den anderen still ueberschreibt. Die Vereinigung aus
-    # objektweiter und je-Zimmer-Ausstattung bildet der Channel-Manager erst
-    # beim Senden (content_sync._zimmer_ausstattung) — Channex kennt je Objekt
-    # nur EINEN Room-Type.
-
     def _content_sync_anstossen(self, tenant_id: str, property_id: str) -> None:
-        """Zimmer-Aenderung an die Portale nachziehen (nur die Ausstattung geht
-        dort hinaus). Best-effort: ein Fehler darf das Speichern nicht kippen."""
+        """Zimmer-Aenderung an die Portale nachziehen. Von der Zimmerstruktur
+        nimmt Channex nichts an — der Anstoss haelt lediglich den uebrigen
+        Objekt-Content aktuell. Best-effort: ein Fehler darf das Speichern nicht
+        kippen."""
         try:
             row = (
                 self._db.table("properties")

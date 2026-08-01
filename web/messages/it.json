@@ -741,12 +741,7 @@
     "authorPlaceholder": "Autore / fotografo (facoltativo)",
     "errorDialogTitle": "Alcune foto non sono state caricate",
     "errorDialogHint": "Correggi i file e caricali di nuovo.",
-    "errorDialogClose": "Chiudi",
-    "ansichtAlle": "Alle Fotos",
-    "ansichtNachZimmern": "Nach Zimmern",
-    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
-    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
-    "zimmerZuordnungLoesen": "Zuordnung aufheben"
+    "errorDialogClose": "Chiudi"
   },
   "owners": {
     "title": "Proprietari",
@@ -4201,21 +4196,8 @@
       "noSearchResults": "Nessun risultato.",
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerZurueck": "Zurück",
       "zimmerFertig": "Fertig",
-      "zimmerNameLabel": "Name (optional)",
-      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
-      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
       "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
-      "zimmerEnSuite": "En suite",
-      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
-      "zimmerEnSuiteZiel": "Gehört zu",
-      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
-      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
-      "zimmerLoeschen": "Zimmer löschen",
-      "zimmerAusstattung": "Ausstattung dieses Zimmers",
-      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
-      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -4226,9 +4208,10 @@
       "zimmerSuffixGemeinschaftlich": "condiviso",
       "zimmerErhoehen": "Aggiungi {room}",
       "zimmerVerringern": "Rimuovi {room}",
-      "zimmerDetailsOeffnen": "Modifica {room}",
       "zimmerAnzahl": "Numero di {room}",
-      "zimmerNummeriert": "{room} {index}"
+      "infoEditorTitle": "Dettagli dell'alloggio",
+      "infoEditorSubtitle": "Indica il tipo di alloggio, la dimensione e la capacità di ospiti.",
+      "statusFieldHint": "«Attivo» significa che l'alloggio è in vendita: sui portali, su myBestDays e per le prenotazioni dirette. «Bozza» non è visibile da nessuna parte."
     },
     "availabilityForm": {
       "title": "Disponibilità",
