@@ -71,8 +71,17 @@ STUCK_AFTER_SECONDS = 300
 # Doppelausführung/Doppel-Push an Channex. Mit Heartbeat trifft der Reaper nur
 # noch tote Worker (5 verpasste Heartbeats).
 JOB_HEARTBEAT_SECONDS = 60
-# Zeit-Tick: Reconcile aller Tenants einreihen (ersetzt den externen 15-min-Cron).
-RECONCILE_TICK_SECONDS = 15 * 60
+# Zeit-Tick: Reconcile aller Tenants einreihen. EINMAL TÄGLICH — der Reconcile
+# spiegelt nur Existenz/Content der Channex-Properties und pusht Preis-Differenzen;
+# er ist kein Live-Pfad. Vorher lief er alle 15 min und erzeugte zusammen mit dem
+# (entfernten) ARI-Rücklesen dauerhaft Channex-Requests, was Channex ausdrücklich
+# beanstandet hat. Laufende Änderungen gehen als Push raus, Buchungen kommen per
+# Webhook + Feed-Backstop (BOOKINGS_TICK_SECONDS).
+RECONCILE_TICK_SECONDS = 24 * 60 * 60
+# Zeit-Tick: offene AUSGEHENDE Pushes (ari_outbox / restriction_outbox) nachziehen.
+# Getrennt vom Reconcile-Tick, weil ein gescheiterter Push schnell heilen muss.
+# Erzeugt nur dann Channex-Requests, wenn offene Zeilen existieren.
+OUTBOX_TICK_SECONDS = 5 * 60
 # Zeit-Tick: externe iCal-Kalender syncen (alle 2 Stunden).
 # Feeds, deren letzter Sync älter ist, werden nachgezogen.
 ICAL_TICK_SECONDS = 30 * 60          # alle 30 min prüfen, ...
@@ -389,6 +398,7 @@ class Worker:
         self._inflight: set[asyncio.Task] = set()
         self._worker_id = f"{socket.gethostname()}:{os.getpid()}"
         self._last_reconcile_tick = 0.0
+        self._last_outbox_tick = 0.0
         self._last_ical_tick = 0.0
         self._last_bookings_tick = 0.0
         self._last_balance_tick = 0.0
@@ -591,7 +601,7 @@ class Worker:
             log.warning("reap_failed", error=str(exc)[:200])
 
     async def _reconcile_tick(self, loop_time: float) -> None:
-        """Alle 15 min je Tenant einen reconcile_tenant-Job einreihen. Coalescing
+        """Einmal täglich je Tenant einen reconcile_tenant-Job einreihen. Coalescing
         über dedup_key (Zeit-Bucket) → mehrere Worker enqueuen nur einmal."""
         if loop_time - self._last_reconcile_tick < RECONCILE_TICK_SECONDS:
             return
@@ -600,6 +610,16 @@ class Worker:
             await asyncio.to_thread(self._enqueue_reconcile_all)
         except Exception as exc:  # noqa: BLE001
             log.warning("reconcile_tick_failed", error=str(exc)[:200])
+
+    async def _outbox_tick(self, loop_time: float) -> None:
+        """Alle 5 min die ausgehenden Push-Outboxen nachziehen (Retry-Pfad)."""
+        if loop_time - self._last_outbox_tick < OUTBOX_TICK_SECONDS:
+            return
+        self._last_outbox_tick = loop_time
+        try:
+            await asyncio.to_thread(self._enqueue_outbox_all)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("outbox_tick_failed", error=str(exc)[:200])
 
     async def _ical_tick(self, loop_time: float) -> None:
         """Alle 30 min prüfen und fällige externe iCal-Feeds (> 2h alt) syncen.
@@ -844,9 +864,14 @@ class Worker:
                 payload={"tenant_id": tid},
                 dedup_key=f"reconcile_tick:{tid}:{bucket}",
             )
-        # Ausgehende ARI-Pushes (ari_outbox) tenant-übergreifend nachziehen — den
-        # per-Tenant-Jobs fehlt dieser Schritt. Einmal je Tick (Bucket-Coalescing),
-        # entspricht dem finalen process_ari_outbox() des alten Host-Crons.
+    def _enqueue_outbox_all(self) -> None:
+        """Offene AUSGEHENDE Pushes nachziehen (Availability + Restriktionen).
+        Bewusst ein EIGENER, häufiger Tick und nicht mehr am Reconcile-Tick: der
+        Reconcile läuft nur noch täglich, ein gescheiterter Preis-/Stop-Sell-Push
+        darf aber nicht einen Tag lang liegen bleiben. Beide Handler senden nur,
+        wenn tatsächlich offene Zeilen existieren — ohne Änderungen entstehen
+        null Channex-Requests."""
+        bucket = int(time.time() // OUTBOX_TICK_SECONDS)
         enqueue(
             self._db, "process_ari_outbox",
             payload={}, dedup_key=f"ari_outbox_tick:{bucket}",
@@ -854,13 +879,15 @@ class Worker:
         # Ausgehende Restriktions-Pushes (Stop-Sell/Rate/Min-/Max-Stay/CTA-CTD)
         # tenant-übergreifend nachziehen — der dauerhafte Backstop, den es vor 0115
         # nur für Availability gab. Ein gescheiterter Verkaufsstopp/Preis heilt so
-        # selbst (auch nach nachträglichem Rate-Plan-Import). Einmal je Tick.
+        # selbst (auch nach nachträglichem Rate-Plan-Import).
         enqueue(
             self._db, "process_restriction_outbox",
             payload={}, dedup_key=f"ari_restriction_outbox_tick:{bucket}",
         )
         # Nächtlicher Full-Sync-Push (dedup je Property+Tag; greift nur im
-        # UTC-Stundenfenster FULL_SYNC_HOUR_UTC).
+        # UTC-Stundenfenster FULL_SYNC_HOUR_UTC). Hängt bewusst an DIESEM Tick:
+        # der Reconcile-Tick läuft nur noch täglich und träfe das Stundenfenster
+        # sonst fast nie — der von Channex verlangte tägliche Voll-Push fiele aus.
         self._enqueue_full_sync_nightly()
 
     async def run(self) -> None:
@@ -870,6 +897,7 @@ class Worker:
             loop_time = asyncio.get_running_loop().time()
             await self._reap_stuck()
             await self._reconcile_tick(loop_time)
+            await self._outbox_tick(loop_time)
             await self._ical_tick(loop_time)
             await self._bookings_tick(loop_time)
             await self._balance_tick(loop_time)

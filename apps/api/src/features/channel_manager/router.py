@@ -903,3 +903,20 @@ async def internal_reconcile(
         return service.reconcile_all_tenants()
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/internal/seed-ari-shadow", include_in_schema=False)
+async def internal_seed_ari_shadow(
+    service: ChannelManagerServiceDep,
+    x_internal_cron_secret: Annotated[str | None, Header()] = None,
+) -> dict:
+    """EINMALIGER Umstellungsschritt zu 0246: den lokalen ARI-Schatten aus dem
+    Soll befüllen, ohne irgendetwas an Channex zu senden. Danach pusht der
+    Abgleich nur noch echte Änderungen und liest die ARI nie wieder zurück.
+    Ohne diesen Lauf gälte beim ersten Abgleich jede Preiszeile als neu.
+    Idempotent: erneutes Aufrufen überschreibt den Schatten mit demselben Soll."""
+    require_internal_cron_secret(x_internal_cron_secret)
+    try:
+        return service.seed_ari_shadow_all_tenants()
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

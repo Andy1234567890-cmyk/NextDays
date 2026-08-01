@@ -194,6 +194,7 @@ class _ReconcileQuery:
         self._not_next = False
         self._op = None
         self._payload = None
+        self._range: tuple[int, int] | None = None
 
     # -- Filter --
     def select(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
@@ -201,6 +202,18 @@ class _ReconcileQuery:
 
     def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
+
+    def range(self, start, end):  # noqa: ANN001, ANN201
+        # PostgREST-Seitenfenster (inklusive Grenzen) — der Schatten-Reader
+        # paginiert damit über die Zeilengrenze hinaus.
+        self._range = (start, end)
+        return self
+
+    def _page(self, rows):  # noqa: ANN001, ANN201
+        if self._range is None:
+            return rows
+        start, end = self._range
+        return rows[start : end + 1]
 
     def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
@@ -321,7 +334,7 @@ class _ReconcileQuery:
             new.setdefault("id", self._db._next_id())
             self._store.append(new)
             return _Result([new])
-        return _Result(rows)
+        return _Result(self._page(rows))
 
 
 class _Result:
@@ -616,6 +629,9 @@ class _ImportChannex:
         # Je update_restrictions-Aufruf eine Liste — belegt die Zert-Forderung
         # „1 API call" (die flache Liste allein zeigt Bündelung nicht).
         self.restriction_calls: list[list[dict]] = []
+        # Zählt LESEZUGRIFFE auf die ARI. Channex hat das Zurücklesen untersagt —
+        # der Preis-Abgleich muss ohne einen einzigen davon auskommen.
+        self.restriction_reads = 0
         self.activated: list[str] = []
         self.deactivated: list[str] = []
         # Content-Sync-Aufzeichnung (create_*-Calls).
@@ -685,6 +701,7 @@ class _ImportChannex:
         return {"data": self._availability}
 
     def get_restrictions(self, property_id, *, date_from, date_to, restrictions):  # noqa: ANN001, ANN201
+        self.restriction_reads += 1
         return {"data": self._restrictions}
 
     def get_room_types(self, property_id):  # noqa: ANN001, ANN201
@@ -750,6 +767,7 @@ _CONFLICT_KEYS = {
     "channex_tax_map": ("property_id", "local_tax_id"),
     "guest_external_ids": ("tenant_id", "channel", "external_id"),
     "tenant_pinned_channel": ("tenant_id", "portal_code"),
+    "channex_ari_shadow": ("tenant_id", "rate_plan_id", "date"),
 }
 
 
@@ -784,6 +802,7 @@ class _ImportDB:
             "rate_plan_restriction_overrides": [],
             "external_calendar": [],
             "tenant_pinned_channel": [],
+            "channex_ari_shadow": [],
         }
         self._seq = 0
 
@@ -815,18 +834,28 @@ class _ImportQuery(_ReconcileQuery):
             return _Result(rows)
         if self._op == "upsert":
             keys = _CONFLICT_KEYS.get(self._name, ("id",))
-            match = [
-                r for r in self._store
-                if all(r.get(k) == self._payload.get(k) for k in keys)
-            ]
-            if match:
-                match[0].update(self._payload)
-                return _Result([match[0]])
-            new = dict(self._payload)
-            new.setdefault("id", self._db.next_id())
-            self._store.append(new)
-            return _Result([new])
-        return _Result(rows)
+            # PostgREST akzeptiert ein Objekt ODER eine Liste (Batch-Upsert).
+            payloads = (
+                self._payload
+                if isinstance(self._payload, list)
+                else [self._payload]
+            )
+            out = []
+            for payload in payloads:
+                match = [
+                    r for r in self._store
+                    if all(r.get(k) == payload.get(k) for k in keys)
+                ]
+                if match:
+                    match[0].update(payload)
+                    out.append(match[0])
+                    continue
+                new = dict(payload)
+                new.setdefault("id", self._db.next_id())
+                self._store.append(new)
+                out.append(new)
+            return _Result(out)
+        return _Result(self._page(rows))
 
 
 def _import_svc(channex, db):  # noqa: ANN001, ANN201
@@ -1755,9 +1784,17 @@ def _future_iso(days_ahead=30):  # noqa: ANN001, ANN201
     return (date.today() + timedelta(days=days_ahead)).isoformat()
 
 
+def _seed_shadow(db, rate_plan_id, day, *, rate_cents=None, min_stay=None):  # noqa: ANN001, ANN201
+    """Eine Zeile im lokalen Schatten (= zuletzt erfolgreich gepusht)."""
+    db.tables["channex_ari_shadow"].append({
+        "tenant_id": "t1", "property_id": "p1", "rate_plan_id": rate_plan_id,
+        "date": day, "rate_cents": rate_cents, "min_stay": min_stay,
+    })
+
+
 def test_reconcile_pushes_drift_and_skips_in_sync() -> None:
-    # Zwei Datumspreise in der DB. Channex hat einen korrekt (kein Push), beim
-    # anderen weicht die Rate ab (Drift → genau dieser eine wird gepusht).
+    # Zwei Datumspreise in der DB. Einer ist bereits so gepusht (kein erneuter
+    # Push), beim anderen weicht der gepushte Stand ab → nur dieser geht raus.
     db = _ImportDB()
     _seed_hotel_mapping(db)
     d1, d2 = _future_iso(10), _future_iso(11)
@@ -1765,10 +1802,10 @@ def test_reconcile_pushes_drift_and_skips_in_sync() -> None:
         {"rate_plan_id": "rp-a", "date": d1, "price": 241.00},
         {"rate_plan_id": "rp-a", "date": d2, "price": 241.00},
     ])
-    # Channex-Ist: d1 stimmt (241.00), d2 falsch (200.00) → nur d2 ist Drift.
-    channex = _ImportChannex(restrictions={
-        "cx-rp-a": {d1: {"rate": "241.00"}, d2: {"rate": "200.00"}},
-    })
+    # Schatten (unser Ist): d1 stimmt (24100), d2 alt (20000) → nur d2 ist Drift.
+    _seed_shadow(db, "rp-a", d1, rate_cents=24100)
+    _seed_shadow(db, "rp-a", d2, rate_cents=20000)
+    channex = _ImportChannex()
     res = _import_svc(channex, db).reconcile_rate_plan_prices("t1", "p1")
     assert res["checked"] == 2 and res["drift"] == 1
     assert len(channex.restrictions_pushed) == 1
@@ -1776,23 +1813,88 @@ def test_reconcile_pushes_drift_and_skips_in_sync() -> None:
     assert v["rate_plan_id"] == "cx-rp-a" and v["rate"] == 24100
     # gepusht wurde GENAU der driftende Tag d2.
     assert v["date"] == d2
+    # Kein einziger Lesezugriff auf die Channex-ARI (Channex-Auflage).
+    assert channex.restriction_reads == 0
 
 
-def test_reconcile_pushes_when_channex_missing_the_date() -> None:
-    # Preis in DB, aber Channex kennt den Tag gar nicht (nie angekommen, z. B. der
-    # Alt-'superseded'-Fall) → Drift, wird nachgepusht.
+def test_reconcile_pushes_when_shadow_has_no_entry() -> None:
+    # Preis in der DB, aber nie erfolgreich gepusht (leerer Schatten, z. B. nach
+    # verlorenem Push) → Differenz, wird nachgepusht.
     db = _ImportDB()
     _seed_hotel_mapping(db)
     d = _future_iso(15)
     db.tables["rate_plan_price_overrides"].append(
         {"rate_plan_id": "rp-b", "date": d, "price": 111.00}
     )
-    channex = _ImportChannex(restrictions={"cx-rp-b": {}})  # Channex leer
+    channex = _ImportChannex()
     res = _import_svc(channex, db).reconcile_rate_plan_prices("t1", "p1")
     assert res["drift"] == 1
     assert len(channex.restrictions_pushed) == 1
     assert channex.restrictions_pushed[0]["rate"] == 11100
     assert channex.restrictions_pushed[0]["rate_plan_id"] == "cx-rp-b"
+    assert channex.restriction_reads == 0
+
+
+def test_shadow_written_after_push_and_second_run_is_silent() -> None:
+    # Nach erfolgreichem Push steht der Wert im Schatten → der zweite Lauf sendet
+    # NICHTS mehr. Das ist der Ersatz für das frühere Zurücklesen der ARI.
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    d = _future_iso(20)
+    db.tables["rate_plan_price_overrides"].append(
+        {"rate_plan_id": "rp-a", "date": d, "price": 99.00}
+    )
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    svc.reconcile_rate_plan_prices("t1", "p1")
+    assert len(channex.restrictions_pushed) == 1
+    shadow = [
+        r for r in db.tables["channex_ari_shadow"]
+        if r["rate_plan_id"] == "rp-a" and r["date"] == d
+    ]
+    assert shadow and shadow[0]["rate_cents"] == 9900
+    res = svc.reconcile_rate_plan_prices("t1", "p1")
+    assert res["drift"] == 0
+    assert len(channex.restrictions_pushed) == 1  # kein zweiter Push
+
+
+def test_seed_ari_shadow_fills_without_pushing() -> None:
+    # Umstellungsschritt zu 0246: der Schatten wird aus dem Soll befüllt, OHNE
+    # etwas zu senden — sonst ginge bei der Umstellung die ganze Preiskurve raus.
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    d = _future_iso(12)
+    db.tables["rate_plan_price_overrides"].append(
+        {"rate_plan_id": "rp-a", "date": d, "price": 150.00}
+    )
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    res = svc.seed_ari_shadow("t1", "p1")
+    assert res["rate_plans"] >= 1
+    assert channex.restrictions_pushed == []
+    assert channex.restriction_reads == 0
+    # Danach ist der Tag als gesendet vermerkt → der Abgleich schweigt.
+    assert svc.reconcile_rate_plan_prices("t1", "p1")["drift"] == 0
+    assert channex.restrictions_pushed == []
+
+
+def test_failed_push_leaves_shadow_untouched_and_retries() -> None:
+    # Schlägt der Push fehl, darf der Schatten NICHT fortgeschrieben werden —
+    # sonst gölte der Tag fälschlich als gesendet und würde nie wiederholt.
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    d = _future_iso(25)
+    db.tables["rate_plan_price_overrides"].append(
+        {"rate_plan_id": "rp-a", "date": d, "price": 77.00}
+    )
+    channex = _ImportChannex(fail_restrictions=True)
+    _import_svc(channex, db).reconcile_rate_plan_prices("t1", "p1")
+    assert db.tables["channex_ari_shadow"] == []
+    # Zweiter Lauf mit funktionierendem Channex holt den Tag nach.
+    channex_ok = _ImportChannex()
+    res = _import_svc(channex_ok, db).reconcile_rate_plan_prices("t1", "p1")
+    assert res["drift"] == 1
+    assert len(channex_ok.restrictions_pushed) == 1
 
 
 def test_full_sync_restriction_rows_carry_all_declared_restrictions() -> None:
@@ -2311,17 +2413,20 @@ def test_reconcile_pushes_continuous_base_price() -> None:
 
 
 def test_reconcile_noop_when_all_in_sync() -> None:
-    # DB und Channex identisch → kein Push (der teure Push wird vermieden).
+    # DB-Soll und zuletzt gepushter Stand identisch → kein Push und kein Read
+    # (der teure Push wird vermieden, Channex wird gar nicht angefasst).
     db = _ImportDB()
     _seed_hotel_mapping(db)
     d = _future_iso(20)
     db.tables["rate_plan_price_overrides"].append(
         {"rate_plan_id": "rp-a", "date": d, "price": 312.66}
     )
-    channex = _ImportChannex(restrictions={"cx-rp-a": {d: {"rate": "312.66"}}})
+    _seed_shadow(db, "rp-a", d, rate_cents=31266)
+    channex = _ImportChannex()
     res = _import_svc(channex, db).reconcile_rate_plan_prices("t1", "p1")
     assert res["drift"] == 0
     assert channex.restrictions_pushed == []
+    assert channex.restriction_reads == 0
 
 
 def test_push_restrictions_cta_ctd_sends_to_channex() -> None:
@@ -2868,11 +2973,14 @@ def test_room_type_occupancy_from_object_data() -> None:
     assert occ["default_occupancy"] == 4
     assert occ["occ_children"] == 2
     assert occ["occ_infants"] == 1
-    assert occ["count_of_rooms"] == 3
+    # count_of_rooms ist die Verkaufsobergrenze bei Channex (ein höherer
+    # availability-Push wird darauf gekappt) und bei „1 Objekt = 1 Einheit"
+    # immer 1 — auch wenn im Altbestand noch ein occupancy.rooms steht (0245).
+    assert occ["count_of_rooms"] == 1
 
 
 def test_room_type_occupancy_defaults_when_missing() -> None:
-    # Ohne occupancy-Block: Kinder/Kleinkinder 0, mind. 1 Zimmer, occ_adults ≥ 1.
+    # Ohne occupancy-Block: Kinder/Kleinkinder 0, count_of_rooms 1, occ_adults ≥ 1.
     occ = ChannelManagerService._room_type_occupancy({"max_guests": 1})
     assert occ == {
         "count_of_rooms": 1,

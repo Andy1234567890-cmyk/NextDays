@@ -1209,6 +1209,12 @@ class AriPushMixin:
                 self._channex.update_restrictions(chunk)
                 pushed += len(chunk)
             self._mark_restriction_outbox(outbox_id, "done")
+            # Erst NACH dem erfolgreichen Push den lokalen Ist-Spiegel
+            # fortschreiben — er ersetzt das Zurücklesen der ARI bei Channex.
+            self._write_ari_shadow(
+                tenant_id, property_id, segments,
+                [m["local_rate_plan_id"] for m in plans if m.get("local_rate_plan_id")],
+            )
             log.info(
                 "restriction_push_batch_done",
                 tenant_id=tenant_id,
@@ -1241,15 +1247,17 @@ class AriPushMixin:
     def reconcile_rate_plan_prices(
         self, tenant_id: str, property_id: str, horizon_days: int = 365
     ) -> dict[str, int]:
-        """Desired-State-Reconciler: gleicht die volle Soll-Preiskurve je Plan
+        """Push-only-Abgleich: vergleicht die volle Soll-Preiskurve je Plan
         (Resolver: Datumspreis > Overrides > Dynamic > Wochentag > Plan-Basis)
-        gegen den AUTORITATIVEN Channex-Zustand (get_restrictions = Ist) ab und
-        pusht NUR die Differenz — pro Rate-Plan.
+        gegen den LOKALEN Schatten des zuletzt gepushten Stands
+        (`channex_ari_shadow`) und pusht NUR die Differenz — pro Rate-Plan.
 
-        Selbstheilend gegen jede Ursache (verlorener Push, Channex-Ablehnung, Race,
-        Alt-'done (superseded)'-Zeilen): der Vergleich fragt nicht 'habe ich
-        gepusht?', sondern 'ist der Preis WIRKLICH bei Channex?'. No-op, wenn nicht
-        verbunden. Rückgabe {checked, drift, pushed_segments}."""
+        Channex wird dabei NICHT gelesen: wir sind die Quelle der Wahrheit, und
+        Channex hat das Zurücklesen der ARI ausdrücklich untersagt. Selbstheilend
+        bleibt es trotzdem: der Schatten wird erst NACH einem erfolgreichen Push
+        fortgeschrieben, ein fehlgeschlagener Push bleibt also Differenz und wird
+        beim nächsten Lauf erneut gesendet. No-op, wenn nicht verbunden.
+        Rückgabe {checked, drift, pushed_segments}."""
         result = {"checked": 0, "drift": 0, "pushed_segments": 0}
         if not self._channex.is_configured or self._db is None:
             return result
@@ -1259,16 +1267,11 @@ class AriPushMixin:
             if self._is_channex_managed(db, tenant_id, property_id)
             else []
         )
-        # channex_rate_plan_id → local_rate_plan_id (für den Ist-Vergleich).
-        channex_to_local = {
-            p["channex_rate_plan_id"]: p.get("local_rate_plan_id")
-            for p in plans
-            if p.get("local_rate_plan_id")
-        }
-        local_rate_plan_ids = list(channex_to_local.values())
+        local_rate_plan_ids = [
+            p["local_rate_plan_id"] for p in plans if p.get("local_rate_plan_id")
+        ]
         if not local_rate_plan_ids:
             return result
-        channex_property_id = plans[0]["channex_property_id"]
         today = date.today()
         horizon = today + timedelta(days=horizon_days)
 
@@ -1285,40 +1288,27 @@ class AriPushMixin:
             db, local_rate_plan_ids, today, horizon
         )
 
-        # IST: autoritativer Channex-Zustand (Rate als Dezimal-String, min_stay int).
-        try:
-            restr = self._channex.get_restrictions(
-                channex_property_id,
-                date_from=today.isoformat(),
-                date_to=horizon.isoformat(),
-                restrictions="rate,min_stay_arrival",
-            )
-        except ChannexError as exc:
-            # Channex nicht erreichbar → NICHTS annehmen/pushen (Wurzel 5).
-            log.warning(
-                "reconcile_rate_prices_readback_failed",
-                tenant_id=tenant_id, property_id=property_id, error=exc.message,
-            )
-            return result
-        actual_by_channex = restr.get("data") or {}
+        # IST: unser eigener Schatten des zuletzt GEPUSHTEN Stands — kein
+        # Channex-Read (siehe Docstring).
+        shadow = self._load_ari_shadow(
+            db, tenant_id, local_rate_plan_ids, today, horizon
+        )
 
         # Differenz je Rate-Plan sammeln und als rate-plan-genaue Segmente pushen.
         segments: list[dict[str, Any]] = []
-        for channex_rp, local_rp in channex_to_local.items():
-            have_days = actual_by_channex.get(channex_rp) or {}
+        for local_rp in local_rate_plan_ids:
+            have_days = shadow.get(local_rp) or {}
             want = desired.get(local_rp) or {}
             price_drift = {
                 iso: cents
                 for iso, cents in want.items()
-                if self._channex_rate_to_cents((have_days.get(iso) or {}).get("rate"))
-                != cents
+                if (have_days.get(iso) or {}).get("rate_cents") != cents
             }
             want_min = desired_min.get(local_rp) or {}
             min_drift = {
                 iso: ms
                 for iso, ms in want_min.items()
-                if self._to_int((have_days.get(iso) or {}).get("min_stay_arrival"))
-                != ms
+                if (have_days.get(iso) or {}).get("min_stay") != ms
             }
             checked = len(want) + len(want_min)
             drift = len(price_drift) + len(min_drift)
@@ -1386,6 +1376,149 @@ class AriPushMixin:
                 continue
             out.setdefault(str(rp), {})[str(iso)] = ms
         return out
+
+    # -- Lokaler Schatten des zuletzt gepushten ARI-Stands ---------------------
+    # Ersetzt das von Channex untersagte Zurücklesen der ARI: Ist = was WIR
+    # zuletzt erfolgreich gepusht haben.
+    _SHADOW_PAGE = 1000
+
+    def _load_ari_shadow(
+        self, db: Client, tenant_id: str,
+        local_rate_plan_ids: list[str], start: date, end: date,
+    ) -> dict[str, dict[str, dict[str, int | None]]]:
+        """{local_rate_plan_id: {iso: {rate_cents, min_stay}}} aus dem Schatten.
+        Seitenweise gelesen — ein Horizont über mehrere Pläne überschreitet die
+        PostgREST-Zeilengrenze, und eine abgeschnittene Seite hieße unnötige
+        Wiederholungs-Pushes. Fehlt die Tabelle (Umgebung vor 0246), leer: dann
+        gilt alles als Differenz und wird einmalig neu gepusht (kein Crash)."""
+        out: dict[str, dict[str, dict[str, int | None]]] = {}
+        offset = 0
+        while True:
+            try:
+                rows = (
+                    db.table("channex_ari_shadow")
+                    .select("rate_plan_id, date, rate_cents, min_stay")
+                    .eq("tenant_id", tenant_id)
+                    .in_("rate_plan_id", local_rate_plan_ids)
+                    .gte("date", start.isoformat())
+                    .lte("date", end.isoformat())
+                    .order("rate_plan_id")
+                    .order("date")
+                    .range(offset, offset + self._SHADOW_PAGE - 1)
+                    .execute()
+                ).data or []
+            except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = leerer Ist
+                log.warning("channex_ari_shadow_unavailable", error=str(exc)[:200])
+                return {}
+            for r in rows:
+                out.setdefault(str(r["rate_plan_id"]), {})[str(r["date"])] = {
+                    "rate_cents": self._to_int(r.get("rate_cents")),
+                    "min_stay": self._to_int(r.get("min_stay")),
+                }
+            if len(rows) < self._SHADOW_PAGE:
+                return out
+            offset += self._SHADOW_PAGE
+
+    def seed_ari_shadow(
+        self, tenant_id: str, property_id: str, horizon_days: int = 365
+    ) -> dict[str, int]:
+        """EINMALIGE Erstbefüllung des Schattens aus dem Soll — ohne zu pushen.
+
+        Nötig genau einmal bei der Einführung von 0246: bis dahin hielt der alte
+        Abgleich (mit Channex-Readback) den Kanal auf dem Soll-Stand, der Schatten
+        ist aber leer. Ohne diese Befüllung gälte beim ersten Lauf die komplette
+        Preiskurve als Differenz und würde am Stück neu gesendet — genau die
+        Request-Flut, die wir abstellen. Bewusst KEIN Automatismus im normalen
+        Lauf: ein neu verbundenes Objekt MUSS seine Preise initial senden.
+        Rückgabe {rate_plans, days}."""
+        result = {"rate_plans": 0, "days": 0}
+        if self._db is None:
+            return result
+        db = self._db
+        plans = (
+            self._resolve_channex_rate_plans(db, tenant_id, property_id)
+            if self._is_channex_managed(db, tenant_id, property_id)
+            else []
+        )
+        local_ids = [p["local_rate_plan_id"] for p in plans if p.get("local_rate_plan_id")]
+        if not local_ids:
+            return result
+        today = date.today()
+        horizon = today + timedelta(days=horizon_days)
+        desired = self._load_desired_rate_plan_prices(
+            db, property_id, local_ids, today, horizon
+        )
+        desired_min = self._load_desired_rate_plan_min_stays(
+            db, local_ids, today, horizon
+        )
+        for local_rp in local_ids:
+            prices = desired.get(local_rp) or {}
+            min_stays = desired_min.get(local_rp) or {}
+            segments: list[dict[str, Any]] = []
+            segments.extend(_merge_equal_value_days(prices, "rate_cents", local_rp))
+            segments.extend(_merge_equal_value_days(min_stays, "min_stay", local_rp))
+            if not segments:
+                continue
+            self._write_ari_shadow(tenant_id, property_id, segments, [local_rp])
+            result["rate_plans"] += 1
+            result["days"] += len(prices) + len(min_stays)
+        log.info(
+            "channex_ari_shadow_seeded",
+            tenant_id=tenant_id, property_id=property_id, **result,
+        )
+        return result
+
+    def _write_ari_shadow(
+        self, tenant_id: str, property_id: str, segments: list[dict[str, Any]],
+        rate_plan_ids: list[str],
+    ) -> None:
+        """Den soeben ERFOLGREICH gepushten Stand festschreiben. `segments` sind
+        dieselben Intervalle, die an Channex gingen; ein Segment ohne
+        `rate_plan_id` galt für alle Pläne des Objekts und wird entsprechend für
+        alle gespiegelt. Preis- und Min-Stay-Zeilen werden GETRENNT geschrieben,
+        damit ein reiner Min-Stay-Push den gespiegelten Preis nicht auf NULL
+        zurücksetzt. Best-effort: ein Schreibfehler darf den Push nicht kippen
+        (Wurzel 5) — der Tag gilt dann beim nächsten Lauf erneut als Differenz."""
+        if self._db is None or not segments or not rate_plan_ids:
+            return
+        rate_rows: list[dict[str, Any]] = []
+        min_rows: list[dict[str, Any]] = []
+        for seg in segments:
+            rate_cents = seg.get("rate_cents")
+            min_stay = seg.get("min_stay")
+            if rate_cents is None and min_stay is None:
+                continue
+            seg_plan = seg.get("rate_plan_id")
+            targets = [seg_plan] if seg_plan else rate_plan_ids
+            days = _iso_days(_as_iso(seg["date_from"]), _as_iso(seg["date_to"]))
+            for plan_id in targets:
+                if plan_id not in rate_plan_ids:
+                    continue
+                for iso in days:
+                    key = {
+                        "tenant_id": tenant_id,
+                        "property_id": property_id,
+                        "rate_plan_id": plan_id,
+                        "date": iso,
+                    }
+                    if rate_cents is not None:
+                        rate_rows.append({**key, "rate_cents": int(rate_cents)})
+                    if min_stay is not None:
+                        min_rows.append({**key, "min_stay": int(min_stay)})
+        for rows in (rate_rows, min_rows):
+            for i in range(0, len(rows), self._SHADOW_PAGE):
+                try:
+                    self._db.table("channex_ari_shadow").upsert(
+                        rows[i : i + self._SHADOW_PAGE],
+                        on_conflict="tenant_id,rate_plan_id,date",
+                    ).execute()
+                except Exception as exc:  # noqa: BLE001 — Spiegel nie den Push kippen
+                    log.warning(
+                        "channex_ari_shadow_write_failed",
+                        tenant_id=tenant_id, property_id=property_id,
+                        error=str(exc)[:200],
+                    )
+                    return
 
     def _write_rate_plan_sync_state(
         self, db: Client, rate_plan_id: str, drift_count: int

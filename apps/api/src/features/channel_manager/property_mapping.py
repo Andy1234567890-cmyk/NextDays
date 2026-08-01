@@ -32,30 +32,11 @@ class PropertyMappingMixin:
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
 
-        # Channex→DB-Abgleich NICHT inline im Request: der volle Tenant-Reconcile
-        # (Channex-Liste + Preis-Reconcile je Objekt inkl. Channex-Reads) lief
-        # früher bei JEDEM Seitenaufbau und nach jeder Server-Action erneut —
-        # sichtbare Request-Flut und er fraß das Channex-API-Budget der echten
-        # Pushes leer. Stattdessen koalesziert als Job einreihen (Dedup je
-        # 15-min-Fenster, wie der Worker-Tick); die Seite zeigt den DB-Stand,
+        # KEIN Channex→DB-Abgleich am Seitenaufruf. Früher wurde hier je Aufruf
+        # (und nach jeder Server-Action) ein Tenant-Reconcile eingereiht — das
+        # erzeugte Channex-Requests im Takt der Klicks. Der Abgleich läuft jetzt
+        # ausschließlich im Tages-Tick des Workers; die Seite zeigt den DB-Stand,
         # Änderungen kommen per Realtime nach.
-        try:
-            import time
-
-            from src.jobs.queue import enqueue
-
-            bucket = int(time.time() // 900)
-            enqueue(
-                db, "reconcile_tenant", tenant_id=tenant_id,
-                payload={"tenant_id": tenant_id},
-                dedup_key=f"reconcile_tick:{tenant_id}:{bucket}",
-            )
-        except Exception as exc:  # noqa: BLE001 — Einreihen kippt die Seite nie
-            log.warning(
-                "reconcile_enqueue_on_pageview_failed",
-                tenant_id=tenant_id, error=str(exc)[:200],
-            )
-
         res = (
             db.table("channex_property_map")
             .select("*")
@@ -378,8 +359,10 @@ class PropertyMappingMixin:
                 count=soft_deleted,
             )
 
-        # Desired-State-Abgleich der Rate-Plan-Datumspreise je noch aktivem Objekt:
-        # DB-Soll vs. autoritativer Channex-Ist → Differenz pushen (selbstheilend).
+        # Preis-Abgleich je noch aktivem Objekt: DB-Soll vs. lokaler Schatten des
+        # zuletzt Gepushten (channex_ari_shadow, 0246) → nur die Differenz pushen.
+        # Liest NICHT bei Channex (Push-only, siehe ari_push.reconcile_rate_plan_
+        # prices). Ohne Differenz entstehen hier null Channex-Requests.
         # Best-effort pro Objekt (ein Objekt-Fehler kippt nicht den Tenant-Reconcile).
         for m in active:
             if m["channex_property_id"] not in live_by_id:
@@ -453,6 +436,35 @@ class PropertyMappingMixin:
             tenant_id=tenant_id, count=len(orphan_ids),
         )
 
+    def seed_ari_shadow_all_tenants(self) -> dict[str, Any]:
+        """Den ARI-Schatten (0246) für alle gemappten Objekte einmalig aus dem
+        Soll befüllen — reiner DB-Vorgang, kein einziger Channex-Request.
+        Ein Objekt-Fehler bricht den Lauf nicht ab."""
+        totals: dict[str, Any] = {"properties": 0, "rate_plans": 0, "days": 0}
+        if self._db is None:
+            return totals
+        rows = (
+            self._db.table("channex_property_map")
+            .select("tenant_id, property_id")
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        for r in rows:
+            try:
+                res = self.seed_ari_shadow(r["tenant_id"], r["property_id"])
+            except Exception as exc:  # noqa: BLE001 — ein Objekt kippt den Lauf nicht
+                log.warning(
+                    "seed_ari_shadow_failed",
+                    tenant_id=r["tenant_id"], property_id=r["property_id"],
+                    error=str(exc)[:200],
+                )
+                continue
+            totals["properties"] += 1
+            totals["rate_plans"] += res["rate_plans"]
+            totals["days"] += res["days"]
+        log.info("seed_ari_shadow_all_done", **totals)
+        return totals
+
     def reconcile_all_tenants(self) -> dict[str, Any]:
         """Iteriert ALLE Tenants aus channex_group_map und spiegelt jeden einzeln.
         Ein Fehler pro Tenant bricht den Gesamtlauf nicht ab. Für den Cron."""
@@ -476,25 +488,13 @@ class PropertyMappingMixin:
                 totals["tenants"] += 1
                 for k in ("created", "updated", "soft_deleted", "skipped"):
                     totals[k] += res[k]
-                # ARI laufend nachziehen: Preise/Verfügbarkeit/stop_sell je aktiver
-                # Property dieses Tenants (idempotent; Fehler pro Property isoliert).
-                active = (
-                    self._db.table("channex_property_map")
-                    .select("channex_property_id")
-                    .eq("tenant_id", tid)
-                    .is_("deleted_at", "null")
-                    .execute()
-                ).data or []
-                for pm in active:
-                    try:
-                        self.import_ari_for_property(tid, pm["channex_property_id"])
-                    except Exception as exc:  # noqa: BLE001
-                        log.error(
-                            "reconcile_ari_failed",
-                            tenant_id=tid,
-                            channex_property_id=pm["channex_property_id"],
-                            error=str(exc),
-                        )
+                # KEIN periodischer ARI-Import mehr: import_ari_for_property las je
+                # Property die komplette Verfügbarkeit/Preiskurve aus Channex
+                # zurück. Channex hat genau das untersagt („push only changes …
+                # you are the source of truth"). Der Import läuft nur noch dort,
+                # wo er fachlich nötig ist: beim Verbinden/Re-Aktivieren eines
+                # Objekts (channels.py, oauth_channels.py). Laufende Änderungen
+                # kommen als Push von uns, Buchungen per Webhook/Revisions-Feed.
             except Exception as exc:  # noqa: BLE001 — ein Tenant darf nicht killen
                 totals["errors"].append(f"{tid}: {exc}")
                 log.error("reconcile_tenant_failed", tenant_id=tid, error=str(exc))
