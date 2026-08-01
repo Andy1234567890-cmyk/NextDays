@@ -21,7 +21,7 @@ jeweils dabei. **Legende:** 🔴 Launch-Blocker · 🟡 Kern-Lücke · 🟢 dana
 | PMS-Dashboard (apps/web) | 🟡 | Kern live; Buchhaltung/HR/Jobs/Marktplatz = Gerüst (29 Coming-Soon-Seiten) |
 | Plattform (Buchungskanal) | 🟢 | Such→Detail→Buchung→Stripe echt angebunden, schmal aber fertig |
 | Builder (White-Label) | 🟢 | Renderer fertig; Editor in apps/web/`/website` |
-| Mobile | 🟡 | Host/Owner/Mitarbeiter live (P1–P6 ✅); Gast-Erlebnis Attrappe (P7–P9 offen) |
+| Mobile | 🟡 | Zwei Apps seit ADR-0019: `mobile-nextdays` (Host/Owner/Mitarbeiter, live) und `mobile-bestdays` (Gast-Erlebnis Attrappe, P7–P9 offen) |
 | Marketing-Site | 🟡 | Landingpage fertig; Trial-Formular ohne Backend, keine Legal-Seiten |
 | DB-Security (RLS/Revokes) | 🔴 | **SB-1/SB-2/PG-1 offen** — Rollen-/Finanz-Bypass über PostgREST |
 | Prod-Umgebung | 🔴 | Kein echter Prod-Server; alles auf einem Staging-Host |
@@ -132,7 +132,7 @@ Nicht Go-Live-kritisch für den Kern; parallel oder Fast-Follow.
 - **🟢 Channex-Zert Test #10 abschließen** — Ref: `docs/plan-channex-cert-test10.md`.
 - **🟢 Payments Revolut** — bewusst zurückgestellt (Stripe primär, ADR-0011).
 - **🟢 CRM- / OCR-Slice** — heute reine Health-Stubs; OCR hängt am Meldeschein/
-  Check-in-Modul (Mobile `Checkin.tsx` bewusst Dummy).
+  Check-in-Modul (`mobile-bestdays/screens/Checkin.tsx` bewusst Dummy).
 - **🟢 Custom Dashboard (Drag&Drop/White-Label), HR/Jobs/Marktplatz-Bereiche** —
   Gerüst; nach MVP ausbauen. Ref: `docs/REQUIREMENTS-GAP.md`.
 - **🟢 Skalierung/Performance** — Pläne vorhanden (100 Betriebe / 100 Nutzer),

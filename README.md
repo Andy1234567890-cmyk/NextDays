@@ -26,8 +26,10 @@ NextDays kombiniert **zwei Geschäftsmodelle auf einem gemeinsamen Datenkern**:
 **Zwei Marken, ein Datenkern:** Die Supply-Seite (PMS, Channel Manager,
 Marketing-Seite: `web`, `apps/api`, `marketing`, `admin`, `builder`) heißt
 **myNextDays**. Die Demand-Seite — Marktplatz `plattform`, Gastgeber-Dashboard
-`gastgeber` und die App `mobile` — heißt **myBestDays**; ebenso der Kanal
-„Plattform" im PMS (`reservations.ota_name = 'myBestDays'`).
+`gastgeber` und die Marktplatz-App `mobile-bestdays` — heißt **myBestDays**;
+ebenso der Kanal „Plattform" im PMS (`reservations.ota_name = 'myBestDays'`).
+Nativ gibt es entsprechend zwei Apps: `mobile-bestdays` (Marktplatz, Gast) und
+`mobile-nextdays` (PMS, Betrieb) — siehe ADR-0019.
 
 myNextDays bedient dabei **zwei Betriebsarten** pro Mandant: klassische
 Ferienvermietung und Hotels (`tenants.accommodation_type`, Migration 0090) —
@@ -233,7 +235,6 @@ nextdays/
 │   └── migrations/         # 90 Migrationen (Kern + Marktplatz + RLS + Page-Builder), auf echter DB angewandt
 ├── apps/
 │   ├── web/                # Next.js — volles Vermieter-Dashboard inkl. visuellem Website-Editor (craft.js)
-│   ├── mobile/             # Expo / React Native — native Gäste- & Gastgeber-App
 │   ├── storybook/          # Design-System & Komponenten-Werkstatt (eigenes Package)
 │   │   ├── components/     # ui/ + pms/ — entstehen HIER (Designer)
 │   │   ├── stories/        # Stories (ui/ + pms/) + Eigentümer-Doku (MDX)

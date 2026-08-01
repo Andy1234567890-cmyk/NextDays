@@ -225,7 +225,8 @@ Erst wenn die Domains stehen. Betroffen sind die hartkodierten Fallback-URLs:
 
 - `marketing/lib/app-url.ts` — `LOGIN_URL_FALLBACK`
 - `plattform/components/plattform-nav.tsx`, `site-header.tsx`, `konto-button.tsx`
-- `mobile/lib/config.ts` — `apiUrl` (Kong-URL bleibt)
+- `mobile-bestdays/lib/config.ts` und `mobile-nextdays/lib/config.ts` — `apiUrl`
+  (Kong-URL bleibt; die Datei ist eine Schwesterdatei, beide gleich halten)
 - `web/components/einstellungen/calendar-sync.tsx` — `API_DOCS_URL`
 - `apps/api/src/core/tests/test_trusted_hosts.py` — Testkonstanten
 

@@ -111,15 +111,21 @@ jobs:
         working-directory: ${{ matrix.app }}
         run: bun run build
 
-  # Mobile hängt nicht am Wurzel-Workspace (React Native braucht sein eigenes,
-  # nicht gehobenes node_modules), nutzt aber denselben Paketmanager: bun
-  # mit eigenem mobile/bun.lock.
+  # Die beiden Mobile-Apps (ADR-0019) hängen nicht am Wurzel-Workspace (React
+  # Native braucht sein eigenes, nicht gehobenes node_modules — deshalb hat jede
+  # App ein eigenes bun.lock), nutzen aber denselben Paketmanager. Matrix statt
+  # zwei Jobs: der Job-NAME `mobile` bleibt, damit die needs-Kette des
+  # deploy-Jobs unverändert gilt.
   mobile:
-    name: Mobile (Typprüfung + Lint + Jest)
+    name: Mobile (${{ matrix.app }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [mobile-bestdays, mobile-nextdays]
     defaults:
       run:
-        working-directory: mobile
+        working-directory: ${{ matrix.app }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -145,6 +151,42 @@ jobs:
 
       - name: Tests (jest)
         run: bun run test
+
+  # Die beiden Apps teilen Code als bewusste KOPIE statt als Paket (ADR-0019,
+  # Stufe 1). Dieser Job ersetzt das Paket: er hält genau die Dateien zusammen,
+  # deren Divergenz echten Schaden anrichtet.
+  mobile-konsistenz:
+    name: Mobile (Konsistenz beider Apps)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Geteilte Logik identisch
+        # Divergenz hier erzeugt falsche Zahlen (currency), tote Realtime-Abos
+        # (realtime) oder eine App, die gegen ein anderes Backend spricht
+        # (config). UI (kit/patterns/Icon) steht bewusst NICHT auf der Liste:
+        # die darf divergieren (ADR-0016, „Mut zur Duplikation").
+        run: |
+          set -e
+          for f in lib/currency.ts lib/realtime.ts lib/config.ts \
+                   lib/config.secrets.example.ts lib/appwechsel.ts \
+                   theme/tokens.ts theme/ThemeProvider.tsx \
+                   components/Splash.tsx navigation/tab-style.tsx; do
+            diff -u "mobile-bestdays/$f" "mobile-nextdays/$f"
+          done
+
+      - name: Kernversionen identisch
+        # Zwei Lockfiles heißt: nichts hält react/react-native/supabase-js
+        # automatisch gleich. Drift ist die teuerste Fehlerklasse — ein Bug
+        # reproduziert sich dann nur in einer der beiden Apps.
+        run: |
+          set -e
+          for p in react react-native @supabase/supabase-js \
+                   @react-navigation/native react-native-keychain; do
+            a=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-bestdays/package.json)
+            b=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-nextdays/package.json)
+            [ "$a" = "$b" ] || { echo "$p: $a (bestdays) != $b (nextdays)"; exit 1; }
+          done
 
   # ────────────────────────────────────────────────────────────────────────
   # JEDE Coolify-App dieses Repos wird hier so gebaut/validiert, wie Coolify es
@@ -268,7 +310,7 @@ jobs:
   # ────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Coolify
-    needs: [api, packages, frontends, mobile, images]
+    needs: [api, packages, frontends, mobile, mobile-konsistenz, images]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

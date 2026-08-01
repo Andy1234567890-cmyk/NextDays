@@ -80,7 +80,7 @@ NextDays/  (→ „My Next")
 ├── apps/
 │   ├── api/            (bestehend — NextDays-PMS-Backend, FastAPI)
 │   ├── web/            (bestehend — Next 15, PMS-Dashboard)
-│   ├── mobile/         (bestehend — React Native)
+│   ├── mobile-bestdays/ · mobile-nextdays/   (bestehend — React Native, 2 Apps)
 │   ├── storybook/      (bestehend)
 │   ├── buchhaltung/    ← NEU: @taskilo/app (Next 16), nur Buchhaltungs-Routen
 │   └── buchhaltung-api/← NEU: Taskilo-Backend, nur Finanz-Slices

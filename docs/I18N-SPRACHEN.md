@@ -6,7 +6,7 @@
 |---|---|---|
 | `gastgeber/` | **45** (weltweit) | Schnittmenge Airbnb ∩ Booking.com, belegt Juli 2026 |
 | `web/` | 24 (EU-Amtssprachen) | EU-Fokus, älterer Stand |
-| `plattform/`, `builder/`, `admin/`, `mobile/` | — | noch nicht auf next-intl |
+| `plattform/`, `builder/`, `admin/`, `mobile-bestdays/`, `mobile-nextdays/` | — | noch nicht auf next-intl |
 
 Die Listen sind **bewusst verschieden**. `web/` ist auf die EU ausgerichtet,
 `gastgeber/` auf den weltweiten Verkauf. Wer `gastgeber/i18n/locales.ts` ändert,

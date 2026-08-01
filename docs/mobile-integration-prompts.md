@@ -1,5 +1,10 @@
 # All-in-One-App — Prompts für Claude Code (P1–P9)
 
+> **ÜBERHOLT (31.07.2026).** Alle Pfadangaben `mobile/...` beziehen sich auf die
+> frühere All-in-One-App. Sie ist seit `docs/decisions/0019-zwei-mobile-apps.md`
+> in `mobile-bestdays` (Gast) und `mobile-nextdays` (Betrieb) aufgeteilt. Dieses
+> Dokument bleibt als Aufzeichnung der Arbeitspakete stehen.
+
 > Nutzung: Jeden Prompt EINZELN in einer frischen Claude-Code-Session im
 > Repo-Root ausführen. Erst wenn die Abnahmekriterien erfüllt sind und Andy
 > freigegeben hat, den nächsten Prompt starten. Nicht committen ohne Ansage.

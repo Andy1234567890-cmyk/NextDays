@@ -83,7 +83,8 @@ weitergebaut wird.
 - **Backend:** `apps/api` — FastAPI, Vertical-Slice (`features/<slice>/…`),
   Multi-Tenant, Postgres + RLS. Deploy: Coolify `nextdays-api` + `nextdays-worker`.
 - **Frontends:** `plattform/` (Gast-Marktplatz), `marketing/`, `builder/`
-  (White-Label), `mobile/` (React Native), `gastgeber/` (neu, Gastgeber-Dashboard)
+  (White-Label), `mobile-bestdays/` + `mobile-nextdays/` (React Native, seit
+ADR-0019 zwei Apps), `gastgeber/` (neu, Gastgeber-Dashboard)
   — auf Top-Level. `apps/web` (PMS-Dashboard) + `apps/storybook` — noch unter `apps/`.
 - **Kein Workspace-Tooling** (kein Turborepo/Nx/pnpm-workspaces). `packages/` leer.
 - **Code-Duplikation vorhanden:** `formatCurrency`, `laender.ts`, API-Client-Muster

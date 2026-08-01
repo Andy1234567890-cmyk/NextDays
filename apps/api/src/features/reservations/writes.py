@@ -143,9 +143,17 @@ class WritesMixin(ReservationsBase):
             req.property_id, req.check_in, req.check_out, total_guests,
             req.channel.value, rate_plan_id=rate_plan_id,
         )
-        total_amount = req.total_amount if req.total_amount > 0 else quote.total
+        # Eigentümer-Aufenthalt (0241): kostenlos, PUNKT. Ein mitgeschickter
+        # Betrag wird verworfen, nicht übernommen — sonst stünde am Ende doch
+        # ein Preis an einem Aufenthalt, der keiner sein darf. Der CHECK in der
+        # Datenbank ist der zweite Riegel (fail-closed, Wurzel 5).
+        total_amount = (
+            0.0
+            if req.is_owner_stay
+            else (req.total_amount if req.total_amount > 0 else quote.total)
+        )
         currency = quote.currency
-        quote_items = [
+        quote_items = [] if req.is_owner_stay else [
             # kind klassifiziert die Zeile für die spätere Rechnungserstellung
             # (Booking→Invoice: 'tax' = Abgabe 0 % USt, sonst Übernachtungssatz).
             # tax_rate = zeilen-eigener Satz-Snapshot (Gebühr mit eigener USt).
@@ -175,6 +183,10 @@ class WritesMixin(ReservationsBase):
             "check_out": req.check_out.isoformat(),
             "status": req.status.value,
             "total_amount": total_amount,
+            # Eigentümer-Aufenthalt (0241): sperrt den Kalender wie jede Buchung
+            # (derselbe atomare RPC-Pfad, derselbe Channex-Push), zählt aber
+            # nirgends als Umsatz.
+            "is_owner_stay": req.is_owner_stay,
             "quote_items": quote_items,
             "currency": currency,
             # Belegung (Gästezahl) für Balken + Detailansicht.

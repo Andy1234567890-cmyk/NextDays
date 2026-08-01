@@ -323,6 +323,12 @@ class OwnerStatementsService:
                 "status, total_amount, channel_fee, currency"
             )
             .eq("tenant_id", tenant_id)
+            # Eigentümer-Aufenthalte (0241) gehören NICHT in die Abrechnung: der
+            # Eigentümer hat sein eigenes Objekt genutzt, das ist weder Erlös
+            # noch Auszahlung. Ohne diesen Filter stünden sie mit 0,00 als Zeile
+            # im Statement — eine „Buchung", für die er nichts bekommt, und die
+            # Belegungsquote der Abrechnung wäre verfälscht.
+            .eq("is_owner_stay", False)
             .in_("property_id", property_ids)
             .gte(basis_col, period_from.isoformat())
             .lte(basis_col, period_to.isoformat())

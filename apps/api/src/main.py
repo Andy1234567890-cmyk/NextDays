@@ -61,6 +61,9 @@ from .features.platform_admin.router import router as platform_admin_router
 from .features.pricing.router import router as pricing_router
 from .features.privacy_settings.router import router as privacy_settings_router
 from .features.properties.router import router as properties_router
+from .features.property_custom_fields.router import (
+    router as property_custom_fields_router,
+)
 from .features.property_discounts.router import router as property_discounts_router
 from .features.property_dossier.router import router as property_dossier_router
 from .features.property_portal.router import router as property_portal_router
@@ -81,6 +84,7 @@ _SLICE_ROUTERS = [
     auth_router,
     buchhaltung_router,
     properties_router,
+    property_custom_fields_router,
     property_portal_router,
     property_dossier_router,
     owners_router,

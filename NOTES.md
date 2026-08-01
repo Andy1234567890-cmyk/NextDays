@@ -132,7 +132,8 @@ Farben/Typo/Logo bleiben myNextDays.
   Testlogin + echten anon-Key voraus.
 
 **P5 erledigt (13.07.2026) — Deep-Links, iOS-Bundle-ID, Tenant-Registrierung:**
-- URL-Scheme `nextdays://` auf beiden Plattformen:
+- URL-Scheme (seit ADR-0019 je App eigen: `mybestdays://` bzw. `mynextdays://`;
+  historisch stand hier `nextdays://`) auf beiden Plattformen:
   · iOS: CFBundleURLTypes/CFBundleURLSchemes in Info.plist (Name com.nextdays.app).
   · Android: zweiter intent-filter (VIEW + DEFAULT + BROWSABLE, data scheme
     nextdays) in AndroidManifest; launchMode war bereits singleTask (Warmstart
@@ -162,8 +163,8 @@ Farben/Typo/Logo bleiben myNextDays.
 - Verifiziert: tsc OK · ESLint 0 Errors (1 Bestands-no-void-Warnung in App.tsx,
   nicht aus P5) · Jest 3 Suites/12 grün.
 - Manueller Test (beschrieben): iOS
-  `xcrun simctl openurl booted "nextdays://host/inbox/123"` bzw. Android
-  `adb shell am start -W -a android.intent.action.VIEW -d "nextdays://host/inbox/123"`
+  `xcrun simctl openurl booted "mynextdays://inbox/123"` bzw. Android
+  `adb shell am start -W -a android.intent.action.VIEW -d "mynextdays://inbox/123"`
   → App öffnet Inbox-Tab mit Thread 123 (falls in der Liste); eingeloggt landet
   man direkt dort, ausgeloggt zuerst im Login und danach am Ziel.
 
@@ -351,7 +352,7 @@ Farben/Typo/Logo bleiben myNextDays.
 
 ⚠ Offen für Andy: (1) eingechecktes Google-OAuth-`client_secret_*.json` unter
 `deploy/mail/` — rotieren + aus Git-Historie entfernen (Teil von P9);
-(2) echten Supabase-anon-Key aus Coolify in `apps/mobile/lib/config.ts`
+(2) echten Supabase-anon-Key aus Coolify in `lib/config.secrets.ts` der App
 eintragen (DEV + PROD), sonst bleibt Realtime ab P4 stumm.
 
 ---

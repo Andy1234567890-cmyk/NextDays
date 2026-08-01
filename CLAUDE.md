@@ -57,12 +57,16 @@ mehrfach passiert und hat falsche Kapazitäten/Buchungen erzeugt.
 
 ## Zwei Marken (UNVERHANDELBAR) — myNextDays ≠ myBestDays
 - **myNextDays** = das PMS, der Channel-Manager und die Marketing-Seite
-  (`web`, `apps/api`, `marketing`, `admin`, `builder`, `storybook`). Der Betrieb
-  ist hier Kunde, zahlt Abo + Provision.
+  (`web`, `apps/api`, `marketing`, `admin`, `builder`, `storybook`,
+  `mobile-nextdays`). Der Betrieb ist hier Kunde, zahlt Abo + Provision.
 - **myBestDays** = der Marktplatz und alles, was Gast und Gastgeber dort sehen:
-  `plattform` (Gäste-Marktplatz), `gastgeber` (Gastgeber-Dashboard), `mobile`
-  (App) und die Marktplatz-Bausteine im PMS (Kanal „Plattform", `ota_name`,
-  Kanal-Karte im Kanalmanager, Hilfe-Artikel „Plattform-Marktplatz").
+  `plattform` (Gäste-Marktplatz), `gastgeber` (Gastgeber-Dashboard),
+  `mobile-bestdays` (Marktplatz-App) und die Marktplatz-Bausteine im PMS (Kanal
+  „Plattform", `ota_name`, Kanal-Karte im Kanalmanager, Hilfe-Artikel
+  „Plattform-Marktplatz").
+Die Marken-Grenze gilt auch nativ: es gibt ZWEI Apps, nicht eine
+(`mobile-bestdays` = myBestDays, `mobile-nextdays` = myNextDays, ADR-0019).
+Nie wieder eine App bauen, die beide Marken trägt.
 Regel vor jedem neuen Text/Label: Sieht das ein Gast oder ein Marktplatz-
 Gastgeber bzw. beschreibt es den Buchungskanal Marktplatz → **myBestDays**.
 Beschreibt es Verwaltung/Kanalmanager/Abrechnung des Betriebs → **myNextDays**.
@@ -80,8 +84,9 @@ Channex/SiteMinder/Cloudbeds/Shopify). Die drei Vertriebskanäle:
   Sichtbarkeit = eigene Achse `properties.listed_on_marketplace` (0159),
   getrennt von OTA. Buchungen tragen `channel='portal'` +
   `ota_name='myBestDays'` (Altbestand per 0239 nachgezogen).
-- **App**: die mobile myBestDays-App (`mobile`, React Native) — gleichwertiges
-  Frontend derselben FastAPI (Gast · Agentur · Owner · Mitarbeiter), siehe
+- **App**: die mobile myBestDays-App (`mobile-bestdays`, React Native) —
+  gleichwertiges Frontend derselben FastAPI für den GAST. Die Verwaltung
+  (Agentur · Owner · Mitarbeiter) ist die zweite App `mobile-nextdays`; siehe
   „Mobile"-Abschnitt unten.
 Regel: auf einem Kanal sichtbar = Objekt-Status erlaubt Verkauf (`status='active'`)
 UND Kanal-Sichtbarkeit dieses Kanals an UND Verfügbarkeit vorhanden. `publish()`
@@ -150,14 +155,24 @@ Rollen ausliefern, die es nicht brauchen (Recon für Priv-Esc).
 
 ---
 
-## Mobile (mobile)
-Regeln der React-Native-App: `mobile/CLAUDE.md` — sie lädt automatisch, sobald
-unter `mobile/` gearbeitet wird.
+## Mobile — ZWEI Apps (ADR-0019)
+Es gibt zwei eigenständige React-Native-Projekte, eines je Marke:
+- `mobile-bestdays` (myBestDays, `com.mybestdays.app`, `mybestdays://`) — der
+  Marktplatz: Gast, eine Auth-Welt (`portal_guests`).
+- `mobile-nextdays` (myNextDays, `com.mynextdays.app`, `mynextdays://`) — das
+  PMS: Betrieb, eine Auth-Welt (Tenant), Erlebnis aus der Rolle.
+Regeln je App: `mobile-bestdays/CLAUDE.md` bzw. `mobile-nextdays/CLAUDE.md` —
+sie laden automatisch, sobald im jeweiligen Ordner gearbeitet wird.
+Geteilter Code liegt als bewusste KOPIE vor (kein Paket, ADR-0019 Stufe 1):
+Dateien mit `SCHWESTERDATEI`-Kopf müssen byte-identisch bleiben, der CI-Job
+`mobile-konsistenz` prüft das. Der Wechsel zwischen beiden Welten ist ein
+App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
 
 ## Qualitätsgate (vor „fertig")
 - `pytest` grün; `ruff check` sauber; `pylint` 10.00/10 auf geänderten Modulen.
 - Frontend: `tsc --noEmit` in apps/web UND builder ohne Fehler.
-- Mobile berührt? `tsc --noEmit` in mobile ohne Fehler, Jest grün.
+- Mobile berührt? `tsc --noEmit` + Jest grün in JEDER betroffenen App
+  (`mobile-bestdays`, `mobile-nextdays`); geteilte Dateien in beiden gleich.
 - DB-Änderung? Migration schreiben und via `supabase/apply-migrations.sh` live
   einspielen (nie automatisch), JEDE neue public-Tabelle bekommt RLS.
 - Realtime: jede neue Liste/Detail-UI abonniert alle speisenden Tabellen. Ein Abo
@@ -165,12 +180,14 @@ unter `mobile/` gearbeitet wird.
   (RLS entscheidet dann, welche Zeilen) UND Mitgliedschaft in der Publikation
   `supabase_realtime`. Fehlt eines, ist das Abo eine stumme Attrappe — die UI
   sieht live aus und aktualisiert nie. Beides gegen die Live-DB prüfen, nicht
-  annehmen (so waren 8 Abos in web+mobile tot, u. a. `properties`). Tabellen, die
+  annehmen (so waren 8 Abos in web und der Mobile-App tot, u. a. `properties`). Tabellen, die
   Wurzel 6 bewusst sperrt (Finanzen: payments, invoices, commission_ledger,
   owner_statements), dürfen NICHT per Grant geöffnet werden — dort ist das Abo
   der Fehler: auf eine erlaubte Quelle hören (z. B. `reservations`).
   Zwei Auth-Welten: Gast-Abos (portal_guest) brauchen das GAST-JWT, sonst passt
-  keine Policy (`mobile/lib/realtime.ts`, `tokenSource: "guest"`).
+  keine Policy. Nativ ist das seit ADR-0019 pro App entschieden — jede App
+  registriert genau EINE Tokenquelle (`realtimeTokenQuelleSetzen`), ein zweiter
+  Aufruf wirft.
 - **Security-Gate (Wurzel 6–9):** neue/geänderte sensible Tabelle → `revoke` +
   restriktive Rollen-Policy gesetzt und gedanklich per anon-Key-`curl` gegengeprüft
   (lesen UND schreiben). Neuer serverseitiger Fetch/Render/HTML-Sink → sanitisiert/

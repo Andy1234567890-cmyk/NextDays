@@ -134,6 +134,7 @@ class ReadsMixin(ReservationsBase):
                 check_in=r["check_in"],
                 check_out=r["check_out"],
                 status=r["status"],
+                is_owner_stay=bool(r.get("is_owner_stay")),
             )
 
         active = [r for r in rows if r.get("status") != "cancelled"]
@@ -176,11 +177,19 @@ class ReadsMixin(ReservationsBase):
         # durchlöchern. None statt eines maskierten 0-Werts (kein erfundener Betrag).
         # Bei gemischten Währungen ebenfalls None — eine addierte Mischsumme mit
         # einem beliebig herausgegriffenen Label wäre schlicht falsch.
-        revenue_30d = (
-            kpi(
-                sum(float(r.get("total_amount") or 0) for r in cur),
-                sum(float(r.get("total_amount") or 0) for r in prev),
+        # Eigentümer-Aufenthalte (0241) sind KEIN Umsatz. Ihr Betrag ist zwar
+        # per CHECK 0, sie werden hier trotzdem ausdrücklich ausgeschlossen —
+        # der Ausschluss soll an der Zahl hängen, nicht an der Annahme, dass
+        # die Spalte schon 0 sein wird.
+        def umsatz(zeilen: list[dict]) -> float:
+            return sum(
+                float(r.get("total_amount") or 0)
+                for r in zeilen
+                if not r.get("is_owner_stay")
             )
+
+        revenue_30d = (
+            kpi(umsatz(cur), umsatz(prev))
             if mask.amounts and not mixed_currency
             else None
         )
@@ -522,6 +531,7 @@ class ReadsMixin(ReservationsBase):
             note=r.get("note"),
             checked_in_at=r.get("checked_in_at"),
             checked_out_at=r.get("checked_out_at"),
+            is_owner_stay=bool(r.get("is_owner_stay")),
             invoice=invoice_info,
             cancel_reason=r.get("cancel_reason"),
             cancelled_at=r.get("cancelled_at"),

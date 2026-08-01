@@ -65,6 +65,11 @@ class ReservationCreate(BaseModel):
     # mit verschiedenen Preisen — der Quote MUSS den gewählten Plan bepreisen.
     # None → der älteste Plan des Objekts als deterministischer Default.
     rate_plan_id: str | None = None
+    # Eigentümer-Aufenthalt (0241): sperrt den Kalender wie jede Buchung, ist
+    # aber kein Umsatz. Der Service erzwingt Betrag 0 und Status confirmed —
+    # ein mitgeschickter total_amount wird bewusst ignoriert, nicht abgelehnt,
+    # damit derselbe Anlegen-Weg für beides gilt.
+    is_owner_stay: bool = False
 
     @model_validator(mode="after")
     def _check_order(self) -> "ReservationCreate":
@@ -137,6 +142,9 @@ class ReservationResponse(BaseModel):
     # Echter Check-in/Check-out-Zustand (0091) — None = noch nicht erfolgt.
     checked_in_at: str | None = None
     checked_out_at: str | None = None
+    # Eigentümer-Aufenthalt (0241) — die UI kennzeichnet ihn und blendet
+    # Geldangaben aus; es gibt dort keine zu zeigen.
+    is_owner_stay: bool = False
 
 
 class QuoteItem(BaseModel):
@@ -252,6 +260,8 @@ class DashboardEntry(BaseModel):
     check_in: date
     check_out: date
     status: ReservationStatus
+    # Eigentümer-Aufenthalt (0241): in den Listen sichtbar, aber kein Umsatz.
+    is_owner_stay: bool = False
 
 
 class DashboardKpi(BaseModel):

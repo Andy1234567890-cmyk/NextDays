@@ -226,6 +226,7 @@ def _base_tables() -> dict[str, list[dict]]:
                 "total_amount": 1000,
                 "channel_fee": 100,
                 "currency": "EUR",
+                "is_owner_stay": False,
             },
             {
                 "id": "r-2",
@@ -239,6 +240,7 @@ def _base_tables() -> dict[str, list[dict]]:
                 "total_amount": 500,
                 "channel_fee": 0,
                 "currency": "EUR",
+                "is_owner_stay": False,
             },
         ],
         "guests": [
@@ -354,6 +356,7 @@ def test_status_filter_excludes_cancelled() -> None:
             "total_amount": 9999,
             "channel_fee": 0,
             "currency": "EUR",
+            "is_owner_stay": False,
         }
     )
     st = _gen(_svc(tables))
@@ -584,6 +587,7 @@ def _sek_owner_tables() -> dict[str, list[dict]]:
             "total_amount": 1000,
             "channel_fee": 0,
             "currency": "EUR",
+            "is_owner_stay": False,
         }
     ]
     t["fx_rates"] = [

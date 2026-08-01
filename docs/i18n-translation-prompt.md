@@ -5,7 +5,7 @@ vervollständigt und übersetzt die Locale-Dateien der Web-App, ohne Code, Keys
 oder Struktur zu verändern.
 
 **Geltungsbereich:** AUSSCHLIESSLICH `apps/web/messages/*.json`. Keine andere App,
-kein Code, keine Config. `marketing/`, `plattform/`, `mobile/`, `builder/`
+kein Code, keine Config. `marketing/`, `plattform/`, `mobile-bestdays/`, `mobile-nextdays/`, `builder/`
 haben kein i18n — die sind hier bewusst NICHT enthalten.
 
 ---

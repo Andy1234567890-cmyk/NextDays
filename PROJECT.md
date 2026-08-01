@@ -92,7 +92,8 @@ nextdays/
 │   ├── public/
 │   └── package.json           # eigene Dependencies, eigene CI/CD-Strecke
 ├── apps/
-│   ├── mobile/                # React Native (bare) — Host-App = mobiles Dashboard.
+│   ├── mobile-bestdays/       # React Native (bare) — myBestDays-Marktplatz-App (Gast).
+│   ├── mobile-nextdays/       # React Native (bare) — myNextDays-PMS-App (Betrieb).
 │   │   │                      # Spricht NUR FastAPI /api/v1 (Bearer, Keychain).
 │   │   ├── lib/               # api.ts, auth.ts, config.ts (einzige URL-Quelle)
 │   │   ├── screens/           # Host*- (echt) und Guest*-Screens (Phase 2)

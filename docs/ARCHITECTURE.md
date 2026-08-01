@@ -35,9 +35,11 @@ strukturelle Schutz gegen Double-Bookings über alle Kanäle hinweg.
 **Marken:** derselbe Kern trägt zwei Marken. **myNextDays** ist die Supply-Seite
 (PMS `web`, `apps/api`, Channel Manager, Marketing, Backoffice `admin`,
 White-Label-Sites `builder`). **myBestDays** ist die Demand-Seite: der globale
-Marktplatz `plattform`, das Gastgeber-Dashboard `gastgeber` und die App
-`mobile` — sowie der Kanal „Plattform" im PMS
+Marktplatz `plattform`, das Gastgeber-Dashboard `gastgeber` und die
+Marktplatz-App `mobile-bestdays` — sowie der Kanal „Plattform" im PMS
 (`reservations.channel='portal'`, `ota_name='myBestDays'`, Migration `0239`).
+Nativ trennt sich das ebenfalls: `mobile-bestdays` (Gast) und `mobile-nextdays`
+(Betrieb) sind zwei eigenständige Apps mit eigenen Bundle-IDs (ADR-0019).
 
 ---
 
@@ -89,7 +91,8 @@ C4Container
     Container_Boundary(nd, "NextDays") {
         Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Blog — KEINE PMS/Auth-Kopplung (ADR-0002)")
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Coolify-App)")
-        Container(mobile, "Mobile-App", "React Native 0.86 + React Navigation (mobile)", "Native Gäste- & Gastgeber-App (iOS/Android); teilt das FastAPI-Backend (/api/v1)")
+        Container(mobile_bestdays, "myBestDays-App", "React Native 0.86 + React Navigation (mobile-bestdays)", "Native Marktplatz-App für Gäste (iOS/Android); teilt das FastAPI-Backend (/api/v1)")
+        Container(mobile_nextdays, "myNextDays-App", "React Native 0.86 + React Navigation (mobile-nextdays)", "Native PMS-App für den Betrieb, Eigentümer und Mitarbeiter (iOS/Android)")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(builder, "Website-Renderer", "Next.js (builder/, Port 3200)", "Öffentliche White-Label-Websites der Vermieter (Page-Builder); Host→Tenant über den by-domain-Resolver")
         Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 29 Vertical Slices unter /api/v1; Redis-Rate-Limiter als ASGI-Middleware (429 + Retry-After)")
@@ -108,14 +111,15 @@ C4Container
     Rel(landlord, web, "Nutzt", "HTTPS")
     Rel(guest, web, "Bucht", "HTTPS")
     Rel(guest, builder, "Besucht Vermieter-Website (Custom-Domain)", "HTTPS")
-    Rel(landlord, mobile, "Verwaltet (Gastgeber-App)", "HTTPS")
-    Rel(guest, mobile, "Bucht & reist (Gäste-App)", "HTTPS")
+    Rel(landlord, mobile_nextdays, "Verwaltet (PMS-App)", "HTTPS")
+    Rel(guest, mobile_bestdays, "Bucht & reist (Marktplatz-App)", "HTTPS")
     Rel(storybook, web, "fertige Komponenten übernehmen", "manuell/Build-Zeit")
     Rel(web, api, "Ruft auf", "JSON/HTTPS")
     Rel(builder, api, "by-domain / page (öffentlicher Resolver)", "JSON/HTTPS")
     Rel(api, cf, "Custom Hostnames anlegen/syncen (TLS)", "API")
     Rel(web, gfonts, "Font-Katalog (Proxy-Route /api/google-fonts)", "HTTPS")
-    Rel(mobile, api, "Ruft auf", "JSON/HTTPS")
+    Rel(mobile_bestdays, api, "Ruft auf", "JSON/HTTPS")
+    Rel(mobile_nextdays, api, "Ruft auf", "JSON/HTTPS")
     Rel(api, db, "Liest/schreibt", "SQL (RLS)")
     Rel(api, cache, "Liest/schreibt", "Redis-Protokoll")
     Rel(api, queue, "Reiht Jobs ein", "Redis")

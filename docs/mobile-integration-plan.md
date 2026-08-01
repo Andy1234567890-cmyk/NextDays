@@ -1,5 +1,11 @@
 # Mobile-Integration — Plan: Die All-in-One-App (mobile)
 
+> **ÜBERHOLT (31.07.2026).** Die Aussage „eine einzige App … kein App-Zoo" gilt
+> nicht mehr: seit `docs/decisions/0019-zwei-mobile-apps.md` gibt es ZWEI Apps —
+> `mobile-bestdays` (myBestDays, Gast) und `mobile-nextdays` (myNextDays,
+> Betrieb). Dieses Dokument bleibt als Aufzeichnung der Arbeitspakete P1–P9
+> stehen; Produktvision und Ordnerpfade darin sind historisch.
+
 > Verbindlicher Plan. Eine einzige App für ALLE Nutzergruppen der Plattform —
 > kein App-Zoo. Umsetzung in 9 sequenziellen Arbeitspaketen
 > (`docs/mobile-integration-prompts.md`). Jedes Paket einzeln abnehmbar.
