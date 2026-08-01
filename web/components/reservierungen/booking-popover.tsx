@@ -9,6 +9,7 @@ import { useTranslations, useLocale } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
 import { CHANNEL_META } from "@/lib/calendar-channels";
+import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import type { AvailabilitySource } from "@/lib/calendar";
 import type { CalendarBooking } from "@/lib/tasks";
 
@@ -26,6 +27,7 @@ export function BookingPopover({
   onCreateTask: () => void;
 }) {
   const t = useTranslations("reservations");
+  const { channelLabel } = useCalendarLabels();
   const locale = useLocale();
   const meta =
     CHANNEL_META[booking.channel as AvailabilitySource] ?? CHANNEL_META.direct;
@@ -70,7 +72,7 @@ export function BookingPopover({
           </div>
           <div className="flex justify-between">
             <dt className="font-medium">{t("bookingPopover.source")}</dt>
-            <dd>{booking.ota_name ?? meta.label}</dd>
+            <dd>{booking.ota_name ?? channelLabel(booking.channel as AvailabilitySource)}</dd>
           </div>
         </dl>
 

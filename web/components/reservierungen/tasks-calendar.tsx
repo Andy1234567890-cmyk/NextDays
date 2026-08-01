@@ -16,6 +16,7 @@ import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
 import { TaskPopover } from "@/components/reservierungen/task-popover";
 import { MultiSelect } from "@nextdays/ui/multi-select";
 import { CHANNEL_META } from "@/lib/calendar-channels";
+import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { listTenantUsers } from "@/lib/account";
 import {
@@ -149,6 +150,7 @@ function dayIndex(iso: string, firstDay: Date, days: number): number {
 
 export function TasksCalendar() {
   const t = useTranslations("reservations");
+  const { channelLabel } = useCalendarLabels();
   const locale = useLocale();
   const MONTHS = t.raw("tasksCalendar.months") as string[];
   const WEEKDAYS = t.raw("tasksCalendar.weekdays") as string[];
@@ -555,7 +557,7 @@ export function TasksCalendar() {
                             }}
                             title={t("tasksCalendar.bookingBarTitle", {
                               guests: b.guests,
-                              channel: meta.label,
+                              channel: channelLabel(b.channel as AvailabilitySource),
                               range: bookingRange(b, locale),
                             })}
                           >
@@ -563,7 +565,7 @@ export function TasksCalendar() {
                               <Icon icon="ph:users" className="size-3.5 shrink-0" />
                               {t("tasksCalendar.bookingBarLabel", {
                                 guests: b.guests,
-                                channel: meta.label,
+                                channel: channelLabel(b.channel as AvailabilitySource),
                               })}
                             </span>
                             <span className="truncate text-[0.7rem] leading-tight opacity-90">

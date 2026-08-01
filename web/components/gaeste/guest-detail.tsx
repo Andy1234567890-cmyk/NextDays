@@ -11,6 +11,8 @@ import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 
 import { useRealtime } from "@/lib/use-realtime";
+import type { DisplayStatus } from "@/lib/calendar-status";
+import { useCalendarLabels } from "@/lib/use-calendar-labels";
 
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
@@ -76,6 +78,7 @@ export function GuestDetail({
   access: GuestAccess;
 }) {
   const t = useTranslations("guests");
+  const { statusLabel } = useCalendarLabels();
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>("overview");
   const [editing, setEditing] = useState(false);
@@ -1327,6 +1330,7 @@ function ReservationList({
   items?: GuestReservation[] | null;
   reload?: () => void;
 }) {
+  const { statusLabel } = useCalendarLabels();
   const t = useTranslations("guests");
   const locale = useLocale();
   const managed = itemsProp !== undefined;
@@ -1382,7 +1386,7 @@ function ReservationList({
               >
                 <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
                   {meta && <span className={`size-2 rounded-full ${meta.dotBg}`} />}
-                  {meta?.label ?? r.status ?? "—"}
+                  {meta ? statusLabel(r.status as DisplayStatus) : r.status ?? "—"}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="flex items-center gap-1.5 truncate font-medium">

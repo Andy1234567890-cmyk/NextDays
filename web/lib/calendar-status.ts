@@ -14,7 +14,6 @@ export type DisplayStatus =
   | "cancelled";
 
 export type StatusMeta = {
-  label: string;
   /** Kleiner Status-Punkt auf dem Balken (Token-basierte Farbe). */
   dotBg: string;
   /** Iconify-Icon für Tooltip/Legende. */
@@ -30,15 +29,14 @@ export type StatusMeta = {
 
 export const STATUS_META: Record<DisplayStatus, StatusMeta> = {
   pending: {
-    label: "Option / vorläufig",
     dotBg: "bg-warning",
     icon: "ph:hourglass-medium",
     barClass: "bg-warning/25 border border-dashed border-warning text-foreground",
   },
-  confirmed: { label: "Bestätigt", dotBg: "bg-success", icon: "ph:check-circle" },
-  in_house: { label: "Eingecheckt", dotBg: "bg-channel-vrbo", icon: "ph:door-open" },
-  completed: { label: "Ausgecheckt", dotBg: "bg-muted-foreground", icon: "ph:flag-checkered" },
-  cancelled: { label: "Storniert", dotBg: "bg-destructive", icon: "ph:x-circle" },
+  confirmed: { dotBg: "bg-success", icon: "ph:check-circle" },
+  in_house: { dotBg: "bg-channel-vrbo", icon: "ph:door-open" },
+  completed: { dotBg: "bg-muted-foreground", icon: "ph:flag-checkered" },
+  cancelled: { dotBg: "bg-destructive", icon: "ph:x-circle" },
 };
 
 // Anzeige-Status aus den PERSISTIERTEN Feldern (0091): storniert gewinnt immer;

@@ -29,11 +29,12 @@ import { Switch } from "@nextdays/ui/switch";
 
 // Zeitfenster (sichtbare Tage). „Monat" = 28 als feste, gleichmäßige Breite
 // (OPERA-Room-Diary-Stil; kalendarische Monatslänge bricht das Raster nicht).
+// Beschriftung kommt aus i18n (calendar.header.range*); hier nur Wert + Schlüssel.
 export const RANGE_OPTIONS = [
-  { value: 1, label: "Tag" },
-  { value: 7, label: "Woche" },
-  { value: 14, label: "2 Wochen" },
-  { value: 28, label: "Monat" },
+  { value: 1, key: "rangeDay" },
+  { value: 7, key: "rangeWeek" },
+  { value: 14, key: "rangeTwoWeeks" },
+  { value: 28, key: "rangeMonth" },
 ] as const;
 
 export type RangeDays = (typeof RANGE_OPTIONS)[number]["value"];
@@ -111,11 +112,11 @@ export function CalendarHeader({
           className="h-9 w-auto rounded-full"
         >
           <option value="" disabled>
-            Zeitfenster wählen…
+            {t("header.chooseTimeframe")}
           </option>
           {RANGE_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.label}
+              {t(`header.${o.key}`)}
             </option>
           ))}
         </NativeSelect>
@@ -173,7 +174,7 @@ export function CalendarHeader({
 
             <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4">
               <section className="flex flex-col gap-3">
-                <p className="text-sm font-semibold">Objekt-Details</p>
+                <p className="text-sm font-semibold">{t("header.propertyDetails")}</p>
                 <ToggleRow label={t("header.showPhoto")} checked={view.showPicture} onChange={(v) => set("showPicture", v)} />
                 <ToggleRow label={t("header.showInternalName")} checked={view.showInternalName} onChange={(v) => set("showInternalName", v)} />
                 <ToggleRow label={t("header.showId")} checked={view.showId} onChange={(v) => set("showId", v)} />

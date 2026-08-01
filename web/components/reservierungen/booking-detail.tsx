@@ -10,7 +10,7 @@ import { Icon } from "@iconify/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 
 import { ReservationAddonsSection } from "@/components/kalender/reservation-addons-section";
@@ -21,6 +21,7 @@ import { PropertyLocation } from "@/components/reservierungen/property-location"
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import type { AvailabilitySource } from "@/lib/calendar";
+import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { channelMeta } from "@/lib/calendar-channels";
 import { STATUS_META, displayStatus } from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
@@ -37,6 +38,9 @@ const SendDocumentModal = dynamic(
 
 export function BookingDetail({ reservationId }: { reservationId: string }) {
   const t = useTranslations("reservations");
+  const { channelLabel } = useCalendarLabels();
+  const { statusLabel } = useCalendarLabels();
+  const locale = useLocale();
   const router = useRouter();
   const d = useReservationDetail(reservationId);
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -51,14 +55,14 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
     v == null ? "—" : formatCurrency(v, currency);
 
   const fmtDate = (s: string) =>
-    new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
+    new Date(`${s}T00:00:00`).toLocaleDateString(locale, {
       day: "numeric",
       month: "short",
       year: "numeric",
     });
 
   const fmtDateTime = (iso: string) =>
-    new Date(iso).toLocaleString("de-DE", {
+    new Date(iso).toLocaleString(locale, {
       day: "numeric",
       month: "short",
       hour: "2-digit",
@@ -127,14 +131,14 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
               <span className={`size-2 rounded-full ${STATUS_META[status].dotBg}`} />
-              {STATUS_META[status].label}
+              {statusLabel(status)}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
               <Icon
                 icon={meta.logo.kind === "icon" ? meta.logo.icon : "ph:globe"}
                 className="size-3"
               />
-              {data.ota_name ?? meta.label}
+              {data.ota_name ?? channelLabel(data.channel as AvailabilitySource)}
             </span>
           </div>
         </div>
@@ -393,6 +397,51 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                     style={{ width: `${paidPct ?? 0}%` }}
                   />
                 </div>
+
+                {/* Zahlungsweg des Portals (0240). Ohne diese Zeile fragt die
+                    Rezeption beim Gast nach, obwohl das Portal längst kassiert
+                    hat — oder sie kassiert nicht, obwohl sie müsste. */}
+                {data.payment_collect ? (
+                  <p className="flex flex-wrap items-center gap-2 rounded-(--radius) bg-secondary/60 p-3 text-sm">
+                    <Icon
+                      icon={
+                        data.payment_collect === "ota"
+                          ? "ph:check-circle"
+                          : "ph:hand-coins"
+                      }
+                      className="size-4 shrink-0 text-muted-foreground"
+                    />
+                    <span>
+                      {t(`bookingDetail.paymentCollect.${data.payment_collect}`)}
+                      {data.payment_method_ota
+                        ? ` · ${t(`bookingDetail.paymentMethod.${data.payment_method_ota}`)}`
+                        : ""}
+                    </span>
+                  </p>
+                ) : null}
+
+                {/* Portalprovision: der Unterschied zwischen Umsatz und Erlös. */}
+                {data.ota_commission != null ? (
+                  <p className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+                    <span className="text-muted-foreground">
+                      {t("bookingDetail.otaCommission")}
+                    </span>
+                    <span>
+                      <span className="font-semibold">
+                        −{money(data.ota_commission, data.currency)}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {" · "}
+                        {t("bookingDetail.netPayout", {
+                          amount: money(
+                            total - data.ota_commission,
+                            data.currency,
+                          ),
+                        })}
+                      </span>
+                    </span>
+                  </p>
+                ) : null}
               </>
             )}
           </Card>

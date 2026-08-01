@@ -39,6 +39,7 @@ import {
   reservationStatus,
 } from "@/lib/calendar-status";
 import type { PropertyType } from "@/lib/properties";
+import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { usePropertyLabels } from "@/lib/use-property-labels";
 import { getRateGrid } from "@/lib/rates";
 import { Input } from "@nextdays/ui/input";
@@ -224,11 +225,6 @@ type BarDrag = {
   targetPid: string; // aktuelles Ziel-Objekt (nur move)
 };
 
-// Herkunftslabel (zentral): echter OTA/Direkt-Kanal aus CHANNEL_META.
-function sourceLabel(source: AvailabilitySource): string {
-  return channelMeta(source).label;
-}
-
 // Debug: Herkunft einer Sperre/Buchung in Klartext — zeigt WELCHE Quelle den Tag
 // gesperrt hat (availability-Quelle + Typ; bei Stop-Sell zusätzlich scope/Kanäle),
 // damit sichtbar wird, welche Plattform die Sperre gesetzt hat.
@@ -241,7 +237,7 @@ function debugOrigin(seg: Segment): string {
         : seg.status === "booked"
           ? "BUCHUNG"
           : "FREI";
-  const parts = [typ, `Quelle: ${sourceLabel(seg.source)} (${seg.source})`];
+  const parts = [typ, `Quelle: ${seg.source}`];
   if (seg.status === "stop_sell" && seg.stopSell) {
     const st = seg.stopSell;
     parts.push(`stop_sell.source: ${st.source}`);
@@ -269,7 +265,7 @@ function ChannelLogo({
     return (
       <img
         src={logo.src}
-        alt={channelMeta(source).label}
+        alt={source}
         className={`${className} shrink-0 rounded-[0.125rem]`}
       />
     );
@@ -415,7 +411,11 @@ function applyReservation(state: ResByProp, r: Reservation): ResByProp {
 }
 
 // Menschliches Herkunfts-/Gastlabel für einen Buchungsbalken.
-function segmentLabel(seg: Segment, t: (key: string) => string): string {
+function segmentLabel(
+  seg: Segment,
+  t: (key: string) => string,
+  channelLabel: (s: AvailabilitySource) => string,
+): string {
   if (seg.status === "stop_sell") {
     // Adressat sichtbar machen: Reisebüro-Name (z. B. TUI), sonst Herkunft.
     const who =
@@ -429,7 +429,7 @@ function segmentLabel(seg: Segment, t: (key: string) => string): string {
   }
   if (seg.status !== "booked") return statusLabels(t)[seg.status];
   const guest = seg.reservation?.guest_name?.trim();
-  return guest || seg.reservation?.ota_name || sourceLabel(seg.source);
+  return guest || seg.reservation?.ota_name || channelLabel(seg.source);
 }
 
 export function CalendarBoard({
@@ -448,6 +448,7 @@ export function CalendarBoard({
   const t = useTranslations("calendar");
   const locale = useLocale();
   const { typeOptionsFor } = usePropertyLabels();
+  const { channelLabel, statusLabel } = useCalendarLabels();
   // Startdatum (rollierend). null bis der Client das heutige Datum kennt.
   const [start, setStart] = useState<Date | null>(null);
   const [todayKey, setTodayKey] = useState("");
@@ -1525,21 +1526,21 @@ export function CalendarBoard({
         <FilterSelect
           value={typeFilter}
           onChange={(v) => setTypeFilter(v as PropertyType | "all")}
-          allLabel="Alle Typen"
+          allLabel={t("board.allTypes")}
           options={typeOptionsFor(accommodationType)}
         />
         <FilterSelect
           value={channelFilter}
           onChange={(v) => setChannelFilter(v as AvailabilitySource | "all")}
-          allLabel="Alle Kanäle"
-          options={CHANNEL_SOURCES.map((s) => ({ value: s, label: CHANNEL_META[s].label }))}
+          allLabel={t("board.allChannels")}
+          options={CHANNEL_SOURCES.map((s) => ({ value: s, label: channelLabel(s) }))}
         />
         <FilterSelect
           value={statusFilter}
           onChange={(v) => setStatusFilter(v as DisplayStatus | "all")}
-          allLabel="Alle Status"
+          allLabel={t("board.allStatus")}
           options={(["confirmed", "pending", "in_house", "completed", "cancelled"] as const).map(
-            (s) => ({ value: s, label: STATUS_META[s].label }),
+            (s) => ({ value: s, label: statusLabel(s) }),
           )}
         />
         {(query || typeFilter !== "all" || channelFilter !== "all" || statusFilter !== "all") && (
@@ -1574,7 +1575,7 @@ export function CalendarBoard({
             >
               <ChannelLogo source={src} className="size-2.5" />
             </span>
-            {CHANNEL_META[src].label}
+            {channelLabel(src)}
           </span>
         ))}
         <span className="h-3 w-px bg-border" aria-hidden />
@@ -1582,7 +1583,7 @@ export function CalendarBoard({
           (s) => (
             <span key={s} className="flex items-center gap-1.5">
               <span className={`size-2 rounded-full ${STATUS_META[s].dotBg}`} />
-              {STATUS_META[s].label}
+              {statusLabel(s)}
             </span>
           ),
         )}
@@ -1642,13 +1643,13 @@ export function CalendarBoard({
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-(--radius) border bg-secondary/40 px-4 py-2.5 text-sm">
         <Metric
           icon="ph:chart-pie-slice"
-          label="Auslastung"
+          label={t("board.occupancy")}
           value={`${Math.round(metrics.occupancy * 100)} %`}
-          hint={`${metrics.bookedNights}/${metrics.totalNights} Objekt-Nächte`}
+          hint={t("board.propertyNights", { booked: metrics.bookedNights, total: metrics.totalNights })}
         />
         <Metric
           icon="ph:currency-circle-dollar"
-          label="Umsatz"
+          label={t("board.revenue")}
           value={
             metrics.mixedCurrency ||
               !metrics.currency ||
@@ -1665,12 +1666,12 @@ export function CalendarBoard({
               ? "gemischte Währungen"
               : metrics.amountsHidden
                 ? "ohne gesperrte Beträge"
-                : "im Zeitraum"
+                : t("board.inPeriod")
           }
         />
         <Metric
           icon="ph:bed"
-          label="ADR"
+          label={t("board.adr")}
           value={
             metrics.mixedCurrency || metrics.adr == null || !metrics.currency
               ? "—"
@@ -1680,7 +1681,7 @@ export function CalendarBoard({
                 maximumFractionDigits: 0,
               })
           }
-          hint={metrics.mixedCurrency ? "gemischte Währungen" : "Ø Nachtpreis"}
+          hint={metrics.mixedCurrency ? t("board.mixedCurrencies") : t("board.avgNightPrice")}
         />
       </div>
 
@@ -1901,14 +1902,14 @@ export function CalendarBoard({
                           ? debugOrigin(seg)
                           : seg.status === "booked"
                             ? [
-                              segmentLabel(seg, t),
-                              meta.label,
-                              statusMeta?.label,
+                              segmentLabel(seg, t, channelLabel),
+                              channelLabel(seg.source as AvailabilitySource),
+                              dispStatus ? statusLabel(dispStatus) : null,
                               t("calendarBoard.nightsCount", { count: nights }),
                             ]
                               .filter(Boolean)
                               .join(" · ")
-                            : `${segmentLabel(seg, t)} · ${t("calendarBoard.daysCount", { count: seg.span })}`;
+                            : `${segmentLabel(seg, t, channelLabel)} · ${t("calendarBoard.daysCount", { count: seg.span })}`;
                         // Kanal-/Status-Filter: nicht passende Balken dimmen
                         // (Belegung bleibt erkennbar, Treffer stechen hervor).
                         const dimmed = filtersActive && !segMatchesFilters(seg);
@@ -1986,7 +1987,7 @@ export function CalendarBoard({
                                         }`
                                       : ""
                                   }`
-                                : segmentLabel(seg, t)}
+                                : segmentLabel(seg, t, channelLabel)}
                             </span>
                             {/* Indikatoren rechts: Gästezahl + Nächte (sofern Platz). */}
                             {seg.status === "booked" && seg.reservation && (

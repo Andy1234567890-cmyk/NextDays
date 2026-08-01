@@ -15,6 +15,7 @@ import { ReservationAddonsSection } from "@/components/kalender/reservation-addo
 import { CheckoutPaymentDialog } from "@/components/reservierungen/checkout-payment-dialog";
 import { Button } from "@nextdays/ui/button";
 import type { AvailabilitySource } from "@/lib/calendar";
+import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { channelMeta } from "@/lib/calendar-channels";
 import { STATUS_META, displayStatus } from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
@@ -103,6 +104,7 @@ export function ReservationDetailSlider({
   const meta = data ? channelMeta(data.channel as AvailabilitySource) : null;
 
   const t = useTranslations("calendar");
+  const { channelLabel, statusLabel } = useCalendarLabels();
   const locale = useLocale();
   const fmtDateTime = (iso: string) =>
     new Date(iso).toLocaleString(locale, {
@@ -163,13 +165,13 @@ export function ReservationDetailSlider({
                 {status && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
                     <span className={`size-2 rounded-full ${STATUS_META[status].dotBg}`} />
-                    {STATUS_META[status].label}
+                    {statusLabel(status)}
                   </span>
                 )}
                 {meta && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
                     <Icon icon={meta.logo.kind === "icon" ? meta.logo.icon : "ph:globe"} className="size-3" />
-                    {meta.label}
+                    {channelLabel(data.channel as AvailabilitySource)}
                   </span>
                 )}
               </div>

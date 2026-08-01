@@ -16,6 +16,7 @@ import { Card } from "@nextdays/ui/card";
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import type { AvailabilitySource } from "@/lib/calendar";
+import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
 import { type DisplayStatus, STATUS_META } from "@/lib/calendar-status";
 import {
@@ -47,6 +48,7 @@ function statusFilters(
 
 export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
   const t = useTranslations("calendar");
+  const { channelLabel, statusLabel } = useCalendarLabels();
   const locale = useLocale();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -221,7 +223,7 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
             onChange={(v) => setChannelFilter(v as AvailabilitySource | "all")}
             options={[
               { value: "all", label: t("bookingsView.allChannels") },
-              ...CHANNEL_SOURCES.map((s) => ({ value: s, label: channelMeta(s).label })),
+              ...CHANNEL_SOURCES.map((s) => ({ value: s, label: channelLabel(s) })),
             ]}
           />
           <span className="ml-auto text-sm text-muted-foreground">
@@ -267,7 +269,7 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5">
                           <span className={`size-2 rounded-full ${sm.dotBg}`} />
-                          {sm.label}
+                          {statusLabel(displayStatusOf(r, todayKey))}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -275,7 +277,7 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
                           {cm.logo.kind === "icon" ? (
                             <Icon icon={cm.logo.icon} className="size-4" />
                           ) : null}
-                          {r.ota_name ?? cm.label}
+                          {r.ota_name ?? channelLabel(channelSource(r))}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">
@@ -340,6 +342,7 @@ function DayColumn({
   empty: string;
   guestsLabel: (count: number) => string;
 }) {
+  const { channelLabel } = useCalendarLabels();
   return (
     <Card className="flex flex-col gap-3 p-4">
       <div className="flex items-center gap-2">
@@ -373,7 +376,7 @@ function DayColumn({
                       <Icon icon={cm.logo.icon} className="size-4" />
                     ) : null}
                     {r.total_amount == null
-                      ? r.ota_name ?? cm.label
+                      ? r.ota_name ?? channelLabel(channelSource(r))
                       : formatCurrency(r.total_amount, r.currency)}
                   </span>
                 </button>

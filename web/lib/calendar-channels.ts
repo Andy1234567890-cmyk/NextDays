@@ -6,8 +6,6 @@
 import type { AvailabilitySource } from "@/lib/calendar";
 
 export type ChannelMeta = {
-  /** Menschliches Label (white-label: echter Plattformname, kein interner Code). */
-  label: string;
   /** Iconify-Icon ODER lokales SVG (kind unterscheidet das Rendering). */
   logo: { kind: "icon"; icon: string } | { kind: "img"; src: string };
   /** Hintergrund-Utility des Balkens (Token-basiert). */
@@ -29,7 +27,6 @@ export type ChannelMeta = {
 // Markenfarbe gerendert, sodass die Marke klar erkennbar bleibt.
 export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
   direct: {
-    label: "Direkt",
     logo: { kind: "icon", icon: "ph:house-line-fill" },
     barBg: "bg-channel-direct",
     barFg: "text-white",
@@ -37,7 +34,6 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     textFg: "text-channel-direct",
   },
   booking: {
-    label: "Booking.com",
     logo: { kind: "icon", icon: "simple-icons:bookingdotcom" },
     barBg: "bg-channel-booking",
     barFg: "text-white",
@@ -45,7 +41,6 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     textFg: "text-channel-booking",
   },
   airbnb: {
-    label: "Airbnb",
     logo: { kind: "icon", icon: "simple-icons:airbnb" },
     barBg: "bg-channel-airbnb",
     barFg: "text-white",
@@ -53,7 +48,6 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     textFg: "text-channel-airbnb",
   },
   vrbo: {
-    label: "Vrbo",
     // Kein Vrbo-Markenlogo in Iconify → klares Ferienhaus-Symbol als Platzhalter.
     logo: { kind: "icon", icon: "ph:house-fill" },
     barBg: "bg-channel-vrbo",
@@ -63,7 +57,6 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
   },
   portal: {
     // Eigener Marktplatz — heißt seit der Umbenennung myBestDays (wie in mobile).
-    label: "myBestDays",
     logo: { kind: "icon", icon: "ph:globe-hemisphere-west-fill" },
     barBg: "bg-channel-portal",
     barFg: "text-white",
@@ -71,7 +64,6 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     textFg: "text-channel-portal",
   },
   manual: {
-    label: "Manuell",
     logo: { kind: "icon", icon: "ph:lock-simple-fill" },
     barBg: "bg-neutral-700",
     barFg: "text-white",

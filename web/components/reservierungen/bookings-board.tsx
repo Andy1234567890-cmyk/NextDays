@@ -20,6 +20,7 @@ import { BookingsFilter } from "@/components/reservierungen/bookings-filter";
 import { Card } from "@nextdays/ui/card";
 import { Input } from "@nextdays/ui/input";
 import { channelMeta } from "@/lib/calendar-channels";
+import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { STATUS_META } from "@/lib/calendar-status";
 import {
   channelSource,
@@ -303,6 +304,7 @@ function BookingRow({
   t: ReturnType<typeof useTranslations>;
 }) {
   const locale = useLocale();
+  const { channelLabel, statusLabel } = useCalendarLabels();
   const ds = displayStatusOf(r, todayKey);
   const sm = STATUS_META[ds];
   const cm = channelMeta(channelSource(r));
@@ -324,8 +326,8 @@ function BookingRow({
       <td className="px-4 py-3">
         <span
           className="inline-flex items-center gap-1.5"
-          title={sm.label}
-          aria-label={sm.label}
+          title={statusLabel(ds)}
+          aria-label={statusLabel(ds)}
         >
           <Icon icon={sm.icon} className="size-4.5 text-muted-foreground" />
         </span>
@@ -346,7 +348,7 @@ function BookingRow({
           {cm.logo.kind === "icon" ? (
             <Icon icon={cm.logo.icon} className="size-4" />
           ) : null}
-          #{r.ota_name ?? cm.label}
+          #{r.ota_name ?? channelLabel(channelSource(r))}
         </span>
       </td>
       <td className="px-4 py-3 text-right tabular-nums">
