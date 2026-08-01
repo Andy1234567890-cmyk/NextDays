@@ -691,11 +691,20 @@ class ContentSyncMixin:
     @staticmethod
     def _room_type_occupancy(prop_row: dict[str, Any] | None) -> dict[str, int]:
         """Room-Type-Belegung aus den ECHTEN Objektdaten, nicht pauschal — sonst
-        zeigt Channex/OTA eine falsche Kapazität. Erwachsene = max_guests; Kinder-,
-        Kleinkindplätze und Zimmeranzahl kommen aus type_attributes.occupancy (im
-        Objekt-Editor „Anzahl Gäste" erfasst, 1:1 die Channex-Felder). Channex verlangt
+        zeigt Channex/OTA eine falsche Kapazität. Erwachsene = max_guests; Kinder-
+        und Kleinkindplätze kommen aus type_attributes.occupancy (im Objekt-Editor
+        „Anzahl Gäste" erfasst, 1:1 die Channex-Felder). Channex verlangt
         occ_adults ≥ 1 und default_occupancy ≤ occ_adults; occ_children/occ_infants
         sind Pflichtfelder (live verifiziert).
+
+        count_of_rooms ist FEST 1 und kommt aus keinem Eingabefeld: Channex kappt
+        jeden availability-Push auf diesen Wert („Provided value is greater than
+        max availability (N). Value changes to max availability." — live gemessen
+        01.08.2026). Es ist damit die Obergrenze, wie oft ein Objekt am selben Tag
+        verkauft werden kann, und bei „1 property = 1 buchbare Einheit" immer 1.
+        Früher floss hier type_attributes.occupancy.rooms ein, ein Feld namens
+        „Anzahl Zimmer" — das hätte eine 3-Zimmer-Wohnung dreimal verkaufbar
+        gemacht, sobald der Push-Pfad nicht mehr binär wäre (0245).
 
         WICHTIG: occupancy ist NUR als Objekt {rooms,children,infants} gültig. Ältere
         Wizard-Versionen schrieben hier ein String-Array (Reisetyp-Tags) — das ist ein
@@ -705,7 +714,7 @@ class ContentSyncMixin:
         occ = raw_occ if isinstance(raw_occ, dict) else {}
         occ_adults = max(1, int((prop_row or {}).get("max_guests") or 2))
         return {
-            "count_of_rooms": max(1, int(occ.get("rooms") or 1)),
+            "count_of_rooms": 1,
             "occ_adults": occ_adults,
             "occ_children": max(0, int(occ.get("children") or 0)),
             "occ_infants": max(0, int(occ.get("infants") or 0)),
@@ -875,6 +884,29 @@ class ContentSyncMixin:
             ).eq("id", child["id"]).execute()
         return ok
 
+    @staticmethod
+    def _zimmer_ausstattung(db: Client, property_id: str) -> set[str]:
+        """Ausstattungs-Slugs über alle Zimmer des Objekts (property_rooms, 0246).
+
+        Best-effort: fehlt die Tabelle (alter Stand) oder hakt die Abfrage, geht
+        die objektweite Zimmer-Ausstattung trotzdem raus — ein Content-Sync darf
+        daran nicht scheitern."""
+        try:
+            rows = (
+                db.table("property_rooms")
+                .select("ausstattung")
+                .eq("property_id", property_id)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — Zusatzquelle, kein Hauptpfad
+            log.warning(
+                "channex_zimmer_ausstattung_unlesbar",
+                property_id=property_id,
+                error=str(exc),
+            )
+            return set()
+        return {slug for r in rows for slug in (r.get("ausstattung") or [])}
+
     def _upsert_channex_room_type(
         self, db: Client, tenant_id: str, property_map_id: str,
         channex_property_id: str, property_id: str, title: str,
@@ -905,9 +937,18 @@ class ContentSyncMixin:
         # kennt, IMMER setzen (auch []), damit ein Entfernen die Facilities bei
         # Channex/den OTAs synchron leert (Wurzel 1 — live verifiziert: ein PUT
         # mit einer UUID entfernt die übrigen).
+        #
+        # Zwei Quellen, EINE Menge: die objektweite Zimmer-Ausstattung
+        # (properties.room_amenities) und die je Zimmer gepflegte
+        # (property_rooms.ausstattung, 0246). Channex kennt je Objekt genau
+        # EINEN Room-Type — die Zimmer-Auflösung kann er nicht abbilden, also
+        # geht die Vereinigung hinaus. Zusammengeführt wird erst hier beim
+        # Senden, nicht in der Spalte: sonst hätte room_amenities zwei
+        # Schreibpfade und der eine überschriebe still den anderen.
         if prop_row is not None and "room_amenities" in prop_row:
+            aus_zimmern = self._zimmer_ausstattung(db, property_id)
             attrs["facilities"] = _channex_room_facility_ids(
-                prop_row.get("room_amenities")
+                sorted({*(prop_row.get("room_amenities") or []), *aus_zimmern})
             )
         # Room-Type-Content (Beschreibung + Fotos, KEIN important_information).
         # Beim 1-Zimmer-Modell teilt der Room-Type die Property-Inhalte.
