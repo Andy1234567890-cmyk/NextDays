@@ -10,7 +10,6 @@
 // Der Nutzer sieht die übrigen Angaben weiter und verliert den Kontext nicht.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -19,7 +18,6 @@ import {
   type UnternehmensFeld,
 } from "@/lib/unternehmen-actions";
 import type { Unternehmensprofil } from "@/lib/unternehmen";
-import { useRealtime } from "@/lib/use-realtime";
 
 /** Eine bearbeitbare Zeile. `titel`/`label`/`hinweis` sind Textschlüssel. */
 type Zeile = {
@@ -103,15 +101,15 @@ const ZEILEN: Zeile[] = [
 
 export function UnternehmenTab({ profil }: { profil: Unternehmensprofil | null }) {
   const t = useTranslations("konto");
-  const router = useRouter();
   const [offen, setOffen] = useState<string | null>(null);
 
-  // Realtime: Die Daten ändern sich auch serverseitig — der Sync-Status beim
-  // Zahlungsanbieter wird per Webhook zurückgeschrieben.
-  useRealtime({
-    table: "tenant_billing_profile",
-    onChange: () => router.refresh(),
-  });
+  // Kein Realtime-Abo: tenant_billing_profile ist für authenticated bewusst
+  // gesperrt (0169, Wurzel 6 — Stripe-Connect-Daten, IBAN, Steuer), ein Abo
+  // darauf wäre eine stumme Attrappe. Der Sync-Status vom Zahlungsanbieter
+  // kommt per Webhook ausschließlich in diese Tabelle, es gibt also keine
+  // erlaubte Ersatzquelle: er erscheint beim nächsten Laden der Seite — nach
+  // dem Onboarding-Rücksprung ohnehin ein frischer Seitenaufbau.
+  // Geprüft mit scripts/realtime/abos-pruefen.sh.
 
   if (!profil) {
     return (

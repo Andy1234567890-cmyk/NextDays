@@ -70,17 +70,17 @@ export type RealtimeSubState = {
 const _rtRegistry = new Map<number, RealtimeSubState>();
 const _rtListeners = new Set<() => void>();
 
-// Gecachter Snapshot: NUR bei _rtNotify neu bauen. getRealtimeDebugState dient
-// als getSnapshot für useSyncExternalStore — würde es jedes Mal ein neues Array
-// liefern, entstünde ein garantierter „Maximum update depth"-Loop.
+// Gecachter Snapshot: NUR neu bauen, wenn sich seit dem letzten Lesen etwas
+// geändert hat. getRealtimeDebugState dient als getSnapshot für
+// useSyncExternalStore — würde es jedes Mal ein neues Array liefern, entstünde
+// ein garantierter „Maximum update depth"-Loop.
 let _rtSnapshot: RealtimeSubState[] = [];
-
-function _rtRebuildSnapshot(): void {
-  _rtSnapshot = [..._rtRegistry.values()].sort((a, b) => a.uid - b.uid);
-}
+// Lazy: ohne Overlay (Produktion) liest niemand den Snapshot, dann wäre ein
+// Rebuild je Event reine Arbeit für nichts — ein ARI-Import schreibt 365 Zeilen.
+let _rtDirty = false;
 
 function _rtNotify(): void {
-  _rtRebuildSnapshot();
+  _rtDirty = true;
   for (const l of _rtListeners) l();
 }
 
@@ -92,8 +92,13 @@ export function _rtUpdate(uid: number, patch: Partial<RealtimeSubState>): void {
 }
 
 /** Snapshot aller aktiven Subscriptions (für das Debug-Overlay). Referenzstabil
- *  zwischen Änderungen — Pflicht für useSyncExternalStore. */
+ *  zwischen Änderungen — Pflicht für useSyncExternalStore: dieselbe Referenz,
+ *  solange kein Update kam, ein neues Array erst nach einer echten Änderung. */
 export function getRealtimeDebugState(): RealtimeSubState[] {
+  if (_rtDirty) {
+    _rtDirty = false;
+    _rtSnapshot = [..._rtRegistry.values()].sort((a, b) => a.uid - b.uid);
+  }
   return _rtSnapshot;
 }
 

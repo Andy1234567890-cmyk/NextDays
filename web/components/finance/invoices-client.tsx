@@ -50,9 +50,16 @@ export function InvoicesClient({ companyId }: { companyId: string }) {
   useEffect(() => {
     if (companyId) loadInvoices();
   }, [companyId, loadInvoices]);
-  // Realtime-Pflicht: Rechnungen anderer Sessions (inkl. Positionen) live.
-  useRealtime({ table: "invoices", onChange: () => void loadInvoices(), enabled: !!companyId });
-  useRealtime({ table: "invoice_line_items", onChange: () => void loadInvoices(), enabled: !!companyId });
+  // invoices/invoice_line_items sind für authenticated bewusst gesperrt (Wurzel 6);
+  // Abos darauf feuern nie. Die erlaubte Quelle sind die Reservierungen des Tenants,
+  // aus denen die Rechnungen entstehen. Rein manuell angelegte Rechnungen ohne
+  // Reservierungsbezug erscheinen entsprechend erst beim nächsten Laden.
+  useRealtime({
+    table: "reservations",
+    filter: `tenant_id=eq.${companyId}`,
+    onChange: () => void loadInvoices(),
+    enabled: !!companyId,
+  });
 
   const header = (
     <header className="flex items-center justify-between">

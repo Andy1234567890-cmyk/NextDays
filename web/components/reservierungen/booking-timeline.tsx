@@ -274,7 +274,10 @@ export function BookingTimeline({
   });
   useRealtime({ table: "messages", filter: `reservation_id=eq.${reservationId}`, onChange: load });
   useRealtime({ table: "tasks", filter: `reservation_id=eq.${reservationId}`, onChange: load });
-  useRealtime({ table: "payments", filter: `reservation_id=eq.${reservationId}`, onChange: load });
+  // payments ist für authenticated bewusst gesperrt (Wurzel 6). Jede Zahlung setzt
+  // aber reservations.payment_status — deshalb hängt der Zahlungs-Zweig der
+  // Zeitleiste an der Reservierung selbst.
+  useRealtime({ table: "reservations", filter: `id=eq.${reservationId}`, onChange: load });
   useRealtime({ table: "reservation_addons", filter: `reservation_id=eq.${reservationId}`, onChange: load });
 
   const events = tl?.items ?? null;

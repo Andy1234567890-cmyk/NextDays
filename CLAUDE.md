@@ -182,8 +182,16 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
   sieht live aus und aktualisiert nie. Beides gegen die Live-DB prüfen, nicht
   annehmen (so waren 8 Abos in web und der Mobile-App tot, u. a. `properties`). Tabellen, die
   Wurzel 6 bewusst sperrt (Finanzen: payments, invoices, commission_ledger,
-  owner_statements), dürfen NICHT per Grant geöffnet werden — dort ist das Abo
-  der Fehler: auf eine erlaubte Quelle hören (z. B. `reservations`).
+  owner_statements, tenant_billing_profile), dürfen NICHT per Grant geöffnet
+  werden — dort ist das Abo der Fehler: auf eine erlaubte Quelle hören
+  (z. B. `reservations`); gibt es keine, ersatzlos streichen und den Grund
+  danebenschreiben.
+  Prüfen NICHT von Hand: `bash scripts/realtime/abos-pruefen.sh` liest alle
+  `table: "…"` aus allen sechs Frontends und prüft jede Tabelle live auf Grant
+  + Publikation (Exit 1 bei Attrappe). In der Entwicklung zeigt zusätzlich das
+  Overlay `RealtimeDebugPanel` (oben rechts) je Seite Status, Token und
+  Event-Zähler pro Abo — in Produktion ist es aus, auf Staging per
+  `NEXT_PUBLIC_REALTIME_DEBUG=1` zuschaltbar.
   Zwei Auth-Welten: Gast-Abos (portal_guest) brauchen das GAST-JWT, sonst passt
   keine Policy. Nativ ist das seit ADR-0019 pro App entschieden — jede App
   registriert genau EINE Tokenquelle (`realtimeTokenQuelleSetzen`), ein zweiter

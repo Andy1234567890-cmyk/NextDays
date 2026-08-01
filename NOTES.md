@@ -29,7 +29,7 @@
    `POST /api/v1/channel-manager/internal/seed-ari-shadow` (27 Objekte, 9 Rate-Pläne,
    3886 Werte, 0 externe Requests); anschließender voller Reconcile über 4 Tenants:
    0 Lesezugriffe, 0 Pushes. Regeln dazu in `docs/CHANNEX-FELDER.md` unten.
-   **Antwortmail an den Aggregator ist formuliert, aber noch nicht verschickt.**
+   Antwortmail an den Aggregator ist raus.
 2. **Zimmer als eigene Entität** (0245–0250) samt Slice `properties/rooms.py`,
    Objekt-Übersicht, Kartei-Stepper, Kanal-Matrix und Übersetzungen — committet.
    `count_of_rooms` geht jetzt fest als 1 nach außen (1 property = 1 buchbare Einheit).
@@ -64,16 +64,42 @@
   der ARI-Schatten liegt jetzt auf 0251). Alle sind live angewendet, der Runner trackt
   Dateinamen — ein frischer Deploy auf leere DB reproduziert die ursprüngliche
   Reihenfolge aber nicht mehr.
-- 8 tote Realtime-Abos in web auf Tabellen ohne `authenticated`-SELECT-Grant
-  (live geprüft: payments, invoices, invoice_line_items, commission_ledger,
-  owner_statements): konto-abo-section:160, guest-detail:1447, booking-timeline:277,
-  owner-realtime:31, my-statements:33, invoices-client:54+55, use-reservation-detail:92.
-  Grant-Entzug ist gewollt (Wurzel 6) → auf `reservations` hören.
+- (erledigt 01.08.2026) Die 8 toten Realtime-Abos in web hängen jetzt auf
+  `reservations`. Gegen die Live-DB geprüft: payments, invoices, invoice_line_items,
+  commission_ledger und owner_statements haben für `authenticated` KEIN SELECT
+  (Grant-Entzug ist gewollt, Wurzel 6), `reservations` hat SELECT und liegt in der
+  Publikation `supabase_realtime`. Umgehängt: konto-abo-section, guest-detail
+  (Rechnungen-Reiter, `guest_id`), booking-timeline (`payments` → `payment_status`
+  an der Reservierung), owner-realtime (Abo entfernt, `reservations` war schon da),
+  my-statements, invoices-client (zwei Abos → eines auf `tenant_id`),
+  use-reservation-detail (`invoices`-Abo entfernt).
+  Bewusste Lücke: rein manuell angelegte Rechnungen ohne Reservierungsbezug und
+  frisch erzeugte Eigentümer-Abrechnungen lösen kein Event aus — sie erscheinen
+  erst beim nächsten Laden.
+  Dauerhafter Schutz gegen die Bug-Klasse (01.08.2026): `RealtimeDebugPanel` war
+  seit seiner Entstehung toter Code (Import im Dashboard-Layout, JSX nie —
+  `git log -S "<RealtimeDebugPanel"` findet keinen Treffer; `web` hat keine
+  ESLint-Config und kein `noUnusedLocals`, deshalb still). Beim Einhängen kam ein
+  echter Fehler hoch: `getServerSnapshot` lieferte jedes Mal ein neues Array.
+  Behoben: Konstante `KEINE_ABOS`, Overlay jetzt oben rechts (unten rechts sitzen
+  Andy + Support-Chat), gerendert nur bei `NODE_ENV !== "production"` oder
+  `NEXT_PUBLIC_REALTIME_DEBUG=1`, und das Debug-Register baut seinen Snapshot
+  lazy statt bei jedem Event. Neu: `scripts/realtime/abos-pruefen.sh` prüft alle
+  67 abonnierten Tabellen aus den sechs Frontends live auf Grant + Publikation;
+  fand dabei eine 9. Attrappe — `tenant_billing_profile` in
+  `gastgeber/components/konto/unternehmen-tab.tsx` (0169 entzieht die Grants
+  bewusst). Dort gibt es keine erlaubte Ersatzquelle, das Abo ist ersatzlos
+  raus. Skript läuft jetzt grün (Exit 0).
+  Live im Browser bewiesen (zwei Tabs, `/buchhaltung` + `/kalender`): Abo
+  `reservations · tenant_id=eq.<tenant>` steht auf SUBSCRIBED mit Token, und eine
+  im Kalender angelegte und wieder stornierte Testreservierung erzeugte 2 Events;
+  `performance.getEntriesByType('resource')` im Buchhaltungs-Tab zeigt genau dazu
+  zwei zusätzliche `/invoices/company/<tenant>`-Requests (bei 492 s und 683 s nach
+  Seitenaufbau, ohne Reload, ohne Polling).
 
 ## Nächster Schritt
 
 1. Freigabe zu `docs/PLAN-buchungskonditionen.md` einholen (Kapitel 9) und danach bauen.
-2. Parallel: die 8 toten Finanz-Abos in web auf `reservations` umhängen (Liste oben).
 
 ## Regel, die aus der Aggregator-Beschwerde folgt
 

@@ -28,9 +28,11 @@ export function MyStatements({
 }) {
   const router = useRouter();
 
-  // Realtime-Pflicht: die eigene Abrechnungsliste live halten. RLS liefert dem
-  // Owner nur seine Zeilen; ein Event genügt zum Refresh der Server-Props.
-  useRealtime({ table: "owner_statements", onChange: () => router.refresh() });
+  // owner_statements ist für authenticated bewusst gesperrt (Wurzel 6) — ein Abo
+  // darauf feuert nie. Abrechnungen entstehen aus Reservierungen, die der Owner
+  // per RLS auf seine Objekte gefiltert sieht; ein Event genügt zum Refresh der
+  // Server-Props.
+  useRealtime({ table: "reservations", onChange: () => router.refresh() });
 
   return (
     <div className="flex flex-col gap-6">

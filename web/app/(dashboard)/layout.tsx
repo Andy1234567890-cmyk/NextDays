@@ -68,6 +68,13 @@ export default async function DashboardLayout({
         {/* Andy lebt im Layout → bleibt beim Navigieren auf jeder Seite bestehen
           und laedt seine Daten selbst. */}
         <DashboardVoiceAssistant userLabel={email || null} />
+        {/* Realtime-Overlay: zeigt je Seite, ob die Abos wirklich verbinden und
+          Events ankommen. Beide Bedingungen sind Build-Zeit-Konstanten, in
+          Produktion faellt die Komponente also aus dem Bundle — sie zeigt
+          Tabellennamen und Filter inkl. tenant_id im Klartext. Auf Staging per
+          NEXT_PUBLIC_REALTIME_DEBUG=1 zuschaltbar. */}
+        {(process.env.NODE_ENV !== "production" ||
+          process.env.NEXT_PUBLIC_REALTIME_DEBUG === "1") && <RealtimeDebugPanel />}
       </SupportChatProvider>
     </SidebarProvider>
   );

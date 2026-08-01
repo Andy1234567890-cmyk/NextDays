@@ -81,16 +81,13 @@ export function useReservationDetail(
     reload();
   }, [reload]);
 
-  // Realtime (WebSocket, kein Polling): Detail + zugehörige Rechnung folgen
-  // Änderungen sofort — auch wenn parallel jemand anderes ein-/auscheckt.
+  // Realtime (WebSocket, kein Polling): das Detail folgt Änderungen sofort — auch
+  // wenn parallel jemand anderes ein-/auscheckt. invoices ist für authenticated
+  // bewusst gesperrt (Wurzel 6); die Rechnung entsteht beim Check-out, der die
+  // Reservierung mitschreibt, also genügt dieses eine Abo.
   useRealtime({
     table: "reservations",
     filter: `id=eq.${reservationId}`,
-    onChange: reload,
-  });
-  useRealtime({
-    table: "invoices",
-    filter: `reservation_id=eq.${reservationId}`,
     onChange: reload,
   });
 

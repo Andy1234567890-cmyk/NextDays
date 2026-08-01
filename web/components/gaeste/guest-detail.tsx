@@ -1443,8 +1443,10 @@ function InvoicesTab({ guestId }: { guestId: string }) {
     listGuestInvoices(guestId).then((r) => r.ok && setItems(r.data.items));
   }, [guestId]);
   useEffect(() => load(), [load]);
-  // Realtime-Pflicht: neue/geänderte Rechnungen live spiegeln.
-  useRealtime({ table: "invoices", onChange: load });
+  // invoices ist für authenticated bewusst gesperrt (Wurzel 6) — ein Abo darauf
+  // liefert nie ein Event. Rechnungen des Gastes hängen an seinen Reservierungen,
+  // deshalb hört der Reiter auf die erlaubte Quelle.
+  useRealtime({ table: "reservations", filter: `guest_id=eq.${guestId}`, onChange: load });
   if (items === null) return <Card>…</Card>;
   if (items.length === 0) return <Card>{t("noInvoices")}</Card>;
   return (

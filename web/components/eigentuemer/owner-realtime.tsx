@@ -27,11 +27,9 @@ export function OwnerRealtime({
     filter: `owner_id=eq.${ownerId}`,
     onChange,
   });
-  useRealtime({
-    table: "owner_statements",
-    filter: `owner_id=eq.${ownerId}`,
-    onChange,
-  });
+  // owner_statements ist für authenticated bewusst gesperrt (Wurzel 6) und taugt
+  // deshalb nicht als Abo-Quelle; die Abrechnungszahlen speisen sich aus den
+  // Reservierungen darunter.
   // reservations: tenant-weit (RLS), owner-Bezug nicht als Spaltenfilter abbildbar.
   useRealtime({ table: "reservations", onChange });
   return null;

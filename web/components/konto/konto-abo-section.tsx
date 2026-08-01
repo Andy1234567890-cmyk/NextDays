@@ -156,8 +156,11 @@ export function KontoAboSection() {
     enabled: !!state?.tenantId,
     onChange: () => void load(),
   });
+  // commission_ledger ist für authenticated bewusst gesperrt (Wurzel 6) — ein Abo
+  // darauf wäre eine stumme Attrappe. Provisionen entstehen aus Reservierungen,
+  // deshalb hört die Abrechnung auf die erlaubte Quelle.
   useRealtime({
-    table: "commission_ledger",
+    table: "reservations",
     filter: state?.tenantId ? `tenant_id=eq.${state.tenantId}` : undefined,
     enabled: !!state?.tenantId,
     onChange: () => void load(),

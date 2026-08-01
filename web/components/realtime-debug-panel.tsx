@@ -1,11 +1,18 @@
 "use client";
 
-// Sichtbares Realtime-Debugging: fixes Overlay unten rechts, das LIVE zeigt, ob
-// die Supabase-WebSocket-Verbindung steht, welchen Status jede Subscription hat
-// (SUBSCRIBED / CHANNEL_ERROR / TIMED_OUT / CLOSED) und ob Events ankommen.
+// Sichtbares Realtime-Debugging: fixes Overlay unter der Topbar, das LIVE zeigt,
+// ob die Supabase-WebSocket-Verbindung steht, welchen Status jede Subscription
+// hat (SUBSCRIBED / CHANNEL_ERROR / TIMED_OUT / CLOSED) und ob Events ankommen.
 // Ohne das sieht man nicht, warum Realtime nicht aktualisiert — genau das war
 // bisher das Problem. Ampel: grün = alle SUBSCRIBED, gelb = verbindet, rot =
 // Fehler. Aufklappbar für die Detail-Liste je Tabelle.
+// Ein Abo, das SUBSCRIBED ist und trotzdem bei 0 Events bleibt, während die
+// Tabelle nachweislich geschrieben wird, ist eine stumme Attrappe (fehlendes
+// `select` für authenticated oder fehlende Mitgliedschaft in der Publikation
+// supabase_realtime) — die Ursache zeigt erst
+// `scripts/realtime/abos-pruefen.sh`.
+// Nur Entwicklung/Staging: das Panel zeigt Tabellennamen und Filter im Klartext
+// (inkl. tenant_id/guest_id) — das Layout schaltet es in Produktion ab.
 import { Icon } from "@iconify/react";
 import { useSyncExternalStore, useState } from "react";
 
@@ -15,11 +22,18 @@ import {
   subscribeRealtimeDebug,
 } from "@/lib/use-realtime";
 
+// Referenzstabil: useSyncExternalStore ruft getServerSnapshot bei SSR und
+// Hydrate auf — ein jedes Mal neu erzeugtes [] wäre ein garantierter
+// „Maximum update depth"-Loop. Bewusst eine EIGENE Konstante statt
+// getRealtimeDebugState: auf dem Server ist das Register modulglobal und darf
+// nicht in die Antwort eines fremden Requests durchschlagen.
+const KEINE_ABOS: RealtimeSubState[] = [];
+
 function useRealtimeDebugState(): RealtimeSubState[] {
   return useSyncExternalStore(
     subscribeRealtimeDebug,
     getRealtimeDebugState,
-    () => [] as RealtimeSubState[],
+    () => KEINE_ABOS,
   );
 }
 
@@ -56,7 +70,9 @@ export function RealtimeDebugPanel() {
   const totalEvents = subs.reduce((n, s) => n + s.events, 0);
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end gap-2">
+    // Unter der Topbar statt unten rechts: dort sitzen Andy und der Support-Chat,
+    // und das Overlay hat Dialog-Buttons verdeckt.
+    <div className="fixed right-4 top-16 z-[9999] flex flex-col items-end gap-2">
       {open && (
         <div className="max-h-[60vh] w-80 overflow-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-xl">
           <div className="mb-2 flex items-center justify-between">
