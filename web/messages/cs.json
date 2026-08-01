@@ -741,7 +741,12 @@
     "authorPlaceholder": "Autor / fotograf (volitelné)",
     "errorDialogTitle": "Některé fotky se nepodařilo nahrát",
     "errorDialogHint": "Opravte prosím soubory a nahrajte je znovu.",
-    "errorDialogClose": "Zavřít"
+    "errorDialogClose": "Zavřít",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Vlastníci",
@@ -4142,8 +4147,6 @@
       "saving": "Ukládání…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Odebrat {room}",
-      "zimmerMehr": "Přidat {room}",
       "zimmerGemeinschaftlich": "Sdílené",
       "zimmerPrivat": "Soukromé",
       "zimmerHinweis": "Jaké místnosti má vaše ubytování? Zde vybrané místnosti se zobrazí na vašich webových stránkách.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Nejdůležitější základní údaje.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} hostů",
-      "unitsSuffix": " · {count} jednotek",
       "roomsCardTitle": "Místnosti",
       "roomsCardHint": "Jaké místnosti jsou k dispozici?",
       "noRooms": "Zatím žádné místnosti.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Místa pro dospělé nabízejí prostor pro dospělé i děti, místa pro děti pouze pro děti. „Max. hostů“ (výše) jsou místa pro dospělé.",
       "childrenSlotsFieldLabel": "Místa pro děti",
       "infantSlotsFieldLabel": "Místa pro batolata",
-      "roomsCountFieldLabel": "Počet místností",
       "sizeFieldLabel": "Rozloha (m²)",
-      "unitsFieldLabel": "Jednotky",
       "statusFieldLabel": "Stav",
       "amenitiesEditorTitle": "Upravit vybavení",
       "amenitiesOtaHint": "Veškeré vybavení se automaticky přenáší na rezervační portály (Booking.com, Airbnb a další).",
       "removeAmenityAriaLabel": "Odebrat {amenity}",
       "amenitiesSearchPlaceholder": "Hledat vybavení …",
-      "noSearchResults": "Žádné výsledky."
+      "noSearchResults": "Žádné výsledky.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "soukromé",
+      "zimmerSuffixGemeinschaftlich": "sdílené",
+      "zimmerErhoehen": "Přidat {room}",
+      "zimmerVerringern": "Odebrat {room}",
+      "zimmerDetailsOeffnen": "Upravit {room}",
+      "zimmerAnzahl": "Počet: {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Dostupnost",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "jen při prvním exportu",
       "nurMitEntsprechung": "jen vlastnosti s odpovídajícím prvkem v portálu",
       "nichtDeckungsgleich": "kategorie se zcela neshodují",
-      "ohneBeleg": "nepotvrzeno — ověřujeme to"
+      "ohneBeleg": "nepotvrzeno — ověřujeme to",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Storno podmínky",
       "kaution": "Kauce",
       "lizenznummer": "Číslo licence/registrace",
-      "mietvertrag": "Nájemní smlouva"
+      "mietvertrag": "Nájemní smlouva",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Herna",
     "terrasse": "Terasa",
     "wc": "WC",
-    "arbeitszimmer": "Pracovna"
+    "arbeitszimmer": "Pracovna",
+    "schlafbereich": "Spací kout"
   }
 }

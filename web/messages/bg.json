@@ -741,7 +741,12 @@
     "authorPlaceholder": "Автор / фотограф (по избор)",
     "errorDialogTitle": "Някои снимки не можаха да бъдат качени",
     "errorDialogHint": "Моля, коригирайте файловете и ги качете отново.",
-    "errorDialogClose": "Затвори"
+    "errorDialogClose": "Затвори",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Собственици",
@@ -4142,8 +4147,6 @@
       "saving": "Запазва се…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Премахни {room}",
-      "zimmerMehr": "Добави {room}",
       "zimmerGemeinschaftlich": "Общо",
       "zimmerPrivat": "Частно",
       "zimmerHinweis": "Какви стаи има Вашето място за настаняване? Избраните тук стаи ще се показват на Вашия уебсайт.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Най-важните основни данни.",
       "sizeM2Prefix": "{size} м² · ",
       "guestsCount": "{count} гости",
-      "unitsSuffix": " · {count} единица(и)",
       "roomsCardTitle": "Помещения",
       "roomsCardHint": "Какви помещения има?",
       "noRooms": "Все още няма помещения.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Местата за възрастни са предвидени за възрастни и деца, местата за деца — само за деца. „Макс. гости“ (по-горе) са местата за възрастни.",
       "childrenSlotsFieldLabel": "Места за деца",
       "infantSlotsFieldLabel": "Места за бебета",
-      "roomsCountFieldLabel": "Брой стаи",
       "sizeFieldLabel": "Площ (кв.м)",
-      "unitsFieldLabel": "Единици",
       "statusFieldLabel": "Статус",
       "amenitiesEditorTitle": "Редактиране на удобствата",
       "amenitiesOtaHint": "Всички удобства се предават автоматично към порталите за резервации (Booking.com, Airbnb & Co.).",
       "removeAmenityAriaLabel": "Премахни {amenity}",
       "amenitiesSearchPlaceholder": "Търсене на удобство …",
-      "noSearchResults": "Няма резултати."
+      "noSearchResults": "Няма резултати.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "частно",
+      "zimmerSuffixGemeinschaftlich": "общо",
+      "zimmerErhoehen": "Добавяне на {room}",
+      "zimmerVerringern": "Премахване на {room}",
+      "zimmerDetailsOeffnen": "Редактиране на {room}",
+      "zimmerAnzahl": "Брой {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Наличност",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "само при първия експорт",
       "nurMitEntsprechung": "само характеристики със съответствие в портала",
       "nichtDeckungsgleich": "категориите не съвпадат напълно",
-      "ohneBeleg": "непотвърдено — проверяваме го"
+      "ohneBeleg": "непотвърдено — проверяваме го",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Условия за анулиране",
       "kaution": "Депозит",
       "lizenznummer": "Номер на лиценз/регистрация",
-      "mietvertrag": "Договор за наем"
+      "mietvertrag": "Договор за наем",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Детска стая за игра",
     "terrasse": "Тераса",
     "wc": "Тоалетна",
-    "arbeitszimmer": "Кабинет"
+    "arbeitszimmer": "Кабинет",
+    "schlafbereich": "Спална зона"
   }
 }

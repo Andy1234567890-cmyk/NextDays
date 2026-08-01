@@ -741,7 +741,12 @@
     "authorPlaceholder": "Autors / fotogrāfs (neobligāti)",
     "errorDialogTitle": "Dažus fotoattēlus neizdevās augšupielādēt",
     "errorDialogHint": "Lūdzu, izlabo failus un augšupielādē tos vēlreiz.",
-    "errorDialogClose": "Aizvērt"
+    "errorDialogClose": "Aizvērt",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Īpašnieki",
@@ -4142,8 +4147,6 @@
       "saving": "Notiek saglabāšana…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Noņemt {room}",
-      "zimmerMehr": "Pievienot {room}",
       "zimmerGemeinschaftlich": "Koplietošanas",
       "zimmerPrivat": "Privāts",
       "zimmerHinweis": "Kādas telpas ir jūsu izmitināšanas vietā? Šeit atlasītās telpas tiks attēlotas jūsu vietnē.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Svarīgākie pamatdati.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} viesi",
-      "unitsSuffix": " · {count} vienība(-as)",
       "roomsCardTitle": "Telpas",
       "roomsCardHint": "Kādas telpas ir pieejamas?",
       "noRooms": "Vēl nav norādīta neviena telpa.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Pieaugušo vietas paredzētas gan pieaugušajiem, gan bērniem, bērnu vietas — tikai bērniem. „Maks. viesu skaits“ (augstāk) ir pieaugušo vietu skaits.",
       "childrenSlotsFieldLabel": "Bērnu vietas",
       "infantSlotsFieldLabel": "Zīdaiņu vietas",
-      "roomsCountFieldLabel": "Telpu skaits",
       "sizeFieldLabel": "Platība (m²)",
-      "unitsFieldLabel": "Vienības",
       "statusFieldLabel": "Statuss",
       "amenitiesEditorTitle": "Rediģēt ērtības",
       "amenitiesOtaHint": "Visas ērtības tiek automātiski nosūtītas uz rezervāciju portāliem (Booking.com, Airbnb un citiem).",
       "removeAmenityAriaLabel": "Noņemt {amenity}",
       "amenitiesSearchPlaceholder": "Meklēt ērtības …",
-      "noSearchResults": "Nav atbilstības."
+      "noSearchResults": "Nav atbilstības.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privāts",
+      "zimmerSuffixGemeinschaftlich": "koplietošanas",
+      "zimmerErhoehen": "Pievienot: {room}",
+      "zimmerVerringern": "Noņemt: {room}",
+      "zimmerDetailsOeffnen": "Rediģēt {room}",
+      "zimmerAnzahl": "{room} skaits",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Pieejamība",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "tikai pirmajā eksportā",
       "nurMitEntsprechung": "tikai pazīmes, kurām portālā ir atbilsme",
       "nichtDeckungsgleich": "kategorijas pilnībā nesakrīt",
-      "ohneBeleg": "nav apstiprināts — mēs to pārbaudām"
+      "ohneBeleg": "nav apstiprināts — mēs to pārbaudām",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Atcelšanas noteikumi",
       "kaution": "Drošības nauda",
       "lizenznummer": "Licences/reģistrācijas numurs",
-      "mietvertrag": "Nomas līgums"
+      "mietvertrag": "Nomas līgums",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Rotaļu istaba",
     "terrasse": "Terase",
     "wc": "Tualete",
-    "arbeitszimmer": "Kabinets"
+    "arbeitszimmer": "Kabinets",
+    "schlafbereich": "Guļamzona"
   }
 }

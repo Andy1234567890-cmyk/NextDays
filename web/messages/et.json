@@ -741,7 +741,12 @@
     "authorPlaceholder": "Autor / fotograaf (valikuline)",
     "errorDialogTitle": "Mõnda fotot ei õnnestunud üles laadida",
     "errorDialogHint": "Palun paranda failid ja laadi need uuesti üles.",
-    "errorDialogClose": "Sulge"
+    "errorDialogClose": "Sulge",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Omanikud",
@@ -4142,8 +4147,6 @@
       "saving": "Salvestamine…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Eemalda {room}",
-      "zimmerMehr": "Lisa {room}",
       "zimmerGemeinschaftlich": "Jagatud",
       "zimmerPrivat": "Privaatne",
       "zimmerHinweis": "Millised toad on Teie majutusüksuses? Siin valitud toad kuvatakse Teie veebilehel.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Kõige olulisemad põhiandmed.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} külalist",
-      "unitsSuffix": " · {count} ühik(ut)",
       "roomsCardTitle": "Toad",
       "roomsCardHint": "Millised toad on olemas?",
       "noRooms": "Tube pole veel.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Täiskasvanukohad mahutavad täiskasvanuid ja lapsi, lapsekohad ainult lapsi. „Maks. külalisi“ (üleval) on täiskasvanukohtade arv.",
       "childrenSlotsFieldLabel": "Lapsekohad",
       "infantSlotsFieldLabel": "Väikelapsekohad",
-      "roomsCountFieldLabel": "Tubade arv",
       "sizeFieldLabel": "Suurus (m²)",
-      "unitsFieldLabel": "Üksused",
       "statusFieldLabel": "Staatus",
       "amenitiesEditorTitle": "Muuda mugavusi",
       "amenitiesOtaHint": "Kõik mugavused edastatakse automaatselt broneerimisportaalidesse (Booking.com, Airbnb & Co.).",
       "removeAmenityAriaLabel": "Eemalda {amenity}",
       "amenitiesSearchPlaceholder": "Otsi mugavusi …",
-      "noSearchResults": "Vasteid ei leitud."
+      "noSearchResults": "Vasteid ei leitud.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privaatne",
+      "zimmerSuffixGemeinschaftlich": "jagatud",
+      "zimmerErhoehen": "Lisa {room}",
+      "zimmerVerringern": "Eemalda {room}",
+      "zimmerDetailsOeffnen": "Muuda: {room}",
+      "zimmerAnzahl": "{room} arv",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Saadavus",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "ainult esimesel ekspordil",
       "nurMitEntsprechung": "ainult tunnused, millel on portaalis vaste",
       "nichtDeckungsgleich": "kategooriad ei kattu täielikult",
-      "ohneBeleg": "kinnitamata — kontrollime seda"
+      "ohneBeleg": "kinnitamata — kontrollime seda",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Tühistamistingimused",
       "kaution": "Tagatisraha",
       "lizenznummer": "Litsentsi-/registreerimisnumber",
-      "mietvertrag": "Üürileping"
+      "mietvertrag": "Üürileping",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Mängutuba",
     "terrasse": "Terrass",
     "wc": "WC",
-    "arbeitszimmer": "Töötuba"
+    "arbeitszimmer": "Töötuba",
+    "schlafbereich": "Magamisala"
   }
 }

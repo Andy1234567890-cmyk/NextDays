@@ -741,7 +741,12 @@
     "authorPlaceholder": "Author / photographer (optional)",
     "errorDialogTitle": "Some photos could not be uploaded",
     "errorDialogHint": "Please fix the files and upload them again.",
-    "errorDialogClose": "Close"
+    "errorDialogClose": "Close",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Owners",
@@ -4163,8 +4168,6 @@
       "saving": "Saving…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Remove {room}",
-      "zimmerMehr": "Add {room}",
       "zimmerGemeinschaftlich": "Shared",
       "zimmerPrivat": "Private",
       "zimmerHinweis": "Which rooms does your property have? The rooms selected here appear on your website.",
@@ -4185,7 +4188,6 @@
       "infoCardHint": "The key facts.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} guests",
-      "unitsSuffix": " · {count} unit(s)",
       "roomsCardTitle": "Rooms",
       "roomsCardHint": "Which rooms does your property have?",
       "noRooms": "No rooms yet.",
@@ -4211,15 +4213,43 @@
       "occupancyHint": "Adult slots accommodate adults and children, children's slots only children. “Max. guests” (above) are the adult slots.",
       "childrenSlotsFieldLabel": "Children's slots",
       "infantSlotsFieldLabel": "Infant slots",
-      "roomsCountFieldLabel": "Number of rooms",
       "sizeFieldLabel": "Size (m²)",
-      "unitsFieldLabel": "Units",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Edit amenities",
       "amenitiesOtaHint": "All amenities are automatically transferred to the booking portals (Booking.com, Airbnb & Co.).",
       "removeAmenityAriaLabel": "Remove {amenity}",
       "amenitiesSearchPlaceholder": "Search amenities …",
-      "noSearchResults": "No matches."
+      "noSearchResults": "No matches.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "private",
+      "zimmerSuffixGemeinschaftlich": "shared",
+      "zimmerErhoehen": "Add {room}",
+      "zimmerVerringern": "Remove {room}",
+      "zimmerDetailsOeffnen": "Edit {room}",
+      "zimmerAnzahl": "Number of {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Availability",
@@ -5100,7 +5130,8 @@
       "nurErstExport": "on first export only",
       "nurMitEntsprechung": "only features with a match in the portal",
       "nichtDeckungsgleich": "categories do not fully match",
-      "ohneBeleg": "not confirmed — we are checking"
+      "ohneBeleg": "not confirmed — we are checking",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5139,7 +5170,8 @@
       "stornobedingungen": "Cancellation policy",
       "kaution": "Security deposit",
       "lizenznummer": "Licence/registration number",
-      "mietvertrag": "Rental agreement"
+      "mietvertrag": "Rental agreement",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6115,6 +6147,7 @@
     "spielzimmer": "Playroom",
     "terrasse": "Terrace",
     "wc": "Toilet",
-    "arbeitszimmer": "Study"
+    "arbeitszimmer": "Study",
+    "schlafbereich": "Sleeping area"
   }
 }

@@ -741,7 +741,12 @@
     "authorPlaceholder": "Upphovsperson / fotograf (valfritt)",
     "errorDialogTitle": "Vissa foton kunde inte laddas upp",
     "errorDialogHint": "Korrigera filerna och ladda upp dem igen.",
-    "errorDialogClose": "Stäng"
+    "errorDialogClose": "Stäng",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Ägare",
@@ -4142,8 +4147,6 @@
       "saving": "Sparar…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Ta bort {room}",
-      "zimmerMehr": "Lägg till {room}",
       "zimmerGemeinschaftlich": "Delat",
       "zimmerPrivat": "Privat",
       "zimmerHinweis": "Vilka rum har ditt boende? De rum som väljs här visas på din webbplats.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "De viktigaste nyckeltalen.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} gäster",
-      "unitsSuffix": " · {count} enhet(er)",
       "roomsCardTitle": "Rum",
       "roomsCardHint": "Vilka rum finns det?",
       "noRooms": "Inga rum ännu.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Vuxenplatser ger plats för vuxna och barn, barnplatser endast för barn. „Max. gäster” (ovan) är vuxenplatserna.",
       "childrenSlotsFieldLabel": "Barnplatser",
       "infantSlotsFieldLabel": "Spädbarnsplatser",
-      "roomsCountFieldLabel": "Antal rum",
       "sizeFieldLabel": "Storlek (m²)",
-      "unitsFieldLabel": "Enheter",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Redigera utrustning",
       "amenitiesOtaHint": "Alla utrustningsegenskaper överförs automatiskt till bokningsportalerna (Booking.com, Airbnb & Co.).",
       "removeAmenityAriaLabel": "Ta bort {amenity}",
       "amenitiesSearchPlaceholder": "Sök utrustning …",
-      "noSearchResults": "Inga träffar."
+      "noSearchResults": "Inga träffar.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privat",
+      "zimmerSuffixGemeinschaftlich": "delat",
+      "zimmerErhoehen": "Lägg till {room}",
+      "zimmerVerringern": "Ta bort {room}",
+      "zimmerDetailsOeffnen": "Redigera {room}",
+      "zimmerAnzahl": "Antal {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Tillgänglighet",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "endast vid första exporten",
       "nurMitEntsprechung": "endast egenskaper med motsvarighet i portalen",
       "nichtDeckungsgleich": "kategorierna stämmer inte helt överens",
-      "ohneBeleg": "inte bekräftat — vi kontrollerar det"
+      "ohneBeleg": "inte bekräftat — vi kontrollerar det",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Avbokningsvillkor",
       "kaution": "Deposition",
       "lizenznummer": "Licens-/registreringsnummer",
-      "mietvertrag": "Hyresavtal"
+      "mietvertrag": "Hyresavtal",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Lekrum",
     "terrasse": "Terrass",
     "wc": "Toalett",
-    "arbeitszimmer": "Arbetsrum"
+    "arbeitszimmer": "Arbetsrum",
+    "schlafbereich": "Sovdel"
   }
 }

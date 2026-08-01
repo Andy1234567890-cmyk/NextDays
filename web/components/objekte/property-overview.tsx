@@ -3,8 +3,8 @@
 // Objekt-Overview: Kopf (Name/Status) + Sektionskarten
 //  (Name & Beschreibung, Rental info, Rooms, Sleeping arrangements, Amenities,
 //   Location). Jede Karte öffnet einen Sheet-Editor; gespeichert wird per
-//  updateProperty(). Flexible Sektionen (rooms/beds/size/units) liegen in
-//  type_attributes.
+//  updateProperty(). Zimmer sind seit 0246 eine eigene Entitaet (ZimmerSektion);
+//  die uebrigen flexiblen Sektionen (beds/size) liegen in type_attributes.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 
@@ -19,6 +19,7 @@ import { ChannelBadge } from "@nextdays/ui/channel-badge";
 import { useKanalZeilen } from "@/lib/use-kanal-felder";
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   Select,
   SelectContent,
@@ -34,25 +35,18 @@ import {
   SheetTitle,
 } from "@nextdays/ui/sheet";
 import { Textarea } from "@nextdays/ui/textarea";
-import { BETT_ILLUSTRATION } from "@/components/objekte/bett-illustrationen";
+import { ZimmerSektion } from "@/components/objekte/zimmer-sektion";
 import {
   AIRBNB_MERKMALE,
   AMENITY_CATALOG,
   AUSSTATTUNG_DUBLETTEN,
   AUSSTATTUNG_KATEGORIEN,
   AUSSTATTUNG_VON_SLUG,
-  bedCount,
   EIGENE_AUSSTATTUNG,
-  BED_SLUGS,
   HOTEL_TYPES,
-  readBeds,
   ROOM_AMENITY_CATALOG,
-  readZimmer,
   ROOM_AMENITY_SLUGS,
   STATUS_OPTIONS,
-  type ZimmerZaehlwerk,
-  ZIMMER_SLUGS,
-  zimmerAnzahl,
 } from "@/lib/property-meta";
 import {
   useAmenityLabels,
@@ -68,13 +62,7 @@ import {
   updateProperty,
 } from "@/lib/properties";
 
-type Section =
-  | null
-  | "name"
-  | "info"
-  | "rooms"
-  | "beds"
-  | "amenities";
+type Section = null | "name" | "info" | "amenities";
 
 // Icon je Ausstattungs-Kategorie (die 13 aus AUSSTATTUNG_KATEGORIEN).
 const KATEGORIE_ICON: Record<string, string> = {
@@ -108,8 +96,6 @@ export function PropertyOverview({ initial }: { initial: Property }) {
   const { amenityLabel } = useAmenityLabels();
   const { roomAmenityLabel } = useRoomAmenityLabels();
   const t = useTranslations("objects");
-  const tb = useTranslations("beds");
-  const tz = useTranslations("zimmer");
   const router = useRouter();
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
@@ -154,15 +140,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
     }
   }
 
-  const sizeM2 = attrNum(p, "size_m2");
-  const units = attrNum(p, "units");
-  // rooms ist {privat, gemeinschaftlich}; readZimmer liest auch das Altformat
-  // (string[] aus der alten Mehrfachauswahl).
-  const zimmer = readZimmer(p.type_attributes?.rooms);
-  // beds ist {slug: anzahl}; readBeds liest zusätzlich die beiden Altformate
-  // (string[] aus der alten Auswahl, blanke Zahl aus einer früheren Wizard-Version).
-  const beds = readBeds(p.type_attributes?.beds);
-  const bedEintraege = Object.entries(beds);
+  const flaeche = p.size_value;
   // Altbestand kennt die Spalte noch nicht (0243) → leer statt Absturz.
   const roomAmenities = p.room_amenities ?? [];
 
@@ -226,65 +204,23 @@ export function PropertyOverview({ initial }: { initial: Property }) {
         <ul className="text-sm text-muted-foreground">
           <li>{typeLabel(p.property_type)}</li>
           <li>
-            {sizeM2 ? t("propertyOverview.sizeM2Prefix", { size: sizeM2 }) : ""}
+            {flaeche
+              ? t(
+                  p.size_unit === "sqft"
+                    ? "propertyOverview.sizeSqftPrefix"
+                    : "propertyOverview.sizeM2Prefix",
+                  { size: flaeche },
+                )
+              : ""}
             {t("propertyOverview.guestsCount", { count: p.max_guests })}
-            {units ? t("propertyOverview.unitsSuffix", { count: units }) : ""}
           </li>
         </ul>
       </SectionCard>
 
-      {/* Rooms */}
-      <SectionCard
-        title={t("propertyOverview.roomsCardTitle")}
-        hint={t("propertyOverview.roomsCardHint")}
-        onEdit={() => setSection("rooms")}
-      >
-        {zimmerAnzahl(zimmer) ? (
-          <ul className="flex flex-col gap-1 text-muted-foreground text-sm">
-            {(["privat", "gemeinschaftlich"] as const).flatMap((ebene) =>
-              Object.entries(zimmer[ebene]).map(([slug, anzahl]) => (
-                <li key={`${ebene}:${slug}`}>
-                  {anzahl}× {tz(slug)}
-                  {ebene === "gemeinschaftlich"
-                    ? ` (${t("propertyOverview.zimmerGemeinschaftlich")})`
-                    : ""}
-                </li>
-              )),
-            )}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {t("propertyOverview.noRooms")}
-          </p>
-        )}
-      </SectionCard>
-
-      {/* Sleeping arrangements */}
-      <SectionCard
-        title={t("propertyOverview.bedsCardTitle")}
-        hint={t("propertyOverview.bedsCardHint")}
-        onEdit={() => setSection("beds")}
-      >
-        {bedEintraege.length ? (
-          <ul className="flex flex-col gap-2 text-muted-foreground text-sm">
-            {bedEintraege.map(([slug, anzahl]) => {
-              const Illustration = BETT_ILLUSTRATION[slug];
-              return (
-                <li key={slug} className="flex items-center gap-2">
-                  {Illustration ? <Illustration className="size-4" /> : null}
-                  <span>
-                    {anzahl}× {tb(slug)}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {t("propertyOverview.noBeds")}
-          </p>
-        )}
-      </SectionCard>
+      {/* Zimmer — eigene Entitäten seit 0246, deshalb eigene Komponente mit
+          eigenem Laden und Realtime-Abo statt einer Sektion über
+          type_attributes. */}
+      <ZimmerSektion propertyId={p.id} />
 
       {/* Amenities — ohne Kanal-Badge: welches Portal ein Merkmal kennt, steht
           im Editor an jeder einzelnen Zeile als Logo. Ein pauschaler Hinweis
@@ -333,22 +269,6 @@ export function PropertyOverview({ initial }: { initial: Property }) {
         onClose={() => setSection(null)}
         onSave={save}
       />
-      <ZimmerEditor
-        open={section === "rooms"}
-        zimmer={zimmer}
-        onClose={() => setSection(null)}
-        onSave={(vals) =>
-          save({ type_attributes: { ...p.type_attributes, rooms: vals } })
-        }
-      />
-      <BedsEditor
-        open={section === "beds"}
-        beds={beds}
-        onClose={() => setSection(null)}
-        onSave={(vals) =>
-          save({ type_attributes: { ...p.type_attributes, beds: vals } })
-        }
-      />
       <AmenitiesEditor
         open={section === "amenities"}
         selected={p.amenities}
@@ -386,6 +306,66 @@ function FieldLabel({
       <Label htmlFor={htmlFor}>{children}</Label>
       <ChannelBadge channel={channel} kanaele={kanaele} />
     </span>
+  );
+}
+
+// Fläche in m² oder ft². Gespeichert statt umgerechnet: der Wert ist die
+// Angabe des Gastgebers, keine Messung — eine Umrechnung würde eine
+// Genauigkeit vortäuschen, die die Angabe nicht hat.
+type FlaechenEinheit = "sqm" | "sqft";
+
+/** Zahl mit Minus/Plus statt Tippfeld — wie im Vorbild. Die Tastatureingabe
+ *  bleibt möglich, damit große Werte nicht erklickt werden müssen. */
+function Stepper({
+  id,
+  value,
+  min,
+  max,
+  onChange,
+  ariaLess,
+  ariaMore,
+}: {
+  id: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+  ariaLess: string;
+  ariaMore: string;
+}) {
+  const setzen = (v: number) => onChange(Math.min(max, Math.max(min, v)));
+  return (
+    <div className="flex items-center gap-3">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-9 bg-secondary text-secondary-foreground disabled:opacity-40"
+        disabled={value <= min}
+        aria-label={ariaLess}
+        onClick={() => setzen(value - 1)}
+      >
+        <Icon icon="ph:minus" className="size-4" />
+      </Button>
+      <Input
+        id={id}
+        type="number"
+        min={min}
+        max={max}
+        value={value}
+        className="w-20 text-center"
+        onChange={(e) => setzen(Number(e.target.value) || min)}
+      />
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-9 bg-secondary text-secondary-foreground disabled:opacity-40"
+        disabled={value >= max}
+        aria-label={ariaMore}
+        onClick={() => setzen(value + 1)}
+      >
+        <Icon icon="ph:plus" className="size-4" />
+      </Button>
+    </div>
   );
 }
 
@@ -598,14 +578,17 @@ function InfoEditor({
   const occ = (p.type_attributes?.occupancy ?? {}) as {
     children?: number;
     infants?: number;
-    rooms?: number;
   };
   const [guests, setGuests] = useState(p.max_guests);
   const [children, setChildren] = useState<number>(occ.children ?? 0);
   const [infants, setInfants] = useState<number>(occ.infants ?? 0);
-  const [rooms, setRooms] = useState<number>(occ.rooms ?? 1);
-  const [size, setSize] = useState<number | "">(attrNum(p, "size_m2"));
-  const [units, setUnits] = useState<number | "">(attrNum(p, "units"));
+  const [size, setSize] = useState<number | "">(p.size_value ?? "");
+  // Maßeinheit der Fläche. Gespeichert, nicht abgeleitet: wer in ft² denkt,
+  // soll auch ft² sehen — umgerechnet wird nichts (der eingegebene Wert ist
+  // die Angabe des Gastgebers, kein Messwert, Wurzel 4).
+  const [einheit, setEinheit] = useState<FlaechenEinheit>(
+    p.size_unit === "sqft" ? "sqft" : "sqm",
+  );
   const [status, setStatus] = useState<PropertyStatus>(p.status);
   const { busy, error, run } = useSaver(onSave);
   const t = useTranslations("objects");
@@ -621,18 +604,22 @@ function InfoEditor({
         <FieldLabel htmlFor="e-guests" channel="ota" feld="belegung">
           {t("propertyOverview.maxGuestsFieldLabel")}
         </FieldLabel>
-        <Input
+        <Stepper
           id="e-guests"
-          type="number"
+          value={guests}
           min={1}
           max={99}
-          value={guests}
-          onChange={(e) => setGuests(Number(e.target.value) || 1)}
+          onChange={setGuests}
+          ariaLess={t("propertyOverview.gaesteWeniger")}
+          ariaMore={t("propertyOverview.gaesteMehr")}
         />
       </div>
 
       {/* Belegung — geht als Kapazität an die Buchungsportale (Room-Type-
-          Belegung: Erwachsene/Kinder/Kleinkinder + Anzahl Zimmer). */}
+          Belegung: Erwachsene/Kinder/Kleinkinder). KEINE Zimmer-/Einheitenzahl:
+          Channex' count_of_rooms ist die Obergrenze, wie oft das Objekt am
+          selben Tag verkaufbar ist (live belegt: ein höherer availability-Push
+          wird darauf gekappt). Bei „1 Objekt = 1 Einheit" ist das immer 1. */}
       <div className="flex flex-col gap-2 rounded-2xl border p-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold">
@@ -643,7 +630,7 @@ function InfoEditor({
         <p className="text-xs text-muted-foreground">
           {t("propertyOverview.occupancyHint")}
         </p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="e-children">
               {t("propertyOverview.childrenSlotsFieldLabel")}
@@ -670,19 +657,6 @@ function InfoEditor({
               onChange={(e) => setInfants(Math.max(0, Number(e.target.value) || 0))}
             />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="e-rooms">
-              {t("propertyOverview.roomsCountFieldLabel")}
-            </Label>
-            <Input
-              id="e-rooms"
-              type="number"
-              min={1}
-              max={99}
-              value={rooms}
-              onChange={(e) => setRooms(Math.max(1, Number(e.target.value) || 1))}
-            />
-          </div>
         </div>
       </div>
 
@@ -690,29 +664,27 @@ function InfoEditor({
         <FieldLabel htmlFor="e-size" channel="local" feld="groesseQm">
           {t("propertyOverview.sizeFieldLabel")}
         </FieldLabel>
-        <Input
-          id="e-size"
-          type="number"
-          min={0}
-          value={size}
-          onChange={(e) =>
-            setSize(e.target.value === "" ? "" : Number(e.target.value))
-          }
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-units" channel="local">
-          {t("propertyOverview.unitsFieldLabel")}
-        </FieldLabel>
-        <Input
-          id="e-units"
-          type="number"
-          min={1}
-          value={units}
-          onChange={(e) =>
-            setUnits(e.target.value === "" ? "" : Number(e.target.value))
-          }
-        />
+        <div className="flex gap-2">
+          <Input
+            id="e-size"
+            type="number"
+            min={0}
+            className="flex-1"
+            value={size}
+            onChange={(e) =>
+              setSize(e.target.value === "" ? "" : Number(e.target.value))
+            }
+          />
+          <NativeSelect
+            aria-label={t("propertyOverview.masseinheitLabel")}
+            className="w-28"
+            value={einheit}
+            onChange={(e) => setEinheit(e.target.value as FlaechenEinheit)}
+          >
+            <option value="sqm">{t("propertyOverview.masseinheitQm")}</option>
+            <option value="sqft">{t("propertyOverview.masseinheitQft")}</option>
+          </NativeSelect>
+        </div>
       </div>
       <div className="flex flex-col gap-1.5">
         <FieldLabel channel="local">
@@ -741,11 +713,13 @@ function InfoEditor({
           run({
             max_guests: guests,
             status,
+            size_value: size === "" ? null : size,
+            // Einheit nur mit einer Fläche — eine Einheit ohne Wert ist keine
+            // Aussage (Wurzel 4).
+            size_unit: size === "" ? null : einheit,
             type_attributes: {
               ...p.type_attributes,
-              size_m2: size === "" ? undefined : size,
-              units: units === "" ? undefined : units,
-              occupancy: { children, infants, rooms },
+              occupancy: { children, infants },
             },
           })
         }
@@ -802,266 +776,13 @@ function ListEditor({
 /** Zimmer: Zähler je Zimmerart, getrennt nach privat und gemeinschaftlich.
  *  Eine Wohnung hat 2 Schlafzimmer, nicht "Schlafzimmer ja/nein" — und in einer
  *  Anlage ist ein Gemeinschaftsbad etwas anderes als ein eigenes. */
-function ZimmerEditor({
-  open,
-  zimmer,
-  onClose,
-  onSave,
-}: {
-  open: boolean;
-  zimmer: ZimmerZaehlwerk;
-  onClose: () => void;
-  onSave: (vals: ZimmerZaehlwerk) => Promise<true | string>;
-}) {
-  const t = useTranslations("objects");
-  const tz = useTranslations("zimmer");
-  const [vals, setVals] = useState<ZimmerZaehlwerk>(zimmer);
-  const [offen, setOffen] = useState<"privat" | "gemeinschaftlich" | null>(
-    "privat",
-  );
-  const { busy, error, run } = useSaver(onSave);
-
-  useEffect(() => {
-    if (open) {
-      setVals(zimmer);
-      setOffen("privat");
-    }
-  }, [open, zimmer]);
-
-  function setzen(
-    ebene: "privat" | "gemeinschaftlich",
-    slug: string,
-    delta: number,
-  ) {
-    setVals((s) => {
-      const next = Math.max(0, (s[ebene][slug] ?? 0) + delta);
-      const kopie = { ...s[ebene] };
-      if (next === 0) delete kopie[slug];
-      else kopie[slug] = next;
-      return { ...s, [ebene]: kopie };
-    });
-  }
-
-  const ebenen = [
-    { key: "privat" as const, icon: "ph:user" },
-    { key: "gemeinschaftlich" as const, icon: "ph:users" },
-  ];
-
-  return (
-    <EditorShell
-      open={open}
-      onClose={onClose}
-      title={t("propertyOverview.roomsEditorTitle")}
-    >
-      <p className="mb-4 text-muted-foreground text-sm">
-        {t("propertyOverview.zimmerHinweis")}
-      </p>
-      <div className="flex flex-col divide-y rounded-2xl border">
-        {ebenen.map(({ key, icon }) => {
-          const auf = offen === key;
-          return (
-            <div key={key}>
-              <button
-                type="button"
-                onClick={() => setOffen(auf ? null : key)}
-                aria-expanded={auf}
-                className="flex w-full items-center gap-4 px-5 py-4 text-left"
-              >
-                <Icon
-                  icon={icon}
-                  className="size-[1.375rem] shrink-0 text-foreground"
-                />
-                <span className="flex-1 font-semibold text-[0.9375rem]">
-                  {t(`propertyOverview.zimmer${key === "privat" ? "Privat" : "Gemeinschaftlich"}`)}
-                </span>
-                <Icon
-                  icon={auf ? "ph:caret-up" : "ph:caret-down"}
-                  className="size-[1.125rem] shrink-0 text-muted-foreground"
-                />
-              </button>
-              {auf && (
-                <div className="flex flex-col divide-y border-t">
-                  {ZIMMER_SLUGS.map((slug) => {
-                    const anzahl = vals[key][slug] ?? 0;
-                    return (
-                      <div
-                        key={slug}
-                        className="flex items-center gap-4 px-5 py-3"
-                      >
-                        <span className="flex-1 text-[0.9375rem]">
-                          {tz(slug)}
-                        </span>
-                        <div className="flex items-center gap-3">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 bg-secondary text-secondary-foreground disabled:opacity-40"
-                            disabled={anzahl === 0}
-                            aria-label={t("propertyOverview.zimmerWeniger", {
-                              room: tz(slug),
-                            })}
-                            onClick={() => setzen(key, slug, -1)}
-                          >
-                            <Icon icon="ph:minus" className="size-4" />
-                          </Button>
-                          <span
-                            className="w-5 text-center text-[0.9375rem] tabular-nums"
-                            aria-live="polite"
-                          >
-                            {anzahl}
-                          </span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 bg-secondary text-secondary-foreground"
-                            aria-label={t("propertyOverview.zimmerMehr", {
-                              room: tz(slug),
-                            })}
-                            onClick={() => setzen(key, slug, 1)}
-                          >
-                            <Icon icon="ph:plus" className="size-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <SaveBar busy={busy} error={error} onSave={() => run(vals)} />
-    </EditorShell>
-  );
-}
-
-/** Schlafgelegenheiten: Zähler je Bettentyp statt Ja/Nein-Auswahl — ein Objekt
- *  hat oft mehrere gleiche Betten (2 Einzelbetten), das trägt eine Checkbox nicht. */
-function BedsEditor({
-  open,
-  beds,
-  onClose,
-  onSave,
-}: {
-  open: boolean;
-  beds: Record<string, number>;
-  onClose: () => void;
-  onSave: (vals: Record<string, number>) => Promise<true | string>;
-}) {
-  const t = useTranslations("objects");
-  const tb = useTranslations("beds");
-  const tz = useTranslations("zimmer");
-  const [vals, setVals] = useState<Record<string, number>>(beds);
-  const { busy, error, run } = useSaver(onSave);
-
-  // Beim Öffnen den gespeicherten Stand übernehmen — der Editor bleibt gemountet,
-  // sonst zeigt er nach einem Abbrechen weiter die verworfenen Zahlen.
-  useEffect(() => {
-    if (open) setVals(beds);
-  }, [open, beds]);
-
-  function setzen(slug: string, delta: number) {
-    setVals((s) => {
-      const next = Math.max(0, (s[slug] ?? 0) + delta);
-      const kopie = { ...s };
-      if (next === 0) delete kopie[slug];
-      else kopie[slug] = next;
-      return kopie;
-    });
-  }
-
-  const plaetze = bedCount(vals);
-
-  return (
-    <EditorShell
-      open={open}
-      onClose={onClose}
-      title={t("propertyOverview.bedsEditorTitle")}
-    >
-      <p className="mb-4 text-muted-foreground text-sm">
-        {t("propertyOverview.bedsEditorHint")}
-      </p>
-      <div className="flex flex-col divide-y rounded-(--radius) border">
-        {BED_SLUGS.map((slug) => {
-          const Illustration = BETT_ILLUSTRATION[slug];
-          const anzahl = vals[slug] ?? 0;
-          return (
-            <div key={slug} className="flex items-center gap-4 p-4">
-              <Illustration className="size-6 shrink-0 text-muted-foreground" />
-              <span className="flex-1 text-sm">{tb(slug)}</span>
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="size-8"
-                  disabled={anzahl === 0}
-                  aria-label={t("propertyOverview.bedsDecrease", {
-                    bed: tb(slug),
-                  })}
-                  onClick={() => setzen(slug, -1)}
-                >
-                  <Icon icon="ph:minus" className="size-4" />
-                </Button>
-                <span
-                  className="w-6 text-center text-sm tabular-nums"
-                  aria-live="polite"
-                >
-                  {anzahl}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="size-8"
-                  aria-label={t("propertyOverview.bedsIncrease", {
-                    bed: tb(slug),
-                  })}
-                  onClick={() => setzen(slug, 1)}
-                >
-                  <Icon icon="ph:plus" className="size-4" />
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      {plaetze > 0 && (
-        <p className="mt-3 text-muted-foreground text-sm">
-          {t("propertyOverview.bedsSleeps", { count: plaetze })}
-        </p>
-      )}
-      <SaveBar busy={busy} error={error} onSave={() => run(vals)} />
-    </EditorShell>
-  );
-}
-
-/** Zimmer-Ausstattung: eigener Katalog (Channex /room_facilities), nach
- *  Kategorien gegliedert. Anders als beim Objekt-Katalog keine Suchleiste —
- *  191 Merkmale in 7 klaren Kategorien blättert man schneller durch, als man
- *  „Klimaanlage" tippt, und man sieht dabei, was es überhaupt gibt. */
-/** Ein Merkmal im Ausstattungs-Editor. `quelle` = der Channex-Katalog, aus dem
- *  es stammt; er entscheidet beim Speichern, ob es an die Property oder an den
- *  Room-Type geht. Für den Nutzer ist das unsichtbar. */
 type AusstattungsEintrag = {
   slug: string;
   label: string;
   quelle: "room" | "property";
 };
 
-/** Ausstattung — EIN Editor für beide Channex-Kataloge.
- *
- *  Channex führt zwei Kataloge mit eigenen UUIDs: /property_facilities (301,
- *  hängt am Objekt) und /room_facilities (191, hängt am Zimmer). Für den Nutzer
- *  ist das EINE Ausstattung: er hakt "Klimaanlage" an, wir entscheiden, an
- *  welchen der beiden Kataloge das geht. Deshalb eine Karte, ein Editor, und
- *  die Katalog-Trennung passiert unsichtbar beim Speichern.
- *
- *  Aufbau nach Airbnb-Vorbild: Suchfeld, aufklappbare Kategorien, Checkboxen,
- *  Portal-Logo an den Merkmalen, die das Portal kennt. */
+/** Ausstattung — EIN Editor für beide Channex-Kataloge. */
 function AmenitiesEditor({
   open,
   selected,

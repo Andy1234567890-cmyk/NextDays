@@ -741,7 +741,12 @@
     "authorPlaceholder": "Autor / fotógrafo (opcional)",
     "errorDialogTitle": "Não foi possível carregar algumas fotos",
     "errorDialogHint": "Corrija os ficheiros e carregue-os novamente.",
-    "errorDialogClose": "Fechar"
+    "errorDialogClose": "Fechar",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Proprietários",
@@ -4142,8 +4147,6 @@
       "saving": "A guardar…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Remover {room}",
-      "zimmerMehr": "Adicionar {room}",
       "zimmerGemeinschaftlich": "Partilhado",
       "zimmerPrivat": "Privado",
       "zimmerHinweis": "Que divisões tem o seu alojamento? As divisões selecionadas aqui são apresentadas no seu site.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Os dados mais importantes.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} hóspedes",
-      "unitsSuffix": " · {count} unidade(s)",
       "roomsCardTitle": "Divisões",
       "roomsCardHint": "Que divisões existem?",
       "noRooms": "Ainda não há divisões.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Os lugares de adulto oferecem espaço para adultos e crianças, os lugares de criança apenas para crianças. «Máx. hóspedes» (acima) são os lugares de adulto.",
       "childrenSlotsFieldLabel": "Lugares de criança",
       "infantSlotsFieldLabel": "Lugares de bebé",
-      "roomsCountFieldLabel": "Número de quartos",
       "sizeFieldLabel": "Área (m²)",
-      "unitsFieldLabel": "Unidades",
       "statusFieldLabel": "Estado",
       "amenitiesEditorTitle": "Editar comodidades",
       "amenitiesOtaHint": "Todas as comodidades são transmitidas automaticamente aos portais de reserva (Booking.com, Airbnb & Co.).",
       "removeAmenityAriaLabel": "Remover {amenity}",
       "amenitiesSearchPlaceholder": "Pesquisar comodidades …",
-      "noSearchResults": "Sem resultados."
+      "noSearchResults": "Sem resultados.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privado",
+      "zimmerSuffixGemeinschaftlich": "partilhado",
+      "zimmerErhoehen": "Adicionar {room}",
+      "zimmerVerringern": "Remover {room}",
+      "zimmerDetailsOeffnen": "Editar {room}",
+      "zimmerAnzahl": "Número de {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Disponibilidade",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "apenas na primeira exportação",
       "nurMitEntsprechung": "apenas características com correspondência no portal",
       "nichtDeckungsgleich": "as categorias não coincidem totalmente",
-      "ohneBeleg": "não confirmado — estamos a verificar"
+      "ohneBeleg": "não confirmado — estamos a verificar",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Condições de cancelamento",
       "kaution": "Caução",
       "lizenznummer": "Número de licença/registo",
-      "mietvertrag": "Contrato de arrendamento"
+      "mietvertrag": "Contrato de arrendamento",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Sala de jogos",
     "terrasse": "Terraço",
     "wc": "Lavabo",
-    "arbeitszimmer": "Escritório"
+    "arbeitszimmer": "Escritório",
+    "schlafbereich": "Zona de dormir"
   }
 }

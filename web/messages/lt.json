@@ -741,7 +741,12 @@
     "authorPlaceholder": "Autorius / fotografas (neprivaloma)",
     "errorDialogTitle": "Kai kurių nuotraukų nepavyko įkelti",
     "errorDialogHint": "Ištaisykite failus ir įkelkite juos dar kartą.",
-    "errorDialogClose": "Uždaryti"
+    "errorDialogClose": "Uždaryti",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Savininkai",
@@ -4142,8 +4147,6 @@
       "saving": "Išsaugoma…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Pašalinti {room}",
-      "zimmerMehr": "Pridėti {room}",
       "zimmerGemeinschaftlich": "Bendras",
       "zimmerPrivat": "Privatus",
       "zimmerHinweis": "Kokie kambariai yra jūsų būste? Čia pasirinkti kambariai bus rodomi jūsų svetainėje.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Svarbiausi duomenys.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} svečių",
-      "unitsSuffix": " · {count} vienetas (-ai)",
       "roomsCardTitle": "Kambariai",
       "roomsCardHint": "Kokie kambariai yra?",
       "noRooms": "Kambarių dar nėra.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Suaugusiųjų vietos skirtos suaugusiesiems ir vaikams, vaikų vietos – tik vaikams. „Maks. svečių“ (aukščiau) yra suaugusiųjų vietos.",
       "childrenSlotsFieldLabel": "Vaikų vietos",
       "infantSlotsFieldLabel": "Mažamečių vietos",
-      "roomsCountFieldLabel": "Kambarių skaičius",
       "sizeFieldLabel": "Plotas (m²)",
-      "unitsFieldLabel": "Vienetai",
       "statusFieldLabel": "Būsena",
       "amenitiesEditorTitle": "Redaguoti ausstattung",
       "amenitiesOtaHint": "Visos ausstattung savybės automatiškai perduodamos į rezervavimo portalus (Booking.com, Airbnb ir kt.).",
       "removeAmenityAriaLabel": "Pašalinti {amenity}",
       "amenitiesSearchPlaceholder": "Ieškoti ausstattung …",
-      "noSearchResults": "Rezultatų nėra."
+      "noSearchResults": "Rezultatų nėra.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privatus",
+      "zimmerSuffixGemeinschaftlich": "bendras",
+      "zimmerErhoehen": "Pridėti: {room}",
+      "zimmerVerringern": "Pašalinti: {room}",
+      "zimmerDetailsOeffnen": "Redaguoti {room}",
+      "zimmerAnzahl": "{room} skaičius",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Prieinamumas",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "tik pirmojo eksporto metu",
       "nurMitEntsprechung": "tik savybės, turinčios atitikmenį portale",
       "nichtDeckungsgleich": "kategorijos nesutampa visiškai",
-      "ohneBeleg": "nepatvirtinta — tikriname"
+      "ohneBeleg": "nepatvirtinta — tikriname",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Atšaukimo sąlygos",
       "kaution": "Užstatas",
       "lizenznummer": "Licencijos / registracijos numeris",
-      "mietvertrag": "Nuomos sutartis"
+      "mietvertrag": "Nuomos sutartis",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Žaidimų kambarys",
     "terrasse": "Terasa",
     "wc": "Tualetas",
-    "arbeitszimmer": "Kabinetas"
+    "arbeitszimmer": "Kabinetas",
+    "schlafbereich": "Miegamoji zona"
   }
 }

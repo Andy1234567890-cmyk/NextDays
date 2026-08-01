@@ -741,7 +741,12 @@
     "authorPlaceholder": "Auteur / fotograaf (optioneel)",
     "errorDialogTitle": "Sommige foto's konden niet worden geüpload",
     "errorDialogHint": "Corrigeer de bestanden en upload ze opnieuw.",
-    "errorDialogClose": "Sluiten"
+    "errorDialogClose": "Sluiten",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Eigenaren",
@@ -4142,8 +4147,6 @@
       "saving": "Opslaan…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "{room} verwijderen",
-      "zimmerMehr": "{room} toevoegen",
       "zimmerGemeinschaftlich": "Gedeeld",
       "zimmerPrivat": "Privé",
       "zimmerHinweis": "Welke kamers heeft uw accommodatie? De hier geselecteerde kamers worden op uw website weergegeven.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "De belangrijkste kerngegevens.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} gasten",
-      "unitsSuffix": " · {count} eenhe(i)d(en)",
       "roomsCardTitle": "Ruimtes",
       "roomsCardHint": "Welke ruimtes zijn er?",
       "noRooms": "Nog geen ruimtes.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Volwassenenplaatsen bieden ruimte voor volwassenen en kinderen, kinderplaatsen alleen voor kinderen. „Max. gasten” (hierboven) zijn de volwassenenplaatsen.",
       "childrenSlotsFieldLabel": "Kinderplaatsen",
       "infantSlotsFieldLabel": "Babyplaatsen",
-      "roomsCountFieldLabel": "Aantal kamers",
       "sizeFieldLabel": "Oppervlakte (m²)",
-      "unitsFieldLabel": "Eenheden",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Voorzieningen bewerken",
       "amenitiesOtaHint": "Alle voorzieningen worden automatisch doorgestuurd naar de boekingsportalen (Booking.com, Airbnb & co.).",
       "removeAmenityAriaLabel": "{amenity} verwijderen",
       "amenitiesSearchPlaceholder": "Voorzieningen zoeken …",
-      "noSearchResults": "Geen resultaten."
+      "noSearchResults": "Geen resultaten.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privé",
+      "zimmerSuffixGemeinschaftlich": "gedeeld",
+      "zimmerErhoehen": "{room} toevoegen",
+      "zimmerVerringern": "{room} verwijderen",
+      "zimmerDetailsOeffnen": "{room} bewerken",
+      "zimmerAnzahl": "Aantal {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Beschikbaarheid",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "alleen bij de eerste export",
       "nurMitEntsprechung": "alleen kenmerken met een equivalent in het portaal",
       "nichtDeckungsgleich": "categorieën komen niet volledig overeen",
-      "ohneBeleg": "niet bevestigd — we controleren dit"
+      "ohneBeleg": "niet bevestigd — we controleren dit",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Annuleringsvoorwaarden",
       "kaution": "Borg",
       "lizenznummer": "Licentie-/registratienummer",
-      "mietvertrag": "Huurovereenkomst"
+      "mietvertrag": "Huurovereenkomst",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Speelkamer",
     "terrasse": "Terras",
     "wc": "Toilet",
-    "arbeitszimmer": "Studeerkamer"
+    "arbeitszimmer": "Studeerkamer",
+    "schlafbereich": "Slaapgedeelte"
   }
 }

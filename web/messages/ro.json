@@ -741,7 +741,12 @@
     "authorPlaceholder": "Autor / fotograf (opțional)",
     "errorDialogTitle": "Unele fotografii nu au putut fi încărcate",
     "errorDialogHint": "Te rugăm să corectezi fișierele și să le încarci din nou.",
-    "errorDialogClose": "Închide"
+    "errorDialogClose": "Închide",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Proprietari",
@@ -4142,8 +4147,6 @@
       "saving": "Se salvează…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Elimină {room}",
-      "zimmerMehr": "Adaugă {room}",
       "zimmerGemeinschaftlich": "Comun",
       "zimmerPrivat": "Privat",
       "zimmerHinweis": "Ce camere are proprietatea dvs.? Camerele selectate aici vor apărea pe site-ul dvs.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Cele mai importante date esențiale.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} oaspeți",
-      "unitsSuffix": " · {count} unitate(unități)",
       "roomsCardTitle": "Camere",
       "roomsCardHint": "Ce camere există?",
       "noRooms": "Încă nu există camere.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Locurile pentru adulți oferă spațiu pentru adulți și copii, locurile pentru copii doar pentru copii. „Max. oaspeți” (mai sus) reprezintă locurile pentru adulți.",
       "childrenSlotsFieldLabel": "Locuri pentru copii",
       "infantSlotsFieldLabel": "Locuri pentru copii mici",
-      "roomsCountFieldLabel": "Număr de camere",
       "sizeFieldLabel": "Suprafață (m²)",
-      "unitsFieldLabel": "Unități",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Editează facilitățile",
       "amenitiesOtaHint": "Toate facilitățile sunt transmise automat către portalurile de rezervări (Booking.com, Airbnb & Co.).",
       "removeAmenityAriaLabel": "Elimină {amenity}",
       "amenitiesSearchPlaceholder": "Caută facilități …",
-      "noSearchResults": "Niciun rezultat."
+      "noSearchResults": "Niciun rezultat.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privat",
+      "zimmerSuffixGemeinschaftlich": "comun",
+      "zimmerErhoehen": "Adăugați {room}",
+      "zimmerVerringern": "Eliminați {room}",
+      "zimmerDetailsOeffnen": "Editează {room}",
+      "zimmerAnzahl": "Număr de {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Disponibilitate",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "doar la primul export",
       "nurMitEntsprechung": "doar caracteristicile cu echivalent în portal",
       "nichtDeckungsgleich": "categoriile nu se suprapun complet",
-      "ohneBeleg": "neconfirmat — verificăm"
+      "ohneBeleg": "neconfirmat — verificăm",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Condiții de anulare",
       "kaution": "Garanție",
       "lizenznummer": "Număr de licență/înregistrare",
-      "mietvertrag": "Contract de închiriere"
+      "mietvertrag": "Contract de închiriere",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Cameră de joacă",
     "terrasse": "Terasă",
     "wc": "WC",
-    "arbeitszimmer": "Birou"
+    "arbeitszimmer": "Birou",
+    "schlafbereich": "Zonă de dormit"
   }
 }

@@ -741,7 +741,12 @@
     "authorPlaceholder": "Δημιουργός / φωτογράφος (προαιρετικό)",
     "errorDialogTitle": "Ορισμένες φωτογραφίες δεν ήταν δυνατό να μεταφορτωθούν",
     "errorDialogHint": "Διορθώστε τα αρχεία και ανεβάστε τα ξανά.",
-    "errorDialogClose": "Κλείσιμο"
+    "errorDialogClose": "Κλείσιμο",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Ιδιοκτήτες",
@@ -4142,8 +4147,6 @@
       "saving": "Αποθήκευση…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Αφαίρεση {room}",
-      "zimmerMehr": "Προσθήκη {room}",
       "zimmerGemeinschaftlich": "Κοινόχρηστο",
       "zimmerPrivat": "Ιδιωτικό",
       "zimmerHinweis": "Ποια δωμάτια διαθέτει το κατάλυμά σας; Τα δωμάτια που επιλέγετε εδώ εμφανίζονται στον ιστότοπό σας.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Τα βασικά στοιχεία με μια ματιά.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} επισκέπτες",
-      "unitsSuffix": " · {count} μονάδα(-ες)",
       "roomsCardTitle": "Χώροι",
       "roomsCardHint": "Ποιοι χώροι υπάρχουν;",
       "noRooms": "Δεν υπάρχουν ακόμη χώροι.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Οι θέσεις ενηλίκων προσφέρουν χώρο για ενήλικες και παιδιά, οι θέσεις παιδιών μόνο για παιδιά. Οι «Μέγ. επισκέπτες» (παραπάνω) είναι οι θέσεις ενηλίκων.",
       "childrenSlotsFieldLabel": "Θέσεις παιδιών",
       "infantSlotsFieldLabel": "Θέσεις βρεφών",
-      "roomsCountFieldLabel": "Αριθμός δωματίων",
       "sizeFieldLabel": "Μέγεθος (m²)",
-      "unitsFieldLabel": "Μονάδες",
       "statusFieldLabel": "Κατάσταση",
       "amenitiesEditorTitle": "Επεξεργασία παροχών",
       "amenitiesOtaHint": "Όλα τα χαρακτηριστικά παροχών μεταφέρονται αυτόματα στις πύλες κρατήσεων (Booking.com, Airbnb & Co.).",
       "removeAmenityAriaLabel": "Αφαίρεση {amenity}",
       "amenitiesSearchPlaceholder": "Αναζήτηση παροχών …",
-      "noSearchResults": "Κανένα αποτέλεσμα."
+      "noSearchResults": "Κανένα αποτέλεσμα.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "ιδιωτικό",
+      "zimmerSuffixGemeinschaftlich": "κοινόχρηστο",
+      "zimmerErhoehen": "Προσθήκη: {room}",
+      "zimmerVerringern": "Αφαίρεση: {room}",
+      "zimmerDetailsOeffnen": "Επεξεργασία {room}",
+      "zimmerAnzahl": "Αριθμός: {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Διαθεσιμότητα",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "μόνο κατά την πρώτη εξαγωγή",
       "nurMitEntsprechung": "μόνο χαρακτηριστικά με αντιστοιχία στην πύλη",
       "nichtDeckungsgleich": "οι κατηγορίες δεν ταυτίζονται πλήρως",
-      "ohneBeleg": "μη επιβεβαιωμένο — το ελέγχουμε"
+      "ohneBeleg": "μη επιβεβαιωμένο — το ελέγχουμε",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Όροι ακύρωσης",
       "kaution": "Εγγύηση",
       "lizenznummer": "Αριθμός άδειας/μητρώου",
-      "mietvertrag": "Μισθωτήριο συμβόλαιο"
+      "mietvertrag": "Μισθωτήριο συμβόλαιο",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Δωμάτιο παιχνιδιών",
     "terrasse": "Βεράντα",
     "wc": "WC",
-    "arbeitszimmer": "Γραφείο"
+    "arbeitszimmer": "Γραφείο",
+    "schlafbereich": "Χώρος ύπνου"
   }
 }

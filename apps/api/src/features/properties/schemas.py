@@ -183,7 +183,7 @@ class PropertyBase(BaseModel):
     # (DK-Katasternummer) ist ein echtes neues Kartei-Feld. Bewusst NICHT in
     # _CONTENT_FIELDS (service.py) → kein Channex/OTA-Sync. Name/Typ/Adresse/
     # Kapazität kommen aus dem Bestand (title, property_type, house_number,
-    # max_guests, type_attributes.size_m2) — keine zweite Wahrheit.
+    # max_guests, size_value/size_unit) — keine zweite Wahrheit.
     bfe_number: str | None = None
 
     # Listen. amenities = Objekt-Ausstattung, room_amenities = Zimmer-Ausstattung:
@@ -345,6 +345,8 @@ class PropertyPhoto(BaseModel):
     caption: dict[str, str] = Field(default_factory=dict)
     # Urheber/Fotograf (an die Buchungsportale mitgesendet). Leer = kein Autor.
     author: str | None = None
+    # Zimmer, zu dem das Foto gehört (0248). None = keinem zugeordnet.
+    room_id: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
 
@@ -367,11 +369,97 @@ class PhotoUpdateRequest(BaseModel):
     ``caption`` ersetzt die gesamte Locale-Map (nicht gesetzt = unverändert).
     ``is_cover=true`` macht dieses Foto zum alleinigen Cover des Objekts.
     ``author`` setzt den Urheber (leerer String = Autor entfernen).
+    ``room_id`` ordnet das Foto einem Zimmer zu; leerer String löst die
+    Zuordnung (None = unverändert — sonst könnte man sie nie entfernen).
     """
 
     caption: dict[str, str] | None = None
     is_cover: bool | None = None
     author: str | None = None
+    room_id: str | None = None
+
+
+# --- Zimmer (property_rooms, 0246) ------------------------------------------
+# Ein Zimmer ist eine eigene Zeile, kein Zählwerk: nur so lässt sich sagen,
+# WELCHES Schlafzimmer welche Betten hat und welches Bad an welches grenzt.
+# Nichts davon geht an Channex (Room-Type verwirft beds/bedrooms/bathrooms,
+# live gemessen) — außer der Zimmer-Ausstattung, die als Vereinigungsmenge in
+# room_type.facilities landet.
+
+# Raumtypen, die Schlafmöglichkeiten tragen können. Lodgify erlaubt es genau
+# hier (Schlafzimmer, Wohnzimmer, Schlafbereich); ein Bett im Badezimmer wäre
+# ein Eingabefehler, kein Sonderfall.
+BETT_RAUMTYPEN = frozenset({"schlafzimmer", "wohnzimmer", "schlafbereich"})
+
+# Raumtypen, für die „en suite" überhaupt eine Aussage ist.
+ENSUITE_RAUMTYPEN = frozenset({"badezimmer", "wc"})
+
+
+class PropertyRoom(BaseModel):
+    """Ein Zimmer eines Objekts."""
+
+    id: str
+    property_id: str
+    raum_typ: str
+    privat: bool = True
+    name: str | None = None
+    position: int = 0
+    # {slug: anzahl}, z. B. {"doppelbett": 1, "einzelbett": 2}
+    betten: dict[str, int] = Field(default_factory=dict)
+    ausstattung: list[str] = Field(default_factory=list)
+    en_suite: bool = False
+    en_suite_schlafzimmer_id: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
+class PropertyRoomListResponse(BaseModel):
+    items: list[PropertyRoom]
+    total: int
+
+
+class PropertyRoomCreate(BaseModel):
+    """Neues Zimmer. Der Typ ist Pflicht — ohne ihn wäre die Zeile bedeutungslos."""
+
+    raum_typ: str = Field(min_length=1, max_length=64)
+    privat: bool = True
+    name: str | None = Field(default=None, max_length=120)
+    betten: dict[str, int] = Field(default_factory=dict)
+    ausstattung: list[str] = Field(default_factory=list)
+    en_suite: bool = False
+    en_suite_schlafzimmer_id: str | None = None
+
+    @field_validator("betten")
+    @classmethod
+    def _betten_positiv(cls, value: dict[str, int]) -> dict[str, int]:
+        """Nur echte Stückzahlen. 0 oder negativ ist kein Bett, sondern Müll —
+        er würde als „vorhanden" durch die Zählung laufen (Wurzel 4)."""
+        return {slug: n for slug, n in value.items() if isinstance(n, int) and n > 0}
+
+
+class PropertyRoomUpdate(BaseModel):
+    """Partielle Änderung. Nicht gesetzte Felder bleiben unverändert."""
+
+    raum_typ: str | None = Field(default=None, min_length=1, max_length=64)
+    privat: bool | None = None
+    name: str | None = Field(default=None, max_length=120)
+    betten: dict[str, int] | None = None
+    ausstattung: list[str] | None = None
+    en_suite: bool | None = None
+    en_suite_schlafzimmer_id: str | None = None
+
+    @field_validator("betten")
+    @classmethod
+    def _betten_positiv(cls, value: dict[str, int] | None) -> dict[str, int] | None:
+        if value is None:
+            return None
+        return {slug: n for slug, n in value.items() if isinstance(n, int) and n > 0}
+
+
+class RoomReorderRequest(BaseModel):
+    """Neue Reihenfolge als vollständige Liste der Zimmer-IDs."""
+
+    room_ids: list[str] = Field(min_length=1)
 
 
 class SliceHealth(BaseModel):

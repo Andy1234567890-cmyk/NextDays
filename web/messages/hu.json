@@ -741,7 +741,12 @@
     "authorPlaceholder": "Szerző / fotós (opcionális)",
     "errorDialogTitle": "Néhány fotót nem sikerült feltölteni",
     "errorDialogHint": "Kérjük, javítsd ki a fájlokat, majd töltsd fel őket újra.",
-    "errorDialogClose": "Bezárás"
+    "errorDialogClose": "Bezárás",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Tulajdonosok",
@@ -4142,8 +4147,6 @@
       "saving": "Mentés…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "{room} eltávolítása",
-      "zimmerMehr": "{room} hozzáadása",
       "zimmerGemeinschaftlich": "Közös",
       "zimmerPrivat": "Privát",
       "zimmerHinweis": "Milyen helyiségekkel rendelkezik az Ön szálláshelye? Az itt kiválasztott helyiségek megjelennek a weboldalán.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "A legfontosabb alapadatok.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} vendég",
-      "unitsSuffix": " · {count} egység",
       "roomsCardTitle": "Helyiségek",
       "roomsCardHint": "Milyen helyiségek vannak?",
       "noRooms": "Még nincs megadva helyiség.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "A felnőtthelyek felnőtteknek és gyerekeknek is helyet biztosítanak, a gyerekhelyek csak gyerekeknek. A „Max. vendég” (fent) a felnőtthelyek száma.",
       "childrenSlotsFieldLabel": "Gyerekhelyek",
       "infantSlotsFieldLabel": "Kisgyerekhelyek",
-      "roomsCountFieldLabel": "Szobák száma",
       "sizeFieldLabel": "Méret (m²)",
-      "unitsFieldLabel": "Egységek",
       "statusFieldLabel": "Állapot",
       "amenitiesEditorTitle": "Felszereltség szerkesztése",
       "amenitiesOtaHint": "Minden felszereltségi jellemző automatikusan átkerül a foglalási portálokra (Booking.com, Airbnb és társai).",
       "removeAmenityAriaLabel": "{amenity} eltávolítása",
       "amenitiesSearchPlaceholder": "Felszereltség keresése …",
-      "noSearchResults": "Nincs találat."
+      "noSearchResults": "Nincs találat.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privát",
+      "zimmerSuffixGemeinschaftlich": "közös",
+      "zimmerErhoehen": "{room} hozzáadása",
+      "zimmerVerringern": "{room} eltávolítása",
+      "zimmerDetailsOeffnen": "{room} szerkesztése",
+      "zimmerAnzahl": "{room} száma",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Elérhetőség",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "csak az első exportnál",
       "nurMitEntsprechung": "csak azok a jellemzők, amelyeknek van megfelelője a portálon",
       "nichtDeckungsgleich": "a kategóriák nem fedik egymást teljesen",
-      "ohneBeleg": "nincs megerősítve — ellenőrizzük"
+      "ohneBeleg": "nincs megerősítve — ellenőrizzük",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Lemondási feltételek",
       "kaution": "Kaució",
       "lizenznummer": "Engedély-/nyilvántartási szám",
-      "mietvertrag": "Bérleti szerződés"
+      "mietvertrag": "Bérleti szerződés",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Játszószoba",
     "terrasse": "Terasz",
     "wc": "WC",
-    "arbeitszimmer": "Dolgozószoba"
+    "arbeitszimmer": "Dolgozószoba",
+    "schlafbereich": "Alvórész"
   }
 }

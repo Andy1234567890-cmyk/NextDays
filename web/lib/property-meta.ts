@@ -997,6 +997,10 @@ export const ZIMMER_SLUGS = [
   "terrasse",
   "wc",
   "arbeitszimmer",
+  // Schlafbereich: eine Schlafecke ohne eigenen Raum (Lodgify fuehrt sie
+  // getrennt vom Schlafzimmer — sie traegt Betten, aber keine eigene
+  // Ausstattung).
+  "schlafbereich",
 ] as const;
 
 export type ZimmerSlug = (typeof ZIMMER_SLUGS)[number];
@@ -1013,6 +1017,7 @@ export const ZIMMER_LABELS: Record<string, string> = {
   terrasse: "Terrasse",
   wc: "WC",
   arbeitszimmer: "Arbeitszimmer",
+  schlafbereich: "Schlafbereich",
 };
 
 export type ZimmerZaehlwerk = {

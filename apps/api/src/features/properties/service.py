@@ -22,6 +22,8 @@ from src.jobs.queue import (
     try_enqueue_recompute,
 )
 
+from .errors import PropertyError
+from .rooms import RoomsMixin
 from .schemas import (
     ChannelState,
     PhotoUpdateRequest,
@@ -97,16 +99,7 @@ def _sniff_image_ext(content: bytes) -> str | None:
     return None
 
 
-class PropertyError(Exception):
-    """Fachlicher Fehler; vom Router auf HTTP-Status gemappt."""
-
-    def __init__(self, message: str, *, status_code: int = 400) -> None:
-        super().__init__(message)
-        self.message = message
-        self.status_code = status_code
-
-
-class PropertiesService:
+class PropertiesService(RoomsMixin):
     slice_name = "properties"
 
     def __init__(self, service_client: Client) -> None:
@@ -821,6 +814,24 @@ class PropertiesService:
             # Cover nicht abwählbar (es muss immer eins geben) — ignorieren.
             changes.pop("is_cover", None)
 
+        if "room_id" in changes:
+            # Leerer String löst die Zuordnung; ein gesetztes Zimmer MUSS zum
+            # selben Objekt gehören — sonst zeigte ein Foto auf ein Zimmer eines
+            # fremden Objekts (Wurzel 3/9: Scope am {id}-Pfad erzwingen).
+            ziel = changes["room_id"]
+            if not ziel:
+                changes["room_id"] = None
+            else:
+                treffer = (
+                    self._db.table("property_rooms")
+                    .select("id")
+                    .eq("id", ziel)
+                    .eq("property_id", property_id)
+                    .execute()
+                ).data
+                if not treffer:
+                    raise PropertyError("Zimmer nicht gefunden.", status_code=404)
+
         if changes:
             res = (
                 self._db.table("property_photos")
@@ -1458,6 +1469,7 @@ def _photo_row(r: dict) -> dict:
         "is_cover": bool(r.get("is_cover")),
         "caption": r.get("caption") or {},
         "author": r.get("author") or None,
+        "room_id": str(r["room_id"]) if r.get("room_id") else None,
         "created_at": str(r["created_at"]) if r.get("created_at") else None,
         "updated_at": str(r["updated_at"]) if r.get("updated_at") else None,
     }

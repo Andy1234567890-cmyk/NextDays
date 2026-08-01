@@ -741,7 +741,12 @@
     "authorPlaceholder": "Ophavsmand / fotograf (valgfrit)",
     "errorDialogTitle": "Nogle fotos kunne ikke uploades",
     "errorDialogHint": "Ret venligst filerne, og upload dem igen.",
-    "errorDialogClose": "Luk"
+    "errorDialogClose": "Luk",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Ejere",
@@ -4142,8 +4147,6 @@
       "saving": "Gemmer…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Fjern {room}",
-      "zimmerMehr": "Tilføj {room}",
       "zimmerGemeinschaftlich": "Fælles",
       "zimmerPrivat": "Privat",
       "zimmerHinweis": "Hvilke rum har din bolig? De rum, du vælger her, vises på din hjemmeside.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "De vigtigste nøgletal.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} gæster",
-      "unitsSuffix": " · {count} enhed(er)",
       "roomsCardTitle": "Rum",
       "roomsCardHint": "Hvilke rum findes der?",
       "noRooms": "Endnu ingen rum.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Voksenpladser giver plads til voksne og børn, børnepladser kun til børn. „Maks. gæster“ (ovenfor) er voksenpladserne.",
       "childrenSlotsFieldLabel": "Børnepladser",
       "infantSlotsFieldLabel": "Småbørnspladser",
-      "roomsCountFieldLabel": "Antal værelser",
       "sizeFieldLabel": "Størrelse (m²)",
-      "unitsFieldLabel": "Enheder",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Rediger faciliteter",
       "amenitiesOtaHint": "Alle faciliteter overføres automatisk til bookingportalerne (Booking.com, Airbnb & Co.).",
       "removeAmenityAriaLabel": "Fjern {amenity}",
       "amenitiesSearchPlaceholder": "Søg faciliteter …",
-      "noSearchResults": "Ingen resultater."
+      "noSearchResults": "Ingen resultater.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privat",
+      "zimmerSuffixGemeinschaftlich": "fælles",
+      "zimmerErhoehen": "Tilføj {room}",
+      "zimmerVerringern": "Fjern {room}",
+      "zimmerDetailsOeffnen": "Rediger {room}",
+      "zimmerAnzahl": "Antal {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Tilgængelighed",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "kun ved første eksport",
       "nurMitEntsprechung": "kun egenskaber med et modstykke i portalen",
       "nichtDeckungsgleich": "kategorierne stemmer ikke helt overens",
-      "ohneBeleg": "ikke bekræftet — vi undersøger det"
+      "ohneBeleg": "ikke bekræftet — vi undersøger det",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Afbestillingsbetingelser",
       "kaution": "Depositum",
       "lizenznummer": "Licens-/registreringsnummer",
-      "mietvertrag": "Lejekontrakt"
+      "mietvertrag": "Lejekontrakt",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Legeværelse",
     "terrasse": "Terrasse",
     "wc": "Toilet",
-    "arbeitszimmer": "Kontor"
+    "arbeitszimmer": "Kontor",
+    "schlafbereich": "Soveområde"
   }
 }

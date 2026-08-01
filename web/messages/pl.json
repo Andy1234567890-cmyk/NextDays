@@ -741,7 +741,12 @@
     "authorPlaceholder": "Autor / fotograf (opcjonalnie)",
     "errorDialogTitle": "Niektórych zdjęć nie udało się przesłać",
     "errorDialogHint": "Popraw pliki i prześlij je ponownie.",
-    "errorDialogClose": "Zamknij"
+    "errorDialogClose": "Zamknij",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Właściciele",
@@ -4142,8 +4147,6 @@
       "saving": "Zapisywanie…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Usuń {room}",
-      "zimmerMehr": "Dodaj {room}",
       "zimmerGemeinschaftlich": "Wspólne",
       "zimmerPrivat": "Prywatne",
       "zimmerHinweis": "Jakie pomieszczenia ma Twój obiekt? Wybrane tutaj pomieszczenia będą widoczne na Twojej stronie internetowej.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Najważniejsze dane w skrócie.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} gości",
-      "unitsSuffix": " · {count} jednostka(i)",
       "roomsCardTitle": "Pomieszczenia",
       "roomsCardHint": "Jakie pomieszczenia są dostępne?",
       "noRooms": "Brak pomieszczeń.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Miejsca dla dorosłych są przeznaczone dla dorosłych i dzieci, miejsca dla dzieci tylko dla dzieci. „Maks. liczba gości” (powyżej) to miejsca dla dorosłych.",
       "childrenSlotsFieldLabel": "Miejsca dla dzieci",
       "infantSlotsFieldLabel": "Miejsca dla niemowląt",
-      "roomsCountFieldLabel": "Liczba pokoi",
       "sizeFieldLabel": "Powierzchnia (m²)",
-      "unitsFieldLabel": "Jednostki",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Edytuj wyposażenie",
       "amenitiesOtaHint": "Wszystkie elementy wyposażenia są automatycznie przekazywane do portali rezerwacyjnych (Booking.com, Airbnb i inne).",
       "removeAmenityAriaLabel": "Usuń {amenity}",
       "amenitiesSearchPlaceholder": "Szukaj wyposażenia …",
-      "noSearchResults": "Brak wyników."
+      "noSearchResults": "Brak wyników.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "prywatne",
+      "zimmerSuffixGemeinschaftlich": "wspólne",
+      "zimmerErhoehen": "Dodaj: {room}",
+      "zimmerVerringern": "Usuń: {room}",
+      "zimmerDetailsOeffnen": "Edytuj {room}",
+      "zimmerAnzahl": "Liczba: {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Dostępność",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "tylko przy pierwszym eksporcie",
       "nurMitEntsprechung": "tylko cechy mające odpowiednik w portalu",
       "nichtDeckungsgleich": "kategorie nie pokrywają się w pełni",
-      "ohneBeleg": "niepotwierdzone — sprawdzamy to"
+      "ohneBeleg": "niepotwierdzone — sprawdzamy to",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Warunki anulowania",
       "kaution": "Kaucja",
       "lizenznummer": "Numer licencji/rejestracji",
-      "mietvertrag": "Umowa najmu"
+      "mietvertrag": "Umowa najmu",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Pokój zabaw",
     "terrasse": "Taras",
     "wc": "WC",
-    "arbeitszimmer": "Gabinet"
+    "arbeitszimmer": "Gabinet",
+    "schlafbereich": "Część sypialna"
   }
 }

@@ -741,7 +741,12 @@
     "authorPlaceholder": "Tekijä / valokuvaaja (valinnainen)",
     "errorDialogTitle": "Joitakin kuvia ei voitu ladata",
     "errorDialogHint": "Korjaa tiedostot ja lataa ne uudelleen.",
-    "errorDialogClose": "Sulje"
+    "errorDialogClose": "Sulje",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Omistajat",
@@ -4142,8 +4147,6 @@
       "saving": "Tallennetaan…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Poista {room}",
-      "zimmerMehr": "Lisää {room}",
       "zimmerGemeinschaftlich": "Jaettu",
       "zimmerPrivat": "Yksityinen",
       "zimmerHinweis": "Mitä huoneita majoituksessasi on? Tässä valitut huoneet näkyvät verkkosivustollasi.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Tärkeimmät perustiedot.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} vierasta",
-      "unitsSuffix": " · {count} yksikkö(ä)",
       "roomsCardTitle": "Huoneet",
       "roomsCardHint": "Mitä huoneita kohteessa on?",
       "noRooms": "Ei vielä huoneita.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Aikuispaikat tarjoavat tilaa aikuisille ja lapsille, lapsipaikat vain lapsille. Yllä oleva „Vieraita enintään” on aikuispaikkojen määrä.",
       "childrenSlotsFieldLabel": "Lapsipaikat",
       "infantSlotsFieldLabel": "Vauvapaikat",
-      "roomsCountFieldLabel": "Huoneiden määrä",
       "sizeFieldLabel": "Koko (m²)",
-      "unitsFieldLabel": "Yksiköt",
       "statusFieldLabel": "Tila",
       "amenitiesEditorTitle": "Muokkaa varusteita",
       "amenitiesOtaHint": "Kaikki varusteet välitetään automaattisesti varausportaaleihin (Booking.com, Airbnb & co.).",
       "removeAmenityAriaLabel": "Poista {amenity}",
       "amenitiesSearchPlaceholder": "Hae varusteita …",
-      "noSearchResults": "Ei hakutuloksia."
+      "noSearchResults": "Ei hakutuloksia.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "yksityinen",
+      "zimmerSuffixGemeinschaftlich": "jaettu",
+      "zimmerErhoehen": "Lisää {room}",
+      "zimmerVerringern": "Poista {room}",
+      "zimmerDetailsOeffnen": "Muokkaa: {room}",
+      "zimmerAnzahl": "{room}: määrä",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Saatavuus",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "vain ensimmäisessä viennissä",
       "nurMitEntsprechung": "vain ominaisuudet, joilla on vastine portaalissa",
       "nichtDeckungsgleich": "kategoriat eivät täsmää täysin",
-      "ohneBeleg": "ei vahvistettu — selvitämme asiaa"
+      "ohneBeleg": "ei vahvistettu — selvitämme asiaa",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Peruutusehdot",
       "kaution": "Vakuus",
       "lizenznummer": "Lisenssi-/rekisterinumero",
-      "mietvertrag": "Vuokrasopimus"
+      "mietvertrag": "Vuokrasopimus",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Leikkihuone",
     "terrasse": "Terassi",
     "wc": "WC",
-    "arbeitszimmer": "Työhuone"
+    "arbeitszimmer": "Työhuone",
+    "schlafbereich": "Nukkumatila"
   }
 }

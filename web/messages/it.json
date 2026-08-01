@@ -741,7 +741,12 @@
     "authorPlaceholder": "Autore / fotografo (facoltativo)",
     "errorDialogTitle": "Alcune foto non sono state caricate",
     "errorDialogHint": "Correggi i file e caricali di nuovo.",
-    "errorDialogClose": "Chiudi"
+    "errorDialogClose": "Chiudi",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Proprietari",
@@ -4142,8 +4147,6 @@
       "saving": "Salvataggio…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Rimuovi {room}",
-      "zimmerMehr": "Aggiungi {room}",
       "zimmerGemeinschaftlich": "Condiviso",
       "zimmerPrivat": "Privato",
       "zimmerHinweis": "Quali stanze ha la tua struttura? Le stanze selezionate qui verranno visualizzate sul tuo sito web.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "I dati principali.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} ospiti",
-      "unitsSuffix": " · {count} unità",
       "roomsCardTitle": "Stanze",
       "roomsCardHint": "Quali stanze sono disponibili?",
       "noRooms": "Ancora nessuna stanza.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "I posti adulti offrono spazio per adulti e bambini, i posti bambino solo per bambini. \"Ospiti max.\" (sopra) sono i posti adulti.",
       "childrenSlotsFieldLabel": "Posti bambino",
       "infantSlotsFieldLabel": "Posti neonato",
-      "roomsCountFieldLabel": "Numero di stanze",
       "sizeFieldLabel": "Superficie (m²)",
-      "unitsFieldLabel": "Unità",
       "statusFieldLabel": "Stato",
       "amenitiesEditorTitle": "Modifica dotazioni",
       "amenitiesOtaHint": "Tutte le dotazioni vengono trasmesse automaticamente ai portali di prenotazione (Booking.com, Airbnb & Co.).",
       "removeAmenityAriaLabel": "Rimuovi {amenity}",
       "amenitiesSearchPlaceholder": "Cerca dotazioni …",
-      "noSearchResults": "Nessun risultato."
+      "noSearchResults": "Nessun risultato.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privato",
+      "zimmerSuffixGemeinschaftlich": "condiviso",
+      "zimmerErhoehen": "Aggiungi {room}",
+      "zimmerVerringern": "Rimuovi {room}",
+      "zimmerDetailsOeffnen": "Modifica {room}",
+      "zimmerAnzahl": "Numero di {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Disponibilità",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "solo alla prima esportazione",
       "nurMitEntsprechung": "solo caratteristiche con corrispondenza nel portale",
       "nichtDeckungsgleich": "le categorie non coincidono del tutto",
-      "ohneBeleg": "non confermato — stiamo verificando"
+      "ohneBeleg": "non confermato — stiamo verificando",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Condizioni di cancellazione",
       "kaution": "Cauzione",
       "lizenznummer": "Numero di licenza/registrazione",
-      "mietvertrag": "Contratto di locazione"
+      "mietvertrag": "Contratto di locazione",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Sala giochi",
     "terrasse": "Terrazza",
     "wc": "WC",
-    "arbeitszimmer": "Studio"
+    "arbeitszimmer": "Studio",
+    "schlafbereich": "Zona notte"
   }
 }

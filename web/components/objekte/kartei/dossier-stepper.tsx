@@ -138,9 +138,9 @@ function Stufe1({ t, property, owner }: { t: T; property: Property; owner: Linke
   }
 
   // Alles außer der DK-Katasternummer kommt read-only aus dem Bestand — Name =
-  // title, Typ = property_type, Kapazität = max_guests / type_attributes.size_m2
+  // title, Typ = property_type, Kapazität = max_guests / size_value (0249)
   // (im Übersichts-Tab gepflegt). Keine zweite Wahrheit.
-  const sizeM2 = property.type_attributes?.size_m2;
+  const sizeM2 = property.size_value;
 
   return (
     <div className="flex flex-col gap-8">

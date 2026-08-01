@@ -52,6 +52,9 @@ export type Grund =
   | "nurErstExport"
   | "nurMitEntsprechung"
   | "nichtDeckungsgleich"
+  // Der Wert kommt an, aber nicht die Zuordnung zum einzelnen Zimmer —
+  // der Aggregator kennt je Objekt nur eine Zimmerkategorie.
+  | "ohneZimmerZuordnung"
   | "ohneBeleg";
 
 export type Kanalregel = { status: Kanalstatus; grund?: Grund };
@@ -147,7 +150,10 @@ export const FELD_GRUPPEN: { gruppe: string; felder: Feldregel[] }[] = [
         },
       },
       {
-        // content_sync.py:690-712 — Room-Type-Belegung
+        // content_sync._room_type_occupancy — occ_adults/children/infants.
+        // count_of_rooms ist KEIN Eingabefeld mehr und fest 1 (0245): es ist
+        // die Obergrenze, wie oft das Objekt am selben Tag verkauft werden
+        // kann, und bei 1 Objekt = 1 Einheit immer eins.
         feld: "belegung",
         kanaele: { airbnb: ja, booking: ja, mybestdays: ja },
       },
@@ -168,10 +174,10 @@ export const FELD_GRUPPEN: { gruppe: string; felder: Feldregel[] }[] = [
     gruppe: "ausstattung",
     felder: [
       {
-        // content_sync.py:652-657 → common.py:531-541. NUR Property-
-        // Ausstattung; die Room-Type-Liste des Aggregators senden wir nicht.
-        // Airbnb übernimmt nur Merkmale mit eigener Entsprechung, der Rest
-        // fällt still weg; bei Booking.com gilt zusätzlich eine Ausschlussliste.
+        // content_sync._property_attrs → common.py (Property-Katalog
+        // /property_facilities). Airbnb übernimmt nur Merkmale mit eigener
+        // Entsprechung, der Rest fällt still weg; bei Booking.com gilt
+        // zusätzlich eine Ausschlussliste.
         feld: "ausstattung",
         kanaele: {
           airbnb: { status: "bedingt", grund: "nurMitEntsprechung" },
@@ -185,13 +191,30 @@ export const FELD_GRUPPEN: { gruppe: string; felder: Feldregel[] }[] = [
         kanaele: { airbnb: ja, booking: vollsync, mybestdays: ja },
       },
       {
-        // Beide Portale kennen Räume und Schlafmöglichkeiten sehr wohl — der
-        // Aggregator hat dafür kein Feld (Betten nur lesend in seiner
-        // Ausgabe-API). Also eine Lücke unseres Wegs, keine des Portals.
+        // Zimmerstruktur und Schlafmöglichkeiten (property_rooms, 0246/0247).
+        // Beide Portale kennen sie sehr wohl — der Aggregator nimmt sie nicht
+        // an: beds, bed_configuration, bedrooms und bathrooms quittieren am
+        // Room-Type 200/201 und werden verworfen, /bed_types gibt es nicht
+        // (live gemessen 01.08.2026, docs/CHANNEX-FELDER.md). Also eine Lücke
+        // unseres Wegs, keine des Portals.
         feld: "raeume",
         kanaele: {
           airbnb: nichtUebertragbar,
           booking: nichtUebertragbar,
+          mybestdays: ja,
+        },
+      },
+      {
+        // content_sync._upsert_channex_room_type → room_type.facilities
+        // (eigener Katalog /room_facilities, eigene UUIDs). Gesendet wird die
+        // Vereinigung aus objektweiter (properties.room_amenities) und je
+        // Zimmer gepflegter Ausstattung — der Aggregator kennt je Objekt nur
+        // EINEN Room-Type, die Zuordnung zum einzelnen Zimmer geht dabei
+        // verloren. Genau das muss am Feld stehen.
+        feld: "zimmerAusstattung",
+        kanaele: {
+          airbnb: { status: "bedingt", grund: "nurMitEntsprechung" },
+          booking: { status: "bedingt", grund: "ohneZimmerZuordnung" },
           mybestdays: ja,
         },
       },

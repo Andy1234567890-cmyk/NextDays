@@ -223,7 +223,7 @@ function DossierDoc({
   const m = d.marketing;
   const hb = d.housebook;
   const em = d.emergency_authority;
-  const sizeM2 = property.type_attributes?.size_m2 as number | undefined;
+  const sizeM2 = property.size_value ?? undefined;
   const place = [property.city, property.country].filter(Boolean).join(", ");
 
   return (

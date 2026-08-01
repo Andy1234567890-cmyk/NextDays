@@ -18,8 +18,13 @@ from .schemas import (
     PropertyPhoto,
     PropertyPhotoListResponse,
     PropertyResponse,
+    PropertyRoom,
+    PropertyRoomCreate,
+    PropertyRoomListResponse,
+    PropertyRoomUpdate,
     PropertyTaxonomyResponse,
     PropertyUpdate,
+    RoomReorderRequest,
     SliceHealth,
 )
 from .service import PropertyError
@@ -360,5 +365,91 @@ def delete_accessibility_photo(
     """Ein Beweisfoto löschen. Gleicher Scope wie die Liste (Wurzel 9)."""
     try:
         service.delete_accessibility_photo(ctx, property_id, photo_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Zimmer (property_rooms, 0246) ------------------------------------------
+# Lesen darf, wer das Objekt sehen darf; Ändern verlangt EDIT_PROPERTY — es sind
+# Objektstammdaten, keine Bilder. Jeder {id}-Pfad prüft im Service denselben
+# Scope wie die Liste (Wurzel 9).
+_EDIT_PROPERTY = require_granular_permission(  # noqa: N816  pylint: disable=invalid-name
+    Permission.EDIT_PROPERTY
+)
+
+
+@router.get("/{property_id}/rooms", response_model=PropertyRoomListResponse)
+def list_property_rooms(
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: CurrentUser,
+) -> PropertyRoomListResponse:
+    """Zimmer eines Objekts in Anzeigereihenfolge."""
+    try:
+        return service.list_rooms(ctx, property_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/{property_id}/rooms",
+    response_model=PropertyRoom,
+    status_code=status.HTTP_201_CREATED,
+)
+def add_property_room(
+    property_id: str,
+    req: PropertyRoomCreate,
+    service: PropertiesServiceDep,
+    ctx: Annotated[AuthContext, Depends(_EDIT_PROPERTY)],
+) -> PropertyRoom:
+    """Ein Zimmer anlegen (Typ, privat/gemeinschaftlich, optional Name)."""
+    try:
+        return service.add_room(ctx, property_id, req)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/{property_id}/rooms/reorder", response_model=PropertyRoomListResponse)
+def reorder_property_rooms(
+    property_id: str,
+    req: RoomReorderRequest,
+    service: PropertiesServiceDep,
+    ctx: Annotated[AuthContext, Depends(_EDIT_PROPERTY)],
+) -> PropertyRoomListResponse:
+    """Reihenfolge der Zimmer setzen (vollständige Liste der Zimmer-IDs)."""
+    try:
+        return service.reorder_rooms(ctx, property_id, req.room_ids)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/{property_id}/rooms/{room_id}", response_model=PropertyRoom)
+def update_property_room(
+    property_id: str,
+    room_id: str,
+    req: PropertyRoomUpdate,
+    service: PropertiesServiceDep,
+    ctx: Annotated[AuthContext, Depends(_EDIT_PROPERTY)],
+) -> PropertyRoom:
+    """Zimmer ändern: Typ, privat/gemeinschaftlich, Name, Betten, Ausstattung,
+    en suite."""
+    try:
+        return service.update_room(ctx, property_id, room_id, req)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete(
+    "/{property_id}/rooms/{room_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_property_room(
+    property_id: str,
+    room_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[AuthContext, Depends(_EDIT_PROPERTY)],
+) -> None:
+    """Zimmer löschen; eine en-suite-Kopplung darauf wird mitgelöst."""
+    try:
+        service.delete_room(ctx, property_id, room_id)
     except PropertyError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

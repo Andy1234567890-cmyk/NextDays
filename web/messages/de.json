@@ -741,7 +741,12 @@
     "authorPlaceholder": "Urheber / Fotograf (optional)",
     "errorDialogTitle": "Einige Fotos konnten nicht hochgeladen werden",
     "errorDialogHint": "Bitte korrigiere die Dateien und lade sie erneut hoch.",
-    "errorDialogClose": "Schließen"
+    "errorDialogClose": "Schließen",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Eigentümer",
@@ -4163,8 +4168,6 @@
       "saving": "Speichert…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "{room} entfernen",
-      "zimmerMehr": "{room} hinzufügen",
       "zimmerGemeinschaftlich": "Gemeinschaftlich",
       "zimmerPrivat": "Privat",
       "zimmerHinweis": "Welche Zimmer hat Ihre Unterkunft? Die hier ausgewählten Zimmer werden auf Ihrer Website angezeigt.",
@@ -4185,7 +4188,6 @@
       "infoCardHint": "Die wichtigsten Eckdaten.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} Gäste",
-      "unitsSuffix": " · {count} Einheit(en)",
       "roomsCardTitle": "Zimmer",
       "roomsCardHint": "Welche Zimmer hat Ihre Unterkunft?",
       "noRooms": "Noch keine Zimmer.",
@@ -4211,15 +4213,43 @@
       "occupancyHint": "Erwachsenenplätze bieten Platz für Erwachsene und Kinder, Kinderplätze nur für Kinder. „Max. Gäste“ (oben) sind die Erwachsenenplätze.",
       "childrenSlotsFieldLabel": "Kinderplätze",
       "infantSlotsFieldLabel": "Kleinkindplätze",
-      "roomsCountFieldLabel": "Anzahl Zimmer",
       "sizeFieldLabel": "Größe (m²)",
-      "unitsFieldLabel": "Einheiten",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Ausstattung bearbeiten",
       "amenitiesOtaHint": "Alle Ausstattungsmerkmale werden automatisch an die Buchungsportale (Booking.com, Airbnb & Co.) übertragen.",
       "removeAmenityAriaLabel": "{amenity} entfernen",
       "amenitiesSearchPlaceholder": "Ausstattung suchen …",
-      "noSearchResults": "Keine Treffer."
+      "noSearchResults": "Keine Treffer.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privat",
+      "zimmerSuffixGemeinschaftlich": "gemeinschaftlich",
+      "zimmerErhoehen": "{room} hinzufügen",
+      "zimmerVerringern": "{room} entfernen",
+      "zimmerDetailsOeffnen": "{room} bearbeiten",
+      "zimmerAnzahl": "Anzahl {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Verfügbarkeit",
@@ -5100,7 +5130,8 @@
       "nurErstExport": "nur beim ersten Export",
       "nurMitEntsprechung": "nur Merkmale mit Entsprechung im Portal",
       "nichtDeckungsgleich": "Kategorien decken sich nicht vollständig",
-      "ohneBeleg": "nicht belegt — wir prüfen das"
+      "ohneBeleg": "nicht belegt — wir prüfen das",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "wird übertragen",
@@ -5139,7 +5170,8 @@
       "stornobedingungen": "Stornobedingungen",
       "kaution": "Kaution",
       "lizenznummer": "Lizenz-/Registriernummer",
-      "mietvertrag": "Mietvertrag"
+      "mietvertrag": "Mietvertrag",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Stammdaten",
@@ -6115,6 +6147,7 @@
     "spielzimmer": "Spielzimmer",
     "terrasse": "Terrasse",
     "wc": "WC",
-    "arbeitszimmer": "Arbeitszimmer"
+    "arbeitszimmer": "Arbeitszimmer",
+    "schlafbereich": "Schlafbereich"
   }
 }

@@ -45,6 +45,12 @@ export type Property = {
   // symbollose Anzeige (lib/currency), nie ein erfundenes € (Wurzel 4).
   currency: string | null;
   max_guests: number;
+  // Wohnfläche als ECHTE Spalten (0197), nicht in type_attributes: der Wert
+  // ist validiert (0 < x ≤ 100000) und die Einheit auf sqm/sqft begrenzt.
+  // Frühere Objekte trugen sie unter type_attributes.size_m2 — 0249 hat das
+  // zusammengeführt, damit es nur eine Wahrheit gibt.
+  size_value: number | null;
+  size_unit: "sqm" | "sqft" | null;
   street: string | null;
   house_number: string | null;
   postal_code: string | null;
@@ -54,7 +60,7 @@ export type Property = {
   lng: number | null;
   // Objektkartei (Lastenheft §6): nur bfe_number (DK-Katasternummer) ist ein
   // echtes neues Kartei-Feld. Name/Typ/Adresse/Kapazität kommen aus dem Bestand
-  // (title, property_type, house_number, max_guests, type_attributes.size_m2).
+  // (title, property_type, house_number, max_guests, size_value).
   bfe_number: string | null;
   // amenities = Objekt-Ausstattung, room_amenities = Zimmer-Ausstattung.
   // Channex führt dafür zwei Kataloge mit eigenen UUIDs (0243) — nie mischen.
@@ -212,6 +218,8 @@ export type PropertyPhoto = {
   caption: Record<string, string>;
   // Urheber/Fotograf (an die Buchungsportale mitgesendet). null = kein Autor.
   author: string | null;
+  // Zimmer, zu dem das Foto gehört (0248). null = keinem zugeordnet.
+  room_id: string | null;
   created_at: string | null;
   updated_at: string | null;
 };
@@ -277,6 +285,8 @@ export async function updatePropertyPhoto(
     caption?: Record<string, string>;
     is_cover?: boolean;
     author?: string;
+    /** Zimmer-ID, oder "" um die Zuordnung zu lösen. */
+    room_id?: string;
   },
 ): Promise<Result<PropertyPhoto>> {
   return call(`/properties/${id}/photos/${photoId}`, {
@@ -291,4 +301,84 @@ export async function deletePropertyPhoto(
   photoId: string,
 ): Promise<Result<null>> {
   return call(`/properties/${id}/photos/${photoId}`, { method: "DELETE" });
+}
+
+// --- Zimmer als eigene Entität (property_rooms, 0246) -----------------------
+// Ein Zimmer ist eine eigene Zeile, kein Zählwerk: nur so lässt sich sagen,
+// WELCHES Schlafzimmer welche Betten hat und welches Bad an welches grenzt.
+// Betten, Zimmergröße und en suite bleiben lokal — Channex verwirft sie am
+// Room-Type (live gemessen). Nur die Ausstattung geht als Vereinigungsmenge
+// über alle Zimmer an die Portale.
+
+export type PropertyRoom = {
+  id: string;
+  property_id: string;
+  /** Slug wie ZIMMER_SLUGS in lib/property-meta. */
+  raum_typ: string;
+  privat: boolean;
+  name: string | null;
+  position: number;
+  /** {slug: anzahl}, z. B. { doppelbett: 1, einzelbett: 2 } */
+  betten: Record<string, number>;
+  ausstattung: string[];
+  en_suite: boolean;
+  en_suite_schlafzimmer_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type PropertyRoomInput = {
+  raum_typ?: string;
+  privat?: boolean;
+  name?: string | null;
+  betten?: Record<string, number>;
+  ausstattung?: string[];
+  en_suite?: boolean;
+  en_suite_schlafzimmer_id?: string | null;
+};
+
+/** Zimmer eines Objekts in Anzeigereihenfolge. */
+export async function listPropertyRooms(
+  id: string,
+): Promise<Result<{ items: PropertyRoom[]; total: number }>> {
+  return call(`/properties/${id}/rooms`);
+}
+
+/** Zimmer anlegen; landet am Ende der Reihenfolge. */
+export async function addPropertyRoom(
+  id: string,
+  input: PropertyRoomInput & { raum_typ: string },
+): Promise<Result<PropertyRoom>> {
+  return call(`/properties/${id}/rooms`, { method: "POST", body: input });
+}
+
+/** Zimmer ändern. Nicht gesetzte Felder bleiben unverändert. */
+export async function updatePropertyRoom(
+  id: string,
+  roomId: string,
+  input: PropertyRoomInput,
+): Promise<Result<PropertyRoom>> {
+  return call(`/properties/${id}/rooms/${roomId}`, {
+    method: "PATCH",
+    body: input,
+  });
+}
+
+/** Zimmer löschen; eine en-suite-Kopplung darauf wird mitgelöst. */
+export async function deletePropertyRoom(
+  id: string,
+  roomId: string,
+): Promise<Result<null>> {
+  return call(`/properties/${id}/rooms/${roomId}`, { method: "DELETE" });
+}
+
+/** Reihenfolge setzen (vollständige Liste der Zimmer-IDs). */
+export async function reorderPropertyRooms(
+  id: string,
+  roomIds: string[],
+): Promise<Result<{ items: PropertyRoom[]; total: number }>> {
+  return call(`/properties/${id}/rooms/reorder`, {
+    method: "PATCH",
+    body: { room_ids: roomIds },
+  });
 }

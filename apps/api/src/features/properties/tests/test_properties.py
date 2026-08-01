@@ -10,10 +10,12 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from src.core.security import AuthContext
+from src.features.properties.rooms import room_row
 from src.features.properties.schemas import (
     ChannelState,
     PhotoUpdateRequest,
     PropertyCreate,
+    PropertyRoomCreate,
     PropertyType,
     PropertyUpdate,
 )
@@ -834,3 +836,94 @@ def test_publish_ohne_gebuchte_menge_ist_422() -> None:
     with pytest.raises(PropertyError) as exc:
         svc.publish(_ctx(), "p-1")
     assert exc.value.status_code == 422
+
+
+# --- Zimmer als eigene Entität (property_rooms, 0246) -----------------------
+# Die fachlichen Regeln stehen im Service, nicht in der DB (die Typliste wächst).
+# Deshalb hier geprüft — und zwar so, dass ein Fehler eine 422 wird und kein
+# stiller Ersatzwert (Wurzel 4/5).
+
+def test_room_create_drops_non_positive_bed_counts() -> None:
+    # 0 Betten sind kein Bett. Bliebe der Eintrag stehen, liefe er als
+    # "vorhanden" durch jede Zählung.
+    req = PropertyRoomCreate(
+        raum_typ="schlafzimmer", betten={"doppelbett": 1, "einzelbett": 0}
+    )
+    assert req.betten == {"doppelbett": 1}
+
+
+def test_room_beds_only_in_sleeping_rooms() -> None:
+    svc = _svc([_row()])
+    with pytest.raises(PropertyError) as exc:
+        svc.add_room(
+            _ctx(),
+            "p-1",
+            PropertyRoomCreate(raum_typ="badezimmer", betten={"doppelbett": 1}),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_room_ensuite_only_for_bathrooms() -> None:
+    svc = _svc([_row()])
+    with pytest.raises(PropertyError) as exc:
+        svc.add_room(
+            _ctx(), "p-1", PropertyRoomCreate(raum_typ="schlafzimmer", en_suite=True)
+        )
+    assert exc.value.status_code == 422
+
+
+def test_room_coupling_requires_ensuite() -> None:
+    svc = _svc([_row()])
+    with pytest.raises(PropertyError) as exc:
+        svc.add_room(
+            _ctx(),
+            "p-1",
+            PropertyRoomCreate(
+                raum_typ="badezimmer", en_suite=False, en_suite_schlafzimmer_id="r-9"
+            ),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_room_coupling_target_must_be_a_bedroom() -> None:
+    # Die Zielzeile kommt aus derselben gemockten Kette: ein Badezimmer.
+    svc = _svc([_row(raum_typ="badezimmer", property_id="p-1")])
+    with pytest.raises(PropertyError) as exc:
+        svc.add_room(
+            _ctx(),
+            "p-1",
+            PropertyRoomCreate(
+                raum_typ="badezimmer", en_suite=True, en_suite_schlafzimmer_id="r-2"
+            ),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_room_reorder_rejects_partial_list() -> None:
+    # Eine Teilliste würde die übrigen Zimmer still auf Position 0 schieben.
+    svc = _svc([_row(id="r-1"), _row(id="r-2")])
+    with pytest.raises(PropertyError) as exc:
+        svc.reorder_rooms(_ctx(), "p-1", ["r-1"])
+    assert exc.value.status_code == 422
+
+
+def test_room_row_maps_all_fields() -> None:
+    out = room_row(
+        {
+            "id": "r-1",
+            "property_id": "p-1",
+            "raum_typ": "schlafzimmer",
+            "privat": False,
+            "name": "Nord",
+            "position": 3,
+            "betten": {"doppelbett": 1},
+            "ausstattung": ["klimaanlage"],
+            "en_suite": False,
+            "en_suite_schlafzimmer_id": None,
+            "created_at": "2026-08-01T00:00:00Z",
+            "updated_at": "2026-08-01T00:00:00Z",
+        }
+    )
+    assert out["privat"] is False
+    assert out["betten"] == {"doppelbett": 1}
+    assert out["en_suite_schlafzimmer_id"] is None

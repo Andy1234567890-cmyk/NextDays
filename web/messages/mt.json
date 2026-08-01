@@ -741,7 +741,12 @@
     "authorPlaceholder": "Awtur / fotografu (mhux obbligatorju)",
     "errorDialogTitle": "Xi ritratti ma setgħux jitilgħu",
     "errorDialogHint": "Jekk jogħġbok ikkoreġi l-fajls u erġa' tellagħhom.",
-    "errorDialogClose": "Agħlaq"
+    "errorDialogClose": "Agħlaq",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Sidien",
@@ -4142,8 +4147,6 @@
       "saving": "Qed jissejvja…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Neħħi {room}",
-      "zimmerMehr": "Żid {room}",
       "zimmerGemeinschaftlich": "Komuni",
       "zimmerPrivat": "Privat",
       "zimmerHinweis": "Liema kmamar għandha l-proprjetà tiegħek? Il-kmamar magħżula hawnhekk jidhru fuq il-websajt tiegħek.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "L-iktar dettalji importanti.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} mistednin",
-      "unitsSuffix": " · {count} unità/unitajiet",
       "roomsCardTitle": "Kmamar",
       "roomsCardHint": "X'kmamar hemm?",
       "noRooms": "Għadhom l-ebda kmamar.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Il-postijiet tal-adulti joffru spazju għall-adulti u t-tfal, il-postijiet tat-tfal biss għat-tfal. \"Massimu ta' mistednin\" (hawn fuq) huma l-postijiet tal-adulti.",
       "childrenSlotsFieldLabel": "Postijiet għat-tfal",
       "infantSlotsFieldLabel": "Postijiet għat-trabi",
-      "roomsCountFieldLabel": "Għadd ta' kmamar",
       "sizeFieldLabel": "Daqs (m²)",
-      "unitsFieldLabel": "Unitajiet",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Editja l-ftehim",
       "amenitiesOtaHint": "Il-karatteristiċi kollha tal-ftehim jintbagħtu awtomatikament lill-portali tal-prenotazzjoni (Booking.com, Airbnb u oħrajn).",
       "removeAmenityAriaLabel": "Neħħi {amenity}",
       "amenitiesSearchPlaceholder": "Fittex ftehim …",
-      "noSearchResults": "L-ebda riżultat."
+      "noSearchResults": "L-ebda riżultat.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privat",
+      "zimmerSuffixGemeinschaftlich": "komuni",
+      "zimmerErhoehen": "Żid {room}",
+      "zimmerVerringern": "Neħħi {room}",
+      "zimmerDetailsOeffnen": "Editja {room}",
+      "zimmerAnzahl": "Numru ta' {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Disponibbiltà",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "biss fl-ewwel esportazzjoni",
       "nurMitEntsprechung": "biss karatteristiċi li għandhom ekwivalenti fil-portal",
       "nichtDeckungsgleich": "il-kategoriji ma jaqblux għalkollox",
-      "ohneBeleg": "mhux ikkonfermat — qed niċċekkjaw"
+      "ohneBeleg": "mhux ikkonfermat — qed niċċekkjaw",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Kundizzjonijiet ta' kanċellazzjoni",
       "kaution": "Depożitu",
       "lizenznummer": "Numru tal-liċenzja/reġistrazzjoni",
-      "mietvertrag": "Kuntratt ta' kera"
+      "mietvertrag": "Kuntratt ta' kera",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Kamra tal-logħob",
     "terrasse": "Terrazza",
     "wc": "Toilet",
-    "arbeitszimmer": "Studju"
+    "arbeitszimmer": "Studju",
+    "schlafbereich": "Żona tal-irqad"
   }
 }

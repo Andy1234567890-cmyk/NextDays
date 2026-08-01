@@ -741,7 +741,12 @@
     "authorPlaceholder": "Údar / grianghrafadóir (roghnach)",
     "errorDialogTitle": "Níorbh fhéidir cuid de na grianghraif a uaslódáil",
     "errorDialogHint": "Ceartaigh na comhaid le do thoil agus uaslódáil arís iad.",
-    "errorDialogClose": "Dún"
+    "errorDialogClose": "Dún",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Úinéirí",
@@ -4142,8 +4147,6 @@
       "saving": "Á shábháil…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Bain {room}",
-      "zimmerMehr": "Cuir {room} leis",
       "zimmerGemeinschaftlich": "Comhroinnte",
       "zimmerPrivat": "Príobháideach",
       "zimmerHinweis": "Cé na seomraí atá i do lóistín? Taispeánfar na seomraí a roghnaítear anseo ar do shuíomh gréasáin.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Na príomhshonraí.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} aoi",
-      "unitsSuffix": " · {count} aonad",
       "roomsCardTitle": "Seomraí",
       "roomsCardHint": "Cé na seomraí atá ann?",
       "noRooms": "Níl aon seomra ann fós.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Tairgeann áiteanna do dhaoine fásta spás do dhaoine fásta agus do pháistí, agus tairgeann áiteanna do pháistí spás do pháistí amháin. Is iad na huas. aíonna (thuas) na háiteanna do dhaoine fásta.",
       "childrenSlotsFieldLabel": "Áiteanna do pháistí",
       "infantSlotsFieldLabel": "Áiteanna do naíonáin",
-      "roomsCountFieldLabel": "Líon na seomraí",
       "sizeFieldLabel": "Méid (m²)",
-      "unitsFieldLabel": "Aonaid",
       "statusFieldLabel": "Stádas",
       "amenitiesEditorTitle": "Cuir saoráidí in eagar",
       "amenitiesOtaHint": "Cuirfear gach saoráid go huathoibríoch chuig na hardáin áirithinte (Booking.com, Airbnb agus a leithéidí).",
       "removeAmenityAriaLabel": "Bain {amenity}",
       "amenitiesSearchPlaceholder": "Cuardaigh saoráidí …",
-      "noSearchResults": "Níor aimsíodh aon toradh."
+      "noSearchResults": "Níor aimsíodh aon toradh.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "príobháideach",
+      "zimmerSuffixGemeinschaftlich": "comhroinnte",
+      "zimmerErhoehen": "Cuir {room} leis",
+      "zimmerVerringern": "Bain {room}",
+      "zimmerDetailsOeffnen": "Cuir {room} in eagar",
+      "zimmerAnzahl": "Líon {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Infhaighteacht",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "ag an gcéad easpórtáil amháin",
       "nurMitEntsprechung": "gnéithe a bhfuil comhionannas acu sa tairseach amháin",
       "nichtDeckungsgleich": "ní thagann na catagóirí le chéile go hiomlán",
-      "ohneBeleg": "gan deimhniú — táimid á sheiceáil"
+      "ohneBeleg": "gan deimhniú — táimid á sheiceáil",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Coinníollacha cealaithe",
       "kaution": "Éarlais",
       "lizenznummer": "Uimhir cheadúnais/chláraithe",
-      "mietvertrag": "Conradh cíosa"
+      "mietvertrag": "Conradh cíosa",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Seomra súgartha",
     "terrasse": "Léibheann",
     "wc": "Leithreas",
-    "arbeitszimmer": "Oifig"
+    "arbeitszimmer": "Oifig",
+    "schlafbereich": "Limistéar codlata"
   }
 }

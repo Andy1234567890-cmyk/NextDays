@@ -741,7 +741,12 @@
     "authorPlaceholder": "Autor / fotograf (neobavezno)",
     "errorDialogTitle": "Neke fotografije nije bilo moguće učitati",
     "errorDialogHint": "Molimo ispravi datoteke i ponovno ih učitaj.",
-    "errorDialogClose": "Zatvori"
+    "errorDialogClose": "Zatvori",
+    "ansichtAlle": "Alle Fotos",
+    "ansichtNachZimmern": "Nach Zimmern",
+    "zimmerOhneZuordnung": "Keinem Zimmer zugeordnet",
+    "zimmerOhneFotos": "Noch keine Fotos für dieses Zimmer.",
+    "zimmerZuordnungLoesen": "Zuordnung aufheben"
   },
   "owners": {
     "title": "Vlasnici",
@@ -4142,8 +4147,6 @@
       "saving": "Sprema se…"
     },
     "propertyOverview": {
-      "zimmerWeniger": "Ukloni {room}",
-      "zimmerMehr": "Dodaj {room}",
       "zimmerGemeinschaftlich": "Zajedničko",
       "zimmerPrivat": "Privatno",
       "zimmerHinweis": "Koje sobe ima vaš smještaj? Ovdje odabrane sobe prikazuju se na vašoj web stranici.",
@@ -4164,7 +4167,6 @@
       "infoCardHint": "Najvažniji osnovni podaci.",
       "sizeM2Prefix": "{size} m² · ",
       "guestsCount": "{count} gostiju",
-      "unitsSuffix": " · {count} jedinica",
       "roomsCardTitle": "Prostorije",
       "roomsCardHint": "Koje prostorije postoje?",
       "noRooms": "Još nema prostorija.",
@@ -4190,15 +4192,43 @@
       "occupancyHint": "Mjesta za odrasle nude prostor za odrasle i djecu, dječja mjesta samo za djecu. „Maks. gostiju” (iznad) su mjesta za odrasle.",
       "childrenSlotsFieldLabel": "Dječja mjesta",
       "infantSlotsFieldLabel": "Mjesta za malu djecu",
-      "roomsCountFieldLabel": "Broj soba",
       "sizeFieldLabel": "Veličina (m²)",
-      "unitsFieldLabel": "Jedinice",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Uredi sadržaje",
       "amenitiesOtaHint": "Svi sadržaji automatski se šalju na portale za rezervacije (Booking.com, Airbnb i drugi).",
       "removeAmenityAriaLabel": "Ukloni {amenity}",
       "amenitiesSearchPlaceholder": "Pretraži sadržaje …",
-      "noSearchResults": "Nema rezultata."
+      "noSearchResults": "Nema rezultata.",
+      "zimmerErneutLaden": "Erneut versuchen",
+      "zimmerLaedt": "Zimmer werden geladen …",
+      "zimmerZurueck": "Zurück",
+      "zimmerFertig": "Fertig",
+      "zimmerNameLabel": "Name (optional)",
+      "zimmerNameHinweis": "Nur für Sie sichtbar, z. B. „Schlafzimmer Nord“. Leer lassen, dann gilt der Zimmertyp.",
+      "zimmerPrivatHinweis": "Aus, wenn das Zimmer mit anderen Gästen geteilt wird.",
+      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerEnSuite": "En suite",
+      "zimmerEnSuiteHinweis": "Das Bad grenzt direkt an ein Schlafzimmer.",
+      "zimmerEnSuiteZiel": "Gehört zu",
+      "zimmerEnSuiteOhneZiel": "Kein bestimmtes Schlafzimmer",
+      "zimmerEnSuiteKeinSchlafzimmer": "Legen Sie zuerst ein Schlafzimmer an.",
+      "zimmerLoeschen": "Zimmer löschen",
+      "zimmerAusstattung": "Ausstattung dieses Zimmers",
+      "zimmerAusstattungHinweis": "Zusätzlich zur Ausstattung des Objekts. Die Portale kennen je Objekt nur eine Zimmerkategorie — dort kommt die Summe aller Zimmer an.",
+      "bettenAusZimmern": "Ergibt sich aus den Betten in den Zimmern.",
+      "masseinheitLabel": "Maßeinheit",
+      "masseinheitQm": "m²",
+      "masseinheitQft": "ft²",
+      "sizeSqftPrefix": "{size} ft² · ",
+      "gaesteWeniger": "Ein Gast weniger",
+      "gaesteMehr": "Ein Gast mehr",
+      "zimmerSuffixPrivat": "privatno",
+      "zimmerSuffixGemeinschaftlich": "zajedničko",
+      "zimmerErhoehen": "Dodaj {room}",
+      "zimmerVerringern": "Ukloni {room}",
+      "zimmerDetailsOeffnen": "Uredi {room}",
+      "zimmerAnzahl": "Broj: {room}",
+      "zimmerNummeriert": "{room} {index}"
     },
     "availabilityForm": {
       "title": "Dostupnost",
@@ -5079,7 +5109,8 @@
       "nurErstExport": "samo pri prvom izvozu",
       "nurMitEntsprechung": "samo značajke koje imaju ekvivalent na portalu",
       "nichtDeckungsgleich": "kategorije se ne poklapaju u potpunosti",
-      "ohneBeleg": "nije potvrđeno — provjeravamo"
+      "ohneBeleg": "nije potvrđeno — provjeravamo",
+      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
     },
     "status": {
       "voll": "transferred",
@@ -5118,7 +5149,8 @@
       "stornobedingungen": "Uvjeti otkazivanja",
       "kaution": "Polog",
       "lizenznummer": "Broj licence/registracije",
-      "mietvertrag": "Ugovor o najmu"
+      "mietvertrag": "Ugovor o najmu",
+      "zimmerAusstattung": "Ausstattung der Zimmer"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -6094,6 +6126,7 @@
     "spielzimmer": "Soba za igru",
     "terrasse": "Terasa",
     "wc": "WC",
-    "arbeitszimmer": "Radna soba"
+    "arbeitszimmer": "Radna soba",
+    "schlafbereich": "Prostor za spavanje"
   }
 }
