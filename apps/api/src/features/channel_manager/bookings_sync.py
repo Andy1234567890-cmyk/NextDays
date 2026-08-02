@@ -540,24 +540,33 @@ class BookingsSyncMixin:
         property_id: str,
         channel: str,
         nights: list[str],
+        unit_id: str | None = None,
     ) -> None:
         """Gibt die genannten Nächte quellengenau frei — lokal (availability
         'open') NUR wo sie WIRKLICH von DIESER OTA-Quelle belegt waren, und an
-        Channex (availability=1) NUR für die tatsächlich frei gewordenen Tage.
+        Channex die neue Stückzahl der freien Einheiten.
+
+        `unit_id` ist die Einheit der stornierten/geänderten Buchung und
+        BEGRENZT die Freigabe auf sie. Ohne diese Grenze gibt ein Storno die
+        Nacht auf ALLEN Einheiten frei — live gesehen: Buchung B wurde
+        storniert und Buchung A verlor ihre Sperre, der Push meldete 2 statt 1
+        freie Einheiten. Das ist eine Überbuchung mit Ansage.
         Gemeinsame Logik von Voll-Storno und Buchungs-Verkürzung/-Verschiebung:
         ein Tag, der lokal noch belegt ist (überlappende Direkt-/Fremdbelegung,
         manueller Block), darf NICHT als buchbar an Channex gemeldet werden
         (Überbuchung)."""
         for d in nights:
-            (
+            query = (
                 db.table("availability")
                 .update({"status": "open", "source": "manual"})
                 .eq("property_id", property_id)
                 .eq("date", d)
                 .eq("status", "booked")
                 .eq("source", channel)
-                .execute()
             )
+            if unit_id:
+                query = query.eq("unit_id", unit_id)
+            query.execute()
         # Für den Channex-Push zählt der ECHTE Kalenderstand NACH der Freigabe —
         # nicht nur die Zeilen, die DIESE Funktion eben gedreht hat: der kanonische
         # Release-Pfad (ReservationsService._release_nights) kann Nächte desselben
@@ -743,7 +752,7 @@ class BookingsSyncMixin:
             db.table("reservations")
             .select(
                 "id, checked_out_at, check_in, check_out, property_id,"
-                " payment_collect"
+                " payment_collect, unit_id"
             )
             .eq("tenant_id", tenant_id)
             .eq("source_channex_booking_id", booking_id)
@@ -761,6 +770,11 @@ class BookingsSyncMixin:
         old_check_in = existing[0].get("check_in") if existing else None
         old_check_out = existing[0].get("check_out") if existing else None
         old_property_id = existing[0].get("property_id") if existing else None
+        # Die Einheit VOR der Änderung. Muss hier gesichert werden, zusammen mit
+        # den übrigen Alt-Werten: weiter unten wird die Reservierung auf die neue
+        # Einheit umgeschrieben, und danach wüsste niemand mehr, welche Einheit
+        # freizugeben ist (Wurzel 1 — der alte Zustand gehört mitgepflegt).
+        alte_einheit = existing[0].get("unit_id") if existing else None
 
         # Storno: reservation stornieren + Nächte dieser OTA-Quelle wieder frei.
         if status_in == "cancelled":
@@ -808,6 +822,7 @@ class BookingsSyncMixin:
                 free_property_id,
                 channel,
                 cancel_nights,
+                unit_id=alte_einheit,
             )
             # Offene externe Provision dieser Buchung entfernen (Gegenzustand,
             # Wurzel 1). Best-effort — Storno-Pfad darf nie kippen (Wurzel 5).
@@ -846,8 +861,25 @@ class BookingsSyncMixin:
         # bekommt die Buchung die erste freie; ist keine frei, hat das Portal
         # mehr verkauft als da ist. Dann wird unten der ganze Typ gesperrt statt
         # eine schon belegte Einheit ein zweites Mal zu vergeben.
+        # MODIFIKATION: die eigenen, bereits gesperrten Nächte zählen nicht als
+        # fremde Belegung, und die bisherige Einheit wird behalten — sonst sähe
+        # die Buchung ihre eigene Sperre, verlöre die Zuweisung (unit_id=None)
+        # und der ganze Typ würde fälschlich als überbucht gesperrt.
+        alte_unit = None
+        eigene_naechte: list[str] = []
+        if (
+            existing
+            and old_property_id == property_id
+            and existing[0].get("unit_id")
+        ):
+            alte_unit = str(existing[0]["unit_id"])
+            if old_check_in and old_check_out:
+                eigene_naechte = self._date_range_nights(
+                    str(old_check_in), str(old_check_out)
+                )
         einheit = freie_einheit(
-            db, property_id, arrival, departure, tenant_id=tenant_id
+            db, property_id, arrival, departure, tenant_id=tenant_id,
+            eigene_unit=alte_unit, eigene_naechte=eigene_naechte,
         )
         if einheit is None:
             log.error(
@@ -1006,7 +1038,8 @@ class BookingsSyncMixin:
                 # bleibt A dauerhaft phantombelegt. Der Datums-Diff (der auf B
                 # rechnet) träfe A nie.
                 self._free_ota_nights(
-                    db, tenant_id, old_property_id, channel, old_nights
+                    db, tenant_id, old_property_id, channel, old_nights,
+                    unit_id=alte_einheit,
                 )
             else:
                 # Gleiches Objekt: nur die aus dem alten Zeitraum herausfallenden
@@ -1014,7 +1047,8 @@ class BookingsSyncMixin:
                 freed_nights = [d for d in old_nights if d not in set(new_nights)]
                 if freed_nights:
                     self._free_ota_nights(
-                        db, tenant_id, property_id, channel, freed_nights
+                        db, tenant_id, property_id, channel, freed_nights,
+                        unit_id=alte_einheit,
                     )
         # Externe Provision (1 %/0,5 %) für diese OTA-Buchung erfassen. Best-effort
         # — der Buchungs-Import darf nie an der Provision scheitern (Wurzel 5).

@@ -1225,12 +1225,14 @@ def test_modification_ohne_payment_collect_behaelt_bezahlt() -> None:
     _import_svc(
         _ImportChannex(bookings=[_bezahl_booking(payment_collect="ota")]), db
     ).import_bookings_for_property("t1", "cx-prop")
-    # Revision ohne payment_collect → bleibt ota/bezahlt.
+    # Revision ohne payment_collect → bleibt ota/bezahlt; eine Preisänderung
+    # in so einer Revision (Booking-Normalfall) zieht paid trotzdem nach.
     _import_svc(
-        _ImportChannex(bookings=[_bezahl_booking(status="modified")]), db
+        _ImportChannex(bookings=[_bezahl_booking(status="modified", amount="320.00")]), db
     ).import_bookings_for_property("t1", "cx-prop")
     r = db.tables["reservations"][0]
     assert r["payment_collect"] == "ota" and r["payment_status"] == "paid"
+    assert r["paid_amount"] == 320.0
     # Betragsänderung mit ota-Signal → paid zieht nach (Wurzel 1).
     _import_svc(
         _ImportChannex(bookings=[_bezahl_booking(
@@ -1245,6 +1247,45 @@ def test_modification_ohne_payment_collect_behaelt_bezahlt() -> None:
         )]), db
     ).import_bookings_for_property("t1", "cx-prop")
     assert r["payment_collect"] == "property"
+    assert r["paid_amount"] == 0 and r["payment_status"] == "unpaid"
+
+
+def test_modification_behaelt_eigene_einheit() -> None:
+    # Die Modifikation darf die EIGENEN gesperrten Nächte nicht als fremde
+    # Belegung werten: die Buchung behält ihre Einheit, statt die Zuweisung
+    # zu verlieren (unit_id=None) und den Typ als überbucht zu sperren.
+    db = _ImportDB()
+    _seed_property(db)
+    _import_svc(
+        _ImportChannex(bookings=[_bezahl_booking()]), db
+    ).import_bookings_for_property("t1", "cx-prop")
+    r = db.tables["reservations"][0]
+    assert r["unit_id"] == "u-p1"
+    # Verschiebung um einen Tag (überlappt die eigene Sperre).
+    _import_svc(
+        _ImportChannex(bookings=[_bezahl_booking(
+            status="modified",
+            arrival_date="2026-07-06", departure_date="2026-07-08",
+        )]), db
+    ).import_bookings_for_property("t1", "cx-prop")
+    assert r["unit_id"] == "u-p1"
+
+
+def test_storno_nimmt_abgeleitetes_bezahlt_zurueck() -> None:
+    # Storno einer Portal-kassierten Buchung: das Portal erstattet im
+    # Regelfall — der von UNS abgeleitete Bezahlt-Zustand wird zurückgenommen
+    # (Wurzel 1), sonst zählt die stornierte Buchung in Statistiken und
+    # Gast-Ansichten als „bezahlt" weiter.
+    db = _ImportDB()
+    _seed_property(db)
+    _import_svc(
+        _ImportChannex(bookings=[_bezahl_booking(payment_collect="ota")]), db
+    ).import_bookings_for_property("t1", "cx-prop")
+    _import_svc(
+        _ImportChannex(bookings=[_bezahl_booking(status="cancelled")]), db
+    ).import_bookings_for_property("t1", "cx-prop")
+    r = db.tables["reservations"][0]
+    assert r["status"] == "cancelled"
     assert r["paid_amount"] == 0 and r["payment_status"] == "unpaid"
 
 
@@ -4641,3 +4682,28 @@ def test_ari_import_spiegelt_bei_mehreren_einheiten_keine_sperre() -> None:
         if a.get("status") == "blocked" and a.get("date") == "2026-10-05"
     ]
     assert gesperrt == []
+
+
+def test_storno_gibt_nur_die_eigene_einheit_frei() -> None:
+    """Live gefunden: Storno von Buchung B öffnete auch die Nacht von Buchung A.
+
+    Ohne Einheiten-Grenze trifft die Freigabe alle Zeilen des Tages mit
+    derselben Quelle — der Push meldete danach 2 freie Einheiten, obwohl eine
+    noch belegt war. Das ist eine Überbuchung mit Ansage.
+    """
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _seed_zwei_einheiten(db)
+    for unit in ("u-p1", "u-p1-2"):
+        db.tables["availability"].append(
+            {"property_id": "p1", "unit_id": unit, "date": "2026-11-10",
+             "status": "booked", "source": "ota_other"}
+        )
+    svc = _import_svc(_ImportChannex(), db)
+    svc._free_ota_nights(db, "t1", "p1", "ota_other", ["2026-11-10"],
+                         unit_id="u-p1-2")
+    stand = {
+        a["unit_id"]: a["status"]
+        for a in db.tables["availability"] if a["date"] == "2026-11-10"
+    }
+    assert stand == {"u-p1": "booked", "u-p1-2": "open"}
