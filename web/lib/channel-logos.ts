@@ -79,3 +79,22 @@ export function channelLogoLoose(name: string | null | undefined): string | null
   if (!name) return null;
   return NORMALISIERT[name.toLowerCase().replace(/[^a-z0-9]/g, "")] ?? null;
 }
+
+// Portal-Codes, deren technischer Name nicht der Markenname ist. Alle anderen
+// Codes SIND der Markenname („Agoda", „Expedia") und werden unverändert
+// gezeigt — hier wird nichts geraten und nichts übersetzt.
+const CHANNEL_LABEL: Record<string, string> = {
+  BookingCom: "Booking.com",
+  AirBNB: "Airbnb",
+  GoogleHotelARI: "Google",
+  CTrip: "Trip.com",
+  DespegarV2: "Despegar",
+  OpenChannel: "Testkanal",
+};
+
+/** Anzeigename eines Kanals. Unbekannte Codes werden unverändert gezeigt —
+ *  besser der echte Code als ein erfundener Klarname. */
+export function channelLabel(code: string | null | undefined): string {
+  if (!code) return "";
+  return CHANNEL_LABEL[code] ?? code;
+}

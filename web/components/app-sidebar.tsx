@@ -164,6 +164,9 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
       icon: "ph:broadcast",
       items: [
         { key: "channelManager", href: "/channels", icon: "ph:arrows-left-right" },
+        // Bewertungen aller Kanäle (Portale + myBestDays) — Vertriebsarbeit:
+        // eine unbeantwortete Bewertung kostet Sichtbarkeit im Ranking.
+        { key: "reviews", href: "/bewertungen", icon: "ph:star", req: "view_reviews" },
         // Preissteuerung ist Vertriebsarbeit — gilt für Hotels wie FeWo.
         { key: "dynamicPricing", href: "/dynamic-pricing", icon: "ph:lightning" },
         { key: "websiteBuilder", href: "/website", icon: "ph:globe", req: "access_homepage_builder" },
@@ -232,6 +235,7 @@ const OWNER_ALLOWED_HREFS: readonly string[] = [
   "/", // Dashboard
   "/kalender",
   "/objekte",
+  "/bewertungen", // Bewertungen SEINER Objekte — lesen, nicht antworten (§4.2)
   "/meine-abrechnungen", // Eigene Auszahlungs-Abrechnungen (self-scoped)
 ];
 
