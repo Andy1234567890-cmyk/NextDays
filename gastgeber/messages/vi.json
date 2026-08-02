@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Khi đăng ký, bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của myBestDays.",
     "seitenTitel": "myBestDays — Chủ nhà",
     "seitenBeschreibung": "Quản lý chỗ nghỉ, lịch, giá và các lượt đặt phòng của bạn."
+  },
+  "bewertungen": {
+    "titel": "Đánh giá",
+    "untertitel": "Khách viết gì về chỗ ở của bạn.",
+    "leer": "Chưa có đánh giá nào.",
+    "durchschnitt": "Trung bình",
+    "anzahl": "Đánh giá",
+    "unbeantwortet": "Chưa trả lời",
+    "nurOffen": "Chỉ chưa trả lời",
+    "offen": "Đang mở",
+    "beantwortet": "Đã trả lời",
+    "verdeckt": "Chưa được công bố",
+    "abgelaufen": "Đã hết thời hạn trả lời",
+    "deineAntwort": "Câu trả lời của bạn",
+    "antworten": "Trả lời",
+    "antwortAendern": "Sửa câu trả lời",
+    "platzhalter": "Trả lời khách …",
+    "senden": "Gửi",
+    "abbrechen": "Hủy",
+    "seite": "Trang {current} / {total}"
   }
 }

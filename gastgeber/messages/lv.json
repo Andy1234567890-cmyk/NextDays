@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Reģistrējoties tu piekrīti myBestDays lietošanas noteikumiem un privātuma politikai.",
     "seitenTitel": "myBestDays — Namatēvs",
     "seitenBeschreibung": "Pārvaldi savus objektus, kalendāru, cenas un rezervācijas."
+  },
+  "bewertungen": {
+    "titel": "Atsauksmes",
+    "untertitel": "Ko viesi raksta par jūsu īpašumiem.",
+    "leer": "Atsauksmju vēl nav.",
+    "durchschnitt": "Vidēji",
+    "anzahl": "Atsauksmes",
+    "unbeantwortet": "Neatbildētas",
+    "nurOffen": "Tikai neatbildētās",
+    "offen": "Atvērta",
+    "beantwortet": "Atbildēta",
+    "verdeckt": "Vēl nav publicēta",
+    "abgelaufen": "Atbildes termiņš beidzies",
+    "deineAntwort": "Jūsu atbilde",
+    "antworten": "Atbildēt",
+    "antwortAendern": "Labot atbildi",
+    "platzhalter": "Atbilde viesim …",
+    "senden": "Nosūtīt",
+    "abbrechen": "Atcelt",
+    "seite": "{current}. lapa no {total}"
   }
 }

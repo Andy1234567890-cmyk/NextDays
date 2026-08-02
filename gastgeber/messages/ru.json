@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Регистрируясь, вы принимаете Условия использования и Политику конфиденциальности myBestDays.",
     "seitenTitel": "myBestDays — Хозяева",
     "seitenBeschreibung": "Управляйте своими объектами, календарём, ценами и бронированиями."
+  },
+  "bewertungen": {
+    "titel": "Отзывы",
+    "untertitel": "Что гости пишут о ваших объектах.",
+    "leer": "Отзывов пока нет.",
+    "durchschnitt": "Среднее",
+    "anzahl": "Отзывы",
+    "unbeantwortet": "Без ответа",
+    "nurOffen": "Только без ответа",
+    "offen": "Открыт",
+    "beantwortet": "С ответом",
+    "verdeckt": "Ещё не опубликован",
+    "abgelaufen": "Срок ответа истёк",
+    "deineAntwort": "Ваш ответ",
+    "antworten": "Ответить",
+    "antwortAendern": "Изменить ответ",
+    "platzhalter": "Ответ гостю …",
+    "senden": "Отправить",
+    "abbrechen": "Отмена",
+    "seite": "Страница {current} из {total}"
   }
 }

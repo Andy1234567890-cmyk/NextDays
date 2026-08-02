@@ -1660,5 +1660,25 @@
     "rechtshinweis": "بتسجيلك توافق على شروط الاستخدام وسياسة الخصوصية الخاصة بـ myBestDays.",
     "seitenTitel": "myBestDays — المضيف",
     "seitenBeschreibung": "أدر وحداتك والتقويم والأسعار والحجوزات."
+  },
+  "bewertungen": {
+    "titel": "التقييمات",
+    "untertitel": "ما يكتبه ضيوفك عن أماكنك.",
+    "leer": "لا توجد تقييمات بعد.",
+    "durchschnitt": "المتوسط",
+    "anzahl": "التقييمات",
+    "unbeantwortet": "بدون رد",
+    "nurOffen": "بدون رد فقط",
+    "offen": "مفتوح",
+    "beantwortet": "تم الرد",
+    "verdeckt": "لم يُنشر بعد",
+    "abgelaufen": "انتهت مدة الرد",
+    "deineAntwort": "ردك",
+    "antworten": "رد",
+    "antwortAendern": "تعديل الرد",
+    "platzhalter": "رد إلى الضيف …",
+    "senden": "إرسال",
+    "abbrechen": "إلغاء",
+    "seite": "صفحة {current} من {total}"
   }
 }

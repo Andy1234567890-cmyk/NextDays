@@ -1660,5 +1660,25 @@
     "rechtshinweis": "पंजीकरण करने पर आप myBestDays की उपयोग शर्तों और गोपनीयता नीति से सहमत होते हैं।",
     "seitenTitel": "myBestDays — मेज़बान",
     "seitenBeschreibung": "अपनी संपत्तियाँ, कैलेंडर, कीमतें और बुकिंग प्रबंधित करें।"
+  },
+  "bewertungen": {
+    "titel": "समीक्षाएँ",
+    "untertitel": "आपके मेहमान आपकी संपत्तियों के बारे में क्या लिखते हैं।",
+    "leer": "अभी कोई समीक्षा नहीं।",
+    "durchschnitt": "औसत",
+    "anzahl": "समीक्षाएँ",
+    "unbeantwortet": "अनुत्तरित",
+    "nurOffen": "केवल अनुत्तरित",
+    "offen": "खुला",
+    "beantwortet": "उत्तर दिया",
+    "verdeckt": "अभी प्रकाशित नहीं",
+    "abgelaufen": "उत्तर की अवधि समाप्त",
+    "deineAntwort": "आपका उत्तर",
+    "antworten": "उत्तर दें",
+    "antwortAendern": "उत्तर बदलें",
+    "platzhalter": "मेहमान को उत्तर …",
+    "senden": "भेजें",
+    "abbrechen": "रद्द करें",
+    "seite": "पृष्ठ {current} / {total}"
   }
 }

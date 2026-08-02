@@ -1660,5 +1660,25 @@
     "rechtshinweis": "登録することで、myBestDaysの利用規約とプライバシーポリシーに同意したものとみなされます。",
     "seitenTitel": "myBestDays — ホスト",
     "seitenBeschreibung": "物件・カレンダー・料金・予約を管理できます。"
+  },
+  "bewertungen": {
+    "titel": "レビュー",
+    "untertitel": "ゲストがあなたの物件について書いた内容です。",
+    "leer": "まだレビューはありません。",
+    "durchschnitt": "平均",
+    "anzahl": "レビュー",
+    "unbeantwortet": "未返信",
+    "nurOffen": "未返信のみ",
+    "offen": "未対応",
+    "beantwortet": "返信済み",
+    "verdeckt": "まだ公開されていません",
+    "abgelaufen": "返信期限が終了しました",
+    "deineAntwort": "あなたの返信",
+    "antworten": "返信する",
+    "antwortAendern": "返信を編集",
+    "platzhalter": "ゲストへの返信 …",
+    "senden": "送信",
+    "abbrechen": "キャンセル",
+    "seite": "{total} ページ中 {current} ページ"
   }
 }

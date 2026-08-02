@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Registracijom prihvatate Uslove korišćenja i Politiku privatnosti myBestDays.",
     "seitenTitel": "myBestDays — Domaćini",
     "seitenBeschreibung": "Upravljajte svojim objektima, kalendarom, cenama i rezervacijama."
+  },
+  "bewertungen": {
+    "titel": "Оцене",
+    "untertitel": "Шта ваши гости пишу о вашим објектима.",
+    "leer": "Још нема оцена.",
+    "durchschnitt": "Просек",
+    "anzahl": "Оцене",
+    "unbeantwortet": "Без одговора",
+    "nurOffen": "Само без одговора",
+    "offen": "Отворено",
+    "beantwortet": "Одговорено",
+    "verdeckt": "Још није објављено",
+    "abgelaufen": "Рок за одговор је истекао",
+    "deineAntwort": "Ваш одговор",
+    "antworten": "Одговори",
+    "antwortAendern": "Измени одговор",
+    "platzhalter": "Одговор госту …",
+    "senden": "Пошаљи",
+    "abbrechen": "Откажи",
+    "seite": "Страна {current} од {total}"
   }
 }

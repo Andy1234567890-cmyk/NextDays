@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Реєструючись, ви погоджуєтеся з Умовами використання та Політикою конфіденційності myBestDays.",
     "seitenTitel": "myBestDays — Господарі",
     "seitenBeschreibung": "Керуйте своїми помешканнями, календарем, цінами та бронюваннями."
+  },
+  "bewertungen": {
+    "titel": "Відгуки",
+    "untertitel": "Що гості пишуть про ваші об’єкти.",
+    "leer": "Відгуків ще немає.",
+    "durchschnitt": "Середнє",
+    "anzahl": "Відгуки",
+    "unbeantwortet": "Без відповіді",
+    "nurOffen": "Лише без відповіді",
+    "offen": "Відкритий",
+    "beantwortet": "З відповіддю",
+    "verdeckt": "Ще не опубліковано",
+    "abgelaufen": "Термін відповіді минув",
+    "deineAntwort": "Ваша відповідь",
+    "antworten": "Відповісти",
+    "antwortAendern": "Змінити відповідь",
+    "platzhalter": "Відповідь гостю …",
+    "senden": "Надіслати",
+    "abbrechen": "Скасувати",
+    "seite": "Сторінка {current} з {total}"
   }
 }

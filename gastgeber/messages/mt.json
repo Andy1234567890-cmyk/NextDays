@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Meta tirreġistra, taqbel mat-termini tal-użu u mal-politika tal-privatezza ta' myBestDays.",
     "seitenTitel": "myBestDays — Ospitant",
     "seitenBeschreibung": "Immaniġġja l-propjetajiet, il-kalendarju, il-prezzijiet u l-bbukkjar tiegħek."
+  },
+  "bewertungen": {
+    "titel": "Reċensjonijiet",
+    "untertitel": "X’jiktbu l-mistednin dwar il-postijiet tiegħek.",
+    "leer": "Għad m’hemm ebda reċensjoni.",
+    "durchschnitt": "Medja",
+    "anzahl": "Reċensjonijiet",
+    "unbeantwortet": "Bla tweġiba",
+    "nurOffen": "Bla tweġiba biss",
+    "offen": "Miftuħa",
+    "beantwortet": "Imwieġba",
+    "verdeckt": "Għadha mhux ippubblikata",
+    "abgelaufen": "L-iskadenza tat-tweġiba għaddiet",
+    "deineAntwort": "It-tweġiba tiegħek",
+    "antworten": "Wieġeb",
+    "antwortAendern": "Ibdel it-tweġiba",
+    "platzhalter": "Tweġiba lill-mistieden …",
+    "senden": "Ibgħat",
+    "abbrechen": "Ikkanċella",
+    "seite": "Paġna {current} minn {total}"
   }
 }

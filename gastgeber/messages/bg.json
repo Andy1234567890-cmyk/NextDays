@@ -1660,5 +1660,25 @@
     "rechtshinweis": "С регистрацията си приемаш условията за ползване и декларацията за поверителност на myBestDays.",
     "seitenTitel": "myBestDays — домакин",
     "seitenBeschreibung": "Управлявай своите обекти, календар, цени и резервации."
+  },
+  "bewertungen": {
+    "titel": "Отзиви",
+    "untertitel": "Какво пишат гостите за вашите обекти.",
+    "leer": "Все още няма отзиви.",
+    "durchschnitt": "Средно",
+    "anzahl": "Отзиви",
+    "unbeantwortet": "Без отговор",
+    "nurOffen": "Само без отговор",
+    "offen": "Отворен",
+    "beantwortet": "С отговор",
+    "verdeckt": "Още не е публикуван",
+    "abgelaufen": "Срокът за отговор изтече",
+    "deineAntwort": "Вашият отговор",
+    "antworten": "Отговор",
+    "antwortAendern": "Промяна на отговора",
+    "platzhalter": "Отговор до госта …",
+    "senden": "Изпращане",
+    "abbrechen": "Отказ",
+    "seite": "Страница {current} от {total}"
   }
 }

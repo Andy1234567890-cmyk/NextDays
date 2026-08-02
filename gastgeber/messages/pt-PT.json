@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Ao registar-se, aceita os Termos de Utilização e a Política de Privacidade do myBestDays.",
     "seitenTitel": "myBestDays — Anfitriões",
     "seitenBeschreibung": "Faça a gestão dos seus alojamentos, calendário, preços e reservas."
+  },
+  "bewertungen": {
+    "titel": "Avaliações",
+    "untertitel": "O que os teus hóspedes escrevem sobre os teus alojamentos.",
+    "leer": "Ainda não há avaliações.",
+    "durchschnitt": "Média",
+    "anzahl": "Avaliações",
+    "unbeantwortet": "Sem resposta",
+    "nurOffen": "Apenas sem resposta",
+    "offen": "Aberta",
+    "beantwortet": "Respondida",
+    "verdeckt": "Ainda não publicada",
+    "abgelaufen": "Prazo de resposta expirado",
+    "deineAntwort": "A tua resposta",
+    "antworten": "Responder",
+    "antwortAendern": "Alterar resposta",
+    "platzhalter": "Resposta ao hóspede …",
+    "senden": "Enviar",
+    "abbrechen": "Cancelar",
+    "seite": "Página {current} de {total}"
   }
 }

@@ -23,9 +23,11 @@ export function Sterne({ wert, size = "size-4" }: { wert: number; size?: string 
 export function SterneWahl({
   wert,
   onChange,
+  size = "size-8",
 }: {
   wert: number;
   onChange: (n: number) => void;
+  size?: string;
 }) {
   const [hover, setHover] = useState(0);
   const anzeige = hover || wert;
@@ -41,10 +43,7 @@ export function SterneWahl({
           onMouseLeave={() => setHover(0)}
           className="text-accent transition-transform hover:scale-110"
         >
-          <Icon
-            icon={n <= anzeige ? "ph:star-fill" : "ph:star"}
-            className="size-8"
-          />
+          <Icon icon={n <= anzeige ? "ph:star-fill" : "ph:star"} className={size} />
         </button>
       ))}
     </div>

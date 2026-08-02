@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Nuair a chláraíonn tú, glacann tú le téarmaí úsáide agus le polasaí príobháideachta myBestDays.",
     "seitenTitel": "myBestDays — óstach",
     "seitenBeschreibung": "Bainistigh do chuid maoine, do fhéilire, do phraghsanna agus do chuid áirithintí."
+  },
+  "bewertungen": {
+    "titel": "Léirmheasanna",
+    "untertitel": "Cad a scríobhann do chuid aíonna faoi na háiteanna atá agat.",
+    "leer": "Níl aon léirmheas fós.",
+    "durchschnitt": "Meán",
+    "anzahl": "Léirmheasanna",
+    "unbeantwortet": "Gan freagra",
+    "nurOffen": "Gan freagra amháin",
+    "offen": "Oscailte",
+    "beantwortet": "Freagartha",
+    "verdeckt": "Nach bhfuil foilsithe fós",
+    "abgelaufen": "Tá an spriocdháta freagra caite",
+    "deineAntwort": "Do fhreagra",
+    "antworten": "Freagair",
+    "antwortAendern": "Athraigh an freagra",
+    "platzhalter": "Freagra don aoi …",
+    "senden": "Seol",
+    "abbrechen": "Cealaigh",
+    "seite": "Leathanach {current} as {total}"
   }
 }

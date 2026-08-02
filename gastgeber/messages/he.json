@@ -1660,5 +1660,25 @@
     "rechtshinweis": "בהרשמה אתם מאשרים את תנאי השימוש ואת מדיניות הפרטיות של myBestDays.",
     "seitenTitel": "myBestDays — מארח",
     "seitenBeschreibung": "נהלו את הנכסים, לוח השנה, המחירים וההזמנות שלכם."
+  },
+  "bewertungen": {
+    "titel": "ביקורות",
+    "untertitel": "מה האורחים שלך כותבים על הנכסים שלך.",
+    "leer": "אין עדיין ביקורות.",
+    "durchschnitt": "ממוצע",
+    "anzahl": "ביקורות",
+    "unbeantwortet": "ללא מענה",
+    "nurOffen": "ללא מענה בלבד",
+    "offen": "פתוחה",
+    "beantwortet": "נענתה",
+    "verdeckt": "עדיין לא פורסמה",
+    "abgelaufen": "חלון התגובה נסגר",
+    "deineAntwort": "התשובה שלך",
+    "antworten": "להשיב",
+    "antwortAendern": "עריכת התשובה",
+    "platzhalter": "תשובה לאורח …",
+    "senden": "שליחה",
+    "abbrechen": "ביטול",
+    "seite": "עמוד {current} מתוך {total}"
   }
 }

@@ -1660,5 +1660,25 @@
     "rechtshinweis": "เมื่อสมัครสมาชิก คุณยอมรับเงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัวของ myBestDays",
     "seitenTitel": "myBestDays — เจ้าของที่พัก",
     "seitenBeschreibung": "จัดการที่พัก ปฏิทิน ราคา และการจองของคุณ"
+  },
+  "bewertungen": {
+    "titel": "รีวิว",
+    "untertitel": "สิ่งที่ผู้เข้าพักเขียนถึงที่พักของคุณ",
+    "leer": "ยังไม่มีรีวิว",
+    "durchschnitt": "ค่าเฉลี่ย",
+    "anzahl": "รีวิว",
+    "unbeantwortet": "ยังไม่ตอบ",
+    "nurOffen": "เฉพาะที่ยังไม่ตอบ",
+    "offen": "เปิดอยู่",
+    "beantwortet": "ตอบแล้ว",
+    "verdeckt": "ยังไม่เผยแพร่",
+    "abgelaufen": "หมดเวลาตอบกลับ",
+    "deineAntwort": "คำตอบของคุณ",
+    "antworten": "ตอบกลับ",
+    "antwortAendern": "แก้ไขคำตอบ",
+    "platzhalter": "ตอบผู้เข้าพัก …",
+    "senden": "ส่ง",
+    "abbrechen": "ยกเลิก",
+    "seite": "หน้า {current} จาก {total}"
   }
 }

@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Registrandoti accetti i termini di utilizzo e l'informativa sulla privacy di myBestDays.",
     "seitenTitel": "myBestDays — Host",
     "seitenBeschreibung": "Gestisci i tuoi alloggi, il calendario, i prezzi e le prenotazioni."
+  },
+  "bewertungen": {
+    "titel": "Recensioni",
+    "untertitel": "Cosa scrivono i tuoi ospiti sui tuoi alloggi.",
+    "leer": "Nessuna recensione ancora.",
+    "durchschnitt": "Media",
+    "anzahl": "Recensioni",
+    "unbeantwortet": "Senza risposta",
+    "nurOffen": "Solo senza risposta",
+    "offen": "Aperta",
+    "beantwortet": "Con risposta",
+    "verdeckt": "Non ancora pubblicata",
+    "abgelaufen": "Termine di risposta scaduto",
+    "deineAntwort": "La tua risposta",
+    "antworten": "Rispondi",
+    "antwortAendern": "Modifica risposta",
+    "platzhalter": "Risposta all’ospite …",
+    "senden": "Invia",
+    "abbrechen": "Annulla",
+    "seite": "Pagina {current} di {total}"
   }
 }

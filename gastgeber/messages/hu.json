@@ -1660,5 +1660,25 @@
     "rechtshinweis": "A regisztrációval elfogadod a myBestDays felhasználási feltételeit és adatvédelmi tájékoztatóját.",
     "seitenTitel": "myBestDays — Házigazda",
     "seitenBeschreibung": "Kezeld a szálláshelyeidet, a naptárat, az árakat és a foglalásokat."
+  },
+  "bewertungen": {
+    "titel": "Értékelések",
+    "untertitel": "Amit a vendégeid az ingatlanjaidról írnak.",
+    "leer": "Még nincsenek értékelések.",
+    "durchschnitt": "Átlag",
+    "anzahl": "Értékelések",
+    "unbeantwortet": "Megválaszolatlan",
+    "nurOffen": "Csak megválaszolatlanok",
+    "offen": "Nyitott",
+    "beantwortet": "Megválaszolva",
+    "verdeckt": "Még nincs közzétéve",
+    "abgelaufen": "A válaszadási határidő lejárt",
+    "deineAntwort": "A válaszod",
+    "antworten": "Válasz",
+    "antwortAendern": "Válasz módosítása",
+    "platzhalter": "Válasz a vendégnek …",
+    "senden": "Küldés",
+    "abbrechen": "Mégse",
+    "seite": "{current}. oldal / {total}"
   }
 }

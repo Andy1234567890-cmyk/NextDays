@@ -39,6 +39,11 @@ import {
   naechte,
   type ListingDetail as ListingDetailTyp,
 } from "@/lib/listings";
+import {
+  KATEGORIEN,
+  ladeObjektBewertungen,
+  type PropertyReviews,
+} from "@/lib/objektBewertungen";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -63,6 +68,7 @@ export default function ListingDetail() {
   const [merkStatus, setMerkStatus] = useState<string | null>(null);
   const [merkLaeuft, setMerkLaeuft] = useState(false);
   const [bild, setBild] = useState(0);
+  const [bewertungen, setBewertungen] = useState<PropertyReviews | null>(null);
 
   const zeitraumGueltig = !!von && !!bis && naechte(von, bis) > 0;
 
@@ -81,6 +87,18 @@ export default function ListingDetail() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Bewertungen einmal je Objekt laden. Beiwerk: schlägt es fehl, entfällt nur
+  // der Abschnitt — das Detail bleibt nutzbar.
+  useEffect(() => {
+    let aktiv = true;
+    ladeObjektBewertungen(id).then((res) => {
+      if (aktiv && res.ok) setBewertungen(res.data);
+    });
+    return () => {
+      aktiv = false;
+    };
+  }, [id]);
 
   // Verfügbarkeit nur prüfen, wenn ein gültiger Zeitraum gewählt ist. Ergebnis
   // ist die Server-Wahrheit (availability + Reservierungen), keine Schätzung.
@@ -397,6 +415,99 @@ export default function ListingDetail() {
                         {formatCurrency(a.price, listing.currency)}
                       </Txt>
                     </Row>
+                  ))}
+                </Col>
+              </Col>
+            </>
+          )}
+
+          {bewertungen && bewertungen.count > 0 && bewertungen.average != null && (
+            <>
+              <Trennlinie />
+              <Col gap={14}>
+                <Row gap={6} style={{ alignItems: "center" }}>
+                  <Icon n="star" s={16} sw={0} c={t.palette.ink} fill={t.palette.ink} />
+                  <Txt v="h2">
+                    {bewertungen.average.toFixed(2).replace(".", ",")}
+                  </Txt>
+                  <Txt v="sm" soft>
+                    · {bewertungen.count}{" "}
+                    {bewertungen.count === 1 ? "Bewertung" : "Bewertungen"}
+                  </Txt>
+                </Row>
+
+                {/* Kategorie-Durchschnitte. Fehlt eine Kategorie, entfällt die
+                    Zeile — es wird keine 0 gezeichnet (Wurzel 4). */}
+                {bewertungen.category_averages && (
+                  <Col gap={8}>
+                    {KATEGORIEN.map((k) => {
+                      const wert = bewertungen.category_averages?.[k.key];
+                      if (wert == null) return null;
+                      return (
+                        <Row key={k.key} gap={10} style={{ alignItems: "center" }}>
+                          <Txt v="sm" soft style={{ width: 128 }}>
+                            {k.label}
+                          </Txt>
+                          <View
+                            style={{
+                              flex: 1,
+                              height: 4,
+                              borderRadius: 2,
+                              backgroundColor: t.palette.surface2,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <View
+                              style={{
+                                width: `${(wert / 5) * 100}%`,
+                                height: "100%",
+                                backgroundColor: t.palette.ink,
+                              }}
+                            />
+                          </View>
+                          <Txt v="sm" style={{ width: 34, textAlign: "right" }}>
+                            {wert.toFixed(1).replace(".", ",")}
+                          </Txt>
+                        </Row>
+                      );
+                    })}
+                  </Col>
+                )}
+
+                <Col gap={16}>
+                  {bewertungen.reviews.map((r) => (
+                    <Col key={r.id} gap={6}>
+                      <Txt v="sm" style={{ fontFamily: t.fonts.semibold }}>
+                        {r.author ?? "Gast"}
+                      </Txt>
+                      <Row gap={2}>
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Icon
+                            key={i}
+                            n="star"
+                            s={12}
+                            sw={i <= r.rating ? 0 : 1.2}
+                            c={i <= r.rating ? t.palette.ink : t.palette.faint}
+                            fill={i <= r.rating ? t.palette.ink : undefined}
+                          />
+                        ))}
+                      </Row>
+                      {r.text ? <Txt v="sm">{r.text}</Txt> : null}
+                      {r.host_reply ? (
+                        <View
+                          style={{
+                            backgroundColor: t.palette.surface2,
+                            borderRadius: 12,
+                            padding: 10,
+                          }}
+                        >
+                          <Txt v="xs" soft>
+                            Antwort des Gastgebers
+                          </Txt>
+                          <Txt v="sm">{r.host_reply}</Txt>
+                        </View>
+                      ) : null}
+                    </Col>
                   ))}
                 </Col>
               </Col>

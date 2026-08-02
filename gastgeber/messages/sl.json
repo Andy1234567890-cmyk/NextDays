@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Z registracijo se strinjate s Pogoji uporabe in Politiko zasebnosti myBestDays.",
     "seitenTitel": "myBestDays — Gostitelji",
     "seitenBeschreibung": "Upravljajte svoje nastanitve, koledar, cene in rezervacije."
+  },
+  "bewertungen": {
+    "titel": "Ocene",
+    "untertitel": "Kaj vaši gostje pišejo o vaših nastanitvah.",
+    "leer": "Ocen še ni.",
+    "durchschnitt": "Povprečje",
+    "anzahl": "Ocene",
+    "unbeantwortet": "Brez odgovora",
+    "nurOffen": "Samo brez odgovora",
+    "offen": "Odprto",
+    "beantwortet": "Odgovorjeno",
+    "verdeckt": "Še ni objavljeno",
+    "abgelaufen": "Rok za odgovor je potekel",
+    "deineAntwort": "Vaš odgovor",
+    "antworten": "Odgovori",
+    "antwortAendern": "Uredi odgovor",
+    "platzhalter": "Odgovor gostu …",
+    "senden": "Pošlji",
+    "abbrechen": "Prekliči",
+    "seite": "Stran {current} od {total}"
   }
 }

@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Rekisteröitymällä hyväksyt myBestDaysin käyttöehdot ja tietosuojaselosteen.",
     "seitenTitel": "myBestDays — majoittaja",
     "seitenBeschreibung": "Hallitse kohteitasi, kalenteria, hintoja ja varauksia."
+  },
+  "bewertungen": {
+    "titel": "Arvostelut",
+    "untertitel": "Mitä vieraasi kirjoittavat kohteistasi.",
+    "leer": "Ei vielä arvosteluja.",
+    "durchschnitt": "Keskiarvo",
+    "anzahl": "Arvostelut",
+    "unbeantwortet": "Vastaamattomat",
+    "nurOffen": "Vain vastaamattomat",
+    "offen": "Avoin",
+    "beantwortet": "Vastattu",
+    "verdeckt": "Ei vielä julkaistu",
+    "abgelaufen": "Vastausaika umpeutui",
+    "deineAntwort": "Vastauksesi",
+    "antworten": "Vastaa",
+    "antwortAendern": "Muokkaa vastausta",
+    "platzhalter": "Vastaus vieraalle …",
+    "senden": "Lähetä",
+    "abbrechen": "Peruuta",
+    "seite": "Sivu {current} / {total}"
   }
 }

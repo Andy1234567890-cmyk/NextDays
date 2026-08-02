@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Ved å registrere deg godtar du bruksvilkårene og personvernerklæringen til myBestDays.",
     "seitenTitel": "myBestDays — Vert",
     "seitenBeschreibung": "Styr bostedene dine, kalender, priser og bestillinger."
+  },
+  "bewertungen": {
+    "titel": "Omtaler",
+    "untertitel": "Hva gjestene dine skriver om stedene dine.",
+    "leer": "Ingen omtaler ennå.",
+    "durchschnitt": "Gjennomsnitt",
+    "anzahl": "Omtaler",
+    "unbeantwortet": "Ubesvarte",
+    "nurOffen": "Bare ubesvarte",
+    "offen": "Åpen",
+    "beantwortet": "Besvart",
+    "verdeckt": "Ennå ikke publisert",
+    "abgelaufen": "Svarfristen er utløpt",
+    "deineAntwort": "Ditt svar",
+    "antworten": "Svar",
+    "antwortAendern": "Endre svar",
+    "platzhalter": "Svar til gjesten …",
+    "senden": "Send",
+    "abbrechen": "Avbryt",
+    "seite": "Side {current} av {total}"
   }
 }

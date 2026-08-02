@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Registracijom prihvaćaš uvjete korištenja i izjavu o privatnosti myBestDaysa.",
     "seitenTitel": "myBestDays — domaćin",
     "seitenBeschreibung": "Upravljaj svojim objektima, kalendarom, cijenama i rezervacijama."
+  },
+  "bewertungen": {
+    "titel": "Ocjene",
+    "untertitel": "Što vaši gosti pišu o vašim objektima.",
+    "leer": "Još nema ocjena.",
+    "durchschnitt": "Prosjek",
+    "anzahl": "Ocjene",
+    "unbeantwortet": "Bez odgovora",
+    "nurOffen": "Samo bez odgovora",
+    "offen": "Otvoreno",
+    "beantwortet": "Odgovoreno",
+    "verdeckt": "Još nije objavljeno",
+    "abgelaufen": "Rok za odgovor je istekao",
+    "deineAntwort": "Vaš odgovor",
+    "antworten": "Odgovori",
+    "antwortAendern": "Uredi odgovor",
+    "platzhalter": "Odgovor gostu …",
+    "senden": "Pošalji",
+    "abbrechen": "Odustani",
+    "seite": "Stranica {current} od {total}"
   }
 }

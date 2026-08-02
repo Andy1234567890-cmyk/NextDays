@@ -8,6 +8,8 @@ import { useState } from "react";
 
 import { Sterne, SterneWahl } from "@/components/sterne";
 import {
+  KATEGORIEN,
+  type KategorieNoten,
   type MyReview,
   aktualisiereBewertung,
   erstelleBewertung,
@@ -30,6 +32,9 @@ type FormState = {
   title: string;
   rating: number;
   text: string;
+  // Kategorie-Noten. Was der Gast nicht anfasst, bleibt null — daraus entsteht
+  // KEIN Durchschnitt, statt eine erfundene Note zu übertragen.
+  noten: Partial<KategorieNoten>;
 };
 
 export function BewertungenClient({
@@ -57,6 +62,7 @@ export function BewertungenClient({
       title: b.title,
       rating: 5,
       text: "",
+      noten: {},
     };
   });
   const [busy, setBusy] = useState(false);
@@ -70,6 +76,7 @@ export function BewertungenClient({
       title: b.title,
       rating: 5,
       text: "",
+      noten: {},
     });
   }
 
@@ -83,6 +90,7 @@ export function BewertungenClient({
       title: reviewTitles[r.property_id] ?? "Unterkunft",
       rating: r.rating,
       text: r.text ?? "",
+      noten: r.scores ?? {},
     });
   }
 
@@ -94,11 +102,13 @@ export function BewertungenClient({
       ? await aktualisiereBewertung(form.reviewId, {
           rating: form.rating,
           text: form.text.trim() || undefined,
+          scores: form.noten,
         })
       : await erstelleBewertung({
           reservation_id: form.reservationId,
           rating: form.rating,
           text: form.text.trim() || undefined,
+          scores: form.noten,
         });
     setBusy(false);
     if (!res.ok) {
@@ -149,6 +159,24 @@ export function BewertungenClient({
               wert={form.rating}
               onChange={(n) => setForm({ ...form, rating: n })}
             />
+          </div>
+
+          {/* Kategorien (optional). Ohne sie gibt es keinen Kategorie-
+              Durchschnitt am Objekt — deshalb hier abfragen, nicht später
+              schätzen. */}
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {KATEGORIEN.map((k) => (
+              <div key={k.key} className="flex items-center justify-between gap-3">
+                <span className="text-sm text-muted-foreground">{k.label}</span>
+                <SterneWahl
+                  size="size-5"
+                  wert={form.noten[k.key] ?? 0}
+                  onChange={(n) =>
+                    setForm({ ...form, noten: { ...form.noten, [k.key]: n } })
+                  }
+                />
+              </div>
+            ))}
           </div>
 
           <textarea
@@ -249,11 +277,19 @@ export function BewertungenClient({
                     <p className="font-medium">
                       {reviewTitles[r.property_id] ?? "Unterkunft"}
                     </p>
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
                       <Sterne wert={r.rating} />
                       <span className="text-xs text-muted-foreground">
                         {formatDate(r.created_at)}
                       </span>
+                      {/* Zwei-Wege-Sichtbarkeit: solange der Gastgeber nicht
+                          bewertet hat und die Frist läuft, sieht niemand sonst
+                          diese Bewertung. Ohne den Hinweis wirkt sie verloren. */}
+                      {!r.published_at && (
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+                          Noch nicht veröffentlicht
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button

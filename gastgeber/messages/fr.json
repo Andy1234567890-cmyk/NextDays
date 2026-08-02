@@ -1660,5 +1660,25 @@
     "rechtshinweis": "En vous inscrivant, vous acceptez les conditions d'utilisation et la politique de confidentialité de myBestDays.",
     "seitenTitel": "myBestDays — hôte",
     "seitenBeschreibung": "Gérez vos logements, votre calendrier, vos tarifs et vos réservations."
+  },
+  "bewertungen": {
+    "titel": "Avis",
+    "untertitel": "Ce que vos clients écrivent sur vos logements.",
+    "leer": "Aucun avis pour l’instant.",
+    "durchschnitt": "Moyenne",
+    "anzahl": "Avis",
+    "unbeantwortet": "Sans réponse",
+    "nurOffen": "Sans réponse uniquement",
+    "offen": "Ouvert",
+    "beantwortet": "Répondu",
+    "verdeckt": "Pas encore publié",
+    "abgelaufen": "Délai de réponse expiré",
+    "deineAntwort": "Votre réponse",
+    "antworten": "Répondre",
+    "antwortAendern": "Modifier la réponse",
+    "platzhalter": "Réponse au client …",
+    "senden": "Envoyer",
+    "abbrechen": "Annuler",
+    "seite": "Page {current} sur {total}"
   }
 }

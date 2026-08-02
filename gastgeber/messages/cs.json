@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Registrací souhlasíš s podmínkami užívání a se zásadami ochrany soukromí myBestDays.",
     "seitenTitel": "myBestDays — hostitel",
     "seitenBeschreibung": "Spravuj své objekty, kalendář, ceny a rezervace."
+  },
+  "bewertungen": {
+    "titel": "Hodnocení",
+    "untertitel": "Co vaši hosté píší o vašich objektech.",
+    "leer": "Zatím žádná hodnocení.",
+    "durchschnitt": "Průměr",
+    "anzahl": "Hodnocení",
+    "unbeantwortet": "Bez odpovědi",
+    "nurOffen": "Jen bez odpovědi",
+    "offen": "Otevřené",
+    "beantwortet": "Odpovězeno",
+    "verdeckt": "Ještě nezveřejněno",
+    "abgelaufen": "Lhůta pro odpověď vypršela",
+    "deineAntwort": "Vaše odpověď",
+    "antworten": "Odpovědět",
+    "antwortAendern": "Upravit odpověď",
+    "platzhalter": "Odpověď hostovi …",
+    "senden": "Odeslat",
+    "abbrechen": "Zrušit",
+    "seite": "Stránka {current} z {total}"
   }
 }

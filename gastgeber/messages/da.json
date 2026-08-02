@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Når du opretter dig, accepterer du myBestDays' brugerbetingelser og privatlivspolitik.",
     "seitenTitel": "myBestDays — vært",
     "seitenBeschreibung": "Styr dine feriesteder, kalender, priser og bookinger."
+  },
+  "bewertungen": {
+    "titel": "Anmeldelser",
+    "untertitel": "Hvad dine gæster skriver om dine boliger.",
+    "leer": "Ingen anmeldelser endnu.",
+    "durchschnitt": "Gennemsnit",
+    "anzahl": "Anmeldelser",
+    "unbeantwortet": "Ubesvarede",
+    "nurOffen": "Kun ubesvarede",
+    "offen": "Åben",
+    "beantwortet": "Besvaret",
+    "verdeckt": "Endnu ikke offentliggjort",
+    "abgelaufen": "Svarfristen er udløbet",
+    "deineAntwort": "Dit svar",
+    "antworten": "Svar",
+    "antwortAendern": "Redigér svar",
+    "platzhalter": "Svar til gæsten …",
+    "senden": "Send",
+    "abbrechen": "Annullér",
+    "seite": "Side {current} af {total}"
   }
 }

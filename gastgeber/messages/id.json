@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Dengan mendaftar, Anda menyetujui Ketentuan Penggunaan dan Kebijakan Privasi myBestDays.",
     "seitenTitel": "myBestDays — Tuan Rumah",
     "seitenBeschreibung": "Kelola properti, kalender, harga, dan pemesanan Anda."
+  },
+  "bewertungen": {
+    "titel": "Ulasan",
+    "untertitel": "Apa yang ditulis tamu tentang properti Anda.",
+    "leer": "Belum ada ulasan.",
+    "durchschnitt": "Rata-rata",
+    "anzahl": "Ulasan",
+    "unbeantwortet": "Belum dijawab",
+    "nurOffen": "Hanya yang belum dijawab",
+    "offen": "Terbuka",
+    "beantwortet": "Dijawab",
+    "verdeckt": "Belum dipublikasikan",
+    "abgelaufen": "Batas waktu balasan berakhir",
+    "deineAntwort": "Balasan Anda",
+    "antworten": "Balas",
+    "antwortAendern": "Ubah balasan",
+    "platzhalter": "Balasan untuk tamu …",
+    "senden": "Kirim",
+    "abbrechen": "Batal",
+    "seite": "Halaman {current} dari {total}"
   }
 }

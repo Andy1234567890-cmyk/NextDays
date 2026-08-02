@@ -1660,5 +1660,25 @@
     "rechtshinweis": "註冊即代表您同意 myBestDays 的使用條款與隱私權政策。",
     "seitenTitel": "myBestDays — 房東",
     "seitenBeschreibung": "管理您的房源、行事曆、價格與訂房。"
+  },
+  "bewertungen": {
+    "titel": "評價",
+    "untertitel": "房客對您房源的評價。",
+    "leer": "尚無評價。",
+    "durchschnitt": "平均分",
+    "anzahl": "評價",
+    "unbeantwortet": "未回覆",
+    "nurOffen": "僅未回覆",
+    "offen": "待處理",
+    "beantwortet": "已回覆",
+    "verdeckt": "尚未發佈",
+    "abgelaufen": "回覆期限已過",
+    "deineAntwort": "您的回覆",
+    "antworten": "回覆",
+    "antwortAendern": "修改回覆",
+    "platzhalter": "回覆房客 …",
+    "senden": "傳送",
+    "abbrechen": "取消",
+    "seite": "第 {current} 頁，共 {total} 頁"
   }
 }

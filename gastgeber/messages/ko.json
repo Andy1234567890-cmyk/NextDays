@@ -1660,5 +1660,25 @@
     "rechtshinweis": "가입하시면 myBestDays의 이용약관과 개인정보 처리방침에 동의하시게 돼요.",
     "seitenTitel": "myBestDays — 호스트",
     "seitenBeschreibung": "숙소와 캘린더, 요금, 예약을 관리해 보세요."
+  },
+  "bewertungen": {
+    "titel": "후기",
+    "untertitel": "게스트가 숙소에 대해 남긴 내용입니다.",
+    "leer": "아직 후기가 없습니다.",
+    "durchschnitt": "평균",
+    "anzahl": "후기",
+    "unbeantwortet": "미답변",
+    "nurOffen": "미답변만",
+    "offen": "미처리",
+    "beantwortet": "답변 완료",
+    "verdeckt": "아직 공개되지 않음",
+    "abgelaufen": "답변 기한 종료",
+    "deineAntwort": "내 답변",
+    "antworten": "답변하기",
+    "antwortAendern": "답변 수정",
+    "platzhalter": "게스트에게 답변 …",
+    "senden": "보내기",
+    "abbrechen": "취소",
+    "seite": "{total}페이지 중 {current}페이지"
   }
 }

@@ -32,6 +32,7 @@ import HostListings from "@/screens/HostListings";
 import HostMore from "@/screens/HostMore";
 import HostProfile from "@/screens/HostProfile";
 import HostReservations from "@/screens/HostReservations";
+import HostReviews from "@/screens/HostReviews";
 import HostTasks from "@/screens/HostTasks";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -72,6 +73,7 @@ export function HostTabs() {
       {/* Über „Mehr“ erreichbar, aber nicht in der Leiste: */}
       <Tab.Screen name="Tasks" component={HostTasks} options={{ title: "Aufgaben", ...hidden }} />
       <Tab.Screen name="Listings" component={HostListings} options={{ title: "Inserate", ...hidden }} />
+      <Tab.Screen name="Reviews" component={HostReviews} options={{ title: "Bewertungen", ...hidden }} />
       <Tab.Screen name="HostProfile" component={HostProfile} options={{ title: "Profil", ...hidden }} />
     </Tab.Navigator>
   );

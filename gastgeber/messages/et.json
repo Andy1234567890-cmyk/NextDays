@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Registreerudes nõustud myBestDaysi kasutustingimuste ja privaatsusteatega.",
     "seitenTitel": "myBestDays — võõrustaja",
     "seitenBeschreibung": "Halda oma objekte, kalendrit, hindu ja broneeringuid."
+  },
+  "bewertungen": {
+    "titel": "Arvustused",
+    "untertitel": "Mida külalised sinu kohtade kohta kirjutavad.",
+    "leer": "Arvustusi veel ei ole.",
+    "durchschnitt": "Keskmine",
+    "anzahl": "Arvustused",
+    "unbeantwortet": "Vastamata",
+    "nurOffen": "Ainult vastamata",
+    "offen": "Avatud",
+    "beantwortet": "Vastatud",
+    "verdeckt": "Veel avaldamata",
+    "abgelaufen": "Vastamise tähtaeg möödus",
+    "deineAntwort": "Sinu vastus",
+    "antworten": "Vasta",
+    "antwortAendern": "Muuda vastust",
+    "platzhalter": "Vastus külalisele …",
+    "senden": "Saada",
+    "abbrechen": "Loobu",
+    "seite": "Lehekülg {current} / {total}"
   }
 }

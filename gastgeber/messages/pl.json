@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Rejestrując się, akceptujesz warunki korzystania i politykę prywatności myBestDays.",
     "seitenTitel": "myBestDays — Gospodarz",
     "seitenBeschreibung": "Zarządzaj swoimi obiektami, kalendarzem, cenami i rezerwacjami."
+  },
+  "bewertungen": {
+    "titel": "Opinie",
+    "untertitel": "Co Twoi goście piszą o Twoich obiektach.",
+    "leer": "Jeszcze brak opinii.",
+    "durchschnitt": "Średnia",
+    "anzahl": "Opinie",
+    "unbeantwortet": "Bez odpowiedzi",
+    "nurOffen": "Tylko bez odpowiedzi",
+    "offen": "Otwarta",
+    "beantwortet": "Z odpowiedzią",
+    "verdeckt": "Jeszcze nieopublikowana",
+    "abgelaufen": "Termin odpowiedzi minął",
+    "deineAntwort": "Twoja odpowiedź",
+    "antworten": "Odpowiedz",
+    "antwortAendern": "Zmień odpowiedź",
+    "platzhalter": "Odpowiedź do gościa …",
+    "senden": "Wyślij",
+    "abbrechen": "Anuluj",
+    "seite": "Strona {current} z {total}"
   }
 }

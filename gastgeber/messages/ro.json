@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Prin înregistrare accepți Termenii de utilizare și Politica de confidențialitate myBestDays.",
     "seitenTitel": "myBestDays — Gazde",
     "seitenBeschreibung": "Gestionează-ți proprietățile, calendarul, prețurile și rezervările."
+  },
+  "bewertungen": {
+    "titel": "Recenzii",
+    "untertitel": "Ce scriu oaspeții despre proprietățile tale.",
+    "leer": "Încă nu există recenzii.",
+    "durchschnitt": "Medie",
+    "anzahl": "Recenzii",
+    "unbeantwortet": "Fără răspuns",
+    "nurOffen": "Doar fără răspuns",
+    "offen": "Deschisă",
+    "beantwortet": "Cu răspuns",
+    "verdeckt": "Încă nepublicată",
+    "abgelaufen": "Termenul de răspuns a expirat",
+    "deineAntwort": "Răspunsul tău",
+    "antworten": "Răspunde",
+    "antwortAendern": "Modifică răspunsul",
+    "platzhalter": "Răspuns pentru oaspete …",
+    "senden": "Trimite",
+    "abbrechen": "Anulează",
+    "seite": "Pagina {current} din {total}"
   }
 }

@@ -6,10 +6,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { BuchungsWidget } from "@/components/buchungs-widget";
+import { ObjektBewertungen } from "@/components/objekt-bewertungen";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ladeInserat } from "@/lib/inserate";
+import { ladeOeffentlicheBewertungen } from "@/lib/objekt-bewertungen";
 
 // Suchmaschinen-Indexierung pro Objekt (Airbnb „Objekte in Suchmaschinen
 // aufnehmen"). Ist der Schalter AUS (Default), rendert Next den robots-Meta-Tag
@@ -49,7 +51,11 @@ export default async function InseratPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const listing = await ladeInserat(id);
+  const [listing, bewertungen] = await Promise.all([
+    ladeInserat(id),
+    // Bewertungen sind Beiwerk: fehlen sie, entfällt nur der Abschnitt.
+    ladeOeffentlicheBewertungen(id),
+  ]);
   if (!listing) notFound();
 
   const galerieHues = [0, 20, 40, 60, 80].map((d) => (listing.hue + d) % 360);
@@ -158,6 +164,8 @@ export default async function InseratPage({
                 </div>
               </div>
             )}
+
+            {bewertungen && <ObjektBewertungen daten={bewertungen} />}
 
             {/* Lage (ungefähr) */}
             <div className="border-t border-border py-6">

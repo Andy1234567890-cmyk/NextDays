@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Sa pagpaparehistro, sumasang-ayon ka sa mga tuntunin ng paggamit at sa pahayag sa pagkapribado ng myBestDays.",
     "seitenTitel": "myBestDays — Mga host",
     "seitenBeschreibung": "Pamahalaan ang iyong mga tuluyan, kalendaryo, presyo at booking."
+  },
+  "bewertungen": {
+    "titel": "Mga review",
+    "untertitel": "Ang isinusulat ng mga bisita tungkol sa mga ari-arian mo.",
+    "leer": "Wala pang review.",
+    "durchschnitt": "Average",
+    "anzahl": "Mga review",
+    "unbeantwortet": "Walang sagot",
+    "nurOffen": "Walang sagot lamang",
+    "offen": "Bukas",
+    "beantwortet": "Nasagot",
+    "verdeckt": "Hindi pa nailalabas",
+    "abgelaufen": "Lipas na ang panahon ng pagsagot",
+    "deineAntwort": "Ang sagot mo",
+    "antworten": "Sumagot",
+    "antwortAendern": "Baguhin ang sagot",
+    "platzhalter": "Sagot sa bisita …",
+    "senden": "Ipadala",
+    "abbrechen": "Kanselahin",
+    "seite": "Pahina {current} ng {total}"
   }
 }

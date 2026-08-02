@@ -10,6 +10,7 @@ export type HostTabParamList = {
   // threadId: Deep-Link mynextdays://inbox/:threadId öffnet diesen Thread.
   HostInbox: { threadId?: string } | undefined;
   Listings: undefined;
+  Reviews: undefined;
   HostProfile: undefined;
   More: undefined;
 };

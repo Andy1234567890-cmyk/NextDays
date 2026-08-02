@@ -15,6 +15,7 @@ type Entry = { icon: IconName; label: string; tab: string };
 const ENTRIES: Entry[] = [
   { icon: "list", label: "Aufgaben", tab: "Tasks" },
   { icon: "grid", label: "Inserate", tab: "Listings" },
+  { icon: "star", label: "Bewertungen", tab: "Reviews" },
   { icon: "user", label: "Profil", tab: "HostProfile" },
 ];
 

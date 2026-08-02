@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Genom att registrera dig godkänner du myBestDays användarvillkor och integritetspolicy.",
     "seitenTitel": "myBestDays — Värdar",
     "seitenBeschreibung": "Hantera dina boenden, kalender, priser och bokningar."
+  },
+  "bewertungen": {
+    "titel": "Omdömen",
+    "untertitel": "Vad dina gäster skriver om dina boenden.",
+    "leer": "Inga omdömen ännu.",
+    "durchschnitt": "Genomsnitt",
+    "anzahl": "Omdömen",
+    "unbeantwortet": "Obesvarade",
+    "nurOffen": "Endast obesvarade",
+    "offen": "Öppet",
+    "beantwortet": "Besvarat",
+    "verdeckt": "Ännu inte publicerat",
+    "abgelaufen": "Svarstiden har gått ut",
+    "deineAntwort": "Ditt svar",
+    "antworten": "Svara",
+    "antwortAendern": "Ändra svar",
+    "platzhalter": "Svar till gästen …",
+    "senden": "Skicka",
+    "abbrechen": "Avbryt",
+    "seite": "Sida {current} av {total}"
   }
 }

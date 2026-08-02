@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Mit der Anmeldung stimmst du den Nutzungsbedingungen und der Datenschutzerklärung von myBestDays zu.",
     "seitenTitel": "myBestDays — Gastgeber",
     "seitenBeschreibung": "Verwalte deine Objekte, Kalender, Preise und Buchungen."
+  },
+  "bewertungen": {
+    "titel": "Bewertungen",
+    "untertitel": "Was deine Gäste über deine Objekte schreiben.",
+    "leer": "Noch keine Bewertungen.",
+    "durchschnitt": "Durchschnitt",
+    "anzahl": "Bewertungen",
+    "unbeantwortet": "Unbeantwortet",
+    "nurOffen": "Nur unbeantwortete",
+    "offen": "Offen",
+    "beantwortet": "Beantwortet",
+    "verdeckt": "Noch nicht veröffentlicht",
+    "abgelaufen": "Antwortfrist abgelaufen",
+    "deineAntwort": "Deine Antwort",
+    "antworten": "Antworten",
+    "antwortAendern": "Antwort ändern",
+    "platzhalter": "Antwort an den Gast …",
+    "senden": "Senden",
+    "abbrechen": "Abbrechen",
+    "seite": "Seite {current} von {total}"
   }
 }

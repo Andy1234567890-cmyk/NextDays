@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Met je aanmelding ga je akkoord met de gebruiksvoorwaarden en het privacybeleid van myBestDays.",
     "seitenTitel": "myBestDays — Verhuurder",
     "seitenBeschreibung": "Beheer je objecten, kalender, prijzen en boekingen."
+  },
+  "bewertungen": {
+    "titel": "Beoordelingen",
+    "untertitel": "Wat je gasten over je accommodaties schrijven.",
+    "leer": "Nog geen beoordelingen.",
+    "durchschnitt": "Gemiddelde",
+    "anzahl": "Beoordelingen",
+    "unbeantwortet": "Onbeantwoord",
+    "nurOffen": "Alleen onbeantwoord",
+    "offen": "Open",
+    "beantwortet": "Beantwoord",
+    "verdeckt": "Nog niet gepubliceerd",
+    "abgelaufen": "Antwoordtermijn verstreken",
+    "deineAntwort": "Jouw antwoord",
+    "antworten": "Antwoorden",
+    "antwortAendern": "Antwoord wijzigen",
+    "platzhalter": "Antwoord aan de gast …",
+    "senden": "Verzenden",
+    "abbrechen": "Annuleren",
+    "seite": "Pagina {current} van {total}"
   }
 }

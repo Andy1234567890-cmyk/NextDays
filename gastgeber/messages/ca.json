@@ -1660,5 +1660,25 @@
     "rechtshinweis": "En registrar-te acceptes les condicions d'ús i la política de privadesa de myBestDays.",
     "seitenTitel": "myBestDays — amfitrió",
     "seitenBeschreibung": "Gestiona els teus allotjaments, el calendari, els preus i les reserves."
+  },
+  "bewertungen": {
+    "titel": "Valoracions",
+    "untertitel": "Què escriuen els teus hostes sobre els teus allotjaments.",
+    "leer": "Encara no hi ha valoracions.",
+    "durchschnitt": "Mitjana",
+    "anzahl": "Valoracions",
+    "unbeantwortet": "Sense resposta",
+    "nurOffen": "Només sense resposta",
+    "offen": "Oberta",
+    "beantwortet": "Resposta",
+    "verdeckt": "Encara no publicada",
+    "abgelaufen": "Termini de resposta caducat",
+    "deineAntwort": "La teva resposta",
+    "antworten": "Respondre",
+    "antwortAendern": "Editar la resposta",
+    "platzhalter": "Resposta a l’hoste …",
+    "senden": "Enviar",
+    "abbrechen": "Cancel·lar",
+    "seite": "Pàgina {current} de {total}"
   }
 }

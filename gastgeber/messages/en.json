@@ -1660,5 +1660,25 @@
     "rechtshinweis": "By signing up you agree to the myBestDays terms of use and privacy policy.",
     "seitenTitel": "myBestDays — host",
     "seitenBeschreibung": "Manage your listings, calendar, prices and bookings."
+  },
+  "bewertungen": {
+    "titel": "Reviews",
+    "untertitel": "What your guests write about your places.",
+    "leer": "No reviews yet.",
+    "durchschnitt": "Average",
+    "anzahl": "Reviews",
+    "unbeantwortet": "Unanswered",
+    "nurOffen": "Unanswered only",
+    "offen": "Open",
+    "beantwortet": "Answered",
+    "verdeckt": "Not published yet",
+    "abgelaufen": "Reply window closed",
+    "deineAntwort": "Your reply",
+    "antworten": "Reply",
+    "antwortAendern": "Edit reply",
+    "platzhalter": "Reply to the guest …",
+    "senden": "Send",
+    "abbrechen": "Cancel",
+    "seite": "Page {current} of {total}"
   }
 }

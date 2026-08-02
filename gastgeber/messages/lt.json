@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Registruodamasis sutinki su myBestDays naudojimo sąlygomis ir privatumo politika.",
     "seitenTitel": "myBestDays — Šeimininkas",
     "seitenBeschreibung": "Tvarkyk savo objektus, kalendorių, kainas ir rezervacijas."
+  },
+  "bewertungen": {
+    "titel": "Atsiliepimai",
+    "untertitel": "Ką svečiai rašo apie jūsų objektus.",
+    "leer": "Atsiliepimų dar nėra.",
+    "durchschnitt": "Vidutinis",
+    "anzahl": "Atsiliepimai",
+    "unbeantwortet": "Neatsakyti",
+    "nurOffen": "Tik neatsakyti",
+    "offen": "Atviras",
+    "beantwortet": "Atsakyta",
+    "verdeckt": "Dar nepaskelbta",
+    "abgelaufen": "Atsakymo terminas pasibaigė",
+    "deineAntwort": "Jūsų atsakymas",
+    "antworten": "Atsakyti",
+    "antwortAendern": "Redaguoti atsakymą",
+    "platzhalter": "Atsakymas svečiui …",
+    "senden": "Siųsti",
+    "abbrechen": "Atšaukti",
+    "seite": "{current} psl. iš {total}"
   }
 }

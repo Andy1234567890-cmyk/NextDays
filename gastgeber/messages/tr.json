@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Kaydolarak myBestDays Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edersiniz.",
     "seitenTitel": "myBestDays — Ev sahipleri",
     "seitenBeschreibung": "İlanlarınızı, takviminizi, fiyatlarınızı ve rezervasyonlarınızı yönetin."
+  },
+  "bewertungen": {
+    "titel": "Değerlendirmeler",
+    "untertitel": "Misafirlerinizin ilanlarınız hakkında yazdıkları.",
+    "leer": "Henüz değerlendirme yok.",
+    "durchschnitt": "Ortalama",
+    "anzahl": "Değerlendirmeler",
+    "unbeantwortet": "Yanıtlanmamış",
+    "nurOffen": "Yalnızca yanıtlanmamış",
+    "offen": "Açık",
+    "beantwortet": "Yanıtlandı",
+    "verdeckt": "Henüz yayınlanmadı",
+    "abgelaufen": "Yanıt süresi doldu",
+    "deineAntwort": "Yanıtınız",
+    "antworten": "Yanıtla",
+    "antwortAendern": "Yanıtı düzenle",
+    "platzhalter": "Misafire yanıt …",
+    "senden": "Gönder",
+    "abbrechen": "İptal",
+    "seite": "Sayfa {current} / {total}"
   }
 }

@@ -1660,5 +1660,25 @@
     "rechtshinweis": "Með skráningu samþykkir þú notkunarskilmála og persónuverndarstefnu myBestDays.",
     "seitenTitel": "myBestDays — Gestgjafi",
     "seitenBeschreibung": "Haltu utan um eignirnar þínar, dagatal, verð og bókanir."
+  },
+  "bewertungen": {
+    "titel": "Umsagnir",
+    "untertitel": "Hvað gestir þínir skrifa um eignir þínar.",
+    "leer": "Engar umsagnir enn.",
+    "durchschnitt": "Meðaltal",
+    "anzahl": "Umsagnir",
+    "unbeantwortet": "Ósvarað",
+    "nurOffen": "Aðeins ósvarað",
+    "offen": "Opin",
+    "beantwortet": "Svarað",
+    "verdeckt": "Ekki enn birt",
+    "abgelaufen": "Svarfrestur útrunninn",
+    "deineAntwort": "Svar þitt",
+    "antworten": "Svara",
+    "antwortAendern": "Breyta svari",
+    "platzhalter": "Svar til gestsins …",
+    "senden": "Senda",
+    "abbrechen": "Hætta",
+    "seite": "Síða {current} af {total}"
   }
 }

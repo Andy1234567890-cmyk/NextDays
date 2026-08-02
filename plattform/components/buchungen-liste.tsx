@@ -5,7 +5,7 @@
 
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ChannelBadge, PaymentBadge, StatusBadge } from "@/components/status-badge";
 import {
@@ -13,6 +13,7 @@ import {
   type BookingStatusFilter,
   ladeBuchungen,
 } from "@/lib/guest-bookings";
+import { ladeMeineBewertungen } from "@/lib/guest-reviews";
 import { formatRange } from "@/lib/format";
 import { formatCurrency } from "@/lib/listings";
 
@@ -34,6 +35,32 @@ export function BuchungenListe({
   >({ upcoming: initialItems });
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
+  // Bereits bewertete Reservierungen — sonst stünde an einem bewerteten
+  // Aufenthalt weiter „Bewerten" und der Gast landete in einer 409.
+  const [bewertet, setBewertet] = useState<Set<string> | null>(null);
+
+  // Erst laden, wenn der Gast auf „Vergangen" wechselt: nur dort wird die
+  // Information gebraucht.
+  useEffect(() => {
+    if (tab !== "past" || bewertet !== null) return;
+    let abgebrochen = false;
+    void (async () => {
+      const res = await ladeMeineBewertungen();
+      if (abgebrochen) return;
+      setBewertet(
+        new Set(
+          res.ok
+            ? res.data.reviews
+                .map((r) => r.reservation_id)
+                .filter((id): id is string => Boolean(id))
+            : [],
+        ),
+      );
+    })();
+    return () => {
+      abgebrochen = true;
+    };
+  }, [tab, bewertet]);
 
   async function wechsle(next: BookingStatusFilter) {
     setTab(next);
@@ -94,7 +121,18 @@ export function BuchungenListe({
       ) : (
         <div className="flex flex-col gap-4">
           {items.map((b) => (
-            <BuchungKarte key={b.id} b={b} />
+            <div key={b.id} className="flex flex-col gap-2">
+              <BuchungKarte b={b} />
+              {tab === "past" && bewertet !== null && !bewertet.has(b.id) && (
+                <Link
+                  href={`/bewertungen?reservation=${b.id}`}
+                  className="self-start rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-secondary"
+                >
+                  <Icon icon="ph:star" className="mb-0.5 mr-1 inline size-4" />
+                  Aufenthalt bewerten
+                </Link>
+              )}
+            </div>
           ))}
         </div>
       )}
