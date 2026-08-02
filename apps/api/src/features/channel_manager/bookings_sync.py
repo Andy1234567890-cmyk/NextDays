@@ -27,7 +27,7 @@ from src.features.guests.identity import (
 from .ari_push import _group_iso_days_to_ranges
 from .channex_client import ChannexError
 from .common import ChannelManagerError, log, ota_zeitstempel_utc
-from .einheiten import freie_einheiten_spannen
+from .einheiten import einheiten_zahl, freie_einheiten_spannen
 from .schemas import (
     BookingListResponse,
     BookingResponse,
@@ -741,7 +741,10 @@ class BookingsSyncMixin:
         status_in = (attrs.get("status") or "new").lower()
         existing = (
             db.table("reservations")
-            .select("id, checked_out_at, check_in, check_out, property_id")
+            .select(
+                "id, checked_out_at, check_in, check_out, property_id,"
+                " payment_collect"
+            )
             .eq("tenant_id", tenant_id)
             .eq("source_channex_booking_id", booking_id)
             .limit(1)
@@ -769,7 +772,16 @@ class BookingsSyncMixin:
                 )
                 return True
             if existing:
-                db.table("reservations").update({"status": "cancelled"}).eq(
+                cancel_update: dict[str, Any] = {"status": "cancelled"}
+                # Von UNS abgeleitetes Portal-bezahlt zurücknehmen (Wurzel 1):
+                # das Portal erstattet beim Storno im Regelfall — eine
+                # stornierte Buchung darf nicht als „bezahlt" in Statistiken
+                # und Gast-Ansichten weiterleben. Eigene Gateway-/Rezeptions-
+                # zahlungen laufen nie über payment_collect='ota'.
+                if existing[0].get("payment_collect") == "ota":
+                    cancel_update["paid_amount"] = 0
+                    cancel_update["payment_status"] = "unpaid"
+                db.table("reservations").update(cancel_update).eq(
                     "id", existing[0]["id"]
                 ).execute()
             elif local_property_id is not None:
@@ -881,6 +893,32 @@ class BookingsSyncMixin:
             # Zugewiesene Einheit (0265) — einmal bestimmt, siehe oben.
             "unit_id": einheit,
         }
+        # Portal-kassiert (payment_collect='ota' = „guest already pay at OTA")
+        # als bezahlt führen — kein Portal liefert ein eigenes Bezahlt-Feld,
+        # der Status MUSS abgeleitet werden (Branchenstandard). Sonst zeigt
+        # der Slider „Noch offen" und die Schlussrechnung fakturiert eine
+        # längst bezahlte Buchung als unbezahlt. Eine Modifikation zieht den
+        # Betrag nach; wechselt der Einzug weg vom Portal (selten), wird nur
+        # der von UNS abgeleitete Zustand zurückgenommen (Wurzel 1) — eigene
+        # Gateway-/Rezeptionszahlungen laufen nie über payment_collect='ota'
+        # und bleiben unberührt.
+        old_collect = existing[0].get("payment_collect") if existing else None
+        if row["payment_collect"] == "ota":
+            row["paid_amount"] = total_amount
+            row["payment_status"] = "paid"
+        elif old_collect == "ota":
+            if row["payment_collect"] == "property":
+                row["paid_amount"] = 0
+                row["payment_status"] = "unpaid"
+            else:
+                # None = „nicht geliefert" ist KEIN Wechsel: das einmal
+                # erkannte Portal-kassiert nicht auf Verdacht zurückdrehen
+                # (Booking.com lässt das Feld in Folge-Revisionen oft leer).
+                # Weiterhin portal-kassiert heißt auch: eine Preisänderung
+                # in dieser Revision zieht den bezahlten Betrag nach.
+                row.pop("payment_collect", None)
+                row["paid_amount"] = total_amount
+                row["payment_status"] = "paid"
         if existing:
             if already_checked_out:
                 # Abgeschlossener (fakturierter) Aufenthalt: Status, Zeitraum
@@ -894,6 +932,8 @@ class BookingsSyncMixin:
                     "total_amount",
                     "quote_items",
                     "currency",
+                    "paid_amount",
+                    "payment_status",
                 ):
                     row.pop(frozen, None)
             db.table("reservations").update(row).eq("id", existing[0]["id"]).execute()
@@ -1054,9 +1094,19 @@ class BookingsSyncMixin:
         der Aggregator kann die Liste erweitern, und ein neuer Wert darf den
         Buchungsimport nicht kippen (Wurzel 5). None heißt „nicht geliefert" —
         ausdrücklich NICHT „wir kassieren".
+
+        Booking.com lässt das Feld auch bei „Payments by Booking.com" oft
+        leer; das verlässliche Signal ist dann die virtuelle Kreditkarte
+        (guarantee.is_virtual) — eine VCC stellt das Portal nur aus, wenn es
+        das Geld des Gastes bereits eingezogen hat.
         """
         wert = (attrs.get("payment_collect") or "").strip().lower()
-        return wert if wert in ("property", "ota") else None
+        if wert in ("property", "ota"):
+            return wert
+        guarantee = attrs.get("guarantee")
+        if isinstance(guarantee, dict) and guarantee.get("is_virtual") is True:
+            return "ota"
+        return None
 
     @staticmethod
     def _payment_method(attrs: dict[str, Any]) -> str | None:
@@ -1333,6 +1383,22 @@ class BookingsSyncMixin:
                 )
             except ChannexError as exc:
                 log.warning("import_ari_availability_failed", error=exc.message)
+                avail = {"data": {}}
+            # MEHRERE EINHEITEN: Der Portal-Wert ist eine Stückzahl für den
+            # ganzen Typ („3 von 5 frei") und lässt sich keiner EINZELNEN
+            # Einheit zuordnen. Ihn trotzdem zu spiegeln, machte aus einer
+            # 0 des Portals eine Sperre auf ALLEN Einheiten — live gesehen:
+            # eine Buchung sperrte prompt auch die freie zweite Einheit, und
+            # der nächste Push meldete 0 statt 1. Bei mehr als einer Einheit
+            # führen wir die Belegung deshalb ausschließlich selbst (das deckt
+            # sich mit der Vorgabe des Aggregators, ARI nicht zyklisch
+            # zurückzulesen); die Preise/Restriktionen weiter unten bleiben
+            # davon unberührt.
+            if einheiten_zahl(db, tenant_id, property_id) > 1:
+                log.info(
+                    "ari_import_availability_uebersprungen_mehrere_einheiten",
+                    tenant_id=tenant_id, property_id=property_id,
+                )
                 avail = {"data": {}}
             by_date: dict[str, int] = {}
             for room_type, days in (avail.get("data") or {}).items():

@@ -1166,6 +1166,88 @@ def test_import_booking_creates_reservation_and_blocks_calendar() -> None:
     assert db.tables["guests"][0]["email"] == "m@x.de"
 
 
+def _bezahl_booking(**extra):  # noqa: ANN003, ANN201
+    attrs = {
+        "booking_id": "BKPAY", "property_id": "cx-prop", "status": "new",
+        "ota_name": "Booking.com", "ota_reservation_code": "RPAY",
+        "arrival_date": "2026-07-05", "departure_date": "2026-07-07",
+        "amount": "300.00", "currency": "EUR",
+        "customer": {"name": "Max", "surname": "M", "mail": "m@x.de"},
+    }
+    attrs.update(extra)
+    return {"attributes": attrs}
+
+
+def test_import_ota_collect_wird_als_bezahlt_gefuehrt() -> None:
+    # payment_collect='ota' = „guest already pay at OTA": die Buchung wird als
+    # vom Portal bezahlt geführt — sonst zeigt der Slider „Noch offen" und die
+    # Schlussrechnung fakturiert eine längst bezahlte Buchung als unbezahlt.
+    db = _ImportDB()
+    _seed_property(db)
+    channex = _ImportChannex(bookings=[_bezahl_booking(payment_collect="ota")])
+    _import_svc(channex, db).import_bookings_for_property("t1", "cx-prop")
+    r = db.tables["reservations"][0]
+    assert r["payment_collect"] == "ota"
+    assert r["paid_amount"] == 300.0 and r["payment_status"] == "paid"
+
+
+def test_import_vcc_ohne_payment_collect_gilt_als_bezahlt() -> None:
+    # Booking.com lässt payment_collect oft leer; die virtuelle Kreditkarte
+    # (guarantee.is_virtual) ist dann das Portal-kassiert-Signal.
+    db = _ImportDB()
+    _seed_property(db)
+    channex = _ImportChannex(bookings=[
+        _bezahl_booking(guarantee={"is_virtual": True, "card_number": "411111******1111"})
+    ])
+    _import_svc(channex, db).import_bookings_for_property("t1", "cx-prop")
+    r = db.tables["reservations"][0]
+    assert r["payment_collect"] == "ota" and r["payment_status"] == "paid"
+
+
+def test_import_property_collect_bleibt_offen() -> None:
+    # Der Betrieb kassiert selbst → kein abgeleiteter Bezahlt-Zustand.
+    db = _ImportDB()
+    _seed_property(db)
+    channex = _ImportChannex(bookings=[_bezahl_booking(payment_collect="property")])
+    _import_svc(channex, db).import_bookings_for_property("t1", "cx-prop")
+    r = db.tables["reservations"][0]
+    assert r["payment_collect"] == "property"
+    assert "paid_amount" not in r and "payment_status" not in r
+
+
+def test_modification_ohne_payment_collect_behaelt_bezahlt() -> None:
+    # Folge-Revision ohne das Feld (Booking-Normalfall) ist KEIN Wechsel:
+    # Portal-kassiert + bezahlt bleiben stehen; eine Betragsänderung mit
+    # erneutem ota-Signal zieht paid nach; ein EXPLIZITER Wechsel auf
+    # 'property' nimmt nur den von uns abgeleiteten Zustand zurück.
+    db = _ImportDB()
+    _seed_property(db)
+    _import_svc(
+        _ImportChannex(bookings=[_bezahl_booking(payment_collect="ota")]), db
+    ).import_bookings_for_property("t1", "cx-prop")
+    # Revision ohne payment_collect → bleibt ota/bezahlt.
+    _import_svc(
+        _ImportChannex(bookings=[_bezahl_booking(status="modified")]), db
+    ).import_bookings_for_property("t1", "cx-prop")
+    r = db.tables["reservations"][0]
+    assert r["payment_collect"] == "ota" and r["payment_status"] == "paid"
+    # Betragsänderung mit ota-Signal → paid zieht nach (Wurzel 1).
+    _import_svc(
+        _ImportChannex(bookings=[_bezahl_booking(
+            status="modified", payment_collect="ota", amount="350.00"
+        )]), db
+    ).import_bookings_for_property("t1", "cx-prop")
+    assert r["paid_amount"] == 350.0
+    # Expliziter Wechsel auf property → abgeleiteter Zustand zurückgenommen.
+    _import_svc(
+        _ImportChannex(bookings=[_bezahl_booking(
+            status="modified", payment_collect="property"
+        )]), db
+    ).import_bookings_for_property("t1", "cx-prop")
+    assert r["payment_collect"] == "property"
+    assert r["paid_amount"] == 0 and r["payment_status"] == "unpaid"
+
+
 def test_csv_import_creates_reservation_and_blocks_calendar() -> None:
     db = _ImportDB()
     _seed_property(db)  # properties: id=p1, title="Haus"
@@ -4536,3 +4618,26 @@ def test_zweite_buchung_nimmt_die_zweite_einheit() -> None:
         "customer": {"name": "C", "surname": "D"}}}])
     _import_svc(channex, db).import_bookings_for_property("t1", "cx-prop")
     assert db.tables["reservations"][-1]["unit_id"] == "u-p1-2"
+
+
+def test_ari_import_spiegelt_bei_mehreren_einheiten_keine_sperre() -> None:
+    """Live gefunden: eine Buchung sperrte auch die freie zweite Einheit.
+
+    Der Portal-Wert ist eine Stückzahl für den ganzen Typ; als Sperre je Einheit
+    gespiegelt macht er aus „eine von zwei belegt" ein „alles zu" — und der
+    nächste Push meldete 0 statt 1. Bei mehr als einer Einheit wird die
+    Verfügbarkeit deshalb nicht zurückgespiegelt.
+    """
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _seed_zwei_einheiten(db)
+    channex = _ImportChannex()
+    channex.availability_by_date = {"cx-rt": {"2026-10-05": 0}}
+    svc = _import_svc(channex, db)
+    svc.import_ari_for_property("t1", "cx-prop", days_ahead=1,
+                                today=date(2026, 10, 5))
+    gesperrt = [
+        a for a in db.tables["availability"]
+        if a.get("status") == "blocked" and a.get("date") == "2026-10-05"
+    ]
+    assert gesperrt == []
