@@ -33,7 +33,9 @@ ge-ackt (Mandantentrennung / Selbstheilung nach Mapping).
 = „ota" heißt laut Aggregator-Doku „guest already pay at OTA"). Der Import
 leitet daraus den Status ab (Branchenstandard, vgl. Hostaway/Beds24): bei
 `payment_collect='ota'` — oder einer virtuellen Kreditkarte
-(`guarantee.is_virtual`, Booking.com lässt `payment_collect` oft leer) —
+(`guarantee.is_virtual`, Booking.com lässt `payment_collect` oft leer),
+oder Kanal Airbnb (kassiert IMMER selbst, meldet aber weder Feld noch
+VCC; Kanal-Regel 0271) —
 werden `paid_amount = total_amount` und `payment_status='paid'` gesetzt;
 Modifikationen ziehen den Betrag nach, ein expliziter Wechsel auf
 `property` nimmt nur den abgeleiteten Zustand zurück, eine Folge-Revision

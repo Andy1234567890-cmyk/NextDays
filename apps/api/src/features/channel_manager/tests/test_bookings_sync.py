@@ -36,6 +36,24 @@ def test_payment_collect_leitet_vcc_als_ota_ab() -> None:
     ) == "property"
 
 
+def test_payment_collect_airbnb_ist_immer_portal_kassiert() -> None:
+    """Airbnb hat keinen Vor-Ort-Zahlweg — der Kanal selbst ist das Signal.
+
+    Airbnb liefert weder payment_collect noch eine VCC (Zahlungsdaten nur als
+    Freitext in notes); ohne Kanal-Regel stünden alle Airbnb-Buchungen als
+    „offen". Ein expliziter Wert gewinnt weiterhin, fremde Kanäle bleiben None.
+    """
+    from src.features.channel_manager.bookings_sync import BookingsSyncMixin as S
+
+    assert S._payment_collect({"ota_name": "Airbnb"}) == "ota"
+    assert S._payment_collect({"ota_name": "airbnb"}) == "ota"
+    assert S._payment_collect(
+        {"ota_name": "Airbnb", "payment_collect": "property"}
+    ) == "property"
+    assert S._payment_collect({"ota_name": "Booking.com"}) is None
+    assert S._payment_collect({"ota_name": "Expedia"}) is None
+
+
 def test_withheld_taxes_summiert_collected_taxes_aller_zimmer() -> None:
     """Vom Portal einbehaltene Steuern: Summe je Buchung, None = nicht geliefert.
 

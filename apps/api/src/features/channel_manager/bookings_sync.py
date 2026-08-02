@@ -1127,8 +1127,8 @@ class BookingsSyncMixin:
         total = self._as_int(occ) or self._as_int(attrs.get("number_of_guests"))
         return (total or 1, 0, 0)
 
-    @staticmethod
-    def _payment_collect(attrs: dict[str, Any]) -> str | None:
+    @classmethod
+    def _payment_collect(cls, attrs: dict[str, Any]) -> str | None:
         """Wer zieht ein? Nur die dokumentierten Werte übernehmen.
 
         Ein unbekannter Wert wird zu None statt zu einem Constraint-Fehler:
@@ -1140,12 +1140,20 @@ class BookingsSyncMixin:
         leer; das verlässliche Signal ist dann die virtuelle Kreditkarte
         (guarantee.is_virtual) — eine VCC stellt das Portal nur aus, wenn es
         das Geld des Gastes bereits eingezogen hat.
+
+        Airbnb kassiert IMMER selbst (es gibt strukturell keinen
+        Vor-Ort-Zahlweg), meldet aber weder payment_collect noch eine VCC —
+        die Zahlungsdaten stehen dort nur als Freitext in notes. Deshalb
+        ist der Kanal selbst das Signal (Kanal-Regel, kein geratener
+        Fallback; so führen es auch die etablierten PMS).
         """
         wert = (attrs.get("payment_collect") or "").strip().lower()
         if wert in ("property", "ota"):
             return wert
         guarantee = attrs.get("guarantee")
         if isinstance(guarantee, dict) and guarantee.get("is_virtual") is True:
+            return "ota"
+        if cls._ota_name_to_channel(attrs.get("ota_name")) == "airbnb":
             return "ota"
         return None
 
