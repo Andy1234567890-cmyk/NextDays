@@ -13,7 +13,7 @@ export type Result<T> =
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST" | "PUT"; body?: unknown } = {},
+  opts: { method?: "GET" | "POST" | "PUT" | "DELETE"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -63,6 +63,9 @@ export type ModulePrice = {
   lookup_key: string;
   unit_amount: number; // Cent
   per_unit_label: string | null;
+  // Stripe-Preise können gestaffelt sein (tiers_mode). Aktuell hat kein Modul
+  // eine Staffel — das Feld bildet die Stripe-Antwort vollständig ab.
+  tiers: PriceTier[] | null;
 };
 
 export type Pricing = {
@@ -98,6 +101,25 @@ export async function startCheckout(input: {
       property_count: input.propertyCount,
     },
   });
+}
+
+/** Zusatzmodul zum laufenden Abo hinzubuchen (anteilig sofort berechnet).
+ *  Ohne laufendes Abo antwortet der Server mit 422 — dann führt der Weg über
+ *  den Tarifrechner, nicht hierüber (sonst zweites Abo, doppelte Grundgebühr). */
+export async function addSubscriptionModule(
+  moduleKey: ModuleKey,
+): Promise<Result<ModuleEntitlement>> {
+  return call<ModuleEntitlement>("/modules", {
+    method: "POST",
+    body: { module_key: moduleKey },
+  });
+}
+
+/** Zusatzmodul kündigen — Zugang bleibt bis zum Ende der bezahlten Periode. */
+export async function removeSubscriptionModule(
+  moduleKey: ModuleKey,
+): Promise<Result<ModuleEntitlement>> {
+  return call<ModuleEntitlement>(`/modules/${moduleKey}`, { method: "DELETE" });
 }
 
 /** Gebuchte Objektzahl eines bestehenden Abos ändern. Erweitern gilt sofort

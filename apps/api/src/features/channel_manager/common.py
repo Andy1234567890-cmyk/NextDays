@@ -784,6 +784,25 @@ def ist_demo_mapping(channex_id: str | None) -> bool:
     return bool(channex_id) and str(channex_id).startswith(_DEMO_PRAEFIX)
 
 
+# Channex-Zeitstempel (`inserted_at` an Buchung, Revision und Nachricht) kommen
+# OHNE Zonen-Suffix: "2026-08-01T11:47:16.132286". Gemeint ist UTC — live
+# gegengeprüft gegen unsere eigene Importzeile (Differenz ~1 s Laufzeit, nicht
+# die 2 h, die eine Ortszeit ergäbe). Ohne explizites 'Z' würde jeder Leser die
+# Zeichenkette in SEINER Zone deuten: Postgres in der Zone der Sitzung, der
+# Browser in der des Nutzers — ein stiller Stundensprung an der Uhrzeit einer
+# Buchung.
+_HAT_ZONE = re.compile(r"(Z|[+-]\d{2}:?\d{2})$")
+
+
+def ota_zeitstempel_utc(wert: object) -> str | None:
+    """Channex-Zeitstempel → ISO-Zeichenkette MIT Zone. Leer/kein Text → None
+    (kein erfundener Ersatzwert, Wurzel 4)."""
+    text = str(wert).strip() if wert is not None else ""
+    if not text:
+        return None
+    return text if _HAT_ZONE.search(text) else text + "Z"
+
+
 class ChannelManagerError(Exception):
     """Fehler im channel_manager-Slice (an die API weitergereicht)."""
 

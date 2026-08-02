@@ -346,7 +346,10 @@ class SubscriptionsService:
         ]
         for mk in module_keys:
             line_items.append(
-                {"price": self._price_id_by_lookup(MODULE_PRICE_LOOKUP[mk]), "quantity": 1}
+                {
+                    "price": self._price_id_by_lookup(MODULE_PRICE_LOOKUP[mk]),
+                    "quantity": 1,
+                }
             )
         try:
             session = self._stripe.v1.checkout.sessions.create(
@@ -570,6 +573,129 @@ class SubscriptionsService:
             total=_f(inv, "total"),
         )
 
+    # -- Zusatzmodule am laufenden Abo --------------------------------------
+    def add_module(self, ctx: AuthContext, *, module_key: str) -> ModuleEntitlement:
+        """Ein Zusatzmodul zu einem BESTEHENDEN Abo hinzufügen.
+
+        Nicht über Checkout: ein zweiter Checkout würde eine zweite Subscription
+        anlegen und die Grundgebühr doppelt berechnen (Wurzel 2). Stattdessen
+        kommt eine weitere Position an die laufende Subscription.
+
+        Idempotent (Wurzel 2 — Doppelklick, Retry): trägt die Subscription das
+        Modul schon, wird die vorhandene Position wiederverwendet und nur der
+        lokale Zustand bestätigt, statt eine zweite Position anzulegen.
+        """
+        if module_key not in MODULE_PRICE_LOOKUP:
+            raise SubscriptionsError(
+                f"Unbekanntes/nicht buchbares Modul: {module_key}", status_code=400
+            )
+        db, tenant_id = self._require(ctx)
+        row = self._load_row(db, tenant_id)
+        sub_id = row.get("stripe_subscription_id") if row else None
+        if not row or not sub_id or row.get("status") not in (
+            "active",
+            "trialing",
+            "past_due",
+        ):
+            raise SubscriptionsError(
+                "Zusatzmodule setzen ein laufendes Abo voraus. Bitte zuerst das "
+                "Abo abschließen.",
+                status_code=422,
+            )
+        lookup = MODULE_PRICE_LOOKUP[module_key]
+        try:
+            sub = self._stripe.v1.subscriptions.retrieve(sub_id)
+            vorhanden = self._item_by_lookup(sub, lookup)
+            if vorhanden is None:
+                self._stripe.v1.subscription_items.create(
+                    params={
+                        "subscription": sub_id,
+                        "price": self._price_id_by_lookup(lookup),
+                        "quantity": 1,
+                        "proration_behavior": "create_prorations",
+                    },
+                    options={"idempotency_key": f"mod:{tenant_id}:{module_key}"},
+                )
+                if row.get("stripe_customer_id"):
+                    self._invoice_prorations_now(
+                        sub_id, row["stripe_customer_id"], tenant_id, quantity=1
+                    )
+        except _StripeError as exc:
+            raise self._stripe_err(exc) from exc
+        # Lokal spiegeln, damit das Feature-Gate sofort greift; der Webhook
+        # bestätigt denselben Zustand gleich noch einmal (idempotent).
+        db.table("tenant_module_entitlement").upsert(
+            {
+                "tenant_id": tenant_id,
+                "module_key": module_key,
+                "active": True,
+                "active_until": None,
+            },
+            on_conflict="tenant_id,module_key",
+        ).execute()
+        log.info("modul_gebucht", tenant_id=tenant_id, module_key=module_key)
+        return ModuleEntitlement(module_key=module_key, active=True)
+
+    def remove_module(self, ctx: AuthContext, *, module_key: str) -> ModuleEntitlement:
+        """Ein Zusatzmodul kündigen — Zugang bleibt bis Periodenende.
+
+        Die Stripe-Position wird ohne Gutschrift entfernt
+        (``proration_behavior='none'``), weil die laufende Periode bereits
+        bezahlt ist. Genau deshalb bleibt das Entitlement bis
+        ``current_period_end`` gültig (Wurzel 1: zur entfernten Position gehört
+        der Gegenzustand „läuft noch bis…"), statt den Zugang sofort zu kappen.
+        """
+        if module_key not in MODULE_PRICE_LOOKUP:
+            raise SubscriptionsError(
+                f"Unbekanntes Modul: {module_key}", status_code=400
+            )
+        db, tenant_id = self._require(ctx)
+        row = self._load_row(db, tenant_id)
+        sub_id = row.get("stripe_subscription_id") if row else None
+        if not row or not sub_id:
+            raise SubscriptionsError(
+                "Es besteht kein Abo, aus dem ein Modul entfernt werden könnte.",
+                status_code=422,
+            )
+        lookup = MODULE_PRICE_LOOKUP[module_key]
+        try:
+            sub = self._stripe.v1.subscriptions.retrieve(sub_id)
+            item = self._item_by_lookup(sub, lookup)
+            if item is not None:
+                self._stripe.v1.subscription_items.delete(
+                    _f(item, "id"), params={"proration_behavior": "none"}
+                )
+        except _StripeError as exc:
+            raise self._stripe_err(exc) from exc
+        bis = row.get("current_period_end")
+        db.table("tenant_module_entitlement").upsert(
+            {
+                "tenant_id": tenant_id,
+                "module_key": module_key,
+                "active": bool(bis),
+                "active_until": bis,
+            },
+            on_conflict="tenant_id,module_key",
+        ).execute()
+        log.info(
+            "modul_gekuendigt",
+            tenant_id=tenant_id,
+            module_key=module_key,
+            active_until=bis,
+        )
+        return ModuleEntitlement(
+            module_key=module_key, active=bool(bis), active_until=bis
+        )
+
+    def _item_by_lookup(
+        self, sub: Any, lookup: str  # noqa: ANN401
+    ) -> dict[str, Any] | None:
+        """Subscription-Position anhand des Preis-lookup_key finden."""
+        for it in _f(_f(sub, "items", {}) or {}, "data", []) or []:
+            if _f(_f(it, "price", {}) or {}, "lookup_key") == lookup:
+                return it
+        return None
+
     def _grundtarif_item(self, sub: Any) -> dict[str, Any] | None:  # noqa: ANN401
         """Die Subscription-Position, die den graduated Grundtarif trägt —
         erkannt am lookup_key des Preises (nicht an Reihenfolge geraten)."""
@@ -616,19 +742,33 @@ class SubscriptionsService:
         for mkey, (lookup, label) in _MODULE_PRICE_VARIANTS.items():
             try:
                 mres = self._stripe.v1.prices.list(
-                    params={"lookup_keys": [lookup], "active": True, "limit": 1}
+                    params={
+                        "lookup_keys": [lookup],
+                        "active": True,
+                        "limit": 1,
+                        "expand": ["data.tiers"],
+                    }
                 )
             except _StripeError as exc:
                 raise self._stripe_err(exc) from exc
             mdata = getattr(mres, "data", None) or []
             if not mdata:
                 continue  # Modul-Preis fehlt → weglassen (nicht raten)
+            mtiers = [
+                PriceTier(
+                    up_to=_f(t, "up_to"),
+                    flat_amount=_f(t, "flat_amount"),
+                    unit_amount=_f(t, "unit_amount"),
+                )
+                for t in (_f(mdata[0], "tiers", []) or [])
+            ]
             modules.append(
                 ModulePrice(
                     module_key=mkey,
                     lookup_key=lookup,
                     unit_amount=int(_f(mdata[0], "unit_amount", 0) or 0),
                     per_unit_label=label,
+                    tiers=mtiers or None,
                 )
             )
         return PricingResponse(

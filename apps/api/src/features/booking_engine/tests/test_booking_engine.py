@@ -292,6 +292,7 @@ def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: 
     """Verliert ein Gast das Buchungs-Race, kommt 409 mit neutraler Meldung —
     die atomare RPC hat nichts geschrieben (kein halber Buchungszustand)."""
     from datetime import date as _date
+    from datetime import timedelta as _delta
     from unittest.mock import MagicMock
 
     from postgrest.exceptions import APIError
@@ -341,8 +342,8 @@ def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: 
 
     req = PublicBookingRequest(
         property_id="p-1",
-        check_in=_date(2026, 8, 1),
-        check_out=_date(2026, 8, 3),
+        check_in=_date.today() + _delta(days=30),
+        check_out=_date.today() + _delta(days=32),
         guests=2,
         total_amount=200.0,
         contact=GuestContact(
@@ -362,6 +363,7 @@ def test_public_booking_includes_addons_in_quote(monkeypatch) -> None:  # noqa: 
     enthält total_amount nur die Unterkunft und der spätere Stripe-PaymentIntent
     kassiert die Zusatzleistungen nie. Wir fangen das an quote() übergebene req ab."""
     from datetime import date as _date
+    from datetime import timedelta as _delta
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
@@ -419,8 +421,8 @@ def test_public_booking_includes_addons_in_quote(monkeypatch) -> None:  # noqa: 
 
     req = PublicBookingRequest(
         property_id="p-1",
-        check_in=_date(2026, 8, 1),
-        check_out=_date(2026, 8, 3),
+        check_in=_date.today() + _delta(days=30),
+        check_out=_date.today() + _delta(days=32),
         guests=2,
         total_amount=200.0,
         contact=GuestContact(
@@ -589,6 +591,7 @@ def test_public_booking_writes_num_guests(monkeypatch) -> None:  # noqa: ANN001
     Spalten-Default 1 gespeichert wurde — Gast-App, Kalender und Kurtaxe sahen
     eine falsche Belegung."""
     from datetime import date as _date
+    from datetime import timedelta as _delta
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
@@ -628,8 +631,8 @@ def test_public_booking_writes_num_guests(monkeypatch) -> None:  # noqa: ANN001
     svc.create_public_booking(
         PublicBookingRequest(
             property_id="p-1",
-            check_in=_date(2026, 8, 1),
-            check_out=_date(2026, 8, 3),
+            check_in=_date.today() + _delta(days=30),
+            check_out=_date.today() + _delta(days=32),
             guests=4,
             contact=GuestContact(
                 first_name="Max", last_name="Gast", email="max@example.com",

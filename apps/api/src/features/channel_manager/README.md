@@ -82,3 +82,37 @@ Alle tenant-gescopt über die Channex-Property-IDs des Tenants (Wurzel 3):
   `POST /threads/{id}/no-reply-needed` (nur Booking.com).
 - **Booking CRS** (Beta): `POST /crs/bookings`, `PUT /crs/bookings/{id}` —
   PMS-Änderungen an (auch OTA-)Buchungen nach Channex zurückspiegeln.
+- **Gäste-Chat freischalten**: `GET /chat-app` (Status je Objekt),
+  `POST /chat-app/{property_id}` (installieren, kostenpflichtig, idempotent).
+
+## Wie die Gastnachricht vom Portal in den Posteingang kommt
+
+Belegt aus der Anbieter-Doku (Messages Collection, Webhook Collection,
+Applications API) und live gegengeprüft.
+
+1. **Freischaltung je Objekt.** Der Chat ist eine kostenpflichtige „Application"
+   (`channex_messages`), die an der Property installiert sein MUSS. Fehlt sie,
+   antwortet `GET /bookings/{id}/messages` mit **403** — nicht mit einer leeren
+   Liste. Unterstützt sind nur Booking.com, Airbnb und Expedia (Expedia nicht
+   über EAN/Affiliate-Buchungen).
+2. **Webhook als Klingel.** Der globale Webhook enthält das Event `message`
+   (Nutzlast: `payload.booking_id`, `message_thread_id`, `sender`, `message`,
+   `ota_message_id`). Er wird NICHT als Datenquelle verwendet: die Doku sagt
+   ausdrücklich, dass Webhooks in beliebiger Reihenfolge eintreffen können.
+3. **Ziehen statt annehmen.** Der Verlauf wird beim Öffnen des Threads live
+   geholt (`GET /bookings/{channex_booking_id}/messages`) — Felder `message`,
+   `attachments`, `sender` (`guest`|`property`), `inserted_at`. Nichts davon
+   liegt bei uns gespiegelt; die Wahrheit bleibt beim Portal.
+4. **Antwort zurück.** `POST /bookings/{id}/messages` (Anhänge zuerst als
+   `POST /attachments`, dann als `attachment_id` senden).
+5. **Ohne Buchung.** Airbnb-Anfragen („Inquiry") erzeugen einen Thread ohne
+   Buchung — dafür `GET /message_threads` samt `/messages`.
+
+Der Ereignisblock „Gast macht Buchung" im Verlauf ist KEINE Nachricht, sondern
+der Lebenslauf der Reservierung: Zeitpunkt aus `channex_booking.ota_inserted_at`
+(Eingang der ersten Booking Revision, write-once via 0261), Kanal aus `ota_name`,
+und — wenn das Portal sie mitschickt — der Buchungszeitpunkt aus der
+OTA-Originalmeldung (`raw.raw_message.date`/`time`, bei Booking.com Ortszeit,
+deshalb unverändert als Text). Unsere eigene Importuhr (`created_at`) wird nur
+noch verwendet, wenn keine Portal-Angabe existiert — und dann sichtbar als
+solche ausgewiesen.

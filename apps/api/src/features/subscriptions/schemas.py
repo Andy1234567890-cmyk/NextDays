@@ -110,6 +110,10 @@ class ModulePrice(BaseModel):
     lookup_key: str
     unit_amount: int  # Cent
     per_unit_label: str | None = None  # z.B. "Nutzer"/"Zimmer" bei per-seat/room
+    # Gestaffelte Module (WhatsApp: Stufe nach Objektzahl, tiers_mode=volume)
+    # liefern die Stufen mit, damit die UI die Staffel zeigt statt eines
+    # einzelnen Betrags. Bei Flat-Modulen None.
+    tiers: list[PriceTier] | None = None
 
 
 class PricingResponse(BaseModel):

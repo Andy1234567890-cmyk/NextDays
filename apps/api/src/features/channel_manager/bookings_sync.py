@@ -25,7 +25,7 @@ from src.features.guests.identity import (
 
 from .ari_push import _group_iso_days_to_ranges
 from .channex_client import ChannexError
-from .common import ChannelManagerError, log
+from .common import ChannelManagerError, log, ota_zeitstempel_utc
 from .schemas import (
     BookingListResponse,
     BookingResponse,
@@ -369,6 +369,11 @@ class BookingsSyncMixin:
             "currency": attrs.get("currency"),
             "customer": attrs.get("customer") or {},
             "guest_id": guest_id,  # direkter Thread→Gast-Link (Inbox/Gästekarte)
+            # Eingang bei Channex (Doku „Bookings Collection": inserted_at).
+            # Die Spalte ist write-once (Trigger 0261): dieser Wert setzt sich
+            # nur beim ERSTEN Mal durch, spätere Revisionen lassen ihn stehen —
+            # sonst wanderte das Buchungs-Ereignis im Verlauf nach vorn.
+            "ota_inserted_at": ota_zeitstempel_utc(attrs.get("inserted_at")),
             "raw": attrs,
         }
         upserted = (

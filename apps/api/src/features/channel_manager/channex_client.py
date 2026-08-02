@@ -891,6 +891,44 @@ class ChannexClient:
     def delete_webhook(self, webhook_id: str) -> dict[str, Any]:
         return self.delete(f"webhooks/{webhook_id}")
 
+    # ----- Applications (Freischaltungen je Objekt) ---------------------------
+    # Der Gäste-Chat ist bei Channex eine kostenpflichtige „Application", die je
+    # Property installiert sein MUSS. Ohne sie antwortet die Messaging-API mit
+    # 403 „forbidden" — nicht mit einer leeren Liste. Genau daran hing der
+    # Posteingang: die Threads standen da, die Nachrichten kamen nie.
+    # Doku: https://docs.channex.io/api-v.1-documentation/applications-api
+    CHAT_APP_CODE = "channex_messages"
+
+    def list_applications(self) -> dict[str, Any]:
+        """Katalog der verfügbaren Anwendungen (code, title, price)."""
+        return self.get("applications")
+
+    def list_installed_applications(self) -> dict[str, Any]:
+        """Bereits installierte Anwendungen (je Property)."""
+        return self.get("applications/installed")
+
+    def install_application(
+        self, *, channex_property_id: str, application_code: str
+    ) -> dict[str, Any]:
+        """Anwendung an einer Property installieren.
+
+        KOSTENPFLICHTIG je Property — der Aufrufer muss das ausdrücklich
+        auslösen, nie ein Hintergrund-Job. Channex empfiehlt den `code` statt
+        der ID, damit die Konstante in der Umgebung stabil bleibt.
+        """
+        return self.post(
+            "applications/install",
+            json={
+                "application_installation": {
+                    "property_id": channex_property_id,
+                    "application_code": application_code,
+                }
+            },
+        )
+
+    def uninstall_application(self, installation_id: str) -> dict[str, Any]:
+        return self.delete(f"applications/{installation_id}/uninstall")
+
     # ----- Messages (Gäste-Chat: Booking.com, Airbnb, Expedia) ----------------
     # Channex omni-channel Messaging-API. Ein Thread gehört i.d.R. zu einer
     # Booking (relationships.booking); Airbnb-„Inquiry" kann threadlos sein.

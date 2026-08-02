@@ -14,8 +14,8 @@ from supabase import Client
 from src.core.countries import normalize_country
 from src.core.security import AuthContext
 
-from .channex_client import ChannexError
-from .common import ChannelManagerError, log
+from .channex_client import ChannexClient, ChannexError
+from .common import ChannelManagerError, ist_demo_mapping, log
 from .schemas import (
     PropertyConnectRequest,
     PropertyMapListResponse,
@@ -25,7 +25,6 @@ from .schemas import (
 
 class PropertyMappingMixin:
     """Property-Mapping (CRUD) + Channex→DB-Reconcile."""
-
 
     # -- Property-Mapping ------------------------------------------------------
     def list_property_maps(self, ctx: AuthContext) -> PropertyMapListResponse:
@@ -377,12 +376,45 @@ class PropertyMappingMixin:
                     error=str(exc)[:200],
                 )
 
+        # Gäste-Chat nachziehen: Objekte, die vor der Automatik verbunden wurden
+        # (oder deren Freischaltung beim Verbinden fehlschlug), bekommen sie hier.
+        # Ein GET + höchstens ein POST je fehlendem Objekt — best effort.
+        self._chat_nachziehen(
+            [m["channex_property_id"] for m in active if m["channex_property_id"] in live_by_id]
+        )
+
         return {
             "created": created,
             "updated": updated,
             "soft_deleted": soft_deleted,
             "skipped": skipped,
         }
+
+    def _chat_nachziehen(self, channex_property_ids: list[str]) -> None:
+        """Fehlende Chat-Freischaltungen nachholen (Selbstheilung des Reconcile).
+
+        Ohne das bliebe ein Objekt, dessen Freischaltung beim Verbinden einmal
+        gescheitert ist, für immer stumm — und niemand würde es merken, weil
+        Buchungen weiter ankommen.
+        """
+        offen = [p for p in channex_property_ids if p and not ist_demo_mapping(p)]
+        if not offen or not self._channex.is_configured:
+            return
+        try:
+            installiert = self._channex.list_installed_applications().get("data") or []
+        except ChannexError as exc:
+            log.warning("chat_app_list_failed", error=exc.message)
+            return
+        aktiv = {
+            str((row.get("attributes") or {}).get("property_id"))
+            for row in installiert
+            if ((row.get("attributes") or {}).get("application_code")
+                or (row.get("attributes") or {}).get("code")) == ChannexClient.CHAT_APP_CODE
+        }
+        for channex_property_id in offen:
+            if channex_property_id in aktiv:
+                continue
+            self._chat_freischalten(channex_property_id)
 
     def _reconcile_channel_connections(self, db: Client, tenant_id: str) -> None:
         """Lokale OTA-Kanal-Verbindungen gegen die AUTORITATIVE Channex-Liste
@@ -607,7 +639,38 @@ class PropertyMappingMixin:
         )
         if not saved.data:
             raise ChannelManagerError("Mapping konnte nicht gespeichert werden.", status_code=500)
+        self._chat_freischalten(channex_id)
         return self._to_property_map(saved.data[0])
+
+    def _chat_freischalten(self, channex_property_id: str) -> None:
+        """Gäste-Chat der Portale für ein frisch verbundenes Objekt einschalten.
+
+        Der Chat ist bei Channex eine Anwendung, die JE PROPERTY installiert sein
+        muss — ohne sie antwortet die Nachrichten-API mit 403 und der Posteingang
+        bleibt bei jeder Buchung stumm. Das ist Teil des Dienstes, den der Betrieb
+        bei uns bucht, also gehört es an das Verbinden und nicht an einen Knopf,
+        den jemand suchen und verstehen muss.
+
+        Best effort: eine fehlgeschlagene Freischaltung darf das Verbinden nicht
+        umwerfen (die Distribution funktioniert auch ohne Chat) — sie wird
+        geloggt und beim nächsten Reconcile nachgeholt. Idempotent: Channex
+        antwortet auf eine erneute Installation ohne Nebenwirkung, doppelt
+        angelegt wird nichts (Wurzel 2).
+        """
+        if ist_demo_mapping(channex_property_id) or not self._channex.is_configured:
+            return
+        try:
+            self._channex.install_application(
+                channex_property_id=channex_property_id,
+                application_code=ChannexClient.CHAT_APP_CODE,
+            )
+        except ChannexError as exc:
+            log.warning(
+                "chat_app_install_failed",
+                channex_property_id=channex_property_id,
+                error=exc.message,
+                channex_status=exc.channex_status,
+            )
 
     def disconnect_property(self, ctx: AuthContext, map_id: str) -> None:
         """Objekt von Channex trennen. Löschkette (Wurzel 1 — Gegenzustand):

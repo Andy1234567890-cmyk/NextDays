@@ -3,6 +3,7 @@ from datetime import UTC, date, datetime, timedelta
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
+from src.features.channel_manager.channex_client import ChannexError
 from src.features.channel_manager.service import (
     ChannelManagerError,
     ChannelManagerService,
@@ -95,6 +96,9 @@ class _FakeQuery:
     def is_(self, *_a, **_k):  # noqa: ANN002, ANN003
         return self
 
+    def limit(self, *_a, **_k):  # noqa: ANN002, ANN003
+        return self
+
     def execute(self):  # noqa: ANN201
         class _R:
             data = self._rows
@@ -176,6 +180,16 @@ class _ReconcileChannex:
             raise ChannexError("Channex down", status_code=502)
         return {"data": self._channels}
 
+
+
+    # Chat-Anwendung: gehört zum Verbinden (property_mapping._chat_freischalten).
+    # Die Stubs bilden sie ohne Wirkung ab, damit der Reconcile-/Connect-Pfad
+    # testbar bleibt, ohne dass jeder Test die Anwendungen mitdenken muss.
+    def list_installed_applications(self) -> dict:
+        return {"data": []}
+
+    def install_application(self, **_k):  # noqa: ANN003, ANN201
+        return {"data": {"id": "inst-test"}}
 
 class _ReconcileDB:
     """In-Memory-DB für properties + channex_property_map + channex_group_map.
@@ -621,6 +635,15 @@ def test_booking_feed_isolates_tenants() -> None:
 class _ImportChannex:
     """Channex-Stub für den Buchungs-/ARI-Import."""
 
+
+    # Chat-Anwendung: gehört zum Verbinden (property_mapping._chat_freischalten);
+    # hier wirkungslos, damit der Import-Pfad ohne Anwendungen testbar bleibt.
+    def list_installed_applications(self) -> dict:
+        return {"data": []}
+
+    def install_application(self, **_k):  # noqa: ANN003, ANN201
+        return {"data": {"id": "inst-test"}}
+
     def __init__(
         self,
         *,
@@ -802,6 +825,7 @@ _CONFLICT_KEYS = {
     "tenant_pinned_channel": ("tenant_id", "portal_code"),
     "channex_ari_shadow": ("tenant_id", "rate_plan_id", "date"),
 }
+
 
 
 class _ImportDB:
@@ -4191,3 +4215,58 @@ def test_ensure_channex_account_fail_closed_when_not_configured() -> None:
         raise AssertionError("sollte fail-closed werfen")
     except ChannelManagerError as exc:
         assert exc.status_code == 503
+
+
+# --- Gäste-Chat: gehört zum Dienst, nicht auf einen Knopf ---------------------
+class _ChatAppChannex:
+    """Stub der Applications-API: merkt sich Installationen."""
+
+    CHAT_APP_CODE = "channex_messages"
+    is_configured = True
+
+    def __init__(self, installed: list[dict] | None = None) -> None:
+        self._installed = installed or []
+        self.installs: list[tuple[str, str]] = []
+
+    def list_installed_applications(self) -> dict:
+        return {"data": self._installed}
+
+    def install_application(self, *, channex_property_id: str, application_code: str) -> dict:
+        self.installs.append((channex_property_id, application_code))
+        return {"data": {"id": "inst-1"}}
+
+
+def test_chat_wird_beim_verbinden_freigeschaltet() -> None:
+    # Ohne installierte Chat-Anwendung antwortet die Nachrichten-API mit 403 —
+    # der Posteingang bliebe bei jeder Buchung stumm. Das darf niemand von Hand
+    # nachholen müssen.
+    channex = _ChatAppChannex()
+    svc = ChannelManagerService(service_client=None, channex=channex)
+    svc._chat_freischalten("cx-prop-1")
+    assert channex.installs == [("cx-prop-1", "channex_messages")]
+
+
+def test_chat_freischaltung_ueberspringt_demo_objekte() -> None:
+    channex = _ChatAppChannex()
+    svc = ChannelManagerService(service_client=None, channex=channex)
+    svc._chat_freischalten("demo-abc")
+    assert channex.installs == []
+
+
+def test_chat_nachziehen_installiert_nur_das_fehlende() -> None:
+    channex = _ChatAppChannex(installed=[{
+        "id": "inst-1",
+        "attributes": {"application_code": "channex_messages", "property_id": "cx-a"},
+    }])
+    svc = ChannelManagerService(service_client=None, channex=channex)
+    svc._chat_nachziehen(["cx-a", "cx-b"])
+    assert channex.installs == [("cx-b", "channex_messages")]
+
+
+def test_chat_freischaltung_kippt_das_verbinden_nicht() -> None:
+    class _Kaputt(_ChatAppChannex):
+        def install_application(self, **_k):  # noqa: ANN003, ANN201
+            raise ChannexError("nope", status_code=502, channex_status=502)
+
+    svc = ChannelManagerService(service_client=None, channex=_Kaputt())
+    svc._chat_freischalten("cx-prop-1")  # kein Werfen: Distribution läuft auch ohne Chat

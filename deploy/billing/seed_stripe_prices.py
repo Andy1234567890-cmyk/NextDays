@@ -183,6 +183,9 @@ def main() -> None:
         ensure_price(lk, prod.id if prod else "<dry>", params, apply)
 
     print("\n[4] Hinweise")
+    print("  - WhatsApp ist KEIN Zusatzmodul: der Kanal gehoert zum Grundtarif.")
+    print("    Eine eigene Gebuehr waere nach Metas Tech-Provider-Terms")
+    print("    (Section 5, No Resale) unzulaessig. Nicht wieder anlegen.")
     print("  - Modul 5 (Jobmarkt 2%) + Provisionen: nachgelagert als Invoice-Item,")
     print("    KEIN Stripe-Produkt (variabel). Siehe PLAN-stripe-preisliste.md.")
     print("  - Nicht-EUR (DKK/SEK/PLN/CZK/HUF/RON/BGN): Adaptive Pricing im")

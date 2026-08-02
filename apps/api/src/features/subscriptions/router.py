@@ -25,6 +25,8 @@ from .schemas import (
     CommissionMonth,
     CommissionSummary,
     InvoiceRow,
+    ModuleEntitlement,
+    ModuleToggleRequest,
     PortalSessionResponse,
     PricingResponse,
     QuantityChangeRequest,
@@ -122,6 +124,33 @@ def change_quantity(
     except SubscriptionsError as exc:
         raise _handle(exc) from exc
     return QuantityChangeResponse(property_count=count)
+
+
+@router.post("/modules", response_model=ModuleEntitlement)
+def add_module(
+    body: ModuleToggleRequest, ctx: _billing, service: ServiceDep
+) -> ModuleEntitlement:
+    """Zusatzmodul zum laufenden Abo hinzufügen (anteilig sofort berechnet).
+
+    Kein zweiter Checkout — das würde eine zweite Subscription mit doppelter
+    Grundgebühr anlegen. Ohne laufendes Abo: 422.
+    """
+    try:
+        return service.add_module(ctx, module_key=body.module_key)
+    except SubscriptionsError as exc:
+        raise _handle(exc) from exc
+
+
+@router.delete("/modules/{module_key}", response_model=ModuleEntitlement)
+def remove_module(
+    module_key: str, ctx: _billing, service: ServiceDep
+) -> ModuleEntitlement:
+    """Zusatzmodul kündigen. Der Zugang bleibt bis zum Ende der bezahlten
+    Periode bestehen (keine Gutschrift, dafür kein sofortiger Entzug)."""
+    try:
+        return service.remove_module(ctx, module_key=module_key)
+    except SubscriptionsError as exc:
+        raise _handle(exc) from exc
 
 
 @router.get("/billing-address", response_model=BillingAddress)
