@@ -265,6 +265,12 @@ class Settings(BaseSettings):
     # Voranmeldung angenommen — ein Link auf eine geratene Domain wäre wertlos.
     marketing_base_url: str = ""
 
+    # Öffentliche Adresse des myBestDays-Marktplatzes (plattform/). Ziel des
+    # Links in der Bewertungs-Erinnerung an den Gast. Fehlt sie, wird KEINE
+    # Erinnerung verschickt — eine Mail mit geratener Domain wäre wertlos
+    # (Wurzel 4).
+    marketplace_base_url: str = ""
+
     # --- Brevo (Newsletter/Marketing, getrennt vom eigenen Mailserver) --------
     # Der eigene Mailcow bleibt für Transaktionsmails zuständig; Brevo ist NUR
     # der Marketing-Kanal (Listenpflege, Kampagnen). Ohne Schlüssel läuft die

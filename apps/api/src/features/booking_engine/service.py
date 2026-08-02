@@ -297,9 +297,12 @@ class BookingEngineService:
         # Zeitraum der niedrigste Effektiv-Tagespreis (ein Resolver, je Objekt
         # die bestehende Auflösung — aber ohne pro Objekt neu aufzubauen).
         prices = self._prices_for_listings(property_ids, start, end)
+        ratings = self._ratings_for_listings(property_ids)
 
         items = [
-            self._to_listing(r, *prices.get(r["id"], (None, "")))
+            self._to_listing(
+                r, *prices.get(r["id"], (None, "")), rating=ratings.get(r["id"])
+            )
             for r in rows
         ]
         return PublicListingListResponse(items=items, total=len(items))
@@ -394,7 +397,10 @@ class BookingEngineService:
             raise BookingEngineError("Objekt nicht gefunden.", status_code=404)
         r = rows[0]
         price, currency = self._price_from(listing_id, start, end)
-        base = self._to_listing(r, price, currency)
+        base = self._to_listing(
+            r, price, currency,
+            rating=self._ratings_for_listings([listing_id]).get(listing_id),
+        )
         nights = (end - start).days if start and end else None
         return PublicListingDetail(
             **base.model_dump(),
@@ -525,7 +531,10 @@ class BookingEngineService:
 
     @staticmethod
     def _to_listing(
-        r: dict, price_from: float | None, currency: str
+        r: dict,
+        price_from: float | None,
+        currency: str,
+        rating: tuple[float, int] | None = None,
     ) -> PublicListing:
         attrs = r.get("type_attributes") or {}
         return PublicListing(
@@ -541,7 +550,23 @@ class BookingEngineService:
             amenities=list(r.get("amenities") or []),
             price_from=price_from,
             currency=currency,
+            # Ohne Bewertung bleibt beides None — die Oberfläche zeigt dann gar
+            # keine Sterne, statt eine 0,0 zu erfinden (Wurzel 4).
+            rating=rating[0] if rating else None,
+            rating_count=rating[1] if rating else None,
         )
+
+    def _ratings_for_listings(
+        self, property_ids: list[str]
+    ) -> dict[str, tuple[float, int]]:
+        """Durchschnitt + Anzahl VERÖFFENTLICHTER Bewertungen je Objekt — in
+        EINER Abfrage für die ganze Trefferliste. Objekte ohne Bewertung fehlen
+        im Ergebnis."""
+        from src.features.guest_reviews.service import GuestReviewsService
+
+        return GuestReviewsService(
+            service_client=self._db()
+        ).property_aggregates(property_ids)
 
     def _property_tenant(self, property_id: str) -> str | None:
         """tenant_id einer ÖFFENTLICHEN Property. Nur 'active' ist öffentlich

@@ -1,36 +1,29 @@
 """Router für guest_reviews. Gemountet unter /api/v1/guest-reviews.
 
-Bewertungen des Kunden-Dashboards (/plattform). Der Lesepfad je Objekt ist
-ÖFFENTLICH (kein Guard, wie booking_engine — Bewertungen sind Produktdaten) und
-liefert maskiert (kein Name/E-Mail/guest_id, Wurzel 9). Alles Gast-bezogene
+Bewertungen des myBestDays-Marktplatzes aus GAST-Sicht. Der Lesepfad je Objekt
+ist ÖFFENTLICH (kein Guard, wie booking_engine — Bewertungen sind Produktdaten)
+und liefert maskiert (kein Name/E-Mail/guest_id, Wurzel 9). Alles Gast-bezogene
 (eigene Liste, abgeben, ändern) verlangt ein Portal-Gast-Token (CurrentGuest);
 der Scope wird server-seitig über guest_id/E-Mail erzwungen (Wurzel 3/9).
+
+Die Betriebs-Seite (Cockpit, antworten, Gast bewerten, Automatik) liegt unter
+/api/v1/reviews — Slice `reviews`.
 """
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
-from src.core.security import (
-    AuthContext,
-    CurrentGuest,
-    require_internal_cron_secret,
-)
+from src.core.security import CurrentGuest, require_internal_cron_secret
 from src.core.supabase import get_service_client
-from src.features.auth.dependencies import require_permission
-from src.features.auth.permissions import Capability
 
 from .schemas import (
     DEFAULT_PAGE_SIZE,
     MAX_PAGE_SIZE,
     CreateReviewRequest,
-    GuestReviewByHost,
-    HostReplyRequest,
-    HostReviewResponse,
     MyReview,
     MyReviewsResponse,
     PublicReviewsResponse,
-    RateGuestRequest,
     SliceHealth,
     UpdateReviewRequest,
 )
@@ -64,6 +57,25 @@ def public_reviews(
     Kein Name/E-Mail/guest_id in der Antwort (Wurzel 9); Pagination (Wurzel 8)."""
     try:
         return service.public_reviews(property_id, limit=limit, offset=offset)
+    except GuestReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/tenant/{tenant_id}", response_model=PublicReviewsResponse)
+def tenant_reviews(
+    tenant_id: str,
+    service: GuestReviewsServiceDep,
+    limit: Annotated[int, Query(ge=1, le=MAX_PAGE_SIZE)] = DEFAULT_PAGE_SIZE,
+) -> PublicReviewsResponse:
+    """ÖFFENTLICH: maskierte Bewertungen ALLER Objekte eines Betriebs + Aggregat.
+
+    Speist den Bewertungs-Block der white-label Website (builder). Dieselbe
+    Maskierung und derselbe Pagination-Deckel wie der Objekt-Pfad; sichtbar ist
+    nur, was veröffentlicht ist. Der tenant-gescopte öffentliche Lesepfad ist
+    kein neues Zugeständnis — die Objektliste desselben Betriebs ist über
+    `booking-engine/listings?tenant=` schon öffentlich."""
+    try:
+        return service.tenant_reviews(tenant_id, limit=limit)
     except GuestReviewError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -103,85 +115,9 @@ def update_review(
     service: GuestReviewsServiceDep,
 ) -> MyReview:
     """Eigene Bewertung ändern (rating/text). Nur wenn portal_guest_id ==
-    ctx.guest_id, sonst 404 (Wurzel 9). host_reply ist Tenant-Seite, hier gesperrt."""
+    ctx.guest_id, sonst 404 (Wurzel 9). host_reply ist Betriebs-Seite, hier gesperrt."""
     try:
         return service.update_review(ctx.guest_id, review_id, req)
-    except GuestReviewError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
-
-
-# ============================================================= Host (Tenant)
-
-_view = Annotated[AuthContext, Depends(require_permission(Capability.VIEW_CALENDAR))]
-_manage = Annotated[
-    AuthContext, Depends(require_permission(Capability.MANAGE_CALENDAR))
-]
-
-
-@router.get(
-    "/manage/property/{property_id}", response_model=list[HostReviewResponse]
-)
-def host_reviews(
-    property_id: str,
-    service: GuestReviewsServiceDep,
-    ctx: _view,
-    limit: Annotated[int, Query(ge=1, le=MAX_PAGE_SIZE)] = DEFAULT_PAGE_SIZE,
-    offset: Annotated[int, Query(ge=0)] = 0,
-) -> list[HostReviewResponse]:
-    """Host-Sicht der Gast-Bewertungen EINES eigenen Objekts (owner-scoped)."""
-    try:
-        return service.host_reviews(ctx, property_id, limit=limit, offset=offset)
-    except GuestReviewError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
-
-
-@router.put("/manage/{review_id}/reply", response_model=HostReviewResponse)
-def set_host_reply(
-    review_id: str,
-    req: HostReplyRequest,
-    service: GuestReviewsServiceDep,
-    ctx: _manage,
-) -> HostReviewResponse:
-    """Öffentliche Host-Antwort auf eine Gast-Bewertung setzen/ändern."""
-    try:
-        return service.set_host_reply(ctx, review_id, req.reply)
-    except GuestReviewError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
-
-
-@router.delete(
-    "/manage/{review_id}/reply", status_code=status.HTTP_204_NO_CONTENT
-)
-def delete_host_reply(
-    review_id: str, service: GuestReviewsServiceDep, ctx: _manage
-) -> None:
-    """Host-Antwort entfernen."""
-    try:
-        service.delete_host_reply(ctx, review_id)
-    except GuestReviewError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
-
-
-@router.post("/manage/rate-guest", response_model=GuestReviewByHost)
-def rate_guest(
-    req: RateGuestRequest, service: GuestReviewsServiceDep, ctx: _manage
-) -> GuestReviewByHost:
-    """Host bewertet einen Gast (Zwei-Wege, Airbnb-Modell)."""
-    try:
-        return service.rate_guest(ctx, req)
-    except GuestReviewError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
-
-
-@router.get(
-    "/manage/rate-guest/{reservation_id}", response_model=GuestReviewByHost
-)
-def get_guest_rating(
-    reservation_id: str, service: GuestReviewsServiceDep, ctx: _view
-) -> GuestReviewByHost:
-    """Die bereits abgegebene Host→Gast-Bewertung einer Reservierung lesen."""
-    try:
-        return service.get_guest_rating(ctx, reservation_id)
     except GuestReviewError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -192,6 +128,8 @@ def publish_overdue(
     x_internal_cron_secret: Annotated[str | None, Header()] = None,
 ) -> dict[str, int]:
     """Cron: einseitige Reviews nach der 14-Tage-Frist veröffentlichen (double-
-    blind). Nur mit gültigem internen Cron-Secret (fail-closed, Wurzel 5)."""
+    blind). Nur mit gültigem internen Cron-Secret (fail-closed, Wurzel 5).
+    Derselbe Schritt läuft im Worker-Tick des reviews-Slice — dieser Endpunkt
+    bleibt als externer Auslöser bestehen."""
     require_internal_cron_secret(x_internal_cron_secret)
     return {"published": service.publish_overdue()}

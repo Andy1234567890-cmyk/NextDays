@@ -48,6 +48,7 @@ class PublicReview(BaseModel):
     rating: int
     text: str | None = None
     host_reply: str | None = None
+    host_reply_at: datetime | None = None
     author: str
     scores: CategoryScores = Field(default_factory=CategoryScores)
     created_at: datetime
@@ -106,56 +107,6 @@ class UpdateReviewRequest(BaseModel):
     scores: CategoryScores | None = None
 
 
-# ======================================================================= Host
-class HostReviewResponse(BaseModel):
-    """Eine Gast-Bewertung aus HOST-Sicht (Objekt des eigenen Tenants). Zeigt den
-    maskierten Autor (Vorname) — kein voller Name/E-Mail (Daten-Split §4.3)."""
-
-    id: str
-    property_id: str
-    reservation_id: str | None = None
-    rating: int
-    text: str | None = None
-    author: str
-    scores: CategoryScores = Field(default_factory=CategoryScores)
-    host_reply: str | None = None
-    host_reply_at: datetime | None = None
-    published_at: datetime | None = None
-    created_at: datetime
-
-
-class HostReplyRequest(BaseModel):
-    """Öffentliche Host-Antwort auf eine Gast-Bewertung setzen/ändern."""
-
-    reply: str = Field(min_length=1, max_length=MAX_TEXT_LEN)
-
-
-class GuestScores(BaseModel):
-    """Airbnb-Gast-Kategorien (Host bewertet Gast): je 1..5, optional."""
-
-    cleanliness: int | None = Field(default=None, ge=1, le=5)
-    communication: int | None = Field(default=None, ge=1, le=5)
-    house_rules: int | None = Field(default=None, ge=1, le=5)
-
-
-class RateGuestRequest(BaseModel):
-    """Host bewertet einen Gast (Zwei-Wege). reservation_id identifiziert Buchung/
-    Gast/Objekt server-seitig (Wurzel 3) — nichts davon kommt aus dem Client."""
-
-    reservation_id: str
-    rating: int = Field(ge=1, le=5)
-    text: str | None = Field(default=None, max_length=MAX_TEXT_LEN)
-    scores: GuestScores = Field(default_factory=GuestScores)
-
-
-class GuestReviewByHost(BaseModel):
-    """Eine Host→Gast-Bewertung (Zwei-Wege)."""
-
-    id: str
-    reservation_id: str
-    property_id: str
-    rating: int
-    text: str | None = None
-    scores: GuestScores = Field(default_factory=GuestScores)
-    published_at: datetime | None = None
-    created_at: datetime
+# Die Betriebs-Seite (Host-Sicht, Antwort, Gast bewerten) lebt im Slice
+# `reviews` — myNextDays-Cockpit über ALLE Kanäle. Hier steht bewusst nur noch
+# die myBestDays-Gast-Seite.

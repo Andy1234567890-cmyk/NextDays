@@ -107,6 +107,11 @@ PAYOUT_TICK_SECONDS = 60 * 60
 # KEINE zweite Belastung.
 COMMISSION_TICK_SECONDS = 60 * 60
 COMMISSION_BILLING_DAY = 1  # Monatserster
+# Bewertungen: Fristablauf veröffentlichen (double-blind), Portal-Bewertungen
+# spiegeln (Backstop für verlorene review-Webhooks) und die Automatik ausführen.
+# Stündlich reicht — alle drei Fälligkeiten sind tagesgenau; der PRIMÄRE Weg für
+# neue Portal-Bewertungen ist der Webhook.
+REVIEWS_TICK_SECONDS = 60 * 60
 # Nächtlicher Full-Sync-Push (Channex-Doku: "daily full update each night per
 # property"): im UTC-Stundenfenster [FULL_SYNC_HOUR_UTC, +1) je aktiver Property
 # EIN full_sync_property-Job pro Tag (dedup je Property+Tag), gestaffelt.
@@ -408,6 +413,7 @@ class Worker:
         self._last_balance_tick = 0.0
         self._last_payout_tick = 0.0
         self._last_commission_tick = 0.0
+        self._last_reviews_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
         self._budget = budget or ChannexBudget(get_settings())
@@ -667,6 +673,35 @@ class Worker:
         if seen:
             log.info("ical_sync_tick", synced=len(seen))
 
+    async def _reviews_tick(self, loop_time: float) -> None:
+        """Stündlich: verdeckte Bewertungen nach Fristablauf veröffentlichen,
+        Portal-Bewertungen spiegeln, Automatik (Gast bewerten / erinnern).
+        Robust: ein nicht erreichbares Portal kippt weder den Tick noch die
+        beiden anderen Schritte."""
+        if loop_time - self._last_reviews_tick < REVIEWS_TICK_SECONDS:
+            return
+        self._last_reviews_tick = loop_time
+        try:
+            await asyncio.to_thread(self._run_reviews_maintenance)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("reviews_tick_failed", error=str(exc)[:200])
+
+    def _run_reviews_maintenance(self) -> None:
+        from src.features.reviews.automation import ReviewAutomation
+        from src.features.reviews.service import ReviewsService
+
+        published, mirrored, queued, rated, expired, reminded = ReviewsService(
+            service_client=self._db
+        ).run_maintenance(ReviewAutomation(service_client=self._db))
+        # Nur loggen, wenn wirklich etwas passiert ist — stündlich eine
+        # Null-Zeile ins Log wäre nur Rauschen.
+        if any((published, mirrored, queued, rated, expired, reminded)):
+            log.info(
+                "reviews_tick",
+                published=published, mirrored=mirrored, queued=queued,
+                guest_rated=rated, expired=expired, reminders_sent=reminded,
+            )
+
     async def _balance_tick(self, loop_time: float) -> None:
         """Stündlich fällige Restzahlungen (Split-Payment) off-session belasten.
         Netzwerk-/DB-Arbeit im Thread; ein fehlgeschlagener Charge kippt weder den
@@ -907,6 +942,7 @@ class Worker:
             await self._balance_tick(loop_time)
             await self._payout_tick(loop_time)
             await self._commission_tick(loop_time)
+            await self._reviews_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)
             jobs = await asyncio.to_thread(self._claim, free) if free > 0 else []
             for job in jobs:

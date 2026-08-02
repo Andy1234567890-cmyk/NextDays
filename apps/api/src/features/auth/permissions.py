@@ -36,6 +36,9 @@ class Capability(StrEnum):
     VIEW_CALENDAR = "view_calendar"
     REQUEST_BLOCK = "request_block"
     APPROVE_BLOCK = "approve_block"
+    # Bewertungen (Portale + myBestDays)
+    VIEW_REVIEWS = "view_reviews"
+    MANAGE_REVIEWS = "manage_reviews"   # antworten, Gast bewerten, Automatik
     # Finanzen / Reports
     VIEW_FINANCES = "view_finances"
     VIEW_OWNER_REPORTS = "view_owner_reports"
@@ -73,6 +76,8 @@ _CO_ADMIN: frozenset[Capability] = frozenset({
     Capability.MANAGE_CALENDAR,
     Capability.VIEW_CALENDAR,
     Capability.APPROVE_BLOCK,
+    Capability.VIEW_REVIEWS,
+    Capability.MANAGE_REVIEWS,
     Capability.VIEW_GUEST_FULL,
     Capability.RECEIVE_SYSTEM_ALERTS,
     Capability.ASSIGN_STAFF_TO_PROPERTY,
@@ -88,6 +93,9 @@ _OWNER: frozenset[Capability] = frozenset({
     Capability.BOOK_SERVICES,
     Capability.VIEW_OWNER_REPORTS,
     Capability.MANAGE_NOTIFICATION_PREFS,
+    # Bewertungen SEINER Objekte lesen — antworten darf er nicht (§4.2 read-only),
+    # deshalb bewusst ohne MANAGE_REVIEWS.
+    Capability.VIEW_REVIEWS,
     Capability.VIEW_GUEST_LIMITED,  # nur Vorname, kein Gesamtpreis (§4.2)
 })
 
@@ -128,6 +136,8 @@ _COHOST_FULL: frozenset[Capability] = frozenset({
     Capability.MANAGE_TASKS,
     Capability.VIEW_OWN_TASKS,
     Capability.APPROVE_BLOCK,
+    Capability.VIEW_REVIEWS,
+    Capability.MANAGE_REVIEWS,
     Capability.VIEW_GUEST_FULL,
     # Laut Doku sieht ein Vollzugriff-Co-Gastgeber das Earnings-Dashboard und
     # vergangene wie kommende Auszahlungen. Gesperrt ist nur das EINRICHTEN der

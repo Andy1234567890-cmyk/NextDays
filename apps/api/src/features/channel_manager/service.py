@@ -35,6 +35,7 @@ from .lodgify_import import LodgifyImportMixin
 from .oauth_channels import OAuthChannelsMixin
 from .ota_extras import OtaExtrasMixin
 from .property_mapping import PropertyMappingMixin
+from .reviews_sync import ReviewsSyncMixin
 from .schemas import ChannexDebugEntry, ChannexDebugResponse, SliceHealth
 
 __all__ = [
@@ -55,6 +56,7 @@ class ChannelManagerService(
     OAuthChannelsMixin,
     BookingsSyncMixin,
     OtaExtrasMixin,
+    ReviewsSyncMixin,
     FullSyncMixin,
     CsvImportMixin,
     LodgifyImportMixin,

@@ -72,6 +72,7 @@ from .features.property_taxes.router import router as property_taxes_router
 from .features.public_portal.router import router as public_portal_router
 from .features.rates.router import router as rates_router
 from .features.reservations.router import router as reservations_router
+from .features.reviews.router import router as reviews_router
 from .features.site_config.router import manage_router as site_config_manage_router
 from .features.site_config.router import public_router as site_config_public_router
 from .features.subscriptions.router import router as subscriptions_router
@@ -97,6 +98,8 @@ _SLICE_ROUTERS = [
     calendar_router,
     reservations_router,
     guests_router,
+    # Bewertungs-Cockpit des Betriebs: Portale + myBestDays in EINER Liste.
+    reviews_router,
     # Gast-/Kunden-Dashboard der Plattform-Demand-Seite (/plattform).
     guest_auth_router,
     guest_blocks_router,
