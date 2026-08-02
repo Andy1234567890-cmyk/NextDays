@@ -35,7 +35,14 @@ import { useRealtime } from "@/lib/use-realtime";
 
 // "oauth" = Airbnb-Verbindung über OAuth-URL (kein Credential): URL öffnen oder
 // an den Eigentümer kopieren, dann auf Verbindung warten und Mapping setzen.
-type Step = "portal" | "credentials" | "oauth" | "mapping" | "done";
+//
+// "object" steht VOR allem anderen und ist der wichtigste Schritt: an welches
+// Objekt wird die Portal-Kennung gebunden? Vorher nahm der Assistent bei
+// fehlender Vorgabe stillschweigend das erste Objekt der Liste. Bei einem
+// Ferienobjekt-Betrieb hat jedes Objekt seine EIGENE Portal-Kennung — die
+// Booking-ID von „Haus Max" landete so an „Double Room", und danach liefen
+// Buchungen, Verfügbarkeit und Preise auf das falsche Objekt.
+type Step = "object" | "portal" | "credentials" | "oauth" | "mapping" | "done";
 
 // Eine Zeile in der Zuordnungs-Tabelle: ein OTA-ZIMMER → ein eigenes Zimmer.
 // Zuordnung auf Zimmer-Ebene (Cloudbeds/SiteMinder-Standard); die Raten des
@@ -98,6 +105,7 @@ function pflichtErfuellt(
 function buildMappingRows(
   otaRooms: OtaRoom[],
   localRooms: LocalRoomOption[],
+  opts: { einzelnesObjekt?: string | null } = {},
 ): MappingRow[] {
   // Schon vorgewählte Objekte nicht doppelt zuordnen (1:1, sonst Überbuchung).
   const used = new Set<string>();
@@ -120,7 +128,10 @@ function buildMappingRows(
       rateSummary: rates.map((r) => r.title ?? `Rate ${r.id}`).join(" · "),
       pricing_type: first?.pricing === "OBP" ? "OBP" : "Standard",
       occupancy: first?.max_persons ?? 2,
-      local_property_id: match?.local_property_id ?? "",
+      // Ferienobjekt mit einer einzigen Portal-Einheit: 1:1 gesetzt, es gibt
+      // nichts zu wählen. Sonst der Namenstreffer oder „nicht zuordnen".
+      local_property_id:
+        opts.einzelnesObjekt ?? match?.local_property_id ?? "",
     };
   });
 }
@@ -131,6 +142,7 @@ export function ChannelConnectButton({
   presetPortalCode,
   presetPropertyId,
   presetHotelId,
+  accommodationType,
   onDone,
 }: {
   label?: string;
@@ -145,15 +157,30 @@ export function ChannelConnectButton({
   // anderes Zimmer schon verbunden). Der Assistent überspringt dann den Hotel-ID-
   // Schritt und geht für dieses weitere Zimmer DIREKT ins Zimmer-Mapping.
   presetHotelId?: string | null;
+  // Betriebsart des Kontos. Sie entscheidet über das GANZE Modell dahinter:
+  //   hotel           – alle Zimmer teilen EINE Portal-Kennung (eine Hotel-ID),
+  //                     jedes Zimmer ist dort ein eigener Zimmertyp.
+  //   vacation_rental – jedes Objekt hat seine EIGENE Portal-Kennung und genau
+  //                     eine Einheit; eine Zimmer-Tabelle gibt es hier nicht.
+  // Ohne diese Angabe zeigte der Assistent allen dieselbe Hotelmaske.
+  accommodationType?: "hotel" | "vacation_rental" | null;
   // Callback nach erfolgreicher Verbindung (z.B. Route refreshen).
   onDone?: () => void;
 }) {
   const t = useTranslations("channels");
+  // Die Betriebsart bestimmt nur noch die WORTE (Zimmer vs. Objekt). Welche
+  // Maske nötig ist, entscheiden die DATEN: hinter der Portal-Kennung dieses
+  // Objekts stehen entweder mehrere eigene Einheiten (Gebäude → Zuordnungs-
+  // tabelle) oder genau eine (1:1). Das ist unabhängig davon, ob der Betrieb
+  // Hotel oder Ferienvermietung ist — ein Ferienhaus mit drei Wohnungen
+  // braucht dieselbe Tabelle wie ein Hotel.
+  const zimmerWelt = accommodationType === "hotel";
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [step, setStep] = useState<Step>("portal");
 
   const [portals, setPortals] = useState<SupportedPortal[]>([]);
+  const [properties, setProperties] = useState<{ id: string; title: string }[]>([]);
   const [propertyId, setPropertyId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SupportedPortal | null>(null);
   const [values, setValues] = useState<Record<string, PortalValue>>({});
@@ -185,13 +212,21 @@ export function ChannelConnectButton({
     startTransition(async () => {
       const [p, props] = await Promise.all([listPortals(), listProperties()]);
       if (p.ok) setPortals(p.data);
-      if (props.ok && props.data.items.length > 0) {
-        // Vorgewähltes Objekt (Mapping-Tabelle „Verbinden") nutzen, sonst das
-        // erste — aber nur, wenn das Preset wirklich zum Tenant gehört.
-        const preset = presetPropertyId
-          ? props.data.items.find((it) => it.id === presetPropertyId)
-          : undefined;
-        setPropertyId(preset?.id ?? props.data.items[0].id);
+      if (!props.ok || props.data.items.length === 0) return;
+      const liste = props.data.items.map((it) => ({ id: it.id, title: it.title }));
+      setProperties(liste);
+      // Objekt NUR setzen, wenn es eindeutig ist: entweder vorgegeben (Aufruf
+      // vom Objekt aus) oder es gibt genau eines. Sonst fragt der Assistent —
+      // ein stilles „nimm das erste" bindet die Portal-Kennung an ein fremdes
+      // Objekt, und das fällt erst auf, wenn dort Buchungen einlaufen.
+      const preset = presetPropertyId
+        ? liste.find((it) => it.id === presetPropertyId)
+        : undefined;
+      const eindeutig = preset ?? (liste.length === 1 ? liste[0] : undefined);
+      if (eindeutig) {
+        setPropertyId(eindeutig.id);
+      } else {
+        setStep("object");
       }
     });
   }, [open, presetPropertyId]);
@@ -239,7 +274,9 @@ export function ChannelConnectButton({
   }, [open, propertyId]);
 
   function reset() {
-    setStep("portal");
+    // Ist das Objekt nicht eindeutig, beginnt der Assistent wieder bei der
+    // Objektwahl — auch beim „weiteres Portal verbinden".
+    setStep(propertyId ? "portal" : "object");
     setSelected(null);
     setValues({});
     setTitle("");
@@ -370,7 +407,16 @@ export function ChannelConnectButton({
       }
       setOtaRooms(res.data.ota_rooms);
       setLocalRooms(res.data.rooms);
-      setRows(buildMappingRows(res.data.ota_rooms, res.data.rooms));
+      setRows(
+        buildMappingRows(res.data.ota_rooms, res.data.rooms, {
+          // Ferienobjekt mit genau einer Portal-Einheit: die Zuordnung ist
+          // zwingend 1:1 und wird nicht erfragt.
+          einzelnesObjekt:
+            res.data.rooms.length === 1 && res.data.ota_rooms.length === 1
+              ? propertyId
+              : null,
+        }),
+      );
       setStep("mapping");
     });
   }
@@ -425,7 +471,16 @@ export function ChannelConnectButton({
       }
       setOtaRooms(res.data.ota_rooms);
       setLocalRooms(res.data.rooms);
-      setRows(buildMappingRows(res.data.ota_rooms, res.data.rooms));
+      setRows(
+        buildMappingRows(res.data.ota_rooms, res.data.rooms, {
+          // Ferienobjekt mit genau einer Portal-Einheit: die Zuordnung ist
+          // zwingend 1:1 und wird nicht erfragt.
+          einzelnesObjekt:
+            res.data.rooms.length === 1 && res.data.ota_rooms.length === 1
+              ? propertyId
+              : null,
+        }),
+      );
       setStep("mapping");
     });
   }
@@ -455,6 +510,24 @@ export function ChannelConnectButton({
       setError(
         "Jedes Zimmer darf nur einem Portal-Zimmer zugeordnet werden. " +
           "Bitte doppelte Zuordnungen auflösen.",
+      );
+      return;
+    }
+    // Hotel: JEDES Zimmer des Portals muss zugeordnet sein. Das Portal
+    // aktiviert die Verbindung sonst nicht, und eine Buchung auf einem nicht
+    // zugeordneten Zimmer kommt später ohne Ziel an. Vorher ging das
+    // Teil-Mapping wortlos raus und die Verbindung blieb tot.
+    // Mehrere eigene Einheiten hinter der Kennung → JEDE Portal-Einheit muss
+    // zugeordnet sein, sonst aktiviert das Portal die Verbindung nicht.
+    const offen =
+      localRooms.length > 1
+        ? rows.filter((r) => !r.local_property_id).map((r) => r.roomLabel)
+        : [];
+    if (offen.length > 0) {
+      setError(
+        `Diese Zimmer des Portals sind noch keinem Zimmer zugeordnet: ${offen.join(", ")}. ` +
+          "Das Portal aktiviert die Verbindung erst, wenn alle zugeordnet sind — " +
+          "lege die fehlenden Zimmer als Objekt an oder entferne sie beim Portal.",
       );
       return;
     }
@@ -508,8 +581,55 @@ export function ChannelConnectButton({
               </button>
             </div>
 
-            {/* Schritt: DONE */}
-            {step === "done" ? (
+            {/* An WELCHES Objekt die Portal-Kennung gebunden wird, steht in
+                jedem Schritt sichtbar im Kopf. Ohne das lässt sich von außen
+                nicht erkennen, ob man gerade das richtige Objekt verbindet. */}
+            {propertyId && step !== "object" && step !== "done" && (
+              <p className="-mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Icon icon="ph:house" className="size-4 shrink-0" />
+                {properties.find((p) => p.id === propertyId)?.title ?? ""}
+                {properties.length > 1 && !presetPropertyId && (
+                  <button
+                    type="button"
+                    onClick={() => setStep("object")}
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    ändern
+                  </button>
+                )}
+              </p>
+            )}
+
+            {/* Schritt 0: Objekt wählen (nur wenn nicht eindeutig) */}
+            {step === "object" ? (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-muted-foreground">
+                  {zimmerWelt
+                    ? "Für welches Zimmer soll die Portal-Verbindung gelten?"
+                    : "Welches Objekt soll mit dem Portal verbunden werden?"}
+                </p>
+                <div className="grid gap-2">
+                  {properties.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setPropertyId(p.id);
+                        setStep("portal");
+                      }}
+                      className="flex items-center gap-3 rounded-(--radius) border border-border p-3 text-left transition-colors hover:bg-secondary"
+                    >
+                      <Icon
+                        icon="ph:house"
+                        className="size-5 shrink-0 text-muted-foreground"
+                      />
+                      <span className="truncate font-medium">{p.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : /* Schritt: DONE */
+            step === "done" ? (
               <div className="flex flex-col items-center gap-3 py-6 text-center">
                 <span className="flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                   <Icon icon="ph:check-bold" className="size-6" />
@@ -785,6 +905,71 @@ export function ChannelConnectButton({
                   <ErrorBox text="Für dieses Konto sind noch keine Zimmer mit Preis angelegt. Lege zuerst ein Zimmer mit Grundpreis an." />
                 ) : rows.length === 0 ? (
                   <ErrorBox text="Das Portal liefert keine Zimmer. Prüfe die Zugangsdaten." />
+                ) : localRooms.length === 1 ? (
+                  /* Genau EINE eigene Einheit hinter dieser Kennung: keine
+                     Tabelle. Liefert das Portal ebenfalls eine Einheit, ist die
+                     Zuordnung fertig. Liefert es mehrere, führt die eingetragene
+                     Kennung ein Haus mit mehreren Einheiten — dann muss der
+                     Betrieb sagen, welche davon DIESES Objekt ist (oder die
+                     übrigen als eigene Objekte im selben Gebäude anlegen). */
+                  <>
+                    {rows.length === 1 ? (
+                      <div className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
+                        <p className="text-sm text-muted-foreground">
+                          Diese Einheit beim Portal wird mit deinem Objekt
+                          verbunden:
+                        </p>
+                        <p className="font-medium">{rows[0].roomLabel}</p>
+                        {rows[0].rateSummary && (
+                          <p className="text-sm text-muted-foreground">
+                            {rows[0].rateSummary}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="rounded-(--radius) border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
+                          Diese Portal-Kennung führt {rows.length} Einheiten,
+                          dieses Objekt ist eine davon — wähle die passende.
+                          Gehören dir mehrere, lege für jede ein eigenes Objekt
+                          an und weise sie im Standort-Tab demselben Gebäude zu;
+                          sie teilen sich dann diese Kennung.
+                        </div>
+                        <NativeSelect
+                          value={String(
+                            rows.find((r) => r.local_property_id)?.room_type_code ?? "",
+                          )}
+                          onChange={(e) =>
+                            setRows((prev) =>
+                              prev.map((row) => ({
+                                ...row,
+                                local_property_id:
+                                  String(row.room_type_code) === e.target.value
+                                    ? (propertyId ?? "")
+                                    : "",
+                              })),
+                            )
+                          }
+                        >
+                          <option value="">{t("noMapping")}</option>
+                          {rows.map((r) => (
+                            <option key={r.room_type_code} value={String(r.room_type_code)}>
+                              {r.roomLabel}
+                              {r.rateSummary ? ` · ${r.rateSummary}` : ""}
+                            </option>
+                          ))}
+                        </NativeSelect>
+                      </>
+                    )}
+                    {error && <ErrorBox text={error} />}
+                    <Button onClick={connect} disabled={pending}>
+                      {pending ? (
+                        <Spinner text="Verbinde …" />
+                      ) : (
+                        "Verbinden & aktivieren"
+                      )}
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <p className="text-sm text-muted-foreground">

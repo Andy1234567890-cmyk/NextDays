@@ -231,6 +231,7 @@ export function PropertyChannels({
           {accommodationType !== "hotel" && (
             <ChannelConnectButton
               presetPropertyId={p.id}
+              accommodationType={accommodationType}
               onDone={() => router.refresh()}
               label={t("channelsTab.connectPortal")}
               variant="outline"

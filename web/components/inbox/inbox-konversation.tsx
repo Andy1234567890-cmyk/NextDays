@@ -563,18 +563,19 @@ export function Conversation({
           ))
         )}
 
-        {/* Der Portal-Chat liefert nichts und kann es auch nicht — entweder
-            trägt dieser Buchungskanal gar keine Nachrichten (Direkt, CRS, viele
-            kleine Portale), oder die Chat-Funktion des Objekts ist bei den
-            Portalen noch nicht aktiv. Das muss dastehen, sonst wartet jemand auf
-            eine Antwort, die nie ankommen kann. */}
+        {/* Kein Verlauf vom Portal — und zwar aus einem von zwei Gründen, die
+            beide dastehen müssen, sonst wartet jemand auf eine Antwort, die
+            nicht kommen kann: der Buchungskanal überträgt gar keine Nachrichten
+            (Direkt, CRS, kleine Portale), oder das Portal ist gerade nicht
+            erreichbar. Etwas zum Anklicken gibt es hier nicht — die Chat-
+            Funktion hängt am verbundenen Objekt und richtet sich selbst. */}
         {chatGesperrt && (
           <div className="flex items-start gap-2 rounded-2xl border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
             <Icon icon="ph:info" className="mt-0.5 size-4 shrink-0" />
             <span>
               {chatGesperrt === "channel_no_chat"
                 ? t("channelNoChat")
-                : t("chatAppMissing")}
+                : t("chatUnavailable")}
             </span>
           </div>
         )}

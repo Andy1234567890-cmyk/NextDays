@@ -13,6 +13,7 @@ import {
 } from "@/components/channel-manager/channel-detail";
 import { ChannelSidebar } from "@/components/channel-manager/channel-sidebar";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
+import { getMe } from "@/lib/auth";
 import {
   channelDetail,
   channelOverview,
@@ -40,12 +41,16 @@ export default async function ChannelDetailPage({
   const { code } = await params;
 
   const t = await getTranslations("channels");
-  const [health, overview, detail, maps, bookings] = await Promise.all([
+  // Die Betriebsart entscheidet über das Verbinden-Modell (Hotel: eine
+  // Portal-Kennung für alle Zimmer; Ferienobjekt: eine je Objekt) und muss
+  // deshalb bis in den Assistenten durchgereicht werden.
+  const [health, overview, detail, maps, bookings, me] = await Promise.all([
     getChannexHealth(),
     channelOverview(),
     channelDetail(code),
     listPropertyMaps(),
     listChannexBookings(),
+    getMe(),
   ]);
 
   // meta aus dem Live-Katalog (Overview) ableiten: existiert der Kanal nicht,
@@ -100,6 +105,7 @@ export default async function ChannelDetailPage({
           detail={detail.ok ? detail.data : null}
           propertyMaps={maps.ok ? maps.data.items : []}
           bookings={bookings.ok ? bookings.data.items : []}
+          accommodationType={me?.accommodation_type ?? null}
         />
       </div>
     </div>

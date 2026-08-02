@@ -65,6 +65,8 @@ def je_einheit(
 def freie_einheit(
     db: Client, property_id: str, von: str, bis_exkl: str,
     *, tenant_id: str | None = None,
+    eigene_unit: str | None = None,
+    eigene_naechte: list[str] | None = None,
 ) -> str | None:
     """Erste Einheit, die im Zeitraum [von, bis_exkl) keinen belegten Tag hat.
 
@@ -72,6 +74,13 @@ def freie_einheit(
     („When a reservation comes in, it will be assigned to a unit randomly") und
     lässt danach Umziehen zu — wir nehmen die erste freie statt einer zufälligen,
     damit dieselbe Buchung bei einem Wiederholungslauf dieselbe Einheit trifft.
+
+    Bei der MODIFIKATION einer bestehenden Buchung sind deren eigene Nächte im
+    Kalender als 'booked' gesperrt — die eigene Einheit sähe sonst belegt aus,
+    die Buchung verlöre ihre Zuweisung und der Typ würde fälschlich als
+    überbucht gesperrt. `eigene_unit` + `eigene_naechte` (die bisher belegten
+    Tage der Buchung selbst) nehmen genau diese Belegung aus der Rechnung;
+    die bisherige Einheit wird bevorzugt behalten (kein stilles Umziehen).
 
     None heißt: keine Einheit frei. Der Aufrufer darf die Buchung dann NICHT
     still verwerfen — sie ist real. Er sperrt den Zeitraum und meldet es, damit
@@ -89,7 +98,22 @@ def freie_einheit(
         .eq("status", "booked")
         .execute()
     ).data or []
-    besetzt = {str(r.get("unit_id")) for r in belegt if r.get("unit_id")}
+    eigene_tage = {str(t) for t in (eigene_naechte or [])}
+    besetzt: set[str] = set()
+    for r in belegt:
+        uid = r.get("unit_id")
+        if not uid:
+            continue
+        uid = str(uid)
+        if (
+            eigene_unit
+            and uid == str(eigene_unit)
+            and str(r.get("date")) in eigene_tage
+        ):
+            continue
+        besetzt.add(uid)
+    if eigene_unit and str(eigene_unit) in ids and str(eigene_unit) not in besetzt:
+        return str(eigene_unit)
     for uid in ids:
         if uid not in besetzt:
             return uid

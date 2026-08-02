@@ -2,6 +2,8 @@
 
 // Objekt-Verwaltung: Server-Actions gegen den FastAPI-properties-Slice
 // (/api/v1/properties). Business-Logik bleibt im Backend (PROJECT.md §2).
+import { revalidatePath } from "next/cache";
+
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
@@ -34,6 +36,10 @@ export type Property = {
   // Getrennt vom internen property_type; null = nicht gesetzt.
   booking_property_type: number | null;
   status: PropertyStatus;
+  // Gebäude (0264): Objekte mit demselben Gebäude teilen sich EINE Portal-
+  // Kennung (eine Booking-Hotel-ID mit mehreren Einheiten). null = das Objekt
+  // steht für sich und bekommt eine eigene Kennung.
+  building_id: string | null;
   // Sichtbarkeit auf dem eigenen myBestDays-Marktplatz (/plattform) als eigener
   // Buchungskanal — getrennt von status und der OTA-Distribution (Migration 0159).
   listed_on_marketplace: boolean;
@@ -94,6 +100,17 @@ export type PropertyChannels = {
 export type PropertyInput = Partial<
   Omit<Property, "id" | "tenant_id" | "created_at" | "updated_at">
 > & { title?: string };
+
+export type Building = {
+  id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  postal_code: string | null;
+  country: string | null;
+  /** Zahl der Objekte in diesem Gebäude. */
+  unit_count: number;
+};
 
 type Result<T> =
   | { ok: true; data: T }
@@ -370,4 +387,21 @@ export async function reorderPropertyRooms(
     method: "PATCH",
     body: { room_ids: roomIds },
   });
+}
+
+// --- Gebäude (0264) ----------------------------------------------------------
+// Ein Gebäude klammert die Objekte, die bei den Portalen unter EINER Kennung
+// stehen (Booking: eine Unterkunft mit mehreren Einheiten). Sein Name ist der
+// Name, den die Portale über den Einheiten zeigen.
+export async function listBuildings(): Promise<Result<Building[]>> {
+  return call("/properties/buildings");
+}
+
+export async function createBuilding(name: string): Promise<Result<Building>> {
+  const res = await call<Building>("/properties/buildings", {
+    method: "POST",
+    body: { name },
+  });
+  if (res.ok) revalidatePath("/objekte");
+  return res;
 }

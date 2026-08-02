@@ -910,6 +910,22 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
         checkin_time, checkout_time = self._ota_zeiten(raw)
         mask = access.mask
         total = (amount / 100) if isinstance(amount, (int, float)) else None
+        # Bezahlt-Stand aus der projizierten Reservierung — Portal-kassierte
+        # Buchungen (payment_collect='ota', 0268) führen dort paid_amount;
+        # ein hartes 0 widerspräche dem Buchungs-Slider daneben.
+        paid = 0.0
+        cbid = row.get("channex_booking_id")
+        if cbid:
+            res_rows = (
+                db.table("reservations")
+                .select("paid_amount")
+                .eq("tenant_id", tenant_id)
+                .eq("source_channex_booking_id", cbid)
+                .limit(1)
+                .execute()
+            ).data
+            if res_rows:
+                paid = float(res_rows[0].get("paid_amount") or 0)
         return ReservationDetail(
             listing_name=listing_name,
             listing_photo=listing_photo,
@@ -924,7 +940,7 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
             children=occ.get("children"),
             nights=nights,
             total_amount=mask.amount(total),
-            paid_amount=mask.amount(0.0),
+            paid_amount=mask.amount(paid),
             currency=row.get("currency") if mask.amounts else None,
             status=row.get("status"),
             ota_name=mask.source_value(row.get("ota_name")),

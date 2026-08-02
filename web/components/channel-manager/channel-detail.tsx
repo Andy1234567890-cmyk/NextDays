@@ -43,6 +43,8 @@ type Props = {
   detail: ChannelDetailData | null;
   propertyMaps: PropertyMap[];
   bookings: ChannexBooking[];
+  // Hotel oder Ferienobjekt — steuert das Verbinden-Modell im Assistenten.
+  accommodationType?: "hotel" | "vacation_rental" | null;
 };
 
 // Buchungen dieses Kanals: ota_name ist der Klarname (z.B. „Booking.com").
@@ -67,6 +69,7 @@ export function ChannelDetail({
   detail,
   propertyMaps,
   bookings,
+  accommodationType,
 }: Props) {
   const router = useRouter();
   const [disconnecting, startDisconnect] = useTransition();
@@ -144,6 +147,7 @@ export function ChannelDetail({
               label={`${meta.label} verbinden`}
               variant="accent"
               presetPortalCode={meta.code}
+              accommodationType={accommodationType}
               onDone={() => router.refresh()}
             />
           ))}
@@ -169,6 +173,7 @@ export function ChannelDetail({
         portalLabel={meta.label}
         connectedCount={detail?.connected_count ?? 0}
         totalCount={detail?.total_count ?? mappings.length}
+        accommodationType={accommodationType}
       />
 
       {/* Eingehende Buchungen dieses Kanals + manueller Sync */}
@@ -199,6 +204,7 @@ function MappingTable({
   portalLabel,
   connectedCount,
   totalCount,
+  accommodationType,
 }: {
   mappings: ChannelMappingRow[];
   maps: PropertyMap[];
@@ -206,6 +212,7 @@ function MappingTable({
   portalLabel: string;
   connectedCount: number;
   totalCount: number;
+  accommodationType?: "hotel" | "vacation_rental" | null;
 }) {
   const t = useTranslations("channels");
   const router = useRouter();
@@ -253,6 +260,7 @@ function MappingTable({
                 portalCode={portalCode}
                 mapId={mapIdFor(maps, row.property_id)}
                 connectedHotelId={connectedHotelId}
+                accommodationType={accommodationType}
                 onConnected={() => router.refresh()}
               />
             ))}
@@ -268,12 +276,14 @@ function MappingRow({
   portalCode,
   mapId,
   connectedHotelId,
+  accommodationType,
   onConnected,
 }: {
   row: ChannelMappingRow;
   portalCode: string;
   mapId: string | null;
   connectedHotelId: string | null;
+  accommodationType?: "hotel" | "vacation_rental" | null;
   onConnected: () => void;
 }) {
   const t = useTranslations("channels");
@@ -391,6 +401,7 @@ function MappingRow({
               presetPortalCode={portalCode}
               presetPropertyId={row.property_id}
               presetHotelId={connectedHotelId}
+              accommodationType={accommodationType}
               onDone={onConnected}
             />
           )}
