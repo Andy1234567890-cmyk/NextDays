@@ -4393,11 +4393,35 @@ _OTA_ZIMMER = [{
 }]
 
 
+# Der Kanal-Katalog (welche Felder eine Zuordnung braucht) kommt sonst LIVE von
+# Channex. In der CI gibt es keinen API-Key — der Katalog wäre leer, der Code
+# fiele in den `direct`-Modus und der Test prüfte etwas anderes als gemeint.
+# Deshalb hier der Booking-Eintrag als fester Stub.
+_BOOKING_SPEC = {
+    "code": "BookingCom",
+    # Werte sind Meta-Objekte, keine Typnamen (der Katalog liefert je Feld ein
+    # Dict mit Typ/Optionen) — sonst greift die Options-Auswertung ins Leere.
+    "rate_params": {
+        "room_type_code": {"type": "integer"},
+        "rate_plan_code": {"type": "integer"},
+        "occupancy": {"type": "integer"},
+        "pricing_type": {"type": "string", "options": ["Standard", "OBP"]},
+        "primary_occ": {"type": "boolean"},
+    },
+}
+
+
+def _raten_svc(db):  # noqa: ANN001, ANN201
+    svc = ChannelManagerService(service_client=db, channex=None)
+    svc._channel_spec = lambda _code: _BOOKING_SPEC  # noqa: SLF001
+    return svc
+
+
 def test_ferienobjekt_ein_preis_deckt_alle_portal_raten_ab() -> None:
     # Ein Ferienobjekt hat EINEN Preis, die Booking-Kennung führt drei Raten.
     # Vorher paarte `zip` nur die erste — zwei Raten blieben unzugeordnet, und
     # eine unzugeordnete Rate verhindert die Aktivierung des Kanals.
-    svc = ChannelManagerService(service_client=_RatenDB(["cx-rp-1"]), channex=None)
+    svc = _raten_svc(_RatenDB(["cx-rp-1"]))
     plaene = svc._build_rate_plans(
         _RatenDB(["cx-rp-1"]), "t1", "BookingCom",
         [{"local_property_id": "p1", "room_type_code": 651942002, "occupancy": 2}],

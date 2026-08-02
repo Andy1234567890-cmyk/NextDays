@@ -66,6 +66,18 @@ petsNonRefundableFee, petsRefundableDeposit, smokingPolicy}` (optional:
 `internetAccessCost`, `adultsOnly`). Unvollständig → Skip mit Log, keine
 erfundenen Defaults. Pflicht für Google-Kanal/Instant-Booking-Readiness.
 
+## Wie viel wird verkauft? — die Einheiten (0265/0266/0267)
+
+Ein Objekt ist der Einheiten-TYP; darunter hängen seine identischen Einheiten
+(`property_units`). Verfügbarkeit geht deshalb als STÜCKZAHL raus, nicht als
+0/1: `einheiten.freie_einheiten_spannen` liefert zusammenhängende Spannen
+gleicher freier Zahl, gerechnet aus `availability` (eine Zeile je Einheit und
+Tag, `unit_id` seit 0266). Eine eingehende OTA-Buchung bekommt über
+`core.einheiten.freie_einheit` die erste freie Einheit, sperrt nur deren Tage
+und trägt sie in `reservations.unit_id`; ist keine frei, wird der ganze Typ
+gesperrt und `ota_buchung_ohne_freie_einheit` geloggt — lieber alles zu als
+eine belegte Einheit doppelt vergeben.
+
 ## Wer teilt sich eine Portal-Kennung? — das Gebäude (0264)
 
 Nicht die Betriebsart. Objekte mit demselben `properties.building_id` landen
