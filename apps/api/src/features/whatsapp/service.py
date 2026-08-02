@@ -9,6 +9,7 @@ bestehende Konversation bzw. den konfigurierten Default-Tenant — nie geraten.
 """
 import re
 from datetime import UTC, datetime, timedelta
+from urllib.parse import urlencode
 
 from supabase import Client
 
@@ -23,16 +24,30 @@ from src.features.guests.identity import (
 )
 
 from .client import WhatsAppClient, WhatsAppError
+from .onboarding import OnboardingError, WhatsAppOnboarding
 from .schemas import (
+    OnboardingResult,
+    OnboardingStartLink,
+    OnboardingStatus,
     SliceHealth,
+    TemplateRolloutResult,
     WhatsAppConversation,
     WhatsAppConversationList,
     WhatsAppMessage,
     WhatsAppMessageList,
     WhatsAppStatus,
 )
+from .templates import rollout
 
 log = get_logger("nextdays.whatsapp")
+
+# WhatsApp ist KEIN kostenpflichtiges Zusatzmodul: der Kanal gehört zum
+# Grundtarif. Eine eigene Gebühr wäre nach Metas Tech-Provider-Terms (Section 5,
+# No Resale) eine unzulässige "fee for your Customers' use of the WhatsApp
+# Business Platform" — erlaubt sind nur Gebühren für Leistungen, die von der
+# Plattform-Nutzung unabhängig sind. Deshalb steht hier bewusst kein Feature-Gate.
+# Metas gehostete Onboarding-Seite (Business-Suite-Domain, NICHT graph.facebook.com).
+_SIGNUP_HOST = "https://business.facebook.com"
 
 
 class WhatsAppServiceError(Exception):
@@ -68,6 +83,119 @@ class WhatsAppService:
             sandbox=s.whatsapp_sandbox,
             phone_number_id_set=bool(s.whatsapp_phone_number_id),
         )
+
+    # --- Kunden-Onboarding (Embedded Signup, Tech-Provider-Modell) ----------
+    @staticmethod
+    def onboarding_startlink() -> OnboardingStartLink:
+        """Die Adresse von Metas gehosteter Embedded-Signup-Seite.
+
+        Wird serverseitig gebaut, damit App- und Konfigurations-ID nicht im
+        Frontend-Bundle stehen und sich ohne Neu-Deploy des Frontends ändern
+        lassen. Fehlt eine der beiden IDs, ist der Vorgang nicht startbar —
+        dann sagt der Endpunkt das klar, statt eine kaputte URL zu liefern
+        (Wurzel 4).
+        """
+        s = get_settings()
+        if not s.whatsapp_app_id or not s.whatsapp_signup_config_id:
+            return OnboardingStartLink(
+                available=False,
+                reason=(
+                    "Das WhatsApp-Onboarding ist noch nicht konfiguriert "
+                    "(App- oder Konfigurations-ID fehlt)."
+                ),
+            )
+        query = urlencode(
+            {
+                "app_id": s.whatsapp_app_id,
+                "config_id": s.whatsapp_signup_config_id,
+                "extras": '{"version":"v4"}',
+            }
+        )
+        return OnboardingStartLink(
+            available=True,
+            url=f"{_SIGNUP_HOST}/messaging/whatsapp/onboard/?{query}",
+        )
+
+    def onboarding_verbinden(
+        self, ctx: AuthContext, *, code: str
+    ) -> OnboardingResult:
+        """Embedded-Signup abschließen und den Kanal des Betriebs anlegen.
+
+        Setzt das gebuchte Modul voraus: das Verbinden einer Nummer ist Teil der
+        kostenpflichtigen Leistung, nicht Vorleistung.
+        """
+        db, tenant_id = self._require(ctx)
+        schluessel = (code or "").strip()
+        if not schluessel:
+            raise WhatsAppServiceError(
+                "Kein Freigabe-Code von Meta erhalten.", status_code=422
+            )
+        try:
+            ergebnis = WhatsAppOnboarding(db).verbinden(tenant_id, schluessel)
+        except OnboardingError as exc:
+            raise WhatsAppServiceError(
+                exc.message, status_code=exc.status_code
+            ) from exc
+        return OnboardingResult(
+            waba_id=ergebnis["waba_id"],
+            phone_number_id=ergebnis["phone_number_id"],
+            display_phone_number=ergebnis.get("display_phone_number"),
+            can_send_message=ergebnis.get("can_send_message"),
+            send_block_reason=ergebnis.get("send_block_reason"),
+            templates=TemplateRolloutResult(**(ergebnis.get("templates") or {})),
+        )
+
+    def onboarding_status(self, ctx: AuthContext) -> OnboardingStatus:
+        """Kanal-Zustand des Betriebs. Das Zugangstoken wird NICHT selektiert —
+        es darf den Server nicht verlassen (Wurzel 6)."""
+        db, tenant_id = self._require(ctx)
+        res = (
+            db.table("whatsapp_account")
+            .select(
+                "waba_id, phone_number_id, display_phone_number, verified_name, "
+                "can_send_message, send_block_reason, quality_rating, "
+                "messaging_limit_tier, status"
+            )
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        rows = res.data or []
+        if not rows:
+            return OnboardingStatus(connected=False)
+        row = rows[0]
+        return OnboardingStatus(
+            connected=row.get("status") == "connected",
+            waba_id=row.get("waba_id"),
+            phone_number_id=row.get("phone_number_id"),
+            display_phone_number=row.get("display_phone_number"),
+            verified_name=row.get("verified_name"),
+            can_send_message=row.get("can_send_message"),
+            send_block_reason=row.get("send_block_reason"),
+            quality_rating=row.get("quality_rating"),
+            messaging_limit_tier=row.get("messaging_limit_tier"),
+            status=row.get("status"),
+        )
+
+    # --- Vorlagen (WABA-Ebene, kein Tenant-Bezug bei EINER eigenen Nummer) ---
+    def list_templates(self) -> list[dict]:
+        """Vorlagen der WABA mit Prüfstatus. Meta ist die Quelle der Wahrheit —
+        wir spiegeln sie nicht in die DB, sonst driftet der Status."""
+        try:
+            return self._client.list_templates()
+        except WhatsAppError as exc:
+            raise WhatsAppServiceError(
+                exc.message, status_code=exc.status_code
+            ) from exc
+
+    def rollout_templates(self) -> dict:
+        """Den Vorlagensatz in die WABA ausrollen (idempotent, s. templates.py)."""
+        try:
+            return rollout(self._client)
+        except WhatsAppError as exc:
+            raise WhatsAppServiceError(
+                exc.message, status_code=exc.status_code
+            ) from exc
 
     def _require(self, ctx: AuthContext) -> tuple[Client, str]:
         if not ctx.tenant_id:
@@ -388,21 +516,70 @@ class WhatsAppService:
         db = self._db
         received = 0
         for entry in payload.get("entry", []) or []:
+            # entry.id ist die WABA-ID des Betriebs. Sie ist der EINDEUTIGE
+            # Zuordnungsschlüssel im Tech-Provider-Modell (Meta: Webhooks
+            # Overview) — anders als die Gast-Nummer, die bei zwei Betrieben
+            # mit demselben Gast doppelt vorkommt.
+            waba_id = entry.get("id")
             for change in entry.get("changes", []) or []:
                 value = change.get("value") or {}
+                phone_number_id = (value.get("metadata") or {}).get(
+                    "phone_number_id"
+                )
+                besitzer = self._tenant_aus_account(db, waba_id, phone_number_id)
                 contacts = {
                     c.get("wa_id"): (c.get("profile") or {}).get("name")
                     for c in (value.get("contacts") or [])
                 }
                 for msg in value.get("messages") or []:
-                    if self._store_incoming(db, msg, contacts):
+                    if self._store_incoming(db, msg, contacts, besitzer):
                         received += 1
                 # Status-Updates (sent/delivered/read/failed) der Ausgangsnachrichten.
                 for st in value.get("statuses") or []:
                     self._apply_status(db, st)
         return {"received": received}
 
+    @staticmethod
+    def _tenant_aus_account(
+        db: Client, waba_id: str | None, phone_number_id: str | None
+    ) -> str | None:
+        """Betrieb über die EMPFANGENDE Nummer bestimmen (whatsapp_account).
+
+        Das ist die belastbare Zuordnung: die Nummer, an die der Gast schreibt,
+        gehört genau einem Betrieb (unique auf phone_number_id, Migration 0255).
+        Zuerst über die Nummer, dann über die WABA — eine WABA kann mehrere
+        Nummern tragen, die Nummer ist der genauere Schlüssel.
+        """
+        if phone_number_id:
+            treffer = (
+                db.table("whatsapp_account")
+                .select("tenant_id")
+                .eq("phone_number_id", str(phone_number_id))
+                .limit(1)
+                .execute()
+            ).data
+            if treffer:
+                return treffer[0]["tenant_id"]
+        if waba_id:
+            treffer = (
+                db.table("whatsapp_account")
+                .select("tenant_id")
+                .eq("waba_id", str(waba_id))
+                .limit(1)
+                .execute()
+            ).data
+            if treffer:
+                return treffer[0]["tenant_id"]
+        return None
+
     def _resolve_tenant(self, db: Client, wa_phone: str) -> str | None:
+        """Rückfallweg, wenn der Webhook keine bekannte Nummer/WABA trägt.
+
+        NUR für den Altbestand mit einer einzigen globalen Nummer. Die Gast-Nummer
+        ist KEIN eindeutiger Schlüssel — schreiben zwei Betriebe mit demselben
+        Gast, trifft es den erstgefundenen. Deshalb wird der Treffer protokolliert,
+        damit dieser Pfad sichtbar bleibt und mit dem letzten Altkunden verschwindet.
+        """
         existing = (
             db.table("whatsapp_conversation")
             .select("tenant_id")
@@ -411,17 +588,26 @@ class WhatsAppService:
             .execute()
         ).data
         if existing:
+            log.info(
+                "whatsapp_tenant_ueber_gastnummer",
+                wa_phone=mask_phone(wa_phone),
+                hinweis="kein whatsapp_account-Treffer, Altpfad",
+            )
             return existing[0]["tenant_id"]
         default = get_settings().whatsapp_default_tenant_id
+        if default:
+            log.info("whatsapp_tenant_ueber_default", wa_phone=mask_phone(wa_phone))
         return default or None
 
-    def _store_incoming(self, db: Client, msg: dict, contacts: dict) -> bool:
+    def _store_incoming(
+        self, db: Client, msg: dict, contacts: dict, tenant_id: str | None = None
+    ) -> bool:
         wa_phone = _normalize_phone(msg.get("from") or "")
         if not wa_phone:
             return False
         body = ((msg.get("text") or {}).get("body")) or ""
         wa_message_id = msg.get("id")
-        tenant_id = self._resolve_tenant(db, wa_phone)
+        tenant_id = tenant_id or self._resolve_tenant(db, wa_phone)
         if not tenant_id:
             log.warning("whatsapp_no_tenant", wa_phone=mask_phone(wa_phone))
             return False

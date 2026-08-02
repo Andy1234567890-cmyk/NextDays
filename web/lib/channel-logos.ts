@@ -62,3 +62,20 @@ export function channelLogo(code: string | null | undefined): string | null {
   if (!code) return null;
   return CHANNEL_LOGO[code] ?? null;
 }
+
+// Schreibweisen-tolerante Suche: dieselbe Marke steht je nach Quelle als
+// Katalog-Code (`BookingCom`), Klarname (`Booking.com`) oder in anderer
+// Groß-/Kleinschreibung in den Daten. Nur Zeichen normalisieren — es wird KEIN
+// Logo geraten, nur dasselbe echte Logo wiedergefunden.
+const NORMALISIERT: Record<string, string> = Object.fromEntries(
+  Object.entries(CHANNEL_LOGO).map(([code, pfad]) => [
+    code.toLowerCase().replace(/[^a-z0-9]/g, ""),
+    pfad,
+  ]),
+);
+
+/** Wie `channelLogo`, akzeptiert aber auch Klarnamen („Booking.com"). */
+export function channelLogoLoose(name: string | null | undefined): string | null {
+  if (!name) return null;
+  return NORMALISIERT[name.toLowerCase().replace(/[^a-z0-9]/g, "")] ?? null;
+}

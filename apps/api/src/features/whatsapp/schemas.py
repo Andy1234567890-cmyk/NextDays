@@ -61,6 +61,63 @@ class WhatsAppStatus(BaseModel):
     phone_number_id_set: bool
 
 
+class OnboardingRequest(BaseModel):
+    """Code aus Metas Embedded-Signup-Fenster. Lebt nur ~30 Sekunden.
+
+    Der Tenant kommt bewusst NICHT hier hinein, sondern aus dem JWT — sonst
+    könnte ein Betrieb den WhatsApp-Kanal eines anderen überschreiben.
+    """
+
+    code: str
+
+
+class TemplateRolloutResult(BaseModel):
+    angelegt: list[str] = []
+    uebersprungen: list[str] = []
+    fehler: list[str] = []
+
+
+class OnboardingResult(BaseModel):
+    """Ergebnis des Embedded-Signup-Abschlusses. Ohne Zugangstoken."""
+
+    waba_id: str
+    phone_number_id: str
+    display_phone_number: str | None = None
+    # None = Meta hat keinen Zustand geliefert; NICHT als „darf senden" deuten.
+    can_send_message: bool | None = None
+    # z. B. „141006: There is an error with the payment method." — der Betrieb
+    # muss dann bei Meta eine Zahlungsmethode hinterlegen.
+    send_block_reason: str | None = None
+    templates: TemplateRolloutResult = TemplateRolloutResult()
+
+
+class OnboardingStartLink(BaseModel):
+    """Einstieg in Metas gehostete Embedded-Signup-Seite.
+
+    `available=False` heißt: die Konfiguration fehlt noch. Dann bleibt `url`
+    leer und `reason` sagt, was fehlt — kein Link ins Nichts.
+    """
+
+    available: bool
+    url: str | None = None
+    reason: str | None = None
+
+
+class OnboardingStatus(BaseModel):
+    """Kanal-Zustand eines Betriebs für die UI. Nie mit Token."""
+
+    connected: bool = False
+    waba_id: str | None = None
+    phone_number_id: str | None = None
+    display_phone_number: str | None = None
+    verified_name: str | None = None
+    can_send_message: bool | None = None
+    send_block_reason: str | None = None
+    quality_rating: str | None = None
+    messaging_limit_tier: str | None = None
+    status: str | None = None
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

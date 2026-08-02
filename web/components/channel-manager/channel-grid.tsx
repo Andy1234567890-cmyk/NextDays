@@ -11,9 +11,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { channelLogo } from "@/lib/channel-logos";
+import {
+  getWhatsAppOnboardingStatus,
+  type WhatsAppOnboardingStatus,
+} from "@/lib/whatsapp-api";
 import { Card } from "@nextdays/ui/card";
 import { Input } from "@nextdays/ui/input";
 import {
@@ -95,7 +99,10 @@ function ChannelCard({
   href,
   connectLabel,
 }: {
-  logo: { src?: string; srcDark?: string; icon?: string };
+  // Nur echte Marken-SVGs. Ohne Logo zeigt die Karte den Namen (siehe
+  // ChannelLogo) — ein `icon`-Feld gab es hier einmal, es wurde aber nie
+  // gerendert und täuschte an den Aufrufstellen ein Symbol vor, das nie kam.
+  logo?: { src?: string; srcDark?: string };
   alt: string;
   connected: boolean;
   badge: string;
@@ -115,7 +122,7 @@ function ChannelCard({
           aria-hidden
         />
         <div className="flex flex-1 items-center justify-center">
-          <ChannelLogo src={logo.src} srcDark={logo.srcDark} alt={alt} />
+          <ChannelLogo src={logo?.src} srcDark={logo?.srcDark} alt={alt} />
         </div>
         {connected ? (
           <span className="rounded-lg bg-emerald-50 py-2 text-center text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
@@ -295,12 +302,24 @@ export function ChannelGrid({ overview }: { overview: ChannelOverview | null }) 
         </div>
       </section>
 
+      {/* Direkter Gästekanal — eigene WhatsApp-Nummer des Betriebs. Bewusst
+          eigene Kategorie: das ist kein Buchungsportal (es kommen keine
+          Buchungen darüber), sondern der Kommunikationsweg zum Gast. */}
+      <section className="flex flex-col gap-3">
+        <CategoryHeading>{t("categoryMessaging")}</CategoryHeading>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <WhatsAppKanalKarte
+            connectLabel={t("connect")}
+            connectedLabel={t("connected")}
+          />
+        </div>
+      </section>
+
       {/* iCal-Kalender-Sync */}
       <section className="flex flex-col gap-3">
         <CategoryHeading>{t("categoryIcal")}</CategoryHeading>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ChannelCard
-            logo={{ icon: "ph:calendar-dots-duotone" }}
             alt={overview.ical.label}
             connected={overview.ical.synced_count > 0}
             badge={t("icalSynced", { count: overview.ical.synced_count })}
@@ -310,5 +329,41 @@ export function ChannelGrid({ overview }: { overview: ChannelOverview | null }) 
         </div>
       </section>
     </div>
+  );
+}
+
+
+/** WhatsApp-Karte. Holt den Kanal-Zustand des Betriebs selbst (whatsapp-Slice),
+ *  damit der Channex-Overview nichts über WhatsApp wissen muss. Solange geladen
+ *  wird, zeigt die Karte „nicht verbunden" — das ist der häufigere Fall und
+ *  vermeidet ein Aufblitzen des falschen Zustands. */
+function WhatsAppKanalKarte({
+  connectLabel,
+  connectedLabel,
+}: {
+  connectLabel: string;
+  connectedLabel: string;
+}) {
+  const [status, setStatus] = useState<WhatsAppOnboardingStatus | null>(null);
+
+  useEffect(() => {
+    void getWhatsAppOnboardingStatus().then((r) =>
+      setStatus(r.ok ? r.data : null),
+    );
+  }, []);
+
+  const verbunden = Boolean(status?.connected);
+  return (
+    <ChannelCard
+      logo={{
+        src: "/channels/whatsapp.svg",
+        srcDark: "/channels/whatsapp-light.svg",
+      }}
+      alt="WhatsApp"
+      connected={verbunden}
+      badge={status?.display_phone_number || connectedLabel}
+      href="/channels/whatsapp"
+      connectLabel={connectLabel}
+    />
   );
 }

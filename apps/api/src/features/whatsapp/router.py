@@ -19,6 +19,10 @@ from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
 from .schemas import (
+    OnboardingRequest,
+    OnboardingResult,
+    OnboardingStartLink,
+    OnboardingStatus,
     SendWhatsAppRequest,
     SendWhatsAppTemplateRequest,
     SliceHealth,
@@ -101,6 +105,66 @@ def send_template(
             language_code=req.language_code,
             variables=req.variables,
         )
+    except WhatsAppServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/onboarding/startlink", response_model=OnboardingStartLink)
+def onboarding_startlink(service: WhatsAppServiceDep, ctx: _guest) -> OnboardingStartLink:
+    """Adresse von Metas gehosteter Signup-Seite. App-/Konfigurations-ID bleiben
+    serverseitig, damit sie nicht im Frontend-Bundle landen."""
+    return service.onboarding_startlink()
+
+
+@router.post("/onboarding/verbinden", response_model=OnboardingResult)
+def onboarding_verbinden(
+    req: OnboardingRequest, service: WhatsAppServiceDep, ctx: _guest
+) -> OnboardingResult:
+    """Embedded-Signup abschließen: Code eintauschen, Kanal des Betriebs anlegen.
+
+    Der Code kommt aus Metas Signup-Fenster und lebt nur ~30 Sekunden, deshalb
+    ruft das Frontend diese Route unmittelbar auf. Der Tenant kommt aus dem JWT,
+    NICHT aus dem Body — sonst könnte ein Betrieb den Kanal eines anderen
+    überschreiben (Wurzel 3).
+    """
+    try:
+        return service.onboarding_verbinden(ctx, code=req.code)
+    except WhatsAppServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/onboarding/status", response_model=OnboardingStatus)
+def onboarding_status(service: WhatsAppServiceDep, ctx: _guest) -> OnboardingStatus:
+    """Kanal-Zustand des Betriebs: verbundene Nummer, Sendebereitschaft, Sperrgrund.
+
+    Das Zugangstoken wird NICHT ausgeliefert — es verlässt den Server nie.
+    """
+    try:
+        return service.onboarding_status(ctx)
+    except WhatsAppServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/templates")
+def list_templates(service: WhatsAppServiceDep, ctx: _guest) -> dict:
+    """Vorlagen der WABA mit Prüfstatus (PENDING/APPROVED/REJECTED)."""
+    try:
+        return {"items": service.list_templates()}
+    except WhatsAppServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/templates/rollout")
+def rollout_templates(service: WhatsAppServiceDep, ctx: _guest) -> dict:
+    """Den myNextDays-Vorlagensatz in die WABA ausrollen (idempotent).
+
+    Wird beim Onboarding einer neuen Nummer aufgerufen. Meta hat keinen
+    Bulk-Push über mehrere WABAs — jede Kunden-WABA braucht den Satz einzeln.
+    Bereits vorhandene Vorlagen werden übersprungen, einzelne Ablehnungen
+    stehen im Ergebnis statt den Lauf abzubrechen.
+    """
+    try:
+        return service.rollout_templates()
     except WhatsAppServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

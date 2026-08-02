@@ -173,6 +173,55 @@ def test_send_rejects_empty() -> None:
     assert exc.value.status_code == 422
 
 
+def test_webhook_ordnet_ueber_empfangende_nummer_zu() -> None:
+    """Zwei Betriebe, derselbe Gast: die Nachricht muss an den Betrieb gehen,
+    dessen NUMMER sie empfangen hat — nicht an den erstgefundenen mit dieser
+    Gast-Nummer."""
+    db = _DB()
+    db.store["whatsapp_account"] = [
+        {"tenant_id": "t-a", "waba_id": "waba-a", "phone_number_id": "num-a"},
+        {"tenant_id": "t-b", "waba_id": "waba-b", "phone_number_id": "num-b"},
+    ]
+    db.store["whatsapp_conversation"] = [
+        {
+            "id": "conv-a",
+            "tenant_id": "t-a",
+            "wa_phone": "491701234567",
+            "guest_name": None,
+        }
+    ]
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    svc.ingest_webhook(
+        {
+            "entry": [
+                {
+                    "id": "waba-b",
+                    "changes": [
+                        {
+                            "field": "messages",
+                            "value": {
+                                "metadata": {"phone_number_id": "num-b"},
+                                "messages": [
+                                    {
+                                        "from": "491701234567",
+                                        "id": "wamid.neu",
+                                        "type": "text",
+                                        "text": {"body": "Hallo B"},
+                                    }
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ]
+        }
+    )
+    nachrichten = db.store["whatsapp_message"]
+    assert len(nachrichten) == 1
+    # Entscheidend: Betrieb B, obwohl der Gast bei A bereits eine Konversation hat.
+    assert nachrichten[0]["tenant_id"] == "t-b"
+
+
 def test_ingest_webhook_creates_incoming(monkeypatch) -> None:  # noqa: ANN001
     # Default-Tenant für neue Nummer setzen (sonst verworfen — kein Raten).
     from src.core import config

@@ -203,6 +203,19 @@ class Settings(BaseSettings):
     # Prod IMMER false, sonst würden Nachrichten nicht real versendet.
     whatsapp_access_token: SecretStr = SecretStr("")
     whatsapp_phone_number_id: str = ""
+    # waba_id: WhatsApp Business Account (Ebene über der Nummer). Template-Anlage
+    # und -Abfrage laufen gegen die WABA, nicht gegen die Nummer. Im Multi-Tenant-
+    # Ausbau kommt die WABA je Betrieb aus der DB, dieser Wert ist die eigene.
+    whatsapp_waba_id: str = ""
+    # app_id: Meta-App-ID. Nötig für den Embedded-Signup-Code-Tausch
+    # (client_id) und für debug_token (app_id|app_secret). Keine Geheimnis —
+    # steht öffentlich in der App-URL, deshalb str und nicht SecretStr.
+    whatsapp_app_id: str = ""
+    # signup_config_id: die Facebook-Login-for-Business-Konfiguration hinter
+    # Metas gehosteter Embedded-Signup-Seite. Meta erzeugt sie zusammen mit der
+    # Redirect-URI im App-Dashboard („Von Meta gehostetes Embedded Signup").
+    # Ohne sie kann der Betrieb den Verbinden-Vorgang nicht starten.
+    whatsapp_signup_config_id: str = ""
     whatsapp_verify_token: SecretStr = SecretStr("")
     whatsapp_app_secret: SecretStr = SecretStr("")
     whatsapp_graph_version: str = "v25.0"
