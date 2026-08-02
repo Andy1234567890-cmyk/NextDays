@@ -6,6 +6,27 @@ import pytest
 from src.core.supabase import _MAX_RETRIES, _ReconnectingTransport
 
 
+class _AbbrechenderStream(httpx.SyncByteStream):
+    """Antwort-Stream, der nach den Headern abbricht — genau das Muster, mit dem
+    Kong eine idle HTTP/2-Verbindung beendet (GOAWAY nach dem Header-Frame)."""
+
+    def __init__(self, request: httpx.Request) -> None:
+        self._request = request
+
+    def __iter__(self):  # noqa: ANN204
+        raise httpx.RemoteProtocolError(
+            "<ConnectionTerminated error_code:1>", request=self._request
+        )
+        yield b""  # pragma: no cover  # macht die Methode zum Generator
+
+    def close(self) -> None:
+        return None
+
+
+def _abbruch_nach_headern(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(200, stream=_AbbrechenderStream(request))
+
+
 class _ScriptedTransport(httpx.BaseTransport):
     """Inner-Transport, der eine Liste von Aktionen abspielt: Exception-Instanz
     → wird geworfen; httpx.Response → wird zurückgegeben."""
@@ -67,3 +88,42 @@ def test_success_on_first_try_does_not_retry() -> None:
     resp = _ReconnectingTransport(inner).handle_request(_req())
     assert resp.status_code == 200
     assert inner.calls == 1
+
+
+def test_abbruch_beim_body_wird_wiederholt() -> None:
+    # Der reale Fall aus dem Log: `handle_request` kehrt sauber zurück, der
+    # GOAWAY kommt erst beim Lesen des Bodys. Ohne Retry an dieser Stelle wurde
+    # daraus ein 500 auf GET /api/v1/properties.
+    inner = _ScriptedTransport(
+        _abbruch_nach_headern(_req()),
+        httpx.Response(200, json={"ok": True}),
+    )
+    resp = _ReconnectingTransport(inner).handle_request(_req())
+    assert resp.status_code == 200
+    assert resp.json() == {"ok": True}
+    assert inner.calls == 2
+
+
+def test_abbruch_beim_body_wiederholt_kein_post() -> None:
+    # Header da heißt: der Server HAT den Request ausgeführt. Ein zweiter
+    # Versuch würde das POST doppelt anlegen (Wurzel 2) → durchreichen.
+    post = httpx.Request("POST", "http://x/rest/v1/reservations")
+    inner = _ScriptedTransport(
+        _abbruch_nach_headern(post),
+        httpx.Response(201, json={"id": "doppelt"}),
+    )
+    with pytest.raises(httpx.RemoteProtocolError):
+        _ReconnectingTransport(inner).handle_request(post)
+    assert inner.calls == 1
+
+
+def test_abbruch_vor_antwort_wiederholt_auch_post() -> None:
+    # Kein Header, keine Ausführung: hier ist der Retry auch für POST sicher.
+    post = httpx.Request("POST", "http://x/rest/v1/reservations")
+    inner = _ScriptedTransport(
+        httpx.RemoteProtocolError("Server disconnected", request=post),
+        httpx.Response(201, json={"id": "einmalig"}),
+    )
+    resp = _ReconnectingTransport(inner).handle_request(post)
+    assert resp.status_code == 201
+    assert inner.calls == 2

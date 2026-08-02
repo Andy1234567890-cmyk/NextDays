@@ -32,6 +32,12 @@ _STALE_CONNECTION_ERRORS = (
 # Verbindung aus dem Pool, der Retry öffnet eine frische.
 _MAX_RETRIES = 2
 
+# Methoden ohne Seiteneffekt. Nur sie dürfen wiederholt werden, NACHDEM der
+# Server bereits geantwortet hat (siehe `handle_request`): dann hat er den
+# Request ausgeführt, und ein zweiter Versuch würde ein POST doppelt ausführen
+# (Wurzel 2). Vor der Antwort ist jede Methode sicher wiederholbar.
+_SICHERE_METHODEN = frozenset({"GET", "HEAD", "OPTIONS"})
+
 
 class _ReconnectingTransport(httpx.BaseTransport):
     """Wiederholt Requests, deren Keep-Alive-Verbindung serverseitig geschlossen
@@ -44,10 +50,29 @@ class _ReconnectingTransport(httpx.BaseTransport):
 
     def handle_request(self, request: httpx.Request) -> httpx.Response:
         for attempt in range(_MAX_RETRIES + 1):
+            antwort: httpx.Response | None = None
             try:
-                return self._inner.handle_request(request)
+                antwort = self._inner.handle_request(request)
+                # Body HIER lesen, nicht erst beim Aufrufer. Bei HTTP/2 schickt
+                # Kong sein GOAWAY häufig ERST NACH den Headern: `handle_request`
+                # kehrt dann sauber zurück und der Abbruch schlägt später in
+                # `response.read()` zu — außerhalb dieses Retrys, also als 500
+                # beim Nutzer. Das Lesen in den Retry hineinzuziehen ist der
+                # einzige Weg, diesen Fall überhaupt zu erwischen.
+                # supabase-py liest jede Antwort ohnehin vollständig, es geht
+                # also kein Streaming verloren.
+                antwort.read()
+                return antwort
             except _STALE_CONNECTION_ERRORS as exc:
-                if attempt >= _MAX_RETRIES:
+                if antwort is not None:
+                    antwort.close()
+                # Hat der Server schon geantwortet, hat er den Request auch
+                # ausgeführt — dann darf nur eine seiteneffektfreie Methode
+                # erneut laufen (Wurzel 2).
+                begonnen = antwort is not None
+                if attempt >= _MAX_RETRIES or (
+                    begonnen and request.method.upper() not in _SICHERE_METHODEN
+                ):
                     raise
                 log.warning(
                     "supabase_stale_connection_retry",
@@ -55,6 +80,7 @@ class _ReconnectingTransport(httpx.BaseTransport):
                     method=request.method,
                     url=str(request.url),
                     error=type(exc).__name__,
+                    phase="body" if begonnen else "connect",
                 )
         # Unerreichbar: range liefert immer ≥1 Iteration, die entweder
         # zurückkehrt oder (im letzten Durchlauf) re-raised.

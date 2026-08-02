@@ -11,6 +11,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from postgrest.exceptions import APIError as PostgrestAPIError
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .core.config import get_settings
@@ -271,6 +272,25 @@ def create_app() -> FastAPI:
         return JSONResponse(
             status_code=500,
             content={"detail": "internal_error", "request_id": rid},
+            headers={"X-Request-Id": rid} if rid else None,
+        )
+
+    # Ein Pfad-/Query-Parameter, den der Client frei setzt, landet ungeprüft als
+    # Wert in PostgREST. Ist er kein gültiger UUID/Zahl/Datumswert, antwortet
+    # Postgres mit 22P02 („invalid input syntax") — bislang ein 500. Ein
+    # kaputter Client-Wert ist aber ein Eingabefehler des Aufrufers, kein
+    # Serverfehler: angreiferkontrollierter Input darf keinen 500 werfen
+    # (Wurzel 5). Deshalb zentral auf 422 abbilden, statt in jedem Slice einzeln
+    # zu prüfen. Jeder andere PostgREST-Fehler bleibt ein echter 500.
+    @app.exception_handler(PostgrestAPIError)
+    async def _postgrest(request: Request, exc: PostgrestAPIError):  # noqa: ANN202
+        if getattr(exc, "code", None) != "22P02":
+            return await _unhandled(request, exc)
+        rid = getattr(request.state, "request_id", None)
+        log.info("ungueltiger_parameter", path=request.url.path, request_id=rid)
+        return JSONResponse(
+            status_code=422,
+            content={"detail": "Ungültiger Wert im Aufruf.", "request_id": rid},
             headers={"X-Request-Id": rid} if rid else None,
         )
 
