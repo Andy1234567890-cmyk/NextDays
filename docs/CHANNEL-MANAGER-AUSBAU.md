@@ -49,7 +49,7 @@ Diff, Voll-Abgleich, Mapping-Assistent, Portal-Katalog) ist vorhanden und läuft
 | 4 | **Kanal-Aufschlag (Mark-up)** | fehlt ganz | kein kanalabhängiger Preisaufschlag (Lodgify: Pflichtfeld beim Mapping) |
 | 5 | **Room-Type-Facilities, Betten, Bundesland** | nur Property-Facilities (`content_sync.py:656`) | dünnes Listing bei Booking/Vrbo |
 | 6 | **OTA-Nachrichten** | live gelesen, **nicht gespeichert** (`inbox/service.py:318`) | kein Verlauf, keine Suche, keine Badges, nichts offline |
-| 7 | **Reviews** | Endpunkte da (`router.py:602-653`), keine UI | Bewertungen unbeantwortet |
+| 7 | ~~**Reviews**~~ | **ERLEDIGT** (Migrationen `0262`/`0263`/`0266`): eigener Bestand `channex_review`, Cockpit `/bewertungen` in web + Gastgeber-Dashboard + `mobile-nextdays`, Antwort/Gastbewertung, Automatik | — |
 | 8 | **Availability Rules** | CRUD da (`router.py:657-713`), keine UI | kanalspezifisches Aussteuern nur per API |
 | 9 | **Sync-Fehler & Retry** | `last_sync_error` nur als HTML-`title`-Tooltip | Fehler faktisch unsichtbar, nur pauschaler Voll-Abgleich |
 | 10 | **Multi-Room-Buchungen** | „Split existiert noch nicht" (`bookings_sync.py:453`) | Mehrzimmer-Buchung nur teilweise zugeordnet |
@@ -141,9 +141,21 @@ Jedes Paket ist einzeln lieferbar und endet mit einem sichtbaren Ergebnis.
 * Achtung Abgrenzung: das ist der **Channex/OTA**-Posteingang, **nicht** der
   Plattform-Posteingang (`guest_messages`) — zwei getrennte Flächen.
 
-**Paket 9 — Bewertungen**
-* Liste, Antwort, Airbnb-Gastbewertung, Score je Objekt; Endpunkte existieren
-  bereits vollständig.
+**Paket 9 — Bewertungen — ERLEDIGT**
+* Portal-Bewertungen liegen jetzt im eigenen Bestand (`channex_review`, `0262`):
+  Webhook (`review`/`updated_review`) als Auslöser, Stand per `GET /reviews/{id}`
+  nachgezogen, stündlicher Backstop-Tick im Worker. Ohne Bestand gäbe es kein
+  „unbeantwortet"-Filter, keine Kennzahl über Kanäle hinweg und kein Realtime.
+* Neuer Slice `reviews`: EINE Liste über Portale UND myBestDays
+  (`UnifiedReview`, Rohnote + Skala erhalten), Antwort (Portal zuerst, dann
+  Spiegel — Wurzel 1), Betrieb→Gast (Airbnb via Channex, myBestDays via
+  `guest_reviews_by_host`), Automatik (`review_automation`, `0263`).
+* Oberflächen: `/bewertungen` (+ `/bewertungen/einstellungen`) im PMS,
+  `/bewertungen` im Gastgeber-Dashboard (schließt den bis dahin toten
+  Menüpunkt), Screen in `mobile-nextdays`, Bewertungs-Block im Page-Builder
+  (`0266`) — dieser zeigt **nur** eigene, verifizierte myBestDays-Bewertungen.
+* Eigene Fähigkeiten `view_reviews`/`manage_reviews`; Eigentümer sehen nur ihre
+  Objekte und sind read-only.
 
 **Paket 10 — Availability Rules**
 * UI für `close_out`, `availability_offset`, `max_availability` je Kanal und

@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Hodnotenia zo všetkých kanálov",
+          excerpt: "Hodnotenia z portálov a z myBestDays sa zbiehajú v jednom zozname — tam aj odpovedáte.",
+          updated: "Stav: august 2026",
+          body: [
+            { type: "h2", text: "Jeden zoznam pre všetky kanály" },
+            {
+              type: "p",
+              text: "V /bewertungen vidíte každé hodnotenie svojich objektov na jednom mieste: tie z portálov (Booking.com, Airbnb, Expedia) aj tie z trhoviska myBestDays. Portály hodnotia na 10, myBestDays na 5 hviezdičiek — zobrazujú sa hviezdičky a vedľa nich pôvodná známka, aby nič nepôsobilo skreslene.",
+            },
+            { type: "h2", text: "Ako odpovedať na hodnotenie" },
+            {
+              type: "steps",
+              items: [
+                "Otvorte /bewertungen a prípadne filtrujte na „Len bez odpovede\"",
+                "Pri hodnotení kliknite na „Odpovedať\" a napíšte svoju odpoveď",
+                "Pošlite — pri portáli ide odpoveď najprv tam a až potom sa tu zobrazí ako odpovedaná",
+              ],
+            },
+            { type: "h2", text: "Čo ešte uvidíte" },
+            {
+              type: "ul",
+              items: [
+                "Priemer, počet a mieru odpovedí podľa kanála ako ukazovatele",
+                "„Ešte nezverejnené\": druhá strana ešte nehodnotila a 14-dňová lehota beží",
+                "„Lehota na odpoveď uplynula\": portál už odpoveď neprijme",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Hodnotenia z portálov vidíte len vy. Na trhovisku myBestDays a na vlastnej webovej stránke sa zobrazujú výhradne vaše vlastné, overené hodnotenia myBestDays — Booking.com a Airbnb povoľujú ďalšie zverejňovanie svojich hodnotení len obmedzene.",
+            },
+          ],
+        },
       ],
     },
   ],

@@ -317,6 +317,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Reċensjonijiet mill-kanali kollha",
+          excerpt: "Ir-reċensjonijiet mill-portali u minn myBestDays jinġabru f’lista waħda — hemm twieġeb ukoll.",
+          updated: "Aġġornat: Awwissu 2026",
+          body: [
+            { type: "h2", text: "Lista waħda għall-kanali kollha" },
+            {
+              type: "p",
+              text: "Taħt /bewertungen tara kull reċensjoni tal-postijiet tiegħek f’post wieħed: dawk mill-portali (Booking.com, Airbnb, Expedia) u dawk mis-suq myBestDays. Il-portali jivvalutaw fuq 10, myBestDays fuq 5 stilel — jintwerew stilel, bil-punteġġ oriġinali ħdejhom, biex xejn ma jidher mgħawweġ.",
+            },
+            { type: "h2", text: "Kif twieġeb reċensjoni" },
+            {
+              type: "steps",
+              items: [
+                "Iftaħ /bewertungen u jekk trid iffiltra fuq „Bla tweġiba biss\"",
+                "Agħfas „Wieġeb\" fuq ir-reċensjoni u ikteb it-tweġiba tiegħek",
+                "Ibgħat — f’każ ta’ portal it-tweġiba tmur l-ewwel hemm u tidher hawn bħala mwieġba biss wara",
+              ],
+            },
+            { type: "h2", text: "X’tara wkoll" },
+            {
+              type: "ul",
+              items: [
+                "Medja, numru u rata ta’ tweġiba għal kull kanal bħala indikaturi",
+                "„Għadha mhux ippubblikata\": in-naħa l-oħra għadha ma rrevediethiex u l-iskadenza ta’ 14 jum għadha għaddejja",
+                "„L-iskadenza tat-tweġiba għaddiet\": il-portal ma jibqax jaċċetta tweġiba",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Ir-reċensjonijiet tal-portali huma viżibbli għalik biss. Fis-suq myBestDays u fis-sit tiegħek jidhru biss ir-reċensjonijiet myBestDays verifikati tiegħek — Booking.com u Airbnb jippermettu l-pubblikazzjoni mill-ġdid tar-reċensjonijiet tagħhom b’mod limitat biss.",
+            },
+          ],
+        },
       ],
     },
   ],

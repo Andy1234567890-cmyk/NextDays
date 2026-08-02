@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Beoordelingen van alle kanalen",
+          excerpt: "Beoordelingen van de portalen en van myBestDays komen samen in één lijst — daar antwoord je ook.",
+          updated: "Bijgewerkt: augustus 2026",
+          body: [
+            { type: "h2", text: "Eén lijst voor alle kanalen" },
+            {
+              type: "p",
+              text: "Onder /bewertungen ziet u elke beoordeling van uw accommodaties op één plek: die van de portalen (Booking.com, Airbnb, Expedia) en die van de myBestDays-marktplaats. De portalen beoordelen op 10, myBestDays op 5 sterren — sterren worden getoond, met het oorspronkelijke cijfer ernaast, zodat niets vertekend lijkt.",
+            },
+            { type: "h2", text: "Op een beoordeling antwoorden" },
+            {
+              type: "steps",
+              items: [
+                "Open /bewertungen en filter eventueel op „Alleen onbeantwoord\"",
+                "Klik bij de beoordeling op „Antwoorden\" en schrijf uw antwoord",
+                "Verzenden — bij een portaal gaat het antwoord daar eerst naartoe en verschijnt het pas daarna hier als beantwoord",
+              ],
+            },
+            { type: "h2", text: "Wat u verder ziet" },
+            {
+              type: "ul",
+              items: [
+                "Gemiddelde, aantal en antwoordpercentage per kanaal als kerncijfers",
+                "„Nog niet gepubliceerd\": de tegenpartij heeft nog niet beoordeeld en de termijn van 14 dagen loopt",
+                "„Antwoordtermijn verstreken\": het portaal neemt geen antwoord meer aan",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Beoordelingen van de portalen zijn alleen voor u zichtbaar. Op de myBestDays-marktplaats en op uw eigen website verschijnen uitsluitend uw eigen, geverifieerde myBestDays-beoordelingen — Booking.com en Airbnb staan het opnieuw publiceren van hun beoordelingen slechts beperkt toe.",
+            },
+          ],
+        },
       ],
     },
   ],

@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Ocene vseh kanalov",
+          excerpt: "Ocene s portalov in z myBestDays se stekajo v enem seznamu — tam tudi odgovarjate.",
+          updated: "Stanje: avgust 2026",
+          body: [
+            { type: "h2", text: "En seznam za vse kanale" },
+            {
+              type: "p",
+              text: "V /bewertungen vidite vsako oceno svojih nastanitev na enem mestu: tiste s portalov (Booking.com, Airbnb, Expedia) in tiste s tržnice myBestDays. Portali ocenjujejo do 10, myBestDays do 5 zvezdic — prikazane so zvezdice, ob njih pa izvirna ocena, da nič ne deluje popačeno.",
+            },
+            { type: "h2", text: "Kako odgovorite na oceno" },
+            {
+              type: "steps",
+              items: [
+                "Odprite /bewertungen in po potrebi filtrirajte na »Samo brez odgovora«",
+                "Pri oceni kliknite »Odgovori« in napišite svoj odgovor",
+                "Pošljite — pri portalu gre odgovor najprej tja in se šele nato tu prikaže kot odgovorjen",
+              ],
+            },
+            { type: "h2", text: "Kaj še vidite" },
+            {
+              type: "ul",
+              items: [
+                "Povprečje, število in delež odgovorov po kanalih kot kazalniki",
+                "»Še ni objavljeno«: nasprotna stran še ni ocenila in 14-dnevni rok teče",
+                "»Rok za odgovor je potekel«: portal odgovora ne sprejme več",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Ocene portalov vidite samo vi. Na tržnici myBestDays in na lastni spletni strani se prikazujejo izključno vaše lastne, preverjene ocene myBestDays — Booking.com in Airbnb dovoljujeta ponovno objavo svojih ocen le omejeno.",
+            },
+          ],
+        },
       ],
     },
   ],

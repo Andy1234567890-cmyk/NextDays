@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Reviews from every channel",
+          excerpt: "Reviews from the portals and from myBestDays come together in one list — and that is where you reply.",
+          updated: "Updated: August 2026",
+          body: [
+            { type: "h2", text: "One list for every channel" },
+            {
+              type: "p",
+              text: "Under /bewertungen you see every review of your places in one place: those from the portals (Booking.com, Airbnb, Expedia) and those from the myBestDays marketplace. The portals rate out of 10, myBestDays out of 5 stars — stars are shown, with the original score next to them so nothing looks distorted.",
+            },
+            { type: "h2", text: "Replying to a review" },
+            {
+              type: "steps",
+              items: [
+                "Open /bewertungen and filter to \"Unanswered only\" if you like",
+                "Click \"Reply\" on the review and write your answer",
+                "Send — for a portal the reply goes there first and only then shows up here as answered",
+              ],
+            },
+            { type: "h2", text: "What else you see" },
+            {
+              type: "ul",
+              items: [
+                "Average, count and response rate per channel as key figures",
+                "\"Not published yet\": the other side has not reviewed yet and the 14-day window is still running",
+                "\"Reply window closed\": the portal no longer accepts a reply",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Portal reviews are visible to you only. On the myBestDays marketplace and on your own website, only your own verified myBestDays reviews appear — Booking.com and Airbnb restrict republishing of their reviews.",
+            },
+          ],
+        },
       ],
     },
   ],

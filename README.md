@@ -243,7 +243,7 @@ nextdays/
 │   └── api/                # FastAPI — gesamte Business-Logik
 │       └── src/
 │           ├── core/       # Config, Auth (ES256/JWKS), Supabase, Logging
-│           └── features/   # 24 Vertical Slices (auth, calendar, tasks, payments, site_config, …)
+│           └── features/   # 26 Vertical Slices (auth, calendar, tasks, payments, reviews, site_config, …)
 └── packages/
     └── shared/             # geteilte TS-Typen
 ```
@@ -260,7 +260,7 @@ nextdays/
 | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | Monorepo-Gerüst + Infra (Docker, Supabase-Config)                                                                                                 | ✅                                                                         |
 | FastAPI `core/` (Config, Logging, Supabase, Auth ES256/JWKS)                                                                                      | ✅                                                                         |
-| 24 Vertical Slices angelegt                                                                                                                       | ✅                                                                         |
+| 26 Vertical Slices angelegt                                                                                                                       | ✅                                                                         |
 | `travel_agencies` (Reisebüro-Kartei: Verträge nach Jahren, Saison-Preise, Stop-Sell-Adressat)                                                     | ✅                                                                         |
 | `auth`-Slice voll (Register/Login/Me · Rollen · Capability-Matrix)                                                                                | ✅                                                                         |
 | `calendar`-Slice (Verfügbarkeit, Sperrung, Preis-Override)                                                                                        | ✅                                                                         |

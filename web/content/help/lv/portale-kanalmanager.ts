@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Atsauksmes no visiem kanāliem",
+          excerpt: "Portālu un myBestDays atsauksmes sanāk vienā sarakstā — tur arī atbildat.",
+          updated: "Atjaunināts: 2026. gada augusts",
+          body: [
+            { type: "h2", text: "Viens saraksts visiem kanāliem" },
+            {
+              type: "p",
+              text: "Sadaļā /bewertungen redzat katru savu īpašumu atsauksmi vienā vietā: gan portālu (Booking.com, Airbnb, Expedia), gan myBestDays tirgus. Portāli vērtē 10 ballēs, myBestDays 5 zvaigznēs — tiek rādītas zvaigznes, bet blakus sākotnējais vērtējums, lai nekas neizskatītos sagrozīts.",
+            },
+            { type: "h2", text: "Kā atbildēt uz atsauksmi" },
+            {
+              type: "steps",
+              items: [
+                "Atveriet /bewertungen un, ja vajag, filtrējiet pēc “Tikai neatbildētās”",
+                "Pie atsauksmes noklikšķiniet “Atbildēt” un uzrakstiet savu atbildi",
+                "Nosūtiet — portālā atbilde vispirms nonāk tur un tikai pēc tam parādās šeit kā atbildēta",
+              ],
+            },
+            { type: "h2", text: "Ko vēl redzat" },
+            {
+              type: "ul",
+              items: [
+                "Vidējo vērtējumu, skaitu un atbilžu īpatsvaru pa kanāliem kā rādītājus",
+                "“Vēl nav publicēta”: otra puse vēl nav vērtējusi un rit 14 dienu termiņš",
+                "“Atbildes termiņš beidzies”: portāls vairs nepieņem atbildi",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Portālu atsauksmes redzat tikai jūs. myBestDays tirgū un savā tīmekļa vietnē parādās vienīgi jūsu paša apstiprinātās myBestDays atsauksmes — Booking.com un Airbnb atļauj savu atsauksmju pārpublicēšanu tikai ierobežoti.",
+            },
+          ],
+        },
       ],
     },
   ],

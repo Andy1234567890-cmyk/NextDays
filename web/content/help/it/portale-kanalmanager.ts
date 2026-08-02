@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Recensioni di tutti i canali",
+          excerpt: "Le recensioni dei portali e di myBestDays confluiscono in un unico elenco — ed è lì che rispondi.",
+          updated: "Aggiornato: agosto 2026",
+          body: [
+            { type: "h2", text: "Un elenco per tutti i canali" },
+            {
+              type: "p",
+              text: "In /bewertungen vede ogni recensione dei suoi alloggi in un unico posto: quelle dei portali (Booking.com, Airbnb, Expedia) e quelle del marketplace myBestDays. I portali valutano su 10, myBestDays su 5 stelle — vengono mostrate le stelle, con accanto il voto originale, così nulla appare distorto.",
+            },
+            { type: "h2", text: "Rispondere a una recensione" },
+            {
+              type: "steps",
+              items: [
+                "Apra /bewertungen e filtri all’occorrenza su «Solo senza risposta»",
+                "Clicchi su «Rispondi» sulla recensione e scriva la sua risposta",
+                "Invii — per un portale la risposta va prima lì e solo dopo compare qui come risposta data",
+              ],
+            },
+            { type: "h2", text: "Cos’altro vede" },
+            {
+              type: "ul",
+              items: [
+                "Media, numero e tasso di risposta per canale come indicatori",
+                "«Non ancora pubblicata»: l’altra parte non ha ancora recensito e i 14 giorni scorrono",
+                "«Termine di risposta scaduto»: il portale non accetta più una risposta",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Le recensioni dei portali sono visibili solo a lei. Sul marketplace myBestDays e sul suo sito compaiono esclusivamente le sue recensioni myBestDays verificate — Booking.com e Airbnb consentono la ripubblicazione delle loro recensioni solo in misura limitata.",
+            },
+          ],
+        },
       ],
     },
   ],

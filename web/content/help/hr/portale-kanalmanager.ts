@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Ocjene svih kanala",
+          excerpt: "Ocjene s portala i s myBestDaysa sastaju se u jednom popisu — tamo i odgovarate.",
+          updated: "Stanje: kolovoz 2026.",
+          body: [
+            { type: "h2", text: "Jedan popis za sve kanale" },
+            {
+              type: "p",
+              text: "Na /bewertungen vidite svaku ocjenu svojih objekata na jednom mjestu: one s portala (Booking.com, Airbnb, Expedia) i one s tržnice myBestDays. Portali ocjenjuju do 10, myBestDays do 5 zvjezdica — prikazuju se zvjezdice, a uz njih izvorna ocjena, kako ništa ne bi izgledalo iskrivljeno.",
+            },
+            { type: "h2", text: "Kako odgovoriti na ocjenu" },
+            {
+              type: "steps",
+              items: [
+                "Otvorite /bewertungen i po potrebi filtrirajte na „Samo bez odgovora\"",
+                "Kod ocjene kliknite „Odgovori\" i napišite svoj odgovor",
+                "Pošaljite — kod portala odgovor prvo ide tamo i tek se nakon toga ovdje prikazuje kao odgovoren",
+              ],
+            },
+            { type: "h2", text: "Što još vidite" },
+            {
+              type: "ul",
+              items: [
+                "Prosjek, broj i stopu odgovora po kanalu kao pokazatelje",
+                "„Još nije objavljeno\": druga strana još nije ocijenila, a rok od 14 dana teče",
+                "„Rok za odgovor je istekao\": portal više ne prima odgovor",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Ocjene portala vidite samo vi. Na tržnici myBestDays i na vlastitoj internetskoj stranici prikazuju se isključivo vaše vlastite, provjerene myBestDays ocjene — Booking.com i Airbnb dopuštaju ponovno objavljivanje svojih ocjena samo ograničeno.",
+            },
+          ],
+        },
       ],
     },
   ],

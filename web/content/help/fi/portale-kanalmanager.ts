@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Arvostelut kaikista kanavista",
+          excerpt: "Portaalien ja myBestDaysin arvostelut kohtaavat yhdessä listassa — siinä myös vastaat.",
+          updated: "Päivitetty: elokuu 2026",
+          body: [
+            { type: "h2", text: "Yksi lista kaikille kanaville" },
+            {
+              type: "p",
+              text: "Osoitteessa /bewertungen näet jokaisen kohteitasi koskevan arvostelun yhdessä paikassa: portaalien (Booking.com, Airbnb, Expedia) ja myBestDays-markkinapaikan. Portaalit arvioivat asteikolla 10, myBestDays 5 tähdellä — tähdet näytetään ja niiden vieressä alkuperäinen arvosana, jotta mikään ei vaikuta vääristyneeltä.",
+            },
+            { type: "h2", text: "Näin vastaat arvosteluun" },
+            {
+              type: "steps",
+              items: [
+                "Avaa /bewertungen ja suodata tarvittaessa ”Vain vastaamattomat”",
+                "Napsauta arvostelun kohdalla ”Vastaa” ja kirjoita vastauksesi",
+                "Lähetä — portaalissa vastaus menee ensin sinne ja näkyy vasta sen jälkeen täällä vastattuna",
+              ],
+            },
+            { type: "h2", text: "Mitä muuta näet" },
+            {
+              type: "ul",
+              items: [
+                "Keskiarvon, määrän ja vastausprosentin kanavakohtaisina tunnuslukuina",
+                "”Ei vielä julkaistu”: toinen osapuoli ei ole vielä arvostellut ja 14 päivän määräaika on käynnissä",
+                "”Vastausaika umpeutui”: portaali ei enää ota vastaan vastausta",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Portaalien arvostelut näkyvät vain sinulle. myBestDays-markkinapaikalla ja omilla verkkosivuillasi näytetään yksinomaan omat, vahvistetut myBestDays-arvostelusi — Booking.com ja Airbnb sallivat arvostelujensa uudelleenjulkaisun vain rajoitetusti.",
+            },
+          ],
+        },
       ],
     },
   ],

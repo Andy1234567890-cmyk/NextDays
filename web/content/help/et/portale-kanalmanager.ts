@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Arvustused kõigist kanalitest",
+          excerpt: "Portaalide ja myBestDaysi arvustused koonduvad ühte loendisse — sealt ka vastate.",
+          updated: "Uuendatud: august 2026",
+          body: [
+            { type: "h2", text: "Üks loend kõigi kanalite jaoks" },
+            {
+              type: "p",
+              text: "Aadressil /bewertungen näete iga oma kohtade arvustust ühes kohas: portaalide (Booking.com, Airbnb, Expedia) ja myBestDaysi turu omi. Portaalid hindavad 10 palli, myBestDays 5 tärni skaalal — kuvatakse tärnid ja nende kõrval algne hinne, et miski ei näiks moonutatud.",
+            },
+            { type: "h2", text: "Kuidas arvustusele vastata" },
+            {
+              type: "steps",
+              items: [
+                "Avage /bewertungen ja filtreerige vajadusel „Ainult vastamata“",
+                "Klõpsake arvustuse juures „Vasta“ ja kirjutage oma vastus",
+                "Saatke — portaali puhul läheb vastus kõigepealt sinna ja alles seejärel kuvatakse see siin vastatuna",
+              ],
+            },
+            { type: "h2", text: "Mida veel näete" },
+            {
+              type: "ul",
+              items: [
+                "Keskmise, arvu ja vastamismäära kanalite kaupa näitajatena",
+                "„Veel avaldamata“: teine pool pole veel arvustanud ja 14-päevane tähtaeg kestab",
+                "„Vastamise tähtaeg möödus“: portaal ei võta enam vastust vastu",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Portaalide arvustused on nähtavad ainult teile. myBestDaysi turul ja teie enda veebilehel kuvatakse üksnes teie enda kinnitatud myBestDaysi arvustused — Booking.com ja Airbnb lubavad oma arvustuste taasavaldamist vaid piiratult.",
+            },
+          ],
+        },
       ],
     },
   ],

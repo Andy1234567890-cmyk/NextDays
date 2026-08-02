@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Bewertungen aller Kanäle",
+          excerpt: "Bewertungen der Portale und von myBestDays laufen in einer Liste zusammen — dort antworten Sie auch.",
+          updated: "Stand: August 2026",
+          body: [
+            { type: "h2", text: "Eine Liste für alle Kanäle" },
+            {
+              type: "p",
+              text: "Unter /bewertungen sehen Sie jede Bewertung Ihrer Objekte an einer Stelle: die der Portale (Booking.com, Airbnb, Expedia) und die vom myBestDays-Marktplatz. Die Portale rechnen auf 10, myBestDays auf 5 Sterne — angezeigt werden Sterne, die ursprüngliche Note steht daneben, damit nichts verfälscht wirkt.",
+            },
+            { type: "h2", text: "Auf eine Bewertung antworten" },
+            {
+              type: "steps",
+              items: [
+                "Öffnen Sie /bewertungen und filtern Sie bei Bedarf auf „Nur unbeantwortete\"",
+                "Klicken Sie an der Bewertung auf „Antworten\" und schreiben Sie Ihre Antwort",
+                "Senden — bei einem Portal geht die Antwort zuerst dorthin und erscheint erst danach hier als beantwortet",
+              ],
+            },
+            { type: "h2", text: "Was Sie außerdem sehen" },
+            {
+              type: "ul",
+              items: [
+                "Durchschnitt, Anzahl und Antwortquote je Kanal als Kennzahlen",
+                "„Noch nicht veröffentlicht\": die Gegenseite hat noch nicht bewertet und die 14-Tage-Frist läuft",
+                "„Antwortfrist abgelaufen\": das Portal nimmt keine Antwort mehr an",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Bewertungen der Portale sind nur für Sie sichtbar. Auf dem myBestDays-Marktplatz und auf Ihrer eigenen Website erscheinen ausschließlich Ihre eigenen, verifizierten myBestDays-Bewertungen — Booking.com und Airbnb erlauben das Weiterveröffentlichen ihrer Bewertungen nur eingeschränkt.",
+            },
+          ],
+        },
       ],
     },
   ],

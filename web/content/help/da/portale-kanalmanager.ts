@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Anmeldelser fra alle kanaler",
+          excerpt: "Anmeldelser fra portalerne og fra myBestDays samles i én liste — dér svarer du også.",
+          updated: "Opdateret: august 2026",
+          body: [
+            { type: "h2", text: "Én liste til alle kanaler" },
+            {
+              type: "p",
+              text: "Under /bewertungen ser du hver anmeldelse af dine boliger på ét sted: dem fra portalerne (Booking.com, Airbnb, Expedia) og dem fra myBestDays-markedspladsen. Portalerne bedømmer på 10, myBestDays på 5 stjerner — der vises stjerner, med den oprindelige karakter ved siden af, så intet virker forvrænget.",
+            },
+            { type: "h2", text: "Svar på en anmeldelse" },
+            {
+              type: "steps",
+              items: [
+                "Åbn /bewertungen og filtrér eventuelt på „Kun ubesvarede\"",
+                "Klik på „Svar\" ved anmeldelsen og skriv dit svar",
+                "Send — ved en portal går svaret først dertil og vises først derefter her som besvaret",
+              ],
+            },
+            { type: "h2", text: "Hvad du desuden ser" },
+            {
+              type: "ul",
+              items: [
+                "Gennemsnit, antal og svarprocent pr. kanal som nøgletal",
+                "„Endnu ikke offentliggjort\": modparten har ikke anmeldt endnu, og 14-dagesfristen løber",
+                "„Svarfristen er udløbet\": portalen tager ikke længere imod et svar",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Portalernes anmeldelser er kun synlige for dig. På myBestDays-markedspladsen og på din egen hjemmeside vises udelukkende dine egne, verificerede myBestDays-anmeldelser — Booking.com og Airbnb tillader kun i begrænset omfang, at deres anmeldelser gengives.",
+            },
+          ],
+        },
       ],
     },
   ],

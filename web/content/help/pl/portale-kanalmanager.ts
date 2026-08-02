@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Opinie ze wszystkich kanałów",
+          excerpt: "Opinie z portali i z myBestDays trafiają do jednej listy — tam też odpowiadasz.",
+          updated: "Stan: sierpień 2026",
+          body: [
+            { type: "h2", text: "Jedna lista dla wszystkich kanałów" },
+            {
+              type: "p",
+              text: "W /bewertungen widzisz każdą opinię o swoich obiektach w jednym miejscu: te z portali (Booking.com, Airbnb, Expedia) i te z rynku myBestDays. Portale oceniają w skali 10, myBestDays w 5 gwiazdkach — pokazywane są gwiazdki, a obok pierwotna ocena, aby nic nie wyglądało na zafałszowane.",
+            },
+            { type: "h2", text: "Jak odpowiedzieć na opinię" },
+            {
+              type: "steps",
+              items: [
+                "Otwórz /bewertungen i w razie potrzeby ustaw filtr „Tylko bez odpowiedzi”",
+                "Kliknij przy opinii „Odpowiedz” i napisz swoją odpowiedź",
+                "Wyślij — w przypadku portalu odpowiedź trafia najpierw tam i dopiero potem pojawia się tutaj jako udzielona",
+              ],
+            },
+            { type: "h2", text: "Co jeszcze widzisz" },
+            {
+              type: "ul",
+              items: [
+                "Średnia, liczba i odsetek odpowiedzi w podziale na kanały",
+                "„Jeszcze nieopublikowana”: druga strona jeszcze nie oceniła, a 14-dniowy termin biegnie",
+                "„Termin odpowiedzi minął”: portal nie przyjmuje już odpowiedzi",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Opinie z portali widzisz tylko Ty. Na rynku myBestDays i na własnej stronie pojawiają się wyłącznie Twoje własne, zweryfikowane opinie myBestDays — Booking.com i Airbnb zezwalają na ponowne publikowanie swoich opinii tylko w ograniczonym zakresie.",
+            },
+          ],
+        },
       ],
     },
   ],

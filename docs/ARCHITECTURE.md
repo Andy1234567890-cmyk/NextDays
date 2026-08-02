@@ -96,7 +96,7 @@ C4Container
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(builder, "Website-Renderer", "Next.js (builder/, Port 3200)", "Öffentliche White-Label-Websites der Vermieter (Page-Builder); Host→Tenant über den by-domain-Resolver")
         Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 29 Vertical Slices unter /api/v1; Redis-Rate-Limiter als ASGI-Middleware (429 + Retry-After)")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "181 Tabellen (Migrationen 0001–0265), Multi-Tenant, RLS, tenant_id")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "182 Tabellen (Migrationen 0001–0267), Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer + Rate-Limiter-Zähler")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
@@ -174,7 +174,7 @@ flowchart TB
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 181 Tabellen (Migrationen 0001–0265), RLS")]
+    DB[("Postgres — 182 Tabellen (Migrationen 0001–0267), RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -360,14 +360,14 @@ erDiagram
 **Marktplatz-Tabellen (angelegt, mit RLS; Geschäftslogik in Phase 2):** `portal_guests`,
 `reviews`, `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 Das Kern-Diagramm oben zeigt bewusst nur die zentralen Entitäten; alle übrigen der
-**181 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
+**182 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
 
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
 
 ### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009 ff.)
 
-Das Modell ist auf **181 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
+Das Modell ist auf **182 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
 echte Supabase-Projekt. Zur Lesbarkeit hier nach Bereich gruppiert (Details in den
 jeweiligen Migrationen):
 
@@ -902,7 +902,7 @@ Detail-/Hilfstabellen (mit RLS, tenant-scoped):
 | Objekte      | `property_photos` (`0061`)                                                                             | Objekt-Fotos (mehrsprachige Caption, Cover, Sortierung)                           |
 | Page-Builder | `tenant_site_config`, `tenant_custom_domains` (`0086`), `site_pages`, `site_blocks` (`0087`)           | White-Label-Website je Tenant: Branding, Custom-Domains, Seiten + Blöcke (s. §12) |
 | Reisebüros   | `travel_agencies`, `travel_agency_contacts`, `travel_agency_contracts`, `travel_agency_rates` (`0088`) | Partner-Kartei mit Verträgen + Saison-Preisen                                     |
-| Bewertungen  | `reviews` (`0006`/`0181`/`0186`), `guest_reviews_by_host` (`0186`), `channex_review` (`0262`), `review_automation`, `review_automation_log` (`0263`) | Gast→Objekt (öffentlich lesbar über Spalten-GRANT), Betrieb→Gast (nur service_role), Portal-Bewertungen (SELECT fürs Realtime-Abo, Schreiben nur Server), Automatik + Idempotenz-Log (voll gesperrt) |
+| Bewertungen  | `reviews` (`0006`/`0181`/`0186`), `guest_reviews_by_host` (`0186`), `channex_review` (`0262`), `review_automation`, `review_automation_log` (`0263`), `guest_review_queue` (`0267`) | Gast→Objekt (öffentlich lesbar über Spalten-GRANT), Betrieb→Gast (nur service_role), Portal-Bewertungen (SELECT fürs Realtime-Abo, Schreiben nur Server), Automatik + Idempotenz-Log (voll gesperrt) |
 
 ---
 
@@ -1419,7 +1419,7 @@ Beide neuen Tabellen sind für `anon`/`authenticated` gesperrt (`revoke all` +
 `as restrictive for all using (false)`, Wurzel 6) und haben bewusst **kein**
 Realtime-Abo — ein Abo darauf wäre eine stumme Attrappe.
 
-**Bewertungen über alle Kanäle (Migrationen `0262`/`0263`/`0266`):**
+**Bewertungen über alle Kanäle (Migrationen `0262`/`0263`/`0266`/`0267`):**
 
 Bis dahin lagen die Bewertungen in zwei Welten, die sich nicht kannten: die
 eigenen Marktplatz-Bewertungen in `public.reviews` (Skala 1..5, Zwei-Wege mit
@@ -1446,13 +1446,28 @@ Portal-Bewertungen, die `ota_extras.py` bei jedem Aufruf LIVE durchgereicht hat.
   `reviews/publication.py`.
 - **Automatik** (`0263`): Betrieb bewertet den Gast X Tage nach Abreise
   (optional erst ab einer Mindest-Gastnote) und/oder erinnert den Gast per
-  E-Mail an seine myBestDays-Bewertung. Jeder Vorgang wird in
-  `review_automation_log` **beansprucht, bevor** der Seiteneffekt passiert
-  (`UNIQUE(reservation_id, kind)`) — eine abgeschickte öffentliche Bewertung
-  lässt sich nicht zurücknehmen (Wurzel 2). Ausgeführt vom Worker-Tick
+  E-Mail an seine myBestDays-Bewertung. Ausgeführt vom Worker-Tick
   (`REVIEWS_TICK_SECONDS`, stündlich), der zugleich den Fristablauf
   veröffentlicht — bis dahin war `publish_overdue` nirgends geplant, verdeckte
   Bewertungen blieben also für immer verdeckt.
+- **Warteschlange** (`guest_review_queue`, `0267`): die Automatik lief anfangs
+  BLIND — sie berechnete die fälligen Gäste und schickte im selben Atemzug ab.
+  Der Betrieb sah nichts, konnte nichts anpassen und nichts auslassen, und eine
+  abgeschickte öffentliche Bewertung lässt sich bei keinem Portal zurücknehmen.
+  Seitdem legt der Tick nur einen **Entwurf** an (`status='geplant'`, mit
+  `send_at` und — wo bekannt — `expires_at`); die Oberfläche zeigt die Restfrist
+  und bietet Ändern · Überspringen · Sofort abschicken. Erst ein späterer Tick
+  versendet. Der Status wird VOR dem Versand beansprucht (Wurzel 2), ein
+  Fehlschlag landet als `fehler` samt Grund in derselben Zeile (Wurzel 5), ein
+  übersprungener Eintrag BLEIBT stehen (sonst legte ihn der nächste Tick neu
+  an). Portal-Entwürfe nur für Airbnb; kein Entwurf, dessen Fenster schon zu
+  ist. Voll gesperrt für `anon`/`authenticated` und bewusst **ohne** Realtime —
+  ein Abo wäre ohne Grant eine Attrappe, und die Schlange ändert sich stündlich.
+- **Qualitäts-Dashboard** (`GET /reviews/quality`): Ø, 5-Sterne-Quote,
+  Antwortquote, Kategorie-Durchschnitte, Tagesverlauf und die Rangliste der
+  Objekte (schwächstes zuerst) über einen Zeitraum ≤ 366 Tage. Beide Skalen auf
+  5 Sterne normalisiert; Tage ohne Bewertung bleiben OHNE Wert, statt als
+  Nullpunkt einen Einbruch vorzutäuschen.
 - **Website-Block** (`0266`): Blocktyp `reviews` im Page-Builder zeigt die
   eigenen, verifizierten myBestDays-Bewertungen auf der Betriebs-Website
   (gespeist vom neuen öffentlichen `guest-reviews/tenant/{id}`).

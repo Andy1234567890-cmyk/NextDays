@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Atsiliepimai iš visų kanalų",
+          excerpt: "Portalų ir myBestDays atsiliepimai susieina viename sąraše — ten ir atsakote.",
+          updated: "Atnaujinta: 2026 m. rugpjūtis",
+          body: [
+            { type: "h2", text: "Vienas sąrašas visiems kanalams" },
+            {
+              type: "p",
+              text: "Skyriuje /bewertungen matote kiekvieną savo objektų atsiliepimą vienoje vietoje: ir portalų (Booking.com, Airbnb, Expedia), ir myBestDays rinkos. Portalai vertina 10 balų, myBestDays 5 žvaigždučių skale — rodomos žvaigždutės, o šalia jų pirminis įvertinimas, kad niekas neatrodytų iškreiptai.",
+            },
+            { type: "h2", text: "Kaip atsakyti į atsiliepimą" },
+            {
+              type: "steps",
+              items: [
+                "Atverkite /bewertungen ir, jei reikia, filtruokite pagal „Tik neatsakyti“",
+                "Prie atsiliepimo spustelėkite „Atsakyti“ ir parašykite savo atsakymą",
+                "Išsiųskite — portale atsakymas pirmiausia patenka ten ir tik po to čia rodomas kaip atsakytas",
+              ],
+            },
+            { type: "h2", text: "Ką dar matote" },
+            {
+              type: "ul",
+              items: [
+                "Vidurkį, skaičių ir atsakymų dalį pagal kanalus kaip rodiklius",
+                "„Dar nepaskelbta“: kita pusė dar neįvertino, o 14 dienų terminas tęsiasi",
+                "„Atsakymo terminas pasibaigė“: portalas atsakymo nebepriima",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Portalų atsiliepimus matote tik jūs. myBestDays rinkoje ir savo svetainėje rodomi tik jūsų patys patvirtinti myBestDays atsiliepimai — Booking.com ir Airbnb leidžia pakartotinai skelbti savo atsiliepimus tik ribotai.",
+            },
+          ],
+        },
       ],
     },
   ],

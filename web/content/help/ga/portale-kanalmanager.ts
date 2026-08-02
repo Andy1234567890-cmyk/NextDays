@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Léirmheasanna ó gach cainéal",
+          excerpt: "Tagann léirmheasanna ó na tairseacha agus ó myBestDays le chéile in aon liosta amháin — is ann a fhreagraíonn tú freisin.",
+          updated: "Nuashonraithe: Lúnasa 2026",
+          body: [
+            { type: "h2", text: "Aon liosta amháin do gach cainéal" },
+            {
+              type: "p",
+              text: "Faoi /bewertungen feiceann tú gach léirmheas ar na háiteanna atá agat in aon áit amháin: cinn ó na tairseacha (Booking.com, Airbnb, Expedia) agus cinn ó mhargadh myBestDays. Rátálann na tairseacha as 10, myBestDays as 5 réalta — taispeántar réaltaí, agus an scór bunaidh in aice leo, ionas nach mbeidh cuma shaobhadh ar aon rud.",
+            },
+            { type: "h2", text: "Freagra ar léirmheas" },
+            {
+              type: "steps",
+              items: [
+                "Oscail /bewertungen agus scag ar „Gan freagra amháin\" más mian leat",
+                "Cliceáil „Freagair\" ag an léirmheas agus scríobh do fhreagra",
+                "Seol — i gcás tairsí téann an freagra ann ar dtús agus ní thaispeántar é anseo mar fhreagartha go dtí ina dhiaidh sin",
+              ],
+            },
+            { type: "h2", text: "Cad eile a fheiceann tú" },
+            {
+              type: "ul",
+              items: [
+                "Meán, líon agus ráta freagartha de réir cainéil mar phríomhfhigiúirí",
+                "„Nach bhfuil foilsithe fós\": níor thug an taobh eile léirmheas fós agus tá an tréimhse 14 lá ag rith",
+                "„Tá an spriocdháta freagra caite\": ní ghlacann an tairseach le freagra a thuilleadh",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Ní fheiceann ach tusa léirmheasanna na dtairseach. Ar mhargadh myBestDays agus ar do shuíomh féin, ní thaispeántar ach do léirmheasanna myBestDays fíoraithe féin — ní cheadaíonn Booking.com ná Airbnb athfhoilsiú a léirmheasanna ach go teoranta.",
+            },
+          ],
+        },
       ],
     },
   ],

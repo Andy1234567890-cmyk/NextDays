@@ -320,6 +320,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Recenzii din toate canalele",
+          excerpt: "Recenziile din portaluri și de pe myBestDays se adună într-o singură listă — acolo răspunzi și tu.",
+          updated: "Actualizat: august 2026",
+          body: [
+            { type: "h2", text: "O listă pentru toate canalele" },
+            {
+              type: "p",
+              text: "În /bewertungen vedeți fiecare recenzie a proprietăților dumneavoastră într-un singur loc: cele din portaluri (Booking.com, Airbnb, Expedia) și cele de pe piața myBestDays. Portalurile notează pe 10, myBestDays pe 5 stele — se afișează stele, iar nota originală apare alături, ca nimic să nu pară denaturat.",
+            },
+            { type: "h2", text: "Cum răspundeți la o recenzie" },
+            {
+              type: "steps",
+              items: [
+                "Deschideți /bewertungen și filtrați, la nevoie, pe „Doar fără răspuns”",
+                "Apăsați „Răspunde” la recenzie și scrieți răspunsul",
+                "Trimiteți — la un portal răspunsul merge întâi acolo și abia apoi apare aici ca răspuns dat",
+              ],
+            },
+            { type: "h2", text: "Ce mai vedeți" },
+            {
+              type: "ul",
+              items: [
+                "Media, numărul și rata de răspuns pe canal, ca indicatori",
+                "„Încă nepublicată”: cealaltă parte nu a lăsat încă recenzie și termenul de 14 zile curge",
+                "„Termenul de răspuns a expirat”: portalul nu mai acceptă un răspuns",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Recenziile portalurilor sunt vizibile doar pentru dumneavoastră. Pe piața myBestDays și pe site-ul propriu apar exclusiv recenziile dumneavoastră myBestDays verificate — Booking.com și Airbnb permit republicarea recenziilor lor doar limitat.",
+            },
+          ],
+        },
       ],
     },
   ],

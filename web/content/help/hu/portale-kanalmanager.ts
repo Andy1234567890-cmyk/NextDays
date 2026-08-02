@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Értékelések minden csatornáról",
+          excerpt: "A portálok és a myBestDays értékelései egy listában futnak össze — ott is válaszol.",
+          updated: "Frissítve: 2026. augusztus",
+          body: [
+            { type: "h2", text: "Egy lista minden csatornához" },
+            {
+              type: "p",
+              text: "A /bewertungen alatt egy helyen látja ingatlanjai összes értékelését: a portálokéit (Booking.com, Airbnb, Expedia) és a myBestDays piactérét is. A portálok 10-es, a myBestDays 5 csillagos skálán értékel — csillagok láthatók, mellettük az eredeti jegy, hogy semmi ne tűnjön elferdítettnek.",
+            },
+            { type: "h2", text: "Válasz egy értékelésre" },
+            {
+              type: "steps",
+              items: [
+                "Nyissa meg a /bewertungen oldalt, és szükség esetén szűrjön a „Csak megválaszolatlanok\" beállításra",
+                "Az értékelésnél kattintson a „Válasz\" gombra, és írja meg a válaszát",
+                "Küldés — portál esetén a válasz először oda kerül, és csak ezután jelenik meg itt megválaszoltként",
+              ],
+            },
+            { type: "h2", text: "Mit lát még" },
+            {
+              type: "ul",
+              items: [
+                "Átlag, darabszám és válaszadási arány csatornánként mutatóként",
+                "„Még nincs közzétéve\": a másik fél még nem értékelt, és fut a 14 napos határidő",
+                "„A válaszadási határidő lejárt\": a portál már nem fogad választ",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "A portálok értékelései csak Önnek láthatók. A myBestDays piactéren és a saját weboldalán kizárólag a saját, ellenőrzött myBestDays-értékelései jelennek meg — a Booking.com és az Airbnb csak korlátozottan engedi értékeléseik újraközlését.",
+            },
+          ],
+        },
       ],
     },
   ],

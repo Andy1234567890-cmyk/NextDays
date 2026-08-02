@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Les avis de tous les canaux",
+          excerpt: "Les avis des portails et de myBestDays se rejoignent dans une seule liste — c’est là que vous répondez.",
+          updated: "Mise à jour : août 2026",
+          body: [
+            { type: "h2", text: "Une liste pour tous les canaux" },
+            {
+              type: "p",
+              text: "Sous /bewertungen, vous voyez chaque avis sur vos logements au même endroit : ceux des portails (Booking.com, Airbnb, Expedia) et ceux de la place de marché myBestDays. Les portails notent sur 10, myBestDays sur 5 étoiles — les étoiles sont affichées, la note d’origine à côté, pour que rien ne paraisse faussé.",
+            },
+            { type: "h2", text: "Répondre à un avis" },
+            {
+              type: "steps",
+              items: [
+                "Ouvrez /bewertungen et filtrez si besoin sur « Sans réponse uniquement »",
+                "Cliquez sur « Répondre » au niveau de l’avis et rédigez votre réponse",
+                "Envoyez — pour un portail, la réponse y est transmise d’abord et n’apparaît ici comme répondue qu’ensuite",
+              ],
+            },
+            { type: "h2", text: "Ce que vous voyez également" },
+            {
+              type: "ul",
+              items: [
+                "Moyenne, nombre et taux de réponse par canal en indicateurs",
+                "« Pas encore publié » : l’autre partie n’a pas encore laissé d’avis et le délai de 14 jours court",
+                "« Délai de réponse expiré » : le portail n’accepte plus de réponse",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Les avis des portails ne sont visibles que par vous. Sur la place de marché myBestDays et sur votre propre site, seuls vos avis myBestDays vérifiés apparaissent — Booking.com et Airbnb n’autorisent la republication de leurs avis que de manière limitée.",
+            },
+          ],
+        },
       ],
     },
   ],

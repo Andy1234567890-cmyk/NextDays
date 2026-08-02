@@ -28,6 +28,19 @@ Buchungen kommen über den **Booking-Revisions-Feed** (paginiert, 100/Seite,
 Tenant zu; Revisionen ohne aktives Mapping werden übersprungen und NICHT
 ge-ackt (Mandantentrennung / Selbstheilung nach Mapping).
 
+**Zahlungsweg → Bezahlt-Status (0240/0268):** Kein Portal liefert ein eigenes
+„bezahlt"-Feld — übermittelt wird nur der Zahlungsweg (`payment_collect`
+= „ota" heißt laut Aggregator-Doku „guest already pay at OTA"). Der Import
+leitet daraus den Status ab (Branchenstandard, vgl. Hostaway/Beds24): bei
+`payment_collect='ota'` — oder einer virtuellen Kreditkarte
+(`guarantee.is_virtual`, Booking.com lässt `payment_collect` oft leer) —
+werden `paid_amount = total_amount` und `payment_status='paid'` gesetzt;
+Modifikationen ziehen den Betrag nach, ein expliziter Wechsel auf
+`property` nimmt nur den abgeleiteten Zustand zurück, eine Folge-Revision
+ohne das Feld ist KEIN Wechsel (zieht aber eine Preisänderung nach). Auch
+ein Storno nimmt den abgeleiteten Zustand zurück (das Portal erstattet).
+Nach Check-out sind die Zahlfelder eingefroren (Schlussrechnung).
+
 ## Webhook-Ereignisse (`channex_webhook_event`, Migration 0132)
 
 Abonniert ist das volle Event-Set (inkl. `booking_unmapped_room/rate`,

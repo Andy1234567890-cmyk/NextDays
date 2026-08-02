@@ -27,7 +27,7 @@ damit findet der Support den Fall im Backoffice wieder. Zentrale Handler in
 
 ## Slices
 
-Jeder der 24 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
+Jeder der 26 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 
 | Slice            | Health-Endpoint                                                              |
 | ---------------- | ---------------------------------------------------------------------------- |
@@ -40,6 +40,8 @@ Jeder der 24 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | reservations     | `GET /api/v1/reservations/health`                                            |
 | guests           | `GET /api/v1/guests/health`                                                  |
 | travel_agencies  | `GET /api/v1/travel-agencies/health`                                         |
+| reviews          | `GET /api/v1/reviews/health` (Bewertungs-Cockpit über alle Kanäle, s.u.)     |
+| guest_reviews    | `GET /api/v1/guest-reviews/health` (myBestDays-Gast-Seite, s.u.)             |
 | inbox            | `GET /api/v1/inbox/health`                                                   |
 | whatsapp         | `GET /api/v1/whatsapp/health` (Meta Cloud API, s.u.)                         |
 | payments         | `GET /api/v1/payments/health` (Stripe Connect + Zahlungen, s.u.)             |
@@ -1180,6 +1182,88 @@ Redis-Ausfall gilt fail-open, für sensible Pfade (Auth/Payments) fail-closed
 > Die übrigen Slices (properties, calendar, …) werden nach dem auth-Muster
 > ausgebaut. Diese Übersicht wird dabei fortgeschrieben.
 
+## reviews — Bewertungs-Cockpit des Betriebs (myNextDays)
+
+EINE Liste über ALLE Kanäle: die eigenen Marktplatz-Bewertungen aus
+`public.reviews` (myBestDays, Skala 1..5) und die Portal-Bewertungen aus
+`public.channex_review` (Booking.com/Airbnb/Expedia, Skala 0..10, Migration
+`0262`). Beides wird auf `UnifiedReview` normalisiert: die **Rohnote bleibt
+mitsamt ihrer Skala** erhalten (`score` + `scale`), `score_5` ist die für Sterne
+umgerechnete Fassung. Fehlt eine Note, bleibt sie `null` — kein Ersatzwert.
+
+Lesen verlangt `view_reviews`, jede Aktion `manage_reviews`. Eigentümer sehen nur
+Bewertungen ihrer Objekte (Liste **und** Detail) und sind read-only (§4.2).
+
+| Methode      | Pfad                                          | Zweck                                                                                            |
+| ------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `GET`        | `/api/v1/reviews?source&property_id&channel_code&unanswered&limit&offset` | Vereinte Liste, neueste zuerst (`limit` ≤ 100)                         |
+| `GET`        | `/api/v1/reviews/summary`                     | Kennzahlen je Kanal: Anzahl, Ø (auf 5 normalisiert), unbeantwortet, Antwortquote                  |
+| `GET`        | `/api/v1/reviews/{source}/{id}`               | Detail (`source` = `marketplace`\|`ota`) — gleicher Objekt-Scope wie die Liste                     |
+| `PUT`        | `/api/v1/reviews/{source}/{id}/reply`         | Öffentlich antworten. Beim Portal geht die Antwort ZUERST dorthin, erst nach Erfolg in den eigenen Bestand |
+| `DELETE`     | `/api/v1/reviews/marketplace/{id}/reply`      | Antwort entfernen — nur auf dem Marktplatz (Portale kennen kein Zurücknehmen) → `204`             |
+| `POST`       | `/api/v1/reviews/guest-rating`                | Betrieb bewertet einen Gast (Zwei-Wege, myBestDays). Idempotent über `UNIQUE(reservation_id)` → `409` |
+| `GET`        | `/api/v1/reviews/guest-rating/{reservation_id}` | Bereits abgegebene Betrieb→Gast-Bewertung                                                       |
+| `POST`       | `/api/v1/reviews/ota/{id}/guest-review`       | Gast beim Portal bewerten (nur Airbnb). Zweiter Versuch → `409`                                  |
+| `GET`        | `/api/v1/reviews/quality?from&to`             | Qualitäts-Kennzahlen: Ø, 5-Sterne-Quote, Antwortquote, Kategorien, Tagesverlauf, Rangliste je Objekt (Spanne ≤ 366 Tage) |
+| `GET`        | `/api/v1/reviews/queue?status&limit&offset`   | Warteschlange der geplanten Gast-Bewertungen, nächste Fälligkeit zuerst (Migration `0267`)       |
+| `PATCH`      | `/api/v1/reviews/queue/{id}`                  | Inhalt eines geplanten Eintrags ändern (nur im Status `geplant`, sonst `409`)                    |
+| `POST`       | `/api/v1/reviews/queue/{id}/skip`             | Diesen Gast nicht bewerten — Eintrag bleibt als `uebersprungen` stehen                           |
+| `POST`       | `/api/v1/reviews/queue/{id}/send`             | Jetzt abschicken statt auf die Fälligkeit zu warten. Unumkehrbar                                 |
+| `GET/PUT`    | `/api/v1/reviews/automation`                  | Automatik je Betrieb (Migration `0263`)                                                          |
+| `POST`       | `/api/v1/reviews/sync`                        | Portal-Bewertungen jetzt abgleichen                                                              |
+| `POST`       | `/api/v1/reviews/tick`                        | Cron: Fristablauf veröffentlichen + spiegeln + Automatik (`X-Internal-Cron-Secret`)              |
+
+**Portal-Anbindung:** `channel_manager/reviews_sync.py` spiegelt die Channex-
+Reviews-API in `channex_review` (Upsert auf `channex_review_id`). Der Webhook
+(`review`/`updated_review`, im `event_mask` seit Beginn) ist nur der **Auslöser** —
+der Stand wird per `GET /reviews/{id}` nachgezogen, weil Channex keine Reihenfolge
+zusichert. Eigene Arbeitsfelder (`is_read`, `is_archived`, `assigned_user_id`)
+werden beim Sync NICHT zurückgesetzt. Backstop: `REVIEWS_TICK_SECONDS` im Worker
+(stündlich) — fängt verlorene Webhooks ab.
+
+**Automatik (`review_automation`) + Warteschlange (`guest_review_queue`, 0267):**
+Die Automatik SCHICKT nicht ab, sie PLANT: der Tick legt einen Entwurf mit
+Fälligkeit und Restfrist an, der Betrieb sieht ihn, ändert ihn, überspringt ihn
+oder schickt ihn sofort — eine abgeschickte öffentliche Bewertung lässt sich bei
+keinem Portal zurücknehmen. Erst ein späterer Tick versendet, was fällig und
+noch `geplant` ist. Der Status wird VOR dem Versand beansprucht (Wurzel 2);
+scheitert er, steht die Zeile auf `fehler` samt Grund statt still zu
+verschwinden. Ein übersprungener Eintrag bleibt stehen, sonst legte ihn der
+nächste Tick neu an. Portal-Entwürfe entstehen nur für **Airbnb** — Booking.com
+und Expedia kennen keine Bewertung des Gasts; kein Entwurf wird angelegt, dessen
+Fenster schon zu ist. Die Erinnerungsmail an den Gast geht dagegen direkt raus
+und wird in `review_automation_log` beansprucht
+(`UNIQUE(reservation_id, kind)`).
+
+**Sichtbarkeit (Zwei-Wege, Airbnb-Modell):** Gast→Objekt und Betrieb→Gast bleiben
+verdeckt (`published_at IS NULL`), bis beide Seiten abgegeben haben oder die
+14-Tage-Frist abläuft (`reviews/publication.py`).
+
+**Abgrenzung:** OTA-Bewertungen sind INTERN. Öffentlich (myBestDays-Marktplatz,
+Website des Betriebs) erscheinen ausschließlich eigene, verifizierte
+myBestDays-Bewertungen — Booking.com und Airbnb erlauben das Weiter-
+veröffentlichen ihrer Bewertungen nur eingeschränkt.
+
+---
+
+## guest_reviews — Bewertungen des myBestDays-Marktplatzes (Gast-Seite)
+
+| Methode | Pfad                                                     | Auth                       | Zweck                                                                        |
+| ------- | -------------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------- |
+| `GET`   | `/api/v1/guest-reviews/property/{property_id}?limit&offset` | **öffentlich**             | Maskierte Bewertungen eines Objekts + Ø/Anzahl/Kategorie-Durchschnitte        |
+| `GET`   | `/api/v1/guest-reviews/tenant/{tenant_id}?limit`         | **öffentlich**             | Dasselbe über ALLE Objekte eines Betriebs (speist den Website-Bewertungs-Block) |
+| `GET`   | `/api/v1/guest-reviews/mine`                             | Gast-JWT                   | Eigene Bewertungen — auch verdeckte (der Gast sieht seine immer)              |
+| `POST`  | `/api/v1/guest-reviews`                                  | Gast-JWT                   | Bewertung abgeben; `property_id` wird aus der Reservierung abgeleitet         |
+| `PATCH` | `/api/v1/guest-reviews/{review_id}`                       | Gast-JWT                   | Eigene Bewertung ändern (fremd → `404`)                                      |
+| `POST`  | `/api/v1/guest-reviews/publish-overdue`                   | `X-Internal-Cron-Secret`   | Einseitige Bewertungen nach der 14-Tage-Frist veröffentlichen                 |
+
+Maskierung (Wurzel 9): der öffentliche Pfad liefert nur den **Vornamen**, nie
+E-Mail, vollen Namen oder `portal_guest_id`. Abgeben setzt einen echten,
+abgeschlossenen Aufenthalt voraus (E-Mail-Match + `status`/`check_out`); der
+Zweit-Insert derselben Reservierung → `409`.
+
+---
+
 ## travel_agencies — Reisebüro-/Partner-Kartei
 
 Alle Endpunkte hinter der ..-Permission `manage_partners`. Verträge sind
@@ -1249,9 +1333,12 @@ den `builder/`-Renderer der myNextDays-Websites.
 | `DELETE` | `/api/v1/site-config/blocks/{block_id}`              | Block löschen → `204`                                                                                                |
 | `POST`   | `/api/v1/site-config/templates/apply`                | Start-Template anwenden: `{template_id}` (`bergchalet`\|`kueste`\|`stadt`) → Seitenliste; `404` unbekanntes Template |
 
-**Block-Typen (10) + Content-Validierung:** `hero` · `rich_text` · `image` ·
+**Block-Typen (11) + Content-Validierung:** `hero` · `rich_text` · `image` ·
 `gallery` · `button` · `spacer` · `contact` · `search` · `properties_grid` ·
-`featured_properties`. Der `content` wird **pro Typ** gegen ein eigenes
+`featured_properties` · `reviews` (Migration `0266`; zeigt die eigenen,
+verifizierten myBestDays-Bewertungen — `property_id` leer = alle Objekte des
+Betriebs; Portal-Bewertungen erscheinen bewusst NICHT). Der `content` wird
+**pro Typ** gegen ein eigenes
 Pydantic-Schema validiert und normalisiert (`validate_block_content`) — Felder
 außerhalb des Schemas werden verworfen, ungültiger Inhalt → `400`. Texte sind
 i18n-Objekte (`{locale: text}`). `settings` sind typunabhängig

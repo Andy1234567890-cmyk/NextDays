@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Hodnocení ze všech kanálů",
+          excerpt: "Hodnocení z portálů a z myBestDays se sbíhají v jednom seznamu — tam také odpovídáte.",
+          updated: "Stav: srpen 2026",
+          body: [
+            { type: "h2", text: "Jeden seznam pro všechny kanály" },
+            {
+              type: "p",
+              text: "V /bewertungen vidíte každé hodnocení svých objektů na jednom místě: ta z portálů (Booking.com, Airbnb, Expedia) i ta z tržiště myBestDays. Portály hodnotí na 10, myBestDays na 5 hvězdiček — zobrazují se hvězdičky a vedle nich původní známka, aby nic nepůsobilo zkresleně.",
+            },
+            { type: "h2", text: "Jak odpovědět na hodnocení" },
+            {
+              type: "steps",
+              items: [
+                "Otevřete /bewertungen a případně filtrujte na „Jen bez odpovědi\"",
+                "U hodnocení klikněte na „Odpovědět\" a napište svou odpověď",
+                "Odešlete — u portálu jde odpověď nejprve tam a teprve poté se zde zobrazí jako odpovězená",
+              ],
+            },
+            { type: "h2", text: "Co dále uvidíte" },
+            {
+              type: "ul",
+              items: [
+                "Průměr, počet a míru odpovědí podle kanálu jako ukazatele",
+                "„Ještě nezveřejněno\": druhá strana ještě nehodnotila a 14denní lhůta běží",
+                "„Lhůta pro odpověď vypršela\": portál už odpověď nepřijme",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Hodnocení z portálů vidíte jen vy. Na tržišti myBestDays a na vlastních webových stránkách se zobrazují výhradně vaše vlastní, ověřená hodnocení myBestDays — Booking.com a Airbnb povolují další zveřejňování svých hodnocení jen omezeně.",
+            },
+          ],
+        },
       ],
     },
   ],

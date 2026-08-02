@@ -318,6 +318,42 @@ export const portaleKanalmanager: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "bewertungen",
+          title: "Valoraciones de todos los canales",
+          excerpt: "Las valoraciones de los portales y de myBestDays se reúnen en una sola lista — ahí también respondes.",
+          updated: "Actualizado: agosto de 2026",
+          body: [
+            { type: "h2", text: "Una lista para todos los canales" },
+            {
+              type: "p",
+              text: "En /bewertungen ve cada valoración de sus alojamientos en un solo lugar: las de los portales (Booking.com, Airbnb, Expedia) y las del mercado myBestDays. Los portales puntúan sobre 10, myBestDays sobre 5 estrellas — se muestran estrellas y, al lado, la nota original, para que nada parezca distorsionado.",
+            },
+            { type: "h2", text: "Responder a una valoración" },
+            {
+              type: "steps",
+              items: [
+                "Abra /bewertungen y filtre si lo desea por «Solo sin responder»",
+                "Pulse «Responder» en la valoración y escriba su respuesta",
+                "Envíe — en un portal la respuesta va primero allí y solo después aparece aquí como respondida",
+              ],
+            },
+            { type: "h2", text: "Qué más ve" },
+            {
+              type: "ul",
+              items: [
+                "Media, número y tasa de respuesta por canal como indicadores",
+                "«Aún no publicada»: la otra parte todavía no ha valorado y el plazo de 14 días sigue corriendo",
+                "«Plazo de respuesta vencido»: el portal ya no acepta respuesta",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Las valoraciones de los portales solo son visibles para usted. En el mercado myBestDays y en su propia web aparecen únicamente sus valoraciones myBestDays verificadas — Booking.com y Airbnb permiten la republicación de sus valoraciones solo de forma limitada.",
+            },
+          ],
+        },
       ],
     },
   ],
