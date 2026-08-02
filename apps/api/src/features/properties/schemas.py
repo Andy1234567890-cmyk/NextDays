@@ -178,6 +178,12 @@ class PropertyBase(BaseModel):
     country: str | None = None
     lat: float | None = None
     lng: float | None = None
+    # IANA-Zeitzone des Objekts ('Europe/Copenhagen', 0258). Bewusst ohne
+    # Rateversuch aus dem Land: Länder mit mehreren Zonen bekämen sonst still
+    # die falsche, und eine falsche Zone verschiebt den Versand von
+    # Automationen um Stunden (Wurzel 4). Fehlt sie, plant der Server für
+    # dieses Objekt keine Automation mit Ortszeit.
+    timezone: str | None = None
 
     # Objektkartei Stufe 1 — OBJEKTINFORMATION (Lastenheft §6). Nur bfe_number
     # (DK-Katasternummer) ist ein echtes neues Kartei-Feld. Bewusst NICHT in
@@ -244,6 +250,7 @@ class PropertyUpdate(BaseModel):
     country: str | None = None
     lat: float | None = None
     lng: float | None = None
+    timezone: str | None = None
     # Objektkartei (Lastenheft §6) — nur bfe_number, kein OTA-Sync (nicht in _CONTENT_FIELDS).
     bfe_number: str | None = None
     amenities: list[str] | None = None

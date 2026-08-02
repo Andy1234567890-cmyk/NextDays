@@ -25,3 +25,20 @@ export function useCountryOptions() {
     })).sort((a, b) => sortierer.compare(a.label, b.label));
   }, [locale]);
 }
+
+/** Dieselbe Liste, aber mit dem ISO-Code als Wert — für Felder, die den Code
+ *  speichern (Rechnungsadresse, Stripe verlangt alpha-2), nicht den Namen.
+ *  Bewusst hier und nicht mit `useTranslations("countries")` im Formular: die
+ *  Sprachdateien führen nur die EU-27, die übrigen 165 Länder liefen dort in
+ *  MISSING_MESSAGE und zeigten den rohen Key. */
+export function useCountryCodeOptions() {
+  const locale = useLocale();
+  return useMemo(() => {
+    const namen = new Intl.DisplayNames([locale], { type: "region" });
+    const sortierer = new Intl.Collator(locale);
+    return COUNTRIES.map((c) => ({
+      code: c.code,
+      label: namen.of(c.code) ?? c.value,
+    })).sort((a, b) => sortierer.compare(a.label, b.label));
+  }, [locale]);
+}

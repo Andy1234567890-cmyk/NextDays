@@ -151,7 +151,7 @@ flowchart TB
             BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht) + Firmenprofil/Logo; Nummernkreise (next_document_number)"]
             OWN["owners — Eigentümer-Stammdaten, Objekt-Zuweisung (Anteil + Provisions-Override je Objekt)"]
             OWNST["owner_statements — Auszahlungs-Abrechnung (Provision je Objekt, EU-Steuer/Reverse-Charge, Storno, Mehrwährung via ECB-Tageskurs)"]
-            INBOXL["inbox — Threads (OTA + eigene Plattform), Versand, Vorlagen/KI, geplante Nachrichten + planbare Automails (Zeit + Zuweisung Haus/Kanal)"]
+            INBOXL["inbox — Threads (OTA + eigene Plattform), Versand, Vorlagen/KI + Wissensdatenbank, Platzhalter, Anhänge, geplante Nachrichten + planbare Automails (Zeit/Objekt-Zeitzone + Zuweisung Haus/Kanal + Auslöser Nachricht empfangen)"]
             ADDON["addons — Zusatzleistungen/Upsells je Objekt (Medien, Basis, appears_in, wann-anzeigen); Verkauf via booking_engine + Gäste-Portal, Extra-Umsatz in Owner-Statement, Task-Trigger addon_purchased, Payment-gegatet"]
             PROP["properties — Objekt-Stammdaten, Fotos, Typ-Attribute, Adress-Split, Owner-Scope (RLS); zentrale Objektwährung (currency, 0161); pro-Kanal-Sichtbarkeit als eigene Achsen: Website (listed_on_website, 0162) + Plattform/Marktplatz (listed_on_marketplace, 0159), getrennt vom Lebenszyklus status; Portale-Zustand aus channex_property_map. PropertyResponse.channels = abgeleitete 3-Kanal-Chips (Website·Plattform·Portale, je active/paused/not_connected/error). Kanal-Steuerung auf ZWEI Ebenen (Lodgify-Muster): zentral /channels + pro Objekt /objekte/[id]/kanaele (property-channels.tsx: Website/Plattform-Toggles via PATCH, Portale-Zeilen togglen die OTA-Verbindung, Connect-Wizard mit presetPropertyId; Markup = Phase 2)"]
             PPORTAL["property_portal — Gastmodul je Objekt (Portal-Schalter, Türcode maskiert); Info-Texte in messaging"]
@@ -845,7 +845,7 @@ Detail-/Hilfstabellen (mit RLS, tenant-scoped):
 | Sicherheit   | `user_mfa` (`0021`)                                                                                    | TOTP-2FA pro Nutzer                                                               |
 | Onboarding   | `tenant_onboarding` (`0029`)                                                                           | Onboarding-Fortschritt des Tenants                                                |
 | Channex      | `stop_sell` (`0032`), `ari_outbox` (`0033`), `channex_tax_map` (`0034`), `sandbox_message` (`0036`)    | Stop-Sell, ARI-Outbox-Queue, Steuer-Mapping, Sandbox-Mock-OTA                     |
-| Posteingang  | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`)                  | KI-Settings, geplante Nachrichten, Thread-Notizen                                 |
+| Posteingang  | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`), `inbox_attachment` (`0259`), `inbox_knowledge_fact` (`0260`) | KI-Settings, geplante Nachrichten, Thread-Notizen, Anhänge, Wissensdatenbank (die letzten beiden für anon/authenticated gesperrt) |
 | WhatsApp     | `whatsapp_conversation`, `whatsapp_message` (`0041`)                                                   | WhatsApp Cloud API — im Posteingang integriert                                    |
 | Objekte      | `property_photos` (`0061`)                                                                             | Objekt-Fotos (mehrsprachige Caption, Cover, Sortierung)                           |
 | Page-Builder | `tenant_site_config`, `tenant_custom_domains` (`0086`), `site_pages`, `site_blocks` (`0087`)           | White-Label-Website je Tenant: Branding, Custom-Domains, Seiten + Blöcke (s. §12) |
@@ -1163,7 +1163,7 @@ Gemeinsame Infrastruktur in `apps/api/src/core/`:
 | ------------- | --------------------------------------------------------------------- |
 | `config.py`   | `Settings` mit `SecretStr` für alle Secrets                           |
 | `logging.py`  | structlog (Console lokal, JSON in Produktion)                         |
-| `supabase.py` | Client-Factory — Anon (RLS) und Service-Role (System) getrennt        |
+| `supabase.py` | Client-Factory — Anon (RLS) und Service-Role (System) getrennt; jeder Client bekommt einen Retry-Transport gegen tote Keep-Alive-Verbindungen (Kong beendet idle HTTP/2, teils erst NACH den Headern → der Body wird schon im Transport gelesen). Nach begonnener Antwort wird nur GET/HEAD/OPTIONS wiederholt, sonst liefe ein POST doppelt (Wurzel 2). |
 | `security.py` | Supabase-JWT-Verifikation (ES256/JWKS) → `AuthContext`, `CurrentUser` |
 
 **Slices (24):** `auth` · `properties` · `rates` · `pricing` · `calendar` ·
@@ -1333,6 +1333,37 @@ alle, **UND-verknüpft**: Haus UND Kanal). Bei jedem Booking-Import plant
 Fallback bei fehlendem Ankerdatum (übersprungen). Beide Tabellen sind in der
 Realtime-Publication. Kanäle sind OTAs **und** der eigene Marktplatz „myBestDays"
 (gleichwertiger Buchungskanal, kein „Direkt").
+
+**Posteingang-Ausbau (inbox, Migrationen `0257`–`0260`):**
+
+- **Platzhalter** (`inbox/felder.py`): 22 Merge-Felder (`{{guest_first_name}}`,
+  `{{check_in_date}}`, …) in vier Gruppen. Schlüssel sprachneutral englisch,
+  Beschriftung aus `inbox.field_*`. Aufgelöst wird **beim Senden**, nicht beim
+  Planen (ein Türcode steht oft erst kurz vor Anreise fest). Fehlender Wert →
+  Abbruch mit Feldliste, nie ein Ersatzwert (Wurzel 4); unbekannter Schlüssel
+  beim Speichern → 422.
+- **Auslöser `message_received`** (`0257`): Abwesenheitsantwort mit Wochentags-
+  und Uhrzeitfenster (auch über Mitternacht) und „nur erste Nachricht".
+  Angestoßen vom Channex-Webhook-Event `message`; der Dedup-Index
+  `(automation_id, thread_id)` begrenzt sie auf einmal je Thread. Da
+  `automation_scheduled_message.thread_id` per FK auf `channex_booking` zeigt,
+  gilt der Auslöser nur für OTA-/Plattform-Threads, nicht für WhatsApp.
+- **Objekt-Zeitzone** (`0258`): `properties.timezone` (IANA, per Trigger gegen
+  `pg_timezone_names` validiert) + `message_automation.use_property_timezone` —
+  `send_time` als Ortszeit des Objekts. Ohne hinterlegte Zeitzone wird die
+  Planung übersprungen und geloggt, statt still UTC anzunehmen.
+- **Anhänge** (`0259`): privater Bucket `inbox-attachments` + `inbox_attachment`.
+  Dateityp per Magic Bytes (Wurzel 8), 10 MB Deckel, Auslieferung nur per
+  signierter URL. Lehnt der Kanal die Datei ab, bleibt sie gespeichert und die
+  Zeile trägt `channel_error` — die Oberfläche zeigt „nicht zugestellt".
+- **Wissensdatenbank** (`0260`): `inbox_knowledge_fact` (betriebsweit oder je
+  Objekt) liefert dem KI-Antwortvorschlag die Angaben, die er als Fakten
+  verwenden darf — vorher durfte er sich nichts ausdenken und konnte deshalb
+  auf „Wie ist das WLAN-Passwort?" nur um Klärung bitten.
+
+Beide neuen Tabellen sind für `anon`/`authenticated` gesperrt (`revoke all` +
+`as restrictive for all using (false)`, Wurzel 6) und haben bewusst **kein**
+Realtime-Abo — ein Abo darauf wäre eine stumme Attrappe.
 
 ### Backoffice-Team (wer darf ins Backoffice?)
 

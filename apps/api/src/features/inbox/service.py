@@ -7,7 +7,8 @@ Ein optionaler KI-Antwortvorschlag (Groq) hilft beim Beantworten.
 
 Tenant-scoped (tenant_id aus dem JWT). Kein stilles Exception-Swallowing.
 """
-from datetime import UTC, datetime, timedelta
+import json
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from supabase import Client
@@ -15,33 +16,31 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.channel_manager.channex_client import ChannexClient, ChannexError
+from src.features.channel_manager.common import ota_zeitstempel_utc
 from src.features.guests.identity import (
     contact_from_ota_customer,
     resolve_or_create_guest,
 )
 
-from .ai import GroqClient, GroqError
+from .anhaenge import AnhangWissenMixin
+from .errors import InboxError
+from .felder import FeldFehlt, Kontext, rendern, unbekannte_felder
+from .planung import PlanungMixin
 from .schemas import (
-    AiReplyResponse,
-    AiSettings,
     Automation,
     AutomationList,
     AutomationUpsert,
-    BulkUpdateResult,
+    InboxEventFact,
     InboxListResponse,
     InboxMessage,
     InboxMessagesResponse,
     InboxThread,
-    MessageTemplate,
-    MessageTemplateList,
     ReservationDetail,
-    ScheduledMessage,
-    ScheduledMessageList,
     SliceHealth,
     TeamMember,
     TeamMemberList,
-    TemplateUpsert,
 )
+from .vorlagen import VorlagenMixin
 
 if TYPE_CHECKING:
     from .authz import InboxAccess
@@ -49,14 +48,20 @@ if TYPE_CHECKING:
 log = get_logger("nextdays.inbox")
 
 
-class InboxError(Exception):
-    def __init__(self, message: str, *, status_code: int = 400) -> None:
-        super().__init__(message)
-        self.message = message
-        self.status_code = status_code
+def _chronologisch(m: InboxMessage) -> tuple[int, str]:
+    """Sortierschlüssel des Verlaufs: nach Zeit, Einträge OHNE Zeit ans Ende.
+
+    Ein schlichtes `m.sent_at or ""` täte das Gegenteil — der leere String
+    sortiert vor jedem Zeitstempel und schöbe zeitlose Einträge an den Anfang.
+    Das fiel lange nicht auf, weil ohne interne Notizen gar nicht sortiert
+    wurde; seit Nachrichten, Notizen und Ereignisse in EINEM Strang laufen,
+    stünde die letzte Kanal-Nachricht ohne Zeitstempel plötzlich ganz oben.
+    Da Pythons Sortierung stabil ist, behalten sie untereinander ihre
+    Eingangsreihenfolge."""
+    return (0, m.sent_at) if m.sent_at else (1, "")
 
 
-class InboxService:
+class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
     slice_name = "inbox"
 
     def __init__(
@@ -84,6 +89,25 @@ class InboxService:
         return load_inbox_access(self._db, ctx)
 
     @staticmethod
+    def _customer_of(row: dict) -> dict:
+        """Gastdaten einer Buchung — Spalte `customer` UND `raw.customer`.
+
+        Der Import legt in der Spalte nur Name/Nachname ab; Mail, Telefon,
+        Sprache und Ort stehen ausschließlich in der rohen OTA-Payload. Wer nur
+        die Spalte liest, zeigt im Posteingang eine leere Gästekarte (genau das
+        war der Fall). Die Spalte gewinnt, wo sie etwas hat.
+        """
+        roh = (row.get("raw") or {}).get("customer") or {}
+        spalte = row.get("customer") or {}
+        return {**roh, **{k: v for k, v in spalte.items() if v not in (None, "")}}
+
+    @staticmethod
+    def _guest_location(customer: dict) -> str | None:
+        """Ort/Land des Gastes für die Gästekarte (nur echte Werte)."""
+        teile = [customer.get("city"), customer.get("country")]
+        return ", ".join(x for x in teile if x) or None
+
+    @staticmethod
     def _guest_name(customer: dict) -> str | None:
         return (
             " ".join(
@@ -107,7 +131,7 @@ class InboxService:
             db.table("channex_booking")
             .select(
                 "id, channex_booking_id, ota_name, ota_reservation_code, status, "
-                "arrival_date, departure_date, customer, updated_at, guest_id, "
+                "arrival_date, departure_date, customer, raw, updated_at, guest_id, "
                 "is_read, is_starred, is_archived, assigned_user_id, inbox_status, "
                 "property_map_id"
             )
@@ -132,10 +156,14 @@ class InboxService:
         map_ids = [r["property_map_id"] for r in rows if r.get("property_map_id")]
         prop_by_map = self._properties_for_maps(db, tenant_id, map_ids)
         mask = access.mask
+        # Vorschau der letzten Nachricht je Thread — beide Vorbilder zeigen sie
+        # in der Liste; ohne sie muss man jeden Thread öffnen, um zu sehen,
+        # worum es geht.
+        letzte = self._last_messages(db, tenant_id, [r["id"] for r in rows])
 
         items: list[InboxThread] = []
         for r in rows:
-            customer = r.get("customer") or {}
+            customer = self._customer_of(r)
             cbid = r.get("channex_booking_id")
             uid = r.get("assigned_user_id")
             prop = prop_by_map.get(r.get("property_map_id")) if r.get("property_map_id") else None
@@ -151,9 +179,11 @@ class InboxService:
                     ota_reservation_code=r.get("ota_reservation_code"),
                     guest_name=mask.name(self._guest_name(customer)),
                     guest_email=mask.contact_value(customer.get("mail") or customer.get("email")),
+                    guest_phone=mask.contact_value(customer.get("phone")),
                     status=r.get("status"),
                     arrival_date=r.get("arrival_date"),
                     departure_date=r.get("departure_date"),
+                    last_message=letzte.get(r["id"]),
                     updated_at=r.get("updated_at"),
                     is_read=bool(r.get("is_read", True)),
                     is_starred=bool(r.get("is_starred")),
@@ -164,6 +194,33 @@ class InboxService:
                 )
             )
         return InboxListResponse(items=items, total=len(items))
+
+    def _last_messages(
+        self, db: Client, tenant_id: str, thread_ids: list[str]
+    ) -> dict[str, str]:
+        """Letzte Nachricht je Thread (Vorschautext in der Liste).
+
+        Nur im Sandbox-Modus: dort liegen die Nachrichten lokal. Gegen die echte
+        Channex-Messaging-API wäre das ein Request PRO Thread — das verbietet
+        sich für eine Liste mit 200 Einträgen, deshalb bleibt die Vorschau dort
+        leer, statt die Liste langsam zu machen.
+        """
+        if not thread_ids or not self._sandbox_enabled():
+            return {}
+        res = (
+            db.table("sandbox_message")
+            .select("thread_id, message, created_at")
+            .eq("tenant_id", tenant_id)
+            .in_("thread_id", thread_ids)
+            .order("created_at", desc=True)
+            .limit(1000)
+            .execute()
+        )
+        out: dict[str, str] = {}
+        for m in res.data or []:
+            # Absteigend sortiert → der erste Treffer je Thread ist der jüngste.
+            out.setdefault(m["thread_id"], (m.get("message") or "").strip())
+        return out
 
     def _user_names(
         self, db: Client, tenant_id: str, user_ids: list[str]
@@ -215,6 +272,116 @@ class InboxService:
             if pid:
                 out[str(m["id"])] = (str(pid), titles.get(str(pid), ""))
         return out
+
+    def _property_for_thread(
+        self, db: Client, tenant_id: str, row: dict
+    ) -> dict | None:
+        """Objekt-Zeile zu einem Thread über `property_map_id`.
+
+        Der Weg führt über `channex_property_map`; `channex_booking` selbst trägt
+        KEINE channex_property_id (siehe Tabellendefinition). Ein früherer Zugriff
+        auf `row["channex_property_id"]` lief deshalb immer ins Leere und ließ das
+        Reservierungs-Panel dauerhaft ohne Objektnamen.
+        """
+        map_id = row.get("property_map_id")
+        if not map_id:
+            return None
+        pm = (
+            db.table("channex_property_map")
+            .select("property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("id", str(map_id))
+            .limit(1)
+            .execute()
+        ).data or []
+        property_id = pm[0].get("property_id") if pm else None
+        if not property_id:
+            return None
+        props = (
+            db.table("properties")
+            .select("id, title, address, city, country, photos, timezone")
+            .eq("tenant_id", tenant_id)
+            .eq("id", str(property_id))
+            .limit(1)
+            .execute()
+        ).data or []
+        return props[0] if props else None
+
+    def _feld_kontext(self, db: Client, tenant_id: str, row: dict) -> Kontext:
+        """Datengrundlage der Platzhalter für einen Thread.
+
+        Bewusst UNGEMASKT: der Empfänger ist der Gast selbst, dem seine eigenen
+        Daten nicht vorenthalten werden müssen. Die Rollen-Maske (§4.3) schützt
+        die ANSICHT für Mitarbeiter — sie darf nicht dazu führen, dass ein Gast
+        eine Nachricht mit „Hallo M****" bekommt.
+        """
+        customer = self._customer_of(row)
+        raw = row.get("raw") or {}
+        occ = raw.get("occupancy") or {}
+        checkin_time, checkout_time = self._ota_zeiten(raw)
+        prop = self._property_for_thread(db, tenant_id, row)
+        cents = row.get("amount_cents")
+        betrag = (cents / 100) if isinstance(cents, (int, float)) else None
+
+        tuercode = None
+        if prop and prop.get("id"):
+            portal = (
+                db.table("property_guest_portal")
+                .select("door_code")
+                .eq("property_id", str(prop["id"]))
+                .limit(1)
+                .execute()
+            ).data or []
+            tuercode = portal[0].get("door_code") if portal else None
+
+        firma = (
+            db.table("tenants")
+            .select("name")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+
+        return Kontext(
+            guest_name=self._guest_name(customer),
+            guest_email=customer.get("mail") or customer.get("email"),
+            guest_phone=customer.get("phone"),
+            guest_language=customer.get("language") or customer.get("lang"),
+            check_in=row.get("arrival_date"),
+            check_out=row.get("departure_date"),
+            checkin_time=checkin_time,
+            checkout_time=checkout_time,
+            adults=occ.get("adults"),
+            children=occ.get("children"),
+            reservation_code=row.get("ota_reservation_code"),
+            channel=row.get("ota_name"),
+            total_amount=betrag,
+            currency=row.get("currency"),
+            property_name=prop.get("title") if prop else None,
+            property_address=prop.get("address") if prop else None,
+            property_city=prop.get("city") if prop else None,
+            door_code=tuercode,
+            company_name=firma[0].get("name") if firma else None,
+        )
+
+    def render_for_thread(
+        self, ctx: AuthContext, thread_id: str, text: str
+    ) -> str:
+        """Vorschau/Auflösung eines Textes für einen konkreten Thread.
+
+        Damit sieht der Mitarbeiter beim Einfügen einer Vorlage sofort den
+        fertigen Text und kann ihn korrigieren, statt `{{guest_name}}` an einen
+        Gast zu schicken."""
+        db, tenant_id, row, _access = self._load_thread_scoped(ctx, thread_id)
+        unbekannt = unbekannte_felder(text)
+        if unbekannt:
+            raise InboxError(
+                "Unbekannte Felder: " + ", ".join(unbekannt), status_code=422
+            )
+        try:
+            return rendern(text, self._feld_kontext(db, tenant_id, row))
+        except FeldFehlt as exc:
+            raise InboxError(str(exc), status_code=422) from exc
 
     def _reservation_ids_for(
         self, db: Client, tenant_id: str, booking_ids: list[str]
@@ -307,12 +474,12 @@ class InboxService:
                 )
                 for m in (res.data or [])
             ]
-            items = self._merge_notes(db, tenant_id, thread_id, items)
+            items = self._merge_stream(db, tenant_id, thread_id, row, items)
             return InboxMessagesResponse(items=items, total=len(items))
 
         cbid = row.get("channex_booking_id")
         if not cbid:
-            items = self._merge_notes(db, tenant_id, thread_id, [])
+            items = self._merge_stream(db, tenant_id, thread_id, row, [])
             return InboxMessagesResponse(items=items, total=len(items))
         try:
             res = self._channex.get_messages_for_booking(cbid)
@@ -328,12 +495,49 @@ class InboxService:
                     channex_booking_id=cbid,
                     channex_status=exc.channex_status,
                 )
-                items = self._merge_notes(db, tenant_id, thread_id, [])
+                items = self._merge_stream(db, tenant_id, thread_id, row, [])
                 return InboxMessagesResponse(items=items, total=len(items))
+            if self._is_channel_without_chat(exc):
+                # 422 „not_supported": die OTA dieser Buchung kennt keinen Chat
+                # (Doku „Messages Collection": nur Booking.com, Airbnb, Expedia —
+                # Expedia nicht über EAN/Affiliate). Das ist der Normalfall bei
+                # Direkt-/CRS-/Test-Buchungen und kein Fehler, der die Ansicht
+                # brechen darf.
+                items = self._merge_stream(db, tenant_id, thread_id, row, [])
+                return InboxMessagesResponse(
+                    items=items, total=len(items), unavailable="channel_no_chat"
+                )
+            if exc.channex_status == 403:
+                # Belegt (Doku „Messages Collection"): 403 heißt genau eine
+                # Sache — die Chat-Anwendung ist an dieser Property nicht
+                # installiert. Das ist kein Fehler des Nutzers und kein
+                # Netzproblem, sondern eine fehlende Freischaltung. Statt die
+                # Ansicht zu brechen: Lebenslauf + Notizen zeigen und den Grund
+                # benennen, damit niemand auf eine Antwort wartet, die nie
+                # kommen kann.
+                log.warning(
+                    "inbox_chat_app_nicht_installiert",
+                    tenant_id=tenant_id,
+                    thread_id=thread_id,
+                    channex_booking_id=cbid,
+                )
+                items = self._merge_stream(db, tenant_id, thread_id, row, [])
+                return InboxMessagesResponse(
+                    items=items, total=len(items), unavailable="chat_app_missing"
+                )
             raise InboxError(exc.message, status_code=exc.status_code) from exc
-        items = [self._to_message(m) for m in (res.get("data") or [])]
-        items = self._merge_notes(db, tenant_id, thread_id, items)
+        items = [self.zu_nachricht(m) for m in (res.get("data") or [])]
+        items = self._merge_stream(db, tenant_id, thread_id, row, items)
         return InboxMessagesResponse(items=items, total=len(items))
+
+    @staticmethod
+    def _is_channel_without_chat(exc: ChannexError) -> bool:
+        """422 mit code „not_supported" — der Kanal dieser Buchung hat keinen Chat."""
+        if exc.channex_status != 422:
+            return False
+        payload = exc.payload if isinstance(exc.payload, dict) else {}
+        errors = payload.get("errors") if isinstance(payload.get("errors"), dict) else {}
+        return str(errors.get("code") or payload.get("code") or "") == "not_supported"
 
     @staticmethod
     def _is_invalid_booking_id_error(exc: ChannexError) -> bool:
@@ -347,6 +551,142 @@ class InboxService:
         if isinstance(booking_error, str):
             return "invalid" in booking_error.lower()
         return False
+
+    def _merge_stream(
+        self,
+        db: Client,
+        tenant_id: str,
+        thread_id: str,
+        row: dict,
+        msgs: list[InboxMessage],
+    ) -> list[InboxMessage]:
+        """Ein Strang: Nachrichten + interne Notizen + Buchungs-Ereignisse."""
+        merged = self._merge_notes(db, tenant_id, thread_id, msgs)
+        merged = merged + self._booking_events(row)
+        merged.sort(key=_chronologisch)
+        return merged
+
+    @staticmethod
+    def _ota_zeiten(raw: dict) -> tuple[str | None, str | None]:
+        """Erwartete An-/Abreisezeit aus der OTA-Payload.
+
+        EINE Stelle für beide Leser (Detailspalte rechts und die Platzhalter
+        `{{checkin_time}}`/`{{checkout_time}}` der Automationen). Vorher stand
+        die Auflösung zweimal im Code, und nur eine der beiden kannte
+        `arrival_hour` — den Namen, unter dem Channex die Ankunftszeit
+        tatsächlich liefert („HH:MM", 24 h). Ergebnis: rechts stand „16:00",
+        während dieselbe Buchung eine Anreise-Automation mit dem Vermerk
+        „Feld ohne Wert: checkin_time" liegen ließ.
+        """
+        occ = raw.get("occupancy") or {}
+        return (
+            raw.get("checkin_time") or occ.get("checkin_time") or raw.get("arrival_hour"),
+            raw.get("checkout_time")
+            or occ.get("checkout_time")
+            or raw.get("departure_hour"),
+        )
+
+    @staticmethod
+    def _ota_buchungszeit(raw: dict) -> str | None:
+        """Wann der Gast beim Portal gebucht hat — aus der OTA-Originalmeldung.
+
+        Channex reicht die geparste Meldung der Gegenseite als `raw_message`
+        durch (JSON-Text). Booking.com trägt darin `date` + `time` des
+        Buchungsvorgangs. Der Wert wird UNVERÄNDERT als Text weitergegeben und
+        NICHT in eine Zeitzone gerechnet: Booking.com meint dort Ortszeit der
+        Unterkunft, andere Portale liefern das Feld gar nicht — eine Umrechnung
+        wäre geraten. Angezeigt wird er als Angabe, nicht als Uhrzeit im Kopf
+        des Ereignisses (dafür steht `inserted_at`, das nachweislich UTC ist).
+        """
+        roh = raw.get("raw_message")
+        if isinstance(roh, str):
+            try:
+                roh = json.loads(roh)
+            except ValueError:
+                return None
+        if not isinstance(roh, dict):
+            return None
+        datum = str(roh.get("date") or "").strip()
+        zeit = str(roh.get("time") or "").strip()
+        if not datum:
+            return None
+        return f"{datum} {zeit}".strip()
+
+    def _booking_events(self, row: dict) -> list[InboxMessage]:
+        """Lebenslauf der Reservierung als Ereignisse im Verlauf.
+
+        Vorbild Lodgify: „Gast macht Buchung · 22:18 · Booking.com" und
+        „Reservierungsstatus geändert", beide aufklappbar. Ohne das steht die
+        Konversation ohne Anlass da.
+
+        JEDE Angabe stammt von der Gegenseite, nicht von uns:
+
+        * Zeitpunkt = `channex_booking.ota_inserted_at` — Eingang der ersten
+          Booking Revision bei Channex (write-once, 0261). Vorher stand hier
+          unser `created_at`; bei einem Feed-Nachlauf trugen damit zwanzig
+          Buchungen aus drei Wochen dieselbe Sekunde.
+        * Kanal = `ota_name` aus der Buchungsmeldung („BookingCom", „Airbnb").
+        * Aufgeklappt: Reservierungsnummer, An-/Abreise und — wenn das Portal
+          sie mitschickt — der Buchungszeitpunkt aus der OTA-Originalmeldung.
+
+        Fehlt die OTA-Zeit (Altbestand ohne Rohdaten), fällt der Zeitpunkt
+        sichtbar auf den Import zurück; dann steht das auch als Angabe dabei,
+        statt unsere Uhr als OTA-Zeit auszugeben.
+        """
+        events: list[InboxMessage] = []
+        raw = row.get("raw") if isinstance(row.get("raw"), dict) else {}
+        ota_eingang = row.get("ota_inserted_at") or ota_zeitstempel_utc(
+            raw.get("inserted_at")
+        )
+        eingang = ota_eingang or row.get("created_at")
+        if eingang:
+            fakten = [
+                InboxEventFact(label=label, value=str(wert))
+                for label, wert in (
+                    ("reservationCode", row.get("ota_reservation_code")),
+                    ("arrival", row.get("arrival_date")),
+                    ("departure", row.get("departure_date")),
+                    ("bookedAtOta", self._ota_buchungszeit(raw)),
+                )
+                if wert
+            ]
+            if not ota_eingang:
+                fakten.append(
+                    InboxEventFact(label="importedAt", value=str(eingang))
+                )
+            events.append(
+                InboxMessage(
+                    id=f"event:booked:{row.get('id')}",
+                    message="",
+                    sender="event",
+                    sent_at=eingang,
+                    event_title="bookingReceived",
+                    event_facts=fakten,
+                    event_channel=row.get("ota_name"),
+                )
+            )
+        status = (row.get("status") or "").strip().lower()
+        if status in ("modified", "cancelled"):
+            # Zeitpunkt der ÄNDERUNG: `raw` trägt immer die zuletzt empfangene
+            # Revision, deren `inserted_at` genau der Eingang dieser Änderung
+            # bei Channex ist. Erst wenn die fehlt, unsere `updated_at`.
+            geaendert = ota_zeitstempel_utc(raw.get("inserted_at")) or row.get(
+                "updated_at"
+            )
+            if geaendert:
+                events.append(
+                    InboxMessage(
+                        id=f"event:status:{row.get('id')}",
+                        message="",
+                        sender="event",
+                        sent_at=geaendert,
+                        event_title="statusChanged",
+                        # Roher Enum-Wert; die Oberfläche übersetzt ihn.
+                        event_detail=status,
+                        event_channel=row.get("ota_name"),
+                    )
+                )
+        return events
 
     def _merge_notes(
         self, db: Client, tenant_id: str, thread_id: str, msgs: list[InboxMessage]
@@ -377,12 +717,11 @@ class InboxService:
             for n in notes
         ]
         merged = msgs + note_msgs
-        # Chronologisch sortieren; Einträge ohne Zeit ans Ende.
-        merged.sort(key=lambda m: m.sent_at or "")
+        merged.sort(key=_chronologisch)
         return merged
 
     @staticmethod
-    def _to_message(m: dict) -> InboxMessage:
+    def zu_nachricht(m: dict) -> InboxMessage:
         a = m.get("attributes") or m
         # Channex: sender kann "guest"/"property" o.ä. heißen.
         sender = (a.get("sender") or a.get("author") or "guest").lower()
@@ -417,6 +756,12 @@ class InboxService:
             db, tenant_id = self._require(ctx)
             row = self._load_thread(db, tenant_id, thread_id)
 
+        # Platzhalter erst HIER auflösen, nicht beim Planen: eine Anreise-Automail
+        # wird Tage vorher eingeplant, der Türcode entsteht oft erst kurz davor.
+        # FeldFehlt wird bewusst durchgereicht — der Aufrufer (Scheduler) hält den
+        # Grund an der geplanten Nachricht fest, statt „Hallo ," zu verschicken.
+        text = rendern(text, self._feld_kontext(db, tenant_id, row))
+
         # Sandbox: Antwort lokal als 'property'-Nachricht ablegen.
         if self._sandbox_enabled():
             ins = (
@@ -447,10 +792,26 @@ class InboxService:
         try:
             res = self._channex.send_message_for_booking(cbid, text)
         except ChannexError as exc:
+            if self._is_channel_without_chat(exc):
+                raise InboxError(
+                    "Dieser Buchungskanal unterstützt keinen Gäste-Chat.",
+                    status_code=409,
+                ) from exc
+            if exc.channex_status == 403:
+                # Gleiche Ursache wie beim Lesen: die Chat-Anwendung fehlt an
+                # dieser Property. Der Portal-Wortlaut ist nur „Forbidden" —
+                # daraus kann niemand ableiten, was los ist. Sie wird beim
+                # Verbinden und beim Reconcile automatisch gesetzt; steht sie
+                # hier trotzdem aus, ist das ein Betriebsfehler, kein Kaufakt.
+                raise InboxError(
+                    "Der Gäste-Chat für dieses Objekt ist bei den Portalen noch "
+                    "nicht aktiv. Er wird automatisch nachgezogen.",
+                    status_code=409,
+                ) from exc
             raise InboxError(exc.message, status_code=exc.status_code) from exc
         data = res.get("data") or {}
         if data:
-            return self._to_message(data)
+            return self.zu_nachricht(data)
         # Channex bestätigt teils ohne Echo — dann die gesendete Nachricht zurück.
         return InboxMessage(message=text, sender="property")
 
@@ -464,45 +825,28 @@ class InboxService:
         row = self._load_thread(
             db, tenant_id, thread_id, access=access, scope_user_id=ctx.user_id
         )
-        customer = row.get("customer") or {}
+        customer = self._customer_of(row)
 
         listing_name = None
         listing_photo = None
         address = None
         rental_id = None
-        # Lokale Property über das Mapping (channex_property_id → property).
-        pm = (
-            db.table("channex_property_map")
-            .select("property_id")
-            .eq("tenant_id", tenant_id)
-            .eq("channex_property_id", row.get("channex_property_id") or "")
-            .limit(1)
-            .execute()
-        ).data if row.get("channex_property_id") else None
-        if pm:
-            rental_id = pm[0]["property_id"]
-            prop = (
-                db.table("properties")
-                .select("title, address, city, photos")
-                .eq("id", rental_id)
-                .limit(1)
-                .execute()
-            ).data
-            if prop:
-                listing_name = prop[0].get("title")
-                address = " ".join(
-                    x for x in [prop[0].get("address"), prop[0].get("city")] if x
-                ).strip() or None
-                photos = prop[0].get("photos") or []
-                listing_photo = photos[0] if photos else None
+        prop = self._property_for_thread(db, tenant_id, row)
+        if prop:
+            rental_id = prop.get("id")
+            listing_name = prop.get("title")
+            address = " ".join(
+                x for x in [prop.get("address"), prop.get("city")] if x
+            ).strip() or None
+            photos = prop.get("photos") or []
+            listing_photo = photos[0] if photos else None
 
         nights = self._nights(row.get("arrival_date"), row.get("departure_date"))
         amount = row.get("amount_cents")
         # Gäste-Aufschlüsselung + Zeiten aus der rohen OTA-Payload (falls vorhanden).
         raw = row.get("raw") or {}
         occ = raw.get("occupancy") or {}
-        checkin_time = raw.get("checkin_time") or occ.get("checkin_time")
-        checkout_time = raw.get("checkout_time") or occ.get("checkout_time")
+        checkin_time, checkout_time = self._ota_zeiten(raw)
         mask = access.mask
         total = (amount / 100) if isinstance(amount, (int, float)) else None
         return ReservationDetail(
@@ -514,6 +858,7 @@ class InboxService:
             guest_email=mask.contact_value(customer.get("mail") or customer.get("email")),
             guest_phone=mask.contact_value(customer.get("phone")),
             guest_language=customer.get("language") or customer.get("lang"),
+            guest_location=self._guest_location(customer),
             adults=occ.get("adults"),
             children=occ.get("children"),
             nights=nights,
@@ -752,376 +1097,6 @@ class InboxService:
             author_name=names.get(ctx.user_id),
         )
 
-    # --- Geplante Nachrichten ----------------------------------------------
-    def schedule_message(
-        self, ctx: AuthContext, thread_id: str, body: str, send_at: str
-    ) -> ScheduledMessage:
-        text = (body or "").strip()
-        if not text:
-            raise InboxError("Nachricht darf nicht leer sein.", status_code=422)
-        if not (send_at or "").strip():
-            raise InboxError("Zeitpunkt fehlt.", status_code=422)
-        db, tenant_id, _row, access = self._load_thread_scoped(ctx, thread_id)
-        # Geplant = später ausgehende Nachricht → gleiche Reply-Berechtigung.
-        if not access.can_reply:
-            raise InboxError("Keine Berechtigung zum Senden.", status_code=403)
-        ins = (
-            db.table("inbox_scheduled_message")
-            .insert(
-                {
-                    "tenant_id": tenant_id,
-                    "thread_id": thread_id,
-                    "body": text,
-                    "send_at": send_at,
-                    "status": "pending",
-                }
-            )
-            .execute()
-        ).data
-        s = ins[0] if ins else {}
-        # Sekundengenauen Timer sofort setzen (kein Warten auf Cron-Tick).
-        from . import scheduler
-        if s.get("id"):
-            scheduler.schedule(s["id"], s.get("send_at") or send_at)
-        return ScheduledMessage(
-            id=s.get("id"), thread_id=thread_id, body=text,
-            send_at=s.get("send_at") or send_at, status=s.get("status") or "pending",
-        )
-
-    def list_scheduled(self, ctx: AuthContext, thread_id: str) -> ScheduledMessageList:
-        """Anstehende geplante Nachrichten einer Konversation."""
-        db, tenant_id, _row, _access = self._load_thread_scoped(ctx, thread_id)
-        res = (
-            db.table("inbox_scheduled_message")
-            .select("id, thread_id, body, send_at, status")
-            .eq("tenant_id", tenant_id)
-            .eq("thread_id", thread_id)
-            .eq("status", "pending")
-            .order("send_at")
-            .execute()
-        )
-        items = [
-            ScheduledMessage(
-                id=s["id"], thread_id=s["thread_id"], body=s.get("body") or "",
-                send_at=s.get("send_at"), status=s.get("status") or "pending",
-            )
-            for s in (res.data or [])
-        ]
-        return ScheduledMessageList(items=items, total=len(items))
-
-    def cancel_scheduled(self, ctx: AuthContext, scheduled_id: str) -> None:
-        db, tenant_id = self._require(ctx)
-        # Zugehörige geplante Nachricht laden, um ihren Thread zu ermitteln — und
-        # den Thread-Scope (assigned-only) durchsetzen. Ohne diese Prüfung könnte
-        # ein Nutzer ohne INBOX_VIEW_ALL eine geplante Nachricht in einem fremd
-        # zugewiesenen Thread stornieren, den er selbst gar nicht sehen darf
-        # (list_scheduled erzwingt den Scope korrekt, cancel_scheduled bislang nicht).
-        row = (
-            db.table("inbox_scheduled_message")
-            .select("id, thread_id")
-            .eq("tenant_id", tenant_id)
-            .eq("id", scheduled_id)
-            .limit(1)
-            .execute()
-        ).data
-        if not row:
-            raise InboxError("Geplante Nachricht nicht gefunden.", status_code=404)
-        # Wirft 404, wenn der Nutzer den Thread laut Scope nicht sehen darf.
-        self._load_thread_scoped(ctx, row[0]["thread_id"])
-        db.table("inbox_scheduled_message").update({"status": "cancelled"}).eq(
-            "tenant_id", tenant_id
-        ).eq("id", scheduled_id).eq("status", "pending").execute()
-        # Laufenden Timer stoppen.
-        from . import scheduler
-        scheduler.cancel(scheduled_id)
-
-    # --- Massenaktualisierung ----------------------------------------------
-    def bulk_update(
-        self, ctx: AuthContext, action: str, before: str
-    ) -> BulkUpdateResult:
-        """Threads mit letzter Aktivität ≤ `before` als gelesen/archiviert."""
-        db, tenant_id = self._require(ctx)
-        access = self.access(ctx)
-        if action == "read":
-            patch = {"is_read": True}
-        elif action == "archived":
-            patch = {"is_archived": True, "inbox_status": "archived"}
-        else:
-            raise InboxError("Unbekannte Aktion.", status_code=422)
-        if not (before or "").strip():
-            raise InboxError("Datum fehlt.", status_code=422)
-        # `before` ist ein Tag (YYYY-MM-DD) → einschließlich des ganzen Tages.
-        upper = f"{before[:10]}T23:59:59Z"
-        query = (
-            db.table("channex_booking")
-            .update(patch)
-            .eq("tenant_id", tenant_id)
-            .lte("updated_at", upper)
-        )
-        # Scope: assigned-only-Nutzer dürfen nur ihre eigenen Threads massen-ändern.
-        if access.scope == "assigned":
-            query = query.eq("assigned_user_id", ctx.user_id)
-        rows = query.execute().data or []
-        return BulkUpdateResult(updated=len(rows))
-
-    # --- Interner Cron: fällige geplante Nachrichten versenden -------------
-    def dispatch_due_scheduled(self) -> dict:
-        """Über ALLE Tenants: fällige (send_at ≤ jetzt) pending-Nachrichten
-        versenden. Kein JWT — via internem Cron-Endpoint aufgerufen."""
-
-        if self._db is None:
-            raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
-        db = self._db
-        now = datetime.now(UTC).isoformat()
-        # Verwaiste 'sending'-Zeilen (Prozess starb nach Claim, vor 'sent'/'failed')
-        # wieder freigeben, damit sie in diesem Tick als fällig neu versendet werden
-        # und nicht für immer verloren bleiben. Frist deutlich über realer
-        # Versanddauer, damit ein aktiver Versand nicht doppelt läuft (updated_at
-        # per DB-Trigger beim Claim gesetzt).
-        from . import scheduler  # noqa: PLC0415 — Zirkularität (scheduler↔service)
-
-        reap_cutoff = (
-            datetime.now(UTC)
-            - timedelta(minutes=scheduler.SENDING_REAP_MINUTES)
-        ).isoformat()
-        reaped = (
-            db.table("inbox_scheduled_message")
-            .update({"status": "pending"})
-            .eq("status", "sending")
-            .lt("updated_at", reap_cutoff)
-            .execute()
-        ).data or []
-        if reaped:
-            log.warning("dispatch_reaped_stuck_sending", count=len(reaped))
-        due = (
-            db.table("inbox_scheduled_message")
-            .select("id, tenant_id, thread_id, body")
-            .eq("status", "pending")
-            .lte("send_at", now)
-            .limit(200)
-            .execute()
-        ).data or []
-        sent = 0
-        failed = 0
-        for s in due:
-            # ATOMARES CLAIM: der In-App-Timer (scheduler._send_now) verarbeitet
-            # dieselben pending-Zeilen. Nur wer die Zeile per UPDATE ...
-            # WHERE status='pending' auf 'sending' flippt, darf senden — sonst
-            # Doppelversand. Leere Rückgabe = anderer Pfad war schneller.
-            claimed = (
-                db.table("inbox_scheduled_message")
-                .update({"status": "sending"})
-                .eq("id", s["id"])
-                .eq("status", "pending")
-                .execute()
-            ).data
-            if not claimed:
-                continue
-            try:
-                ctx = AuthContext(user_id="cron", tenant_id=s["tenant_id"])
-                self.send_message(ctx, s["thread_id"], s["body"], enforce_reply=False)
-                db.table("inbox_scheduled_message").update(
-                    {"status": "sent"}
-                ).eq("id", s["id"]).execute()
-                sent += 1
-            except Exception as exc:  # noqa: BLE001 — Cron darf nicht abbrechen
-                db.table("inbox_scheduled_message").update(
-                    {"status": "failed", "last_error": str(exc)[:500]}
-                ).eq("id", s["id"]).execute()
-                failed += 1
-        return {"sent": sent, "failed": failed, "considered": len(due)}
-
-    # -- Automail-Planung (Trigger-Engine) -------------------------------------
-    #
-    # Bei jeder importierten/aktualisierten OTA-Buchung (channex_booking = Thread)
-    # werden die fälligen Automails geplant: für jede aktive Automation prüfen, ob
-    # Objekt UND Kanal passen (leere Zuweisung = alle), das send_at aus anchor +
-    # offset_days @ send_time berechnen und EINE Zeile je (Automation, Thread) in
-    # automation_scheduled_message anlegen (Dedup-Constraint verhindert Doppel-
-    # versand). Der Cron (dispatch_due_automations) versendet später die fälligen.
-
-    @staticmethod
-    def _automation_body(db: Client, tenant_id: str, automation: dict) -> str | None:
-        """Text der Automail: Inline-message, sonst Vorlage (template_id).
-
-        Die Vorlage wird explizit nach tenant_id gefiltert — der Service-Role-Key
-        umgeht RLS, sonst ließe sich über eine manipulierte template_id die Vorlage
-        eines fremden Tenants laden."""
-        msg = (automation.get("message") or "").strip()
-        if msg:
-            return msg
-        tid = automation.get("template_id")
-        if not tid:
-            return None
-        tpl = (
-            db.table("message_template")
-            .select("body")
-            .eq("id", tid)
-            .eq("tenant_id", tenant_id)
-            .limit(1)
-            .execute()
-        ).data or []
-        body = (tpl[0].get("body") if tpl else "") or ""
-        return body.strip() or None
-
-    @staticmethod
-    def _compute_send_at(
-        anchor: str, offset_days: int, send_time: object, thread: dict
-    ) -> datetime | None:
-        """send_at = Ankerdatum + offset_days @ send_time (UTC). None, wenn das
-        Ankerdatum fehlt (z. B. booking ohne created_at) → Automail wird übersprungen."""
-        from datetime import date, time
-
-        if anchor == "arrival":
-            base = thread.get("arrival_date")
-        elif anchor == "departure":
-            base = thread.get("departure_date")
-        else:  # booking
-            base = thread.get("created_at")
-        if not base:
-            return None
-        base_str = str(base)[:10]
-        try:
-            d = date.fromisoformat(base_str)
-        except ValueError:
-            return None
-        # send_time aus DB ist "HH:MM[:SS]"; ohne Angabe Mitternacht.
-        hh, mm = 0, 0
-        if send_time:
-            parts = str(send_time).split(":")
-            hh = int(parts[0])
-            mm = int(parts[1]) if len(parts) > 1 else 0
-        dt = datetime.combine(d + timedelta(days=offset_days), time(hh, mm), tzinfo=UTC)
-        return dt
-
-    @staticmethod
-    def _automation_matches(
-        automation: dict, property_id: str | None, ota_name: str | None
-    ) -> bool:
-        """Zuweisung prüfen: Objekt UND Kanal müssen passen (UND-verknüpft).
-        Leere/NULL-Zuweisung = alle (kein Filter)."""
-        props = automation.get("property_ids") or []
-        if props and (property_id is None or str(property_id) not in {str(p) for p in props}):
-            return False
-        chans = automation.get("channels") or []
-        if chans:
-            name = (ota_name or "").strip().lower()
-            if name not in {str(c).strip().lower() for c in chans}:
-                return False
-        return True
-
-    def schedule_automations_for_thread(self, tenant_id: str, thread_id: str) -> int:
-        """Fällige Automails für einen Thread planen. Gibt die Anzahl geplanter
-        (neu angelegter) Automails zurück. Idempotent über den Unique-Index."""
-        if self._db is None:
-            return 0
-        db = self._db
-        thread = (
-            db.table("channex_booking")
-            .select(
-                "id, tenant_id, property_map_id, ota_name, arrival_date, "
-                "departure_date, created_at"
-            )
-            .eq("id", thread_id)
-            .eq("tenant_id", tenant_id)
-            .limit(1)
-            .execute()
-        ).data or []
-        if not thread:
-            return 0
-        th = thread[0]
-        # property_map_id → lokale property_id (für Haus-Matching).
-        property_id = None
-        if th.get("property_map_id"):
-            pm = (
-                db.table("channex_property_map")
-                .select("property_id")
-                .eq("id", th["property_map_id"])
-                .limit(1)
-                .execute()
-            ).data or []
-            property_id = pm[0]["property_id"] if pm else None
-
-        automations = (
-            db.table("message_automation")
-            .select(self._AUTOMATION_COLS)
-            .eq("tenant_id", tenant_id)
-            .eq("is_active", True)
-            .execute()
-        ).data or []
-
-        planned = 0
-        for a in automations:
-            if not self._automation_matches(a, property_id, th.get("ota_name")):
-                continue
-            body = self._automation_body(db, tenant_id, a)
-            if not body:
-                continue
-            send_at = self._compute_send_at(
-                a.get("anchor") or "arrival",
-                a.get("offset_days") or 0,
-                a.get("send_time"),
-                th,
-            )
-            if send_at is None:
-                continue
-            # Upsert je (Automation, Thread); Dedup verhindert Doppelversand.
-            db.table("automation_scheduled_message").upsert(
-                {
-                    "tenant_id": tenant_id,
-                    "automation_id": a["id"],
-                    "thread_id": thread_id,
-                    "body": body,
-                    "send_at": send_at.isoformat(),
-                },
-                on_conflict="automation_id,thread_id",
-            ).execute()
-            planned += 1
-        return planned
-
-    def dispatch_due_automations(self) -> dict:
-        """Über ALLE Tenants: fällige (send_at ≤ jetzt) pending Automails versenden.
-        Kein JWT — via internem Cron-Endpoint. Versand über send_message (Channex)."""
-
-        if self._db is None:
-            raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
-        db = self._db
-        now = datetime.now(UTC).isoformat()
-        due = (
-            db.table("automation_scheduled_message")
-            .select("id, tenant_id, thread_id, body")
-            .eq("status", "pending")
-            .lte("send_at", now)
-            .limit(200)
-            .execute()
-        ).data or []
-        sent = 0
-        failed = 0
-        for s in due:
-            # Atomares Claim gegen überlappende Cron-Läufe (kein Doppelversand).
-            claimed = (
-                db.table("automation_scheduled_message")
-                .update({"status": "sending"})
-                .eq("id", s["id"])
-                .eq("status", "pending")
-                .execute()
-            ).data
-            if not claimed:
-                continue
-            try:
-                ctx = AuthContext(user_id="cron", tenant_id=s["tenant_id"])
-                self.send_message(ctx, s["thread_id"], s["body"], enforce_reply=False)
-                db.table("automation_scheduled_message").update(
-                    {"status": "sent"}
-                ).eq("id", s["id"]).execute()
-                sent += 1
-            except Exception as exc:  # noqa: BLE001 — Cron darf nicht abbrechen
-                db.table("automation_scheduled_message").update(
-                    {"status": "failed", "last_error": str(exc)[:500]}
-                ).eq("id", s["id"]).execute()
-                failed += 1
-        return {"sent": sent, "failed": failed, "considered": len(due)}
-
     @staticmethod
     def _nights(arrival: str | None, departure: str | None) -> int | None:
         if not (arrival and departure):
@@ -1134,98 +1109,11 @@ class InboxService:
         except ValueError:
             return None
 
-    def ai_reply(self, ctx: AuthContext, thread_id: str) -> AiReplyResponse:
-        """KI-Antwortvorschlag aus Gast-Nachrichten + Buchungskontext (Groq)."""
-        self._require(ctx)
-        # Verlauf laden (best effort, inkl. Sandbox-Mock) + Reservierungskontext.
-        history: list[InboxMessage] = []
-        try:
-            history = self.get_messages(ctx, thread_id).items
-        except InboxError as exc:
-            log.warning("inbox_ai_history_failed", error=exc.message)
-        detail = self.get_reservation_detail(ctx, thread_id)
-        settings = self.get_ai_settings(ctx)
-
-        try:
-            reply = GroqClient().suggest_reply(
-                history=history, reservation=detail, settings=settings
-            )
-        except GroqError as exc:
-            raise InboxError(exc.message, status_code=exc.status_code) from exc
-        return AiReplyResponse(reply=reply, sources=[])
-
-    # -- Vorlagen --------------------------------------------------------------
-    def list_templates(self, ctx: AuthContext) -> MessageTemplateList:
-        db, tenant_id = self._require(ctx)
-        res = (
-            db.table("message_template")
-            .select("id, title, body")
-            .eq("tenant_id", tenant_id)
-            .order("title")
-            .execute()
-        )
-        items = [MessageTemplate(**r) for r in (res.data or [])]
-        return MessageTemplateList(items=items, total=len(items))
-
-    def create_template(self, ctx: AuthContext, req: TemplateUpsert) -> MessageTemplate:
-        db, tenant_id = self._require(ctx)
-        if not req.title.strip() or not req.body.strip():
-            raise InboxError("Titel und Text sind nötig.", status_code=422)
-        ins = (
-            db.table("message_template")
-            .insert({"tenant_id": tenant_id, "title": req.title, "body": req.body})
-            .execute()
-        ).data
-        r = ins[0]
-        return MessageTemplate(id=r["id"], title=r["title"], body=r["body"])
-
-    def update_template(
-        self, ctx: AuthContext, template_id: str, req: TemplateUpsert
-    ) -> MessageTemplate:
-        db, tenant_id = self._require(ctx)
-        upd = (
-            db.table("message_template")
-            .update({"title": req.title, "body": req.body})
-            .eq("tenant_id", tenant_id)
-            .eq("id", template_id)
-            .execute()
-        ).data
-        if not upd:
-            raise InboxError("Vorlage nicht gefunden.", status_code=404)
-        r = upd[0]
-        return MessageTemplate(id=r["id"], title=r["title"], body=r["body"])
-
-    def delete_template(self, ctx: AuthContext, template_id: str) -> None:
-        db, tenant_id = self._require(ctx)
-        db.table("message_template").delete().eq("tenant_id", tenant_id).eq(
-            "id", template_id
-        ).execute()
-
-    # -- KI-Einstellungen ------------------------------------------------------
-    def get_ai_settings(self, ctx: AuthContext) -> AiSettings:
-        db, tenant_id = self._require(ctx)
-        res = (
-            db.table("inbox_ai_settings")
-            .select("tone, language, signature, extra_prompt, auto_suggest")
-            .eq("tenant_id", tenant_id)
-            .limit(1)
-            .execute()
-        ).data
-        if not res:
-            return AiSettings()  # Defaults, solange nichts gespeichert ist
-        return AiSettings(**res[0])
-
-    def save_ai_settings(self, ctx: AuthContext, req: AiSettings) -> AiSettings:
-        db, tenant_id = self._require(ctx)
-        db.table("inbox_ai_settings").upsert(
-            {"tenant_id": tenant_id, **req.model_dump()}, on_conflict="tenant_id"
-        ).execute()
-        return req
-
     # -- Automatisierungen -----------------------------------------------------
     _AUTOMATION_COLS = (
         "id, name, trigger, anchor, offset_days, send_time, property_ids, "
-        "channels, template_id, message, is_active"
+        "channels, template_id, message, is_active, use_property_timezone, "
+        "only_first_message, window_days, window_from, window_to"
     )
 
     @staticmethod
@@ -1244,6 +1132,11 @@ class InboxService:
             template_id=str(r["template_id"]) if r.get("template_id") else None,
             message=r.get("message"),
             is_active=bool(r.get("is_active", True)),
+            use_property_timezone=bool(r.get("use_property_timezone")),
+            only_first_message=bool(r.get("only_first_message")),
+            window_days=[int(t) for t in (r.get("window_days") or [])],
+            window_from=str(r["window_from"])[:5] if r.get("window_from") else None,
+            window_to=str(r["window_to"])[:5] if r.get("window_to") else None,
         )
 
     @staticmethod
@@ -1260,7 +1153,37 @@ class InboxService:
             "template_id": req.template_id,
             "message": req.message,
             "is_active": req.is_active,
+            "use_property_timezone": req.use_property_timezone,
+            "only_first_message": req.only_first_message,
+            # Leeres Array als NULL = „alle Tage" (analog property_ids/channels).
+            "window_days": req.window_days or None,
+            "window_from": req.window_from or None,
+            "window_to": req.window_to or None,
         }
+
+    _TRIGGER = ("booking_new", "before_checkin", "after_checkout", "message_received")
+
+    def _automation_pruefen(self, req: AutomationUpsert) -> None:
+        """Eingabe abweisen, bevor die DB-Constraints als 500 durchschlagen."""
+        if req.trigger not in self._TRIGGER:
+            raise InboxError(
+                f"Unbekannter Auslöser: {req.trigger}", status_code=422
+            )
+        if bool(req.window_from) != bool(req.window_to):
+            raise InboxError(
+                "Das Zeitfenster braucht Anfang UND Ende.", status_code=422
+            )
+        if any(t < 0 or t > 6 for t in req.window_days):
+            raise InboxError(
+                "Wochentage müssen zwischen 0 (Mo) und 6 (So) liegen.",
+                status_code=422,
+            )
+        if not (req.message or "").strip() and not req.template_id:
+            raise InboxError(
+                "Die Automatisierung braucht einen Text oder eine Vorlage.",
+                status_code=422,
+            )
+        self._felder_pruefen(req.message)
 
     def list_automations(self, ctx: AuthContext) -> AutomationList:
         db, tenant_id = self._require(ctx)
@@ -1280,6 +1203,7 @@ class InboxService:
         db, tenant_id = self._require(ctx)
         if not req.name.strip():
             raise InboxError("Name ist nötig.", status_code=422)
+        self._automation_pruefen(req)
         ins = (
             db.table("message_automation")
             .insert({"tenant_id": tenant_id, **self._automation_payload(req)})
@@ -1291,6 +1215,7 @@ class InboxService:
         self, ctx: AuthContext, automation_id: str, req: AutomationUpsert
     ) -> Automation:
         db, tenant_id = self._require(ctx)
+        self._automation_pruefen(req)
         upd = (
             db.table("message_automation")
             .update(self._automation_payload(req))

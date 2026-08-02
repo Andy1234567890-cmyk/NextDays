@@ -12,6 +12,19 @@ Interaktive Doku (Swagger UI): **http://localhost:8000/docs**
 | `GET`   | `/`       | Service-Info |
 | `GET`   | `/health` | App-Health   |
 
+## Fehlerantworten
+
+Jede Fehlerantwort trägt eine `request_id` (auch als `X-Request-Id`-Header) —
+damit findet der Support den Fall im Backoffice wieder. Zentrale Handler in
+`main.py`:
+
+- **422** bei Schema-Verstoß (`RequestValidationError`, mit Feldliste) **und**
+  bei einem Pfad-/Query-Wert, den Postgres nicht parsen kann (`22P02`, z. B.
+  eine abgeschnittene UUID). Letzteres war früher ein 500 — ein kaputter
+  Client-Wert ist aber ein Eingabefehler des Aufrufers (Wurzel 5).
+- **500** nur bei echten Serverfehlern; der Client bekommt ausschließlich
+  `internal_error` + `request_id`, nie Exception-Typ oder Stacktrace.
+
 ## Slices
 
 Jeder der 24 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
@@ -655,6 +668,12 @@ liefert nur Nutzer mit Posteingang-Zugriff; jede Zuweisung setzt `assigned_by`/
 | `POST`     | `/api/v1/inbox/bulk-update`                         | Massenaktion: `{action: read\|archived, before: YYYY-MM-DD}`                                                                   |
 | `POST`     | `/api/v1/inbox/{id}/ai-reply`                       | KI-Antwortvorschlag (Groq)                                                                                                     |
 | `…`        | `/api/v1/inbox/templates\|ai-settings\|automations` | Vorlagen / KI-Einstellungen / Automatisierungen                                                                                |
+| `GET`      | `/api/v1/inbox/fields`                              | Katalog der Platzhalter (22 Felder, Gruppen guest/reservation/property/company) für den Feld-Picker                            |
+| `POST`     | `/api/v1/inbox/{id}/render`                         | Platzhalter gegen diesen Thread auflösen (Editor-Vorschau); fehlender Wert → 422 mit Feldliste, nie ein Ersatzwert             |
+| `GET/POST` | `/api/v1/inbox/{id}/attachments`                    | Anhänge auflisten / hochladen (multipart, `?filename=&message=`). Typ per Magic Bytes, max. 10 MB, privater Bucket + signierte URL |
+| `DELETE`   | `/api/v1/inbox/attachments/{aid}`                   | Anhang löschen (Storage + Zeile)                                                                                               |
+| `GET/POST` | `/api/v1/inbox/knowledge`                           | Wissensdatenbank der KI-Antwort: Fakten auflisten (`?property_id`) / anlegen                                                   |
+| `PUT/DELETE` | `/api/v1/inbox/knowledge/{fid}`                   | Fakt ändern / löschen                                                                                                          |
 
 **Interner Cron (kein JWT, Secret-Header `X-Internal-Cron-Secret` = `INTERNAL_CRON_SECRET`):**
 Eigenes Secret, bewusst getrennt vom `CHANNEX_WEBHOOK_SECRET` (das geht outbound
@@ -682,6 +701,17 @@ Per Coolify-Scheduled-Task / crontab regelmäßig aufrufen, analog zu
 `inbox_thread_note` (interne Notizen). RLS via `current_tenant_id()`.
 **Migration 0045 (Audit):** `channex_booking.assigned_by`/`assigned_at` +
 `inbox_assignment_log` (from/to/by-User, Historie). RLS via `current_tenant_id()`.
+**Migration 0257:** `message_automation` bekommt den Auslöser `message_received`
+(+ CHECK auf `trigger`) sowie `only_first_message`, `window_days smallint[]`,
+`window_from`/`window_to` — die Abwesenheitsantwort außerhalb der Bürozeiten.
+**Migration 0258:** `properties.timezone` (IANA, per Trigger gegen
+`pg_timezone_names` geprüft — ein CHECK kann keine Unterabfrage enthalten) +
+`message_automation.use_property_timezone`: `send_time` gilt dann als Ortszeit
+des Objekts. Fehlt die Zeitzone, wird die Planung übersprungen und geloggt.
+**Migration 0259/0260 (Wurzel 6):** `inbox_attachment` und
+`inbox_knowledge_fact` sind für `anon`/`authenticated` komplett gesperrt
+(`revoke all` + `as restrictive for all using (false)`) — sie enthalten
+Dokumente bzw. Zugangsdaten. Kein Realtime-Abo darauf.
 
 **Posteingang-Berechtigungen (..-Permissions, `users.permissions`):**
 `pm_chat` (Zugriff), `inbox_view_all` (Scope), `inbox_reply`, `inbox_assign`,

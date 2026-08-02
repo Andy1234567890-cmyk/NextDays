@@ -1,8 +1,11 @@
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
 from src.features.channel_manager.channex_client import ChannexError
+from src.features.inbox.felder import FeldFehlt, Kontext, rendern, unbekannte_felder
 from src.features.inbox.service import InboxError, InboxService
 from src.main import create_app
 
@@ -22,9 +25,14 @@ class _Res:
 
 
 class _FakeChannex:
-    def __init__(self, messages=None, get_error: ChannexError | None = None) -> None:  # noqa: ANN001
+    def __init__(
+        self, messages=None,  # noqa: ANN001
+        get_error: ChannexError | None = None,
+        send_error: ChannexError | None = None,
+    ) -> None:
         self._messages = messages or []
         self._get_error = get_error
+        self._send_error = send_error
         self.sent: list[tuple[str, str]] = []
 
     def get_messages_for_booking(self, cbid):  # noqa: ANN001, ANN201
@@ -33,6 +41,8 @@ class _FakeChannex:
         return {"data": self._messages}
 
     def send_message_for_booking(self, cbid, message):  # noqa: ANN001, ANN201
+        if self._send_error is not None:
+            raise self._send_error
         self.sent.append((cbid, message))
         return {"data": {"id": "m1", "attributes": {"message": message, "sender": "property"}}}
 
@@ -593,7 +603,7 @@ def test_link_thread_guest_requires_config_permission() -> None:
 
 
 # --- Automail: Zeitberechnung + Zuweisungs-Matching (reine Logik) ------------
-from datetime import UTC, datetime  # noqa: E402
+from datetime import UTC  # noqa: E402
 
 
 def test_compute_send_at_before_arrival_with_time() -> None:
@@ -628,3 +638,209 @@ def test_automation_matches_house_and_channel_and_logic() -> None:
     assert InboxService._automation_matches(a, "p-9", "Airbnb") is False
     # Kanal passt nicht (UND-Verknüpfung).
     assert InboxService._automation_matches(a, "p-1", "Booking.com") is False
+
+
+# --- Platzhalter (felder.py) --------------------------------------------------
+def test_platzhalter_ersetzt_bekannte_felder() -> None:
+    k = Kontext(guest_name="Anna Meier", check_in="2026-08-14", property_name="Haus 1")
+    out = rendern(
+        "Hallo {{guest_first_name}}, {{property_name}} erwartet Sie am {{check_in}}.", k
+    )
+    assert out == "Hallo Anna, Haus 1 erwartet Sie am 14.08.2026."
+
+
+def test_platzhalter_ohne_wert_bricht_ab_statt_luecke_zu_senden() -> None:
+    # „Hallo ," ist kein akzeptabler Ersatz — der Versand muss scheitern (Wurzel 4).
+    with pytest.raises(FeldFehlt) as exc:
+        rendern("Hallo {{guest_name}}, Code {{door_code}}", Kontext())
+    assert set(exc.value.felder) == {"guest_name", "door_code"}
+
+
+def test_platzhalter_null_kinder_ist_ein_wert_kein_fehler() -> None:
+    assert rendern("{{children}} Kinder", Kontext(children=0)) == "0 Kinder"
+
+
+def test_platzhalter_unbekanntes_feld_bleibt_stehen_statt_zu_werfen() -> None:
+    # Beim Speichern längst abgewiesen; ein von Hand getipptes {{...}} darf den
+    # Versand trotzdem nicht kippen.
+    assert rendern("Preis {{foo}}", Kontext()) == "Preis {{foo}}"
+
+
+def test_unbekannte_felder_findet_tippfehler() -> None:
+    assert unbekannte_felder("{{guest_nmae}} und {{guest_name}}") == ["guest_nmae"]
+
+
+def test_betrag_ohne_waehrungszeichen() -> None:
+    # Kein hartkodiertes € (Wurzel 4) — die Währung ist ein eigenes Feld.
+    out = rendern("{{total_amount}} {{currency}}", Kontext(total_amount=1132, currency="DKK"))
+    assert out == "1132,00 DKK"
+
+
+# --- Sendezeit in der Zeitzone des Objekts ------------------------------------
+def test_sendezeit_nutzt_objekt_zeitzone() -> None:
+    thread = {"arrival_date": "2026-08-14"}
+    utc = InboxService._compute_send_at("arrival", 0, "10:00", thread)
+    athen = InboxService._compute_send_at(
+        "arrival", 0, "10:00", thread, timezone_name="Europe/Athens"
+    )
+    # 10:00 in Athen (UTC+3 im August) ist 07:00 UTC — ohne Zone wären es 10:00 UTC.
+    assert utc.isoformat() == "2026-08-14T10:00:00+00:00"
+    assert athen.isoformat() == "2026-08-14T07:00:00+00:00"
+
+
+def test_unbekannte_zeitzone_faellt_klar_durch_statt_auf_utc() -> None:
+    with pytest.raises(InboxError):
+        InboxService._compute_send_at(
+            "arrival", 0, "10:00", {"arrival_date": "2026-08-14"},
+            timezone_name="Europe/Kopenhagen",
+        )
+
+
+# --- Zeitfenster der Abwesenheitsantwort --------------------------------------
+def _zeitpunkt(tag: str, uhr: str) -> datetime:
+    return datetime.fromisoformat(f"{tag}T{uhr}:00+00:00")
+
+
+def test_zeitfenster_ohne_angabe_immer_offen() -> None:
+    assert InboxService._im_zeitfenster({}, _zeitpunkt("2026-08-05", "03:00")) is True
+
+
+def test_zeitfenster_ueber_mitternacht() -> None:
+    # 22:00–06:00 ist die Vereinigung beider Teilstücke, nicht ihr leerer Schnitt.
+    a = {"window_from": "22:00", "window_to": "06:00"}
+    assert InboxService._im_zeitfenster(a, _zeitpunkt("2026-08-05", "23:30")) is True
+    assert InboxService._im_zeitfenster(a, _zeitpunkt("2026-08-05", "02:00")) is True
+    assert InboxService._im_zeitfenster(a, _zeitpunkt("2026-08-05", "12:00")) is False
+
+
+def test_zeitfenster_am_tag() -> None:
+    a = {"window_from": "09:00", "window_to": "17:00"}
+    assert InboxService._im_zeitfenster(a, _zeitpunkt("2026-08-05", "12:00")) is True
+    assert InboxService._im_zeitfenster(a, _zeitpunkt("2026-08-05", "18:00")) is False
+
+
+def test_zeitfenster_wochentage() -> None:
+    # 2026-08-05 ist ein Mittwoch (weekday 2).
+    nur_wochenende = {"window_days": [5, 6]}
+    assert InboxService._im_zeitfenster(nur_wochenende, _zeitpunkt("2026-08-05", "12:00")) is False
+    assert InboxService._im_zeitfenster(nur_wochenende, _zeitpunkt("2026-08-08", "12:00")) is True
+
+
+# --- Anhänge: Typerkennung über Magic-Bytes ------------------------------------
+def test_anhang_typ_aus_magic_bytes_nicht_aus_content_type() -> None:
+    assert InboxService._dateityp(b"%PDF-1.7 ...") == ("pdf", "application/pdf")
+    assert InboxService._dateityp(b"\x89PNG\r\n\x1a\n rest") == ("png", "image/png")
+    # Als Bild deklariertes HTML bleibt HTML → abgelehnt.
+    assert InboxService._dateityp(b"<html><script>alert(1)</script>") is None
+
+
+def test_anhang_dateiname_ohne_pfadanteile() -> None:
+    assert InboxService._dateiname_saeubern("../../etc/passwd", "pdf") == "passwd.pdf"
+    assert InboxService._dateiname_saeubern("Haus\nordnung.pdf", "pdf") == "Haus_ordnung.pdf"
+
+
+# --- Buchungs-Ereignisse: jede Angabe stammt von der Gegenseite ----------------
+def test_buchungsereignis_nimmt_ota_zeit_nicht_unsere_importzeit() -> None:
+    row = {
+        "id": "th1", "ota_name": "BookingCom", "ota_reservation_code": "4711",
+        "arrival_date": "2026-08-10", "departure_date": "2026-08-11",
+        "status": "new",
+        # Unsere Uhr: der Feed-Nachlauf lief erst Wochen später.
+        "created_at": "2026-08-01T11:47:17.365761+00:00",
+        "ota_inserted_at": "2026-05-11T21:08:40Z",
+        "raw": {
+            "inserted_at": "2026-05-11T21:08:40.123456",
+            # Booking.com reicht die Originalmeldung durch (JSON-Text).
+            "raw_message": '{"id":"6887445125","date":"2026-05-11","time":"23:08:36"}',
+        },
+    }
+    ereignis = InboxService(service_client=None, channex=None)._booking_events(row)[0]
+    assert ereignis.sent_at == "2026-05-11T21:08:40Z"   # nicht created_at
+    assert ereignis.event_channel == "BookingCom"
+    fakten = {f.label: f.value for f in ereignis.event_facts}
+    assert fakten["reservationCode"] == "4711"
+    assert fakten["bookedAtOta"] == "2026-05-11 23:08:36"
+    assert "importedAt" not in fakten
+
+
+def test_buchungsereignis_ohne_ota_zeit_weist_importzeit_aus() -> None:
+    row = {
+        "id": "th1", "ota_name": "Booking.com", "status": "new",
+        "created_at": "2026-06-22T10:00:00Z",
+    }
+    ereignis = InboxService(service_client=None, channex=None)._booking_events(row)[0]
+    assert ereignis.sent_at == "2026-06-22T10:00:00Z"
+    # Kein stiller Ersatz: dass es die IMPORT-Zeit ist, steht sichtbar dabei.
+    assert {f.label for f in ereignis.event_facts} == {"importedAt"}
+
+
+def test_statuswechsel_nimmt_zeit_der_revision() -> None:
+    row = {
+        "id": "th1", "ota_name": "BookingCom", "status": "cancelled",
+        "created_at": "2026-05-11T21:08:40Z",
+        "ota_inserted_at": "2026-05-11T21:08:40Z",
+        "updated_at": "2026-08-01T11:47:17Z",          # unsere Schreibzeit
+        "raw": {"inserted_at": "2026-07-30T09:15:00"},  # Eingang der Storno-Revision
+    }
+    ereignisse = InboxService(service_client=None, channex=None)._booking_events(row)
+    storno = [e for e in ereignisse if e.event_title == "statusChanged"][0]
+    assert storno.sent_at == "2026-07-30T09:15:00Z"
+    assert storno.event_detail == "cancelled"
+
+
+def test_ota_zeiten_kennen_arrival_hour() -> None:
+    # Channex nennt die erwartete Ankunft `arrival_hour` — beide Leser (Detail-
+    # spalte und Platzhalter der Automationen) müssen sie finden.
+    assert InboxService._ota_zeiten({"arrival_hour": "16:00"}) == ("16:00", None)
+    assert InboxService._ota_zeiten({"occupancy": {"checkin_time": "15:00"}}) == (
+        "15:00", None,
+    )
+
+
+def test_get_messages_ohne_chat_app_zeigt_lebenslauf_statt_fehler(monkeypatch) -> None:  # noqa: ANN001
+    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
+    bookings = [{
+        "id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1",
+        "ota_name": "BookingCom", "status": "new",
+        "created_at": "2026-06-22T10:00:00Z",
+    }]
+    err = ChannexError(
+        "Forbidden", status_code=403, channex_status=403,
+        payload={"errors": {"code": "forbidden", "title": "Forbidden"}},
+    )
+    svc = InboxService(service_client=_FakeDB(bookings, []), channex=_FakeChannex(get_error=err))
+    out = svc.get_messages(_CTX, "th1")
+    assert out.unavailable == "chat_app_missing"
+    assert [m.event_title for m in out.items] == ["bookingReceived"]
+
+
+def test_senden_ohne_chat_app_nennt_den_grund(monkeypatch) -> None:  # noqa: ANN001
+    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
+    bookings = [{"id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1"}]
+    err = ChannexError("Forbidden", status_code=403, channex_status=403, payload={})
+    svc = InboxService(service_client=_FakeDB(bookings, []), channex=_FakeChannex(send_error=err))
+    with pytest.raises(InboxError) as exc:
+        svc.send_message(_CTX, "th1", "Hallo")
+    # 409 statt des nackten „Forbidden": der Grund ist eine fehlende
+    # Freischaltung, kein Rechteproblem des Benutzers.
+    assert exc.value.status_code == 409
+    assert "nicht aktiv" in exc.value.message
+
+
+def test_kanal_ohne_chat_bricht_die_ansicht_nicht(monkeypatch) -> None:  # noqa: ANN001
+    # Staging-Realität: Testbuchungen laufen über einen Kanal, den die
+    # Nachrichten-API nicht unterstützt (422 not_supported). Der Verlauf muss
+    # trotzdem stehen — mit Grund statt Fehlerseite.
+    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
+    bookings = [{
+        "id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1",
+        "ota_name": "BookingCom", "status": "new", "created_at": "2026-06-22T10:00:00Z",
+    }]
+    err = ChannexError(
+        "Method not supported", status_code=422, channex_status=422,
+        payload={"errors": {"code": "not_supported", "title": "Method not supported"}},
+    )
+    svc = InboxService(service_client=_FakeDB(bookings, []), channex=_FakeChannex(get_error=err))
+    out = svc.get_messages(_CTX, "th1")
+    assert out.unavailable == "channel_no_chat"
+    assert [m.event_title for m in out.items] == ["bookingReceived"]

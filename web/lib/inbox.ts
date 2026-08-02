@@ -17,6 +17,7 @@ export type InboxThread = {
   ota_reservation_code: string | null;
   guest_name: string | null;
   guest_email: string | null;
+  guest_phone: string | null;
   status: string | null;
   arrival_date: string | null;
   departure_date: string | null;
@@ -33,9 +34,22 @@ export type InboxThread = {
 export type InboxMessage = {
   id: string | null;
   message: string;
-  sender: "guest" | "property" | "note";
+  // "event" = Ereignis der Reservierung (Buchungseingang, Statuswechsel) im
+  // selben Strang wie die Nachrichten — wie bei Lodgify/Hostaway.
+  sender: "guest" | "property" | "note" | "event";
   sent_at: string | null;
   author_name?: string | null;
+  /** Nur bei sender="event": Schlüssel der Kopfzeile (i18n). */
+  event_title?: string | null;
+  /** Nur bei sender="event": roher Statuswert ("modified" | "cancelled"). */
+  event_detail?: string | null;
+  /**
+   * Nur bei sender="event": aufklappbare Angaben. `label` ist ein i18n-Kürzel,
+   * `value` steht unverändert so da, wie das Portal es geliefert hat.
+   */
+  event_facts?: { label: string; value: string }[];
+  /** Nur bei sender="event": Herkunftskanal (BookingCom, Airbnb …). */
+  event_channel?: string | null;
 };
 
 export type TeamMember = { id: string; name: string; email: string | null };
@@ -57,6 +71,7 @@ export type ReservationDetail = {
   guest_email: string | null;
   guest_phone: string | null;
   guest_language: string | null;
+  guest_location: string | null;
   adults: number | null;
   children: number | null;
   nights: number | null;
@@ -192,11 +207,23 @@ export async function bulkUpdate(
   });
 }
 
-/** Nachrichtenverlauf einer Konversation (live aus Channex). */
+/**
+ * Nachrichtenverlauf einer Konversation — live vom Portal, nicht aus unserer DB.
+ *
+ * `unavailable` benennt, warum der Portal-Chat gerade nichts liefert
+ * ("chat_app_missing": Chat für dieses Objekt bei den Portalen nicht
+ * freigeschaltet). Die Ereignisse der Buchung stehen trotzdem im Verlauf.
+ */
+export type InboxMessagesResult = {
+  items: InboxMessage[];
+  total: number;
+  unavailable?: string | null;
+};
+
 export async function getInboxMessages(
   threadId: string,
-): Promise<Result<{ items: InboxMessage[]; total: number }>> {
-  return call<{ items: InboxMessage[]; total: number }>(`/${threadId}/messages`);
+): Promise<Result<InboxMessagesResult>> {
+  return call<InboxMessagesResult>(`/${threadId}/messages`);
 }
 
 /** Antwort an den Gast senden (zurück an die OTA). */
@@ -288,10 +315,20 @@ export async function saveAiSettings(
 }
 
 // --- Automatisierungen ------------------------------------------------------
+/** Auslöser einer Automatisierung. `message_received` (Abwesenheitsantwort)
+ *  hängt an keinem Datum der Reservierung, sondern am Eingang einer Nachricht —
+ *  dort sind anchor/offset_days/send_time bedeutungslos und stattdessen die
+ *  window_*-Felder maßgeblich. */
+export type AutomationTrigger =
+  | "booking_new"
+  | "before_checkin"
+  | "after_checkout"
+  | "message_received";
+
 export type Automation = {
   id: string;
   name: string;
-  trigger: string;
+  trigger: AutomationTrigger;
   // anchor: Bezugsdatum (arrival|departure|booking); offset_days = vorzeichen-
   // behaftetes Tagesdelta; send_time "HH:MM"; property_ids/channels leer = alle.
   anchor: string;
@@ -302,6 +339,18 @@ export type Automation = {
   template_id: string | null;
   message: string | null;
   is_active: boolean;
+  /** Sendezeit in der Zeitzone des Objekts auflösen statt in UTC. Ohne
+   *  hinterlegte Zeitzone plant der Server für dieses Objekt NICHT. */
+  use_property_timezone: boolean;
+  /** Nur message_received: nur die erste Gastnachricht des Threads. */
+  only_first_message: boolean;
+  /** Nur message_received: Wochentage, an denen ausgelöst werden darf
+   *  (0 = Montag … 6 = Sonntag). Leer = alle Tage. */
+  window_days: number[];
+  /** Nur message_received: Zeitfenster "HH:MM". Ende vor Anfang = über
+   *  Mitternacht (22:00–06:00). Beide oder keines. */
+  window_from: string | null;
+  window_to: string | null;
 };
 
 export type AutomationInput = Omit<Automation, "id">;
@@ -327,4 +376,136 @@ export async function updateAutomation(
 
 export async function deleteAutomation(id: string): Promise<Result<void>> {
   return call<void>(`/automations/${id}`, { method: "DELETE" });
+}
+
+// --- Platzhalter (Felder) -----------------------------------------------------
+/** Ein Platzhalter, der in Vorlagen und Automationen benutzt werden kann.
+ *  `key` ist sprachneutral und stabil (`{{guest_name}}`); die Beschriftung
+ *  kommt aus den Sprachdateien (`inbox.field_<key>`), damit eine Vorlage einen
+ *  Sprachwechsel der Oberfläche unbeschadet übersteht. */
+export type FieldEntry = {
+  key: string;
+  group: "guest" | "reservation" | "property" | "company";
+};
+
+export async function listFields(): Promise<Result<{ items: FieldEntry[] }>> {
+  return call<{ items: FieldEntry[] }>("/fields");
+}
+
+/** Text mit den Daten DIESER Konversation auflösen — Vorschau beim Einfügen
+ *  einer Vorlage, damit niemand `{{guest_name}}` an einen Gast schickt.
+ *  Fehlt der Wert eines benutzten Feldes, antwortet der Server mit 422 und
+ *  nennt das Feld; dann steht die Reservierung unvollständig da. */
+export async function renderForThread(
+  threadId: string,
+  text: string,
+): Promise<Result<{ text: string }>> {
+  return call<{ text: string }>(`/${threadId}/render`, {
+    method: "POST",
+    body: { text },
+  });
+}
+
+// --- Anhänge ------------------------------------------------------------------
+export type Attachment = {
+  id: string;
+  filename: string;
+  mime: string;
+  size: number;
+  /** Befristet signierte Download-URL (privater Bucket). */
+  url: string | null;
+  created_at: string | null;
+  /** Gesetzt, sobald an den Kanal übergeben. NULL = liegt nur bei uns. */
+  sent_at: string | null;
+  /** Warum der Kanal die Datei abgelehnt hat (Airbnb nimmt kein PDF). */
+  channel_error: string | null;
+};
+
+export async function listAttachments(
+  threadId: string,
+): Promise<Result<{ items: Attachment[]; total: number }>> {
+  return call<{ items: Attachment[]; total: number }>(`/${threadId}/attachments`);
+}
+
+export async function deleteAttachment(id: string): Promise<Result<void>> {
+  return call<void>(`/attachments/${id}`, { method: "DELETE" });
+}
+
+// --- KI-Wissensdatenbank -------------------------------------------------------
+export type KnowledgeFact = {
+  id: string;
+  /** null = gilt betriebsweit, sonst nur für dieses Objekt. */
+  property_id: string | null;
+  property_title: string | null;
+  fact: string;
+  source: "manual" | "document" | "message";
+  source_ref: string | null;
+  updated_at: string | null;
+};
+
+export async function listKnowledge(
+  propertyId?: string,
+): Promise<Result<{ items: KnowledgeFact[]; total: number }>> {
+  const q = propertyId ? `?property_id=${encodeURIComponent(propertyId)}` : "";
+  return call<{ items: KnowledgeFact[]; total: number }>(`/knowledge${q}`);
+}
+
+export async function createKnowledge(input: {
+  property_id: string | null;
+  fact: string;
+}): Promise<Result<KnowledgeFact>> {
+  return call<KnowledgeFact>("/knowledge", { method: "POST", body: input });
+}
+
+export async function updateKnowledge(
+  id: string,
+  input: { property_id: string | null; fact: string },
+): Promise<Result<KnowledgeFact>> {
+  return call<KnowledgeFact>(`/knowledge/${id}`, { method: "PUT", body: input });
+}
+
+export async function deleteKnowledge(id: string): Promise<Result<void>> {
+  return call<void>(`/knowledge/${id}`, { method: "DELETE" });
+}
+
+/** Datei an eine Konversation hängen (multipart) und an den Kanal übergeben.
+ *  Der Upload gelingt auch, wenn der Kanal die Datei ablehnt — dann trägt der
+ *  Anhang `channel_error` und `sent_at` bleibt leer. */
+export async function uploadAttachment(
+  threadId: string,
+  file: File,
+  message?: string,
+): Promise<Result<Attachment>> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: "Nicht angemeldet." };
+
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const form = new FormData();
+  form.append("file", file);
+  const params = new URLSearchParams({ filename: file.name });
+  if (message) params.set("message", message);
+  try {
+    const res = await fetch(
+      `${base}/api/v1/inbox/${threadId}/attachments?${params.toString()}`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+        cache: "no-store",
+      },
+    );
+    if (!res.ok) {
+      let detail = `Fehler ${res.status}`;
+      try {
+        const data = await res.json();
+        if (typeof data?.detail === "string") detail = data.detail;
+      } catch {
+        // kein JSON-Body
+      }
+      return { ok: false, error: detail };
+    }
+    return { ok: true, data: (await res.json()) as Attachment };
+  } catch {
+    return { ok: false, error: "Backend nicht erreichbar." };
+  }
 }

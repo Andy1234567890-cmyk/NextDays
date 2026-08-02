@@ -2,11 +2,12 @@
 
 // Vorlagen-Tab: Nachrichten-Vorlagen anlegen, bearbeiten, löschen.
 import { Icon } from "@iconify/react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
+import { FeldPicker, anCursorEinfuegen } from "@/components/inbox/feld-picker";
 import {
   type MessageTemplate,
   createTemplate,
@@ -23,6 +24,7 @@ export function TemplatesTab() {
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const textfeld = useRef<HTMLTextAreaElement>(null);
 
   async function load() {
     const res = await listTemplates();
@@ -120,11 +122,15 @@ export function TemplatesTab() {
           placeholder={t("templateTitle")}
         />
         <textarea
+          ref={textfeld}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={t("templateBody")}
           rows={6}
           className="resize-none rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
+        />
+        <FeldPicker
+          onInsert={(p) => anCursorEinfuegen(textfeld.current, p, body, setBody)}
         />
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">

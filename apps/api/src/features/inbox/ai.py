@@ -46,10 +46,16 @@ class GroqClient:
         history: list[InboxMessage],
         reservation: ReservationDetail,
         settings: AiSettings | None = None,
+        knowledge: list[str] | None = None,
     ) -> str:
         """Antwortvorschlag erzeugen. `history`=Liste InboxMessage, `reservation`=
-        ReservationDetail, `settings`=AiSettings (Ton/Sprache/Signatur/Prompt).
-        Gibt den Vorschlagstext zurück."""
+        ReservationDetail, `settings`=AiSettings (Ton/Sprache/Signatur/Prompt),
+        `knowledge`=Fakten aus der Wissensdatenbank.
+
+        Ohne `knowledge` kann das Modell auf „Wie ist das WLAN-Passwort?" nichts
+        anderes tun als um Klärung zu bitten — der System-Prompt verbietet ihm
+        (zu Recht) das Erfinden von Fakten. Die Wissensdatenbank ist genau die
+        Menge an Angaben, die es benutzen DARF."""
         if not self.is_configured:
             raise GroqError(
                 "KI-Antworten sind nicht konfiguriert (Groq-API-Key fehlt).",
@@ -97,8 +103,16 @@ class GroqClient:
             system += f" Beende die Nachricht mit dieser Signatur: {signature}."
         if extra:
             system += f" Zusätzliche Anweisung: {extra}"
+        wissen = "\n".join(f"- {f}" for f in (knowledge or []) if f.strip())
+        wissen_block = (
+            f"Gesicherte Angaben zu dieser Unterkunft (nur diese als Fakten "
+            f"verwenden):\n{wissen}\n\n"
+            if wissen
+            else ""
+        )
         user = (
             f"Buchungskontext:\n{context}\n\n"
+            f"{wissen_block}"
             f"Bisheriger Verlauf:\n{convo}\n\n"
             "Schreibe den Antwortvorschlag des Gastgebers."
         )

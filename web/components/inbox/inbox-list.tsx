@@ -2,55 +2,65 @@
 
 // Posteingang (Guest Messaging) im 3-Spalten-Layout — das Gerüst steht IMMER,
 // auch wenn keine Nachrichten da sind (Tabs, Filterleiste, leere Spalten):
-//   links   – Thread-Liste (Gast, Aufenthalt, Vorschau, Kanal-Icon, Suche)
+//   links   – Thread-Liste (Gast, Aufenthalt, Vorschau, Kanal-Marke, Suche)
 //   mitte   – Chat-Verlauf + KI-Antwortvorschlag (Groq) + Antwortfeld
 //   rechts  – Reservierungs-Panel (Unterkunft, Kontakt, Nächte, Preis, Daten)
 // Nachrichten werden live über Channex gelesen/gesendet (Booking.com/Airbnb/Expedia);
 // im Sandbox-Modus über den lokalen Mock-Speicher.
+//
+// DIESE Datei hält nur noch das Seitengerüst und die Thread-Liste. Die großen
+// Teile liegen daneben, weil die Datei auf 2178 Zeilen gewachsen war:
+//   inbox-konversation.tsx        – mittlere Spalte (Verlauf, KI, Composer)
+//   inbox-reservierung.tsx        – rechte Spalte (Buchung, Gast, Notizen)
+//   inbox-massenaktualisierung.tsx– Dialog „Massenaktualisierung"
+//   inbox-darstellung.tsx         – Avatar/Kanal-Marke/Status/Zeitformate
+//   inbox-whatsapp-threads.ts     – WhatsApp-Konversation → InboxThread
 import { Icon } from "@iconify/react";
-import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { useTranslations, useLocale } from "next-intl";
 
 import { AiSettingsTab } from "@/components/inbox/ai-settings-tab";
 import { AutomationsTab } from "@/components/inbox/automations-tab";
 import { ManageTab } from "@/components/inbox/manage-tab";
+import { WissenTab } from "@/components/inbox/wissen-tab";
 import { TemplatesTab } from "@/components/inbox/templates-tab";
+import {
+  ChannelTag,
+  GuestAvatar,
+  StatusBadge,
+  fmtRange,
+  kurzeZeit,
+} from "@/components/inbox/inbox-darstellung";
+import { Conversation } from "@/components/inbox/inbox-konversation";
+import { BulkUpdateDialog } from "@/components/inbox/inbox-massenaktualisierung";
+import { ReservationPanel } from "@/components/inbox/inbox-reservierung";
+import {
+  WA_NEW_PREFIX,
+  WA_PREFIX,
+  isWhatsApp,
+  whatsAppDraftThread,
+  whatsAppToThread,
+} from "@/components/inbox/inbox-whatsapp-threads";
 import { WhatsAppChat } from "@/components/inbox/whatsapp-panel";
 import { Button } from "@nextdays/ui/button";
 import { DatePicker } from "@nextdays/ui/date-picker";
 import { MultiSelect } from "@nextdays/ui/multi-select";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Popover, PopoverContent, PopoverTrigger } from "@nextdays/ui/popover";
-import { formatCurrency } from "@/lib/currency";
 import {
-  type InboxMessage,
   type InboxStatus,
   type InboxThread,
-  type MessageTemplate,
-  type ReservationDetail,
-  type ScheduledMessage,
-  type TeamMember,
-  addNote,
-  assignThread,
-  bulkUpdate,
-  cancelScheduled,
-  getAiReply,
-  getInboxMessages,
-  getInboxReservation,
   listInboxThreads,
-  listScheduled,
-  listTeam,
-  listTemplates,
-  scheduleMessage,
-  sendInboxMessage,
   setInboxStatus,
   updateThreadFlags,
 } from "@/lib/inbox";
 import { type InboxAccess } from "@/lib/inbox-access";
 import { useRealtime } from "@/lib/use-realtime";
 import {
-  type WhatsAppConversation,
   listWhatsAppConversations,
 } from "@/lib/whatsapp-api";
 
@@ -59,88 +69,8 @@ type TabKey =
   | "tabAiReplies"
   | "tabTemplates"
   | "tabAutomations"
+  | "tabKnowledge"
   | "tabManage";
-
-const OTA_ICON: Record<string, string> = {
-  "booking.com": "simple-icons:bookingdotcom",
-  airbnb: "simple-icons:airbnb",
-  expedia: "simple-icons:expedia",
-  vrbo: "ph:house",
-  whatsapp: "ph:whatsapp-logo",
-};
-
-// Kanalname für WhatsApp-Konversationen in der gemeinsamen Liste (Filter/Anzeige).
-const WHATSAPP_CHANNEL = "WhatsApp";
-// Stabiler ID-Präfix, damit WhatsApp-Threads von OTA-Threads unterscheidbar sind
-// (Klick öffnet dann das WhatsApp-Chat-Panel statt der OTA-Konversation).
-const WA_PREFIX = "wa:";
-// Flüchtige Konversation für eine NEUE Nummer (entsteht real erst beim Senden).
-const WA_NEW_PREFIX = "wa:new:";
-const isWhatsApp = (id: string) => id.startsWith(WA_PREFIX);
-
-// WhatsApp-Konversation in die InboxThread-Form bringen, damit sie in derselben
-// Liste/Filterung wie OTA-Threads läuft. Nur die Felder, die Liste + Filter
-// nutzen, werden gefüllt; OTA-spezifische Felder bleiben null (keine Fallbacks).
-function whatsAppToThread(c: WhatsAppConversation): InboxThread {
-  return {
-    id: `${WA_PREFIX}${c.id}`,
-    channex_booking_id: null,
-    reservation_id: c.reservation_id,
-    guest_id: null,
-    property_id: null,
-    property_title: null,
-    ota_name: WHATSAPP_CHANNEL,
-    // Normalisierte WhatsApp-Nummer mitführen (Feld bei WhatsApp sonst leer), um
-    // zuverlässig „existiert schon ein Chat für diese Nummer?" zu prüfen — auch
-    // wenn der Chat einen echten Gastnamen statt der Rohnummer anzeigt.
-    ota_reservation_code: c.wa_phone.replace(/\D/g, ""),
-    guest_name: c.guest_name ?? `+${c.wa_phone}`,
-    guest_email: null,
-    status: null,
-    arrival_date: null,
-    departure_date: null,
-    last_message: c.last_message,
-    updated_at: c.last_at,
-    is_read: c.is_read,
-    is_starred: false,
-    is_archived: false,
-    inbox_status: "active",
-    assigned_user_id: null,
-    assigned_user_name: null,
-  };
-}
-
-// Flüchtiger Listeneintrag für eine neue, noch nicht existierende WhatsApp-Nummer.
-function whatsAppDraftThread(phone: string): InboxThread {
-  return {
-    ...whatsAppToThread({
-      id: `new:${phone}`,
-      wa_phone: phone,
-      guest_name: null,
-      reservation_id: null,
-      last_message: null,
-      last_at: null,
-      is_read: true,
-    }),
-    id: `${WA_NEW_PREFIX}${phone}`,
-  };
-}
-
-function otaIcon(name: string | null): string {
-  if (!name) return "ph:chat-circle";
-  return OTA_ICON[name.trim().toLowerCase()] ?? "ph:globe";
-}
-
-function fmtRange(a: string | null, b: string | null, locale: string): string {
-  if (!a) return "";
-  const f = (s: string) =>
-    new Date(`${s}T00:00:00`).toLocaleDateString(locale, {
-      day: "2-digit",
-      month: "short",
-      year: "2-digit",
-    });
-  return b ? `${f(a)} - ${f(b)}` : f(a);
-}
 
 export function InboxList({
   threads,
@@ -176,6 +106,16 @@ export function InboxList({
   const [newWaPhone, setNewWaPhone] = useState("");
   // Ansicht: Aktiv | Archiv | Papierkorb.
   const [view, setView] = useState<InboxStatus>("active");
+  // WhatsApp-Verlauf UNTER dem OTA-Verlauf desselben Gastes (aus der
+  // Gästekarte geöffnet). Bewusst kein Thread-Wechsel: Buchung und
+  // WhatsApp-Chat gehören zusammen und sollen zusammen sichtbar bleiben.
+  const [waUnterChat, setWaUnterChat] = useState<{
+    phone: string;
+    conversationId: string | null;
+  } | null>(null);
+  // Sortierung der Thread-Liste (Hostaway-Muster: Schlüssel + Richtung).
+  const [sortKey, setSortKey] = useState<"recent" | "arrival" | "name">("recent");
+  const [sortDesc, setSortDesc] = useState(true);
   const current = rows.find((x) => x.id === active) ?? null;
 
   // Threads je Ansicht laden — auch für Realtime-Reload. WhatsApp-Konversationen
@@ -219,7 +159,7 @@ export function InboxList({
   ).map(([value, label]) => ({ value, label }));
 
   const lc = (s: string | null) => (s ?? "").toLowerCase();
-  const filtered = rows.filter((th) => {
+  const gefiltert = rows.filter((th) => {
     if (onlyUnassigned && th.assigned_user_id) return false;
     if (!lc(th.guest_name).includes(query.trim().toLowerCase())) return false;
     if (fChannels.length && !(th.ota_name && fChannels.includes(th.ota_name)))
@@ -236,6 +176,39 @@ export function InboxList({
     if (fTo && (!th.arrival_date || th.arrival_date > fTo)) return false;
     return true;
   });
+  // Sortierung wie bei Hostaway wählbar: nach letzter Aktivität (Standard),
+  // nach Anreise (wer kommt als Nächstes?) oder alphabetisch.
+  const filtered = [...gefiltert].sort((a, b) => {
+    const richtung = sortDesc ? -1 : 1;
+    if (sortKey === "arrival")
+      return richtung * (a.arrival_date ?? "").localeCompare(b.arrival_date ?? "");
+    if (sortKey === "name")
+      return richtung * (a.guest_name ?? "").localeCompare(b.guest_name ?? "", locale);
+    return richtung * (a.updated_at ?? "").localeCompare(b.updated_at ?? "");
+  });
+  // Zusammengehörigkeit sichtbar machen: Ein WhatsApp-Verlauf mit der
+  // Telefonnummer eines Gastes ist KEIN eigener Vorgang, sondern der zweite
+  // Draht zu dessen Buchung. Er wird deshalb als eingerückter Unterpunkt unter
+  // seiner Buchung geführt statt unverbunden in der Liste zu stehen.
+  const waKinder = new Map<string, InboxThread[]>();
+  const kindIds = new Set<string>();
+  for (const wa of filtered) {
+    if (!isWhatsApp(wa.id) || !wa.ota_reservation_code) continue;
+    const eltern = filtered.find(
+      (p) =>
+        !isWhatsApp(p.id) &&
+        (p.guest_phone ?? "").replace(/\D/g, "") === wa.ota_reservation_code,
+    );
+    if (!eltern) continue;
+    waKinder.set(eltern.id, [...(waKinder.get(eltern.id) ?? []), wa]);
+    kindIds.add(wa.id);
+  }
+  // Oberste Ebene = alles, was kein Unterpunkt ist.
+  const sichtbar = filtered.filter((th) => !kindIds.has(th.id));
+
+  // Ungelesene in der AKTUELLEN Ansicht — beide Vorbilder zeigen die Zahl
+  // prominent, sonst sieht man Arbeit erst beim Durchscrollen.
+  const unreadCount = rows.filter((r) => !r.is_read).length;
   const activeFilterCount =
     (onlyUnassigned ? 1 : 0) +
     (fChannels.length ? 1 : 0) +
@@ -276,7 +249,13 @@ export function InboxList({
   // WhatsApp-Chat mit einer Nummer öffnen. Existiert bereits eine Konversation
   // für die Nummer, wird sie ausgewählt; sonst ein flüchtiger Entwurf
   // vorangestellt (real entsteht sie erst beim ersten Senden über den Webhook).
-  function openWhatsApp(rawPhone: string) {
+  /**
+   * WhatsApp als EIGENEN Thread öffnen — für das Popover „Neue Nummer", wo es
+   * (noch) keine Buchung gibt. Aus einer Buchung heraus wird stattdessen
+   * `waUnterChat` benutzt: dort gehört der WhatsApp-Verlauf UNTER den
+   * OTA-Verlauf, nicht an dessen Stelle.
+   */
+  function openWhatsAppThread(rawPhone: string) {
     const phone = rawPhone.replace(/\D/g, "");
     if (phone.length < 6) return;
     // WhatsApp-Chats leben in der aktiven Ansicht — von Archiv/Papierkorb wechseln.
@@ -295,9 +274,24 @@ export function InboxList({
     setActive(id);
   }
 
+  /** Aus der Gästekarte: WhatsApp-Verlauf unter dem offenen Chat einblenden. */
+  function whatsAppUnterChat(rawPhone: string) {
+    const phone = rawPhone.replace(/\D/g, "");
+    if (phone.length < 6) return;
+    // Gibt es zu der Nummer schon eine Konversation, zeigen wir DIESE — sonst
+    // entstünde ein zweiter, leerer Verlauf neben dem echten.
+    const vorhanden = rows.find(
+      (r) => isWhatsApp(r.id) && r.ota_reservation_code === phone,
+    );
+    setWaUnterChat({
+      phone,
+      conversationId: vorhanden ? vorhanden.id.slice(WA_PREFIX.length) : null,
+    });
+  }
+
   // Aus dem Popover „Neue Nummer": Eingabe übernehmen, Popover schließen.
   function startWhatsApp() {
-    openWhatsApp(newWaPhone);
+    openWhatsAppThread(newWaPhone);
     setNewWaPhone("");
     setShowNewWa(false);
   }
@@ -306,6 +300,8 @@ export function InboxList({
   // nicht über den inbox-Slice; nur lokal als gelesen spiegeln (kein OTA-Call).
   function selectThread(id: string) {
     setActive(id);
+    // Der eingeblendete WhatsApp-Verlauf gehört zum vorherigen Gast.
+    setWaUnterChat(null);
     const th = rows.find((r) => r.id === id);
     if (th && !th.is_read) {
       patchThread(id, { is_read: true });
@@ -318,7 +314,13 @@ export function InboxList({
   const TABS: TabKey[] = [
     "tabInbox",
     ...(access.canManageConfig
-      ? (["tabAiReplies", "tabTemplates", "tabAutomations", "tabManage"] as TabKey[])
+      ? ([
+          "tabAiReplies",
+          "tabKnowledge",
+          "tabTemplates",
+          "tabAutomations",
+          "tabManage",
+        ] as TabKey[])
       : []),
   ];
 
@@ -380,8 +382,10 @@ export function InboxList({
         <AiSettingsTab />
       ) : tab === "tabAutomations" ? (
         <AutomationsTab />
+      ) : tab === "tabKnowledge" ? (
+        <WissenTab />
       ) : tab === "tabManage" ? (
-        <ManageTab />
+        <ManageTab onOpenTab={setTab} />
       ) : (
         <>
           {error && (
@@ -417,6 +421,13 @@ export function InboxList({
                   >
                     <Icon icon={v.icon} className="size-4" />
                     {v.label}
+                    {/* Ungelesen-Zähler nur an der Ansicht, in der man gerade
+                        steht — die Zahl gilt für die geladenen Threads. */}
+                    {v.key === view && unreadCount > 0 && (
+                      <span className="rounded-full bg-accent px-1.5 text-[0.65rem] font-bold text-accent-foreground">
+                        {unreadCount}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -580,6 +591,37 @@ export function InboxList({
                   </PopoverContent>
                 </Popover>
               </div>
+              {/* Sortierzeile (Hostaway-Muster) — Schlüssel links, Richtung rechts */}
+              <div className="flex items-center gap-1 border-b border-border px-2 py-1.5 text-xs">
+                <label className="sr-only" htmlFor="inbox-sort">
+                  {t("sortBy")}
+                </label>
+                <select
+                  id="inbox-sort"
+                  value={sortKey}
+                  onChange={(e) =>
+                    setSortKey(e.target.value as "recent" | "arrival" | "name")
+                  }
+                  className="min-w-0 flex-1 cursor-pointer bg-transparent text-muted-foreground outline-none hover:text-foreground"
+                >
+                  <option value="recent">{t("sortRecent")}</option>
+                  <option value="arrival">{t("sortArrival")}</option>
+                  <option value="name">{t("sortName")}</option>
+                </select>
+                <button
+                  type="button"
+                  title={sortDesc ? t("sortDesc") : t("sortAsc")}
+                  aria-label={sortDesc ? t("sortDesc") : t("sortAsc")}
+                  onClick={() => setSortDesc((v) => !v)}
+                  className="flex size-6 items-center justify-center rounded-(--radius) text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                >
+                  <Icon
+                    icon={sortDesc ? "ph:sort-descending" : "ph:sort-ascending"}
+                    className="size-4"
+                  />
+                </button>
+              </div>
+
               {/* Liste oder Leerzustand */}
               {filtered.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
@@ -603,7 +645,7 @@ export function InboxList({
                 </div>
               ) : (
                 <ul className="min-h-0 flex-1 divide-y divide-border overflow-y-auto">
-                  {filtered.map((th) => (
+                  {sichtbar.map((th) => (
                     <li key={th.id}>
                       <button
                         data-testid="inbox-thread-item"
@@ -612,37 +654,69 @@ export function InboxList({
                         type="button"
                         onClick={() => selectThread(th.id)}
                         className={
-                          "flex w-full items-start gap-3 p-3 text-left " +
-                          (th.id === active ? "bg-muted/60" : "hover:bg-muted/30")
+                          // Aktiver Thread bekommt links einen Farbbalken (Muster
+                          // aus Hostaway) — im Blick über eine lange Liste sofort
+                          // erkennbar, welcher Chat offen ist.
+                          "flex w-full items-start gap-3 border-l-2 py-2.5 pl-2.5 pr-3 text-left transition-colors " +
+                          (th.id === active
+                            ? "border-l-accent bg-accent/5"
+                            : "border-l-transparent hover:bg-muted/30")
                         }
                       >
-                        <span className="relative mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary">
-                          <Icon icon={otaIcon(th.ota_name)} className="size-5 text-muted-foreground" />
-                          {/* Ungelesen-Punkt */}
-                          {!th.is_read && (
-                            <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-accent ring-2 ring-card" />
-                          )}
+                        <span className="mt-0.5">
+                          <GuestAvatar
+                            name={th.guest_name}
+                            size="sm"
+                            unread={!th.is_read}
+                          />
                         </span>
-                        <div className="flex min-w-0 flex-1 flex-col">
-                          <span
-                            className={
-                              "flex items-center gap-1 truncate text-sm " +
-                              (th.is_read ? "font-semibold" : "font-extrabold")
-                            }
-                          >
-                            {th.guest_name ?? t("unknownGuest")}
-                            {th.is_starred && (
-                              <Icon icon="ph:star-fill" className="size-3.5 text-amber-500" />
-                            )}
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          {/* Zeile 1: Name + Zeit der letzten Aktivität */}
+                          <span className="flex items-baseline gap-2">
+                            <span
+                              className={
+                                "flex min-w-0 flex-1 items-center gap-1 truncate text-sm " +
+                                (th.is_read ? "font-semibold" : "font-extrabold")
+                              }
+                            >
+                              <span className="truncate">
+                                {th.guest_name ?? t("unknownGuest")}
+                              </span>
+                              {th.is_starred && (
+                                <Icon icon="ph:star-fill" className="size-3.5 shrink-0 text-amber-500" />
+                              )}
+                            </span>
+                            <span className="shrink-0 text-[0.7rem] text-muted-foreground">
+                              {kurzeZeit(th.updated_at, locale)}
+                            </span>
                           </span>
-                          <span className="truncate text-xs text-muted-foreground">
-                            {fmtRange(th.arrival_date, th.departure_date, locale)}
-                          </span>
+                          {/* Zeile 2: letzte Nachricht */}
                           {th.last_message && (
-                            <span className="truncate text-xs text-muted-foreground/80">
+                            <span
+                              className={
+                                "truncate text-xs " +
+                                (th.is_read ? "text-muted-foreground" : "text-foreground")
+                              }
+                            >
                               {th.last_message}
                             </span>
                           )}
+                          {/* Zeile 3: Objekt — beantwortet „um welche Unterkunft
+                              geht es?" ohne den Thread zu öffnen */}
+                          {th.property_title && (
+                            <span className="truncate text-xs text-muted-foreground/70">
+                              {th.property_title}
+                            </span>
+                          )}
+                          {/* Zeile 4: Kanal-Logo + Aufenthalt + Status — wie bei
+                              Lodgify/Hostaway in EINER Meta-Zeile. */}
+                          <span className="flex items-center gap-2">
+                            <ChannelTag channel={th.ota_name} />
+                            <span className="min-w-0 flex-1 truncate text-[0.7rem] text-muted-foreground">
+                              {fmtRange(th.arrival_date, th.departure_date, locale)}
+                            </span>
+                            {th.status && <StatusBadge status={th.status} />}
+                          </span>
                           {th.assigned_user_name && (
                             <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-secondary px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
                               <Icon icon="ph:user" className="size-3" />
@@ -651,6 +725,61 @@ export function InboxList({
                           )}
                         </div>
                       </button>
+                      {/* Unterpunkte: WhatsApp-Verläufe desselben Gastes.
+                          Eingerückt und mit Verbindungslinie an die Buchung
+                          gehängt, damit die Zugehörigkeit ohne Klick sichtbar
+                          ist. Der Klick öffnet die Buchung UND blendet den
+                          WhatsApp-Verlauf unter ihrem Chat ein. */}
+                      {(waKinder.get(th.id) ?? []).map((kind) => (
+                        <div key={kind.id} className="relative flex items-center">
+                          {/* Verbindung als Ecke: aus der Buchungszeile herunter
+                              und in den Unterpunkt hinein — dieselbe Sprache wie
+                              ein Verzeichnisbaum, sofort als „gehört dazu"
+                              lesbar. Endet auf halber Höhe des Unterpunkts. */}
+                          <span
+                            aria-hidden
+                            className="absolute bottom-1/2 left-[1.4rem] top-0 w-3 rounded-bl-md border-b border-l border-border"
+                          />
+                          <button
+                            type="button"
+                            data-testid="inbox-thread-subitem"
+                            data-thread-id={kind.id}
+                            onClick={() => {
+                              selectThread(th.id);
+                              setWaUnterChat({
+                                phone: kind.ota_reservation_code ?? "",
+                                conversationId: kind.id.slice(WA_PREFIX.length),
+                              });
+                            }}
+                            className="ml-[2.6rem] flex w-full items-center gap-2 py-2 pr-3 text-left hover:bg-muted/30"
+                          >
+                            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20">
+                              <Icon
+                                icon="ph:whatsapp-logo"
+                                className="size-3.5 text-emerald-600 dark:text-emerald-400"
+                              />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span
+                                className={
+                                  "block truncate text-xs " +
+                                  (kind.is_read ? "font-medium" : "font-bold")
+                                }
+                              >
+                                WhatsApp
+                              </span>
+                              {kind.last_message && (
+                                <span className="block truncate text-[0.7rem] text-muted-foreground">
+                                  {kind.last_message}
+                                </span>
+                              )}
+                            </span>
+                            <span className="shrink-0 text-[0.7rem] text-muted-foreground">
+                              {kurzeZeit(kind.updated_at, locale)}
+                            </span>
+                          </button>
+                        </div>
+                      ))}
                     </li>
                   ))}
                 </ul>
@@ -685,6 +814,8 @@ export function InboxList({
                 <Conversation
                   key={current.id}
                   thread={current}
+                  whatsapp={waUnterChat}
+                  onCloseWhatsapp={() => setWaUnterChat(null)}
                   view={view}
                   access={access}
                   onMarkUnread={() => markUnread(current.id)}
@@ -709,7 +840,7 @@ export function InboxList({
                   key={`${current.id}-res`}
                   thread={current}
                   openNoteSignal={openNoteSignal}
-                  onWhatsApp={openWhatsApp}
+                  onWhatsApp={whatsAppUnterChat}
                 />
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
@@ -734,1113 +865,8 @@ export function InboxList({
   );
 }
 
-// --- Konversation (Chat + KI-Vorschlag + Antwortfeld) -----------------------
-function Conversation({
-  thread,
-  view,
-  access,
-  onMarkUnread,
-  onStatus,
-  onNext,
-  onOpenNote,
-  onAssigned,
-}: {
-  thread: InboxThread;
-  view: InboxStatus;
-  access: InboxAccess;
-  onMarkUnread: () => void;
-  onStatus: (status: "active" | "archived" | "trashed" | "deleted") => void;
-  onNext: () => void;
-  onOpenNote: () => void;
-  onAssigned: (userId: string | null, name: string | null) => void;
-}) {
-  const t = useTranslations("inbox");
-  const locale = useLocale();
-  const [messages, setMessages] = useState<InboxMessage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [text, setText] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [sending, startSend] = useTransition();
-  const [ai, setAi] = useState<string | null>(null);
-  const [aiEditing, setAiEditing] = useState(false);
-  const [aiLoading, startAi] = useTransition();
-  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
-  const [showTemplates, setShowTemplates] = useState(false);
-  const [starred, setStarred] = useState(thread.is_starred);
-  // Zuweisen / Snooze / Geplant-senden.
-  const [team, setTeam] = useState<TeamMember[]>([]);
-  const [showAssign, setShowAssign] = useState(false);
-  const [showSnooze, setShowSnooze] = useState(false);
-  const [scheduled, setScheduled] = useState<ScheduledMessage[]>([]);
-  const [showSchedule, setShowSchedule] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const res = await getInboxMessages(thread.id);
-    setMessages(res.ok ? res.data.items : []);
-    if (!res.ok) setError(res.error);
-    setLoading(false);
-  }, [thread.id]);
 
-  const loadScheduled = useCallback(async () => {
-    const res = await listScheduled(thread.id);
-    if (res.ok) setScheduled(res.data.items);
-  }, [thread.id]);
 
-  useEffect(() => {
-    load();
-    loadScheduled();
-  }, [load, loadScheduled]);
 
-  // Echtes Realtime für den offenen Chat: neue Nachrichten + Notizen sofort.
-  useRealtime({
-    table: "sandbox_message",
-    filter: `thread_id=eq.${thread.id}`,
-    onChange: load,
-  });
-  useRealtime({
-    table: "inbox_thread_note",
-    filter: `thread_id=eq.${thread.id}`,
-    onChange: load,
-  });
-  // Geplante Nachrichten: bei Versand (Cron) aus der Liste verschwinden lassen.
-  useRealtime({
-    table: "inbox_scheduled_message",
-    filter: `thread_id=eq.${thread.id}`,
-    onChange: loadScheduled,
-  });
 
-  // Vorlagen + Team einmal laden.
-  useEffect(() => {
-    (async () => {
-      const [tpl, tm] = await Promise.all([listTemplates(), listTeam()]);
-      if (tpl.ok) setTemplates(tpl.data.items);
-      if (tm.ok) setTeam(tm.data.items);
-    })();
-  }, []);
-
-  // Interne Notiz (gelb) hinzufügen → sofort im Verlauf zeigen.
-  function addInternalNote() {
-    const body = window.prompt(t("notePrompt"));
-    if (!body?.trim()) return;
-    startSend(async () => {
-      const res = await addNote(thread.id, body.trim());
-      if (res.ok) setMessages((m) => [...m, res.data]);
-      else setError(res.error);
-    });
-  }
-
-  // Konversation zuweisen.
-  function assign(member: TeamMember | null) {
-    setShowAssign(false);
-    startSend(async () => {
-      const res = await assignThread(thread.id, member?.id ?? null);
-      if (res.ok) onAssigned(member?.id ?? null, member?.name ?? null);
-      else setError(res.error);
-    });
-  }
-
-  // Snooze: Erinnerung relativ zu jetzt (Minuten) setzen.
-  function snooze(minutes: number) {
-    setShowSnooze(false);
-    const at = new Date(Date.now() + minutes * 60_000).toISOString();
-    updateThreadFlags(thread.id, { remind_at: at });
-  }
-
-  // Nachricht zeitversetzt planen.
-  function planMessage(sendAtIso: string) {
-    const body = text.trim();
-    if (!body) return;
-    startSend(async () => {
-      const res = await scheduleMessage(thread.id, body, sendAtIso);
-      if (res.ok) {
-        setScheduled((s) => [...s, res.data]);
-        setText("");
-        setShowSchedule(false);
-      } else {
-        setError(res.error);
-      }
-    });
-  }
-
-  async function dropScheduled(id: string) {
-    await cancelScheduled(id);
-    setScheduled((s) => s.filter((x) => x.id !== id));
-  }
-
-  function send(message: string) {
-    const msg = message.trim();
-    if (!msg) return;
-    setError(null);
-    startSend(async () => {
-      const res = await sendInboxMessage(thread.id, msg);
-      if (res.ok) {
-        setMessages((m) => [...m, res.data]);
-        setText("");
-        setAi(null);
-        setAiEditing(false);
-      } else {
-        setError(res.error);
-      }
-    });
-  }
-
-  function suggest() {
-    setError(null);
-    setAiEditing(false);
-    startAi(async () => {
-      const res = await getAiReply(thread.id);
-      if (res.ok) setAi(res.data.reply);
-      else setError(res.error);
-    });
-  }
-
-  return (
-    <>
-      {/* Kopf mit Aktions-Leiste (wie im Vorbild) */}
-      <div className="flex items-center gap-3 border-b border-border p-3">
-        <span className="flex size-9 items-center justify-center rounded-full bg-secondary">
-          <Icon icon={otaIcon(thread.ota_name)} className="size-5 text-accent" />
-        </span>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate font-semibold">
-            {thread.guest_name ?? t("unknownGuest")}
-          </span>
-          <span className="truncate text-xs text-muted-foreground">
-            {thread.ota_name ?? t("directChannel")}
-            {thread.ota_reservation_code ? ` · ${thread.ota_reservation_code}` : ""}
-          </span>
-        </div>
-        {/* Aktions-Icons — alle funktional */}
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <HeadAction
-            icon="ph:eye-slash"
-            title={t("markUnread")}
-            onClick={onMarkUnread}
-          />
-          {/* Notiz: gelben Eintrag in den Verlauf legen */}
-          <HeadAction
-            icon="ph:note"
-            title={t("addNote")}
-            onClick={addInternalNote}
-          />
-          <HeadAction
-            icon={starred ? "ph:star-fill" : "ph:star"}
-            title={t("favorite")}
-            active={starred}
-            onClick={() => {
-              const next = !starred;
-              setStarred(next);
-              updateThreadFlags(thread.id, { is_starred: next });
-            }}
-          />
-          {/* Zuweisen an Team-Benutzer — nur mit INBOX_ASSIGN */}
-          {access.canAssign && (
-            <div className="relative">
-              <HeadAction
-                icon="ph:user-circle-gear"
-                title={t("assign")}
-                active={!!thread.assigned_user_id}
-                onClick={() => setShowAssign((v) => !v)}
-              />
-              {showAssign && (
-                <div className="absolute right-0 top-9 z-20 max-h-72 w-56 overflow-y-auto rounded-2xl border border-border bg-card p-1 shadow-xl">
-                  <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">
-                    {t("assignTo")}
-                  </p>
-                  {team.length === 0 && (
-                    <p className="px-2 py-2 text-xs text-muted-foreground">
-                      {t("assignEmpty")}
-                    </p>
-                  )}
-                  {team.map((member) => (
-                    <button
-                      key={member.id}
-                      type="button"
-                      onClick={() => assign(member)}
-                      className={
-                        "flex w-full items-center gap-2 rounded-(--radius) px-2 py-1.5 text-left text-sm hover:bg-muted/50 " +
-                        (thread.assigned_user_id === member.id ? "text-accent" : "")
-                      }
-                    >
-                      <Icon icon="ph:user" className="size-4" />
-                      {member.name}
-                    </button>
-                  ))}
-                  {thread.assigned_user_id && (
-                    <button
-                      type="button"
-                      onClick={() => assign(null)}
-                      className="mt-1 flex w-full items-center gap-2 rounded-(--radius) px-2 py-1.5 text-left text-sm text-destructive hover:bg-muted/50"
-                    >
-                      <Icon icon="ph:user-minus" className="size-4" />
-                      {t("assignNone")}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-          {/* Wiederherstellen, wenn nicht in der aktiven Ansicht */}
-          {view !== "active" && (
-            <HeadAction
-              icon="ph:arrow-counter-clockwise"
-              title={t("restore")}
-              onClick={() => onStatus("active")}
-            />
-          )}
-          {/* Archivieren nur aus der aktiven Ansicht */}
-          {view === "active" && (
-            <HeadAction
-              icon="ph:archive-box"
-              title={t("archive")}
-              onClick={() => onStatus("archived")}
-            />
-          )}
-          {/* Papierkorb (aus aktiv/archiv) bzw. endgültig löschen (im Papierkorb) */}
-          {view === "trashed" ? (
-            <HeadAction
-              icon="ph:trash-simple"
-              title={t("deleteForever")}
-              onClick={() => {
-                if (window.confirm(t("deleteConfirm"))) onStatus("deleted");
-              }}
-            />
-          ) : (
-            <HeadAction
-              icon="ph:trash"
-              title={t("trash")}
-              onClick={() => onStatus("trashed")}
-            />
-          )}
-          {/* Snooze: Schnellauswahl */}
-          <div className="relative">
-            <HeadAction
-              icon="ph:alarm"
-              title={t("snooze")}
-              onClick={() => setShowSnooze((v) => !v)}
-            />
-            {showSnooze && (
-              <div className="absolute right-0 top-9 z-20 w-40 rounded-2xl border border-border bg-card p-1 shadow-xl">
-                {[
-                  { label: t("snooze20m"), m: 20 },
-                  { label: t("snooze1h"), m: 60 },
-                  { label: t("snooze3h"), m: 180 },
-                  { label: t("snooze6h"), m: 360 },
-                  { label: t("snooze1d"), m: 1440 },
-                ].map((opt) => (
-                  <button
-                    key={opt.m}
-                    type="button"
-                    onClick={() => snooze(opt.m)}
-                    className="flex w-full rounded-(--radius) px-2 py-1.5 text-left text-sm hover:bg-muted/50"
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <HeadAction
-            icon="ph:user"
-            title={t("guestProfile")}
-            onClick={onOpenNote}
-          />
-          <HeadAction icon="ph:caret-right" title={t("next")} onClick={onNext} />
-        </div>
-      </div>
-
-      {/* Verlauf */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
-        {loading ? (
-          <p className="text-sm text-muted-foreground">…</p>
-        ) : messages.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("noMessages")}</p>
-        ) : (
-          messages.map((m, i) =>
-            m.sender === "note" ? (
-              // Interne Notiz — gelb, mittig (wie im Vorbild).
-              <div key={m.id ?? i} className="flex flex-col items-center gap-1">
-                <div className="max-w-[85%] rounded-2xl border border-amber-300 bg-amber-100 px-3 py-2 text-sm text-amber-900">
-                  <span className="mb-0.5 flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-700">
-                    <Icon icon="ph:note-pencil" className="size-3.5" />
-                    {t("internalNote")}
-                    {m.author_name ? ` · ${m.author_name}` : ""}
-                  </span>
-                  <span className="whitespace-pre-wrap">{m.message}</span>
-                </div>
-                {m.sent_at && (
-                  <span className="text-[0.65rem] text-muted-foreground">
-                    {new Date(m.sent_at).toLocaleString(locale)}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <div
-                key={m.id ?? i}
-                className={
-                  "flex flex-col gap-1 " +
-                  (m.sender === "property" ? "items-end" : "items-start")
-                }
-              >
-                <div
-                  className={
-                    "max-w-[80%] rounded-2xl px-3 py-2 text-sm " +
-                    (m.sender === "property"
-                      ? "bg-accent text-white"
-                      : "bg-muted text-foreground")
-                  }
-                >
-                  {m.message}
-                </div>
-                {m.sent_at && (
-                  <span className="text-[0.65rem] text-muted-foreground">
-                    {new Date(m.sent_at).toLocaleString(locale)}
-                  </span>
-                )}
-              </div>
-            ),
-          )
-        )}
-
-        {/* KI-Vorschlag INLINE im Chat-Verlauf (wie im Vorbild). 'Bearbeiten'
-            macht den Vorschlag direkt im Block editierbar. */}
-        {ai !== null && (
-          <div className="rounded-2xl border border-accent/50 bg-accent/5 p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-sm font-medium text-accent">
-                <Icon icon="ph:sparkle" className="size-4" />
-                {t("aiTitle")}
-              </span>
-              <button
-                type="button"
-                aria-label="Verwerfen"
-                onClick={() => {
-                  setAi(null);
-                  setAiEditing(false);
-                }}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Icon icon="ph:x" className="size-4" />
-              </button>
-            </div>
-
-            {aiEditing ? (
-              <textarea
-                data-testid="inbox-ai-draft-textarea"
-                value={ai}
-                onChange={(e) => setAi(e.target.value)}
-                rows={6}
-                autoFocus
-                className="w-full resize-none rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
-              />
-            ) : (
-              <p data-testid="inbox-ai-draft-preview" className="whitespace-pre-wrap text-sm">{ai}</p>
-            )}
-
-            <div className="mt-3 flex justify-end gap-2">
-              {aiEditing ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAiEditing(false)}
-                >
-                  {t("aiDone")}
-                </Button>
-              ) : (
-                <Button
-                  data-testid="inbox-ai-edit-button"
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAiEditing(true)}
-                >
-                  <Icon icon="ph:pencil-simple" className="size-4" />
-                  {t("aiEdit")}
-                </Button>
-              )}
-              <Button
-                data-testid="inbox-ai-send-button"
-                type="button"
-                size="sm"
-                onClick={() => send(ai)}
-                disabled={sending || !ai.trim()}
-              >
-                <Icon icon="ph:paper-plane-tilt" className="size-4" />
-                {t("send")}
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Anstehende geplante Nachrichten */}
-      {scheduled.length > 0 && (
-        <div className="mx-4 mb-2 rounded-2xl border border-border bg-muted/30 p-3">
-          <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-            <Icon icon="ph:clock-countdown" className="size-4" />
-            {t("upcomingScheduled")}
-          </p>
-          <ul className="flex flex-col gap-1">
-            {scheduled.map((s) => (
-              <li key={s.id} className="flex items-center gap-2 text-sm">
-                <span className="text-xs text-muted-foreground">
-                  {new Date(s.send_at).toLocaleString(locale)}
-                </span>
-                <span className="min-w-0 flex-1 truncate">{s.body}</span>
-                <button
-                  type="button"
-                  aria-label={t("cancel")}
-                  onClick={() => dropScheduled(s.id)}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Icon icon="ph:x" className="size-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {error && (
-        <p className="mx-4 mb-2 rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {error}
-        </p>
-      )}
-
-      {/* Antwortfeld — nur mit INBOX_REPLY; sonst Read-Only-Hinweis */}
-      {!access.canReply ? (
-        <div className="flex items-center gap-2 border-t border-border p-4 text-sm text-muted-foreground">
-          <Icon icon="ph:lock-simple" className="size-4" />
-          {t("readOnlyHint")}
-        </div>
-      ) : (
-        // Composer als EINE Eingabe-Box (moderner Messenger-Stil): Textarea oben,
-        // Werkzeug-Zeile (Vorlagen/KI/Geplant + Senden) INNEN unten rechts. So
-        // bleibt das Textfeld in jeder Spaltenbreite voll breit — ohne Breakpoints.
-        <div className="relative border-t border-border p-3">
-          <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
-            {/* Geplant-senden-Popover */}
-            {showSchedule && (
-              <SchedulePopover
-                onClose={() => setShowSchedule(false)}
-                onPick={planMessage}
-                disabled={!text.trim()}
-              />
-            )}
-            {/* Vorlagen-Dropdown */}
-            {showTemplates && (
-              <div className="absolute bottom-full left-3 z-10 mb-1 max-h-60 w-72 overflow-y-auto rounded-2xl border border-border bg-card p-1 shadow-xl">
-                {templates.length === 0 ? (
-                  <p className="p-3 text-sm text-muted-foreground">
-                    {t("templatesEmpty")}
-                  </p>
-                ) : (
-                  templates.map((tpl) => (
-                    <button
-                      key={tpl.id}
-                      type="button"
-                      onClick={() => {
-                        setText((prev) => (prev ? `${prev}\n${tpl.body}` : tpl.body));
-                        setShowTemplates(false);
-                      }}
-                      className="flex w-full flex-col gap-0.5 rounded-(--radius) p-2 text-left hover:bg-muted/50"
-                    >
-                      <span className="text-sm font-medium">{tpl.title}</span>
-                      <span className="line-clamp-1 text-xs text-muted-foreground">
-                        {tpl.body}
-                      </span>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-            <textarea
-              data-testid="inbox-composer-textarea"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={t("placeholder")}
-              rows={2}
-              className="min-h-[2.5rem] w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-sm outline-none"
-            />
-            <div className="flex items-center justify-end gap-1.5 px-2 pb-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                title={t("tabTemplates")}
-                onClick={() => setShowTemplates((v) => !v)}
-              >
-                <Icon icon="ph:note" className="size-4" />
-              </Button>
-              <Button
-                data-testid="inbox-ai-reply-button"
-                type="button"
-                variant="outline"
-                size="icon"
-                title={t("aiSuggest")}
-                onClick={suggest}
-                disabled={aiLoading}
-              >
-                <Icon
-                  icon={aiLoading ? "ph:spinner" : "ph:sparkle"}
-                  className={"size-4 " + (aiLoading ? "animate-spin" : "")}
-                />
-              </Button>
-              {/* Geplant senden (Uhr) */}
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                title={t("scheduleSend")}
-                onClick={() => setShowSchedule((v) => !v)}
-              >
-                <Icon icon="ph:clock" className="size-4" />
-              </Button>
-              <Button data-testid="inbox-composer-send-button" type="button" onClick={() => send(text)} disabled={sending || !text.trim()}>
-                <Icon
-                  icon={sending ? "ph:spinner" : "ph:paper-plane-tilt"}
-                  className={"size-4 " + (sending ? "animate-spin" : "")}
-                />
-                {sending ? t("sending") : t("send")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-// --- Reservierungs-Panel (rechts) — Karte + Gästedaten + Notizen ------------
-function ReservationPanel({
-  thread,
-  openNoteSignal,
-  onWhatsApp,
-}: {
-  thread: InboxThread;
-  openNoteSignal: number;
-  onWhatsApp: (phone: string) => void;
-}) {
-  const t = useTranslations("inbox");
-  const locale = useLocale();
-  const [res, setRes] = useState<ReservationDetail | null>(null);
-  const [noteEdit, setNoteEdit] = useState(false);
-  const [note, setNote] = useState("");
-  const noteRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const r = await getInboxReservation(thread.id);
-      if (active && r.ok) {
-        setRes(r.data);
-        setNote(r.data.note ?? "");
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [thread.id]);
-
-  // Notiz-/Gastprofil-Icon im Kopf → Notizfeld öffnen + hinscrollen.
-  useEffect(() => {
-    if (openNoteSignal > 0) {
-      setNoteEdit(true);
-      noteRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [openNoteSignal]);
-
-  if (!res) {
-    return <div className="p-4 text-sm text-muted-foreground">…</div>;
-  }
-
-  const money = (v: number | null) =>
-    v == null
-      ? null
-      : res.currency
-        ? formatCurrency(v, res.currency)
-        : v.toLocaleString(locale);
-  const total = money(res.total_amount);
-  const due = money(res.total_amount);
-  const paid = money(res.paid_amount ?? 0);
-  const fmtDay = (s: string | null) =>
-    s
-      ? new Date(`${s}T00:00:00`).toLocaleDateString(locale, {
-        weekday: "short",
-        day: "2-digit",
-        month: "short",
-        year: "2-digit",
-      })
-      : "—";
-  const guests = [
-    res.adults != null ? `${res.adults} Erwachsene` : null,
-    res.children != null ? `${res.children} Kinder` : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
-
-  async function saveNote() {
-    setNoteEdit(false);
-    await updateThreadFlags(thread.id, { note });
-  }
-
-  return (
-    <div className="flex flex-col gap-5 p-5">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg font-extrabold">
-          {t("reservation")}
-          {res.ota_reservation_code ? ` ${res.ota_reservation_code}` : ""}
-        </h2>
-      </div>
-
-      {/* Reservierungs-Karte */}
-      <div className="flex flex-col rounded-2xl border border-border">
-        <div className="flex items-start gap-3 p-4">
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <span className="w-fit rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-              {t("resBooked")}
-            </span>
-            <span className="font-display text-lg font-extrabold">
-              {res.guest_name ?? t("unknownGuest")}
-            </span>
-            {guests && <span className="text-sm text-muted-foreground">{guests}</span>}
-            <span className="text-sm text-muted-foreground">
-              {res.nights != null ? `${res.nights} Nächte` : ""}
-              {res.ota_name ? `, von ${res.ota_name}` : ""}
-            </span>
-            {res.ota_reservation_code && (
-              <span className="text-sm text-muted-foreground">
-                {t("reservationId")}: {res.ota_reservation_code}
-              </span>
-            )}
-          </div>
-          <Icon icon={otaIcon(res.ota_name)} className="size-7 shrink-0 text-accent" />
-        </div>
-
-        {/* Unterkunft */}
-        {(res.listing_name || res.address) && (
-          <div className="flex items-start gap-3 border-t border-border p-4">
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="font-medium">{res.listing_name}</span>
-              {res.address && (
-                <span className="text-sm text-muted-foreground">{res.address}</span>
-              )}
-              {res.rental_id && (
-                <span className="text-xs text-muted-foreground">
-                  {t("rentalId")}: {res.rental_id.slice(0, 8)}
-                </span>
-              )}
-            </div>
-            {res.listing_photo && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={res.listing_photo}
-                alt=""
-                className="size-12 shrink-0 rounded-(--radius) object-cover"
-              />
-            )}
-          </div>
-        )}
-
-        {/* Check-in / Check-out */}
-        <div className="grid grid-cols-2 border-t border-border">
-          <div className="flex flex-col gap-0.5 border-r border-border p-4">
-            <span className="font-display text-base font-bold">{fmtDay(res.check_in)}</span>
-            <span className="text-xs text-muted-foreground">{t("checkIn")}</span>
-          </div>
-          <div className="flex flex-col gap-0.5 p-4">
-            <span className="font-display text-base font-bold">{fmtDay(res.check_out)}</span>
-            <span className="text-xs text-muted-foreground">{t("checkOut")}</span>
-          </div>
-        </div>
-
-        {/* Beträge */}
-        {total && (
-          <div className="flex flex-col gap-1 border-t border-border p-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t("due")}</span>
-              <span>{due}</span>
-            </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>{t("paid")}</span>
-              <span>{paid}</span>
-            </div>
-            <div className="flex justify-between font-display text-base font-extrabold">
-              <span>{t("total")}</span>
-              <span>{total}</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Gästedaten */}
-      <div className="flex flex-col gap-3">
-        <h3 className="font-display text-base font-extrabold">{t("guestDetails")}</h3>
-        <DetailLine icon="ph:users" value={res.guest_name} />
-        <DetailLine icon="ph:envelope" value={res.guest_email} />
-        <DetailLine icon="ph:map-pin" value={res.address ?? "N/A"} />
-        <DetailLine icon="ph:translate" value={res.guest_language} />
-        <DetailLine icon="ph:device-mobile" value={res.guest_phone} />
-        <DetailLine
-          icon="ph:sign-in"
-          value={
-            res.checkin_time ? `${t("estCheckin")}: ${res.checkin_time}` : null
-          }
-        />
-        <DetailLine
-          icon="ph:sign-out"
-          value={
-            res.checkout_time ? `${t("estCheckout")}: ${res.checkout_time}` : null
-          }
-        />
-        {res.guest_phone && (
-          <button
-            type="button"
-            onClick={() => onWhatsApp(res.guest_phone!)}
-            className="flex w-fit items-center gap-2 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium hover:bg-secondary/80"
-          >
-            <Icon icon="ph:whatsapp-logo" className="size-4 text-emerald-600" />
-            {t("whatsappOpenChat")}
-          </button>
-        )}
-      </div>
-
-      {/* Notizen */}
-      <div ref={noteRef} className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display text-base font-extrabold">{t("notes")}</h3>
-          {!noteEdit && (
-            <Button type="button" variant="outline" size="sm" onClick={() => setNoteEdit(true)}>
-              {t("noteEdit")}
-            </Button>
-          )}
-        </div>
-        {noteEdit ? (
-          <div className="flex flex-col gap-2">
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={3}
-              className="resize-none rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
-            />
-            <Button type="button" size="sm" onClick={saveNote} className="self-end">
-              {t("noteSave")}
-            </Button>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">{note || t("notesEmpty")}</p>
-        )}
-      </div>
-
-      {/* Kalender: Aufenthaltszeitraum der Reservierung im Monat markiert */}
-      {res.check_in && (
-        <StayCalendar checkIn={res.check_in} checkOut={res.check_out} />
-      )}
-
-      {thread.reservation_id && (
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/kalender?reservation=${thread.reservation_id}`}>
-            <Icon icon="ph:calendar-check" className="size-4" />
-            {t("openReservation")}
-          </Link>
-        </Button>
-      )}
-
-      {thread.guest_id && (
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/gaeste/${thread.guest_id}`}>
-            <Icon icon="ph:identification-card" className="size-4" />
-            {t("openGuest")}
-          </Link>
-        </Button>
-      )}
-    </div>
-  );
-}
-
-/**
- * Kompakter Monatskalender, der den Aufenthalt (check_in … check_out,
- * Check-out exklusiv) hervorhebt. Navigierbar zwischen Monaten; startet im
- * Anreisemonat. Reine Datums-Mathematik, keine zusätzlichen Daten nötig.
- */
-function StayCalendar({
-  checkIn,
-  checkOut,
-}: {
-  checkIn: string;
-  checkOut: string | null;
-}) {
-  const locale = useLocale();
-  const ci = new Date(`${checkIn}T00:00:00`);
-  const co = checkOut ? new Date(`${checkOut}T00:00:00`) : null;
-  const [month, setMonth] = useState(
-    () => new Date(ci.getFullYear(), ci.getMonth(), 1),
-  );
-
-  const year = month.getFullYear();
-  const mon = month.getMonth();
-  const monthLabel = month.toLocaleDateString(locale, {
-    month: "long",
-    year: "numeric",
-  });
-  // Wochenstart Montag: getDay() So=0 → auf Mo=0 verschieben.
-  const firstWeekday = (new Date(year, mon, 1).getDay() + 6) % 7;
-  const daysInMonth = new Date(year, mon + 1, 0).getDate();
-  const cells: (number | null)[] = [
-    ...Array.from({ length: firstWeekday }, () => null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
-
-  const inStay = (day: number) => {
-    const d = new Date(year, mon, day);
-    if (d < new Date(ci.getFullYear(), ci.getMonth(), ci.getDate())) return false;
-    // Check-out-Tag ist Abreisetag → exklusiv markieren bis zum Tag davor.
-    if (co) {
-      const lastNight = new Date(co.getFullYear(), co.getMonth(), co.getDate() - 1);
-      return d <= lastNight;
-    }
-    return d.getTime() === ci.getTime();
-  };
-  const isStart = (day: number) =>
-    year === ci.getFullYear() && mon === ci.getMonth() && day === ci.getDate();
-  const isEnd = (day: number) =>
-    !!co && year === co.getFullYear() && mon === co.getMonth() && day === co.getDate();
-
-  const wd = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border p-4">
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          aria-label="Vormonat"
-          onClick={() => setMonth(new Date(year, mon - 1, 1))}
-          className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
-        >
-          <Icon icon="ph:caret-left" className="size-4" />
-        </button>
-        <span className="font-display text-sm font-bold capitalize">{monthLabel}</span>
-        <button
-          type="button"
-          aria-label="Folgemonat"
-          onClick={() => setMonth(new Date(year, mon + 1, 1))}
-          className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
-        >
-          <Icon icon="ph:caret-right" className="size-4" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
-        {wd.map((d) => (
-          <span key={d} className="py-1">
-            {d}
-          </span>
-        ))}
-        {cells.map((day, i) =>
-          day == null ? (
-            <span key={`e${i}`} />
-          ) : (
-            <span
-              key={day}
-              className={`flex aspect-square items-center justify-center rounded-full text-sm ${inStay(day)
-                  ? isStart(day) || isEnd(day)
-                    ? "bg-accent font-semibold text-white"
-                    : "bg-accent/15 text-accent"
-                  : "text-foreground"
-                }`}
-            >
-              {day}
-            </span>
-          ),
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DetailLine({ icon, value }: { icon: string; value: string | null }) {
-  if (!value) return null;
-  return (
-    <div className="flex items-center gap-3 text-sm">
-      <Icon icon={icon} className="size-5 shrink-0 text-muted-foreground" />
-      <span className="min-w-0 break-words">{value}</span>
-    </div>
-  );
-}
-
-function HeadAction({
-  icon,
-  title,
-  active,
-  onClick,
-}: {
-  icon: string;
-  title: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      className={
-        "flex size-8 items-center justify-center rounded-(--radius) hover:bg-muted/60 " +
-        (active ? "text-amber-500" : "")
-      }
-    >
-      <Icon icon={icon} className="size-4" />
-    </button>
-  );
-}
-
-// --- Massenaktualisierung (Dialog) ------------------------------------------
-function BulkUpdateDialog({
-  onClose,
-  onDone,
-}: {
-  onClose: () => void;
-  onDone: (action: "read" | "archived") => void;
-}) {
-  const t = useTranslations("inbox");
-  const [action, setAction] = useState<"read" | "archived">("read");
-  const [before, setBefore] = useState("");
-  const [busy, startBusy] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  function confirm() {
-    if (!before) {
-      setError(t("bulkDateRequired"));
-      return;
-    }
-    setError(null);
-    startBusy(async () => {
-      const res = await bulkUpdate(action, before);
-      if (res.ok) onDone(action);
-      else setError(res.error);
-    });
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-display text-lg font-extrabold">{t("bulkUpdate")}</h3>
-          <button
-            type="button"
-            aria-label={t("close")}
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Icon icon="ph:x" className="size-5" />
-          </button>
-        </div>
-
-        <label className="mb-1 block text-sm font-medium">{t("bulkMarkAs")}</label>
-        <NativeSelect
-          value={action}
-          onChange={(e) => setAction(e.target.value as "read" | "archived")}
-          className="mb-4 w-full"
-        >
-          <option value="read">{t("bulkRead")}</option>
-          <option value="archived">{t("bulkArchived")}</option>
-        </NativeSelect>
-
-        <label className="mb-1 block text-sm font-medium">{t("bulkBefore")}</label>
-        <input
-          type="date"
-          value={before}
-          onChange={(e) => setBefore(e.target.value)}
-          className="mb-4 w-full rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
-        />
-
-        {error && (
-          <p className="mb-3 rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
-        )}
-
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>
-            {t("cancel")}
-          </Button>
-          <Button type="button" size="sm" onClick={confirm} disabled={busy}>
-            {t("confirm")}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --- Geplant senden (Popover über dem Antwortfeld) --------------------------
-function SchedulePopover({
-  onClose,
-  onPick,
-  disabled,
-}: {
-  onClose: () => void;
-  onPick: (sendAtIso: string) => void;
-  disabled: boolean;
-}) {
-  const t = useTranslations("inbox");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("09:00");
-
-  function schedule() {
-    if (!date) return;
-    // Lokale Zeit → ISO (UTC) für die Speicherung.
-    const local = new Date(`${date}T${time}:00`);
-    onPick(local.toISOString());
-  }
-
-  return (
-    <div className="absolute bottom-full right-3 z-20 mb-1 w-64 rounded-2xl border border-border bg-card p-3 shadow-xl">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-semibold">{t("schedulePick")}</span>
-        <button
-          type="button"
-          aria-label={t("close")}
-          onClick={onClose}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <Icon icon="ph:x" className="size-4" />
-        </button>
-      </div>
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        className="mb-2 w-full rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
-      />
-      <input
-        type="time"
-        value={time}
-        onChange={(e) => setTime(e.target.value)}
-        className="mb-3 w-full rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
-      />
-      {disabled && (
-        <p className="mb-2 text-xs text-muted-foreground">{t("scheduleNeedsText")}</p>
-      )}
-      <Button
-        type="button"
-        size="sm"
-        className="w-full"
-        onClick={schedule}
-        disabled={disabled || !date}
-      >
-        <Icon icon="ph:clock" className="size-4" />
-        {t("scheduleSend")}
-      </Button>
-    </div>
-  );
-}

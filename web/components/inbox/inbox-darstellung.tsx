@@ -1,0 +1,294 @@
+"use client";
+
+// Darstellungs-Bausteine des Posteingangs: Kanal-Marke, Gast-Avatar, Status,
+// Zeit- und Zeitraum-Formate, Kopfleisten-Aktionen. Aus `inbox-list.tsx`
+// herausgelöst — die Datei war auf 2178 Zeilen gewachsen und mischte Seiten-
+// gerüst, Konversation, Reservierungspanel und diese kleinen Bausteine.
+// Rein darstellend: kein Laden, kein Zustand, keine Seiteneffekte.
+import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
+
+import { channelLogoLoose } from "@/lib/channel-logos";
+
+const OTA_ICON: Record<string, string> = {
+  "booking.com": "simple-icons:bookingdotcom",
+  airbnb: "simple-icons:airbnb",
+  expedia: "simple-icons:expedia",
+  vrbo: "ph:house",
+  whatsapp: "ph:whatsapp-logo",
+};
+
+export function otaIcon(name: string | null): string {
+  if (!name) return "ph:chat-circle";
+  return OTA_ICON[name.trim().toLowerCase()] ?? "ph:globe";
+}
+
+/** Initialen des Gastes (max. 2) für den Avatar — wie bei Lodgify/Hostaway. */
+export function initialen(name: string | null): string {
+  const teile = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (teile.length === 0) return "?";
+  return teile
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+// Kanal → Marken-GLYPHE + Kanalfarbe für das kleine Eckabzeichen am Avatar.
+// Bewusst NICHT die Wortmarken-SVGs aus `channelLogoLoose`: „Booking.com" &
+// Co. sind breite Schriftzüge, in einen 1,1-rem-Kreis gequetscht ergeben sie
+// einen Fleck (dieselbe Erkenntnis steht in mobile-nextdays/KanalMarke). Die
+// simple-icons-Glyphen SIND die offiziellen Bildmarken — kein Ersatz-Icon.
+// Farben aus den --channel-*-Tokens, identisch zum Kalender.
+const KANAL_ABZEICHEN: Record<string, { icon: string; fg: string }> = {
+  bookingcom: { icon: "simple-icons:bookingdotcom", fg: "text-channel-booking" },
+  airbnb: { icon: "simple-icons:airbnb", fg: "text-channel-airbnb" },
+  expedia: { icon: "simple-icons:expedia", fg: "text-channel-expedia" },
+  vrbo: { icon: "ph:house-fill", fg: "text-channel-vrbo" },
+  whatsapp: { icon: "simple-icons:whatsapp", fg: "text-emerald-600" },
+  mybestdays: { icon: "ph:globe-hemisphere-west-fill", fg: "text-channel-portal" },
+};
+
+export function kanalAbzeichen(name: string | null): { icon: string; fg: string } {
+  const key = (name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  return (
+    KANAL_ABZEICHEN[key] ?? {
+      icon: otaIcon(name),
+      fg: "text-muted-foreground",
+    }
+  );
+}
+
+/**
+ * Kanal-Herkunft in der Listenzeile: das ECHTE Portal-Logo, wo es Breite hat.
+ *
+ * Der Versuch, es als 1-rem-Abzeichen an den Avatar zu heften, ist gescheitert:
+ * „Booking.com" und Co. sind breite Wortmarken, in einen Kreis oder eine kleine
+ * Kachel gequetscht werden sie zum Fleck. In der Meta-Zeile darf das Logo seine
+ * natürliche Breite behalten und bleibt lesbar. Kanäle ohne echtes Logo
+ * (WhatsApp, eigener Marktplatz) zeigen Bildmarke + Namen — kein geratenes
+ * Marken-Logo (Regel „Portal-Logos nur echt").
+ */
+export function ChannelTag({ channel }: { channel: string | null }) {
+  const logo = channelLogoLoose(channel);
+  const marke = kanalAbzeichen(channel);
+  if (logo) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={logo}
+        alt={channel ?? ""}
+        title={channel ?? undefined}
+        className="h-3 w-auto max-w-[4.5rem] shrink-0 object-contain object-left"
+      />
+    );
+  }
+  if (!channel) return null;
+  return (
+    <span className={`flex shrink-0 items-center gap-1 text-[0.7rem] ${marke.fg}`}>
+      <Icon icon={marke.icon} className="size-3" />
+      {channel}
+    </span>
+  );
+}
+
+/**
+ * Gast-Avatar (Initialen). Die Kanal-Herkunft steht als `ChannelTag` in der
+ * Zeile, nicht als Abzeichen am Avatar.
+ */
+export function GuestAvatar({
+  name,
+  size = "md",
+  unread,
+}: {
+  name: string | null;
+  size?: "sm" | "md";
+  unread?: boolean;
+}) {
+  const box = size === "sm" ? "size-9" : "size-10";
+  return (
+    <span className={`relative ${box} shrink-0`}>
+      <span
+        className={`flex ${box} items-center justify-center rounded-full bg-secondary text-xs font-bold text-muted-foreground`}
+      >
+        {initialen(name)}
+      </span>
+      {unread && (
+        <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-accent ring-2 ring-card" />
+      )}
+    </span>
+  );
+}
+
+/** Kanal-Herkunft groß: echtes Portal-Logo, sonst das Kanal-Symbol. */
+export function ChannelMark({ name }: { name: string | null }) {
+  const logo = channelLogoLoose(name);
+  if (logo) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={logo}
+        alt={name ?? ""}
+        title={name ?? undefined}
+        className="size-7 shrink-0 object-contain"
+      />
+    );
+  }
+  return (
+    <span title={name ?? undefined} className="shrink-0">
+      <Icon icon={otaIcon(name)} className="size-7 text-accent" />
+    </span>
+  );
+}
+
+/**
+ * Reservierungsstatus als Pille in der Thread-Zeile (beide Vorbilder führen
+ * ihn dort: eine stornierte Buchung darf man nicht erst nach dem Öffnen
+ * erkennen). Werte kommen aus `channex_booking.status`.
+ */
+export function StatusBadge({ status }: { status: string }) {
+  const t = useTranslations("inbox");
+  const key = status.trim().toLowerCase();
+  const farbe =
+    key === "cancelled"
+      ? "bg-destructive/10 text-destructive"
+      : key === "modified"
+        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+        : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+  const label =
+    key === "cancelled"
+      ? t("filterStatusCancelled")
+      : key === "modified"
+        ? t("filterStatusModified")
+        : key === "new"
+          ? t("filterStatusNew")
+          : status;
+  return (
+    <span
+      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[0.65rem] font-medium ${farbe}`}
+    >
+      {label}
+    </span>
+  );
+}
+
+/**
+ * „vor 5 Min." / „Gestern" / „1. Aug." — kurze Zeitangabe rechts in der
+ * Thread-Zeile. Beide Vorbilder zeigen das Alter der letzten Aktivität; ohne
+ * das lässt sich nicht erkennen, was frisch ist.
+ */
+export function kurzeZeit(iso: string | null, locale: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const min = Math.round((Date.now() - d.getTime()) / 60_000);
+  const rel = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style: "narrow" });
+  if (min < 1) return rel.format(0, "minute");
+  if (min < 60) return rel.format(-min, "minute");
+  if (min < 60 * 24) return rel.format(-Math.round(min / 60), "hour");
+  if (min < 60 * 24 * 7) return rel.format(-Math.round(min / (60 * 24)), "day");
+  return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
+}
+
+export function fmtRange(a: string | null, b: string | null, locale: string): string {
+  if (!a) return "";
+  const f = (s: string) =>
+    new Date(`${s}T00:00:00`).toLocaleDateString(locale, {
+      day: "2-digit",
+      month: "short",
+      year: "2-digit",
+    });
+  return b ? `${f(a)} - ${f(b)}` : f(a);
+}
+
+/**
+ * Eine Zeile der Gästekarte.
+ *
+ * `always` hält die Zeile auch ohne Wert sichtbar (mit Feldnamen und „—"), wie
+ * es Lodgify tut: der Nutzer sieht dann, dass das Feld existiert und die OTA es
+ * nicht mitliefert — statt einer Karte, die je nach Buchung anders aussieht.
+ */
+export function DetailLine({
+  icon,
+  value,
+  label,
+  always,
+}: {
+  icon: string;
+  value: string | null;
+  label?: string;
+  always?: boolean;
+}) {
+  if (!value && !always) return null;
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <Icon icon={icon} className="size-5 shrink-0 text-muted-foreground" />
+      {value ? (
+        <span className="min-w-0 break-words">
+          {label ? <span className="text-muted-foreground">{label}: </span> : null}
+          {value}
+        </span>
+      ) : (
+        <span className="min-w-0 break-words text-muted-foreground">
+          {label ? `${label}: ` : ""}—
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Eintrag im Überlaufmenü der Kopfleiste — Icon UND Text. */
+export function MenuAction({
+  icon,
+  label,
+  destructive,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  destructive?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        "flex w-full items-center gap-2 rounded-(--radius) px-2 py-1.5 text-left text-sm hover:bg-muted/50 " +
+        (destructive ? "text-destructive" : "")
+      }
+    >
+      <Icon
+        icon={icon}
+        className={"size-4 " + (destructive ? "" : "text-muted-foreground")}
+      />
+      {label}
+    </button>
+  );
+}
+
+export function HeadAction({
+  icon,
+  title,
+  active,
+  onClick,
+}: {
+  icon: string;
+  title: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      className={
+        "flex size-8 items-center justify-center rounded-(--radius) hover:bg-muted/60 " +
+        (active ? "text-amber-500" : "")
+      }
+    >
+      <Icon icon={icon} className="size-4" />
+    </button>
+  );
+}

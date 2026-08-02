@@ -2101,7 +2101,77 @@ class ChannelsMixin:
         if event == "ari" and tenant_id and channex_property_id:
             self._enqueue_ari_import(tenant_id, str(channex_property_id))
 
+        # 4) Gastnachricht → Abwesenheitsantworten prüfen (message_received).
+        if event == "message" and tenant_id:
+            self._nachricht_eingegangen(str(tenant_id), payload)
+
         return {"status": "accepted", "event": event}
+
+    # Schlüssel, unter denen die Booking-Referenz einer Nachricht ankommen kann.
+    # Channex ist bei diesem Event nicht auf EINE Form festgelegt, und wir haben
+    # bislang keinen echten `message`-Webhook im Log gesehen (das Event war von
+    # der Persistenz ausgenommen). Deshalb defensiv über alle plausiblen Formen —
+    # und beim Nichttreffen wird die tatsächliche Struktur geloggt, damit sich
+    # das beim ersten echten Ereignis genau festziehen lässt.
+    _MESSAGE_BOOKING_KEYS = ("booking_id", "booking", "revision_id", "id")
+
+    def _booking_ref_aus_message(self, payload: dict[str, Any]) -> str | None:
+        inner = payload.get("payload") if isinstance(payload.get("payload"), dict) else {}
+        for quelle in (inner, payload):
+            for key in self._MESSAGE_BOOKING_KEYS:
+                wert = quelle.get(key)
+                if isinstance(wert, str) and wert.strip():
+                    return wert.strip()
+                if isinstance(wert, dict) and isinstance(wert.get("id"), str):
+                    return wert["id"]
+        return None
+
+    def _nachricht_eingegangen(self, tenant_id: str, payload: dict[str, Any]) -> None:
+        """Eingegangene Gastnachricht → Abwesenheitsantworten einplanen.
+
+        Best effort: der Webhook wird IMMER mit 200 quittiert (sonst wiederholt
+        Channex bis ~24 h). Eine fehlgeschlagene Abwesenheitsantwort darf den
+        Ingest nicht kippen — sie ist Komfort, kein Datenpfad.
+        """
+        if self._db is None:
+            return
+        ref = self._booking_ref_aus_message(payload)
+        if not ref:
+            log.warning(
+                "message_webhook_ohne_booking_bezug",
+                schluessel=sorted(payload.keys()),
+                innere_schluessel=sorted(
+                    (payload.get("payload") or {}).keys()
+                    if isinstance(payload.get("payload"), dict)
+                    else []
+                ),
+            )
+            return
+        try:
+            rows = (
+                self._db.table("channex_booking")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("channex_booking_id", ref)
+                .limit(1)
+                .execute()
+            ).data or []
+            if not rows:
+                log.info("message_webhook_thread_unbekannt", booking_ref=ref)
+                return
+            thread_id = rows[0]["id"]
+            # „Erste Nachricht" heißt: bisher lag noch keine im Thread. Der
+            # Webhook kommt VOR unserem nächsten Lesen, also zählt der Stand
+            # davor — genau das, was die Option meint.
+            from src.features.inbox.service import InboxService  # noqa: PLC0415
+
+            svc = InboxService(service_client=self._db)
+            vorher = svc.zaehle_gastnachrichten(tenant_id, thread_id)
+            svc.schedule_message_received(
+                tenant_id, thread_id, ist_erste_nachricht=vorher == 0
+            )
+        except Exception as exc:  # noqa: BLE001 — Ingest nie kippen (200 zurück)
+            log.warning("message_webhook_automail_fehlgeschlagen", error=str(exc)[:300])
 
     def _resolve_webhook_property(
         self, channex_property_id: object

@@ -58,6 +58,10 @@ export type Property = {
   country: string | null;
   lat: number | null;
   lng: number | null;
+  /** IANA-Zeitzone des Objekts ("Europe/Copenhagen"). Bestimmt, wann eine
+   *  Automation mit Ortszeit auslöst. Fehlt sie, plant der Server für dieses
+   *  Objekt keine Automation mit Ortszeit — statt still auf UTC auszuweichen. */
+  timezone: string | null;
   // Objektkartei (Lastenheft §6): nur bfe_number (DK-Katasternummer) ist ein
   // echtes neues Kartei-Feld. Name/Typ/Adresse/Kapazität kommen aus dem Bestand
   // (title, property_type, house_number, max_guests, size_value).

@@ -1,30 +1,41 @@
 """Router für inbox. Gemountet unter /api/v1/inbox."""
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 
 from src.core.security import AuthContext, get_current_user, require_internal_cron_secret
 from src.core.supabase import get_service_client
+from src.core.uploads import read_upload
 
 from .authz import InboxAccess
+from .felder import FELDER
 from .schemas import (
     AiReplyResponse,
     AiSettings,
     AssignRequest,
+    Attachment,
+    AttachmentList,
     Automation,
     AutomationList,
     AutomationUpsert,
     BulkUpdateRequest,
     BulkUpdateResult,
+    FieldCatalog,
+    FieldEntry,
     InboxListResponse,
     InboxMessage,
     InboxMessagesResponse,
     InboxStatusUpdate,
+    KnowledgeFact,
+    KnowledgeFactList,
+    KnowledgeFactUpsert,
     LinkGuestRequest,
     LinkGuestResponse,
     MessageTemplate,
     MessageTemplateList,
     NoteCreate,
+    RenderRequest,
+    RenderResponse,
     ReservationDetail,
     ScheduleCreate,
     ScheduledMessage,
@@ -390,5 +401,127 @@ def delete_automation(
     ctx, _access = bundle
     try:
         service.delete_automation(ctx, automation_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Platzhalter (Felder) ----------------------------------------------------
+@router.get("/fields", response_model=FieldCatalog)
+def field_catalog(bundle: _AccessDep) -> FieldCatalog:
+    """Katalog der Platzhalter für den Picker in Vorlagen/Automationen.
+
+    Nur die Schlüssel — die Beschriftung kommt aus den 24 Sprachdateien
+    (`inbox.field_*`); ein hier mitgeliefertes deutsches Etikett wäre für einen
+    italienischen Betrieb falsch."""
+    _ctx, _access = bundle
+    return FieldCatalog(
+        items=[FieldEntry(key=f.schluessel, group=f.gruppe) for f in FELDER]
+    )
+
+
+@router.post("/{thread_id}/render", response_model=RenderResponse)
+def render_text(
+    thread_id: str, req: RenderRequest, service: InboxServiceDep, bundle: _AccessDep
+) -> RenderResponse:
+    """Text mit den Daten DIESER Konversation auflösen (Vorschau beim Einfügen
+    einer Vorlage), damit niemand `{{guest_name}}` an einen Gast schickt."""
+    ctx, _access = bundle
+    try:
+        return RenderResponse(text=service.render_for_thread(ctx, thread_id, req.text))
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Anhänge -----------------------------------------------------------------
+@router.get("/{thread_id}/attachments", response_model=AttachmentList)
+def list_attachments(
+    thread_id: str, service: InboxServiceDep, bundle: _AccessDep
+) -> AttachmentList:
+    ctx, _access = bundle
+    try:
+        return service.list_attachments(ctx, thread_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/{thread_id}/attachments", response_model=Attachment)
+async def add_attachment(
+    thread_id: str, request: Request, service: InboxServiceDep, bundle: _AccessDep
+) -> Attachment:
+    """Datei an die Konversation hängen und an den Kanal übergeben.
+
+    Der Dateityp wird im Service über die Magic-Bytes entschieden, nicht über
+    den mitgeschickten content_type (Wurzel 8)."""
+    ctx, _access = bundle
+    content, _content_type = await read_upload(request)
+    filename = request.query_params.get("filename") or "anhang"
+    message = request.query_params.get("message") or None
+    try:
+        return service.add_attachment(
+            ctx, thread_id, content=content, filename=filename, message=message
+        )
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/attachments/{attachment_id}", status_code=204)
+def delete_attachment(
+    attachment_id: str, service: InboxServiceDep, bundle: _AccessDep
+) -> None:
+    ctx, _access = bundle
+    try:
+        service.delete_attachment(ctx, attachment_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- KI-Wissensdatenbank ------------------------------------------------------
+# Die Fakten enthalten typischerweise WLAN-Passwort und Schlüsselversteck →
+# Lesen wie Schreiben nur mit INBOX_MANAGE_CONFIG, nicht für jeden mit
+# Posteingang-Zugriff (Wurzel 9: kein Datenausgang an Rollen, die ihn nicht
+# brauchen). Der KI-Vorschlag selbst nutzt sie serverseitig weiter.
+@router.get("/knowledge", response_model=KnowledgeFactList)
+def list_knowledge(
+    service: InboxServiceDep,
+    bundle: _ConfigDep,
+    property_id: Annotated[str | None, Query()] = None,
+) -> KnowledgeFactList:
+    ctx, _access = bundle
+    try:
+        return service.list_knowledge(ctx, property_id=property_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/knowledge", response_model=KnowledgeFact)
+def create_knowledge(
+    req: KnowledgeFactUpsert, service: InboxServiceDep, bundle: _ConfigDep
+) -> KnowledgeFact:
+    ctx, _access = bundle
+    try:
+        return service.create_knowledge(ctx, req)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/knowledge/{fact_id}", response_model=KnowledgeFact)
+def update_knowledge(
+    fact_id: str, req: KnowledgeFactUpsert, service: InboxServiceDep,
+    bundle: _ConfigDep,
+) -> KnowledgeFact:
+    ctx, _access = bundle
+    try:
+        return service.update_knowledge(ctx, fact_id, req)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/knowledge/{fact_id}", status_code=204)
+def delete_knowledge(
+    fact_id: str, service: InboxServiceDep, bundle: _ConfigDep
+) -> None:
+    ctx, _access = bundle
+    try:
+        service.delete_knowledge(ctx, fact_id)
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

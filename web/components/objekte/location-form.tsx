@@ -29,6 +29,7 @@ import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { Checkbox } from "@nextdays/ui/checkbox";
 import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   type Distances,
   type LocationExtras,
@@ -225,11 +226,23 @@ type Addr = {
   postal_code: string;
   city: string;
   country: string;
+  timezone: string;
   lat: number | null;
   lng: number | null;
   // Transport aus dem Picker in den separaten stateProvince-State.
   state_province?: string;
 };
+
+// IANA-Zeitzonen, die der Browser kennt. Kein eigener, gepflegter Katalog:
+// `supportedValuesOf` liefert genau die Liste, gegen die auch die Datenbank
+// prüft (0258). Ältere Browser ohne die Funktion bekommen eine leere Liste —
+// dann bleibt das Feld leer statt eine geratene Zone anzubieten.
+function zeitzonen(): string[] {
+  const f = (
+    Intl as unknown as { supportedValuesOf?: (k: string) => string[] }
+  ).supportedValuesOf;
+  return typeof f === "function" ? f("timeZone") : [];
+}
 
 function AddressEditor({
   p,
@@ -251,6 +264,7 @@ function AddressEditor({
     postal_code: p.postal_code ?? "",
     city: p.city ?? "",
     country: p.country ?? "",
+    timezone: p.timezone ?? "",
     lat: p.lat,
     lng: p.lng,
   });
@@ -269,6 +283,7 @@ function AddressEditor({
         postal_code: a.postal_code,
         city: a.city,
         country: a.country,
+        timezone: a.timezone || null,
         lat: a.lat,
         lng: a.lng,
       },
@@ -301,6 +316,27 @@ function AddressEditor({
               onChange={(e) => setA({ ...a, country: e.target.value })}
               placeholder={t("locationForm.countryPlaceholder")}
             />
+          </Field>
+          {/* Zeitzone bestimmt, wann Automationen mit Ortszeit auslösen.
+              Ohne sie plant der Server für dieses Objekt keine — statt still
+              auf UTC auszuweichen und Nachrichten um Stunden zu verschieben. */}
+          <Field label={t("locationForm.timezoneLabel")}>
+            <>
+              <NativeSelect
+                value={a.timezone}
+                onChange={(e) => setA({ ...a, timezone: e.target.value })}
+              >
+                <option value="">{t("locationForm.timezoneNone")}</option>
+                {zeitzonen().map((z) => (
+                  <option key={z} value={z}>
+                    {z}
+                  </option>
+                ))}
+              </NativeSelect>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("locationForm.timezoneHint")}
+              </p>
+            </>
           </Field>
           <div className="grid grid-cols-[1fr_6rem] gap-3">
             <Field label={t("locationForm.streetLabel")} required>
