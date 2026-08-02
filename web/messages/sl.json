@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Provizija portala",
+      "withheldTaxes": "Davki, ki jih je zadržal portal",
       "netPayout": "Izplačilo {amount}",
       "paymentCollect": {
         "property": "Plačilo poberemo mi",

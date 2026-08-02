@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Kummissjoni tal-portal",
+      "withheldTaxes": "Taxxi miżmuma mill-portal",
       "netPayout": "Ħlas {amount}",
       "paymentCollect": {
         "property": "Il-ħlas jinġabar minna",

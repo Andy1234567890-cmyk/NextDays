@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Προμήθεια πύλης",
+      "withheldTaxes": "Φόροι που παρακρατήθηκαν από την πύλη",
       "netPayout": "Πληρωμή {amount}",
       "paymentCollect": {
         "property": "Την πληρωμή την εισπράττουμε εμείς",

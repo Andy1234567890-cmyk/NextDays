@@ -522,6 +522,11 @@ class ReadsMixin(ReservationsBase):
                 if mask.amounts and r.get("ota_commission") is not None
                 else None
             ),
+            ota_withheld_taxes=(
+                float(r["ota_withheld_taxes"])
+                if mask.amounts and r.get("ota_withheld_taxes") is not None
+                else None
+            ),
             check_in=ci,
             check_out=co,
             nights=(co - ci).days,

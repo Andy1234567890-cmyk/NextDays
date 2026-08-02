@@ -918,6 +918,7 @@ class BookingsSyncMixin:
             "payment_collect": self._payment_collect(attrs),
             "payment_method_ota": self._payment_method(attrs),
             "ota_commission": self._to_float(attrs.get("ota_commission")),
+            "ota_withheld_taxes": self._withheld_taxes(attrs),
             # Zugewiesene Einheit (0265) — einmal bestimmt, siehe oben.
             "unit_id": einheit,
         }
@@ -930,6 +931,14 @@ class BookingsSyncMixin:
         # der von UNS abgeleitete Zustand zurückgenommen (Wurzel 1) — eigene
         # Gateway-/Rezeptionszahlungen laufen nie über payment_collect='ota'
         # und bleiben unberührt.
+        # Provision/einbehaltene Steuern: „nicht geliefert" (None) ist KEINE
+        # Löschung — magere Folge-Revisionen dürfen einmal gemeldete Beträge
+        # nicht nullen (gleiche Regel wie payment_collect unten). Ein
+        # gelieferter neuer Wert überschreibt weiterhin.
+        if existing:
+            for betragsfeld in ("ota_commission", "ota_withheld_taxes"):
+                if row.get(betragsfeld) is None:
+                    row.pop(betragsfeld, None)
         old_collect = existing[0].get("payment_collect") if existing else None
         if row["payment_collect"] == "ota":
             row["paid_amount"] = total_amount
@@ -962,6 +971,8 @@ class BookingsSyncMixin:
                     "currency",
                     "paid_amount",
                     "payment_status",
+                    "ota_commission",
+                    "ota_withheld_taxes",
                 ):
                     row.pop(frozen, None)
             db.table("reservations").update(row).eq("id", existing[0]["id"]).execute()
@@ -1143,6 +1154,37 @@ class BookingsSyncMixin:
         """Zahlungsart laut Portal; unbekannte Werte → None (siehe oben)."""
         wert = (attrs.get("payment_type") or "").strip().lower()
         return wert if wert in ("credit_card", "bank_transfer") else None
+
+    def _withheld_taxes(self, attrs: dict[str, Any]) -> float | None:
+        """Vom Portal einbehaltene Steuern (collected_taxes, nur Booking.com).
+
+        Booking behält z. B. City Tax direkt ein und meldet sie je Zimmer als
+        `collected_taxes` — sie mindern die Auszahlung zusätzlich zur
+        Provision. Summe über alle Zimmer; None = nicht geliefert (0270,
+        ausdrücklich NICHT „0 einbehalten")."""
+        summe = 0.0
+        gefunden = False
+        for room in attrs.get("rooms") or []:
+            if not isinstance(room, dict):
+                continue
+            for tax in room.get("collected_taxes") or []:
+                if not isinstance(tax, dict):
+                    continue
+                betrag = self._to_float(tax.get("total_price"))
+                if betrag is None:
+                    continue
+                gefunden = True
+                summe += betrag
+        if not gefunden:
+            return None
+        if summe < 0:
+            # OTA-kontrollierter Input darf den Import nicht kippen (DB-Check
+            # verlangt >= 0) — eine negative Gesamtsumme ist ein Datenfehler
+            # des Portals: melden und als „nicht geliefert" behandeln, nie
+            # einen plausiblen Ersatzwert erfinden.
+            log.warning("ota_withheld_taxes_negativ", summe=summe)
+            return None
+        return summe
 
     def _booking_quote_items(self, attrs: dict[str, Any]) -> list[dict[str, Any]]:
         """Preisaufschlüsselung [{label, amount, kind}] aus einem Channex-Booking.

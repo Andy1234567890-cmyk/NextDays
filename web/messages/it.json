@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Commissione del portale",
+      "withheldTaxes": "Tasse trattenute dal portale",
       "netPayout": "Pagamento {amount}",
       "paymentCollect": {
         "property": "Il pagamento lo incassiamo noi",

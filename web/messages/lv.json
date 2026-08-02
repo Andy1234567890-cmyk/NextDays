@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Portāla komisija",
+      "withheldTaxes": "Portāla ieturētie nodokļi",
       "netPayout": "Izmaksa {amount}",
       "paymentCollect": {
         "property": "Maksājumu iekasējam mēs",

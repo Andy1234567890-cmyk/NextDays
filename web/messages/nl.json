@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Portaalcommissie",
+      "withheldTaxes": "Door het portaal ingehouden belastingen",
       "netPayout": "Uitbetaling {amount}",
       "paymentCollect": {
         "property": "De betaling wordt door ons geïnd",

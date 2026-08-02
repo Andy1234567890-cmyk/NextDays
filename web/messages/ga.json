@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Coimisiún na tairsí",
+      "withheldTaxes": "Cánacha coinnithe siar ag an tairseach",
       "netPayout": "Íocaíocht {amount}",
       "paymentCollect": {
         "property": "Baileoimid an íocaíocht",

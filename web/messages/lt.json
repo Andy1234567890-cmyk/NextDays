@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Portalo komisinis",
+      "withheldTaxes": "Portalo išskaičiuoti mokesčiai",
       "netPayout": "Išmoka {amount}",
       "paymentCollect": {
         "property": "Mokėjimą surenkame mes",

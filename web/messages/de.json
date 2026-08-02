@@ -3875,6 +3875,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Portalprovision",
+      "withheldTaxes": "Vom Portal einbehaltene Steuern",
       "netPayout": "Auszahlung {amount}",
       "paymentCollect": {
         "property": "Zahlung wird von uns eingezogen",

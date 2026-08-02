@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Comisionul portalului",
+      "withheldTaxes": "Taxe reținute de portal",
       "netPayout": "Plată {amount}",
       "paymentCollect": {
         "property": "Plata este încasată de noi",

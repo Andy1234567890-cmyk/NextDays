@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Portaalin provisio",
+      "withheldTaxes": "Portaalin pidättämät verot",
       "netPayout": "Maksu {amount}",
       "paymentCollect": {
         "property": "Perimme maksun itse",

@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Portalkommission",
+      "withheldTaxes": "Skatter tilbageholdt af portalen",
       "netPayout": "Udbetaling {amount}",
       "paymentCollect": {
         "property": "Betalingen opkræves af os",

@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Portaali komisjonitasu",
+      "withheldTaxes": "Portaali kinnipeetud maksud",
       "netPayout": "Väljamakse {amount}",
       "paymentCollect": {
         "property": "Makse kogume meie",

@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Portalprovision",
+      "withheldTaxes": "Skatter innehållna av portalen",
       "netPayout": "Utbetalning {amount}",
       "paymentCollect": {
         "property": "Betalningen tas emot av oss",

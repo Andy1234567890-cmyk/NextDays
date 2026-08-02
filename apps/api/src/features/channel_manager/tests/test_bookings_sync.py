@@ -36,6 +36,25 @@ def test_payment_collect_leitet_vcc_als_ota_ab() -> None:
     ) == "property"
 
 
+def test_withheld_taxes_summiert_collected_taxes_aller_zimmer() -> None:
+    """Vom Portal einbehaltene Steuern: Summe je Buchung, None = nicht geliefert.
+
+    Booking.com meldet einbehaltene Steuern (City Tax etc.) je Zimmer als
+    collected_taxes — sie mindern die Auszahlung zusätzlich zur Provision.
+    Kaputte Einträge werden übersprungen, nie zu 0 erfunden (Wurzel 4).
+    """
+    from src.features.channel_manager.service import ChannelManagerService
+
+    svc = ChannelManagerService.__new__(ChannelManagerService)
+    assert svc._withheld_taxes({"rooms": [
+        {"collected_taxes": [{"total_price": "23.04", "type": "City Tax"}]},
+        {"collected_taxes": [{"total_price": "10.00"}, {"total_price": "kaputt"}]},
+    ]}) == 33.04
+    assert svc._withheld_taxes({"rooms": [{"collected_taxes": []}]}) is None
+    assert svc._withheld_taxes({"rooms": [{}]}) is None
+    assert svc._withheld_taxes({}) is None
+
+
 def test_payment_method_nimmt_nur_dokumentierte_werte() -> None:
     """Zahlungsart: nur credit_card und bank_transfer, sonst None."""
     from src.features.channel_manager.bookings_sync import BookingsSyncMixin as S

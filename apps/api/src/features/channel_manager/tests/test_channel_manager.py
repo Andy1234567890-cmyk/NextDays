@@ -1182,13 +1182,26 @@ def test_import_ota_collect_wird_als_bezahlt_gefuehrt() -> None:
     # payment_collect='ota' = „guest already pay at OTA": die Buchung wird als
     # vom Portal bezahlt geführt — sonst zeigt der Slider „Noch offen" und die
     # Schlussrechnung fakturiert eine längst bezahlte Buchung als unbezahlt.
+    # Einbehaltene Steuern (collected_taxes) landen als Summe an der Buchung.
     db = _ImportDB()
     _seed_property(db)
-    channex = _ImportChannex(bookings=[_bezahl_booking(payment_collect="ota")])
+    channex = _ImportChannex(bookings=[_bezahl_booking(
+        payment_collect="ota",
+        rooms=[{"collected_taxes": [
+            {"total_price": "23.04", "type": "City Tax", "is_withheld": True}
+        ]}],
+    )])
     _import_svc(channex, db).import_bookings_for_property("t1", "cx-prop")
     r = db.tables["reservations"][0]
     assert r["payment_collect"] == "ota"
     assert r["paid_amount"] == 300.0 and r["payment_status"] == "paid"
+    assert r["ota_withheld_taxes"] == 23.04
+    # Magere Folge-Revision (ohne rooms/collected_taxes) löscht einmal
+    # gemeldete Beträge NICHT — „nicht geliefert" ist keine Löschung.
+    _import_svc(
+        _ImportChannex(bookings=[_bezahl_booking(status="modified")]), db
+    ).import_bookings_for_property("t1", "cx-prop")
+    assert r["ota_withheld_taxes"] == 23.04
 
 
 def test_import_vcc_ohne_payment_collect_gilt_als_bezahlt() -> None:

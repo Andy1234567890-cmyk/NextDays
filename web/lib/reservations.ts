@@ -113,6 +113,9 @@ export type ReservationDetail = {
   payment_method_ota: "credit_card" | "bank_transfer" | null;
   /** Vom Portal einbehaltene Provision in Buchungswährung. */
   ota_commission: number | null;
+  /** Vom Portal einbehaltene Steuern (collected_taxes, Booking.com) —
+   *  mindern die Auszahlung zusätzlich zur Provision. */
+  ota_withheld_taxes: number | null;
   check_in: string;
   check_out: string;
   nights: number;

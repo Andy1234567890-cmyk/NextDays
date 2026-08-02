@@ -193,6 +193,9 @@ class ReservationDetail(BaseModel):
     payment_method_ota: str | None = None
     # Vom Portal einbehaltene Provision in Buchungswährung.
     ota_commission: float | None = None
+    # Vom Portal einbehaltene Steuern (collected_taxes, Booking.com) —
+    # mindern die Auszahlung zusätzlich zur Provision (0270).
+    ota_withheld_taxes: float | None = None
     check_in: date
     check_out: date
     nights: int

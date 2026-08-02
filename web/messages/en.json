@@ -3875,6 +3875,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Portal commission",
+      "withheldTaxes": "Taxes withheld by the portal",
       "netPayout": "Payout {amount}",
       "paymentCollect": {
         "property": "We collect the payment",

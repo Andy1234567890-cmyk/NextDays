@@ -40,6 +40,13 @@ Modifikationen ziehen den Betrag nach, ein expliziter Wechsel auf
 ohne das Feld ist KEIN Wechsel (zieht aber eine Preisänderung nach). Auch
 ein Storno nimmt den abgeleiteten Zustand zurück (das Portal erstattet).
 Nach Check-out sind die Zahlfelder eingefroren (Schlussrechnung).
+Vom Portal einbehaltene Steuern (`collected_taxes` je Zimmer, nur
+Booking.com) werden als Summe in `reservations.ota_withheld_taxes` (0270)
+geführt — die Auszahlung ist Brutto − Provision − einbehaltene Steuern.
+Zahlungsgebühren von Payments by Booking.com sind in der Aggregator-Doku
+NICHT strukturiert spezifiziert — kein geratenes Parsing; die Roh-Payloads
+liegen in `channex_booking.raw`, sobald echte Gebühren-Revisionen deren
+Struktur zeigen, wird das Feld nachgezogen.
 
 ## Webhook-Ereignisse (`channex_webhook_event`, Migration 0132)
 

@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Комисиона на портала",
+      "withheldTaxes": "Данъци, удържани от портала",
       "netPayout": "Изплащане {amount}",
       "paymentCollect": {
         "property": "Плащането се събира от нас",

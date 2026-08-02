@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Provize portálu",
+      "withheldTaxes": "Daně sražené portálem",
       "netPayout": "Výplata {amount}",
       "paymentCollect": {
         "property": "Platbu inkasujeme my",

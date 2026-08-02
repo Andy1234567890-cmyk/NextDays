@@ -417,27 +417,50 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                   </p>
                 ) : null}
 
-                {/* Portalprovision: der Unterschied zwischen Umsatz und Erlös. */}
-                {data.ota_commission != null ? (
-                  <p className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
-                    <span className="text-muted-foreground">
-                      {t("bookingDetail.otaCommission")}
-                    </span>
-                    <span>
-                      <span className="font-semibold">
-                        −{money(data.ota_commission, data.currency)}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {" · "}
+                {/* Portalprovision + vom Portal einbehaltene Steuern: der
+                    Unterschied zwischen Umsatz und Erlös. Die Auszahlung ist
+                    Brutto − Provision − einbehaltene Steuern — ohne die
+                    Steuern wäre sie zu hoch (Booking behält z. B. City Tax
+                    direkt ein). */}
+                {data.ota_commission != null ||
+                data.ota_withheld_taxes != null ? (
+                  <div className="space-y-1 text-sm">
+                    {data.ota_commission != null ? (
+                      <p className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="text-muted-foreground">
+                          {t("bookingDetail.otaCommission")}
+                        </span>
+                        <span className="font-semibold">
+                          −{money(data.ota_commission, data.currency)}
+                        </span>
+                      </p>
+                    ) : null}
+                    {data.ota_withheld_taxes != null ? (
+                      <p className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="text-muted-foreground">
+                          {t("bookingDetail.withheldTaxes")}
+                        </span>
+                        <span className="font-semibold">
+                          −{money(data.ota_withheld_taxes, data.currency)}
+                        </span>
+                      </p>
+                    ) : null}
+                    {/* Auszahlung nur mit gemeldeter Provision — ohne sie wäre
+                        jeder Betrag erfunden (Provision null heißt „nicht
+                        geliefert", nicht 0). */}
+                    {data.ota_commission != null ? (
+                      <p className="flex flex-wrap items-baseline justify-end gap-2 text-muted-foreground">
                         {t("bookingDetail.netPayout", {
                           amount: money(
-                            total - data.ota_commission,
+                            total -
+                              data.ota_commission -
+                              (data.ota_withheld_taxes ?? 0),
                             data.currency,
                           ),
                         })}
-                      </span>
-                    </span>
-                  </p>
+                      </p>
+                    ) : null}
+                  </div>
                 ) : null}
               </>
             )}

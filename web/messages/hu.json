@@ -3854,6 +3854,7 @@
     },
     "bookingDetail": {
       "otaCommission": "Portáljutalék",
+      "withheldTaxes": "A portál által visszatartott adók",
       "netPayout": "Kifizetés: {amount}",
       "paymentCollect": {
         "property": "A fizetést mi szedjük be",
