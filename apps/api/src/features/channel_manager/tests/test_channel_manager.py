@@ -2641,7 +2641,10 @@ def test_free_ota_nights_pushes_days_already_freed_by_release_path() -> None:
 
 def test_free_ota_nights_keeps_foreign_blocked_day_closed() -> None:
     # Ein Tag mit Fremd-Belegung (anderer Kanal/manueller Block) darf NICHT als
-    # frei an Channex gehen — der Range wird um ihn herum zerschnitten.
+    # frei an Channex gehen. Seit die Verfügbarkeit eine Stückzahl ist, wird er
+    # nicht mehr aus dem Range geschnitten, sondern mit seiner echten Zahl
+    # gemeldet: 0. Das ist dieselbe Aussage, nur vollständig — und es behebt den
+    # Fall, in dem ein teilweise belegter Tag gar nicht gemeldet wurde.
     db = _ImportDB()
     _seed_with_room_type(db)
     db.tables["availability"].extend([
@@ -2659,7 +2662,11 @@ def test_free_ota_nights_keeps_foreign_blocked_day_closed() -> None:
     )
     assert [
         (v["date_from"], v["date_to"], v["availability"]) for v in channex.pushed
-    ] == [("2026-12-03", "2026-12-03", 1), ("2026-12-05", "2026-12-05", 1)]
+    ] == [
+        ("2026-12-03", "2026-12-03", 1),
+        ("2026-12-04", "2026-12-04", 0),   # fremd belegt → 0, nicht „frei"
+        ("2026-12-05", "2026-12-05", 1),
+    ]
 
 
 def test_exclude_superseded_days_splits_ranges() -> None:
@@ -4707,3 +4714,26 @@ def test_storno_gibt_nur_die_eigene_einheit_frei() -> None:
         for a in db.tables["availability"] if a["date"] == "2026-11-10"
     }
     assert stand == {"u-p1": "booked", "u-p1-2": "open"}
+
+
+def test_storno_meldet_die_frei_gewordene_einheit() -> None:
+    """Live gefunden: nach dem Storno blieb die Meldung auf 0 stehen.
+
+    Der alte Filter warf jeden Tag raus, an dem noch IRGENDEINE Einheit belegt
+    war — bei zwei Einheiten und einer verbleibenden Buchung ging deshalb nie
+    die frei gewordene Einheit raus. Verkauft wurde sie damit nirgends.
+    """
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _seed_zwei_einheiten(db)
+    db.tables["availability"].extend([
+        {"property_id": "p1", "unit_id": "u-p1", "date": "2026-12-08",
+         "status": "booked", "source": "ota_other"},
+        {"property_id": "p1", "unit_id": "u-p1-2", "date": "2026-12-08",
+         "status": "booked", "source": "ota_other"},
+    ])
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    svc._free_ota_nights(db, "t1", "p1", "ota_other", ["2026-12-08"],
+                         unit_id="u-p1-2")
+    assert [v["availability"] for v in channex.pushed] == [1]

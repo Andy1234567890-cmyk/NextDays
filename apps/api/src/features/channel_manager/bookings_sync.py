@@ -574,18 +574,14 @@ class BookingsSyncMixin:
         # bei den OTAs dauerhaft gesperrt (live passiert: Storno gab 3 Nächte
         # lokal frei, an Channex ging nur eine). Tage mit verbleibender Belegung
         # (Fremd-Quelle, manueller Block) bleiben draußen — kein Überbuchen.
-        still_closed = {
-            r["date"]
-            for r in (
-                db.table("availability")
-                .select("date")
-                .eq("property_id", property_id)
-                .in_("date", nights)
-                .neq("status", "open")
-                .execute()
-            ).data or []
-        }
-        open_days = {d for d in nights if d not in still_closed}
+        # KEIN Filter auf „noch belegte" Tage mehr: seit die Verfügbarkeit eine
+        # Stückzahl ist, rechnet freie_einheiten_spannen die verbleibende
+        # Belegung selbst heraus. Der alte Filter warf jeden Tag raus, an dem
+        # IRGENDEINE Einheit noch belegt war — live gesehen: Storno der zweiten
+        # Buchung, die erste lief weiter, und statt der frei gewordenen Einheit
+        # ging weiterhin 0 an die Portale. Ein voll belegter Tag ergibt ohnehin
+        # 0, ein teilweise belegter die richtige Restzahl.
+        open_days = set(nights)
         # Zusammenhängende Tage als EIN Range-Push (statt N Einzeltag-Calls),
         # und je Spanne die ZAHL der freien Einheiten statt einer festen 1 —
         # ein Objekt kann mehrere identische Einheiten führen (0265). Bei genau
