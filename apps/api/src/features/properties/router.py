@@ -10,6 +10,7 @@ from src.features.auth.granular_permissions import Permission
 
 from .dependencies import PropertiesServiceDep
 from .schemas import (
+    BuildingCreate,
     ImageUploadResponse,
     PhotoReorderRequest,
     PhotoUpdateRequest,
@@ -26,6 +27,7 @@ from .schemas import (
     PropertyUpdate,
     RoomReorderRequest,
     SliceHealth,
+    UnitCountRequest,
 )
 from .service import PropertyError
 
@@ -76,6 +78,53 @@ def get_taxonomy(
     # Objekt-Taxonomie (Kategorien + Immobilientypen) für den Objekttyp-Editor.
     # MUSS vor „/{property_id}" stehen (sonst fängt die Detail-Route „taxonomy" ab).
     return service.taxonomy()
+
+
+@router.get("/buildings")
+def list_buildings(ctx: CurrentUser, service: PropertiesServiceDep) -> list[dict]:
+    """Gebäude des Betriebs. MUSS vor „/{property_id}" stehen, sonst fängt die
+    Detail-Route „buildings" ab."""
+    try:
+        return service.list_buildings(ctx)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/buildings", status_code=status.HTTP_201_CREATED)
+def create_building(
+    req: BuildingCreate, ctx: CurrentUser, service: PropertiesServiceDep
+) -> dict:
+    """Gebäude anlegen. Objekte darin teilen sich später EINE Portal-Kennung."""
+    try:
+        return service.create_building(ctx, req.name)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/{property_id}/units")
+def list_units(
+    property_id: str, ctx: CurrentUser, service: PropertiesServiceDep
+) -> list[dict]:
+    """Einheiten eines Objekts (mindestens eine)."""
+    try:
+        return service.list_units(ctx, property_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/{property_id}/units")
+def set_unit_count(
+    property_id: str,
+    req: UnitCountRequest,
+    ctx: CurrentUser,
+    service: PropertiesServiceDep,
+) -> list[dict]:
+    """Objekt in n identische Einheiten aufteilen. Verkleinern nur, solange die
+    wegfallenden Einheiten frei sind (409 sonst)."""
+    try:
+        return service.set_unit_count(ctx, property_id, req.count)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/{property_id}", response_model=PropertyResponse)

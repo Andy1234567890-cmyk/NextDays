@@ -14,7 +14,7 @@ from typing import Any
 from src.core.security import AuthContext
 
 from .channex_client import ChannexError
-from .common import ChannelManagerError, log
+from .common import ChannelManagerError, log, nur_uuids
 
 
 def _rows(res: dict[str, Any]) -> list[dict[str, Any]]:
@@ -99,7 +99,11 @@ class OtaExtrasMixin:
         verworfen — der Channex-Account ist kontoweit, eine Zeile ohne belegbare
         Objekt-Zuordnung darf nie bei einem Tenant landen."""
         own = self._own_channex_property_ids(ctx)
-        if not own:
+        # Nur echte UUIDs an Channex geben: ein synthetischer Demo-Wert lässt den
+        # ganzen Request mit 422 `filter is_invalid` scheitern (live beobachtet).
+        # Die Tenant-Zuordnung prüfen wir ohnehin unten selbst.
+        gefiltert = nur_uuids(own)
+        if not gefiltert:
             return []
         out: list[dict[str, Any]] = []
         # `page` des Aufrufers = Seite über die GEFILTERTE Liste; intern wird
@@ -108,7 +112,7 @@ class OtaExtrasMixin:
         for feed_page in range(1, self._ACCOUNT_LIST_MAX_PAGES + 1):
             try:
                 res = self._channex.list_reviews(
-                    property_ids=sorted(own), page=feed_page, limit=100
+                    property_ids=gefiltert, page=feed_page, limit=100
                 )
             except ChannexError as exc:
                 raise self._wrap_channex(exc) from exc
@@ -137,7 +141,19 @@ class OtaExtrasMixin:
         try:
             res = self._channex.get_review(review_id)
         except ChannexError as exc:
-            raise self._wrap_channex(exc) from exc
+            # KEIN Durchreichen der Portal-Meldung: die ist technisch und
+            # kontextlos („is invalid") und im Kundentext hat Provider-Sprache
+            # nichts zu suchen. Ein 4xx heißt fachlich: die Bewertung liegt beim
+            # Portal nicht (mehr) vor — alles andere ist eine Störung dort.
+            if 400 <= exc.status_code < 500:
+                raise ChannelManagerError(
+                    "Diese Bewertung ist beim Portal nicht mehr verfügbar.",
+                    status_code=404,
+                ) from exc
+            raise ChannelManagerError(
+                "Das Portal antwortet gerade nicht. Bitte später erneut versuchen.",
+                status_code=502,
+            ) from exc
         row = res.get("data") or {}
         prop_id = _related_property_id(row)
         if not prop_id or prop_id not in own:
@@ -150,9 +166,14 @@ class OtaExtrasMixin:
         """Auf eine Gäste-Bewertung antworten (geht an die OTA zurück)."""
         self._require_own_review(ctx, review_id)
         try:
-            return self._channex.reply_review(review_id, reply)
+            res = self._channex.reply_review(review_id, reply)
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
+        # Gegenzustand (Wurzel 1): erst ist die Antwort beim Portal, dann im
+        # eigenen Bestand — sonst bleibt die Bewertung im Cockpit bis zum
+        # nächsten Sync „unbeantwortet".
+        self._mark_review_replied(review_id, reply)
+        return res
 
     def send_guest_review(
         self, ctx: AuthContext, review_id: str, review: dict[str, Any]
@@ -160,9 +181,13 @@ class OtaExtrasMixin:
         """Gast bewerten (nur Airbnb): scores/tags/public+private review."""
         self._require_own_review(ctx, review_id)
         try:
-            return self._channex.send_airbnb_guest_review(review_id, review)
+            res = self._channex.send_airbnb_guest_review(review_id, review)
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
+        # Wurzel 1/2: abgeschickt festhalten, sonst schickt die Automatik beim
+        # nächsten Lauf eine zweite Bewertung — die lässt sich nicht zurückholen.
+        self._mark_guest_review_sent(review_id)
+        return res
 
     def get_property_scores(
         self, ctx: AuthContext, map_id: str, *, detailed: bool = False
@@ -345,7 +370,11 @@ class OtaExtrasMixin:
         """Threads der Tenant-Objekte. Der Channex-Endpunkt ist kontoweit —
         gefiltert wird hier über relationships.property (Wurzel 3)."""
         own = self._own_channex_property_ids(ctx)
-        if not own:
+        # Nur echte UUIDs an Channex geben: ein synthetischer Demo-Wert lässt den
+        # ganzen Request mit 422 `filter is_invalid` scheitern (live beobachtet).
+        # Die Tenant-Zuordnung prüfen wir ohnehin unten selbst.
+        gefiltert = nur_uuids(own)
+        if not gefiltert:
             return []
         out: list[dict[str, Any]] = []
         needed = page * limit

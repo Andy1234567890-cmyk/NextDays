@@ -217,19 +217,22 @@ class _Tbl:
         elif op[0] == "upsert":
             _, payload, oc = op
             keys = [k.strip() for k in oc.split(",")] if oc else []
-            hit = None
-            for r in rows:
-                if keys and all(r.get(k) == payload.get(k) for k in keys):
-                    hit = r
-                    break
-            if hit is not None:
-                hit.update(payload)
-                data = [hit]
-            else:
-                nr = dict(payload)
-                nr.setdefault("id", f"{self.n}_{len(rows)+1}")
-                rows.append(nr)
-                data = [nr]
+            # Der echte Client nimmt eine Zeile ODER eine Liste; seit der
+            # Einheiten-Auffächerung (0266) kommt hier eine Liste an.
+            for eintrag in payload if isinstance(payload, list) else [payload]:
+                hit = None
+                for r in rows:
+                    if keys and all(r.get(k) == eintrag.get(k) for k in keys):
+                        hit = r
+                        break
+                if hit is not None:
+                    hit.update(eintrag)
+                    data.append(hit)
+                else:
+                    nr = dict(eintrag)
+                    nr.setdefault("id", f"{self.n}_{len(rows)+1}")
+                    rows.append(nr)
+                    data.append(nr)
         elif op[0] == "update":
             for r in rows:
                 if self._match(r):

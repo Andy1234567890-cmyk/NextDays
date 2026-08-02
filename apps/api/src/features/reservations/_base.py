@@ -20,6 +20,7 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.dates import nights as _nights
+from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
@@ -338,12 +339,12 @@ class ReservationsBase:
         if not release:
             return
         self._db().table("availability").upsert(
-            [
+            je_einheit(self._db(), property_id, [
                 {"property_id": property_id, "date": d,
                  "status": "open", "source": "manual"}
                 for d in release
-            ],
-            on_conflict="property_id,date",
+            ]),
+            on_conflict=AVAILABILITY_CONFLICT,
         ).execute()
         self._release_channex(tenant_id, property_id, release)
         if recompute:

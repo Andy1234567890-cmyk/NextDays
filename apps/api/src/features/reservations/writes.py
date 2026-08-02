@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 
 from postgrest.exceptions import APIError
 
+from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.sales_channels import (
     RECEPTION,
     availability_block_hits_channel,
@@ -563,7 +564,8 @@ class WritesMixin(ReservationsBase):
         ]
         if occupy_rows:
             self._db().table("availability").upsert(
-                occupy_rows, on_conflict="property_id,date"
+                je_einheit(self._db(), req.property_id, occupy_rows),
+                on_conflict=AVAILABILITY_CONFLICT,
             ).execute()
         self._push_channex_availability(
             tenant_id, req.property_id, req.check_in, req.check_out, 0

@@ -96,7 +96,7 @@ C4Container
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(builder, "Website-Renderer", "Next.js (builder/, Port 3200)", "Öffentliche White-Label-Websites der Vermieter (Page-Builder); Host→Tenant über den by-domain-Resolver")
         Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 29 Vertical Slices unter /api/v1; Redis-Rate-Limiter als ASGI-Middleware (429 + Retry-After)")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "101 Tabellen (Migrationen 0001–0090), Multi-Tenant, RLS, tenant_id")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "181 Tabellen (Migrationen 0001–0265), Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer + Rate-Limiter-Zähler")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
@@ -161,18 +161,20 @@ flowchart TB
             PAY["payments — Stripe Connect Custom (primär), Charge + Provision, Kaution, Refund, Webhooks; OTA-Gate; Revolut sekundär"]
             POUT["payouts — Auszahlung nach Abreise, Verrechnung statt Rückholung; Cohost-Anteile"]
             SUB["subscriptions — Abo-Billing Tenant→myNextDays: Grundgebühr + Objekt-Staffel (graduated) + Zusatzmodule; Stripe Subscription/Checkout/Portal, Adaptive Pricing (27 EU); Modul-Entitlements"]
-            CM["channel_manager — Channex (ARI-Push, Buchungs-Import, Webhooks, Hotel-ID-Flow, Stop-Sell, ARI-Outbox)"]
+            CM["channel_manager — Channex (ARI-Push, Buchungs-Import, Webhooks, Hotel-ID-Flow, Stop-Sell, ARI-Outbox, Bewertungs-Spiegel channex_review via reviews_sync)"]
             BOOK["booking_engine — eigene Direktbuchungs-Strecke (provisionsfrei) + Buchungs-Widget"]
             PORTAL["public_portal — White-Label-Gäste-Portal (Phase 2-Struktur, 9 Routen)"]
             WA["whatsapp — WhatsApp Cloud API (Conversations/Messages, im Posteingang integriert)"]
             TAG["travel_agencies — Reisebüro-Kartei (Profile, Verträge nach Jahren, Saison-Preise, Vertragsdateien)"]
+            REV["reviews — Bewertungs-Cockpit des Betriebs: EINE Liste über alle Kanäle (public.reviews = myBestDays 1..5 + channex_review = Portale 0..10, normalisiert auf UnifiedReview), antworten (Portal zuerst, dann Spiegel), Betrieb→Gast (Zwei-Wege), Automatik (Auto-Bewertung + Gast-Erinnerung, review_automation/-_log), Zwei-Wege-Sichtbarkeit (publication.py, 14 Tage). OTA-Bewertungen sind INTERN — öffentlich nur eigene, verifizierte myBestDays-Bewertungen"]
+            GREV["guest_reviews — Gast-Seite des Marktplatzes: öffentlicher, MASKIERTER Lesepfad je Objekt und je Betrieb (speist Listing-Sterne, Inserat-Abschnitt, Website-Block), abgeben/ändern mit Nachweis eines abgeschlossenen Aufenthalts"]
             SITE["site_config — Page-Builder: Branding, Custom-Domains (Cloudflare for SaaS), Seiten + Blöcke (Page-Builder), Templates, Draft-Token; öffentlicher by-domain-Resolver (s. §12)"]
         end
         subgraph SCAFFOLD["Slices als Gerüst (Health-only) — Logik folgt lt. Roadmap"]
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 101 Tabellen (Migrationen 0001–0090), RLS")]
+    DB[("Postgres — 181 Tabellen (Migrationen 0001–0265), RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -358,14 +360,14 @@ erDiagram
 **Marktplatz-Tabellen (angelegt, mit RLS; Geschäftslogik in Phase 2):** `portal_guests`,
 `reviews`, `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 Das Kern-Diagramm oben zeigt bewusst nur die zentralen Entitäten; alle übrigen der
-**101 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
+**181 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
 
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
 
 ### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009 ff.)
 
-Das Modell ist auf **101 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
+Das Modell ist auf **181 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
 echte Supabase-Projekt. Zur Lesbarkeit hier nach Bereich gruppiert (Details in den
 jeweiligen Migrationen):
 
@@ -834,6 +836,56 @@ betriebsfremde Objekttypen mit 422 ab (sonst entstünden unsichtbare Objekte);
 `GET /properties/{id}` bleibt bewusst ungefiltert (Direktlink als
 Sicherheitsventil für falsch typisierte Bestandsobjekte).
 
+**Einheiten (`property_units` + `reservations.unit_id`, `0265`) — was verkauft
+wird.** Ein Objekt ist der Einheiten-TYP, darunter hängen seine identischen
+Einheiten (Bestand: genau eine je Objekt). Verfügbarkeit an die Portale ist
+deshalb eine STÜCKZAHL, keine 0/1 — Booking.com führt sie am Typ („number of
+rooms available to sell"), SiteMinder sendet sie als `AvailStatusMessage
+@BookingLimit` je `@InvTypeCode`, Hostaway nennt die Einheiten „sub-units".
+Berechnet wird sie in `channel_manager/einheiten.freie_einheiten_spannen` aus
+dem KALENDER (nicht aus Reservierungen: der Push läuft im Import vor dem
+Anlegen der Reservierungszeile).
+
+`availability` trägt seit **`0266`** die Spalte `unit_id` (NOT NULL): eine Zeile
+gehört genau einer Einheit, ein Sperr-Tag des ganzen Typs steht als je eine
+Zeile pro Einheit. Aufgefächert wird zentral in `core/einheiten.je_einheit`,
+damit die Regel nicht in neun Schreibpfaden (calendar, external_calendar,
+reservations ×2, properties, channel_manager ×2) einzeln nachgebaut wird;
+Konflikt-Ziel ist `core.einheiten.AVAILABILITY_CONFLICT`
+(`property_id,unit_id,date`). Die ALTE Unique-Bedingung `(property_id, date)`
+steht absichtlich noch daneben — sie fällt erst in dem Schritt, der das
+Aufteilen in mehrere Einheiten freischaltet, weil sonst die auf dem Server
+laufende Vorversion (die mit dem alten Konflikt-Ziel schreibt) sofort brechen
+würde.
+
+**Gebäude (`buildings` + `properties.building_id`, `0264`) — Träger der
+Portal-Kennung.** Die Betriebsart entscheidet AUSDRÜCKLICH NICHT (mehr), welche
+Objekte sich bei den Portalen eine Kennung teilen; das tut das Gebäude:
+
+- Objekte mit demselben `building_id` teilen EINE Channex-Property (= eine
+  Booking-Unterkunft mit mehreren Einheiten). Der Gebäudename ist der Name, den
+  die Portale über den Einheiten zeigen.
+- `building_id IS NULL` → das Objekt steht für sich und bekommt eine eigene
+  Kennung. Das ist der Normalfall verstreuter Ferienobjekte.
+- Warum eine eigene Zeile statt „abgeleitet aus `channex_property_map`": die
+  Gruppierung steht dort zwar (mehrere Objekte auf einer `channex_property_id`),
+  aber erst NACH dem Verbinden und ohne Namen. Ohne Namen stünde bei einer
+  Agentur mit drei Häusern dreimal der Betriebsname bei Booking.com.
+- Booking.com zum Fall „mehrere Einheiten an einer Adresse" (Partner-Hilfe,
+  „How do I register multiple properties or units?"): „To add two properties of
+  the same type at the same address, choose Home, Hotel, or Alternative places
+  as a property type. You can then choose between listing your full place or
+  individual rooms and add multiple units if needed."
+- Der Bestand wurde aus der Wirklichkeit abgeleitet (Objekte, die sich schon
+  eine `channex_property_id` teilen, plus Hotels ohne Verbindung), nicht aus dem
+  Flag — sonst wären bestehende Verbindungen beim nächsten Sync zerfallen.
+- Wechsel der Zuordnung nach dem Verbinden: 409. Die Kennung liegt dann beim
+  Portal; ein Umhängen schickte ARI an das falsche Haus.
+- Gelesen wird das in `content_sync` (Property-Wiederverwendung) und
+  `channels._ensure_property_registered` (alle Einheiten des Gebäudes
+  registrieren). Endpunkte: `GET/POST /properties/buildings`, Zuordnung über
+  `PATCH /properties/{id}` (`building_id`, Leerstring löst).
+
 ### Weitere Tabellen nach Bereich
 
 Über die oben im ER-Diagramm gezeigten Kern-Entitäten hinaus existieren diese
@@ -850,6 +902,7 @@ Detail-/Hilfstabellen (mit RLS, tenant-scoped):
 | Objekte      | `property_photos` (`0061`)                                                                             | Objekt-Fotos (mehrsprachige Caption, Cover, Sortierung)                           |
 | Page-Builder | `tenant_site_config`, `tenant_custom_domains` (`0086`), `site_pages`, `site_blocks` (`0087`)           | White-Label-Website je Tenant: Branding, Custom-Domains, Seiten + Blöcke (s. §12) |
 | Reisebüros   | `travel_agencies`, `travel_agency_contacts`, `travel_agency_contracts`, `travel_agency_rates` (`0088`) | Partner-Kartei mit Verträgen + Saison-Preisen                                     |
+| Bewertungen  | `reviews` (`0006`/`0181`/`0186`), `guest_reviews_by_host` (`0186`), `channex_review` (`0262`), `review_automation`, `review_automation_log` (`0263`) | Gast→Objekt (öffentlich lesbar über Spalten-GRANT), Betrieb→Gast (nur service_role), Portal-Bewertungen (SELECT fürs Realtime-Abo, Schreiben nur Server), Automatik + Idempotenz-Log (voll gesperrt) |
 
 ---
 
@@ -1166,11 +1219,12 @@ Gemeinsame Infrastruktur in `apps/api/src/core/`:
 | `supabase.py` | Client-Factory — Anon (RLS) und Service-Role (System) getrennt; jeder Client bekommt einen Retry-Transport gegen tote Keep-Alive-Verbindungen (Kong beendet idle HTTP/2, teils erst NACH den Headern → der Body wird schon im Transport gelesen). Nach begonnener Antwort wird nur GET/HEAD/OPTIONS wiederholt, sonst liefe ein POST doppelt (Wurzel 2). |
 | `security.py` | Supabase-JWT-Verifikation (ES256/JWKS) → `AuthContext`, `CurrentUser` |
 
-**Slices (24):** `auth` · `properties` · `rates` · `pricing` · `calendar` ·
+**Slices (26):** `auth` · `properties` · `rates` · `pricing` · `calendar` ·
 `reservations` · `guests` · `inbox` · `whatsapp` · `payments` ·
 `channel_manager` · `booking_engine` · `addons` · `owners` · `owner_statements` ·
-`buchhaltung` · `travel_agencies` · `site_config` · `ocr` · `public_portal` ·
-`tasks` · `crm` · `dashboard` · `content`. (24 namentlich + interne
+`buchhaltung` · `travel_agencies` · `reviews` · `guest_reviews` · `site_config` ·
+`ocr` · `public_portal` · `tasks` · `crm` · `dashboard` · `content`.
+(26 namentlich + interne
 Slice-Bausteine — Router-Prefixe je unter `/api/v1`; `site_config` mountet zwei
 Router: `/site-config` (Dashboard) und `/site` (öffentlicher Resolver).)
 
@@ -1364,6 +1418,55 @@ Realtime-Publication. Kanäle sind OTAs **und** der eigene Marktplatz „myBestD
 Beide neuen Tabellen sind für `anon`/`authenticated` gesperrt (`revoke all` +
 `as restrictive for all using (false)`, Wurzel 6) und haben bewusst **kein**
 Realtime-Abo — ein Abo darauf wäre eine stumme Attrappe.
+
+**Bewertungen über alle Kanäle (Migrationen `0262`/`0263`/`0266`):**
+
+Bis dahin lagen die Bewertungen in zwei Welten, die sich nicht kannten: die
+eigenen Marktplatz-Bewertungen in `public.reviews` (Skala 1..5, Zwei-Wege mit
+`guest_reviews_by_host`, Sichtbarkeit nach dem Airbnb-Modell) und die
+Portal-Bewertungen, die `ota_extras.py` bei jedem Aufruf LIVE durchgereicht hat.
+
+- **Eigener Bestand** (`channex_review`, `0262`): der Webhook (`review`/
+  `updated_review`) ist nur der AUSLÖSER, den Stand zieht `reviews_sync.py` per
+  `GET /reviews/{id}` nach — Channex sichert keine Reihenfolge zu. Ohne diesen
+  Bestand gäbe es kein „unbeantwortet"-Filter, keine Kennzahl über Kanäle
+  hinweg, kein Realtime, und jeder Seitenaufruf kostete Portal-Requests. Grants
+  wie bei `channex_booking`: `SELECT` für `authenticated` (Voraussetzung fürs
+  Realtime-Abo), Schreiben nur `service_role` — eine Antwort muss zuerst beim
+  Portal ankommen, sonst täuscht sie etwas vor, das den Gast nie erreicht
+  (Wurzel 1). Zusätzlich Owner-/Staff-Objektscope wie bei `reviews` (0059/0136).
+- **Ein Cockpit** (Slice `reviews`): liest beide Tabellen und normalisiert auf
+  `UnifiedReview`. Die Rohnote bleibt mitsamt ihrer Skala erhalten (Portale
+  0..10, myBestDays 1..5); `score_5` ist die umgerechnete Fassung für Sterne.
+  Fehlt eine Note, bleibt sie `null` — kein Ersatzwert (Wurzel 4). Eigene
+  Fähigkeiten `VIEW_REVIEWS`/`MANAGE_REVIEWS` statt weiter auf Kalender-Rechten
+  mitzureiten; der Detailpfad prüft denselben Objekt-Scope wie die Liste
+  (Wurzel 9). Der Slice `guest_reviews` bleibt die Gast-Seite (myBestDays);
+  geteilte Helfer und die Sichtbarkeitslogik liegen in `reviews/common.py` und
+  `reviews/publication.py`.
+- **Automatik** (`0263`): Betrieb bewertet den Gast X Tage nach Abreise
+  (optional erst ab einer Mindest-Gastnote) und/oder erinnert den Gast per
+  E-Mail an seine myBestDays-Bewertung. Jeder Vorgang wird in
+  `review_automation_log` **beansprucht, bevor** der Seiteneffekt passiert
+  (`UNIQUE(reservation_id, kind)`) — eine abgeschickte öffentliche Bewertung
+  lässt sich nicht zurücknehmen (Wurzel 2). Ausgeführt vom Worker-Tick
+  (`REVIEWS_TICK_SECONDS`, stündlich), der zugleich den Fristablauf
+  veröffentlicht — bis dahin war `publish_overdue` nirgends geplant, verdeckte
+  Bewertungen blieben also für immer verdeckt.
+- **Website-Block** (`0266`): Blocktyp `reviews` im Page-Builder zeigt die
+  eigenen, verifizierten myBestDays-Bewertungen auf der Betriebs-Website
+  (gespeist vom neuen öffentlichen `guest-reviews/tenant/{id}`).
+
+**Abgrenzung (bewusst):** Portal-Bewertungen bleiben INTERN. Öffentlich —
+myBestDays-Marktplatz, Website des Betriebs — erscheinen ausschließlich eigene,
+verifizierte Bewertungen; Booking.com und Airbnb erlauben das Weiter-
+veröffentlichen ihrer Bewertungen nur eingeschränkt (Lodgify löst das deshalb
+über den Drittanbieter Revyoos).
+
+**Nebeneffekt:** `booking_engine._to_listing` füllt `rating`/`rating_count`
+erstmals wirklich (Batch-Aggregat über veröffentlichte Bewertungen). Die
+Sternanzeige in `plattform`, `builder` und `mobile-bestdays` war vorher fertig
+gebaut, aber dauerhaft leer.
 
 ### Backoffice-Team (wer darf ins Backoffice?)
 

@@ -43,17 +43,35 @@ Vergleich über `core.security.secrets_match`, byteweise). Secret/Signatur fehlt
 fail-CLOSED (401/403), nie fail-open. Best-effort-`except` (Logging/Audit) ist ok,
 solange es den Hauptpfad nicht kippt (`# noqa: BLE001` markieren).
 
-## Datenmodell (UNVERHANDELBAR) — 1 property = 1 buchbare Einheit
+## Datenmodell (UNVERHANDELBAR) — 1 property = 1 Typ mit n ≥ 1 Einheiten
 myNextDays ist EINE Plattform für Ferienobjekte UND Hotels, dasselbe Modell für
-beide. Jede `properties`-Zeile ist GENAU EINE buchbare Einheit: ein einzelnes
-**Zimmer** (Hotel) ODER ein **Ferienobjekt** (FeWo). NIE ein Objekt als
-„Hotelgebäude mit Zimmerkategorien darunter" deuten. Ein Hotel mit 8 Twin- und
-4 Double-Zimmern hat entsprechend viele Objekte — NICHT ein Objekt mit
-`count_of_rooms=8`. Konto/Tenant = der Betrieb (`/konto`); darunter die Objekte
-(= Zimmer/Ferienobjekte, `/objekte`). Vor JEDER Aussage/Änderung zu Zimmern/
-Verfügbarkeit/Kapazität dieses Modell zugrunde legen; im Zweifel den Nutzer
-fragen statt eine Container-/Kategorie-Ebene zu erfinden. Dieser Fehler ist
-mehrfach passiert und hat falsche Kapazitäten/Buchungen erzeugt.
+beide. Jede `properties`-Zeile ist GENAU EIN Einheiten-TYP: ein Zimmertyp
+(Hotel) ODER ein Ferienobjekt (FeWo). Darunter hängen seine **Einheiten**
+(`property_units`, 0265) — im Normalfall genau eine, bei mehreren identischen
+Einheiten entsprechend viele. Verkauft wird die Einheit, geführt und bepreist
+wird der Typ.
+
+Diese Form ist Branchenstandard, weil die Portale sie erzwingen: Booking.com
+führt die Stückzahl am Zimmer-/Apartment-Typ („you sold all the rooms or units
+of this type that you have loaded"), SiteMinder sendet sie als `BookingLimit`
+je Zimmertyp („All rate plans under the same room type share the same
+availability pool"), Hostaway nennt die Einheiten „sub-units" eines Multi-Unit-
+Listings. Entscheidung vom 02.08.2026 nach Recherche; vorher galt hier
+„1 property = 1 buchbare Einheit", was Multi-Inventory-Listings (fünf gleiche
+Studios unter einem Typ) nicht abbilden konnte.
+
+Was weiterhin FALSCH ist: ein Objekt als „Hotelgebäude mit Zimmerkategorien
+darunter" zu deuten. Ein Hotel mit 8 Twin- und 4 Double-Zimmern hat ZWEI
+Objekte (Twin, Double) mit 8 bzw. 4 Einheiten — nicht ein Objekt mit
+`count_of_rooms=12` und keine erfundene Kategorie-Ebene im Objekt.
+
+Welche Objekte bei den Portalen unter EINER Kennung stehen, entscheidet das
+**Gebäude** (`buildings`/`properties.building_id`, 0264), nicht die Betriebsart.
+Konto/Tenant = der Betrieb (`/konto`); darunter die Objekte (`/objekte`),
+darunter ihre Einheiten. Vor JEDER Aussage/Änderung zu Zimmern/Verfügbarkeit/
+Kapazität diese drei Ebenen zugrunde legen; im Zweifel den Nutzer fragen statt
+eine weitere zu erfinden. Verfügbarkeit an die Portale ist deshalb eine ZAHL
+(freie Einheiten), nicht 0/1.
 
 ## Zwei Marken (UNVERHANDELBAR) — myNextDays ≠ myBestDays
 - **myNextDays** = das PMS, der Channel-Manager und die Marketing-Seite

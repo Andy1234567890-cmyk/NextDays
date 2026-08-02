@@ -874,3 +874,107 @@ def test_room_row_maps_all_fields() -> None:
     assert out["privat"] is False
     assert out["raum_typ"] == "schlafzimmer"
     assert out["position"] == 3
+
+
+# --- Einheiten aufteilen (0265/0266) -----------------------------------------
+def test_aufteilen_legt_einheiten_an_und_kuerzt_nur_freie() -> None:
+    """Vergrößern immer, Verkleinern nur solange die Einheiten frei sind.
+
+    Hostaway lässt das Kürzen mit Buchungen zu („it can generate situations of
+    overlapping reservations") — wir nicht: eine Buchung ohne Einheit wäre eine
+    unsichtbare Doppelbelegung.
+    """
+    from src.features.properties.errors import PropertyError
+
+    class _DB:
+        def __init__(self) -> None:
+            self.units = [
+                {"id": "u1", "tenant_id": "t1", "property_id": "p1",
+                 "name": "Einheit 1", "position": 0},
+            ]
+            self.availability: list[dict] = []
+            self.geloescht: list[str] = []
+
+        def table(self, name):  # noqa: ANN001, ANN201
+            return _Q(self, name)
+
+    class _Q:
+        def __init__(self, db, name) -> None:  # noqa: ANN001
+            self.db, self.name, self._in = db, name, None
+
+        def select(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+            return self
+
+        def eq(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+            return self
+
+        def neq(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+            return self
+
+        def in_(self, _f, values):  # noqa: ANN001, ANN201
+            self._in = values
+            return self
+
+        def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+            return self
+
+        def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+            return self
+
+        def insert(self, rows):  # noqa: ANN001, ANN201
+            for i, r in enumerate(rows):
+                self.db.units.append({**r, "id": f"u{len(self.db.units) + i + 1}"})
+            return self
+
+        def delete(self):  # noqa: ANN201
+            return self
+
+        def execute(self):  # noqa: ANN201
+            class _R:
+                pass
+
+            r = _R()
+            if self.name == "property_units":
+                if self._in is not None:
+                    self.db.units = [u for u in self.db.units if u["id"] not in self._in]
+                    self.db.geloescht.extend(self._in)
+                r.data = list(self.db.units)
+            elif self.name == "availability":
+                r.data = [
+                    a for a in self.db.availability
+                    if self._in is None or a["unit_id"] in self._in
+                ]
+            else:
+                r.data = []
+            return r
+
+    from src.features.properties.gebaeude import GebaeudeMixin
+
+    class _Svc(GebaeudeMixin):
+        def __init__(self, db) -> None:  # noqa: ANN001
+            self._db = db
+
+        def _require_tenant(self, _ctx):  # noqa: ANN001, ANN202
+            return "t1"
+
+        def get(self, _ctx, _pid):  # noqa: ANN001, ANN202
+            return None
+
+    db = _DB()
+    svc = _Svc(db)
+
+    # 1 → 3 Einheiten
+    units = svc.set_unit_count(None, "p1", 3)
+    assert [u["name"] for u in units] == ["Einheit 1", "Einheit 2", "Einheit 3"]
+
+    # Einheit 3 belegt → Kürzen auf 2 muss scheitern
+    db.availability.append({"unit_id": db.units[2]["id"], "date": "2026-07-01",
+                            "status": "booked"})
+    with pytest.raises(PropertyError) as exc:
+        svc.set_unit_count(None, "p1", 2)
+    assert exc.value.status_code == 409
+
+    # frei → Kürzen geht
+    db.availability.clear()
+    rest = svc.set_unit_count(None, "p1", 2)
+    assert len(rest) == 2

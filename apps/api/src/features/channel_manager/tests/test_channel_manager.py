@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
 from src.features.channel_manager.channex_client import ChannexError
+from src.features.channel_manager.einheiten import freie_einheiten_spannen
 from src.features.channel_manager.service import (
     ChannelManagerError,
     ChannelManagerService,
@@ -94,6 +95,12 @@ class _FakeQuery:
         return self
 
     def is_(self, *_a, **_k):  # noqa: ANN002, ANN003
+        return self
+
+    def in_(self, *_a, **_k):  # noqa: ANN002, ANN003
+        return self
+
+    def order(self, *_a, **_k):  # noqa: ANN002, ANN003
         return self
 
     def limit(self, *_a, **_k):  # noqa: ANN002, ANN003
@@ -860,6 +867,11 @@ class _ImportDB:
             "external_calendar": [],
             "tenant_pinned_channel": [],
             "channex_ari_shadow": [],
+            # Einheiten unter dem Objekt (0265). Der Buchungs-Import liest sie,
+            # um die Zahl der freien Einheiten zu melden; die Seed-Helfer legen
+            # je Objekt genau eine an — wie die Migration im Bestand.
+            "property_units": [],
+            "buildings": [],
         }
         self._seq = 0
 
@@ -931,6 +943,12 @@ def _seed_property(db, tenant_id="t1", channex_pid="cx-prop", property_id="p1"):
         {"id": "c1", "tenant_id": tenant_id, "property_id": property_id,
          "ota_portal_code": "BookingCom", "is_active": True,
          "channex_channel_id": "cx-chan"}
+    )
+    # Genau EINE Einheit — der Bestand nach 0265. Damit ist die gemeldete
+    # Stückzahl rechnerisch die alte 0/1.
+    db.tables["property_units"].append(
+        {"id": f"u-{property_id}", "tenant_id": tenant_id,
+         "property_id": property_id, "name": "Haus", "position": 0}
     )
 
 
@@ -4270,3 +4288,227 @@ def test_chat_freischaltung_kippt_das_verbinden_nicht() -> None:
 
     svc = ChannelManagerService(service_client=None, channex=_Kaputt())
     svc._chat_freischalten("cx-prop-1")  # kein Werfen: Distribution läuft auch ohne Chat
+
+# --- Gebäude trägt die Portal-Kennung (0264) ---------------------------------
+def _seed_gebaeude_einheit(db, pid, building_id, titel):  # noqa: ANN001, ANN201
+    db.tables["properties"].append({
+        "id": pid, "tenant_id": "t1", "title": titel, "building_id": building_id,
+        "property_type": "appartement", "country": "DE", "city": "Kiel",
+        "max_guests": 2, "status": "active",
+    })
+    db.tables["rate_plans"].append({
+        "id": f"rp-{pid}", "property_id": pid, "name": "Standardpreis",
+        "base_price": 100.00, "currency": "EUR", "min_stay": 1,
+        "created_at": "2026-01-01T00:00:00Z",
+    })
+
+
+def test_zweite_einheit_im_gebaeude_teilt_die_portal_kennung() -> None:
+    # Booking.com verlangt für mehrere Einheiten an DERSELBEN Adresse eine
+    # Property-ID mit mehreren Room-IDs und weist eine zweite Registrierung ab.
+    # Also: zweite Einheit desselben Gebäudes → KEINE zweite Property, sondern
+    # eine weitere Map-Zeile auf dieselbe Kennung.
+    db = _ImportDB()
+    db.tables["buildings"] = [{"id": "b1", "tenant_id": "t1", "name": "Haus Nordwind"}]
+    _seed_gebaeude_einheit(db, "p1", "b1", "Wohnung 1")
+    _seed_gebaeude_einheit(db, "p2", "b1", "Wohnung 2")
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+
+    svc.sync_content("t1", property_id="p1")
+    svc.sync_content("t1", property_id="p2")
+
+    assert len(channex.created_properties) == 1          # nur EINE Kennung
+    maps = [m for m in db.tables["channex_property_map"] if not m.get("deleted_at")]
+    assert {m["property_id"] for m in maps} == {"p1", "p2"}
+    assert {m["channex_property_id"] for m in maps} == {"cx-prop"}
+
+
+def test_gebaeude_property_traegt_den_hausnamen() -> None:
+    # Sonst hieße das Haus bei den Portalen wie die zuletzt gesyncte Wohnung.
+    db = _ImportDB()
+    db.tables["buildings"] = [{"id": "b1", "tenant_id": "t1", "name": "Haus Nordwind"}]
+    _seed_gebaeude_einheit(db, "p1", "b1", "Wohnung 1")
+    _seed_gebaeude_einheit(db, "p2", "b1", "Wohnung 2")
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    svc.sync_content("t1", property_id="p1")
+    svc.sync_content("t1", property_id="p2")
+    assert any(
+        (attrs or {}).get("title") == "Haus Nordwind"
+        for _cid, attrs in channex.updated_properties
+    )
+
+
+def test_objekt_ohne_gebaeude_bekommt_eigene_kennung() -> None:
+    # Verstreute Ferienobjekte: jedes ist bei den Portalen ein eigenes Haus.
+    db = _ImportDB()
+    _seed_gebaeude_einheit(db, "p1", None, "Haus am See")
+    _seed_gebaeude_einheit(db, "p2", None, "Haus am Wald")
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    svc.sync_content("t1", property_id="p1")
+    svc.sync_content("t1", property_id="p2")
+    assert len(channex.created_properties) == 2          # zwei eigene Kennungen
+
+
+# --- Raten-Zuordnung: KEINE Portal-Rate darf liegen bleiben -------------------
+class _RatenDB:
+    """Minimal-DB für _build_rate_plans: ein Objekt mit n Preisplänen."""
+
+    def __init__(self, plan_ids: list[str]) -> None:
+        self._plans = plan_ids
+
+    def table(self, name: str):  # noqa: ANN201
+        rows = []
+        if name == "channex_rate_plan_map":
+            rows = [
+                {"id": f"map-{pid}", "channex_rate_plan_id": pid,
+                 "local_rate_plan_id": f"local-{pid}", "deleted_at": None,
+                 "room_type_map_id": "rtm-1",
+                 "created_at": f"2026-01-0{i + 1}T00:00:00Z"}
+                for i, pid in enumerate(self._plans)
+            ]
+        elif name == "channex_room_type_map":
+            rows = [{"id": "rtm-1", "local_unit_ref": "p1", "deleted_at": None,
+                     "property_map_id": "m1"}]
+        elif name == "channex_property_map":
+            rows = [{"id": "m1", "property_id": "p1", "channex_property_id": "cx-prop",
+                     "deleted_at": None}]
+        elif name == "rate_plans":
+            rows = [{"id": f"local-{pid}", "property_id": "p1",
+                     "send_to_portals": True, "created_at": "2026-01-01T00:00:00Z"}
+                    for pid in self._plans]
+        return _FakeQuery(rows)
+
+
+_OTA_ZIMMER = [{
+    "id": 651942002,
+    "title": "Single Room",
+    "rates": [
+        {"id": 111, "title": "standard rate"},
+        {"id": 222, "title": "special rate"},
+        {"id": 333, "title": "non-refundable rate"},
+    ],
+}]
+
+
+def test_ferienobjekt_ein_preis_deckt_alle_portal_raten_ab() -> None:
+    # Ein Ferienobjekt hat EINEN Preis, die Booking-Kennung führt drei Raten.
+    # Vorher paarte `zip` nur die erste — zwei Raten blieben unzugeordnet, und
+    # eine unzugeordnete Rate verhindert die Aktivierung des Kanals.
+    svc = ChannelManagerService(service_client=_RatenDB(["cx-rp-1"]), channex=None)
+    plaene = svc._build_rate_plans(
+        _RatenDB(["cx-rp-1"]), "t1", "BookingCom",
+        [{"local_property_id": "p1", "room_type_code": 651942002, "occupancy": 2}],
+        _OTA_ZIMMER,
+    )
+    codes = [p["settings"]["rate_plan_code"] for p in plaene]
+    assert sorted(codes) == [111, 222, 333]           # keine Rate bleibt liegen
+    assert {p["rate_plan_id"] for p in plaene} == {"cx-rp-1"}
+    # Genau EINE Zeile trägt die Restriktionen (Booking kennt nur einen Träger).
+    assert sum(1 for p in plaene if p["settings"].get("primary_occ")) == 1
+
+
+# Kein Test mit MEHREREN Preisplänen auf dieser Ebene: welche Pläne überhaupt
+# ans Portal gehen, entscheidet `_selected_rate_plan_ids` über send_to_portals
+# (0177) und die Rate-Plan-Map — das hängt an echter DB-Semantik, die ein
+# Fake hier nur vortäuschen würde. Die Paarung selbst (der Reihe nach, Rest auf
+# den Primärplan) ist eine Zeile Code direkt über der geprüften Schleife.
+
+
+# --- Phase 1: Verfügbarkeit ist eine STÜCKZAHL (0265) -------------------------
+def test_eine_einheit_meldet_wie_bisher_null_und_eins() -> None:
+    # Regressionsschutz: Der Bestand hat je Objekt genau eine Einheit — die
+    # gemeldete Zahl muss exakt die alte 0/1 sein.
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    db.tables["availability"].append(
+        {"property_id": "p1", "date": "2026-06-24", "status": "booked"}
+    )
+    spannen = freie_einheiten_spannen(
+        db, "t1", "p1", date(2026, 6, 23), date(2026, 6, 25)
+    )
+    assert spannen == [
+        (date(2026, 6, 23), date(2026, 6, 23), 1),
+        (date(2026, 6, 24), date(2026, 6, 24), 0),
+        (date(2026, 6, 25), date(2026, 6, 25), 1),
+    ]
+
+
+def test_fuenf_einheiten_melden_fuenf() -> None:
+    # Fünf gleiche Studios unter einem Typ: die Portale erwarten die Stückzahl
+    # (SiteMinder `BookingLimit`, Booking „number of rooms available to sell").
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    for i in range(1, 5):
+        db.tables["property_units"].append(
+            {"id": f"u{i}", "tenant_id": "t1", "property_id": "p1",
+             "name": f"Studio {i}", "position": i}
+        )
+    spannen = freie_einheiten_spannen(
+        db, "t1", "p1", date(2026, 6, 23), date(2026, 6, 24)
+    )
+    assert spannen == [(date(2026, 6, 23), date(2026, 6, 24), 5)]
+
+
+def test_gesperrter_tag_bleibt_null_egal_wie_viele_einheiten() -> None:
+    # Stop-Sell sperrt überall — auch wenn rechnerisch Einheiten frei wären.
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    db.tables["property_units"].append(
+        {"id": "u2", "tenant_id": "t1", "property_id": "p1", "name": "B", "position": 1}
+    )
+    db.tables["availability"].append(
+        {"property_id": "p1", "date": "2026-07-01", "status": "blocked"}
+    )
+    spannen = freie_einheiten_spannen(
+        db, "t1", "p1", date(2026, 7, 1), date(2026, 7, 1)
+    )
+    assert spannen == [(date(2026, 7, 1), date(2026, 7, 1), 0)]
+
+
+# --- Phase 2: eine Buchung belegt EINE Einheit -------------------------------
+def _seed_zwei_einheiten(db) -> None:  # noqa: ANN001
+    db.tables["property_units"].append(
+        {"id": "u-p1-2", "tenant_id": "t1", "property_id": "p1",
+         "name": "Einheit 2", "position": 1}
+    )
+
+
+def test_ota_buchung_belegt_nur_eine_einheit() -> None:
+    # Zwei identische Einheiten, eine Buchung: die zweite bleibt verkäuflich.
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _seed_zwei_einheiten(db)
+    channex = _ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK1", "property_id": "cx-prop", "status": "new",
+        "ota_name": "Booking.com", "arrival_date": "2026-06-23",
+        "departure_date": "2026-06-25", "amount": "100", "currency": "EUR",
+        "customer": {"name": "A", "surname": "B"}}}])
+    _import_svc(channex, db).import_bookings_for_property("t1", "cx-prop")
+
+    belegt = [r for r in db.tables["availability"] if r["status"] == "booked"]
+    assert {r["unit_id"] for r in belegt} == {"u-p1"}      # nur die erste
+    # An das Portal geht 1 (eine von zwei Einheiten bleibt frei) — nicht 0.
+    assert [p["availability"] for p in channex.pushed if p["availability"] != 0]
+    reservierung = db.tables["reservations"][-1]
+    assert reservierung["unit_id"] == "u-p1"
+
+
+def test_zweite_buchung_nimmt_die_zweite_einheit() -> None:
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _seed_zwei_einheiten(db)
+    for tag in ("2026-06-23", "2026-06-24"):
+        db.tables["availability"].append(
+            {"property_id": "p1", "unit_id": "u-p1", "date": tag,
+             "status": "booked", "source": "portal"}
+        )
+    channex = _ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK2", "property_id": "cx-prop", "status": "new",
+        "ota_name": "Booking.com", "arrival_date": "2026-06-23",
+        "departure_date": "2026-06-25", "amount": "100", "currency": "EUR",
+        "customer": {"name": "C", "surname": "D"}}}])
+    _import_svc(channex, db).import_bookings_for_property("t1", "cx-prop")
+    assert db.tables["reservations"][-1]["unit_id"] == "u-p1-2"

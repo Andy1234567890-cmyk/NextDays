@@ -15,6 +15,7 @@ from uuid import uuid4
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from src.core.einheiten import AVAILABILITY_CONFLICT, freie_einheit, je_einheit
 from src.core.security import AuthContext
 from src.features.auth.guest_masking import GuestMask
 from src.features.guests.identity import (
@@ -26,6 +27,7 @@ from src.features.guests.identity import (
 from .ari_push import _group_iso_days_to_ranges
 from .channex_client import ChannexError
 from .common import ChannelManagerError, log, ota_zeitstempel_utc
+from .einheiten import freie_einheiten_spannen
 from .schemas import (
     BookingListResponse,
     BookingResponse,
@@ -515,16 +517,20 @@ class BookingsSyncMixin:
         *,
         status: str,
         source: str,
+        unit_id: str | None = None,
     ) -> None:
+        """Kalendertage setzen. `unit_id` gesetzt → nur DIESE Einheit (eine
+        Buchung belegt eine Einheit, nicht den ganzen Typ); sonst gilt die
+        Angabe für alle Einheiten (Sperre/Freigabe)."""
         for d in days:
             db.table("availability").upsert(
-                {
+                je_einheit(db, property_id, [{
                     "property_id": property_id,
                     "date": d,
                     "status": status,
                     "source": source,
-                },
-                on_conflict="property_id,date",
+                }], unit_id=unit_id),
+                on_conflict=AVAILABILITY_CONFLICT,
             ).execute()
 
     def _free_ota_nights(
@@ -571,12 +577,18 @@ class BookingsSyncMixin:
             ).data or []
         }
         open_days = {d for d in nights if d not in still_closed}
-        # Zusammenhängende Tage als EIN Range-Push (statt N Einzeltag-Calls).
+        # Zusammenhängende Tage als EIN Range-Push (statt N Einzeltag-Calls),
+        # und je Spanne die ZAHL der freien Einheiten statt einer festen 1 —
+        # ein Objekt kann mehrere identische Einheiten führen (0265). Bei genau
+        # einer Einheit ist das Ergebnis dasselbe wie vorher.
         for span_start, span_end in _group_iso_days_to_ranges(open_days):
-            self.push_availability_for_property(
-                tenant_id, property_id,
-                date.fromisoformat(span_start), date.fromisoformat(span_end), 1,
-            )
+            for von, bis, frei in freie_einheiten_spannen(
+                db, tenant_id, property_id,
+                date.fromisoformat(span_start), date.fromisoformat(span_end),
+            ):
+                self.push_availability_for_property(
+                    tenant_id, property_id, von, bis, frei,
+                )
 
     def _property_currency(self, db: Client, property_id: str) -> str | None:
         """Objekt-Währung: zentrale properties.currency (0161, die Wahrheit),
@@ -817,6 +829,20 @@ class BookingsSyncMixin:
         # oder eine Zahl; defensiv beides unterstützen, sonst 1.
         adults, children, infants = self._booking_occupancy(attrs)
         customer = attrs.get("customer") or {}
+        # Welche EINHEIT belegt diese Buchung? Bei einem Objekt mit genau einer
+        # Einheit ist es die eine — Verhalten wie bisher. Führt der Typ mehrere,
+        # bekommt die Buchung die erste freie; ist keine frei, hat das Portal
+        # mehr verkauft als da ist. Dann wird unten der ganze Typ gesperrt statt
+        # eine schon belegte Einheit ein zweites Mal zu vergeben.
+        einheit = freie_einheit(
+            db, property_id, arrival, departure, tenant_id=tenant_id
+        )
+        if einheit is None:
+            log.error(
+                "ota_buchung_ohne_freie_einheit",
+                tenant_id=tenant_id, property_id=property_id,
+                arrival=arrival, departure=departure,
+            )
         row = {
             "tenant_id": tenant_id,
             "property_id": property_id,
@@ -852,6 +878,8 @@ class BookingsSyncMixin:
             "payment_collect": self._payment_collect(attrs),
             "payment_method_ota": self._payment_method(attrs),
             "ota_commission": self._to_float(attrs.get("ota_commission")),
+            # Zugewiesene Einheit (0265) — einmal bestimmt, siehe oben.
+            "unit_id": einheit,
         }
         if existing:
             if already_checked_out:
@@ -900,6 +928,12 @@ class BookingsSyncMixin:
             return True
 
         new_nights = self._date_range_nights(arrival, departure)
+        # Welche EINHEIT belegt diese Buchung? Bei einem Objekt mit genau einer
+        # Einheit ist das die eine — Verhalten wie bisher. Führt der Typ mehrere,
+        # bekommt die Buchung die erste freie; ist keine frei, hat das Portal
+        # mehr verkauft als da ist. Dann wird der Zeitraum für den GANZEN Typ
+        # gesperrt (unit_id=None) und der Fall geloggt: lieber alles zu als eine
+        # stille Doppelbelegung auf einer schon belegten Einheit.
         # Kalender: belegte Nächte sperren (Buchung ist autoritativ für 'booked').
         self._set_availability(
             db,
@@ -907,15 +941,18 @@ class BookingsSyncMixin:
             new_nights,
             status="booked",
             source=channel,
+            unit_id=einheit,
         )
-        # Realtime an Channex: Tage sperren (availability=0) → kein OTA-Doppel.
-        self.push_availability_for_property(
-            tenant_id,
-            property_id,
+        # Realtime an Channex: die belegten Tage neu melden. Bei einem Objekt mit
+        # EINER Einheit ist das die bisherige 0; führt der Typ mehrere identische
+        # Einheiten (0265), bleiben die übrigen verkäuflich — sonst nähme eine
+        # einzige Buchung dem ganzen Typ die Verfügbarkeit.
+        for von, bis, frei in freie_einheiten_spannen(
+            db, tenant_id, property_id,
             date.fromisoformat(arrival),
             date.fromisoformat(departure) - timedelta(days=1),
-            0,
-        )
+        ):
+            self.push_availability_for_property(tenant_id, property_id, von, bis, frei)
         # Buchungs-MODIFIKATION (Verkürzung/Verschiebung/OBJEKTWECHSEL einer
         # bestehenden OTA-Buchung): die neuen Nächte sind jetzt gesperrt, aber die
         # durch die Änderung GERÄUMTEN Alt-Nächte bleiben sonst dauerhaft
@@ -1341,13 +1378,13 @@ class BookingsSyncMixin:
                 if cur and cur["status"] == new_status:
                     continue
                 db.table("availability").upsert(
-                    {
+                    je_einheit(db, property_id, [{
                         "property_id": property_id,
                         "date": d,
                         "status": new_status,
                         "source": "portal",
-                    },
-                    on_conflict="property_id,date",
+                    }]),
+                    on_conflict=AVAILABILITY_CONFLICT,
                 ).execute()
                 result["availability"] += 1
 

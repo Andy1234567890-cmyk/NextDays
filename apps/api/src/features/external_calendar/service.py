@@ -22,6 +22,7 @@ import httpx
 from supabase import Client
 
 from src.core.dates import merge_day_ranges
+from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
@@ -441,12 +442,12 @@ class ExternalCalendarService:
                         cur.get("status") != "open":
                     continue
             db.table("availability").upsert(
-                {
+                je_einheit(db, property_id, [{
                     "property_id": property_id, "date": iso,
                     "status": "blocked", "source": "ical",
                     "external_calendar_id": calendar_id,
-                },
-                on_conflict="property_id,date",
+                }]),
+                on_conflict=AVAILABILITY_CONFLICT,
             ).execute()
         # Gegenzustand: von DIESEM Feed gesetzte Tage, die nicht mehr belegt sind.
         self._clear_calendar_nights(db, property_id, calendar_id, keep=booked)

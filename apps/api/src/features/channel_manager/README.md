@@ -66,12 +66,29 @@ petsNonRefundableFee, petsRefundableDeposit, smokingPolicy}` (optional:
 `internetAccessCost`, `adultsOnly`). Unvollständig → Skip mit Log, keine
 erfundenen Defaults. Pflicht für Google-Kanal/Instant-Booking-Readiness.
 
+## Wer teilt sich eine Portal-Kennung? — das Gebäude (0264)
+
+Nicht die Betriebsart. Objekte mit demselben `properties.building_id` landen
+unter EINER Channex-Property (eine Booking-Unterkunft mit mehreren Einheiten,
+jede Einheit ein Room-Type mit eigener Rate); Objekte ohne Gebäude bekommen je
+eine eigene Property. Umgesetzt in `content_sync._existing_building_channex_property`
+(Wiederverwendung beim Anlegen) und `channels._register_building_units`
+(beim Verbinden alle Einheiten des Hauses registrieren, damit die Zuordnungs-
+liste vollständig ist). Der Gebäudename trägt den Titel der geteilten Property —
+sonst hieße sie wie die zuletzt gesyncte Einheit.
+
 ## OTA-Zusatzflächen (`ota_extras.py`)
 
 Alle tenant-gescopt über die Channex-Property-IDs des Tenants (Wurzel 3):
 
 - **Reviews**: `GET /reviews`, `POST /reviews/{id}/reply`,
   `POST /reviews/{id}/guest-review` (Airbnb), `GET /properties/{map_id}/scores`.
+  Der Property-Filter bekommt NUR echte UUIDs (`common.nur_uuids`): der
+  Demo-Seed legt Zuordnungen mit synthetischen IDs an (`demo-0bca947c-…`), und
+  Channex lehnt bei EINEM ungültigen Wert den ganzen Request mit
+  `422 filter is_invalid` ab — dann kommt keine einzige Bewertung mehr durch
+  (live beobachtet). Portal-Fehler werden übersetzt, nicht durchgereicht:
+  „is invalid" hat im Kundentext nichts zu suchen.
 - **Availability Rules** (close_out/availability_offset/max_availability je
   Kanal): CRUD unter `/properties/{map_id}/availability-rules` bzw.
   `/availability-rules/{rule_id}`.
@@ -82,19 +99,43 @@ Alle tenant-gescopt über die Channex-Property-IDs des Tenants (Wurzel 3):
   `POST /threads/{id}/no-reply-needed` (nur Booking.com).
 - **Booking CRS** (Beta): `POST /crs/bookings`, `PUT /crs/bookings/{id}` —
   PMS-Änderungen an (auch OTA-)Buchungen nach Channex zurückspiegeln.
-- **Gäste-Chat freischalten**: `GET /chat-app` (Status je Objekt),
-  `POST /chat-app/{property_id}` (installieren, kostenpflichtig, idempotent).
+- **Gäste-Chat**: keine eigene Route und kein Knopf — die Chat-Anwendung wird
+  beim Verbinden gesetzt (`property_mapping._chat_freischalten`), im Reconcile
+  nachgezogen (`_chat_nachziehen`) und beim ersten 403 im Posteingang sofort
+  installiert und der Abruf wiederholt (`inbox._portal_nachrichten`).
+
+## Bewertungs-Spiegel (`reviews_sync.py`, Migration 0262)
+
+Portal-Bewertungen liegen als eigener Bestand in `channex_review` — ohne den
+gäbe es kein „unbeantwortet"-Filter, keine Kennzahl über Kanäle hinweg, kein
+Realtime, und jeder Seitenaufruf kostete Portal-Requests.
+
+- **Auslöser** ist der Webhook (`review` / `updated_review`, seit jeher im
+  `event_mask`). Wie überall gilt: der Webhook ist NUR das Signal — den Stand
+  zieht `sync_single_review` per `GET /reviews/{id}` nach, weil Channex keine
+  Reihenfolge zusichert.
+- **Backstop** ist der stündliche Worker-Tick (`REVIEWS_TICK_SECONDS`), der
+  kontoweit spiegelt und verlorene Webhooks abfängt.
+- **Upsert auf `channex_review_id`** (Wurzel 2). Die eigenen Arbeitsfelder
+  (`is_read`, `is_archived`, `assigned_user_id`) stehen bewusst NICHT im
+  Datensatz — ein erneuter Abgleich darf sie nicht zurücksetzen (Wurzel 1).
+- **Fail-closed**: eine Zeile ohne belegbare Objekt-Zuordnung landet bei
+  KEINEM Mandanten (der Channex-Account ist kontoweit, white-label).
+
+Verwendet wird der Bestand vom Slice `reviews` (Cockpit über alle Kanäle).
 
 ## Wie die Gastnachricht vom Portal in den Posteingang kommt
 
 Belegt aus der Anbieter-Doku (Messages Collection, Webhook Collection,
 Applications API) und live gegengeprüft.
 
-1. **Freischaltung je Objekt.** Der Chat ist eine kostenpflichtige „Application"
+1. **Freischaltung je Objekt.** Der Chat ist eine „Application"
    (`channex_messages`), die an der Property installiert sein MUSS. Fehlt sie,
    antwortet `GET /bookings/{id}/messages` mit **403** — nicht mit einer leeren
-   Liste. Unterstützt sind nur Booking.com, Airbnb und Expedia (Expedia nicht
-   über EAN/Affiliate-Buchungen).
+   Liste. Sie wird automatisch gesetzt (Verbinden → Reconcile → Selbstheilung
+   beim Lesen/Senden); für den Betrieb gibt es dabei nichts zu tun. Unterstützt
+   sind nur Booking.com, Airbnb und Expedia (Expedia nicht über
+   EAN/Affiliate-Buchungen); andere Kanäle antworten 422 `not_supported`.
 2. **Webhook als Klingel.** Der globale Webhook enthält das Event `message`
    (Nutzlast: `payload.booking_id`, `message_thread_id`, `sender`, `message`,
    `ota_message_id`). Er wird NICHT als Datenquelle verwendet: die Doku sagt

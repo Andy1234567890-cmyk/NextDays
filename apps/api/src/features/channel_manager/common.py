@@ -13,6 +13,27 @@ from src.core.logging import get_logger
 
 log = get_logger("nextdays.channel_manager")
 
+_UUID_MUSTER = re.compile(
+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+)
+
+
+def nur_uuids(ids: object) -> list[str]:
+    """Nur echte UUIDs behalten — sortiert.
+
+    Der Demo-Seed legt Portal-Zuordnungen mit synthetischen IDs an
+    (``demo-0bca947c-…``). Channex prüft `filter[property_id]` strikt und lehnt
+    bei EINEM ungültigen Wert den GANZEN Request mit 422 `filter is_invalid` ab —
+    dann kommt keine einzige Zeile mehr durch (live beobachtet). Also
+    aussortieren, statt Müll zu senden; die Tenant-Zuordnung passiert ohnehin
+    lokal.
+    """
+    if not isinstance(ids, list | set | tuple | dict):
+        return []
+    return sorted(
+        str(i) for i in ids if _UUID_MUSTER.fullmatch(str(i or "")) is not None
+    )
+
 _WEEKDAYS = ["mo", "tu", "we", "th", "fr", "sa", "su"]
 
 # Haupt-IANA-Zeitzone je Land (DACH+EU+CH). Channex verlangt eine Zeitzone an der

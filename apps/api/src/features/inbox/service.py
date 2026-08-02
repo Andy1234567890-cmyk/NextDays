@@ -482,7 +482,7 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
             items = self._merge_stream(db, tenant_id, thread_id, row, [])
             return InboxMessagesResponse(items=items, total=len(items))
         try:
-            res = self._channex.get_messages_for_booking(cbid)
+            res = self._portal_nachrichten(cbid, row, tenant_id, thread_id)
         except ChannexError as exc:
             # Channex liefert bei einzelnen Sandbox-/Legacy-Buchungen 422
             # (details.booking_id: "is invalid"). In dem Fall degradieren wir
@@ -497,38 +497,110 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
                 )
                 items = self._merge_stream(db, tenant_id, thread_id, row, [])
                 return InboxMessagesResponse(items=items, total=len(items))
-            if self._is_channel_without_chat(exc):
-                # 422 „not_supported": die OTA dieser Buchung kennt keinen Chat
-                # (Doku „Messages Collection": nur Booking.com, Airbnb, Expedia —
-                # Expedia nicht über EAN/Affiliate). Das ist der Normalfall bei
-                # Direkt-/CRS-/Test-Buchungen und kein Fehler, der die Ansicht
-                # brechen darf.
-                items = self._merge_stream(db, tenant_id, thread_id, row, [])
-                return InboxMessagesResponse(
-                    items=items, total=len(items), unavailable="channel_no_chat"
-                )
-            if exc.channex_status == 403:
-                # Belegt (Doku „Messages Collection"): 403 heißt genau eine
-                # Sache — die Chat-Anwendung ist an dieser Property nicht
-                # installiert. Das ist kein Fehler des Nutzers und kein
-                # Netzproblem, sondern eine fehlende Freischaltung. Statt die
-                # Ansicht zu brechen: Lebenslauf + Notizen zeigen und den Grund
-                # benennen, damit niemand auf eine Antwort wartet, die nie
-                # kommen kann.
-                log.warning(
-                    "inbox_chat_app_nicht_installiert",
+            grund = (
+                "channel_no_chat"
+                if self._is_channel_without_chat(exc)
+                else "chat_unavailable"
+            )
+            if grund == "chat_unavailable":
+                log.error(
+                    "inbox_portal_chat_unerreichbar",
                     tenant_id=tenant_id,
                     thread_id=thread_id,
                     channex_booking_id=cbid,
+                    channex_status=exc.channex_status,
+                    error=exc.message,
                 )
-                items = self._merge_stream(db, tenant_id, thread_id, row, [])
-                return InboxMessagesResponse(
-                    items=items, total=len(items), unavailable="chat_app_missing"
-                )
-            raise InboxError(exc.message, status_code=exc.status_code) from exc
+            items = self._merge_stream(db, tenant_id, thread_id, row, [])
+            return InboxMessagesResponse(
+                items=items, total=len(items), unavailable=grund
+            )
         items = [self.zu_nachricht(m) for m in (res.get("data") or [])]
         items = self._merge_stream(db, tenant_id, thread_id, row, items)
         return InboxMessagesResponse(items=items, total=len(items))
+
+    def _portal_nachrichten(
+        self, cbid: str, row: dict, tenant_id: str, thread_id: str
+    ) -> dict:
+        """Verlauf beim Portal holen — mit Selbstheilung und zweitem Weg.
+
+        Ist ein Objekt verbunden, MUSS der Chat gehen; niemand soll dafür etwas
+        anklicken. Zwei Dinge stehen dem im Weg, beide werden hier erledigt:
+
+        1. **Fehlende Chat-Anwendung** (403). Sie gehört zur Property und wird
+           beim Verbinden gesetzt. Fehlt sie hier trotzdem (Objekt von vor der
+           Automatik, Installation damals fehlgeschlagen), wird sie SOFORT
+           nachgezogen und der Abruf genau einmal wiederholt.
+        2. **Kein Verlauf am Buchungspfad.** Die Buchung verweist über
+           `relationships.message_thread` auf ihren Thread (Doku „Channel
+           IFrame"). Über den Thread kommt man auch dort an den Verlauf, wo der
+           Buchungs-Endpunkt nichts hergibt — etwa bei Airbnb-Anfragen.
+        """
+        try:
+            return self._channex.get_messages_for_booking(cbid)
+        except ChannexError as exc:
+            if exc.channex_status == 403 and self._chat_app_nachziehen(row):
+                log.info(
+                    "inbox_chat_app_nachgezogen",
+                    tenant_id=tenant_id, thread_id=thread_id,
+                )
+                return self._channex.get_messages_for_booking(cbid)
+            thread = self._portal_thread_id(cbid)
+            if thread:
+                return self._channex.get_thread_messages(thread)
+            raise
+
+    def _portal_senden(self, cbid: str, row: dict, text: str) -> dict:
+        """Antwort ans Portal — gleiche Selbstheilung wie beim Lesen.
+
+        Ohne sie wäre der Chat lesbar (der Abruf heilt sich), aber nicht
+        beantwortbar — ein Zustand, den niemand versteht.
+        """
+        try:
+            return self._channex.send_message_for_booking(cbid, text)
+        except ChannexError as exc:
+            if exc.channex_status == 403 and self._chat_app_nachziehen(row):
+                return self._channex.send_message_for_booking(cbid, text)
+            thread = self._portal_thread_id(cbid)
+            if thread:
+                return self._channex.send_thread_message(thread, text)
+            raise
+
+    def _chat_app_nachziehen(self, row: dict) -> bool:
+        """Chat-Anwendung an der Property dieser Buchung installieren.
+
+        True, wenn ein erneuter Abruf sinnvoll ist. Die Channex-Property-ID steht
+        in der rohen Buchungs-Payload (`raw.property_id`); ohne sie lässt sich
+        nichts installieren, dann bleibt es beim ursprünglichen Fehler.
+        """
+        raw = row.get("raw") if isinstance(row.get("raw"), dict) else {}
+        channex_property_id = raw.get("property_id")
+        if not channex_property_id:
+            return False
+        try:
+            self._channex.install_application(
+                channex_property_id=str(channex_property_id),
+                application_code=ChannexClient.CHAT_APP_CODE,
+            )
+        except ChannexError as exc:
+            log.error(
+                "inbox_chat_app_install_fehlgeschlagen",
+                channex_property_id=str(channex_property_id),
+                error=exc.message,
+            )
+            return False
+        return True
+
+    def _portal_thread_id(self, cbid: str) -> str | None:
+        """`relationships.message_thread.data.id` der Buchung (oder None)."""
+        try:
+            res = self._channex.get_booking(cbid)
+        except ChannexError:
+            return None
+        rel = ((res.get("data") or {}).get("relationships") or {})
+        thread = (rel.get("message_thread") or {}).get("data") or {}
+        tid = thread.get("id")
+        return str(tid) if tid else None
 
     @staticmethod
     def _is_channel_without_chat(exc: ChannexError) -> bool:
@@ -790,22 +862,11 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
                 "Für diese Konversation ist kein Versand möglich.", status_code=422
             )
         try:
-            res = self._channex.send_message_for_booking(cbid, text)
+            res = self._portal_senden(cbid, row, text)
         except ChannexError as exc:
             if self._is_channel_without_chat(exc):
                 raise InboxError(
-                    "Dieser Buchungskanal unterstützt keinen Gäste-Chat.",
-                    status_code=409,
-                ) from exc
-            if exc.channex_status == 403:
-                # Gleiche Ursache wie beim Lesen: die Chat-Anwendung fehlt an
-                # dieser Property. Der Portal-Wortlaut ist nur „Forbidden" —
-                # daraus kann niemand ableiten, was los ist. Sie wird beim
-                # Verbinden und beim Reconcile automatisch gesetzt; steht sie
-                # hier trotzdem aus, ist das ein Betriebsfehler, kein Kaufakt.
-                raise InboxError(
-                    "Der Gäste-Chat für dieses Objekt ist bei den Portalen noch "
-                    "nicht aktiv. Er wird automatisch nachgezogen.",
+                    "Dieser Buchungskanal überträgt keine Gastnachrichten.",
                     status_code=409,
                 ) from exc
             raise InboxError(exc.message, status_code=exc.status_code) from exc

@@ -121,6 +121,19 @@ def _validate_size_unit(value: str | None) -> str | None:
     return value
 
 
+class BuildingCreate(BaseModel):
+    """Ein Gebäude anlegen. Der Name steht später bei den Portalen als Name des
+    Hauses — deshalb Pflichtangabe."""
+
+    name: str = Field(min_length=1, max_length=200)
+
+
+class UnitCountRequest(BaseModel):
+    """Wie viele identische Einheiten dieses Objekt führt (0265)."""
+
+    count: int = Field(ge=1, le=200)
+
+
 class PropertyBase(BaseModel):
     """Gemeinsame, bearbeitbare Felder eines Objekts."""
 
@@ -185,6 +198,9 @@ class PropertyBase(BaseModel):
     # dieses Objekt keine Automation mit Ortszeit.
     timezone: str | None = None
 
+    # Gebäude (0264): Klammer um Objekte, die sich EINE Portal-Kennung teilen.
+    # None = das Objekt steht für sich und bekommt eine eigene Kennung.
+    building_id: str | None = None
     # Objektkartei Stufe 1 — OBJEKTINFORMATION (Lastenheft §6). Nur bfe_number
     # (DK-Katasternummer) ist ein echtes neues Kartei-Feld. Bewusst NICHT in
     # _CONTENT_FIELDS (service.py) → kein Channex/OTA-Sync. Name/Typ/Adresse/
@@ -251,6 +267,11 @@ class PropertyUpdate(BaseModel):
     lat: float | None = None
     lng: float | None = None
     timezone: str | None = None
+    # Gebäude (0264): Objekte desselben Gebäudes teilen EINE Portal-Kennung.
+    # Leerstring löst die Zuordnung (Objekt steht dann für sich); None = nicht
+    # angefasst. Ein Wechsel wird im Service geprüft — er verschiebt das Objekt
+    # bei den Portalen unter eine andere Kennung.
+    building_id: str | None = None
     # Objektkartei (Lastenheft §6) — nur bfe_number, kein OTA-Sync (nicht in _CONTENT_FIELDS).
     bfe_number: str | None = None
     amenities: list[str] | None = None

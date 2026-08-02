@@ -11,6 +11,7 @@ from typing import Any
 
 from supabase import Client
 
+from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner, owner_property_ids
@@ -23,6 +24,7 @@ from src.jobs.queue import (
 )
 
 from .errors import PropertyError
+from .gebaeude import GebaeudeMixin
 from .rooms import RoomsMixin
 from .schemas import (
     ChannelState,
@@ -99,7 +101,7 @@ def _sniff_image_ext(content: bytes) -> str | None:
     return None
 
 
-class PropertiesService(RoomsMixin):
+class PropertiesService(GebaeudeMixin, RoomsMixin):
     slice_name = "properties"
 
     def __init__(self, service_client: Client) -> None:
@@ -469,6 +471,15 @@ class PropertiesService(RoomsMixin):
         # tatsächlich übermittelt wurde — der publish()-Pfad ist der einzige, der
         # die Registrierung blockierend erzwingt. Der Anfrage nicht vertrauen,
         # Scope/Vorbedingung serverseitig erzwingen (Wurzel 3), fail-closed.
+        # Gebäude-Zuordnung (0264): sie entscheidet, unter welcher Portal-Kennung
+        # dieses Objekt verkauft wird — deshalb serverseitig prüfen, wem das
+        # Gebäude gehört (Wurzel 3), und einen Wechsel nach dem Verbinden
+        # ablehnen: die Kennung liegt dann bei den Portalen fest, ein Umhängen
+        # würde Verfügbarkeit und Preise stumm an das falsche Haus schicken.
+        if "building_id" in changes:
+            changes["building_id"] = self._pruefe_gebaeude(
+                tenant_id, property_id, changes["building_id"]
+            )
         if changes.get("status") == PropertyStatus.active.value:
             self._require_property_registered(tenant_id, property_id)
             # Derselbe Kontingent-Riegel wie in publish() — sonst wäre update()
@@ -1095,7 +1106,8 @@ class PropertiesService(RoomsMixin):
         ]
         if new_rows:
             self._db.table("availability").upsert(
-                new_rows, on_conflict="property_id,date"
+                je_einheit(self._db, property_id, new_rows),
+                on_conflict=AVAILABILITY_CONFLICT,
             ).execute()
 
         # 4) Go-Live-Full-Sync: EIN full_sync_property-Job deckt Verfügbarkeit UND

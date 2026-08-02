@@ -29,19 +29,52 @@ class _FakeChannex:
         self, messages=None,  # noqa: ANN001
         get_error: ChannexError | None = None,
         send_error: ChannexError | None = None,
+        # Wie oft der Fehler kommt, bevor der Aufruf gelingt (1 = nur beim
+        # ersten Mal → bildet die Selbstheilung ab).
+        get_error_mal: int | None = None,
+        send_error_mal: int | None = None,
+        thread_id: str | None = None,
+        thread_messages=None,  # noqa: ANN001
     ) -> None:
         self._messages = messages or []
         self._get_error = get_error
         self._send_error = send_error
+        self._get_error_rest = get_error_mal
+        self._send_error_rest = send_error_mal
+        self._thread_id = thread_id
+        self._thread_messages = thread_messages or []
         self.sent: list[tuple[str, str]] = []
+        self.installs: list[tuple[str, str]] = []
+
+    def install_application(self, *, channex_property_id, application_code):  # noqa: ANN001, ANN201
+        self.installs.append((channex_property_id, application_code))
+        return {"data": {"id": "inst-1"}}
+
+    def get_booking(self, cbid):  # noqa: ANN001, ANN201
+        if not self._thread_id:
+            return {"data": {}}
+        return {"data": {"relationships": {
+            "message_thread": {"data": {"id": self._thread_id}}
+        }}}
+
+    def get_thread_messages(self, thread_id, **_k):  # noqa: ANN001, ANN003, ANN201
+        return {"data": self._thread_messages}
+
+    def send_thread_message(self, thread_id, message):  # noqa: ANN001, ANN201
+        self.sent.append((thread_id, message))
+        return {"data": {}}
 
     def get_messages_for_booking(self, cbid):  # noqa: ANN001, ANN201
-        if self._get_error is not None:
+        if self._get_error is not None and self._get_error_rest != 0:
+            if self._get_error_rest is not None:
+                self._get_error_rest -= 1
             raise self._get_error
         return {"data": self._messages}
 
     def send_message_for_booking(self, cbid, message):  # noqa: ANN001, ANN201
-        if self._send_error is not None:
+        if self._send_error is not None and self._send_error_rest != 0:
+            if self._send_error_rest is not None:
+                self._send_error_rest -= 1
             raise self._send_error
         self.sent.append((cbid, message))
         return {"data": {"id": "m1", "attributes": {"message": message, "sender": "property"}}}
@@ -797,34 +830,62 @@ def test_ota_zeiten_kennen_arrival_hour() -> None:
     )
 
 
-def test_get_messages_ohne_chat_app_zeigt_lebenslauf_statt_fehler(monkeypatch) -> None:  # noqa: ANN001
+def test_fehlende_chat_app_wird_beim_lesen_selbst_geheilt(monkeypatch) -> None:  # noqa: ANN001
+    # Verbundenes Objekt = Chat geht. Fehlt die Anwendung trotzdem (Objekt von
+    # vor der Automatik), zieht der Server sie nach und liest erneut — der
+    # Benutzer bekommt den Verlauf, nicht eine Aufforderung.
     monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     bookings = [{
         "id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1",
         "ota_name": "BookingCom", "status": "new",
         "created_at": "2026-06-22T10:00:00Z",
+        "raw": {"property_id": "cx-prop-1"},
     }]
     err = ChannexError(
         "Forbidden", status_code=403, channex_status=403,
         payload={"errors": {"code": "forbidden", "title": "Forbidden"}},
     )
-    svc = InboxService(service_client=_FakeDB(bookings, []), channex=_FakeChannex(get_error=err))
+    channex = _FakeChannex(
+        messages=[{"id": "m1", "attributes": {"message": "Hallo", "sender": "guest"}}],
+        get_error=err, get_error_mal=1,
+    )
+    svc = InboxService(service_client=_FakeDB(bookings, []), channex=channex)
     out = svc.get_messages(_CTX, "th1")
-    assert out.unavailable == "chat_app_missing"
-    assert [m.event_title for m in out.items] == ["bookingReceived"]
+    assert channex.installs == [("cx-prop-1", "channex_messages")]
+    assert out.unavailable is None
+    assert [m.message for m in out.items if m.sender == "guest"] == ["Hallo"]
 
 
-def test_senden_ohne_chat_app_nennt_den_grund(monkeypatch) -> None:  # noqa: ANN001
+def test_senden_heilt_die_fehlende_chat_app_ebenfalls(monkeypatch) -> None:  # noqa: ANN001
+    # Sonst wäre der Chat lesbar (Lesen heilt sich), aber nicht beantwortbar.
+    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
+    bookings = [{
+        "id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1",
+        "raw": {"property_id": "cx-prop-1"},
+    }]
+    err = ChannexError("Forbidden", status_code=403, channex_status=403, payload={})
+    channex = _FakeChannex(send_error=err, send_error_mal=1)
+    svc = InboxService(service_client=_FakeDB(bookings, []), channex=channex)
+    msg = svc.send_message(_CTX, "th1", "Danke!")
+    assert channex.installs == [("cx-prop-1", "channex_messages")]
+    assert channex.sent == [("cx-b1", "Danke!")]
+    assert msg.sender == "property"
+
+
+def test_verlauf_ueber_den_thread_wenn_der_buchungspfad_nichts_hergibt(monkeypatch) -> None:  # noqa: ANN001
+    # Die Buchung verweist über relationships.message_thread auf ihren Thread —
+    # der zweite, belegte Weg zum Verlauf (u. a. Airbnb-Anfragen).
     monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     bookings = [{"id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1"}]
-    err = ChannexError("Forbidden", status_code=403, channex_status=403, payload={})
-    svc = InboxService(service_client=_FakeDB(bookings, []), channex=_FakeChannex(send_error=err))
-    with pytest.raises(InboxError) as exc:
-        svc.send_message(_CTX, "th1", "Hallo")
-    # 409 statt des nackten „Forbidden": der Grund ist eine fehlende
-    # Freischaltung, kein Rechteproblem des Benutzers.
-    assert exc.value.status_code == 409
-    assert "nicht aktiv" in exc.value.message
+    err = ChannexError("Not found", status_code=404, channex_status=404, payload={})
+    channex = _FakeChannex(
+        get_error=err,
+        thread_id="thr-9",
+        thread_messages=[{"id": "m9", "attributes": {"message": "Vom Thread", "sender": "guest"}}],
+    )
+    svc = InboxService(service_client=_FakeDB(bookings, []), channex=channex)
+    out = svc.get_messages(_CTX, "th1")
+    assert [m.message for m in out.items if m.sender == "guest"] == ["Vom Thread"]
 
 
 def test_kanal_ohne_chat_bricht_die_ansicht_nicht(monkeypatch) -> None:  # noqa: ANN001

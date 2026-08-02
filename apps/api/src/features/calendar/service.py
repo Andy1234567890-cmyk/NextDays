@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 from supabase import Client
 
 from src.core.dates import merge_day_ranges
+from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner, owner_property_ids
@@ -412,8 +413,10 @@ class CalendarService:
             }
             for day in req.range.nights()
         ]
+        # Eine Sperre gilt dem ganzen Typ → je Einheit eine Zeile (0266).
         self._db().table("availability").upsert(
-            payload, on_conflict="property_id,date"
+            je_einheit(self._db(), req.property_id, payload),
+            on_conflict=AVAILABILITY_CONFLICT,
         ).execute()
         # Realtime: gesperrte Tage sofort an Channex/OTAs (availability=0).
         self._push_channex_availability(
@@ -1125,7 +1128,8 @@ class CalendarService:
                 for day in rng.nights()
             ]
             self._db().table("availability").upsert(
-                payload, on_conflict="property_id,date"
+                je_einheit(self._db(), property_id, payload),
+                on_conflict=AVAILABILITY_CONFLICT,
             ).execute()
         self._push_channex_restrictions(
             property_id, rng.start, rng.end, cta, ctd,
@@ -1498,9 +1502,12 @@ class CalendarService:
             if row.closed_to_departure is not None:
                 flags["closed_to_departure"] = row.closed_to_departure
             self._db().table("availability").upsert(
-                [{"property_id": pid, "date": d.isoformat(), **flags}
-                 for d in row.range.nights()],
-                on_conflict="property_id,date",
+                je_einheit(
+                    self._db(), pid,
+                    [{"property_id": pid, "date": d.isoformat(), **flags}
+                     for d in row.range.nights()],
+                ),
+                on_conflict=AVAILABILITY_CONFLICT,
             ).execute()
         if row.min_stay is not None and row.rate_plan_id:
             # Hotel: datumsgenauer Mindestaufenthalt gehört an den Plan.

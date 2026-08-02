@@ -474,36 +474,67 @@ class ContentSyncMixin:
         name = (row[0].get("name") or "").strip() if row else ""
         return name or None
 
-    def _is_hotel_tenant(self, db: Client, tenant_id: str) -> bool:
-        """True, wenn der Betrieb ein HOTEL ist (accommodation_type='hotel').
-        Beim Hotel gehören ALLE Zimmer-Objekte unter EINE Channex-Property (eine
-        Booking-Hotel-ID) als je eigener Room-Type — Booking.com-Modell (belegt:
-        1 Hotel = 1 Property-ID, Zimmer = room_types mit je eigener Rate). Bei
-        'vacation_rental' (Agentur/FeWo) bleibt 1 Objekt = 1 eigene Property mit
-        eigener Booking-ID."""
-        row = (
-            db.table("tenants").select("accommodation_type")
-            .eq("id", tenant_id).limit(1).execute()
-        ).data
-        return bool(row) and row[0].get("accommodation_type") == "hotel"
+    @staticmethod
+    def _building_of(db: Client, tenant_id: str, property_id: str) -> str | None:
+        """Gebäude dieses Objekts (0264) — oder None, wenn es für sich steht.
 
-    def _existing_tenant_channex_property(
-        self, db: Client, tenant_id: str
+        Das Gebäude, NICHT die Betriebsart, entscheidet über die Portal-Kennung:
+        Objekte im selben Gebäude teilen sich eine Channex-Property (= eine
+        Booking-Hotel-ID mit mehreren Room-IDs), eigenständige bekommen je eine
+        eigene. Booking.com verlangt das so — mehrere Einheiten an derselben
+        Adresse gehören unter eine Property-ID; eine zweite Registrierung
+        derselben Adresse wird abgewiesen.
+        """
+        row = (
+            db.table("properties").select("building_id")
+            .eq("id", property_id).eq("tenant_id", tenant_id)
+            .limit(1).execute()
+        ).data
+        return (row[0].get("building_id") if row else None) or None
+
+    def _existing_building_channex_property(
+        self, db: Client, tenant_id: str, building_id: str
     ) -> str | None:
-        """channex_property_id einer bereits angelegten Property DIESES Tenants
-        (für Hotels: alle Zimmer teilen sie). None, wenn noch keine existiert.
-        Nimmt die älteste aktive Map-Zeile — deterministisch, damit alle Zimmer
-        auf dieselbe Property zeigen."""
+        """channex_property_id, die die Objekte DIESES Gebäudes schon nutzen.
+
+        None, wenn noch keines verbunden ist. Deterministisch die älteste
+        Map-Zeile, damit alle Einheiten desselben Gebäudes auf dieselbe
+        Property zeigen — auch wenn zwei Zimmer gleichzeitig gesynct werden.
+        """
+        einheiten = (
+            db.table("properties").select("id")
+            .eq("tenant_id", tenant_id).eq("building_id", building_id)
+            .execute()
+        ).data or []
+        ids = [str(e["id"]) for e in einheiten]
+        if not ids:
+            return None
         rows = (
             db.table("channex_property_map")
             .select("channex_property_id, created_at")
             .eq("tenant_id", tenant_id)
+            .in_("property_id", ids)
             .is_("deleted_at", "null")
             .order("created_at")
             .limit(1)
             .execute()
         ).data or []
         return rows[0]["channex_property_id"] if rows else None
+
+    @staticmethod
+    def _building_title(db: Client, tenant_id: str, building_id: str) -> str | None:
+        """Name des Gebäudes — er trägt die geteilte Property bei den Portalen.
+
+        Ohne ihn hieße die Property bei Booking.com so wie die zuletzt gesyncte
+        Einheit („Zimmer 204"), obwohl dort das ganze Haus steht.
+        """
+        row = (
+            db.table("buildings").select("name")
+            .eq("id", building_id).eq("tenant_id", tenant_id)
+            .limit(1).execute()
+        ).data
+        name = (row[0].get("name") or "").strip() if row else ""
+        return name or None
 
     def _upsert_channex_property(
         self, db: Client, tenant_id: str, property_id: str, title: str,
@@ -544,21 +575,25 @@ class ContentSyncMixin:
             self._channex.update_property(channex_id, attrs)
             return channex_id
 
-        # HOTEL: alle Zimmer-Objekte teilen EINE Channex-Property (eine Booking-
-        # Hotel-ID). Existiert für diesen Tenant schon eine Property, die
-        # BESTEHENDE wiederverwenden und nur eine Map-Zeile für dieses Zimmer
-        # anlegen — statt eine zweite Property zu erzeugen. Der Room-Type/Rate-Plan
-        # dieses Zimmers entsteht danach als eigener Eintrag darunter (eigene
-        # Rate, keine Vermischung). Bei vacation_rental (FeWo) NICHT wiederverwenden
-        # → jede FeWo bekommt ihre eigene Property/Booking-ID.
-        if self._is_hotel_tenant(db, tenant_id):
-            shared = self._existing_tenant_channex_property(db, tenant_id)
+        # GEBÄUDE (0264): Objekte desselben Gebäudes teilen EINE Channex-Property
+        # (eine Booking-Hotel-ID mit mehreren Room-IDs). Existiert für dieses
+        # Gebäude schon eine Property, die BESTEHENDE wiederverwenden und nur
+        # eine Map-Zeile für diese Einheit anlegen — statt eine zweite Property
+        # zu erzeugen, die Booking.com für dieselbe Adresse ohnehin abweist. Der
+        # Room-Type/Rate-Plan dieser Einheit entsteht danach als eigener Eintrag
+        # darunter (eigene Rate, keine Vermischung). Ein Objekt OHNE Gebäude
+        # steht für sich und bekommt seine eigene Property/Kennung.
+        building_id = self._building_of(db, tenant_id, property_id)
+        if building_id:
+            shared = self._existing_building_channex_property(
+                db, tenant_id, building_id
+            )
             if shared:
-                # Property-Titel auf den Betriebsnamen halten (nicht diesen
-                # Zimmertitel) — sonst benennt das Zimmer die Hotel-Property um.
-                tenant_title = self._tenant_title(db, tenant_id)
+                # Property-Titel auf den Gebäudenamen halten (nicht diesen
+                # Einheitentitel) — sonst benennt jede Einheit die Property um.
+                haus_title = self._building_title(db, tenant_id, building_id)
                 self._channex.update_property(
-                    shared, {**attrs, "title": tenant_title or attrs["title"]}
+                    shared, {**attrs, "title": haus_title or attrs["title"]}
                 )
                 db.table("channex_property_map").insert(
                     {

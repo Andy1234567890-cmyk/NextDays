@@ -808,8 +808,22 @@ class ChannelsMixin:
             occupancy = self._as_int(m.get("occupancy")) or 2
             pricing_type = m.get("pricing_type") or "Standard"
 
-            # Jede gewählte Rate auf eine eigene OTA-Rate paaren (Standard zuerst).
+            # Jede gewählte Rate auf eine eigene OTA-Rate paaren (Standard zuerst)
+            # — und dann JEDE übrige OTA-Rate ebenfalls auf den ersten (Primary-)
+            # Preisplan legen. Ohne diesen zweiten Teil blieben Raten unzugeordnet,
+            # sobald das Portal-Zimmer mehr Raten führt als das Objekt Preispläne
+            # hat: ein Ferienobjekt hat EINEN Preis, eine Booking-Kennung
+            # regelmäßig drei (standard · special · non-refundable). `zip` allein
+            # bricht bei der kürzeren Liste ab und ließ zwei davon liegen — und
+            # eine nicht zugeordnete Rate verhindert die Aktivierung des Kanals
+            # (Channex-Mapping-Anleitung: „Channel wont be activated unless you
+            # map rooms and rates", „Map all rates even the derived ones").
+            # Erlaubt ist das, weil die Eindeutigkeit auf dem OTA-PAAR
+            # (Zimmer + Rate) liegt, nicht auf unserem Preisplan: mehrere
+            # OTA-Raten dürfen auf denselben lokalen Plan zeigen, dieselbe
+            # OTA-Rate aber nie zweimal (seen_pairs unten).
             pairs = list(zip(ota_rates, selected, strict=False))
+            pairs += [(rate, selected[0]) for rate in ota_rates[len(pairs):]]
 
             for rate, channex_rate_plan_id in pairs:
                 rate_code = (
@@ -1746,13 +1760,14 @@ class ChannelsMixin:
         + Rate-Plans anlegt und die Map schreibt. sync_content wirft ein präzises
         422, wenn Voraussetzungen fehlen (kein Preis/Titel/Währung) — das ist die
         umsetzbare Meldung, die die UI dem Nutzer zeigen soll (statt 409)."""
-        # HOTEL: alle aktiven Zimmer des Betriebs registrieren, nicht nur das
-        # aufgerufene — sonst wäre die Mapping-Liste (welches Booking-Zimmer ist
-        # welches Objekt) unvollständig. Die Zimmer landen als Room-Types unter
-        # DERSELBEN Property (eine Booking-Hotel-ID), jedes mit eigener Rate. Bei
-        # vacation_rental nur das eine Objekt (eigene Property/ID pro FeWo).
-        if self._is_hotel_tenant(db, tenant_id):
-            self._register_all_hotel_rooms(db, tenant_id)
+        # GEBÄUDE (0264): alle aktiven Einheiten DESSELBEN Gebäudes registrieren,
+        # nicht nur die aufgerufene — sonst wäre die Zuordnungsliste (welche
+        # Portal-Einheit ist welches Objekt) unvollständig. Sie landen als
+        # Room-Types unter DERSELBEN Property (eine Portal-Kennung), jede mit
+        # eigener Rate. Ein Objekt ohne Gebäude bringt nur sich selbst mit.
+        building_id = self._building_of(db, tenant_id, property_id)
+        if building_id:
+            self._register_building_units(db, tenant_id, building_id)
 
         existing = self._lookup_property_mapping(db, tenant_id, property_id)
         if existing is not None:
@@ -1769,17 +1784,21 @@ class ChannelsMixin:
             )
         return registered
 
-    def _register_all_hotel_rooms(self, db: Client, tenant_id: str) -> None:
-        """HOTEL: jedes aktive Zimmer-Objekt bei Channex registrieren (idempotent),
-        damit alle als Room-Types unter DERSELBEN Property (eine Booking-Hotel-ID)
-        landen. Best-effort je Zimmer — ein Zimmer ohne Preis (sync_content 422)
-        stoppt die übrigen nicht; es fehlt dann nur in der Mapping-Liste, bis ein
-        Preis hinterlegt ist. Der Hauptpfad (das aufgerufene Objekt) prüft danach
-        selbst, ob seine Registrierung wirklich entstand."""
+    def _register_building_units(
+        self, db: Client, tenant_id: str, building_id: str
+    ) -> None:
+        """Jede aktive Einheit DIESES Gebäudes bei Channex registrieren
+        (idempotent), damit alle als Room-Types unter DERSELBEN Property (eine
+        Portal-Kennung) landen. Best-effort je Einheit — eine ohne Preis
+        (sync_content 422) stoppt die übrigen nicht; sie fehlt dann nur in der
+        Zuordnungsliste, bis ein Preis hinterlegt ist. Der Hauptpfad (das
+        aufgerufene Objekt) prüft danach selbst, ob seine Registrierung entstand.
+        """
         rooms = (
             db.table("properties")
             .select("id")
             .eq("tenant_id", tenant_id)
+            .eq("building_id", building_id)
             .eq("status", "active")
             .execute()
         ).data or []
@@ -2105,7 +2124,31 @@ class ChannelsMixin:
         if event == "message" and tenant_id:
             self._nachricht_eingegangen(str(tenant_id), payload)
 
+        # 5) Bewertung → aktuellen Stand ziehen und spiegeln (channex_review).
+        if event in self._REVIEW_EVENTS:
+            self._bewertung_eingegangen(payload)
+
         return {"status": "accepted", "event": event}
+
+    # Bewertungs-Events: `review` = neu eingetroffen, `updated_review` = der Gast
+    # hat nachgelegt oder das Portal hat die Sichtbarkeit geändert. Beide führen
+    # zum selben Schritt (Stand ziehen), weil Channex keine Reihenfolge zusichert.
+    _REVIEW_EVENTS = frozenset({"review", "updated_review"})
+
+    def _bewertung_eingegangen(self, payload: dict[str, Any]) -> None:
+        """Bewertungs-Webhook → die eine Bewertung frisch ziehen und spiegeln.
+
+        Best effort: der Ingest antwortet immer mit 200, sonst wiederholt Channex
+        bis zu 24 h. Was hier verloren geht, holt der Backstop-Tick nach."""
+        inner = payload.get("payload") if isinstance(payload.get("payload"), dict) else {}
+        review_id = inner.get("id") or payload.get("id")
+        if not isinstance(review_id, str) or not review_id.strip():
+            log.warning("channex_review_webhook_ohne_id", keys=sorted(inner))
+            return
+        try:
+            self.sync_single_review(review_id.strip())
+        except Exception as exc:  # noqa: BLE001 — Ingest nie kippen (200 zurück)
+            log.warning("channex_review_webhook_failed", error=str(exc)[:200])
 
     # Schlüssel, unter denen die Booking-Referenz einer Nachricht ankommen kann.
     # Channex ist bei diesem Event nicht auf EINE Form festgelegt, und wir haben
