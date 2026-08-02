@@ -28,6 +28,7 @@ import {
   ImageNode,
   MasonryNode,
   PropertiesGridNode,
+  ReviewsNode,
   SearchNode,
   SpacerNode,
   StackNode,
@@ -83,6 +84,7 @@ const RESOLVER = {
   ContactNode,
   SearchNode,
   PropertiesGridNode,
+  ReviewsNode,
 };
 
 export function CanvasEditor({

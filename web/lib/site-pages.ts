@@ -18,7 +18,8 @@ export type BlockType =
   | "contact"
   | "search"
   | "properties_grid"
-  | "featured_properties";
+  | "featured_properties"
+  | "reviews";
 
 export type Page = {
   id: string;

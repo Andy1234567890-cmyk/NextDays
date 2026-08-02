@@ -185,6 +185,7 @@ class BlockType(StrEnum):
     search = "search"
     properties_grid = "properties_grid"
     featured_properties = "featured_properties"
+    reviews = "reviews"
 
 
 # --- getypte content-Schemas je Block-Typ (kein freies Any) ------------------
@@ -265,6 +266,23 @@ class FeaturedPropertiesContent(BaseModel):
     property_ids: list[str] = Field(default_factory=list)
 
 
+class ReviewsContent(BaseModel):
+    """Bewertungs-Block der eigenen Website.
+
+    Zeigt AUSSCHLIESSLICH eigene, verifizierte myBestDays-Bewertungen. Portal-
+    Bewertungen (Booking.com/Airbnb) gehören nicht hierher: deren Nutzungs-
+    bedingungen erlauben das Weiterveröffentlichen nur eingeschränkt.
+
+    ``property_id`` leer = Bewertungen aller Objekte des Betriebs."""
+
+    headline: dict[str, str] = Field(default_factory=dict)
+    property_id: str | None = None
+    # Wie viele Bewertungen gezeigt werden. Obergrenze, damit ein Block nicht
+    # unbegrenzt viele Zeilen rendert (Wurzel 8).
+    limit: int = Field(default=6, ge=1, le=24)
+    show_categories: bool = True
+
+
 _CONTENT_MODEL: dict[BlockType, type[BaseModel]] = {
     BlockType.hero: HeroContent,
     BlockType.rich_text: RichTextContent,
@@ -276,6 +294,7 @@ _CONTENT_MODEL: dict[BlockType, type[BaseModel]] = {
     BlockType.search: SearchContent,
     BlockType.properties_grid: PropertiesGridContent,
     BlockType.featured_properties: FeaturedPropertiesContent,
+    BlockType.reviews: ReviewsContent,
 }
 
 

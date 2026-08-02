@@ -18,6 +18,7 @@ import {
   HeroNode,
   ImageNode,
   PropertiesGridNode,
+  ReviewsNode,
   SearchNode,
   SpacerNode,
   TextNode,
@@ -40,6 +41,7 @@ const ITEMS: PaletteItem[] = [
   { label: "Kontakt", icon: "ph:envelope", element: <Element is={ContactNode} canvas={false} /> },
   { label: "Suche", icon: "ph:magnifying-glass", booking: true, element: <Element is={SearchNode} canvas={false} /> },
   { label: "Objekt-Grid", icon: "ph:grid-four", booking: true, element: <Element is={PropertiesGridNode} canvas={false} /> },
+  { label: "Bewertungen", icon: "ph:star", booking: true, element: <Element is={ReviewsNode} canvas={false} /> },
 ];
 
 export function Palette() {

@@ -18,6 +18,7 @@ const RESOLVER_NAME: Record<BlockType, string> = {
   search: "SearchNode",
   properties_grid: "PropertiesGridNode",
   featured_properties: "PropertiesGridNode",
+  reviews: "ReviewsNode",
 };
 
 // content+settings eines Blocks → flache Props des Node (1:1, content führt).

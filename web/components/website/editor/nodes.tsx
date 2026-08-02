@@ -17,6 +17,7 @@ import {
   HeroNode,
   ImageNode,
   PropertiesGridNode,
+  ReviewsNode,
   SearchNode,
   SpacerNode,
   TextNode,
@@ -30,6 +31,7 @@ export {
   HeroNode,
   ImageNode,
   PropertiesGridNode,
+  ReviewsNode,
   SearchNode,
   SpacerNode,
   TextNode,
@@ -55,6 +57,7 @@ export const NODE_BY_TYPE = {
   search: SearchNode,
   properties_grid: PropertiesGridNode,
   featured_properties: PropertiesGridNode,
+  reviews: ReviewsNode,
 } as const;
 
 export type EditorBlockType = keyof typeof NODE_BY_TYPE;

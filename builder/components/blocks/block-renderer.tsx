@@ -5,6 +5,7 @@
 import type { Block } from "@/lib/site";
 import type { SuchParams } from "@/lib/inserate";
 
+import { BewertungenBlock } from "./bewertungen";
 import { ButtonBlock, ContactBlock, GalleryBlock, ImageBlock, SpacerBlock } from "./simple-blocks";
 import { FeaturedPropertiesBlock, PropertiesGridBlock } from "./properties-grid";
 import { HeroBlock } from "./hero";
@@ -50,6 +51,8 @@ async function renderBlock(
       return (
         <FeaturedPropertiesBlock content={block.content} tenantId={tenantId} />
       );
+    case "reviews":
+      return <BewertungenBlock content={block.content} tenantId={tenantId} />;
     default:
       return null;
   }

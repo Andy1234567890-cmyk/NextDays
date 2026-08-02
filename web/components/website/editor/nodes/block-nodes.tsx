@@ -226,6 +226,59 @@ PropertiesGridNode.craft = {
 };
 
 // =============================================================================
+// BEWERTUNGEN (Buchung) — echte myBestDays-Bewertungen des Betriebs
+// =============================================================================
+// Auf der Live-Seite erscheinen die verifizierten eigenen Bewertungen. Portal-
+// Bewertungen (Booking.com/Airbnb) sind NICHT dabei: deren Bedingungen erlauben
+// das Weiterveröffentlichen nur eingeschränkt.
+export function ReviewsNode(props: { headline?: LocaleMap }) {
+  const t = useTranslations("website");
+  const {
+    connectors: { connect },
+    actions: { setProp },
+  } = useNode();
+  const headline = pick(props.headline);
+  return (
+    <section ref={(r) => { if (r) connect(r); }} className="mx-auto max-w-7xl px-6 py-14">
+      <div className="mb-6 flex items-center gap-2">
+        <Icon icon="ph:star" className="size-5 text-primary" />
+        <InlineText
+          as="h2"
+          value={headline}
+          placeholder={t("editor.guestReviews")}
+          onChange={(v) => setProp((p: { headline: LocaleMap }) => { p.headline = put(p.headline, v); })}
+          className="font-display text-3xl font-semibold tracking-tight empty:before:text-muted-foreground empty:before:content-[attr(data-placeholder)]"
+        />
+        <span className="ml-auto rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+          echte Bewertungen
+        </span>
+      </div>
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex flex-col gap-2">
+            <span className="flex items-center gap-0.5 text-amber-500">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Icon key={n} icon="ph:star-fill" className="size-4" />
+              ))}
+            </span>
+            <p className="text-sm text-muted-foreground">
+              {t("editor.reviewPreview")}
+            </p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        {t("editor.reviewsHint")}
+      </p>
+    </section>
+  );
+}
+ReviewsNode.craft = {
+  displayName: "Bewertungen",
+  props: { headline: { de: "Was unsere Gäste sagen" } },
+};
+
+// =============================================================================
 // SUCHE (Buchung) — elegante Pill-Leiste
 // =============================================================================
 export function SearchNode(props: { placeholder?: LocaleMap }) {
