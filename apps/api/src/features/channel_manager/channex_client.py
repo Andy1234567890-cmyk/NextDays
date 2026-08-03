@@ -85,6 +85,17 @@ def _budget_property_id(
                     pid = entry.get("property_id")
                     if isinstance(pid, str) and pid:
                         return pid
+        # Content-Payloads (tax, tax_set, room_type, rate_plan, hotel_policy)
+        # tragen die Property in ihrem EINEN Attribut-Objekt, nicht in
+        # `values[]`. Ohne diesen Zweig zählten sie nur auf der Konto-Ebene —
+        # ein Objekt mit vielen Content-Änderungen könnte dann das Budget aller
+        # anderen leerziehen, ohne von seinem eigenen Property-Bucket gebremst
+        # zu werden (die Fairness-Ebene liefe leer).
+        for wert in json.values():
+            if isinstance(wert, dict):
+                pid = wert.get("property_id")
+                if isinstance(pid, str) and pid:
+                    return pid
     return None
 
 
@@ -584,11 +595,30 @@ class ChannexClient:
     def update_tax(self, tax_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
         return self.put(f"taxes/{tax_id}", json={"tax": attributes})
 
+    def delete_tax(self, tax_id: str) -> dict[str, Any]:
+        """Steuer bei Channex entfernen (dokumentierter Löschweg, „Remove Tax").
+        Ein leeres `taxes: []` am Tax-Set ist KEIN Ersatz — dort ist `taxes`
+        als Pflichtfeld deklariert; das Entfernen läuft über diesen Endpunkt."""
+        return self.delete(f"taxes/{tax_id}")
+
+    def list_taxes(self, *, limit: int = 100, page: int = 1) -> dict[str, Any]:
+        """Steuern des Kontos (für den Soll/Ist-Abgleich). Die Property steht in
+        `relationships.property.data.id`. Channex liefert per Default nur 10
+        Einträge — deshalb explizit paginieren (max. 100)."""
+        return self.get(
+            "taxes",
+            params={"pagination[page]": page, "pagination[limit]": limit},
+        )
+
     def create_tax_set(self, attributes: dict[str, Any]) -> dict[str, Any]:
         return self.post("tax_sets", json={"tax_set": attributes})
 
     def update_tax_set(self, tax_set_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
         return self.put(f"tax_sets/{tax_set_id}", json={"tax_set": attributes})
+
+    def delete_tax_set(self, tax_set_id: str) -> dict[str, Any]:
+        """Tax-Set entfernen (wenn das Objekt keine Steuer mehr führt)."""
+        return self.delete(f"tax_sets/{tax_set_id}")
 
     # ----- Hotel Policies (Check-in/-out, Haustiere, Parken, Internet, Rauchen) --
     # Pflicht für Google-Kanal/Instant-Booking-Page-Readiness; children_fee am

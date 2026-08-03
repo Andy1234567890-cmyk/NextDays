@@ -5,12 +5,12 @@ from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
 from src.features.channel_manager.channex_client import ChannexError
-from src.features.channel_manager.content_sync import ContentSyncMixin
 from src.features.channel_manager.einheiten import freie_einheiten_spannen
 from src.features.channel_manager.service import (
     ChannelManagerError,
     ChannelManagerService,
 )
+from src.features.channel_manager.tax_sync import TaxSyncMixin
 from src.main import create_app
 
 client = TestClient(create_app())
@@ -4957,19 +4957,19 @@ def test_tax_logic_deckt_alle_vier_betragsbasen_ab() -> None:
     }
     for (charge, period), erwartet in faelle.items():
         tax = {"mode": "amount", "chargeBasis": charge, "period": period}
-        assert ContentSyncMixin._tax_logic(tax) == erwartet
+        assert TaxSyncMixin._tax_logic(tax) == erwartet
 
 
 def test_tax_logic_altdatensatz_bleibt_per_night() -> None:
     """Ohne gespeicherte Basis bleibt es beim bisherigen Verhalten."""
-    assert ContentSyncMixin._tax_logic({"mode": "amount"}) == "per_night"
-    assert ContentSyncMixin._tax_logic({"mode": "percent"}) == "percent"
+    assert TaxSyncMixin._tax_logic({"mode": "amount"}) == "per_night"
+    assert TaxSyncMixin._tax_logic({"mode": "percent"}) == "percent"
 
 
 def test_tax_type_aus_steuerart() -> None:
     """Ortsbezogene Abgaben sind „city tax", Zimmer-/Beherbergungssteuern „tax"."""
-    assert ContentSyncMixin._tax_type({"taxType": "TouristTax"}) == "city tax"
-    assert ContentSyncMixin._tax_type({"taxType": "RoomTax"}) == "tax"
+    assert TaxSyncMixin._tax_type({"taxType": "TouristTax"}) == "city tax"
+    assert TaxSyncMixin._tax_type({"taxType": "RoomTax"}) == "tax"
     # Ohne Steuerart entscheidet weiter die gröbere kind-Achse (Bestand).
-    assert ContentSyncMixin._tax_type({"kind": "local"}) == "city tax"
-    assert ContentSyncMixin._tax_type({"kind": "vat"}) == "tax"
+    assert TaxSyncMixin._tax_type({"kind": "local"}) == "city tax"
+    assert TaxSyncMixin._tax_type({"kind": "vat"}) == "tax"

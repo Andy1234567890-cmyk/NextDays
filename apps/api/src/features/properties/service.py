@@ -14,6 +14,7 @@ from supabase import Client
 from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import load_scoped
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.auth.staff_scope import is_staff, staff_property_ids
 from src.jobs.queue import (
@@ -21,6 +22,7 @@ from src.jobs.queue import (
     try_enqueue_ari,
     try_enqueue_content_sync,
     try_enqueue_recompute,
+    try_enqueue_tax_sync,
 )
 
 from .errors import PropertyError
@@ -44,7 +46,7 @@ from .schemas import (
     SliceHealth,
     types_for_accommodation,
 )
-from .steuern import SteuernMixin, normalize_taxes
+from .steuern import SteuernMixin, normalize_taxes, nur_steuern_geaendert
 
 log = get_logger("nextdays.properties")
 
@@ -494,6 +496,18 @@ class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin):
             pricing_in = attrs_in["pricing"]
             if isinstance(pricing_in.get("taxes"), list):
                 pricing_in["taxes"] = normalize_taxes(pricing_in["taxes"])
+        # Alt-Stand der type_attributes für den Änderungs-Diff (siehe unten):
+        # nur laden, wenn type_attributes überhaupt im Update steckt.
+        alte_attrs: dict[str, Any] = {}
+        if "type_attributes" in changes:
+            alte_attrs = (
+                load_scoped(
+                    self._db, "properties", property_id, tenant_id,
+                    columns="type_attributes",
+                    not_found=PropertyError("Objekt nicht gefunden.", status_code=404),
+                ).get("type_attributes")
+                or {}
+            )
         res = (
             self._db.table("properties")
             .update(changes)
@@ -527,12 +541,20 @@ class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin):
         if (_CONTENT_FIELDS & changes.keys()) or (
             "currency" in changes and changes.get("currency")
         ):
-            self._sync_to_channel_manager(
-                tenant_id,
-                property_id=property_id,
-                title=row.get("title") or "Unbenannt",
-                currency=None,
-            )
+            # Haben sich AUSSCHLIESSLICH die Steuern geändert, genügt der
+            # schlanke Steuer-Sync (2 Channex-Calls) statt des vollen
+            # Content-Syncs (~6: Property, Room-Type, Rate-Plan, Tax, Tax-Set,
+            # Hotel-Policy). Der volle Sync nimmt die Steuern ohnehin mit —
+            # deshalb entweder/oder, nie beides.
+            if nur_steuern_geaendert(alte_attrs, changes):
+                try_enqueue_tax_sync(self._db, tenant_id, property_id)
+            else:
+                self._sync_to_channel_manager(
+                    tenant_id,
+                    property_id=property_id,
+                    title=row.get("title") or "Unbenannt",
+                    currency=None,
+                )
         # Maximalaufenthalt (Verfügbarkeits-Formular) an die Portale spiegeln,
         # sobald type_attributes sich ändert — sonst bliebe die Obergrenze bei
         # Booking/Airbnb veraltet. Best-effort, blockiert das Speichern nie.

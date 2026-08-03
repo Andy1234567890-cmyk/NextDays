@@ -50,7 +50,7 @@ NICHT strukturiert spezifiziert — kein geratenes Parsing; die Roh-Payloads
 liegen in `channex_booking.raw`, sobald echte Gebühren-Revisionen deren
 Struktur zeigen, wird das Feld nachgezogen.
 
-## Steuern → Channex (`_sync_taxes` in `content_sync.py`)
+## Steuern → Channex (`tax_sync.py`)
 
 Quelle sind die Objekt-Steuern (`type_attributes.pricing.taxes`); Idempotenz
 über `channex_tax_map` (unique `property_id, local_tax_id`). Abgeleitet wird:
@@ -69,10 +69,29 @@ bisherigen Verhalten. Der `type` kommt aus der Steuerart: ortsbezogene Abgaben
 Beherbergungs-/Zimmersteuern → `tax`; ohne Steuerart entscheidet weiter `kind`.
 Als Titel geht der gastseitige Name (`names[locale]`) ans Portal.
 
-Gegenzustand (Wurzel 1): eine im Objekt GELÖSCHTE Steuer wird beim Sync aus
-dem Mapping genommen (`deleted_at`) und verschwindet aus dem Tax-Set; ist die
-letzte Steuer entfernt, wird das Set geleert (`_clear_tax_set`) — sonst
-kassierte das Portal eine Abgabe weiter, die es hier nicht mehr gibt.
+Gegenzustand (Wurzel 1): eine im Objekt GELÖSCHTE Steuer wird bei Channex per
+`DELETE /taxes/:id` entfernt (der dokumentierte Weg — ein leeres `taxes: []` am
+Tax-Set ist KEIN Ersatz, dort ist `taxes` Pflichtfeld) und danach das Mapping
+stillgelegt; erst löschen, dann Mapping schließen, sonst bliebe eine Steuer am
+Portal aktiv, auf die wir keinen Zugriff mehr hätten. Ist die letzte Steuer
+entfernt, wird das Tax-Set gelöscht (`_drop_tax_set`). Ein bereits
+verschwundener Datensatz (404) gilt als erledigt.
+
+**Zwei Sync-Wege.** Ändern sich AUSSCHLIESSLICH die Steuern, reiht
+`properties.update` den schlanken Job `sync_property_taxes` ein
+(`sync_taxes_only`, 2 Channex-Calls) statt des vollen Content-Syncs (~6:
+Property, Room-Type, Rate-Plan, Tax, Tax-Set, Hotel-Policy). Die Entscheidung
+trifft `properties.steuern.nur_steuern_geaendert` per Alt/Neu-Diff — bewusst
+konservativ: jede Unsicherheit führt zum vollen Sync, der die Steuern ohnehin
+mitnimmt. Nie beides. Ohne registriertes Objekt (kein `channex_property_map`)
+meldet der schlanke Pfad `no_mapping` und tut nichts — die Property muss erst
+der volle Sync anlegen.
+
+**Heilung.** Schlägt ein Content-Push endgültig fehl (10 Versuche, ~5 h), holte
+ihn früher NICHTS nach: der Tenant-Reconcile spiegelt nur Channex→DB, der
+nächtliche Full-Sync ist reines ARI. Der stündliche Tick
+`worker._enqueue_failed_content_syncs` reiht deshalb alle Objekte mit
+`channex_property_map.last_sync_status='error'` erneut ein (max. 50 je Lauf).
 
 ## Webhook-Ereignisse (`channex_webhook_event`, Migration 0132)
 

@@ -25,6 +25,7 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
 from .errors import PropertyError
+from .schemas import PropertyUpdate
 
 log = get_logger("nextdays.properties.steuern")
 
@@ -176,6 +177,38 @@ def normalize_taxes(raw_taxes: list[Any]) -> list[dict[str, Any]]:
     return taxes
 
 
+def nur_steuern_geaendert(alte_attrs: dict, changes: dict) -> bool:
+    """Betrifft dieses Update AUSSCHLIESSLICH die Steuern des Objekts?
+
+    Nur dann reicht der schlanke Steuer-Sync. Bewusst KONSERVATIV: im Zweifel
+    (andere Content-Felder im Update, Währungswechsel, kein Alt-Stand ladbar,
+    irgendein anderer Unterschied in type_attributes) wird `False` gemeldet und
+    der volle Content-Sync läuft. Ein zu viel gelaufener voller Sync kostet
+    Calls; ein fälschlich ausgelassener ließe echten Content veralten.
+    """
+    if set(changes.keys()) - {"type_attributes"}:
+        return False
+    neu_attrs = changes.get("type_attributes")
+    if not isinstance(neu_attrs, dict) or not isinstance(alte_attrs, dict):
+        return False
+    # Alles außer `pricing` muss gleich sein …
+    if {k: v for k, v in alte_attrs.items() if k != "pricing"} != {
+        k: v for k, v in neu_attrs.items() if k != "pricing"
+    }:
+        return False
+    alt_pricing = alte_attrs.get("pricing") or {}
+    neu_pricing = neu_attrs.get("pricing") or {}
+    if not isinstance(alt_pricing, dict) or not isinstance(neu_pricing, dict):
+        return False
+    # … und innerhalb von `pricing` alles außer `taxes`. Bleibt nur ein
+    # tatsächlicher Steuer-Unterschied übrig, ist es ein reines Steuer-Update.
+    if {k: v for k, v in alt_pricing.items() if k != "taxes"} != {
+        k: v for k, v in neu_pricing.items() if k != "taxes"
+    }:
+        return False
+    return (alt_pricing.get("taxes") or []) != (neu_pricing.get("taxes") or [])
+
+
 class SteuernMixin:
     """Steuer-Aktionen am Objekt. Wird von PropertiesService eingebunden."""
 
@@ -232,17 +265,16 @@ class SteuernMixin:
             # die vorhandene, statt eine zweite anzulegen.
             if vorlage.get("kind") == "vat":
                 bestand = [t for t in bestand if t.get("kind") != "vat"]
-            pricing["taxes"] = normalize_taxes([*bestand, dict(vorlage)])
+            pricing["taxes"] = [*bestand, dict(vorlage)]
             attrs["pricing"] = pricing
-            self._db.table("properties").update({"type_attributes": attrs}).eq(
-                "tenant_id", tenant_id
-            ).eq("id", ziel_id).execute()
-            self._sync_pricing_config(tenant_id, ziel_id, pricing)
-            self._sync_to_channel_manager(
-                tenant_id,
-                property_id=ziel_id,
-                title=ziel.get("title") or "Unbenannt",
-                currency=None,
+            # Über den normalen Update-Pfad, NICHT per Direkt-Schreibung: nur
+            # so laufen Prüfung (normalize_taxes), Spiegelung in
+            # property_pricing_config, der Sync-Entscheid (schlanker Steuer-Job
+            # statt vollem Content-Sync) und der max_stay-Push wie überall
+            # sonst. Ein eigener Schreibweg hier hieße, jede künftige Regel
+            # zweimal pflegen zu müssen.
+            self.update(  # type: ignore[attr-defined]
+                ctx, ziel_id, PropertyUpdate(type_attributes=attrs)
             )
             angewendet.append(ziel_id)
         log.info(

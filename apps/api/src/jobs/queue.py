@@ -107,6 +107,24 @@ def try_enqueue_content_sync(
                     error=str(exc)[:200])
 
 
+def try_enqueue_tax_sync(db: Client, tenant_id: str, property_id: str) -> None:
+    """Nur die Steuern eines Objekts nach Channex spiegeln (coalesced je Objekt).
+
+    Schlanke Alternative zum vollen Content-Sync, wenn sich ausschließlich die
+    Steuern geändert haben: zwei Channex-Calls statt sechs. Ein parallel
+    laufender voller Sync macht diesen Job nicht falsch — er überträgt
+    dieselben Steuern noch einmal (idempotent über channex_tax_map)."""
+    try:
+        enqueue(
+            db, "sync_property_taxes", tenant_id=tenant_id,
+            payload={"tenant_id": tenant_id, "property_id": property_id},
+            dedup_key=dedup_key(tenant_id, property_id, "sync_property_taxes"),
+        )
+    except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+        log.warning("enqueue_tax_sync_failed", property_id=property_id,
+                    error=str(exc)[:200])
+
+
 def try_enqueue_recompute(db: Client, tenant_id: str, property_id: str) -> None:
     """DP-Recompute eines Objekts als Job einreihen (coalesced je Objekt). Der
     Handler rechnet die Tagespreise neu und pusht sie via push_rates_batch."""

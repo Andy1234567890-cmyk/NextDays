@@ -38,6 +38,7 @@ from .ota_extras import OtaExtrasMixin
 from .property_mapping import PropertyMappingMixin
 from .reviews_sync import ReviewsSyncMixin
 from .schemas import ChannexDebugEntry, ChannexDebugResponse, SliceHealth
+from .tax_sync import TaxSyncMixin
 
 __all__ = [
     "ChannelManagerError",
@@ -51,6 +52,7 @@ __all__ = [
 
 class ChannelManagerService(
     ContentSyncMixin,
+    TaxSyncMixin,
     PropertyMappingMixin,
     AriPushMixin,
     ChannelsMixin,

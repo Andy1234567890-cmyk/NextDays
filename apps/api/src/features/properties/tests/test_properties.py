@@ -26,7 +26,7 @@ from src.features.properties.service import (
     _max_stay_of,
     _sniff_image_ext,
 )
-from src.features.properties.steuern import normalize_taxes
+from src.features.properties.steuern import normalize_taxes, nur_steuern_geaendert
 from src.main import create_app
 
 client = TestClient(create_app())
@@ -1053,3 +1053,54 @@ def test_normalize_taxes_lokale_steuer_braucht_namen() -> None:
         normalize_taxes(
             [{"id": "t", "kind": "local", "mode": "amount", "value": 2}]
         )
+
+
+# --- Steuer-Änderung → schlanker Sync statt vollem Content-Sync -------------
+
+
+def test_nur_steuern_geaendert_erkennt_reines_steuer_update() -> None:
+    alt = {"pricing": {"basePrice": 100, "taxes": [{"id": "a", "value": 7}]}}
+    changes = {
+        "type_attributes": {
+            "pricing": {"basePrice": 100, "taxes": [{"id": "a", "value": 19}]}
+        }
+    }
+    assert nur_steuern_geaendert(alt, changes) is True
+
+
+def test_nur_steuern_geaendert_false_bei_weiterem_feld() -> None:
+    """Ändert sich daneben Content, muss der VOLLE Sync laufen — sonst bliebe
+    z. B. eine neue Beschreibung bei den Portalen liegen."""
+    alt = {"pricing": {"taxes": []}}
+    changes = {
+        "type_attributes": {"pricing": {"taxes": [{"id": "a"}]}},
+        "description": "neu",
+    }
+    assert nur_steuern_geaendert(alt, changes) is False
+
+
+def test_nur_steuern_geaendert_false_bei_anderem_pricing_feld() -> None:
+    alt = {"pricing": {"basePrice": 100, "taxes": []}}
+    changes = {
+        "type_attributes": {"pricing": {"basePrice": 120, "taxes": [{"id": "a"}]}}
+    }
+    assert nur_steuern_geaendert(alt, changes) is False
+
+
+def test_nur_steuern_geaendert_false_ohne_steuer_unterschied() -> None:
+    """Gleiche Steuern = kein Steuer-Update; dann greift die normale Regel."""
+    alt = {"pricing": {"taxes": [{"id": "a", "value": 7}]}}
+    changes = {"type_attributes": {"pricing": {"taxes": [{"id": "a", "value": 7}]}}}
+    assert nur_steuern_geaendert(alt, changes) is False
+
+
+def test_nur_steuern_geaendert_false_bei_anderem_attribut() -> None:
+    """availability o. Ä. daneben geändert → voller Sync."""
+    alt = {"availability": {"minStay": 2}, "pricing": {"taxes": []}}
+    changes = {
+        "type_attributes": {
+            "availability": {"minStay": 3},
+            "pricing": {"taxes": [{"id": "a"}]},
+        }
+    }
+    assert nur_steuern_geaendert(alt, changes) is False

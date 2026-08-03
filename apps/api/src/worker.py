@@ -32,7 +32,7 @@ from src.core.config import get_settings
 from src.core.logging import configure_logging, get_logger
 from src.core.supabase import get_service_client
 from src.jobs.channex_budget import BudgetDecision, ChannexBudget
-from src.jobs.queue import enqueue, next_run_after
+from src.jobs.queue import enqueue, next_run_after, try_enqueue_content_sync
 
 log = get_logger("nextdays.worker")
 
@@ -46,7 +46,8 @@ log = get_logger("nextdays.worker")
 # ChannexBudgetExhausted → der Worker verzögert (deferred) ihn, ohne einen
 # Retry-Versuch zu verbrennen.
 _CHANNEX_JOB_TYPES = frozenset(
-    {"sync_property_content", "reconcile_tenant", "push_ari", "process_ari_outbox",
+    {"sync_property_content", "sync_property_taxes",
+     "reconcile_tenant", "push_ari", "process_ari_outbox",
      "process_restriction_outbox",
      # recompute_property pusht die meisten Rate-Calls (Tagespreise über den
      # 365-Tage-Horizont) — MUSS das kontoweite Channex-Token-Budget ziehen.
@@ -116,6 +117,18 @@ REVIEWS_TICK_SECONDS = 60 * 60
 # reicht: die Termine sind tagesgenau und der Lauf ist idempotent (UNIQUE-Index
 # auf (rule_id, occurrence_on)), ein zweiter Durchlauf legt nichts doppelt an.
 TASKS_TICK_SECONDS = 60 * 60
+# Content-Sync-Heilung: Objekte, deren letzter Content-Push fehlgeschlagen ist
+# (channex_property_map.last_sync_status='error'), erneut einreihen. Ohne diesen
+# Tick bleibt eine lokale Änderung — Steuern, Beschreibung, Ausstattung — nach
+# dem endgültigen Sterben des Jobs (10 Versuche, ~5 h) für IMMER unübertragen:
+# der Tenant-Reconcile spiegelt nur Channex→DB, der nächtliche Full-Sync ist
+# reines ARI. Stündlich reicht (ein Push-Fehler ist selten und selten dringend),
+# und weil der Job je Objekt coalesced, kostet ein Dauerfehler nichts extra.
+CONTENT_HEAL_TICK_SECONDS = 60 * 60
+# Wie viele fehlerhafte Objekte je Durchlauf höchstens nachgezogen werden —
+# begrenzt, damit ein flächiger Channex-Ausfall nicht das ganze Token-Budget
+# in einem Tick verbrennt (der nächste Durchlauf nimmt den Rest).
+CONTENT_HEAL_BATCH = 50
 # Nächtlicher Full-Sync-Push (Channex-Doku: "daily full update each night per
 # property"): im UTC-Stundenfenster [FULL_SYNC_HOUR_UTC, +1) je aktiver Property
 # EIN full_sync_property-Job pro Tag (dedup je Property+Tag), gestaffelt.
@@ -176,6 +189,18 @@ def _handle_sync_property_content(
         property_id=payload["property_id"],
         currency=payload.get("currency") or None,
     )
+
+
+def _handle_sync_property_taxes(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Nur die Steuern eines Objekts spiegeln (2 Calls statt ~6). Wird gestellt,
+    wenn sich ausschließlich die Steuern geändert haben; ein Fehler kippt den
+    Job wie beim vollen Sync auf Retry (Wurzel 5)."""
+    svc = _svc(db, budget)
+    if not svc.is_channex_configured:
+        return
+    svc.sync_taxes_only(payload["tenant_id"], payload["property_id"])
 
 
 def _handle_reconcile_tenant(
@@ -385,6 +410,7 @@ HANDLERS: dict[
     str, Callable[[Client, dict[str, Any], ChannexBudget | None], None]
 ] = {
     "sync_property_content": _handle_sync_property_content,
+    "sync_property_taxes": _handle_sync_property_taxes,
     "reconcile_tenant": _handle_reconcile_tenant,
     "reconcile_rate_plan_prices": _handle_reconcile_rate_plan_prices,
     "recompute_property": _handle_recompute_property,
@@ -419,6 +445,7 @@ class Worker:
         self._last_commission_tick = 0.0
         self._last_reviews_tick = 0.0
         self._last_tasks_tick = 0.0
+        self._last_content_heal_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
         self._budget = budget or ChannexBudget(get_settings())
@@ -677,6 +704,42 @@ class Worker:
             svc.sync_calendar(self._db, cal)  # schreibt Status/Fehler selbst
         if seen:
             log.info("ical_sync_tick", synced=len(seen))
+
+    async def _content_heal_tick(self, loop_time: float) -> None:
+        """Stündlich fehlgeschlagene Content-Syncs erneut einreihen."""
+        if loop_time - self._last_content_heal_tick < CONTENT_HEAL_TICK_SECONDS:
+            return
+        self._last_content_heal_tick = loop_time
+        try:
+            await asyncio.to_thread(self._enqueue_failed_content_syncs)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("content_heal_tick_failed", error=str(exc)[:200])
+
+    def _enqueue_failed_content_syncs(self) -> None:
+        """Objekte mit fehlerhaftem letzten Content-Push erneut einreihen.
+
+        Das ist der Heilungspfad zum Sichtbarkeits-Signal `last_sync_status`:
+        gemeldet wurde der Fehler schon immer, nur nachgeholt hat ihn nie
+        jemand. Coalescing über den bestehenden dedup_key — läuft für ein
+        Objekt bereits ein Sync, entsteht kein zweiter.
+        """
+        rows = (
+            self._db.table("channex_property_map")
+            .select("tenant_id, property_id")
+            .eq("last_sync_status", "error")
+            .is_("deleted_at", "null")
+            .limit(CONTENT_HEAL_BATCH)
+            .execute()
+        ).data or []
+        for row in rows:
+            tenant_id, property_id = row.get("tenant_id"), row.get("property_id")
+            if not tenant_id or not property_id:
+                continue
+            # title/currency bewusst None: der Handler lädt den aktuellen Stand
+            # ohnehin aus der DB, ein Snapshot von hier wäre nur veraltet.
+            try_enqueue_content_sync(self._db, str(tenant_id), str(property_id))
+        if rows:
+            log.info("content_sync_heal_enqueued", properties=len(rows))
 
     async def _reviews_tick(self, loop_time: float) -> None:
         """Stündlich: verdeckte Bewertungen nach Fristablauf veröffentlichen,
@@ -982,6 +1045,7 @@ class Worker:
             await self._commission_tick(loop_time)
             await self._reviews_tick(loop_time)
             await self._tasks_tick(loop_time)
+            await self._content_heal_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)
             jobs = await asyncio.to_thread(self._claim, free) if free > 0 else []
             for job in jobs:
