@@ -375,6 +375,71 @@ Sync-Seite (Spalte „Preisänderung", editierbar). Der frühere „Mark-up"-Blo
 (`property_pricing_config.markup`) war eine Attrappe (wirkte nirgends) und
 wurde ersatzlos entfernt.
 
+## Promotions an die Portale — zwei Wege (`ota_aktionen.py` + `airbnb_aktionen.py`)
+
+Eine Promotion (`property_discounts`) erreicht ein Portal auf genau einem von zwei
+Wegen. Sie schließen sich nach Konstruktion aus, ein Gast kann also nie beide
+bekommen: Weg 1 verlangt, dass KEINE buchungsbezogene Bedingung gesetzt ist,
+Weg 2, dass GENAU EINE gesetzt ist.
+
+**Weg 1 — Tagespreis (`ota_aktionen.py`).** Der gesendete Preis der betroffenen
+Tage ist niedriger. Trägt JEDES Portal. `aktionsfaktor_je_tag()` liefert
+`{ISO-Tag: Faktor}` (bester Einzelrabatt, kein Stacking, portal-scope-bewusst);
+`ari_push._aktionen_einrechnen()` teilt die Segmente an den Faktor-Grenzen und
+rechnet sie ein — an EINER Stelle (`push_rates_batch`) plus in der Soll-Kurve des
+Reconcilers, damit der Abgleich den Rabatt nicht zurücknimmt. Ein Ladefehler
+ergibt ein LEERES Ergebnis: dann geht der ungerabattete Preis raus (zu wenig
+verlangt ist Geldverlust, den niemand sieht).
+
+**Weg 2 — Airbnbs eigene Rabattregeln (`airbnb_aktionen.py`).** Mindestaufenthalt,
+Frühbucher und Last Minute hängen an der BUCHUNG, nicht am Tag — über den
+Tagespreis wären sie nur zu haben, indem man sie jedem Gast gibt. Airbnb kennt sie
+als eigenes Objekt, Channex gibt es durch:
+`GET|PUT /channels/{id}/mappings/{mapping_id}/pricing_settings` mit
+`default_pricing_rules: [{rule_type, price_change, threshold_one}]`.
+
+| unsere Bedingung | `rule_type`                    | Grenze                          |
+| ---------------- | ------------------------------ | ------------------------------- |
+| `min_nights`     | `STAYED_AT_LEAST_X_DAYS`       | ≥ 1, nur Preismodell `standard` |
+| `lead_min_days`  | `BOOKED_BEYOND_AT_LEAST_X_DAYS`| Vielfaches von 28 ODER 30       |
+| `lead_max_days`  | `BOOKED_WITHIN_AT_MOST_X_DAYS` | 1–28 Tage                       |
+
+`price_change` = Rabatt in ganzen Prozent, 0–99. PUT ersetzt das GANZE Objekt →
+immer den GET-Stand als Grundlage nehmen und nur `default_pricing_rules` tauschen,
+sonst räumt ein Aktions-Push die Steuer-/Gebühren-Einstellungen des Listings ab
+(Wurzel 1). Wir führen die Liste VOLLSTÄNDIG: eine gelöschte oder deaktivierte
+Promotion verliert damit ihre Regel wieder. Geschrieben wird nur bei echter
+Abweichung (Wurzel 2). Angestoßen wird der Push nach jeder Promotion-Änderung als
+Job `sync_airbnb_aktionen` und über
+`POST /channel-manager/properties/{id}/aktionen/airbnb-sync`.
+
+Zusätzlich kennt Channex Airbnbs eigene AKTIONSPROGRAMME
+(`GET /channels/{id}/promotions`, `POST /channels/{id}/promotions/enable|disable`
+mit `{promotion:{listing_id, type}}`): `NEW_LISTING_PROMOTION` 20 %,
+`HIGH_RATED_GUEST_DISCOUNT` 15 %, `MOBILE_ONLY_DISCOUNT` 10 % — die Höhe gibt
+Airbnb vor, es gibt nur an/aus. Die Client-Methoden liegen bereit
+(`channex_client.list_channel_promotions` / `enable_…` / `disable_…`), eine
+Oberfläche dafür gibt es noch nicht.
+
+**Herkunft dieser Endpunkte (keine öffentliche Doku).** Ermittelt aus dem
+ausgelieferten Channex-Client (`staging.channex.io/assets/index-*.js`, 03.08.2026)
+und live gegengeprüft: `GET /channels/{id}/promotions` → **403** ohne verbundenes
+Airbnb-Konto (die Route existiert also; ein erfundener Pfad wie
+`/channels/{id}/discounts` antwortet **404**), ebenso
+`POST /channels/{id}/execute/load_listing_price_settings` → 403. Das Wire-Format
+ist snake_case: der Client schickt jeden Body durch einen rekursiven
+snakeCase-Mapper und camelCase-t die Antwort erst im Browser zurück. NICHT live
+verifizierbar war der Vollzug (PUT `pricing_settings`, `promotions/enable`) — dafür
+braucht es ein per OAuth verbundenes Airbnb-Konto, das im Staging fehlt.
+
+Was KEINER der beiden Wege trägt — Angebotscode (kein Portal übergibt einen
+Gast-Code), Buchungszeitraum (die Airbnb-Regel hat kein Gültigkeitsfenster),
+Pauschale (nicht auf Nächte verteilbar, ohne die Aufenthaltsdauer zu raten), zwei
+Bedingungen in EINER Promotion, Aufenthaltszeitraum ZUSAMMEN mit einer Bedingung —
+wird in der Oberfläche als „Manuelle Synchronisierung" samt Grund gemeldet
+(`abgaben_status._aktionen_status`), statt still jedem Portal-Gast den Rabatt zu
+geben.
+
 ## Zwei Blickrichtungen auf dieselbe Zuordnung
 
 Dieselbe Verbindung wird von beiden Seiten gebraucht, deshalb gibt es sie

@@ -862,6 +862,82 @@ class ChannexClient:
         """Groups, auf die der Key Zugriff hat (für die group_id beim Channel-Create)."""
         return self.get("groups")
 
+    # ----- Airbnb-Listing: Preis-Einstellungen & Aktionen ----------------------
+    # Diese Endpunkte stehen in KEINER öffentlichen Doku. Ermittelt aus dem
+    # ausgelieferten Channex-Client (staging.channex.io/assets/index-*.js,
+    # 03.08.2026) und live gegengeprüft:
+    #   * GET  channels/{id}/promotions                        → 403 ohne
+    #     verbundenes Airbnb-Konto (Route existiert; ein erfundener Pfad wie
+    #     channels/{id}/discounts antwortet 404)
+    #   * POST channels/{id}/execute/load_listing_price_settings → 403 (dito)
+    # Das Wire-Format ist snake_case: der Client schickt jeden Body durch einen
+    # rekursiven snakeCase-Mapper (`ag = rg.bind(void 0, snakeCase)`) und
+    # camelCase-t die Antwort erst im Browser zurück.
+    def get_listing_pricing_settings(
+        self, channel_id: str, mapping_id: str
+    ) -> dict[str, Any]:
+        """Preis-Einstellungen EINES Airbnb-Listings (je Mapping, nicht je Kanal).
+
+        Enthält u.a. `default_pricing_rules` — Airbnbs eigene Rabattregeln
+        (Längenrabatt/Frühbucher/Last Minute), der einzige Weg, eine Aktion mit
+        Bedingung an Airbnb zu geben, ohne den Tagespreis für alle zu senken.
+        """
+        return self.get(f"channels/{channel_id}/mappings/{mapping_id}/pricing_settings")
+
+    def update_listing_pricing_settings(
+        self, channel_id: str, mapping_id: str, settings: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Preis-Einstellungen eines Airbnb-Listings schreiben.
+
+        ACHTUNG: PUT ersetzt das ganze Objekt (Währung, Steuern, Gebühren,
+        Regeln). Immer den GET-Stand als Grundlage nehmen und nur die eigenen
+        Felder tauschen (Wurzel 1) — sonst räumt ein Aktions-Push die
+        Steuer-Einstellungen des Listings ab.
+        """
+        return self.put(
+            f"channels/{channel_id}/mappings/{mapping_id}/pricing_settings",
+            json={"pricing_settings": settings},
+        )
+
+    def reload_listing_pricing_settings(
+        self, channel_id: str, listing_id: str
+    ) -> dict[str, Any]:
+        """Preis-Einstellungen bei Airbnb neu einlesen (asynchron, kein Rückgabewert
+        mit Inhalt). Nötig, wenn im Airbnb-Konto direkt etwas geändert wurde."""
+        return self.post(
+            f"channels/{channel_id}/execute/load_listing_price_settings",
+            json={"listing_id": listing_id},
+        )
+
+    def list_channel_promotions(self, channel_id: str) -> dict[str, Any]:
+        """Airbnbs eigene Aktionsprogramme je Listing.
+
+        Feste Rabatte, die Airbnb vorgibt (aus dem Client gelesen):
+        `NEW_LISTING_PROMOTION` 20 %, `HIGH_RATED_GUEST_DISCOUNT` 15 %,
+        `MOBILE_ONLY_DISCOUNT` 10 %. Status: AVAILABLE | ONGOING | EXPIRED
+        (der Client zeigt zusätzlich ein selbst erzeugtes COMING_SOON).
+        Nur an/aus — die Höhe ist NICHT einstellbar.
+        """
+        return self.get(f"channels/{channel_id}/promotions")
+
+    def enable_channel_promotion(
+        self, channel_id: str, *, listing_id: str, promotion_type: str
+    ) -> dict[str, Any]:
+        """Ein Airbnb-Aktionsprogramm für ein Listing einschalten."""
+        return self.post(
+            f"channels/{channel_id}/promotions/enable",
+            json={"promotion": {"listing_id": listing_id, "type": promotion_type}},
+        )
+
+    def disable_channel_promotion(
+        self, channel_id: str, *, listing_id: str, promotion_type: str
+    ) -> dict[str, Any]:
+        """Ein Airbnb-Aktionsprogramm für ein Listing ausschalten (Gegenzustand)."""
+        return self.post(
+            f"channels/{channel_id}/promotions/disable",
+            json={"promotion": {"listing_id": listing_id, "type": promotion_type}},
+        )
+
     # ----- Airbnb-OAuth (white-label, ohne iFrame) ----------------------------
     # Airbnb hat KEIN eingebbares Credential; die Verbindung läuft über eine echte
     # airbnb.com-OAuth-URL, die ein dedizierter meta-Endpunkt erzeugt. Verifiziert

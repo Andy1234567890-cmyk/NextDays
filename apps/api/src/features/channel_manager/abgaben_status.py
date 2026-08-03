@@ -35,8 +35,10 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 from src.features.properties.gebuehren import fee_category
 
-from .common import ChannelManagerError
-from .ota_abgaben import NICHT_EXPORTIERBAR, Abgabe, abgaben_je_portal
+from .airbnb_aktionen import regel_fuer_airbnb
+from .common import ChannelManagerError, log
+from .ota_abgaben import AIRBNB, NICHT_EXPORTIERBAR, Abgabe, abgaben_je_portal
+from .ota_aktionen import per_tagespreis_uebertragbar
 from .tax_regime import STANDARD
 
 
@@ -135,8 +137,84 @@ class AbgabenStatusMixin:
             )
             for kind, liste in (("fee", fees), ("tax", taxes))
             for eintrag in liste
-        ]
+        ] + self._aktionen_status(db, tenant_id, property_id, portale)
         return antwort
+
+    def _aktionen_status(
+        self, db: Client, tenant_id: str, property_id: str, portale: list[str]
+    ) -> list[dict[str, Any]]:
+        """Aktionen (property_discounts): welche Portale bekommen sie nicht?
+
+        Es gibt zwei Wege zu den Portalen, und der Chip muss beide kennen:
+
+        * **Tagespreis** — trägt JEDES Portal, aber nur Bedingungen, die sich am
+          einzelnen Tag entscheiden lassen (Aufenthaltsdaten, keine Bedingung).
+        * **Airbnbs eigene Rabattregeln** — tragen Mindestaufenthalt, Frühbucher
+          und Last Minute, aber nur bei Airbnb und nur innerhalb der
+          Airbnb-Grenzen (airbnb_aktionen.py).
+
+        Was keiner der beiden Wege tragen kann (Angebotscode, Buchungszeitraum,
+        Pauschale, zwei Bedingungen in einer Aktion), muss im Extranet des
+        Portals gepflegt werden — das ist der Chip.
+        """
+        try:
+            rows = (
+                db.table("property_discounts")
+                .select(
+                    "id, discount_type, discount_kind, min_nights, lead_min_days, "
+                    "lead_max_days, booked_from, booked_to, promo_codes, "
+                    "portal_scope, active"
+                )
+                .eq("tenant_id", tenant_id)
+                .eq("property_id", property_id)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — kein Status ist besser als ein falscher
+            log.warning(
+                "aktionen_status_nicht_ladbar",
+                property_id=property_id, error=str(exc)[:200],
+            )
+            return []
+        out: list[dict[str, Any]] = []
+        for regel in rows:
+            scope = {str(x) for x in (regel.get("portal_scope") or [])}
+            restricted = sorted(p for p in portale if scope and p not in scope)
+            uebertragbar, grund = per_tagespreis_uebertragbar(regel)
+            # Eine Pauschale lässt sich nicht auf Nächte verteilen, ohne die
+            # Aufenthaltsdauer zu raten — beim Push kennt sie niemand.
+            if uebertragbar and str(regel.get("discount_kind") or "percent") != "percent":
+                uebertragbar, grund = False, "pauschalbetrag"
+            # Was der Tagespreis nicht kann, kann bei Airbnb noch die eigene
+            # Rabattregel. Das Preismodell des Listings steht nur bei Channex —
+            # hier wird der Standardfall angenommen (rein lesende Antwort, kein
+            # Channex-Call); der Push protokolliert die Abweichung.
+            airbnb_regel, airbnb_grund = (
+                (None, None) if uebertragbar else regel_fuer_airbnb(regel)
+            )
+            manual = (
+                []
+                if uebertragbar or not regel.get("active")
+                else [
+                    p
+                    for p in portale
+                    if p not in restricted
+                    and not (p == AIRBNB and airbnb_regel is not None)
+                ]
+            )
+            out.append(
+                {
+                    "key": str(regel.get("id") or ""),
+                    "kind": "promotion",
+                    "manual_portals": manual,
+                    "restricted_portals": restricted,
+                    # Eine INAKTIVE Aktion geht nirgends hin — das ist Absicht und
+                    # kein fehlender Sync.
+                    "internal_only": not regel.get("active"),
+                    "reason": grund,
+                    "airbnb_reason": airbnb_grund,
+                }
+            )
+        return out
 
     @staticmethod
     def _posten_status(

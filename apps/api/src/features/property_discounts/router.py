@@ -13,7 +13,15 @@ from src.core.supabase import get_service_client
 from src.features.auth.dependencies import require_granular_permission
 from src.features.auth.granular_permissions import Permission
 
-from .schemas import DiscountCreate, DiscountResponse, DiscountUpdate, SliceHealth
+from .schemas import (
+    DiscountApplyRequest,
+    DiscountApplyResponse,
+    DiscountCreate,
+    DiscountLibraryResponse,
+    DiscountResponse,
+    DiscountUpdate,
+    SliceHealth,
+)
 from .service import DiscountError, PropertyDiscountsService
 
 router = APIRouter(prefix="/pricing/discounts", tags=["property_discounts"])
@@ -42,6 +50,22 @@ def list_discounts(
     """Alle Rabattregeln eines Objekts (Host-Konfiguration)."""
     try:
         return service.list_for_property(ctx, property_id)
+    except DiscountError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/{property_id}/library", response_model=DiscountLibraryResponse)
+def discount_library(
+    property_id: str, service: ServiceDep, ctx: _manage
+) -> DiscountLibraryResponse:
+    """Bestehende Promotions des Betriebs, übernehmbar auf dieses Objekt.
+
+    Speist den Auswahlschritt vor dem Formular („neue oder bestehende
+    Promotion"). Übernommen wird anschließend über
+    `POST /{quell_objekt}/{promotion}/apply` mit diesem Objekt als Ziel — es gibt
+    genau EINEN Schreibpfad für die Übernahme."""
+    try:
+        return DiscountLibraryResponse(**service.library(ctx, property_id))
     except DiscountError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -79,5 +103,26 @@ def delete_discount(
     """Rabattregel löschen."""
     try:
         service.delete(ctx, property_id, discount_id)
+    except DiscountError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/{property_id}/{discount_id}/apply", response_model=DiscountApplyResponse
+)
+def apply_discount_to_properties(
+    property_id: str,
+    discount_id: str,
+    req: DiscountApplyRequest,
+    service: ServiceDep,
+    ctx: _manage,
+) -> DiscountApplyResponse:
+    """Aktion dieses Objekts auf weitere eigene Objekte übertragen. Jede Ziel-ID
+    einzeln tenant-gescopt; eine fachlich gleiche Aktion wird am Ziel nicht
+    doppelt angelegt."""
+    try:
+        return DiscountApplyResponse(
+            **service.apply_to_properties(ctx, property_id, discount_id, req.property_ids)
+        )
     except DiscountError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

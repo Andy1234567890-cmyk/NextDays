@@ -58,6 +58,11 @@ class QuoteRequest(BaseModel):
     # Resolver deterministisch bleibt (kein date.today() tief in der Rechnung) —
     # zwei Quotes mit gleichem as_of liefern immer denselben Preis.
     as_of: date = Field(default_factory=date.today)
+    # Angebotscode des Gastes („Aktionscode" im Branchenstandard). Eine Aktion mit
+    # gepflegten Codes greift NUR mit einem davon; ohne Codes ist das Feld
+    # bedeutungslos. Groß-/Kleinschreibung egal (serverseitig normalisiert) —
+    # sonst tippt der Gast „sommer26" und findet den Grund nie.
+    promo_code: str | None = Field(default=None, max_length=15)
 
     @model_validator(mode="after")
     def _check_order(self) -> "QuoteRequest":
@@ -114,6 +119,11 @@ class QuoteResponse(BaseModel):
     nightly_total: float
     lines: list[QuoteLine] = []
     total: float
+    # Hat der mitgeschickte Angebotscode WIRKLICH eine Aktion ausgelöst? Ohne
+    # diese Antwort könnte die Buchungsstrecke nicht zwischen „Code angewendet"
+    # und „Code ungültig, aber es gilt eine automatische Aktion" unterscheiden —
+    # der Gast sähe einen Rabatt und dächte, sein Code habe gewirkt.
+    promo_code_applied: bool = False
     # True, wenn das Objekt keinen bepreisbaren Tag hat (kein Rate-Plan/Override/
     # Wochentagspreis) — der Aufrufer muss dann manuell bepreisen, statt 0 zu zeigen.
     priceless: bool = False

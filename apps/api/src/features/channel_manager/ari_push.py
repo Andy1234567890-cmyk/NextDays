@@ -18,6 +18,7 @@ from src.core.security import AuthContext
 
 from .channex_client import ChannexError
 from .common import ist_demo_mapping, log
+from .ota_aktionen import aktionsfaktor_je_tag
 from .schemas import (
     AriPushRequest,
     AriPushResponse,
@@ -63,6 +64,45 @@ def _segment_to_payload(seg: dict[str, Any]) -> dict[str, Any]:
     # spiegelt der Backstop den Preis wieder an ALLE Pläne.
     if seg.get("rate_plan_id") is not None:
         out["rate_plan_id"] = seg["rate_plan_id"]
+    return out
+
+
+def _aktionen_einrechnen(
+    segments: list[dict[str, Any]], faktoren: dict[str, float]
+) -> list[dict[str, Any]]:
+    """Segmente an den Aktions-Grenzen aufteilen und die Preise senken.
+
+    Ein Segment ist ein Zeitraum mit EINEM Preis. Gilt die Aktion nur an einem
+    Teil davon, muss es geteilt werden — sonst bekäme entweder der Rabatt zu viele
+    Tage oder zu wenige. Tag für Tag aufteilen und danach wieder bündeln wäre
+    dasselbe Ergebnis mit mehr Code: hier wird direkt je Tag ein Ein-Tages-Segment
+    gebildet, wenn sich der Faktor innerhalb des Segments ändert.
+
+    Segmente ohne Preis (nur `min_stay`) bleiben unberührt — eine Aktion senkt
+    keinen Mindestaufenthalt.
+    """
+    if not faktoren:
+        return segments
+    out: list[dict[str, Any]] = []
+    for seg in segments:
+        rate_cents = seg.get("rate_cents")
+        if rate_cents is None:
+            out.append(seg)
+            continue
+        von, bis = _as_date(seg["date_from"]), _as_date(seg["date_to"])
+        # Betroffen? Sonst unverändert übernehmen (kein unnötiges Aufsplitten).
+        tage = [von + timedelta(days=i) for i in range((bis - von).days + 1)]
+        if not any(t.isoformat() in faktoren for t in tage):
+            out.append(seg)
+            continue
+        for tag in tage:
+            faktor = faktoren.get(tag.isoformat(), 1.0)
+            # Mindestens 1 Cent: Channex lehnt rate 0 ab, und „geschenkt" war nie
+            # gemeint — 100 % Rabatt gibt es in der Oberfläche nicht (max. 100 %
+            # wäre bps 10000, dann bleibt 1 Cent statt eines abgelehnten Pushes).
+            gesenkt = max(1, int(round(int(rate_cents) * faktor)))
+            out.append({**seg, "date_from": tag, "date_to": tag,
+                        "rate_cents": gesenkt})
     return out
 
 
@@ -1184,6 +1224,24 @@ class AriPushMixin:
                 tenant_id=tenant_id, property_id=property_id,
             )
             return
+        # AKTIONEN in den gesendeten Preis rechnen — HIER und nur hier, weil dies
+        # die letzte Station vor Channex ist und ALLE Preis-Pusher hier ankommen
+        # (Dynamic Pricing, Datumspreise, Kalender, Kanal-Backfill). An jedem
+        # Aufrufer einzeln wäre es die vierte Kopie derselben Regel.
+        #
+        # Der Tagespreis ist der Träger für alles, was sich AM TAG entscheiden
+        # lässt (Zeitraum, keine Bedingung). Mindestaufenthalt, Frühbucher und
+        # Last Minute bleiben hier draußen — sie hängen an der BUCHUNG und gingen
+        # pauschal gesenkt an JEDEN Portal-Gast. Für Airbnb übernimmt sie der
+        # zweite Weg (airbnb_aktionen.py: Airbnbs eigene Rabattregeln).
+        faktoren = aktionsfaktor_je_tag(
+            self._db,
+            property_id,
+            von=date.fromisoformat(seg_from),
+            bis=date.fromisoformat(seg_to),
+        )
+        segments = _aktionen_einrechnen(segments, faktoren)
+
         values: list[dict[str, Any]] = []
         for seg in segments:
             rate_cents = seg.get("rate_cents")
@@ -1619,6 +1677,12 @@ class AriPushMixin:
                     property_id=property_id, rate_plan_id=rp,
                 )
                 continue
+            # DIESELBE Aktions-Senkung wie beim Push (push_rates_batch). Ohne sie
+            # sähe der Reconciler den rabattierten Preis bei Channex als „Drift"
+            # und würde ihn auf den Listenpreis zurückschreiben — der Rabatt wäre
+            # nach dem nächsten Abgleich wieder weg (Wurzel 1: Soll und Ist müssen
+            # dieselbe Rechnung sein).
+            faktoren = aktionsfaktor_je_tag(db, property_id, von=start, bis=end)
             curve: dict[str, int] = {}
             for entry in days:
                 if entry.price is None:
@@ -1626,7 +1690,11 @@ class AriPushMixin:
                 cents = int(round(float(entry.price) * 100))
                 if cents <= 0:
                     continue
-                curve[entry.date.isoformat()] = cents
+                iso = entry.date.isoformat()
+                faktor = faktoren.get(iso)
+                if faktor is not None:
+                    cents = max(1, int(round(cents * faktor)))
+                curve[iso] = cents
             out[rp] = curve
         return out
 

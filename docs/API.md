@@ -463,6 +463,78 @@ einzieht), erkennt der Sync automatisch aus dem verbundenen Kanal — kein
 Frontend-Feld. Details, Enum-Tabellen und die live gemessenen Channex-Eigenheiten:
 `apps/api/src/features/channel_manager/README.md`.
 
+### Promotions / Rabatte (`/api/v1/pricing/discounts`, Migrationen `0185` + `0276`)
+
+Eine Promotion ist EIN Betrag plus BELIEBIG VIELE Bedingungen, die alle zutreffen
+müssen (UND). Gating wie die Raten: `MANAGE_PROPERTY_SETTINGS` — Eigentümer
+(read-only §4.2) und staff/cleaner sehen sie nicht. Jede Route prüft den Tenant
+UND das Objekt der Zeile erneut (Wurzel 9).
+
+| Methode  | Pfad                                                        | Beschreibung                                                                                     |
+| -------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `GET`    | `/api/v1/pricing/discounts/{property_id}`                   | Alle Promotions eines Objekts                                                                    |
+| `GET`    | `/api/v1/pricing/discounts/{property_id}/library`            | Bestehende Promotions des Betriebs, übernehmbar auf DIESES Objekt (`{currency, items:[{promotion, property_id, property_title}]}`). Speist den Auswahlschritt „neue oder bestehende Promotion“. Pauschalen nur aus Objekten derselben Währung (Prozent währungsfrei); fachlich gleiche Promotion erscheint EINMAL; übernommen wird über `/{quell_objekt}/{promotion}/apply` |
+| `POST`   | `/api/v1/pricing/discounts/{property_id}`                   | Neue Promotion → `201`                                                                           |
+| `PATCH`  | `/api/v1/pricing/discounts/{property_id}/{discount_id}`     | Ändern; nur GESENDETE Felder werden gesetzt (`discount_type` ist nicht änderbar)                 |
+| `DELETE` | `/api/v1/pricing/discounts/{property_id}/{discount_id}`     | Löschen → `204`                                                                                  |
+| `POST`   | `/api/v1/pricing/discounts/{property_id}/{discount_id}/apply` | Dieselbe Promotion auf weitere eigene Objekte übertragen (`{property_ids:[…]}`, max. 200); fachlich gleiche Promotion wird am Ziel nicht doppelt angelegt |
+
+**Betrag:** `discount_kind` = `percent` (dann `discount_bps`, 100 = 1,00 %, PFLICHT
+— kein stiller Default) oder `fixed` (dann `discount_amount` > 0 in der Währung des
+Objekts). **Bedingungen** (alle optional): `min_nights`, `lead_min_days`,
+`lead_max_days`, `stay_ranges: [{from, to}]` (max. 24), `booked_from`/`booked_to`,
+`promo_codes` (max. 20, je ≤ 15 Zeichen, normalisiert GROSS/getrimmt),
+`portal_scope`. **Darstellung:** `name: {locale: text}`, `description_html`
+(nh3-Allowlist), `photo_url`.
+
+`discount_type` beschreibt die ART für Oberfläche und Rechnung: die drei
+Kurven-Typen `length_of_stay`/`early_booker`/`last_minute` verlangen ihre Achse
+(DB-CHECK) und dürfen je Objekt nur EINMAL aktiv sein (partieller UNIQUE-Index als
+Idempotenz-Backstop); `promotion` und `custom` dürfen mehrfach existieren
+(Sommer- und Winteraktion). Die Promotions-Oberfläche schreibt deshalb immer
+`promotion`. `days_before` bleibt als EINGABE erhalten (Bestand `gastgeber`) und
+wird nach Typ auf `lead_min_days`/`lead_max_days` abgebildet; in der Antwort daraus
+zurückgerechnet — zwei Speicherorte gibt es nicht.
+
+**Wie der Rabatt rechnet** (drei Festlegungen des Branchenstandards, alle live
+abgelesen):
+
+* Grundlage ist der ÜBERNACHTUNGSWERT (inkl. Kurzaufenthalts-/Extra-Gast-
+  Aufschlag), NICHT Gebühren oder Steuern — „% des Gesamtwerts der Buchung
+  (exkl. Gebühren, Steuern & Aktionen)“ steht wörtlich am Eingabefeld.
+* Mit `stay_ranges` zählen NUR die Nächte im Zeitraum: deckt die Aktion einen
+  Teil des Aufenthalts, gilt sie nur für diesen Teil. Damit rechnet die
+  Buchungsstrecke dasselbe wie der Portal-Push, der schon immer je Tag rabattiert.
+* Es gilt der BESTE EINZELRABATT, kein Stacking — verglichen wird die ERSPARNIS
+  IN GELD, damit eine Pauschale gegen einen Prozentsatz antreten kann.
+* CODE-VORRANG: ein GÜLTIGER `promo_code` verdrängt alle Aktionen ohne Code, auch
+  wenn eine automatische mehr gebracht hätte („werden Aktionen ohne Code nicht
+  angewendet. Stattdessen verwendet das System den Wert der Aktion, die dem
+  angegebenen Code zugeordnet ist, sofern der Code gültig ist"). Bei einem
+  UNGÜLTIGEN Code bleibt alles beim Normalfall.
+
+`POST /api/v1/pricing/quote` nimmt zusätzlich `promo_code` (≤ 15 Zeichen) und
+antwortet mit `promo_code_applied`: hat der Code WIRKLICH eine Aktion ausgelöst?
+Dieselben zwei Felder trägt `POST /api/v1/booking-engine/quote` (Gast-Strecke:
+Code eingeben → Rabattzeile) und `POST /api/v1/booking-engine/reservations`
+(dieselbe Rechnung wie die Anzeige). Ohne `promo_code_applied` könnte die
+Oberfläche „Code angewendet“ nicht von „Code ungültig, aber es greift eine
+automatische Aktion“ unterscheiden.
+
+**Weg zu den Portalen** (zwei, sie schließen sich nach Konstruktion aus):
+1. **Tagespreis** — jedes Portal, aber nur Bedingungen, die sich am TAG
+   entscheiden lassen (`stay_ranges` oder gar keine). Rechnet `ari_push`
+   (`_aktionen_einrechnen`) in die gesendeten Segmente ein.
+2. **Airbnbs eigene Rabattregeln** — `min_nights`/`lead_min_days`/`lead_max_days`
+   als `default_pricing_rules` je Listing (`channel_manager/airbnb_aktionen.py`,
+   Route `…/aktionen/airbnb-sync`). Grenzen: Prozent 1–99 (ganzzahlig),
+   Last Minute ≤ 28 Tage, Frühbucher-Vorlauf ein Vielfaches von 28 oder 30,
+   Längenrabatt nur im Preismodell `standard`, eine Regel = eine Schwelle.
+
+Was keiner der beiden Wege trägt (Angebotscode, Buchungszeitraum, Pauschale,
+mehrere Bedingungen zusammen), wird als „Manuelle Synchronisierung" gemeldet
+(`abgaben-status`) statt still jedem Portal-Gast den Rabatt zu geben.
+
 ### Abgeleitete Preispläne (Migration `0157`, SiteMinder-Modell)
 
 Ein Objekt kann mehrere Preispläne haben (BAR/B&B). Jeder Plan ist `manual`
@@ -978,7 +1050,8 @@ Berechtigung `manage_property_settings`. Beträge laufen durchgängig in **Cent*
 | `POST /api/v1/channel-manager/channels`                            | Schritt 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen **und aktivieren** → `201`                |
 | `DELETE /api/v1/channel-manager/channels/{channel_id}`             | Kanal trennen (erst deaktivieren, dann löschen) → `204`                                         |
 | `GET /api/v1/channel-manager/properties/{property_id}/connections` | Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal, white-label)         |
-| `GET /api/v1/channel-manager/properties/{property_id}/abgaben-status` | Je Gebühr/Steuer: welche verbundenen Portale bekommen sie NICHT automatisch? Speist den Chip „Manuelle Synchronisierung". Rein lesend, gerechnet aus derselben Quelle wie der Sync (`ota_abgaben.abgaben_je_portal`) — kein zweiter Regelsatz für die Anzeige. Drei getrennte Felder je Posten: `manual_portals` (Portal nimmt ihn nicht → Chip), `restricted_portals` (per `portalScope` ausgeschlossen → Absicht), `internal_only` (optionale/Kurzaufenthalts-Gebühr, Kaution → geht bewusst nirgends hin). `currency_missing` ist ein Befund über das OBJEKT: ohne Objektwährung überträgt der Abgaben-Sync gar nichts |
+| `GET /api/v1/channel-manager/properties/{property_id}/abgaben-status` | Je Gebühr/Steuer: welche verbundenen Portale bekommen sie NICHT automatisch? Speist den Chip „Manuelle Synchronisierung". Rein lesend, gerechnet aus derselben Quelle wie der Sync (`ota_abgaben.abgaben_je_portal`) — kein zweiter Regelsatz für die Anzeige. Drei getrennte Felder je Posten: `manual_portals` (Portal nimmt ihn nicht → Chip), `restricted_portals` (per `portalScope` ausgeschlossen → Absicht), `internal_only` (optionale/Kurzaufenthalts-Gebühr, Kaution → geht bewusst nirgends hin). `currency_missing` ist ein Befund über das OBJEKT: ohne Objektwährung überträgt der Abgaben-Sync gar nichts. Die Antwort enthält zusätzlich die PROMOTIONS des Objekts (`kind: "promotion"`, `key` = Promotion-ID) mit zwei getrennten Gründen: `reason` = warum der Tagespreis sie nicht tragen kann (gilt für alle Portale außer Airbnb), `airbnb_reason` = warum Airbnb sie auch nicht über die eigene Rabattregel bekommt |
+| `POST /api/v1/channel-manager/properties/{property_id}/aktionen/airbnb-sync` | Promotions mit Bedingung als Airbnbs eigene Rabattregeln durchsetzen (`default_pricing_rules` je Listing-Mapping). Antwort: `{channel_id, listings, updated, rules[], skipped{}}` — `updated` zählt nur Listings mit echter Änderung (idempotent), `skipped` nennt je Promotion den Grund, warum Airbnb sie nicht als Regel nimmt. Läuft zusätzlich als Job `sync_airbnb_aktionen` nach jeder Promotion-Änderung |
 | `PUT /api/v1/channel-manager/properties/{property_id}/connections/{portal}/airbnb-tax` | Airbnb-Steuererhebung dieses Inserats: `{scenario, acknowledged, send_user_taxes}`. Steuern gehen an Airbnb NUR wenn Szenario ≠ `ineligible` UND beide Schalter an (fail-closed); stößt den Steuer-Sync an |
 | `POST /api/v1/channel-manager/webhook`                             | Webhook-Empfang (ohne JWT, via geteiltem Secret-Header `X-Channex-Webhook-Secret`)              |
 

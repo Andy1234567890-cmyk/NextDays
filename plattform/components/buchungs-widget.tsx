@@ -84,6 +84,11 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
   const [vorname, setVorname] = useState("");
   const [nachname, setNachname] = useState("");
   const [email, setEmail] = useState("");
+  // Aktionscode des Gastes („Rabattcode einlösen"). `code` ist das Eingabefeld,
+  // `codeAktiv` der EINGELÖSTE Code — erst beim Einlösen wird neu gerechnet,
+  // sonst schickte jeder Tastendruck eine Anfrage.
+  const [code, setCode] = useState("");
+  const [codeAktiv, setCodeAktiv] = useState("");
   const [angebot, setAngebot] = useState<Angebot | null>(null);
   const [rechnet, setRechnet] = useState(false);
   const [status, setStatus] = useState<{
@@ -111,6 +116,7 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
       check_out: checkOut,
       guests: gaeste,
       pets: tiere,
+      promo_code: codeAktiv || undefined,
     }).then((res) => {
       if (abgebrochen) return;
       setRechnet(false);
@@ -122,7 +128,7 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
     return () => {
       abgebrochen = true;
     };
-  }, [listing.id, checkIn, checkOut, gaeste, tiere, n]);
+  }, [listing.id, checkIn, checkOut, gaeste, tiere, n, codeAktiv]);
 
   // Tiere zurücksetzen, sobald das Objekt sie nicht (mehr) erlaubt — sonst
   // stünde eine Zahl im Zustand, die der Server mit 422 ablehnt.
@@ -169,6 +175,8 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
       total_amount: angebot.total,
       guests: gaeste,
       pets: tiere,
+      // Derselbe Code wie im Angebot — der Server rechnet den Preis erneut.
+      promo_code: codeAktiv || undefined,
     });
     if (res.ok) {
       // Reservierung steht — weiter zum Bezahlschritt (Stripe Payment Element).
@@ -311,6 +319,51 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
                   </span>
                 </div>
               ))}
+              {/* Aktionscode — Branchenstandard: der Gast löst ihn beim Buchen
+                  ein, der Rabatt erscheint als eigene Zeile in der Übersicht.
+                  Gerechnet wird ausschließlich serverseitig. */}
+              <div className="mt-2 flex flex-col gap-2 border-t border-border pt-3">
+                <label className="flex items-center gap-2">
+                  <input
+                    value={code}
+                    maxLength={15}
+                    placeholder="Aktionscode"
+                    onChange={(e) => setCode(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        setCodeAktiv(code.trim());
+                      }
+                    }}
+                    className="h-10 min-w-0 flex-1 rounded-full border border-border bg-background px-4 text-sm"
+                  />
+                  <button
+                    type="button"
+                    disabled={!code.trim() || code.trim() === codeAktiv}
+                    onClick={() => setCodeAktiv(code.trim())}
+                    className="h-10 shrink-0 rounded-full border border-border px-4 text-sm font-medium disabled:opacity-40"
+                  >
+                    Einlösen
+                  </button>
+                </label>
+                {/* Nur nach einem Einlöse-Versuch etwas sagen — und zwar die
+                    Wahrheit: ein Rabatt in den Zeilen kann auch von einer
+                    automatischen Aktion kommen, dann war der Code trotzdem
+                    ungültig. */}
+                {codeAktiv && (
+                  <p
+                    className={
+                      angebot.promo_code_applied
+                        ? "text-sm text-emerald-700"
+                        : "text-sm text-destructive"
+                    }
+                  >
+                    {angebot.promo_code_applied
+                      ? "Aktionscode angewendet."
+                      : "Dieser Aktionscode gilt für diese Buchung nicht."}
+                  </p>
+                )}
+              </div>
               <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
                 <span>Gesamt</span>
                 <span>{formatCurrency(angebot.total, waehrung)}</span>

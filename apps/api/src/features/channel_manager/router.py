@@ -34,6 +34,7 @@ from .common import log
 from .dependencies import ChannelManagerServiceDep
 from .schemas import (
     AbgabenStatusResponse,
+    AirbnbAktionenPushResponse,
     AirbnbTaxSettingsRequest,
     AirbnbTaxSettingsResponse,
     AriPushRequest,
@@ -474,6 +475,27 @@ def finalize_oauth_channel(
             mappings=[m.model_dump() for m in req.mappings],
         )
         return ChannelResponse(**result)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/properties/{property_id}/aktionen/airbnb-sync",
+    response_model=AirbnbAktionenPushResponse,
+)
+def aktionen_an_airbnb(
+    property_id: str, ctx: _write, service: ChannelManagerServiceDep
+) -> AirbnbAktionenPushResponse:
+    """Aktionen mit Bedingung als Airbnb-Rabattregeln durchsetzen.
+
+    Mindestaufenthalt, Frühbucher und Last Minute kann der Tagespreis nicht
+    ausdrücken — Airbnb kennt sie aber als eigenes Objekt
+    (`default_pricing_rules`). Der Endpunkt schreibt die Soll-Liste; was Airbnb
+    nicht nehmen kann, steht mit Grund in `skipped`."""
+    try:
+        return AirbnbAktionenPushResponse(
+            **service.aktionen_an_airbnb(ctx, property_id)
+        )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

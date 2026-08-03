@@ -49,6 +49,9 @@ import { Switch } from "@nextdays/ui/switch";
 import { EinschraenkungenEditor } from "@/components/objekte/pricing/einschraenkungen-editor";
 import { GebuehrAuswahl } from "@/components/objekte/pricing/gebuehr-auswahl";
 import { GebuehrEditor } from "@/components/objekte/pricing/gebuehren-editor";
+import { PromotionAuswahl } from "@/components/objekte/pricing/promotion-auswahl";
+import { PromotionEditor } from "@/components/objekte/pricing/promotion-editor";
+import { PromotionEinschraenkungen } from "@/components/objekte/pricing/promotion-einschraenkungen";
 import {
   LokaleSteuerEditor,
   MwStEditor,
@@ -60,7 +63,6 @@ import {
   type FeeBasis,
   type LengthPrice,
   type Pricing,
-  type Promotion,
   type StayKind,
   type Tax,
   type TaxKind,
@@ -86,6 +88,11 @@ import {
 } from "@/lib/channex";
 import { getDpSettings } from "@/lib/dynamic-pricing";
 import { type Property, updateProperty } from "@/lib/properties";
+import {
+  deletePromotion,
+  listPromotions,
+  type Promotion,
+} from "@/lib/promotions";
 import {
   deleteRatePlan,
   listRatePlans,
@@ -114,6 +121,12 @@ type Section =
   // Felder). Nur bei `fee: "new"` gesetzt.
   | { fee: string | "new"; vorlage?: Fee }
   | { restrict: "fee" | "tax"; id: string }
+  // Kanal-Einschränkung einer Promotion — eigener Dialog wie bei Gebühr/Steuer,
+  // erreichbar über das Zeilenmenü.
+  | { promoRestrict: string }
+  // Auswahlschritt VOR dem Promotion-Formular („neue oder bestehende") —
+  // dieselbe Form wie bei den Gebühren.
+  | "promoPick"
   | { tax: TaxKind; id?: string }
   | { promo: string | "new" }
   | { addon: string | "new" }
@@ -217,6 +230,59 @@ export function PricingForm({ initial }: { initial: Property }) {
   /** Portale, bei denen dieser Posten von Hand gepflegt werden muss. */
   function manualPortals(key: string): string[] {
     return abgaben?.items.find((x) => x.key === key)?.manual_portals ?? [];
+  }
+
+  /** Warum ein Posten dort von Hand gepflegt werden muss — nur bei Promotions
+   *  gesetzt (Gebühren/Steuern erklärt der Chip über das Portal selbst). Der
+   *  Grund kommt als SCHLÜSSEL vom Server und wird hier übersetzt. */
+  function manualReason(key: string): string | undefined {
+    const posten = abgaben?.items.find((x) => x.key === key);
+    if (!posten) return undefined;
+    const teile: string[] = [];
+    if (posten.reason) teile.push(t(`pricingForm.promoReason.${posten.reason}`));
+    // Airbnb hat einen ZWEITEN Weg (eigene Rabattregeln) mit eigenen Grenzen.
+    // Scheitert dort etwas anderes als am Tagespreis, muss beides dastehen —
+    // sonst schickt der Hinweis den Betrieb in die falsche Richtung.
+    if (posten.airbnb_reason && posten.airbnb_reason !== posten.reason) {
+      teile.push(
+        t("pricingForm.promoReasonAirbnb", {
+          grund: t(`pricingForm.promoReason.${posten.airbnb_reason}`),
+        }),
+      );
+    }
+    return teile.length > 0 ? teile.join(" · ") : undefined;
+  }
+
+  // Promotions liegen in property_discounts (eigene Zeilen mit Bedingungen),
+  // nicht im Preis-Blob — deshalb eine eigene Liste mit eigenem Abo.
+  const [promos, setPromos] = useState<Promotion[]>([]);
+  const loadPromos = useCallback(async () => {
+    const res = await listPromotions(p.id);
+    if (res.ok) setPromos(res.data);
+  }, [p.id]);
+  useEffect(() => {
+    void loadPromos();
+  }, [loadPromos]);
+  // KEIN Realtime-Abo auf `property_discounts`: die Tabelle ist bewusst gesperrt
+  // (0185 — `revoke select … from anon, authenticated`, damit ein eingeloggter
+  // cleaner mit dem anon-Key keine Rabatte lesen und keine schreiben kann,
+  // Wurzel 6). Ohne `select` für `authenticated` wäre ein Abo eine stumme
+  // Attrappe: die Seite sähe live aus und aktualisierte nie. Einen Grant dafür
+  // nachzuziehen wäre der falsche Weg — stattdessen wird nach jeder EIGENEN
+  // Änderung neu geladen (`loadPromos` im Editor-Callback und beim Löschen).
+  // Preis dieser Entscheidung, bewusst in Kauf genommen: die Änderung eines
+  // ZWEITEN Nutzers erscheint erst beim nächsten Laden der Seite.
+
+  async function promoLoeschen(id: string) {
+    const res = await deletePromotion(p.id, id);
+    if (!res.ok) {
+      // Nicht verschlucken: sonst bliebe die Zeile stehen und niemand wüsste,
+      // warum (Wurzel 5).
+      setVerteilFehler(res.error);
+      return;
+    }
+    void loadPromos();
+    void loadAbgaben();
   }
 
   async function save(next: Pricing): Promise<true | string> {
@@ -502,21 +568,27 @@ export function PricingForm({ initial }: { initial: Property }) {
         )}
       </PreisAbschnitt>
 
-      {/* Promotions */}
+      {/* Promotions — eigene Zeilen in property_discounts, KEIN Preis-Blob:
+          eine Promotion ist eine Preisregel mit Bedingungen, die der Resolver
+          auswertet und die über den Tagespreis bzw. Airbnbs Rabattregeln an die
+          Portale geht. Deshalb steht hier auch kein „nur Direktbuchungen". */}
       <ListSection
         title={t("pricingForm.promotionsTitle")}
         hint={t("pricingForm.promotionsHint")}
-        localOnly
-        onAdd={() => setSection({ promo: "new" })}
+        onAdd={() => setSection("promoPick")}
         empty={t("pricingForm.promotionsEmpty")}
-        items={pr.promotions}
-        render={(p2) => (
+        items={promos}
+        render={(pm) => (
           <ListRow
-            key={p2.id}
-            title={p2.name}
-            pill={`${p2.percent}%${p2.conditions ? ` · ${t("pricingForm.withConditionsSuffix")}` : ""}`}
-            onEdit={() => setSection({ promo: p2.id })}
-            onDelete={() => save({ ...pr, promotions: pr.promotions.filter((x) => x.id !== p2.id) })}
+            key={pm.id}
+            title={promoName(pm, locale) || t("pricingForm.promoUnnamed")}
+            pill={promoSummary(pm, cur, locale, t)}
+            badge={pm.active ? undefined : t("pricingForm.promoInactiveBadge")}
+            manualPortals={manualPortals(pm.id)}
+            manualReason={manualReason(pm.id)}
+            onEdit={() => setSection({ promo: pm.id })}
+            onRestrict={() => setSection({ promoRestrict: pm.id })}
+            onDelete={() => void promoLoeschen(pm.id)}
           />
         )}
       />
@@ -633,8 +705,55 @@ export function PricingForm({ initial }: { initial: Property }) {
         )
       )}
       {section && typeof section === "object" && "promo" in section && (
-        <PromoEditor pr={pr} editId={section.promo === "new" ? undefined : section.promo} onSave={save} onClose={() => setSection(null)} />
+        <PromotionEditor
+          propertyId={p.id}
+          currency={cur}
+          vorhanden={
+            section.promo === "new"
+              ? undefined
+              : promos.find((x) => x.id === section.promo)
+          }
+          onSaved={() => {
+            setSection(null);
+            void loadPromos();
+            // Der Sync-Stand hängt an den Bedingungen der Promotion — ohne
+            // diesen Aufruf zeigte der Chip den Stand VOR der Änderung.
+            void loadAbgaben();
+          }}
+          onApplyError={setVerteilFehler}
+          onClose={() => setSection(null)}
+        />
       )}
+      {section === "promoPick" && (
+        <PromotionAuswahl
+          propertyId={p.id}
+          summary={(pm) => promoSummary(pm, cur, locale, t)}
+          nameOf={promoName}
+          onNew={() => setSection({ promo: "new" })}
+          onApplied={() => {
+            setSection(null);
+            void loadPromos();
+            void loadAbgaben();
+          }}
+          onError={setVerteilFehler}
+          onClose={() => setSection(null)}
+        />
+      )}
+      {section && typeof section === "object" && "promoRestrict" in section && (() => {
+        const pm = promos.find((x) => x.id === section.promoRestrict);
+        return pm ? (
+          <PromotionEinschraenkungen
+            propertyId={p.id}
+            promotion={pm}
+            onSaved={() => {
+              setSection(null);
+              void loadPromos();
+              void loadAbgaben();
+            }}
+            onClose={() => setSection(null)}
+          />
+        ) : null;
+      })()}
       {section && typeof section === "object" && "addon" in section && (
         <AddOnEditor pr={pr} editId={section.addon === "new" ? undefined : section.addon} onSave={save} onClose={() => setSection(null)} />
       )}
@@ -693,6 +812,43 @@ function ListSection<T>({
       {footer}
     </PreisAbschnitt>
   );
+}
+
+// Gastseitiger Name einer Promotion in der gewünschten Sprache, sonst der
+// erste gepflegte. Ohne Rückfall stünde die Zeile leer da, obwohl ein Name
+// existiert (nur in einer anderen Sprache).
+function promoName(pm: Promotion, locale: string): string {
+  return pm.name?.[locale]?.trim() || Object.values(pm.name ?? {})[0]?.trim() || "";
+}
+
+// Zusammenfassung einer Promotion für die Listenzeile: der Rabatt plus der
+// Hinweis, dass Bedingungen daran hängen — genau die Form des Branchenstandards
+// („20% mit Bedingungen"). Welche Bedingungen es sind, steht im Editor; in der
+// Zeile wären fünf Achsen unlesbar.
+function promoSummary(
+  pm: Promotion,
+  cur: Currency | "",
+  locale: string,
+  t: (key: string) => string,
+): string {
+  const wert =
+    pm.discount_kind === "fixed"
+      ? fmtPrice(pm.discount_amount ?? 0, cur, locale)
+      : `${Math.round((pm.discount_bps ?? 0) / 100)}%`;
+  const hatBedingung =
+    pm.min_nights != null ||
+    pm.lead_min_days != null ||
+    pm.lead_max_days != null ||
+    (pm.stay_ranges ?? []).length > 0 ||
+    Boolean(pm.booked_from) ||
+    Boolean(pm.booked_to) ||
+    (pm.promo_codes ?? []).length > 0;
+  const teile = [wert];
+  if (hatBedingung) teile.push(t("pricingForm.withConditionsSuffix"));
+  if ((pm.portal_scope ?? []).length > 0) {
+    teile.push(t("pricingForm.restrictedSuffix"));
+  }
+  return teile.join(" · ");
 }
 
 // Zusammenfassung einer Gebühr für die Listenzeile. Prozent und Betrag lesen
@@ -773,6 +929,7 @@ function ListRow({
   badge,
   badgeTone,
   manualPortals,
+  manualReason,
   onEdit,
   onDelete,
   onRestrict,
@@ -786,6 +943,10 @@ function ListRow({
    *  Extranet gepflegt werden. Kommt gerechnet vom Server (Wurzel 4: die Zeile
    *  behauptet nichts, was der Sync nicht belegt). */
   manualPortals?: string[];
+  /** Warum diese Portale den Posten nicht bekommen (nur bei Promotions). Ohne
+   *  den Grund liest sich der Chip als „geht dort nicht" ohne Hinweis darauf,
+   *  was daran zu ändern wäre. */
+  manualReason?: string;
   onEdit: () => void;
   onDelete: () => void;
   /** Gesetzt bei Gebühren/Steuern: die Kanal-Einschränkung ist ein EIGENER
@@ -841,6 +1002,9 @@ function ListRow({
           {(manualPortals ?? []).map((code) => (
             <PortalMarke key={code} code={code} name={channelLabel(code)} nurLogo />
           ))}
+          {manualReason && (
+            <span className="text-muted-foreground">· {manualReason}</span>
+          )}
         </PreisChip>
       )}
     </PreisKarte>
@@ -1361,51 +1525,6 @@ function LengthEditor({
 }
 
 // --- Etappe-2-Editoren ------------------------------------------------------
-
-function PromoEditor({
-  pr,
-  editId,
-  onSave,
-  onClose,
-}: {
-  pr: Pricing;
-  editId?: string;
-  onSave: (next: Pricing) => Promise<true | string>;
-  onClose: () => void;
-}) {
-  const t = useTranslations("objects");
-  const ex = editId ? pr.promotions.find((x) => x.id === editId) : undefined;
-  const [v, setV] = useState<Promotion>(ex ?? { id: "", name: "", percent: 10, conditions: "" });
-  const { busy, error, run } = useSaver(onSave);
-
-  function commit() {
-    const entry: Promotion = { ...v, id: v.id || crypto.randomUUID() };
-    const list = ex ? pr.promotions.map((x) => (x.id === entry.id ? entry : x)) : [...pr.promotions, entry];
-    run({ ...pr, promotions: list });
-  }
-
-  return (
-    <EditorShell
-      title={ex ? t("pricingForm.promoEditTitle") : t("pricingForm.promoAddTitle")}
-      subtitle={t("pricingForm.promoEditorSubtitle")}
-      onClose={onClose}
-      footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} disabled={!v.name.trim()} />}
-    >
-      <Field label={t("pricingForm.nameLabel")}>
-        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={t("pricingForm.promoNamePlaceholder")} />
-      </Field>
-      <Field label={t("pricingForm.discountPercentLabel")}>
-        <div className="flex items-center gap-2">
-          <Input type="number" min={0} max={100} value={v.percent} onChange={(e) => setV({ ...v, percent: Number(e.target.value) || 0 })} />
-          <span className="text-sm text-muted-foreground">%</span>
-        </div>
-      </Field>
-      <Field label={t("pricingForm.conditionsLabel")}>
-        <Input value={v.conditions} onChange={(e) => setV({ ...v, conditions: e.target.value })} placeholder={t("pricingForm.conditionsPlaceholder")} />
-      </Field>
-    </EditorShell>
-  );
-}
 
 function AddOnEditor({
   pr,

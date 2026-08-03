@@ -47,6 +47,8 @@ log = get_logger("nextdays.worker")
 # Retry-Versuch zu verbrennen.
 _CHANNEX_JOB_TYPES = frozenset(
     {"sync_property_content", "sync_property_taxes",
+     # Airbnb-Rabattregeln je Listing (GET+PUT pricing_settings pro Mapping).
+     "sync_airbnb_aktionen",
      "reconcile_tenant", "push_ari", "process_ari_outbox",
      "process_restriction_outbox",
      # recompute_property pusht die meisten Rate-Calls (Tagespreise über den
@@ -201,6 +203,18 @@ def _handle_sync_property_taxes(
     if not svc.is_channex_configured:
         return
     svc.sync_taxes_only(payload["tenant_id"], payload["property_id"])
+
+
+def _handle_sync_airbnb_aktionen(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Aktions-Bedingungen (Mindestaufenthalt/Frühbucher/Last Minute) als
+    Airbnb-Rabattregeln durchsetzen. Ohne Airbnb-Verbindung tut der Service
+    nichts; ein Fehler kippt den Job auf Retry (Wurzel 5)."""
+    svc = _svc(db, budget)
+    if not svc.is_channex_configured:
+        return
+    svc.sync_airbnb_aktionen(payload["tenant_id"], payload["property_id"])
 
 
 def _handle_reconcile_tenant(
@@ -411,6 +425,7 @@ HANDLERS: dict[
 ] = {
     "sync_property_content": _handle_sync_property_content,
     "sync_property_taxes": _handle_sync_property_taxes,
+    "sync_airbnb_aktionen": _handle_sync_airbnb_aktionen,
     "reconcile_tenant": _handle_reconcile_tenant,
     "reconcile_rate_plan_prices": _handle_reconcile_rate_plan_prices,
     "recompute_property": _handle_recompute_property,

@@ -112,6 +112,7 @@ def _resolver(
     dynamic: list[dict] | None = None,
     addons: list[dict] | None = None,
     rate_plan_overrides: list[dict] | None = None,
+    discounts: list[dict] | None = None,
 ) -> PricingResolver:
     tables: dict[str, list[dict]] = {
         "rate_plans": [{"base_price": base, "currency": "EUR"}] if base is not None else [],
@@ -120,6 +121,8 @@ def _resolver(
         "dynamic_prices": dynamic or [],
         "property_addons": addons or [],
         "rate_plan_price_overrides": rate_plan_overrides or [],
+        # Aktionen/Rabatte (property_discounts, 0185 + 0276).
+        "property_discounts": discounts or [],
     }
     return PricingResolver(service_client=_DB(tables))
 
@@ -318,7 +321,7 @@ def test_quote_priceless_without_rate_plan() -> None:
 
 
 def test_quote_full_breakdown() -> None:
-    # 3 Nächte, base 100, Reinigung 50 fest, Frühbucher 10 %, MwSt 19 %
+    # 3 Nächte, base 100, Reinigung 50 fest, Aktion 10 %, MwSt 19 %
     # (nicht enthalten). Der frühere „Kanal-Markup" ist entfernt (0272,
     # Attrappe) — Portal-Aufschläge sind Kanal-Pläne, keine Quote-Zeile.
     cfg = {
@@ -330,9 +333,15 @@ def test_quote_full_breakdown() -> None:
             {"name": "MwSt", "kind": "vat", "mode": "percent", "value": 19,
              "includedInPrice": False}
         ],
-        "promotions": [{"name": "Frühbucher", "percent": 10}],
     }
-    r = _resolver(base=100.0, config=cfg)
+    r = _resolver(
+        base=100.0,
+        config=cfg,
+        discounts=[
+            {"discount_type": "promotion", "discount_kind": "percent",
+             "discount_bps": 1000, "name": {"de": "Frühbucher"}},
+        ],
+    )
     q = r.quote(
         QuoteRequest(
             property_id="p",
@@ -343,8 +352,32 @@ def test_quote_full_breakdown() -> None:
         )
     )
     assert q.nightly_total == 300.0
-    assert q.total == 374.85
+    # 300 Übernachtung + 50 Reinigung; die Aktion rabattiert NUR die
+    # Übernachtung (−30, Branchenstandard: „% des Gesamtwerts der Buchung exkl.
+    # Gebühren, Steuern & Aktionen") → 320 netto, +19 % USt = 380,80. Vorher lief
+    # der Rabatt über die ganze Zwischensumme und zog auch 10 % von der
+    # Reinigungsgebühr ab (374,85) — mehr, als die Oberfläche zusagt.
+    assert q.total == 380.8
     assert q.priceless is False
+
+
+def test_quote_blob_aktion_rabattiert_nicht_mehr() -> None:
+    """`type_attributes.pricing.promotions` war der ZWEITE Rabattpfad: Bedingung
+    als Freitext, nie geprüft, Prozentsatz von JEDER Buchung abgezogen — eine
+    Aktion „20 % nur Juni" rabattierte das ganze Jahr. Der Pfad ist weg; die
+    Zeile darf keinen Preis mehr verändern."""
+    cfg = {"promotions": [{"name": "Alt", "percent": 20, "conditions": "nur Juni"}]}
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    assert q.total == 300.0
+    assert not [ln for ln in q.lines if ln.kind == "discount"]
 
 
 def test_quote_fee_tax_rate_snapshot_in_line() -> None:
@@ -964,3 +997,289 @@ def test_quote_fee_short_stay_only() -> None:
         )
     )
     assert "Kurz" not in {line.label for line in q.lines}
+
+
+# --- Aktionen: Bedingungen werden WIRKLICH geprüft (0276) --------------------
+
+
+def _mit_aktion(regel: dict, **req_kw: object) -> object:
+    """Quote mit genau einer Aktion; Standard-Anfrage 3 Nächte ab 01.07.2026."""
+    r = _resolver(
+        base=100.0,
+        discounts=[{"discount_bps": 1000, "discount_kind": "percent", **regel}],
+    )
+    kw: dict = {
+        "property_id": "p",
+        "check_in": date(2026, 7, 1),
+        "check_out": date(2026, 7, 4),
+        "guests": 2,
+        "as_of": date(2026, 6, 1),
+        **req_kw,
+    }
+    return r.quote(QuoteRequest(**kw))
+
+
+def _rabatt(q: object) -> float:
+    return round(sum(ln.amount for ln in q.lines if ln.kind == "discount"), 2)
+
+
+def test_aktion_ohne_bedingung_gilt_immer() -> None:
+    """Keine Bedingung ist eine bewusste Eingabe („20 % auf alles"), kein
+    Versehen — im Standard sind alle Bedingungsfelder abwählbar."""
+    assert _rabatt(_mit_aktion({"discount_type": "promotion"})) == -30.0
+
+
+def test_aktion_aufenthaltsdaten() -> None:
+    """Mehrere Zeiträume, EINER muss die Nacht decken. Vorher war das ein
+    Freitext, der die Rechnung nicht erreichte."""
+    juni = {"from": "2026-06-01", "to": "2026-06-30"}
+    juli = {"from": "2026-07-01", "to": "2026-07-31"}
+    assert _rabatt(_mit_aktion({"discount_type": "promotion", "stay_ranges": [juni]})) == 0.0
+    assert _rabatt(
+        _mit_aktion({"discount_type": "promotion", "stay_ranges": [juni, juli]})
+    ) == -30.0
+
+
+def test_aktion_zeitraum_nur_die_gedeckten_naechte() -> None:
+    """Deckt der Aktionszeitraum nur einen TEIL des Aufenthalts, gilt die Aktion
+    nur für die Nächte darin — wörtlich der Branchenstandard („gilt sie nur für
+    die Tage, die in den Aktionszeitraum fallen").
+
+    Vorher entschied allein der ANREISETAG: lag er im Zeitraum, bekam der ganze
+    Aufenthalt den Rabatt; lag er einen Tag davor, bekam ihn kein einziger Tag.
+    Damit rechnete die Buchungsstrecke anders als der Portal-Push, der schon
+    immer je Tag rabattiert."""
+    # 3 Nächte 01.–04.07. zu je 100. Zeitraum deckt nur den 1. und 2. Juli.
+    zwei_von_drei = {"from": "2026-07-01", "to": "2026-07-02"}
+    assert _rabatt(
+        _mit_aktion({"discount_type": "promotion", "stay_ranges": [zwei_von_drei]})
+    ) == -20.0
+    # Zeitraum beginnt NACH der Anreise: die gedeckten Nächte zählen trotzdem.
+    spaeter = {"from": "2026-07-03", "to": "2026-07-31"}
+    assert _rabatt(
+        _mit_aktion({"discount_type": "promotion", "stay_ranges": [spaeter]})
+    ) == -10.0
+    # Gar keine gedeckte Nacht → kein Rabatt (und keine Rabattzeile).
+    assert _rabatt(
+        _mit_aktion(
+            {"discount_type": "promotion",
+             "stay_ranges": [{"from": "2026-08-01", "to": "2026-08-31"}]}
+        )
+    ) == 0.0
+
+
+def test_aktion_hoechster_wert_gewinnt_auch_als_pauschale() -> None:
+    """„Die Aktion mit dem höchsten Wert" — verglichen wird die Ersparnis in Geld.
+
+    Vorher wurde nur `discount_bps` verglichen. Eine Pauschale trägt dort den
+    Mindestwert 1 (die Spalte ist NOT NULL und wird bei `fixed` nicht gelesen)
+    und konnte deshalb NIE gewinnen: 200 € verloren gegen 5 %."""
+    r = _resolver(
+        base=100.0,
+        discounts=[
+            {"discount_type": "promotion", "discount_kind": "percent",
+             "discount_bps": 500, "name": {"de": "5 %"}},
+            {"discount_type": "promotion", "discount_kind": "fixed",
+             "discount_bps": 1, "discount_amount": 200, "name": {"de": "200 €"}},
+        ],
+    )
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+            as_of=date(2026, 6, 1),
+        )
+    )
+    # 3 × 100 = 300: 5 % wären 15, die Pauschale ist 200 → sie gewinnt.
+    assert _rabatt(q) == -200.0
+    assert any("200" in ln.label for ln in q.lines if ln.kind == "discount")
+
+
+def test_aktion_rabattiert_keine_gebuehren() -> None:
+    """Grundlage ist der Übernachtungswert, NICHT die Gebühren — genau die Zusage
+    am Eingabefeld („exkl. Gebühren, Steuern & Aktionen")."""
+    r = _resolver(
+        base=100.0,
+        config={"fees": [{"name": "Reinigung", "amount": 90, "basis": "per_stay"}]},
+        discounts=[
+            {"discount_type": "promotion", "discount_kind": "percent",
+             "discount_bps": 1000},
+        ],
+    )
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+            as_of=date(2026, 6, 1),
+        )
+    )
+    # 10 % von 300 (Übernachtung), nicht von 390.
+    assert _rabatt(q) == -30.0
+    assert q.total == 360.0
+
+
+def test_aktion_buchungsdaten() -> None:
+    """„Daten der Buchung" prüft `as_of` (wann gebucht wird), NICHT die Anreise."""
+    regel = {
+        "discount_type": "promotion",
+        "booked_from": "2026-05-01",
+        "booked_to": "2026-05-31",
+    }
+    assert _rabatt(_mit_aktion(regel)) == 0.0
+    assert _rabatt(_mit_aktion(regel, as_of=date(2026, 5, 15))) == -30.0
+
+
+def test_aktion_vorlauf_fenster_kombinierbar() -> None:
+    """Frühbucher (Untergrenze) und Last Minute (Obergrenze) sind zwei Grenzen
+    desselben Maßes und deshalb kombinierbar — im Standard drei unabhängige
+    Checkboxen. 30 Tage Vorlauf im Beispiel."""
+    assert _rabatt(_mit_aktion({"discount_type": "promotion", "lead_min_days": 60})) == 0.0
+    assert _rabatt(_mit_aktion({"discount_type": "promotion", "lead_min_days": 10})) == -30.0
+    assert _rabatt(_mit_aktion({"discount_type": "promotion", "lead_max_days": 7})) == 0.0
+    # Fenster 10..60 Tage: 30 liegt drin.
+    assert _rabatt(
+        _mit_aktion(
+            {"discount_type": "promotion", "lead_min_days": 10, "lead_max_days": 60}
+        )
+    ) == -30.0
+
+
+def test_aktion_mindestnaechte_mit_zeitraum_kombiniert() -> None:
+    """Das war mit dem alten Modell NICHT ausdrückbar: der Typ-CHECK erlaubte je
+    Zeile genau eine Bedingung."""
+    regel = {
+        "discount_type": "promotion",
+        "min_nights": 5,
+        "stay_ranges": [{"from": "2026-07-01", "to": "2026-07-31"}],
+    }
+    assert _rabatt(_mit_aktion(regel)) == 0.0  # nur 3 Nächte
+    assert _rabatt(_mit_aktion(regel, check_out=date(2026, 7, 8))) != 0.0
+
+
+def test_aktion_angebotscode() -> None:
+    """Mit gepflegten Codes greift die Aktion NUR mit einem davon — Groß-/
+    Kleinschreibung egal, sonst findet niemand den Grund."""
+    regel = {"discount_type": "promotion", "promo_codes": ["SOMMER26"]}
+    assert _rabatt(_mit_aktion(regel)) == 0.0
+    assert _rabatt(_mit_aktion(regel, promo_code="sommer26")) == -30.0
+    assert _rabatt(_mit_aktion(regel, promo_code="WINTER")) == 0.0
+
+
+def test_aktion_kanal_einschraenkung() -> None:
+    """Dieselbe Achse wie bei Gebühren/Steuern: „nur Booking" darf in einer
+    Direktbuchung nicht erscheinen."""
+    regel = {"discount_type": "promotion", "portal_scope": ["BookingCom"]}
+    assert _rabatt(_mit_aktion(regel)) == 0.0
+    assert _rabatt(_mit_aktion(regel, channel="BookingCom")) == -30.0
+
+
+def test_aktion_pauschalbetrag_kappt_bei_der_summe() -> None:
+    """Eine Pauschale darf den Preis nicht unter null drücken — ein negativer
+    Gesamtpreis wäre eine Auszahlung an den Gast."""
+    q = _mit_aktion(
+        {"discount_type": "promotion", "discount_kind": "fixed", "discount_amount": 50}
+    )
+    assert _rabatt(q) == -50.0
+    assert q.total == 250.0
+    zu_gross = _mit_aktion(
+        {"discount_type": "promotion", "discount_kind": "fixed",
+         "discount_amount": 5000}
+    )
+    assert zu_gross.total == 0.0
+
+
+def test_aktion_bester_einzelrabatt_kein_stacking() -> None:
+    """Mehrere greifende Aktionen addieren sich NICHT (Booking/Airbnb-Standard) —
+    nur die höchste gewinnt."""
+    r = _resolver(
+        base=100.0,
+        discounts=[
+            {"discount_type": "promotion", "discount_bps": 500,
+             "discount_kind": "percent"},
+            {"discount_type": "promotion", "discount_bps": 2000,
+             "discount_kind": "percent"},
+        ],
+    )
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    assert _rabatt(q) == -60.0  # 20 % von 300, nicht 25 %
+
+
+def test_aktion_kaputtes_datum_faellt_nicht_offen_aus() -> None:
+    """Ein unlesbares Grenzdatum darf die Bedingung nicht WEGFALLEN lassen —
+    sonst griffe der Rabatt plötzlich überall (Wurzel 5, fail-closed)."""
+    regel = {"discount_type": "promotion", "stay_ranges": [{"from": "kaputt", "to": "x"}]}
+    assert _rabatt(_mit_aktion(regel)) == 0.0
+
+
+def test_promo_code_applied_nur_bei_echtem_treffer() -> None:
+    """Der Gast muss unterscheiden können: „Code angewendet" oder „Code ungültig,
+    aber es gilt eine automatische Aktion". Sonst sieht er einen Rabatt und hält
+    seinen falschen Code für gültig."""
+    # Aktion MIT Code: nur mit dem Code greift sie, dann ist die Antwort True.
+    mit_code = {"discount_type": "promotion", "promo_codes": ["SOMMER26"]}
+    q = _mit_aktion(mit_code, promo_code="sommer26")
+    assert _rabatt(q) == -30.0
+    assert q.promo_code_applied is True
+    q = _mit_aktion(mit_code, promo_code="WINTER")
+    assert _rabatt(q) == 0.0
+    assert q.promo_code_applied is False
+    # Automatische Aktion (ohne Codes) + falscher Code: Rabatt ja, Code nein.
+    q = _mit_aktion({"discount_type": "promotion"}, promo_code="WINTER")
+    assert _rabatt(q) == -30.0
+    assert q.promo_code_applied is False
+
+
+def test_eingelöster_code_verdrängt_automatische_aktionen() -> None:
+    """Code-Vorrang (Branchenstandard, wörtlich): „Gibt ein Gast einen Aktionscode
+    an […], werden Aktionen ohne Code nicht angewendet. Stattdessen verwendet das
+    System den Wert der Aktion, die dem angegebenen Code zugeordnet ist."
+
+    Der eingelöste Code gewinnt also auch dann, wenn eine automatische Aktion
+    MEHR gebracht hätte — nicht der höchste Rabatt, sondern die Entscheidung des
+    Gastes zählt, sobald sein Code gültig ist."""
+    r = _resolver(
+        base=100.0,
+        discounts=[
+            {"discount_type": "promotion", "discount_kind": "percent",
+             "discount_bps": 2000, "name": {"de": "Juni automatisch"}},
+            {"discount_type": "promotion", "discount_kind": "percent",
+             "discount_bps": 500, "promo_codes": ["SOMMER26"],
+             "name": {"de": "Mit Code"}},
+        ],
+    )
+
+    def _q(code: str | None) -> object:
+        return r.quote(
+            QuoteRequest(
+                property_id="p",
+                check_in=date(2026, 7, 1),
+                check_out=date(2026, 7, 4),
+                guests=2,
+                as_of=date(2026, 6, 1),
+                promo_code=code,
+            )
+        )
+
+    # Ohne Code: die automatische Aktion (20 % von 300).
+    q = _q(None)
+    assert _rabatt(q) == -60.0
+    assert q.promo_code_applied is False
+    # Mit gültigem Code: 5 % — obwohl 20 % möglich gewesen wären.
+    q = _q("sommer26")
+    assert _rabatt(q) == -15.0
+    assert q.promo_code_applied is True
+    # UNGÜLTIGER Code: nichts wird verdrängt, die automatische Aktion bleibt.
+    q = _q("QUATSCH")
+    assert _rabatt(q) == -60.0
+    assert q.promo_code_applied is False

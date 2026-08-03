@@ -265,13 +265,12 @@ export function taxDisplayName(tax: Tax, locale: string): string {
   return tax.names?.[locale]?.trim() || tax.name;
 }
 
-// Promotion (Promotions): prozentualer Rabatt mit Bedingungen.
-export type Promotion = {
-  id: string;
-  name: string;
-  percent: number;
-  conditions: string; // z. B. „nur Juni 2026", Freitext
-};
+// Promotions liegen NICHT hier, sondern als eigene Zeilen in
+// `property_discounts` (lib/promotions.ts). Der frühere Blob-Eintrag trug ein
+// FREITEXT-Feld „conditions", das niemand auswertete: „20 % nur Juni" zog 20 %
+// von JEDER Buchung ab. Der Preis-Resolver liest den Blob deshalb nicht mehr,
+// und die Oberfläche pflegt ihn nicht mehr — ein Feld, das nur noch aussieht
+// wie eine Preisregel, wäre schlimmer als keines.
 
 // Add-on (Add-ons): aktivierbares Extra (z. B. Frühstück).
 export type AddOn = {
@@ -302,7 +301,6 @@ export type Pricing = {
   // Etappe 2
   fees: Fee[];
   taxes: Tax[];
-  promotions: Promotion[];
   addOns: AddOn[];
   businessTaxId: string; // Tax information (Airbnb)
   totRegistrationId: string;
@@ -322,7 +320,6 @@ export const DEFAULT_PRICING: Pricing = {
   lengthPrices: [],
   fees: [],
   taxes: [],
-  promotions: [],
   addOns: [],
   businessTaxId: "",
   totRegistrationId: "",
@@ -339,7 +336,6 @@ export function readPricing(typeAttributes: Record<string, unknown> | undefined)
     lengthPrices: Array.isArray(raw.lengthPrices) ? raw.lengthPrices : [],
     fees: Array.isArray(raw.fees) ? raw.fees : [],
     taxes: Array.isArray(raw.taxes) ? raw.taxes : [],
-    promotions: Array.isArray(raw.promotions) ? raw.promotions : [],
     addOns: Array.isArray(raw.addOns) ? raw.addOns : [],
   };
 }

@@ -29,10 +29,11 @@ export function ZuAnderenObjekten({
   onChange,
 }: {
   propertyId: string;
-  /** Nur für den erklärenden Satz („dieselbe Gebühr" vs. „dieselbe Steuer") —
-   *  die Mechanik ist identisch. Ein neutraler Sammelbegriff („Posten") wäre
-   *  Fachjargon, den der Betrieb nirgends sonst liest. */
-  kind: "fee" | "tax";
+  /** Nur für den erklärenden Satz („dieselbe Gebühr" vs. „dieselbe Steuer" vs.
+   *  „dieselbe Promotion") — die Mechanik ist identisch. Ein neutraler
+   *  Sammelbegriff („Posten") wäre Fachjargon, den der Betrieb nirgends sonst
+   *  liest. */
+  kind: "fee" | "tax" | "promotion";
   selected: string[];
   onChange: (next: string[]) => void;
 }) {
@@ -83,9 +84,7 @@ export function ZuAnderenObjekten({
         <h3 className="font-display text-lg font-extrabold">
           {t("pricingForm.applyToOthersTitle")}
         </h3>
-        <p className="text-sm text-muted-foreground">
-          {t(kind === "fee" ? "pricingForm.applyToOthersFeeHint" : "pricingForm.applyToOthersTaxHint")}
-        </p>
+        <p className="text-sm text-muted-foreground">{t(hinweisSchluessel(kind))}</p>
         <p className="rounded-(--radius) border border-border p-4 text-sm text-muted-foreground">
           {t("pricingForm.applyToOthersEmpty")}
         </p>
@@ -97,9 +96,7 @@ export function ZuAnderenObjekten({
       <h3 className="font-display text-lg font-extrabold">
         {t("pricingForm.applyToOthersTitle")}
       </h3>
-      <p className="text-sm text-muted-foreground">
-        {t(kind === "fee" ? "pricingForm.applyToOthersFeeHint" : "pricingForm.applyToOthersTaxHint")}
-      </p>
+      <p className="text-sm text-muted-foreground">{t(hinweisSchluessel(kind))}</p>
       <div className="relative">
         <Icon
           icon="ph:magnifying-glass"
@@ -170,6 +167,13 @@ export function ZuAnderenObjekten({
       </div>
     </section>
   );
+}
+
+/** Welcher erklärende Satz über der Liste steht. */
+function hinweisSchluessel(kind: "fee" | "tax" | "promotion"): string {
+  if (kind === "fee") return "pricingForm.applyToOthersFeeHint";
+  if (kind === "tax") return "pricingForm.applyToOthersTaxHint";
+  return "pricingForm.applyToOthersPromoHint";
 }
 
 /** Zweite Zeile je Objekt: Adresse als Unterscheidungsmerkmal, wenn mehrere

@@ -701,6 +701,10 @@ class BookingEngineService:
                 # Wie in create_public_booking: derselbe Kanal, sonst wiche ein
                 # Kanal-Markup zwischen Anzeige und Buchung ab.
                 channel="direct",
+                # Angebotscode des Gastes: NUR ein Filter auf die Aktionen des
+                # Objekts. Der Rabatt wird serverseitig gerechnet; ein Betrag aus
+                # dem Client wird nie übernommen (Wurzel 3).
+                promo_code=req.promo_code,
                 addons=[
                     AddonSelection(addon_id=aid, qty=qty)
                     for aid, qty in bookable_addons
@@ -716,6 +720,7 @@ class BookingEngineService:
                 for line in quote.lines
             ],
             total=quote.total,
+            promo_code_applied=quote.promo_code_applied,
             priceless=quote.priceless,
             pets_allowed=pets_allowed,
             max_guests=max_guests,
@@ -846,6 +851,9 @@ class BookingEngineService:
                 guests=max(req.guests, 1),
                 pets=max(req.pets, 0),
                 channel="direct",
+                # DERSELBE Code wie im Quote — ohne ihn zahlte der Gast den
+                # Preis ohne seinen Rabatt, obwohl die Strecke ihn angezeigt hat.
+                promo_code=req.promo_code,
                 addons=[
                     AddonSelection(addon_id=aid, qty=qty)
                     for aid, qty in bookable_addons

@@ -58,6 +58,11 @@ export type Angebot = {
   currency: string;
   lines: AngebotsZeile[];
   total: number;
+  /** Hat der eingegebene Aktionscode WIRKLICH eine Aktion ausgelöst? False bei
+   *  unbekanntem Code — auch dann kann ein Rabatt in den Zeilen stehen (eine
+   *  automatische Aktion), er gehört aber nicht zum Code. Ohne diese Unterscheidung
+   *  hielte der Gast einen falschen Code für gültig. */
+  promo_code_applied: boolean;
   priceless: boolean;
   pets_allowed: boolean;
   max_guests: number;
@@ -74,6 +79,9 @@ export async function ladeAngebot(input: {
   check_out: string;
   guests: number;
   pets: number;
+  /** Aktionscode des Gastes. Nur ein Filter auf die Aktionen des Objekts — den
+   *  Rabatt rechnet der Server, nie der Browser. */
+  promo_code?: string;
 }): Promise<Result<Angebot>> {
   return call("quote", { method: "POST", body: input });
 }
@@ -85,6 +93,9 @@ export async function bucheGast(input: {
   check_out: string;
   contact: GuestContact;
   total_amount: number;
+  /** DERSELBE Aktionscode wie im Angebot — ohne ihn zahlte der Gast den Preis
+   *  ohne seinen Rabatt, obwohl die Strecke ihn angezeigt hat. */
+  promo_code?: string;
   /** Reisende und mitgebrachte Tiere. Beide sind preiswirksam (Gebühren „pro
    *  Gast" bzw. „pro Tier"); ohne Angabe rechnet der Server mit 1 Gast, 0 Tieren. */
   guests?: number;

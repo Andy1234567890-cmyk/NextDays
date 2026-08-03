@@ -704,7 +704,8 @@ def test_public_quote_lehnt_tiere_ohne_erlaubnis_ab(monkeypatch) -> None:  # noq
         resolver_mod.PricingResolver,
         "quote",
         lambda _self, _req: SimpleNamespace(
-            total=200.0, currency="EUR", lines=[], priceless=False
+            total=200.0, currency="EUR", lines=[], priceless=False,
+            promo_code_applied=False
         ),
     )
 
@@ -751,7 +752,10 @@ def test_public_quote_reicht_tiere_an_den_resolver(monkeypatch) -> None:  # noqa
     def _quote(_self, req):  # noqa: ANN001, ANN202
         gesehen["pets"] = req.pets
         gesehen["guests"] = req.guests
-        return SimpleNamespace(total=250.0, currency="EUR", lines=[], priceless=False)
+        return SimpleNamespace(
+            total=250.0, currency="EUR", lines=[], priceless=False,
+            promo_code_applied=False,
+        )
 
     monkeypatch.setattr(resolver_mod.PricingResolver, "quote", _quote)
 

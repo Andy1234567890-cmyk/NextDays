@@ -56,6 +56,9 @@ export async function bucheGast(input: {
   check_out: string;
   contact: GuestContact;
   total_amount: number;
+  /** DERSELBE Aktionscode wie im Angebot — ohne ihn zahlte der Gast den Preis
+   *  ohne seinen Rabatt, obwohl die Strecke ihn angezeigt hat. */
+  promo_code?: string;
 }): Promise<
   Result<{ id: string; property_id: string; check_in: string; check_out: string; status: string }>
 > {

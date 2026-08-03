@@ -668,6 +668,28 @@ class AbgabePostenStatus(BaseModel):
     manual_portals: list[str] = Field(default_factory=list)
     restricted_portals: list[str] = Field(default_factory=list)
     internal_only: bool = False
+    # Nur bei Aktionen: WARUM der Tagespreis die Aktion nicht tragen kann
+    # (Schlüssel, kein Satz — die Oberfläche übersetzt ihn). Gilt für alle
+    # Portale außer Airbnb. `None` = kein Hindernis.
+    reason: str | None = None
+    # Nur bei Aktionen: warum AIRBNB sie auch nicht über die eigene Rabattregel
+    # bekommt. Getrennt von `reason`, weil es ein anderer Weg mit anderen
+    # Grenzen ist — ein gemeinsamer Grund wäre für ein Portal immer falsch.
+    airbnb_reason: str | None = None
+
+
+class AirbnbAktionenPushResponse(BaseModel):
+    """Ergebnis eines Aktions-Pushes in Airbnbs eigene Rabattregeln.
+
+    `updated` zählt die Listings, an denen sich WIRKLICH etwas geändert hat —
+    ein Push ohne Änderung schreibt nichts (Wurzel 2). `skipped` nennt je Aktion
+    den Grund, warum sie nicht als Airbnb-Regel ankommt (Schlüssel, kein Satz)."""
+
+    channel_id: str | None = None
+    listings: int = 0
+    updated: int = 0
+    rules: list[dict[str, Any]] = Field(default_factory=list)
+    skipped: dict[str, str] = Field(default_factory=dict)
 
 
 class AbgabenStatusResponse(BaseModel):

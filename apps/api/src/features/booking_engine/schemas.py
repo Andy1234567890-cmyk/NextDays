@@ -132,6 +132,10 @@ class PublicBookingRequest(BaseModel):
     # Optionale Zusatzleistungen; serverseitig aus dem Katalog bepreist + als
     # reservation_addons angelegt (Client-Beträge werden nicht vertraut).
     addons: list[AddonPick] = []
+    # Aktionscode des Gastes („Rabattcode einlösen"). Nur ein FILTER auf die
+    # Aktionen des Objekts — der Rabatt selbst wird serverseitig gerechnet, ein
+    # Client-Betrag wird nie übernommen. Länge wie im Branchenstandard (15).
+    promo_code: str | None = Field(default=None, max_length=15)
 
     @model_validator(mode="after")
     def _check_dates(self) -> "PublicBookingRequest":
@@ -153,6 +157,10 @@ class PublicQuoteRequest(BaseModel):
     guests: int = Field(default=1, ge=1, le=100)
     pets: int = Field(default=0, ge=0, le=50)
     addons: list[AddonPick] = []
+    # Aktionscode des Gastes („Rabattcode einlösen"). Nur ein FILTER auf die
+    # Aktionen des Objekts — der Rabatt selbst wird serverseitig gerechnet, ein
+    # Client-Betrag wird nie übernommen. Länge wie im Branchenstandard (15).
+    promo_code: str | None = Field(default=None, max_length=15)
 
     @model_validator(mode="after")
     def _check_dates(self) -> "PublicQuoteRequest":
@@ -179,6 +187,10 @@ class PublicQuoteResponse(BaseModel):
     currency: str
     lines: list[PublicQuoteLine] = []
     total: float
+    # Hat der eingegebene Code WIRKLICH eine Aktion ausgelöst? False bei leerem
+    # oder unbekanntem Code — die Strecke sagt dann „Code ungültig", auch wenn
+    # eine automatische Aktion greift und ein Rabatt in den Zeilen steht.
+    promo_code_applied: bool = False
     # True = das Objekt hat für diesen Zeitraum keinen hinterlegten Preis. Dann
     # zeigt die Oberfläche „Preis auf Anfrage" statt einer 0 (Wurzel 4).
     priceless: bool = False

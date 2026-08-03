@@ -530,10 +530,18 @@ export async function listChannelConnections(
  *  `internal_only` = er geht bewusst an kein Portal (optionale Gebühr, Kaution). */
 export type AbgabePostenStatus = {
   key: string;
-  kind: "fee" | "tax";
+  kind: "fee" | "tax" | "promotion";
   manual_portals: string[];
   restricted_portals: string[];
   internal_only: boolean;
+  /** Nur bei Promotions: warum der TAGESPREIS die Aktion nicht tragen kann
+   *  (Schlüssel, kein Satz — die Oberfläche übersetzt ihn). Gilt für alle
+   *  Portale außer Airbnb. */
+  reason?: string | null;
+  /** Nur bei Promotions: warum AIRBNB sie auch nicht über die eigene
+   *  Rabattregel bekommt. Getrennt, weil es ein anderer Weg mit anderen Grenzen
+   *  ist — ein gemeinsamer Grund wäre für ein Portal immer falsch. */
+  airbnb_reason?: string | null;
 };
 
 /** Welche Abgabe kommt bei welchem verbundenen Portal wirklich an?

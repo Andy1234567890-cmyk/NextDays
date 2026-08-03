@@ -125,6 +125,25 @@ def try_enqueue_tax_sync(db: Client, tenant_id: str, property_id: str) -> None:
                     error=str(exc)[:200])
 
 
+def try_enqueue_airbnb_aktionen(
+    db: Client, tenant_id: str, property_id: str
+) -> None:
+    """Aktions-Bedingungen als Airbnb-Rabattregeln nachziehen (coalesced je Objekt).
+
+    Coalescing ist hier RICHTIG (anders als beim ARI-Push): der Job überträgt
+    immer die VOLLE Soll-Liste aller Aktionen des Objekts, „letzter gewinnt"
+    verliert also nichts."""
+    try:
+        enqueue(
+            db, "sync_airbnb_aktionen", tenant_id=tenant_id,
+            payload={"tenant_id": tenant_id, "property_id": property_id},
+            dedup_key=dedup_key(tenant_id, property_id, "sync_airbnb_aktionen"),
+        )
+    except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+        log.warning("enqueue_airbnb_aktionen_failed", property_id=property_id,
+                    error=str(exc)[:200])
+
+
 def try_enqueue_recompute(db: Client, tenant_id: str, property_id: str) -> None:
     """DP-Recompute eines Objekts als Job einreihen (coalesced je Objekt). Der
     Handler rechnet die Tagespreise neu und pusht sie via push_rates_batch."""

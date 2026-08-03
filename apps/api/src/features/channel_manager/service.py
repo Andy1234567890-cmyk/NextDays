@@ -17,6 +17,7 @@ from supabase import Client
 from src.core.security import AuthContext
 
 from .abgaben_status import AbgabenStatusMixin
+from .airbnb_aktionen import AirbnbAktionenMixin
 from .ari_push import AriPushMixin
 from .bookings_sync import BookingsSyncMixin
 from .channels import ChannelsMixin
@@ -55,6 +56,7 @@ class ChannelManagerService(
     ContentSyncMixin,
     TaxSyncMixin,
     AbgabenStatusMixin,
+    AirbnbAktionenMixin,
     PropertyMappingMixin,
     AriPushMixin,
     ChannelsMixin,

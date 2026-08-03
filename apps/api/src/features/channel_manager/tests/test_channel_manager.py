@@ -1,7 +1,7 @@
 
 from fastapi.testclient import TestClient
 
-from src.features.channel_manager import ota_abgaben
+from src.features.channel_manager import ota_abgaben, ota_aktionen
 from src.features.channel_manager.abgaben_status import (
     AbgabenStatusMixin,
 )
@@ -1164,3 +1164,343 @@ def test_abgaben_status_summierte_airbnb_kategorie_gilt_als_gesendet() -> None:
             [summe], schluessel=str(fee["id"]),
             kategorie=ota_abgaben.fee_category(fee),
         )
+
+
+# --- Aktionen an die Portale: Weg 1 Tagespreis (ota_aktionen) ----------------
+
+
+def test_per_tagespreis_uebertragbar_nur_am_tag_entscheidbare_bedingungen() -> None:
+    """Der Tagespreis trägt nur Bedingungen, die sich am TAG entscheiden.
+    Was an der BUCHUNG hängt, darf NICHT pauschal gesenkt rausgehen, sonst
+    bekommt jeder Portal-Gast den Rabatt (bei Airbnb übernimmt das Weg 2,
+    airbnb_aktionen)."""
+    ok, grund = ota_aktionen.per_tagespreis_uebertragbar(
+        {"stay_ranges": [{"from": "2026-06-01", "to": "2026-06-30"}]}
+    )
+    assert ok is True and grund is None
+    # Ohne jede Bedingung: gilt an jedem Tag, also übertragbar.
+    assert ota_aktionen.per_tagespreis_uebertragbar({})[0] is True
+
+    for feld, erwartet in (
+        ("min_nights", "mindestaufenthalt"),
+        ("lead_min_days", "fruehbucher"),
+        ("lead_max_days", "last_minute"),
+        ("booked_from", "buchungszeitraum"),
+        ("promo_codes", "angebotscode"),
+    ):
+        wert = ["CODE"] if feld == "promo_codes" else 5
+        ok, grund = ota_aktionen.per_tagespreis_uebertragbar({feld: wert})
+        assert ok is False, feld
+        assert grund == erwartet, feld
+
+
+class _AktionenDB:
+    """Minimal-Stub: property_discounts mit festen Zeilen."""
+
+    def __init__(self, rows: list[dict]) -> None:
+        self._rows = rows
+
+    def table(self, _name: str) -> "_AktionenDB":
+        return self
+
+    def select(self, *_a: object, **_k: object) -> "_AktionenDB":
+        return self
+
+    def eq(self, *_a: object, **_k: object) -> "_AktionenDB":
+        return self
+
+    def execute(self) -> object:
+        class _R:
+            pass
+
+        r = _R()
+        r.data = self._rows  # type: ignore[attr-defined]
+        return r
+
+
+def test_aktionsfaktor_je_tag_nur_im_zeitraum() -> None:
+    """Der Faktor senkt genau die Tage der Aufenthaltsdaten — nicht mehr."""
+    from datetime import date as _d
+
+    db = _AktionenDB(
+        [
+            {"discount_type": "promotion", "discount_kind": "percent",
+             "discount_bps": 2000,
+             "stay_ranges": [{"from": "2026-06-10", "to": "2026-06-12"}]},
+        ]
+    )
+    f = ota_aktionen.aktionsfaktor_je_tag(
+        db, "p", von=_d(2026, 6, 8), bis=_d(2026, 6, 14)
+    )
+    assert set(f) == {"2026-06-10", "2026-06-11", "2026-06-12"}
+    assert f["2026-06-10"] == 0.8
+
+
+def test_aktionsfaktor_bester_einzelrabatt_und_pauschale_draussen() -> None:
+    """Kein Stacking (wie im Resolver), und eine Pauschale wird NICHT auf Nächte
+    verteilt — beim Push kennt niemand die Aufenthaltsdauer (Wurzel 4)."""
+    from datetime import date as _d
+
+    db = _AktionenDB(
+        [
+            {"discount_type": "promotion", "discount_kind": "percent",
+             "discount_bps": 500, "stay_ranges": []},
+            {"discount_type": "promotion", "discount_kind": "percent",
+             "discount_bps": 3000, "stay_ranges": []},
+            {"discount_type": "promotion", "discount_kind": "fixed",
+             "discount_amount": 50, "stay_ranges": []},
+        ]
+    )
+    f = ota_aktionen.aktionsfaktor_je_tag(
+        db, "p", von=_d(2026, 6, 1), bis=_d(2026, 6, 1)
+    )
+    assert f["2026-06-01"] == 0.7  # 30 %, nicht 35 %
+
+
+def test_aktionsfaktor_kanal_einschraenkung() -> None:
+    """Eine auf ein Portal eingeschränkte Aktion darf NICHT in den Standardpreis
+    (portal=None) — den bekommen alle Kanäle ohne eigenen Plan."""
+    from datetime import date as _d
+
+    db = _AktionenDB(
+        [
+            {"discount_type": "promotion", "discount_kind": "percent",
+             "discount_bps": 1000, "stay_ranges": [],
+             "portal_scope": ["BookingCom"]},
+        ]
+    )
+    tag = {"von": _d(2026, 6, 1), "bis": _d(2026, 6, 1)}
+    assert ota_aktionen.aktionsfaktor_je_tag(db, "p", **tag) == {}
+    assert ota_aktionen.aktionsfaktor_je_tag(
+        db, "p", portal="BookingCom", **tag
+    )["2026-06-01"] == 0.9
+    assert ota_aktionen.aktionsfaktor_je_tag(db, "p", portal="AirBNB", **tag) == {}
+
+
+def test_segmente_werden_an_der_aktionsgrenze_geteilt() -> None:
+    """Ein Segment ist ein Zeitraum mit EINEM Preis. Gilt die Aktion nur an einem
+    Teil, muss geteilt werden — sonst bekäme der Rabatt zu viele oder zu wenige
+    Tage. Segmente ohne Preis (nur min_stay) bleiben unberührt."""
+    from datetime import date as _d
+
+    from src.features.channel_manager.ari_push import _aktionen_einrechnen
+
+    segmente = [
+        {"date_from": _d(2026, 6, 1), "date_to": _d(2026, 6, 4), "rate_cents": 10000},
+        {"date_from": _d(2026, 7, 1), "date_to": _d(2026, 7, 2), "min_stay": 3},
+    ]
+    faktoren = {"2026-06-02": 0.8, "2026-06-03": 0.8}
+    out = _aktionen_einrechnen(segmente, faktoren)
+    preise = {
+        s["date_from"].isoformat(): s.get("rate_cents")
+        for s in out
+        if s.get("rate_cents") is not None
+    }
+    assert preise == {
+        "2026-06-01": 10000,
+        "2026-06-02": 8000,
+        "2026-06-03": 8000,
+        "2026-06-04": 10000,
+    }
+    # Das min_stay-Segment ist unverändert durchgelaufen.
+    assert {"date_from": _d(2026, 7, 1), "date_to": _d(2026, 7, 2), "min_stay": 3} in out
+    # Ohne Aktionen wird NICHT aufgesplittet (keine unnötigen Channex-Werte).
+    assert _aktionen_einrechnen(segmente, {}) is segmente
+
+
+# --- Aktionen an die Portale: Weg 2 Airbnbs eigene Rabattregeln --------------
+# Belege für die Grenzen stehen im Modul-Docstring von airbnb_aktionen.py
+# (Formular-Schema des ausgelieferten Channex-Clients, 03.08.2026).
+
+
+def test_airbnb_regel_je_bedingungsart() -> None:
+    """Mindestaufenthalt, Frühbucher und Last Minute werden auf genau die drei
+    Airbnb-`rule_type`s abgebildet — das ist der Weg, den der Tagespreis nicht
+    gehen kann."""
+    from src.features.channel_manager import airbnb_aktionen as aa
+
+    basis = {"active": True, "discount_kind": "percent", "discount_bps": 2000}
+    assert aa.regel_fuer_airbnb({**basis, "min_nights": 7})[0] == {
+        "rule_type": aa.RULE_LOS, "price_change": 20, "threshold_one": 7,
+    }
+    assert aa.regel_fuer_airbnb({**basis, "lead_min_days": 60})[0] == {
+        "rule_type": aa.RULE_FRUEHBUCHER, "price_change": 20, "threshold_one": 60,
+    }
+    assert aa.regel_fuer_airbnb({**basis, "lead_max_days": 14})[0] == {
+        "rule_type": aa.RULE_LAST_MINUTE, "price_change": 20, "threshold_one": 14,
+    }
+
+
+def test_airbnb_regel_lehnt_ab_was_airbnb_nicht_nimmt() -> None:
+    """Jede abgelehnte Form nennt ihren Grund — der speist den Chip „Manuelle
+    Synchronisierung". Stilles Mitsenden wäre Geldverlust bzw. ein 422."""
+    from src.features.channel_manager import airbnb_aktionen as aa
+
+    basis = {"active": True, "discount_kind": "percent", "discount_bps": 2000}
+    faelle = [
+        ({**basis, "min_nights": 7, "promo_codes": ["SOMMER"]}, "angebotscode"),
+        ({**basis, "min_nights": 7, "booked_to": "2026-06-30"}, "buchungszeitraum"),
+        ({**basis, "min_nights": 7, "lead_max_days": 5}, "bedingungen_kombiniert"),
+        (
+            {**basis, "min_nights": 7,
+             "stay_ranges": [{"from": "2026-06-01", "to": "2026-06-30"}]},
+            "zeitraum_mit_bedingung",
+        ),
+        # Pauschale: Airbnb-Regeln sind prozentual.
+        (
+            {"active": True, "discount_kind": "fixed", "discount_amount": 50,
+             "min_nights": 7},
+            "pauschalbetrag",
+        ),
+        # 12,5 % lässt sich in `price_change` (ganze Prozent) nicht ausdrücken.
+        ({**basis, "discount_bps": 1250, "min_nights": 7}, "prozent_nicht_darstellbar"),
+        # Frühbucher-Vorlauf muss ein Vielfaches von 28 oder 30 Tagen sein.
+        ({**basis, "lead_min_days": 45}, "vorlauf_nicht_28_30"),
+        # Last Minute höchstens 28 Tage.
+        ({**basis, "lead_max_days": 40}, "last_minute_ueber_28"),
+        ({**basis, "active": False, "min_nights": 7}, "inaktiv"),
+    ]
+    for aktion, erwartet in faelle:
+        regel, grund = aa.regel_fuer_airbnb(aktion)
+        assert regel is None, erwartet
+        assert grund == erwartet, aktion
+
+    # Reine Zeitraum-Aktion: kein Mangel, sondern Weg 1 (Tagespreis) — deshalb
+    # KEIN Grund und kein Chip.
+    regel, grund = aa.regel_fuer_airbnb(
+        {**basis, "stay_ranges": [{"from": "2026-06-01", "to": "2026-06-30"}]}
+    )
+    assert regel is None and grund is None
+
+
+def test_airbnb_regel_beachtet_preismodell_des_listings() -> None:
+    """Der Längenrabatt existiert nur im Standard-Preismodell; im Rate-Plan-Modell
+    kennt Airbnb überhaupt keine Regeln."""
+    from src.features.channel_manager import airbnb_aktionen as aa
+
+    basis = {"active": True, "discount_kind": "percent", "discount_bps": 1000}
+    assert aa.regel_fuer_airbnb(
+        {**basis, "min_nights": 7}, preismodell=aa.MODELL_LOS
+    ) == (None, "airbnb_preismodell")
+    assert aa.regel_fuer_airbnb(
+        {**basis, "lead_max_days": 7}, preismodell=aa.MODELL_LOS
+    )[0] is not None
+    assert aa.regel_fuer_airbnb(
+        {**basis, "lead_max_days": 7}, preismodell=aa.MODELL_RATE_PLAN
+    ) == (None, "airbnb_preismodell")
+
+
+def test_airbnb_regeln_bester_einzelrabatt_und_kanal_scope() -> None:
+    """Je Regelart genau EINE Regel: bei zwei Kandidaten gewinnt der höhere
+    Rabatt (kein Stacking, wie im Resolver). Eine auf andere Kanäle
+    eingeschränkte Aktion kommt gar nicht vor."""
+    from src.features.channel_manager import airbnb_aktionen as aa
+
+    aktionen = [
+        {"id": "a", "active": True, "discount_kind": "percent",
+         "discount_bps": 1000, "min_nights": 7},
+        {"id": "b", "active": True, "discount_kind": "percent",
+         "discount_bps": 2500, "min_nights": 7},
+        {"id": "c", "active": True, "discount_kind": "percent",
+         "discount_bps": 3000, "min_nights": 7, "portal_scope": ["BookingCom"]},
+        {"id": "d", "active": True, "discount_kind": "percent",
+         "discount_bps": 1500, "lead_max_days": 7},
+    ]
+    regeln, gruende = aa.regeln_fuer_listing(
+        aktionen, preismodell=aa.MODELL_STANDARD
+    )
+    assert regeln == [
+        {"rule_type": aa.RULE_LOS, "price_change": 25, "threshold_one": 7},
+        {"rule_type": aa.RULE_LAST_MINUTE, "price_change": 15, "threshold_one": 7},
+    ]
+    assert gruende == {}
+
+
+def test_airbnb_listing_regeln_schreiben_nur_bei_aenderung() -> None:
+    """Idempotenz (Wurzel 2): steht der Soll-Stand schon drin, wird NICHT
+    geschrieben. Und ein PUT nimmt den vollen Ist-Stand mit, damit es die
+    Steuer-/Gebühren-Einstellungen des Listings nicht abräumt (Wurzel 1)."""
+    from src.features.channel_manager.airbnb_aktionen import (
+        RULE_LOS,
+        AirbnbAktionenMixin,
+    )
+
+    regel = {"rule_type": RULE_LOS, "price_change": 20, "threshold_one": 7}
+
+    class _Channex:
+        def __init__(self, vorhandene: list[dict]) -> None:
+            self.ist = {
+                "data": {
+                    "attributes": {
+                        "id": "map-1",
+                        "currency": "DKK",
+                        "pass_through_taxes": [{"tax_type": "pass_through_vat_gst"}],
+                        "default_pricing_rules": vorhandene,
+                    }
+                }
+            }
+            self.puts: list[dict] = []
+
+        def get_listing_pricing_settings(self, _channel: str, _mapping: str) -> dict:
+            return self.ist
+
+        def update_listing_pricing_settings(
+            self, _channel: str, _mapping: str, settings: dict
+        ) -> dict:
+            self.puts.append(settings)
+            return {"data": {"attributes": settings}}
+
+    class _Service(AirbnbAktionenMixin):
+        def __init__(self, channex: _Channex) -> None:
+            self._channex = channex
+
+    unveraendert = _Channex([regel])
+    svc = _Service(unveraendert)
+    assert svc._listing_regeln_setzen("ch", "map-1", [regel]) is False
+    assert unveraendert.puts == []
+
+    leer = _Channex([])
+    svc = _Service(leer)
+    assert svc._listing_regeln_setzen("ch", "map-1", [regel]) is True
+    assert leer.puts[0]["default_pricing_rules"] == [regel]
+    # Fremde Felder bleiben erhalten, die Kennung geht NICHT mit in den PUT.
+    assert leer.puts[0]["currency"] == "DKK"
+    assert leer.puts[0]["pass_through_taxes"] == [
+        {"tax_type": "pass_through_vat_gst"}
+    ]
+    assert "id" not in leer.puts[0]
+
+
+def test_abgaben_status_aktion_geht_bei_airbnb_ueber_die_regel() -> None:
+    """Eine Frühbucher-Aktion ist bei Airbnb NICHT „manuell" (dort trägt sie die
+    Rabattregel), bei Booking.com aber schon — der Chip muss je Portal
+    unterscheiden."""
+
+    class _DB:
+        def table(self, _name: str) -> "_DB":
+            return self
+
+        def select(self, *_a: object, **_k: object) -> "_DB":
+            return self
+
+        def eq(self, *_a: object) -> "_DB":
+            return self
+
+        def execute(self) -> object:
+            return type(
+                "R", (), {"data": [
+                    {"id": "akt-1", "discount_type": "early_booker",
+                     "discount_kind": "percent", "discount_bps": 2000,
+                     "lead_min_days": 60, "active": True},
+                ]},
+            )()
+
+    class _Service(AbgabenStatusMixin):
+        pass
+
+    posten = _Service()._aktionen_status(_DB(), "t", "p", ["AirBNB", "BookingCom"])
+    assert posten[0]["manual_portals"] == ["BookingCom"]
+    # `reason` erklärt, warum der TAGESPREIS sie nicht trägt (das betrifft
+    # Booking.com); `airbnb_reason` bleibt leer, weil Airbnb sie sehr wohl nimmt.
+    assert posten[0]["reason"] == "fruehbucher"
+    assert posten[0]["airbnb_reason"] is None

@@ -46,6 +46,12 @@ _DISCOUNT_LABEL = {
     "early_booker": "Frühbucher-Rabatt",
     "last_minute": "Last-Minute-Rabatt",
     "custom": "Rabatt",
+    # Eine Promotion ohne Typ-Bedingung (nur Zeitraum/Code/Betrag) — im Standard
+    # der Normalfall. Trägt der Betrieb einen gastseitigen Namen ein, gewinnt der.
+    # Der Begriff ist bewusst „Promotion" (so heißt der Abschnitt in der
+    # Oberfläche, auch auf Deutsch) — derselbe Posten darf nicht auf der Rechnung
+    # anders heißen als im Formular.
+    "promotion": "Promotion",
 }
 
 
@@ -74,6 +80,110 @@ def _gilt_fuer_kanal(eintrag: dict, channel: str) -> bool:
     if not isinstance(scope, list) or not scope:
         return True
     return channel in {str(x) for x in scope}
+
+
+def _in_zeitraum(tag: date, von: object, bis: object) -> bool:
+    """Liegt `tag` im (beidseitig inklusiven) Zeitraum? Fehlende Grenze = offen."""
+    if von and tag < date.fromisoformat(str(von)):
+        return False
+    if bis and tag > date.fromisoformat(str(bis)):
+        return False
+    return True
+
+
+def _aktion_greift(  # pylint: disable=too-many-return-statements
+    regel: dict,
+    *,
+    nights: int,
+    check_in: date,
+    as_of: date,
+    channel: str,
+    code: str,
+) -> bool:
+    """Treffen ALLE Bedingungen dieser Aktion zu?
+
+    UND-Verknüpfung, wie im Branchenstandard: unter „Art der Aktion" stehen drei
+    unabhängige Checkboxen, dazu Aufenthaltsdaten, Buchungsdaten und
+    Angebotscodes. Jede gesetzte Bedingung muss erfüllt sein; eine NICHT gesetzte
+    schränkt nicht ein. Fehlt jede, gilt die Aktion immer — das ist eine bewusste
+    Eingabe des Betriebs („20 % auf alles"), kein Versehen.
+
+    Fail-CLOSED bei kaputtem Datum: ein unlesbares Grenzdatum darf nicht dazu
+    führen, dass die Bedingung wegfällt und der Rabatt plötzlich überall greift
+    (Wurzel 5).
+    """
+    # Kanal — dieselbe Achse wie bei Gebühren/Steuern.
+    scope = regel.get("portal_scope")
+    if isinstance(scope, list) and scope and channel not in {str(x) for x in scope}:
+        return False
+
+    # Angebotscode: gesetzt heißt „nur mit einem dieser Codes".
+    codes = [str(c).strip().upper() for c in (regel.get("promo_codes") or [])]
+    codes = [c for c in codes if c]
+    if codes and code not in codes:
+        return False
+
+    # Mindestaufenthalt.
+    mn = regel.get("min_nights")
+    if mn is not None and nights < int(mn):
+        return False
+
+    # Vorlauf zwischen Buchung und Anreise. Frühbucher = Untergrenze,
+    # Last Minute = Obergrenze; beide zusammen ergeben ein Fenster.
+    days_ahead = (check_in - as_of).days
+    lead_min = regel.get("lead_min_days")
+    lead_max = regel.get("lead_max_days")
+    if lead_min is not None and days_ahead < int(lead_min):
+        return False
+    if lead_max is not None and not 0 <= days_ahead <= int(lead_max):
+        return False
+
+    # Aufenthaltsdaten werden hier NICHT geprüft: sie entscheiden nicht ob,
+    # sondern WORAUF die Aktion wirkt — deckt der Zeitraum nur einen Teil des
+    # Aufenthalts ab, gilt sie nur für die Nächte darin (`_rabatt_basis`). Eine
+    # Prüfung an dieser Stelle hätte den Rabatt auf den GANZEN Aufenthalt
+    # gegeben, sobald der Anreisetag im Zeitraum lag — und gar nicht, wenn der
+    # Gast einen Tag früher anreiste.
+    try:
+        # Daten der Buchung: wann gebucht wird, nicht wann angereist wird.
+        if not _in_zeitraum(as_of, regel.get("booked_from"), regel.get("booked_to")):
+            return False
+    except ValueError:
+        return False
+    return True
+
+
+def _rabatt_basis(regel: dict, nacht_betrag: dict[date, float]) -> float:
+    """Auf welchen Betrag wirkt diese Aktion?
+
+    ZWEI Festlegungen des Branchenstandards, beide live abgelesen (03.08.2026):
+
+    * Grundlage ist der Übernachtungswert der Buchung — „% des Gesamtwerts der
+      Buchung (exkl. Gebühren, Steuern & Aktionen)" steht wörtlich am Wert-Feld.
+      Gebühren zu rabattieren wäre eine andere Zusage, als die Oberfläche macht.
+    * Mit Aufenthaltsdaten zählen NUR die Nächte im Zeitraum: „Wenn die
+      Werbeaktion nur einen Teil der im Aufenthalt enthaltenen Tage abdeckt, gilt
+      sie nur für die Tage, die in den Aktionszeitraum fallen." Damit rechnet die
+      Buchungsstrecke dasselbe wie der Portal-Push, der schon immer je Tag
+      rabattiert (`channel_manager/ota_aktionen.aktionsfaktor_je_tag`).
+
+    Fail-closed: ein unlesbares Grenzdatum ergibt Basis 0 (kein Rabatt), statt
+    den Zeitraum zu „gilt immer" aufzuweiten (Wurzel 5).
+    """
+    ranges = [z for z in (regel.get("stay_ranges") or []) if isinstance(z, dict)]
+    if not ranges:
+        return sum(nacht_betrag.values())
+    summe = 0.0
+    for tag, betrag in nacht_betrag.items():
+        try:
+            passt = any(
+                _in_zeitraum(tag, z.get("from"), z.get("to")) for z in ranges
+            )
+        except ValueError:
+            return 0.0
+        if passt:
+            summe += betrag
+    return summe
 
 
 class PricingError(Exception):
@@ -164,9 +274,11 @@ class _PricingConfig:
         self.taxes: list[dict] = [
             t for t in (row.get("taxes") or []) if isinstance(t, dict)
         ]
-        self.promotions: list[dict] = [
-            p for p in (row.get("promotions") or []) if isinstance(p, dict)
-        ]
+        # `promotions` (Blob) wird BEWUSST nicht mehr geladen: dort war die
+        # Bedingung ein Freitext, der nie geprüft wurde — der Rabatt lief auf
+        # jede Buchung. Aktionen kommen seit 0276 aus `property_discounts` mit
+        # prüfbaren Bedingungen (siehe `_best_discount`). Die Spalte bleibt
+        # vorerst stehen (Altbestand lesbar halten), wird aber nicht gerechnet.
 
     def weekday_price(self, day: date) -> float | None:
         if not self.custom_by_weekday:
@@ -634,22 +746,45 @@ class PricingResolver:
                 out[pid] = _to_float(r.get("base_price"))
         return out
 
-    def _best_discount(
-        self, property_id: str, nights: int, check_in: date, as_of: date
-    ) -> dict | None:
-        """Die AKTIVE Rabattregel (property_discounts, 0185) mit der höchsten
-        greifenden Ersparnis liefern — oder None. BESTER EINZELRABATT, kein
-        Stacking (Produktentscheidung): mehrere greifende Regeln addieren sich
-        NICHT, nur die höchste discount_bps gewinnt. Deterministisch (as_of aus
-        dem Request, nicht date.today() hier).
+    def _best_discount(  # pylint: disable=too-many-arguments
+        self,
+        property_id: str,
+        nights: int,
+        check_in: date,
+        as_of: date,
+        *,
+        channel: str,
+        promo_code: str | None,
+        nacht_betrag: dict[date, float],
+    ) -> tuple[dict, float] | None:
+        """Die AKTIVE Aktion mit der höchsten greifenden Ersparnis — oder None.
+
+        BESTER EINZELRABATT, kein Stacking (Produktentscheidung, Booking/Airbnb-
+        Standard): mehrere greifende Aktionen addieren sich NICHT. Deterministisch
+        (`as_of` aus dem Request, kein `date.today()` tief in der Rechnung).
+
+        Seit 0276 trägt eine Aktion BELIEBIG VIELE Bedingungen, die ALLE zutreffen
+        müssen (UND) — so führt es der Branchenstandard, und so meint es der
+        Betrieb: „20 % im Juni, ab 5 Nächten, nur mit Code SOMMER" ist EINE Aktion
+        mit drei Bedingungen, nicht drei Aktionen. `discount_type` ist dabei nur
+        noch die Art für die Anzeige; ausgewertet werden die Achsen.
+
+        Vorher wurde je Typ GENAU EINE Bedingung geprüft und der Rest ignoriert.
+        Die Aktionen der Preise-Seite hatten überhaupt keine prüfbare Bedingung
+        (Freitext) und wurden auf jede Buchung angewandt.
+
+        AUSNAHME vom „höchsten Wert": ein gültiger Angebotscode hat Vorrang und
+        verdrängt die automatischen Aktionen, auch wenn sie mehr gebracht hätten
+        (siehe Code-Vorrang unten).
         """
         try:
             rows = (
                 self._db()
                 .table("property_discounts")
                 .select(
-                    "discount_type, discount_bps, min_nights, days_before, "
-                    "starts_on, ends_on, name"
+                    "discount_type, discount_kind, discount_bps, discount_amount, "
+                    "min_nights, lead_min_days, lead_max_days, stay_ranges, "
+                    "booked_from, booked_to, promo_codes, portal_scope, name"
                 )
                 .eq("property_id", property_id)
                 .eq("active", True)
@@ -657,33 +792,60 @@ class PricingResolver:
             ).data or []
         except Exception:  # noqa: BLE001 — fehlende Tabelle/Fehler = kein Rabatt
             return None
-        days_ahead = (check_in - as_of).days
-        best: dict | None = None
-        best_bps = 0
+        code = (promo_code or "").strip().upper()
+        # Kandidaten mit ihrer Ersparnis und der Angabe, ob sie an einem CODE
+        # hängen — die Trennung braucht der Vorrang weiter unten.
+        kandidaten: list[tuple[dict, float, bool]] = []
         for r in rows:
-            t = r.get("discount_type")
-            applies = False
-            if t == "length_of_stay":
-                mn = r.get("min_nights")
-                applies = mn is not None and nights >= int(mn)
-            elif t == "early_booker":
-                db = r.get("days_before")
-                applies = db is not None and days_ahead >= int(db)
-            elif t == "last_minute":
-                db = r.get("days_before")
-                applies = db is not None and 0 <= days_ahead <= int(db)
-            elif t == "custom":
-                s, e = r.get("starts_on"), r.get("ends_on")
-                if s and e:
-                    applies = (
-                        date.fromisoformat(str(s))
-                        <= check_in
-                        <= date.fromisoformat(str(e))
-                    )
-            bps = int(r["discount_bps"])
-            if applies and bps > best_bps:
-                best, best_bps = r, bps
-        return best
+            if not _aktion_greift(
+                r,
+                nights=nights,
+                check_in=check_in,
+                as_of=as_of,
+                channel=channel,
+                code=code,
+            ):
+                continue
+            basis = _rabatt_basis(r, nacht_betrag)
+            if basis <= 0:
+                # Kein Aufenthaltstag im Zeitraum → die Aktion greift nicht.
+                continue
+            # Verglichen wird die ERSPARNIS IN GELD, nicht der Prozentsatz: „der
+            # Wert der Aktion" entscheidet (Branchenstandard: „wendet das System
+            # automatisch die Aktion mit dem höchsten Wert an"). Vorher wurde nur
+            # `discount_bps` verglichen — eine Pauschale trägt dort den
+            # Mindestwert 1 und konnte deshalb NIE gewinnen, auch 200 € nicht
+            # gegen 5 %.
+            if str(r.get("discount_kind") or "percent") == "fixed":
+                # Eine Pauschale darf den Übernachtungswert nicht übersteigen —
+                # ein negativer Preis wäre eine Auszahlung an den Gast.
+                ersparnis = min(_to_float(r.get("discount_amount")) or 0.0, basis)
+            else:
+                ersparnis = basis * (int(r.get("discount_bps") or 0) / 10000.0)
+            if ersparnis <= 0:
+                continue
+            kandidaten.append((r, ersparnis, bool(r.get("promo_codes"))))
+
+        # CODE-VORRANG (Branchenstandard, wörtlich): „Gibt ein Gast bei der
+        # Buchung einen Aktionscode an […], werden Aktionen ohne Code nicht
+        # angewendet. Stattdessen verwendet das System den Wert der Aktion, die
+        # dem angegebenen Code zugeordnet ist, sofern der Code gültig ist."
+        #
+        # Der eingelöste Code gewinnt also, AUCH wenn eine automatische Aktion
+        # mehr gebracht hätte — der Gast hat sich für diesen Code entschieden.
+        # Ist der Code ungültig (keine Aktion hängt daran), bleibt alles beim
+        # Normalfall und die automatischen Aktionen greifen weiter; deshalb wird
+        # NUR gefiltert, wenn wirklich eine Code-Aktion greift.
+        mit_code = [k for k in kandidaten if k[2]]
+        if code and mit_code:
+            kandidaten = mit_code
+
+        beste_regel: dict | None = None
+        beste_ersparnis = 0.0
+        for regel, ersparnis, _hat_code in kandidaten:
+            if ersparnis > beste_ersparnis:
+                beste_regel, beste_ersparnis = regel, ersparnis
+        return None if beste_regel is None else (beste_regel, beste_ersparnis)
 
     # -- Vollständiger Quote --------------------------------------------------
     def quote(self, req: QuoteRequest) -> QuoteResponse:
@@ -737,13 +899,18 @@ class PricingResolver:
         # Längenpreis verdrängt nur den Basispreis-Anteil (nicht Overrides/Weekday).
         length_pn = config.length_price_per_night(n)
         nightly_total = 0.0
+        # Betrag JE NACHT — Grundlage für Aktionen mit Aufenthaltszeitraum: deckt
+        # der Zeitraum nur einen Teil des Aufenthalts ab, wird auch nur dieser
+        # Teil rabattiert (`_rabatt_basis`).
+        nacht_betrag: dict[date, float] = {}
         for d in per_day:
             if d.price is None:
                 continue
-            if d.source == "base" and length_pn is not None:
-                nightly_total += length_pn
-            else:
-                nightly_total += d.price
+            betrag = (
+                length_pn if (d.source == "base" and length_pn is not None) else d.price
+            )
+            nightly_total += betrag
+            nacht_betrag[d.date] = nacht_betrag.get(d.date, 0.0) + betrag
 
         lines: list[QuoteLine] = []
         if nightly_total > 0 or not priceless:
@@ -760,6 +927,8 @@ class PricingResolver:
         ):
             surcharge = config.short_stay_surcharge * n
             nightly_total += surcharge
+            for tag in nacht_betrag:
+                nacht_betrag[tag] += config.short_stay_surcharge
             lines.append(
                 QuoteLine(
                     label="Kurzaufenthalts-Aufschlag",
@@ -773,6 +942,8 @@ class PricingResolver:
         if config.extra_guest_charge > 0 and extra_guests > 0:
             extra = config.extra_guest_charge * extra_guests * n
             nightly_total += extra
+            for tag in nacht_betrag:
+                nacht_betrag[tag] += config.extra_guest_charge * extra_guests
             lines.append(
                 QuoteLine(
                     label=f"Aufschlag {extra_guests} weitere(r) Gast/Gäste",
@@ -821,69 +992,71 @@ class PricingResolver:
                 )
                 subtotal += amount
 
-        # 4a) Host-Rabatt (property_discounts, 0185): der BESTE greifende Einzel-
-        #    rabatt (Wochen-/Monats-LOS, Frühbucher, Last-Minute, custom) als eigene
-        #    Rabattzeile — pro Steuersatz aufgeteilt wie die Aktion unten. Kein
-        #    Stacking untereinander (bester gewinnt); as_of/Nächte deterministisch
-        #    aus dem Request.
+        # 4) Aktion/Rabatt (property_discounts, 0185 + 0276): die BESTE greifende
+        #    Aktion als eigene Rabattzeile — pro Steuersatz aufgeteilt. Sonst
+        #    würde der auf eine höher besteuerte Gebühr (Frühstück 19 %)
+        #    entfallende Rabattanteil mit dem niedrigeren Übernachtungssatz
+        #    (7 %) gutgeschrieben: falsche USt auf der Rechnung.
+        #
+        #    Der frühere ZWEITE Rabattpfad (`type_attributes.pricing.promotions`)
+        #    ist WEG: dort stand die Bedingung als Freitext, wurde nie geprüft und
+        #    der Prozentsatz von jeder Buchung abgezogen — eine Aktion „20 % nur
+        #    Juni" rabattierte das ganze Jahr. Kein Objekt hatte eine solche
+        #    Aktion (live geprüft, 0 von 34), die Umstellung ändert also keinen
+        #    Bestandspreis. Aktionen laufen jetzt ausschließlich über die
+        #    typisierte Tabelle mit prüfbaren Bedingungen.
         best_disc = self._best_discount(
-            req.property_id, n, req.check_in, req.as_of
+            req.property_id,
+            n,
+            req.check_in,
+            req.as_of,
+            channel=req.channel,
+            promo_code=req.promo_code,
+            nacht_betrag=nacht_betrag,
         )
+        promo_code_applied = False
         if best_disc and subtotal > 0:
-            disc_pct = int(best_disc["discount_bps"]) / 100.0
+            regel, gesamt = best_disc
+            # „Angewendet" heißt: die gewinnende Aktion hängt WIRKLICH an diesem
+            # Code. Eine automatische Aktion, die zufällig auch greift, macht
+            # einen falschen Code nicht gültig.
+            eingegeben = (req.promo_code or "").strip().upper()
+            codes = {str(c).strip().upper() for c in (regel.get("promo_codes") or [])}
+            promo_code_applied = bool(eingegeben) and eingegeben in codes
             disc_name = (
-                _pick_locale_text(best_disc.get("name"))
-                or _DISCOUNT_LABEL.get(best_disc["discount_type"], "Rabatt")
+                _pick_locale_text(regel.get("name"))
+                or _DISCOUNT_LABEL.get(str(regel["discount_type"]), "Rabatt")
             )
+            if str(regel.get("discount_kind") or "percent") == "fixed":
+                etikett = disc_name
+            else:
+                disc_pct = int(regel["discount_bps"]) / 100.0
+                etikett = f"{disc_name} (−{disc_pct:g}%)"
+            # Der Rabatt wirkt auf die ÜBERNACHTUNG (inkl. Aufschläge), nicht auf
+            # Gebühren — deshalb wird er über die Übernachtungszeilen aufgeteilt
+            # und trägt deren Steuersatz. Vorher lief er über die ganze
+            # Zwischensumme und rabattierte damit auch die Reinigungsgebühr,
+            # obwohl am Eingabefeld „exkl. Gebühren, Steuern & Aktionen" steht.
+            uebernachtung = [
+                ln for ln in lines if ln.kind in ("lodging", "surcharge") and ln.amount > 0
+            ]
+            basis_summe = sum(ln.amount for ln in uebernachtung)
             by_rate_d: dict[float | None, float] = {}
-            for ln in lines:
-                if ln.amount > 0:
-                    by_rate_d[ln.tax_rate] = by_rate_d.get(ln.tax_rate, 0.0) + ln.amount
+            for ln in uebernachtung:
+                by_rate_d[ln.tax_rate] = by_rate_d.get(ln.tax_rate, 0.0) + ln.amount
             for rate, base in by_rate_d.items():
-                part = base * disc_pct / 100.0
+                part = gesamt * (base / basis_summe) if basis_summe > 0 else 0.0
                 if part <= 0:
                     continue
                 lines.append(
                     QuoteLine(
-                        label=f"{disc_name} (−{disc_pct:g}%)",
+                        label=etikett,
                         amount=round(-part, 2),
                         kind="discount",
                         tax_rate=rate,
                     )
                 )
-            subtotal -= subtotal * disc_pct / 100.0
-
-        # 4b) Aktion (prozentualer Rabatt auf die bisherige Zwischensumme). Der
-        #    Rabatt wird PRO STEUERSATZ aufgeteilt (eine discount-Zeile je Satz mit
-        #    dem passenden tax_rate-Snapshot): sonst würde der auf eine höher
-        #    besteuerte Gebühr (z. B. Frühstück 19 %) entfallende Rabattanteil mit
-        #    dem niedrigeren Übernachtungssatz (z. B. 7 %) gutgeschrieben — falsche
-        #    USt auf der Rechnung. tax_rate=None = Übernachtungssatz (die Rechnung
-        #    setzt ihn dort ein, wo der Resolver ihn noch nicht kennt).
-        for promo in config.promotions:
-            pct = _to_float(promo.get("percent")) or 0.0
-            if pct <= 0 or subtotal <= 0:
-                continue
-            name = str(promo.get("name") or "Rabatt")
-            # Bisherige POSITIVE Zeilen nach ihrem tax_rate-Snapshot gruppieren
-            # (None = Übernachtungssatz). Reihenfolge stabil halten.
-            by_rate: dict[float | None, float] = {}
-            for ln in lines:
-                if ln.amount > 0:
-                    by_rate[ln.tax_rate] = by_rate.get(ln.tax_rate, 0.0) + ln.amount
-            for rate, base in by_rate.items():
-                part = base * pct / 100.0
-                if part <= 0:
-                    continue
-                lines.append(
-                    QuoteLine(
-                        label=f"{name} (−{pct:g}%)",
-                        amount=round(-part, 2),
-                        kind="discount",
-                        tax_rate=rate,
-                    )
-                )
-            subtotal -= subtotal * pct / 100.0
+            subtotal -= gesamt
 
         # 5) Steuern (nicht im Preis enthaltene werden addiert). Prozent-Steuern
         #    mit gewählter Bemessungsgrundlage besteuern nur Grundpreis und/oder
@@ -952,6 +1125,7 @@ class PricingResolver:
             nightly_total=round(nightly_total, 2),
             lines=lines,
             total=total,
+            promo_code_applied=promo_code_applied,
             priceless=priceless,
         )
 
