@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Podaj opis (tylko do użytku wewnętrznego).",
       "applyToOthersTitle": "Dodaj do innych obiektów",
       "applyToOthersHint": "Zastosuj ten sam podatek również w innych obiektach.",
-      "applyToOthersPlaceholder": "Wybierz obiekty …",
+      "applyToOthersEmpty": "Brak innych obiektów — gdy dodasz kolejny, pojawi się tutaj.",
       "searchPlaceholder": "Szukaj …",
       "searchPropertiesPlaceholder": "Szukaj obiektów …",
       "noMatches": "Brak wyników.",
       "selectAll": "Zaznacz wszystko",
+      "deselectAll": "Odznacz wszystkie",
       "selectedCount": "Wybrano {count}/{total}",
       "localTaxType": {
         "HotelTax": "Podatek hotelowy",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Plan cenowy usunięty.",
       "planCreated": "Plan cenowy utworzony.",
       "openCalendar": "Zarządzaj cenami",
-      "planConfirmDelete": "Czy na pewno usunąć ten plan cenowy? Ceny planu według dat zostaną usunięte razem z nim."
+      "planConfirmDelete": "Czy na pewno usunąć ten plan cenowy? Ceny planu według dat zostaną usunięte razem z nim.",
+      "feeTypeLabel": "Rodzaj opłaty",
+      "feeTypeHint": "Określa, jako co opłata trafia do portali. Portale takie jak Airbnb mają własne kategorie dla sprzątania i zwierząt.",
+      "feeType": {
+        "cleaning": "Opłata za sprzątanie",
+        "pet": "Opłata za zwierzę",
+        "resort": "Opłata resortowa",
+        "management": "Opłata administracyjna",
+        "community": "Opłata wspólnotowa",
+        "linen": "Serwis pościelowy",
+        "other": "Inna opłata"
+      }
     },
     "policiesForm": {
       "title": "Zasady",

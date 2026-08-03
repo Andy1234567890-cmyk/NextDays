@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Adjon meg leírást (csak belső használatra).",
       "applyToOthersTitle": "Hozzáadás más objektumokhoz",
       "applyToOthersHint": "Ugyanezt az adót más objektumoknál is alkalmazza.",
-      "applyToOthersPlaceholder": "Objektumok kiválasztása …",
+      "applyToOthersEmpty": "Még nincs másik szálláshely — amint hozzáad egy másikat, itt jelenik meg.",
       "searchPlaceholder": "Keresés …",
       "searchPropertiesPlaceholder": "Objektumok keresése …",
       "noMatches": "Nincs találat.",
       "selectAll": "Összes kijelölése",
+      "deselectAll": "Kijelölés törlése",
       "selectedCount": "{count}/{total} kiválasztva",
       "localTaxType": {
         "HotelTax": "Szállodaadó",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Árterv törölve.",
       "planCreated": "Árterv létrehozva.",
       "openCalendar": "Árak kezelése",
-      "planConfirmDelete": "Biztosan törlöd ezt az ártervet? A terv dátum szerinti árai is törlődnek."
+      "planConfirmDelete": "Biztosan törlöd ezt az ártervet? A terv dátum szerinti árai is törlődnek.",
+      "feeTypeLabel": "Díj típusa",
+      "feeTypeHint": "Meghatározza, hogy a díj miként érkezik meg a portálokhoz. Az olyan portálok, mint az Airbnb, saját kategóriákat használnak a takarításra és a háziállatokra.",
+      "feeType": {
+        "cleaning": "Takarítási díj",
+        "pet": "Háziállatdíj",
+        "resort": "Üdülőhelyi díj",
+        "management": "Kezelési díj",
+        "community": "Közös költség",
+        "linen": "Ágyneműszolgáltatás",
+        "other": "Egyéb díj"
+      }
     },
     "policiesForm": {
       "title": "Irányelvek",

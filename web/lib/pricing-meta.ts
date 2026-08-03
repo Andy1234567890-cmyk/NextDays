@@ -78,6 +78,37 @@ export const FEE_BASIS_LABELS: Record<FeeBasis, string> = {
   per_guest_stay: "Pro Gast / Aufenthalt",
   per_guest_night: "Pro Gast / Nacht",
 };
+// Gebührenart. Bestimmt, als WAS die Gebühr beim Portal ankommt — Airbnb kennt
+// z. B. Reinigung und Haustier als eigene Kategorien, nicht als Freitext.
+// Gegenstück: FEE_TYPES in apps/api/src/features/properties/gebuehren.py.
+export type FeeType =
+  | "cleaning"
+  | "pet"
+  | "resort"
+  | "management"
+  | "community"
+  | "linen"
+  | "other";
+export const FEE_TYPE_LABELS: Record<FeeType, string> = {
+  cleaning: "Reinigungsgebühr",
+  pet: "Haustiergebühr",
+  resort: "Resortgebühr",
+  management: "Verwaltungsgebühr",
+  community: "Gemeinschaftsgebühr",
+  linen: "Wäscheservice",
+  other: "Sonstige Gebühr",
+};
+/** Reihenfolge im Auswahlfeld: die häufigsten Arten zuerst, „Sonstige" zuletzt. */
+export const FEE_TYPE_ORDER: readonly FeeType[] = [
+  "cleaning",
+  "pet",
+  "resort",
+  "management",
+  "community",
+  "linen",
+  "other",
+] as const;
+
 export type Fee = {
   id: string;
   name: string;
@@ -87,6 +118,12 @@ export type Fee = {
   // Eigener USt-Satz in % (z. B. Frühstück 19 % neben Logis 7 %). Leer =
   // Standard-Übernachtungssatz des Objekts/Kontos (Override-Hierarchie).
   taxRate?: number | null;
+  // Gebührenart für die Portale. Altbestand hat sie nicht — fehlt sie, gilt
+  // "other" (kein erfundener Reinigungs-Typ, Wurzel 4).
+  feeType?: FeeType;
+  // Kanal-Einschränkung: leer/fehlend = alle Kanäle. Sonst NUR diese Portale
+  // (Portal-Codes wie in rate_plans.portal_scope).
+  portalScope?: string[];
 };
 
 // Steuer (Taxes): USt./Sales tax ODER lokale Steuer.
@@ -147,6 +184,10 @@ export type Tax = {
   /** Nur bei mode==="percent": Fee-IDs und/oder TAXABLE_BASE_PRICE. */
   taxableBase?: string[];
   includedInPrice: boolean; // im Preis enthalten?
+  /** Kanal-Einschränkung: leer/fehlend = alle Kanäle. Sonst NUR diese Portale.
+   *  Nötig, wo das Portal die Steuer selbst einzieht (Airbnb „collects taxes",
+   *  Booking in manchen Regionen) — sonst zahlt der Gast doppelt. */
+  portalScope?: string[];
 };
 
 /** Basis einer Betrags-Steuer, mit der Auslegung für Altdatensätze: ohne

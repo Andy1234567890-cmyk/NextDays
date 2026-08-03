@@ -4657,11 +4657,12 @@
       "internalDescriptionPlaceholder": "Enter a description (for internal use only).",
       "applyToOthersTitle": "Add to other properties",
       "applyToOthersHint": "Apply the same tax to other properties as well.",
-      "applyToOthersPlaceholder": "Select properties …",
+      "applyToOthersEmpty": "No other properties yet — as soon as you add a second one, it appears here.",
       "searchPlaceholder": "Search …",
       "searchPropertiesPlaceholder": "Search properties …",
       "noMatches": "No matches.",
       "selectAll": "Select all",
+      "deselectAll": "Deselect all",
       "selectedCount": "{count}/{total} selected",
       "localTaxType": {
         "HotelTax": "Hotel tax",
@@ -4727,7 +4728,18 @@
       "currencyHint": "Applies to all rate plans of this property and to the booking portals.",
       "currencyNotSet": "Not set yet",
       "currencyEditorSubtitle": "The currency applies centrally to all rate plans of this property.",
-      "currencyEditorHint": "If the currency is changed, all rate plans adopt the new currency. The figures stay unchanged."
+      "currencyEditorHint": "If the currency is changed, all rate plans adopt the new currency. The figures stay unchanged.",
+      "feeTypeLabel": "Fee type",
+      "feeTypeHint": "Determines how the fee arrives at the portals. Portals such as Airbnb have their own categories for cleaning and pets.",
+      "feeType": {
+        "cleaning": "Cleaning fee",
+        "pet": "Pet fee",
+        "resort": "Resort fee",
+        "management": "Management fee",
+        "community": "Community fee",
+        "linen": "Linen service",
+        "other": "Other fee"
+      }
     },
     "policiesForm": {
       "title": "Policies",

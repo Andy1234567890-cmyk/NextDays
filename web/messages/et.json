@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Sisestage kirjeldus (ainult sisekasutuseks).",
       "applyToOthersTitle": "Lisa teistele objektidele",
       "applyToOthersHint": "Rakenda sama maks ka teistele objektidele.",
-      "applyToOthersPlaceholder": "Vali objektid …",
+      "applyToOthersEmpty": "Teisi objekte veel pole — niipea kui lisad teise, ilmub see siia.",
       "searchPlaceholder": "Otsi …",
       "searchPropertiesPlaceholder": "Otsi objekte …",
       "noMatches": "Vasteid pole.",
       "selectAll": "Vali kõik",
+      "deselectAll": "Tühista valik",
       "selectedCount": "Valitud {count}/{total}",
       "localTaxType": {
         "HotelTax": "Hotellimaks",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Hinnaplaan kustutatud.",
       "planCreated": "Hinnaplaan loodud.",
       "openCalendar": "Halda hindu",
-      "planConfirmDelete": "Kas kustutada see hinnaplaan? Koos sellega kustutatakse ka plaani kuupäevapõhised hinnad."
+      "planConfirmDelete": "Kas kustutada see hinnaplaan? Koos sellega kustutatakse ka plaani kuupäevapõhised hinnad.",
+      "feeTypeLabel": "Tasu liik",
+      "feeTypeHint": "Määrab, millisena tasu portaalidesse jõuab. Portaalidel nagu Airbnb on koristuse ja lemmikloomade jaoks omad kategooriad.",
+      "feeType": {
+        "cleaning": "Koristustasu",
+        "pet": "Lemmiklooma tasu",
+        "resort": "Kuurorditasu",
+        "management": "Haldustasu",
+        "community": "Ühiskulude tasu",
+        "linen": "Voodipesuteenus",
+        "other": "Muu tasu"
+      }
     },
     "policiesForm": {
       "title": "Reeglid",

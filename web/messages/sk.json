@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Zadajte popis (len na interné použitie).",
       "applyToOthersTitle": "Pridať k ďalším objektom",
       "applyToOthersHint": "Použiť rovnakú daň aj pri ďalších objektoch.",
-      "applyToOthersPlaceholder": "Vybrať objekty …",
+      "applyToOthersEmpty": "Zatiaľ žiadne ďalšie objekty — hneď ako pridáte druhý, zobrazí sa tu.",
       "searchPlaceholder": "Hľadať …",
       "searchPropertiesPlaceholder": "Hľadať objekty …",
       "noMatches": "Žiadne výsledky.",
       "selectAll": "Vybrať všetko",
+      "deselectAll": "Zrušiť výber",
       "selectedCount": "Vybraté {count}/{total}",
       "localTaxType": {
         "HotelTax": "Hotelová daň",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Cenový plán odstránený.",
       "planCreated": "Cenový plán vytvorený.",
       "openCalendar": "Spravovať ceny",
-      "planConfirmDelete": "Naozaj odstrániť tento cenový plán? Ceny plánu podľa dátumu sa odstránia spolu s ním."
+      "planConfirmDelete": "Naozaj odstrániť tento cenový plán? Ceny plánu podľa dátumu sa odstránia spolu s ním.",
+      "feeTypeLabel": "Typ poplatku",
+      "feeTypeHint": "Určuje, ako poplatok dorazí na portály. Portály ako Airbnb majú vlastné kategórie pre upratovanie a domáce zvieratá.",
+      "feeType": {
+        "cleaning": "Poplatok za upratovanie",
+        "pet": "Poplatok za domáce zviera",
+        "resort": "Rezortný poplatok",
+        "management": "Poplatok za správu",
+        "community": "Poplatok za spoločné priestory",
+        "linen": "Služba prania bielizne",
+        "other": "Iný poplatok"
+      }
     },
     "policiesForm": {
       "title": "Zásady",

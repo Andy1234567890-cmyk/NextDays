@@ -620,6 +620,24 @@ class ChannexClient:
         """Tax-Set entfernen (wenn das Objekt keine Steuer mehr führt)."""
         return self.delete(f"tax_sets/{tax_set_id}")
 
+    def get_tax_set(self, tax_set_id: str) -> dict[str, Any]:
+        """Ein Tax-Set mit seiner aktuellen `taxes`-Liste (id + level).
+
+        Nötig vor jedem `PUT /tax_sets/:id`, das nur die Rate-Plan-Verknüpfung
+        ändern will: Channex verlangt `taxes` immer mit und lehnt eine leere
+        oder fehlende Liste mit `422 taxes: can't be blank` ab (live gemessen)."""
+        return self.get(f"tax_sets/{tax_set_id}")
+
+    def list_tax_sets(self, *, limit: int = 100, page: int = 1) -> dict[str, Any]:
+        """Tax-Sets des Kontos (Soll/Ist-Abgleich, Diagnose). Jedes Set trägt
+        seine Steuern samt `level` und die `associated_rate_plan_ids` — daran
+        ist ablesbar, welches Portal welche Steuern bekommt. Wie list_taxes
+        explizit paginieren (Default sind nur 10)."""
+        return self.get(
+            "tax_sets",
+            params={"pagination[page]": page, "pagination[limit]": limit},
+        )
+
     # ----- Hotel Policies (Check-in/-out, Haustiere, Parken, Internet, Rauchen) --
     # Pflicht für Google-Kanal/Instant-Booking-Page-Readiness; children_fee am
     # Rate-Plan greift nur mit Altersgrenzen aus der Policy.

@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Įveskite aprašymą (tik vidiniam naudojimui).",
       "applyToOthersTitle": "Pridėti prie kitų objektų",
       "applyToOthersHint": "Taikyti tą patį mokestį ir kitiems objektams.",
-      "applyToOthersPlaceholder": "Pasirinkite objektus …",
+      "applyToOthersEmpty": "Kitų objektų kol kas nėra — kai tik pridėsite antrą, jis atsiras čia.",
       "searchPlaceholder": "Ieškoti …",
       "searchPropertiesPlaceholder": "Ieškoti objektų …",
       "noMatches": "Nėra atitikmenų.",
       "selectAll": "Pasirinkti viską",
+      "deselectAll": "Atšaukti visų pasirinkimą",
       "selectedCount": "Pasirinkta {count}/{total}",
       "localTaxType": {
         "HotelTax": "Viešbučio mokestis",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Kainų planas ištrintas.",
       "planCreated": "Kainų planas sukurtas.",
       "openCalendar": "Tvarkyti kainas",
-      "planConfirmDelete": "Tikrai ištrinti šį kainų planą? Plano kainos pagal datą bus ištrintos kartu su juo."
+      "planConfirmDelete": "Tikrai ištrinti šį kainų planą? Plano kainos pagal datą bus ištrintos kartu su juo.",
+      "feeTypeLabel": "Mokesčio tipas",
+      "feeTypeHint": "Nustato, kokiu mokesčiu jis pateks į portalus. Tokie portalai kaip Airbnb turi atskiras kategorijas valymui ir augintiniams.",
+      "feeType": {
+        "cleaning": "Valymo mokestis",
+        "pet": "Mokestis už augintinį",
+        "resort": "Kurorto mokestis",
+        "management": "Administravimo mokestis",
+        "community": "Bendrijos mokestis",
+        "linen": "Patalynės paslauga",
+        "other": "Kitas mokestis"
+      }
     },
     "policiesForm": {
       "title": "Taisyklės",

@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Cuir isteach cur síos (le haghaidh úsáide inmheánaí amháin).",
       "applyToOthersTitle": "Cuir le maoine eile",
       "applyToOthersHint": "Cuir an cháin chéanna i bhfeidhm ar mhaoine eile freisin.",
-      "applyToOthersPlaceholder": "Roghnaigh maoine …",
+      "applyToOthersEmpty": "Níl aon áit chónaithe eile ann fós — chomh luath is a chuireann tú ceann eile leis, taispeánfar anseo é.",
       "searchPlaceholder": "Cuardaigh …",
       "searchPropertiesPlaceholder": "Cuardaigh maoine …",
       "noMatches": "Gan torthaí.",
       "selectAll": "Roghnaigh gach ceann",
+      "deselectAll": "Díroghnaigh gach ceann",
       "selectedCount": "{count}/{total} roghnaithe",
       "localTaxType": {
         "HotelTax": "Cáin óstáin",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Scriosadh an plean praghsála.",
       "planCreated": "Cruthaíodh an plean praghsála.",
       "openCalendar": "Bainistigh na praghsanna",
-      "planConfirmDelete": "An bhfuil tú cinnte gur mian leat an plean praghsála seo a scriosadh? Scriosfar praghsanna dáta an phlean chomh maith."
+      "planConfirmDelete": "An bhfuil tú cinnte gur mian leat an plean praghsála seo a scriosadh? Scriosfar praghsanna dáta an phlean chomh maith.",
+      "feeTypeLabel": "Cineál táille",
+      "feeTypeHint": "Cinneann sé conas a shroicheann an táille na tairseacha. Tá catagóirí dá gcuid féin ag tairseacha ar nós Airbnb do ghlantachán agus do pheataí.",
+      "feeType": {
+        "cleaning": "Táille ghlantacháin",
+        "pet": "Táille pheataí",
+        "resort": "Táille ionaid saoire",
+        "management": "Táille bhainistíochta",
+        "community": "Táille comhphobail",
+        "linen": "Seirbhís línéadaigh",
+        "other": "Táille eile"
+      }
     },
     "policiesForm": {
       "title": "Polasaithe",

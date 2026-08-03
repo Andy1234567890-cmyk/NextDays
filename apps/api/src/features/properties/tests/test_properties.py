@@ -26,6 +26,7 @@ from src.features.properties.service import (
     _max_stay_of,
     _sniff_image_ext,
 )
+from src.features.properties.gebuehren import normalize_fees
 from src.features.properties.steuern import normalize_taxes, nur_steuern_geaendert
 from src.main import create_app
 
@@ -1104,3 +1105,119 @@ def test_nur_steuern_geaendert_false_bei_anderem_attribut() -> None:
         }
     }
     assert nur_steuern_geaendert(alt, changes) is False
+
+
+# --- Gebühren: serverseitige Prüfung (gebuehren.normalize_fees) ---------------
+# Gebühren liefen bis zum Gebühren-Export ungeprüft durch (der Preis-Blob wurde
+# übernommen wie er kam). Das ging, solange sie nur intern gerechnet wurden;
+# seit sie als `type: "fee"` an die Portale gehen, ist jedes Feld Fremdeingabe.
+
+_PORTALE = frozenset({"BookingCom", "AirBNB"})
+
+
+def test_normalize_fees_prueft_die_gebuehrenart() -> None:
+    """Die Art geht als Kategorie an die Portale — kein Freitext (Wurzel 4)."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "Endreinigung", "amount": 50,
+          "basis": "per_stay", "feeType": "cleaning"}],
+        portale=_PORTALE,
+    )
+    assert ok[0]["feeType"] == "cleaning"
+    with pytest.raises(PropertyError) as exc:
+        normalize_fees(
+            [{"id": "f1", "name": "X", "basis": "per_stay",
+              "feeType": "raumschiff"}],
+            portale=_PORTALE,
+        )
+    assert exc.value.status_code == 422
+
+
+def test_normalize_fees_altbestand_ohne_art_bleibt_gueltig() -> None:
+    """Bestandsgebühren haben keine Art — sie dürfen nicht plötzlich 422 werfen.
+    Der Export liest dann „other", statt eine Art zu erfinden."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "Alte Gebühr", "amount": 10, "basis": "per_night"}],
+        portale=_PORTALE,
+    )
+    assert "feeType" not in ok[0]
+
+
+def test_normalize_fees_prueft_basis_und_betrag() -> None:
+    """Die Basis bestimmt die Channex-`logic`; ein unbekannter Wert käme dort
+    als falsche Berechnungsart an."""
+    with pytest.raises(PropertyError):
+        normalize_fees(
+            [{"id": "f1", "name": "X", "basis": "pro_mondphase"}],
+            portale=_PORTALE,
+        )
+    with pytest.raises(PropertyError):
+        normalize_fees(
+            [{"id": "f1", "name": "X", "basis": "per_stay", "amount": -5}],
+            portale=_PORTALE,
+        )
+
+
+def test_normalize_fees_braucht_namen_und_kennung() -> None:
+    """Ohne Namen stünde beim Portal ein Platzhalter; ohne Kennung wäre die
+    Steuerbemessungsgrundlage (referenziert Fee-IDs) mehrdeutig."""
+    with pytest.raises(PropertyError):
+        normalize_fees([{"id": "f1", "basis": "per_stay"}], portale=_PORTALE)
+    with pytest.raises(PropertyError):
+        normalize_fees([{"name": "Ohne Kennung"}], portale=_PORTALE)
+
+
+def test_normalize_fees_lehnt_doppelte_kennung_ab() -> None:
+    """Zwei gleiche IDs wären in der Bemessungsgrundlage nicht auflösbar."""
+    with pytest.raises(PropertyError):
+        normalize_fees(
+            [{"id": "f1", "name": "A", "basis": "per_stay"},
+             {"id": "f1", "name": "B", "basis": "per_stay"}],
+            portale=_PORTALE,
+        )
+
+
+def test_clean_portal_scope_nur_verbundene_portale() -> None:
+    """Eine Einschränkung auf ein nicht verbundenes Portal wäre wirkungslos —
+    die Oberfläche zeigte „nur an Booking", gesendet würde an alle."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "X", "basis": "per_stay",
+          "portalScope": ["BookingCom"]}],
+        portale=_PORTALE,
+    )
+    assert ok[0]["portalScope"] == ["BookingCom"]
+    with pytest.raises(PropertyError):
+        normalize_fees(
+            [{"id": "f1", "name": "X", "basis": "per_stay",
+              "portalScope": ["GibtEsNicht"]}],
+            portale=_PORTALE,
+        )
+
+
+def test_clean_portal_scope_bei_nicht_ladbarer_liste_nicht_blockieren() -> None:
+    """`portale=None` heißt „Liste nicht ladbar", NICHT „keine verbunden".
+
+    Bei einem DB-Aussetzer würde ein leeres Set jede bestehende Einschränkung
+    als unbekanntes Portal abweisen — der Betrieb könnte am Objekt dann nichts
+    mehr speichern, auch keine Beschreibung, weil das Formular den ganzen
+    Preis-Blob zurücksendet."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "X", "basis": "per_stay",
+          "portalScope": ["IrgendeinPortal"]}],
+        portale=None,
+    )
+    assert ok[0]["portalScope"] == ["IrgendeinPortal"]
+    # Mit leerem Set (= wirklich keine Portale verbunden) greift die Prüfung.
+    with pytest.raises(PropertyError):
+        normalize_fees(
+            [{"id": "f1", "name": "X", "basis": "per_stay",
+              "portalScope": ["IrgendeinPortal"]}],
+            portale=frozenset(),
+        )
+
+
+def test_nur_steuern_geaendert_gilt_auch_fuer_gebuehren() -> None:
+    """Gebühren laufen über denselben Channex-Pfad wie Steuern — ein voller
+    Content-Sync wäre für eine geänderte Reinigungsgebühr Verschwendung."""
+    alt = {"pricing": {"fees": [{"id": "f1", "amount": 50}]}}
+    changes = {"type_attributes": {"pricing": {"fees": [{"id": "f1", "amount": 60}]}}}
+    assert nur_steuern_geaendert(alt, changes) is True

@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Unesite opis (samo za internu upotrebu).",
       "applyToOthersTitle": "Dodaj drugim objektima",
       "applyToOthersHint": "Primijeni isti porez i na druge objekte.",
-      "applyToOthersPlaceholder": "Odaberi objekte …",
+      "applyToOthersEmpty": "Još nema drugih objekata — čim dodate još jedan, pojavit će se ovdje.",
       "searchPlaceholder": "Traži …",
       "searchPropertiesPlaceholder": "Pretraži objekte …",
       "noMatches": "Nema rezultata.",
       "selectAll": "Odaberi sve",
+      "deselectAll": "Poništi odabir",
       "selectedCount": "Odabrano {count}/{total}",
       "localTaxType": {
         "HotelTax": "Hotelski porez",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Cjenik izbrisan.",
       "planCreated": "Cjenik izrađen.",
       "openCalendar": "Održavaj cijene",
-      "planConfirmDelete": "Stvarno izbrisati ovaj cjenik? Cijene cjenika po datumu bit će izbrisane zajedno s njim."
+      "planConfirmDelete": "Stvarno izbrisati ovaj cjenik? Cijene cjenika po datumu bit će izbrisane zajedno s njim.",
+      "feeTypeLabel": "Vrsta naknade",
+      "feeTypeHint": "Određuje kao koja vrsta naknade dolazi na portale. Portali kao Airbnb imaju vlastite kategorije za čišćenje i kućne ljubimce.",
+      "feeType": {
+        "cleaning": "Naknada za čišćenje",
+        "pet": "Naknada za kućnog ljubimca",
+        "resort": "Naknada resorta",
+        "management": "Naknada za upravljanje",
+        "community": "Naknada za zajedničke prostore",
+        "linen": "Usluga posteljine",
+        "other": "Druga naknada"
+      }
     },
     "policiesForm": {
       "title": "Pravila",

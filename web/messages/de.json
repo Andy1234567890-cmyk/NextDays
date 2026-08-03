@@ -4662,11 +4662,12 @@
       "internalDescriptionPlaceholder": "Beschreibung angeben (nur für den internen Gebrauch).",
       "applyToOthersTitle": "Zu anderen Objekten hinzufügen",
       "applyToOthersHint": "Dieselbe Steuer auch bei anderen Objekten anwenden.",
-      "applyToOthersPlaceholder": "Objekte wählen …",
+      "applyToOthersEmpty": "Noch keine weiteren Objekte — sobald du ein zweites anlegst, steht es hier zur Auswahl.",
       "searchPlaceholder": "Suchen …",
       "searchPropertiesPlaceholder": "Objekte durchsuchen …",
       "noMatches": "Keine Treffer.",
       "selectAll": "Alle auswählen",
+      "deselectAll": "Alle abwählen",
       "selectedCount": "{count}/{total} ausgewählt",
       "localTaxType": {
         "HotelTax": "Hotelsteuer",
@@ -4727,7 +4728,18 @@
       "planDeleted": "Preisplan gelöscht.",
       "planCreated": "Preisplan angelegt.",
       "openCalendar": "Preise pflegen",
-      "planConfirmDelete": "Diesen Preisplan wirklich löschen? Die Datumspreise des Plans werden mit gelöscht."
+      "planConfirmDelete": "Diesen Preisplan wirklich löschen? Die Datumspreise des Plans werden mit gelöscht.",
+      "feeTypeLabel": "Gebührenart",
+      "feeTypeHint": "Bestimmt, als was die Gebühr bei den Portalen ankommt. Portale wie Airbnb kennen eigene Kategorien für Reinigung und Haustiere.",
+      "feeType": {
+        "cleaning": "Reinigungsgebühr",
+        "pet": "Haustiergebühr",
+        "resort": "Resortgebühr",
+        "management": "Verwaltungsgebühr",
+        "community": "Gemeinschaftsgebühr",
+        "linen": "Wäscheservice",
+        "other": "Sonstige Gebühr"
+      }
     },
     "policiesForm": {
       "title": "Richtlinien",

@@ -27,6 +27,7 @@ from src.jobs.queue import (
 
 from .errors import PropertyError
 from .gebaeude import GebaeudeMixin
+from .gebuehren import erlaubte_portale, normalize_fees, sync_pricing_config
 from .rooms import RoomsMixin
 from .schemas import (
     ChannelState,
@@ -494,8 +495,17 @@ class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin):
         attrs_in = changes.get("type_attributes")
         if isinstance(attrs_in, dict) and isinstance(attrs_in.get("pricing"), dict):
             pricing_in = attrs_in["pricing"]
+            portale = erlaubte_portale(self._db, tenant_id, property_id)
             if isinstance(pricing_in.get("taxes"), list):
-                pricing_in["taxes"] = normalize_taxes(pricing_in["taxes"])
+                pricing_in["taxes"] = normalize_taxes(
+                    pricing_in["taxes"], portale=portale
+                )
+            # Gebühren ebenso prüfen: sie gehen seit dem Gebühren-Export als
+            # `type: "fee"` an die Portale, damit ist jedes Feld Fremdeingabe.
+            if isinstance(pricing_in.get("fees"), list):
+                pricing_in["fees"] = normalize_fees(
+                    pricing_in["fees"], portale=portale
+                )
         # Alt-Stand der type_attributes für den Änderungs-Diff (siehe unten):
         # nur laden, wenn type_attributes überhaupt im Update steckt.
         alte_attrs: dict[str, Any] = {}
@@ -522,7 +532,7 @@ class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin):
         # type_attributes.pricing-Blob bleibt zusätzlich für die Form-UI erhalten.
         attrs = changes.get("type_attributes")
         if isinstance(attrs, dict) and isinstance(attrs.get("pricing"), dict):
-            self._sync_pricing_config(tenant_id, property_id, attrs["pricing"])
+            sync_pricing_config(self._db, tenant_id, property_id, attrs["pricing"])
         # Content-Felder (Beschreibung, Titel, Adresse, Typ, Fotos, Ausstattung)
         # nach Channex spiegeln, sobald sie sich ändern — sonst bliebe der
         # OTA-Content veraltet (z. B. Beschreibung nie an Booking/Airbnb). Nur bei
@@ -603,44 +613,6 @@ class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin):
              "max_stay": max_stay},
             coalesce=True,
         )
-
-    def _sync_pricing_config(
-        self, tenant_id: str, property_id: str, pricing: dict
-    ) -> None:
-        """Pricing-Blob → property_pricing_config (vom Preis-Resolver gelesen).
-
-        Schreibt die strukturierten Felder per Upsert. Fehlende Felder bleiben auf
-        den Spalten-Defaults (kein erfundener Wert). Best-effort — ein Fehler hier
-        darf das Speichern des Objekts nicht kippen (Realtime/Resolver greifen beim
-        nächsten Speichern erneut)."""
-        try:
-            row = {
-                "property_id": property_id,
-                "tenant_id": tenant_id,
-                "custom_by_weekday": bool(pricing.get("customByWeekday")),
-                "weekday_prices": pricing.get("weekdayPrices") or {},
-                "extra_guest_charge": pricing.get("extraGuestCharge") or 0,
-                "extra_guest_from": pricing.get("extraGuestFrom") or 1,
-                "short_stay_max_nights": pricing.get("shortStayMaxNights") or 0,
-                "short_stay_surcharge": pricing.get("shortStaySurcharge") or 0,
-                "length_prices": pricing.get("lengthPrices") or [],
-                "fees": pricing.get("fees") or [],
-                "taxes": pricing.get("taxes") or [],
-                "promotions": pricing.get("promotions") or [],
-                "add_ons": pricing.get("addOns") or [],
-            }
-            # Währung nur setzen, wenn explizit übergeben — kein EUR erfinden
-            # (Wurzel 4). Fehlt sie, greift bei Insert der Spalten-Default bzw. der
-            # bestehende Wert bleibt bei Update erhalten.
-            if pricing.get("currency"):
-                row["currency"] = pricing["currency"]
-            self._db.table("property_pricing_config").upsert(
-                row, on_conflict="property_id"
-            ).execute()
-        except Exception as exc:  # noqa: BLE001 — Spiegelung darf Speichern nicht kippen
-            log.warning(
-                "pricing_config_sync_failed", property_id=property_id, error=str(exc)
-            )
 
     IMAGE_BUCKET = "property-images"
     IMAGE_MAX_BYTES = 10 * 1024 * 1024

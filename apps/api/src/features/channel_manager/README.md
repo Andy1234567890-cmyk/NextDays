@@ -50,10 +50,14 @@ NICHT strukturiert spezifiziert — kein geratenes Parsing; die Roh-Payloads
 liegen in `channex_booking.raw`, sobald echte Gebühren-Revisionen deren
 Struktur zeigen, wird das Feld nachgezogen.
 
-## Steuern → Channex (`tax_sync.py`)
+## Steuern und Gebühren → Channex (`tax_sync.py`)
 
-Quelle sind die Objekt-Steuern (`type_attributes.pricing.taxes`); Idempotenz
-über `channex_tax_map` (unique `property_id, local_tax_id`). Abgeleitet wird:
+Quelle sind die Objekt-Steuern (`type_attributes.pricing.taxes`) UND die
+Gebühren (`…pricing.fees`); Idempotenz über `channex_tax_map` (unique
+`property_id, local_tax_id` — Gebühren liegen in derselben Tabelle).
+
+Steuer und Gebühr sind bei Channex **dasselbe Objekt** (`/taxes`, unterschieden
+nur durch `type` ∈ `tax` | `fee` | `city_tax`), deshalb ein gemeinsamer Pfad.
 
 | unsere Steuer | Channex `logic` |
 |---|---|
@@ -63,21 +67,130 @@ Quelle sind die Objekt-Steuern (`type_attributes.pricing.taxes`); Idempotenz
 | `amount` + `PerPerson`/`PerStay` | `per_person` |
 | `amount` + `PerPerson`/`PerNight` | `per_person_per_night` |
 
+| unsere Gebühr (`fees[].basis`) | Channex `logic` (mit `type: "fee"`) |
+|---|---|
+| `per_stay` | `per_booking` |
+| `per_night` | `per_night` |
+| `per_guest_stay` | `per_person` |
+| `per_guest_night` | `per_person_per_night` |
+
+**Gebühren gingen vorher GAR NICHT an die Portale** — sie landeten nur im
+eigenen Quote und auf der Rechnung, der Gast zahlte bei Booking/Airbnb also
+weniger als vorgesehen. Alle sieben `logic`-Werte sind live auch mit
+`type: "fee"` geprüft (03.08.2026); die feineren Arten (`cleaning_fee`,
+`resort_fee`, `pet_fee`, `service_fee`) lehnt Channex mit 422 ab — unsere
+Gebührenart (`fees[].feeType`) lebt deshalb im **Titel**, nicht im Typ.
+
+**Optionale Gebühren gehen nicht raus** (`fees[].optional`): beim Portal könnte
+der Gast sie nicht abwählen, dort wären sie ein Pflichtaufschlag. Wird eine
+Gebühr auf `optional` umgestellt, wird sie bei Channex gelöscht (Wurzel 1).
+
+**Kaskade (`level`).** Gebühren liegen auf `level: 1`, Steuern auf `level: 0`.
+Channex rechnet von der höchsten Zahl zur niedrigsten, damit greift eine
+prozentuale USt auf Grundpreis **plus** Gebühren statt nur auf den Grundpreis.
+
 Ohne gespeicherte Basis (Altbestand) bleibt es bei `per_night` — dem
 bisherigen Verhalten. Der `type` kommt aus der Steuerart: ortsbezogene Abgaben
-(`TouristTax`, `TourismAssessment`, `TransientOccupancyTax`) → `city tax`,
+(`TouristTax`, `TourismAssessment`, `TransientOccupancyTax`) → `city_tax`,
 Beherbergungs-/Zimmersteuern → `tax`; ohne Steuerart entscheidet weiter `kind`.
 Als Titel geht der gastseitige Name (`names[locale]`) ans Portal.
 
-Gegenzustand (Wurzel 1): eine im Objekt GELÖSCHTE Steuer wird bei Channex per
-`DELETE /taxes/:id` entfernt (der dokumentierte Weg — ein leeres `taxes: []` am
-Tax-Set ist KEIN Ersatz, dort ist `taxes` Pflichtfeld) und danach das Mapping
-stillgelegt; erst löschen, dann Mapping schließen, sonst bliebe eine Steuer am
-Portal aktiv, auf die wir keinen Zugriff mehr hätten. Ist die letzte Steuer
-entfernt, wird das Tax-Set gelöscht (`_drop_tax_set`). Ein bereits
-verschwundener Datensatz (404) gilt als erledigt.
+⚠️ **`city_tax` mit UNTERSTRICH** — live gegen die Sandbox gemessen
+(03.08.2026). Die Channex-Doku schreibt „city tax" mit Leerzeichen, Responses
+liefern „City Tax"; beide ergeben bei `POST /taxes` ein
+`422 {"type": ["is invalid"]}`. Alle sieben `logic`-Werte sind dagegen exakt
+wie dokumentiert gültig (ebenfalls einzeln live geprüft). Nicht nach der Doku
+„korrigieren" — hier gilt die gemessene Realität.
 
-**Zwei Sync-Wege.** Ändern sich AUSSCHLIESSLICH die Steuern, reiht
+### Kanal-Einschränkung: n Tax-Sets je Objekt (0273)
+
+Eine Steuer soll nicht immer an jedes Portal. Zieht das Portal die Ortstaxe
+selbst ein, zahlt der Gast sie sonst doppelt.
+
+⚠️ **Channex hat dafür KEIN Feld an der Steuer.** Live geprüft (03.08.2026):
+`channels`, `excluded_channels`, `restrict_to_channels`, `channel_codes` und
+`ota_ids` werden bei `POST /taxes` alle mit **201 angenommen und still
+verworfen** — keines erscheint im Readback. Nicht daran weiterbauen.
+
+Die einzige echte Achse ist **`tax_set_id` am Rate-Plan**, und ein Objekt darf
+mehrere Tax-Sets haben. Also:
+
+* **Standard-Set** → alle Rate-Plans ohne `portal_scope`. Es ist der Weg zu
+  jedem Kanal ohne eigenen Plan, deshalb bleibt ein eingeschränkter Posten hier
+  draußen.
+* **Portal-Set je Kanal-Plan** (`rate_plans.portal_scope`, 0272) → nur die für
+  dieses Portal erlaubten Posten.
+
+`channex_tax_set_map` (0273) merkt sich, welches Channex-Set zu welchem Portal
+gehört (`portal_scope IS NULL` = Standard). **Kein `upsert`/`on_conflict`**: die
+Unique-Indizes sind partiell (`where portal_scope is not null` bzw. `is null`),
+und Postgres akzeptiert für `ON CONFLICT` nur einen Index ohne `WHERE` — live
+bestätigt mit `42P10`. Stattdessen stillgelegte Zeile reaktivieren oder neu
+einfügen.
+
+Fällt ein Kanal-Plan weg, räumt `_prune_portal_tax_sets` sein Set ab; sind alle
+Posten weg, legt `_tax_set_map_stilllegen` zusätzlich die Zuordnungen still —
+sonst zeigte die Standard-Zeile weiter auf ein gelöschtes Set.
+
+### Steuerregime automatisch erkennen (`tax_regime.py`)
+
+Wie eine Steuer an ein Portal gehört, ist **keine Einstellung im Frontend**: der
+Betrieb kann nicht wissen, dass Agoda „Inclusive With Commissions" kennt. Die
+Information liefert Channex selbst — der Kanal-Katalog deklariert je Kanal seine
+Steuer-Parameter, und der verbundene Kanal trägt den gewählten Wert.
+
+Live gemessen (03.08.2026), welche Kanäle überhaupt ein Steuerfeld haben:
+
+| Kanal | Feld | Werte |
+|---|---|---|
+| Agoda | `booking_tax_settings` | Inclusive, Inclusive With Commissions, Exclusive |
+| CTrip | `booking_tax_settings` | Inclusive, Exclusive |
+| AirBNB | `booking_amount_settings` | **Payout Amount** (Default), Total Paid Amount |
+| Expedia | `booking_amount_settings` | Collect Amount, Total Amount, Total Amount Excluding Tax |
+| Goibibo | `booking_amount_settings` | Payout Amount, Total Amount |
+| Hostelworld, Ostrovok | `booking_amount_settings` | With/Without Commission (**Provision, keine Steuer**) |
+
+Booking.com deklariert **kein** Steuerfeld → Standardverhalten.
+
+Daraus wird abgeleitet: `Payout Amount`/`Collect Amount` → **nicht senden** (das
+Portal rechnet die Steuer selbst zum Gastpreis; das ist der Airbnb-Fall, und
+`Payout Amount` ist dort der Default). `Exclusive`/`Total Amount Excluding Tax`
+→ `is_inclusive: false`. `Inclusive`/`Total Amount`/`Total Paid Amount` →
+`is_inclusive: true`. Ein **unbekannter Wert wird nicht geraten** (Wurzel 4):
+Standardverhalten plus Warnung, damit ein neuer Channex-Wert auffällt.
+
+Damit die Einschränkung greifen kann, braucht das Portal einen eigenen
+Kanal-Plan — ohne ihn hängt es am Standard-Set. Fehlt er, protokolliert der Sync
+`channex_steuer_doppelt_moeglich_ohne_kanalplan`, statt stumm falsch zu senden.
+
+**Löschkette (Wurzel 1).** Eine im Objekt entfernte Steuer muss auch beim
+Portal weg — sonst kassiert Booking eine Kurtaxe weiter, die es hier nicht mehr
+gibt. Channex verkettet die Objekte dabei dreifach; die Reihenfolge ist
+komplett live ermittelt (03.08.2026), **nichts davon steht in der Doku**:
+
+1. `PUT /properties/:id {"default_tax_set_id": null}` — sonst
+   `Can't remove Tax Set used as default at Property`
+2. `PUT /tax_sets/:id {"associated_rate_plan_ids": []}` — sonst
+   `Can't remove TaxSet associated with at least one RatePlan`;
+   `taxes` muss dabei MITgeschickt werden, sonst `taxes: can't be blank`
+3. `DELETE /tax_sets/:id`
+4. `DELETE /taxes/:id` — geht erst jetzt, vorher
+   `can't be remove because used at TaxSet`
+
+Erst danach wird das Mapping stillgelegt (`deleted_at`): wäre es umgekehrt,
+bliebe eine Steuer am Portal aktiv, auf die wir keinen Zugriff mehr hätten. Ein
+bereits verschwundener Datensatz (404) gilt als erledigt. Wird dieselbe
+UI-Kennung später wieder verwendet, setzt der Upsert `deleted_at` zurück — der
+Unique-Index `(property_id, local_tax_id)` kennt kein `deleted_at`, ohne das
+Zurücksetzen bliebe die Zeile unsichtbar und die Steuer würde bei Channex ein
+zweites Mal angelegt (Wurzel 2).
+
+`_prune_removed_taxes` bekommt Steuern **und** Gebühren: beide liegen in
+derselben `channex_tax_map`, und was dort nicht als „noch aktuell" gilt, wird
+gelöscht. Ohne die Gebühren-Liste löschte jeder Lauf die gerade angelegten
+Gebühren sofort wieder.
+
+**Zwei Sync-Wege.** Ändern sich AUSSCHLIESSLICH Steuern oder Gebühren, reiht
 `properties.update` den schlanken Job `sync_property_taxes` ein
 (`sync_taxes_only`, 2 Channex-Calls) statt des vollen Content-Syncs (~6:
 Property, Room-Type, Rate-Plan, Tax, Tax-Set, Hotel-Policy). Die Entscheidung

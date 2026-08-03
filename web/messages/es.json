@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Introduzca una descripción (solo para uso interno).",
       "applyToOthersTitle": "Añadir a otros alojamientos",
       "applyToOthersHint": "Aplicar el mismo impuesto también a otros alojamientos.",
-      "applyToOthersPlaceholder": "Elegir alojamientos …",
+      "applyToOthersEmpty": "Aún no hay otros alojamientos: en cuanto añadas uno más, aparecerá aquí.",
       "searchPlaceholder": "Buscar …",
       "searchPropertiesPlaceholder": "Buscar alojamientos …",
       "noMatches": "Sin resultados.",
       "selectAll": "Seleccionar todo",
+      "deselectAll": "Deseleccionar todo",
       "selectedCount": "{count}/{total} seleccionados",
       "localTaxType": {
         "HotelTax": "Impuesto hotelero",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Plan de precios eliminado.",
       "planCreated": "Plan de precios creado.",
       "openCalendar": "Gestionar precios",
-      "planConfirmDelete": "¿Seguro que quieres eliminar este plan de precios? También se eliminarán los precios por fecha del plan."
+      "planConfirmDelete": "¿Seguro que quieres eliminar este plan de precios? También se eliminarán los precios por fecha del plan.",
+      "feeTypeLabel": "Tipo de tarifa",
+      "feeTypeHint": "Determina cómo llega la tarifa a los portales. Portales como Airbnb tienen sus propias categorías para limpieza y mascotas.",
+      "feeType": {
+        "cleaning": "Tarifa de limpieza",
+        "pet": "Tarifa por mascota",
+        "resort": "Tarifa de resort",
+        "management": "Tarifa de gestión",
+        "community": "Gastos de comunidad",
+        "linen": "Servicio de ropa de cama",
+        "other": "Otra tarifa"
+      }
     },
     "policiesForm": {
       "title": "Políticas",

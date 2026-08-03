@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Daħħal deskrizzjoni (għal użu intern biss).",
       "applyToOthersTitle": "Żid ma' proprjetajiet oħra",
       "applyToOthersHint": "Applika l-istess taxxa anke għal proprjetajiet oħra.",
-      "applyToOthersPlaceholder": "Agħżel proprjetajiet …",
+      "applyToOthersEmpty": "Għad m’hemmx propjetajiet oħra — hekk kif iżżid oħra, tidher hawn.",
       "searchPlaceholder": "Fittex …",
       "searchPropertiesPlaceholder": "Fittex proprjetajiet …",
       "noMatches": "L-ebda riżultat.",
       "selectAll": "Agħżel kollox",
+      "deselectAll": "Neħħi l-għażla kollha",
       "selectedCount": "{count}/{total} magħżula",
       "localTaxType": {
         "HotelTax": "Taxxa tal-lukanda",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Il-pjan tal-prezzijiet tħassar.",
       "planCreated": "Il-pjan tal-prezzijiet inħoloq.",
       "openCalendar": "Immaniġġja l-prezzijiet",
-      "planConfirmDelete": "Żgur li trid tħassar dan il-pjan tal-prezzijiet? Il-prezzijiet skont id-data tal-pjan jitħassru wkoll."
+      "planConfirmDelete": "Żgur li trid tħassar dan il-pjan tal-prezzijiet? Il-prezzijiet skont id-data tal-pjan jitħassru wkoll.",
+      "feeTypeLabel": "Tip ta’ tariffa",
+      "feeTypeHint": "Jiddetermina kif it-tariffa tasal għand il-portali. Portali bħal Airbnb għandhom kategoriji tagħhom għat-tindif u għall-annimali domestiċi.",
+      "feeType": {
+        "cleaning": "Tariffa tat-tindif",
+        "pet": "Tariffa għall-annimali domestiċi",
+        "resort": "Tariffa tar-resort",
+        "management": "Tariffa ta’ amministrazzjoni",
+        "community": "Tariffa komunitarja",
+        "linen": "Servizz tal-bjankerija",
+        "other": "Tariffa oħra"
+      }
     },
     "policiesForm": {
       "title": "Politiki",

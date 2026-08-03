@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Vnesite opis (samo za interno uporabo).",
       "applyToOthersTitle": "Dodaj drugim objektom",
       "applyToOthersHint": "Isti davek uporabi tudi pri drugih objektih.",
-      "applyToOthersPlaceholder": "Izberi objekte …",
+      "applyToOthersEmpty": "Drugih nastanitev še ni — takoj ko dodate še eno, se prikaže tukaj.",
       "searchPlaceholder": "Iskanje …",
       "searchPropertiesPlaceholder": "Iskanje objektov …",
       "noMatches": "Ni zadetkov.",
       "selectAll": "Izberi vse",
+      "deselectAll": "Odstrani izbor",
       "selectedCount": "Izbrano {count}/{total}",
       "localTaxType": {
         "HotelTax": "Hotelski davek",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Cenik izbrisan.",
       "planCreated": "Cenik ustvarjen.",
       "openCalendar": "Uredi cene",
-      "planConfirmDelete": "Ali res želiš izbrisati ta cenik? Cene cenika po datumih bodo izbrisane skupaj z njim."
+      "planConfirmDelete": "Ali res želiš izbrisati ta cenik? Cene cenika po datumih bodo izbrisane skupaj z njim.",
+      "feeTypeLabel": "Vrsta pristojbine",
+      "feeTypeHint": "Določa, kot kaj pristojbina prispe na portale. Portali kot Airbnb imajo lastne kategorije za čiščenje in hišne ljubljenčke.",
+      "feeType": {
+        "cleaning": "Pristojbina za čiščenje",
+        "pet": "Pristojbina za hišne ljubljenčke",
+        "resort": "Letoviška pristojbina",
+        "management": "Pristojbina za upravljanje",
+        "community": "Pristojbina za skupne prostore",
+        "linen": "Storitev perila",
+        "other": "Druga pristojbina"
+      }
     },
     "policiesForm": {
       "title": "Pravilniki",

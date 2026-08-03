@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Ievadiet aprakstu (tikai iekšējai lietošanai).",
       "applyToOthersTitle": "Pievienot citiem objektiem",
       "applyToOthersHint": "Piemērot to pašu nodokli arī citiem objektiem.",
-      "applyToOthersPlaceholder": "Izvēlieties objektus …",
+      "applyToOthersEmpty": "Citu objektu pagaidām nav — tiklīdz pievienosiet otru, tas parādīsies šeit.",
       "searchPlaceholder": "Meklēt …",
       "searchPropertiesPlaceholder": "Meklēt objektus …",
       "noMatches": "Nav rezultātu.",
       "selectAll": "Atlasīt visu",
+      "deselectAll": "Noņemt visas atlases",
       "selectedCount": "Atlasīti {count}/{total}",
       "localTaxType": {
         "HotelTax": "Viesnīcas nodoklis",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Cenu plāns dzēsts.",
       "planCreated": "Cenu plāns izveidots.",
       "openCalendar": "Pārvaldīt cenas",
-      "planConfirmDelete": "Vai tiešām dzēst šo cenu plānu? Plāna cenas pa datumiem tiks dzēstas kopā ar to."
+      "planConfirmDelete": "Vai tiešām dzēst šo cenu plānu? Plāna cenas pa datumiem tiks dzēstas kopā ar to.",
+      "feeTypeLabel": "Maksas veids",
+      "feeTypeHint": "Nosaka, kā maksa nonāk portālos. Tādiem portāliem kā Airbnb ir savas kategorijas uzkopšanai un mājdzīvniekiem.",
+      "feeType": {
+        "cleaning": "Uzkopšanas maksa",
+        "pet": "Maksa par mājdzīvnieku",
+        "resort": "Kūrorta maksa",
+        "management": "Apsaimniekošanas maksa",
+        "community": "Kopīpašuma maksa",
+        "linen": "Veļas serviss",
+        "other": "Cita maksa"
+      }
     },
     "policiesForm": {
       "title": "Noteikumi",

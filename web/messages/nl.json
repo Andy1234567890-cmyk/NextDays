@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Geef een omschrijving op (alleen voor intern gebruik).",
       "applyToOthersTitle": "Aan andere objecten toevoegen",
       "applyToOthersHint": "Pas dezelfde belasting ook toe op andere objecten.",
-      "applyToOthersPlaceholder": "Objecten kiezen …",
+      "applyToOthersEmpty": "Nog geen andere accommodaties — zodra je er een tweede toevoegt, verschijnt die hier.",
       "searchPlaceholder": "Zoeken …",
       "searchPropertiesPlaceholder": "Objecten doorzoeken …",
       "noMatches": "Geen resultaten.",
       "selectAll": "Alles selecteren",
+      "deselectAll": "Alles deselecteren",
       "selectedCount": "{count}/{total} geselecteerd",
       "localTaxType": {
         "HotelTax": "Hotelbelasting",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Prijsplan verwijderd.",
       "planCreated": "Prijsplan aangemaakt.",
       "openCalendar": "Prijzen beheren",
-      "planConfirmDelete": "Dit prijsplan echt verwijderen? De datumprijzen van het plan worden mee verwijderd."
+      "planConfirmDelete": "Dit prijsplan echt verwijderen? De datumprijzen van het plan worden mee verwijderd.",
+      "feeTypeLabel": "Soort kosten",
+      "feeTypeHint": "Bepaalt als wat de kosten bij de portalen aankomen. Portalen zoals Airbnb hebben eigen categorieën voor schoonmaak en huisdieren.",
+      "feeType": {
+        "cleaning": "Schoonmaakkosten",
+        "pet": "Kosten voor huisdieren",
+        "resort": "Resortkosten",
+        "management": "Beheerkosten",
+        "community": "Servicekosten complex",
+        "linen": "Linnenservice",
+        "other": "Overige kosten"
+      }
     },
     "policiesForm": {
       "title": "Beleid",

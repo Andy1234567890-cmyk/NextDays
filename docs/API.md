@@ -256,7 +256,9 @@ alle 24), `descriptionHtml` (beim Speichern mit `nh3`-Allowlist gesäubert). Bei
 `Unknown`); bei `mode=amount` `chargeBasis` (`SingleCharge`/`PerPerson`) ×
 `period` (`PerStay`/`PerNight`) — die vier Kombinationen bilden das
 Kurtaxen-Modell und gehen als Channex-`logic` (`per_booking`, `per_night`,
-`per_person`, `per_person_per_night`) an die Portale; bei `mode=percent`
+`per_person`, `per_person_per_night`) an die Portale (Channex-`type`:
+`city_tax` mit Unterstrich — live gemessen, die Doku-Schreibweise „city tax"
+wird abgelehnt); bei `mode=percent`
 optional `taxableBase[]` (Gebühren-IDs und/oder `base_price`). Fehlen
 `chargeBasis`/`period` (Altbestand), gilt „einmalig pro Nacht" — exakt das
 bisherige Verhalten.
@@ -417,6 +419,19 @@ längenabhängige Preise, Gebühren, Steuern, Aktionen, Add-ons) liegt strukturi
 `property_pricing_config` sind in der Realtime-Publication (`0052`) → Preisänderungen
 erscheinen live im Kalender. Basispreis setzen: `PUT /api/v1/rates/base-price`
 (Upsert — ersten Rate-Plan ändern oder anlegen, in einem Round-Trip).
+
+**Steuern und Gebühren gehen an die Portale.** Beide werden beim Speichern
+serverseitig geprüft (`properties/steuern.py` bzw. `properties/gebuehren.py`:
+genau eine USt je Objekt, nh3-Allowlist für Beschreibungen, geschlossene
+Enum-Listen für Steuerart/Gebührenart/Basis, keine Kanal-Einschränkung auf ein
+nicht verbundenes Portal) und danach als Channex-`taxes` gespiegelt — Gebühren
+mit `type: "fee"`, Steuern mit `tax`/`city_tax`. `fees[].optional` geht bewusst
+NICHT ans Portal (dort nicht abwählbar). Eine Steuer/Gebühr kann per
+`portalScope` auf bestimmte Portale beschränkt werden; wie sie beim jeweiligen
+Portal ankommt (inklusiv, exklusiv oder gar nicht, weil das Portal sie selbst
+einzieht), erkennt der Sync automatisch aus dem verbundenen Kanal — kein
+Frontend-Feld. Details, Enum-Tabellen und die live gemessenen Channex-Eigenheiten:
+`apps/api/src/features/channel_manager/README.md`.
 
 ### Abgeleitete Preispläne (Migration `0157`, SiteMinder-Modell)
 

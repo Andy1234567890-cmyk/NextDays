@@ -46,6 +46,7 @@ import {
   type Currency,
   type Fee,
   type FeeBasis,
+  type FeeType,
   type LengthPrice,
   type Pricing,
   type Promotion,
@@ -54,6 +55,7 @@ import {
   type TaxKind,
   CURRENCY_OPTIONS,
   FEE_BASIS_LABELS,
+  FEE_TYPE_ORDER,
   STAY_KIND_LABELS,
   TAX_KIND_LABELS,
   TAXABLE_BASE_PRICE,
@@ -1190,7 +1192,14 @@ function FeeEditor({
   const t = useTranslations("objects");
   const ex = editId ? pr.fees.find((x) => x.id === editId) : undefined;
   const [v, setV] = useState<Fee>(
-    ex ?? { id: "", name: "", amount: 0, basis: "per_stay", optional: false },
+    ex ?? {
+      id: "",
+      name: "",
+      amount: 0,
+      basis: "per_stay",
+      optional: false,
+      feeType: "cleaning",
+    },
   );
   const { busy, error, run } = useSaver(onSave);
 
@@ -1207,6 +1216,23 @@ function FeeEditor({
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} disabled={!v.name.trim()} />}
     >
+      <Field label={t("pricingForm.feeTypeLabel")} hint={t("pricingForm.feeTypeHint")}>
+        <Select
+          value={v.feeType ?? "other"}
+          onValueChange={(x) => setV({ ...v, feeType: x as FeeType })}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FEE_TYPE_ORDER.map((k) => (
+              <SelectItem key={k} value={k}>
+                {t(`pricingForm.feeType.${k}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
       <Field label={t("pricingForm.nameLabel")}>
         <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={t("pricingForm.feeNamePlaceholder")} />
       </Field>

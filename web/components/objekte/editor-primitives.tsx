@@ -170,10 +170,13 @@ export function Pill({ children }: { children: React.ReactNode }) {
 export function Field({
   label,
   required,
+  hint,
   children,
 }: {
   label: React.ReactNode;
   required?: boolean;
+  /** Erklärender Text unter dem Feld (optional). */
+  hint?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -183,6 +186,7 @@ export function Field({
         {required && <span className="ml-0.5 text-destructive">*</span>}
       </Label>
       {children}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }

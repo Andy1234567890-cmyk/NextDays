@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Saisissez une description (usage interne uniquement).",
       "applyToOthersTitle": "Ajouter à d'autres hébergements",
       "applyToOthersHint": "Appliquer la même taxe à d'autres hébergements.",
-      "applyToOthersPlaceholder": "Choisir des hébergements …",
+      "applyToOthersEmpty": "Aucun autre hébergement pour l’instant — dès que vous en ajoutez un, il apparaît ici.",
       "searchPlaceholder": "Rechercher …",
       "searchPropertiesPlaceholder": "Rechercher des hébergements …",
       "noMatches": "Aucun résultat.",
       "selectAll": "Tout sélectionner",
+      "deselectAll": "Tout désélectionner",
       "selectedCount": "{count}/{total} sélectionnés",
       "localTaxType": {
         "HotelTax": "Taxe hôtelière",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Plan tarifaire supprimé.",
       "planCreated": "Plan tarifaire créé.",
       "openCalendar": "Gérer les prix",
-      "planConfirmDelete": "Supprimer vraiment ce plan tarifaire ? Les prix par date du plan seront supprimés également."
+      "planConfirmDelete": "Supprimer vraiment ce plan tarifaire ? Les prix par date du plan seront supprimés également.",
+      "feeTypeLabel": "Type de frais",
+      "feeTypeHint": "Détermine la façon dont les frais arrivent sur les portails. Des portails comme Airbnb disposent de leurs propres catégories pour le ménage et les animaux.",
+      "feeType": {
+        "cleaning": "Frais de ménage",
+        "pet": "Frais pour animaux",
+        "resort": "Frais de complexe touristique",
+        "management": "Frais de gestion",
+        "community": "Charges de copropriété",
+        "linen": "Service de linge",
+        "other": "Autres frais"
+      }
     },
     "policiesForm": {
       "title": "Règlements",

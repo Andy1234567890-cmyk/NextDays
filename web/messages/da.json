@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Angiv en beskrivelse (kun til internt brug).",
       "applyToOthersTitle": "Tilføj til andre objekter",
       "applyToOthersHint": "Anvend den samme skat på andre objekter.",
-      "applyToOthersPlaceholder": "Vælg objekter …",
+      "applyToOthersEmpty": "Ingen andre objekter endnu — så snart du opretter et mere, vises det her.",
       "searchPlaceholder": "Søg …",
       "searchPropertiesPlaceholder": "Søg i objekter …",
       "noMatches": "Ingen træffere.",
       "selectAll": "Vælg alle",
+      "deselectAll": "Fravælg alle",
       "selectedCount": "{count}/{total} valgt",
       "localTaxType": {
         "HotelTax": "Hotelskat",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Prisplan slettet.",
       "planCreated": "Prisplan oprettet.",
       "openCalendar": "Vedligehold priser",
-      "planConfirmDelete": "Vil du virkelig slette denne prisplan? Planens datopriser slettes med."
+      "planConfirmDelete": "Vil du virkelig slette denne prisplan? Planens datopriser slettes med.",
+      "feeTypeLabel": "Gebyrtype",
+      "feeTypeHint": "Bestemmer, hvad gebyret ankommer som hos portalerne. Portaler som Airbnb har deres egne kategorier for rengøring og kæledyr.",
+      "feeType": {
+        "cleaning": "Rengøringsgebyr",
+        "pet": "Kæledyrsgebyr",
+        "resort": "Resortgebyr",
+        "management": "Administrationsgebyr",
+        "community": "Fællesudgifter",
+        "linen": "Linnedservice",
+        "other": "Andet gebyr"
+      }
     },
     "policiesForm": {
       "title": "Retningslinjer",

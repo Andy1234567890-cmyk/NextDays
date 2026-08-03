@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Anna kuvaus (vain sisäiseen käyttöön).",
       "applyToOthersTitle": "Lisää muihin kohteisiin",
       "applyToOthersHint": "Käytä samaa veroa myös muissa kohteissa.",
-      "applyToOthersPlaceholder": "Valitse kohteet …",
+      "applyToOthersEmpty": "Ei vielä muita kohteita — heti kun lisäät toisen, se näkyy tässä.",
       "searchPlaceholder": "Hae …",
       "searchPropertiesPlaceholder": "Hae kohteita …",
       "noMatches": "Ei osumia.",
       "selectAll": "Valitse kaikki",
+      "deselectAll": "Poista kaikki valinnat",
       "selectedCount": "{count}/{total} valittu",
       "localTaxType": {
         "HotelTax": "Hotellivero",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Hintasuunnitelma poistettu.",
       "planCreated": "Hintasuunnitelma luotu.",
       "openCalendar": "Hallitse hintoja",
-      "planConfirmDelete": "Poistetaanko tämä hintasuunnitelma? Myös suunnitelman päiväkohtaiset hinnat poistetaan."
+      "planConfirmDelete": "Poistetaanko tämä hintasuunnitelma? Myös suunnitelman päiväkohtaiset hinnat poistetaan.",
+      "feeTypeLabel": "Maksun tyyppi",
+      "feeTypeHint": "Määrittää, minä maksu näkyy portaaleissa. Portaaleilla kuten Airbnb on omat luokat siivoukselle ja lemmikeille.",
+      "feeType": {
+        "cleaning": "Siivousmaksu",
+        "pet": "Lemmikkimaksu",
+        "resort": "Lomakeskusmaksu",
+        "management": "Hallinnointimaksu",
+        "community": "Yhtiövastikemaksu",
+        "linen": "Liinavaatepalvelu",
+        "other": "Muu maksu"
+      }
     },
     "policiesForm": {
       "title": "Käytännöt",

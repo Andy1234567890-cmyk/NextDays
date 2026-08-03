@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Ange en beskrivning (endast för internt bruk).",
       "applyToOthersTitle": "Lägg till i andra objekt",
       "applyToOthersHint": "Tillämpa samma skatt på andra objekt.",
-      "applyToOthersPlaceholder": "Välj objekt …",
+      "applyToOthersEmpty": "Inga andra objekt än — så snart du lägger till ett till visas det här.",
       "searchPlaceholder": "Sök …",
       "searchPropertiesPlaceholder": "Sök objekt …",
       "noMatches": "Inga träffar.",
       "selectAll": "Välj alla",
+      "deselectAll": "Avmarkera alla",
       "selectedCount": "{count}/{total} valda",
       "localTaxType": {
         "HotelTax": "Hotellskatt",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Prisplanen har tagits bort.",
       "planCreated": "Prisplanen har skapats.",
       "openCalendar": "Hantera priser",
-      "planConfirmDelete": "Vill du verkligen ta bort den här prisplanen? Planens datumpriser tas bort samtidigt."
+      "planConfirmDelete": "Vill du verkligen ta bort den här prisplanen? Planens datumpriser tas bort samtidigt.",
+      "feeTypeLabel": "Avgiftstyp",
+      "feeTypeHint": "Bestämmer vad avgiften kommer in som hos portalerna. Portaler som Airbnb har egna kategorier för städning och husdjur.",
+      "feeType": {
+        "cleaning": "Städavgift",
+        "pet": "Avgift för husdjur",
+        "resort": "Resortavgift",
+        "management": "Förvaltningsavgift",
+        "community": "Avgift för gemensamma utrymmen",
+        "linen": "Linneservice",
+        "other": "Övrig avgift"
+      }
     },
     "policiesForm": {
       "title": "Villkor",

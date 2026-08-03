@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Zadejte popis (pouze pro interní použití).",
       "applyToOthersTitle": "Přidat k dalším objektům",
       "applyToOthersHint": "Použít stejnou daň i u dalších objektů.",
-      "applyToOthersPlaceholder": "Vybrat objekty …",
+      "applyToOthersEmpty": "Zatím žádné další objekty — jakmile nějaký přidáte, objeví se zde.",
       "searchPlaceholder": "Hledat …",
       "searchPropertiesPlaceholder": "Hledat objekty …",
       "noMatches": "Žádné výsledky.",
       "selectAll": "Vybrat vše",
+      "deselectAll": "Zrušit výběr",
       "selectedCount": "Vybráno {count}/{total}",
       "localTaxType": {
         "HotelTax": "Hotelová daň",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Cenový plán odstraněn.",
       "planCreated": "Cenový plán vytvořen.",
       "openCalendar": "Spravovat ceny",
-      "planConfirmDelete": "Opravdu odstranit tento cenový plán? Ceny plánu podle data budou odstraněny spolu s ním."
+      "planConfirmDelete": "Opravdu odstranit tento cenový plán? Ceny plánu podle data budou odstraněny spolu s ním.",
+      "feeTypeLabel": "Druh poplatku",
+      "feeTypeHint": "Určuje, jak poplatek dorazí na portály. Portály jako Airbnb mají vlastní kategorie pro úklid a domácí mazlíčky.",
+      "feeType": {
+        "cleaning": "Poplatek za úklid",
+        "pet": "Poplatek za domácího mazlíčka",
+        "resort": "Resortní poplatek",
+        "management": "Poplatek za správu",
+        "community": "Poplatek za společné prostory",
+        "linen": "Služba prádla",
+        "other": "Jiný poplatek"
+      }
     },
     "policiesForm": {
       "title": "Zásady",

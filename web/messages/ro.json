@@ -4641,11 +4641,12 @@
       "internalDescriptionPlaceholder": "Introduceți o descriere (doar pentru uz intern).",
       "applyToOthersTitle": "Adăugați la alte obiective",
       "applyToOthersHint": "Aplicați aceeași taxă și la alte obiective.",
-      "applyToOthersPlaceholder": "Alegeți obiective …",
+      "applyToOthersEmpty": "Încă nu există alte proprietăți — de îndată ce adăugați una, va apărea aici.",
       "searchPlaceholder": "Căutare …",
       "searchPropertiesPlaceholder": "Căutați obiective …",
       "noMatches": "Niciun rezultat.",
       "selectAll": "Selectați tot",
+      "deselectAll": "Deselectează tot",
       "selectedCount": "{count}/{total} selectate",
       "localTaxType": {
         "HotelTax": "Taxă hotelieră",
@@ -4706,7 +4707,18 @@
       "planDeleted": "Plan de prețuri șters.",
       "planCreated": "Plan de prețuri creat.",
       "openCalendar": "Gestionează prețurile",
-      "planConfirmDelete": "Ștergi într-adevăr acest plan de prețuri? Prețurile pe date ale planului vor fi șterse și ele."
+      "planConfirmDelete": "Ștergi într-adevăr acest plan de prețuri? Prețurile pe date ale planului vor fi șterse și ele.",
+      "feeTypeLabel": "Tip de taxă",
+      "feeTypeHint": "Stabilește drept ce ajunge taxa la portaluri. Portaluri precum Airbnb au categorii proprii pentru curățenie și animale de companie.",
+      "feeType": {
+        "cleaning": "Taxă de curățenie",
+        "pet": "Taxă pentru animale de companie",
+        "resort": "Taxă de resort",
+        "management": "Taxă de administrare",
+        "community": "Taxă de întreținere",
+        "linen": "Serviciu de lenjerie",
+        "other": "Altă taxă"
+      }
     },
     "policiesForm": {
       "title": "Politici",

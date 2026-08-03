@@ -25,6 +25,7 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
 from .errors import PropertyError
+from .gebuehren import clean_portal_scope
 from .schemas import PropertyUpdate
 
 log = get_logger("nextdays.properties.steuern")
@@ -44,6 +45,14 @@ LOCAL_TAX_TYPES = frozenset(
 )
 CHARGE_BASES = frozenset({"SingleCharge", "PerPerson"})
 PERIODS = frozenset({"PerStay", "PerNight"})
+
+# Wer die Abgabe bei einem Portal einzieht, wird NICHT hier gepflegt: das
+# erkennt der Sync selbst aus dem verbundenen Kanal
+# (channel_manager/tax_regime.py, live aus dem Channex-Katalog + den echten
+# Kanal-Einstellungen). Airbnb „Payout Amount" oder Expedia „Collect Amount"
+# heißt, dass das Portal die Steuer zum Gastpreis rechnet — dann bleibt sie aus
+# dem Set dieses Portals heraus. Ein Handschalter dafür wäre eine zweite,
+# schlechtere Wahrheit über etwas, das der Kanal ohnehin ansagt.
 
 # Beschreibung ist internes Rich-Text (fett/kursiv/unterstrichen/durchgestrichen).
 # Keine Links, keine Bilder, keine Attribute — der Text braucht nichts davon,
@@ -96,8 +105,14 @@ def _clean_value(raw: object, *, percent: bool) -> float:
     return value
 
 
-def normalize_taxes(raw_taxes: list[Any]) -> list[dict[str, Any]]:
-    """Steuerliste prüfen und säubern; wirft PropertyError(422) bei Unsinn."""
+def normalize_taxes(
+    raw_taxes: list[Any], *, portale: frozenset[str] | None = frozenset()
+) -> list[dict[str, Any]]:
+    """Steuerliste prüfen und säubern; wirft PropertyError(422) bei Unsinn.
+
+    `portale` sind die für das Objekt verbundenen Kanäle — nur auf sie darf eine
+    Steuer eingeschränkt werden (siehe gebuehren.erlaubte_portale).
+    """
     taxes: list[dict[str, Any]] = []
     vat_gesehen = False
     for eintrag in raw_taxes:
@@ -168,6 +183,14 @@ def normalize_taxes(raw_taxes: list[Any]) -> list[dict[str, Any]]:
                 if ids:
                     sauber["taxableBase"] = ids
 
+        # Kanal-Einschränkung: leer = an alle Portale. Gesetzt heißt „NUR
+        # diese" — nötig, wo das Portal die Abgabe selbst einzieht (Airbnb
+        # „collects taxes", Booking in manchen Regionen); ohne das zahlte der
+        # Gast doppelt.
+        scope = clean_portal_scope(eintrag.get("portalScope"), erlaubt=portale)
+        if scope:
+            sauber["portalScope"] = scope
+
         # Lokale Steuern brauchen einen Namen — entweder intern oder gastseitig,
         # sonst stünde beim Portal ein Platzhalter (Wurzel 4). Die USt trägt
         # keinen eigenen Namen (sie ist die Umsatzsteuer des Objekts).
@@ -178,13 +201,18 @@ def normalize_taxes(raw_taxes: list[Any]) -> list[dict[str, Any]]:
 
 
 def nur_steuern_geaendert(alte_attrs: dict, changes: dict) -> bool:
-    """Betrifft dieses Update AUSSCHLIESSLICH die Steuern des Objekts?
+    """Betrifft dieses Update AUSSCHLIESSLICH Steuern oder Gebühren des Objekts?
 
-    Nur dann reicht der schlanke Steuer-Sync. Bewusst KONSERVATIV: im Zweifel
-    (andere Content-Felder im Update, Währungswechsel, kein Alt-Stand ladbar,
-    irgendein anderer Unterschied in type_attributes) wird `False` gemeldet und
-    der volle Content-Sync läuft. Ein zu viel gelaufener voller Sync kostet
-    Calls; ein fälschlich ausgelassener ließe echten Content veralten.
+    Nur dann reicht der schlanke Steuer-Sync. Gebühren zählen mit, seit sie
+    ebenfalls als Channex-`taxes` gesendet werden — derselbe Sync-Pfad deckt
+    beide ab, und ein voller Content-Sync wäre für eine geänderte
+    Reinigungsgebühr Verschwendung.
+
+    Bewusst KONSERVATIV: im Zweifel (andere Content-Felder im Update,
+    Währungswechsel, kein Alt-Stand ladbar, irgendein anderer Unterschied in
+    type_attributes) wird `False` gemeldet und der volle Content-Sync läuft. Ein
+    zu viel gelaufener voller Sync kostet Calls; ein fälschlich ausgelassener
+    ließe echten Content veralten.
     """
     if set(changes.keys()) - {"type_attributes"}:
         return False
@@ -200,13 +228,17 @@ def nur_steuern_geaendert(alte_attrs: dict, changes: dict) -> bool:
     neu_pricing = neu_attrs.get("pricing") or {}
     if not isinstance(alt_pricing, dict) or not isinstance(neu_pricing, dict):
         return False
-    # … und innerhalb von `pricing` alles außer `taxes`. Bleibt nur ein
-    # tatsächlicher Steuer-Unterschied übrig, ist es ein reines Steuer-Update.
-    if {k: v for k, v in alt_pricing.items() if k != "taxes"} != {
-        k: v for k, v in neu_pricing.items() if k != "taxes"
+    # … und innerhalb von `pricing` alles außer `taxes`/`fees`. Bleibt nur ein
+    # tatsächlicher Unterschied dort übrig, genügt der schlanke Sync.
+    _abgaben = {"taxes", "fees"}
+    if {k: v for k, v in alt_pricing.items() if k not in _abgaben} != {
+        k: v for k, v in neu_pricing.items() if k not in _abgaben
     }:
         return False
-    return (alt_pricing.get("taxes") or []) != (neu_pricing.get("taxes") or [])
+    return (
+        (alt_pricing.get("taxes") or []) != (neu_pricing.get("taxes") or [])
+        or (alt_pricing.get("fees") or []) != (neu_pricing.get("fees") or [])
+    )
 
 
 class SteuernMixin:
