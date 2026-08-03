@@ -160,9 +160,16 @@ class AbgabenStatusMixin:
         try:
             rows = (
                 db.table("property_discounts")
+                # ALLE Felder, die `regel_fuer_airbnb` liest — sonst sieht sie
+                # z. B. `discount_bps = 0` und meldet „nur ganze Prozent
+                # möglich" für JEDE Aktion mit Bedingung. Der Chip schickte den
+                # Betrieb dann ins Extranet, obwohl Airbnb die Regel bekommt.
+                # Ein Stub-Test kann das nicht finden (er ignoriert die
+                # Spaltenliste) — gefunden hat es der E2E-Lauf.
                 .select(
-                    "id, discount_type, discount_kind, min_nights, lead_min_days, "
-                    "lead_max_days, booked_from, booked_to, promo_codes, "
+                    "id, discount_type, discount_kind, discount_bps, "
+                    "discount_amount, min_nights, lead_min_days, lead_max_days, "
+                    "stay_ranges, booked_from, booked_to, promo_codes, "
                     "portal_scope, active"
                 )
                 .eq("tenant_id", tenant_id)

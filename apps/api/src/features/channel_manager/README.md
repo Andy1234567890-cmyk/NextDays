@@ -432,6 +432,23 @@ snakeCase-Mapper und camelCase-t die Antwort erst im Browser zurück. NICHT live
 verifizierbar war der Vollzug (PUT `pricing_settings`, `promotions/enable`) — dafür
 braucht es ein per OAuth verbundenes Airbnb-Konto, das im Staging fehlt.
 
+### Live-Nachweis (Promotions)
+
+`scripts/channex/e2e_promotions.py` fährt die ganze Kette gegen die Server-DB
+(47 Prüfungen, wiederholbar): Anlegen/Ändern/Löschen samt CHECKs und
+Singleton-Index, die Rechnung (Grundlage nur Übernachtung, Teil-Aufenthalt je
+Nacht, bester Wert in Geld, Code-Vorrang), jede Bedingung einzeln, die
+Gast-Buchungsstrecke mit eingelöstem Code bis in `reservations.total_amount`, die
+Auswahlliste, beide Portal-Wege samt „Manuelle Synchronisierung" je Portal und die
+zwei eingereihten Jobs.
+
+Das Skript verändert KEINE Preise des Testobjekts — es misst den Ist-Stand und
+rechnet die Erwartungen daraus. Ein E2E, das die Ausgangslage erst passend macht,
+prüft am Ende sich selbst. Der erste Lauf hat prompt einen echten Fehler gefunden:
+`_aktionen_status` las `discount_bps` nicht mit und meldete deshalb für JEDE
+Aktion mit Bedingung „nur ganze Prozent möglich" — ein Stub-Test kann das nicht
+sehen, weil er die Spaltenliste ignoriert.
+
 Was KEINER der beiden Wege trägt — Angebotscode (kein Portal übergibt einen
 Gast-Code), Buchungszeitraum (die Airbnb-Regel hat kein Gültigkeitsfenster),
 Pauschale (nicht auf Nächte verteilbar, ohne die Aufenthaltsdauer zu raten), zwei
