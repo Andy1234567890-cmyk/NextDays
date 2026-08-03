@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from src.core.security import AuthContext
+from src.features.properties.gebuehren import normalize_fees
 from src.features.properties.rooms import room_row
 from src.features.properties.schemas import (
     ChannelState,
@@ -26,7 +27,6 @@ from src.features.properties.service import (
     _max_stay_of,
     _sniff_image_ext,
 )
-from src.features.properties.gebuehren import normalize_fees
 from src.features.properties.steuern import normalize_taxes, nur_steuern_geaendert
 from src.main import create_app
 
