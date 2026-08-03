@@ -44,6 +44,7 @@ import {
   type TaxChargeBasis,
   type TaxPeriod,
   LOCAL_TAX_TYPES,
+  TAXABLE_BASE_ITEMS,
   TAXABLE_BASE_PRICE,
   currencySymbol,
 } from "@/lib/pricing-meta";
@@ -187,10 +188,16 @@ export function LokaleSteuerEditor({
   }
 
   const waehrung: Currency | "" = pr.currency;
-  const grundlagenOptionen = [
-    { value: TAXABLE_BASE_PRICE, label: t("pricingForm.taxableBasePrice") },
-    ...pr.fees.map((f) => ({ value: f.id, label: f.name })),
-  ];
+  // Bemessungsgrundlage = Grundpreis + GebührenKATEGORIEN, nicht einzelne
+  // Gebühren: beim Portal werden mehrere Gebührenarten zu EINER Gebühr ihrer
+  // Kategorie zusammengefasst, „genau diese eine Gebühr" gibt es dort nicht.
+  const grundlagenOptionen = TAXABLE_BASE_ITEMS.map((item) => ({
+    value: item,
+    label:
+      item === TAXABLE_BASE_PRICE
+        ? t("pricingForm.taxableBasePrice")
+        : t(`pricingForm.taxableBaseCategory.${item}`),
+  }));
 
   return (
     <EditorShell
@@ -247,6 +254,8 @@ export function LokaleSteuerEditor({
                   },
             )
           }
+          variant="solid"
+          block
           options={[
             { value: "amount" as const, label: t("pricingForm.taxModeAmount") },
             { value: "percent" as const, label: t("pricingForm.taxModePercent") },

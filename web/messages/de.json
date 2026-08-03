@@ -4731,15 +4731,30 @@
       "planConfirmDelete": "Diesen Preisplan wirklich löschen? Die Datumspreise des Plans werden mit gelöscht.",
       "feeTypeLabel": "Gebührenart",
       "feeTypeHint": "Bestimmt, als was die Gebühr bei den Portalen ankommt. Portale wie Airbnb kennen eigene Kategorien für Reinigung und Haustiere.",
-      "feeType": {
+      "feeTypePlaceholder": "Zum Auswählen klicken",
+      "feeModeAmount": "Pauschalbetrag",
+      "feeModePercent": "Prozent",
+      "feeModePercentShort": "einmalig auf den Zimmerpreis",
+      "feePercentPlaceholder": "0 % des Zimmerpreises inkl. Aktionen",
+      "feePercentHint": "Eine prozentuale Gebühr wird einmalig berechnet und richtet sich nach dem Zimmerpreis einschließlich Aktionen.",
+      "feeOptionalHint": "Optionale Gebühren gehen an kein Portal — der Gast könnte sie dort nicht abwählen.",
+      "restrictionsTitle": "Einschränkungen",
+      "restrictionsHint": "Wählen Sie die Kanäle aus, auf denen dies erhoben werden soll.",
+      "restrictionsNote": "Nichts ausgewählt = alle Kanäle. Was ein Portal davon wirklich übernimmt, entscheidet dessen Schnittstelle.",
+      "restrictedSuffix": "eingeschränkt",
+      "ownChannel": {
+        "direct": "Eigene Website",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Reinigungsgebühr",
-        "pet": "Haustiergebühr",
+        "linen": "Wäschegebühr",
         "resort": "Resortgebühr",
         "management": "Verwaltungsgebühr",
         "community": "Gemeinschaftsgebühr",
-        "linen": "Wäscheservice",
-        "other": "Sonstige Gebühr"
-      }
+        "pet": "Haustiergebühr"
+      },
+      "actions": "Aktionen"
     },
     "policiesForm": {
       "title": "Richtlinien",
@@ -5346,7 +5361,19 @@
     "syncing": "Synchronisiere …",
     "syncBookings": "Buchungen synchronisieren",
     "noBookingsYet": "Noch keine Buchungen von diesem Portal.",
-    "channelFallback": "Kanal"
+    "channelFallback": "Kanal",
+    "airbnbTax": {
+      "title": "Steuererhebung",
+      "hint": "Ob eigene Steuern übertragen werden dürfen, hängt davon ab, was das Portal selbst erhebt.",
+      "scenarioLabel": "Szenario der Steuererhebung",
+      "scenarioUnset": "Noch nicht erfasst",
+      "scenarioIneligible": "Nicht berechtigt",
+      "scenarioNoCollected": "Portal erhebt keine Steuern",
+      "scenarioStacked": "Portal erhebt Steuern, unsere kommen dazu",
+      "acknowledge": "Ich bestätige, dass ich das Szenario der Steuererhebung verstehe.",
+      "sendUserTaxes": "Eigene Steuern senden",
+      "blockedNote": "Solange dies aus ist, gehen keine eigenen Steuern an dieses Portal."
+    }
   },
   "calendarSync": {
     "title": "Kalender importieren/exportieren",

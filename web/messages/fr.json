@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Supprimer vraiment ce plan tarifaire ? Les prix par date du plan seront supprimés également.",
       "feeTypeLabel": "Type de frais",
       "feeTypeHint": "Détermine la façon dont les frais arrivent sur les portails. Des portails comme Airbnb disposent de leurs propres catégories pour le ménage et les animaux.",
-      "feeType": {
+      "feeTypePlaceholder": "Cliquez pour sélectionner",
+      "feeModeAmount": "Montant forfaitaire",
+      "feeModePercent": "Pourcentage",
+      "feeModePercentShort": "une fois sur le prix de la chambre",
+      "feePercentPlaceholder": "0 % du prix de la chambre, promotions incluses",
+      "feePercentHint": "Des frais en pourcentage sont facturés une seule fois sur le prix de la chambre, promotions incluses.",
+      "feeOptionalHint": "Les frais optionnels ne sont pas envoyés aux canaux : le client ne pourrait pas les refuser.",
+      "restrictionsTitle": "Restrictions",
+      "restrictionsHint": "Sélectionnez les canaux sur lesquels le prélèvement doit s'appliquer.",
+      "restrictionsNote": "Rien de sélectionné = tous les canaux. Ce qu'un canal accepte dépend de son interface.",
+      "restrictedSuffix": "restreint",
+      "ownChannel": {
+        "direct": "Site web propre",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Frais de ménage",
-        "pet": "Frais pour animaux",
-        "resort": "Frais de complexe touristique",
+        "linen": "Frais de linge",
+        "resort": "Frais de complexe",
         "management": "Frais de gestion",
-        "community": "Charges de copropriété",
-        "linen": "Service de linge",
-        "other": "Autres frais"
-      }
+        "community": "Frais de communauté",
+        "pet": "Frais pour animal"
+      },
+      "actions": "Actions"
     },
     "policiesForm": {
       "title": "Règlements",
@@ -5325,7 +5340,19 @@
     "syncing": "Synchronisation …",
     "syncBookings": "Synchroniser les réservations",
     "noBookingsYet": "Aucune réservation de ce portail pour l'instant.",
-    "channelFallback": "Canal"
+    "channelFallback": "Canal",
+    "airbnbTax": {
+      "title": "Collecte des taxes",
+      "hint": "La possibilité d'exporter vos taxes dépend de ce que le canal collecte lui-même.",
+      "scenarioLabel": "Scénario de collecte des taxes",
+      "scenarioUnset": "Pas encore renseigné",
+      "scenarioIneligible": "Non éligible",
+      "scenarioNoCollected": "Le canal ne collecte pas de taxes",
+      "scenarioStacked": "Le canal collecte des taxes, les nôtres s'y ajoutent",
+      "acknowledge": "Je confirme comprendre le scénario de collecte des taxes.",
+      "sendUserTaxes": "Envoyer mes taxes",
+      "blockedNote": "Tant que ceci est désactivé, aucune taxe propre n'est envoyée à ce canal."
+    }
   },
   "calendarSync": {
     "title": "Importer/exporter le calendrier",

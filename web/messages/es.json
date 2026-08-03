@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "¿Seguro que quieres eliminar este plan de precios? También se eliminarán los precios por fecha del plan.",
       "feeTypeLabel": "Tipo de tarifa",
       "feeTypeHint": "Determina cómo llega la tarifa a los portales. Portales como Airbnb tienen sus propias categorías para limpieza y mascotas.",
-      "feeType": {
+      "feeTypePlaceholder": "Haz clic para seleccionar",
+      "feeModeAmount": "Importe fijo",
+      "feeModePercent": "Porcentaje",
+      "feeModePercentShort": "una vez sobre el precio de la habitación",
+      "feePercentPlaceholder": "0 % del precio de la habitación con promociones",
+      "feePercentHint": "Una tarifa porcentual se cobra una sola vez sobre el precio de la habitación con promociones.",
+      "feeOptionalHint": "Las tarifas opcionales no se envían a los canales: el huésped no podría descartarlas allí.",
+      "restrictionsTitle": "Restricciones",
+      "restrictionsHint": "Seleccione los canales en los que se debe cobrar.",
+      "restrictionsNote": "Nada seleccionado = todos los canales. Lo que cada canal acepta depende de su interfaz.",
+      "restrictedSuffix": "restringido",
+      "ownChannel": {
+        "direct": "Sitio web propio",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Tarifa de limpieza",
-        "pet": "Tarifa por mascota",
+        "linen": "Tarifa de ropa de cama",
         "resort": "Tarifa de resort",
         "management": "Tarifa de gestión",
-        "community": "Gastos de comunidad",
-        "linen": "Servicio de ropa de cama",
-        "other": "Otra tarifa"
-      }
+        "community": "Tarifa comunitaria",
+        "pet": "Tarifa por mascota"
+      },
+      "actions": "Acciones"
     },
     "policiesForm": {
       "title": "Políticas",
@@ -5325,7 +5340,19 @@
     "syncing": "Sincronizando …",
     "syncBookings": "Sincronizar reservas",
     "noBookingsYet": "Aún no hay reservas de este portal.",
-    "channelFallback": "Canal"
+    "channelFallback": "Canal",
+    "airbnbTax": {
+      "title": "Recaudación de impuestos",
+      "hint": "Que se puedan exportar tus impuestos depende de lo que recaude el propio canal.",
+      "scenarioLabel": "Escenario de recaudación de impuestos",
+      "scenarioUnset": "Aún no registrado",
+      "scenarioIneligible": "No apto",
+      "scenarioNoCollected": "El canal no recauda impuestos",
+      "scenarioStacked": "El canal recauda impuestos y los nuestros se suman",
+      "acknowledge": "Confirmo que entiendo el escenario de recaudación de impuestos.",
+      "sendUserTaxes": "Enviar impuestos propios",
+      "blockedNote": "Mientras esté desactivado, no se envían impuestos propios a este canal."
+    }
   },
   "calendarSync": {
     "title": "Importar/exportar calendario",

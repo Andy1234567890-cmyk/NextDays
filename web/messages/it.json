@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Eliminare davvero questo piano tariffario? Verranno eliminati anche i prezzi per data del piano.",
       "feeTypeLabel": "Tipo di costo",
       "feeTypeHint": "Determina come il costo arriva ai portali. Portali come Airbnb hanno categorie proprie per la pulizia e gli animali domestici.",
-      "feeType": {
-        "cleaning": "Costo di pulizia",
-        "pet": "Costo per animali domestici",
+      "feeTypePlaceholder": "Clicca per selezionare",
+      "feeModeAmount": "Importo fisso",
+      "feeModePercent": "Percentuale",
+      "feeModePercentShort": "una volta sul prezzo della camera",
+      "feePercentPlaceholder": "0% del prezzo della camera incluse promozioni",
+      "feePercentHint": "Una tariffa percentuale viene applicata una sola volta sul prezzo della camera, promozioni incluse.",
+      "feeOptionalHint": "Le tariffe opzionali non vengono inviate ai canali: l'ospite non potrebbe rifiutarle.",
+      "restrictionsTitle": "Restrizioni",
+      "restrictionsHint": "Seleziona i canali su cui addebitarlo.",
+      "restrictionsNote": "Nulla selezionato = tutti i canali. Ciò che un canale accetta dipende dalla sua interfaccia.",
+      "restrictedSuffix": "limitato",
+      "ownChannel": {
+        "direct": "Sito web proprio",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
+        "cleaning": "Costo pulizia",
+        "linen": "Costo biancheria",
         "resort": "Costo resort",
         "management": "Costo di gestione",
-        "community": "Spese condominiali",
-        "linen": "Servizio biancheria",
-        "other": "Altro costo"
-      }
+        "community": "Costo condominiale",
+        "pet": "Costo animali"
+      },
+      "actions": "Azioni"
     },
     "policiesForm": {
       "title": "Policy",
@@ -5325,7 +5340,19 @@
     "syncing": "Sincronizzazione …",
     "syncBookings": "Sincronizza prenotazioni",
     "noBookingsYet": "Nessuna prenotazione da questo portale.",
-    "channelFallback": "Canale"
+    "channelFallback": "Canale",
+    "airbnbTax": {
+      "title": "Riscossione imposte",
+      "hint": "Se le tue imposte possono essere esportate dipende da ciò che riscuote il canale.",
+      "scenarioLabel": "Scenario di riscossione imposte",
+      "scenarioUnset": "Non ancora registrato",
+      "scenarioIneligible": "Non ammissibile",
+      "scenarioNoCollected": "Il canale non riscuote imposte",
+      "scenarioStacked": "Il canale riscuote imposte, le nostre si aggiungono",
+      "acknowledge": "Confermo di aver compreso lo scenario di riscossione delle imposte.",
+      "sendUserTaxes": "Invia le mie imposte",
+      "blockedNote": "Finché è disattivato, non vengono inviate imposte proprie a questo canale."
+    }
   },
   "calendarSync": {
     "title": "Importa/esporta calendario",

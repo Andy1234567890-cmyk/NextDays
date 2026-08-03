@@ -1,11 +1,11 @@
 
 from fastapi.testclient import TestClient
 
+from src.features.channel_manager import ota_abgaben
 from src.features.channel_manager.channex_client import ChannexError
 from src.features.channel_manager.service import (
     ChannelManagerService,
 )
-from src.features.channel_manager.tax_sync import TaxSyncMixin
 from src.main import create_app
 
 client = TestClient(create_app())
@@ -533,13 +533,13 @@ def test_tax_logic_deckt_alle_vier_betragsbasen_ab() -> None:
     }
     for (charge, period), erwartet in faelle.items():
         tax = {"mode": "amount", "chargeBasis": charge, "period": period}
-        assert TaxSyncMixin._tax_logic(tax) == erwartet
+        assert ota_abgaben.tax_logic(tax) == erwartet
 
 
 def test_tax_logic_altdatensatz_bleibt_per_night() -> None:
     """Ohne gespeicherte Basis bleibt es beim bisherigen Verhalten."""
-    assert TaxSyncMixin._tax_logic({"mode": "amount"}) == "per_night"
-    assert TaxSyncMixin._tax_logic({"mode": "percent"}) == "percent"
+    assert ota_abgaben.tax_logic({"mode": "amount"}) == "per_night"
+    assert ota_abgaben.tax_logic({"mode": "percent"}) == "percent"
 
 
 def test_tax_type_aus_steuerart() -> None:
@@ -550,14 +550,26 @@ def test_tax_type_aus_steuerart() -> None:
     (Doku-Schreibweise) und „City Tax" (Response-Schreibweise) ergeben
     `422 {"type": ["is invalid"]}`. Dieser Test hält die geprüfte Realität
     fest, nicht die Doku."""
-    assert TaxSyncMixin._tax_type({"taxType": "TouristTax"}) == "city_tax"
-    assert TaxSyncMixin._tax_type({"taxType": "RoomTax"}) == "tax"
+    assert ota_abgaben.tax_type({"taxType": "TouristTax"}) == "city_tax"
+    assert ota_abgaben.tax_type({"taxType": "RoomTax"}) == "tax"
     # Ohne Steuerart entscheidet weiter die gröbere kind-Achse (Bestand).
-    assert TaxSyncMixin._tax_type({"kind": "local"}) == "city_tax"
-    assert TaxSyncMixin._tax_type({"kind": "vat"}) == "tax"
+    assert ota_abgaben.tax_type({"kind": "local"}) == "city_tax"
+    assert ota_abgaben.tax_type({"kind": "vat"}) == "tax"
 
 
-# --- Gebühren → Channex (`type: "fee"`) --------------------------------------
+# --- Gebühren/Steuern je Portal (Branchenstandard als Regelwerk) -------------
+
+
+def _abgaben(portal, *, taxes=(), fees=(), **kw):
+    """Kurzform: Posten eines Portals als {Titel: attrs}."""
+    posten, diagnose = ota_abgaben.abgaben_je_portal(
+        portal=portal,
+        taxes=list(taxes),
+        fees=list(fees),
+        currency="EUR",
+        **kw,
+    )
+    return {p.attrs["title"]: p for p in posten}, diagnose
 
 
 def test_fee_logic_deckt_alle_vier_basen_ab() -> None:
@@ -573,44 +585,276 @@ def test_fee_logic_deckt_alle_vier_basen_ab() -> None:
         "per_guest_night": "per_person_per_night",
     }
     for basis, erwartet in faelle.items():
-        assert TaxSyncMixin._fee_logic({"basis": basis}) == erwartet
+        posten, _ = _abgaben(
+            None,
+            fees=[{"id": "f", "name": "Extra", "amount": 10, "basis": basis}],
+        )
+        assert posten["Extra"].attrs["logic"] == erwartet
     # Ohne Basis gilt „einmalig pro Aufenthalt" (der Default des Formulars).
-    assert TaxSyncMixin._fee_logic({}) == "per_booking"
+    posten, _ = _abgaben(None, fees=[{"id": "f", "name": "Extra", "amount": 10}])
+    assert posten["Extra"].attrs["logic"] == "per_booking"
 
 
-def test_fee_title_nutzt_die_gebuehrenart_wenn_kein_name_da_ist() -> None:
-    """Channex kennt nur tax|fee|city_tax — die feinere Art lebt im TITEL.
-
-    `cleaning_fee`/`resort_fee`/`pet_fee` werden von POST /taxes mit 422
-    abgelehnt (live geprüft), deshalb ist der Titel die einzige Stelle, an der
-    das Portal die Art überhaupt sehen kann."""
-    assert TaxSyncMixin._fee_title({"name": "Endreinigung"}) == "Endreinigung"
-    # Ohne Namen tritt die Art als Bezeichnung ein — nie ein blankes „Gebühr",
-    # solange die Art bekannt ist (Wurzel 4).
-    assert TaxSyncMixin._fee_title({"feeType": "pet"}) == "Haustiergebühr"
-    assert TaxSyncMixin._fee_title({"feeType": "linen"}) == "Wäscheservice"
-    # Weder Name noch Art: dann bleibt nur der neutrale Sammelbegriff.
-    assert TaxSyncMixin._fee_title({}) == "Gebühr"
-
-
-def test_gebuehr_liegt_in_der_kaskade_unter_der_steuer() -> None:
-    """Level-Reihenfolge: Channex rechnet von der höchsten Zahl zur niedrigsten.
-
-    Gebühr auf 1, Steuer auf 0 → die prozentuale USt greift auf Grundpreis
-    PLUS Gebühren. Wären beide auf 0, rechnete die USt nur auf den Grundpreis
-    und die Rechnung des Portals wiche von unserer ab."""
-    assert TaxSyncMixin._LEVEL_FEE > TaxSyncMixin._LEVEL_TAX
+def test_prozentgebuehr_geht_als_percent_ohne_waehrung() -> None:
+    """Prozentuale Gebühr → logic=percent; `currency` verlangt Channex dort
+    nicht (und `rate` ist der Satz, nicht ein Betrag)."""
+    posten, _ = _abgaben(
+        None,
+        fees=[{"id": "f", "name": "Resort", "amount": 5, "mode": "percent",
+               "basis": "per_stay"}],
+    )
+    attrs = posten["Resort"].attrs
+    assert attrs["logic"] == "percent"
+    assert attrs["rate"] == "5"
+    assert "currency" not in attrs
 
 
-def test_scope_of_liest_nur_echte_portal_codes() -> None:
-    """Kanal-Einschränkung: leer = alle Kanäle (der Normalfall)."""
-    assert TaxSyncMixin._scope_of({}) == []
-    assert TaxSyncMixin._scope_of({"portalScope": None}) == []
-    # Kein String-Splitting auf Zuruf: nur eine echte Liste zählt.
-    assert TaxSyncMixin._scope_of({"portalScope": "BookingCom"}) == []
-    assert TaxSyncMixin._scope_of({"portalScope": ["BookingCom"]}) == ["BookingCom"]
-    # Leere Einträge fliegen raus (ein leerer Code schränkte auf „nichts" ein).
-    assert TaxSyncMixin._scope_of({"portalScope": ["AirBNB", "  "]}) == ["AirBNB"]
+def test_expedia_bekommt_nichts() -> None:
+    """„Taxes and fees are not sent to Expedia." — beides, ohne Ausnahme."""
+    posten, diagnose = _abgaben(
+        ota_abgaben.EXPEDIA,
+        taxes=[{"id": "t", "kind": "local", "name": "Kurtaxe", "mode": "percent",
+                "value": 5}],
+        fees=[{"id": "f", "name": "Reinigung", "amount": 50}],
+    )
+    assert posten == {}
+    assert diagnose["gebuehren_nicht_exportiert"] == 1
+
+
+def test_booking_nimmt_nur_prozent_und_zwar_inklusiv() -> None:
+    """Booking.com: nur Prozentwerte, und sie stecken IM Zimmerpreis."""
+    posten, diagnose = _abgaben(
+        ota_abgaben.BOOKING,
+        taxes=[
+            {"id": "p", "kind": "local", "name": "Kurtaxe %", "mode": "percent",
+             "value": 2.5},
+            {"id": "b", "kind": "local", "name": "Kurtaxe Betrag",
+             "mode": "amount", "value": 2, "chargeBasis": "PerPerson",
+             "period": "PerNight"},
+        ],
+        fees=[
+            {"id": "fp", "name": "Service %", "amount": 5, "mode": "percent"},
+            {"id": "fb", "name": "Reinigung", "amount": 50},
+        ],
+    )
+    assert set(posten) == {"Kurtaxe %", "Service %"}
+    assert all(p.attrs["is_inclusive"] is True for p in posten.values())
+    assert diagnose["steuer_nicht_exportfaehig"] == ["b"]
+    assert diagnose["gebuehr_kein_prozent"] == ["fb"]
+
+
+def test_airbnb_nimmt_betragssteuer_nur_pro_gast_pro_nacht() -> None:
+    """„Fixed amounts are only exported if they are set as per guest per night."
+
+    Und: getrennt vom Zimmerpreis ausgewiesen, nicht inklusiv.
+    """
+    posten, _ = _abgaben(
+        ota_abgaben.AIRBNB,
+        taxes=[
+            {"id": "ok", "kind": "local", "name": "Kurtaxe Nacht/Gast",
+             "mode": "amount", "value": 2, "chargeBasis": "PerPerson",
+             "period": "PerNight"},
+            {"id": "nein", "kind": "local", "name": "Kurtaxe Aufenthalt",
+             "mode": "amount", "value": 20, "chargeBasis": "SingleCharge",
+             "period": "PerStay"},
+        ],
+    )
+    assert set(posten) == {"Kurtaxe Nacht/Gast"}
+    assert posten["Kurtaxe Nacht/Gast"].attrs["is_inclusive"] is False
+
+
+def test_airbnb_export_matrix_je_kategorie_und_modell() -> None:
+    """Die Export-Tabelle des Standards, Zeile für Zeile."""
+    faelle = [
+        ("cleaning_fee", "per_stay", True),
+        ("cleaning_fee", "per_night", False),
+        ("cleaning_fee", "per_guest_stay", False),
+        ("pet_fee", "per_stay", True),
+        ("pet_fee", "per_guest_night", False),
+        ("linens", "per_stay", True),
+        ("linens", "per_guest_stay", True),
+        ("linens", "per_night", False),
+        ("linens", "per_guest_night", False),
+        ("resort", "per_guest_night", True),
+        ("internet", "per_night", True),      # → Gemeinschaftsgebühr
+        ("hot_tub", "per_guest_stay", True),  # → Verwaltungsgebühr
+        # Unknown/MiscCharges haben keine Kategorie → „Not sent to Airbnb".
+        ("unknown", "per_stay", False),
+        ("misc_charges", "per_stay", False),
+        # Kaution steht nicht in der Export-Tabelle.
+        ("security_deposit", "per_stay", False),
+    ]
+    for art, basis, erwartet in faelle:
+        posten, _ = _abgaben(
+            ota_abgaben.AIRBNB,
+            fees=[{"id": "f", "name": "X", "amount": 10, "basis": basis,
+                   "feeType": art}],
+        )
+        assert bool(posten) is erwartet, f"{art}/{basis}"
+
+
+def test_airbnb_prozent_nur_bei_community_management_resort() -> None:
+    """Nur diese drei Zeilen der Tabelle sind „Percentage or flat"; die
+    Haustiergebühr MUSS ein Pauschalbetrag sein."""
+    for art, erwartet in (
+        ("resort", True), ("internet", True), ("hot_tub", True),
+        ("cleaning_fee", False), ("pet_fee", False), ("linens", False),
+    ):
+        posten, _ = _abgaben(
+            ota_abgaben.AIRBNB,
+            fees=[{"id": "f", "name": "X", "amount": 5, "mode": "percent",
+                   "basis": "per_stay", "feeType": art}],
+        )
+        assert bool(posten) is erwartet, art
+
+
+def test_airbnb_summiert_gleiche_kategorie_gleiches_modell() -> None:
+    """Zwei Gebühren derselben Airbnb-Kategorie, gleiches Modell: Beträge
+    addieren, EINE Gebühr senden — mit dem Kategorie-Namen als Titel und einem
+    stabilen Kategorie-Schlüssel."""
+    posten, _ = _abgaben(
+        ota_abgaben.AIRBNB,
+        fees=[
+            {"id": "a", "name": "Parken", "amount": 10, "basis": "per_night",
+             "feeType": "parking"},
+            {"id": "b", "name": "Internet", "amount": 5, "basis": "per_night",
+             "feeType": "internet"},
+        ],
+    )
+    assert set(posten) == {"Gemeinschaftsgebühr"}
+    eintrag = posten["Gemeinschaftsgebühr"]
+    assert eintrag.attrs["rate"] == "15.0"
+    assert eintrag.schluessel == "cat:community"
+
+
+def test_airbnb_sperrt_kategorie_bei_gemischten_modellen() -> None:
+    """Gemischte Berechnungsmodelle in einer Kategorie: KEINE der Gebühren geht
+    raus. Der Standard verlangt, Art zu ändern oder Dubletten zu entfernen."""
+    posten, diagnose = _abgaben(
+        ota_abgaben.AIRBNB,
+        fees=[
+            {"id": "a", "name": "Parken", "amount": 10, "basis": "per_night",
+             "feeType": "parking"},
+            {"id": "b", "name": "Internet", "amount": 5, "basis": "per_stay",
+             "feeType": "internet"},
+        ],
+    )
+    assert posten == {}
+    assert diagnose["gesperrte_kategorien"] == ["community"]
+
+
+def test_airbnb_steuern_haengen_am_szenario() -> None:
+    """Ohne freigeschaltetes Steuerszenario bekommt Airbnb KEINE Steuern —
+    Gebühren dagegen schon (der Standard hängt nur die Steuern daran)."""
+    posten, diagnose = _abgaben(
+        ota_abgaben.AIRBNB,
+        taxes=[{"id": "t", "kind": "local", "name": "Kurtaxe", "mode": "percent",
+                "value": 5}],
+        fees=[{"id": "f", "name": "Reinigung", "amount": 50,
+               "feeType": "cleaning_fee"}],
+        airbnb_steuern_erlaubt=False,
+    )
+    assert set(posten) == {"Reinigung"}
+    assert diagnose["airbnb_steuern_gesperrt"] == 1
+
+
+def test_grundlage_hebt_nur_gewaehlte_kategorien_ueber_die_steuer() -> None:
+    """Bemessungsgrundlage → Kaskadenebene: die gewählte Kategorie liegt ÜBER
+    der Steuer (wird also mitbesteuert), die andere auf derselben Ebene."""
+    posten, _ = _abgaben(
+        ota_abgaben.AIRBNB,
+        taxes=[{"id": "t", "kind": "local", "name": "Kurtaxe", "mode": "percent",
+                "value": 5, "taxableBase": ["base_price", "cleaning"]}],
+        fees=[
+            {"id": "c", "name": "Reinigung", "amount": 50,
+             "feeType": "cleaning_fee"},
+            {"id": "r", "name": "Resort", "amount": 20, "feeType": "resort"},
+        ],
+    )
+    assert posten["Reinigung"].level > posten["Kurtaxe"].level
+    assert posten["Resort"].level == posten["Kurtaxe"].level
+
+
+def test_ohne_grundlage_liegen_gebuehren_unter_der_steuer() -> None:
+    """Bestand ohne gepflegte Grundlage: unverändertes Verhalten — die
+    prozentuale Steuer rechnet auf Grundpreis PLUS Gebühren."""
+    posten, _ = _abgaben(
+        ota_abgaben.AIRBNB,
+        taxes=[{"id": "t", "kind": "local", "name": "Kurtaxe", "mode": "percent",
+                "value": 5}],
+        fees=[{"id": "c", "name": "Reinigung", "amount": 50,
+               "feeType": "cleaning_fee"}],
+    )
+    assert posten["Reinigung"].level > posten["Kurtaxe"].level
+
+
+def test_bei_anderen_kanaelen_liegt_keine_gebuehr_in_der_grundlage() -> None:
+    """„Für alle anderen Kanäle gelten Steuern nur auf den Basispreis."
+
+    Also: Gebühr auf derselben Ebene wie die Steuer, damit sie nicht mit
+    besteuert wird — selbst wenn die Grundlage sie ausdrücklich nennt.
+    """
+    posten, _ = _abgaben(
+        ota_abgaben.BOOKING,
+        taxes=[{"id": "t", "kind": "local", "name": "Kurtaxe", "mode": "percent",
+                "value": 5, "taxableBase": ["base_price", "cleaning"]}],
+        fees=[{"id": "c", "name": "Reinigung %", "amount": 5, "mode": "percent",
+               "feeType": "cleaning_fee"}],
+    )
+    assert posten["Reinigung %"].level == posten["Kurtaxe"].level
+
+
+def test_kanal_einschraenkung_haelt_posten_aus_dem_standard_set() -> None:
+    """Ein auf ein Portal eingeschränkter Posten darf NICHT ins Standard-Set:
+    das hängt an allen Plänen ohne Portal-Scope und wäre der Weg zu jedem
+    anderen Kanal."""
+    fee = {"id": "f", "name": "Nur Booking", "amount": 50,
+           "portalScope": ["BookingCom"], "mode": "percent"}
+    standard, _ = _abgaben(None, fees=[fee])
+    booking, _ = _abgaben(ota_abgaben.BOOKING, fees=[fee])
+    assert standard == {}
+    assert set(booking) == {"Nur Booking"}
+
+
+def test_optionale_gebuehr_geht_an_kein_portal() -> None:
+    """Optionale Gebühren wählt der Gast ab — als Pflichtaufschlag beim Portal
+    wären sie eine Falle."""
+    posten, _ = _abgaben(
+        None, fees=[{"id": "f", "name": "Frühstück", "amount": 20,
+                     "optional": True}]
+    )
+    assert posten == {}
+
+
+def test_portal_das_selbst_kassiert_bekommt_nichts() -> None:
+    """Rechnet das Portal die Abgabe selbst zum Gastpreis (Airbnb „Payout
+    Amount", Expedia „Collect Amount"), darf sie nicht zusätzlich hin."""
+    posten, _ = _abgaben(
+        ota_abgaben.BOOKING,
+        taxes=[{"id": "t", "kind": "local", "name": "Kurtaxe", "mode": "percent",
+                "value": 5}],
+        objekt_inklusiv_erlaubt=False,
+    )
+    assert posten == {}
+
+
+def test_ust_ohne_namen_heisst_nicht_steuer() -> None:
+    """Die USt trägt keinen eigenen Namen — beim Portal darf trotzdem kein
+    Platzhalter „Steuer" stehen (Wurzel 4)."""
+    posten, _ = _abgaben(
+        None, taxes=[{"id": "v", "kind": "vat", "mode": "percent", "value": 19}]
+    )
+    assert set(posten) == {"USt."}
+
+
+def test_gastseitiger_steuername_gewinnt_beim_portal() -> None:
+    """names[locale] ist der Text, den der Gast beim Portal sieht."""
+    posten, _ = _abgaben(
+        None,
+        taxes=[{"id": "t", "kind": "local", "name": "intern",
+                "names": {"de": "Kurtaxe"}, "mode": "percent", "value": 5}],
+    )
+    assert set(posten) == {"Kurtaxe"}
 
 
 # --- Steuerregime der Portale (automatisch erkannt) --------------------------

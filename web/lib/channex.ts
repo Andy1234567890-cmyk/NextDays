@@ -565,7 +565,35 @@ export type ChannelPropertyDetail = {
   dynamic_pricing_enabled: boolean;
   /** Preisänderung dieses Portals in % (Kanal-Plan-Offset); 0 = keine. */
   price_adjustment_percent: number;
+  /** Airbnb-Steuererhebung dieses Inserats (nur bei Airbnb gepflegt). */
+  airbnb_tax_scenario: AirbnbTaxScenario | null;
+  airbnb_tax_acknowledged: boolean;
+  airbnb_send_user_taxes: boolean;
 };
+
+/** Was AIRBNB selbst mit den Steuern tut — nicht, was wir wollen.
+ *  `ineligible`: Airbnb erhebt automatisch bzw. unterstützt keine
+ *  Beherbergungssteuern, ein Export ist unmöglich. `no_collected`: Airbnb erhebt
+ *  nichts. `stacked`: Airbnb erhebt, unsere Werte kommen obendrauf. */
+export type AirbnbTaxScenario = "ineligible" | "no_collected" | "stacked";
+
+/** Airbnb-Steuererhebung setzen. Erst wenn Szenario, Bestätigung und Schalter
+ *  zusammenpassen, gehen eigene Steuern an Airbnb; der Server erzwingt die
+ *  Abhängigkeiten erneut und stößt den Steuer-Sync an. */
+export async function setAirbnbTaxSettings(
+  propertyId: string,
+  portalCode: string,
+  req: {
+    scenario: AirbnbTaxScenario | null;
+    acknowledged: boolean;
+    send_user_taxes: boolean;
+  },
+): Promise<Result<{ airbnb_send_user_taxes: boolean }>> {
+  return call<{ airbnb_send_user_taxes: boolean }>(
+    `/properties/${propertyId}/connections/${portalCode}/airbnb-tax`,
+    { method: "PUT", body: req },
+  );
+}
 
 /** Preisänderung je Portal setzen (Lodgify-Modell): %-Aufschlag auf die
  *  effektive Tageskurve GENAU DIESES Portals; 0 entfernt den Aufschlag. */

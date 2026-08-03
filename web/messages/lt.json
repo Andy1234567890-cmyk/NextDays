@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Tikrai ištrinti šį kainų planą? Plano kainos pagal datą bus ištrintos kartu su juo.",
       "feeTypeLabel": "Mokesčio tipas",
       "feeTypeHint": "Nustato, kokiu mokesčiu jis pateks į portalus. Tokie portalai kaip Airbnb turi atskiras kategorijas valymui ir augintiniams.",
-      "feeType": {
+      "feeTypePlaceholder": "Spustelėkite, kad pasirinktumėte",
+      "feeModeAmount": "Fiksuota suma",
+      "feeModePercent": "Procentai",
+      "feeModePercentShort": "vienkartinis nuo kambario kainos",
+      "feePercentPlaceholder": "0 % kambario kainos su akcijomis",
+      "feePercentHint": "Procentinis mokestis taikomas vieną kartą nuo kambario kainos su akcijomis.",
+      "feeOptionalHint": "Neprivalomi mokesčiai kanalams neperduodami – svečias jų negalėtų atsisakyti.",
+      "restrictionsTitle": "Apribojimai",
+      "restrictionsHint": "Pasirinkite kanalus, kuriuose tai bus taikoma.",
+      "restrictionsNote": "Nieko nepasirinkta = visi kanalai. Ką kanalas tikrai priima, sprendžia jo sąsaja.",
+      "restrictedSuffix": "apribota",
+      "ownChannel": {
+        "direct": "Savo svetainė",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Valymo mokestis",
-        "pet": "Mokestis už augintinį",
+        "linen": "Patalynės mokestis",
         "resort": "Kurorto mokestis",
         "management": "Administravimo mokestis",
         "community": "Bendrijos mokestis",
-        "linen": "Patalynės paslauga",
-        "other": "Kitas mokestis"
-      }
+        "pet": "Gyvūno mokestis"
+      },
+      "actions": "Veiksmai"
     },
     "policiesForm": {
       "title": "Taisyklės",
@@ -5325,7 +5340,19 @@
     "syncing": "Sinchronizuojama …",
     "syncBookings": "Sinchronizuoti rezervacijas",
     "noBookingsYet": "Iš šio portalo rezervacijų dar nėra.",
-    "channelFallback": "Kanalas"
+    "channelFallback": "Kanalas",
+    "airbnbTax": {
+      "title": "Mokesčių rinkimas",
+      "hint": "Ar galima perduoti savo mokesčius, priklauso nuo to, ką renka pats kanalas.",
+      "scenarioLabel": "Mokesčių rinkimo scenarijus",
+      "scenarioUnset": "Dar neįrašyta",
+      "scenarioIneligible": "Netinkama",
+      "scenarioNoCollected": "Kanalas mokesčių nerenka",
+      "scenarioStacked": "Kanalas renka mokesčius, mūsų pridedami",
+      "acknowledge": "Patvirtinu, kad suprantu mokesčių rinkimo scenarijų.",
+      "sendUserTaxes": "Siųsti savo mokesčius",
+      "blockedNote": "Kol tai išjungta, į šį kanalą savi mokesčiai neperduodami."
+    }
   },
   "calendarSync": {
     "title": "Kalendoriaus importas / eksportas",

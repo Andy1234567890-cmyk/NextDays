@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Stvarno izbrisati ovaj cjenik? Cijene cjenika po datumu bit će izbrisane zajedno s njim.",
       "feeTypeLabel": "Vrsta naknade",
       "feeTypeHint": "Određuje kao koja vrsta naknade dolazi na portale. Portali kao Airbnb imaju vlastite kategorije za čišćenje i kućne ljubimce.",
-      "feeType": {
+      "feeTypePlaceholder": "Kliknite za odabir",
+      "feeModeAmount": "Fiksni iznos",
+      "feeModePercent": "Postotak",
+      "feeModePercentShort": "jednokratno na cijenu sobe",
+      "feePercentPlaceholder": "0 % cijene sobe uključujući akcije",
+      "feePercentHint": "Postotna naknada obračunava se jednokratno na cijenu sobe uključujući akcije.",
+      "feeOptionalHint": "Neobvezne naknade ne šalju se kanalima — gost ih tamo ne može odabrati.",
+      "restrictionsTitle": "Ograničenja",
+      "restrictionsHint": "Odaberite kanale na kojima se to naplaćuje.",
+      "restrictionsNote": "Ništa odabrano = svi kanali. Što kanal stvarno prihvaća određuje njegovo sučelje.",
+      "restrictedSuffix": "ograničeno",
+      "ownChannel": {
+        "direct": "Vlastita web stranica",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Naknada za čišćenje",
-        "pet": "Naknada za kućnog ljubimca",
+        "linen": "Naknada za posteljinu",
         "resort": "Naknada resorta",
         "management": "Naknada za upravljanje",
-        "community": "Naknada za zajedničke prostore",
-        "linen": "Usluga posteljine",
-        "other": "Druga naknada"
-      }
+        "community": "Naknada zajednice",
+        "pet": "Naknada za ljubimca"
+      },
+      "actions": "Radnje"
     },
     "policiesForm": {
       "title": "Pravila",
@@ -5325,7 +5340,19 @@
     "syncing": "Sinkroniziram …",
     "syncBookings": "Sinkroniziraj rezervacije",
     "noBookingsYet": "Još nema rezervacija s ovog portala.",
-    "channelFallback": "Kanal"
+    "channelFallback": "Kanal",
+    "airbnbTax": {
+      "title": "Naplata poreza",
+      "hint": "Mogu li se vlastiti porezi prenositi ovisi o tome što kanal sam naplaćuje.",
+      "scenarioLabel": "Scenarij naplate poreza",
+      "scenarioUnset": "Još nije zabilježeno",
+      "scenarioIneligible": "Nije prihvatljivo",
+      "scenarioNoCollected": "Kanal ne naplaćuje poreze",
+      "scenarioStacked": "Kanal naplaćuje poreze, naši se dodaju",
+      "acknowledge": "Potvrđujem da razumijem scenarij naplate poreza.",
+      "sendUserTaxes": "Pošalji vlastite poreze",
+      "blockedNote": "Dok je ovo isključeno, kanalu se ne šalju vlastiti porezi."
+    }
   },
   "calendarSync": {
     "title": "Uvoz/izvoz kalendara",

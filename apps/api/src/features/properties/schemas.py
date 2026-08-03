@@ -366,6 +366,22 @@ class PropertyTaxonomyResponse(BaseModel):
     subtypes: list[PropertySubtypeOut]
 
 
+class FeeTypeEntry(BaseModel):
+    """Eine wählbare Gebührenart mit ihrer Portal-Kategorie.
+
+    `category` sagt, als WAS die Gebühr beim Portal ankommt — mehrere Arten
+    fallen auf dieselbe Kategorie und werden dort zu einer Gebühr summiert.
+    `None` heißt: geht an kein Portal (Unbekannt, Sonstige Gebühren)."""
+
+    value: str
+    label: str
+    category: str | None = None
+
+
+class FeeTypeCatalogResponse(BaseModel):
+    items: list[FeeTypeEntry]
+
+
 class ImageUploadResponse(BaseModel):
     """Antwort auf einen Bild-Upload: öffentliche URL des gespeicherten Bildes."""
 

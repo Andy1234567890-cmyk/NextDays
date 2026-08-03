@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from src.core.security import AuthContext
-from src.features.properties.gebuehren import normalize_fees
+from src.features.properties.gebuehren import fee_category, normalize_fees
 from src.features.properties.rooms import room_row
 from src.features.properties.schemas import (
     ChannelState,
@@ -1221,3 +1221,118 @@ def test_nur_steuern_geaendert_gilt_auch_fuer_gebuehren() -> None:
     alt = {"pricing": {"fees": [{"id": "f1", "amount": 50}]}}
     changes = {"type_attributes": {"pricing": {"fees": [{"id": "f1", "amount": 60}]}}}
     assert nur_steuern_geaendert(alt, changes) is True
+
+
+# --- Gebührenart-Taxonomie und Rechenart (Branchenstandard) -------------------
+# Die 49 Gebührenarten sind live aus dem Standard abgelesen (Gebühren-Editor,
+# Auswahlfeld „Gebührenart", 03.08.2026); ihre Airbnb-Kategorie steht im
+# Hilfe-Artikel. Diese Tests halten beide Enden fest.
+
+
+def test_gebuehrenart_zuordnung_deckt_jede_airbnb_kategorie_ab() -> None:
+    """Stichproben aus jeder Fußnote des Standards — Schlüssel UND Ziel."""
+    faelle = {
+        "additional_bed": "community",
+        "utensils_cleaning": "community",
+        "baby_bed": "community",
+        "food_utensils": "management",
+        "on_site_payment_method": "management",
+        "water_craft_mooring": "management",
+        "damage_protection_insurance": "resort",
+        "transportation": "resort",
+        "linens_bath": "linen",
+        "pet_fee": "pet",
+        "cleaning_fee": "cleaning",
+    }
+    for art, kategorie in faelle.items():
+        assert fee_category({"feeType": art}) == kategorie, art
+    # Ohne Kategorie: geht an KEIN Portal (Wurzel 4 — nichts erfinden).
+    assert fee_category({"feeType": "unknown"}) is None
+    assert fee_category({"feeType": "misc_charges"}) is None
+    assert fee_category({}) is None
+    # Bestandsschlüssel bleiben lesbar, sonst wäre das Objekt unspeicherbar.
+    assert fee_category({"feeType": "cleaning"}) == "cleaning"
+    assert fee_category({"feeType": "other"}) is None
+
+
+def test_normalize_fees_prueft_die_rechenart() -> None:
+    """Prozent oder Pauschalbetrag — Freitext gäbe es beim Portal nicht."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "Resort", "amount": 5, "mode": "percent",
+          "basis": "per_stay", "feeType": "resort"}],
+        portale=_PORTALE,
+    )
+    assert ok[0]["mode"] == "percent"
+    # Altbestand ohne `mode`: das waren ausschließlich Beträge.
+    alt = normalize_fees(
+        [{"id": "f1", "name": "Alt", "amount": 50, "basis": "per_stay"}],
+        portale=_PORTALE,
+    )
+    assert alt[0]["mode"] == "amount"
+    with pytest.raises(PropertyError):
+        normalize_fees(
+            [{"id": "f1", "name": "X", "mode": "mondphase", "basis": "per_stay"}],
+            portale=_PORTALE,
+        )
+
+
+def test_normalize_fees_prozentsatz_hoechstens_hundert() -> None:
+    """Channex lehnt `rate > 100` bei logic=percent ab — hier schon fehlschlagen,
+    statt erst beim Sync."""
+    with pytest.raises(PropertyError) as exc:
+        normalize_fees(
+            [{"id": "f1", "name": "X", "amount": 150, "mode": "percent",
+              "basis": "per_stay"}],
+            portale=_PORTALE,
+        )
+    assert exc.value.status_code == 422
+
+
+def test_portal_scope_erlaubt_die_eigenen_buchungsstrecken() -> None:
+    """Die Einschränkung zählt die eigene Buchungsstrecke mit — im Standard steht
+    sie gleichrangig neben Airbnb und Booking.com."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "X", "basis": "per_stay", "amount": 10,
+          "portalScope": ["direct", "portal", "BookingCom"]}],
+        portale=_PORTALE,
+    )
+    assert ok[0]["portalScope"] == ["direct", "portal", "BookingCom"]
+
+
+# --- Steuerbemessungsgrundlage (Gebührenkategorien, nicht Gebühren-IDs) -------
+
+
+def test_taxable_base_nur_bekannte_items() -> None:
+    """Grundpreis + die sechs von Airbnb unterstützten Kategorien; alles andere
+    wäre eine Grundlage, die es beim Portal nicht gibt."""
+    ok = normalize_taxes(
+        [{"id": "t", "kind": "local", "name": "Kurtaxe", "mode": "percent",
+          "value": 5, "taxableBase": ["base_price", "cleaning", "cleaning"]}],
+        portale=frozenset(),
+    )
+    assert ok[0]["taxableBase"] == ["base_price", "cleaning"]
+    with pytest.raises(PropertyError) as exc:
+        normalize_taxes(
+            [{"id": "t", "kind": "local", "name": "K", "mode": "percent",
+              "value": 5, "taxableBase": ["security_deposit"]}],
+            portale=frozenset(),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_taxable_base_altbestand_wird_auf_die_kategorie_gehoben() -> None:
+    """Früher standen dort GEBÜHREN-IDs. Beim Portal gibt es „genau diese eine
+    Gebühr" nicht — der Alt-Wert wird auf seine Kategorie umgeschrieben, statt
+    das Objekt unspeicherbar zu machen oder die Grundlage still zu verlieren."""
+    fees = normalize_fees(
+        [{"id": "fee-uuid", "name": "Endreinigung", "amount": 50,
+          "basis": "per_stay", "feeType": "cleaning_fee"}],
+        portale=frozenset(),
+    )
+    ok = normalize_taxes(
+        [{"id": "t", "kind": "local", "name": "Kurtaxe", "mode": "percent",
+          "value": 5, "taxableBase": ["base_price", "fee-uuid"]}],
+        portale=frozenset(),
+        fees=fees,
+    )
+    assert ok[0]["taxableBase"] == ["base_price", "cleaning"]

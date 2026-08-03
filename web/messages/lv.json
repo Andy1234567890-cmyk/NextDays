@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Vai tiešām dzēst šo cenu plānu? Plāna cenas pa datumiem tiks dzēstas kopā ar to.",
       "feeTypeLabel": "Maksas veids",
       "feeTypeHint": "Nosaka, kā maksa nonāk portālos. Tādiem portāliem kā Airbnb ir savas kategorijas uzkopšanai un mājdzīvniekiem.",
-      "feeType": {
+      "feeTypePlaceholder": "Noklikšķiniet, lai atlasītu",
+      "feeModeAmount": "Fiksēta summa",
+      "feeModePercent": "Procenti",
+      "feeModePercentShort": "vienreiz no numura cenas",
+      "feePercentPlaceholder": "0 % no numura cenas ar akcijām",
+      "feePercentHint": "Procentuālo maksu aprēķina vienreiz no numura cenas, ieskaitot akcijas.",
+      "feeOptionalHint": "Neobligātās maksas netiek sūtītas kanāliem — viesis tās tur nevar atteikt.",
+      "restrictionsTitle": "Ierobežojumi",
+      "restrictionsHint": "Atlasiet kanālus, kuros tas jāiekasē.",
+      "restrictionsNote": "Nekas nav atlasīts = visi kanāli. Ko kanāls patiešām pieņem, nosaka tā saskarne.",
+      "restrictedSuffix": "ierobežots",
+      "ownChannel": {
+        "direct": "Sava vietne",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Uzkopšanas maksa",
-        "pet": "Maksa par mājdzīvnieku",
+        "linen": "Veļas maksa",
         "resort": "Kūrorta maksa",
-        "management": "Apsaimniekošanas maksa",
+        "management": "Pārvaldības maksa",
         "community": "Kopīpašuma maksa",
-        "linen": "Veļas serviss",
-        "other": "Cita maksa"
-      }
+        "pet": "Mājdzīvnieka maksa"
+      },
+      "actions": "Darbības"
     },
     "policiesForm": {
       "title": "Noteikumi",
@@ -5325,7 +5340,19 @@
     "syncing": "Sinhronizē …",
     "syncBookings": "Sinhronizēt rezervācijas",
     "noBookingsYet": "No šī portāla vēl nav rezervāciju.",
-    "channelFallback": "Kanāls"
+    "channelFallback": "Kanāls",
+    "airbnbTax": {
+      "title": "Nodokļu iekasēšana",
+      "hint": "Vai savus nodokļus var pārsūtīt, atkarīgs no tā, ko iekasē pats kanāls.",
+      "scenarioLabel": "Nodokļu iekasēšanas scenārijs",
+      "scenarioUnset": "Vēl nav norādīts",
+      "scenarioIneligible": "Nav tiesīgs",
+      "scenarioNoCollected": "Kanāls neiekasē nodokļus",
+      "scenarioStacked": "Kanāls iekasē nodokļus, mūsu tiek pievienoti",
+      "acknowledge": "Apliecinu, ka saprotu nodokļu iekasēšanas scenāriju.",
+      "sendUserTaxes": "Sūtīt savus nodokļus",
+      "blockedNote": "Kamēr tas ir izslēgts, uz šo kanālu netiek sūtīti savi nodokļi."
+    }
   },
   "calendarSync": {
     "title": "Kalendāra imports/eksports",

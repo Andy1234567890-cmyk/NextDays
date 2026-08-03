@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Eliminar mesmo este plano de preços? Os preços por data do plano serão eliminados também.",
       "feeTypeLabel": "Tipo de taxa",
       "feeTypeHint": "Determina como a taxa chega aos portais. Portais como o Airbnb têm categorias próprias para limpeza e animais de estimação.",
-      "feeType": {
+      "feeTypePlaceholder": "Clique para selecionar",
+      "feeModeAmount": "Valor fixo",
+      "feeModePercent": "Percentagem",
+      "feeModePercentShort": "uma vez sobre o preço do quarto",
+      "feePercentPlaceholder": "0 % do preço do quarto incl. promoções",
+      "feePercentHint": "Uma taxa percentual é cobrada uma vez sobre o preço do quarto, incluindo promoções.",
+      "feeOptionalHint": "As taxas opcionais não são enviadas a nenhum canal — o hóspede não as poderia recusar.",
+      "restrictionsTitle": "Restrições",
+      "restrictionsHint": "Selecione os canais onde deve ser cobrado.",
+      "restrictionsNote": "Nada selecionado = todos os canais. O que cada canal aceita depende da sua interface.",
+      "restrictedSuffix": "restrito",
+      "ownChannel": {
+        "direct": "Site próprio",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Taxa de limpeza",
-        "pet": "Taxa por animal de estimação",
+        "linen": "Taxa de roupa de cama",
         "resort": "Taxa de resort",
         "management": "Taxa de gestão",
         "community": "Taxa de condomínio",
-        "linen": "Serviço de roupa de cama",
-        "other": "Outra taxa"
-      }
+        "pet": "Taxa de animal"
+      },
+      "actions": "Ações"
     },
     "policiesForm": {
       "title": "Políticas",
@@ -5325,7 +5340,19 @@
     "syncing": "A sincronizar …",
     "syncBookings": "Sincronizar reservas",
     "noBookingsYet": "Ainda não há reservas deste portal.",
-    "channelFallback": "Canal"
+    "channelFallback": "Canal",
+    "airbnbTax": {
+      "title": "Cobrança de impostos",
+      "hint": "Se os seus impostos podem ser exportados depende do que o canal cobra.",
+      "scenarioLabel": "Cenário de cobrança de impostos",
+      "scenarioUnset": "Ainda não registado",
+      "scenarioIneligible": "Não elegível",
+      "scenarioNoCollected": "O canal não cobra impostos",
+      "scenarioStacked": "O canal cobra impostos e os nossos acrescem",
+      "acknowledge": "Confirmo que compreendo o cenário de cobrança de impostos.",
+      "sendUserTaxes": "Enviar impostos próprios",
+      "blockedNote": "Enquanto estiver desligado, não são enviados impostos próprios a este canal."
+    }
   },
   "calendarSync": {
     "title": "Importar/exportar calendário",

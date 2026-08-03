@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Poistetaanko tämä hintasuunnitelma? Myös suunnitelman päiväkohtaiset hinnat poistetaan.",
       "feeTypeLabel": "Maksun tyyppi",
       "feeTypeHint": "Määrittää, minä maksu näkyy portaaleissa. Portaaleilla kuten Airbnb on omat luokat siivoukselle ja lemmikeille.",
-      "feeType": {
+      "feeTypePlaceholder": "Napsauta valitaksesi",
+      "feeModeAmount": "Kiinteä summa",
+      "feeModePercent": "Prosentti",
+      "feeModePercentShort": "kerran huonehinnasta",
+      "feePercentPlaceholder": "0 % huonehinnasta tarjoukset mukaan lukien",
+      "feePercentHint": "Prosenttimaksu veloitetaan kertaluonteisesti huonehinnasta tarjoukset mukaan lukien.",
+      "feeOptionalHint": "Valinnaisia maksuja ei lähetetä kanaviin – vieras ei voisi poistaa niitä.",
+      "restrictionsTitle": "Rajoitukset",
+      "restrictionsHint": "Valitse kanavat, joilla tämä veloitetaan.",
+      "restrictionsNote": "Ei valintaa = kaikki kanavat. Sen, mitä kanava hyväksyy, ratkaisee sen rajapinta.",
+      "restrictedSuffix": "rajoitettu",
+      "ownChannel": {
+        "direct": "Oma verkkosivusto",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Siivousmaksu",
-        "pet": "Lemmikkimaksu",
-        "resort": "Lomakeskusmaksu",
+        "linen": "Liinavaatemaksu",
+        "resort": "Resort-maksu",
         "management": "Hallinnointimaksu",
-        "community": "Yhtiövastikemaksu",
-        "linen": "Liinavaatepalvelu",
-        "other": "Muu maksu"
-      }
+        "community": "Yhteismaksu",
+        "pet": "Lemmikkimaksu"
+      },
+      "actions": "Toiminnot"
     },
     "policiesForm": {
       "title": "Käytännöt",
@@ -5325,7 +5340,19 @@
     "syncing": "Synkronoidaan …",
     "syncBookings": "Synkronoi varaukset",
     "noBookingsYet": "Ei vielä varauksia tästä portaalista.",
-    "channelFallback": "Kanava"
+    "channelFallback": "Kanava",
+    "airbnbTax": {
+      "title": "Verojen keruu",
+      "hint": "Voidaanko omat verot lähettää, riippuu siitä, mitä kanava itse kerää.",
+      "scenarioLabel": "Verojen keruun skenaario",
+      "scenarioUnset": "Ei vielä määritetty",
+      "scenarioIneligible": "Ei oikeutettu",
+      "scenarioNoCollected": "Kanava ei kerää veroja",
+      "scenarioStacked": "Kanava kerää veroja, omat lisätään",
+      "acknowledge": "Vahvistan ymmärtäväni verojen keruun skenaarion.",
+      "sendUserTaxes": "Lähetä omat verot",
+      "blockedNote": "Kun tämä on pois, kanavalle ei lähetetä omia veroja."
+    }
   },
   "calendarSync": {
     "title": "Tuo/vie kalenteri",

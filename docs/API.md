@@ -258,14 +258,26 @@ alle 24), `descriptionHtml` (beim Speichern mit `nh3`-Allowlist gesäubert). Bei
 Kurtaxen-Modell und gehen als Channex-`logic` (`per_booking`, `per_night`,
 `per_person`, `per_person_per_night`) an die Portale (Channex-`type`:
 `city_tax` mit Unterstrich — live gemessen, die Doku-Schreibweise „city tax"
-wird abgelehnt); bei `mode=percent`
-optional `taxableBase[]` (Gebühren-IDs und/oder `base_price`). Fehlen
-`chargeBasis`/`period` (Altbestand), gilt „einmalig pro Nacht" — exakt das
-bisherige Verhalten.
+wird abgelehnt); bei `mode=percent` optional `taxableBase[]` — `base_price`
+und/oder Gebühren**kategorien** (`cleaning`, `linen`, `resort`, `management`,
+`community`, `pet`). Alt-Datensätze trugen dort Gebühren-IDs; sie werden beim
+nächsten Speichern auf ihre Kategorie gehoben. Die Grundlage wirkt NUR auf das,
+was an Airbnb geht — für alle anderen Kanäle rechnen Prozent-Steuern auf den
+Basispreis. Fehlen `chargeBasis`/`period` (Altbestand), gilt „einmalig pro
+Nacht" — exakt das bisherige Verhalten.
+
+`fees[]` je Eintrag: `id`, `name`, `amount`, `mode` (`amount`/`percent`, ohne
+Angabe `amount`), `basis` (`per_stay`/`per_night`/`per_guest_stay`/
+`per_guest_night`), `optional`, optional `taxRate` (eigener USt-Satz),
+`descriptionHtml`, `feeType` (49 Arten, siehe `GET /properties/fee-types`) und
+`portalScope[]`. Prozent ist immer einmalig auf den Zimmerpreis; `feeType`
+entscheidet über die Portal-Kategorie und damit, ob und wie die Gebühr exportiert
+wird (`channel_manager/ota_abgaben.py`).
 
 | Methode | Pfad | Zweck |
 |---|---|---|
 | `POST` | `/api/v1/properties/{id}/taxes/{tax_id}/apply` | Steuer dieses Objekts auf weitere eigene Objekte übertragen (`{property_ids: []}`, max. 200). Jede Ziel-ID einzeln tenant-gescopt → `404` bei fremder ID, kein stilles Überspringen |
+| `GET` | `/api/v1/properties/fee-types` | Die 49 wählbaren Gebührenarten mit Bezeichnung und Portal-Kategorie (`{items:[{value,label,category}]}`). Eine Quelle für Auswahlfeld UND serverseitige Prüfung |
 
 **Verfügbarkeit** (.. „Availability") liegt in `type_attributes.availability`:
 `minStay`, `minStayByDays`, `maxStay`, sowie pro-Kanal-fähige Werte
@@ -947,6 +959,7 @@ Berechtigung `manage_property_settings`. Beträge laufen durchgängig in **Cent*
 | `POST /api/v1/channel-manager/channels`                            | Schritt 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen **und aktivieren** → `201`                |
 | `DELETE /api/v1/channel-manager/channels/{channel_id}`             | Kanal trennen (erst deaktivieren, dann löschen) → `204`                                         |
 | `GET /api/v1/channel-manager/properties/{property_id}/connections` | Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal, white-label)         |
+| `PUT /api/v1/channel-manager/properties/{property_id}/connections/{portal}/airbnb-tax` | Airbnb-Steuererhebung dieses Inserats: `{scenario, acknowledged, send_user_taxes}`. Steuern gehen an Airbnb NUR wenn Szenario ≠ `ineligible` UND beide Schalter an (fail-closed); stößt den Steuer-Sync an |
 | `POST /api/v1/channel-manager/webhook`                             | Webhook-Empfang (ohne JWT, via geteiltem Secret-Header `X-Channex-Webhook-Secret`)              |
 
 **ARI-Push (Best-Practice: batchen, nicht einzeln).** Availability und Preise

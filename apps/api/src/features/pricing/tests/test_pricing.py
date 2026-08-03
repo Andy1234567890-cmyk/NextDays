@@ -323,7 +323,13 @@ def test_quote_full_breakdown() -> None:
     # Attrappe) — Portal-Aufschläge sind Kanal-Pläne, keine Quote-Zeile.
     cfg = {
         "fees": [{"name": "Reinigung", "amount": 50, "basis": "per_stay"}],
-        "taxes": [{"name": "MwSt", "mode": "percent", "value": 19, "includedInPrice": False}],
+        # USt. (kind="vat") liegt auf allem, was verkauft wird — also auch auf
+        # der Reinigungsgebühr. Nur LOKALE Abgaben rechnen ausschließlich auf den
+        # Grundpreis (siehe test_quote_lokale_prozentsteuer_nur_auf_grundpreis).
+        "taxes": [
+            {"name": "MwSt", "kind": "vat", "mode": "percent", "value": 19,
+             "includedInPrice": False}
+        ],
         "promotions": [{"name": "Frühbucher", "percent": 10}],
     }
     r = _resolver(base=100.0, config=cfg)
@@ -713,11 +719,19 @@ def test_quote_prozentsteuer_nur_auf_gewaehlte_grundlage() -> None:
     assert next(line for line in q.lines if line.kind == "tax").amount == 30.0
 
 
-def test_quote_prozentsteuer_grundlage_inkl_gebuehr() -> None:
-    """Grundlage mit ausgewählter Gebühr: 10 % von (300 + 50)."""
+def test_quote_grundlage_mit_gebuehrenkategorie_wirkt_nur_bei_airbnb() -> None:
+    """Eine gewählte Gebührenkategorie in der Grundlage ändert die EIGENE
+    Buchungsstrecke NICHT: dort gilt „Steuern nur auf den Basispreis".
+
+    Die Auswahl wirkt ausschließlich beim Airbnb-Export
+    (channel_manager/ota_abgaben.py) — so ist der Branchenstandard live
+    beschrieben. Vorher besteuerte diese Grundlage die Reinigungsgebühr auch in
+    der Direktbuchung mit (350 statt 300).
+    """
     cfg = {
         "fees": [
-            {"id": "clean", "name": "Reinigung", "amount": 50, "basis": "per_stay"}
+            {"id": "clean", "name": "Reinigung", "amount": 50, "basis": "per_stay",
+             "feeType": "cleaning_fee"}
         ],
         "taxes": [
             {
@@ -726,7 +740,7 @@ def test_quote_prozentsteuer_grundlage_inkl_gebuehr() -> None:
                 "name": "Stadtsteuer",
                 "mode": "percent",
                 "value": 10,
-                "taxableBase": ["base_price", "clean"],
+                "taxableBase": ["base_price", "cleaning"],
                 "includedInPrice": False,
             }
         ],
@@ -740,7 +754,80 @@ def test_quote_prozentsteuer_grundlage_inkl_gebuehr() -> None:
             guests=2,
         )
     )
-    assert next(line for line in q.lines if line.kind == "tax").amount == 35.0
+    assert next(line for line in q.lines if line.kind == "tax").amount == 30.0
+
+
+def test_quote_lokale_prozentsteuer_nur_auf_grundpreis() -> None:
+    """Ohne gepflegte Grundlage gilt dasselbe: die lokale Prozent-Steuer rechnet
+    auf den Grundpreis, nicht auf Grundpreis + Gebühren."""
+    cfg = {
+        "fees": [
+            {"id": "clean", "name": "Reinigung", "amount": 50, "basis": "per_stay"}
+        ],
+        "taxes": [
+            {"id": "city", "kind": "local", "name": "Stadtsteuer",
+             "mode": "percent", "value": 10, "includedInPrice": False}
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    assert next(line for line in q.lines if line.kind == "tax").amount == 30.0
+
+
+def test_quote_prozentgebuehr_einmalig_auf_zimmerpreis() -> None:
+    """Prozentuale Gebühr: einmalig auf den Zimmerpreis, die Basis multipliziert
+    nichts — 5 % von 300 sind 15, auch bei basis=per_night."""
+    cfg = {
+        "fees": [
+            {"id": "resort", "name": "Resortgebühr", "amount": 5,
+             "mode": "percent", "basis": "per_night", "feeType": "resort"}
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    assert next(line for line in q.lines if line.kind == "fee").amount == 15.0
+    assert q.total == 315.0
+
+
+def test_quote_kanal_einschraenkung_gilt_auch_direkt() -> None:
+    """Eine Gebühr „nur an Booking" darf in einer Direktbuchung nicht auftauchen.
+
+    Die Einschränkung zählt die eigene Buchungsstrecke mit — sonst behauptet die
+    Oberfläche „nur an Booking" und die Rechnung stellt sie trotzdem.
+    """
+    cfg = {
+        "fees": [
+            {"id": "b", "name": "Nur Booking", "amount": 50, "basis": "per_stay",
+             "portalScope": ["BookingCom"]},
+            {"id": "d", "name": "Überall", "amount": 20, "basis": "per_stay"},
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    labels = [line.label for line in q.lines if line.kind == "fee"]
+    assert labels == ["Überall"]
+    assert q.total == 320.0
 
 
 def test_quote_gastseitiger_steuername_gewinnt() -> None:

@@ -496,15 +496,19 @@ class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin):
         if isinstance(attrs_in, dict) and isinstance(attrs_in.get("pricing"), dict):
             pricing_in = attrs_in["pricing"]
             portale = erlaubte_portale(self._db, tenant_id, property_id)
-            if isinstance(pricing_in.get("taxes"), list):
-                pricing_in["taxes"] = normalize_taxes(
-                    pricing_in["taxes"], portale=portale
-                )
-            # Gebühren ebenso prüfen: sie gehen seit dem Gebühren-Export als
-            # `type: "fee"` an die Portale, damit ist jedes Feld Fremdeingabe.
+            # Gebühren ZUERST: sie gehen seit dem Gebühren-Export als
+            # `type: "fee"` an die Portale, damit ist jedes Feld Fremdeingabe —
+            # und die Steuerprüfung braucht die geprüften Gebühren, um eine alte
+            # Bemessungsgrundlage (Gebühren-IDs) auf ihre Kategorie zu heben.
             if isinstance(pricing_in.get("fees"), list):
                 pricing_in["fees"] = normalize_fees(
                     pricing_in["fees"], portale=portale
+                )
+            if isinstance(pricing_in.get("taxes"), list):
+                pricing_in["taxes"] = normalize_taxes(
+                    pricing_in["taxes"],
+                    portale=portale,
+                    fees=pricing_in.get("fees") or [],
                 )
         # Alt-Stand der type_attributes für den Änderungs-Diff (siehe unten):
         # nur laden, wenn type_attributes überhaupt im Update steckt.

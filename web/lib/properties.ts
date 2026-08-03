@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache";
 
 import { ApiError, api } from "@/lib/api";
+import type { FeeTypeEntry } from "@/lib/pricing-meta";
 import { currentToken } from "@/lib/session-token";
 
 export type PropertyType =
@@ -174,6 +175,15 @@ export async function deleteProperty(id: string): Promise<Result<null>> {
 
 /** Eine Steuer dieses Objekts auf weitere eigene Objekte übertragen. Der
  *  Server prüft jede Ziel-ID einzeln auf den eigenen Betrieb. */
+/** Die wählbaren Gebührenarten mit Bezeichnung und Portal-Kategorie.
+ *
+ *  Eine Fachtaxonomie mit 49 Einträgen — sie liegt serverseitig in EINER Quelle
+ *  (`gebuehren.FEE_TYPE_CATEGORY`), damit Auswahlfeld und Prüfung nicht
+ *  auseinanderlaufen. Deshalb geladen statt im Frontend nachgebaut. */
+export async function listFeeTypes(): Promise<Result<{ items: FeeTypeEntry[] }>> {
+  return call("/properties/fee-types");
+}
+
 export async function applyTaxToProperties(
   propertyId: string,
   taxId: string,

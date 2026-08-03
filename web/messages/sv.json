@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Vill du verkligen ta bort den här prisplanen? Planens datumpriser tas bort samtidigt.",
       "feeTypeLabel": "Avgiftstyp",
       "feeTypeHint": "Bestämmer vad avgiften kommer in som hos portalerna. Portaler som Airbnb har egna kategorier för städning och husdjur.",
-      "feeType": {
+      "feeTypePlaceholder": "Klicka för att välja",
+      "feeModeAmount": "Fast belopp",
+      "feeModePercent": "Procent",
+      "feeModePercentShort": "engångs på rumspriset",
+      "feePercentPlaceholder": "0 % av rumspriset inkl. kampanjer",
+      "feePercentHint": "En procentuell avgift debiteras en gång och beräknas på rumspriset inkl. kampanjer.",
+      "feeOptionalHint": "Valfria avgifter skickas inte till kanaler – gästen kan inte välja bort dem där.",
+      "restrictionsTitle": "Begränsningar",
+      "restrictionsHint": "Välj de kanaler där detta ska tas ut.",
+      "restrictionsNote": "Inget valt = alla kanaler. Vad en kanal faktiskt tar emot avgörs av dess gränssnitt.",
+      "restrictedSuffix": "begränsad",
+      "ownChannel": {
+        "direct": "Egen webbplats",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Städavgift",
-        "pet": "Avgift för husdjur",
+        "linen": "Linneavgift",
         "resort": "Resortavgift",
         "management": "Förvaltningsavgift",
-        "community": "Avgift för gemensamma utrymmen",
-        "linen": "Linneservice",
-        "other": "Övrig avgift"
-      }
+        "community": "Gemensamhetsavgift",
+        "pet": "Husdjursavgift"
+      },
+      "actions": "Åtgärder"
     },
     "policiesForm": {
       "title": "Villkor",
@@ -5325,7 +5340,19 @@
     "syncing": "Synkroniserar …",
     "syncBookings": "Synkronisera bokningar",
     "noBookingsYet": "Inga bokningar från den här portalen ännu.",
-    "channelFallback": "Kanal"
+    "channelFallback": "Kanal",
+    "airbnbTax": {
+      "title": "Skatteuppbörd",
+      "hint": "Om egna skatter får överföras beror på vad kanalen själv tar in.",
+      "scenarioLabel": "Scenario för skatteuppbörd",
+      "scenarioUnset": "Ännu inte angivet",
+      "scenarioIneligible": "Inte behörig",
+      "scenarioNoCollected": "Kanalen tar inte in skatter",
+      "scenarioStacked": "Kanalen tar in skatter, våra läggs till",
+      "acknowledge": "Jag bekräftar att jag förstår scenariot för skatteuppbörd.",
+      "sendUserTaxes": "Skicka egna skatter",
+      "blockedNote": "Så länge detta är av skickas inga egna skatter till kanalen."
+    }
   },
   "calendarSync": {
     "title": "Importera/exportera kalender",

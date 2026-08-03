@@ -37,6 +37,8 @@ import {
   SelectValue,
 } from "@nextdays/ui/select";
 import { Switch } from "@nextdays/ui/switch";
+import { EinschraenkungenEditor } from "@/components/objekte/pricing/einschraenkungen-editor";
+import { GebuehrEditor } from "@/components/objekte/pricing/gebuehren-editor";
 import {
   LokaleSteuerEditor,
   MwStEditor,
@@ -46,7 +48,6 @@ import {
   type Currency,
   type Fee,
   type FeeBasis,
-  type FeeType,
   type LengthPrice,
   type Pricing,
   type Promotion,
@@ -55,7 +56,6 @@ import {
   type TaxKind,
   CURRENCY_OPTIONS,
   FEE_BASIS_LABELS,
-  FEE_TYPE_ORDER,
   STAY_KIND_LABELS,
   TAX_KIND_LABELS,
   TAXABLE_BASE_PRICE,
@@ -89,6 +89,7 @@ type Section =
   | "shortStay"
   | { length: StayKind; id?: string }
   | { fee: string | "new" }
+  | { restrict: "fee" | "tax"; id: string }
   | { tax: TaxKind; id?: string }
   | { promo: string | "new" }
   | { addon: string | "new" }
@@ -364,9 +365,14 @@ export function PricingForm({ initial }: { initial: Property }) {
           <ListRow
             key={f.id}
             title={f.name}
-            pill={`${fmtPrice(f.amount, cur, locale)} · ${FEE_BASIS_LABELS[f.basis]}${f.taxRate != null ? ` · ${t("pricingForm.taxRateSuffix", { rate: f.taxRate })}` : ""
-              }${f.optional ? ` · ${t("pricingForm.optionalSuffix")}` : ""}`}
+            pill={feeSummary(f, cur, locale, t)}
+            badge={
+              (f.portalScope ?? []).length > 0
+                ? t("pricingForm.restrictedSuffix")
+                : undefined
+            }
             onEdit={() => setSection({ fee: f.id })}
+            onRestrict={() => setSection({ restrict: "fee", id: f.id })}
             onDelete={() => save({ ...pr, fees: pr.fees.filter((x) => x.id !== f.id) })}
           />
         )}
@@ -419,8 +425,14 @@ export function PricingForm({ initial }: { initial: Property }) {
                   ? t("pricingForm.vatLabel")
                   : taxDisplayName(tx, locale) || TAX_KIND_LABELS[tx.kind]
               }
-              pill={taxSummary(tx, pr, cur, locale, t)}
+              pill={taxSummary(tx, cur, locale, t)}
+              badge={
+                (tx.portalScope ?? []).length > 0
+                  ? t("pricingForm.restrictedSuffix")
+                  : undefined
+              }
               onEdit={() => setSection({ tax: tx.kind, id: tx.id })}
+              onRestrict={() => setSection({ restrict: "tax", id: tx.id })}
               onDelete={() => save({ ...pr, taxes: pr.taxes.filter((x) => x.id !== tx.id) })}
             />
           ))
@@ -513,7 +525,17 @@ export function PricingForm({ initial }: { initial: Property }) {
         />
       )}
       {section && typeof section === "object" && "fee" in section && (
-        <FeeEditor pr={pr} editId={section.fee === "new" ? undefined : section.fee} onSave={save} onClose={() => setSection(null)} />
+        <GebuehrEditor pr={pr} editId={section.fee === "new" ? undefined : section.fee} onSave={save} onClose={() => setSection(null)} />
+      )}
+      {section && typeof section === "object" && "restrict" in section && (
+        <EinschraenkungenEditor
+          pr={pr}
+          propertyId={p.id}
+          kind={section.restrict}
+          id={section.id}
+          onSave={save}
+          onClose={() => setSection(null)}
+        />
       )}
       {section && typeof section === "object" && "tax" in section && (
         section.tax === "vat" ? (
@@ -600,12 +622,38 @@ function ListSection<T>({
   );
 }
 
+// Zusammenfassung einer Gebühr für die Listenzeile. Prozent und Betrag lesen
+// sich unterschiedlich: ein Prozentsatz ist immer einmalig auf den Zimmerpreis,
+// eine Basis dranzuschreiben wäre falsch.
+function feeSummary(
+  f: Fee,
+  cur: Currency | "",
+  locale: string,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): string {
+  const teile: string[] = [];
+  if ((f.mode ?? "amount") === "percent") {
+    teile.push(`${f.amount}%`);
+    teile.push(t("pricingForm.feeModePercentShort"));
+  } else {
+    teile.push(fmtPrice(f.amount, cur, locale));
+    teile.push(FEE_BASIS_LABELS[f.basis]);
+  }
+  if (f.taxRate != null) {
+    teile.push(t("pricingForm.taxRateSuffix", { rate: f.taxRate }));
+  }
+  if (f.optional) teile.push(t("pricingForm.optionalSuffix"));
+  if ((f.portalScope ?? []).length > 0) {
+    teile.push(t("pricingForm.restrictedSuffix"));
+  }
+  return teile.join(" · ");
+}
+
 // Zusammenfassung einer Steuer für die Listenzeile: Wert plus die Angaben, die
 // den Betrag erst eindeutig machen — bei Beträgen die Basis („pro Gast · pro
 // Nacht"), bei Prozentsätzen die gewählte Bemessungsgrundlage.
 function taxSummary(
   tx: Tax,
-  pr: Pricing,
   cur: Currency | "",
   locale: string,
   t: (key: string) => string,
@@ -615,12 +663,17 @@ function taxSummary(
     teile.push(`${tx.value}%`);
     const basis = tx.taxableBase ?? [];
     if (basis.length > 0) {
-      const namen = basis.map((id) =>
-        id === TAXABLE_BASE_PRICE
-          ? t("pricingForm.taxableBasePrice")
-          : (pr.fees.find((f) => f.id === id)?.name ?? id),
+      // Die Grundlage sind Kategorien, keine einzelnen Gebühren — mehrere
+      // Gebührenarten fallen beim Portal auf dieselbe Kategorie.
+      teile.push(
+        basis
+          .map((item) =>
+            item === TAXABLE_BASE_PRICE
+              ? t("pricingForm.taxableBasePrice")
+              : t(`pricingForm.taxableBaseCategory.${item}`),
+          )
+          .join(", "),
       );
-      teile.push(namen.join(", "));
     }
   } else {
     const { charge, period } = taxAmountBasis(tx);
@@ -647,12 +700,17 @@ function ListRow({
   badge,
   onEdit,
   onDelete,
+  onRestrict,
 }: {
   title: string;
   pill: string;
   badge?: string;
   onEdit: () => void;
   onDelete: () => void;
+  /** Gesetzt bei Gebühren/Steuern: die Kanal-Einschränkung ist ein EIGENER
+   *  Dialog neben Bearbeiten und Entfernen — sie gehört nicht zum Posten
+   *  selbst, sondern regelt, wohin er geht. */
+  onRestrict?: () => void;
 }) {
   const t = useTranslations("objects");
   return (
@@ -670,12 +728,36 @@ function ListRow({
           {pill}
         </span>
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={onEdit}>{t("pricingForm.edit")}</Button>
-        <Button variant="ghost" size="icon" aria-label={t("pricingForm.remove")} onClick={onDelete}>
-          <Icon icon="ph:trash" className="size-4 text-muted-foreground" />
-        </Button>
-      </div>
+      {onRestrict ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label={t("pricingForm.actions")}>
+              <Icon icon="ph:dots-three-vertical" className="size-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onEdit}>
+              <Icon icon="ph:pencil-simple" className="size-4" />
+              {t("pricingForm.edit")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onRestrict}>
+              <Icon icon="ph:arrows-in-line-vertical" className="size-4" />
+              {t("pricingForm.restrictionsTitle")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>
+              <Icon icon="ph:trash" className="size-4" />
+              {t("pricingForm.remove")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={onEdit}>{t("pricingForm.edit")}</Button>
+          <Button variant="ghost" size="icon" aria-label={t("pricingForm.remove")} onClick={onDelete}>
+            <Icon icon="ph:trash" className="size-4 text-muted-foreground" />
+          </Button>
+        </div>
+      )}
     </Card>
   );
 }
@@ -1177,103 +1259,6 @@ function LengthEditor({
 }
 
 // --- Etappe-2-Editoren ------------------------------------------------------
-
-function FeeEditor({
-  pr,
-  editId,
-  onSave,
-  onClose,
-}: {
-  pr: Pricing;
-  editId?: string;
-  onSave: (next: Pricing) => Promise<true | string>;
-  onClose: () => void;
-}) {
-  const t = useTranslations("objects");
-  const ex = editId ? pr.fees.find((x) => x.id === editId) : undefined;
-  const [v, setV] = useState<Fee>(
-    ex ?? {
-      id: "",
-      name: "",
-      amount: 0,
-      basis: "per_stay",
-      optional: false,
-      feeType: "cleaning",
-    },
-  );
-  const { busy, error, run } = useSaver(onSave);
-
-  function commit() {
-    const entry: Fee = { ...v, id: v.id || crypto.randomUUID() };
-    const list = ex ? pr.fees.map((x) => (x.id === entry.id ? entry : x)) : [...pr.fees, entry];
-    run({ ...pr, fees: list });
-  }
-
-  return (
-    <EditorShell
-      title={ex ? t("pricingForm.feeEditTitle") : t("pricingForm.feeAddTitle")}
-      subtitle={t("pricingForm.feeEditorSubtitle")}
-      onClose={onClose}
-      footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} disabled={!v.name.trim()} />}
-    >
-      <Field label={t("pricingForm.feeTypeLabel")} hint={t("pricingForm.feeTypeHint")}>
-        <Select
-          value={v.feeType ?? "other"}
-          onValueChange={(x) => setV({ ...v, feeType: x as FeeType })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {FEE_TYPE_ORDER.map((k) => (
-              <SelectItem key={k} value={k}>
-                {t(`pricingForm.feeType.${k}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field label={t("pricingForm.nameLabel")}>
-        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={t("pricingForm.feeNamePlaceholder")} />
-      </Field>
-      <Field label={t("pricingForm.amountLabel")}>
-        <MoneyInput value={v.amount} currency={pr.currency} onChange={(n) => setV({ ...v, amount: n })} />
-      </Field>
-      <Field label={t("pricingForm.calculationLabel")}>
-        <BasisSelect value={v.basis} onChange={(b) => setV({ ...v, basis: b })} />
-      </Field>
-      <Field label={t("pricingForm.taxRateFieldLabel")}>
-        <div className="flex items-center gap-2">
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            step={0.1}
-            value={v.taxRate ?? ""}
-            placeholder={t("pricingForm.taxRatePlaceholder")}
-            onChange={(e) => {
-              if (e.target.value === "") {
-                setV({ ...v, taxRate: null });
-                return;
-              }
-              // Auf gültigen USt-Bereich 0–100 begrenzen (min/max am Input
-              // blocken getippte/„2e3"-Werte nicht) — der Satz wird als
-              // Snapshot in Rechnungszeilen übernommen.
-              const n = Number(e.target.value);
-              if (!Number.isFinite(n)) return;
-              setV({ ...v, taxRate: Math.min(100, Math.max(0, n)) });
-            }}
-          />
-          <span className="text-sm text-muted-foreground">%</span>
-        </div>
-      </Field>
-      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-        <span className="font-medium">{t("pricingForm.feeOptionalLabel")}</span>
-        <Switch checked={v.optional} onCheckedChange={(c) => setV({ ...v, optional: c })} />
-      </label>
-    </EditorShell>
-  );
-}
 
 function PromoEditor({
   pr,

@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useTransition } from "react";
 
+import { AirbnbSteuererhebung } from "@/components/objekte/airbnb-steuererhebung";
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { Input } from "@nextdays/ui/input";
@@ -341,6 +342,10 @@ export function PropertyChannelDetail({
           )}
         </Card>
       </section>
+
+      {/* Airbnb-Steuererhebung: entscheidet, ob eigene Steuern dorthin gehen.
+          Nur bei Airbnb — andere Portale kennen dieses Szenario nicht. */}
+      {detail.portal_code === "AirBNB" && <AirbnbSteuererhebung detail={detail} />}
 
       {/* Kennungen beim Portal */}
       <section className="flex flex-col gap-2">

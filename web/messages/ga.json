@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "An bhfuil tú cinnte gur mian leat an plean praghsála seo a scriosadh? Scriosfar praghsanna dáta an phlean chomh maith.",
       "feeTypeLabel": "Cineál táille",
       "feeTypeHint": "Cinneann sé conas a shroicheann an táille na tairseacha. Tá catagóirí dá gcuid féin ag tairseacha ar nós Airbnb do ghlantachán agus do pheataí.",
-      "feeType": {
-        "cleaning": "Táille ghlantacháin",
-        "pet": "Táille pheataí",
+      "feeTypePlaceholder": "Cliceáil chun roghnú",
+      "feeModeAmount": "Suim sheasta",
+      "feeModePercent": "Céatadán",
+      "feeModePercentShort": "aon uair ar ráta an tseomra",
+      "feePercentPlaceholder": "0% de ráta an tseomra le tairiscintí",
+      "feePercentHint": "Gearrtar táille chéatadáin aon uair amháin ar ráta an tseomra, tairiscintí san áireamh.",
+      "feeOptionalHint": "Ní sheoltar táillí roghnacha chuig cainéal – ní fhéadfadh an t-aoi iad a dhíroghnú.",
+      "restrictionsTitle": "Srianta",
+      "restrictionsHint": "Roghnaigh na cainéil ar ar cheart é seo a ghearradh.",
+      "restrictionsNote": "Gan aon rud roghnaithe = gach cainéal. Is é comhéadan an chainéil a shocraíonn cad a ghlacann sé.",
+      "restrictedSuffix": "srianta",
+      "ownChannel": {
+        "direct": "Suíomh gréasáin féin",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
+        "cleaning": "Táille glantacháin",
+        "linen": "Táille línéadaigh",
         "resort": "Táille ionaid saoire",
         "management": "Táille bhainistíochta",
-        "community": "Táille comhphobail",
-        "linen": "Seirbhís línéadaigh",
-        "other": "Táille eile"
-      }
+        "community": "Táille pobail",
+        "pet": "Táille peata"
+      },
+      "actions": "Gníomhartha"
     },
     "policiesForm": {
       "title": "Polasaithe",
@@ -5325,7 +5340,19 @@
     "syncing": "Á shioncrónú …",
     "syncBookings": "Sioncrónaigh áirithintí",
     "noBookingsYet": "Níl aon áirithint ón tairseach seo fós.",
-    "channelFallback": "Cainéal"
+    "channelFallback": "Cainéal",
+    "airbnbTax": {
+      "title": "Bailiú cánach",
+      "hint": "Braitheann easpórtáil do chánacha féin ar a mbailíonn an cainéal féin.",
+      "scenarioLabel": "Cás bailiú cánach",
+      "scenarioUnset": "Gan taifeadadh go fóill",
+      "scenarioIneligible": "Neamh-incháilithe",
+      "scenarioNoCollected": "Ní bhailíonn an cainéal cáin",
+      "scenarioStacked": "Bailíonn an cainéal cáin, cuirtear ár gcuid leis",
+      "acknowledge": "Admhaím go dtuigim an cás bailiú cánach.",
+      "sendUserTaxes": "Seol cánacha féin",
+      "blockedNote": "Fad is atá sé seo múchta, ní sheoltar aon cháin dá gcuid chuig an gcainéal."
+    }
   },
   "calendarSync": {
     "title": "Iompórtáil/easpórtáil féilire",

@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Opravdu odstranit tento cenový plán? Ceny plánu podle data budou odstraněny spolu s ním.",
       "feeTypeLabel": "Druh poplatku",
       "feeTypeHint": "Určuje, jak poplatek dorazí na portály. Portály jako Airbnb mají vlastní kategorie pro úklid a domácí mazlíčky.",
-      "feeType": {
+      "feeTypePlaceholder": "Klikněte pro výběr",
+      "feeModeAmount": "Pevná částka",
+      "feeModePercent": "Procenta",
+      "feeModePercentShort": "jednorázově z ceny pokoje",
+      "feePercentPlaceholder": "0 % z ceny pokoje včetně akcí",
+      "feePercentHint": "Procentní poplatek se účtuje jednorázově z ceny pokoje včetně akcí.",
+      "feeOptionalHint": "Volitelné poplatky se neposílají do kanálů – hosté je tam nemohou odmítnout.",
+      "restrictionsTitle": "Omezení",
+      "restrictionsHint": "Vyberte kanály, na kterých se to má účtovat.",
+      "restrictionsNote": "Nic nevybráno = všechny kanály. Co kanál skutečně přijme, závisí na jeho rozhraní.",
+      "restrictedSuffix": "omezeno",
+      "ownChannel": {
+        "direct": "Vlastní web",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Poplatek za úklid",
-        "pet": "Poplatek za domácího mazlíčka",
-        "resort": "Resortní poplatek",
+        "linen": "Poplatek za prádlo",
+        "resort": "Resort poplatek",
         "management": "Poplatek za správu",
         "community": "Poplatek za společné prostory",
-        "linen": "Služba prádla",
-        "other": "Jiný poplatek"
-      }
+        "pet": "Poplatek za mazlíčka"
+      },
+      "actions": "Akce"
     },
     "policiesForm": {
       "title": "Zásady",
@@ -5325,7 +5340,19 @@
     "syncing": "Synchronizuji …",
     "syncBookings": "Synchronizovat rezervace",
     "noBookingsYet": "Zatím žádné rezervace z tohoto portálu.",
-    "channelFallback": "Kanál"
+    "channelFallback": "Kanál",
+    "airbnbTax": {
+      "title": "Výběr daní",
+      "hint": "Zda lze vlastní daně přenášet, závisí na tom, co vybírá samotný kanál.",
+      "scenarioLabel": "Scénář výběru daní",
+      "scenarioUnset": "Dosud nezadáno",
+      "scenarioIneligible": "Nezpůsobilé",
+      "scenarioNoCollected": "Kanál nevybírá daně",
+      "scenarioStacked": "Kanál vybírá daně, naše se přidávají",
+      "acknowledge": "Potvrzuji, že rozumím scénáři výběru daní.",
+      "sendUserTaxes": "Odesílat vlastní daně",
+      "blockedNote": "Dokud je to vypnuté, na kanál se neposílají žádné vlastní daně."
+    }
   },
   "calendarSync": {
     "title": "Import/export kalendáře",

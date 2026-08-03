@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -325,6 +325,33 @@ class ChannelPropertyDetailResponse(BaseModel):
     dynamic_pricing_enabled: bool = False
     # Preisänderung dieses Portals in % (Kanal-Plan-Offset, 0272); 0 = keine.
     price_adjustment_percent: float = 0.0
+    # Airbnb-Steuererhebung (0274). Nur bei Airbnb gepflegt.
+    airbnb_tax_scenario: str | None = None
+    airbnb_tax_acknowledged: bool = False
+    airbnb_send_user_taxes: bool = False
+
+
+class AirbnbTaxSettingsRequest(BaseModel):
+    """Airbnb-Steuererhebung dieses Inserats.
+
+    `scenario` beschreibt, was AIRBNB tut (nicht, was wir wollen):
+    `ineligible` — Airbnb erhebt automatisch bzw. unterstützt keine
+    Beherbergungssteuern, ein Export ist unmöglich; `no_collected` — Airbnb
+    erhebt nichts; `stacked` — Airbnb erhebt, unsere Werte kommen obendrauf.
+    `None` = noch nicht erfasst, dann gehen keine Steuern an Airbnb.
+    """
+
+    scenario: Literal["ineligible", "no_collected", "stacked"] | None = None
+    acknowledged: bool = False
+    send_user_taxes: bool = False
+
+
+class AirbnbTaxSettingsResponse(BaseModel):
+    portal_code: str
+    property_id: str
+    airbnb_tax_scenario: str | None = None
+    airbnb_tax_acknowledged: bool = False
+    airbnb_send_user_taxes: bool = False
 
 
 class PortalPriceAdjustmentRequest(BaseModel):

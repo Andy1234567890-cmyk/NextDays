@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Biztosan törlöd ezt az ártervet? A terv dátum szerinti árai is törlődnek.",
       "feeTypeLabel": "Díj típusa",
       "feeTypeHint": "Meghatározza, hogy a díj miként érkezik meg a portálokhoz. Az olyan portálok, mint az Airbnb, saját kategóriákat használnak a takarításra és a háziállatokra.",
-      "feeType": {
-        "cleaning": "Takarítási díj",
-        "pet": "Háziállatdíj",
-        "resort": "Üdülőhelyi díj",
+      "feeTypePlaceholder": "Kattintson a kiválasztáshoz",
+      "feeModeAmount": "Fix összeg",
+      "feeModePercent": "Százalék",
+      "feeModePercentShort": "egyszeri a szobaárra",
+      "feePercentPlaceholder": "a szobaár 0%-a akciókkal együtt",
+      "feePercentHint": "A százalékos díjat egyszer számoljuk fel a szobaár alapján, az akciókkal együtt.",
+      "feeOptionalHint": "Az opcionális díjakat nem küldjük a csatornákra – a vendég ott nem tudná levenni.",
+      "restrictionsTitle": "Korlátozások",
+      "restrictionsHint": "Válassza ki a csatornákat, amelyeken ezt felszámítjuk.",
+      "restrictionsNote": "Nincs kiválasztva = minden csatorna. Hogy egy csatorna mit fogad el, a felülete dönti el.",
+      "restrictedSuffix": "korlátozva",
+      "ownChannel": {
+        "direct": "Saját weboldal",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
+        "cleaning": "Tisztítási díj",
+        "linen": "Textíliadíj",
+        "resort": "Resortdíj",
         "management": "Kezelési díj",
-        "community": "Közös költség",
-        "linen": "Ágyneműszolgáltatás",
-        "other": "Egyéb díj"
-      }
+        "community": "Közösségi díj",
+        "pet": "Állatdíj"
+      },
+      "actions": "Műveletek"
     },
     "policiesForm": {
       "title": "Irányelvek",
@@ -5325,7 +5340,19 @@
     "syncing": "Szinkronizálás …",
     "syncBookings": "Foglalások szinkronizálása",
     "noBookingsYet": "Még nincs foglalás erről a portálról.",
-    "channelFallback": "Csatorna"
+    "channelFallback": "Csatorna",
+    "airbnbTax": {
+      "title": "Adóbeszedés",
+      "hint": "Hogy a saját adók átvihetők-e, attól függ, mit szed be maga a csatorna.",
+      "scenarioLabel": "Adóbeszedési forgatókönyv",
+      "scenarioUnset": "Még nincs megadva",
+      "scenarioIneligible": "Nem jogosult",
+      "scenarioNoCollected": "A csatorna nem szed adót",
+      "scenarioStacked": "A csatorna adót szed, a mieink hozzáadódnak",
+      "acknowledge": "Megerősítem, hogy értem az adóbeszedési forgatókönyvet.",
+      "sendUserTaxes": "Saját adók küldése",
+      "blockedNote": "Amíg ez ki van kapcsolva, nem küldünk saját adót erre a csatornára."
+    }
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",

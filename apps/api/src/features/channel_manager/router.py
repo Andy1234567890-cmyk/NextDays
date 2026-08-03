@@ -33,6 +33,8 @@ from src.features.auth.granular_permissions import Permission
 from .common import log
 from .dependencies import ChannelManagerServiceDep
 from .schemas import (
+    AirbnbTaxSettingsRequest,
+    AirbnbTaxSettingsResponse,
     AriPushRequest,
     AriPushResponse,
     AvailabilityRuleRequest,
@@ -530,6 +532,35 @@ def set_portal_price_adjustment(
         return PortalPriceAdjustmentResponse(
             **service.set_portal_price_adjustment(
                 ctx, property_id, portal_code, req.percent
+            )
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put(
+    "/properties/{property_id}/connections/{portal_code}/airbnb-tax",
+    response_model=AirbnbTaxSettingsResponse,
+)
+def set_airbnb_tax_settings(
+    property_id: str,
+    portal_code: str,
+    req: AirbnbTaxSettingsRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> AirbnbTaxSettingsResponse:
+    """Airbnb-Steuererhebung dieses Inserats: Szenario + Bestätigung +
+    „Benutzungssteuern senden". Erst wenn alle drei passen, gehen Steuern an
+    Airbnb; die Änderung stößt den Steuer-Sync direkt an."""
+    try:
+        return AirbnbTaxSettingsResponse(
+            **service.set_airbnb_tax_settings(
+                ctx,
+                property_id,
+                portal_code,
+                scenario=req.scenario,
+                acknowledged=req.acknowledged,
+                send_user_taxes=req.send_user_taxes,
             )
         )
     except ChannelManagerError as exc:

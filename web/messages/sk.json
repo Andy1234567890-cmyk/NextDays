@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Naozaj odstrániť tento cenový plán? Ceny plánu podľa dátumu sa odstránia spolu s ním.",
       "feeTypeLabel": "Typ poplatku",
       "feeTypeHint": "Určuje, ako poplatok dorazí na portály. Portály ako Airbnb majú vlastné kategórie pre upratovanie a domáce zvieratá.",
-      "feeType": {
-        "cleaning": "Poplatok za upratovanie",
-        "pet": "Poplatok za domáce zviera",
-        "resort": "Rezortný poplatok",
+      "feeTypePlaceholder": "Kliknite na výber",
+      "feeModeAmount": "Pevná suma",
+      "feeModePercent": "Percentá",
+      "feeModePercentShort": "jednorazovo z ceny izby",
+      "feePercentPlaceholder": "0 % z ceny izby vrátane akcií",
+      "feePercentHint": "Percentuálny poplatok sa účtuje jednorazovo z ceny izby vrátane akcií.",
+      "feeOptionalHint": "Voliteľné poplatky sa kanálom neposielajú – hosť ich tam nemôže odmietnuť.",
+      "restrictionsTitle": "Obmedzenia",
+      "restrictionsHint": "Vyberte kanály, na ktorých sa to má účtovať.",
+      "restrictionsNote": "Nič nevybrané = všetky kanály. Čo kanál skutočne prijme, rozhoduje jeho rozhranie.",
+      "restrictedSuffix": "obmedzené",
+      "ownChannel": {
+        "direct": "Vlastný web",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
+        "cleaning": "Poplatok za úklid",
+        "linen": "Poplatok za prádlo",
+        "resort": "Resort poplatok",
         "management": "Poplatok za správu",
         "community": "Poplatok za spoločné priestory",
-        "linen": "Služba prania bielizne",
-        "other": "Iný poplatok"
-      }
+        "pet": "Poplatok za zvieratko"
+      },
+      "actions": "Akcie"
     },
     "policiesForm": {
       "title": "Zásady",
@@ -5325,7 +5340,19 @@
     "syncing": "Synchronizujem …",
     "syncBookings": "Synchronizovať rezervácie",
     "noBookingsYet": "Zatiaľ žiadne rezervácie z tohto portálu.",
-    "channelFallback": "Kanál"
+    "channelFallback": "Kanál",
+    "airbnbTax": {
+      "title": "Výber daní",
+      "hint": "Či sa vlastné dane môžu prenášať, závisí od toho, čo vyberá samotný kanál.",
+      "scenarioLabel": "Scenár výberu daní",
+      "scenarioUnset": "Ešte nezadané",
+      "scenarioIneligible": "Nespôsobilé",
+      "scenarioNoCollected": "Kanál nevyberá dane",
+      "scenarioStacked": "Kanál vyberá dane, naše sa pridávajú",
+      "acknowledge": "Potvrdzujem, že rozumiem scenáru výberu daní.",
+      "sendUserTaxes": "Posielať vlastné dane",
+      "blockedNote": "Kým je to vypnuté, na tento kanál sa neposielajú vlastné dane."
+    }
   },
   "calendarSync": {
     "title": "Import/export kalendára",

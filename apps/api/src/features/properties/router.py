@@ -9,8 +9,11 @@ from src.features.auth.dependencies import require_granular_permission
 from src.features.auth.granular_permissions import Permission
 
 from .dependencies import PropertiesServiceDep
+from .gebuehren import fee_type_katalog
 from .schemas import (
     BuildingCreate,
+    FeeTypeCatalogResponse,
+    FeeTypeEntry,
     ImageUploadResponse,
     PhotoReorderRequest,
     PhotoUpdateRequest,
@@ -80,6 +83,18 @@ def get_taxonomy(
     # Objekt-Taxonomie (Kategorien + Immobilientypen) für den Objekttyp-Editor.
     # MUSS vor „/{property_id}" stehen (sonst fängt die Detail-Route „taxonomy" ab).
     return service.taxonomy()
+
+
+@router.get("/fee-types", response_model=FeeTypeCatalogResponse)
+def get_fee_types(ctx: CurrentUser) -> FeeTypeCatalogResponse:
+    """Die wählbaren Gebührenarten mit Bezeichnung und Portal-Kategorie.
+
+    Eine Fachtaxonomie mit 49 Einträgen — sie kommt aus EINER Quelle
+    (`gebuehren.FEE_TYPE_CATEGORY`), damit die Auswahl im Formular und die
+    serverseitige Prüfung nicht auseinanderlaufen können. MUSS vor
+    „/{property_id}" stehen, sonst fängt die Detail-Route „fee-types" ab.
+    """
+    return FeeTypeCatalogResponse(items=[FeeTypeEntry(**e) for e in fee_type_katalog()])
 
 
 @router.get("/buildings")

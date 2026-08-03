@@ -58,9 +58,22 @@ def _pick_locale_text(name: object) -> str | None:
     return str(val) if val else None
 
 
-# Kennung der Bemessungsgrundlage „Grundpreis" (neben den Gebühren-IDs des
-# Objekts); Gegenstück zu TAXABLE_BASE_PRICE in web/lib/pricing-meta.ts.
-_TAXABLE_BASE_PRICE = "base_price"
+def _gilt_fuer_kanal(eintrag: dict, channel: str) -> bool:
+    """Greift diese Gebühr/Steuer auf dem Kanal dieser Anfrage?
+
+    Die Kanal-Einschränkung (`portalScope`) zählt die eigene Buchungsstrecke
+    mit — im Branchenstandard steht sie im Einschränkungs-Dialog gleichrangig
+    neben Airbnb und Booking.com (live abgelesen 03.08.2026). Eine Gebühr „nur
+    an Booking" darf deshalb auch in einer Direktbuchung nicht erscheinen; ohne
+    diese Prüfung stünde sie hier auf der Rechnung, obwohl die Oberfläche das
+    Gegenteil behauptet.
+
+    Leer/fehlend = alle Kanäle.
+    """
+    scope = eintrag.get("portalScope")
+    if not isinstance(scope, list) or not scope:
+        return True
+    return channel in {str(x) for x in scope}
 
 
 class PricingError(Exception):
@@ -779,7 +792,9 @@ class PricingResolver:
         # wandert als Snapshot in die Zeile — die Rechnung nutzt ihn später
         # vorrangig vor dem Übernachtungssatz.
         for fee in config.fees:
-            amount = self._fee_amount(fee, n, req.guests)
+            if not _gilt_fuer_kanal(fee, req.channel):
+                continue
+            amount = self._fee_amount(fee, n, req.guests, nightly_total)
             if amount > 0:
                 name = str(fee.get("name") or "Gebühr")
                 lines.append(
@@ -867,6 +882,8 @@ class PricingResolver:
         for tax in config.taxes:
             if bool(tax.get("includedInPrice")):
                 continue
+            if not _gilt_fuer_kanal(tax, req.channel):
+                continue
             basis = self._taxable_base(
                 tax, steuer_basis_lines, nightly_total, steuer_subtotal
             )
@@ -926,8 +943,23 @@ class PricingResolver:
         )
 
     @staticmethod
-    def _fee_amount(fee: dict, nights: int, guests: int) -> float:
+    def _fee_amount(
+        fee: dict, nights: int, guests: int, nightly_total: float
+    ) -> float:
+        """Betrag einer Gebühr für diesen Aufenthalt.
+
+        Prozentuale Gebühr: EINMALIG auf den Zimmerpreis, die Basis multipliziert
+        nichts. Das ist die Regel des Branchenstandards („Gebühr wird als
+        einmalige Gebühr berechnet, wenn sie prozentual basiert ist, und richtet
+        sich nach dem Zimmerpreis einschließlich Promotions" — live abgelesen
+        03.08.2026; dort verschwinden die Berechnungsfelder im Prozent-Modus).
+        „Einschließlich Promotions" ergibt sich hier von selbst: die Aktion kürzt
+        anschließend alle positiven Zeilen im gleichen Verhältnis, also auch
+        diese.
+        """
         amount = _to_float(fee.get("amount")) or 0.0
+        if str(fee.get("mode") or "amount") == "percent":
+            return nightly_total * amount / 100.0
         basis = str(fee.get("basis") or "per_stay")
         if basis == "per_night":
             return amount * nights
@@ -967,26 +999,29 @@ class PricingResolver:
     ) -> float:
         """Bemessungsgrundlage einer Prozent-Steuer.
 
-        Ohne gesetzte `taxableBase` bleibt es bei der bisherigen Auslegung
-        (gesamte Zwischensumme). Mit gesetzter Grundlage zählen nur der
-        Grundpreis und/oder die ausgewählten Gebühren — die Rabatt-Zeilen
-        wirken dabei anteilig weiter über `subtotal`, deshalb wird die
-        gewählte Grundlage im selben Verhältnis gekürzt wie die Zwischensumme
-        gegenüber der ungekürzten Summe aller positiven Zeilen.
+        LOKALE Steuer: der Grundpreis, nichts anderes. Das ist die Regel des
+        Branchenstandards, live abgelesen am Steuer-Editor (03.08.2026): „Die
+        steuerpflichtige Grundlage gilt nur für Gebühren, die an Airbnb
+        übermittelt werden. Für alle anderen Kanäle gelten Steuern nur auf den
+        Basispreis." Unsere eigenen Buchungsstrecken (Website, Marktplatz) sind
+        genau diese „anderen Kanäle" — die am Objekt gepflegte `taxableBase`
+        wirkt deshalb NUR beim Airbnb-Export (channel_manager/ota_abgaben.py),
+        nicht hier. Vorher zählte hier die gesamte Zwischensumme inklusive
+        Gebühren; das wich vom Standard ab.
+
+        USt./MwSt. bleibt unverändert auf der Zwischensumme: sie ist keine
+        lokale Abgabe, kennt die Grundlagen-Auswahl nicht (eigener Editor, nur
+        Satz + „im Preis enthalten") und liegt fachlich auf allem, was verkauft
+        wird. Gebühren mit eigenem Satz tragen ihren über `taxRate`.
+
+        Rabatte haben die Zwischensumme bereits gesenkt; der Grundpreis-Anteil
+        wird im selben Verhältnis gekürzt, statt ungekürzt besteuert zu werden.
         """
-        basis_ids = tax.get("taxableBase")
-        if not isinstance(basis_ids, list) or not basis_ids:
+        if str(tax.get("kind") or "local") != "local":
             return subtotal
-        gewaehlt = set(basis_ids)
-        grundlage = nightly_total if _TAXABLE_BASE_PRICE in gewaehlt else 0.0
-        for ln in lines:
-            if ln.kind == "fee" and ln.fee_id and ln.fee_id in gewaehlt:
-                grundlage += ln.amount
-        if grundlage <= 0:
+        if nightly_total <= 0:
             return 0.0
         positiv = sum(ln.amount for ln in lines if ln.amount > 0)
         if positiv <= 0:
             return 0.0
-        # Rabatte haben die Zwischensumme bereits gesenkt; die gewählte
-        # Grundlage anteilig mitziehen, statt sie ungekürzt zu besteuern.
-        return grundlage * min(subtotal / positiv, 1.0)
+        return nightly_total * min(subtotal / positiv, 1.0)

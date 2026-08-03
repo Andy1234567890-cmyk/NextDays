@@ -70,7 +70,9 @@ export const STAY_KIND_LABELS: Record<StayKind, string> = {
 
 // --- Etappe 2: Fees, Taxes, Promotions, Add-ons, Other information ---------
 
-// Gebühr (Fee). Berechnung als Einmalbetrag oder pro Gast/Nacht.
+// Gebühr (Fee). Zwei Achsen wie im Branchenstandard: „Einmaliger Betrag | Pro
+// Gast" × „Pro Aufenthalt | Pro Nacht" — hier als die vier möglichen
+// Kombinationen in EINEM Wert (genau vier gibt es).
 export type FeeBasis = "per_stay" | "per_night" | "per_guest_stay" | "per_guest_night";
 export const FEE_BASIS_LABELS: Record<FeeBasis, string> = {
   per_stay: "Einmalig pro Aufenthalt",
@@ -78,51 +80,72 @@ export const FEE_BASIS_LABELS: Record<FeeBasis, string> = {
   per_guest_stay: "Pro Gast / Aufenthalt",
   per_guest_night: "Pro Gast / Nacht",
 };
+/** Die beiden Achsen der Berechnung, wie sie im Formular als zwei Felder stehen. */
+export type FeeChargeBasis = "SingleCharge" | "PerPerson";
+export type FeePeriod = "PerStay" | "PerNight";
+const FEE_BASIS_VON_ACHSEN: Record<string, FeeBasis> = {
+  "SingleCharge|PerStay": "per_stay",
+  "SingleCharge|PerNight": "per_night",
+  "PerPerson|PerStay": "per_guest_stay",
+  "PerPerson|PerNight": "per_guest_night",
+};
+/** Basis → die zwei Achsen (für die zwei Auswahlfelder). */
+export function feeBasisAchsen(basis: FeeBasis): {
+  charge: FeeChargeBasis;
+  period: FeePeriod;
+} {
+  return {
+    charge: basis.startsWith("per_guest") ? "PerPerson" : "SingleCharge",
+    period: basis.endsWith("night") ? "PerNight" : "PerStay",
+  };
+}
+/** Die zwei Achsen → Basis. */
+export function feeBasisAus(charge: FeeChargeBasis, period: FeePeriod): FeeBasis {
+  return FEE_BASIS_VON_ACHSEN[`${charge}|${period}`];
+}
+
+/** Pauschalbetrag oder Prozentsatz. Prozent ist IMMER einmalig auf den
+ *  Zimmerpreis (einschließlich Aktionen) — die Berechnungsfelder entfallen dann. */
+export type FeeMode = "amount" | "percent";
+
 // Gebührenart. Bestimmt, als WAS die Gebühr beim Portal ankommt — Airbnb kennt
 // z. B. Reinigung und Haustier als eigene Kategorien, nicht als Freitext.
-// Gegenstück: FEE_TYPES in apps/api/src/features/properties/gebuehren.py.
-export type FeeType =
-  | "cleaning"
-  | "pet"
-  | "resort"
-  | "management"
-  | "community"
-  | "linen"
-  | "other";
-export const FEE_TYPE_LABELS: Record<FeeType, string> = {
-  cleaning: "Reinigungsgebühr",
-  pet: "Haustiergebühr",
-  resort: "Resortgebühr",
-  management: "Verwaltungsgebühr",
-  community: "Gemeinschaftsgebühr",
-  linen: "Wäscheservice",
-  other: "Sonstige Gebühr",
-};
-/** Reihenfolge im Auswahlfeld: die häufigsten Arten zuerst, „Sonstige" zuletzt. */
-export const FEE_TYPE_ORDER: readonly FeeType[] = [
+// Die Liste ist eine Fachtaxonomie mit 49 Einträgen und kommt deshalb LIVE vom
+// Server (`GET /properties/fee-types`, eine Quelle: gebuehren.FEE_TYPE_CATEGORY),
+// statt hier als zweite Wahrheit zu liegen.
+export type FeeType = string;
+export type FeeTypeEntry = { value: FeeType; label: string; category: string | null };
+
+/** Airbnb-Gebührenkategorien, auf die eine Steuer erhoben werden kann.
+ *  Gegenstück: TAXABLE_BASE_CATEGORIES in properties/gebuehren.py. */
+export const TAXABLE_BASE_CATEGORIES = [
   "cleaning",
-  "pet",
+  "linen",
   "resort",
   "management",
   "community",
-  "linen",
-  "other",
+  "pet",
 ] as const;
 
 export type Fee = {
   id: string;
   name: string;
   amount: number;
+  /** Pauschalbetrag (Standard) oder Prozentsatz auf den Zimmerpreis. */
+  mode?: FeeMode;
   basis: FeeBasis;
   optional: boolean; // Gast kann ab-/zuwählen
   // Eigener USt-Satz in % (z. B. Frühstück 19 % neben Logis 7 %). Leer =
   // Standard-Übernachtungssatz des Objekts/Kontos (Override-Hierarchie).
   taxRate?: number | null;
-  // Gebührenart für die Portale. Altbestand hat sie nicht — fehlt sie, gilt
-  // "other" (kein erfundener Reinigungs-Typ, Wurzel 4).
+  // Gebührenart für die Portale. Altbestand hat sie nicht — dann geht die
+  // Gebühr an kein Portal (kein erfundener Typ, Wurzel 4).
   feeType?: FeeType;
-  // Kanal-Einschränkung: leer/fehlend = alle Kanäle. Sonst NUR diese Portale
-  // (Portal-Codes wie in rate_plans.portal_scope).
+  /** Interne Beschreibung; serverseitig beim Speichern sanitisiert. */
+  descriptionHtml?: string | null;
+  // Kanal-Einschränkung: leer/fehlend = alle Kanäle. Sonst NUR diese Kanäle —
+  // Portal-Codes (rate_plans.portal_scope) UND die eigenen Buchungsstrecken
+  // ("direct" = Website, "portal" = myBestDays).
   portalScope?: string[];
 };
 
@@ -181,7 +204,9 @@ export type Tax = {
   /** Nur bei mode==="amount". */
   chargeBasis?: TaxChargeBasis;
   period?: TaxPeriod;
-  /** Nur bei mode==="percent": Fee-IDs und/oder TAXABLE_BASE_PRICE. */
+  /** Nur bei mode==="percent": Werte aus TAXABLE_BASE_ITEMS (Grundpreis und/oder
+   *  Gebührenkategorien). Alte Datensätze trugen hier Fee-IDs; der Server hebt
+   *  sie beim nächsten Speichern auf ihre Kategorie. */
   taxableBase?: string[];
   includedInPrice: boolean; // im Preis enthalten?
   /** Kanal-Einschränkung: leer/fehlend = alle Kanäle. Sonst NUR diese Portale.
@@ -189,6 +214,15 @@ export type Tax = {
    *  Booking in manchen Regionen) — sonst zahlt der Gast doppelt. */
   portalScope?: string[];
 };
+
+/** Bemessungsgrundlage einer prozentualen lokalen Steuer: Grundpreis und/oder
+ *  Gebührenkategorien. Die Auswahl wirkt NUR auf das, was an Airbnb geht — für
+ *  alle anderen Kanäle (auch die eigene Buchungsstrecke) gelten Steuern nur auf
+ *  den Basispreis. Gegenstück: TAXABLE_BASE_ITEMS in properties/gebuehren.py. */
+export const TAXABLE_BASE_ITEMS: readonly string[] = [
+  TAXABLE_BASE_PRICE,
+  ...TAXABLE_BASE_CATEGORIES,
+];
 
 /** Basis einer Betrags-Steuer, mit der Auslegung für Altdatensätze: ohne
  *  gespeicherte Basis gilt „einmalig pro Nacht" — exakt das, was der

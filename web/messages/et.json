@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Kas kustutada see hinnaplaan? Koos sellega kustutatakse ka plaani kuupäevapõhised hinnad.",
       "feeTypeLabel": "Tasu liik",
       "feeTypeHint": "Määrab, millisena tasu portaalidesse jõuab. Portaalidel nagu Airbnb on koristuse ja lemmikloomade jaoks omad kategooriad.",
-      "feeType": {
+      "feeTypePlaceholder": "Klõpsake valimiseks",
+      "feeModeAmount": "Kindel summa",
+      "feeModePercent": "Protsent",
+      "feeModePercentShort": "ühekordselt toa hinnalt",
+      "feePercentPlaceholder": "0% toa hinnast koos pakkumistega",
+      "feePercentHint": "Protsentuaalne tasu arvestatakse ühekordselt toa hinnalt koos pakkumistega.",
+      "feeOptionalHint": "Valikulisi tasusid kanalitesse ei saadeta – külaline ei saaks neist loobuda.",
+      "restrictionsTitle": "Piirangud",
+      "restrictionsHint": "Valige kanalid, kus seda tuleks nõuda.",
+      "restrictionsNote": "Midagi valimata = kõik kanalid. Mida kanal tegelikult vastu võtab, otsustab tema liides.",
+      "restrictedSuffix": "piiratud",
+      "ownChannel": {
+        "direct": "Oma veebisait",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Koristustasu",
-        "pet": "Lemmiklooma tasu",
+        "linen": "Voodipesu tasu",
         "resort": "Kuurorditasu",
         "management": "Haldustasu",
         "community": "Ühiskulude tasu",
-        "linen": "Voodipesuteenus",
-        "other": "Muu tasu"
-      }
+        "pet": "Lemmiklooma tasu"
+      },
+      "actions": "Toimingud"
     },
     "policiesForm": {
       "title": "Reeglid",
@@ -5325,7 +5340,19 @@
     "syncing": "Sünkroonin …",
     "syncBookings": "Sünkrooni broneeringud",
     "noBookingsYet": "Sellest portaalist pole veel broneeringuid.",
-    "channelFallback": "Kanal"
+    "channelFallback": "Kanal",
+    "airbnbTax": {
+      "title": "Maksude kogumine",
+      "hint": "Kas oma makse võib edastada, sõltub sellest, mida kanal ise kogub.",
+      "scenarioLabel": "Maksude kogumise stsenaarium",
+      "scenarioUnset": "Veel määramata",
+      "scenarioIneligible": "Ei ole lubatud",
+      "scenarioNoCollected": "Kanal ei kogu makse",
+      "scenarioStacked": "Kanal kogub makse, meie omad lisanduvad",
+      "acknowledge": "Kinnitan, et mõistan maksude kogumise stsenaariumi.",
+      "sendUserTaxes": "Saada oma maksud",
+      "blockedNote": "Kuni see on väljas, ei saadeta sellele kanalile omi makse."
+    }
   },
   "calendarSync": {
     "title": "Kalendri import/eksport",

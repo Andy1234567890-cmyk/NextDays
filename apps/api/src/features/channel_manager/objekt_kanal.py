@@ -22,10 +22,11 @@ from supabase import Client
 
 from src.core.security import AuthContext
 from src.core.supabase import load_scoped
-from src.jobs.queue import dedup_key, enqueue
+from src.jobs.queue import dedup_key, enqueue, try_enqueue_tax_sync
 
 from .channex_client import ChannexError
 from .common import ChannelManagerError, log
+from .ota_abgaben import AIRBNB, AIRBNB_SZENARIEN, SZENARIO_INELIGIBLE
 
 
 class ObjektKanalMixin:
@@ -57,7 +58,8 @@ class ObjektKanalMixin:
             .select(
                 "ota_hotel_id, ota_room_type_code, ota_room_title, "
                 "channex_channel_id, channex_property_id, is_active, "
-                "last_error, updated_at"
+                "last_error, updated_at, airbnb_tax_scenario, "
+                "airbnb_tax_acknowledged, airbnb_send_user_taxes"
             )
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
@@ -111,6 +113,96 @@ class ObjektKanalMixin:
             "price_adjustment_percent": self._portal_adjustment_percent(
                 db, property_id, portal_code
             ),
+            # Airbnb-Steuererhebung. Nur bei Airbnb gepflegt; bei anderen
+            # Portalen bleiben die Werte auf ihren Spalten-Defaults und die
+            # Oberfläche zeigt den Block nicht.
+            "airbnb_tax_scenario": conn.get("airbnb_tax_scenario"),
+            "airbnb_tax_acknowledged": bool(conn.get("airbnb_tax_acknowledged")),
+            "airbnb_send_user_taxes": bool(conn.get("airbnb_send_user_taxes")),
+        }
+
+    def set_airbnb_tax_settings(  # pylint: disable=too-many-arguments
+        self,
+        ctx: AuthContext,
+        property_id: str,
+        portal_code: str,
+        *,
+        scenario: str | None,
+        acknowledged: bool,
+        send_user_taxes: bool,
+    ) -> dict[str, Any]:
+        """Airbnb-Steuererhebung dieses Inserats pflegen.
+
+        Drei Werte, wie im Branchenstandard: das Szenario (was Airbnb selbst
+        tut), die Bestätigung, es verstanden zu haben, und der Schalter
+        „Benutzungssteuern senden". Erst wenn alle drei passen, gehen Steuern an
+        Airbnb (siehe tax_sync._airbnb_steuern_erlaubt).
+
+        Zwei Abhängigkeiten werden hier erzwungen, nicht nur in der Oberfläche
+        (Wurzel 3 — der Anfrage nicht vertrauen):
+
+        * `ineligible` heißt, Airbnb erhebt selbst bzw. unterstützt keine
+          Beherbergungssteuern — ein Export ist dort GAR NICHT möglich, also
+          fallen beide Schalter aus.
+        * „Senden" ohne Bestätigung gibt es nicht.
+        """
+        if portal_code != AIRBNB:
+            raise ChannelManagerError(
+                "Steuererhebungs-Einstellungen gibt es nur für Airbnb.",
+                status_code=422,
+            )
+        if scenario is not None and scenario not in AIRBNB_SZENARIEN:
+            raise ChannelManagerError(
+                f"Unbekanntes Steuererhebungsszenario: {scenario}",
+                status_code=422,
+            )
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        # Wurzel 3/9: dieselbe Achse wie die Detailsicht — Tenant UND Objekt.
+        vorhanden = (
+            db.table("channex_channel_connection")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal_code)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not vorhanden:
+            raise ChannelManagerError(
+                "Dieses Objekt ist mit diesem Portal nicht verbunden.",
+                status_code=404,
+            )
+        if scenario == SZENARIO_INELIGIBLE:
+            acknowledged = False
+            send_user_taxes = False
+        elif not acknowledged:
+            send_user_taxes = False
+        db.table("channex_channel_connection").update(
+            {
+                "airbnb_tax_scenario": scenario,
+                "airbnb_tax_acknowledged": acknowledged,
+                "airbnb_send_user_taxes": send_user_taxes,
+            }
+        ).eq("id", vorhanden[0]["id"]).execute()
+        # Der Schalter ändert, WAS Airbnb bekommt — also muss das Set neu
+        # zusammengestellt werden. Ohne diesen Anstoß wirkte die Änderung erst
+        # beim nächsten Preis-/Content-Update (Wurzel 1: Gegenzustand pflegen).
+        try_enqueue_tax_sync(db, tenant_id, property_id)
+        log.info(
+            "airbnb_steuererhebung_gesetzt",
+            tenant_id=tenant_id,
+            property_id=property_id,
+            scenario=scenario,
+            acknowledged=acknowledged,
+            send_user_taxes=send_user_taxes,
+        )
+        return {
+            "portal_code": portal_code,
+            "property_id": property_id,
+            "airbnb_tax_scenario": scenario,
+            "airbnb_tax_acknowledged": acknowledged,
+            "airbnb_send_user_taxes": send_user_taxes,
         }
 
     @staticmethod

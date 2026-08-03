@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Ștergi într-adevăr acest plan de prețuri? Prețurile pe date ale planului vor fi șterse și ele.",
       "feeTypeLabel": "Tip de taxă",
       "feeTypeHint": "Stabilește drept ce ajunge taxa la portaluri. Portaluri precum Airbnb au categorii proprii pentru curățenie și animale de companie.",
-      "feeType": {
+      "feeTypePlaceholder": "Faceți clic pentru a selecta",
+      "feeModeAmount": "Sumă fixă",
+      "feeModePercent": "Procent",
+      "feeModePercentShort": "o singură dată la prețul camerei",
+      "feePercentPlaceholder": "0 % din prețul camerei, inclusiv promoțiile",
+      "feePercentHint": "O taxă procentuală se calculează o singură dată la prețul camerei, inclusiv promoțiile.",
+      "feeOptionalHint": "Taxele opționale nu se trimit către canale — oaspetele nu le-ar putea refuza.",
+      "restrictionsTitle": "Restricții",
+      "restrictionsHint": "Selectați canalele pe care se percepe.",
+      "restrictionsNote": "Nimic selectat = toate canalele. Ce preia efectiv un canal depinde de interfața lui.",
+      "restrictedSuffix": "restricționat",
+      "ownChannel": {
+        "direct": "Site propriu",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Taxă de curățenie",
-        "pet": "Taxă pentru animale de companie",
-        "resort": "Taxă de resort",
+        "linen": "Taxă lenjerie",
+        "resort": "Taxă resort",
         "management": "Taxă de administrare",
-        "community": "Taxă de întreținere",
-        "linen": "Serviciu de lenjerie",
-        "other": "Altă taxă"
-      }
+        "community": "Taxă de comunitate",
+        "pet": "Taxă animal"
+      },
+      "actions": "Acțiuni"
     },
     "policiesForm": {
       "title": "Politici",
@@ -5325,7 +5340,19 @@
     "syncing": "Se sincronizează …",
     "syncBookings": "Sincronizează rezervările",
     "noBookingsYet": "Încă nu există rezervări de la acest portal.",
-    "channelFallback": "Canal"
+    "channelFallback": "Canal",
+    "airbnbTax": {
+      "title": "Colectarea taxelor",
+      "hint": "Dacă taxele proprii pot fi transmise depinde de ce colectează canalul.",
+      "scenarioLabel": "Scenariul de colectare a taxelor",
+      "scenarioUnset": "Încă neînregistrat",
+      "scenarioIneligible": "Neeligibil",
+      "scenarioNoCollected": "Canalul nu colectează taxe",
+      "scenarioStacked": "Canalul colectează taxe, ale noastre se adaugă",
+      "acknowledge": "Confirm că înțeleg scenariul de colectare a taxelor.",
+      "sendUserTaxes": "Trimite taxele proprii",
+      "blockedNote": "Cât timp este dezactivat, nu se trimit taxe proprii către acest canal."
+    }
   },
   "calendarSync": {
     "title": "Import/export calendar",

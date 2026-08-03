@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Dit prijsplan echt verwijderen? De datumprijzen van het plan worden mee verwijderd.",
       "feeTypeLabel": "Soort kosten",
       "feeTypeHint": "Bepaalt als wat de kosten bij de portalen aankomen. Portalen zoals Airbnb hebben eigen categorieën voor schoonmaak en huisdieren.",
-      "feeType": {
+      "feeTypePlaceholder": "Klik om te selecteren",
+      "feeModeAmount": "Vast bedrag",
+      "feeModePercent": "Percentage",
+      "feeModePercentShort": "eenmalig op de kamerprijs",
+      "feePercentPlaceholder": "0% van de kamerprijs incl. acties",
+      "feePercentHint": "Een procentuele kosten wordt eenmalig berekend over de kamerprijs inclusief acties.",
+      "feeOptionalHint": "Optionele kosten gaan naar geen kanaal — de gast kan ze daar niet weglaten.",
+      "restrictionsTitle": "Beperkingen",
+      "restrictionsHint": "Kies de kanalen waarop dit wordt geheven.",
+      "restrictionsNote": "Niets gekozen = alle kanalen. Wat een kanaal echt overneemt, bepaalt zijn interface.",
+      "restrictedSuffix": "beperkt",
+      "ownChannel": {
+        "direct": "Eigen website",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Schoonmaakkosten",
-        "pet": "Kosten voor huisdieren",
+        "linen": "Linnenkosten",
         "resort": "Resortkosten",
         "management": "Beheerkosten",
-        "community": "Servicekosten complex",
-        "linen": "Linnenservice",
-        "other": "Overige kosten"
-      }
+        "community": "Gemeenschapskosten",
+        "pet": "Huisdierkosten"
+      },
+      "actions": "Acties"
     },
     "policiesForm": {
       "title": "Beleid",
@@ -5325,7 +5340,19 @@
     "syncing": "Synchroniseren …",
     "syncBookings": "Boekingen synchroniseren",
     "noBookingsYet": "Nog geen boekingen van dit portaal.",
-    "channelFallback": "Kanaal"
+    "channelFallback": "Kanaal",
+    "airbnbTax": {
+      "title": "Belastinginning",
+      "hint": "Of eigen belastingen mogen worden verzonden, hangt af van wat het kanaal zelf heft.",
+      "scenarioLabel": "Scenario voor belastinginning",
+      "scenarioUnset": "Nog niet vastgelegd",
+      "scenarioIneligible": "Niet in aanmerking",
+      "scenarioNoCollected": "Kanaal heft geen belasting",
+      "scenarioStacked": "Kanaal heft belasting, de onze komen erbij",
+      "acknowledge": "Ik bevestig dat ik het scenario voor belastinginning begrijp.",
+      "sendUserTaxes": "Eigen belastingen verzenden",
+      "blockedNote": "Zolang dit uit staat, gaan er geen eigen belastingen naar dit kanaal."
+    }
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",

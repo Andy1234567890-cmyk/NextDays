@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Żgur li trid tħassar dan il-pjan tal-prezzijiet? Il-prezzijiet skont id-data tal-pjan jitħassru wkoll.",
       "feeTypeLabel": "Tip ta’ tariffa",
       "feeTypeHint": "Jiddetermina kif it-tariffa tasal għand il-portali. Portali bħal Airbnb għandhom kategoriji tagħhom għat-tindif u għall-annimali domestiċi.",
-      "feeType": {
+      "feeTypePlaceholder": "Ikklikkja biex tagħżel",
+      "feeModeAmount": "Ammont fiss",
+      "feeModePercent": "Perċentwal",
+      "feeModePercentShort": "darba fuq il-prezz tal-kamra",
+      "feePercentPlaceholder": "0% tal-prezz tal-kamra inkluż promozzjonijiet",
+      "feePercentHint": "Tariffa perċentwali tiġi ċċarġjata darba fuq il-prezz tal-kamra inkluż il-promozzjonijiet.",
+      "feeOptionalHint": "Tariffi mhux obbligatorji ma jintbagħtux lill-kanali — l-mistieden ma jistax jinżagħhom.",
+      "restrictionsTitle": "Restrizzjonijiet",
+      "restrictionsHint": "Agħżel il-kanali fejn dan għandu jiġi ċċarġjat.",
+      "restrictionsNote": "Xejn magħżul = il-kanali kollha. Dak li kanal jaċċetta jiddependi mill-interfaċċa tiegħu.",
+      "restrictedSuffix": "ristrett",
+      "ownChannel": {
+        "direct": "Websajt tagħna",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Tariffa tat-tindif",
-        "pet": "Tariffa għall-annimali domestiċi",
+        "linen": "Tariffa tal-bjankerija",
         "resort": "Tariffa tar-resort",
-        "management": "Tariffa ta’ amministrazzjoni",
+        "management": "Tariffa tal-immaniġġjar",
         "community": "Tariffa komunitarja",
-        "linen": "Servizz tal-bjankerija",
-        "other": "Tariffa oħra"
-      }
+        "pet": "Tariffa tal-annimali"
+      },
+      "actions": "Azzjonijiet"
     },
     "policiesForm": {
       "title": "Politiki",
@@ -5325,7 +5340,19 @@
     "syncing": "Qed jissinkronizza …",
     "syncBookings": "Issinkronizza r-riżervazzjonijiet",
     "noBookingsYet": "Għad m'hemm ebda riżervazzjoni minn dan il-portal.",
-    "channelFallback": "Kanal"
+    "channelFallback": "Kanal",
+    "airbnbTax": {
+      "title": "Ġbir tat-taxxi",
+      "hint": "Jekk it-taxxi tiegħek jistgħu jintbagħtu jiddependi minn dak li jiġbor il-kanal.",
+      "scenarioLabel": "Xenarju tal-ġbir tat-taxxa",
+      "scenarioUnset": "Għadu mhux irreġistrat",
+      "scenarioIneligible": "Mhux eliġibbli",
+      "scenarioNoCollected": "Il-kanal ma jiġborx taxxi",
+      "scenarioStacked": "Il-kanal jiġbor taxxi, tagħna jiżdiedu",
+      "acknowledge": "Nikkonferma li nifhem ix-xenarju tal-ġbir tat-taxxa.",
+      "sendUserTaxes": "Ibgħat it-taxxi tiegħek",
+      "blockedNote": "Sakemm dan huwa mitfi, ma jintbagħtux taxxi tagħna lil dan il-kanal."
+    }
   },
   "calendarSync": {
     "title": "Importazzjoni/esportazzjoni tal-kalendarju",

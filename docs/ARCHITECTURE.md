@@ -608,11 +608,20 @@ Preise erschienen nicht im Kalender/Quote. Jetzt gibt es **einen** Resolver
   unbegrenzter Nächte-Loop aus Client-Input.
 - **Steuern** rechnen mit ihrer Basis, nicht pauschal: Betrags-Steuern über
   `chargeBasis` × `period` (Kurtaxe „2,50 € pro Gast pro Nacht" = Betrag × Gäste
-  × Nächte), Prozent-Steuern über `taxableBase` nur auf Grundpreis und/oder
-  ausgewählte Gebühren (dafür trägt jede fee-Zeile ihre `fee_id`). Die
-  Bemessungsgrundlage wird VOR der Steuerschleife eingefroren, damit Steuern
-  sich nicht gegenseitig besteuern. Angezeigt wird der gastseitige Name
-  (`names[locale]`), nicht der interne.
+  × Nächte). **Lokale Prozent-Steuern rechnen auf den Grundpreis**, nicht auf
+  Grundpreis + Gebühren — die am Objekt gepflegte `taxableBase` wirkt
+  ausschließlich beim Airbnb-Export („für alle anderen Kanäle gelten Steuern nur
+  auf den Basispreis", Branchenstandard live abgelesen). Die USt liegt
+  unverändert auf der Zwischensumme; Gebühren mit eigenem Satz tragen ihn über
+  `taxRate`. Die Bemessungsgrundlage wird VOR der Steuerschleife eingefroren,
+  damit Steuern sich nicht gegenseitig besteuern. Angezeigt wird der gastseitige
+  Name (`names[locale]`), nicht der interne.
+- **Gebühren** kennen zwei Rechenarten: Pauschalbetrag nach `basis`, oder
+  **Prozent** — dann EINMALIG auf den Zimmerpreis (einschließlich Aktionen), die
+  Basis multipliziert nichts.
+- **Kanal-Einschränkung** (`portalScope`) gilt auch hier: eine Gebühr/Steuer „nur
+  an Booking" erscheint in einer Direktbuchung nicht. Die eigenen
+  Buchungsstrecken zählen als Kanäle mit (`direct`, `portal`).
 
 Jede Oberfläche liest Preise **ausschließlich** über den Resolver: der Kalender
 (`calendar/get_availability`) zeigt denselben Effektivpreis wie die Buchungs-Quote;

@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Ali res želiš izbrisati ta cenik? Cene cenika po datumih bodo izbrisane skupaj z njim.",
       "feeTypeLabel": "Vrsta pristojbine",
       "feeTypeHint": "Določa, kot kaj pristojbina prispe na portale. Portali kot Airbnb imajo lastne kategorije za čiščenje in hišne ljubljenčke.",
-      "feeType": {
-        "cleaning": "Pristojbina za čiščenje",
-        "pet": "Pristojbina za hišne ljubljenčke",
-        "resort": "Letoviška pristojbina",
-        "management": "Pristojbina za upravljanje",
-        "community": "Pristojbina za skupne prostore",
-        "linen": "Storitev perila",
-        "other": "Druga pristojbina"
-      }
+      "feeTypePlaceholder": "Kliknite za izbiro",
+      "feeModeAmount": "Pavšalni znesek",
+      "feeModePercent": "Odstotek",
+      "feeModePercentShort": "enkratno na ceno sobe",
+      "feePercentPlaceholder": "0 % cene sobe z akcijami",
+      "feePercentHint": "Odstotna pristojbina se obračuna enkratno na ceno sobe z akcijami.",
+      "feeOptionalHint": "Neobveznih pristojbin ne pošiljamo kanalom — gost jih tam ne bi mogel odstraniti.",
+      "restrictionsTitle": "Omejitve",
+      "restrictionsHint": "Izberite kanale, na katerih se to obračuna.",
+      "restrictionsNote": "Nič izbrano = vsi kanali. Kaj kanal dejansko sprejme, določa njegov vmesnik.",
+      "restrictedSuffix": "omejeno",
+      "ownChannel": {
+        "direct": "Lastna spletna stran",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
+        "cleaning": "Stroški čiščenja",
+        "linen": "Stroški perila",
+        "resort": "Stroški letovišča",
+        "management": "Stroški upravljanja",
+        "community": "Stroški skupnosti",
+        "pet": "Stroški hišnega ljubljenčka"
+      },
+      "actions": "Dejanja"
     },
     "policiesForm": {
       "title": "Pravilniki",
@@ -5325,7 +5340,19 @@
     "syncing": "Sinhroniziram …",
     "syncBookings": "Sinhroniziraj rezervacije",
     "noBookingsYet": "Iz tega portala še ni rezervacij.",
-    "channelFallback": "Kanal"
+    "channelFallback": "Kanal",
+    "airbnbTax": {
+      "title": "Pobiranje davkov",
+      "hint": "Ali je mogoče prenesti lastne davke, je odvisno od tega, kaj pobira kanal.",
+      "scenarioLabel": "Scenarij pobiranja davkov",
+      "scenarioUnset": "Še ni zabeleženo",
+      "scenarioIneligible": "Ni upravičeno",
+      "scenarioNoCollected": "Kanal ne pobira davkov",
+      "scenarioStacked": "Kanal pobira davke, naši se dodajo",
+      "acknowledge": "Potrjujem, da razumem scenarij pobiranja davkov.",
+      "sendUserTaxes": "Pošlji lastne davke",
+      "blockedNote": "Dokler je to izklopljeno, temu kanalu ne pošiljamo lastnih davkov."
+    }
   },
   "calendarSync": {
     "title": "Uvoz/izvoz koledarja",

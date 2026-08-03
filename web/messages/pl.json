@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Czy na pewno usunąć ten plan cenowy? Ceny planu według dat zostaną usunięte razem z nim.",
       "feeTypeLabel": "Rodzaj opłaty",
       "feeTypeHint": "Określa, jako co opłata trafia do portali. Portale takie jak Airbnb mają własne kategorie dla sprzątania i zwierząt.",
-      "feeType": {
+      "feeTypePlaceholder": "Kliknij, aby wybrać",
+      "feeModeAmount": "Kwota stała",
+      "feeModePercent": "Procent",
+      "feeModePercentShort": "jednorazowo od ceny pokoju",
+      "feePercentPlaceholder": "0% ceny pokoju z promocjami",
+      "feePercentHint": "Opłata procentowa jest naliczana jednorazowo od ceny pokoju z promocjami.",
+      "feeOptionalHint": "Opłaty opcjonalne nie są wysyłane do kanałów — gość nie mógłby ich odrzucić.",
+      "restrictionsTitle": "Ograniczenia",
+      "restrictionsHint": "Wybierz kanały, w których ma być naliczane.",
+      "restrictionsNote": "Nic nie wybrano = wszystkie kanały. Co kanał naprawdę przyjmie, zależy od jego interfejsu.",
+      "restrictedSuffix": "ograniczone",
+      "ownChannel": {
+        "direct": "Własna strona",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Opłata za sprzątanie",
-        "pet": "Opłata za zwierzę",
+        "linen": "Opłata za pościel",
         "resort": "Opłata resortowa",
-        "management": "Opłata administracyjna",
+        "management": "Opłata za zarządzanie",
         "community": "Opłata wspólnotowa",
-        "linen": "Serwis pościelowy",
-        "other": "Inna opłata"
-      }
+        "pet": "Opłata za zwierzę"
+      },
+      "actions": "Akcje"
     },
     "policiesForm": {
       "title": "Zasady",
@@ -5325,7 +5340,19 @@
     "syncing": "Synchronizowanie …",
     "syncBookings": "Synchronizuj rezerwacje",
     "noBookingsYet": "Brak rezerwacji z tego portalu.",
-    "channelFallback": "Kanał"
+    "channelFallback": "Kanał",
+    "airbnbTax": {
+      "title": "Pobór podatków",
+      "hint": "Czy własne podatki można przesyłać, zależy od tego, co pobiera sam kanał.",
+      "scenarioLabel": "Scenariusz poboru podatków",
+      "scenarioUnset": "Jeszcze nie podano",
+      "scenarioIneligible": "Brak uprawnień",
+      "scenarioNoCollected": "Kanał nie pobiera podatków",
+      "scenarioStacked": "Kanał pobiera podatki, nasze dochodzą",
+      "acknowledge": "Potwierdzam, że rozumiem scenariusz poboru podatków.",
+      "sendUserTaxes": "Wysyłaj własne podatki",
+      "blockedNote": "Dopóki to jest wyłączone, do tego kanału nie idą własne podatki."
+    }
   },
   "calendarSync": {
     "title": "Importuj/eksportuj kalendarz",

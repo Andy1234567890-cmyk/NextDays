@@ -25,7 +25,12 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
 from .errors import PropertyError
-from .gebuehren import clean_portal_scope
+from .gebuehren import (
+    TAXABLE_BASE_CATEGORIES,
+    TAXABLE_BASE_ITEMS,
+    clean_portal_scope,
+    fee_category,
+)
 from .schemas import PropertyUpdate
 
 log = get_logger("nextdays.properties.steuern")
@@ -105,14 +110,70 @@ def _clean_value(raw: object, *, percent: bool) -> float:
     return value
 
 
+def _grundlage_je_gebuehr(fees: list[dict[str, Any]] | None) -> dict[str, str]:
+    """Gebühren-ID → Bemessungsgrundlage-Item ihrer Kategorie.
+
+    Für Altbestand: die Bemessungsgrundlage stand früher als Liste von
+    GEBÜHREN-IDs im Datensatz. Beim Portal gibt es „genau diese eine Gebühr"
+    aber nicht — mehrere Gebührenarten werden dort zu EINER Gebühr ihrer
+    Kategorie zusammengefasst. Der Alt-Wert wird deshalb beim nächsten Speichern
+    auf seine Kategorie umgeschrieben, statt ihn abzulehnen (das machte jedes
+    Objekt mit alter Grundlage unspeicherbar) oder still zu verwerfen (dann
+    besteuerte die Steuer plötzlich nur noch den Grundpreis).
+    """
+    aus_id: dict[str, str] = {}
+    for fee in fees or []:
+        if not isinstance(fee, dict):
+            continue
+        fee_id = str(fee.get("id") or "").strip()
+        kategorie = fee_category(fee)
+        if fee_id and kategorie in TAXABLE_BASE_CATEGORIES:
+            aus_id[fee_id] = str(kategorie)
+    return aus_id
+
+
+def _clean_taxable_base(
+    raw: object, aus_gebuehr: dict[str, str]
+) -> list[str]:
+    """Bemessungsgrundlage säubern: Grundpreis und/oder Gebührenkategorien.
+
+    Ein unbekanntes Item wird zuerst als Alt-Gebühren-ID gedeutet (siehe
+    `_grundlage_je_gebuehr`); passt auch das nicht, ist es ein Fehler — eine
+    Grundlage, die es beim Portal nicht gibt, dürfte nicht als „gespeichert"
+    durchgehen (Wurzel 5).
+    """
+    if not isinstance(raw, list):
+        return []
+    items: list[str] = []
+    for roh in raw:
+        item = str(roh).strip()
+        if not item:
+            continue
+        if item not in TAXABLE_BASE_ITEMS:
+            item = aus_gebuehr.get(item, "")
+        if not item:
+            raise PropertyError(
+                f"Unbekannte Bemessungsgrundlage: {roh}", status_code=422
+            )
+        items.append(item)
+    return list(dict.fromkeys(items))
+
+
 def normalize_taxes(
-    raw_taxes: list[Any], *, portale: frozenset[str] | None = frozenset()
+    raw_taxes: list[Any],
+    *,
+    portale: frozenset[str] | None = frozenset(),
+    fees: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Steuerliste prüfen und säubern; wirft PropertyError(422) bei Unsinn.
 
     `portale` sind die für das Objekt verbundenen Kanäle — nur auf sie darf eine
     Steuer eingeschränkt werden (siehe gebuehren.erlaubte_portale).
+
+    `fees` sind die bereits geprüften Gebühren desselben Objekts. Gebraucht, um
+    eine alte Bemessungsgrundlage (Gebühren-IDs) auf ihre Kategorie zu heben.
     """
+    grundlage_aus_gebuehr = _grundlage_je_gebuehr(fees)
     taxes: list[dict[str, Any]] = []
     vat_gesehen = False
     for eintrag in raw_taxes:
@@ -177,11 +238,11 @@ def normalize_taxes(
                     )
                 sauber["period"] = str(zeitraum)
         else:
-            grundlage = eintrag.get("taxableBase")
-            if isinstance(grundlage, list):
-                ids = [str(x).strip() for x in grundlage if str(x).strip()]
-                if ids:
-                    sauber["taxableBase"] = ids
+            items = _clean_taxable_base(
+                eintrag.get("taxableBase"), grundlage_aus_gebuehr
+            )
+            if items:
+                sauber["taxableBase"] = items
 
         # Kanal-Einschränkung: leer = an alle Portale. Gesetzt heißt „NUR
         # diese" — nötig, wo das Portal die Abgabe selbst einzieht (Airbnb

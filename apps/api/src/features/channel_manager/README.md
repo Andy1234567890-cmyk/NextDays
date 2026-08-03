@@ -50,14 +50,61 @@ NICHT strukturiert spezifiziert — kein geratenes Parsing; die Roh-Payloads
 liegen in `channex_booking.raw`, sobald echte Gebühren-Revisionen deren
 Struktur zeigen, wird das Feld nachgezogen.
 
-## Steuern und Gebühren → Channex (`tax_sync.py`)
+## Steuern und Gebühren → Channex (`tax_sync.py` + `ota_abgaben.py`)
 
 Quelle sind die Objekt-Steuern (`type_attributes.pricing.taxes`) UND die
-Gebühren (`…pricing.fees`); Idempotenz über `channex_tax_map` (unique
-`property_id, local_tax_id` — Gebühren liegen in derselben Tabelle).
+Gebühren (`…pricing.fees`). **WAS an welches Portal geht, steht in
+`ota_abgaben.py`** — dem Branchenstandard als Regelwerk. `tax_sync.py` sagt nur,
+WIE es zu Channex kommt.
 
 Steuer und Gebühr sind bei Channex **dasselbe Objekt** (`/taxes`, unterschieden
 nur durch `type` ∈ `tax` | `fee` | `city_tax`), deshalb ein gemeinsamer Pfad.
+
+### Jedes Portal bekommt sein EIGENES Channex-Objekt
+
+Channex führt `is_inclusive` und `logic` **an der Steuer**, nicht am Tax-Set. Ein
+gemeinsames Objekt könnte deshalb nicht gleichzeitig „bei Booking im
+Zimmerpreis" und „bei Airbnb getrennt ausgewiesen" sein. Genau daran scheiterte
+der frühere Aufbau: der Widerspruch wurde nur protokolliert und eine Seite still
+falsch bespielt.
+
+Darum trägt `channex_tax_map` seit 0274 eine **`portal_scope`**-Achse
+(`NULL` = portalneutrales Objekt im Standard-Set). Der Schlüssel ist
+(Objekt, lokale Kennung, Portal); die Kennung ist eine Steuer-/Gebühren-ID oder
+`cat:<kategorie>` für eine je Kategorie summierte Airbnb-Gebühr.
+
+### Die Matrix (Branchenstandard, live gemessen 03.08.2026)
+
+|              | Gebühren | Steuern |
+|---|---|---|
+| **Airbnb** | Kategorie×Berechnungsmodell (Tabelle unten); gleiche Kategorie wird zu EINER summiert; gemischte Modelle → gar nicht | Prozent ✔; Betrag **nur** „pro Gast pro Nacht"; **getrennt** vom Zimmerpreis; hängt am Steuererhebungsszenario |
+| **Booking.com** | **nur Prozent**, **im** Zimmerpreis | **nur Prozent**, **im** Zimmerpreis |
+| **Expedia** | nichts | nichts |
+| **HomeAway/Vrbo** | Prozent und Betrag, getrennt, keine Summierung | Prozent und Betrag, getrennt |
+| *alle anderen* | unverändert alles, `is_inclusive` wie am Objekt gepflegt | dito |
+
+⚠️ **Vrbo ist NICHT verdrahtet**: der Channex-Kanalkatalog führt diesen Kanal
+nicht (live geprüft, 52 Kanäle — kein Vrbo/HomeAway). Ein Portal-Code dafür wäre
+erfunden. Die Regel steht in `ota_abgaben.py` als Kommentar, damit sie beim
+Auftauchen des Kanals nur eingetragen werden muss.
+
+**Airbnb-Exporttabelle** (Kategorie → erlaubte Berechnungsmodelle):
+
+| Airbnb-Kategorie | pro Aufenthalt | pro Nacht | pro Gast/Aufenthalt | pro Gast/Nacht | Prozent erlaubt |
+|---|---|---|---|---|---|
+| Reinigung | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Haustier | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Wäsche | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Gemeinschaft | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Verwaltung | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Resort | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Kaution / Unbekannt | ❌ (steht nicht in der Exporttabelle) | | | | |
+
+Die 49 Gebührenarten und ihre Kategorie stehen in
+`properties/gebuehren.py FEE_TYPE_CATEGORY` (live aus dem Standard abgelesen);
+das Auswahlfeld holt sie über `GET /properties/fee-types` — eine Quelle.
+
+### Logic-Abbildung
 
 | unsere Steuer | Channex `logic` |
 |---|---|
@@ -67,45 +114,75 @@ nur durch `type` ∈ `tax` | `fee` | `city_tax`), deshalb ein gemeinsamer Pfad.
 | `amount` + `PerPerson`/`PerStay` | `per_person` |
 | `amount` + `PerPerson`/`PerNight` | `per_person_per_night` |
 
-| unsere Gebühr (`fees[].basis`) | Channex `logic` (mit `type: "fee"`) |
+| unsere Gebühr | Channex `logic` (mit `type: "fee"`) |
 |---|---|
+| `mode=percent` (jede Basis) | `percent` — Prozent ist **immer einmalig** auf den Zimmerpreis, die Basis multipliziert nichts |
 | `per_stay` | `per_booking` |
 | `per_night` | `per_night` |
 | `per_guest_stay` | `per_person` |
 | `per_guest_night` | `per_person_per_night` |
 
-**Gebühren gingen vorher GAR NICHT an die Portale** — sie landeten nur im
-eigenen Quote und auf der Rechnung, der Gast zahlte bei Booking/Airbnb also
-weniger als vorgesehen. Alle sieben `logic`-Werte sind live auch mit
-`type: "fee"` geprüft (03.08.2026); die feineren Arten (`cleaning_fee`,
-`resort_fee`, `pet_fee`, `service_fee`) lehnt Channex mit 422 ab — unsere
-Gebührenart (`fees[].feeType`) lebt deshalb im **Titel**, nicht im Typ.
+Alle sieben `logic`-Werte sind live auch mit `type: "fee"` geprüft; die feineren
+Arten (`cleaning_fee`, `resort_fee`, `pet_fee`, `service_fee`) lehnt Channex mit
+422 ab — unsere Gebührenart lebt deshalb im **Titel**, nicht im Typ. Bei einer je
+Kategorie summierten Airbnb-Gebühr ist der Titel die Kategorie („Gemeinschafts-
+gebühr"), weil mehrere Gebühren darin aufgehen.
 
 **Optionale Gebühren gehen nicht raus** (`fees[].optional`): beim Portal könnte
-der Gast sie nicht abwählen, dort wären sie ein Pflichtaufschlag. Wird eine
-Gebühr auf `optional` umgestellt, wird sie bei Channex gelöscht (Wurzel 1).
+der Gast sie nicht abwählen, dort wären sie ein Pflichtaufschlag.
 
-**Kaskade (`level`).** Gebühren liegen auf `level: 1`, Steuern auf `level: 0`.
-Channex rechnet von der höchsten Zahl zur niedrigsten, damit greift eine
-prozentuale USt auf Grundpreis **plus** Gebühren statt nur auf den Grundpreis.
+**Kaskade (`level`) = Steuerbemessungsgrundlage.** Channex rechnet von der
+höchsten Zahl zur niedrigsten; Posten auf DERSELBEN Ebene besteuern sich nicht.
+Damit wird die Grundlage ausdrückbar: eine Gebühr, deren Kategorie in
+`taxes[].taxableBase` steht, liegt auf `level: 1` (wird mitbesteuert), eine
+andere auf `level: 0` wie die Steuer. Ohne gepflegte Grundlage liegen alle
+Gebühren auf `level: 1` — das bisherige Verhalten. Verlangen zwei Steuern
+Verschiedenes, ist das bei Channex nicht abbildbar (die Ebene hängt an der
+Gebühr, nicht am Paar): dann wird protokolliert und beim bisherigen Verhalten
+geblieben, statt eine Seite still falsch zu bespielen.
 
-Ohne gespeicherte Basis (Altbestand) bleibt es bei `per_night` — dem
-bisherigen Verhalten. Der `type` kommt aus der Steuerart: ortsbezogene Abgaben
-(`TouristTax`, `TourismAssessment`, `TransientOccupancyTax`) → `city_tax`,
-Beherbergungs-/Zimmersteuern → `tax`; ohne Steuerart entscheidet weiter `kind`.
-Als Titel geht der gastseitige Name (`names[locale]`) ans Portal.
+Bei Portalen **ohne** Airbnb-Regel liegt keine Gebühr in der Grundlage — „für
+alle anderen Kanäle gelten Steuern nur auf den Basispreis" (live abgelesen).
+Dasselbe gilt im eigenen Quote (`pricing/resolver._taxable_base`).
+
+Der `type` kommt aus der Steuerart: ortsbezogene Abgaben (`TouristTax`,
+`TourismAssessment`, `TransientOccupancyTax`) → `city_tax`, Beherbergungs-/
+Zimmersteuern → `tax`; ohne Steuerart entscheidet weiter `kind`. Als Titel geht
+der gastseitige Name (`names[locale]`) ans Portal.
 
 ⚠️ **`city_tax` mit UNTERSTRICH** — live gegen die Sandbox gemessen
 (03.08.2026). Die Channex-Doku schreibt „city tax" mit Leerzeichen, Responses
 liefern „City Tax"; beide ergeben bei `POST /taxes` ein
-`422 {"type": ["is invalid"]}`. Alle sieben `logic`-Werte sind dagegen exakt
-wie dokumentiert gültig (ebenfalls einzeln live geprüft). Nicht nach der Doku
-„korrigieren" — hier gilt die gemessene Realität.
+`422 {"type": ["is invalid"]}`. Nicht nach der Doku „korrigieren" — hier gilt die
+gemessene Realität.
+
+### Airbnb-Steuererhebungsszenario (0274)
+
+Ob eigene Steuern überhaupt an Airbnb gehen, entscheidet nicht der Betrieb
+allein: Airbnb erhebt in manchen Regionen selbst. Drei Werte an der Verbindung
+(`channex_channel_connection`):
+
+* `airbnb_tax_scenario` ∈ `ineligible` | `no_collected` | `stacked`
+* `airbnb_tax_acknowledged` — „Ich bestätige, dass ich das Szenario verstehe"
+* `airbnb_send_user_taxes` — „Benutzungssteuern senden"
+
+Steuern gehen an Airbnb **nur** wenn Szenario gesetzt und ≠ `ineligible` UND
+beide Schalter an. **Fail-closed**: ohne erfasstes Szenario keine Steuern. Das
+Szenario wirkt ausschließlich auf Steuern — Gebühren gehen unabhängig davon.
+
+⚠️ Channex bietet für das Szenario **kein Feld** (der AirBNB-Kanal deklariert nur
+`code`, `email`, `min_stay_type`, `rate_plans_enabled`,
+`send_email_notifications`, `booking_amount_settings`,
+`cohost_payout_calculations`). Es ist deshalb ein gepflegter Wert, kein
+gelesener — im Standard liest die Software ihn direkt bei Airbnb aus.
+
+Endpunkt: `PUT /properties/{id}/connections/{portal}/airbnb-tax`. Die Änderung
+stößt den Steuer-Sync direkt an (Wurzel 1).
 
 ### Kanal-Einschränkung: n Tax-Sets je Objekt (0273)
 
-Eine Steuer soll nicht immer an jedes Portal. Zieht das Portal die Ortstaxe
-selbst ein, zahlt der Gast sie sonst doppelt.
+Eine Steuer/Gebühr soll nicht immer an jedes Portal. Zieht das Portal die
+Ortstaxe selbst ein, zahlt der Gast sie sonst doppelt.
 
 ⚠️ **Channex hat dafür KEIN Feld an der Steuer.** Live geprüft (03.08.2026):
 `channels`, `excluded_channels`, `restrict_to_channels`, `channel_codes` und
@@ -119,7 +196,13 @@ mehrere Tax-Sets haben. Also:
   jedem Kanal ohne eigenen Plan, deshalb bleibt ein eingeschränkter Posten hier
   draußen.
 * **Portal-Set je Kanal-Plan** (`rate_plans.portal_scope`, 0272) → nur die für
-  dieses Portal erlaubten Posten.
+  dieses Portal erlaubten Posten. Fehlt der Kanal-Plan für ein Portal mit
+  Sonderregel, legt der Sync ihn selbst an (`offset_percent = 0`).
+
+`portalScope` an Steuer/Gebühr zählt auch die **eigenen Buchungsstrecken** mit
+(`direct` = Website, `portal` = myBestDays) — der Preis-Resolver liest dieselbe
+Einschränkung, damit eine Gebühr „nur an Booking" nicht in einer Direktbuchung
+auftaucht.
 
 `channex_tax_set_map` (0273) merkt sich, welches Channex-Set zu welchem Portal
 gehört (`portal_scope IS NULL` = Standard). **Kein `upsert`/`on_conflict`**: die
@@ -128,9 +211,18 @@ und Postgres akzeptiert für `ON CONFLICT` nur einen Index ohne `WHERE` — live
 bestätigt mit `42P10`. Stattdessen stillgelegte Zeile reaktivieren oder neu
 einfügen.
 
-Fällt ein Kanal-Plan weg, räumt `_prune_portal_tax_sets` sein Set ab; sind alle
-Posten weg, legt `_tax_set_map_stilllegen` zusätzlich die Zuordnungen still —
-sonst zeigte die Standard-Zeile weiter auf ein gelöschtes Set.
+Fällt ein Kanal-Plan weg oder will kein Ziel einen Posten mehr, räumen
+`_prune_portal_tax_sets` und `_prune_verwaiste_abgaben` ihn bei Channex ab. Das
+deckt ALLE Wege ab, auf denen ein Posten verschwindet — lokal gelöscht, auf
+`optional` gestellt, aus der Export-Matrix gefallen, in einer Kategorie
+aufgegangen, Portal getrennt (Wurzel 1).
+
+### Live-Nachweis
+
+`scripts/channex/e2e_abgaben.py` fährt die ganze Matrix gegen die Staging-Sandbox
+und liest bei Channex zurück (91 Prüfungen): Posten je Portal, `logic`, `type`,
+`rate`, `is_inclusive`, Kaskadenebene, Szenario-Sperre und das vollständige
+Abräumen. „HTTP 200" ist bei Channex kein Beweis — nur das Readback ist einer.
 
 ### Steuerregime automatisch erkennen (`tax_regime.py`)
 

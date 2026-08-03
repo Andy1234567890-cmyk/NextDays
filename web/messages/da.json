@@ -4710,15 +4710,30 @@
       "planConfirmDelete": "Vil du virkelig slette denne prisplan? Planens datopriser slettes med.",
       "feeTypeLabel": "Gebyrtype",
       "feeTypeHint": "Bestemmer, hvad gebyret ankommer som hos portalerne. Portaler som Airbnb har deres egne kategorier for rengøring og kæledyr.",
-      "feeType": {
+      "feeTypePlaceholder": "Klik for at vælge",
+      "feeModeAmount": "Fast beløb",
+      "feeModePercent": "Procent",
+      "feeModePercentShort": "engangs af værelsesprisen",
+      "feePercentPlaceholder": "0 % af værelsesprisen inkl. kampagner",
+      "feePercentHint": "Et procentgebyr opkræves én gang og beregnes af værelsesprisen inkl. kampagner.",
+      "feeOptionalHint": "Valgfrie gebyrer sendes ikke til kanaler – gæsten kan ikke fravælge dem der.",
+      "restrictionsTitle": "Begrænsninger",
+      "restrictionsHint": "Vælg de kanaler, hvor dette skal opkræves.",
+      "restrictionsNote": "Intet valgt = alle kanaler. Hvad en kanal faktisk overtager, afgør dens grænseflade.",
+      "restrictedSuffix": "begrænset",
+      "ownChannel": {
+        "direct": "Eget website",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Rengøringsgebyr",
-        "pet": "Kæledyrsgebyr",
+        "linen": "Linnedgebyr",
         "resort": "Resortgebyr",
         "management": "Administrationsgebyr",
-        "community": "Fællesudgifter",
-        "linen": "Linnedservice",
-        "other": "Andet gebyr"
-      }
+        "community": "Fællesgebyr",
+        "pet": "Kæledyrsgebyr"
+      },
+      "actions": "Handlinger"
     },
     "policiesForm": {
       "title": "Retningslinjer",
@@ -5325,7 +5340,19 @@
     "syncing": "Synkroniserer …",
     "syncBookings": "Synkroniser bookinger",
     "noBookingsYet": "Endnu ingen bookinger fra denne portal.",
-    "channelFallback": "Kanal"
+    "channelFallback": "Kanal",
+    "airbnbTax": {
+      "title": "Skatteopkrævning",
+      "hint": "Om egne skatter må overføres afhænger af, hvad kanalen selv opkræver.",
+      "scenarioLabel": "Scenarie for skatteopkrævning",
+      "scenarioUnset": "Endnu ikke angivet",
+      "scenarioIneligible": "Ikke berettiget",
+      "scenarioNoCollected": "Kanalen opkræver ingen skatter",
+      "scenarioStacked": "Kanalen opkræver skatter, vores lægges til",
+      "acknowledge": "Jeg bekræfter, at jeg forstår scenariet for skatteopkrævning.",
+      "sendUserTaxes": "Send egne skatter",
+      "blockedNote": "Så længe dette er slået fra, sendes ingen egne skatter til kanalen."
+    }
   },
   "calendarSync": {
     "title": "Importér/eksportér kalender",

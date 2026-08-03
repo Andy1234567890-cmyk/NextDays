@@ -4731,15 +4731,30 @@
       "currencyEditorHint": "If the currency is changed, all rate plans adopt the new currency. The figures stay unchanged.",
       "feeTypeLabel": "Fee type",
       "feeTypeHint": "Determines how the fee arrives at the portals. Portals such as Airbnb have their own categories for cleaning and pets.",
-      "feeType": {
+      "feeTypePlaceholder": "Click to select",
+      "feeModeAmount": "Flat amount",
+      "feeModePercent": "Percentage",
+      "feeModePercentShort": "one-off on the room rate",
+      "feePercentPlaceholder": "0% of the room rate incl. promotions",
+      "feePercentHint": "A percentage fee is charged once and is based on the room rate including promotions.",
+      "feeOptionalHint": "Optional fees are not sent to any channel — guests could not deselect them there.",
+      "restrictionsTitle": "Restrictions",
+      "restrictionsHint": "Select the channels this should be charged on.",
+      "restrictionsNote": "Nothing selected = all channels. What a channel actually accepts depends on its own interface.",
+      "restrictedSuffix": "restricted",
+      "ownChannel": {
+        "direct": "Own website",
+        "portal": "myBestDays"
+      },
+      "taxableBaseCategory": {
         "cleaning": "Cleaning fee",
-        "pet": "Pet fee",
+        "linen": "Linen fee",
         "resort": "Resort fee",
         "management": "Management fee",
         "community": "Community fee",
-        "linen": "Linen service",
-        "other": "Other fee"
-      }
+        "pet": "Pet fee"
+      },
+      "actions": "Actions"
     },
     "policiesForm": {
       "title": "Policies",
@@ -5346,7 +5361,19 @@
     "syncing": "Syncing …",
     "syncBookings": "Sync bookings",
     "noBookingsYet": "No bookings from this channel yet.",
-    "channelFallback": "Channel"
+    "channelFallback": "Channel",
+    "airbnbTax": {
+      "title": "Tax collection",
+      "hint": "Whether your own taxes may be exported depends on what the channel collects itself.",
+      "scenarioLabel": "Tax collection scenario",
+      "scenarioUnset": "Not recorded yet",
+      "scenarioIneligible": "Ineligible",
+      "scenarioNoCollected": "No channel-collected tax",
+      "scenarioStacked": "Stacked channel-collected tax",
+      "acknowledge": "I acknowledge that I understand the tax collection scenario.",
+      "sendUserTaxes": "Send user taxes",
+      "blockedNote": "While this is off, no taxes of your own are sent to this channel."
+    }
   },
   "calendarSync": {
     "title": "Import/export calendar",
