@@ -12,7 +12,6 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {
-  ChannelLogo,
   EditorShell,
   Field,
   Footer,
@@ -38,7 +37,6 @@ import {
   SelectValue,
 } from "@nextdays/ui/select";
 import { Switch } from "@nextdays/ui/switch";
-import { CHANNEL_LABELS } from "@/lib/availability-meta";
 import {
   type AddOn,
   type Currency,
@@ -53,7 +51,6 @@ import {
   type TaxMode,
   CURRENCY_OPTIONS,
   FEE_BASIS_LABELS,
-  MARKUP_CHANNELS,
   STAY_KIND_LABELS,
   TAX_KIND_LABELS,
   WEEKDAY_LABELS,
@@ -61,6 +58,13 @@ import {
   fmtPrice,
   readPricing,
 } from "@/lib/pricing-meta";
+import { channelLogoLoose } from "@/lib/channel-logos";
+import {
+  listChannelConnections,
+  setPortalPriceAdjustment,
+  type StoredChannelConnection,
+} from "@/lib/channex";
+import { getDpSettings } from "@/lib/dynamic-pricing";
 import { type Property, updateProperty } from "@/lib/properties";
 import {
   deleteRatePlan,
@@ -73,7 +77,6 @@ import { useRealtime } from "@/lib/use-realtime";
 type Section =
   | "currency"
   | "base"
-  | "markup"
   | "extraGuest"
   | "shortStay"
   | { length: StayKind; id?: string }
@@ -109,6 +112,23 @@ export function PricingForm({ initial }: { initial: Property }) {
     table: "rate_plans",
     filter: `property_id=eq.${p.id}`,
     onChange: () => void loadPlans(),
+  });
+  // Dynamic Pricing aktiv? Dann sind die verkauften Tagespreise die dynamischen
+  // — der Grundpreis hier ist nur der Anker. Ohne diesen Hinweis liest sich die
+  // Seite als „das Objekt kostet 129 €", während Kalender/Portale längst andere
+  // Tagespreise führen.
+  const [dpEnabled, setDpEnabled] = useState(false);
+  const loadDp = useCallback(async () => {
+    const res = await getDpSettings(p.id);
+    if (res.ok) setDpEnabled(Boolean(res.data.enabled));
+  }, [p.id]);
+  useEffect(() => {
+    void loadDp();
+  }, [loadDp]);
+  useRealtime({
+    table: "dp_settings",
+    filter: `property_id=eq.${p.id}`,
+    onChange: () => void loadDp(),
   });
   const multiPlan = plans.length > 1;
   const basePlan = multiPlan ? null : (plans[0] ?? null);
@@ -195,6 +215,27 @@ export function PricingForm({ initial }: { initial: Property }) {
           </BlockCard>
         )}
 
+        {dpEnabled && (
+          <Card className="flex flex-wrap items-center justify-between gap-3 border-accent/40 bg-accent/5 p-4">
+            <div className="flex min-w-0 items-start gap-2">
+              <span aria-hidden className="text-accent">⚡</span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">
+                  {t("pricingForm.dynamicActiveTitle")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t("pricingForm.dynamicActiveHint")}
+                </p>
+              </div>
+            </div>
+            <Button type="button" variant="outline" asChild>
+              <a href={`/dynamic-pricing/${p.id}`}>
+                {t("pricingForm.dynamicActiveOpen")}
+              </a>
+            </Button>
+          </Card>
+        )}
+
         <RatePlanList
           plans={plans}
           currency={cur}
@@ -202,21 +243,7 @@ export function PricingForm({ initial }: { initial: Property }) {
           onDeleted={() => void loadPlans()}
         />
 
-        <BlockCard
-          title={t("pricingForm.markupTitle")}
-          hint={t("pricingForm.markupHint")}
-          onEdit={() => setSection("markup")}
-          localOnly
-        >
-          <span className="flex flex-wrap items-center gap-2">
-            {MARKUP_CHANNELS.map((c) => (
-              <span key={c} className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-sm">
-                <ChannelLogo channel={c} />
-                {pr.markup[c] >= 0 ? "+" : ""}{pr.markup[c]}%
-              </span>
-            ))}
-          </span>
-        </BlockCard>
+        <PortalAdjustmentsCard propertyId={p.id} plans={plans} />
 
         <BlockCard
           title={t("pricingForm.extraGuestTitle")}
@@ -457,7 +484,6 @@ export function PricingForm({ initial }: { initial: Property }) {
           onClose={() => setSection(null)}
         />
       )}
-      {section === "markup" && <MarkupEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
       {section === "extraGuest" && <ExtraGuestEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
       {section === "shortStay" && <ShortStayEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
       {section && typeof section === "object" && "length" in section && (
@@ -764,46 +790,190 @@ function BaseEditor({
   );
 }
 
-function MarkupEditor({
-  pr,
-  onSave,
+// Portal-Logo + Name eines verbundenen Portals; ohne echtes Logo nur der Name.
+function PortalMarke({ code, name }: { code: string; name: string }) {
+  const logo = channelLogoLoose(code) ?? channelLogoLoose(name);
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      {logo && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logo} alt="" className="size-4 shrink-0 rounded-sm object-contain" />
+      )}
+      <span className="truncate text-sm font-medium">{name}</span>
+    </span>
+  );
+}
+
+function PortalAdjustmentsCard({
+  propertyId,
+  plans,
+}: {
+  propertyId: string;
+  plans: RatePlan[];
+}) {
+  // Preisänderung je Portal (Lodgify-Modell „Aufschlag"): Karte zeigt nur die
+  // gesetzten Aufschläge als Chips, der Stift öffnet ein Sheet mit allen
+  // verbundenen Portalen. Technisch ist jeder Aufschlag ein automatisch
+  // gepflegter Kanal-Plan (portal_scope) auf die effektive Tageskurve GENAU
+  // dieses Portals — er ersetzt den früheren „Mark-up", der eine Attrappe war.
+  // Werte kommen aus `plans` (Realtime auf rate_plans hält sie frisch).
+  const t = useTranslations("objects");
+  const [conns, setConns] = useState<StoredChannelConnection[] | null>(null);
+  const [offen, setOffen] = useState(false);
+  useEffect(() => {
+    void (async () => {
+      const res = await listChannelConnections(propertyId);
+      if (res.ok) setConns(res.data.items);
+    })();
+  }, [propertyId]);
+
+  const wert = (portal: string): number =>
+    plans.find((pl) => pl.portal_scope === portal)?.offset_percent ?? 0;
+  const gesetzt = (conns ?? []).filter((c) => wert(c.portal_code) !== 0);
+
+  return (
+    <>
+      <Card className="flex flex-col gap-3 p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="leading-tight">
+            <p className="font-semibold">{t("pricingForm.portalAdjustmentTitle")}</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {t("pricingForm.portalAdjustmentHint")}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t("pricingForm.edit")}
+            disabled={!conns?.length}
+            onClick={() => setOffen(true)}
+          >
+            <Icon icon="ph:pencil-simple" className="size-4" />
+          </Button>
+        </div>
+        {conns !== null && conns.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {t("pricingForm.portalAdjustmentNone")}
+          </p>
+        ) : gesetzt.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {gesetzt.map((c) => {
+              const v = wert(c.portal_code);
+              const logo = channelLogoLoose(c.portal_code) ?? channelLogoLoose(c.portal);
+              return (
+                <span
+                  key={c.portal_code}
+                  title={c.portal}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-sm"
+                >
+                  {v > 0 ? "+" : ""}
+                  {v}%
+                  {logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logo} alt={c.portal} className="size-4 rounded-sm object-contain" />
+                  ) : (
+                    <span className="text-muted-foreground">{c.portal}</span>
+                  )}
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+      </Card>
+      {offen && conns && (
+        <PortalAdjustmentsEditor
+          propertyId={propertyId}
+          conns={conns}
+          wert={wert}
+          onClose={() => setOffen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function PortalAdjustmentsEditor({
+  propertyId,
+  conns,
+  wert,
   onClose,
 }: {
-  pr: Pricing;
-  onSave: (next: Pricing) => Promise<true | string>;
+  propertyId: string;
+  conns: StoredChannelConnection[];
+  wert: (portal: string) => number;
   onClose: () => void;
 }) {
   const t = useTranslations("objects");
-  const [v, setV] = useState(pr);
-  const { busy, error, run } = useSaver(onSave);
+  const [entwurf, setEntwurf] = useState<Record<string, string>>(() =>
+    Object.fromEntries(conns.map((c) => [c.portal_code, String(wert(c.portal_code))])),
+  );
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Ein Speichern für alle Portale: nur geänderte Werte gehen raus, jedes
+  // Portal ist ein eigener Endpoint-Aufruf (eigener Kanal-Plan). Ein Fehler
+  // bricht ab und lässt das Sheet offen — bereits gespeicherte Portale bleiben
+  // gespeichert (Teilstand ist sichtbar, weil die Karte per Realtime folgt).
+  const speichern = async () => {
+    const zuAendern: Array<[string, number]> = [];
+    for (const c of conns) {
+      const roh = entwurf[c.portal_code] ?? "";
+      const n = Number(roh.trim().replace(",", "."));
+      if (roh.trim() === "" || !Number.isFinite(n) || n < -99 || n > 500) {
+        setError(t("pricingForm.portalAdjustmentInvalid"));
+        return;
+      }
+      if (n !== wert(c.portal_code)) zuAendern.push([c.portal_code, n]);
+    }
+    if (zuAendern.length === 0) {
+      onClose();
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    for (const [portal, prozent] of zuAendern) {
+      const res = await setPortalPriceAdjustment(propertyId, portal, prozent);
+      if (!res.ok) {
+        setBusy(false);
+        setError(res.error);
+        return;
+      }
+    }
+    setBusy(false);
+    toast.success(t("pricingForm.portalAdjustmentSaved"));
+    onClose();
+  };
+
   return (
     <EditorShell
-      title={t("pricingForm.markupEditorTitle")}
-      subtitle={t("pricingForm.markupEditorSubtitle")}
+      title={t("pricingForm.portalAdjustmentTitle")}
+      subtitle={t("pricingForm.portalAdjustmentEditorSubtitle")}
       onClose={onClose}
-      footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
+      footer={
+        <Footer busy={busy} error={error} onCancel={onClose} onSave={() => void speichern()} />
+      }
     >
-      {MARKUP_CHANNELS.map((c) => (
-        <Field
-          key={c}
-          label={
-            <span className="flex items-center gap-1.5">
-              <ChannelLogo channel={c} />
-              {CHANNEL_LABELS[c]}
-            </span>
-          }
-        >
-          <div className="flex items-center gap-2">
+      {conns.map((c) => (
+        <Field key={c.portal_code} label={<PortalMarke code={c.portal_code} name={c.portal} />}>
+          <div className="relative">
             <Input
-              type="number"
-              value={v.markup[c]}
-              onChange={(e) => setV({ ...v, markup: { ...v.markup, [c]: Number(e.target.value) || 0 } })}
+              value={entwurf[c.portal_code] ?? ""}
+              onChange={(e) =>
+                setEntwurf((prev) => ({ ...prev, [c.portal_code]: e.target.value }))
+              }
+              inputMode="decimal"
+              className="pr-8"
             />
-            <span className="text-sm text-muted-foreground">%</span>
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+              %
+            </span>
           </div>
         </Field>
       ))}
-      <Hint>{t("pricingForm.markupHintNote")}</Hint>
+      <p className="flex items-start gap-2 text-sm text-muted-foreground">
+        <Icon icon="ph:arrow-elbow-down-right" className="mt-0.5 size-4 shrink-0" />
+        <span>{t("pricingForm.portalAdjustmentDirectNote")}</span>
+      </p>
     </EditorShell>
   );
 }

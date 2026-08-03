@@ -112,6 +112,10 @@ COMMISSION_BILLING_DAY = 1  # Monatserster
 # Stündlich reicht — alle drei Fälligkeiten sind tagesgenau; der PRIMÄRE Weg für
 # neue Portal-Bewertungen ist der Webhook.
 REVIEWS_TICK_SECONDS = 60 * 60
+# Wiederkehrende Aufgaben (0272) in den 60-Tage-Horizont ausrollen. Stündlich
+# reicht: die Termine sind tagesgenau und der Lauf ist idempotent (UNIQUE-Index
+# auf (rule_id, occurrence_on)), ein zweiter Durchlauf legt nichts doppelt an.
+TASKS_TICK_SECONDS = 60 * 60
 # Nächtlicher Full-Sync-Push (Channex-Doku: "daily full update each night per
 # property"): im UTC-Stundenfenster [FULL_SYNC_HOUR_UTC, +1) je aktiver Property
 # EIN full_sync_property-Job pro Tag (dedup je Property+Tag), gestaffelt.
@@ -414,6 +418,7 @@ class Worker:
         self._last_payout_tick = 0.0
         self._last_commission_tick = 0.0
         self._last_reviews_tick = 0.0
+        self._last_tasks_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
         self._budget = budget or ChannexBudget(get_settings())
@@ -702,6 +707,39 @@ class Worker:
                 guest_rated=rated, expired=expired, reminders_sent=reminded,
             )
 
+    async def _tasks_tick(self, loop_time: float) -> None:
+        """Stündlich wiederkehrende Aufgaben-Regeln ausrollen (0272).
+
+        Bis dahin hatten regelmäßige Aufgaben keinen Ausführenden: sie ließen
+        sich anlegen, erzeugten aber nie eine Aufgabe. Ein Tenant mit kaputter
+        Regel kippt weder den Tick noch die übrigen Tenants."""
+        if loop_time - self._last_tasks_tick < TASKS_TICK_SECONDS:
+            return
+        self._last_tasks_tick = loop_time
+        try:
+            await asyncio.to_thread(self._materialize_recurring_tasks)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("tasks_tick_failed", error=str(exc)[:200])
+
+    def _materialize_recurring_tasks(self) -> None:
+        from src.features.tasks.engine import materialize_recurring
+
+        today = datetime.now(UTC).date()
+        created = 0
+        for tenant in (self._db.table("tenants").select("id").execute()).data or []:
+            try:
+                created += materialize_recurring(
+                    self._db, str(tenant["id"]), today=today
+                )
+            except Exception as exc:  # noqa: BLE001 — ein Tenant kippt nicht alle
+                log.warning(
+                    "tasks_materialize_failed",
+                    tenant_id=str(tenant["id"]),
+                    error=str(exc)[:200],
+                )
+        if created:
+            log.info("tasks_tick", created=created)
+
     async def _balance_tick(self, loop_time: float) -> None:
         """Stündlich fällige Restzahlungen (Split-Payment) off-session belasten.
         Netzwerk-/DB-Arbeit im Thread; ein fehlgeschlagener Charge kippt weder den
@@ -943,6 +981,7 @@ class Worker:
             await self._payout_tick(loop_time)
             await self._commission_tick(loop_time)
             await self._reviews_tick(loop_time)
+            await self._tasks_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)
             jobs = await asyncio.to_thread(self._claim, free) if free > 0 else []
             for job in jobs:

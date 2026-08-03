@@ -752,7 +752,9 @@ class ChannelsMixin:
         # macht der Provider selbst — es geht nur die Rate-Plan-ID mit.
         direct_mode = spec.get("mapping_mode") == "direct" or not rate_params
         if direct_mode:
-            return self._build_rate_plans_direct(db, tenant_id, mappings)
+            return self._build_rate_plans_direct(
+                db, tenant_id, mappings, portal_code
+            )
         rooms_by_code = {str(r.get("id")): r for r in ota_rooms}
         seen_local: set[str] = set()
         # Channex/Booking-Eindeutigkeit gilt auf dem OTA-Paar (room_type_code,
@@ -791,7 +793,9 @@ class ChannelsMixin:
             # Standard ist der GRUNDPREIS: der erste (Standard-)Preis des Zimmers
             # geht immer an die Portale; zusätzliche Preise nur, wenn der Kunde sie
             # je Preis freigeschaltet hat (rate_plans.send_to_portals, 0177).
-            selected = self._selected_rate_plan_ids(db, tenant_id, local_property_id)
+            selected = self._selected_rate_plan_ids(
+                db, tenant_id, local_property_id, portal_code
+            )
             log.info(
                 "build_rate_plans_debug_row",
                 local_property_id=local_property_id,
@@ -912,7 +916,8 @@ class ChannelsMixin:
         return settings
 
     def _build_rate_plans_direct(
-        self, db: Client, tenant_id: str, mappings: list[dict[str, Any]]
+        self, db: Client, tenant_id: str, mappings: list[dict[str, Any]],
+        portal_code: str | None = None,
     ) -> list[dict[str, Any]]:
         """Zuordnung für Kanäle ohne OTA-Codes (`mapping_mode: direct`, z.B.
         Google): es gehen nur die eigenen Preispläne mit, die Zuordnung macht
@@ -925,7 +930,7 @@ class ChannelsMixin:
             if not local_property_id:
                 continue
             for channex_rate_plan_id in self._selected_rate_plan_ids(
-                db, tenant_id, local_property_id
+                db, tenant_id, local_property_id, portal_code
             ):
                 if channex_rate_plan_id in gesehen:
                     continue
@@ -938,11 +943,17 @@ class ChannelsMixin:
         return rate_plans
 
     def _selected_rate_plan_ids(
-        self, db: Client, tenant_id: str, local_property_id: str
+        self, db: Client, tenant_id: str, local_property_id: str,
+        portal_code: str | None = None,
     ) -> list[str]:
         """Die Channex-Rate-Plan-IDs eines Objekts, die an das Portal gehen:
         immer der Grundpreis (der erste) und zusätzlich jeder Preis, den der
-        Kunde ausdrücklich freigeschaltet hat (send_to_portals, 0177)."""
+        Kunde ausdrücklich freigeschaltet hat (send_to_portals, 0177).
+
+        Preisänderung je Portal (0272): existiert für `portal_code` ein
+        Kanal-Plan (`rate_plans.portal_scope`), ERSETZT er den Grundpreis als
+        Primary an genau diesem Kanal — Kanal-Pläne anderer Portale gehen hier
+        nie mit."""
         local_rate_maps = self._rate_plan_maps_for_property(
             db, tenant_id, local_property_id
         )
@@ -950,23 +961,72 @@ class ChannelsMixin:
             raise ChannelManagerError(
                 "Das zugeordnete Zimmer hat keinen Preisplan.", status_code=422
             )
-        ids = [
-            cid
-            for cid in (
-                self._channex_rate_plan_id_for_map(db, tenant_id, mid)
-                for mid in local_rate_maps
-            )
-            if cid
-        ]
+        # Scope je lokalem Plan auflösen, um Kanal-Pläne richtig einzusortieren.
+        scoped = self._portal_scoped_channex_ids(db, tenant_id, local_property_id)
+        ids: list[str] = []
+        for mid in local_rate_maps:
+            cid = self._channex_rate_plan_id_for_map(db, tenant_id, mid)
+            if not cid:
+                continue
+            scope = scoped.get(cid)
+            if scope is not None and scope != portal_code:
+                continue  # Kanal-Plan eines ANDEREN Portals
+            ids.append(cid)
         if not ids:
             raise ChannelManagerError(
                 "Preisplan des Zimmers nicht bei den Portalen registriert.",
                 status_code=422,
             )
+        eigener_kanalplan = next(
+            (cid for cid in ids if scoped.get(cid) == portal_code
+             and portal_code is not None),
+            None,
+        )
         portal_ids = self._portal_enabled_rate_plan_ids(
             db, tenant_id, local_property_id
         )
+        if eigener_kanalplan:
+            # Kanal-Plan ersetzt den Grundpreis als Primary dieses Portals.
+            rest = [
+                cid for cid in ids
+                if cid != eigener_kanalplan and cid in portal_ids
+            ]
+            return [eigener_kanalplan, *rest]
         return [cid for i, cid in enumerate(ids) if i == 0 or cid in portal_ids]
+
+    def _portal_scoped_channex_ids(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> dict[str, str]:
+        """channex_rate_plan_id → portal_scope für alle Kanal-Pläne des Objekts
+        (0272). Leeres Dict, wenn das Objekt keine Kanal-Pläne führt."""
+        rows = [
+            r
+            for r in (
+                db.table("rate_plans")
+                .select("id, portal_scope")
+                .eq("property_id", property_id)
+                .execute()
+            ).data
+            or []
+            if r.get("portal_scope")
+        ]
+        if not rows:
+            return {}
+        maps = (
+            db.table("channex_rate_plan_map")
+            .select("local_rate_plan_id, channex_rate_plan_id")
+            .eq("tenant_id", tenant_id)
+            .in_("local_rate_plan_id", [r["id"] for r in rows])
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        scope_von_lokal = {r["id"]: r["portal_scope"] for r in rows}
+        return {
+            m["channex_rate_plan_id"]: scope_von_lokal[m["local_rate_plan_id"]]
+            for m in maps
+            if m.get("channex_rate_plan_id")
+            and m.get("local_rate_plan_id") in scope_von_lokal
+        }
 
     def _portal_enabled_rate_plan_ids(
         self, db: Client, tenant_id: str, property_id: str
@@ -1619,6 +1679,22 @@ class ChannelsMixin:
         ).data or []
         property_ids = [p["id"] for p in props]
 
+        # Titelbild je Objekt: die Zuordnungsliste zeigt das Objekt so, wie es
+        # der Betrieb kennt (Lodgify-Muster) — ein Name allein lässt bei 15
+        # gleichnamigen Ferienhäusern raten. Kein Ersatzbild: fehlt eines,
+        # bleibt die Zelle leer.
+        cover_by_property: dict[str, str] = {}
+        if property_ids:
+            for ph in (
+                db.table("property_photos")
+                .select("property_id, url, is_cover, sort_order")
+                .in_("property_id", property_ids)
+                .order("is_cover", desc=True)
+                .order("sort_order")
+                .execute()
+            ).data or []:
+                cover_by_property.setdefault(ph["property_id"], ph["url"])
+
         # Verbindung dieses Portals je Objekt (falls vorhanden).
         conn_by_property: dict[str, dict[str, Any]] = {}
         for c in (
@@ -1656,6 +1732,7 @@ class ChannelsMixin:
                 {
                     "property_id": pid,
                     "property_title": p.get("title"),
+                    "property_photo": cover_by_property.get(pid),
                     "ota_hotel_id": c.get("ota_hotel_id"),
                     "ota_room_type_code": c.get("ota_room_type_code"),
                     "ota_room_title": c.get("ota_room_title"),
@@ -1702,14 +1779,28 @@ class ChannelsMixin:
         res = (
             db.table("channex_channel_connection")
             .select(
-                "ota_portal_code, ota_hotel_id, channex_channel_id, "
-                "is_active, last_error, updated_at"
+                "ota_portal_code, ota_hotel_id, ota_room_type_code, "
+                "ota_room_title, channex_channel_id, is_active, last_error, "
+                "updated_at"
             )
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
             .order("created_at")
             .execute()
         )
+        # Sync-Stand des Objekts (gilt für alle Portale dieses Objekts): er
+        # gehört in dieselbe Zeile wie die Verbindung, sonst muss man ihn sich
+        # auf einer anderen Seite zusammensuchen.
+        pm = (
+            db.table("channex_property_map")
+            .select("sync_enabled, last_sync_status, last_sync_error")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data or []
+        sync = pm[0] if pm else {}
         out: list[dict[str, Any]] = []
         for r in res.data or []:
             code = r.get("ota_portal_code")
@@ -1719,7 +1810,14 @@ class ChannelsMixin:
                     "portal": self._portal_label(code),
                     "hotel_id": r.get("ota_hotel_id"),
                     "channel_id": r.get("channex_channel_id"),
+                    # Zimmer/Einheit beim Portal — die Angabe, mit der man im
+                    # Extranet nachsieht (Hotel-ID gilt für alle Zimmer).
+                    "ota_room_type_code": r.get("ota_room_type_code"),
+                    "ota_room_title": r.get("ota_room_title"),
                     "is_active": bool(r.get("is_active")),
+                    "sync_enabled": bool(sync.get("sync_enabled")),
+                    "last_sync_status": sync.get("last_sync_status"),
+                    "last_sync_error": sync.get("last_sync_error"),
                     "last_error": r.get("last_error"),
                     "updated_at": r.get("updated_at"),
                 }

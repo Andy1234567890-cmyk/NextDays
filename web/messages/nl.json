@@ -3290,15 +3290,10 @@
       "allProperties": "Alle accommodaties"
     },
     "myTasksList": {
-      "title": "Taken",
-      "doneCount": "{done}/{total} voltooid",
+      "title": "Mijn taken",
       "loading": "Laden…",
       "emptyState": "Er zijn momenteel geen taken aan jou toegewezen.",
-      "dueOn": "vervalt {date}",
-      "statusOpen": "Open",
-      "statusInProgress": "In behandeling",
-      "statusDone": "Voltooid",
-      "statusCancelled": "Geannuleerd"
+      "completed": "Taak afgerond."
     },
     "bookingPopover": {
       "title": "Boeking {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} voltooid",
       "loading": "Laden…",
       "emptyState": "Nog geen taken voor deze boeking.",
-      "createDefaultTasks": "Standaardtaken aanmaken",
-      "defaultTasksCreated": "Standaardtaken aangemaakt.",
       "statusOpen": "Open",
       "statusInProgress": "In behandeling",
       "statusDone": "Voltooid",
-      "statusCancelled": "Geannuleerd"
+      "statusCancelled": "Geannuleerd",
+      "applyRules": "Regels toepassen",
+      "rulesApplied": "{count} taken uit de regels.",
+      "noRuleMatched": "Geen enkele regel is van toepassing op deze boeking."
     },
     "propertyWarnings": {
       "title": "Waarschuwingen",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Foto toevoegen",
       "done": "Voltooid",
       "saving": "Opslaan…",
-      "completeButton": "Afronden"
+      "completeButton": "Afronden",
+      "inBooking": "Naar boeking {ref}",
+      "assignedTo": "Voor {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Hoe betaalt de gast?",
@@ -3464,7 +3462,8 @@
       "reject": "Afwijzen",
       "approve": "Goedkeuren",
       "toastApproved": "Goedgekeurd.",
-      "toastRejected": "Afgewezen."
+      "toastRejected": "Afgewezen.",
+      "noPhotos": "Geen fotobewijs aanwezig."
     },
     "bookingsBoard": {
       "title": "Boekingen",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Teamtaken",
-      "tabs": {
-        "current": "HUIDIG",
-        "upcoming": "AANKOMEND",
-        "done": "AFGEROND"
-      },
-      "status": {
-        "open": "Open",
-        "inProgress": "In behandeling",
-        "done": "Voltooid",
-        "cancelled": "Geannuleerd"
-      },
       "loading": "Laden…",
       "empty": "Geen taken in deze weergave.",
-      "columns": {
-        "title": "Titel",
-        "property": "Accommodatie",
-        "assignee": "Toegewezen aan",
-        "status": "Status",
-        "due": "Vervalt"
-      },
-      "unassigned": "Niet toegewezen",
-      "inspectionNeeded": "Inspectie nodig",
-      "details": "Details"
+      "completed": "Taak afgerond.",
+      "deleted": "Taak verwijderd."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Taaksjablonen",
         "auto": "Geplande taken",
         "recurring": "Terugkerende taken"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Titel",
       "columnActive": "Actief",
       "columnAssignee": "Toegewezen",
-      "columnPoints": "Punten",
-      "columnUpdated": "Bijgewerkt",
-      "inspectionNeeded": "Inspectie nodig",
       "yes": "Ja",
       "no": "Nee",
       "emptyValue": "–",
-      "edit": "Bewerken",
-      "delete": "Verwijderen",
-      "deleted": "Verwijderd."
+      "columnInspection": "Inspectie nodig?",
+      "columnPriority": "Prioriteit van de taak",
+      "columnDetails": "Details",
+      "learnBody": {
+        "auto": "Een geplande taak ontstaat automatisch bij elke boeking van de gekozen accommodaties — met begin en einde ten opzichte van check-in en check-out.",
+        "recurring": "Een terugkerende taak volgt de kalender: startdatum, frequentie en duur. Het systeem maakt de afspraken vooruit aan — los van boekingen."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM-modules",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigatie",
       "previousMonth": "Vorige maand",
       "nextMonth": "Volgende maand",
-      "selectedUsersLabel": "Geselecteerde gebruikers",
-      "allUsersPlaceholder": "Alle gebruikers",
-      "selectedPropertiesLabel": "Geselecteerde accommodaties",
-      "allPropertiesPlaceholder": "Alle accommodaties",
       "resetAllLabel": "Alles resetten",
       "loading": "Laden…",
       "createTaskOnDay": "Taak op deze dag aanmaken",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - boeking",
       "months": "Januari,Februari,Maart,April,Mei,Juni,Juli,Augustus,September,Oktober,November,December",
-      "weekdays": "Zondag,Maandag,Dinsdag,Woensdag,Donderdag,Vrijdag,Zaterdag"
+      "weekdays": "Zondag,Maandag,Dinsdag,Woensdag,Donderdag,Vrijdag,Zaterdag",
+      "miscRow": "Diversen"
     },
     "ruleEditor": {
       "loading": "Laden…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Bevestigde reserveringen"
     },
     "mobileAppHint": "De takenweergave voor onderweg is al responsive beschikbaar op het web (Mijn taken + detail met foto-upload). Een aparte mobiele app volgt als eigen project.",
-    "guestModuleHint": "Met het pre-check-informulier verzamel je vóór aankomst alle gegevens van je gasten (identiteitsbewijs, adres, medereizigers, aankomsttijd). Dit onderdeel wordt als aparte stap gebouwd."
+    "guestModuleHint": "Met het pre-check-informulier verzamel je vóór aankomst alle gegevens van je gasten (identiteitsbewijs, adres, medereizigers, aankomsttijd). Dit onderdeel wordt als aparte stap gebouwd.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} geselecteerd",
+      "resetCaption": "Alles opnieuw instellen",
+      "close": "Sluiten",
+      "noMatch": "Geen resultaat.",
+      "selectAll": "Alles selecteren",
+      "selectNone": "Niets selecteren",
+      "save": "Opslaan",
+      "taskCaption": "Geselecteerde taak",
+      "allTasks": "Alle taken",
+      "taskDialog": "Taak selecteren",
+      "taskSearch": "Zoeken op taaktitel",
+      "usersCaption": "Geselecteerde gebruikers",
+      "allUsers": "Alle gebruikers",
+      "usersDialog": "Gebruikers selecteren",
+      "usersSearch": "Zoeken op naam",
+      "unassignedOption": "Niet toegewezen",
+      "propertiesCaption": "Geselecteerde accommodaties",
+      "allProperties": "Alle accommodaties",
+      "propertiesDialog": "Accommodaties selecteren",
+      "propertiesSearch": "Zoeken op naam of stad"
+    },
+    "aufgabenReiter": {
+      "current": "ACTUEEL",
+      "upcoming": "AANKOMEND",
+      "done": "AFGEROND"
+    },
+    "massenaktionen": {
+      "selected": "{count} geselecteerd",
+      "completeAria": "Selectie afronden",
+      "deleteAria": "Selectie verwijderen",
+      "completed": "{done} taken afgerond.",
+      "completedPartly": "{done} afgerond, {skipped} overgeslagen (foto ontbreekt of geen toegang).",
+      "deleted": "{done} taken verwijderd.",
+      "deletedPartly": "{done} verwijderd, {skipped} overgeslagen (geen toegang)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Acties",
+      "columnTitle": "Titel",
+      "columnProperty": "Accommodatie",
+      "columnBooking": "Boeking",
+      "columnAssignee": "Toegewezen aan",
+      "columnStatus": "Status",
+      "columnDates": "Start- en einddatum",
+      "selectAll": "Alle rijen selecteren",
+      "selectRow": "Rij selecteren",
+      "open": "Bekijken",
+      "complete": "Afronden",
+      "delete": "Verwijderen",
+      "inspectionNeeded": "Inspectie nodig",
+      "unassigned": "Niet toegewezen",
+      "statusOpen": "Onvolledig",
+      "statusDone": "Afgerond",
+      "statusCancelled": "Geannuleerd"
+    },
+    "ruleEditorPage": {
+      "loading": "Laden…",
+      "modeCreate": "Aanmaken",
+      "modeEdit": "Bewerken",
+      "breadcrumbHome": "Start",
+      "breadcrumbTasks": "Taken",
+      "titleLabel": "Titel",
+      "descriptionLabel": "Beschrijving",
+      "active": "Actief",
+      "removeOnCancellation": "Verwijderen bij annulering",
+      "priority": "Prioriteit van de taak",
+      "priorityDown": "Prioriteit verlagen",
+      "priorityUp": "Prioriteit verhogen",
+      "priorityLevel": {
+        "1": "zeer laag",
+        "2": "laag",
+        "3": "gemiddeld",
+        "4": "hoog",
+        "5": "onmiddellijk"
+      },
+      "propertiesLabel": {
+        "auto": "Accommodaties waarvoor de taak bij elke boeking ontstaat",
+        "recurring": "Accommodaties waar de taak moet worden uitgevoerd"
+      },
+      "propertiesPlaceholder": "Accommodaties kiezen…",
+      "propertiesHint": "Zonder selectie geldt de regel voor alle accommodaties.",
+      "templateLabel": "Taaksjabloon met de lijst met subtaken",
+      "templateNone": "Geen sjabloon",
+      "assigneeLabel": "Ontvanger van de taak",
+      "unassigned": "Niet toegewezen",
+      "needsInspection": "Afronden vereist inspectie",
+      "saveAria": "Regel opslaan",
+      "deleteAria": "Regel verwijderen",
+      "saved": "Opgeslagen.",
+      "deleted": "Verwijderd.",
+      "nameRequired": "Titel is verplicht.",
+      "startTriggerRequired": "Kies wanneer de taak moet beginnen — anders wordt de regel nooit geactiveerd.",
+      "scheduleRequired": "Startdatum en frequentie zijn verplicht.",
+      "learnTitle": {
+        "auto": "Geplande taken",
+        "recurring": "Terugkerende taken"
+      },
+      "learnBody": {
+        "auto": "Een geplande taak hangt aan een boeking: u bepaalt wanneer die begint en eindigt ten opzichte van check-in en check-out. Bij elke nieuwe boeking ontstaat ze, bij verplaatsing schuift ze mee en bij annulering verdwijnt ze.",
+        "recurring": "Een terugkerende taak volgt de kalender, niet de boekingen: u stelt start, frequentie en duur in en het systeem maakt de afspraken vooruit aan."
+      },
+      "startTriggerLabel": "Wanneer de taak moet beginnen",
+      "endTriggerLabel": "Wanneer de taak moet eindigen",
+      "triggerNone": "— niet ingesteld —",
+      "trigger": {
+        "booking_confirmed": "Bij boekingsbevestiging",
+        "check_in": "Bij check-in",
+        "after_check_in_24h": "Na check-in (max. 24 uur)",
+        "check_out": "Bij check-out",
+        "days_before_check_in": "Dagen voor check-in",
+        "days_after_check_out": "Dagen na check-out"
+      },
+      "triggerHint": {
+        "booking_confirmed": "De taak ontstaat zodra de boeking is bevestigd.",
+        "check_in": "De taak begint bij de check-in van de boeking.",
+        "after_check_in_24h": "24 uur na check-in — maar nooit voorbij de check-out: bij kort verblijf eindigt de taak bij het vertrek.",
+        "check_out": "De taak hangt aan de check-out van de boeking.",
+        "days_before_check_in": "De taak ontstaat het opgegeven aantal dagen voor de check-in.",
+        "days_after_check_out": "De taak ontstaat het opgegeven aantal dagen na de check-out."
+      },
+      "offsetDays": "Dagen",
+      "periodLabel": "Start- en einddatum instellen",
+      "startsOn": "Startdatum",
+      "startTime": "Starttijd",
+      "hasEnd": "Eindigt",
+      "endsOn": "Einddatum",
+      "repeatLabel": "Herhalingsinterval",
+      "frequency": "Frequentie",
+      "choose": "Kiezen…",
+      "frequencyOption": {
+        "daily": "Dagelijks",
+        "weekly": "Wekelijks",
+        "monthly": "Maandelijks",
+        "yearly": "Jaarlijks"
+      },
+      "interval": "Elke",
+      "onDay": "Op dag",
+      "onPattern": "Op de",
+      "position": {
+        "first": "Eerste",
+        "second": "Tweede",
+        "third": "Derde",
+        "fourth": "Vierde",
+        "last": "Laatste"
+      },
+      "durationLabel": "Geschatte duur",
+      "hours": "Uren",
+      "minutes": "Minuten",
+      "weekdayMon": "Maandag",
+      "weekdayTue": "Dinsdag",
+      "weekdayWed": "Woensdag",
+      "weekdayThu": "Donderdag",
+      "weekdayFri": "Vrijdag",
+      "weekdaySat": "Zaterdag",
+      "weekdaySun": "Zondag",
+      "weekdayMonShort": "Ma",
+      "weekdayTueShort": "Di",
+      "weekdayWedShort": "Wo",
+      "weekdayThuShort": "Do",
+      "weekdayFriShort": "Vr",
+      "weekdaySatShort": "Za",
+      "weekdaySunShort": "Zo"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Beschikbaarheid",
       "itemChannels": "Kanalen",
       "itemPolicies": "Beleid",
-      "itemSeasonalPrices": "Seizoensprijzen"
+      "itemSeasonalPrices": "Seizoensprijzen",
+      "groupChannels": "Kanalen",
+      "itemSync": "Synchronisatie"
     },
     "complianceForm": {
       "title": "Compliance",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Stel je nachtprijs in met basisprijs en toeslag.",
       "basePriceTitle": "Basisprijs",
       "basePriceHint": "Basisprijs per nacht en valuta. Optioneel per weekdag aanpassen.",
-      "markupTitle": "Toeslag (mark-up)",
-      "markupHint": "Pas de basisprijs aan die naar externe kanalen wordt verzonden.",
       "extraGuestTitle": "Toeslag per gast",
       "extraGuestHint": "Activeer een nachtelijke toeslag voor elke extra gast.",
       "extraGuestPill": "{price} vanaf gast {guest}",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Dynamische prijzen (automatisch per seizoen, weekend, bezetting, markt …) stel je centraal in onder <link>Dynamic Pricing</link> in het hoofdmenu. Een hier ingestelde basisprijs blijft de basis; een handmatige dagprijs in de kalender heeft altijd voorrang.",
       "basePricePerNightLabel": "Basisprijs per nacht",
       "customByWeekdayLabel": "Per weekdag aanpassen",
-      "markupEditorTitle": "Toeslag voor externe kanalen",
-      "markupEditorSubtitle": "Een positief % verhoogt, een negatief % verlaagt de basisprijs voor externe kanalen.",
-      "markupHintNote": "De toeslag geldt niet voor directe NextDays-boekingen.",
       "extraGuestEditorSubtitle": "Activeer een nachtelijke toeslag voor elke extra gast.",
       "extraGuestFromLabel": "Geldt voor elke gast vanaf",
       "guestCount": "{count, plural, one {# gast} other {# gasten}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "bijv. Standaardprijs",
       "multiPlanHint": "Meerdere prijsplannen (bijv. BAR/B&B) — de prijzen worden per datum beheerd in de kalenderweergave ‘Prijzen’.",
       "plansTitle": "Prijsplannen",
+      "dynamicActiveTitle": "Dynamic Pricing actief",
+      "dynamicActiveHint": "De dagprijzen worden automatisch berekend en gelden overal — kalender, je eigen platform en de portalen. De basisprijs is alleen de basis van de berekening.",
+      "dynamicActiveOpen": "Voorbeeld openen",
+      "portalAdjustmentTitle": "Prijsaanpassing per portaal",
+      "portalAdjustmentHint": "Pas de prijzen aan die naar uw externe portalen worden gestuurd.",
+      "portalAdjustmentNone": "Nog geen portaal verbonden.",
+      "portalAdjustmentInvalid": "Ongeldige waarde — toegestaan is −99 tot 500%.",
+      "portalAdjustmentEditorSubtitle": "Pas de toeslag voor externe portalen aan. Een positief percentage verhoogt de prijzen die naar dat portaal gaan, een negatief verlaagt ze.",
+      "portalAdjustmentDirectNote": "De toeslag geldt niet voor directe boekingen via uw eigen website of myBestDays.",
+      "portalAdjustmentSaved": "Prijsaanpassing opgeslagen.",
       "plansHint": "Prijzen worden per datum beheerd in de kalender.",
       "planCreate": "Prijsplan aanmaken",
-      "planModeManual": "Handmatig",
+      "planModeManual": "Eigen prijs",
       "planModeDerived": "Afgeleid van {parent} · {offset}",
       "planDerivedPrice": "berekend",
       "planMinStay": "Min. {nights} nachten",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Synchronisatie",
+      "hint": "Welk kenmerk dit object op welk portaal heeft en of de synchronisatie loopt. De kenmerken staan er net als in het extranet van het portaal, zodat een boeking daar terug te vinden is.",
+      "none": "Dit object is met geen enkel portaal verbonden. Verbind het op het tabblad ‘Kanalen’.",
+      "colPortal": "Bij het portaal",
+      "colOurs": "Bij ons",
+      "colStatus": "Status",
+      "published": "Gepubliceerd",
+      "notPublished": "Niet gepubliceerd",
+      "syncOk": "Gesynchroniseerd",
+      "statusActive": "Actief",
+      "statusPaused": "Gepauzeerd",
+      "statusError": "Fout",
+      "singleUnit": "Hele object",
+      "loadFailed": "Dit object kon niet worden geladen."
+    },
+    "channelDetail": {
+      "identifiers": "Kenmerken",
+      "hotelId": "Hotelkenmerk",
+      "roomCode": "Kamerkenmerk",
+      "roomTitle": "Kamernaam bij het portaal",
+      "sellingTitle": "Verkoop via dit portaal",
+      "sellingHint": "Uit: prijzen en beschikbaarheid gaan niet meer naar dit portaal. Bestaande boekingen lopen door en nieuwe komen nog binnen.",
+      "lastSync": "Laatst gesynchroniseerd",
+      "never": "Nooit",
+      "syncNow": "Nu synchroniseren",
+      "loadFailed": "Deze verbinding kon niet worden geladen.",
+      "backToChannel": "{portal}-accounts",
+      "ourId": "myNextDays-ID:",
+      "published": "Gepubliceerd",
+      "notPublished": "Niet gepubliceerd",
+      "statusSynced": "Gesynchroniseerd",
+      "statusPaused": "Gepauzeerd",
+      "statusError": "Fout",
+      "syncSection": "Synchronisatie",
+      "ratePlans": "Actieve tariefplannen",
+      "noRatePlans": "Geen tariefplan is vrijgegeven voor de portalen.",
+      "colCondition": "Voorwaarden",
+      "colPlanName": "Naam van het tariefplan (type)",
+      "colPriceChange": "Prijswijziging",
+      "modeManual": "Eigen prijs",
+      "modeDerived": "Afgeleid",
+      "minStay": "min. {nights} nachten",
+      "colPrice": "Prijs",
+      "dynamicActiveTitle": "Dynamic Pricing actief",
+      "dynamicActiveHint": "Naar dit portaal gaan de automatisch berekende dagprijzen — de hieronder getoonde prijs is alleen de basis van de berekening.",
+      "adjustmentInvalid": "Ongeldige waarde — toegestaan is −99 tot 500%.",
+      "adjustmentSave": "Opslaan",
+      "adjustmentCancel": "Annuleren",
+      "adjustmentHint": "Prijsaanpassing van dit portaal bewerken",
+      "notReleased": "niet vrijgegeven voor portalen"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Beschikbaarheid, prijzen en restricties volledig opnieuw doorsturen",
     "categoryMessaging": "Directe gastcommunicatie",
     "connected": "Verbonden",
-    "notConnected": "Niet verbonden"
+    "notConnected": "Niet verbonden",
+    "propertiesHeading": "Objecten",
+    "noPropertiesYet": "Je hebt nog geen actieve objecten. Maak er eerst een aan om het met {portal} te verbinden.",
+    "connectedOf": "{connected} van {total} verbonden",
+    "searchProperty": "Zoeken",
+    "propertyAtPortal": "Object bij {portal}",
+    "syncStatusColumn": "Synchronisatiestatus",
+    "actionColumn": "Actie",
+    "noSearchResults": "Geen object komt overeen met de zoekopdracht.",
+    "statusPaused": "Gepauzeerd",
+    "statusError": "Fout",
+    "statusSynced": "Gesynchroniseerd",
+    "idPrefix": "ID:",
+    "edit": "Bewerken",
+    "fullResyncShort": "Volledige synchronisatie",
+    "pause": "Pauzeren",
+    "activate": "Activeren",
+    "disconnectChannel": "Verbinding verbreken",
+    "disconnectConfirm": "{portal} volledig loskoppelen? Alle verbonden objecten van dit portaal worden losgekoppeld.",
+    "disconnectDone": "{portal} losgekoppeld.",
+    "notConfiguredHint": "De portaalkoppeling is nog niet actief. Zodra die is ingeschakeld, kun je je objecten verbinden.",
+    "channelIntro": "Publiceer, synchroniseer en beheer je {portal}-advertenties op één plek.",
+    "syncResult": "Synchronisatie klaar — {fetched} opgehaald, {saved} opgeslagen, {acked} bevestigd.",
+    "pullFutureStarted": "Bestaande boekingen worden geladen — dit kan even duren.",
+    "bookingsFrom": "Boekingen van {portal}",
+    "pullFuture": "Bestaande boekingen laden",
+    "syncing": "Synchroniseren …",
+    "syncBookings": "Boekingen synchroniseren",
+    "noBookingsYet": "Nog geen boekingen van dit portaal.",
+    "channelFallback": "Kanaal"
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",

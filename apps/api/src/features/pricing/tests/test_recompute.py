@@ -93,9 +93,18 @@ def _db(*, enabled: bool, base: float | None) -> _DB:
     return _DB(tables)
 
 
+def _svc_ohne_push(db):  # noqa: ANN001, ANN202
+    """Recompute mit gestubbtem Channex-Push: enabled pusht jetzt IMMER —
+    diese Tests prüfen nur die lokale Persistenz, nicht den Push-Pfad
+    (der Fake kann kein lte/range)."""
+    svc = DynamicPricingRecompute(service_client=db)
+    svc._push_to_channex = lambda *a, **k: None
+    return svc
+
+
 def test_recompute_writes_only_dynamic_prices() -> None:
     db = _db(enabled=True, base=100.0)
-    svc = DynamicPricingRecompute(service_client=db)
+    svc = _svc_ohne_push(db)
     n = svc.recompute_property(
         "p1", start=date(2026, 7, 1), end=date(2026, 7, 4)
     )
@@ -110,7 +119,7 @@ def test_recompute_writes_only_dynamic_prices() -> None:
 def test_recompute_writes_factors() -> None:
     # Faktor-Aufschlüsselung wird persistiert (für „Warum dieser Preis?").
     db = _db(enabled=True, base=100.0)
-    svc = DynamicPricingRecompute(service_client=db)
+    svc = _svc_ohne_push(db)
     svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 2))
     row = db.writes["dynamic_prices"][0]
     assert isinstance(row["factors"], dict)
@@ -139,7 +148,7 @@ def test_recompute_no_base_no_price() -> None:
 
 def test_recompute_all_only_enabled() -> None:
     db = _db(enabled=True, base=100.0)
-    svc = DynamicPricingRecompute(service_client=db)
+    svc = _svc_ohne_push(db)
     res = svc.recompute_all(horizon_days=3)
     assert res["properties"] == 1
     assert res["days"] >= 1
@@ -205,7 +214,7 @@ def test_e2e_full_pipeline_runs_and_writes_snapshots() -> None:
     """Voller Pfad: Snapshots werden geschrieben UND dynamic_prices entstehen,
     alle neuen Faktoren (pickup/weather/rate_rules) in der Aufschlüsselung."""
     db = _db_full()
-    svc = DynamicPricingRecompute(service_client=db)
+    svc = _svc_ohne_push(db)
     n = svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 4))
     assert n == 3
     # Pickup-Snapshots wurden persistiert (Lern-Fundament ab Tag 1).
@@ -225,7 +234,7 @@ def test_e2e_rate_rule_applies_through_pipeline() -> None:
         occupancy_sensitivity=0,
         rate_rules=[{"match": {"weekday": 6}, "adjust_pct": 20}],
     )
-    svc = DynamicPricingRecompute(service_client=db)
+    svc = _svc_ohne_push(db)
     # 2026-07-05 = Sonntag.
     svc.recompute_property("p1", start=date(2026, 7, 5), end=date(2026, 7, 6))
     row = db.writes["dynamic_prices"][0]
@@ -233,19 +242,16 @@ def test_e2e_rate_rule_applies_through_pipeline() -> None:
     assert row["price"] == 120.0
 
 
-def test_e2e_autopilot_gates_channex_push() -> None:
-    """Ohne Autopilot KEIN Channex-Push; dynamic_prices wird trotzdem geschrieben."""
-    pushed: list[str] = []
-    db = _db_full(autopilot_enabled=False)
-    svc = DynamicPricingRecompute(service_client=db)
-    svc._push_to_channex = lambda *a, **k: pushed.append("push")  # type: ignore[method-assign]
-    svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 2))
-    assert "dynamic_prices" in db.writes  # berechnet + gespeichert (Empfehlung)
-    assert pushed == []  # aber NICHT veröffentlicht
-
-    pushed.clear()
-    db2 = _db_full(autopilot_enabled=True)
-    svc2 = DynamicPricingRecompute(service_client=db2)
-    svc2._push_to_channex = lambda *a, **k: pushed.append("push")  # type: ignore[method-assign]
-    svc2.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 2))
-    assert pushed == ["push"]  # mit Autopilot veröffentlicht
+def test_e2e_enabled_pusht_immer_an_channex() -> None:
+    """EIN Schalter: enabled berechnet UND veröffentlicht — der frühere
+    Autopilot-Zwischenmodus existiert nicht mehr (das Gate war eine Attrappe,
+    Reconcile/Full-Sync pushten die Resolver-Kurve ohnehin). Die alte
+    DB-Spalte darf das Verhalten nicht mehr beeinflussen."""
+    for altwert in (False, True):
+        pushed: list[str] = []
+        db = _db_full(autopilot_enabled=altwert)
+        svc = DynamicPricingRecompute(service_client=db)
+        svc._push_to_channex = lambda *a, **k: pushed.append("push")  # type: ignore[method-assign]  # noqa: B023
+        svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 2))
+        assert "dynamic_prices" in db.writes
+        assert pushed == ["push"]

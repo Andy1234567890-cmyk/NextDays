@@ -3290,15 +3290,10 @@
       "allProperties": "Všechna ubytování"
     },
     "myTasksList": {
-      "title": "Úkoly",
-      "doneCount": "{done}/{total} dokončeno",
+      "title": "Moje úkoly",
       "loading": "Načítání…",
       "emptyState": "Aktuálně vám nejsou přiřazeny žádné úkoly.",
-      "dueOn": "splatné {date}",
-      "statusOpen": "Otevřeno",
-      "statusInProgress": "Probíhá",
-      "statusDone": "Dokončeno",
-      "statusCancelled": "Zrušeno"
+      "completed": "Úkol dokončen."
     },
     "bookingPopover": {
       "title": "Rezervace {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} dokončeno",
       "loading": "Načítání…",
       "emptyState": "K této rezervaci zatím nejsou žádné úkoly.",
-      "createDefaultTasks": "Vytvořit standardní úkoly",
-      "defaultTasksCreated": "Standardní úkoly vytvořeny.",
       "statusOpen": "Otevřeno",
       "statusInProgress": "Probíhá",
       "statusDone": "Dokončeno",
-      "statusCancelled": "Zrušeno"
+      "statusCancelled": "Zrušeno",
+      "applyRules": "Použít pravidla",
+      "rulesApplied": "Z pravidel vzniklo úkolů: {count}.",
+      "noRuleMatched": "Na tuto rezervaci se nevztahuje žádné pravidlo."
     },
     "propertyWarnings": {
       "title": "Upozornění",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Přidat fotku",
       "done": "Dokončeno",
       "saving": "Ukládání…",
-      "completeButton": "Dokončit"
+      "completeButton": "Dokončit",
+      "inBooking": "K rezervaci {ref}",
+      "assignedTo": "Pro {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Jak host platí?",
@@ -3464,7 +3462,8 @@
       "reject": "Odmítnout",
       "approve": "Schválit",
       "toastApproved": "Schváleno.",
-      "toastRejected": "Odmítnuto."
+      "toastRejected": "Odmítnuto.",
+      "noPhotos": "Žádné fotodoklady."
     },
     "bookingsBoard": {
       "title": "Rezervace",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Úkoly týmu",
-      "tabs": {
-        "current": "AKTUÁLNÍ",
-        "upcoming": "NADCHÁZEJÍCÍ",
-        "done": "DOKONČENÉ"
-      },
-      "status": {
-        "open": "Otevřeno",
-        "inProgress": "Probíhá",
-        "done": "Dokončeno",
-        "cancelled": "Zrušeno"
-      },
       "loading": "Načítání…",
       "empty": "V tomto zobrazení nejsou žádné úkoly.",
-      "columns": {
-        "title": "Název",
-        "property": "Ubytování",
-        "assignee": "Přiřazeno",
-        "status": "Stav",
-        "due": "Splatnost"
-      },
-      "unassigned": "Nepřiřazeno",
-      "inspectionNeeded": "Vyžadována kontrola",
-      "details": "Podrobnosti"
+      "completed": "Úkol dokončen.",
+      "deleted": "Úkol smazán."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Šablony úkolů",
         "auto": "Plánované úkoly",
         "recurring": "Pravidelné úkoly"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Název",
       "columnActive": "Aktivní",
       "columnAssignee": "Přiřazeno",
-      "columnPoints": "Body",
-      "columnUpdated": "Aktualizováno",
-      "inspectionNeeded": "Vyžadována kontrola",
       "yes": "Ano",
       "no": "Ne",
       "emptyValue": "–",
-      "edit": "Upravit",
-      "delete": "Smazat",
-      "deleted": "Smazáno."
+      "columnInspection": "Vyžaduje kontrolu?",
+      "columnPriority": "Priorita úkolu",
+      "columnDetails": "Detaily",
+      "learnBody": {
+        "auto": "Plánovaný úkol vzniká automaticky u každé rezervace vybraných ubytování — se začátkem a koncem podle příjezdu a odjezdu.",
+        "recurring": "Opakovaný úkol jde podle kalendáře: datum začátku, frekvence a délka. Systém termíny zakládá dopředu — nezávisle na rezervacích."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM moduly",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigace",
       "previousMonth": "Předchozí měsíc",
       "nextMonth": "Další měsíc",
-      "selectedUsersLabel": "Vybraní uživatelé",
-      "allUsersPlaceholder": "Všichni uživatelé",
-      "selectedPropertiesLabel": "Vybraná ubytování",
-      "allPropertiesPlaceholder": "Všechna ubytování",
       "resetAllLabel": "Zrušit vše",
       "loading": "Načítání…",
       "createTaskOnDay": "Vytvořit úkol na tento den",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - rezervace",
       "months": "[\"Leden\", \"Únor\", \"Březen\", \"Duben\", \"Květen\", \"Červen\", \"Červenec\", \"Srpen\", \"Září\", \"Říjen\", \"Listopad\", \"Prosinec\"]",
-      "weekdays": "[\"Neděle\", \"Pondělí\", \"Úterý\", \"Středa\", \"Čtvrtek\", \"Pátek\", \"Sobota\"]"
+      "weekdays": "[\"Neděle\", \"Pondělí\", \"Úterý\", \"Středa\", \"Čtvrtek\", \"Pátek\", \"Sobota\"]",
+      "miscRow": "Různé"
     },
     "ruleEditor": {
       "loading": "Načítání…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Potvrzené rezervace"
     },
     "mobileAppHint": "Zobrazení úkolů na cestách je již responzivně dostupné na webu (Moje úkoly + detail s nahráním fotek). Samostatná mobilní aplikace přijde jako vlastní projekt.",
-    "guestModuleHint": "Pomocí formuláře pre-check-in získáte před příjezdem všechny údaje svých hostů (doklad, adresu, spolucestující, čas příjezdu). Tato část bude vybudována jako samostatný krok."
+    "guestModuleHint": "Pomocí formuláře pre-check-in získáte před příjezdem všechny údaje svých hostů (doklad, adresu, spolucestující, čas příjezdu). Tato část bude vybudována jako samostatný krok.",
+    "aufgabenFilter": {
+      "selectedCount": "Vybráno: {count}",
+      "resetCaption": "Vše zrušit",
+      "close": "Zavřít",
+      "noMatch": "Žádná shoda.",
+      "selectAll": "Vybrat vše",
+      "selectNone": "Nevybrat nic",
+      "save": "Uložit",
+      "taskCaption": "Vybraný úkol",
+      "allTasks": "Všechny úkoly",
+      "taskDialog": "Vybrat úkol",
+      "taskSearch": "Hledat podle názvu úkolu",
+      "usersCaption": "Vybraní uživatelé",
+      "allUsers": "Všichni uživatelé",
+      "usersDialog": "Vybrat uživatele",
+      "usersSearch": "Hledat podle jména",
+      "unassignedOption": "Nepřiřazeno",
+      "propertiesCaption": "Vybrané ubytování",
+      "allProperties": "Všechna ubytování",
+      "propertiesDialog": "Vybrat ubytování",
+      "propertiesSearch": "Hledat podle názvu nebo města"
+    },
+    "aufgabenReiter": {
+      "current": "AKTUÁLNÍ",
+      "upcoming": "NADCHÁZEJÍCÍ",
+      "done": "DOKONČENÉ"
+    },
+    "massenaktionen": {
+      "selected": "Vybráno: {count}",
+      "completeAria": "Dokončit vybrané",
+      "deleteAria": "Smazat vybrané",
+      "completed": "Dokončeno: {done}.",
+      "completedPartly": "Dokončeno {done}, přeskočeno {skipped} (chybí foto nebo chybí přístup).",
+      "deleted": "Smazáno: {done}.",
+      "deletedPartly": "Smazáno {done}, přeskočeno {skipped} (chybí přístup)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Akce",
+      "columnTitle": "Název",
+      "columnProperty": "Ubytování",
+      "columnBooking": "Rezervace",
+      "columnAssignee": "Přiřazeno",
+      "columnStatus": "Stav",
+      "columnDates": "Začátek a konec",
+      "selectAll": "Vybrat všechny řádky",
+      "selectRow": "Vybrat řádek",
+      "open": "Otevřít",
+      "complete": "Dokončit",
+      "delete": "Smazat",
+      "inspectionNeeded": "Vyžaduje kontrolu",
+      "unassigned": "Nepřiřazeno",
+      "statusOpen": "Nedokončeno",
+      "statusDone": "Dokončeno",
+      "statusCancelled": "Zrušeno"
+    },
+    "ruleEditorPage": {
+      "loading": "Načítá se…",
+      "modeCreate": "Vytvořit",
+      "modeEdit": "Upravit",
+      "breadcrumbHome": "Domů",
+      "breadcrumbTasks": "Úkoly",
+      "titleLabel": "Název",
+      "descriptionLabel": "Popis",
+      "active": "Aktivní",
+      "removeOnCancellation": "Odstranit při zrušení rezervace",
+      "priority": "Priorita úkolu",
+      "priorityDown": "Snížit prioritu",
+      "priorityUp": "Zvýšit prioritu",
+      "priorityLevel": {
+        "1": "velmi nízká",
+        "2": "nízká",
+        "3": "střední",
+        "4": "vysoká",
+        "5": "okamžitá"
+      },
+      "propertiesLabel": {
+        "auto": "Ubytování, u kterých se úkol vytvoří u každé rezervace",
+        "recurring": "Ubytování, kde se má úkol provádět"
+      },
+      "propertiesPlaceholder": "Vyberte ubytování…",
+      "propertiesHint": "Bez výběru platí pravidlo pro všechna ubytování.",
+      "templateLabel": "Šablona se seznamem dílčích úkolů",
+      "templateNone": "Bez šablony",
+      "assigneeLabel": "Příjemce úkolu",
+      "unassigned": "Nepřiřazeno",
+      "needsInspection": "Dokončení vyžaduje kontrolu",
+      "saveAria": "Uložit pravidlo",
+      "deleteAria": "Smazat pravidlo",
+      "saved": "Uloženo.",
+      "deleted": "Smazáno.",
+      "nameRequired": "Název je povinný.",
+      "startTriggerRequired": "Vyberte, kdy má úkol začít — jinak se pravidlo nikdy nespustí.",
+      "scheduleRequired": "Počáteční datum a frekvence jsou povinné.",
+      "learnTitle": {
+        "auto": "Plánované úkoly",
+        "recurring": "Opakované úkoly"
+      },
+      "learnBody": {
+        "auto": "Plánovaný úkol se váže na rezervaci: určíte, kdy začíná a končí vůči příjezdu a odjezdu. U každé nové rezervace úkol vznikne, při přesunu se posune s ní, při zrušení zmizí.",
+        "recurring": "Opakovaný úkol se řídí kalendářem, ne rezervacemi: určíte začátek, frekvenci a délku, systém úkoly zakládá dopředu."
+      },
+      "startTriggerLabel": "Kdy má úkol začít",
+      "endTriggerLabel": "Kdy má úkol skončit",
+      "triggerNone": "— nenastaveno —",
+      "trigger": {
+        "booking_confirmed": "Při potvrzení rezervace",
+        "check_in": "Při příjezdu",
+        "after_check_in_24h": "Po příjezdu (max. 24 hodin)",
+        "check_out": "Při odjezdu",
+        "days_before_check_in": "Dny před příjezdem",
+        "days_after_check_out": "Dny po odjezdu"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Úkol vznikne, jakmile je rezervace potvrzena.",
+        "check_in": "Úkol začíná příjezdem rezervace.",
+        "after_check_in_24h": "24 hodin po příjezdu — nikdy však po odjezdu: u krátkých pobytů končí úkol s odjezdem.",
+        "check_out": "Úkol se váže na odjezd rezervace.",
+        "days_before_check_in": "Úkol vznikne uvedený počet dní před příjezdem.",
+        "days_after_check_out": "Úkol vznikne uvedený počet dní po odjezdu."
+      },
+      "offsetDays": "Dny",
+      "periodLabel": "Počáteční a koncové datum",
+      "startsOn": "Datum začátku",
+      "startTime": "Čas začátku",
+      "hasEnd": "Končí",
+      "endsOn": "Datum konce",
+      "repeatLabel": "Interval opakování",
+      "frequency": "Frekvence",
+      "choose": "Vyberte…",
+      "frequencyOption": {
+        "daily": "Denně",
+        "weekly": "Týdně",
+        "monthly": "Měsíčně",
+        "yearly": "Ročně"
+      },
+      "interval": "Každých",
+      "onDay": "V den",
+      "onPattern": "Ve",
+      "position": {
+        "first": "První",
+        "second": "Druhý",
+        "third": "Třetí",
+        "fourth": "Čtvrtý",
+        "last": "Poslední"
+      },
+      "durationLabel": "Odhadovaná délka",
+      "hours": "Hodin",
+      "minutes": "Minut",
+      "weekdayMon": "Pondělí",
+      "weekdayTue": "Úterý",
+      "weekdayWed": "Středa",
+      "weekdayThu": "Čtvrtek",
+      "weekdayFri": "Pátek",
+      "weekdaySat": "Sobota",
+      "weekdaySun": "Neděle",
+      "weekdayMonShort": "Po",
+      "weekdayTueShort": "Út",
+      "weekdayWedShort": "St",
+      "weekdayThuShort": "Čt",
+      "weekdayFriShort": "Pá",
+      "weekdaySatShort": "So",
+      "weekdaySunShort": "Ne"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Dostupnost",
       "itemChannels": "Kanály",
       "itemPolicies": "Zásady",
-      "itemSeasonalPrices": "Sezónní ceny"
+      "itemSeasonalPrices": "Sezónní ceny",
+      "groupChannels": "Kanály",
+      "itemSync": "Synchronizace"
     },
     "complianceForm": {
       "title": "Compliance",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Nastavte cenu za noc se základní cenou a příplatkem.",
       "basePriceTitle": "Základní cena",
       "basePriceHint": "Základní cena za noc a měnu. Volitelně upravte podle dne v týdnu.",
-      "markupTitle": "Příplatek (mark-up)",
-      "markupHint": "Upravte základní cenu odesílanou na externí kanály.",
       "extraGuestTitle": "Příplatek za hosta",
       "extraGuestHint": "Aktivujte noční příplatek za každého dalšího hosta.",
       "extraGuestPill": "{price} od hosta {guest}",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Dynamické ceny (automaticky podle sezóny, víkendu, obsazenosti, trhu…) nastavíte centrálně v sekci <link>Dynamic Pricing</link> v hlavním menu. Zde nastavená základní cena zůstává základem; ruční denní cena v kalendáři má vždy přednost.",
       "basePricePerNightLabel": "Základní cena za noc",
       "customByWeekdayLabel": "Upravit podle dne v týdnu",
-      "markupEditorTitle": "Příplatek pro externí kanály",
-      "markupEditorSubtitle": "Kladné % zvyšuje, záporné % snižuje základní cenu pro externí kanály.",
-      "markupHintNote": "Příplatek se nevztahuje na přímé rezervace myNextDays.",
       "extraGuestEditorSubtitle": "Aktivujte noční příplatek za každého dalšího hosta.",
       "extraGuestFromLabel": "Platí pro každého hosta od",
       "guestCount": "{count, plural, one {# host} few {# hosté} other {# hostů}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "např. Standardní cena",
       "multiPlanHint": "Více cenových plánů (např. BAR/B&B) — ceny se spravují podle data v zobrazení kalendáře „Ceny“.",
       "plansTitle": "Cenové plány",
+      "dynamicActiveTitle": "Dynamic Pricing aktivní",
+      "dynamicActiveHint": "Denní ceny se počítají automaticky a platí všude — v kalendáři, na vlastní platformě i na portálech. Základní cena je jen základem výpočtu.",
+      "dynamicActiveOpen": "Otevřít náhled",
+      "portalAdjustmentTitle": "Cenová úprava podle portálu",
+      "portalAdjustmentHint": "Upravte ceny odesílané na vaše externí portály.",
+      "portalAdjustmentNone": "Zatím není připojen žádný portál.",
+      "portalAdjustmentInvalid": "Neplatná hodnota — povolený rozsah je −99 až 500 %.",
+      "portalAdjustmentEditorSubtitle": "Upravte přirážku pro externí portály. Kladné procento zvyšuje ceny odesílané na daný portál, záporné je snižuje.",
+      "portalAdjustmentDirectNote": "Přirážka se nevztahuje na přímé rezervace přes vlastní web ani přes myBestDays.",
+      "portalAdjustmentSaved": "Cenová úprava uložena.",
       "plansHint": "Ceny se spravují podle data v kalendáři.",
       "planCreate": "Vytvořit cenový plán",
-      "planModeManual": "Ručně",
+      "planModeManual": "Vlastní cena",
       "planModeDerived": "Odvozeno od plánu {parent} · {offset}",
       "planDerivedPrice": "vypočítáno",
       "planMinStay": "Min. {nights} nocí",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Synchronizace",
+      "hint": "Jaké označení má tento objekt na kterém portálu a zda synchronizace běží. Označení jsou uvedena stejně jako v extranetu portálu, aby tam šla rezervace dohledat.",
+      "none": "Tento objekt není připojen k žádnému portálu. Připojte jej na kartě „Kanály“.",
+      "colPortal": "Na portálu",
+      "colOurs": "U nás",
+      "colStatus": "Stav",
+      "published": "Publikováno",
+      "notPublished": "Nepublikováno",
+      "syncOk": "Synchronizováno",
+      "statusActive": "Aktivní",
+      "statusPaused": "Pozastaveno",
+      "statusError": "Chyba",
+      "singleUnit": "Celý objekt",
+      "loadFailed": "Tento objekt se nepodařilo načíst."
+    },
+    "channelDetail": {
+      "identifiers": "Označení",
+      "hotelId": "Označení hotelu",
+      "roomCode": "Označení pokoje",
+      "roomTitle": "Název pokoje na portálu",
+      "sellingTitle": "Prodej přes tento portál",
+      "sellingHint": "Vypnuto: ceny a dostupnost už na tento portál nejdou. Stávající rezervace pokračují a nové stále přicházejí.",
+      "lastSync": "Naposledy synchronizováno",
+      "never": "Nikdy",
+      "syncNow": "Synchronizovat nyní",
+      "loadFailed": "Toto propojení se nepodařilo načíst.",
+      "backToChannel": "Účty {portal}",
+      "ourId": "myNextDays ID:",
+      "published": "Publikováno",
+      "notPublished": "Nepublikováno",
+      "statusSynced": "Synchronizováno",
+      "statusPaused": "Pozastaveno",
+      "statusError": "Chyba",
+      "syncSection": "Synchronizace",
+      "ratePlans": "Aktivní tarifní plány",
+      "noRatePlans": "Žádný tarifní plán není uvolněn pro portály.",
+      "colCondition": "Podmínky",
+      "colPlanName": "Název tarifního plánu (typ)",
+      "colPriceChange": "Změna ceny",
+      "modeManual": "Vlastní cena",
+      "modeDerived": "Odvozený",
+      "minStay": "min. {nights} nocí",
+      "colPrice": "Cena",
+      "dynamicActiveTitle": "Dynamic Pricing aktivní",
+      "dynamicActiveHint": "Na tento portál se odesílají automaticky počítané denní ceny — cena níže je jen základem výpočtu.",
+      "adjustmentInvalid": "Neplatná hodnota — povolený rozsah je −99 až 500 %.",
+      "adjustmentSave": "Uložit",
+      "adjustmentCancel": "Zrušit",
+      "adjustmentHint": "Upravit cenovou úpravu tohoto portálu",
+      "notReleased": "neuvolněno pro portály"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Znovu přenést kompletně dostupnost, ceny a restrikce",
     "categoryMessaging": "Přímá komunikace s hosty",
     "connected": "Připojeno",
-    "notConnected": "Nepřipojeno"
+    "notConnected": "Nepřipojeno",
+    "propertiesHeading": "Objekty",
+    "noPropertiesYet": "Zatím nemáte žádné aktivní objekty. Nejprve založte objekt, abyste jej propojili s {portal}.",
+    "connectedOf": "{connected} z {total} propojeno",
+    "searchProperty": "Hledat",
+    "propertyAtPortal": "Objekt na {portal}",
+    "syncStatusColumn": "Stav synchronizace",
+    "actionColumn": "Akce",
+    "noSearchResults": "Hledání neodpovídá žádný objekt.",
+    "statusPaused": "Pozastaveno",
+    "statusError": "Chyba",
+    "statusSynced": "Synchronizováno",
+    "idPrefix": "ID:",
+    "edit": "Upravit",
+    "fullResyncShort": "Plná synchronizace",
+    "pause": "Pozastavit",
+    "activate": "Aktivovat",
+    "disconnectChannel": "Odpojit",
+    "disconnectConfirm": "Odpojit {portal} úplně? Všechny propojené objekty tohoto portálu budou odpojeny.",
+    "disconnectDone": "{portal} odpojen.",
+    "notConfiguredHint": "Napojení portálu ještě není aktivní. Jakmile bude povoleno, můžete propojit své objekty.",
+    "channelIntro": "Publikujte, synchronizujte a spravujte své nabídky na {portal} z jednoho místa.",
+    "syncResult": "Synchronizace hotová — {fetched} načteno, {saved} uloženo, {acked} potvrzeno.",
+    "pullFutureStarted": "Stávající rezervace se načítají — může to chvíli trvat.",
+    "bookingsFrom": "Rezervace z {portal}",
+    "pullFuture": "Načíst stávající rezervace",
+    "syncing": "Synchronizuji …",
+    "syncBookings": "Synchronizovat rezervace",
+    "noBookingsYet": "Zatím žádné rezervace z tohoto portálu.",
+    "channelFallback": "Kanál"
   },
   "calendarSync": {
     "title": "Import/export kalendáře",

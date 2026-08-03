@@ -117,7 +117,6 @@ export function DpEditSheet({
       market_max_adjust_pct: s.market_max_adjust_pct,
       market_key: s.market_key,
       comp_refs: s.comp_refs,
-      autopilot_enabled: s.autopilot_enabled ?? false,
       weather_enabled: s.weather_enabled ?? false,
       weather_max_adjust_pct: s.weather_max_adjust_pct ?? 10,
       rate_rules: s.rate_rules ?? [],
@@ -155,10 +154,11 @@ export function DpEditSheet({
               <span className="leading-tight">
                 <span className="flex items-center gap-1.5 font-semibold">
                   Dynamic Pricing aktiv
-                  <InfoHint text="Ist dies an, berechnet die Engine die Tagespreise dieses Objekts automatisch und überschreibt den festen Grundpreis. Ein im Kalender manuell gesetzter Tagespreis hat trotzdem immer Vorrang." />
+                  <InfoHint text="Ist dies an, berechnet die Engine die Tagespreise dieses Objekts automatisch und veröffentlicht sie überall — Kalender, eigene Plattform und alle verbundenen Portale. Ein im Kalender manuell gesetzter Tagespreis hat immer Vorrang." />
                 </span>
                 <span className="block text-sm text-muted-foreground">
-                  Standardmäßig aus — du entscheidest pro Objekt.
+                  Standardmäßig aus — du entscheidest pro Objekt. An heißt:
+                  ein Preis, überall.
                 </span>
               </span>
               <Switch
@@ -166,25 +166,6 @@ export function DpEditSheet({
                 onCheckedChange={(c) => set("enabled", c)}
               />
             </label>
-
-            {/* Autopilot — nur sinnvoll, wenn DP überhaupt an ist */}
-            {s.enabled && (
-              <label className="flex cursor-pointer items-center justify-between gap-3">
-                <span className="leading-tight">
-                  <span className="flex items-center gap-1.5 font-semibold">
-                    Autopilot
-                    <InfoHint text="Ist Autopilot an, werden die berechneten Preise automatisch an alle Kanäle (eigene Plattform + OTAs) geschickt. Ist er aus, berechnet die Engine die Preise weiterhin und zeigt sie als Vorschau/Empfehlung — veröffentlicht werden sie aber erst, wenn du es freigibst." />
-                  </span>
-                  <span className="block text-sm text-muted-foreground">
-                    Preise automatisch veröffentlichen statt nur empfehlen.
-                  </span>
-                </span>
-                <Switch
-                  checked={s.autopilot_enabled}
-                  onCheckedChange={(c) => set("autopilot_enabled", c)}
-                />
-              </label>
-            )}
 
             {/* Basispreis-Modus */}
             <div className="flex flex-col gap-3">

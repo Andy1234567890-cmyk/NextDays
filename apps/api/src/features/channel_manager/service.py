@@ -33,6 +33,7 @@ from .csv_import import CsvImportMixin
 from .full_sync import FullSyncMixin
 from .lodgify_import import LodgifyImportMixin
 from .oauth_channels import OAuthChannelsMixin
+from .objekt_kanal import ObjektKanalMixin
 from .ota_extras import OtaExtrasMixin
 from .property_mapping import PropertyMappingMixin
 from .reviews_sync import ReviewsSyncMixin
@@ -54,6 +55,7 @@ class ChannelManagerService(
     AriPushMixin,
     ChannelsMixin,
     OAuthChannelsMixin,
+    ObjektKanalMixin,
     BookingsSyncMixin,
     OtaExtrasMixin,
     ReviewsSyncMixin,

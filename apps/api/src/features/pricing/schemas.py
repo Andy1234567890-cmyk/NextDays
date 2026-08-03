@@ -148,8 +148,8 @@ class DpSettingsResponse(BaseModel):
     base_mode: str = "data_driven"  # 'data_driven' | 'manual'
     base_rate_mode: str = "recommended"  # 'conservative' | 'recommended' | 'aggressive'
     manual_base_price: float | None = None
-    # Phase 4 / RateBoard-Bausteine.
-    autopilot_enabled: bool = False
+    # Phase 4 / RateBoard-Bausteine. (autopilot_enabled wurde entfernt:
+    # enabled heißt „gilt überall, auch auf den Portalen".)
     weather_enabled: bool = False
     weather_max_adjust_pct: float = 10.0
     rate_rules: list[RateRule] = []
@@ -178,7 +178,6 @@ class DpSettingsUpdate(BaseModel):
     )
     manual_base_price: float | None = Field(default=None, ge=0)
     # Phase 4 / RateBoard-Bausteine.
-    autopilot_enabled: bool | None = None
     weather_enabled: bool | None = None
     weather_max_adjust_pct: float | None = Field(default=None, ge=0, le=100)
     rate_rules: list[RateRule] | None = None

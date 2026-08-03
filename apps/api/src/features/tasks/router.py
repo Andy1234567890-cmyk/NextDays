@@ -1,15 +1,24 @@
 """Router für tasks. Gemountet unter /api/v1/tasks (Lastenheft §2.5 + §4.3)."""
+from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Header,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 
-from src.core.security import AuthContext
+from src.core.security import AuthContext, require_internal_cron_secret
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
 from .schemas import (
-    BookingTasksRequest,
+    BulkTaskRequest,
     ChecklistItemCreate,
     ChecklistPhotoCreate,
     InspectionDecision,
@@ -64,14 +73,25 @@ def create_task(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.get("/mine", response_model=list[Task])
+@router.get("/mine", response_model=list[TaskListItem])
 def my_tasks(
     service: TasksServiceDep,
     ctx: Annotated[
         AuthContext, Depends(require_permission(Capability.VIEW_OWN_TASKS))
     ],
-) -> list[Task]:
-    return service.list_tasks(_tenant(ctx), assignee_id=ctx.user_id, ctx=ctx)
+    status_bucket: str | None = None,
+    property_id: Annotated[list[str] | None, Query()] = None,
+) -> list[TaskListItem]:
+    """Dieselbe Tabelle wie Teamaufgaben, hart auf den angemeldeten Nutzer
+    gescopt (Wurzel 9). Liefert Objekt, Buchungsreferenz und Checklisten-Stand —
+    ohne die ist die Liste für eine Reinigungskraft nicht arbeitsfähig."""
+    return service.list_own_tasks(
+        _tenant(ctx),
+        ctx.user_id,
+        status_bucket=status_bucket,
+        property_ids=property_id,
+        ctx=ctx,
+    )
 
 
 @router.get("/by-reservation/{reservation_id}", response_model=list[Task])
@@ -112,16 +132,42 @@ def update_task_status(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.post("/from-booking", response_model=list[Task], status_code=201)
-def from_booking(
-    req: BookingTasksRequest,
+@router.post("/sync-reservation/{reservation_id}")
+def sync_reservation(
+    reservation_id: str,
     service: TasksServiceDep,
     ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_TASKS))],
-) -> list[Task]:
+) -> dict[str, int]:
+    """Planmäßige Regeln für eine Reservierung nachziehen.
+
+    Der Normalfall läuft automatisch im Reservierungs-Schreibpfad; das hier ist
+    der Nachzügler-Knopf für Buchungen, die vor dem Anlegen einer Regel bestanden.
+    """
     try:
-        return service.generate_for_booking(_tenant(ctx), req)
+        return {"touched": service.sync_reservation_tasks(_tenant(ctx), reservation_id)}
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/internal/tick", include_in_schema=False)
+def internal_tick(
+    x_internal_cron_secret: Annotated[str | None, Header()] = None,
+) -> dict[str, int]:
+    """Interner Cron-Trigger: rollt wiederkehrende Regeln über ALLE Tenants aus.
+
+    Kein JWT — über INTERNAL_CRON_SECRET abgesichert (Wurzel 5: fehlt das
+    Secret, wird fail-closed abgewiesen). Derselbe Lauf steckt im Worker-Tick;
+    dieser Endpunkt ist die Handkurbel bzw. der Scheduled-Task.
+    """
+    require_internal_cron_secret(x_internal_cron_secret)
+    db = get_service_client()
+    service = TasksService(client=db)
+    today = datetime.now(UTC).date()
+    tenants = (db.table("tenants").select("id").execute()).data or []
+    created = sum(
+        service.materialize_recurring(str(t["id"]), today) for t in tenants
+    )
+    return {"tenants": len(tenants), "created": created}
 
 
 @router.post("/checklist/item", status_code=201)
@@ -262,12 +308,41 @@ def team_tasks(
     service: TasksServiceDep,
     ctx: Annotated[AuthContext, Depends(_manage())],
     status_bucket: str | None = None,
-    property_id: str | None = None,
-    assignee_id: str | None = None,
+    property_id: Annotated[list[str] | None, Query()] = None,
+    assignee_id: Annotated[list[str] | None, Query()] = None,
+    rule_id: Annotated[list[str] | None, Query()] = None,
 ) -> list[TaskListItem]:
+    """Filter sind MEHRFACH wählbar (Lodgify-Dialoge). `assignee_id=none` meint
+    „Nicht zugeordnet"."""
     return service.list_team_tasks(
-        _tenant(ctx), status_bucket, property_id, assignee_id
+        _tenant(ctx), status_bucket, property_id, assignee_id, rule_id
     )
+
+
+@router.post("/bulk/complete")
+def bulk_complete(
+    req: BulkTaskRequest,
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(_own())],
+) -> dict[str, int]:
+    """Auswahl abschließen. Jede Aufgabe durchläuft denselben Scope- und
+    Foto-Pflicht-Pfad wie der Einzelabschluss (Wurzel 9)."""
+    try:
+        return service.bulk_complete(_tenant(ctx), req.ids, ctx.user_id, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bulk/delete")
+def bulk_delete(
+    req: BulkTaskRequest,
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(_manage())],
+) -> dict[str, int]:
+    try:
+        return service.bulk_delete(_tenant(ctx), req.ids, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/calendar", response_model=TaskCalendarResponse)
@@ -276,9 +351,12 @@ def task_calendar(
     month_to: str,
     service: TasksServiceDep,
     ctx: Annotated[AuthContext, Depends(_manage())],
-    assignee_id: str | None = None,
+    assignee_id: Annotated[list[str] | None, Query()] = None,
+    rule_id: Annotated[list[str] | None, Query()] = None,
 ) -> TaskCalendarResponse:
-    return service.calendar(_tenant(ctx), month_from, month_to, assignee_id)
+    return service.calendar(
+        _tenant(ctx), month_from, month_to, assignee_id, rule_id
+    )
 
 
 @router.get("/inspection", response_model=list[InspectionItem])
@@ -286,8 +364,9 @@ def inspection_list(
     service: TasksServiceDep,
     ctx: Annotated[AuthContext, Depends(_manage())],
     tab: str = "to_review",
+    property_id: Annotated[list[str] | None, Query()] = None,
 ) -> list[InspectionItem]:
-    return service.list_inspection(_tenant(ctx), tab)
+    return service.list_inspection(_tenant(ctx), tab, property_id)
 
 
 @router.get("/detail/{task_id}", response_model=TaskDetail)

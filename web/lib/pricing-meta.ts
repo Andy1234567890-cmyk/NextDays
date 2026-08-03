@@ -2,7 +2,6 @@
 // Gespeichert im flexiblen jsonb-Feld `type_attributes.pricing` eines Objekts —
 // keine Migration. Mark-up pro externem Kanal (Airbnb/Booking/Google).
 
-import type { Channel } from "@/lib/availability-meta";
 
 // Alle in den 27 EU-Staaten + CH real vorkommenden Währungen (Quelle: laender.ts)
 // plus die beiden gängigsten internationalen (USD/GBP). Wurzel 4: nicht 5
@@ -42,7 +41,6 @@ export function currencySymbol(c: Currency | ""): string {
 }
 
 // Externe Kanäle, auf die ein Mark-up angewendet wird (nicht „direct").
-export const MARKUP_CHANNELS: Exclude<Channel, "direct">[] = ["airbnb", "booking", "google"];
 
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 export const WEEKDAY_LABELS: { key: Weekday; label: string }[] = [
@@ -133,7 +131,6 @@ export type Pricing = {
   dynamicPricing: boolean;
   customByWeekday: boolean; // Preis pro Wochentag anpassen
   weekdayPrices: Record<Weekday, number>; // gilt, wenn customByWeekday
-  markup: Record<"airbnb" | "booking" | "google", number>; // % je Kanal
   // Extra guest charge
   extraGuestCharge: number; // Aufschlag pro Gast/Nacht (0 = aus)
   extraGuestFrom: number; // ab dem wievielten Gast
@@ -158,7 +155,6 @@ export const DEFAULT_PRICING: Pricing = {
   dynamicPricing: false,
   customByWeekday: false,
   weekdayPrices: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 },
-  markup: { airbnb: 0, booking: 0, google: 0 },
   extraGuestCharge: 0,
   extraGuestFrom: 1,
   shortStayMaxNights: 0,
@@ -180,7 +176,6 @@ export function readPricing(typeAttributes: Record<string, unknown> | undefined)
     ...DEFAULT_PRICING,
     ...raw,
     weekdayPrices: { ...DEFAULT_PRICING.weekdayPrices, ...(raw.weekdayPrices ?? {}) },
-    markup: { ...DEFAULT_PRICING.markup, ...(raw.markup ?? {}) },
     lengthPrices: Array.isArray(raw.lengthPrices) ? raw.lengthPrices : [],
     fees: Array.isArray(raw.fees) ? raw.fees : [],
     taxes: Array.isArray(raw.taxes) ? raw.taxes : [],

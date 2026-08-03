@@ -260,6 +260,43 @@ class ReservationsBase:
             return
         try_enqueue_recompute(self._client, tenant_id, property_id)
 
+    def _sync_task_rules(self, tenant_id: str, reservation_id: str) -> None:
+        """Planmäßige Aufgaben-Regeln auf den neuen Buchungsstand bringen (0272).
+
+        Anlegen erzeugt die Aufgaben, Verschieben verschiebt sie mit (Wurzel 1),
+        Storno räumt sie weg. Best-effort: eine Reinigungsaufgabe, die nicht
+        entstehen konnte, darf die bereits vollzogene Buchung/Storno NICHT
+        zurückdrehen (`# noqa: BLE001`) — der Fehler wird geloggt und der
+        Nachzügler-Endpunkt `POST /tasks/sync-reservation/{id}` holt ihn nach.
+        """
+        if self._client is None:
+            return
+        try:
+            from src.features.tasks.engine import (  # noqa: PLC0415
+                sync_for_reservation,
+            )
+
+            rows = (
+                self._db()
+                .table("reservations")
+                .select(
+                    "id, property_id, status, check_in, check_out, "
+                    "checkin_time, checkout_time, created_at"
+                )
+                .eq("id", reservation_id)
+                .eq("tenant_id", tenant_id)
+                .limit(1)
+                .execute()
+            ).data
+            if rows:
+                sync_for_reservation(self._db(), tenant_id, rows[0])
+        except Exception as exc:  # noqa: BLE001 — Aufgaben sind der Nebenpfad
+            log.warning(
+                "task_rules_sync_failed",
+                reservation_id=reservation_id,
+                error=str(exc),
+            )
+
     def _log_event(
         self,
         tenant_id: str,

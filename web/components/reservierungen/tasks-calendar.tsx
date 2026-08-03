@@ -9,21 +9,23 @@ import { Icon } from "@iconify/react";
 import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { AufgabenFilter } from "@/components/reservierungen/aufgaben-filter";
 import { BookingPopover } from "@/components/reservierungen/booking-popover";
 import { LearnButton } from "@/components/reservierungen/learn-dialog";
 import { TaskCreatePopup } from "@/components/reservierungen/task-create-popup";
 import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
 import { TaskPopover } from "@/components/reservierungen/task-popover";
-import { MultiSelect } from "@nextdays/ui/multi-select";
 import { CHANNEL_META } from "@/lib/calendar-channels";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { listTenantUsers } from "@/lib/account";
+import { UNASSIGNED } from "@/lib/aufgaben-konstanten";
 import {
   type CalendarBooking,
   type CalendarRow,
   type TaskListItem,
   getTaskCalendar,
+  listRules,
 } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -174,8 +176,10 @@ export function TasksCalendar() {
     date: string;
   } | null>(null);
   const [users, setUsers] = useState<{ value: string; label: string }[]>([]);
+  const [rules, setRules] = useState<{ value: string; label: string }[]>([]);
   const [userFilter, setUserFilter] = useState<string[]>([]);
   const [propFilter, setPropFilter] = useState<string[]>([]);
+  const [ruleFilter, setRuleFilter] = useState<string[]>([]);
 
   const { from, to, days, firstDay } = useMemo(
     () => monthBounds(year, month),
@@ -184,11 +188,12 @@ export function TasksCalendar() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await getTaskCalendar(
-      from,
-      to,
-      userFilter.length === 1 ? userFilter[0] : undefined,
-    );
+    // Mehrfachauswahl wirkt wirklich: vorher wurde der Nutzerfilter nur bei
+    // GENAU einer Auswahl an den Server gegeben, jede weitere blieb folgenlos.
+    const res = await getTaskCalendar(from, to, {
+      assignee_ids: userFilter,
+      rule_ids: ruleFilter,
+    });
     if (res.ok) {
       setRows(res.data.rows);
       setLoadError(null);
@@ -198,24 +203,32 @@ export function TasksCalendar() {
       setRows([]);
     }
     setLoading(false);
-  }, [from, to, userFilter]);
+  }, [from, to, userFilter, ruleFilter]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   useEffect(() => {
-    void listTenantUsers().then((r) => {
-      if (r.ok) {
-        setUsers(
-          r.data.map((u) => ({
+    void (async () => {
+      const [tenantUsers, autoRules] = await Promise.all([
+        listTenantUsers(),
+        listRules("auto"),
+      ]);
+      if (tenantUsers.ok) {
+        setUsers([
+          ...tenantUsers.data.map((u) => ({
             value: u.user_id,
             label: u.full_name ?? u.email ?? u.user_id,
           })),
-        );
+          { value: UNASSIGNED, label: t("aufgabenFilter.unassignedOption") },
+        ]);
       }
-    });
-  }, []);
+      if (autoRules.ok) {
+        setRules(autoRules.data.map((r) => ({ value: r.id, label: r.name })));
+      }
+    })();
+  }, [t]);
 
   useRealtime({ table: "tasks", onChange: load });
   useRealtime({ table: "reservations", onChange: load });
@@ -224,13 +237,6 @@ export function TasksCalendar() {
     const d = new Date(Date.UTC(year, month + delta, 1));
     setYear(d.getUTCFullYear());
     setMonth(d.getUTCMonth());
-  };
-
-  const reset = () => {
-    setYear(now.getFullYear());
-    setMonth(now.getMonth());
-    setUserFilter([]);
-    setPropFilter([]);
   };
 
   const propOptions = useMemo(
@@ -360,48 +366,47 @@ export function TasksCalendar() {
             </div>
           </div>
 
-          {/* Benutzer-Filter */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-muted-foreground">
-              {t("tasksCalendar.selectedUsersLabel")}
-            </span>
-            <MultiSelect
-              options={users}
-              selected={userFilter}
-              onChange={setUserFilter}
-              placeholder={t("tasksCalendar.allUsersPlaceholder")}
-              className="rounded-full bg-secondary"
-            />
-          </div>
+          {/* Aufgabe · Benutzer · Unterkünfte — dieselben Auswahldialoge wie in
+              den Listen (Suchfeld, Alle/Nichts selektieren, Speichern). */}
+          <AufgabenFilter
+            zusatzReset={() => {
+              setYear(now.getFullYear());
+              setMonth(now.getMonth());
+            }}
+            filters={[
+              {
+                key: "rule",
+                caption: t("aufgabenFilter.taskCaption"),
+                allLabel: t("aufgabenFilter.allTasks"),
+                dialogTitle: t("aufgabenFilter.taskDialog"),
+                searchPlaceholder: t("aufgabenFilter.taskSearch"),
+                options: rules,
+                selected: ruleFilter,
+                onChange: setRuleFilter,
+              },
+              {
+                key: "user",
+                caption: t("aufgabenFilter.usersCaption"),
+                allLabel: t("aufgabenFilter.allUsers"),
+                dialogTitle: t("aufgabenFilter.usersDialog"),
+                searchPlaceholder: t("aufgabenFilter.usersSearch"),
+                options: users,
+                selected: userFilter,
+                onChange: setUserFilter,
+              },
+              {
+                key: "property",
+                caption: t("aufgabenFilter.propertiesCaption"),
+                allLabel: t("aufgabenFilter.allProperties"),
+                dialogTitle: t("aufgabenFilter.propertiesDialog"),
+                searchPlaceholder: t("aufgabenFilter.propertiesSearch"),
+                options: propOptions,
+                selected: propFilter,
+                onChange: setPropFilter,
+              },
+            ]}
+          />
 
-          {/* Unterkunfts-Filter */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-muted-foreground">
-              {t("tasksCalendar.selectedPropertiesLabel")}
-            </span>
-            <MultiSelect
-              options={propOptions}
-              selected={propFilter}
-              onChange={setPropFilter}
-              placeholder={t("tasksCalendar.allPropertiesPlaceholder")}
-              className="rounded-full bg-secondary"
-            />
-          </div>
-
-          {/* Zurücksetzen */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-muted-foreground">
-              {t("tasksCalendar.resetAllLabel")}
-            </span>
-            <button
-              type="button"
-              onClick={reset}
-              className="flex size-9 items-center justify-center rounded-full bg-secondary hover:bg-muted"
-              aria-label={t("tasksCalendar.resetAllLabel")}
-            >
-              <Icon icon="ph:x" className="size-4" />
-            </button>
-          </div>
         </div>
       </div>
 
@@ -491,7 +496,13 @@ export function TasksCalendar() {
                     style={{ width: `${LABEL}rem` }}
                     className="sticky left-0 z-10 flex shrink-0 items-center border-r bg-card px-3 text-sm font-medium"
                   >
-                    <span className="line-clamp-2">{row.property_title}</span>
+                    {/* Die objektlose Zeile trägt keinen Titel aus dem Backend —
+                        wie sie heißt, gehört in die Sprache der Oberfläche. */}
+                    <span className="line-clamp-2">
+                      {row.property_id
+                        ? row.property_title
+                        : t("tasksCalendar.miscRow")}
+                    </span>
                   </div>
 
                   {/* Tages-Fläche: FESTE Breite = days × COL (kein flex!), damit
@@ -557,7 +568,7 @@ export function TasksCalendar() {
                             }}
                             title={t("tasksCalendar.bookingBarTitle", {
                               guests: b.guests,
-                              channel: channelLabel(b.channel as AvailabilitySource),
+                              channel: b.ota_name ?? channelLabel(b.channel as AvailabilitySource),
                               range: bookingRange(b, locale),
                             })}
                           >
@@ -565,7 +576,7 @@ export function TasksCalendar() {
                               <Icon icon="ph:users" className="size-3.5 shrink-0" />
                               {t("tasksCalendar.bookingBarLabel", {
                                 guests: b.guests,
-                                channel: channelLabel(b.channel as AvailabilitySource),
+                                channel: b.ota_name ?? channelLabel(b.channel as AvailabilitySource),
                               })}
                             </span>
                             <span className="truncate text-[0.7rem] leading-tight opacity-90">

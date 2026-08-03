@@ -30,6 +30,9 @@ export type RatePlan = {
   // An die Buchungsportale senden. Nur für ZUSÄTZLICHE Preise relevant — der
   // Grundpreis (Standard-Preis des Objekts) geht immer an die Portale.
   send_to_portals: boolean;
+  /** Kanal-Plan (0272): Preisänderung GENAU EINES Portals (automatisch
+   *  gepflegt, nur dort gemappt). null = normaler Plan. */
+  portal_scope: string | null;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };

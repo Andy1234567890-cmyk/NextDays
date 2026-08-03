@@ -248,8 +248,18 @@ class ChannelConnectionResponse(BaseModel):
     portal_code: str                     # interner Code (BookingCom …)
     portal: str                          # menschlich, z.B. "Booking.com"
     hotel_id: str                        # Hotel-ID beim OTA (Eingabe des Vermieters)
+    # Zimmer/Einheit beim Portal: Code + Klarname. Zusammen mit der Hotel-ID die
+    # Angabe, mit der im Extranet nachgesehen wird (Lodgify zeigt sie als
+    # „12298950|1229895001").
+    ota_room_type_code: str | None = None
+    ota_room_title: str | None = None
     channel_id: str | None = None        # erzeugter Channel (None nach Trennen)
     is_active: bool = False
+    # Sync-Stand des Objekts (aus channex_property_map) — gehört in dieselbe
+    # Zeile wie die Verbindung.
+    sync_enabled: bool = False
+    last_sync_status: str | None = None
+    last_sync_error: str | None = None
     last_error: str | None = None
     updated_at: str | None = None
 
@@ -257,6 +267,76 @@ class ChannelConnectionResponse(BaseModel):
 class ChannelConnectionListResponse(BaseModel):
     items: list[ChannelConnectionResponse]
     total: int
+
+
+class ChannelRatePlanRow(BaseModel):
+    """Ein Tarifplan, wie er ans Portal geht: Kondition, Name/Typ, Preisänderung.
+
+    `offset_percent`/`offset_amount` sind nur bei abgeleiteten Plänen gesetzt
+    (`rate_mode='derived'`) — bei eigenen Preisen gibt es keine Änderung, und
+    dort steht deshalb auch keine 0 % (die wäre eine Behauptung)."""
+
+    id: str
+    name: str | None = None
+    base_price: float | None = None
+    currency: str | None = None
+    min_stay: int | None = None
+    rate_mode: str | None = None
+    offset_amount: float | None = None
+    offset_percent: float | None = None
+    condition: str | None = None
+    # Geht dieser Plan an die Portale (0177)? Steht als Angabe an der Zeile,
+    # damit ein nicht freigegebener Plan sichtbar bleibt statt zu fehlen.
+    send_to_portals: bool = False
+    # Grundpreis-Plan (älteste Channex-Zuordnung): geht IMMER ans Portal —
+    # `send_to_portals` schaltet nur ZUSÄTZLICHE Pläne frei. Ohne dieses Flag
+    # zeigte die Zeile „nicht für Portale freigegeben" am Standard-Plan,
+    # obwohl genau er die Portalpreise trägt.
+    is_primary: bool = False
+
+
+class ChannelPropertyDetailResponse(BaseModel):
+    """Portal × Objekt: Kennungen, Sync-Stand und die Tarifpläne dazu.
+
+    Keine Qualitäts-/Score-Angabe: Channex führt keine (die API kennt „score"
+    nur bei Gästebewertungen), und erfundene Kennzahlen gibt es hier nicht."""
+
+    portal_code: str
+    portal: str
+    property_id: str
+    property_title: str | None = None
+    currency: str | None = None
+    hotel_id: str | None = None
+    ota_room_type_code: str | None = None
+    ota_room_title: str | None = None
+    channel_id: str | None = None
+    is_active: bool = False
+    last_error: str | None = None
+    updated_at: str | None = None
+    map_id: str | None = None
+    sync_enabled: bool = False
+    last_sync_at: str | None = None
+    last_sync_status: str | None = None
+    last_sync_error: str | None = None
+    property_photo: str | None = None
+    rate_plans: list[ChannelRatePlanRow] = Field(default_factory=list)
+    # Dynamic Pricing aktiv? Dann sind die Portalpreise die dynamischen
+    # Tagespreise — base_price ist nur der Anker, nicht der Verkaufspreis.
+    dynamic_pricing_enabled: bool = False
+    # Preisänderung dieses Portals in % (Kanal-Plan-Offset, 0272); 0 = keine.
+    price_adjustment_percent: float = 0.0
+
+
+class PortalPriceAdjustmentRequest(BaseModel):
+    """Preisänderung je Portal setzen: Prozent-Aufschlag (negativ = Abschlag)
+    auf die effektive Tageskurve dieses Portals. 0 entfernt den Aufschlag."""
+
+    percent: float = Field(ge=-99, le=500)
+
+
+class PortalPriceAdjustmentResponse(BaseModel):
+    portal_code: str
+    percent: float
 
 
 class PrepareChannelRequest(BaseModel):
@@ -510,6 +590,8 @@ class ChannelMappingRow(BaseModel):
 
     property_id: str
     property_title: str | None = None
+    # Titelbild des Objekts (Cover, sonst erstes Foto); None = keins vorhanden.
+    property_photo: str | None = None
     ota_hotel_id: str | None = None
     # OTA-Zimmertyp, auf den DIESES Objekt gemappt ist (unter der Hotel-ID):
     # Code (z. B. Booking room_type_code 651942003) + Klarname (z. B. „Double Room").

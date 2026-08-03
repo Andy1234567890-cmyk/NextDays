@@ -89,6 +89,9 @@ class RatePlanResponse(BaseModel):
     offset_percent: float | None = None
     # An die Buchungsportale senden (nur zusätzliche Preise; Grundpreis geht immer).
     send_to_portals: bool = False
+    # Kanal-Plan (0272): dieser Plan ist die Preisänderung GENAU EINES Portals
+    # (automatisch gepflegt) und wird nur dort gemappt. None = normaler Plan.
+    portal_scope: str | None = None
 
 
 class RatePlanListResponse(BaseModel):

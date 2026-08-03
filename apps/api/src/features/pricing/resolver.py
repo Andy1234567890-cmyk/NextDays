@@ -131,7 +131,6 @@ class _PricingConfig:
         self.currency: str | None = row.get("currency") or None
         self.custom_by_weekday: bool = bool(row.get("custom_by_weekday"))
         self.weekday_prices: dict[str, object] = row.get("weekday_prices") or {}
-        self.markup: dict[str, object] = row.get("markup") or {}
         self.extra_guest_charge: float = _to_float(row.get("extra_guest_charge")) or 0.0
         self.extra_guest_from: int = int(row.get("extra_guest_from") or 1)
         self.short_stay_max_nights: int = int(row.get("short_stay_max_nights") or 0)
@@ -170,9 +169,6 @@ class _PricingConfig:
                 best_price = price
         return best_price
 
-    def markup_pct(self, channel: str) -> float:
-        """Markup-Prozent für einen externen Kanal (direct/unbekannt → 0)."""
-        return _to_float(self.markup.get(channel)) or 0.0
 
 
 class PricingResolver:
@@ -767,20 +763,11 @@ class PricingResolver:
                 )
             )
 
-        # 2) Kanal-Markup (nur externe Kanäle; direct = 0).
-        markup_pct = config.markup_pct(req.channel)
-        if markup_pct != 0 and nightly_total > 0:
-            markup = nightly_total * markup_pct / 100.0
-            nightly_total += markup
-            sign = "Aufschlag" if markup > 0 else "Abschlag"
-            lines.append(
-                QuoteLine(
-                    label=f"Kanal-{sign} ({markup_pct:g}%)",
-                    amount=round(markup, 2),
-                    kind="surcharge",
-                )
-            )
-
+        # Der frühere „Kanal-Markup" wurde entfernt (0272): er war eine
+        # Attrappe — die Quote läuft mit channel='direct', die Werte trugen
+        # OTA-Keys, der Aufschlag wirkte NIRGENDS. Portal-Aufschläge sind
+        # jetzt Kanal-Pläne (rate_plans.portal_scope), die über die normale
+        # abgeleitete Kurve wirken.
         subtotal = nightly_total
 
         # 3) Gebühren. Eigener USt-Satz (fees[].taxRate, z. B. Frühstück 19 %)

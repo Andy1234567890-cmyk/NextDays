@@ -3290,15 +3290,10 @@
       "allProperties": "Alle Unterkünfte"
     },
     "myTasksList": {
-      "title": "Aufgaben",
-      "doneCount": "{done}/{total} erledigt",
+      "title": "Meine Aufgaben",
       "loading": "Lädt…",
       "emptyState": "Ihnen sind aktuell keine Aufgaben zugewiesen.",
-      "dueOn": "fällig {date}",
-      "statusOpen": "Offen",
-      "statusInProgress": "In Arbeit",
-      "statusDone": "Erledigt",
-      "statusCancelled": "Abgebrochen"
+      "completed": "Aufgabe abgeschlossen."
     },
     "bookingPopover": {
       "title": "Buchung {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} erledigt",
       "loading": "Lädt…",
       "emptyState": "Noch keine Aufgaben zu dieser Buchung.",
-      "createDefaultTasks": "Standard-Aufgaben erstellen",
-      "defaultTasksCreated": "Standard-Aufgaben erstellt.",
       "statusOpen": "Offen",
       "statusInProgress": "In Arbeit",
       "statusDone": "Erledigt",
-      "statusCancelled": "Abgebrochen"
+      "statusCancelled": "Abgebrochen",
+      "applyRules": "Regeln anwenden",
+      "rulesApplied": "{count} Aufgaben aus den Regeln.",
+      "noRuleMatched": "Keine Regel trifft auf diese Buchung zu."
     },
     "propertyWarnings": {
       "title": "Warnungen",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Foto hinzufügen",
       "done": "Erledigt",
       "saving": "Speichert…",
-      "completeButton": "Abschließen"
+      "completeButton": "Abschließen",
+      "inBooking": "Zur Buchung {ref}",
+      "assignedTo": "Für {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Wie bezahlt der Gast?",
@@ -3464,7 +3462,8 @@
       "reject": "Zurückweisen",
       "approve": "Freigeben",
       "toastApproved": "Freigegeben.",
-      "toastRejected": "Zurückgewiesen."
+      "toastRejected": "Zurückgewiesen.",
+      "noPhotos": "Keine Foto-Nachweise vorhanden."
     },
     "bookingsBoard": {
       "title": "Buchungen",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Teamaufgaben",
-      "tabs": {
-        "current": "AKTUELL",
-        "upcoming": "BEVORSTEHENDE",
-        "done": "ABGESCHLOSSEN"
-      },
-      "status": {
-        "open": "Offen",
-        "inProgress": "In Arbeit",
-        "done": "Erledigt",
-        "cancelled": "Abgebrochen"
-      },
       "loading": "Lädt…",
       "empty": "Keine Aufgaben in dieser Ansicht.",
-      "columns": {
-        "title": "Titel",
-        "property": "Unterkunft",
-        "assignee": "Zugewiesen an",
-        "status": "Status",
-        "due": "Fällig"
-      },
-      "unassigned": "Nicht zugewiesen",
-      "inspectionNeeded": "Inspektion nötig",
-      "details": "Details"
+      "completed": "Aufgabe abgeschlossen.",
+      "deleted": "Aufgabe gelöscht."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Aufgabenvorlagen",
         "auto": "Planmäßige Aufgaben",
         "recurring": "Regelmäßige Aufgaben"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Titel",
       "columnActive": "Aktiv",
       "columnAssignee": "Zugewiesen",
-      "columnPoints": "Punkte",
-      "columnUpdated": "Aktualisiert",
-      "inspectionNeeded": "Inspektion nötig",
       "yes": "Ja",
       "no": "Nein",
       "emptyValue": "–",
-      "edit": "Bearbeiten",
-      "delete": "Löschen",
-      "deleted": "Gelöscht."
+      "columnInspection": "Braucht eine Inspektion?",
+      "columnPriority": "Priorität der Aufgabe",
+      "columnDetails": "Details",
+      "learnBody": {
+        "auto": "Eine planmäßige Aufgabe entsteht automatisch bei jeder Buchung der gewählten Objekte — mit Beginn und Ende relativ zu Check-in und Check-out.",
+        "recurring": "Eine regelmäßige Aufgabe folgt dem Kalender: Anfangsdatum, Häufigkeit und Dauer. Das System legt die Termine im Voraus an — unabhängig von Buchungen."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM-Module",
@@ -3724,10 +3704,6 @@
       "navigationLabel": "Navigation",
       "previousMonth": "Vorheriger Monat",
       "nextMonth": "Nächster Monat",
-      "selectedUsersLabel": "Ausgewählte Benutzer",
-      "allUsersPlaceholder": "Alle Nutzer",
-      "selectedPropertiesLabel": "Ausgewählte Unterkünfte",
-      "allPropertiesPlaceholder": "Alle Unterkünfte",
       "resetAllLabel": "Alles zurücksetzen",
       "loading": "Lädt…",
       "createTaskOnDay": "Aufgabe an diesem Tag anlegen",
@@ -3755,7 +3731,8 @@
         "Donnerstag",
         "Freitag",
         "Samstag"
-      ]
+      ],
+      "miscRow": "Verschiedene"
     },
     "ruleEditor": {
       "loading": "Lädt…",
@@ -3962,7 +3939,170 @@
       "confirmedReservations": "Bestätigte Reservierungen"
     },
     "mobileAppHint": "Die Aufgaben-Sicht für unterwegs ist bereits responsiv im Web verfügbar (Meine Aufgaben + Detail mit Foto-Upload). Eine separate mobile App folgt als eigener Auftrag.",
-    "guestModuleHint": "Mit dem Pre-Check-in-Formular erfassen Sie vor der Anreise alle Daten Ihrer Gäste (Ausweis, Adresse, Mitreisende, Ankunftszeit). Diese Fläche wird als eigener Schritt aufgebaut."
+    "guestModuleHint": "Mit dem Pre-Check-in-Formular erfassen Sie vor der Anreise alle Daten Ihrer Gäste (Ausweis, Adresse, Mitreisende, Ankunftszeit). Diese Fläche wird als eigener Schritt aufgebaut.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} gewählt",
+      "resetCaption": "Alles zurücksetzen",
+      "close": "Schließen",
+      "noMatch": "Kein Treffer.",
+      "selectAll": "Alle selektieren",
+      "selectNone": "Nichts selektieren",
+      "save": "Speichern",
+      "taskCaption": "Ausgewählte Aufgabe",
+      "allTasks": "Alle Aufgaben",
+      "taskDialog": "Aufgabe auswählen",
+      "taskSearch": "Suche nach Aufgabentitel",
+      "usersCaption": "Ausgewählte Benutzer",
+      "allUsers": "Alle Nutzer",
+      "usersDialog": "Benutzer auswählen",
+      "usersSearch": "Suche nach Name",
+      "unassignedOption": "Nicht zugeordnet",
+      "propertiesCaption": "Ausgewählte Unterkünfte",
+      "allProperties": "Alle Unterkünfte",
+      "propertiesDialog": "Unterkünfte auswählen",
+      "propertiesSearch": "Suche nach Name oder Stadt"
+    },
+    "aufgabenReiter": {
+      "current": "AKTUELL",
+      "upcoming": "BEVORSTEHENDE",
+      "done": "ABGESCHLOSSEN"
+    },
+    "massenaktionen": {
+      "selected": "{count} ausgewählt",
+      "completeAria": "Auswahl abschließen",
+      "deleteAria": "Auswahl löschen",
+      "completed": "{done} Aufgaben abgeschlossen.",
+      "completedPartly": "{done} abgeschlossen, {skipped} übersprungen (Foto fehlt oder kein Zugriff).",
+      "deleted": "{done} Aufgaben gelöscht.",
+      "deletedPartly": "{done} gelöscht, {skipped} übersprungen (kein Zugriff)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Aktionen",
+      "columnTitle": "Titel",
+      "columnProperty": "Unterkunft",
+      "columnBooking": "Buchung",
+      "columnAssignee": "Zugewiesen an",
+      "columnStatus": "Status",
+      "columnDates": "Start- und Endtermine",
+      "selectAll": "Alle Zeilen auswählen",
+      "selectRow": "Zeile auswählen",
+      "open": "Ansehen",
+      "complete": "Abschließen",
+      "delete": "Löschen",
+      "inspectionNeeded": "Inspektion nötig",
+      "unassigned": "Nicht zugewiesen",
+      "statusOpen": "Unvollständig",
+      "statusDone": "Fertiggestellt",
+      "statusCancelled": "Abgebrochen"
+    },
+    "ruleEditorPage": {
+      "loading": "Lädt…",
+      "modeCreate": "Neu anlegen",
+      "modeEdit": "Bearbeiten",
+      "breadcrumbHome": "Startseite",
+      "breadcrumbTasks": "Aufgaben",
+      "titleLabel": "Titel",
+      "descriptionLabel": "Beschreibung",
+      "active": "Aktiv",
+      "removeOnCancellation": "Bei Buchungsstornierung entfernen",
+      "priority": "Priorität der Aufgabe",
+      "priorityDown": "Priorität senken",
+      "priorityUp": "Priorität erhöhen",
+      "priorityLevel": {
+        "1": "sehr niedrig",
+        "2": "niedrig",
+        "3": "mittel",
+        "4": "hoch",
+        "5": "sofortig"
+      },
+      "propertiesLabel": {
+        "auto": "Objekte, für die die Aufgabe bei jeder Reservierung entsteht",
+        "recurring": "Objekte, in denen die Aufgabe ausgeführt werden soll"
+      },
+      "propertiesPlaceholder": "Objekte wählen…",
+      "propertiesHint": "Ohne Auswahl gilt die Regel für alle Objekte.",
+      "templateLabel": "Aufgabenvorlage mit der Liste der Teilaufgaben",
+      "templateNone": "Keine Vorlage",
+      "assigneeLabel": "Empfänger der Aufgabe",
+      "unassigned": "Nicht zugewiesen",
+      "needsInspection": "Abschluss erfordert Inspektion",
+      "saveAria": "Regel speichern",
+      "deleteAria": "Regel löschen",
+      "saved": "Gespeichert.",
+      "deleted": "Gelöscht.",
+      "nameRequired": "Titel ist Pflicht.",
+      "startTriggerRequired": "Wählen Sie, wann die Aufgabe beginnen soll — sonst löst die Regel nie aus.",
+      "scheduleRequired": "Anfangsdatum und Häufigkeit sind Pflicht.",
+      "learnTitle": {
+        "auto": "Planmäßige Aufgaben",
+        "recurring": "Regelmäßige Aufgaben"
+      },
+      "learnBody": {
+        "auto": "Eine planmäßige Aufgabe hängt an einer Buchung: Sie legen fest, wann sie relativ zu Check-in und Check-out beginnt und endet. Bei jeder neuen Buchung entsteht sie, bei einer Verschiebung wandert sie mit, bei einer Stornierung verschwindet sie.",
+        "recurring": "Eine regelmäßige Aufgabe folgt dem Kalender, nicht den Buchungen: Sie legen Anfang, Häufigkeit und Dauer fest, das System legt die Termine im Voraus an."
+      },
+      "startTriggerLabel": "Wählen Sie, wann die Aufgabe beginnen soll",
+      "endTriggerLabel": "Wählen Sie, wann die Aufgabe beendet werden soll",
+      "triggerNone": "— nicht gesetzt —",
+      "trigger": {
+        "booking_confirmed": "Bei Buchungsbestätigung",
+        "check_in": "Beim Check-in",
+        "after_check_in_24h": "Nach dem Check-in (max. 24 Stunden)",
+        "check_out": "Beim Check-out",
+        "days_before_check_in": "Tage vor der Anreise",
+        "days_after_check_out": "Tage nach der Abreise"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Die Aufgabe entsteht, sobald die Buchung bestätigt ist.",
+        "check_in": "Die Aufgabe beginnt mit dem Check-in der Reservierung.",
+        "after_check_in_24h": "24 Stunden nach dem Check-in — aber nie über den Check-out hinaus: bei Kurzaufenthalten endet die Aufgabe mit der Abreise.",
+        "check_out": "Die Aufgabe hängt am Check-out der Reservierung.",
+        "days_before_check_in": "Die Aufgabe entsteht die angegebene Zahl an Tagen vor der Anreise.",
+        "days_after_check_out": "Die Aufgabe entsteht die angegebene Zahl an Tagen nach der Abreise."
+      },
+      "offsetDays": "Tage",
+      "periodLabel": "Anfangs- und End-Datum festlegen",
+      "startsOn": "Anfangsdatum",
+      "startTime": "Startzeit",
+      "hasEnd": "Endet",
+      "endsOn": "Enddatum",
+      "repeatLabel": "Wiederholungsintervall",
+      "frequency": "Häufigkeit",
+      "choose": "Wählen…",
+      "frequencyOption": {
+        "daily": "Täglich",
+        "weekly": "Wöchentlich",
+        "monthly": "Monatlich",
+        "yearly": "Jährlich"
+      },
+      "interval": "Alle",
+      "onDay": "Am Tag",
+      "onPattern": "Am",
+      "position": {
+        "first": "Erste",
+        "second": "Zweite",
+        "third": "Dritte",
+        "fourth": "Vierte",
+        "last": "Letzte"
+      },
+      "durationLabel": "Geschätzte Dauer",
+      "hours": "Stunden",
+      "minutes": "Minuten",
+      "weekdayMon": "Montag",
+      "weekdayTue": "Dienstag",
+      "weekdayWed": "Mittwoch",
+      "weekdayThu": "Donnerstag",
+      "weekdayFri": "Freitag",
+      "weekdaySat": "Samstag",
+      "weekdaySun": "Sonntag",
+      "weekdayMonShort": "Mo",
+      "weekdayTueShort": "Di",
+      "weekdayWedShort": "Mi",
+      "weekdayThuShort": "Do",
+      "weekdayFriShort": "Fr",
+      "weekdaySatShort": "Sa",
+      "weekdaySunShort": "So"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4118,7 +4258,9 @@
       "itemAvailability": "Verfügbarkeit",
       "itemChannels": "Kanäle",
       "itemPolicies": "Richtlinien",
-      "itemSeasonalPrices": "Saisonpreise"
+      "itemSeasonalPrices": "Saisonpreise",
+      "groupChannels": "Kanäle",
+      "itemSync": "Synchronisierung"
     },
     "complianceForm": {
       "title": "Compliance",
@@ -4416,8 +4558,6 @@
       "nightlyPriceHint": "Lege deinen Nachtpreis mit Grundpreis und Aufschlag fest.",
       "basePriceTitle": "Grundpreis",
       "basePriceHint": "Grundpreis pro Nacht und Währung. Optional pro Wochentag anpassen.",
-      "markupTitle": "Aufschlag (Mark-up)",
-      "markupHint": "Passe den an externe Kanäle gesendeten Grundpreis an.",
       "extraGuestTitle": "Aufschlag pro Gast",
       "extraGuestHint": "Aktiviere einen Nacht-Aufschlag für jeden weiteren Gast.",
       "extraGuestPill": "{price} ab Gast {guest}",
@@ -4475,9 +4615,6 @@
       "dynamicPricingHint": "Dynamische Preise (automatisch nach Saison, Wochenende, Auslastung, Markt …) richtest du zentral unter <link>Dynamic Pricing</link> im Hauptmenü ein. Ein hier gesetzter Grundpreis bleibt die Basis; ein manueller Tagespreis im Kalender hat immer Vorrang.",
       "basePricePerNightLabel": "Grundpreis pro Nacht",
       "customByWeekdayLabel": "Pro Wochentag anpassen",
-      "markupEditorTitle": "Aufschlag für externe Kanäle",
-      "markupEditorSubtitle": "Positiver % erhöht, negativer % senkt den Grundpreis für externe Kanäle.",
-      "markupHintNote": "Der Aufschlag gilt nicht für NextDays-Direktbuchungen.",
       "extraGuestEditorSubtitle": "Aktiviere einen nächtlichen Aufschlag für jeden weiteren Gast.",
       "extraGuestFromLabel": "Gilt für jeden Gast ab",
       "guestCount": "{count, plural, one {# Gast} other {# Gäste}}",
@@ -4527,9 +4664,19 @@
       "baseLabelPlaceholder": "z. B. Standardpreis",
       "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt.",
       "plansTitle": "Preispläne",
+      "dynamicActiveTitle": "Dynamic Pricing aktiv",
+      "dynamicActiveHint": "Die Tagespreise werden automatisch berechnet und gelten überall — Kalender, eigene Plattform und Portale. Der Grundpreis ist nur die Basis der Berechnung.",
+      "dynamicActiveOpen": "Vorschau öffnen",
+      "portalAdjustmentTitle": "Preisänderung je Portal",
+      "portalAdjustmentHint": "Passen Sie die Preise an, die an Ihre externen Portale gesendet werden.",
+      "portalAdjustmentNone": "Noch kein Portal verbunden.",
+      "portalAdjustmentInvalid": "Ungültiger Wert — erlaubt sind −99 bis 500 %.",
+      "portalAdjustmentEditorSubtitle": "Aufschlag für externe Portale anpassen. Ein positiver Prozentwert erhöht, ein negativer senkt die Preise, die an das jeweilige Portal gehen.",
+      "portalAdjustmentDirectNote": "Der Aufschlag gilt nicht für Direktbuchungen über Ihre eigene Website oder myBestDays.",
+      "portalAdjustmentSaved": "Preisänderung gespeichert.",
       "plansHint": "Preise werden datumsgenau im Kalender gepflegt.",
       "planCreate": "Preisplan anlegen",
-      "planModeManual": "Manuell",
+      "planModeManual": "Eigener Preis",
       "planModeDerived": "Abgeleitet von {parent} · {offset}",
       "planDerivedPrice": "berechnet",
       "planMinStay": "Min. {nights} Nächte",
@@ -4645,6 +4792,58 @@
         "junior_suite": "Junior Suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Synchronisierung",
+      "hint": "Welche Kennung dieses Objekt bei welchem Portal trägt und ob der Abgleich läuft. Die Kennungen stehen genauso da wie im Extranet des Portals — damit lässt sich eine Buchung dort wiederfinden.",
+      "none": "Dieses Objekt ist mit keinem Portal verbunden. Verbinde es im Tab „Kanäle“.",
+      "colPortal": "Beim Portal",
+      "colOurs": "Bei uns",
+      "colStatus": "Status",
+      "published": "Veröffentlicht",
+      "notPublished": "Nicht veröffentlicht",
+      "syncOk": "Abgeglichen",
+      "statusActive": "Aktiv",
+      "statusPaused": "Pausiert",
+      "statusError": "Fehler",
+      "singleUnit": "Ganzes Objekt",
+      "loadFailed": "Dieses Objekt konnte nicht geladen werden."
+    },
+    "channelDetail": {
+      "identifiers": "Kennungen",
+      "hotelId": "Hotel-Kennung",
+      "roomCode": "Zimmer-Kennung",
+      "roomTitle": "Zimmername beim Portal",
+      "sellingTitle": "Verkauf über dieses Portal",
+      "sellingHint": "Aus: Preise und Verfügbarkeit gehen nicht mehr an dieses Portal. Bereits vorhandene Buchungen laufen weiter und neue kommen weiter herein.",
+      "lastSync": "Zuletzt abgeglichen",
+      "never": "Noch nie",
+      "syncNow": "Jetzt abgleichen",
+      "loadFailed": "Diese Verbindung konnte nicht geladen werden.",
+      "backToChannel": "{portal}-Konten",
+      "ourId": "myNextDays-ID:",
+      "published": "Veröffentlicht",
+      "notPublished": "Nicht veröffentlicht",
+      "statusSynced": "Synchronisiert",
+      "statusPaused": "Pausiert",
+      "statusError": "Fehler",
+      "syncSection": "Synchronisierung",
+      "ratePlans": "Aktive Tarifpläne",
+      "noRatePlans": "Kein Tarifplan ist für die Portale freigegeben.",
+      "colCondition": "Konditionen",
+      "colPlanName": "Name des Tarifplans (Typ)",
+      "colPriceChange": "Preisänderung",
+      "modeManual": "Eigener Preis",
+      "modeDerived": "Abgeleitet",
+      "minStay": "mind. {nights} Nächte",
+      "colPrice": "Preis",
+      "dynamicActiveTitle": "Dynamic Pricing aktiv",
+      "dynamicActiveHint": "An dieses Portal gehen die automatisch berechneten Tagespreise — der unten angezeigte Preis ist nur die Basis der Berechnung.",
+      "adjustmentInvalid": "Ungültiger Wert — erlaubt sind −99 bis 500 %.",
+      "adjustmentSave": "Speichern",
+      "adjustmentCancel": "Abbrechen",
+      "adjustmentHint": "Preisänderung dieses Portals bearbeiten",
+      "notReleased": "nicht für Portale freigegeben"
     }
   },
   "calendar": {
@@ -5063,7 +5262,36 @@
     "fullResync": "Verfügbarkeit, Preise und Restriktionen komplett neu übertragen",
     "categoryMessaging": "Direkte Gästekommunikation",
     "connected": "Verbunden",
-    "notConnected": "Nicht verbunden"
+    "notConnected": "Nicht verbunden",
+    "propertiesHeading": "Objekte",
+    "noPropertiesYet": "Du hast noch keine aktiven Objekte. Lege zuerst ein Objekt an, um es mit {portal} zu verbinden.",
+    "connectedOf": "{connected} von {total} verbunden",
+    "searchProperty": "Suche",
+    "propertyAtPortal": "Unterkunft bei {portal}",
+    "syncStatusColumn": "Synchronisationsstatus",
+    "actionColumn": "Aktion",
+    "noSearchResults": "Kein Objekt passt zur Suche.",
+    "statusPaused": "Pausiert",
+    "statusError": "Fehler",
+    "statusSynced": "Synchronisiert",
+    "idPrefix": "ID:",
+    "edit": "Bearbeiten",
+    "fullResyncShort": "Voll-Abgleich",
+    "pause": "Pausieren",
+    "activate": "Aktivieren",
+    "disconnectChannel": "Verbindung trennen",
+    "disconnectConfirm": "{portal} komplett trennen? Alle verbundenen Objekte dieses Portals werden getrennt.",
+    "disconnectDone": "{portal} getrennt.",
+    "notConfiguredHint": "Die Kanal-Anbindung ist noch nicht aktiv. Sobald sie freigeschaltet ist, kannst du deine Objekte mit diesem Portal verbinden.",
+    "channelIntro": "Veröffentliche, synchronisiere und verwalte deine {portal}-Angebote an einem Ort.",
+    "syncResult": "Abgleich fertig — {fetched} geladen, {saved} gespeichert, {acked} bestätigt.",
+    "pullFutureStarted": "Bestehende Buchungen werden geladen — das kann einen Moment dauern.",
+    "bookingsFrom": "Buchungen von {portal}",
+    "pullFuture": "Bestehende Buchungen laden",
+    "syncing": "Synchronisiere …",
+    "syncBookings": "Buchungen synchronisieren",
+    "noBookingsYet": "Noch keine Buchungen von diesem Portal.",
+    "channelFallback": "Kanal"
   },
   "calendarSync": {
     "title": "Kalender importieren/exportieren",

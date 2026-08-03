@@ -666,12 +666,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
 
           {/* Aufgaben zu dieser Buchung (echt angebunden, live) */}
           <Card className="p-5">
-            <BookingTasksSection
-              reservationId={reservationId}
-              propertyId={data.property_id}
-              checkIn={data.check_in}
-              checkOut={data.check_out}
-            />
+            <BookingTasksSection reservationId={reservationId} />
           </Card>
 
           {/* Fotos — echter Leerzustand */}

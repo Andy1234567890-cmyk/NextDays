@@ -7,11 +7,13 @@
 // Backend-Slice (lib/channex.ts); Realtime-Pflicht (Route abonniert die Tabellen).
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
 import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
 import type {
   ChannelDetail as ChannelDetailData,
   ChannelMappingRow,
@@ -71,6 +73,7 @@ export function ChannelDetail({
   bookings,
   accommodationType,
 }: Props) {
+  const t = useTranslations("channels");
   const router = useRouter();
   const [disconnecting, startDisconnect] = useTransition();
   const portalBookings = bookingsForPortal(bookings, meta.label);
@@ -84,10 +87,7 @@ export function ChannelDetail({
   const disconnectAll = () => {
     if (!channelId) return;
     if (
-      !window.confirm(
-        `${meta.label} komplett trennen? Alle verbundenen Objekte dieses Portals ` +
-          "werden getrennt.",
-      )
+      !window.confirm(t("disconnectConfirm", { portal: meta.label }))
     ) {
       return;
     }
@@ -97,7 +97,7 @@ export function ChannelDetail({
         toast.error(res.error);
         return;
       }
-      toast.success(`${meta.label} getrennt.`);
+      toast.success(t("disconnectDone", { portal: meta.label }));
       router.refresh();
     });
   };
@@ -140,7 +140,7 @@ export function ChannelDetail({
                 icon={disconnecting ? "ph:spinner" : "ph:plugs"}
                 className={"size-4 " + (disconnecting ? "animate-spin" : "")}
               />
-              Verbindung trennen
+              {t("disconnectChannel")}
             </Button>
           ) : (
             <ChannelConnectButton
@@ -155,13 +155,11 @@ export function ChannelDetail({
 
       {!configured ? (
         <p className="rounded-(--radius) border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-          Die Kanal-Anbindung ist noch nicht aktiv. Sobald sie freigeschaltet
-          ist, kannst du deine Objekte mit diesem Portal verbinden.
+          {t("notConfiguredHint")}
         </p>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Veröffentliche, synchronisiere und verwalte deine {meta.label}-Angebote
-          an einem Ort.
+          {t("channelIntro", { portal: meta.label })}
         </p>
       )}
 
@@ -216,6 +214,7 @@ function MappingTable({
 }) {
   const t = useTranslations("channels");
   const router = useRouter();
+  const [suche, setSuche] = useState("");
   // Hotel-ID einer BEREITS verbundenen Zeile: bei Hotels teilen alle Zimmer eine
   // Hotel-ID. Weitere Zimmer müssen sie NICHT erneut eingeben — der Assistent
   // überspringt dann den Hotel-ID-Schritt und geht direkt ins Zimmer-Mapping.
@@ -225,35 +224,59 @@ function MappingTable({
   if (mappings.length === 0) {
     return (
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Objekte</h2>
+        <h2 className="text-lg font-semibold">{t("propertiesHeading")}</h2>
         <p className="rounded-(--radius) border border-border p-4 text-sm text-muted-foreground">
-          Du hast noch keine aktiven Objekte. Lege zuerst ein Objekt an, um es
-          mit {portalLabel} zu verbinden.
+          {t("noPropertiesYet", { portal: portalLabel })}
         </p>
       </section>
     );
   }
 
+  // Suche über beide Seiten der Zuordnung: Objektname, Portal-Zimmername und
+  // die Kennungen. Bei 15 Ferienhäusern ist Scrollen keine Suche.
+  const needle = suche.trim().toLowerCase();
+  const sichtbar = needle
+    ? mappings.filter((m) =>
+        [
+          m.property_title,
+          m.ota_room_title,
+          m.ota_hotel_id,
+          m.ota_room_type_code,
+          m.property_id,
+        ]
+          .filter(Boolean)
+          .some((v) => (v as string).toLowerCase().includes(needle)),
+      )
+    : mappings;
+
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Objekte</h2>
+        <h2 className="text-lg font-semibold">{t("propertiesHeading")}</h2>
         <span className="text-sm text-muted-foreground">
-          {connectedCount} von {totalCount} verbunden
+          {t("connectedOf", { connected: connectedCount, total: totalCount })}
         </span>
       </div>
+      <Input
+        value={suche}
+        onChange={(e) => setSuche(e.target.value)}
+        placeholder={t("searchProperty")}
+        aria-label={t("searchProperty")}
+      />
       <div className="overflow-x-auto rounded-(--radius) border border-border">
-        <table className="w-full min-w-[36rem] text-sm">
+        <table className="w-full min-w-[44rem] text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
               <th className="p-3 font-medium">{t("propertyAtBrand")}</th>
-              <th className="p-3 font-medium">Objekt bei {portalLabel}</th>
-              <th className="p-3 font-medium">Status</th>
-              <th className="p-3 font-medium text-right">Aktion</th>
+              <th className="p-3 font-medium">
+                {t("propertyAtPortal", { portal: portalLabel })}
+              </th>
+              <th className="p-3 font-medium">{t("syncStatusColumn")}</th>
+              <th className="p-3 font-medium text-right">{t("actionColumn")}</th>
             </tr>
           </thead>
           <tbody>
-            {mappings.map((row) => (
+            {sichtbar.map((row) => (
               <MappingRow
                 key={row.property_id}
                 row={row}
@@ -264,6 +287,13 @@ function MappingTable({
                 onConnected={() => router.refresh()}
               />
             ))}
+            {sichtbar.length === 0 && (
+              <tr>
+                <td colSpan={4} className="p-4 text-sm text-muted-foreground">
+                  {t("noSearchResults")}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -301,10 +331,10 @@ function MappingRow({
   }, [row.is_active]);
 
   const statusLabel = !active
-    ? "Pausiert"
+    ? t("statusPaused")
     : row.last_sync_status === "error"
-      ? "Fehler"
-      : "Synchronisiert";
+      ? t("statusError")
+      : t("statusSynced");
   const statusTone = !active
     ? "bg-muted text-muted-foreground"
     : row.last_sync_status === "error"
@@ -330,19 +360,42 @@ function MappingRow({
   return (
     <tr className="border-b border-border last:border-0">
       <td className="p-3">
-        <span className="font-medium">{row.property_title ?? "Objekt"}</span>
+        {/* Bild + Name + eigene Kennung — so steht das Objekt auch in unserer
+            Objektliste, damit beide Listen dieselbe Sprache sprechen. */}
+        <div className="flex items-center gap-3">
+          {row.property_photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={row.property_photo}
+              alt=""
+              className="size-10 shrink-0 rounded-(--radius) object-cover"
+            />
+          ) : (
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-(--radius) bg-muted text-muted-foreground">
+              <Icon icon="ph:house" className="size-5" />
+            </span>
+          )}
+          <span className="flex flex-col">
+            <span className="font-medium">{row.property_title}</span>
+            <span className="font-mono text-xs text-muted-foreground">
+              {t("idPrefix")} {row.property_id.slice(0, 8)}
+            </span>
+          </span>
+        </div>
       </td>
       <td className="p-3 text-muted-foreground">
-        {/* Der OTA-Zimmertyp, auf den dieses Objekt gemappt ist (Name + Code),
-            NICHT die Hotel-ID — die ist für alle Zimmer eines Hotels gleich. */}
+        {/* Portal-Seite: Zimmername plus die Kennungen in der Schreibweise des
+            Extranets (Hotel-ID|Zimmer-ID) — damit lässt sich dort nachsehen. */}
         {row.connected ? (
           <div className="flex flex-col">
             <span className="font-medium text-foreground">
-              {row.ota_room_title ?? row.property_title ?? "Zimmer"}
+              {row.ota_room_title ?? row.property_title}
             </span>
-            {row.ota_room_type_code && (
-              <span className="font-mono text-xs">{row.ota_room_type_code}</span>
-            )}
+            <span className="font-mono text-xs">
+              {[row.ota_hotel_id, row.ota_room_type_code]
+                .filter(Boolean)
+                .join("|")}
+            </span>
           </div>
         ) : (
           "—"
@@ -361,7 +414,7 @@ function MappingRow({
           </span>
         ) : (
           <span className="inline-block rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-            Nicht verbunden
+            {t("notConnectedStatus")}
           </span>
         )}
       </td>
@@ -381,7 +434,7 @@ function MappingRow({
                   icon={pending ? "ph:spinner" : "ph:arrows-counter-clockwise"}
                   className={"size-4 " + (pending ? "animate-spin" : "")}
                 />
-                Voll-Abgleich
+                {t("fullResyncShort")}
               </Button>
               <Button
                 type="button"
@@ -390,13 +443,21 @@ function MappingRow({
                 onClick={toggle}
                 disabled={pending}
               >
-                {active ? "Pausieren" : "Aktivieren"}
+                {active ? t("pause") : t("activate")}
               </Button>
+              {/* „Bearbeiten" führt auf die Einstellungen dieses Paars
+                  (Objekt × Portal) — von hier kam man bisher nirgendwohin. */}
+              <Link
+                href={`/objekte/${row.property_id}/synchronisierung/${portalCode}`}
+                className="text-sm font-medium hover:underline"
+              >
+                {t("edit")}
+              </Link>
             </>
           ) : (
             // Nicht verbunden: Assistent für GENAU dieses Objekt + Portal öffnen.
             <ChannelConnectButton
-              label="Verbinden"
+              label={t("connect")}
               variant="accent"
               presetPortalCode={portalCode}
               presetPropertyId={row.property_id}
@@ -426,6 +487,7 @@ function BookingsSection({
   channelId: string | null;
   canPullFuture: boolean;
 }) {
+  const t = useTranslations("channels");
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
@@ -437,7 +499,11 @@ function BookingsSection({
       if (res.ok) {
         setIsError(false);
         setMessage(
-          `Sync ok — ${res.data.fetched} geladen, ${res.data.saved} gespeichert, ${res.data.acknowledged} bestätigt.`,
+          t("syncResult", {
+            fetched: res.data.fetched,
+            saved: res.data.saved,
+            acked: res.data.acknowledged,
+          }),
         );
       } else {
         setIsError(true);
@@ -455,7 +521,7 @@ function BookingsSection({
       setIsError(!res.ok);
       setMessage(
         res.ok
-          ? "Bestehende Buchungen werden geladen — das kann einen Moment dauern."
+          ? t("pullFutureStarted")
           : res.error,
       );
     });
@@ -465,7 +531,7 @@ function BookingsSection({
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">
-          Buchungen von {portalLabel}{" "}
+          {t("bookingsFrom", { portal: portalLabel })}{" "}
           <span className="text-muted-foreground">({bookings.length})</span>
         </h2>
         {canPullFuture && (
@@ -477,7 +543,7 @@ function BookingsSection({
             disabled={pending}
           >
             <Icon icon="ph:clock-counter-clockwise" className="size-4" />
-            Bestehende Buchungen laden
+            {t("pullFuture")}
           </Button>
         )}
         <Button
@@ -491,7 +557,7 @@ function BookingsSection({
             icon={pending ? "ph:spinner" : "ph:arrows-clockwise"}
             className={"size-4 " + (pending ? "animate-spin" : "")}
           />
-          {pending ? "Synchronisiere …" : "Buchungen synchronisieren"}
+          {pending ? t("syncing") : t("syncBookings")}
         </Button>
       </div>
 
@@ -506,16 +572,14 @@ function BookingsSection({
       )}
 
       {bookings.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Noch keine Buchungen von diesem Portal.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("noBookingsYet")}</p>
       ) : (
         <ul className="flex flex-col divide-y divide-border rounded-(--radius) border border-border">
           {bookings.slice(0, 8).map((b) => (
             <li key={b.id} className="flex items-center gap-3 p-3">
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-medium">
-                  {b.ota_name ?? "Kanal"} ·{" "}
+                  {b.ota_name ?? t("channelFallback")} ·{" "}
                   {b.ota_reservation_code ?? b.external_id}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">

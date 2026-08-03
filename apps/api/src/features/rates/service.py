@@ -169,6 +169,7 @@ class RatesService:
                 if r.get("offset_percent") is not None else None
             ),
             send_to_portals=bool(r.get("send_to_portals")),
+            portal_scope=r.get("portal_scope"),
         )
 
     def _sync_states(self, rate_plan_ids: list[str]) -> dict[str, bool]:

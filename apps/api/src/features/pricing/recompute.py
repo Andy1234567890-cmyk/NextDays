@@ -129,18 +129,14 @@ class DynamicPricingRecompute:
             self._db().table("dynamic_prices").upsert(
                 rows, on_conflict="property_id,date"
             ).execute()
-            # Autopilot-Gate (RateBoard): nur bei aktivem Autopilot gehen die
-            # Preise automatisch an die OTAs (Channex). Ohne Autopilot bleiben sie
-            # reine Empfehlung — in dynamic_prices/Vorschau/Kalender sichtbar, aber
-            # nicht extern veröffentlicht (der Vermieter entscheidet manuell).
-            if settings.autopilot_enabled:
-                self._push_to_channex(tenant_id, property_id, rows)
-            else:
-                log.info(
-                    "dynamic_pricing_recommend_only_no_push",
-                    property_id=property_id,
-                    days=len(rows),
-                )
+            # EIN Schalter, EINE Wahrheit: enabled heißt, die dynamischen
+            # Tagespreise gelten überall — lokal (Resolver-Pull) UND auf den
+            # Portalen. Der frühere Autopilot-Zwischenmodus („rechnen, aber
+            # nicht veröffentlichen") war eine Attrappe: Reconcile und
+            # Full-Sync bauen ihre Soll-Kurve aus demselben Resolver und
+            # pushten die Preise ohnehin. Ein Gate nur hier gaukelte eine
+            # Kontrolle vor, die es nie gab.
+            self._push_to_channex(tenant_id, property_id, rows)
         log.info(
             "dynamic_pricing_recompute_property",
             property_id=property_id,

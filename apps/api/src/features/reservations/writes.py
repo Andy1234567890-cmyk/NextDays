@@ -239,6 +239,9 @@ class WritesMixin(ReservationsBase):
         # Dynamic Pricing der betroffenen Tage neu rechnen (Auslastung/Orphan).
         self._recompute_dynamic_pricing(tenant_id, req.property_id)
 
+        # Planmäßige Aufgaben aus den Regeln erzeugen (0272).
+        self._sync_task_rules(tenant_id, str(row["id"]))
+
         # Loyalty-Aggregate des Gastes (Aufenthalte/Umsatz) neu berechnen.
         if guest_id:
             from src.features.guests.service import (  # noqa: PLC0415
@@ -578,6 +581,8 @@ class WritesMixin(ReservationsBase):
         self._recompute_dynamic_pricing(tenant_id, req.property_id)
         if not same_property:
             self._recompute_dynamic_pricing(tenant_id, old_property)
+        # Aufgaben der Regeln mitziehen statt neue anzulegen (Wurzel 1, 0272).
+        self._sync_task_rules(tenant_id, reservation_id)
         log.info(
             "reservation_moved",
             reservation_id=reservation_id,
@@ -726,6 +731,10 @@ class WritesMixin(ReservationsBase):
         self._release_nights(
             tenant_id, property_id, [d.isoformat() for d in nights], reservation_id,
         )
+
+        # Aufgaben-Gegenzustand: Regeln mit remove_on_cancellation räumen ihre
+        # Aufgabe weg, die übrigen bleiben als 'cancelled' sichtbar (0272).
+        self._sync_task_rules(tenant_id, reservation_id)
 
         # Audit: append-only Storno-Historie (Best-Effort — Log-Fehler darf die
         # Stornierung nicht kippen).

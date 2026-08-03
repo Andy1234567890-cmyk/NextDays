@@ -14,7 +14,7 @@ export type Result<T> =
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST" | "PATCH" | "DELETE"; body?: unknown } = {},
+  opts: { method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -326,6 +326,8 @@ export async function channelOverview(): Promise<Result<ChannelOverview>> {
 export type ChannelMappingRow = {
   property_id: string;
   property_title: string | null;
+  /** Titelbild des Objekts (Cover, sonst erstes Foto); null = keins. */
+  property_photo: string | null;
   ota_hotel_id: string | null;
   // OTA-Zimmertyp, auf den dieses Objekt gemappt ist (Code + Klarname) — die
   // Anzeige nutzt Titel/Code, nicht die Hotel-ID (für alle Zimmer gleich).
@@ -497,8 +499,16 @@ export type StoredChannelConnection = {
   portal_code: string;
   portal: string;
   hotel_id: string;
+  /** Zimmer/Einheit beim Portal — zusammen mit hotel_id die Angabe, mit der
+   *  man im Extranet des Portals nachsieht. */
+  ota_room_type_code: string | null;
+  ota_room_title: string | null;
   channel_id: string | null;
   is_active: boolean;
+  /** Sync-Stand des Objekts (gilt für alle Portale dieses Objekts). */
+  sync_enabled: boolean;
+  last_sync_status: string | null;
+  last_sync_error: string | null;
   last_error: string | null;
   updated_at: string | null;
 };
@@ -508,6 +518,74 @@ export async function listChannelConnections(
 ): Promise<Result<{ items: StoredChannelConnection[]; total: number }>> {
   return call<{ items: StoredChannelConnection[]; total: number }>(
     `/properties/${propertyId}/connections`,
+  );
+}
+
+/** Ein Tarifplan dieses Objekts, wie er ans Portal geht (Lodgify: „Aktive
+ *  Tarifpläne"): Kondition, Name/Typ, Preisänderung. offset_* nur bei
+ *  abgeleiteten Plänen. */
+export type ChannelRatePlanRow = {
+  id: string;
+  name: string | null;
+  base_price: number | null;
+  currency: string | null;
+  min_stay: number | null;
+  rate_mode: string | null;
+  offset_amount: number | null;
+  offset_percent: number | null;
+  condition: string | null;
+  send_to_portals: boolean;
+  /** Grundpreis-Plan (älteste Channex-Zuordnung): geht IMMER ans Portal —
+   *  send_to_portals schaltet nur ZUSÄTZLICHE Pläne frei. */
+  is_primary: boolean;
+};
+
+export type ChannelPropertyDetail = {
+  portal_code: string;
+  portal: string;
+  property_id: string;
+  property_title: string | null;
+  currency: string | null;
+  hotel_id: string | null;
+  ota_room_type_code: string | null;
+  ota_room_title: string | null;
+  channel_id: string | null;
+  is_active: boolean;
+  last_error: string | null;
+  updated_at: string | null;
+  map_id: string | null;
+  sync_enabled: boolean;
+  last_sync_at: string | null;
+  last_sync_status: string | null;
+  last_sync_error: string | null;
+  property_photo: string | null;
+  rate_plans: ChannelRatePlanRow[];
+  /** Dynamic Pricing aktiv: ans Portal gehen die dynamischen Tagespreise,
+   *  base_price ist nur der Anker der Berechnung. */
+  dynamic_pricing_enabled: boolean;
+  /** Preisänderung dieses Portals in % (Kanal-Plan-Offset); 0 = keine. */
+  price_adjustment_percent: number;
+};
+
+/** Preisänderung je Portal setzen (Lodgify-Modell): %-Aufschlag auf die
+ *  effektive Tageskurve GENAU DIESES Portals; 0 entfernt den Aufschlag. */
+export async function setPortalPriceAdjustment(
+  propertyId: string,
+  portalCode: string,
+  percent: number,
+): Promise<Result<{ portal_code: string; percent: number }>> {
+  return call<{ portal_code: string; percent: number }>(
+    `/properties/${propertyId}/connections/${portalCode}/price-adjustment`,
+    { method: "PUT", body: { percent } },
+  );
+}
+
+export async function channelPropertyDetail(
+  propertyId: string,
+  portalCode: string,
+): Promise<Result<ChannelPropertyDetail>> {
+  return call<ChannelPropertyDetail>(
+    `/properties/${propertyId}/connections/${portalCode}`,
   );
 }
 

@@ -111,6 +111,40 @@ eine eigene Property. Umgesetzt in `content_sync._existing_building_channex_prop
 liste vollständig ist). Der Gebäudename trägt den Titel der geteilten Property —
 sonst hieße sie wie die zuletzt gesyncte Einheit.
 
+## Preisänderung je Portal (0272)
+
+Lodgify-Modell: jede Portal-Verbindung kann einen prozentualen Aufschlag auf
+ihre Tagespreise tragen (Booking +15 %, Airbnb +18 %, …). Umgesetzt als
+automatisch gepflegter **Kanal-Plan**: ein abgeleiteter Rate-Plan (derived vom
+Grundpreis-Plan, `offset_percent` = Aufschlag, `rate_plans.portal_scope` =
+Portal-Code), dessen Channex-Rate am Kanal dieses Portals die Standard-Rate
+ERSETZT (`_selected_rate_plan_ids` + `_swap_channel_rate_plan`). Dadurch wirkt
+der Aufschlag auf die komplette effektive Tageskurve inkl. Dynamic Pricing —
+über die vorhandene derived-Kurve, kein eigener Push-Pfad. Gepflegt über
+`PUT /properties/{id}/connections/{portal}/price-adjustment` (0 % = Kanal-Plan
++ Mapping-Rückbau); UI: Objekt-Preise-Seite (Hauptpflege, alle Portale) und
+Sync-Seite (Spalte „Preisänderung", editierbar). Der frühere „Mark-up"-Block
+(`property_pricing_config.markup`) war eine Attrappe (wirkte nirgends) und
+wurde ersatzlos entfernt.
+
+## Zwei Blickrichtungen auf dieselbe Zuordnung
+
+Dieselbe Verbindung wird von beiden Seiten gebraucht, deshalb gibt es sie
+zweimal — nicht doppelt gepflegt, sondern aus derselben Quelle:
+
+- **Portal → Objekte**: `GET /channels/{portal_code}/detail`, Oberfläche
+  `/channels/[code]`. Alle Objekte eines Portals untereinander.
+- **Objekt → Portale**: `GET /properties/{property_id}/connections`,
+  Oberfläche `/objekte/[id]/synchronisierung`. Alle Portale eines Objekts,
+  mit den Kennungen in der Schreibweise des Extranets (`hotel_id | room_code`).
+- **Objekt × Portal**: `GET /properties/{property_id}/connections/{portal_code}`
+  (`objekt_kanal.py`), Oberfläche `/objekte/[id]/synchronisierung/[portal]`.
+  Kennungen, Verkaufsschalter (`is_active`), letzter Abgleich, Vollsync.
+
+Keine Preise/Tarifpläne in dieser Ansicht (die führt das Kalender-Rate-Grid)
+und keine „Inserats-Qualität": Channex führt kein solches Maß (die API kennt
+„score" nur bei Gästebewertungen; `/properties/{id}/scores` antwortet 404).
+
 ## OTA-Zusatzflächen (`ota_extras.py`)
 
 Alle tenant-gescopt über die Channex-Property-IDs des Tenants (Wurzel 3):

@@ -3290,15 +3290,10 @@
       "allProperties": "Todos os alojamentos"
     },
     "myTasksList": {
-      "title": "Tarefas",
-      "doneCount": "{done}/{total} concluídas",
+      "title": "As minhas tarefas",
       "loading": "A carregar…",
       "emptyState": "De momento não tem tarefas atribuídas.",
-      "dueOn": "vence a {date}",
-      "statusOpen": "Aberta",
-      "statusInProgress": "Em curso",
-      "statusDone": "Concluída",
-      "statusCancelled": "Cancelada"
+      "completed": "Tarefa concluída."
     },
     "bookingPopover": {
       "title": "Reserva {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} concluídas",
       "loading": "A carregar…",
       "emptyState": "Ainda não há tarefas para esta reserva.",
-      "createDefaultTasks": "Criar tarefas padrão",
-      "defaultTasksCreated": "Tarefas padrão criadas.",
       "statusOpen": "Aberta",
       "statusInProgress": "Em curso",
       "statusDone": "Concluída",
-      "statusCancelled": "Cancelada"
+      "statusCancelled": "Cancelada",
+      "applyRules": "Aplicar regras",
+      "rulesApplied": "{count} tarefas a partir das regras.",
+      "noRuleMatched": "Nenhuma regra se aplica a esta reserva."
     },
     "propertyWarnings": {
       "title": "Avisos",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Adicionar foto",
       "done": "Concluída",
       "saving": "A guardar…",
-      "completeButton": "Concluir"
+      "completeButton": "Concluir",
+      "inBooking": "Para a reserva {ref}",
+      "assignedTo": "Para {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Como paga o hóspede?",
@@ -3464,7 +3462,8 @@
       "reject": "Rejeitar",
       "approve": "Aprovar",
       "toastApproved": "Aprovada.",
-      "toastRejected": "Rejeitada."
+      "toastRejected": "Rejeitada.",
+      "noPhotos": "Sem provas fotográficas."
     },
     "bookingsBoard": {
       "title": "Reservas",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Tarefas da equipa",
-      "tabs": {
-        "current": "ATUAIS",
-        "upcoming": "PRÓXIMAS",
-        "done": "CONCLUÍDAS"
-      },
-      "status": {
-        "open": "Aberta",
-        "inProgress": "Em curso",
-        "done": "Concluída",
-        "cancelled": "Cancelada"
-      },
       "loading": "A carregar…",
       "empty": "Não há tarefas nesta vista.",
-      "columns": {
-        "title": "Título",
-        "property": "Alojamento",
-        "assignee": "Atribuída a",
-        "status": "Estado",
-        "due": "Prazo"
-      },
-      "unassigned": "Não atribuída",
-      "inspectionNeeded": "Inspeção necessária",
-      "details": "Detalhes"
+      "completed": "Tarefa concluída.",
+      "deleted": "Tarefa eliminada."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Modelos de tarefas",
         "auto": "Tarefas programadas",
         "recurring": "Tarefas recorrentes"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Título",
       "columnActive": "Ativa",
       "columnAssignee": "Atribuída",
-      "columnPoints": "Pontos",
-      "columnUpdated": "Atualizado",
-      "inspectionNeeded": "Inspeção necessária",
       "yes": "Sim",
       "no": "Não",
       "emptyValue": "–",
-      "edit": "Editar",
-      "delete": "Eliminar",
-      "deleted": "Eliminado."
+      "columnInspection": "Requer inspeção?",
+      "columnPriority": "Prioridade da tarefa",
+      "columnDetails": "Detalhes",
+      "learnBody": {
+        "auto": "Uma tarefa planeada é criada automaticamente em cada reserva dos alojamentos escolhidos — com início e fim em relação ao check-in e ao check-out.",
+        "recurring": "Uma tarefa recorrente segue o calendário: data de início, frequência e duração. O sistema cria as ocorrências com antecedência — independentemente das reservas."
+      }
     },
     "pmModuleNav": {
       "navLabel": "Módulos PM",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navegação",
       "previousMonth": "Mês anterior",
       "nextMonth": "Mês seguinte",
-      "selectedUsersLabel": "Utilizadores selecionados",
-      "allUsersPlaceholder": "Todos os utilizadores",
-      "selectedPropertiesLabel": "Alojamentos selecionados",
-      "allPropertiesPlaceholder": "Todos os alojamentos",
       "resetAllLabel": "Repor tudo",
       "loading": "A carregar…",
       "createTaskOnDay": "Criar tarefa neste dia",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - reserva",
       "months": "Janeiro,Fevereiro,Março,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro",
-      "weekdays": "Domingo,Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira,Sexta-feira,Sábado"
+      "weekdays": "Domingo,Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira,Sexta-feira,Sábado",
+      "miscRow": "Diversos"
     },
     "ruleEditor": {
       "loading": "A carregar…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Reservas confirmadas"
     },
     "mobileAppHint": "A vista de tarefas para o dia a dia já está disponível de forma responsiva na web (As minhas tarefas + detalhe com carregamento de fotos). Uma aplicação móvel separada seguirá como projeto próprio.",
-    "guestModuleHint": "Com o formulário de pré-check-in recolhe antes da chegada todos os dados dos seus hóspedes (documento, morada, acompanhantes, hora de chegada). Esta área será construída como um passo próprio."
+    "guestModuleHint": "Com o formulário de pré-check-in recolhe antes da chegada todos os dados dos seus hóspedes (documento, morada, acompanhantes, hora de chegada). Esta área será construída como um passo próprio.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} selecionados",
+      "resetCaption": "Repor tudo",
+      "close": "Fechar",
+      "noMatch": "Sem resultados.",
+      "selectAll": "Selecionar tudo",
+      "selectNone": "Não selecionar nada",
+      "save": "Guardar",
+      "taskCaption": "Tarefa selecionada",
+      "allTasks": "Todas as tarefas",
+      "taskDialog": "Selecionar tarefa",
+      "taskSearch": "Pesquisar por título da tarefa",
+      "usersCaption": "Utilizadores selecionados",
+      "allUsers": "Todos os utilizadores",
+      "usersDialog": "Selecionar utilizadores",
+      "usersSearch": "Pesquisar por nome",
+      "unassignedOption": "Sem atribuição",
+      "propertiesCaption": "Alojamentos selecionados",
+      "allProperties": "Todos os alojamentos",
+      "propertiesDialog": "Selecionar alojamentos",
+      "propertiesSearch": "Pesquisar por nome ou cidade"
+    },
+    "aufgabenReiter": {
+      "current": "ATUAIS",
+      "upcoming": "PRÓXIMAS",
+      "done": "CONCLUÍDAS"
+    },
+    "massenaktionen": {
+      "selected": "{count} selecionadas",
+      "completeAria": "Concluir seleção",
+      "deleteAria": "Eliminar seleção",
+      "completed": "{done} tarefas concluídas.",
+      "completedPartly": "{done} concluídas, {skipped} ignoradas (falta foto ou sem acesso).",
+      "deleted": "{done} tarefas eliminadas.",
+      "deletedPartly": "{done} eliminadas, {skipped} ignoradas (sem acesso)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Ações",
+      "columnTitle": "Título",
+      "columnProperty": "Alojamento",
+      "columnBooking": "Reserva",
+      "columnAssignee": "Atribuído a",
+      "columnStatus": "Estado",
+      "columnDates": "Datas de início e fim",
+      "selectAll": "Selecionar todas as linhas",
+      "selectRow": "Selecionar linha",
+      "open": "Ver",
+      "complete": "Concluir",
+      "delete": "Eliminar",
+      "inspectionNeeded": "Requer inspeção",
+      "unassigned": "Sem atribuição",
+      "statusOpen": "Incompleta",
+      "statusDone": "Concluída",
+      "statusCancelled": "Cancelada"
+    },
+    "ruleEditorPage": {
+      "loading": "A carregar…",
+      "modeCreate": "Criar",
+      "modeEdit": "Editar",
+      "breadcrumbHome": "Início",
+      "breadcrumbTasks": "Tarefas",
+      "titleLabel": "Título",
+      "descriptionLabel": "Descrição",
+      "active": "Ativo",
+      "removeOnCancellation": "Remover ao cancelar a reserva",
+      "priority": "Prioridade da tarefa",
+      "priorityDown": "Reduzir prioridade",
+      "priorityUp": "Aumentar prioridade",
+      "priorityLevel": {
+        "1": "muito baixa",
+        "2": "baixa",
+        "3": "média",
+        "4": "alta",
+        "5": "imediata"
+      },
+      "propertiesLabel": {
+        "auto": "Alojamentos para os quais a tarefa é criada em cada reserva",
+        "recurring": "Alojamentos onde a tarefa deve ser executada"
+      },
+      "propertiesPlaceholder": "Escolher alojamentos…",
+      "propertiesHint": "Sem seleção, a regra aplica-se a todos os alojamentos.",
+      "templateLabel": "Modelo de tarefa com a lista de subtarefas",
+      "templateNone": "Sem modelo",
+      "assigneeLabel": "Destinatário da tarefa",
+      "unassigned": "Sem atribuição",
+      "needsInspection": "A conclusão exige inspeção",
+      "saveAria": "Guardar regra",
+      "deleteAria": "Eliminar regra",
+      "saved": "Guardado.",
+      "deleted": "Eliminado.",
+      "nameRequired": "O título é obrigatório.",
+      "startTriggerRequired": "Escolha quando a tarefa deve começar — caso contrário, a regra nunca é acionada.",
+      "scheduleRequired": "A data de início e a frequência são obrigatórias.",
+      "learnTitle": {
+        "auto": "Tarefas planeadas",
+        "recurring": "Tarefas recorrentes"
+      },
+      "learnBody": {
+        "auto": "Uma tarefa planeada está ligada a uma reserva: define quando começa e termina em relação ao check-in e ao check-out. É criada em cada nova reserva, acompanha uma alteração de datas e desaparece no cancelamento.",
+        "recurring": "Uma tarefa recorrente segue o calendário, não as reservas: define o início, a frequência e a duração, e o sistema cria as ocorrências com antecedência."
+      },
+      "startTriggerLabel": "Quando a tarefa deve começar",
+      "endTriggerLabel": "Quando a tarefa deve terminar",
+      "triggerNone": "— não definido —",
+      "trigger": {
+        "booking_confirmed": "Na confirmação da reserva",
+        "check_in": "No check-in",
+        "after_check_in_24h": "Após o check-in (máx. 24 horas)",
+        "check_out": "No check-out",
+        "days_before_check_in": "Dias antes do check-in",
+        "days_after_check_out": "Dias após o check-out"
+      },
+      "triggerHint": {
+        "booking_confirmed": "A tarefa é criada assim que a reserva é confirmada.",
+        "check_in": "A tarefa começa com o check-in da reserva.",
+        "after_check_in_24h": "24 horas após o check-in — mas nunca depois do check-out: em estadias curtas a tarefa termina com a partida.",
+        "check_out": "A tarefa está ligada ao check-out da reserva.",
+        "days_before_check_in": "A tarefa é criada o número de dias indicado antes do check-in.",
+        "days_after_check_out": "A tarefa é criada o número de dias indicado após o check-out."
+      },
+      "offsetDays": "Dias",
+      "periodLabel": "Definir data de início e de fim",
+      "startsOn": "Data de início",
+      "startTime": "Hora de início",
+      "hasEnd": "Termina",
+      "endsOn": "Data de fim",
+      "repeatLabel": "Intervalo de repetição",
+      "frequency": "Frequência",
+      "choose": "Escolher…",
+      "frequencyOption": {
+        "daily": "Diária",
+        "weekly": "Semanal",
+        "monthly": "Mensal",
+        "yearly": "Anual"
+      },
+      "interval": "A cada",
+      "onDay": "No dia",
+      "onPattern": "No",
+      "position": {
+        "first": "Primeiro",
+        "second": "Segundo",
+        "third": "Terceiro",
+        "fourth": "Quarto",
+        "last": "Último"
+      },
+      "durationLabel": "Duração estimada",
+      "hours": "Horas",
+      "minutes": "Minutos",
+      "weekdayMon": "Segunda-feira",
+      "weekdayTue": "Terça-feira",
+      "weekdayWed": "Quarta-feira",
+      "weekdayThu": "Quinta-feira",
+      "weekdayFri": "Sexta-feira",
+      "weekdaySat": "Sábado",
+      "weekdaySun": "Domingo",
+      "weekdayMonShort": "Seg",
+      "weekdayTueShort": "Ter",
+      "weekdayWedShort": "Qua",
+      "weekdayThuShort": "Qui",
+      "weekdayFriShort": "Sex",
+      "weekdaySatShort": "Sáb",
+      "weekdaySunShort": "Dom"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Disponibilidade",
       "itemChannels": "Canais",
       "itemPolicies": "Políticas",
-      "itemSeasonalPrices": "Preços sazonais"
+      "itemSeasonalPrices": "Preços sazonais",
+      "groupChannels": "Canais",
+      "itemSync": "Sincronização"
     },
     "complianceForm": {
       "title": "Compliance",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Define o teu preço por noite com preço base e agravamento.",
       "basePriceTitle": "Preço base",
       "basePriceHint": "Preço base por noite e moeda. Ajustável opcionalmente por dia da semana.",
-      "markupTitle": "Agravamento (mark-up)",
-      "markupHint": "Ajusta o preço base enviado aos canais externos.",
       "extraGuestTitle": "Agravamento por hóspede",
       "extraGuestHint": "Ativa um agravamento por noite para cada hóspede adicional.",
       "extraGuestPill": "{price} a partir do hóspede {guest}",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Os preços dinâmicos (automáticos por época, fim de semana, ocupação, mercado …) são configurados de forma centralizada em <link>Preços dinâmicos</link> no menu principal. Um preço base definido aqui permanece a referência; um preço diário manual no calendário tem sempre prioridade.",
       "basePricePerNightLabel": "Preço base por noite",
       "customByWeekdayLabel": "Ajustar por dia da semana",
-      "markupEditorTitle": "Agravamento para canais externos",
-      "markupEditorSubtitle": "Uma % positiva aumenta, uma % negativa reduz o preço base para canais externos.",
-      "markupHintNote": "O agravamento não se aplica a reservas diretas NextDays.",
       "extraGuestEditorSubtitle": "Ativa um agravamento noturno para cada hóspede adicional.",
       "extraGuestFromLabel": "Aplica-se a cada hóspede a partir de",
       "guestCount": "{count, plural, one {# hóspede} many {# hóspedes} other {# hóspedes}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "p. ex. Preço padrão",
       "multiPlanHint": "Vários planos de preços (p. ex. BAR/B&B) — os preços são geridos por data na vista de calendário «Preços».",
       "plansTitle": "Planos de preços",
+      "dynamicActiveTitle": "Dynamic Pricing ativo",
+      "dynamicActiveHint": "Os preços diários são calculados automaticamente e aplicam-se em todo o lado — calendário, a tua própria plataforma e os portais. O preço base é apenas a base do cálculo.",
+      "dynamicActiveOpen": "Abrir pré-visualização",
+      "portalAdjustmentTitle": "Ajuste de preço por portal",
+      "portalAdjustmentHint": "Ajuste os preços enviados para os seus portais externos.",
+      "portalAdjustmentNone": "Ainda não há nenhum portal ligado.",
+      "portalAdjustmentInvalid": "Valor inválido — o intervalo permitido é de −99 a 500%.",
+      "portalAdjustmentEditorSubtitle": "Ajuste o acréscimo para os portais externos. Uma percentagem positiva aumenta os preços enviados para esse portal, uma negativa reduz.",
+      "portalAdjustmentDirectNote": "O acréscimo não se aplica a reservas diretas através do seu próprio site ou do myBestDays.",
+      "portalAdjustmentSaved": "Ajuste de preço guardado.",
       "plansHint": "Os preços são geridos por data no calendário.",
       "planCreate": "Criar plano de preços",
-      "planModeManual": "Manual",
+      "planModeManual": "Preço próprio",
       "planModeDerived": "Derivado de {parent} · {offset}",
       "planDerivedPrice": "calculado",
       "planMinStay": "Mín. {nights} noites",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Sincronização",
+      "hint": "Que identificador este imóvel tem em cada portal e se a sincronização está a funcionar. Os identificadores aparecem tal como na extranet do portal, para aí encontrar uma reserva.",
+      "none": "Este imóvel não está ligado a nenhum portal. Ligue-o no separador «Canais».",
+      "colPortal": "No portal",
+      "colOurs": "Connosco",
+      "colStatus": "Estado",
+      "published": "Publicado",
+      "notPublished": "Não publicado",
+      "syncOk": "Sincronizado",
+      "statusActive": "Ativo",
+      "statusPaused": "Em pausa",
+      "statusError": "Erro",
+      "singleUnit": "Imóvel inteiro",
+      "loadFailed": "Não foi possível carregar este imóvel."
+    },
+    "channelDetail": {
+      "identifiers": "Identificadores",
+      "hotelId": "Identificador do hotel",
+      "roomCode": "Identificador do quarto",
+      "roomTitle": "Nome do quarto no portal",
+      "sellingTitle": "Venda através deste portal",
+      "sellingHint": "Desligado: os preços e a disponibilidade deixam de ser enviados para este portal. As reservas existentes continuam e continuam a chegar novas.",
+      "lastSync": "Última sincronização",
+      "never": "Nunca",
+      "syncNow": "Sincronizar agora",
+      "loadFailed": "Não foi possível carregar esta ligação.",
+      "backToChannel": "Contas {portal}",
+      "ourId": "ID myNextDays:",
+      "published": "Publicado",
+      "notPublished": "Não publicado",
+      "statusSynced": "Sincronizado",
+      "statusPaused": "Em pausa",
+      "statusError": "Erro",
+      "syncSection": "Sincronização",
+      "ratePlans": "Planos tarifários ativos",
+      "noRatePlans": "Nenhum plano tarifário está liberado para os portais.",
+      "colCondition": "Condições",
+      "colPlanName": "Nome do plano tarifário (tipo)",
+      "colPriceChange": "Alteração de preço",
+      "modeManual": "Preço próprio",
+      "modeDerived": "Derivado",
+      "minStay": "mín. {nights} noites",
+      "colPrice": "Preço",
+      "dynamicActiveTitle": "Dynamic Pricing ativo",
+      "dynamicActiveHint": "Para este portal são enviados os preços diários calculados automaticamente — o preço mostrado abaixo é apenas a base do cálculo.",
+      "adjustmentInvalid": "Valor inválido — o intervalo permitido é de −99 a 500%.",
+      "adjustmentSave": "Guardar",
+      "adjustmentCancel": "Cancelar",
+      "adjustmentHint": "Editar o ajuste de preço deste portal",
+      "notReleased": "não liberado para portais"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Voltar a transmitir por completo disponibilidade, preços e restrições",
     "categoryMessaging": "Mensagens diretas com hóspedes",
     "connected": "Ligado",
-    "notConnected": "Não ligado"
+    "notConnected": "Não ligado",
+    "propertiesHeading": "Imóveis",
+    "noPropertiesYet": "Ainda não tem imóveis ativos. Crie um primeiro para o ligar a {portal}.",
+    "connectedOf": "{connected} de {total} ligados",
+    "searchProperty": "Pesquisar",
+    "propertyAtPortal": "Imóvel em {portal}",
+    "syncStatusColumn": "Estado de sincronização",
+    "actionColumn": "Ação",
+    "noSearchResults": "Nenhum imóvel corresponde à pesquisa.",
+    "statusPaused": "Em pausa",
+    "statusError": "Erro",
+    "statusSynced": "Sincronizado",
+    "idPrefix": "ID:",
+    "edit": "Editar",
+    "fullResyncShort": "Sincronização completa",
+    "pause": "Pausar",
+    "activate": "Ativar",
+    "disconnectChannel": "Desligar",
+    "disconnectConfirm": "Desligar {portal} por completo? Todos os imóveis ligados a este portal serão desligados.",
+    "disconnectDone": "{portal} desligado.",
+    "notConfiguredHint": "A ligação ao portal ainda não está ativa. Assim que estiver, poderá ligar os seus imóveis.",
+    "channelIntro": "Publique, sincronize e gira os seus anúncios de {portal} num só lugar.",
+    "syncResult": "Sincronização concluída — {fetched} obtidas, {saved} guardadas, {acked} confirmadas.",
+    "pullFutureStarted": "As reservas existentes estão a ser carregadas — pode demorar um momento.",
+    "bookingsFrom": "Reservas de {portal}",
+    "pullFuture": "Carregar reservas existentes",
+    "syncing": "A sincronizar …",
+    "syncBookings": "Sincronizar reservas",
+    "noBookingsYet": "Ainda não há reservas deste portal.",
+    "channelFallback": "Canal"
   },
   "calendarSync": {
     "title": "Importar/exportar calendário",

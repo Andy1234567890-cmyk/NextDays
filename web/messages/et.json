@@ -3290,15 +3290,10 @@
       "allProperties": "Kõik majutused"
     },
     "myTasksList": {
-      "title": "Ülesanded",
-      "doneCount": "{done}/{total} tehtud",
+      "title": "Minu ülesanded",
       "loading": "Laadib…",
       "emptyState": "Teile pole hetkel ühtegi ülesannet määratud.",
-      "dueOn": "tähtaeg {date}",
-      "statusOpen": "Avatud",
-      "statusInProgress": "Töös",
-      "statusDone": "Tehtud",
-      "statusCancelled": "Katkestatud"
+      "completed": "Ülesanne lõpetatud."
     },
     "bookingPopover": {
       "title": "Broneering {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} tehtud",
       "loading": "Laadib…",
       "emptyState": "Sellel broneeringul pole veel ühtegi ülesannet.",
-      "createDefaultTasks": "Loo vaikeülesanded",
-      "defaultTasksCreated": "Vaikeülesanded loodud.",
       "statusOpen": "Avatud",
       "statusInProgress": "Töös",
       "statusDone": "Tehtud",
-      "statusCancelled": "Katkestatud"
+      "statusCancelled": "Katkestatud",
+      "applyRules": "Rakenda reeglid",
+      "rulesApplied": "{count} ülesannet reeglitest.",
+      "noRuleMatched": "Ükski reegel ei kehti sellele broningule."
     },
     "propertyWarnings": {
       "title": "Hoiatused",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Lisa pilt",
       "done": "Tehtud",
       "saving": "Salvestab…",
-      "completeButton": "Lõpeta"
+      "completeButton": "Lõpeta",
+      "inBooking": "Broningule {ref}",
+      "assignedTo": "Kasutajale {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Kuidas külaline tasub?",
@@ -3464,7 +3462,8 @@
       "reject": "Lükka tagasi",
       "approve": "Kinnita",
       "toastApproved": "Kinnitatud.",
-      "toastRejected": "Tagasi lükatud."
+      "toastRejected": "Tagasi lükatud.",
+      "noPhotos": "Fototõendeid ei ole."
     },
     "bookingsBoard": {
       "title": "Broneeringud",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Meeskonna ülesanded",
-      "tabs": {
-        "current": "PRAEGUSED",
-        "upcoming": "EESOOTAVAD",
-        "done": "LÕPETATUD"
-      },
-      "status": {
-        "open": "Avatud",
-        "inProgress": "Töös",
-        "done": "Tehtud",
-        "cancelled": "Katkestatud"
-      },
       "loading": "Laadib…",
       "empty": "Selles vaates ülesandeid pole.",
-      "columns": {
-        "title": "Pealkiri",
-        "property": "Majutus",
-        "assignee": "Määratud",
-        "status": "Staatus",
-        "due": "Tähtaeg"
-      },
-      "unassigned": "Määramata",
-      "inspectionNeeded": "Vajab kontrolli",
-      "details": "Üksikasjad"
+      "completed": "Ülesanne lõpetatud.",
+      "deleted": "Ülesanne kustutatud."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Ülesannete mallid",
         "auto": "Plaanilised ülesanded",
         "recurring": "Korduvad ülesanded"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Pealkiri",
       "columnActive": "Aktiivne",
       "columnAssignee": "Määratud",
-      "columnPoints": "Punktid",
-      "columnUpdated": "Uuendatud",
-      "inspectionNeeded": "Vajab kontrolli",
       "yes": "Jah",
       "no": "Ei",
       "emptyValue": "–",
-      "edit": "Muuda",
-      "delete": "Kustuta",
-      "deleted": "Kustutatud."
+      "columnInspection": "Vajab ülevaatust?",
+      "columnPriority": "Ülesande prioriteet",
+      "columnDetails": "Üksikasjad",
+      "learnBody": {
+        "auto": "Plaaniline ülesanne tekib automaatselt iga valitud majutuse broningu juures — algus ja lõpp saabumise ja lahkumise suhtes.",
+        "recurring": "Korduv ülesanne järgib kalendrit: alguskuupäev, sagedus ja kestus. Süsteem loob korded ette — broningutest sõltumatult."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM-moodulid",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigatsioon",
       "previousMonth": "Eelmine kuu",
       "nextMonth": "Järgmine kuu",
-      "selectedUsersLabel": "Valitud kasutajad",
-      "allUsersPlaceholder": "Kõik kasutajad",
-      "selectedPropertiesLabel": "Valitud majutused",
-      "allPropertiesPlaceholder": "Kõik majutused",
       "resetAllLabel": "Lähtesta kõik",
       "loading": "Laadib…",
       "createTaskOnDay": "Loo sellele päevale ülesanne",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - broneering",
       "months": "Jaanuar,Veebruar,Märts,Aprill,Mai,Juuni,Juuli,August,September,Oktoober,November,Detsember",
-      "weekdays": "Pühapäev,Esmaspäev,Teisipäev,Kolmapäev,Neljapäev,Reede,Laupäev"
+      "weekdays": "Pühapäev,Esmaspäev,Teisipäev,Kolmapäev,Neljapäev,Reede,Laupäev",
+      "miscRow": "Muud"
     },
     "ruleEditor": {
       "loading": "Laadib…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Kinnitatud broneeringud"
     },
     "mobileAppHint": "Ülesannete vaade liikvel olles on juba veebis reageeriv (Minu ülesanded + detailid fotode üleslaadimisega). Eraldi mobiilirakendus tuleb omaette projektina.",
-    "guestModuleHint": "Eelregistreerimisvormiga kogud enne saabumist kõik oma külaliste andmed (dokument, aadress, kaasreisijad, saabumisaeg). See ala ehitatakse eraldi sammuna."
+    "guestModuleHint": "Eelregistreerimisvormiga kogud enne saabumist kõik oma külaliste andmed (dokument, aadress, kaasreisijad, saabumisaeg). See ala ehitatakse eraldi sammuna.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} valitud",
+      "resetCaption": "Lähtesta kõik",
+      "close": "Sulge",
+      "noMatch": "Vasteid ei ole.",
+      "selectAll": "Vali kõik",
+      "selectNone": "Tühista valik",
+      "save": "Salvesta",
+      "taskCaption": "Valitud ülesanne",
+      "allTasks": "Kõik ülesanded",
+      "taskDialog": "Vali ülesanne",
+      "taskSearch": "Otsi ülesande nime järgi",
+      "usersCaption": "Valitud kasutajad",
+      "allUsers": "Kõik kasutajad",
+      "usersDialog": "Vali kasutajad",
+      "usersSearch": "Otsi nime järgi",
+      "unassignedOption": "Määramata",
+      "propertiesCaption": "Valitud majutused",
+      "allProperties": "Kõik majutused",
+      "propertiesDialog": "Vali majutused",
+      "propertiesSearch": "Otsi nime või linna järgi"
+    },
+    "aufgabenReiter": {
+      "current": "PRAEGUSED",
+      "upcoming": "TULEVASED",
+      "done": "LÕPETATUD"
+    },
+    "massenaktionen": {
+      "selected": "{count} valitud",
+      "completeAria": "Lõpeta valitud",
+      "deleteAria": "Kustuta valitud",
+      "completed": "{done} ülesannet lõpetatud.",
+      "completedPartly": "{done} lõpetatud, {skipped} vahele jäetud (foto puudub või puudub ligipääs).",
+      "deleted": "{done} ülesannet kustutatud.",
+      "deletedPartly": "{done} kustutatud, {skipped} vahele jäetud (puudub ligipääs)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Toimingud",
+      "columnTitle": "Pealkiri",
+      "columnProperty": "Majutus",
+      "columnBooking": "Broning",
+      "columnAssignee": "Määratud",
+      "columnStatus": "Olek",
+      "columnDates": "Algus- ja lõppaeg",
+      "selectAll": "Vali kõik read",
+      "selectRow": "Vali rida",
+      "open": "Vaata",
+      "complete": "Lõpeta",
+      "delete": "Kustuta",
+      "inspectionNeeded": "Vajab ülevaatust",
+      "unassigned": "Määramata",
+      "statusOpen": "Lõpetamata",
+      "statusDone": "Lõpetatud",
+      "statusCancelled": "Tühistatud"
+    },
+    "ruleEditorPage": {
+      "loading": "Laadib…",
+      "modeCreate": "Loo",
+      "modeEdit": "Muuda",
+      "breadcrumbHome": "Avaleht",
+      "breadcrumbTasks": "Ülesanded",
+      "titleLabel": "Pealkiri",
+      "descriptionLabel": "Kirjeldus",
+      "active": "Aktiivne",
+      "removeOnCancellation": "Eemalda broningu tühistamisel",
+      "priority": "Ülesande prioriteet",
+      "priorityDown": "Vähenda prioriteeti",
+      "priorityUp": "Suurenda prioriteeti",
+      "priorityLevel": {
+        "1": "väga madal",
+        "2": "madal",
+        "3": "keskmine",
+        "4": "kõrge",
+        "5": "kohene"
+      },
+      "propertiesLabel": {
+        "auto": "Majutused, mille puhul ülesanne tekib iga broningu juures",
+        "recurring": "Majutused, kus ülesanne tuleb täita"
+      },
+      "propertiesPlaceholder": "Vali majutused…",
+      "propertiesHint": "Valikuta kehtib reegel kõigile majutustele.",
+      "templateLabel": "Ülesandemall alamülesannete loeteluga",
+      "templateNone": "Malli puudub",
+      "assigneeLabel": "Ülesande saaja",
+      "unassigned": "Määramata",
+      "needsInspection": "Lõpetamine nõuab ülevaatust",
+      "saveAria": "Salvesta reegel",
+      "deleteAria": "Kustuta reegel",
+      "saved": "Salvestatud.",
+      "deleted": "Kustutatud.",
+      "nameRequired": "Pealkiri on kohustuslik.",
+      "startTriggerRequired": "Vali, millal ülesanne algab — muidu reegel kunagi ei käivitu.",
+      "scheduleRequired": "Alguskuupäev ja sagedus on kohustuslikud.",
+      "learnTitle": {
+        "auto": "Plaanilised ülesanded",
+        "recurring": "Korduvad ülesanded"
+      },
+      "learnBody": {
+        "auto": "Plaaniline ülesanne on seotud broninguga: määrate, millal see algab ja lõpeb saabumise ja lahkumise suhtes. Iga uue broninguga see tekib, nihutamisel liigub kaasa, tühistamisel kaob.",
+        "recurring": "Korduv ülesanne järgib kalendrit, mitte broninguid: määrate alguse, sageduse ja kestuse ning süsteem loob korded ette."
+      },
+      "startTriggerLabel": "Millal ülesanne algab",
+      "endTriggerLabel": "Millal ülesanne lõpeb",
+      "triggerNone": "— määramata —",
+      "trigger": {
+        "booking_confirmed": "Broningu kinnitamisel",
+        "check_in": "Saabumisel",
+        "after_check_in_24h": "Pärast saabumist (max 24 tundi)",
+        "check_out": "Lahkumisel",
+        "days_before_check_in": "Päevi enne saabumist",
+        "days_after_check_out": "Päevi pärast lahkumist"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Ülesanne tekib kohe, kui broning on kinnitatud.",
+        "check_in": "Ülesanne algab broningu saabumisega.",
+        "after_check_in_24h": "24 tundi pärast saabumist — kuid mitte üle lahkumise: lühikeste ööbimiste puhul lõpeb ülesanne lahkumisega.",
+        "check_out": "Ülesanne on seotud broningu lahkumisega.",
+        "days_before_check_in": "Ülesanne tekib määratud arv päevi enne saabumist.",
+        "days_after_check_out": "Ülesanne tekib määratud arv päevi pärast lahkumist."
+      },
+      "offsetDays": "Päevad",
+      "periodLabel": "Alguse ja lõpu kuupäev",
+      "startsOn": "Alguskuupäev",
+      "startTime": "Algusaeg",
+      "hasEnd": "Lõpeb",
+      "endsOn": "Lõppkuupäev",
+      "repeatLabel": "Kordusintervall",
+      "frequency": "Sagedus",
+      "choose": "Vali…",
+      "frequencyOption": {
+        "daily": "Iga päev",
+        "weekly": "Iga nädal",
+        "monthly": "Iga kuu",
+        "yearly": "Iga aasta"
+      },
+      "interval": "Iga",
+      "onDay": "Päeval",
+      "onPattern": "Sellel",
+      "position": {
+        "first": "Esimene",
+        "second": "Teine",
+        "third": "Kolmas",
+        "fourth": "Neljas",
+        "last": "Viimane"
+      },
+      "durationLabel": "Hinnanguline kestus",
+      "hours": "Tundi",
+      "minutes": "Minutit",
+      "weekdayMon": "Esmaspäev",
+      "weekdayTue": "Teisipäev",
+      "weekdayWed": "Kolmapäev",
+      "weekdayThu": "Neljapäev",
+      "weekdayFri": "Reede",
+      "weekdaySat": "Laupäev",
+      "weekdaySun": "Pühapäev",
+      "weekdayMonShort": "E",
+      "weekdayTueShort": "T",
+      "weekdayWedShort": "K",
+      "weekdayThuShort": "N",
+      "weekdayFriShort": "R",
+      "weekdaySatShort": "L",
+      "weekdaySunShort": "P"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Saadavus",
       "itemChannels": "Kanäle",
       "itemPolicies": "Reeglid",
-      "itemSeasonalPrices": "Hooajahinnad"
+      "itemSeasonalPrices": "Hooajahinnad",
+      "groupChannels": "Kanalid",
+      "itemSync": "Sünkroonimine"
     },
     "complianceForm": {
       "title": "Vastavus",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Määra öö hind koos põhihinna ja juurdehindlusega.",
       "basePriceTitle": "Põhihind",
       "basePriceHint": "Põhihind öö ja valuuta kohta. Valikuliselt kohanda nädalapäeva kaupa.",
-      "markupTitle": "Juurdehindlus (mark-up)",
-      "markupHint": "Kohanda väliskanalitele saadetavat põhihinda.",
       "extraGuestTitle": "Juurdehindlus külalise kohta",
       "extraGuestHint": "Aktiveeri öine juurdehindlus iga täiendava külalise kohta.",
       "extraGuestPill": "{price} alates {guest}. külalisest",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Dünaamilised hinnad (automaatselt vastavalt hooajale, nädalavahetusele, täituvusele, turule …) seadistad kesksel viisil peamenüü all <link>Dynamic Pricing</link>. Siin määratud põhihind jääb aluseks; kalendris käsitsi määratud päevahind on alati ülimuslik.",
       "basePricePerNightLabel": "Põhihind öö kohta",
       "customByWeekdayLabel": "Kohanda nädalapäeva kaupa",
-      "markupEditorTitle": "Juurdehindlus väliskanalite jaoks",
-      "markupEditorSubtitle": "Positiivne % tõstab, negatiivne % langetab väliskanalite põhihinda.",
-      "markupHintNote": "Juurdehindlus ei kehti myNextDaysi otsebroneeringute kohta.",
       "extraGuestEditorSubtitle": "Aktiveeri öine juurdehindlus iga täiendava külalise kohta.",
       "extraGuestFromLabel": "Kehtib iga külalise kohta alates",
       "guestCount": "{count, plural, one {# külaline} other {# külalist}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "nt Standardhind",
       "multiPlanHint": "Mitu hinnaplaani (nt BAR/B&B) — hindu hallatakse kuupäevapõhiselt kalendrivaates „Hinnad“.",
       "plansTitle": "Hinnaplaanid",
+      "dynamicActiveTitle": "Dynamic Pricing on sees",
+      "dynamicActiveHint": "Päevahinnad arvutatakse automaatselt ja kehtivad kõikjal — kalendris, oma platvormil ja portaalides. Baashind on vaid arvutuse alus.",
+      "dynamicActiveOpen": "Ava eelvaade",
+      "portalAdjustmentTitle": "Hinnamuudatus portaali kohta",
+      "portalAdjustmentHint": "Kohandage hindu, mis saadetakse teie välisportaalidesse.",
+      "portalAdjustmentNone": "Ühtegi portaali pole veel ühendatud.",
+      "portalAdjustmentInvalid": "Vigane väärtus — lubatud vahemik on −99 kuni 500%.",
+      "portalAdjustmentEditorSubtitle": "Kohandage välisportaalide juurdehindlust. Positiivne protsent tõstab portaali saadetavaid hindu, negatiivne langetab neid.",
+      "portalAdjustmentDirectNote": "Juurdehindlus ei kehti otsebroneeringutele oma veebisaidi ega myBestDays kaudu.",
+      "portalAdjustmentSaved": "Hinnamuudatus salvestatud.",
       "plansHint": "Hindu hallatakse kuupäevapõhiselt kalendris.",
       "planCreate": "Loo hinnaplaan",
-      "planModeManual": "Käsitsi",
+      "planModeManual": "Oma hind",
       "planModeDerived": "Tuletatud plaanist {parent} · {offset}",
       "planDerivedPrice": "arvutatud",
       "planMinStay": "Min. {nights} ööd",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Sünkroonimine",
+      "hint": "Millise tunnuse see objekt igas portaalis kannab ja kas sünkroonimine töötab. Tunnused on kuvatud täpselt nagu portaali ekstranetis, et broneering sealt üles leida.",
+      "none": "See objekt pole ühegi portaaliga ühendatud. Ühenda see vahekaardil „Kanalid“.",
+      "colPortal": "Portaalis",
+      "colOurs": "Meil",
+      "colStatus": "Olek",
+      "published": "Avaldatud",
+      "notPublished": "Avaldamata",
+      "syncOk": "Sünkroonitud",
+      "statusActive": "Aktiivne",
+      "statusPaused": "Peatatud",
+      "statusError": "Viga",
+      "singleUnit": "Kogu objekt",
+      "loadFailed": "Seda objekti ei õnnestunud laadida."
+    },
+    "channelDetail": {
+      "identifiers": "Tunnused",
+      "hotelId": "Hotelli tunnus",
+      "roomCode": "Toa tunnus",
+      "roomTitle": "Toa nimi portaalis",
+      "sellingTitle": "Müük selle portaali kaudu",
+      "sellingHint": "Väljas: hinnad ja saadavus ei lähe enam sellesse portaali. Olemasolevad broneeringud jätkuvad ja uued tulevad endiselt.",
+      "lastSync": "Viimati sünkroonitud",
+      "never": "Mitte kunagi",
+      "syncNow": "Sünkrooni kohe",
+      "loadFailed": "Seda ühendust ei õnnestunud laadida.",
+      "backToChannel": "{portal} kontod",
+      "ourId": "myNextDays ID:",
+      "published": "Avaldatud",
+      "notPublished": "Avaldamata",
+      "statusSynced": "Sünkroonitud",
+      "statusPaused": "Peatatud",
+      "statusError": "Viga",
+      "syncSection": "Sünkroonimine",
+      "ratePlans": "Aktiivsed hinnaplaanid",
+      "noRatePlans": "Ükski hinnaplaan pole portaalidele vabastatud.",
+      "colCondition": "Tingimused",
+      "colPlanName": "Hinnaplaani nimi (tüüp)",
+      "colPriceChange": "Hinnamuutus",
+      "modeManual": "Oma hind",
+      "modeDerived": "Tuletatud",
+      "minStay": "vähemalt {nights} ööd",
+      "colPrice": "Hind",
+      "dynamicActiveTitle": "Dynamic Pricing on sees",
+      "dynamicActiveHint": "Sellele portaalile saadetakse automaatselt arvutatud päevahinnad — allpool kuvatav hind on vaid arvutuse alus.",
+      "adjustmentInvalid": "Vigane väärtus — lubatud vahemik on −99 kuni 500%.",
+      "adjustmentSave": "Salvesta",
+      "adjustmentCancel": "Tühista",
+      "adjustmentHint": "Muuda selle portaali hinnamuudatust",
+      "notReleased": "portaalidele vabastamata"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Kanna saadavus, hinnad ja piirangud täielikult uuesti üle",
     "categoryMessaging": "Otsene suhtlus külalistega",
     "connected": "Ühendatud",
-    "notConnected": "Pole ühendatud"
+    "notConnected": "Pole ühendatud",
+    "propertiesHeading": "Objektid",
+    "noPropertiesYet": "Sul pole veel aktiivseid objekte. Loo esmalt objekt, et ühendada see portaaliga {portal}.",
+    "connectedOf": "{connected} / {total} ühendatud",
+    "searchProperty": "Otsi",
+    "propertyAtPortal": "Objekt portaalis {portal}",
+    "syncStatusColumn": "Sünkroonimise olek",
+    "actionColumn": "Toiming",
+    "noSearchResults": "Otsingule ei vasta ükski objekt.",
+    "statusPaused": "Peatatud",
+    "statusError": "Viga",
+    "statusSynced": "Sünkroonitud",
+    "idPrefix": "ID:",
+    "edit": "Muuda",
+    "fullResyncShort": "Täissünkroonimine",
+    "pause": "Peata",
+    "activate": "Aktiveeri",
+    "disconnectChannel": "Katkesta ühendus",
+    "disconnectConfirm": "Kas katkestada {portal} täielikult? Kõik selle portaali ühendatud objektid ühendatakse lahti.",
+    "disconnectDone": "{portal} ühendus katkestatud.",
+    "notConfiguredHint": "Portaaliühendus pole veel aktiivne. Kui see lubatakse, saad oma objektid ühendada.",
+    "channelIntro": "Avalda, sünkrooni ja halda oma {portal} kuulutusi ühest kohast.",
+    "syncResult": "Sünkroonimine valmis — {fetched} laaditud, {saved} salvestatud, {acked} kinnitatud.",
+    "pullFutureStarted": "Olemasolevaid broneeringuid laaditakse — see võib hetke võtta.",
+    "bookingsFrom": "Broneeringud portaalist {portal}",
+    "pullFuture": "Laadi olemasolevad broneeringud",
+    "syncing": "Sünkroonin …",
+    "syncBookings": "Sünkrooni broneeringud",
+    "noBookingsYet": "Sellest portaalist pole veel broneeringuid.",
+    "channelFallback": "Kanal"
   },
   "calendarSync": {
     "title": "Kalendri import/eksport",

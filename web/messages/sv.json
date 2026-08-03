@@ -3290,15 +3290,10 @@
       "allProperties": "Alla boenden"
     },
     "myTasksList": {
-      "title": "Uppgifter",
-      "doneCount": "{done}/{total} klara",
+      "title": "Mina uppgifter",
       "loading": "Laddar…",
       "emptyState": "Du har för närvarande inga tilldelade uppgifter.",
-      "dueOn": "förfaller {date}",
-      "statusOpen": "Öppen",
-      "statusInProgress": "Pågår",
-      "statusDone": "Klar",
-      "statusCancelled": "Avbruten"
+      "completed": "Uppgift slutförd."
     },
     "bookingPopover": {
       "title": "Bokning {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} klara",
       "loading": "Laddar…",
       "emptyState": "Inga uppgifter för denna bokning ännu.",
-      "createDefaultTasks": "Skapa standarduppgifter",
-      "defaultTasksCreated": "Standarduppgifter skapade.",
       "statusOpen": "Öppen",
       "statusInProgress": "Pågår",
       "statusDone": "Klar",
-      "statusCancelled": "Avbruten"
+      "statusCancelled": "Avbruten",
+      "applyRules": "Tillämpa regler",
+      "rulesApplied": "{count} uppgifter från reglerna.",
+      "noRuleMatched": "Ingen regel gäller för denna bokning."
     },
     "propertyWarnings": {
       "title": "Varningar",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Lägg till bild",
       "done": "Klar",
       "saving": "Sparar…",
-      "completeButton": "Avsluta"
+      "completeButton": "Avsluta",
+      "inBooking": "Till bokning {ref}",
+      "assignedTo": "För {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Hur betalar gästen?",
@@ -3464,7 +3462,8 @@
       "reject": "Avvisa",
       "approve": "Godkänn",
       "toastApproved": "Godkänd.",
-      "toastRejected": "Avvisad."
+      "toastRejected": "Avvisad.",
+      "noPhotos": "Inga fotobevis."
     },
     "bookingsBoard": {
       "title": "Bokningar",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Teamuppgifter",
-      "tabs": {
-        "current": "AKTUELLA",
-        "upcoming": "KOMMANDE",
-        "done": "AVSLUTADE"
-      },
-      "status": {
-        "open": "Öppen",
-        "inProgress": "Pågår",
-        "done": "Klar",
-        "cancelled": "Avbruten"
-      },
       "loading": "Laddar…",
       "empty": "Inga uppgifter i denna vy.",
-      "columns": {
-        "title": "Titel",
-        "property": "Boende",
-        "assignee": "Tilldelad till",
-        "status": "Status",
-        "due": "Förfaller"
-      },
-      "unassigned": "Ej tilldelad",
-      "inspectionNeeded": "Inspektion krävs",
-      "details": "Detaljer"
+      "completed": "Uppgift slutförd.",
+      "deleted": "Uppgift raderad."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Uppgiftsmallar",
         "auto": "Schemalagda uppgifter",
         "recurring": "Återkommande uppgifter"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Titel",
       "columnActive": "Aktiv",
       "columnAssignee": "Tilldelad",
-      "columnPoints": "Poäng",
-      "columnUpdated": "Uppdaterad",
-      "inspectionNeeded": "Inspektion krävs",
       "yes": "Ja",
       "no": "Nej",
       "emptyValue": "–",
-      "edit": "Redigera",
-      "delete": "Ta bort",
-      "deleted": "Borttagen."
+      "columnInspection": "Kräver inspektion?",
+      "columnPriority": "Uppgiftens prioritet",
+      "columnDetails": "Detaljer",
+      "learnBody": {
+        "auto": "En planerad uppgift skapas automatiskt vid varje bokning av de valda boendena — med start och slut i förhållande till in- och utcheckning.",
+        "recurring": "En återkommande uppgift följer kalendern: startdatum, frekvens och längd. Systemet skapar tillfällena i förväg — oberoende av bokningar."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM-moduler",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigering",
       "previousMonth": "Föregående månad",
       "nextMonth": "Nästa månad",
-      "selectedUsersLabel": "Valda användare",
-      "allUsersPlaceholder": "Alla användare",
-      "selectedPropertiesLabel": "Valda boenden",
-      "allPropertiesPlaceholder": "Alla boenden",
       "resetAllLabel": "Återställ allt",
       "loading": "Laddar…",
       "createTaskOnDay": "Skapa uppgift denna dag",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - bokning",
       "months": "Januari,Februari,Mars,April,Maj,Juni,Juli,Augusti,September,Oktober,November,December",
-      "weekdays": "Söndag,Måndag,Tisdag,Onsdag,Torsdag,Fredag,Lördag"
+      "weekdays": "Söndag,Måndag,Tisdag,Onsdag,Torsdag,Fredag,Lördag",
+      "miscRow": "Övrigt"
     },
     "ruleEditor": {
       "loading": "Laddar…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Bekräftade bokningar"
     },
     "mobileAppHint": "Uppgiftsvyn för på språng finns redan responsivt på webben (Mina uppgifter + detaljer med fotouppladdning). En separat mobilapp kommer som ett eget projekt.",
-    "guestModuleHint": "Med förhandsincheckningsformuläret samlar du in alla dina gästers uppgifter före ankomsten (id-handling, adress, medresenärer, ankomsttid). Den här ytan byggs som ett eget steg."
+    "guestModuleHint": "Med förhandsincheckningsformuläret samlar du in alla dina gästers uppgifter före ankomsten (id-handling, adress, medresenärer, ankomsttid). Den här ytan byggs som ett eget steg.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} valda",
+      "resetCaption": "Återställ allt",
+      "close": "Stäng",
+      "noMatch": "Ingen träff.",
+      "selectAll": "Välj alla",
+      "selectNone": "Välj inget",
+      "save": "Spara",
+      "taskCaption": "Vald uppgift",
+      "allTasks": "Alla uppgifter",
+      "taskDialog": "Välj uppgift",
+      "taskSearch": "Sök på uppgiftens titel",
+      "usersCaption": "Valda användare",
+      "allUsers": "Alla användare",
+      "usersDialog": "Välj användare",
+      "usersSearch": "Sök på namn",
+      "unassignedOption": "Ej tilldelad",
+      "propertiesCaption": "Valda boenden",
+      "allProperties": "Alla boenden",
+      "propertiesDialog": "Välj boenden",
+      "propertiesSearch": "Sök på namn eller stad"
+    },
+    "aufgabenReiter": {
+      "current": "AKTUELLA",
+      "upcoming": "KOMMANDE",
+      "done": "SLUTFÖRDA"
+    },
+    "massenaktionen": {
+      "selected": "{count} valda",
+      "completeAria": "Slutför valda",
+      "deleteAria": "Radera valda",
+      "completed": "{done} uppgifter slutförda.",
+      "completedPartly": "{done} slutförda, {skipped} överhoppade (foto saknas eller ingen behörighet).",
+      "deleted": "{done} uppgifter raderade.",
+      "deletedPartly": "{done} raderade, {skipped} överhoppade (ingen behörighet)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Åtgärder",
+      "columnTitle": "Titel",
+      "columnProperty": "Boende",
+      "columnBooking": "Bokning",
+      "columnAssignee": "Tilldelad",
+      "columnStatus": "Status",
+      "columnDates": "Start- och slutdatum",
+      "selectAll": "Välj alla rader",
+      "selectRow": "Välj rad",
+      "open": "Visa",
+      "complete": "Slutför",
+      "delete": "Radera",
+      "inspectionNeeded": "Kräver inspektion",
+      "unassigned": "Ej tilldelad",
+      "statusOpen": "Ofullständig",
+      "statusDone": "Slutförd",
+      "statusCancelled": "Avbruten"
+    },
+    "ruleEditorPage": {
+      "loading": "Läser in…",
+      "modeCreate": "Skapa",
+      "modeEdit": "Redigera",
+      "breadcrumbHome": "Start",
+      "breadcrumbTasks": "Uppgifter",
+      "titleLabel": "Titel",
+      "descriptionLabel": "Beskrivning",
+      "active": "Aktiv",
+      "removeOnCancellation": "Ta bort vid avbokning",
+      "priority": "Uppgiftens prioritet",
+      "priorityDown": "Sänk prioritet",
+      "priorityUp": "Höj prioritet",
+      "priorityLevel": {
+        "1": "mycket låg",
+        "2": "låg",
+        "3": "medel",
+        "4": "hög",
+        "5": "omedelbar"
+      },
+      "propertiesLabel": {
+        "auto": "Boenden där uppgiften skapas vid varje bokning",
+        "recurring": "Boenden där uppgiften ska utföras"
+      },
+      "propertiesPlaceholder": "Välj boenden…",
+      "propertiesHint": "Utan val gäller regeln för alla boenden.",
+      "templateLabel": "Uppgiftsmall med listan över deluppgifter",
+      "templateNone": "Ingen mall",
+      "assigneeLabel": "Uppgiftens mottagare",
+      "unassigned": "Ej tilldelad",
+      "needsInspection": "Slutförande kräver inspektion",
+      "saveAria": "Spara regel",
+      "deleteAria": "Radera regel",
+      "saved": "Sparat.",
+      "deleted": "Raderad.",
+      "nameRequired": "Titel krävs.",
+      "startTriggerRequired": "Välj när uppgiften ska börja — annars utlöses regeln aldrig.",
+      "scheduleRequired": "Startdatum och frekvens krävs.",
+      "learnTitle": {
+        "auto": "Planerade uppgifter",
+        "recurring": "Återkommande uppgifter"
+      },
+      "learnBody": {
+        "auto": "En planerad uppgift hänger på en bokning: du bestämmer när den börjar och slutar i förhållande till incheckning och utcheckning. Den skapas vid varje ny bokning, följer med vid ändring och försvinner vid avbokning.",
+        "recurring": "En återkommande uppgift följer kalendern, inte bokningarna: du anger start, frekvens och längd, och systemet skapar tillfällena i förväg."
+      },
+      "startTriggerLabel": "När uppgiften ska börja",
+      "endTriggerLabel": "När uppgiften ska sluta",
+      "triggerNone": "— inte angivet —",
+      "trigger": {
+        "booking_confirmed": "Vid bokningsbekräftelse",
+        "check_in": "Vid incheckning",
+        "after_check_in_24h": "Efter incheckning (max 24 timmar)",
+        "check_out": "Vid utcheckning",
+        "days_before_check_in": "Dagar före incheckning",
+        "days_after_check_out": "Dagar efter utcheckning"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Uppgiften skapas så snart bokningen bekräftas.",
+        "check_in": "Uppgiften startar vid bokningens incheckning.",
+        "after_check_in_24h": "24 timmar efter incheckning — men aldrig efter utcheckning: vid korta vistelser slutar uppgiften vid avresan.",
+        "check_out": "Uppgiften är kopplad till bokningens utcheckning.",
+        "days_before_check_in": "Uppgiften skapas angivet antal dagar före incheckning.",
+        "days_after_check_out": "Uppgiften skapas angivet antal dagar efter utcheckning."
+      },
+      "offsetDays": "Dagar",
+      "periodLabel": "Ange start- och slutdatum",
+      "startsOn": "Startdatum",
+      "startTime": "Starttid",
+      "hasEnd": "Slutar",
+      "endsOn": "Slutdatum",
+      "repeatLabel": "Upprepningsintervall",
+      "frequency": "Frekvens",
+      "choose": "Välj…",
+      "frequencyOption": {
+        "daily": "Dagligen",
+        "weekly": "Veckovis",
+        "monthly": "Månadsvis",
+        "yearly": "Årsvis"
+      },
+      "interval": "Var",
+      "onDay": "På dag",
+      "onPattern": "Den",
+      "position": {
+        "first": "Första",
+        "second": "Andra",
+        "third": "Tredje",
+        "fourth": "Fjärde",
+        "last": "Sista"
+      },
+      "durationLabel": "Uppskattad längd",
+      "hours": "Timmar",
+      "minutes": "Minuter",
+      "weekdayMon": "Måndag",
+      "weekdayTue": "Tisdag",
+      "weekdayWed": "Onsdag",
+      "weekdayThu": "Torsdag",
+      "weekdayFri": "Fredag",
+      "weekdaySat": "Lördag",
+      "weekdaySun": "Söndag",
+      "weekdayMonShort": "Mån",
+      "weekdayTueShort": "Tis",
+      "weekdayWedShort": "Ons",
+      "weekdayThuShort": "Tor",
+      "weekdayFriShort": "Fre",
+      "weekdaySatShort": "Lör",
+      "weekdaySunShort": "Sön"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Tillgänglighet",
       "itemChannels": "Kanäle",
       "itemPolicies": "Villkor",
-      "itemSeasonalPrices": "Säsongspriser"
+      "itemSeasonalPrices": "Säsongspriser",
+      "groupChannels": "Kanaler",
+      "itemSync": "Synkronisering"
     },
     "complianceForm": {
       "title": "Efterlevnad",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Ange ditt nattpris med grundpris och påslag.",
       "basePriceTitle": "Grundpris",
       "basePriceHint": "Grundpris per natt och valuta. Valfritt anpassa per veckodag.",
-      "markupTitle": "Påslag (mark-up)",
-      "markupHint": "Justera grundpriset som skickas till externa kanaler.",
       "extraGuestTitle": "Påslag per gäst",
       "extraGuestHint": "Aktivera ett nattpåslag för varje ytterligare gäst.",
       "extraGuestPill": "{price} från gäst {guest}",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Dynamiska priser (automatiskt efter säsong, helg, beläggning, marknad …) ställer du in centralt under <link>Dynamic Pricing</link> i huvudmenyn. Ett grundpris som anges här förblir basen; ett manuellt dagspris i kalendern har alltid företräde.",
       "basePricePerNightLabel": "Grundpris per natt",
       "customByWeekdayLabel": "Anpassa per veckodag",
-      "markupEditorTitle": "Påslag för externa kanaler",
-      "markupEditorSubtitle": "Positiv % höjer, negativ % sänker grundpriset för externa kanaler.",
-      "markupHintNote": "Påslaget gäller inte för NextDays-direktbokningar.",
       "extraGuestEditorSubtitle": "Aktivera ett nattligt påslag för varje ytterligare gäst.",
       "extraGuestFromLabel": "Gäller för varje gäst från",
       "guestCount": "{count, plural, one {# gäst} other {# gäster}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "t.ex. Standardpris",
       "multiPlanHint": "Flera prisplaner (t.ex. BAR/B&B) — priserna hanteras datumspecifikt i kalendervyn ”Priser”.",
       "plansTitle": "Prisplaner",
+      "dynamicActiveTitle": "Dynamic Pricing aktivt",
+      "dynamicActiveHint": "Dagspriserna beräknas automatiskt och gäller överallt — kalender, din egen plattform och portalerna. Grundpriset är bara beräkningsunderlaget.",
+      "dynamicActiveOpen": "Öppna förhandsvisning",
+      "portalAdjustmentTitle": "Prisjustering per portal",
+      "portalAdjustmentHint": "Justera priserna som skickas till dina externa portaler.",
+      "portalAdjustmentNone": "Ingen portal ansluten ännu.",
+      "portalAdjustmentInvalid": "Ogiltigt värde — tillåtet intervall är −99 till 500 %.",
+      "portalAdjustmentEditorSubtitle": "Justera påslaget för externa portaler. Ett positivt procenttal höjer priserna som skickas till portalen, ett negativt sänker dem.",
+      "portalAdjustmentDirectNote": "Påslaget gäller inte för direktbokningar via din egen webbplats eller myBestDays.",
+      "portalAdjustmentSaved": "Prisjustering sparad.",
       "plansHint": "Priserna hanteras datumspecifikt i kalendern.",
       "planCreate": "Skapa prisplan",
-      "planModeManual": "Manuell",
+      "planModeManual": "Eget pris",
       "planModeDerived": "Härledd från {parent} · {offset}",
       "planDerivedPrice": "beräknat",
       "planMinStay": "Min. {nights} nätter",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Synkronisering",
+      "hint": "Vilket id detta objekt har hos vilken portal och om synkroniseringen fungerar. Id:na visas precis som i portalens extranät, så att en bokning går att hitta där.",
+      "none": "Det här objektet är inte anslutet till någon portal. Anslut det på fliken ”Kanaler”.",
+      "colPortal": "Hos portalen",
+      "colOurs": "Hos oss",
+      "colStatus": "Status",
+      "published": "Publicerad",
+      "notPublished": "Inte publicerad",
+      "syncOk": "Synkroniserad",
+      "statusActive": "Aktiv",
+      "statusPaused": "Pausad",
+      "statusError": "Fel",
+      "singleUnit": "Hela objektet",
+      "loadFailed": "Det här objektet kunde inte laddas."
+    },
+    "channelDetail": {
+      "identifiers": "Id:n",
+      "hotelId": "Hotell-id",
+      "roomCode": "Rums-id",
+      "roomTitle": "Rumsnamn hos portalen",
+      "sellingTitle": "Försäljning via den här portalen",
+      "sellingHint": "Av: priser och tillgänglighet skickas inte längre till den här portalen. Befintliga bokningar fortsätter och nya kommer fortfarande in.",
+      "lastSync": "Senast synkroniserad",
+      "never": "Aldrig",
+      "syncNow": "Synkronisera nu",
+      "loadFailed": "Den här anslutningen kunde inte laddas.",
+      "backToChannel": "{portal}-konton",
+      "ourId": "myNextDays-ID:",
+      "published": "Publicerad",
+      "notPublished": "Inte publicerad",
+      "statusSynced": "Synkroniserad",
+      "statusPaused": "Pausad",
+      "statusError": "Fel",
+      "syncSection": "Synkronisering",
+      "ratePlans": "Aktiva prisplaner",
+      "noRatePlans": "Ingen prisplan är frisläppt till portalerna.",
+      "colCondition": "Villkor",
+      "colPlanName": "Prisplanens namn (typ)",
+      "colPriceChange": "Prisändring",
+      "modeManual": "Eget pris",
+      "modeDerived": "Härledd",
+      "minStay": "minst {nights} nätter",
+      "colPrice": "Pris",
+      "dynamicActiveTitle": "Dynamic Pricing aktivt",
+      "dynamicActiveHint": "De automatiskt beräknade dagspriserna skickas till den här portalen — priset nedan är bara beräkningsunderlaget.",
+      "adjustmentInvalid": "Ogiltigt värde — tillåtet intervall är −99 till 500 %.",
+      "adjustmentSave": "Spara",
+      "adjustmentCancel": "Avbryt",
+      "adjustmentHint": "Redigera portalens prisjustering",
+      "notReleased": "inte frisläppt till portaler"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Överför tillgänglighet, priser och restriktioner helt på nytt",
     "categoryMessaging": "Direkt gästkommunikation",
     "connected": "Ansluten",
-    "notConnected": "Inte ansluten"
+    "notConnected": "Inte ansluten",
+    "propertiesHeading": "Objekt",
+    "noPropertiesYet": "Du har inga aktiva objekt ännu. Skapa ett först för att koppla det till {portal}.",
+    "connectedOf": "{connected} av {total} anslutna",
+    "searchProperty": "Sök",
+    "propertyAtPortal": "Objekt hos {portal}",
+    "syncStatusColumn": "Synkroniseringsstatus",
+    "actionColumn": "Åtgärd",
+    "noSearchResults": "Inget objekt matchar sökningen.",
+    "statusPaused": "Pausad",
+    "statusError": "Fel",
+    "statusSynced": "Synkroniserad",
+    "idPrefix": "ID:",
+    "edit": "Redigera",
+    "fullResyncShort": "Full synkronisering",
+    "pause": "Pausa",
+    "activate": "Aktivera",
+    "disconnectChannel": "Koppla från",
+    "disconnectConfirm": "Koppla från {portal} helt? Alla anslutna objekt hos den här portalen kopplas från.",
+    "disconnectDone": "{portal} frånkopplad.",
+    "notConfiguredHint": "Portalanslutningen är inte aktiv ännu. När den aktiveras kan du ansluta dina objekt.",
+    "channelIntro": "Publicera, synkronisera och hantera dina {portal}-annonser på ett ställe.",
+    "syncResult": "Synkronisering klar — {fetched} hämtade, {saved} sparade, {acked} bekräftade.",
+    "pullFutureStarted": "Befintliga bokningar laddas — det kan ta en stund.",
+    "bookingsFrom": "Bokningar från {portal}",
+    "pullFuture": "Ladda befintliga bokningar",
+    "syncing": "Synkroniserar …",
+    "syncBookings": "Synkronisera bokningar",
+    "noBookingsYet": "Inga bokningar från den här portalen ännu.",
+    "channelFallback": "Kanal"
   },
   "calendarSync": {
     "title": "Importera/exportera kalender",

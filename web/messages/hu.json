@@ -3290,15 +3290,10 @@
       "allProperties": "Minden ingatlan"
     },
     "myTasksList": {
-      "title": "Feladatok",
-      "doneCount": "{done}/{total} kész",
+      "title": "Feladataim",
       "loading": "Betöltés…",
       "emptyState": "Jelenleg nincs Önhöz rendelt feladat.",
-      "dueOn": "határidő: {date}",
-      "statusOpen": "Nyitott",
-      "statusInProgress": "Folyamatban",
-      "statusDone": "Kész",
-      "statusCancelled": "Megszakítva"
+      "completed": "Feladat befejezve."
     },
     "bookingPopover": {
       "title": "{id} foglalás",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} kész",
       "loading": "Betöltés…",
       "emptyState": "Ehhez a foglaláshoz még nincs feladat.",
-      "createDefaultTasks": "Alapértelmezett feladatok létrehozása",
-      "defaultTasksCreated": "Alapértelmezett feladatok létrehozva.",
       "statusOpen": "Nyitott",
       "statusInProgress": "Folyamatban",
       "statusDone": "Kész",
-      "statusCancelled": "Megszakítva"
+      "statusCancelled": "Megszakítva",
+      "applyRules": "Szabályok alkalmazása",
+      "rulesApplied": "{count} feladat a szabályokból.",
+      "noRuleMatched": "Egyetlen szabály sem vonatkozik erre a foglalásra."
     },
     "propertyWarnings": {
       "title": "Figyelmeztetések",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Fotó hozzáadása",
       "done": "Kész",
       "saving": "Mentés…",
-      "completeButton": "Lezárás"
+      "completeButton": "Lezárás",
+      "inBooking": "A(z) {ref} foglaláshoz",
+      "assignedTo": "{name} részére"
     },
     "checkoutPaymentDialog": {
       "title": "Hogyan fizet a vendég?",
@@ -3464,7 +3462,8 @@
       "reject": "Elutasítás",
       "approve": "Jóváhagyás",
       "toastApproved": "Jóváhagyva.",
-      "toastRejected": "Elutasítva."
+      "toastRejected": "Elutasítva.",
+      "noPhotos": "Nincs fotós bizonyíték."
     },
     "bookingsBoard": {
       "title": "Foglalások",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Csapatfeladatok",
-      "tabs": {
-        "current": "AKTUÁLIS",
-        "upcoming": "KÖZELGŐ",
-        "done": "LEZÁRT"
-      },
-      "status": {
-        "open": "Nyitott",
-        "inProgress": "Folyamatban",
-        "done": "Kész",
-        "cancelled": "Megszakítva"
-      },
       "loading": "Betöltés…",
       "empty": "Ebben a nézetben nincs feladat.",
-      "columns": {
-        "title": "Cím",
-        "property": "Ingatlan",
-        "assignee": "Hozzárendelve",
-        "status": "Státusz",
-        "due": "Határidő"
-      },
-      "unassigned": "Nincs hozzárendelve",
-      "inspectionNeeded": "Ellenőrzés szükséges",
-      "details": "Részletek"
+      "completed": "Feladat befejezve.",
+      "deleted": "Feladat törölve."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Feladatsablonok",
         "auto": "Ütemezett feladatok",
         "recurring": "Ismétlődő feladatok"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Cím",
       "columnActive": "Aktív",
       "columnAssignee": "Hozzárendelve",
-      "columnPoints": "Pontok",
-      "columnUpdated": "Frissítve",
-      "inspectionNeeded": "Ellenőrzés szükséges",
       "yes": "Igen",
       "no": "Nem",
       "emptyValue": "–",
-      "edit": "Szerkesztés",
-      "delete": "Törlés",
-      "deleted": "Törölve."
+      "columnInspection": "Ellenőrzés szükséges?",
+      "columnPriority": "Feladat prioritása",
+      "columnDetails": "Részletek",
+      "learnBody": {
+        "auto": "Az ütemezett feladat automatikusan létrejön a kiválasztott szállások minden foglalásánál – kezdéssel és befejezéssel az érkezéshez és távozáshoz képest.",
+        "recurring": "Az ismétlődő feladat a naptárat követi: kezdődátum, gyakoriság és időtartam. A rendszer az alkalmakat előre létrehozza – a foglalásoktól függetlenül."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM-modulok",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigáció",
       "previousMonth": "Előző hónap",
       "nextMonth": "Következő hónap",
-      "selectedUsersLabel": "Kiválasztott felhasználók",
-      "allUsersPlaceholder": "Minden felhasználó",
-      "selectedPropertiesLabel": "Kiválasztott ingatlanok",
-      "allPropertiesPlaceholder": "Minden ingatlan",
       "resetAllLabel": "Összes visszaállítása",
       "loading": "Betöltés…",
       "createTaskOnDay": "Feladat létrehozása ezen a napon",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - foglalás",
       "months": "[\"Január\",\"Február\",\"Március\",\"Április\",\"Május\",\"Június\",\"Július\",\"Augusztus\",\"Szeptember\",\"Október\",\"November\",\"December\"]",
-      "weekdays": "[\"Vasárnap\",\"Hétfő\",\"Kedd\",\"Szerda\",\"Csütörtök\",\"Péntek\",\"Szombat\"]"
+      "weekdays": "[\"Vasárnap\",\"Hétfő\",\"Kedd\",\"Szerda\",\"Csütörtök\",\"Péntek\",\"Szombat\"]",
+      "miscRow": "Egyéb"
     },
     "ruleEditor": {
       "loading": "Betöltés…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Megerősített foglalások"
     },
     "mobileAppHint": "A feladatnézet útközbeni használatra már reszponzívan elérhető a weben (Feladataim + részletek fotófeltöltéssel). Külön mobilalkalmazás önálló projektként következik.",
-    "guestModuleHint": "Az előzetes bejelentkezési űrlappal érkezés előtt összegyűjti vendégei összes adatát (okmány, cím, útitársak, érkezési idő). Ez a felület külön lépésként épül fel."
+    "guestModuleHint": "Az előzetes bejelentkezési űrlappal érkezés előtt összegyűjti vendégei összes adatát (okmány, cím, útitársak, érkezési idő). Ez a felület külön lépésként épül fel.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} kiválasztva",
+      "resetCaption": "Összes visszaállítása",
+      "close": "Bezárás",
+      "noMatch": "Nincs találat.",
+      "selectAll": "Összes kijelölése",
+      "selectNone": "Kijelölés törlése",
+      "save": "Mentés",
+      "taskCaption": "Kiválasztott feladat",
+      "allTasks": "Összes feladat",
+      "taskDialog": "Feladat kiválasztása",
+      "taskSearch": "Keresés feladatcím szerint",
+      "usersCaption": "Kiválasztott felhasználók",
+      "allUsers": "Összes felhasználó",
+      "usersDialog": "Felhasználók kiválasztása",
+      "usersSearch": "Keresés név szerint",
+      "unassignedOption": "Nincs hozzárendelve",
+      "propertiesCaption": "Kiválasztott szállások",
+      "allProperties": "Összes szállás",
+      "propertiesDialog": "Szállások kiválasztása",
+      "propertiesSearch": "Keresés név vagy város szerint"
+    },
+    "aufgabenReiter": {
+      "current": "AKTUÁLIS",
+      "upcoming": "KÖZELGŐ",
+      "done": "BEFEJEZETT"
+    },
+    "massenaktionen": {
+      "selected": "{count} kiválasztva",
+      "completeAria": "Kijelöltek befejezése",
+      "deleteAria": "Kijelöltek törlése",
+      "completed": "{done} feladat befejezve.",
+      "completedPartly": "{done} befejezve, {skipped} kihagyva (hiányzó fotó vagy nincs hozzáférés).",
+      "deleted": "{done} feladat törölve.",
+      "deletedPartly": "{done} törölve, {skipped} kihagyva (nincs hozzáférés)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Műveletek",
+      "columnTitle": "Cím",
+      "columnProperty": "Szállás",
+      "columnBooking": "Foglalás",
+      "columnAssignee": "Hozzárendelve",
+      "columnStatus": "Állapot",
+      "columnDates": "Kezdés és befejezés",
+      "selectAll": "Összes sor kijelölése",
+      "selectRow": "Sor kijelölése",
+      "open": "Megtekintés",
+      "complete": "Befejezés",
+      "delete": "Törlés",
+      "inspectionNeeded": "Ellenőrzés szükséges",
+      "unassigned": "Nincs hozzárendelve",
+      "statusOpen": "Befejezetlen",
+      "statusDone": "Befejezve",
+      "statusCancelled": "Megszakítva"
+    },
+    "ruleEditorPage": {
+      "loading": "Betöltés…",
+      "modeCreate": "Létrehozás",
+      "modeEdit": "Szerkesztés",
+      "breadcrumbHome": "Kezdőlap",
+      "breadcrumbTasks": "Feladatok",
+      "titleLabel": "Cím",
+      "descriptionLabel": "Leírás",
+      "active": "Aktív",
+      "removeOnCancellation": "Eltávolítás foglalás lemondásakor",
+      "priority": "Feladat prioritása",
+      "priorityDown": "Prioritás csökkentése",
+      "priorityUp": "Prioritás növelése",
+      "priorityLevel": {
+        "1": "nagyon alacsony",
+        "2": "alacsony",
+        "3": "közepes",
+        "4": "magas",
+        "5": "azonnali"
+      },
+      "propertiesLabel": {
+        "auto": "Szállások, amelyeknél a feladat minden foglalásnál létrejön",
+        "recurring": "Szállások, ahol a feladatot el kell végezni"
+      },
+      "propertiesPlaceholder": "Válasszon szállásokat…",
+      "propertiesHint": "Kijelölés nélkül a szabály minden szállásra érvényes.",
+      "templateLabel": "Feladatsablon az alfeladatok listájával",
+      "templateNone": "Nincs sablon",
+      "assigneeLabel": "A feladat címzettje",
+      "unassigned": "Nincs hozzárendelve",
+      "needsInspection": "A befejezéshez ellenőrzés kell",
+      "saveAria": "Szabály mentése",
+      "deleteAria": "Szabály törlése",
+      "saved": "Mentve.",
+      "deleted": "Törölve.",
+      "nameRequired": "A cím kötelező.",
+      "startTriggerRequired": "Válassza ki, mikor induljon a feladat – különben a szabály sosem indul el.",
+      "scheduleRequired": "A kezdődátum és a gyakoriság kötelező.",
+      "learnTitle": {
+        "auto": "Ütemezett feladatok",
+        "recurring": "Ismétlődő feladatok"
+      },
+      "learnBody": {
+        "auto": "Az ütemezett feladat egy foglaláshoz kötődik: megadja, mikor kezdődik és ér véget az érkezéshez és távozáshoz képest. Minden új foglalásnál létrejön, áthelyezéskor vele mozog, lemondáskor eltűnik.",
+        "recurring": "Az ismétlődő feladat a naptárat követi, nem a foglalásokat: megadja a kezdést, a gyakoriságot és az időtartamot, a rendszer pedig előre létrehozza az alkalmakat."
+      },
+      "startTriggerLabel": "Mikor induljon a feladat",
+      "endTriggerLabel": "Mikor érjen véget a feladat",
+      "triggerNone": "— nincs beállítva —",
+      "trigger": {
+        "booking_confirmed": "Foglalás visszaigazolásakor",
+        "check_in": "Bejelentkezéskor",
+        "after_check_in_24h": "Bejelentkezés után (max. 24 óra)",
+        "check_out": "Kijelentkezéskor",
+        "days_before_check_in": "Nappal a bejelentkezés előtt",
+        "days_after_check_out": "Nappal a kijelentkezés után"
+      },
+      "triggerHint": {
+        "booking_confirmed": "A feladat a foglalás visszaigazolásakor jön létre.",
+        "check_in": "A feladat a foglalás bejelentkezésekor indul.",
+        "after_check_in_24h": "24 órával a bejelentkezés után – de sosem a kijelentkezés után: rövid tartózkodásnál a feladat a távozással ér véget.",
+        "check_out": "A feladat a foglalás kijelentkezéséhez kötődik.",
+        "days_before_check_in": "A feladat a megadott számú nappal a bejelentkezés előtt jön létre.",
+        "days_after_check_out": "A feladat a megadott számú nappal a kijelentkezés után jön létre."
+      },
+      "offsetDays": "Nap",
+      "periodLabel": "Kezdő és záró dátum",
+      "startsOn": "Kezdődátum",
+      "startTime": "Kezdés időpontja",
+      "hasEnd": "Véget ér",
+      "endsOn": "Záródátum",
+      "repeatLabel": "Ismétlési időköz",
+      "frequency": "Gyakoriság",
+      "choose": "Válasszon…",
+      "frequencyOption": {
+        "daily": "Naponta",
+        "weekly": "Hetente",
+        "monthly": "Havonta",
+        "yearly": "Évente"
+      },
+      "interval": "Minden",
+      "onDay": "Napon",
+      "onPattern": "A(z)",
+      "position": {
+        "first": "Első",
+        "second": "Második",
+        "third": "Harmadik",
+        "fourth": "Negyedik",
+        "last": "Utolsó"
+      },
+      "durationLabel": "Becsült időtartam",
+      "hours": "Óra",
+      "minutes": "Perc",
+      "weekdayMon": "Hétfő",
+      "weekdayTue": "Kedd",
+      "weekdayWed": "Szerda",
+      "weekdayThu": "Csütörtök",
+      "weekdayFri": "Péntek",
+      "weekdaySat": "Szombat",
+      "weekdaySun": "Vasárnap",
+      "weekdayMonShort": "H",
+      "weekdayTueShort": "K",
+      "weekdayWedShort": "Sze",
+      "weekdayThuShort": "Cs",
+      "weekdayFriShort": "P",
+      "weekdaySatShort": "Szo",
+      "weekdaySunShort": "V"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Elérhetőség",
       "itemChannels": "Kanäle",
       "itemPolicies": "Irányelvek",
-      "itemSeasonalPrices": "Szezonális árak"
+      "itemSeasonalPrices": "Szezonális árak",
+      "groupChannels": "Csatornák",
+      "itemSync": "Szinkronizálás"
     },
     "complianceForm": {
       "title": "Megfelelőség",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Add meg az éjszakai árat alapárral és felárral.",
       "basePriceTitle": "Alapár",
       "basePriceHint": "Alapár éjszakánként és pénznemenként. Opcionálisan hétnaponta testre szabható.",
-      "markupTitle": "Felár (mark-up)",
-      "markupHint": "Módosítsd a külső csatornáknak küldött alapárat.",
       "extraGuestTitle": "Felár vendégenként",
       "extraGuestHint": "Kapcsolj be éjszakai felárat minden további vendégre.",
       "extraGuestPill": "{price} {guest}. vendégtől",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "A dinamikus árazást (automatikusan szezon, hétvége, foglaltság, piac stb. szerint) központilag a <link>Dynamic Pricing</link> menüpontban állíthatod be a főmenüben. Az itt megadott alapár marad az alap; a naptárban kézzel beállított napi ár mindig elsőbbséget élvez.",
       "basePricePerNightLabel": "Alapár éjszakánként",
       "customByWeekdayLabel": "Testreszabás hétnaponta",
-      "markupEditorTitle": "Felár külső csatornáknak",
-      "markupEditorSubtitle": "Pozitív % növeli, negatív % csökkenti az alapárat a külső csatornák számára.",
-      "markupHintNote": "A felár nem érvényes a myNextDays közvetlen foglalásokra.",
       "extraGuestEditorSubtitle": "Kapcsolj be éjszakai felárat minden további vendégre.",
       "extraGuestFromLabel": "Érvényes minden vendégre, ettől kezdve",
       "guestCount": "{count, plural, one {# vendég} other {# vendég}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "pl. standard ár",
       "multiPlanHint": "Több árterv (pl. BAR/B&B) — az árakat dátum szerint a naptár „Árak“ nézetében kezeljük.",
       "plansTitle": "Ártervek",
+      "dynamicActiveTitle": "A Dynamic Pricing aktív",
+      "dynamicActiveHint": "A napi árak automatikusan számítódnak, és mindenhol érvényesek — a naptárban, a saját platformon és a portálokon. Az alapár csak a számítás alapja.",
+      "dynamicActiveOpen": "Előnézet megnyitása",
+      "portalAdjustmentTitle": "Árkorrekció portálonként",
+      "portalAdjustmentHint": "Állítsa be a külső portáljaira küldött árakat.",
+      "portalAdjustmentNone": "Még nincs portál csatlakoztatva.",
+      "portalAdjustmentInvalid": "Érvénytelen érték — a megengedett tartomány −99 és 500% között van.",
+      "portalAdjustmentEditorSubtitle": "Állítsa be a külső portálok felárát. A pozitív százalék emeli, a negatív csökkenti az adott portálra küldött árakat.",
+      "portalAdjustmentDirectNote": "A felár nem vonatkozik a saját weboldalán vagy a myBestDays-en keresztüli közvetlen foglalásokra.",
+      "portalAdjustmentSaved": "Árkorrekció mentve.",
       "plansHint": "Az árakat dátum szerint a naptárban kezeljük.",
       "planCreate": "Árterv létrehozása",
-      "planModeManual": "Manuális",
+      "planModeManual": "Saját ár",
       "planModeDerived": "Származtatva ebből: {parent} · {offset}",
       "planDerivedPrice": "számított",
       "planMinStay": "Min. {nights} éjszaka",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Szinkronizálás",
+      "hint": "Milyen azonosítót visel ez az ingatlan az egyes portálokon, és fut-e a szinkronizálás. Az azonosítók ugyanúgy jelennek meg, mint a portál extranetjében, hogy ott megtalálható legyen a foglalás.",
+      "none": "Ez az ingatlan egyetlen portálhoz sincs csatlakoztatva. Csatlakoztasd a „Csatornák” fülön.",
+      "colPortal": "A portálon",
+      "colOurs": "Nálunk",
+      "colStatus": "Állapot",
+      "published": "Közzétéve",
+      "notPublished": "Nincs közzétéve",
+      "syncOk": "Szinkronizálva",
+      "statusActive": "Aktív",
+      "statusPaused": "Szüneteltetve",
+      "statusError": "Hiba",
+      "singleUnit": "Teljes ingatlan",
+      "loadFailed": "Ezt az ingatlant nem sikerült betölteni."
+    },
+    "channelDetail": {
+      "identifiers": "Azonosítók",
+      "hotelId": "Szálloda azonosítója",
+      "roomCode": "Szoba azonosítója",
+      "roomTitle": "Szoba neve a portálon",
+      "sellingTitle": "Értékesítés ezen a portálon",
+      "sellingHint": "Ki: az árak és a szabad kapacitás már nem kerül erre a portálra. A meglévő foglalások futnak tovább, és újak is érkeznek.",
+      "lastSync": "Utoljára szinkronizálva",
+      "never": "Soha",
+      "syncNow": "Szinkronizálás most",
+      "loadFailed": "Ezt a kapcsolatot nem sikerült betölteni.",
+      "backToChannel": "{portal} fiókok",
+      "ourId": "myNextDays azonosító:",
+      "published": "Közzétéve",
+      "notPublished": "Nincs közzétéve",
+      "statusSynced": "Szinkronizálva",
+      "statusPaused": "Szüneteltetve",
+      "statusError": "Hiba",
+      "syncSection": "Szinkronizálás",
+      "ratePlans": "Aktív tarifatervek",
+      "noRatePlans": "Egyetlen tarifaterv sincs engedélyezve a portálokra.",
+      "colCondition": "Feltételek",
+      "colPlanName": "Tarifaterv neve (típus)",
+      "colPriceChange": "Árváltozás",
+      "modeManual": "Saját ár",
+      "modeDerived": "Származtatott",
+      "minStay": "min. {nights} éjszaka",
+      "colPrice": "Ár",
+      "dynamicActiveTitle": "A Dynamic Pricing aktív",
+      "dynamicActiveHint": "Erre a portálra az automatikusan számított napi árak kerülnek — az alább látható ár csak a számítás alapja.",
+      "adjustmentInvalid": "Érvénytelen érték — a megengedett tartomány −99 és 500% között van.",
+      "adjustmentSave": "Mentés",
+      "adjustmentCancel": "Mégse",
+      "adjustmentHint": "A portál árkorrekciójának szerkesztése",
+      "notReleased": "nincs engedélyezve a portálokra"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Elérhetőség, árak és korlátozások teljes újraküldése",
     "categoryMessaging": "Közvetlen vendégkommunikáció",
     "connected": "Csatlakoztatva",
-    "notConnected": "Nincs csatlakoztatva"
+    "notConnected": "Nincs csatlakoztatva",
+    "propertiesHeading": "Ingatlanok",
+    "noPropertiesYet": "Még nincs aktív ingatlanod. Hozz létre egyet, hogy összekapcsold a következővel: {portal}.",
+    "connectedOf": "{connected} / {total} összekapcsolva",
+    "searchProperty": "Keresés",
+    "propertyAtPortal": "Ingatlan a(z) {portal} oldalon",
+    "syncStatusColumn": "Szinkronizálás állapota",
+    "actionColumn": "Művelet",
+    "noSearchResults": "Egyetlen ingatlan sem felel meg a keresésnek.",
+    "statusPaused": "Szüneteltetve",
+    "statusError": "Hiba",
+    "statusSynced": "Szinkronizálva",
+    "idPrefix": "ID:",
+    "edit": "Szerkesztés",
+    "fullResyncShort": "Teljes szinkronizálás",
+    "pause": "Szüneteltetés",
+    "activate": "Aktiválás",
+    "disconnectChannel": "Kapcsolat bontása",
+    "disconnectConfirm": "Teljesen bontod a(z) {portal} kapcsolatot? A portál összes összekapcsolt ingatlana lecsatlakozik.",
+    "disconnectDone": "{portal} lecsatlakoztatva.",
+    "notConfiguredHint": "A portálkapcsolat még nem aktív. Amint engedélyezve lesz, összekapcsolhatod az ingatlanjaidat.",
+    "channelIntro": "Tedd közzé, szinkronizáld és kezeld a(z) {portal} hirdetéseidet egy helyről.",
+    "syncResult": "Szinkronizálás kész — {fetched} betöltve, {saved} mentve, {acked} visszaigazolva.",
+    "pullFutureStarted": "A meglévő foglalások betöltése folyamatban — ez eltarthat egy pillanatig.",
+    "bookingsFrom": "Foglalások innen: {portal}",
+    "pullFuture": "Meglévő foglalások betöltése",
+    "syncing": "Szinkronizálás …",
+    "syncBookings": "Foglalások szinkronizálása",
+    "noBookingsYet": "Még nincs foglalás erről a portálról.",
+    "channelFallback": "Csatorna"
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",

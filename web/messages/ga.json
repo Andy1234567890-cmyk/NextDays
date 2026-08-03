@@ -3290,15 +3290,10 @@
       "allProperties": "Gach lóistín"
     },
     "myTasksList": {
-      "title": "Tascanna",
-      "doneCount": "{done}/{total} déanta",
+      "title": "Mo thascanna",
       "loading": "Á lódáil…",
       "emptyState": "Níl aon tasc sannta duit faoi láthair.",
-      "dueOn": "dlite {date}",
-      "statusOpen": "Oscailte",
-      "statusInProgress": "Ar siúl",
-      "statusDone": "Déanta",
-      "statusCancelled": "Cealaithe"
+      "completed": "Tasc críochnaithe."
     },
     "bookingPopover": {
       "title": "Áirithint {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} déanta",
       "loading": "Á lódáil…",
       "emptyState": "Níl aon tasc ag baint leis an áirithint seo fós.",
-      "createDefaultTasks": "Cruthaigh tascanna réamhshocraithe",
-      "defaultTasksCreated": "Tascanna réamhshocraithe cruthaithe.",
       "statusOpen": "Oscailte",
       "statusInProgress": "Ar siúl",
       "statusDone": "Déanta",
-      "statusCancelled": "Cealaithe"
+      "statusCancelled": "Cealaithe",
+      "applyRules": "Cuir na rialacha i bhfeidhm",
+      "rulesApplied": "{count} tasc ó na rialacha.",
+      "noRuleMatched": "Ní bhaineann aon riail leis an áirithint seo."
     },
     "propertyWarnings": {
       "title": "Rabhaidh",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Cuir grianghraf leis",
       "done": "Déanta",
       "saving": "Á shábháil…",
-      "completeButton": "Críochnaigh"
+      "completeButton": "Críochnaigh",
+      "inBooking": "Chuig áirithint {ref}",
+      "assignedTo": "Do {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Conas a íocann an t-aoi?",
@@ -3464,7 +3462,8 @@
       "reject": "Diúltaigh",
       "approve": "Ceadaigh",
       "toastApproved": "Ceadaithe.",
-      "toastRejected": "Diúltaithe."
+      "toastRejected": "Diúltaithe.",
+      "noPhotos": "Gan fianaise ghrianghraif."
     },
     "bookingsBoard": {
       "title": "Áirithintí",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Tascanna foirne",
-      "tabs": {
-        "current": "REATHA",
-        "upcoming": "AG TEACHT",
-        "done": "CRÍOCHNAITHE"
-      },
-      "status": {
-        "open": "Oscailte",
-        "inProgress": "Ar siúl",
-        "done": "Déanta",
-        "cancelled": "Cealaithe"
-      },
       "loading": "Á lódáil…",
       "empty": "Níl aon tasc san amharc seo.",
-      "columns": {
-        "title": "Teideal",
-        "property": "Lóistín",
-        "assignee": "Sannta do",
-        "status": "Stádas",
-        "due": "Dlite"
-      },
-      "unassigned": "Neamhshannta",
-      "inspectionNeeded": "Cigireacht ag teastáil",
-      "details": "Sonraí"
+      "completed": "Tasc críochnaithe.",
+      "deleted": "Tasc scriosta."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Teimpléid tascanna",
         "auto": "Tascanna sceidealta",
         "recurring": "Tascanna rialta"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Teideal",
       "columnActive": "Gníomhach",
       "columnAssignee": "Sannta",
-      "columnPoints": "Pointí",
-      "columnUpdated": "Nuashonraithe",
-      "inspectionNeeded": "Cigireacht ag teastáil",
       "yes": "Tá",
       "no": "Níl",
       "emptyValue": "–",
-      "edit": "Cuir in eagar",
-      "delete": "Scrios",
-      "deleted": "Scriosta."
+      "columnInspection": "An dteastaíonn cigireacht?",
+      "columnPriority": "Tosaíocht an taisc",
+      "columnDetails": "Sonraí",
+      "learnBody": {
+        "auto": "Cruthaítear tasc sceidealta go huathoibríoch le gach áirithint den chóiríocht roghnaithe — le tús agus deireadh i gcoibhneas leis an teacht isteach agus an t-imeacht.",
+        "recurring": "Leanann tasc athfhillteach an féilire: dáta tosaigh, minicíocht agus fad. Cruthaíonn an córas na hócáidí roimh ré — go neamhspleách ar áirithintí."
+      }
     },
     "pmModuleNav": {
       "navLabel": "Modúil PM",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Nascleanúint",
       "previousMonth": "An mhí roimhe seo",
       "nextMonth": "An chéad mhí eile",
-      "selectedUsersLabel": "Úsáideoirí roghnaithe",
-      "allUsersPlaceholder": "Gach úsáideoir",
-      "selectedPropertiesLabel": "Lóistíní roghnaithe",
-      "allPropertiesPlaceholder": "Gach lóistín",
       "resetAllLabel": "Athshocraigh gach rud",
       "loading": "Á lódáil…",
       "createTaskOnDay": "Cruthaigh tasc ar an lá seo",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - áirithint",
       "months": "Eanáir,Feabhra,Márta,Aibreán,Bealtaine,Meitheamh,Iúil,Lúnasa,Meán Fómhair,Deireadh Fómhair,Samhain,Nollaig",
-      "weekdays": "Domhnach,Luan,Máirt,Céadaoin,Déardaoin,Aoine,Satharn"
+      "weekdays": "Domhnach,Luan,Máirt,Céadaoin,Déardaoin,Aoine,Satharn",
+      "miscRow": "Ilghnéitheach"
     },
     "ruleEditor": {
       "loading": "Á lódáil…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Áirithintí deimhnithe"
     },
     "mobileAppHint": "Tá an t-amharc tascanna don bhóthar ar fáil cheana go freagrúil ar an ngréasán (Mo thascanna + sonraí le huaslódáil grianghraf). Leanfaidh aip mhóibíleach ar leith mar thionscadal dá cuid féin.",
-    "guestModuleHint": "Leis an bhfoirm réamh-sheiceála bailíonn tú roimh theacht gach sonra faoi d'aíonna (cáipéis, seoladh, comhthaistealaithe, am teachta). Tógfar an limistéar seo mar chéim ar leith."
+    "guestModuleHint": "Leis an bhfoirm réamh-sheiceála bailíonn tú roimh theacht gach sonra faoi d'aíonna (cáipéis, seoladh, comhthaistealaithe, am teachta). Tógfar an limistéar seo mar chéim ar leith.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} roghnaithe",
+      "resetCaption": "Athshocraigh gach rud",
+      "close": "Dún",
+      "noMatch": "Gan torthaí.",
+      "selectAll": "Roghnaigh gach rud",
+      "selectNone": "Ná roghnaigh aon rud",
+      "save": "Sábháil",
+      "taskCaption": "Tasc roghnaithe",
+      "allTasks": "Gach tasc",
+      "taskDialog": "Roghnaigh tasc",
+      "taskSearch": "Cuardaigh de réir teideal an taisc",
+      "usersCaption": "Úsáideoirí roghnaithe",
+      "allUsers": "Gach úsáideoir",
+      "usersDialog": "Roghnaigh úsáideoirí",
+      "usersSearch": "Cuardaigh de réir ainm",
+      "unassignedOption": "Gan sannadh",
+      "propertiesCaption": "Cóiríocht roghnaithe",
+      "allProperties": "Gach cóiríocht",
+      "propertiesDialog": "Roghnaigh cóiríocht",
+      "propertiesSearch": "Cuardaigh de réir ainm nó cathrach"
+    },
+    "aufgabenReiter": {
+      "current": "REATHA",
+      "upcoming": "LE TEACHT",
+      "done": "CRÍOCHNAITHE"
+    },
+    "massenaktionen": {
+      "selected": "{count} roghnaithe",
+      "completeAria": "Críochnaigh an rogha",
+      "deleteAria": "Scrios an rogha",
+      "completed": "{done} tasc críochnaithe.",
+      "completedPartly": "{done} críochnaithe, {skipped} scipeáilte (grianghraf ar iarraidh nó gan rochtain).",
+      "deleted": "{done} tasc scriosta.",
+      "deletedPartly": "{done} scriosta, {skipped} scipeáilte (gan rochtain)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Gníomhartha",
+      "columnTitle": "Teideal",
+      "columnProperty": "Cóiríocht",
+      "columnBooking": "Áirithint",
+      "columnAssignee": "Sannta do",
+      "columnStatus": "Stádas",
+      "columnDates": "Dátaí tosaigh agus deiridh",
+      "selectAll": "Roghnaigh gach ró",
+      "selectRow": "Roghnaigh ró",
+      "open": "Féach",
+      "complete": "Críochnaigh",
+      "delete": "Scrios",
+      "inspectionNeeded": "Teastaíonn cigireacht",
+      "unassigned": "Gan sannadh",
+      "statusOpen": "Neamhiomlán",
+      "statusDone": "Críochnaithe",
+      "statusCancelled": "Cealaithe"
+    },
+    "ruleEditorPage": {
+      "loading": "Á lódáil…",
+      "modeCreate": "Cruthaigh",
+      "modeEdit": "Cuir in eagar",
+      "breadcrumbHome": "Baile",
+      "breadcrumbTasks": "Tascanna",
+      "titleLabel": "Teideal",
+      "descriptionLabel": "Cur síos",
+      "active": "Gníomhach",
+      "removeOnCancellation": "Bain amach ar chealú áirithinte",
+      "priority": "Tosaíocht an taisc",
+      "priorityDown": "Ísligh an tosaíocht",
+      "priorityUp": "Ardaigh an tosaíocht",
+      "priorityLevel": {
+        "1": "an-íseal",
+        "2": "íseal",
+        "3": "meánach",
+        "4": "ard",
+        "5": "láithreach"
+      },
+      "propertiesLabel": {
+        "auto": "Cóiríocht a gcruthaítear an tasc di ag gach áirithint",
+        "recurring": "Cóiríocht ina bhfuil an tasc le déanamh"
+      },
+      "propertiesPlaceholder": "Roghnaigh cóiríocht…",
+      "propertiesHint": "Gan rogha, baineann an riail le gach cóiríocht.",
+      "templateLabel": "Teimpléad taisc leis an liosta fothascanna",
+      "templateNone": "Gan teimpléad",
+      "assigneeLabel": "Faighteoir an taisc",
+      "unassigned": "Gan sannadh",
+      "needsInspection": "Teastaíonn cigireacht chun críochnú",
+      "saveAria": "Sábháil an riail",
+      "deleteAria": "Scrios an riail",
+      "saved": "Sábháilte.",
+      "deleted": "Scriosta.",
+      "nameRequired": "Tá an teideal riachtanach.",
+      "startTriggerRequired": "Roghnaigh cathain a thosóidh an tasc — nó ní spreagfar an riail riamh.",
+      "scheduleRequired": "Tá an dáta tosaigh agus an mhinicíocht riachtanach.",
+      "learnTitle": {
+        "auto": "Tascanna sceidealta",
+        "recurring": "Tascanna athfhillteacha"
+      },
+      "learnBody": {
+        "auto": "Bíonn tasc sceidealta ceangailte le háirithint: socraíonn tú cathain a thosaíonn agus a chríochnaíonn sé i gcoibhneas leis an teacht isteach agus an t-imeacht. Cruthaítear é le gach áirithint nua, bogann sé léi, agus imíonn sé ar chealú.",
+        "recurring": "Leanann tasc athfhillteach an féilire, ní na háirithintí: socraíonn tú tús, minicíocht agus fad, agus cruthaíonn an córas na hócáidí roimh ré."
+      },
+      "startTriggerLabel": "Cathain ba chóir don tasc tosú",
+      "endTriggerLabel": "Cathain ba chóir don tasc críochnú",
+      "triggerNone": "— gan socrú —",
+      "trigger": {
+        "booking_confirmed": "Ar dheimhniú na háirithinte",
+        "check_in": "Ag an teacht isteach",
+        "after_check_in_24h": "Tar éis an teacht isteach (uas. 24 uair)",
+        "check_out": "Ag an imeacht",
+        "days_before_check_in": "Laethanta roimh an teacht isteach",
+        "days_after_check_out": "Laethanta tar éis an imeachta"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Cruthaítear an tasc chomh luath is a dheimhnítear an áirithint.",
+        "check_in": "Tosaíonn an tasc le teacht isteach na háirithinte.",
+        "after_check_in_24h": "24 uair tar éis an teacht isteach — ach riamh tar éis an imeachta: i gcás gearrfhanachta críochnaíonn an tasc leis an imeacht.",
+        "check_out": "Tá an tasc ceangailte le himeacht na háirithinte.",
+        "days_before_check_in": "Cruthaítear an tasc an líon laethanta sonraithe roimh an teacht isteach.",
+        "days_after_check_out": "Cruthaítear an tasc an líon laethanta sonraithe tar éis an imeachta."
+      },
+      "offsetDays": "Laethanta",
+      "periodLabel": "Socraigh dáta tosaigh agus deiridh",
+      "startsOn": "Dáta tosaigh",
+      "startTime": "Am tosaigh",
+      "hasEnd": "Críochnaíonn",
+      "endsOn": "Dáta deiridh",
+      "repeatLabel": "Eatramh athdhéanta",
+      "frequency": "Minicíocht",
+      "choose": "Roghnaigh…",
+      "frequencyOption": {
+        "daily": "Laethúil",
+        "weekly": "Seachtainiúil",
+        "monthly": "Míosúil",
+        "yearly": "Bliantúil"
+      },
+      "interval": "Gach",
+      "onDay": "Ar an lá",
+      "onPattern": "Ar an",
+      "position": {
+        "first": "An chéad",
+        "second": "An dara",
+        "third": "An tríú",
+        "fourth": "An ceathrú",
+        "last": "An ceann deireanach"
+      },
+      "durationLabel": "Fad measta",
+      "hours": "Uaireanta",
+      "minutes": "Nóiméid",
+      "weekdayMon": "Dé Luain",
+      "weekdayTue": "Dé Máirt",
+      "weekdayWed": "Dé Céadaoin",
+      "weekdayThu": "Déardaoin",
+      "weekdayFri": "Dé hAoine",
+      "weekdaySat": "Dé Sathairn",
+      "weekdaySun": "Dé Domhnaigh",
+      "weekdayMonShort": "Luan",
+      "weekdayTueShort": "Máirt",
+      "weekdayWedShort": "Céad",
+      "weekdayThuShort": "Déar",
+      "weekdayFriShort": "Aoine",
+      "weekdaySatShort": "Sath",
+      "weekdaySunShort": "Domh"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Infhaighteacht",
       "itemChannels": "Kanäle",
       "itemPolicies": "Polasaithe",
-      "itemSeasonalPrices": "Praghsanna séasúracha"
+      "itemSeasonalPrices": "Praghsanna séasúracha",
+      "groupChannels": "Cainéil",
+      "itemSync": "Sioncrónú"
     },
     "complianceForm": {
       "title": "Comhlíonadh",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Socraigh do phraghas oíche le bunphraghas agus formhuirear.",
       "basePriceTitle": "Bunphraghas",
       "basePriceHint": "Bunphraghas in aghaidh na hoíche agus an airgeadra. Coigeartaigh de réir lae na seachtaine go roghnach.",
-      "markupTitle": "Formhuirear",
-      "markupHint": "Coigeartaigh an bunphraghas a sheoltar chuig cainéil sheachtracha.",
       "extraGuestTitle": "Formhuirear in aghaidh an aoi",
       "extraGuestHint": "Cuir formhuirear oíche i bhfeidhm do gach aoi breise.",
       "extraGuestPill": "{price} ón {guest}ú aoi ar aghaidh",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Socraíonn tú praghsáil dhinimiciúil (go huathoibríoch de réir séasúir, deireadh seachtaine, líonadh, margadh …) go lárnach faoi <link>Praghsáil Dhinimiciúil</link> sa phríomh-roghchlár. Fanann bunphraghas socraithe anseo mar bhonn; bíonn tosaíocht i gcónaí ag praghas laethúil a shocraítear de láimh sa fhéilire.",
       "basePricePerNightLabel": "Bunphraghas in aghaidh na hoíche",
       "customByWeekdayLabel": "Coigeartaigh de réir lae na seachtaine",
-      "markupEditorTitle": "Formhuirear do chainéil sheachtracha",
-      "markupEditorSubtitle": "Ardaíonn % dearfach agus laghdaíonn % diúltach an bunphraghas do chainéil sheachtracha.",
-      "markupHintNote": "Ní bhaineann an formhuirear le háirithintí díreacha myNextDays.",
       "extraGuestEditorSubtitle": "Cuir formhuirear oíche i bhfeidhm do gach aoi breise.",
       "extraGuestFromLabel": "Baineann le gach aoi ó",
       "guestCount": "{count, plural, one {# aoi} two {# aoi} few {# aoi} many {# n-aoi} other {# aoi}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "m.sh. Caighdeánach",
       "multiPlanHint": "Pleananna praghsála iolracha (m.sh. BAR/B&B) — bainistítear na praghsanna de réir dáta san amharc féilire „Praghsanna“.",
       "plansTitle": "Pleananna praghsála",
+      "dynamicActiveTitle": "Dynamic Pricing gníomhach",
+      "dynamicActiveHint": "Ríomhtar praghsanna laethúla go huathoibríoch agus tá feidhm acu i ngach áit — sa fhéilire, ar do láithreán féin agus ar na tairseacha. Níl sa bhonnphraghas ach bunús an ríomha.",
+      "dynamicActiveOpen": "Oscail réamhamharc",
+      "portalAdjustmentTitle": "Coigeartú praghais in aghaidh na tairsí",
+      "portalAdjustmentHint": "Coigeartaigh na praghsanna a sheoltar chuig do thairseacha seachtracha.",
+      "portalAdjustmentNone": "Níl aon tairseach ceangailte fós.",
+      "portalAdjustmentInvalid": "Luach neamhbhailí — is é an raon ceadaithe ná −99 go 500%.",
+      "portalAdjustmentEditorSubtitle": "Coigeartaigh an bhreisluach do thairseacha seachtracha. Ardaíonn céatadán deimhneach na praghsanna a sheoltar chuig an tairseach, íslíonn ceann diúltach iad.",
+      "portalAdjustmentDirectNote": "Ní bhaineann an bhreisluach le háirithintí díreacha trí do shuíomh gréasáin féin ná trí myBestDays.",
+      "portalAdjustmentSaved": "Sábháladh an coigeartú praghais.",
       "plansHint": "Bainistítear na praghsanna de réir dáta san fhéilire.",
       "planCreate": "Cruthaigh plean praghsála",
-      "planModeManual": "De láimh",
+      "planModeManual": "Praghas féin",
       "planModeDerived": "Díorthaithe ó {parent} · {offset}",
       "planDerivedPrice": "ríofa",
       "planMinStay": "Íos. {nights} oíche",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Sioncrónú",
+      "hint": "Cén t-aitheantóir atá ag an maoin seo ar gach tairseach agus an bhfuil an sioncrónú ag rith. Taispeántar na haitheantóirí díreach mar atá in extranet na tairsí.",
+      "none": "Níl an mhaoin seo ceangailte le tairseach ar bith. Ceangail í sa chluaisín „Cainéil“.",
+      "colPortal": "Ar an tairseach",
+      "colOurs": "Againne",
+      "colStatus": "Stádas",
+      "published": "Foilsithe",
+      "notPublished": "Gan foilsiú",
+      "syncOk": "Sioncrónaithe",
+      "statusActive": "Gníomhach",
+      "statusPaused": "Ar sos",
+      "statusError": "Earráid",
+      "singleUnit": "An mhaoin iomlán",
+      "loadFailed": "Níorbh fhéidir an mhaoin seo a lódáil."
+    },
+    "channelDetail": {
+      "identifiers": "Aitheantóirí",
+      "hotelId": "Aitheantóir an óstáin",
+      "roomCode": "Aitheantóir an tseomra",
+      "roomTitle": "Ainm an tseomra ar an tairseach",
+      "sellingTitle": "Díolachán tríd an tairseach seo",
+      "sellingHint": "As: ní théann praghsanna ná fáltas chuig an tairseach seo a thuilleadh. Leanann áirithintí atá ann cheana agus tagann cinn nua fós isteach.",
+      "lastSync": "Sioncrónaithe go deireanach",
+      "never": "Riamh",
+      "syncNow": "Sioncrónaigh anois",
+      "loadFailed": "Níorbh fhéidir an nasc seo a lódáil.",
+      "backToChannel": "Cuntais {portal}",
+      "ourId": "Aitheantas myNextDays:",
+      "published": "Foilsithe",
+      "notPublished": "Gan foilsiú",
+      "statusSynced": "Sioncrónaithe",
+      "statusPaused": "Ar sos",
+      "statusError": "Earráid",
+      "syncSection": "Sioncrónú",
+      "ratePlans": "Pleananna rátaí gníomhacha",
+      "noRatePlans": "Níl aon phlean rátaí scaoilte chuig na tairseacha.",
+      "colCondition": "Coinníollacha",
+      "colPlanName": "Ainm an phlean rátaí (cineál)",
+      "colPriceChange": "Athrú praghais",
+      "modeManual": "Praghas féin",
+      "modeDerived": "Díorthaithe",
+      "minStay": "{nights} oíche ar a laghad",
+      "colPrice": "Praghas",
+      "dynamicActiveTitle": "Dynamic Pricing gníomhach",
+      "dynamicActiveHint": "Seoltar na praghsanna laethúla a ríomhtar go huathoibríoch chuig an tairseach seo — níl sa phraghas thíos ach bunús an ríomha.",
+      "adjustmentInvalid": "Luach neamhbhailí — is é an raon ceadaithe ná −99 go 500%.",
+      "adjustmentSave": "Sábháil",
+      "adjustmentCancel": "Cealaigh",
+      "adjustmentHint": "Cuir coigeartú praghais na tairsí seo in eagar",
+      "notReleased": "gan scaoileadh chuig tairseacha"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Aistrigh infhaighteacht, praghsanna agus srianta go hiomlán arís",
     "categoryMessaging": "Teachtaireachtaí díreacha le haíonna",
     "connected": "Ceangailte",
-    "notConnected": "Gan cheangal"
+    "notConnected": "Gan cheangal",
+    "propertiesHeading": "Maoine",
+    "noPropertiesYet": "Níl aon mhaoin ghníomhach agat fós. Cruthaigh ceann chun é a nascadh le {portal}.",
+    "connectedOf": "{connected} as {total} nasctha",
+    "searchProperty": "Cuardach",
+    "propertyAtPortal": "Maoin ar {portal}",
+    "syncStatusColumn": "Stádas sioncrónaithe",
+    "actionColumn": "Gníomh",
+    "noSearchResults": "Níl aon mhaoin ag teacht leis an gcuardach.",
+    "statusPaused": "Ar sos",
+    "statusError": "Earráid",
+    "statusSynced": "Sioncrónaithe",
+    "idPrefix": "ID:",
+    "edit": "Cuir in eagar",
+    "fullResyncShort": "Lánsioncrónú",
+    "pause": "Cuir ar sos",
+    "activate": "Gníomhachtaigh",
+    "disconnectChannel": "Dínasc",
+    "disconnectConfirm": "An bhfuil {portal} le dínascadh go hiomlán? Dínascfar gach maoin atá nasctha leis an tairseach seo.",
+    "disconnectDone": "{portal} dínasctha.",
+    "notConfiguredHint": "Níl an nasc leis an tairseach gníomhach go fóill. Nuair a bheidh, is féidir do mhaoine a nascadh.",
+    "channelIntro": "Foilsigh, sioncrónaigh agus bainistigh do liostuithe {portal} ó áit amháin.",
+    "syncResult": "Sioncrónú déanta — {fetched} faighte, {saved} sábháilte, {acked} deimhnithe.",
+    "pullFutureStarted": "Tá áirithintí atá ann á lódáil — d'fhéadfadh sé nóiméad a thógáil.",
+    "bookingsFrom": "Áirithintí ó {portal}",
+    "pullFuture": "Lódáil áirithintí atá ann",
+    "syncing": "Á shioncrónú …",
+    "syncBookings": "Sioncrónaigh áirithintí",
+    "noBookingsYet": "Níl aon áirithint ón tairseach seo fós.",
+    "channelFallback": "Cainéal"
   },
   "calendarSync": {
     "title": "Iompórtáil/easpórtáil féilire",

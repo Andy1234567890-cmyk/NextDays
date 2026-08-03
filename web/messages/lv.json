@@ -3290,15 +3290,10 @@
       "allProperties": "Visas naktsmītnes"
     },
     "myTasksList": {
-      "title": "Uzdevumi",
-      "doneCount": "{done}/{total} pabeigti",
+      "title": "Mani uzdevumi",
       "loading": "Ielādē…",
       "emptyState": "Jums šobrīd nav piešķirts neviens uzdevums.",
-      "dueOn": "termiņš {date}",
-      "statusOpen": "Atvērts",
-      "statusInProgress": "Darbā",
-      "statusDone": "Pabeigts",
-      "statusCancelled": "Atcelts"
+      "completed": "Uzdevums pabeigts."
     },
     "bookingPopover": {
       "title": "Rezervācija {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} pabeigti",
       "loading": "Ielādē…",
       "emptyState": "Šai rezervācijai vēl nav uzdevumu.",
-      "createDefaultTasks": "Izveidot standarta uzdevumus",
-      "defaultTasksCreated": "Standarta uzdevumi izveidoti.",
       "statusOpen": "Atvērts",
       "statusInProgress": "Darbā",
       "statusDone": "Pabeigts",
-      "statusCancelled": "Atcelts"
+      "statusCancelled": "Atcelts",
+      "applyRules": "Piemērot noteikumus",
+      "rulesApplied": "{count} uzdevumi no noteikumiem.",
+      "noRuleMatched": "Šai rezervācijai neattiecas neviens noteikums."
     },
     "propertyWarnings": {
       "title": "Brīdinājumi",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Pievienot attēlu",
       "done": "Pabeigts",
       "saving": "Saglabā…",
-      "completeButton": "Pabeigt"
+      "completeButton": "Pabeigt",
+      "inBooking": "Uz rezervāciju {ref}",
+      "assignedTo": "Priekš {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Kā viesis maksā?",
@@ -3464,7 +3462,8 @@
       "reject": "Noraidīt",
       "approve": "Apstiprināt",
       "toastApproved": "Apstiprināts.",
-      "toastRejected": "Noraidīts."
+      "toastRejected": "Noraidīts.",
+      "noPhotos": "Nav foto pierādījumu."
     },
     "bookingsBoard": {
       "title": "Rezervācijas",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Komandas uzdevumi",
-      "tabs": {
-        "current": "PAŠREIZĒJIE",
-        "upcoming": "GAIDĀMIE",
-        "done": "PABEIGTIE"
-      },
-      "status": {
-        "open": "Atvērts",
-        "inProgress": "Darbā",
-        "done": "Pabeigts",
-        "cancelled": "Atcelts"
-      },
       "loading": "Ielādē…",
       "empty": "Šajā skatā nav uzdevumu.",
-      "columns": {
-        "title": "Nosaukums",
-        "property": "Naktsmītne",
-        "assignee": "Piešķirts",
-        "status": "Statuss",
-        "due": "Termiņš"
-      },
-      "unassigned": "Nav piešķirts",
-      "inspectionNeeded": "Nepieciešama pārbaude",
-      "details": "Detaļas"
+      "completed": "Uzdevums pabeigts.",
+      "deleted": "Uzdevums dzēsts."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Uzdevumu veidnes",
         "auto": "Ieplānotie uzdevumi",
         "recurring": "Regulārie uzdevumi"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Nosaukums",
       "columnActive": "Aktīvs",
       "columnAssignee": "Piešķirts",
-      "columnPoints": "Punkti",
-      "columnUpdated": "Atjaunināts",
-      "inspectionNeeded": "Nepieciešama pārbaude",
       "yes": "Jā",
       "no": "Nē",
       "emptyValue": "–",
-      "edit": "Rediģēt",
-      "delete": "Dzēst",
-      "deleted": "Dzēsts."
+      "columnInspection": "Vai nepieciešama pārbaude?",
+      "columnPriority": "Uzdevuma prioritāte",
+      "columnDetails": "Detaļas",
+      "learnBody": {
+        "auto": "Plānotais uzdevums rodas automātiski katrai izvēlēto naktsmītņu rezervācijai — ar sākumu un beigām attiecībā pret ierašanos un izbraukšanu.",
+        "recurring": "Regulārs uzdevums seko kalendāram: sākuma datums, biežums un ilgums. Sistēma izveido reizes iepriekš — neatkarīgi no rezervācijām."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM moduļi",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigācija",
       "previousMonth": "Iepriekšējais mēnesis",
       "nextMonth": "Nākamais mēnesis",
-      "selectedUsersLabel": "Atlasītie lietotāji",
-      "allUsersPlaceholder": "Visi lietotāji",
-      "selectedPropertiesLabel": "Atlasītās naktsmītnes",
-      "allPropertiesPlaceholder": "Visas naktsmītnes",
       "resetAllLabel": "Atiestatīt visu",
       "loading": "Ielādē…",
       "createTaskOnDay": "Izveidot uzdevumu šajā dienā",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - rezervācija",
       "months": "[\"Janvāris\",\"Februāris\",\"Marts\",\"Aprīlis\",\"Maijs\",\"Jūnijs\",\"Jūlijs\",\"Augusts\",\"Septembris\",\"Oktobris\",\"Novembris\",\"Decembris\"]",
-      "weekdays": "[\"Svētdiena\",\"Pirmdiena\",\"Otrdiena\",\"Trešdiena\",\"Ceturtdiena\",\"Piektdiena\",\"Sestdiena\"]"
+      "weekdays": "[\"Svētdiena\",\"Pirmdiena\",\"Otrdiena\",\"Trešdiena\",\"Ceturtdiena\",\"Piektdiena\",\"Sestdiena\"]",
+      "miscRow": "Dažādi"
     },
     "ruleEditor": {
       "loading": "Ielādē…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Apstiprinātas rezervācijas"
     },
     "mobileAppHint": "Uzdevumu skats ceļā jau ir pieejams responsīvi tīmeklī (Mani uzdevumi + detaļas ar fotoattēlu augšupielādi). Atsevišķa mobilā lietotne sekos kā atsevišķs projekts.",
-    "guestModuleHint": "Ar iepriekšējās reģistrācijas veidlapu pirms ierašanās apkopojat visus savu viesu datus (dokuments, adrese, līdzbraucēji, ierašanās laiks). Šī sadaļa tiks veidota kā atsevišķs solis."
+    "guestModuleHint": "Ar iepriekšējās reģistrācijas veidlapu pirms ierašanās apkopojat visus savu viesu datus (dokuments, adrese, līdzbraucēji, ierašanās laiks). Šī sadaļa tiks veidota kā atsevišķs solis.",
+    "aufgabenFilter": {
+      "selectedCount": "atlasīts: {count}",
+      "resetCaption": "Atiestatīt visu",
+      "close": "Aizvērt",
+      "noMatch": "Nav atbilstību.",
+      "selectAll": "Atlasīt visu",
+      "selectNone": "Neatlasīt neko",
+      "save": "Saglabāt",
+      "taskCaption": "Atlasītais uzdevums",
+      "allTasks": "Visi uzdevumi",
+      "taskDialog": "Atlasīt uzdevumu",
+      "taskSearch": "Meklēt pēc uzdevuma nosaukuma",
+      "usersCaption": "Atlasītie lietotāji",
+      "allUsers": "Visi lietotāji",
+      "usersDialog": "Atlasīt lietotājus",
+      "usersSearch": "Meklēt pēc vārda",
+      "unassignedOption": "Nav piešķirts",
+      "propertiesCaption": "Atlasītās naktsmītnes",
+      "allProperties": "Visas naktsmītnes",
+      "propertiesDialog": "Atlasīt naktsmītnes",
+      "propertiesSearch": "Meklēt pēc nosaukuma vai pilsētas"
+    },
+    "aufgabenReiter": {
+      "current": "PAŠREIZĒJIE",
+      "upcoming": "GAIDĀMIE",
+      "done": "PABEIGTIE"
+    },
+    "massenaktionen": {
+      "selected": "atlasīts: {count}",
+      "completeAria": "Pabeigt atlasītos",
+      "deleteAria": "Dzēst atlasītos",
+      "completed": "Pabeigti {done} uzdevumi.",
+      "completedPartly": "Pabeigti {done}, izlaisti {skipped} (trūkst foto vai nav piekļuves).",
+      "deleted": "Dzēsti {done} uzdevumi.",
+      "deletedPartly": "Dzēsti {done}, izlaisti {skipped} (nav piekļuves)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Darbības",
+      "columnTitle": "Nosaukums",
+      "columnProperty": "Naktsmītne",
+      "columnBooking": "Rezervācija",
+      "columnAssignee": "Piešķirts",
+      "columnStatus": "Statuss",
+      "columnDates": "Sākuma un beigu laiks",
+      "selectAll": "Atlasīt visas rindas",
+      "selectRow": "Atlasīt rindu",
+      "open": "Skatīt",
+      "complete": "Pabeigt",
+      "delete": "Dzēst",
+      "inspectionNeeded": "Nepieciešama pārbaude",
+      "unassigned": "Nav piešķirts",
+      "statusOpen": "Nepabeigts",
+      "statusDone": "Pabeigts",
+      "statusCancelled": "Atcelts"
+    },
+    "ruleEditorPage": {
+      "loading": "Ielādē…",
+      "modeCreate": "Izveidot",
+      "modeEdit": "Rediģēt",
+      "breadcrumbHome": "Sākums",
+      "breadcrumbTasks": "Uzdevumi",
+      "titleLabel": "Nosaukums",
+      "descriptionLabel": "Apraksts",
+      "active": "Aktīvs",
+      "removeOnCancellation": "Noņemt, atceļot rezervāciju",
+      "priority": "Uzdevuma prioritāte",
+      "priorityDown": "Samazināt prioritāti",
+      "priorityUp": "Palielināt prioritāti",
+      "priorityLevel": {
+        "1": "ļoti zema",
+        "2": "zema",
+        "3": "vidēja",
+        "4": "augsta",
+        "5": "tūlītēja"
+      },
+      "propertiesLabel": {
+        "auto": "Naktsmītnes, kurām uzdevums tiek izveidots katrai rezervācijai",
+        "recurring": "Naktsmītnes, kurās uzdevums jāveic"
+      },
+      "propertiesPlaceholder": "Izvēlieties naktsmītnes…",
+      "propertiesHint": "Bez atlases noteikums attiecas uz visām naktsmītnēm.",
+      "templateLabel": "Uzdevuma veidne ar apakšuzdevumu sarakstu",
+      "templateNone": "Bez veidnes",
+      "assigneeLabel": "Uzdevuma saņēmējs",
+      "unassigned": "Nav piešķirts",
+      "needsInspection": "Pabeigšanai nepieciešama pārbaude",
+      "saveAria": "Saglabāt noteikumu",
+      "deleteAria": "Dzēst noteikumu",
+      "saved": "Saglabāts.",
+      "deleted": "Dzēsts.",
+      "nameRequired": "Nosaukums ir obligāts.",
+      "startTriggerRequired": "Izvēlieties, kad uzdevums sākas — citādi noteikums nekad neaktivizēsies.",
+      "scheduleRequired": "Sākuma datums un biežums ir obligāti.",
+      "learnTitle": {
+        "auto": "Plānotie uzdevumi",
+        "recurring": "Regulārie uzdevumi"
+      },
+      "learnBody": {
+        "auto": "Plānotais uzdevums ir piesaistīts rezervācijai: jūs nosakāt, kad tas sākas un beidzas attiecībā pret ierašanos un izbraukšanu. Tas rodas ar katru jaunu rezervāciju, pārvietojas līdzi un pazūd, atceļot.",
+        "recurring": "Regulārs uzdevums seko kalendāram, nevis rezervācijām: jūs nosakāt sākumu, biežumu un ilgumu, un sistēma izveido reizes iepriekš."
+      },
+      "startTriggerLabel": "Kad uzdevumam jāsākas",
+      "endTriggerLabel": "Kad uzdevumam jābeidzas",
+      "triggerNone": "— nav iestatīts —",
+      "trigger": {
+        "booking_confirmed": "Apstiprinot rezervāciju",
+        "check_in": "Ierodoties",
+        "after_check_in_24h": "Pēc ierašanās (maks. 24 stundas)",
+        "check_out": "Izbraucot",
+        "days_before_check_in": "Dienas pirms ierašanās",
+        "days_after_check_out": "Dienas pēc izbraukšanas"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Uzdevums rodas, tiklīdz rezervācija ir apstiprināta.",
+        "check_in": "Uzdevums sākas ar rezervācijas ierašanos.",
+        "after_check_in_24h": "24 stundas pēc ierašanās — bet nekad pēc izbraukšanas: īsās uzturēšanās laikā uzdevums beidzas ar aizbraukšanu.",
+        "check_out": "Uzdevums ir piesaistīts rezervācijas izbraukšanai.",
+        "days_before_check_in": "Uzdevums rodas norādīto dienu skaitu pirms ierašanās.",
+        "days_after_check_out": "Uzdevums rodas norādīto dienu skaitu pēc izbraukšanas."
+      },
+      "offsetDays": "Dienas",
+      "periodLabel": "Sākuma un beigu datums",
+      "startsOn": "Sākuma datums",
+      "startTime": "Sākuma laiks",
+      "hasEnd": "Beidzas",
+      "endsOn": "Beigu datums",
+      "repeatLabel": "Atkārtošanās intervāls",
+      "frequency": "Biežums",
+      "choose": "Izvēlieties…",
+      "frequencyOption": {
+        "daily": "Katru dienu",
+        "weekly": "Katru nedēļu",
+        "monthly": "Katru mēnesi",
+        "yearly": "Katru gadu"
+      },
+      "interval": "Ik pēc",
+      "onDay": "Dienā",
+      "onPattern": "Katrā",
+      "position": {
+        "first": "Pirmais",
+        "second": "Otrais",
+        "third": "Trešais",
+        "fourth": "Ceturtais",
+        "last": "Pēdējais"
+      },
+      "durationLabel": "Aptuvenais ilgums",
+      "hours": "Stundas",
+      "minutes": "Minūtes",
+      "weekdayMon": "Pirmdiena",
+      "weekdayTue": "Otrdiena",
+      "weekdayWed": "Trešdiena",
+      "weekdayThu": "Ceturtdiena",
+      "weekdayFri": "Piektdiena",
+      "weekdaySat": "Sestdiena",
+      "weekdaySun": "Svētdiena",
+      "weekdayMonShort": "P",
+      "weekdayTueShort": "O",
+      "weekdayWedShort": "T",
+      "weekdayThuShort": "C",
+      "weekdayFriShort": "Pk",
+      "weekdaySatShort": "S",
+      "weekdaySunShort": "Sv"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Pieejamība",
       "itemChannels": "Kanäle",
       "itemPolicies": "Noteikumi",
-      "itemSeasonalPrices": "Sezonas cenas"
+      "itemSeasonalPrices": "Sezonas cenas",
+      "groupChannels": "Kanāli",
+      "itemSync": "Sinhronizācija"
     },
     "complianceForm": {
       "title": "Atbilstība",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Nosaki savu nakts cenu ar pamatcenu un uzcenojumu.",
       "basePriceTitle": "Pamatcena",
       "basePriceHint": "Pamatcena par nakti un valūtā. Pēc izvēles pielāgo pa nedēļas dienām.",
-      "markupTitle": "Uzcenojums (mark-up)",
-      "markupHint": "Pielāgo pamatcenu, kas tiek sūtīta ārējiem kanāliem.",
       "extraGuestTitle": "Uzcenojums par viesi",
       "extraGuestHint": "Aktivizē nakts uzcenojumu par katru papildu viesi.",
       "extraGuestPill": "{price} sākot ar {guest}. viesi",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Dinamiskās cenas (automātiski atkarībā no sezonas, nedēļas nogales, noslogojuma, tirgus …) iestati centralizēti sadaļā <link>Dynamic Pricing</link> galvenajā izvēlnē. Šeit iestatītā pamatcena paliek par bāzi; manuāli iestatīta dienas cena kalendārā vienmēr ir prioritāra.",
       "basePricePerNightLabel": "Pamatcena par nakti",
       "customByWeekdayLabel": "Pielāgot pa nedēļas dienām",
-      "markupEditorTitle": "Uzcenojums ārējiem kanāliem",
-      "markupEditorSubtitle": "Pozitīvs % palielina, negatīvs % samazina pamatcenu ārējiem kanāliem.",
-      "markupHintNote": "Uzcenojums neattiecas uz myNextDays tiešajām rezervācijām.",
       "extraGuestEditorSubtitle": "Aktivizē nakts uzcenojumu par katru papildu viesi.",
       "extraGuestFromLabel": "Attiecas uz katru viesi, sākot ar",
       "guestCount": "{count, plural, zero {# viesu} one {# viesis} other {# viesi}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "piem., standarta cena",
       "multiPlanHint": "Vairāki cenu plāni (piem., BAR/B&B) — cenas tiek pārvaldītas pa datumiem kalendāra skatā “Cenas”.",
       "plansTitle": "Cenu plāni",
+      "dynamicActiveTitle": "Dynamic Pricing ir ieslēgts",
+      "dynamicActiveHint": "Dienas cenas tiek aprēķinātas automātiski un ir spēkā visur — kalendārā, savā platformā un portālos. Bāzes cena ir tikai aprēķina pamats.",
+      "dynamicActiveOpen": "Atvērt priekšskatījumu",
+      "portalAdjustmentTitle": "Cenas korekcija katram portālam",
+      "portalAdjustmentHint": "Pielāgojiet cenas, kas tiek nosūtītas uz jūsu ārējiem portāliem.",
+      "portalAdjustmentNone": "Vēl nav pievienots neviens portāls.",
+      "portalAdjustmentInvalid": "Nederīga vērtība — atļautais diapazons ir no −99 līdz 500 %.",
+      "portalAdjustmentEditorSubtitle": "Pielāgojiet uzcenojumu ārējiem portāliem. Pozitīvs procents paaugstina uz portālu sūtītās cenas, negatīvs tās pazemina.",
+      "portalAdjustmentDirectNote": "Uzcenojums neattiecas uz tiešajām rezervācijām savā tīmekļa vietnē vai myBestDays.",
+      "portalAdjustmentSaved": "Cenas korekcija saglabāta.",
       "plansHint": "Cenas tiek pārvaldītas pa datumiem kalendārā.",
       "planCreate": "Izveidot cenu plānu",
-      "planModeManual": "Manuāli",
+      "planModeManual": "Sava cena",
       "planModeDerived": "Atvasināts no plāna {parent} · {offset}",
       "planDerivedPrice": "aprēķināta",
       "planMinStay": "Vismaz {nights} naktis",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Sinhronizācija",
+      "hint": "Kāds identifikators šim objektam ir katrā portālā un vai sinhronizācija darbojas. Identifikatori tiek rādīti tāpat kā portāla ekstranetā, lai tur atrastu rezervāciju.",
+      "none": "Šis objekts nav savienots ne ar vienu portālu. Savieno to cilnē “Kanāli”.",
+      "colPortal": "Portālā",
+      "colOurs": "Pie mums",
+      "colStatus": "Statuss",
+      "published": "Publicēts",
+      "notPublished": "Nav publicēts",
+      "syncOk": "Sinhronizēts",
+      "statusActive": "Aktīvs",
+      "statusPaused": "Pauzēts",
+      "statusError": "Kļūda",
+      "singleUnit": "Viss objekts",
+      "loadFailed": "Šo objektu neizdevās ielādēt."
+    },
+    "channelDetail": {
+      "identifiers": "Identifikatori",
+      "hotelId": "Viesnīcas identifikators",
+      "roomCode": "Numura identifikators",
+      "roomTitle": "Numura nosaukums portālā",
+      "sellingTitle": "Pārdošana šajā portālā",
+      "sellingHint": "Izslēgts: cenas un pieejamība vairs netiek sūtītas uz šo portālu. Esošās rezervācijas turpinās, un jaunas joprojām pienāk.",
+      "lastSync": "Pēdējoreiz sinhronizēts",
+      "never": "Nekad",
+      "syncNow": "Sinhronizēt tagad",
+      "loadFailed": "Šo savienojumu neizdevās ielādēt.",
+      "backToChannel": "{portal} konti",
+      "ourId": "myNextDays ID:",
+      "published": "Publicēts",
+      "notPublished": "Nav publicēts",
+      "statusSynced": "Sinhronizēts",
+      "statusPaused": "Pauzēts",
+      "statusError": "Kļūda",
+      "syncSection": "Sinhronizācija",
+      "ratePlans": "Aktīvie cenu plāni",
+      "noRatePlans": "Neviens cenu plāns nav atļauts portāliem.",
+      "colCondition": "Nosacījumi",
+      "colPlanName": "Cenu plāna nosaukums (veids)",
+      "colPriceChange": "Cenas izmaiņas",
+      "modeManual": "Sava cena",
+      "modeDerived": "Atvasināts",
+      "minStay": "vismaz {nights} naktis",
+      "colPrice": "Cena",
+      "dynamicActiveTitle": "Dynamic Pricing ir ieslēgts",
+      "dynamicActiveHint": "Uz šo portālu tiek sūtītas automātiski aprēķinātās dienas cenas — zemāk redzamā cena ir tikai aprēķina pamats.",
+      "adjustmentInvalid": "Nederīga vērtība — atļautais diapazons ir no −99 līdz 500 %.",
+      "adjustmentSave": "Saglabāt",
+      "adjustmentCancel": "Atcelt",
+      "adjustmentHint": "Rediģēt šī portāla cenas korekciju",
+      "notReleased": "nav atļauts portāliem"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Pilnībā pārsūtīt pieejamību, cenas un ierobežojumus no jauna",
     "categoryMessaging": "Tieša saziņa ar viesiem",
     "connected": "Savienots",
-    "notConnected": "Nav savienots"
+    "notConnected": "Nav savienots",
+    "propertiesHeading": "Objekti",
+    "noPropertiesYet": "Jums vēl nav aktīvu objektu. Vispirms izveidojiet objektu, lai savienotu to ar {portal}.",
+    "connectedOf": "{connected} no {total} savienoti",
+    "searchProperty": "Meklēt",
+    "propertyAtPortal": "Objekts portālā {portal}",
+    "syncStatusColumn": "Sinhronizācijas statuss",
+    "actionColumn": "Darbība",
+    "noSearchResults": "Neviens objekts neatbilst meklējumam.",
+    "statusPaused": "Pauzēts",
+    "statusError": "Kļūda",
+    "statusSynced": "Sinhronizēts",
+    "idPrefix": "ID:",
+    "edit": "Rediģēt",
+    "fullResyncShort": "Pilna sinhronizācija",
+    "pause": "Pauzēt",
+    "activate": "Aktivizēt",
+    "disconnectChannel": "Atvienot",
+    "disconnectConfirm": "Vai pilnībā atvienot {portal}? Visi šī portāla savienotie objekti tiks atvienoti.",
+    "disconnectDone": "{portal} atvienots.",
+    "notConfiguredHint": "Portāla savienojums vēl nav aktīvs. Kad tas būs iespējots, varēsiet savienot savus objektus.",
+    "channelIntro": "Publicējiet, sinhronizējiet un pārvaldiet savus {portal} sludinājumus vienuviet.",
+    "syncResult": "Sinhronizācija pabeigta — {fetched} ielādēti, {saved} saglabāti, {acked} apstiprināti.",
+    "pullFutureStarted": "Esošās rezervācijas tiek ielādētas — tas var aizņemt brīdi.",
+    "bookingsFrom": "Rezervācijas no {portal}",
+    "pullFuture": "Ielādēt esošās rezervācijas",
+    "syncing": "Sinhronizē …",
+    "syncBookings": "Sinhronizēt rezervācijas",
+    "noBookingsYet": "No šī portāla vēl nav rezervāciju.",
+    "channelFallback": "Kanāls"
   },
   "calendarSync": {
     "title": "Kalendāra imports/eksports",

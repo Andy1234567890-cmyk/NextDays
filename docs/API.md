@@ -379,7 +379,7 @@ Markt-Faktor zieht den Preis gewichtet (`market_sensitivity`) Richtung Markt-Med
 `0057`):** Bedienmodell nach Vorbild gängiger Channel-Manager (Hostaway). Eigener
 Hauptmenü-Bereich **`/dynamic-pricing`** mit einer **Objekt-Tabelle** (alle Objekte:
 Objekt-ID + Foto, Basispreis + Modus, Min/Max, **Aktiv-Toggle**, **Bearbeiten**-Slider,
-**30-Tage-Vorschau** `/dynamic-pricing/{id}`), gespeist aus `GET /pricing/overview`.
+**35-Tage-Vorschau** `/dynamic-pricing/{id}`), gespeist aus `GET /pricing/overview`.
 Die angezeigte ID ist die **interne Objekt-ID** (lückenlos, kanal-unabhängig) — DP
 wirkt über den Resolver auf **beide** Verteilwege: die eigene Buchungsplattform (Pull)
 und Channex/OTAs (Push), nicht nur auf einen Kanal. Pro Objekt

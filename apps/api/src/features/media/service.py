@@ -18,6 +18,25 @@ _SIGNED_URL_TTL = 3600  # Sekunden
 _TASK_PHOTO_BUCKET = "task-photos"
 
 
+def sign_task_photo(db: Client, path: str) -> str | None:
+    """Signierte Download-URL für ein Foto im privaten Bucket `task-photos`.
+
+    Modul-Funktion, weil außer dem Bilder-Modul auch die Inspektion die Fotos
+    anzeigen muss — dort war bis dahin nur der Storage-PFAD zu sehen, also gar
+    kein Bild. Fehler ergeben None (Bild fällt aus), nie eine tote URL.
+    """
+    try:
+        signed = db.storage.from_(_TASK_PHOTO_BUCKET).create_signed_url(
+            path, _SIGNED_URL_TTL
+        )
+    except Exception as exc:  # noqa: BLE001 — ein Storage-Fehler überspringt ein Bild
+        log.warning("task_photo_sign_failed", path=path, error=str(exc))
+        return None
+    if isinstance(signed, dict):
+        return signed.get("signedURL") or signed.get("signedUrl")
+    return None
+
+
 class MediaError(Exception):
     def __init__(self, message: str, *, status_code: int = 400) -> None:
         super().__init__(message)
@@ -155,18 +174,7 @@ class MediaService:
 
     def _sign(self, path: str) -> str | None:
         """Signierte Download-URL für den privaten task-photos-Bucket."""
-        try:
-            signed = (
-                self._db()
-                .storage.from_(_TASK_PHOTO_BUCKET)
-                .create_signed_url(path, _SIGNED_URL_TTL)
-            )
-        except Exception as exc:  # noqa: BLE001 — Storage-Fehler ein Bild überspringen
-            log.warning("task_photo_sign_failed", path=path, error=str(exc))
-            return None
-        if isinstance(signed, dict):
-            return signed.get("signedURL") or signed.get("signedUrl")
-        return None
+        return sign_task_photo(self._db(), path)
 
     # --- Löschen ---
 

@@ -3290,15 +3290,10 @@
       "allProperties": "Всички обекти"
     },
     "myTasksList": {
-      "title": "Задачи",
-      "doneCount": "{done}/{total} изпълнени",
+      "title": "Моите задачи",
       "loading": "Зареждане…",
       "emptyState": "В момента нямате назначени задачи.",
-      "dueOn": "с падеж {date}",
-      "statusOpen": "Отворена",
-      "statusInProgress": "В процес",
-      "statusDone": "Изпълнена",
-      "statusCancelled": "Прекратена"
+      "completed": "Задачата е приключена."
     },
     "bookingPopover": {
       "title": "Резервация {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} изпълнени",
       "loading": "Зареждане…",
       "emptyState": "Все още няма задачи към тази резервация.",
-      "createDefaultTasks": "Създай стандартни задачи",
-      "defaultTasksCreated": "Стандартните задачи са създадени.",
       "statusOpen": "Отворена",
       "statusInProgress": "В процес",
       "statusDone": "Изпълнена",
-      "statusCancelled": "Прекратена"
+      "statusCancelled": "Прекратена",
+      "applyRules": "Прилагане на правилата",
+      "rulesApplied": "{count} задачи от правилата.",
+      "noRuleMatched": "Няма правило за тази резервация."
     },
     "propertyWarnings": {
       "title": "Предупреждения",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Добави снимка",
       "done": "Изпълнена",
       "saving": "Запазва се…",
-      "completeButton": "Завърши"
+      "completeButton": "Завърши",
+      "inBooking": "Към резервация {ref}",
+      "assignedTo": "За {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Как плаща гостът?",
@@ -3464,7 +3462,8 @@
       "reject": "Отхвърли",
       "approve": "Одобри",
       "toastApproved": "Одобрено.",
-      "toastRejected": "Отхвърлено."
+      "toastRejected": "Отхвърлено.",
+      "noPhotos": "Няма снимков материал."
     },
     "bookingsBoard": {
       "title": "Резервации",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Задачи на екипа",
-      "tabs": {
-        "current": "ТЕКУЩИ",
-        "upcoming": "ПРЕДСТОЯЩИ",
-        "done": "ЗАВЪРШЕНИ"
-      },
-      "status": {
-        "open": "Отворена",
-        "inProgress": "В процес",
-        "done": "Изпълнена",
-        "cancelled": "Прекратена"
-      },
       "loading": "Зареждане…",
       "empty": "Няма задачи в този изглед.",
-      "columns": {
-        "title": "Заглавие",
-        "property": "Обект",
-        "assignee": "Възложена на",
-        "status": "Статус",
-        "due": "Падеж"
-      },
-      "unassigned": "Невъзложена",
-      "inspectionNeeded": "Необходима е проверка",
-      "details": "Детайли"
+      "completed": "Задачата е приключена.",
+      "deleted": "Задачата е изтрита."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Шаблони за задачи",
         "auto": "Планирани задачи",
         "recurring": "Периодични задачи"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Заглавие",
       "columnActive": "Активна",
       "columnAssignee": "Възложена",
-      "columnPoints": "Точки",
-      "columnUpdated": "Актуализирано",
-      "inspectionNeeded": "Необходима е проверка",
       "yes": "Да",
       "no": "Не",
       "emptyValue": "–",
-      "edit": "Редактирай",
-      "delete": "Изтрий",
-      "deleted": "Изтрито."
+      "columnInspection": "Изисква инспекция?",
+      "columnPriority": "Приоритет на задачата",
+      "columnDetails": "Детайли",
+      "learnBody": {
+        "auto": "Планова задача се създава автоматично при всяка резервация на избраните обекти — с начало и край спрямо настаняване и напускане.",
+        "recurring": "Повтарящата се задача върви по календара: начална дата, честота и продължителност. Системата създава срещите предварително — независимо от резервациите."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM модули",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Навигация",
       "previousMonth": "Предишен месец",
       "nextMonth": "Следващ месец",
-      "selectedUsersLabel": "Избрани потребители",
-      "allUsersPlaceholder": "Всички потребители",
-      "selectedPropertiesLabel": "Избрани обекти",
-      "allPropertiesPlaceholder": "Всички обекти",
       "resetAllLabel": "Изчисти всичко",
       "loading": "Зареждане…",
       "createTaskOnDay": "Създай задача за този ден",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - резервация",
       "months": "Януари, Февруари, Март, Април, Май, Юни, Юли, Август, Септември, Октомври, Ноември, Декември",
-      "weekdays": "Неделя, Понеделник, Вторник, Сряда, Четвъртък, Петък, Събота"
+      "weekdays": "Неделя, Понеделник, Вторник, Сряда, Четвъртък, Петък, Събота",
+      "miscRow": "Разни"
     },
     "ruleEditor": {
       "loading": "Зареждане…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Потвърдени резервации"
     },
     "mobileAppHint": "Изгледът със задачи в движение вече е достъпен адаптивно в уеб (Моите задачи + детайли с качване на снимки). Отделно мобилно приложение ще последва като собствен проект.",
-    "guestModuleHint": "С формуляра за предварително настаняване събирате преди пристигането всички данни на гостите си (документ, адрес, спътници, час на пристигане). Тази област ще бъде изградена като отделна стъпка."
+    "guestModuleHint": "С формуляра за предварително настаняване събирате преди пристигането всички данни на гостите си (документ, адрес, спътници, час на пристигане). Тази област ще бъде изградена като отделна стъпка.",
+    "aufgabenFilter": {
+      "selectedCount": "избрани: {count}",
+      "resetCaption": "Нулиране на всичко",
+      "close": "Затваряне",
+      "noMatch": "Няма съвпадения.",
+      "selectAll": "Избери всички",
+      "selectNone": "Изчисти избора",
+      "save": "Запази",
+      "taskCaption": "Избрана задача",
+      "allTasks": "Всички задачи",
+      "taskDialog": "Избор на задача",
+      "taskSearch": "Търсене по заглавие на задача",
+      "usersCaption": "Избрани потребители",
+      "allUsers": "Всички потребители",
+      "usersDialog": "Избор на потребители",
+      "usersSearch": "Търсене по име",
+      "unassignedOption": "Без изпълнител",
+      "propertiesCaption": "Избрани обекти",
+      "allProperties": "Всички обекти",
+      "propertiesDialog": "Избор на обекти",
+      "propertiesSearch": "Търсене по име или град"
+    },
+    "aufgabenReiter": {
+      "current": "АКТУАЛНИ",
+      "upcoming": "ПРЕДСТОЯЩИ",
+      "done": "ПРИКЛЮЧЕНИ"
+    },
+    "massenaktionen": {
+      "selected": "избрани: {count}",
+      "completeAria": "Приключване на избраните",
+      "deleteAria": "Изтриване на избраните",
+      "completed": "{done} задачи приключени.",
+      "completedPartly": "{done} приключени, {skipped} пропуснати (липсва снимка или няма достъп).",
+      "deleted": "{done} задачи изтрити.",
+      "deletedPartly": "{done} изтрити, {skipped} пропуснати (няма достъп)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Действия",
+      "columnTitle": "Заглавие",
+      "columnProperty": "Обект",
+      "columnBooking": "Резервация",
+      "columnAssignee": "Изпълнител",
+      "columnStatus": "Статус",
+      "columnDates": "Начало и край",
+      "selectAll": "Избери всички редове",
+      "selectRow": "Ред за избор",
+      "open": "Отваряне",
+      "complete": "Приключване",
+      "delete": "Изтриване",
+      "inspectionNeeded": "Изисква инспекция",
+      "unassigned": "Без изпълнител",
+      "statusOpen": "Незавършена",
+      "statusDone": "Приключена",
+      "statusCancelled": "Отменена"
+    },
+    "ruleEditorPage": {
+      "loading": "Зареждане…",
+      "modeCreate": "Създаване",
+      "modeEdit": "Редактиране",
+      "breadcrumbHome": "Начало",
+      "breadcrumbTasks": "Задачи",
+      "titleLabel": "Заглавие",
+      "descriptionLabel": "Описание",
+      "active": "Активно",
+      "removeOnCancellation": "Премахване при анулиране на резервация",
+      "priority": "Приоритет на задачата",
+      "priorityDown": "Намаляване на приоритета",
+      "priorityUp": "Повишаване на приоритета",
+      "priorityLevel": {
+        "1": "много нисък",
+        "2": "нисък",
+        "3": "среден",
+        "4": "висок",
+        "5": "незабавен"
+      },
+      "propertiesLabel": {
+        "auto": "Обекти, за които задачата да се създава при всяка резервация",
+        "recurring": "Обекти, в които задачата да се изпълнява"
+      },
+      "propertiesPlaceholder": "Изберете обекти…",
+      "propertiesHint": "Без избор правилото важи за всички обекти.",
+      "templateLabel": "Шаблон със списъка от подзадачи",
+      "templateNone": "Без шаблон",
+      "assigneeLabel": "Изпълнител на задачата",
+      "unassigned": "Без изпълнител",
+      "needsInspection": "Приключването изисква инспекция",
+      "saveAria": "Запазване на правилото",
+      "deleteAria": "Изтриване на правилото",
+      "saved": "Запазено.",
+      "deleted": "Изтрито.",
+      "nameRequired": "Заглавието е задължително.",
+      "startTriggerRequired": "Изберете кога задачата да започва — иначе правилото никога не се задейства.",
+      "scheduleRequired": "Начална дата и честота са задължителни.",
+      "learnTitle": {
+        "auto": "Планови задачи",
+        "recurring": "Повтарящи се задачи"
+      },
+      "learnBody": {
+        "auto": "Планова задача се закача за резервация: определяте кога започва и свършва спрямо настаняване и напускане. При всяка нова резервация се създава задачата, при преместване се мести с нея, при анулиране се премахва.",
+        "recurring": "Повтарящата се задача следва календара, не резервациите: определяте начало, честота и продължителност, а системата създава задачите предварително."
+      },
+      "startTriggerLabel": "Кога да започне задачата",
+      "endTriggerLabel": "Кога да приключи задачата",
+      "triggerNone": "— не е зададено —",
+      "trigger": {
+        "booking_confirmed": "При потвърждаване на резервацията",
+        "check_in": "При настаняване",
+        "after_check_in_24h": "След настаняване (макс. 24 часа)",
+        "check_out": "При напускане",
+        "days_before_check_in": "Дни преди настаняване",
+        "days_after_check_out": "Дни след напускане"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Задачата възниква веднага щом резервацията бъде потвърдена.",
+        "check_in": "Задачата започва с настаняването на резервацията.",
+        "after_check_in_24h": "24 часа след настаняването — но никога след напускането: при кратък престой задачата свършва с отпътуването.",
+        "check_out": "Задачата се обвързва с напускането на резервацията.",
+        "days_before_check_in": "Задачата се създава посочения брой дни преди настаняването.",
+        "days_after_check_out": "Задачата се създава посочения брой дни след напускането."
+      },
+      "offsetDays": "Дни",
+      "periodLabel": "Начална и крайна дата",
+      "startsOn": "Начална дата",
+      "startTime": "Начален час",
+      "hasEnd": "Има край",
+      "endsOn": "Крайна дата",
+      "repeatLabel": "Интервал на повторение",
+      "frequency": "Честота",
+      "choose": "Изберете…",
+      "frequencyOption": {
+        "daily": "Ежедневно",
+        "weekly": "Седмично",
+        "monthly": "Месечно",
+        "yearly": "Годишно"
+      },
+      "interval": "На всеки",
+      "onDay": "На ден",
+      "onPattern": "На",
+      "position": {
+        "first": "Първи",
+        "second": "Втори",
+        "third": "Трети",
+        "fourth": "Четвърти",
+        "last": "Последен"
+      },
+      "durationLabel": "Приблизителна продължителност",
+      "hours": "Часа",
+      "minutes": "Минути",
+      "weekdayMon": "Понеделник",
+      "weekdayTue": "Вторник",
+      "weekdayWed": "Сряда",
+      "weekdayThu": "Четвъртък",
+      "weekdayFri": "Петък",
+      "weekdaySat": "Събота",
+      "weekdaySun": "Неделя",
+      "weekdayMonShort": "Пн",
+      "weekdayTueShort": "Вт",
+      "weekdayWedShort": "Ср",
+      "weekdayThuShort": "Чт",
+      "weekdayFriShort": "Пт",
+      "weekdaySatShort": "Сб",
+      "weekdaySunShort": "Нд"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Наличност",
       "itemChannels": "Kanäle",
       "itemPolicies": "Правила",
-      "itemSeasonalPrices": "Сезонни цени"
+      "itemSeasonalPrices": "Сезонни цени",
+      "groupChannels": "Канали",
+      "itemSync": "Синхронизация"
     },
     "complianceForm": {
       "title": "Съответствие",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Задайте нощната си цена с основна цена и надценка.",
       "basePriceTitle": "Основна цена",
       "basePriceHint": "Основна цена на нощувка и валута. По избор адаптирайте за всеки ден от седмицата.",
-      "markupTitle": "Надценка (Mark-up)",
-      "markupHint": "Коригирайте основната цена, изпращана към външните канали.",
       "extraGuestTitle": "Надценка за гост",
       "extraGuestHint": "Активирайте нощна надценка за всеки допълнителен гост.",
       "extraGuestPill": "{price} от гост {guest}",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Динамични цени (автоматично според сезон, уикенд, заетост, пазар …) настройвате централно в <link>Динамични цени</link> в главното меню. Зададената тук основна цена остава базата; ръчна дневна цена в календара винаги има предимство.",
       "basePricePerNightLabel": "Основна цена на нощувка",
       "customByWeekdayLabel": "Адаптирай по ден от седмицата",
-      "markupEditorTitle": "Надценка за външни канали",
-      "markupEditorSubtitle": "Положителен % увеличава, отрицателен % намалява основната цена за външни канали.",
-      "markupHintNote": "Надценката не важи за директни резервации в NextDays.",
       "extraGuestEditorSubtitle": "Активирайте нощна надценка за всеки допълнителен гост.",
       "extraGuestFromLabel": "Важи за всеки гост от",
       "guestCount": "{count, plural, one {# гост} other {# гости}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "напр. Стандартна цена",
       "multiPlanHint": "Няколко ценови плана (напр. BAR/B&B) — цените се поддържат по дати в изгледа „Цени“ на календара.",
       "plansTitle": "Ценови планове",
+      "dynamicActiveTitle": "Dynamic Pricing е активен",
+      "dynamicActiveHint": "Дневните цени се изчисляват автоматично и важат навсякъде — в календара, на собствената платформа и в порталите. Базовата цена е само основа за изчислението.",
+      "dynamicActiveOpen": "Отвори визуализацията",
+      "portalAdjustmentTitle": "Ценова промяна за всеки портал",
+      "portalAdjustmentHint": "Настройте цените, които се изпращат към външните ви портали.",
+      "portalAdjustmentNone": "Все още няма свързан портал.",
+      "portalAdjustmentInvalid": "Невалидна стойност — допустимият диапазон е от −99 до 500 %.",
+      "portalAdjustmentEditorSubtitle": "Настройте надбавката за външните портали. Положителен процент повишава изпращаните към портала цени, отрицателен ги намалява.",
+      "portalAdjustmentDirectNote": "Надбавката не важи за директни резервации през собствения ви сайт или myBestDays.",
+      "portalAdjustmentSaved": "Ценовата промяна е запазена.",
       "plansHint": "Цените се поддържат по дати в календара.",
       "planCreate": "Създаване на ценови план",
-      "planModeManual": "Ръчно",
+      "planModeManual": "Собствена цена",
       "planModeDerived": "Производна от {parent} · {offset}",
       "planDerivedPrice": "изчислена",
       "planMinStay": "Мин. {nights} нощувки",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Синхронизация",
+      "hint": "Кой номер има този обект в кой портал и работи ли синхронизацията. Номерата се показват точно както в екстранета на портала, за да може резервацията да бъде намерена там.",
+      "none": "Този обект не е свързан с портал. Свържете го в раздел „Канали“.",
+      "colPortal": "В портала",
+      "colOurs": "При нас",
+      "colStatus": "Статус",
+      "published": "Публикуван",
+      "notPublished": "Непубликуван",
+      "syncOk": "Синхронизиран",
+      "statusActive": "Активен",
+      "statusPaused": "На пауза",
+      "statusError": "Грешка",
+      "singleUnit": "Целият обект",
+      "loadFailed": "Този обект не можа да бъде зареден."
+    },
+    "channelDetail": {
+      "identifiers": "Идентификатори",
+      "hotelId": "Идентификатор на хотела",
+      "roomCode": "Идентификатор на стаята",
+      "roomTitle": "Име на стаята в портала",
+      "sellingTitle": "Продажба през този портал",
+      "sellingHint": "Изкл.: цените и наличността вече не отиват към този портал. Съществуващите резервации продължават, нови продължават да постъпват.",
+      "lastSync": "Последна синхронизация",
+      "never": "Никога",
+      "syncNow": "Синхронизирай сега",
+      "loadFailed": "Тази връзка не можа да бъде заредена.",
+      "backToChannel": "Профили в {portal}",
+      "ourId": "myNextDays ID:",
+      "published": "Публикуван",
+      "notPublished": "Непубликуван",
+      "statusSynced": "Синхронизиран",
+      "statusPaused": "На пауза",
+      "statusError": "Грешка",
+      "syncSection": "Синхронизация",
+      "ratePlans": "Активни тарифни планове",
+      "noRatePlans": "Нито един тарифен план не е освободен за порталите.",
+      "colCondition": "Условия",
+      "colPlanName": "Име на тарифния план (тип)",
+      "colPriceChange": "Промяна на цената",
+      "modeManual": "Собствена цена",
+      "modeDerived": "Производна",
+      "minStay": "мин. {nights} нощувки",
+      "colPrice": "Цена",
+      "dynamicActiveTitle": "Dynamic Pricing е активен",
+      "dynamicActiveHint": "Към този портал се изпращат автоматично изчислените дневни цени — цената по-долу е само основа за изчислението.",
+      "adjustmentInvalid": "Невалидна стойност — допустимият диапазон е от −99 до 500 %.",
+      "adjustmentSave": "Запази",
+      "adjustmentCancel": "Отказ",
+      "adjustmentHint": "Редактирай ценовата промяна на този портал",
+      "notReleased": "не е освободен за портали"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Пълно повторно прехвърляне на наличност, цени и ограничения",
     "categoryMessaging": "Директна комуникация с гости",
     "connected": "Свързано",
-    "notConnected": "Не е свързано"
+    "notConnected": "Не е свързано",
+    "propertiesHeading": "Обекти",
+    "noPropertiesYet": "Още нямате активни обекти. Създайте обект, за да го свържете с {portal}.",
+    "connectedOf": "{connected} от {total} свързани",
+    "searchProperty": "Търсене",
+    "propertyAtPortal": "Обект в {portal}",
+    "syncStatusColumn": "Статус на синхронизация",
+    "actionColumn": "Действие",
+    "noSearchResults": "Няма обект, отговарящ на търсенето.",
+    "statusPaused": "На пауза",
+    "statusError": "Грешка",
+    "statusSynced": "Синхронизиран",
+    "idPrefix": "ID:",
+    "edit": "Редактиране",
+    "fullResyncShort": "Пълна синхронизация",
+    "pause": "Пауза",
+    "activate": "Активиране",
+    "disconnectChannel": "Прекъсване на връзката",
+    "disconnectConfirm": "Да се прекъсне ли изцяло {portal}? Всички свързани обекти на този портал ще бъдат прекъснати.",
+    "disconnectDone": "{portal} е прекъснат.",
+    "notConfiguredHint": "Връзката с портала още не е активна. След активиране ще можете да свържете обектите си.",
+    "channelIntro": "Публикувайте, синхронизирайте и управлявайте своите оферти в {portal} от едно място.",
+    "syncResult": "Синхронизацията завърши — {fetched} заредени, {saved} записани, {acked} потвърдени.",
+    "pullFutureStarted": "Съществуващите резервации се зареждат — това може да отнеме момент.",
+    "bookingsFrom": "Резервации от {portal}",
+    "pullFuture": "Зареждане на съществуващи резервации",
+    "syncing": "Синхронизиране …",
+    "syncBookings": "Синхронизирай резервациите",
+    "noBookingsYet": "Още няма резервации от този портал.",
+    "channelFallback": "Канал"
   },
   "calendarSync": {
     "title": "Импорт/експорт на календар",

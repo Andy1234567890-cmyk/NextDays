@@ -316,10 +316,10 @@ def test_quote_priceless_without_rate_plan() -> None:
 
 
 def test_quote_full_breakdown() -> None:
-    # 3 Nächte, base 100, Markup booking +10 %, Reinigung 50 fest, Frühbucher 10 %,
-    # MwSt 19 % (nicht enthalten). Erwartet 406.98 (vgl. Smoke-Test).
+    # 3 Nächte, base 100, Reinigung 50 fest, Frühbucher 10 %, MwSt 19 %
+    # (nicht enthalten). Der frühere „Kanal-Markup" ist entfernt (0272,
+    # Attrappe) — Portal-Aufschläge sind Kanal-Pläne, keine Quote-Zeile.
     cfg = {
-        "markup": {"booking": 10},
         "fees": [{"name": "Reinigung", "amount": 50, "basis": "per_stay"}],
         "taxes": [{"name": "MwSt", "mode": "percent", "value": 19, "includedInPrice": False}],
         "promotions": [{"name": "Frühbucher", "percent": 10}],
@@ -334,8 +334,8 @@ def test_quote_full_breakdown() -> None:
             channel="booking",
         )
     )
-    assert q.nightly_total == 330.0  # 300 + 10 % Markup
-    assert q.total == 406.98
+    assert q.nightly_total == 300.0
+    assert q.total == 374.85
     assert q.priceless is False
 
 

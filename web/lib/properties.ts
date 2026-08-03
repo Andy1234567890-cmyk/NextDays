@@ -405,3 +405,10 @@ export async function createBuilding(name: string): Promise<Result<Building>> {
   if (res.ok) revalidatePath("/objekte");
   return res;
 }
+
+/** Einheiten eines Objekts (0265) — mindestens eine. */
+export async function listUnits(
+  propertyId: string,
+): Promise<Result<{ id: string; name: string; position: number }[]>> {
+  return call(`/properties/${propertyId}/units`);
+}

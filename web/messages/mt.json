@@ -3290,15 +3290,10 @@
       "allProperties": "L-akkomodazzjonijiet kollha"
     },
     "myTasksList": {
-      "title": "Kompiti",
-      "doneCount": "{done}/{total} lesti",
+      "title": "Il-kompiti tiegħi",
       "loading": "Qed jitgħabba…",
       "emptyState": "Bħalissa m'għandekx kompiti assenjati.",
-      "dueOn": "jaħbat {date}",
-      "statusOpen": "Miftuħ",
-      "statusInProgress": "Għaddej",
-      "statusDone": "Lest",
-      "statusCancelled": "Ikkanċellat"
+      "completed": "Kompitu lest."
     },
     "bookingPopover": {
       "title": "Prenotazzjoni {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} lesti",
       "loading": "Qed jitgħabba…",
       "emptyState": "Għad m'hemm l-ebda kompitu għal din il-prenotazzjoni.",
-      "createDefaultTasks": "Oħloq kompiti standard",
-      "defaultTasksCreated": "Il-kompiti standard inħolqu.",
       "statusOpen": "Miftuħ",
       "statusInProgress": "Għaddej",
       "statusDone": "Lest",
-      "statusCancelled": "Ikkanċellat"
+      "statusCancelled": "Ikkanċellat",
+      "applyRules": "Applika r-regoli",
+      "rulesApplied": "{count} kompiti mir-regoli.",
+      "noRuleMatched": "L-ebda regola ma tapplika għal din ir-riżervazzjoni."
     },
     "propertyWarnings": {
       "title": "Twissijiet",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Żid ritratt",
       "done": "Lest",
       "saving": "Qed jissejvja…",
-      "completeButton": "Ikkompleta"
+      "completeButton": "Ikkompleta",
+      "inBooking": "Għar-riżervazzjoni {ref}",
+      "assignedTo": "Għal {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Kif se jħallas il-mistieden?",
@@ -3464,7 +3462,8 @@
       "reject": "Iċħad",
       "approve": "Approva",
       "toastApproved": "Approvat.",
-      "toastRejected": "Miċħud."
+      "toastRejected": "Miċħud.",
+      "noPhotos": "L-ebda evidenza b'ritratti."
     },
     "bookingsBoard": {
       "title": "Prenotazzjonijiet",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Kompiti tat-tim",
-      "tabs": {
-        "current": "ATTWALI",
-        "upcoming": "LI ĠEJJIN",
-        "done": "LESTI"
-      },
-      "status": {
-        "open": "Miftuħ",
-        "inProgress": "Għaddej",
-        "done": "Lest",
-        "cancelled": "Ikkanċellat"
-      },
       "loading": "Qed jitgħabba…",
       "empty": "L-ebda kompitu f'din il-veduta.",
-      "columns": {
-        "title": "Titlu",
-        "property": "Akkomodazzjoni",
-        "assignee": "Assenjat lil",
-        "status": "Status",
-        "due": "Jaħbat"
-      },
-      "unassigned": "Mhux assenjat",
-      "inspectionNeeded": "Meħtieġa spezzjoni",
-      "details": "Dettalji"
+      "completed": "Kompitu lest.",
+      "deleted": "Kompitu mħassar."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Mudelli tal-kompiti",
         "auto": "Kompiti skedati",
         "recurring": "Kompiti regolari"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Titlu",
       "columnActive": "Attiv",
       "columnAssignee": "Assenjat",
-      "columnPoints": "Punti",
-      "columnUpdated": "Aġġornat",
-      "inspectionNeeded": "Meħtieġa spezzjoni",
       "yes": "Iva",
       "no": "Le",
       "emptyValue": "–",
-      "edit": "Editja",
-      "delete": "Ħassar",
-      "deleted": "Imħassar."
+      "columnInspection": "Teħtieġ spezzjoni?",
+      "columnPriority": "Prijorità tal-kompitu",
+      "columnDetails": "Dettalji",
+      "learnBody": {
+        "auto": "Kompitu skedat jinħoloq awtomatikament ma' kull riżervazzjoni tal-akkomodazzjoni magħżula — bil-bidu u t-tmiem fir-rigward tal-check-in u l-check-out.",
+        "recurring": "Kompitu rikorrenti jsegwi l-kalendarju: data tal-bidu, frekwenza u tul. Is-sistema toħloq l-okkorrenzi bil-quddiem — indipendentement mir-riżervazzjonijiet."
+      }
     },
     "pmModuleNav": {
       "navLabel": "Moduli PM",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigazzjoni",
       "previousMonth": "Xahar preċedenti",
       "nextMonth": "Xahar li jmiss",
-      "selectedUsersLabel": "Utenti magħżula",
-      "allUsersPlaceholder": "L-utenti kollha",
-      "selectedPropertiesLabel": "Akkomodazzjonijiet magħżula",
-      "allPropertiesPlaceholder": "L-akkomodazzjonijiet kollha",
       "resetAllLabel": "Irreġistra kollox mill-ġdid",
       "loading": "Qed jitgħabba…",
       "createTaskOnDay": "Oħloq kompitu f'dan il-jum",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - prenotazzjoni",
       "months": "[\"Jannar\",\"Frar\",\"Marzu\",\"April\",\"Mejju\",\"Ġunju\",\"Lulju\",\"Awwissu\",\"Settembru\",\"Ottubru\",\"Novembru\",\"Diċembru\"]",
-      "weekdays": "[\"Il-Ħadd\",\"It-Tnejn\",\"It-Tlieta\",\"L-Erbgħa\",\"Il-Ħamis\",\"Il-Ġimgħa\",\"Is-Sibt\"]"
+      "weekdays": "[\"Il-Ħadd\",\"It-Tnejn\",\"It-Tlieta\",\"L-Erbgħa\",\"Il-Ħamis\",\"Il-Ġimgħa\",\"Is-Sibt\"]",
+      "miscRow": "Varji"
     },
     "ruleEditor": {
       "loading": "Qed jitgħabba…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Prenotazzjonijiet ikkonfermati"
     },
     "mobileAppHint": "Il-veduta tal-kompiti waqt li tkun barra diġà hija disponibbli b'mod responsiv fuq il-web (Il-kompiti tiegħi + dettalji bit-tlugħ ta' ritratti). App mobbli separata se ssegwi bħala proġett għalih.",
-    "guestModuleHint": "Bil-formola tal-pre-check-in tiġbor qabel il-wasla d-dettalji kollha tal-mistednin tiegħek (dokument, indirizz, sħab tal-vjaġġ, ħin tal-wasla). Din iż-żona se tinbena bħala pass separat."
+    "guestModuleHint": "Bil-formola tal-pre-check-in tiġbor qabel il-wasla d-dettalji kollha tal-mistednin tiegħek (dokument, indirizz, sħab tal-vjaġġ, ħin tal-wasla). Din iż-żona se tinbena bħala pass separat.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} magħżula",
+      "resetCaption": "Irrisettja kollox",
+      "close": "Agħlaq",
+      "noMatch": "L-ebda riżultat.",
+      "selectAll": "Agħżel kollox",
+      "selectNone": "Tagħżel xejn",
+      "save": "Issejvja",
+      "taskCaption": "Kompitu magħżul",
+      "allTasks": "Il-kompiti kollha",
+      "taskDialog": "Agħżel kompitu",
+      "taskSearch": "Fittex bit-titlu tal-kompitu",
+      "usersCaption": "Utenti magħżula",
+      "allUsers": "L-utenti kollha",
+      "usersDialog": "Agħżel utenti",
+      "usersSearch": "Fittex bl-isem",
+      "unassignedOption": "Mhux assenjat",
+      "propertiesCaption": "Akkomodazzjoni magħżula",
+      "allProperties": "L-akkomodazzjoni kollha",
+      "propertiesDialog": "Agħżel akkomodazzjoni",
+      "propertiesSearch": "Fittex bl-isem jew bil-belt"
+    },
+    "aufgabenReiter": {
+      "current": "KURRENTI",
+      "upcoming": "LI ĠEJJIN",
+      "done": "LESTI"
+    },
+    "massenaktionen": {
+      "selected": "{count} magħżula",
+      "completeAria": "Lesti l-għażla",
+      "deleteAria": "Ħassar l-għażla",
+      "completed": "{done} kompiti lesti.",
+      "completedPartly": "{done} lesti, {skipped} maqbuża (nieqes ritratt jew l-ebda aċċess).",
+      "deleted": "{done} kompiti mħassra.",
+      "deletedPartly": "{done} imħassra, {skipped} maqbuża (l-ebda aċċess)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Azzjonijiet",
+      "columnTitle": "Titlu",
+      "columnProperty": "Akkomodazzjoni",
+      "columnBooking": "Booking",
+      "columnAssignee": "Assenjat lil",
+      "columnStatus": "Status",
+      "columnDates": "Dati tal-bidu u tat-tmiem",
+      "selectAll": "Agħżel ir-ringieli kollha",
+      "selectRow": "Agħżel ir-ringiela",
+      "open": "Ara",
+      "complete": "Lesti",
+      "delete": "Ħassar",
+      "inspectionNeeded": "Teħtieġ spezzjoni",
+      "unassigned": "Mhux assenjat",
+      "statusOpen": "Mhux komplut",
+      "statusDone": "Lest",
+      "statusCancelled": "Ikkanċellat"
+    },
+    "ruleEditorPage": {
+      "loading": "Qed jitgħabba…",
+      "modeCreate": "Oħloq",
+      "modeEdit": "Editja",
+      "breadcrumbHome": "Home",
+      "breadcrumbTasks": "Kompiti",
+      "titleLabel": "Titlu",
+      "descriptionLabel": "Deskrizzjoni",
+      "active": "Attiv",
+      "removeOnCancellation": "Neħħi mal-kanċellazzjoni tal-booking",
+      "priority": "Prijorità tal-kompitu",
+      "priorityDown": "Naqqas il-prijorità",
+      "priorityUp": "Żid il-prijorità",
+      "priorityLevel": {
+        "1": "baxxa ħafna",
+        "2": "baxxa",
+        "3": "medja",
+        "4": "għolja",
+        "5": "immedjata"
+      },
+      "propertiesLabel": {
+        "auto": "Akkomodazzjoni li għaliha jinħoloq il-kompitu ma' kull riżervazzjoni",
+        "recurring": "Akkomodazzjoni fejn għandu jsir il-kompitu"
+      },
+      "propertiesPlaceholder": "Agħżel akkomodazzjoni…",
+      "propertiesHint": "Mingħajr għażla r-regola tapplika għall-akkomodazzjoni kollha.",
+      "templateLabel": "Mudell tal-kompitu bil-lista tas-sottokompiti",
+      "templateNone": "L-ebda mudell",
+      "assigneeLabel": "Riċevitur tal-kompitu",
+      "unassigned": "Mhux assenjat",
+      "needsInspection": "It-tlestija teħtieġ spezzjoni",
+      "saveAria": "Issejvja r-regola",
+      "deleteAria": "Ħassar ir-regola",
+      "saved": "Issejvjat.",
+      "deleted": "Imħassar.",
+      "nameRequired": "It-titlu huwa obbligatorju.",
+      "startTriggerRequired": "Agħżel meta jibda l-kompitu — inkella r-regola qatt ma tiskatta.",
+      "scheduleRequired": "Id-data tal-bidu u l-frekwenza huma obbligatorji.",
+      "learnTitle": {
+        "auto": "Kompiti skedati",
+        "recurring": "Kompiti rikorrenti"
+      },
+      "learnBody": {
+        "auto": "Kompitu skedat jorbot ma' riżervazzjoni: tiddeċiedi meta jibda u jispiċċa fir-rigward tal-check-in u l-check-out. Jinħoloq ma' kull riżervazzjoni ġdida, jimxi magħha u jisparixxi mal-kanċellazzjoni.",
+        "recurring": "Kompitu rikorrenti jsegwi l-kalendarju, mhux ir-riżervazzjonijiet: tissettja l-bidu, il-frekwenza u t-tul, u s-sistema toħloq l-okkorrenzi bil-quddiem."
+      },
+      "startTriggerLabel": "Meta għandu jibda l-kompitu",
+      "endTriggerLabel": "Meta għandu jispiċċa l-kompitu",
+      "triggerNone": "— mhux issettjat —",
+      "trigger": {
+        "booking_confirmed": "Mal-konferma tal-booking",
+        "check_in": "Mal-check-in",
+        "after_check_in_24h": "Wara l-check-in (mass. 24 siegħa)",
+        "check_out": "Mal-check-out",
+        "days_before_check_in": "Jiem qabel il-check-in",
+        "days_after_check_out": "Jiem wara l-check-out"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Il-kompitu jinħoloq malli tiġi kkonfermata r-riżervazzjoni.",
+        "check_in": "Il-kompitu jibda mal-check-in tar-riżervazzjoni.",
+        "after_check_in_24h": "24 siegħa wara l-check-in — imma qatt wara l-check-out: fi żjarat qosra l-kompitu jispiċċa mat-tluq.",
+        "check_out": "Il-kompitu jorbot mal-check-out tar-riżervazzjoni.",
+        "days_before_check_in": "Il-kompitu jinħoloq in-numru ta' jiem indikat qabel il-check-in.",
+        "days_after_check_out": "Il-kompitu jinħoloq in-numru ta' jiem indikat wara l-check-out."
+      },
+      "offsetDays": "Jiem",
+      "periodLabel": "Issettja d-data tal-bidu u tat-tmiem",
+      "startsOn": "Data tal-bidu",
+      "startTime": "Ħin tal-bidu",
+      "hasEnd": "Jispiċċa",
+      "endsOn": "Data tat-tmiem",
+      "repeatLabel": "Intervall ta' ripetizzjoni",
+      "frequency": "Frekwenza",
+      "choose": "Agħżel…",
+      "frequencyOption": {
+        "daily": "Kuljum",
+        "weekly": "Kull ġimgħa",
+        "monthly": "Kull xahar",
+        "yearly": "Kull sena"
+      },
+      "interval": "Kull",
+      "onDay": "Fil-jum",
+      "onPattern": "Fil-",
+      "position": {
+        "first": "L-ewwel",
+        "second": "It-tieni",
+        "third": "It-tielet",
+        "fourth": "Ir-raba'",
+        "last": "L-aħħar"
+      },
+      "durationLabel": "Tul stmat",
+      "hours": "Sigħat",
+      "minutes": "Minuti",
+      "weekdayMon": "It-Tnejn",
+      "weekdayTue": "It-Tlieta",
+      "weekdayWed": "L-Erbgħa",
+      "weekdayThu": "Il-Ħamis",
+      "weekdayFri": "Il-Ġimgħa",
+      "weekdaySat": "Is-Sibt",
+      "weekdaySun": "Il-Ħadd",
+      "weekdayMonShort": "Tne",
+      "weekdayTueShort": "Tli",
+      "weekdayWedShort": "Erb",
+      "weekdayThuShort": "Ħam",
+      "weekdayFriShort": "Ġim",
+      "weekdaySatShort": "Sib",
+      "weekdaySunShort": "Ħad"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Disponibbiltà",
       "itemChannels": "Kanäle",
       "itemPolicies": "Politiki",
-      "itemSeasonalPrices": "Prezzijiet staġjonali"
+      "itemSeasonalPrices": "Prezzijiet staġjonali",
+      "groupChannels": "Kanali",
+      "itemSync": "Sinkronizzazzjoni"
     },
     "complianceForm": {
       "title": "Konformità",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Iffissa l-prezz ta' kull lejl tiegħek b'prezz bażiku u supplement.",
       "basePriceTitle": "Prezz bażiku",
       "basePriceHint": "Prezz bażiku għal kull lejl u munita. Aġġusta opzjonalment skont il-jum tal-ġimgħa.",
-      "markupTitle": "Supplement (mark-up)",
-      "markupHint": "Aġġusta l-prezz bażiku mibgħut lill-kanali esterni.",
       "extraGuestTitle": "Supplement għal kull mistieden",
       "extraGuestHint": "Attiva supplement ta' kull lejl għal kull mistieden addizzjonali.",
       "extraGuestPill": "{price} mill-mistieden {guest}",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Il-prezzijiet dinamiċi (awtomatiċi skont l-istaġun, il-weekend, l-okkupazzjoni, is-suq …) tissettjahom ċentralment taħt <link>Dynamic Pricing</link> fil-menu prinċipali. Prezz bażiku ssettjat hawn jibqa' l-bażi; prezz manwali ta' kuljum fil-kalendarju dejjem għandu prijorità.",
       "basePricePerNightLabel": "Prezz bażiku għal kull lejl",
       "customByWeekdayLabel": "Aġġusta skont il-jum tal-ġimgħa",
-      "markupEditorTitle": "Supplement għall-kanali esterni",
-      "markupEditorSubtitle": "Perċentwal pożittiv jgħolli, negattiv inaqqas il-prezz bażiku għall-kanali esterni.",
-      "markupHintNote": "Is-supplement ma japplikax għall-prenotazzjonijiet diretti ta' NextDays.",
       "extraGuestEditorSubtitle": "Attiva supplement ta' kull lejl għal kull mistieden addizzjonali.",
       "extraGuestFromLabel": "Japplika għal kull mistieden minn",
       "guestCount": "{count, plural, one {# mistieden} two {# mistednin} few {# mistednin} many {# mistieden} other {# mistieden}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "eż. Prezz standard",
       "multiPlanHint": "Bosta pjani tal-prezzijiet (eż. BAR/B&B) — il-prezzijiet jiġu mmaniġġjati skont id-data fil-vista tal-kalendarju „Prezzijiet“.",
       "plansTitle": "Pjani tal-prezzijiet",
+      "dynamicActiveTitle": "Dynamic Pricing attiv",
+      "dynamicActiveHint": "Il-prezzijiet ta' kuljum jiġu kkalkulati awtomatikament u japplikaw kullimkien — fil-kalendarju, fil-pjattaforma tiegħek u fil-portali. Il-prezz bażi huwa biss il-bażi tal-kalkolu.",
+      "dynamicActiveOpen": "Iftaħ il-previżjoni",
+      "portalAdjustmentTitle": "Aġġustament tal-prezz għal kull portal",
+      "portalAdjustmentHint": "Aġġusta l-prezzijiet li jintbagħtu lill-portali esterni tiegħek.",
+      "portalAdjustmentNone": "Għad m'hemm l-ebda portal konness.",
+      "portalAdjustmentInvalid": "Valur invalidu — il-firxa permessa hija minn −99 sa 500%.",
+      "portalAdjustmentEditorSubtitle": "Aġġusta ż-żieda għall-portali esterni. Perċentwal pożittiv jgħolli l-prezzijiet mibgħuta lil dak il-portal, wieħed negattiv iniżżilhom.",
+      "portalAdjustmentDirectNote": "Iż-żieda ma tapplikax għal prenotazzjonijiet diretti mis-sit web tiegħek stess jew minn myBestDays.",
+      "portalAdjustmentSaved": "L-aġġustament tal-prezz ġie ssejvjat.",
       "plansHint": "Il-prezzijiet jiġu mmaniġġjati skont id-data fil-kalendarju.",
       "planCreate": "Oħloq pjan tal-prezzijiet",
-      "planModeManual": "Manwali",
+      "planModeManual": "Prezz proprju",
       "planModeDerived": "Derivat minn {parent} · {offset}",
       "planDerivedPrice": "ikkalkulat",
       "planMinStay": "Min. {nights} iljieli",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Sinkronizzazzjoni",
+      "hint": "Liema identifikatur għandha din il-propjetà fuq kull portal u jekk is-sinkronizzazzjoni taħdimx. L-identifikaturi jidhru bħal fl-extranet tal-portal, biex tinstab riżervazzjoni hemm.",
+      "none": "Din il-propjetà mhijiex konnessa ma' ebda portal. Qabbadha fit-tab “Kanali”.",
+      "colPortal": "Fuq il-portal",
+      "colOurs": "Għandna",
+      "colStatus": "Status",
+      "published": "Ippubblikat",
+      "notPublished": "Mhux ippubblikat",
+      "syncOk": "Sinkronizzat",
+      "statusActive": "Attiv",
+      "statusPaused": "Pawża",
+      "statusError": "Żball",
+      "singleUnit": "Il-propjetà kollha",
+      "loadFailed": "Din il-propjetà ma setgħetx tiġi mgħobbija."
+    },
+    "channelDetail": {
+      "identifiers": "Identifikaturi",
+      "hotelId": "Identifikatur tal-lukanda",
+      "roomCode": "Identifikatur tal-kamra",
+      "roomTitle": "Isem tal-kamra fil-portal",
+      "sellingTitle": "Bejgħ permezz ta' dan il-portal",
+      "sellingHint": "Mitfi: il-prezzijiet u d-disponibbiltà ma jibqgħux jintbagħtu lil dan il-portal. Ir-riżervazzjonijiet eżistenti jkomplu u oħrajn ġodda xorta jaslu.",
+      "lastSync": "L-aħħar sinkronizzazzjoni",
+      "never": "Qatt",
+      "syncNow": "Issinkronizza issa",
+      "loadFailed": "Din il-konnessjoni ma setgħetx tiġi mgħobbija.",
+      "backToChannel": "Kontijiet ta' {portal}",
+      "ourId": "ID myNextDays:",
+      "published": "Ippubblikat",
+      "notPublished": "Mhux ippubblikat",
+      "statusSynced": "Sinkronizzat",
+      "statusPaused": "Pawża",
+      "statusError": "Żball",
+      "syncSection": "Sinkronizzazzjoni",
+      "ratePlans": "Pjanijiet tat-tariffi attivi",
+      "noRatePlans": "Ebda pjan tat-tariffi mhu approvat għall-portali.",
+      "colCondition": "Kundizzjonijiet",
+      "colPlanName": "Isem tal-pjan tat-tariffi (tip)",
+      "colPriceChange": "Bidla fil-prezz",
+      "modeManual": "Prezz proprju",
+      "modeDerived": "Derivat",
+      "minStay": "minimu ta' {nights} iljieli",
+      "colPrice": "Prezz",
+      "dynamicActiveTitle": "Dynamic Pricing attiv",
+      "dynamicActiveHint": "Lil dan il-portal jintbagħtu l-prezzijiet ta' kuljum ikkalkulati awtomatikament — il-prezz muri hawn taħt huwa biss il-bażi tal-kalkolu.",
+      "adjustmentInvalid": "Valur invalidu — il-firxa permessa hija minn −99 sa 500%.",
+      "adjustmentSave": "Issejvja",
+      "adjustmentCancel": "Ikkanċella",
+      "adjustmentHint": "Editja l-aġġustament tal-prezz ta' dan il-portal",
+      "notReleased": "mhux approvat għall-portali"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Ittrasferixxi mill-ġdid kompletament id-disponibbiltà, il-prezzijiet u r-restrizzjonijiet",
     "categoryMessaging": "Komunikazzjoni diretta mal-mistednin",
     "connected": "Konness",
-    "notConnected": "Mhux konness"
+    "notConnected": "Mhux konness",
+    "propertiesHeading": "Propjetajiet",
+    "noPropertiesYet": "Għad m'għandekx propjetajiet attivi. L-ewwel oħloq waħda biex tqabbadha ma' {portal}.",
+    "connectedOf": "{connected} minn {total} imqabbda",
+    "searchProperty": "Fittex",
+    "propertyAtPortal": "Propjetà fuq {portal}",
+    "syncStatusColumn": "Status tas-sinkronizzazzjoni",
+    "actionColumn": "Azzjoni",
+    "noSearchResults": "Ebda propjetà ma taqbel mat-tfittxija.",
+    "statusPaused": "Pawża",
+    "statusError": "Żball",
+    "statusSynced": "Sinkronizzat",
+    "idPrefix": "ID:",
+    "edit": "Editja",
+    "fullResyncShort": "Sinkronizzazzjoni sħiħa",
+    "pause": "Waqqaf temporanjament",
+    "activate": "Attiva",
+    "disconnectChannel": "Aqta' l-konnessjoni",
+    "disconnectConfirm": "Taqta' {portal} kompletament? Il-propjetajiet kollha mqabbda ma' dan il-portal jinqatgħu.",
+    "disconnectDone": "{portal} maqtugħ.",
+    "notConfiguredHint": "Il-konnessjoni mal-portal għadha mhix attiva. Meta tkun attivata, tkun tista' tqabbad il-propjetajiet tiegħek.",
+    "channelIntro": "Ippubblika, issinkronizza u mmaniġġja l-listi tiegħek ta' {portal} minn post wieħed.",
+    "syncResult": "Sinkronizzazzjoni lesta — {fetched} miġbura, {saved} salvati, {acked} ikkonfermati.",
+    "pullFutureStarted": "Ir-riżervazzjonijiet eżistenti qed jitgħabbew — jista' jieħu ftit.",
+    "bookingsFrom": "Riżervazzjonijiet minn {portal}",
+    "pullFuture": "Agħbi r-riżervazzjonijiet eżistenti",
+    "syncing": "Qed jissinkronizza …",
+    "syncBookings": "Issinkronizza r-riżervazzjonijiet",
+    "noBookingsYet": "Għad m'hemm ebda riżervazzjoni minn dan il-portal.",
+    "channelFallback": "Kanal"
   },
   "calendarSync": {
     "title": "Importazzjoni/esportazzjoni tal-kalendarju",

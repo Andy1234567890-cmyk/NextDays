@@ -42,8 +42,8 @@ export type DpSettings = {
   base_mode: BaseMode;
   base_rate_mode: BaseRateMode;
   manual_base_price: number | null;
-  // Phase 4 / RateBoard-Bausteine.
-  autopilot_enabled: boolean;
+  // Phase 4 / RateBoard-Bausteine. (autopilot_enabled entfernt: enabled
+  // heißt „gilt überall, auch auf den Portalen".)
   weather_enabled: boolean;
   weather_max_adjust_pct: number;
   rate_rules: RateRule[];

@@ -1,15 +1,21 @@
 "use client";
 
-// Inspektion (.. /tasks/inspection): QA-Workflow über abgeschlossenen
-// Aufgaben mit needs_inspection. Tabs ZU ÜBERPRÜFEN/KOMMEND/ÜBERPRÜFT.
-// Foto-Nachweise ansehen, Freigeben/Zurückweisen. Live via useRealtime.
+// Inspektion (.. /tasks/inspection): QA-Workflow über abgeschlossenen Aufgaben
+// mit needs_inspection. Reiter ZU ÜBERPRÜFEN/KOMMEND/ÜBERPRÜFT, Unterkunfts-
+// Filter, Freigeben/Zurückweisen. Live via useRealtime.
+//
+// Die Foto-Nachweise werden als BILD gezeigt (signierte URL aus dem privaten
+// Bucket) und lassen sich groß öffnen. Vorher stand hier nur ein Chip
+// „Nachweis" — eine Inspektion, bei der man das Foto nicht sieht, prüft nichts.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { AufgabenFilter } from "@/components/reservierungen/aufgaben-filter";
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import { listProperties } from "@/lib/properties";
 import {
   type InspectionItem,
   inspectTask,
@@ -26,18 +32,35 @@ export function TasksInspection() {
   ];
   const [tab, setTab] = useState("to_review");
   const [rows, setRows] = useState<InspectionItem[]>([]);
+  const [properties, setProperties] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [propFilter, setPropFilter] = useState<string[]>([]);
+  const [gross, setGross] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await listInspection(tab);
+    const res = await listInspection(tab, propFilter);
     if (res.ok) setRows(res.data);
+    else toast.error(res.error);
     setLoading(false);
-  }, [tab]);
+  }, [tab, propFilter]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    void (async () => {
+      const res = await listProperties();
+      if (res.ok) {
+        setProperties(
+          res.data.items.map((p) => ({ value: p.id, label: p.title })),
+        );
+      }
+    })();
+  }, []);
 
   useRealtime({ table: "tasks", onChange: load });
 
@@ -56,9 +79,25 @@ export function TasksInspection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="font-display text-2xl font-extrabold">
-        {t("tasksInspection.title")}
-      </h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="font-display text-2xl font-extrabold">
+          {t("tasksInspection.title")}
+        </h1>
+        <AufgabenFilter
+          filters={[
+            {
+              key: "property",
+              caption: t("aufgabenFilter.propertiesCaption"),
+              allLabel: t("aufgabenFilter.allProperties"),
+              dialogTitle: t("aufgabenFilter.propertiesDialog"),
+              searchPlaceholder: t("aufgabenFilter.propertiesSearch"),
+              options: properties,
+              selected: propFilter,
+              onChange: setPropFilter,
+            },
+          ]}
+        />
+      </div>
 
       <div className="flex gap-1 border-b">
         {TABS.map((tabItem) => (
@@ -66,10 +105,11 @@ export function TasksInspection() {
             key={tabItem.tab}
             type="button"
             onClick={() => setTab(tabItem.tab)}
-            className={`flex-1 border-b-2 px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors ${tab === tabItem.tab
+            className={`flex-1 border-b-2 px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors ${
+              tab === tabItem.tab
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+            }`}
           >
             {tabItem.label}
           </button>
@@ -97,23 +137,34 @@ export function TasksInspection() {
                   </p>
                 </div>
                 {tab === "reviewed" && (
-                  <span className="flex items-center gap-1 text-sm text-emerald-600">
+                  <span className="flex items-center gap-1 text-sm text-success">
                     <Icon icon="ph:check-circle-fill" className="size-4" />
                     {t("tasksInspection.reviewedBadge")}
                   </span>
                 )}
               </div>
 
-              {item.photos.length > 0 && (
+              {item.photos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("tasksInspection.noPhotos")}
+                </p>
+              ) : (
                 <div className="flex flex-wrap gap-2">
-                  {item.photos.map((p) => (
-                    <span
-                      key={p}
-                      className="flex items-center gap-1 rounded-(--radius) bg-secondary px-2 py-1 text-xs text-muted-foreground"
+                  {item.photos.map((url) => (
+                    <button
+                      key={url}
+                      type="button"
+                      onClick={() => setGross(url)}
+                      className="overflow-hidden rounded-(--radius) border transition hover:opacity-80"
+                      aria-label={t("tasksInspection.photoProof")}
                     >
-                      <Icon icon="ph:image" className="size-3.5" />
-                      {t("tasksInspection.photoProof")}
-                    </span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt={t("tasksInspection.photoProof")}
+                        className="size-24 object-cover"
+                      />
+                    </button>
                   ))}
                 </div>
               )}
@@ -133,6 +184,21 @@ export function TasksInspection() {
               )}
             </Card>
           ))}
+        </div>
+      )}
+
+      {gross && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
+          role="presentation"
+          onClick={() => setGross(null)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={gross}
+            alt={t("tasksInspection.photoProof")}
+            className="max-h-full max-w-full rounded-(--radius) object-contain"
+          />
         </div>
       )}
     </div>

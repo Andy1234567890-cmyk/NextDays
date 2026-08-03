@@ -32,6 +32,8 @@ export type Task = {
 export type TaskListItem = Task & {
   property_title: string | null;
   assignee_name: string | null;
+  /** Anzeige-Referenz der Buchung (Portal-Referenz, sonst Kurz-ID). */
+  reservation_ref: string | null;
   checklist_total: number;
   checklist_done: number;
 };
@@ -95,14 +97,43 @@ export type RuleListItem = {
   updated_at: string | null;
 };
 
-export type RuleDetail = RuleListItem & {
-  description: string | null;
-  remove_on_cancellation: boolean;
-  recurrence: Record<string, unknown>;
-  items: RuleItem[];
+/**
+ * Zeitanker einer planmäßigen Regel relativ zur Buchung (0272). Die
+ * Feinjustierung steckt immer in `start_offset_minutes`/`end_offset_minutes` —
+ * bei `days_before_check_in` trägt sie die ganze Distanz.
+ */
+export type TaskTrigger =
+  | "booking_confirmed"
+  | "check_in"
+  | "after_check_in_24h"
+  | "check_out"
+  | "days_before_check_in"
+  | "days_after_check_out";
+
+export type RuleSchedule = {
+  template_rule_id: string | null;
+  start_trigger: TaskTrigger | null;
+  end_trigger: TaskTrigger | null;
+  start_offset_minutes: number;
+  end_offset_minutes: number;
+  starts_on: string | null;
+  ends_on: string | null;
+  /** „HH:MM" bzw. „HH:MM:SS" — leer, wenn keine Uhrzeit gesetzt ist. */
+  start_time: string | null;
+  duration_minutes: number | null;
 };
 
-export type RuleInput = {
+export type RuleDetail = RuleListItem &
+  RuleSchedule & {
+    description: string | null;
+    remove_on_cancellation: boolean;
+    recurrence: Record<string, unknown>;
+    items: RuleItem[];
+    /** Anzeigename der verknüpften Vorlage (leer, wenn sie gelöscht wurde). */
+    template_name: string | null;
+  };
+
+export type RuleInput = RuleSchedule & {
   kind: RuleKind;
   name: string;
   description?: string | null;
@@ -212,9 +243,16 @@ export async function listBookingTasks(
   return call(`/tasks/by-reservation/${encodeURIComponent(reservationId)}`);
 }
 
-/** Dem angemeldeten Nutzer zugewiesene Aufgaben. */
-export async function listMyTasks(): Promise<Result<Task[]>> {
-  return call("/tasks/mine");
+/** Dem angemeldeten Nutzer zugewiesene Aufgaben (Reiter + Objektfilter). */
+export async function listMyTasks(filter?: {
+  status_bucket?: string;
+  property_ids?: string[];
+}): Promise<Result<TaskListItem[]>> {
+  const p = new URLSearchParams();
+  if (filter?.status_bucket) p.set("status_bucket", filter.status_bucket);
+  for (const id of filter?.property_ids ?? []) p.append("property_id", id);
+  const q = p.toString();
+  return call(`/tasks/mine${q ? `?${q}` : ""}`);
 }
 
 /** Aufgaben-Status umschalten (offen/in Arbeit/erledigt/abgebrochen). */
@@ -228,40 +266,70 @@ export async function setTaskStatus(
   });
 }
 
-/** Standard-Aufgaben aus einer Buchung erzeugen (Anreise-Check + Endreinigung). */
-export async function generateBookingTasks(input: {
-  reservation_id: string;
-  property_id: string;
-  check_in: string;
-  check_out: string;
-}): Promise<Result<Task[]>> {
-  return call("/tasks/from-booking", { method: "POST", body: input });
+/**
+ * Planmäßige Regeln für eine Buchung nachziehen. Der Normalfall läuft
+ * automatisch im Reservierungs-Schreibpfad; das hier ist der Nachzügler-Knopf
+ * für Buchungen, die es vor der Regel schon gab.
+ */
+export async function syncReservationTasks(
+  reservationId: string,
+): Promise<Result<{ touched: number }>> {
+  return call(`/tasks/sync-reservation/${encodeURIComponent(reservationId)}`, {
+    method: "POST",
+  });
 }
 
 // --- PM-Aufgaben-Modul ---
+// Konstanten liegen in `lib/aufgaben-konstanten.ts`: aus einer "use server"-
+// Datei dürfen nur async-Funktionen exportiert werden.
 
-/** Teamaufgaben (alle Aufgaben mit Assignee/Objekt-Namen). */
-export async function listTeamTasks(filter?: {
+export type TaskFilter = {
   status_bucket?: string;
-  property_id?: string;
-  assignee_id?: string;
-}): Promise<Result<TaskListItem[]>> {
+  property_ids?: string[];
+  assignee_ids?: string[];
+  rule_ids?: string[];
+};
+
+function filterParams(filter?: TaskFilter): URLSearchParams {
   const p = new URLSearchParams();
   if (filter?.status_bucket) p.set("status_bucket", filter.status_bucket);
-  if (filter?.property_id) p.set("property_id", filter.property_id);
-  if (filter?.assignee_id) p.set("assignee_id", filter.assignee_id);
-  const q = p.toString();
+  for (const id of filter?.property_ids ?? []) p.append("property_id", id);
+  for (const id of filter?.assignee_ids ?? []) p.append("assignee_id", id);
+  for (const id of filter?.rule_ids ?? []) p.append("rule_id", id);
+  return p;
+}
+
+/** Teamaufgaben (alle Aufgaben mit Assignee/Objekt-Namen). */
+export async function listTeamTasks(
+  filter?: TaskFilter,
+): Promise<Result<TaskListItem[]>> {
+  const q = filterParams(filter).toString();
   return call(`/tasks/team${q ? `?${q}` : ""}`);
+}
+
+/** Auswahl abschließen (Foto-Pflicht/Scope gelten je Aufgabe). */
+export async function bulkCompleteTasks(
+  ids: string[],
+): Promise<Result<{ completed: number; skipped: number }>> {
+  return call("/tasks/bulk/complete", { method: "POST", body: { ids } });
+}
+
+/** Auswahl löschen. */
+export async function bulkDeleteTasks(
+  ids: string[],
+): Promise<Result<{ deleted: number; skipped: number }>> {
+  return call("/tasks/bulk/delete", { method: "POST", body: { ids } });
 }
 
 /** Kalender-Timeline: Aufgaben im Zeitraum, nach Objekt gruppiert. */
 export async function getTaskCalendar(
   monthFrom: string,
   monthTo: string,
-  assigneeId?: string,
+  filter?: Pick<TaskFilter, "assignee_ids" | "rule_ids">,
 ): Promise<Result<{ rows: CalendarRow[] }>> {
-  const p = new URLSearchParams({ month_from: monthFrom, month_to: monthTo });
-  if (assigneeId) p.set("assignee_id", assigneeId);
+  const p = filterParams(filter);
+  p.set("month_from", monthFrom);
+  p.set("month_to", monthTo);
   return call(`/tasks/calendar?${p.toString()}`);
 }
 
@@ -275,11 +343,17 @@ export async function completeTask(taskId: string): Promise<Result<TaskDetail>> 
   return call(`/tasks/${encodeURIComponent(taskId)}/complete`, { method: "POST" });
 }
 
-/** Inspektions-Liste (Tab: to_review | reviewed | upcoming). */
+/**
+ * Inspektions-Liste (Tab: to_review | reviewed | upcoming). `photos` enthält
+ * SIGNIERTE URLs aus dem privaten Bucket — direkt in ein `<img>` einsetzbar.
+ */
 export async function listInspection(
   tab: string,
+  propertyIds?: string[],
 ): Promise<Result<InspectionItem[]>> {
-  return call(`/tasks/inspection?tab=${encodeURIComponent(tab)}`);
+  const p = new URLSearchParams({ tab });
+  for (const id of propertyIds ?? []) p.append("property_id", id);
+  return call(`/tasks/inspection?${p.toString()}`);
 }
 
 /** Inspektions-Entscheidung: freigeben oder zurückweisen. */

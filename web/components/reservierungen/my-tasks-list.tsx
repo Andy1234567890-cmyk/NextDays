@@ -1,117 +1,129 @@
 "use client";
 
-// „Meine Aufgaben"-Reiter der PM-Fläche: die dem angemeldeten Nutzer
-// zugewiesenen Aufgaben (echte Daten, live über useRealtime auf tasks).
-// Status umschaltbar; ehrlicher Leerzustand statt Fake.
-import { Icon } from "@iconify/react";
-import { useTranslations, useLocale } from "next-intl";
+// „Meine Aufgaben": die dem angemeldeten Nutzer zugewiesenen Aufgaben in
+// derselben Tabelle wie die Teamaufgaben — nur ohne Zuweisungs-Spalte, die hier
+// nichts sagen würde.
+//
+// Vorher war das eine reine Abhak-Liste ohne Reiter, ohne Unterkunft, ohne
+// Buchungsbezug und ohne Termine. Eine Reinigungskraft konnte daraus nicht
+// ablesen, WO und BIS WANN etwas zu tun ist — genau die zwei Angaben, auf die
+// es ankommt.
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Card } from "@nextdays/ui/card";
-import {
-  type Task,
-  type TaskStatus,
-  listMyTasks,
-  setTaskStatus,
-} from "@/lib/tasks";
+import { AufgabenFilter } from "@/components/reservierungen/aufgaben-filter";
+import { AufgabenReiter } from "@/components/reservierungen/aufgaben-reiter";
+import { AufgabenTabelle } from "@/components/reservierungen/aufgaben-tabelle";
+import { MassenaktionenFab } from "@/components/reservierungen/massenaktionen-fab";
+import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
+import { listProperties } from "@/lib/properties";
+import { type TaskListItem, completeTask, listMyTasks } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
 export function MyTasksList() {
   const t = useTranslations("reservations");
-  const locale = useLocale();
-  const STATUS_LABEL: Record<TaskStatus, string> = {
-    open: t("myTasksList.statusOpen"),
-    in_progress: t("myTasksList.statusInProgress"),
-    done: t("myTasksList.statusDone"),
-    cancelled: t("myTasksList.statusCancelled"),
-  };
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tab, setTab] = useState("current");
+  const [rows, setRows] = useState<TaskListItem[]>([]);
+  const [properties, setProperties] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [propFilter, setPropFilter] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const res = await listMyTasks();
-    if (res.ok) setTasks(res.data);
+    setLoading(true);
+    const res = await listMyTasks({
+      status_bucket: tab,
+      property_ids: propFilter,
+    });
+    if (res.ok) setRows(res.data);
+    else toast.error(res.error);
     setLoading(false);
-  }, []);
+  }, [tab, propFilter]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    void (async () => {
+      const res = await listProperties();
+      if (res.ok) {
+        setProperties(
+          res.data.items.map((p) => ({ value: p.id, label: p.title })),
+        );
+      }
+    })();
+  }, []);
+
   useRealtime({ table: "tasks", onChange: load });
 
-  const toggle = async (task: Task) => {
-    const next: TaskStatus = task.status === "done" ? "open" : "done";
-    const res = await setTaskStatus(task.id, next);
+  const complete = async (taskId: string) => {
+    const res = await completeTask(taskId);
     if (!res.ok) toast.error(res.error);
-    else load();
+    else {
+      toast.success(t("myTasksList.completed"));
+      load();
+    }
   };
 
-  const fmtDue = (iso: string | null) =>
-    iso
-      ? new Date(iso).toLocaleDateString(locale, {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-      : null;
-
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-extrabold">{t("myTasksList.title")}</h1>
-        {tasks.length > 0 && (
-          <span className="text-sm text-muted-foreground">
-            {t("myTasksList.doneCount", {
-              done: tasks.filter((task) => task.status === "done").length,
-              total: tasks.length,
-            })}
-          </span>
-        )}
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="font-display text-2xl font-extrabold">
+          {t("myTasksList.title")}
+        </h1>
+        <AufgabenFilter
+          filters={[
+            {
+              key: "property",
+              caption: t("aufgabenFilter.propertiesCaption"),
+              allLabel: t("aufgabenFilter.allProperties"),
+              dialogTitle: t("aufgabenFilter.propertiesDialog"),
+              searchPlaceholder: t("aufgabenFilter.propertiesSearch"),
+              options: properties,
+              selected: propFilter,
+              onChange: setPropFilter,
+            },
+          ]}
+        />
       </div>
 
-      <Card className="p-5">
-        {loading ? (
-          <p className="text-sm text-muted-foreground">{t("myTasksList.loading")}</p>
-        ) : tasks.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            {t("myTasksList.emptyState")}
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-1.5">
-            {tasks.map((task) => {
-              const done = task.status === "done";
-              const due = fmtDue(task.due_at);
-              return (
-                <li key={task.id}>
-                  <button
-                    type="button"
-                    onClick={() => toggle(task)}
-                    className="flex w-full items-center gap-2.5 rounded-(--radius) border px-3 py-2.5 text-left text-sm transition-colors hover:bg-secondary/40"
-                  >
-                    <Icon
-                      icon={done ? "ph:check-circle-fill" : "ph:circle"}
-                      className={"size-5 shrink-0 " + (done ? "text-success" : "text-muted-foreground")}
-                    />
-                    <span className={"min-w-0 flex-1 truncate " + (done ? "text-muted-foreground line-through" : "")}>
-                      {task.title}
-                    </span>
-                    {due && (
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {t("myTasksList.dueOn", { date: due })}
-                      </span>
-                    )}
-                    <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-                      {STATUS_LABEL[task.status]}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </Card>
+      <AufgabenReiter value={tab} onChange={setTab} />
+
+      {loading ? (
+        <p className="p-6 text-sm text-muted-foreground">
+          {t("myTasksList.loading")}
+        </p>
+      ) : (
+        <AufgabenTabelle
+          rows={rows}
+          selected={selected}
+          onSelectedChange={setSelected}
+          emptyLabel={t("myTasksList.emptyState")}
+          aktionen={{ onOpen: setOpenId, onComplete: complete }}
+        />
+      )}
+
+      <MassenaktionenFab
+        ids={selected}
+        allowDelete={false}
+        onDone={() => {
+          setSelected([]);
+          load();
+        }}
+      />
+
+      {openId && (
+        <TaskDetailModal
+          taskId={openId}
+          onClose={() => setOpenId(null)}
+          onChanged={load}
+        />
+      )}
     </div>
   );
 }

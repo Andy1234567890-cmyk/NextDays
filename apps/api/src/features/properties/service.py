@@ -589,7 +589,6 @@ class PropertiesService(GebaeudeMixin, RoomsMixin):
                 "tenant_id": tenant_id,
                 "custom_by_weekday": bool(pricing.get("customByWeekday")),
                 "weekday_prices": pricing.get("weekdayPrices") or {},
-                "markup": pricing.get("markup") or {},
                 "extra_guest_charge": pricing.get("extraGuestCharge") or 0,
                 "extra_guest_from": pricing.get("extraGuestFrom") or 1,
                 "short_stay_max_nights": pricing.get("shortStayMaxNights") or 0,
@@ -1113,10 +1112,10 @@ class PropertiesService(GebaeudeMixin, RoomsMixin):
         # 4) Go-Live-Full-Sync: EIN full_sync_property-Job deckt Verfügbarkeit UND
         #    Preise/Restriktionen über den vollen 500-Tage-Horizont in genau zwei
         #    Channex-Calls ab (1× availability RLE, 1× rates&restrictions via
-        #    push_rates_batch aus dem Preis-Resolver — autopilot-unabhängig). Das ist
+        #    push_rates_batch aus dem Preis-Resolver — dieselbe Kurve, die auch
+        #    der DP-Recompute pusht: EIN Schalter, EINE Wahrheit). Das ist
         #    die dokumentierte „Hotel goes Live"-Semantik (Channex-Zertifizierung
-        #    Test 1). Ersetzt den früheren availability-Einzel-Push, der ohne
-        #    Autopilot KEINEN Preis-Push erzeugte (recompute pusht nur bei Autopilot).
+        #    Test 1). Ersetzt den früheren availability-Einzel-Push ohne Preise.
         #    Tages-Dedup wie der nächtliche Lauf: mehrfaches draft↔active-Togglen am
         #    selben Tag erzeugt keinen zweiten Voll-Push (kein Timer-Anti-Pattern).
         horizon_to = (today + timedelta(days=_PUBLISH_HORIZON_DAYS - 1)).isoformat()

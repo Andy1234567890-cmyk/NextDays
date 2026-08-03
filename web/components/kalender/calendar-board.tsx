@@ -191,17 +191,20 @@ function barDragTarget(d: BarDrag): { ci: string; co: string; pid: string } {
   return { ci: key(ci0), co: key(co), pid: d.res.property_id };
 }
 
-// Kompakter Tagespreis fürs Raster. null (kein Rate-Plan) → „–" statt erfundener 0.
+// Tagespreis fürs Raster. null (kein Rate-Plan) → „–" statt erfundener 0.
 // Währung wird durchgereicht (kein €-Hardcode, 27 EU-Länder); ein leerer/ungültiger
 // Code ergibt eine reine Zahl (kein falsches Symbol, kein Crash) — analog zu
-// lib/currency.ts::formatCurrency, hier aber ohne Nachkommastellen fürs Raster.
+// lib/currency.ts::formatCurrency. Centgenau wie Rate-Grid/Vorschau/Channex:
+// EINE Zahl überall — ein gerundetes „119 €" neben „118,68 €" im Rate-Grid
+// las sich als Fehler in der Preisführung.
 function fmtPrice(price: number | null | undefined, currency: string | null | undefined, locale: string): string {
   if (price == null) return "–";
   const code = typeof currency === "string" ? currency.trim().toUpperCase() : "";
   const valid = /^[A-Z]{3}$/.test(code);
   return price.toLocaleString(locale, {
     ...(valid ? { style: "currency", currency: code } : {}),
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 }
 

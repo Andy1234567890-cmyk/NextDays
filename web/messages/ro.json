@@ -3290,15 +3290,10 @@
       "allProperties": "Toate proprietățile"
     },
     "myTasksList": {
-      "title": "Sarcini",
-      "doneCount": "{done}/{total} finalizate",
+      "title": "Sarcinile mele",
       "loading": "Se încarcă…",
       "emptyState": "În prezent nu vă este atribuită nicio sarcină.",
-      "dueOn": "scadentă {date}",
-      "statusOpen": "Deschisă",
-      "statusInProgress": "În lucru",
-      "statusDone": "Finalizată",
-      "statusCancelled": "Anulată"
+      "completed": "Sarcină finalizată."
     },
     "bookingPopover": {
       "title": "Rezervare {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} finalizate",
       "loading": "Se încarcă…",
       "emptyState": "Încă nu există sarcini pentru această rezervare.",
-      "createDefaultTasks": "Creează sarcini standard",
-      "defaultTasksCreated": "Sarcini standard create.",
       "statusOpen": "Deschisă",
       "statusInProgress": "În lucru",
       "statusDone": "Finalizată",
-      "statusCancelled": "Anulată"
+      "statusCancelled": "Anulată",
+      "applyRules": "Aplică regulile",
+      "rulesApplied": "{count} sarcini din reguli.",
+      "noRuleMatched": "Nicio regulă nu se aplică acestei rezervări."
     },
     "propertyWarnings": {
       "title": "Avertismente",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Adaugă fotografie",
       "done": "Finalizat",
       "saving": "Se salvează…",
-      "completeButton": "Finalizează"
+      "completeButton": "Finalizează",
+      "inBooking": "Către rezervarea {ref}",
+      "assignedTo": "Pentru {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Cum plătește oaspetele?",
@@ -3464,7 +3462,8 @@
       "reject": "Respinge",
       "approve": "Aprobă",
       "toastApproved": "Aprobat.",
-      "toastRejected": "Respins."
+      "toastRejected": "Respins.",
+      "noPhotos": "Fără dovezi foto."
     },
     "bookingsBoard": {
       "title": "Rezervări",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Sarcini echipă",
-      "tabs": {
-        "current": "CURENTE",
-        "upcoming": "VIITOARE",
-        "done": "FINALIZATE"
-      },
-      "status": {
-        "open": "Deschisă",
-        "inProgress": "În lucru",
-        "done": "Finalizată",
-        "cancelled": "Anulată"
-      },
       "loading": "Se încarcă…",
       "empty": "Nicio sarcină în această vizualizare.",
-      "columns": {
-        "title": "Titlu",
-        "property": "Proprietate",
-        "assignee": "Atribuit către",
-        "status": "Status",
-        "due": "Scadentă"
-      },
-      "unassigned": "Neatribuită",
-      "inspectionNeeded": "Inspecție necesară",
-      "details": "Detalii"
+      "completed": "Sarcină finalizată.",
+      "deleted": "Sarcină ștearsă."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Șabloane de sarcini",
         "auto": "Sarcini planificate",
         "recurring": "Sarcini recurente"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Titlu",
       "columnActive": "Activ",
       "columnAssignee": "Atribuit",
-      "columnPoints": "Puncte",
-      "columnUpdated": "Actualizat",
-      "inspectionNeeded": "Inspecție necesară",
       "yes": "Da",
       "no": "Nu",
       "emptyValue": "–",
-      "edit": "Editează",
-      "delete": "Șterge",
-      "deleted": "Șters."
+      "columnInspection": "Necesită inspecție?",
+      "columnPriority": "Prioritatea sarcinii",
+      "columnDetails": "Detalii",
+      "learnBody": {
+        "auto": "O sarcină planificată se creează automat la fiecare rezervare a cazărilor alese — cu început și sfârșit față de sosire și plecare.",
+        "recurring": "O sarcină recurentă urmează calendarul: data de început, frecvența și durata. Sistemul creează aparițiile în avans — independent de rezervări."
+      }
     },
     "pmModuleNav": {
       "navLabel": "Module PM",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigare",
       "previousMonth": "Luna anterioară",
       "nextMonth": "Luna următoare",
-      "selectedUsersLabel": "Utilizatori selectați",
-      "allUsersPlaceholder": "Toți utilizatorii",
-      "selectedPropertiesLabel": "Proprietăți selectate",
-      "allPropertiesPlaceholder": "Toate proprietățile",
       "resetAllLabel": "Resetează tot",
       "loading": "Se încarcă…",
       "createTaskOnDay": "Creează sarcină în această zi",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - rezervare",
       "months": "Ianuarie,Februarie,Martie,Aprilie,Mai,Iunie,Iulie,August,Septembrie,Octombrie,Noiembrie,Decembrie",
-      "weekdays": "Duminică,Luni,Marți,Miercuri,Joi,Vineri,Sâmbătă"
+      "weekdays": "Duminică,Luni,Marți,Miercuri,Joi,Vineri,Sâmbătă",
+      "miscRow": "Diverse"
     },
     "ruleEditor": {
       "loading": "Se încarcă…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Rezervări confirmate"
     },
     "mobileAppHint": "Vizualizarea sarcinilor pentru deplasări este deja disponibilă responsiv pe web (Sarcinile mele + detalii cu încărcare de fotografii). O aplicație mobilă separată va urma ca proiect propriu.",
-    "guestModuleHint": "Cu formularul de pre-check-in colectați înainte de sosire toate datele oaspeților dvs. (act, adresă, însoțitori, ora sosirii). Această zonă va fi construită ca pas separat."
+    "guestModuleHint": "Cu formularul de pre-check-in colectați înainte de sosire toate datele oaspeților dvs. (act, adresă, însoțitori, ora sosirii). Această zonă va fi construită ca pas separat.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} selectate",
+      "resetCaption": "Resetează tot",
+      "close": "Închide",
+      "noMatch": "Niciun rezultat.",
+      "selectAll": "Selectează tot",
+      "selectNone": "Nu selecta nimic",
+      "save": "Salvează",
+      "taskCaption": "Sarcină selectată",
+      "allTasks": "Toate sarcinile",
+      "taskDialog": "Selectează sarcina",
+      "taskSearch": "Caută după titlul sarcinii",
+      "usersCaption": "Utilizatori selectați",
+      "allUsers": "Toți utilizatorii",
+      "usersDialog": "Selectează utilizatori",
+      "usersSearch": "Caută după nume",
+      "unassignedOption": "Neatribuit",
+      "propertiesCaption": "Cazări selectate",
+      "allProperties": "Toate cazările",
+      "propertiesDialog": "Selectează cazări",
+      "propertiesSearch": "Caută după nume sau oraș"
+    },
+    "aufgabenReiter": {
+      "current": "CURENTE",
+      "upcoming": "VIITOARE",
+      "done": "FINALIZATE"
+    },
+    "massenaktionen": {
+      "selected": "{count} selectate",
+      "completeAria": "Finalizează selecția",
+      "deleteAria": "Șterge selecția",
+      "completed": "{done} sarcini finalizate.",
+      "completedPartly": "{done} finalizate, {skipped} omise (lipsă foto sau fără acces).",
+      "deleted": "{done} sarcini șterse.",
+      "deletedPartly": "{done} șterse, {skipped} omise (fără acces)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Acțiuni",
+      "columnTitle": "Titlu",
+      "columnProperty": "Cazare",
+      "columnBooking": "Rezervare",
+      "columnAssignee": "Atribuit lui",
+      "columnStatus": "Stare",
+      "columnDates": "Date de început și sfârșit",
+      "selectAll": "Selectează toate rândurile",
+      "selectRow": "Selectează rândul",
+      "open": "Vezi",
+      "complete": "Finalizează",
+      "delete": "Șterge",
+      "inspectionNeeded": "Necesită inspecție",
+      "unassigned": "Neatribuit",
+      "statusOpen": "Incompletă",
+      "statusDone": "Finalizată",
+      "statusCancelled": "Anulată"
+    },
+    "ruleEditorPage": {
+      "loading": "Se încarcă…",
+      "modeCreate": "Creează",
+      "modeEdit": "Editează",
+      "breadcrumbHome": "Acasă",
+      "breadcrumbTasks": "Sarcini",
+      "titleLabel": "Titlu",
+      "descriptionLabel": "Descriere",
+      "active": "Activ",
+      "removeOnCancellation": "Elimină la anularea rezervării",
+      "priority": "Prioritatea sarcinii",
+      "priorityDown": "Scade prioritatea",
+      "priorityUp": "Crește prioritatea",
+      "priorityLevel": {
+        "1": "foarte scăzută",
+        "2": "scăzută",
+        "3": "medie",
+        "4": "ridicată",
+        "5": "imediată"
+      },
+      "propertiesLabel": {
+        "auto": "Cazări pentru care sarcina se creează la fiecare rezervare",
+        "recurring": "Cazări în care sarcina trebuie efectuată"
+      },
+      "propertiesPlaceholder": "Alege cazări…",
+      "propertiesHint": "Fără selecție, regula se aplică tuturor cazărilor.",
+      "templateLabel": "Șablon de sarcină cu lista subsarcinilor",
+      "templateNone": "Fără șablon",
+      "assigneeLabel": "Destinatarul sarcinii",
+      "unassigned": "Neatribuit",
+      "needsInspection": "Finalizarea necesită inspecție",
+      "saveAria": "Salvează regula",
+      "deleteAria": "Șterge regula",
+      "saved": "Salvat.",
+      "deleted": "Șters.",
+      "nameRequired": "Titlul este obligatoriu.",
+      "startTriggerRequired": "Alegeți când începe sarcina — altfel regula nu se declanșează niciodată.",
+      "scheduleRequired": "Data de început și frecvența sunt obligatorii.",
+      "learnTitle": {
+        "auto": "Sarcini planificate",
+        "recurring": "Sarcini recurente"
+      },
+      "learnBody": {
+        "auto": "O sarcină planificată este legată de o rezervare: stabiliți când începe și se termină față de sosire și plecare. Se creează la fiecare rezervare nouă, se mută odată cu ea și dispare la anulare.",
+        "recurring": "O sarcină recurentă urmează calendarul, nu rezervările: stabiliți începutul, frecvența și durata, iar sistemul creează aparițiile în avans."
+      },
+      "startTriggerLabel": "Când trebuie să înceapă sarcina",
+      "endTriggerLabel": "Când trebuie să se termine sarcina",
+      "triggerNone": "— nedefinit —",
+      "trigger": {
+        "booking_confirmed": "La confirmarea rezervării",
+        "check_in": "La sosire",
+        "after_check_in_24h": "După sosire (max. 24 de ore)",
+        "check_out": "La plecare",
+        "days_before_check_in": "Zile înainte de sosire",
+        "days_after_check_out": "Zile după plecare"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Sarcina se creează imediat ce rezervarea este confirmată.",
+        "check_in": "Sarcina începe la sosirea rezervării.",
+        "after_check_in_24h": "24 de ore după sosire — dar niciodată după plecare: la sejururi scurte sarcina se încheie la plecare.",
+        "check_out": "Sarcina este legată de plecarea rezervării.",
+        "days_before_check_in": "Sarcina se creează cu numărul de zile indicat înainte de sosire.",
+        "days_after_check_out": "Sarcina se creează cu numărul de zile indicat după plecare."
+      },
+      "offsetDays": "Zile",
+      "periodLabel": "Stabiliți data de început și de sfârșit",
+      "startsOn": "Data de început",
+      "startTime": "Ora de început",
+      "hasEnd": "Se încheie",
+      "endsOn": "Data de sfârșit",
+      "repeatLabel": "Interval de repetare",
+      "frequency": "Frecvență",
+      "choose": "Alege…",
+      "frequencyOption": {
+        "daily": "Zilnic",
+        "weekly": "Săptămânal",
+        "monthly": "Lunar",
+        "yearly": "Anual"
+      },
+      "interval": "La fiecare",
+      "onDay": "În ziua",
+      "onPattern": "În",
+      "position": {
+        "first": "Primul",
+        "second": "Al doilea",
+        "third": "Al treilea",
+        "fourth": "Al patrulea",
+        "last": "Ultimul"
+      },
+      "durationLabel": "Durată estimată",
+      "hours": "Ore",
+      "minutes": "Minute",
+      "weekdayMon": "Luni",
+      "weekdayTue": "Marți",
+      "weekdayWed": "Miercuri",
+      "weekdayThu": "Joi",
+      "weekdayFri": "Vineri",
+      "weekdaySat": "Sâmbătă",
+      "weekdaySun": "Duminică",
+      "weekdayMonShort": "Lu",
+      "weekdayTueShort": "Ma",
+      "weekdayWedShort": "Mi",
+      "weekdayThuShort": "Jo",
+      "weekdayFriShort": "Vi",
+      "weekdaySatShort": "Sâ",
+      "weekdaySunShort": "Du"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Disponibilitate",
       "itemChannels": "Kanäle",
       "itemPolicies": "Politici",
-      "itemSeasonalPrices": "Prețuri sezoniere"
+      "itemSeasonalPrices": "Prețuri sezoniere",
+      "groupChannels": "Canale",
+      "itemSync": "Sincronizare"
     },
     "complianceForm": {
       "title": "Conformitate",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Stabilește prețul pe noapte cu preț de bază și adaos.",
       "basePriceTitle": "Preț de bază",
       "basePriceHint": "Preț de bază pe noapte și monedă. Opțional, ajustabil pe zi a săptămânii.",
-      "markupTitle": "Adaos (mark-up)",
-      "markupHint": "Ajustează prețul de bază trimis către canalele externe.",
       "extraGuestTitle": "Adaos pe oaspete",
       "extraGuestHint": "Activează un adaos pe noapte pentru fiecare oaspete suplimentar.",
       "extraGuestPill": "{price} de la oaspetele {guest}",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Prețurile dinamice (automate în funcție de sezon, weekend, grad de ocupare, piață …) le configurezi centralizat la <link>Prețuri dinamice</link> din meniul principal. Un preț de bază setat aici rămâne baza; un preț manual pe zi din calendar are întotdeauna prioritate.",
       "basePricePerNightLabel": "Preț de bază pe noapte",
       "customByWeekdayLabel": "Ajustează pe zi a săptămânii",
-      "markupEditorTitle": "Adaos pentru canale externe",
-      "markupEditorSubtitle": "Un procent pozitiv crește, unul negativ reduce prețul de bază pentru canalele externe.",
-      "markupHintNote": "Adaosul nu se aplică rezervărilor directe NextDays.",
       "extraGuestEditorSubtitle": "Activează un adaos pe noapte pentru fiecare oaspete suplimentar.",
       "extraGuestFromLabel": "Se aplică pentru fiecare oaspete de la",
       "guestCount": "{count, plural, one {# oaspete} few {# oaspeți} other {# de oaspeți}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "de ex. Preț standard",
       "multiPlanHint": "Mai multe planuri de prețuri (de ex. BAR/B&B) — prețurile se gestionează pe date în vizualizarea de calendar „Prețuri”.",
       "plansTitle": "Planuri de prețuri",
+      "dynamicActiveTitle": "Dynamic Pricing activ",
+      "dynamicActiveHint": "Prețurile zilnice sunt calculate automat și se aplică peste tot — în calendar, pe propria platformă și pe portaluri. Prețul de bază este doar baza calculului.",
+      "dynamicActiveOpen": "Deschide previzualizarea",
+      "portalAdjustmentTitle": "Ajustare de preț per portal",
+      "portalAdjustmentHint": "Ajustați prețurile trimise către portalurile dvs. externe.",
+      "portalAdjustmentNone": "Niciun portal conectat încă.",
+      "portalAdjustmentInvalid": "Valoare nevalidă — intervalul permis este de la −99 la 500%.",
+      "portalAdjustmentEditorSubtitle": "Ajustați adaosul pentru portalurile externe. Un procent pozitiv crește prețurile trimise portalului, unul negativ le scade.",
+      "portalAdjustmentDirectNote": "Adaosul nu se aplică rezervărilor directe prin propriul site sau prin myBestDays.",
+      "portalAdjustmentSaved": "Ajustarea de preț a fost salvată.",
       "plansHint": "Prețurile se gestionează pe date în calendar.",
       "planCreate": "Creează plan de prețuri",
-      "planModeManual": "Manual",
+      "planModeManual": "Preț propriu",
       "planModeDerived": "Derivat din {parent} · {offset}",
       "planDerivedPrice": "calculat",
       "planMinStay": "Min. {nights} nopți",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Sincronizare",
+      "hint": "Ce identificator are această proprietate pe fiecare portal și dacă sincronizarea funcționează. Identificatorii apar exact ca în extranetul portalului, pentru a găsi acolo o rezervare.",
+      "none": "Această proprietate nu este conectată la niciun portal. Conecteaz-o în fila „Canale”.",
+      "colPortal": "La portal",
+      "colOurs": "La noi",
+      "colStatus": "Stare",
+      "published": "Publicat",
+      "notPublished": "Nepublicat",
+      "syncOk": "Sincronizat",
+      "statusActive": "Activ",
+      "statusPaused": "În pauză",
+      "statusError": "Eroare",
+      "singleUnit": "Toată proprietatea",
+      "loadFailed": "Această proprietate nu a putut fi încărcată."
+    },
+    "channelDetail": {
+      "identifiers": "Identificatori",
+      "hotelId": "Identificatorul hotelului",
+      "roomCode": "Identificatorul camerei",
+      "roomTitle": "Numele camerei la portal",
+      "sellingTitle": "Vânzare prin acest portal",
+      "sellingHint": "Oprit: prețurile și disponibilitatea nu mai ajung la acest portal. Rezervările existente continuă, iar altele noi tot sosesc.",
+      "lastSync": "Ultima sincronizare",
+      "never": "Niciodată",
+      "syncNow": "Sincronizează acum",
+      "loadFailed": "Această conexiune nu a putut fi încărcată.",
+      "backToChannel": "Conturi {portal}",
+      "ourId": "ID myNextDays:",
+      "published": "Publicat",
+      "notPublished": "Nepublicat",
+      "statusSynced": "Sincronizat",
+      "statusPaused": "În pauză",
+      "statusError": "Eroare",
+      "syncSection": "Sincronizare",
+      "ratePlans": "Planuri tarifare active",
+      "noRatePlans": "Niciun plan tarifar nu este eliberat către portaluri.",
+      "colCondition": "Condiții",
+      "colPlanName": "Numele planului tarifar (tip)",
+      "colPriceChange": "Modificare de preț",
+      "modeManual": "Preț propriu",
+      "modeDerived": "Derivat",
+      "minStay": "min. {nights} nopți",
+      "colPrice": "Preț",
+      "dynamicActiveTitle": "Dynamic Pricing activ",
+      "dynamicActiveHint": "Către acest portal se trimit prețurile zilnice calculate automat — prețul afișat mai jos este doar baza calculului.",
+      "adjustmentInvalid": "Valoare nevalidă — intervalul permis este de la −99 la 500%.",
+      "adjustmentSave": "Salvează",
+      "adjustmentCancel": "Anulează",
+      "adjustmentHint": "Editează ajustarea de preț a acestui portal",
+      "notReleased": "neeliberat către portaluri"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Retransmite integral disponibilitatea, prețurile și restricțiile",
     "categoryMessaging": "Comunicare directă cu oaspeții",
     "connected": "Conectat",
-    "notConnected": "Neconectat"
+    "notConnected": "Neconectat",
+    "propertiesHeading": "Proprietăți",
+    "noPropertiesYet": "Încă nu ai proprietăți active. Creează una pentru a o conecta la {portal}.",
+    "connectedOf": "{connected} din {total} conectate",
+    "searchProperty": "Căutare",
+    "propertyAtPortal": "Proprietate pe {portal}",
+    "syncStatusColumn": "Stare sincronizare",
+    "actionColumn": "Acțiune",
+    "noSearchResults": "Nicio proprietate nu corespunde căutării.",
+    "statusPaused": "În pauză",
+    "statusError": "Eroare",
+    "statusSynced": "Sincronizat",
+    "idPrefix": "ID:",
+    "edit": "Editează",
+    "fullResyncShort": "Sincronizare completă",
+    "pause": "Pauză",
+    "activate": "Activează",
+    "disconnectChannel": "Deconectează",
+    "disconnectConfirm": "Deconectezi complet {portal}? Toate proprietățile conectate la acest portal vor fi deconectate.",
+    "disconnectDone": "{portal} deconectat.",
+    "notConfiguredHint": "Conexiunea cu portalul nu este încă activă. Odată activată, îți poți conecta proprietățile.",
+    "channelIntro": "Publică, sincronizează și administrează anunțurile tale {portal} dintr-un singur loc.",
+    "syncResult": "Sincronizare gata — {fetched} preluate, {saved} salvate, {acked} confirmate.",
+    "pullFutureStarted": "Rezervările existente se încarcă — poate dura un moment.",
+    "bookingsFrom": "Rezervări de la {portal}",
+    "pullFuture": "Încarcă rezervările existente",
+    "syncing": "Se sincronizează …",
+    "syncBookings": "Sincronizează rezervările",
+    "noBookingsYet": "Încă nu există rezervări de la acest portal.",
+    "channelFallback": "Canal"
   },
   "calendarSync": {
     "title": "Import/export calendar",

@@ -179,6 +179,10 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
   useRealtime({ table: "rate_plan_sync_state", onChange: reload });
   useRealtime({ table: "price_overrides", onChange: reload });
   useRealtime({ table: "dynamic_prices", onChange: reload });
+  // Wochentagspreise (Resolver-Quelle „weekday") — ohne dieses Abo zeigte das
+  // Grid nach einer Änderung im Objekt-Preis-Tab bis zum Reload alte Werte
+  // (Belegungsplan + Monatsansicht abonnieren die Tabelle längst).
+  useRealtime({ table: "property_pricing_config", onChange: reload });
   // Speisen die Verfügbarkeits-Kopfzeile (Belegung/Sperren/Stop-Sell).
   useRealtime({ table: "availability", onChange: reload });
   useRealtime({ table: "reservations", onChange: reload });

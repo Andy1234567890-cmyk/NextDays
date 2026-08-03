@@ -410,8 +410,10 @@ def test_rate_rules_match_window() -> None:
     assert far.factors["rate_rules"] == 1.0
 
 
-def test_autopilot_setting_parsed() -> None:
-    on = DpSettings.from_row({"enabled": True, "autopilot_enabled": True})
-    off = DpSettings.from_row({"enabled": True})
-    assert on.autopilot_enabled is True
-    assert off.autopilot_enabled is False
+def test_autopilot_spalte_wird_ignoriert() -> None:
+    # EIN Schalter, EINE Wahrheit: enabled heißt „gilt überall". Die alte
+    # DB-Spalte autopilot_enabled existiert noch, hat aber keine Bedeutung
+    # mehr — from_row darf an ihr nicht scheitern und kein Feld erzeugen.
+    s = DpSettings.from_row({"enabled": True, "autopilot_enabled": True})
+    assert s.enabled is True
+    assert not hasattr(s, "autopilot_enabled")

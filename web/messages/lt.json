@@ -3290,15 +3290,10 @@
       "allProperties": "Visos apgyvendinimo vietos"
     },
     "myTasksList": {
-      "title": "Užduotys",
-      "doneCount": "{done}/{total} atlikta",
+      "title": "Mano užduotys",
       "loading": "Įkeliama…",
       "emptyState": "Šiuo metu jums nepriskirta jokių užduočių.",
-      "dueOn": "terminas {date}",
-      "statusOpen": "Neatlikta",
-      "statusInProgress": "Vykdoma",
-      "statusDone": "Atlikta",
-      "statusCancelled": "Atšaukta"
+      "completed": "Užduotis užbaigta."
     },
     "bookingPopover": {
       "title": "Rezervacija {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} atlikta",
       "loading": "Įkeliama…",
       "emptyState": "Šiai rezervacijai užduočių dar nėra.",
-      "createDefaultTasks": "Sukurti numatytąsias užduotis",
-      "defaultTasksCreated": "Numatytosios užduotys sukurtos.",
       "statusOpen": "Neatlikta",
       "statusInProgress": "Vykdoma",
       "statusDone": "Atlikta",
-      "statusCancelled": "Atšaukta"
+      "statusCancelled": "Atšaukta",
+      "applyRules": "Taikyti taisykles",
+      "rulesApplied": "Iš taisyklių: {count} užduotys.",
+      "noRuleMatched": "Šiam užsakymui netaikoma jokia taisyklė."
     },
     "propertyWarnings": {
       "title": "Įspėjimai",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Pridėti nuotrauką",
       "done": "Atlikta",
       "saving": "Išsaugoma…",
-      "completeButton": "Užbaigti"
+      "completeButton": "Užbaigti",
+      "inBooking": "Į užsakymą {ref}",
+      "assignedTo": "Skirta {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Kaip svečias moka?",
@@ -3464,7 +3462,8 @@
       "reject": "Atmesti",
       "approve": "Patvirtinti",
       "toastApproved": "Patvirtinta.",
-      "toastRejected": "Atmesta."
+      "toastRejected": "Atmesta.",
+      "noPhotos": "Nėra nuotraukų įrodymų."
     },
     "bookingsBoard": {
       "title": "Rezervacijos",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Komandos užduotys",
-      "tabs": {
-        "current": "DABARTINĖS",
-        "upcoming": "ARTĖJANČIOS",
-        "done": "BAIGTOS"
-      },
-      "status": {
-        "open": "Neatlikta",
-        "inProgress": "Vykdoma",
-        "done": "Atlikta",
-        "cancelled": "Atšaukta"
-      },
       "loading": "Įkeliama…",
       "empty": "Šiame rodinyje užduočių nėra.",
-      "columns": {
-        "title": "Pavadinimas",
-        "property": "Apgyvendinimo vieta",
-        "assignee": "Priskirta",
-        "status": "Būsena",
-        "due": "Terminas"
-      },
-      "unassigned": "Nepriskirta",
-      "inspectionNeeded": "Reikalinga patikra",
-      "details": "Detalės"
+      "completed": "Užduotis užbaigta.",
+      "deleted": "Užduotis ištrinta."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Užduočių šablonai",
         "auto": "Planinės užduotys",
         "recurring": "Pasikartojančios užduotys"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Pavadinimas",
       "columnActive": "Aktyvu",
       "columnAssignee": "Priskirta",
-      "columnPoints": "Punktai",
-      "columnUpdated": "Atnaujinta",
-      "inspectionNeeded": "Reikalinga patikra",
       "yes": "Taip",
       "no": "Ne",
       "emptyValue": "–",
-      "edit": "Redaguoti",
-      "delete": "Ištrinti",
-      "deleted": "Ištrinta."
+      "columnInspection": "Ar reikia patikros?",
+      "columnPriority": "Užduoties prioritetas",
+      "columnDetails": "Išsami informacija",
+      "learnBody": {
+        "auto": "Suplanuota užduotis sukuriama automatiškai kiekvieno pasirinktų vietų užsakymo metu — su pradžia ir pabaiga atvykimo ir išvykimo atžvilgiu.",
+        "recurring": "Pasikartojanti užduotis seka kalendorių: pradžios data, dažnumas ir trukmė. Sistema įvykius sukuria iš anksto — nepriklausomai nuo užsakymų."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PV moduliai",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Naršymas",
       "previousMonth": "Ankstesnis mėnuo",
       "nextMonth": "Kitas mėnuo",
-      "selectedUsersLabel": "Pasirinkti naudotojai",
-      "allUsersPlaceholder": "Visi naudotojai",
-      "selectedPropertiesLabel": "Pasirinktos apgyvendinimo vietos",
-      "allPropertiesPlaceholder": "Visos apgyvendinimo vietos",
       "resetAllLabel": "Atstatyti viską",
       "loading": "Įkeliama…",
       "createTaskOnDay": "Sukurti užduotį šią dieną",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - rezervacija",
       "months": "[\"Sausis\",\"Vasaris\",\"Kovas\",\"Balandis\",\"Gegužė\",\"Birželis\",\"Liepa\",\"Rugpjūtis\",\"Rugsėjis\",\"Spalis\",\"Lapkritis\",\"Gruodis\"]",
-      "weekdays": "[\"Sekmadienis\",\"Pirmadienis\",\"Antradienis\",\"Trečiadienis\",\"Ketvirtadienis\",\"Penktadienis\",\"Šeštadienis\"]"
+      "weekdays": "[\"Sekmadienis\",\"Pirmadienis\",\"Antradienis\",\"Trečiadienis\",\"Ketvirtadienis\",\"Penktadienis\",\"Šeštadienis\"]",
+      "miscRow": "Įvairūs"
     },
     "ruleEditor": {
       "loading": "Įkeliama…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Patvirtintos rezervacijos"
     },
     "mobileAppHint": "Užduočių rodinys kelyje jau prieinamas adaptyviai internete (Mano užduotys + detalės su nuotraukų įkėlimu). Atskira mobilioji programėlė bus atskiras projektas.",
-    "guestModuleHint": "Išankstinės registracijos forma prieš atvykimą surenkate visus savo svečių duomenis (dokumentas, adresas, kartu keliaujantys, atvykimo laikas). Ši sritis bus kuriama kaip atskiras žingsnis."
+    "guestModuleHint": "Išankstinės registracijos forma prieš atvykimą surenkate visus savo svečių duomenis (dokumentas, adresas, kartu keliaujantys, atvykimo laikas). Ši sritis bus kuriama kaip atskiras žingsnis.",
+    "aufgabenFilter": {
+      "selectedCount": "pasirinkta: {count}",
+      "resetCaption": "Atstatyti viską",
+      "close": "Uždaryti",
+      "noMatch": "Nėra atitikmenų.",
+      "selectAll": "Pasirinkti viską",
+      "selectNone": "Nieko nepasirinkti",
+      "save": "Išsaugoti",
+      "taskCaption": "Pasirinkta užduotis",
+      "allTasks": "Visos užduotys",
+      "taskDialog": "Pasirinkti užduotį",
+      "taskSearch": "Ieškoti pagal užduoties pavadinimą",
+      "usersCaption": "Pasirinkti naudotojai",
+      "allUsers": "Visi naudotojai",
+      "usersDialog": "Pasirinkti naudotojus",
+      "usersSearch": "Ieškoti pagal vardą",
+      "unassignedOption": "Nepriskirta",
+      "propertiesCaption": "Pasirinktos apgyvendinimo vietos",
+      "allProperties": "Visos apgyvendinimo vietos",
+      "propertiesDialog": "Pasirinkti apgyvendinimo vietas",
+      "propertiesSearch": "Ieškoti pagal pavadinimą ar miestą"
+    },
+    "aufgabenReiter": {
+      "current": "DABARTINĖS",
+      "upcoming": "ARTIMIAUSIOS",
+      "done": "UŽBAIGTOS"
+    },
+    "massenaktionen": {
+      "selected": "pasirinkta: {count}",
+      "completeAria": "Užbaigti pasirinktas",
+      "deleteAria": "Ištrinti pasirinktas",
+      "completed": "Užbaigta užduočių: {done}.",
+      "completedPartly": "Užbaigta {done}, praleista {skipped} (trūksta nuotraukos arba nėra prieigos).",
+      "deleted": "Ištrinta užduočių: {done}.",
+      "deletedPartly": "Ištrinta {done}, praleista {skipped} (nėra prieigos)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Veiksmai",
+      "columnTitle": "Pavadinimas",
+      "columnProperty": "Apgyvendinimas",
+      "columnBooking": "Užsakymas",
+      "columnAssignee": "Priskirta",
+      "columnStatus": "Būsena",
+      "columnDates": "Pradžios ir pabaigos laikas",
+      "selectAll": "Pasirinkti visas eilutes",
+      "selectRow": "Pasirinkti eilutę",
+      "open": "Peržiūrėti",
+      "complete": "Užbaigti",
+      "delete": "Ištrinti",
+      "inspectionNeeded": "Reikia patikros",
+      "unassigned": "Nepriskirta",
+      "statusOpen": "Nebaigta",
+      "statusDone": "Užbaigta",
+      "statusCancelled": "Atšaukta"
+    },
+    "ruleEditorPage": {
+      "loading": "Įkeliama…",
+      "modeCreate": "Sukurti",
+      "modeEdit": "Redaguoti",
+      "breadcrumbHome": "Pradžia",
+      "breadcrumbTasks": "Užduotys",
+      "titleLabel": "Pavadinimas",
+      "descriptionLabel": "Aprašymas",
+      "active": "Aktyvu",
+      "removeOnCancellation": "Pašalinti atšaukus užsakymą",
+      "priority": "Užduoties prioritetas",
+      "priorityDown": "Sumažinti prioritetą",
+      "priorityUp": "Padidinti prioritetą",
+      "priorityLevel": {
+        "1": "labai žemas",
+        "2": "žemas",
+        "3": "vidutinis",
+        "4": "aukštas",
+        "5": "neatidėliotinas"
+      },
+      "propertiesLabel": {
+        "auto": "Apgyvendinimo vietos, kurioms užduotis kuriama kiekvieno užsakymo metu",
+        "recurring": "Apgyvendinimo vietos, kuriose atliekama užduotis"
+      },
+      "propertiesPlaceholder": "Pasirinkite vietas…",
+      "propertiesHint": "Nepasirinkus taisyklė galioja visoms vietoms.",
+      "templateLabel": "Užduoties šablonas su papildomų užduočių sąrašu",
+      "templateNone": "Be šablono",
+      "assigneeLabel": "Užduoties gavėjas",
+      "unassigned": "Nepriskirta",
+      "needsInspection": "Užbaigimui reikia patikros",
+      "saveAria": "Išsaugoti taisyklę",
+      "deleteAria": "Ištrinti taisyklę",
+      "saved": "Išsaugota.",
+      "deleted": "Ištrinta.",
+      "nameRequired": "Pavadinimas privalomas.",
+      "startTriggerRequired": "Pasirinkite, kada užduotis prasideda — kitaip taisyklė niekada nesuveiks.",
+      "scheduleRequired": "Pradžios data ir dažnumas privalomi.",
+      "learnTitle": {
+        "auto": "Suplanuotos užduotys",
+        "recurring": "Pasikartojančios užduotys"
+      },
+      "learnBody": {
+        "auto": "Suplanuota užduotis susieta su užsakymu: nustatote, kada ji prasideda ir baigiasi atvykimo ir išvykimo atžvilgiu. Ji sukuriama su kiekvienu nauju užsakymu, perkeliama kartu ir dingsta atšaukus.",
+        "recurring": "Pasikartojanti užduotis seka kalendorių, o ne užsakymus: nustatote pradžią, dažnumą ir trukmę, o sistema iš anksto sukuria įvykius."
+      },
+      "startTriggerLabel": "Kada užduotis turi prasidėti",
+      "endTriggerLabel": "Kada užduotis turi baigtis",
+      "triggerNone": "— nenustatyta —",
+      "trigger": {
+        "booking_confirmed": "Patvirtinus užsakymą",
+        "check_in": "Atvykstant",
+        "after_check_in_24h": "Po atvykimo (ne daugiau kaip 24 val.)",
+        "check_out": "Išvykstant",
+        "days_before_check_in": "Dienos prieš atvykimą",
+        "days_after_check_out": "Dienos po išvykimo"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Užduotis sukuriama, kai tik užsakymas patvirtinamas.",
+        "check_in": "Užduotis prasideda užsakymo atvykimo metu.",
+        "after_check_in_24h": "24 valandos po atvykimo — bet niekada po išvykimo: trumpo viešnagės atveju užduotis baigiasi išvykus.",
+        "check_out": "Užduotis susieta su užsakymo išvykimu.",
+        "days_before_check_in": "Užduotis sukuriama nurodytą dienų skaičių prieš atvykimą.",
+        "days_after_check_out": "Užduotis sukuriama nurodytą dienų skaičių po išvykimo."
+      },
+      "offsetDays": "Dienos",
+      "periodLabel": "Pradžios ir pabaigos data",
+      "startsOn": "Pradžios data",
+      "startTime": "Pradžios laikas",
+      "hasEnd": "Baigiasi",
+      "endsOn": "Pabaigos data",
+      "repeatLabel": "Kartojimo intervalas",
+      "frequency": "Dažnumas",
+      "choose": "Pasirinkite…",
+      "frequencyOption": {
+        "daily": "Kasdien",
+        "weekly": "Kas savaitę",
+        "monthly": "Kas mėnesį",
+        "yearly": "Kasmet"
+      },
+      "interval": "Kas",
+      "onDay": "Dieną",
+      "onPattern": "Kas",
+      "position": {
+        "first": "Pirmas",
+        "second": "Antras",
+        "third": "Trečias",
+        "fourth": "Ketvirtas",
+        "last": "Paskutinis"
+      },
+      "durationLabel": "Numatoma trukmė",
+      "hours": "Valandos",
+      "minutes": "Minutės",
+      "weekdayMon": "Pirmadienis",
+      "weekdayTue": "Antradienis",
+      "weekdayWed": "Trečiadienis",
+      "weekdayThu": "Ketvirtadienis",
+      "weekdayFri": "Penktadienis",
+      "weekdaySat": "Šeštadienis",
+      "weekdaySun": "Sekmadienis",
+      "weekdayMonShort": "Pr",
+      "weekdayTueShort": "An",
+      "weekdayWedShort": "Tr",
+      "weekdayThuShort": "Kt",
+      "weekdayFriShort": "Pn",
+      "weekdaySatShort": "Št",
+      "weekdaySunShort": "Sk"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Prieinamumas",
       "itemChannels": "Kanäle",
       "itemPolicies": "Taisyklės",
-      "itemSeasonalPrices": "Sezoninės kainos"
+      "itemSeasonalPrices": "Sezoninės kainos",
+      "groupChannels": "Kanalai",
+      "itemSync": "Sinchronizavimas"
     },
     "complianceForm": {
       "title": "Atitiktis",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Nustatykite nakties kainą su baze ir priedu.",
       "basePriceTitle": "Bazinė kaina",
       "basePriceHint": "Bazinė kaina už naktį ir valiuta. Pasirinktinai – koreguokite pagal savaitės dieną.",
-      "markupTitle": "Priedas (mark-up)",
-      "markupHint": "Pakoreguokite bazinę kainą, siunčiamą į išorinius kanalus.",
       "extraGuestTitle": "Priedas už svečią",
       "extraGuestHint": "Įjunkite nakties priedą už kiekvieną papildomą svečią.",
       "extraGuestPill": "{price} nuo {guest} svečio",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Dinamines kainas (automatiškai pagal sezoną, savaitgalį, užimtumą, rinką …) nustatote centralizuotai skiltyje <link>Dinaminė kainodara</link> pagrindiniame meniu. Čia nustatyta bazinė kaina lieka pagrindu; rankiniu būdu kalendoriuje nustatyta dienos kaina visada turi pirmenybę.",
       "basePricePerNightLabel": "Bazinė kaina už naktį",
       "customByWeekdayLabel": "Koreguoti pagal savaitės dieną",
-      "markupEditorTitle": "Priedas išoriniams kanalams",
-      "markupEditorSubtitle": "Teigiamas % padidina, neigiamas % sumažina bazinę kainą išoriniams kanalams.",
-      "markupHintNote": "Priedas negalioja myNextDays tiesioginėms rezervacijoms.",
       "extraGuestEditorSubtitle": "Įjunkite nakties priedą už kiekvieną papildomą svečią.",
       "extraGuestFromLabel": "Galioja kiekvienam svečiui nuo",
       "guestCount": "{count, plural, one {# svečias} few {# svečiai} other {# svečių}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "pvz., Standartinė kaina",
       "multiPlanHint": "Keli kainų planai (pvz., BAR/B&B) — kainos tvarkomos pagal datą kalendoriaus rodinyje „Kainos“.",
       "plansTitle": "Kainų planai",
+      "dynamicActiveTitle": "Dynamic Pricing įjungtas",
+      "dynamicActiveHint": "Dienos kainos skaičiuojamos automatiškai ir galioja visur — kalendoriuje, savo platformoje ir portaluose. Bazinė kaina yra tik skaičiavimo pagrindas.",
+      "dynamicActiveOpen": "Atidaryti peržiūrą",
+      "portalAdjustmentTitle": "Kainos pakeitimas kiekvienam portalui",
+      "portalAdjustmentHint": "Pakoreguokite kainas, siunčiamas į jūsų išorinius portalus.",
+      "portalAdjustmentNone": "Kol kas neprijungtas nė vienas portalas.",
+      "portalAdjustmentInvalid": "Neteisinga reikšmė — leidžiama nuo −99 iki 500 %.",
+      "portalAdjustmentEditorSubtitle": "Pakoreguokite antkainį išoriniams portalams. Teigiamas procentas padidina į portalą siunčiamas kainas, neigiamas jas sumažina.",
+      "portalAdjustmentDirectNote": "Antkainis netaikomas tiesioginiams užsakymams per savo svetainę ar myBestDays.",
+      "portalAdjustmentSaved": "Kainos pakeitimas išsaugotas.",
       "plansHint": "Kainos tvarkomos pagal datą kalendoriuje.",
       "planCreate": "Sukurti kainų planą",
-      "planModeManual": "Rankiniu būdu",
+      "planModeManual": "Sava kaina",
       "planModeDerived": "Išvestinė iš plano {parent} · {offset}",
       "planDerivedPrice": "apskaičiuojama",
       "planMinStay": "Min. {nights} naktų",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Sinchronizavimas",
+      "hint": "Kokį identifikatorių šis objektas turi kiekviename portale ir ar veikia sinchronizavimas. Identifikatoriai rodomi taip pat kaip portalo ekstranete, kad ten būtų galima rasti rezervaciją.",
+      "none": "Šis objektas nesusietas su jokiu portalu. Susiek jį kortelėje „Kanalai“.",
+      "colPortal": "Portale",
+      "colOurs": "Pas mus",
+      "colStatus": "Būsena",
+      "published": "Paskelbta",
+      "notPublished": "Nepaskelbta",
+      "syncOk": "Sinchronizuota",
+      "statusActive": "Aktyvus",
+      "statusPaused": "Pristabdyta",
+      "statusError": "Klaida",
+      "singleUnit": "Visas objektas",
+      "loadFailed": "Šio objekto įkelti nepavyko."
+    },
+    "channelDetail": {
+      "identifiers": "Identifikatoriai",
+      "hotelId": "Viešbučio identifikatorius",
+      "roomCode": "Kambario identifikatorius",
+      "roomTitle": "Kambario pavadinimas portale",
+      "sellingTitle": "Pardavimas per šį portalą",
+      "sellingHint": "Išjungta: kainos ir laisvos vietos į šį portalą nebesiunčiamos. Esami užsakymai galioja toliau, nauji vis dar ateina.",
+      "lastSync": "Paskutinį kartą sinchronizuota",
+      "never": "Niekada",
+      "syncNow": "Sinchronizuoti dabar",
+      "loadFailed": "Šio ryšio įkelti nepavyko.",
+      "backToChannel": "{portal} paskyros",
+      "ourId": "myNextDays ID:",
+      "published": "Paskelbta",
+      "notPublished": "Nepaskelbta",
+      "statusSynced": "Sinchronizuota",
+      "statusPaused": "Pristabdyta",
+      "statusError": "Klaida",
+      "syncSection": "Sinchronizavimas",
+      "ratePlans": "Aktyvūs tarifų planai",
+      "noRatePlans": "Nė vienas tarifų planas nėra patvirtintas portalams.",
+      "colCondition": "Sąlygos",
+      "colPlanName": "Tarifų plano pavadinimas (tipas)",
+      "colPriceChange": "Kainos pokytis",
+      "modeManual": "Sava kaina",
+      "modeDerived": "Išvestinis",
+      "minStay": "bent {nights} naktys",
+      "colPrice": "Kaina",
+      "dynamicActiveTitle": "Dynamic Pricing įjungtas",
+      "dynamicActiveHint": "Į šį portalą siunčiamos automatiškai apskaičiuotos dienos kainos — žemiau rodoma kaina yra tik skaičiavimo pagrindas.",
+      "adjustmentInvalid": "Neteisinga reikšmė — leidžiama nuo −99 iki 500 %.",
+      "adjustmentSave": "Išsaugoti",
+      "adjustmentCancel": "Atšaukti",
+      "adjustmentHint": "Redaguoti šio portalo kainos pakeitimą",
+      "notReleased": "nepatvirtinta portalams"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Iš naujo visiškai perduoti laisvas dienas, kainas ir apribojimus",
     "categoryMessaging": "Tiesioginis bendravimas su svečiais",
     "connected": "Prijungta",
-    "notConnected": "Neprijungta"
+    "notConnected": "Neprijungta",
+    "propertiesHeading": "Objektai",
+    "noPropertiesYet": "Dar neturite aktyvių objektų. Pirma sukurkite objektą, kad susietumėte jį su {portal}.",
+    "connectedOf": "{connected} iš {total} susieta",
+    "searchProperty": "Paieška",
+    "propertyAtPortal": "Objektas portale {portal}",
+    "syncStatusColumn": "Sinchronizavimo būsena",
+    "actionColumn": "Veiksmas",
+    "noSearchResults": "Nė vienas objektas neatitinka paieškos.",
+    "statusPaused": "Pristabdyta",
+    "statusError": "Klaida",
+    "statusSynced": "Sinchronizuota",
+    "idPrefix": "ID:",
+    "edit": "Redaguoti",
+    "fullResyncShort": "Pilnas sinchronizavimas",
+    "pause": "Pristabdyti",
+    "activate": "Aktyvuoti",
+    "disconnectChannel": "Atjungti",
+    "disconnectConfirm": "Visiškai atjungti {portal}? Visi su šiuo portalu susieti objektai bus atjungti.",
+    "disconnectDone": "{portal} atjungtas.",
+    "notConfiguredHint": "Portalo ryšys dar neaktyvus. Kai bus įjungtas, galėsite susieti savo objektus.",
+    "channelIntro": "Skelbkite, sinchronizuokite ir tvarkykite savo {portal} skelbimus vienoje vietoje.",
+    "syncResult": "Sinchronizavimas baigtas — {fetched} gauta, {saved} išsaugota, {acked} patvirtinta.",
+    "pullFutureStarted": "Esamos rezervacijos įkeliamos — tai gali šiek tiek užtrukti.",
+    "bookingsFrom": "Rezervacijos iš {portal}",
+    "pullFuture": "Įkelti esamas rezervacijas",
+    "syncing": "Sinchronizuojama …",
+    "syncBookings": "Sinchronizuoti rezervacijas",
+    "noBookingsYet": "Iš šio portalo rezervacijų dar nėra.",
+    "channelFallback": "Kanalas"
   },
   "calendarSync": {
     "title": "Kalendoriaus importas / eksportas",

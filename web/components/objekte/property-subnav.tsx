@@ -37,6 +37,14 @@ const GROUPS: { labelKey: string; items: SubnavItem[] }[] = [
       { slug: "saisonpreise", titleKey: "itemSeasonalPrices", icon: "ph:sun" },
     ],
   },
+  {
+    // Eigene Gruppe wie bei Lodgify: die technische Zuordnung zu den Portalen
+    // ist etwas anderes als die Sichtbarkeit im Tab „Kanäle".
+    labelKey: "groupChannels",
+    items: [
+      { slug: "synchronisierung", titleKey: "itemSync", icon: "ph:arrows-clockwise" },
+    ],
+  },
 ];
 
 export function PropertySubnav({

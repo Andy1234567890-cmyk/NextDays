@@ -2,9 +2,14 @@
 
 // Aufgaben-Box der PM-Buchungsdetailseite (.. „Aufgaben"). Listet die
 // Aufgaben zu genau dieser Buchung, erlaubt Status-Umschalten (erledigt/offen)
-// und das Erzeugen der Standard-Aufgaben (Anreise-Check + Endreinigung). Live
-// über useRealtime auf der tasks-Tabelle (Pflicht, kein Polling). Zeigt echte
-// Daten oder einen ehrlichen Leerzustand — kein Fake.
+// und zieht die planmäßigen Regeln nach. Live über useRealtime auf der
+// tasks-Tabelle (Pflicht, kein Polling). Zeigt echte Daten oder einen
+// ehrlichen Leerzustand — kein Fake.
+//
+// Der Knopf hieß früher „Standard-Aufgaben erzeugen" und legte zwei fest
+// verdrahtete Aufgaben an, die mit den angelegten Regeln nichts zu tun hatten.
+// Seit 0272 entstehen die Aufgaben beim Buchen automatisch aus den Regeln; der
+// Knopf ist nur noch der Nachzügler für Buchungen, die es vor der Regel gab.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
@@ -14,9 +19,9 @@ import { Button } from "@nextdays/ui/button";
 import {
   type Task,
   type TaskStatus,
-  generateBookingTasks,
   listBookingTasks,
   setTaskStatus,
+  syncReservationTasks,
 } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -32,14 +37,8 @@ function useStatusLabels(): Record<TaskStatus, string> {
 
 export function BookingTasksSection({
   reservationId,
-  propertyId,
-  checkIn,
-  checkOut,
 }: {
   reservationId: string;
-  propertyId: string;
-  checkIn: string;
-  checkOut: string;
 }) {
   const t = useTranslations("reservations");
   const statusLabel = useStatusLabels();
@@ -72,18 +71,20 @@ export function BookingTasksSection({
 
   const generate = async () => {
     setBusy(true);
-    const res = await generateBookingTasks({
-      reservation_id: reservationId,
-      property_id: propertyId,
-      check_in: checkIn,
-      check_out: checkOut,
-    });
+    const res = await syncReservationTasks(reservationId);
     setBusy(false);
-    if (!res.ok) toast.error(res.error);
-    else {
-      toast.success(t("bookingTasksSection.defaultTasksCreated"));
-      load();
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
     }
+    // Ehrlich melden, was passiert ist: 0 heißt „keine Regel trifft auf diese
+    // Buchung zu" — nicht „erledigt".
+    toast.success(
+      res.data.touched > 0
+        ? t("bookingTasksSection.rulesApplied", { count: res.data.touched })
+        : t("bookingTasksSection.noRuleMatched"),
+    );
+    load();
   };
 
   return (
@@ -112,7 +113,7 @@ export function BookingTasksSection({
               icon={busy ? "ph:spinner" : "ph:plus"}
               className={"size-4 " + (busy ? "animate-spin" : "")}
             />
-            {t("bookingTasksSection.createDefaultTasks")}
+            {t("bookingTasksSection.applyRules")}
           </Button>
         </div>
       ) : (

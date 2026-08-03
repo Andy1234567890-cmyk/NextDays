@@ -3290,15 +3290,10 @@
       "allProperties": "Kaikki kohteet"
     },
     "myTasksList": {
-      "title": "Tehtävät",
-      "doneCount": "{done}/{total} valmis",
+      "title": "Omat tehtäväni",
       "loading": "Ladataan…",
       "emptyState": "Sinulle ei ole tällä hetkellä osoitettu tehtäviä.",
-      "dueOn": "erääntyy {date}",
-      "statusOpen": "Avoin",
-      "statusInProgress": "Kesken",
-      "statusDone": "Valmis",
-      "statusCancelled": "Peruttu"
+      "completed": "Tehtävä valmis."
     },
     "bookingPopover": {
       "title": "Varaus {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} valmis",
       "loading": "Ladataan…",
       "emptyState": "Tälle varaukselle ei ole vielä tehtäviä.",
-      "createDefaultTasks": "Luo oletustehtävät",
-      "defaultTasksCreated": "Oletustehtävät luotu.",
       "statusOpen": "Avoin",
       "statusInProgress": "Kesken",
       "statusDone": "Valmis",
-      "statusCancelled": "Peruttu"
+      "statusCancelled": "Peruttu",
+      "applyRules": "Käytä sääntöjä",
+      "rulesApplied": "{count} tehtävää säännöistä.",
+      "noRuleMatched": "Mikään sääntö ei koske tätä varausta."
     },
     "propertyWarnings": {
       "title": "Varoitukset",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Lisää kuva",
       "done": "Valmis",
       "saving": "Tallennetaan…",
-      "completeButton": "Merkitse valmiiksi"
+      "completeButton": "Merkitse valmiiksi",
+      "inBooking": "Varaukseen {ref}",
+      "assignedTo": "Henkilölle {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Miten vieras maksaa?",
@@ -3464,7 +3462,8 @@
       "reject": "Hylkää",
       "approve": "Hyväksy",
       "toastApproved": "Hyväksytty.",
-      "toastRejected": "Hylätty."
+      "toastRejected": "Hylätty.",
+      "noPhotos": "Ei valokuvatodisteita."
     },
     "bookingsBoard": {
       "title": "Varaukset",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Tiimin tehtävät",
-      "tabs": {
-        "current": "NYKYISET",
-        "upcoming": "TULEVAT",
-        "done": "VALMIIT"
-      },
-      "status": {
-        "open": "Avoin",
-        "inProgress": "Kesken",
-        "done": "Valmis",
-        "cancelled": "Peruttu"
-      },
       "loading": "Ladataan…",
       "empty": "Ei tehtäviä tässä näkymässä.",
-      "columns": {
-        "title": "Otsikko",
-        "property": "Kohde",
-        "assignee": "Vastuuhenkilö",
-        "status": "Tila",
-        "due": "Määräaika"
-      },
-      "unassigned": "Ei osoitettu",
-      "inspectionNeeded": "Tarkastus tarvitaan",
-      "details": "Tiedot"
+      "completed": "Tehtävä valmis.",
+      "deleted": "Tehtävä poistettu."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Tehtävämallit",
         "auto": "Ajastetut tehtävät",
         "recurring": "Toistuvat tehtävät"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Otsikko",
       "columnActive": "Aktiivinen",
       "columnAssignee": "Vastuuhenkilö",
-      "columnPoints": "Pisteet",
-      "columnUpdated": "Päivitetty",
-      "inspectionNeeded": "Tarkastus tarvitaan",
       "yes": "Kyllä",
       "no": "Ei",
       "emptyValue": "–",
-      "edit": "Muokkaa",
-      "delete": "Poista",
-      "deleted": "Poistettu."
+      "columnInspection": "Vaatiiko tarkastuksen?",
+      "columnPriority": "Tehtävän prioriteetti",
+      "columnDetails": "Tiedot",
+      "learnBody": {
+        "auto": "Aikataulutettu tehtävä syntyy automaattisesti jokaisesta valittujen majoitusten varauksesta — alku ja loppu suhteessa saapumiseen ja lähtöön.",
+        "recurring": "Toistuva tehtävä seuraa kalenteria: aloituspäivä, toistuvuus ja kesto. Järjestelmä luo ajankohdat etukäteen varauksista riippumatta."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM-moduulit",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigointi",
       "previousMonth": "Edellinen kuukausi",
       "nextMonth": "Seuraava kuukausi",
-      "selectedUsersLabel": "Valitut käyttäjät",
-      "allUsersPlaceholder": "Kaikki käyttäjät",
-      "selectedPropertiesLabel": "Valitut kohteet",
-      "allPropertiesPlaceholder": "Kaikki kohteet",
       "resetAllLabel": "Nollaa kaikki",
       "loading": "Ladataan…",
       "createTaskOnDay": "Luo tehtävä tälle päivälle",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - varaus",
       "months": "[\"Tammikuu\",\"Helmikuu\",\"Maaliskuu\",\"Huhtikuu\",\"Toukokuu\",\"Kesäkuu\",\"Heinäkuu\",\"Elokuu\",\"Syyskuu\",\"Lokakuu\",\"Marraskuu\",\"Joulukuu\"]",
-      "weekdays": "[\"Sunnuntai\",\"Maanantai\",\"Tiistai\",\"Keskiviikko\",\"Torstai\",\"Perjantai\",\"Lauantai\"]"
+      "weekdays": "[\"Sunnuntai\",\"Maanantai\",\"Tiistai\",\"Keskiviikko\",\"Torstai\",\"Perjantai\",\"Lauantai\"]",
+      "miscRow": "Muut"
     },
     "ruleEditor": {
       "loading": "Ladataan…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Vahvistetut varaukset"
     },
     "mobileAppHint": "Tehtävänäkymä liikkeellä ollessa on jo saatavilla responsiivisesti verkossa (Omat tehtävät + tiedot kuvien lataamisella). Erillinen mobiilisovellus tulee omana projektinaan.",
-    "guestModuleHint": "Ennakkoilmoittautumislomakkeella keräät ennen saapumista kaikki vieraidesi tiedot (henkilöllisyystodistus, osoite, matkakumppanit, saapumisaika). Tämä alue rakennetaan omana vaiheenaan."
+    "guestModuleHint": "Ennakkoilmoittautumislomakkeella keräät ennen saapumista kaikki vieraidesi tiedot (henkilöllisyystodistus, osoite, matkakumppanit, saapumisaika). Tämä alue rakennetaan omana vaiheenaan.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} valittu",
+      "resetCaption": "Nollaa kaikki",
+      "close": "Sulje",
+      "noMatch": "Ei osumia.",
+      "selectAll": "Valitse kaikki",
+      "selectNone": "Poista valinnat",
+      "save": "Tallenna",
+      "taskCaption": "Valittu tehtävä",
+      "allTasks": "Kaikki tehtävät",
+      "taskDialog": "Valitse tehtävä",
+      "taskSearch": "Hae tehtävän nimellä",
+      "usersCaption": "Valitut käyttäjät",
+      "allUsers": "Kaikki käyttäjät",
+      "usersDialog": "Valitse käyttäjät",
+      "usersSearch": "Hae nimellä",
+      "unassignedOption": "Ei osoitettu",
+      "propertiesCaption": "Valitut majoitukset",
+      "allProperties": "Kaikki majoitukset",
+      "propertiesDialog": "Valitse majoitukset",
+      "propertiesSearch": "Hae nimellä tai kaupungilla"
+    },
+    "aufgabenReiter": {
+      "current": "NYKYISET",
+      "upcoming": "TULEVAT",
+      "done": "VALMIIT"
+    },
+    "massenaktionen": {
+      "selected": "{count} valittu",
+      "completeAria": "Merkitse valitut valmiiksi",
+      "deleteAria": "Poista valitut",
+      "completed": "{done} tehtävää valmiina.",
+      "completedPartly": "{done} valmista, {skipped} ohitettu (kuva puuttuu tai ei oikeuksia).",
+      "deleted": "{done} tehtävää poistettu.",
+      "deletedPartly": "{done} poistettu, {skipped} ohitettu (ei oikeuksia)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Toiminnot",
+      "columnTitle": "Otsikko",
+      "columnProperty": "Majoitus",
+      "columnBooking": "Varaus",
+      "columnAssignee": "Vastuuhenkilö",
+      "columnStatus": "Tila",
+      "columnDates": "Alku- ja loppuaika",
+      "selectAll": "Valitse kaikki rivit",
+      "selectRow": "Valitse rivi",
+      "open": "Näytä",
+      "complete": "Merkitse valmiiksi",
+      "delete": "Poista",
+      "inspectionNeeded": "Vaatii tarkastuksen",
+      "unassigned": "Ei osoitettu",
+      "statusOpen": "Kesken",
+      "statusDone": "Valmis",
+      "statusCancelled": "Peruttu"
+    },
+    "ruleEditorPage": {
+      "loading": "Ladataan…",
+      "modeCreate": "Luo",
+      "modeEdit": "Muokkaa",
+      "breadcrumbHome": "Etusivu",
+      "breadcrumbTasks": "Tehtävät",
+      "titleLabel": "Otsikko",
+      "descriptionLabel": "Kuvaus",
+      "active": "Aktiivinen",
+      "removeOnCancellation": "Poista varauksen peruessa",
+      "priority": "Tehtävän prioriteetti",
+      "priorityDown": "Laske prioriteettia",
+      "priorityUp": "Nosta prioriteettia",
+      "priorityLevel": {
+        "1": "hyvin matala",
+        "2": "matala",
+        "3": "keskitaso",
+        "4": "korkea",
+        "5": "välitön"
+      },
+      "propertiesLabel": {
+        "auto": "Majoitukset, joissa tehtävä luodaan jokaisesta varauksesta",
+        "recurring": "Majoitukset, joissa tehtävä suoritetaan"
+      },
+      "propertiesPlaceholder": "Valitse majoitukset…",
+      "propertiesHint": "Ilman valintaa sääntö koskee kaikkia majoituksia.",
+      "templateLabel": "Tehtäväpohja alitehtävineen",
+      "templateNone": "Ei pohjaa",
+      "assigneeLabel": "Tehtävän saaja",
+      "unassigned": "Ei osoitettu",
+      "needsInspection": "Valmistuminen vaatii tarkastuksen",
+      "saveAria": "Tallenna sääntö",
+      "deleteAria": "Poista sääntö",
+      "saved": "Tallennettu.",
+      "deleted": "Poistettu.",
+      "nameRequired": "Otsikko on pakollinen.",
+      "startTriggerRequired": "Valitse, milloin tehtävä alkaa — muuten sääntö ei laukea koskaan.",
+      "scheduleRequired": "Aloituspäivä ja toistuvuus ovat pakollisia.",
+      "learnTitle": {
+        "auto": "Aikataulutetut tehtävät",
+        "recurring": "Toistuvat tehtävät"
+      },
+      "learnBody": {
+        "auto": "Aikataulutettu tehtävä liittyy varaukseen: määrität, milloin se alkaa ja päättyy suhteessa saapumiseen ja lähtöön. Se syntyy jokaisesta uudesta varauksesta, siirtyy varauksen mukana ja katoaa peruutuksessa.",
+        "recurring": "Toistuva tehtävä seuraa kalenteria, ei varauksia: määrität alun, toistuvuuden ja keston, ja järjestelmä luo ajankohdat etukäteen."
+      },
+      "startTriggerLabel": "Milloin tehtävä alkaa",
+      "endTriggerLabel": "Milloin tehtävä päättyy",
+      "triggerNone": "— ei asetettu —",
+      "trigger": {
+        "booking_confirmed": "Varauksen vahvistuessa",
+        "check_in": "Sisäänkirjautuessa",
+        "after_check_in_24h": "Sisäänkirjautumisen jälkeen (enint. 24 h)",
+        "check_out": "Uloskirjautuessa",
+        "days_before_check_in": "Päiviä ennen saapumista",
+        "days_after_check_out": "Päiviä lähdön jälkeen"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Tehtävä syntyy heti, kun varaus on vahvistettu.",
+        "check_in": "Tehtävä alkaa varauksen saapumisesta.",
+        "after_check_in_24h": "24 tuntia sisäänkirjautumisen jälkeen — mutta ei koskaan lähdön jälkeen: lyhyillä oleskeluilla tehtävä päättyy lähtöön.",
+        "check_out": "Tehtävä sidotaan varauksen lähtöön.",
+        "days_before_check_in": "Tehtävä syntyy annetun päivämäärän verran ennen saapumista.",
+        "days_after_check_out": "Tehtävä syntyy annetun päivämäärän verran lähdön jälkeen."
+      },
+      "offsetDays": "Päivät",
+      "periodLabel": "Alku- ja loppupäivä",
+      "startsOn": "Aloituspäivä",
+      "startTime": "Aloitusaika",
+      "hasEnd": "Päättyy",
+      "endsOn": "Loppupäivä",
+      "repeatLabel": "Toistoväli",
+      "frequency": "Toistuvuus",
+      "choose": "Valitse…",
+      "frequencyOption": {
+        "daily": "Päivittäin",
+        "weekly": "Viikoittain",
+        "monthly": "Kuukausittain",
+        "yearly": "Vuosittain"
+      },
+      "interval": "Joka",
+      "onDay": "Päivänä",
+      "onPattern": "Sinä",
+      "position": {
+        "first": "Ensimmäinen",
+        "second": "Toinen",
+        "third": "Kolmas",
+        "fourth": "Neljäs",
+        "last": "Viimeinen"
+      },
+      "durationLabel": "Arvioitu kesto",
+      "hours": "Tuntia",
+      "minutes": "Minuuttia",
+      "weekdayMon": "Maanantai",
+      "weekdayTue": "Tiistai",
+      "weekdayWed": "Keskiviikko",
+      "weekdayThu": "Torstai",
+      "weekdayFri": "Perjantai",
+      "weekdaySat": "Lauantai",
+      "weekdaySun": "Sunnuntai",
+      "weekdayMonShort": "Ma",
+      "weekdayTueShort": "Ti",
+      "weekdayWedShort": "Ke",
+      "weekdayThuShort": "To",
+      "weekdayFriShort": "Pe",
+      "weekdaySatShort": "La",
+      "weekdaySunShort": "Su"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Saatavuus",
       "itemChannels": "Kanäle",
       "itemPolicies": "Käytännöt",
-      "itemSeasonalPrices": "Kausihinnat"
+      "itemSeasonalPrices": "Kausihinnat",
+      "groupChannels": "Kanavat",
+      "itemSync": "Synkronointi"
     },
     "complianceForm": {
       "title": "Compliance",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Aseta yöhintasi perushinnalla ja lisällä.",
       "basePriceTitle": "Perushinta",
       "basePriceHint": "Perushinta per yö ja valuutta. Voit mukauttaa sitä valinnaisesti viikonpäivittäin.",
-      "markupTitle": "Lisä (mark-up)",
-      "markupHint": "Mukauta ulkoisiin kanaviin lähetettävää perushintaa.",
       "extraGuestTitle": "Lisä per vieras",
       "extraGuestHint": "Ota käyttöön yöhintalisä jokaiselle lisävieraalle.",
       "extraGuestPill": "{price} alkaen vieraasta {guest}",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Dynaamiset hinnat (automaattisesti kauden, viikonlopun, käyttöasteen, markkinoiden … mukaan) asetetaan keskitetysti kohdassa <link>Dynaaminen hinnoittelu</link> päävalikossa. Täällä asetettu perushinta pysyy pohjana; kalenterin manuaalinen päivähinta on aina etusijalla.",
       "basePricePerNightLabel": "Perushinta per yö",
       "customByWeekdayLabel": "Mukauta viikonpäivittäin",
-      "markupEditorTitle": "Lisä ulkoisille kanaville",
-      "markupEditorSubtitle": "Positiivinen % korottaa, negatiivinen % laskee perushintaa ulkoisille kanaville.",
-      "markupHintNote": "Lisä ei koske myNextDays-suoravarauksia.",
       "extraGuestEditorSubtitle": "Ota käyttöön yöhintalisä jokaiselle lisävieraalle.",
       "extraGuestFromLabel": "Koskee jokaista vierasta alkaen",
       "guestCount": "{count, plural, one {# vieras} other {# vierasta}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "esim. Vakiohinta",
       "multiPlanHint": "Useita hintasuunnitelmia (esim. BAR/B&B) — hintoja hallitaan päiväkohtaisesti kalenterinäkymässä ”Hinnat”.",
       "plansTitle": "Hintasuunnitelmat",
+      "dynamicActiveTitle": "Dynamic Pricing käytössä",
+      "dynamicActiveHint": "Päivähinnat lasketaan automaattisesti ja ne pätevät kaikkialla — kalenterissa, omalla alustallasi ja portaaleissa. Perushinta on vain laskennan pohja.",
+      "dynamicActiveOpen": "Avaa esikatselu",
+      "portalAdjustmentTitle": "Hinnanmuutos portaalikohtaisesti",
+      "portalAdjustmentHint": "Säädä hintoja, jotka lähetetään ulkoisiin portaaleihisi.",
+      "portalAdjustmentNone": "Portaalia ei ole vielä yhdistetty.",
+      "portalAdjustmentInvalid": "Virheellinen arvo — sallittu väli on −99…500 %.",
+      "portalAdjustmentEditorSubtitle": "Säädä ulkoisten portaalien lisää. Positiivinen prosentti nostaa portaaliin lähetettäviä hintoja, negatiivinen laskee niitä.",
+      "portalAdjustmentDirectNote": "Lisä ei koske suoria varauksia oman verkkosivuston tai myBestDaysin kautta.",
+      "portalAdjustmentSaved": "Hinnanmuutos tallennettu.",
       "plansHint": "Hintoja hallitaan päiväkohtaisesti kalenterissa.",
       "planCreate": "Luo hintasuunnitelma",
-      "planModeManual": "Manuaalinen",
+      "planModeManual": "Oma hinta",
       "planModeDerived": "Johdettu suunnitelmasta {parent} · {offset}",
       "planDerivedPrice": "laskettu",
       "planMinStay": "Väh. {nights} yötä",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Synkronointi",
+      "hint": "Mikä tunnus tällä kohteella on kussakin portaalissa ja toimiiko synkronointi. Tunnukset näkyvät samoin kuin portaalin extranetissä, jotta varaus löytyy sieltä.",
+      "none": "Tätä kohdetta ei ole yhdistetty mihinkään portaaliin. Yhdistä se Kanavat-välilehdellä.",
+      "colPortal": "Portaalissa",
+      "colOurs": "Meillä",
+      "colStatus": "Tila",
+      "published": "Julkaistu",
+      "notPublished": "Ei julkaistu",
+      "syncOk": "Synkronoitu",
+      "statusActive": "Aktiivinen",
+      "statusPaused": "Keskeytetty",
+      "statusError": "Virhe",
+      "singleUnit": "Koko kohde",
+      "loadFailed": "Tätä kohdetta ei voitu ladata."
+    },
+    "channelDetail": {
+      "identifiers": "Tunnukset",
+      "hotelId": "Hotellin tunnus",
+      "roomCode": "Huoneen tunnus",
+      "roomTitle": "Huoneen nimi portaalissa",
+      "sellingTitle": "Myynti tämän portaalin kautta",
+      "sellingHint": "Pois: hinnat ja saatavuus eivät enää mene tähän portaaliin. Olemassa olevat varaukset jatkuvat ja uusia tulee edelleen.",
+      "lastSync": "Viimeksi synkronoitu",
+      "never": "Ei koskaan",
+      "syncNow": "Synkronoi nyt",
+      "loadFailed": "Tätä yhteyttä ei voitu ladata.",
+      "backToChannel": "{portal}-tilit",
+      "ourId": "myNextDays-tunnus:",
+      "published": "Julkaistu",
+      "notPublished": "Ei julkaistu",
+      "statusSynced": "Synkronoitu",
+      "statusPaused": "Keskeytetty",
+      "statusError": "Virhe",
+      "syncSection": "Synkronointi",
+      "ratePlans": "Aktiiviset hintasuunnitelmat",
+      "noRatePlans": "Yhtäkään hintasuunnitelmaa ei ole vapautettu portaaleihin.",
+      "colCondition": "Ehdot",
+      "colPlanName": "Hintasuunnitelman nimi (tyyppi)",
+      "colPriceChange": "Hinnanmuutos",
+      "modeManual": "Oma hinta",
+      "modeDerived": "Johdettu",
+      "minStay": "väh. {nights} yötä",
+      "colPrice": "Hinta",
+      "dynamicActiveTitle": "Dynamic Pricing käytössä",
+      "dynamicActiveHint": "Tälle portaalille lähetetään automaattisesti lasketut päivähinnat — alla näkyvä hinta on vain laskennan pohja.",
+      "adjustmentInvalid": "Virheellinen arvo — sallittu väli on −99…500 %.",
+      "adjustmentSave": "Tallenna",
+      "adjustmentCancel": "Peruuta",
+      "adjustmentHint": "Muokkaa tämän portaalin hinnanmuutosta",
+      "notReleased": "ei vapautettu portaaleihin"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Siirrä saatavuus, hinnat ja rajoitukset kokonaan uudelleen",
     "categoryMessaging": "Suora viestintä vieraiden kanssa",
     "connected": "Yhdistetty",
-    "notConnected": "Ei yhdistetty"
+    "notConnected": "Ei yhdistetty",
+    "propertiesHeading": "Kohteet",
+    "noPropertiesYet": "Sinulla ei ole vielä aktiivisia kohteita. Luo ensin kohde, jotta voit yhdistää sen portaaliin {portal}.",
+    "connectedOf": "{connected} / {total} yhdistetty",
+    "searchProperty": "Haku",
+    "propertyAtPortal": "Kohde portaalissa {portal}",
+    "syncStatusColumn": "Synkronoinnin tila",
+    "actionColumn": "Toiminto",
+    "noSearchResults": "Yksikään kohde ei vastaa hakua.",
+    "statusPaused": "Keskeytetty",
+    "statusError": "Virhe",
+    "statusSynced": "Synkronoitu",
+    "idPrefix": "ID:",
+    "edit": "Muokkaa",
+    "fullResyncShort": "Täyssynkronointi",
+    "pause": "Keskeytä",
+    "activate": "Aktivoi",
+    "disconnectChannel": "Katkaise yhteys",
+    "disconnectConfirm": "Katkaistaanko {portal} kokonaan? Kaikkien tämän portaalin yhdistettyjen kohteiden yhteys katkaistaan.",
+    "disconnectDone": "{portal} irrotettu.",
+    "notConfiguredHint": "Portaaliyhteys ei ole vielä aktiivinen. Kun se otetaan käyttöön, voit yhdistää kohteesi.",
+    "channelIntro": "Julkaise, synkronoi ja hallitse {portal}-ilmoituksiasi yhdestä paikasta.",
+    "syncResult": "Synkronointi valmis — {fetched} haettu, {saved} tallennettu, {acked} vahvistettu.",
+    "pullFutureStarted": "Olemassa olevia varauksia ladataan — tämä voi kestää hetken.",
+    "bookingsFrom": "Varaukset portaalista {portal}",
+    "pullFuture": "Lataa olemassa olevat varaukset",
+    "syncing": "Synkronoidaan …",
+    "syncBookings": "Synkronoi varaukset",
+    "noBookingsYet": "Ei vielä varauksia tästä portaalista.",
+    "channelFallback": "Kanava"
   },
   "calendarSync": {
     "title": "Tuo/vie kalenteri",

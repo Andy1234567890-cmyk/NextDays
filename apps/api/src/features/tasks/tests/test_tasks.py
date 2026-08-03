@@ -1,12 +1,10 @@
 """Tests für den tasks-Slice (Lastenheft §2.5 + §4.3)."""
-from datetime import datetime
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
 from src.features.tasks.schemas import (
-    BookingTasksRequest,
     InventoryItemCreate,
     SubstitutionRequest,
     TaskCreate,
@@ -31,33 +29,6 @@ def _svc() -> tuple[TasksService, MagicMock]:
 
 def _insert_returns(m: MagicMock, rows: list[dict]) -> None:
     m.table.return_value.insert.return_value.execute.return_value.data = rows
-
-
-# --- auto-Generierung bei Buchung (§2.5) ---
-
-def test_generate_for_booking_creates_arrival_and_cleaning() -> None:
-    svc, m = _svc()
-    _insert_returns(
-        m,
-        [
-            {"id": "t1", "tenant_id": "T", "title": "Anreise-Check/Inspektion",
-             "status": "open", "property_id": "p1"},
-            {"id": "t2", "tenant_id": "T", "title": "Endreinigung",
-             "status": "open", "property_id": "p1"},
-        ],
-    )
-    req = BookingTasksRequest(
-        reservation_id="r1",
-        property_id="p1",
-        check_in=datetime(2026, 7, 1, 15, 0),
-        check_out=datetime(2026, 7, 8, 10, 0),
-    )
-    tasks = svc.generate_for_booking("T", req)
-    assert [t.title for t in tasks] == ["Anreise-Check/Inspektion", "Endreinigung"]
-    payload = m.table.return_value.insert.call_args.args[0]
-    assert len(payload) == 2
-    assert payload[0]["due_at"] == req.check_in.isoformat()
-    assert payload[1]["due_at"] == req.check_out.isoformat()
 
 
 # --- Vertretungs-Feature (§4.3) ---
@@ -312,22 +283,32 @@ def test_inspect_reject_reopens_task() -> None:
 
 # --- PM-Modul: Status-Bucket-Filter (Meine/Team-Tabs) ---
 
-def test_filter_bucket_maps_status() -> None:
+def test_filter_bucket_teilt_zeitlich_nicht_nach_status() -> None:
+    """AKTUELL/BEVORSTEHENDE entscheiden sich am Termin, nicht am Status.
+
+    Vorher galt „current = in_progress", wodurch eine heute fällige offene
+    Aufgabe unter BEVORSTEHENDE landete und der AKTUELL-Reiter leer blieb.
+    """
+    from datetime import UTC, datetime, timedelta
+
     from src.features.tasks.schemas import Task
 
-    def _t(status: TaskStatus) -> Task:
-        return Task(id="x", tenant_id="T", title="x", status=status)
+    now = datetime.now(UTC)
 
-    tasks = [
-        _t(TaskStatus.open),
-        _t(TaskStatus.in_progress),
-        _t(TaskStatus.done),
-    ]
-    assert len(TasksService._filter_bucket(tasks, "done")) == 1
-    assert TasksService._filter_bucket(tasks, "current")[0].status == (
-        TaskStatus.in_progress
-    )
-    assert TasksService._filter_bucket(tasks, "upcoming")[0].status == (
-        TaskStatus.open
-    )
-    assert len(TasksService._filter_bucket(tasks, None)) == 3
+    def _t(tid: str, status: TaskStatus, start: datetime | None) -> Task:
+        return Task(id=tid, tenant_id="T", title=tid, status=status, start_at=start)
+
+    faellig = _t("faellig", TaskStatus.open, now - timedelta(hours=2))
+    kommend = _t("kommend", TaskStatus.open, now + timedelta(days=3))
+    laufend = _t("laufend", TaskStatus.in_progress, now - timedelta(days=1))
+    erledigt = _t("erledigt", TaskStatus.done, now - timedelta(days=5))
+    storniert = _t("storniert", TaskStatus.cancelled, now - timedelta(days=5))
+    tasks = [faellig, kommend, laufend, erledigt, storniert]
+
+    current = {t.id for t in TasksService._filter_bucket(tasks, "current")}
+    assert current == {"faellig", "laufend"}
+    upcoming = {t.id for t in TasksService._filter_bucket(tasks, "upcoming")}
+    assert upcoming == {"kommend"}
+    done = {t.id for t in TasksService._filter_bucket(tasks, "done")}
+    assert done == {"erledigt", "storniert"}
+    assert len(TasksService._filter_bucket(tasks, None)) == 5

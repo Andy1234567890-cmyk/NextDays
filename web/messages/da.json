@@ -3290,15 +3290,10 @@
       "allProperties": "Alle overnatningssteder"
     },
     "myTasksList": {
-      "title": "Opgaver",
-      "doneCount": "{done}/{total} udført",
+      "title": "Mine opgaver",
       "loading": "Indlæser…",
       "emptyState": "Du har aktuelt ingen tildelte opgaver.",
-      "dueOn": "forfalder {date}",
-      "statusOpen": "Åben",
-      "statusInProgress": "I gang",
-      "statusDone": "Udført",
-      "statusCancelled": "Afbrudt"
+      "completed": "Opgave afsluttet."
     },
     "bookingPopover": {
       "title": "Booking {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} udført",
       "loading": "Indlæser…",
       "emptyState": "Endnu ingen opgaver til denne booking.",
-      "createDefaultTasks": "Opret standardopgaver",
-      "defaultTasksCreated": "Standardopgaver oprettet.",
       "statusOpen": "Åben",
       "statusInProgress": "I gang",
       "statusDone": "Udført",
-      "statusCancelled": "Afbrudt"
+      "statusCancelled": "Afbrudt",
+      "applyRules": "Anvend regler",
+      "rulesApplied": "{count} opgaver fra reglerne.",
+      "noRuleMatched": "Ingen regel passer til denne reservation."
     },
     "propertyWarnings": {
       "title": "Advarsler",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Tilføj foto",
       "done": "Udført",
       "saving": "Gemmer…",
-      "completeButton": "Afslut"
+      "completeButton": "Afslut",
+      "inBooking": "Til reservation {ref}",
+      "assignedTo": "Til {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Hvordan betaler gæsten?",
@@ -3464,7 +3462,8 @@
       "reject": "Afvis",
       "approve": "Godkend",
       "toastApproved": "Godkendt.",
-      "toastRejected": "Afvist."
+      "toastRejected": "Afvist.",
+      "noPhotos": "Ingen fotodokumentation."
     },
     "bookingsBoard": {
       "title": "Bookinger",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Teamopgaver",
-      "tabs": {
-        "current": "AKTUELLE",
-        "upcoming": "KOMMENDE",
-        "done": "AFSLUTTEDE"
-      },
-      "status": {
-        "open": "Åben",
-        "inProgress": "I gang",
-        "done": "Udført",
-        "cancelled": "Afbrudt"
-      },
       "loading": "Indlæser…",
       "empty": "Ingen opgaver i denne visning.",
-      "columns": {
-        "title": "Titel",
-        "property": "Overnatningssted",
-        "assignee": "Tildelt til",
-        "status": "Status",
-        "due": "Forfalder"
-      },
-      "unassigned": "Ikke tildelt",
-      "inspectionNeeded": "Inspektion nødvendig",
-      "details": "Detaljer"
+      "completed": "Opgave afsluttet.",
+      "deleted": "Opgave slettet."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Opgaveskabeloner",
         "auto": "Planlagte opgaver",
         "recurring": "Faste opgaver"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Titel",
       "columnActive": "Aktiv",
       "columnAssignee": "Tildelt",
-      "columnPoints": "Point",
-      "columnUpdated": "Opdateret",
-      "inspectionNeeded": "Inspektion nødvendig",
       "yes": "Ja",
       "no": "Nej",
       "emptyValue": "–",
-      "edit": "Rediger",
-      "delete": "Slet",
-      "deleted": "Slettet."
+      "columnInspection": "Kræver inspektion?",
+      "columnPriority": "Opgavens prioritet",
+      "columnDetails": "Detaljer",
+      "learnBody": {
+        "auto": "En planlagt opgave oprettes automatisk ved hver reservation på de valgte boliger — med start og slut i forhold til check-in og check-ud.",
+        "recurring": "En tilbagevendende opgave følger kalenderen: startdato, hyppighed og varighed. Systemet opretter terminerne på forhånd — uafhængigt af reservationer."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM-moduler",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigation",
       "previousMonth": "Forrige måned",
       "nextMonth": "Næste måned",
-      "selectedUsersLabel": "Valgte brugere",
-      "allUsersPlaceholder": "Alle brugere",
-      "selectedPropertiesLabel": "Valgte overnatningssteder",
-      "allPropertiesPlaceholder": "Alle overnatningssteder",
       "resetAllLabel": "Nulstil alt",
       "loading": "Indlæser…",
       "createTaskOnDay": "Opret opgave på denne dag",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - booking",
       "months": "[\"Januar\",\"Februar\",\"Marts\",\"April\",\"Maj\",\"Juni\",\"Juli\",\"August\",\"September\",\"Oktober\",\"November\",\"December\"]",
-      "weekdays": "[\"Søndag\",\"Mandag\",\"Tirsdag\",\"Onsdag\",\"Torsdag\",\"Fredag\",\"Lørdag\"]"
+      "weekdays": "[\"Søndag\",\"Mandag\",\"Tirsdag\",\"Onsdag\",\"Torsdag\",\"Fredag\",\"Lørdag\"]",
+      "miscRow": "Diverse"
     },
     "ruleEditor": {
       "loading": "Indlæser…",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Bekræftede reservationer"
     },
     "mobileAppHint": "Opgavevisningen til farten er allerede tilgængelig responsivt på nettet (Mine opgaver + detaljer med foto-upload). En separat mobilapp følger som et selvstændigt projekt.",
-    "guestModuleHint": "Med pre-check-in-formularen indsamler du alle dine gæsters data før ankomsten (legitimation, adresse, medrejsende, ankomsttid). Dette område bygges som et selvstændigt trin."
+    "guestModuleHint": "Med pre-check-in-formularen indsamler du alle dine gæsters data før ankomsten (legitimation, adresse, medrejsende, ankomsttid). Dette område bygges som et selvstændigt trin.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} valgt",
+      "resetCaption": "Nulstil alt",
+      "close": "Luk",
+      "noMatch": "Ingen match.",
+      "selectAll": "Vælg alle",
+      "selectNone": "Vælg ingen",
+      "save": "Gem",
+      "taskCaption": "Valgt opgave",
+      "allTasks": "Alle opgaver",
+      "taskDialog": "Vælg opgave",
+      "taskSearch": "Søg efter opgavetitel",
+      "usersCaption": "Valgte brugere",
+      "allUsers": "Alle brugere",
+      "usersDialog": "Vælg brugere",
+      "usersSearch": "Søg efter navn",
+      "unassignedOption": "Ikke tildelt",
+      "propertiesCaption": "Valgte boliger",
+      "allProperties": "Alle boliger",
+      "propertiesDialog": "Vælg boliger",
+      "propertiesSearch": "Søg efter navn eller by"
+    },
+    "aufgabenReiter": {
+      "current": "AKTUELLE",
+      "upcoming": "KOMMENDE",
+      "done": "AFSLUTTEDE"
+    },
+    "massenaktionen": {
+      "selected": "{count} valgt",
+      "completeAria": "Afslut valgte",
+      "deleteAria": "Slet valgte",
+      "completed": "{done} opgaver afsluttet.",
+      "completedPartly": "{done} afsluttet, {skipped} sprunget over (manglende foto eller adgang).",
+      "deleted": "{done} opgaver slettet.",
+      "deletedPartly": "{done} slettet, {skipped} sprunget over (ingen adgang)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Handlinger",
+      "columnTitle": "Titel",
+      "columnProperty": "Bolig",
+      "columnBooking": "Booking",
+      "columnAssignee": "Tildelt",
+      "columnStatus": "Status",
+      "columnDates": "Start- og sluttidspunkt",
+      "selectAll": "Vælg alle rækker",
+      "selectRow": "Vælg række",
+      "open": "Åbn",
+      "complete": "Afslut",
+      "delete": "Slet",
+      "inspectionNeeded": "Kræver inspektion",
+      "unassigned": "Ikke tildelt",
+      "statusOpen": "Ufuldstændig",
+      "statusDone": "Afsluttet",
+      "statusCancelled": "Annulleret"
+    },
+    "ruleEditorPage": {
+      "loading": "Indlæser…",
+      "modeCreate": "Opret",
+      "modeEdit": "Rediger",
+      "breadcrumbHome": "Start",
+      "breadcrumbTasks": "Opgaver",
+      "titleLabel": "Titel",
+      "descriptionLabel": "Beskrivelse",
+      "active": "Aktiv",
+      "removeOnCancellation": "Fjern ved afbestilling",
+      "priority": "Opgavens prioritet",
+      "priorityDown": "Sænk prioritet",
+      "priorityUp": "Hæv prioritet",
+      "priorityLevel": {
+        "1": "meget lav",
+        "2": "lav",
+        "3": "middel",
+        "4": "høj",
+        "5": "omgående"
+      },
+      "propertiesLabel": {
+        "auto": "Boliger, hvor opgaven oprettes ved hver reservation",
+        "recurring": "Boliger, hvor opgaven skal udføres"
+      },
+      "propertiesPlaceholder": "Vælg boliger…",
+      "propertiesHint": "Uden valg gælder reglen for alle boliger.",
+      "templateLabel": "Opgaveskabelon med listen over deludgaver",
+      "templateNone": "Ingen skabelon",
+      "assigneeLabel": "Modtager af opgaven",
+      "unassigned": "Ikke tildelt",
+      "needsInspection": "Afslutning kræver inspektion",
+      "saveAria": "Gem regel",
+      "deleteAria": "Slet regel",
+      "saved": "Gemt.",
+      "deleted": "Slettet.",
+      "nameRequired": "Titel er påkrævet.",
+      "startTriggerRequired": "Vælg, hvornår opgaven skal starte — ellers udløses reglen aldrig.",
+      "scheduleRequired": "Startdato og hyppighed er påkrævet.",
+      "learnTitle": {
+        "auto": "Planlagte opgaver",
+        "recurring": "Tilbagevendende opgaver"
+      },
+      "learnBody": {
+        "auto": "En planlagt opgave hænger på en reservation: du bestemmer, hvornår den starter og slutter i forhold til check-in og check-ud. Ved hver ny reservation oprettes opgaven, ved flytning følger den med, ved afbestilling fjernes den.",
+        "recurring": "En tilbagevendende opgave følger kalenderen, ikke reservationerne: du angiver start, hyppighed og varighed, og systemet opretter opgaverne på forhånd."
+      },
+      "startTriggerLabel": "Hvornår opgaven skal starte",
+      "endTriggerLabel": "Hvornår opgaven skal slutte",
+      "triggerNone": "— ikke angivet —",
+      "trigger": {
+        "booking_confirmed": "Ved bekræftelse af reservationen",
+        "check_in": "Ved check-in",
+        "after_check_in_24h": "Efter check-in (maks. 24 timer)",
+        "check_out": "Ved check-ud",
+        "days_before_check_in": "Dage før check-in",
+        "days_after_check_out": "Dage efter check-ud"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Opgaven oprettes, så snart reservationen er bekræftet.",
+        "check_in": "Opgaven starter ved reservationens check-in.",
+        "after_check_in_24h": "24 timer efter check-in — dog aldrig efter check-ud: ved korte ophold slutter opgaven ved afrejsen.",
+        "check_out": "Opgaven knyttes til reservationens check-ud.",
+        "days_before_check_in": "Opgaven oprettes det angivne antal dage før check-in.",
+        "days_after_check_out": "Opgaven oprettes det angivne antal dage efter check-ud."
+      },
+      "offsetDays": "Dage",
+      "periodLabel": "Start- og slutdato",
+      "startsOn": "Startdato",
+      "startTime": "Starttidspunkt",
+      "hasEnd": "Slutter",
+      "endsOn": "Slutdato",
+      "repeatLabel": "Gentagelsesinterval",
+      "frequency": "Hyppighed",
+      "choose": "Vælg…",
+      "frequencyOption": {
+        "daily": "Dagligt",
+        "weekly": "Ugentligt",
+        "monthly": "Månedligt",
+        "yearly": "Årligt"
+      },
+      "interval": "Hver",
+      "onDay": "På dag",
+      "onPattern": "Den",
+      "position": {
+        "first": "Første",
+        "second": "Anden",
+        "third": "Tredje",
+        "fourth": "Fjerde",
+        "last": "Sidste"
+      },
+      "durationLabel": "Anslået varighed",
+      "hours": "Timer",
+      "minutes": "Minutter",
+      "weekdayMon": "Mandag",
+      "weekdayTue": "Tirsdag",
+      "weekdayWed": "Onsdag",
+      "weekdayThu": "Torsdag",
+      "weekdayFri": "Fredag",
+      "weekdaySat": "Lørdag",
+      "weekdaySun": "Søndag",
+      "weekdayMonShort": "Man",
+      "weekdayTueShort": "Tir",
+      "weekdayWedShort": "Ons",
+      "weekdayThuShort": "Tor",
+      "weekdayFriShort": "Fre",
+      "weekdaySatShort": "Lør",
+      "weekdaySunShort": "Søn"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Tilgængelighed",
       "itemChannels": "Kanäle",
       "itemPolicies": "Retningslinjer",
-      "itemSeasonalPrices": "Sæsonpriser"
+      "itemSeasonalPrices": "Sæsonpriser",
+      "groupChannels": "Kanaler",
+      "itemSync": "Synkronisering"
     },
     "complianceForm": {
       "title": "Overholdelse",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Fastsæt din natpris med grundpris og tillæg.",
       "basePriceTitle": "Grundpris",
       "basePriceHint": "Grundpris pr. nat og valuta. Valgfrit tilpasses pr. ugedag.",
-      "markupTitle": "Tillæg (mark-up)",
-      "markupHint": "Tilpas grundprisen, der sendes til eksterne kanaler.",
       "extraGuestTitle": "Tillæg pr. gæst",
       "extraGuestHint": "Aktiver et nattillæg for hver ekstra gæst.",
       "extraGuestPill": "{price} fra gæst {guest}",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Dynamiske priser (automatisk efter sæson, weekend, belægning, marked …) opsætter du centralt under <link>Dynamic Pricing</link> i hovedmenuen. En grundpris fastsat her forbliver basis; en manuel dagspris i kalenderen har altid forrang.",
       "basePricePerNightLabel": "Grundpris pr. nat",
       "customByWeekdayLabel": "Tilpas pr. ugedag",
-      "markupEditorTitle": "Tillæg for eksterne kanaler",
-      "markupEditorSubtitle": "Positiv % forhøjer, negativ % sænker grundprisen for eksterne kanaler.",
-      "markupHintNote": "Tillægget gælder ikke for myNextDays-direkte bookinger.",
       "extraGuestEditorSubtitle": "Aktiver et natligt tillæg for hver ekstra gæst.",
       "extraGuestFromLabel": "Gælder for hver gæst fra",
       "guestCount": "{count, plural, one {# gæst} other {# gæster}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "f.eks. Standardpris",
       "multiPlanHint": "Flere prisplaner (f.eks. BAR/B&B) — priserne vedligeholdes datospecifikt i kalendervisningen „Priser“.",
       "plansTitle": "Prisplaner",
+      "dynamicActiveTitle": "Dynamic Pricing aktiv",
+      "dynamicActiveHint": "Dagspriserne beregnes automatisk og gælder overalt — kalender, din egen platform og portalerne. Grundprisen er kun beregningsgrundlaget.",
+      "dynamicActiveOpen": "Åbn forhåndsvisning",
+      "portalAdjustmentTitle": "Prisjustering pr. portal",
+      "portalAdjustmentHint": "Justér de priser, der sendes til dine eksterne portaler.",
+      "portalAdjustmentNone": "Ingen portal forbundet endnu.",
+      "portalAdjustmentInvalid": "Ugyldig værdi — tilladt interval er −99 til 500 %.",
+      "portalAdjustmentEditorSubtitle": "Justér tillægget for eksterne portaler. En positiv procent hæver de priser, der sendes til portalen, en negativ sænker dem.",
+      "portalAdjustmentDirectNote": "Tillægget gælder ikke for direkte bookinger via dit eget website eller myBestDays.",
+      "portalAdjustmentSaved": "Prisjustering gemt.",
       "plansHint": "Priserne vedligeholdes datospecifikt i kalenderen.",
       "planCreate": "Opret prisplan",
-      "planModeManual": "Manuel",
+      "planModeManual": "Egen pris",
       "planModeDerived": "Afledt af {parent} · {offset}",
       "planDerivedPrice": "beregnet",
       "planMinStay": "Min. {nights} nætter",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Synkronisering",
+      "hint": "Hvilket id dette objekt har på hvilken portal, og om synkroniseringen kører. Id'erne står præcis som i portalens extranet, så en booking kan findes der.",
+      "none": "Dette objekt er ikke forbundet til nogen portal. Forbind det under fanen “Kanaler”.",
+      "colPortal": "Hos portalen",
+      "colOurs": "Hos os",
+      "colStatus": "Status",
+      "published": "Offentliggjort",
+      "notPublished": "Ikke offentliggjort",
+      "syncOk": "Synkroniseret",
+      "statusActive": "Aktiv",
+      "statusPaused": "Sat på pause",
+      "statusError": "Fejl",
+      "singleUnit": "Hele objektet",
+      "loadFailed": "Dette objekt kunne ikke indlæses."
+    },
+    "channelDetail": {
+      "identifiers": "Id'er",
+      "hotelId": "Hotel-id",
+      "roomCode": "Værelses-id",
+      "roomTitle": "Værelsesnavn hos portalen",
+      "sellingTitle": "Salg via denne portal",
+      "sellingHint": "Fra: priser og tilgængelighed sendes ikke længere til denne portal. Eksisterende bookinger fortsætter, og nye kommer stadig ind.",
+      "lastSync": "Senest synkroniseret",
+      "never": "Aldrig",
+      "syncNow": "Synkroniser nu",
+      "loadFailed": "Denne forbindelse kunne ikke indlæses.",
+      "backToChannel": "{portal}-konti",
+      "ourId": "myNextDays-ID:",
+      "published": "Offentliggjort",
+      "notPublished": "Ikke offentliggjort",
+      "statusSynced": "Synkroniseret",
+      "statusPaused": "Sat på pause",
+      "statusError": "Fejl",
+      "syncSection": "Synkronisering",
+      "ratePlans": "Aktive prisplaner",
+      "noRatePlans": "Ingen prisplan er frigivet til portalerne.",
+      "colCondition": "Betingelser",
+      "colPlanName": "Prisplanens navn (type)",
+      "colPriceChange": "Prisændring",
+      "modeManual": "Egen pris",
+      "modeDerived": "Afledt",
+      "minStay": "mindst {nights} nætter",
+      "colPrice": "Pris",
+      "dynamicActiveTitle": "Dynamic Pricing aktiv",
+      "dynamicActiveHint": "De automatisk beregnede dagspriser sendes til denne portal — prisen nedenfor er kun beregningsgrundlaget.",
+      "adjustmentInvalid": "Ugyldig værdi — tilladt interval er −99 til 500 %.",
+      "adjustmentSave": "Gem",
+      "adjustmentCancel": "Annuller",
+      "adjustmentHint": "Rediger denne portals prisjustering",
+      "notReleased": "ikke frigivet til portaler"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Overfør tilgængelighed, priser og restriktioner helt på ny",
     "categoryMessaging": "Direkte gæstebeskeder",
     "connected": "Forbundet",
-    "notConnected": "Ikke forbundet"
+    "notConnected": "Ikke forbundet",
+    "propertiesHeading": "Objekter",
+    "noPropertiesYet": "Du har endnu ingen aktive objekter. Opret et objekt for at forbinde det med {portal}.",
+    "connectedOf": "{connected} af {total} forbundet",
+    "searchProperty": "Søg",
+    "propertyAtPortal": "Objekt hos {portal}",
+    "syncStatusColumn": "Synkroniseringsstatus",
+    "actionColumn": "Handling",
+    "noSearchResults": "Intet objekt matcher søgningen.",
+    "statusPaused": "Sat på pause",
+    "statusError": "Fejl",
+    "statusSynced": "Synkroniseret",
+    "idPrefix": "ID:",
+    "edit": "Rediger",
+    "fullResyncShort": "Fuld synkronisering",
+    "pause": "Sæt på pause",
+    "activate": "Aktivér",
+    "disconnectChannel": "Afbryd forbindelsen",
+    "disconnectConfirm": "Afbryd {portal} helt? Alle forbundne objekter på denne portal bliver afbrudt.",
+    "disconnectDone": "{portal} afbrudt.",
+    "notConfiguredHint": "Portalforbindelsen er endnu ikke aktiv. Når den er aktiveret, kan du forbinde dine objekter.",
+    "channelIntro": "Udgiv, synkroniser og administrer dine {portal}-annoncer ét sted.",
+    "syncResult": "Synkronisering færdig — {fetched} hentet, {saved} gemt, {acked} bekræftet.",
+    "pullFutureStarted": "Eksisterende bookinger indlæses — det kan tage et øjeblik.",
+    "bookingsFrom": "Bookinger fra {portal}",
+    "pullFuture": "Indlæs eksisterende bookinger",
+    "syncing": "Synkroniserer …",
+    "syncBookings": "Synkroniser bookinger",
+    "noBookingsYet": "Endnu ingen bookinger fra denne portal.",
+    "channelFallback": "Kanal"
   },
   "calendarSync": {
     "title": "Importér/eksportér kalender",

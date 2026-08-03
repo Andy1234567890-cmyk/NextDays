@@ -3290,15 +3290,10 @@
       "allProperties": "All accommodations"
     },
     "myTasksList": {
-      "title": "Tasks",
-      "doneCount": "{done}/{total} done",
+      "title": "My tasks",
       "loading": "Loading…",
       "emptyState": "You currently have no tasks assigned.",
-      "dueOn": "due {date}",
-      "statusOpen": "Open",
-      "statusInProgress": "In progress",
-      "statusDone": "Done",
-      "statusCancelled": "Cancelled"
+      "completed": "Task completed."
     },
     "bookingPopover": {
       "title": "Booking {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} done",
       "loading": "Loading…",
       "emptyState": "No tasks for this booking yet.",
-      "createDefaultTasks": "Create standard tasks",
-      "defaultTasksCreated": "Standard tasks created.",
       "statusOpen": "Open",
       "statusInProgress": "In progress",
       "statusDone": "Done",
-      "statusCancelled": "Cancelled"
+      "statusCancelled": "Cancelled",
+      "applyRules": "Apply rules",
+      "rulesApplied": "{count} tasks from the rules.",
+      "noRuleMatched": "No rule applies to this booking."
     },
     "propertyWarnings": {
       "title": "Warnings",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Add photo",
       "done": "Done",
       "saving": "Saving…",
-      "completeButton": "Complete"
+      "completeButton": "Complete",
+      "inBooking": "To booking {ref}",
+      "assignedTo": "For {name}"
     },
     "checkoutPaymentDialog": {
       "title": "How is the guest paying?",
@@ -3464,7 +3462,8 @@
       "reject": "Reject",
       "approve": "Approve",
       "toastApproved": "Approved.",
-      "toastRejected": "Rejected."
+      "toastRejected": "Rejected.",
+      "noPhotos": "No photo evidence."
     },
     "bookingsBoard": {
       "title": "Bookings",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Team tasks",
-      "tabs": {
-        "current": "CURRENT",
-        "upcoming": "UPCOMING",
-        "done": "COMPLETED"
-      },
-      "status": {
-        "open": "Open",
-        "inProgress": "In progress",
-        "done": "Done",
-        "cancelled": "Cancelled"
-      },
       "loading": "Loading…",
       "empty": "No tasks in this view.",
-      "columns": {
-        "title": "Title",
-        "property": "Accommodation",
-        "assignee": "Assigned to",
-        "status": "Status",
-        "due": "Due"
-      },
-      "unassigned": "Unassigned",
-      "inspectionNeeded": "Inspection needed",
-      "details": "Details"
+      "completed": "Task completed.",
+      "deleted": "Task deleted."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Task templates",
         "auto": "Scheduled tasks",
         "recurring": "Recurring tasks"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Title",
       "columnActive": "Active",
       "columnAssignee": "Assigned",
-      "columnPoints": "Points",
-      "columnUpdated": "Updated",
-      "inspectionNeeded": "Inspection needed",
       "yes": "Yes",
       "no": "No",
       "emptyValue": "–",
-      "edit": "Edit",
-      "delete": "Delete",
-      "deleted": "Deleted."
+      "columnInspection": "Needs an inspection?",
+      "columnPriority": "Task priority",
+      "columnDetails": "Details",
+      "learnBody": {
+        "auto": "A scheduled task is created automatically for every booking of the selected accommodations — with start and end relative to check-in and check-out.",
+        "recurring": "A recurring task follows the calendar: start date, frequency and duration. The system creates the occurrences in advance — independently of bookings."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM modules",
@@ -3724,10 +3704,6 @@
       "navigationLabel": "Navigation",
       "previousMonth": "Previous month",
       "nextMonth": "Next month",
-      "selectedUsersLabel": "Selected users",
-      "allUsersPlaceholder": "All users",
-      "selectedPropertiesLabel": "Selected accommodations",
-      "allPropertiesPlaceholder": "All accommodations",
       "resetAllLabel": "Reset all",
       "loading": "Loading…",
       "createTaskOnDay": "Create a task on this day",
@@ -3755,7 +3731,8 @@
         "Thursday",
         "Friday",
         "Saturday"
-      ]
+      ],
+      "miscRow": "Miscellaneous"
     },
     "ruleEditor": {
       "loading": "Loading…",
@@ -3962,7 +3939,170 @@
       "confirmedReservations": "Confirmed reservations"
     },
     "mobileAppHint": "The task view for on the go is already available responsively on the web (My tasks + detail with photo upload). A separate mobile app will follow as its own project.",
-    "guestModuleHint": "With the pre-check-in form you collect all your guests' details before arrival (ID, address, fellow travellers, arrival time). This area is being built as a separate step."
+    "guestModuleHint": "With the pre-check-in form you collect all your guests' details before arrival (ID, address, fellow travellers, arrival time). This area is being built as a separate step.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} selected",
+      "resetCaption": "Reset all",
+      "close": "Close",
+      "noMatch": "No match.",
+      "selectAll": "Select all",
+      "selectNone": "Select none",
+      "save": "Save",
+      "taskCaption": "Selected task",
+      "allTasks": "All tasks",
+      "taskDialog": "Select task",
+      "taskSearch": "Search by task title",
+      "usersCaption": "Selected users",
+      "allUsers": "All users",
+      "usersDialog": "Select users",
+      "usersSearch": "Search by name",
+      "unassignedOption": "Unassigned",
+      "propertiesCaption": "Selected accommodations",
+      "allProperties": "All accommodations",
+      "propertiesDialog": "Select accommodations",
+      "propertiesSearch": "Search by name or city"
+    },
+    "aufgabenReiter": {
+      "current": "CURRENT",
+      "upcoming": "UPCOMING",
+      "done": "COMPLETED"
+    },
+    "massenaktionen": {
+      "selected": "{count} selected",
+      "completeAria": "Complete selection",
+      "deleteAria": "Delete selection",
+      "completed": "{done} tasks completed.",
+      "completedPartly": "{done} completed, {skipped} skipped (photo missing or no access).",
+      "deleted": "{done} tasks deleted.",
+      "deletedPartly": "{done} deleted, {skipped} skipped (no access)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Actions",
+      "columnTitle": "Title",
+      "columnProperty": "Accommodation",
+      "columnBooking": "Booking",
+      "columnAssignee": "Assigned to",
+      "columnStatus": "Status",
+      "columnDates": "Start and end dates",
+      "selectAll": "Select all rows",
+      "selectRow": "Select row",
+      "open": "View",
+      "complete": "Complete",
+      "delete": "Delete",
+      "inspectionNeeded": "Inspection required",
+      "unassigned": "Unassigned",
+      "statusOpen": "Incomplete",
+      "statusDone": "Completed",
+      "statusCancelled": "Cancelled"
+    },
+    "ruleEditorPage": {
+      "loading": "Loading…",
+      "modeCreate": "Create",
+      "modeEdit": "Edit",
+      "breadcrumbHome": "Home",
+      "breadcrumbTasks": "Tasks",
+      "titleLabel": "Title",
+      "descriptionLabel": "Description",
+      "active": "Active",
+      "removeOnCancellation": "Remove on booking cancellation",
+      "priority": "Task priority",
+      "priorityDown": "Lower priority",
+      "priorityUp": "Raise priority",
+      "priorityLevel": {
+        "1": "very low",
+        "2": "low",
+        "3": "medium",
+        "4": "high",
+        "5": "immediate"
+      },
+      "propertiesLabel": {
+        "auto": "Accommodations for which the task is created on every reservation",
+        "recurring": "Accommodations where the task should be carried out"
+      },
+      "propertiesPlaceholder": "Choose accommodations…",
+      "propertiesHint": "With no selection the rule applies to all accommodations.",
+      "templateLabel": "Task template with the list of subtasks",
+      "templateNone": "No template",
+      "assigneeLabel": "Task recipient",
+      "unassigned": "Unassigned",
+      "needsInspection": "Completion requires inspection",
+      "saveAria": "Save rule",
+      "deleteAria": "Delete rule",
+      "saved": "Saved.",
+      "deleted": "Deleted.",
+      "nameRequired": "Title is required.",
+      "startTriggerRequired": "Choose when the task should start — otherwise the rule never triggers.",
+      "scheduleRequired": "Start date and frequency are required.",
+      "learnTitle": {
+        "auto": "Scheduled tasks",
+        "recurring": "Recurring tasks"
+      },
+      "learnBody": {
+        "auto": "A scheduled task hangs on a booking: you define when it starts and ends relative to check-in and check-out. It is created with every new booking, moves along when the booking moves, and disappears on cancellation.",
+        "recurring": "A recurring task follows the calendar, not the bookings: you set start, frequency and duration, and the system creates the occurrences in advance."
+      },
+      "startTriggerLabel": "Choose when the task should start",
+      "endTriggerLabel": "Choose when the task should end",
+      "triggerNone": "— not set —",
+      "trigger": {
+        "booking_confirmed": "On booking confirmation",
+        "check_in": "At check-in",
+        "after_check_in_24h": "After check-in (max. 24 hours)",
+        "check_out": "At check-out",
+        "days_before_check_in": "Days before check-in",
+        "days_after_check_out": "Days after check-out"
+      },
+      "triggerHint": {
+        "booking_confirmed": "The task is created as soon as the booking is confirmed.",
+        "check_in": "The task starts at the check-in of the reservation.",
+        "after_check_in_24h": "24 hours after check-in — but never past check-out: on short stays the task ends with the departure.",
+        "check_out": "The task is tied to the check-out of the reservation.",
+        "days_before_check_in": "The task is created the given number of days before check-in.",
+        "days_after_check_out": "The task is created the given number of days after check-out."
+      },
+      "offsetDays": "Days",
+      "periodLabel": "Set start and end date",
+      "startsOn": "Start date",
+      "startTime": "Start time",
+      "hasEnd": "Ends",
+      "endsOn": "End date",
+      "repeatLabel": "Repeat interval",
+      "frequency": "Frequency",
+      "choose": "Choose…",
+      "frequencyOption": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      },
+      "interval": "Every",
+      "onDay": "On day",
+      "onPattern": "On the",
+      "position": {
+        "first": "First",
+        "second": "Second",
+        "third": "Third",
+        "fourth": "Fourth",
+        "last": "Last"
+      },
+      "durationLabel": "Estimated duration",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "weekdayMon": "Monday",
+      "weekdayTue": "Tuesday",
+      "weekdayWed": "Wednesday",
+      "weekdayThu": "Thursday",
+      "weekdayFri": "Friday",
+      "weekdaySat": "Saturday",
+      "weekdaySun": "Sunday",
+      "weekdayMonShort": "Mon",
+      "weekdayTueShort": "Tue",
+      "weekdayWedShort": "Wed",
+      "weekdayThuShort": "Thu",
+      "weekdayFriShort": "Fri",
+      "weekdaySatShort": "Sat",
+      "weekdaySunShort": "Sun"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4118,7 +4258,9 @@
       "itemAvailability": "Availability",
       "itemChannels": "Channels",
       "itemPolicies": "Policies",
-      "itemSeasonalPrices": "Seasonal prices"
+      "itemSeasonalPrices": "Seasonal prices",
+      "groupChannels": "Channels",
+      "itemSync": "Synchronisation"
     },
     "complianceForm": {
       "title": "Compliance",
@@ -4416,8 +4558,6 @@
       "nightlyPriceHint": "Set your nightly price with a base price and a surcharge.",
       "basePriceTitle": "Base price",
       "basePriceHint": "Base price per night and currency. Optionally adjust it per weekday.",
-      "markupTitle": "Mark-up",
-      "markupHint": "Adjust the base price sent to external channels.",
       "extraGuestTitle": "Surcharge per guest",
       "extraGuestHint": "Enable a nightly surcharge for each additional guest.",
       "extraGuestPill": "{price} from guest {guest}",
@@ -4470,9 +4610,6 @@
       "dynamicPricingHint": "You set up dynamic pricing (automatically by season, weekend, occupancy, market …) centrally under <link>Dynamic Pricing</link> in the main menu. A base price set here remains the basis; a manual daily rate in the calendar always takes precedence.",
       "basePricePerNightLabel": "Base price per night",
       "customByWeekdayLabel": "Adjust per weekday",
-      "markupEditorTitle": "Mark-up for external channels",
-      "markupEditorSubtitle": "A positive % increases the base price for external channels, a negative % lowers it.",
-      "markupHintNote": "The mark-up does not apply to myNextDays direct bookings.",
       "extraGuestEditorSubtitle": "Enable a nightly surcharge for each additional guest.",
       "extraGuestFromLabel": "Applies to every guest from",
       "guestCount": "{count, plural, one {# guest} other {# guests}}",
@@ -4522,9 +4659,19 @@
       "baseLabelPlaceholder": "e.g. standard rate",
       "multiPlanHint": "Several rate plans (e.g. BAR/B&B) — the prices are maintained date by date in the calendar view “Rates”.",
       "plansTitle": "Rate plans",
+      "dynamicActiveTitle": "Dynamic Pricing active",
+      "dynamicActiveHint": "Daily prices are calculated automatically and apply everywhere — calendar, your own platform and the portals. The base price is only the basis of the calculation.",
+      "dynamicActiveOpen": "Open preview",
+      "portalAdjustmentTitle": "Price adjustment per portal",
+      "portalAdjustmentHint": "Adjust the prices that are sent to your external portals.",
+      "portalAdjustmentNone": "No portal connected yet.",
+      "portalAdjustmentInvalid": "Invalid value — allowed range is −99 to 500%.",
+      "portalAdjustmentEditorSubtitle": "Adjust the mark-up for external portals. A positive percentage raises the prices sent to that portal, a negative one lowers them.",
+      "portalAdjustmentDirectNote": "The mark-up does not apply to direct bookings via your own website or myBestDays.",
+      "portalAdjustmentSaved": "Price adjustment saved.",
       "plansHint": "Prices are maintained date by date in the calendar.",
       "planCreate": "Create rate plan",
-      "planModeManual": "Manual",
+      "planModeManual": "Own price",
       "planModeDerived": "Derived from {parent} · {offset}",
       "planDerivedPrice": "calculated",
       "planMinStay": "Min. {nights} nights",
@@ -4645,6 +4792,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Synchronisation",
+      "hint": "Which listing this property has on which channel, and whether the sync is running. The identifiers are shown exactly as in the channel's extranet, so a booking can be traced there.",
+      "none": "This property is not connected to any channel. Connect it in the “Channels” tab.",
+      "colPortal": "On the channel",
+      "colOurs": "With us",
+      "colStatus": "Status",
+      "published": "Published",
+      "notPublished": "Not published",
+      "syncOk": "Synced",
+      "statusActive": "Active",
+      "statusPaused": "Paused",
+      "statusError": "Error",
+      "singleUnit": "Whole property",
+      "loadFailed": "This property could not be loaded."
+    },
+    "channelDetail": {
+      "identifiers": "Identifiers",
+      "hotelId": "Hotel ID",
+      "roomCode": "Room ID",
+      "roomTitle": "Room name on the channel",
+      "sellingTitle": "Selling on this channel",
+      "sellingHint": "Off: prices and availability no longer go to this channel. Existing bookings continue and new ones still arrive.",
+      "lastSync": "Last synced",
+      "never": "Never",
+      "syncNow": "Sync now",
+      "loadFailed": "This connection could not be loaded.",
+      "backToChannel": "{portal} accounts",
+      "ourId": "myNextDays ID:",
+      "published": "Published",
+      "notPublished": "Not published",
+      "statusSynced": "Synced",
+      "statusPaused": "Paused",
+      "statusError": "Error",
+      "syncSection": "Synchronisation",
+      "ratePlans": "Active rate plans",
+      "noRatePlans": "No rate plan is released to the channels.",
+      "colCondition": "Conditions",
+      "colPlanName": "Rate plan name (type)",
+      "colPriceChange": "Price change",
+      "modeManual": "Own price",
+      "modeDerived": "Derived",
+      "minStay": "min. {nights} nights",
+      "colPrice": "Price",
+      "dynamicActiveTitle": "Dynamic Pricing active",
+      "dynamicActiveHint": "The automatically calculated daily prices are sent to this portal — the price shown below is only the basis of the calculation.",
+      "adjustmentInvalid": "Invalid value — allowed range is −99 to 500%.",
+      "adjustmentSave": "Save",
+      "adjustmentCancel": "Cancel",
+      "adjustmentHint": "Edit this portal's price adjustment",
+      "notReleased": "not released to channels"
     }
   },
   "calendar": {
@@ -5063,7 +5262,36 @@
     "fullResync": "Transfer availability, prices and restrictions completely again",
     "categoryMessaging": "Direct guest messaging",
     "connected": "Connected",
-    "notConnected": "Not connected"
+    "notConnected": "Not connected",
+    "propertiesHeading": "Properties",
+    "noPropertiesYet": "You have no active properties yet. Create one first to connect it to {portal}.",
+    "connectedOf": "{connected} of {total} connected",
+    "searchProperty": "Search",
+    "propertyAtPortal": "Property on {portal}",
+    "syncStatusColumn": "Sync status",
+    "actionColumn": "Action",
+    "noSearchResults": "No property matches your search.",
+    "statusPaused": "Paused",
+    "statusError": "Error",
+    "statusSynced": "Synced",
+    "idPrefix": "ID:",
+    "edit": "Edit",
+    "fullResyncShort": "Full sync",
+    "pause": "Pause",
+    "activate": "Activate",
+    "disconnectChannel": "Disconnect",
+    "disconnectConfirm": "Disconnect {portal} entirely? All connected properties of this channel will be disconnected.",
+    "disconnectDone": "{portal} disconnected.",
+    "notConfiguredHint": "The channel connection is not active yet. Once it is enabled you can connect your properties to this channel.",
+    "channelIntro": "Publish, sync and manage your {portal} listings from one place.",
+    "syncResult": "Sync done — {fetched} fetched, {saved} saved, {acked} acknowledged.",
+    "pullFutureStarted": "Existing bookings are being loaded — this may take a moment.",
+    "bookingsFrom": "Bookings from {portal}",
+    "pullFuture": "Load existing bookings",
+    "syncing": "Syncing …",
+    "syncBookings": "Sync bookings",
+    "noBookingsYet": "No bookings from this channel yet.",
+    "channelFallback": "Channel"
   },
   "calendarSync": {
     "title": "Import/export calendar",

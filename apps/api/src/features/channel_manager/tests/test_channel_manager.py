@@ -1,5 +1,6 @@
 from datetime import UTC, date, datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
@@ -1349,6 +1350,38 @@ def test_csv_import_dedup_and_bad_rows() -> None:
     assert res.failed == 3 and len(res.errors) == 3
     # Kein neuer Datensatz durch das Duplikat (Dedup über csv:X1).
     assert len(db.tables["reservations"]) == first
+
+
+def test_selected_rate_plans_kanalplan_ersetzt_standard_am_eigenen_portal() -> None:
+    """Preisänderung je Portal (0272): der Kanal-Plan (portal_scope) ersetzt
+    den Standard als Primary an GENAU seinem Portal; andere Portale bekommen
+    weiter den Standard und sehen den fremden Kanal-Plan nie."""
+    db = _ImportDB()
+    db.tables["channex_property_map"].append(
+        {"id": "m1", "tenant_id": "t1", "property_id": "p1",
+         "channex_property_id": "cx-prop", "deleted_at": None}
+    )
+    db.tables["channex_room_type_map"].append(
+        {"id": "rt1", "property_map_id": "m1", "deleted_at": None}
+    )
+    db.tables["channex_rate_plan_map"] = [
+        {"id": "map-std", "tenant_id": "t1", "room_type_map_id": "rt1",
+         "local_rate_plan_id": "rp-std", "channex_rate_plan_id": "cx-std",
+         "created_at": "2026-01-01T00:00:00Z", "deleted_at": None},
+        {"id": "map-kanal", "tenant_id": "t1", "room_type_map_id": "rt1",
+         "local_rate_plan_id": "rp-kanal", "channex_rate_plan_id": "cx-kanal",
+         "created_at": "2026-02-01T00:00:00Z", "deleted_at": None},
+    ]
+    db.tables["rate_plans"] = [
+        {"id": "rp-std", "property_id": "p1", "send_to_portals": False,
+         "portal_scope": None},
+        {"id": "rp-kanal", "property_id": "p1", "send_to_portals": False,
+         "portal_scope": "BookingCom"},
+    ]
+    svc = _import_svc(_ImportChannex(), db)
+    assert svc._selected_rate_plan_ids(db, "t1", "p1", "BookingCom") == ["cx-kanal"]
+    assert svc._selected_rate_plan_ids(db, "t1", "p1", "AirBNB") == ["cx-std"]
+    assert svc._selected_rate_plan_ids(db, "t1", "p1") == ["cx-std"]
 
 
 def test_import_cancelled_booking_creates_record_without_block() -> None:
@@ -3371,16 +3404,26 @@ def test_extract_hotel_id_none_without_match() -> None:
 
 
 class _ConnDB:
-    """Fake-DB für channex_channel_connection: speichert Upserts, liefert Selects."""
+    """Fake-DB für channex_channel_connection: speichert Upserts, liefert Selects.
 
-    def __init__(self, rows: list[dict] | None = None) -> None:
+    Die Verbindungsliste liest zusätzlich den Sync-Stand aus
+    channex_property_map (Status gehört in dieselbe Zeile) — dafür liefert die
+    Fake-DB eine Zeile mit den Sync-Feldern.
+    """
+
+    def __init__(self, rows: list[dict] | None = None,
+                 sync: dict | None = None) -> None:  # noqa: ANN001
         self.rows = rows or []
+        self.sync = sync if sync is not None else {
+            "sync_enabled": True, "last_sync_status": "ok", "last_sync_error": None,
+        }
         self.upserts: list[dict] = []
         self.updates: list[dict] = []
 
     def table(self, name: str):  # noqa: ANN201
-        assert name == "channex_channel_connection"
+        assert name in ("channex_channel_connection", "channex_property_map")
         outer = self
+        ist_map = name == "channex_property_map"
 
         class _Q:
             def select(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
@@ -3392,6 +3435,12 @@ class _ConnDB:
             def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
                 return self
 
+            def is_(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+                return self
+
+            def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+                return self
+
             def upsert(self, row, **_k):  # noqa: ANN001, ANN002, ANN003, ANN201
                 outer.upserts.append(row)
                 return self
@@ -3401,7 +3450,7 @@ class _ConnDB:
                 return self
 
             def execute(self):  # noqa: ANN201
-                return _Result(outer.rows)
+                return _Result([outer.sync] if ist_map else outer.rows)
 
         return _Q()
 
@@ -3467,10 +3516,151 @@ def test_list_channel_connections_white_label_only() -> None:
     assert item["portal"] == "Booking.com"
     assert item["hotel_id"] == "777"
     assert item["is_active"] is True
+    # Zimmer beim Portal + Sync-Stand gehören dazu (Lodgify zeigt beides in
+    # derselben Zeile); Credentials weiterhin NICHT.
     assert set(item.keys()) == {
-        "portal_code", "portal", "hotel_id", "channel_id",
-        "is_active", "last_error", "updated_at",
+        "portal_code", "portal", "hotel_id", "ota_room_type_code",
+        "ota_room_title", "channel_id", "is_active", "sync_enabled",
+        "last_sync_status", "last_sync_error", "last_error", "updated_at",
     }
+    assert item["last_sync_status"] == "ok"
+
+
+class _DetailDB:
+    """Fake-DB für die Detailsicht Portal × Objekt.
+
+    Liefert je Tabelle eine feste Antwort und merkt sich die Filter — damit der
+    Test beweisen kann, dass jeder Zugriff auf den Tenant gescopt ist (Wurzel 3)
+    und dass das Portal wirklich gefiltert wird.
+    """
+
+    def __init__(self, *, conn: list[dict] | None = None) -> None:
+        self.conn = conn if conn is not None else [
+            {
+                "ota_hotel_id": "777",
+                "ota_room_type_code": "12345001",
+                "ota_room_title": "Double Room",
+                "channex_channel_id": "chan-1",
+                "channex_property_id": "cx-1",
+                "is_active": True,
+                "last_error": None,
+                "updated_at": "2026-08-01T10:00:00Z",
+            }
+        ]
+        self.filters: list[tuple[str, str, object]] = []
+
+    def table(self, name: str):  # noqa: ANN201
+        outer = self
+        antworten = {
+            "properties": [{"id": "prop-1", "title": "Haus Max", "currency": "DKK"}],
+            "property_photos": [{"url": "https://bild/1.jpg", "is_cover": True,
+                                 "sort_order": 0}],
+            "rate_plans": [
+                {"id": "rp-1", "name": "Standard", "currency": "DKK",
+                 "min_stay": 2, "rate_mode": "manual", "offset_amount": None,
+                 "offset_percent": None, "booking_condition_id": "bc-1",
+                 "send_to_portals": True},
+                {"id": "rp-2", "name": "Wochenpreis", "currency": "DKK",
+                 "min_stay": 7, "rate_mode": "derived", "offset_amount": None,
+                 "offset_percent": -10, "booking_condition_id": None,
+                 "send_to_portals": True},
+            ],
+            "booking_conditions": [{"id": "bc-1", "internal_name": "Flexibel 30 Tage"}],
+            "channex_channel_connection": self.conn,
+            "channex_property_map": [
+                {
+                    "id": "map-1",
+                    "sync_enabled": True,
+                    "last_sync_at": "2026-08-01T09:00:00Z",
+                    "last_sync_status": "ok",
+                    "last_sync_error": None,
+                }
+            ],
+            # Grundpreis-Plan-Kette (is_primary): rp-1 hängt an der ältesten
+            # Channex-Zuordnung → er geht IMMER ans Portal.
+            "channex_room_type_map": [{"id": "rt-1"}],
+            "channex_rate_plan_map": [
+                {"local_rate_plan_id": "rp-1", "created_at": "2026-01-01T00:00:00Z"}
+            ],
+            # Dynamic Pricing für das Objekt aktiv → Portalpreise sind dynamisch.
+            "dp_settings": [{"enabled": True}],
+        }
+
+        class _Q:
+            def select(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+                return self
+
+            def eq(self, feld, wert):  # noqa: ANN001, ANN201
+                outer.filters.append((name, feld, wert))
+                return self
+
+            def in_(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+                return self
+
+            def is_(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+                return self
+
+            def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+                return self
+
+            def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+                return self
+
+            def execute(self):  # noqa: ANN201
+                return _Result(antworten[name])
+
+        return _Q()
+
+
+def test_channel_property_detail_zeigt_kennungen_und_tarifplaene() -> None:
+    db = _DetailDB()
+    svc = ChannelManagerService(service_client=db, channex=_FakeChannex([]))
+    ctx = AuthContext(user_id="u", tenant_id="tenant-1")
+    out = svc.channel_property_detail(ctx, "prop-1", "BookingCom")
+
+    assert out["portal"] == "Booking.com"
+    assert out["hotel_id"] == "777"
+    assert out["ota_room_type_code"] == "12345001"
+    assert out["map_id"] == "map-1"
+    assert out["currency"] == "DKK"  # Währung aus dem Objekt, kein €-Ersatz
+    assert out["is_active"] is True
+    assert out["property_photo"] == "https://bild/1.jpg"
+    # Aktive Tarifpläne: Kondition, Name/Typ, Preisänderung. Ein eigener Preis
+    # hat KEINE Änderung (kein erfundenes „0 %"), ein abgeleiteter schon.
+    plans = {p["name"]: p for p in out["rate_plans"]}
+    assert plans["Standard"]["condition"] == "Flexibel 30 Tage"
+    assert plans["Standard"]["offset_percent"] is None
+    assert plans["Wochenpreis"]["rate_mode"] == "derived"
+    assert plans["Wochenpreis"]["offset_percent"] == -10
+    # Grundpreis-Plan (älteste Channex-Zuordnung) geht IMMER ans Portal.
+    assert plans["Standard"]["is_primary"] is True
+    assert plans["Wochenpreis"]["is_primary"] is False
+    # Dynamic Pricing aktiv → die Seite darf den Basispreis nicht als
+    # Portalpreis ausgeben.
+    assert out["dynamic_pricing_enabled"] is True
+
+
+def test_channel_property_detail_scopt_auf_tenant_und_portal() -> None:
+    db = _DetailDB()
+    svc = ChannelManagerService(service_client=db, channex=_FakeChannex([]))
+    ctx = AuthContext(user_id="u", tenant_id="tenant-1")
+    svc.channel_property_detail(ctx, "prop-1", "BookingCom")
+
+    # Service-Role umgeht RLS: jeder Zugriff MUSS den Tenant selbst filtern.
+    for tabelle in ("properties", "channex_channel_connection",
+                    "channex_property_map", "booking_conditions"):
+        assert ("tenant_id" in [f for t, f, _ in db.filters if t == tabelle]), tabelle
+    assert ("channex_channel_connection", "ota_portal_code", "BookingCom") in db.filters
+
+
+def test_channel_property_detail_unverbunden_ist_404() -> None:
+    # Kein stiller Leer-Zustand: ohne Verbindung gibt es diese Sicht nicht.
+    db = _DetailDB(conn=[])
+    svc = ChannelManagerService(service_client=db, channex=_FakeChannex([]))
+    ctx = AuthContext(user_id="u", tenant_id="tenant-1")
+    with pytest.raises(ChannelManagerError) as exc:
+        svc.channel_property_detail(ctx, "prop-1", "BookingCom")
+    assert exc.value.status_code == 404
 
 
 # --- Airbnb-OAuth (white-label, ohne iFrame) --------------------------------

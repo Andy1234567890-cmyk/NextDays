@@ -320,7 +320,6 @@ class DpSettingsService:
                 "recommended",
             ),
             manual_base_price=_opt_float(row.get("manual_base_price")),
-            autopilot_enabled=bool(row.get("autopilot_enabled")),
             weather_enabled=bool(row.get("weather_enabled")),
             weather_max_adjust_pct=float(row.get("weather_max_adjust_pct") or 0),
             rate_rules=[

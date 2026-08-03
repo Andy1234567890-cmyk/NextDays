@@ -3,7 +3,7 @@
 Bildet das Datenmodell aus Migration 0012 (tasks, checklist, inventory) und 0019
 (task_substitutions, staff_property_assignments) ab.
 """
-from datetime import datetime
+from datetime import date, datetime, time
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
@@ -77,6 +77,13 @@ class TaskStatusUpdate(BaseModel):
     status: TaskStatus
 
 
+class BulkTaskRequest(BaseModel):
+    """Auswahl für die Massenaktionen (Abschließen/Löschen). Die Obergrenze
+    steht im Service (`TasksService.BULK_MAX`) — Wurzel 8."""
+
+    ids: list[str] = Field(min_length=1, max_length=200)
+
+
 # --- angereicherte Sichten (Team/Kalender) ---
 # Objekt-/Assignee-Namen für Team- und Kalender-Ansicht. KEINE Gast-PII/Beträge
 # (Housekeeping-Masking, CLAUDE.md Wurzel 3 / §4.3): der cleaner sieht nur Objekt
@@ -85,6 +92,9 @@ class TaskStatusUpdate(BaseModel):
 class TaskListItem(Task):
     property_title: str | None = None
     assignee_name: str | None = None
+    # Anzeige-Referenz der Buchung (Portal-Referenz, sonst Kurz-ID). Kein
+    # Gastname, kein Betrag — die Spalte sieht auch die Reinigungskraft (§4.3).
+    reservation_ref: str | None = None
     checklist_total: int = 0
     checklist_done: int = 0
 
@@ -127,18 +137,6 @@ class InspectionItem(TaskListItem):
 class InspectionDecision(BaseModel):
     approved: bool
     note: str | None = None
-
-
-# --- Auto-Generierung bei Buchung (§2.5) ---
-
-class BookingTasksRequest(BaseModel):
-    """Erzeugt aus einer Reservierung die Standard-Aufgaben:
-    Anreise-Check am check_in, Endreinigung am check_out."""
-
-    reservation_id: str
-    property_id: str
-    check_in: datetime
-    check_out: datetime
 
 
 # --- Checklisten + Foto-Nachweise (§2.5) ---
@@ -219,12 +217,27 @@ class TaskDetail(Task):
     checklist: list[ChecklistItem] = Field(default_factory=list)
 
 
+class TaskTrigger(StrEnum):
+    """Zeitanker einer planmäßigen Regel relativ zur Reservierung (0272).
+
+    Die Feinjustierung steckt immer in `start_offset_minutes`/`end_offset_minutes`
+    — bei ``days_before_check_in`` trägt sie die ganze Distanz.
+    """
+
+    booking_confirmed = "booking_confirmed"
+    check_in = "check_in"
+    after_check_in_24h = "after_check_in_24h"
+    check_out = "check_out"
+    days_before_check_in = "days_before_check_in"
+    days_after_check_out = "days_after_check_out"
+
+
 class RuleCreate(BaseModel):
     kind: TaskRuleKind
     name: str = Field(min_length=1, max_length=300)
     description: str | None = None
     active: bool = True
-    priority: int = 0
+    priority: int = Field(default=0, ge=0, le=5)
     assignee_id: str | None = None
     needs_inspection: bool = False
     remove_on_cancellation: bool = True
@@ -232,6 +245,22 @@ class RuleCreate(BaseModel):
     recurrence: dict[str, object] = Field(default_factory=dict)
     property_ids: list[str] = Field(default_factory=list)
     items: list[RuleItem] = Field(default_factory=list)
+
+    # Verweis auf die Aufgabenvorlage, deren Punkte materialisiert werden.
+    # None = die Regel trägt ihre Punkte selbst (`items`).
+    template_rule_id: str | None = None
+
+    # kind='auto': Anker an der Reservierung.
+    start_trigger: TaskTrigger | None = None
+    end_trigger: TaskTrigger | None = None
+    start_offset_minutes: int = Field(default=0, ge=-525_600, le=525_600)
+    end_offset_minutes: int = Field(default=0, ge=-525_600, le=525_600)
+
+    # kind='recurring': Kalenderfenster, Uhrzeit, geschätzte Dauer.
+    starts_on: date | None = None
+    ends_on: date | None = None
+    start_time: time | None = None
+    duration_minutes: int | None = Field(default=None, ge=1, le=43_200)
 
 
 class RuleUpdate(RuleCreate):
@@ -258,6 +287,16 @@ class RuleDetail(RuleListItem):
     remove_on_cancellation: bool = True
     recurrence: dict[str, object] = Field(default_factory=dict)
     items: list[RuleItem] = Field(default_factory=list)
+    template_rule_id: str | None = None
+    template_name: str | None = None  # Anzeigename der verknüpften Vorlage
+    start_trigger: TaskTrigger | None = None
+    end_trigger: TaskTrigger | None = None
+    start_offset_minutes: int = 0
+    end_offset_minutes: int = 0
+    starts_on: date | None = None
+    ends_on: date | None = None
+    start_time: time | None = None
+    duration_minutes: int | None = None
 
 
 class TaskCompletePayload(BaseModel):

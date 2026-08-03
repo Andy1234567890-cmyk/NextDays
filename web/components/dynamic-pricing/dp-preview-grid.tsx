@@ -16,10 +16,11 @@ import { explainDpPrice } from "@/lib/dynamic-pricing";
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
 // Preis in der OBJEKT-Währung (aus dem Rate-Plan) — kein €-Hardcode (27 EU-Länder).
-// 0 Nachkommastellen für die kompakte Rasteranzeige.
+// Centgenau wie Kalender/Channex: EINE Zahl überall — eine gerundete „119 €"
+// neben „118,68 €" im Kalender las sich als Fehler in der Preisführung.
 function fmt(value: number | null, currency: string | null, locale: string): string {
   if (value === null) return "—";
-  return formatCurrency(value, currency, locale, 0);
+  return formatCurrency(value, currency, locale);
 }
 
 // Mo=0 … So=6 (JS getDay: So=0).
@@ -100,12 +101,21 @@ export function DpPreviewGrid({
           const dayNum = Number(d.date.slice(8, 10));
           const isToday = d.date === today;
           const isDynamic = d.price_source === "dynamic";
+          const isOverride = d.price_source === "override";
           const why = explainFactors(d.price_factors);
           const aiText = explained[d.date];
+          // Jede Zelle erklärt ihre Preisquelle — eine nackte 333 € neben
+          // lauter Blitz-Preisen las sich als Fehler statt als manueller
+          // Vorrang.
+          const quelle = isDynamic
+            ? why || "Dynamisch berechneter Tagespreis"
+            : isOverride
+              ? "Manuell gesetzter Tagespreis — hat immer Vorrang"
+              : "Grund-/Wochentagspreis (kein dynamischer Preis für diesen Tag)";
           return (
             <div
               key={d.date}
-              title={why || undefined}
+              title={quelle}
               className="relative flex min-h-24 flex-col justify-between border-b border-r p-2"
             >
               {/* Preis oben rechts (wie Hostaway) */}
@@ -120,6 +130,14 @@ export function DpPreviewGrid({
                   {isDynamic && (
                     <span className="text-accent" aria-label="dynamisch">
                       ⚡
+                    </span>
+                  )}
+                  {isOverride && (
+                    <span
+                      className="text-muted-foreground"
+                      aria-label="manuell gesetzt"
+                    >
+                      ✎
                     </span>
                   )}
                   {fmt(d.price, currency, locale)}

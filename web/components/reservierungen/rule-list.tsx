@@ -1,52 +1,33 @@
 "use client";
 
-// Gemeinsame Liste für Aufgabenvorlagen / Planmäßige / Regelmäßige Aufgaben
-// (task_rules kind=template|auto|recurring). Live via useRealtime auf
-// task_rules. Anlegen/Bearbeiten über das Regel-Editor-Modal.
+// Liste der Planmäßigen bzw. Regelmäßigen Aufgaben (task_rules kind=auto|
+// recurring). Aufgabenvorlagen haben eine eigene Liste (`template-list.tsx`),
+// weil sie andere Spalten brauchen.
+//
+// Spalten wie bei Lodgify: Titel · Aktiv · Zugewiesen · [Planen] · Braucht eine
+// Inspektion? · Priorität · Details. Anlegen über den schwebenden „+" unten
+// rechts, Bearbeiten über den grünen „Details"-Knopf — beides führt auf eine
+// eigene Seite, nicht in ein Modal (der Editor hat dafür zu viele Felder).
 import { Icon } from "@iconify/react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
 
-import { RuleEditor } from "@/components/reservierungen/rule-editor";
-import { Button } from "@nextdays/ui/button";
-import { Card } from "@nextdays/ui/card";
-import {
-  type RuleKind,
-  type RuleListItem,
-  deleteRule,
-  listRules,
-} from "@/lib/tasks";
+import { LearnButton } from "@/components/reservierungen/learn-dialog";
+import { type RuleListItem, listRules } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
-export function RuleList({ kind }: { kind: RuleKind }) {
+type Kind = "auto" | "recurring";
+
+const BASE: Record<Kind, string> = {
+  auto: "/reservierungen/aufgaben/planmaessig",
+  recurring: "/reservierungen/aufgaben/regelmaessig",
+};
+
+export function RuleList({ kind }: { kind: Kind }) {
   const t = useTranslations("reservations");
-  const locale = useLocale();
-  const CONFIG: Record<
-    RuleKind,
-    { title: string; scheduleCol: boolean; scheduleLabel: string }
-  > = {
-    template: {
-      title: t("ruleList.kindTitle.template"),
-      scheduleCol: false,
-      scheduleLabel: "",
-    },
-    auto: {
-      title: t("ruleList.kindTitle.auto"),
-      scheduleCol: false,
-      scheduleLabel: "",
-    },
-    recurring: {
-      title: t("ruleList.kindTitle.recurring"),
-      scheduleCol: true,
-      scheduleLabel: t("ruleList.scheduleLabel"),
-    },
-  };
-  const cfg = CONFIG[kind];
   const [rows, setRows] = useState<RuleListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,148 +42,119 @@ export function RuleList({ kind }: { kind: RuleKind }) {
 
   useRealtime({ table: "task_rules", onChange: load });
 
-  const remove = async (id: string) => {
-    const res = await deleteRule(id);
-    if (!res.ok) toast.error(res.error);
-    else {
-      toast.success(t("ruleList.deleted"));
-      load();
-    }
-  };
-
-  const fmt = (iso: string | null) =>
-    iso
-      ? new Date(iso).toLocaleDateString(locale, {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-      : t("ruleList.emptyValue");
+  const title = t(`ruleList.kindTitle.${kind}`);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-extrabold">{cfg.title}</h1>
-        <Button onClick={() => setCreating(true)}>
-          <Icon icon="ph:plus" className="size-4" />
-          {t("ruleList.new")}
-        </Button>
+      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <span>{t("templateList.breadcrumbHome")}</span>
+        <Icon icon="ph:caret-right" className="size-3.5" />
+        <span>{t("templateList.breadcrumbTasks")}</span>
+        <Icon icon="ph:caret-right" className="size-3.5" />
+        <span className="text-foreground">{title}</span>
+      </nav>
+
+      <div className="flex items-center gap-3">
+        <h1 className="font-display text-2xl font-extrabold">{title}</h1>
+        <LearnButton title={title}>
+          <p className="text-sm text-muted-foreground">
+            {t(`ruleList.learnBody.${kind}`)}
+          </p>
+        </LearnButton>
       </div>
 
-      <Card className="overflow-x-auto p-0">
+      <div className="overflow-x-auto rounded-(--radius) border">
         {loading ? (
           <p className="p-6 text-sm text-muted-foreground">
             {t("ruleList.loading")}
           </p>
         ) : rows.length === 0 ? (
           <p className="p-8 text-center text-sm text-muted-foreground">
-            {t("ruleList.empty", { title: cfg.title.toLowerCase() })}
+            {t("ruleList.empty", { title: title.toLowerCase() })}
           </p>
         ) : (
-          <table className="w-full min-w-[40rem] border-collapse text-sm">
+          <table className="w-full min-w-[48rem] border-collapse text-sm">
             <thead>
-              <tr className="border-b text-left text-xs text-muted-foreground">
-                <th className="px-3 py-2 font-medium">{t("ruleList.columnTitle")}</th>
-                {kind !== "template" && (
-                  <th className="px-3 py-2 font-medium">{t("ruleList.columnActive")}</th>
+              <tr className="bg-secondary text-left text-xs uppercase text-muted-foreground">
+                <th className="px-4 py-3 font-semibold">
+                  {t("ruleList.columnTitle")}
+                </th>
+                <th className="px-4 py-3 font-semibold">
+                  {t("ruleList.columnActive")}
+                </th>
+                <th className="px-4 py-3 font-semibold">
+                  {t("ruleList.columnAssignee")}
+                </th>
+                {kind === "recurring" && (
+                  <th className="px-4 py-3 font-semibold">
+                    {t("ruleList.scheduleLabel")}
+                  </th>
                 )}
-                {kind !== "template" && (
-                  <th className="px-3 py-2 font-medium">{t("ruleList.columnAssignee")}</th>
-                )}
-                {cfg.scheduleCol && (
-                  <th className="px-3 py-2 font-medium">{cfg.scheduleLabel}</th>
-                )}
-                <th className="px-3 py-2 font-medium">{t("ruleList.columnPoints")}</th>
-                {kind === "template" && (
-                  <th className="px-3 py-2 font-medium">{t("ruleList.columnUpdated")}</th>
-                )}
-                <th className="px-3 py-2" />
+                <th className="px-4 py-3 font-semibold">
+                  {t("ruleList.columnInspection")}
+                </th>
+                <th className="px-4 py-3 text-right font-semibold">
+                  {t("ruleList.columnPriority")}
+                </th>
+                <th className="px-4 py-3 text-right font-semibold">
+                  {t("ruleList.columnDetails")}
+                </th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-b hover:bg-secondary/40">
-                  <td className="px-3 py-2 font-medium">
-                    <span className="inline-flex items-center gap-1.5">
-                      {r.needs_inspection && (
-                        <Icon
-                          icon="ph:magnifying-glass"
-                          className="size-3.5 text-amber-500"
-                          aria-label={t("ruleList.inspectionNeeded")}
-                        />
-                      )}
-                      {r.name}
-                    </span>
+                <tr key={r.id} className="border-b last:border-b-0">
+                  <td className="px-4 py-3 font-semibold">{r.name}</td>
+                  <td className="px-4 py-3 font-medium">
+                    {r.active ? (
+                      <span className="text-success">{t("ruleList.yes")}</span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {t("ruleList.no")}
+                      </span>
+                    )}
                   </td>
-                  {kind !== "template" && (
-                    <td className="px-3 py-2">
-                      {r.active ? (
-                        <span className="text-emerald-600">{t("ruleList.yes")}</span>
-                      ) : (
-                        <span className="text-muted-foreground">{t("ruleList.no")}</span>
-                      )}
-                    </td>
-                  )}
-                  {kind !== "template" && (
-                    <td className="px-3 py-2 text-muted-foreground">
-                      {r.assignee_name ?? t("ruleList.emptyValue")}
-                    </td>
-                  )}
-                  {cfg.scheduleCol && (
-                    <td className="px-3 py-2 text-muted-foreground">
+                  <td className="px-4 py-3 font-medium">
+                    {r.assignee_name ?? (
+                      <span className="text-muted-foreground">
+                        {t("ruleList.emptyValue")}
+                      </span>
+                    )}
+                  </td>
+                  {kind === "recurring" && (
+                    <td className="px-4 py-3 font-medium">
                       {r.schedule_label ?? t("ruleList.emptyValue")}
                     </td>
                   )}
-                  <td className="px-3 py-2 text-muted-foreground">
-                    {r.item_count}
+                  <td className="px-4 py-3 font-medium">
+                    {r.needs_inspection ? t("ruleList.yes") : t("ruleList.no")}
                   </td>
-                  {kind === "template" && (
-                    <td className="px-3 py-2 text-muted-foreground">
-                      {fmt(r.updated_at)}
-                    </td>
-                  )}
-                  <td className="px-3 py-2">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        type="button"
-                        onClick={() => setEditId(r.id)}
-                        className="flex size-8 items-center justify-center rounded-full hover:bg-secondary"
-                        aria-label={t("ruleList.edit")}
-                      >
-                        <Icon icon="ph:pencil-simple" className="size-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => remove(r.id)}
-                        className="flex size-8 items-center justify-center rounded-full text-destructive hover:bg-destructive/10"
-                        aria-label={t("ruleList.delete")}
-                      >
-                        <Icon icon="ph:trash" className="size-4" />
-                      </button>
-                    </div>
+                  <td className="px-4 py-3 text-right font-medium">
+                    {r.priority || t("ruleList.emptyValue")}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Link
+                      href={`${BASE[kind]}/${r.id}`}
+                      className="inline-flex items-center rounded-(--radius) bg-emerald-400 px-4 py-1.5 text-sm font-medium text-emerald-950 hover:bg-emerald-500"
+                    >
+                      {t("ruleList.columnDetails")}
+                    </Link>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-      </Card>
+      </div>
 
-      {(creating || editId) && (
-        <RuleEditor
-          kind={kind}
-          ruleId={editId}
-          onClose={() => {
-            setCreating(false);
-            setEditId(null);
-          }}
-          onSaved={() => {
-            setCreating(false);
-            setEditId(null);
-            load();
-          }}
-        />
-      )}
+      {/* Schwebender „+" unten rechts (neue Regel). Über dem Andy-Button. */}
+      <Link
+        href={`${BASE[kind]}/neu`}
+        className="fixed bottom-24 right-6 z-40 flex size-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition hover:scale-105"
+        aria-label={t("ruleList.new")}
+      >
+        <Icon icon="ph:plus" className="size-6" />
+      </Link>
     </div>
   );
 }

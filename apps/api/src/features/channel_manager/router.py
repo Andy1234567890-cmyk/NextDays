@@ -43,6 +43,7 @@ from .schemas import (
     ChannelDetailResponse,
     ChannelListResponse,
     ChannelOverviewResponse,
+    ChannelPropertyDetailResponse,
     ChannelResponse,
     ChannexDebugResponse,
     ConnectChannelRequest,
@@ -59,6 +60,8 @@ from .schemas import (
     OAuthStatusResponse,
     PinChannelRequest,
     PinnedChannelsResponse,
+    PortalPriceAdjustmentRequest,
+    PortalPriceAdjustmentResponse,
     PrepareChannelRequest,
     PrepareChannelResponse,
     PropertyConnectRequest,
@@ -485,6 +488,49 @@ def list_channel_connections(
         return ChannelConnectionListResponse(
             items=[ChannelConnectionResponse(**c) for c in items],
             total=len(items),
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/properties/{property_id}/connections/{portal_code}",
+    response_model=ChannelPropertyDetailResponse,
+)
+def channel_property_detail(
+    property_id: str,
+    portal_code: str,
+    ctx: _read,
+    service: ChannelManagerServiceDep,
+) -> ChannelPropertyDetailResponse:
+    """Ein Portal, ein Objekt: Kennungen, Sync-Stand und Tarifpläne."""
+    try:
+        return ChannelPropertyDetailResponse(
+            **service.channel_property_detail(ctx, property_id, portal_code)
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put(
+    "/properties/{property_id}/connections/{portal_code}/price-adjustment",
+    response_model=PortalPriceAdjustmentResponse,
+)
+def set_portal_price_adjustment(
+    property_id: str,
+    portal_code: str,
+    req: PortalPriceAdjustmentRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> PortalPriceAdjustmentResponse:
+    """Preisänderung je Portal (Lodgify-Modell): prozentualer Aufschlag auf
+    die effektive Tageskurve GENAU DIESES Portals — umgesetzt als automatisch
+    gepflegter Kanal-Plan (0272). 0 % nimmt Aufschlag + Kanal-Plan zurück."""
+    try:
+        return PortalPriceAdjustmentResponse(
+            **service.set_portal_price_adjustment(
+                ctx, property_id, portal_code, req.percent
+            )
         )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

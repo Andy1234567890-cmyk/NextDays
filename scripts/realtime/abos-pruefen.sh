@@ -66,8 +66,17 @@ TREFFER=$(cd "$WURZEL" && echo "$DATEIEN" | tr '\n' '\0' | xargs -0 grep -Hn \
 # RealtimeRefresh nimmt die Tabellen als Liste entgegen (`tables={["a","b"]}`)
 # und reicht sie an useRealtime durch — die Aufrufer sind der eigentliche Ort,
 # an dem der Tabellenname steht.
-LISTEN=$(cd "$WURZEL" && grep -rHn -oE 'tables=\{\[[^]]*\]\}' \
-  --include="*.tsx" --exclude-dir=node_modules "${PROJEKTE[@]}" 2>/dev/null || true)
+# MEHRZEILIG lesen: prettier bricht jede Liste ab zwei Einträgen um, und ein
+# zeilenweises grep sah davon nur die Klammerzeile — die Abos standen dann gar
+# nicht im Report und galten als geprüft, obwohl sie niemand angesehen hatte.
+LISTEN=$(cd "$WURZEL" && find "${PROJEKTE[@]}" -name '*.tsx' -not -path '*/node_modules/*' \
+  -print0 2>/dev/null | xargs -0 perl -0777 -ne '
+    while (/tables=\{\[(.*?)\]\}/gs) {
+      my $inhalt = $1; my $vor = substr($_, 0, pos($_));
+      my $zeile = ($vor =~ tr/\n//) + 1;
+      my @namen = ($inhalt =~ /"([a-zA-Z0-9_]+)"/g);
+      print "$ARGV:$zeile:tables={[" . join(",", map { "\"$_\"" } @namen) . "]}\n" if @namen;
+    }' 2>/dev/null || true)
 if [ -n "$LISTEN" ]; then
   TREFFER=$(printf '%s\n%s' "$TREFFER" "$(echo "$LISTEN" | while IFS= read -r zeile; do
     ort=${zeile%%:tables=*}

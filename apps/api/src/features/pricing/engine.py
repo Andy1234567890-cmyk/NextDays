@@ -40,11 +40,12 @@ _AGGRESSIVENESS = {
 class DpSettings:
     """Dynamic-Pricing-Konfiguration eines Objekts (aus dp_settings)."""
 
+    # EIN Schalter: enabled = rechnen + überall gültig + an die Portale pushen.
+    # Den früheren Autopilot-Zwischenmodus gibt es nicht mehr — Reconcile und
+    # Full-Sync pushten die Resolver-Kurve (inkl. dynamic) ohnehin, das Gate
+    # im Recompute war eine Attrappe. Die DB-Spalte autopilot_enabled bleibt
+    # bestehen, wird aber nicht mehr gelesen.
     enabled: bool = False
-    # RateBoard-Autopilot: berechnete Preise automatisch scharf schalten (an die
-    # Kanäle pushen). False = nur Empfehlung (in dynamic_prices/Vorschau sichtbar,
-    # aber kein OTA-Push). enabled steuert das Rechnen, autopilot das Veröffentlichen.
-    autopilot_enabled: bool = False
     min_price: float | None = None
     max_price: float | None = None
     weekend_uplift_pct: float = 15.0
@@ -99,7 +100,6 @@ class DpSettings:
         lm = row.get("last_minute")
         return DpSettings(
             enabled=bool(row.get("enabled")),
-            autopilot_enabled=bool(row.get("autopilot_enabled")),
             min_price=_opt_float(row.get("min_price")),
             max_price=_opt_float(row.get("max_price")),
             weekend_uplift_pct=_as_float(row.get("weekend_uplift_pct"), 15.0),

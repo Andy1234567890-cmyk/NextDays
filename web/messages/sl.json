@@ -3290,15 +3290,10 @@
       "allProperties": "Vse nastanitve"
     },
     "myTasksList": {
-      "title": "Naloge",
-      "doneCount": "{done}/{total} opravljenih",
+      "title": "Moje naloge",
       "loading": "Nalaganje …",
       "emptyState": "Trenutno vam ni dodeljena nobena naloga.",
-      "dueOn": "zapade {date}",
-      "statusOpen": "Odprto",
-      "statusInProgress": "V teku",
-      "statusDone": "Opravljeno",
-      "statusCancelled": "Preklicano"
+      "completed": "Naloga zaključena."
     },
     "bookingPopover": {
       "title": "Rezervacija {id}",
@@ -3325,12 +3320,13 @@
       "doneCount": "{done}/{total} opravljenih",
       "loading": "Nalaganje …",
       "emptyState": "Za to rezervacijo še ni nalog.",
-      "createDefaultTasks": "Ustvari privzete naloge",
-      "defaultTasksCreated": "Privzete naloge ustvarjene.",
       "statusOpen": "Odprto",
       "statusInProgress": "V teku",
       "statusDone": "Opravljeno",
-      "statusCancelled": "Preklicano"
+      "statusCancelled": "Preklicano",
+      "applyRules": "Uporabi pravila",
+      "rulesApplied": "Nalog iz pravil: {count}.",
+      "noRuleMatched": "Za to rezervacijo ne velja nobeno pravilo."
     },
     "propertyWarnings": {
       "title": "Opozorila",
@@ -3437,7 +3433,9 @@
       "addPhoto": "Dodaj fotografijo",
       "done": "Opravljeno",
       "saving": "Shranjevanje …",
-      "completeButton": "Zaključi"
+      "completeButton": "Zaključi",
+      "inBooking": "Na rezervacijo {ref}",
+      "assignedTo": "Za {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Kako gost plača?",
@@ -3464,7 +3462,8 @@
       "reject": "Zavrni",
       "approve": "Odobri",
       "toastApproved": "Odobreno.",
-      "toastRejected": "Zavrnjeno."
+      "toastRejected": "Zavrnjeno.",
+      "noPhotos": "Ni fotografskih dokazov."
     },
     "bookingsBoard": {
       "title": "Rezervacije",
@@ -3537,33 +3536,13 @@
     },
     "teamTasks": {
       "title": "Naloge ekipe",
-      "tabs": {
-        "current": "TRENUTNE",
-        "upcoming": "PRIHAJAJOČE",
-        "done": "ZAKLJUČENE"
-      },
-      "status": {
-        "open": "Odprto",
-        "inProgress": "V teku",
-        "done": "Opravljeno",
-        "cancelled": "Preklicano"
-      },
       "loading": "Nalaganje …",
       "empty": "V tem prikazu ni nalog.",
-      "columns": {
-        "title": "Naslov",
-        "property": "Nastanitev",
-        "assignee": "Dodeljeno",
-        "status": "Status",
-        "due": "Rok"
-      },
-      "unassigned": "Ni dodeljeno",
-      "inspectionNeeded": "Potreben je pregled",
-      "details": "Podrobnosti"
+      "completed": "Naloga zaključena.",
+      "deleted": "Naloga izbrisana."
     },
     "ruleList": {
       "kindTitle": {
-        "template": "Predloge nalog",
         "auto": "Načrtovane naloge",
         "recurring": "Redne naloge"
       },
@@ -3574,15 +3553,16 @@
       "columnTitle": "Naslov",
       "columnActive": "Aktivno",
       "columnAssignee": "Dodeljeno",
-      "columnPoints": "Točke",
-      "columnUpdated": "Posodobljeno",
-      "inspectionNeeded": "Potreben je pregled",
       "yes": "Da",
       "no": "Ne",
       "emptyValue": "–",
-      "edit": "Uredi",
-      "delete": "Izbriši",
-      "deleted": "Izbrisano."
+      "columnInspection": "Potreben pregled?",
+      "columnPriority": "Prednost naloge",
+      "columnDetails": "Podrobnosti",
+      "learnBody": {
+        "auto": "Načrtovana naloga nastane samodejno ob vsaki rezervaciji izbranih nastanitev — z začetkom in koncem glede na prijavo in odjavo.",
+        "recurring": "Ponavljajoča naloga sledi koledarju: začetni datum, pogostost in trajanje. Sistem termine ustvari vnaprej — neodvisno od rezervacij."
+      }
     },
     "pmModuleNav": {
       "navLabel": "PM moduli",
@@ -3724,17 +3704,14 @@
       "navigationLabel": "Navigacija",
       "previousMonth": "Prejšnji mesec",
       "nextMonth": "Naslednji mesec",
-      "selectedUsersLabel": "Izbrani uporabniki",
-      "allUsersPlaceholder": "Vsi uporabniki",
-      "selectedPropertiesLabel": "Izbrane nastanitve",
-      "allPropertiesPlaceholder": "Vse nastanitve",
       "resetAllLabel": "Ponastavi vse",
       "loading": "Nalaganje …",
       "createTaskOnDay": "Ustvari nalogo na ta dan",
       "bookingBarTitle": "{guests} · {channel} · {range}",
       "bookingBarLabel": "{guests} {channel} - rezervacija",
       "months": "Januar,Februar,Marec,April,Maj,Junij,Julij,Avgust,September,Oktober,November,December",
-      "weekdays": "Nedelja,Ponedeljek,Torek,Sreda,Četrtek,Petek,Sobota"
+      "weekdays": "Nedelja,Ponedeljek,Torek,Sreda,Četrtek,Petek,Sobota",
+      "miscRow": "Razno"
     },
     "ruleEditor": {
       "loading": "Nalaganje …",
@@ -3941,7 +3918,170 @@
       "confirmedReservations": "Potrjene rezervacije"
     },
     "mobileAppHint": "Pogled opravil za na pot je že odziven na spletu (Moja opravila + podrobnosti z nalaganjem fotografij). Ločena mobilna aplikacija bo sledila kot samostojen projekt.",
-    "guestModuleHint": "Z obrazcem za predprijavo pred prihodom zberete vse podatke svojih gostov (dokument, naslov, sopotniki, čas prihoda). To področje bo zgrajeno kot samostojen korak."
+    "guestModuleHint": "Z obrazcem za predprijavo pred prihodom zberete vse podatke svojih gostov (dokument, naslov, sopotniki, čas prihoda). To področje bo zgrajeno kot samostojen korak.",
+    "aufgabenFilter": {
+      "selectedCount": "{count} izbranih",
+      "resetCaption": "Ponastavi vse",
+      "close": "Zapri",
+      "noMatch": "Ni zadetkov.",
+      "selectAll": "Izberi vse",
+      "selectNone": "Ne izberi nič",
+      "save": "Shrani",
+      "taskCaption": "Izbrana naloga",
+      "allTasks": "Vse naloge",
+      "taskDialog": "Izberi nalogo",
+      "taskSearch": "Iskanje po naslovu naloge",
+      "usersCaption": "Izbrani uporabniki",
+      "allUsers": "Vsi uporabniki",
+      "usersDialog": "Izberi uporabnike",
+      "usersSearch": "Iskanje po imenu",
+      "unassignedOption": "Ni dodeljeno",
+      "propertiesCaption": "Izbrane nastanitve",
+      "allProperties": "Vse nastanitve",
+      "propertiesDialog": "Izberi nastanitve",
+      "propertiesSearch": "Iskanje po imenu ali mestu"
+    },
+    "aufgabenReiter": {
+      "current": "TRENUTNE",
+      "upcoming": "PRIHAJAJOČE",
+      "done": "ZAKLJUČENE"
+    },
+    "massenaktionen": {
+      "selected": "{count} izbranih",
+      "completeAria": "Zaključi izbrano",
+      "deleteAria": "Izbriši izbrano",
+      "completed": "Zaključenih nalog: {done}.",
+      "completedPartly": "Zaključenih {done}, preskočenih {skipped} (manjka fotografija ali dostop).",
+      "deleted": "Izbrisanih nalog: {done}.",
+      "deletedPartly": "Izbrisanih {done}, preskočenih {skipped} (ni dostopa)."
+    },
+    "aufgabenTabelle": {
+      "columnActions": "Dejanja",
+      "columnTitle": "Naslov",
+      "columnProperty": "Nastanitev",
+      "columnBooking": "Rezervacija",
+      "columnAssignee": "Dodeljeno",
+      "columnStatus": "Stanje",
+      "columnDates": "Začetek in konec",
+      "selectAll": "Izberi vse vrstice",
+      "selectRow": "Izberi vrstico",
+      "open": "Prikaži",
+      "complete": "Zaključi",
+      "delete": "Izbriši",
+      "inspectionNeeded": "Potreben pregled",
+      "unassigned": "Ni dodeljeno",
+      "statusOpen": "Nedokončano",
+      "statusDone": "Zaključeno",
+      "statusCancelled": "Preklicano"
+    },
+    "ruleEditorPage": {
+      "loading": "Nalaganje…",
+      "modeCreate": "Ustvari",
+      "modeEdit": "Uredi",
+      "breadcrumbHome": "Domov",
+      "breadcrumbTasks": "Naloge",
+      "titleLabel": "Naslov",
+      "descriptionLabel": "Opis",
+      "active": "Aktivno",
+      "removeOnCancellation": "Odstrani ob preklicu rezervacije",
+      "priority": "Prednost naloge",
+      "priorityDown": "Zmanjšaj prednost",
+      "priorityUp": "Povečaj prednost",
+      "priorityLevel": {
+        "1": "zelo nizka",
+        "2": "nizka",
+        "3": "srednja",
+        "4": "visoka",
+        "5": "takojšnja"
+      },
+      "propertiesLabel": {
+        "auto": "Nastanitve, za katere naloga nastane ob vsaki rezervaciji",
+        "recurring": "Nastanitve, v katerih se naloga izvaja"
+      },
+      "propertiesPlaceholder": "Izberite nastanitve…",
+      "propertiesHint": "Brez izbire pravilo velja za vse nastanitve.",
+      "templateLabel": "Predloga naloge s seznamom podnalog",
+      "templateNone": "Brez predloge",
+      "assigneeLabel": "Prejemnik naloge",
+      "unassigned": "Ni dodeljeno",
+      "needsInspection": "Zaključek zahteva pregled",
+      "saveAria": "Shrani pravilo",
+      "deleteAria": "Izbriši pravilo",
+      "saved": "Shranjeno.",
+      "deleted": "Izbrisano.",
+      "nameRequired": "Naslov je obvezen.",
+      "startTriggerRequired": "Izberite, kdaj se naloga začne — sicer se pravilo nikoli ne sproži.",
+      "scheduleRequired": "Začetni datum in pogostost sta obvezna.",
+      "learnTitle": {
+        "auto": "Načrtovane naloge",
+        "recurring": "Ponavljajoče naloge"
+      },
+      "learnBody": {
+        "auto": "Načrtovana naloga je vezana na rezervacijo: določite, kdaj se začne in konča glede na prijavo in odjavo. Nastane ob vsaki novi rezervaciji, se premakne z njo in ob preklicu izgine.",
+        "recurring": "Ponavljajoča naloga sledi koledarju, ne rezervacijam: določite začetek, pogostost in trajanje, sistem pa termine ustvari vnaprej."
+      },
+      "startTriggerLabel": "Kdaj naj se naloga začne",
+      "endTriggerLabel": "Kdaj naj se naloga konča",
+      "triggerNone": "— ni nastavljeno —",
+      "trigger": {
+        "booking_confirmed": "Ob potrditvi rezervacije",
+        "check_in": "Ob prijavi",
+        "after_check_in_24h": "Po prijavi (največ 24 ur)",
+        "check_out": "Ob odjavi",
+        "days_before_check_in": "Dni pred prijavo",
+        "days_after_check_out": "Dni po odjavi"
+      },
+      "triggerHint": {
+        "booking_confirmed": "Naloga nastane takoj, ko je rezervacija potrjena.",
+        "check_in": "Naloga se začne ob prijavi rezervacije.",
+        "after_check_in_24h": "24 ur po prijavi — a nikoli po odjavi: pri kratkih bivanjih se naloga konča z odhodom.",
+        "check_out": "Naloga je vezana na odjavo rezervacije.",
+        "days_before_check_in": "Naloga nastane navedeno število dni pred prijavo.",
+        "days_after_check_out": "Naloga nastane navedeno število dni po odjavi."
+      },
+      "offsetDays": "Dni",
+      "periodLabel": "Določite začetni in končni datum",
+      "startsOn": "Začetni datum",
+      "startTime": "Čas začetka",
+      "hasEnd": "Se konča",
+      "endsOn": "Končni datum",
+      "repeatLabel": "Interval ponavljanja",
+      "frequency": "Pogostost",
+      "choose": "Izberite…",
+      "frequencyOption": {
+        "daily": "Dnevno",
+        "weekly": "Tedensko",
+        "monthly": "Mesečno",
+        "yearly": "Letno"
+      },
+      "interval": "Vsakih",
+      "onDay": "Na dan",
+      "onPattern": "Na",
+      "position": {
+        "first": "Prvi",
+        "second": "Drugi",
+        "third": "Tretji",
+        "fourth": "Četrti",
+        "last": "Zadnji"
+      },
+      "durationLabel": "Ocenjeno trajanje",
+      "hours": "Ure",
+      "minutes": "Minute",
+      "weekdayMon": "Ponedeljek",
+      "weekdayTue": "Torek",
+      "weekdayWed": "Sreda",
+      "weekdayThu": "Četrtek",
+      "weekdayFri": "Petek",
+      "weekdaySat": "Sobota",
+      "weekdaySun": "Nedelja",
+      "weekdayMonShort": "Pon",
+      "weekdayTueShort": "Tor",
+      "weekdayWedShort": "Sre",
+      "weekdayThuShort": "Čet",
+      "weekdayFriShort": "Pet",
+      "weekdaySatShort": "Sob",
+      "weekdaySunShort": "Ned"
+    }
   },
   "objects": {
     "channelChips": {
@@ -4097,7 +4237,9 @@
       "itemAvailability": "Razpoložljivost",
       "itemChannels": "Kanäle",
       "itemPolicies": "Pravilniki",
-      "itemSeasonalPrices": "Sezonske cene"
+      "itemSeasonalPrices": "Sezonske cene",
+      "groupChannels": "Kanali",
+      "itemSync": "Sinhronizacija"
     },
     "complianceForm": {
       "title": "Skladnost",
@@ -4395,8 +4537,6 @@
       "nightlyPriceHint": "Določi svojo nočno ceno z osnovno ceno in pribitkom.",
       "basePriceTitle": "Osnovna cena",
       "basePriceHint": "Osnovna cena na noč in valuta. Neobvezno prilagodi po dnevih v tednu.",
-      "markupTitle": "Pribitek (mark-up)",
-      "markupHint": "Prilagodi osnovno ceno, poslano zunanjim kanalom.",
       "extraGuestTitle": "Pribitek na gosta",
       "extraGuestHint": "Aktiviraj nočni pribitek za vsakega dodatnega gosta.",
       "extraGuestPill": "{price} od gosta {guest}",
@@ -4454,9 +4594,6 @@
       "dynamicPricingHint": "Dinamične cene (samodejno glede na sezono, konec tedna, zasedenost, trg …) nastaviš centralno pod <link>Dinamično oblikovanje cen</link> v glavnem meniju. Tukaj določena osnovna cena ostane osnova; ročna dnevna cena v koledarju ima vedno prednost.",
       "basePricePerNightLabel": "Osnovna cena na noč",
       "customByWeekdayLabel": "Prilagodi po dnevih v tednu",
-      "markupEditorTitle": "Pribitek za zunanje kanale",
-      "markupEditorSubtitle": "Pozitiven % zviša, negativen % zniža osnovno ceno za zunanje kanale.",
-      "markupHintNote": "Pribitek ne velja za neposredne rezervacije myNextDays.",
       "extraGuestEditorSubtitle": "Aktiviraj nočni pribitek za vsakega dodatnega gosta.",
       "extraGuestFromLabel": "Velja za vsakega gosta od",
       "guestCount": "{count, plural, one {# gost} two {# gosta} few {# gostje} other {# gostov}}",
@@ -4506,9 +4643,19 @@
       "baseLabelPlaceholder": "npr. Standardna cena",
       "multiPlanHint": "Več cenovnih načrtov (npr. BAR/B&B) — cene se urejajo po datumih v koledarskem pogledu »Cene«.",
       "plansTitle": "Ceniki",
+      "dynamicActiveTitle": "Dynamic Pricing vklopljen",
+      "dynamicActiveHint": "Dnevne cene se izračunajo samodejno in veljajo povsod — v koledarju, na lastni platformi in na portalih. Osnovna cena je le osnova izračuna.",
+      "dynamicActiveOpen": "Odpri predogled",
+      "portalAdjustmentTitle": "Prilagoditev cene po portalu",
+      "portalAdjustmentHint": "Prilagodite cene, ki se pošiljajo na vaše zunanje portale.",
+      "portalAdjustmentNone": "Noben portal še ni povezan.",
+      "portalAdjustmentInvalid": "Neveljavna vrednost — dovoljen razpon je od −99 do 500 %.",
+      "portalAdjustmentEditorSubtitle": "Prilagodite pribitek za zunanje portale. Pozitiven odstotek zviša cene, poslane na portal, negativen jih zniža.",
+      "portalAdjustmentDirectNote": "Pribitek ne velja za neposredne rezervacije prek lastne spletne strani ali myBestDays.",
+      "portalAdjustmentSaved": "Prilagoditev cene shranjena.",
       "plansHint": "Cene se urejajo po datumih v koledarju.",
       "planCreate": "Ustvari cenik",
-      "planModeManual": "Ročno",
+      "planModeManual": "Lastna cena",
       "planModeDerived": "Izpeljano iz cenika {parent} · {offset}",
       "planDerivedPrice": "izračunano",
       "planMinStay": "Najmanj {nights} noči",
@@ -4624,6 +4771,58 @@
         "junior_suite": "Junior suite",
         "suite": "Suite"
       }
+    },
+    "sync": {
+      "title": "Sinhronizacija",
+      "hint": "Katero oznako ima ta objekt na posameznem portalu in ali sinhronizacija teče. Oznake so prikazane enako kot v ekstranetu portala, da je mogoče tam najti rezervacijo.",
+      "none": "Ta objekt ni povezan z nobenim portalom. Poveži ga na zavihku »Kanali«.",
+      "colPortal": "Na portalu",
+      "colOurs": "Pri nas",
+      "colStatus": "Stanje",
+      "published": "Objavljeno",
+      "notPublished": "Ni objavljeno",
+      "syncOk": "Sinhronizirano",
+      "statusActive": "Aktivno",
+      "statusPaused": "Zaustavljeno",
+      "statusError": "Napaka",
+      "singleUnit": "Celoten objekt",
+      "loadFailed": "Tega objekta ni bilo mogoče naložiti."
+    },
+    "channelDetail": {
+      "identifiers": "Oznake",
+      "hotelId": "Oznaka hotela",
+      "roomCode": "Oznaka sobe",
+      "roomTitle": "Ime sobe na portalu",
+      "sellingTitle": "Prodaja prek tega portala",
+      "sellingHint": "Izklopljeno: cene in razpoložljivost ne gredo več na ta portal. Obstoječe rezervacije tečejo naprej, nove še vedno prihajajo.",
+      "lastSync": "Nazadnje sinhronizirano",
+      "never": "Nikoli",
+      "syncNow": "Sinhroniziraj zdaj",
+      "loadFailed": "Te povezave ni bilo mogoče naložiti.",
+      "backToChannel": "Računi {portal}",
+      "ourId": "myNextDays ID:",
+      "published": "Objavljeno",
+      "notPublished": "Ni objavljeno",
+      "statusSynced": "Sinhronizirano",
+      "statusPaused": "Zaustavljeno",
+      "statusError": "Napaka",
+      "syncSection": "Sinhronizacija",
+      "ratePlans": "Aktivni cenovni načrti",
+      "noRatePlans": "Noben cenovni načrt ni sproščen za portale.",
+      "colCondition": "Pogoji",
+      "colPlanName": "Ime cenovnega načrta (vrsta)",
+      "colPriceChange": "Sprememba cene",
+      "modeManual": "Lastna cena",
+      "modeDerived": "Izveden",
+      "minStay": "najmanj {nights} noči",
+      "colPrice": "Cena",
+      "dynamicActiveTitle": "Dynamic Pricing vklopljen",
+      "dynamicActiveHint": "Na ta portal se pošiljajo samodejno izračunane dnevne cene — spodaj prikazana cena je le osnova izračuna.",
+      "adjustmentInvalid": "Neveljavna vrednost — dovoljen razpon je od −99 do 500 %.",
+      "adjustmentSave": "Shrani",
+      "adjustmentCancel": "Prekliči",
+      "adjustmentHint": "Uredi prilagoditev cene tega portala",
+      "notReleased": "ni sproščeno za portale"
     }
   },
   "calendar": {
@@ -5042,7 +5241,36 @@
     "fullResync": "Znova v celoti prenesi razpoložljivost, cene in omejitve",
     "categoryMessaging": "Neposredna komunikacija z gosti",
     "connected": "Povezano",
-    "notConnected": "Ni povezano"
+    "notConnected": "Ni povezano",
+    "propertiesHeading": "Objekti",
+    "noPropertiesYet": "Nimate še aktivnih objektov. Najprej ustvarite objekt, da ga povežete s {portal}.",
+    "connectedOf": "{connected} od {total} povezanih",
+    "searchProperty": "Iskanje",
+    "propertyAtPortal": "Objekt na {portal}",
+    "syncStatusColumn": "Stanje sinhronizacije",
+    "actionColumn": "Dejanje",
+    "noSearchResults": "Noben objekt ne ustreza iskanju.",
+    "statusPaused": "Zaustavljeno",
+    "statusError": "Napaka",
+    "statusSynced": "Sinhronizirano",
+    "idPrefix": "ID:",
+    "edit": "Uredi",
+    "fullResyncShort": "Polna sinhronizacija",
+    "pause": "Zaustavi",
+    "activate": "Aktiviraj",
+    "disconnectChannel": "Prekini povezavo",
+    "disconnectConfirm": "Ali želite {portal} v celoti prekiniti? Vsi povezani objekti tega portala bodo odklopljeni.",
+    "disconnectDone": "{portal} odklopljen.",
+    "notConfiguredHint": "Povezava s portalom še ni aktivna. Ko bo omogočena, boste lahko povezali svoje objekte.",
+    "channelIntro": "Objavljajte, sinhronizirajte in upravljajte svoje oglase na {portal} z enega mesta.",
+    "syncResult": "Sinhronizacija končana — {fetched} pridobljenih, {saved} shranjenih, {acked} potrjenih.",
+    "pullFutureStarted": "Obstoječe rezervacije se nalagajo — to lahko traja trenutek.",
+    "bookingsFrom": "Rezervacije s {portal}",
+    "pullFuture": "Naloži obstoječe rezervacije",
+    "syncing": "Sinhroniziram …",
+    "syncBookings": "Sinhroniziraj rezervacije",
+    "noBookingsYet": "Iz tega portala še ni rezervacij.",
+    "channelFallback": "Kanal"
   },
   "calendarSync": {
     "title": "Uvoz/izvoz koledarja",

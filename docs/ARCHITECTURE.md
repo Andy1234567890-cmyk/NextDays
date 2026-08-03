@@ -146,14 +146,14 @@ flowchart TB
         subgraph DONE["Slices mit Logik"]
             AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix + ..-Berechtigungen (pro Nutzer)"]
             CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override (liest Preis via pricing-Resolver)"]
-            PRICE["pricing — Preis-Resolver (effective_price + quote) + Dynamic-Pricing-Engine (dynamic_prices; Regeln + gelernte Pickup-Kurve/Wetter/Autopilot)"]
+            PRICE["pricing — Preis-Resolver (effective_price + quote) + Dynamic-Pricing-Engine (dynamic_prices; Regeln + gelernte Pickup-Kurve/Wetter; enabled = überall gültig inkl. OTA-Push)"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
             BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht) + Firmenprofil/Logo; Nummernkreise (next_document_number)"]
             OWN["owners — Eigentümer-Stammdaten, Objekt-Zuweisung (Anteil + Provisions-Override je Objekt)"]
             OWNST["owner_statements — Auszahlungs-Abrechnung (Provision je Objekt, EU-Steuer/Reverse-Charge, Storno, Mehrwährung via ECB-Tageskurs)"]
             INBOXL["inbox — Threads (OTA + eigene Plattform), Versand, Vorlagen/KI + Wissensdatenbank, Platzhalter, Anhänge, geplante Nachrichten + planbare Automails (Zeit/Objekt-Zeitzone + Zuweisung Haus/Kanal + Auslöser Nachricht empfangen)"]
             ADDON["addons — Zusatzleistungen/Upsells je Objekt (Medien, Basis, appears_in, wann-anzeigen); Verkauf via booking_engine + Gäste-Portal, Extra-Umsatz in Owner-Statement, Task-Trigger addon_purchased, Payment-gegatet"]
-            PROP["properties — Objekt-Stammdaten, Fotos, Typ-Attribute, Adress-Split, Owner-Scope (RLS); zentrale Objektwährung (currency, 0161); pro-Kanal-Sichtbarkeit als eigene Achsen: Website (listed_on_website, 0162) + Plattform/Marktplatz (listed_on_marketplace, 0159), getrennt vom Lebenszyklus status; Portale-Zustand aus channex_property_map. PropertyResponse.channels = abgeleitete 3-Kanal-Chips (Website·Plattform·Portale, je active/paused/not_connected/error). Kanal-Steuerung auf ZWEI Ebenen (Lodgify-Muster): zentral /channels + pro Objekt /objekte/[id]/kanaele (property-channels.tsx: Website/Plattform-Toggles via PATCH, Portale-Zeilen togglen die OTA-Verbindung, Connect-Wizard mit presetPropertyId; Markup = Phase 2)"]
+            PROP["properties — Objekt-Stammdaten, Fotos, Typ-Attribute, Adress-Split, Owner-Scope (RLS); zentrale Objektwährung (currency, 0161); pro-Kanal-Sichtbarkeit als eigene Achsen: Website (listed_on_website, 0162) + Plattform/Marktplatz (listed_on_marketplace, 0159), getrennt vom Lebenszyklus status; Portale-Zustand aus channex_property_map. PropertyResponse.channels = abgeleitete 3-Kanal-Chips (Website·Plattform·Portale, je active/paused/not_connected/error). Kanal-Steuerung auf ZWEI Ebenen (Lodgify-Muster): zentral /channels + pro Objekt /objekte/[id]/kanaele (property-channels.tsx: Website/Plattform-Toggles via PATCH, Portale-Zeilen togglen die OTA-Verbindung, Connect-Wizard mit presetPropertyId; Markup = Phase 2); dazu die Nachschlag-Ebene /objekte/[id]/synchronisierung (alle Portale eines Objekts mit den Extranet-Kennungen hotel_id | room_code) und /objekte/[id]/synchronisierung/[portal] (ein Portal: Kennungen, Verkaufsschalter, letzter Abgleich)"]
             PPORTAL["property_portal — Gastmodul je Objekt (Portal-Schalter, Türcode maskiert); Info-Texte in messaging"]
             RATES["rates — Saison-/Event-Preise, Rate-Plans, Aufschläge"]
             RES["reservations — Buchungen, Lifecycle, Gast-Maskierung (Daten-Split); nach Domäne geteilt (_base/reads/writes/service-Fassade), Objekt-Statistiken (KPIs + Tages-Sparklines + KPI-Detail) in property_stats.py"]
@@ -653,7 +653,7 @@ AirDNA-Konto läuft alles über den NullProvider — DP wie Phase 1, nur mit Mar
   **Phase 3 (Migration `0057`)** bringt das zentrale Bedienmodell gängiger
   Channel-Manager (Hostaway) ins UI: ein eigener Hauptmenü-Bereich **`/dynamic-pricing`**
   mit einer **Objekt-Tabelle** (alle Objekte: Basispreis + Modus-Label, Min/Max,
-  Aktiv-Toggle, Bearbeiten-Slider, 30-Tage-Vorschau `/dynamic-pricing/{id}`), gespeist
+  Aktiv-Toggle, Bearbeiten-Slider, 35-Tage-Vorschau `/dynamic-pricing/{id}`), gespeist
   aus `GET /pricing/overview` (`settings_service.overview`). Pro Objekt wählt der
   Vermieter den **Basispreis-Modus** (`dp_settings.base_mode`): `data_driven` (Anker aus
   `rate_plans.base_price`, Aggressivität `base_rate_mode` konservativ/empfohlen/aggressiv
@@ -677,10 +677,14 @@ AirDNA-Konto läuft alles über den NullProvider — DP wie Phase 1, nur mit Mar
   neutral. (c) **Rate Rules** (`dp_settings.rate_rules`): manuelle Regeln
   (weekday/month/Vorlauf-Fenster → adjust_pct), die als bewusster Vermieter-Override
   OBENDRAUF auf die kombinierten Auto-Faktoren wirken (nicht von der Anti-Über-
-  Rabattierung erfasst). (d) **Autopilot** (`dp_settings.autopilot_enabled`): trennt
-  Rechnen von Veröffentlichen — `enabled` rechnet immer (Vorschau/Kalender sichtbar), der
-  Channex-OTA-Push läuft nur bei aktivem Autopilot, sonst bleibt der Preis reine
-  Empfehlung. Anti-Über-Rabattierung (nur stärkster Rabatt zählt, Aufschläge stapeln) +
+  Rabattierung erfasst). (d) **EIN Schalter** (`dp_settings.enabled`): rechnen heißt
+  überall gelten — Kalender, eigene Plattform UND Channex-OTA-Push. Den früheren
+  Autopilot-Zwischenmodus („rechnen, aber nicht veröffentlichen") gibt es nicht mehr:
+  Reconcile/Full-Sync bauten ihre Soll-Kurve ohnehin aus dem Resolver inkl. dynamic —
+  das Gate war eine Attrappe, und vier Flächen mit verschiedenen Preisen zerstören
+  das Vertrauen in die Preisführung. Die DB-Spalte `autopilot_enabled` bleibt
+  bestehen, wird aber nicht mehr gelesen.
+  Anti-Über-Rabattierung (nur stärkster Rabatt zählt, Aufschläge stapeln) +
   asymmetrische Caps (−20 %/+15 %) + Vorlauf-Buckets sind ebenfalls in `0060`. Damit
   erreicht die Engine das Funktionsniveau von PriceLabs/Beyond/RateBoard mit eigenen
   Daten; die Booking-Market-Insights-Quelle dockt später über dieselbe

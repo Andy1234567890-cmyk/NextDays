@@ -6,6 +6,7 @@
 // Gast-PII/Beträge (Housekeeping-Masking, §4.3).
 import { Icon } from "@iconify/react";
 import { useTranslations, useLocale } from "next-intl";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -135,6 +136,26 @@ export function TaskDetailModal({
                   <p className="text-xs text-muted-foreground">
                     {fmt(detail.start_at ?? detail.due_at)}
                     {detail.end_at ? ` – ${fmt(detail.end_at)}` : ""}
+                  </p>
+                )}
+                {/* Buchungsbezug: ohne ihn weiß die Reinigungskraft nicht, zu
+                    welcher Anreise die Aufgabe gehört. Nur die Referenz, kein
+                    Gastname und kein Betrag (§4.3). */}
+                {detail.reservation_id && detail.reservation_ref && (
+                  <Link
+                    href={`/reservierungen/${detail.reservation_id}`}
+                    className="text-xs text-primary underline-offset-2 hover:underline"
+                  >
+                    {t("taskDetailModal.inBooking", {
+                      ref: detail.reservation_ref,
+                    })}
+                  </Link>
+                )}
+                {detail.assignee_name && (
+                  <p className="text-xs text-muted-foreground">
+                    {t("taskDetailModal.assignedTo", {
+                      name: detail.assignee_name,
+                    })}
                   </p>
                 )}
               </div>

@@ -23,6 +23,7 @@ from src.features.guests.identity import (
     create_placeholder_guest,
     resolve_or_create_guest,
 )
+from src.jobs.queue import try_enqueue_recompute
 
 from .ari_push import _group_iso_days_to_ranges
 from .channex_client import ChannexError
@@ -824,6 +825,10 @@ class BookingsSyncMixin:
             # Wurzel 1). Best-effort — Storno-Pfad darf nie kippen (Wurzel 5).
             if existing:
                 self._cancel_commission_safe(tenant_id, existing[0]["id"])
+            # Auslastung/Orphan-Lücken haben sich geändert → Dynamic Pricing
+            # neu rechnen (coalesced; ohne Trigger altern die Empfehlungen
+            # bis zum nächsten Tages-Cron). Best-effort wie beim Direktkanal.
+            try_enqueue_recompute(db, tenant_id, free_property_id)
             return True
 
         if guest_id is None:
@@ -1064,6 +1069,13 @@ class BookingsSyncMixin:
             self._record_commission_safe(
                 db, tenant_id, reservation_id, channel, total_amount, row["currency"]
             )
+        # Neue/geänderte OTA-Buchung ändert Auslastung + Orphan-Lücken →
+        # Dynamic Pricing neu rechnen (coalesced je Objekt, best-effort) —
+        # derselbe Trigger, den Direktbuchungen längst haben (reservations/
+        # _base). Beim Objektwechsel auch das ALTE Objekt (Wurzel 1).
+        try_enqueue_recompute(db, tenant_id, property_id)
+        if existing and old_property_id and old_property_id != property_id:
+            try_enqueue_recompute(db, tenant_id, old_property_id)
         return True
 
     def _record_commission_safe(

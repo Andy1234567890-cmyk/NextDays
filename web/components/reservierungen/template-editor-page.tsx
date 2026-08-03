@@ -14,6 +14,7 @@ import { LearnButton } from "@/components/reservierungen/learn-dialog";
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import { Switch } from "@nextdays/ui/switch";
+import { LEERER_ZEITPLAN } from "@/lib/aufgaben-konstanten";
 import {
   type RuleItem,
   createRule,
@@ -68,6 +69,7 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
     }
     setSaving(true);
     const payload = {
+      ...LEERER_ZEITPLAN,
       kind: "template" as const,
       name,
       description: description || null,
