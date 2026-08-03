@@ -73,27 +73,40 @@ export const STAY_KIND_LABELS: Record<StayKind, string> = {
 // Gebühr (Fee). Zwei Achsen wie im Branchenstandard: „Einmaliger Betrag | Pro
 // Gast" × „Pro Aufenthalt | Pro Nacht" — hier als die vier möglichen
 // Kombinationen in EINEM Wert (genau vier gibt es).
-export type FeeBasis = "per_stay" | "per_night" | "per_guest_stay" | "per_guest_night";
+export type FeeBasis =
+  | "per_stay"
+  | "per_night"
+  | "per_guest_stay"
+  | "per_guest_night"
+  | "per_pet_stay";
 export const FEE_BASIS_LABELS: Record<FeeBasis, string> = {
   per_stay: "Einmalig pro Aufenthalt",
   per_night: "Pro Nacht",
   per_guest_stay: "Pro Gast / Aufenthalt",
   per_guest_night: "Pro Gast / Nacht",
+  per_pet_stay: "Pro Tier / Aufenthalt",
 };
-/** Die beiden Achsen der Berechnung, wie sie im Formular als zwei Felder stehen. */
-export type FeeChargeBasis = "SingleCharge" | "PerPerson";
+/** Die beiden Achsen der Berechnung, wie sie im Formular als zwei Felder stehen.
+ *  `PerPet` gibt es nur mit `PerStay` und nur an der Haustiergebühr — der
+ *  Standard kennt keine Tier-pro-Nacht-Gebühr, der Server weist sie ab. */
+export type FeeChargeBasis = "SingleCharge" | "PerPerson" | "PerPet";
 export type FeePeriod = "PerStay" | "PerNight";
 const FEE_BASIS_VON_ACHSEN: Record<string, FeeBasis> = {
   "SingleCharge|PerStay": "per_stay",
   "SingleCharge|PerNight": "per_night",
   "PerPerson|PerStay": "per_guest_stay",
   "PerPerson|PerNight": "per_guest_night",
+  "PerPet|PerStay": "per_pet_stay",
+  // Es gibt kein „pro Tier pro Nacht": die Kombination fällt auf pro Aufenthalt
+  // zurück, statt einen Wert zu erzeugen, den der Server ablehnt.
+  "PerPet|PerNight": "per_pet_stay",
 };
 /** Basis → die zwei Achsen (für die zwei Auswahlfelder). */
 export function feeBasisAchsen(basis: FeeBasis): {
   charge: FeeChargeBasis;
   period: FeePeriod;
 } {
+  if (basis === "per_pet_stay") return { charge: "PerPet", period: "PerStay" };
   return {
     charge: basis.startsWith("per_guest") ? "PerPerson" : "SingleCharge",
     period: basis.endsWith("night") ? "PerNight" : "PerStay",
@@ -103,6 +116,9 @@ export function feeBasisAchsen(basis: FeeBasis): {
 export function feeBasisAus(charge: FeeChargeBasis, period: FeePeriod): FeeBasis {
   return FEE_BASIS_VON_ACHSEN[`${charge}|${period}`];
 }
+/** Airbnb-Kategorien, für die „pro Tier" wählbar ist. Gegenstück:
+ *  PET_BASIS_CATEGORIES in properties/gebuehren.py. */
+export const PET_BASIS_CATEGORIES = ["pet"];
 
 /** Pauschalbetrag oder Prozentsatz. Prozent ist IMMER einmalig auf den
  *  Zimmerpreis (einschließlich Aktionen) — die Berechnungsfelder entfallen dann. */
@@ -110,7 +126,7 @@ export type FeeMode = "amount" | "percent";
 
 // Gebührenart. Bestimmt, als WAS die Gebühr beim Portal ankommt — Airbnb kennt
 // z. B. Reinigung und Haustier als eigene Kategorien, nicht als Freitext.
-// Die Liste ist eine Fachtaxonomie mit 49 Einträgen und kommt deshalb LIVE vom
+// Die Liste ist eine Fachtaxonomie mit 51 Einträgen und kommt deshalb LIVE vom
 // Server (`GET /properties/fee-types`, eine Quelle: gebuehren.FEE_TYPE_CATEGORY),
 // statt hier als zweite Wahrheit zu liegen.
 export type FeeType = string;
@@ -138,6 +154,15 @@ export type Fee = {
   // Eigener USt-Satz in % (z. B. Frühstück 19 % neben Logis 7 %). Leer =
   // Standard-Übernachtungssatz des Objekts/Kontos (Override-Hierarchie).
   taxRate?: number | null;
+  /** Steckt `taxRate` schon in `amount` (Brutto) oder kommt er obendrauf?
+   *  Fehlend/`true` = enthalten — das bisherige Verhalten, damit Bestandsgebühren
+   *  nicht stillschweigend teurer werden. Nur wirksam mit eigenem `taxRate`. */
+  taxIncluded?: boolean;
+  /** Gebühr nur bei Kurzaufenthalten erheben. „Kurz" ist die EINE Grenze des
+   *  Objekts (`shortStayMaxNights`), keine zweite Zahl an der Gebühr. Ohne
+   *  gepflegte Grenze greift die Gebühr nicht — und an kein Portal geht sie
+   *  ohnehin, weil dort keine Längenbedingung abbildbar ist. */
+  shortStayOnly?: boolean;
   // Gebührenart für die Portale. Altbestand hat sie nicht — dann geht die
   // Gebühr an kein Portal (kein erfundener Typ, Wurzel 4).
   feeType?: FeeType;

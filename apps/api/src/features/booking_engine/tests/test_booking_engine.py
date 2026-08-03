@@ -5,6 +5,7 @@ KEINE Tenant-/Eigentümer-Felder; price_from kommt aus dem Pricing-Resolver;
 Default tenant-übergreifend, mit tenant-Filter nur dieser Mandant; Detail 404
 für nicht-active.
 """
+import pytest
 from fastapi.testclient import TestClient
 
 from src.features.booking_engine.service import BookingEngineService
@@ -649,3 +650,120 @@ def test_public_booking_writes_num_guests(monkeypatch) -> None:  # noqa: ANN001
         if call[0][0] == "create_reservation_atomic"
     )
     assert payload["num_guests"] == 4
+
+
+def test_pets_allowed_liest_policy_vor_ausstattung() -> None:
+    """Die Hotel-Policy ist die ausdrückliche Angabe des Betriebs und gewinnt.
+    Ohne Policy zählen die Merkmale; ohne beides gilt NEIN (fail-closed) — sonst
+    böte die Buchungsstrecke Tiere an, wo keine erlaubt sind."""
+    from src.features.booking_engine.service import _pets_allowed
+
+    policy_nein = {
+        "type_attributes": {"policies": {"hotelPolicy": {"petsPolicy": "not_allowed"}}},
+        # Merkmal sagt ja — die Policy gewinnt trotzdem.
+        "amenities": ["pets_allowed"],
+    }
+    assert _pets_allowed(policy_nein) is False
+    policy_ja = {
+        "type_attributes": {"policies": {"hotelPolicy": {"petsPolicy": "allowed"}}},
+        "amenities": [],
+    }
+    assert _pets_allowed(policy_ja) is True
+    assert _pets_allowed({"amenities": ["pet_friendly"]}) is True
+    assert _pets_allowed({"amenities": ["nd_pets_not_allowed", "pets_allowed"]}) is False
+    # Nichts gepflegt → kein Tier.
+    assert _pets_allowed({}) is False
+
+
+def test_public_quote_lehnt_tiere_ohne_erlaubnis_ab(monkeypatch) -> None:  # noqa: ANN001
+    """Ein Gast darf keine Tiere buchen, wo keine erlaubt sind — serverseitig,
+    nicht nur im Widget (Wurzel 3). Ohne Tiere rechnet dasselbe Objekt normal."""
+    from datetime import date as _date
+    from datetime import timedelta as _delta
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    import src.features.pricing.resolver as resolver_mod
+    from src.features.booking_engine.schemas import PublicQuoteRequest
+    from src.features.booking_engine.service import (
+        BookingEngineError,
+        BookingEngineService,
+    )
+
+    svc = BookingEngineService(service_client=MagicMock(name="supabase"))
+    monkeypatch.setattr(
+        svc,
+        "_pets_property",
+        lambda *_a: {
+            "tenant_id": "t-1", "status": "active", "max_guests": 4,
+            "amenities": [], "type_attributes": {},
+        },
+    )
+    monkeypatch.setattr(svc, "_bookable_addon_selections", lambda *_a: [])
+    monkeypatch.setattr(
+        resolver_mod.PricingResolver,
+        "quote",
+        lambda _self, _req: SimpleNamespace(
+            total=200.0, currency="EUR", lines=[], priceless=False
+        ),
+    )
+
+    req = {
+        "property_id": "p-1",
+        "check_in": _date.today() + _delta(days=10),
+        "check_out": _date.today() + _delta(days=12),
+        "guests": 2,
+    }
+    with pytest.raises(BookingEngineError) as exc:
+        svc.public_quote(PublicQuoteRequest(**req, pets=1))
+    assert exc.value.status_code == 422
+
+    antwort = svc.public_quote(PublicQuoteRequest(**req, pets=0))
+    assert antwort.pets_allowed is False
+    assert antwort.max_guests == 4
+    assert antwort.total == 200.0
+
+
+def test_public_quote_reicht_tiere_an_den_resolver(monkeypatch) -> None:  # noqa: ANN001
+    """Die Tierzahl muss im Quote ankommen — sonst zeigte das Widget einen Preis
+    ohne Haustiergebühr und die Buchung berechnete einen anderen."""
+    from datetime import date as _date
+    from datetime import timedelta as _delta
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    import src.features.pricing.resolver as resolver_mod
+    from src.features.booking_engine.schemas import PublicQuoteRequest
+    from src.features.booking_engine.service import BookingEngineService
+
+    svc = BookingEngineService(service_client=MagicMock(name="supabase"))
+    monkeypatch.setattr(
+        svc,
+        "_pets_property",
+        lambda *_a: {
+            "tenant_id": "t-1", "status": "active", "max_guests": 4,
+            "amenities": ["pets_allowed"], "type_attributes": {},
+        },
+    )
+    monkeypatch.setattr(svc, "_bookable_addon_selections", lambda *_a: [])
+    gesehen: dict[str, int] = {}
+
+    def _quote(_self, req):  # noqa: ANN001, ANN202
+        gesehen["pets"] = req.pets
+        gesehen["guests"] = req.guests
+        return SimpleNamespace(total=250.0, currency="EUR", lines=[], priceless=False)
+
+    monkeypatch.setattr(resolver_mod.PricingResolver, "quote", _quote)
+
+    antwort = svc.public_quote(
+        PublicQuoteRequest(
+            property_id="p-1",
+            check_in=_date.today() + _delta(days=10),
+            check_out=_date.today() + _delta(days=12),
+            guests=2,
+            pets=2,
+        )
+    )
+    assert gesehen == {"pets": 2, "guests": 2}
+    assert antwort.pets_allowed is True
+    assert antwort.nights == 2

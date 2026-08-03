@@ -49,6 +49,35 @@ export async function ladeVerfuegbarkeit(
   return call(`availability?${qs.toString()}`);
 }
 
+/** Eine Zeile der Preisaufschlüsselung, wie sie der Gast sieht. */
+export type AngebotsZeile = { label: string; amount: number; kind?: string | null };
+
+export type Angebot = {
+  property_id: string;
+  nights: number;
+  currency: string;
+  lines: AngebotsZeile[];
+  total: number;
+  priceless: boolean;
+  pets_allowed: boolean;
+  max_guests: number;
+};
+
+/**
+ * Verbindliche Preisaufschlüsselung vor der Buchung — dieselbe Rechnung, die
+ * der Server bei der Buchung anstellt (Gebühren, Haustiergebühr, Abgaben).
+ * Selbst rechnen (Nächte × Grundpreis) verschwiege genau diese Posten.
+ */
+export async function ladeAngebot(input: {
+  property_id: string;
+  check_in: string;
+  check_out: string;
+  guests: number;
+  pets: number;
+}): Promise<Result<Angebot>> {
+  return call("quote", { method: "POST", body: input });
+}
+
 /** Gastbuchung anlegen. end (check_out) exklusiv. */
 export async function bucheGast(input: {
   property_id: string;
@@ -56,6 +85,10 @@ export async function bucheGast(input: {
   check_out: string;
   contact: GuestContact;
   total_amount: number;
+  /** Reisende und mitgebrachte Tiere. Beide sind preiswirksam (Gebühren „pro
+   *  Gast" bzw. „pro Tier"); ohne Angabe rechnet der Server mit 1 Gast, 0 Tieren. */
+  guests?: number;
+  pets?: number;
 }): Promise<
   Result<{ id: string; property_id: string; check_in: string; check_out: string; status: string }>
 > {

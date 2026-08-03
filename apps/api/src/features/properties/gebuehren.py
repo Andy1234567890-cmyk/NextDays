@@ -19,11 +19,15 @@ from __future__ import annotations
 
 from typing import Any
 
+import nh3
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.security import AuthContext
+from src.core.supabase import load_scoped
 
 from .errors import PropertyError
+from .schemas import PropertyUpdate
 
 log = get_logger("nextdays.properties.gebuehren")
 
@@ -43,11 +47,17 @@ log = get_logger("nextdays.properties.gebuehren")
 #   * `community` und `misc_charges` sind wählbar, stehen aber NICHT in der
 #     Artikel-Tabelle. `community` ist die Kategorie selbst; `misc_charges` hat
 #     dort keine Airbnb-Kategorie → None (nicht übertragbar), kein geratenes Ziel.
-#   * `security_deposit` steht in der Artikel-Tabelle, ist live NICHT wählbar.
-#     Bleibt als gültiger Wert stehen (siehe unten), wird aber nicht angeboten.
-#   * `short_term_cleaning` ist NICHT wählbar — die Export-Tabelle des Artikels
-#     nennt es als eigene Zeile, das Produkt kennt dafür keine Gebührenart.
-#     Deshalb hier keine erfundene Art (Wurzel 4).
+#   * `security_deposit` steht in der Zuordnungstabelle („Kaution →
+#     SecurityDeposit"), war im Produkt live nicht im Auswahlfeld. Der Artikel
+#     ist die verbindliche Quelle → wählbar, mit eigener Kategorie. Exportiert
+#     wird sie trotzdem nicht: die Export-Tabelle (Kategorie × Modell) führt
+#     keine Zeile für die Kaution, und Channex kennt nur tax|fee|city_tax —
+#     eine Kaution als „fee" wäre ein Aufschlag, der nie zurückgeht.
+#   * `short_term_cleaning` steht als eigene Zeile der Export-Tabelle
+#     („Short-term cleaning (Flat amount)": nur einmalig pro Aufenthalt) und ist
+#     deshalb eine eigene Kategorie — NICHT `cleaning`, sonst würden Reinigung
+#     und Kurzzeitreinigung zu einer Gebühr summiert, die die Tabelle getrennt
+#     führt.
 #
 # `unknown` ist bewusst dabei und bewusst OHNE Kategorie (None): eine Gebühr
 # ohne Art geht an kein Portal — kein erfundenes „ist bestimmt Reinigung"
@@ -105,20 +115,19 @@ FEE_TYPE_CATEGORY: dict[str, str | None] = {
     # → eigene Kategorien (1:1)
     "pet_fee": "pet",
     "cleaning_fee": "cleaning",
+    "short_term_cleaning": "short_term_cleaning",
+    "security_deposit": "security_deposit",
     # → nicht übertragbar (keine Airbnb-Kategorie)
     "misc_charges": None,
     "unknown": None,
 }
 # Gültig, aber nicht (mehr) anzubieten.
 #
-# `security_deposit` steht in der Artikel-Zuordnung (→ SecurityDeposit), ist im
-# Produkt aber nicht wählbar — wer den Wert schon hat, behält ihn.
 # `linen`/`management`/`pet`/`cleaning`/`other` sind unsere eigenen Bestands-
 # schlüssel aus der Zeit vor der vollen Taxonomie. Sie bleiben gültig, damit ein
 # Objekt mit alter Gebühr speicherbar bleibt — sonst wirft jedes Speichern 422,
 # auch beim Ändern der Beschreibung. Das Auswahlfeld zeigt nur die Werte oben.
 FEE_TYPE_ALTBESTAND: dict[str, str | None] = {
-    "security_deposit": "security_deposit",
     "cleaning": "cleaning",
     "pet": "pet",
     "management": "management",
@@ -183,6 +192,10 @@ FEE_TYPE_LABEL: dict[str, str] = {
     "linens_bed": "Bettwäsche (Bett)",
     "pet_fee": "Haustiergebühr",
     "cleaning_fee": "Reinigungsgebühr",
+    "short_term_cleaning": "Kurzzeitreinigung",
+    # „Kaution" allein wäre doppeldeutig: `damage_protection_insurance` trägt
+    # diese Bezeichnung bereits (live abgelesen) und geht als Resortgebühr raus.
+    "security_deposit": "Kaution (Sicherheitsleistung)",
     "misc_charges": "Sonstige Gebühren",
     "unknown": "Unbekannt",
 }
@@ -227,7 +240,7 @@ def fee_category(fee: dict[str, Any]) -> str | None:
 # „SecurityDeposit"; sie ist keine Gebühr im Preis, sondern eine Kaution.
 FEE_CATEGORIES = frozenset(
     {"community", "management", "resort", "linen", "pet", "cleaning",
-     "security_deposit"}
+     "short_term_cleaning", "security_deposit"}
 )
 
 # Berechnungsbasis („calculation model" der Export-Tabelle); bestimmt die
@@ -238,9 +251,19 @@ FEE_CATEGORIES = frozenset(
 # Gast" × „Pro Aufenthalt | Pro Nacht" (live abgelesen). Wir führen die vier
 # Kombinationen als EINEN Wert, weil genau vier möglich sind und die
 # Channex-`logic` ohnehin die Kombination braucht.
+#
+# `per_pet_stay` ist die fünfte: „pro Tier und Aufenthalt". Der Standard nennt
+# sie ausdrücklich an der Haustiergebühr („can also be configured per pet per
+# stay") und nur dort — deshalb gibt es kein `per_pet_night`, das wäre erfunden.
+# Sie multipliziert mit `reservations.pets`; an die Portale geht sie als
+# Pauschale pro Aufenthalt (kein Portal überträgt eine Tierzahl vorab).
 FEE_BASES = frozenset(
-    {"per_stay", "per_night", "per_guest_stay", "per_guest_night"}
+    {"per_stay", "per_night", "per_guest_stay", "per_guest_night", "per_pet_stay"}
 )
+# Die Tier-Basis ergibt nur bei der Haustiergebühr Sinn: eine „Reinigung pro
+# Tier" wäre eine Zahl ohne Bedeutung. Serverseitig erzwungen (Wurzel 3).
+PET_BASIS = "per_pet_stay"
+PET_BASIS_CATEGORIES = frozenset({"pet"})
 
 # Rechenart der Gebühr. Prozentuale Gebühren („Resort fee: 5 %") sind für
 # Booking.com sogar die EINZIGEN, die exportiert werden — ohne diese Achse
@@ -282,6 +305,34 @@ EIGENE_KANAELE = frozenset({"direct", "portal"})
 
 _NAME_MAX = 255
 _AMOUNT_MAX = 1_000_000.0
+
+# Beschreibung ist internes Rich-Text (fett/kursiv/unterstrichen/durchgestrichen).
+# Keine Links, keine Bilder, keine Attribute — der Text braucht nichts davon, und
+# was nicht erlaubt ist, kann auch nicht missbraucht werden (Wurzel 8: Allowlist-
+# Parser, nie Regex).
+#
+# Liegt HIER und nicht in steuern.py, obwohl die Steuern sie zuerst brauchten:
+# gebuehren.py ist die untere Schicht (steuern.py importiert daraus, nicht
+# umgekehrt). Eine zweite Kopie in gebuehren.py wäre die dritte Wahrheit über
+# erlaubtes HTML — genau das, was Wurzel 4 verbietet.
+_DESC_TAGS = {"b", "strong", "i", "em", "u", "s", "strike", "p", "br"}
+_DESC_MAX = 5000
+
+
+def clean_description(raw: object) -> str | None:
+    """Internes Rich-Text säubern; `None`, wenn nichts übrig bleibt."""
+    if raw is None:
+        return None
+    text = str(raw)
+    if not text.strip():
+        return None
+    if len(text) > _DESC_MAX:
+        raise PropertyError(
+            f"Beschreibung zu lang (höchstens {_DESC_MAX} Zeichen).",
+            status_code=422,
+        )
+    cleaned = nh3.clean(text, tags=_DESC_TAGS, attributes={}, url_schemes=set())
+    return cleaned or None
 
 
 def _clean_amount(raw: object) -> float:
@@ -494,6 +545,31 @@ def normalize_fees(
         satz = _clean_tax_rate(eintrag.get("taxRate"))
         if satz is not None:
             sauber["taxRate"] = satz
+            # Steckt der Satz schon im Betrag oder kommt er obendrauf? Der
+            # Branchenstandard fragt es genau hier (Auswahlfeld unter dem
+            # USt-Satz der Gebühr: „Preis inkl. Umsatz-/MwSt." vs. „Der Preis
+            # enthält keine Umsatzsteuer / MwSt.", live abgelesen 03.08.2026).
+            #
+            # Standard ist INKLUSIVE — das war das bisherige Verhalten (die
+            # Rechnung zerlegt jeden Zeilenbetrag als Brutto, siehe
+            # buchhaltung/reservation_invoice._split_gross). Ein anderer Default
+            # würde alle Bestandsgebühren stillschweigend teurer machen.
+            sauber["taxIncluded"] = bool(eintrag.get("taxIncluded", True))
+
+        # „Nur für Kurzaufenthalte": dieselbe Grenze, die den
+        # Kurzaufenthalts-Aufschlag steuert (`shortStayMaxNights`) — nicht eine
+        # zweite Zahl an der Gebühr. Zwei Definitionen von „kurz" in einem
+        # Objekt wären der Widerspruch, den niemand auflösen kann.
+        if bool(eintrag.get("shortStayOnly")):
+            sauber["shortStayOnly"] = True
+
+        # Interne Beschreibung. Sie stand im Editor und im Frontend-Typ, wurde
+        # hier aber nie in `sauber` übernommen — jedes Speichern hat sie also
+        # stillschweigend verworfen (der Betrieb tippt einen Text, der beim
+        # nächsten Öffnen weg ist). Allowlist-gesäubert wie bei der Steuer.
+        beschreibung = clean_description(eintrag.get("descriptionHtml"))
+        if beschreibung is not None:
+            sauber["descriptionHtml"] = beschreibung
 
         # Gebührenart: Altbestand hat sie nicht. Fehlt sie, bleibt sie weg —
         # der Export liest dann "other". Ein gesetzter Wert muss aber stimmen.
@@ -503,9 +579,260 @@ def normalize_fees(
                 raise PropertyError(f"Unbekannte Gebührenart: {art}", status_code=422)
             sauber["feeType"] = str(art)
 
+        # „Pro Tier und Aufenthalt" gibt es nur an der Haustiergebühr; sonst
+        # multiplizierte eine Zahl, die mit der Leistung nichts zu tun hat.
+        if basis == PET_BASIS and fee_category(sauber) not in PET_BASIS_CATEGORIES:
+            raise PropertyError(
+                "„Pro Tier und Aufenthalt“ gibt es nur für die Haustiergebühr.",
+                status_code=422,
+            )
+
         scope = clean_portal_scope(eintrag.get("portalScope"), erlaubt=portale)
         if scope:
             sauber["portalScope"] = scope
 
         fees.append(sauber)
     return fees
+
+
+def fee_signatur(fee: dict[str, Any]) -> str:
+    """Fachliche Identität einer Gebühr — ohne ihre Kennung.
+
+    Dieselbe Gebühr steht auf jedem Objekt, dem sie zugewiesen wurde, als
+    EIGENER Eintrag mit EIGENER `id` (der Preis-Blob hängt am Objekt, es gibt
+    keine gemeinsame Gebühren-Tabelle). In der Auswahlliste soll die
+    „Reinigungsgebühr 955 kr" trotzdem EINMAL erscheinen und nicht achtmal —
+    also wird über die fachlichen Felder gebündelt, nicht über die Kennung.
+
+    Der Name ist Teil der Signatur: zwei gleich gerechnete Gebühren mit
+    verschiedenem Namen sind für den Betrieb zwei Gebühren.
+    """
+    return "|".join(
+        (
+            str(fee.get("name") or "").strip().casefold(),
+            str(fee.get("feeType") or ""),
+            str(fee.get("mode") or "amount"),
+            str(fee.get("basis") or "per_stay"),
+            f"{float(fee.get('amount') or 0):.2f}",
+        )
+    )
+
+
+class GebuehrenMixin:
+    """Gebühren-Aktionen am Objekt. Wird von PropertiesService eingebunden.
+
+    Gegenstück zu `SteuernMixin` — dieselben zwei Wege, die der
+    Branchenstandard für Gebühren führt (live abgelesen 03.08.2026):
+
+    * `/pricing/<id>/assign-fee` — „Fügen Sie eine neue oder bestehende Gebühr
+      hinzu": eine Auswahlliste der Gebühren, die der Betrieb schon irgendwo
+      angelegt hat (`fee_library`).
+    * Block „Zu anderen Unterkünften hinzufügen" im Gebühren-Editor: dieselbe
+      Gebühr auf weitere Objekte übertragen (`apply_fee_to_properties`).
+    """
+
+    def fee_library(
+        self, ctx: AuthContext, property_id: str
+    ) -> dict[str, Any]:
+        """Bestehende Gebühren des Betriebs zur Übernahme auf DIESES Objekt.
+
+        Nur Gebühren aus Objekten mit DERSELBEN Währung: ein Betrag ist ohne
+        seine Währung keine Zahl, die man übernehmen kann — „955" von einem
+        DKK-Objekt auf ein EUR-Objekt zu kopieren wäre eine stille
+        Preiserhöhung um den Faktor 7,5 (Wurzel 4: kein plausibel aussehender
+        Ersatzwert). Prozentuale Gebühren sind währungsfrei und kommen deshalb
+        aus allen Objekten.
+
+        Hat das Zielobjekt noch keine Währung, bleibt die Liste bei den
+        prozentualen Gebühren und `currency` ist `None` — die Oberfläche sagt
+        dann, dass zuerst die Objektwährung zu setzen ist. Kein geratenes EUR.
+
+        Gebühren, die auf DIESEM Objekt schon liegen, fehlen bewusst: sie
+        „hinzuzufügen" wäre eine Dublette.
+        """
+        tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
+        ziel = load_scoped(
+            self._db,  # type: ignore[attr-defined]
+            "properties",
+            property_id,
+            tenant_id,
+            columns="id, currency, type_attributes",
+            not_found=PropertyError("Objekt nicht gefunden.", status_code=404),
+        )
+        ziel_currency = str(ziel.get("currency") or "").upper() or None
+        eigene = {
+            fee_signatur(f)
+            for f in _fees_von(ziel)
+        }
+
+        rows = (
+            self._db.table("properties")  # type: ignore[attr-defined]
+            .select("id, title, currency, type_attributes")
+            .eq("tenant_id", tenant_id)
+            .order("title")
+            .execute()
+        ).data or []
+
+        items: list[dict[str, Any]] = []
+        gesehen: set[str] = set()
+        for row in rows:
+            if str(row.get("id")) == property_id:
+                continue
+            quelle_currency = str(row.get("currency") or "").upper() or None
+            for fee in _fees_von(row):
+                prozent = str(fee.get("mode") or "amount") == "percent"
+                if not prozent and quelle_currency != ziel_currency:
+                    continue
+                signatur = fee_signatur(fee)
+                if signatur in eigene or signatur in gesehen:
+                    continue
+                gesehen.add(signatur)
+                items.append(
+                    {
+                        "fee": fee,
+                        "property_id": str(row["id"]),
+                        "property_title": row.get("title"),
+                    }
+                )
+        return {"currency": ziel_currency, "items": items}
+
+    def apply_fee_to_properties(
+        self, ctx: AuthContext, property_id: str, fee_id: str, targets: list[str]
+    ) -> dict[str, Any]:
+        """Eine Gebühr des Objekts auf weitere Objekte übertragen.
+
+        Wie bei der Steuer: jede Ziel-ID wird EINZELN tenant-gescopt geladen
+        (Wurzel 3), und die Gebühr behält ihre Kennung — dasselbe Objekt
+        zweimal zu bespielen aktualisiert die vorhandene Zeile, statt sie zu
+        duplizieren (Wurzel 2).
+
+        Zwei Dinge werden VOR dem ersten Schreiben geprüft, nicht unterwegs:
+
+        * Die Währung des Ziels muss zur Währung der Quelle passen, sonst
+          änderte die Übertragung den Preis (siehe `fee_library`).
+        * Eine Kanal-Einschränkung (`portalScope`) muss beim Ziel überhaupt
+          erfüllbar sein — ist das Portal dort nicht verbunden, wird die
+          Übertragung ABGELEHNT statt die Einschränkung stillschweigend
+          fallenzulassen. Ohne sie ginge die Gebühr beim Ziel an ALLE Portale;
+          das ist eine Ausweitung, die niemand angefordert hat (fail-closed,
+          Wurzel 5).
+
+        Beides schlägt fehl, BEVOR irgendein Ziel geschrieben wurde — eine halb
+        durchgelaufene Übertragung wäre schwer zu erkennen und noch schwerer
+        zurückzunehmen.
+        """
+        tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
+        quelle = load_scoped(
+            self._db,  # type: ignore[attr-defined]
+            "properties",
+            property_id,
+            tenant_id,
+            columns="id, currency, type_attributes",
+            not_found=PropertyError("Objekt nicht gefunden.", status_code=404),
+        )
+        vorlage = next(
+            (f for f in _fees_von(quelle) if str(f.get("id")) == fee_id), None
+        )
+        if vorlage is None:
+            raise PropertyError("Gebühr nicht gefunden.", status_code=404)
+
+        prozent = str(vorlage.get("mode") or "amount") == "percent"
+        quelle_currency = str(quelle.get("currency") or "").upper() or None
+        scope = [str(x) for x in (vorlage.get("portalScope") or [])]
+
+        ziel_ids = [z for z in dict.fromkeys(targets) if z != property_id]
+        ziele = [
+            load_scoped(
+                self._db,  # type: ignore[attr-defined]
+                "properties",
+                ziel_id,
+                tenant_id,
+                columns="id, title, currency, type_attributes",
+                not_found=PropertyError("Objekt nicht gefunden.", status_code=404),
+            )
+            for ziel_id in ziel_ids
+        ]
+        for ziel in ziele:
+            self._pruefe_uebertragbar(
+                ziel,
+                tenant_id=tenant_id,
+                prozent=prozent,
+                quelle_currency=quelle_currency,
+                scope=scope,
+            )
+
+        angewendet: list[str] = []
+        for ziel in ziele:
+            ziel_id = str(ziel["id"])
+            attrs = dict(ziel.get("type_attributes") or {})
+            pricing = dict(attrs.get("pricing") or {})
+            bestand = [
+                f
+                for f in (pricing.get("fees") or [])
+                if isinstance(f, dict) and str(f.get("id")) != fee_id
+            ]
+            pricing["fees"] = [*bestand, dict(vorlage)]
+            attrs["pricing"] = pricing
+            # Über den normalen Update-Pfad, NICHT per Direkt-Schreibung: nur so
+            # laufen Prüfung (normalize_fees), Spiegelung in
+            # property_pricing_config und der Sync-Entscheid (schlanker
+            # Abgaben-Job statt vollem Content-Sync) wie überall sonst.
+            self.update(  # type: ignore[attr-defined]
+                ctx, ziel_id, PropertyUpdate(type_attributes=attrs)
+            )
+            angewendet.append(ziel_id)
+        log.info(
+            "fee_applied_to_properties",
+            tenant_id=tenant_id,
+            property_id=property_id,
+            fee_id=fee_id,
+            targets=len(angewendet),
+        )
+        return {"applied_to": angewendet}
+
+    def _pruefe_uebertragbar(
+        self,
+        ziel: dict[str, Any],
+        *,
+        tenant_id: str,
+        prozent: bool,
+        quelle_currency: str | None,
+        scope: list[str],
+    ) -> None:
+        """Darf die Gebühr auf DIESES Ziel? Wirft 422 mit dem Grund am Objekt."""
+        titel = str(ziel.get("title") or ziel["id"])
+        ziel_currency = str(ziel.get("currency") or "").upper() or None
+        if not prozent and ziel_currency != quelle_currency:
+            raise PropertyError(
+                f"„{titel}“ rechnet in einer anderen Währung — ein Betrag lässt "
+                "sich so nicht übernehmen.",
+                status_code=422,
+            )
+        portal_codes = [c for c in scope if c not in EIGENE_KANAELE]
+        if not portal_codes:
+            return
+        erlaubt = erlaubte_portale(
+            self._db, tenant_id, str(ziel["id"])  # type: ignore[attr-defined]
+        )
+        # `None` = Portalliste nicht ladbar. Dann NICHT übertragen: die
+        # Einschränkung ließe sich hier nicht belegen, und eine Gebühr, die
+        # womöglich an alle Portale geht, ist der teurere Fehler (Wurzel 5).
+        if erlaubt is None:
+            raise PropertyError(
+                f"Verbundene Portale von „{titel}“ sind nicht abrufbar — "
+                "eingeschränkte Gebühr nicht übertragen.",
+                status_code=503,
+            )
+        fehlend = sorted(set(portal_codes) - erlaubt)
+        if fehlend:
+            raise PropertyError(
+                f"„{titel}“ ist nicht mit {', '.join(fehlend)} verbunden — die "
+                "Einschränkung der Gebühr wäre dort nicht abbildbar.",
+                status_code=422,
+            )
+
+
+def _fees_von(row: dict[str, Any]) -> list[dict[str, Any]]:
+    """Gebühren eines properties-Datensatzes (Preis-Blob), nur echte Einträge."""
+    pricing = (row.get("type_attributes") or {}).get("pricing") or {}
+    return [f for f in (pricing.get("fees") or []) if isinstance(f, dict)]

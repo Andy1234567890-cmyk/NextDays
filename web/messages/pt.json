@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Montante",
       "chargeSingle": "Montante único",
       "chargePerPerson": "Por hóspede",
+      "chargePerPet": "Por animal",
       "periodPerStay": "Por estadia",
       "periodPerNight": "Por noite",
       "percentOfBasePlaceholder": "0% do preço base, promoções incluídas",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Nome do imposto local",
       "internalDescriptionPlaceholder": "Introduza uma descrição (apenas para uso interno).",
       "applyToOthersTitle": "Adicionar a outros alojamentos",
-      "applyToOthersHint": "Aplicar o mesmo imposto também a outros alojamentos.",
       "applyToOthersEmpty": "Ainda não há outros alojamentos — assim que adicionar mais um, aparecerá aqui.",
       "searchPlaceholder": "Pesquisar …",
       "searchPropertiesPlaceholder": "Pesquisar alojamentos …",
@@ -4733,7 +4733,21 @@
         "community": "Taxa de condomínio",
         "pet": "Taxa de animal"
       },
-      "actions": "Ações"
+      "actions": "Ações",
+      "manualSyncLabel": "Sincronização manual",
+      "abgabenNoCurrency": "Enquanto não estiver definida a moeda do alojamento, as taxas e os impostos não são enviados a nenhum portal.",
+      "feeAssignSubtitle": "Adicione uma taxa nova ou existente.",
+      "feeCreateNew": "Criar nova taxa",
+      "searchFeesPlaceholder": "Pesquisar taxas …",
+      "feeFromProperty": "de {title}",
+      "feeLibraryEmpty": "Ainda não há taxas nos outros alojamentos — crie uma nova acima.",
+      "feeLibraryNoCurrency": "Defina primeiro a moeda deste alojamento; depois as taxas existentes ficam disponíveis aqui.",
+      "feeShortStayOnlyLabel": "Apenas para estadias curtas",
+      "feeShortStayOnlyHint": "Cobrar a taxa apenas em estadias curtas.",
+      "feeShortStayOnlyBound": "Aplica-se até {nights} noites — o mesmo limite do agravamento por estadia curta. A taxa não é enviada aos portais: ali não é possível representar a duração da estadia.",
+      "feeShortStayOnlyMissing": "Para este alojamento ainda não foi definida uma estadia curta («Agravamento por estadia curta») — enquanto faltar, a taxa não é cobrada.",
+      "applyToOthersFeeHint": "Aplicar a mesma taxa também a outros alojamentos.",
+      "applyToOthersTaxHint": "Aplicar o mesmo imposto também a outros alojamentos."
     },
     "policiesForm": {
       "title": "Políticas",

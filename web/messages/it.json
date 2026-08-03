@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Importo",
       "chargeSingle": "Importo unico",
       "chargePerPerson": "Per ospite",
+      "chargePerPet": "Per animale",
       "periodPerStay": "Per soggiorno",
       "periodPerNight": "Per notte",
       "percentOfBasePlaceholder": "0% del prezzo base, promozioni incluse",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Nome dell'imposta locale",
       "internalDescriptionPlaceholder": "Inserisci una descrizione (solo per uso interno).",
       "applyToOthersTitle": "Aggiungi ad altri alloggi",
-      "applyToOthersHint": "Applica la stessa imposta anche ad altri alloggi.",
       "applyToOthersEmpty": "Nessun altro alloggio finora: appena ne aggiungi un altro, comparirà qui.",
       "searchPlaceholder": "Cerca …",
       "searchPropertiesPlaceholder": "Cerca alloggi …",
@@ -4733,7 +4733,21 @@
         "community": "Costo condominiale",
         "pet": "Costo animali"
       },
-      "actions": "Azioni"
+      "actions": "Azioni",
+      "manualSyncLabel": "Sincronizzazione manuale",
+      "abgabenNoCurrency": "Finché non è impostata la valuta dell’alloggio, costi e imposte non vengono trasmessi a nessun portale.",
+      "feeAssignSubtitle": "Aggiungi un costo nuovo o esistente.",
+      "feeCreateNew": "Crea nuovo costo",
+      "searchFeesPlaceholder": "Cerca costi …",
+      "feeFromProperty": "da {title}",
+      "feeLibraryEmpty": "Negli altri alloggi non ci sono ancora costi — creane uno nuovo qui sopra.",
+      "feeLibraryNoCurrency": "Imposta prima la valuta di questo alloggio; dopo potrai scegliere qui i costi esistenti.",
+      "feeShortStayOnlyLabel": "Solo per soggiorni brevi",
+      "feeShortStayOnlyHint": "Applica il costo solo ai soggiorni brevi.",
+      "feeShortStayOnlyBound": "Vale fino a {nights} notti — lo stesso limite del supplemento soggiorno breve. Il costo non viene inviato ai portali: lì non è rappresentabile una durata del soggiorno.",
+      "feeShortStayOnlyMissing": "Per questo alloggio non è ancora definito un soggiorno breve («Supplemento soggiorno breve») — finché manca, il costo non viene applicato.",
+      "applyToOthersFeeHint": "Applica lo stesso costo anche ad altri alloggi.",
+      "applyToOthersTaxHint": "Applica la stessa imposta anche ad altri alloggi."
     },
     "policiesForm": {
       "title": "Policy",

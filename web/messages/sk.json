@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Suma",
       "chargeSingle": "Jednorazová suma",
       "chargePerPerson": "Za hosťa",
+      "chargePerPet": "Za zviera",
       "periodPerStay": "Za pobyt",
       "periodPerNight": "Za noc",
       "percentOfBasePlaceholder": "0 % základnej ceny vrátane akcií",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Názov miestnej dane",
       "internalDescriptionPlaceholder": "Zadajte popis (len na interné použitie).",
       "applyToOthersTitle": "Pridať k ďalším objektom",
-      "applyToOthersHint": "Použiť rovnakú daň aj pri ďalších objektoch.",
       "applyToOthersEmpty": "Zatiaľ žiadne ďalšie objekty — hneď ako pridáte druhý, zobrazí sa tu.",
       "searchPlaceholder": "Hľadať …",
       "searchPropertiesPlaceholder": "Hľadať objekty …",
@@ -4733,7 +4733,21 @@
         "community": "Poplatok za spoločné priestory",
         "pet": "Poplatok za zvieratko"
       },
-      "actions": "Akcie"
+      "actions": "Akcie",
+      "manualSyncLabel": "Ručná synchronizácia",
+      "abgabenNoCurrency": "Kým nie je nastavená mena objektu, poplatky a dane sa neodosielajú na žiadny portál.",
+      "feeAssignSubtitle": "Pridajte nový alebo existujúci poplatok.",
+      "feeCreateNew": "Vytvoriť nový poplatok",
+      "searchFeesPlaceholder": "Hľadať poplatky …",
+      "feeFromProperty": "z {title}",
+      "feeLibraryEmpty": "Pri ďalších objektoch ešte nie sú žiadne poplatky — vytvorte nový vyššie.",
+      "feeLibraryNoCurrency": "Najprv nastavte menu tohto objektu; potom tu budú na výber existujúce poplatky.",
+      "feeShortStayOnlyLabel": "Len pri krátkych pobytoch",
+      "feeShortStayOnlyHint": "Účtovať poplatok len pri krátkych pobytoch.",
+      "feeShortStayOnlyBound": "Platí pri najviac {nights} nociach — tá istá hranica ako pri príplatku za krátky pobyt. Na portály sa poplatok neposiela: dĺžku pobytu tam nemožno vyjadriť.",
+      "feeShortStayOnlyMissing": "Pre tento objekt ešte nie je určený krátky pobyt („Príplatok za krátky pobyt“) — kým chýba, poplatok sa neúčtuje.",
+      "applyToOthersFeeHint": "Použiť rovnaký poplatok aj pri ďalších objektoch.",
+      "applyToOthersTaxHint": "Použiť rovnakú daň aj pri ďalších objektoch."
     },
     "policiesForm": {
       "title": "Zásady",

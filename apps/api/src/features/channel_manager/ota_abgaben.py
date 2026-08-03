@@ -24,10 +24,12 @@ belegt (Lodgify Help-Center „Taxes and Fees applied in OTAs", englisches Origi
 | Vrbo         | ausgewiesen, keine Summierung      | getrennt ausgewiesen      |
 +--------------+-----------------------------------+---------------------------+
 
-HomeAway/Vrbo ist hier NICHT verdrahtet: der Channex-Kanalkatalog führt diesen
-Kanal nicht (live geprüft 03.08.2026, 52 Kanäle — kein Vrbo/HomeAway). Ein
-Portal-Code dafür wäre erfunden (Wurzel 4). Die Regel steht oben, damit sie beim
-Auftauchen des Kanals nur noch eingetragen werden muss.
+HomeAway/Vrbo ist verdrahtet, aber NICHT über einen festen Code: der
+Channex-Kanalkatalog führt den Kanal heute nicht (live geprüft 03.08.2026, 52
+Kanäle — kein Vrbo/HomeAway), ein Code wäre also geraten (Wurzel 4). Statt ihn
+zu erfinden, greift die Regel über den Namen des Kanals (`VRBO_CODE_MUSTER`):
+jeder Channex-Code, der „vrbo" oder „homeaway" enthält, bekommt sie. Damit ist
+die Regel am Tag der Freischaltung wirksam, ohne dass jemand daran denken muss.
 
 Kanäle, über die der Standard nichts sagt (Agoda, Trip.com, Google, Hostelworld
 …), behalten das bisherige Verhalten: alles übertragen, `is_inclusive` wie am
@@ -51,11 +53,19 @@ ALLE_BASEN = frozenset({"per_stay", "per_night", "per_guest_stay", "per_guest_ni
 
 # Gebühren-Basis → Channex `logic`. Alle vier Ziele sind live gegen POST /taxes
 # mit type=fee geprüft (03.08.2026).
+#
+# `per_pet_stay` („pro Tier und Aufenthalt", nur Haustiergebühr) geht als
+# `per_booking` raus: weder Channex noch ein Portal kennt eine Tierzahl VOR der
+# Buchung — das Portal bekommt den Betrag für EIN Tier, die tatsächliche Zahl
+# steht erst in der Reservierung und wird bei uns gerechnet. Genau so führt es
+# der Standard („Pet (Flat amount) — once per stay ✅", Hinweis: kann zusätzlich
+# pro Tier konfiguriert sein).
 FEE_LOGIC = {
     "per_stay": "per_booking",
     "per_night": "per_night",
     "per_guest_stay": "per_person",
     "per_guest_night": "per_person_per_night",
+    "per_pet_stay": "per_booking",
 }
 # Betrags-Steuern: (chargeBasis, period) → Channex `logic`.
 TAX_AMOUNT_LOGIC = {
@@ -75,12 +85,19 @@ TAX_AMOUNT_LOGIC = {
 # MiscCharges, Gebühr ohne Art) ebenfalls nicht — „Unknown: not sent to Airbnb".
 AIRBNB_FEE_EXPORT: dict[str, frozenset[str]] = {
     "cleaning": frozenset({"per_stay"}),
-    "pet": frozenset({"per_stay"}),
+    "short_term_cleaning": frozenset({"per_stay"}),
+    "pet": frozenset({"per_stay", "per_pet_stay"}),
     "linen": frozenset({"per_stay", "per_guest_stay"}),
     "community": ALLE_BASEN,
     "management": ALLE_BASEN,
     "resort": ALLE_BASEN,
 }
+# Die Kaution geht an KEIN Portal, auch nicht an eines ohne Sonderregel: Channex
+# kennt nur tax|fee|city_tax, und als `fee` gesendet wäre sie ein Aufschlag, der
+# nie zurückgeht. Die Zuordnungstabelle des Standards führt sie („Kaution →
+# SecurityDeposit"), seine Export-Tabelle nicht — sie ist keine Gebühr im Preis.
+NICHT_EXPORTIERBAR = frozenset({"security_deposit"})
+
 # Kategorien, die als Prozentsatz gehen dürfen. Die Tabelle sagt es an jeder
 # Zeile: „(Percentage or flat)" nur bei Community/Management/Resort, sonst
 # „(Flat amount)" — und ausdrücklich „The pet fee must be calculated as a flat
@@ -170,6 +187,21 @@ PORTAL_REGELN: dict[str, PortalRegel] = {
     ),
 }
 
+# HomeAway/Vrbo: Prozent UND Betrag gehen raus, beides getrennt vom Zimmerpreis
+# ausgewiesen; zwei Gebühren derselben Art bleiben zwei Gebühren (keine
+# Summierung wie bei Airbnb); die Steuer wird nur auf den Zimmerpreis gerechnet
+# — also wirkt die Bemessungsgrundlage hier nicht (`grundlage_wirkt=False` legt
+# alle Gebühren auf die Steuer-Ebene, damit besteuert keine die andere).
+HOMEAWAY_REGEL = PortalRegel(
+    gebuehren="alle",
+    steuern="alle",
+    im_zimmerpreis=False,
+)
+# Kein Code, sondern ein Namensmuster — siehe Modul-Docstring. Channex benennt
+# seine Codes nach der Marke (BookingCom, AirBNB, HopperHomes), ein Vrbo-Kanal
+# trüge die Marke also im Code.
+VRBO_CODE_MUSTER = ("vrbo", "homeaway")
+
 # Kanäle ohne Sonderregel: unverändertes Verhalten (alles senden, Inklusiv-Frage
 # entscheidet das Objekt). Auch das Standard-Set (portal=None) nutzt sie.
 STANDARD_REGEL = PortalRegel(
@@ -181,7 +213,13 @@ def regel_fuer(portal: str | None) -> PortalRegel:
     """Regelwerk eines Portals; ohne Sonderregel das Standardverhalten."""
     if portal is None:
         return STANDARD_REGEL
-    return PORTAL_REGELN.get(portal, STANDARD_REGEL)
+    regel = PORTAL_REGELN.get(portal)
+    if regel is not None:
+        return regel
+    klein = portal.lower()
+    if any(marke in klein for marke in VRBO_CODE_MUSTER):
+        return HOMEAWAY_REGEL
+    return STANDARD_REGEL
 
 
 class Abgabe:
@@ -241,6 +279,7 @@ KATEGORIE_TITEL = {
     "linen": "Wäscheservice",
     "pet": "Haustiergebühr",
     "cleaning": "Reinigungsgebühr",
+    "short_term_cleaning": "Kurzzeitreinigung",
     "security_deposit": "Kaution",
 }
 
@@ -501,11 +540,27 @@ def abgaben_je_portal(  # pylint: disable=too-many-locals
     # Optionale Gebühren (Gast wählt sie ab) dürfen NICHT als Pflichtaufschlag
     # ans Portal: der Gast bekäme sie dort ohne Wahlmöglichkeit berechnet. Sie
     # bleiben in Direktbuchung/Rechnung.
+    #
+    # Dasselbe gilt für „nur für Kurzaufenthalte" (`shortStayOnly`): keine
+    # Channex-`logic` und kein Portal kennt eine Gebühr, die erst ab/bis einer
+    # Aufenthaltslänge greift. Sie unbedingt zu senden hieße, sie JEDEM
+    # Portal-Gast zu berechnen — ein falscher Gastpreis. Fail-closed draußen
+    # lassen und protokollieren (der Chip „Manuelle Synchronisierung" zeigt es
+    # in der Oberfläche, siehe abgaben_status.py).
     eigene_fees = [
         f
         for f in fees
-        if isinstance(f, dict) and not f.get("optional") and _gilt_fuer(f, portal)
+        if isinstance(f, dict)
+        and not f.get("optional")
+        and not f.get("shortStayOnly")
+        and fee_category(f) not in NICHT_EXPORTIERBAR
+        and _gilt_fuer(f, portal)
     ]
+    nur_kurz = [
+        f for f in fees if isinstance(f, dict) and f.get("shortStayOnly")
+    ]
+    if nur_kurz:
+        diagnose["gebuehr_nur_kurzaufenthalt"] = len(nur_kurz)
 
     steuer_inklusiv = (
         regel.im_zimmerpreis if regel.im_zimmerpreis is not None else None
@@ -552,6 +607,19 @@ def abgaben_je_portal(  # pylint: disable=too-many-locals
         diagnose["airbnb_steuern_gesperrt"] = len(eigene_taxes)
 
     # --- Gebühren ---
+    #
+    # Bei Airbnb sagt der Standard „alle Gebühren sind im Zimmerpreis
+    # enthalten" (Beispiel: 100 Zimmer + 25 Reinigung + 5 Resort → 130 an
+    # Airbnb gesendet). Das ist dort eine EIGENSCHAFT DES EXPORTS, nicht der
+    # Gebühr: die Software rechnet den Betrag in den gesendeten Preis und sendet
+    # gar keinen Gebührenposten. Über Channex ist derselbe Weg nicht abbildbar
+    # und wäre auch falsch: `is_inclusive: true` heißt laut Channex-Doku „der
+    # Betrag steckt bereits im gesendeten Preis" — ohne gleichzeitig erhöhten
+    # Preis würde die Gebühr also NIE eingezogen (Geldverlust), und eine
+    # Pauschale pro Aufenthalt ließe sich nur mit geratener Aufenthaltsdauer auf
+    # Nachtpreise verteilen (Wurzel 4). Channex nimmt sie stattdessen exakt als
+    # eigenen Posten (`logic: per_booking` …) und addiert sie beim Portal. Der
+    # Gast zahlt denselben Endpreis; die Aufschlüsselung ist genauer.
     gebuehr_inklusiv = bool(regel.im_zimmerpreis)
     if regel.gebuehren == "keine":
         if eigene_fees:

@@ -18,8 +18,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import nh3
-
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import load_scoped
@@ -28,6 +26,7 @@ from .errors import PropertyError
 from .gebuehren import (
     TAXABLE_BASE_CATEGORIES,
     TAXABLE_BASE_ITEMS,
+    clean_description,
     clean_portal_scope,
     fee_category,
 )
@@ -59,26 +58,9 @@ PERIODS = frozenset({"PerStay", "PerNight"})
 # dem Set dieses Portals heraus. Ein Handschalter dafür wäre eine zweite,
 # schlechtere Wahrheit über etwas, das der Kanal ohnehin ansagt.
 
-# Beschreibung ist internes Rich-Text (fett/kursiv/unterstrichen/durchgestrichen).
-# Keine Links, keine Bilder, keine Attribute — der Text braucht nichts davon,
-# und was nicht erlaubt ist, kann auch nicht missbraucht werden.
-_DESC_TAGS = {"b", "strong", "i", "em", "u", "s", "strike", "p", "br"}
-_DESC_MAX = 5000
-
-
-def _clean_description(raw: object) -> str | None:
-    if raw is None:
-        return None
-    text = str(raw)
-    if not text.strip():
-        return None
-    if len(text) > _DESC_MAX:
-        raise PropertyError(
-            f"Beschreibung zu lang (höchstens {_DESC_MAX} Zeichen).",
-            status_code=422,
-        )
-    cleaned = nh3.clean(text, tags=_DESC_TAGS, attributes={}, url_schemes=set())
-    return cleaned or None
+# Die Beschreibungs-Säuberung liegt in gebuehren.py (untere Schicht, wird von hier
+# ohnehin importiert). Eine eigene Kopie hier wäre eine zweite Wahrheit über
+# erlaubtes HTML — und genau die Sorte Kopie, die auseinanderläuft.
 
 
 def _clean_names(raw: object) -> dict[str, str]:
@@ -209,7 +191,7 @@ def normalize_taxes(
         namen = _clean_names(eintrag.get("names"))
         if namen:
             sauber["names"] = namen
-        beschreibung = _clean_description(eintrag.get("descriptionHtml"))
+        beschreibung = clean_description(eintrag.get("descriptionHtml"))
         if beschreibung:
             sauber["descriptionHtml"] = beschreibung
 

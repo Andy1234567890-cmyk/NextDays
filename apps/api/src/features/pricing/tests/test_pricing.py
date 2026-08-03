@@ -371,6 +371,35 @@ def test_quote_fee_tax_rate_snapshot_in_line() -> None:
     assert by_label["Reinigung"].tax_rate is None
 
 
+def test_quote_haustiergebuehr_pro_tier() -> None:
+    """„Pro Tier und Aufenthalt": die Gebühr multipliziert die Tierzahl der
+    Buchung — mit zwei Hunden das Doppelte, ohne Tier gar nichts."""
+    cfg = {
+        "fees": [
+            {"name": "Haustier", "amount": 25, "basis": "per_pet_stay",
+             "feeType": "pet_fee"},
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+
+    def quote_mit(pets: int) -> dict[str, float]:
+        q = r.quote(
+            QuoteRequest(
+                property_id="p",
+                check_in=date(2026, 7, 1),
+                check_out=date(2026, 7, 4),
+                guests=2,
+                pets=pets,
+            )
+        )
+        return {line.label: line.amount for line in q.lines}
+
+    assert quote_mit(2)["Haustier"] == 50.0
+    assert quote_mit(1)["Haustier"] == 25.0
+    # Kein Tier → keine Zeile (Beträge von 0 werden nicht ausgewiesen).
+    assert "Haustier" not in quote_mit(0)
+
+
 def test_quote_direct_has_no_markup() -> None:
     cfg = {"markup": {"booking": 25}}
     r = _resolver(base=100.0, config=cfg)
@@ -859,3 +888,79 @@ def test_quote_zeitraum_obergrenze() -> None:
             check_out=date(2030, 1, 1),
             guests=1,
         )
+
+
+def test_quote_fee_tax_exklusiv_rechnet_die_ust_obendrauf() -> None:
+    """Jede Zeile ist BRUTTO (die Rechnung zerlegt sie). Ist der eingetippte
+    Betrag netto (`taxIncluded: false`), muss der Satz obendrauf — sonst fehlte
+    er auf der Rechnung und der Betrieb bekäme weniger als gewollt."""
+    cfg = {
+        "fees": [
+            {"id": "a", "name": "Netto", "amount": 100, "basis": "per_stay",
+             "taxRate": 19, "taxIncluded": False},
+            {"id": "b", "name": "Brutto", "amount": 100, "basis": "per_stay",
+             "taxRate": 19, "taxIncluded": True},
+            # Ohne eigenen Satz gibt es nichts aufzuschlagen (Wurzel 4).
+            {"id": "c", "name": "Ohne Satz", "amount": 100, "basis": "per_stay",
+             "taxIncluded": False},
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    by_label = {line.label: line for line in q.lines}
+    assert by_label["Netto"].amount == 119.0
+    assert by_label["Brutto"].amount == 100.0
+    assert by_label["Ohne Satz"].amount == 100.0
+
+
+def test_quote_fee_short_stay_only() -> None:
+    """„Nur für Kurzaufenthalte" greift genau bis zur Grenze des Objekts — und
+    ohne gepflegte Grenze gar nicht (keine geratene Nächtezahl)."""
+    cfg = {
+        "short_stay_max_nights": 3,
+        "fees": [
+            {"id": "k", "name": "Kurz", "amount": 30, "basis": "per_stay",
+             "shortStayOnly": True},
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+
+    def labels(nights: int) -> set[str]:
+        q = r.quote(
+            QuoteRequest(
+                property_id="p",
+                check_in=date(2026, 7, 1),
+                check_out=date(2026, 7, 1 + nights),
+                guests=2,
+            )
+        )
+        return {line.label for line in q.lines}
+
+    assert "Kurz" in labels(3)
+    assert "Kurz" not in labels(4)
+
+    ohne_grenze = _resolver(
+        base=100.0,
+        config={
+            "fees": [
+                {"id": "k", "name": "Kurz", "amount": 30, "basis": "per_stay",
+                 "shortStayOnly": True},
+            ],
+        },
+    )
+    q = ohne_grenze.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 3),
+            guests=2,
+        )
+    )
+    assert "Kurz" not in {line.label for line in q.lines}

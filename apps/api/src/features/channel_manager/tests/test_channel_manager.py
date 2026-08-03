@@ -2,6 +2,12 @@
 from fastapi.testclient import TestClient
 
 from src.features.channel_manager import ota_abgaben
+from src.features.channel_manager.abgaben_status import (
+    AbgabenStatusMixin,
+)
+from src.features.channel_manager.abgaben_status import (
+    _exportiert as abgaben_status_exportiert,
+)
 from src.features.channel_manager.channex_client import ChannexError
 from src.features.channel_manager.service import (
     ChannelManagerService,
@@ -727,6 +733,101 @@ def test_airbnb_summiert_gleiche_kategorie_gleiches_modell() -> None:
     assert eintrag.schluessel == "cat:community"
 
 
+def test_kurzzeitreinigung_ist_eine_eigene_zeile_der_export_tabelle() -> None:
+    """„Short-term cleaning (Flat amount)": nur einmalig pro Aufenthalt, nur als
+    Betrag — und getrennt von der Reinigungsgebühr, nicht mit ihr summiert."""
+    for basis, erwartet in (
+        ("per_stay", True), ("per_night", False),
+        ("per_guest_stay", False), ("per_guest_night", False),
+    ):
+        posten, _ = _abgaben(
+            ota_abgaben.AIRBNB,
+            fees=[{"id": "f", "name": "Kurzreinigung", "amount": 20,
+                   "basis": basis, "feeType": "short_term_cleaning"}],
+        )
+        assert bool(posten) is erwartet, basis
+    # Prozentual gibt es die Zeile nicht („Flat amount").
+    posten, _ = _abgaben(
+        ota_abgaben.AIRBNB,
+        fees=[{"id": "f", "name": "Kurzreinigung", "amount": 5, "mode": "percent",
+               "basis": "per_stay", "feeType": "short_term_cleaning"}],
+    )
+    assert posten == {}
+    # Zwei Zeilen, zwei Posten — keine Summierung mit der Reinigungsgebühr.
+    posten, _ = _abgaben(
+        ota_abgaben.AIRBNB,
+        fees=[
+            {"id": "a", "name": "Endreinigung", "amount": 50,
+             "basis": "per_stay", "feeType": "cleaning_fee"},
+            {"id": "b", "name": "Kurzreinigung", "amount": 20,
+             "basis": "per_stay", "feeType": "short_term_cleaning"},
+        ],
+    )
+    assert set(posten) == {"Endreinigung", "Kurzreinigung"}
+
+
+def test_haustiergebuehr_pro_tier_geht_als_pauschale_ans_portal() -> None:
+    """Kein Portal kennt die Tierzahl vor der Buchung: „pro Tier und
+    Aufenthalt" geht als Pauschale pro Aufenthalt raus (Betrag für EIN Tier),
+    die tatsächliche Zahl rechnet der Resolver bei uns."""
+    posten, _ = _abgaben(
+        ota_abgaben.AIRBNB,
+        fees=[{"id": "f", "name": "Hund", "amount": 25, "basis": "per_pet_stay",
+               "feeType": "pet_fee"}],
+    )
+    assert posten["Hund"].attrs["logic"] == "per_booking"
+    assert posten["Hund"].attrs["rate"] == "25"
+
+
+def test_kaution_geht_an_kein_portal() -> None:
+    """„Kaution → SecurityDeposit" steht nur in der Zuordnungstabelle, nicht in
+    der Export-Tabelle: sie ist kein Aufschlag auf den Preis. Channex kennt
+    dafür keinen Typ — als `fee` gesendet wäre sie Geld, das nie zurückgeht."""
+    fee = {"id": "f", "name": "Kaution", "amount": 300, "basis": "per_stay",
+           "feeType": "security_deposit"}
+    for portal in (
+        ota_abgaben.AIRBNB, ota_abgaben.BOOKING, ota_abgaben.EXPEDIA, "Vrbo", None
+    ):
+        posten, _ = _abgaben(portal, fees=[fee])
+        assert posten == {}, portal
+
+
+def test_homeaway_vrbo_nimmt_alles_getrennt_ausgewiesen() -> None:
+    """Vrbo: Prozent UND Betrag, bei Steuern wie Gebühren, alles getrennt vom
+    Zimmerpreis; zwei Gebühren derselben Art bleiben zwei Gebühren; die Steuer
+    rechnet nur auf den Zimmerpreis (Gebühr also nicht in der Grundlage).
+
+    Der Kanal steht heute nicht im Channex-Katalog — die Regel greift deshalb
+    über den Markennamen im Code, nicht über einen geratenen Code.
+    """
+    for code in ("Vrbo", "HomeAway", "VrboUS"):
+        posten, diagnose = _abgaben(
+            code,
+            taxes=[
+                {"id": "p", "kind": "local", "name": "Kurtaxe %",
+                 "mode": "percent", "value": 2.5,
+                 "taxableBase": ["base_price", "cleaning"]},
+                {"id": "b", "kind": "local", "name": "Kurtaxe Betrag",
+                 "mode": "amount", "value": 2, "chargeBasis": "SingleCharge",
+                 "period": "PerNight"},
+            ],
+            fees=[
+                {"id": "fa", "name": "Parken", "amount": 10, "basis": "per_night",
+                 "feeType": "parking"},
+                {"id": "fb", "name": "Internet", "amount": 5,
+                 "basis": "per_night", "feeType": "internet"},
+                {"id": "fc", "name": "Reinigung", "amount": 50,
+                 "basis": "per_stay", "feeType": "cleaning_fee"},
+            ],
+        )
+        assert set(posten) == {
+            "Kurtaxe %", "Kurtaxe Betrag", "Parken", "Internet", "Reinigung"
+        }, code
+        assert all(p.attrs["is_inclusive"] is False for p in posten.values()), code
+        assert posten["Reinigung"].level == posten["Kurtaxe %"].level, code
+        assert diagnose == {}, code
+
+
 def test_airbnb_sperrt_kategorie_bei_gemischten_modellen() -> None:
     """Gemischte Berechnungsmodelle in einer Kategorie: KEINE der Gebühren geht
     raus. Der Standard verlangt, Art zu ändern oder Dubletten zu entfernen."""
@@ -963,3 +1064,103 @@ def test_chat_freischaltung_kippt_das_verbinden_nicht() -> None:
     svc = ChannelManagerService(service_client=None, channex=_Kaputt())
     svc._chat_freischalten("cx-prop-1")  # kein Werfen: Distribution läuft auch ohne Chat
 
+
+
+def test_kurzaufenthalts_gebuehr_geht_an_kein_portal() -> None:
+    """Keine Channex-`logic` und kein Portal kennt eine Gebühr, die nur bis zu
+    einer Aufenthaltslänge greift. Unbedingt gesendet würde sie JEDEM
+    Portal-Gast berechnet — also draußen lassen und protokollieren."""
+    posten, diagnose = _abgaben(
+        None,
+        fees=[
+            {"id": "k", "name": "Kurz", "amount": 30, "basis": "per_stay",
+             "shortStayOnly": True},
+            {"id": "n", "name": "Normal", "amount": 50, "basis": "per_stay"},
+        ],
+    )
+    assert "Kurz" not in posten
+    assert "Normal" in posten
+    assert diagnose["gebuehr_nur_kurzaufenthalt"] == 1
+
+
+# --- Sync-Stand der Abgaben (Chip „Manuelle Synchronisierung") ---------------
+
+
+def _status(eintrag, kind, *, portale, nicht_gesendet=None):
+    return AbgabenStatusMixin._posten_status(  # pylint: disable=protected-access
+        eintrag,
+        kind,
+        portale=portale,
+        nicht_gesendet=nicht_gesendet or {},
+    )
+
+
+def test_abgaben_status_trennt_manuell_von_eingeschraenkt() -> None:
+    """Drei verschiedene Aussagen, drei verschiedene Felder: „das Portal nimmt
+    den Posten nicht" (Chip), „der Betrieb hat ihn ausgeschlossen" (Absicht) und
+    „er geht bewusst an kein Portal" (intern)."""
+    portale = ["AirBNB", "BookingCom"]
+    # Booking nimmt keine festen Beträge → dort manuell, bei Airbnb nicht.
+    manuell = _status(
+        {"id": "f1", "name": "Reinigung", "feeType": "cleaning_fee"},
+        "fee",
+        portale=portale,
+        nicht_gesendet={"BookingCom": {"f1"}, "AirBNB": set()},
+    )
+    assert manuell["manual_portals"] == ["BookingCom"]
+    assert manuell["restricted_portals"] == []
+    assert manuell["internal_only"] is False
+
+    # Ausdrücklich nur an Airbnb: Booking ist eingeschränkt, NICHT „manuell".
+    eingeschraenkt = _status(
+        {"id": "f1", "name": "Reinigung", "feeType": "cleaning_fee",
+         "portalScope": ["AirBNB"]},
+        "fee",
+        portale=portale,
+        nicht_gesendet={"BookingCom": {"f1"}, "AirBNB": set()},
+    )
+    assert eingeschraenkt["restricted_portals"] == ["BookingCom"]
+    assert eingeschraenkt["manual_portals"] == []
+
+
+def test_abgaben_status_interne_gebuehren_ohne_chip() -> None:
+    """Optionale Gebühr, Kurzaufenthalts-Gebühr und Kaution gehen bewusst an
+    kein Portal. Ein Chip „muss dort manuell gepflegt werden" wäre bei ihnen
+    eine Aufforderung zu etwas, das gar nicht gewollt ist."""
+    portale = ["AirBNB"]
+    for eintrag in (
+        {"id": "f1", "optional": True, "feeType": "cleaning_fee"},
+        {"id": "f1", "shortStayOnly": True, "feeType": "cleaning_fee"},
+        {"id": "f1", "feeType": "security_deposit"},
+    ):
+        st = _status(eintrag, "fee", portale=portale,
+                     nicht_gesendet={"AirBNB": {"f1"}})
+        assert st["internal_only"] is True, eintrag
+        assert st["manual_portals"] == []
+
+    # Eine Steuer ist NIE „intern": sie hat keine Optional-Achse.
+    st = _status({"id": "t1", "kind": "local"}, "tax", portale=portale,
+                 nicht_gesendet={"AirBNB": {"t1"}})
+    assert st["internal_only"] is False
+    assert st["manual_portals"] == ["AirBNB"]
+
+
+def test_abgaben_status_summierte_airbnb_kategorie_gilt_als_gesendet() -> None:
+    """Bei Airbnb werden Gebühren derselben Kategorie zu EINER summiert; der
+    Posten trägt dann `cat:<kategorie>`. Ohne diesen zweiten Schlüssel stünde
+    der Chip an genau den Gebühren, die sehr wohl rausgehen."""
+    fees = [
+        {"id": "a", "name": "Reinigung 1", "amount": 20, "basis": "per_stay",
+         "feeType": "community"},
+        {"id": "b", "name": "Reinigung 2", "amount": 30, "basis": "per_stay",
+         "feeType": "parking"},
+    ]
+    posten, _ = _abgaben(ota_abgaben.AIRBNB, fees=fees)
+    summe = next(iter(posten.values()))
+    assert summe.schluessel == "cat:community"
+    # Beide Einzelgebühren gelten als übertragen.
+    for fee in fees:
+        assert abgaben_status_exportiert(
+            [summe], schluessel=str(fee["id"]),
+            kategorie=ota_abgaben.fee_category(fee),
+        )

@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Сума",
       "chargeSingle": "Еднократна сума",
       "chargePerPerson": "На гост",
+      "chargePerPet": "На животно",
       "periodPerStay": "На престой",
       "periodPerNight": "На нощувка",
       "percentOfBasePlaceholder": "0 % от основната цена с промоциите",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Име на местния данък",
       "internalDescriptionPlaceholder": "Въведете описание (само за вътрешна употреба).",
       "applyToOthersTitle": "Добавяне към други обекти",
-      "applyToOthersHint": "Приложете същия данък и към други обекти.",
       "applyToOthersEmpty": "Няма други обекти — тук ще се появят, щом добавите още един.",
       "searchPlaceholder": "Търсене …",
       "searchPropertiesPlaceholder": "Търсене в обектите …",
@@ -4733,7 +4733,21 @@
         "community": "Такса за общи части",
         "pet": "Такса за домашен любимец"
       },
-      "actions": "Действия"
+      "actions": "Действия",
+      "manualSyncLabel": "Ръчна синхронизация",
+      "abgabenNoCurrency": "Докато не е зададена валута на обекта, таксите и данъците не се изпращат към нито един портал.",
+      "feeAssignSubtitle": "Добавете нова или съществуваща такса.",
+      "feeCreateNew": "Създаване на нова такса",
+      "searchFeesPlaceholder": "Търсене в таксите …",
+      "feeFromProperty": "от {title}",
+      "feeLibraryEmpty": "Все още няма такси в другите обекти — създайте нова по-горе.",
+      "feeLibraryNoCurrency": "Задайте първо валутата на този обект; след това тук ще се показват съществуващите такси.",
+      "feeShortStayOnlyLabel": "Само за кратък престой",
+      "feeShortStayOnlyHint": "Начислявайте таксата само при кратък престой.",
+      "feeShortStayOnlyBound": "Важи при най-много {nights} нощувки — същата граница като надценката за кратък престой. Таксата не се изпраща към порталите: там продължителността на престоя не може да бъде отразена.",
+      "feeShortStayOnlyMissing": "За този обект още не е определен кратък престой („Надценка за кратък престой“) — докато липсва, таксата не се начислява.",
+      "applyToOthersFeeHint": "Приложете същата такса и към други обекти.",
+      "applyToOthersTaxHint": "Приложете същия данък и към други обекти."
     },
     "policiesForm": {
       "title": "Правила",

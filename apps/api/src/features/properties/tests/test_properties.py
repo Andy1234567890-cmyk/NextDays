@@ -10,7 +10,11 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from src.core.security import AuthContext
-from src.features.properties.gebuehren import fee_category, normalize_fees
+from src.features.properties.gebuehren import (
+    fee_category,
+    fee_signatur,
+    normalize_fees,
+)
 from src.features.properties.rooms import room_row
 from src.features.properties.schemas import (
     ChannelState,
@@ -1224,9 +1228,12 @@ def test_nur_steuern_geaendert_gilt_auch_fuer_gebuehren() -> None:
 
 
 # --- Gebührenart-Taxonomie und Rechenart (Branchenstandard) -------------------
-# Die 49 Gebührenarten sind live aus dem Standard abgelesen (Gebühren-Editor,
+# 49 der 51 Gebührenarten sind live aus dem Standard abgelesen (Gebühren-Editor,
 # Auswahlfeld „Gebührenart", 03.08.2026); ihre Airbnb-Kategorie steht im
-# Hilfe-Artikel. Diese Tests halten beide Enden fest.
+# Hilfe-Artikel. Zwei kommen aus dem Artikel selbst, weil das Auswahlfeld sie
+# nicht führte, seine Tabellen sie aber verlangen: `short_term_cleaning`
+# (eigene Zeile der Export-Tabelle) und `security_deposit` (Zuordnung
+# „Kaution → SecurityDeposit"). Diese Tests halten beide Enden fest.
 
 
 def test_gebuehrenart_zuordnung_deckt_jede_airbnb_kategorie_ab() -> None:
@@ -1243,6 +1250,10 @@ def test_gebuehrenart_zuordnung_deckt_jede_airbnb_kategorie_ab() -> None:
         "linens_bath": "linen",
         "pet_fee": "pet",
         "cleaning_fee": "cleaning",
+        # Eigene Zeile der Export-Tabelle bzw. eigene Zuordnung — NICHT auf
+        # `cleaning`/`resort` mitgeführt, sonst würden sie dort summiert.
+        "short_term_cleaning": "short_term_cleaning",
+        "security_deposit": "security_deposit",
     }
     for art, kategorie in faelle.items():
         assert fee_category({"feeType": art}) == kategorie, art
@@ -1253,6 +1264,29 @@ def test_gebuehrenart_zuordnung_deckt_jede_airbnb_kategorie_ab() -> None:
     # Bestandsschlüssel bleiben lesbar, sonst wäre das Objekt unspeicherbar.
     assert fee_category({"feeType": "cleaning"}) == "cleaning"
     assert fee_category({"feeType": "other"}) is None
+
+
+def test_tier_basis_nur_an_der_haustiergebuehr() -> None:
+    """„Pro Tier und Aufenthalt" nennt der Standard nur an der Haustiergebühr.
+    An jeder anderen Art multiplizierte sie eine Zahl ohne Bezug zur Leistung."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "Hund", "amount": 25, "basis": "per_pet_stay",
+          "feeType": "pet_fee"}],
+        portale=_PORTALE,
+    )
+    assert ok[0]["basis"] == "per_pet_stay"
+    with pytest.raises(PropertyError):
+        normalize_fees(
+            [{"id": "f1", "name": "Reinigung", "amount": 25,
+              "basis": "per_pet_stay", "feeType": "cleaning_fee"}],
+            portale=_PORTALE,
+        )
+    # Auch ohne Gebührenart: keine Kategorie, also keine Tier-Basis.
+    with pytest.raises(PropertyError):
+        normalize_fees(
+            [{"id": "f1", "name": "X", "amount": 25, "basis": "per_pet_stay"}],
+            portale=_PORTALE,
+        )
 
 
 def test_normalize_fees_prueft_die_rechenart() -> None:
@@ -1336,3 +1370,80 @@ def test_taxable_base_altbestand_wird_auf_die_kategorie_gehoben() -> None:
         fees=fees,
     )
     assert ok[0]["taxableBase"] == ["base_price", "cleaning"]
+
+
+def test_normalize_fees_haelt_die_beschreibung_fest() -> None:
+    """Die Beschreibung stand im Editor, wurde aber nie gespeichert: `sauber`
+    übernahm sie nicht. Jetzt bleibt sie — Allowlist-gesäubert (Wurzel 8)."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "Reinigung", "amount": 50, "basis": "per_stay",
+          "feeType": "cleaning_fee",
+          "descriptionHtml": "<b>Fett</b><script>alert(1)</script>"}],
+        portale=_PORTALE,
+    )
+    assert ok[0]["descriptionHtml"] == "<b>Fett</b>"
+    # Leerer Text speichert kein leeres Feld mit.
+    leer = normalize_fees(
+        [{"id": "f1", "name": "Reinigung", "amount": 50, "basis": "per_stay",
+          "feeType": "cleaning_fee", "descriptionHtml": "   "}],
+        portale=_PORTALE,
+    )
+    assert "descriptionHtml" not in leer[0]
+
+
+def test_fee_tax_included_default_ist_inklusive() -> None:
+    """`taxIncluded` entscheidet, ob der eigene USt-Satz im Betrag steckt.
+    Ohne Angabe gilt INKLUSIVE — das bisherige Verhalten; ein anderer Default
+    machte jede Bestandsgebühr stillschweigend teurer."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "Frühstück", "amount": 20, "basis": "per_stay",
+          "feeType": "food", "taxRate": 19}],
+        portale=_PORTALE,
+    )
+    assert ok[0]["taxIncluded"] is True
+    exklusiv = normalize_fees(
+        [{"id": "f1", "name": "Frühstück", "amount": 20, "basis": "per_stay",
+          "feeType": "food", "taxRate": 19, "taxIncluded": False}],
+        portale=_PORTALE,
+    )
+    assert exklusiv[0]["taxIncluded"] is False
+    # Ohne eigenen Satz gibt es nichts zu entscheiden — kein Feld.
+    ohne = normalize_fees(
+        [{"id": "f1", "name": "Reinigung", "amount": 50, "basis": "per_stay",
+          "feeType": "cleaning_fee"}],
+        portale=_PORTALE,
+    )
+    assert "taxIncluded" not in ohne[0]
+
+
+def test_fee_short_stay_only_wird_uebernommen() -> None:
+    """„Nur für Kurzaufenthalte": ein Schalter, keine zweite Nächte-Zahl an der
+    Gebühr — die Grenze ist die des Objekts (`shortStayMaxNights`)."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "Kurz", "amount": 30, "basis": "per_stay",
+          "feeType": "cleaning_fee", "shortStayOnly": True}],
+        portale=_PORTALE,
+    )
+    assert ok[0]["shortStayOnly"] is True
+    aus = normalize_fees(
+        [{"id": "f1", "name": "Kurz", "amount": 30, "basis": "per_stay",
+          "feeType": "cleaning_fee"}],
+        portale=_PORTALE,
+    )
+    assert "shortStayOnly" not in aus[0]
+
+
+def test_fee_signatur_buendelt_dieselbe_gebuehr() -> None:
+    """Dieselbe Gebühr liegt auf jedem Objekt als eigener Eintrag mit eigener
+    Kennung. Die Auswahlliste soll sie EINMAL zeigen — also bündelt sie über die
+    fachlichen Felder, nicht über die ID."""
+    a = {"id": "a", "name": "Reinigungsgebühr", "amount": 955,
+         "basis": "per_stay", "mode": "amount", "feeType": "cleaning_fee"}
+    b = {**a, "id": "b"}
+    assert fee_signatur(a) == fee_signatur(b)
+    # Groß-/Kleinschreibung des Namens ist keine zweite Gebühr …
+    assert fee_signatur({**a, "name": "REINIGUNGSGEBÜHR"}) == fee_signatur(a)
+    # … ein anderer Betrag, eine andere Basis oder ein anderer Name schon.
+    assert fee_signatur({**a, "amount": 956}) != fee_signatur(a)
+    assert fee_signatur({**a, "basis": "per_night"}) != fee_signatur(a)
+    assert fee_signatur({**a, "name": "Endreinigung"}) != fee_signatur(a)

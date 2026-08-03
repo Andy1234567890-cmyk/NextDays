@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Montant",
       "chargeSingle": "Montant unique",
       "chargePerPerson": "Par personne",
+      "chargePerPet": "Par animal",
       "periodPerStay": "Par séjour",
       "periodPerNight": "Par nuit",
       "percentOfBasePlaceholder": "0 % du prix de base, promotions incluses",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Nom de la taxe locale",
       "internalDescriptionPlaceholder": "Saisissez une description (usage interne uniquement).",
       "applyToOthersTitle": "Ajouter à d'autres hébergements",
-      "applyToOthersHint": "Appliquer la même taxe à d'autres hébergements.",
       "applyToOthersEmpty": "Aucun autre hébergement pour l’instant — dès que vous en ajoutez un, il apparaît ici.",
       "searchPlaceholder": "Rechercher …",
       "searchPropertiesPlaceholder": "Rechercher des hébergements …",
@@ -4733,7 +4733,21 @@
         "community": "Frais de communauté",
         "pet": "Frais pour animal"
       },
-      "actions": "Actions"
+      "actions": "Actions",
+      "manualSyncLabel": "Synchronisation manuelle",
+      "abgabenNoCurrency": "Tant qu’aucune devise n’est définie pour l’hébergement, les frais et les taxes ne sont envoyés à aucun portail.",
+      "feeAssignSubtitle": "Ajoutez des frais nouveaux ou existants.",
+      "feeCreateNew": "Créer de nouveaux frais",
+      "searchFeesPlaceholder": "Rechercher des frais …",
+      "feeFromProperty": "de {title}",
+      "feeLibraryEmpty": "Aucuns frais sur vos autres hébergements pour l’instant — créez-en de nouveaux ci-dessus.",
+      "feeLibraryNoCurrency": "Définissez d’abord la devise de cet hébergement ; les frais existants seront ensuite proposés ici.",
+      "feeShortStayOnlyLabel": "Séjours courts uniquement",
+      "feeShortStayOnlyHint": "Facturer les frais uniquement pour les séjours courts.",
+      "feeShortStayOnlyBound": "S’applique jusqu’à {nights} nuits — la même limite que la majoration séjour court. Les frais ne sont pas envoyés aux portails : une durée de séjour n’y est pas représentable.",
+      "feeShortStayOnlyMissing": "Aucun séjour court n’est encore défini pour cet hébergement (« Majoration séjour court ») — tant qu’il manque, les frais ne sont pas facturés.",
+      "applyToOthersFeeHint": "Appliquer les mêmes frais à d’autres hébergements.",
+      "applyToOthersTaxHint": "Appliquer la même taxe à d’autres hébergements."
     },
     "policiesForm": {
       "title": "Règlements",

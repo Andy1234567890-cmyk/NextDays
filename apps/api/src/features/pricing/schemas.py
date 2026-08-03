@@ -41,6 +41,10 @@ class QuoteRequest(BaseModel):
     check_in: date
     check_out: date  # exklusiv (Abreisetag ist wieder frei)
     guests: int = Field(default=1, ge=1)
+    # Mitgebrachte Tiere. Multipliziert Gebühren mit `basis: per_pet_stay`
+    # („pro Tier und Aufenthalt"). Ohne Angabe 0 — dann kostet eine solche
+    # Gebühr nichts, was genau richtig ist: kein Tier, keine Tiergebühr.
+    pets: int = Field(default=0, ge=0, le=50)
     # Kanal bestimmt den Markup-Aufschlag (direct = kein Markup).
     channel: str = "direct"
     # Hotel: der KONKRETE Rate-Plan der Buchung (BAR vs. B&B kosten verschieden).

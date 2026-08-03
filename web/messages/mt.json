@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Ammont",
       "chargeSingle": "Ammont wieħed",
       "chargePerPerson": "Għal kull mistieden",
+      "chargePerPet": "Għal kull annimal",
       "periodPerStay": "Għal kull soġġorn",
       "periodPerNight": "Għal kull lejl",
       "percentOfBasePlaceholder": "0 % tal-prezz bażi bil-promozzjonijiet",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Isem tat-taxxa lokali",
       "internalDescriptionPlaceholder": "Daħħal deskrizzjoni (għal użu intern biss).",
       "applyToOthersTitle": "Żid ma' proprjetajiet oħra",
-      "applyToOthersHint": "Applika l-istess taxxa anke għal proprjetajiet oħra.",
       "applyToOthersEmpty": "Għad m’hemmx propjetajiet oħra — hekk kif iżżid oħra, tidher hawn.",
       "searchPlaceholder": "Fittex …",
       "searchPropertiesPlaceholder": "Fittex proprjetajiet …",
@@ -4733,7 +4733,21 @@
         "community": "Tariffa komunitarja",
         "pet": "Tariffa tal-annimali"
       },
-      "actions": "Azzjonijiet"
+      "actions": "Azzjonijiet",
+      "manualSyncLabel": "Sinkronizzazzjoni manwali",
+      "abgabenNoCurrency": "Sakemm ma tiġix stabbilita l-munita tal-proprjetà, it-tariffi u t-taxxi ma jintbagħtux lil ebda portal.",
+      "feeAssignSubtitle": "Żid tariffa ġdida jew eżistenti.",
+      "feeCreateNew": "Oħloq tariffa ġdida",
+      "searchFeesPlaceholder": "Fittex tariffi …",
+      "feeFromProperty": "minn {title}",
+      "feeLibraryEmpty": "Għadu m’hemmx tariffi fil-proprjetajiet oħra — oħloq waħda ġdida hawn fuq.",
+      "feeLibraryNoCurrency": "Stabbilixxi l-ewwel il-munita ta’ din il-proprjetà; wara jkunu disponibbli hawn it-tariffi eżistenti.",
+      "feeShortStayOnlyLabel": "Għal soġġorni qosra biss",
+      "feeShortStayOnlyHint": "Iċċarġja t-tariffa biss għal soġġorni qosra.",
+      "feeShortStayOnlyBound": "Tapplika sa {nights} iljieli — l-istess limitu tas-supplement għal soġġorn qasir. It-tariffa ma tintbagħatx lill-portali: it-tul tas-soġġorn ma jistax jiġi espress hemm.",
+      "feeShortStayOnlyMissing": "Għal din il-proprjetà għadu ma ġiex definit soġġorn qasir („Supplement għal soġġorn qasir“) — sakemm dan jonqos, it-tariffa ma tiġix iċċarġjata.",
+      "applyToOthersFeeHint": "Applika l-istess tariffa anke għal proprjetajiet oħra.",
+      "applyToOthersTaxHint": "Applika l-istess taxxa anke għal proprjetajiet oħra."
     },
     "policiesForm": {
       "title": "Politiki",

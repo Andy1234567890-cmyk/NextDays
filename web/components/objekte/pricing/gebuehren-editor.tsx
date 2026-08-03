@@ -47,35 +47,50 @@ import {
   type FeePeriod,
   type FeeTypeEntry,
   type Pricing,
+  PET_BASIS_CATEGORIES,
   currencySymbol,
   feeBasisAchsen,
   feeBasisAus,
 } from "@/lib/pricing-meta";
-import { listFeeTypes } from "@/lib/properties";
+import { applyFeeToProperties, listFeeTypes } from "@/lib/properties";
+import { ZuAnderenObjekten } from "@/components/objekte/pricing/zu-anderen-objekten";
 
 export function GebuehrEditor({
   pr,
+  propertyId,
   editId,
+  vorlage,
   onSave,
+  onApplyError,
   onClose,
 }: {
   pr: Pricing;
+  propertyId: string;
   editId?: string;
+  /** Bestehende Gebühr des Betriebs als Startwert („bestehende Gebühr
+   *  hinzufügen"): dieselben Felder, aber EIGENE Kennung — sonst überschriebe
+   *  die Übernahme die Gebühr, aus der sie kommt. */
+  vorlage?: Fee;
   onSave: (next: Pricing) => Promise<true | string>;
+  /** Fehler beim Übertragen auf weitere Objekte — gemeldet an die SEITE, weil
+   *  dieser Dialog nach erfolgreichem Speichern nicht mehr steht. */
+  onApplyError: (error: string | null) => void;
   onClose: () => void;
 }) {
   const t = useTranslations("objects");
   const vorhanden = editId ? pr.fees.find((x) => x.id === editId) : undefined;
   const [v, setV] = useState<Fee>(
-    vorhanden ?? {
-      id: "",
-      name: "",
-      amount: 0,
-      mode: "amount",
-      basis: "per_stay",
-      optional: false,
-    },
+    vorhanden ??
+      (vorlage ? { ...vorlage, id: "" } : undefined) ?? {
+        id: "",
+        name: "",
+        amount: 0,
+        mode: "amount",
+        basis: "per_stay",
+        optional: false,
+      },
   );
+  const [ziele, setZiele] = useState<string[]>([]);
   const [arten, setArten] = useState<FeeTypeEntry[]>([]);
   // USt-Satz als eigener Schalter wie im Standard: aus = die Gebühr folgt dem
   // Übernachtungssatz des Objekts (kein erfundener eigener Satz, Wurzel 4).
@@ -91,9 +106,14 @@ export function GebuehrEditor({
 
   const prozent = (v.mode ?? "amount") === "percent";
   const achsen = feeBasisAchsen(v.basis);
+  // „Pro Tier" gibt es nur an der Haustiergebühr — der Server weist alles
+  // andere ab, also darf es hier gar nicht erst wählbar sein.
+  const tierBasisMoeglich = PET_BASIS_CATEGORIES.includes(
+    arten.find((a) => a.value === v.feeType)?.category ?? "",
+  );
   const waehrung: Currency | "" = pr.currency;
 
-  function commit() {
+  async function commit() {
     const eintrag: Fee = {
       ...v,
       id: v.id || crypto.randomUUID(),
@@ -104,7 +124,19 @@ export function GebuehrEditor({
     const liste = vorhanden
       ? pr.fees.map((x) => (x.id === eintrag.id ? eintrag : x))
       : [...pr.fees, eintrag];
-    run({ ...pr, fees: liste });
+    // Übernahme auf weitere Objekte erst NACH dem Speichern — vorher gibt es die
+    // Gebühr am Quell-Objekt noch nicht. Und nur, wenn das Speichern geklappt
+    // hat: sonst verteilte ein fehlgeschlagener Vorgang trotzdem Gebühren.
+    //
+    // Der FEHLER geht nach oben, nicht in diesen Dialog: erfolgreiches Speichern
+    // schließt ihn (die Seite ruft `setSection(null)`), eine Meldung hier stünde
+    // also auf einer Fläche, die es nicht mehr gibt — der Betrieb würde glauben,
+    // die Gebühr liege auf allen ausgewählten Objekten.
+    const ok = await run({ ...pr, fees: liste });
+    if (ok && ziele.length > 0) {
+      const res = await applyFeeToProperties(propertyId, eintrag.id, ziele);
+      onApplyError(res.ok ? null : res.error);
+    }
   }
 
   return (
@@ -117,7 +149,7 @@ export function GebuehrEditor({
           busy={busy}
           error={error}
           onCancel={onClose}
-          onSave={commit}
+          onSave={() => void commit()}
           disabled={!v.name.trim() || !v.feeType}
         />
       }
@@ -125,7 +157,21 @@ export function GebuehrEditor({
       <Field label={t("pricingForm.feeTypeLabel")} hint={t("pricingForm.feeTypeHint")} required>
         <Select
           value={v.feeType ?? ""}
-          onValueChange={(x) => setV({ ...v, feeType: x })}
+          onValueChange={(x) =>
+            setV({
+              ...v,
+              feeType: x,
+              // Weg von der Haustiergebühr heißt weg von „pro Tier" — sonst
+              // stünde eine Basis im Formular, die der Server ablehnt.
+              basis:
+                v.basis === "per_pet_stay" &&
+                !PET_BASIS_CATEGORIES.includes(
+                  arten.find((a) => a.value === x)?.category ?? "",
+                )
+                  ? "per_stay"
+                  : v.basis,
+            })
+          }
         >
           <SelectTrigger>
             <SelectValue placeholder={t("pricingForm.feeTypePlaceholder")} />
@@ -222,10 +268,16 @@ export function GebuehrEditor({
                   <SelectItem value="PerPerson">
                     {t("pricingForm.chargePerPerson")}
                   </SelectItem>
+                  {tierBasisMoeglich && (
+                    <SelectItem value="PerPet">
+                      {t("pricingForm.chargePerPet")}
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <Select
                 value={achsen.period}
+                disabled={achsen.charge === "PerPet"}
                 onValueChange={(val) =>
                   setV({
                     ...v,
@@ -262,26 +314,72 @@ export function GebuehrEditor({
           />
         </label>
         {ustAn && (
-          <div className="relative">
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              step="0.1"
-              value={v.taxRate ?? 0}
-              onChange={(e) =>
-                setV({
-                  ...v,
-                  taxRate: Math.min(100, Math.max(0, Number(e.target.value) || 0)),
-                })
-              }
-              className="pr-8"
-            />
-            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
-              %
-            </span>
-          </div>
+          <>
+            <div className="relative">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step="0.1"
+                value={v.taxRate ?? 0}
+                onChange={(e) =>
+                  setV({
+                    ...v,
+                    taxRate: Math.min(100, Math.max(0, Number(e.target.value) || 0)),
+                  })
+                }
+                className="pr-8"
+              />
+              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                %
+              </span>
+            </div>
+            {/* Steckt der Satz schon im Betrag oder kommt er obendrauf? Der
+                Standard fragt es genau hier. Ohne die Angabe wäre der Betrag
+                zweideutig — und der Betrieb müsste raten, was auf der Rechnung
+                herauskommt. Standard ist „inklusive" (bisheriges Verhalten). */}
+            <Select
+              value={(v.taxIncluded ?? true) ? "included" : "excluded"}
+              onValueChange={(val) => setV({ ...v, taxIncluded: val === "included" })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="included">{t("pricingForm.vatIncluded")}</SelectItem>
+                <SelectItem value="excluded">{t("pricingForm.vatExcluded")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
         )}
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <label className="flex cursor-pointer items-center justify-between gap-3">
+          <span className="font-display text-lg font-extrabold">
+            {t("pricingForm.feeShortStayOnlyLabel")}
+          </span>
+          <Switch
+            checked={v.shortStayOnly ?? false}
+            onCheckedChange={(c) => setV({ ...v, shortStayOnly: c })}
+          />
+        </label>
+        <p className="text-sm text-muted-foreground">
+          {t("pricingForm.feeShortStayOnlyHint")}
+        </p>
+        {/* „Kurz" ist keine zweite Zahl an der Gebühr, sondern die EINE Grenze
+            des Objekts. Ist sie nicht gepflegt, greift die Gebühr nie — das
+            muss hier stehen, sonst sieht der Schalter aktiv aus und wirkt nicht. */}
+        {v.shortStayOnly &&
+          (pr.shortStayMaxNights > 0 ? (
+            <Hint>
+              {t("pricingForm.feeShortStayOnlyBound", {
+                nights: pr.shortStayMaxNights,
+              })}
+            </Hint>
+          ) : (
+            <Hint>{t("pricingForm.feeShortStayOnlyMissing")}</Hint>
+          ))}
       </section>
 
       <Field label={t("pricingForm.nameLabel")} required>
@@ -305,6 +403,13 @@ export function GebuehrEditor({
         />
       </label>
       {v.optional && <Hint>{t("pricingForm.feeOptionalHint")}</Hint>}
+
+      <ZuAnderenObjekten
+        propertyId={propertyId}
+        kind="fee"
+        selected={ziele}
+        onChange={setZiele}
+      />
     </EditorShell>
   );
 }

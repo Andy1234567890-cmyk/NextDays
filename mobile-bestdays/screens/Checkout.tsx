@@ -27,12 +27,18 @@ import { formatZeitraum } from "@/lib/datum";
 import {
   createBooking,
   getListing,
+  getQuote,
   listingOrt,
   naechte,
   type ListingDetail,
+  type Quote,
 } from "@/lib/listings";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
+
+// Obergrenze der Tierauswahl im Formular (der Server deckelt bei 50). Mehr als
+// vier Tiere ist ein Fall für die Nachricht an den Gastgeber, kein Formularwert.
+const MAX_TIERE = 4;
 
 // E-Mail nur grob prüfen (die verbindliche Prüfung macht Pydantic serverseitig).
 function istEmail(wert: string): boolean {
@@ -49,6 +55,10 @@ export default function Checkout() {
 
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [ladeFehler, setLadeFehler] = useState<string | null>(null);
+  // Tiere wählt der Gast hier, nicht in der Suche: erst hier steht fest, ob
+  // dieses Objekt sie erlaubt.
+  const [tiere, setTiere] = useState(0);
+  const [angebot, setAngebot] = useState<Quote | null>(null);
 
   // Kontaktdaten: aus dem Gast-Konto vorbelegt, wenn eines angemeldet ist.
   // Der Name wird am ersten Leerzeichen getrennt; hat das Konto nur einen
@@ -87,9 +97,28 @@ export default function Checkout() {
     load();
   }, [load]);
 
-  const nights = listing?.nights ?? naechte(checkIn, checkOut);
-  const proNacht = listing?.price ?? listing?.price_from ?? null;
-  const gesamt = proNacht != null && nights > 0 ? proNacht * nights : null;
+  // Verbindliche Aufschlüsselung vom Server — Gebühren, Haustiergebühr und
+  // Abgaben inbegriffen. Nächte × Grundpreis (der alte Weg) verschwieg sie.
+  useEffect(() => {
+    let abgebrochen = false;
+    void getQuote({
+      property_id: listingId,
+      check_in: checkIn,
+      check_out: checkOut,
+      guests,
+      pets: tiere,
+    }).then((res) => {
+      if (!abgebrochen) setAngebot(res.ok ? res.data : null);
+    });
+    return () => {
+      abgebrochen = true;
+    };
+  }, [listingId, checkIn, checkOut, guests, tiere]);
+
+  const nights = angebot?.nights ?? listing?.nights ?? naechte(checkIn, checkOut);
+  const waehrung = angebot?.currency || listing?.currency;
+  const gesamt = angebot && !angebot.priceless ? angebot.total : null;
+  const tiereErlaubt = angebot?.pets_allowed ?? false;
 
   const formularOk =
     vorname.trim().length > 0 && nachname.trim().length > 0 && istEmail(email);
@@ -103,6 +132,7 @@ export default function Checkout() {
       check_in: checkIn,
       check_out: checkOut,
       guests,
+      pets: tiere,
       contact: {
         first_name: vorname.trim(),
         last_name: nachname.trim(),
@@ -215,35 +245,67 @@ export default function Checkout() {
               {guests} {guests === 1 ? "Gast" : "Gäste"}
             </Txt>
           </Row>
+          {tiereErlaubt && (
+            <Row style={{ justifyContent: "space-between", gap: 16 }}>
+              <Col gap={2} style={{ flex: 1 }}>
+                <Txt v="body" soft>
+                  Haustiere
+                </Txt>
+                <Txt v="xs" soft>
+                  Gebühren können anfallen
+                </Txt>
+              </Col>
+              <Row gap={12} style={{ alignItems: "center" }}>
+                <Pressable
+                  accessibilityLabel="Haustiere verringern"
+                  disabled={tiere <= 0}
+                  onPress={() => setTiere((x) => Math.max(0, x - 1))}
+                  style={{ opacity: tiere <= 0 ? 0.4 : 1, padding: 6 }}
+                >
+                  <Icon n="minus" s={18} sw={2} c={t.palette.ink} />
+                </Pressable>
+                <Txt v="body">{tiere}</Txt>
+                <Pressable
+                  accessibilityLabel="Haustiere erhöhen"
+                  disabled={tiere >= MAX_TIERE}
+                  onPress={() => setTiere((x) => Math.min(MAX_TIERE, x + 1))}
+                  style={{ opacity: tiere >= MAX_TIERE ? 0.4 : 1, padding: 6 }}
+                >
+                  <Icon n="plus" s={18} sw={2} c={t.palette.ink} />
+                </Pressable>
+              </Row>
+            </Row>
+          )}
         </Col>
 
         <Trennlinie />
 
-        {/* Preis: nur echte Werte des Servers, keine erfundenen Gebühren. */}
+        {/* Preis: ausschließlich die Zeilen des Servers — dieselbe Rechnung,
+            die beim Buchen greift. */}
         <Col gap={14}>
           <Txt v="h2">Preisdetails</Txt>
-          {proNacht != null && nights > 0 ? (
+          {angebot && !angebot.priceless ? (
             <>
-              <Row style={{ justifyContent: "space-between", gap: 16 }}>
-                <Txt v="body" soft>
-                  {formatCurrency(proNacht, listing.currency)} × {nights}{" "}
-                  {nights === 1 ? "Nacht" : "Nächte"}
-                </Txt>
-                <Txt v="body">{formatCurrency(gesamt ?? 0, listing.currency)}</Txt>
-              </Row>
+              {angebot.lines.map((zeile, i) => (
+                <Row
+                  key={`${zeile.label}-${i}`}
+                  style={{ justifyContent: "space-between", gap: 16 }}
+                >
+                  <Txt v="body" soft style={{ flex: 1 }}>
+                    {zeile.label}
+                  </Txt>
+                  <Txt v="body">{formatCurrency(zeile.amount, waehrung)}</Txt>
+                </Row>
+              ))}
               <Trennlinie />
               <Row style={{ justifyContent: "space-between", gap: 16 }}>
                 <Txt v="body" style={{ fontFamily: t.fonts.semibold }}>
                   Gesamt
                 </Txt>
                 <Txt v="body" style={{ fontFamily: t.fonts.semibold }}>
-                  {formatCurrency(gesamt ?? 0, listing.currency)}
+                  {formatCurrency(angebot.total, waehrung)}
                 </Txt>
               </Row>
-              <Txt v="xs" soft>
-                Verbindlich rechnet der Gastgeber ab; Zusatzleistungen und Steuern
-                können hinzukommen.
-              </Txt>
             </>
           ) : (
             <Txt v="body" soft>

@@ -106,6 +106,33 @@ export async function getAvailability(
   );
 }
 
+/** Eine Zeile der Preisaufschlüsselung, wie sie der Gast sieht. */
+export type QuoteLine = { label: string; amount: number; kind?: string | null };
+
+export type Quote = {
+  property_id: string;
+  nights: number;
+  currency: string;
+  lines: QuoteLine[];
+  total: number;
+  priceless: boolean;
+  pets_allowed: boolean;
+  max_guests: number;
+};
+
+/** Verbindliche Preisaufschlüsselung vor der Buchung — dieselbe Rechnung wie
+ *  beim Buchen. Nächte × Grundpreis selbst zu rechnen verschwiege Reinigung,
+ *  Haustiergebühr und Abgaben. */
+export async function getQuote(input: {
+  property_id: string;
+  check_in: string;
+  check_out: string;
+  guests: number;
+  pets: number;
+}): Promise<Result<Quote>> {
+  return publicCall("/booking-engine/quote", { method: "POST", body: input });
+}
+
 /** Gastbuchung anlegen. Doppelbuchungs-Schutz + Kanal-Push laufen serverseitig;
  *  `total_amount` ist ein Anzeigewert — verbindlich rechnet der Server. */
 export async function createBooking(input: {
@@ -113,6 +140,8 @@ export async function createBooking(input: {
   check_in: string;
   check_out: string;
   guests: number;
+  /** Mitgebrachte Tiere; preiswirksam bei einer Gebühr „pro Tier / Aufenthalt". */
+  pets?: number;
   contact: { first_name: string; last_name: string; email: string; phone?: string };
   total_amount?: number;
   addons?: { addon_id: string; qty: number }[];

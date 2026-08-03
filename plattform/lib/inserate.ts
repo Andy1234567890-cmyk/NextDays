@@ -13,6 +13,7 @@ type ApiListing = {
   country: string | null;
   photos: string[];
   max_guests: number;
+  pets_allowed?: boolean;
   bedrooms: number | null;
   baths: number | null;
   amenities: string[];
@@ -75,6 +76,7 @@ function mapList(a: ApiListing): Listing {
     schlafzimmer: a.bedrooms,
     baeder: a.baths,
     gaeste: a.max_guests,
+    haustiereErlaubt: a.pets_allowed ?? false,
     ausstattung: a.amenities ?? [],
     beschreibung: null,
     // Bewertungen nur übernehmen, wenn das Backend echte Werte liefert.

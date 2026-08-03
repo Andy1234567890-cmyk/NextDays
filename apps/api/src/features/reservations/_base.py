@@ -419,6 +419,7 @@ class ReservationsBase:
         guests: int,
         channel: str,
         rate_plan_id: str | None = None,
+        pets: int = 0,
     ) -> QuoteResponse:
         """Buchungs-Quote über den zentralen Resolver (eine Preis-Wahrheit).
 
@@ -434,6 +435,7 @@ class ReservationsBase:
                 check_in=check_in,
                 check_out=check_out,
                 guests=max(1, guests),
+                pets=max(0, pets),
                 channel=channel,
                 rate_plan_id=rate_plan_id,
             )

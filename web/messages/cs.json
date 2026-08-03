@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Částka",
       "chargeSingle": "Jednorázová částka",
       "chargePerPerson": "Za hosta",
+      "chargePerPet": "Za zvíře",
       "periodPerStay": "Za pobyt",
       "periodPerNight": "Za noc",
       "percentOfBasePlaceholder": "0 % základní ceny včetně akcí",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Název místní daně",
       "internalDescriptionPlaceholder": "Zadejte popis (pouze pro interní použití).",
       "applyToOthersTitle": "Přidat k dalším objektům",
-      "applyToOthersHint": "Použít stejnou daň i u dalších objektů.",
       "applyToOthersEmpty": "Zatím žádné další objekty — jakmile nějaký přidáte, objeví se zde.",
       "searchPlaceholder": "Hledat …",
       "searchPropertiesPlaceholder": "Hledat objekty …",
@@ -4733,7 +4733,21 @@
         "community": "Poplatek za společné prostory",
         "pet": "Poplatek za mazlíčka"
       },
-      "actions": "Akce"
+      "actions": "Akce",
+      "manualSyncLabel": "Ruční synchronizace",
+      "abgabenNoCurrency": "Dokud není nastavena měna objektu, poplatky a daně se neodesílají na žádný portál.",
+      "feeAssignSubtitle": "Přidejte nový nebo existující poplatek.",
+      "feeCreateNew": "Vytvořit nový poplatek",
+      "searchFeesPlaceholder": "Hledat poplatky …",
+      "feeFromProperty": "z {title}",
+      "feeLibraryEmpty": "U dalších objektů zatím nejsou žádné poplatky — vytvořte nový výše.",
+      "feeLibraryNoCurrency": "Nejprve nastavte měnu tohoto objektu; poté zde budou k výběru existující poplatky.",
+      "feeShortStayOnlyLabel": "Pouze pro krátké pobyty",
+      "feeShortStayOnlyHint": "Účtovat poplatek pouze u krátkých pobytů.",
+      "feeShortStayOnlyBound": "Platí pro pobyty do {nights} nocí — stejná hranice jako u příplatku za krátký pobyt. Na portály se poplatek neposílá: délku pobytu tam nelze vyjádřit.",
+      "feeShortStayOnlyMissing": "Pro tento objekt zatím není určen krátký pobyt („Příplatek za krátký pobyt“) — dokud chybí, poplatek se neúčtuje.",
+      "applyToOthersFeeHint": "Použít stejný poplatek i u dalších objektů.",
+      "applyToOthersTaxHint": "Použít stejnou daň i u dalších objektů."
     },
     "policiesForm": {
       "title": "Zásady",

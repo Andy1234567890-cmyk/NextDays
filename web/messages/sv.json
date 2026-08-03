@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Belopp",
       "chargeSingle": "Engångsbelopp",
       "chargePerPerson": "Per gäst",
+      "chargePerPet": "Per husdjur",
       "periodPerStay": "Per vistelse",
       "periodPerNight": "Per natt",
       "percentOfBasePlaceholder": "0 % av grundpriset inkl. kampanjer",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Den lokala skattens namn",
       "internalDescriptionPlaceholder": "Ange en beskrivning (endast för internt bruk).",
       "applyToOthersTitle": "Lägg till i andra objekt",
-      "applyToOthersHint": "Tillämpa samma skatt på andra objekt.",
       "applyToOthersEmpty": "Inga andra objekt än — så snart du lägger till ett till visas det här.",
       "searchPlaceholder": "Sök …",
       "searchPropertiesPlaceholder": "Sök objekt …",
@@ -4733,7 +4733,21 @@
         "community": "Gemensamhetsavgift",
         "pet": "Husdjursavgift"
       },
-      "actions": "Åtgärder"
+      "actions": "Åtgärder",
+      "manualSyncLabel": "Manuell synkronisering",
+      "abgabenNoCurrency": "Så länge ingen valuta är angiven för objektet skickas avgifter och skatter inte till någon portal.",
+      "feeAssignSubtitle": "Lägg till en ny eller befintlig avgift.",
+      "feeCreateNew": "Skapa ny avgift",
+      "searchFeesPlaceholder": "Sök avgifter …",
+      "feeFromProperty": "från {title}",
+      "feeLibraryEmpty": "Inga avgifter på dina andra objekt ännu — skapa en ny ovan.",
+      "feeLibraryNoCurrency": "Ange först objektets valuta; därefter kan du välja befintliga avgifter här.",
+      "feeShortStayOnlyLabel": "Endast vid kortvistelse",
+      "feeShortStayOnlyHint": "Ta ut avgiften endast vid kortvistelse.",
+      "feeShortStayOnlyBound": "Gäller vid högst {nights} nätter — samma gräns som kortvistelsepåslaget. Avgiften skickas inte till portalerna: en vistelselängd kan inte anges där.",
+      "feeShortStayOnlyMissing": "För detta objekt är ingen kortvistelse fastställd ännu (”Kortvistelsepåslag”) — så länge den saknas tas avgiften inte ut.",
+      "applyToOthersFeeHint": "Tillämpa samma avgift på andra objekt.",
+      "applyToOthersTaxHint": "Tillämpa samma skatt på andra objekt."
     },
     "policiesForm": {
       "title": "Villkor",

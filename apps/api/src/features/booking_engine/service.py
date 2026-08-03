@@ -32,6 +32,9 @@ from .schemas import (
     PublicListing,
     PublicListingDetail,
     PublicListingListResponse,
+    PublicQuoteLine,
+    PublicQuoteRequest,
+    PublicQuoteResponse,
     PurchasedAddon,
     ReservationAddonsView,
     SliceHealth,
@@ -140,6 +143,28 @@ def _round_coord(value: object) -> float | None:
         return round(float(value), 2)  # type: ignore[arg-type]
     except (TypeError, ValueError):
         return None
+
+
+# Haustier-Regel eines Objekts. Zwei Quellen, in dieser Reihenfolge:
+# 1. die strukturierte Hotel-Policy (`policies.hotelPolicy.petsPolicy`), die auch
+#    an die Portale geht — sie ist die ausdrückliche Angabe des Betriebs;
+# 2. die Ausstattungsmerkmale, wenn keine Policy gepflegt ist.
+# Ohne beides gilt NEIN (fail-closed, Wurzel 5): lieber bietet die Oberfläche die
+# Tierauswahl nicht an, als dass ein Gast mit Hund anreist, wo keiner erlaubt ist.
+_PETS_JA = frozenset({"pets_allowed", "pet_friendly", "nd_pets_on_request"})
+_PETS_NEIN = frozenset({"nd_pets_not_allowed"})
+
+
+def _pets_allowed(prop: dict) -> bool:
+    """Sind Haustiere in diesem Objekt erlaubt?"""
+    policies = (prop.get("type_attributes") or {}).get("policies") or {}
+    policy = ((policies.get("hotelPolicy") or {}).get("petsPolicy") or "").strip()
+    if policy:
+        return policy != "not_allowed"
+    amenities = {str(a) for a in (prop.get("amenities") or [])}
+    if amenities & _PETS_NEIN:
+        return False
+    return bool(amenities & _PETS_JA)
 
 
 def _as_opt_int(value: object) -> int | None:
@@ -548,6 +573,7 @@ class BookingEngineService:
             bedrooms=_as_opt_int(attrs.get("bedrooms")),
             baths=_as_opt_int(attrs.get("baths") or attrs.get("bathrooms")),
             amenities=list(r.get("amenities") or []),
+            pets_allowed=_pets_allowed(r),
             price_from=price_from,
             currency=currency,
             # Ohne Bewertung bleibt beides None — die Oberfläche zeigt dann gar
@@ -616,6 +642,85 @@ class BookingEngineService:
         ]
         return PublicAvailabilityResponse(property_id=property_id, days=days)
 
+    def _pets_property(self, property_id: str) -> dict | None:
+        """Objektzeile für Kapazität + Haustierregel (nur öffentliche Objekte)."""
+        res = (
+            self._db()
+            .table("properties")
+            .select("tenant_id, status, max_guests, amenities, type_attributes")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not res or res[0].get("status") != "active":
+            return None
+        return res[0]
+
+    def public_quote(self, req: PublicQuoteRequest) -> PublicQuoteResponse:
+        """Preisaufschlüsselung für die Gast-Buchungsstrecke.
+
+        Rechnet mit DENSELBEN Größen wie `create_public_booking` (gleicher
+        Kanal, gleiche Add-on-Auswahl) — sonst zeigte das Widget einen Preis und
+        die Buchung berechnete einen anderen. Der Gast bekommt Bezeichnung und
+        Betrag je Zeile, keine internen Kennungen.
+        """
+        _assert_span(req.check_in, req.check_out)
+        prop = self._pets_property(req.property_id)
+        if prop is None:
+            raise BookingEngineError("Objekt nicht gefunden.", status_code=404)
+
+        max_guests = _as_opt_int(prop.get("max_guests")) or 1
+        if req.guests > max_guests:
+            raise BookingEngineError(
+                "Die Gästezahl übersteigt die Kapazität des Objekts.",
+                status_code=422,
+            )
+        pets_allowed = _pets_allowed(prop)
+        if req.pets > 0 and not pets_allowed:
+            raise BookingEngineError(
+                "Für dieses Objekt sind keine Haustiere erlaubt.", status_code=422
+            )
+
+        # Lokal importiert wie in den anderen Preis-Pfaden dieses Slices.
+        from src.features.pricing.resolver import PricingResolver  # noqa: PLC0415
+        from src.features.pricing.schemas import (  # noqa: PLC0415
+            AddonSelection,
+            QuoteRequest,
+        )
+
+        bookable_addons = self._bookable_addon_selections(
+            req.property_id, [(a.addon_id, a.qty) for a in (req.addons or [])]
+        )
+        quote = PricingResolver(service_client=self._db()).quote(
+            QuoteRequest(
+                property_id=req.property_id,
+                check_in=req.check_in,
+                check_out=req.check_out,
+                guests=max(req.guests, 1),
+                pets=max(req.pets, 0),
+                # Wie in create_public_booking: derselbe Kanal, sonst wiche ein
+                # Kanal-Markup zwischen Anzeige und Buchung ab.
+                channel="direct",
+                addons=[
+                    AddonSelection(addon_id=aid, qty=qty)
+                    for aid, qty in bookable_addons
+                ],
+            )
+        )
+        return PublicQuoteResponse(
+            property_id=req.property_id,
+            nights=len(_nights(req.check_in, req.check_out)),
+            currency=quote.currency,
+            lines=[
+                PublicQuoteLine(label=line.label, amount=line.amount, kind=line.kind)
+                for line in quote.lines
+            ],
+            total=quote.total,
+            priceless=quote.priceless,
+            pets_allowed=pets_allowed,
+            max_guests=max_guests,
+        )
+
     def create_public_booking(
         self, req: PublicBookingRequest
     ) -> PublicBookingResponse:
@@ -653,6 +758,17 @@ class BookingEngineService:
                 "Die Gästezahl übersteigt die Kapazität des Objekts.",
                 status_code=422,
             )
+
+        # Tiere nur, wo sie erlaubt sind — serverseitig, nicht nur im Widget
+        # (Wurzel 3). `_public_property` liest die dafür nötigen Spalten nicht,
+        # also hier gezielt nachladen statt raten.
+        if req.pets > 0:
+            pets_row = self._pets_property(req.property_id)
+            if pets_row is None or not _pets_allowed(pets_row):
+                raise BookingEngineError(
+                    "Für dieses Objekt sind keine Haustiere erlaubt.",
+                    status_code=422,
+                )
 
         nights = _nights(req.check_in, req.check_out)
 
@@ -728,6 +844,7 @@ class BookingEngineService:
                 check_in=req.check_in,
                 check_out=req.check_out,
                 guests=max(req.guests, 1),
+                pets=max(req.pets, 0),
                 channel="direct",
                 addons=[
                     AddonSelection(addon_id=aid, qty=qty)
@@ -809,6 +926,10 @@ class BookingEngineService:
                             # Belegung. Kapazität ist oben bereits gegen max_guests
                             # geprüft.
                             "num_guests": max(req.guests, 1),
+                            # Wie num_guests: die Zahl ist bepreist worden und
+                            # muss an der Buchung stehen, sonst rechnet jedes
+                            # spätere Neurechnen sie weg (Wurzel 1).
+                            "pets": max(req.pets, 0),
                             "status": reservation_status,
                             "request_expires_at": request_expires_at,
                             "total_amount": total_amount,

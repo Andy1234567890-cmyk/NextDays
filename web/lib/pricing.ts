@@ -57,6 +57,8 @@ export async function getQuote(input: {
   check_in: string;
   check_out: string;
   guests: number;
+  /** Mitgebrachte Tiere — multipliziert Gebühren „pro Tier / Aufenthalt". */
+  pets?: number;
   channel: string;
 }): Promise<Result<Quote>> {
   return call("/pricing/quote", { method: "POST", body: input });

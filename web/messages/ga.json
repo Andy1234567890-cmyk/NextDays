@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Méid",
       "chargeSingle": "Muirear aonair",
       "chargePerPerson": "In aghaidh an aoi",
+      "chargePerPet": "In aghaidh an pheata",
       "periodPerStay": "In aghaidh na fanachta",
       "periodPerNight": "In aghaidh na hoíche",
       "percentOfBasePlaceholder": "0 % den bhunphraghas le tairiscintí",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Ainm na cánach áitiúla",
       "internalDescriptionPlaceholder": "Cuir isteach cur síos (le haghaidh úsáide inmheánaí amháin).",
       "applyToOthersTitle": "Cuir le maoine eile",
-      "applyToOthersHint": "Cuir an cháin chéanna i bhfeidhm ar mhaoine eile freisin.",
       "applyToOthersEmpty": "Níl aon áit chónaithe eile ann fós — chomh luath is a chuireann tú ceann eile leis, taispeánfar anseo é.",
       "searchPlaceholder": "Cuardaigh …",
       "searchPropertiesPlaceholder": "Cuardaigh maoine …",
@@ -4733,7 +4733,21 @@
         "community": "Táille pobail",
         "pet": "Táille peata"
       },
-      "actions": "Gníomhartha"
+      "actions": "Gníomhartha",
+      "manualSyncLabel": "Sioncronú de láimh",
+      "abgabenNoCurrency": "Fad nach bhfuil airgeadra socraithe don mhaoin, ní sheoltar táillí ná cánacha chuig aon tairseach.",
+      "feeAssignSubtitle": "Cuir táille nua nó táille atá ann cheana leis.",
+      "feeCreateNew": "Cruthaigh táille nua",
+      "searchFeesPlaceholder": "Cuardaigh táillí …",
+      "feeFromProperty": "ó {title}",
+      "feeLibraryEmpty": "Níl táillí ag na maoine eile go fóill — cruthaigh ceann nua thuas.",
+      "feeLibraryNoCurrency": "Socraigh airgeadra na maoine seo ar dtús; ansin beidh táillí atá ann cheana ar fáil anseo.",
+      "feeShortStayOnlyLabel": "Gearrfhanachtaí amháin",
+      "feeShortStayOnlyHint": "Gearr an táille ar ghearrfhanachtaí amháin.",
+      "feeShortStayOnlyBound": "Bainfidh sé le fanachtaí de {nights} oíche ar a mhéad — an teorainn chéanna leis an bhformhuirear gearrfhanachta. Ní sheoltar an táille chuig na tairseacha: ní féidir fad fanachta a chur in iúl ansin.",
+      "feeShortStayOnlyMissing": "Níl gearrfhanacht sainithe don mhaoin seo go fóill („Formhuirear gearrfhanachta“) — go dtí sin ní ghearrtar an táille.",
+      "applyToOthersFeeHint": "Cuir an táille chéanna i bhfeidhm ar mhaoine eile freisin.",
+      "applyToOthersTaxHint": "Cuir an cháin chéanna i bhfeidhm ar mhaoine eile freisin."
     },
     "policiesForm": {
       "title": "Polasaithe",

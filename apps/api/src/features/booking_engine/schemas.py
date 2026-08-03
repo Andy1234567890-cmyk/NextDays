@@ -6,7 +6,7 @@ Double-Booking-Schutz + Realtime-Push an Channex laufen serverseitig.
 """
 from datetime import date
 
-from pydantic import BaseModel, EmailStr, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class PublicListing(BaseModel):
@@ -28,6 +28,10 @@ class PublicListing(BaseModel):
     bedrooms: int | None = None
     baths: int | None = None
     amenities: list[str] = []
+    # Haustiere erlaubt? Aus der Hotel-Policy, sonst aus den Merkmalen; ohne
+    # Angabe False (fail-closed) — die Buchungsstrecke bietet die Tierauswahl
+    # nur an, wo der Betrieb sie ausdrücklich zulässt.
+    pets_allowed: bool = False
     price_from: float | None = None
     currency: str = ""
     rating: float | None = None
@@ -121,6 +125,10 @@ class PublicBookingRequest(BaseModel):
     contact: GuestContact
     total_amount: float = 0
     guests: int = 1
+    # Mitgebrachte Tiere: preiswirksam, sobald das Objekt eine Haustiergebühr
+    # „pro Tier und Aufenthalt" führt. Ohne das Feld zahlte ein Gast mit zwei
+    # Hunden dasselbe wie einer ohne.
+    pets: int = Field(default=0, ge=0, le=50)
     # Optionale Zusatzleistungen; serverseitig aus dem Katalog bepreist + als
     # reservation_addons angelegt (Client-Beträge werden nicht vertraut).
     addons: list[AddonPick] = []
@@ -130,6 +138,53 @@ class PublicBookingRequest(BaseModel):
         if self.check_out <= self.check_in:
             raise ValueError("check_out muss nach check_in liegen")
         return self
+
+
+class PublicQuoteRequest(BaseModel):
+    """Preisaufschlüsselung VOR der Buchung, für die Gast-Buchungsstrecke.
+
+    Dieselben Größen wie die Buchung selbst — sonst zeigte das Widget einen
+    anderen Preis, als der Server anschließend berechnet.
+    """
+
+    property_id: str
+    check_in: date
+    check_out: date  # exklusiv
+    guests: int = Field(default=1, ge=1, le=100)
+    pets: int = Field(default=0, ge=0, le=50)
+    addons: list[AddonPick] = []
+
+    @model_validator(mode="after")
+    def _check_dates(self) -> "PublicQuoteRequest":
+        if self.check_out <= self.check_in:
+            raise ValueError("check_out muss nach check_in liegen")
+        return self
+
+
+class PublicQuoteLine(BaseModel):
+    """Eine Zeile der Gast-Aufschlüsselung.
+
+    Bewusst OHNE `fee_id`/`tax_rate`: der Gast braucht Bezeichnung und Betrag,
+    interne Kennungen und Steuersätze gehören nicht in eine JWT-lose Antwort.
+    """
+
+    label: str
+    amount: float
+    kind: str | None = None
+
+
+class PublicQuoteResponse(BaseModel):
+    property_id: str
+    nights: int
+    currency: str
+    lines: list[PublicQuoteLine] = []
+    total: float
+    # True = das Objekt hat für diesen Zeitraum keinen hinterlegten Preis. Dann
+    # zeigt die Oberfläche „Preis auf Anfrage" statt einer 0 (Wurzel 4).
+    priceless: bool = False
+    # Haustiere überhaupt erlaubt? Entscheidet, ob die Auswahl angeboten wird.
+    pets_allowed: bool = False
+    max_guests: int = 1
 
 
 class PublicBookingResponse(BaseModel):

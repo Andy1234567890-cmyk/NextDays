@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Määrä",
       "chargeSingle": "Kertamaksu",
       "chargePerPerson": "Vierasta kohden",
+      "chargePerPet": "Lemmikkiä kohden",
       "periodPerStay": "Oleskelua kohden",
       "periodPerNight": "Yötä kohden",
       "percentOfBasePlaceholder": "0 % perushinnasta kampanjoineen",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Paikallisen veron nimi",
       "internalDescriptionPlaceholder": "Anna kuvaus (vain sisäiseen käyttöön).",
       "applyToOthersTitle": "Lisää muihin kohteisiin",
-      "applyToOthersHint": "Käytä samaa veroa myös muissa kohteissa.",
       "applyToOthersEmpty": "Ei vielä muita kohteita — heti kun lisäät toisen, se näkyy tässä.",
       "searchPlaceholder": "Hae …",
       "searchPropertiesPlaceholder": "Hae kohteita …",
@@ -4733,7 +4733,21 @@
         "community": "Yhteismaksu",
         "pet": "Lemmikkimaksu"
       },
-      "actions": "Toiminnot"
+      "actions": "Toiminnot",
+      "manualSyncLabel": "Manuaalinen synkronointi",
+      "abgabenNoCurrency": "Kun kohteen valuuttaa ei ole valittu, maksuja ja veroja ei lähetetä mihinkään portaaliin.",
+      "feeAssignSubtitle": "Lisää uusi tai olemassa oleva maksu.",
+      "feeCreateNew": "Luo uusi maksu",
+      "searchFeesPlaceholder": "Hae maksuja …",
+      "feeFromProperty": "kohteesta {title}",
+      "feeLibraryEmpty": "Muissa kohteissa ei ole vielä maksuja — luo uusi yltä.",
+      "feeLibraryNoCurrency": "Valitse ensin tämän kohteen valuutta; sen jälkeen olemassa olevat maksut näkyvät tässä.",
+      "feeShortStayOnlyLabel": "Vain lyhyille oleskeluille",
+      "feeShortStayOnlyHint": "Peri maksu vain lyhyistä oleskeluista.",
+      "feeShortStayOnlyBound": "Koskee enintään {nights} yön oleskeluja — sama raja kuin lyhytoleskelulisässä. Maksua ei lähetetä portaaleihin: oleskelun pituutta ei voi siellä ilmaista.",
+      "feeShortStayOnlyMissing": "Tälle kohteelle ei ole vielä määritetty lyhyttä oleskelua (”Lyhytoleskelulisä”) — niin kauan kuin se puuttuu, maksua ei peritä.",
+      "applyToOthersFeeHint": "Käytä samaa maksua myös muissa kohteissa.",
+      "applyToOthersTaxHint": "Käytä samaa veroa myös muissa kohteissa."
     },
     "policiesForm": {
       "title": "Käytännöt",

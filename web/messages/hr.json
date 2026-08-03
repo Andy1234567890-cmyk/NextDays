@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Iznos",
       "chargeSingle": "Jednokratni iznos",
       "chargePerPerson": "Po gostu",
+      "chargePerPet": "Po ljubimcu",
       "periodPerStay": "Po boravku",
       "periodPerNight": "Po noćenju",
       "percentOfBasePlaceholder": "0 % osnovne cijene s akcijama",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Naziv lokalnog poreza",
       "internalDescriptionPlaceholder": "Unesite opis (samo za internu upotrebu).",
       "applyToOthersTitle": "Dodaj drugim objektima",
-      "applyToOthersHint": "Primijeni isti porez i na druge objekte.",
       "applyToOthersEmpty": "Još nema drugih objekata — čim dodate još jedan, pojavit će se ovdje.",
       "searchPlaceholder": "Traži …",
       "searchPropertiesPlaceholder": "Pretraži objekte …",
@@ -4733,7 +4733,21 @@
         "community": "Naknada zajednice",
         "pet": "Naknada za ljubimca"
       },
-      "actions": "Radnje"
+      "actions": "Radnje",
+      "manualSyncLabel": "Ručna sinkronizacija",
+      "abgabenNoCurrency": "Dok valuta objekta nije određena, naknade i porezi ne šalju se na nijedan portal.",
+      "feeAssignSubtitle": "Dodajte novu ili postojeću naknadu.",
+      "feeCreateNew": "Stvori novu naknadu",
+      "searchFeesPlaceholder": "Pretraži naknade …",
+      "feeFromProperty": "iz {title}",
+      "feeLibraryEmpty": "Na drugim objektima još nema naknada — stvorite novu iznad.",
+      "feeLibraryNoCurrency": "Najprije odredite valutu ovog objekta; nakon toga će se ovdje ponuditi postojeće naknade.",
+      "feeShortStayOnlyLabel": "Samo za kratke boravke",
+      "feeShortStayOnlyHint": "Naplati naknadu samo kod kratkih boravaka.",
+      "feeShortStayOnlyBound": "Vrijedi za najviše {nights} noćenja — ista granica kao i doplata za kratki boravak. Naknada se ne šalje na portale: tamo se dužina boravka ne može prikazati.",
+      "feeShortStayOnlyMissing": "Za ovaj objekt kratki boravak još nije određen („Doplata za kratki boravak“) — dok toga nema, naknada se ne naplaćuje.",
+      "applyToOthersFeeHint": "Primijeni istu naknadu i na druge objekte.",
+      "applyToOthersTaxHint": "Primijeni isti porez i na druge objekte."
     },
     "policiesForm": {
       "title": "Pravila",

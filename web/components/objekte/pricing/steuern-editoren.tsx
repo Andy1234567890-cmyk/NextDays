@@ -8,7 +8,7 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   EditorShell,
@@ -18,7 +18,6 @@ import {
   useSaver,
 } from "@/components/objekte/editor-primitives";
 import { Button } from "@nextdays/ui/button";
-import { Checkbox } from "@nextdays/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,7 +48,8 @@ import {
   currencySymbol,
 } from "@/lib/pricing-meta";
 import { type Locale, LOCALES, LOCALE_LABELS } from "@/i18n/locales";
-import { applyTaxToProperties, listProperties, type Property } from "@/lib/properties";
+import { applyTaxToProperties } from "@/lib/properties";
+import { ZuAnderenObjekten } from "@/components/objekte/pricing/zu-anderen-objekten";
 
 /** USt./MwSt.: genau zwei Angaben — Satz und ob er im Preis steckt. Einen
  *  eigenen Namen bekommt sie nicht (sie IST die Umsatzsteuer des Objekts). */
@@ -138,12 +138,16 @@ export function LokaleSteuerEditor({
   propertyId,
   editId,
   onSave,
+  onApplyError,
   onClose,
 }: {
   pr: Pricing;
   propertyId: string;
   editId?: string;
   onSave: (next: Pricing) => Promise<true | string>;
+  /** Fehler beim Übertragen auf weitere Objekte — gemeldet an die SEITE, weil
+   *  dieser Dialog nach erfolgreichem Speichern nicht mehr steht. */
+  onApplyError: (error: string | null) => void;
   onClose: () => void;
 }) {
   const t = useTranslations("objects");
@@ -179,11 +183,16 @@ export function LokaleSteuerEditor({
     const liste = vorhanden
       ? pr.taxes.map((x) => (x.id === eintrag.id ? eintrag : x))
       : [...pr.taxes, eintrag];
-    await run({ ...pr, taxes: liste });
+    const ok = await run({ ...pr, taxes: liste });
     // Übernahme auf weitere Objekte erst NACH dem Speichern — vorher gibt es
-    // die Steuer am Quell-Objekt noch nicht.
-    if (ziele.length > 0) {
-      await applyTaxToProperties(propertyId, eintrag.id, ziele);
+    // die Steuer am Quell-Objekt noch nicht. Und nur bei Erfolg: ein
+    // fehlgeschlagenes Speichern verteilte sonst trotzdem eine Steuer, die es am
+    // Quell-Objekt gar nicht gibt. Ein Fehler beim Verteilen bleibt sichtbar,
+    // statt still zu verschwinden (Wurzel 5).
+    if (ok && ziele.length > 0) {
+      const res = await applyTaxToProperties(propertyId, eintrag.id, ziele);
+      // Nach oben, nicht in diesen Dialog: erfolgreiches Speichern schließt ihn.
+      onApplyError(res.ok ? null : res.error);
     }
   }
 
@@ -207,7 +216,12 @@ export function LokaleSteuerEditor({
       subtitle={t("pricingForm.localTaxEditorSubtitle")}
       onClose={onClose}
       footer={
-        <Footer busy={busy} error={error} onCancel={onClose} onSave={() => void commit()} />
+        <Footer
+          busy={busy}
+          error={error}
+          onCancel={onClose}
+          onSave={() => void commit()}
+        />
       }
     >
       <Hint>
@@ -415,6 +429,7 @@ export function LokaleSteuerEditor({
 
       <ZuAnderenObjekten
         propertyId={propertyId}
+        kind="tax"
         selected={ziele}
         onChange={setZiele}
       />
@@ -422,157 +437,3 @@ export function LokaleSteuerEditor({
   );
 }
 
-/** Block „Zu anderen Objekten hinzufügen": dieselbe Steuer auf weitere eigene
- *  Objekte übernehmen. Die Liste kommt tenant-gescopt vom Server; welche IDs
- *  wirklich erlaubt sind, prüft der Endpunkt beim Anwenden erneut. */
-function ZuAnderenObjekten({
-  propertyId,
-  selected,
-  onChange,
-}: {
-  propertyId: string;
-  selected: string[];
-  onChange: (next: string[]) => void;
-}) {
-  const t = useTranslations("objects");
-  const [objekte, setObjekte] = useState<Property[]>([]);
-  const [suche, setSuche] = useState("");
-  useEffect(() => {
-    void (async () => {
-      const res = await listProperties();
-      if (res.ok) setObjekte(res.data.items.filter((p) => p.id !== propertyId));
-    })();
-  }, [propertyId]);
-
-  const q = suche.trim().toLowerCase();
-  const gefiltert = q
-    ? objekte.filter(
-        (p) =>
-          p.title.toLowerCase().includes(q) ||
-          objektReferenz(p).toLowerCase().includes(q),
-      )
-    : objekte;
-  // „Alle auswählen" wirkt auf die aktuell SICHTBAREN Zeilen (wie die Suche
-  // suggeriert), nicht auf ausgeblendete — sonst wählt man blind mit.
-  const alleSichtbarGewaehlt =
-    gefiltert.length > 0 && gefiltert.every((p) => selected.includes(p.id));
-
-  function umschalten(id: string) {
-    onChange(
-      selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id],
-    );
-  }
-
-  function alleUmschalten() {
-    const ids = gefiltert.map((p) => p.id);
-    onChange(
-      alleSichtbarGewaehlt
-        ? selected.filter((x) => !ids.includes(x))
-        : [...new Set([...selected, ...ids])],
-    );
-  }
-
-  // Der Block bleibt IMMER sichtbar — auch bei nur einem Objekt. Wird er
-  // ausgeblendet, sieht die Zuweisung aus wie „nicht gebaut"; stattdessen sagt
-  // eine Zeile, warum gerade nichts zur Auswahl steht.
-  if (objekte.length === 0) {
-    return (
-      <section className="flex flex-col gap-3">
-        <h3 className="font-display text-lg font-extrabold">
-          {t("pricingForm.applyToOthersTitle")}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {t("pricingForm.applyToOthersHint")}
-        </p>
-        <p className="rounded-(--radius) border border-border p-4 text-sm text-muted-foreground">
-          {t("pricingForm.applyToOthersEmpty")}
-        </p>
-      </section>
-    );
-  }
-  return (
-    <section className="flex flex-col gap-3">
-      <h3 className="font-display text-lg font-extrabold">
-        {t("pricingForm.applyToOthersTitle")}
-      </h3>
-      <p className="text-sm text-muted-foreground">
-        {t("pricingForm.applyToOthersHint")}
-      </p>
-      <div className="relative">
-        <Icon
-          icon="ph:magnifying-glass"
-          className="pointer-events-none absolute inset-y-0 left-3 my-auto size-4 text-muted-foreground"
-        />
-        <Input
-          value={suche}
-          onChange={(e) => setSuche(e.target.value)}
-          placeholder={t("pricingForm.searchPropertiesPlaceholder")}
-          className="pl-9"
-        />
-      </div>
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">
-          {t("pricingForm.selectedCount", {
-            count: selected.length,
-            total: objekte.length,
-          })}
-        </span>
-        <button
-          type="button"
-          onClick={alleUmschalten}
-          disabled={gefiltert.length === 0}
-          className="font-medium text-foreground underline-offset-4 hover:underline disabled:opacity-50"
-        >
-          {alleSichtbarGewaehlt
-            ? t("pricingForm.deselectAll")
-            : t("pricingForm.selectAll")}
-        </button>
-      </div>
-      <div className="max-h-72 divide-y divide-border overflow-y-auto rounded-(--radius) border border-border">
-        {gefiltert.length === 0 ? (
-          <p className="p-4 text-sm text-muted-foreground">
-            {t("pricingForm.noMatches")}
-          </p>
-        ) : (
-          gefiltert.map((p) => {
-            const referenz = objektReferenz(p);
-            return (
-              <label
-                key={p.id}
-                className="flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors hover:bg-secondary"
-              >
-                <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-(--radius) bg-secondary">
-                  {p.photos[0] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.photos[0]} alt="" className="size-full object-cover" />
-                  ) : (
-                    <Icon icon="ph:house-line" className="size-4 text-muted-foreground" />
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">{p.title}</span>
-                  {referenz && (
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {referenz}
-                    </span>
-                  )}
-                </span>
-                <Checkbox
-                  checked={selected.includes(p.id)}
-                  onCheckedChange={() => umschalten(p.id)}
-                />
-              </label>
-            );
-          })
-        )}
-      </div>
-    </section>
-  );
-}
-
-/** Zweite Zeile je Objekt: Adresse als Unterscheidungsmerkmal, wenn mehrere
- *  Objekte ähnlich heißen. Fehlt sie, bleibt die Zeile weg — kein Platzhalter. */
-function objektReferenz(p: Property): string {
-  const strasse = [p.street, p.house_number].filter(Boolean).join(" ");
-  return [strasse, p.city].filter(Boolean).join(", ");
-}

@@ -21,6 +21,8 @@ per_person_per_night | per_night | per_booking, `type` ∈ tax | fee | city_tax.
 """
 from __future__ import annotations
 
+import time
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -299,8 +301,19 @@ class TaxSyncMixin(TaxRegimeMixin):
         vorhanden = (bestand.limit(1).execute()).data or []
         if vorhanden:
             channex_tax_id = str(vorhanden[0]["channex_tax_id"])
-            self._channex.update_tax(channex_tax_id, attrs)
-            return channex_tax_id, str(vorhanden[0]["id"])
+            try:
+                self._channex.update_tax(channex_tax_id, attrs)
+                return channex_tax_id, str(vorhanden[0]["id"])
+            except ChannexError as exc:
+                # 404 = unser Mapping zeigt auf eine Leiche (ein abgebrochener
+                # Lauf hat drüben aufgeräumt, die Zeile blieb aktiv). Anders als
+                # beim Löschen ist 404 hier NICHT „erledigt": das Ziel ist
+                # Anwesenheit. Also unten neu anlegen; der create-Pfad dreht die
+                # bestehende Zeile per `alt` auf die neue ID. Ohne das bleibt der
+                # Sync dauerhaft kaputt, weil jeder Lauf dieselbe tote ID
+                # anfasst (Wurzel 2). Alles andere fliegt weiter (Wurzel 5).
+                if exc.channex_status != 404:
+                    raise
 
         created = self._channex.create_tax(attrs)
         channex_tax_id = (created.get("data") or {}).get("id")
@@ -416,6 +429,21 @@ class TaxSyncMixin(TaxRegimeMixin):
                 try:
                     self._channex.delete_tax(str(channex_tax_id))
                 except ChannexError as exc:
+                    if exc.channex_status == 422 and "used at TaxSet" in str(exc):
+                        # Der Posten hängt noch in einem Set, das erst später in
+                        # diesem Lauf abgebaut wird (Channex erzwingt Set vor
+                        # Steuer, live gemessen). Kein dauerhafter Fehler und
+                        # kein Grund, den ganzen Sync zu kippen: Mapping AKTIV
+                        # lassen, dann greift der nächste Lauf denselben Posten
+                        # erneut ab — dann ohne Set (Wurzel 1: der Gegenzustand
+                        # bleibt gepflegt, statt still verloren zu gehen).
+                        log.warning(
+                            "channex_tax_prune_verschoben",
+                            tenant_id=tenant_id,
+                            property_id=property_id,
+                            channex_tax_id=str(channex_tax_id),
+                        )
+                        continue
                     if exc.channex_status != 404:
                         # Nicht verschlucken (Wurzel 5): das Mapping bleibt
                         # stehen, der nächste Sync versucht es erneut.
@@ -521,9 +549,20 @@ class TaxSyncMixin(TaxRegimeMixin):
             "associated_rate_plan_ids": rate_plan_ids,
         }
         if set_id:
-            self._channex.update_tax_set(set_id, set_attrs)
-        else:
-            created = self._channex.create_tax_set(set_attrs)
+            try:
+                self._mit_tax_id_retry(
+                    lambda: self._channex.update_tax_set(set_id, set_attrs)
+                )
+            except ChannexError as exc:
+                # Wie beim Posten: 404 heißt hier „Mapping zeigt ins Leere", das
+                # Set muss neu her (Wurzel 2). Nur dieses Signal fangen.
+                if exc.channex_status != 404:
+                    raise
+                set_id = None
+        if not set_id:
+            created = self._mit_tax_id_retry(
+                lambda: self._channex.create_tax_set(set_attrs)
+            )
             set_id = (created.get("data") or {}).get("id")
             if not set_id:
                 return None
@@ -602,6 +641,53 @@ class TaxSyncMixin(TaxRegimeMixin):
             for t in (attrs.get("taxes") or [])
             if t.get("id")
         ]
+
+    @staticmethod
+    def _mit_tax_id_retry(aufruf: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+        """Set-Schreibzugriff mit Retry gegen Channex' Read-after-Write-Lücke.
+
+        LIVE GEMESSEN (2 von 26 E2E-Läufen): Channex quittiert die Steuern mit
+        200/201 und lehnt dieselben IDs Sekundenbruchteile später beim Set mit
+        `422 tax_id: does not exist` ab — die Anlage ist drüben noch nicht
+        sichtbar. Im grünen Fall lagen zwischen letzter Steuer und Set 13–23
+        Sekunden, im roten unter einer Sekunde.
+
+        Der Payload ist dabei nachweislich korrekt: JEDE der abgelehnten IDs
+        stammt aus einer unmittelbar vorher von Channex selbst mit 200/201
+        quittierten Antwort. Ein Umbau des Payloads würde also nichts heilen —
+        gewartet werden muss. Die Staffel geht bis ~30 s, weil 1 s + 3 s live
+        noch nicht reichten. Eng begrenzt auf genau dieses Fehlerbild
+        (422 + `does not exist`); jeder andere Fehler fliegt sofort (Wurzel 5).
+        """
+        for wartezeit in (2.0, 5.0, 10.0, 15.0, None):
+            try:
+                return aufruf()
+            except ChannexError as exc:
+                # Text aus Message UND payload prüfen: `_extract_message` zieht
+                # das Detail zwar hoch, aber der Treffer soll nicht am Format
+                # hängen.
+                passt = exc.channex_status == 422 and "does not exist" in (
+                    f"{exc} {exc.payload}"
+                )
+                if not passt or wartezeit is None:
+                    raise
+                log.warning("channex_tax_id_noch_nicht_sichtbar", wartet=wartezeit)
+                time.sleep(wartezeit)
+        raise AssertionError("unerreichbar")  # pragma: no cover
+
+    def _tax_set_ist_weg(self, set_id: str) -> bool:
+        """Ist das Set bei Channex wirklich fort?
+
+        Nur nach einem 500 auf `DELETE` gebraucht: dort ist die Wirkung
+        unbekannt, und geraten wird nicht. 404 = weg (Ziel erreicht). Antwortet
+        Channex weiter mit einem Fehler, gilt das Set als NICHT weg — im Zweifel
+        fail-closed, damit der Aufrufer den Abbau als gescheitert behandelt.
+        """
+        try:
+            self._channex.get_tax_set(set_id)
+        except ChannexError as exc:
+            return exc.channex_status == 404
+        return False
 
     def _tax_set_verwerfen(self, set_id: str) -> None:
         """Ein gerade angelegtes, überzähliges Tax-Set bei Channex entfernen.
@@ -780,15 +866,51 @@ class TaxSyncMixin(TaxRegimeMixin):
             # Weglassen enden in `422 taxes: can't be blank`. Also die aktuelle
             # Zusammenstellung vom Set selbst lesen und unverändert
             # zurückschicken; gelöscht wird es im nächsten Schritt ohnehin.
-            self._channex.update_tax_set(
-                set_id,
-                {
-                    "taxes": self._taxes_eines_sets(set_id),
-                    "associated_rate_plan_ids": [],
-                },
-            )
+            #
+            # Dieser PUT antwortet bei Channex sporadisch mit 500 (live gemessen:
+            # dieselbe Sequenz mal 200, mal 500 — eine Validierung wäre
+            # deterministisch 422, das ist also ein Serverfehler drüben). Er ist
+            # aber nur VORBEREITUNG: Ziel der Methode ist, dass das Set weg ist.
+            # Ein Scheitern hier darf den Abbau deshalb nicht abbrechen, sonst
+            # bleibt ein Set-Leichnam stehen, an dem der nächste Lauf beim
+            # Löschen der Steuern hängenbleibt („can't be remove because used at
+            # TaxSet", live gemessen). Das DELETE unten sagt die Wahrheit: geht
+            # es durch, war der PUT ohnehin verzichtbar; geht es nicht durch,
+            # fliegt sein Fehler.
+            try:
+                self._channex.update_tax_set(
+                    set_id,
+                    {
+                        "taxes": self._taxes_eines_sets(set_id),
+                        "associated_rate_plan_ids": [],
+                    },
+                )
+            except ChannexError as exc:
+                if exc.channex_status not in (404, 500):
+                    raise
+                log.warning(
+                    "channex_tax_set_abhaengen_fehlgeschlagen",
+                    set_id=set_id,
+                    status=exc.channex_status,
+                )
             # (3) Erst jetzt ist das Set löschbar.
-            self._channex.delete_tax_set(set_id)
+            try:
+                self._channex.delete_tax_set(set_id)
+            except ChannexError as exc:
+                if exc.channex_status != 500:
+                    raise
+                # Auch das DELETE antwortet sporadisch mit 500 (live gemessen).
+                # Anders als beim PUT ist hier NICHT klar, ob die Wirkung
+                # eintrat — also nicht raten, sondern nachsehen: ist das Set
+                # weg, war der 500 nur Lärm; steht es noch, ist der Abbau echt
+                # gescheitert und der Fehler muss fliegen (Wurzel 5), sonst
+                # legen wir ein Mapping still, dessen Set drüben weiterlebt
+                # (Wurzel 1).
+                if not self._tax_set_ist_weg(set_id):
+                    raise
+                log.warning(
+                    "channex_tax_set_delete_500_aber_weg", set_id=set_id
+                )
         except ChannexError as exc:
             if getattr(exc, "channex_status", None) != 404:
                 raise

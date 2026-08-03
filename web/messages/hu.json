@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Összeg",
       "chargeSingle": "Egyszeri összeg",
       "chargePerPerson": "Vendégenként",
+      "chargePerPet": "Állatonként",
       "periodPerStay": "Tartózkodásonként",
       "periodPerNight": "Éjszakánként",
       "percentOfBasePlaceholder": "Az alapár 0%-a akciókkal együtt",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "A helyi adó neve",
       "internalDescriptionPlaceholder": "Adjon meg leírást (csak belső használatra).",
       "applyToOthersTitle": "Hozzáadás más objektumokhoz",
-      "applyToOthersHint": "Ugyanezt az adót más objektumoknál is alkalmazza.",
       "applyToOthersEmpty": "Még nincs másik szálláshely — amint hozzáad egy másikat, itt jelenik meg.",
       "searchPlaceholder": "Keresés …",
       "searchPropertiesPlaceholder": "Objektumok keresése …",
@@ -4733,7 +4733,21 @@
         "community": "Közösségi díj",
         "pet": "Állatdíj"
       },
-      "actions": "Műveletek"
+      "actions": "Műveletek",
+      "manualSyncLabel": "Kézi szinkronizálás",
+      "abgabenNoCurrency": "Amíg nincs beállítva az objektum pénzneme, a díjak és adók egyetlen portálra sem kerülnek át.",
+      "feeAssignSubtitle": "Adjon hozzá új vagy meglévő díjat.",
+      "feeCreateNew": "Új díj létrehozása",
+      "searchFeesPlaceholder": "Díjak keresése …",
+      "feeFromProperty": "innen: {title}",
+      "feeLibraryEmpty": "A többi objektumnál még nincsenek díjak — hozzon létre egy újat fent.",
+      "feeLibraryNoCurrency": "Először állítsa be az objektum pénznemét; ezután itt választhat a meglévő díjak közül.",
+      "feeShortStayOnlyLabel": "Csak rövid tartózkodásnál",
+      "feeShortStayOnlyHint": "A díjat csak rövid tartózkodás esetén számítsa fel.",
+      "feeShortStayOnlyBound": "Legfeljebb {nights} éjszakára érvényes — ugyanaz a határ, mint a rövid tartózkodási felárnál. A díj nem kerül a portálokra: ott a tartózkodás hossza nem képezhető le.",
+      "feeShortStayOnlyMissing": "Ehhez az objektumhoz még nincs meghatározva rövid tartózkodás („Rövid tartózkodási felár”) — amíg ez hiányzik, a díjat nem számítjuk fel.",
+      "applyToOthersFeeHint": "Ugyanezt a díjat más objektumoknál is alkalmazza.",
+      "applyToOthersTaxHint": "Ugyanezt az adót más objektumoknál is alkalmazza."
     },
     "policiesForm": {
       "title": "Irányelvek",

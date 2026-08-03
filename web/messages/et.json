@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Summa",
       "chargeSingle": "Ühekordne summa",
       "chargePerPerson": "Külalise kohta",
+      "chargePerPet": "Lemmiklooma kohta",
       "periodPerStay": "Peatumise kohta",
       "periodPerNight": "Öö kohta",
       "percentOfBasePlaceholder": "0 % baashinnast koos kampaaniatega",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Kohaliku maksu nimi",
       "internalDescriptionPlaceholder": "Sisestage kirjeldus (ainult sisekasutuseks).",
       "applyToOthersTitle": "Lisa teistele objektidele",
-      "applyToOthersHint": "Rakenda sama maks ka teistele objektidele.",
       "applyToOthersEmpty": "Teisi objekte veel pole — niipea kui lisad teise, ilmub see siia.",
       "searchPlaceholder": "Otsi …",
       "searchPropertiesPlaceholder": "Otsi objekte …",
@@ -4733,7 +4733,21 @@
         "community": "Ühiskulude tasu",
         "pet": "Lemmiklooma tasu"
       },
-      "actions": "Toimingud"
+      "actions": "Toimingud",
+      "manualSyncLabel": "Käsitsi sünkroonimine",
+      "abgabenNoCurrency": "Kuni objekti valuuta pole määratud, tasusid ja makse ühelegi portaali ei saadeta.",
+      "feeAssignSubtitle": "Lisa uus või olemasolev tasu.",
+      "feeCreateNew": "Loo uus tasu",
+      "searchFeesPlaceholder": "Otsi tasusid …",
+      "feeFromProperty": "objektilt {title}",
+      "feeLibraryEmpty": "Teistel objektidel pole veel tasusid — loo ülal uus.",
+      "feeLibraryNoCurrency": "Määra kõigepealt selle objekti valuuta; seejärel saab siit valida olemasolevaid tasusid.",
+      "feeShortStayOnlyLabel": "Ainult lühiviibimistel",
+      "feeShortStayOnlyHint": "Võta tasu ainult lühiviibimiste eest.",
+      "feeShortStayOnlyBound": "Kehtib kuni {nights} öö puhul — sama piir nagu lühiviibimise juurdehindlusel. Portaalidesse tasu ei lähe: viibimise pikkust ei saa seal väljendada.",
+      "feeShortStayOnlyMissing": "Sellel objektil pole lühiviibimist veel määratud („Lühiviibimise juurdehindlus“) — kuni see puudub, tasu ei arvestata.",
+      "applyToOthersFeeHint": "Rakenda sama tasu ka teistele objektidele.",
+      "applyToOthersTaxHint": "Rakenda sama maks ka teistele objektidele."
     },
     "policiesForm": {
       "title": "Reeglid",

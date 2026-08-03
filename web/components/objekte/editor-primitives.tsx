@@ -60,7 +60,11 @@ export function EditorShell({
   subtitle?: string;
   channels?: Channel[];
   onClose: () => void;
-  footer: React.ReactNode;
+  /** Optional: eine Auswahl-Fläche hat keine Fußzeile — dort wird nichts
+   *  gespeichert, jede Zeile ist selbst die Aktion (Branchenstandard:
+   *  `assign-fee` zeigt nur Schließen). Ohne `footer` entfällt die Leiste ganz,
+   *  statt eine leere Kante zu hinterlassen. */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const t = useTranslations("objects");
@@ -95,7 +99,11 @@ export function EditorShell({
         </SheetHeader>
         {/* min-h-0 ist entscheidend, damit der Bereich scrollt statt zu wachsen */}
         <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-5">{children}</div>
-        <div className="flex shrink-0 items-center justify-end gap-3 border-t p-4">{footer}</div>
+        {footer && (
+          <div className="flex shrink-0 items-center justify-end gap-3 border-t p-4">
+            {footer}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
@@ -107,12 +115,19 @@ export function useSaver<A extends unknown[]>(
 ) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  async function run(...args: A) {
+  /** Gibt zurück, OB gespeichert wurde. Aufrufer, die danach noch etwas tun
+   *  (z. B. den Posten auf weitere Objekte übertragen), brauchen das: vorher gab
+   *  `run` nichts zurück, und ein fehlgeschlagenes Speichern verteilte trotzdem. */
+  async function run(...args: A): Promise<boolean> {
     setBusy(true);
     setError(null);
     const r = await save(...args);
     setBusy(false);
-    if (r !== true) setError(r);
+    if (r !== true) {
+      setError(r);
+      return false;
+    }
+    return true;
   }
   return { busy, error, run };
 }

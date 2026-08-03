@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Suma",
       "chargeSingle": "Vienkartinė suma",
       "chargePerPerson": "Vienam svečiui",
+      "chargePerPet": "Vienam gyvūnui",
       "periodPerStay": "Už apsilankymą",
       "periodPerNight": "Už naktį",
       "percentOfBasePlaceholder": "0 % bazinės kainos su akcijomis",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Vietinio mokesčio pavadinimas",
       "internalDescriptionPlaceholder": "Įveskite aprašymą (tik vidiniam naudojimui).",
       "applyToOthersTitle": "Pridėti prie kitų objektų",
-      "applyToOthersHint": "Taikyti tą patį mokestį ir kitiems objektams.",
       "applyToOthersEmpty": "Kitų objektų kol kas nėra — kai tik pridėsite antrą, jis atsiras čia.",
       "searchPlaceholder": "Ieškoti …",
       "searchPropertiesPlaceholder": "Ieškoti objektų …",
@@ -4733,7 +4733,21 @@
         "community": "Bendrijos mokestis",
         "pet": "Gyvūno mokestis"
       },
-      "actions": "Veiksmai"
+      "actions": "Veiksmai",
+      "manualSyncLabel": "Rankinis sinchronizavimas",
+      "abgabenNoCurrency": "Kol nenustatyta objekto valiuta, mokesčiai ir rinkliavos nesiunčiami į jokį portalą.",
+      "feeAssignSubtitle": "Pridėkite naują arba esamą mokestį.",
+      "feeCreateNew": "Kurti naują mokestį",
+      "searchFeesPlaceholder": "Ieškoti mokesčių …",
+      "feeFromProperty": "iš {title}",
+      "feeLibraryEmpty": "Kituose objektuose mokesčių dar nėra — sukurkite naują viršuje.",
+      "feeLibraryNoCurrency": "Pirmiausia nustatykite šio objekto valiutą; tada čia bus galima rinktis esamus mokesčius.",
+      "feeShortStayOnlyLabel": "Tik trumpoms viešnagėms",
+      "feeShortStayOnlyHint": "Imti mokestį tik už trumpas viešnages.",
+      "feeShortStayOnlyBound": "Taikoma iki {nights} naktų — ta pati riba kaip trumpos viešnagės priedui. Į portalus mokestis nesiunčiamas: viešnagės trukmės ten išreikšti neįmanoma.",
+      "feeShortStayOnlyMissing": "Šiam objektui trumpa viešnagė dar neapibrėžta („Trumpos viešnagės priedas“) — kol jos nėra, mokestis neskaičiuojamas.",
+      "applyToOthersFeeHint": "Taikyti tą pačią rinkliavą ir kitiems objektams.",
+      "applyToOthersTaxHint": "Taikyti tą patį mokestį ir kitiems objektams."
     },
     "policiesForm": {
       "title": "Taisyklės",

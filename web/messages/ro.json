@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Sumă",
       "chargeSingle": "Sumă unică",
       "chargePerPerson": "Per oaspete",
+      "chargePerPet": "Per animal",
       "periodPerStay": "Per sejur",
       "periodPerNight": "Per noapte",
       "percentOfBasePlaceholder": "0% din prețul de bază, promoții incluse",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Numele taxei locale",
       "internalDescriptionPlaceholder": "Introduceți o descriere (doar pentru uz intern).",
       "applyToOthersTitle": "Adăugați la alte obiective",
-      "applyToOthersHint": "Aplicați aceeași taxă și la alte obiective.",
       "applyToOthersEmpty": "Încă nu există alte proprietăți — de îndată ce adăugați una, va apărea aici.",
       "searchPlaceholder": "Căutare …",
       "searchPropertiesPlaceholder": "Căutați obiective …",
@@ -4733,7 +4733,21 @@
         "community": "Taxă de comunitate",
         "pet": "Taxă animal"
       },
-      "actions": "Acțiuni"
+      "actions": "Acțiuni",
+      "manualSyncLabel": "Sincronizare manuală",
+      "abgabenNoCurrency": "Atât timp cât nu este stabilită moneda obiectivului, taxele și impozitele nu sunt trimise către niciun portal.",
+      "feeAssignSubtitle": "Adăugați o taxă nouă sau existentă.",
+      "feeCreateNew": "Creați o taxă nouă",
+      "searchFeesPlaceholder": "Căutați taxe …",
+      "feeFromProperty": "de la {title}",
+      "feeLibraryEmpty": "La celelalte obiective nu există încă taxe — creați una nouă mai sus.",
+      "feeLibraryNoCurrency": "Stabiliți mai întâi moneda acestui obiectiv; apoi taxele existente vor apărea aici.",
+      "feeShortStayOnlyLabel": "Numai pentru sejururi scurte",
+      "feeShortStayOnlyHint": "Percepeți taxa numai la sejururi scurte.",
+      "feeShortStayOnlyBound": "Se aplică la cel mult {nights} nopți — aceeași limită ca adaosul pentru sejur scurt. Taxa nu ajunge la portaluri: durata sejurului nu poate fi reprezentată acolo.",
+      "feeShortStayOnlyMissing": "Pentru acest obiectiv nu este încă definit un sejur scurt („Adaos sejur scurt“) — până atunci, taxa nu este percepută.",
+      "applyToOthersFeeHint": "Aplicați aceeași taxă suplimentară și la alte obiective.",
+      "applyToOthersTaxHint": "Aplicați aceeași taxă și la alte obiective."
     },
     "policiesForm": {
       "title": "Politici",

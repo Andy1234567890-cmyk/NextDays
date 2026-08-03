@@ -652,3 +652,30 @@ class ChannelDetailResponse(BaseModel):
     # Die UI bietet nur an, was der Kanal wirklich kann.
     actions: list[str] = Field(default_factory=list)
     mappings: list[ChannelMappingRow]
+
+
+class AbgabePostenStatus(BaseModel):
+    """Sync-Stand EINES Postens (Gebühr oder Steuer) über alle Portale.
+
+    Drei getrennte Aussagen, weil sie verschiedene Dinge bedeuten:
+    `manual_portals` = dort muss der Posten von Hand gepflegt werden (das Portal
+    nimmt ihn nicht), `restricted_portals` = der Betrieb hat ihn selbst
+    ausgeschlossen, `internal_only` = er geht bewusst an kein Portal.
+    """
+
+    key: str
+    kind: str
+    manual_portals: list[str] = Field(default_factory=list)
+    restricted_portals: list[str] = Field(default_factory=list)
+    internal_only: bool = False
+
+
+class AbgabenStatusResponse(BaseModel):
+    """Sync-Stand der Abgaben eines Objekts (Chip „Manuelle Synchronisierung").
+
+    `currency_missing` ist ein Befund über das OBJEKT, nicht über einen Posten:
+    ohne Objektwährung überträgt der Abgaben-Sync gar nichts."""
+
+    currency_missing: bool = False
+    portals: list[str] = Field(default_factory=list)
+    items: list[AbgabePostenStatus] = Field(default_factory=list)

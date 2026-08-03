@@ -16,12 +16,21 @@ import {
   Field,
   Footer,
   Hint,
-  Pill,
   useSaver,
 } from "@/components/objekte/editor-primitives";
+import {
+  PreisAbschnitt,
+  PreisBadge,
+  PreisChip,
+  PreisHinzufuegen,
+  PreisKarte,
+  PreisLeer,
+  PreisSeitenkopf,
+  PreisSpalte,
+  PreisSymbolAktion,
+  PreisTextAktion,
+} from "@/components/objekte/pricing/preis-bausteine";
 import { RatePlanWizard } from "@/components/objekte/rate-plan-wizard";
-import { Button } from "@nextdays/ui/button";
-import { Card } from "@nextdays/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +47,7 @@ import {
 } from "@nextdays/ui/select";
 import { Switch } from "@nextdays/ui/switch";
 import { EinschraenkungenEditor } from "@/components/objekte/pricing/einschraenkungen-editor";
+import { GebuehrAuswahl } from "@/components/objekte/pricing/gebuehr-auswahl";
 import { GebuehrEditor } from "@/components/objekte/pricing/gebuehren-editor";
 import {
   LokaleSteuerEditor,
@@ -66,10 +76,12 @@ import {
   taxAmountBasis,
   taxDisplayName,
 } from "@/lib/pricing-meta";
-import { channelLogoLoose } from "@/lib/channel-logos";
+import { channelLabel, channelLogoLoose } from "@/lib/channel-logos";
 import {
+  getAbgabenStatus,
   listChannelConnections,
   setPortalPriceAdjustment,
+  type AbgabePostenStatus,
   type StoredChannelConnection,
 } from "@/lib/channex";
 import { getDpSettings } from "@/lib/dynamic-pricing";
@@ -82,13 +94,25 @@ import {
 } from "@/lib/rates";
 import { useRealtime } from "@/lib/use-realtime";
 
+/** Sync-Stand der Abgaben eines Objekts, wie der Server ihn liefert. */
+type AbgabenStatus = {
+  currency_missing: boolean;
+  portals: string[];
+  items: AbgabePostenStatus[];
+};
+
 type Section =
   | "currency"
   | "base"
   | "extraGuest"
   | "shortStay"
   | { length: StayKind; id?: string }
-  | { fee: string | "new" }
+  // Auswahlschritt VOR dem Gebühren-Formular („neue oder bestehende Gebühr"),
+  // wie im Branchenstandard `assign-fee`.
+  | "feePick"
+  // `vorlage` = übernommene Gebühr aus der Auswahlliste (neue Kennung, gleiche
+  // Felder). Nur bei `fee: "new"` gesetzt.
+  | { fee: string | "new"; vorlage?: Fee }
   | { restrict: "fee" | "tax"; id: string }
   | { tax: TaxKind; id?: string }
   | { promo: string | "new" }
@@ -161,6 +185,40 @@ export function PricingForm({ initial }: { initial: Property }) {
     return true;
   }
 
+  // Welcher Posten kommt bei welchem verbundenen Portal NICHT an? Gerechnet vom
+  // Server aus derselben Quelle, aus der der Sync sendet (`ota_abgaben`) — die
+  // Oberfläche führt dazu KEINE eigene Regeltabelle, sonst behauptete der Chip
+  // „geht raus", wo der Sync den Posten wegließe.
+  const [abgaben, setAbgaben] = useState<AbgabenStatus | null>(null);
+  const loadAbgaben = useCallback(async () => {
+    const res = await getAbgabenStatus(p.id);
+    // Bei Fehler bleibt der Stand LEER, nicht „alles synchron": ein nicht
+    // ladbarer Status darf nicht als Erfolgsmeldung aussehen (Wurzel 4).
+    setAbgaben(res.ok ? res.data : null);
+  }, [p.id]);
+  useEffect(() => {
+    void loadAbgaben();
+  }, [loadAbgaben]);
+  // Verbindet/trennt der Betrieb ein Portal, ändert sich die Antwort — ohne das
+  // Abo stünde der Chip bis zum nächsten Seitenaufruf falsch da.
+  useRealtime({
+    table: "channex_channel_connection",
+    filter: `property_id=eq.${p.id}`,
+    onChange: () => void loadAbgaben(),
+  });
+
+  // Fehler beim Übertragen eines Postens auf weitere Objekte. Er entsteht NACH
+  // dem Speichern — also nachdem der Editor-Dialog geschlossen wurde. Deshalb
+  // liegt er hier auf der Seite: im Dialog wäre die Meldung an eine Fläche
+  // geheftet, die es in dem Moment nicht mehr gibt, und ein fehlgeschlagenes
+  // Verteilen sähe wie ein erfolgreiches aus (Wurzel 5 — nichts verschlucken).
+  const [verteilFehler, setVerteilFehler] = useState<string | null>(null);
+
+  /** Portale, bei denen dieser Posten von Hand gepflegt werden muss. */
+  function manualPortals(key: string): string[] {
+    return abgaben?.items.find((x) => x.key === key)?.manual_portals ?? [];
+  }
+
   async function save(next: Pricing): Promise<true | string> {
     const res = await updateProperty(p.id, {
       type_attributes: { ...p.type_attributes, pricing: next },
@@ -168,6 +226,9 @@ export function PricingForm({ initial }: { initial: Property }) {
     if (!res.ok) return res.error;
     setP(res.data);
     setSection(null);
+    // Der Sync-Stand hängt an den gerade gespeicherten Posten — ohne diesen
+    // Aufruf zeigte der Chip den Stand VOR der Änderung.
+    void loadAbgaben();
     // Basispreis in rate_plans persistieren — die eine Preis-Wahrheit (Resolver,
     // Channex, Kalender). Auch 0 wird gespiegelt (Zurücksetzen muss wirken);
     // ohne gewählte Währung kein Push (Backend lehnt leere Währung ab, 422).
@@ -181,36 +242,46 @@ export function PricingForm({ initial }: { initial: Property }) {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <h1 className="font-display text-3xl font-extrabold">{t("pricingForm.pageTitle")}</h1>
+    <PreisSpalte>
+      <PreisSeitenkopf title={t("pricingForm.pageTitle")} />
+
+      {/* Ein Posten wurde gespeichert, ließ sich aber nicht auf alle gewählten
+          Objekte übertragen. Die Meldung steht HIER und nicht im Editor: der ist
+          nach dem Speichern zu, und ein fehlgeschlagenes Verteilen sähe sonst
+          wie ein erfolgreiches aus. Sie bleibt stehen, bis der nächste Vorgang
+          sie ersetzt — ein Toast wäre weg, bevor man ihn gelesen hat. */}
+      {verteilFehler && (
+        <p
+          role="alert"
+          className="rounded-(--radius) border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive"
+        >
+          {verteilFehler}
+        </p>
+      )}
 
       {/* Zentrale Objektwährung — gilt für ALLE Preispläne dieses Objekts
           (FeWo wie Hotel). Eine Stelle, kein Setzen je Rate-Plan (Channex:
           1 Objekt = 1 Währung, Migration 0161). */}
-      <section className="flex flex-col gap-4">
+      <section className="pb-16">
         <BlockCard
           title={t("pricingForm.currencyTitle")}
           hint={t("pricingForm.currencyHint")}
-          actionLabel={cur ? t("pricingForm.edit") : t("pricingForm.add")}
+          hasValue={Boolean(cur)}
           onEdit={() => setSection("currency")}
         >
           {cur ? (
-            <Pill>
+            <PreisChip>
               {CURRENCY_OPTIONS.find((o) => o.value === cur)?.label ?? cur}
-            </Pill>
+            </PreisChip>
           ) : null}
         </BlockCard>
       </section>
 
       {/* Nightly price */}
-      <section className="flex flex-col gap-4">
-        <div>
-          <h2 className="font-display text-xl font-extrabold">{t("pricingForm.nightlyPriceTitle")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {t("pricingForm.nightlyPriceHint")}
-          </p>
-        </div>
-
+      <PreisAbschnitt
+        title={t("pricingForm.nightlyPriceTitle")}
+        hint={t("pricingForm.nightlyPriceHint")}
+      >
         {/* Ein Plan → Objekt-Grundpreis direkt pflegbar. Mehrere Pläne (BAR/B&B,
             abgeleitet) → kein EINER Objekt-Grundpreis; die Pläne werden
             datumsgenau im Kalender gepflegt. Die Liste steht in beiden Fällen. */}
@@ -218,31 +289,31 @@ export function PricingForm({ initial }: { initial: Property }) {
           <BlockCard
             title={t("pricingForm.basePriceTitle")}
             hint={t("pricingForm.basePriceHint")}
+            hasValue
             onEdit={() => setSection("base")}
           >
-            <Pill>{fmtPrice(shownBasePrice, cur, locale)}</Pill>
+            <PreisChip>{fmtPrice(shownBasePrice, cur, locale)}</PreisChip>
           </BlockCard>
         )}
 
         {dpEnabled && (
-          <Card className="flex flex-wrap items-center justify-between gap-3 border-accent/40 bg-accent/5 p-4">
-            <div className="flex min-w-0 items-start gap-2">
-              <span aria-hidden className="text-accent">⚡</span>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold">
-                  {t("pricingForm.dynamicActiveTitle")}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {t("pricingForm.dynamicActiveHint")}
-                </p>
-              </div>
-            </div>
-            <Button type="button" variant="outline" asChild>
-              <a href={`/dynamic-pricing/${p.id}`}>
-                {t("pricingForm.dynamicActiveOpen")}
-              </a>
-            </Button>
-          </Card>
+          <PreisKarte
+            className="border-accent/40 bg-accent/5"
+            title={
+              <span className="flex items-center gap-2">
+                <span aria-hidden className="text-accent">⚡</span>
+                {t("pricingForm.dynamicActiveTitle")}
+              </span>
+            }
+            hint={t("pricingForm.dynamicActiveHint")}
+            action={
+              <PreisTextAktion asChild>
+                <a href={`/dynamic-pricing/${p.id}`}>
+                  {t("pricingForm.dynamicActiveOpen")}
+                </a>
+              </PreisTextAktion>
+            }
+          />
         )}
 
         <RatePlanList
@@ -257,47 +328,36 @@ export function PricingForm({ initial }: { initial: Property }) {
         <BlockCard
           title={t("pricingForm.extraGuestTitle")}
           hint={t("pricingForm.extraGuestHint")}
-          actionLabel={pr.extraGuestCharge > 0 ? t("pricingForm.edit") : t("pricingForm.add")}
+          hasValue={pr.extraGuestCharge > 0}
           onEdit={() => setSection("extraGuest")}
         >
           {pr.extraGuestCharge > 0 ? (
-            <Pill>{t("pricingForm.extraGuestPill", { price: fmtPrice(pr.extraGuestCharge, cur, locale), guest: pr.extraGuestFrom + 1 })}</Pill>
+            <PreisChip>{t("pricingForm.extraGuestPill", { price: fmtPrice(pr.extraGuestCharge, cur, locale), guest: pr.extraGuestFrom + 1 })}</PreisChip>
           ) : null}
         </BlockCard>
 
         <BlockCard
           title={t("pricingForm.shortStayTitle")}
           hint={t("pricingForm.shortStayHint")}
-          actionLabel={pr.shortStayMaxNights > 0 ? t("pricingForm.edit") : t("pricingForm.add")}
+          hasValue={pr.shortStayMaxNights > 0}
           onEdit={() => setSection("shortStay")}
           localOnly
         >
           {pr.shortStayMaxNights > 0 ? (
-            <Pill>{t("pricingForm.shortStayPill", { price: fmtPrice(pr.shortStaySurcharge, cur, locale), nights: pr.shortStayMaxNights })}</Pill>
+            <PreisChip>{t("pricingForm.shortStayPill", { price: fmtPrice(pr.shortStaySurcharge, cur, locale), nights: pr.shortStayMaxNights })}</PreisChip>
           ) : null}
         </BlockCard>
-      </section>
+      </PreisAbschnitt>
 
       {/* Length of stay prices */}
-      <section className="flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="flex items-center gap-2 font-display text-xl font-extrabold">
-              {t("pricingForm.lengthPricesTitle")}
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                {t("pricingForm.directBookingsOnly")}
-              </span>
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {t("pricingForm.lengthPricesHint")}
-            </p>
-          </div>
+      <PreisAbschnitt
+        title={t("pricingForm.lengthPricesTitle")}
+        hint={t("pricingForm.lengthPricesHint")}
+        badge={<PreisBadge>{t("pricingForm.directBookingsOnly")}</PreisBadge>}
+        action={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Icon icon="ph:plus" className="size-4" />
-                {t("pricingForm.add")}
-              </Button>
+              <PreisHinzufuegen label={t("pricingForm.add")} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setSection({ length: "weekly" })}>
@@ -320,45 +380,43 @@ export function PricingForm({ initial }: { initial: Property }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-
+        }
+      >
         {pr.lengthPrices.length === 0 ? (
-          <Card className="p-5 text-sm text-muted-foreground">
-            {t("pricingForm.lengthPricesEmpty")}
-          </Card>
+          <PreisLeer>{t("pricingForm.lengthPricesEmpty")}</PreisLeer>
         ) : (
           pr.lengthPrices.map((lp) => (
-            <Card key={lp.id} className="flex items-center justify-between gap-4 p-5">
-              <div className="leading-tight">
-                <p className="font-semibold">{STAY_KIND_LABELS[lp.kind]}</p>
-                <p className="text-sm text-muted-foreground">{t("pricingForm.minNightsOrMore", { nights: lp.minNights })}</p>
-                <span className="mt-2 inline-flex w-fit items-center rounded-full bg-muted/60 px-3 py-1.5 text-sm">
-                  {t("pricingForm.pricePerNight", { price: fmtPrice(lp.pricePerNight, cur, locale) })}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setSection({ length: lp.kind, id: lp.id })}>
-                  {t("pricingForm.edit")}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t("pricingForm.remove")}
-                  onClick={() => save({ ...pr, lengthPrices: pr.lengthPrices.filter((x) => x.id !== lp.id) })}
-                >
-                  <Icon icon="ph:trash" className="size-4 text-muted-foreground" />
-                </Button>
-              </div>
-            </Card>
+            <PreisKarte
+              key={lp.id}
+              title={STAY_KIND_LABELS[lp.kind]}
+              hint={t("pricingForm.minNightsOrMore", { nights: lp.minNights })}
+              action={
+                <div className="flex shrink-0 items-center">
+                  <PreisSymbolAktion
+                    label={t("pricingForm.edit")}
+                    onClick={() => setSection({ length: lp.kind, id: lp.id })}
+                  />
+                  <PreisSymbolAktion
+                    icon="ph:trash"
+                    label={t("pricingForm.remove")}
+                    onClick={() => save({ ...pr, lengthPrices: pr.lengthPrices.filter((x) => x.id !== lp.id) })}
+                  />
+                </div>
+              }
+            >
+              <PreisChip>
+                {t("pricingForm.pricePerNight", { price: fmtPrice(lp.pricePerNight, cur, locale) })}
+              </PreisChip>
+            </PreisKarte>
           ))
         )}
-      </section>
+      </PreisAbschnitt>
 
       {/* Fees */}
       <ListSection
         title={t("pricingForm.feesTitle")}
         hint={t("pricingForm.feesHint")}
-        onAdd={() => setSection({ fee: "new" })}
+        onAdd={() => setSection("feePick")}
         empty={t("pricingForm.feesEmpty")}
         items={pr.fees}
         render={(f) => (
@@ -371,27 +429,30 @@ export function PricingForm({ initial }: { initial: Property }) {
                 ? t("pricingForm.restrictedSuffix")
                 : undefined
             }
+            manualPortals={manualPortals(f.id)}
             onEdit={() => setSection({ fee: f.id })}
             onRestrict={() => setSection({ restrict: "fee", id: f.id })}
             onDelete={() => save({ ...pr, fees: pr.fees.filter((x) => x.id !== f.id) })}
           />
         )}
+        /* Ohne Objektwährung überträgt der Abgaben-Sync GAR NICHTS. Das ist ein
+           Befund über das Objekt, kein Chip an jedem Posten — deshalb einmal
+           unter der Liste und nicht zwanzigmal in den Zeilen. */
+        footer={
+          abgaben?.currency_missing && pr.fees.length + pr.taxes.length > 0 ? (
+            <PreisLeer>{t("pricingForm.abgabenNoCurrency")}</PreisLeer>
+          ) : undefined
+        }
       />
 
       {/* Taxes */}
-      <section className="flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="font-display text-xl font-extrabold">{t("pricingForm.taxesTitle")}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t("pricingForm.taxesHint")}
-            </p>
-          </div>
+      <PreisAbschnitt
+        title={t("pricingForm.taxesTitle")}
+        hint={t("pricingForm.taxesHint")}
+        action={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Icon icon="ph:plus" className="size-4" /> {t("pricingForm.add")}
-              </Button>
+              <PreisHinzufuegen label={t("pricingForm.add")} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {/* Es gibt genau EINE USt je Objekt — ist sie angelegt, führt der
@@ -413,9 +474,10 @@ export function PricingForm({ initial }: { initial: Property }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+        }
+      >
         {pr.taxes.length === 0 ? (
-          <Card className="p-5 text-sm text-muted-foreground">{t("pricingForm.taxesEmpty")}</Card>
+          <PreisLeer>{t("pricingForm.taxesEmpty")}</PreisLeer>
         ) : (
           pr.taxes.map((tx) => (
             <ListRow
@@ -431,13 +493,14 @@ export function PricingForm({ initial }: { initial: Property }) {
                   ? t("pricingForm.restrictedSuffix")
                   : undefined
               }
+              manualPortals={manualPortals(tx.id)}
               onEdit={() => setSection({ tax: tx.kind, id: tx.id })}
               onRestrict={() => setSection({ restrict: "tax", id: tx.id })}
               onDelete={() => save({ ...pr, taxes: pr.taxes.filter((x) => x.id !== tx.id) })}
             />
           ))
         )}
-      </section>
+      </PreisAbschnitt>
 
       {/* Promotions */}
       <ListSection
@@ -471,6 +534,7 @@ export function PricingForm({ initial }: { initial: Property }) {
             key={a.id}
             title={a.name}
             badge={a.active ? t("pricingForm.activated") : undefined}
+            badgeTone="success"
             pill={`${fmtPrice(a.amount, cur, locale)} · ${FEE_BASIS_LABELS[a.basis]}`}
             onEdit={() => setSection({ addon: a.id })}
             onDelete={() => save({ ...pr, addOns: pr.addOns.filter((x) => x.id !== a.id) })}
@@ -479,26 +543,26 @@ export function PricingForm({ initial }: { initial: Property }) {
       />
 
       {/* Other information */}
-      <section className="flex flex-col gap-4">
-        <h2 className="font-display text-xl font-extrabold">{t("pricingForm.otherInfoTitle")}</h2>
+      <PreisAbschnitt title={t("pricingForm.otherInfoTitle")}>
         <BlockCard
           title={t("pricingForm.taxInfoTitle")}
           hint={t("pricingForm.taxInfoHint")}
+          hasValue={Boolean(pr.businessTaxId || pr.totRegistrationId)}
           onEdit={() => setSection("taxInfo")}
         >
           {(pr.businessTaxId || pr.totRegistrationId) && (
-            <Pill>{[pr.businessTaxId, pr.totRegistrationId].filter(Boolean).join(" · ")}</Pill>
+            <PreisChip>{[pr.businessTaxId, pr.totRegistrationId].filter(Boolean).join(" · ")}</PreisChip>
           )}
         </BlockCard>
         <BlockCard
           title={t("pricingForm.baseLabelTitle")}
           hint={t("pricingForm.baseLabelHint")}
-          actionLabel={pr.basePriceLabel ? t("pricingForm.edit") : t("pricingForm.add")}
+          hasValue={Boolean(pr.basePriceLabel)}
           onEdit={() => setSection("baseLabel")}
         >
-          {pr.basePriceLabel && <Pill>{pr.basePriceLabel}</Pill>}
+          {pr.basePriceLabel && <PreisChip>{pr.basePriceLabel}</PreisChip>}
         </BlockCard>
-      </section>
+      </PreisAbschnitt>
 
       {/* Editoren */}
       {section === "currency" && (
@@ -524,8 +588,25 @@ export function PricingForm({ initial }: { initial: Property }) {
           onClose={() => setSection(null)}
         />
       )}
+      {section === "feePick" && (
+        <GebuehrAuswahl
+          propertyId={p.id}
+          summary={(f) => feeSummary(f, cur, locale, t)}
+          onNew={() => setSection({ fee: "new" })}
+          onPick={(f) => setSection({ fee: "new", vorlage: f })}
+          onClose={() => setSection(null)}
+        />
+      )}
       {section && typeof section === "object" && "fee" in section && (
-        <GebuehrEditor pr={pr} editId={section.fee === "new" ? undefined : section.fee} onSave={save} onClose={() => setSection(null)} />
+        <GebuehrEditor
+          pr={pr}
+          propertyId={p.id}
+          editId={section.fee === "new" ? undefined : section.fee}
+          vorlage={section.vorlage}
+          onSave={save}
+          onApplyError={setVerteilFehler}
+          onClose={() => setSection(null)}
+        />
       )}
       {section && typeof section === "object" && "restrict" in section && (
         <EinschraenkungenEditor
@@ -546,6 +627,7 @@ export function PricingForm({ initial }: { initial: Property }) {
             propertyId={p.id}
             editId={section.id}
             onSave={save}
+            onApplyError={setVerteilFehler}
             onClose={() => setSection(null)}
           />
         )
@@ -572,7 +654,7 @@ export function PricingForm({ initial }: { initial: Property }) {
           onClose={() => setWizardOpen(false)}
         />
       )}
-    </div>
+    </PreisSpalte>
   );
 }
 
@@ -585,6 +667,7 @@ function ListSection<T>({
   items,
   render,
   localOnly,
+  footer,
 }: {
   title: string;
   hint: string;
@@ -593,32 +676,22 @@ function ListSection<T>({
   items: T[];
   render: (item: T) => React.ReactNode;
   localOnly?: boolean;
+  /** Hinweis UNTER der Liste (gilt für die Liste als Ganzes, nicht je Zeile). */
+  footer?: React.ReactNode;
 }) {
   const t = useTranslations("objects");
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="flex items-center gap-2 font-display text-xl font-extrabold">
-            {title}
-            {localOnly && (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                {t("pricingForm.directBookingsOnly")}
-              </span>
-            )}
-          </h2>
-          <p className="text-sm text-muted-foreground">{hint}</p>
-        </div>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={onAdd}>
-          <Icon icon="ph:plus" className="size-4" /> {t("pricingForm.add")}
-        </Button>
-      </div>
-      {items.length === 0 ? (
-        <Card className="p-5 text-sm text-muted-foreground">{empty}</Card>
-      ) : (
-        items.map(render)
-      )}
-    </section>
+    <PreisAbschnitt
+      title={title}
+      hint={hint}
+      badge={
+        localOnly ? <PreisBadge>{t("pricingForm.directBookingsOnly")}</PreisBadge> : undefined
+      }
+      action={<PreisHinzufuegen label={t("pricingForm.add")} onClick={onAdd} />}
+    >
+      {items.length === 0 ? <PreisLeer>{empty}</PreisLeer> : items.map(render)}
+      {footer}
+    </PreisAbschnitt>
   );
 }
 
@@ -698,6 +771,8 @@ function ListRow({
   title,
   pill,
   badge,
+  badgeTone,
+  manualPortals,
   onEdit,
   onDelete,
   onRestrict,
@@ -705,6 +780,12 @@ function ListRow({
   title: string;
   pill: string;
   badge?: string;
+  /** `info` (Standard) = Einschränkung/Umfang, `success` = aktiv geschaltet. */
+  badgeTone?: "info" | "success";
+  /** Portale, die diesen Posten NICHT automatisch bekommen — dort muss er im
+   *  Extranet gepflegt werden. Kommt gerechnet vom Server (Wurzel 4: die Zeile
+   *  behauptet nichts, was der Sync nicht belegt). */
+  manualPortals?: string[];
   onEdit: () => void;
   onDelete: () => void;
   /** Gesetzt bei Gebühren/Steuern: die Kanal-Einschränkung ist ein EIGENER
@@ -714,51 +795,55 @@ function ListRow({
 }) {
   const t = useTranslations("objects");
   return (
-    <Card className="flex items-center justify-between gap-4 p-5">
-      <div className="leading-tight">
-        <p className="flex items-center gap-2 font-semibold">
-          {title}
-          {badge && (
-            <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-              {badge}
-            </span>
-          )}
-        </p>
-        <span className="mt-2 inline-flex w-fit items-center rounded-full bg-muted/60 px-3 py-1.5 text-sm">
-          {pill}
-        </span>
-      </div>
-      {onRestrict ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label={t("pricingForm.actions")}>
-              <Icon icon="ph:dots-three-vertical" className="size-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onEdit}>
-              <Icon icon="ph:pencil-simple" className="size-4" />
-              {t("pricingForm.edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onRestrict}>
-              <Icon icon="ph:arrows-in-line-vertical" className="size-4" />
-              {t("pricingForm.restrictionsTitle")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>
-              <Icon icon="ph:trash" className="size-4" />
-              {t("pricingForm.remove")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={onEdit}>{t("pricingForm.edit")}</Button>
-          <Button variant="ghost" size="icon" aria-label={t("pricingForm.remove")} onClick={onDelete}>
-            <Icon icon="ph:trash" className="size-4 text-muted-foreground" />
-          </Button>
-        </div>
+    <PreisKarte
+      title={title}
+      badge={badge ? <PreisBadge tone={badgeTone}>{badge}</PreisBadge> : undefined}
+      action={
+        onRestrict ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <PreisSymbolAktion
+                icon="ph:dots-three-vertical"
+                label={t("pricingForm.actions")}
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onEdit}>
+                <Icon icon="ph:pencil-simple" className="size-4" />
+                {t("pricingForm.edit")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onRestrict}>
+                <Icon icon="ph:arrows-in-line-vertical" className="size-4" />
+                {t("pricingForm.restrictionsTitle")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onDelete}>
+                <Icon icon="ph:trash" className="size-4" />
+                {t("pricingForm.remove")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="flex shrink-0 items-center">
+            <PreisSymbolAktion label={t("pricingForm.edit")} onClick={onEdit} />
+            <PreisSymbolAktion icon="ph:trash" label={t("pricingForm.remove")} onClick={onDelete} />
+          </div>
+        )
+      }
+    >
+      <PreisChip>{pill}</PreisChip>
+      {/* „Manuelle Synchronisierung" mit den Logos der betroffenen Portale —
+          genau so führt es der Branchenstandard direkt am Posten. Der Chip
+          erscheint NUR, wenn ein verbundenes Portal den Posten wirklich
+          nicht nimmt; ohne echtes Markenlogo bleibt es beim Namen. */}
+      {(manualPortals ?? []).length > 0 && (
+        <PreisChip>
+          {t("pricingForm.manualSyncLabel")}
+          {(manualPortals ?? []).map((code) => (
+            <PortalMarke key={code} code={code} name={channelLabel(code)} nurLogo />
+          ))}
+        </PreisChip>
       )}
-    </Card>
+    </PreisKarte>
   );
 }
 
@@ -767,39 +852,39 @@ function ListRow({
 function BlockCard({
   title,
   hint,
-  actionLabel,
+  hasValue,
   onEdit,
   localOnly,
   children,
 }: {
   title: string;
   hint: string;
-  actionLabel?: string;
+  /** Ist schon etwas eingerichtet? Dann führt der Stift hinein (Branchen-
+   *  standard), sonst steht dort das Wort „Hinzufügen" — der Stift an einer
+   *  leeren Karte behauptete, es gäbe etwas zu ändern. */
+  hasValue?: boolean;
   onEdit: () => void;
   localOnly?: boolean;
   children?: React.ReactNode;
 }) {
   const t = useTranslations("objects");
   return (
-    <Card className="flex flex-col gap-3 p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div className="leading-tight">
-          <p className="flex items-center gap-2 font-semibold">
-            {title}
-            {localOnly && (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                {t("pricingForm.directBookingsOnly")}
-              </span>
-            )}
-          </p>
-          <p className="mt-0.5 text-sm text-muted-foreground">{hint}</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={onEdit}>
-          {actionLabel ?? t("pricingForm.edit")}
-        </Button>
-      </div>
+    <PreisKarte
+      title={title}
+      hint={hint}
+      badge={
+        localOnly ? <PreisBadge>{t("pricingForm.directBookingsOnly")}</PreisBadge> : undefined
+      }
+      action={
+        hasValue ? (
+          <PreisSymbolAktion label={t("pricingForm.edit")} onClick={onEdit} />
+        ) : (
+          <PreisTextAktion label={t("pricingForm.add")} onClick={onEdit} />
+        )
+      }
+    >
       {children}
-    </Card>
+    </PreisKarte>
   );
 }
 
@@ -940,8 +1025,38 @@ function BaseEditor({
 }
 
 // Portal-Logo + Name eines verbundenen Portals; ohne echtes Logo nur der Name.
-function PortalMarke({ code, name }: { code: string; name: string }) {
+// KEIN generisches Ersatz-Icon (ausdrückliche Vorgabe, lib/channel-logos): ein
+// Platzhalter-Symbol sähe nach „irgendein Kanal" aus.
+function PortalMarke({
+  code,
+  name,
+  nurLogo,
+}: {
+  code: string;
+  name: string;
+  /** Im Chip „Manuelle Synchronisierung" stehen bis zu drei Portale neben
+   *  Fließtext — dort trägt nur das Logo, der Name würde die Zeile sprengen.
+   *  Ohne Logo bleibt der Name, sonst stünde da nichts. */
+  nurLogo?: boolean;
+}) {
   const logo = channelLogoLoose(code) ?? channelLogoLoose(name);
+  if (nurLogo) {
+    // Feste HÖHE, freie Breite: die echten Logos sind teils Wortmarken
+    // (Booking.com, Expedia). In ein 16×16-Quadrat gequetscht werden sie zu
+    // einem grauen Strich — man sieht, dass da etwas ist, aber nicht welches
+    // Portal. Genau die Information trägt der Chip aber.
+    return logo ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={logo}
+        alt={name}
+        title={name}
+        className="h-4 w-auto max-w-20 rounded-sm object-contain"
+      />
+    ) : (
+      <span className="text-xs font-medium">{name}</span>
+    );
+  }
   return (
     <span className="flex min-w-0 items-center gap-2">
       {logo && (
@@ -982,53 +1097,40 @@ function PortalAdjustmentsCard({
 
   return (
     <>
-      <Card className="flex flex-col gap-3 p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="leading-tight">
-            <p className="font-semibold">{t("pricingForm.portalAdjustmentTitle")}</p>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {t("pricingForm.portalAdjustmentHint")}
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t("pricingForm.edit")}
+      <PreisKarte
+        title={t("pricingForm.portalAdjustmentTitle")}
+        hint={t("pricingForm.portalAdjustmentHint")}
+        action={
+          <PreisSymbolAktion
+            label={t("pricingForm.edit")}
             disabled={!conns?.length}
             onClick={() => setOffen(true)}
-          >
-            <Icon icon="ph:pencil-simple" className="size-4" />
-          </Button>
-        </div>
+          />
+        }
+      >
         {conns !== null && conns.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {t("pricingForm.portalAdjustmentNone")}
-          </p>
-        ) : gesetzt.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-2">
-            {gesetzt.map((c) => {
-              const v = wert(c.portal_code);
-              const logo = channelLogoLoose(c.portal_code) ?? channelLogoLoose(c.portal);
-              return (
-                <span
-                  key={c.portal_code}
-                  title={c.portal}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-sm"
-                >
+          <PreisLeer>{t("pricingForm.portalAdjustmentNone")}</PreisLeer>
+        ) : (
+          gesetzt.map((c) => {
+            const v = wert(c.portal_code);
+            const logo = channelLogoLoose(c.portal_code) ?? channelLogoLoose(c.portal);
+            return (
+              <span key={c.portal_code} title={c.portal}>
+                <PreisChip>
                   {v > 0 ? "+" : ""}
                   {v}%
                   {logo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={logo} alt={c.portal} className="size-4 rounded-sm object-contain" />
                   ) : (
-                    <span className="text-muted-foreground">{c.portal}</span>
+                    c.portal
                   )}
-                </span>
-              );
-            })}
-          </div>
-        ) : null}
-      </Card>
+                </PreisChip>
+              </span>
+            );
+          })
+        )}
+      </PreisKarte>
       {offen && conns && (
         <PortalAdjustmentsEditor
           propertyId={propertyId}
@@ -1476,63 +1578,54 @@ function RatePlanList({
   };
 
   return (
-    <Card className="flex flex-col gap-3 p-5">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h3 className="font-display text-lg font-extrabold">
-            {t("pricingForm.plansTitle")}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {t("pricingForm.plansHint")}
-          </p>
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <Button type="button" variant="outline" asChild>
+    <PreisKarte
+      title={t("pricingForm.plansTitle")}
+      hint={t("pricingForm.plansHint")}
+      action={
+        <div className="flex shrink-0 items-center">
+          <PreisTextAktion asChild>
             <a href="/kalender?view=rates">{t("pricingForm.openCalendar")}</a>
-          </Button>
-          <Button type="button" onClick={onCreate}>
+          </PreisTextAktion>
+          <PreisTextAktion onClick={onCreate}>
             <Icon icon="ph:plus" className="size-4" />
             {t("pricingForm.planCreate")}
-          </Button>
+          </PreisTextAktion>
         </div>
-      </div>
+      }
+    >
+      {err && <p className="w-full text-[0.8125rem] leading-5 text-destructive">{err}</p>}
 
-      {err && <p className="text-sm text-destructive">{err}</p>}
-
-      <ul className="flex flex-col divide-y">
+      <ul className="flex w-full flex-col divide-y">
         {plans.map((p) => (
-          <li key={p.id} className="flex items-center gap-3 py-3">
-            <span className="min-w-0 flex-1 truncate text-sm font-medium">
+          <li key={p.id} className="flex items-center gap-3 py-2">
+            <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium leading-5">
               {p.name}
             </span>
-            <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
+            <PreisChip>
               {p.rate_mode === "derived"
                 ? t("pricingForm.planModeDerived", {
                     parent: p.derived_from_name ?? "",
                     offset: offsetLabel(p),
                   })
                 : t("pricingForm.planModeManual")}
-            </span>
-            <span className="w-24 shrink-0 text-right text-sm tabular-nums">
+            </PreisChip>
+            <span className="w-24 shrink-0 text-right text-[0.8125rem] leading-5 tabular-nums">
               {p.rate_mode === "derived"
                 ? t("pricingForm.planDerivedPrice")
                 : fmtPrice(p.base_price, (p.currency || "") as Currency | "", locale)}
             </span>
-            <span className="w-28 shrink-0 text-right text-xs text-muted-foreground">
+            <span className="w-28 shrink-0 text-right text-xs leading-4 text-muted-foreground">
               {t("pricingForm.planMinStay", { nights: p.min_stay })}
             </span>
-            <button
-              type="button"
-              onClick={() => void remove(p.id)}
+            <PreisSymbolAktion
+              icon="ph:trash"
+              label={t("pricingForm.planDelete")}
               disabled={busy === p.id}
-              title={t("pricingForm.planDelete")}
-              className="shrink-0 text-muted-foreground hover:text-destructive disabled:opacity-50"
-            >
-              <Icon icon="ph:trash" className="size-4" />
-            </button>
+              onClick={() => void remove(p.id)}
+            />
           </li>
         ))}
       </ul>
-    </Card>
+    </PreisKarte>
   );
 }

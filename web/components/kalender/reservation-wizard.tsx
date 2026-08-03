@@ -123,6 +123,7 @@ export function ReservationWizard({
       check_in: checkInState,
       check_out: checkOutState,
       guests: guests.adults + guests.children + guests.infants,
+      pets: guests.pets,
       channel,
     }).then((res) => {
       if (cancelled) return;

@@ -33,6 +33,7 @@ from src.features.auth.granular_permissions import Permission
 from .common import log
 from .dependencies import ChannelManagerServiceDep
 from .schemas import (
+    AbgabenStatusResponse,
     AirbnbTaxSettingsRequest,
     AirbnbTaxSettingsResponse,
     AriPushRequest,
@@ -473,6 +474,24 @@ def finalize_oauth_channel(
             mappings=[m.model_dump() for m in req.mappings],
         )
         return ChannelResponse(**result)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/properties/{property_id}/abgaben-status",
+    response_model=AbgabenStatusResponse,
+)
+def abgaben_status(
+    property_id: str, ctx: _read, service: ChannelManagerServiceDep
+) -> AbgabenStatusResponse:
+    """Je Gebühr/Steuer: welche verbundenen Portale bekommen sie NICHT automatisch?
+
+    Speist den Chip „Manuelle Synchronisierung" an der Preise-Seite. Gerechnet
+    aus derselben Quelle, aus der der Sync sendet (`ota_abgaben`) — kein zweiter
+    Regelsatz nur für die Anzeige."""
+    try:
+        return AbgabenStatusResponse(**service.abgaben_status(ctx, property_id))
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

@@ -27,7 +27,12 @@ from src.jobs.queue import (
 
 from .errors import PropertyError
 from .gebaeude import GebaeudeMixin
-from .gebuehren import erlaubte_portale, normalize_fees, sync_pricing_config
+from .gebuehren import (
+    GebuehrenMixin,
+    erlaubte_portale,
+    normalize_fees,
+    sync_pricing_config,
+)
 from .rooms import RoomsMixin
 from .schemas import (
     ChannelState,
@@ -105,7 +110,7 @@ def _sniff_image_ext(content: bytes) -> str | None:
     return None
 
 
-class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin):
+class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin, GebuehrenMixin):
     slice_name = "properties"
 
     def __init__(self, service_client: Client) -> None:

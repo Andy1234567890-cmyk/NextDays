@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Summa",
       "chargeSingle": "Vienreizēja summa",
       "chargePerPerson": "Par viesi",
+      "chargePerPet": "Par mājdzīvnieku",
       "periodPerStay": "Par uzturēšanos",
       "periodPerNight": "Par nakti",
       "percentOfBasePlaceholder": "0 % no pamatcenas, ieskaitot akcijas",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Vietējā nodokļa nosaukums",
       "internalDescriptionPlaceholder": "Ievadiet aprakstu (tikai iekšējai lietošanai).",
       "applyToOthersTitle": "Pievienot citiem objektiem",
-      "applyToOthersHint": "Piemērot to pašu nodokli arī citiem objektiem.",
       "applyToOthersEmpty": "Citu objektu pagaidām nav — tiklīdz pievienosiet otru, tas parādīsies šeit.",
       "searchPlaceholder": "Meklēt …",
       "searchPropertiesPlaceholder": "Meklēt objektus …",
@@ -4733,7 +4733,21 @@
         "community": "Kopīpašuma maksa",
         "pet": "Mājdzīvnieka maksa"
       },
-      "actions": "Darbības"
+      "actions": "Darbības",
+      "manualSyncLabel": "Manuāla sinhronizācija",
+      "abgabenNoCurrency": "Kamēr objekta valūta nav noteikta, maksas un nodokļi netiek sūtīti nevienam portālam.",
+      "feeAssignSubtitle": "Pievienojiet jaunu vai esošu maksu.",
+      "feeCreateNew": "Izveidot jaunu maksu",
+      "searchFeesPlaceholder": "Meklēt maksas …",
+      "feeFromProperty": "no {title}",
+      "feeLibraryEmpty": "Citos objektos maksu vēl nav — izveidojiet jaunu augšpusē.",
+      "feeLibraryNoCurrency": "Vispirms nosakiet šī objekta valūtu; pēc tam šeit būs pieejamas esošās maksas.",
+      "feeShortStayOnlyLabel": "Tikai īsai uzturēšanās reizei",
+      "feeShortStayOnlyHint": "Iekasēt maksu tikai par īsu uzturēšanos.",
+      "feeShortStayOnlyBound": "Attiecas uz ne vairāk kā {nights} naktīm — tā pati robeža kā īsas uzturēšanās uzcenojumam. Portāliem maksa netiek sūtīta: tur uzturēšanās ilgumu nevar atspoguļot.",
+      "feeShortStayOnlyMissing": "Šim objektam īsa uzturēšanās vēl nav noteikta („Īsas uzturēšanās uzcenojums“) — kamēr tās nav, maksa netiek aprēķināta.",
+      "applyToOthersFeeHint": "Piemērot to pašu maksu arī citiem objektiem.",
+      "applyToOthersTaxHint": "Piemērot to pašu nodokli arī citiem objektiem."
     },
     "policiesForm": {
       "title": "Noteikumi",

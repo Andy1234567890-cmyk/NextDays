@@ -268,16 +268,34 @@ Nacht" — exakt das bisherige Verhalten.
 
 `fees[]` je Eintrag: `id`, `name`, `amount`, `mode` (`amount`/`percent`, ohne
 Angabe `amount`), `basis` (`per_stay`/`per_night`/`per_guest_stay`/
-`per_guest_night`), `optional`, optional `taxRate` (eigener USt-Satz),
-`descriptionHtml`, `feeType` (49 Arten, siehe `GET /properties/fee-types`) und
+`per_guest_night`/`per_pet_stay`), `optional`, optional `taxRate` (eigener USt-Satz)
+mit `taxIncluded` (Default `true` = der Satz steckt schon in `amount`; `false`
+rechnet ihn obendrauf, weil jede Quote-Zeile brutto ist), `shortStayOnly`,
+`descriptionHtml`, `feeType` (51 Arten, siehe `GET /properties/fee-types`) und
 `portalScope[]`. Prozent ist immer einmalig auf den Zimmerpreis; `feeType`
 entscheidet über die Portal-Kategorie und damit, ob und wie die Gebühr exportiert
-wird (`channel_manager/ota_abgaben.py`).
+wird (`channel_manager/ota_abgaben.py`). Zwei Kategorien sind Sonderfälle:
+`short_term_cleaning` ist eine eigene Zeile der Export-Tabelle (nur Betrag, nur
+einmalig pro Aufenthalt) und wird NICHT mit der Reinigungsgebühr summiert;
+`security_deposit` (Kaution) geht an KEIN Portal — Channex kennt nur
+`tax|fee|city_tax`, als Gebühr gesendet wäre sie ein Aufschlag ohne Rückgabe.
+`basis: per_pet_stay` („pro Tier und Aufenthalt") ist nur an der Haustiergebühr
+erlaubt (sonst 422) und multipliziert `reservations.pets`; ans Portal geht sie
+als Pauschale pro Aufenthalt, weil kein Portal die Tierzahl vorab kennt.
+`POST /pricing/quote` nimmt dafür `pets` (Default 0, max. 50) entgegen.
+
+`shortStayOnly` erhebt die Gebühr nur bei Kurzaufenthalten. „Kurz" ist die EINE
+Grenze des Objekts (`shortStayMaxNights`), keine zweite Zahl an der Gebühr — ist
+sie nicht gepflegt, greift die Gebühr nicht (keine geratene Nächtezahl). An die
+Portale geht sie NICHT: weder Channex-`logic` noch ein Portal kennt eine
+Längenbedingung, unbedingt gesendet würde sie jedem Portal-Gast berechnet.
 
 | Methode | Pfad | Zweck |
 |---|---|---|
 | `POST` | `/api/v1/properties/{id}/taxes/{tax_id}/apply` | Steuer dieses Objekts auf weitere eigene Objekte übertragen (`{property_ids: []}`, max. 200). Jede Ziel-ID einzeln tenant-gescopt → `404` bei fremder ID, kein stilles Überspringen |
-| `GET` | `/api/v1/properties/fee-types` | Die 49 wählbaren Gebührenarten mit Bezeichnung und Portal-Kategorie (`{items:[{value,label,category}]}`). Eine Quelle für Auswahlfeld UND serverseitige Prüfung |
+| `POST` | `/api/v1/properties/{id}/fees/{fee_id}/apply` | Gebühr dieses Objekts auf weitere eigene Objekte übertragen (`{property_ids: []}`, max. 200). Währungs-Mismatch (Betragsgebühr) → `422`, eine `portalScope`-Einschränkung auf ein beim Ziel nicht verbundenes Portal → `422`, Portalliste nicht abrufbar → `503`. Alle Prüfungen laufen VOR dem ersten Schreiben, damit keine Übertragung halb durchläuft |
+| `GET` | `/api/v1/properties/{id}/fee-library` | Bestehende Gebühren des Betriebs, übernehmbar auf DIESES Objekt (`{currency, items:[{fee, property_id, property_title}]}`). Speist „neue oder bestehende Gebühr hinzufügen". Nur Objekte derselben Währung (Prozentgebühren währungsfrei); `currency: null` = noch keine Objektwährung, dann nur Prozentgebühren. Gleiche Gebühr auf mehreren Objekten erscheint EINMAL (Bündelung über Name+Art+Rechenart+Basis+Betrag, nicht über die Kennung) |
+| `GET` | `/api/v1/properties/fee-types` | Die 51 wählbaren Gebührenarten mit Bezeichnung und Portal-Kategorie (`{items:[{value,label,category}]}`). Eine Quelle für Auswahlfeld UND serverseitige Prüfung |
 
 **Verfügbarkeit** (.. „Availability") liegt in `type_attributes.availability`:
 `minStay`, `minStayByDays`, `maxStay`, sowie pro-Kanal-fähige Werte
@@ -593,7 +611,8 @@ internen Preisdetails). Preis kommt aus dem Pricing-Resolver.
 | `GET`   | `/api/v1/booking-engine/listings?q&guests&start&end&tenant` | Liste buchbarer (active) Objekte. Optional: `q` (Titel/Ort), `guests` (Kapazität), `start`/`end` (Verfügbarkeit + Effektivpreis), `tenant` (Default: alle active tenant-übergreifend)                            |
 | `GET`   | `/api/v1/booking-engine/listings/{id}?start&end`            | Detail eines active Objekts (`404` wenn nicht active): Beschreibung, Fotos, Ausstattung, ungefähre Lage (gerundete lat/lng), Preis via Resolver                                                                  |
 | `GET`   | `/api/v1/booking-engine/availability?property_id&start&end` | Öffentliche Tagesverfügbarkeit (buchbar/belegt)                                                                                                                                                                  |
-| `POST`  | `/api/v1/booking-engine/reservations`                       | Gastbuchung (Double-Booking-Schutz `409`, sperrt Kalender + Channex-Push). Body kann `guests` + `addons` (Auswahl) enthalten → Zusatzleistungen werden serverseitig bepreist + als `reservation_addons` angelegt |
+| `POST`  | `/api/v1/booking-engine/quote`                              | Preisaufschlüsselung VOR der Buchung (`property_id`, Zeitraum, `guests`, `pets`, `addons`) — dieselbe Rechnung wie die Buchung, inkl. Gebühren und Abgaben. Antwort trägt zusätzlich `pets_allowed`/`max_guests`; Überbelegung und Tiere ohne Erlaubnis → `422` |
+| `POST`  | `/api/v1/booking-engine/reservations`                       | Gastbuchung (Double-Booking-Schutz `409`, sperrt Kalender + Channex-Push). Body kann `guests`, `pets` + `addons` (Auswahl) enthalten → Zusatzleistungen werden serverseitig bepreist + als `reservation_addons` angelegt |
 | `GET`   | `/api/v1/booking-engine/reservations/{id}/addons?email`     | Nach-Buchung-Sicht des Gasts: buchbare `guest_portal`-Zusatzleistungen (unter Beachtung der „wann anzeigen"-Regel) + bereits gekaufte. Verifikation über die Buchungs-E-Mail                                     |
 | `POST`  | `/api/v1/booking-engine/reservations/{id}/addons`           | Nachträglicher Add-on-Kauf durch den Gast (`email` + `addons`); serverseitig bepreist, Verkaufsfläche `guest_portal`                                                                                             |
 
@@ -959,6 +978,7 @@ Berechtigung `manage_property_settings`. Beträge laufen durchgängig in **Cent*
 | `POST /api/v1/channel-manager/channels`                            | Schritt 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen **und aktivieren** → `201`                |
 | `DELETE /api/v1/channel-manager/channels/{channel_id}`             | Kanal trennen (erst deaktivieren, dann löschen) → `204`                                         |
 | `GET /api/v1/channel-manager/properties/{property_id}/connections` | Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal, white-label)         |
+| `GET /api/v1/channel-manager/properties/{property_id}/abgaben-status` | Je Gebühr/Steuer: welche verbundenen Portale bekommen sie NICHT automatisch? Speist den Chip „Manuelle Synchronisierung". Rein lesend, gerechnet aus derselben Quelle wie der Sync (`ota_abgaben.abgaben_je_portal`) — kein zweiter Regelsatz für die Anzeige. Drei getrennte Felder je Posten: `manual_portals` (Portal nimmt ihn nicht → Chip), `restricted_portals` (per `portalScope` ausgeschlossen → Absicht), `internal_only` (optionale/Kurzaufenthalts-Gebühr, Kaution → geht bewusst nirgends hin). `currency_missing` ist ein Befund über das OBJEKT: ohne Objektwährung überträgt der Abgaben-Sync gar nichts |
 | `PUT /api/v1/channel-manager/properties/{property_id}/connections/{portal}/airbnb-tax` | Airbnb-Steuererhebung dieses Inserats: `{scenario, acknowledged, send_user_taxes}`. Steuern gehen an Airbnb NUR wenn Szenario ≠ `ineligible` UND beide Schalter an (fail-closed); stößt den Steuer-Sync an |
 | `POST /api/v1/channel-manager/webhook`                             | Webhook-Empfang (ohne JWT, via geteiltem Secret-Header `X-Channex-Webhook-Secret`)              |
 

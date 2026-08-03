@@ -18,6 +18,8 @@ from .schemas import (
     PublicBookingResponse,
     PublicListingDetail,
     PublicListingListResponse,
+    PublicQuoteRequest,
+    PublicQuoteResponse,
     ReservationAddonsView,
     SitemapEntry,
     SitemapResponse,
@@ -108,6 +110,23 @@ def availability(
 ) -> PublicAvailabilityResponse:
     try:
         return service.public_availability(property_id, start, end)
+    except BookingEngineError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/quote", response_model=PublicQuoteResponse)
+def public_quote(
+    req: PublicQuoteRequest,
+    service: BookingEngineServiceDep,
+) -> PublicQuoteResponse:
+    """Preisaufschlüsselung vor der Buchung (Gebühren + Abgaben inbegriffen).
+
+    Ohne diesen Endpunkt müsste das Gast-Widget selbst rechnen — es zeigte
+    Nächte × Grundpreis und verschwiege Reinigung, Haustiergebühr und Kurtaxe,
+    die der Server anschließend berechnet.
+    """
+    try:
+        return service.public_quote(req)
     except BookingEngineError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

@@ -62,14 +62,11 @@ export function KanalEinschraenkung({
     ...portale.map((code) => ({ code, label: channelLabel(code) })),
   ];
 
+  // KEIN eigener Titel/Untertitel: der einzige Aufrufer ist ein Dialog, dessen
+  // Kopf beide bereits trägt — so stand „Einschränkungen · Wählen Sie die Kanäle
+  // aus …" zweimal untereinander im selben Fenster.
   return (
     <section className="flex flex-col gap-3">
-      <h3 className="font-display text-lg font-extrabold">
-        {t("pricingForm.restrictionsTitle")}
-      </h3>
-      <p className="text-sm text-muted-foreground">
-        {t("pricingForm.restrictionsHint")}
-      </p>
       <div className="flex flex-col gap-2">
         {zeilen.map((zeile) => (
           <label

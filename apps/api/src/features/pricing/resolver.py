@@ -794,7 +794,20 @@ class PricingResolver:
         for fee in config.fees:
             if not _gilt_fuer_kanal(fee, req.channel):
                 continue
-            amount = self._fee_amount(fee, n, req.guests, nightly_total)
+            # „Nur für Kurzaufenthalte": dieselbe Grenze wie der
+            # Kurzaufenthalts-Aufschlag des Objekts (`shortStayMaxNights`) — es
+            # gibt genau EINE Definition von „kurz" je Objekt. Ist keine
+            # gepflegt, greift die Gebühr NICHT: eine Schranke ohne Grenze wäre
+            # sonst wirkungslos und die Gebühr liefe immer mit (Wurzel 4 — keine
+            # geratene Nächtezahl).
+            if bool(fee.get("shortStayOnly")) and not (
+                config.short_stay_max_nights > 0
+                and n <= config.short_stay_max_nights
+            ):
+                continue
+            amount = self._fee_brutto(
+                fee, self._fee_amount(fee, n, req.guests, nightly_total, req.pets)
+            )
             if amount > 0:
                 name = str(fee.get("name") or "Gebühr")
                 lines.append(
@@ -944,7 +957,7 @@ class PricingResolver:
 
     @staticmethod
     def _fee_amount(
-        fee: dict, nights: int, guests: int, nightly_total: float
+        fee: dict, nights: int, guests: int, nightly_total: float, pets: int = 0
     ) -> float:
         """Betrag einer Gebühr für diesen Aufenthalt.
 
@@ -967,7 +980,39 @@ class PricingResolver:
             return amount * guests
         if basis == "per_guest_night":
             return amount * guests * nights
+        if basis == "per_pet_stay":
+            # Kein Tier → keine Tiergebühr. Die Zahl kommt aus der Buchung
+            # (`reservations.pets`); fehlt sie, ist 0 die richtige Antwort und
+            # kein Ersatzwert „bestimmt eines" (Wurzel 4).
+            return amount * pets
         return amount  # per_stay
+
+    @staticmethod
+    def _fee_brutto(fee: dict, amount: float) -> float:
+        """Gebührenbetrag als BRUTTO, wie ihn die Zeile trägt.
+
+        Jede QuoteLine ist brutto — die Rechnung zerlegt sie in netto + Steuer
+        (`buchhaltung/reservation_invoice._split_gross`). Der Betrag, den der
+        Betrieb eintippt, ist dagegen entweder brutto oder netto; das sagt das
+        Auswahlfeld an der Gebühr (`taxIncluded`, Branchenstandard: „Preis inkl.
+        Umsatz-/MwSt." vs. „Der Preis enthält keine Umsatzsteuer / MwSt.").
+
+        `taxIncluded` fehlt oder ist `True` → der Betrag IST brutto, unverändert
+        (bisheriges Verhalten, Bestandsdaten bleiben gleich teuer). `False` →
+        der Satz kommt obendrauf; `_split_gross` gewinnt daraus exakt den
+        eingetippten Netto-Betrag zurück.
+
+        Ohne eigenen Satz (`taxRate` fehlt) gibt es nichts aufzuschlagen: die
+        Gebühr folgt dem Übernachtungssatz des Objekts, und der steckt nach
+        dessen eigener „im Preis enthalten"-Einstellung im Preis. Hier einen
+        Satz zu erfinden wäre ein Aufschlag aus Nichts (Wurzel 4).
+        """
+        if bool(fee.get("taxIncluded", True)):
+            return amount
+        satz = _to_float(fee.get("taxRate"))
+        if satz is None or satz <= 0:
+            return amount
+        return amount * (1.0 + satz / 100.0)
 
     @staticmethod
     def _tax_amount(tax: dict, base: float, nights: int, guests: int) -> float:

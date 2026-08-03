@@ -143,6 +143,7 @@ class WritesMixin(ReservationsBase):
         quote = self._quote(
             req.property_id, req.check_in, req.check_out, total_guests,
             req.channel.value, rate_plan_id=rate_plan_id,
+            pets=req.guests.pets,
         )
         # Eigentümer-Aufenthalt (0241): kostenlos, PUNKT. Ein mitgeschickter
         # Betrag wird verworfen, nicht übernommen — sonst stünde am Ende doch
@@ -480,6 +481,9 @@ class WritesMixin(ReservationsBase):
                     if req.property_id == current.get("property_id")
                     else None
                 ),
+                # Die Tierzahl gehört zur Buchung, nicht zum Zeitraum — beim
+                # Neurechnen darf die Haustiergebühr nicht verschwinden.
+                pets=int(current.get("pets") or 0),
             )
             update_fields["total_amount"] = quote.total
             update_fields["quote_items"] = [

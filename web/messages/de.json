@@ -4646,6 +4646,7 @@
       "amountSectionTitle": "Betrag",
       "chargeSingle": "Einmaliger Betrag",
       "chargePerPerson": "Pro Gast",
+      "chargePerPet": "Pro Tier",
       "periodPerStay": "Pro Aufenthalt",
       "periodPerNight": "Pro Nacht",
       "percentOfBasePlaceholder": "0 % des Grundpreises inkl. Aktionen",
@@ -4661,7 +4662,6 @@
       "localTaxNameLabel": "Name der lokalen Steuer",
       "internalDescriptionPlaceholder": "Beschreibung angeben (nur für den internen Gebrauch).",
       "applyToOthersTitle": "Zu anderen Objekten hinzufügen",
-      "applyToOthersHint": "Dieselbe Steuer auch bei anderen Objekten anwenden.",
       "applyToOthersEmpty": "Noch keine weiteren Objekte — sobald du ein zweites anlegst, steht es hier zur Auswahl.",
       "searchPlaceholder": "Suchen …",
       "searchPropertiesPlaceholder": "Objekte durchsuchen …",
@@ -4754,7 +4754,21 @@
         "community": "Gemeinschaftsgebühr",
         "pet": "Haustiergebühr"
       },
-      "actions": "Aktionen"
+      "actions": "Aktionen",
+      "manualSyncLabel": "Manuelle Synchronisierung",
+      "abgabenNoCurrency": "Solange keine Objektwährung festgelegt ist, werden Gebühren und Steuern an kein Portal übertragen.",
+      "feeAssignSubtitle": "Fügen Sie eine neue oder bestehende Gebühr hinzu.",
+      "feeCreateNew": "Neue Gebühr erstellen",
+      "searchFeesPlaceholder": "Gebühren durchsuchen …",
+      "feeFromProperty": "von {title}",
+      "feeLibraryEmpty": "Noch keine Gebühren bei anderen Objekten — erstellen Sie oben eine neue.",
+      "feeLibraryNoCurrency": "Legen Sie zuerst die Währung dieses Objekts fest; danach stehen hier bestehende Gebühren zur Auswahl.",
+      "feeShortStayOnlyLabel": "Nur für Kurzaufenthalte",
+      "feeShortStayOnlyHint": "Die Gebühr nur bei Kurzaufenthalten erheben.",
+      "feeShortStayOnlyBound": "Gilt bei höchstens {nights} Nächten — dieselbe Grenze wie der Kurzaufenthalts-Aufschlag. An die Portale geht die Gebühr nicht: dort ist keine Aufenthaltslänge abbildbar.",
+      "feeShortStayOnlyMissing": "Für dieses Objekt ist noch kein Kurzaufenthalt festgelegt („Kurzaufenthalts-Aufschlag“) — solange das fehlt, wird die Gebühr nicht berechnet.",
+      "applyToOthersFeeHint": "Dieselbe Gebühr auch bei anderen Objekten anwenden.",
+      "applyToOthersTaxHint": "Dieselbe Steuer auch bei anderen Objekten anwenden."
     },
     "policiesForm": {
       "title": "Richtlinien",

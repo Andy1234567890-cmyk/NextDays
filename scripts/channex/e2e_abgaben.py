@@ -95,6 +95,19 @@ GEBUEHREN: list[dict[str, Any]] = [
     # Resort als Prozentsatz → Airbnb ✅ UND Booking ✅
     {"id": "e2e-resort", "name": "Resortgebühr", "amount": 5, "mode": "percent",
      "basis": "per_stay", "optional": False, "feeType": "resort"},
+    # Kurzzeitreinigung: eigene Zeile der Export-Tabelle → eigener Posten bei
+    # Airbnb, NICHT mit der Endreinigung summiert
+    {"id": "e2e-kurzreinigung", "name": "Kurzreinigung", "amount": 20,
+     "mode": "amount", "basis": "per_stay", "optional": False,
+     "feeType": "short_term_cleaning"},
+    # Kaution: steht in der Zuordnungstabelle, aber in keiner Export-Zeile →
+    # geht an KEIN Portal, auch nicht an eines ohne Sonderregel
+    {"id": "e2e-kaution", "name": "Kaution", "amount": 300, "mode": "amount",
+     "basis": "per_stay", "optional": False, "feeType": "security_deposit"},
+    # Haustiergebühr „pro Tier und Aufenthalt": bei uns × Tierzahl, ans Portal
+    # als Pauschale pro Aufenthalt (kein Portal kennt die Tierzahl vorab)
+    {"id": "e2e-hund", "name": "Haustiergebühr", "amount": 25, "mode": "amount",
+     "basis": "per_pet_stay", "optional": False, "feeType": "pet_fee"},
     # Wäsche pro Nacht → Airbnb ❌ (Matrix erlaubt nur Aufenthalt/Gast+Aufenthalt)
     {"id": "e2e-waesche", "name": "Wäsche", "amount": 8, "mode": "amount",
      "basis": "per_night", "optional": False, "feeType": "linens"},
@@ -118,6 +131,8 @@ ERWARTET: dict[str | None, dict[str, tuple[str, str, str, bool]]] = {
         "Kurtaxe Prozent": ("percent", "city_tax", "2.5", False),
         "Kurtaxe pro Gast pro Nacht": ("per_person_per_night", "city_tax", "2.0", False),
         "Endreinigung": ("per_booking", "fee", "50.0", False),
+        "Kurzreinigung": ("per_booking", "fee", "20.0", False),
+        "Haustiergebühr": ("per_booking", "fee", "25.0", False),
         "Gemeinschaftsgebühr": ("per_night", "fee", "15.0", False),
         "Resortgebühr": ("percent", "fee", "5.0", False),
     },
@@ -134,6 +149,8 @@ ERWARTET: dict[str | None, dict[str, tuple[str, str, str, bool]]] = {
         "Kurtaxe pro Gast pro Nacht": ("per_person_per_night", "city_tax", "2.0", False),
         "Kurtaxe pro Aufenthalt": ("per_booking", "city_tax", "20.0", False),
         "Endreinigung": ("per_booking", "fee", "50.0", False),
+        "Kurzreinigung": ("per_booking", "fee", "20.0", False),
+        "Haustiergebühr": ("per_booking", "fee", "25.0", False),
         "Parkplatz": ("per_night", "fee", "10.0", False),
         "Internet": ("per_night", "fee", "5.0", False),
         "Resortgebühr": ("percent", "fee", "5.0", False),

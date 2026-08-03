@@ -12,6 +12,9 @@ from .dependencies import PropertiesServiceDep
 from .gebuehren import fee_type_katalog
 from .schemas import (
     BuildingCreate,
+    FeeApplyRequest,
+    FeeApplyResponse,
+    FeeLibraryResponse,
     FeeTypeCatalogResponse,
     FeeTypeEntry,
     ImageUploadResponse,
@@ -140,6 +143,51 @@ def set_unit_count(
     wegfallenden Einheiten frei sind (409 sonst)."""
     try:
         return service.set_unit_count(ctx, property_id, req.count)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/{property_id}/fee-library", response_model=FeeLibraryResponse)
+def get_fee_library(
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
+) -> FeeLibraryResponse:
+    """Bestehende Gebühren des Betriebs, die auf DIESES Objekt übernehmbar sind.
+
+    Speist „Fügen Sie eine neue oder bestehende Gebühr hinzu" (Branchenstandard
+    `/pricing/<id>/assign-fee`). Preisdaten sind Vertriebsinformation — dieselbe
+    Capability wie das Pflegen der Gebühr, nicht bloß `get_current_user`
+    (Wurzel 9: Autorisierung, nicht nur Authentifizierung)."""
+    try:
+        return FeeLibraryResponse(**service.fee_library(ctx, property_id))
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/{property_id}/fees/{fee_id}/apply", response_model=FeeApplyResponse)
+def apply_fee_to_properties(
+    property_id: str,
+    fee_id: str,
+    req: FeeApplyRequest,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
+) -> FeeApplyResponse:
+    """Gebühr dieses Objekts auf weitere eigene Objekte übertragen. Jede Ziel-ID
+    wird einzeln tenant-gescopt; Währungs- und Portal-Konflikte werden VOR dem
+    ersten Schreiben abgelehnt, nicht halb durchgelaufen."""
+    try:
+        return FeeApplyResponse(
+            **service.apply_fee_to_properties(
+                ctx, property_id, fee_id, req.property_ids
+            )
+        )
     except PropertyError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

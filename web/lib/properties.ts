@@ -5,7 +5,7 @@
 import { revalidatePath } from "next/cache";
 
 import { ApiError, api } from "@/lib/api";
-import type { FeeTypeEntry } from "@/lib/pricing-meta";
+import type { Fee, FeeTypeEntry } from "@/lib/pricing-meta";
 import { currentToken } from "@/lib/session-token";
 
 export type PropertyType =
@@ -182,6 +182,41 @@ export async function deleteProperty(id: string): Promise<Result<null>> {
  *  auseinanderlaufen. Deshalb geladen statt im Frontend nachgebaut. */
 export async function listFeeTypes(): Promise<Result<{ items: FeeTypeEntry[] }>> {
   return call("/properties/fee-types");
+}
+
+/** Eine bestehende Gebühr des Betriebs, übernehmbar auf dieses Objekt.
+ *
+ *  `fee` ist der gespeicherte Eintrag selbst — die Übernahme legt genau die
+ *  Gebühr an, die woanders schon steht, statt eine nachgebaute. */
+export type FeeLibraryEntry = {
+  fee: Fee;
+  property_id: string;
+  property_title: string | null;
+};
+
+/** Auswahlliste für „bestehende Gebühr hinzufügen" (Standard: `assign-fee`).
+ *
+ *  `currency` ist die Währung DIESES Objekts; `null` heißt „noch keine gewählt"
+ *  — dann stehen nur prozentuale Gebühren zur Auswahl, weil ein Betrag ohne
+ *  Währung nicht übernehmbar ist. */
+export async function listFeeLibrary(
+  propertyId: string,
+): Promise<Result<{ currency: string | null; items: FeeLibraryEntry[] }>> {
+  return call(`/properties/${propertyId}/fee-library`);
+}
+
+/** Dieselbe Gebühr auf weitere eigene Objekte übertragen. Der Server prüft jede
+ *  Ziel-ID einzeln auf den eigenen Betrieb und lehnt Währungs-/Portal-Konflikte
+ *  ab, BEVOR er das erste Ziel schreibt. */
+export async function applyFeeToProperties(
+  propertyId: string,
+  feeId: string,
+  targetIds: string[],
+): Promise<Result<{ applied_to: string[] }>> {
+  return call(`/properties/${propertyId}/fees/${feeId}/apply`, {
+    method: "POST",
+    body: { property_ids: targetIds },
+  });
 }
 
 export async function applyTaxToProperties(

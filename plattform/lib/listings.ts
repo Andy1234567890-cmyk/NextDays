@@ -13,6 +13,9 @@ export type Listing = {
   schlafzimmer: number | null;
   baeder: number | null;
   gaeste: number;
+  // Haustiere erlaubt? Entscheidet, ob die Buchungsstrecke die Tierauswahl
+  // anbietet. Ohne Angabe des Betriebs false (fail-closed, siehe booking_engine).
+  haustiereErlaubt: boolean;
   ausstattung: string[];
   beschreibung: string | null;
   // Bewertungen werden NICHT erfunden — nur gesetzt, wenn echte Daten existieren.

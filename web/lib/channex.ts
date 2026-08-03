@@ -521,6 +521,36 @@ export async function listChannelConnections(
   );
 }
 
+/** Sync-Stand EINES Postens (Gebühr/Steuer) über alle verbundenen Portale.
+ *
+ *  Drei getrennte Aussagen, weil sie verschiedene Dinge bedeuten:
+ *  `manual_portals` = dort nimmt das Portal den Posten nicht, er muss im
+ *  Extranet gepflegt werden (Chip „Manuelle Synchronisierung");
+ *  `restricted_portals` = der Betrieb hat ihn selbst ausgeschlossen;
+ *  `internal_only` = er geht bewusst an kein Portal (optionale Gebühr, Kaution). */
+export type AbgabePostenStatus = {
+  key: string;
+  kind: "fee" | "tax";
+  manual_portals: string[];
+  restricted_portals: string[];
+  internal_only: boolean;
+};
+
+/** Welche Abgabe kommt bei welchem verbundenen Portal wirklich an?
+ *
+ *  Gerechnet aus derselben Quelle, aus der der Sync sendet — die Oberfläche
+ *  führt KEINE eigene Regeltabelle, sonst behauptete der Chip „geht raus", wo
+ *  der Sync den Posten wegließe. */
+export async function getAbgabenStatus(propertyId: string): Promise<
+  Result<{
+    currency_missing: boolean;
+    portals: string[];
+    items: AbgabePostenStatus[];
+  }>
+> {
+  return call(`/properties/${propertyId}/abgaben-status`);
+}
+
 /** Ein Tarifplan dieses Objekts, wie er ans Portal geht (Lodgify: „Aktive
  *  Tarifpläne"): Kondition, Name/Typ, Preisänderung. offset_* nur bei
  *  abgeleiteten Plänen. */

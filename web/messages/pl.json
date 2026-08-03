@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Kwota",
       "chargeSingle": "Kwota jednorazowa",
       "chargePerPerson": "Za gościa",
+      "chargePerPet": "Za zwierzę",
       "periodPerStay": "Za pobyt",
       "periodPerNight": "Za noc",
       "percentOfBasePlaceholder": "0% ceny podstawowej z promocjami",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Nazwa podatku lokalnego",
       "internalDescriptionPlaceholder": "Podaj opis (tylko do użytku wewnętrznego).",
       "applyToOthersTitle": "Dodaj do innych obiektów",
-      "applyToOthersHint": "Zastosuj ten sam podatek również w innych obiektach.",
       "applyToOthersEmpty": "Brak innych obiektów — gdy dodasz kolejny, pojawi się tutaj.",
       "searchPlaceholder": "Szukaj …",
       "searchPropertiesPlaceholder": "Szukaj obiektów …",
@@ -4733,7 +4733,21 @@
         "community": "Opłata wspólnotowa",
         "pet": "Opłata za zwierzę"
       },
-      "actions": "Akcje"
+      "actions": "Akcje",
+      "manualSyncLabel": "Synchronizacja ręczna",
+      "abgabenNoCurrency": "Dopóki nie ustawiono waluty obiektu, opłaty i podatki nie są przesyłane do żadnego portalu.",
+      "feeAssignSubtitle": "Dodaj nową lub istniejącą opłatę.",
+      "feeCreateNew": "Utwórz nową opłatę",
+      "searchFeesPlaceholder": "Szukaj opłat …",
+      "feeFromProperty": "z {title}",
+      "feeLibraryEmpty": "W innych obiektach nie ma jeszcze opłat — utwórz nową powyżej.",
+      "feeLibraryNoCurrency": "Ustaw najpierw walutę tego obiektu; potem pojawią się tu istniejące opłaty.",
+      "feeShortStayOnlyLabel": "Tylko przy krótkim pobycie",
+      "feeShortStayOnlyHint": "Pobieraj opłatę tylko przy krótkim pobycie.",
+      "feeShortStayOnlyBound": "Obowiązuje przy maksymalnie {nights} nocach — ta sama granica co narzut za krótki pobyt. Opłata nie trafia do portali: nie można tam odwzorować długości pobytu.",
+      "feeShortStayOnlyMissing": "Dla tego obiektu nie określono jeszcze krótkiego pobytu („Narzut za krótki pobyt“) — dopóki go brak, opłata nie jest naliczana.",
+      "applyToOthersFeeHint": "Zastosuj tę samą opłatę również w innych obiektach.",
+      "applyToOthersTaxHint": "Zastosuj ten sam podatek również w innych obiektach."
     },
     "policiesForm": {
       "title": "Zasady",

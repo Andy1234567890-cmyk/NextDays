@@ -19,6 +19,7 @@ export const NIC: Record<string, string> = {
   back: "M15 4.5l-7 7.5 7 7.5",
   fwd: "M9 4.5l7 7.5-7 7.5",
   plus: "M12 5v14M5 12h14",
+  minus: "M5 12h14",
   filter: "M3 5.5h18M6 12h12M10 18.5h4",
   wifi: "M4 10a13 13 0 0116 0M7 13.5a8 8 0 0110 0M10 17a3 3 0 014 0M12 20.5h.01",
   key: "M15.5 7.5a4 4 0 11-3.6 6L5 20.5 7.5 23M15.5 7.5l2-2M10.5 13l2.5 2.5",

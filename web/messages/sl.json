@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Znesek",
       "chargeSingle": "Enkratni znesek",
       "chargePerPerson": "Na gosta",
+      "chargePerPet": "Na žival",
       "periodPerStay": "Na bivanje",
       "periodPerNight": "Na noč",
       "percentOfBasePlaceholder": "0 % osnovne cene z akcijami",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Ime lokalnega davka",
       "internalDescriptionPlaceholder": "Vnesite opis (samo za interno uporabo).",
       "applyToOthersTitle": "Dodaj drugim objektom",
-      "applyToOthersHint": "Isti davek uporabi tudi pri drugih objektih.",
       "applyToOthersEmpty": "Drugih nastanitev še ni — takoj ko dodate še eno, se prikaže tukaj.",
       "searchPlaceholder": "Iskanje …",
       "searchPropertiesPlaceholder": "Iskanje objektov …",
@@ -4733,7 +4733,21 @@
         "community": "Stroški skupnosti",
         "pet": "Stroški hišnega ljubljenčka"
       },
-      "actions": "Dejanja"
+      "actions": "Dejanja",
+      "manualSyncLabel": "Ročna sinhronizacija",
+      "abgabenNoCurrency": "Dokler valuta objekta ni določena, pristojbine in davki niso poslani na noben portal.",
+      "feeAssignSubtitle": "Dodajte novo ali obstoječo pristojbino.",
+      "feeCreateNew": "Ustvari novo pristojbino",
+      "searchFeesPlaceholder": "Iskanje pristojbin …",
+      "feeFromProperty": "iz {title}",
+      "feeLibraryEmpty": "Pri drugih objektih še ni pristojbin — ustvarite novo zgoraj.",
+      "feeLibraryNoCurrency": "Najprej določite valuto tega objekta; nato bodo tu na voljo obstoječe pristojbine.",
+      "feeShortStayOnlyLabel": "Samo za kratka bivanja",
+      "feeShortStayOnlyHint": "Pristojbino zaračunaj samo pri kratkih bivanjih.",
+      "feeShortStayOnlyBound": "Velja pri največ {nights} nočeh — ista meja kot pribitek za kratko bivanje. Na portale pristojbina ne gre: tam dolžine bivanja ni mogoče prikazati.",
+      "feeShortStayOnlyMissing": "Za ta objekt kratko bivanje še ni določeno („Pribitek za kratko bivanje“) — dokler ga ni, pristojbina ni obračunana.",
+      "applyToOthersFeeHint": "Isto pristojbino uporabi tudi pri drugih objektih.",
+      "applyToOthersTaxHint": "Isti davek uporabi tudi pri drugih objektih."
     },
     "policiesForm": {
       "title": "Pravilniki",

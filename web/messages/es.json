@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Importe",
       "chargeSingle": "Importe único",
       "chargePerPerson": "Por huésped",
+      "chargePerPet": "Por mascota",
       "periodPerStay": "Por estancia",
       "periodPerNight": "Por noche",
       "percentOfBasePlaceholder": "0 % del precio base, promociones incluidas",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Nombre del impuesto local",
       "internalDescriptionPlaceholder": "Introduzca una descripción (solo para uso interno).",
       "applyToOthersTitle": "Añadir a otros alojamientos",
-      "applyToOthersHint": "Aplicar el mismo impuesto también a otros alojamientos.",
       "applyToOthersEmpty": "Aún no hay otros alojamientos: en cuanto añadas uno más, aparecerá aquí.",
       "searchPlaceholder": "Buscar …",
       "searchPropertiesPlaceholder": "Buscar alojamientos …",
@@ -4733,7 +4733,21 @@
         "community": "Tarifa comunitaria",
         "pet": "Tarifa por mascota"
       },
-      "actions": "Acciones"
+      "actions": "Acciones",
+      "manualSyncLabel": "Sincronización manual",
+      "abgabenNoCurrency": "Mientras no se fije la moneda del alojamiento, las tarifas y los impuestos no se envían a ningún portal.",
+      "feeAssignSubtitle": "Añade una tarifa nueva o existente.",
+      "feeCreateNew": "Crear tarifa nueva",
+      "searchFeesPlaceholder": "Buscar tarifas …",
+      "feeFromProperty": "de {title}",
+      "feeLibraryEmpty": "Todavía no hay tarifas en tus otros alojamientos — crea una nueva arriba.",
+      "feeLibraryNoCurrency": "Fija primero la moneda de este alojamiento; después podrás elegir aquí las tarifas existentes.",
+      "feeShortStayOnlyLabel": "Solo para estancias cortas",
+      "feeShortStayOnlyHint": "Cobrar la tarifa solo en estancias cortas.",
+      "feeShortStayOnlyBound": "Se aplica con un máximo de {nights} noches — el mismo límite que el recargo por estancia corta. La tarifa no se envía a los portales: allí no se puede expresar una duración de estancia.",
+      "feeShortStayOnlyMissing": "Para este alojamiento aún no se ha definido una estancia corta («Recargo por estancia corta») — mientras falte, la tarifa no se cobra.",
+      "applyToOthersFeeHint": "Aplicar la misma tarifa también a otros alojamientos.",
+      "applyToOthersTaxHint": "Aplicar el mismo impuesto también a otros alojamientos."
     },
     "policiesForm": {
       "title": "Políticas",

@@ -4641,6 +4641,7 @@
       "amountSectionTitle": "Amount",
       "chargeSingle": "Single charge",
       "chargePerPerson": "Per guest",
+      "chargePerPet": "Per pet",
       "periodPerStay": "Per stay",
       "periodPerNight": "Per night",
       "percentOfBasePlaceholder": "0% of the base price incl. promotions",
@@ -4656,7 +4657,6 @@
       "localTaxNameLabel": "Local tax name",
       "internalDescriptionPlaceholder": "Enter a description (for internal use only).",
       "applyToOthersTitle": "Add to other properties",
-      "applyToOthersHint": "Apply the same tax to other properties as well.",
       "applyToOthersEmpty": "No other properties yet — as soon as you add a second one, it appears here.",
       "searchPlaceholder": "Search …",
       "searchPropertiesPlaceholder": "Search properties …",
@@ -4754,7 +4754,21 @@
         "community": "Community fee",
         "pet": "Pet fee"
       },
-      "actions": "Actions"
+      "actions": "Actions",
+      "manualSyncLabel": "Manual synchronisation",
+      "abgabenNoCurrency": "As long as no property currency is set, fees and taxes are not sent to any channel.",
+      "feeAssignSubtitle": "Add a new or existing fee.",
+      "feeCreateNew": "Create new fee",
+      "searchFeesPlaceholder": "Search fees …",
+      "feeFromProperty": "from {title}",
+      "feeLibraryEmpty": "No fees at your other properties yet — create a new one above.",
+      "feeLibraryNoCurrency": "Set this property's currency first; existing fees will then be available here.",
+      "feeShortStayOnlyLabel": "Short stays only",
+      "feeShortStayOnlyHint": "Charge the fee for short stays only.",
+      "feeShortStayOnlyBound": "Applies to stays of at most {nights} nights — the same limit as the short-stay surcharge. The fee is not sent to the channels: a stay length cannot be expressed there.",
+      "feeShortStayOnlyMissing": "No short stay has been defined for this property yet (“Short-stay surcharge”) — until it is, the fee is not charged.",
+      "applyToOthersFeeHint": "Apply the same fee to other properties as well.",
+      "applyToOthersTaxHint": "Apply the same tax to other properties as well."
     },
     "policiesForm": {
       "title": "Policies",

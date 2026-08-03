@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Bedrag",
       "chargeSingle": "Eenmalig bedrag",
       "chargePerPerson": "Per gast",
+      "chargePerPet": "Per huisdier",
       "periodPerStay": "Per verblijf",
       "periodPerNight": "Per nacht",
       "percentOfBasePlaceholder": "0% van de basisprijs incl. acties",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Naam van de lokale belasting",
       "internalDescriptionPlaceholder": "Geef een omschrijving op (alleen voor intern gebruik).",
       "applyToOthersTitle": "Aan andere objecten toevoegen",
-      "applyToOthersHint": "Pas dezelfde belasting ook toe op andere objecten.",
       "applyToOthersEmpty": "Nog geen andere accommodaties — zodra je er een tweede toevoegt, verschijnt die hier.",
       "searchPlaceholder": "Zoeken …",
       "searchPropertiesPlaceholder": "Objecten doorzoeken …",
@@ -4733,7 +4733,21 @@
         "community": "Gemeenschapskosten",
         "pet": "Huisdierkosten"
       },
-      "actions": "Acties"
+      "actions": "Acties",
+      "manualSyncLabel": "Handmatige synchronisatie",
+      "abgabenNoCurrency": "Zolang er geen valuta voor het object is ingesteld, worden kosten en belastingen naar geen enkel portaal verstuurd.",
+      "feeAssignSubtitle": "Voeg nieuwe of bestaande kosten toe.",
+      "feeCreateNew": "Nieuwe kosten aanmaken",
+      "searchFeesPlaceholder": "Kosten doorzoeken …",
+      "feeFromProperty": "van {title}",
+      "feeLibraryEmpty": "Nog geen kosten bij je andere objecten — maak hierboven nieuwe aan.",
+      "feeLibraryNoCurrency": "Stel eerst de valuta van dit object in; daarna staan hier bestaande kosten ter keuze.",
+      "feeShortStayOnlyLabel": "Alleen bij kort verblijf",
+      "feeShortStayOnlyHint": "Bereken de kosten alleen bij een kort verblijf.",
+      "feeShortStayOnlyBound": "Geldt bij maximaal {nights} nachten — dezelfde grens als de toeslag kort verblijf. De kosten gaan niet naar de portalen: een verblijfsduur is daar niet weer te geven.",
+      "feeShortStayOnlyMissing": "Voor dit object is nog geen kort verblijf vastgelegd („Toeslag kort verblijf“) — zolang dat ontbreekt, worden de kosten niet berekend.",
+      "applyToOthersFeeHint": "Pas dezelfde kosten ook toe op andere objecten.",
+      "applyToOthersTaxHint": "Pas dezelfde belasting ook toe op andere objecten."
     },
     "policiesForm": {
       "title": "Beleid",

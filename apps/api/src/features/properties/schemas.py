@@ -5,6 +5,7 @@ Ausstattung/Fotos. Sektionen ohne eigene Spalte (Rooms, Sleeping arrangements,
 Rental-Info-Detailfelder) liegen flexibel im jsonb-Feld `type_attributes`.
 """
 from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -380,6 +381,44 @@ class FeeTypeEntry(BaseModel):
 
 class FeeTypeCatalogResponse(BaseModel):
     items: list[FeeTypeEntry]
+
+
+class FeeLibraryEntry(BaseModel):
+    """Eine bestehende Gebühr des Betriebs, übernehmbar auf ein anderes Objekt.
+
+    `fee` ist der Preis-Blob-Eintrag selbst (Name, Betrag, Rechenart, Basis,
+    Gebührenart …) — unverändert weitergegeben, damit die Übernahme genau die
+    Gebühr anlegt, die woanders schon steht, und nicht eine nachgebaute.
+    `property_title` sagt, woher sie stammt: bei „Reinigungsgebühr" hilft es zu
+    wissen, an welchem Objekt sie hängt."""
+
+    fee: dict[str, Any]
+    property_id: str
+    property_title: str | None = None
+
+
+class FeeLibraryResponse(BaseModel):
+    """Auswahlliste für „bestehende Gebühr hinzufügen".
+
+    `currency` ist die Währung des Zielobjekts. `None` heißt: noch keine
+    gewählt — dann stehen nur prozentuale Gebühren zur Auswahl, weil ein Betrag
+    ohne Währung nicht übernehmbar ist (kein geratenes EUR, Wurzel 4)."""
+
+    currency: str | None = None
+    items: list[FeeLibraryEntry]
+
+
+class FeeApplyRequest(BaseModel):
+    """Eine Gebühr dieses Objekts auf weitere eigene Objekte übertragen.
+    Obergrenze wie bei der Steuer (Wurzel 8: jede Liste bekommt eine Grenze)."""
+
+    property_ids: list[str] = Field(min_length=1, max_length=200)
+
+
+class FeeApplyResponse(BaseModel):
+    """Objekte, die die Gebühr tatsächlich erhalten haben."""
+
+    applied_to: list[str]
 
 
 class ImageUploadResponse(BaseModel):

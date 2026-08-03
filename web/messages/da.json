@@ -4625,6 +4625,7 @@
       "amountSectionTitle": "Beløb",
       "chargeSingle": "Enkeltbeløb",
       "chargePerPerson": "Pr. gæst",
+      "chargePerPet": "Pr. dyr",
       "periodPerStay": "Pr. ophold",
       "periodPerNight": "Pr. nat",
       "percentOfBasePlaceholder": "0 % af grundprisen inkl. kampagner",
@@ -4640,7 +4641,6 @@
       "localTaxNameLabel": "Den lokale skats navn",
       "internalDescriptionPlaceholder": "Angiv en beskrivelse (kun til internt brug).",
       "applyToOthersTitle": "Tilføj til andre objekter",
-      "applyToOthersHint": "Anvend den samme skat på andre objekter.",
       "applyToOthersEmpty": "Ingen andre objekter endnu — så snart du opretter et mere, vises det her.",
       "searchPlaceholder": "Søg …",
       "searchPropertiesPlaceholder": "Søg i objekter …",
@@ -4733,7 +4733,21 @@
         "community": "Fællesgebyr",
         "pet": "Kæledyrsgebyr"
       },
-      "actions": "Handlinger"
+      "actions": "Handlinger",
+      "manualSyncLabel": "Manuel synkronisering",
+      "abgabenNoCurrency": "Så længe der ikke er valgt en valuta for objektet, sendes gebyrer og skatter ikke til nogen portal.",
+      "feeAssignSubtitle": "Tilføj et nyt eller eksisterende gebyr.",
+      "feeCreateNew": "Opret nyt gebyr",
+      "searchFeesPlaceholder": "Søg i gebyrer …",
+      "feeFromProperty": "fra {title}",
+      "feeLibraryEmpty": "Der er endnu ingen gebyrer på dine andre objekter — opret et nyt ovenfor.",
+      "feeLibraryNoCurrency": "Vælg først objektets valuta; derefter kan du vælge eksisterende gebyrer her.",
+      "feeShortStayOnlyLabel": "Kun ved kortophold",
+      "feeShortStayOnlyHint": "Opkræv kun gebyret ved kortophold.",
+      "feeShortStayOnlyBound": "Gælder ved højst {nights} nætter — samme grænse som kortophold-tillægget. Gebyret sendes ikke til portalerne: en opholdslængde kan ikke angives der.",
+      "feeShortStayOnlyMissing": "Der er endnu ikke fastlagt et kortophold for dette objekt („Kortophold-tillæg“) — indtil da opkræves gebyret ikke.",
+      "applyToOthersFeeHint": "Anvend det samme gebyr på andre objekter.",
+      "applyToOthersTaxHint": "Anvend den samme skat på andre objekter."
     },
     "policiesForm": {
       "title": "Retningslinjer",
