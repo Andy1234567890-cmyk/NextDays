@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Header, HTTPException, Query
+from fastapi import APIRouter, Header, HTTPException, Query, Request
 
 from src.core.config import get_settings
 from src.core.logging import get_logger
@@ -127,14 +127,39 @@ def mapping_details(
     }
 
 
-@router.post("/changes/")
-def changes(
+@router.post("/activate/")
+def activate(
+    hotel_code: Annotated[str, Query(description="lokale property_id")],
     api_key: Annotated[str | None, Header(alias="api-key")] = None,
 ) -> dict[str, Any]:
-    """Channex pusht ARI-Änderungen hierher (Test). Wir bestätigen nur."""
+    """Channex ruft das beim Aktivieren des Kanals auf — live gemessen
+    (03.08.2026): `POST …/activate/?hotel_code=…`. Ohne diese Route antwortet
+    unsere Gegenstelle mit 404, und Channex schickt danach KEINE ARI-Änderungen
+    mehr (`/changes/` blieb im Test komplett aus). Nicht in der Doku."""
     _require_sandbox()
     _check_api_key(api_key)
-    log.info("sandbox_ota_changes")
+    log.info("sandbox_ota_activate", hotel_code=hotel_code)
+    return {"success": True}
+
+
+@router.post("/changes/")
+async def changes(
+    request: Request,
+    api_key: Annotated[str | None, Header(alias="api-key")] = None,
+) -> dict[str, Any]:
+    """Channex pusht ARI-Änderungen hierher (Test). Wir bestätigen nur.
+
+    Der Rumpf wird MITGELOGGT: das ist die einzige Stelle, an der sichtbar wird,
+    was eine OTA von uns wirklich bekommt (Preise, Verfügbarkeit,
+    Restriktionen). Ohne das ist „geht an die OTA" eine Behauptung.
+    """
+    _require_sandbox()
+    _check_api_key(api_key)
+    try:
+        payload = await request.json()
+    except ValueError:  # kein/kaputtes JSON — trotzdem bestätigen
+        payload = None
+    log.info("sandbox_ota_changes", payload=payload)
     return {"success": True, "unique_id": "sandbox"}
 
 
