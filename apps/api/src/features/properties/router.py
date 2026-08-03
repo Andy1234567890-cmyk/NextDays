@@ -27,6 +27,8 @@ from .schemas import (
     PropertyUpdate,
     RoomReorderRequest,
     SliceHealth,
+    TaxApplyRequest,
+    TaxApplyResponse,
     UnitCountRequest,
 )
 from .service import PropertyError
@@ -123,6 +125,28 @@ def set_unit_count(
     wegfallenden Einheiten frei sind (409 sonst)."""
     try:
         return service.set_unit_count(ctx, property_id, req.count)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/{property_id}/taxes/{tax_id}/apply", response_model=TaxApplyResponse)
+def apply_tax_to_properties(
+    property_id: str,
+    tax_id: str,
+    req: TaxApplyRequest,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
+) -> TaxApplyResponse:
+    """Steuer dieses Objekts auf weitere eigene Objekte übertragen. Jede Ziel-ID
+    wird einzeln tenant-gescopt; eine fremde ID ergibt 404 statt stillem
+    Überspringen."""
+    try:
+        return TaxApplyResponse(
+            **service.apply_tax_to_properties(ctx, property_id, tax_id, req.property_ids)
+        )
     except PropertyError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

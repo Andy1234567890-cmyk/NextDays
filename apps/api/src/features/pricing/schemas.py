@@ -9,6 +9,11 @@ from datetime import date
 
 from pydantic import BaseModel, Field, model_validator
 
+# Harte Obergrenze für einen Quote-Zeitraum (Wurzel 8: kein unbegrenzter
+# Nächte-Loop aus Client-Input). Zwei Jahre decken jede reale Buchung ab —
+# auch Langzeitmiete —, ein längerer Zeitraum ist ein Fehler, kein Angebot.
+MAX_QUOTE_NIGHTS = 730
+
 
 class EffectivePriceDay(BaseModel):
     """Effektiver Preis eines einzelnen Tages (kein Fallback: None = kein Preis)."""
@@ -54,6 +59,10 @@ class QuoteRequest(BaseModel):
     def _check_order(self) -> "QuoteRequest":
         if self.check_out <= self.check_in:
             raise ValueError("check_out muss nach check_in liegen")
+        if (self.check_out - self.check_in).days > MAX_QUOTE_NIGHTS:
+            raise ValueError(
+                f"Zeitraum zu lang (höchstens {MAX_QUOTE_NIGHTS} Nächte)"
+            )
         return self
 
 
@@ -76,6 +85,10 @@ class QuoteLine(BaseModel):
     amount: float
     kind: str | None = None
     tax_rate: float | None = None
+    # Nur bei kind="fee": die Gebühren-ID aus der Objekt-Preiskonfiguration.
+    # Prozent-Steuern mit gewählter Bemessungsgrundlage brauchen sie, um „diese
+    # Gebühr zählt, jene nicht" sicher zu treffen — Labels sind nicht eindeutig.
+    fee_id: str | None = None
 
 
 class QuoteResponse(BaseModel):

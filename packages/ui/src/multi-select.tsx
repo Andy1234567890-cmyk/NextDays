@@ -21,6 +21,8 @@ export function MultiSelect({
   searchPlaceholder = "Suchen …",
   emptyHint = "Keine Treffer.",
   allLabel = "Alle",
+  selectAllLabel,
+  countLabel,
   className,
 }: {
   options: MultiSelectOption[];
@@ -31,6 +33,11 @@ export function MultiSelect({
   emptyHint?: string;
   // Anzeige, wenn nichts gewählt ist (= alle).
   allLabel?: string;
+  /** Setzt den Kopf auf „n/m gewählt" + expliziten Alle-auswählen-Schalter.
+   *  Ohne diese Angabe bleibt es beim Bestandsverhalten (leer = alle). */
+  selectAllLabel?: string;
+  /** Zählertext, z. B. (n, m) => `${n}/${m} ausgewählt`. */
+  countLabel?: (selectedCount: number, total: number) => string;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -84,18 +91,36 @@ export function MultiSelect({
         <Command className="flex max-h-72 flex-col">
           <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
             <span className="text-xs text-muted-foreground">
-              {selected.length === 0
-                ? allLabel
-                : `${selected.length} gewählt`}
+              {countLabel
+                ? countLabel(selected.length, options.length)
+                : selected.length === 0
+                  ? allLabel
+                  : `${selected.length} gewählt`}
             </span>
-            {selected.length > 0 && (
+            {selectAllLabel ? (
               <button
                 type="button"
                 className="text-xs text-accent hover:underline"
-                onClick={() => onChange([])}
+                onClick={() =>
+                  onChange(
+                    selected.length === options.length
+                      ? []
+                      : options.map((o) => o.value),
+                  )
+                }
               >
-                {allLabel}
+                {selectAllLabel}
               </button>
+            ) : (
+              selected.length > 0 && (
+                <button
+                  type="button"
+                  className="text-xs text-accent hover:underline"
+                  onClick={() => onChange([])}
+                >
+                  {allLabel}
+                </button>
+              )
             )}
           </div>
           <CommandInput

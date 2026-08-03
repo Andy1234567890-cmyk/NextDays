@@ -44,6 +44,7 @@ from .schemas import (
     SliceHealth,
     types_for_accommodation,
 )
+from .steuern import SteuernMixin, normalize_taxes
 
 log = get_logger("nextdays.properties")
 
@@ -101,7 +102,7 @@ def _sniff_image_ext(content: bytes) -> str | None:
     return None
 
 
-class PropertiesService(GebaeudeMixin, RoomsMixin):
+class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin):
     slice_name = "properties"
 
     def __init__(self, service_client: Client) -> None:
@@ -486,6 +487,13 @@ class PropertiesService(GebaeudeMixin, RoomsMixin):
             # der offene Seitenweg, über den beliebig viele Objekte aktiv würden
             # (Wurzel 9: gleicher Scope auf allen Pfaden zum selben Zustand).
             self._require_kontingent(tenant_id, property_id)
+        # Steuern serverseitig prüfen und säubern, BEVOR sie gespeichert werden:
+        # der Client bestimmt weder die USt-Anzahl noch das erlaubte HTML.
+        attrs_in = changes.get("type_attributes")
+        if isinstance(attrs_in, dict) and isinstance(attrs_in.get("pricing"), dict):
+            pricing_in = attrs_in["pricing"]
+            if isinstance(pricing_in.get("taxes"), list):
+                pricing_in["taxes"] = normalize_taxes(pricing_in["taxes"])
         res = (
             self._db.table("properties")
             .update(changes)

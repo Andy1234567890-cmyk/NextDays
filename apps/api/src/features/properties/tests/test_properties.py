@@ -26,6 +26,7 @@ from src.features.properties.service import (
     _max_stay_of,
     _sniff_image_ext,
 )
+from src.features.properties.steuern import normalize_taxes
 from src.main import create_app
 
 client = TestClient(create_app())
@@ -978,3 +979,77 @@ def test_aufteilen_legt_einheiten_an_und_kuerzt_nur_freie() -> None:
     db.availability.clear()
     rest = svc.set_unit_count(None, "p1", 2)
     assert len(rest) == 2
+
+
+# --- Steuern: serverseitige Prüfung (steuern.normalize_taxes) ----------------
+
+
+def test_normalize_taxes_nur_eine_ust() -> None:
+    """Zwei USt-Zeilen sind ein Fehler — die Rechnung liest genau eine."""
+    with pytest.raises(PropertyError) as exc:
+        normalize_taxes(
+            [
+                {"id": "a", "kind": "vat", "mode": "percent", "value": 19,
+                 "includedInPrice": True},
+                {"id": "b", "kind": "vat", "mode": "percent", "value": 7,
+                 "includedInPrice": True},
+            ]
+        )
+    assert exc.value.status_code == 422
+
+
+def test_normalize_taxes_saeubert_beschreibung() -> None:
+    """Rich-Text wird mit Allowlist geparst; Skript-Anteile verschwinden."""
+    out = normalize_taxes(
+        [
+            {
+                "id": "t",
+                "kind": "local",
+                "name": "Kurtaxe",
+                "mode": "amount",
+                "value": 2,
+                "descriptionHtml": "<b>fett</b><script>alert(1)</script>",
+            }
+        ]
+    )
+    assert out[0]["descriptionHtml"] == "<b>fett</b>"
+
+
+def test_normalize_taxes_unbekannte_steuerart_faellt_durch() -> None:
+    with pytest.raises(PropertyError):
+        normalize_taxes(
+            [{"id": "t", "kind": "local", "name": "X", "mode": "amount",
+              "value": 1, "taxType": "Fantasiesteuer"}]
+        )
+
+
+def test_normalize_taxes_prozent_ueber_100() -> None:
+    with pytest.raises(PropertyError):
+        normalize_taxes(
+            [{"id": "t", "kind": "vat", "mode": "percent", "value": 120,
+              "includedInPrice": True}]
+        )
+
+
+def test_normalize_taxes_leere_uebersetzung_faellt_weg() -> None:
+    """Ein ungefüllter Sprach-Tab darf nicht als leerer Name beim Portal landen."""
+    out = normalize_taxes(
+        [
+            {
+                "id": "t",
+                "kind": "local",
+                "name": "Kurtaxe",
+                "mode": "amount",
+                "value": 2,
+                "names": {"de": "Kurtaxe", "en": "  "},
+            }
+        ]
+    )
+    assert out[0]["names"] == {"de": "Kurtaxe"}
+
+
+def test_normalize_taxes_lokale_steuer_braucht_namen() -> None:
+    with pytest.raises(PropertyError):
+        normalize_taxes(
+            [{"id": "t", "kind": "local", "mode": "amount", "value": 2}]
+        )

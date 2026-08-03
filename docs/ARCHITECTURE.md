@@ -603,8 +603,16 @@ Preise erschienen nicht im Kalender/Quote. Jetzt gibt es **einen** Resolver
   in zwei Systemen ableiten). Plan/Belege: `docs/rate-plan-derived-plan.md`.
 - `quote(property_id, range, guests, channel)` → vollständige Aufschlüsselung:
   Effektiv-Tagespreise + Längenpreis (verdrängt Basispreis), Kurzaufenthalts- und
-  Extra-Gast-Aufschlag, Kanal-Markup (direct = 0), Gebühren, Aktionen (Rabatt),
-  Steuern → Summe + Positionen.
+  Extra-Gast-Aufschlag, Gebühren, Aktionen (Rabatt), Steuern → Summe + Positionen.
+  Der Zeitraum ist auf `MAX_QUOTE_NIGHTS` (730) gedeckelt (422) — kein
+  unbegrenzter Nächte-Loop aus Client-Input.
+- **Steuern** rechnen mit ihrer Basis, nicht pauschal: Betrags-Steuern über
+  `chargeBasis` × `period` (Kurtaxe „2,50 € pro Gast pro Nacht" = Betrag × Gäste
+  × Nächte), Prozent-Steuern über `taxableBase` nur auf Grundpreis und/oder
+  ausgewählte Gebühren (dafür trägt jede fee-Zeile ihre `fee_id`). Die
+  Bemessungsgrundlage wird VOR der Steuerschleife eingefroren, damit Steuern
+  sich nicht gegenseitig besteuern. Angezeigt wird der gastseitige Name
+  (`names[locale]`), nicht der interne.
 
 Jede Oberfläche liest Preise **ausschließlich** über den Resolver: der Kalender
 (`calendar/get_availability`) zeigt denselben Effektivpreis wie die Buchungs-Quote;

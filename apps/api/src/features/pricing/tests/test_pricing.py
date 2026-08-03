@@ -6,7 +6,9 @@ Kurzaufenthalt, Extra-Gast, Markup, Gebühren, Aktion, Steuern).
 """
 from datetime import date
 
+import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from src.features.pricing.resolver import PricingError, PricingResolver
 from src.features.pricing.schemas import QuoteRequest
@@ -626,3 +628,147 @@ def test_derived_plan_no_price_when_parent_none() -> None:
     days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2),
                               rate_plan_id="bnb")
     assert days[0].price is None
+
+
+def test_quote_kurtaxe_pro_gast_pro_nacht() -> None:
+    """Kurtaxe „2,50 € pro Gast pro Nacht": 3 Nächte × 2 Gäste = 15,00 €."""
+    cfg = {
+        "taxes": [
+            {
+                "id": "kurtaxe",
+                "kind": "local",
+                "taxType": "TouristTax",
+                "name": "Kurtaxe",
+                "mode": "amount",
+                "value": 2.5,
+                "chargeBasis": "PerPerson",
+                "period": "PerNight",
+                "includedInPrice": False,
+            }
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    kurtaxe = next(line for line in q.lines if line.kind == "tax")
+    assert kurtaxe.amount == 15.0
+    assert q.total == 315.0
+
+
+def test_quote_betrags_steuer_altdatensatz_bleibt_pro_nacht() -> None:
+    """Ohne chargeBasis/period gilt weiter „einmalig pro Nacht" (Bestand)."""
+    cfg = {
+        "taxes": [
+            {"id": "alt", "name": "Abgabe", "mode": "amount", "value": 3,
+             "includedInPrice": False}
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=4,
+        )
+    )
+    assert next(line for line in q.lines if line.kind == "tax").amount == 9.0
+
+
+def test_quote_prozentsteuer_nur_auf_gewaehlte_grundlage() -> None:
+    """taxableBase=[base_price] besteuert NUR die Übernachtung, nicht die
+    Reinigungsgebühr."""
+    cfg = {
+        "fees": [
+            {"id": "clean", "name": "Reinigung", "amount": 50, "basis": "per_stay"}
+        ],
+        "taxes": [
+            {
+                "id": "city",
+                "kind": "local",
+                "name": "Stadtsteuer",
+                "mode": "percent",
+                "value": 10,
+                "taxableBase": ["base_price"],
+                "includedInPrice": False,
+            }
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    # 10 % von 300 (nur Übernachtung), NICHT von 350.
+    assert next(line for line in q.lines if line.kind == "tax").amount == 30.0
+
+
+def test_quote_prozentsteuer_grundlage_inkl_gebuehr() -> None:
+    """Grundlage mit ausgewählter Gebühr: 10 % von (300 + 50)."""
+    cfg = {
+        "fees": [
+            {"id": "clean", "name": "Reinigung", "amount": 50, "basis": "per_stay"}
+        ],
+        "taxes": [
+            {
+                "id": "city",
+                "kind": "local",
+                "name": "Stadtsteuer",
+                "mode": "percent",
+                "value": 10,
+                "taxableBase": ["base_price", "clean"],
+                "includedInPrice": False,
+            }
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    assert next(line for line in q.lines if line.kind == "tax").amount == 35.0
+
+
+def test_quote_gastseitiger_steuername_gewinnt() -> None:
+    """names[locale] ist der Text, den der Gast sieht — nicht der interne Name."""
+    cfg = {
+        "taxes": [
+            {"id": "t", "kind": "local", "name": "intern", "names": {"de": "Kurtaxe"},
+             "mode": "amount", "value": 2, "includedInPrice": False}
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 2),
+            guests=1,
+        )
+    )
+    assert next(line for line in q.lines if line.kind == "tax").label == "Kurtaxe"
+
+
+def test_quote_zeitraum_obergrenze() -> None:
+    """Ein unbegrenzter Zeitraum aus Client-Input ist ein Fehler (Wurzel 8)."""
+    with pytest.raises(ValidationError):
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 1, 1),
+            check_out=date(2030, 1, 1),
+            guests=1,
+        )

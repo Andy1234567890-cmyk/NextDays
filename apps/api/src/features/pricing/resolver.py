@@ -58,6 +58,11 @@ def _pick_locale_text(name: object) -> str | None:
     return str(val) if val else None
 
 
+# Kennung der Bemessungsgrundlage „Grundpreis" (neben den Gebühren-IDs des
+# Objekts); Gegenstück zu TAXABLE_BASE_PRICE in web/lib/pricing-meta.ts.
+_TAXABLE_BASE_PRICE = "base_price"
+
+
 class PricingError(Exception):
     """Fachlicher Preis-Fehler; vom Router auf HTTP-Status gemappt."""
 
@@ -783,6 +788,7 @@ class PricingResolver:
                         amount=round(amount, 2),
                         kind="fee",
                         tax_rate=_to_float(fee.get("taxRate")),
+                        fee_id=(str(fee["id"]) if fee.get("id") else None),
                     )
                 )
                 subtotal += amount
@@ -851,13 +857,24 @@ class PricingResolver:
                 )
             subtotal -= subtotal * pct / 100.0
 
-        # 5) Steuern (nicht im Preis enthaltene werden addiert).
+        # 5) Steuern (nicht im Preis enthaltene werden addiert). Prozent-Steuern
+        #    mit gewählter Bemessungsgrundlage besteuern nur Grundpreis und/oder
+        #    einzelne Gebühren; Betrags-Steuern zählen Gäste/Nächte nach ihrer
+        #    Basis (Kurtaxe „pro Gast pro Nacht"). Die Grundlage wird VOR dieser
+        #    Schleife eingefroren, damit sich Steuern nicht gegenseitig besteuern.
+        steuer_basis_lines = list(lines)
+        steuer_subtotal = subtotal
         for tax in config.taxes:
             if bool(tax.get("includedInPrice")):
                 continue
-            amount = self._tax_amount(tax, subtotal)
+            basis = self._taxable_base(
+                tax, steuer_basis_lines, nightly_total, steuer_subtotal
+            )
+            amount = self._tax_amount(tax, basis, n, req.guests)
             if amount > 0:
-                name = str(tax.get("name") or "Steuer")
+                name = _pick_locale_text(tax.get("names")) or str(
+                    tax.get("name") or "Steuer"
+                )
                 lines.append(QuoteLine(label=name, amount=round(amount, 2), kind="tax"))
                 subtotal += amount
 
@@ -921,9 +938,55 @@ class PricingResolver:
         return amount  # per_stay
 
     @staticmethod
-    def _tax_amount(tax: dict, base: float) -> float:
+    def _tax_amount(tax: dict, base: float, nights: int, guests: int) -> float:
+        """Steuerbetrag einer Steuer auf ihre Bemessungsgrundlage.
+
+        Prozent: Anteil der übergebenen Grundlage (die der Aufrufer je nach
+        `taxableBase` bildet). Betrag: Stückzahl aus `chargeBasis` × `period`
+        — „2,50 € pro Gast pro Nacht" ist damit abbildbar. Fehlt die Basis
+        (Altdatensatz), gilt einmalig pro Nacht: genau das, was für
+        `mode:"amount"` bisher gerechnet und an die Portale gesendet wurde
+        (Channex-`logic` `per_night`) — kein Bedeutungswechsel im Bestand.
+        """
         value = _to_float(tax.get("value")) or 0.0
         mode = str(tax.get("mode") or "percent")
         if mode == "percent":
             return base * value / 100.0
-        return value  # fester Betrag
+        charge = str(tax.get("chargeBasis") or "SingleCharge")
+        period = str(tax.get("period") or "PerNight")
+        faktor = 1
+        if charge == "PerPerson":
+            faktor *= max(guests, 0)
+        if period == "PerNight":
+            faktor *= max(nights, 0)
+        return value * faktor
+
+    @staticmethod
+    def _taxable_base(
+        tax: dict, lines: list[QuoteLine], nightly_total: float, subtotal: float
+    ) -> float:
+        """Bemessungsgrundlage einer Prozent-Steuer.
+
+        Ohne gesetzte `taxableBase` bleibt es bei der bisherigen Auslegung
+        (gesamte Zwischensumme). Mit gesetzter Grundlage zählen nur der
+        Grundpreis und/oder die ausgewählten Gebühren — die Rabatt-Zeilen
+        wirken dabei anteilig weiter über `subtotal`, deshalb wird die
+        gewählte Grundlage im selben Verhältnis gekürzt wie die Zwischensumme
+        gegenüber der ungekürzten Summe aller positiven Zeilen.
+        """
+        basis_ids = tax.get("taxableBase")
+        if not isinstance(basis_ids, list) or not basis_ids:
+            return subtotal
+        gewaehlt = set(basis_ids)
+        grundlage = nightly_total if _TAXABLE_BASE_PRICE in gewaehlt else 0.0
+        for ln in lines:
+            if ln.kind == "fee" and ln.fee_id and ln.fee_id in gewaehlt:
+                grundlage += ln.amount
+        if grundlage <= 0:
+            return 0.0
+        positiv = sum(ln.amount for ln in lines if ln.amount > 0)
+        if positiv <= 0:
+            return 0.0
+        # Rabatte haben die Zwischensumme bereits gesenkt; die gewählte
+        # Grundlage anteilig mitziehen, statt sie ungekürzt zu besteuern.
+        return grundlage * min(subtotal / positiv, 1.0)

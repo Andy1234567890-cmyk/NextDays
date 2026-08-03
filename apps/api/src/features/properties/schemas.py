@@ -134,6 +134,20 @@ class UnitCountRequest(BaseModel):
     count: int = Field(ge=1, le=200)
 
 
+class TaxApplyRequest(BaseModel):
+    """Eine Steuer dieses Objekts auf weitere eigene Objekte übertragen.
+    Obergrenze, damit ein Aufruf nicht das ganze Portfolio durchschreibt
+    (Wurzel 8: jede Liste bekommt eine harte Grenze)."""
+
+    property_ids: list[str] = Field(min_length=1, max_length=200)
+
+
+class TaxApplyResponse(BaseModel):
+    """Objekte, die die Steuer tatsächlich erhalten haben."""
+
+    applied_to: list[str]
+
+
 class PropertyBase(BaseModel):
     """Gemeinsame, bearbeitbare Felder eines Objekts."""
 

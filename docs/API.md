@@ -242,10 +242,28 @@ Kaution, Angebots-Gültigkeit), `bookability` (`instant|request|inquiry`),
 
 **Preise** (.. „Pricing") liegen in `type_attributes.pricing`:
 `currency`, `basePrice`, `dynamicPricing`, `customByWeekday`/`weekdayPrices`,
-`markup` (% je externem Kanal `airbnb`/`booking`/`google`), `extraGuestCharge`,
-`shortStay*`, `lengthPrices[]` (Wochen-/Monats-/eigene Längenpreise) sowie
-`fees[]`, `taxes[]` (USt./lokal), `promotions[]`, `addOns[]`, `businessTaxId`,
-`totRegistrationId` und `basePriceLabel`.
+`extraGuestCharge`, `shortStay*`, `lengthPrices[]` (Wochen-/Monats-/eigene
+Längenpreise) sowie `fees[]`, `taxes[]`, `promotions[]`, `addOns[]`,
+`businessTaxId`, `totRegistrationId` und `basePriceLabel`. Portal-Aufschläge
+stehen NICHT hier — sie sind Kanal-Pläne (`rate_plans.portal_scope`, 0272).
+
+`taxes[]` je Eintrag: `id`, `kind` (`vat` — genau EINE je Objekt, serverseitig
+erzwungen — oder `local`), `mode` (`percent`/`amount`), `value`,
+`includedInPrice`, `name` plus optional `names` (gastseitiger Name je Locale,
+alle 24), `descriptionHtml` (beim Speichern mit `nh3`-Allowlist gesäubert). Bei
+`kind=local` zusätzlich `taxType` (Airbnb-Taxonomie: `HotelTax`, `LodgingTax`,
+`RoomTax`, `TourismAssessment`, `TouristTax`, `TransientOccupancyTax`,
+`Unknown`); bei `mode=amount` `chargeBasis` (`SingleCharge`/`PerPerson`) ×
+`period` (`PerStay`/`PerNight`) — die vier Kombinationen bilden das
+Kurtaxen-Modell und gehen als Channex-`logic` (`per_booking`, `per_night`,
+`per_person`, `per_person_per_night`) an die Portale; bei `mode=percent`
+optional `taxableBase[]` (Gebühren-IDs und/oder `base_price`). Fehlen
+`chargeBasis`/`period` (Altbestand), gilt „einmalig pro Nacht" — exakt das
+bisherige Verhalten.
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| `POST` | `/api/v1/properties/{id}/taxes/{tax_id}/apply` | Steuer dieses Objekts auf weitere eigene Objekte übertragen (`{property_ids: []}`, max. 200). Jede Ziel-ID einzeln tenant-gescopt → `404` bei fremder ID, kein stilles Überspringen |
 
 **Verfügbarkeit** (.. „Availability") liegt in `type_attributes.availability`:
 `minStay`, `minStayByDays`, `maxStay`, sowie pro-Kanal-fähige Werte

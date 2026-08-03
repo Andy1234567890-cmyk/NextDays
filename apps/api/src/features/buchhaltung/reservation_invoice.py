@@ -78,7 +78,11 @@ def _property_vat_rate(pricing_taxes: list[dict]) -> Decimal | None:
     MwStSystRL) — bei Portfolios über mehrere EU-Länder (27 Länder, Sätze
     7/9/10/13 % …) MUSS der Satz je Objekt gewinnen; der Tenant-Satz
     (tenant_billing_profile.lodging_tax_rate) ist nur der Standard für
-    Objekte ohne eigene USt-Konfiguration."""
+    Objekte ohne eigene USt-Konfiguration.
+
+    Es gibt je Objekt GENAU EINE USt (die Pflege erzwingt das, siehe
+    properties/service.py `_normalize_taxes`); die Schleife findet sie und
+    hört auf — kein stilles „erster von mehreren"."""
     for t in pricing_taxes:
         if not isinstance(t, dict) or t.get("kind") != "vat":
             continue
@@ -92,17 +96,26 @@ def _property_vat_rate(pricing_taxes: list[dict]) -> Decimal | None:
     return None
 
 
-def _additive_tax_labels(pricing_taxes: list[dict]) -> set[str]:
+def _additive_tax_labels(pricing_taxes: list[dict], language: str = "de") -> set[str]:
     """Namen der additiven Steuern/Abgaben aus property_pricing_config.taxes —
-    der Resolver erzeugt quote_items-Labels 1:1 aus tax.name (resolver.py §5),
-    darüber werden Bestands-Zeilen ohne `kind` als Abgabe (0 % USt) erkannt."""
-    return {
-        str(t.get("name") or "").strip()
-        for t in pricing_taxes
-        if isinstance(t, dict)
-        and not bool(t.get("includedInPrice"))
-        and str(t.get("name") or "").strip()
-    }
+    der Resolver erzeugt quote_items-Labels aus dem gastseitigen Namen
+    (`names[locale]`, sonst `name`; resolver.py §5), darüber werden Bestands-
+    Zeilen ohne `kind` als Abgabe (0 % USt) erkannt. Beide Schreibweisen
+    aufnehmen: ältere Snapshots tragen noch den internen Namen."""
+    labels: set[str] = set()
+    for t in pricing_taxes:
+        if not isinstance(t, dict) or bool(t.get("includedInPrice")):
+            continue
+        names = t.get("names") if isinstance(t.get("names"), dict) else {}
+        for kandidat in (
+            names.get(language),
+            names.get("de"),
+            next(iter(names.values()), None),
+            t.get("name"),
+        ):
+            if kandidat and str(kandidat).strip():
+                labels.add(str(kandidat).strip())
+    return labels
 
 
 def _split_gross(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
@@ -148,7 +161,7 @@ def build_positions(
     kein Kleinunternehmer) oder gar keine fakturierbare Position entsteht.
     """
     unit = doc_i18n.flat_rate_unit(language)
-    tax_labels = _additive_tax_labels(pricing_taxes)
+    tax_labels = _additive_tax_labels(pricing_taxes, language)
     total_amount = _dec(reservation.get("total_amount"))
     quote_items = [
         it for it in (reservation.get("quote_items") or []) if isinstance(it, dict)

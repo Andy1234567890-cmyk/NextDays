@@ -50,6 +50,30 @@ NICHT strukturiert spezifiziert — kein geratenes Parsing; die Roh-Payloads
 liegen in `channex_booking.raw`, sobald echte Gebühren-Revisionen deren
 Struktur zeigen, wird das Feld nachgezogen.
 
+## Steuern → Channex (`_sync_taxes` in `content_sync.py`)
+
+Quelle sind die Objekt-Steuern (`type_attributes.pricing.taxes`); Idempotenz
+über `channex_tax_map` (unique `property_id, local_tax_id`). Abgeleitet wird:
+
+| unsere Steuer | Channex `logic` |
+|---|---|
+| `mode=percent` | `percent` |
+| `amount` + `SingleCharge`/`PerStay` | `per_booking` |
+| `amount` + `SingleCharge`/`PerNight` | `per_night` |
+| `amount` + `PerPerson`/`PerStay` | `per_person` |
+| `amount` + `PerPerson`/`PerNight` | `per_person_per_night` |
+
+Ohne gespeicherte Basis (Altbestand) bleibt es bei `per_night` — dem
+bisherigen Verhalten. Der `type` kommt aus der Steuerart: ortsbezogene Abgaben
+(`TouristTax`, `TourismAssessment`, `TransientOccupancyTax`) → `city tax`,
+Beherbergungs-/Zimmersteuern → `tax`; ohne Steuerart entscheidet weiter `kind`.
+Als Titel geht der gastseitige Name (`names[locale]`) ans Portal.
+
+Gegenzustand (Wurzel 1): eine im Objekt GELÖSCHTE Steuer wird beim Sync aus
+dem Mapping genommen (`deleted_at`) und verschwindet aus dem Tax-Set; ist die
+letzte Steuer entfernt, wird das Set geleert (`_clear_tax_set`) — sonst
+kassierte das Portal eine Abgabe weiter, die es hier nicht mehr gibt.
+
 ## Webhook-Ereignisse (`channex_webhook_event`, Migration 0132)
 
 Abonniert ist das volle Event-Set (inkl. `booking_unmapped_room/rate`,

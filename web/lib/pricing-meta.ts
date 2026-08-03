@@ -1,6 +1,7 @@
 // Preis-Datenmodell (Pricing, Etappe 1: Nightly + Length of stay).
 // Gespeichert im flexiblen jsonb-Feld `type_attributes.pricing` eines Objekts —
-// keine Migration. Mark-up pro externem Kanal (Airbnb/Booking/Google).
+// keine Migration. Portal-Aufschläge sind Kanal-Pläne (0272), kein Mark-up hier.
+import { currencySymbol, formatCurrency } from "@/lib/currency";
 
 
 // Alle in den 27 EU-Staaten + CH real vorkommenden Währungen (Quelle: laender.ts)
@@ -33,12 +34,11 @@ export const CURRENCY_OPTIONS: { value: Currency; label: string; symbol: string 
   { value: "GBP", label: "GBP £", symbol: "£" },
 ];
 
-export function currencySymbol(c: Currency | ""): string {
-  // Leere Währung → kein Symbol (Wurzel 4: kein erfundenes €). Unbekannter
-  // Code → der Code selbst (symbollose, aber informative Anzeige).
-  if (!c) return "";
-  return CURRENCY_OPTIONS.find((o) => o.value === c)?.symbol ?? c;
-}
+// Symbol und Betragsformat kommen aus der EINEN Quelle (@nextdays/currency über
+// lib/currency) — hier standen früher eigene Kopien, deren Zahlenformat vom Rest
+// der App abwich (2,5 statt 2,50). Genau die dritte Kopie, die Wurzel 4
+// verbietet. Re-Export, damit die Preis-UI ihren gewohnten Namen behält.
+export { currencySymbol };
 
 // Externe Kanäle, auf die ein Mark-up angewendet wird (nicht „direct").
 
@@ -96,14 +96,74 @@ export const TAX_KIND_LABELS: Record<TaxKind, string> = {
   vat: "USt. / Mehrwertsteuer",
   local: "Lokale Steuer",
 };
+
+// Steuerart einer lokalen Steuer. Diese Werte sind KEINE freie Wahl: sie gehen
+// als Airbnb-Steuerart an die Portale (Airbnb-Taxonomie), deshalb genau diese
+// Codes und keine eigenen.
+export type LocalTaxType =
+  | "HotelTax"
+  | "LodgingTax"
+  | "RoomTax"
+  | "TourismAssessment"
+  | "TouristTax"
+  | "TransientOccupancyTax"
+  | "Unknown";
+export const LOCAL_TAX_TYPES: LocalTaxType[] = [
+  "HotelTax",
+  "LodgingTax",
+  "RoomTax",
+  "TourismAssessment",
+  "TouristTax",
+  "TransientOccupancyTax",
+  "Unknown",
+];
+
+// Betrags-Steuern: wer wird gezählt (Buchung oder Gast) × pro Aufenthalt oder
+// pro Nacht. Die vier Kombinationen bilden das Kurtaxen-Modell („2,50 € pro
+// Gast pro Nacht") und werden 1:1 auf die Channex-`logic` abgebildet
+// (per_booking / per_night / per_person / per_person_per_night).
+export type TaxChargeBasis = "SingleCharge" | "PerPerson";
+export type TaxPeriod = "PerStay" | "PerNight";
+
+/** Bemessungsgrundlage „Grundpreis" — neben den Fee-IDs des Objekts. */
+export const TAXABLE_BASE_PRICE = "base_price";
+
 export type Tax = {
   id: string;
   kind: TaxKind;
+  /** Nur bei kind==="local": Steuerart für die Portale. */
+  taxType?: LocalTaxType;
+  /** Interner Name (Fallback, wenn keine gastseitige Übersetzung greift). */
   name: string;
+  /** Gastseitiger Name je Sprache (Muster wie bei Addons/Services). */
+  names?: Record<string, string>;
+  /** Interne Beschreibung; serverseitig beim Speichern sanitisiert. */
+  descriptionHtml?: string | null;
   mode: TaxMode; // % oder Betrag
   value: number;
+  /** Nur bei mode==="amount". */
+  chargeBasis?: TaxChargeBasis;
+  period?: TaxPeriod;
+  /** Nur bei mode==="percent": Fee-IDs und/oder TAXABLE_BASE_PRICE. */
+  taxableBase?: string[];
   includedInPrice: boolean; // im Preis enthalten?
 };
+
+/** Basis einer Betrags-Steuer, mit der Auslegung für Altdatensätze: ohne
+ *  gespeicherte Basis gilt „einmalig pro Nacht" — exakt das, was der
+ *  Channex-Sync für `mode:"amount"` bisher gesendet hat (`per_night`). Damit
+ *  ändert sich für Bestandsdaten nichts; alles andere wird NICHT geraten. */
+export function taxAmountBasis(tax: Tax): { charge: TaxChargeBasis; period: TaxPeriod } {
+  return {
+    charge: tax.chargeBasis ?? "SingleCharge",
+    period: tax.period ?? "PerNight",
+  };
+}
+
+/** Gastseitiger Name in der gewünschten Sprache, sonst der interne Name. */
+export function taxDisplayName(tax: Tax, locale: string): string {
+  return tax.names?.[locale]?.trim() || tax.name;
+}
 
 // Promotion (Promotions): prozentualer Rabatt mit Bedingungen.
 export type Promotion = {
@@ -184,9 +244,14 @@ export function readPricing(typeAttributes: Record<string, unknown> | undefined)
   };
 }
 
-// Preis formatieren (z. B. "kr 450") in der Sprache der Oberfläche.
+/** Preis in der Sprache der Oberfläche formatieren („450,00 kr").
+ *
+ *  Dünner Aufsatz auf `formatCurrency` — KEINE eigene Formatierung mehr: die
+ *  frühere Kopie nutzte `toLocaleString()` ohne Optionen und schnitt damit
+ *  nachlaufende Nullen ab (2,50 € wurde „2,5"), während der Rest der App
+ *  centgenau rendert. Eine Wahrheit für alle Beträge (Wurzel 4). Ohne gewählte
+ *  Währung bleibt es bei der reinen Zahl, kein erfundenes €.
+ */
 export function fmtPrice(amount: number, currency: Currency | "", locale: string): string {
-  const sym = currencySymbol(currency);
-  // Ohne Währung nur die Zahl (kein führendes Leerzeichen/Symbol).
-  return sym ? `${sym} ${amount.toLocaleString(locale)}` : amount.toLocaleString(locale);
+  return formatCurrency(amount, currency || null, locale);
 }

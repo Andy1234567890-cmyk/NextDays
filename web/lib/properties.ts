@@ -172,6 +172,19 @@ export async function deleteProperty(id: string): Promise<Result<null>> {
   return call(`/properties/${id}`, { method: "DELETE" });
 }
 
+/** Eine Steuer dieses Objekts auf weitere eigene Objekte übertragen. Der
+ *  Server prüft jede Ziel-ID einzeln auf den eigenen Betrieb. */
+export async function applyTaxToProperties(
+  propertyId: string,
+  taxId: string,
+  targetIds: string[],
+): Promise<Result<{ applied_to: string[] }>> {
+  return call(`/properties/${propertyId}/taxes/${taxId}/apply`, {
+    method: "POST",
+    body: { property_ids: targetIds },
+  });
+}
+
 /** Objekt duplizieren („Kopieren"): eigenständige Kopie als Entwurf, auf keinem
  *  Kanal sichtbar. Gibt das neu angelegte Objekt zurück. */
 export async function duplicateProperty(

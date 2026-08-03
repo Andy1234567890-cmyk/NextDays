@@ -1183,11 +1183,53 @@ class ContentSyncMixin:
                 channex_rate_plan_id=channex_id, local_rate_plan_id=local_id,
             )
 
-    # Lokale Steuer-Logik → Channex tax.logic. percent→percent; amount → pro Nacht
-    # (Pauschale je Nacht ist die gängige Auslegung eines festen Betrags).
-    _TAX_LOGIC = {"percent": "percent", "amount": "per_night"}
-    # Lokale Steuer-Art → Channex type.
+    # Betrags-Steuern: (chargeBasis, period) → Channex tax.logic. Die vier
+    # Kombinationen sind exakt die Channex-Enums (docs: taxes-and-tax-sets,
+    # logic ∈ percent|per_room|per_room_per_night|per_person|
+    # per_person_per_night|per_night|per_booking) — damit geht „2,50 € pro Gast
+    # pro Nacht" unverfälscht an die Portale statt wie früher pauschal als
+    # per_night.
+    _TAX_AMOUNT_LOGIC = {
+        ("SingleCharge", "PerStay"): "per_booking",
+        ("SingleCharge", "PerNight"): "per_night",
+        ("PerPerson", "PerStay"): "per_person",
+        ("PerPerson", "PerNight"): "per_person_per_night",
+    }
+    # Lokale Steuerart (Airbnb-Taxonomie) → Channex type ∈ tax|fee|city tax.
+    # Ortsbezogene Abgaben sind „city tax", Beherbergungs-/Zimmersteuern „tax".
+    _TAX_TYPE_BY_LOCAL_KIND = {
+        "HotelTax": "tax",
+        "LodgingTax": "tax",
+        "RoomTax": "tax",
+        "TourismAssessment": "city tax",
+        "TouristTax": "city tax",
+        "TransientOccupancyTax": "city tax",
+        "Unknown": "tax",
+    }
+    # Fallback auf der gröberen Achse (kind), wenn keine Steuerart gesetzt ist
+    # (Altdatensatz) — unverändertes Verhalten für den Bestand.
     _TAX_TYPE = {"vat": "tax", "local": "city tax"}
+
+    @classmethod
+    def _tax_logic(cls, tax: dict[str, Any]) -> str:
+        """Channex-`logic` einer Steuer. Ohne gespeicherte Basis gilt bei
+        Betrags-Steuern „einmalig pro Nacht" — genau das, was bisher gesendet
+        wurde; nichts wird geraten."""
+        if str(tax.get("mode") or "percent") == "percent":
+            return "percent"
+        schluessel = (
+            str(tax.get("chargeBasis") or "SingleCharge"),
+            str(tax.get("period") or "PerNight"),
+        )
+        return cls._TAX_AMOUNT_LOGIC.get(schluessel, "per_night")
+
+    @classmethod
+    def _tax_type(cls, tax: dict[str, Any]) -> str:
+        """Channex-`type` einer Steuer: aus der Steuerart, sonst aus `kind`."""
+        art = tax.get("taxType")
+        if art:
+            return cls._TAX_TYPE_BY_LOCAL_KIND.get(str(art), "tax")
+        return cls._TAX_TYPE.get(str(tax.get("kind") or ""), "tax")
 
     def _sync_taxes(
         self,
@@ -1201,23 +1243,30 @@ class ContentSyncMixin:
     ) -> None:
         """Lokale Steuern (type_attributes.pricing.taxes) → Channex taxes + ein
         tax_set, das an die Rate-Plans gehängt wird. Idempotent über
-        channex_tax_map. Ohne Steuern: no-op."""
+        channex_tax_map. Ohne Steuern: nur noch der Abgleich gelöschter."""
         attrs = prop_row.get("type_attributes") or {}
         pricing = attrs.get("pricing") or {}
         taxes = pricing.get("taxes") or []
-        if not taxes:
-            return
 
         channex_tax_ids: list[str] = []
         for t in taxes:
             local_id = t.get("id")
             if not local_id:
                 continue
-            logic = self._TAX_LOGIC.get(t.get("mode"), "percent")
+            logic = self._tax_logic(t)
+            # Gastseitiger Name, wenn gepflegt (names[locale]) — das ist der
+            # Text, den der Gast beim Portal sieht.
+            names = t.get("names") if isinstance(t.get("names"), dict) else {}
+            titel = (
+                names.get("de")
+                or next((v for v in names.values() if v), None)
+                or t.get("name")
+                or "Steuer"
+            )
             tax_attrs: dict[str, Any] = {
-                "title": (t.get("name") or "Steuer")[:255],
+                "title": str(titel)[:255],
                 "logic": logic,
-                "type": self._TAX_TYPE.get(t.get("kind"), "tax"),
+                "type": self._tax_type(t),
                 "rate": str(t.get("value") or 0),
                 "is_inclusive": bool(t.get("includedInPrice")),
                 "property_id": channex_property_id,
@@ -1253,7 +1302,43 @@ class ContentSyncMixin:
                 ).execute()
             channex_tax_ids.append(channex_tax_id)
 
+        # Wurzel 1 (Gegenzustand): eine im Objekt GELÖSCHTE Steuer muss auch bei
+        # den Portalen verschwinden. Sonst kassiert Booking eine Kurtaxe weiter,
+        # die es hier längst nicht mehr gibt. Das Tax-Set unten wird ohnehin neu
+        # gesetzt (es enthält nur noch die aktuellen IDs) — hier wird zusätzlich
+        # das Mapping stillgelegt, damit ein späteres Wiederanlegen derselben
+        # UI-ID sauber neu erzeugt statt eine tote Channex-ID zu updaten.
+        aktuelle_ids = {str(t["id"]) for t in taxes if t.get("id")}
+        verwaiste = [
+            row
+            for row in (
+                db.table("channex_tax_map")
+                .select("id, local_tax_id")
+                .eq("tenant_id", tenant_id)
+                .eq("property_id", property_id)
+                .is_("deleted_at", "null")
+                .execute()
+            ).data
+            or []
+            if str(row.get("local_tax_id")) not in aktuelle_ids
+        ]
+        if verwaiste:
+            db.table("channex_tax_map").update(
+                {"deleted_at": datetime.now(UTC).isoformat()}
+            ).in_("id", [r["id"] for r in verwaiste]).execute()
+            log.info(
+                "channex_taxes_pruned",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                pruned=len(verwaiste),
+            )
+
         if not channex_tax_ids:
+            # Letzte Steuer entfernt: das Tax-Set leeren, damit die Portale
+            # keine Steuer mehr aufschlagen. Ohne diesen Zweig bliebe der alte
+            # Satz beim Portal stehen (stiller Gegenzustand-Fehler).
+            self._clear_tax_set(db, tenant_id, property_id, channex_property_id,
+                                currency, channex_rate_plan_ids)
             return
 
         # Ein tax_set je Property (enthält alle Steuern), an die Rate-Plans gehängt.
@@ -1295,6 +1380,45 @@ class ContentSyncMixin:
             tenant_id=tenant_id,
             property_id=property_id,
             taxes=len(channex_tax_ids),
+        )
+
+    def _clear_tax_set(
+        self,
+        db: Client,
+        tenant_id: str,
+        property_id: str,
+        channex_property_id: str,
+        currency: str,
+        channex_rate_plan_ids: list[str],
+    ) -> None:
+        """Tax-Set des Objekts leeren, wenn keine Steuer mehr konfiguriert ist.
+        Ohne bestehendes Set: no-op (nie eines nur zum Leeren anlegen)."""
+        vorhanden = (
+            db.table("channex_tax_map")
+            .select("channex_tax_set_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .not_.is_("channex_tax_set_id", "null")
+            .limit(1)
+            .execute()
+        ).data
+        tax_set_id = (vorhanden or [{}])[0].get("channex_tax_set_id")
+        if not tax_set_id:
+            return
+        self._channex.update_tax_set(
+            tax_set_id,
+            {
+                "title": "Standard",
+                "property_id": channex_property_id,
+                "currency": currency,
+                "taxes": [],
+                "associated_rate_plan_ids": channex_rate_plan_ids,
+            },
+        )
+        log.info(
+            "channex_tax_set_cleared",
+            tenant_id=tenant_id,
+            property_id=property_id,
         )
 
     def _mark_property_sync(

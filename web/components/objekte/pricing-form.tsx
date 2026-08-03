@@ -38,6 +38,10 @@ import {
 } from "@nextdays/ui/select";
 import { Switch } from "@nextdays/ui/switch";
 import {
+  LokaleSteuerEditor,
+  MwStEditor,
+} from "@/components/objekte/pricing/steuern-editoren";
+import {
   type AddOn,
   type Currency,
   type Fee,
@@ -48,15 +52,17 @@ import {
   type StayKind,
   type Tax,
   type TaxKind,
-  type TaxMode,
   CURRENCY_OPTIONS,
   FEE_BASIS_LABELS,
   STAY_KIND_LABELS,
   TAX_KIND_LABELS,
+  TAXABLE_BASE_PRICE,
   WEEKDAY_LABELS,
   currencySymbol,
   fmtPrice,
   readPricing,
+  taxAmountBasis,
+  taxDisplayName,
 } from "@/lib/pricing-meta";
 import { channelLogoLoose } from "@/lib/channel-logos";
 import {
@@ -380,7 +386,12 @@ export function PricingForm({ initial }: { initial: Property }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSection({ tax: "vat" })}>
+              {/* Es gibt genau EINE USt je Objekt — ist sie angelegt, führt der
+                  Eintrag nicht zu einer zweiten, sondern gar nicht mehr weiter. */}
+              <DropdownMenuItem
+                disabled={pr.taxes.some((x) => x.kind === "vat")}
+                onClick={() => setSection({ tax: "vat" })}
+              >
                 <div className="flex flex-col">
                   <span className="font-medium">{t("pricingForm.vatLabel")}</span>
                   <span className="text-xs text-muted-foreground">{t("pricingForm.vatDesc")}</span>
@@ -401,8 +412,12 @@ export function PricingForm({ initial }: { initial: Property }) {
           pr.taxes.map((tx) => (
             <ListRow
               key={tx.id}
-              title={tx.name || TAX_KIND_LABELS[tx.kind]}
-              pill={`${tx.mode === "percent" ? `${tx.value}%` : fmtPrice(tx.value, cur, locale)}${tx.includedInPrice ? ` · ${t("pricingForm.includedInPriceSuffix")}` : ""}`}
+              title={
+                tx.kind === "vat"
+                  ? t("pricingForm.vatLabel")
+                  : taxDisplayName(tx, locale) || TAX_KIND_LABELS[tx.kind]
+              }
+              pill={taxSummary(tx, pr, cur, locale, t)}
               onEdit={() => setSection({ tax: tx.kind, id: tx.id })}
               onDelete={() => save({ ...pr, taxes: pr.taxes.filter((x) => x.id !== tx.id) })}
             />
@@ -499,7 +514,17 @@ export function PricingForm({ initial }: { initial: Property }) {
         <FeeEditor pr={pr} editId={section.fee === "new" ? undefined : section.fee} onSave={save} onClose={() => setSection(null)} />
       )}
       {section && typeof section === "object" && "tax" in section && (
-        <TaxEditor pr={pr} kind={section.tax} editId={section.id} onSave={save} onClose={() => setSection(null)} />
+        section.tax === "vat" ? (
+          <MwStEditor pr={pr} onSave={save} onClose={() => setSection(null)} />
+        ) : (
+          <LokaleSteuerEditor
+            pr={pr}
+            propertyId={p.id}
+            editId={section.id}
+            onSave={save}
+            onClose={() => setSection(null)}
+          />
+        )
       )}
       {section && typeof section === "object" && "promo" in section && (
         <PromoEditor pr={pr} editId={section.promo === "new" ? undefined : section.promo} onSave={save} onClose={() => setSection(null)} />
@@ -571,6 +596,46 @@ function ListSection<T>({
       )}
     </section>
   );
+}
+
+// Zusammenfassung einer Steuer für die Listenzeile: Wert plus die Angaben, die
+// den Betrag erst eindeutig machen — bei Beträgen die Basis („pro Gast · pro
+// Nacht"), bei Prozentsätzen die gewählte Bemessungsgrundlage.
+function taxSummary(
+  tx: Tax,
+  pr: Pricing,
+  cur: Currency | "",
+  locale: string,
+  t: (key: string) => string,
+): string {
+  const teile: string[] = [];
+  if (tx.mode === "percent") {
+    teile.push(`${tx.value}%`);
+    const basis = tx.taxableBase ?? [];
+    if (basis.length > 0) {
+      const namen = basis.map((id) =>
+        id === TAXABLE_BASE_PRICE
+          ? t("pricingForm.taxableBasePrice")
+          : (pr.fees.find((f) => f.id === id)?.name ?? id),
+      );
+      teile.push(namen.join(", "));
+    }
+  } else {
+    const { charge, period } = taxAmountBasis(tx);
+    teile.push(fmtPrice(tx.value, cur, locale));
+    teile.push(
+      charge === "PerPerson"
+        ? t("pricingForm.chargePerPerson")
+        : t("pricingForm.chargeSingle"),
+    );
+    teile.push(
+      period === "PerNight"
+        ? t("pricingForm.periodPerNight")
+        : t("pricingForm.periodPerStay"),
+    );
+  }
+  if (tx.includedInPrice) teile.push(t("pricingForm.includedInPriceSuffix"));
+  return teile.join(" · ");
 }
 
 // Eine Listenzeile mit Pill + Bearbeiten/Löschen.
@@ -1179,69 +1244,6 @@ function FeeEditor({
       <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
         <span className="font-medium">{t("pricingForm.feeOptionalLabel")}</span>
         <Switch checked={v.optional} onCheckedChange={(c) => setV({ ...v, optional: c })} />
-      </label>
-    </EditorShell>
-  );
-}
-
-function TaxEditor({
-  pr,
-  kind,
-  editId,
-  onSave,
-  onClose,
-}: {
-  pr: Pricing;
-  kind: TaxKind;
-  editId?: string;
-  onSave: (next: Pricing) => Promise<true | string>;
-  onClose: () => void;
-}) {
-  const t = useTranslations("objects");
-  const ex = editId ? pr.taxes.find((x) => x.id === editId) : undefined;
-  const [v, setV] = useState<Tax>(
-    ex ?? { id: "", kind, name: "", mode: "percent", value: 0, includedInPrice: false },
-  );
-  const { busy, error, run } = useSaver(onSave);
-
-  function commit() {
-    const entry: Tax = { ...v, id: v.id || crypto.randomUUID() };
-    const list = ex ? pr.taxes.map((x) => (x.id === entry.id ? entry : x)) : [...pr.taxes, entry];
-    run({ ...pr, taxes: list });
-  }
-
-  return (
-    <EditorShell
-      title={kind === "vat" ? t("pricingForm.vatLabel") : t("pricingForm.localTaxLabel")}
-      subtitle={t("pricingForm.taxEditorSubtitle")}
-      onClose={onClose}
-      footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} />}
-    >
-      <Field label={t("pricingForm.designationLabel")}>
-        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={kind === "vat" ? t("pricingForm.vatPlaceholder") : t("pricingForm.localTaxPlaceholder")} />
-      </Field>
-      <Field label={t("pricingForm.taxModeLabel")}>
-        <Select value={v.mode} onValueChange={(val) => setV({ ...v, mode: val as TaxMode })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="percent">{t("pricingForm.taxModePercent")}</SelectItem>
-            <SelectItem value="amount">{t("pricingForm.taxModeAmount")}</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field label={v.mode === "percent" ? t("pricingForm.rateLabel") : t("pricingForm.amountLabel")}>
-        {v.mode === "percent" ? (
-          <div className="flex items-center gap-2">
-            <Input type="number" min={0} value={v.value} onChange={(e) => setV({ ...v, value: Number(e.target.value) || 0 })} />
-            <span className="text-sm text-muted-foreground">%</span>
-          </div>
-        ) : (
-          <MoneyInput value={v.value} currency={pr.currency} onChange={(n) => setV({ ...v, value: n })} />
-        )}
-      </Field>
-      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-        <span className="font-medium">{t("pricingForm.includedInPriceLabel")}</span>
-        <Switch checked={v.includedInPrice} onCheckedChange={(c) => setV({ ...v, includedInPrice: c })} />
       </label>
     </EditorShell>
   );
