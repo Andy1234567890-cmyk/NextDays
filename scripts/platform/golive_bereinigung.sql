@@ -52,6 +52,21 @@ delete from public.tenants
 delete from public.portal_guests;
 
 -- ---------------------------------------------------------------------------
+-- 2b) Support-Tickets
+-- ---------------------------------------------------------------------------
+-- MUSS vor Schritt 3 stehen. `support_tickets.reporter_user_id` ist die einzige
+-- Kante auf auth.users mit ON DELETE SET NULL — und genau die kollidiert mit dem
+-- CHECK `support_tickets_genau_ein_melder`, der GENAU EINEN Melder verlangt
+-- (Nutzer ODER Marktplatz-Gast ODER Besucher-Token). SET NULL erzeugt eine Zeile
+-- ohne jeden Melder und lässt die ganze Transaktion platzen.
+--
+-- Ein Ticket ohne Melder wäre auch fachlich Unsinn: niemand könnte die Antwort
+-- lesen. Die beiden vorhandenen Zeilen sind Testkonversationen der Support-
+-- Konsole („test", „Testkonversation für die Konsole"), also Testbestand.
+
+delete from public.support_tickets;
+
+-- ---------------------------------------------------------------------------
 -- 3) Auth-Identitäten
 -- ---------------------------------------------------------------------------
 -- Der Backoffice-Zugang MUSS bleiben: an ihm hängt public.platform_admins per

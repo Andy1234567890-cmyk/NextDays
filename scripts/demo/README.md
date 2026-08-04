@@ -7,7 +7,13 @@ aus allen Vertriebskanälen, echte Objektfotos, Aufgaben und Sperrungen.
 | Betrieb | Login | Bestand |
 |---|---|---|
 | Nordlicht Ferienvermietung | `merle.ahrens@mynextdays.com` | 8 Ferienobjekte (Ostsee, Alpen, Mallorca, Wien …) |
-| Hotel Seeblick Warnemünde | `jonas.reimers@mynextdays.com` | 12 Zimmer, jedes eine eigene buchbare Einheit |
+| Hotel Seeblick Warnemünde | `jonas.reimers@mynextdays.com` | 12 Zimmertypen, je eine Einheit |
+
+Jedes Objekt bekommt genau EINE `property_units`-Zeile (0265): eine
+`properties`-Zeile ist ein Einheiten-TYP, verkauft wird die Einheit. Ohne
+Einheit lehnt `create_reservation_atomic` (0275) jede Buchung mit `22023` ab,
+und `availability.unit_id` ist NOT NULL — der Seed schreibt beides, sonst
+entstünde ein Bestand, der sich nicht buchen lässt.
 
 Das Passwort wird beim Lauf gesetzt (`--passwort`) und am Ende ausgegeben. Es
 steht bewusst in keiner Repo-Datei.

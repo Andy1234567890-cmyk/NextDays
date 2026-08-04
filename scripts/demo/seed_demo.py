@@ -36,6 +36,12 @@ from typing import Any
 # absichtlich vor den Imports.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # pylint: disable=wrong-import-position
+# too-many-locals: die Aufbau-Funktionen setzen je einen zusammenhängenden
+# Datensatz (Objekt + Einheit + Rate-Plan, Buchung + Gast + Kalendernächte). In
+# Hilfsfunktionen zerlegt, müsste man ein Dutzend Zwischenwerte durchreichen,
+# ohne dass die Zeile lesbarer wird — ein Seed-Skript soll von oben nach unten
+# zeigen, welche Felder eine Demo-Zeile trägt.
+# pylint: disable=too-many-locals
 from fotos import FOTO_ORDNER, MANIFEST  # noqa: E402
 from katalog import BETRIEBE, GAESTE, Betrieb, Objekt  # noqa: E402
 from konfig import Supabase, demo_id  # noqa: E402
@@ -172,6 +178,22 @@ def objekte_anlegen(db: Supabase, betrieb: Betrieb, tenant_id: str) -> dict[str,
             "search_engine_indexing": True,
         })
     db.upsert("properties", zeilen)
+
+    # Einheiten (0265): jede properties-Zeile ist EIN Einheiten-TYP, verkauft
+    # wird die EINHEIT. Ohne mindestens eine `property_units`-Zeile lehnt
+    # `create_reservation_atomic` (0275) mit 22023 ab — verkaufen kann man nur,
+    # was eine Einheit hat. Die Demo-Objekte sind Ferienobjekte bzw. einzeln
+    # geführte Zimmer, also genau eine Einheit je Typ (der Normalfall).
+    db.upsert("property_units", [
+        {
+            "id": demo_id(f"einheit:{objekt.schluessel}"),
+            "tenant_id": tenant_id,
+            "property_id": demo_id(f"objekt:{objekt.schluessel}"),
+            "name": objekt.titel,
+            "position": 0,
+        }
+        for objekt in betrieb.objekte
+    ])
 
     # Zwei Listen, weil PostgREST bei einem Mehrzeilen-Insert identische
     # Schlüsselmengen verlangt — abgeleitete Pläne tragen drei Spalten mehr.
@@ -476,6 +498,10 @@ def sperrungen_anlegen(db: Supabase, betrieb: Betrieb, tenant_id: str,
                 continue
             sperren.append({
                 "property_id": property_id,
+                # Gesperrt wird die EINHEIT, nicht der Typ (0265): `unit_id` ist
+                # NOT NULL und Teil des Unique-Keys. Die Demo-Objekte haben
+                # genau eine Einheit, deren ID aus demselben Schlüssel kommt.
+                "unit_id": demo_id(f"einheit:{objekt.schluessel}"),
                 "date": tag.isoformat(),
                 "status": "blocked",
                 "source": "manual",
@@ -495,7 +521,7 @@ def sperrungen_anlegen(db: Supabase, betrieb: Betrieb, tenant_id: str,
                     "source": "manual",
                     "scope": "all",
                 })
-    db.upsert("availability", sperren, konflikt="property_id,date")
+    db.upsert("availability", sperren, konflikt="property_id,unit_id,date")
     db.upsert("stop_sell", stops)
     print(f"  {len(sperren)} gesperrte Nächte, {len(stops)} Stop-Sell-Tage")
 
