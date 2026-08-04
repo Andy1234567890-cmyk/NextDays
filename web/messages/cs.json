@@ -103,7 +103,8 @@
         "country": "Země",
         "email": "E-mail",
         "phone": "Telefon",
-        "vatOrTax": "DIČ nebo daňové číslo"
+        "vatOrTax": "DIČ nebo daňové číslo",
+        "iban": "IBAN"
       },
       "state": "Region / spolková země",
       "statePlaceholder": "např. Bavorsko"

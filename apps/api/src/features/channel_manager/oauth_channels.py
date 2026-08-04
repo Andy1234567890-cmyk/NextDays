@@ -6,7 +6,7 @@ von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TypeVar
 
 from supabase import Client
 
@@ -15,6 +15,12 @@ from src.core.security import AuthContext
 from . import airbnb_oauth
 from .channex_client import ChannexError
 from .common import ChannelManagerError, log
+
+# PostgREST-Query-Builder. Select- und Update-Builder haben keinen gemeinsamen
+# Basistyp in den Stubs, tragen aber beide `.eq()`/`.is_()` und geben sich selbst
+# zurück — ein TypeVar hält deshalb den konkreten Typ über den Scope-Helfer
+# hinweg fest, ohne ihn auf `Any` zu verlieren.
+_Q = TypeVar("_Q")
 
 
 class OAuthChannelsMixin:
@@ -28,14 +34,25 @@ class OAuthChannelsMixin:
     # autorisiert) → Status pollen → Mapping + activate über den bestehenden Pfad.
     # Verifiziert: docs/CHANNEX-FELDER.md §4a.
     def begin_channel_oauth(
-        self, ctx: AuthContext, *, property_id: str, portal_code: str,
+        self, ctx: AuthContext, *, property_id: str | None, portal_code: str,
         title: str | None, settings: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """OAuth-Start: inaktiven Channel anlegen + echte OAuth-URL erzeugen.
 
         Gibt {channel_id, oauth_url, portal, status:"pending"} zurück. Der Kunde
         öffnet die URL oder schickt sie dem Eigentümer; Mapping/activate folgen
-        nach erfolgreicher Verbindung (refresh_channel_oauth_status → finalize)."""
+        nach erfolgreicher Verbindung (refresh_channel_oauth_status → finalize).
+
+        `property_id` ist OPTIONAL — das ist der Weg des WECHSELKUNDEN: er will
+        seine bestehenden Airbnb-Objekte übernehmen und hat deshalb noch keins,
+        an das ein Kanal hängen könnte. Ein Pflicht-Objekt war hier ein
+        Zirkelschluss: zum Importieren erst anlegen, was man importieren will.
+        Möglich ist der objektlose Kanal, weil der Channex-Katalog für Airbnb
+        `property_mapping: "multiple"` liefert — ein Kanal trägt mehrere Objekte.
+        Nach dem Autorisieren spiegelt Channex die Listings, und
+        `reconcile_properties_for_tenant` legt daraus die Objekte an (EIN
+        Import-Weg, kein zweiter).
+        """
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
         if portal_code not in self._OAUTH_PORTALS:
@@ -43,20 +60,30 @@ class OAuthChannelsMixin:
                 "Dieses Portal nutzt keinen OAuth-Verbindungsweg.", status_code=400
             )
 
-        channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
+        channex_property_id = (
+            self._require_property_mapping(db, tenant_id, property_id)
+            if property_id
+            else None
+        )
 
         # Idempotenz (Wurzel 2): existiert für (property_id, portal_code) bereits ein
         # Channex-Kanal, ihn wiederverwenden statt bei Doppelklick/Retry einen zweiten
         # anzulegen (sonst verwaister Zweit-Kanal bei Channex vor dem DB-UNIQUE).
-        existing = (
+        frage = (
             db.table("channex_channel_connection")
             .select("channex_channel_id")
             .eq("tenant_id", tenant_id)
-            .eq("property_id", property_id)
             .eq("ota_portal_code", portal_code)
-            .limit(1)
-            .execute()
-        ).data
+        )
+        # Ohne Objekt (Wechselkunde) ist der Kanal der KONTO-Kanal des Portals —
+        # dann darf die Suche nicht auf ein Objekt filtern, sonst legt jeder
+        # Klick einen weiteren Kanal bei Channex an (Wurzel 2).
+        frage = (
+            frage.eq("property_id", property_id)
+            if property_id
+            else frage.is_("property_id", "null")
+        )
+        existing = frage.limit(1).execute().data
         existing_channel_id = (
             existing[0].get("channex_channel_id") if existing else None
         )
@@ -68,16 +95,21 @@ class OAuthChannelsMixin:
             channel_id = existing_channel_id
         else:
             # 1) Channel inaktiv anlegen (ohne rate_plans/settings — Mapping folgt).
+            attribute: dict[str, Any] = {
+                "channel": portal_code,
+                "group_id": group_id,
+                "is_active": False,
+                "title": channel_title,
+            }
+            # `properties` NUR mitschicken, wenn es ein Objekt gibt. Beim
+            # Wechselkunden-Connect existiert keins — eine Liste mit `null`
+            # darin wäre für Channex ein Bad Request, eine leere Liste würde den
+            # Kanal an KEIN Objekt binden und ihn beim späteren Mapping
+            # überschreiben (PUT ersetzt, kein Merge).
+            if channex_property_id:
+                attribute["properties"] = [channex_property_id]
             try:
-                created = self._channex.create_channel(
-                    {
-                        "channel": portal_code,
-                        "group_id": group_id,
-                        "is_active": False,
-                        "title": channel_title,
-                        "properties": [channex_property_id],
-                    }
-                )
+                created = self._channex.create_channel(attribute)
             except ChannexError as exc:
                 raise self._wrap_channex(exc) from exc
             channel_id = (created.get("data") or {}).get("id")
@@ -133,25 +165,39 @@ class OAuthChannelsMixin:
         }
 
     def refresh_channel_oauth_status(
-        self, ctx: AuthContext, *, property_id: str, portal_code: str
+        self, ctx: AuthContext, *, property_id: str | None, portal_code: str
     ) -> dict[str, Any]:
         """Verbindungsstatus aus Channex lesen (Poll — Channex liefert keine
         Channel-Webhooks). Schreibt host_id/Status in channex_channel_connection
-        → Realtime-Update. `is_active` bleibt false bis Mapping+activate."""
+        → Realtime-Update. `is_active` bleibt false bis Mapping+activate.
+
+        Ohne `property_id` wird die KONTO-Verbindung gepollt (Wechselkunde, der
+        Airbnb vor dem ersten Objekt autorisiert hat)."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
+
+        def _scope(frage: _Q) -> _Q:
+            """Denselben Scope auf Lese- und Schreibpfad anwenden — getrennt
+            formuliert wäre er beim nächsten Eingriff auseinandergelaufen."""
+            frage = frage.eq("tenant_id", tenant_id).eq(
+                "ota_portal_code", portal_code
+            )
+            return (
+                frage.eq("property_id", property_id)
+                if property_id
+                else frage.is_("property_id", "null")
+            )
+
         row = (
-            db.table("channex_channel_connection")
-            .select("channex_channel_id")
-            .eq("tenant_id", tenant_id)
-            .eq("property_id", property_id)
-            .eq("ota_portal_code", portal_code)
+            _scope(
+                db.table("channex_channel_connection").select("channex_channel_id")
+            )
             .limit(1)
             .execute()
         ).data
         if not row or not row[0].get("channex_channel_id"):
             raise ChannelManagerError(
-                "Keine OAuth-Verbindung für dieses Objekt.", status_code=404
+                "Keine OAuth-Verbindung gefunden.", status_code=404
             )
         channel_id = row[0]["channex_channel_id"]
         try:
@@ -165,10 +211,10 @@ class OAuthChannelsMixin:
         last_error = status["last_error"]
 
         # host_id/Fehler persistieren (Realtime). is_active NICHT hier setzen.
-        db.table("channex_channel_connection").update(
-            {"ota_hotel_id": host_id, "last_error": last_error}
-        ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
-            "ota_portal_code", portal_code
+        _scope(
+            db.table("channex_channel_connection").update(
+                {"ota_hotel_id": host_id, "last_error": last_error}
+            )
         ).execute()
         log.info(
             "channex_oauth_status",
@@ -269,13 +315,19 @@ class OAuthChannelsMixin:
         }
 
     def _save_oauth_connection(
-        self, db: Client, tenant_id: str, *, property_id: str,
-        channex_property_id: str, portal_code: str, channel_id: str,
+        self, db: Client, tenant_id: str, *, property_id: str | None,
+        channex_property_id: str | None, portal_code: str, channel_id: str,
         host_id: str | None, is_active: bool, last_error: str | None,
     ) -> None:
         """Upsert einer OAuth-Verbindung (Airbnb): kein hotel_id-Credential, sondern
         host_id (erst nach Verbindung). Anders als _save_channel_connection, das
-        eine eingegebene Hotel-ID voraussetzt."""
+        eine eingegebene Hotel-ID voraussetzt.
+
+        Ohne Objekt (Wechselkunde) ist es die KONTO-Verbindung: `property_id`
+        bleibt NULL, und der Konflikt läuft über (tenant_id, ota_portal_code) —
+        der Index `..._property_portal_uidx` greift bei NULL nicht, weil NULLs in
+        Postgres voneinander verschieden sind. Ohne diesen Wechsel legte jeder
+        Klick eine zweite Zeile und damit einen zweiten Kanal an (Wurzel 2)."""
         row = {
             "tenant_id": tenant_id,
             "property_id": property_id,
@@ -286,9 +338,13 @@ class OAuthChannelsMixin:
             "is_active": is_active,
             "last_error": last_error,
         }
+        konflikt = (
+            "property_id,ota_portal_code" if property_id
+            else "tenant_id,ota_portal_code"
+        )
         try:
             db.table("channex_channel_connection").upsert(
-                row, on_conflict="property_id,ota_portal_code"
+                row, on_conflict=konflikt
             ).execute()
         except Exception as exc:  # noqa: BLE001 — Persistenz darf Connect nicht killen
             log.warning(

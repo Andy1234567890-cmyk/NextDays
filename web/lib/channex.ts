@@ -448,32 +448,40 @@ export type OAuthStatusResult = {
   portal: string;
 };
 
+/**
+ * Airbnb-OAuth starten. `property_id` ist OPTIONAL: ohne Objekt läuft der
+ * konto-weite Weg des Wechselkunden (Onboarding → Airbnb autorisieren → Channex
+ * spiegelt die Listings → `reconcileTenant` legt die Objekte an). Mit Objekt
+ * bleibt es der bisherige, objektgebundene Pfad.
+ */
 export async function beginChannelOAuth(input: {
-  property_id: string;
+  property_id?: string | null;
   portal_code: string;
   title?: string;
   settings?: Record<string, unknown>;
 }): Promise<Result<OAuthBeginResult>> {
-  return call<OAuthBeginResult>(
-    `/properties/${input.property_id}/channels/${input.portal_code}/oauth/begin`,
-    {
-      method: "POST",
-      body: {
-        property_id: input.property_id,
-        portal_code: input.portal_code,
-        title: input.title,
-        settings: input.settings ?? {},
-      },
+  const pfad = input.property_id
+    ? `/properties/${input.property_id}/channels/${input.portal_code}/oauth/begin`
+    : `/channels/${input.portal_code}/oauth/begin`;
+  return call<OAuthBeginResult>(pfad, {
+    method: "POST",
+    body: {
+      property_id: input.property_id ?? null,
+      portal_code: input.portal_code,
+      title: input.title,
+      settings: input.settings ?? {},
     },
-  );
+  });
 }
 
 export async function getChannelOAuthStatus(
-  propertyId: string,
+  propertyId: string | null,
   portalCode: string,
 ): Promise<Result<OAuthStatusResult>> {
   return call<OAuthStatusResult>(
-    `/properties/${propertyId}/channels/${portalCode}/oauth/status`,
+    propertyId
+      ? `/properties/${propertyId}/channels/${portalCode}/oauth/status`
+      : `/channels/${portalCode}/oauth/status`,
   );
 }
 

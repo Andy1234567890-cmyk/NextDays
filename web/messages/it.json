@@ -103,7 +103,8 @@
         "country": "Paese",
         "email": "E-mail",
         "phone": "Telefono",
-        "vatOrTax": "P.IVA o codice fiscale"
+        "vatOrTax": "P.IVA o codice fiscale",
+        "iban": "IBAN"
       },
       "state": "Regione / stato",
       "statePlaceholder": "es. Baviera"

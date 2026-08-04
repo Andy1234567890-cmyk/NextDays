@@ -408,6 +408,54 @@ def disconnect_channel(
 
 
 # --- Airbnb-OAuth (white-label, ohne iFrame) ---------------------------------
+#
+# ZWEI Einstiege, EIN Service:
+#   * /channels/{portal}/oauth/…            → konto-weit, OHNE Objekt
+#   * /properties/{id}/channels/{portal}/…  → an ein bestehendes Objekt gebunden
+#
+# Der konto-weite Weg ist der des WECHSELKUNDEN und die Kette, die das Onboarding
+# geht: Airbnb autorisieren → Channex spiegelt die Listings → `POST /reconcile`
+# legt daraus unsere Objekte an. Vorher verlangte der Start ein Objekt, das es
+# noch nicht gab — man musste anlegen, was man importieren wollte.
+@router.post(
+    "/channels/{portal_code}/oauth/begin", response_model=OAuthBeginResponse
+)
+def begin_account_oauth(
+    portal_code: str,
+    req: OAuthBeginRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> OAuthBeginResponse:
+    """OAuth-Start OHNE Objekt (Wechselkunde: Objekte kommen aus den Listings)."""
+    try:
+        result = service.begin_channel_oauth(
+            ctx,
+            property_id=None,
+            portal_code=portal_code,
+            title=req.title,
+            settings=req.settings,
+        )
+        return OAuthBeginResponse(**result)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/channels/{portal_code}/oauth/status", response_model=OAuthStatusResponse
+)
+def account_oauth_status(
+    portal_code: str, service: ChannelManagerServiceDep, ctx: _write
+) -> OAuthStatusResponse:
+    """Status der konto-weiten Verbindung pollen (Channex hat keine Webhooks)."""
+    try:
+        result = service.refresh_channel_oauth_status(
+            ctx, property_id=None, portal_code=portal_code
+        )
+        return OAuthStatusResponse(**result)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post(
     "/properties/{property_id}/channels/{portal_code}/oauth/begin",
     response_model=OAuthBeginResponse,

@@ -103,7 +103,8 @@
         "country": "Tír",
         "email": "Ríomhphost",
         "phone": "Fón",
-        "vatOrTax": "VAT/CBL nó uimhir chánach"
+        "vatOrTax": "VAT/CBL nó uimhir chánach",
+        "iban": "IBAN"
       },
       "state": "Stát / réigiún",
       "statePlaceholder": "m.sh. an Bhaváir"

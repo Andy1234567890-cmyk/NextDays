@@ -103,7 +103,8 @@
         "country": "Land",
         "email": "E-mail",
         "phone": "Telefon",
-        "vatOrTax": "CVR/momsnr. eller skattenummer"
+        "vatOrTax": "CVR/momsnr. eller skattenummer",
+        "iban": "IBAN"
       },
       "state": "Region / delstat",
       "statePlaceholder": "f.eks. Bayern"

@@ -103,7 +103,8 @@
         "country": "Riik",
         "email": "E-post",
         "phone": "Telefon",
-        "vatOrTax": "KMKR või maksukohustuslase number"
+        "vatOrTax": "KMKR või maksukohustuslase number",
+        "iban": "IBAN"
       },
       "state": "Liidumaa / piirkond",
       "statePlaceholder": "nt Baieri"

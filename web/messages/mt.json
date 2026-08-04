@@ -103,7 +103,8 @@
         "country": "Pajjiż",
         "email": "Email",
         "phone": "Telefown",
-        "vatOrTax": "VAT jew numru tat-taxxa"
+        "vatOrTax": "VAT jew numru tat-taxxa",
+        "iban": "IBAN"
       },
       "state": "Stat / reġjun",
       "statePlaceholder": "eż. Bavarja"

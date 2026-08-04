@@ -103,7 +103,8 @@
         "country": "Land",
         "email": "E-Mail",
         "phone": "Telefon",
-        "vatOrTax": "USt-ID oder Steuernummer"
+        "vatOrTax": "USt-ID oder Steuernummer",
+        "iban": "IBAN"
       },
       "state": "Bundesland / Region",
       "statePlaceholder": "z. B. Bayern"

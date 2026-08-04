@@ -29,6 +29,7 @@ import {
   listChannelConnections,
   listPortals,
   prepareChannel,
+  reconcileTenant,
 } from "@/lib/channex";
 import { listProperties } from "@/lib/properties";
 import { useRealtime } from "@/lib/use-realtime";
@@ -204,6 +205,7 @@ export function ChannelConnectButton({
   // OAuth-Flow (Airbnb): erzeugte OAuth-URL, Verbundenheits-Status, Host-ID.
   const [oauthUrl, setOauthUrl] = useState<string | null>(null);
   const [oauthConnected, setOauthConnected] = useState(false);
+  const [objectImportMsg, setObjectImportMsg] = useState<string | null>(null);
   const [oauthHostId, setOauthHostId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -343,10 +345,10 @@ export function ChannelConnectButton({
 
   // OAuth-Start (Airbnb): inaktiven Kanal anlegen + echte OAuth-URL holen.
   function startOAuth(portal: SupportedPortal) {
-    if (!propertyId) {
-      setError("Bitte zuerst ein Objekt anlegen.");
-      return;
-    }
+    // KEIN Objekt-Zwang: genau das war der Zirkelschluss für den Wechselkunden —
+    // um seine Airbnb-Objekte zu importieren, hätte er erst eins anlegen müssen.
+    // Ohne Objekt läuft der konto-weite Weg; danach holt „Von Portalen holen"
+    // (reconcileTenant) die Listings als Objekte herein.
     setOauthUrl(null);
     setOauthConnected(false);
     setOauthHostId(null);
@@ -365,10 +367,36 @@ export function ChannelConnectButton({
     });
   }
 
+  // Konto-weiter Abschluss (Wechselkunde): Channex hat die Airbnb-Listings nach
+  // dem Autorisieren gespiegelt — dieser Aufruf holt sie als Objekte in unsere
+  // DB. Derselbe Weg wie der Onboarding-Knopf „Von Portalen holen", nicht ein
+  // zweiter Import.
+  function importAirbnbObjects() {
+    setObjectImportMsg(null);
+    setError(null);
+    startTransition(async () => {
+      const res = await reconcileTenant();
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      const anzahl = res.data.created + res.data.updated;
+      setObjectImportMsg(
+        anzahl > 0
+          ? `${anzahl} Objekt(e) übernommen. Du findest sie unter „Objekte“.`
+          : "Noch keine Objekte gefunden. Airbnb braucht manchmal einen Moment — " +
+            "bitte in einer Minute erneut versuchen.",
+      );
+      onDone?.();
+    });
+  }
+
   // Status prüfen: ist die OAuth-Verbindung inzwischen aktiv (host_id da)?
   const checkOAuthStatus = useCallback(async () => {
-    if (!propertyId || !selected) return;
-    const res = await getChannelOAuthStatus(propertyId, selected.code);
+    // Ohne Objekt wird die konto-weite Verbindung gepollt (Wechselkunde) —
+    // `propertyId` darf hier nicht mehr abbrechen.
+    if (!selected) return;
+    const res = await getChannelOAuthStatus(propertyId ?? null, selected.code);
     if (res.ok) {
       setOauthConnected(res.data.connected);
       setOauthHostId(res.data.host_id);
@@ -741,13 +769,38 @@ export function ChannelConnectButton({
                       <Icon icon="ph:check-circle" className="size-5" />
                       Verbunden{oauthHostId ? ` · Host-ID ${oauthHostId}` : ""}
                     </p>
-                    <Button onClick={loadOAuthMapping} disabled={pending}>
-                      {pending ? (
-                        <Spinner text="Lade Listings …" />
-                      ) : (
-                        "Weiter zur Zuordnung"
-                      )}
-                    </Button>
+                    {propertyId ? (
+                      <Button onClick={loadOAuthMapping} disabled={pending}>
+                        {pending ? (
+                          <Spinner text="Lade Listings …" />
+                        ) : (
+                          "Weiter zur Zuordnung"
+                        )}
+                      </Button>
+                    ) : (
+                      /* Konto-weiter Connect (Wechselkunde): es gibt noch kein
+                         Objekt zum Zuordnen — die Objekte ENTSTEHEN aus den
+                         Listings. Channex spiegelt sie nach dem Autorisieren,
+                         `reconcileTenant` holt sie zu uns. */
+                      <div className="flex flex-col gap-2">
+                        <p className="text-sm text-muted-foreground">
+                          Deine Airbnb-Objekte werden jetzt übernommen. Das kann
+                          einen Moment dauern.
+                        </p>
+                        <Button onClick={importAirbnbObjects} disabled={pending}>
+                          {pending ? (
+                            <Spinner text="Objekte werden geholt …" />
+                          ) : (
+                            "Objekte übernehmen"
+                          )}
+                        </Button>
+                        {objectImportMsg && (
+                          <p className="text-sm text-muted-foreground">
+                            {objectImportMsg}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

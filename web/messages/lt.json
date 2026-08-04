@@ -103,7 +103,8 @@
         "country": "Šalis",
         "email": "El. paštas",
         "phone": "Telefonas",
-        "vatOrTax": "PVM kodas arba mokesčių mokėtojo numeris"
+        "vatOrTax": "PVM kodas arba mokesčių mokėtojo numeris",
+        "iban": "IBAN"
       },
       "state": "Valstija / regionas",
       "statePlaceholder": "pvz. Bavarija"

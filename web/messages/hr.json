@@ -103,7 +103,8 @@
         "country": "Država",
         "email": "E-pošta",
         "phone": "Telefon",
-        "vatOrTax": "OIB/PDV ili porezni broj"
+        "vatOrTax": "OIB/PDV ili porezni broj",
+        "iban": "IBAN"
       },
       "state": "Regija / savezna pokrajina",
       "statePlaceholder": "npr. Bavarska"

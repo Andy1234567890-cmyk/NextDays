@@ -101,7 +101,8 @@
         "country": "Country",
         "email": "Email",
         "phone": "Phone",
-        "vatOrTax": "VAT ID or tax number"
+        "vatOrTax": "VAT ID or tax number",
+        "iban": "IBAN"
       },
       "state": "State / region",
       "statePlaceholder": "e.g. Bavaria",

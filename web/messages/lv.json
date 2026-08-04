@@ -103,7 +103,8 @@
         "country": "Valsts",
         "email": "E-pasts",
         "phone": "Tālrunis",
-        "vatOrTax": "PVN nr. vai nodokļu maksātāja numurs"
+        "vatOrTax": "PVN nr. vai nodokļu maksātāja numurs",
+        "iban": "IBAN"
       },
       "state": "Štats / reģions",
       "statePlaceholder": "piem. Bavārija"

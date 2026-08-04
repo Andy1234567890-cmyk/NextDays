@@ -103,7 +103,8 @@
         "country": "Țară",
         "email": "E-mail",
         "phone": "Telefon",
-        "vatOrTax": "Cod TVA sau cod fiscal"
+        "vatOrTax": "Cod TVA sau cod fiscal",
+        "iban": "IBAN"
       },
       "state": "Stat / regiune",
       "statePlaceholder": "ex. Bavaria"

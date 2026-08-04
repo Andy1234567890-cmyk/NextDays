@@ -103,7 +103,8 @@
         "country": "Ország",
         "email": "E-mail",
         "phone": "Telefon",
-        "vatOrTax": "adószám vagy adóazonosító szám"
+        "vatOrTax": "adószám vagy adóazonosító szám",
+        "iban": "IBAN"
       },
       "state": "Tartomány / régió",
       "statePlaceholder": "pl. Bajorország"

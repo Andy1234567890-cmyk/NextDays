@@ -249,6 +249,13 @@ export function OnboardingWizard({
       setError(t("company.missing", { fields: t("company.field.vatOrTax") }));
       return;
     }
+    // IBAN ist Pflicht: ohne sie gibt es keine Auszahlung. Ein Onboarding, das
+    // hier durchläuft, hinterlässt einen Betrieb, der verkaufen kann, aber sein
+    // Geld nicht bekommt.
+    if (!firma.iban?.trim()) {
+      setError(t("company.missing", { fields: t("company.field.iban") }));
+      return;
+    }
     startTransition(async () => {
       const res = await saveFirmenProfil({
         ...firma,
@@ -537,6 +544,21 @@ export function OnboardingWizard({
           )}
 
           {/* C — Weitere Angaben (direkt sichtbar, kein Aufklappen) */}
+          {/* IBAN ist PFLICHT, nicht optional: ohne Bankverbindung kann der
+              Betrieb keine Auszahlung erhalten — ein Konto ohne IBAN ist
+              betriebsbereit nur zum Schein. Steht deshalb bei den Steuerdaten
+              und NICHT unter „Weitere Angaben (optional)". */}
+          <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
+            <Field label={t("company.iban")}>
+              <Input
+                autoComplete="nd-iban"
+                value={firma.iban ?? ""}
+                onChange={(e) => setF("iban", e.target.value)}
+              />
+            </Field>
+          </div>
+
+          {/* C — Weitere Angaben, wirklich optional */}
           <p className="text-sm font-medium text-muted-foreground">
             {t("company.moreOptional")}
           </p>
@@ -561,13 +583,6 @@ export function OnboardingWizard({
                 />
               </Field>
             )}
-            <Field label={t("company.iban")}>
-              <Input
-                autoComplete="nd-iban"
-                value={firma.iban ?? ""}
-                onChange={(e) => setF("iban", e.target.value)}
-              />
-            </Field>
           </div>
 
           {/* Stripe-KYC: Kontotyp + Geburtsdatum für die Zahlungsfreischaltung.

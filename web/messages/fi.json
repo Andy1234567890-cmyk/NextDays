@@ -103,7 +103,8 @@
         "country": "Maa",
         "email": "Sähköposti",
         "phone": "Puhelin",
-        "vatOrTax": "ALV-numero tai verotunniste"
+        "vatOrTax": "ALV-numero tai verotunniste",
+        "iban": "IBAN"
       },
       "state": "Osavaltio / alue",
       "statePlaceholder": "esim. Baijeri"

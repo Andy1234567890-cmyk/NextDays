@@ -103,7 +103,8 @@
         "country": "Land",
         "email": "E-mail",
         "phone": "Telefoon",
-        "vatOrTax": "btw-nummer of fiscaal nummer"
+        "vatOrTax": "btw-nummer of fiscaal nummer",
+        "iban": "IBAN"
       },
       "state": "Provincie / regio",
       "statePlaceholder": "bijv. Beieren"
