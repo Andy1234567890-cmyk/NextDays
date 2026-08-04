@@ -31,13 +31,64 @@ Warum es diesen eigenen Ablauf braucht (alles live gegen app.channex.io am
    `id, title, type, city, country_code, occupancies, quality_status,
    synchronization_category`.
 
-   Mehr gibt Airbnb über Channex NICHT her — kein Content, keine Preise:
+   ACHTUNG — es kommen NICHT alle Anzeigen des Kontos. Airbnb führte beim
+   Beta-Betrieb 19, `mapping_details` lieferte 18. Die fehlende
+   (`021 Stjerneskud`) war genau die EINE, die in Airbnb den Sync-Status
+   „Connected" trug, also schon an eine andere Software gebunden ist. Ebenfalls
+   nicht geliefert werden laut Channex Anzeigen, die „disabled, unlisted, hidden
+   or snoozed" sind, sowie alle Anzeigen, bei denen man nur CoHost ist. Die Zahl
+   der gelieferten Anzeigen geht deshalb als `listings_gefunden` ans UI: der
+   Betrieb muss sehen, wenn eine fehlt, statt sie vergeblich zu suchen.
+
+   Jede dieser Anzeigen ist ein EIGENES Objekt an eigener Adresse (im
+   Beta-Betrieb Ferienhäuser in Bindslev, Skagen, Mygdal, Sindal, Vidstrup,
+   Ålbæk, Tversted, Hjørring) — NICHT mehrere Einheiten einer Kennung und kein
+   gemeinsames Gebäude. Bei einem OAuth-Portal ist die Kennung das KONTO. Live
+   bestätigt: 18 Objekte, kein `building_id`, 18 eigene Channex-Properties (1:1).
+
+   Mehr gibt CHANNEX nicht her — kein Content, keine Preise:
    `channels/{id}/proxy/listings`, `.../proxy/v2/listings`,
    `.../proxy/v2/calendars`, `.../proxy/v2/pricing_settings`,
    `meta/airbnb/listings` und `meta/airbnb/full_sync_listing` antworten alle
-   mit HTTP 500, `channels/{id}/listings` mit 404. Airbnb ist bei Channex ein
+   mit HTTP 500, `channels/{id}/listings` mit 404. Bei Channex ist Airbnb ein
    PUSH-Kanal: Preise/Verfügbarkeit gehen von uns dorthin, nicht zurück (wie
-   beim ARI-Readback, `channex_ari_shadow`).
+   beim ARI-Readback, `channex_ari_shadow`). Channex' eigene Doku kennt
+   dementsprechend nur Mapping und ARI-Push.
+
+   WICHTIG — das ist eine Grenze von Channex, NICHT von Airbnb: Airbnbs
+   Partner-API gibt Content UND Preise heraus, belegt an den Hilfeartikeln der
+   zugelassenen Partner. Hostfully importiert „Prices for next 3 years for each
+   night" samt Adresse, Amenities und Fotos; Guesty „The listing's base price
+   in Airbnb will be imported … Calendar prices will be imported"; Beds24 „Your
+   prices are imported as daily prices"; Hostaway „initial availability and
+   rates will be imported". Die zugehörigen Airbnb-Pfade (aus produktiven
+   Partner-Clients, nicht aus der Doku — die ist login-gesperrt):
+   `GET /v2/listings/{id}`, `/v2/listing_descriptions/{id}/{locale}`,
+   `/v2/listing_photos?listing_id=`, `/v2/pricing_settings/{id}`,
+   `/v2/calendars/{id}/{von}/{bis}` auf `https://api.airbnb.com`.
+   Genau diese Pfade scheitern über den Channex-Proxy (500) — der Proxy gibt sie
+   nicht durch, die Pfade selbst sind echt.
+
+   Wer die Preise wirklich holen will, braucht also einen EIGENEN
+   Airbnb-Partner-Zugang neben Channex (Zugang vergibt Airbnb, mit NDA und
+   Security-Review) oder einen Content-Endpunkt von Channex — Channex ist selbst
+   „Preferred+ Partner", hat die Daten also, gibt sie über die API aber nicht
+   heraus. Das ist eine Support-Frage an Channex, kein Code-Problem.
+
+   Zwei Randbedingungen aus denselben Quellen, falls das je gebaut wird: der
+   Preis-Pull ist nur EINMALIG beim Import möglich (danach besitzt das PMS die
+   Preise), und Airbnbs „Smart Pricing" muss vorher AUS sein — sonst kommen
+   keine Preise mit (Hostfully wörtlich: „otherwise prices and min night
+   requirements won't come in").
+
+4. SPERRTERMINE KOMMEN NICHT MIT. Einheitlich bei allen Anbietern: Beds24
+   („Blocked dates in Airbnb are NOT imported, you need to block in the Beds24
+   Calendar"), Smoobu (der Nutzer muss „blocked dates" selbst nachtragen),
+   Lodgify (nur selbst gesetzte Sperren). Das ist die reale
+   ÜBERBUCHUNGS-Gefahr dieses Ablaufs: die Objekte stehen nach der Übernahme
+   frei, obwohl bei Airbnb Termine gesperrt sind. Deshalb entstehen die Objekte
+   `status='draft'` — sie verkaufen erst, wenn der Betrieb sie bewusst
+   freischaltet, und bis dahin kann er die Sperren nachtragen.
 
 Daraus der Ablauf — der Kunde gibt NICHTS ein:
     a) `uebernahme_starten`: Server legt ein Übernahme-Objekt an (lokal +
@@ -61,7 +112,12 @@ from supabase import Client
 from src.core.security import AuthContext
 
 from .channex_client import ChannexError
-from .common import ChannelManagerError, log
+from .common import (
+    ChannelManagerError,
+    _currency_for_country,
+    _timezone_speicherbar,
+    log,
+)
 
 # Titel des Gerüst-Objekts. Bewusst erkennbar und nicht geraten: solange die
 # echten Airbnb-Daten fehlen, darf hier kein plausibler Fantasiename stehen
@@ -280,13 +336,43 @@ class AirbnbUebernahmeMixin:
                 )
                 uebersprungen += 1
                 continue
-            neu = self._objekt_schreiben(db, tenant_id, row)
+            objekt_id, neu = self._objekt_schreiben(db, tenant_id, row)
+            # JEDES übernommene Objekt bei Channex registrieren. Ohne diesen
+            # Schritt existiert nur die lokale Zeile, aber keine
+            # Channex-Property — und damit kein Ziel, auf das die Airbnb-Anzeige
+            # gemappt werden könnte. Live nachgewiesen am Beta-Betrieb: 18
+            # Objekte + 18 Einheiten in der DB, aber nur 2
+            # `channex_property_map`-Zeilen, und im Channex-UI standen alle 18
+            # Anzeigen auf „Not mapped".
+            #
+            # `_registrierung_nachholen` ist der richtige Weg (nicht
+            # `_ensure_property_registered`): der verlangt über `sync_content`
+            # einen Preis und wirft ohne einen 422 — und einen Preis liefert
+            # Airbnb nicht. Die Übernahme registriert deshalb OHNE Preis, genau
+            # wie beim Gerüst-Objekt: Property ja, Room-Type/Rate erst, wenn ein
+            # Preis da ist (Wurzel 4 — kein erfundener Preis).
+            registriert = True
+            try:
+                self._registrierung_nachholen(db, tenant_id, objekt_id)
+            except (ChannexError, ChannelManagerError) as exc:
+                # Ein Objekt, das sich nicht registrieren lässt, darf die
+                # übrigen 17 nicht mitreißen — aber es wird GENANNT, nicht
+                # still übergangen (Wurzel 5).
+                registriert = False
+                log.warning(
+                    "airbnb_uebernahme_registrierung_fehlgeschlagen",
+                    tenant_id=tenant_id, property_id=objekt_id,
+                    titel=row.get("title"),
+                    error=getattr(exc, "message", str(exc)),
+                )
             log.info(
                 "airbnb_uebernahme_objekt",
                 tenant_id=tenant_id,
+                property_id=objekt_id,
                 airbnb_listing_id=row.get("airbnb_listing_id"),
                 titel=row.get("title"),
                 neu_angelegt=neu,
+                bei_channex_registriert=registriert,
                 uebernommene_felder=sorted(row.keys()),
             )
             if neu:
@@ -294,16 +380,79 @@ class AirbnbUebernahmeMixin:
             else:
                 aktualisiert += 1
 
+        # Alle registrierten Objekte an DEN Kanal hängen („Affected Properties").
+        # Ein Airbnb-Konto hat bei Channex genau EINEN Kanal, und nur die
+        # Properties, die an diesem Kanal hängen, können überhaupt eine Anzeige
+        # zugeordnet bekommen. Ein zweiter Kanal ist keine Option — Airbnb
+        # antwortet darauf mit `has_already_channel` („This Airbnb user is
+        # already connected"); Channex' eigene Anleitung sagt genau das: den
+        # bestehenden Kanal öffnen und die weiteren Objekte unter „Affected
+        # Properties" ergänzen. Live nachgewiesen: am Kanal hing nur die eine
+        # Gerüst-Property, während 18 Anzeigen auf „Not mapped" standen.
+        am_kanal = self._kanal_properties_nachziehen(db, tenant_id, channel_id)
+
         log.info(
             "airbnb_uebernahme_fertig",
             tenant_id=tenant_id, angelegt=angelegt,
             aktualisiert=aktualisiert, uebersprungen=uebersprungen,
+            properties_am_kanal=am_kanal,
         )
         return {
             "created": angelegt,
             "updated": aktualisiert,
             "skipped": uebersprungen,
+            "listings_gefunden": len(listings),
         }
+
+    def _kanal_properties_nachziehen(
+        self, db: Client, tenant_id: str, channel_id: str
+    ) -> int:
+        """Alle Channex-Properties dieses Betriebs an den Kanal hängen.
+
+        Liefert die Anzahl am Kanal. Der PUT ERSETZT die Liste (kein Merge), also
+        wird die bestehende gelesen und vereinigt — sonst verlöre ein Nachzug die
+        vorher verbundenen Objekte (Wurzel 1). Idempotent: dieselbe Menge zweimal
+        gesetzt ändert nichts (Wurzel 2).
+        """
+        maps = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        unsere = {
+            str(m["channex_property_id"]) for m in maps
+            if m.get("channex_property_id")
+        }
+        if not unsere:
+            return 0
+        try:
+            kanal = self._channex.get_channel(channel_id)
+            attrs = (kanal.get("data") or {}).get("attributes") or {}
+            vorhanden = {str(p) for p in (attrs.get("properties") or [])}
+            fehlend = unsere - vorhanden
+            if fehlend:
+                self._channex.update_channel(
+                    channel_id, {"properties": sorted(vorhanden | unsere)}
+                )
+            log.info(
+                "airbnb_uebernahme_kanal_properties",
+                tenant_id=tenant_id, channel_id=channel_id,
+                vorher=len(vorhanden), ergaenzt=len(fehlend),
+                gesamt=len(vorhanden | unsere),
+            )
+            return len(vorhanden | unsere)
+        except (ChannexError, ChannelManagerError) as exc:
+            # Nicht den ganzen Import kippen: die Objekte sind angelegt und
+            # registriert, nur die Kanal-Zuordnung fehlt noch. Der Grund wird
+            # genannt, damit es nicht als „fertig" durchgeht (Wurzel 5).
+            log.warning(
+                "airbnb_uebernahme_kanal_properties_fehlgeschlagen",
+                tenant_id=tenant_id, channel_id=channel_id,
+                error=getattr(exc, "message", str(exc)),
+            )
+            return 0
 
     def _airbnb_listings_lesen(self, channel_id: str) -> list[dict[str, Any]]:
         """Listings des autorisierten Airbnb-Kontos holen.
@@ -439,6 +588,13 @@ class AirbnbUebernahmeMixin:
         Personenzahlen als Liste (`[1,2,3,4,5,6]`), das Maximum davon IST die
         Kapazität des Listings.
 
+        Die STÜCKZAHL der Einheiten kommt NICHT mit: jedes übernommene Objekt
+        bekommt genau eine Einheit (`_ensure_default_unit`). Das ist keine
+        Abkürzung, sondern die Grenze der Datenquelle — Lodgify sagt für seinen
+        Airbnb-Import dasselbe („Room types or number of units ✖ — You need to
+        set this up in your Overview section"). Wer mehrere identische Einheiten
+        unter einem Typ führt, ergänzt sie unter „Objekte".
+
         Ohne ID oder Titel ist das Listing nicht übernehmbar → None
         (überspringen, nicht mit Platzhaltern anlegen).
         """
@@ -462,12 +618,50 @@ class AirbnbUebernahmeMixin:
         ]
         if belegungen:
             row["max_guests"] = max(belegungen)
+
+        # Währung UND Zeitzone kommen aus DEMSELBEN `country_code`. Beide sind
+        # keine Erfindung (Wurzel 4), sondern Tatsachen über das Land: Dänemark
+        # rechnet in DKK und liegt in Europe/Copenhagen. Ohne Währung lässt sich
+        # kein Preisplan anlegen (`rate_plans.currency` NOT NULL), ohne Zeitzone
+        # verweigert Channex die Aktivierung ("timezone required") — beides war
+        # live der Grund, warum alle 18 übernommenen Objekte unbrauchbar blieben.
+        # Unbekanntes oder mehrzoniges Land → Feld bleibt leer, nicht geraten.
+        land = row.get("country")
+        waehrung = _currency_for_country(land)
+        if waehrung:
+            row["currency"] = waehrung
+        zone = _timezone_speicherbar(land)
+        if zone:
+            row["timezone"] = zone
         return row
+
+    @staticmethod
+    def _ohne_gepflegte_felder(
+        row: dict[str, Any], vorhanden: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Aus dem Land abgeleitete Felder nicht über gepflegte Werte schreiben.
+
+        Währung und Zeitzone leitet die Übernahme aus `country_code` ab. Hat der
+        Kunde sie am Objekt schon gesetzt, ist SEIN Wert die Wahrheit: ein Objekt
+        auf Teneriffa mit Atlantic/Canary darf ein erneuter Abruf nicht auf
+        Europe/Madrid zurückdrehen (Wurzel 1 — die Ableitung ist eine Starthilfe,
+        keine dauernde Zuständigkeit). Nur LEERE Felder werden gefüllt.
+        """
+        gefiltert = dict(row)
+        for feld in ("currency", "timezone"):
+            if vorhanden.get(feld):
+                gefiltert.pop(feld, None)
+        return gefiltert
 
     def _objekt_schreiben(
         self, db: Client, tenant_id: str, row: dict[str, Any]
-    ) -> bool:
-        """Objekt anlegen oder aktualisieren. True = neu angelegt.
+    ) -> tuple[str, bool]:
+        """Objekt anlegen oder aktualisieren → (objekt_id, neu_angelegt).
+
+        Die ID wird MITGEGEBEN, weil der Aufrufer das Objekt danach bei Channex
+        registrieren muss — ohne Channex-Property gibt es kein Ziel, auf das
+        eine Airbnb-Anzeige gemappt werden kann, und alle 18 blieben im
+        Channex-UI auf „Not mapped".
 
         Idempotent über (tenant_id, airbnb_listing_id): derselbe Aufruf zweimal
         erzeugt kein zweites Objekt (Wurzel 2). Ein vorhandenes Gerüst-Objekt
@@ -477,22 +671,24 @@ class AirbnbUebernahmeMixin:
         """
         vorhanden = (
             db.table("properties")
-            .select("id")
+            .select("id, currency, timezone")
             .eq("tenant_id", tenant_id)
             .eq("airbnb_listing_id", row["airbnb_listing_id"])
             .limit(1)
             .execute()
         ).data
         if vorhanden:
-            db.table("properties").update(row).eq("id", vorhanden[0]["id"]).execute()
+            db.table("properties").update(
+                self._ohne_gepflegte_felder(row, vorhanden[0])
+            ).eq("id", vorhanden[0]["id"]).execute()
             self._ensure_default_unit(
                 db, tenant_id, vorhanden[0]["id"], row.get("title")
             )
-            return False
+            return str(vorhanden[0]["id"]), False
 
         geruest = (
             db.table("properties")
-            .select("id")
+            .select("id, currency, timezone")
             .eq("tenant_id", tenant_id)
             .eq("title", _GERUEST_TITEL)
             .is_("airbnb_listing_id", "null")
@@ -500,11 +696,13 @@ class AirbnbUebernahmeMixin:
             .execute()
         ).data
         if geruest:
-            db.table("properties").update(row).eq("id", geruest[0]["id"]).execute()
+            db.table("properties").update(
+                self._ohne_gepflegte_felder(row, geruest[0])
+            ).eq("id", geruest[0]["id"]).execute()
             self._ensure_default_unit(
                 db, tenant_id, geruest[0]["id"], row.get("title")
             )
-            return False
+            return str(geruest[0]["id"]), False
 
         neu = (
             db.table("properties")
@@ -516,4 +714,4 @@ class AirbnbUebernahmeMixin:
                 "Objekt konnte nicht angelegt werden.", status_code=500
             )
         self._ensure_default_unit(db, tenant_id, neu[0]["id"], row.get("title"))
-        return True
+        return str(neu[0]["id"]), True

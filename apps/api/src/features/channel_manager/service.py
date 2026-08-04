@@ -18,6 +18,7 @@ from src.core.security import AuthContext
 
 from .abgaben_status import AbgabenStatusMixin
 from .airbnb_aktionen import AirbnbAktionenMixin
+from .airbnb_objekt_abruf import AirbnbObjektAbrufMixin
 from .airbnb_uebernahme import AirbnbUebernahmeMixin
 from .ari_push import AriPushMixin
 from .bookings_sync import BookingsSyncMixin
@@ -66,6 +67,10 @@ class ChannelManagerService(
     # begin_channel_oauth bzw. _ensure_default_unit auf, statt einen zweiten Weg
     # zu Channex zu bauen.
     AirbnbUebernahmeMixin,
+    # Nach ContentSyncMixin: der Einzel-Abruf ruft sync_content, um Property,
+    # Room-Type und Rate-Plan bei Channex anzulegen — ohne sie gibt es kein
+    # Mapping und Airbnb liefert keinen Preis.
+    AirbnbObjektAbrufMixin,
     ObjektKanalMixin,
     BookingsSyncMixin,
     OtaExtrasMixin,

@@ -224,6 +224,11 @@ class ContentSyncMixin:
                 # property_type kommt bevorzugt aus dem Subtyp (property_subtypes).
                 "property_subtypes(channex_property_type), "
                 "street, house_number, "
+                # `timezone` (0258) ist die GEPFLEGTE Wahrheit: die Spalte wird
+                # per DB-Trigger gegen pg_timezone_names validiert. Sie fehlte
+                # hier, weshalb `_property_attrs` immer nur aus dem Land RATEN
+                # konnte — bei Mehrzonen-Ländern (Kanaren, Azoren) still falsch.
+                "timezone, "
                 "postal_code, city, country, lat, lng, max_guests, amenities, "
                 "room_amenities, type_attributes, currency"
             )
@@ -807,7 +812,20 @@ class ContentSyncMixin:
             ),
             "latitude": prop_row.get("lat"),
             "longitude": prop_row.get("lng"),
-            "timezone": _timezone_for_country(country) if country else None,
+            # Zeitzone in dieser Reihenfolge, NICHT geraten wenn es sie gibt:
+            #  1. `properties.timezone` (0258) — vom Betrieb gepflegt und per
+            #     DB-Trigger gegen pg_timezone_names geprüft. Das ist die Wahrheit.
+            #  2. sonst aus dem Land, aber NUR für Länder mit genau EINER Zone
+            #     (`_timezone_for_country`). Spanien/Portugal sind dort bewusst
+            #     nicht drin: ein Objekt auf Teneriffa (Atlantic/Canary, −1 h)
+            #     oder Madeira/Azoren bekäme sonst still die Festlandzone.
+            # Fehlt beides, bleibt das Feld weg — Channex' Readiness meldet dann
+            # `timezone required` und die Meldung nennt den echten Grund, statt
+            # dass eine falsche Zone Check-in-Zeiten verschiebt (Wurzel 4).
+            "timezone": (
+                prop_row.get("timezone")
+                or (_timezone_for_country(country) if country else None)
+            ),
         }
         attrs = {k: v for k, v in candidates.items() if v not in (None, "")}
         # Ausstattung → Channex-Facilities (property.facilities, Top-Level). Sobald

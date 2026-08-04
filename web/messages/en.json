@@ -164,7 +164,8 @@
         "a": "Disconnect each portal from your previous system before connecting it here — only ONE system may push per channel.",
         "b": "Past bookings and manual blocks are NOT imported automatically. Re-enter them yourself after the import.",
         "c": "Keep your old system running as a backup and watch the first few days closely.",
-        "ack": "I understand."
+        "ack": "I understand.",
+        "doneTitle": "Notes from before connecting (done)"
       },
       "step1": {
         "title": "Create a listing",
@@ -175,7 +176,9 @@
       "step2": {
         "title": "Connect portal & map",
         "text": "Connect Booking, Airbnb & co. and map the portal rooms 1:1 to your listings. Bookings and availability then sync automatically.",
-        "connect": "Connect portal"
+        "connect": "Connect portal",
+        "connectMore": "Connect another portal",
+        "alreadyConnected": "A portal is already connected and your listings are transferred — no need to connect again here. Use “Connect another portal” only for an ADDITIONAL portal (e.g. Booking)."
       },
       "pull": {
         "button": "Pull listings from portal",
@@ -5006,7 +5009,24 @@
       "statusPaused": "Paused",
       "statusError": "Error",
       "singleUnit": "Whole property",
-      "loadFailed": "This property could not be loaded."
+      "loadFailed": "This property could not be loaded.",
+      "airbnbPull": {
+        "button": "Fetch from Airbnb",
+        "hint": "Maps this listing at Airbnb and pulls the price from there.",
+        "priceTaken": "Price taken from Airbnb: {price} · minimum stay {nights} nights",
+        "noPrice": "Airbnb did not return a price. The mapping is in place.",
+        "currency": "Currency: {currency}",
+        "timezone": "Time zone: {timezone}",
+        "alsoTaken": "Also imported: {fields}",
+        "field": {
+          "check_in_from": "check-in time",
+          "check_out_until": "check-out time",
+          "pets_allowed": "pets allowed",
+          "pets_max": "number of pets",
+          "smoking_allowed": "smoking",
+          "max_nights": "maximum nights"
+        }
+      }
     },
     "channelDetail": {
       "identifiers": "Identifiers",
@@ -5502,7 +5522,8 @@
       "acknowledge": "I acknowledge that I understand the tax collection scenario.",
       "sendUserTaxes": "Send user taxes",
       "blockedNote": "While this is off, no taxes of your own are sent to this channel."
-    }
+    },
+    "linkedPending": "{count, plural, =0 {Account connected · mapping pending} one {Account connected · # listing to map} other {Account connected · # listings to map}}"
   },
   "calendarSync": {
     "title": "Import/export calendar",

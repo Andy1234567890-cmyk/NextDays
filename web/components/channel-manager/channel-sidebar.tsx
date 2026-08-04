@@ -84,6 +84,12 @@ function ChannelRow({
       <SmallLogo logo={logo} alt={label} />
       <div className="flex min-w-0 flex-col">
         <span className="truncate text-sm font-medium">{label}</span>
+        {/* „Verbunden" meint die KANAL-Verbindung, nicht die Zuordnung der
+            Objekte — so hält es Lodgify auch (dort steht „Verbunden" grün,
+            während in der Tabelle daneben jede Zeile „Nicht synchronisiert"
+            zeigt). Vorher hing dieser Text an `connected_count` (Objekte mit
+            LAUFENDEM Abgleich); ein verbundenes Airbnb-Konto stand deshalb als
+            „Nicht verbunden" da, und der Betrieb verband es immer wieder neu. */}
         <span
           className={
             "text-xs " +
@@ -132,7 +138,13 @@ export function ChannelSidebar({
   // Prominente + verbundene + gepinnte Kanäle als feste Zeilen; der Rest liegt
   // im „Kanal hinzufügen"-Dropdown.
   const shownOtas = overview.ota.filter(
-    (c) => PROMINENT_OTA.has(c.code) || c.connected_count > 0 || c.pinned,
+    (c) =>
+      PROMINENT_OTA.has(c.code) ||
+      c.connected_count > 0 ||
+      // Bestehende Verbindung ohne laufenden Abgleich zählt auch — sonst
+      // verschwindet ein verbundenes Konto aus der Leiste.
+      c.linked_count > 0 ||
+      c.pinned,
   );
   const hiddenOtas = overview.ota.filter((c) => !shownOtas.includes(c));
 
@@ -170,7 +182,9 @@ export function ChannelSidebar({
           href={`/channels/${c.code}`}
           logo={logoFor(c)}
           label={c.label}
-          connected={c.connected_count > 0}
+          // Kanal-Verbindung, nicht Zuordnung: `linked_count` zählt, sobald das
+          // Konto verbunden ist (Lodgify-Verhalten, siehe ChannelRow).
+          connected={c.connected_count > 0 || c.linked_count > 0}
           active={c.code === activeCode}
           connectedLabel={labels.connected}
           notConnectedLabel={labels.notConnected}

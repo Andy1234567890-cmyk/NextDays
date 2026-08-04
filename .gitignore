@@ -39,3 +39,4 @@ client_secret_*.json
 
 # Lokale Audit-/Analyse-Notizen (nicht ins Repo)
 AUDIT_MyNextDays.md
+.playwright-mcp/

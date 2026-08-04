@@ -35,6 +35,7 @@ from .dependencies import ChannelManagerServiceDep
 from .schemas import (
     AbgabenStatusResponse,
     AirbnbAktionenPushResponse,
+    AirbnbObjektAbrufResponse,
     AirbnbTaxSettingsRequest,
     AirbnbTaxSettingsResponse,
     AirbnbUebernahmeResponse,
@@ -444,6 +445,28 @@ def airbnb_listings_uebernehmen(
     """Airbnb-Listings des verbundenen Kontos als Objekte übernehmen."""
     try:
         return AirbnbUebernahmeResponse(**service.listings_uebernehmen(ctx))
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/properties/{property_id}/airbnb/abrufen",
+    response_model=AirbnbObjektAbrufResponse,
+)
+def airbnb_objekt_abrufen(
+    property_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> AirbnbObjektAbrufResponse:
+    """EIN Objekt bei Airbnb abrufen: zuordnen, dann Preise holen.
+
+    Bewusst pro Objekt (nicht für alle 18): der Betrieb prüft ein Haus, bevor der
+    Rest angefasst wird — und ein Fehler an einem Objekt zieht die anderen nicht
+    mit. Der Scope wird im Service tenant-gescopt geladen (Wurzel 3/9: derselbe
+    Scope wie im List-Pfad).
+    """
+    try:
+        return AirbnbObjektAbrufResponse(
+            **service.airbnb_objekt_abrufen(ctx, property_id)
+        )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

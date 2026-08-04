@@ -23,6 +23,38 @@ from .schemas import (
 )
 
 
+def _normal(wert: object) -> str:
+    """Adress-Text zum Vergleichen normieren (Groß/Klein, Leerraum)."""
+    return " ".join(str(wert or "").split()).strip().lower()
+
+
+def _ist_firmenadresse(
+    attrs: dict[str, Any], firmenadresse: dict[str, Any] | None
+) -> bool:
+    """Ist die von Channex gelieferte Adresse die FIRMENADRESSE des Betriebs?
+
+    Verglichen wird Straße + PLZ, beide normiert. Beide müssen übereinstimmen —
+    eine gleiche PLZ allein bedeutet nur, dass Betrieb und Ferienhaus im selben
+    Ort liegen (bei einem regionalen Vermieter der Normalfall) und wäre kein
+    Grund, eine echte Hausadresse zu verwerfen.
+
+    Ohne Firmenadresse (kein Firmenprofil) ist nichts zu vergleichen → False,
+    also wird übernommen. Das ist bewusst nicht fail-closed: eine Adresse zu
+    verwerfen, die wir nicht als Firmenadresse belegen können, würde echte Daten
+    löschen.
+    """
+    if not firmenadresse:
+        return False
+    firma_strasse = _normal(firmenadresse.get("address"))
+    firma_plz = _normal(firmenadresse.get("zip_code"))
+    if not firma_strasse or not firma_plz:
+        return False
+    return (
+        _normal(attrs.get("address")) == firma_strasse
+        and _normal(attrs.get("zip_code")) == firma_plz
+    )
+
+
 class PropertyMappingMixin:
     """Property-Mapping (CRUD) + Channex→DB-Reconcile."""
 
@@ -137,30 +169,54 @@ class PropertyMappingMixin:
     @staticmethod
     def _channex_attrs_to_property_row(
         attrs: dict[str, Any],
+        firmenadresse: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         """Channex-Property-Attribute → properties-Spalten (invers zu
         _property_attrs). title ist NOT NULL → fehlt es, gibt None zurück
         (Property überspringen, KEIN Titel erfinden). Optionale Felder nur, wenn
         Channex sie liefert; sonst NULL/DB-Default (kein Fallback raten).
         property_type wird bewusst NICHT übernommen — Channex-Werte (apartment,
-        hotel, …) entsprechen nicht dem lokalen property_type-Enum."""
+        hotel, …) entsprechen nicht dem lokalen property_type-Enum.
+
+        `firmenadresse` schließt einen KREISLAUF, der live echten Schaden gemacht
+        hat: hat ein Objekt keine eigene Adresse, sendet `_billing_property_attrs`
+        die FIRMENADRESSE des Betriebs an Channex (nötig, weil Booking & Co. eine
+        Property-Adresse zur Aktivierung verlangen). Channex speichert sie. Beim
+        nächsten Reconcile kam sie hier zurück und wurde als HAUSADRESSE in die
+        DB geschrieben — aus der Geschäftsadresse des Betriebs wurde die Adresse
+        des Ferienhauses, und die ging an alle Portale raus.
+
+        Live nachgewiesen am Beta-Betrieb: zwei von 18 Objekten trugen
+        „Hirtshalsvej 21, 9881 Bindslev" (die Firmenadresse aus den AGB), obwohl
+        das eine Haus tatsächlich in 9800 Hjørring steht. Niemand hatte das
+        eingetippt — der Kreislauf hatte es erzeugt. Genau das ist Wurzel 4: ein
+        Rückfallwert, der zur Tatsache wird.
+
+        Stimmt die von Channex gelieferte Adresse mit der Firmenadresse überein,
+        wird sie deshalb NICHT übernommen. Das Objekt behält seine leere Adresse —
+        leer ist ehrlich, falsch ist Schaden.
+        """
         title = attrs.get("title")
         if not title or not str(title).strip():
             return None
         row: dict[str, Any] = {"title": str(title).strip()}
-        if attrs.get("address"):
+        eigene = not _ist_firmenadresse(attrs, firmenadresse)
+        if attrs.get("address") and eigene:
             row["address"] = attrs["address"]
         if attrs.get("city"):
             row["city"] = attrs["city"]
-        if attrs.get("zip_code"):
+        if attrs.get("zip_code") and eigene:
             row["postal_code"] = attrs["zip_code"]
         if attrs.get("country"):
             # Invariante halten: properties.country ist IMMER ISO-2 (auch aus
             # dem Reverse-Import). Channex liefert bereits ISO-2; defensiv normen.
             row["country"] = normalize_country(attrs["country"]) or attrs["country"]
-        if attrs.get("latitude") is not None:
+        # Koordinaten gehören zur Adresse: stammt die Adresse von der Firma, sind
+        # es die Koordinaten der Geschäftsstelle. Die Karte auf der Objekt-Seite
+        # zeigte damit auf das Büro statt auf das Ferienhaus.
+        if attrs.get("latitude") is not None and eigene:
             row["lat"] = attrs["latitude"]
-        if attrs.get("longitude") is not None:
+        if attrs.get("longitude") is not None and eigene:
             row["lng"] = attrs["longitude"]
         content = attrs.get("content") or {}
         if content.get("description"):
@@ -266,8 +322,14 @@ class PropertyMappingMixin:
         now = datetime.now(UTC).isoformat()
         created = updated = soft_deleted = skipped = 0
 
+        # Einmal je Reconcile geladen, nicht je Property: die Firmenadresse ist
+        # tenant-weit dieselbe. Sie dient nur dem Vergleich — kommt sie von
+        # Channex zurück, ist sie NICHT die Adresse des Hauses (siehe
+        # `_channex_attrs_to_property_row`).
+        firmenadresse = self._billing_property_attrs(db, tenant_id)
+
         for channex_id, attrs in live_by_id.items():
-            row = self._channex_attrs_to_property_row(attrs)
+            row = self._channex_attrs_to_property_row(attrs, firmenadresse)
             if row is None:
                 log.warning(
                     "reconcile_skip_no_title",

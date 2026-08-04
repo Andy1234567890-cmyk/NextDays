@@ -49,7 +49,12 @@ type Step = "object" | "portal" | "credentials" | "oauth" | "mapping" | "done";
 // Zuordnung auf Zimmer-Ebene (Cloudbeds/SiteMinder-Standard); die Raten des
 // Zimmers verbindet der Server automatisch. Kein Rate-Feld im UI.
 type MappingRow = {
-  room_type_code: number;
+  // STRING, nicht number: Airbnb-Listing-IDs sind 19-stellig
+  // (`1133122057704952480`) und liegen über Number.MAX_SAFE_INTEGER — `Number()`
+  // rundete sie zu `1133122057704952400`, also auf eine Anzeige, die es nicht
+  // gibt. Booking-Codes sind kürzer und überleben beides; als String ist beides
+  // korrekt, und das Backend nimmt `int | str`.
+  room_type_code: string;
   roomLabel: string;
   rateSummary: string; // die Raten des OTA-Zimmers, nur zur Anzeige
   pricing_type: string;
@@ -115,16 +120,29 @@ function buildMappingRows(
     const rates = room.rates ?? [];
     const first = rates[0];
     const otaName = norm(room.title ?? "");
-    // Passt der Booking-Zimmername zum Vorschlag eines noch freien Objekts?
-    const match = localRooms.find(
+    // ZUERST die exakte Zuordnung: ein aus Airbnb übernommenes Objekt trägt die
+    // Listing-ID der Anzeige. Das ist keine Heuristik, sondern dieselbe ID —
+    // Namensraten scheitert hier ohnehin (bei 18 Anzeigen wie „013 Rævlingevej ·
+    // The Fox House" gibt es keinen Zimmertyp-Namen zum Vergleichen), und ohne
+    // Treffer blieb `mappings` leer und finalize antwortete mit 422.
+    const exakt = localRooms.find(
       (lr) =>
         !used.has(lr.local_property_id) &&
-        lr.suggested_bcrt_name &&
-        otaName.includes(norm(lr.suggested_bcrt_name)),
+        lr.airbnb_listing_id &&
+        String(lr.airbnb_listing_id) === String(room.id),
     );
+    // Sonst: passt der Booking-Zimmername zum Vorschlag eines noch freien Objekts?
+    const match =
+      exakt ??
+      localRooms.find(
+        (lr) =>
+          !used.has(lr.local_property_id) &&
+          lr.suggested_bcrt_name &&
+          otaName.includes(norm(lr.suggested_bcrt_name)),
+      );
     if (match) used.add(match.local_property_id);
     return {
-      room_type_code: Number(room.id),
+      room_type_code: String(room.id),
       roomLabel: room.title ?? `Zimmer ${room.id}`,
       rateSummary: rates.map((r) => r.title ?? `Rate ${r.id}`).join(" · "),
       pricing_type: first?.pricing === "OBP" ? "OBP" : "Standard",
@@ -406,11 +424,27 @@ export function ChannelConnectButton({
       // Die Preis-Lücke wird GENANNT, nicht verschwiegen: Airbnb gibt über
       // Channex keine Preise heraus (nur Titel, Stadt, Land, Kapazität). Wer
       // das nicht liest, wartet vergeblich darauf, dass Preise „noch kommen".
+      // Der Preis ist KEINE Nebensache, sondern der nächste Pflichtschritt: das
+      // Portal verlangt beim Zuordnen Zimmer UND Tarif. Ohne Preis gibt es
+      // keinen Tarif, und die Anzeigen bleiben dort „nicht zugeordnet".
+      // Wie viele Anzeigen das Portal übergeben hat, wird GENANNT: Airbnb
+      // liefert Anzeigen nicht mit, die dort schon an eine andere Software
+      // gebunden sind (Sync-Status „Connected"), ebenso unlisted/snoozed und
+      // CoHost-Anzeigen. Live: Airbnb führte 19, geliefert wurden 18. Ohne
+      // diese Zahl sucht der Betrieb ein fehlendes Objekt vergeblich.
+      const gefunden =
+        res.data.listings_gefunden > 0
+          ? ` Airbnb hat ${res.data.listings_gefunden} Anzeige(n) übergeben — ` +
+            "fehlt eine, ist sie bei Airbnb noch mit einer anderen Software " +
+            "verbunden oder nicht veröffentlicht."
+          : "";
       setObjectImportMsg(
         anzahl > 0
-          ? `${anzahl} Objekt(e) übernommen. Du findest sie unter „Objekte“. ` +
-            "Airbnb übergibt keine Preise — setze je Objekt einmal deinen " +
-            `Preis, danach geht er automatisch an Airbnb.${rest}`
+          ? `${anzahl} Objekt(e) übernommen — du findest sie unter „Objekte“. ` +
+            "Nächster Schritt: Airbnb übergibt keine Preise, deshalb brauchen " +
+            "die Objekte je einen Grundpreis unter „Preise“. Erst danach kann " +
+            "die Anzeige zugeordnet werden, weil das Portal Objekt UND Preis " +
+            `verlangt. Danach geht dein Preis automatisch an Airbnb.${gefunden}${rest}`
           : "Noch keine Objekte gefunden. Airbnb braucht nach dem Verbinden " +
             "manchmal einen Moment — bitte in einer Minute erneut versuchen.",
       );
@@ -788,10 +822,22 @@ export function ChannelConnectButton({
                           <PortalLogo code={p.code} size={22} />
                         </span>
                         <span className="font-medium">{p.label}</span>
+                        {/* DREI Zustände, nicht zwei. `is_active` heißt
+                            „Zuordnung fertig und Kanal live" — nicht „Konto
+                            verbunden". Bei einem OAuth-Portal ist das KONTO
+                            kontoweit verbunden (Host-ID vorhanden), während die
+                            Zuordnung je Objekt noch offen sein kann. Vorher
+                            stand deshalb an ALLEN 18 Objekten „Aktion nötig",
+                            obwohl das Airbnb-Konto längst verbunden war — der
+                            Betrieb hat daraufhin immer wieder neu verbunden. */}
                         {conn &&
                           (conn.is_active ? (
                             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
                               Verbunden
+                            </span>
+                          ) : p.connection_type === "oauth" && conn.channel_id ? (
+                            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
+                              Konto verbunden · Zuordnung offen
                             </span>
                           ) : (
                             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
@@ -897,8 +943,10 @@ export function ChannelConnectButton({
                       <div className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
                         <p className="text-sm text-muted-foreground">
                           Sobald du Airbnb bestätigt hast, hol deine Objekte
-                          hierher — Name, Adresse und Beschreibung kommen aus
-                          deinem Airbnb-Objekt. Du musst nichts eintippen.
+                          hierher — Name, Ort, Land und Personenzahl kommen aus
+                          deinen Airbnb-Anzeigen. Du musst nichts eintippen.
+                          Preise übergibt Airbnb nicht: die setzt du einmal
+                          selbst, danach gehen sie automatisch dorthin.
                         </p>
                         <Button
                           onClick={importAirbnbObjects}
@@ -928,14 +976,59 @@ export function ChannelConnectButton({
                 )}
 
                 {oauthConnected && (
+                  /* Verbunden. ZUERST die Objekte übernehmen, DANN zuordnen —
+                     in dieser Reihenfolge, weil sonst die Zuordnung nicht
+                     aufgeht: Airbnb liefert hier so viele Einheiten, wie das
+                     Konto Anzeigen hat (beim Beta-Betrieb 18), unsere Seite hat
+                     nach dem Verbinden aber nur das eine Gerüst-Objekt. Ohne
+                     Übernahme bleiben 17 Zeilen ohne Gegenstück, `mappings`
+                     bliebe leer, und finalize antwortete mit 422 („Mindestens
+                     eine Zimmer/Raten-Zuordnung ist nötig") — genau das ist
+                     live passiert. */
                   <div className="flex flex-col gap-3">
                     <p className="flex items-center gap-2 text-sm font-medium text-emerald-600">
                       <Icon icon="ph:check-circle" className="size-5" />
                       Verbunden{oauthHostId ? ` · Host-ID ${oauthHostId}` : ""}
                     </p>
-                    <Button onClick={loadOAuthMapping} disabled={pending}>
+                    <div className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
+                      <p className="text-sm text-muted-foreground">
+                        Hol zuerst deine Airbnb-Anzeigen als Objekte hierher —
+                        Name, Ort, Land und Personenzahl kommen mit. Erst danach
+                        lässt sich zuordnen, welche Anzeige zu welchem Objekt
+                        gehört. Preise übergibt Airbnb nicht: die setzt du
+                        einmal selbst, danach gehen sie automatisch dorthin.
+                      </p>
+                      <Button
+                        onClick={importAirbnbObjects}
+                        disabled={pending}
+                        className="self-start"
+                      >
+                        {pending ? (
+                          <Spinner text="Objekte werden geholt …" />
+                        ) : (
+                          <>
+                            <Icon
+                              icon="ph:cloud-arrow-down"
+                              className="size-4"
+                            />
+                            Objekte übernehmen
+                          </>
+                        )}
+                      </Button>
+                      {objectImportMsg && (
+                        <p className="text-sm text-muted-foreground">
+                          {objectImportMsg}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={loadOAuthMapping}
+                      disabled={pending}
+                      className="self-start"
+                    >
                       {pending ? (
-                        <Spinner text="Lade Listings …" />
+                        <Spinner text="Lade Anzeigen …" />
                       ) : (
                         "Weiter zur Zuordnung"
                       )}
@@ -1135,11 +1228,34 @@ export function ChannelConnectButton({
                     ) : (
                       <>
                         <div className="rounded-(--radius) border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
-                          Diese Portal-Kennung führt {rows.length} Einheiten,
-                          dieses Objekt ist eine davon — wähle die passende.
-                          Gehören dir mehrere, lege für jede ein eigenes Objekt
-                          an und weise sie im Standort-Tab demselben Gebäude zu;
-                          sie teilen sich dann diese Kennung.
+                          {selected.connection_type === "oauth" ? (
+                            /* AIRBNB & Co.: mehrere Zeilen sind hier NICHT
+                               Einheiten einer Kennung. Bei einem OAuth-Portal
+                               ist die Kennung das KONTO, und jede Anzeige ist
+                               ein eigenständiges Objekt an eigener Adresse — im
+                               Beta-Betrieb 18 Ferienhäuser in Bindslev, Skagen,
+                               Mygdal, Sindal, Vidstrup, Ålbæk, Tversted und
+                               Hjørring. Der alte Text nannte sie „Einheiten
+                               dieser Kennung" und riet, sie demselben GEBÄUDE
+                               zuzuweisen: fachlich falsch, weil sie zu
+                               verschiedenen Gebäuden gehören. */
+                            <>
+                              Dein Airbnb-Konto führt {rows.length} Anzeigen —
+                              jede ist ein eigenes Objekt. Hier wird nur
+                              zugeordnet, welche davon dieses Objekt ist; die
+                              übrigen behalten ihre eigenen Objekte. Ist die
+                              Anzeige schon vorausgewählt, stimmt die Zuordnung
+                              bereits.
+                            </>
+                          ) : (
+                            <>
+                              Diese Portal-Kennung führt {rows.length} Einheiten,
+                              dieses Objekt ist eine davon — wähle die passende.
+                              Gehören dir mehrere, lege für jede ein eigenes
+                              Objekt an und weise sie im Standort-Tab demselben
+                              Gebäude zu; sie teilen sich dann diese Kennung.
+                            </>
+                          )}
                         </div>
                         <NativeSelect
                           value={String(

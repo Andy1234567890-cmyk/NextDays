@@ -268,6 +268,10 @@ export type LocalRoomOption = {
   // die Vorauswahl des passenden OTA-Zimmers. null = keine Entsprechung.
   suggested_bcrt_code: number | null;
   suggested_bcrt_name: string | null;
+  // Bei einem aus Airbnb übernommenen Objekt: die Airbnb-Listing-ID. Damit ist
+  // die Zuordnung Anzeige→Objekt eindeutig und muss nicht über Namen geraten
+  // werden. null = nicht aus Airbnb übernommen.
+  airbnb_listing_id: string | null;
 };
 export type PrepareResult = {
   portal: string;
@@ -277,7 +281,10 @@ export type PrepareResult = {
 export type ChannelMapping = {
   // Das eigene Zimmer (Objekt), dem dieses OTA-Zimmer zugeordnet wird.
   local_property_id: string;
-  room_type_code: number;
+  // STRING: Airbnb-Listing-IDs (19-stellig) verlieren als JS-`number`
+  // Präzision — `1133122057704952480` würde zu `…400`. Das Backend nimmt
+  // `int | str`, Booking-Codes gehen als Ziffernstring genauso durch.
+  room_type_code: string;
   occupancy?: number;
   pricing_type?: string;
 };
@@ -294,7 +301,13 @@ export type OtaChannelOverview = {
   label: string;
   icon: string;
   connection_type: "oauth" | "credential";
+  // Objekte, deren Abgleich LÄUFT (Kanal bei Channex aktiv).
   connected_count: number;
+  // Objekte, für die eine Verbindung BESTEHT — auch ohne laufenden Abgleich.
+  // Bei OAuth-Portalen (Airbnb) liegen zwischen „Konto verbunden" und „Abgleich
+  // läuft" mehrere Schritte; ohne diese Zahl zeigte die Karte „Verbinden",
+  // obwohl das Konto längst autorisiert war.
+  linked_count: number;
   // Vom Tenant in die Sidebar geholt (Dropdown „Kanal hinzufügen")?
   pinned: boolean;
 };
@@ -492,6 +505,11 @@ export type AirbnbUebernahmeResult = {
   created: number;
   updated: number;
   skipped: number;
+  // Wie viele Anzeigen das Portal übergeben hat. Airbnb liefert NICHT alle:
+  // Anzeigen, die dort schon an eine andere Software gebunden sind (Sync-Status
+  // „Connected"), fehlen — ebenso unlisted/snoozed und CoHost-Anzeigen. Die Zahl
+  // wird angezeigt, damit ein fehlendes Objekt erklärbar ist.
+  listings_gefunden: number;
 };
 
 /**
@@ -518,6 +536,44 @@ export async function uebernehmeAirbnbListings(): Promise<
     { method: "POST" },
   );
   if (res.ok) revalidatePath("/objekte");
+  return res;
+}
+
+export type AirbnbObjektAbrufResult = {
+  property_id: string;
+  listing_id: string;
+  waehrung: string | null;
+  zeitzone: string | null;
+  plan_angelegt: boolean;
+  zugeordnet: boolean;
+  preis_uebernommen: boolean;
+  base_price: number | null;
+  min_stay: number | null;
+  // Welche weiteren Angaben aus Airbnb übernommen wurden (check_in_from,
+  // check_out_until, pets_allowed, pets_max, smoking_allowed, max_nights).
+  // Airbnb liefert beim Zuordnen mehr als den Preis.
+  uebernommene_felder: string[];
+  // Steht NUR, wenn der Preis NICHT kam — mit dem Grund. Ein leeres Feld bei
+  // preis_uebernommen: false wäre eine verschluckte Fehlermeldung.
+  hinweis: string | null;
+};
+
+/**
+ * EIN Objekt bei Airbnb abrufen: zuordnen, dann den Preis holen.
+ *
+ * Bewusst pro Objekt und nicht für alle — der Betrieb prüft ein Haus, bevor der
+ * Rest angefasst wird. Der Abruf macht in einem Zug: Währung/Zeitzone aus dem
+ * Land nachtragen, Preisplan sicherstellen, bei Channex zuordnen und den Preis
+ * von Airbnb übernehmen (`load_listing_price_settings`).
+ */
+export async function airbnbObjektAbrufen(
+  propertyId: string,
+): Promise<Result<AirbnbObjektAbrufResult>> {
+  const res = await call<AirbnbObjektAbrufResult>(
+    `/properties/${propertyId}/airbnb/abrufen`,
+    { method: "POST" },
+  );
+  if (res.ok) revalidatePath(`/objekte/${propertyId}`);
   return res;
 }
 

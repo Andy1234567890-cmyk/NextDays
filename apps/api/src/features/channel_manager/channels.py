@@ -805,7 +805,29 @@ class ChannelsMixin:
         Die Feldnamen der Zuordnung sind NICHT fix: jeder Kanal deklariert sie im
         Katalog unter `rate_params` (Booking/Expedia: room_type_code +
         rate_plan_code + occupancy …, Airbnb: listing_id + airbnb_rate_plan_id).
-        Gebaut wird deshalb genau das, was der Kanal deklariert."""
+        Gebaut wird deshalb genau das, was der Kanal deklariert.
+
+        AIRBNB-BESONDERHEIT — `airbnb_rate_plan_id` bleibt LEER. Der Katalog
+        deklariert das Feld, aber es gehört zu Airbnbs optionalen „Rate Plans",
+        die erst existieren, wenn man sie bei Airbnb ANLEGT (Channex' eigene
+        Maske tut das über `channels/{id}/action/create_rate_plan` und liest sie
+        mit `action/retrieve_rate_plans`; live gegen unseren Kanal geprüft:
+        `retrieve_rate_plans` → `{"data": []}`, es gibt keine). Ohne aktivierte
+        Rate Plans setzt Channex' Maske nur `{listing_id, primary_occ}` — kein
+        Ersatzwert, und insbesondere NICHT die Listing-ID ein zweites Mal.
+        Deshalb liefert `_normalize_mapping_rooms` für ein Listing bewusst eine
+        Rate mit derselben ID: `_rate_plan_settings` setzt daraus `listing_id`,
+        und `airbnb_rate_plan_id` fällt weg, weil Channex es aus dem Katalog
+        kennt, aber ohne Rate Plans nicht erwartet. Airbnb akzeptiert ohnehin nur
+        EINEN Preis je Listing („Airbnb allows you to map only 1 rate plan").
+
+        OFFEN (nicht verifiziert, weil ich bei Channex nichts anlegen darf): das
+        SPA baut für Airbnb KEIN `rate_plans`-Array im Kanal-Update, sondern
+        schickt jede Zuordnung einzeln an `POST channels/{id}/mappings` mit
+        `{mapping: {rate_plan_id, settings: {listing_id, primary_occ}}}`. Sollte
+        der `rate_plans`-Weg hier bei Airbnb scheitern, ist DAS der nächste
+        Schritt — der Pfad antwortet auf GET mit 404, was nichts über POST sagt.
+        """
         is_sandbox = portal_code == self._SANDBOX_CODE
         spec = self._channel_spec(portal_code)
         rate_params: dict[str, Any] = spec.get("rate_params") or {}
@@ -1019,8 +1041,19 @@ class ChannelsMixin:
             db, tenant_id, local_property_id
         )
         if not local_rate_maps:
+            # UMSETZBARE Meldung: das trifft jedes aus Airbnb übernommene Objekt,
+            # weil Airbnb über Channex keinen Preis mitliefert. Channex' eigene
+            # Anleitung verlangt beim Zuordnen ausdrücklich BEIDES („Sie müssen
+            # sowohl ein Zimmer als auch einen Tarif auswählen") — ohne Preis
+            # gibt es keinen Tarif und die Anzeige bleibt „Not mapped". Der
+            # Kunde muss wissen, WO er das behebt, statt nur zu lesen, dass
+            # etwas fehlt.
             raise ChannelManagerError(
-                "Das zugeordnete Zimmer hat keinen Preisplan.", status_code=422
+                "Für dieses Objekt ist noch kein Preis hinterlegt — das Portal "
+                "verlangt beim Zuordnen einen Preis. Setze unter „Preise“ den "
+                "Grundpreis des Objekts, danach lässt sich die Anzeige "
+                "verbinden.",
+                status_code=422,
             )
         # Scope je lokalem Plan auflösen, um Kanal-Pläne richtig einzusortieren.
         scoped = self._portal_scoped_channex_ids(db, tenant_id, local_property_id)
@@ -1612,12 +1645,23 @@ class ChannelsMixin:
             .execute()
         ).data or []
         active_props_by_portal: dict[str, set[str]] = {}
+        # ZWEITE Achse, bewusst getrennt von `is_active`: „Konto verbunden" ist
+        # NICHT dasselbe wie „Abgleich läuft". `is_active` wird erst true, wenn der
+        # Kanal bei Channex aktiviert ist, und das setzt eine fertige Zuordnung
+        # voraus. Ein Airbnb-Konto kann also autorisiert sein (Token gültig, 18
+        # Objekte am Kanal) und `is_active` trotzdem überall false — dann zeigte die
+        # Kanal-Karte „Verbinden", der Onboarding-Schritt „Aktion nötig" und die
+        # Objekt-Seite „Pausiert". Live passiert: der Betrieb verband Airbnb
+        # wieder und wieder, weil die Oberfläche die bestehende Verbindung nicht
+        # zugab. Mit `linked_count` sagt sie jetzt die Wahrheit: verbunden, aber
+        # Zuordnung noch offen.
+        linked_props_by_portal: dict[str, set[str]] = {}
         for r in conns:
+            portal = r.get("ota_portal_code") or ""
+            linked_props_by_portal.setdefault(portal, set()).add(r.get("property_id"))
             if not r.get("is_active"):
                 continue
-            active_props_by_portal.setdefault(
-                r.get("ota_portal_code") or "", set()
-            ).add(r.get("property_id"))
+            active_props_by_portal.setdefault(portal, set()).add(r.get("property_id"))
 
         # Vom Tenant in die Sidebar geholte Kanäle (Dropdown „Kanal hinzufügen").
         pinned_codes = self._pinned_codes(db, tenant_id)
@@ -1632,6 +1676,9 @@ class ChannelsMixin:
                     "oauth" if p["code"] in self._OAUTH_PORTALS else "credential"
                 ),
                 "connected_count": len(active_props_by_portal.get(p["code"], set())),
+                # Objekte, für die eine Verbindung zu diesem Portal BESTEHT —
+                # unabhängig davon, ob der Abgleich schon läuft (siehe oben).
+                "linked_count": len(linked_props_by_portal.get(p["code"], set())),
                 "pinned": p["code"] in pinned_codes,
             }
             for p in self._portal_catalog()
@@ -1729,12 +1776,23 @@ class ChannelsMixin:
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
 
-        # Basis: alle aktiven Objekte des Tenants (jede Zeile = ein Objekt).
+        # Basis: alle NICHT archivierten Objekte des Tenants (jede Zeile = ein
+        # Objekt). Bewusst NICHT auf `status='active'` gefiltert: die Zuordnung
+        # kommt VOR dem Aktivieren. Ein aus Airbnb übernommenes Objekt ist `draft`
+        # (richtig — ohne Preis darf es nicht verkaufen), und mit dem alten Filter
+        # sagte diese Seite „Du hast noch keine aktiven Objekte. Lege zuerst ein
+        # Objekt an", während 18 übernommene Objekte in der DB standen. Damit war
+        # die Zuordnung genau dort unmöglich, wo sie hingehört — und der Betrieb
+        # verband Airbnb immer wieder neu, statt zuordnen zu können.
+        # `inactive` bleibt draußen: ein stillgelegtes Objekt gehört an kein Portal.
+        # Der Enum `property_status` kennt genau drei Werte (`draft, active,
+        # inactive`) — ein Filter auf einen erfundenen Wert antwortet 400 und
+        # kippte die ganze Seite auf 422.
         props = (
             db.table("properties")
-            .select("id, title")
+            .select("id, title, status")
             .eq("tenant_id", tenant_id)
-            .eq("status", "active")
+            .in_("status", ["draft", "active"])
             .order("title")
             .execute()
         ).data or []
@@ -2059,7 +2117,7 @@ class ChannelsMixin:
             return []
         props = (
             db.table("properties")
-            .select("id, title, property_type")
+            .select("id, title, property_type, airbnb_listing_id")
             .eq("tenant_id", tenant_id)
             .in_("id", prop_ids)
             .execute()
@@ -2076,6 +2134,12 @@ class ChannelsMixin:
                     "title": p.get("title") or "Zimmer",
                     "suggested_bcrt_code": suggestion[0] if suggestion else None,
                     "suggested_bcrt_name": suggestion[1] if suggestion else None,
+                    # Bei einem aus Airbnb ÜBERNOMMENEN Objekt ist die Zuordnung
+                    # bereits eindeutig bekannt: die Listing-ID steht am Objekt.
+                    # Die UI kann damit exakt vorwählen, statt über Namen zu
+                    # raten — bei 18 Anzeigen ist Namensraten aussichtslos, und
+                    # ohne Vorauswahl blieb `mappings` leer (finalize → 422).
+                    "airbnb_listing_id": p.get("airbnb_listing_id"),
                 }
             )
         return out

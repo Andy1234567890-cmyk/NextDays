@@ -19,10 +19,16 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useState, useTransition } from "react";
 
+import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { channelLogoLoose } from "@/lib/channel-logos";
-import type { StoredChannelConnection } from "@/lib/channex";
+import {
+  type AirbnbObjektAbrufResult,
+  type StoredChannelConnection,
+  airbnbObjektAbrufen,
+} from "@/lib/channex";
 import type { Property } from "@/lib/properties";
 
 type Einheit = { id: string; name: string; position: number };
@@ -131,8 +137,101 @@ export function PropertySync({
                 {c.last_error ?? c.last_sync_error}
               </p>
             )}
+
+            {/* Nur bei Airbnb: dieses EINE Objekt dort abrufen. Die anderen
+                Portale haben keinen Lese-Weg für Preise (nur Airbnb kennt
+                `load_listing_price_settings`), ein Knopf dort wäre eine
+                Attrappe. */}
+            {c.portal_code === "AirBNB" && (
+              <AirbnbAbruf propertyId={property.id} />
+            )}
           </Card>
         ))
+      )}
+    </div>
+  );
+}
+
+// Abruf dieses EINEN Objekts bei Airbnb: zuordnen, dann den Preis holen.
+//
+// Bewusst pro Objekt, nicht für alle 18 — der Betrieb prüft ein Haus, bevor der
+// Rest angefasst wird, und ein Fehler an einem Objekt zieht die anderen nicht mit.
+function AirbnbAbruf({ propertyId }: { propertyId: string }) {
+  const t = useTranslations("objects.sync.airbnbPull");
+  const [pending, startTransition] = useTransition();
+  const [result, setResult] = useState<AirbnbObjektAbrufResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  function abrufen() {
+    setError(null);
+    setResult(null);
+    startTransition(async () => {
+      const res = await airbnbObjektAbrufen(propertyId);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      setResult(res.data);
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-2 border-t border-border pt-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="outline" onClick={abrufen} disabled={pending}>
+          <Icon
+            icon={pending ? "ph:spinner" : "ph:cloud-arrow-down"}
+            className={pending ? "size-4 animate-spin" : "size-4"}
+          />
+          {t("button")}
+        </Button>
+        <span className="text-sm text-muted-foreground">{t("hint")}</span>
+      </div>
+
+      {error && (
+        <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
+      {result && (
+        <div className="flex flex-col gap-1 rounded-(--radius) border border-border p-3 text-sm">
+          {/* Der Preis ist der Zweck des Knopfs — kam er nicht, sagt die Zeile
+              das mit Grund, statt Erfolg zu behaupten. */}
+          {result.preis_uebernommen ? (
+            <span className="font-medium text-emerald-700 dark:text-emerald-400">
+              {t("priceTaken", {
+                price: result.base_price ?? 0,
+                nights: result.min_stay ?? 1,
+              })}
+            </span>
+          ) : (
+            <span className="text-amber-700 dark:text-amber-400">
+              {result.hinweis ?? t("noPrice")}
+            </span>
+          )}
+          {result.waehrung && (
+            <span className="text-muted-foreground">
+              {t("currency", { currency: result.waehrung })}
+            </span>
+          )}
+          {result.zeitzone && (
+            <span className="text-muted-foreground">
+              {t("timezone", { timezone: result.zeitzone })}
+            </span>
+          )}
+          {/* Airbnb liefert beim Zuordnen mehr als den Preis. Was davon
+              wirklich ankam, wird benannt — nicht behauptet. */}
+          {result.uebernommene_felder.length > 0 && (
+            <span className="text-muted-foreground">
+              {t("alsoTaken", {
+                fields: result.uebernommene_felder
+                  .map((f) => t(`field.${f}`))
+                  .join(", "),
+              })}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

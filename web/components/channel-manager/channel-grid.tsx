@@ -91,13 +91,24 @@ function ChannelLogo({
 }
 
 // Eine Kanal-Karte: Status-Punkt oben, Logo mittig, Badge unten.
+//
+// DREI Zustände, nicht zwei. Das ist der Kern einer echten Fehlbedienung: bei
+// einem OAuth-Portal wie Airbnb ist das Konto verbunden, LANGE bevor der Abgleich
+// läuft (dazwischen liegt die Zuordnung). Mit nur „verbunden/nicht verbunden"
+// stand auf der Karte „Verbinden", obwohl 18 Objekte am Kanal hingen — und der
+// Betrieb verband dasselbe Airbnb-Konto immer wieder neu.
+//   grün  = Abgleich läuft (connected)
+//   gelb  = Konto verbunden, Zuordnung offen (linked)
+//   grau  = nichts verbunden
 function ChannelCard({
   logo,
   alt,
   connected,
+  linked = false,
   badge,
   href,
   connectLabel,
+  linkedLabel,
 }: {
   // Nur echte Marken-SVGs. Ohne Logo zeigt die Karte den Namen (siehe
   // ChannelLogo) — ein `icon`-Feld gab es hier einmal, es wurde aber nie
@@ -105,10 +116,15 @@ function ChannelCard({
   logo?: { src?: string; srcDark?: string };
   alt: string;
   connected: boolean;
+  // Verbindung besteht, Abgleich läuft aber noch nicht. Nur auswerten, wenn
+  // `connected` false ist — sonst gewinnt immer der stärkere Zustand.
+  linked?: boolean;
   badge: string;
   href: string;
   connectLabel: string;
+  linkedLabel?: string;
 }) {
+  const offen = !connected && linked;
   return (
     // Ganze Karte klickbar → Kanal-Detailseite (Lodgify-Muster). Ein Link statt
     // nur der Button, damit auch der VERBUNDENE Zustand navigierbar ist.
@@ -117,7 +133,11 @@ function ChannelCard({
         <span
           className={
             "size-2.5 rounded-full " +
-            (connected ? "bg-emerald-500" : "bg-muted-foreground/30")
+            (connected
+              ? "bg-emerald-500"
+              : offen
+                ? "bg-amber-500"
+                : "bg-muted-foreground/30")
           }
           aria-hidden
         />
@@ -127,6 +147,10 @@ function ChannelCard({
         {connected ? (
           <span className="rounded-lg bg-emerald-50 py-2 text-center text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
             {badge}
+          </span>
+        ) : offen ? (
+          <span className="rounded-lg bg-amber-50 py-2 text-center text-sm font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+            {linkedLabel ?? badge}
           </span>
         ) : (
           <span className="rounded-full bg-foreground py-2 text-center text-sm font-medium text-background transition-opacity group-hover:opacity-90">
@@ -248,7 +272,14 @@ export function ChannelGrid({ overview }: { overview: ChannelOverview | null }) 
   // Nur prominente + verbundene + gepinnte OTAs als Karten; der lange Rest liegt
   // im „Kanal hinzufügen"-Dropdown (keine ewige Kachelwand).
   const shownOtas = overview.ota.filter(
-    (c) => PROMINENT_OTA.has(c.code) || c.connected_count > 0 || c.pinned,
+    (c) =>
+      PROMINENT_OTA.has(c.code) ||
+      c.connected_count > 0 ||
+      // Auch ein Portal mit bestehender, aber noch nicht aktiver Verbindung
+      // gehört als Karte sichtbar — sonst verschwindet ein verbundenes Konto
+      // ins „Kanal hinzufügen"-Dropdown.
+      c.linked_count > 0 ||
+      c.pinned,
   );
   const hiddenOtas = overview.ota.filter((c) => !shownOtas.includes(c));
 
@@ -266,7 +297,9 @@ export function ChannelGrid({ overview }: { overview: ChannelOverview | null }) 
               logo={otaLogo(c)}
               alt={c.label}
               connected={c.connected_count > 0}
+              linked={c.linked_count > 0}
               badge={t("syncedCount", { count: c.connected_count })}
+              linkedLabel={t("linkedPending", { count: c.linked_count })}
               href={`/channels/${c.code}`}
               connectLabel={t("connect")}
             />

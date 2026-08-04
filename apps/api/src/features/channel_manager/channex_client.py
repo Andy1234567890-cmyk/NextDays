@@ -935,6 +935,72 @@ class ChannexClient:
         """
         return self.get(f"channels/{channel_id}/mappings/{mapping_id}/pricing_settings")
 
+    def create_channel_mapping(
+        self, channel_id: str, rate_plan_id: str, settings: dict[str, Any]
+    ) -> dict[str, Any]:
+        """EINE Zuordnung am Kanal anlegen — der Weg für Airbnb.
+
+        LIVE VERIFIZIERT (04.08.2026) durch Rücklesen, nicht durch „200":
+            POST channels/{id}/mappings
+            {"mapping": {"rate_plan_id": …, "settings": {"listing_id": …}}}
+
+        Der naheliegende Weg über `PUT channels/{id}` mit einem `rate_plans`-Array
+        antwortet 200 und speichert NICHTS — danach steht am Kanal weiter
+        `rate_plans: []`. Wer nur den Status prüft, hält das für Erfolg (Wurzel 5).
+
+        Die Antwort trägt die vollen Airbnb-Einstellungen des Listings zurück:
+        `pricing_setting` (default_daily_price, listing_currency, standard_fees),
+        `availability_rule` (min/max Nächte, Vorlaufzeit), `booking_setting`
+        (Check-in/-out, Storno, Haustiere) und `promotions`. Das ist der
+        eigentliche Lese-Kanal zu Airbnb — kein separater Abruf nötig.
+
+        Es gibt KEINEN GET-Pfad für Mappings: `channels/{id}/mappings`,
+        `…/rate_plans`, `…/listings` antworten alle 404. Der Ist-Stand steht
+        ausschließlich im Kanal-Objekt unter `rate_plans[]`.
+        """
+        return self.post(
+            f"channels/{channel_id}/mappings",
+            json={"mapping": {"rate_plan_id": rate_plan_id, "settings": settings}},
+        )
+
+    def listing_settings_laden(
+        self, channel_id: str, listing_id: str, aktion: str
+    ) -> dict[str, Any]:
+        """Channex anstoßen, die Einstellungen eines Listings VOM KANAL zu holen.
+
+        ZWEI NAMENSRÄUME, live gemessen (04.08.2026) — das ist die Falle:
+        `channels/{id}/action/<name>` UND `channels/{id}/execute/<name>`. Die
+        Lade-Aktionen liegen im ZWEITEN und werden per **GET** mit `listing_id` als
+        Query-Parameter gerufen. Dieselben Namen als POST im `action`-Namensraum
+        antworten 400 „action is not supported" bzw. 404 — daran war die frühere
+        (falsche) Schlussfolgerung gescheitert, Airbnb gebe über Channex keine
+        Preise heraus.
+
+        Gemessen mit 200 „Success":
+            load_listing_price_settings · load_listing_availability_rule
+            load_listing_booking_settings · reload_settings
+            load_future_reservations
+
+        ACHTUNG — DIESE ANTWORT BEWEIST NICHTS. Kontrolliert gemessen: der
+        `execute`-Namensraum antwortet auf JEDEN Namen mit 200
+        `{"meta":{"message":"Success"}}`, auch auf `voelliger_unsinn_xyz123`, und
+        protokolliert ihn sogar in `channel_events`. Als Existenznachweis einer
+        Aktion ist er unbrauchbar. Belegt sind laut Channex' eigener Library
+        (`ChannexIO/Channex-BL`) nur vier Namen: `publish`, `unpublish`,
+        `update_pricing_setting`, `update_availability_rule`.
+
+        Der EINZIGE harte Beweis ist eine Änderung an den Daten. Deshalb ist der
+        Preis-Lesepfad NICHT dieser Aufruf, sondern `create_channel_mapping`:
+        dessen Antwort trägt die Airbnb-Einstellungen nachweislich zurück.
+
+        Dieser Aufruf bleibt als Auffrischung ohne Verlass — schlägt er fehl oder
+        tut nichts, ändert das den Ablauf nicht.
+        """
+        return self.get(
+            f"channels/{channel_id}/execute/{aktion}",
+            params={"listing_id": listing_id},
+        )
+
     def update_listing_pricing_settings(
         self, channel_id: str, mapping_id: str, settings: dict[str, Any]
     ) -> dict[str, Any]:

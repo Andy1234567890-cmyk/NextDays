@@ -164,7 +164,8 @@
         "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
         "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
         "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden."
+        "ack": "Ich habe das verstanden.",
+        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
       },
       "step1": {
         "title": "Objekt anlegen",
@@ -175,7 +176,9 @@
       "step2": {
         "title": "Portal verbinden & zuordnen",
         "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden"
+        "connect": "Portal verbinden",
+        "connectMore": "Weiteres Portal verbinden",
+        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
       },
       "pull": {
         "button": "Objekte aus Portal holen",
@@ -4985,7 +4988,24 @@
       "statusPaused": "În pauză",
       "statusError": "Eroare",
       "singleUnit": "Toată proprietatea",
-      "loadFailed": "Această proprietate nu a putut fi încărcată."
+      "loadFailed": "Această proprietate nu a putut fi încărcată.",
+      "airbnbPull": {
+        "button": "Bei Airbnb abrufen",
+        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
+        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
+        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
+        "currency": "Währung: {currency}",
+        "timezone": "Zeitzone: {timezone}",
+        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "field": {
+          "check_in_from": "Check-in-Zeit",
+          "check_out_until": "Check-out-Zeit",
+          "pets_allowed": "Haustiere erlaubt",
+          "pets_max": "Anzahl Haustiere",
+          "smoking_allowed": "Rauchen",
+          "max_nights": "Maximale Nächte"
+        }
+      }
     },
     "channelDetail": {
       "identifiers": "Identificatori",
@@ -5481,7 +5501,8 @@
       "acknowledge": "Confirm că înțeleg scenariul de colectare a taxelor.",
       "sendUserTaxes": "Trimite taxele proprii",
       "blockedNote": "Cât timp este dezactivat, nu se trimit taxe proprii către acest canal."
-    }
+    },
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
   },
   "calendarSync": {
     "title": "Import/export calendar",

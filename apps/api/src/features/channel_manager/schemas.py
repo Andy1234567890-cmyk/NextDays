@@ -247,7 +247,13 @@ class ChannelConnectionResponse(BaseModel):
 
     portal_code: str                     # interner Code (BookingCom …)
     portal: str                          # menschlich, z.B. "Booking.com"
-    hotel_id: str                        # Hotel-ID beim OTA (Eingabe des Vermieters)
+    # Hotel-ID beim OTA (Eingabe des Vermieters) — bei OAuth-Portalen NULL.
+    # Airbnb kennt keine eingebbare Kennung: die Konto-Identität steckt im Token,
+    # die Objekt-Identität in der Listing-ID. Das Feld war als `str` deklariert
+    # und die Antwort brach mit HTTP 500 („Input should be a valid string,
+    # input_value=None"), sobald ein Airbnb-Objekt in der Liste stand — ein
+    # Datenzustand, der völlig normal ist, kein Fehler.
+    hotel_id: str | None = None
     # Zimmer/Einheit beim Portal: Code + Klarname. Zusammen mit der Hotel-ID die
     # Angabe, mit der im Extranet nachgesehen wird (Lodgify zeigt sie als
     # „12298950|1229895001").
@@ -445,11 +451,52 @@ class AirbnbUebernahmeResponse(BaseModel):
     """Ergebnis der Airbnb-Übernahme: wie viele Objekte daraus entstanden sind.
 
     `skipped` zählt Listings, die NICHT übernommen wurden (ohne Titel/ID oder
-    über der Obergrenze) — bewusst ausgewiesen statt still abgeschnitten."""
+    über der Obergrenze) — bewusst ausgewiesen statt still abgeschnitten.
+
+    `listings_gefunden` ist die Zahl der Anzeigen, die das Portal ÜBERGEBEN hat.
+    Sie ist wichtig, weil Airbnb nicht alle liefert: Anzeigen, die dort bereits
+    an eine andere Software gebunden sind, fehlen in der Liste. Live gemessen am
+    Beta-Betrieb: Airbnb führt 19 Anzeigen, `mapping_details` liefert 18 — genau
+    die eine mit Airbnb-Sync-Status „Connected" (`021 Stjerneskud`) fehlt. Ohne
+    diese Zahl im UI wundert sich der Betrieb, warum ein Objekt fehlt, und
+    findet den Grund nie."""
 
     created: int = 0
     updated: int = 0
     skipped: int = 0
+    listings_gefunden: int = 0
+
+
+class AirbnbObjektAbrufResponse(BaseModel):
+    """Ergebnis des Abrufs EINES Objekts bei Airbnb.
+
+    Jedes Feld sagt, was wirklich passiert ist — keine Erfolgsmeldung ohne
+    Deckung (Wurzel 5). `preis_uebernommen: false` mit `hinweis` ist der
+    ehrliche Fall: die Zuordnung steht, aber Airbnb hat (noch) keinen Preis
+    übergeben, und der Platzhalter 0 steht weiter im Preisplan. Das Objekt
+    bleibt dann `draft` — eine Nacht für 0 ist nicht verkäuflich.
+
+    `waehrung`/`zeitzone` kommen aus dem `country_code` der Anzeige. Beide
+    fehlten nach der Übernahme (Zeitzone bei allen 18 Objekten des Beta-
+    Betriebs), und ohne sie ging weder ein Preisplan noch die Aktivierung
+    bei Channex.
+    """
+
+    property_id: str
+    listing_id: str
+    waehrung: str | None = None
+    zeitzone: str | None = None
+    plan_angelegt: bool = False
+    zugeordnet: bool = False
+    preis_uebernommen: bool = False
+    base_price: float | None = None
+    min_stay: int | None = None
+    # Welche WEITEREN Angaben aus Airbnb übernommen wurden (Check-in-Zeiten,
+    # Haustiere, max. Nächte …). Airbnb liefert beim Zuordnen deutlich mehr als
+    # den Preis; die Liste macht sichtbar, was wirklich ankam, statt es zu
+    # behaupten.
+    uebernommene_felder: list[str] = []
+    hinweis: str | None = None
 
 
 class OAuthBeginResponse(BaseModel):
@@ -580,7 +627,16 @@ class WebhookEventEntry(BaseModel):
 
 class OtaChannelOverview(BaseModel):
     """Ein OTA-Kanal in der Kanal-Übersicht (Karte): Katalog-Metadaten + wie viele
-    Objekte aktiv damit verbunden sind."""
+    Objekte damit verbunden sind.
+
+    ZWEI Zahlen, weil es ZWEI Fragen sind — und sie zu vermischen war ein echter
+    Fehler: `connected_count` zählt Objekte, deren Abgleich LÄUFT (`is_active`);
+    `linked_count` zählt Objekte, für die eine Verbindung BESTEHT. Bei einem
+    OAuth-Portal wie Airbnb liegen dazwischen mehrere Schritte: das Konto ist
+    autorisiert, aber bis die Zuordnung fertig ist, bleibt `is_active` false.
+    Ohne `linked_count` zeigte die Karte in genau diesem Zustand „Verbinden" —
+    und der Betrieb verband dasselbe Konto immer wieder neu.
+    """
 
     kind: str = "ota"
     code: str
@@ -588,6 +644,7 @@ class OtaChannelOverview(BaseModel):
     icon: str
     connection_type: str  # "oauth" | "credential"
     connected_count: int
+    linked_count: int = 0
     # Vom Tenant in die Sidebar geholt (Dropdown „Kanal hinzufügen")?
     pinned: bool = False
 

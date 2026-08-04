@@ -59,6 +59,7 @@ export function SwitcherImport({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [propertyCount, setPropertyCount] = useState<number | null>(null);
+  const [channelsDone, setChannelsDone] = useState(false);
   const [reconcileMsg, setReconcileMsg] = useState<string | null>(null);
   const [bookingMsg, setBookingMsg] = useState<string | null>(null);
   const [includePast, setIncludePast] = useState(false);
@@ -79,10 +80,27 @@ export function SwitcherImport({
       if (res.ok) setPropertyCount(res.data.items.length);
     });
   }
-  useEffect(refreshCount, []);
+
+  // Ist schon ein Portal verbunden? Serverseitig aus `channex_property_map`
+  // gemessen (nicht aus einem Client-Flag). Ohne diese Abfrage stand Schritt 2
+  // auch dann noch als offen da, wenn der Kanal längst hing und 18 Objekte
+  // registriert waren — der Kunde verband deshalb immer wieder neu.
+  function refreshChannels() {
+    void getOnboarding().then((res) => {
+      if (res.ok) setChannelsDone(res.data.channels_done);
+    });
+  }
+
+  useEffect(() => {
+    refreshCount();
+    refreshChannels();
+  }, []);
 
   // Realtime: neu importierte/angelegte Objekte sofort zählen (kein manuelles Reload).
   useRealtime({ table: "properties", onChange: refreshCount });
+  // Registrierung bei den Portalen: derselbe Weg, damit der Haken an Schritt 2
+  // erscheint, sobald das erste Objekt wirklich übertragen ist.
+  useRealtime({ table: "channex_property_map", onChange: refreshChannels });
 
   // Objekte von den Portalen holen. ZWEI Wege, weil die Portale sich
   // unterscheiden (beide live geprüft, siehe airbnb_uebernahme.py):
@@ -225,29 +243,48 @@ export function SwitcherImport({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Cutover-Warnung ZUERST — Doppelbuchungsschutz ist der kritische Teil. */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900">
-        <div className="flex items-center gap-2 font-semibold">
-          <Icon icon="ph:warning-circle" className="size-5" />
-          {t("cutover.title")}
+      {/* Cutover-Warnung ZUERST — Doppelbuchungsschutz ist der kritische Teil.
+          Sie warnt VOR dem Verbinden; ist bereits verbunden, ist sie Rückblick
+          und wird eingeklappt. Der Pflicht-Haken entfällt dann, sonst hätte der
+          Kunde eine Vorab-Warnung bestätigen müssen, die längst überholt ist. */}
+      {channelsDone ? (
+        <details className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+          <summary className="cursor-pointer font-medium text-foreground">
+            {t("cutover.doneTitle")}
+          </summary>
+          <ul className="mt-3 flex flex-col gap-2 pl-1">
+            {["a", "b", "c"].map((k) => (
+              <li key={k} className="flex items-start gap-2">
+                <Icon icon="ph:dot-outline" className="mt-0.5 size-4 shrink-0" />
+                <span>{t(`cutover.${k}`)}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : (
+        <div className="flex flex-col gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900">
+          <div className="flex items-center gap-2 font-semibold">
+            <Icon icon="ph:warning-circle" className="size-5" />
+            {t("cutover.title")}
+          </div>
+          <ul className="flex flex-col gap-2 pl-1">
+            {["a", "b", "c"].map((k) => (
+              <li key={k} className="flex items-start gap-2">
+                <Icon icon="ph:dot-outline" className="mt-0.5 size-4 shrink-0" />
+                <span>{t(`cutover.${k}`)}</span>
+              </li>
+            ))}
+          </ul>
+          <label className="mt-1 flex items-center gap-2 font-medium">
+            <input
+              type="checkbox"
+              checked={cutoverAck}
+              onChange={(e) => setCutoverAck(e.target.checked)}
+            />
+            {t("cutover.ack")}
+          </label>
         </div>
-        <ul className="flex flex-col gap-2 pl-1">
-          {["a", "b", "c"].map((k) => (
-            <li key={k} className="flex items-start gap-2">
-              <Icon icon="ph:dot-outline" className="mt-0.5 size-4 shrink-0" />
-              <span>{t(`cutover.${k}`)}</span>
-            </li>
-          ))}
-        </ul>
-        <label className="mt-1 flex items-center gap-2 font-medium">
-          <input
-            type="checkbox"
-            checked={cutoverAck}
-            onChange={(e) => setCutoverAck(e.target.checked)}
-          />
-          {t("cutover.ack")}
-        </label>
-      </div>
+      )}
 
       {/* Schritt 1: Objekt-Hülle je Bestands-Listing */}
       <ImportStep
@@ -264,18 +301,30 @@ export function SwitcherImport({
         )}
         {/* Airbnb-Wechsler müssen hier nichts tun — die Objekte entstehen beim
             Verbinden. Ohne diesen Hinweis liest sich Schritt 1 als Pflicht und
-            genau das wollte der Kunde nicht: alles neu anlegen. */}
-        <p className="basis-full text-sm text-muted-foreground">
-          <Icon icon="ph:info" className="mr-1 inline size-4 align-[-0.15em]" />
-          {t("step1.airbnbHint")}
-        </p>
+            genau das wollte der Kunde nicht: alles neu anlegen. Ist ein Portal
+            schon verbunden, ist der Hinweis erledigt und stand nur noch als
+            Aufforderung da, obwohl die Objekte längst da waren. */}
+        {!channelsDone && (
+          <p className="basis-full text-sm text-muted-foreground">
+            <Icon icon="ph:info" className="mr-1 inline size-4 align-[-0.15em]" />
+            {t("step1.airbnbHint")}
+          </p>
+        )}
       </ImportStep>
 
       {/* Schritt 2: Portal verbinden + 1:1 zuordnen (importiert Buchungen/ARI) */}
-      <ImportStep n={2} title={t("step2.title")} text={t("step2.text")}>
+      <ImportStep
+        n={2}
+        title={t("step2.title")}
+        text={t("step2.text")}
+        done={channelsDone}
+      >
         <ChannelConnectButton
-          label={t("step2.connect")}
-          onDone={refreshCount}
+          label={channelsDone ? t("step2.connectMore") : t("step2.connect")}
+          onDone={() => {
+            refreshCount();
+            refreshChannels();
+          }}
         />
         {/* Airbnb-OAuth: Listings erscheinen automatisch — als Objekte holen. */}
         <Button
@@ -291,6 +340,17 @@ export function SwitcherImport({
         </Button>
         {reconcileMsg && (
           <span className="text-sm text-muted-foreground">{reconcileMsg}</span>
+        )}
+        {/* Sonst liest sich der Schritt wie „noch nichts passiert" und der Kunde
+            verbindet dasselbe Portal ein zweites Mal. */}
+        {channelsDone && (
+          <p className="basis-full text-sm text-muted-foreground">
+            <Icon
+              icon="ph:check-circle"
+              className="mr-1 inline size-4 align-[-0.15em] text-emerald-600"
+            />
+            {t("step2.alreadyConnected")}
+          </p>
         )}
       </ImportStep>
 
@@ -470,13 +530,15 @@ export function SwitcherImport({
 
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap gap-3">
+          {/* Ist schon verbunden, gibt es die Ankreuzbox nicht mehr — dann darf
+              sie den Abschluss auch nicht sperren. */}
           <Button
             onClick={finish}
-            disabled={pending || !cutoverAck || !hasProperties}
+            disabled={pending || !(cutoverAck || channelsDone) || !hasProperties}
           >
             {t("finishCta")}
           </Button>
-          {!cutoverAck && (
+          {!cutoverAck && !channelsDone && (
             <span className="self-center text-sm text-muted-foreground">
               {t("finishHint")}
             </span>

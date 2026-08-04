@@ -36,6 +36,19 @@ def nur_uuids(ids: object) -> list[str]:
 
 _WEEKDAYS = ["mo", "tu", "we", "th", "fr", "sa", "su"]
 
+# Länder mit MEHR ALS EINER Zeitzone in ihrem eigenen Ländercode. Für sie darf die
+# Zone NIE aus dem Land abgeleitet und GESPEICHERT werden — ein Objekt auf
+# Teneriffa liegt in Atlantic/Canary, nicht in Europe/Madrid, und eine still
+# falsch gespeicherte Zone verschiebt jede Automation um eine Stunde (Migration
+# 0258 nennt genau das als Grund, die Spalte NULL zu lassen).
+#   ES: Europe/Madrid + Atlantic/Canary (Kanaren)
+#   PT: Europe/Lisbon + Atlantic/Madeira + Atlantic/Azores
+#   FR: Europe/Paris + Überseegebiete unter FR (Guadeloupe, Réunion, …)
+#   NL: Europe/Amsterdam + America/Curacao (Karibische Niederlande)
+# NICHT dabei ist DK: Grönland und die Färöer haben eigene Ländercodes (GL, FO),
+# das dänische Festland hat genau eine Zone.
+_MEHRZONIGE_LAENDER = frozenset({"ES", "PT", "FR", "NL", "US", "CA", "RU", "AU", "BR"})
+
 # Haupt-IANA-Zeitzone je Land (DACH+EU+CH). Channex verlangt eine Zeitzone an der
 # Property; spiegelt das Frontend-Mapping in apps/web/lib/laender.ts.
 _TIMEZONE_BY_COUNTRY: dict[str, str] = {
@@ -53,8 +66,63 @@ _TIMEZONE_BY_COUNTRY: dict[str, str] = {
 
 
 def _timezone_for_country(code: str) -> str | None:
-    """IANA-Zeitzone für ein Land — None, wenn unbekannt (kein Fallback erfinden)."""
+    """IANA-Zeitzone für ein Land — None, wenn unbekannt (kein Fallback erfinden).
+
+    Für den PUSH an Channex: Channex verlangt eine Zone, sonst verweigert es die
+    Aktivierung. Die Hauptzone des Landes ist dort die beste verfügbare Angabe.
+    Zum SPEICHERN in `properties.timezone` ist das zu grob — dafür
+    `_timezone_speicherbar`, das mehrzonige Länder ablehnt.
+    """
     return _TIMEZONE_BY_COUNTRY.get(code.upper())
+
+
+def _timezone_speicherbar(code: str | None) -> str | None:
+    """Zeitzone, die sich aus dem Land WIRKLICH ableiten lässt — sonst None.
+
+    Unterschied zu `_timezone_for_country`: hier wird der Wert dauerhaft an das
+    Objekt geschrieben, also darf er nicht bloß plausibel sein. Bei mehrzonigen
+    Ländern (Spanien mit den Kanaren, Portugal mit Madeira/Azoren) bleibt die
+    Spalte NULL und der Kunde setzt sie selbst — genau wie Migration 0258 es
+    vorschreibt. Für Dänemark, Deutschland, Italien & Co. ist die Zone eindeutig
+    und wird gesetzt.
+    """
+    if not code:
+        return None
+    land = code.upper()
+    if land in _MEHRZONIGE_LAENDER:
+        return None
+    return _TIMEZONE_BY_COUNTRY.get(land)
+
+
+# Landeswährung je Land (ISO 4217). Für die Airbnb-Übernahme: das Listing liefert
+# `country_code`, aber keine Währung — und ohne Währung lässt sich kein Preisplan
+# anlegen (`rate_plans.currency` NOT NULL). Das ist KEIN erfundener Ersatzwert im
+# Sinne von Wurzel 4: die gesetzliche Landeswährung ist eine Tatsache, kein
+# geratener Default (Dänemark rechnet in DKK, nicht in Euro). Unbekanntes Land →
+# None → der Aufrufer muss fehlschlagen, statt „EUR" zu unterstellen.
+# Die sieben EU-Länder ohne Euro sind der eigentliche Grund für diese Karte.
+_CURRENCY_BY_COUNTRY: dict[str, str] = {
+    # Nicht-Euro-Länder — hier ist ein €-Fallback schlicht falsch.
+    "DK": "DKK", "SE": "SEK", "PL": "PLN", "CZ": "CZK", "HU": "HUF",
+    "RO": "RON", "BG": "BGN", "CH": "CHF", "NO": "NOK", "GB": "GBP",
+    "IS": "ISK",
+    # Eurozone.
+    "DE": "EUR", "AT": "EUR", "BE": "EUR", "CY": "EUR", "EE": "EUR",
+    "ES": "EUR", "FI": "EUR", "FR": "EUR", "GR": "EUR", "HR": "EUR",
+    "IE": "EUR", "IT": "EUR", "LT": "EUR", "LU": "EUR", "LV": "EUR",
+    "MT": "EUR", "NL": "EUR", "PT": "EUR", "SI": "EUR", "SK": "EUR",
+}
+
+
+def _currency_for_country(code: str | None) -> str | None:
+    """Landeswährung (ISO 4217) für ein Land — None, wenn unbekannt.
+
+    None ist Absicht: der Aufrufer muss dann klar fehlschlagen (422), statt eine
+    plausible Währung zu erfinden. Ein falsches „EUR" auf einem dänischen Objekt
+    verkauft eine 1200-DKK-Nacht für 1200 € (Wurzel 4)."""
+    if not code:
+        return None
+    return _CURRENCY_BY_COUNTRY.get(code.upper())
 
 
 # Lokaler property_type-Enum (public.property_type, Migration 0009) → gültiger

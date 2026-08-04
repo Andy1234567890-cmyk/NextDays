@@ -5,15 +5,38 @@
 // getUser() zuerst validiert/erneuert die Session serverseitig (@supabase/ssr).
 // Cookie-Read + JWT-email-Decoder aus @nextdays/auth (ADR-0017); die
 // Supabase-OAuth-Welt bleibt web-spezifisch (nur web hat Google-Login).
-import { emailFromToken, readToken } from "@nextdays/auth/server";
+import { cookies } from "next/headers";
 
+import { emailFromToken, persistSession, readToken } from "@nextdays/auth/server";
+
+import { api, type SessionResponse } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
 const ACCESS = "nd_access";
+const REFRESH = "nd_refresh";
+const COOKIES = { access: ACCESS, refresh: REFRESH } as const;
 
+/**
+ * Access-Token für FastAPI-Aufrufe.
+ *
+ * Drei Quellen, in dieser Reihenfolge:
+ *   1. `nd_access` (gültig) — der Normalfall
+ *   2. `nd_refresh` gegen ein NEUES Access-Token einlösen
+ *   3. Supabase-OAuth-Session (Google-Login, nur `web`)
+ *
+ * Warum Schritt 2 hier stehen MUSS: `nd_access` trägt `maxAge = expires_in`, ist
+ * also nach Ablauf aus dem Jar verschwunden. Der 30-Tage-`nd_refresh` wurde beim
+ * Login gesetzt — und danach nie eingelöst. Folge: nach Ablauf des kurzen
+ * Access-Tokens antwortete JEDE Aktion 401 „Ungültiges oder abgelaufenes Token",
+ * bis sich der Nutzer von Hand neu anmeldete. Der Endpunkt `POST /auth/refresh`
+ * existierte die ganze Zeit; er war nur nicht angeschlossen.
+ */
 export async function currentToken(): Promise<string | null> {
   const fromCookie = await readToken(ACCESS);
   if (fromCookie) return fromCookie;
+
+  const refreshed = await tokenAusRefresh();
+  if (refreshed) return refreshed;
 
   try {
     const supabase = await createClient();
@@ -26,6 +49,38 @@ export async function currentToken(): Promise<string | null> {
     } = await supabase.auth.getSession();
     return session?.access_token ?? null;
   } catch {
+    return null;
+  }
+}
+
+/**
+ * Refresh-Token gegen eine neue Session tauschen. `null`, wenn keiner da ist
+ * oder das Backend ihn ablehnt (dann ist der Nutzer wirklich abgemeldet —
+ * fail-closed, kein Weiterreichen eines toten Tokens).
+ *
+ * Das Neu-Setzen der Cookies kann in einem Server-Component-Render scheitern
+ * (dort ist das Cookie-Jar nur lesbar). Das ist verkraftbar und darf den Aufruf
+ * nicht kippen: das frische Token wird zurückgegeben und der Request läuft
+ * durch; gespeichert wird es beim nächsten Aufruf aus einer Server-Action.
+ */
+async function tokenAusRefresh(): Promise<string | null> {
+  const jar = await cookies();
+  const refresh = jar.get(REFRESH)?.value;
+  if (!refresh) return null;
+  try {
+    const session = await api<SessionResponse>("/auth/refresh", {
+      method: "POST",
+      body: { refresh_token: refresh },
+    });
+    if (!session?.access_token) return null;
+    try {
+      await persistSession(session, COOKIES);
+    } catch {
+      // Nur-Lese-Jar (Server-Component-Render) — Token trotzdem verwenden.
+    }
+    return session.access_token;
+  } catch {
+    // Refresh-Token abgelaufen/entzogen → wirklich abgemeldet.
     return null;
   }
 }

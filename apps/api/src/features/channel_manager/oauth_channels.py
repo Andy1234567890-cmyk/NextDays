@@ -15,7 +15,7 @@ from src.core.security import AuthContext
 
 from . import airbnb_oauth
 from .channex_client import ChannexError
-from .common import ChannelManagerError, log
+from .common import ChannelManagerError, _timezone_for_country, log
 
 # PostgREST-Query-Builder. Select- und Update-Builder haben keinen gemeinsamen
 # Basistyp in den Stubs, tragen aber beide `.eq()`/`.is_()` und geben sich selbst
@@ -112,20 +112,74 @@ class OAuthChannelsMixin:
                 db, tenant_id, property_id
             )
 
-        # Idempotenz (Wurzel 2): existiert für (property_id, portal_code) bereits ein
-        # Channex-Kanal, ihn wiederverwenden statt bei Doppelklick/Retry einen zweiten
-        # anzulegen (sonst verwaister Zweit-Kanal bei Channex vor dem DB-UNIQUE).
-        existing = (
+        # Idempotenz (Wurzel 2): existiert für dieses Portal bereits ein
+        # Channex-Kanal, ihn WIEDERVERWENDEN statt einen zweiten anzulegen.
+        #
+        # ACHTUNG — der Scope ist der BETRIEB, nicht das Objekt. Bei Airbnb hängt
+        # die Verbindung am Airbnb-KONTO: ein Konto = ein Kanal, und alle Objekte
+        # hängen über „Affected Properties" an DIESEM einen Kanal (Channex-
+        # Anleitung: „Wenn Sie mehrere Objekte haben, … Fügen Sie alle Objekte
+        # dem Kanal hinzu"). Vorher filterte diese Suche auf `property_id` —
+        # damit fand ein ZWEITES Objekt den bestehenden Kanal nicht und legte
+        # einen neuen an. Airbnb lehnt das ab (nur EINE verbundene Software,
+        # Channex-Fehlercode `has_already_channel`), also kam für diesen zweiten
+        # Kanal nie eine Autorisierung an — und die UI zeigte fälschlich
+        # „in deinem Airbnb-Konto ist bereits eine andere Software verbunden",
+        # obwohl WIR selbst diese andere Verbindung waren.
+        # Live nachgewiesen am Beta-Betrieb: Objekt e34fc9fb → Kanal 9a46827b
+        # (verbunden, Host-ID 529591717), Objekt ed885e62 → Kanal f729554c
+        # (leer, ohne Tokens, mit genau dieser irreführenden Meldung).
+        vorhandene = (
             db.table("channex_channel_connection")
-            .select("channex_channel_id")
+            .select("channex_channel_id, property_id")
             .eq("tenant_id", tenant_id)
             .eq("ota_portal_code", portal_code)
-            .eq("property_id", property_id)
-            .limit(1)
+            .not_.is_("channex_channel_id", "null")
             .execute()
-        ).data
-        existing_channel_id = (
-            existing[0].get("channex_channel_id") if existing else None
+        ).data or []
+        # WELCHER Kanal gewinnt: der AUTORISIERTE — nicht der, der in unserer
+        # DB-Zeile steht. Das ist der Kern des Fehlers: sobald für ein Objekt
+        # (durch den alten property_id-Filter) ein leerer Zweit-Kanal entstanden
+        # war, zeigte dessen eigene Zeile darauf, und jeder weitere Versuch lief
+        # wieder in genau diesen leeren Kanal. Der Kunde sah endlos „warte auf
+        # die Bestätigung", während die echte Autorisierung am ERSTEN Kanal hing.
+        # Live gemessen: 9a46827b hat tokens/host_id 529591717, f729554c ist leer
+        # — und das Objekt ed885e62 zeigte auf f729554c.
+        # Die Tokens sind die Wahrheit (Airbnb autorisiert das KONTO, also genau
+        # einen Kanal), deshalb wird der Kanal-Zustand bei Channex geprüft und
+        # nicht geraten.
+        kandidaten = sorted(
+            {str(r["channex_channel_id"]) for r in vorhandene
+             if r.get("channex_channel_id")}
+        )
+        autorisiert = self._autorisierter_kanal(kandidaten)
+        eigener_kanal = next(
+            (str(r["channex_channel_id"]) for r in vorhandene
+             if r.get("property_id") == property_id
+             and r.get("channex_channel_id")),
+            None,
+        )
+        existing_channel_id = autorisiert or eigener_kanal or (
+            kandidaten[0] if kandidaten else None
+        )
+        eigener = existing_channel_id is not None and (
+            existing_channel_id == eigener_kanal
+        )
+        log.info(
+            "channex_oauth_kanal_wahl",
+            tenant_id=tenant_id, property_id=property_id,
+            portal_code=portal_code,
+            kanaele_im_betrieb=kandidaten,
+            autorisierter_kanal=autorisiert,
+            kanal_dieses_objekts=eigener_kanal,
+            gewaehlt=existing_channel_id,
+            grund=(
+                "autorisiert" if autorisiert
+                else "eigene zeile" if eigener_kanal
+                else "erster im betrieb" if kandidaten
+                else "keiner - neu anlegen"
+            ),
+            neu_anlegen=existing_channel_id is None,
         )
 
         group_id = self._require_group(db, tenant_id, channex_property_id)
@@ -141,6 +195,47 @@ class OAuthChannelsMixin:
 
         if existing_channel_id:
             channel_id = existing_channel_id
+            if not eigener:
+                # Der gewählte Kanal ist NICHT der aus der Zeile dieses Objekts:
+                # entweder der Kanal eines Geschwister-Objekts oder — der
+                # eigentliche Fall — der autorisierte Kanal, während die Zeile
+                # noch auf einen leeren Zweit-Kanal zeigte.
+                #
+                # Beides erfordert dasselbe: das Objekt an diesen Kanal hängen
+                # („Affected Properties"), sonst kann seine Airbnb-Anzeige dort
+                # nicht zugeordnet werden, UND die Verbindungszeile auf diesen
+                # Kanal umschreiben — sonst pollt der Status-Pfad weiter den
+                # falschen Kanal und meldet ewig „warte auf die Bestätigung"
+                # (Wurzel 1: der Gegenzustand zum Wechsel ist das Nachziehen der
+                # alten Zeile).
+                self._objekt_an_kanal_haengen(
+                    channel_id, channex_property_id
+                )
+                # Host-ID des gewählten Kanals MITSCHREIBEN. Steht dort None,
+                # zeigt die UI „nicht verbunden", obwohl das Konto autorisiert
+                # ist — der Kanal trägt die Tokens ja bereits (Wurzel 4: den
+                # echten Wert nehmen, nicht leer lassen und später raten).
+                host = None
+                if channel_id == autorisiert:
+                    host = self._kanal_host_id(channel_id)
+                self._save_oauth_connection(
+                    db, tenant_id,
+                    property_id=property_id,
+                    channex_property_id=channex_property_id,
+                    portal_code=portal_code,
+                    channel_id=channel_id,
+                    host_id=host,
+                    is_active=False,
+                    last_error=None,
+                )
+                log.info(
+                    "channex_oauth_kanal_geteilt",
+                    tenant_id=tenant_id, property_id=property_id,
+                    channel_id=channel_id,
+                    channex_property_id=channex_property_id,
+                    host_id=host,
+                    war_autorisiert=channel_id == autorisiert,
+                )
         else:
             # 1) Channel inaktiv anlegen (ohne rate_plans/settings — Mapping folgt).
             attribute: dict[str, Any] = {
@@ -282,9 +377,20 @@ class OAuthChannelsMixin:
             self._ensure_property_registered(db, tenant_id, property_id)
             return
 
+        # GANZE Zeile lesen, nicht nur Titel/Währung: `_property_attrs` baut daraus
+        # Adresse, Land, Geo UND die `timezone` (aus dem Land, `_timezone_for_country`).
+        # Vorher stand hier `select("title, currency")` und der Upsert unten bekam
+        # kein `prop_row` — die Channex-Property entstand also OHNE Zeitzone. Live
+        # gemessen am Beta-Betrieb (04.08.2026):
+        #     GET properties/cf7ff6f4-… → country='DK', timezone=None
+        #     POST channels/{id}/check_readiness →
+        #         {"field": "timezone", "error_code": "required", "entity": "Property"}
+        # Solange die Readiness-Liste nicht leer ist, gibt Channex den Kanal nicht
+        # frei — die Verbindung stand, blieb aber „Disabled". Die Doku führt
+        # timezone als optional; maßgeblich ist der Readiness-Check.
         prop = (
             db.table("properties")
-            .select("title, currency")
+            .select("*")
             .eq("id", property_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -334,15 +440,173 @@ class OAuthChannelsMixin:
                 tenant_id=tenant_id, property_id=property_id,
                 channex_property_id=verwaist,
             )
+            # Die wiederverwendete Property auf den STAND unseres Objekts
+            # bringen. Vorher wurde nur die Map-Zeile geschrieben und die
+            # Property bei Channex blieb, wie sie beim abgebrochenen Versuch
+            # entstand — im Beta-Betrieb hieß das `timezone=None`, und damit
+            # meldet Channex' Readiness `timezone required` und der Kanal bleibt
+            # „Disabled" (live geprüft: die alte Property cf7ff6f4… hatte keine
+            # Zeitzone, die danach neu angelegte f86cb4d8… hatte
+            # `Europe/Copenhagen`). Der Upsert ist idempotent und macht aus dem
+            # Wiederverwenden ein echtes Aktualisieren (Wurzel 1).
+            self._upsert_channex_property(
+                db, tenant_id, property_id, titel, str(waehrung).upper(),
+                prop_row=prop[0],
+            )
             return
 
         self._upsert_channex_property(
-            db, tenant_id, property_id, titel, str(waehrung).upper()
+            db, tenant_id, property_id, titel, str(waehrung).upper(),
+            prop_row=prop[0],
         )
         log.info(
             "channex_registrierung_ohne_preis",
             tenant_id=tenant_id, property_id=property_id,
+            land=prop[0].get("country"),
+            # Dieselbe Vorrangkette wie `_property_attrs`: gepflegte Spalte
+            # zuerst, Land nur als Rückfall. Steht hier None, wird Channex
+            # `timezone required` melden — dann ist DAS der Grund.
+            zeitzone=(
+                prop[0].get("timezone")
+                or (_timezone_for_country(str(prop[0].get("country")))
+                    if prop[0].get("country") else None)
+            ),
         )
+
+    # Channex-Readiness-Feldnamen → Klartext für den Kunden. Die Liste stammt aus
+    # dem gemessenen Verhalten und der Channex-Doku („To activate the channel we
+    # will check: country, address, phone, latitude & longitude, timezone,
+    # hotel_policy, cancellation_policy, facility, photo, property_description").
+    # Ein unbekannter Schlüssel wird UNVERÄNDERT durchgereicht statt geschluckt —
+    # ein Kunde soll nie „irgendwas fehlt" lesen (Wurzel 5).
+    _READINESS_KLARTEXT: dict[str, str] = {
+        "timezone": "Zeitzone des Objekts",
+        "country": "Land",
+        "address": "Straße und Hausnummer",
+        "phone": "Telefonnummer",
+        "latitude": "Standort auf der Karte",
+        "longitude": "Standort auf der Karte",
+        "photos": "Fotos",
+        "facilities": "Ausstattung",
+        "description": "Beschreibung",
+        "property_descriptions": "Beschreibung",
+        "hotel_policy_id": "Hausregeln",
+        "default_cancellation_policy_id": "Stornobedingungen",
+        "bedrooms_count": "Anzahl Schlafzimmer",
+        "bathrooms_count": "Anzahl Badezimmer",
+        "beds_count": "Anzahl Betten",
+    }
+    _READINESS_RELATION_KLARTEXT: dict[str, str] = {
+        "Mapping": "Zuordnung der Anzeigen zu deinen Objekten",
+    }
+
+    def _autorisierter_kanal(self, kandidaten: list[str]) -> str | None:
+        """Der Kanal aus `kandidaten`, der bei Channex TOKENS trägt.
+
+        Airbnb autorisiert das KONTO, nicht das Objekt — es gibt also höchstens
+        einen autorisierten Kanal je Betrieb, und der ist der einzige, an dem
+        eine Verbindung wirklich hängt. Best effort: ist der Zustand nicht
+        lesbar, gibt es None und der Aufrufer nimmt seinen bisherigen Weg (der
+        Kanal-Zustand darf den Start nicht blockieren).
+        """
+        for channel_id in kandidaten:
+            try:
+                kanal = self._channex.get_channel(channel_id)
+            except ChannexError as exc:  # noqa: BLE001 — nur Auswahlhilfe
+                log.warning(
+                    "channex_kanal_zustand_nicht_lesbar",
+                    channel_id=channel_id, error=exc.message,
+                )
+                continue
+            attrs = (kanal.get("data") or {}).get("attributes") or {}
+            settings = attrs.get("settings") or {}
+            tokens = settings.get("tokens")
+            if isinstance(tokens, dict) and tokens.get("user_id") \
+                    and not settings.get("token_invalid"):
+                return channel_id
+        return None
+
+    def _kanal_host_id(self, channel_id: str) -> str | None:
+        """Airbnb-Host-ID aus den Kanal-Settings (`settings.tokens.user_id`).
+
+        Best effort: ist der Kanal nicht lesbar, gibt es None — die Host-ID ist
+        eine Anzeige, sie darf den Start nicht blockieren.
+        """
+        try:
+            kanal = self._channex.get_channel(channel_id)
+        except ChannexError as exc:  # noqa: BLE001 — nur Anzeige
+            log.warning(
+                "channex_host_id_nicht_lesbar",
+                channel_id=channel_id, error=exc.message,
+            )
+            return None
+        return airbnb_oauth.parse_connection_status(kanal).get("host_id")
+
+    def _objekt_an_kanal_haengen(
+        self, channel_id: str, channex_property_id: str
+    ) -> None:
+        """Eine Channex-Property an einen bestehenden Kanal hängen.
+
+        Der PUT ERSETZT die `properties`-Liste (kein Merge) → erst lesen, dann
+        vereinigt schreiben, sonst fallen die schon verbundenen Objekte heraus
+        (Wurzel 1). Ist sie schon dabei, passiert nichts (Wurzel 2).
+        """
+        try:
+            kanal = self._channex.get_channel(channel_id)
+            attrs = (kanal.get("data") or {}).get("attributes") or {}
+            vorhanden = {str(p) for p in (attrs.get("properties") or [])}
+            if channex_property_id in vorhanden:
+                return
+            self._channex.update_channel(
+                channel_id,
+                {"properties": sorted(vorhanden | {channex_property_id})},
+            )
+            log.info(
+                "channex_objekt_an_kanal_gehaengt",
+                channel_id=channel_id,
+                channex_property_id=channex_property_id,
+                vorher=len(vorhanden), nachher=len(vorhanden) + 1,
+            )
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
+    def _readiness_offen(self, channel_id: str) -> str:
+        """Offene Pflichtpunkte des Kanals als lesbare, kommagetrennte Liste.
+
+        Leerer String = alles bereit. Die Prüfung selbst ist best effort: fällt
+        der Aufruf aus, wird NICHT blockiert (sonst hinge die Aktivierung an
+        einem Diagnose-Endpunkt) — der Fehler geht dann ins Log und Channex
+        entscheidet beim `activate` selbst.
+        """
+        try:
+            punkte = self._channex.check_readiness(channel_id)
+        except ChannexError as exc:  # noqa: BLE001 — nur Diagnose, nicht blockieren
+            log.warning(
+                "channex_readiness_pruefung_fehlgeschlagen",
+                channel_id=channel_id, error=exc.message,
+            )
+            return ""
+        namen: list[str] = []
+        for p in punkte:
+            if not isinstance(p, dict):
+                continue
+            feld = p.get("field")
+            relation = p.get("relation")
+            if feld:
+                namen.append(self._READINESS_KLARTEXT.get(str(feld), str(feld)))
+            elif relation:
+                namen.append(
+                    self._READINESS_RELATION_KLARTEXT.get(
+                        str(relation), str(relation)
+                    )
+                )
+        if punkte:
+            log.info(
+                "channex_readiness_offen",
+                channel_id=channel_id, roh=punkte, klartext=namen,
+            )
+        # Reihenfolge erhalten, Doppelte raus (latitude/longitude ergeben denselben Text).
+        return ", ".join(dict.fromkeys(namen))
 
     def _verwaiste_channex_property(
         self, db: Client, tenant_id: str, titel: str
@@ -564,6 +828,26 @@ class OAuthChannelsMixin:
         merged = self._merge_channel_rate_plans(channel_id, rate_plans)
         try:
             self._channex.update_channel(channel_id, {"rate_plans": merged})
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
+        # VOR der Aktivierung prüfen, was Channex noch fehlt, und den Grund
+        # NENNEN. Channex lässt einen Kanal ohne vollständige Angaben nicht live
+        # gehen („You cant Activate the channel unless you do mapping of rooms
+        # and rates first"), und der Kanal bleibt dann still auf „Disabled" —
+        # genau so stand die Airbnb-Verbindung des Beta-Betriebs da, ohne dass
+        # irgendwo ein Grund auftauchte. Live gemessen (04.08.2026):
+        #     [{"relation":"Mapping","error_code":"required","entity":"Channel"},
+        #      {"field":"timezone","error_code":"required","entity":"Property"}]
+        offene = self._readiness_offen(channel_id)
+        if offene:
+            raise ChannelManagerError(
+                "Das Portal kann noch nicht aktiviert werden, weil Angaben "
+                f"fehlen: {offene}. Ergänze sie am Objekt und versuche es "
+                "erneut.",
+                status_code=422,
+            )
+        try:
             self._channex.activate_channel(channel_id)
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
