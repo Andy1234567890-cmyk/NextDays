@@ -240,6 +240,14 @@ class WritesMixin(ReservationsBase):
         # Dynamic Pricing der betroffenen Tage neu rechnen (Auslastung/Orphan).
         self._recompute_dynamic_pricing(tenant_id, req.property_id)
 
+        # Modul „Dynamische Preise": 0,5 % des Buchungsumsatzes im Ledger
+        # erfassen (Währung der Buchung). Ohne gebuchtes Modul passiert nichts
+        # (Entitlement-Gate im Service). Best-effort — die Erfassung darf die
+        # bereits angelegte Buchung nicht kippen (Wurzel 5).
+        self._record_dynpricing_usage(
+            tenant_id, str(row["id"]), total_amount, row.get("currency"),
+        )
+
         # Planmäßige Aufgaben aus den Regeln erzeugen (0272).
         self._sync_task_rules(tenant_id, str(row["id"]))
 
@@ -739,6 +747,10 @@ class WritesMixin(ReservationsBase):
         # Aufgaben-Gegenzustand: Regeln mit remove_on_cancellation räumen ihre
         # Aufgabe weg, die übrigen bleiben als 'cancelled' sichtbar (0272).
         self._sync_task_rules(tenant_id, reservation_id)
+
+        # 0,5 %-Nutzungsmeldung dieser Buchung zurücknehmen (Wurzel 1) — sonst
+        # bliebe der Umsatz einer stornierten Buchung in der Monatssumme.
+        self._cancel_dynpricing_usage(tenant_id, reservation_id)
 
         # Audit: append-only Storno-Historie (Best-Effort — Log-Fehler darf die
         # Stornierung nicht kippen).

@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Aktualizováno: červenec 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Dynamické ceny jsou zpoplatněný doplňkový modul. Objednáte si jej v části „Rozšíření“, kde je uvedena i cena. Bez zakoupeného modulu automatika nepočítá.",
+            },
+            {
               type: "p",
               text: "Dynamické ceny automaticky upravují základní cenu podle faktorů, jako je předstih rezervace, aktuální obsazenost a poptávka — podobně jako to velké portály dělají u svých vlastních cenových doporučení. Reagujete tak na změny na trhu, aniž byste museli každý den ručně dolaďovat ceny.",
             },

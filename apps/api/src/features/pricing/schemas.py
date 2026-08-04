@@ -234,6 +234,12 @@ class DpOverviewItem(BaseModel):
 
 class DpOverviewResponse(BaseModel):
     items: list[DpOverviewItem] = []
+    # Ist das kostenpflichtige Modul „Dynamische Preise" (0,5 % vom
+    # Buchungsumsatz) gebucht? Die Fläche selbst sagt, ob sie freigeschaltet
+    # ist — die UI muss dafür NICHT den Abo-Endpunkt abfragen (der verlangt
+    # MANAGE_BILLING, das ein Vertriebs-Nutzer nicht hat; er würde sonst
+    # fälschlich die Verkaufsseite sehen). Fail-CLOSED: Default false.
+    module_active: bool = False
 
 
 class PriceSuggestResponse(BaseModel):

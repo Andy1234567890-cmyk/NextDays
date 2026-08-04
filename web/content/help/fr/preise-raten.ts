@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Mise à jour : juillet 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Les tarifs dynamiques sont un module payant. Vous l’activez dans « Extensions », où le prix est également indiqué. Sans ce module, l’automatisation ne calcule rien.",
+            },
+            {
               type: "p",
               text: "Les prix dynamiques ajustent automatiquement le prix de base en fonction de facteurs tels que le délai de réservation, le taux d'occupation actuel et la demande — de façon similaire à ce que font les grands portails avec leurs propres recommandations de prix. Vous réagissez ainsi aux évolutions du marché sans devoir ajuster manuellement chaque jour.",
             },

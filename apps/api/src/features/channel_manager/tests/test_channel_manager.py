@@ -1504,3 +1504,68 @@ def test_abgaben_status_aktion_geht_bei_airbnb_ueber_die_regel() -> None:
     # Booking.com); `airbnb_reason` bleibt leer, weil Airbnb sie sehr wohl nimmt.
     assert posten[0]["reason"] == "fruehbucher"
     assert posten[0]["airbnb_reason"] is None
+
+
+def test_preisblock_status_trennt_portalfaehig_von_nur_eigenen() -> None:
+    """Die Editor-Kopfzeile „Gilt für · Nicht unterstützt von" hängt an dieser
+    einen Antwort. Grundpreis und Gast-Aufschlag gehen an jeden verbundenen
+    Kanal (ARI-Push bzw. `per_person`-Rate-Plan); Kurzaufenthalt und Extras
+    hängen an der Aufenthaltslänge bzw. sind dazubuchbar — dafür hat kein Portal
+    ein Feld."""
+    from src.features.channel_manager.abgaben_status import preisblock_status
+
+    status = {p["key"]: p for p in preisblock_status()}
+    assert set(status) == {"base_price", "extra_guest", "short_stay", "addons"}
+    assert status["base_price"]["internal_only"] is False
+    assert status["extra_guest"]["internal_only"] is False
+    for key in ("short_stay", "addons"):
+        assert status[key]["internal_only"] is True
+    # Ein Block wird NIE „von Hand im Extranet gepflegt" — dort gibt es kein Feld.
+    assert all(not p["manual_portals"] for p in status.values())
+
+
+def test_laengenpreis_mechanik_geht_an_airbnb_und_sonst_manuell() -> None:
+    """Preise nach Aufenthaltsdauer gehen SEHR WOHL an die Portale — über Airbnbs
+    eigene Rabattregel. Jedes andere Portal hat dafür kein Feld: dort muss der
+    Wochenpreis im Extranet gepflegt werden. Das ist die Aussage der Kopfzeile im
+    Editor, wo die Zeile noch keine Kennung hat."""
+    from src.features.channel_manager.abgaben_status import laengenpreis_mechanik
+
+    posten = laengenpreis_mechanik(["AirBNB", "BookingCom", "Expedia"])
+    assert posten["key"] == "length_prices"
+    assert posten["internal_only"] is False
+    assert posten["manual_portals"] == ["BookingCom", "Expedia"]
+
+
+def test_laengenpreis_prozent_rundet_ab_und_meldet_undarstellbares() -> None:
+    """Airbnb nimmt nur ganze Prozent. Abwärts runden, damit dort nie billiger
+    verkauft wird als eingestellt; bleibt 0 % übrig, wird NICHTS gesendet."""
+    from src.features.channel_manager.airbnb_aktionen import (
+        aktion_aus_laengenpreis,
+        laengenpreis_prozent,
+        regel_fuer_airbnb,
+    )
+
+    # 405 von 450 = genau 10 % Rabatt.
+    assert laengenpreis_prozent(405, 450) == 10
+    # 410 von 450 = 8,88 % → 8 % (abwärts, nie aufwärts).
+    assert laengenpreis_prozent(410, 450) == 8
+    # Kein Grundpreis, Aufschlag statt Rabatt, oder unter 1 % → nicht darstellbar.
+    assert laengenpreis_prozent(405, 0) is None
+    assert laengenpreis_prozent(500, 450) is None
+    assert laengenpreis_prozent(449, 450) is None
+
+    # Als Aktions-Zeile läuft der Längenpreis durch dieselbe Airbnb-Pipeline.
+    regel, grund = regel_fuer_airbnb(
+        aktion_aus_laengenpreis({"id": "lp1", "minNights": 7, "pricePerNight": 405}, 450)
+    )
+    assert grund is None
+    assert regel == {
+        "rule_type": "STAYED_AT_LEAST_X_DAYS", "price_change": 10, "threshold_one": 7
+    }
+    # Ohne darstellbaren Prozentsatz kommt KEINE Regel, sondern der Grund.
+    regel, grund = regel_fuer_airbnb(
+        aktion_aus_laengenpreis({"id": "lp2", "minNights": 7, "pricePerNight": 449}, 450)
+    )
+    assert regel is None
+    assert grund == "prozent_nicht_darstellbar"

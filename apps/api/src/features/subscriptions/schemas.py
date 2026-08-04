@@ -15,14 +15,33 @@ GRUNDTARIF_LOOKUP_KEY = "mnd_grundtarif_month"
 # Modul 4 und 6 haben je zwei Preisvarianten (flat ODER per-unit) — der Kunde
 # wählt eine; hier steht die Default-/Flat-Variante. Modul 5 (Jobmarkt) ist
 # nachgelagert (2 % Umsatz) und hat KEINEN festen Preis.
+# „Dynamische Preise" steht bewusst NICHT hier: das Modul hat keinen festen
+# Abo-Preis, sondern wird nachgelagert über den Ledger fakturiert (0,5 % vom
+# Buchungsumsatz) — wie Modul 5 und die Provisionen. Buchbar ist es trotzdem
+# (MODULE_KEYS + Entitlement steuern den Feature-Zugang).
 MODULE_PRICE_LOOKUP: dict[str, str] = {
     "modul3_buchhaltung": "modul3_flat",
     "modul4_mitarbeiter": "modul4_flat",
     "modul6_hotel": "modul6_flat",
 }
 MODULE_KEYS = frozenset(
-    {"modul3_buchhaltung", "modul4_mitarbeiter", "modul5_jobmarkt", "modul6_hotel"}
+    {
+        "modul3_buchhaltung",
+        "modul4_mitarbeiter",
+        "modul5_jobmarkt",
+        "modul6_hotel",
+        "dynamische_preise",
+    }
 )
+
+# --- Dynamische Preise: 0,5 % vom Buchungsumsatz (nutzungsabhängig) ---------
+# Abgerechnet wird über `dynpricing_ledger` (0277) + monatliches Invoice-Item,
+# NICHT über einen Stripe-Billing-Meter: ein Meter ist eine währungslose Zahl
+# und würde EUR-, DKK- und GBP-Buchungen zu einer sinnlosen Summe addieren
+# (implizit Kurs 1:1). myNextDays verkauft in 24 Ländern → die Währung gehört
+# an jede einzelne Zeile (Wurzel 4). Gleiche Mechanik wie die OTA-Provision.
+DYNPRICING_MODULE_KEY = "dynamische_preise"
+DYNPRICING_RATE = 0.005  # 0,5 % als Faktor (wie commission_ledger.rate)
 
 
 class SliceHealth(BaseModel):
@@ -114,6 +133,10 @@ class ModulePrice(BaseModel):
     # liefern die Stufen mit, damit die UI die Staffel zeigt statt eines
     # einzelnen Betrags. Bei Flat-Modulen None.
     tiers: list[PriceTier] | None = None
+    # Nutzungsabhängige Module (Dynamische Preise) haben KEINEN Monatsbetrag,
+    # sondern einen Prozentsatz vom Buchungsumsatz. Dann ist unit_amount 0 und
+    # die UI zeigt den Satz — kein erfundener Cent-Betrag (Wurzel 4).
+    usage_percent: float | None = None
 
 
 class PricingResponse(BaseModel):

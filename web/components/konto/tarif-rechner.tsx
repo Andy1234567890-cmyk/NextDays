@@ -10,6 +10,7 @@
 // `graduated` abrechnet: jeder Tier gilt nur für die Objekte IN seiner Spanne.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -41,9 +42,12 @@ const ENTHALTEN: readonly { icon: string; text: string }[] = [
   { icon: "lucide:file-text", text: "Eigentümer-Abrechnungen" },
   { icon: "lucide:receipt", text: "Gastrechnungen" },
   { icon: "lucide:users", text: "Mitarbeiter & Rollen" },
-  { icon: "lucide:trending-up", text: "Dynamische Preise" },
   { icon: "lucide:life-buoy", text: "Persönlicher Support" },
 ];
+
+// „Dynamische Preise" stand hier einmal als enthaltene Funktion. Es ist ein
+// eigenes buchbares Modul (0,5 % vom Buchungsumsatz, /erweiterungen) — in der
+// Inklusiv-Liste wäre es eine falsche Zusage.
 
 // Wettbewerbspreise, recherchiert 29.07.2026 von den OFFIZIELLEN Preisseiten.
 // Jede Zahl trägt ihre Quelle — wer sie später prüft, muss nicht raten. Nur
@@ -426,6 +430,15 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
                   </li>
                 ))}
               </ul>
+              {/* Zusatzmodule sind NICHT im Tarif enthalten — der Weg dorthin
+                  gehört trotzdem hierhin, damit niemand sie im Tarif sucht. */}
+              <p className="mt-4 text-sm text-muted-foreground">
+                Zusätzliche Module wie dynamische Preise buchen Sie einzeln unter{" "}
+                <Link href="/erweiterungen" className="underline">
+                  Erweiterungen
+                </Link>
+                .
+              </p>
             </div>
           </div>
 

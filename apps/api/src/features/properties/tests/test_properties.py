@@ -1447,3 +1447,58 @@ def test_fee_signatur_buendelt_dieselbe_gebuehr() -> None:
     assert fee_signatur({**a, "amount": 956}) != fee_signatur(a)
     assert fee_signatur({**a, "basis": "per_night"}) != fee_signatur(a)
     assert fee_signatur({**a, "name": "Endreinigung"}) != fee_signatur(a)
+
+
+def test_normalize_fees_haelt_gastseitige_namen_je_sprache() -> None:
+    """Die Gebühr steht in der Preisaufschlüsselung des Gastes — sie braucht
+    denselben mehrsprachigen Namen wie die lokale Steuer. Leere Sprach-Tabs
+    fliegen raus, damit beim Portal kein „Name = leer" landet."""
+    aus = normalize_fees(
+        [{
+            "id": "f1", "name": "Reinigungsgebühr", "amount": 955,
+            "basis": "per_stay", "feeType": "cleaning_fee",
+            "names": {"de": "Reinigungsgebühr", "da": " Rengøringsgebyr ", "en": "  "},
+        }],
+        portale=_PORTALE,
+    )
+    assert aus[0]["names"] == {"de": "Reinigungsgebühr", "da": "Rengøringsgebyr"}
+
+
+def test_normalize_fees_ohne_namen_je_sprache_bleibt_das_feld_weg() -> None:
+    """Kein leeres `names: {}` im Datensatz: ein leeres Feld liest sich wie
+    „Übersetzungen gepflegt, alle leer"."""
+    aus = normalize_fees(
+        [{"id": "f1", "name": "Kurtaxe-Service", "amount": 5,
+          "basis": "per_stay", "feeType": "cleaning_fee"}],
+        portale=_PORTALE,
+    )
+    assert "names" not in aus[0]
+
+
+def test_preise_kopieren_lehnt_abweichende_waehrung_ab() -> None:
+    """Ein Betrag in DKK, in ein Objekt in EUR kopiert, ist ein anderer Preis.
+    Umrechnen wäre ein erfundener Kurs (Wurzel 4) — also 422."""
+    from src.features.properties.preise_kopieren import PreiseKopierenMixin
+
+    pruef = PreiseKopierenMixin._pruefe_waehrung
+    # Gleiche Währung, oder eine Seite noch ohne: erlaubt.
+    pruef("DKK", "DKK")
+    pruef("DKK", None)
+    pruef(None, "EUR")
+    pruef(None, None)
+    with pytest.raises(PropertyError) as exc:
+        pruef("DKK", "EUR")
+    assert exc.value.status_code == 422
+
+
+def test_preise_kopieren_sammelt_nur_echte_portal_scopes() -> None:
+    """Geprüft werden muss nur, was ein PORTAL ist: die eigenen Strecken
+    (`direct`/`portal`) sind überall erfüllbar und dürfen die Übernahme nicht
+    blockieren."""
+    from src.features.properties.preise_kopieren import _portal_codes
+
+    codes = _portal_codes({
+        "fees": [{"id": "f1", "portalScope": ["BookingCom", "direct"]}],
+        "taxes": [{"id": "t1", "portalScope": ["AirBNB", "portal"]}, {"id": "t2"}],
+    })
+    assert codes == ["AirBNB", "BookingCom"]

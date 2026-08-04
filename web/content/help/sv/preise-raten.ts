@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Uppdaterad: juli 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Dynamiska priser är en betald tilläggsmodul. Du beställer den under ”Tillägg”, där även priset står. Utan modulen räknar automatiken inte ut några priser.",
+            },
+            {
               type: "p",
               text: "Dynamiska priser anpassar grundpriset automatiskt utifrån faktorer som bokningsframförhållning, aktuell beläggning och efterfrågan — på liknande sätt som stora portaler gör med sina egna prisrekommendationer. På så sätt reagerar du på marknadsförändringar utan att justera manuellt varje dag.",
             },

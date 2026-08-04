@@ -12,6 +12,8 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner, owner_property_ids
+from src.features.subscriptions.entitlements import modul_aktiv
+from src.features.subscriptions.schemas import DYNPRICING_MODULE_KEY
 
 from .engine import DpSettings
 from .resolver import PricingError
@@ -110,6 +112,16 @@ class DpSettingsService:
             )
         self._require_own_property(ctx, property_id)
         patch = req.model_dump(mode="json", exclude_none=True)
+        # Einschalten geht nur mit gebuchtem Modul (0,5 % vom Buchungsumsatz).
+        # Ohne das Modul rechnet die Engine nicht (recompute-Gate) — ein Toggle,
+        # der auf „an" steht und nichts tut, wäre eine Attrappe. Deshalb hier
+        # fail-CLOSED mit 402, statt still zu speichern.
+        if patch.get("enabled") and not self._modul_gebucht(ctx):
+            raise PricingError(
+                "Dynamische Preise ist ein kostenpflichtiges Modul. "
+                "Bitte zuerst unter Erweiterungen aktivieren.",
+                status_code=402,
+            )
         row = {"property_id": property_id, **patch}
         self._db().table("dp_settings").upsert(
             row, on_conflict="property_id"
@@ -129,6 +141,7 @@ class DpSettingsService:
         kein Fallback), Min/Max. dp_settings fehlt → Defaults (DP aus)."""
         if not ctx.tenant_id:
             raise PricingError("Kein Tenant im Konto.", status_code=400)
+        gebucht = self._modul_gebucht(ctx)
         query = (
             self._db()
             .table("properties")
@@ -139,11 +152,11 @@ class DpSettingsService:
         if is_owner(ctx):
             owned = owner_property_ids(self._db(), ctx)
             if not owned:
-                return DpOverviewResponse(items=[])
+                return DpOverviewResponse(items=[], module_active=gebucht)
             query = query.in_("id", list(owned))
         props = query.order("title").execute().data or []
         if not props:
-            return DpOverviewResponse(items=[])
+            return DpOverviewResponse(items=[], module_active=gebucht)
 
         ids = [p["id"] for p in props]
         settings_by_prop = self._settings_by_property(ids)
@@ -185,7 +198,12 @@ class DpSettingsService:
                     channels=channels,
                 )
             )
-        return DpOverviewResponse(items=items)
+        return DpOverviewResponse(items=items, module_active=gebucht)
+
+    def _modul_gebucht(self, ctx: AuthContext) -> bool:
+        """Ist „Dynamische Preise" für diesen Betrieb gebucht? (eine Quelle:
+        `subscriptions.entitlements`, fail-CLOSED)."""
+        return modul_aktiv(self._db(), ctx.tenant_id, DYNPRICING_MODULE_KEY)
 
     def explain_input(
         self, ctx: AuthContext, property_id: str, tag: str

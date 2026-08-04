@@ -86,6 +86,11 @@ def _db(*, enabled: bool, base: float | None) -> _DB:
             else []
         ),
         "properties": [{"id": "p1", "tenant_id": "t1"}],
+        # Modul „Dynamische Preise" gebucht — ohne Entitlement rechnet die
+        # Engine bewusst nicht (kostenpflichtiges Modul, fail-closed).
+        "tenant_module_entitlement": [
+            {"tenant_id": "t1", "module_key": "dynamische_preise", "active": True}
+        ],
         "availability": [],
         "events": [],
         "event_periods": [],
@@ -114,6 +119,28 @@ def test_recompute_writes_only_dynamic_prices() -> None:
     assert "price_overrides" not in db.writes
     assert len(db.writes["dynamic_prices"]) == 3
     assert all(row["price"] == 100.0 for row in db.writes["dynamic_prices"])
+
+
+def test_recompute_ohne_gebuchtes_modul_rechnet_nicht() -> None:
+    """„Dynamische Preise" ist kostenpflichtig (0,5 % vom Buchungsumsatz).
+    Ohne Entitlement wird NICHT gerechnet — sonst erhielte der Betrieb die
+    Leistung, ohne dass je eine Nutzung gemeldet und abgerechnet würde."""
+    db = _db(enabled=True, base=100.0)
+    db.tables["tenant_module_entitlement"] = []
+    svc = _svc_ohne_push(db)
+    assert svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 4)) == 0
+    assert "dynamic_prices" not in db.writes
+
+
+def test_recompute_modul_inaktiv_rechnet_nicht() -> None:
+    """Gekündigtes Modul (active=False) zählt wie nicht gebucht (fail-closed)."""
+    db = _db(enabled=True, base=100.0)
+    db.tables["tenant_module_entitlement"] = [
+        {"tenant_id": "t1", "module_key": "dynamische_preise", "active": False}
+    ]
+    svc = _svc_ohne_push(db)
+    assert svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 4)) == 0
+    assert "dynamic_prices" not in db.writes
 
 
 def test_recompute_writes_factors() -> None:
@@ -202,6 +229,9 @@ def _db_full(**settings_overrides: object) -> _DB:
             "dp_settings": [base_settings],
             "rate_plans": [{"property_id": "p1", "base_price": 100.0, "currency": "EUR"}],
             "properties": [{"id": "p1", "tenant_id": "t1", "lat": None, "lng": None}],
+            "tenant_module_entitlement": [
+                {"tenant_id": "t1", "module_key": "dynamische_preise", "active": True}
+            ],
             "availability": [],
             "events": [],
             "event_periods": [],

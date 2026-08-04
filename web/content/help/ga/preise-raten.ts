@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Nuashonraithe: Iúil 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Is breiseán íocaíochta é an praghsáil dhinimiciúil. Cuireann tú in áirithe é faoi “Breiseáin”, áit a bhfuil an praghas luaite freisin. Gan an modúl, ní ríomhann an uathoibriú aon rud.",
+            },
+            {
               type: "p",
               text: "Cuireann praghsanna dinimiciúla an bunphraghas in oiriúint go huathoibríoch bunaithe ar fhachtóirí ar nós réamhfhógra áirithinte, áitíocht reatha agus éileamh — cosúil leis an mbealach a dhéanann mórthairseacha a moltaí praghais féin. Mar sin freagraíonn tú d'athruithe margaidh gan a bheith ag coigeartú de láimh gach lá.",
             },

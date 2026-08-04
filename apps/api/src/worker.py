@@ -906,12 +906,18 @@ class Worker:
             log.warning("commission_tick_failed", error=str(exc)[:200])
 
     def _bill_commissions(self, heute: date) -> None:
-        """Offene Provisionen aller Betriebe für den Vormonat fakturieren."""
+        """Offene Provisionen + Nutzungsgebühren aller Betriebe für den
+        Vormonat fakturieren. Beide Läufe sind idempotent (deterministischer
+        Stripe-idempotency_key je Tenant/Periode)."""
         from src.features.subscriptions.service import SubscriptionsService
 
         svc = SubscriptionsService(service_client=self._db)
         periode = svc.abgelaufene_periode(heute)
         svc.bill_all_tenants_for_period(period=periode)
+        # Modul „Dynamische Preise" (0,5 % vom Buchungsumsatz), je Währung ein
+        # eigenes Invoice-Item. Eigener Lauf, damit ein Fehler im einen Pfad
+        # den anderen nicht mitreißt (Wurzel 5).
+        svc.bill_all_dynpricing(period=periode)
 
     async def _bookings_tick(self, loop_time: float) -> None:
         """Alle 5 min einen kontoweiten Booking-Feed-Pull einreihen (Backstop —

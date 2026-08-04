@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Actualizat: iulie 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Prețurile dinamice sunt un modul suplimentar cu plată. Îl activați din „Extensii”, unde este afișat și prețul. Fără modul, automatizarea nu calculează.",
+            },
+            {
               type: "p",
               text: "Prețurile dinamice ajustează automat prețul de bază pe baza unor factori precum timpul de anticipare al rezervării, gradul de ocupare curent și cererea — similar cu ceea ce fac portalurile mari cu propriile lor recomandări de preț. Astfel reacționați la schimbările pieței fără să ajustați manual fiecare zi.",
             },

@@ -13,6 +13,8 @@ Listings (`channels/{id}/mappings/{mapping_id}/pricing_settings`).
     | unsere Aktion               | Airbnb-Regel (`rule_type`)     | Schwelle    |
     +-----------------------------+--------------------------------+-------------+
     | min_nights (Längenrabatt)   | STAYED_AT_LEAST_X_DAYS         | Nächte ≥ 1  |
+    | lengthPrices (Wochen-/      | STAYED_AT_LEAST_X_DAYS         | Nächte ≥ 1  |
+    |   Monats-/eigener Preis)    |   (Prozentsatz abgeleitet)      |             |
     | lead_min_days (Frühbucher)  | BOOKED_BEYOND_AT_LEAST_X_DAYS  | Vielfaches  |
     |                             |                                | von 28/30   |
     | lead_max_days (Last Minute) | BOOKED_WITHIN_AT_MOST_X_DAYS   | 1–28 Tage   |
@@ -69,6 +71,95 @@ FRUEHBUCHER_AUSWAHL = (28, 30, 56, 60, 84, 90)
 MODELL_STANDARD = "standard"
 MODELL_LOS = "los_record"
 MODELL_RATE_PLAN = "rate_plan"
+
+
+# --- Längenabhängige Preise („ab 7 Nächten kostet die Nacht weniger") --------
+#
+# Sie gehen über DENSELBEN Weg: ein Längenpreis IST ein Längenrabatt, und Airbnb
+# kennt ihn als `STAYED_AT_LEAST_X_DAYS`. Deshalb werden sie hier in dieselbe
+# Form gebracht wie eine Aktion und durch dieselbe Pipeline geschickt — dann
+# gelten automatisch dieselben Airbnb-Grenzen, und ein Längenpreis und eine
+# Aktion mit Mindestaufenthalt konkurrieren um die EINE Regel dieser Art (der
+# höhere Rabatt gewinnt, wie im Resolver).
+#
+# ZWEI DINGE SIND DABEI EHRLICH ZU BENENNEN:
+#
+# 1. Airbnbs Regel ist PROZENTUAL, unser Längenpreis ein absoluter Nachtpreis.
+#    Der Prozentsatz wird deshalb aus dem Grundpreis des Objekts abgeleitet.
+#    Läuft der verkaufte Tagespreis auseinander (Wochentagspreise, Dynamic
+#    Pricing, Datumspreise im Kalender), trifft der Prozentsatz den absoluten
+#    Wunschpreis nicht auf den Cent — das ist eine Eigenschaft von Airbnbs
+#    Modell, nicht unserer Umsetzung, und gilt für jedes PMS gleich.
+# 2. Gerundet wird ABWÄRTS. Airbnb nimmt nur ganze Prozent; 8,9 % würden als
+#    8 % gesendet. Aufwärts zu runden hieße, bei Airbnb billiger zu verkaufen,
+#    als der Betrieb eingestellt hat — das ist der teurere Fehler (Wurzel 5).
+#    Bleibt nach dem Abrunden 0 % übrig, wird NICHTS gesendet und die Zeile
+#    meldet „manuelle Synchronisierung" statt einen Rabatt vorzutäuschen.
+DISCOUNT_TYPE_LOS = "length_of_stay"
+
+
+def laengenpreis_prozent(price_per_night: float, base_price: float) -> int | None:
+    """Längenpreis → ganzzahliger Rabatt in Prozent, abgerundet.
+
+    `None`, wenn sich daraus kein Rabatt ergibt: ohne Grundpreis, bei einem
+    Längenpreis über dem Grundpreis (das ist ein AUFSCHLAG, den Airbnbs
+    Rabattregel nicht kennt) oder wenn nach dem Abrunden 0 % bleiben.
+    """
+    if base_price <= 0 or price_per_night <= 0 or price_per_night >= base_price:
+        return None
+    # ZUERST multiplizieren, dann teilen — und vor dem Abschneiden auf sechs
+    # Stellen runden. `1 - 405/450` ist in Gleitkomma 0,09999999999999998; ein
+    # direktes `int(... * 100)` machte daraus 9 % statt 10 % und hätte bei Airbnb
+    # dauerhaft einen Prozentpunkt zu wenig Rabatt gegeben.
+    prozent = int(round((base_price - price_per_night) * 100 / base_price, 6))
+    return prozent or None
+
+
+def aktion_aus_laengenpreis(
+    eintrag: dict[str, Any], base_price: float
+) -> dict[str, Any]:
+    """Längenpreis in die Form einer Aktion bringen (siehe Abschnitts-Kommentar).
+
+    Bewusst dieselben Feldnamen wie eine `property_discounts`-Zeile: so laufen
+    `regel_fuer_airbnb`, `per_tagespreis_uebertragbar` und der Status-Chip ohne
+    Sonderfall darüber. Ein zweiter Übersetzungspfad wäre die zweite Wahrheit
+    über Airbnbs Grenzen.
+    """
+    prozent = laengenpreis_prozent(
+        float(eintrag.get("pricePerNight") or 0), base_price
+    )
+    return {
+        "id": str(eintrag.get("id") or ""),
+        "discount_type": DISCOUNT_TYPE_LOS,
+        "discount_kind": "percent",
+        # 0 heißt „nicht darstellbar" — `_prozent` lehnt es ab und der Grund
+        # steht am Posten, statt einen erfundenen Rabatt zu senden (Wurzel 4).
+        "discount_bps": (prozent or 0) * 100,
+        "min_nights": int(eintrag.get("minNights") or 0),
+        "lead_min_days": None,
+        "lead_max_days": None,
+        "stay_ranges": [],
+        "booked_from": None,
+        "booked_to": None,
+        "promo_codes": [],
+        # Längenpreise werden nicht je Kanal eingeschränkt — es gibt dafür keine
+        # Oberfläche und keine Spalte. Leer = alle Kanäle.
+        "portal_scope": [],
+        "active": True,
+    }
+
+
+def laengenpreise_als_aktionen(
+    pricing: dict[str, Any], base_price: float
+) -> list[dict[str, Any]]:
+    """Alle Längenpreise eines Objekts als Aktions-Zeilen."""
+    return [
+        aktion_aus_laengenpreis(eintrag, base_price)
+        for eintrag in (pricing.get("lengthPrices") or [])
+        if isinstance(eintrag, dict)
+        and str(eintrag.get("id") or "")
+        and int(eintrag.get("minNights") or 0) > 0
+    ]
 
 
 def _prozent(regel: dict[str, Any]) -> int | None:
@@ -272,7 +363,13 @@ class AirbnbAktionenMixin:
                 "channel_id": None, "listings": 0, "updated": 0,
                 "rules": [], "skipped": {},
             }
-        aktionen = self._aktionen_des_objekts(db, tenant_id, property_id)
+        # Aktionen UND Längenpreise: beides sind Längen-/Buchungsrabatte, und
+        # Airbnb hat für sie dieselbe Regel-Art. Sie konkurrieren deshalb um
+        # dieselbe Regel (höherer Rabatt gewinnt, `regeln_fuer_listing`) —
+        # getrennt zu pushen hieße, die zweite Regel würde die erste löschen.
+        aktionen = self._aktionen_des_objekts(
+            db, tenant_id, property_id
+        ) + self.laengenpreise_des_objekts(db, tenant_id, property_id)
         kanal = self._channex.get_channel(channel_id)  # type: ignore[attr-defined]
         attrs = (kanal.get("data") or {}).get("attributes") or {}
         mappings = _mappings(attrs)
@@ -348,6 +445,65 @@ class AirbnbAktionenMixin:
             if row.get("is_active") and row.get("channex_channel_id"):
                 return str(row["channex_channel_id"])
         return None
+
+    @staticmethod
+    def grundpreis_des_objekts(db: Client, property_id: str) -> float:
+        """Grundpreis, aus dem der Längen-Prozentsatz abgeleitet wird.
+
+        Quelle ist `rate_plans` — DIE Preis-Wahrheit (der Preis-Blob ist nur die
+        Anzeige-Kopie). Bei MEHREREN property-weiten Plänen gibt es keinen einen
+        Grundpreis: ein aus dem zufällig ältesten Plan abgeleiteter Prozentsatz
+        wäre für die anderen falsch. Dann kommt 0 zurück, `laengenpreis_prozent`
+        meldet „nicht darstellbar" und die Zeile sagt „manuell pflegen" —
+        statt einen Rabatt zu senden, der auf halben Plänen nicht stimmt.
+
+        `rate_plans` trägt KEINE tenant_id (RLS läuft über die property, 0016) —
+        der Tenant-Scope kommt deshalb vom Aufrufer, der das Objekt bereits
+        gescopt geladen hat. Kanal-Pläne (`portal_scope` gesetzt, 0272) sind
+        abgeleitete Aufschläge und zählen hier nicht mit.
+        """
+        rows = (
+            db.table("rate_plans")
+            .select("base_price")
+            .eq("property_id", property_id)
+            .is_("portal_scope", "null")
+            .order("created_at")
+            .limit(2)
+            .execute()
+        ).data or []
+        if len(rows) != 1:
+            return 0.0
+        try:
+            return float(rows[0].get("base_price") or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    @classmethod
+    def laengenpreise_des_objekts(
+        cls, db: Client, tenant_id: str, property_id: str
+    ) -> list[dict[str, Any]]:
+        """Längenpreise des Objekts als Aktions-Zeilen — tenant-gescopt (Wurzel 3).
+
+        Auch vom Status-Chip genutzt (`abgaben_status`), damit dort dieselbe
+        Rechnung steht wie im Push — sonst behauptete der Chip „geht raus", wo
+        der Push abrundet und nichts sendet.
+        """
+        rows = (
+            db.table("properties")
+            .select("type_attributes")
+            .eq("tenant_id", tenant_id)
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return []
+        pricing = (rows[0].get("type_attributes") or {}).get("pricing") or {}
+        if not isinstance(pricing, dict):
+            return []
+        return laengenpreise_als_aktionen(
+            pricing, cls.grundpreis_des_objekts(db, property_id)
+        )
 
     @staticmethod
     def _aktionen_des_objekts(

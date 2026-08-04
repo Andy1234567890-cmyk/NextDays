@@ -335,6 +335,27 @@ def clean_description(raw: object) -> str | None:
     return cleaned or None
 
 
+def clean_names(raw: object) -> dict[str, str]:
+    """Gastseitige Namen je Sprache. Leere Werte fliegen raus, damit ein
+    ungefüllter Sprach-Tab nicht als „Name = leer" beim Portal landet.
+
+    Liegt HIER, nicht in steuern.py, obwohl die Steuer sie zuerst brauchte:
+    gebuehren.py ist die untere Schicht (steuern.py importiert daraus, nicht
+    umgekehrt) — und die Gebühr trägt denselben mehrsprachigen Namen. Eine
+    Kopie je Posten wäre die zweite Wahrheit über Länge und Leerbehandlung.
+    """
+    if not isinstance(raw, dict):
+        return {}
+    namen: dict[str, str] = {}
+    for locale, value in raw.items():
+        if not isinstance(locale, str) or not isinstance(value, (str, int, float)):
+            continue
+        text = str(value).strip()[:_NAME_MAX]
+        if text:
+            namen[locale[:10]] = text
+    return namen
+
+
 def _clean_amount(raw: object) -> float:
     try:
         value = float(raw if raw is not None else 0)
@@ -407,6 +428,12 @@ def sync_pricing_config(
             "fees": pricing.get("fees") or [],
             "taxes": pricing.get("taxes") or [],
             "promotions": pricing.get("promotions") or [],
+            # Beide Spalten sind TOT und werden vom Resolver nicht gelesen: die
+            # Aktionen liegen seit 0276 in `property_discounts`, die Extras im
+            # addons-Slice (`property_addons`, 0074/0075). Der Blob trägt sie
+            # nicht mehr, die Spalten laufen also auf [] leer. Sie bleiben
+            # stehen, damit Altbestand lesbar bleibt — wer hier etwas hinein
+            # schreibt, baut die Attrappe wieder auf.
             "add_ons": pricing.get("addOns") or [],
         }
         # Währung nur setzen, wenn explizit übergeben — kein EUR erfinden
@@ -421,6 +448,35 @@ def sync_pricing_config(
         log.warning(
             "pricing_config_sync_failed", property_id=property_id, error=str(exc)
         )
+
+
+def laengenpreise_geaendert(alte_attrs: dict, changes: dict) -> bool:
+    """Haben sich die Preise nach Aufenthaltsdauer geändert?
+
+    Entscheidet, ob die Airbnb-Rabattregeln nachgezogen werden müssen: ein
+    Wochen-/Monatspreis IST ein Längenrabatt und geht als
+    `STAYED_AT_LEAST_X_DAYS` raus (channel_manager/airbnb_aktionen.py).
+
+    Bewusst KONSERVATIV: ist der Alt-Stand nicht ladbar, gilt „geändert" und der
+    Job läuft. Ein Job zu viel kostet zwei Channex-Calls; ein ausgelassener ließe
+    bei Airbnb einen Rabatt stehen, den es nicht mehr gibt (Wurzel 1).
+
+    Liegt hier und nicht in service.py — aus demselben Grund wie
+    `sync_pricing_config`: das Modul läuft sonst über die 1500-Zeilen-Grenze.
+    """
+    neu_attrs = changes.get("type_attributes")
+    if not isinstance(neu_attrs, dict):
+        return False
+    if not isinstance(alte_attrs, dict):
+        return True
+
+    def _liste(attrs: dict[str, Any]) -> object:
+        pricing = attrs.get("pricing")
+        if not isinstance(pricing, dict):
+            return []
+        return pricing.get("lengthPrices") or []
+
+    return _liste(alte_attrs) != _liste(neu_attrs)
 
 
 def erlaubte_portale(
@@ -528,6 +584,12 @@ def normalize_fees(
         if not name:
             raise PropertyError("Gebühr braucht einen Namen.", status_code=422)
 
+        # Gastseitiger Name je Sprache — dieselbe Achse wie bei der lokalen
+        # Steuer. Die Gebühr steht in der Preisaufschlüsselung des Gastes; ohne
+        # Übersetzung liest ein dänischer Gast „Reinigungsgebühr". Der interne
+        # `name` bleibt daneben stehen (Listen, Bestands-Rechnungen).
+        namen = clean_names(eintrag.get("names"))
+
         betrag = (
             _clean_percent(eintrag.get("amount"))
             if mode == "percent"
@@ -541,6 +603,8 @@ def normalize_fees(
             "basis": basis,
             "optional": bool(eintrag.get("optional")),
         }
+        if namen:
+            sauber["names"] = namen
 
         satz = _clean_tax_rate(eintrag.get("taxRate"))
         if satz is not None:

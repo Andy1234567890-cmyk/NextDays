@@ -27,6 +27,7 @@ from .gebuehren import (
     TAXABLE_BASE_CATEGORIES,
     TAXABLE_BASE_ITEMS,
     clean_description,
+    clean_names,
     clean_portal_scope,
     fee_category,
 )
@@ -60,22 +61,9 @@ PERIODS = frozenset({"PerStay", "PerNight"})
 
 # Die Beschreibungs-Säuberung liegt in gebuehren.py (untere Schicht, wird von hier
 # ohnehin importiert). Eine eigene Kopie hier wäre eine zweite Wahrheit über
-# erlaubtes HTML — und genau die Sorte Kopie, die auseinanderläuft.
-
-
-def _clean_names(raw: object) -> dict[str, str]:
-    """Gastseitige Namen je Sprache. Leere Werte fliegen raus, damit ein
-    ungefüllter Sprach-Tab nicht als „Name = leer" beim Portal landet."""
-    if not isinstance(raw, dict):
-        return {}
-    namen: dict[str, str] = {}
-    for locale, value in raw.items():
-        if not isinstance(locale, str) or not isinstance(value, (str, int, float)):
-            continue
-        text = str(value).strip()[:255]
-        if text:
-            namen[locale[:10]] = text
-    return namen
+# erlaubtes HTML — und genau die Sorte Kopie, die auseinanderläuft. Dasselbe gilt
+# seit dem mehrsprachigen Gebühren-Namen für `clean_names`: die stand hier und ist
+# nach unten gewandert, statt sie für die Gebühr ein zweites Mal zu schreiben.
 
 
 def _clean_value(raw: object, *, percent: bool) -> float:
@@ -188,7 +176,7 @@ def normalize_taxes(
             "includedInPrice": bool(eintrag.get("includedInPrice")),
         }
 
-        namen = _clean_names(eintrag.get("names"))
+        namen = clean_names(eintrag.get("names"))
         if namen:
             sauber["names"] = namen
         beschreibung = clean_description(eintrag.get("descriptionHtml"))

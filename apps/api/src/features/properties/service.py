@@ -19,6 +19,7 @@ from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.auth.staff_scope import is_staff, staff_property_ids
 from src.jobs.queue import (
     enqueue,
+    try_enqueue_airbnb_aktionen,
     try_enqueue_ari,
     try_enqueue_content_sync,
     try_enqueue_recompute,
@@ -30,9 +31,11 @@ from .gebaeude import GebaeudeMixin
 from .gebuehren import (
     GebuehrenMixin,
     erlaubte_portale,
+    laengenpreise_geaendert,
     normalize_fees,
     sync_pricing_config,
 )
+from .preise_kopieren import PreiseKopierenMixin
 from .rooms import RoomsMixin
 from .schemas import (
     ChannelState,
@@ -110,7 +113,9 @@ def _sniff_image_ext(content: bytes) -> str | None:
     return None
 
 
-class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin, GebuehrenMixin):
+class PropertiesService(
+    GebaeudeMixin, RoomsMixin, SteuernMixin, GebuehrenMixin, PreiseKopierenMixin
+):
     slice_name = "properties"
 
     def __init__(self, service_client: Client) -> None:
@@ -574,6 +579,14 @@ class PropertiesService(GebaeudeMixin, RoomsMixin, SteuernMixin, GebuehrenMixin)
                     title=row.get("title") or "Unbenannt",
                     currency=None,
                 )
+        # Preise nach Aufenthaltsdauer an die Portale nachziehen: ein Wochen-/
+        # Monatspreis IST ein Längenrabatt und geht als Airbnb-Rabattregel raus
+        # (`STAYED_AT_LEAST_X_DAYS`, airbnb_aktionen.py). Ohne diesen Anstoß
+        # bliebe die Regel bei Airbnb auf dem Stand vor der Änderung — ein
+        # gelöschter Wochenpreis würde dort weiter Rabatt geben (Wurzel 1: der
+        # Gegenzustand muss mitgepflegt werden).
+        if laengenpreise_geaendert(alte_attrs, changes):
+            try_enqueue_airbnb_aktionen(self._db, tenant_id, property_id)
         # Maximalaufenthalt (Verfügbarkeits-Formular) an die Portale spiegeln,
         # sobald type_attributes sich ändert — sonst bliebe die Obergrenze bei
         # Booking/Airbnb veraltet. Best-effort, blockiert das Speichern nie.

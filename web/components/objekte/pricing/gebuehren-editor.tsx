@@ -21,6 +21,8 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { Icon } from "@iconify/react";
+
 import {
   EditorShell,
   Field,
@@ -28,6 +30,13 @@ import {
   Hint,
   useSaver,
 } from "@/components/objekte/editor-primitives";
+import { Button } from "@nextdays/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@nextdays/ui/dropdown-menu";
 import { Input } from "@nextdays/ui/input";
 import { RichTextEditor } from "@nextdays/ui/rich-text-editor";
 import { Segmented } from "@nextdays/ui/segmented";
@@ -52,6 +61,7 @@ import {
   feeBasisAchsen,
   feeBasisAus,
 } from "@/lib/pricing-meta";
+import { type Locale, LOCALES, LOCALE_LABELS } from "@/i18n/locales";
 import { applyFeeToProperties, listFeeTypes } from "@/lib/properties";
 import { ZuAnderenObjekten } from "@/components/objekte/pricing/zu-anderen-objekten";
 
@@ -92,6 +102,7 @@ export function GebuehrEditor({
   );
   const [ziele, setZiele] = useState<string[]>([]);
   const [arten, setArten] = useState<FeeTypeEntry[]>([]);
+  const [sprache, setSprache] = useState<Locale>("de");
   // USt-Satz als eigener Schalter wie im Standard: aus = die Gebühr folgt dem
   // Übernachtungssatz des Objekts (kein erfundener eigener Satz, Wurzel 4).
   const [ustAn, setUstAn] = useState<boolean>(v.taxRate != null);
@@ -112,6 +123,19 @@ export function GebuehrEditor({
     arten.find((a) => a.value === v.feeType)?.category ?? "",
   );
   const waehrung: Currency | "" = pr.currency;
+
+  /** Gastseitiger Name in der offenen Sprache. Der INTERNE `name` folgt der
+   *  deutschen Eingabe, damit Listen und Bestands-Rechnungen einen Namen haben,
+   *  auch ohne Übersetzungen — dieselbe Regel wie bei der lokalen Steuer. */
+  const setzeName = (text: string) =>
+    setV((alt) => ({
+      ...alt,
+      names: { ...(alt.names ?? {}), [sprache]: text },
+      // Auch die ERSTE gepflegte Sprache füllt den internen Namen, wenn er noch
+      // leer ist: der Server verlangt ihn (422), und wer nur Dänisch pflegt,
+      // stünde sonst vor einem Speichern-Knopf, der nicht sagt, was fehlt.
+      name: sprache === "de" || !alt.name.trim() ? text : alt.name,
+    }));
 
   async function commit() {
     const eintrag: Fee = {
@@ -382,18 +406,55 @@ export function GebuehrEditor({
           ))}
       </section>
 
-      <Field label={t("pricingForm.nameLabel")} required>
-        <Input
-          value={v.name}
-          onChange={(e) => setV({ ...v, name: e.target.value })}
-          placeholder={t("pricingForm.feeNamePlaceholder")}
+      <section className="flex flex-col gap-3">
+        <h3 className="font-display text-lg font-extrabold">
+          {t("pricingForm.guestFacingNameTitle")}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          {t("pricingForm.guestFacingNameHint")}
+        </p>
+        {/* 24 EU-Amtssprachen als Dropdown, genau wie im Steuer-Editor. Die
+            Gebühr steht in der Preisaufschlüsselung des Gastes — ohne
+            Übersetzung liest ein dänischer Gast „Reinigungsgebühr". */}
+        <div className="flex flex-wrap items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="outline" size="sm" className="gap-2">
+                {LOCALE_LABELS[sprache]}
+                <Icon icon="ph:caret-down" className="size-3.5 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="max-h-80 overflow-y-auto">
+              {LOCALES.map((l) => (
+                <DropdownMenuItem key={l} onClick={() => setSprache(l)}>
+                  {LOCALE_LABELS[l]}
+                  {v.names?.[l]?.trim() && (
+                    <Icon icon="ph:check" className="ml-auto size-4 text-muted-foreground" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <span className="text-xs text-muted-foreground">
+            {t("pricingForm.languagesFilled", {
+              count: Object.values(v.names ?? {}).filter((x) => x?.trim()).length,
+              total: LOCALES.length,
+            })}
+          </span>
+        </div>
+        <Field label={t("pricingForm.nameLabel")} required>
+          <Input
+            value={v.names?.[sprache] ?? (sprache === "de" ? v.name : "")}
+            onChange={(e) => setzeName(e.target.value)}
+            placeholder={t("pricingForm.feeNamePlaceholder")}
+          />
+        </Field>
+        <RichTextEditor
+          value={v.descriptionHtml ?? ""}
+          onChange={(html) => setV({ ...v, descriptionHtml: html })}
+          placeholder={t("pricingForm.internalDescriptionPlaceholder")}
         />
-      </Field>
-      <RichTextEditor
-        value={v.descriptionHtml ?? ""}
-        onChange={(html) => setV({ ...v, descriptionHtml: html })}
-        placeholder={t("pricingForm.internalDescriptionPlaceholder")}
-      />
+      </section>
 
       <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
         <span className="font-medium">{t("pricingForm.feeOptionalLabel")}</span>

@@ -42,6 +42,12 @@ PRODUCTS = {
                            "desc": "Schicht- & Einsatzplanung."},
     "modul6_hotel": {"name": "Modul 6 - Hotel",
                      "desc": "Front Desk."},
+    "dynamische_preise": {
+        "name": "Dynamische Preise",
+        "desc": "Automatische Preisoptimierung (Auslastung, Vorlauf, Saison, "
+        "Markt). Abrechnung nutzungsabhaengig: 0,5 % vom Umsatz der Buchungen, "
+        "die waehrend der aktiven Buchung des Moduls entstehen.",
+    },
     # Modul 5 (Jobmarkt, 2 % vom Umsatz) ist KEIN fixer Preis -> wird nachgelagert
     # als Invoice-Item berechnet, kein Stripe-Produkt hier. Bewusst ausgelassen.
 }
@@ -86,13 +92,12 @@ def _assert_pdf_math() -> None:
     """Rechnet die Staffel gegen die PDF-Beispiele (Abschnitt 4). Bricht ab,
     wenn die Tiers nicht exakt stimmen — bevor irgendetwas in Stripe entsteht."""
     def cost(objects: int) -> int:
-        total, prev = 1990, 1  # Tier 1 flat, erste 1 Objekt drin
+        total = 1990  # Tier 1 flat, das erste Objekt ist darin enthalten
         for lo, hi, unit in ((1, 50, 600), (50, 100, 500), (100, None, 400)):
             if objects <= lo:
                 break
             n = (min(objects, hi) if hi else objects) - lo
             total += n * unit
-            prev = hi or objects
         return total
     checks = {1: 1990, 3: 3190, 20: 13390, 100: 56390, 200: 96390}
     for objs, want in checks.items():
@@ -150,14 +155,21 @@ def main() -> None:
     key = os.environ.get("STRIPE_SECRET_KEY", "").strip()
     if not key:
         _die("STRIPE_SECRET_KEY nicht in der Umgebung gesetzt.")
-    if not key.startswith("sk_test_") and "--apply" in sys.argv and \
+    if not key.startswith(("sk_test_", "rk_test_")) and "--apply" in sys.argv and \
             "--allow-live" not in sys.argv:
         _die("LIVE-Key erkannt. --apply nur mit zusaetzlichem --allow-live "
              "(Sicherheitsschranke).")
     stripe.api_key = key
     apply = "--apply" in sys.argv
     mode = "APPLY (schreibt in Stripe)" if apply else "DRY-RUN (nichts wird geschrieben)"
-    live = "LIVE" if key.startswith("sk_live_") else "TEST"
+    # Eingeschraenkte Schluessel (rk_) tragen denselben Modus wie sk_ — beide
+    # Praefixe pruefen, sonst meldet ein rk_live_-Lauf faelschlich "TEST".
+    if key.startswith(("sk_live_", "rk_live_")):
+        live = "LIVE"
+    elif key.startswith(("sk_test_", "rk_test_")):
+        live = "TEST"
+    else:
+        live = "UNBEKANNT"
     print(f"== Stripe-Preisliste seeden — {mode} — Account-Modus: {live} ==")
 
     print("\n[0] PDF-Betragspruefung")
@@ -186,8 +198,13 @@ def main() -> None:
     print("  - WhatsApp ist KEIN Zusatzmodul: der Kanal gehoert zum Grundtarif.")
     print("    Eine eigene Gebuehr waere nach Metas Tech-Provider-Terms")
     print("    (Section 5, No Resale) unzulaessig. Nicht wieder anlegen.")
-    print("  - Modul 5 (Jobmarkt 2%) + Provisionen: nachgelagert als Invoice-Item,")
-    print("    KEIN Stripe-Produkt (variabel). Siehe PLAN-stripe-preisliste.md.")
+    print("  - Modul 5 (Jobmarkt 2%), Provisionen UND Dynamische Preise (0,5%):")
+    print("    nachgelagert als Invoice-Item, KEIN Stripe-Preis (variabel).")
+    print("    Das Produkt 'Dynamische Preise' existiert nur als Katalog-Eintrag")
+    print("    (Name/Beschreibung) — der Betrag kommt aus dynpricing_ledger")
+    print("    (Migration 0277), je Waehrung ein eigenes Invoice-Item.")
+    print("    KEIN Billing-Meter: ein Meter ist waehrungslos und wuerde EUR-")
+    print("    und DKK-Buchungen zu einer sinnlosen Summe addieren (24 Laender).")
     print("  - Nicht-EUR (DKK/SEK/PLN/CZK/HUF/RON/BGN): Adaptive Pricing im")
     print("    Checkout (Stripe-Kurs), kein currency_options am graduated Preis.")
     if not apply:

@@ -90,9 +90,12 @@ async function call<T>(
   }
 }
 
-/** Alle Objekte des Kontos mit ihrem Dynamic-Pricing-Status (Hostaway-Tabelle). */
+/** Alle Objekte des Kontos mit ihrem Dynamic-Pricing-Status (Hostaway-Tabelle).
+ *  `module_active` sagt, ob das kostenpflichtige Modul „Dynamische Preise"
+ *  gebucht ist — die Fläche selbst gibt darüber Auskunft, damit die UI dafür
+ *  nicht den Abo-Endpunkt (MANAGE_BILLING) braucht. */
 export async function getDpOverview(): Promise<
-  Result<{ items: DpOverviewItem[] }>
+  Result<{ items: DpOverviewItem[]; module_active: boolean }>
 > {
   return call(`/pricing/overview`);
 }

@@ -421,6 +421,21 @@ class FeeApplyResponse(BaseModel):
     applied_to: list[str]
 
 
+class PricingCopyRequest(BaseModel):
+    """Preise von einem anderen eigenen Objekt übernehmen (Quell-Objekt)."""
+
+    source_property_id: str = Field(min_length=1)
+
+
+class PricingCopyResponse(BaseModel):
+    """Was übernommen wurde — die Zahlen belegen es, statt nur „ok" zu melden."""
+
+    property_id: str
+    source_id: str
+    fees: int
+    taxes: int
+
+
 class ImageUploadResponse(BaseModel):
     """Antwort auf einen Bild-Upload: öffentliche URL des gespeicherten Bildes."""
 

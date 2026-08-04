@@ -6,9 +6,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DpPreviewGrid } from "@/components/dynamic-pricing/dp-preview-grid";
+import { ModulVerkaufsseite } from "@/components/erweiterungen/modul-verkaufsseite";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@nextdays/ui/card";
 import { getAvailability, getBoard } from "@/lib/calendar";
+import { getDpOverview } from "@/lib/dynamic-pricing";
+import { erweiterungFuerModul } from "@/lib/erweiterungen";
 import { getProperty } from "@/lib/properties";
 
 export const dynamic = "force-dynamic";
@@ -28,12 +31,24 @@ export default async function Page({
   const { id } = await params;
   const start = isoDay(0);
   const end = isoDay(35); // exklusiv → 35 Tage Vorschau
-  const [prop, avail, board] = await Promise.all([
+  const [prop, avail, board, overview] = await Promise.all([
     getProperty(id),
     getAvailability(id, start, end),
     // Objekt-Währung (aus dem Rate-Plan) für die Preisanzeige — kein €-Hardcode.
     getBoard([id], start, end),
+    // Modul-Status: die Vorschau ist Teil des kostenpflichtigen Moduls. Ein
+    // Direktaufruf dieser URL darf es nicht umgehen (gleicher Scope wie die
+    // Liste, Wurzel 9) — ohne Buchung stünde hier ohnehin ein leeres Raster.
+    getDpOverview(),
   ]);
+  const modul = erweiterungFuerModul("dynamische_preise");
+  if (overview.ok && !overview.data.module_active && modul) {
+    return (
+      <div className="flex w-full flex-col p-6">
+        <ModulVerkaufsseite eintrag={modul} />
+      </div>
+    );
+  }
   const currency =
     (board.ok ? board.data.items[0]?.currency : null) ?? null;
   if (!prop.ok) {

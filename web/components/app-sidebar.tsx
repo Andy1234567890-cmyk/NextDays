@@ -184,9 +184,20 @@ const HIDDEN_AT_LAUNCH: ReadonlySet<string> = new Set([
   "jobs",
 ]);
 
-// Betriebsart-unabhängige Gruppen (Marktplatz/HR/Jobs).
+// Betriebsart-unabhängige Gruppen (Werkzeuge/Marktplatz/HR/Jobs).
 // `groupKey` = i18n-Schlüssel (Namespace "nav.groups").
 const STATIC_GROUPS: readonly NavGroup[] = [
+  {
+    // Werkzeuge: kontoweite Flächen, die zu keinem Objekt und keiner Buchung
+    // gehören. „Erweiterungen" ist der Modul-Verkauf (Kacheln + Detailseite mit
+    // „Aktivieren") — bewusst NICHT in der Abrechnung, dort stehen Tarif und
+    // Rechnungen. Buchen kostet Geld → manage_billing.
+    groupKey: "tools",
+    icon: "ph:toolbox",
+    items: [
+      { key: "extensions", href: "/erweiterungen", icon: "ph:puzzle-piece", req: "manage_billing" },
+    ],
+  },
   {
     groupKey: "marketplace",
     icon: "ph:storefront",

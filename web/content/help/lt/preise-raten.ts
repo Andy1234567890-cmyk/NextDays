@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Atnaujinta: 2026 m. liepa",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Dinaminės kainos yra mokamas papildomas modulis. Jį įsigyjate skiltyje „Papildymai“ – ten nurodyta ir kaina. Be modulio automatika neskaičiuoja.",
+            },
+            {
               type: "p",
               text: "Dinaminės kainos automatiškai koreguoja bazinę kainą pagal tokius veiksnius kaip rezervacijos laikas iš anksto, esamas užimtumas ir paklausa — panašiai, kaip tai daro didieji portalai savo kainų rekomendacijose. Taip reaguojate į rinkos pokyčius, nekoreguodami kiekvienos dienos rankiniu būdu.",
             },

@@ -401,8 +401,22 @@ als eigenes Objekt, Channex gibt es durch:
 | unsere Bedingung | `rule_type`                    | Grenze                          |
 | ---------------- | ------------------------------ | ------------------------------- |
 | `min_nights`     | `STAYED_AT_LEAST_X_DAYS`       | ≥ 1, nur Preismodell `standard` |
+| `lengthPrices[]` | `STAYED_AT_LEAST_X_DAYS`       | dito (Prozent abgeleitet)       |
 | `lead_min_days`  | `BOOKED_BEYOND_AT_LEAST_X_DAYS`| Vielfaches von 28 ODER 30       |
 | `lead_max_days`  | `BOOKED_WITHIN_AT_MOST_X_DAYS` | 1–28 Tage                       |
+
+**Preise nach Aufenthaltsdauer laufen über DENSELBEN Weg.** Ein Wochen-/Monats-
+preis IST ein Längenrabatt; er wird deshalb in die Form einer Aktion gebracht
+(`aktion_aus_laengenpreis`) und durch dieselbe Pipeline geschickt — dann gelten
+automatisch dieselben Airbnb-Grenzen, und ein Längenpreis konkurriert mit einer
+Aktion um die EINE Regel dieser Art (höherer Rabatt gewinnt, wie im Resolver).
+Zwei Dinge sind dabei ehrlich zu benennen: Airbnbs Regel ist PROZENTUAL, unser
+Längenpreis absolut — der Prozentsatz kommt aus dem Grundpreis des Objekts
+(`rate_plans`; bei mehreren Plänen gibt es keinen einen Grundpreis → nicht
+darstellbar). Und gerundet wird ABWÄRTS: 8,9 % gehen als 8 % raus, damit bei
+Airbnb nie billiger verkauft wird als eingestellt. Bleibt 0 % übrig, wird nichts
+gesendet und die Zeile meldet „Manuelle Synchronisierung". Alle anderen Portale
+haben für einen Längenrabatt kein Feld und tragen denselben Chip.
 
 `price_change` = Rabatt in ganzen Prozent, 0–99. PUT ersetzt das GANZE Objekt →
 immer den GET-Stand als Grundlage nehmen und nur `default_pricing_rules` tauschen,
@@ -411,7 +425,9 @@ sonst räumt ein Aktions-Push die Steuer-/Gebühren-Einstellungen des Listings a
 Promotion verliert damit ihre Regel wieder. Geschrieben wird nur bei echter
 Abweichung (Wurzel 2). Angestoßen wird der Push nach jeder Promotion-Änderung als
 Job `sync_airbnb_aktionen` und über
-`POST /channel-manager/properties/{id}/aktionen/airbnb-sync`.
+`POST /channel-manager/properties/{id}/aktionen/airbnb-sync` — sowie nach jeder
+Änderung an den Preisen nach Aufenthaltsdauer
+(`properties.gebuehren.laengenpreise_geaendert`).
 
 Zusätzlich kennt Channex Airbnbs eigene AKTIONSPROGRAMME
 (`GET /channels/{id}/promotions`, `POST /channels/{id}/promotions/enable|disable`

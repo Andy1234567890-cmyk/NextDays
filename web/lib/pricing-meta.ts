@@ -62,11 +62,35 @@ export type LengthPrice = {
   pricePerNight: number; // reduzierter Preis pro Nacht
 };
 
-export const STAY_KIND_LABELS: Record<StayKind, string> = {
-  weekly: "Wochenpreis",
-  monthly: "Monatspreis",
-  custom: "Eigener Längenpreis",
+/** i18n-Schlüssel je Aufenthaltsart. Hier standen bis 04.08.2026 deutsche
+ *  Klartexte — ein dänischer Betrieb las „Wochenpreis" mitten in einer
+ *  dänischen Oberfläche. Die Schlüssel gibt es in allen 24 Sprachen, weil das
+ *  Auswahlmenü sie schon nutzt. */
+export const STAY_KIND_KEYS: Record<StayKind, string> = {
+  weekly: "pricingForm.weeklyPriceLabel",
+  monthly: "pricingForm.monthlyPriceLabel",
+  custom: "pricingForm.customLengthPriceLabel",
 };
+
+/** Gesamtpreis des Aufenthalts, wie der Branchenstandard ihn führt
+ *  („Wöchentlicher Gesamtpreis kr 2835" statt „kr 405 / Nacht", live abgelesen
+ *  04.08.2026).
+ *
+ *  Gespeichert bleibt der NACHTPREIS: den liest der Preis-Resolver
+ *  (`_PricingConfig.length_price_per_night`), und nur er ist eindeutig — bei
+ *  „7 Nächte oder mehr" wäre ein Gesamtpreis für eine 9-Nacht-Buchung nicht
+ *  definiert. Der Gesamtpreis ist deshalb eine ANSICHT auf denselben Wert, keine
+ *  zweite Zahl im Datensatz (Wurzel 4). */
+export function lengthTotal(pricePerNight: number, minNights: number): number {
+  return pricePerNight * Math.max(1, minNights);
+}
+
+/** Gesamtpreis → Nachtpreis. Zwei Nachkommastellen, weil Beträge so gerechnet
+ *  und gerendert werden; ohne Rundung stünde 2835/7 als 404.99999999999994 im
+ *  Datensatz. */
+export function lengthPerNight(total: number, minNights: number): number {
+  return Math.round((total / Math.max(1, minNights)) * 100) / 100;
+}
 
 // --- Etappe 2: Fees, Taxes, Promotions, Add-ons, Other information ---------
 
@@ -79,12 +103,18 @@ export type FeeBasis =
   | "per_guest_stay"
   | "per_guest_night"
   | "per_pet_stay";
-export const FEE_BASIS_LABELS: Record<FeeBasis, string> = {
-  per_stay: "Einmalig pro Aufenthalt",
-  per_night: "Pro Nacht",
-  per_guest_stay: "Pro Gast / Aufenthalt",
-  per_guest_night: "Pro Gast / Nacht",
-  per_pet_stay: "Pro Tier / Aufenthalt",
+/** i18n-Schlüssel je Basis, als die zwei Achsen des Standards („Einmaliger
+ *  Betrag · Pro Aufenthalt"). Hier standen bis 04.08.2026 deutsche Klartexte —
+ *  in einer dänischen Oberfläche las die Gebührenzeile „Einmalig pro
+ *  Aufenthalt". Zusammengesetzt aus den Schlüsseln, die die Auswahlfelder im
+ *  Editor schon nutzen (`chargeSingle`/`periodPerStay` …), damit keine zweite
+ *  Übersetzung derselben Sache entsteht. */
+export const FEE_BASIS_KEYS: Record<FeeBasis, readonly string[]> = {
+  per_stay: ["pricingForm.chargeSingle", "pricingForm.periodPerStay"],
+  per_night: ["pricingForm.chargeSingle", "pricingForm.periodPerNight"],
+  per_guest_stay: ["pricingForm.chargePerPerson", "pricingForm.periodPerStay"],
+  per_guest_night: ["pricingForm.chargePerPerson", "pricingForm.periodPerNight"],
+  per_pet_stay: ["pricingForm.chargePerPet", "pricingForm.periodPerStay"],
 };
 /** Die beiden Achsen der Berechnung, wie sie im Formular als zwei Felder stehen.
  *  `PerPet` gibt es nur mit `PerStay` und nur an der Haustiergebühr — der
@@ -145,7 +175,12 @@ export const TAXABLE_BASE_CATEGORIES = [
 
 export type Fee = {
   id: string;
+  /** Interner Name (Fallback, wenn keine gastseitige Übersetzung greift). */
   name: string;
+  /** Gastseitiger Name je Sprache — dieselbe Achse wie bei der lokalen Steuer.
+   *  Die Gebühr steht in der Preisaufschlüsselung des Gastes; ohne Übersetzung
+   *  liest ein dänischer Gast „Reinigungsgebühr". */
+  names?: Record<string, string>;
   amount: number;
   /** Pauschalbetrag (Standard) oder Prozentsatz auf den Zimmerpreis. */
   mode?: FeeMode;
@@ -177,9 +212,11 @@ export type Fee = {
 // Steuer (Taxes): USt./Sales tax ODER lokale Steuer.
 export type TaxKind = "vat" | "local";
 export type TaxMode = "percent" | "amount";
-export const TAX_KIND_LABELS: Record<TaxKind, string> = {
-  vat: "USt. / Mehrwertsteuer",
-  local: "Lokale Steuer",
+/** i18n-Schlüssel je Steuerart (statt deutscher Klartexte, siehe
+ *  `FEE_BASIS_KEYS`). Beide Schlüssel gibt es in allen 24 Sprachen. */
+export const TAX_KIND_KEYS: Record<TaxKind, string> = {
+  vat: "pricingForm.vatLabel",
+  local: "pricingForm.localTaxLabel",
 };
 
 // Steuerart einer lokalen Steuer. Diese Werte sind KEINE freie Wahl: sie gehen
@@ -265,6 +302,13 @@ export function taxDisplayName(tax: Tax, locale: string): string {
   return tax.names?.[locale]?.trim() || tax.name;
 }
 
+/** Dasselbe für eine Gebühr. Die Liste zeigt den Namen, den der GAST sieht —
+ *  sonst prüft der Betrieb die Übersetzung nie und merkt erst am Gast-Angebot,
+ *  dass dort noch der interne Arbeitstitel steht. */
+export function feeDisplayName(fee: Fee, locale: string): string {
+  return fee.names?.[locale]?.trim() || fee.name;
+}
+
 // Promotions liegen NICHT hier, sondern als eigene Zeilen in
 // `property_discounts` (lib/promotions.ts). Der frühere Blob-Eintrag trug ein
 // FREITEXT-Feld „conditions", das niemand auswertete: „20 % nur Juni" zog 20 %
@@ -272,14 +316,14 @@ export function taxDisplayName(tax: Tax, locale: string): string {
 // und die Oberfläche pflegt ihn nicht mehr — ein Feld, das nur noch aussieht
 // wie eine Preisregel, wäre schlimmer als keines.
 
-// Add-on (Add-ons): aktivierbares Extra (z. B. Frühstück).
-export type AddOn = {
-  id: string;
-  name: string;
-  amount: number;
-  basis: FeeBasis;
-  active: boolean;
-};
+// Extras (Zusatzleistungen) liegen NICHT hier, sondern als eigene Zeilen in
+// `property_addons` (lib/addons.ts, Migrationen 0074/0075). Der frühere
+// Blob-Eintrag `addOns` war eine Attrappe: NIEMAND hat ihn gelesen — nicht der
+// Preis-Resolver, nicht die Buchungsstrecke, nicht die Rechnung. Der Betrieb
+// pflegte Extras auf der Preise-Seite, und im Gast-Angebot tauchten sie nie auf.
+// Dasselbe Muster wie bei den Promotions davor, deshalb dieselbe Lösung: die
+// Seite pflegt jetzt den echten Katalog, und das Blob-Feld ist weg statt weiter
+// wie ein Preisbestandteil auszusehen.
 
 export type Pricing = {
   // Wurzel 4: "" = noch keine Währung gewählt (kein erfundenes EUR). Der
@@ -301,7 +345,6 @@ export type Pricing = {
   // Etappe 2
   fees: Fee[];
   taxes: Tax[];
-  addOns: AddOn[];
   businessTaxId: string; // Tax information (Airbnb)
   totRegistrationId: string;
   basePriceLabel: string; // „Label for base price" (Website)
@@ -320,7 +363,6 @@ export const DEFAULT_PRICING: Pricing = {
   lengthPrices: [],
   fees: [],
   taxes: [],
-  addOns: [],
   businessTaxId: "",
   totRegistrationId: "",
   basePriceLabel: "",
@@ -336,7 +378,6 @@ export function readPricing(typeAttributes: Record<string, unknown> | undefined)
     lengthPrices: Array.isArray(raw.lengthPrices) ? raw.lengthPrices : [],
     fees: Array.isArray(raw.fees) ? raw.fees : [],
     taxes: Array.isArray(raw.taxes) ? raw.taxes : [],
-    addOns: Array.isArray(raw.addOns) ? raw.addOns : [],
   };
 }
 

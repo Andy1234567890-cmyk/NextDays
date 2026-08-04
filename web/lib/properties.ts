@@ -205,6 +205,25 @@ export async function listFeeLibrary(
   return call(`/properties/${propertyId}/fee-library`);
 }
 
+/** Preise (inkl. Gebühren und Steuern) von einem anderen eigenen Objekt
+ *  übernehmen — Branchenstandard „Preise einer bestehenden Unterkunft kopieren".
+ *
+ *  Überschreibt den Preis-Block DIESES Objekts vollständig. Der Server lehnt
+ *  abweichende Währungen und nicht erfüllbare Kanal-Einschränkungen ab, BEVOR er
+ *  schreibt; Aktionen und Verfügbarkeit sind nicht dabei (siehe
+ *  properties/preise_kopieren.py). */
+export async function copyPricingFrom(
+  propertyId: string,
+  sourcePropertyId: string,
+): Promise<
+  Result<{ property_id: string; source_id: string; fees: number; taxes: number }>
+> {
+  return call(`/properties/${propertyId}/pricing/copy-from`, {
+    method: "POST",
+    body: { source_property_id: sourcePropertyId },
+  });
+}
+
 /** Dieselbe Gebühr auf weitere eigene Objekte übertragen. Der Server prüft jede
  *  Ziel-ID einzeln auf den eigenen Betrieb und lehnt Währungs-/Portal-Konflikte
  *  ab, BEVOR er das erste Ziel schreibt. */

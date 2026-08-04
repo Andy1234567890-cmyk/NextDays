@@ -825,6 +825,7 @@ class BookingsSyncMixin:
             # Wurzel 1). Best-effort — Storno-Pfad darf nie kippen (Wurzel 5).
             if existing:
                 self._cancel_commission_safe(tenant_id, existing[0]["id"])
+                self._cancel_dynpricing_safe(tenant_id, existing[0]["id"])
             # Auslastung/Orphan-Lücken haben sich geändert → Dynamic Pricing
             # neu rechnen (coalesced; ohne Trigger altern die Empfehlungen
             # bis zum nächsten Tages-Cron). Best-effort wie beim Direktkanal.
@@ -1069,6 +1070,12 @@ class BookingsSyncMixin:
             self._record_commission_safe(
                 db, tenant_id, reservation_id, channel, total_amount, row["currency"]
             )
+            # Dynamische Preise 0,5 %: gilt kanalunabhängig für JEDE Buchung des
+            # Objekts (anders als die Provision, die nur externe Kanäle trifft) —
+            # die Engine hat den Preis gesetzt, egal wo verkauft wurde.
+            self._record_dynpricing_safe(
+                db, tenant_id, reservation_id, total_amount, row["currency"]
+            )
         # Neue/geänderte OTA-Buchung ändert Auslastung + Orphan-Lücken →
         # Dynamic Pricing neu rechnen (coalesced je Objekt, best-effort) —
         # derselbe Trigger, den Direktbuchungen längst haben (reservations/
@@ -1102,6 +1109,47 @@ class BookingsSyncMixin:
         except Exception:  # noqa: BLE001 — best-effort, kein Kippen des Imports
             log.warning(
                 "commission_record_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+            )
+
+    def _record_dynpricing_safe(
+        self,
+        db: Client,
+        tenant_id: str,
+        reservation_id: str,
+        gross_amount: float,
+        currency: str | None,
+    ) -> None:
+        """0,5 %-Nutzung melden, ohne den Import-Pfad zu gefährden (Wurzel 5).
+        Ohne gebuchtes Modul passiert im Service nichts."""
+        try:
+            from src.features.subscriptions.service import SubscriptionsService
+
+            SubscriptionsService(service_client=db).record_dynpricing_usage(
+                tenant_id,
+                reservation_id=reservation_id,
+                gross_amount=gross_amount,
+                currency=currency or "",
+            )
+        except Exception:  # noqa: BLE001 — best-effort, kein Kippen des Imports
+            log.warning(
+                "dynpricing_record_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+            )
+
+    def _cancel_dynpricing_safe(self, tenant_id: str, reservation_id: str) -> None:
+        """Gemeldete 0,5 %-Nutzung bei Storno zurücknehmen (Gegenzustand)."""
+        try:
+            from src.features.subscriptions.service import SubscriptionsService
+
+            SubscriptionsService(service_client=self._db).cancel_dynpricing_usage(
+                tenant_id, reservation_id=reservation_id
+            )
+        except Exception:  # noqa: BLE001 — best-effort, kein Kippen des Stornos
+            log.warning(
+                "dynpricing_cancel_failed",
                 tenant_id=tenant_id,
                 reservation_id=reservation_id,
             )

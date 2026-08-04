@@ -19,6 +19,8 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.supabase import fetch_all_rows
+from src.features.subscriptions.entitlements import modul_aktiv
+from src.features.subscriptions.schemas import DYNPRICING_MODULE_KEY
 
 from .engine import DayResult, DaySignals, DpSettings, compute_day
 from .market import MarketDay, MarketSignalProvider, get_market_provider
@@ -99,6 +101,12 @@ class DynamicPricingRecompute:
 
         settings = self._load_settings(property_id)
         if not settings.enabled:
+            return 0
+        # Feature-Gate: „Dynamische Preise" ist ein kostenpflichtiges Modul
+        # (0,5 % vom Buchungsumsatz). Ohne gebuchtes Modul rechnet die Engine
+        # nicht — sonst bekäme der Betrieb die Leistung, ohne dass jemals eine
+        # Nutzung gemeldet (und abgerechnet) würde.
+        if not self._modul_gebucht(property_id):
             return 0
         base = self._load_base_price(property_id)
         if base is None:
@@ -492,6 +500,27 @@ class DynamicPricingRecompute:
             return float(res[0]["base_price"])
         except (TypeError, ValueError):
             return None
+
+    def _modul_gebucht(self, property_id: str) -> bool:
+        """Hat der Betrieb des Objekts das Modul „Dynamische Preise" gebucht?
+
+        Fail-CLOSED (Wurzel 5): ohne auflösbaren Tenant oder ohne aktive
+        Entitlement-Zeile wird NICHT gerechnet. Eine stillschweigend erbrachte
+        Leistung wäre nie abrechenbar — der Betrieb sieht stattdessen, dass das
+        Modul fehlt.
+        """
+        tenant_id = self._tenant_for_property(property_id)
+        if not tenant_id:
+            log.info("dynamic_pricing_skip_kein_tenant", property_id=property_id)
+            return False
+        if not modul_aktiv(self._db(), tenant_id, DYNPRICING_MODULE_KEY):
+            log.info(
+                "dynamic_pricing_skip_modul_nicht_gebucht",
+                property_id=property_id,
+                tenant_id=tenant_id,
+            )
+            return False
+        return True
 
     def _tenant_for_property(self, property_id: str) -> str | None:
         res = (

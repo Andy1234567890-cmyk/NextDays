@@ -1,10 +1,23 @@
 "use client";
 
 // Preis-Seite eines Objekts (Pricing, Etappe 1).
-//  Nightly price: Grundpreis (Währung, Dynamic, Wochentag), Mark-up je Kanal,
+//  Nightly price: Grundpreis (Währung, Dynamic, Wochentag), Aufschlag je Portal,
 //  Extra-Gast-Aufschlag, Kurzaufenthalts-Aufschlag.
 //  Length of stay: Wochen-/Monats-/eigene Längenpreise.
 // Gespeichert per updateProperty() in type_attributes.pricing.
+//
+// ZWEI Dinge liegen bewusst NICHT im Preis-Blob, weil sie echte Preisregeln mit
+// Bedingungen sind und dort nur wie welche AUSSAHEN:
+//   * Aktionen → `property_discounts` (lib/promotions.ts).
+//   * Extras   → `property_addons` (lib/addons.ts). Der frühere Blob `addOns`
+//     wurde von NIEMANDEM gelesen — nicht vom Resolver, nicht von der
+//     Buchungsstrecke, nicht von der Rechnung; der Betrieb pflegte Extras, die
+//     im Gast-Angebot nie erschienen (behoben 04.08.2026).
+//
+// Jeder Editor trägt oben die Zeile „Gilt für · Nicht unterstützt von"
+// (PortalReichweite) — gerechnet vom Server aus derselben Quelle, aus der der
+// Sync sendet. Ohne sie sieht eine Eingabe, die kein Portal je bekommt, genauso
+// verbindlich aus wie der Grundpreis.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
@@ -47,8 +60,14 @@ import {
 } from "@nextdays/ui/select";
 import { Switch } from "@nextdays/ui/switch";
 import { EinschraenkungenEditor } from "@/components/objekte/pricing/einschraenkungen-editor";
+import { ExtraEditor } from "@/components/objekte/pricing/extra-editor";
 import { GebuehrAuswahl } from "@/components/objekte/pricing/gebuehr-auswahl";
 import { GebuehrEditor } from "@/components/objekte/pricing/gebuehren-editor";
+import {
+  PortalReichweite,
+  PortalReichweiteChip,
+} from "@/components/objekte/pricing/portal-reichweite";
+import { PreiseUebernehmen } from "@/components/objekte/pricing/preise-uebernehmen";
 import { PromotionAuswahl } from "@/components/objekte/pricing/promotion-auswahl";
 import { PromotionEditor } from "@/components/objekte/pricing/promotion-editor";
 import { PromotionEinschraenkungen } from "@/components/objekte/pricing/promotion-einschraenkungen";
@@ -57,27 +76,34 @@ import {
   MwStEditor,
 } from "@/components/objekte/pricing/steuern-editoren";
 import {
-  type AddOn,
   type Currency,
   type Fee,
-  type FeeBasis,
   type LengthPrice,
   type Pricing,
   type StayKind,
   type Tax,
   type TaxKind,
   CURRENCY_OPTIONS,
-  FEE_BASIS_LABELS,
-  STAY_KIND_LABELS,
-  TAX_KIND_LABELS,
+  FEE_BASIS_KEYS,
+  STAY_KIND_KEYS,
+  TAX_KIND_KEYS,
   TAXABLE_BASE_PRICE,
   WEEKDAY_LABELS,
   currencySymbol,
+  feeDisplayName,
   fmtPrice,
+  lengthPerNight,
+  lengthTotal,
   readPricing,
   taxAmountBasis,
   taxDisplayName,
 } from "@/lib/pricing-meta";
+import {
+  deleteAddon,
+  listAddons,
+  updateAddon,
+  type Addon,
+} from "@/lib/addons";
 import { channelLabel, channelLogoLoose } from "@/lib/channel-logos";
 import {
   getAbgabenStatus,
@@ -87,7 +113,7 @@ import {
   type StoredChannelConnection,
 } from "@/lib/channex";
 import { getDpSettings } from "@/lib/dynamic-pricing";
-import { type Property, updateProperty } from "@/lib/properties";
+import { getProperty, type Property, updateProperty } from "@/lib/properties";
 import {
   deletePromotion,
   listPromotions,
@@ -107,6 +133,11 @@ type AbgabenStatus = {
   portals: string[];
   items: AbgabePostenStatus[];
 };
+
+/** Was die Kopfzeile „Gilt für · Nicht unterstützt von" in einem Editor braucht.
+ *  Als EIN Objekt durchgereicht, damit nicht jeder Editor zwei zusätzliche
+ *  Parameter trägt — und damit ein neuer Editor die Zeile nicht vergisst. */
+type Reichweite = { status: AbgabePostenStatus[] | null; portale: string[] };
 
 type Section =
   | "currency"
@@ -129,9 +160,13 @@ type Section =
   | "promoPick"
   | { tax: TaxKind; id?: string }
   | { promo: string | "new" }
-  | { addon: string | "new" }
+  // Extra = Zeile aus `property_addons` (echter Katalog), nicht mehr der tote
+  // Preis-Blob-Eintrag.
+  | { extra: string | "new" }
   | "taxInfo"
   | "baseLabel"
+  // Seitenmenü: Preise von einem anderen eigenen Objekt übernehmen.
+  | "copyPricing"
   | null;
 
 export function PricingForm({ initial }: { initial: Property }) {
@@ -227,14 +262,21 @@ export function PricingForm({ initial }: { initial: Property }) {
   // Verteilen sähe wie ein erfolgreiches aus (Wurzel 5 — nichts verschlucken).
   const [verteilFehler, setVerteilFehler] = useState<string | null>(null);
 
+  const reichweite: Reichweite = {
+    status: abgaben?.items ?? null,
+    portale: abgaben?.portals ?? [],
+  };
+
   /** Portale, bei denen dieser Posten von Hand gepflegt werden muss. */
   function manualPortals(key: string): string[] {
     return abgaben?.items.find((x) => x.key === key)?.manual_portals ?? [];
   }
 
-  /** Warum ein Posten dort von Hand gepflegt werden muss — nur bei Promotions
-   *  gesetzt (Gebühren/Steuern erklärt der Chip über das Portal selbst). Der
-   *  Grund kommt als SCHLÜSSEL vom Server und wird hier übersetzt. */
+  /** Warum ein Posten dort von Hand gepflegt werden muss — gesetzt bei Aktionen
+   *  UND bei Preisen nach Aufenthaltsdauer (Gebühren/Steuern erklärt der Chip
+   *  über das Portal selbst). Der Grund kommt als SCHLÜSSEL vom Server und wird
+   *  hier übersetzt; der Schlüsselraum heißt aus historischen Gründen
+   *  `promoReason`, die Texte sind aber allgemein gehalten. */
   function manualReason(key: string): string | undefined {
     const posten = abgaben?.items.find((x) => x.key === key);
     if (!posten) return undefined;
@@ -273,6 +315,49 @@ export function PricingForm({ initial }: { initial: Property }) {
   // Preis dieser Entscheidung, bewusst in Kauf genommen: die Änderung eines
   // ZWEITEN Nutzers erscheint erst beim nächsten Laden der Seite.
 
+  // Extras kommen aus dem ECHTEN Katalog (`property_addons`) — derselben Quelle,
+  // aus der der Preis-Resolver rechnet und die Buchungsstrecke verkauft. Der
+  // frühere Blob-Eintrag `pr.addOns` wurde von niemandem gelesen.
+  const [extras, setExtras] = useState<Addon[]>([]);
+  const loadExtras = useCallback(async () => {
+    const res = await listAddons(p.id);
+    if (res.ok) setExtras(res.data.items);
+  }, [p.id]);
+  useEffect(() => {
+    void loadExtras();
+  }, [loadExtras]);
+  useRealtime({
+    table: "property_addons",
+    filter: `property_id=eq.${p.id}`,
+    onChange: () => void loadExtras(),
+  });
+
+  /** Extra aktiv/inaktiv schalten — im Standard ein eigener Menüpunkt neben
+   *  Bearbeiten, weil „vorübergehend nicht anbieten" der häufigere Fall ist als
+   *  Löschen (das die Zeile samt Foto mitnimmt). */
+  async function extraUmschalten(extra: Addon) {
+    const res = await updateAddon(extra.id, { active: !extra.active });
+    if (!res.ok) {
+      setVerteilFehler(res.error);
+      return;
+    }
+    void loadExtras();
+  }
+
+  async function extraLoeschen(id: string) {
+    // Löschen nimmt Übersetzungen und Fotos mit — anders als „Deaktivieren" ist
+    // das nicht zurückzunehmen (Projekt-Muster: window.confirm).
+    if (!window.confirm(t("pricingForm.extraConfirmDelete"))) return;
+    const res = await deleteAddon(id);
+    if (!res.ok) {
+      // Nicht verschlucken: sonst bliebe die Zeile stehen und niemand wüsste,
+      // warum (Wurzel 5).
+      setVerteilFehler(res.error);
+      return;
+    }
+    void loadExtras();
+  }
+
   async function promoLoeschen(id: string) {
     const res = await deletePromotion(p.id, id);
     if (!res.ok) {
@@ -309,7 +394,31 @@ export function PricingForm({ initial }: { initial: Property }) {
 
   return (
     <PreisSpalte>
-      <PreisSeitenkopf title={t("pricingForm.pageTitle")} />
+      <PreisSeitenkopf
+        title={t("pricingForm.pageTitle")}
+        action={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <PreisSymbolAktion
+                icon="ph:dots-three"
+                label={t("pricingForm.actions")}
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="max-w-80">
+              <DropdownMenuItem onClick={() => setSection("copyPricing")}>
+                <div className="flex flex-col">
+                  <span className="font-medium">
+                    {t("pricingForm.copyPricingTitle")}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {t("pricingForm.copyPricingSubtitle")}
+                  </span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
 
       {/* Ein Posten wurde gespeichert, ließ sich aber nicht auf alle gewählten
           Objekte übertragen. Die Meldung steht HIER und nicht im Editor: der ist
@@ -358,7 +467,10 @@ export function PricingForm({ initial }: { initial: Property }) {
             hasValue
             onEdit={() => setSection("base")}
           >
-            <PreisChip>{fmtPrice(shownBasePrice, cur, locale)}</PreisChip>
+            <PreisChip>
+              {fmtPrice(shownBasePrice, cur, locale)}
+              <PortalReichweiteChip schluessel="base_price" {...reichweite} />
+            </PreisChip>
           </BlockCard>
         )}
 
@@ -398,7 +510,10 @@ export function PricingForm({ initial }: { initial: Property }) {
           onEdit={() => setSection("extraGuest")}
         >
           {pr.extraGuestCharge > 0 ? (
-            <PreisChip>{t("pricingForm.extraGuestPill", { price: fmtPrice(pr.extraGuestCharge, cur, locale), guest: pr.extraGuestFrom + 1 })}</PreisChip>
+            <PreisChip>
+              {t("pricingForm.extraGuestPill", { price: fmtPrice(pr.extraGuestCharge, cur, locale), guest: pr.extraGuestFrom + 1 })}
+              <PortalReichweiteChip schluessel="extra_guest" {...reichweite} />
+            </PreisChip>
           ) : null}
         </BlockCard>
 
@@ -416,10 +531,14 @@ export function PricingForm({ initial }: { initial: Property }) {
       </PreisAbschnitt>
 
       {/* Length of stay prices */}
+      {/* Preise nach Aufenthaltsdauer. KEIN „nur Direktbuchungen": ein Wochen-/
+          Monatspreis IST ein Längenrabatt und geht über Airbnbs eigene
+          Rabattregel (`STAYED_AT_LEAST_X_DAYS`) an das Portal. Wo das nicht
+          geht, sagt es der Chip „Manuelle Synchronisierung" an der ZEILE — mit
+          den Logos der betroffenen Portale, gerechnet vom Server. */}
       <PreisAbschnitt
         title={t("pricingForm.lengthPricesTitle")}
         hint={t("pricingForm.lengthPricesHint")}
-        badge={<PreisBadge>{t("pricingForm.directBookingsOnly")}</PreisBadge>}
         action={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -454,7 +573,7 @@ export function PricingForm({ initial }: { initial: Property }) {
           pr.lengthPrices.map((lp) => (
             <PreisKarte
               key={lp.id}
-              title={STAY_KIND_LABELS[lp.kind]}
+              title={t(STAY_KIND_KEYS[lp.kind])}
               hint={t("pricingForm.minNightsOrMore", { nights: lp.minNights })}
               action={
                 <div className="flex shrink-0 items-center">
@@ -470,9 +589,21 @@ export function PricingForm({ initial }: { initial: Property }) {
                 </div>
               }
             >
+              {/* Beide Zahlen, und zwar in dieser Reihenfolge: der Standard
+                  führt den GESAMTPREIS des Aufenthalts („kr 2835"), weil man so
+                  einkauft. Gespeichert und gerechnet wird der Nachtpreis — er
+                  steht daneben, damit niemand rätselt, was bei 9 Nächten
+                  passiert (dann gilt weiter der Nachtpreis). */}
+              <PreisChip>
+                {fmtPrice(lengthTotal(lp.pricePerNight, lp.minNights), cur, locale)}
+              </PreisChip>
               <PreisChip>
                 {t("pricingForm.pricePerNight", { price: fmtPrice(lp.pricePerNight, cur, locale) })}
               </PreisChip>
+              <ManuellerSyncChip
+                portale={manualPortals(lp.id)}
+                grund={manualReason(lp.id)}
+              />
             </PreisKarte>
           ))
         )}
@@ -488,7 +619,7 @@ export function PricingForm({ initial }: { initial: Property }) {
         render={(f) => (
           <ListRow
             key={f.id}
-            title={f.name}
+            title={feeDisplayName(f, locale)}
             pill={feeSummary(f, cur, locale, t)}
             badge={
               (f.portalScope ?? []).length > 0
@@ -551,7 +682,7 @@ export function PricingForm({ initial }: { initial: Property }) {
               title={
                 tx.kind === "vat"
                   ? t("pricingForm.vatLabel")
-                  : taxDisplayName(tx, locale) || TAX_KIND_LABELS[tx.kind]
+                  : taxDisplayName(tx, locale) || t(TAX_KIND_KEYS[tx.kind])
               }
               pill={taxSummary(tx, cur, locale, t)}
               badge={
@@ -593,23 +724,35 @@ export function PricingForm({ initial }: { initial: Property }) {
         )}
       />
 
-      {/* Add-ons */}
+      {/* Extras — Zeilen aus `property_addons` (echter Katalog), NICHT aus dem
+          Preis-Blob: der frühere Blob-Eintrag `addOns` wurde von niemandem
+          gelesen, also erschien kein einziges dort gepflegtes Extra im
+          Gast-Angebot. „nur Direktbuchungen" stimmt weiterhin — ein Portal hat
+          für ein dazubuchbares Extra kein Feld. */}
       <ListSection
-        title={t("pricingForm.addOnsTitle")}
-        hint={t("pricingForm.addOnsHint")}
+        title={t("pricingForm.extrasTitle")}
+        hint={t("pricingForm.extrasHint")}
         localOnly
-        onAdd={() => setSection({ addon: "new" })}
-        empty={t("pricingForm.addOnsEmpty")}
-        items={pr.addOns}
+        onAdd={() => setSection({ extra: "new" })}
+        empty={t("pricingForm.extrasEmpty")}
+        items={extras}
         render={(a) => (
           <ListRow
             key={a.id}
-            title={a.name}
-            badge={a.active ? t("pricingForm.activated") : undefined}
-            badgeTone="success"
-            pill={`${fmtPrice(a.amount, cur, locale)} · ${FEE_BASIS_LABELS[a.basis]}`}
-            onEdit={() => setSection({ addon: a.id })}
-            onDelete={() => save({ ...pr, addOns: pr.addOns.filter((x) => x.id !== a.id) })}
+            title={addonName(a, locale) || t("pricingForm.extraUnnamed")}
+            badge={
+              a.active ? t("pricingForm.activated") : t("pricingForm.extraInactiveBadge")
+            }
+            badgeTone={a.active ? "success" : "info"}
+            pill={extraSummary(a, cur, locale, t)}
+            onEdit={() => setSection({ extra: a.id })}
+            onToggle={() => void extraUmschalten(a)}
+            toggleLabel={
+              a.active
+                ? t("pricingForm.extraDeactivate")
+                : t("pricingForm.extraActivate")
+            }
+            onDelete={() => void extraLoeschen(a.id)}
           />
         )}
       />
@@ -642,6 +785,9 @@ export function PricingForm({ initial }: { initial: Property }) {
       )}
       {section === "base" && (
         <BaseEditor
+          reichweite={reichweite}
+          dpEnabled={dpEnabled}
+          propertyId={p.id}
           // Editor mit der Plan-Wahrheit vorbelegen (rate_plans), nicht mit der
           // type_attributes-Kopie — sonst editiert man einen veralteten Wert.
           pr={basePlan ? { ...pr, basePrice: basePlan.base_price, currency: (basePlan.currency || pr.currency) as Pricing["currency"] } : pr}
@@ -649,11 +795,26 @@ export function PricingForm({ initial }: { initial: Property }) {
           onClose={() => setSection(null)}
         />
       )}
-      {section === "extraGuest" && <ExtraGuestEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
-      {section === "shortStay" && <ShortStayEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
+      {section === "extraGuest" && (
+        <ExtraGuestEditor
+          pr={pr}
+          reichweite={reichweite}
+          onSave={save}
+          onClose={() => setSection(null)}
+        />
+      )}
+      {section === "shortStay" && (
+        <ShortStayEditor
+          pr={pr}
+          reichweite={reichweite}
+          onSave={save}
+          onClose={() => setSection(null)}
+        />
+      )}
       {section && typeof section === "object" && "length" in section && (
         <LengthEditor
           pr={pr}
+          reichweite={reichweite}
           kind={section.length}
           editId={section.id}
           onSave={save}
@@ -754,11 +915,46 @@ export function PricingForm({ initial }: { initial: Property }) {
           />
         ) : null;
       })()}
-      {section && typeof section === "object" && "addon" in section && (
-        <AddOnEditor pr={pr} editId={section.addon === "new" ? undefined : section.addon} onSave={save} onClose={() => setSection(null)} />
+      {section && typeof section === "object" && "extra" in section && (
+        <ExtraEditor
+          propertyId={p.id}
+          currency={cur}
+          vorhanden={
+            section.extra === "new"
+              ? undefined
+              : extras.find((x) => x.id === section.extra)
+          }
+          naechsteReihenfolge={extras.length}
+          status={reichweite.status}
+          portale={reichweite.portale}
+          onSaved={() => {
+            setSection(null);
+            void loadExtras();
+          }}
+          onClose={() => setSection(null)}
+        />
       )}
       {section === "taxInfo" && <TaxInfoEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
       {section === "baseLabel" && <BaseLabelEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
+      {section === "copyPricing" && (
+        <PreiseUebernehmen
+          propertyId={p.id}
+          onDone={() => {
+            setSection(null);
+            toast.success(t("pricingForm.copyPricingDone"));
+            // Der ganze Preis-Block ist neu — Objekt, Pläne und Sync-Stand neu
+            // laden. Ohne das zeigte die Seite die alten Gebühren weiter, und der
+            // Betrieb hielte die Übernahme für gescheitert.
+            void (async () => {
+              const res = await getProperty(p.id);
+              if (res.ok) setP(res.data);
+            })();
+            void loadPlans();
+            void loadAbgaben();
+          }}
+          onClose={() => setSection(null)}
+        />
+      )}
 
       {wizardOpen && (
         <RatePlanWizard
@@ -821,6 +1017,34 @@ function promoName(pm: Promotion, locale: string): string {
   return pm.name?.[locale]?.trim() || Object.values(pm.name ?? {})[0]?.trim() || "";
 }
 
+/** Dasselbe für ein Extra: `property_addons.name` ist mehrsprachig. */
+function addonName(a: Addon, locale: string): string {
+  return a.name?.[locale]?.trim() || Object.values(a.name ?? {})[0]?.trim() || "";
+}
+
+/** Zusammenfassung eines Extras für die Listenzeile: Betrag, Basis, und wo es
+ *  überhaupt kaufbar ist. Die Flächen gehören dazu — ein Extra ohne Fläche sieht
+ *  in der Liste sonst genauso fertig aus wie ein verkauftes. */
+function extraSummary(
+  a: Addon,
+  cur: Currency | "",
+  locale: string,
+  t: (key: string) => string,
+): string {
+  const teile = [
+    fmtPrice(a.price, cur, locale),
+    t(`pricingForm.extraBasis.${a.basis}`),
+  ];
+  if (a.tax_rate != null) teile.push(`${a.tax_rate} %`);
+  if (a.mandatory) teile.push(t("pricingForm.extraMandatoryShort"));
+  teile.push(
+    a.appears_in.length > 0
+      ? a.appears_in.map((s) => t(`pricingForm.extraSurface.${s}`)).join(", ")
+      : t("pricingForm.extraNoSurfaceShort"),
+  );
+  return teile.join(" · ");
+}
+
 // Zusammenfassung einer Promotion für die Listenzeile: der Rabatt plus der
 // Hinweis, dass Bedingungen daran hängen — genau die Form des Branchenstandards
 // („20% mit Bedingungen"). Welche Bedingungen es sind, steht im Editor; in der
@@ -866,7 +1090,11 @@ function feeSummary(
     teile.push(t("pricingForm.feeModePercentShort"));
   } else {
     teile.push(fmtPrice(f.amount, cur, locale));
-    teile.push(FEE_BASIS_LABELS[f.basis]);
+    // Zwei Achsen („Einmaliger Betrag · Pro Nacht") aus denselben Schlüsseln, die
+    // die Auswahlfelder im Editor tragen. Hier stand bis 04.08.2026 deutscher
+    // Klartext aus einer Konstanten — in einer dänischen Oberfläche las die Zeile
+    // „Einmalig pro Aufenthalt".
+    teile.push(...FEE_BASIS_KEYS[f.basis].map((key) => t(key)));
   }
   if (f.taxRate != null) {
     teile.push(t("pricingForm.taxRateSuffix", { rate: f.taxRate }));
@@ -933,6 +1161,8 @@ function ListRow({
   onEdit,
   onDelete,
   onRestrict,
+  onToggle,
+  toggleLabel,
 }: {
   title: string;
   pill: string;
@@ -953,14 +1183,22 @@ function ListRow({
    *  Dialog neben Bearbeiten und Entfernen — sie gehört nicht zum Posten
    *  selbst, sondern regelt, wohin er geht. */
   onRestrict?: () => void;
+  /** Gesetzt bei Extras: aktiv/inaktiv schalten. Eigener Menüpunkt wie im
+   *  Standard, weil „vorübergehend nicht anbieten" der häufigere Fall ist als
+   *  Löschen — das nimmt Übersetzungen und Fotos mit. */
+  onToggle?: () => void;
+  toggleLabel?: string;
 }) {
   const t = useTranslations("objects");
+  // Ein Menü, sobald es mehr als Bearbeiten und Entfernen gibt — sonst zwei
+  // Symbole direkt in der Zeile (Branchenstandard).
+  const menue = Boolean(onRestrict || onToggle);
   return (
     <PreisKarte
       title={title}
       badge={badge ? <PreisBadge tone={badgeTone}>{badge}</PreisBadge> : undefined}
       action={
-        onRestrict ? (
+        menue ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <PreisSymbolAktion
@@ -973,10 +1211,18 @@ function ListRow({
                 <Icon icon="ph:pencil-simple" className="size-4" />
                 {t("pricingForm.edit")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onRestrict}>
-                <Icon icon="ph:arrows-in-line-vertical" className="size-4" />
-                {t("pricingForm.restrictionsTitle")}
-              </DropdownMenuItem>
+              {onToggle && (
+                <DropdownMenuItem onClick={onToggle}>
+                  <Icon icon="ph:eye-slash" className="size-4" />
+                  {toggleLabel}
+                </DropdownMenuItem>
+              )}
+              {onRestrict && (
+                <DropdownMenuItem onClick={onRestrict}>
+                  <Icon icon="ph:arrows-in-line-vertical" className="size-4" />
+                  {t("pricingForm.restrictionsTitle")}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={onDelete}>
                 <Icon icon="ph:trash" className="size-4" />
                 {t("pricingForm.remove")}
@@ -992,22 +1238,48 @@ function ListRow({
       }
     >
       <PreisChip>{pill}</PreisChip>
-      {/* „Manuelle Synchronisierung" mit den Logos der betroffenen Portale —
-          genau so führt es der Branchenstandard direkt am Posten. Der Chip
-          erscheint NUR, wenn ein verbundenes Portal den Posten wirklich
-          nicht nimmt; ohne echtes Markenlogo bleibt es beim Namen. */}
-      {(manualPortals ?? []).length > 0 && (
-        <PreisChip>
-          {t("pricingForm.manualSyncLabel")}
-          {(manualPortals ?? []).map((code) => (
-            <PortalMarke key={code} code={code} name={channelLabel(code)} nurLogo />
-          ))}
-          {manualReason && (
-            <span className="text-muted-foreground">· {manualReason}</span>
-          )}
-        </PreisChip>
-      )}
+      <ManuellerSyncChip portale={manualPortals ?? []} grund={manualReason} />
     </PreisKarte>
+  );
+}
+
+/** „Manuelle Synchronisierung" mit den Logos der betroffenen Portale — genau so
+ *  führt es der Branchenstandard direkt am Posten. Der Chip erscheint NUR, wenn
+ *  ein verbundenes Portal den Posten wirklich nicht nimmt; ohne echtes
+ *  Markenlogo bleibt es beim Namen.
+ *
+ *  EIGENE Komponente, weil ihn zwei Listen tragen: Gebühren/Steuern/Aktionen
+ *  über `ListRow` und die Preise nach Aufenthaltsdauer über ihre eigene Karte.
+ *  Zwei Kopien wären zwei Wahrheiten über Bedingung und Wortlaut. */
+function ManuellerSyncChip({
+  portale,
+  grund,
+}: {
+  portale: string[];
+  /** Warum diese Portale den Posten nicht bekommen (Aktionen/Längenpreise).
+   *  Ohne den Grund liest sich der Chip als „geht dort nicht" ohne Hinweis
+   *  darauf, was daran zu ändern wäre. */
+  grund?: string;
+}) {
+  const t = useTranslations("objects");
+  if (portale.length === 0) return null;
+  return (
+    <PreisChip>
+      {t("pricingForm.manualSyncLabel")}
+      {/* Eigene Reihe mit 0.5rem Abstand: die echten Logos sind Wortmarken
+          unterschiedlicher Breite und klebten mit dem Chip-Abstand von 0.25rem
+          aneinander wie ein Wort. */}
+      <span className="inline-flex flex-wrap items-center gap-2">
+        {portale.map((code) => (
+          <PortalMarke key={code} code={code} name={channelLabel(code)} nurLogo />
+        ))}
+      </span>
+      {grund && (
+        <span className="border-l border-border pl-2 text-muted-foreground">
+          {grund}
+        </span>
+      )}
+    </PreisChip>
   );
 }
 
@@ -1057,15 +1329,23 @@ function MoneyInput({
   value,
   onChange,
   currency,
+  disabled,
 }: {
   value: number;
   onChange: (v: number) => void;
   // Wurzel 4: "" = noch keine Währung gewählt → Symbol bleibt leer, kein EUR.
   currency: Currency | "";
+  disabled?: boolean;
 }) {
   return (
     <div className="flex items-center gap-2">
-      <Input type="number" min={0} value={value} onChange={(e) => onChange(Number(e.target.value) || 0)} />
+      <Input
+        type="number"
+        min={0}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(Number(e.target.value) || 0)}
+      />
       <span className="text-sm text-muted-foreground">{currencySymbol(currency)}</span>
     </div>
   );
@@ -1121,10 +1401,19 @@ function CurrencyEditor({
 
 function BaseEditor({
   pr,
+  reichweite,
+  dpEnabled,
+  propertyId,
   onSave,
   onClose,
 }: {
   pr: Pricing;
+  reichweite: Reichweite;
+  /** Ist Dynamic Pricing für DIESES Objekt an? Der Standard schreibt den echten
+   *  Zustand in den Editor („Dynamic Pricing: AUS" + Einstellungen) — ein reiner
+   *  Werbehinweis lässt offen, ob die Tagespreise gerade automatisch entstehen. */
+  dpEnabled: boolean;
+  propertyId: string;
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
@@ -1138,6 +1427,8 @@ function BaseEditor({
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
+      <PortalReichweite schluessel="base_price" {...reichweite} />
+
       {/* Währung wird zentral am Objekt gepflegt (Sektion „Währung" oben) und
           gilt für alle Preispläne — hier nur read-only, kein zweites Select. */}
       <Field label={t("pricingForm.currencyLabel")}>
@@ -1148,21 +1439,45 @@ function BaseEditor({
         </div>
       </Field>
 
-      <div className="flex items-start gap-2 rounded-(--radius) bg-accent/10 p-3 text-sm">
-        <Icon icon="ph:lightning" className="mt-0.5 size-4 shrink-0 text-accent" />
-        <span>
-          {t.rich("pricingForm.dynamicPricingHint", {
-            link: (chunks) => (
-              <Link href="/dynamic-pricing" className="font-semibold text-accent underline">
-                {chunks}
-              </Link>
-            ),
-          })}
+      {/* Echter Zustand statt Werbetext, und der Link führt auf DIESES Objekt.
+          Vorher stand hier ein Satz über Dynamic Pricing im Allgemeinen mit einem
+          Link auf die Übersicht — wer wissen wollte, ob die 450 kr überhaupt noch
+          der verkaufte Preis sind, erfuhr es hier nicht. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-(--radius) bg-accent/10 p-3 text-sm">
+        <span className="flex items-center gap-2">
+          <Icon icon="ph:lightning" className="size-4 shrink-0 text-accent" />
+          <span className="font-medium">
+            {dpEnabled
+              ? t("pricingForm.dynamicStateOn")
+              : t("pricingForm.dynamicStateOff")}
+          </span>
+        </span>
+        <Link
+          href={`/dynamic-pricing/${propertyId}`}
+          className="font-semibold text-accent underline"
+        >
+          {t("pricingForm.dynamicSettings")}
+        </Link>
+        <span className="w-full text-xs text-muted-foreground">
+          {dpEnabled
+            ? t("pricingForm.dynamicStateOnHint")
+            : t("pricingForm.dynamicStateOffHint")}
         </span>
       </div>
 
-      <Field label={t("pricingForm.basePricePerNightLabel")}>
-        <MoneyInput value={v.basePrice} currency={v.currency} onChange={(n) => setV({ ...v, basePrice: n })} />
+      <Field
+        label={t("pricingForm.basePricePerNightLabel")}
+        // Mit Wochentagspreisen wird der eine Grundpreis nicht mehr verkauft: es
+        // gilt der Preis des jeweiligen Tages. Der Standard sperrt das Feld dann,
+        // statt zwei widersprüchliche Zahlen editierbar zu lassen.
+        hint={v.customByWeekday ? t("pricingForm.baseDisabledByWeekday") : undefined}
+      >
+        <MoneyInput
+          value={v.basePrice}
+          currency={v.currency}
+          disabled={v.customByWeekday}
+          onChange={(n) => setV({ ...v, basePrice: n })}
+        />
       </Field>
 
       <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
@@ -1215,10 +1530,18 @@ function PortalMarke({
         src={logo}
         alt={name}
         title={name}
-        className="h-4 w-auto max-w-20 rounded-sm object-contain"
+        className="h-4 w-auto max-w-16 shrink-0 self-center rounded-sm object-contain"
       />
     ) : (
-      <span className="text-xs font-medium">{name}</span>
+      // Ohne Logo trägt der Name dieselbe optische Masse wie ein Logo (gleiche
+      // Höhe, kleine Fläche) — als Fließtext zwischen zwei Bildern wirkte die
+      // Reihe gekippt.
+      <span
+        title={name}
+        className="inline-flex h-4 shrink-0 items-center rounded-sm bg-background px-1 text-[0.6875rem] font-medium leading-none text-foreground"
+      >
+        {name}
+      </span>
     );
   }
   return (
@@ -1395,10 +1718,12 @@ function PortalAdjustmentsEditor({
 
 function ExtraGuestEditor({
   pr,
+  reichweite,
   onSave,
   onClose,
 }: {
   pr: Pricing;
+  reichweite: Reichweite;
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
@@ -1412,6 +1737,8 @@ function ExtraGuestEditor({
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
+      <PortalReichweite schluessel="extra_guest" {...reichweite} />
+
       <Field label={t("pricingForm.extraGuestTitle")}>
         <MoneyInput value={v.extraGuestCharge} currency={v.currency} onChange={(n) => setV({ ...v, extraGuestCharge: n })} />
       </Field>
@@ -1433,10 +1760,12 @@ function ExtraGuestEditor({
 
 function ShortStayEditor({
   pr,
+  reichweite,
   onSave,
   onClose,
 }: {
   pr: Pricing;
+  reichweite: Reichweite;
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
@@ -1450,6 +1779,8 @@ function ShortStayEditor({
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
+      <PortalReichweite schluessel="short_stay" {...reichweite} />
+
       <Field label={t("pricingForm.shortStayMaxLabel")}>
         <div className="flex items-center gap-2">
           <Input
@@ -1470,23 +1801,50 @@ function ShortStayEditor({
 
 function LengthEditor({
   pr,
+  reichweite,
   kind,
   editId,
   onSave,
   onClose,
 }: {
   pr: Pricing;
+  reichweite: Reichweite;
   kind: StayKind;
   editId?: string;
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
   const t = useTranslations("objects");
+  const locale = useLocale();
   const existing = editId ? pr.lengthPrices.find((x) => x.id === editId) : undefined;
   const defaultMin = kind === "weekly" ? 7 : kind === "monthly" ? 30 : 14;
   const [minNights, setMinNights] = useState(existing?.minNights ?? defaultMin);
   const [price, setPrice] = useState(existing?.pricePerNight ?? 0);
+  // GESAMTPREIS ist das Eingabefeld des Standards („Wöchentlicher Gesamtpreis
+  // kr 2835"), weil man so einkauft und weil so auch die Portale ihre
+  // Wochenpreise führen. Gespeichert wird weiter der NACHTPREIS: nur er ist
+  // eindeutig, wenn die Regel „7 Nächte ODER MEHR" heißt, und nur ihn liest der
+  // Preis-Resolver. Beide Felder hängen aneinander — wer eines tippt, sieht das
+  // andere sofort, statt raten zu müssen, welche Zahl gilt.
+  const [gesamt, setGesamt] = useState<string>(
+    existing ? String(lengthTotal(existing.pricePerNight, existing.minNights)) : "",
+  );
   const { busy, error, run } = useSaver(onSave);
+
+  /** Gesamtpreis geändert → Nachtpreis nachziehen. */
+  function gesamtSetzen(text: string, naechte = minNights) {
+    setGesamt(text);
+    const zahl = Number(text.replace(",", "."));
+    setPrice(Number.isFinite(zahl) && zahl > 0 ? lengthPerNight(zahl, naechte) : 0);
+  }
+
+  /** Nächtezahl geändert → der Gesamtpreis bleibt, der Nachtpreis folgt. Der
+   *  Betrieb hat den Gesamtpreis eingegeben; ihn beim Ändern der Nächtezahl
+   *  umzurechnen wäre eine Preisänderung, die niemand angefordert hat. */
+  function naechteSetzen(naechte: number) {
+    setMinNights(naechte);
+    gesamtSetzen(gesamt, naechte);
+  }
 
   function commit() {
     const entry: LengthPrice = {
@@ -1503,76 +1861,52 @@ function LengthEditor({
 
   return (
     <EditorShell
-      title={STAY_KIND_LABELS[kind]}
+      title={t(STAY_KIND_KEYS[kind])}
       subtitle={t("pricingForm.lengthEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} disabled={price <= 0} />}
     >
+      <PortalReichweite schluessel="length_prices" {...reichweite} />
+
       <Field label={t("pricingForm.minNightsLabel")}>
         <Input
           type="number"
           min={1}
           value={minNights}
-          onChange={(e) => setMinNights(Number(e.target.value) || 1)}
+          onChange={(e) => naechteSetzen(Number(e.target.value) || 1)}
           disabled={kind !== "custom"}
         />
       </Field>
+      <Field
+        label={t("pricingForm.lengthTotalLabel")}
+        hint={t("pricingForm.lengthTotalHint", { nights: minNights })}
+        required
+      >
+        <div className="flex items-center gap-2">
+          <Input
+            inputMode="decimal"
+            value={gesamt}
+            placeholder="0"
+            onChange={(e) => gesamtSetzen(e.target.value)}
+          />
+          <span className="min-w-8 text-sm text-muted-foreground">
+            {currencySymbol(pr.currency)}
+          </span>
+        </div>
+      </Field>
+      {/* Der abgeleitete Nachtpreis, nicht editierbar: er ist der gespeicherte
+          Wert, aber die Eingabe ist der Gesamtpreis. Zwei tippbare Felder für
+          eine Zahl hießen „welches gewinnt?". */}
       <Field label={t("pricingForm.reducedPricePerNightLabel")}>
-        <MoneyInput value={price} currency={pr.currency} onChange={setPrice} />
+        <div className="rounded-(--radius) border border-input bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+          {price > 0 ? fmtPrice(price, pr.currency, locale) : "—"}
+        </div>
       </Field>
     </EditorShell>
   );
 }
 
 // --- Etappe-2-Editoren ------------------------------------------------------
-
-function AddOnEditor({
-  pr,
-  editId,
-  onSave,
-  onClose,
-}: {
-  pr: Pricing;
-  editId?: string;
-  onSave: (next: Pricing) => Promise<true | string>;
-  onClose: () => void;
-}) {
-  const t = useTranslations("objects");
-  const ex = editId ? pr.addOns.find((x) => x.id === editId) : undefined;
-  const [v, setV] = useState<AddOn>(
-    ex ?? { id: "", name: "", amount: 0, basis: "per_stay", active: true },
-  );
-  const { busy, error, run } = useSaver(onSave);
-
-  function commit() {
-    const entry: AddOn = { ...v, id: v.id || crypto.randomUUID() };
-    const list = ex ? pr.addOns.map((x) => (x.id === entry.id ? entry : x)) : [...pr.addOns, entry];
-    run({ ...pr, addOns: list });
-  }
-
-  return (
-    <EditorShell
-      title={ex ? t("pricingForm.addonEditTitle") : t("pricingForm.addonAddTitle")}
-      subtitle={t("pricingForm.addonEditorSubtitle")}
-      onClose={onClose}
-      footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} disabled={!v.name.trim()} />}
-    >
-      <Field label={t("pricingForm.nameLabel")}>
-        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={t("pricingForm.addonNamePlaceholder")} />
-      </Field>
-      <Field label={t("pricingForm.priceLabel")}>
-        <MoneyInput value={v.amount} currency={pr.currency} onChange={(n) => setV({ ...v, amount: n })} />
-      </Field>
-      <Field label={t("pricingForm.calculationLabel")}>
-        <BasisSelect value={v.basis} onChange={(b) => setV({ ...v, basis: b })} />
-      </Field>
-      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-        <span className="font-medium">{t("pricingForm.activated")}</span>
-        <Switch checked={v.active} onCheckedChange={(c) => setV({ ...v, active: c })} />
-      </label>
-    </EditorShell>
-  );
-}
 
 function TaxInfoEditor({
   pr,
@@ -1631,20 +1965,6 @@ function BaseLabelEditor({
         />
       </Field>
     </EditorShell>
-  );
-}
-
-// Berechnungsbasis-Auswahl (für Gebühren & Add-ons).
-function BasisSelect({ value, onChange }: { value: FeeBasis; onChange: (b: FeeBasis) => void }) {
-  return (
-    <Select value={value} onValueChange={(val) => onChange(val as FeeBasis)}>
-      <SelectTrigger><SelectValue /></SelectTrigger>
-      <SelectContent>
-        {Object.entries(FEE_BASIS_LABELS).map(([k, label]) => (
-          <SelectItem key={k} value={k}>{label}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   );
 }
 

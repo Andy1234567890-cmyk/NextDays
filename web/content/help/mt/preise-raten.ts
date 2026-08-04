@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Aġġornat: Lulju 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Il-prezzijiet dinamiċi huma modulu addizzjonali bi ħlas. Tordnah taħt “Estensjonijiet”, fejn tidher ukoll il-prezz. Mingħajr il-modulu, l-awtomazzjoni ma tikkalkulax.",
+            },
+            {
               type: "p",
               text: "Il-prezzijiet dinamiċi jaġġustaw il-prezz bażiku awtomatikament abbażi ta' fatturi bħaż-żmien ta' avviż tal-prenotazzjoni, l-okkupazzjoni kurrenti u d-domanda — b'mod simili għal kif il-portali l-kbar jagħmlu bir-rakkomandazzjonijiet ta' prezz tagħhom stess. B'hekk tirreaġixxi għal bidliet fis-suq mingħajr ma taġġusta manwalment kuljum.",
             },

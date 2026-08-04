@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Zaktualizowano: lipiec 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Ceny dynamiczne to płatny moduł dodatkowy. Zamawiasz go w sekcji „Rozszerzenia”, gdzie podana jest też cena. Bez modułu automatyka nie wylicza cen.",
+            },
+            {
               type: "p",
               text: "Ceny dynamiczne automatycznie dostosowują cenę bazową na podstawie czynników takich jak wyprzedzenie rezerwacji, aktualne obłożenie i popyt — podobnie jak robią to duże portale przy własnych rekomendacjach cenowych. Dzięki temu reagujesz na zmiany rynkowe bez ręcznego dostosowywania każdego dnia.",
             },

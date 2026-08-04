@@ -35,11 +35,97 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 from src.features.properties.gebuehren import fee_category
 
-from .airbnb_aktionen import regel_fuer_airbnb
+from .airbnb_aktionen import DISCOUNT_TYPE_LOS, regel_fuer_airbnb
 from .common import ChannelManagerError, log
 from .ota_abgaben import AIRBNB, NICHT_EXPORTIERBAR, Abgabe, abgaben_je_portal
 from .ota_aktionen import per_tagespreis_uebertragbar
 from .tax_regime import STANDARD
+
+# --- Preis-Blöcke, die keine Gebühr und keine Steuer sind -------------------
+#
+# Der Branchenstandard schreibt in JEDEN Editor der Preise-Seite eine Kopfzeile
+# „Gilt für <Portal-Logos> · Nicht unterstützt von <Portal-Logos>" (live
+# abgelesen 04.08.2026, Lodgify `/pricing/<id>`: im Kurzaufenthalts-Editor stand
+# „Gilt für [Lodgify][Airbnb] | Nicht unterstützt von [Booking.com]"). Ohne sie
+# sieht jede Eingabe gleich verbindlich aus — auch die, die kein Portal je sieht.
+#
+# Ob ein Block bei den Portalen ankommt, ist KEINE Einschätzung: es steht in
+# unserem eigenen Sync-Code. Hier die Belegstelle je Block, damit der Chip nicht
+# zur zweiten Wahrheit wird (dieselbe Regel wie bei Gebühren/Steuern oben):
+#
+#   base_price   → `ari_push`: der Tagespreis geht an jeden verbundenen Kanal.
+#   extra_guest  → `content_sync._rate_plan_options`: ein Aufschlag > 0 macht den
+#                  Rate-Plan `per_person` mit einer Option je Belegung.
+#   short_stay   → NICHTS sendet ihn. Der Aufschlag hängt an der Aufenthalts-
+#                  LÄNGE; ein Tagespreis kennt sie nicht, und Channex hat für
+#                  „nur bei kurzen Aufenthalten" keine `logic`.
+#   addons       → `property_addons.appears_in` kennt genau drei Flächen
+#                  (booking_engine/guest_portal/checkin) — alle drei sind unsere
+#                  eigenen, kein Portal.
+#
+# LÄNGENPREISE stehen NICHT in dieser Tabelle: sie gehen sehr wohl an die Portale
+# (Airbnbs `STAYED_AT_LEAST_X_DAYS`, airbnb_aktionen.py) und werden deshalb wie
+# eine Aktion behandelt — mit echter Rechnung je Zeile, weil der abgeleitete
+# Prozentsatz vom Grundpreis abhängt und beim Abrunden auf 0 landen kann.
+BLOECKE_AN_PORTALE = ("base_price", "extra_guest")
+BLOECKE_NUR_EIGENE = ("short_stay", "addons")
+
+
+def _block(schluessel: str, *, kind: str, intern: bool) -> dict[str, Any]:
+    """Ein Preis-Block in derselben Form wie ein Gebühren-/Steuer-Posten.
+
+    Bewusst dieselbe Form: die Oberfläche hat für die drei Zustände schon eine
+    Darstellung, und ein zweiter Antwort-Typ für dieselbe Frage („wohin geht
+    das?") wäre eine Abzweigung, die auseinanderläuft.
+    """
+    return {
+        "key": schluessel,
+        "kind": kind,
+        # Ein Block wird nie „von Hand im Extranet gepflegt": entweder trägt ihn
+        # der Sync (dann ist nichts zu tun) oder er ist für die eigenen Kanäle
+        # gedacht (dann ist `internal_only` die richtige Aussage). Ein
+        # `manual_portals`-Chip würde hier zu „trag es bei Booking.com nach",
+        # wo es bei Booking.com kein Feld dafür gibt.
+        "manual_portals": [],
+        "restricted_portals": [],
+        "internal_only": intern,
+    }
+
+
+def laengenpreis_mechanik(portale: list[str]) -> dict[str, Any]:
+    """Was der WEG für Längenpreise kann, unabhängig von einer konkreten Zeile.
+
+    Gebraucht für die Kopfzeile im Editor: dort steht die Zeile noch nicht (ein
+    neuer Wochenpreis hat keine Kennung), die Frage „wohin geht das?" ist aber
+    genau dann interessant. Die Antwort ist keine Schätzung, sondern der Weg
+    selbst: Airbnb hat für einen Längenrabatt eine Regel
+    (`STAYED_AT_LEAST_X_DAYS`), jedes andere Portal nicht — dort muss der
+    Wochenpreis im Extranet gepflegt werden. Ob es bei DIESER Zeile auch bei
+    Airbnb klappt, sagt ihr eigener Posten (`_aktionen_status`): der abgeleitete
+    Prozentsatz kann beim Abrunden auf 0 landen.
+    """
+    return {
+        "key": "length_prices",
+        "kind": "block",
+        "manual_portals": sorted(p for p in portale if p != AIRBNB),
+        "restricted_portals": [],
+        "internal_only": False,
+    }
+
+
+def preisblock_status() -> list[dict[str, Any]]:
+    """Reichweite der Preis-Blöcke eines Objekts (Grundpreis, Aufschläge …).
+
+    Rein aus der Sync-FÄHIGKEIT abgeleitet und deshalb ohne Argumente: anders
+    als bei Gebühren und Steuern entscheidet hier keine Portal-Matrix und kein
+    Feld des Postens mit, weil kein Portal für diese Blöcke ein eigenes Feld hat.
+    Ein Schlüssel je BLOCK, nicht je Zeile — alle Längenpreise eines Objekts
+    haben dieselbe Reichweite, und ein neuer (noch nicht gespeicherter) hätte
+    sonst gar keine.
+    """
+    return [
+        _block(key, kind="block", intern=False) for key in BLOECKE_AN_PORTALE
+    ] + [_block(key, kind="block", intern=True) for key in BLOECKE_NUR_EIGENE]
 
 
 def _exportiert(posten: list[Abgabe], *, schluessel: str, kategorie: str | None) -> bool:
@@ -97,7 +183,7 @@ class AbgabenStatusMixin:
                 self._posten_status(eintrag, kind, portale=[], nicht_gesendet={})
                 for kind, liste in (("fee", fees), ("tax", taxes))
                 for eintrag in liste
-            ]
+            ] + preisblock_status() + [laengenpreis_mechanik([])]
             return antwort
 
         regime = self.regime_je_portal(db, tenant_id, property_id)  # type: ignore[attr-defined]
@@ -138,12 +224,13 @@ class AbgabenStatusMixin:
             for kind, liste in (("fee", fees), ("tax", taxes))
             for eintrag in liste
         ] + self._aktionen_status(db, tenant_id, property_id, portale)
+        antwort["items"] += preisblock_status() + [laengenpreis_mechanik(portale)]
         return antwort
 
     def _aktionen_status(
         self, db: Client, tenant_id: str, property_id: str, portale: list[str]
     ) -> list[dict[str, Any]]:
-        """Aktionen (property_discounts): welche Portale bekommen sie nicht?
+        """Aktionen UND Längenpreise: welche Portale bekommen sie nicht?
 
         Es gibt zwei Wege zu den Portalen, und der Chip muss beide kennen:
 
@@ -156,6 +243,12 @@ class AbgabenStatusMixin:
         Was keiner der beiden Wege tragen kann (Angebotscode, Buchungszeitraum,
         Pauschale, zwei Bedingungen in einer Aktion), muss im Extranet des
         Portals gepflegt werden — das ist der Chip.
+
+        LÄNGENPREISE laufen hier mit, weil sie derselbe Fall sind: ein Wochenpreis
+        IST ein Längenrabatt und geht als `STAYED_AT_LEAST_X_DAYS` an Airbnb. Sie
+        werden dafür in dieselbe Form gebracht (`laengenpreise_des_objekts`) —
+        dieselbe Rechnung wie im Push, damit der Chip nicht „geht raus" behauptet,
+        wo der Push den Prozentsatz auf 0 abrundet und nichts sendet.
         """
         try:
             rows = (
@@ -182,6 +275,17 @@ class AbgabenStatusMixin:
                 property_id=property_id, error=str(exc)[:200],
             )
             return []
+        # Längenpreise als Aktions-Zeilen anhängen. Schlägt das Laden fehl, bleibt
+        # es bei den Aktionen — ein fehlender Chip ist besser als ein falscher.
+        try:
+            rows = rows + self.laengenpreise_des_objekts(  # type: ignore[attr-defined]
+                db, tenant_id, property_id
+            )
+        except Exception as exc:  # noqa: BLE001 — siehe oben
+            log.warning(
+                "laengenpreise_status_nicht_ladbar",
+                property_id=property_id, error=str(exc)[:200],
+            )
         out: list[dict[str, Any]] = []
         for regel in rows:
             scope = {str(x) for x in (regel.get("portal_scope") or [])}
@@ -211,7 +315,14 @@ class AbgabenStatusMixin:
             out.append(
                 {
                     "key": str(regel.get("id") or ""),
-                    "kind": "promotion",
+                    # Die Oberfläche unterscheidet die beiden Listen — ein
+                    # Längenpreis ist keine Aktion, auch wenn er denselben Weg
+                    # zum Portal nimmt.
+                    "kind": (
+                        "length_price"
+                        if str(regel.get("discount_type") or "") == DISCOUNT_TYPE_LOS
+                        else "promotion"
+                    ),
                     "manual_portals": manual,
                     "restricted_portals": restricted,
                     # Eine INAKTIVE Aktion geht nirgends hin — das ist Absicht und

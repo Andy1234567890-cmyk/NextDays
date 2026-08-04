@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Atjaunināts: 2026. gada jūlijs",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Dinamiskās cenas ir maksas papildmodulis. To pasūtāt sadaļā “Paplašinājumi”, kur norādīta arī cena. Bez moduļa automātika neaprēķina cenas.",
+            },
+            {
               type: "p",
               text: "Dinamiskās cenas automātiski pielāgo bāzes cenu, ņemot vērā tādus faktorus kā rezervēšanas apsteidzošais laiks, pašreizējais noslogojums un pieprasījums — līdzīgi kā to dara lielie portāli savos cenu ieteikumos. Tā jūs reaģējat uz tirgus izmaiņām, katru dienu manuāli nepielāgojot.",
             },

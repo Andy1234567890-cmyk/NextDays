@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Frissítve: 2026. július",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "A dinamikus árazás fizetős kiegészítő modul. A „Kiegészítők” menüpontban rendelheti meg, ott látja az árat is. A modul nélkül az automatika nem számol.",
+            },
+            {
               type: "p",
               text: "A dinamikus árak automatikusan igazítják az alapárat olyan tényezők alapján, mint a foglalási előrelátási idő, az aktuális kihasználtság és a kereslet — hasonlóan ahhoz, ahogyan a nagy portálok teszik saját ár-ajánlásaikban. Így reagálhat a piaci változásokra anélkül, hogy minden napot kézzel kellene utánaigazítania.",
             },

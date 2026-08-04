@@ -260,6 +260,59 @@ class ReservationsBase:
             return
         try_enqueue_recompute(self._client, tenant_id, property_id)
 
+    def _record_dynpricing_usage(
+        self,
+        tenant_id: str,
+        reservation_id: str,
+        gross_amount: float | None,
+        currency: str | None,
+    ) -> None:
+        """Modul „Dynamische Preise" (0,5 %): Gebühr im `dynpricing_ledger`
+        erfassen — mit der Währung DIESER Buchung, nicht der des Abos
+        (24 Länder, Wurzel 4). Idempotent über die reservation_id (Wurzel 2,
+        UNIQUE-Backstop in 0277). Ohne gebuchtes Modul tut der Service nichts.
+        Best-effort: eine fehlgeschlagene Erfassung darf die vollzogene Buchung
+        NICHT zurückdrehen (Wurzel 5) — sie wird geloggt."""
+        if self._client is None or not gross_amount or gross_amount <= 0:
+            return
+        try:
+            from src.features.subscriptions.service import (  # noqa: PLC0415
+                SubscriptionsService,
+            )
+
+            SubscriptionsService(service_client=self._client).record_dynpricing_usage(
+                tenant_id,
+                reservation_id=reservation_id,
+                gross_amount=float(gross_amount),
+                currency=currency or "",
+            )
+        except Exception:  # noqa: BLE001 — best-effort, Buchung bleibt bestehen
+            log.warning(
+                "dynpricing_record_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+            )
+
+    def _cancel_dynpricing_usage(self, tenant_id: str, reservation_id: str) -> None:
+        """Storno → offene 0,5 %-Zeile entfernen (Gegenzustand, Wurzel 1).
+        Bereits fakturierte Zeilen bleiben. Best-effort wie die Erfassung."""
+        if self._client is None:
+            return
+        try:
+            from src.features.subscriptions.service import (  # noqa: PLC0415
+                SubscriptionsService,
+            )
+
+            SubscriptionsService(service_client=self._client).cancel_dynpricing_usage(
+                tenant_id, reservation_id=reservation_id
+            )
+        except Exception:  # noqa: BLE001 — best-effort, Storno bleibt bestehen
+            log.warning(
+                "dynpricing_cancel_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+            )
+
     def _sync_task_rules(self, tenant_id: str, reservation_id: str) -> None:
         """Planmäßige Aufgaben-Regeln auf den neuen Buchungsstand bringen (0272).
 

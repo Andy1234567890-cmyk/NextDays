@@ -33,7 +33,8 @@ export type ModuleKey =
   | "modul3_buchhaltung"
   | "modul4_mitarbeiter"
   | "modul5_jobmarkt"
-  | "modul6_hotel";
+  | "modul6_hotel"
+  | "dynamische_preise";
 
 export type ModuleEntitlement = {
   module_key: string;
@@ -66,6 +67,9 @@ export type ModulePrice = {
   // Stripe-Preise können gestaffelt sein (tiers_mode). Aktuell hat kein Modul
   // eine Staffel — das Feld bildet die Stripe-Antwort vollständig ab.
   tiers: PriceTier[] | null;
+  // Nutzungsabhängige Module (Dynamische Preise): Prozentsatz vom
+  // Buchungsumsatz statt Monatsbetrag. Dann ist unit_amount 0.
+  usage_percent: number | null;
 };
 
 export type Pricing = {

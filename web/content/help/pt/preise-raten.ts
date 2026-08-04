@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Atualizado: julho de 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Os preços dinâmicos são um módulo adicional pago. Contrata-o em «Extensões», onde também consta o preço. Sem o módulo, a automatização não calcula nada.",
+            },
+            {
               type: "p",
               text: "Os preços dinâmicos ajustam automaticamente o preço base com base em fatores como a antecedência da reserva, a ocupação atual e a procura — de forma semelhante ao que os grandes portais fazem nas suas próprias recomendações de preço. Assim, reage a alterações do mercado sem ter de ajustar manualmente todos os dias.",
             },

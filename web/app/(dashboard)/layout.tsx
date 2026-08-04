@@ -6,9 +6,11 @@
 import { redirect } from "next/navigation";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { DashboardVoiceAssistant } from "@/components/dashboard/voice-assistant";
+// Der Sprach-Assistent ist abgeschaltet (siehe unten) — Import bewusst nicht
+// vorhanden, damit kein toter Code im Bundle landet.
 import { RealtimeDebugPanel } from "@/components/realtime-debug-panel";
 import { Topbar } from "@/components/topbar";
+import { SupportChatButton } from "@/components/support/support-chat-button";
 import { SupportChatProvider } from "@/components/support/support-chat";
 import { SidebarInset, SidebarProvider } from "@nextdays/ui/sidebar";
 import { getMe } from "@/lib/auth";
@@ -65,9 +67,16 @@ export default async function DashboardLayout({
             {children}
           </main>
         </SidebarInset>
-        {/* Andy lebt im Layout → bleibt beim Navigieren auf jeder Seite bestehen
-          und laedt seine Daten selbst. */}
-        <DashboardVoiceAssistant userLabel={email || null} />
+        {/* Support-Chat-Knopf: der schwebende Weg zum Team, bleibt beim
+          Navigieren bestehen.
+
+          An dieser Stelle schwebte vorher der Sprach-Assistent „Andy"
+          (`DashboardVoiceAssistant`). Er ist ABGESCHALTET, nicht entfernt: die
+          Sprachsteuerung ist noch nicht fertig, und ein Knopf zu einer
+          halbfertigen Funktion kostet Vertrauen. Zum Wiedereinschalten den
+          Import und die Zeile
+          `<DashboardVoiceAssistant userLabel={email || null} />` zurückholen. */}
+        <SupportChatButton />
         {/* Realtime-Overlay: zeigt je Seite, ob die Abos wirklich verbinden und
           Events ankommen. Beide Bedingungen sind Build-Zeit-Konstanten, in
           Produktion faellt die Komponente also aus dem Bundle — sie zeigt

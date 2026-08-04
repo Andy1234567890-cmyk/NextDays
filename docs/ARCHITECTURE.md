@@ -623,12 +623,32 @@ Preise erschienen nicht im Kalender/Quote. Jetzt gibt es **einen** Resolver
   an Booking" erscheint in einer Direktbuchung nicht. Die eigenen
   Buchungsstrecken zählen als Kanäle mit (`direct`, `portal`).
 
+**Reichweite je Preis-Block (Editor-Kopfzeile).** Jeder Editor der Preise-Seite
+trägt oben „Gilt für <Kanäle> · Nicht unterstützt von <Portale>" — gerechnet vom
+Server (`channel_manager/abgaben_status.preisblock_status`) aus derselben Quelle,
+aus der der Sync sendet. `base_price` und `extra_guest` gehen an jeden verbundenen
+Kanal (ARI-Push bzw. `per_person`-Rate-Plan aus `content_sync._rate_plan_options`);
+`short_stay` und `addons` sind bewusst nur für die eigenen Buchungsstrecken — ein
+Kurzaufenthalts-Aufschlag hängt an der Aufenthaltslänge, ein Extra wird
+dazugebucht, und dafür hat kein Portal ein Feld. Die **Preise nach
+Aufenthaltsdauer** gehen dagegen sehr wohl raus: als Airbnb-Rabattregel
+`STAYED_AT_LEAST_X_DAYS` (Prozentsatz aus dem Grundpreis abgeleitet, abwärts
+gerundet); die übrigen Portale tragen „Manuelle Synchronisierung". Eine Regeltabelle in der Oberfläche wäre die
+zweite Wahrheit, die genau dann auseinanderläuft, wenn es darauf ankommt.
+
+**Preise von einem anderen Objekt übernehmen** (`POST /properties/{id}/pricing/
+copy-from`, `preise_kopieren.py`): überschreibt den Preis-Block dieses Objekts
+vollständig und spiegelt den Grundpreis in `rate_plans`. Währung und
+Kanal-Einschränkungen werden VOR dem ersten Schreiben geprüft (abweichende
+Währung → 422, nie umgerechnet). Aktionen, Extras und Verfügbarkeit bleiben außen
+vor — sie tragen objekt-eigene Codes, Fotos und Kalender.
+
 Jede Oberfläche liest Preise **ausschließlich** über den Resolver: der Kalender
 (`calendar/get_availability`) zeigt denselben Effektivpreis wie die Buchungs-Quote;
 `reservations.create` füllt `total_amount` + `quote_items` automatisch aus dem Quote
 (manueller Betrag > 0 überschreibt); der Reservierungs-Wizard zeigt die Quote-
 Aufschlüsselung live. Die zuvor opake Pricing-Konfiguration (Markups, Aufschläge,
-Gebühren, Steuern, Aktionen, Add-ons) wurde aus `properties.type_attributes.pricing`
+Gebühren, Steuern) wurde aus `properties.type_attributes.pricing`
 in die typisierte, vom Resolver gelesene Tabelle **`property_pricing_config`** (`0051`,
 Backfill aus dem Blob) überführt; `properties.update` spiegelt jede Änderung dorthin.
 `rate_plans` + `property_pricing_config` sind jetzt in der Realtime-Publication (`0052`)
@@ -706,6 +726,22 @@ AirDNA-Konto läuft alles über den NullProvider — DP wie Phase 1, nur mit Mar
   erreicht die Engine das Funktionsniveau von PriceLabs/Beyond/RateBoard mit eigenen
   Daten; die Booking-Market-Insights-Quelle dockt später über dieselbe
   `MarketSignalProvider`-Schnittstelle an.
+  **Kostenpflichtiges Modul + Erweiterungs-Fläche (`dynpricing_ledger`, `0277`):**
+  „Dynamische Preise" ist ein einzeln buchbares Zusatzmodul (0,5 % vom
+  Buchungsumsatz, nachgelagert über den Ledger fakturiert — nie über einen
+  währungslosen Stripe-Meter). Gebucht wird auf der eigenen Fläche
+  **`/erweiterungen`** (Kachel-Raster) → **`/erweiterungen/[slug]`** (Beschreibung,
+  Preis aus Stripe, „Aktivieren"/„Kündigen" über `POST|DELETE
+  /subscriptions/modules`); Katalog-Texte in `web/lib/erweiterungen.ts`, bewusst
+  NICHT in der Abrechnung (`/konto/tarif`), die Tarif und Rechnungen zeigt.
+  **Drei Gates, eine Quelle** (`subscriptions/entitlements.py::modul_aktiv`,
+  fail-closed): (1) `recompute` rechnet ohne Entitlement nicht, (2)
+  `settings_service.update` lehnt `enabled=true` mit **402** ab (ein Toggle, der
+  nichts bewirkt, wäre eine Attrappe), (3) `GET /pricing/overview` liefert
+  `module_active` — ohne Buchung zeigt `/dynamic-pricing` die Verkaufsseite
+  (`components/erweiterungen/modul-verkaufsseite.tsx`) statt der Objekt-Tabelle.
+  Buchen setzt ein laufendes Abo voraus (sonst 422): ohne Stripe-Kunden wäre die
+  erfasste Nutzung nie abrechenbar.
 
 **Kanalübergreifende Nachricht→Gast-Zuordnung (Resolver, Migration 0047):** Jede
 eingehende Buchung/Nachricht — OTA via Channex, WhatsApp, manuelle Reservierung,

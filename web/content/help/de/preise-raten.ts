@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Stand: Juli 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Dynamische Preise sind ein kostenpflichtiges Zusatzmodul. Sie buchen es unter „Erweiterungen“ dazu — dort steht auch der Preis. Ohne gebuchtes Modul rechnet die Automatik nicht.",
+            },
+            {
               type: "p",
               text: "Dynamische Preise passen den Basispreis automatisch anhand von Faktoren wie Buchungsvorlauf, aktueller Auslastung und Nachfrage an — ähnlich wie es große Portale bei ihren eigenen Preisempfehlungen tun. So reagieren Sie auf Marktveränderungen, ohne jeden Tag manuell nachzujustieren.",
             },

@@ -13,7 +13,6 @@ tenant-gescopet (Wurzel 3). Stripe-Fehler werden spezifisch übersetzt (Wurzel 5
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from typing import Any
 
@@ -29,8 +28,13 @@ from src.core.supabase import fetch_all_rows
 # Reverse-Charge in den Eigentümer-Abrechnungen (Wurzel 4: eine Quelle).
 from src.features.owner_statements.tax import EU_COUNTRIES as _EU_LAENDER
 
+from .dynpricing import DynPricingBillingMixin
+from .errors import SubscriptionsError, field
 from .schemas import (
+    DYNPRICING_MODULE_KEY,
+    DYNPRICING_RATE,
     GRUNDTARIF_LOOKUP_KEY,
+    MODULE_KEYS,
     MODULE_PRICE_LOOKUP,
     BillingAddress,
     CommissionMonth,
@@ -71,26 +75,13 @@ _MODULE_PRICE_VARIANTS: dict[str, tuple[str, str | None]] = {
 }
 
 
-def _f(obj: Any, key: str, default: Any = None) -> Any:  # noqa: ANN401
-    """Feldzugriff robust für Stripe-``StripeObject`` (KEIN ``.get()``) UND Dict.
-    StripeObject erlaubt Item-Zugriff, wirft aber bei fehlendem Key — daher
-    try/except auf den Default (analog payments/webhook._field)."""
-    if isinstance(obj, Mapping):
-        return obj.get(key, default)
-    try:
-        return obj[key]
-    except (KeyError, AttributeError, TypeError):
-        return default
+# `_f` und `SubscriptionsError` leben in errors.py, damit die ausgelagerten
+# Abrechnungs-Mixins sie ohne Zirkelbezug importieren können. Hier nur als
+# eingeführte Namen weitergereicht (Router und Tests importieren sie von hier).
+_f = field
 
 
-class SubscriptionsError(Exception):
-    def __init__(self, message: str, *, status_code: int = 400) -> None:
-        super().__init__(message)
-        self.message = message
-        self.status_code = status_code
-
-
-class SubscriptionsService:
+class SubscriptionsService(DynPricingBillingMixin):
     slice_name = "subscriptions"
 
     def __init__(
@@ -585,11 +576,41 @@ class SubscriptionsService:
         Modul schon, wird die vorhandene Position wiederverwendet und nur der
         lokale Zustand bestätigt, statt eine zweite Position anzulegen.
         """
-        if module_key not in MODULE_PRICE_LOOKUP:
+        if module_key not in MODULE_KEYS:
             raise SubscriptionsError(
                 f"Unbekanntes/nicht buchbares Modul: {module_key}", status_code=400
             )
         db, tenant_id = self._require(ctx)
+        # Nutzungsabhängige Module (Dynamische Preise 0,5 %) haben KEINE
+        # Abo-Position — sie werden nachgelagert über den Ledger fakturiert.
+        # Buchen heißt hier: Entitlement setzen, sonst nichts.
+        if module_key not in MODULE_PRICE_LOOKUP:
+            # Ein laufendes Abo ist trotzdem Pflicht: der Monatslauf stellt das
+            # Invoice-Item am Stripe-Kunden des Abos (`bill_pending_dynpricing`
+            # → 409 ohne Kunde). Ohne Abo wäre das Modul freigeschaltet, aber
+            # die Nutzung nie abrechenbar — genau die stillschweigend erbrachte
+            # Leistung, die das Feature-Gate verhindern soll (Wurzel 5).
+            row = self._load_row(db, tenant_id)
+            if not row or not row.get("stripe_customer_id") or row.get(
+                "status"
+            ) not in ("active", "trialing", "past_due"):
+                raise SubscriptionsError(
+                    "Zusatzmodule setzen ein laufendes Abo voraus. Bitte zuerst "
+                    "das Abo abschließen.",
+                    status_code=422,
+                )
+            db.table("tenant_module_entitlement").upsert(
+                {
+                    "tenant_id": tenant_id,
+                    "module_key": module_key,
+                    "active": True,
+                    "active_until": None,
+                },
+                on_conflict="tenant_id,module_key",
+            ).execute()
+            log.info("modul_gebucht_nutzungsbasiert",
+                     tenant_id=tenant_id, module_key=module_key)
+            return ModuleEntitlement(module_key=module_key, active=True)
         row = self._load_row(db, tenant_id)
         sub_id = row.get("stripe_subscription_id") if row else None
         if not row or not sub_id or row.get("status") not in (
@@ -645,11 +666,28 @@ class SubscriptionsService:
         ``current_period_end`` gültig (Wurzel 1: zur entfernten Position gehört
         der Gegenzustand „läuft noch bis…"), statt den Zugang sofort zu kappen.
         """
-        if module_key not in MODULE_PRICE_LOOKUP:
+        if module_key not in MODULE_KEYS:
             raise SubscriptionsError(
                 f"Unbekanntes Modul: {module_key}", status_code=400
             )
         db, tenant_id = self._require(ctx)
+        # Nutzungsabhängig (0,5 %): nichts vorausbezahlt, also endet der Zugang
+        # SOFORT — anders als bei den Monatsmodulen, deren Periode schon
+        # bezahlt ist. Bereits erfasste Ledger-Zeilen bleiben und werden im
+        # nächsten Lauf fakturiert (Leistung wurde erbracht).
+        if module_key not in MODULE_PRICE_LOOKUP:
+            db.table("tenant_module_entitlement").upsert(
+                {
+                    "tenant_id": tenant_id,
+                    "module_key": module_key,
+                    "active": False,
+                    "active_until": None,
+                },
+                on_conflict="tenant_id,module_key",
+            ).execute()
+            log.info("modul_gekuendigt_nutzungsbasiert",
+                     tenant_id=tenant_id, module_key=module_key)
+            return ModuleEntitlement(module_key=module_key, active=False)
         row = self._load_row(db, tenant_id)
         sub_id = row.get("stripe_subscription_id") if row else None
         if not row or not sub_id:
@@ -771,6 +809,19 @@ class SubscriptionsService:
                     tiers=mtiers or None,
                 )
             )
+        # Nutzungsabhängige Module haben keinen Stripe-Preis (der Betrag
+        # entsteht erst je Buchung im Ledger). Sie stehen trotzdem im Katalog,
+        # damit die UI sie anbieten kann — mit Prozentsatz statt Betrag.
+        modules.append(
+            ModulePrice(
+                module_key=DYNPRICING_MODULE_KEY,
+                lookup_key="",
+                unit_amount=0,
+                per_unit_label=None,
+                tiers=None,
+                usage_percent=DYNPRICING_RATE * 100,
+            )
+        )
         return PricingResponse(
             currency=currency, grundtarif_tiers=tiers, modules=modules
         )

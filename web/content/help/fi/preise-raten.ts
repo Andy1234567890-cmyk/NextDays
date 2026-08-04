@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Päivitetty: heinäkuu 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Dynaaminen hinnoittelu on maksullinen lisämoduuli. Tilaat sen kohdasta ”Laajennukset”, jossa näkyy myös hinta. Ilman moduulia automatiikka ei laske hintoja.",
+            },
+            {
               type: "p",
               text: "Dynaamiset hinnat säätävät perushintaa automaattisesti tekijöiden, kuten varausajan, nykyisen käyttöasteen ja kysynnän, perusteella — samaan tapaan kuin suuret portaalit tekevät omissa hintasuosituksissaan. Näin reagoit markkinamuutoksiin ilman, että säädät hintaa käsin joka päivä.",
             },

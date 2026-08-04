@@ -20,6 +20,8 @@ from .schemas import (
     ImageUploadResponse,
     PhotoReorderRequest,
     PhotoUpdateRequest,
+    PricingCopyRequest,
+    PricingCopyResponse,
     PropertyCreate,
     PropertyListResponse,
     PropertyPhoto,
@@ -209,6 +211,34 @@ def apply_tax_to_properties(
     try:
         return TaxApplyResponse(
             **service.apply_tax_to_properties(ctx, property_id, tax_id, req.property_ids)
+        )
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/{property_id}/pricing/copy-from", response_model=PricingCopyResponse
+)
+def copy_pricing_from(
+    property_id: str,
+    req: PricingCopyRequest,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
+) -> PricingCopyResponse:
+    """Preise (inkl. Gebühren und Steuern) von einem anderen eigenen Objekt
+    übernehmen — Branchenstandard „Preise einer bestehenden Unterkunft kopieren".
+
+    QUELLE UND ZIEL werden beide einzeln tenant-gescopt geladen (Wurzel 3): eine
+    fremde Quell-ID ergibt 404, nicht das stille Kopieren fremder Preise.
+    Währung und Kanal-Einschränkungen werden VOR dem ersten Schreiben geprüft
+    (Details in preise_kopieren.py). Dieselbe Capability wie das Pflegen der
+    Preise — nicht bloß `get_current_user` (Wurzel 9)."""
+    try:
+        return PricingCopyResponse(
+            **service.copy_pricing_from(ctx, property_id, req.source_property_id)
         )
     except PropertyError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

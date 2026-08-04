@@ -25,11 +25,20 @@ export function PreisSpalte({ children }: { children: React.ReactNode }) {
   return <div className="mx-auto flex w-full max-w-[57.5rem] flex-col">{children}</div>;
 }
 
-/** Seitenkopf: Titel im Display-Font, 2rem/2.5rem, danach 2rem Luft. */
-export function PreisSeitenkopf({ title }: { title: string }) {
+/** Seitenkopf: Titel im Display-Font, 2rem/2.5rem, danach 2rem Luft. Rechts
+ *  optional das Seitenmenü (Branchenstandard: ⋯ neben der Überschrift, dort
+ *  hängt „Preise einer bestehenden Unterkunft kopieren"). */
+export function PreisSeitenkopf({
+  title,
+  action,
+}: {
+  title: string;
+  action?: React.ReactNode;
+}) {
   return (
-    <header className="pb-8">
+    <header className="flex items-start justify-between gap-4 pb-8">
       <h1 className="font-display text-[2rem] font-bold leading-10">{title}</h1>
+      {action}
     </header>
   );
 }

@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Bijgewerkt: juli 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Dynamische prijzen zijn een betaalde uitbreiding. U boekt deze bij ‘Uitbreidingen’, waar ook de prijs staat. Zonder de module rekent de automatisering niets uit.",
+            },
+            {
               type: "p",
               text: "Dynamische prijzen passen de basisprijs automatisch aan op basis van factoren zoals boekingsvoorlooptijd, actuele bezetting en vraag — vergelijkbaar met wat grote portalen doen bij hun eigen prijsaanbevelingen. Zo reageert u op marktveranderingen zonder elke dag handmatig bij te sturen.",
             },

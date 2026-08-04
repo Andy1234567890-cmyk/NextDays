@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Uuendatud: juuli 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Dünaamiline hinnastamine on tasuline lisamoodul. Selle tellite jaotisest „Laiendused“, kus on ka hind. Ilma mooduli tellimiseta automaatika ei arvuta.",
+            },
+            {
               type: "p",
               text: "Dünaamilised hinnad kohandavad põhihinda automaatselt selliste tegurite alusel nagu broneeringu etteteatamisaeg, hetke täituvus ja nõudlus — sarnaselt sellele, kuidas suured portaalid teevad oma hinnasoovitusi. Nii reageerite turumuutustele ilma iga päev käsitsi kohandamata.",
             },

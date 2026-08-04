@@ -74,6 +74,64 @@ Vertical Slice für Online-Zahlungen über **Stripe** (primäres Gateway) und
 Gegen die echte Stripe-Test-API (Sandbox, `sk_test_…`) — kein Mock; ohne Key
 werden netzabhängige Tests übersprungen. DB als In-Memory-Fake.
 
+## Go-Live-Checkliste Stripe (Test → Live)
+
+„Key getauscht" ist KEINE Live-Schaltung. Stripe trennt Test und Live
+vollständig: Connected Accounts, Kunden, Abos, Preise, Webhook-Endpunkte,
+Signing-Secrets und gespeicherte Zahlungsmethoden aus dem Testmodus existieren
+live NICHT. Wer nur `STRIPE_SECRET_KEY` tauscht, hat drei stille Fehler
+gleichzeitig — keinen Webhook (jede Zahlung bleibt „pending"), keine Preise
+(Abo-Anlage scheitert) und ein `acct_…` in der DB, das live niemand kennt,
+während `stripe_charges_enabled = true` weiter Verkaufsbereitschaft behauptet.
+
+Reihenfolge (die letzten zwei Schritte sind der Beweis, nicht die Hoffnung):
+
+1. **Konto aktivieren** (Stripe-Dashboard, Live): Geschäftsangaben, Bankkonto,
+   Verantwortliche. Ziel: `charges_enabled = true` und die Capabilities
+   `card_payments`/`transfers` auf `active`. Ohne sie gibt es keinen Charge und
+   keine Weiterleitung an den Betrieb.
+2. **Connect freischalten**: Plattform-Profil ausfüllen (Branche, Zahlungsfluss,
+   Verlusthaftung). ACHTUNG: `type=custom` ist für NEUE Integrationen abgekündigt.
+   Ob unser Aufruf live erlaubt ist, beweist nur ein Versuch —
+   `stripe_live_check.py --probe-connect` legt genau einen Account an und löscht
+   ihn sofort wieder. Lehnt Stripe ab, ist das Gegenstück
+   `controller.stripe_dashboard.type=none` + `controller.losses.payments=application`
+   + `controller.fees.payer=application` (dasselbe Verhalten, neue Parameter) —
+   dann muss `create_connect_account` umgestellt werden.
+3. **Alte Kennungen aus der DB nehmen**: `deploy/billing/stripe_mode_reset.py`
+   (erst Bericht, dann `--apply`). Setzt Connect-Account, KYC-Flags, Kunde/Abo und
+   Co-Host-Konten zurück. Zahlungs-/Auszahlungsprotokoll bleibt unberührt — es
+   dokumentiert den Testbetrieb und ist keine Zeigerliste.
+4. **Preise live anlegen**: `STRIPE_SECRET_KEY=sk_live_… python3
+   deploy/billing/seed_stripe_prices.py` (Dry-Run), dann `--apply`. Idempotent
+   über `lookup_key`; Beträge bleiben die Quelle der Wahrheit in Stripe.
+5. **Webhook-Endpunkt live registrieren** auf die Produktions-URL
+   `…/api/v1/payments/webhook` mit ALLEN Events, die `webhook.py` verarbeitet
+   (16, siehe `BENOETIGTE_EVENTS` in `stripe_live_check.py`) — inklusive
+   `charge.dispute.created`/`charge.dispute.closed`, die am Staging-Endpunkt
+   fehlen. Danach das **Signing-Secret dieses Endpunkts** in
+   `STRIPE_WEBHOOK_SECRET`; das Test-Secret verwirft live jedes Ereignis
+   (fail-closed, richtig, aber unsichtbar).
+6. **Env in Coolify** (nur dort, nie im Repo): `STRIPE_SECRET_KEY=sk_live_…`,
+   `STRIPE_PUBLISHABLE_KEY=pk_live_…`, `STRIPE_WEBHOOK_SECRET=whsec_…` (Live-
+   Endpunkt). Der Publishable Key geht NICHT als `NEXT_PUBLIC_` ins Frontend —
+   die Gast-Strecke holt ihn vom Intent-Endpunkt, es gibt nur diese eine Stelle.
+   Danach API + Worker neu deployen (`lru_cache` hält den Client pro Prozess).
+7. **Prüfen**: `apps/api/.venv/bin/python deploy/billing/stripe_live_check.py`
+   muss „BEREIT" melden — Konto, Capabilities, Webhook-Events, alle
+   `lookup_keys`, und dass KEINE gespeicherte Kennung aus dem anderen Modus
+   stammt (jede wird bei Stripe abgefragt, kein Prefix-Raten).
+8. **Erste echte Zahlung** mit einer eigenen Karte über die Gast-Strecke, danach
+   erstatten. Erst dieser Durchlauf beweist Webhook, `payment_status`, Provision
+   und Auszahlung.
+
+Zwei Entscheidungen, die vor dem ersten echten Geld stehen müssen:
+`stripe_separate_transfers` (Destination Charge vs. Separate Charge — solange
+`false`, MUSS der Auszahlungslauf gesperrt bleiben, sonst wird doppelt
+ausgezahlt) und die Frage, welche Kanäle überhaupt Charges erzeugen (Tabelle
+oben: `direct` = Direct Charge beim Betrieb, `portal` = über die Plattform,
+OTA = kein Charge).
+
 ## PayPal (Complete Payments Platform / Multiparty)
 
 Zweites Gateway neben Stripe — dasselbe Muster (verbundene Verkäufer + Plattform-

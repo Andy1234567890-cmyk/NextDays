@@ -243,9 +243,32 @@ Kaution, Angebots-Gültigkeit), `bookability` (`instant|request|inquiry`),
 **Preise** (.. „Pricing") liegen in `type_attributes.pricing`:
 `currency`, `basePrice`, `dynamicPricing`, `customByWeekday`/`weekdayPrices`,
 `extraGuestCharge`, `shortStay*`, `lengthPrices[]` (Wochen-/Monats-/eigene
-Längenpreise) sowie `fees[]`, `taxes[]`, `promotions[]`, `addOns[]`,
-`businessTaxId`, `totRegistrationId` und `basePriceLabel`. Portal-Aufschläge
-stehen NICHT hier — sie sind Kanal-Pläne (`rate_plans.portal_scope`, 0272).
+Längenpreise) sowie `fees[]`, `taxes[]`, `businessTaxId`, `totRegistrationId` und
+`basePriceLabel`. Portal-Aufschläge stehen NICHT hier — sie sind Kanal-Pläne
+(`rate_plans.portal_scope`, 0272). Aktionen liegen in `property_discounts` (0276)
+und Extras im addons-Slice (`property_addons`, 0074/0075): die alten Blob-Felder
+`promotions[]` und `addOns[]` waren Attrappen, die niemand las, und werden nicht
+mehr gepflegt.
+
+`lengthPrices[]` je Eintrag: `id`, `kind` (`weekly`/`monthly`/`custom`),
+`minNights`, `pricePerNight`. Gespeichert ist der NACHTPREIS — die Oberfläche
+lässt (wie der Branchenstandard) den GESAMTPREIS des Aufenthalts eintippen und
+rechnet ihn um. Grund: die Regel heißt „ab N Nächten", ein Gesamtpreis wäre für
+eine längere Buchung nicht definiert.
+
+Diese Preise gehen an die PORTALE, nicht nur an die eigenen Strecken: ein
+Wochen-/Monatspreis IST ein Längenrabatt, und Airbnb kennt ihn als
+`STAYED_AT_LEAST_X_DAYS` (`channel_manager/airbnb_aktionen.py`, dieselbe
+Pipeline wie eine Aktion mit Mindestaufenthalt — höherer Rabatt gewinnt um die
+EINE Regel dieser Art). Airbnbs Regel ist prozentual, unser Längenpreis
+absolut: der Prozentsatz wird aus dem Grundpreis des Objekts abgeleitet
+(`rate_plans`, bei mehreren Plänen gibt es keinen einen Grundpreis → nicht
+darstellbar) und ABWÄRTS gerundet, damit bei Airbnb nie billiger verkauft wird
+als eingestellt. Bleibt 0 % übrig, wird nichts gesendet und die Zeile meldet
+„Manuelle Synchronisierung". Alle anderen Portale haben kein Feld dafür und
+tragen denselben Chip. Eine Änderung an `lengthPrices` reiht
+`sync_airbnb_aktionen` ein (`gebuehren.laengenpreise_geaendert`) — sonst bliebe
+ein gelöschter Wochenpreis bei Airbnb als Rabatt stehen.
 
 `taxes[]` je Eintrag: `id`, `kind` (`vat` — genau EINE je Objekt, serverseitig
 erzwungen — oder `local`), `mode` (`percent`/`amount`), `value`,
@@ -266,7 +289,9 @@ was an Airbnb geht — für alle anderen Kanäle rechnen Prozent-Steuern auf den
 Basispreis. Fehlen `chargeBasis`/`period` (Altbestand), gilt „einmalig pro
 Nacht" — exakt das bisherige Verhalten.
 
-`fees[]` je Eintrag: `id`, `name`, `amount`, `mode` (`amount`/`percent`, ohne
+`fees[]` je Eintrag: `id`, `name` (intern) plus optional `names` (gastseitiger
+Name je Locale, alle 24 — wie bei der Steuer), `amount`, `mode`
+(`amount`/`percent`, ohne
 Angabe `amount`), `basis` (`per_stay`/`per_night`/`per_guest_stay`/
 `per_guest_night`/`per_pet_stay`), `optional`, optional `taxRate` (eigener USt-Satz)
 mit `taxIncluded` (Default `true` = der Satz steckt schon in `amount`; `false`
@@ -294,6 +319,7 @@ Längenbedingung, unbedingt gesendet würde sie jedem Portal-Gast berechnet.
 |---|---|---|
 | `POST` | `/api/v1/properties/{id}/taxes/{tax_id}/apply` | Steuer dieses Objekts auf weitere eigene Objekte übertragen (`{property_ids: []}`, max. 200). Jede Ziel-ID einzeln tenant-gescopt → `404` bei fremder ID, kein stilles Überspringen |
 | `POST` | `/api/v1/properties/{id}/fees/{fee_id}/apply` | Gebühr dieses Objekts auf weitere eigene Objekte übertragen (`{property_ids: []}`, max. 200). Währungs-Mismatch (Betragsgebühr) → `422`, eine `portalScope`-Einschränkung auf ein beim Ziel nicht verbundenes Portal → `422`, Portalliste nicht abrufbar → `503`. Alle Prüfungen laufen VOR dem ersten Schreiben, damit keine Übertragung halb durchläuft |
+| `POST` | `/api/v1/properties/{id}/pricing/copy-from` | Preise (inkl. Gebühren und Steuern) von einem anderen eigenen Objekt übernehmen (`{source_property_id}`) — Branchenstandard „Preise einer bestehenden Unterkunft kopieren". Überschreibt den Preis-Block DIESES Objekts vollständig und spiegelt den Grundpreis in `rate_plans`. Übernommen werden Grundpreis + Wochentage, Aufschlag pro Gast, Kurzaufenthalt, Längenpreise, Gebühren, Steuern, Steuer-Informationen, Bezeichnung des Grundpreises; NICHT übernommen werden Aktionen (`property_discounts`, tragen objekt-eigene Codes/Zeiträume), Extras (`property_addons`, eigene Fotos/Übersetzungen) und Verfügbarkeit. Quelle UND Ziel werden einzeln tenant-gescopt → fremde Quell-ID ergibt `404`. Abweichende Währung → `422` (nie umgerechnet); hat das Ziel noch keine Währung, übernimmt es die der Quelle. Eine `portalScope`-Einschränkung auf ein hier nicht verbundenes Portal → `422`, Portalliste nicht abrufbar → `503`. Antwort: `{property_id, source_id, fees, taxes}` |
 | `GET` | `/api/v1/properties/{id}/fee-library` | Bestehende Gebühren des Betriebs, übernehmbar auf DIESES Objekt (`{currency, items:[{fee, property_id, property_title}]}`). Speist „neue oder bestehende Gebühr hinzufügen". Nur Objekte derselben Währung (Prozentgebühren währungsfrei); `currency: null` = noch keine Objektwährung, dann nur Prozentgebühren. Gleiche Gebühr auf mehreren Objekten erscheint EINMAL (Bündelung über Name+Art+Rechenart+Basis+Betrag, nicht über die Kennung) |
 | `GET` | `/api/v1/properties/fee-types` | Die 51 wählbaren Gebührenarten mit Bezeichnung und Portal-Kategorie (`{items:[{value,label,category}]}`). Eine Quelle für Auswahlfeld UND serverseitige Prüfung |
 
@@ -388,9 +414,9 @@ Buchungsstrecke lesen Preise ausschließlich hierüber. Leseendpoints `view_cale
 | ------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GET`   | `/api/v1/pricing/effective?property_id&start&end` | Effektivpreis je Tag — Priorität manueller `price_overrides`(Tag) > `dynamic_prices` (Regel-Engine) > Wochentagspreis > `rate_plans.base_price`; sonst `null` (kein Fallback)                                                |
 | `POST`  | `/api/v1/pricing/quote`                           | Vollständige Aufschlüsselung `{property_id, check_in, check_out, guests, channel}` → `lines[]` (Übernachtung, Markup, Gebühren, Rabatt, Steuern), `nightly_total`, `total`, `priceless`                                      |
-| `GET`   | `/api/v1/pricing/overview`                        | Alle Objekte des Kontos mit DP-Status (eine Zeile je Objekt: `enabled`, `base_mode`, `base_rate_mode`, effektiver `base_rate`, `min_price`, `max_price`, `currency`) — die Dynamic-Pricing-Objekt-Tabelle. `manage_calendar` |
+| `GET`   | `/api/v1/pricing/overview`                        | Alle Objekte des Kontos mit DP-Status (eine Zeile je Objekt: `enabled`, `base_mode`, `base_rate_mode`, effektiver `base_rate`, `min_price`, `max_price`, `currency`) **+ `module_active`** (ist das kostenpflichtige Modul „Dynamische Preise" gebucht?) — die Dynamic-Pricing-Objekt-Tabelle. `manage_calendar` |
 | `GET`   | `/api/v1/pricing/settings/{property_id}`          | Dynamic-Pricing-Einstellungen (dp_settings) eines Objekts (Defaults, falls leer). `manage_calendar`                                                                                                                          |
-| `PUT`   | `/api/v1/pricing/settings/{property_id}`          | Dynamic-Pricing-Einstellungen setzen (Upsert); bei `enabled=true` sofortiger Recompute. `manage_calendar` + `edit_calendar_bookings`                                                                                         |
+| `PUT`   | `/api/v1/pricing/settings/{property_id}`          | Dynamic-Pricing-Einstellungen setzen (Upsert); bei `enabled=true` sofortiger Recompute — **ohne gebuchtes Modul 402** (die Engine würde ohnehin nicht rechnen). `manage_calendar` + `edit_calendar_bookings`                  |
 | `POST`  | `/api/v1/pricing/recompute`                       | Interner Cron (Header `X-Internal-Cron-Secret`): berechnet die dynamischen Preise aller Objekte mit aktiviertem DP neu (Horizont 540 Tage) + Channex-Push                                                                    |
 
 **Dynamic Pricing (Phase 1, regelbasiert, Migration `0055`):** Eine Regel-Engine
@@ -952,9 +978,22 @@ doppelte Belastung). Add-ons/Upsells am OTA vorbei sind separat (addons-Slice).
 amount_capturable_updated` + `charge.refunded` → `payments.status` +
 `reservations.payment_status` (Enum `unpaid|pending|paid|refunded|deposit_held`).
 
-**Env:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY`
-(→ `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` im Frontend), `STRIPE_PLATFORM_FEE_PCT`
-(Default 0). **Offen:** Owner→Owner-Stripe-Transfer, Revolut-Adapter.
+**Env:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY`,
+`STRIPE_PLATFORM_FEE_PCT` (veraltet, ohne Wirkung — die Provision kommt aus
+`tenants.platform_fee_bps`). Der Publishable Key ist KEINE Frontend-Variable: die
+Gast-Strecke bekommt ihn zusammen mit dem `client_secret` aus der Intent-Antwort
+(`publishable_key`), damit Test- und Live-Modus nie auseinanderlaufen können —
+ein `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` existiert in keiner App und wäre eine
+zweite, unabhängig veraltende Wahrheit.
+
+**Test → Live:** eigene Checkliste in
+`apps/api/src/features/payments/README.md` (Konto aktivieren, Connect
+freischalten, alte Kennungen zurücksetzen, Preise live anlegen, Webhook + Secret,
+Env, Prüflauf). Werkzeuge: `deploy/billing/stripe_live_check.py` (liest nur,
+prüft Konto/Webhook-Events/Preise/DB-Kennungen gegen den gesetzten Modus) und
+`deploy/billing/stripe_mode_reset.py` (nimmt Test-Kennungen aus der DB).
+
+**Offen:** Owner→Owner-Stripe-Transfer, Revolut-Adapter.
 
 ---
 
@@ -1050,7 +1089,7 @@ Berechtigung `manage_property_settings`. Beträge laufen durchgängig in **Cent*
 | `POST /api/v1/channel-manager/channels`                            | Schritt 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen **und aktivieren** → `201`                |
 | `DELETE /api/v1/channel-manager/channels/{channel_id}`             | Kanal trennen (erst deaktivieren, dann löschen) → `204`                                         |
 | `GET /api/v1/channel-manager/properties/{property_id}/connections` | Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal, white-label)         |
-| `GET /api/v1/channel-manager/properties/{property_id}/abgaben-status` | Je Gebühr/Steuer: welche verbundenen Portale bekommen sie NICHT automatisch? Speist den Chip „Manuelle Synchronisierung". Rein lesend, gerechnet aus derselben Quelle wie der Sync (`ota_abgaben.abgaben_je_portal`) — kein zweiter Regelsatz für die Anzeige. Drei getrennte Felder je Posten: `manual_portals` (Portal nimmt ihn nicht → Chip), `restricted_portals` (per `portalScope` ausgeschlossen → Absicht), `internal_only` (optionale/Kurzaufenthalts-Gebühr, Kaution → geht bewusst nirgends hin). `currency_missing` ist ein Befund über das OBJEKT: ohne Objektwährung überträgt der Abgaben-Sync gar nichts. Die Antwort enthält zusätzlich die PROMOTIONS des Objekts (`kind: "promotion"`, `key` = Promotion-ID) mit zwei getrennten Gründen: `reason` = warum der Tagespreis sie nicht tragen kann (gilt für alle Portale außer Airbnb), `airbnb_reason` = warum Airbnb sie auch nicht über die eigene Rabattregel bekommt |
+| `GET /api/v1/channel-manager/properties/{property_id}/abgaben-status` | Je Gebühr/Steuer: welche verbundenen Portale bekommen sie NICHT automatisch? Speist den Chip „Manuelle Synchronisierung". Rein lesend, gerechnet aus derselben Quelle wie der Sync (`ota_abgaben.abgaben_je_portal`) — kein zweiter Regelsatz für die Anzeige. Drei getrennte Felder je Posten: `manual_portals` (Portal nimmt ihn nicht → Chip), `restricted_portals` (per `portalScope` ausgeschlossen → Absicht), `internal_only` (optionale/Kurzaufenthalts-Gebühr, Kaution → geht bewusst nirgends hin). `currency_missing` ist ein Befund über das OBJEKT: ohne Objektwährung überträgt der Abgaben-Sync gar nichts. Die Antwort enthält zusätzlich die PROMOTIONS des Objekts (`kind: "promotion"`, `key` = Promotion-ID) mit zwei getrennten Gründen: `reason` = warum der Tagespreis sie nicht tragen kann (gilt für alle Portale außer Airbnb), `airbnb_reason` = warum Airbnb sie auch nicht über die eigene Rabattregel bekommt. Zusätzlich kommen die PREIS-BLÖCKE der Seite (`kind: "block"`) mit festen Schlüsseln — `base_price` und `extra_guest` gehen an jeden verbundenen Kanal (ARI-Push bzw. `per_person`-Rate-Plan), `short_stay` und `addons` sind `internal_only` (kein Portal hat ein Feld dafür). `length_prices` ist der Weg-Befund für die Preise nach Aufenthaltsdauer: sie gehen als Airbnb-Rabattregel raus, alle anderen Portale stehen in `manual_portals`. Zusätzlich kommt JEDER Aufenthaltsdauer-Preis als eigener Posten (`kind: "length_price"`, `key` = seine Kennung) mit `reason`/`airbnb_reason` — der aus dem Grundpreis abgeleitete Prozentsatz kann beim Abrunden auf 0 landen, dann geht auch zu Airbnb nichts. Sie speisen die Editor-Kopfzeile „Gilt für · Nicht unterstützt von" — ein Schlüssel je Block, nicht je Zeile, damit auch ein noch nicht gespeicherter Posten seine Reichweite kennt |
 | `POST /api/v1/channel-manager/properties/{property_id}/aktionen/airbnb-sync` | Promotions mit Bedingung als Airbnbs eigene Rabattregeln durchsetzen (`default_pricing_rules` je Listing-Mapping). Antwort: `{channel_id, listings, updated, rules[], skipped{}}` — `updated` zählt nur Listings mit echter Änderung (idempotent), `skipped` nennt je Promotion den Grund, warum Airbnb sie nicht als Regel nimmt. Läuft zusätzlich als Job `sync_airbnb_aktionen` nach jeder Promotion-Änderung |
 | `PUT /api/v1/channel-manager/properties/{property_id}/connections/{portal}/airbnb-tax` | Airbnb-Steuererhebung dieses Inserats: `{scenario, acknowledged, send_user_taxes}`. Steuern gehen an Airbnb NUR wenn Szenario ≠ `ineligible` UND beide Schalter an (fail-closed); stößt den Steuer-Sync an |
 | `POST /api/v1/channel-manager/webhook`                             | Webhook-Empfang (ohne JWT, via geteiltem Secret-Header `X-Channex-Webhook-Secret`)              |

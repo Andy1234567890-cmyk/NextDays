@@ -135,6 +135,9 @@ class _Table:
             if self._name == "commission_ledger":
                 new_row.setdefault("status", "pending")
                 new_row.setdefault("id", f"cl_{len(self._rows()) + 1}")
+            if self._name == "dynpricing_ledger":
+                new_row.setdefault("status", "pending")
+                new_row.setdefault("id", f"dl_{len(self._rows()) + 1}")
             self._rows().append(new_row)
             changed = [self._rows()[-1]]
         elif pending and pending[0] == "delete":
@@ -230,6 +233,11 @@ def test_pricing_matches_pdf() -> None:
     assert by_key["modul4_per_seat"] == 250
     assert by_key["modul6_flat"] == 60000
     assert by_key["modul6_per_room"] == 150
+    # Nutzungsabhängiges Modul: KEIN Monatsbetrag, sondern ein Prozentsatz.
+    # Die UI muss den Satz zeigen können, ohne einen Cent-Betrag zu erfinden.
+    dyn = next(m for m in pr.modules if m.module_key == "dynamische_preise")
+    assert dyn.unit_amount == 0
+    assert dyn.usage_percent == 0.5
 
 
 def _sub_event(event_id: str, status: str, module_lookups: list[str]) -> dict[str, Any]:
@@ -322,6 +330,92 @@ def _db_with_properties(active_count: int) -> _DB:
         for i in range(active_count)
     ]
     return db
+
+
+# --- Modul „Dynamische Preise" (0,5 %) — Mehrwährung ------------------------
+
+
+def _db_mit_modul(*, aktiv: bool = True) -> _DB:
+    db = _db_with_properties(5)
+    db.store["tenant_module_entitlement"] = [
+        {"tenant_id": "t1", "module_key": "dynamische_preise", "active": aktiv}
+    ]
+    return db
+
+
+def test_dynpricing_ohne_modul_keine_zeile() -> None:
+    """Ohne gebuchtes Modul entsteht keine Gebühr (fail-closed)."""
+    db = _db_with_properties(5)  # gar keine Entitlement-Zeile
+    svc = SubscriptionsService(service_client=db)
+    svc.record_dynpricing_usage("t1", reservation_id="r1",
+                                gross_amount=400.0, currency="EUR")
+    assert db.store.get("dynpricing_ledger", []) == []
+    # Gekündigtes Modul (active=False) zählt wie nicht gebucht.
+    db2 = _db_mit_modul(aktiv=False)
+    SubscriptionsService(service_client=db2).record_dynpricing_usage(
+        "t1", reservation_id="r1", gross_amount=400.0, currency="EUR")
+    assert db2.store.get("dynpricing_ledger", []) == []
+
+
+def test_dynpricing_erfasst_waehrung_je_buchung() -> None:
+    """Die Währung der BUCHUNG landet in der Zeile — nicht die des Abos.
+    Genau das kann ein Stripe-Meter nicht (er ist währungslos)."""
+    db = _db_mit_modul()
+    svc = SubscriptionsService(service_client=db)
+    svc.record_dynpricing_usage("t1", reservation_id="r-eur",
+                                gross_amount=400.0, currency="EUR")
+    svc.record_dynpricing_usage("t1", reservation_id="r-dkk",
+                                gross_amount=3000.0, currency="DKK")
+    zeilen = {z["reservation_id"]: z for z in db.store["dynpricing_ledger"]}
+    assert zeilen["r-eur"]["currency"] == "EUR"
+    assert zeilen["r-eur"]["fee_amount"] == 2.0     # 0,5 % von 400
+    assert zeilen["r-dkk"]["currency"] == "DKK"
+    assert zeilen["r-dkk"]["fee_amount"] == 15.0    # 0,5 % von 3000
+    # KEINE Vermischung: die Beträge bleiben in ihrer eigenen Währung stehen.
+    assert len(db.store["dynpricing_ledger"]) == 2
+
+
+def test_dynpricing_idempotent_und_storno() -> None:
+    """Resync erzeugt keine zweite Zeile (Wurzel 2); Storno entfernt die
+    offene Zeile (Wurzel 1)."""
+    db = _db_mit_modul()
+    svc = SubscriptionsService(service_client=db)
+    svc.record_dynpricing_usage("t1", reservation_id="r1",
+                                gross_amount=400.0, currency="EUR")
+    svc.record_dynpricing_usage("t1", reservation_id="r1",
+                                gross_amount=500.0, currency="EUR")
+    assert len(db.store["dynpricing_ledger"]) == 1
+    # Solange pending, wird der Betrag nachgezogen (Preisänderung vor Rechnung).
+    assert db.store["dynpricing_ledger"][0]["fee_amount"] == 2.5
+    svc.cancel_dynpricing_usage("t1", reservation_id="r1")
+    assert db.store["dynpricing_ledger"] == []
+
+
+def test_dynpricing_fakturierte_zeile_unveraendert() -> None:
+    """Eine bereits gestellte Gebühr wird weder geändert noch storniert —
+    sonst verfälschte eine späte Preisänderung eine gestellte Rechnung."""
+    db = _db_mit_modul()
+    db.store["dynpricing_ledger"] = [
+        {"id": "d1", "tenant_id": "t1", "reservation_id": "r1", "currency": "EUR",
+         "gross_amount": 400.0, "rate": 0.005, "fee_amount": 2.0,
+         "status": "invoiced"}
+    ]
+    svc = SubscriptionsService(service_client=db)
+    svc.record_dynpricing_usage("t1", reservation_id="r1",
+                                gross_amount=9999.0, currency="EUR")
+    assert db.store["dynpricing_ledger"][0]["fee_amount"] == 2.0
+    svc.cancel_dynpricing_usage("t1", reservation_id="r1")
+    assert len(db.store["dynpricing_ledger"]) == 1
+
+
+def test_dynpricing_ohne_waehrung_faellt_klar_durch() -> None:
+    """Fehlende Währung ist ein Datenfehler → 422, kein EUR-Fallback (Wurzel 4)."""
+    db = _db_mit_modul()
+    svc = SubscriptionsService(service_client=db)
+    with pytest.raises(SubscriptionsError) as exc:
+        svc.record_dynpricing_usage("t1", reservation_id="r1",
+                                    gross_amount=400.0, currency="")
+    assert exc.value.status_code == 422
 
 
 def test_commission_rate_staffel() -> None:
@@ -454,6 +548,41 @@ def test_bill_commissions_creates_stripe_invoice_item() -> None:
     assert item["amount"] == 550
     # Idempotenz: zweiter Lauf findet keine pending mehr → 0.
     assert svc.bill_pending_commissions("t1", period=period) == 0
+
+
+@_needs_stripe
+def test_dynpricing_billing_je_waehrung_getrennt() -> None:
+    """E2E gegen die echte Stripe-API: EUR- und DKK-Buchungen ergeben ZWEI
+    getrennte Invoice-Items in ihrer jeweiligen Währung. Nichts wird
+    umgerechnet (Wurzel 4) — der Kern der 24-Länder-Anforderung."""
+    stripe = SubscriptionsService()._stripe  # noqa: SLF001
+    customer = stripe.v1.customers.create(params={"name": "E2E DynPricing"})
+    db = _db_mit_modul()
+    db.store["tenant_subscription"] = [
+        {"tenant_id": "t1", "stripe_customer_id": customer["id"]}]
+    db.store["dynpricing_ledger"] = [
+        {"id": "d1", "tenant_id": "t1", "currency": "EUR",
+         "fee_amount": 2.0, "status": "pending"},
+        {"id": "d2", "tenant_id": "t1", "currency": "EUR",
+         "fee_amount": 3.5, "status": "pending"},
+        {"id": "d3", "tenant_id": "t1", "currency": "DKK",
+         "fee_amount": 15.0, "status": "pending"},
+    ]
+    svc = SubscriptionsService(service_client=db, stripe=stripe)
+    period = f"2026-07-{customer['id'][-8:]}"
+    assert svc.bill_pending_dynpricing("t1", period=period) == 3
+    assert all(r["status"] == "invoiced" for r in db.store["dynpricing_ledger"])
+    # Zwei verschiedene Items — eines je Währung.
+    items = {r["currency"]: r["stripe_invoice_item_id"]
+             for r in db.store["dynpricing_ledger"]}
+    assert items["EUR"] != items["DKK"]
+    # Aus Stripe gegengelesen: Beträge UND Währungen stimmen.
+    eur = stripe.v1.invoice_items.retrieve(items["EUR"])
+    dkk = stripe.v1.invoice_items.retrieve(items["DKK"])
+    assert (eur["amount"], eur["currency"]) == (550, "eur")   # 2,00 + 3,50
+    assert (dkk["amount"], dkk["currency"]) == (1500, "dkk")  # 15,00
+    # Idempotenz: zweiter Lauf findet keine pending mehr.
+    assert svc.bill_pending_dynpricing("t1", period=period) == 0
 
 
 # --- Verwaiste Stripe-Customer-ID (realer Vorfall) -------------------------
@@ -827,3 +956,51 @@ def test_merge_address_stripe_gewinnt_profil_fuellt_luecken() -> None:
     # Name/E-Mail: das Profil gewinnt, sonst stünde der Firmenname als Vorname.
     assert zus.first_name == "Max"
     assert zus.email == "admin@villa.de"
+
+
+# --- Buchen des nutzungsabhängigen Moduls (Erweiterungen-Fläche) ------------
+
+
+def test_modul_dynamische_preise_ohne_abo_nicht_buchbar() -> None:
+    """Nutzungsabhängige Module setzen ein laufendes Abo voraus (422).
+
+    Ohne Stripe-Kunde könnte der Monatslauf das Invoice-Item nicht stellen
+    (`bill_pending_dynpricing` → 409) — das Modul wäre freigeschaltet, die
+    Nutzung aber nie abrechenbar. Fail-CLOSED beim Buchen statt später beim
+    Abrechnen.
+    """
+    db = _DB()  # kein tenant_subscription-Eintrag
+    svc = SubscriptionsService(service_client=db)
+    with pytest.raises(SubscriptionsError) as exc:
+        svc.add_module(_CTX, module_key="dynamische_preise")
+    assert exc.value.status_code == 422
+    assert db.store["tenant_module_entitlement"] == []
+
+
+def test_modul_dynamische_preise_buchen_und_kuendigen() -> None:
+    """Mit laufendem Abo: Buchen setzt das Entitlement OHNE Abo-Position (der
+    Betrag entsteht erst je Buchung im Ledger); Kündigen entzieht den Zugang
+    sofort, weil nichts vorausbezahlt wurde."""
+    db = _DB()
+    db.store["tenant_subscription"] = [
+        {
+            "tenant_id": "t1",
+            "status": "active",
+            "stripe_customer_id": "cus_1",
+            "stripe_subscription_id": "sub_1",
+        }
+    ]
+    svc = SubscriptionsService(service_client=db)
+    ent = svc.add_module(_CTX, module_key="dynamische_preise")
+    assert ent.active is True
+    zeilen = db.store["tenant_module_entitlement"]
+    assert [(z["module_key"], z["active"]) for z in zeilen] == [
+        ("dynamische_preise", True)
+    ]
+    # Idempotent (Doppelklick, Wurzel 2): keine zweite Zeile.
+    svc.add_module(_CTX, module_key="dynamische_preise")
+    assert len(db.store["tenant_module_entitlement"]) == 1
+    # Kündigen: sofort inaktiv, Zeile bleibt (Historie), kein active_until.
+    weg = svc.remove_module(_CTX, module_key="dynamische_preise")
+    assert weg.active is False
+    assert db.store["tenant_module_entitlement"][0]["active"] is False

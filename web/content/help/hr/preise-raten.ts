@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Ažurirano: srpanj 2026.",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Dinamične cijene su dodatni modul koji se plaća. Naručujete ga u odjeljku „Proširenja“, gdje je navedena i cijena. Bez modula automatika ne izračunava cijene.",
+            },
+            {
               type: "p",
               text: "Dinamične cijene automatski prilagođavaju osnovnu cijenu na temelju čimbenika poput roka rezervacije, trenutne popunjenosti i potražnje — slično kako to veliki portali rade sa svojim vlastitim preporukama cijena. Tako reagirate na tržišne promjene bez ručnog prilagođavanja svaki dan.",
             },

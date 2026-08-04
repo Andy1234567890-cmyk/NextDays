@@ -200,6 +200,11 @@ export const preiseRaten: HelpCategory = {
           updated: "Last updated: July 2026",
           body: [
             {
+              type: "note",
+              variant: "info",
+              text: "Dynamic pricing is a paid add-on module. You book it under “Extensions”, where you will also find the price. Without the module, the automation does not calculate anything.",
+            },
+            {
               type: "p",
               text: "Dynamic pricing automatically adjusts the base price based on factors such as booking lead time, current occupancy, and demand — similar to how large portals handle their own price recommendations. This lets you respond to market changes without manually adjusting every day.",
             },
