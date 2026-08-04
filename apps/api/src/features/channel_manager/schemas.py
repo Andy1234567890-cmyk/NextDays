@@ -431,7 +431,11 @@ class ConnectChannelRequest(BaseModel):
 class OAuthBeginRequest(BaseModel):
     """OAuth-Start: inaktiven Channel anlegen + echte OAuth-URL erzeugen."""
 
-    property_id: str
+    # None = konto-weiter Connect (Wechselkunde): Airbnb wird autorisiert, BEVOR
+    # es Objekte gibt — sie entstehen aus den gespiegelten Listings. Der Wert im
+    # Body ist ohnehin nur informativ; verbindlich ist der Pfad-Parameter der
+    # objektgebundenen Route.
+    property_id: str | None = None
     portal_code: str                                  # OAuth-Portal (AirBNB)
     title: str | None = None
     settings: dict = Field(default_factory=dict)      # optionale Airbnb-Settings
