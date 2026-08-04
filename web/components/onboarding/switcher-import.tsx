@@ -12,11 +12,19 @@
 // vom Kanal trennen bzw. dort die Verfügbarkeit schließen; vergangene Buchungen
 // und manuelle Sperren kommen NICHT automatisch mit → manuell nachtragen.
 //
+// AUSNAHME AIRBNB: Dort muss der Kunde die Hülle NICHT selbst anlegen. Channex
+// verlangt für die Airbnb-Autorisierung zwar zwingend ein Objekt
+// (`connection_link` ohne Property → 422, live geprüft), aber dieses EINE legt
+// der Server an und füllt es aus dem ersten Listing; jedes weitere Listing wird
+// ein eigenes Objekt. Schritt 1 ist für Airbnb-Wechsler also optional.
+//
 // Wiederverwendete Bausteine (nichts neu erfunden):
 //  - NewPropertyButton: Objekt-Hülle (erzeugt Room-Type + Rate-Plan zum Mappen)
 //  - ChannelConnectButton: Verbinden + 1:1-Mapping (Credential ODER Airbnb-OAuth);
 //    triggert im Backend automatisch den historischen Buchungs-/ARI-Import
-//  - reconcileTenant: Airbnb-OAuth-Listings als Objekte in die DB spiegeln
+//  - uebernehmeAirbnbListings: Airbnb-Listings über den Channex-Proxy als Objekte
+//    holen (Airbnb führt die Inhalte, nicht Channex)
+//  - reconcileTenant: Channex-Properties der ÜBRIGEN Portale in die DB spiegeln
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -35,6 +43,7 @@ import {
   importLodgifyBookings,
   previewLodgifyImport,
   reconcileTenant,
+  uebernehmeAirbnbListings,
 } from "@/lib/channex";
 import { Input } from "@nextdays/ui/input";
 import { getOnboarding, updateOnboarding } from "@/lib/onboarding";
@@ -75,17 +84,30 @@ export function SwitcherImport({
   // Realtime: neu importierte/angelegte Objekte sofort zählen (kein manuelles Reload).
   useRealtime({ table: "properties", onChange: refreshCount });
 
-  // Airbnb-OAuth spiegelt Listings automatisch bei Channex — Reconcile holt sie
-  // als Objekte in unsere DB (ohne auf den 15-min-Tick zu warten).
+  // Objekte von den Portalen holen. ZWEI Wege, weil die Portale sich
+  // unterscheiden (beide live geprüft, siehe airbnb_uebernahme.py):
+  //  - Airbnb: Listings werden bei Channex nur GEMAPPT (`mapping_mode:
+  //    "listing"`), es entstehen dort KEINE Properties. Die Übernahme liest sie
+  //    über den Channex-Proxy direkt von Airbnb.
+  //  - übrige Portale: Channex führt echte Properties, die der Reconcile
+  //    spiegelt.
+  // Zuerst die Airbnb-Übernahme, dann der Reconcile — so kommt der Kunde mit
+  // einem Klick an beides, ohne den Unterschied kennen zu müssen. Ein Fehler im
+  // Airbnb-Teil (z.B. „noch nicht verbunden") darf den Reconcile nicht
+  // verhindern; gemeldet wird, was zusammen herauskam.
   function pullFromPortals() {
     setReconcileMsg(null);
     startTransition(async () => {
-      const res = await reconcileTenant();
-      if (!res.ok) {
-        setReconcileMsg(res.error);
+      const uebernahme = await uebernehmeAirbnbListings();
+      const reconcile = await reconcileTenant();
+
+      if (!uebernahme.ok && !reconcile.ok) {
+        setReconcileMsg(reconcile.error);
         return;
       }
-      const n = res.data.created + res.data.updated;
+      const n =
+        (uebernahme.ok ? uebernahme.data.created + uebernahme.data.updated : 0) +
+        (reconcile.ok ? reconcile.data.created + reconcile.data.updated : 0);
       setReconcileMsg(t("pull.result", { count: n }));
       refreshCount();
     });
@@ -240,6 +262,13 @@ export function SwitcherImport({
             {t("step1.count", { count: propertyCount })}
           </span>
         )}
+        {/* Airbnb-Wechsler müssen hier nichts tun — die Objekte entstehen beim
+            Verbinden. Ohne diesen Hinweis liest sich Schritt 1 als Pflicht und
+            genau das wollte der Kunde nicht: alles neu anlegen. */}
+        <p className="basis-full text-sm text-muted-foreground">
+          <Icon icon="ph:info" className="mr-1 inline size-4 align-[-0.15em]" />
+          {t("step1.airbnbHint")}
+        </p>
       </ImportStep>
 
       {/* Schritt 2: Portal verbinden + 1:1 zuordnen (importiert Buchungen/ARI) */}

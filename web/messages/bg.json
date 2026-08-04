@@ -169,7 +169,8 @@
       "step1": {
         "title": "Objekt anlegen",
         "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}"
+        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "airbnbHint": "Идвате от Airbnb? Пропуснете тази стъпка — обектите ви се прехвърлят автоматично, когато свържете Airbnb."
       },
       "step2": {
         "title": "Portal verbinden & zuordnen",
