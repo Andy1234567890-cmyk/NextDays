@@ -62,7 +62,30 @@ log = get_logger("nextdays.channex")
 # So kann JEDER echte HTTP-Call (nicht nur der erste Job-Schritt) ein Token
 # ziehen — sonst umgeht ein Batch-Job (reconcile_tenant, process_ari_outbox)
 # mit N Calls das Konto-Limit für 1 Token.
-BudgetCallback = Callable[[str | None], "BudgetDecision"]
+# Zweites Argument ist die Topf-Sorte: Channex zählt ARI getrennt (je Property
+# 10 Availability/Minute UND 10 Restrictions&Preise/Minute, kontoweit 20 ARI/
+# Minute — Acceptable Use Policy). Ohne die Sorte landet alles in einem Topf und
+# 20 Availability-Calls je Property gelten uns als erlaubt, Channex aber nicht.
+BudgetCallback = Callable[[str | None, str], "BudgetDecision"]
+
+
+def _budget_kind(method: str, path: str) -> str:
+    """Topf-Sorte des anstehenden Calls: "availability", "rates" oder "other".
+
+    Nur die beiden ARI-SCHREIB-Endpunkte zählen als ARI (``POST availability``
+    bzw. ``POST restrictions`` — Preise gehen bei Channex über restrictions).
+    Lesende Calls fallen absichtlich in "other": wir machen keinen ARI-Readback
+    (siehe channel_manager/README.md), und ein Read würde den engen ARI-Topf
+    dem Push wegnehmen.
+    """
+    if method.upper() != "POST":
+        return "other"
+    erste = path.lstrip("/").split("?", 1)[0].split("/", 1)[0]
+    if erste == "availability":
+        return "availability"
+    if erste == "restrictions":
+        return "rates"
+    return "other"
 
 
 def _budget_property_id(
@@ -305,6 +328,7 @@ class ChannexClient:
             headers["user-api-key"] = self._api_key
 
         budget_property_id = _budget_property_id(params, json)
+        budget_kind = _budget_kind(method, path)
 
         last_exc: Exception | None = None
         # +1 finaler Versuch nach allen Backoffs.
@@ -314,7 +338,7 @@ class ChannexClient:
             # bis zu (Retries+1) echte Channex-Requests ab und das Budget unterzählt
             # die reale Last genau dann, wenn Channex bereits 429 liefert (die
             # Situation, für die die Drosselung gebaut ist).
-            self._acquire_budget(budget_property_id)
+            self._acquire_budget(budget_property_id, budget_kind)
             # Trace-Zeitmessung je echtem Round-Trip (sichtbares Flow-Debugging).
             started = time.perf_counter()
             try:
@@ -372,7 +396,9 @@ class ChannexClient:
             "Channex-Aufruf fehlgeschlagen.", status_code=502
         ) from last_exc
 
-    def _acquire_budget(self, channex_property_id: str | None) -> None:
+    def _acquire_budget(
+        self, channex_property_id: str | None, kind: str = "other"
+    ) -> None:
         """Vor jedem echten HTTP-Call ein Token aus dem kontoweiten Budget ziehen.
 
         Ohne gesetztes Callback (Request-Pfad, Tests) passiert nichts. Wird der
@@ -384,7 +410,7 @@ class ChannexClient:
         if self._before_call is None:
             return
         for _ in range(self._BUDGET_MAX_WAITS + 1):
-            decision = self._before_call(channex_property_id)
+            decision = self._before_call(channex_property_id, kind)
             if decision.allowed:
                 return
             wait = min(max(decision.retry_after, 0), self._BUDGET_WAIT_CAP_SECONDS)
@@ -393,6 +419,7 @@ class ChannexClient:
             log.info(
                 "channex_budget_wait",
                 property_id=channex_property_id,
+                kind=kind,
                 retry_after=decision.retry_after,
             )
             time.sleep(wait)

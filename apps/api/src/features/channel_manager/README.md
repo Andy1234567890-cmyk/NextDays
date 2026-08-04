@@ -14,6 +14,11 @@ Channel-Verwaltung im 4-Schritt-Flow (`POST /channels/prepare` →
 gibt es eine Mock-OTA (`sandbox_ota.py`, OpenChannel).
 Siehe ADR-0001 und ADR-0012.
 
+Staging und Produktion sind **zwei getrennte Channex-Installationen** (getrennte
+Konten, Objekte, Kanäle, Webhooks, Schlüssel). Umgeschaltet wird ausschließlich
+über `CHANNEX_BASE_URL` (`channex_client.py:193`) — Reihenfolge, Grenzen und
+Fallstricke: `deploy/CHANNEX-GO-LIVE.md`.
+
 ## Buchungs-Pull (automatisch)
 
 Buchungen kommen über den **Booking-Revisions-Feed** (paginiert, 100/Seite,

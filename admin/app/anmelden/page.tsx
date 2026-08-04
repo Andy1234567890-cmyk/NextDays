@@ -6,9 +6,11 @@
 // public.platform_admins. Die Server Action prüft das direkt nach dem Login
 // (/platform/me) und setzt die Cookies nur, wenn die Prüfung durchgeht — ein
 // Betriebs-Nutzer mit korrektem Passwort kommt hier also nicht hinein.
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
+import { PasswortFeld } from "@/components/passwort-feld";
 import { anmelden } from "@/lib/auth";
 
 function Formular() {
@@ -58,19 +60,23 @@ function Formular() {
         />
       </label>
 
-      <label className="mt-4 block">
-        <span className="mb-1.5 block text-sm text-muted-foreground">
-          Passwort
-        </span>
-        <input
-          type="password"
-          required
-          autoComplete="current-password"
+      <div className="mt-4">
+        <PasswortFeld
+          label="Passwort"
           value={passwort}
-          onChange={(e) => setPasswort(e.target.value)}
-          className="w-full rounded-xl border border-border bg-transparent px-4 py-2.5 outline-none focus-visible:border-foreground"
+          onChange={setPasswort}
+          autoComplete="current-password"
         />
-      </label>
+      </div>
+
+      <p className="mt-3 text-sm">
+        <Link
+          href="/passwort-vergessen"
+          className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
+        >
+          Passwort zurücksetzen
+        </Link>
+      </p>
 
       {fehler && (
         <p className="mt-4 text-sm text-destructive" role="alert">

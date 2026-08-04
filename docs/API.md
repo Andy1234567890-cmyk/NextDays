@@ -1561,6 +1561,8 @@ neue Kollege per psql eingetragen werden. Diese Endpunkte schließen das.
 | `POST`  | `/api/v1/platform/team`       | Einladen/Freischalten (`require_platform_write`)                                   |
 | `PATCH` | `/api/v1/platform/team/{id}`  | Rolle, Notiz, Aktiv-Status (`require_platform_write`)                              |
 | `POST`  | `/api/v1/platform/team/accept`| Einladung annehmen + eigenes Passwort setzen — **öffentlich**, auth-Rate-Limit     |
+| `POST`  | `/api/v1/platform/team/passwort-vergessen` | Reset-Link anfordern — **öffentlich**, immer dieselbe Antwort         |
+| `POST`  | `/api/v1/platform/team/passwort-neu`       | Neues Passwort per Reset-Token setzen — **öffentlich**               |
 
 **Einladung:** existiert zur E-Mail schon ein Konto (RPC `auth_user_id_by_email`,
 nur `service_role`), wird es sofort freigeschaltet — kein Link, kein
@@ -1570,6 +1572,25 @@ SHA-256, der Klartext existiert nur im Link. Versendet wird über `core.mail`
 (unser SMTP), 72 h gültig, einmal verwendbar. Scheitert der Versand, wird der
 Link an den einladenden Admin zurückgegeben — mit dem echten Grund, nie als
 stiller Erfolg.
+
+**Passwort vergessen (`0279`):** derselbe Mechanismus, eigene Spalten
+(`reset_token_hash`/`reset_expires_at`/`reset_requested_at`) und **eine Stunde**
+Gültigkeit. Warum nicht GoTrue: `GOTRUE_SMTP_HOST` ist leer, `reset_password_email()`
+läuft dort ins Leere — der Versand geht über `core.mail` an den eigenen
+Mailcow-Server. `passwort-vergessen` antwortet **immer** wörtlich gleich (kein
+Konto, kein Zugang, entzogen, Sperrfrist, Mailfehler): eine unterscheidbare
+Antwort wäre ein Verzeichnis der Betreiber-Zugänge. Zusätzlich zum strengen
+`auth`-Bucket gilt eine **Sperrfrist von 1 Minute je Konto** gegen
+Mail-Bombardement. Ging die Mail nicht raus, wird der Token wieder entfernt —
+es liegt nie ein gültiger Zugang bereit, den niemand bekommen hat.
+`passwort-neu` lehnt jeden Fehlerfall mit demselben `400` ab, setzt das Passwort
+über die GoTrue-Admin-API, verbraucht den Token, holt ein offenes
+`accepted_at`/`invite_token_hash` nach und **widerruft ALLE Sitzungen** des
+Kontos (`host_revoke_other_sessions`, `keep=NULL`) — ein Reset ist der Weg eines
+Kompromittierten, eine überlebende fremde Sitzung würde ihn wirkungslos machen.
+Beide Endpunkte stehen bewusst NICHT im Backoffice-Protokoll: dort gibt es
+keinen Akteur, und schon der Eintrag würde verraten, welche Adresse ein Konto hat.
+Live-Prüfung: `scripts/platform/verify_backoffice_passwort_reset.py`.
 
 **Aussperr-Schutz (im Service, gilt für jeden Aufrufer):** niemand ändert die
 eigene Rolle oder den eigenen Zugang; der letzte aktive `platform_admin` kann

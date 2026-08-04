@@ -166,6 +166,15 @@ class Settings(BaseSettings):
     # Schema wie die HTTP-Limits: "<max>/<fenster-sekunden>".
     channex_account_budget: str = "200/60"   # kontoweit ~200 Requests/Minute
     channex_property_budget: str = "20/60"    # je Property ~20 Requests/Minute
+    # ARI zählt Channex GETRENNT und vertraglich verbindlich (Acceptable Use
+    # Policy): je Property 10 Availability/Minute UND 10 Restrictions&Preise/
+    # Minute — zwei eigene Töpfe, nicht ein gemeinsamer. Kontoweit sind es
+    # 20 ARI-Anfragen/Minute. Ein einziger Topf mit 20 je Property wäre für
+    # Channex ein Verstoß (10 Availability + 10 Rates hintereinander wären
+    # erlaubt, 20 Availability nicht), deshalb eigene Budgets.
+    channex_ari_account_budget: str = "20/60"      # kontoweit ARI insgesamt
+    channex_availability_budget: str = "10/60"     # je Property, Availability
+    channex_rates_budget: str = "10/60"            # je Property, Restrictions+Preise
     # Öffentliche Basis-URL DIESER API (für den Webhook-Callback, den Channex
     # aufruft). Muss von außen per HTTPS erreichbar sein — im Dev z.B. ein
     # Tunnel (ngrok/cloudflared), in Prod die echte API-Domain.

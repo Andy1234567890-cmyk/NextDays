@@ -536,6 +536,99 @@ class ContentSyncMixin:
         name = (row[0].get("name") or "").strip() if row else ""
         return name or None
 
+    def _put_property_oder_heilen(
+        self, db: Client, tenant_id: str, channex_id: str, attrs: dict[str, Any]
+    ) -> bool:
+        """Property bei Channex aktualisieren. True = aktualisiert, False = weg.
+
+        Channex entfernt eine Property, die 90 Tage keinen Kanal hatte
+        (Aufbewahrungsfrist, `deploy/CHANNEX-GO-LIVE.md`) — und beim Wechsel von
+        Staging auf Produktion existiert eine gespeicherte Kennung dort ohnehin
+        nicht. Ohne Heilung läuft dann JEDER Sync dieses Objekts für immer in
+        denselben 404: der Upsert nimmt den PUT-Pfad, weil eine Map-Zeile da ist,
+        und der Neu-Anlege-Pfad wird nie erreicht.
+
+        Bei 404 räumen wir deshalb den Gegenzustand ab (Wurzel 1) — und zwar
+        ALLES, was an dieser Kennung hängt, nicht nur die eine Map-Zeile:
+        * die Map-Zeilen aller Einheiten, die auf diese Property zeigen
+          (geteilte Gebäude-Property, 0264) — sie sind gleichermaßen entwertet,
+        * deren Room-Type-/Rate-Plan-Zuordnungen (sonst zeigt die neue Property
+          auf Room-Types, die es bei Channex nicht mehr gibt),
+        * den ARI-Schatten (`channex_ari_shadow`) dieser Objekte: er hält den
+          Ist-Stand ohne Readback fest (siehe README). Bliebe er stehen, hielte
+          der Push die neue Property für „schon gesendet" und schickte nie
+          wieder Preise/Verfügbarkeit.
+
+        Nur 404 heilt. Jeder andere Fehler (401 Schlüssel falsch, 422 Attribute,
+        429 Budget, 5xx) wird weitergeworfen — ihn als „weg" zu deuten würde
+        Zuordnungen wegwerfen, die intakt sind (Wurzel 5).
+        """
+        try:
+            self._channex.update_property(channex_id, attrs)
+            return True
+        except ChannexError as exc:
+            if exc.channex_status != 404:
+                raise
+
+        betroffene = (
+            db.table("channex_property_map")
+            .select("id, property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("channex_property_id", channex_id)
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        property_ids = [str(r["property_id"]) for r in betroffene]
+        map_ids = [str(r["id"]) for r in betroffene]
+        log.warning(
+            "channex_property_verschwunden_neu_anlegen",
+            tenant_id=tenant_id,
+            channex_property_id=channex_id,
+            betroffene_objekte=len(property_ids),
+        )
+        if not property_ids:
+            return False
+
+        jetzt = datetime.now(UTC).isoformat()
+        # Room-Types hängen über property_map_id an der Zuordnung, Rate-Plans
+        # über room_type_map_id an den Room-Types — mit der Property sind alle
+        # drei Ebenen bei Channex verschwunden, also alle drei abräumen.
+        rt_rows = (
+            db.table("channex_room_type_map")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .in_("property_map_id", map_ids)
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        rt_ids = [str(r["id"]) for r in rt_rows]
+        if rt_ids:
+            db.table("channex_rate_plan_map").update({"deleted_at": jetzt}).eq(
+                "tenant_id", tenant_id
+            ).in_("room_type_map_id", rt_ids).is_(
+                "deleted_at", "null"
+            ).execute()
+            db.table("channex_room_type_map").update({"deleted_at": jetzt}).eq(
+                "tenant_id", tenant_id
+            ).in_("id", rt_ids).execute()
+        db.table("channex_ari_shadow").delete().eq(
+            "tenant_id", tenant_id
+        ).in_("property_id", property_ids).execute()
+        db.table("channex_property_map").update(
+            {
+                "deleted_at": jetzt,
+                "sync_enabled": False,
+                "last_sync_status": "error",
+                "last_sync_error": (
+                    "Objekt bei den Portalen nicht mehr vorhanden (404) — "
+                    "wird beim nächsten Sync neu angelegt."
+                ),
+            }
+        ).eq("tenant_id", tenant_id).eq(
+            "channex_property_id", channex_id
+        ).is_("deleted_at", "null").execute()
+        return False
+
     def _upsert_channex_property(
         self, db: Client, tenant_id: str, property_id: str, title: str,
         currency: str, prop_row: dict[str, Any] | None = None,
@@ -572,8 +665,10 @@ class ContentSyncMixin:
                         "channex_shared_property_no_tenant_title",
                         tenant_id=tenant_id, property_id=property_id,
                     )
-            self._channex.update_property(channex_id, attrs)
-            return channex_id
+            if self._put_property_oder_heilen(db, tenant_id, channex_id, attrs):
+                return channex_id
+            # Property bei Channex weg (404) → Zuordnung ist entwertet und
+            # wurde eben abgeräumt. Weiter im Neu-Anlege-Pfad unten.
 
         # GEBÄUDE (0264): Objekte desselben Gebäudes teilen EINE Channex-Property
         # (eine Booking-Hotel-ID mit mehreren Room-IDs). Existiert für dieses
@@ -592,9 +687,16 @@ class ContentSyncMixin:
                 # Property-Titel auf den Gebäudenamen halten (nicht diesen
                 # Einheitentitel) — sonst benennt jede Einheit die Property um.
                 haus_title = self._building_title(db, tenant_id, building_id)
-                self._channex.update_property(
-                    shared, {**attrs, "title": haus_title or attrs["title"]}
-                )
+                if not self._put_property_oder_heilen(
+                    db, tenant_id, shared,
+                    {**attrs, "title": haus_title or attrs["title"]},
+                ):
+                    # Die Gebäude-Property ist bei Channex weg; die Zuordnungen
+                    # der Geschwister-Einheiten sind abgeräumt. Diese Einheit
+                    # legt jetzt die neue Gebäude-Property an, die Geschwister
+                    # hängen sich bei ihrem nächsten Sync wieder daran.
+                    shared = None
+            if shared:
                 db.table("channex_property_map").insert(
                     {
                         "tenant_id": tenant_id,

@@ -458,10 +458,10 @@ def _budget_client(*, allow: bool):  # noqa: ANN202
     from src.features.channel_manager.channex_client import ChannexClient
     from src.jobs.channex_budget import BudgetDecision
 
-    calls: list[str | None] = []
+    calls: list[tuple[str | None, str]] = []
 
-    def before_call(channex_property_id):  # noqa: ANN001, ANN202
-        calls.append(channex_property_id)
+    def before_call(channex_property_id, kind):  # noqa: ANN001, ANN202
+        calls.append((channex_property_id, kind))
         return BudgetDecision(allowed=allow, retry_after=0)
 
     client = ChannexClient(
@@ -489,8 +489,9 @@ def test_channex_client_raises_when_budget_exhausted_without_http() -> None:
         else:
             raise AssertionError("erschöpftes Budget muss ChannexBudgetExhausted werfen")
     httpx_client.assert_not_called()  # KEIN Channex-Call trotz Aufruf
-    # Property-Ebene: die channex_property_id aus values[] wurde durchgereicht.
-    assert calls == ["cx-prop"]
+    # Property-Ebene: die channex_property_id aus values[] wurde durchgereicht,
+    # und POST /availability zählt in den eigenen ARI-Availability-Topf.
+    assert calls == [("cx-prop", "availability")]
 
 
 def test_channex_client_allows_and_hits_http_when_budget_free() -> None:
@@ -511,7 +512,8 @@ def test_channex_client_allows_and_hits_http_when_budget_free() -> None:
               "date_from": "2026-06-23", "date_to": "2026-06-25", "availability": 0}]
         )
     httpx_client.assert_called_once()  # Budget frei → echter Call läuft
-    assert calls == ["cx-prop"]  # genau ein Token für diesen einen Call
+    # genau ein Token für diesen einen Call, aus dem Availability-Topf
+    assert calls == [("cx-prop", "availability")]
 
 
 # --- Restriktions-Outbox: dauerhafter Backstop (BUG 2) + BUG 9 ---------------

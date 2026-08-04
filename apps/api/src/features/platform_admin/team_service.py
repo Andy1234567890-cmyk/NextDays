@@ -41,6 +41,8 @@ from .schemas import (
     TeamInviteResult,
     TeamList,
     TeamMember,
+    TeamPasswordResetConfirm,
+    TeamPasswordResetRequest,
     TeamUpdate,
 )
 
@@ -53,6 +55,23 @@ _MAX_MEMBERS = 200
 # Gültigkeit der Einladung. Kurz genug, dass ein vergessener Link nicht ewig
 # offensteht, lang genug für ein Wochenende.
 _INVITE_TTL = timedelta(hours=72)
+
+# Gültigkeit eines Passwort-Reset-Links. Deutlich kürzer als die Einladung: hier
+# geht es um einen bestehenden Zugang, und der Link liegt in einem Postfach.
+_RESET_TTL = timedelta(hours=1)
+
+# Sperrfrist zwischen zwei Reset-Mails an dasselbe Konto. Verhindert, dass der
+# öffentliche Endpunkt zum Mail-Bombardement gegen ein Betreiber-Postfach wird
+# (der IP-Ratelimit allein hilft dagegen nicht — Wurzel 8).
+_RESET_COOLDOWN = timedelta(minutes=1)
+
+# Neutrale Antwort der Reset-Anfrage. EINE Formulierung für alle Fälle: kein
+# Konto, kein Backoffice-Zugang, entzogener Zugang, Mailfehler. Wer hier
+# unterscheidet, baut ein Verzeichnis der Betreiber-Konten (Wurzel 3/9).
+_RESET_ANTWORT = (
+    "Falls zu dieser Adresse ein Backoffice-Zugang gehört, ist eine E-Mail "
+    "mit einem Link unterwegs."
+)
 
 _ROLLEN = ("platform_admin", "platform_support")
 
@@ -209,6 +228,135 @@ class TeamService:
             }
         ).eq("user_id", zeile["user_id"]).execute()
         log.info("platform_team_accepted", user_id=zeile["user_id"])
+
+    # -- Passwort vergessen --------------------------------------------------
+    #
+    # Zwei öffentliche Schritte, weil der Nutzer sich per Definition nicht
+    # anmelden kann. Der Einmal-Token im Postfach IST die Berechtigung —
+    # derselbe Mechanismus wie bei der Einladung, nur mit eigenen Spalten
+    # (0279) und einer Stunde Gültigkeit.
+
+    def passwort_reset_anfordern(self, req: TeamPasswordResetRequest) -> str:
+        """Reset-Link anfordern. Gibt IMMER dieselbe neutrale Auskunft zurück.
+
+        Jeder Abbruchgrund (keine gültige Adresse, kein Konto, kein
+        Backoffice-Zugang, entzogener Zugang, Sperrfrist, Mailfehler) endet in
+        derselben Antwort. Das ist hier kein Verschlucken, sondern der Zweck:
+        eine unterscheidbare Antwort wäre ein Verzeichnis der Betreiber-Zugänge
+        (Wurzel 3/9). Jeder Abbruch wird protokolliert, damit der Betrieb sieht,
+        was passiert ist.
+        """
+        email = req.email.strip().lower()
+        try:
+            self._reset_ausloesen(email)
+        except TeamError as exc:
+            # EINE Stelle, die abbricht, EINE Antwort: so kann kein neuer
+            # Abbruchgrund versehentlich eine unterscheidbare Antwort erzeugen.
+            log.info(
+                "platform_team_reset_abgebrochen",
+                email=mask_email(email),
+                grund=exc.message,
+            )
+        return _RESET_ANTWORT
+
+    def _reset_ausloesen(self, email: str) -> None:
+        """Token setzen und Mail schicken. Wirft TeamError bei jedem Abbruch.
+
+        Die Gründe stehen nur im Protokoll, nie in der Antwort — der Aufrufer
+        übersetzt sie alle in dieselbe neutrale Auskunft.
+        """
+        if "@" not in email or email.startswith("@") or email.endswith("@"):
+            raise TeamError("Keine gültige E-Mail-Adresse.", status_code=422)
+        user_id = self._auth_user_id(email)
+        zeile = self._zeile(user_id) if user_id else None
+        if zeile is None or not zeile.get("active"):
+            # Kein Backoffice-Zugang (oder entzogen) → keine Mail. Der Zugang
+            # entsteht ausschließlich über eine Einladung, nie über einen Reset.
+            raise TeamError("Kein aktiver Backoffice-Zugang zu dieser Adresse.")
+        if self._reset_gesperrt(zeile.get("reset_requested_at")):
+            raise TeamError("Sperrfrist seit der letzten Anfrage läuft noch.")
+
+        token = secrets.token_urlsafe(32)
+        link = self._reset_link(token)
+        jetzt = datetime.now(UTC)
+        self._db.table("platform_admins").update(
+            {
+                "reset_token_hash": _hash(token),
+                "reset_expires_at": (jetzt + _RESET_TTL).isoformat(),
+                "reset_requested_at": jetzt.isoformat(),
+            }
+        ).eq("user_id", zeile["user_id"]).execute()
+
+        try:
+            self._reset_mail(email, link)
+        except MailError as exc:
+            # Gegenzustand (Wurzel 1): ging die Mail nicht raus, darf der Token
+            # nicht in der DB stehenbleiben — sonst liegt ein gültiger Zugang
+            # bereit, den niemand bekommen hat. `reset_requested_at` bleibt,
+            # damit die Sperrfrist auch den Fehlerfall deckt.
+            self._db.table("platform_admins").update(
+                {"reset_token_hash": None, "reset_expires_at": None}
+            ).eq("user_id", zeile["user_id"]).execute()
+            log.warning(
+                "platform_team_reset_mail_failed",
+                user_id=zeile["user_id"],
+                error=exc.message,
+            )
+            raise TeamError(f"Mailversand fehlgeschlagen: {exc.message}") from exc
+
+        log.info("platform_team_reset_versendet", user_id=zeile["user_id"])
+
+    def passwort_neu_setzen(self, req: TeamPasswordResetConfirm) -> None:
+        """Neues Passwort über den Reset-Token setzen (öffentlich).
+
+        Fehlerfälle antworten absichtlich gleich — ob ein Token existiert, geht
+        niemanden etwas an. Nach dem Wechsel werden ALLE Sitzungen des Kontos
+        widerrufen: ein Reset ist der Weg, den ein Kompromittierter geht, und
+        eine überlebende fremde Sitzung würde ihn wirkungslos machen.
+        """
+        rows = (
+            self._db.table("platform_admins")
+            .select("user_id, reset_expires_at, active, accepted_at")
+            .eq("reset_token_hash", _hash(req.token))
+            .limit(1)
+            .execute()
+        ).data or []
+        zeile = rows[0] if rows else None
+        if (
+            zeile is None
+            or not zeile.get("active")
+            or not self._gueltig(zeile.get("reset_expires_at"))
+        ):
+            raise TeamError("Link ungültig oder abgelaufen.", status_code=400)
+
+        user_id = zeile["user_id"]
+        try:
+            self._db.auth.admin.update_user_by_id(
+                user_id, {"password": req.password}
+            )
+        except Exception as exc:  # noqa: BLE001 — in TeamError übersetzen
+            log.warning("platform_team_reset_set_failed", error=str(exc))
+            raise TeamError(
+                "Passwort konnte nicht gesetzt werden.", status_code=502
+            ) from exc
+
+        felder: dict[str, object] = {
+            "reset_token_hash": None,
+            "reset_expires_at": None,
+        }
+        if not zeile.get("accepted_at"):
+            # Der Reset ersetzt eine noch offene Einladung: wer ein Passwort
+            # gesetzt hat, ist angenommen, und der Einladungslink ist damit
+            # verbraucht (Wurzel 1 — sonst zeigt die Team-Liste ewig
+            # „Einladung ausstehend" und ein zweiter Link bleibt gültig).
+            felder["accepted_at"] = datetime.now(UTC).isoformat()
+            felder["invite_token_hash"] = None
+            felder["invite_expires_at"] = None
+        self._db.table("platform_admins").update(felder).eq(
+            "user_id", user_id
+        ).execute()
+        self._alle_sitzungen_widerrufen(user_id)
+        log.info("platform_team_reset_gesetzt", user_id=user_id)
 
     # -- Ändern --------------------------------------------------------------
 
@@ -398,6 +546,76 @@ class TeamService:
                 f"({exc.message}). Gib den Link bitte persönlich weiter."
             )
         return True, None
+
+    def _reset_link(self, token: str) -> str:
+        """Absoluter Link auf die „neues Passwort"-Seite des Backoffice."""
+        basis = (self._settings.admin_base_url or "").rstrip("/")
+        if not basis:
+            raise TeamError(
+                "ADMIN_BASE_URL ist nicht konfiguriert — ohne sie kann kein "
+                "Reset-Link erzeugt werden.",
+                status_code=500,
+            )
+        return f"{basis}/passwort-neu?token={token}"
+
+    def _reset_mail(self, email: str, link: str) -> None:
+        """Reset-Link verschicken (über den eigenen Mailcow-SMTP, `core.mail`).
+
+        Wirft `MailError` weiter — der Aufrufer nimmt den Token dann zurück.
+        """
+        text = (
+            "Hallo,\n\n"
+            "für deinen Zugang zum myNextDays-Backoffice wurde ein neues "
+            "Passwort angefordert.\n\n"
+            "Setze es hier (der Link ist eine Stunde gültig und nur einmal "
+            "verwendbar):\n"
+            f"{link}\n\n"
+            "Warst das nicht du, ignoriere diese Mail — dein bisheriges "
+            "Passwort bleibt dann unverändert gültig.\n"
+        )
+        self._mail.send(
+            OutboundMessage(
+                to=email,
+                subject="Neues Passwort für das myNextDays-Backoffice",
+                text=text,
+            )
+        )
+
+    @staticmethod
+    def _reset_gesperrt(zuletzt: str | None) -> bool:
+        """True, solange die Sperrfrist seit der letzten Anfrage läuft.
+
+        Ein unlesbarer Zeitstempel gilt als „nicht gesperrt": lieber eine Mail
+        zu viel als ein Konto, das sich nie zurücksetzen lässt.
+        """
+        if not zuletzt:
+            return False
+        try:
+            gesetzt = datetime.fromisoformat(zuletzt)
+        except ValueError:
+            return False
+        if gesetzt.tzinfo is None:
+            gesetzt = gesetzt.replace(tzinfo=UTC)
+        return gesetzt + _RESET_COOLDOWN > datetime.now(UTC)
+
+    def _alle_sitzungen_widerrufen(self, user_id: str) -> None:
+        """Jede aktive Sitzung des Kontos beenden (RPC aus 0191, keep=None).
+
+        Best-effort: schlägt der Aufruf fehl, ist das Passwort trotzdem neu —
+        das darf den Hauptpfad nicht kippen. Protokolliert, damit ein
+        klemmender Widerruf nicht unbemerkt bleibt.
+        """
+        try:
+            self._db.rpc(
+                "host_revoke_other_sessions",
+                {"p_user_id": user_id, "p_keep_session_id": None},
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — reiner Aufräum-Schritt
+            log.warning(
+                "platform_team_reset_sessions_failed",
+                user_id=user_id,
+                error=str(exc),
+            )
 
     def _zeile(self, user_id: str) -> dict | None:
         rows = (

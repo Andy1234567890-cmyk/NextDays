@@ -77,8 +77,8 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 ### Integrationen (Channex / Stripe / WhatsApp / Groq)
 | Variable | Zweck | Secret? | Quelle |
 |---|---|---|---|
-| `CHANNEX_API_KEY` | Channel-Manager-API | **ja** | → Passwort-Manager |
-| `CHANNEX_BASE_URL` | Channex-Endpoint | nein | Coolify-Env |
+| `CHANNEX_API_KEY` | Channel-Manager-API; gilt nur für die Installation aus `CHANNEX_BASE_URL` (Prod-Schlüssel wird einmalig angezeigt, braucht ein aktives Abo) | **ja** | → Passwort-Manager |
+| `CHANNEX_BASE_URL` | Channex-Endpoint — Prod `https://app.channex.io/api/v1`, Staging `https://staging.channex.io/api/v1`; getrennte Konten, Schlüssel gelten nur in ihrer Welt (`deploy/CHANNEX-GO-LIVE.md`) | nein | Coolify-Env |
 | `CHANNEX_WEBHOOK_SECRET` | Channex-Webhook-Prüf-Secret (geht outbound an Channex — autorisiert NUR den Webhook-Empfang) | **ja** | → Passwort-Manager |
 | `INTERNAL_CRON_SECRET` | Eigenes Secret für interne Cron-Endpunkte (recompute/reconcile/auto-run/dispatch); verlässt den Server nie. Leer = Cron-Endpunkte deaktiviert (503) | **ja** | → Passwort-Manager |
 | `CHANNEX_SANDBOX_PORTALS` | Sandbox-Kanäle (Prod=false) | nein | Coolify-Env |
@@ -96,7 +96,10 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 | `PGRST_DB_POOL` | PostgREST-Connection-Pool (Default 25; Σ Pools < max_connections 100) | nein | Coolify-Env |
 | `WORKER_CONCURRENCY` | Parallel-Jobs je Worker-Prozess (Default 4) | nein | Coolify-Env |
 | `CHANNEX_ACCOUNT_BUDGET` | Kontoweites Channex-Anfrage-Budget im Worker (Default `200/60`) | nein | Coolify-Env |
-| `CHANNEX_PROPERTY_BUDGET` | Channex-Budget je Property im Worker (Default `20/60`) | nein | Coolify-Env |
+| `CHANNEX_PROPERTY_BUDGET` | Channex-Budget je Property im Worker für NICHT-ARI-Calls (Content-Sync; Default `20/60`) | nein | Coolify-Env |
+| `CHANNEX_ARI_ACCOUNT_BUDGET` | Kontoweites ARI-Budget (Channex-Grenze: 20 ARI/Minute; Default `20/60`) | nein | Coolify-Env |
+| `CHANNEX_AVAILABILITY_BUDGET` | ARI-Budget je Property für Availability (Channex-Grenze: 10/Minute; Default `10/60`) | nein | Coolify-Env |
+| `CHANNEX_RATES_BUDGET` | ARI-Budget je Property für Restrictions+Preise (Channex-Grenze: 10/Minute; Default `10/60`) | nein | Coolify-Env |
 
 ### Page-Builder (`site_config`-Slice)
 | Variable | Zweck | Secret? | Quelle |

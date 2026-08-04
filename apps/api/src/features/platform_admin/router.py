@@ -39,6 +39,9 @@ from .schemas import (
     TeamInviteResult,
     TeamList,
     TeamMember,
+    TeamPasswordResetConfirm,
+    TeamPasswordResetRequest,
+    TeamPasswordResetResponse,
     TeamUpdate,
     TenantDetail,
     TenantList,
@@ -383,6 +386,44 @@ def accept_team_invite(
     """
     try:
         service.accept(req)
+    except TeamError as exc:
+        raise _map_team(exc) from exc
+    return PlatformOk()
+
+
+@router.post("/team/passwort-vergessen", response_model=TeamPasswordResetResponse)
+def request_password_reset(
+    req: TeamPasswordResetRequest, service: TeamServiceDep
+) -> TeamPasswordResetResponse:
+    """Reset-Link an ein Backoffice-Konto schicken (öffentlich).
+
+    Bewusst OHNE Guard — wer sein Passwort vergessen hat, kann sich nicht
+    anmelden. Die Antwort ist IMMER dieselbe: ein unterscheidbarer Fehler wäre
+    ein Verzeichnis der Betreiber-Zugänge (Wurzel 3/9). Deshalb wird hier auch
+    keine Ausnahme gemappt — der Service beantwortet jeden Abbruch neutral und
+    protokolliert ihn. Ratelimit: strenger `auth`-Bucket (Wurzel 8), zusätzlich
+    eine Sperrfrist je Konto gegen Mail-Bombardement.
+
+    Nicht protokolliert im Backoffice-Audit: dort gibt es keinen Akteur, und
+    schon der Eintrag würde verraten, welche Adresse ein Konto hat.
+    """
+    return TeamPasswordResetResponse(
+        message=service.passwort_reset_anfordern(req)
+    )
+
+
+@router.post("/team/passwort-neu", response_model=PlatformOk)
+def confirm_password_reset(
+    req: TeamPasswordResetConfirm, service: TeamServiceDep
+) -> PlatformOk:
+    """Neues Passwort über den Link aus der Mail setzen (öffentlich).
+
+    Der Einmal-Token IST die Berechtigung: nur als Hash gespeichert, eine Stunde
+    gültig, danach verbraucht. Alle Fehlerfälle antworten gleich. Nach dem
+    Wechsel widerruft der Service jede Sitzung des Kontos.
+    """
+    try:
+        service.passwort_neu_setzen(req)
     except TeamError as exc:
         raise _map_team(exc) from exc
     return PlatformOk()

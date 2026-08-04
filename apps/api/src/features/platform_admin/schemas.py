@@ -87,6 +87,32 @@ class TeamInviteAccept(BaseModel):
     password: str = Field(min_length=12, max_length=200)
 
 
+class TeamPasswordResetRequest(BaseModel):
+    """„Passwort vergessen": Anfrage mit der E-Mail-Adresse."""
+
+    email: str = Field(min_length=5, max_length=200)
+
+
+class TeamPasswordResetConfirm(BaseModel):
+    """Neues Passwort setzen: Token aus der Mail + Passwort.
+
+    Dieselbe Mindestlänge wie bei der Einladung — der Zugang ist derselbe.
+    """
+
+    token: str = Field(min_length=20, max_length=200)
+    password: str = Field(min_length=12, max_length=200)
+
+
+class TeamPasswordResetResponse(BaseModel):
+    """Antwort auf die Reset-Anfrage — bewusst IMMER dieselbe.
+
+    Kein Feld verrät, ob die Adresse ein Backoffice-Konto hat: sonst wäre der
+    Endpunkt ein Verzeichnis der Betreiber-Zugänge (Wurzel 3/9).
+    """
+
+    message: str
+
+
 class AuditEntry(BaseModel):
     """Ein Eintrag des Backoffice-Protokolls."""
 

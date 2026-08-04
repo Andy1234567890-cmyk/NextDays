@@ -9,6 +9,17 @@ Zwei Ebenen, beide müssen ein Token hergeben:
   - ``channex:account``           — kontoweit (alle Betriebe zusammen)
   - ``channex:prop:{channex_id}`` — je Channex-Property (Fairness zwischen Objekten)
 
+Und ZWEI Topf-Sorten, weil Channex ARI getrennt zählt (Acceptable Use Policy,
+vertraglich verbindlich): je Property 10 Availability/Minute UND 10
+Restrictions&Preise/Minute, kontoweit 20 ARI/Minute. Ein gemeinsamer Topf mit
+20 je Property würde die Grenze verletzen, sobald alle 20 Calls dieselbe Sorte
+sind. Deshalb wählt ``kind`` die Schlüssel und die Limits:
+  - ``"availability"`` → ``channex:ari:account`` + ``channex:avail:{id}``
+  - ``"rates"``        → ``channex:ari:account`` + ``channex:rates:{id}``
+  - ``"other"``        → ``channex:account``     + ``channex:prop:{id}``
+Beide ARI-Sorten teilen sich absichtlich DENSELBEN Konto-Topf — kontoweit gilt
+die Summe (20), nicht 20 je Sorte.
+
 Synchron mit Absicht: der Worker ruft dies im Thread (asyncio.to_thread) direkt
 vor dem blockierenden Channex-Call. Wir verwenden dasselbe atomare Lua-Fenster wie
 der HTTP-Limiter (ratelimit._WINDOW_LUA) — kein zweiter Zähl-Algorithmus, nur ein
@@ -89,33 +100,57 @@ class ChannexBudget:
     def __init__(self, settings: Settings, client: redis.Redis | None = None) -> None:
         self._account: Limit = parse_limit(settings.channex_account_budget)
         self._property: Limit = parse_limit(settings.channex_property_budget)
+        self._ari_account: Limit = parse_limit(settings.channex_ari_account_budget)
+        self._availability: Limit = parse_limit(settings.channex_availability_budget)
+        self._rates: Limit = parse_limit(settings.channex_rates_budget)
         self._redis = client or _build_sync_redis(settings.redis_url)
 
-    def try_consume(self, channex_property_id: str | None) -> BudgetDecision:
+    def _toepfe(self, kind: str) -> tuple[str, Limit, str, Limit]:
+        """Konto-Schlüssel/-Limit und Property-Präfix/-Limit für diese Sorte.
+
+        Unbekannte Sorte fällt auf den ARI-Rates-Topf, NICHT auf den weiten
+        "other"-Topf: eine neue ARI-Sorte, die hier vergessen wird, läuft dann
+        in das strenge Limit statt Channex' Grenze zu reißen (fail-closed,
+        Wurzel 5).
+        """
+        if kind == "other":
+            return ("rl:channex:account", self._account,
+                    "rl:channex:prop", self._property)
+        if kind == "availability":
+            return ("rl:channex:ari:account", self._ari_account,
+                    "rl:channex:avail", self._availability)
+        return ("rl:channex:ari:account", self._ari_account,
+                "rl:channex:rates", self._rates)
+
+    def try_consume(
+        self, channex_property_id: str | None, kind: str = "other"
+    ) -> BudgetDecision:
         """Ein Token je Ebene verbrauchen — ATOMAR all-or-nothing. Erlaubt nur,
         wenn BEIDE hergeben; lehnt die Property-Ebene ab, wird KEIN Account-Token
         verbraucht (kein Leck über abgelehnte, retryte Jobs).
 
         channex_property_id=None → nur die Konto-Ebene (globaler/objektloser Push).
+        kind wählt den Topf ("availability"/"rates"/"other", siehe Modul-Kopf).
         Bei Redis-Fehler: NICHT erlaubt (Push verzögern statt Channex überfahren).
         """
+        acc_key, acc_limit, prop_praefix, prop_limit = self._toepfe(kind)
         has_prop = 1 if channex_property_id else 0
-        keys = ["rl:channex:account"]
+        keys = [acc_key]
         keys.append(
-            f"rl:channex:prop:{channex_property_id}" if channex_property_id
-            else "rl:channex:prop:_none"  # ungenutzt (has_prop=0), nur Platzhalter
+            f"{prop_praefix}:{channex_property_id}" if channex_property_id
+            else f"{prop_praefix}:_none"  # ungenutzt (has_prop=0), nur Platzhalter
         )
         try:
             allowed, acc_ttl, prop_ttl = self._redis.eval(
                 _TWO_LEVEL_LUA, 2, keys[0], keys[1],
-                self._account.max, self._account.window_seconds,
-                self._property.max, self._property.window_seconds,
+                acc_limit.max, acc_limit.window_seconds,
+                prop_limit.max, prop_limit.window_seconds,
                 has_prop,
             )
         except (redis.RedisError, OSError) as exc:
             log.warning("channex_budget_redis_unavailable", error=type(exc).__name__)
             return BudgetDecision(
-                allowed=False, retry_after=self._account.window_seconds
+                allowed=False, retry_after=acc_limit.window_seconds
             )
         if int(allowed) == 1:
             return BudgetDecision(allowed=True, retry_after=0)
@@ -126,15 +161,15 @@ class ChannexBudget:
         acc_ttl, prop_ttl = int(acc_ttl), int(prop_ttl)
         if acc_ttl >= 0:
             return BudgetDecision(
-                allowed=False, retry_after=_retry(acc_ttl, self._account)
+                allowed=False, retry_after=_retry(acc_ttl, acc_limit)
             )
         if prop_ttl >= 0:
             return BudgetDecision(
-                allowed=False, retry_after=_retry(prop_ttl, self._property)
+                allowed=False, retry_after=_retry(prop_ttl, prop_limit)
             )
         # Beide -2 (sollte nicht vorkommen) → konservativ das Account-Fenster.
         return BudgetDecision(
-            allowed=False, retry_after=self._account.window_seconds
+            allowed=False, retry_after=acc_limit.window_seconds
         )
 
 

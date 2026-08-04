@@ -413,8 +413,10 @@ class _ProgressBudget:
         self._inner = inner
         self.granted = 0
 
-    def try_consume(self, channex_property_id: str | None) -> BudgetDecision:
-        decision = self._inner.try_consume(channex_property_id)
+    def try_consume(
+        self, channex_property_id: str | None, kind: str = "other"
+    ) -> BudgetDecision:
+        decision = self._inner.try_consume(channex_property_id, kind)
         if decision.allowed:
             self.granted += 1
         return decision

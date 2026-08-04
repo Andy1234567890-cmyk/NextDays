@@ -1567,6 +1567,21 @@ psql. Seitdem läuft es über `/api/v1/platform/team` und die Seite
   (`core.mail`) — GoTrue selbst hat keinen Mailzugang. Die eingeladene Person
   setzt ihr Passwort selbst unter `admin/app/einladung` (ohne Anmeldung
   erreichbar, Berechtigung ist der Token).
+- **Passwort vergessen (`0279`)** → derselbe Weg, eigene Spalten
+  (`reset_*`), **eine Stunde** gültig, Versand ebenfalls über `core.mail`. Die
+  Anmeldung verlinkt „Passwort zurücksetzen" auf `admin/app/passwort-vergessen`,
+  der Link aus der Mail führt auf `admin/app/passwort-neu` — beide ohne
+  Anmeldung erreichbar (Middleware-Ausnahme), Berechtigung ist der Token. Die
+  Anfrage antwortet IMMER wörtlich gleich (kein Existenz-Leak) und hat eine
+  Sperrfrist von 1 Minute je Konto; nach dem Wechsel werden ALLE Sitzungen des
+  Kontos widerrufen (`host_revoke_other_sessions`, `keep=NULL`, RPC aus `0191`).
+  Ging die Mail nicht raus, wird der Token wieder entfernt (Wurzel 1).
+  Live geprüft mit `scripts/platform/verify_backoffice_passwort_reset.py`
+  (echte Server-DB, echter Mailversand — kein Mock, kein Testkonto).
+- **Passwort-Eingaben** nutzen eine gemeinsame Komponente
+  `admin/components/passwort-feld.tsx` mit Sichtbarkeits-Schalter (Auge,
+  `aria-pressed`) — eine Stelle für Anmeldung, Einladung und Reset, damit
+  Beschriftung und Verhalten nicht auseinanderdriften.
 - **Aussperr-Schutz:** keine Selbst-Änderung der eigenen Rolle/Aktivität, und
   der letzte aktive `platform_admin` bleibt bestehen (409).
 

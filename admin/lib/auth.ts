@@ -83,3 +83,61 @@ export async function abmelden(): Promise<never> {
   await clearSession(ADMIN_COOKIES);
   redirect("/anmelden");
 }
+
+/**
+ * Passwort-Reset anfordern.
+ *
+ * Ohne Bearer-Token (wer sein Passwort vergessen hat, hat keine Sitzung). Die
+ * Antwort des Servers ist IMMER dieselbe — deshalb gibt es hier auch keine
+ * Fehler-Unterscheidung: die Meldung wird unverändert durchgereicht. Nur ein
+ * Transportfehler (Server nicht erreichbar) ist ein echter Fehlerfall.
+ */
+export async function passwortResetAnfordern(
+  email: string,
+): Promise<{ ok: true; meldung: string } | { ok: false; fehler: string }> {
+  try {
+    const res = await sharedApi<{ message: string }>(
+      "/platform/team/passwort-vergessen",
+      { method: "POST", body: { email }, isPublic: true },
+    );
+    return { ok: true, meldung: res.message };
+  } catch (exc) {
+    return {
+      ok: false,
+      fehler:
+        exc instanceof ApiError
+          ? exc.message
+          : "Anfrage konnte nicht gesendet werden.",
+    };
+  }
+}
+
+/**
+ * Neues Passwort über den Link aus der Mail setzen.
+ *
+ * Der Einmal-Token aus dem Link IST die Berechtigung; geprüft wird er
+ * ausschließlich serverseitig. Alle Fehlerfälle antworten gleich, damit die
+ * Existenz eines Tokens nicht ableitbar ist — die Meldung wird deshalb nicht
+ * „hilfreich" ausgeschmückt.
+ */
+export async function passwortNeuSetzen(
+  token: string,
+  passwort: string,
+): Promise<LoginErgebnis> {
+  try {
+    await sharedApi("/platform/team/passwort-neu", {
+      method: "POST",
+      body: { token, password: passwort },
+      isPublic: true,
+    });
+    return { ok: true };
+  } catch (exc) {
+    return {
+      ok: false,
+      fehler:
+        exc instanceof ApiError
+          ? exc.message
+          : "Passwort konnte nicht gesetzt werden.",
+    };
+  }
+}

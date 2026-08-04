@@ -45,12 +45,26 @@ class _FakeRedis:
         return [1, self.acc_ttl, self.prop_ttl if has_prop else -2]
 
 
-def _budget(account: str = "5/60", prop: str = "2/60") -> tuple[ChannexBudget, _FakeRedis]:
+def _settings(
+    account: str = "5/60",
+    prop: str = "2/60",
+    *,
+    ari_account: str = "20/60",
+    availability: str = "10/60",
+    rates: str = "10/60",
+) -> MagicMock:
     settings = MagicMock()
     settings.channex_account_budget = account
     settings.channex_property_budget = prop
+    settings.channex_ari_account_budget = ari_account
+    settings.channex_availability_budget = availability
+    settings.channex_rates_budget = rates
+    return settings
+
+
+def _budget(account: str = "5/60", prop: str = "2/60") -> tuple[ChannexBudget, _FakeRedis]:
     fake = _FakeRedis()
-    return ChannexBudget(settings, client=fake), fake
+    return ChannexBudget(_settings(account, prop), client=fake), fake
 
 
 def test_allows_until_property_limit() -> None:
@@ -101,11 +115,9 @@ def test_retry_after_uses_blocking_level_only() -> None:
     # Fix: nur das Account-Budget ist voll (acc_ttl=55), die Property-Ebene hat
     # noch Platz. retry_after MUSS die Account-TTL sein, nicht die kürzere
     # (nicht-blockierende) Property-TTL — sonst wacht der Job zu früh auf.
-    settings = MagicMock()
-    settings.channex_account_budget = "1/60"   # sofort voll nach 1 Push
-    settings.channex_property_budget = "20/60"  # viel Platz
     fake = _FakeRedis(acc_ttl=55, prop_ttl=9)
-    budget = ChannexBudget(settings, client=fake)
+    # 1/60 kontoweit = sofort voll nach 1 Push, 20/60 je Property = viel Platz.
+    budget = ChannexBudget(_settings("1/60", "20/60"), client=fake)
     budget.try_consume("p1")  # acc=1 (voll)
     decision = budget.try_consume("p2")  # Account blockiert, Property frei
     assert decision.allowed is False
@@ -113,12 +125,46 @@ def test_retry_after_uses_blocking_level_only() -> None:
 
 
 def test_retry_after_property_block_uses_property_ttl() -> None:
-    settings = MagicMock()
-    settings.channex_account_budget = "100/60"
-    settings.channex_property_budget = "1/60"
     fake = _FakeRedis(acc_ttl=55, prop_ttl=9)
-    budget = ChannexBudget(settings, client=fake)
+    budget = ChannexBudget(_settings("100/60", "1/60"), client=fake)
     budget.try_consume("p1")  # p1=1 (Property voll)
     decision = budget.try_consume("p1")  # Property blockiert
     assert decision.allowed is False
     assert decision.retry_after == 9  # Property-TTL
+
+
+def test_ari_toepfe_sind_getrennt_und_teilen_das_konto() -> None:
+    """Channex' Grenzen: je Property 10 Availability UND 10 Rates, kontoweit 20
+    ARI zusammen. Der Availability-Topf darf den Rates-Topf nicht auffressen —
+    aber der KONTO-Topf ist für beide derselbe."""
+    fake = _FakeRedis()
+    budget = ChannexBudget(
+        _settings(ari_account="3/60", availability="2/60", rates="2/60"),
+        client=fake,
+    )
+    assert budget.try_consume("p1", "availability").allowed is True
+    assert budget.try_consume("p1", "availability").allowed is True
+    # 3. Availability-Push überschreitet den eigenen Topf (2/60) …
+    assert budget.try_consume("p1", "availability").allowed is False
+    # … der Rates-Topf desselben Objekts ist davon unberührt.
+    assert budget.try_consume("p1", "rates").allowed is True
+    # Kontoweit (3/60) sind damit alle ARI-Token weg — auch für ein anderes Objekt.
+    assert budget.try_consume("p2", "rates").allowed is False
+    # Der "other"-Topf (Content-Sync) hat sein eigenes Konto-Budget.
+    assert budget.try_consume("p2", "other").allowed is True
+    assert fake.store["rl:channex:ari:account"] == 3
+    assert fake.store["rl:channex:avail:p1"] == 2
+    assert fake.store["rl:channex:rates:p1"] == 1
+
+
+def test_unbekannte_sorte_faellt_in_den_engen_ari_topf() -> None:
+    """Fail-closed: eine hier vergessene ARI-Sorte darf nicht im weiten
+    "other"-Topf landen und Channex' ARI-Grenze reißen."""
+    fake = _FakeRedis()
+    budget = ChannexBudget(
+        _settings(account="99/60", prop="99/60", ari_account="1/60", rates="1/60"),
+        client=fake,
+    )
+    assert budget.try_consume("p1", "was_neues").allowed is True
+    assert budget.try_consume("p1", "was_neues").allowed is False
+    assert fake.store["rl:channex:ari:account"] == 1

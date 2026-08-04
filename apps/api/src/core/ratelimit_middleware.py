@@ -82,6 +82,12 @@ _AUTH_PATHS = (
     # noch keine Sitzung) und setzt ein Passwort — also derselbe strenge Bucket
     # wie ein Login, sonst wäre der Token-Raum durchprobierbar.
     "/platform/team/accept",
+    # Passwort-Reset des Backoffice: die Anfrage verschickt Mails an eine
+    # fremde Adresse und antwortet neutral (Enumeration), das Einlösen probiert
+    # einen Token durch. Beide gehören in denselben strengen Bucket wie ein
+    # Login; die Sperrfrist je Konto sitzt zusätzlich im Service.
+    "/platform/team/passwort-vergessen",
+    "/platform/team/passwort-neu",
 )
 
 # Endpunkte, die eine KOSTENPFLICHTIGE Fremd-API anstoßen (Groq bzw. Google

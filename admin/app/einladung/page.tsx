@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
+import { PasswortFeld } from "@/components/passwort-feld";
 import { einladungAnnehmen } from "@/lib/team-actions";
 
 const MIN_LAENGE = 12;
@@ -90,35 +91,22 @@ function Formular() {
         dieser Zugang sieht die Daten aller Betriebe.
       </p>
 
-      <label className="mt-8 block">
-        <span className="mb-1.5 block text-sm text-muted-foreground">
-          Passwort
-        </span>
-        <input
-          type="password"
-          required
-          minLength={MIN_LAENGE}
-          autoComplete="new-password"
+      <div className="mt-8 flex flex-col gap-4">
+        <PasswortFeld
+          label="Passwort"
           value={passwort}
-          onChange={(e) => setPasswort(e.target.value)}
-          className="w-full rounded-xl border border-border bg-transparent px-4 py-2.5 outline-none focus-visible:border-foreground"
-        />
-      </label>
-
-      <label className="mt-4 block">
-        <span className="mb-1.5 block text-sm text-muted-foreground">
-          Passwort wiederholen
-        </span>
-        <input
-          type="password"
-          required
-          minLength={MIN_LAENGE}
+          onChange={setPasswort}
           autoComplete="new-password"
-          value={wiederholung}
-          onChange={(e) => setWiederholung(e.target.value)}
-          className="w-full rounded-xl border border-border bg-transparent px-4 py-2.5 outline-none focus-visible:border-foreground"
+          minLength={MIN_LAENGE}
         />
-      </label>
+        <PasswortFeld
+          label="Passwort wiederholen"
+          value={wiederholung}
+          onChange={setWiederholung}
+          autoComplete="new-password"
+          minLength={MIN_LAENGE}
+        />
+      </div>
 
       {fehler && (
         <p className="mt-4 text-sm text-destructive" role="alert">
