@@ -24,17 +24,29 @@ Warum es diesen eigenen Ablauf braucht (alles live gegen app.channex.io am
    nicht: es entstehen dort keine neuen Properties, aus denen Objekte werden
    könnten.
 
-3. Die Listing-INHALTE liegen bei Airbnb, nicht bei Channex
-   (`GET /listings` → 404). Channex reicht Aufrufe an Airbnbs API durch
-   (`POST channels/{id}/proxy/*path`, Bundle: `Channels.ProxyScenario`); der
-   OAuth-Scope `property_management` aus dem Katalog deckt `hosting/listings`.
+3. Die Listing-Liste kommt aus `POST channels/mapping_details` mit den
+   KANAL-Settings (dort liegen nach der Autorisierung die Airbnb-Tokens), und
+   zwar unter `data.listing_id_dictionary.values[]`. Am autorisierten Kanal des
+   Beta-Betriebs live gemessen: 18 Listings, je Listing genau die Felder
+   `id, title, type, city, country_code, occupancies, quality_status,
+   synchronization_category`.
+
+   Mehr gibt Airbnb über Channex NICHT her — kein Content, keine Preise:
+   `channels/{id}/proxy/listings`, `.../proxy/v2/listings`,
+   `.../proxy/v2/calendars`, `.../proxy/v2/pricing_settings`,
+   `meta/airbnb/listings` und `meta/airbnb/full_sync_listing` antworten alle
+   mit HTTP 500, `channels/{id}/listings` mit 404. Airbnb ist bei Channex ein
+   PUSH-Kanal: Preise/Verfügbarkeit gehen von uns dorthin, nicht zurück (wie
+   beim ARI-Readback, `channex_ari_shadow`).
 
 Daraus der Ablauf — der Kunde gibt NICHTS ein:
     a) `uebernahme_starten`: Server legt ein Übernahme-Objekt an (lokal +
        Channex) und erzeugt damit die OAuth-URL.
     b) Kunde autorisiert bei Airbnb (ein Klick).
-    c) `listings_uebernehmen`: Listings über den Proxy lesen, das erste in das
-       Übernahme-Objekt schreiben, für jedes weitere ein Objekt anlegen.
+    c) `listings_uebernehmen`: Listings aus `mapping_details` lesen, das erste
+       in das Übernahme-Objekt schreiben, für jedes weitere ein Objekt anlegen.
+       Übernommen werden Titel, Stadt, Land und Kapazität (Maximum der
+       `occupancies`); Preise setzt der Betrieb einmal selbst — siehe oben.
 
 Das Übernahme-Objekt bleibt `status='draft'`: es ist ein Gerüst für die
 Autorisierung, kein verkaufsfertiges Objekt. Erst die echten Airbnb-Daten
@@ -83,6 +95,9 @@ class AirbnbUebernahmeMixin:
         property_id = self._geruest_objekt(db, tenant_id)
         # Ab hier der bestehende, erprobte OAuth-Pfad — kein zweiter Weg zu
         # Channex (der erste Anlauf dieser Funktion hatte genau das gebaut).
+        # Die Channex-Registrierung des Gerüsts holt `begin_channel_oauth` selbst
+        # nach; sie liegt dort, weil sie für JEDEN noch nicht registrierten
+        # Connect nötig ist — nicht nur für den aus der Übernahme.
         return self.begin_channel_oauth(
             ctx,
             property_id=property_id,
@@ -108,15 +123,34 @@ class AirbnbUebernahmeMixin:
         if vorhanden:
             return vorhanden[0]["id"]
 
-        # Nur Pflichtspalten setzen (live geprüft: NOT NULL ohne Default sind
-        # allein tenant_id und title). Alles andere bleibt DB-Default — kein
-        # geratener Typ, keine erfundene Adresse, keine Kapazität (Wurzel 4).
+        # Land des BETRIEBS mitgeben — nicht geraten, sondern der echte Wert aus
+        # `tenants.country` (im Onboarding erfasst). Nötig, weil Channex daraus
+        # die `timezone` ableitet und sie für eine Property PFLICHT ist. Ohne sie
+        # meldet Channex' Readiness-Check
+        #     {"field": "timezone", "error_code": "required",
+        #      "entity": "Property"}
+        # und der Kanal bleibt unvollständig — dann wird der Airbnb-Connect gar
+        # nicht erst freigegeben ("Once all required fields are filled, the
+        # Connect to Airbnb button becomes active", help.channex.io). Genau
+        # daran hing die Übernahme: Kanal und Link entstanden, aber Channex
+        # vergab keine Tokens.
+        land = self._tenant_country(db, tenant_id)
+        if not land:
+            # Fail-closed statt ein Property ohne Zeitzone anzulegen: das wäre
+            # bei Channex dauerhaft unvollständig und der Connect bliebe
+            # gesperrt — mit einer Fehlermeldung, die den Grund nicht nennt.
+            raise ChannelManagerError(
+                "Für diesen Betrieb ist kein Land hinterlegt. Ergänze es unter "
+                "„Konto“ — Airbnb braucht daraus die Zeitzone des Objekts.",
+                status_code=422,
+            )
         neu = (
             db.table("properties")
             .insert({
                 "tenant_id": tenant_id,
                 "title": _GERUEST_TITEL,
                 "status": "draft",
+                "country": land,
             })
             .execute()
         ).data
@@ -134,29 +168,61 @@ class AirbnbUebernahmeMixin:
         )
         return property_id
 
+    @staticmethod
+    def _tenant_country(db: Client, tenant_id: str) -> str | None:
+        """Land des Betriebs (`tenants.country`, ISO-2). Kein Default: fehlt es,
+        gibt None zurück und der Aufrufer meldet einen Datenfehler statt ein
+        Land zu raten (Wurzel 4) — ein falsches Land bedeutet eine falsche
+        Zeitzone und damit falsche An-/Abreisetage an den Portalen."""
+        res = (
+            db.table("tenants")
+            .select("country")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        return res[0].get("country") if res else None
+
     # -- c) Listings holen und Objekte daraus machen --------------------------
     def listings_uebernehmen(
         self, ctx: AuthContext, *, portal_code: str = "AirBNB"
     ) -> dict[str, Any]:
         """Airbnb-Listings des verbundenen Kontos als Objekte übernehmen.
 
-        Liest die Listings über den Channex-Proxy von Airbnb und schreibt sie in
+        Liest die Listings über `channels/mapping_details` und schreibt sie in
         unsere DB: das erste füllt das Gerüst-Objekt, jedes weitere wird ein
         eigenes Objekt. Idempotent über `airbnb_listing_id` (Wurzel 2) — ein
         zweiter Aufruf aktualisiert, statt zu verdoppeln.
+
+        WAS DIESER SCHRITT NICHT TUT — und WARUM (jetzt gemessen, nicht
+        vermutet): Er legt KEINE Preise an, weil Airbnb über Channex keine
+        liefert. Der einzige Weg an die Listings gibt genau sieben Felder her
+        (`id, title, type, city, country_code, occupancies, quality_status`);
+        jeder Content-/Preis-Pfad antwortet mit 500 bzw. 404 (Belege in
+        `airbnb_listings_aus_mapping_details` und `_listing_zu_objekt`). Airbnb
+        ist ein Push-Kanal: Preise und Verfügbarkeit gehen von uns DORTHIN.
+        Die Objekte entstehen darum mit `status='draft'` und ohne Rate-Plan; der
+        Betrieb setzt den Preis EINMAL, danach fließt er zu Airbnb. Ein
+        geratener Preis wäre bei der ersten Buchung echtes Geld (Wurzel 4).
         """
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
 
+        # Nur Zeilen MIT Kanal-ID: die Tabelle trägt für jedes Objekt eine Zeile
+        # je Portal, und solange dort kein Kanal angelegt wurde, ist
+        # `channex_channel_id` leer. Ohne diesen Filter hätte `limit(1)` eine
+        # leere Zeile erwischt und "nicht verbunden" gemeldet, obwohl eine andere
+        # Zeile den Kanal trägt.
         verbindung = (
             db.table("channex_channel_connection")
             .select("channex_channel_id, property_id")
             .eq("tenant_id", tenant_id)
             .eq("ota_portal_code", portal_code)
+            .not_.is_("channex_channel_id", "null")
             .limit(1)
             .execute()
         ).data
-        if not verbindung or not verbindung[0].get("channex_channel_id"):
+        if not verbindung:
             raise ChannelManagerError(
                 "Airbnb ist noch nicht verbunden. Starte die Übernahme und "
                 "autorisiere Airbnb zuerst.",
@@ -164,7 +230,27 @@ class AirbnbUebernahmeMixin:
             )
         channel_id = verbindung[0]["channex_channel_id"]
 
+        # Jeden Channex-Aufruf dieses Ablaufs in channex_debug_log schreiben.
+        # Ohne gesetzten Trace-Kontext schreibt der Sink nichts, und dann ist
+        # NUR am Serverlog erkennbar, was Channex geantwortet hat — im
+        # Debug-Bereich der Anwendung stand nichts.
+        self._trace_step(
+            tenant_id=tenant_id, property_id=verbindung[0].get("property_id"),
+            step="airbnb_uebernahme",
+        )
+
         listings = self._airbnb_listings_lesen(channel_id)
+        # Die ROHE Liste loggen, bevor sie übersetzt wird: die Feldnamen von
+        # Channex/Airbnb sind nicht dokumentiert, und nur hier ist zu sehen,
+        # welche Schlüssel wirklich kommen. Ohne dieses Log bliebe bei einem
+        # unpassenden Namen nur "0 Objekte übernommen" ohne Grund.
+        log.info(
+            "airbnb_uebernahme_listings_roh",
+            tenant_id=tenant_id, channel_id=channel_id,
+            anzahl=len(listings),
+            schluessel=sorted(listings[0].keys()) if listings else [],
+            erstes_listing=listings[0] if listings else None,
+        )
         if not listings:
             raise ChannelManagerError(
                 "Airbnb hat keine Objekte zurückgegeben. Prüfe, ob die "
@@ -173,13 +259,37 @@ class AirbnbUebernahmeMixin:
             )
 
         uebersprungen = max(0, len(listings) - _MAX_LISTINGS)
+        if uebersprungen:
+            # Keine stille Kürzung: was über der Grenze liegt, wird benannt.
+            log.warning(
+                "airbnb_uebernahme_ueber_grenze",
+                tenant_id=tenant_id, gesamt=len(listings), grenze=_MAX_LISTINGS,
+            )
         angelegt = aktualisiert = 0
         for listing in listings[:_MAX_LISTINGS]:
             row = self._listing_zu_objekt(listing)
             if row is None:
+                # WELCHES Listing übersprungen wurde und warum — sonst ist ein
+                # fehlender Titel/eine fehlende ID nicht von einem Fehler in
+                # unserer Feldzuordnung zu unterscheiden.
+                log.warning(
+                    "airbnb_uebernahme_listing_uebersprungen",
+                    tenant_id=tenant_id,
+                    grund="ohne id oder titel",
+                    vorhandene_schluessel=sorted(listing.keys()),
+                )
                 uebersprungen += 1
                 continue
-            if self._objekt_schreiben(db, tenant_id, row):
+            neu = self._objekt_schreiben(db, tenant_id, row)
+            log.info(
+                "airbnb_uebernahme_objekt",
+                tenant_id=tenant_id,
+                airbnb_listing_id=row.get("airbnb_listing_id"),
+                titel=row.get("title"),
+                neu_angelegt=neu,
+                uebernommene_felder=sorted(row.keys()),
+            )
+            if neu:
                 angelegt += 1
             else:
                 aktualisiert += 1
@@ -196,26 +306,111 @@ class AirbnbUebernahmeMixin:
         }
 
     def _airbnb_listings_lesen(self, channel_id: str) -> list[dict[str, Any]]:
-        """Listings des autorisierten Kontos über den Channex-Proxy holen.
+        """Listings des autorisierten Airbnb-Kontos holen.
 
-        Der Proxy reicht an Airbnbs eigene API durch; die Antwortform ist nicht
-        dokumentiert, deshalb wird sie tolerant gelesen (Liste unter `listings`,
-        `data` oder direkt) — aber NICHT geraten: fehlt die Struktur ganz, ist
-        das ein Fehler und keine leere Übernahme (Wurzel 5).
+        Weg: `POST channels/mapping_details` mit `{channel, settings}`. Die
+        `settings` sind die des Kanals — dort liegen nach dem Autorisieren die
+        Airbnb-Tokens, und ohne sie kennt Channex keine Listings.
+
+        WARUM NICHT DER PROXY: Ein früherer Anlauf rief
+        `channels/{id}/proxy/hosting/listings` auf und bekam 500. Der Pfad war
+        von mir falsch abgeleitet — `hosting/listings` steht im Channex-Bundle
+        nur als WEBLINK auf airbnb.com
+        (`https://www.airbnb.com/hosting/listings/editor/{id}/details/`), nicht
+        als API-Pfad. Die Bundle-Suche zeigt genau drei `meta/airbnb`-Routen
+        (connection_link, full_sync_listing, disconnect_listing) und KEINE, die
+        eine Listing-Liste liefert.
+
+        Channex' eigene Zuordnungs-Maske macht es so (aus dem Bundle,
+        `loadMappingDetails`):
+            const { token_invalid } = model.settings || {}
+            if (!selectedChannel || token_invalid) return   // Abbruch
+            getMappingDetails({ settings, channel })
+        Sie bricht also ab, solange keine Tokens da sind — dieselbe Bedingung
+        wird hier geprüft, damit der Kunde eine verständliche Meldung bekommt
+        statt eines rohen 400/422 von Channex (Wurzel 5).
         """
         try:
-            res = self._channex.airbnb_proxy(channel_id, "hosting/listings")
+            kanal = self._channex.get_channel(channel_id)
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
 
-        for schluessel in ("listings", "data", "results"):
-            wert = res.get(schluessel)
-            if isinstance(wert, list):
-                return wert
-        if isinstance(res, list):
-            return res
+        attrs = (kanal.get("data") or {}).get("attributes") or {}
+        settings = attrs.get("settings") or {}
+        # Kanal-Zustand vollständig loggen: DAS ist die Stelle, an der sich
+        # entscheidet, ob Airbnb autorisiert hat. `tokens` selbst wird NICHT
+        # geloggt (Zugangsdaten gehören nicht ins Log) — nur, ob sie da sind.
+        log.info(
+            "airbnb_uebernahme_kanal_zustand",
+            channel_id=channel_id,
+            is_active=attrs.get("is_active"),
+            titel=attrs.get("title"),
+            properties=attrs.get("properties"),
+            settings_schluessel=sorted(settings.keys()),
+            hat_tokens=isinstance(settings.get("tokens"), dict),
+            host_id=(settings.get("tokens") or {}).get("user_id")
+            if isinstance(settings.get("tokens"), dict) else None,
+            token_invalid=settings.get("token_invalid"),
+        )
+        # Fail-closed VOR dem Aufruf: ohne Tokens hat das Portal die
+        # Autorisierung nicht bestätigt. Häufigster Grund bei Airbnb: dort ist
+        # bereits eine andere Software verbunden — Airbnb erlaubt nur EINE
+        # ("You may only authorize one property management app to manage your
+        # account"). Das ist der Satz, den der Kunde auf airbnb.com sieht, und
+        # er gehört hierher, statt ihn als "nicht lesbar" zu verschleiern.
+        if not settings or settings.get("token_invalid"):
+            raise ChannelManagerError(
+                "Airbnb hat die Verbindung nicht bestätigt. Meist liegt es "
+                "daran, dass in deinem Airbnb-Konto bereits eine andere "
+                "Software verbunden ist — Airbnb erlaubt nur EINE. Trenne die "
+                "alte Verbindung in deinem Airbnb-Konto (Konto → Datenschutz "
+                "und Freigabe → Verbundene Apps) und verbinde dann hier erneut.",
+                status_code=409,
+            )
+
+        try:
+            res = self._channex.get_channel_mapping_details(
+                channel="AirBNB", settings=settings
+            )
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
+        return self.airbnb_listings_aus_mapping_details(res)
+
+    @staticmethod
+    def airbnb_listings_aus_mapping_details(
+        res: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Listings aus einer Airbnb-`mapping_details`-Antwort ziehen.
+
+        ECHTE Antwortform, live gemessen am autorisierten Kanal (04.08.2026,
+        18 Listings):
+            {"data": {"listing_id_dictionary": {"values": [
+                {"id": "1133122057704952480", "type": "house",
+                 "title": "013 Rævlingevej · The Fox House", "city": "Bindslev",
+                 "country_code": "DK", "occupancies": [1,2,3,4,5,6],
+                 "quality_status": "educate",
+                 "synchronization_category": null}, …]}}}
+
+        Das ist NICHT die Form, die `_normalize_mapping_rooms` für
+        Booking.com (`data.rooms[]`) oder OpenChannel
+        (`data.attributes.room_types[]`) kennt — Airbnb ist im Katalog
+        `mapping_mode: "listing"`, und die Listing-Liste steht ausschließlich
+        unter diesem Schlüssel. Vorher las der Code `listings`/`rooms`/
+        `room_types` und bekam darum immer eine leere Liste, obwohl der Abruf
+        200 lieferte („Das Portal liefert keine Zimmer").
+
+        Fehlt der Schlüssel ganz, ist das ein Fehler und keine leere Übernahme
+        (Wurzel 5) — sonst hieße es „0 Objekte übernommen", obwohl der Abruf
+        misslang.
+        """
+        daten = res.get("data") if isinstance(res, dict) else None
+        woerterbuch = (daten or {}).get("listing_id_dictionary")
+        werte = (woerterbuch or {}).get("values")
+        if isinstance(werte, list):
+            return [w for w in werte if isinstance(w, dict)]
         raise ChannelManagerError(
-            "Die Antwort von Airbnb war nicht lesbar. Bitte später erneut "
+            "Die Objektliste von Airbnb war nicht lesbar. Bitte später erneut "
             "versuchen.",
             status_code=502,
         )
@@ -224,16 +419,31 @@ class AirbnbUebernahmeMixin:
     def _listing_zu_objekt(listing: dict[str, Any]) -> dict[str, Any] | None:
         """Ein Airbnb-Listing → properties-Spalten.
 
-        Übernimmt nur, was das Listing WIRKLICH trägt; fehlende Felder bleiben
-        weg (DB-Default), damit kein Wert erfunden wird (Wurzel 4). Ohne ID oder
-        Titel ist das Listing nicht übernehmbar → None (überspringen, nicht mit
-        Platzhaltern anlegen).
+        WELCHE FELDER ES WIRKLICH GIBT (live gemessen, 04.08.2026, siehe
+        `airbnb_listings_aus_mapping_details`): `id`, `title`, `type`, `city`,
+        `country_code`, `occupancies`, `quality_status`,
+        `synchronization_category`. Das ist ALLES, was Airbnb über Channex
+        herausgibt.
 
-        Die Feldnamen sind die von Airbnbs `hosting/listings`; das Listing wird
-        defensiv gelesen, weil die Antwortform undokumentiert ist.
+        Was es damit NICHT gibt — und was der Kunde deshalb weiter selbst
+        pflegt: Straße/PLZ, Koordinaten, Beschreibung, Fotos, Ausstattung und
+        **Preise**. Es gibt bei Channex keinen Airbnb-Content-Abruf: die
+        Proxy-Pfade (`proxy/listings`, `proxy/v2/listings`,
+        `proxy/v2/calendars`, `proxy/v2/pricing_settings`) antworten alle mit
+        HTTP 500, `channels/{id}/listings` mit 404. Airbnb ist ein
+        Push-Kanal — Channex SENDET Preise/Verfügbarkeit dorthin, es liest sie
+        nicht zurück (dieselbe Einbahnstraße wie beim ARI-Readback,
+        `channex_ari_shadow`). Hier wird darum nichts erfunden (Wurzel 4).
+
+        `max_guests` kommt aus `occupancies` — Airbnb liefert die belegbaren
+        Personenzahlen als Liste (`[1,2,3,4,5,6]`), das Maximum davon IST die
+        Kapazität des Listings.
+
+        Ohne ID oder Titel ist das Listing nicht übernehmbar → None
+        (überspringen, nicht mit Platzhaltern anlegen).
         """
-        listing_id = listing.get("id") or listing.get("listing_id")
-        titel = listing.get("name") or listing.get("title")
+        listing_id = listing.get("id")
+        titel = listing.get("title")
         if not listing_id or not titel or not str(titel).strip():
             return None
 
@@ -241,28 +451,17 @@ class AirbnbUebernahmeMixin:
             "airbnb_listing_id": str(listing_id),
             "title": str(titel).strip(),
         }
-        paare = [
-            ("address", ("address", "street")),
-            ("city", ("city",)),
-            ("postal_code", ("zipcode", "zip_code", "postal_code")),
-            ("country", ("country_code", "country")),
-            ("description", ("description", "summary")),
+        for spalte, schluessel in (("city", "city"), ("country", "country_code")):
+            wert = listing.get(schluessel)
+            if wert:
+                row[spalte] = str(wert).strip()
+
+        belegungen = [
+            b for b in (listing.get("occupancies") or [])
+            if isinstance(b, int) and b > 0
         ]
-        for spalte, schluessel in paare:
-            for k in schluessel:
-                wert = listing.get(k)
-                if wert:
-                    row[spalte] = str(wert).strip()
-                    break
-
-        for spalte, schluessel in (("lat", "lat"), ("lng", "lng")):
-            wert = listing.get(schluessel) or listing.get(f"{schluessel}itude")
-            if wert is not None:
-                row[spalte] = wert
-
-        gaeste = listing.get("person_capacity") or listing.get("guests_included")
-        if isinstance(gaeste, int) and gaeste > 0:
-            row["max_guests"] = gaeste
+        if belegungen:
+            row["max_guests"] = max(belegungen)
         return row
 
     def _objekt_schreiben(

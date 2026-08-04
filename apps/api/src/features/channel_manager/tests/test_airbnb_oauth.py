@@ -30,21 +30,51 @@ def test_connection_settings_overrides() -> None:
 def test_connection_link_body_shape() -> None:
     body = airbnb_oauth.connection_link_body(
         group_id="g", channex_property_id="p", channel_id="c",
-        title="Mein Airbnb", settings=None,
+        request_id="r", title="Mein Airbnb", settings=None,
     )
     assert body["group_id"] == "g"
     assert body["properties"] == ["p"]
     assert body["channel_id"] == "c"
-    assert body["request_id"] == "c"  # Korrelation = Channel
     assert body["title"] == "Mein Airbnb"
     assert body["settings"]["min_stay_type"] == "Arrival"
 
 
-def test_parse_status_not_connected() -> None:
+def test_connection_link_request_id_ist_nicht_die_channel_id() -> None:
+    """Regression: `request_id` und `channel_id` sind ZWEI verschiedene Werte.
+
+    Vorher stand in beiden Feldern die Kanal-ID. Folge live: Airbnb führte
+    "Channex" als verbundenen Dienst, aber KEIN Channex-Kanal erhielt Tokens
+    (`settings: []` bei allen vier Kanälen des Kontos) — die Autorisierung war
+    keinem Versuch zuordenbar. Channex' eigene Maske erzeugt je Versuch eine
+    frische UUID und vergleicht sie mit der `request_id` der
+    `channel_created`-Rückmeldung."""
+    body = airbnb_oauth.connection_link_body(
+        group_id="g", channex_property_id="p", channel_id="c",
+        request_id="r", title="T", settings=None,
+    )
+    assert body["request_id"] == "r"
+    assert body["request_id"] != body["channel_id"]
+
+
+def test_parse_status_settings_leer_nennt_abgebrochene_autorisierung() -> None:
+    """`settings == {}`: Channex hat den Kanal angefasst, aber es kamen keine
+    Tokens → die Autorisierung wurde abgebrochen/abgelehnt. Das muss einen
+    GRUND liefern; vorher stand hier `last_error: None`, und die UI zeigte
+    endlos „warte auf Bestätigung"."""
     st = airbnb_oauth.parse_connection_status(
         {"data": {"attributes": {"settings": {}}}}
     )
-    assert st == {"connected": False, "host_id": None, "last_error": None}
+    assert st["connected"] is False
+    assert st["host_id"] is None
+    assert "nicht abgeschlossen" in st["last_error"]
+
+
+def test_parse_status_settings_fehlt_nennt_fremde_software() -> None:
+    """`settings is None` ist ein ANDERER Zustand: Channex hat den Kanal seit
+    der Anlage nie angefasst — die Autorisierung kam dort nie an."""
+    st = airbnb_oauth.parse_connection_status({"data": {"attributes": {}}})
+    assert st["connected"] is False
+    assert "andere Software" in st["last_error"]
 
 
 def test_parse_status_connected() -> None:

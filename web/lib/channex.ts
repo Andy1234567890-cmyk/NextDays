@@ -446,6 +446,10 @@ export type OAuthStatusResult = {
   connected: boolean;
   host_id: string | null;
   portal: string;
+  // Grund, warum die Verbindung (noch) nicht steht — vom Portal gemeldet, z.B.
+  // dass dort bereits eine andere Software verbunden ist. Muss dem Kunden
+  // gezeigt werden, sonst wartet er endlos auf eine Bestätigung, die nie kommt.
+  last_error?: string | null;
 };
 
 /**

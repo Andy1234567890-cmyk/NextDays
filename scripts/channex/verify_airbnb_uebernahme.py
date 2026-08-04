@@ -1,21 +1,22 @@
-"""Live-Prüfung der Airbnb-Übernahme gegen die echte Server-DB + Channex.
+"""Live-Prüfung der Airbnb-Übernahme gegen die echte Server-DB.
 
-Prüft, was ohne autorisiertes Airbnb-Konto prüfbar IST — und sagt beim Rest
-ehrlich, dass er offen bleibt:
+Prüft die Logik, die aus einem Airbnb-Listing ein Objekt macht, sowie die
+Vorbedingungen des OAuth-Starts.
 
-  1. Channex' connection_link verlangt mindestens ein Property (die Ursache,
-     weshalb es das Gerüst-Objekt gibt).
-  2. Der Katalog liefert für AirBNB `mapping_mode: "listing"` (weshalb der
-     Property-Reconcile für Airbnb NICHTS erzeugt).
-  3. Das Gerüst-Objekt entsteht serverseitig, bekommt seine Einheit und ist
-     idempotent (zweiter Start → kein zweites Objekt).
-  4. Ein Listing wird korrekt in properties-Spalten übersetzt, und das erste
-     Listing FÜLLT das Gerüst statt daneben ein Objekt anzulegen.
-  5. Ein zweiter Übernahme-Lauf verdoppelt nichts (Wurzel 2).
+BEWUSST NICHT ENTHALTEN — es wird NICHTS bei Channex angelegt, geändert oder
+gelöscht. Kein Property, kein Kanal, kein Link. Frühere Fassungen dieses
+Skripts haben Testkanäle angelegt; das ist Aufgabe des Kunden im echten Ablauf,
+nicht die eines Prüfskripts. Die zwei belegten Channex-Tatsachen dahinter sind
+LESEND geprüft (Katalog) bzw. in `airbnb_uebernahme.py` dokumentiert:
+  * `meta/airbnb/connection_link` verlangt `properties` mit ≥ 1 Eintrag
+    (ohne → 422 "should have at least 1 item(s)"), deshalb das Gerüst-Objekt.
+  * Der Katalog liefert für AirBNB `mapping_mode: "listing"`, deshalb entstehen
+    aus dem Property-Reconcile keine Airbnb-Objekte.
 
-NICHT prüfbar ohne echtes Airbnb-Konto: die Feldnamen der Antwort von
-`hosting/listings`. Sie sind aus dem Channex-SPA-Bundle abgeleitet und werden
-defensiv gelesen; der Punkt wird am Ende als offen ausgewiesen.
+Was hier NICHT prüfbar ist (braucht ein autorisiertes Airbnb-Konto):
+  * die echten Feldnamen der Antwort von `hosting/listings`
+  * ob Airbnb dort den Preis mitliefert
+  * der vollständige Durchlauf Auth → Listings → Objekte
 
 Aufruf (aus apps/api, mit .env):
     python ../../scripts/channex/verify_airbnb_uebernahme.py
@@ -38,178 +39,196 @@ for zeile in (API / ".env").read_text().splitlines():
 
 # pylint: disable=wrong-import-position
 from src.core.supabase import get_service_client            # noqa: E402
-from src.features.channel_manager.airbnb_uebernahme import (  # noqa: E402
-    _GERUEST_TITEL,
-)
-from src.features.channel_manager.service import (           # noqa: E402
+from src.features.channel_manager import airbnb_uebernahme  # noqa: E402
+from src.features.channel_manager.service import (          # noqa: E402
     ChannelManagerService,
 )
 
-ok = 0
-fehler: list[str] = []
+
+class Bericht:
+    """Sammelt die Ergebnisse — ohne `global`, damit das Skript selbst den
+    Regeln entspricht, die es prüfen soll."""
+
+    def __init__(self) -> None:
+        self.gruen = 0
+        self.rot: list[str] = []
+
+    def pruefe(self, name: str, bedingung: bool, detail: str = "") -> None:
+        if bedingung:
+            self.gruen += 1
+            print(f"  ✓ {name}")
+        else:
+            self.rot.append(f"{name} — {detail}")
+            print(f"  ✗ {name} — {detail}")
+
+    def abschluss(self) -> int:
+        print(f"\n{'=' * 66}")
+        print(f"{self.gruen} Prüfungen grün, {len(self.rot)} rot")
+        for eintrag in self.rot:
+            print(f"  ✗ {eintrag}")
+        print("\nOFFEN (ohne autorisiertes Airbnb-Konto nicht prüfbar):")
+        print("  - die echten Feldnamen von hosting/listings")
+        print("  - ob Airbnb den Preis mitliefert (sonst einmal selbst setzen)")
+        print("  - der Durchlauf Auth → Listings → Objekte")
+        return 1 if self.rot else 0
 
 
-def pruefe(name: str, bedingung: bool, detail: str = "") -> None:
-    global ok                                                # noqa: PLW0603
-    if bedingung:
-        ok += 1
-        print(f"  ✓ {name}")
-    else:
-        fehler.append(f"{name} — {detail}")
-        print(f"  ✗ {name} — {detail}")
-
-
-service = ChannelManagerService(service_client=get_service_client())
-db = get_service_client()
-channex = service._channex                                   # noqa: SLF001
-
-print("\n1) Channex verlangt ein Property für den OAuth-Link")
-gruppe = (channex.list_groups().get("data") or [])[0]["id"]
-kanal = channex.create_channel({
-    "channel": "AirBNB", "group_id": gruppe, "is_active": False,
-    "title": "ND Verify Übernahme",
-})
-kanal_id = kanal["data"]["id"]
-try:
-    ott = channex.create_one_time_token(
-        property_id=None, group_id=gruppe, username="verify"
-    )
-    jwt = channex.exchange_one_time_token(ott)
-    basis = {
-        "group_id": gruppe, "channel_id": kanal_id, "request_id": kanal_id,
-        "title": "ND Verify Übernahme",
-        "settings": {
-            "booking_amount_settings": "Payout Amount",
-            "cohost_payout_calculations": False,
-            "min_stay_type": "Arrival",
-            "send_email_notifications": False,
-        },
-    }
-    verweigert = False
-    try:
-        channex.create_airbnb_connection_link(jwt=jwt, connection_link=basis)
-    except Exception as exc:                                 # noqa: BLE001
-        verweigert = "at least 1 item" in str(exc)
-    pruefe(
-        "connection_link ohne Property wird abgelehnt",
-        verweigert,
-        "Channex nahm den Link OHNE Property an — dann wäre das Gerüst-Objekt "
-        "unnötig und diese Prüfung müsste neu bewertet werden",
-    )
-finally:
-    channex.deactivate_channel(kanal_id)
-    channex.delete_channel(kanal_id)
-
-print("\n2) Katalog: Airbnb mappt Listings (keine Properties)")
-katalog = channex.list_channel_catalog().get("data") or []
-airbnb = None
-for eintrag in katalog:
-    for kandidat in (eintrag if isinstance(eintrag, list) else [eintrag]):
-        if isinstance(kandidat, dict) and kandidat.get("code") == "AirBNB":
-            airbnb = kandidat
-pruefe("AirBNB im Katalog gefunden", airbnb is not None)
-if airbnb:
-    pruefe(
-        "mapping_mode == 'listing'",
+def katalog_pruefen(service: ChannelManagerService, b: Bericht) -> None:
+    """Nur LESEN: bestätigt, dass Airbnb Listings mappt statt Properties zu
+    spiegeln — die Begründung dafür, dass die Übernahme über den Proxy geht."""
+    print("\n1) Channex-Katalog (nur lesend)")
+    eintraege = service.channex.list_channel_catalog().get("data") or []
+    airbnb = None
+    for eintrag in eintraege:
+        for kandidat in eintrag if isinstance(eintrag, list) else [eintrag]:
+            if isinstance(kandidat, dict) and kandidat.get("code") == "AirBNB":
+                airbnb = kandidat
+    b.pruefe("AirBNB im Katalog gefunden", airbnb is not None)
+    if not airbnb:
+        return
+    b.pruefe(
+        "mapping_mode == 'listing' (kein Property-Spiegel)",
         airbnb.get("mapping_mode") == "listing",
         f"gelesen: {airbnb.get('mapping_mode')}",
     )
-    pruefe(
+    b.pruefe(
         "rate_params trägt listing_id",
         "listing_id" in (airbnb.get("rate_params") or {}),
-        f"gelesen: {list((airbnb.get('rate_params') or {}).keys())}",
+        f"gelesen: {sorted((airbnb.get('rate_params') or {}).keys())}",
+    )
+    b.pruefe(
+        "OAuth-Scope deckt property_management (Proxy auf hosting/listings)",
+        "property_management" in str((airbnb.get("payload") or {}).get("scope")),
+        f"gelesen: {(airbnb.get('payload') or {}).get('scope')}",
     )
 
-print("\n3) Gerüst-Objekt: Anlage, Einheit, Idempotenz")
-tenant_id = str(uuid.uuid4())
-db.table("tenants").insert({
-    "id": tenant_id, "name": "ZZ Verify Übernahme", "country": "DK",
-    # currency ist NOT NULL — bewusst DKK zum Land passend, kein EUR-Default
-    # (Wurzel 4). Der Wert spielt für diese Prüfung keine Rolle.
-    "currency": "DKK",
-}).execute()
-try:
-    erste = service._geruest_objekt(db, tenant_id)            # noqa: SLF001
-    zweite = service._geruest_objekt(db, tenant_id)           # noqa: SLF001
-    pruefe("zweiter Start liefert dasselbe Objekt", erste == zweite,
-           f"{erste} != {zweite}")
 
-    objekte = (
-        db.table("properties").select("id, title, status")
-        .eq("tenant_id", tenant_id).execute()
-    ).data or []
-    pruefe("genau EIN Objekt angelegt", len(objekte) == 1,
-           f"{len(objekte)} Objekte")
-    pruefe("Titel ist der Gerüst-Titel",
-           objekte and objekte[0]["title"] == _GERUEST_TITEL,
-           f"{objekte[0]['title'] if objekte else '—'}")
-    pruefe("Status ist draft (nicht verkäuflich)",
-           objekte and objekte[0]["status"] == "draft",
-           f"{objekte[0]['status'] if objekte else '—'}")
-
-    einheiten = (
-        db.table("property_units").select("id")
-        .eq("property_id", erste).execute()
-    ).data or []
-    pruefe("Einheit vorhanden (0265, sonst 22023 bei Buchung)",
-           len(einheiten) == 1, f"{len(einheiten)} Einheiten")
-
-    print("\n4) Listing → Objekt: das erste füllt das Gerüst")
+def listing_mapping_pruefen(service: ChannelManagerService, b: Bericht) -> None:
+    """Ein Airbnb-Listing → properties-Spalten. Reine Transformation, kein I/O."""
+    print("\n2) Listing → Objekt-Felder")
     listing = {
         "id": 987654321, "name": "Strandhus ved Vesterhavet",
-        "address": "Vestervej 12", "city": "Hvide Sande",
-        "zipcode": "6960", "country_code": "DK", "person_capacity": 6,
+        "address": "Vestervej 12", "city": "Hvide Sande", "zipcode": "6960",
+        "country_code": "DK", "person_capacity": 6,
         "description": "Lyst hus tæt på stranden.",
     }
-    row = service._listing_zu_objekt(listing)                 # noqa: SLF001
-    pruefe("Titel übernommen", row and row["title"] == listing["name"])
-    pruefe("Adresse übernommen", row and row["address"] == "Vestervej 12")
-    pruefe("Land als ISO-2", row and row["country"] == "DK")
-    pruefe("Kapazität übernommen", row and row["max_guests"] == 6)
-    pruefe("Listing-ID als Schlüssel",
-           row and row["airbnb_listing_id"] == "987654321")
+    row = service.listing_zu_objekt(listing)
+    b.pruefe("Titel übernommen", bool(row) and row["title"] == listing["name"])
+    b.pruefe("Adresse übernommen", bool(row) and row["address"] == "Vestervej 12")
+    b.pruefe("Ort übernommen", bool(row) and row["city"] == "Hvide Sande")
+    b.pruefe("PLZ übernommen", bool(row) and row["postal_code"] == "6960")
+    b.pruefe("Land als ISO-2", bool(row) and row["country"] == "DK")
+    b.pruefe("Kapazität übernommen", bool(row) and row["max_guests"] == 6)
+    b.pruefe(
+        "Listing-ID als Wiedererkennungsschlüssel",
+        bool(row) and row["airbnb_listing_id"] == "987654321",
+    )
+    b.pruefe(
+        "Listing ohne Titel wird übersprungen (kein Platzhalter)",
+        service.listing_zu_objekt({"id": 5}) is None,
+    )
+    b.pruefe(
+        "Listing ohne ID wird übersprungen",
+        service.listing_zu_objekt({"name": "Ohne ID"}) is None,
+    )
+    b.pruefe(
+        "kein Preis erfunden (Preis kommt aus Airbnb oder gar nicht)",
+        bool(row) and "base_price" not in row and "price" not in row,
+    )
 
-    neu = service._objekt_schreiben(db, tenant_id, row)       # noqa: SLF001
-    pruefe("kein NEUES Objekt (Gerüst wurde gefüllt)", neu is False)
-    nach = (
-        db.table("properties").select("id, title, airbnb_listing_id")
-        .eq("tenant_id", tenant_id).execute()
-    ).data or []
-    pruefe("weiterhin genau EIN Objekt", len(nach) == 1, f"{len(nach)}")
-    pruefe("Gerüst trägt jetzt den Airbnb-Namen",
-           nach and nach[0]["title"] == listing["name"],
-           f"{nach[0]['title'] if nach else '—'}")
 
-    print("\n5) Zweiter Lauf verdoppelt nichts (Wurzel 2)")
-    nochmal = service._objekt_schreiben(db, tenant_id, row)   # noqa: SLF001
-    pruefe("zweiter Schreibvorgang legt nichts an", nochmal is False)
+def db_kette_pruefen(service: ChannelManagerService, b: Bericht) -> None:
+    """Gerüst-Anlage, Einheit, Idempotenz und das Füllen durch das erste
+    Listing — gegen die echte Server-DB, in einem eigenen Test-Tenant."""
+    print("\n3) Gerüst und Übernahme in der DB")
+    db = get_service_client()
+    tenant_id = str(uuid.uuid4())
+    db.table("tenants").insert({
+        "id": tenant_id, "name": "ZZ Verify Übernahme", "country": "DK",
+        # currency ist NOT NULL — DKK passend zum Land, kein EUR-Default.
+        "currency": "DKK",
+    }).execute()
+    try:
+        erste = service.geruest_objekt_id(db, tenant_id)
+        b.pruefe(
+            "zweiter Start liefert dasselbe Objekt (idempotent)",
+            erste == service.geruest_objekt_id(db, tenant_id),
+        )
+        objekte = (
+            db.table("properties").select("id, title, status")
+            .eq("tenant_id", tenant_id).execute()
+        ).data or []
+        b.pruefe("genau EIN Objekt angelegt", len(objekte) == 1,
+                 f"{len(objekte)} Objekte")
+        b.pruefe("Status draft (verkauft nichts)",
+                 bool(objekte) and objekte[0]["status"] == "draft",
+                 objekte[0]["status"] if objekte else "—")
+        einheiten = (
+            db.table("property_units").select("id")
+            .eq("property_id", erste).execute()
+        ).data or []
+        b.pruefe("Einheit vorhanden (0265, sonst 22023 bei Buchung)",
+                 len(einheiten) == 1, f"{len(einheiten)} Einheiten")
 
-    zweites = service._listing_zu_objekt({                    # noqa: SLF001
-        "id": 111222333, "name": "Sommerhus i Skagen", "city": "Skagen",
-    })
-    pruefe("zweites Listing wird ein NEUES Objekt",
-           service._objekt_schreiben(db, tenant_id, zweites) is True)  # noqa: SLF001
-    gesamt = (
-        db.table("properties").select("id")
-        .eq("tenant_id", tenant_id).execute()
-    ).data or []
-    pruefe("jetzt ZWEI Objekte", len(gesamt) == 2, f"{len(gesamt)}")
+        b.pruefe(
+            "Gerüst ist noch NICHT bei Channex registriert (der 409-Auslöser)",
+            service.channex_property_id_von(db, tenant_id, erste) is None,
+        )
+        b.pruefe(
+            "Währung des Betriebs wird gelesen (kein EUR-Default)",
+            service.tenant_currency(db, tenant_id) == "DKK",
+            f"gelesen: {service.tenant_currency(db, tenant_id)}",
+        )
 
-    ohne_titel = service._listing_zu_objekt({"id": 5})        # noqa: SLF001
-    pruefe("Listing ohne Titel wird übersprungen (kein Platzhalter)",
-           ohne_titel is None)
-finally:
-    # Eng gescoped aufräumen — nur DIESER Test-Tenant (Wurzel 3).
-    db.table("property_units").delete().eq("tenant_id", tenant_id).execute()
-    db.table("properties").delete().eq("tenant_id", tenant_id).execute()
-    db.table("tenants").delete().eq("id", tenant_id).execute()
-    print("\n  (Test-Tenant aufgeräumt)")
+        print("\n4) Das erste Listing FÜLLT das Gerüst")
+        row = service.listing_zu_objekt({
+            "id": 987654321, "name": "Strandhus ved Vesterhavet",
+            "address": "Vestervej 12", "city": "Hvide Sande",
+        })
+        b.pruefe("kein NEUES Objekt angelegt",
+                 service.objekt_aus_listing_schreiben(db, tenant_id, row) is False)
+        nach = (
+            db.table("properties").select("id, title")
+            .eq("tenant_id", tenant_id).execute()
+        ).data or []
+        b.pruefe("weiterhin genau EIN Objekt", len(nach) == 1, f"{len(nach)}")
+        b.pruefe("Gerüst trägt jetzt den Airbnb-Namen",
+                 bool(nach) and nach[0]["title"] == "Strandhus ved Vesterhavet",
+                 nach[0]["title"] if nach else "—")
+        b.pruefe(
+            "kein Geisterobjekt „Übernahme läuft“ übrig",
+            all(n["title"] != airbnb_uebernahme.GERUEST_TITEL for n in nach),
+        )
 
-print(f"\n{'='*66}")
-print(f"{ok} Prüfungen grün, {len(fehler)} rot")
-for f in fehler:
-    print(f"  ✗ {f}")
-print("\nOFFEN (ohne autorisiertes Airbnb-Konto nicht prüfbar):")
-print("  - die echten Feldnamen von hosting/listings über den Channex-Proxy")
-print("  - der vollständige Durchlauf Auth → Listings → Objekte")
-sys.exit(1 if fehler else 0)
+        print("\n5) Zweiter Lauf verdoppelt nichts (Wurzel 2)")
+        b.pruefe("erneutes Schreiben legt nichts an",
+                 service.objekt_aus_listing_schreiben(db, tenant_id, row) is False)
+        zweites = service.listing_zu_objekt(
+            {"id": 111222333, "name": "Sommerhus i Skagen", "city": "Skagen"}
+        )
+        b.pruefe("zweites Listing wird ein NEUES Objekt",
+                 service.objekt_aus_listing_schreiben(db, tenant_id, zweites) is True)
+        gesamt = (
+            db.table("properties").select("id")
+            .eq("tenant_id", tenant_id).execute()
+        ).data or []
+        b.pruefe("jetzt ZWEI Objekte", len(gesamt) == 2, f"{len(gesamt)}")
+    finally:
+        # Eng gescoped aufräumen — nur DIESER Test-Tenant (Wurzel 3).
+        db.table("property_units").delete().eq("tenant_id", tenant_id).execute()
+        db.table("properties").delete().eq("tenant_id", tenant_id).execute()
+        db.table("tenants").delete().eq("id", tenant_id).execute()
+        print("\n  (Test-Tenant aufgeräumt)")
+
+
+def main() -> int:
+    service = ChannelManagerService(service_client=get_service_client())
+    bericht = Bericht()
+    katalog_pruefen(service, bericht)
+    listing_mapping_pruefen(service, bericht)
+    db_kette_pruefen(service, bericht)
+    return bericht.abschluss()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

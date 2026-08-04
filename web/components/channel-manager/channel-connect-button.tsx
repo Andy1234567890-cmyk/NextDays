@@ -33,7 +33,6 @@ import {
   uebernehmeAirbnbListings,
 } from "@/lib/channex";
 import { listProperties } from "@/lib/properties";
-import { useRealtime } from "@/lib/use-realtime";
 
 // "oauth" = Airbnb-Verbindung über OAuth-URL (kein Credential): URL öffnen oder
 // an den Eigentümer kopieren, dann auf Verbindung warten und Mapping setzen.
@@ -208,6 +207,11 @@ export function ChannelConnectButton({
   const [oauthConnected, setOauthConnected] = useState(false);
   const [objectImportMsg, setObjectImportMsg] = useState<string | null>(null);
   const [oauthHostId, setOauthHostId] = useState<string | null>(null);
+  // Vom Portal gemeldeter Grund, warum die Verbindung nicht steht.
+  const [oauthError, setOauthError] = useState<string | null>(null);
+  // Zeitpunkt, ab dem gepollt wird — begrenzt das Warten (siehe unten).
+  const [oauthSince, setOauthSince] = useState<number | null>(null);
+  const [oauthAufgegeben, setOauthAufgegeben] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -379,8 +383,10 @@ export function ChannelConnectButton({
   // Bewusst NICHT `reconcileTenant`: der spiegelt Channex-PROPERTIES, und
   // Airbnb-Listings werden bei Channex gemappt statt als Properties angelegt
   // (Katalog: `mapping_mode: "listing"`, live gelesen). Es entstünde also
-  // nichts. Die Übernahme liest die Listings über den Channex-Proxy direkt von
-  // Airbnb und baut daraus die Objekte.
+  // nichts. Die Übernahme liest die Listing-Liste aus `mapping_details` und
+  // baut daraus die Objekte. Sie bringt Titel, Stadt, Land und Kapazität mit —
+  // mehr gibt Airbnb über Channex nicht her, insbesondere KEINE Preise
+  // (Belege in apps/api/.../airbnb_uebernahme.py).
   function importAirbnbObjects() {
     setObjectImportMsg(null);
     setError(null);
@@ -397,9 +403,14 @@ export function ChannelConnectButton({
         res.data.skipped > 0
           ? ` ${res.data.skipped} Objekt(e) konnten nicht übernommen werden.`
           : "";
+      // Die Preis-Lücke wird GENANNT, nicht verschwiegen: Airbnb gibt über
+      // Channex keine Preise heraus (nur Titel, Stadt, Land, Kapazität). Wer
+      // das nicht liest, wartet vergeblich darauf, dass Preise „noch kommen".
       setObjectImportMsg(
         anzahl > 0
-          ? `${anzahl} Objekt(e) übernommen. Du findest sie unter „Objekte“.${rest}`
+          ? `${anzahl} Objekt(e) übernommen. Du findest sie unter „Objekte“. ` +
+            "Airbnb übergibt keine Preise — setze je Objekt einmal deinen " +
+            `Preis, danach geht er automatisch an Airbnb.${rest}`
           : "Noch keine Objekte gefunden. Airbnb braucht nach dem Verbinden " +
             "manchmal einen Moment — bitte in einer Minute erneut versuchen.",
       );
@@ -418,7 +429,20 @@ export function ChannelConnectButton({
     if (res.ok) {
       setOauthConnected(res.data.connected);
       setOauthHostId(res.data.host_id);
+      // Einen vom Portal gemeldeten Grund ZEIGEN. Vorher wurde `last_error`
+      // verworfen: der Kunde sah endlos "Warte auf die Bestätigung …", während
+      // Airbnb die Autorisierung längst abgelehnt hatte (etwa weil dort schon
+      // eine andere Software verbunden ist — Airbnb erlaubt nur EINE).
+      setOauthError(res.data.last_error ?? null);
+      return;
     }
+    // FEHLER BEENDET DEN POLL. Vorher wurde ein Fehler stillschweigend
+    // verworfen und beim nächsten Takt erneut erzeugt — bei einem bei Channex
+    // entfernten Kanal lief das endlos (hunderte 404er, Ratelimit-Verbrauch,
+    // während die UI weiter "warten" anzeigte). Ein Statusabruf, der scheitert,
+    // ist ein Ergebnis: anzeigen und aufhören (Wurzel 5).
+    setOauthError(res.error);
+    setOauthAufgegeben(true);
   }, [propertyId, selected]);
 
   // OAuth-Link öffnen bzw. in die Zwischenablage kopieren (Self-Connect durch
@@ -467,24 +491,50 @@ export function ChannelConnectButton({
     });
   }
 
-  // Realtime-Pflicht: ein Verbindungs-Update (host_id geschrieben durch das
-  // Status-Polling, evtl. in einer anderen Session) kommt ohne Reload an.
-  const oauthWaiting = step === "oauth" && !!selected && !oauthConnected;
-  useRealtime({
-    table: "channex_channel_connection",
-    filter: propertyId ? `property_id=eq.${propertyId}` : undefined,
-    enabled: oauthWaiting,
-    onChange: () => void checkOAuthStatus(),
-  });
+  // `oauthUrl` ist Teil der Bedingung, weil die Verbindungszeile ERST bei
+  // erfolgreichem `begin` entsteht. Scheitert das (z.B. 409, weil das Objekt
+  // noch nicht bei Channex registriert ist), gibt es nichts zu pollen — vorher
+  // lief der 5-Sekunden-Takt dann endlos in 404er (im Serverlog belegt).
+  const oauthWaiting =
+    step === "oauth" && !!selected && !!oauthUrl && !!propertyId &&
+    !oauthConnected && !oauthAufgegeben;
+
+  // KEIN Realtime-Abo auf channex_channel_connection an dieser Stelle.
+  // Es war eine RÜCKKOPPLUNG: der Status-Poll schreibt host_id/last_error per
+  // PATCH, das PATCH löst ein Realtime-Event aus, das Event rief den Poll
+  // erneut — Poll → PATCH → Event → Poll. Statt der gedachten 5 Sekunden lief
+  // der Takt dadurch mehrmals pro Sekunde und erzeugte Dauerlast auf Channex,
+  // DB und Browser (im Serverlog: ein get_channel alle ~0,5 s).
+  //
+  // Ein Abo ist hier auch fachlich unnötig: die einzige Quelle neuer
+  // Information ist Channex selbst, und die fragt genau dieser Poll ab. Er ist
+  // die Aktualisierung, nicht ihr Auslöser (Realtime-Pflicht gilt für Daten,
+  // die ANDERE ändern — hier ändert sie dieser Dialog selbst).
 
   // Fallback-Poll (Channex liefert keine Channel-Webhooks): solange der Dialog
-  // im OAuth-Schritt offen und noch nicht verbunden ist, alle 5 s prüfen.
+  // im OAuth-Schritt offen und noch nicht verbunden ist, alle 5 s prüfen —
+  // aber NICHT unbegrenzt. Lehnt das Portal die Autorisierung ab (z.B. weil dort
+  // schon eine andere Software verbunden ist), kommt nie eine Bestätigung; der
+  // Takt lief dann endlos weiter und erzeugte hunderte Channex-Aufrufe, die auf
+  // das konto-weite Channex-Budget gehen. Nach POLL_MAX_MS wird aufgegeben und
+  // dem Kunden gesagt, was er prüfen soll.
   useEffect(() => {
     if (!oauthWaiting) return;
+    const POLL_MAX_MS = 180_000;
+    const start = oauthSince ?? Date.now();
+    if (oauthSince === null) setOauthSince(start);
+
     void checkOAuthStatus();
-    const t = window.setInterval(() => void checkOAuthStatus(), 5000);
+    const t = window.setInterval(() => {
+      if (Date.now() - start > POLL_MAX_MS) {
+        setOauthAufgegeben(true);
+        window.clearInterval(t);
+        return;
+      }
+      void checkOAuthStatus();
+    }, 5000);
     return () => window.clearInterval(t);
-  }, [oauthWaiting, checkOAuthStatus]);
+  }, [oauthWaiting, oauthSince, checkOAuthStatus]);
 
   // Status-Hinweis für ein Portal in der Auswahl-Liste (verbunden/Aktion nötig).
   function connectionFor(code: string): StoredChannelConnection | undefined {
@@ -796,10 +846,48 @@ export function ChannelConnectButton({
                       </Button>
                     </div>
                     {propertyId ? (
-                      <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Icon icon="ph:spinner" className="size-4 animate-spin" />
-                        Warte auf die Bestätigung über Airbnb …
-                      </p>
+                      <>
+                        {/* Vom Portal gemeldeter Grund ZUERST — er erklärt, warum
+                            nichts passiert. Häufigster Fall bei Airbnb: dort ist
+                            schon eine andere Software verbunden ("You may only
+                            authorize one property management app"). */}
+                        {oauthError && <ErrorBox text={oauthError} />}
+                        {oauthAufgegeben ? (
+                          <div className="flex flex-col gap-2 rounded-(--radius) border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                            <span className="flex items-center gap-2 font-medium">
+                              <Icon icon="ph:warning-circle" className="size-4" />
+                              Keine Bestätigung von {selected.label} erhalten
+                            </span>
+                            <span>
+                              Das passiert vor allem, wenn in deinem{" "}
+                              {selected.label}-Konto bereits eine andere Software
+                              verbunden ist — dort ist nur EINE erlaubt. Trenne
+                              die alte Verbindung in deinem {selected.label}-Konto
+                              und versuche es dann erneut.
+                            </span>
+                            <Button
+                              variant="outline"
+                              className="self-start"
+                              onClick={() => {
+                                setOauthAufgegeben(false);
+                                setOauthSince(null);
+                                setOauthError(null);
+                              }}
+                            >
+                              <Icon icon="ph:arrow-clockwise" className="size-4" />
+                              Erneut prüfen
+                            </Button>
+                          </div>
+                        ) : (
+                          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Icon
+                              icon="ph:spinner"
+                              className="size-4 animate-spin"
+                            />
+                            Warte auf die Bestätigung über {selected.label} …
+                          </p>
+                        )}
+                      </>
                     ) : (
                       /* ÜBERNAHME (noch kein Objekt): hier wird nicht gepollt —
                          die Verbindung hängt am Objekt, das der Server gerade
@@ -1012,7 +1100,17 @@ export function ChannelConnectButton({
                 ) : localRooms.length === 0 ? (
                   <ErrorBox text="Für dieses Konto sind noch keine Zimmer mit Preis angelegt. Lege zuerst ein Zimmer mit Grundpreis an." />
                 ) : rows.length === 0 ? (
-                  <ErrorBox text="Das Portal liefert keine Zimmer. Prüfe die Zugangsdaten." />
+                  /* Bei einem OAuth-Portal gibt es keine Zugangsdaten, die man
+                     prüfen könnte — der alte Text schickte den Kunden auf eine
+                     Suche nach Feldern, die es nicht gibt. Dort ist die
+                     Übernahme der Weg. */
+                  <ErrorBox
+                    text={
+                      selected.connection_type === "oauth"
+                        ? "Das Portal hat noch keine Objekte übergeben. Nutze „Objekte übernehmen“ — damit holen wir deine Anzeigen direkt."
+                        : "Das Portal liefert keine Zimmer. Prüfe die Zugangsdaten."
+                    }
+                  />
                 ) : localRooms.length === 1 ? (
                   /* Genau EINE eigene Einheit hinter dieser Kennung: keine
                      Tabelle. Liefert das Portal ebenfalls eine Einheit, ist die

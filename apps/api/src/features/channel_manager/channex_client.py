@@ -889,6 +889,30 @@ class ChannexClient:
         """Groups, auf die der Key Zugriff hat (für die group_id beim Channel-Create)."""
         return self.get("groups")
 
+    def check_readiness(self, channel_id: str) -> list[dict[str, Any]]:
+        """Prüft, was einem Kanal noch fehlt, BEVOR er verbunden werden kann.
+
+        Der Endpunkt steht in keiner öffentlichen Doku; der Changelog belegt ihn
+        als „Channel Readiness Probe". Live verifiziert (04.08.2026):
+            POST channels/{id}/check_readiness  → 200
+            GET  auf denselben Pfad             → 404
+        Die Antwort ist eine LISTE offener Punkte, z.B.
+            {"type": "field", "field": "timezone",
+             "error_code": "required", "entity": "Property"}
+            {"type": "entity", "relation": "Mapping",
+             "error_code": "required", "entity": "Channel"}
+        Leere Liste = nichts fehlt.
+
+        Das ist die einzige Quelle, die den GRUND nennt, wenn Channex einen
+        Airbnb-Connect nicht freigibt ("Once all required fields are filled, the
+        Connect to Airbnb button becomes active", help.channex.io). Ohne diese
+        Prüfung entstehen Kanal und OAuth-Link scheinbar erfolgreich, aber es
+        kommen nie Tokens — genau so blieb eine Übernahme stumm hängen.
+        """
+        res = self.post(f"channels/{channel_id}/check_readiness", json={})
+        daten = res.get("data")
+        return daten if isinstance(daten, list) else []
+
     # ----- Airbnb-Listing: Preis-Einstellungen & Aktionen ----------------------
     # Diese Endpunkte stehen in KEINER öffentlichen Doku. Ermittelt aus dem
     # ausgelieferten Channex-Client (staging.channex.io/assets/index-*.js,
@@ -945,23 +969,33 @@ class ChannexClient:
     # Die Szenario-Liste im Bundle nennt den Proxy als
     # `Channels.ProxyScenario → POST /api/v1/channels/:channel_id/proxy/*path`.
     #
-    # WARUM der Proxy: Channex selbst hat KEIN Objekt „Listing-Inhalt"
-    # (`GET /listings` → 404, live geprüft). Titel/Beschreibung/Fotos liegen bei
-    # AIRBNB; der Proxy reicht Aufrufe an Airbnbs eigene API durch, und dort ist
-    # `hosting/listings` der Pfad (ebenfalls aus dem Bundle). Möglich wird das
-    # durch den OAuth-Scope `property_management`, den der Kanal-Katalog live
-    # ausliefert — Channex' Airbnb-Partnerschaft trägt uns.
+    # ACHTUNG — NICHT für die Listing-LISTE verwenden. Diese Korrektur steht
+    # hier, weil genau der Fehler schon einmal gemacht wurde (live: HTTP 500):
     #
-    # KEIN Sammel-Import: jeder Endpunkt adressiert EIN Listing. „Alle
-    # übernehmen" ist deshalb eine Schleife über Einzelaufrufe (der Aufrufer
-    # macht das im Worker, nicht im Request).
+    # `hosting/listings` ist KEIN Airbnb-API-Pfad. Im Bundle kommt die
+    # Zeichenkette nur EINMAL vor, und zwar als Weblink für den Browser:
+    #     `https://www.airbnb.com/hosting/listings/editor/${id}/details/`
+    # Ein Proxy-Aufruf darauf antwortet mit
+    #     {"errors":{"code":"internal_server_error"}}
+    #
+    # Die Listings eines autorisierten Airbnb-Kontos kommen über
+    # `get_channel_mapping_details(channel="AirBNB", settings=<Kanal-Settings>)`
+    # — denselben Weg nutzt Channex' eigene Zuordnungs-Maske (Bundle,
+    # `loadMappingDetails`), und sie bricht ab, solange `settings` leer oder
+    # `token_invalid` gesetzt ist. Ohne Autorisierung existiert die Liste also
+    # nirgends. Siehe airbnb_uebernahme.py.
+    #
+    # Wofür der Proxy dann? Er ist der generische Durchgriff auf Airbnb für
+    # Aufrufe, die Channex nicht selbst abbildet. Welche Pfade Airbnb dort
+    # akzeptiert, ist NICHT verifiziert — vor der ersten Nutzung live prüfen,
+    # nicht aus einem Bundle-Fund schließen.
     def airbnb_proxy(
         self, channel_id: str, path: str, payload: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        """Einen Aufruf an Airbnbs eigene API durchreichen.
+        """Einen Aufruf an Airbnbs eigene API durchreichen (Channels.ProxyScenario).
 
-        `path` ist der Airbnb-Pfad OHNE führenden Schrägstrich, z.B.
-        ``hosting/listings`` oder ``hosting/listings/{id}``.
+        `path` ist der Airbnb-Pfad OHNE führenden Schrägstrich. Kein hier
+        eingesetzter Pfad ist verifiziert; siehe Warnung oben.
         """
         return self.post(
             f"channels/{channel_id}/proxy/{path.lstrip('/')}",

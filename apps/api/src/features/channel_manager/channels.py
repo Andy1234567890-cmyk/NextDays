@@ -405,6 +405,26 @@ class ChannelsMixin:
         )
         settings = self._inject_sandbox_settings(portal_code, property_id, settings)
 
+        # OAuth-Portale (Airbnb): die maßgeblichen Settings liegen am KANAL bei
+        # Channex — dort stehen nach dem Autorisieren die Tokens. Das Frontend
+        # kann sie nicht liefern (es gibt keine Eingabefelder, das ist der Sinn
+        # von OAuth), und mit einem leeren `settings` lehnt Channex
+        # `mapping_details` mit HTTP 400 ab. Live belegt:
+        #     request_body '{"channel":"AirBNB","settings":{}}' → 400
+        # Deshalb hier die echten Kanal-Settings nachladen statt zu raten.
+        if portal_code in self._OAUTH_PORTALS:
+            kanal_settings = self._oauth_channel_settings(
+                db, tenant_id, property_id, portal_code
+            )
+            log.info("prepare_oauth_settings",
+                     portal_code=portal_code, property_id=property_id,
+                     gefunden=kanal_settings is not None,
+                     keys=sorted((kanal_settings or {}).keys()),
+                     token_keys=sorted(
+                         ((kanal_settings or {}).get("tokens") or {}).keys()),
+                     token_invalid=(kanal_settings or {}).get("token_invalid"))
+            settings = kanal_settings or settings
+
         # 1) Zugangsdaten prüfen. ACHTUNG (live verifiziert): Channex liefert
         #    HTTP 200 AUCH bei falschen Daten — der Erfolg steht in data.success.
         try:
@@ -433,6 +453,8 @@ class ChannelsMixin:
             )
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
+        log.info("prepare_mapping_details_RAW",
+                 portal_code=portal_code, property_id=property_id, raw=details)
         rooms = self._normalize_mapping_rooms(details)
 
         # Zuordnung auf ZIMMER-Ebene (Cloudbeds/SiteMinder-Standard: Zimmer→Zimmer,
@@ -453,11 +475,44 @@ class ChannelsMixin:
 
     @staticmethod
     def _normalize_mapping_rooms(details: dict[str, Any]) -> list[dict[str, Any]]:
-        """mapping_details kommt je OTA in zwei Formen — auf eine einheitliche
+        """mapping_details kommt je OTA in drei Formen — auf eine einheitliche
         Struktur [{id, title, rates:[{id, title, pricing, max_persons}]}] bringen:
           a) Booking.com: data.rooms[].rates[]
-          b) OpenChannel/„attributes": data.attributes.room_types[].rate_plans[]"""
+          b) OpenChannel/„attributes": data.attributes.room_types[].rate_plans[]
+          c) Airbnb (`mapping_mode: "listing"`):
+             data.listing_id_dictionary.values[] — eine flache LISTING-Liste
+             ohne Raten-Ebene. Live gemessen (04.08.2026, 18 Listings):
+             {id, title, type, city, country_code, occupancies, quality_status,
+              synchronization_category}. Fehlte diese Form, lief prepare mit
+             `ota_rooms=[]` und die UI meldete „Das Portal liefert keine
+             Zimmer", obwohl der Abruf 200 lieferte."""
         data = details.get("data") or {}
+        listings = (data.get("listing_id_dictionary") or {}).get("values")
+        if isinstance(listings, list) and listings:
+            return [
+                {
+                    "id": lst.get("id"),
+                    "title": lst.get("title"),
+                    # Ein Airbnb-Listing hat keine Raten-Ebene: eine Rate je
+                    # Listing, dieselbe ID — so ordnet auch Channex' eigene
+                    # Maske zu (`rate_params.listing_id`).
+                    "rates": [
+                        {
+                            "id": lst.get("id"),
+                            "title": lst.get("title"),
+                            "pricing": None,
+                            "max_persons": max(
+                                (b for b in (lst.get("occupancies") or [])
+                                 if isinstance(b, int)),
+                                default=None,
+                            ),
+                            "occupancies": lst.get("occupancies") or [],
+                        }
+                    ],
+                }
+                for lst in listings
+                if isinstance(lst, dict) and lst.get("id")
+            ]
         if data.get("rooms"):
             out = []
             for r in data["rooms"]:
@@ -561,6 +616,12 @@ class ChannelsMixin:
 
         group_id = self._require_group(db, tenant_id, channex_property_id)
         settings = self._inject_sandbox_settings(portal_code, property_id, settings)
+        # Wie im prepare-Pfad: bei OAuth-Portalen sind die Kanal-Settings mit den
+        # Tokens maßgeblich, ein leeres `settings` führt zu 400.
+        if portal_code in self._OAUTH_PORTALS:
+            settings = self._oauth_channel_settings(
+                db, tenant_id, property_id, portal_code
+            ) or settings
         log.info("connect_debug_group_and_settings", group_id=group_id,
                  settings=settings)
 
@@ -1823,6 +1884,39 @@ class ChannelsMixin:
                 }
             )
         return out
+
+    def _oauth_channel_settings(
+        self, db: Client, tenant_id: str, property_id: str, portal_code: str
+    ) -> dict[str, Any] | None:
+        """Settings des OAuth-Kanals bei Channex lesen (dort liegen die Tokens).
+
+        Nötig für `test_connection`/`mapping_details` bei Airbnb: diese Aufrufe
+        identifizieren das Portal-Konto über `settings`, und bei OAuth steckt die
+        Identität in den Tokens — nicht in einer eingegebenen Kennung. Ohne sie
+        antwortet Channex mit 400.
+
+        None, wenn kein Kanal registriert ist oder Channex nicht erreichbar ist
+        (dann behält der Aufrufer seine bisherigen Settings; ein Fehler hier darf
+        den Ablauf nicht kippen, der eigentliche Aufruf meldet ihn ohnehin)."""
+        row = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal_code)
+            .not_.is_("channex_channel_id", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if not row:
+            return None
+        try:
+            kanal = self._channex.get_channel(row[0]["channex_channel_id"])
+        except ChannexError:
+            return None
+        attrs = (kanal.get("data") or {}).get("attributes") or {}
+        settings = attrs.get("settings")
+        return settings if isinstance(settings, dict) and settings else None
 
     def _lookup_property_mapping(
         self, db: Client, tenant_id: str, property_id: str

@@ -467,6 +467,11 @@ class OAuthStatusResponse(BaseModel):
     connected: bool = False
     host_id: str | None = None
     portal: str
+    # Grund, warum die Verbindung nicht steht. Der Service ermittelt ihn bereits
+    # (parse_connection_status), das Schema hat ihn aber verworfen — dadurch sah
+    # der Kunde endlos "Warte auf die Bestätigung …", obwohl das Portal die
+    # Autorisierung abgelehnt hatte. Fehler nie verschlucken (Wurzel 5).
+    last_error: str | None = None
 
 
 class OAuthFinalizeRequest(BaseModel):
