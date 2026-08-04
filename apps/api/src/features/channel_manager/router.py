@@ -37,6 +37,7 @@ from .schemas import (
     AirbnbAktionenPushResponse,
     AirbnbTaxSettingsRequest,
     AirbnbTaxSettingsResponse,
+    AirbnbUebernahmeResponse,
     AriPushRequest,
     AriPushResponse,
     AvailabilityRuleRequest,
@@ -407,51 +408,42 @@ def disconnect_channel(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-# --- Airbnb-OAuth (white-label, ohne iFrame) ---------------------------------
+# --- Airbnb-Übernahme (Wechselkunde ohne eigene Objekte) ---------------------
 #
-# ZWEI Einstiege, EIN Service:
-#   * /channels/{portal}/oauth/…            → konto-weit, OHNE Objekt
-#   * /properties/{id}/channels/{portal}/…  → an ein bestehendes Objekt gebunden
+# Für den Betrieb, der schon auf Airbnb verkauft und zu uns wechselt: er hat 0
+# Objekte und soll sie NICHT abtippen. Zwei Aufrufe, dazwischen ein Klick des
+# Kunden bei Airbnb:
+#   1. POST /airbnb/uebernahme/start  → Server legt das Gerüst-Objekt an und
+#      gibt die echte Airbnb-OAuth-URL zurück
+#   2. (Kunde autorisiert bei Airbnb)
+#   3. POST /airbnb/uebernahme/listings → Listings von Airbnb lesen und daraus
+#      Objekte anlegen; das erste füllt das Gerüst
 #
-# Der konto-weite Weg ist der des WECHSELKUNDEN und die Kette, die das Onboarding
-# geht: Airbnb autorisieren → Channex spiegelt die Listings → `POST /reconcile`
-# legt daraus unsere Objekte an. Vorher verlangte der Start ein Objekt, das es
-# noch nicht gab — man musste anlegen, was man importieren wollte.
-@router.post(
-    "/channels/{portal_code}/oauth/begin", response_model=OAuthBeginResponse
-)
-def begin_account_oauth(
-    portal_code: str,
-    req: OAuthBeginRequest,
-    service: ChannelManagerServiceDep,
-    ctx: _write,
+# Warum ein Gerüst-Objekt nötig ist (live geprüft, siehe airbnb_uebernahme.py):
+# Channex' `connection_link` verlangt mindestens ein Property, sonst 422. Ein
+# konto-weiter Airbnb-Connect ist deshalb nicht möglich — der Zirkelschluss ist
+# aber auf EIN serverseitig angelegtes Objekt begrenzt, nicht auf n Objekte des
+# Kunden.
+@router.post("/airbnb/uebernahme/start", response_model=OAuthBeginResponse)
+def start_airbnb_uebernahme(
+    service: ChannelManagerServiceDep, ctx: _write
 ) -> OAuthBeginResponse:
-    """OAuth-Start OHNE Objekt (Wechselkunde: Objekte kommen aus den Listings)."""
+    """Übernahme starten: Gerüst-Objekt anlegen + Airbnb-OAuth-URL erzeugen."""
     try:
-        result = service.begin_channel_oauth(
-            ctx,
-            property_id=None,
-            portal_code=portal_code,
-            title=req.title,
-            settings=req.settings,
-        )
-        return OAuthBeginResponse(**result)
+        return OAuthBeginResponse(**service.uebernahme_starten(ctx))
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.get(
-    "/channels/{portal_code}/oauth/status", response_model=OAuthStatusResponse
+@router.post(
+    "/airbnb/uebernahme/listings", response_model=AirbnbUebernahmeResponse
 )
-def account_oauth_status(
-    portal_code: str, service: ChannelManagerServiceDep, ctx: _write
-) -> OAuthStatusResponse:
-    """Status der konto-weiten Verbindung pollen (Channex hat keine Webhooks)."""
+def airbnb_listings_uebernehmen(
+    service: ChannelManagerServiceDep, ctx: _write
+) -> AirbnbUebernahmeResponse:
+    """Airbnb-Listings des verbundenen Kontos als Objekte übernehmen."""
     try:
-        result = service.refresh_channel_oauth_status(
-            ctx, property_id=None, portal_code=portal_code
-        )
-        return OAuthStatusResponse(**result)
+        return AirbnbUebernahmeResponse(**service.listings_uebernehmen(ctx))
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

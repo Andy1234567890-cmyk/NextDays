@@ -449,40 +449,72 @@ export type OAuthStatusResult = {
 };
 
 /**
- * Airbnb-OAuth starten. `property_id` ist OPTIONAL: ohne Objekt läuft der
- * konto-weite Weg des Wechselkunden (Onboarding → Airbnb autorisieren → Channex
- * spiegelt die Listings → `reconcileTenant` legt die Objekte an). Mit Objekt
- * bleibt es der bisherige, objektgebundene Pfad.
+ * Airbnb-OAuth für ein BESTEHENDES Objekt starten. Ohne Objekt gibt es diesen
+ * Weg nicht: Channex' `connection_link` verlangt mindestens ein Property (live
+ * geprüft, sonst 422). Wer noch keine Objekte hat, nutzt
+ * `startAirbnbUebernahme` — dort legt der Server das eine nötige Objekt selbst
+ * an, statt es vom Kunden zu verlangen.
  */
 export async function beginChannelOAuth(input: {
-  property_id?: string | null;
+  property_id: string;
   portal_code: string;
   title?: string;
   settings?: Record<string, unknown>;
 }): Promise<Result<OAuthBeginResult>> {
-  const pfad = input.property_id
-    ? `/properties/${input.property_id}/channels/${input.portal_code}/oauth/begin`
-    : `/channels/${input.portal_code}/oauth/begin`;
-  return call<OAuthBeginResult>(pfad, {
-    method: "POST",
-    body: {
-      property_id: input.property_id ?? null,
-      portal_code: input.portal_code,
-      title: input.title,
-      settings: input.settings ?? {},
+  return call<OAuthBeginResult>(
+    `/properties/${input.property_id}/channels/${input.portal_code}/oauth/begin`,
+    {
+      method: "POST",
+      body: {
+        property_id: input.property_id,
+        portal_code: input.portal_code,
+        title: input.title,
+        settings: input.settings ?? {},
+      },
     },
-  });
+  );
 }
 
 export async function getChannelOAuthStatus(
-  propertyId: string | null,
+  propertyId: string,
   portalCode: string,
 ): Promise<Result<OAuthStatusResult>> {
   return call<OAuthStatusResult>(
-    propertyId
-      ? `/properties/${propertyId}/channels/${portalCode}/oauth/status`
-      : `/channels/${portalCode}/oauth/status`,
+    `/properties/${propertyId}/channels/${portalCode}/oauth/status`,
   );
+}
+
+export type AirbnbUebernahmeResult = {
+  created: number;
+  updated: number;
+  skipped: number;
+};
+
+/**
+ * Airbnb-Übernahme starten — für den Wechselkunden mit NULL Objekten. Der
+ * Server legt das Gerüst-Objekt an, an dem Channex die Autorisierung festmacht,
+ * und liefert die echte Airbnb-OAuth-URL zurück. Der Kunde tippt keine Daten.
+ */
+export async function startAirbnbUebernahme(): Promise<
+  Result<OAuthBeginResult>
+> {
+  return call<OAuthBeginResult>("/airbnb/uebernahme/start", { method: "POST" });
+}
+
+/**
+ * Nach dem Autorisieren: die Airbnb-Listings als Objekte übernehmen. Das erste
+ * füllt das Gerüst-Objekt, jedes weitere wird ein eigenes Objekt. Idempotent —
+ * ein zweiter Aufruf aktualisiert statt zu verdoppeln.
+ */
+export async function uebernehmeAirbnbListings(): Promise<
+  Result<AirbnbUebernahmeResult>
+> {
+  const res = await call<AirbnbUebernahmeResult>(
+    "/airbnb/uebernahme/listings",
+    { method: "POST" },
+  );
+  if (res.ok) revalidatePath("/objekte");
+  return res;
 }
 
 export async function finalizeOAuthChannel(input: {

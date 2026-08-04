@@ -431,14 +431,25 @@ class ConnectChannelRequest(BaseModel):
 class OAuthBeginRequest(BaseModel):
     """OAuth-Start: inaktiven Channel anlegen + echte OAuth-URL erzeugen."""
 
-    # None = konto-weiter Connect (Wechselkunde): Airbnb wird autorisiert, BEVOR
-    # es Objekte gibt — sie entstehen aus den gespiegelten Listings. Der Wert im
-    # Body ist ohnehin nur informativ; verbindlich ist der Pfad-Parameter der
-    # objektgebundenen Route.
+    # Optional, weil verbindlich der Pfad-Parameter der Route gilt — der
+    # Body-Wert ist informativ. Ein Pflichtfeld hier hätte ältere Clients, die
+    # es nicht senden, mit einem nackten Typfehler abgewiesen statt mit der
+    # erklärenden Meldung des Service.
     property_id: str | None = None
     portal_code: str                                  # OAuth-Portal (AirBNB)
     title: str | None = None
     settings: dict = Field(default_factory=dict)      # optionale Airbnb-Settings
+
+
+class AirbnbUebernahmeResponse(BaseModel):
+    """Ergebnis der Airbnb-Übernahme: wie viele Objekte daraus entstanden sind.
+
+    `skipped` zählt Listings, die NICHT übernommen wurden (ohne Titel/ID oder
+    über der Obergrenze) — bewusst ausgewiesen statt still abgeschnitten."""
+
+    created: int = 0
+    updated: int = 0
+    skipped: int = 0
 
 
 class OAuthBeginResponse(BaseModel):

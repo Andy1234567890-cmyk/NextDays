@@ -18,6 +18,7 @@ from src.core.security import AuthContext
 
 from .abgaben_status import AbgabenStatusMixin
 from .airbnb_aktionen import AirbnbAktionenMixin
+from .airbnb_uebernahme import AirbnbUebernahmeMixin
 from .ari_push import AriPushMixin
 from .bookings_sync import BookingsSyncMixin
 from .channels import ChannelsMixin
@@ -61,6 +62,10 @@ class ChannelManagerService(
     AriPushMixin,
     ChannelsMixin,
     OAuthChannelsMixin,
+    # Nach OAuthChannelsMixin/PropertyMappingMixin: die Übernahme ruft deren
+    # begin_channel_oauth bzw. _ensure_default_unit auf, statt einen zweiten Weg
+    # zu Channex zu bauen.
+    AirbnbUebernahmeMixin,
     ObjektKanalMixin,
     BookingsSyncMixin,
     OtaExtrasMixin,

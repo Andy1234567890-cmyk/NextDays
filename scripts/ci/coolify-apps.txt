@@ -1,0 +1,28 @@
+# Coolify-Apps dieses Repos — die EINE Quelle für Image-Build und Deploy.
+#
+# Format: uuid|name|pfad-präfix1 pfad-präfix2 …
+# Die Pfad-Präfixe sind die Coolify-watch_paths der App (ohne /**). Ändert sich
+# ein watch_path in Coolify, MUSS er hier mitgeführt werden — sonst deployt
+# Coolify auf einen Push, den die CI als "betrifft diese App nicht" gewertet
+# und deshalb nie gebaut hat.
+#
+# Der images-Job baut genau die Apps, die hier auf geänderte Dateien matchen;
+# der deploy-Job deployt genau dieselben. Beide lesen diese Datei über
+# scripts/ci/betroffene-apps.sh, damit sie nicht auseinanderlaufen können.
+#
+# apps/api/ gehört an nextdays-api + nextdays-worker — NICHT an
+# nextdays-supabase (sonst reißt jeder API-Push den DB-Stack mit →
+# Container-Race/WAL-Korruptionsrisiko). supabase deployt NUR bei
+# deploy/supabase/**.
+jt5gdgragv2jzivpx4oiqfir|nextdays-kong|deploy/kong/
+y13cm245vlmvq3yv38gdbtat|nextdays-marketing|marketing/
+rh4f581hqashrnmiwnxb6pcu|nextdays-plattform|plattform/ packages/
+uo0irbk8eno9c9qonngzqwy2|nextdays-gastgeber|gastgeber/ packages/
+oznosa2xmefzmfeqidezodm6|nextdays-admin|admin/ packages/
+u67kn5pj9cb2gqryt2ezsc8r|nextdays-storybook|storybook/ packages/
+cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase|deploy/supabase/
+kilcrxob5u434k3vsyf54ble|nextdays-api|apps/api/ deploy/api-standalone/
+ly4w6vw4ffxk2987nyg5z5kt|nextdays-worker|apps/api/ deploy/worker/
+bln3q0n1l1se2hna8utkuag9|nextdays-web|web/ packages/
+zcjrx4czu338zghc58d41yp7|nextdays-docs|deploy/docs/
+yih7d7kz4tkkgezqzg1zzjcs|nextdays-redis|deploy/redis-standalone/

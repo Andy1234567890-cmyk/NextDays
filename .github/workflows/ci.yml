@@ -216,6 +216,71 @@ jobs:
           done
 
   # ────────────────────────────────────────────────────────────────────────
+  # Welche Coolify-Apps berührt der Push? Ermittelt EINMAL, genutzt von images
+  # (welche Builds laufen) und deploy (welche Apps live gehen). Vorher baute
+  # images blind alle 12 Apps und deploy hängt per needs daran — ein
+  # API-Fix wartete auf einen 8-Minuten-Storybook-Build, der ihn nicht betraf.
+  #
+  # Die Pfad-Präfixe MÜSSEN mit den APPS-Einträgen im deploy-Job (und damit den
+  # Coolify-watch_paths) übereinstimmen: würde hier weniger matchen als dort,
+  # deployte Coolify eine App, deren Image in der CI nie gebaut wurde.
+  # `pfade-pruefen.sh` erzwingt das.
+  # ────────────────────────────────────────────────────────────────────────
+  betroffen:
+    name: Betroffene Apps ermitteln
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      apps: ${{ steps.ermitteln.outputs.apps }}
+      base: ${{ steps.basis.outputs.base }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Basis des Diffs ermitteln
+        id: basis
+        # github.event.before wäre falsch: war das CI eines Pushes rot, wird
+        # nichts deployt — beim NÄCHSTEN Push liegen dessen Änderungen aber
+        # schon vor `before` und fallen für immer aus dem Diff. Genau so gingen
+        # 29b7468 (web) und bc2af55 (marketing) nicht live.
+        # Basis ist deshalb der head_sha des letzten erfolgreichen Laufs dieses
+        # Workflows auf main — der einzige Stand, von dem sicher ist, dass er
+        # deployt wurde. Fällt keiner an (Erst-Lauf, Historie beschnitten),
+        # bleibt github.event.before als Rückfall.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          base=""
+          if [ "${{ github.event_name }}" = "push" ]; then
+            base=$(gh api \
+              "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?branch=main&status=success&event=push&per_page=10" \
+              --jq ".workflow_runs[] | select(.id != ${{ github.run_id }}) | .head_sha" \
+              | head -1 || true)
+            if [ -n "$base" ] && git cat-file -e "${base}^{commit}" 2>/dev/null; then
+              echo "Basis: letzter erfolgreicher Lauf ($base)"
+            else
+              base="${{ github.event.before }}"
+              echo "Kein verwertbarer Vorlauf → Rückfall auf before ($base)"
+            fi
+          else
+            # Pull Request: gegen den Merge-Basis-Commit des Ziel-Branches.
+            base=$(git merge-base "origin/${{ github.base_ref }}" "${{ github.sha }}" || true)
+            echo "Basis (PR): $base"
+          fi
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+
+      - name: App-Liste deckungsgleich mit images-Matrix
+        run: bash scripts/ci/apps-liste-pruefen.sh
+
+      - name: Betroffene Apps ermitteln
+        id: ermitteln
+        run: bash scripts/ci/betroffene-apps.sh "${{ steps.basis.outputs.base }}" "${{ github.sha }}"
+
+  # ────────────────────────────────────────────────────────────────────────
   # JEDE Coolify-App dieses Repos wird hier so gebaut/validiert, wie Coolify es
   # tut — gleicher Build-Pack, gleicher Kontext, gleiches Dockerfile bzw.
   # gleiche Compose-Datei. Bisher deployte Coolify Dockerfiles und Compose-
@@ -229,9 +294,15 @@ jobs:
   # seinem Dockerfile Location. Weicht hier etwas ab, prüft die CI etwas
   # anderes als deployt wird.
   # Kommt eine Coolify-App hinzu, MUSS sie hier UND in APPS (deploy-Job) rein.
+  #
+  # Gebaut wird nur, was der Push berührt (needs.betroffen). Eine App, die
+  # nicht gebaut wurde, wird auch nicht deployt — beide Jobs lesen dieselbe
+  # Liste, deshalb kann kein ungeprüftes Image live gehen.
   # ────────────────────────────────────────────────────────────────────────
   images:
     name: Coolify-App (${{ matrix.app }})
+    needs: [betroffen]
+    if: needs.betroffen.outputs.apps != ''
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -286,10 +357,31 @@ jobs:
             projectdir: .
             compose: deploy/supabase/docker-compose.yml
     steps:
+      # Die Matrix bleibt die vollständige, lesbare Abbildung aller 12
+      # Coolify-Resources; ob dieser Eintrag WIRKLICH baut, entscheidet die
+      # Betroffenheit. GitHub kann eine include-Matrix nicht dynamisch kürzen,
+      # ohne sie als JSON zu generieren — dann verlöre man diese Abbildung.
+      # Nicht betroffene Einträge sind in Sekunden durch (kein checkout, kein
+      # Build) und erscheinen im Lauf als grün-übersprungen.
+      - name: Betroffen?
+        id: pruefen
+        env:
+          APPS: ${{ needs.betroffen.outputs.apps }}
+        run: |
+          set -euo pipefail
+          for a in $APPS; do
+            if [ "$a" = "${{ matrix.app }}" ]; then
+              echo "bauen=ja" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+          done
+          echo "${{ matrix.app }} nicht betroffen — übersprungen."
+          echo "bauen=nein" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.bauen == 'ja'
 
       - name: Image bauen (Dockerfile)
-        if: matrix.kind == 'dockerfile'
+        if: steps.pruefen.outputs.bauen == 'ja' && matrix.kind == 'dockerfile'
         # Ohne NEXT_PUBLIC_*-Build-Args: die Apps lesen API-/Supabase-URLs erst
         # zur Laufzeit. Bricht der Build ohne sie, ist das ein echter Befund
         # (Wurzel 4) — keine Platzhalter-URL nachschieben, die ihn kaschiert.
@@ -312,7 +404,7 @@ jobs:
           exit 1
 
       - name: Compose validieren
-        if: matrix.kind == 'compose'
+        if: steps.pruefen.outputs.bauen == 'ja' && matrix.kind == 'compose'
         # --project-directory = Coolifys Base Directory: davon hängen die
         # relativen build.context-Pfade ab. Env-Variablen fehlen bewusst
         # (Coolify injiziert sie) — leere Interpolation ist eine Warnung, kein
@@ -321,7 +413,7 @@ jobs:
         run: docker compose --project-directory "${{ matrix.projectdir }}" -f "${{ matrix.compose }}" config -q
 
       - name: Compose-Images bauen
-        if: matrix.kind == 'compose'
+        if: steps.pruefen.outputs.bauen == 'ja' && matrix.kind == 'compose'
         # Nur Stacks mit build:-Sektion bauen tatsächlich etwas (api, worker,
         # docs); die reinen Image-Stacks (kong, redis, supabase) sind hier ein
         # No-Op — `build` ohne baubaren Service ist erfolgreich.
@@ -331,92 +423,34 @@ jobs:
   # Auto-Deploy bei Push auf main — NUR wenn alle Prüf-Jobs grün sind (needs).
   # Coolifys eigener Push-Webhook ist für die Deploy-Key-Apps nicht nutzbar
   # (manuelle Webhook-Route 500, API-Deploy verlangt Bearer-Header, den
-  # GitHub-Webhooks nicht setzen können). Dieser Job bildet Coolifys
-  # watch_paths-Logik nach: er deployt nur die Apps, deren Pfade im Push
-  # tatsächlich geändert wurden.
+  # GitHub-Webhooks nicht setzen können). Deployt werden genau die Apps, die
+  # der betroffen-Job ermittelt hat — dieselbe Liste, die images gebaut hat.
   # ────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Coolify
-    needs: [api, packages, frontends, kanal-enums, mobile, mobile-konsistenz, images]
+    needs: [betroffen, api, packages, frontends, kanal-enums, mobile, mobile-konsistenz, images]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      # Für die Basis-Ermittlung unten: den letzten Lauf lesen, der wirklich
-      # deployt hat.
-      actions: read
     concurrency:
       group: coolify-deploy
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
 
-      - name: Basis des Diffs ermitteln
-        # github.event.before wäre falsch: war das CI eines Pushes rot, wird
-        # hier nichts deployt — beim NÄCHSTEN Push liegen dessen Änderungen
-        # aber schon vor `before` und fallen für immer aus dem Diff. Genau so
-        # gingen 29b7468 (web) und bc2af55 (marketing) nicht live.
-        # Basis ist deshalb der head_sha des letzten erfolgreichen Laufs dieses
-        # Workflows auf main — der einzige Stand, von dem sicher ist, dass er
-        # deployt wurde. Fällt keiner an (Erst-Lauf, Historie beschnitten),
-        # bleibt github.event.before als Rückfall.
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          base=$(gh api \
-            "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?branch=main&status=success&event=push&per_page=10" \
-            --jq ".workflow_runs[] | select(.id != ${{ github.run_id }}) | .head_sha" \
-            | head -1 || true)
-          if [ -n "$base" ] && git cat-file -e "${base}^{commit}" 2>/dev/null; then
-            echo "Basis: letzter erfolgreicher Lauf ($base)"
-          else
-            base="${{ github.event.before }}"
-            echo "Kein verwertbarer Vorlauf → Rückfall auf before ($base)"
-          fi
-          echo "DEPLOY_BASE=$base" >> "$GITHUB_ENV"
-
-      - name: Deploy geänderte Apps
+      - name: Deploy betroffene Apps
         env:
           COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          APPS: ${{ needs.betroffen.outputs.apps }}
         run: |
           set -euo pipefail
 
-          # App-Definitionen: "uuid|name|pfad-präfix1 pfad-präfix2 …"
-          # Pfad-Präfixe entsprechen den Coolify-watch_paths (ohne /**).
-          # WICHTIG: Pfade müssen den echten Coolify-watch_paths der App
-          # entsprechen. apps/api/ gehört an nextdays-api + nextdays-worker —
-          # NICHT an nextdays-supabase (sonst reißt jeder API-Push den DB-Stack
-          # mit → Container-Race/WAL-Korruptionsrisiko). supabase deployt NUR
-          # bei deploy/supabase/**.
-          APPS=(
-            "jt5gdgragv2jzivpx4oiqfir|nextdays-kong|deploy/kong/"
-            "y13cm245vlmvq3yv38gdbtat|nextdays-marketing|marketing/"
-            "rh4f581hqashrnmiwnxb6pcu|nextdays-plattform|plattform/ packages/"
-            "uo0irbk8eno9c9qonngzqwy2|nextdays-gastgeber|gastgeber/ packages/"
-            "oznosa2xmefzmfeqidezodm6|nextdays-admin|admin/ packages/"
-            "u67kn5pj9cb2gqryt2ezsc8r|nextdays-storybook|storybook/"
-            "cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase|deploy/supabase/"
-            "kilcrxob5u434k3vsyf54ble|nextdays-api|apps/api/ deploy/api-standalone/"
-            "ly4w6vw4ffxk2987nyg5z5kt|nextdays-worker|apps/api/ deploy/worker/"
-            "bln3q0n1l1se2hna8utkuag9|nextdays-web|web/ packages/"
-            "zcjrx4czu338zghc58d41yp7|nextdays-docs|deploy/docs/"
-            "yih7d7kz4tkkgezqzg1zzjcs|nextdays-redis|deploy/redis-standalone/"
-          )
-
-          # Geänderte Dateien seit dem letzten deployten Stand (Fallback: alles).
-          BEFORE="$DEPLOY_BASE"
-          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
-             || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
-            echo "Kein gültiger Basis-Commit → alle Apps prüfen (Erst-Push/Force)."
-            CHANGED=$(git ls-files)
-          else
-            CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}")
+          if [ -z "${APPS// }" ]; then
+            echo "Keine App betroffen — nichts zu deployen."
+            exit 0
           fi
-          echo "Geänderte Dateien:"; echo "$CHANGED" | sed 's/^/  /'
 
           deploy() {
             local uuid="$1" name="$2"
@@ -431,17 +465,11 @@ jobs:
             [ "$code" = "200" ] || { echo "::error::Deploy $name fehlgeschlagen (HTTP $code)"; exit 1; }
           }
 
-          any=0
-          for entry in "${APPS[@]}"; do
-            IFS='|' read -r uuid name paths <<< "$entry"
-            match=0
-            for p in $paths; do
-              if echo "$CHANGED" | grep -q "^$p"; then match=1; break; fi
-            done
-            if [ "$match" = "1" ]; then
-              deploy "$uuid" "$name"; any=1
-            else
-              echo "– $name übersprungen (keine Änderungen in: $paths)"
-            fi
+          # UUID je betroffener App aus der geteilten Liste holen. Fehlt sie
+          # dort, ist das ein Fehler und kein Überspringen (fail-closed):
+          # sonst gilt eine App still als deployt, die nie angefasst wurde.
+          for name in $APPS; do
+            uuid=$(awk -F'|' -v n="$name" '$2 == n { print $1 }' scripts/ci/coolify-apps.txt)
+            [ -n "$uuid" ] || { echo "::error::Keine UUID für $name in scripts/ci/coolify-apps.txt"; exit 1; }
+            deploy "$uuid" "$name"
           done
-          [ "$any" = "1" ] || echo "Keine App betroffen — nichts zu deployen."

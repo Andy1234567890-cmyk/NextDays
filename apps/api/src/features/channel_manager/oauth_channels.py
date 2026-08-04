@@ -43,15 +43,27 @@ class OAuthChannelsMixin:
         öffnet die URL oder schickt sie dem Eigentümer; Mapping/activate folgen
         nach erfolgreicher Verbindung (refresh_channel_oauth_status → finalize).
 
-        `property_id` ist OPTIONAL — das ist der Weg des WECHSELKUNDEN: er will
-        seine bestehenden Airbnb-Objekte übernehmen und hat deshalb noch keins,
-        an das ein Kanal hängen könnte. Ein Pflicht-Objekt war hier ein
-        Zirkelschluss: zum Importieren erst anlegen, was man importieren will.
-        Möglich ist der objektlose Kanal, weil der Channex-Katalog für Airbnb
-        `property_mapping: "multiple"` liefert — ein Kanal trägt mehrere Objekte.
-        Nach dem Autorisieren spiegelt Channex die Listings, und
-        `reconcile_properties_for_tenant` legt daraus die Objekte an (EIN
-        Import-Weg, kein zweiter).
+        `property_id` ist PFLICHT — auch für den Wechselkunden, der eigentlich
+        nur übernehmen will. Grund ist Channex, nicht unsere Wahl: der
+        Airbnb-Flow braucht ein Objekt, an dem die Autorisierung hängt.
+        Live geprüft gegen app.channex.io (04.08.2026):
+          POST meta/airbnb/connection_link ohne `properties`  → 422
+          dito mit `properties: []`                           → 422
+              {"properties": ["should have at least 1 item(s)"]}
+          dito mit genau einem Property                       → 200 + OAuth-URL
+        `POST channels` selbst akzeptiert 0 Properties (201) — der Kanal wäre
+        also anlegbar, aber der Link, den der Kunde braucht, nicht. Ein
+        objektloser Start hinterließe deshalb nur einen tauben Kanal bei Channex.
+        `property_mapping: "multiple"` im Katalog widerspricht dem nicht: es
+        sagt, dass EIN Kanal MEHRERE Objekte tragen darf — nicht, dass er mit
+        keinem beginnen darf.
+
+        Der Zirkelschluss ("zum Importieren erst anlegen, was man importieren
+        will") ist damit nicht auflösbar, aber auf EIN Objekt begrenzt: das
+        erste Objekt trägt die Autorisierung, alle weiteren Listings kommen
+        danach über `reconcile_properties_for_tenant` von selbst — der Kanal
+        wird per PUT channels/{id} um deren Properties erweitert (ebenfalls live
+        geprüft: HTTP 200). Niemand muss Listing für Listing abtippen.
         """
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
@@ -60,30 +72,36 @@ class OAuthChannelsMixin:
                 "Dieses Portal nutzt keinen OAuth-Verbindungsweg.", status_code=400
             )
 
-        channex_property_id = (
-            self._require_property_mapping(db, tenant_id, property_id)
-            if property_id
-            else None
+        # Fail-closed VOR dem ersten Channex-Aufruf (Wurzel 5): ohne Objekt
+        # liefert connection_link ohnehin 422, ein vorher angelegter Kanal wäre
+        # dann ein tauber Rest bei Channex. Die Meldung nennt den Grund und den
+        # nächsten Schritt — der Kunde soll nicht raten, warum "Verbinden" nicht
+        # geht, während daneben "Objekte übernehmen" steht.
+        if not property_id:
+            raise ChannelManagerError(
+                "Airbnb verbindet sich immer über ein Objekt. Lege dein erstes "
+                "Objekt an (Name und Art genügen) und verbinde Airbnb dort — "
+                "deine weiteren Airbnb-Objekte holst du danach mit "
+                "„Objekte übernehmen“, ohne sie einzeln anzulegen.",
+                status_code=422,
+            )
+
+        channex_property_id = self._require_property_mapping(
+            db, tenant_id, property_id
         )
 
         # Idempotenz (Wurzel 2): existiert für (property_id, portal_code) bereits ein
         # Channex-Kanal, ihn wiederverwenden statt bei Doppelklick/Retry einen zweiten
         # anzulegen (sonst verwaister Zweit-Kanal bei Channex vor dem DB-UNIQUE).
-        frage = (
+        existing = (
             db.table("channex_channel_connection")
             .select("channex_channel_id")
             .eq("tenant_id", tenant_id)
             .eq("ota_portal_code", portal_code)
-        )
-        # Ohne Objekt (Wechselkunde) ist der Kanal der KONTO-Kanal des Portals —
-        # dann darf die Suche nicht auf ein Objekt filtern, sonst legt jeder
-        # Klick einen weiteren Kanal bei Channex an (Wurzel 2).
-        frage = (
-            frage.eq("property_id", property_id)
-            if property_id
-            else frage.is_("property_id", "null")
-        )
-        existing = frage.limit(1).execute().data
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data
         existing_channel_id = (
             existing[0].get("channex_channel_id") if existing else None
         )
@@ -100,14 +118,8 @@ class OAuthChannelsMixin:
                 "group_id": group_id,
                 "is_active": False,
                 "title": channel_title,
+                "properties": [channex_property_id],
             }
-            # `properties` NUR mitschicken, wenn es ein Objekt gibt. Beim
-            # Wechselkunden-Connect existiert keins — eine Liste mit `null`
-            # darin wäre für Channex ein Bad Request, eine leere Liste würde den
-            # Kanal an KEIN Objekt binden und ihn beim späteren Mapping
-            # überschreiben (PUT ersetzt, kein Merge).
-            if channex_property_id:
-                attribute["properties"] = [channex_property_id]
             try:
                 created = self._channex.create_channel(attribute)
             except ChannexError as exc:
@@ -165,27 +177,21 @@ class OAuthChannelsMixin:
         }
 
     def refresh_channel_oauth_status(
-        self, ctx: AuthContext, *, property_id: str | None, portal_code: str
+        self, ctx: AuthContext, *, property_id: str, portal_code: str
     ) -> dict[str, Any]:
         """Verbindungsstatus aus Channex lesen (Poll — Channex liefert keine
         Channel-Webhooks). Schreibt host_id/Status in channex_channel_connection
-        → Realtime-Update. `is_active` bleibt false bis Mapping+activate.
-
-        Ohne `property_id` wird die KONTO-Verbindung gepollt (Wechselkunde, der
-        Airbnb vor dem ersten Objekt autorisiert hat)."""
+        → Realtime-Update. `is_active` bleibt false bis Mapping+activate."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
 
         def _scope(frage: _Q) -> _Q:
             """Denselben Scope auf Lese- und Schreibpfad anwenden — getrennt
             formuliert wäre er beim nächsten Eingriff auseinandergelaufen."""
-            frage = frage.eq("tenant_id", tenant_id).eq(
-                "ota_portal_code", portal_code
-            )
             return (
-                frage.eq("property_id", property_id)
-                if property_id
-                else frage.is_("property_id", "null")
+                frage.eq("tenant_id", tenant_id)
+                .eq("ota_portal_code", portal_code)
+                .eq("property_id", property_id)
             )
 
         row = (
@@ -315,19 +321,13 @@ class OAuthChannelsMixin:
         }
 
     def _save_oauth_connection(
-        self, db: Client, tenant_id: str, *, property_id: str | None,
-        channex_property_id: str | None, portal_code: str, channel_id: str,
+        self, db: Client, tenant_id: str, *, property_id: str,
+        channex_property_id: str, portal_code: str, channel_id: str,
         host_id: str | None, is_active: bool, last_error: str | None,
     ) -> None:
         """Upsert einer OAuth-Verbindung (Airbnb): kein hotel_id-Credential, sondern
         host_id (erst nach Verbindung). Anders als _save_channel_connection, das
-        eine eingegebene Hotel-ID voraussetzt.
-
-        Ohne Objekt (Wechselkunde) ist es die KONTO-Verbindung: `property_id`
-        bleibt NULL, und der Konflikt läuft über (tenant_id, ota_portal_code) —
-        der Index `..._property_portal_uidx` greift bei NULL nicht, weil NULLs in
-        Postgres voneinander verschieden sind. Ohne diesen Wechsel legte jeder
-        Klick eine zweite Zeile und damit einen zweiten Kanal an (Wurzel 2)."""
+        eine eingegebene Hotel-ID voraussetzt."""
         row = {
             "tenant_id": tenant_id,
             "property_id": property_id,
@@ -338,13 +338,9 @@ class OAuthChannelsMixin:
             "is_active": is_active,
             "last_error": last_error,
         }
-        konflikt = (
-            "property_id,ota_portal_code" if property_id
-            else "tenant_id,ota_portal_code"
-        )
         try:
             db.table("channex_channel_connection").upsert(
-                row, on_conflict=konflikt
+                row, on_conflict="property_id,ota_portal_code"
             ).execute()
         except Exception as exc:  # noqa: BLE001 — Persistenz darf Connect nicht killen
             log.warning(

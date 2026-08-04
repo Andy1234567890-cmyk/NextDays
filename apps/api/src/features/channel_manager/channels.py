@@ -1916,14 +1916,12 @@ class ChannelsMixin:
                 )
 
     def _require_group(
-        self, db: Client, tenant_id: str, channex_property_id: str | None
+        self, db: Client, tenant_id: str, channex_property_id: str
     ) -> str:
         """group_id für den Channel-Create (Pflicht). Bevorzugt die Tenant-Group;
         fällt sonst auf die Group zurück, die diese Property bei Channex besitzt.
 
-        `channex_property_id` darf None sein (Airbnb-Connect des Wechselkunden,
-        der noch kein Objekt hat): dann greift nur der Tenant-Weg. Fehlt auch die
-        Tenant-Group, ist der Betrieb nicht bei Channex angelegt — das ist ein
+        Fehlt beides, ist der Betrieb nicht bei Channex angelegt — das ist ein
         Konfigurationsfehler und wird als solcher gemeldet, nicht geraten."""
         grp = (
             db.table("channex_group_map")
@@ -1934,18 +1932,14 @@ class ChannelsMixin:
         )
         if grp.data:
             return grp.data[0]["channex_group_id"]
-        # Fallback: Group ermitteln, die die Property enthält. Ohne Property
-        # entfällt er — dann gibt es kein Merkmal, an dem sich die richtige
-        # Group erkennen ließe, und eine beliebige zu nehmen wäre geraten.
-        if channex_property_id:
-            try:
-                for g in self._channex.list_groups().get("data") or []:
-                    rel = (g.get("relationships") or {}).get("properties") or {}
-                    ids = {p.get("id") for p in (rel.get("data") or [])}
-                    if channex_property_id in ids:
-                        return g.get("id")
-            except ChannexError:
-                pass
+        try:
+            for g in self._channex.list_groups().get("data") or []:
+                rel = (g.get("relationships") or {}).get("properties") or {}
+                ids = {p.get("id") for p in (rel.get("data") or [])}
+                if channex_property_id in ids:
+                    return g.get("id")
+        except ChannexError:
+            pass
         raise ChannelManagerError(
             "Keine Channex-Gruppe für dieses Konto gefunden.", status_code=409
         )
