@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dinamične cene",
           excerpt: "Samodejno prilagajanje cen povpraševanju, predčasnosti rezervacije in zasedenosti.",
-          updated: "Posodobljeno: julij 2026",
+          updated: "Posodobljeno: avgust 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Pri objektu odprite zavihek „Cene“ in razdelek „Dinamične cene“.",
-                "Aktivirajte funkcijo za osnovno tarifo objekta.",
-                "Določite spodnjo in zgornjo mejo cene.",
-                "Določite, kako močno sme zasedenost vplivati na ceno.",
-                "Shranite nastavitve.",
+                "Modul naročite v „Orodja → Razširitve“ — brez modula samodejni izračun ne teče.",
+                "V glavnem meniju odprite „Distribucija → Dinamične cene“.",
+                "V razpredelnici objektov kliknite ikono svinčnika pri želenem objektu („Določi osnovno ceno“).",
+                "Izberite strategijo osnovne cene: na podlagi podatkov ali fiksno osnovno ceno.",
+                "Določite najnižjo in najvišjo ceno ter v polju „Občutljivost na zasedenost (%)“ nastavite, kako močno vpliva zasedenost.",
+                "Vklopite „Dinamične cene aktivne“ in shranite.",
               ],
             },
             { type: "h2", text: "Meje in varnost" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Spodnja meja cene ščiti pred prenizkimi cenami ob šibkem povpraševanju.",
                 "Zgornja meja cene ščiti pred pretiranimi cenami ob visokem povpraševanju.",
                 "Izpeljane tarife samodejno prevzamejo novo osnovno tarifo.",
+                "Dnevna cena, ročno nastavljena v koledarju, ima vedno prednost pred samodejnim izračunom.",
               ],
             },
             {

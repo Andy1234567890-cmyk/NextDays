@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Prezzijiet Dinamiċi",
           excerpt: "Aġġusta l-prezzijiet awtomatikament skont id-domanda, iż-żmien ta' avviż u l-okkupazzjoni.",
-          updated: "Aġġornat: Lulju 2026",
+          updated: "Aġġornat: Awwissu 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Fil-proprjetà, iftaħ it-tab “Prezzijiet” u t-taqsima “Prezzijiet Dinamiċi”.",
-                "Attiva l-funzjoni għar-rata bażika tal-proprjetà.",
-                "Iddefinixxi limitu minimu u limitu massimu tal-prezz.",
-                "Iddetermina sa fejn l-okkupazzjoni tista' tinfluwenza l-prezz.",
-                "Issejvja l-issettjar.",
+                "Ixtri l-modulu taħt “Għodod → Estensjonijiet” — mingħajr il-modulu l-awtomatizzazzjoni ma tikkalkulax.",
+                "Fil-menu prinċipali iftaħ “Distribuzzjoni → Ipprezzar dinamiku”.",
+                "Fit-tabella tal-proprjetajiet, agħfas l-ikona tal-lapes ħdejn il-proprjetà mixtieqa (“Iddetermina l-prezz bażiku”).",
+                "Agħżel l-istrateġija tal-prezz bażiku: ibbażata fuq id-data jew prezz bażiku fiss.",
+                "Iddetermina prezz minimu u massimu u fil-qasam “Sensittività għall-okkupazzjoni (%)” iddeċiedi kemm tinfluwenza l-okkupazzjoni.",
+                "Ixgħel “Prezzijiet dinamiċi attivi” u ssalva.",
               ],
             },
             { type: "h2", text: "Limiti u sigurtà" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Il-limitu minimu tal-prezz jipproteġi minn prezzijiet baxxi wisq waqt domanda dgħajfa.",
                 "Il-limitu massimu tal-prezz jipproteġi minn prezzijiet esaġerati waqt domanda għolja.",
                 "Ir-rati derivati jaqbdu awtomatikament ir-rata bażika l-ġdida.",
+                "Prezz ta' kuljum imdaħħal manwalment fil-kalendarju dejjem jieħu preċedenza fuq l-awtomatizzazzjoni.",
               ],
             },
             {

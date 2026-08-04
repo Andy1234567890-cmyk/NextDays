@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dynamic Pricing",
           excerpt: "Automatically adjust prices based on demand, lead time, and occupancy.",
-          updated: "Last updated: July 2026",
+          updated: "Last updated: August 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Open the “Prices” tab on the property and the “Dynamic Pricing” section.",
-                "Enable the feature for the property's base rate.",
-                "Set a price floor and a price ceiling.",
-                "Determine how much occupancy is allowed to influence the price.",
-                "Save the settings.",
+                "Book the module under “Tools → Extensions” — without the module the automation does not calculate.",
+                "Open “Distribution → Dynamic pricing” in the main menu.",
+                "In the property table, click the pencil icon next to the property (“Set base price”).",
+                "Choose the base price strategy: data-driven or a fixed base price.",
+                "Set a minimum and maximum price and use “Occupancy sensitivity (%)” to decide how strongly occupancy influences the price.",
+                "Switch on “Dynamic pricing active” and save.",
               ],
             },
             { type: "h2", text: "Limits and Safeguards" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "The price floor protects against prices that are too low in weak demand.",
                 "The price ceiling protects against excessive prices under high demand.",
                 "Derived rates automatically adopt the new base rate.",
+                "A day price set manually in the calendar always takes precedence over the automation.",
               ],
             },
             {

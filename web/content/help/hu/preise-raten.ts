@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dinamikus árak",
           excerpt: "Az árak automatikus igazítása a kereslethez, az előrelátási időhöz és a kihasználtsághoz.",
-          updated: "Frissítve: 2026. július",
+          updated: "Frissítve: 2026. augusztus",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Nyissa meg az objektumban az „Árak” fület és a „Dinamikus árak” területet.",
-                "Aktiválja a funkciót az objektum alapdíjához.",
-                "Határozzon meg egy alsó és egy felső árhatárt.",
-                "Adja meg, mennyire befolyásolhatja a kihasználtság az árat.",
-                "Mentse el a beállításokat.",
+                "Rendelje meg a modult az „Eszközök → Kiegészítők” alatt — modul nélkül az automatika nem számol.",
+                "Nyissa meg a főmenüben az „Értékesítés → Dinamikus árazás” pontot.",
+                "Az objektumtáblában kattintson a kívánt objektum melletti toll ikonra („Alapár megadása”).",
+                "Válassza ki az alapár stratégiáját: adatvezérelt vagy fix alapár.",
+                "Adjon meg minimum- és maximumárat, és a „Kihasználtsági érzékenység (%)” mezőben határozza meg, mennyire hat a kihasználtság.",
+                "Kapcsolja be „A dinamikus árazás aktív” beállítást, és mentsen.",
               ],
             },
             { type: "h2", text: "Határok és biztonság" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Az alsó árhatár véd a túl alacsony árak ellen gyenge kereslet esetén.",
                 "A felső árhatár véd a túlzott árak ellen magas kereslet esetén.",
                 "A levezetett díjak automatikusan átveszik az új alapdíjat.",
+                "A naptárban kézzel megadott napi ár mindig megelőzi az automatikát.",
               ],
             },
             {

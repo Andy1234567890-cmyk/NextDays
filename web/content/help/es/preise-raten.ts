@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Precios dinámicos",
           excerpt: "Ajuste automáticamente los precios según la demanda, la antelación y la ocupación.",
-          updated: "Actualizado: julio de 2026",
+          updated: "Actualizado: agosto de 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Abra en el alojamiento la pestaña «Precios» y la sección «Precios dinámicos».",
-                "Active la función para la tarifa base del alojamiento.",
-                "Establezca un límite mínimo y un límite máximo de precio.",
-                "Determine con qué intensidad puede influir la ocupación en el precio.",
-                "Guarde la configuración.",
+                "Contrate el módulo en «Herramientas → Extensiones»: sin el módulo contratado la automatización no calcula.",
+                "Abra «Distribución → Precios dinámicos» en el menú principal.",
+                "En la tabla de alojamientos, haga clic en el icono de lápiz del alojamiento deseado («Definir precio base»).",
+                "Elija la estrategia del precio base: basada en datos o un precio base fijo.",
+                "Fije un precio mínimo y un precio máximo y determine con «Sensibilidad a la ocupación (%)» cuánto influye la ocupación.",
+                "Active «Precios dinámicos activos» y guarde.",
               ],
             },
             { type: "h2", text: "Límites y seguridad" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "El límite mínimo protege frente a precios demasiado bajos en épocas de baja demanda.",
                 "El límite máximo protege frente a precios excesivos en épocas de alta demanda.",
                 "Las tarifas derivadas adoptan automáticamente la nueva tarifa base.",
+                "Un precio diario fijado manualmente en el calendario siempre prevalece sobre la automatización.",
               ],
             },
             {

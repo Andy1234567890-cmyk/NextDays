@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dynamische prijzen",
           excerpt: "Prijzen automatisch aanpassen aan vraag, voorlooptijd en bezetting.",
-          updated: "Bijgewerkt: juli 2026",
+          updated: "Bijgewerkt: augustus 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Open in het object het tabblad “Prijzen” en het onderdeel “Dynamische prijzen”.",
-                "Activeer de functie voor het basistarief van het object.",
-                "Leg een prijsondergrens en een prijsbovengrens vast.",
-                "Bepaal hoe sterk de bezetting de prijs mag beïnvloeden.",
-                "Sla de instellingen op.",
+                "Neem de module af onder “Hulpmiddelen → Uitbreidingen” — zonder module rekent de automatiek niet.",
+                "Open in het hoofdmenu “Distributie → Dynamische prijzen”.",
+                "Klik in de objecttabel bij het gewenste object op het potloodpictogram (“Basisprijs vastleggen”).",
+                "Kies de strategie voor de basisprijs: datagestuurd of een vaste basisprijs.",
+                "Stel een minimum- en maximumprijs in en bepaal met “Bezettingsgevoeligheid (%)” hoe sterk de bezetting doorwerkt.",
+                "Zet “Dynamische prijzen actief” aan en sla op.",
               ],
             },
             { type: "h2", text: "Grenzen en veiligheid" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Prijsondergrens beschermt tegen te lage prijzen bij zwakke vraag.",
                 "Prijsbovengrens beschermt tegen overdreven prijzen bij hoge vraag.",
                 "Afgeleide tarieven nemen automatisch het nieuwe basistarief over.",
+                "Een handmatig in de kalender gezette dagprijs heeft altijd voorrang op de automatiek.",
               ],
             },
             {

@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dünaamilised hinnad",
           excerpt: "Kohandage hindu automaatselt nõudluse, etteteatamisaja ja täituvuse järgi.",
-          updated: "Uuendatud: juuli 2026",
+          updated: "Uuendatud: august 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Avage objektis vahekaart „Hinnad“ ja jaotis „Dünaamilised hinnad“.",
-                "Aktiveerige funktsioon objekti põhihinna jaoks.",
-                "Määrake hinna alampiir ja ülempiir.",
-                "Määrake, kui palju täituvus tohib hinda mõjutada.",
-                "Salvestage seaded.",
+                "Tellige moodul jaotises „Tööriistad → Laiendused“ — ilma moodulita automaatika ei arvuta.",
+                "Avage peamenüüs „Turustus → Dünaamiline hinnastamine“.",
+                "Klõpsake tabelis soovitud objekti juures pliiatsiikoonil („Määra baashind“).",
+                "Valige baashinna strateegia: andmepõhine või kindel baashind.",
+                "Määrake miinimum- ja maksimumhind ning otsustage väljal „Täituvustundlikkus (%)“, kui tugevalt täituvus mõjub.",
+                "Lülitage sisse „Dünaamiline hinnastamine aktiivne“ ja salvestage.",
               ],
             },
             { type: "h2", text: "Piirid ja turvalisus" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Hinna alampiir kaitseb liiga madalate hindade eest nõrga nõudluse korral.",
                 "Hinna ülempiir kaitseb ülepaisutatud hindade eest suure nõudluse korral.",
                 "Tuletatud hinnad võtavad automaatselt üle uue põhihinna.",
+                "Kalendris käsitsi määratud päevahind on alati automaatikast tähtsam.",
               ],
             },
             {

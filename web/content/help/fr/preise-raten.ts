@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Prix dynamiques",
           excerpt: "Adapter automatiquement les prix à la demande, au délai de réservation et au taux d'occupation.",
-          updated: "Mise à jour : juillet 2026",
+          updated: "Mise à jour : août 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Ouvrez dans l'objet l'onglet « Prix » puis la section « Prix dynamiques ».",
-                "Activez la fonction pour le tarif de base de l'objet.",
-                "Définissez un prix plancher et un prix plafond.",
-                "Déterminez dans quelle mesure le taux d'occupation peut influencer le prix.",
-                "Enregistrez les paramètres.",
+                "Souscrivez le module dans « Outils → Extensions » — sans module souscrit, l'automatisme ne calcule pas.",
+                "Ouvrez « Distribution → Tarification dynamique » dans le menu principal.",
+                "Dans le tableau des objets, cliquez sur l'icône crayon de l'objet souhaité (« Définir le prix de base »).",
+                "Choisissez la stratégie de prix de base : basée sur les données ou un prix de base fixe.",
+                "Définissez un prix minimum et un prix maximum, puis réglez « Sensibilité au taux d'occupation (%) » pour déterminer l'influence du taux d'occupation.",
+                "Activez « Tarification dynamique active » et enregistrez.",
               ],
             },
             { type: "h2", text: "Limites et sécurité" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Le prix plancher protège contre des prix trop bas en cas de faible demande.",
                 "Le prix plafond protège contre des prix excessifs en cas de forte demande.",
                 "Les tarifs dérivés reprennent automatiquement le nouveau tarif de base.",
+                "Un prix journalier saisi manuellement dans le calendrier prime toujours sur l'automatisme.",
               ],
             },
             {

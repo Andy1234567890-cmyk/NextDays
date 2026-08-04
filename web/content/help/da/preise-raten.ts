@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dynamiske priser",
           excerpt: "Tilpas priser automatisk til efterspørgsel, bookingforspring og belægning.",
-          updated: "Opdateret: juli 2026",
+          updated: "Opdateret: august 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Åbn fanen »Priser« i boligen og området »Dynamiske priser«.",
-                "Aktivér funktionen for boligens basisrate.",
-                "Fastlæg en prismindstegrænse og en prismaksimumsgrænse.",
-                "Bestem, hvor meget belægningen må påvirke prisen.",
-                "Gem indstillingerne.",
+                "Tilkøb modulet under »Værktøjer → Udvidelser« — uden modulet beregner automatikken ikke.",
+                "Åbn »Distribution → Dynamisk prissætning« i hovedmenuen.",
+                "Klik på blyantikonet ud for den ønskede bolig i oversigten (»Fastsæt basispris«).",
+                "Vælg strategien for basisprisen: datadrevet eller en fast basispris.",
+                "Fastsæt en minimums- og maksimumpris, og bestem med »Belægningsfølsomhed (%)«, hvor meget belægningen må påvirke prisen.",
+                "Slå »Dynamiske priser aktive« til, og gem.",
               ],
             },
             { type: "h2", text: "Grænser og sikkerhed" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Prismindstegrænse beskytter mod for lave priser ved svag efterspørgsel.",
                 "Prismaksimumsgrænse beskytter mod overdrevne priser ved høj efterspørgsel.",
                 "Afledte rater overtager automatisk den nye basisrate.",
+                "En dagspris, der er sat manuelt i kalenderen, har altid forrang for automatikken.",
               ],
             },
             {

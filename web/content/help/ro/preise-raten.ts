@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Prețuri dinamice",
           excerpt: "Ajustați automat prețurile în funcție de cerere, timp de anticipare și grad de ocupare.",
-          updated: "Actualizat: iulie 2026",
+          updated: "Actualizat: august 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Deschideți în obiect fila „Prețuri” și secțiunea „Prețuri dinamice”.",
-                "Activați funcția pentru tariful de bază al obiectului.",
-                "Stabiliți o limită inferioară și o limită superioară a prețului.",
-                "Determinați cât de mult poate influența gradul de ocupare prețul.",
-                "Salvați setările.",
+                "Achiziționați modulul din „Instrumente → Extensii” — fără modul automatizarea nu calculează.",
+                "Deschideți în meniul principal „Distribuție → Prețuri dinamice”.",
+                "În tabelul obiectelor, faceți clic pe pictograma creion de la obiectul dorit („Stabilește prețul de bază”).",
+                "Alegeți strategia prețului de bază: bazată pe date sau un preț de bază fix.",
+                "Stabiliți prețul minim și maxim și determinați în câmpul „Sensibilitate la grad de ocupare (%)” cât de puternic influențează gradul de ocupare.",
+                "Activați „Prețuri dinamice active” și salvați.",
               ],
             },
             { type: "h2", text: "Limite și siguranță" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Limita inferioară a prețului protejează împotriva prețurilor prea scăzute în perioade de cerere slabă.",
                 "Limita superioară a prețului protejează împotriva prețurilor exagerate în perioade de cerere mare.",
                 "Tarifele derivate preiau automat noul tarif de bază.",
+                "Un preț zilnic setat manual în calendar are întotdeauna prioritate față de automatizare.",
               ],
             },
             {

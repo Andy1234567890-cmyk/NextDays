@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Preços dinâmicos",
           excerpt: "Ajustar preços automaticamente à procura, à antecedência e à ocupação.",
-          updated: "Atualizado: julho de 2026",
+          updated: "Atualizado: agosto de 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Abra no imóvel o separador “Preços” e a área “Preços dinâmicos”.",
-                "Ative a função para a tarifa base do imóvel.",
-                "Defina um limite mínimo e um limite máximo de preço.",
-                "Determine em que medida a ocupação pode influenciar o preço.",
-                "Guarde as configurações.",
+                "Adquira o módulo em “Ferramentas → Extensões” — sem o módulo a automatização não calcula.",
+                "Abra no menu principal “Distribuição → Preços dinâmicos”.",
+                "Na tabela de imóveis, clique no ícone de lápis do imóvel pretendido (“Definir preço base”).",
+                "Escolha a estratégia do preço base: baseada em dados ou um preço base fixo.",
+                "Defina um preço mínimo e um preço máximo e determine em “Sensibilidade à ocupação (%)” a intensidade do efeito da ocupação.",
+                "Ative “Preços dinâmicos ativos” e guarde.",
               ],
             },
             { type: "h2", text: "Limites e segurança" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "O limite mínimo protege contra preços demasiado baixos em períodos de procura fraca.",
                 "O limite máximo protege contra preços exagerados em períodos de procura elevada.",
                 "As tarifas derivadas assumem automaticamente a nova tarifa base.",
+                "Um preço diário definido manualmente no calendário tem sempre precedência sobre a automatização.",
               ],
             },
             {

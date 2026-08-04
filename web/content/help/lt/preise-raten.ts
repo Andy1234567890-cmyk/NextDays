@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dinaminės kainos",
           excerpt: "Automatiškai koreguoti kainas pagal paklausą, rezervacijos laiką iš anksto ir užimtumą.",
-          updated: "Atnaujinta: 2026 m. liepa",
+          updated: "Atnaujinta: 2026 m. rugpjūtis",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Objekte atidarykite skirtuką „Kainos“ ir sritį „Dinaminės kainos“.",
-                "Aktyvuokite funkciją objekto baziniam tarifui.",
-                "Nustatykite žemiausią ir aukščiausią kainos ribą.",
-                "Nustatykite, kiek stipriai užimtumas gali paveikti kainą.",
-                "Išsaugokite nustatymus.",
+                "Įsigykite modulį skiltyje „Įrankiai → Papildymai“ — be modulio automatika neskaičiuoja.",
+                "Pagrindiniame meniu atverkite „Platinimas → Dinaminė kainodara“.",
+                "Lentelėje spustelėkite pieštuko piktogramą prie norimo objekto („Nustatyti bazinę kainą“).",
+                "Pasirinkite bazinės kainos strategiją: duomenimis pagrįstą arba fiksuotą bazinę kainą.",
+                "Nustatykite mažiausią ir didžiausią kainą ir lauke „Jautrumas užimtumui (%)“ nurodykite, kiek užimtumas veikia kainą.",
+                "Įjunkite „Dinaminės kainos aktyvios“ ir išsaugokite.",
               ],
             },
             { type: "h2", text: "Ribos ir saugumas" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Žemiausia kainos riba apsaugo nuo per žemų kainų esant silpnai paklausai.",
                 "Aukščiausia kainos riba apsaugo nuo per didelių kainų esant didelei paklausai.",
                 "Išvestiniai tarifai automatiškai perima naują bazinį tarifą.",
+                "Kalendoriuje rankiniu būdu nustatyta dienos kaina visada turi viršenybę prieš automatiką.",
               ],
             },
             {

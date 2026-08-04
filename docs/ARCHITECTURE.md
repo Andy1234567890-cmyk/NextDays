@@ -742,6 +742,17 @@ AirDNA-Konto läuft alles über den NullProvider — DP wie Phase 1, nur mit Mar
   (`components/erweiterungen/modul-verkaufsseite.tsx`) statt der Objekt-Tabelle.
   Buchen setzt ein laufendes Abo voraus (sonst 422): ohne Stripe-Kunden wäre die
   erfasste Nutzung nie abrechenbar.
+  **Der Schlüssel braucht die Migration (`0278`):**
+  `tenant_module_entitlement.module_key` trägt einen CHECK, der die Module
+  namentlich aufzählt (`0117`, danach `0254`/`0256`). Ein neuer `module_key` im
+  Code ohne diese Erweiterung ist live ein 23505/23514 beim Upsert — „Aktivieren"
+  quittiert mit 500, während die Unit-Tests grün bleiben (der DB-Fake kennt keine
+  CHECKs). Genau so war `dynamische_preise` unbuchbar. Gegen die Wiederholung
+  vergleicht `subscriptions/tests/test_modul_keys_migration.py` `MODULE_KEYS` mit
+  der jüngsten Constraint-Definition in `supabase/migrations`; den ganzen Weg
+  (Gate 402 → `add_module` → `module_active` → Kündigen) spielt
+  `scripts/subscriptions/e2e_modul_dynamische_preise.py` live gegen die Server-DB
+  und räumt hinter sich auf.
 
 **Kanalübergreifende Nachricht→Gast-Zuordnung (Resolver, Migration 0047):** Jede
 eingehende Buchung/Nachricht — OTA via Channex, WhatsApp, manuelle Reservierung,

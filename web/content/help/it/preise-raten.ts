@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Prezzi dinamici",
           excerpt: "Adatta automaticamente i prezzi in base a domanda, anticipo di prenotazione e occupazione.",
-          updated: "Ultimo aggiornamento: luglio 2026",
+          updated: "Ultimo aggiornamento: agosto 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Apri nell'oggetto la scheda «Prezzi» e la sezione «Prezzi dinamici».",
-                "Attiva la funzione per la tariffa base dell'oggetto.",
-                "Stabilisci un limite minimo e un limite massimo di prezzo.",
-                "Determina quanto l'occupazione può influenzare il prezzo.",
-                "Salva le impostazioni.",
+                "Attiva il modulo in «Strumenti → Estensioni»: senza il modulo l'automatismo non calcola.",
+                "Apri «Distribuzione → Prezzi dinamici» dal menu principale.",
+                "Nella tabella degli oggetti fai clic sull'icona a matita dell'oggetto desiderato («Imposta prezzo base»).",
+                "Scegli la strategia del prezzo base: basata sui dati oppure un prezzo base fisso.",
+                "Imposta prezzo minimo e massimo e definisci con «Sensibilità all'occupazione (%)» quanto incide l'occupazione.",
+                "Attiva «Prezzi dinamici attivi» e salva.",
               ],
             },
             { type: "h2", text: "Limiti e sicurezza" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Il limite minimo protegge da prezzi troppo bassi in caso di domanda debole.",
                 "Il limite massimo protegge da prezzi eccessivi in caso di domanda elevata.",
                 "Le tariffe derivate recepiscono automaticamente la nuova tariffa base.",
+                "Un prezzo giornaliero impostato manualmente nel calendario ha sempre la precedenza sull'automatismo.",
               ],
             },
             {

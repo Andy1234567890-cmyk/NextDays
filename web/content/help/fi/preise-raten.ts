@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dynaamiset hinnat",
           excerpt: "Hintojen automaattinen säätäminen kysynnän, varausajan ja käyttöasteen mukaan.",
-          updated: "Päivitetty: heinäkuu 2026",
+          updated: "Päivitetty: elokuu 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Avaa kohteessa välilehti ”Hinnat” ja osio ”Dynaamiset hinnat”.",
-                "Aktivoi toiminto kohteen perushinnalle.",
-                "Määritä hinnan alaraja ja yläraja.",
-                "Määritä, kuinka voimakkaasti käyttöaste saa vaikuttaa hintaan.",
-                "Tallenna asetukset.",
+                "Tilaa moduuli kohdasta ”Työkalut → Laajennukset” — ilman moduulia automatiikka ei laske.",
+                "Avaa päävalikosta ”Jakelu → Dynaaminen hinnoittelu”.",
+                "Napsauta taulukossa halutun kohteen kynäkuvaketta (”Määritä perushinta”).",
+                "Valitse perushinnan strategia: dataan perustuva tai kiinteä perushinta.",
+                "Aseta vähimmäis- ja enimmäishinta ja määritä kohdassa ”Käyttöasteherkkyys (%)”, kuinka voimakkaasti käyttöaste vaikuttaa.",
+                "Kytke ”Dynaaminen hinnoittelu käytössä” päälle ja tallenna.",
               ],
             },
             { type: "h2", text: "Rajat ja turvallisuus" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Hinnan alaraja suojaa liian alhaisilta hinnoilta heikon kysynnän aikana.",
                 "Hinnan yläraja suojaa liian korkeilta hinnoilta suuren kysynnän aikana.",
                 "Johdetut hinnat ottavat automaattisesti käyttöön uuden perushinnan.",
+                "Kalenterissa käsin asetettu päivähinta on aina automatiikan edellä.",
               ],
             },
             {

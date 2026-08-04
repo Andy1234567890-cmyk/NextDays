@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dynamische Preise",
           excerpt: "Preise automatisch an Nachfrage, Vorlaufzeit und Auslastung anpassen.",
-          updated: "Stand: Juli 2026",
+          updated: "Stand: August 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Öffnen Sie im Objekt den Tab „Preise“ und den Bereich „Dynamische Preise“.",
-                "Aktivieren Sie die Funktion für die Basisrate des Objekts.",
-                "Legen Sie eine Preisuntergrenze und eine Preisobergrenze fest.",
-                "Bestimmen Sie, wie stark die Auslastung den Preis beeinflussen darf.",
-                "Speichern Sie die Einstellungen.",
+                "Buchen Sie das Modul unter „Werkzeuge → Erweiterungen“ — ohne gebuchtes Modul rechnet die Automatik nicht.",
+                "Öffnen Sie im Hauptmenü „Vertrieb → Dynamic Pricing“.",
+                "Klicken Sie in der Objekt-Tabelle beim gewünschten Objekt auf das Stift-Symbol („Basispreis festlegen“).",
+                "Wählen Sie die Basispreis-Strategie: datenbasiert oder ein fester Grundpreis.",
+                "Legen Sie Mindest- und Höchstpreis fest und bestimmen Sie über „Auslastungs-Empfindlichkeit (%)“, wie stark die Auslastung wirkt.",
+                "Schalten Sie „Dynamic Pricing aktiv“ ein und speichern Sie.",
               ],
             },
             { type: "h2", text: "Grenzen und Sicherheit" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Preisuntergrenze schützt vor zu niedrigen Preisen in schwacher Nachfrage.",
                 "Preisobergrenze schützt vor überzogenen Preisen bei hoher Nachfrage.",
                 "Abgeleitete Raten übernehmen automatisch die neue Basisrate.",
+                "Ein manuell im Kalender gesetzter Tagespreis hat immer Vorrang vor der Automatik.",
               ],
             },
             {

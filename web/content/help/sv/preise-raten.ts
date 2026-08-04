@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dynamiska priser",
           excerpt: "Anpassa priser automatiskt efter efterfrågan, framförhållning och beläggning.",
-          updated: "Uppdaterad: juli 2026",
+          updated: "Uppdaterad: augusti 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Öppna fliken ”Priser” i objektet och området ”Dynamiska priser”.",
-                "Aktivera funktionen för objektets basrate.",
-                "Fastställ en prisnedre gräns och en prisövre gräns.",
-                "Bestäm hur mycket beläggningen får påverka priset.",
-                "Spara inställningarna.",
+                "Köp till modulen under ”Verktyg → Tillägg” — utan modulen räknar automatiken inte.",
+                "Öppna ”Distribution → Dynamisk prissättning” i huvudmenyn.",
+                "Klicka på pennikonen vid önskat objekt i tabellen (”Fastställ grundpris”).",
+                "Välj strategi för grundpriset: datadriven eller ett fast grundpris.",
+                "Ange lägsta och högsta pris och bestäm med ”Beläggningskänslighet (%)” hur mycket beläggningen får påverka priset.",
+                "Slå på ”Dynamiska priser aktiva” och spara.",
               ],
             },
             { type: "h2", text: "Gränser och säkerhet" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Prisnedre gräns skyddar mot för låga priser vid svag efterfrågan.",
                 "Prisövre gräns skyddar mot uppdrivna priser vid hög efterfrågan.",
                 "Härledda rateplaner tar automatiskt över den nya basraten.",
+                "Ett dagspris som satts manuellt i kalendern har alltid företräde framför automatiken.",
               ],
             },
             {

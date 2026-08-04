@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Praghsanna Dinimiciúla",
           excerpt: "Praghsanna a chur in oiriúint go huathoibríoch d'éileamh, do réamhfhógra agus d'áitíocht.",
-          updated: "Nuashonraithe: Iúil 2026",
+          updated: "Nuashonraithe: Lúnasa 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Oscail sa mhaoin an cluaisín „Praghsanna“ agus an rannóg „Praghsanna Dinimiciúla“.",
-                "Gníomhachtaigh an fheidhm do bhunráta na maoine.",
-                "Socraigh íosphraghas agus uasphraghas.",
-                "Socraigh cé chomh mór is a fhéadfaidh an áitíocht tionchar a bheith aici ar an bpraghas.",
-                "Sábháil na socruithe.",
+                "Ceannaigh an modúl faoi „Uirlisí → Breiseáin“ — gan an modúl ní ríomhann an uathoibriú.",
+                "Oscail sa phríomh-roghchlár „Dáileadh → Praghsáil dhinimiciúil“.",
+                "I dtábla na maoine, cliceáil ar an íocón luaidhe in aice na maoine atá uait („Socraigh an bunphraghas“).",
+                "Roghnaigh straitéis an bhunphraghais: bunaithe ar shonraí nó bunphraghas seasta.",
+                "Socraigh praghas íosta agus uasta agus socraigh sa réimse „Íogaireacht áitíochta (%)“ cé chomh mór a imríonn an áitíocht tionchar.",
+                "Cuir „Praghsáil dhinimiciúil gníomhach“ ar siúl agus sábháil.",
               ],
             },
             { type: "h2", text: "Teorainneacha & sábháilteacht" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Cosnaíonn an t-íosphraghas ar phraghsanna róíseal in am éileamh laga.",
                 "Cosnaíonn an t-uasphraghas ar phraghsanna ró-ard le linn éilimh ard.",
                 "Glacann rátaí díorthaithe leis an mbunráta nua go huathoibríoch.",
+                "Bíonn tosaíocht i gcónaí ag praghas laethúil a shocraítear de láimh sa fhéilire ar an uathoibriú.",
               ],
             },
             {

@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Ceny dynamiczne",
           excerpt: "Automatyczne dostosowanie cen do popytu, czasu wyprzedzenia i obłożenia.",
-          updated: "Zaktualizowano: lipiec 2026",
+          updated: "Zaktualizowano: sierpień 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Otwórz w obiekcie zakładkę „Ceny” i sekcję „Ceny dynamiczne”.",
-                "Aktywuj funkcję dla stawki bazowej obiektu.",
-                "Ustal dolną i górną granicę ceny.",
-                "Określ, jak mocno obłożenie może wpływać na cenę.",
-                "Zapisz ustawienia.",
+                "Wykup moduł w „Narzędzia → Rozszerzenia” — bez wykupionego modułu automatyka nie liczy.",
+                "Otwórz w menu głównym „Dystrybucja → Ceny dynamiczne”.",
+                "W tabeli obiektów kliknij ikonę ołówka przy wybranym obiekcie („Ustal cenę bazową”).",
+                "Wybierz strategię ceny bazowej: opartą na danych albo stałą cenę bazową.",
+                "Ustal cenę minimalną i maksymalną oraz określ w polu „Wrażliwość na obłożenie (%)”, jak mocno obłożenie wpływa na cenę.",
+                "Włącz „Ceny dynamiczne aktywne” i zapisz.",
               ],
             },
             { type: "h2", text: "Granice i bezpieczeństwo" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Dolna granica ceny chroni przed zbyt niskimi cenami przy słabym popycie.",
                 "Górna granica ceny chroni przed zawyżonymi cenami przy wysokim popycie.",
                 "Stawki pochodne automatycznie przejmują nową stawkę bazową.",
+                "Cena dobowa ustawiona ręcznie w kalendarzu ma zawsze pierwszeństwo przed automatyką.",
               ],
             },
             {

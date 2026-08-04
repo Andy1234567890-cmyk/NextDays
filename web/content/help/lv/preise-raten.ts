@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dinamiskās cenas",
           excerpt: "Automātiski pielāgojiet cenas pieprasījumam, laika rezervei un noslogojumam.",
-          updated: "Atjaunināts: 2026. gada jūlijs",
+          updated: "Atjaunināts: 2026. gada augusts",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Objektā atveriet cilni „Cenas“ un sadaļu „Dinamiskās cenas“.",
-                "Aktivizējiet funkciju objekta bāzes tarifam.",
-                "Nosakiet cenas apakšējo un augšējo robežu.",
-                "Nosakiet, cik lielā mērā noslogojums drīkst ietekmēt cenu.",
-                "Saglabājiet iestatījumus.",
+                "Pievienojiet moduli sadaļā „Rīki → Paplašinājumi“ — bez moduļa automātika neaprēķina.",
+                "Galvenajā izvēlnē atveriet „Izplatīšana → Dinamiskā cenu noteikšana“.",
+                "Tabulā noklikšķiniet uz zīmuļa ikonas pie vajadzīgā objekta („Noteikt pamatcenu“).",
+                "Izvēlieties pamatcenas stratēģiju: uz datiem balstītu vai fiksētu pamatcenu.",
+                "Nosakiet minimālo un maksimālo cenu un ar „Jutība pret noslodzi (%)“ nosakiet, cik spēcīgi noslodze ietekmē cenu.",
+                "Ieslēdziet „Dinamiskās cenas aktīvas“ un saglabājiet.",
               ],
             },
             { type: "h2", text: "Robežas un drošība" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Cenas apakšējā robeža aizsargā pret pārāk zemām cenām vāja pieprasījuma apstākļos.",
                 "Cenas augšējā robeža aizsargā pret pārmērīgām cenām augsta pieprasījuma apstākļos.",
                 "Atvasinātie tarifi automātiski pārņem jauno bāzes tarifu.",
+                "Kalendārā manuāli noteikta dienas cena vienmēr ir svarīgāka par automātiku.",
               ],
             },
             {

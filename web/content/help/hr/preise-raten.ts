@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dinamične cijene",
           excerpt: "Automatski prilagodite cijene potražnji, roku rezervacije i popunjenosti.",
-          updated: "Ažurirano: srpanj 2026.",
+          updated: "Ažurirano: kolovoz 2026.",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Otvorite karticu „Cijene” u objektu i područje „Dinamične cijene”.",
-                "Aktivirajte funkciju za osnovnu tarifu objekta.",
-                "Odredite donju i gornju granicu cijene.",
-                "Odredite koliko snažno popunjenost smije utjecati na cijenu.",
-                "Spremite postavke.",
+                "Modul zakupite u „Alati → Proširenja” — bez modula automatika ne računa.",
+                "U glavnom izborniku otvorite „Distribucija → Dinamičke cijene”.",
+                "U tablici objekata kliknite ikonu olovke uz željeni objekt („Odredi osnovnu cijenu”).",
+                "Odaberite strategiju osnovne cijene: na temelju podataka ili fiksnu osnovnu cijenu.",
+                "Odredite najnižu i najvišu cijenu te u polju „Osjetljivost na popunjenost (%)” postavite koliko snažno popunjenost utječe.",
+                "Uključite „Dinamične cijene aktivne” i spremite.",
               ],
             },
             { type: "h2", text: "Granice i sigurnost" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Donja granica cijene štiti od preniskih cijena pri slaboj potražnji.",
                 "Gornja granica cijene štiti od pretjeranih cijena pri visokoj potražnji.",
                 "Izvedene tarife automatski preuzimaju novu osnovnu tarifu.",
+                "Dnevna cijena ručno postavljena u kalendaru uvijek ima prednost pred automatikom.",
               ],
             },
             {

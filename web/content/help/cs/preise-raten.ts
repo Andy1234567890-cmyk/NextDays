@@ -197,7 +197,7 @@ export const preiseRaten: HelpCategory = {
           slug: "dynamische-preise",
           title: "Dynamické ceny",
           excerpt: "Automatické přizpůsobení cen podle poptávky, předstihu a obsazenosti.",
-          updated: "Aktualizováno: červenec 2026",
+          updated: "Aktualizováno: srpen 2026",
           body: [
             {
               type: "note",
@@ -212,11 +212,12 @@ export const preiseRaten: HelpCategory = {
             {
               type: "steps",
               items: [
-                "Otevřete v objektu záložku „Ceny“ a sekci „Dynamické ceny“.",
-                "Aktivujte funkci pro základní sazbu objektu.",
-                "Nastavte dolní a horní cenovou hranici.",
-                "Určete, jak silně smí obsazenost ovlivňovat cenu.",
-                "Uložte nastavení.",
+                "Objednejte modul v „Nástroje → Rozšíření“ — bez modulu automatika nepočítá.",
+                "V hlavní nabídce otevřete „Distribuce → Dynamické ceny“.",
+                "V tabulce objektů klikněte u požadovaného objektu na ikonu tužky („Nastavit základní cenu“).",
+                "Vyberte strategii základní ceny: na základě dat, nebo pevnou základní cenu.",
+                "Nastavte minimální a maximální cenu a v poli „Citlivost na obsazenost (%)“ určete, jak silně obsazenost působí.",
+                "Zapněte „Dynamické ceny aktivní“ a uložte.",
               ],
             },
             { type: "h2", text: "Hranice a bezpečnost" },
@@ -230,6 +231,7 @@ export const preiseRaten: HelpCategory = {
                 "Dolní cenová hranice chrání před příliš nízkými cenami při slabé poptávce.",
                 "Horní cenová hranice chrání před přemrštěnými cenami při vysoké poptávce.",
                 "Odvozené sazby automaticky přebírají novou základní sazbu.",
+                "Denní cena zadaná ručně v kalendáři má vždy přednost před automatikou.",
               ],
             },
             {
