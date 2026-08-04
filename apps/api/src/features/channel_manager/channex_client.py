@@ -936,6 +936,69 @@ class ChannexClient:
             json={"listing_id": listing_id},
         )
 
+    # ----- Bestehende Airbnb-Listings übernehmen (Wechselkunde) ----------------
+    # Auch diese Pfade stehen in KEINER Doku. Aus dem ausgelieferten Bundle
+    # (app.channex.io/assets/index-BefbhQp2.js, 04.08.2026):
+    #   * POST meta/airbnb/{channel}/full_sync_listing   {listing_id}
+    #   * POST meta/airbnb/{channel}/disconnect_listing  {listing_id}
+    #   * POST channels/{channel}/proxy/*path            Durchgriff auf Airbnb
+    # Die Szenario-Liste im Bundle nennt den Proxy als
+    # `Channels.ProxyScenario → POST /api/v1/channels/:channel_id/proxy/*path`.
+    #
+    # WARUM der Proxy: Channex selbst hat KEIN Objekt „Listing-Inhalt"
+    # (`GET /listings` → 404, live geprüft). Titel/Beschreibung/Fotos liegen bei
+    # AIRBNB; der Proxy reicht Aufrufe an Airbnbs eigene API durch, und dort ist
+    # `hosting/listings` der Pfad (ebenfalls aus dem Bundle). Möglich wird das
+    # durch den OAuth-Scope `property_management`, den der Kanal-Katalog live
+    # ausliefert — Channex' Airbnb-Partnerschaft trägt uns.
+    #
+    # KEIN Sammel-Import: jeder Endpunkt adressiert EIN Listing. „Alle
+    # übernehmen" ist deshalb eine Schleife über Einzelaufrufe (der Aufrufer
+    # macht das im Worker, nicht im Request).
+    def airbnb_proxy(
+        self, channel_id: str, path: str, payload: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Einen Aufruf an Airbnbs eigene API durchreichen.
+
+        `path` ist der Airbnb-Pfad OHNE führenden Schrägstrich, z.B.
+        ``hosting/listings`` oder ``hosting/listings/{id}``.
+        """
+        return self.post(
+            f"channels/{channel_id}/proxy/{path.lstrip('/')}",
+            json=payload or {},
+        )
+
+    def full_sync_listing(self, channel_id: str, listing_id: str) -> dict[str, Any]:
+        """Ein bestehendes Airbnb-Listing vollständig mit Channex synchronisieren.
+
+        Der Aufruf ist ASYNCHRON (das Bundle wertet keinen Inhalt aus) — danach
+        stehen die Listing-Einstellungen bei Channex bereit und sind über
+        `get_listing_pricing_settings` / `load_listing_booking_settings`
+        abrufbar. Idempotent aus unserer Sicht: ein zweiter Aufruf für dasselbe
+        Listing synchronisiert erneut, erzeugt aber nichts Zweites.
+        """
+        return self.post(
+            f"meta/airbnb/{channel_id}/full_sync_listing",
+            json={"listing_id": listing_id},
+        )
+
+    def disconnect_listing(self, channel_id: str, listing_id: str) -> dict[str, Any]:
+        """Ein Listing von der Verbindung trennen (Gegenzustand zum Übernehmen,
+        Wurzel 1) — das Airbnb-Listing selbst bleibt bestehen."""
+        return self.post(
+            f"meta/airbnb/{channel_id}/disconnect_listing",
+            json={"listing_id": listing_id},
+        )
+
+    def load_listing_booking_settings(
+        self, channel_id: str, listing_id: str
+    ) -> dict[str, Any]:
+        """Buchungs-Einstellungen eines Listings bei Airbnb neu einlesen."""
+        return self.post(
+            f"channels/{channel_id}/execute/load_listing_booking_settings",
+            json={"listing_id": listing_id},
+        )
+
     def list_channel_promotions(self, channel_id: str) -> dict[str, Any]:
         """Airbnbs eigene Aktionsprogramme je Listing.
 
@@ -976,17 +1039,19 @@ class ChannexClient:
     #          → data.attributes.url  (= airbnb.com/oauth2/auth?…)
     # Doku: docs/CHANNEX-FELDER.md §4a.
     def create_one_time_token(
-        self, *, property_id: str, group_id: str, username: str
+        self, *, property_id: str | None, group_id: str, username: str
     ) -> str:
-        """Schritt 1: One-Time-Token (15 Min, einmalig) für den JWT-Exchange."""
-        res = self.post(
-            "auth/one_time_token",
-            json={
-                "property_id": property_id,
-                "group_id": group_id,
-                "username": username,
-            },
-        )
+        """Schritt 1: One-Time-Token (15 Min, einmalig) für den JWT-Exchange.
+
+        `property_id` ist optional: beim konto-weiten Airbnb-Connect
+        (Wechselkunde) existiert noch KEIN Objekt — der Token hängt dann nur an
+        der Gruppe. Ein leeres Feld würde Channex als Objekt-Referenz deuten,
+        deshalb wird es ganz weggelassen statt mit "" belegt.
+        """
+        body: dict[str, Any] = {"group_id": group_id, "username": username}
+        if property_id:
+            body["property_id"] = property_id
+        res = self.post("auth/one_time_token", json=body)
         token = (res.get("data") or {}).get("token")
         if not token:
             raise ChannexError(

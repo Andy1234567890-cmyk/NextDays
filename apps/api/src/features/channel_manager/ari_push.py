@@ -531,7 +531,16 @@ class AriPushMixin:
             .limit(1)
             .execute()
         ).data
-        return bool(res) and not ist_demo_mapping(res[0].get("channex_property_id"))
+        # Eine Map-Zeile OHNE channex_property_id ist ein aus Airbnb ÜBERNOMMENES
+        # Objekt (0280): die Brücke zum Listing steht, die Channex-Property
+        # entsteht erst beim Verkaufsstart. Ein Push würde `property_id: null`
+        # an Channex schicken — dieselbe Retry-Schleife wie beim Demo-
+        # Platzhalter, nur mit NULL statt Präfix. Deshalb hier explizit
+        # fail-closed statt sich auf `ist_demo_mapping` zu verlassen, das für
+        # None bewusst False liefert (Wurzel 5).
+        if not res or not res[0].get("channex_property_id"):
+            return False
+        return not ist_demo_mapping(res[0].get("channex_property_id"))
 
     def _property_id_for_map(
         self, db: Client, tenant_id: str, property_map_id: str

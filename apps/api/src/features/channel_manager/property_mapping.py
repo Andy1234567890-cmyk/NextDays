@@ -167,6 +167,48 @@ class PropertyMappingMixin:
             row["description"] = content["description"]
         return row
 
+    @staticmethod
+    def _ensure_default_unit(
+        db: Client, tenant_id: str, property_id: str, titel: str | None
+    ) -> None:
+        """Genau EINE Einheit für ein gespiegeltes Objekt sicherstellen (0265).
+
+        Ein aus Channex gespiegeltes Objekt (Wechselkunde: Airbnb-Listing) ist
+        ohne `property_units`-Zeile unverkäuflich — `create_reservation_atomic`
+        (0275) lehnt jede Buchung mit 22023 ab, und `availability.unit_id` ist
+        NOT NULL. Eine eingehende OTA-Buchung würde also ins Leere laufen.
+
+        Bewusst KEIN Upsert: auf `property_units` liegt kein Unique-Index über
+        (property_id, position) — ein `on_conflict` darauf wirft 42P10 (genau der
+        Fehler, der `create_reservation_atomic` nach 0267 lahmgelegt hat).
+        Stattdessen Existenzprüfung; damit bleibt der Reconcile idempotent
+        (Wurzel 2), ohne bei einem Objekt mit MEHREREN Einheiten die zweite zu
+        überschreiben.
+        """
+        vorhanden = (
+            db.table("property_units")
+            .select("id")
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if vorhanden:
+            return
+        db.table("property_units").insert(
+            {
+                "tenant_id": tenant_id,
+                "property_id": property_id,
+                # Der Objekttitel ist der sprechendste Name; fehlt er, bleibt es
+                # bei der neutralen "1" statt einer erfundenen Bezeichnung.
+                "name": titel or "1",
+                "position": 0,
+            }
+        ).execute()
+        log.info(
+            "reconcile_default_unit_created",
+            tenant_id=tenant_id, property_id=property_id,
+        )
+
     def reconcile_own_tenant(self, ctx: AuthContext) -> dict[str, int]:
         """Channex→DB-Spiegelung für den Tenant aus dem JWT sofort ausführen
         (On-Demand aus dem Onboarding-Import). Tenant-Scope aus dem Kontext, dann
@@ -323,6 +365,17 @@ class PropertyMappingMixin:
                     skipped += 1
                     continue
                 property_id = ins.data[0]["id"]
+
+            # EINHEIT (0265) — sonst ist das gespiegelte Objekt unverkäuflich.
+            # Eine `properties`-Zeile ist ein Einheiten-TYP; verkauft wird die
+            # EINHEIT. Ohne `property_units`-Zeile lehnt
+            # `create_reservation_atomic` (0275) jede Buchung mit 22023 ab —
+            # also käme eine eingehende Airbnb-Buchung für ein frisch
+            # gespiegeltes Objekt nicht an. Genau der Weg, den ein Wechselkunde
+            # geht: Listing spiegeln → Buchung kommt rein → nichts passiert.
+            # Der Reconcile ist idempotent, das Anlegen der Einheit muss es auch
+            # sein (Wurzel 2), deshalb Upsert auf (property_id, position).
+            self._ensure_default_unit(db, tenant_id, property_id, row.get("title"))
 
             db.table("channex_property_map").upsert(
                 {

@@ -268,3 +268,36 @@ const VAT_BEISPIEL_NACH_LAND: Readonly<Record<string, string>> = {
 export function vatBeispielFuerLand(code: string): string {
   return VAT_BEISPIEL_NACH_LAND[code] ?? `${code}123456789`;
 }
+
+// Länder, in denen das Handelsregister von einem GERICHT geführt wird und ein
+// Betrieb deshalb ein „Registergericht" angeben kann.
+//
+// In der EU führt das Register je Land ein Gericht, eine Handelskammer oder eine
+// Behörde (EU-Justizportal, „Business registers in EU countries"). Nur im
+// ersten Fall existiert ein Registergericht. Dänemark etwa hat ausschließlich
+// die zentrale CVR-Nummer der Erhvervsstyrelsen — dort nach einem
+// Registergericht zu fragen, ist eine Frage ohne Antwort, und der Nutzer sucht
+// den Fehler bei sich (genau so gemeldet für AirSmil, DK).
+//
+// Bewusst eine ALLOWLIST (Wurzel 5, fail-closed): ein Land, dessen System hier
+// nicht belegt ist, bekommt das Feld NICHT. Ein zu viel gezeigtes Feld verlangt
+// eine Angabe, die es nicht gibt; ein zu wenig gezeigtes ist ein optionales
+// Feld weniger — die harmlosere Richtung.
+const REGISTERGERICHT_LAENDER: ReadonlySet<string> = new Set([
+  "DE", // Amtsgericht als Registergericht (HRA/HRB)
+  "AT", // Firmenbuchgericht (Landes-/Handelsgericht)
+  "PL", // Krajowy Rejestr Sądowy, geführt von den Bezirksgerichten
+  "HU", // Firmengericht (cégbíróság)
+  "CZ", // Handelsregister bei den Kreisgerichten
+  "SK", // Obchodný register bei den Bezirksgerichten
+  "SI", // Registergericht (sodni register)
+  "HR", // Handelsgericht (trgovački sud)
+  "BG", // historisch gerichtlich geführt, Angabe weiterhin üblich
+  "LU", // Registre de commerce et des sociétés, gerichtlich verankert
+  "BE", // Kruispuntbank/BCE über die Unternehmensgerichte
+]);
+
+/** Führt dieses Land ein gerichtliches Handelsregister? */
+export function hatRegistergericht(code: string): boolean {
+  return REGISTERGERICHT_LAENDER.has(code.toUpperCase());
+}

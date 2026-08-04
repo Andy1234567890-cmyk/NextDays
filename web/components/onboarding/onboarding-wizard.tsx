@@ -31,6 +31,7 @@ import {
   befreiungFuerLand,
   rechtsformLabel,
   rechtsformenFuerLand,
+  hatRegistergericht,
   vatBeispielFuerLand,
 } from "@/lib/laender";
 import type { OnboardingStatus } from "@/lib/onboarding";
@@ -519,14 +520,16 @@ export function OnboardingWizard({
             <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-12">
               <Field className="sm:col-span-6" label={t("company.vatId")}>
                 <Input
-                  value={firma.vatId ?? ""}
+                  autoComplete="nd-vatId"
+                value={firma.vatId ?? ""}
                   onChange={(e) => setF("vatId", e.target.value)}
                   placeholder={`z. B. ${vatBeispielFuerLand(land)}`}
                 />
               </Field>
               <Field className="sm:col-span-6" label={t("company.taxNumber")}>
                 <Input
-                  value={firma.taxNumber ?? ""}
+                  autoComplete="nd-taxNumber"
+                value={firma.taxNumber ?? ""}
                   onChange={(e) => setF("taxNumber", e.target.value)}
                 />
               </Field>
@@ -540,18 +543,27 @@ export function OnboardingWizard({
           <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
             <Field label={t("company.companyRegister")}>
               <Input
+                autoComplete="nd-companyRegister"
                 value={firma.companyRegister ?? ""}
                 onChange={(e) => setF("companyRegister", e.target.value)}
               />
             </Field>
-            <Field label={t("company.districtCourt")}>
-              <Input
-                value={firma.districtCourt ?? ""}
-                onChange={(e) => setF("districtCourt", e.target.value)}
-              />
-            </Field>
+            {/* Registergericht gibt es nur, wo ein GERICHT das Register führt.
+                In DK führt es die Erhvervsstyrelsen (nur CVR-Nummer), in
+                SE/NL/… eine Behörde bzw. Handelskammer — dort wäre das Feld
+                eine Frage ohne Antwort (Allowlist in lib/laender.ts). */}
+            {hatRegistergericht(land) && (
+              <Field label={t("company.districtCourt")}>
+                <Input
+                  autoComplete="nd-districtCourt"
+                  value={firma.districtCourt ?? ""}
+                  onChange={(e) => setF("districtCourt", e.target.value)}
+                />
+              </Field>
+            )}
             <Field label={t("company.iban")}>
               <Input
+                autoComplete="nd-iban"
                 value={firma.iban ?? ""}
                 onChange={(e) => setF("iban", e.target.value)}
               />

@@ -774,6 +774,10 @@ export function ChannelConnectButton({
                   </label>
                   <Input
                     id="kanal-titel"
+                    // Wie bei den Portalfeldern: „Bezeichnung" ist kein Name
+                    // einer Person, Chromes Heuristik würde hier aber genau
+                    // den einsetzen.
+                    autoComplete="nd-kanal-titel"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder={selected.label}
@@ -1083,6 +1087,17 @@ function PortalFeld({
       ) : (
         <Input
           id={field.key}
+          // Portal-Kennungen sind KEINE Personendaten. Ohne dieses Attribut
+          // errät Chrome die Bedeutung aus dem Label und trug in „Booking.com
+          // Hotel-ID" den gespeicherten Namen ein — eine falsche Hotel-ID
+          // scheitert erst beim Verbinden, und der Nutzer sucht den Fehler bei
+          // sich. Chrome ignoriert `off` bei Textfeldern; ein unbekannter
+          // Token-Name passt auf keine Kategorie und lässt das Feld leer
+          // (`one-time-code` wäre falsch — das zieht SMS-Vorschläge an).
+          autoComplete={`nd-${field.key}`}
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
           type={
             field.type === "email"
               ? "email"
