@@ -1,0 +1,1116 @@
+openapi: 3.1.0
+info:
+  title: Channex.io - Embedded Channel Manager API
+  version: 0.0.0
+tags:
+  - name: Airbnb Performance Stats
+  - name: Airbnb Performance Charts
+  - name: Airbnb Performance Views
+  - name: Airbnb Performance Filters
+  - name: Airbnb Performance Listings
+paths:
+  /airbnb_performance/chart/average_score:
+    get:
+      operationId: Charts_get_chart_average_score
+      parameters:
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: listing_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: country
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: city
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: quality_status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.ListingQualityStatus'
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: resolution
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.ChartResolution'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Responses.AirbnbPerformanceAverageScoreChartResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.UnauthorizedError'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.ValidationError'
+      tags:
+        - Airbnb Performance Charts
+  /airbnb_performance/chart/average_score_by_category:
+    get:
+      operationId: Charts_get_chart_average_score_by_category
+      parameters:
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: listing_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: country
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: city
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: quality_status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.ListingQualityStatus'
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: resolution
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.ChartResolution'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Responses.AirbnbPerformanceAverageScoreByCategoryChartResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.UnauthorizedError'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.ValidationError'
+      tags:
+        - Airbnb Performance Charts
+  /airbnb_performance/chart/five_star_rate:
+    get:
+      operationId: Charts_get_five_star_rate
+      parameters:
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: listing_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: country
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: city
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: quality_status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.ListingQualityStatus'
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: resolution
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.ChartResolution'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Responses.AirbnbPerformanceFiveStarRateChartResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.UnauthorizedError'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.ValidationError'
+      tags:
+        - Airbnb Performance Charts
+  /airbnb_performance/filters:
+    get:
+      operationId: Fitlers_get_filters
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Fitlers.Responses.AirbnbPerformanceFiltersResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.UnauthorizedError'
+      tags:
+        - Airbnb Performance Filters
+  /airbnb_performance/listings:
+    get:
+      operationId: Listings_get_listings
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Listings.Responses.AirbnbPerformanceListingsResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.UnauthorizedError'
+      tags:
+        - Airbnb Performance Listings
+  /airbnb_performance/stats:
+    get:
+      operationId: Stats_get_stats
+      parameters:
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: listing_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: country
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: city
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: quality_status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Stats.Models.ListingQualityStatus'
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Stats.Responses.AirbnbPerformanceStatsResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.UnauthorizedError'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.ValidationError'
+      tags:
+        - Airbnb Performance Stats
+  /airbnb_performance/views:
+    get:
+      operationId: Views_get_views
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Views.Responses.AirbnbPerformanceViewsResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.UnauthorizedError'
+      tags:
+        - Airbnb Performance Views
+    post:
+      operationId: Views_create_view
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Views.Responses.AirbnbPerformanceViewResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.UnauthorizedError'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.ValidationError'
+      tags:
+        - Airbnb Performance Views
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Views.Requests.AirbnbPerformanceViewRequest'
+  /airbnb_performance/views/{viewId}:
+    put:
+      operationId: Views_update_view
+      parameters:
+        - name: viewId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.Scalars.id'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Views.Responses.AirbnbPerformanceViewResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.UnauthorizedError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.NotFoundError'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.ValidationError'
+      tags:
+        - Airbnb Performance Views
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Views.Requests.AirbnbPerformanceViewRequest'
+    delete:
+      operationId: Views_delete_view
+      parameters:
+        - name: viewId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Common.Scalars.id'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Views.Responses.AirbnbPerformanceViewSuccessResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.UnauthorizedError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors.Models.NotFoundError'
+      tags:
+        - Airbnb Performance Views
+components:
+  schemas:
+    Airbnb.AirbnbPerformance.Charts.Models.AirbnbPerformanceAverageScoreByCategoryChartAttributes:
+      type: object
+      required:
+        - values
+      properties:
+        filter:
+          type: object
+          description: |-
+            Optional filter object applied to the statistics request.
+
+            Can include various filtering parameters depending on the context (e.g. date range, region, listing type).
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.AverageScoreByCategoryChartDataPoint'
+          description: Average score data points broken down by category.
+    Airbnb.AirbnbPerformance.Charts.Models.AirbnbPerformanceAverageScoreChartAttributes:
+      type: object
+      required:
+        - values
+      properties:
+        filter:
+          type: object
+          description: |-
+            Optional filter object applied to the statistics request.
+
+            Can include various filtering parameters depending on the context (e.g. date range, region, listing type).
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.AverageScoreChartDataPoint'
+          description: Most frequent negative review tags for this category.
+    Airbnb.AirbnbPerformance.Charts.Models.AirbnbPerformanceFiveStarRateChartAttributes:
+      type: object
+      required:
+        - values
+      properties:
+        filter:
+          type: object
+          description: |-
+            Optional filter object applied to the statistics request.
+
+            Can include various filtering parameters depending on the context (e.g. date range, region, listing type).
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.FiveStarDataPoint'
+          description: Five star rate data points over time.
+    Airbnb.AirbnbPerformance.Charts.Models.AverageScoreByCategoryChartDataPoint:
+      type: object
+      required:
+        - date
+        - value
+        - checkin
+        - accuracy
+        - cleanliness
+        - communication
+        - location
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date of the data point.
+        value:
+          type: number
+          format: float
+          description: Overall average score value on the given date.
+          examples:
+            - 4.7
+        checkin:
+          type: number
+          format: float
+          description: Average score for the check-in category on the given date.
+          examples:
+            - 4.6
+        accuracy:
+          type: number
+          format: float
+          description: Average score for the accuracy category on the given date.
+          examples:
+            - 4.5
+        cleanliness:
+          type: number
+          format: float
+          description: Average score for the cleanliness category on the given date.
+          examples:
+            - 4.4
+        communication:
+          type: number
+          format: float
+          description: Average score for the communication category on the given date.
+          examples:
+            - 4.4
+        location:
+          type: number
+          format: float
+          description: Average score for the location category on the given date.
+          examples:
+            - 4.4
+    Airbnb.AirbnbPerformance.Charts.Models.AverageScoreChartDataPoint:
+      type: object
+      required:
+        - date
+        - average_score
+        - average_score_last_year
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date of the data point.
+        average_score:
+          type: number
+          format: float
+          description: Average score value on the given date.
+          examples:
+            - 4.65
+        average_score_last_year:
+          type: number
+          format: float
+          description: Average score value on the same date last year.
+          examples:
+            - 4.55
+    Airbnb.AirbnbPerformance.Charts.Models.ChartResolution:
+      type: string
+      enum:
+        - week
+        - month
+    Airbnb.AirbnbPerformance.Charts.Models.FiveStarDataPoint:
+      type: object
+      required:
+        - date
+        - five_star_rate
+        - five_star_rate_last_year
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date of the data point.
+        five_star_rate:
+          type: number
+          format: float
+          description: Five star rate value on the given date.
+          examples:
+            - 0.72
+        five_star_rate_last_year:
+          type: number
+          format: float
+          description: Five star rate value on the same date last year.
+          examples:
+            - 0.68
+    Airbnb.AirbnbPerformance.Charts.Models.ListingQualityStatus:
+      type: string
+      enum:
+        - good
+        - warn
+        - probation
+        - suspend
+        - additional_warn
+        - pending_removal
+        - educate
+        - removed
+    Airbnb.AirbnbPerformance.Charts.Responses.AirbnbPerformanceAverageScoreByCategoryChartResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - airbnb_performance_dashboard_average_score_by_category_chart_data
+            attributes:
+              $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.AirbnbPerformanceAverageScoreByCategoryChartAttributes'
+          required:
+            - type
+            - attributes
+    Airbnb.AirbnbPerformance.Charts.Responses.AirbnbPerformanceAverageScoreChartResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - airbnb_performance_dashboard_average_score_chart_data
+            attributes:
+              $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.AirbnbPerformanceAverageScoreChartAttributes'
+          required:
+            - type
+            - attributes
+    Airbnb.AirbnbPerformance.Charts.Responses.AirbnbPerformanceFiveStarRateChartResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - airbnb_performance_dashboard_five_star_rate_chart_data
+            attributes:
+              $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Charts.Models.AirbnbPerformanceFiveStarRateChartAttributes'
+          required:
+            - type
+            - attributes
+    Airbnb.AirbnbPerformance.Fitlers.Models.AirbnbPerformanceFilterAttributes:
+      type: object
+      properties:
+        listings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Fitlers.Models.DashboardListingItem'
+          description: List of available listings.
+        locations:
+          type: object
+          description: |-
+            Available locations used for filtering.
+
+            Structure is flexible and may vary depending on backend implementation.
+        quality_standards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Fitlers.Models.ListingQualityStatus'
+          description: List of supported listing quality standards.
+        views:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Fitlers.Models.DashboardViewItem'
+          description: Available dashboard views.
+    Airbnb.AirbnbPerformance.Fitlers.Models.DashboardListingItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Listing identifier.
+          examples:
+            - '123456789'
+        title:
+          type: string
+          description: Listing title.
+          examples:
+            - Cozy apartment in city center
+    Airbnb.AirbnbPerformance.Fitlers.Models.DashboardViewItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: View identifier.
+        title:
+          type: string
+          description: Human-readable view title.
+          examples:
+            - Quality Overview
+    Airbnb.AirbnbPerformance.Fitlers.Models.ListingQualityStatus:
+      type: string
+      enum:
+        - good
+        - warn
+        - probation
+        - suspend
+        - additional_warn
+        - pending_removal
+        - educate
+        - removed
+    Airbnb.AirbnbPerformance.Fitlers.Responses.AirbnbPerformanceFiltersResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum:
+                  - airbnb_performance_dashboard_filters
+              id:
+                $ref: '#/components/schemas/Common.Scalars.id'
+              attributes:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Fitlers.Models.AirbnbPerformanceFilterAttributes'
+            required:
+              - type
+              - id
+              - attributes
+    Airbnb.AirbnbPerformance.Listings.Models.AirbnbPerformanceListingAttributes:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Listing identifier.
+          examples:
+            - '123456789'
+        title:
+          type: string
+          description: Listing title.
+          examples:
+            - Cozy apartment in city center
+    Airbnb.AirbnbPerformance.Listings.Models.ListingQualityStatus:
+      type: string
+      enum:
+        - good
+        - warn
+        - probation
+        - suspend
+        - additional_warn
+        - pending_removal
+        - educate
+        - removed
+    Airbnb.AirbnbPerformance.Listings.Responses.AirbnbPerformanceListingsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum:
+                  - airbnb_performance_dashboard_listing
+              id:
+                $ref: '#/components/schemas/Common.Scalars.id'
+              attributes:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Listings.Models.AirbnbPerformanceListingAttributes'
+            required:
+              - type
+              - id
+              - attributes
+    Airbnb.AirbnbPerformance.Stats.Models.AirbnbPerformanceStatsModelAttributes:
+      type: object
+      required:
+        - count_of_listings
+        - average_overall_review_score
+        - average_overall_review_score_change_yoy
+        - average_overall_review_score_change_wow
+        - five_star_review_rate
+        - five_star_review_rate_change_yoy
+        - five_star_review_rate_change_wow
+        - listing_quality_categories
+        - top_negative_tags
+        - rating_per_category
+      properties:
+        filter:
+          type: object
+          description: |-
+            Optional filter object applied to the statistics request.
+
+            Can include various filtering parameters depending on the context (e.g. date range, region, listing type).
+        count_of_listings:
+          type: integer
+          format: int32
+          description: Total number of listings included in the statistics.
+          examples:
+            - 1250
+        average_overall_review_score:
+          type: number
+          format: float
+          description: Average overall review score across all listings.
+          examples:
+            - 4.62
+        average_overall_review_score_change_yoy:
+          type: number
+          format: float
+          description: Year-over-year change in the average overall review score.
+          examples:
+            - 0.08
+        average_overall_review_score_change_wow:
+          type: number
+          format: float
+          description: Week-over-week change in the average overall review score.
+          examples:
+            - -0.02
+        five_star_review_rate:
+          type: number
+          format: float
+          description: Percentage of reviews that are five-star ratings.
+          examples:
+            - 0.74
+        five_star_review_rate_change_yoy:
+          type: number
+          format: float
+          description: Year-over-year change in the five-star review rate.
+          examples:
+            - 0.05
+        five_star_review_rate_change_wow:
+          type: number
+          format: float
+          description: Week-over-week change in the five-star review rate.
+          examples:
+            - -0.01
+        listing_quality_categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Stats.Models.ListingQualityCategoryStats'
+          description: Distribution of listings by quality category.
+        top_negative_tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Stats.Models.ReviewTagStats'
+          description: Most frequent negative review tags across all listings.
+        rating_per_category:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Stats.Models.RatingCategoryStats'
+          description: Rating statistics broken down by individual review categories.
+    Airbnb.AirbnbPerformance.Stats.Models.ChartResolution:
+      type: string
+      enum:
+        - week
+        - month
+    Airbnb.AirbnbPerformance.Stats.Models.ListingQualityCategoryStats:
+      type: object
+      required:
+        - category
+        - count
+      properties:
+        category:
+          type: string
+          enum:
+            - good
+            - warning
+            - suspension
+            - removed
+          description: Quality category assigned to listings.
+          examples:
+            - good
+        count:
+          type: integer
+          format: int32
+          description: Number of listings in the given quality category.
+          examples:
+            - 320
+    Airbnb.AirbnbPerformance.Stats.Models.ListingQualityStatus:
+      type: string
+      enum:
+        - good
+        - warn
+        - probation
+        - suspend
+        - additional_warn
+        - pending_removal
+        - educate
+        - removed
+    Airbnb.AirbnbPerformance.Stats.Models.RatingCategoryStats:
+      type: object
+      required:
+        - category
+        - average_score
+        - average_score_change_yoy
+        - average_score_change_wow
+        - top_negative_tags
+        - top_positive_tags
+      properties:
+        category:
+          type: string
+          description: Review category name (e.g. cleanliness, communication, location).
+          examples:
+            - cleanliness
+        average_score:
+          type: number
+          format: float
+          description: Average review score for this category.
+          examples:
+            - 4.7
+        average_score_change_yoy:
+          type: number
+          format: float
+          description: Year-over-year change in the average score for this category.
+          examples:
+            - 0.1
+        average_score_change_wow:
+          type: number
+          format: float
+          description: Week-over-week change in the average score for this category.
+          examples:
+            - -0.03
+        top_negative_tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Stats.Models.ReviewTagStats'
+          description: Most frequent negative review tags for this category.
+        top_positive_tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Stats.Models.ReviewTagStats'
+          description: Most frequent positive review tags for this category.
+    Airbnb.AirbnbPerformance.Stats.Models.ReviewTagStats:
+      type: object
+      required:
+        - tag
+        - percent
+      properties:
+        tag:
+          type: string
+          description: Review tag label.
+          examples:
+            - cleanliness
+        percent:
+          type: number
+          format: float
+          description: Percentage of reviews containing this tag.
+          examples:
+            - 0.18
+    Airbnb.AirbnbPerformance.Stats.Responses.AirbnbPerformanceStatsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - airbnb_performance_dashboard_stats
+            attributes:
+              $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Stats.Models.AirbnbPerformanceStatsModelAttributes'
+          required:
+            - type
+            - attributes
+    Airbnb.AirbnbPerformance.Views.Models.AirbnbPerformanceViewAttributes:
+      type: object
+      required:
+        - filter
+        - title
+      properties:
+        filter:
+          type: object
+          description: |-
+            Optional filter object applied to the statistics request.
+
+            Can include various filtering parameters depending on the context (e.g. date range, region, listing type).
+        title:
+          type: string
+          description: Total number of listings included in the statistics.
+          examples:
+            - New York City Performance Dashboard
+    Airbnb.AirbnbPerformance.Views.Models.ListingQualityStatus:
+      type: string
+      enum:
+        - good
+        - warn
+        - probation
+        - suspend
+        - additional_warn
+        - pending_removal
+        - educate
+        - removed
+    Airbnb.AirbnbPerformance.Views.Requests.AirbnbPerformanceViewRequest:
+      type: object
+      required:
+        - airbnb_performance_dashboard_view
+      properties:
+        airbnb_performance_dashboard_view:
+          $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Views.Models.AirbnbPerformanceViewAttributes'
+    Airbnb.AirbnbPerformance.Views.Responses.AirbnbPerformanceViewResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - airbnb_performance_dashboard_view
+            id:
+              $ref: '#/components/schemas/Common.Scalars.id'
+            attributes:
+              $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Views.Models.AirbnbPerformanceViewAttributes'
+          required:
+            - type
+            - id
+            - attributes
+    Airbnb.AirbnbPerformance.Views.Responses.AirbnbPerformanceViewSuccessResponse:
+      type: object
+      required:
+        - meta
+      properties:
+        meta:
+          type: object
+          properties:
+            message:
+              type: string
+          required:
+            - message
+    Airbnb.AirbnbPerformance.Views.Responses.AirbnbPerformanceViewsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum:
+                  - airbnb_performance_dashboard_view
+              id:
+                $ref: '#/components/schemas/Common.Scalars.id'
+              attributes:
+                $ref: '#/components/schemas/Airbnb.AirbnbPerformance.Views.Models.AirbnbPerformanceViewAttributes'
+            required:
+              - type
+              - id
+              - attributes
+    Common.Scalars.id:
+      type: string
+      format: uuid
+    Common.Scalars.uuid:
+      type: string
+      format: uuid
+    Errors.Models.NotFoundError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - resource_not_found
+            title:
+              type: string
+              enum:
+                - Resource Not Found
+          required:
+            - code
+            - title
+    Errors.Models.UnauthorizedError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - unauthorized
+            title:
+              type: string
+              enum:
+                - Unauthorized
+          required:
+            - code
+            - title
+    Errors.Models.ValidationError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - validation_error
+            title:
+              type: string
+              enum:
+                - Validation Error
+            details:
+              type: object
+              properties:
+                field:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - field
+          required:
+            - code
+            - title
+            - details
+    Errors.UnprocessableEntityResponse:
+      type: object
+servers:
+  - url: https://app.channex.io/api/v1
+    description: Production server
+    variables: {}
+  - url: https://staging.channex.io/api/v1
+    description: Staging server
+    variables: {}
+  - url: http://localhost:4000/api/v1
+    description: Development server
+    variables: {}

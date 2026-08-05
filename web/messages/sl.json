@@ -5007,6 +5007,7 @@
           "address": "Naslov",
           "postal_code": "Poštna številka",
           "city": "Mesto",
+          "state_province": "Zvezna dežela / regija",
           "lat": "Koordinate",
           "lng": "Koordinate",
           "amenities": "Oprema",

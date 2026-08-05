@@ -5007,6 +5007,7 @@
           "address": "Adres",
           "postal_code": "Kod pocztowy",
           "city": "Miasto",
+          "state_province": "Województwo / region",
           "lat": "Współrzędne",
           "lng": "Współrzędne",
           "amenities": "Udogodnienia",

@@ -124,6 +124,7 @@ class AirbnbDiagnoseMixin:
                 ),
                 "felder": [],
                 "nicht_uebernommen": [],
+                "abgeleitet": [],
                 "fotos": {},
                 "beschreibung": {},
             }
@@ -140,6 +141,7 @@ class AirbnbDiagnoseMixin:
                 ),
                 "felder": [],
                 "nicht_uebernommen": [],
+                "abgeleitet": [],
                 "fotos": {},
                 "beschreibung": {},
             }
@@ -158,6 +160,7 @@ class AirbnbDiagnoseMixin:
                 ),
                 "felder": [],
                 "nicht_uebernommen": [],
+                "abgeleitet": [],
                 "fotos": {},
                 "beschreibung": {},
             }
@@ -179,6 +182,7 @@ class AirbnbDiagnoseMixin:
                 if not _leer(listing.get(feld))
             ],
             "ausstattung": self._ausstattung_vergleichen(listing, prop),
+            "abgeleitet": self._abgeleitet_pruefen(prop),
             "fotos": self._fotos_vergleichen(db, property_id, token, str(listing_id)),
             "beschreibung": self._beschreibung_vergleichen(
                 token, str(listing_id), prop
@@ -208,6 +212,33 @@ class AirbnbDiagnoseMixin:
         if not rows:
             raise ChannelManagerError("Objekt nicht gefunden.", status_code=404)
         return rows[0]
+
+    @staticmethod
+    def _abgeleitet_pruefen(prop: dict[str, Any]) -> list[dict[str, Any]]:
+        """Felder, die KEINE Quelle liefert und die wir berechnen.
+
+        Ohne diesen Abschnitt sieht ein leeres Bundesland wie ein verlorener
+        Import aus, obwohl Airbnb es nie geliefert hat (35 Felder gemessen,
+        kein Regionsfeld; Channex führt `state: null`).
+        """
+        attrs = prop.get("type_attributes")
+        location = (attrs or {}).get("location") if isinstance(attrs, dict) else None
+        region = ""
+        if isinstance(location, dict):
+            region = str(location.get("stateProvince") or "").strip()
+        return [
+            {
+                "feld": "stateProvince",
+                "quelle": "Rückwärts-Geokodierung aus lat/lng",
+                "wert": region or None,
+                "status": "ok" if region else "fehlt",
+                "grund": (
+                    "Airbnb liefert kein Bundesland/keine Region (35 Felder "
+                    "gemessen, vier Formate identisch); Channex führt das Feld "
+                    "leer. Der Wert entsteht aus den Koordinaten."
+                ),
+            }
+        ]
 
     @staticmethod
     def _felder_vergleichen(

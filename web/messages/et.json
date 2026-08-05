@@ -5007,6 +5007,7 @@
           "address": "Aadress",
           "postal_code": "Sihtnumber",
           "city": "Linn",
+          "state_province": "Liidumaa / piirkond",
           "lat": "Koordinaadid",
           "lng": "Koordinaadid",
           "amenities": "Mugavused",

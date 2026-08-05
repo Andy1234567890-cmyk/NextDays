@@ -5007,6 +5007,7 @@
           "address": "Cím",
           "postal_code": "Postai irányítószám",
           "city": "Város",
+          "state_province": "Tartomány / régió",
           "lat": "Koordináták",
           "lng": "Koordináták",
           "amenities": "Felszereltség",

@@ -5007,6 +5007,7 @@
           "address": "Adress",
           "postal_code": "Postnummer",
           "city": "Ort",
+          "state_province": "Delstat/region",
           "lat": "Koordinater",
           "lng": "Koordinater",
           "amenities": "Bekvämligheter",

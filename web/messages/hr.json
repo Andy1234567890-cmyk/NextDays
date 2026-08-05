@@ -5007,6 +5007,7 @@
           "address": "Adresa",
           "postal_code": "Poštanski broj",
           "city": "Grad",
+          "state_province": "Savezna pokrajina / regija",
           "lat": "Koordinate",
           "lng": "Koordinate",
           "amenities": "Sadržaji",

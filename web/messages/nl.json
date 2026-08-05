@@ -5007,6 +5007,7 @@
           "address": "Adres",
           "postal_code": "Postcode",
           "city": "Plaats",
+          "state_province": "Deelstaat / regio",
           "lat": "Coördinaten",
           "lng": "Coördinaten",
           "amenities": "Voorzieningen",

@@ -1,0 +1,360 @@
+openapi: 3.1.0
+info:
+  title: Airbnb Listing Availability Settings API
+  version: 0.0.0
+tags:
+  - name: Airbnb Listing Availability Settings
+paths:
+  /channels/{channelId}/mappings/{mappingId}/availability_settings:
+    get:
+      operationId: get_availability_settings
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+        - name: mappingId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Responses.AvailabilitySettingsResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.UnauthorizedError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.NotFoundError'
+      tags:
+        - Airbnb Listing Availability Settings
+    put:
+      operationId: update_availability_settings
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+        - name: mappingId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Responses.AvailabilitySettingsResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.UnauthorizedError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.NotFoundError'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.ValidationError'
+      tags:
+        - Airbnb Listing Availability Settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Requests.AvailabilitySettingsRequest'
+security:
+  - ApiKeyAuth: []
+components:
+  schemas:
+    ChannexIO.Common.Responses.Errors.Models.NotFoundError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - resource_not_found
+            title:
+              type: string
+              enum:
+                - Resource Not Found
+          required:
+            - code
+            - title
+    ChannexIO.Common.Responses.Errors.Models.UnauthorizedError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - unauthorized
+            title:
+              type: string
+              enum:
+                - Unauthorized
+          required:
+            - code
+            - title
+    ChannexIO.Common.Responses.Errors.Models.ValidationError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - validation_error
+            title:
+              type: string
+              enum:
+                - Validation Error
+            details:
+              type: object
+              properties:
+                field:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - field
+          required:
+            - code
+            - title
+            - details
+    ChannexIO.Common.Scalars.id:
+      type: string
+      format: uuid
+    Models.AvailabilitySettingsModel:
+      type: object
+      required:
+        - booking_lead_time
+        - max_days_notice
+        - default_max_nights
+        - allow_rtb_above_max_nights
+        - turnover_days
+      properties:
+        booking_lead_time:
+          type: number
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
+            - 8
+            - 9
+            - 10
+            - 11
+            - 12
+            - 13
+            - 14
+            - 15
+            - 16
+            - 17
+            - 18
+            - 19
+            - 20
+            - 21
+            - 22
+            - 23
+            - 24
+            - 48
+            - 72
+            - 168
+          description: |-
+            Minimum amount of notice required before guests can book.
+
+            Number of hours required for minimum notice before booking. Valid values are 0-24, 48, 72, and 168.
+          examples:
+            - 0
+        max_days_notice:
+          type: number
+          enum:
+            - -1
+            - 0
+            - 30
+            - 60
+            - 90
+            - 120
+            - 150
+            - 180
+            - 210
+            - 240
+            - 270
+            - 300
+            - 330
+            - 365
+          description: |-
+            Maximum number of days between the booking date and the check-in date. Default value is 30.
+
+            Valid values are -1, 0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 365. Pass 0 to make ALL future days unavailable. Pass -1 to reset ALL future days to available.
+          examples:
+            - -1
+        default_min_nights:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 1125
+          description: |-
+            Default minimum night requirement, must fall within the range of 1 to 1125. Set 0 to reset to default value.
+            Required only for LOS Pricing model.
+          examples:
+            - 1
+        default_max_nights:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 1125
+          description: Default maximum night requirement, must fall within the range of 1 to 1125. Set 0 to reset to default value.
+          examples:
+            - 0
+        allow_rtb_above_max_nights:
+          type: boolean
+          description: Set to true to allow guests to create a Request to Book for reservations with length of stay above the default maximum nights. This setting applies when default_max_nights is 28 or greater. Any seasonal/daily max nights setting overrides this option.
+          examples:
+            - false
+        day_of_week_check_in:
+          type: array
+          items:
+            type: boolean
+          minItems: 7
+          maxItems: 7
+          description: |-
+            Day of week guests are allowed to check in.
+
+            List of booleans starting with Monday. For example, to allow check-in on Fridays and Saturdays, set the array to [false, false, false, false, true, true, false].
+
+            Required only for Standard Pricing model.
+        day_of_week_check_out:
+          type: array
+          items:
+            type: boolean
+          minItems: 7
+          maxItems: 7
+          description: |-
+            Day of week guests are allowed to check out.
+
+            List of booleans starting with Monday. For example, to allow check-in on Fridays and Saturdays, set the array to [false, false, false, false, true, true, false].
+
+            Required only for Standard Pricing model.
+        day_of_week_min_nights:
+          type: array
+          items:
+            $ref: '#/components/schemas/Models.min_nights_item'
+          minItems: 7
+          maxItems: 7
+          description: |-
+            Minimum number of nights that guests can stay if the reservation starts on a specific day of the week.
+
+            List of integers starting with Monday.
+        seasonal_min_nights:
+          type: array
+          items:
+            $ref: '#/components/schemas/Models.SeasonalMinNights'
+          description: Minimum number of nights that guests can stay for a specific date range.
+        turnover_days:
+          type: number
+          enum:
+            - 0
+            - 1
+            - 2
+          description: Amount of days Hosts require for preparation between reservations.
+    Models.SeasonalMinNights:
+      type: object
+      required:
+        - start_date
+        - end_date
+        - min_nights
+      properties:
+        start_date:
+          type: string
+          format: date
+          description: Start date of date range for this rule, as YYYY-MM-DD.
+        end_date:
+          type: string
+          format: date
+          description: End date of date range for this rule, as YYYY-MM-DD.
+        min_nights:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1125
+          description: Minimum number of nights if the trip starts on a day within the range, must fall within the range of 1 to 1125.
+    Models.min_nights_item:
+      type: integer
+      format: int32
+      minimum: -1
+      maximum: 1125
+      examples:
+        - 1
+    Requests.AvailabilitySettingsRequest:
+      type: object
+      required:
+        - availability_settings
+      properties:
+        availability_settings:
+          $ref: '#/components/schemas/Models.AvailabilitySettingsModel'
+    Responses.AvailabilitySettingsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - airbnb_listing_availability_settings
+            id:
+              $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+            attributes:
+              $ref: '#/components/schemas/Models.AvailabilitySettingsModel'
+          required:
+            - type
+            - id
+            - attributes
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: user-api-key

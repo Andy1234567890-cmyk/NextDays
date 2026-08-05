@@ -1,0 +1,277 @@
+openapi: 3.1.0
+info:
+  title: Airbnb Listing Promotions API
+  version: 0.0.0
+tags:
+  - name: Airbnb Listing Promotions
+paths:
+  /channels/{channelId}/promotions:
+    get:
+      operationId: get_promotions
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Responses.PromotionsListResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.UnauthorizedError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.NotFoundError'
+      tags:
+        - Airbnb Listing Promotions
+  /channels/{channelId}/promotions/disable:
+    post:
+      operationId: disable_promotion
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Responses.PromotionResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.UnauthorizedError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.NotFoundError'
+      tags:
+        - Airbnb Listing Promotions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Requests.PromotionRequest'
+  /channels/{channelId}/promotions/enable:
+    post:
+      operationId: enable_promotion
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Responses.PromotionResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.UnauthorizedError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.NotFoundError'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.ValidationError'
+      tags:
+        - Airbnb Listing Promotions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Requests.PromotionRequest'
+security:
+  - ApiKeyAuth: []
+components:
+  schemas:
+    ChannexIO.Common.Responses.Errors.Models.NotFoundError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - resource_not_found
+            title:
+              type: string
+              enum:
+                - Resource Not Found
+          required:
+            - code
+            - title
+    ChannexIO.Common.Responses.Errors.Models.UnauthorizedError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - unauthorized
+            title:
+              type: string
+              enum:
+                - Unauthorized
+          required:
+            - code
+            - title
+    ChannexIO.Common.Responses.Errors.Models.ValidationError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - validation_error
+            title:
+              type: string
+              enum:
+                - Validation Error
+            details:
+              type: object
+              properties:
+                field:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - field
+          required:
+            - code
+            - title
+            - details
+    ChannexIO.Common.Scalars.id:
+      type: string
+      format: uuid
+    Models.CommandModel:
+      type: object
+      required:
+        - type
+        - listing_id
+      properties:
+        type:
+          $ref: '#/components/schemas/Models.PromotionType'
+        listing_id:
+          $ref: '#/components/schemas/Models.listing_id'
+    Models.PromotionModel:
+      type: object
+      required:
+        - status
+        - type
+        - listing_id
+      properties:
+        status:
+          $ref: '#/components/schemas/Models.PromotionStatus'
+        type:
+          $ref: '#/components/schemas/Models.PromotionType'
+        listing_id:
+          $ref: '#/components/schemas/Models.listing_id'
+    Models.PromotionStatus:
+      type: string
+      enum:
+        - AVAILABLE
+        - ONGOING
+        - EXPIRED
+      description: |-
+        Promotion status
+
+        AVAILABLE: The promotion is available for use.
+        ONGOING: The promotion is currently active.
+        EXPIRED: The promotion has expired.
+    Models.PromotionType:
+      type: string
+      enum:
+        - NEW_LISTING_PROMOTION
+      description: |-
+        Type of the promotion.
+
+        Currently only `NEW_LISTING_PROMOTION` is supported.
+    Models.listing_id:
+      type: string
+      description: The listing ID associated with the promotion.
+      examples:
+        - '123456789'
+    Requests.PromotionRequest:
+      type: object
+      required:
+        - promotion
+      properties:
+        promotion:
+          $ref: '#/components/schemas/Models.CommandModel'
+    Responses.Promotion:
+      type: object
+      required:
+        - type
+        - attributes
+      properties:
+        type:
+          type: string
+          enum:
+            - airbnb_listing_promotion
+        attributes:
+          $ref: '#/components/schemas/Models.PromotionModel'
+    Responses.PromotionResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Responses.Promotion'
+    Responses.PromotionsListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Responses.Promotion'
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: user-api-key

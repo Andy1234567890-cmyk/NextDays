@@ -5007,6 +5007,7 @@
           "address": "Adresas",
           "postal_code": "Pašto kodas",
           "city": "Miestas",
+          "state_province": "Valstija / regionas",
           "lat": "Koordinatės",
           "lng": "Koordinatės",
           "amenities": "Patogumai",

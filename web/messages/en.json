@@ -5028,6 +5028,7 @@
           "address": "Address",
           "postal_code": "Postcode",
           "city": "City",
+          "state_province": "State / region",
           "lat": "Coordinates",
           "lng": "Coordinates",
           "amenities": "Amenities",

@@ -32,6 +32,12 @@ FALLEN, die gemessen wurden:
   * `v2/listing_descriptions/{id}` ohne Locale → 404. Das Locale ist Pflicht.
   * `v2/listing_amenities` und `v2/listing_expectations` gibt es NICHT (404);
     die Ausstattung steckt in `v2/listings/{id}` unter `amenities`.
+  * Ein BUNDESLAND/eine REGION liefert Airbnb nirgends. Gemessen: 35 Felder im
+    Listing, vier `_format`-Varianten identisch, `v2/listing_addresses` → 404,
+    `listing_descriptions` (11578 B) enthält kein Regionswort. Channex hat das
+    Feld (`properties.state`), dort ist es `null`. Unser Standort-Formular
+    verlangt es aber → es wird aus `lat`/`lng` rückwärts geokodiert
+    (`region_geokodierung`), genau wie Lodgify es macht.
   * Foto-URLs kommen nur als `small_url`/`extra_medium_url`/`thumbnail_url` mit
     `?aki_policy=…`. Der Pfad enthält `/original/` — für die volle Auflösung
     wird der Query-Teil entfernt (`_foto_url`).
@@ -47,7 +53,9 @@ from typing import Any
 import httpx
 from supabase import Client
 
+from .bildtext_uebersetzung import bildtexte_uebersetzen, caption_mehrsprachig
 from .common import log
+from .region_geokodierung import region_aus_koordinaten
 
 AIRBNB_API = "https://api.airbnb.com"
 
@@ -213,19 +221,14 @@ class AirbnbDirektMixin:
             ergebnis.append(
                 {
                     "url": url,
-                    # `property_photos.caption` ist mehrsprachig
-                    # ({locale: text}) — ein reiner String erzeugt beim Lesen
-                    # einen 500er (Pydantic `dict_type`). Airbnb liefert den
-                    # Bildtext EINSPRACHIG ohne Locale-Angabe; er steht so, wie
-                    # der Host ihn geschrieben hat. Wir legen ihn unter `en` ab,
-                    # weil die gemessenen Texte englisch sind
-                    # („Living-dining area with sofa bed 140x200…") — und raten
-                    # keine Übersetzung dazu.
-                    "caption": (
-                        {"en": text}
-                        if (text := str(foto.get("caption") or "").strip())
-                        else {}
-                    ),
+                    # Der ROHE Bildtext, einsprachig wie Airbnb ihn liefert.
+                    # Die mehrsprachige Form (`property_photos.caption` ist
+                    # `{locale: text}`) entsteht erst beim Speichern — dort wird
+                    # in die Sprache des Betriebs übersetzt. Wer hier schon
+                    # `{"en": …}` festschreibt, hinterlässt eine deutsche
+                    # Oberfläche mit Platzhaltern, weil sie `caption["de"]`
+                    # liest (live so passiert, 17 Fotos englisch in der DB).
+                    "caption_roh": str(foto.get("caption") or "").strip(),
                     "sort_order": foto.get("sort_order"),
                     "category": foto.get("category"),
                     "airbnb_photo_id": str(foto.get("id")) if foto.get("id") else None,
@@ -307,7 +310,7 @@ class AirbnbDirektMixin:
             db.table("properties")
             .select("address, street, house_number, postal_code, city, "
                     "lat, lng, max_guests, "
-                    "amenities, description")
+                    "amenities, description, type_attributes")
             .eq("tenant_id", tenant_id)
             .eq("id", property_id)
             .limit(1)
@@ -332,27 +335,84 @@ class AirbnbDirektMixin:
             if text:
                 neu["description"] = text
 
+        region_attrs = self._region_nachtragen(
+            alt, neu.get("lat", alt.get("lat")), neu.get("lng", alt.get("lng"))
+        )
+        if region_attrs is not None:
+            neu["type_attributes"] = region_attrs
+
         if neu:
             db.table("properties").update(neu).eq("tenant_id", tenant_id).eq(
                 "id", property_id
             ).execute()
 
-        fotos = self._airbnb_fotos_speichern(db, property_id, token, listing_id)
+        fotos = self._airbnb_fotos_speichern(
+            db, property_id, token, listing_id, locale
+        )
+        # Gemeldet wird, WAS ankam, nicht in welche Spalte es floss:
+        # `type_attributes` ist ein Sammel-JSON, hier trägt es allein die Region.
+        gemeldet = sorted(
+            "state_province" if feld == "type_attributes" else feld
+            for feld in neu
+        )
         log.info(
             "airbnb_content_uebernommen",
             tenant_id=tenant_id, property_id=property_id,
-            felder=sorted(neu), fotos=fotos,
+            felder=gemeldet, fotos=fotos,
         )
-        return {"uebernommen": sorted(neu), "fotos": fotos}
+        return {"uebernommen": gemeldet, "fotos": fotos}
+
+    @staticmethod
+    def _region_nachtragen(
+        alt: dict[str, Any], lat: object, lng: object
+    ) -> dict[str, Any] | None:
+        """Bundesland/Region in `type_attributes.location.stateProvince` setzen.
+
+        Airbnb liefert das Feld NICHT (35 Felder gemessen, vier Formate, kein
+        state/region — siehe `region_geokodierung`). Es entsteht hier aus den
+        Koordinaten, die Airbnb liefert.
+
+        Wurzel 1: `type_attributes` ist ein Sammel-JSON mit Entfernungen,
+        Wegbeschreibung und Kartenbild darin. Es wird MITGELESEN und ergänzt,
+        nie ersetzt — ein Update mit nur `{"location": {...}}` würde alles
+        andere darin löschen.
+
+        Wurzel 4: ein bereits gepflegter Wert des Betriebs bleibt stehen, und
+        ohne Geokodier-Treffer wird nichts geschrieben (None) statt ein
+        plausibler Ersatz.
+        """
+        attrs = alt.get("type_attributes")
+        attrs = dict(attrs) if isinstance(attrs, dict) else {}
+        location = attrs.get("location")
+        location = dict(location) if isinstance(location, dict) else {}
+        if str(location.get("stateProvince") or "").strip():
+            return None
+        if not isinstance(lat, (int, float)) or not isinstance(lng, (int, float)):
+            return None
+        region = region_aus_koordinaten(float(lat), float(lng))
+        if not region:
+            return None
+        location["stateProvince"] = region
+        attrs["location"] = location
+        return attrs
 
     def _airbnb_fotos_speichern(
-        self, db: Client, property_id: str, token: str, listing_id: str
+        self,
+        db: Client,
+        property_id: str,
+        token: str,
+        listing_id: str,
+        locale: str = "de",
     ) -> int:
         """Airbnb-Fotos als `property_photos` anlegen — nur die neuen.
 
         Wurzel 2: die URL ist der Schlüssel. Ein zweiter Aufruf legt dasselbe
         Foto nicht erneut an; eigene Fotos des Betriebs bleiben unberührt.
         Das erste Airbnb-Foto wird NUR Titelbild, wenn es noch keins gibt.
+
+        Die Bildtexte werden in EINEM Aufruf in `locale` übersetzt und BEIDES
+        gespeichert (Original + Übersetzung) — ohne das zeigt die Oberfläche
+        Platzhalter, weil sie nur ihre eigene Sprache liest.
         """
         fotos = self.airbnb_fotos_direkt(token, listing_id)
         if not fotos:
@@ -367,24 +427,59 @@ class AirbnbDirektMixin:
         hat_cover = any(f.get("is_cover") for f in bestehende)
         naechste = len(bestehende)
 
-        zeilen: list[dict[str, Any]] = []
-        for foto in fotos:
-            if foto["url"] in bekannte:
-                continue
-            zeilen.append(
-                {
-                    "property_id": property_id,
-                    "url": foto["url"],
-                    "caption": foto["caption"],
-                    "sort_order": naechste + len(zeilen),
-                    "is_cover": not hat_cover and not zeilen,
-                }
-            )
-        if not zeilen:
+        neue = [f for f in fotos if f["url"] not in bekannte]
+        if not neue:
             return 0
+
+        captions = self._captions_aufbauen(neue, locale)
+        zeilen = [
+            {
+                "property_id": property_id,
+                "url": foto["url"],
+                "caption": caption,
+                "sort_order": naechste + i,
+                "is_cover": not hat_cover and i == 0,
+            }
+            for i, (foto, caption) in enumerate(zip(neue, captions, strict=True))
+        ]
         db.table("property_photos").insert(zeilen).execute()
         self._photos_spalte_spiegeln(db, property_id)
         return len(zeilen)
+
+    @staticmethod
+    def _captions_aufbauen(
+        fotos: list[dict[str, Any]], locale: str
+    ) -> list[dict[str, str]]:
+        """Je Foto `{quelle: Original, locale: Übersetzung}`.
+
+        EIN Übersetzungsaufruf für alle Texte (Google nimmt bis 128 je Anfrage) —
+        17 Einzelaufrufe wären 17-mal Latenz und Quote. Ohne Schlüssel oder bei
+        einem Fehler bleibt nur das Original stehen; es wird nie ein Text
+        erfunden und nie einer an ein fremdes Bild geschrieben (die Zuordnung
+        gilt nur, wenn die Anzahl exakt passt — das prüft
+        `bildtexte_uebersetzen`).
+        """
+        # Airbnb nennt die Sprache seiner Bildtexte nicht. Die gemessenen Texte
+        # dieses Kontos sind englisch („Living-dining area with sofa bed…"),
+        # deshalb gilt `en` als Quelle — für die Übersetzung UND als Locale, unter
+        # dem das Original abgelegt wird (dieselbe Annahme wie zuvor, nur jetzt
+        # NEBEN der Übersetzung statt allein).
+        quelle = "en"
+        indizes = [i for i, f in enumerate(fotos) if f.get("caption_roh")]
+        texte = [str(fotos[i]["caption_roh"]) for i in indizes]
+        uebersetzt = bildtexte_uebersetzen(texte, quelle=quelle, ziel=locale)
+        je_index: dict[int, str] = {}
+        if uebersetzt:
+            je_index = dict(zip(indizes, uebersetzt, strict=True))
+        return [
+            caption_mehrsprachig(
+                str(f.get("caption_roh") or ""),
+                je_index.get(i),
+                quelle=quelle,
+                ziel=locale,
+            )
+            for i, f in enumerate(fotos)
+        ]
 
     @staticmethod
     def _photos_spalte_spiegeln(db: Client, property_id: str) -> None:

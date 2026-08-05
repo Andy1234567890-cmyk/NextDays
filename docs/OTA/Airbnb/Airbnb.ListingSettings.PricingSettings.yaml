@@ -1,0 +1,599 @@
+openapi: 3.1.0
+info:
+  title: Airbnb Listing Pricing Settings API
+  version: 0.0.0
+tags:
+  - name: Airbnb Listing Pricing Settings
+paths:
+  /channels/{channelId}/mappings/{mappingId}/pricing_settings:
+    get:
+      operationId: get_pricing_settings
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+        - name: mappingId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Responses.PricingSettingsResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.UnauthorizedError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.NotFoundError'
+      tags:
+        - Airbnb Listing Pricing Settings
+    put:
+      operationId: update_pricing_settings
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+        - name: mappingId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Responses.PricingSettingsResponse'
+        '401':
+          description: Access is unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.UnauthorizedError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.NotFoundError'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChannexIO.Common.Responses.Errors.Models.ValidationError'
+      tags:
+        - Airbnb Listing Pricing Settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Requests.PricingSettingsRequest'
+security:
+  - ApiKeyAuth: []
+components:
+  schemas:
+    ChannexIO.Common.Responses.Errors.Models.NotFoundError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - resource_not_found
+            title:
+              type: string
+              enum:
+                - Resource Not Found
+          required:
+            - code
+            - title
+    ChannexIO.Common.Responses.Errors.Models.UnauthorizedError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - unauthorized
+            title:
+              type: string
+              enum:
+                - Unauthorized
+          required:
+            - code
+            - title
+    ChannexIO.Common.Responses.Errors.Models.ValidationError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - validation_error
+            title:
+              type: string
+              enum:
+                - Validation Error
+            details:
+              type: object
+              properties:
+                field:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - field
+          required:
+            - code
+            - title
+            - details
+    ChannexIO.Common.Scalars.id:
+      type: string
+      format: uuid
+    Models.DefaultPricingRule:
+      type: object
+      required:
+        - rule_type
+        - price_change
+        - threshold_one
+      properties:
+        rule_type:
+          allOf:
+            - $ref: '#/components/schemas/Models.DefaultPricingRuleType'
+          description: |-
+            STAYED_AT_LEAST_X_DAYS: Long-term stay discount.
+
+            BOOKED_WITHIN_AT_MOST_X_DAYS: Last-minute discount.
+
+            BOOKED_BEYOND_AT_LEAST_X_DAYS: Booking ahead discount.
+          examples:
+            - BOOKED_WITHIN_AT_MOST_X_DAYS
+        price_change:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 100
+          description: Must be a positive float value, meaning price decrease in percentage.
+          examples:
+            - 10
+        threshold_one:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |-
+            Specifies the X value in the X_DAYS rules.
+
+            Must be a multiple of 28 or 30 for "BOOKED_BEYOND_AT_LEAST_X_DAYS".
+
+            Must be equal to or less than 28 for "BOOKED_WITHIN_AT_MOST_X_DAYS".
+
+            Cannot be negative.
+          examples:
+            - 7
+    Models.DefaultPricingRuleType:
+      type: string
+      enum:
+        - STAYED_AT_LEAST_X_DAYS
+        - BOOKED_WITHIN_AT_MOST_X_DAYS
+        - BOOKED_BEYOND_AT_LEAST_X_DAYS
+    Models.PassThroughTax:
+      type: object
+      required:
+        - tax_type
+        - amount
+        - amount_type
+        - attestation
+      properties:
+        tax_type:
+          allOf:
+            - $ref: '#/components/schemas/Models.PassThroughTaxesTaxType'
+          description: Type of occupancy tax.
+        amount:
+          type: number
+          format: float
+          minimum: 0
+          description: The tax amount. Must be a float between 0 and 100 (inclusive) if the amount type is a percent, or a float for flat amount types.
+        amount_type:
+          allOf:
+            - $ref: '#/components/schemas/Models.PassThroughTaxesAmountType'
+          description: Default price to apply for the weekend days, between 10 and 100,000 USD (inclusive).
+        taxable_base:
+          type: array
+          items:
+            $ref: '#/components/schemas/Models.PassThroughTaxesTaxableBase'
+          description: |-
+            Taxable base array. Applicable and mandatory for tax when `amount_type` is `percent_per_reservation`.
+
+            NOTE: Currently not available for Luxe listings.
+
+            NOTE: Optional for existing partners for backward compatibility. You should migrate to explicitly specify taxable base. All taxable base types will be added to the tax by default.
+        business_tax_id:
+          anyOf:
+            - type: string
+            - type: 'null'
+          description: The business tax ID identifies the business as a taxpayer. For example in the US, it would be the EIN.
+        no_business_tax_id_declaration:
+          type: boolean
+          description: |-
+            If business_tax_id is `null`, this field must be `true`.
+
+            NOTE: Currently not available for Luxe listings.
+        tot_registration_id:
+          anyOf:
+            - type: string
+            - type: 'null'
+          description: |-
+            The ID number that a Host receives from a jurisdiction when it registers to collect, remit, and report the applicable occupancy tax, and demonstrates that the Host likely will do so.
+
+            NOTE: Optional for eligible listings. The requests will fail and validation errors will be returned if the target listing is ineligible.
+        no_tot_registration_id_declaration:
+          type: boolean
+          description: |-
+            If `tot_registration_id` is `null`, this field must be `true`.
+
+            NOTE: Currently not available for Luxe listings.
+        attestation:
+          type: boolean
+          description: Confirmation that the tax information is true and the Host accepts responsibility to remit the tax given to them as a business.
+        long_term_stay_exemption:
+          type: integer
+          format: int32
+          description: |-
+            A length of stay, in number of days—minimum 13 days. Pass through taxes do not apply to stays longer than this value. The minimum value for this field is 13 days. If set to null or omitted, no exemption applies and taxes are applied to all bookings regardless of length.
+
+            NOTE: For backward compatibility, 0 is automatically converted to null.
+
+            NOTE: This field and only_first_nights_exemption cannot be both set.
+        only_first_nights_exemption:
+          type: integer
+          format: int32
+          description: |-
+            Conditional long term exemption where the set number of nights are taxable. Must be greater than 0. If set to null or omitted, no exemption applies and taxes are applied to all bookings regardless of length.
+
+            NOTE: Currently not available for Luxe listings.
+
+            NOTE: This field and long_term_stay_exemption cannot be both set.
+        max_cap_per_person_per_night:
+          type: integer
+          format: int32
+          description: |-
+            Maximum amount of tax to be applied to a booking per person and per night. Applicable for tax when amount_type is percent_per_reservation.
+
+            NOTE: Currently not available for Luxe listings.
+    Models.PassThroughTaxesAmountType:
+      type: string
+      enum:
+        - percent_per_reservation
+        - flat_per_guest
+        - flat_per_guest_per_night
+        - flat_per_night
+    Models.PassThroughTaxesCollectionType:
+      type: string
+      enum:
+        - NO_AIRBNB_COLLECTED_TAX
+        - OVERRIDE_AIRBNB_COLLECTED_TAX
+        - STACKED_AIRBNB_COLLECTED_TAX
+        - INELIGIBLE
+        - UNDEFINED
+    Models.PassThroughTaxesTaxType:
+      type: string
+      enum:
+        - pass_through_hotel_tax
+        - pass_through_lodging_tax
+        - pass_through_room_tax
+        - pass_through_tourist_tax
+        - pass_through_transient_occupancy_tax
+        - pass_through_sales_tax
+        - pass_through_vat_gst
+        - pass_through_tourism_assessment_fee
+    Models.PassThroughTaxesTaxableBase:
+      type: string
+      enum:
+        - base_price
+        - pass_through_resort_fee
+        - pass_through_community_fee
+        - pass_through_management_fee
+        - pass_through_linen_fee
+        - pass_through_cleaning_fee
+        - pass_through_pet_fee
+    Models.PricingSettingsModel:
+      type: object
+      required:
+        - currency
+        - default_daily_price
+        - weekend_price
+        - guests_included
+        - price_per_extra_person
+        - pass_through_taxes_collection_type
+        - pass_through_taxes
+        - standard_fees
+        - default_pricing_rules
+      properties:
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Listing currency in ISO 4217 format.
+          examples:
+            - USD
+        default_daily_price:
+          type: integer
+          format: int32
+          description: |-
+            Default daily price for the listing, between 10 and 100,000 USD (inclusive).
+
+            Test listings created in a sandbox app can have a value of zero in order to test reservations. Do not set a non-zero value less than 10 USD.
+          examples:
+            - 100
+        weekend_price:
+          type: integer
+          format: int32
+          description: Default price to apply for the weekend days, between 10 and 100,000 USD (inclusive).
+          examples:
+            - 150
+        guests_included:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Number of guests permitted without any additional fees—default is 1. Infants (children under two years old) do not count towards the number of guests.
+          examples:
+            - 1
+        price_per_extra_person:
+          type: integer
+          format: int32
+          description: Per guest per night price for each additional guest beyond the number specified as guests_included, between 5 and 300 USD.
+          examples:
+            - 20
+        pass_through_taxes_collection_type:
+          allOf:
+            - $ref: '#/components/schemas/Models.PassThroughTaxesCollectionType'
+          description: The pass through collection type to apply on this listing—must be one of the allowed pass through collection types for this listing.
+        pass_through_taxes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Models.PassThroughTax'
+          description: Array of pass through occupancy taxes to be applied to the listing.
+        standard_fees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Models.StandardFee'
+          description: Array of standard fees to be applied to the listing.
+        default_pricing_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Models.DefaultPricingRule'
+          description: Array of default pricing rules that are applied to the listing.
+    Models.PricingSettingsModelResponse:
+      type: object
+      required:
+        - currency
+        - default_daily_price
+        - weekend_price
+        - guests_included
+        - price_per_extra_person
+        - pass_through_taxes_collection_type
+        - pass_through_taxes
+        - standard_fees
+        - default_pricing_rules
+        - default_pass_through_taxes_collection_type
+        - allowed_pass_through_taxes_collection_types
+      properties:
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Listing currency in ISO 4217 format.
+          examples:
+            - USD
+        default_daily_price:
+          type: integer
+          format: int32
+          description: |-
+            Default daily price for the listing, between 10 and 100,000 USD (inclusive).
+
+            Test listings created in a sandbox app can have a value of zero in order to test reservations. Do not set a non-zero value less than 10 USD.
+          examples:
+            - 100
+        weekend_price:
+          type: integer
+          format: int32
+          description: Default price to apply for the weekend days, between 10 and 100,000 USD (inclusive).
+          examples:
+            - 150
+        guests_included:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Number of guests permitted without any additional fees—default is 1. Infants (children under two years old) do not count towards the number of guests.
+          examples:
+            - 1
+        price_per_extra_person:
+          type: integer
+          format: int32
+          description: Per guest per night price for each additional guest beyond the number specified as guests_included, between 5 and 300 USD.
+          examples:
+            - 20
+        pass_through_taxes_collection_type:
+          allOf:
+            - $ref: '#/components/schemas/Models.PassThroughTaxesCollectionType'
+          description: The pass through collection type to apply on this listing—must be one of the allowed pass through collection types for this listing.
+        pass_through_taxes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Models.PassThroughTax'
+          description: Array of pass through occupancy taxes to be applied to the listing.
+        standard_fees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Models.StandardFee'
+          description: Array of standard fees to be applied to the listing.
+        default_pricing_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Models.DefaultPricingRule'
+          description: Array of default pricing rules that are applied to the listing.
+        default_pass_through_taxes_collection_type:
+          $ref: '#/components/schemas/Models.PassThroughTaxesCollectionType'
+        allowed_pass_through_taxes_collection_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/Models.PassThroughTaxesCollectionType'
+    Models.StandardFee:
+      type: object
+      required:
+        - fee_type
+        - amount_type
+        - amount
+      properties:
+        fee_type:
+          allOf:
+            - $ref: '#/components/schemas/Models.StandardFeeType'
+          description: The type of fee being charged. Some fees are a flat rate, some are a percentage, and some are consumption fees charged each time a unit is consumed.
+          examples:
+            - PASS_THROUGH_CLEANING_FEE
+        offline:
+          type: boolean
+          description: Whether the standard fee is being charged at the time of the booking or offline. Default is false, meaning that the charge happens at the time of booking.
+          examples:
+            - false
+        amount_type:
+          allOf:
+            - $ref: '#/components/schemas/Models.StandardFeeAmountType'
+          description: Amount Type
+          examples:
+            - flat
+        amount:
+          type: integer
+          format: int32
+          minimum: 0
+          description: |-
+            If amount_type is `percent`, this is a float between 0 and 100 (inclusive).
+
+            If amount_type is `flat`, this is an int32 in cents of the listing currency.
+          examples:
+            - 5000
+        fee_unit_type:
+          anyOf:
+            - $ref: '#/components/schemas/Models.StandardFeeUnitType'
+            - type: 'null'
+          description: |-
+            The unit to measure the standard fee. Only applicable for fees charged each time a measured unit is consumed (e.g. electricity, water, heat, air conditioning, or other utilities).
+
+            The amount_type must be `FLAT`.
+          examples:
+            - null
+        charge_type:
+          allOf:
+            - $ref: '#/components/schemas/Models.StandardFeeChargeType'
+          description: |-
+            Whether the fee applies per person, per guest, or per pet. Default value is `PER_GROUP`.
+
+            A value of `PER_PET` is available exclusively for `PASS_THROUGH_PET_FEE`.
+          examples:
+            - PER_GROUP
+        charge_period:
+          allOf:
+            - $ref: '#/components/schemas/Models.StandardFeeChargePeriod'
+          description: The time period for which the fee will be charged. Default value is `PER_BOOKING`.
+          examples:
+            - PER_BOOKING
+    Models.StandardFeeAmountType:
+      type: string
+      enum:
+        - percent
+        - flat
+    Models.StandardFeeChargePeriod:
+      type: string
+      enum:
+        - PER_BOOKING
+        - PER_NIGHT
+    Models.StandardFeeChargeType:
+      type: string
+      enum:
+        - PER_GROUP
+        - PER_PERSON
+        - PER_PET
+    Models.StandardFeeType:
+      type: string
+      enum:
+        - PASS_THROUGH_RESORT_FEE
+        - PASS_THROUGH_COMMUNITY_FEE
+        - PASS_THROUGH_MANAGEMENT_FEE
+        - PASS_THROUGH_LINEN_FEE
+        - PASS_THROUGH_ELECTRICITY_FEE
+        - PASS_THROUGH_WATER_FEE
+        - PASS_THROUGH_HEATING_FEE
+        - PASS_THROUGH_AIR_CONDITIONING_FEE
+        - PASS_THROUGH_UTILITY_FEE
+        - PASS_THROUGH_PET_FEE
+        - PASS_THROUGH_CLEANING_FEE
+        - PASS_THROUGH_SHORT_TERM_CLEANING_FEE
+        - PASS_THROUGH_SECURITY_DEPOSIT
+    Models.StandardFeeUnitType:
+      type: string
+      enum:
+        - PER_KILOWATT_HOUR
+        - PER_LITER
+        - PER_CUBIC_METER
+    Requests.PricingSettingsRequest:
+      type: object
+      required:
+        - pricing_settings
+      properties:
+        pricing_settings:
+          $ref: '#/components/schemas/Models.PricingSettingsModel'
+    Responses.PricingSettingsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - airbnb_listing_pricing_settings
+            id:
+              $ref: '#/components/schemas/ChannexIO.Common.Scalars.id'
+            attributes:
+              $ref: '#/components/schemas/Models.PricingSettingsModelResponse'
+          required:
+            - type
+            - id
+            - attributes
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: user-api-key
