@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Adresse",
+          "postal_code": "Code postal",
+          "city": "Ville",
+          "lat": "Coordonnées",
+          "lng": "Coordonnées",
+          "amenities": "Équipements",
+          "description": "Description",
+          "max_guests": "Nombre de voyageurs",
+          "street": "Rue",
+          "house_number": "Numéro"
+        },
+        "photosTaken": "{count} photos importées d'Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Annuler",
       "adjustmentHint": "Modifier l'ajustement de prix de ce portail",
       "notReleased": "non autorisé pour les portails"
+    },
+    "switcher": {
+      "searchPlaceholder": "Rechercher un bien …",
+      "noMatch": "Aucun bien trouvé."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Envoyer mes taxes",
       "blockedNote": "Tant que ceci est désactivé, aucune taxe propre n'est envoyée à ce canal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Activer le canal",
+    "activateDone": "{portal} est maintenant actif.",
+    "activateFailed": "Le canal n'a pas pu être activé.",
+    "channelInactiveTitle": "{portal} est connecté mais pas actif",
+    "channelInactiveMissing": "Rien n'est envoyé au portail. Il manque encore : {fields}",
+    "channelInactiveReady": "Rien n'est envoyé au portail. Toutes les données sont complètes – activez maintenant."
   },
   "calendarSync": {
     "title": "Importer/exporter le calendrier",

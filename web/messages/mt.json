@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Indirizz",
+          "postal_code": "Kodiċi postali",
+          "city": "Belt",
+          "lat": "Koordinati",
+          "lng": "Koordinati",
+          "amenities": "Faċilitajiet",
+          "description": "Deskrizzjoni",
+          "max_guests": "Numru ta' mistednin",
+          "street": "Triq",
+          "house_number": "Numru"
+        },
+        "photosTaken": "{count} ritratti importati minn Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Ikkanċella",
       "adjustmentHint": "Editja l-aġġustament tal-prezz ta' dan il-portal",
       "notReleased": "mhux approvat għall-portali"
+    },
+    "switcher": {
+      "searchPlaceholder": "Fittex proprjetà …",
+      "noMatch": "Ma nstabet ebda proprjetà."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Ibgħat it-taxxi tiegħek",
       "blockedNote": "Sakemm dan huwa mitfi, ma jintbagħtux taxxi tagħna lil dan il-kanal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Attiva l-kanal",
+    "activateDone": "{portal} huwa attiv issa.",
+    "activateFailed": "Il-kanal ma setax jiġi attivat.",
+    "channelInactiveTitle": "{portal} huwa konness imma mhux attiv",
+    "channelInactiveMissing": "Xejn ma jintbagħat lill-portal. Għadu nieqes: {fields}",
+    "channelInactiveReady": "Xejn ma jintbagħat lill-portal. Id-dettalji kollha huma kompluti – attiva issa."
   },
   "calendarSync": {
     "title": "Importazzjoni/esportazzjoni tal-kalendarju",

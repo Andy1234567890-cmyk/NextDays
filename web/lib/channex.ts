@@ -365,6 +365,11 @@ export type ChannelDetail = {
   channel_id: string | null;
   // Kanal-eigene Aktionen aus dem Katalog (z.B. "load_future_reservations").
   actions: string[];
+  // Läuft der Kanal bei Channex? Verbunden ≠ aktiv — Channex legt Kanäle
+  // INAKTIV an. null = unbekannt (Abruf fehlgeschlagen), nicht "inaktiv".
+  channel_active: boolean | null;
+  // Was der Aktivierung noch fehlt (Klartext). Leer/null = bereit.
+  readiness_offen: string | null;
   mappings: ChannelMappingRow[];
 };
 
@@ -443,6 +448,22 @@ export async function disconnectChannel(
   channelId: string,
 ): Promise<Result<void>> {
   return call<void>(`/channels/${channelId}`, { method: "DELETE" });
+}
+
+export type ChannelActivateResult = {
+  channel_active: boolean | null;
+  readiness_offen: string | null;
+};
+
+// Einen verbundenen, aber inaktiven Kanal live schalten. Channex legt Kanäle
+// INAKTIV an; scheitert die Aktivierung beim Verbinden an fehlenden Angaben,
+// ist dies der einzige Weg zurück. Fehlen weiterhin Angaben → 422 mit Grund.
+export async function activateChannel(
+  channelId: string,
+): Promise<Result<ChannelActivateResult>> {
+  return call<ChannelActivateResult>(`/channels/${channelId}/activate`, {
+    method: "POST",
+  });
 }
 
 // --- Airbnb-OAuth (white-label, ohne iFrame) --------------------------------
@@ -553,6 +574,10 @@ export type AirbnbObjektAbrufResult = {
   // check_out_until, pets_allowed, pets_max, smoking_allowed, max_nights).
   // Airbnb liefert beim Zuordnen mehr als den Preis.
   uebernommene_felder: string[];
+  // Wie viele Fotos NEU aus Airbnb angelegt wurden. Kommt nicht über Channex
+  // (dort ist `content.photos` leer), sondern direkt aus `v2/listing_photos`.
+  // 0 = keine NEUEN; schon vorhandene werden nicht doppelt angelegt.
+  fotos_uebernommen: number;
   // Steht NUR, wenn der Preis NICHT kam — mit dem Grund. Ein leeres Feld bei
   // preis_uebernommen: false wäre eine verschluckte Fehlermeldung.
   hinweis: string | null;

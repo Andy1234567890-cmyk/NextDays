@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Adres",
+          "postal_code": "Kod pocztowy",
+          "city": "Miasto",
+          "lat": "Współrzędne",
+          "lng": "Współrzędne",
+          "amenities": "Udogodnienia",
+          "description": "Opis",
+          "max_guests": "Liczba gości",
+          "street": "Ulica",
+          "house_number": "Numer domu"
+        },
+        "photosTaken": "Zaimportowano {count} zdjęć z Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Anuluj",
       "adjustmentHint": "Edytuj zmianę ceny tego portalu",
       "notReleased": "niezwolniony dla portali"
+    },
+    "switcher": {
+      "searchPlaceholder": "Szukaj obiektu …",
+      "noMatch": "Nie znaleziono obiektu."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Wysyłaj własne podatki",
       "blockedNote": "Dopóki to jest wyłączone, do tego kanału nie idą własne podatki."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Aktywuj kanał",
+    "activateDone": "{portal} jest teraz aktywny.",
+    "activateFailed": "Nie udało się aktywować kanału.",
+    "channelInactiveTitle": "{portal} jest połączony, ale nieaktywny",
+    "channelInactiveMissing": "Nic nie jest wysyłane do portalu. Nadal brakuje: {fields}",
+    "channelInactiveReady": "Nic nie jest wysyłane do portalu. Wszystkie dane są kompletne – aktywuj teraz."
   },
   "calendarSync": {
     "title": "Importuj/eksportuj kalendarz",

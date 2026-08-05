@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Dirección",
+          "postal_code": "Código postal",
+          "city": "Ciudad",
+          "lat": "Coordenadas",
+          "lng": "Coordenadas",
+          "amenities": "Servicios",
+          "description": "Descripción",
+          "max_guests": "Número de huéspedes",
+          "street": "Calle",
+          "house_number": "Número"
+        },
+        "photosTaken": "{count} fotos importadas de Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Cancelar",
       "adjustmentHint": "Editar el ajuste de precio de este portal",
       "notReleased": "no liberado para portales"
+    },
+    "switcher": {
+      "searchPlaceholder": "Buscar alojamiento …",
+      "noMatch": "No se encontró ningún alojamiento."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Enviar impuestos propios",
       "blockedNote": "Mientras esté desactivado, no se envían impuestos propios a este canal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Activar canal",
+    "activateDone": "{portal} ya está activo.",
+    "activateFailed": "No se pudo activar el canal.",
+    "channelInactiveTitle": "{portal} está conectado pero no activo",
+    "channelInactiveMissing": "No se envía nada al portal. Todavía falta: {fields}",
+    "channelInactiveReady": "No se envía nada al portal. Todos los datos están completos: actívalo ahora."
   },
   "calendarSync": {
     "title": "Importar/exportar calendario",

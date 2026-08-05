@@ -231,6 +231,13 @@ function AirbnbAbruf({ propertyId }: { propertyId: string }) {
               })}
             </span>
           )}
+          {/* Fotos zählen einzeln, weil sie der sichtbarste Gewinn sind: sie
+              kommen direkt aus Airbnb, nicht über die Portal-Anbindung. */}
+          {result.fotos_uebernommen > 0 && (
+            <span className="font-medium text-emerald-700 dark:text-emerald-400">
+              {t("photosTaken", { count: result.fotos_uebernommen })}
+            </span>
+          )}
         </div>
       )}
     </div>

@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Seoladh",
+          "postal_code": "Cód poist",
+          "city": "Cathair",
+          "lat": "Comhordanáidí",
+          "lng": "Comhordanáidí",
+          "amenities": "Áiseanna",
+          "description": "Cur síos",
+          "max_guests": "Líon aíonna",
+          "street": "Sráid",
+          "house_number": "Uimhir tí"
+        },
+        "photosTaken": "Iompórtáladh {count} grianghraf ó Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Cealaigh",
       "adjustmentHint": "Cuir coigeartú praghais na tairsí seo in eagar",
       "notReleased": "gan scaoileadh chuig tairseacha"
+    },
+    "switcher": {
+      "searchPlaceholder": "Cuardaigh maoin …",
+      "noMatch": "Níor aimsíodh aon mhaoin."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Seol cánacha féin",
       "blockedNote": "Fad is atá sé seo múchta, ní sheoltar aon cháin dá gcuid chuig an gcainéal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Gníomhachtaigh an cainéal",
+    "activateDone": "Tá {portal} gníomhach anois.",
+    "activateFailed": "Níorbh fhéidir an cainéal a ghníomhachtú.",
+    "channelInactiveTitle": "Tá {portal} ceangailte ach níl sé gníomhach",
+    "channelInactiveMissing": "Ní sheoltar aon rud chuig an tairseach. Ar iarraidh fós: {fields}",
+    "channelInactiveReady": "Ní sheoltar aon rud chuig an tairseach. Tá na sonraí go léir iomlán – gníomhachtaigh anois."
   },
   "calendarSync": {
     "title": "Iompórtáil/easpórtáil féilire",

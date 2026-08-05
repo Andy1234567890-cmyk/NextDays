@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Adresă",
+          "postal_code": "Cod poștal",
+          "city": "Oraș",
+          "lat": "Coordonate",
+          "lng": "Coordonate",
+          "amenities": "Facilități",
+          "description": "Descriere",
+          "max_guests": "Număr de oaspeți",
+          "street": "Stradă",
+          "house_number": "Număr"
+        },
+        "photosTaken": "{count} fotografii importate din Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Anulează",
       "adjustmentHint": "Editează ajustarea de preț a acestui portal",
       "notReleased": "neeliberat către portaluri"
+    },
+    "switcher": {
+      "searchPlaceholder": "Caută proprietate …",
+      "noMatch": "Nicio proprietate găsită."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Trimite taxele proprii",
       "blockedNote": "Cât timp este dezactivat, nu se trimit taxe proprii către acest canal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Activează canalul",
+    "activateDone": "{portal} este acum activ.",
+    "activateFailed": "Canalul nu a putut fi activat.",
+    "channelInactiveTitle": "{portal} este conectat, dar nu este activ",
+    "channelInactiveMissing": "Nu se trimite nimic către portal. Încă lipsesc: {fields}",
+    "channelInactiveReady": "Nu se trimite nimic către portal. Toate datele sunt complete – activează acum."
   },
   "calendarSync": {
     "title": "Import/export calendar",

@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Διεύθυνση",
+          "postal_code": "Ταχυδρομικός κώδικας",
+          "city": "Πόλη",
+          "lat": "Συντεταγμένες",
+          "lng": "Συντεταγμένες",
+          "amenities": "Παροχές",
+          "description": "Περιγραφή",
+          "max_guests": "Αριθμός επισκεπτών",
+          "street": "Οδός",
+          "house_number": "Αριθμός"
+        },
+        "photosTaken": "Εισήχθησαν {count} φωτογραφίες από το Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Άκυρο",
       "adjustmentHint": "Επεξεργασία της προσαρμογής τιμής αυτής της πύλης",
       "notReleased": "δεν έχει εγκριθεί για πύλες"
+    },
+    "switcher": {
+      "searchPlaceholder": "Αναζήτηση καταλύματος …",
+      "noMatch": "Δεν βρέθηκε κατάλυμα."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Αποστολή δικών σας φόρων",
       "blockedNote": "Όσο αυτό είναι κλειστό, δεν στέλνονται δικοί σας φόροι στο κανάλι."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Ενεργοποίηση καναλιού",
+    "activateDone": "Το {portal} είναι πλέον ενεργό.",
+    "activateFailed": "Το κανάλι δεν μπόρεσε να ενεργοποιηθεί.",
+    "channelInactiveTitle": "Το {portal} είναι συνδεδεμένο αλλά ανενεργό",
+    "channelInactiveMissing": "Δεν αποστέλλεται τίποτα στην πύλη. Λείπουν ακόμη: {fields}",
+    "channelInactiveReady": "Δεν αποστέλλεται τίποτα στην πύλη. Όλα τα στοιχεία είναι πλήρη – ενεργοποιήστε τώρα."
   },
   "calendarSync": {
     "title": "Εισαγωγή/εξαγωγή ημερολογίου",

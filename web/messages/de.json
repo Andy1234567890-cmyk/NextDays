@@ -5024,8 +5024,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Adresse",
+          "postal_code": "Postleitzahl",
+          "city": "Ort",
+          "lat": "Koordinaten",
+          "lng": "Koordinaten",
+          "amenities": "Ausstattung",
+          "description": "Beschreibung",
+          "max_guests": "Gästezahl",
+          "street": "Straße",
+          "house_number": "Hausnummer"
+        },
+        "photosTaken": "{count} Fotos aus Airbnb übernommen"
       }
     },
     "channelDetail": {
@@ -5063,6 +5074,10 @@
       "adjustmentCancel": "Abbrechen",
       "adjustmentHint": "Preisänderung dieses Portals bearbeiten",
       "notReleased": "nicht für Portale freigegeben"
+    },
+    "switcher": {
+      "searchPlaceholder": "Objekt suchen …",
+      "noMatch": "Kein Objekt gefunden."
     }
   },
   "calendar": {
@@ -5523,7 +5538,13 @@
       "sendUserTaxes": "Eigene Steuern senden",
       "blockedNote": "Solange dies aus ist, gehen keine eigenen Steuern an dieses Portal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Kanal aktivieren",
+    "activateDone": "{portal} ist jetzt aktiv.",
+    "activateFailed": "Der Kanal konnte nicht aktiviert werden.",
+    "channelInactiveTitle": "{portal} ist verbunden, aber nicht aktiv",
+    "channelInactiveMissing": "Damit nichts an das Portal geht. Es fehlen noch: {fields}",
+    "channelInactiveReady": "Damit geht nichts an das Portal. Alle Angaben sind vollständig – jetzt aktivieren."
   },
   "calendarSync": {
     "title": "Kalender importieren/exportieren",

@@ -399,6 +399,21 @@ def run_channel_action(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/channels/{channel_id}/activate")
+def activate_channel(
+    channel_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> dict[str, object]:
+    """Einen verbundenen, aber inaktiven Kanal live schalten.
+
+    Channex legt Kanäle inaktiv an; scheitert die Aktivierung im Verbinde-Fluss
+    an fehlenden Angaben, gibt es ohne diese Route keinen zweiten Versuch.
+    Fehlen weiterhin Angaben, antwortet der Service 422 MIT Grund."""
+    try:
+        return service.activate_channel(ctx, channel_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.delete("/channels/{channel_id}", status_code=status.HTTP_204_NO_CONTENT)
 def disconnect_channel(
     channel_id: str, service: ChannelManagerServiceDep, ctx: _write
@@ -467,6 +482,25 @@ def airbnb_objekt_abrufen(
         return AirbnbObjektAbrufResponse(
             **service.airbnb_objekt_abrufen(ctx, property_id)
         )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/properties/{property_id}/airbnb/diagnose")
+def airbnb_diagnose(
+    property_id: str, service: ChannelManagerServiceDep, ctx: _read
+) -> dict[str, object]:
+    """Feld für Feld: was Airbnb liefert, was bei uns steht, was fehlt.
+
+    Nur LESEND — die Diagnose ändert nichts. Sie beantwortet drei Fragen je
+    Feld (liefert Airbnb es? steht es bei uns? passt es zusammen?) und macht
+    damit die Fehler sichtbar, die sonst stumm bleiben: eine Adresse, die kam
+    aber nicht gespeichert wurde; Fotos, die Channex wegen seiner 10er-Grenze
+    nicht annimmt; eine Bildunterschrift im falschen Format, die jeden
+    Foto-Abruf mit 500 kippt.
+    """
+    try:
+        return service.airbnb_diagnose(ctx, property_id)
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

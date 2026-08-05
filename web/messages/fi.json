@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Osoite",
+          "postal_code": "Postinumero",
+          "city": "Kaupunki",
+          "lat": "Koordinaatit",
+          "lng": "Koordinaatit",
+          "amenities": "Mukavuudet",
+          "description": "Kuvaus",
+          "max_guests": "Vieraiden määrä",
+          "street": "Katu",
+          "house_number": "Talonumero"
+        },
+        "photosTaken": "{count} kuvaa tuotu Airbnb:stä"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Peruuta",
       "adjustmentHint": "Muokkaa tämän portaalin hinnanmuutosta",
       "notReleased": "ei vapautettu portaaleihin"
+    },
+    "switcher": {
+      "searchPlaceholder": "Etsi kohdetta …",
+      "noMatch": "Kohdetta ei löytynyt."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Lähetä omat verot",
       "blockedNote": "Kun tämä on pois, kanavalle ei lähetetä omia veroja."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Aktivoi kanava",
+    "activateDone": "{portal} on nyt aktiivinen.",
+    "activateFailed": "Kanavaa ei voitu aktivoida.",
+    "channelInactiveTitle": "{portal} on yhdistetty mutta ei aktiivinen",
+    "channelInactiveMissing": "Portaaliin ei lähetetä mitään. Puuttuu vielä: {fields}",
+    "channelInactiveReady": "Portaaliin ei lähetetä mitään. Kaikki tiedot ovat valmiit – aktivoi nyt."
   },
   "calendarSync": {
     "title": "Tuo/vie kalenteri",

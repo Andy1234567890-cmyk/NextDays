@@ -397,6 +397,31 @@ export function AppSidebar({
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </CollapsibleContent>
+
+                {/* Zugeklappte Sidebar (Icon-Modus): die Gruppen waren dort
+                    KOMPLETT unsichtbar — `SidebarGroupLabel` wird vom
+                    UI-Paket auf `opacity-0` gesetzt, und die Einträge stecken
+                    im zugeklappten CollapsibleContent. Sichtbar blieben nur die
+                    drei Einzel-Links oben, darunter Leerraum. Deshalb hier je
+                    Gruppe EIN Icon, das auf ihren ersten Eintrag führt; der
+                    Tooltip nennt die Gruppe. Nur im Icon-Modus eingeblendet,
+                    damit die aufgeklappte Ansicht unverändert bleibt. */}
+                <SidebarMenu className="hidden group-data-[collapsible=icon]:block">
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={groupActive}
+                      tooltip={t(`groups.${group.groupKey}`)}
+                    >
+                      <Link href={items[0].href}>
+                        <Icon icon={group.icon} />
+                        <span className="font-display font-normal">
+                          {t(`groups.${group.groupKey}`)}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
               </SidebarGroup>
             </Collapsible>
           );

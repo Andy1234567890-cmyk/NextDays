@@ -130,6 +130,31 @@ class AirbnbObjektAbrufMixin:
             )
 
         stammdaten = self._stammdaten_nachtragen(db, prop)
+
+        # Content ZUERST — vor der Zuordnung. Grund: `_zuordnen` schickt
+        # Property und Zimmertyp an Channex und kann dort scheitern (live
+        # gemessen: 422 „Room type photos limit exceeded"). Stand der
+        # Content-Abruf danach, war bei einem solchen Abbruch auch die ADRESSE
+        # weg, obwohl Airbnb sie geliefert hatte — der Nutzer sah ein leeres
+        # Straßenfeld und keinen Grund. Jetzt ist die echte Hausadresse in
+        # unserer DB, bevor irgendetwas nach außen geht.
+        content: dict[str, Any] = {"uebernommen": [], "fotos": 0}
+        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        if zugang:
+            token, _host = zugang
+            content = self.airbnb_content_uebernehmen(  # type: ignore[attr-defined]
+                db, tenant_id, property_id, str(listing_id), token
+            )
+            # Nach dem Content neu laden: Adresse, Beschreibung und Ausstattung
+            # gehen im nächsten Schritt an Channex mit.
+            frisch = (
+                db.table("properties").select("*")
+                .eq("tenant_id", tenant_id).eq("id", property_id)
+                .limit(1).execute()
+            ).data
+            if frisch:
+                prop = frisch[0]
+
         plan = self._preisplan_sicherstellen(db, tenant_id, prop, stammdaten)
         # Die Zuordnung IST der Lesevorgang: ihre Antwort trägt Airbnbs Preise,
         # Gebühren und Regeln zurück. `None` = keine Zuordnung möglich.
@@ -156,6 +181,7 @@ class AirbnbObjektAbrufMixin:
             plan_angelegt=plan.get("angelegt"),
             zugeordnet=settings is not None,
             preis_uebernommen=preis.get("uebernommen"),
+            content_felder=content["uebernommen"], fotos=content["fotos"],
         )
         return {
             "property_id": property_id,
@@ -172,7 +198,10 @@ class AirbnbObjektAbrufMixin:
             "preis_uebernommen": bool(preis.get("uebernommen")),
             "base_price": preis.get("base_price"),
             "min_stay": preis.get("min_stay"),
-            "uebernommene_felder": sorted((preis.get("weitere") or {}).keys()),
+            "uebernommene_felder": sorted(
+                set((preis.get("weitere") or {}).keys()) | set(content["uebernommen"])
+            ),
+            "fotos_uebernommen": content["fotos"],
             "hinweis": preis.get("hinweis"),
         }
 

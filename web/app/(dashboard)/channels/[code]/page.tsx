@@ -67,8 +67,13 @@ export default async function ChannelDetailPage({
     icon: otaEntry.icon,
   };
 
+  // Kein `max-w`-Deckel: die Zuordnungstabelle hat sechs Spalten (Objekt,
+  // Listing, Status, Voll-Abgleich, Pausieren, Bearbeiten). Mit `max-w-6xl`
+  // blieb die Seite bei 72rem stehen, auch wenn die Sidebar zugeklappt war —
+  // der freie Platz ging ins Nichts, während Objektnamen wie „020 Lille
+  // Lægehus (1966) · FeWo Lille Lægehus" auf vier Zeilen umbrachen.
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+    <div className="flex w-full flex-col gap-6 p-6">
       <RealtimeRefresh
         tables={[
           "channex_property_map",

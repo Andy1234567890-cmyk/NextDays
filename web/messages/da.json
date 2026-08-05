@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Adresse",
+          "postal_code": "Postnummer",
+          "city": "By",
+          "lat": "Koordinater",
+          "lng": "Koordinater",
+          "amenities": "Faciliteter",
+          "description": "Beskrivelse",
+          "max_guests": "Antal gæster",
+          "street": "Vej",
+          "house_number": "Husnummer"
+        },
+        "photosTaken": "{count} billeder hentet fra Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Annuller",
       "adjustmentHint": "Rediger denne portals prisjustering",
       "notReleased": "ikke frigivet til portaler"
+    },
+    "switcher": {
+      "searchPlaceholder": "Søg objekt …",
+      "noMatch": "Intet objekt fundet."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Send egne skatter",
       "blockedNote": "Så længe dette er slået fra, sendes ingen egne skatter til kanalen."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Aktiver kanal",
+    "activateDone": "{portal} er nu aktiv.",
+    "activateFailed": "Kanalen kunne ikke aktiveres.",
+    "channelInactiveTitle": "{portal} er forbundet, men ikke aktiv",
+    "channelInactiveMissing": "Der sendes intet til portalen. Mangler stadig: {fields}",
+    "channelInactiveReady": "Der sendes intet til portalen. Alle oplysninger er komplette – aktiver nu."
   },
   "calendarSync": {
     "title": "Importér/eksportér kalender",

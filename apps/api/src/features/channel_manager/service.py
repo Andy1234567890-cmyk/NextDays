@@ -18,6 +18,8 @@ from src.core.security import AuthContext
 
 from .abgaben_status import AbgabenStatusMixin
 from .airbnb_aktionen import AirbnbAktionenMixin
+from .airbnb_diagnose import AirbnbDiagnoseMixin
+from .airbnb_direkt import AirbnbDirektMixin
 from .airbnb_objekt_abruf import AirbnbObjektAbrufMixin
 from .airbnb_uebernahme import AirbnbUebernahmeMixin
 from .ari_push import AriPushMixin
@@ -71,6 +73,15 @@ class ChannelManagerService(
     # Room-Type und Rate-Plan bei Channex anzulegen — ohne sie gibt es kein
     # Mapping und Airbnb liefert keinen Preis.
     AirbnbObjektAbrufMixin,
+    # Liest Adresse, Beschreibung, Ausstattung und Fotos DIREKT bei Airbnb —
+    # mit dem OAuth-Token, das im Channex-Kanal liegt. Über Channex kommen nur
+    # acht Felder (kein Content, keine Adresse); Airbnbs eigene API gibt alles
+    # her (live verifiziert 05.08.2026). Nach AirbnbObjektAbrufMixin, weil es
+    # dessen `_airbnb_kanal_des_betriebs` nutzt.
+    AirbnbDirektMixin,
+    # Nach AirbnbDirektMixin: die Diagnose nutzt dessen Lese-Methoden, um
+    # Airbnbs Stand gegen unsere DB zu stellen. Sie schreibt nichts.
+    AirbnbDiagnoseMixin,
     ObjektKanalMixin,
     BookingsSyncMixin,
     OtaExtrasMixin,

@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Adresas",
+          "postal_code": "Pašto kodas",
+          "city": "Miestas",
+          "lat": "Koordinatės",
+          "lng": "Koordinatės",
+          "amenities": "Patogumai",
+          "description": "Aprašymas",
+          "max_guests": "Svečių skaičius",
+          "street": "Gatvė",
+          "house_number": "Namo numeris"
+        },
+        "photosTaken": "Importuota {count} nuotraukų iš Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Atšaukti",
       "adjustmentHint": "Redaguoti šio portalo kainos pakeitimą",
       "notReleased": "nepatvirtinta portalams"
+    },
+    "switcher": {
+      "searchPlaceholder": "Ieškoti objekto …",
+      "noMatch": "Objektas nerastas."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Siųsti savo mokesčius",
       "blockedNote": "Kol tai išjungta, į šį kanalą savi mokesčiai neperduodami."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Aktyvinti kanalą",
+    "activateDone": "{portal} dabar aktyvus.",
+    "activateFailed": "Kanalo nepavyko aktyvinti.",
+    "channelInactiveTitle": "{portal} prijungtas, bet neaktyvus",
+    "channelInactiveMissing": "Į portalą nieko nesiunčiama. Vis dar trūksta: {fields}",
+    "channelInactiveReady": "Į portalą nieko nesiunčiama. Visi duomenys pilni – aktyvinkite dabar."
   },
   "calendarSync": {
     "title": "Kalendoriaus importas / eksportas",

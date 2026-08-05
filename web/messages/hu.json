@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Cím",
+          "postal_code": "Postai irányítószám",
+          "city": "Város",
+          "lat": "Koordináták",
+          "lng": "Koordináták",
+          "amenities": "Felszereltség",
+          "description": "Leírás",
+          "max_guests": "Vendégek száma",
+          "street": "Utca",
+          "house_number": "Házszám"
+        },
+        "photosTaken": "{count} fotó importálva az Airbnb-ről"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Mégse",
       "adjustmentHint": "A portál árkorrekciójának szerkesztése",
       "notReleased": "nincs engedélyezve a portálokra"
+    },
+    "switcher": {
+      "searchPlaceholder": "Objektum keresése …",
+      "noMatch": "Nem található objektum."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Saját adók küldése",
       "blockedNote": "Amíg ez ki van kapcsolva, nem küldünk saját adót erre a csatornára."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Csatorna aktiválása",
+    "activateDone": "A(z) {portal} most aktív.",
+    "activateFailed": "A csatornát nem sikerült aktiválni.",
+    "channelInactiveTitle": "A(z) {portal} kapcsolódik, de nem aktív",
+    "channelInactiveMissing": "Semmi sem kerül a portálra. Még hiányzik: {fields}",
+    "channelInactiveReady": "Semmi sem kerül a portálra. Minden adat hiánytalan – aktiválja most."
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",

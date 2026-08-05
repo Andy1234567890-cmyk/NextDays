@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Aadress",
+          "postal_code": "Sihtnumber",
+          "city": "Linn",
+          "lat": "Koordinaadid",
+          "lng": "Koordinaadid",
+          "amenities": "Mugavused",
+          "description": "Kirjeldus",
+          "max_guests": "Külaliste arv",
+          "street": "Tänav",
+          "house_number": "Majanumber"
+        },
+        "photosTaken": "{count} fotot imporditud Airbnb-st"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Tühista",
       "adjustmentHint": "Muuda selle portaali hinnamuudatust",
       "notReleased": "portaalidele vabastamata"
+    },
+    "switcher": {
+      "searchPlaceholder": "Otsi objekti …",
+      "noMatch": "Objekti ei leitud."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Saada oma maksud",
       "blockedNote": "Kuni see on väljas, ei saadeta sellele kanalile omi makse."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Aktiveeri kanal",
+    "activateDone": "{portal} on nüüd aktiivne.",
+    "activateFailed": "Kanalit ei õnnestunud aktiveerida.",
+    "channelInactiveTitle": "{portal} on ühendatud, kuid pole aktiivne",
+    "channelInactiveMissing": "Portaali ei saadeta midagi. Puudub veel: {fields}",
+    "channelInactiveReady": "Portaali ei saadeta midagi. Kõik andmed on täielikud – aktiveeri kohe."
   },
   "calendarSync": {
     "title": "Kalendri import/eksport",

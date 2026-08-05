@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Endereço",
+          "postal_code": "Código postal",
+          "city": "Cidade",
+          "lat": "Coordenadas",
+          "lng": "Coordenadas",
+          "amenities": "Comodidades",
+          "description": "Descrição",
+          "max_guests": "Número de hóspedes",
+          "street": "Rua",
+          "house_number": "Número"
+        },
+        "photosTaken": "{count} fotos importadas do Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Cancelar",
       "adjustmentHint": "Editar o ajuste de preço deste portal",
       "notReleased": "não liberado para portais"
+    },
+    "switcher": {
+      "searchPlaceholder": "Procurar imóvel …",
+      "noMatch": "Nenhum imóvel encontrado."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Enviar impostos próprios",
       "blockedNote": "Enquanto estiver desligado, não são enviados impostos próprios a este canal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Ativar canal",
+    "activateDone": "{portal} está agora ativo.",
+    "activateFailed": "Não foi possível ativar o canal.",
+    "channelInactiveTitle": "{portal} está ligado mas não ativo",
+    "channelInactiveMissing": "Nada é enviado ao portal. Ainda falta: {fields}",
+    "channelInactiveReady": "Nada é enviado ao portal. Todos os dados estão completos – ative agora."
   },
   "calendarSync": {
     "title": "Importar/exportar calendário",

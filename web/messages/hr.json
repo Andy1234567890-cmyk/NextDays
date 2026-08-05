@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Adresa",
+          "postal_code": "Poštanski broj",
+          "city": "Grad",
+          "lat": "Koordinate",
+          "lng": "Koordinate",
+          "amenities": "Sadržaji",
+          "description": "Opis",
+          "max_guests": "Broj gostiju",
+          "street": "Ulica",
+          "house_number": "Kućni broj"
+        },
+        "photosTaken": "Uvezeno {count} fotografija s Airbnb-a"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Odustani",
       "adjustmentHint": "Uredi prilagodbu cijene ovog portala",
       "notReleased": "nije odobreno za portale"
+    },
+    "switcher": {
+      "searchPlaceholder": "Traži objekt …",
+      "noMatch": "Objekt nije pronađen."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Pošalji vlastite poreze",
       "blockedNote": "Dok je ovo isključeno, kanalu se ne šalju vlastiti porezi."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Aktiviraj kanal",
+    "activateDone": "{portal} je sada aktivan.",
+    "activateFailed": "Kanal nije bilo moguće aktivirati.",
+    "channelInactiveTitle": "{portal} je povezan, ali nije aktivan",
+    "channelInactiveMissing": "Ništa se ne šalje na portal. Još nedostaje: {fields}",
+    "channelInactiveReady": "Ništa se ne šalje na portal. Svi su podaci potpuni – aktivirajte sada."
   },
   "calendarSync": {
     "title": "Uvoz/izvoz kalendara",

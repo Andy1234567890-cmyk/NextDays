@@ -496,6 +496,12 @@ class AirbnbObjektAbrufResponse(BaseModel):
     # den Preis; die Liste macht sichtbar, was wirklich ankam, statt es zu
     # behaupten.
     uebernommene_felder: list[str] = []
+    # Wie viele Fotos NEU aus Airbnb angelegt wurden. Kommt nicht über Channex
+    # (dort ist `content.photos` bei allen 18 Objekten leer und kontoweit
+    # `total: 0`), sondern direkt aus `v2/listing_photos` — bei Objekt 020 sind
+    # das 17 Bilder mit Bildtexten. 0 heißt: keine NEUEN (schon vorhandene
+    # werden nicht doppelt angelegt).
+    fotos_uebernommen: int = 0
     hinweis: str | None = None
 
 
@@ -728,6 +734,16 @@ class ChannelDetailResponse(BaseModel):
     # Kanal-eigene Aktionen aus dem Katalog (z.B. load_future_reservations).
     # Die UI bietet nur an, was der Kanal wirklich kann.
     actions: list[str] = Field(default_factory=list)
+    # Läuft der Kanal bei Channex? Ein Kanal wird INAKTIV angelegt und geht erst
+    # mit `POST channels/{id}/activate` live. Verbunden ≠ aktiv: die Airbnb-
+    # Verbindung des Beta-Betriebs stand tagelang auf `is_active: false`, weil
+    # der erste Aktivierungsversuch an einer fehlenden Zeitzone scheiterte
+    # (live gemessen 04.08.2026) und es keinen zweiten Weg dorthin gab. Ohne
+    # dieses Feld kann die Oberfläche den Zustand nicht einmal ANZEIGEN.
+    channel_active: bool | None = None
+    # Was Channex vor dem Aktivieren noch fehlt (Klartext, leer = bereit).
+    # None = nicht geprüft (kein Kanal vorhanden).
+    readiness_offen: str | None = None
     mappings: list[ChannelMappingRow]
 
 

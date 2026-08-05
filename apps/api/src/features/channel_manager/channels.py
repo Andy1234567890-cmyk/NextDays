@@ -1266,6 +1266,63 @@ class ChannelsMixin:
             {"is_active": False, "channex_channel_id": None}
         ).eq("tenant_id", tenant_id).eq("channex_channel_id", channel_id).execute()
 
+    def activate_channel(self, ctx: AuthContext, channel_id: str) -> dict[str, Any]:
+        """Einen VERBUNDENEN, aber inaktiven Channex-Kanal live schalten.
+
+        Warum es diesen Weg gibt: Channex legt jeden Kanal INAKTIV an
+        (`channex_client.py`: „4) /channels/:id/activate → live (startet
+        inaktiv)"). Aktiviert wird er im Verbinde-Fluss
+        (`oauth_channels.py`) — scheitert der dortige Readiness-Check aber an
+        einer behebbaren Lücke (live gemessen: fehlende `timezone`), bricht der
+        Fluss mit 422 ab und der Kanal bleibt für immer auf „Disabled".
+        Ergänzt der Betrieb die Angabe später, führte KEIN Weg zurück zur
+        Aktivierung — genau so stand die Airbnb-Verbindung des Beta-Betriebs
+        (Kanal seit 04.08.2026 14:40 `is_active: false`, Token gültig,
+        `check_readiness` inzwischen leer).
+
+        Idempotent (Wurzel 2): ist der Kanal schon aktiv, wird NICHT erneut
+        aktiviert, sondern der Zustand zurückgemeldet.
+        """
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        # Wurzel 3: nur einen Kanal aktivieren, der diesem Betrieb gehört —
+        # die Channex-Calls laufen mit dem geteilten Account-Key.
+        owns = (
+            db.table("channex_channel_connection")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("channex_channel_id", channel_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not owns:
+            raise ChannelManagerError("Kanal nicht gefunden.", status_code=404)
+
+        aktiv, offen = self._channel_live_zustand(channel_id)
+        if aktiv:
+            return {"channel_active": True, "readiness_offen": None}
+        if offen:
+            # Der Grund wird GENANNT statt still zu scheitern: Channex lehnt die
+            # Aktivierung ohne diese Angaben ab.
+            raise ChannelManagerError(
+                "Das Portal kann noch nicht aktiviert werden, weil Angaben "
+                f"fehlen: {offen}. Ergänze sie am Objekt und versuche es erneut.",
+                status_code=422,
+            )
+        try:
+            self._channex.activate_channel(channel_id)
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
+        # Rücklesen, nicht dem 200 vertrauen (Wurzel 5): nur eine gemessene
+        # Änderung ist der Beweis, dass der Kanal wirklich live ist.
+        neu_aktiv, neu_offen = self._channel_live_zustand(channel_id)
+        log.info(
+            "channex_channel_aktiviert",
+            tenant_id=tenant_id, channel_id=channel_id, is_active=neu_aktiv,
+        )
+        return {"channel_active": neu_aktiv, "readiness_offen": neu_offen}
+
     def set_connection_active(
         self, ctx: AuthContext, *, property_id: str, portal_code: str, is_active: bool
     ) -> dict[str, Any]:
@@ -1829,6 +1886,21 @@ class ChannelsMixin:
             if c.get("property_id"):
                 conn_by_property[c["property_id"]] = c
 
+        # Welche Objekte sind bei CHANNEX wirklich zugeordnet? (siehe
+        # _objekte_mit_channex_ziel — unsere Verbindungszeile beweist es nicht).
+        # `None` = konnten wir nicht abrufen; dann bleibt es bei der bisherigen
+        # Aussage statt „nicht verbunden" zu behaupten.
+        mit_ziel = self._objekte_mit_channex_ziel(
+            db,
+            tenant_id,
+            property_ids,
+            {
+                str(c["channex_channel_id"])
+                for c in conn_by_property.values()
+                if c.get("channex_channel_id")
+            },
+        )
+
         # Sync-Status je Objekt aus der Property-Map (nur nicht-gelöschte).
         sync_by_property: dict[str, dict[str, Any]] = {}
         if property_ids:
@@ -1847,6 +1919,17 @@ class ChannelsMixin:
             pid = p["id"]
             c = conn_by_property.get(pid, {})
             m = sync_by_property.get(pid, {})
+            # EINE Wahrheit für alle vier Statusfelder dieser Zeile: gibt es bei
+            # Channex ein Ziel? Nur dann kann etwas gesendet oder synchronisiert
+            # sein. Ohne Kanal-ID gibt es dort gar kein Gegenstück (live
+            # gemessen: 22 Zeilen `is_active = true`, davon 20 ohne Kanal-ID);
+            # mit Kanal-ID, aber ohne Zuordnung, steht das Listing bei Channex
+            # auf „Not mapped" (`013 Rævlingevej`). `mit_ziel is None` heißt
+            # „Channex nicht erreichbar" — dann NICHT behaupten, es sei nichts
+            # zugeordnet (Wurzel 4/5).
+            hat_ziel = bool(c.get("channex_channel_id")) and (
+                mit_ziel is None or pid in mit_ziel
+            )
             mappings.append(
                 {
                     "property_id": pid,
@@ -1855,11 +1938,21 @@ class ChannelsMixin:
                     "ota_hotel_id": c.get("ota_hotel_id"),
                     "ota_room_type_code": c.get("ota_room_type_code"),
                     "ota_room_title": c.get("ota_room_title"),
-                    "is_active": bool(c.get("is_active")),
-                    "connected": bool(c),  # existiert eine Verbindung dieses Portals?
-                    "sync_enabled": bool(m.get("sync_enabled")),
-                    "last_sync_status": m.get("last_sync_status"),
-                    "last_sync_error": m.get("last_sync_error") or c.get("last_error"),
+                    "is_active": bool(c.get("is_active")) and hat_ziel,
+                    "connected": hat_ziel,
+                    # Auch der Sync-Stand hängt an der Zuordnung bei Channex:
+                    # ohne Zuordnung gibt es dort kein Ziel, also kann NICHTS
+                    # synchronisiert sein. `channex_property_map.sync_enabled`
+                    # allein sagte „Synchronisiert" für `013 Rævlingevej`,
+                    # während Channex dasselbe Listing als „Not mapped" führt
+                    # (live gemessen 04.08.2026). Ein grünes „Synchronisiert"
+                    # auf einer Zeile, die nichts sendet, ist die schlimmste
+                    # Variante: der Betrieb prüft dort nicht mehr nach.
+                    "sync_enabled": bool(m.get("sync_enabled")) and hat_ziel,
+                    "last_sync_status": m.get("last_sync_status") if hat_ziel else None,
+                    "last_sync_error": (
+                        m.get("last_sync_error") or c.get("last_error")
+                    ),
                     "updated_at": c.get("updated_at"),
                 }
             )
@@ -1875,6 +1968,16 @@ class ChannelsMixin:
             ),
             None,
         )
+        # Läuft der Kanal bei Channex überhaupt? Verbunden ≠ aktiv (siehe
+        # ChannelDetailResponse.channel_active). Best effort: fällt der Abruf
+        # aus, bleibt das Feld None und die UI zeigt keinen Zustand statt einen
+        # falschen (Wurzel 4/5 — kein erfundener Ersatzwert).
+        channel_active: bool | None = None
+        readiness_offen: str | None = None
+        if channel_id:
+            channel_active, readiness_offen = self._channel_live_zustand(
+                str(channel_id)
+            )
         return {
             "portal_code": portal_code,
             "portal": self._portal_label(portal_code),
@@ -1883,8 +1986,92 @@ class ChannelsMixin:
             "total_count": len(mappings),
             "channel_id": channel_id,
             "actions": self._channel_spec(portal_code).get("actions") or [],
+            "channel_active": channel_active,
+            "readiness_offen": readiness_offen,
             "mappings": mappings,
         }
+
+    def _objekte_mit_channex_ziel(
+        self,
+        db: Client,
+        tenant_id: str,
+        property_ids: list[str],
+        channel_ids: set[str],
+    ) -> set[str] | None:
+        """Objekte, die bei CHANNEX wirklich zugeordnet sind.
+
+        Gefragt wird Channex, nicht unsere eigene Tabelle: `013 Rævlingevej` und
+        `020 Lille Lægehus` sind in `channex_channel_connection` Feld für Feld
+        identisch (Kanal-ID gesetzt, `sync_enabled = true`), aber bei Channex ist
+        nur 020 zugeordnet — 013 steht dort auf „Not mapped" (live gemessen
+        04.08.2026, Channex meldet „Count: 1"). Wer unsere Zeile als Beweis
+        nimmt, zählt Zuordnungen, die es nicht gibt.
+
+        Der Ist-Stand steht ausschließlich im Kanal-Objekt unter `rate_plans[]`;
+        einen GET-Pfad für Mappings gibt es nicht (alle 404, gemessen). Jeder
+        Eintrag trägt `settings.listing_id` — das ist die Verbindung zu unserem
+        Objekt über `properties.airbnb_listing_id`.
+
+        Rückgabe `None` = unbekannt (Abruf fehlgeschlagen). Dann darf der
+        Aufrufer NICHT „nicht verbunden" behaupten (Wurzel 4/5).
+        """
+        if not property_ids or not channel_ids:
+            return set()
+        gemappte_listings: set[str] = set()
+        for channel_id in channel_ids:
+            try:
+                kanal = self._channex.get_channel(channel_id)
+            except ChannexError as exc:  # noqa: BLE001 — Anzeige, nicht Hauptpfad
+                log.warning(
+                    "channex_mappings_unbekannt",
+                    channel_id=channel_id, error=exc.message,
+                )
+                return None
+            attrs = ((kanal.get("data") or {}).get("attributes")) or {}
+            for eintrag in attrs.get("rate_plans") or []:
+                listing = ((eintrag or {}).get("settings") or {}).get("listing_id")
+                if listing:
+                    gemappte_listings.add(str(listing))
+        if not gemappte_listings:
+            return set()
+        rows = (
+            db.table("properties")
+            .select("id, airbnb_listing_id")
+            .eq("tenant_id", tenant_id)
+            .in_("id", property_ids)
+            .execute()
+        ).data or []
+        return {
+            str(r["id"])
+            for r in rows
+            if r.get("airbnb_listing_id")
+            and str(r["airbnb_listing_id"]) in gemappte_listings
+        }
+
+    def _channel_live_zustand(
+        self, channel_id: str
+    ) -> tuple[bool | None, str | None]:
+        """`is_active` des Channex-Kanals + was der Aktivierung noch fehlt.
+
+        Zwei Aufrufe, beide nur lesend. Scheitert einer, ist die Antwort None
+        (= „unbekannt") und NICHT False — sonst behauptet die Oberfläche
+        „inaktiv", wo sie es nur nicht wissen konnte.
+        """
+        aktiv: bool | None = None
+        try:
+            kanal = self._channex.get_channel(channel_id)
+            attrs = ((kanal.get("data") or {}).get("attributes")) or {}
+            if "is_active" in attrs:
+                aktiv = bool(attrs["is_active"])
+        except ChannexError as exc:  # noqa: BLE001 — nur Anzeige, nicht der Hauptpfad
+            log.warning(
+                "channex_kanal_zustand_unbekannt",
+                channel_id=channel_id, error=exc.message,
+            )
+            return None, None
+        if aktiv:
+            return True, None
+        return aktiv, self._readiness_offen(channel_id)
 
     def list_channel_connections(
         self, ctx: AuthContext, property_id: str

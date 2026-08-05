@@ -9,6 +9,8 @@ import { usePropertyLabels } from "@/lib/use-property-labels";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { PropertySwitcher } from "@/components/objekte/property-switcher";
+
 import type { PropertyStatus } from "@/lib/properties";
 
 type SubnavItem = { slug: string; titleKey: string; icon: string };
@@ -47,16 +49,30 @@ const GROUPS: { labelKey: string; items: SubnavItem[] }[] = [
   },
 ];
 
+type SwitcherEintrag = {
+  id: string;
+  title: string;
+  photo: string | null;
+  status: PropertyStatus;
+};
+
 export function PropertySubnav({
   id,
   title,
   photo,
   status,
+  properties,
+  addresses,
 }: {
   id: string;
   title: string;
   photo: string | null;
   status: PropertyStatus;
+  // Alle Objekte des Betriebs für den Umschalter. Leer/fehlend = der Kopf
+  // bleibt eine reine Anzeige (z. B. wenn die Liste nicht geladen werden
+  // konnte) — statt einen Umschalter zu zeigen, der nichts zu wechseln hat.
+  properties?: SwitcherEintrag[];
+  addresses?: Record<string, string>;
 }) {
   const t = useTranslations("objects");
   const { statusLabel } = usePropertyLabels();
@@ -70,23 +86,33 @@ export function PropertySubnav({
 
   return (
     <aside className="flex flex-col gap-4">
-      {/* Objekt-Wähler-Kopf */}
-      <div className="flex items-center gap-3 rounded-(--radius) border p-2.5">
-        <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-(--radius) bg-secondary">
-          {photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={photo} alt="" className="size-full object-cover" />
-          ) : (
-            <Icon icon="ph:house-line" className="size-5 text-muted-foreground" />
-          )}
-        </span>
-        <div className="flex min-w-0 flex-col">
-          <span className="truncate text-sm font-semibold">{title}</span>
-          <span className="text-xs text-muted-foreground">
-            {statusLabel(status)}
+      {/* Objekt-Wähler: mit mehr als einem Objekt ein echter Umschalter, der
+          den aktuellen Unterpunkt beibehält. Mit nur einem Objekt gibt es
+          nichts zu wechseln — dann bleibt es die reine Anzeige. */}
+      {properties && properties.length > 1 ? (
+        <PropertySwitcher
+          current={{ id, title, photo, status }}
+          properties={properties}
+          addresses={addresses ?? {}}
+        />
+      ) : (
+        <div className="flex items-center gap-3 rounded-(--radius) border p-2.5">
+          <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-(--radius) bg-secondary">
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photo} alt="" className="size-full object-cover" />
+            ) : (
+              <Icon icon="ph:house-line" className="size-5 text-muted-foreground" />
+            )}
           </span>
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm font-semibold">{title}</span>
+            <span className="text-xs text-muted-foreground">
+              {statusLabel(status)}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Gruppen */}
       {GROUPS.map((g) => (

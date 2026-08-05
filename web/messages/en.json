@@ -5024,8 +5024,19 @@
           "pets_allowed": "pets allowed",
           "pets_max": "number of pets",
           "smoking_allowed": "smoking",
-          "max_nights": "maximum nights"
-        }
+          "max_nights": "maximum nights",
+          "address": "Address",
+          "postal_code": "Postcode",
+          "city": "City",
+          "lat": "Coordinates",
+          "lng": "Coordinates",
+          "amenities": "Amenities",
+          "description": "Description",
+          "max_guests": "Guest count",
+          "street": "Street",
+          "house_number": "House number"
+        },
+        "photosTaken": "{count} photos imported from Airbnb"
       }
     },
     "channelDetail": {
@@ -5063,6 +5074,10 @@
       "adjustmentCancel": "Cancel",
       "adjustmentHint": "Edit this portal's price adjustment",
       "notReleased": "not released to channels"
+    },
+    "switcher": {
+      "searchPlaceholder": "Search property …",
+      "noMatch": "No property found."
     }
   },
   "calendar": {
@@ -5523,7 +5538,13 @@
       "sendUserTaxes": "Send user taxes",
       "blockedNote": "While this is off, no taxes of your own are sent to this channel."
     },
-    "linkedPending": "{count, plural, =0 {Account connected · mapping pending} one {Account connected · # listing to map} other {Account connected · # listings to map}}"
+    "linkedPending": "{count, plural, =0 {Account connected · mapping pending} one {Account connected · # listing to map} other {Account connected · # listings to map}}",
+    "activateChannel": "Activate channel",
+    "activateDone": "{portal} is now active.",
+    "activateFailed": "The channel could not be activated.",
+    "channelInactiveTitle": "{portal} is connected but not active",
+    "channelInactiveMissing": "Nothing is sent to the portal. Still missing: {fields}",
+    "channelInactiveReady": "Nothing is sent to the portal. All details are complete – activate now."
   },
   "calendarSync": {
     "title": "Import/export calendar",

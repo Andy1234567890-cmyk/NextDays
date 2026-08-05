@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .common import log
+
 # Hauptsprache je Land (DACH + EU). Reihenfolge: Landessprache zuerst, dann als
 # Zweitsprache Englisch (von Channex/OTAs breit verstanden). Unbekannt → ["en"].
 # Spiegelt die Mehrsprachen-Ausrichtung (27 EU-Länder), ohne € o.ä. zu erfinden.
@@ -63,12 +65,26 @@ def _text_in_order(value: object, locale_order: list[str]) -> str | None:
     return None
 
 
+# Channex nimmt pro Zimmertyp höchstens 10 Fotos:
+#   422 {"photos": ["Room type photos limit exceeded. Maximum allowed is 10."]}
+# Live gemessen (05.08.2026) beim Import von Objekt 020, das aus Airbnb 17
+# Bilder mitbrachte. Ohne diese Grenze scheitert der GANZE `PUT room_types` —
+# und damit auch die Adresse, die im selben Vorgang gespeichert wird.
+# Die Grenze steht in keiner Doku; sie kommt aus der Fehlermeldung.
+CHANNEX_MAX_PHOTOS = 10
+
+
 def _photos(photos_rows: list[dict[str, Any]], locale_order: list[str]) -> list[dict[str, Any]]:
     """property_photos-Zeilen → Channex-Foto-Objekte.
 
     Cover (`is_cover`) zuerst (position 0), danach nach `sort_order`. `description`
     aus der mehrsprachigen `caption` (weggelassen, wenn leer). `author` = Urheber
-    (weggelassen, wenn leer). `kind` = "photo"."""
+    (weggelassen, wenn leer). `kind` = "photo".
+
+    Höchstens `CHANNEX_MAX_PHOTOS` Bilder — mehr lehnt Channex mit 422 ab. Weil
+    das Cover zuerst sortiert wird, gehen bei mehr Bildern die HINTEREN
+    verloren, nicht das Titelbild. Bei uns bleiben alle erhalten; nur der
+    Portal-Push ist gekappt."""
     if not photos_rows:
         return []
     ordered = sorted(
@@ -88,6 +104,15 @@ def _photos(photos_rows: list[dict[str, Any]], locale_order: list[str]) -> list[
         if author and str(author).strip():
             photo["author"] = str(author).strip()
         out.append(photo)
+        if len(out) >= CHANNEX_MAX_PHOTOS:
+            # Nicht still abschneiden: der Betrieb sieht bei uns 17 Bilder und
+            # muss wissen, dass am Portal nur 10 ankommen.
+            if len(ordered) > CHANNEX_MAX_PHOTOS:
+                log.info(
+                    "channex_fotos_gekappt",
+                    vorhanden=len(ordered), gesendet=CHANNEX_MAX_PHOTOS,
+                )
+            break
     return out
 
 

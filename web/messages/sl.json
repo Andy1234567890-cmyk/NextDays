@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Naslov",
+          "postal_code": "Poštna številka",
+          "city": "Mesto",
+          "lat": "Koordinate",
+          "lng": "Koordinate",
+          "amenities": "Oprema",
+          "description": "Opis",
+          "max_guests": "Število gostov",
+          "street": "Ulica",
+          "house_number": "Hišna številka"
+        },
+        "photosTaken": "Uvoženih {count} fotografij iz Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Prekliči",
       "adjustmentHint": "Uredi prilagoditev cene tega portala",
       "notReleased": "ni sproščeno za portale"
+    },
+    "switcher": {
+      "searchPlaceholder": "Iskanje objekta …",
+      "noMatch": "Objekt ni bil najden."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Pošlji lastne davke",
       "blockedNote": "Dokler je to izklopljeno, temu kanalu ne pošiljamo lastnih davkov."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Aktiviraj kanal",
+    "activateDone": "{portal} je zdaj aktiven.",
+    "activateFailed": "Kanala ni bilo mogoče aktivirati.",
+    "channelInactiveTitle": "{portal} je povezan, vendar ni aktiven",
+    "channelInactiveMissing": "Na portal se ne pošilja nič. Še manjka: {fields}",
+    "channelInactiveReady": "Na portal se ne pošilja nič. Vsi podatki so popolni – aktivirajte zdaj."
   },
   "calendarSync": {
     "title": "Uvoz/izvoz koledarja",

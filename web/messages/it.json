@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Indirizzo",
+          "postal_code": "CAP",
+          "city": "Città",
+          "lat": "Coordinate",
+          "lng": "Coordinate",
+          "amenities": "Servizi",
+          "description": "Descrizione",
+          "max_guests": "Numero di ospiti",
+          "street": "Via",
+          "house_number": "Numero civico"
+        },
+        "photosTaken": "{count} foto importate da Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Annulla",
       "adjustmentHint": "Modifica la variazione di prezzo di questo portale",
       "notReleased": "non abilitato per i portali"
+    },
+    "switcher": {
+      "searchPlaceholder": "Cerca struttura …",
+      "noMatch": "Nessuna struttura trovata."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Invia le mie imposte",
       "blockedNote": "Finché è disattivato, non vengono inviate imposte proprie a questo canale."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Attiva canale",
+    "activateDone": "{portal} è ora attivo.",
+    "activateFailed": "Non è stato possibile attivare il canale.",
+    "channelInactiveTitle": "{portal} è collegato ma non attivo",
+    "channelInactiveMissing": "Non viene inviato nulla al portale. Mancano ancora: {fields}",
+    "channelInactiveReady": "Non viene inviato nulla al portale. Tutti i dati sono completi: attiva ora."
   },
   "calendarSync": {
     "title": "Importa/esporta calendario",

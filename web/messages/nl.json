@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Adres",
+          "postal_code": "Postcode",
+          "city": "Plaats",
+          "lat": "Coördinaten",
+          "lng": "Coördinaten",
+          "amenities": "Voorzieningen",
+          "description": "Beschrijving",
+          "max_guests": "Aantal gasten",
+          "street": "Straat",
+          "house_number": "Huisnummer"
+        },
+        "photosTaken": "{count} foto's uit Airbnb overgenomen"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Annuleren",
       "adjustmentHint": "Prijsaanpassing van dit portaal bewerken",
       "notReleased": "niet vrijgegeven voor portalen"
+    },
+    "switcher": {
+      "searchPlaceholder": "Object zoeken …",
+      "noMatch": "Geen object gevonden."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Eigen belastingen verzenden",
       "blockedNote": "Zolang dit uit staat, gaan er geen eigen belastingen naar dit kanaal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Kanaal activeren",
+    "activateDone": "{portal} is nu actief.",
+    "activateFailed": "Het kanaal kon niet worden geactiveerd.",
+    "channelInactiveTitle": "{portal} is verbonden maar niet actief",
+    "channelInactiveMissing": "Er wordt niets naar het portaal gestuurd. Nog ontbrekend: {fields}",
+    "channelInactiveReady": "Er wordt niets naar het portaal gestuurd. Alle gegevens zijn compleet – activeer nu."
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",

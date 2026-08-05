@@ -21,6 +21,7 @@ import type {
   PropertyMap,
 } from "@/lib/channex";
 import {
+  activateChannel,
   disconnectChannel,
   runChannelAction,
   setConnectionActive,
@@ -76,11 +77,35 @@ export function ChannelDetail({
   const t = useTranslations("channels");
   const router = useRouter();
   const [disconnecting, startDisconnect] = useTransition();
+  const [activating, startActivate] = useTransition();
   const portalBookings = bookingsForPortal(bookings, meta.label);
   const mappings = detail?.mappings ?? [];
   // Ist das Portal verbunden? (mind. eine Verbindung + Channex-Kanal vorhanden)
   const channelId = detail?.channel_id ?? null;
   const isConnected = mappings.some((m) => m.connected) && !!channelId;
+  // Verbunden ≠ aktiv: Channex legt Kanäle INAKTIV an. `false` heißt „steht auf
+  // Disabled", `null` heißt „konnten wir nicht abrufen" — nur bei `false` gibt
+  // es etwas zu tun, sonst behaupteten wir einen Zustand, den wir nicht kennen.
+  const channelInactive = !!channelId && detail?.channel_active === false;
+
+  // Kanal live schalten. Fehlen Channex noch Angaben, antwortet das Backend 422
+  // mit dem Grund im Klartext — der wird gezeigt, statt still zu scheitern.
+  const activate = () => {
+    if (!channelId) return;
+    startActivate(async () => {
+      const res = await activateChannel(channelId);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      if (res.data.channel_active) {
+        toast.success(t("activateDone", { portal: meta.label }));
+      } else {
+        toast.error(res.data.readiness_offen ?? t("activateFailed"));
+      }
+      router.refresh();
+    });
+  };
 
   // „Alles lösen": den einen Channex-Kanal des Portals trennen (bei Hotels teilen
   // sich alle Zimmer diesen Kanal → alle Zimmer-Verbindungen sind danach weg).
@@ -129,19 +154,39 @@ export function ChannelDetail({
             hier stattdessen „Verbindung trennen" (löst den gemeinsamen Kanal). */}
         {configured &&
           (isConnected ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={disconnectAll}
-              disabled={disconnecting}
-              className="text-destructive hover:bg-destructive/10"
-            >
-              <Icon
-                icon={disconnecting ? "ph:spinner" : "ph:plugs"}
-                className={"size-4 " + (disconnecting ? "animate-spin" : "")}
-              />
-              {t("disconnectChannel")}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Steht der Kanal bei Channex auf „Disabled", ist das Verbinden
+                  allein wirkungslos — nichts geht raus. Der Knopf ist der
+                  einzige Weg zurück, wenn die Aktivierung beim Verbinden an
+                  einer inzwischen behobenen Lücke gescheitert ist. */}
+              {channelInactive && (
+                <Button
+                  type="button"
+                  variant="accent"
+                  onClick={activate}
+                  disabled={activating}
+                >
+                  <Icon
+                    icon={activating ? "ph:spinner" : "ph:play-circle"}
+                    className={"size-4 " + (activating ? "animate-spin" : "")}
+                  />
+                  {t("activateChannel")}
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={disconnectAll}
+                disabled={disconnecting}
+                className="text-destructive hover:bg-destructive/10"
+              >
+                <Icon
+                  icon={disconnecting ? "ph:spinner" : "ph:plugs"}
+                  className={"size-4 " + (disconnecting ? "animate-spin" : "")}
+                />
+                {t("disconnectChannel")}
+              </Button>
+            </div>
           ) : (
             <ChannelConnectButton
               label={`${meta.label} verbinden`}
@@ -152,6 +197,23 @@ export function ChannelDetail({
             />
           ))}
       </header>
+
+      {/* Der Zustand wird BENANNT, nicht nur ein Knopf angeboten: „verbunden,
+          aber nicht aktiv" ist der Fall, in dem alles eingerichtet aussieht und
+          trotzdem nichts an das Portal geht. Fehlen Channex noch Angaben,
+          stehen sie hier — sonst sucht der Betrieb den Grund nirgends. */}
+      {channelInactive && (
+        <div className="flex flex-col gap-1 rounded-(--radius) border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+          <span className="font-medium text-amber-800 dark:text-amber-300">
+            {t("channelInactiveTitle", { portal: meta.label })}
+          </span>
+          <span className="text-amber-800/90 dark:text-amber-300/90">
+            {detail?.readiness_offen
+              ? t("channelInactiveMissing", { fields: detail.readiness_offen })
+              : t("channelInactiveReady")}
+          </span>
+        </div>
+      )}
 
       {!configured ? (
         <p className="rounded-(--radius) border border-border bg-muted/40 p-3 text-sm text-muted-foreground">

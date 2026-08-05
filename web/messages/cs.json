@@ -5003,8 +5003,19 @@
           "pets_allowed": "Haustiere erlaubt",
           "pets_max": "Anzahl Haustiere",
           "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte"
-        }
+          "max_nights": "Maximale Nächte",
+          "address": "Adresa",
+          "postal_code": "PSČ",
+          "city": "Město",
+          "lat": "Souřadnice",
+          "lng": "Souřadnice",
+          "amenities": "Vybavení",
+          "description": "Popis",
+          "max_guests": "Počet hostů",
+          "street": "Ulice",
+          "house_number": "Číslo domu"
+        },
+        "photosTaken": "Importováno {count} fotografií z Airbnb"
       }
     },
     "channelDetail": {
@@ -5042,6 +5053,10 @@
       "adjustmentCancel": "Zrušit",
       "adjustmentHint": "Upravit cenovou úpravu tohoto portálu",
       "notReleased": "neuvolněno pro portály"
+    },
+    "switcher": {
+      "searchPlaceholder": "Hledat objekt …",
+      "noMatch": "Objekt nenalezen."
     }
   },
   "calendar": {
@@ -5502,7 +5517,13 @@
       "sendUserTaxes": "Odesílat vlastní daně",
       "blockedNote": "Dokud je to vypnuté, na kanál se neposílají žádné vlastní daně."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}"
+    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "activateChannel": "Aktivovat kanál",
+    "activateDone": "{portal} je nyní aktivní.",
+    "activateFailed": "Kanál nelze aktivovat.",
+    "channelInactiveTitle": "{portal} je připojen, ale není aktivní",
+    "channelInactiveMissing": "Do portálu se nic neposílá. Stále chybí: {fields}",
+    "channelInactiveReady": "Do portálu se nic neposílá. Všechny údaje jsou úplné – aktivujte nyní."
   },
   "calendarSync": {
     "title": "Import/export kalendáře",
