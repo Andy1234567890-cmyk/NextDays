@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Lemmikit sallittu",
           "rauchenErlaubt": "Tupakointi sallittu",
           "feiernErlaubt": "Juhlat sallittu",
-          "haustiereMax": "Lemmikkejä enintään"
+          "haustiereMax": "Lemmikkejä enintään",
+          "titel": "Otsikko"
         },
         "photosTaken": "{count} kuvaa tuotu Airbnb:stä"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Kanavaa ei voitu aktivoida.",
     "channelInactiveTitle": "{portal} on yhdistetty mutta ei aktiivinen",
     "channelInactiveMissing": "Portaaliin ei lähetetä mitään. Puuttuu vielä: {fields}",
-    "channelInactiveReady": "Portaaliin ei lähetetä mitään. Kaikki tiedot ovat valmiit – aktivoi nyt."
+    "channelInactiveReady": "Portaaliin ei lähetetä mitään. Kaikki tiedot ovat valmiit – aktivoi nyt.",
+    "disconnect": "Katkaise yhteys",
+    "disconnectRowConfirm": "Katkaistaanko ”{property}” yhteys tähän portaaliin? Myynti portaalin kautta pysähtyy heti ja ilmoitus on liitettävä uudelleen."
   },
   "calendarSync": {
     "title": "Tuo/vie kalenteri",

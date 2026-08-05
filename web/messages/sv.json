@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Husdjur tillåtna",
           "rauchenErlaubt": "Rökning tillåten",
           "feiernErlaubt": "Fester tillåtna",
-          "haustiereMax": "Max antal husdjur"
+          "haustiereMax": "Max antal husdjur",
+          "titel": "Titel"
         },
         "photosTaken": "{count} bilder hämtade från Airbnb"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Kanalen kunde inte aktiveras.",
     "channelInactiveTitle": "{portal} är ansluten men inte aktiv",
     "channelInactiveMissing": "Inget skickas till portalen. Saknas fortfarande: {fields}",
-    "channelInactiveReady": "Inget skickas till portalen. Alla uppgifter är kompletta – aktivera nu."
+    "channelInactiveReady": "Inget skickas till portalen. Alla uppgifter är kompletta – aktivera nu.",
+    "disconnect": "Koppla från",
+    "disconnectRowConfirm": "Vill du koppla från ”{property}” från den här portalen? Försäljningen via portalen stoppas omedelbart och annonsen måste kopplas på nytt."
   },
   "calendarSync": {
     "title": "Importera/exportera kalender",

@@ -24,6 +24,7 @@ import {
   activateChannel,
   disconnectChannel,
   runChannelAction,
+  disconnectPortalConnection,
   setConnectionActive,
   syncChannexBookings,
   triggerFullSync,
@@ -419,6 +420,35 @@ function MappingRow({
     });
   }
 
+  // Trennen ist NICHT das Gegenstück zu „Pausieren": es löst die Zuordnung
+  // dieser Anzeige zu diesem Objekt. Gebraucht, wenn falsch verbunden wurde.
+  // Rückfrage, weil danach neu zugeordnet werden muss — und weil der Verkauf
+  // über dieses Portal sofort stoppt.
+  function trennen() {
+    // Eigener Key, NICHT `disconnectConfirm`: das gehört zur Komplett-Trennung
+    // des Portals („alle verbundenen Objekte") und erwartet `portal`. Hier geht
+    // es um genau EIN Objekt — denselben Text zu benutzen hieße, dem Nutzer den
+    // falschen Umfang zu nennen.
+    if (
+      !window.confirm(
+        t("disconnectRowConfirm", {
+          // Ohne Titel die Kennung nennen — dieselbe, die in der Zeile steht.
+          // Ein leerer Name in der Rückfrage („Verbindung von „“ trennen?")
+          // sagt dem Nutzer nicht, was er gerade trennt.
+          property: row.property_title || row.property_id.slice(0, 8),
+        }),
+      )
+    )
+      return;
+    startTransition(async () => {
+      const res = await disconnectPortalConnection(row.property_id, portalCode);
+      if (res.ok) {
+        setActive(false);
+        onConnected();
+      }
+    });
+  }
+
   return (
     <tr className="border-b border-border last:border-0">
       <td className="p-3">
@@ -437,8 +467,19 @@ function MappingRow({
               <Icon icon="ph:house" className="size-5" />
             </span>
           )}
-          <span className="flex flex-col">
-            <span className="font-medium">{row.property_title}</span>
+          <span className="flex flex-col items-start">
+            {/* Nur der NAME ist der Link, nicht die ganze Zeile: rechts stehen
+                Voll-Abgleich/Pausieren/Bearbeiten/Trennen, und ein Klickziel
+                über der Zeile würde jeden Fehlklick daneben zur Navigation
+                machen — beim „Trennen" der teuerste mögliche Fehlklick.
+                Dasselbe Ziel wie in der Objektliste und im Kalender
+                (`/objekte/{id}`), damit alle drei Listen gleich funktionieren. */}
+            <Link
+              href={`/objekte/${row.property_id}`}
+              className="font-medium hover:underline"
+            >
+              {row.property_title}
+            </Link>
             <span className="font-mono text-xs text-muted-foreground">
               {t("idPrefix")} {row.property_id.slice(0, 8)}
             </span>
@@ -515,6 +556,16 @@ function MappingRow({
               >
                 {t("edit")}
               </Link>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={trennen}
+                disabled={pending}
+                className="text-destructive hover:text-destructive"
+              >
+                {t("disconnect")}
+              </Button>
             </>
           ) : (
             // Nicht verbunden: Assistent für GENAU dieses Objekt + Portal öffnen.

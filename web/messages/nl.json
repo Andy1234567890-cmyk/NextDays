@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Huisdieren toegestaan",
           "rauchenErlaubt": "Roken toegestaan",
           "feiernErlaubt": "Feesten toegestaan",
-          "haustiereMax": "Max. huisdieren"
+          "haustiereMax": "Max. huisdieren",
+          "titel": "Titel"
         },
         "photosTaken": "{count} foto's uit Airbnb overgenomen"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Het kanaal kon niet worden geactiveerd.",
     "channelInactiveTitle": "{portal} is verbonden maar niet actief",
     "channelInactiveMissing": "Er wordt niets naar het portaal gestuurd. Nog ontbrekend: {fields}",
-    "channelInactiveReady": "Er wordt niets naar het portaal gestuurd. Alle gegevens zijn compleet – activeer nu."
+    "channelInactiveReady": "Er wordt niets naar het portaal gestuurd. Alle gegevens zijn compleet – activeer nu.",
+    "disconnect": "Verbinding verbreken",
+    "disconnectRowConfirm": "Verbinding van „{property}” met dit portaal echt verbreken? De verkoop via dit portaal stopt direct en de advertentie moet daarna opnieuw worden gekoppeld."
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",

@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Domáce zvieratá povolené",
           "rauchenErlaubt": "Fajčenie povolené",
           "feiernErlaubt": "Oslavy povolené",
-          "haustiereMax": "Max. zvierat"
+          "haustiereMax": "Max. zvierat",
+          "titel": "Názov"
         },
         "photosTaken": "Importovaných {count} fotografií z Airbnb"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Kanál sa nepodarilo aktivovať.",
     "channelInactiveTitle": "{portal} je pripojený, ale nie je aktívny",
     "channelInactiveMissing": "Do portálu sa nič neposiela. Stále chýba: {fields}",
-    "channelInactiveReady": "Do portálu sa nič neposiela. Všetky údaje sú úplné – aktivujte teraz."
+    "channelInactiveReady": "Do portálu sa nič neposiela. Všetky údaje sú úplné – aktivujte teraz.",
+    "disconnect": "Odpojiť",
+    "disconnectRowConfirm": "Naozaj odpojiť „{property}“ od tohto portálu? Predaj cez tento portál sa okamžite zastaví a inzerát bude treba znova priradiť."
   },
   "calendarSync": {
     "title": "Import/export kalendára",

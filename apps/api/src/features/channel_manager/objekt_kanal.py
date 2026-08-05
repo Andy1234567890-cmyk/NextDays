@@ -655,3 +655,225 @@ class ObjektKanalMixin:
             }
             for p in plans
         ]
+
+    def portal_verbindung_trennen(
+        self, ctx: AuthContext, *, property_id: str, portal_code: str
+    ) -> dict[str, Any]:
+        """Ein Objekt von EINEM Portal trennen — die falsche Zuordnung lösen.
+
+        Abgrenzung zu den beiden bestehenden Wegen:
+          * `set_connection_active(False)` PAUSIERT nur (Kanal bleibt, Zuordnung
+            bleibt) — damit lässt sich eine falsche Zuordnung nicht korrigieren.
+          * `disconnect_property` trennt das Objekt von CHANNEX komplett, also
+            von allen Portalen.
+        Gebraucht wird der Fall dazwischen: Der Betrieb hat eine Airbnb-Anzeige
+        dem falschen Objekt zugeordnet und muss genau diese Zuordnung lösen,
+        ohne die anderen Portale anzufassen.
+
+        NICHT den Kanal abschalten. Live gemessen (05.08.2026): bei Airbnb
+        trägt EIN Channex-Kanal alle Objekte des Kontos — ein Kanal, 18 Objekte,
+        17 Zuordnungen. `deactivate_channel` hätte also 17 fremde Objekte
+        mitgetrennt. Channex verweigert es ohnehin, solange Zuordnungen
+        bestehen: 422 `{"channel": ["remove mappings before"]}`.
+
+        LÖSCHKETTE, Reihenfolge ist der Punkt (Wurzel 1 — Gegenzustand):
+          1. Die Zuordnung(en) DIESES Objekts am Kanal löschen
+             (`DELETE channels/{id}/mappings/{mapping_id}`). Das ist der
+             Verkaufsstopp beim Portal für genau dieses Objekt — der Kanal und
+             alle anderen Objekte bleiben unberührt.
+          2. Listing-Zuordnung bei Channex lösen (`disconnect_listing`). Bleibt
+             sie stehen, ist der Rate-Plan-Titel weiter belegt und ein späteres
+             Verbinden scheitert an „Duplication in Rate Plan title is not
+             allowed" — genau so live passiert.
+          3. Kanal-Plan dieses Portals (`portal_scope`) samt Aufschlag entfernen:
+             er beschreibt einen Preis für ein Portal, an das nichts mehr geht.
+          4. Unsere Verbindungszeile auf inaktiv und OHNE Kanal-/Listing-Bezug.
+             Die Hotel-ID bleibt stehen, damit ein Neu-Verbinden sie vorbefüllt.
+
+        Fail-closed: Scheitert Schritt 1, bricht die Trennung ab — ein Portal,
+        das weiterverkauft, während wir uns für getrennt halten, ist der
+        gefährlichste Zustand. Schritt 2 ist best effort mit Protokoll: dort ist
+        der Verkauf schon gestoppt.
+        """
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()  # type: ignore[attr-defined]
+        load_scoped(
+            db, "properties", property_id, tenant_id, columns="id",
+            not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
+        )
+        row = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id, ota_hotel_id, ota_room_type_code")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal_code)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not row:
+            raise ChannelManagerError(
+                "Kanal-Verbindung nicht gefunden.", status_code=404
+            )
+        channel_id = row[0].get("channex_channel_id")
+
+        if channel_id:
+            self._kanal_zuordnungen_loesen(db, tenant_id, property_id, channel_id)
+
+            listing_id = self._airbnb_listing_id(db, property_id)
+            if listing_id:
+                try:
+                    self._channex.disconnect_listing(  # type: ignore[attr-defined]
+                        channel_id, listing_id
+                    )
+                except ChannexError as exc:
+                    log.warning(
+                        "portal_trennen_listing_blieb",
+                        property_id=property_id, listing_id=listing_id,
+                        error=exc.message,
+                    )
+
+        self._kanalplan_entfernen(db, property_id, portal_code)
+
+        db.table("channex_channel_connection").update(
+            {
+                "is_active": False,
+                "channex_channel_id": None,
+                "ota_room_type_code": None,
+                "last_error": None,
+            }
+        ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
+            "ota_portal_code", portal_code
+        ).execute()
+        log.info(
+            "portal_verbindung_getrennt",
+            tenant_id=tenant_id, property_id=property_id, portal_code=portal_code,
+        )
+        return {
+            "portal_code": portal_code,
+            "portal": self._portal_label(portal_code),
+            "hotel_id": row[0].get("ota_hotel_id"),
+            "channel_id": None,
+            "is_active": False,
+            "last_error": None,
+        }
+
+    def _kanal_zuordnungen_loesen(
+        self, db: Client, tenant_id: str, property_id: str, channel_id: str
+    ) -> None:
+        """Alle Kanal-Zuordnungen DIESES Objekts löschen, fremde nicht anfassen.
+
+        Der Kanal ist bei Airbnb kontoweit — welche seiner Zuordnungen zu
+        diesem Objekt gehören, sagt allein die Kette
+        `channex_property_map` → `channex_room_type_map` →
+        `channex_rate_plan_map.channex_rate_plan_id`, abgeglichen gegen
+        `attributes.rate_plans[].rate_plan_id` am Kanal.
+
+        Wurzel 5 — fail-closed: Lässt sich der Ist-Stand nicht lesen oder eine
+        Zuordnung nicht löschen, bricht die Trennung ab. Wer hier weitermacht,
+        setzt unsere Zeile auf „getrennt", während das Portal weiterverkauft.
+        """
+        eigene = self._channex_rate_plan_ids(db, tenant_id, property_id)
+        if not eigene:
+            return
+        try:
+            kanal = self._channex.get_channel(channel_id)  # type: ignore[attr-defined]
+        except ChannexError as exc:
+            raise ChannelManagerError(
+                "Trennung abgebrochen: Der Stand beim Portal ließ sich nicht "
+                f"lesen ({exc.message}). Bitte erneut versuchen — solange "
+                "bleibt der Verkauf dort aktiv.",
+                status_code=502,
+            ) from exc
+        attrs = ((kanal or {}).get("data") or {}).get("attributes") or {}
+        for eintrag in attrs.get("rate_plans") or []:
+            if str(eintrag.get("rate_plan_id") or "") not in eigene:
+                continue
+            mapping_id = str(eintrag.get("id") or "")
+            if not mapping_id:
+                continue
+            try:
+                self._channex.delete_channel_mapping(  # type: ignore[attr-defined]
+                    channel_id, mapping_id
+                )
+            except ChannexError as exc:
+                # 404 = schon weg: Zielzustand erreicht, kein Fehler (Wurzel 2,
+                # der Knopf ist wiederholbar).
+                if exc.channex_status == 404:
+                    continue
+                raise ChannelManagerError(
+                    "Trennung abgebrochen: Die Zuordnung beim Portal ließ sich "
+                    f"nicht lösen ({exc.message}). Bitte erneut versuchen — "
+                    "solange bleibt der Verkauf dort aktiv.",
+                    status_code=502,
+                ) from exc
+            log.info(
+                "portal_zuordnung_geloest",
+                property_id=property_id, channel_id=channel_id,
+                mapping_id=mapping_id,
+            )
+
+    @staticmethod
+    def _channex_rate_plan_ids(
+        db: Client, tenant_id: str, property_id: str
+    ) -> set[str]:
+        """Channex-Rate-Plan-IDs des Objekts (alle, nicht nur die primäre)."""
+        pm = (
+            db.table("channex_property_map")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if not pm:
+            return set()
+        rts = (
+            db.table("channex_room_type_map")
+            .select("id")
+            .eq("property_map_id", pm[0]["id"])
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        rt_ids = [r["id"] for r in rts]
+        if not rt_ids:
+            return set()
+        rps = (
+            db.table("channex_rate_plan_map")
+            .select("channex_rate_plan_id")
+            .in_("room_type_map_id", rt_ids)
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        return {
+            str(r["channex_rate_plan_id"])
+            for r in rps
+            if r.get("channex_rate_plan_id")
+        }
+
+    @staticmethod
+    def _airbnb_listing_id(db: Client, property_id: str) -> str | None:
+        """Die Airbnb-Listing-ID des Objekts, falls es eine Airbnb-Anzeige ist."""
+        rows = (
+            db.table("properties")
+            .select("airbnb_listing_id")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        kennung = rows[0].get("airbnb_listing_id") if rows else None
+        return str(kennung) if kennung else None
+
+    @staticmethod
+    def _kanalplan_entfernen(
+        db: Client, property_id: str, portal_code: str
+    ) -> None:
+        """Den Kanal-Plan dieses Portals löschen (Gegenzustand zum Aufschlag).
+
+        Bliebe er stehen, gäbe es einen Preisplan mit Aufschlag für ein Portal,
+        an das nichts mehr geht — und beim Neu-Verbinden träfe man auf einen
+        alten Aufschlag, den niemand mehr gesetzt hat.
+        """
+        db.table("rate_plans").delete().eq("property_id", property_id).eq(
+            "portal_scope", portal_code
+        ).execute()

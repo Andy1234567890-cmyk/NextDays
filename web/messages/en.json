@@ -5051,7 +5051,8 @@
           "haustiereErlaubt": "Pets allowed",
           "rauchenErlaubt": "Smoking allowed",
           "feiernErlaubt": "Events allowed",
-          "haustiereMax": "Maximum pets"
+          "haustiereMax": "Maximum pets",
+          "titel": "Title"
         },
         "photosTaken": "{count} photos imported from Airbnb"
       }
@@ -5561,7 +5562,9 @@
     "activateFailed": "The channel could not be activated.",
     "channelInactiveTitle": "{portal} is connected but not active",
     "channelInactiveMissing": "Nothing is sent to the portal. Still missing: {fields}",
-    "channelInactiveReady": "Nothing is sent to the portal. All details are complete – activate now."
+    "channelInactiveReady": "Nothing is sent to the portal. All details are complete – activate now.",
+    "disconnect": "Disconnect",
+    "disconnectRowConfirm": "Really disconnect “{property}” from this portal? Selling via this portal stops immediately and the listing has to be mapped again afterwards."
   },
   "calendarSync": {
     "title": "Import/export calendar",

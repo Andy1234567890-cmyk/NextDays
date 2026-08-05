@@ -19,7 +19,7 @@ from typing import Any
 
 
 class AirbnbActionsMixin:
-    """Lesende Airbnb-Aktionen am Kanal. Kein Schreibpfad."""
+    """Airbnb-Aktionen am Kanal — lesend, plus die drei Raum-Schreibwege."""
 
     def airbnb_api_proxy_get(
         self, channel_id: str, endpoint: str, params: dict[str, Any]
@@ -77,6 +77,84 @@ class AirbnbActionsMixin:
         """
         return self.airbnb_api_proxy_get(
             channel_id, "listing_rooms", {"listing_id": listing_id}
+        )
+
+    def airbnb_api_proxy_write(
+        self,
+        channel_id: str,
+        endpoint: str,
+        method: str,
+        *,
+        params: dict[str, Any] | None = None,
+        payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Einen SCHREIBENDEN Airbnb-Aufruf durch Channex durchreichen.
+
+        Bewusst getrennt von `airbnb_api_proxy_get`: ein Schreibzugriff auf ein
+        Live-Listing darf nicht das Ergebnis eines vertippten Parameters sein.
+
+        Form aus Airbnbs „Airbnb Connection API" (Abschnitt „Execute API Proxy
+        request", `docs/OTA/Airbnb/Airbnb Connection API.pdf`, S. 10) — dort
+        ausdrücklich `method: PUT, POST, GET, DELETE`, `endpoint: Airbnb method
+        URL`, `payload: request JSON body`.
+
+        Der Proxy ist ein ECHTER Durchgriff, nicht die 200-Attrappe des
+        `execute`-Namensraums: lesend gemessen liefert `listing_rooms` die Räume,
+        ein erfundener Endpunkt antwortet 422 `route_not_found` (05.08.2026).
+
+        Was er zurückgibt, ist Airbnbs eigene Antwort. Ein Erfolg wird NIE aus
+        dem Status geschlossen (Wurzel 5) — der Aufrufer liest den Stand zurück.
+        """
+        return self.post(
+            f"channels/{channel_id}/action/api_proxy",
+            json={
+                "request": {
+                    "endpoint": endpoint,
+                    "method": method.lower(),
+                    "params": params or {},
+                    "payload": payload or {},
+                }
+            },
+        )
+
+    def create_airbnb_listing_room(
+        self, channel_id: str, listing_id: str, room_type: str, *, privat: bool
+    ) -> dict[str, Any]:
+        """Einen Raum bei Airbnb anlegen (`POST listing_rooms`).
+
+        Die Feldnamen sind die der Leseantwort — `listing_id`, `room_type`,
+        `is_private` —, weil Airbnb dieselbe Ressource beschreibt. Betten gehen
+        NICHT mit: sie hängen bei uns am Objekt (`type_attributes.beds`), nicht
+        am Zimmer (0251), und ein erfundenes Bett wäre eine Behauptung über die
+        Anzeige (Wurzel 4).
+        """
+        return self.airbnb_api_proxy_write(
+            channel_id,
+            "listing_rooms",
+            "post",
+            payload={
+                "listing_room": {
+                    "listing_id": listing_id,
+                    "room_type": room_type,
+                    "is_private": privat,
+                }
+            },
+        )
+
+    def delete_airbnb_listing_room(
+        self, channel_id: str, listing_id: str, room_id: str
+    ) -> dict[str, Any]:
+        """Einen Raum bei Airbnb löschen (`DELETE listing_rooms/{room_id}`).
+
+        Die `listing_id` geht als Parameter mit: Airbnbs Raum-Ressourcen sind
+        listing-gebunden, und ohne sie träfe ein Löschen im schlimmsten Fall
+        einen Raum eines FREMDEN Listings desselben Kontos.
+        """
+        return self.airbnb_api_proxy_write(
+            channel_id,
+            f"listing_rooms/{room_id}",
+            "delete",
+            params={"listing_id": listing_id},
         )
 
     def get_airbnb_listings(self, channel_id: str) -> dict[str, Any]:

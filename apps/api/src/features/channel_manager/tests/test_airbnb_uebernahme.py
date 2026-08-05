@@ -303,3 +303,63 @@ def test_geruest_titel_wird_ersetzt() -> None:
         {"title": "Airbnb-Übernahme läuft"},
     )
     assert gefiltert["title"] == "The Fox House"
+
+
+# ---------------------------------------------------------------------------
+# Titel in der Landessprache. Live gemessen (05.08.2026): die Channex-Liste
+# trägt nur Airbnbs ENGLISCHEN Anzeigenamen, dadurch standen 10 von 18 Objekten
+# des dänischen Beta-Betriebs englisch bei uns — „The Fox House" statt
+# „Rævlingehuset". Der Gastgeber erkannte seine Häuser nicht wieder.
+class _BeschreibungsMixin(AirbnbUebernahmeMixin):
+    """Nur die eine Fremdabfrage ersetzen, der Rest ist echter Code."""
+
+    def __init__(self, namen: dict[str, str] | None) -> None:
+        self.namen = namen
+        self.abgefragt: list[str] = []
+
+    def airbnb_beschreibung_direkt(
+        self, _token: str, _listing_id: str, locale: str
+    ) -> dict | None:
+        self.abgefragt.append(locale)
+        if not self.namen or locale not in self.namen:
+            return None
+        return {"name": self.namen[locale], "locale": locale}
+
+
+def test_titel_wird_daenisch_bei_dk() -> None:
+    """DK-Objekt bekommt den dänischen Namen des Gastgebers."""
+    mixin = _BeschreibungsMixin({"da": "013 Rævlingevej · Rævlingehuset"})
+    row = {
+        "airbnb_listing_id": "1133122057704952480",
+        "title": "The Fox House",
+        "country": "DK",
+    }
+    mixin._titel_in_landessprache(row, "tok")  # noqa: SLF001 — Testziel
+    assert row["title"] == "Rævlingehuset"
+    assert mixin.abgefragt == ["da"]
+
+
+def test_titel_ohne_landessprache_bleibt() -> None:
+    """Pflegt der Gastgeber `da` nicht, bleibt der bisherige Titel — es wird
+    nichts erfunden und kein zweiter Sprachversuch geraten (Wurzel 4)."""
+    mixin = _BeschreibungsMixin({"en": "The Fox House"})
+    row = {"airbnb_listing_id": "1", "title": "The Fox House", "country": "DK"}
+    mixin._titel_in_landessprache(row, "tok")  # noqa: SLF001
+    assert row["title"] == "The Fox House"
+
+
+def test_titel_ohne_bekanntes_land_kein_fremdaufruf() -> None:
+    """Ohne bekanntes Land ist die Reihenfolge nur `en` — dann gar nicht fragen."""
+    mixin = _BeschreibungsMixin({"da": "Rævlingehuset"})
+    row = {"airbnb_listing_id": "1", "title": "The Fox House", "country": None}
+    mixin._titel_in_landessprache(row, "tok")  # noqa: SLF001
+    assert row["title"] == "The Fox House"
+    assert mixin.abgefragt == []
+
+
+def test_titel_uebernahme_uebersteht_ausfall() -> None:
+    """Antwortet Airbnb nicht, bleibt der Titel stehen — best effort, kein Abbruch."""
+    mixin = _BeschreibungsMixin(None)
+    row = {"airbnb_listing_id": "1", "title": "The Fox House", "country": "DK"}
+    mixin._titel_in_landessprache(row, "tok")  # noqa: SLF001
+    assert row["title"] == "The Fox House"

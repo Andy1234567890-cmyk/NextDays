@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Lemmikloomad lubatud",
           "rauchenErlaubt": "Suitsetamine lubatud",
           "feiernErlaubt": "Peod lubatud",
-          "haustiereMax": "Lemmikloomi kuni"
+          "haustiereMax": "Lemmikloomi kuni",
+          "titel": "Pealkiri"
         },
         "photosTaken": "{count} fotot imporditud Airbnb-st"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Kanalit ei õnnestunud aktiveerida.",
     "channelInactiveTitle": "{portal} on ühendatud, kuid pole aktiivne",
     "channelInactiveMissing": "Portaali ei saadeta midagi. Puudub veel: {fields}",
-    "channelInactiveReady": "Portaali ei saadeta midagi. Kõik andmed on täielikud – aktiveeri kohe."
+    "channelInactiveReady": "Portaali ei saadeta midagi. Kõik andmed on täielikud – aktiveeri kohe.",
+    "disconnect": "Katkesta",
+    "disconnectRowConfirm": "Kas katkestada „{property}“ ühendus selle portaaliga? Müük selle portaali kaudu peatub kohe ja kuulutus tuleb hiljem uuesti siduda."
   },
   "calendarSync": {
     "title": "Kalendri import/eksport",

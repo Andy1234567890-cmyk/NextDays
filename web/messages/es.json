@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Mascotas permitidas",
           "rauchenErlaubt": "Fumar permitido",
           "feiernErlaubt": "Fiestas permitidas",
-          "haustiereMax": "Mascotas máximo"
+          "haustiereMax": "Mascotas máximo",
+          "titel": "Título"
         },
         "photosTaken": "{count} fotos importadas de Airbnb"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "No se pudo activar el canal.",
     "channelInactiveTitle": "{portal} está conectado pero no activo",
     "channelInactiveMissing": "No se envía nada al portal. Todavía falta: {fields}",
-    "channelInactiveReady": "No se envía nada al portal. Todos los datos están completos: actívalo ahora."
+    "channelInactiveReady": "No se envía nada al portal. Todos los datos están completos: actívalo ahora.",
+    "disconnect": "Desconectar",
+    "disconnectRowConfirm": "¿Desconectar realmente «{property}» de este portal? La venta a través de este portal se detiene de inmediato y el anuncio deberá asignarse de nuevo."
   },
   "calendarSync": {
     "title": "Importar/exportar calendario",

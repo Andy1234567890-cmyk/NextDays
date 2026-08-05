@@ -15,13 +15,19 @@
 // dagegen am Objekt (properties.type_attributes.beds) — 0251 hat sie von den
 // Zimmern dorthin zurückgeholt.
 //
-// An die Portale geht von alledem nichts: Channex verwirft am Room-Type beds,
+// An CHANNEX geht von alledem nichts: es verwirft am Room-Type beds,
 // bed_configuration, bedrooms und bathrooms (live gemessen,
-// docs/CHANNEX-FELDER.md). Die Angaben bleiben lokal und auf myBestDays.
+// docs/CHANNEX-FELDER.md).
+//
+// An AIRBNB gehen die Zimmer dagegen sehr wohl — es führt sie als eigene
+// Ressource, und jede Änderung hier löst den Abgleich dorthin aus
+// (channel_manager/airbnb_zimmer_push.py). Bis das gebaut war, blieb ein hier
+// gelöschter Raum bei Airbnb online: live gemessen am Balkon von „Holiday house
+// Cornflower". Die Betten bleiben lokal und auf myBestDays.
 
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
@@ -174,6 +180,18 @@ function ZimmerEditor({
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
 
+  // Der zuletzt bekannte Stand als Ref, NICHT nur als Prop: `zimmer` ist die
+  // Momentaufnahme des Renders, in dem der Klick-Handler entstand. Wer zweimal
+  // schnell auf „−" klickt, rechnete sonst beide Male gegen dieselbe alte Liste
+  // und schickte dieselbe Zimmer-ID zweimal — live als 404 zu sehen (das
+  // Backend ist deshalb zusätzlich idempotent, Wurzel 2: zwei Schichten, weil
+  // beide Fehler unabhängig voneinander auftreten können).
+  const standRef = useRef(zimmer);
+  standRef.current = zimmer;
+  // Verhindert PARALLELE Läufe. `busy` ist Anzeige-Zustand und greift erst nach
+  // dem Re-Render — zwei Klicks im selben Tick sehen beide `busy === false`.
+  const laeuft = useRef(false);
+
   // Zähler auf einen Zielwert bringen: die Differenz wird angelegt bzw.
   // gelöscht — beim Löschen die zuletzt angelegten zuerst.
   async function anzahlSetzen(
@@ -181,9 +199,11 @@ function ZimmerEditor({
     privat: boolean,
     ziel: number,
   ): Promise<void> {
-    const vorhanden = zimmerVonTyp(zimmer, raumTyp, privat);
+    if (laeuft.current) return;
+    const vorhanden = zimmerVonTyp(standRef.current, raumTyp, privat);
     const gekappt = Math.max(0, Math.min(MAX_ANZAHL, ziel));
     if (gekappt === vorhanden.length) return;
+    laeuft.current = true;
     setBusy(true);
     setFehler(null);
     if (gekappt > vorhanden.length) {
@@ -206,6 +226,7 @@ function ZimmerEditor({
         }
       }
     }
+    laeuft.current = false;
     setBusy(false);
     // Kein manuelles Nachladen — das Realtime-Abo der Sektion pflegt die Liste.
   }

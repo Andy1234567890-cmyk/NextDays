@@ -141,10 +141,39 @@ def test_touch_heartbeat_schreibt_iso_zeitstempel(monkeypatch, tmp_path) -> None
     assert datetime.fromisoformat(hb.read_text()).tzinfo is not None
 
 
-def test_run_job_unbekannter_typ_wird_dead() -> None:
+def test_run_job_unbekannter_typ_wird_zurueckgestellt() -> None:
+    """Unbekannter Typ = dieser Worker ist ÄLTER als die API, nicht Datenmüll.
+
+    Live passiert (05.08.2026): vier `sync_airbnb_zimmer`-Jobs gingen auf 'dead',
+    weil der laufende Worker den neuen Typ nicht kannte. Die Zimmer-Änderung
+    erreichte Airbnb dauerhaft nicht, und ein Worker-Neustart heilte nichts —
+    die Jobs waren schon weggeworfen. Genau der Zustand entsteht bei jedem
+    Rolling Deploy (Wurzel 5: ein echter Auftrag darf nicht still verschwinden).
+    """
     db = _StatusDB()
     w = _worker_with(db)
     w._run_job({"id": "j1", "job_type": "gibts_nicht", "attempts": 1, "payload": {}})
+    letzte = db.updates[-1]
+    assert letzte["status"] == "queued"
+    # Kein verbrauchter Versuch: Warten ist kein Fehlschlag.
+    assert letzte["attempts"] == 0
+    assert letzte["defer_count"] == 1
+
+
+def test_run_job_unbekannter_typ_gibt_irgendwann_auf() -> None:
+    """Ein WIRKLICH unbekannter Typ (Tippfehler) belegt keinen Slot für immer.
+
+    Der `defer_count`-Deckel greift wie beim Budget-Livelock — nur eben nicht
+    beim ersten Blick, sondern nachdem ein Deploy längst durch wäre.
+    """
+    import src.worker as worker_mod
+
+    db = _StatusDB()
+    w = _worker_with(db)
+    w._run_job({
+        "id": "j1", "job_type": "gibts_nicht", "attempts": 1, "payload": {},
+        "defer_count": worker_mod._MAX_DEFERS,
+    })
     assert db.updates[-1]["status"] == "dead"
 
 

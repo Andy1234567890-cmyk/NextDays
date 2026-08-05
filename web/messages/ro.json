@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Animale permise",
           "rauchenErlaubt": "Fumat permis",
           "feiernErlaubt": "Petreceri permise",
-          "haustiereMax": "Animale maxim"
+          "haustiereMax": "Animale maxim",
+          "titel": "Titlu"
         },
         "photosTaken": "{count} fotografii importate din Airbnb"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Canalul nu a putut fi activat.",
     "channelInactiveTitle": "{portal} este conectat, dar nu este activ",
     "channelInactiveMissing": "Nu se trimite nimic către portal. Încă lipsesc: {fields}",
-    "channelInactiveReady": "Nu se trimite nimic către portal. Toate datele sunt complete – activează acum."
+    "channelInactiveReady": "Nu se trimite nimic către portal. Toate datele sunt complete – activează acum.",
+    "disconnect": "Deconectează",
+    "disconnectRowConfirm": "Deconectezi într-adevăr „{property}” de la acest portal? Vânzarea prin acest portal se oprește imediat, iar anunțul va trebui reasociat."
   },
   "calendarSync": {
     "title": "Import/export calendar",

@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Augintiniai leidžiami",
           "rauchenErlaubt": "Rūkyti leidžiama",
           "feiernErlaubt": "Vakarėliai leidžiami",
-          "haustiereMax": "Daugiausia augintinių"
+          "haustiereMax": "Daugiausia augintinių",
+          "titel": "Pavadinimas"
         },
         "photosTaken": "Importuota {count} nuotraukų iš Airbnb"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Kanalo nepavyko aktyvinti.",
     "channelInactiveTitle": "{portal} prijungtas, bet neaktyvus",
     "channelInactiveMissing": "Į portalą nieko nesiunčiama. Vis dar trūksta: {fields}",
-    "channelInactiveReady": "Į portalą nieko nesiunčiama. Visi duomenys pilni – aktyvinkite dabar."
+    "channelInactiveReady": "Į portalą nieko nesiunčiama. Visi duomenys pilni – aktyvinkite dabar.",
+    "disconnect": "Atjungti",
+    "disconnectRowConfirm": "Tikrai atjungti „{property}“ nuo šio portalo? Pardavimas per šį portalą nedelsiant sustos, o skelbimą teks priskirti iš naujo."
   },
   "calendarSync": {
     "title": "Kalendoriaus importas / eksportas",

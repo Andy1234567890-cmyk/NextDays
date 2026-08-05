@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Annimali permessi",
           "rauchenErlaubt": "Tipjip permess",
           "feiernErlaubt": "Parties permessi",
-          "haustiereMax": "Massimu annimali"
+          "haustiereMax": "Massimu annimali",
+          "titel": "Titlu"
         },
         "photosTaken": "{count} ritratti importati minn Airbnb"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Il-kanal ma setax jiġi attivat.",
     "channelInactiveTitle": "{portal} huwa konness imma mhux attiv",
     "channelInactiveMissing": "Xejn ma jintbagħat lill-portal. Għadu nieqes: {fields}",
-    "channelInactiveReady": "Xejn ma jintbagħat lill-portal. Id-dettalji kollha huma kompluti – attiva issa."
+    "channelInactiveReady": "Xejn ma jintbagħat lill-portal. Id-dettalji kollha huma kompluti – attiva issa.",
+    "disconnect": "Aqta' l-konnessjoni",
+    "disconnectRowConfirm": "Tassew taqta' l-konnessjoni ta' “{property}” minn dan il-portal? Il-bejgħ permezz ta' dan il-portal jieqaf minnufih u l-lista trid terġa' tiġi assoċjata."
   },
   "calendarSync": {
     "title": "Importazzjoni/esportazzjoni tal-kalendarju",

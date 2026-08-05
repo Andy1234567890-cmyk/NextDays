@@ -22,6 +22,7 @@ from .airbnb_diagnose import AirbnbDiagnoseMixin
 from .airbnb_direkt import AirbnbDirektMixin
 from .airbnb_objekt_abruf import AirbnbObjektAbrufMixin
 from .airbnb_uebernahme import AirbnbUebernahmeMixin
+from .airbnb_zimmer_push import AirbnbZimmerPushMixin
 from .ari_push import AriPushMixin
 from .bookings_sync import BookingsSyncMixin
 from .channels import ChannelsMixin
@@ -83,6 +84,10 @@ class ChannelManagerService(
     # Nach AirbnbDirektMixin: die Diagnose nutzt dessen Lese-Methoden, um
     # Airbnbs Stand gegen unsere DB zu stellen. Sie schreibt nichts.
     AirbnbDiagnoseMixin,
+    # Nach AirbnbObjektAbrufMixin: nutzt dessen `_airbnb_listing_id` und
+    # `_airbnb_kanal_des_betriebs`, um die Zimmer unserer Maske zurück an die
+    # Airbnb-Anzeige zu geben (Gegenrichtung zum Import, Wurzel 1).
+    AirbnbZimmerPushMixin,
     ObjektKanalMixin,
     BookingsSyncMixin,
     LiveFeedSyncMixin,

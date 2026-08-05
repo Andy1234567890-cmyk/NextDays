@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Kæledyr tilladt",
           "rauchenErlaubt": "Rygning tilladt",
           "feiernErlaubt": "Fester tilladt",
-          "haustiereMax": "Maks. kæledyr"
+          "haustiereMax": "Maks. kæledyr",
+          "titel": "Titel"
         },
         "photosTaken": "{count} billeder hentet fra Airbnb"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Kanalen kunne ikke aktiveres.",
     "channelInactiveTitle": "{portal} er forbundet, men ikke aktiv",
     "channelInactiveMissing": "Der sendes intet til portalen. Mangler stadig: {fields}",
-    "channelInactiveReady": "Der sendes intet til portalen. Alle oplysninger er komplette – aktiver nu."
+    "channelInactiveReady": "Der sendes intet til portalen. Alle oplysninger er komplette – aktiver nu.",
+    "disconnect": "Afbryd",
+    "disconnectRowConfirm": "Vil du afbryde „{property}“ fra denne portal? Salget via portalen stopper med det samme, og annoncen skal tilknyttes igen bagefter."
   },
   "calendarSync": {
     "title": "Importér/eksportér kalender",

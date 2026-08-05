@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Kućni ljubimci dopušteni",
           "rauchenErlaubt": "Pušenje dopušteno",
           "feiernErlaubt": "Zabave dopuštene",
-          "haustiereMax": "Najviše ljubimaca"
+          "haustiereMax": "Najviše ljubimaca",
+          "titel": "Naslov"
         },
         "photosTaken": "Uvezeno {count} fotografija s Airbnb-a"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Kanal nije bilo moguće aktivirati.",
     "channelInactiveTitle": "{portal} je povezan, ali nije aktivan",
     "channelInactiveMissing": "Ništa se ne šalje na portal. Još nedostaje: {fields}",
-    "channelInactiveReady": "Ništa se ne šalje na portal. Svi su podaci potpuni – aktivirajte sada."
+    "channelInactiveReady": "Ništa se ne šalje na portal. Svi su podaci potpuni – aktivirajte sada.",
+    "disconnect": "Odspoji",
+    "disconnectRowConfirm": "Zaista odspojiti „{property}“ od ovog portala? Prodaja preko ovog portala odmah se zaustavlja, a oglas će se morati ponovno povezati."
   },
   "calendarSync": {
     "title": "Uvoz/izvoz kalendara",

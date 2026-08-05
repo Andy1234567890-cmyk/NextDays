@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Háziállatok engedélyezve",
           "rauchenErlaubt": "Dohányzás engedélyezve",
           "feiernErlaubt": "Rendezvények engedélyezve",
-          "haustiereMax": "Háziállatok maximum"
+          "haustiereMax": "Háziállatok maximum",
+          "titel": "Cím"
         },
         "photosTaken": "{count} fotó importálva az Airbnb-ről"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "A csatornát nem sikerült aktiválni.",
     "channelInactiveTitle": "A(z) {portal} kapcsolódik, de nem aktív",
     "channelInactiveMissing": "Semmi sem kerül a portálra. Még hiányzik: {fields}",
-    "channelInactiveReady": "Semmi sem kerül a portálra. Minden adat hiánytalan – aktiválja most."
+    "channelInactiveReady": "Semmi sem kerül a portálra. Minden adat hiánytalan – aktiválja most.",
+    "disconnect": "Leválasztás",
+    "disconnectRowConfirm": "Valóban leválasztja a(z) „{property}” hirdetést erről a portálról? Az ezen a portálon való értékesítés azonnal leáll, és a hirdetést újra hozzá kell rendelni."
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",

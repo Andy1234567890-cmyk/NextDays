@@ -119,6 +119,7 @@ from .common import (
     _timezone_speicherbar,
     log,
 )
+from .content_builder import locale_order_for_country
 
 # Titel des Gerüst-Objekts. Bewusst erkennbar und nicht geraten: solange die
 # echten Airbnb-Daten fehlen, darf hier kein plausibler Fantasiename stehen
@@ -323,8 +324,11 @@ class AirbnbUebernahmeMixin:
                 tenant_id=tenant_id, gesamt=len(listings), grenze=_MAX_LISTINGS,
             )
         angelegt = aktualisiert = 0
+        zugang = self._airbnb_token(db, tenant_id)
         for listing in listings[:_MAX_LISTINGS]:
             row = self._listing_zu_objekt(listing)
+            if row is not None and zugang:
+                self._titel_in_landessprache(row, zugang[0])
             if row is None:
                 # WELCHES Listing übersprungen wurde und warum — sonst ist ein
                 # fehlender Titel/eine fehlende ID nicht von einem Fehler in
@@ -646,6 +650,49 @@ class AirbnbUebernahmeMixin:
         if zone:
             row["timezone"] = zone
         return row
+
+    def _titel_in_landessprache(self, row: dict[str, Any], token: str) -> None:
+        """Den Titel durch Airbnbs Namen in der LANDESSPRACHE ersetzen.
+
+        Die Channex-Liste trägt nur Airbnbs englischen Anzeigenamen. Live
+        gemessen am Beta-Betrieb (DK, 05.08.2026): 10 von 18 Objekten standen
+        dadurch englisch bei uns, obwohl der Gastgeber sie dänisch benannt hat
+        („Holiday house Fox's Den" statt „Feriehus Rævehulen", „The Fox House"
+        statt „Rævlingehuset"). Der Gastgeber erkannte seine Häuser nicht wieder.
+
+        Airbnbs eigene API hat den Namen je Sprache
+        (`v2/listing_descriptions/{id}/{locale}` → `name`). Die Sprache kommt aus
+        dem Land des Listings über `locale_order_for_country`, nicht geraten
+        (Wurzel 4); ohne bekanntes Land bleibt der englische Titel stehen.
+
+        Best effort: der Aufruf ist ein zusätzlicher Fremdzugriff. Antwortet er
+        nicht, bleibt der bisherige Titel — die Übernahme darf daran nicht
+        scheitern. Der interne Name (`_internal_name`) bleibt unberührt: er kommt
+        aus dem Anzeigenamen und ist sprachneutral (Hausnummer/Code).
+        """
+        listing_id = row.get("airbnb_listing_id")
+        sprachen = locale_order_for_country(row.get("country"))
+        # Nur `en` in der Reihenfolge heißt: kein bekanntes Land → nichts zu tun.
+        if not listing_id or sprachen == ["en"]:
+            return
+        for sprache in sprachen:
+            if sprache == "en":
+                break
+            beschreibung = self.airbnb_beschreibung_direkt(
+                token, str(listing_id), sprache
+            )
+            name = (beschreibung or {}).get("name")
+            if not isinstance(name, str) or not name.strip():
+                continue
+            gast_titel, _intern = ali.titel_trennen(name.strip())
+            if gast_titel and gast_titel != row.get("title"):
+                log.info(
+                    "airbnb_titel_landessprache",
+                    airbnb_listing_id=str(listing_id), sprache=sprache,
+                    vorher=row.get("title"), nachher=gast_titel,
+                )
+                row["title"] = gast_titel
+            return
 
     @staticmethod
     def _ohne_gepflegte_felder(

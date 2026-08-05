@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Protocol
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.jobs.queue import enqueue
 
 from .errors import PropertyError
 from .schemas import (
@@ -145,21 +146,38 @@ class RoomsMixin:
         return PropertyRoom(**room_row(res.data[0]))
 
     def delete_room(self, ctx: AuthContext, property_id: str, room_id: str) -> None:
-        """Zimmer löschen."""
+        """Zimmer löschen — IDEMPOTENT (Wurzel 2).
+
+        Ist die Zeile schon weg, ist das der ZIELZUSTAND und kein Fehler. Vorher
+        antwortete der Endpunkt 404, und das war live zu sehen: der Zähler im
+        Zimmer-Editor arbeitet auf einer Momentaufnahme der Liste. Wer zweimal
+        auf „−" klickt (oder klickt, bevor das Realtime-Ereignis durch ist),
+        schickt dieselbe Zimmer-ID zweimal — der zweite Aufruf lief in einen
+        404, und die Oberfläche zeigte „nicht gefunden", obwohl genau das
+        Gewünschte passiert war.
+
+        Der Scope bleibt streng: `property_id` MUSS passen (Wurzel 9, gleicher
+        Scope wie die Liste). Nur die Unterscheidung „war schon weg" ist kein
+        Fehlerfall mehr — eine fremde ID trifft ohnehin keine Zeile.
+
+        `delete()` liefert die gelöschten Zeilen zurück; daran hängt, ob der
+        Portal-Nachzug nötig ist. Ohne Löschung ist nichts zu senden.
+        """
         tenant_id = self._require_tenant(ctx)
         self.get(ctx, property_id)
-        vorhanden = (
+        geloescht = (
             self._db.table("property_rooms")
-            .select("id")
+            .delete()
             .eq("id", room_id)
             .eq("property_id", property_id)
             .execute()
         ).data
-        if not vorhanden:
-            raise PropertyError("Zimmer nicht gefunden.", status_code=404)
-        self._db.table("property_rooms").delete().eq("id", room_id).eq(
-            "property_id", property_id
-        ).execute()
+        if not geloescht:
+            log.info(
+                "property_room_delete_bereits_weg",
+                tenant_id=tenant_id, property_id=property_id, room_id=room_id,
+            )
+            return
         self._content_sync_anstossen(tenant_id, property_id)
         log.info("property_room_deleted", tenant_id=tenant_id, property_id=property_id)
 
@@ -188,10 +206,23 @@ class RoomsMixin:
         return self.list_rooms(ctx, property_id)
 
     def _content_sync_anstossen(self, tenant_id: str, property_id: str) -> None:
-        """Zimmer-Aenderung an die Portale nachziehen. Von der Zimmerstruktur
-        nimmt Channex nichts an — der Anstoss haelt lediglich den uebrigen
-        Objekt-Content aktuell. Best-effort: ein Fehler darf das Speichern nicht
-        kippen."""
+        """Zimmer-Aenderung an die Portale nachziehen.
+
+        ZWEI Wege, weil Channex und Airbnb Verschiedenes annehmen:
+          * Channex' Room-Type nimmt von der Zimmerstruktur NICHTS an (beds,
+            bed_configuration, bedrooms, bathrooms werden verworfen — live
+            gemessen, docs/CHANNEX-FELDER.md). Der Content-Sync haelt hier nur
+            den uebrigen Objekt-Content aktuell.
+          * AIRBNB fuehrt die Raeume dagegen als eigene Ressource und nimmt sie
+            ueber Channex' api_proxy an. Genau der Weg fehlte: eine Aenderung in
+            unserer Maske erreichte die Anzeige nie — live gemessen an „Holiday
+            house Cornflower", wo der geloeschte Balkon bei Airbnb online blieb
+            und der wieder hinzugefuegte dort nie ankam. Das ist Wurzel 1: eine
+            Aktion ohne Gegenzustand nach aussen, und sie fiel nicht auf, weil
+            nie etwas versucht wurde (kein Fehler im Log).
+
+        Best-effort: ein Fehler darf das Speichern nicht kippen."""
+        self._airbnb_zimmer_anstossen(tenant_id, property_id)
         try:
             row = (
                 self._db.table("properties")
@@ -213,4 +244,33 @@ class RoomsMixin:
                 "property_room_content_sync_failed",
                 property_id=property_id,
                 error=str(exc),
+            )
+
+    def _airbnb_zimmer_anstossen(self, tenant_id: str, property_id: str) -> None:
+        """Die Zimmer an die Airbnb-Anzeige nachziehen (Job, nicht inline).
+
+        Als Job und nicht direkt im Request, weil der Abgleich mehrere Aufrufe an
+        Airbnb macht (einmal lesen, dann je Raum anlegen/loeschen) — das gehoert
+        nicht in die Antwortzeit eines Klicks, und der Job wiederholt sich bei
+        einem Ausfall von selbst.
+
+        `dedup_key` je Objekt: wer in der Maske fuenf Zimmer hintereinander
+        anhakt, loest EINEN Abgleich aus, nicht fuenf. Der Job liest ohnehin den
+        Endstand (Wurzel 2 — Coalescing statt Doppelarbeit).
+
+        Best effort beim EINREIHEN: ein Job, der sich nicht einreihen laesst,
+        darf das Speichern nicht kippen. Der Job selbst faellt dagegen laut aus,
+        wenn Airbnb den Schreibaufruf ablehnt — sonst hiesse „gespeichert", die
+        Anzeige waere aktuell (Wurzel 5).
+        """
+        try:
+            enqueue(
+                self._db, "sync_airbnb_zimmer", tenant_id=tenant_id,
+                payload={"tenant_id": tenant_id, "property_id": property_id},
+                dedup_key=f"airbnb_zimmer:{property_id}",
+            )
+        except Exception as exc:  # noqa: BLE001 — Einreihen, kein Hauptpfad
+            log.warning(
+                "property_room_airbnb_enqueue_failed",
+                property_id=property_id, error=str(exc)[:200],
             )

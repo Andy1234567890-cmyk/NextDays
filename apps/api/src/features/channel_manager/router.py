@@ -706,6 +706,37 @@ def set_airbnb_tax_settings(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.delete(
+    "/properties/{property_id}/connections/{portal_code}",
+    response_model=ChannelConnectionResponse,
+)
+def portal_verbindung_trennen(
+    property_id: str,
+    portal_code: str,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> ChannelConnectionResponse:
+    """Ein Objekt von EINEM Portal trennen — eine falsche Zuordnung lösen.
+
+    Abgrenzung: PATCH …/connections/{portal} PAUSIERT nur (Kanal und Zuordnung
+    bleiben), `DELETE /properties/{id}/mapping/{map_id}` trennt das Objekt von
+    CHANNEX und damit von allen Portalen. Dieser Weg löst genau EINE
+    Portal-Zuordnung, ohne die anderen anzufassen — der Fall, den der Betrieb
+    braucht, wenn er eine Anzeige dem falschen Objekt zugeordnet hat.
+
+    Die Kanal-Verbindungszeile bleibt (mit Hotel-ID, ohne Kanal), damit ein
+    Neu-Verbinden sie vorbefüllt.
+    """
+    try:
+        return ChannelConnectionResponse(
+            **service.portal_verbindung_trennen(
+                ctx, property_id=property_id, portal_code=portal_code
+            )
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.patch(
     "/properties/{property_id}/connections/{portal_code}",
     response_model=ChannelConnectionResponse,

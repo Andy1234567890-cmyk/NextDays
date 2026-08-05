@@ -3,6 +3,7 @@
 Unit/Contract (immer): Health, Schema-Validierung, Service-CRUD mit gemocktem
 Supabase-Client (tenant-Scope wird im Code erzwungen).
 """
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -863,6 +864,59 @@ def test_room_update_without_fields_is_rejected() -> None:
     with pytest.raises(PropertyError) as exc:
         svc.update_room(_ctx(), "p-1", "r-1", PropertyRoomUpdate())
     assert exc.value.status_code == 422
+
+
+def test_room_delete_ist_idempotent() -> None:
+    """Wurzel 2: ein schon gelöschtes Zimmer ist der Zielzustand, kein 404.
+
+    Live gemessen: der Zimmer-Zähler arbeitet auf einer Momentaufnahme der
+    Liste. Zwei Klicks auf „−" (oder ein Klick, bevor das Realtime-Ereignis
+    durch ist) schicken dieselbe Zimmer-ID zweimal — der zweite Aufruf lief in
+    einen 404, und die Maske meldete „nicht gefunden", obwohl genau das
+    Gewünschte passiert war (Objekt 4ce8c81f…, Zimmer 28b5f900…).
+    """
+    class _Kette:
+        def __init__(self, name: str, protokoll: list[str]) -> None:
+            self.name, self.protokoll = name, protokoll
+            self.loeschend = False
+
+        def select(self, *_a: object, **_k: object) -> "_Kette":
+            return self
+
+        def delete(self) -> "_Kette":
+            self.loeschend = True
+            return self
+
+        def eq(self, *_a: object, **_k: object) -> "_Kette":
+            return self
+
+        def limit(self, *_a: object, **_k: object) -> "_Kette":
+            return self
+
+        def order(self, *_a: object, **_k: object) -> "_Kette":
+            return self
+
+        def execute(self) -> object:
+            if self.loeschend:
+                self.protokoll.append(f"delete:{self.name}")
+                # Kein Treffer: die Zeile war schon weg.
+                return SimpleNamespace(data=[])
+            if self.name == "properties":
+                return SimpleNamespace(data=[_row()])
+            return SimpleNamespace(data=[])
+
+    class _DB:
+        def __init__(self) -> None:
+            self.protokoll: list[str] = []
+
+        def table(self, name: str) -> _Kette:
+            return _Kette(name, self.protokoll)
+
+    db = _DB()
+    svc = PropertiesService(service_client=db)
+    # Kein Fehler — und KEIN Portal-Nachzug, denn es wurde nichts gelöscht.
+    assert svc.delete_room(_ctx(), "p-1", "r-weg") is None
+    assert "delete:property_rooms" in db.protokoll
 
 
 def test_room_row_maps_all_fields() -> None:

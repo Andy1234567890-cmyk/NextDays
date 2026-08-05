@@ -796,6 +796,24 @@ export async function setConnectionActive(
   return res;
 }
 
+/** Ein Objekt von EINEM Portal trennen — eine falsche Zuordnung lösen.
+ *
+ *  Nicht zu verwechseln mit `setConnectionActive(false)`: das PAUSIERT nur
+ *  (Kanal und Zuordnung bleiben), womit sich eine falsch zugeordnete Anzeige
+ *  nicht korrigieren lässt. Und nicht mit `disconnectProperty`: das trennt das
+ *  Objekt von allen Portalen. */
+export async function disconnectPortalConnection(
+  propertyId: string,
+  portalCode: string,
+): Promise<Result<StoredChannelConnection>> {
+  const res = await call<StoredChannelConnection>(
+    `/properties/${propertyId}/connections/${portalCode}`,
+    { method: "DELETE" },
+  );
+  if (res.ok) revalidatePath("/einstellungen");
+  return res;
+}
+
 // --- Bookings ---------------------------------------------------------------
 export async function listChannexBookings(): Promise<
   Result<{ items: ChannexBooking[]; total: number }>

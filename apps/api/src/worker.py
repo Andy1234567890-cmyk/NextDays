@@ -53,6 +53,9 @@ _CHANNEX_JOB_TYPES = frozenset(
      # Channex — der OAuth-Token dafür aber schon (`get_channel`), also zählt der
      # Job mit, sonst umginge er das kontoweite Limit.
      "sync_airbnb_ausstattung",
+     # Zimmer an Airbnb (Gegenrichtung zum Import). Läuft über Channex'
+     # api_proxy, ist also ein echter Channex-Call und zählt mit.
+     "sync_airbnb_zimmer",
      "reconcile_tenant", "push_ari", "process_ari_outbox",
      "process_restriction_outbox",
      # recompute_property pusht die meisten Rate-Calls (Tagespreise über den
@@ -152,6 +155,10 @@ FULL_SYNC_STAGGER_SECONDS = 5
 # aufgibt ('dead'). Deckel gegen Endlos-Defer-Livelock bei dauerhaft totem Redis.
 # Großzügig, damit legitimes Warten auf ein volles Budget-Fenster nie greift.
 _MAX_DEFERS = 100
+# Wartezeit für einen Job-Typ, den DIESER Worker nicht kennt. Bemessen an einem
+# Deploy: eine Minute reicht, bis der neue Worker läuft — und mit `_MAX_DEFERS`
+# übersteht ein Job so über eine Stunde Versatz zwischen API und Worker.
+_UNKNOWN_TYPE_RETRY = 60
 # Heartbeat-Datei für den Docker-Healthcheck: der Run-Loop schreibt sie je
 # Durchlauf neu (idle ≤ 1 s, unter Last je Claim-Zyklus). Der Healthcheck im
 # Worker-Compose meldet unhealthy, wenn sie älter als 120 s ist — so wird ein
@@ -242,6 +249,20 @@ def _handle_sync_airbnb_ausstattung(
     if not svc.is_channex_configured:
         return
     svc.sync_airbnb_ausstattung(payload["tenant_id"], payload["property_id"])
+
+
+def _handle_sync_airbnb_zimmer(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Die Zimmer unserer Maske an die Airbnb-Anzeige geben.
+
+    Gegenrichtung zum Import: ohne diesen Job blieb ein in unserer Maske
+    gelöschter Raum bei Airbnb online und ein hinzugefügter kam nie an — live
+    gemessen an „Holiday house Cornflower" (Wurzel 1, Gegenzustand)."""
+    svc = _svc(db, budget)
+    if not svc.is_channex_configured:
+        return
+    svc.sync_airbnb_zimmer(payload["tenant_id"], payload["property_id"])
 
 
 def _handle_reconcile_tenant(
@@ -469,6 +490,7 @@ HANDLERS: dict[
     "sync_property_taxes": _handle_sync_property_taxes,
     "sync_airbnb_aktionen": _handle_sync_airbnb_aktionen,
     "sync_airbnb_ausstattung": _handle_sync_airbnb_ausstattung,
+    "sync_airbnb_zimmer": _handle_sync_airbnb_zimmer,
     "reconcile_tenant": _handle_reconcile_tenant,
     "reconcile_rate_plan_prices": _handle_reconcile_rate_plan_prices,
     "recompute_property": _handle_recompute_property,
@@ -632,8 +654,21 @@ class Worker:
 
         handler = HANDLERS.get(job["job_type"])
         if handler is None:
-            self._finish(job["id"], "dead", f"unknown job_type: {job['job_type']}")
+            # NICHT 'dead': ein unbekannter Typ heißt im Regelfall, dass die API
+            # schon neu ist und DIESER Worker noch mit älterem Code läuft — ein
+            # Rolling Deploy ist genau dieser Zustand. Live passiert (05.08.2026):
+            # vier `sync_airbnb_zimmer`-Jobs landeten auf 'dead', die Zimmer-
+            # Änderung erreichte Airbnb dauerhaft nicht, und im Log stand nur
+            # „unknown job_type" — ein Neustart heilte nichts, weil die Jobs
+            # bereits verloren waren.
+            #
+            # Zurückstellen statt wegwerfen (Wurzel 5 — kein stilles Verschlucken
+            # eines echten Auftrags): `_defer` verbraucht kein Retry-Budget und
+            # deckelt sich über `defer_count` selbst. Ist der Typ WIRKLICH
+            # unbekannt (getippter Name), stirbt der Job nach `_MAX_DEFERS` —
+            # nur eben nicht beim ersten Blick.
             log.error("job_unknown_type", id=job["id"], job_type=job["job_type"])
+            self._defer(job, _UNKNOWN_TYPE_RETRY)
             return
         # Fortschritts-Zähler: der Budget-Wrapper zählt jeden ERFOLGREICH vergebenen
         # Token = jeder echte Channex-Call, der durchging. Erschöpft das Budget

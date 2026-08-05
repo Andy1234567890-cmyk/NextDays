@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Peataí ceadaithe",
           "rauchenErlaubt": "Caitheamh tobac ceadaithe",
           "feiernErlaubt": "Imeachtaí ceadaithe",
-          "haustiereMax": "Uaslíon peataí"
+          "haustiereMax": "Uaslíon peataí",
+          "titel": "Teideal"
         },
         "photosTaken": "Iompórtáladh {count} grianghraf ó Airbnb"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Níorbh fhéidir an cainéal a ghníomhachtú.",
     "channelInactiveTitle": "Tá {portal} ceangailte ach níl sé gníomhach",
     "channelInactiveMissing": "Ní sheoltar aon rud chuig an tairseach. Ar iarraidh fós: {fields}",
-    "channelInactiveReady": "Ní sheoltar aon rud chuig an tairseach. Tá na sonraí go léir iomlán – gníomhachtaigh anois."
+    "channelInactiveReady": "Ní sheoltar aon rud chuig an tairseach. Tá na sonraí go léir iomlán – gníomhachtaigh anois.",
+    "disconnect": "Dínasc",
+    "disconnectRowConfirm": "An bhfuil tú cinnte gur mian leat “{property}” a dhínascadh ón tairseach seo? Stopfaidh an díol tríd an tairseach láithreach agus caithfear an liostáil a mhapáil arís."
   },
   "calendarSync": {
     "title": "Iompórtáil/easpórtáil féilire",

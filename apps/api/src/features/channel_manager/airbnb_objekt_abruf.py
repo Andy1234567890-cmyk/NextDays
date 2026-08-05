@@ -88,6 +88,7 @@ from .common import (
     _timezone_speicherbar,
     log,
 )
+from .content_builder import locale_order_for_country
 from .ota_abgaben import AIRBNB
 
 # Name des Preisplans, den der Abruf anlegt. Bewusst sprechend: der Kunde soll in
@@ -567,7 +568,7 @@ class AirbnbObjektAbrufMixin:
 
         rows = (
             db.table("properties")
-            .select("type_attributes, max_guests")
+            .select("type_attributes, max_guests, title, country")
             .eq("tenant_id", tenant_id).eq("id", property_id)
             .limit(1).execute()
         ).data or []
@@ -590,8 +591,21 @@ class AirbnbObjektAbrufMixin:
         if self._zimmer_zeilen_anlegen(db, tenant_id, property_id, listing):
             gesetzt.append("zimmer")
 
+        spalten: dict[str, Any] = {}
         if gesetzt:
-            db.table("properties").update({"type_attributes": neu}).eq(
+            spalten["type_attributes"] = neu
+        # Der Titel ist eine SPALTE, kein `type_attributes`-Feld — deshalb hier
+        # und nicht in `_details_texte`.
+        airbnb_texte = neu.get("airbnbTexte")
+        landestitel = self._landestitel(
+            airbnb_texte if isinstance(airbnb_texte, dict) else {},
+            rows[0].get("country"), rows[0].get("title"),
+        )
+        if landestitel:
+            spalten["title"] = landestitel
+            gesetzt.append("titel")
+        if spalten:
+            db.table("properties").update(spalten).eq(
                 "tenant_id", tenant_id
             ).eq("id", property_id).execute()
         log.info(
@@ -608,6 +622,45 @@ class AirbnbObjektAbrufMixin:
             "uebernommen": gesetzt,
             "pricing_settings": preise if isinstance(preise, dict) else {},
         }
+
+    @staticmethod
+    def _landestitel(
+        texte: dict[str, Any], land: str | None, titel_jetzt: str | None
+    ) -> str | None:
+        """Der Anzeigename in der Sprache des Objekt-LANDES, sonst None.
+
+        WARUM: Der Erstimport nimmt den Titel aus der Channex-Mapping-Liste, und
+        die trägt nur Airbnbs ENGLISCHEN Anzeigenamen. Live gemessen am
+        Beta-Betrieb (DK, 05.08.2026) standen dadurch 10 von 18 Objekten
+        englisch in unserer DB, während der Gastgeber sie dänisch benannt hat:
+
+            DB „Holiday house Fox's Den"       Airbnb da „Feriehus Rævehulen"
+            DB „The Fox House"                 Airbnb da „Rævlingehuset"
+            DB „Grandpa's little forest house" Airbnb da „Bedstefars lille skovhus"
+
+        Der Gastgeber erkannte seine eigenen Häuser in der Liste nicht wieder.
+        Die Sprachfassungen liegen nach `_details_texte` bereits vor
+        (`airbnbTexte.name`, je Sprache) — es fehlte nur die Übernahme in die
+        Spalte.
+
+        Die Sprache wird NICHT geraten (Wurzel 4): sie kommt aus
+        `locale_order_for_country` — derselbe Baustein, der schon den
+        Channex-Content in der richtigen Sprache wählt. Unbekanntes Land →
+        nur `en` in der Reihenfolge, dann bleibt es beim bisherigen Titel.
+
+        Kein Rückschreiben, wenn der Wert gleich ist oder der Landestitel fehlt:
+        ein Update ohne Änderung wäre ein leerer Realtime-Ausschlag und im
+        Ergebnis-Feld ein „übernommen", das nichts übernommen hat.
+        """
+        namen = texte.get("name")
+        if not isinstance(namen, dict) or not namen:
+            return None
+        for sprache in locale_order_for_country(land):
+            wert = namen.get(sprache)
+            if isinstance(wert, str) and wert.strip():
+                gewuenscht = wert.strip()
+                return gewuenscht if gewuenscht != (titel_jetzt or "") else None
+        return None
 
     @staticmethod
     def _details_zimmer_betten(

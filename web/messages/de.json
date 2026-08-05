@@ -5069,7 +5069,8 @@
           "haustiereErlaubt": "Haustiere erlaubt",
           "rauchenErlaubt": "Rauchen erlaubt",
           "feiernErlaubt": "Feiern erlaubt",
-          "haustiereMax": "Haustiere maximal"
+          "haustiereMax": "Haustiere maximal",
+          "titel": "Titel"
         },
         "photosTaken": "{count} Fotos aus Airbnb übernommen"
       }
@@ -5579,7 +5580,9 @@
     "activateFailed": "Der Kanal konnte nicht aktiviert werden.",
     "channelInactiveTitle": "{portal} ist verbunden, aber nicht aktiv",
     "channelInactiveMissing": "Damit nichts an das Portal geht. Es fehlen noch: {fields}",
-    "channelInactiveReady": "Damit geht nichts an das Portal. Alle Angaben sind vollständig – jetzt aktivieren."
+    "channelInactiveReady": "Damit geht nichts an das Portal. Alle Angaben sind vollständig – jetzt aktivieren.",
+    "disconnect": "Trennen",
+    "disconnectRowConfirm": "Verbindung von „{property}“ zu diesem Portal wirklich trennen? Der Verkauf über dieses Portal stoppt sofort, und die Anzeige muss danach neu zugeordnet werden."
   },
   "calendarSync": {
     "title": "Kalender importieren/exportieren",

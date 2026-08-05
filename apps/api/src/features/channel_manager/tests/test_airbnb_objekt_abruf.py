@@ -276,3 +276,53 @@ def test_ohne_kinder_kein_update() -> None:
         db, "eltern-1", {"min_stay": 1}
     ) == 0
     assert db.updates == []
+
+
+# ---------------------------------------------------------------------------
+# Titel in der Landessprache. Werte live gemessen am Beta-Betrieb (DK,
+# 05.08.2026): 10 von 18 Objekten standen englisch in unserer DB, weil die
+# Channex-Mapping-Liste nur Airbnbs englischen Anzeigenamen trägt. Die
+# Sprachfassungen lagen längst in `airbnbTexte.name` — nur nie in der Spalte.
+NAMEN_FOX = {
+    "da": "Feriehus Rævehulen",
+    "de": "Feriehus Rævehulen",
+    "en": "Holiday house Fox's Den",
+}
+
+
+def test_landestitel_nimmt_daenisch_bei_dk() -> None:
+    """DK → `da`. Der Gastgeber kennt „Feriehus Rævehulen", nicht „Fox's Den"."""
+    assert M._landestitel(  # noqa: SLF001 — Testziel
+        {"name": NAMEN_FOX}, "DK", "Holiday house Fox's Den"
+    ) == "Feriehus Rævehulen"
+
+
+def test_landestitel_kein_update_wenn_gleich() -> None:
+    """Gleicher Wert → None, kein leerer Schreibvorgang (Wurzel 2)."""
+    assert M._landestitel(  # noqa: SLF001
+        {"name": NAMEN_FOX}, "DK", "Feriehus Rævehulen"
+    ) is None
+
+
+def test_landestitel_ohne_bekanntes_land_kein_raten() -> None:
+    """Unbekanntes Land → nur `en` in der Reihenfolge; der Titel steht schon
+    englisch da, also nichts zu tun. Es wird KEINE Sprache erfunden (Wurzel 4)."""
+    assert M._landestitel(  # noqa: SLF001
+        {"name": NAMEN_FOX}, "XX", "Holiday house Fox's Den"
+    ) is None
+
+
+def test_landestitel_faellt_auf_englisch_zurueck() -> None:
+    """Pflegt der Gastgeber die Landessprache nicht, gilt die nächste Sprache
+    der Reihenfolge — statt eines leeren Titels."""
+    assert M._landestitel(  # noqa: SLF001
+        {"name": {"en": "Holiday house Oluf"}}, "DK", "Altname"
+    ) == "Holiday house Oluf"
+
+
+def test_landestitel_ohne_namen_none() -> None:
+    """Keine Namensfassungen → None (nicht raten, nicht leeren)."""
+    assert M._landestitel({}, "DK", "Feriehus Oluf") is None  # noqa: SLF001
+    assert M._landestitel(  # noqa: SLF001
+        {"name": {"da": "   "}}, "DK", "Feriehus Oluf"
+    ) is None

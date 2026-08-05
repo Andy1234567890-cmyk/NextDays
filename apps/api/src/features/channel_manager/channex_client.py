@@ -1027,6 +1027,31 @@ class ChannexClient(AirbnbActionsMixin):
             json={"mapping": {"rate_plan_id": rate_plan_id, "settings": settings}},
         )
 
+    def delete_channel_mapping(
+        self, channel_id: str, mapping_id: str
+    ) -> dict[str, Any]:
+        """EINE Zuordnung am Kanal lösen — der Gegenzustand zu
+        `create_channel_mapping` (Wurzel 1).
+
+        Pfad aus dem ausgelieferten Channex-Client (app.channex.io/assets/
+        index-BefbhQp2.js, 05.08.2026), dort neben den beiden bekannten:
+            createMapping → POST   channels/{id}/mappings
+            updateMapping → PUT    channels/{id}/mappings/{mapping_id}
+            deleteMapping → DELETE channels/{id}/mappings/{mapping_id}
+
+        WARUM NICHT `deactivate_channel`: Bei Airbnb trägt EIN Kanal alle
+        Objekte des Kontos (live gemessen: ein Kanal, 18 Objekte, 17
+        Zuordnungen). Den Kanal abzuschalten, um EIN Objekt zu trennen, würde
+        alle anderen mit abschalten. Channex lehnt es ohnehin ab, solange
+        Zuordnungen bestehen: 422 `{"channel": ["remove mappings before"]}`.
+
+        Die `mapping_id` steht ausschließlich im Kanal-Objekt unter
+        `attributes.rate_plans[].id` (es gibt keinen GET-Pfad für Mappings) —
+        gefunden wird sie über `rate_plan_id`, also unsere Channex-Rate-Plan-ID
+        aus `channex_rate_plan_map`.
+        """
+        return self.delete(f"channels/{channel_id}/mappings/{mapping_id}")
+
     def listing_settings_laden(
         self, channel_id: str, listing_id: str, aktion: str
     ) -> dict[str, Any]:

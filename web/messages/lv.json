@@ -5030,7 +5030,8 @@
           "haustiereErlaubt": "Mājdzīvnieki atļauti",
           "rauchenErlaubt": "Smēķēšana atļauta",
           "feiernErlaubt": "Svinības atļautas",
-          "haustiereMax": "Maksimums mājdzīvnieku"
+          "haustiereMax": "Maksimums mājdzīvnieku",
+          "titel": "Nosaukums"
         },
         "photosTaken": "Importēti {count} foto no Airbnb"
       }
@@ -5540,7 +5541,9 @@
     "activateFailed": "Kanālu neizdevās aktivizēt.",
     "channelInactiveTitle": "{portal} ir savienots, bet nav aktīvs",
     "channelInactiveMissing": "Uz portālu netiek nosūtīts nekas. Vēl trūkst: {fields}",
-    "channelInactiveReady": "Uz portālu netiek nosūtīts nekas. Visi dati ir pilnīgi – aktivizējiet tagad."
+    "channelInactiveReady": "Uz portālu netiek nosūtīts nekas. Visi dati ir pilnīgi – aktivizējiet tagad.",
+    "disconnect": "Atvienot",
+    "disconnectRowConfirm": "Vai tiešām atvienot „{property}“ no šī portāla? Pārdošana caur šo portālu apstājas nekavējoties, un sludinājums pēc tam būs jāpiesaista atkārtoti."
   },
   "calendarSync": {
     "title": "Kalendāra imports/eksports",
