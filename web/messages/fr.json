@@ -5087,6 +5087,13 @@
       "gleichstand": "Les pièces correspondent à Airbnb.",
       "restHinweis": "Toujours sur Airbnb : {zimmer}. Airbnb n'offre aucun moyen de supprimer une pièce via l'interface — cela n'est possible que dans votre compte Airbnb.",
       "beiAirbnbEntfernen": "Supprimer sur Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Airbnb a {anzahl} frais supplémentaires enregistrés",
+      "hinweis": "Tu peux les reprendre au lieu de les recréer. Les frais existants restent inchangés.",
+      "uebernehmen": "Reprendre les frais",
+      "laeuft": "Reprise en cours …",
+      "uebernommen": "{anzahl} frais repris."
     }
   },
   "calendar": {

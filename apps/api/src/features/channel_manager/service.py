@@ -21,6 +21,7 @@ from .airbnb_aktionen import AirbnbAktionenMixin
 from .airbnb_diagnose import AirbnbDiagnoseMixin
 from .airbnb_direkt import AirbnbDirektMixin
 from .airbnb_foto_raum import AirbnbFotoRaumMixin
+from .airbnb_gebuehren import AirbnbGebuehrenMixin
 from .airbnb_objekt_abruf import AirbnbObjektAbrufMixin
 from .airbnb_uebernahme import AirbnbUebernahmeMixin
 from .airbnb_zimmer_push import AirbnbZimmerPushMixin
@@ -93,6 +94,10 @@ class ChannelManagerService(
     # und `_airbnb_raeume_lesen`. Airbnb-Eigenheit — Booking.com kennt keine
     # Raum-Zuordnung für Fotos (0288).
     AirbnbFotoRaumMixin,
+    # Nach ObjektKanalMixin-Helfern (`_channex_rate_plan_ids`): liest Airbnbs
+    # `standard_fees` über das Mapping des Objekts. Der alte Weg
+    # (`v2/pricing_settings/{listing_id}`) ist von Airbnb abgeschaltet (403).
+    AirbnbGebuehrenMixin,
     ObjektKanalMixin,
     BookingsSyncMixin,
     LiveFeedSyncMixin,

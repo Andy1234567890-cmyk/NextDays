@@ -5087,6 +5087,13 @@
       "gleichstand": "Kambariai sutampa su Airbnb.",
       "restHinweis": "Airbnb vis dar yra: {zimmer}. Airbnb nesiūlo būdo ištrinti kambarį per sąsają — tai galima tik jūsų Airbnb paskyroje.",
       "beiAirbnbEntfernen": "Pašalinti Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Airbnb yra išsaugoti dar {anzahl} mokesčiai",
+      "hinweis": "Gali juos perimti, o ne kurti iš naujo. Esami mokesčiai išlieka nepakitę.",
+      "uebernehmen": "Perimti mokesčius",
+      "laeuft": "Perimama …",
+      "uebernommen": "Perimta {anzahl} mokesčių."
     }
   },
   "calendar": {

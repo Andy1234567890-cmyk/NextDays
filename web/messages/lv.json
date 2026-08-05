@@ -5087,6 +5087,13 @@
       "gleichstand": "Telpas sakrīt ar Airbnb.",
       "restHinweis": "Airbnb joprojām ir: {zimmer}. Airbnb nepiedāvā veidu, kā dzēst telpu caur saskarni — tas iespējams tikai jūsu Airbnb kontā.",
       "beiAirbnbEntfernen": "Noņemt Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Airbnb ir saglabātas vēl {anzahl} maksas",
+      "hinweis": "Vari tās pārņemt, tā vietā, lai izveidotu no jauna. Esošās maksas netiek mainītas.",
+      "uebernehmen": "Pārņemt maksas",
+      "laeuft": "Notiek pārņemšana …",
+      "uebernommen": "Pārņemtas {anzahl} maksas."
     }
   },
   "calendar": {

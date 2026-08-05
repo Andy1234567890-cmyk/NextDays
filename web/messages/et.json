@@ -5087,6 +5087,13 @@
       "gleichstand": "Toad ühtivad Airbnb-ga.",
       "restHinweis": "Airbnb-s on veel: {zimmer}. Airbnb ei paku võimalust tuba liidese kaudu kustutada — seda saab teha ainult oma Airbnb kontos.",
       "beiAirbnbEntfernen": "Eemalda Airbnb-s"
+    },
+    "airbnbGebuehren": {
+      "titel": "Airbnbis on registreeritud veel {anzahl} tasu",
+      "hinweis": "Saad need üle võtta, selle asemel et need uuesti luua. Olemasolevad tasud jäävad muutmata.",
+      "uebernehmen": "Võta tasud üle",
+      "laeuft": "Ülevõtmine …",
+      "uebernommen": "{anzahl} tasu üle võetud."
     }
   },
   "calendar": {

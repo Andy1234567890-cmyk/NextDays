@@ -5087,6 +5087,13 @@
       "gleichstand": "Стаите съвпадат с Airbnb.",
       "restHinweis": "Все още в Airbnb: {zimmer}. Airbnb не предлага начин за изтриване на стая през интерфейса — това става само в акаунта ви в Airbnb.",
       "beiAirbnbEntfernen": "Премахване в Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "В Airbnb са зададени още {anzahl} такси",
+      "hinweis": "Можеш да ги преземеш, вместо да ги създаваш отново. Съществуващите такси остават без промяна.",
+      "uebernehmen": "Преземане на такси",
+      "laeuft": "Преземане …",
+      "uebernommen": "Преземени {anzahl} такси."
     }
   },
   "calendar": {

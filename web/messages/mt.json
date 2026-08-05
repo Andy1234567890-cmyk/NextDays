@@ -5087,6 +5087,13 @@
       "gleichstand": "Il-kmamar jaqblu ma' Airbnb.",
       "restHinweis": "Għadu fuq Airbnb: {zimmer}. Airbnb ma joffri l-ebda mod biex tħassar kamra permezz tal-interfaċċa — dan isir biss fil-kont Airbnb tiegħek.",
       "beiAirbnbEntfernen": "Neħħi fuq Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Fuq Airbnb hemm {anzahl} tariffi oħra rreġistrati",
+      "hinweis": "Tista' timportahom minflok toħloqhom mill-ġdid. It-tariffi eżistenti jibqgħu mhux mibdula.",
+      "uebernehmen": "Importa t-tariffi",
+      "laeuft": "Qed jiġu importati …",
+      "uebernommen": "{anzahl} tariffi importati."
     }
   },
   "calendar": {

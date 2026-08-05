@@ -1207,6 +1207,32 @@ async def internal_seed_ari_shadow(
 # Zuordnung gibt es NUR bei Airbnb — Booking.com kennt sie nicht (0288).
 
 
+@router.get("/properties/{property_id}/airbnb-gebuehren")
+def airbnb_gebuehren_vergleich(
+    property_id: str, ctx: _read, service: ChannelManagerServiceDep
+) -> dict[str, Any]:
+    """Airbnbs Gebühren gegen unsere: was fehlt, was ist gleich.
+
+    Der Weg dorthin ist `channels/{cid}/mappings/{mid}/pricing_settings` —
+    `v2/pricing_settings/{listing_id}` hat Airbnb abgeschaltet (403).
+    """
+    try:
+        return service.airbnb_gebuehren_vergleich(ctx, property_id=property_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/properties/{property_id}/airbnb-gebuehren/uebernehmen")
+def airbnb_gebuehren_uebernehmen(
+    property_id: str, ctx: _write, service: ChannelManagerServiceDep
+) -> dict[str, Any]:
+    """Airbnbs Gebühren als unsere anlegen — nur die fehlenden, nichts löschen."""
+    try:
+        return service.airbnb_gebuehren_uebernehmen(ctx, property_id=property_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.get("/properties/{property_id}/airbnb-zimmer-rest")
 def airbnb_zimmer_rest(
     property_id: str, ctx: _read, service: ChannelManagerServiceDep

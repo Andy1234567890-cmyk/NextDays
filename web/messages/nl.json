@@ -5087,6 +5087,13 @@
       "gleichstand": "De kamers komen overeen met Airbnb.",
       "restHinweis": "Staat nog bij Airbnb: {zimmer}. Airbnb biedt geen manier om een kamer via de koppeling te verwijderen — dat kan alleen in je Airbnb-account.",
       "beiAirbnbEntfernen": "Verwijderen bij Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Bij Airbnb staan nog {anzahl} extra kosten geregistreerd",
+      "hinweis": "Je kunt ze overnemen in plaats van ze opnieuw aan te maken. Bestaande kosten blijven ongewijzigd.",
+      "uebernehmen": "Kosten overnemen",
+      "laeuft": "Wordt overgenomen …",
+      "uebernommen": "{anzahl} kosten overgenomen."
     }
   },
   "calendar": {

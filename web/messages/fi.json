@@ -5087,6 +5087,13 @@
       "gleichstand": "Huoneet vastaavat Airbnb:tä.",
       "restHinweis": "Airbnb:ssä on yhä: {zimmer}. Airbnb ei tarjoa tapaa poistaa huonetta rajapinnan kautta — se onnistuu vain Airbnb-tilissäsi.",
       "beiAirbnbEntfernen": "Poista Airbnb:ssä"
+    },
+    "airbnbGebuehren": {
+      "titel": "Airbnbissa on tallennettuna {anzahl} muuta maksua",
+      "hinweis": "Voit tuoda ne sen sijaan, että luot ne uudelleen. Olemassa olevat maksut pysyvät muuttumattomina.",
+      "uebernehmen": "Tuo maksut",
+      "laeuft": "Tuodaan …",
+      "uebernommen": "{anzahl} maksua tuotu."
     }
   },
   "calendar": {

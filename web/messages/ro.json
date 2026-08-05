@@ -5087,6 +5087,13 @@
       "gleichstand": "Camerele corespund cu Airbnb.",
       "restHinweis": "Încă există pe Airbnb: {zimmer}. Airbnb nu oferă nicio modalitate de a șterge o cameră prin interfață — acest lucru este posibil doar în contul tău Airbnb.",
       "beiAirbnbEntfernen": "Elimină pe Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Pe Airbnb sunt înregistrate încă {anzahl} taxe",
+      "hinweis": "Le poți importa în loc să le creezi din nou. Taxele existente rămân neschimbate.",
+      "uebernehmen": "Importă taxele",
+      "laeuft": "Se importă …",
+      "uebernommen": "{anzahl} taxe importate."
     }
   },
   "calendar": {

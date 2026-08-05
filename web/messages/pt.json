@@ -5087,6 +5087,13 @@
       "gleichstand": "Os quartos coincidem com o Airbnb.",
       "restHinweis": "Ainda no Airbnb: {zimmer}. O Airbnb não oferece forma de eliminar um quarto através da interface — só é possível na sua conta Airbnb.",
       "beiAirbnbEntfernen": "Remover no Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "No Airbnb existem mais {anzahl} taxas registadas",
+      "hinweis": "Podes importá-las em vez de as criares novamente. As taxas existentes permanecem inalteradas.",
+      "uebernehmen": "Importar taxas",
+      "laeuft": "A importar …",
+      "uebernommen": "{anzahl} taxas importadas."
     }
   },
   "calendar": {

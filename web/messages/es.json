@@ -5087,6 +5087,13 @@
       "gleichstand": "Las habitaciones coinciden con Airbnb.",
       "restHinweis": "Todavía en Airbnb: {zimmer}. Airbnb no ofrece ninguna forma de eliminar una habitación a través de la interfaz — solo se puede en tu cuenta de Airbnb.",
       "beiAirbnbEntfernen": "Eliminar en Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Airbnb tiene {anzahl} tarifas adicionales registradas",
+      "hinweis": "Puedes importarlas en lugar de crearlas de nuevo. Las tarifas existentes no se modifican.",
+      "uebernehmen": "Importar tarifas",
+      "laeuft": "Importando …",
+      "uebernommen": "{anzahl} tarifas importadas."
     }
   },
   "calendar": {

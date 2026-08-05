@@ -5087,6 +5087,13 @@
       "gleichstand": "Místnosti odpovídají Airbnb.",
       "restHinweis": "Na Airbnb stále je: {zimmer}. Airbnb nenabízí způsob, jak místnost smazat přes rozhraní — jde to jen ve vašem účtu Airbnb.",
       "beiAirbnbEntfernen": "Odstranit na Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Na Airbnb je uloženo dalších {anzahl} poplatků",
+      "hinweis": "Můžeš je převzít, místo abys je vytvářel znovu. Stávající poplatky zůstanou nezměněny.",
+      "uebernehmen": "Převzít poplatky",
+      "laeuft": "Převádí se …",
+      "uebernommen": "Převzato {anzahl} poplatků."
     }
   },
   "calendar": {

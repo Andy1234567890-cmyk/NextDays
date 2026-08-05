@@ -5087,6 +5087,13 @@
       "gleichstand": "Rummen stämmer med Airbnb.",
       "restHinweis": "Finns fortfarande hos Airbnb: {zimmer}. Airbnb erbjuder inget sätt att ta bort ett rum via gränssnittet — det går bara i ditt Airbnb-konto.",
       "beiAirbnbEntfernen": "Ta bort hos Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "På Airbnb finns {anzahl} ytterligare avgifter registrerade",
+      "hinweis": "Du kan ta över dem istället för att skapa dem på nytt. Befintliga avgifter förblir oförändrade.",
+      "uebernehmen": "Ta över avgifter",
+      "laeuft": "Tar över …",
+      "uebernommen": "{anzahl} avgifter övertagna."
     }
   },
   "calendar": {

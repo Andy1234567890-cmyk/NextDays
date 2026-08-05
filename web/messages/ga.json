@@ -5087,6 +5087,13 @@
       "gleichstand": "Tagann na seomraí le Airbnb.",
       "restHinweis": "Fós ar Airbnb: {zimmer}. Ní chuireann Airbnb bealach ar fáil chun seomra a scriosadh tríd an gcomhéadan — níl sé sin indéanta ach i do chuntas Airbnb.",
       "beiAirbnbEntfernen": "Bain ar Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Tá {anzahl} táille eile taifeadta ar Airbnb",
+      "hinweis": "Is féidir leat iad a iompórtáil in ionad iad a chruthú arís. Fanann táillí atá ann cheana gan athrú.",
+      "uebernehmen": "Iompórtáil táillí",
+      "laeuft": "Ag iompórtáil …",
+      "uebernommen": "{anzahl} táille iompórtáilte."
     }
   },
   "calendar": {

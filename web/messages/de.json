@@ -5126,6 +5126,13 @@
       "gleichstand": "Die Zimmer stimmen mit Airbnb überein.",
       "restHinweis": "Bei Airbnb steht noch: {zimmer}. Airbnb bietet keinen Weg, ein Zimmer über die Schnittstelle zu löschen — das geht nur im Airbnb-Konto.",
       "beiAirbnbEntfernen": "Bei Airbnb entfernen"
+    },
+    "airbnbGebuehren": {
+      "titel": "Bei Airbnb sind {anzahl} weitere Gebühren hinterlegt",
+      "hinweis": "Du kannst sie übernehmen, statt sie neu anzulegen. Bestehende Gebühren bleiben unverändert.",
+      "uebernehmen": "Gebühren übernehmen",
+      "laeuft": "Wird übernommen …",
+      "uebernommen": "{anzahl} Gebühren übernommen."
     }
   },
   "calendar": {

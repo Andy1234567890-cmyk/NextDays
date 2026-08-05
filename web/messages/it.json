@@ -5087,6 +5087,13 @@
       "gleichstand": "Le stanze corrispondono ad Airbnb.",
       "restHinweis": "Ancora su Airbnb: {zimmer}. Airbnb non offre alcun modo per eliminare una stanza tramite l'interfaccia — è possibile solo nel tuo account Airbnb.",
       "beiAirbnbEntfernen": "Rimuovi su Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Su Airbnb sono registrate altre {anzahl} commissioni",
+      "hinweis": "Puoi importarle invece di crearle di nuovo. Le commissioni esistenti restano invariate.",
+      "uebernehmen": "Importa commissioni",
+      "laeuft": "Importazione in corso …",
+      "uebernommen": "{anzahl} commissioni importate."
     }
   },
   "calendar": {

@@ -5087,6 +5087,13 @@
       "gleichstand": "Værelserne stemmer overens med Airbnb.",
       "restHinweis": "Står stadig hos Airbnb: {zimmer}. Airbnb tilbyder ingen måde at slette et værelse via grænsefladen — det kan kun gøres i din Airbnb-konto.",
       "beiAirbnbEntfernen": "Fjern hos Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Airbnb har {anzahl} yderligere gebyrer registreret",
+      "hinweis": "Du kan overtage dem i stedet for at oprette dem igen. Eksisterende gebyrer forbliver uændrede.",
+      "uebernehmen": "Overtag gebyrer",
+      "laeuft": "Overtager …",
+      "uebernommen": "{anzahl} gebyrer overtaget."
     }
   },
   "calendar": {

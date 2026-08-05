@@ -5108,6 +5108,13 @@
       "gleichstand": "Rooms match Airbnb.",
       "restHinweis": "Still on Airbnb: {zimmer}. Airbnb offers no way to delete a room via the interface — this only works in your Airbnb account.",
       "beiAirbnbEntfernen": "Remove on Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Airbnb has {anzahl} more fees on file",
+      "hinweis": "You can import them instead of creating them again. Existing fees stay unchanged.",
+      "uebernehmen": "Import fees",
+      "laeuft": "Importing …",
+      "uebernommen": "{anzahl} fees imported."
     }
   },
   "calendar": {

@@ -5087,6 +5087,13 @@
       "gleichstand": "A szobák megegyeznek az Airbnb-vel.",
       "restHinweis": "Az Airbnb-n még szerepel: {zimmer}. Az Airbnb nem kínál módot szoba törlésére a felületen keresztül — ez csak az Airbnb-fiókjában lehetséges.",
       "beiAirbnbEntfernen": "Eltávolítás az Airbnb-n"
+    },
+    "airbnbGebuehren": {
+      "titel": "Az Airbnb-n még {anzahl} díj van rögzítve",
+      "hinweis": "Átveheted őket, helyette hogy újra létrehoznád. A meglévő díjak változatlanok maradnak.",
+      "uebernehmen": "Díjak átvétele",
+      "laeuft": "Átvétel folyamatban …",
+      "uebernommen": "{anzahl} díj átvéve."
     }
   },
   "calendar": {

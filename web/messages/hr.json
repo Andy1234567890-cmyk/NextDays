@@ -5087,6 +5087,13 @@
       "gleichstand": "Sobe se podudaraju s Airbnb-om.",
       "restHinweis": "Na Airbnb-u još stoji: {zimmer}. Airbnb ne nudi način za brisanje sobe putem sučelja — to je moguće samo u vašem Airbnb računu.",
       "beiAirbnbEntfernen": "Ukloni na Airbnb-u"
+    },
+    "airbnbGebuehren": {
+      "titel": "Na Airbnbu je pohranjeno još {anzahl} naknada",
+      "hinweis": "Možeš ih preuzeti umjesto da ih ponovno kreiraš. Postojeće naknade ostaju nepromijenjene.",
+      "uebernehmen": "Preuzmi naknade",
+      "laeuft": "Preuzimanje u tijeku …",
+      "uebernommen": "Preuzeto {anzahl} naknada."
     }
   },
   "calendar": {

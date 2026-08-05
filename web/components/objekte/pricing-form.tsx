@@ -59,6 +59,7 @@ import {
   SelectValue,
 } from "@nextdays/ui/select";
 import { Switch } from "@nextdays/ui/switch";
+import { AirbnbGebuehrenImport } from "@/components/objekte/pricing/airbnb-gebuehren-import";
 import { EinschraenkungenEditor } from "@/components/objekte/pricing/einschraenkungen-editor";
 import { ExtraEditor } from "@/components/objekte/pricing/extra-editor";
 import { GebuehrAuswahl } from "@/components/objekte/pricing/gebuehr-auswahl";
@@ -651,6 +652,28 @@ export function PricingForm({ initial }: { initial: Property }) {
             <PreisLeer>{t("pricingForm.abgabenNoCurrency")}</PreisLeer>
           ) : undefined
         }
+      />
+
+      {/* Was bei Airbnb schon hinterlegt ist, muss der Betrieb nicht abtippen.
+          Rendert nichts, wenn das Objekt nicht bei Airbnb hängt oder dort
+          nichts Zusätzliches steht. */}
+      <AirbnbGebuehrenImport
+        propertyId={p.id}
+        anzahlGebuehren={pr.fees.length}
+        onUebernommen={(fees) => {
+          // Die Übernahme schreibt SERVERSEITIG (über den regulären
+          // Objekt-Update-Weg, inklusive Validierung und Abgaben-Sync). Hier
+          // wird nur die Anzeige nachgezogen — kein zweites Speichern, das den
+          // gerade geschriebenen Stand überschreiben würde.
+          setP((alt) => ({
+            ...alt,
+            type_attributes: {
+              ...alt.type_attributes,
+              pricing: { ...readPricing(alt.type_attributes), fees },
+            },
+          }));
+          void loadAbgaben();
+        }}
       />
 
       {/* Taxes */}

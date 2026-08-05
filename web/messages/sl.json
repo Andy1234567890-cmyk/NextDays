@@ -5087,6 +5087,13 @@
       "gleichstand": "Sobe se ujemajo z Airbnb.",
       "restHinweis": "Na Airbnb je še vedno: {zimmer}. Airbnb ne ponuja načina za brisanje sobe prek vmesnika — to je mogoče samo v vašem računu Airbnb.",
       "beiAirbnbEntfernen": "Odstrani na Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Na Airbnbu je shranjenih še {anzahl} pristojbin",
+      "hinweis": "Lahko jih prevzameš, namesto da jih ustvariš znova. Obstoječe pristojbine ostanejo nespremenjene.",
+      "uebernehmen": "Prevzemi pristojbine",
+      "laeuft": "Prevzemanje …",
+      "uebernommen": "Prevzetih {anzahl} pristojbin."
     }
   },
   "calendar": {

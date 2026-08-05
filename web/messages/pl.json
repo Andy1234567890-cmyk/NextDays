@@ -5087,6 +5087,13 @@
       "gleichstand": "Pokoje zgadzają się z Airbnb.",
       "restHinweis": "W Airbnb nadal jest: {zimmer}. Airbnb nie oferuje sposobu usunięcia pokoju przez interfejs — jest to możliwe tylko na koncie Airbnb.",
       "beiAirbnbEntfernen": "Usuń w Airbnb"
+    },
+    "airbnbGebuehren": {
+      "titel": "Na Airbnb zapisanych jest jeszcze {anzahl} opłat",
+      "hinweis": "Możesz je przejąć, zamiast tworzyć je od nowa. Istniejące opłaty pozostają niezmienione.",
+      "uebernehmen": "Przejmij opłaty",
+      "laeuft": "Przejmowanie …",
+      "uebernommen": "Przejęto {anzahl} opłat."
     }
   },
   "calendar": {
