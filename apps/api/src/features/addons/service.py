@@ -15,6 +15,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import public_storage_url
 
 from .pricing import addon_total
 from .schemas import (
@@ -195,7 +196,7 @@ class AddonsService:
         except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich
             log.warning("addon_media_upload_failed", addon_id=addon_id, error=str(exc))
             raise AddonError("Upload fehlgeschlagen.", status_code=502) from exc
-        url = storage.get_public_url(path)
+        url = public_storage_url(self.IMAGE_BUCKET, path)
         media.append(url)
         self._db.table("property_addons").update({"media": media}).eq(
             "id", addon_id

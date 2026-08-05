@@ -834,3 +834,17 @@ class AbgabenStatusResponse(BaseModel):
     currency_missing: bool = False
     portals: list[str] = Field(default_factory=list)
     items: list[AbgabePostenStatus] = Field(default_factory=list)
+
+
+class AirbnbFotoRaumRequest(BaseModel):
+    """Ziel-Raum beim Umhängen eines Fotos. `null` = vom Raum LÖSEN.
+
+    Airbnbs Raum-Kennung als Text (keine UUID) — Airbnb vergibt numerische IDs
+    wie „817240083".
+
+    `null` ist ein eigener, gemessener Vorgang und kein fehlender Wert: das Foto
+    bleibt bestehen, hängt danach aber an keinem Raum mehr (Airbnb führt das als
+    gültigen Zustand, siehe `airbnb_foto_raum.py`).
+    """
+
+    airbnb_room_id: str | None = Field(default=None, min_length=1, max_length=64)

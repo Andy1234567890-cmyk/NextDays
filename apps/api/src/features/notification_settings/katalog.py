@@ -18,6 +18,18 @@ class Kanal(StrEnum):
     EMAIL = "email"
     SMS = "sms"
     PHONE = "phone"
+    # In-App (die Glocke). BEWUSST OHNE Praeferenzspalte und darum in KEINER
+    # Kategorie unten aufgefuehrt: `SPALTEN` leitet sich aus den Kanaelen ab,
+    # ein vierter Kanal je Kategorie erzwaenge 15 neue `*_inapp`-Spalten samt
+    # Schaltern — fuer eine Anzeige, die niemand abschalten koennen soll.
+    #
+    # Fachlich ist das der Unterschied: E-Mail und SMS gehen HINAUS und stoeren,
+    # deshalb sind sie waehlbar. Die Glocke ist der Ort IN der Anwendung, an dem
+    # das System seine eigenen Probleme meldet („Raum ohne Foto", abgelaufener
+    # Token). Wer sie abschalten koennte, saehe nie, dass etwas klemmt.
+    #
+    # `soll_senden` gibt fuer diesen Kanal darum immer True zurueck.
+    INAPP = "inapp"
 
 
 class Tab(StrEnum):

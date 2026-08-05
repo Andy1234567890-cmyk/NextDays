@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "{room} arv",
       "infoEditorTitle": "Majutuse üksikasjad",
       "infoEditorSubtitle": "Määrake majutuse tüüp, suurus ja külaliste mahutavus.",
-      "statusFieldHint": "„Aktiivne“ tähendab, et majutust müüakse – portaalides, myBestDaysis ja otsebroneeringutel. „Mustand“ pole kusagil nähtav."
+      "statusFieldHint": "„Aktiivne“ tähendab, et majutust müüakse – portaalides, myBestDaysis ja otsebroneeringutel. „Mustand“ pole kusagil nähtav.",
+      "zimmerNurLokal": "Jääb myNextDaysi — portaalid ei tunne seda toatüüpi."
     },
     "availabilityForm": {
       "title": "Saadavus",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Otsi objekti …",
       "noMatch": "Objekti ei leitud."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Toata määramata",
+      "umgehaengt": "Määramine muudetud Airbnb-s.",
+      "menue": "Airbnb tuba",
+      "geloest": "Foto ei ole enam toaga seotud."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Toad ühtivad Airbnb-ga.",
+      "restHinweis": "Airbnb-s on veel: {zimmer}. Airbnb ei paku võimalust tuba liidese kaudu kustutada — seda saab teha ainult oma Airbnb kontos.",
+      "beiAirbnbEntfernen": "Eemalda Airbnb-s"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Aegunud",
       "fehler": "Viga"
     }
+  },
+  "glocke": {
+    "leer": "Teateid pole",
+    "alleGelesen": "Märgi kõik loetuks",
+    "erneut": "Laadi uuesti",
+    "ariaMitAnzahl": "Teated ({count} lugemata)"
   }
 }

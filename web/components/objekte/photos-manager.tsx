@@ -10,6 +10,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  type AirbnbFotoStand,
+  AirbnbRaumMenue,
+  useAirbnbFotoRaeume,
+} from "@/components/objekte/airbnb-foto-raeume";
 import { useRealtime } from "@/lib/use-realtime";
 
 import {
@@ -113,6 +118,10 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
   // kein eigener Selektor. Fallback auf die Basissprache, falls untypisiert.
   const activeLocale = useLocale();
   const lang: Locale = isLocale(activeLocale) ? activeLocale : DEFAULT_LOCALE;
+  // Airbnb-Eigenheit: dort hängt jedes Foto an einem Zimmer, und fehlt einem
+  // Zimmer das Foto, versteckt Airbnb die ganze Fototour. null = das Objekt
+  // hängt nicht bei Airbnb (oder der Stand ist unlesbar) → kein Menüeintrag.
+  const airbnb = useAirbnbFotoRaeume(propertyId);
 
   const reload = useCallback(async () => {
     const res = await listPropertyPhotos(propertyId);
@@ -510,6 +519,7 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
               onRemove={removePhoto}
               onSaveCaption={saveCaption}
               onSaveAuthor={saveAuthor}
+              airbnb={airbnb}
             />
           )}
 
@@ -531,6 +541,7 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
                   onRemove={removePhoto}
                   onSaveCaption={saveCaption}
                   onSaveAuthor={saveAuthor}
+                  airbnb={airbnb}
                 />
               ))}
             </div>
@@ -557,6 +568,7 @@ function PhotoCard({
   onRemove,
   onSaveCaption,
   onSaveAuthor,
+  airbnb,
 }: {
   photo: PropertyPhoto;
   lang: Locale;
@@ -571,6 +583,8 @@ function PhotoCard({
   onRemove: (photo: PropertyPhoto) => void;
   onSaveCaption: (photo: PropertyPhoto, text: string) => void;
   onSaveAuthor: (photo: PropertyPhoto, text: string) => void;
+  /** null = kein Airbnb-Objekt; dann fehlt der Zuordnungs-Zweig im Menü. */
+  airbnb: AirbnbFotoStand | null;
 }) {
   // Lokaler Entwurf, damit der Zähler live mitläuft; gespeichert wird onBlur.
   const [value, setValue] = useState(photo.caption[lang] ?? "");
@@ -645,6 +659,7 @@ function PhotoCard({
                 {t("setCover")}
               </DropdownMenuItem>
             )}
+            {airbnb && <AirbnbRaumMenue photoId={photo.id} stand={airbnb} />}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"

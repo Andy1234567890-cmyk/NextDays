@@ -4,6 +4,7 @@ Service-Role umgeht RLS → nur in vertrauenswürdigen Server-Pfaden nutzen,
 nie mit Gast-/User-Input ohne tenant-Scope.
 """
 from functools import lru_cache
+from urllib.parse import quote
 
 import httpx
 from supabase import Client, ClientOptions, create_client
@@ -182,6 +183,20 @@ def fetch_all_rows(query: object, *, page_size: int = _PAGE_SIZE) -> list[dict]:
         if len(page) < page_size:
             return rows
         offset += page_size
+
+
+def public_storage_url(bucket: str, path: str) -> str:
+    """Öffentliche URL eines Objekts in einem PUBLIC-Bucket — für Speichern gedacht.
+
+    Bewusst NICHT `storage.get_public_url`: der Storage-Client kennt nur
+    `supabase_url`, und das ist im Container die INTERNE Kong-Adresse
+    (`http://kong:8000`). Eine damit gebaute und in die DB geschriebene URL ist im
+    Browser und für OTAs unerreichbar — genau so war das Firmenlogo auf /konto ein
+    kaputtes Bild und ging als toter Link an die Portale. Basis ist deshalb immer
+    `storage_public_base` (von außen erreichbar).
+    """
+    base = get_settings().storage_public_base
+    return f"{base}/storage/v1/object/public/{bucket}/{quote(path, safe='/')}"
 
 
 def escape_like(value: str) -> str:

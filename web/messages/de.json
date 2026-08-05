@@ -4476,7 +4476,8 @@
       "zimmerAnzahl": "Anzahl {room}",
       "infoEditorTitle": "Details zur Unterkunft",
       "infoEditorSubtitle": "Geben Sie den Unterkunftstyp, die Größe und die Kapazität für Gäste an.",
-      "statusFieldHint": "„Aktiv“ heißt: Das Objekt wird verkauft — auf den Portalen, auf myBestDays und bei Direktbuchungen. „Entwurf“ ist nirgends sichtbar."
+      "statusFieldHint": "„Aktiv“ heißt: Das Objekt wird verkauft — auf den Portalen, auf myBestDays und bei Direktbuchungen. „Entwurf“ ist nirgends sichtbar.",
+      "zimmerNurLokal": "Bleibt bei myNextDays — die Portale kennen diese Zimmerart nicht."
     },
     "availabilityForm": {
       "title": "Verfügbarkeit",
@@ -5114,6 +5115,17 @@
     "switcher": {
       "searchPlaceholder": "Objekt suchen …",
       "noMatch": "Kein Objekt gefunden."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Ohne Zimmer",
+      "umgehaengt": "Zuordnung bei Airbnb geändert.",
+      "menue": "Airbnb-Zimmer",
+      "geloest": "Das Foto hängt an keinem Zimmer mehr."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Die Zimmer stimmen mit Airbnb überein.",
+      "restHinweis": "Bei Airbnb steht noch: {zimmer}. Airbnb bietet keinen Weg, ein Zimmer über die Schnittstelle zu löschen — das geht nur im Airbnb-Konto.",
+      "beiAirbnbEntfernen": "Bei Airbnb entfernen"
     }
   },
   "calendar": {
@@ -6872,5 +6884,11 @@
       "abgelaufen": "Abgelaufen",
       "fehler": "Fehler"
     }
+  },
+  "glocke": {
+    "leer": "Keine Benachrichtigungen",
+    "alleGelesen": "Alle gelesen",
+    "erneut": "Erneut laden",
+    "ariaMitAnzahl": "Benachrichtigungen ({count} ungelesen)"
   }
 }

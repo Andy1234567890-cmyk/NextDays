@@ -7,6 +7,7 @@ from fastapi import Depends
 
 from src.core.supabase import get_service_client
 
+from .glocke import GlockeService
 from .service import NotificationSettingsService
 
 
@@ -20,3 +21,13 @@ def get_notification_settings_service() -> NotificationSettingsService:
 NotificationSettingsServiceDep = Annotated[
     NotificationSettingsService, Depends(get_notification_settings_service)
 ]
+
+
+def get_glocke_service() -> GlockeService:
+    # service_role wie oben: `notifications` ist per revoke gegen direktes
+    # Schreiben gesperrt, `select` ist für authenticated nur über die eigene
+    # Zeile offen (Realtime). Der Scope kommt hier aus ctx (Wurzel 3/9).
+    return GlockeService(db=get_service_client())
+
+
+GlockeServiceDep = Annotated[GlockeService, Depends(get_glocke_service)]

@@ -10,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from src.core.config import get_settings
 from src.core.security import AuthContext
 from src.features.properties.gebuehren import (
     fee_category,
@@ -173,7 +174,7 @@ def test_upload_image_unknown_property_raises_404() -> None:
 
 
 def test_upload_image_returns_public_url() -> None:
-    # DB-Mock mit Storage: get() liefert ein Objekt, Storage gibt Public-URL.
+    # DB-Mock mit Storage: get() liefert ein Objekt, Upload läuft durch.
     db = MagicMock()
     chain = MagicMock()
     chain.execute.return_value = MagicMock(data=[_row()])
@@ -182,9 +183,6 @@ def test_upload_image_returns_public_url() -> None:
     db.table.return_value = chain
 
     storage = MagicMock()
-    storage.get_public_url.return_value = (
-        "https://x.supabase.co/storage/v1/object/public/property-images/t-1/p-1/custom-map.png"
-    )
     db.storage.from_.return_value = storage
 
     svc = PropertiesService(service_client=db)
@@ -194,8 +192,11 @@ def test_upload_image_returns_public_url() -> None:
     # Pfad enthält tenant/property/slot, Upload wurde aufgerufen.
     assert storage.upload.called
     assert "custom-map.png" in storage.upload.call_args[0][0]
-    assert url.startswith("https://x.supabase.co/")
-    assert "?v=" in url  # Cache-Buster
+    # URL wird NICHT vom Storage-Client gebaut (der kennt nur die interne
+    # Kong-Adresse), sondern aus der von außen erreichbaren Basis.
+    assert not storage.get_public_url.called
+    assert url.startswith(f"{get_settings().storage_public_base}/storage/v1/object/public/")
+    assert "/property-images/t-1/p-1/custom-map.png?v=" in url  # Cache-Buster
 
 
 # --- publish (draft→active): ohne Preis 422 ---------------------------------

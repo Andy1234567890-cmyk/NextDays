@@ -20,6 +20,7 @@ from .abgaben_status import AbgabenStatusMixin
 from .airbnb_aktionen import AirbnbAktionenMixin
 from .airbnb_diagnose import AirbnbDiagnoseMixin
 from .airbnb_direkt import AirbnbDirektMixin
+from .airbnb_foto_raum import AirbnbFotoRaumMixin
 from .airbnb_objekt_abruf import AirbnbObjektAbrufMixin
 from .airbnb_uebernahme import AirbnbUebernahmeMixin
 from .airbnb_zimmer_push import AirbnbZimmerPushMixin
@@ -88,6 +89,10 @@ class ChannelManagerService(
     # `_airbnb_kanal_des_betriebs`, um die Zimmer unserer Maske zurück an die
     # Airbnb-Anzeige zu geben (Gegenrichtung zum Import, Wurzel 1).
     AirbnbZimmerPushMixin,
+    # Nach AirbnbDirektMixin/AirbnbZimmerPushMixin: nutzt deren Foto-Lesepfad
+    # und `_airbnb_raeume_lesen`. Airbnb-Eigenheit — Booking.com kennt keine
+    # Raum-Zuordnung für Fotos (0288).
+    AirbnbFotoRaumMixin,
     ObjektKanalMixin,
     BookingsSyncMixin,
     LiveFeedSyncMixin,

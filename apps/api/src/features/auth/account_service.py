@@ -18,6 +18,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import public_storage_url
 
 from .granular_permissions import (
     default_permissions_for,
@@ -599,7 +600,7 @@ class AccountService:
             log.warning("avatar_upload_failed", user_id=ctx.user_id, error=str(exc))
             raise AuthError("Upload fehlgeschlagen.", status_code=502) from exc
 
-        public_url = storage.get_public_url(path)
+        public_url = public_storage_url(self.AVATAR_BUCKET, path)
         # Cache-Buster, damit Clients das neue Bild trotz gleicher URL laden.
         versioned = f"{public_url}?v={secrets.token_hex(4)}"
         self._service.table("users").update({"avatar_url": versioned}).eq(

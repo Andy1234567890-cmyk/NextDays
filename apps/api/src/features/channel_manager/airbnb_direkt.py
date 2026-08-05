@@ -563,6 +563,14 @@ class AirbnbDirektMixin:
                     "sort_order": foto.get("sort_order"),
                     "category": foto.get("category"),
                     "airbnb_photo_id": str(foto.get("id")) if foto.get("id") else None,
+                    # Der Raum, an dem das Foto bei Airbnb hängt. Airbnb blendet
+                    # die ganze „Photo tour" aus, wenn ein Raum kein Foto hat —
+                    # ohne diesen Wert ist nicht feststellbar, welcher fehlt.
+                    # None ist gültig: `category: LISTING` (Außenbilder) hat
+                    # keinen Raum.
+                    "airbnb_room_id": (
+                        str(foto["room_id"]) if foto.get("room_id") else None
+                    ),
                 }
             )
         ergebnis.sort(key=lambda f: (f["sort_order"] is None, f["sort_order"] or 0))
@@ -831,23 +839,136 @@ class AirbnbDirektMixin:
         naechste = len(bestehende)
 
         neue = [f for f in fotos if f["url"] not in bekannte]
-        if not neue:
-            return 0
+        if neue:
+            captions = self._captions_aufbauen(neue, locale)
+            zeilen = [
+                {
+                    "property_id": property_id,
+                    "url": foto["url"],
+                    "caption": caption,
+                    "sort_order": naechste + i,
+                    "is_cover": not hat_cover and i == 0,
+                }
+                for i, (foto, caption) in enumerate(zip(neue, captions, strict=True))
+            ]
+            db.table("property_photos").insert(zeilen).execute()
+            self._photos_spalte_spiegeln(db, property_id)
 
-        captions = self._captions_aufbauen(neue, locale)
-        zeilen = [
-            {
-                "property_id": property_id,
-                "url": foto["url"],
-                "caption": caption,
-                "sort_order": naechste + i,
-                "is_cover": not hat_cover and i == 0,
-            }
-            for i, (foto, caption) in enumerate(zip(neue, captions, strict=True))
-        ]
-        db.table("property_photos").insert(zeilen).execute()
-        self._photos_spalte_spiegeln(db, property_id)
-        return len(zeilen)
+        # Die Raum-Zuordnung IMMER pflegen, auch wenn kein Foto neu ist: sie
+        # ändert sich bei Airbnb unabhängig vom Bestand (der Betrieb hängt dort
+        # ein Bild um), und die bereits importierten Fotos hätten sonst nie eine
+        # (live: 16 Fotos ohne jede Zuordnung). Wurzel 1 — der Abgleich gehört
+        # zur Aktion, nicht nur das Anlegen.
+        self._airbnb_foto_raum_pflegen(db, property_id, fotos)
+        return len(neue)
+
+    def _airbnb_raumarten(self, db: Client, property_id: str) -> dict[str, str]:
+        """Airbnbs Raumart je Raum-ID. Leer, wenn nicht lesbar.
+
+        Best effort: ohne die Arten wird die Zuordnung trotzdem gepflegt, nur
+        eine später tote Raum-ID lässt sich dann nicht mehr auflösen.
+        """
+        zeile = (
+            db.table("properties")
+            .select("tenant_id")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not zeile:
+            return {}
+        listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
+        kanal = self._airbnb_kanal_des_betriebs(  # type: ignore[attr-defined]
+            db, str(zeile[0]["tenant_id"])
+        )
+        if not listing_id or not kanal:
+            return {}
+        raeume = self._airbnb_raeume_lesen(kanal, listing_id)  # type: ignore[attr-defined]
+        return {
+            str(r["id"]): str(r.get("room_type") or "")
+            for r in (raeume or []) if r.get("id")
+        }
+
+    def _airbnb_foto_raum_pflegen(
+        self, db: Client, property_id: str, fotos: list[dict[str, Any]]
+    ) -> None:
+        """`airbnb_foto_raum` mit Airbnbs Stand abgleichen.
+
+        Airbnb-Eigenheit, darum eigene Tabelle statt Spalten in
+        `property_photos` (Booking.com kennt das Konzept nicht, 0288).
+
+        Der Abgleich geht über die URL: sie ist der einzige Wert, den beide
+        Seiten teilen — unsere Zeilen tragen Airbnbs CDN-URL. Ein Foto, das der
+        Betrieb selbst hochgeladen hat, hat keine Entsprechung bei Airbnb und
+        bleibt hier zu Recht außen vor.
+
+        Best effort: fällt der Abgleich aus, bleiben die Fotos selbst korrekt —
+        der Grund steht im Log (Wurzel 5: kein stiller Erfolg).
+        """
+        # Der Mandant hängt am OBJEKT, nicht am Foto: `property_photos` hat
+        # keine `tenant_id` (live geprüft, 9 Spalten). Der frühere Select darauf
+        # warf 42703 und liess den Abgleich jedes Mal in den Best-effort-Fang
+        # laufen — deshalb war die Tabelle trotz 16 Fotos praktisch leer.
+        objekt = (
+            db.table("properties")
+            .select("tenant_id")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not objekt:
+            return
+        tenant_id = str(objekt[0]["tenant_id"])
+        unsere = (
+            db.table("property_photos")
+            .select("id, url")
+            .eq("property_id", property_id)
+            .execute()
+        ).data or []
+        nach_url = {str(z.get("url")): z for z in unsere}
+        # Die ART zur Raum-ID: die ID ist FLÜCHTIG (Löschen+Neuanlegen im
+        # Extranet gibt eine neue), die Art bleibt. Ohne sie lässt sich eine
+        # tote ID später nicht mehr auflösen — live genau der Fall gewesen
+        # (Balkon 817240083 → 817255403, siehe 0290).
+        art_je_raum = self._airbnb_raumarten(db, property_id)
+        zeilen = []
+        for foto in fotos:
+            unser = nach_url.get(foto["url"])
+            if not unser or not foto.get("airbnb_photo_id"):
+                continue
+            raum_id = foto.get("airbnb_room_id")
+            zeilen.append(
+                {
+                    "tenant_id": tenant_id,
+                    "property_photo_id": unser["id"],
+                    "airbnb_photo_id": foto["airbnb_photo_id"],
+                    "airbnb_room_id": raum_id,
+                    "airbnb_room_art": art_je_raum.get(str(raum_id or "")),
+                }
+            )
+        if not zeilen:
+            return
+        try:
+            # Auf die Foto-Zeile upserten, nicht auf die Airbnb-Kennung: unser
+            # Foto ist der stabile Bezug, und `property_photo_id` ist UNIQUE.
+            db.table("airbnb_foto_raum").upsert(
+                zeilen, on_conflict="property_photo_id"
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Nebenpfad, siehe Docstring
+            # `error`, nicht `warning`: hier steckte ein echter Programmierfehler
+            # (Select auf eine Spalte, die es nicht gibt → 42703), und als
+            # Warnung ist er niemandem aufgefallen — die Tabelle blieb leer,
+            # während die Oberfläche „keine Zuordnung" meldete.
+            log.error(
+                "airbnb_foto_raum_abgleich_fehlgeschlagen",
+                property_id=property_id, error=str(exc)[:300],
+            )
+            return
+        log.info(
+            "airbnb_foto_raum_abgeglichen",
+            property_id=property_id, zeilen=len(zeilen),
+            ohne_raum=sum(1 for z in zeilen if not z["airbnb_room_id"]),
+        )
 
     @staticmethod
     def _captions_aufbauen(

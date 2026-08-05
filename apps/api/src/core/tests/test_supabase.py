@@ -3,7 +3,12 @@ Verbindungen (Kong/PostgREST schließt idle HTTP/2-Connections serverseitig)."""
 import httpx
 import pytest
 
-from src.core.supabase import _MAX_RETRIES, _ReconnectingTransport
+from src.core.config import Settings, get_settings
+from src.core.supabase import (
+    _MAX_RETRIES,
+    _ReconnectingTransport,
+    public_storage_url,
+)
 
 
 class _AbbrechenderStream(httpx.SyncByteStream):
@@ -127,3 +132,45 @@ def test_abbruch_vor_antwort_wiederholt_auch_post() -> None:
     resp = _ReconnectingTransport(inner).handle_request(post)
     assert resp.status_code == 201
     assert inner.calls == 2
+
+
+def test_public_storage_url_nutzt_externe_basis(monkeypatch) -> None:  # noqa: ANN001
+    """Gespeicherte Storage-URLs müssen von AUSSEN erreichbar sein.
+
+    Im Container ist SUPABASE_URL die interne Kong-Adresse; eine damit gebaute
+    URL landete in der DB und war im Browser ein kaputtes Bild (Firmenlogo).
+    """
+    get_settings.cache_clear()
+    monkeypatch.setenv("SUPABASE_URL", "http://kong:8000")
+    monkeypatch.setenv("API_EXTERNAL_URL", "https://kong.example.com/")
+    try:
+        url = public_storage_url("company-logos", "t-1/logo.jpg")
+        assert url == (
+            "https://kong.example.com/storage/v1/object/public/company-logos/t-1/logo.jpg"
+        )
+    finally:
+        get_settings.cache_clear()
+
+
+def test_public_storage_url_explizite_basis_gewinnt(monkeypatch) -> None:  # noqa: ANN001
+    get_settings.cache_clear()
+    monkeypatch.setenv("SUPABASE_URL", "http://kong:8000")
+    monkeypatch.setenv("API_EXTERNAL_URL", "https://kong.example.com")
+    monkeypatch.setenv("SUPABASE_PUBLIC_URL", "https://cdn.example.com")
+    try:
+        assert public_storage_url("avatars", "u 1/a.png") == (
+            "https://cdn.example.com/storage/v1/object/public/avatars/u%201/a.png"
+        )
+    finally:
+        get_settings.cache_clear()
+
+
+def test_storage_public_base_ohne_konfiguration_schlaegt_fehl() -> None:
+    """Kein Rückfall auf die interne Adresse: ohne konfigurierte externe Basis
+    gibt es keine speicherbare URL, also einen klaren Fehler."""
+    # _env_file=None: bewusst ohne die lokale .env prüfen (dort ist die Basis
+    # gesetzt) — hier geht es um den unkonfigurierten Zustand.
+    settings = Settings(_env_file=None, supabase_url="http://kong:8000",
+                        supabase_public_url="")
+    with pytest.raises(RuntimeError, match="SUPABASE_PUBLIC_URL"):
+        _ = settings.storage_public_base

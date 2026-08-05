@@ -1083,6 +1083,16 @@ export const ZIMMER_SLUGS = [
 
 export type ZimmerSlug = (typeof ZIMMER_SLUGS)[number];
 
+// Zimmerarten, die bei Airbnb KEINE Entsprechung haben und darum lokal bleiben.
+// Live gemessen (05.08.2026): die anderen zehn Arten laufen durch Airbnbs
+// Validator (`POST listing_rooms` bemaengelt nur die absichtlich weggelassene
+// listing_id, nicht die Art). Fuer den Schlafbereich gibt es keinen Wert —
+// `sleeping_area` kommt weder in der API-Messung ueber alle 18 Anzeigen vor
+// noch in Airbnbs Auswahlliste („Choose a room or space", 40 Eintraege).
+// Backend-Gegenstueck: SLUG_AUF_AIRBNB_RAUM in airbnb_zimmer_push.py — was dort
+// fehlt, steht hier.
+export const ZIMMER_NUR_LOKAL: ReadonlySet<string> = new Set(["schlafbereich"]);
+
 // Fallback-Labels (Deutsch) für Server-/PDF-Pfade ohne next-intl.
 export const ZIMMER_LABELS: Record<string, string> = {
   balkon: "Balkon",

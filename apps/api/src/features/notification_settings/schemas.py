@@ -84,3 +84,28 @@ class NotificationOverview(BaseModel):
 
     kategorien: list[KategorieInfo]
     marketing_unsubscribed_all: bool
+
+
+class GlockeEintrag(BaseModel):
+    """Eine In-App-Benachrichtigung, wie die Glocke sie zeigt."""
+
+    id: str
+    kategorie: str
+    titel: str
+    text: str | None = None
+    # Relativer Pfad; die UI hängt keine Domäne davor (Wechsel .com → .dk).
+    ziel_pfad: str | None = None
+    property_id: str | None = None
+    gelesen_am: str | None = None
+    created_at: str
+
+
+class GlockeListe(BaseModel):
+    """Die Meldungen plus der Zähler — beides in EINEM Aufruf.
+
+    Getrennt wären es zwei Anfragen für eine Ansicht, und der Zähler könnte
+    kurzzeitig nicht zur Liste passen.
+    """
+
+    eintraege: list[GlockeEintrag]
+    ungelesen: int

@@ -33,6 +33,7 @@ import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { Input } from "@nextdays/ui/input";
 
+import { AirbnbZimmerRestHinweis } from "@/components/objekte/airbnb-zimmer-rest";
 import { BETT_ILLUSTRATION } from "@/components/objekte/bett-illustrationen";
 import { EditorShell, Footer } from "@/components/objekte/editor-primitives";
 import {
@@ -41,7 +42,11 @@ import {
   listPropertyRooms,
   type PropertyRoom,
 } from "@/lib/properties";
-import { BED_SLUGS, ZIMMER_SLUGS } from "@/lib/property-meta";
+import {
+  BED_SLUGS,
+  ZIMMER_NUR_LOKAL,
+  ZIMMER_SLUGS,
+} from "@/lib/property-meta";
 import { useRealtime } from "@/lib/use-realtime";
 
 // Obergrenze je Zimmertyp und Gruppe bzw. je Bettentyp. Ohne Deckel macht eine
@@ -246,6 +251,13 @@ function ZimmerEditor({
         />
       }
     >
+      {/* Der Rückweg ist nur zur HÄLFTE möglich, und das muss KONKRET dastehen:
+          ein hinzugefügtes Zimmer geht an Airbnb (live bewiesen), ein
+          entferntes NICHT — Airbnb hat keinen Löschweg für Räume (16 Formen
+          gemessen, über Channex und direkt; `v2/listing_rooms` kennt nur GET
+          und POST). Deshalb kein pauschaler Satz, sondern die Liste dessen, was
+          WIRKLICH offen ist, mit dem Weg, der wirkt. */}
+      <AirbnbZimmerRestHinweis propertyId={propertyId} zimmer={zimmer} />
       <ZimmerGruppe
         icon="ph:user"
         titel={t("propertyOverview.zimmerPrivat")}
@@ -282,6 +294,7 @@ function ZimmerGruppe({
   busy: boolean;
   onAnzahl: (raumTyp: string, privat: boolean, ziel: number) => Promise<void>;
 }) {
+  const t = useTranslations("objects");
   const tz = useTranslations("zimmer");
   // Gemeinschaftliche Zimmer sind der Sonderfall — zu wie bei Lodgify, außer es
   // steht schon etwas darin.
@@ -311,6 +324,14 @@ function ZimmerGruppe({
             <Zaehlzeile
               key={slug}
               label={tz(slug)}
+              // Ohne diesen Zusatz sieht die Zeile aus wie jede andere, und der
+              // Betrieb erwartet den Raum bei den Portalen. Airbnb kennt ihn
+              // aber nicht (siehe ZIMMER_NUR_LOKAL).
+              hinweis={
+                ZIMMER_NUR_LOKAL.has(slug)
+                  ? t("propertyOverview.zimmerNurLokal")
+                  : undefined
+              }
               anzahl={zimmerVonTyp(alleZimmer, slug, privat).length}
               busy={busy}
               onSetzen={(ziel) => onAnzahl(slug, privat, ziel)}
@@ -472,12 +493,15 @@ function BettenEditor({
 function Zaehlzeile({
   label,
   icon,
+  hinweis,
   anzahl,
   busy,
   onSetzen,
 }: {
   label: string;
   icon?: React.ReactNode;
+  /** Kleingedrucktes unter dem Namen, z. B. „geht nicht an die Portale". */
+  hinweis?: string;
   anzahl: number;
   busy: boolean;
   onSetzen: (ziel: number) => Promise<void>;
@@ -498,7 +522,12 @@ function Zaehlzeile({
   return (
     <div className="flex items-center gap-3 py-2.5">
       {icon}
-      <span className="flex-1 text-[0.9375rem]">{label}</span>
+      <span className="flex flex-1 flex-col">
+        <span className="text-[0.9375rem]">{label}</span>
+        {hinweis ? (
+          <span className="text-xs text-muted-foreground">{hinweis}</span>
+        ) : null}
+      </span>
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"

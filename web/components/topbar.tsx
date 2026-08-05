@@ -2,13 +2,12 @@
 
 // Dashboard-Topbar: Sidebar-Trigger, Seitentitel, Benachrichtigungen,
 // Theme-Umschalter. Client-Komponente (Iconify + Interaktion).
-import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
+import { Glocke } from "@/components/glocke";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@nextdays/ui/button";
 import { Separator } from "@nextdays/ui/separator";
 import { SidebarTrigger } from "@nextdays/ui/sidebar";
 
@@ -49,9 +48,7 @@ export function Topbar() {
       <h1 className="font-display text-base font-extrabold">{title}</h1>
 
       <div className="ml-auto flex items-center gap-1">
-        <Button variant="ghost" size="icon" aria-label={t("notifications")}>
-          <Icon icon="ph:bell" className="size-5" />
-        </Button>
+        <Glocke />
         <LanguageToggle />
         <ThemeToggle />
       </div>

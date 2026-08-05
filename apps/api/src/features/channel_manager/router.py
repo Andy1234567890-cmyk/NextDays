@@ -5,7 +5,7 @@ sind tenant-scoped (tenant_id aus dem JWT) und erfordern MANAGE_PROPERTY_SETTING
 Der Webhook-Endpoint ist bewusst ohne JWT (Channex ruft ihn auf) und wird über
 ein geteiltes Secret im Header abgesichert.
 """
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import (
     APIRouter,
@@ -36,6 +36,7 @@ from .schemas import (
     AbgabenStatusResponse,
     AirbnbAktionenPushResponse,
     AirbnbAnfrageAntwort,
+    AirbnbFotoRaumRequest,
     AirbnbObjektAbrufResponse,
     AirbnbTaxSettingsRequest,
     AirbnbTaxSettingsResponse,
@@ -1197,5 +1198,55 @@ async def internal_seed_ari_shadow(
     require_internal_cron_secret(x_internal_cron_secret)
     try:
         return service.seed_ari_shadow_all_tenants()
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Airbnb: Foto ↔ Raum ------------------------------------------------------
+# Airbnb blendet die ganze „Photo tour" aus, wenn ein Raum kein Foto hat. Diese
+# Zuordnung gibt es NUR bei Airbnb — Booking.com kennt sie nicht (0288).
+
+
+@router.get("/properties/{property_id}/airbnb-zimmer-rest")
+def airbnb_zimmer_rest(
+    property_id: str, ctx: _read, service: ChannelManagerServiceDep
+) -> dict[str, Any]:
+    """Zimmer, die bei Airbnb stehen, obwohl wir sie nicht mehr führen.
+
+    Airbnb hat keinen Löschweg für Räume (16 Formen gemessen, 05.08.2026) — der
+    Betrieb muss es im Extranet tun. Ohne diese Abfrage sähe er nicht, DASS
+    etwas offen ist.
+    """
+    try:
+        return service.airbnb_zimmer_rest(ctx, property_id=property_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/properties/{property_id}/airbnb-foto-raeume")
+def airbnb_foto_raeume(
+    property_id: str, ctx: _read, service: ChannelManagerServiceDep
+) -> dict[str, Any]:
+    """Zuordnung je Foto, Airbnbs Räume und die Räume OHNE Foto."""
+    try:
+        return service.airbnb_foto_raeume(ctx, property_id=property_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/properties/{property_id}/airbnb-foto-raeume/{photo_id}")
+def airbnb_foto_umhaengen(
+    property_id: str,
+    photo_id: str,
+    payload: AirbnbFotoRaumRequest,
+    ctx: _write,
+    service: ChannelManagerServiceDep,
+) -> dict[str, Any]:
+    """Ein Foto bei Airbnb zuordnen — `airbnb_room_id: null` löst es vom Raum."""
+    try:
+        return service.airbnb_foto_umhaengen(
+            ctx, property_id=property_id, photo_id=photo_id,
+            room_id=payload.airbnb_room_id,
+        )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

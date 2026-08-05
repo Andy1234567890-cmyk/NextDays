@@ -23,6 +23,7 @@ from supabase import Client
 from src.core.countries import dial_code
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import public_storage_url
 
 from .schemas import (
     CustomerCreate,
@@ -891,7 +892,7 @@ class BuchhaltungService:
         g = payload.get
         row = {
             "tenant_id": tenant_id,
-            "legal_name": g("companyName") or g("name") or g("legal_name"),
+            "legal_name": _legal_name_from_payload(payload),
             # Adresse
             "company_street": g("companyStreet") or g("company_street"),
             "company_house_number": g("companyHouseNumber") or g("company_house_number"),
@@ -1231,7 +1232,7 @@ class BuchhaltungService:
             log.warning("company_logo_upload_failed", tenant_id=tenant_id, error=str(exc))
             raise BuchhaltungError("Upload fehlgeschlagen.", status_code=502) from exc
 
-        public_url = storage.get_public_url(path)
+        public_url = public_storage_url(self.LOGO_BUCKET, path)
         # Cache-Buster, damit Clients trotz gleicher URL das neue Logo laden.
         url = f"{public_url}?v={secrets.token_hex(4)}"
         self._db.table("tenant_billing_profile").upsert(
@@ -1595,6 +1596,32 @@ class BuchhaltungService:
                 "Angebot wurde bereits umgewandelt.", status_code=409
             )
         return invoice
+
+
+def _legal_name_from_payload(payload: dict) -> str | None:
+    """Rechtsname des Betriebs (legal_name) — genau EINE Ableitung, hier im Server.
+
+    Das ist der eingetragene Firmenname, wenn einer angegeben ist. Eine natürliche
+    Person ohne eingetragenen Firmennamen (Einzelunternehmen, dänische
+    Enkeltmandsvirksomhed, sole trader) firmiert unter ihrem EIGENEN Namen — der
+    ist dann ihr Rechtsname, kein Ersatzwert. Trägt der Payload überhaupt kein
+    Firmenname-Feld (Teil-Update), bleibt der gespeicherte Wert unangetastet
+    (None → der Aufrufer filtert den Schlüssel heraus).
+    """
+    schluessel = next(
+        (k for k in ("companyName", "name", "legal_name") if k in payload), None
+    )
+    if schluessel is None:
+        return None
+    firmenname = (payload[schluessel] or "").strip()
+    if firmenname:
+        return firmenname
+    person = " ".join(
+        (payload.get(k) or "").strip()
+        for k in ("firstName", "lastName")
+        if (payload.get(k) or "").strip()
+    )
+    return person or None
 
 
 def _account_holder_from(profile: dict) -> str | None:

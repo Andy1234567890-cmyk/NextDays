@@ -14,7 +14,7 @@ from supabase import Client
 from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.logging import get_logger
 from src.core.security import AuthContext
-from src.core.supabase import load_scoped
+from src.core.supabase import load_scoped, public_storage_url
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.auth.staff_scope import is_staff, staff_property_ids
 from src.jobs.queue import (
@@ -690,7 +690,7 @@ class PropertiesService(
             log.warning("property_image_upload_failed", property_id=property_id, error=str(exc))
             raise PropertyError("Upload fehlgeschlagen.", status_code=502) from exc
 
-        public_url = storage.get_public_url(path)
+        public_url = public_storage_url(self.IMAGE_BUCKET, path)
         log.info(
             "property_image_uploaded",
             tenant_id=tenant_id,
@@ -773,7 +773,7 @@ class PropertiesService(
         except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich
             log.warning("property_photo_upload_failed", property_id=property_id, error=str(exc))
             raise PropertyError("Upload fehlgeschlagen.", status_code=502) from exc
-        url = storage.get_public_url(path)
+        url = public_storage_url(self.IMAGE_BUCKET, path)
 
         res = (
             self._db.table("property_photos")
@@ -1396,7 +1396,7 @@ class PropertiesService(
                     "property_id": property_id,
                     "feature_key": feature_key,
                     "storage_path": path,
-                    "url": storage.get_public_url(path),
+                    "url": public_storage_url(self.IMAGE_BUCKET, path),
                     "status": "pending",
                 }
             )

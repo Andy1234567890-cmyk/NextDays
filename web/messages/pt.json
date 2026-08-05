@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Número de {room}",
       "infoEditorTitle": "Detalhes do alojamento",
       "infoEditorSubtitle": "Indique o tipo de alojamento, o tamanho e a capacidade de hóspedes.",
-      "statusFieldHint": "«Ativo» significa que o alojamento está à venda — nos portais, no myBestDays e em reservas diretas. «Rascunho» não é visível em lado nenhum."
+      "statusFieldHint": "«Ativo» significa que o alojamento está à venda — nos portais, no myBestDays e em reservas diretas. «Rascunho» não é visível em lado nenhum.",
+      "zimmerNurLokal": "Permanece no myNextDays — os portais não conhecem este tipo de quarto."
     },
     "availabilityForm": {
       "title": "Disponibilidade",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Procurar imóvel …",
       "noMatch": "Nenhum imóvel encontrado."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Sem quarto",
+      "umgehaengt": "Atribuição alterada no Airbnb.",
+      "menue": "Quarto no Airbnb",
+      "geloest": "A foto já não está associada a um quarto."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Os quartos coincidem com o Airbnb.",
+      "restHinweis": "Ainda no Airbnb: {zimmer}. O Airbnb não oferece forma de eliminar um quarto através da interface — só é possível na sua conta Airbnb.",
+      "beiAirbnbEntfernen": "Remover no Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Expirada",
       "fehler": "Erro"
     }
+  },
+  "glocke": {
+    "leer": "Sem notificações",
+    "alleGelesen": "Marcar todas como lidas",
+    "erneut": "Recarregar",
+    "ariaMitAnzahl": "Notificações ({count} não lidas)"
   }
 }

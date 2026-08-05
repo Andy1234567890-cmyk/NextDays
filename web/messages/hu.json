@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "{room} száma",
       "infoEditorTitle": "A szállás adatai",
       "infoEditorSubtitle": "Adja meg a szállás típusát, méretét és vendégkapacitását.",
-      "statusFieldHint": "Az „Aktív” azt jelenti, hogy a szállást értékesítjük – a portálokon, a myBestDaysen és közvetlen foglalásnál. A „Piszkozat” sehol sem látható."
+      "statusFieldHint": "Az „Aktív” azt jelenti, hogy a szállást értékesítjük – a portálokon, a myBestDaysen és közvetlen foglalásnál. A „Piszkozat” sehol sem látható.",
+      "zimmerNurLokal": "A myNextDays-ben marad — a portálok nem ismerik ezt a szobatípust."
     },
     "availabilityForm": {
       "title": "Elérhetőség",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Objektum keresése …",
       "noMatch": "Nem található objektum."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Szoba nélkül",
+      "umgehaengt": "Hozzárendelés módosítva az Airbnb-n.",
+      "menue": "Airbnb-szoba",
+      "geloest": "A fotó már nincs szobához rendelve."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "A szobák megegyeznek az Airbnb-vel.",
+      "restHinweis": "Az Airbnb-n még szerepel: {zimmer}. Az Airbnb nem kínál módot szoba törlésére a felületen keresztül — ez csak az Airbnb-fiókjában lehetséges.",
+      "beiAirbnbEntfernen": "Eltávolítás az Airbnb-n"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Lejárt",
       "fehler": "Hiba"
     }
+  },
+  "glocke": {
+    "leer": "Nincsenek értesítések",
+    "alleGelesen": "Összes olvasottnak jelölése",
+    "erneut": "Újratöltés",
+    "ariaMitAnzahl": "Értesítések ({count} olvasatlan)"
   }
 }

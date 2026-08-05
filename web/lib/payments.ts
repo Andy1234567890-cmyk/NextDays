@@ -35,12 +35,25 @@ async function call<T>(
 // KYC-Status eines Connect-Custom-Accounts. requirements = offene Felder, die
 // Stripe noch zur Freischaltung verlangt; disabled_reason erklärt, warum
 // charges/payouts (noch) gesperrt sind.
+export type ConnectRequirementError = {
+  requirement: string;
+  code: string;
+  reason: string;
+};
+
 export type ConnectStatus = {
   stripe_account_id: string;
   charges_enabled: boolean;
   payouts_enabled: boolean;
   details_submitted: boolean;
+  // currently_due — jetzt fällig. Die weiteren Listen kommen getrennt, weil
+  // „später fällig" und „in Prüfung" keinen Handlungsbedarf bedeuten.
   requirements: string[];
+  past_due: string[];
+  eventually_due: string[];
+  pending_verification: string[];
+  errors: ConnectRequirementError[];
+  current_deadline: number | null;
   disabled_reason: string | null;
 };
 

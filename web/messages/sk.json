@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Počet: {room}",
       "infoEditorTitle": "Podrobnosti o ubytovaní",
       "infoEditorSubtitle": "Zadajte typ ubytovania, veľkosť a kapacitu pre hostí.",
-      "statusFieldHint": "„Aktívne“ znamená, že sa ubytovanie predáva – na portáloch, na myBestDays aj pri priamych rezerváciách. „Koncept“ nie je nikde viditeľný."
+      "statusFieldHint": "„Aktívne“ znamená, že sa ubytovanie predáva – na portáloch, na myBestDays aj pri priamych rezerváciách. „Koncept“ nie je nikde viditeľný.",
+      "zimmerNurLokal": "Zostáva v myNextDays — portály tento typ miestnosti nepoznajú."
     },
     "availabilityForm": {
       "title": "Dostupnosť",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Hľadať objekt …",
       "noMatch": "Objekt sa nenašiel."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Bez izby",
+      "umgehaengt": "Priradenie na Airbnb zmenené.",
+      "menue": "Izba na Airbnb",
+      "geloest": "Fotka už nie je priradená k izbe."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Izby sa zhodujú s Airbnb.",
+      "restHinweis": "Na Airbnb stále je: {zimmer}. Airbnb neponúka spôsob, ako izbu zmazať cez rozhranie — dá sa to len vo vašom účte Airbnb.",
+      "beiAirbnbEntfernen": "Odstrániť na Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Vypršané",
       "fehler": "Chyba"
     }
+  },
+  "glocke": {
+    "leer": "Žiadne oznámenia",
+    "alleGelesen": "Označiť všetko ako prečítané",
+    "erneut": "Načítať znova",
+    "ariaMitAnzahl": "Oznámenia ({count} neprečítaných)"
   }
 }

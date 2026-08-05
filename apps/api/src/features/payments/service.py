@@ -42,6 +42,7 @@ from .schemas import (
     ConnectAccountCreate,
     ConnectAccountResponse,
     ConnectAccountStatus,
+    ConnectRequirementError,
     CountryRequirements,
     DiagnosticCheck,
     PaymentsDiagnostics,
@@ -454,7 +455,7 @@ class PaymentsService:
         self._require_own_connect_account(tenant_id, stripe_account_id)
         with _stripe_errors():
             account = self._stripe.v1.accounts.retrieve(stripe_account_id)
-        requirements: list[str] = list(account.requirements.currently_due or [])
+        reqs = account.requirements
         self._mirror_account_flags(
             tenant_id,
             charges=bool(account.charges_enabled),
@@ -466,8 +467,20 @@ class PaymentsService:
             charges_enabled=bool(account.charges_enabled),
             payouts_enabled=bool(account.payouts_enabled),
             details_submitted=bool(account.details_submitted),
-            requirements=requirements,
-            disabled_reason=account.requirements.disabled_reason,
+            requirements=list(reqs.currently_due or []),
+            past_due=list(reqs.past_due or []),
+            eventually_due=list(reqs.eventually_due or []),
+            pending_verification=list(reqs.pending_verification or []),
+            errors=[
+                ConnectRequirementError(
+                    requirement=str(e.get("requirement") or ""),
+                    code=str(e.get("code") or ""),
+                    reason=str(e.get("reason") or ""),
+                )
+                for e in (reqs.errors or [])
+            ],
+            current_deadline=reqs.current_deadline,
+            disabled_reason=reqs.disabled_reason,
         )
 
     def _mirror_account_flags(

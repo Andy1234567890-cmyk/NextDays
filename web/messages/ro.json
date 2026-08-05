@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Număr de {room}",
       "infoEditorTitle": "Detalii despre proprietate",
       "infoEditorSubtitle": "Indicați tipul proprietății, suprafața și capacitatea de oaspeți.",
-      "statusFieldHint": "„Activ” înseamnă că proprietatea este vândută — pe portaluri, pe myBestDays și la rezervări directe. „Ciornă” nu este vizibilă nicăieri."
+      "statusFieldHint": "„Activ” înseamnă că proprietatea este vândută — pe portaluri, pe myBestDays și la rezervări directe. „Ciornă” nu este vizibilă nicăieri.",
+      "zimmerNurLokal": "Rămâne în myNextDays — portalurile nu cunosc acest tip de cameră."
     },
     "availabilityForm": {
       "title": "Disponibilitate",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Caută proprietate …",
       "noMatch": "Nicio proprietate găsită."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Fără cameră",
+      "umgehaengt": "Atribuire modificată pe Airbnb.",
+      "menue": "Cameră pe Airbnb",
+      "geloest": "Fotografia nu mai este asociată unei camere."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Camerele corespund cu Airbnb.",
+      "restHinweis": "Încă există pe Airbnb: {zimmer}. Airbnb nu oferă nicio modalitate de a șterge o cameră prin interfață — acest lucru este posibil doar în contul tău Airbnb.",
+      "beiAirbnbEntfernen": "Elimină pe Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Expirată",
       "fehler": "Eroare"
     }
+  },
+  "glocke": {
+    "leer": "Nicio notificare",
+    "alleGelesen": "Marchează toate ca citite",
+    "erneut": "Reîncarcă",
+    "ariaMitAnzahl": "Notificări ({count} necitite)"
   }
 }

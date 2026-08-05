@@ -55,7 +55,7 @@ class NotificationDispatcher:
         self._settings = settings_service or NotificationSettingsService(db)
         self._mail = mail or MailService()
 
-    def sende(
+    def sende(  # noqa: PLR0913 — die Glocke braucht Ziel und Objektbezug
         self,
         *,
         user_id: str,
@@ -63,12 +63,25 @@ class NotificationDispatcher:
         betreff: str,
         text: str,
         html: str | None = None,
+        tenant_id: str | None = None,
+        ziel_pfad: str | None = None,
+        property_id: str | None = None,
+        dedup_key: str | None = None,
+        inapp: bool = True,
     ) -> Zustellung:
         """Eine Benachrichtigung ueber alle vom Nutzer erlaubten Kanaele.
 
         `schluessel` ist eine Kategorie aus dem Katalog (z. B. „listing_activity").
         Unbekannte Kategorien sind ein Programmierfehler → ValueError, nicht
         stillschweigend nichts tun.
+
+        Die GLOCKE (`inapp`) laeuft immer mit, sofern ein `tenant_id` da ist —
+        sie ist nicht abwaehlbar (siehe Kanal.INAPP). `inapp=False` schaltet sie
+        fuer Meldungen aus, die in der Anwendung keinen Sinn ergeben (etwa eine
+        reine Bestaetigungs-Mail an einen Gast ohne Zugang).
+
+        `ziel_pfad` ist der RELATIVE Pfad, auf den der Klick fuehrt; `dedup_key`
+        verhindert, dass derselbe Zustand bei jedem Sync erneut meldet (Wurzel 2).
         """
         kategorie = NACH_SCHLUESSEL.get(schluessel)
         if kategorie is None:
@@ -77,6 +90,13 @@ class NotificationDispatcher:
 
         ergebnis = Zustellung()
         empfaenger = self._empfaenger(user_id)
+
+        if inapp and tenant_id:
+            self._glocke(
+                tenant_id=tenant_id, user_id=user_id, kategorie=schluessel,
+                titel=betreff, text=text, ziel_pfad=ziel_pfad,
+                property_id=property_id, dedup_key=dedup_key, ergebnis=ergebnis,
+            )
 
         for kanal in kategorie.kanaele:
             if kanal is Kanal.PHONE:
@@ -97,6 +117,58 @@ class NotificationDispatcher:
             fehlgeschlagen=sorted(ergebnis.fehlgeschlagen),
         )
         return ergebnis
+
+    def _glocke(  # noqa: PLR0913 — eine Zeile mit ihren Feldern
+        self,
+        *,
+        tenant_id: str,
+        user_id: str,
+        kategorie: str,
+        titel: str,
+        text: str,
+        ziel_pfad: str | None,
+        property_id: str | None,
+        dedup_key: str | None,
+        ergebnis: Zustellung,
+    ) -> None:
+        """Eine Zeile in `notifications` — die In-App-Meldung.
+
+        Anders als E-Mail/SMS wird hier nichts versendet, sondern gespeichert:
+        die Meldung bleibt, bis der Nutzer sie gesehen hat.
+
+        Doppelmeldungen faengt der partielle UNIQUE-Index
+        `notifications_dedup_offen_uq` ab (Wurzel 2): steht dieselbe Meldung
+        ungelesen schon da, ist der 23505 der ZIELZUSTAND, kein Fehler. Der
+        Index greift bewusst nur fuer UNGELESENE — nach dem Lesen darf derselbe
+        Zustand erneut melden.
+        """
+        zeile = {
+            "tenant_id": tenant_id,
+            "user_id": user_id,
+            "kategorie": kategorie,
+            "titel": titel,
+            "text": text or None,
+            "ziel_pfad": ziel_pfad,
+            "property_id": property_id,
+            "dedup_key": dedup_key,
+        }
+        try:
+            self._db.table("notifications").insert(zeile).execute()
+        except Exception as exc:  # noqa: BLE001 — Fremdbibliothek, siehe unten
+            # Der Supabase-Client wirft je nach Version verschiedene Typen; der
+            # Konflikt ist am Code 23505 erkennbar. Ihn als Erfolg zu werten ist
+            # korrekt (die Meldung steht bereits), jeden anderen Fehler aber
+            # NICHT zu verschlucken (Wurzel 5) — er landet im Ergebnis.
+            if "23505" in str(exc):
+                ergebnis.uebersprungen.append(f"{Kanal.INAPP.value} (bereits offen)")
+                return
+            log.warning(
+                "notification_glocke_fehlgeschlagen",
+                user_id=user_id, kategorie=kategorie, error=str(exc)[:200],
+            )
+            ergebnis.fehlgeschlagen[Kanal.INAPP.value] = str(exc)[:200]
+            return
+        ergebnis.gesendet.append(Kanal.INAPP.value)
 
     def _sende_kanal(
         self,

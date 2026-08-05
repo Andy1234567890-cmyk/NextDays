@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Брой {room}",
       "infoEditorTitle": "Детайли за обекта",
       "infoEditorSubtitle": "Посочете типа на обекта, размера и капацитета за гости.",
-      "statusFieldHint": "„Активен“ означава, че обектът се продава — по портали, на myBestDays и при директни резервации. „Чернова“ не се показва никъде."
+      "statusFieldHint": "„Активен“ означава, че обектът се продава — по портали, на myBestDays и при директни резервации. „Чернова“ не се показва никъде.",
+      "zimmerNurLokal": "Остава в myNextDays — порталите не познават този тип помещение."
     },
     "availabilityForm": {
       "title": "Наличност",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Търсене на обект …",
       "noMatch": "Няма намерен обект."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Без стая",
+      "umgehaengt": "Разпределението в Airbnb е променено.",
+      "menue": "Стая в Airbnb",
+      "geloest": "Снимката вече не е свързана със стая."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Стаите съвпадат с Airbnb.",
+      "restHinweis": "Все още в Airbnb: {zimmer}. Airbnb не предлага начин за изтриване на стая през интерфейса — това става само в акаунта ви в Airbnb.",
+      "beiAirbnbEntfernen": "Премахване в Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Изтекла",
       "fehler": "Грешка"
     }
+  },
+  "glocke": {
+    "leer": "Няма известия",
+    "alleGelesen": "Отбележи всички като прочетени",
+    "erneut": "Презареди",
+    "ariaMitAnzahl": "Известия ({count} непрочетени)"
   }
 }

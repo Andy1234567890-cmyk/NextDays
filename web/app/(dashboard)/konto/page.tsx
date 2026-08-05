@@ -140,8 +140,17 @@ export default function ProfilPage() {
       const at = s("accountType");
       if (at === "individual" || at === "company") setAccountType(at);
       if (s("legalForm")) setLegalForm(s("legalForm"));
-      // Firma / Rechnungskontakt
-      if (s("companyName")) setCompanyName(s("companyName"));
+      // Firma / Rechnungskontakt. Vor dem eigenen Firmenname-Feld für
+      // Einzelunternehmen wurde dort der PERSONENNAME als legal_name gespeichert
+      // (abgeleitet aus Vor+Nachname) — der ist kein Firmenname und würde das
+      // Feld fälschlich vorbelegen.
+      const geladenerName = s("companyName");
+      const personenName = [s("firstName"), s("lastName")]
+        .filter(Boolean)
+        .join(" ");
+      if (geladenerName && geladenerName !== personenName) {
+        setCompanyName(geladenerName);
+      }
       if (s("companyStreet")) setStreet(s("companyStreet"));
       if (s("companyHouseNumber")) setHouseNumber(s("companyHouseNumber"));
       if (s("companyPostalCode")) setPostalCode(s("companyPostalCode"));
@@ -196,12 +205,6 @@ export default function ProfilPage() {
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    // Aussteller-Name (legal_name): bei Firma der Firmenname, bei Einzelperson
-    // Vor+Nachname — sonst hätte die Einzelperson keinen Namen auf Rechnungen.
-    const issuerName =
-      accountType === "company"
-        ? companyName
-        : [firstName, lastName].filter(Boolean).join(" ");
     const res = await saveFirmenProfil({
       // Person
       firstName: firstName || undefined,
@@ -211,8 +214,10 @@ export default function ProfilPage() {
       accountType,
       legalForm: legalForm || undefined,
       ownerDob: ownerDob || undefined,
-      // Firma / Rechnungskontakt
-      companyName: issuerName || undefined,
+      // Firma / Rechnungskontakt. Der Firmenname geht genau so raus, wie er im
+      // Feld steht — auch leer (Einzelunternehmen ohne eingetragenen Namen). Den
+      // Rechtsnamen für Belege bestimmt allein der Server (_legal_name_from_payload).
+      companyName: companyName.trim(),
       companyStreet: street || undefined,
       companyHouseNumber: houseNumber || undefined,
       companyPostalCode: postalCode || undefined,
@@ -370,18 +375,31 @@ export default function ProfilPage() {
                 ))}
               </NativeSelect>
             </div>
-            {accountType === "company" && (
-              <div className="flex flex-col gap-1.5">
+            {/* Firmenname gilt für JEDE Rechtsform: auch ein Einzelunternehmen
+                (Enkeltmandsvirksomhed, sole trader) ist unter einem Namen
+                eingetragen und rechnet unter ihm ab. Pflicht ist er nur bei
+                Gesellschaften; bleibt er leer, firmiert die Person unter ihrem
+                eigenen Namen (bestimmt der Server). */}
+            <div className="flex flex-col gap-1.5">
+              {accountType === "company" ? (
                 <Label htmlFor="companyName">
                   Firmenname <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="companyName"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                />
-              </div>
-            )}
+              ) : (
+                <LabelHint
+                  htmlFor="companyName"
+                  hint="Der eingetragene Name deines Einzelunternehmens. Ohne Eintrag erscheint dein Vor- und Nachname auf Rechnungen."
+                >
+                  Firmenname
+                </LabelHint>
+              )}
+              <Input
+                id="companyName"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                required={accountType === "company"}
+              />
+            </div>
           </div>
 
           <Separator />
@@ -454,6 +472,7 @@ export default function ProfilPage() {
                   Regex-Zerlegung von Freitext). Leere Teile überschreiben
                   nichts — Google liefert je Land unterschiedlich viel. */}
               <AddressPlacesSearch
+                id="street"
                 value={street}
                 onChange={setStreet}
                 onPick={(a) => {

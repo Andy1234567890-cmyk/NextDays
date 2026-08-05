@@ -27,10 +27,12 @@ export type PlacesAddress = {
 };
 
 function Inner({
+  id,
   value,
   onChange,
   onPick,
 }: {
+  id?: string;
   value: string;
   onChange: (v: string) => void;
   onPick: (addr: PlacesAddress) => void;
@@ -78,6 +80,7 @@ function Inner({
   // zusätzliches Suchfeld (Nutzer-Vorgabe: hinter/aus den bestehenden Inputs).
   return (
     <Input
+      id={id}
       ref={inputRef}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -88,21 +91,28 @@ function Inner({
 // Macht ein Straße-Input zum Places-Autocomplete: manuell editierbar (value/
 // onChange) und befüllt bei Auswahl die gesamte Adresse strukturiert (onPick).
 // Ohne API-Key Fallback auf ein normales Input (manuelle Eingabe bleibt möglich).
+// `id` wird durchgereicht, damit das zugehörige <Label htmlFor> greift und die
+// Zahlungen-Karte per document.getElementById auf das Straßenfeld springen kann
+// (ohne id war beides eine Attrappe).
 export function AddressPlacesSearch({
+  id,
   value,
   onChange,
   onPick,
 }: {
+  id?: string;
   value: string;
   onChange: (v: string) => void;
   onPick: (addr: PlacesAddress) => void;
 }) {
   if (!API_KEY) {
-    return <Input value={value} onChange={(e) => onChange(e.target.value)} />;
+    return (
+      <Input id={id} value={value} onChange={(e) => onChange(e.target.value)} />
+    );
   }
   return (
     <APIProvider apiKey={API_KEY}>
-      <Inner value={value} onChange={onChange} onPick={onPick} />
+      <Inner id={id} value={value} onChange={onChange} onPick={onPick} />
     </APIProvider>
   );
 }

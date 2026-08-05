@@ -19,10 +19,26 @@ DER WEG DORTHIN steht in Airbnbs „Airbnb Connection API"
 (`docs/OTA/Airbnb/Airbnb Connection API.pdf`, S. 10, „Execute API Proxy
 request"): `POST channels/{id}/action/api_proxy` mit `method: PUT|POST|GET|
 DELETE`. Ein eigener Raum-Endpunkt ist bei Channex NICHT dokumentiert — die
-Räume erscheinen dort nur lesend in `action/listing_details`. Der Proxy ist ein
-echter Durchgriff und nicht die 200-Attrappe des `execute`-Namensraums:
-`listing_rooms` liefert lesend die Räume, ein erfundener Endpunkt antwortet
-422 `route_not_found` (kontrolliert gemessen).
+Räume erscheinen dort nur lesend in `action/listing_details`.
+
+ANLEGEN IST LIVE BEWIESEN, LÖSCHEN GEHT NICHT — beides gemessen, nicht vermutet:
+
+  * ANLEGEN: `POST listing_rooms` mit FLACHEM Payload legte an Cornflower den
+    Balkon an; Airbnb gab `{"data": {"id": "817240083"}}` zurück, und ein
+    Rücklesen zeigte 9 statt 8 Räume mit genau dieser ID (16:28 Uhr).
+    Der Payload darf KEINE `listing_room`-Hülle haben (siehe
+    `create_airbnb_listing_room` — daran scheiterten drei Versuche).
+  * LÖSCHEN: existiert nirgends. Bei Channex antworten alle vier Formen
+    (`DELETE listing_rooms/{id}`, `DELETE listing_rooms` mit ID im Body,
+    `PUT listing_rooms/{id}`, `POST listing_rooms/{id}/delete`) mit
+    422 `Route not found`; Airbnbs eigene API antwortet auf
+    `DELETE v2/listing_rooms/{id}` mit 404 `route_not_found` — identisch zu
+    einem frei erfundenen Pfad (Kontrolltest). Ein in unserer Maske entferntes
+    Zimmer bleibt bei Airbnb stehen und muss im Extranet nachgezogen werden;
+    die Oberfläche sagt das (`objects.propertyOverview.zimmerLoeschenHinweis`).
+
+Der Proxy ist damit ein echter Durchgriff und nicht die 200-Attrappe des
+`execute`-Namensraums — aber nur für das Anlegen.
 
 OFFENE LÜCKE (bewusst, nicht vergessen): Airbnbs Auswahlliste hat 40 Raumarten
 („Choose a room or space", 05.08.2026 abgelesen), unsere `ZIMMER_SLUGS` haben 12.
@@ -48,6 +64,7 @@ from typing import Any
 
 from supabase import Client
 
+from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
 from .airbnb_listing_import import _RAUM_UEBERSPRINGEN, AIRBNB_RAUM_AUF_SLUG
@@ -185,6 +202,67 @@ def zimmer_diff(
 class AirbnbZimmerPushMixin:
     """Schickt die Zimmer eines Objekts an dessen Airbnb-Anzeige."""
 
+    def airbnb_zimmer_rest(
+        self, ctx: AuthContext, *, property_id: str
+    ) -> dict[str, Any]:
+        """Zimmer, die bei Airbnb stehen, obwohl wir sie nicht (mehr) führen.
+
+        WOZU DAS DA IST: Airbnb hat keinen Löschweg für Räume — gemessen am
+        05.08.2026 in sechzehn Formen, über Channex UND direkt gegen
+        `api.airbnb.com`; `v2/listing_rooms` kennt ausschließlich GET und POST,
+        jede andere Methode ist `route_not_found`. Wer bei uns ein Zimmer
+        entfernt, hat es bei Airbnb also weiterhin stehen.
+
+        Statt das im Log verschwinden zu lassen, liefert diese Abfrage den
+        Reststand an die Oberfläche: das Zimmer bleibt dort sichtbar, mit dem
+        Weg, der wirkt (Airbnb-Extranet, Fototour). `stand_bekannt=False`, wenn
+        Airbnb nicht lesbar ist — dann wird nichts behauptet (Wurzel 4).
+        """
+        tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
+        db = self._require_db()  # type: ignore[attr-defined]
+        load_scoped(
+            db, "properties", property_id, tenant_id, columns="id",
+            not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
+        )
+        listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id)  # type: ignore[attr-defined]
+        if not listing_id or not channel_id:
+            return {"verbunden": False, "stand_bekannt": True, "rest": []}
+        raeume = self._airbnb_raeume_lesen(channel_id, listing_id)
+        if raeume is None:
+            return {"verbunden": True, "stand_bekannt": False, "rest": []}
+
+        soll = _soll_stand(db, tenant_id, property_id)
+        ist = _ist_stand(raeume)
+        _anlegen, ueberzaehlig = zimmer_diff(soll, ist)
+        art_je_id = {
+            str(r.get("id")): str(r.get("room_type") or "")
+            for r in raeume if r.get("id")
+        }
+        rest = [
+            {
+                "airbnb_room_id": raum_id,
+                "airbnb_art": art_je_id.get(raum_id, ""),
+                "slug": AIRBNB_RAUM_AUF_SLUG.get(art_je_id.get(raum_id, "")),
+            }
+            for raum_id in ueberzaehlig
+        ]
+        log.info(
+            "airbnb_zimmer_rest",
+            property_id=property_id, listing_id=listing_id,
+            soll=soll, airbnb_roh=sorted(art_je_id.values()), rest=ueberzaehlig,
+        )
+        return {
+            "verbunden": True,
+            "stand_bekannt": True,
+            "rest": rest,
+            # Direkt an die Stelle, die es wirklich kann.
+            "extranet_url": (
+                f"https://www.airbnb.com/hosting/listings/editor/{listing_id}"
+                "/details/photo-tour"
+            ),
+        }
+
     def sync_airbnb_zimmer(self, tenant_id: str, property_id: str) -> dict[str, Any]:
         """Einstieg für den Worker (kein AuthContext).
 
@@ -225,7 +303,21 @@ class AirbnbZimmerPushMixin:
             return {"gesendet": False, "grund": "stand_unlesbar"}
 
         soll = _soll_stand(db, tenant_id, property_id)
-        anlegen, loeschen = zimmer_diff(soll, _ist_stand(raeume))
+        ist = _ist_stand(raeume)
+        anlegen, loeschen = zimmer_diff(soll, ist)
+        # Soll, Ist und Diff in EINER Zeile: ohne sie war live nicht zu sehen, ob
+        # ein leerer Diff „beide Seiten gleich" heißt oder „unsere Seite falsch
+        # gelesen". `airbnb_roh` nennt die Raumarten, die Airbnb liefert — auch
+        # die, für die wir keinen Slug haben (sie fehlen absichtlich in `ist`).
+        log.info(
+            "airbnb_zimmer_diff",
+            property_id=property_id, listing_id=listing_id,
+            soll=soll, ist={k: len(v) for k, v in ist.items()},
+            airbnb_roh=sorted(
+                str(r.get("room_type") or "?") for r in raeume
+            ),
+            anlegen=anlegen, loeschen=loeschen,
+        )
         if len(anlegen) + len(loeschen) > _MAX_AENDERUNGEN:
             log.warning(
                 "airbnb_zimmer_zu_viele_aenderungen",
@@ -234,16 +326,206 @@ class AirbnbZimmerPushMixin:
             )
             return {"gesendet": False, "grund": "zu_viele_aenderungen"}
         if not anlegen and not loeschen:
+            # Gleichstand heißt NICHT „alles gut": ein Raum ohne Foto blendet bei
+            # Airbnb die ganze Photo tour aus. Auch hier prüfen, sonst meldet die
+            # Glocke es nur beim ersten Mal.
+            self._fehlende_fotos_melden(db, tenant_id, property_id)
             return {"gesendet": False, "grund": "gleichstand"}
 
         angelegt = self._raeume_anlegen(channel_id, listing_id, anlegen)
         geloescht = self._raeume_loeschen(channel_id, listing_id, loeschen)
+        # Was NICHT wegging, muss der Betrieb im Extranet nachziehen — sonst
+        # steht das Zimmer bei Airbnb weiter und wirkt bei uns gelöscht.
+        if len(geloescht) < len(loeschen):
+            self._nicht_loeschbar_melden(
+                db, tenant_id, property_id,
+                [r for r in loeschen if r not in geloescht], raeume,
+            )
+        # NACH dem Anlegen: ein gerade erzeugter Raum hat noch kein Foto, und
+        # genau davor soll die Meldung warnen.
+        self._fehlende_fotos_melden(db, tenant_id, property_id)
         log.info(
             "airbnb_zimmer_gepusht",
             tenant_id=tenant_id, property_id=property_id,
             listing_id=listing_id, angelegt=angelegt, geloescht=geloescht,
         )
         return {"gesendet": True, "angelegt": angelegt, "geloescht": geloescht}
+
+    def _fehlende_fotos_melden(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> None:
+        """Räume ohne Foto in die Glocke legen.
+
+        WARUM DAS WICHTIG IST: Airbnb blendet die GESAMTE „Photo tour" für Gäste
+        aus, sobald ein einziger Raum kein Foto hat („Guests only see your photo
+        tour if every room has a photo"). Der Betrieb sieht das nur im
+        Airbnb-Extranet — bei uns wirkte das Objekt vollständig gepflegt. Genau
+        so ist es live passiert: der neu angelegte Balkon hatte kein Bild, und
+        Airbnb versteckte die ganze Tour.
+
+        `dedup_key` je Objekt: der Zimmer-Sync läuft bei jeder Änderung, die
+        Meldung darf aber nicht bei jedem Lauf neu erscheinen (Wurzel 2). Der
+        partielle UNIQUE-Index greift nur für UNGELESENE — hat der Betrieb sie
+        gelesen und fehlt später wieder ein Foto, meldet es erneut.
+
+        Best effort: die Meldung ist ein Nebenpfad. Fällt sie aus, ist der
+        Zimmer-Sync trotzdem gelaufen — der Grund steht im Log (Wurzel 5).
+        """
+        try:
+            stand = self._airbnb_raeume_ohne_foto(db, tenant_id, property_id)
+        except Exception as exc:  # noqa: BLE001 — Nebenpfad, kein Hauptpfad
+            log.warning(
+                "airbnb_fotopruefung_fehlgeschlagen",
+                property_id=property_id, error=str(exc)[:200],
+            )
+            return
+        if not stand:
+            return
+        self._an_die_glocke(
+            db, tenant_id, property_id,
+            betreff=f"{len(stand)} Zimmer ohne Foto bei Airbnb",
+            text=(
+                "Airbnb zeigt Gästen die Fototour nur, wenn jedes Zimmer ein "
+                "Foto hat. Betroffen: " + ", ".join(stand)
+            ),
+            ziel_pfad=f"/objekte/{property_id}/fotos",
+            dedup_key=f"airbnb_foto_fehlt:{property_id}",
+        )
+
+    def _nicht_loeschbar_melden(  # noqa: PLR0913 — Kontext der Meldung
+        self,
+        db: Client,
+        tenant_id: str,
+        property_id: str,
+        raum_ids: list[str],
+        raeume: list[dict[str, Any]],
+    ) -> None:
+        """Melden, welches Zimmer bei Airbnb stehen bleibt.
+
+        Ohne diese Meldung ist das Löschen eine stille Lüge: bei uns ist das
+        Zimmer weg, bei Airbnb steht es weiter in der Fototour. Der einzige Weg
+        dorthin ist Airbnbs Extranet (Listings → Photo tour → Raum → „Delete
+        room or space") — das muss dastehen, sonst sucht der Betrieb den Fehler
+        bei uns.
+        """
+        namen: list[str] = []
+        for raum_id in raum_ids:
+            treffer = next(
+                (r for r in raeume if str(r.get("id")) == str(raum_id)), None
+            )
+            art = str((treffer or {}).get("room_type") or "").strip()
+            namen.append(AIRBNB_RAUM_AUF_SLUG.get(art) or art or str(raum_id))
+        self._an_die_glocke(
+            db, tenant_id, property_id,
+            betreff=f"{len(namen)} Zimmer bei Airbnb noch vorhanden",
+            text=(
+                "Airbnb bietet keinen Weg, ein Zimmer über die Schnittstelle zu "
+                "löschen. Bitte im Airbnb-Konto unter Fototour entfernen: "
+                + ", ".join(sorted(namen))
+            ),
+            ziel_pfad=f"/objekte/{property_id}",
+            # Je Zimmer eigener Schlüssel: löscht der Betrieb zwei Zimmer
+            # nacheinander, darf die zweite Meldung nicht an der ersten
+            # hängenbleiben (Wurzel 2 gilt für Wiederholungen, nicht für
+            # verschiedene Sachverhalte).
+            dedup_key=f"airbnb_zimmer_bleibt:{property_id}:{'-'.join(sorted(raum_ids))}",
+        )
+
+    def _an_die_glocke(  # noqa: PLR0913 — Empfänger plus Inhalt der Meldung
+        self,
+        db: Client,
+        tenant_id: str,
+        property_id: str,
+        *,
+        betreff: str,
+        text: str,
+        ziel_pfad: str,
+        dedup_key: str,
+    ) -> None:
+        """Eine In-App-Meldung an alle Admins des Betriebs.
+
+        Nur die Glocke: eine E-Mail je Sync-Lauf wäre Spam, und der Zustand ist
+        in der Anwendung zu beheben, nicht im Postfach.
+        """
+        empfaenger = (
+            db.table("users")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("role", "admin")
+            .execute()
+        ).data or []
+        if not empfaenger:
+            log.info("airbnb_meldung_ohne_empfaenger", tenant_id=tenant_id)
+            return
+        titel = (
+            db.table("properties")
+            .select("title")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        objekt = (titel[0].get("title") if titel else None) or property_id[:8]
+        from src.features.notification_settings.dispatcher import (  # noqa: PLC0415
+            NotificationDispatcher,
+        )
+
+        dispatcher = NotificationDispatcher(db)
+        for nutzer in empfaenger:
+            dispatcher.sende(
+                user_id=str(nutzer["id"]),
+                schluessel="listing_activity",
+                betreff=f"{objekt}: {betreff}",
+                text=text,
+                tenant_id=tenant_id,
+                property_id=property_id,
+                ziel_pfad=ziel_pfad,
+                dedup_key=dedup_key,
+                inapp=True,
+            )
+
+    def _airbnb_raeume_ohne_foto(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> list[str]:
+        """Namen der Airbnb-Räume ohne Foto. Leer = alles in Ordnung.
+
+        Belegt/nicht belegt kommt DIREKT von Airbnb, nicht aus unserer Tabelle
+        `airbnb_foto_raum` (0288). Die ist nur ein Cache für den Schreibweg und
+        kann leer sein, obwohl jedes Zimmer ein Bild hat — live genau so
+        passiert: 16 Fotos waren importiert, bevor es die Tabelle gab, und die
+        Meldung führte JEDES Zimmer als fotolos auf. Nicht-Wissen ist kein
+        Befund (Wurzel 4).
+
+        Räume, die Airbnb führt und unsere Liste nicht kennt (`exterior`,
+        `garden`), zählen mit: Airbnb verlangt auch für sie ein Foto.
+        """
+        listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id)  # type: ignore[attr-defined]
+        if not listing_id or not channel_id:
+            return []
+        raeume = self._airbnb_raeume_lesen(channel_id, listing_id)
+        if not raeume:
+            return []
+        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        if not zugang:
+            # Ohne Foto-Stand keine Aussage — lieber schweigen als jedes Zimmer
+            # fälschlich melden.
+            return []
+        token, _user = zugang
+        belegt = {
+            str(f["airbnb_room_id"])
+            for f in self.airbnb_fotos_direkt(token, str(listing_id))  # type: ignore[attr-defined]
+            if f.get("airbnb_room_id")
+        }
+        fehlend = []
+        for raum in raeume:
+            raum_id = str(raum.get("id") or "")
+            if not raum_id or raum_id in belegt:
+                continue
+            art = str(raum.get("room_type") or "").strip()
+            # Airbnbs Rohwert, wenn wir keinen Slug haben — lieber `exterior` als
+            # ein leerer Eintrag in der Meldung.
+            fehlend.append(AIRBNB_RAUM_AUF_SLUG.get(art) or art or raum_id)
+        return sorted(fehlend)
 
     def _airbnb_raeume_lesen(
         self, channel_id: str, listing_id: str
@@ -280,35 +562,68 @@ class AirbnbZimmerPushMixin:
         """
         angelegt: list[str] = []
         for slug in slugs:
+            art = SLUG_AUF_AIRBNB_RAUM[slug]
             try:
-                self._channex.create_airbnb_listing_room(  # type: ignore[attr-defined]
-                    channel_id, listing_id,
-                    SLUG_AUF_AIRBNB_RAUM[slug], privat=True,
+                antwort = self._channex.create_airbnb_listing_room(  # type: ignore[attr-defined]
+                    channel_id, listing_id, art, privat=True,
                 )
             except ChannexError as exc:
+                # `exc.message` ist nur „Channex-Fehler 422." — die Begründung
+                # steht in `payload`. Ohne sie war live nicht zu unterscheiden,
+                # ob Airbnb den Raumtyp, die Kennung oder die Form ablehnt.
                 log.warning(
                     "airbnb_zimmer_anlegen_fehlgeschlagen",
-                    listing_id=listing_id, slug=slug, error=exc.message,
+                    listing_id=listing_id, slug=slug, raumart=art,
+                    status=exc.channex_status, error=exc.message,
+                    antwort=exc.payload,
                 )
                 continue
+            # Auch der Erfolgsfall wird protokolliert: eine 200 von Channex heißt
+            # NICHT, dass Airbnb den Raum angelegt hat (Wurzel 5). Erst die
+            # zurückgegebene Raum-ID ist ein Beweis — steht sie nicht drin, ist
+            # das im Log sichtbar, statt als „angelegt" zu gelten.
+            log.info(
+                "airbnb_zimmer_anlegen_antwort",
+                listing_id=listing_id, slug=slug, raumart=art,
+                antwort=antwort,
+            )
             angelegt.append(slug)
         return angelegt
 
     def _raeume_loeschen(
         self, channel_id: str, listing_id: str, raum_ids: list[str]
     ) -> list[str]:
-        """Die überzähligen Räume bei Airbnb löschen; zurück kommt, was wegging."""
+        """Die überzähligen Räume bei Airbnb löschen; zurück kommt, was wegging.
+
+        AIRBNB KANN DAS NICHT — zweimal gemessen (05.08.2026), acht Formen: auf
+        `listing_rooms/{id}` antwortet JEDE Methode „Route not found", auch das
+        harmlose `PUT {"is_private": true}`; die Sammlung ist ebenfalls nicht
+        ersetzbar. Kontrolltest, der ausschließt, dass Channex filtert: ein
+        `DELETE listing_photos/<unsinn>` kommt bis Airbnb durch (403 mit
+        Airbnb-`error_id`). Die Route existiert bei Airbnb schlicht nicht;
+        Räume verschwinden nur im Extranet.
+
+        Der Aufruf bleibt trotzdem stehen: er kostet einen Request pro
+        Löschung, und käme die Route je dazu, wirkt der Rückweg sofort. Der
+        Fehlschlag ist hier aber der ERWARTETE Fall — deshalb `info` statt
+        `warning`, sonst sieht jedes Löschen im Log wie eine Störung aus.
+        """
         geloescht: list[str] = []
         for raum_id in raum_ids:
             try:
-                self._channex.delete_airbnb_listing_room(  # type: ignore[attr-defined]
+                antwort = self._channex.delete_airbnb_listing_room(  # type: ignore[attr-defined]
                     channel_id, listing_id, raum_id
                 )
             except ChannexError as exc:
-                log.warning(
-                    "airbnb_zimmer_loeschen_fehlgeschlagen",
-                    listing_id=listing_id, raum_id=raum_id, error=exc.message,
+                log.info(
+                    "airbnb_zimmer_loeschen_nicht_moeglich",
+                    listing_id=listing_id, raum_id=raum_id,
+                    status=exc.channex_status, error=exc.message,
                 )
                 continue
+            log.info(
+                "airbnb_zimmer_loeschen_antwort",
+                listing_id=listing_id, raum_id=raum_id, antwort=antwort,
+            )
             geloescht.append(raum_id)
         return geloescht

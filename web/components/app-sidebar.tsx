@@ -53,6 +53,10 @@ const MAIN: readonly NavItem[] = [
   { key: "dashboard", href: "/", icon: "ph:squares-four" },
   { key: "calendar", href: "/kalender", icon: "ph:calendar-blank", req: "view_calendar" },
   { key: "inbox", href: "/posteingang", icon: "ph:chat-circle", req: "pm_chat" },
+  // Ausgaben ist Tagesgeschäft (Belege kommen laufend rein) und steht deshalb
+  // flach unter dem Posteingang statt in der Betriebs-Gruppe — dort war es nur
+  // bei Ferienvermietung erreichbar, obwohl auch ein Hotel Ausgaben erfasst.
+  { key: "expenses", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
 ];
 
 // Thematische Gruppen; werden zur Laufzeit nach Beherbergungsart gebaut.
@@ -82,7 +86,8 @@ const HOTEL_FINANCE: readonly NavItem[] = [
 const VR_FINANCE: readonly NavItem[] = [
   { key: "invoices", href: "/buchhaltung", icon: "ph:receipt", req: "owner_reporting" },
   { key: "quotes", href: "/buchhaltung/angebote", icon: "ph:file-text", req: "owner_reporting" },
-  { key: "expenses", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
+  // „expenses" steht jetzt oben in MAIN (unter Posteingang) — hier NICHT
+  // wiederholen, sonst hätte die Sidebar den Punkt zweimal.
   { key: "dunning", href: "/buchhaltung/mahnwesen", icon: "ph:warning-circle", req: "owner_reporting" },
   { key: "chartOfAccounts", href: "/buchhaltung/kontenplan", icon: "ph:tree-structure", req: "owner_reporting" },
   { key: "cashBook", href: "/buchhaltung/kassenbuch", icon: "ph:wallet", req: "owner_reporting" },

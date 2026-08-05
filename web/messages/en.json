@@ -4476,7 +4476,8 @@
       "zimmerAnzahl": "Number of {room}",
       "infoEditorTitle": "Property details",
       "infoEditorSubtitle": "Enter the property type, the size and the guest capacity.",
-      "statusFieldHint": "“Active” means the property is being sold — on the portals, on myBestDays and for direct bookings. “Draft” is visible nowhere."
+      "statusFieldHint": "“Active” means the property is being sold — on the portals, on myBestDays and for direct bookings. “Draft” is visible nowhere.",
+      "zimmerNurLokal": "Stays in myNextDays — the portals don't know this room type."
     },
     "availabilityForm": {
       "title": "Availability",
@@ -5096,6 +5097,17 @@
     "switcher": {
       "searchPlaceholder": "Search property …",
       "noMatch": "No property found."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "No room",
+      "umgehaengt": "Assignment changed at Airbnb.",
+      "menue": "Airbnb room",
+      "geloest": "The photo is no longer linked to a room."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Rooms match Airbnb.",
+      "restHinweis": "Still on Airbnb: {zimmer}. Airbnb offers no way to delete a room via the interface — this only works in your Airbnb account.",
+      "beiAirbnbEntfernen": "Remove on Airbnb"
     }
   },
   "calendar": {
@@ -6854,5 +6866,11 @@
       "abgelaufen": "Expired",
       "fehler": "Error"
     }
+  },
+  "glocke": {
+    "leer": "No notifications",
+    "alleGelesen": "Mark all read",
+    "erneut": "Reload",
+    "ariaMitAnzahl": "Notifications ({count} unread)"
   }
 }

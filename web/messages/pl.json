@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Liczba: {room}",
       "infoEditorTitle": "Szczegóły obiektu",
       "infoEditorSubtitle": "Podaj typ obiektu, powierzchnię i liczbę gości.",
-      "statusFieldHint": "„Aktywny” oznacza, że obiekt jest sprzedawany — na portalach, w myBestDays i w rezerwacjach bezpośrednich. „Wersja robocza” nie jest nigdzie widoczna."
+      "statusFieldHint": "„Aktywny” oznacza, że obiekt jest sprzedawany — na portalach, w myBestDays i w rezerwacjach bezpośrednich. „Wersja robocza” nie jest nigdzie widoczna.",
+      "zimmerNurLokal": "Pozostaje w myNextDays — portale nie znają tego typu pokoju."
     },
     "availabilityForm": {
       "title": "Dostępność",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Szukaj obiektu …",
       "noMatch": "Nie znaleziono obiektu."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Bez pokoju",
+      "umgehaengt": "Przypisanie zmienione w Airbnb.",
+      "menue": "Pokój w Airbnb",
+      "geloest": "Zdjęcie nie jest już przypisane do pokoju."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Pokoje zgadzają się z Airbnb.",
+      "restHinweis": "W Airbnb nadal jest: {zimmer}. Airbnb nie oferuje sposobu usunięcia pokoju przez interfejs — jest to możliwe tylko na koncie Airbnb.",
+      "beiAirbnbEntfernen": "Usuń w Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Wygasła",
       "fehler": "Błąd"
     }
+  },
+  "glocke": {
+    "leer": "Brak powiadomień",
+    "alleGelesen": "Oznacz wszystkie jako przeczytane",
+    "erneut": "Załaduj ponownie",
+    "ariaMitAnzahl": "Powiadomienia ({count} nieprzeczytanych)"
   }
 }

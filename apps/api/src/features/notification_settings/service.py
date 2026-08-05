@@ -173,6 +173,12 @@ class NotificationSettingsService:
         if kategorie is None:
             msg = f"Unbekannte Benachrichtigungs-Kategorie: {schluessel}"
             raise ValueError(msg)
+        # Die Glocke ist nicht abwählbar und hat darum keine Präferenzspalte
+        # (siehe Kanal.INAPP im Katalog). Ohne diesen Vorrang fiele sie durch die
+        # `kanaele`-Prüfung darunter und würde stumm nie erscheinen — der Nutzer
+        # sähe nie, dass etwas klemmt.
+        if kanal is Kanal.INAPP:
+            return True
         if kanal not in kategorie.kanaele:
             return False
         if kategorie.email_pflicht and kanal is Kanal.EMAIL:

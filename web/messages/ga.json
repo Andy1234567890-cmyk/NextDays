@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Líon {room}",
       "infoEditorTitle": "Sonraí an chóiríochta",
       "infoEditorSubtitle": "Cuir isteach cineál na cóiríochta, an mhéid agus an cumas aíonna.",
-      "statusFieldHint": "Ciallaíonn “Gníomhach” go bhfuil an mhaoin á díol — ar na tairseacha, ar myBestDays agus leháirithintí díreacha. Níl “Dréacht” le feiceáil in aon áit."
+      "statusFieldHint": "Ciallaíonn “Gníomhach” go bhfuil an mhaoin á díol — ar na tairseacha, ar myBestDays agus leháirithintí díreacha. Níl “Dréacht” le feiceáil in aon áit.",
+      "zimmerNurLokal": "Fanann sé i myNextDays — níl aithne ag na tairseacha ar an gcineál seomra seo."
     },
     "availabilityForm": {
       "title": "Infhaighteacht",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Cuardaigh maoin …",
       "noMatch": "Níor aimsíodh aon mhaoin."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Gan seomra",
+      "umgehaengt": "Athraíodh an sannadh ar Airbnb.",
+      "menue": "Seomra Airbnb",
+      "geloest": "Níl an grianghraf nasctha le seomra a thuilleadh."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Tagann na seomraí le Airbnb.",
+      "restHinweis": "Fós ar Airbnb: {zimmer}. Ní chuireann Airbnb bealach ar fáil chun seomra a scriosadh tríd an gcomhéadan — níl sé sin indéanta ach i do chuntas Airbnb.",
+      "beiAirbnbEntfernen": "Bain ar Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Imithe in éag",
       "fehler": "Earráid"
     }
+  },
+  "glocke": {
+    "leer": "Gan fógraí",
+    "alleGelesen": "Marcáil uile mar léite",
+    "erneut": "Athlódáil",
+    "ariaMitAnzahl": "Fógraí ({count} gan léamh)"
   }
 }

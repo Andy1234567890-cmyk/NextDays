@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Numru ta' {room}",
       "infoEditorTitle": "Dettalji tal-akkomodazzjoni",
       "infoEditorSubtitle": "Daħħal it-tip ta' akkomodazzjoni, id-daqs u l-kapaċità tal-mistednin.",
-      "statusFieldHint": "“Attiv” ifisser li l-akkomodazzjoni qed tinbiegħ — fuq il-portali, fuq myBestDays u għal ibbukkjar dirett. “Abbozz” ma jidher imkien."
+      "statusFieldHint": "“Attiv” ifisser li l-akkomodazzjoni qed tinbiegħ — fuq il-portali, fuq myBestDays u għal ibbukkjar dirett. “Abbozz” ma jidher imkien.",
+      "zimmerNurLokal": "Tibqa' f'myNextDays — il-portali ma jafux dan it-tip ta' kamra."
     },
     "availabilityForm": {
       "title": "Disponibbiltà",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Fittex proprjetà …",
       "noMatch": "Ma nstabet ebda proprjetà."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Mingħajr kamra",
+      "umgehaengt": "L-assenjazzjoni nbidlet fuq Airbnb.",
+      "menue": "Kamra fuq Airbnb",
+      "geloest": "Ir-ritratt m'għadux marbut ma' kamra."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Il-kmamar jaqblu ma' Airbnb.",
+      "restHinweis": "Għadu fuq Airbnb: {zimmer}. Airbnb ma joffri l-ebda mod biex tħassar kamra permezz tal-interfaċċa — dan isir biss fil-kont Airbnb tiegħek.",
+      "beiAirbnbEntfernen": "Neħħi fuq Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Skadut",
       "fehler": "Żball"
     }
+  },
+  "glocke": {
+    "leer": "L-ebda notifika",
+    "alleGelesen": "Immarka kollox bħala moqri",
+    "erneut": "Erġa' tella'",
+    "ariaMitAnzahl": "Notifiki ({count} mhux moqrija)"
   }
 }

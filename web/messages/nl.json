@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Aantal {room}",
       "infoEditorTitle": "Details van de accommodatie",
       "infoEditorSubtitle": "Geef het accommodatietype, de grootte en de gastencapaciteit op.",
-      "statusFieldHint": "“Actief” betekent dat de accommodatie wordt verkocht — op de portalen, op myBestDays en bij directe boekingen. “Concept” is nergens zichtbaar."
+      "statusFieldHint": "“Actief” betekent dat de accommodatie wordt verkocht — op de portalen, op myBestDays en bij directe boekingen. “Concept” is nergens zichtbaar.",
+      "zimmerNurLokal": "Blijft in myNextDays — de portalen kennen dit kamertype niet."
     },
     "availabilityForm": {
       "title": "Beschikbaarheid",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Object zoeken …",
       "noMatch": "Geen object gevonden."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Zonder kamer",
+      "umgehaengt": "Toewijzing gewijzigd bij Airbnb.",
+      "menue": "Airbnb-kamer",
+      "geloest": "De foto is niet meer aan een kamer gekoppeld."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "De kamers komen overeen met Airbnb.",
+      "restHinweis": "Staat nog bij Airbnb: {zimmer}. Airbnb biedt geen manier om een kamer via de koppeling te verwijderen — dat kan alleen in je Airbnb-account.",
+      "beiAirbnbEntfernen": "Verwijderen bij Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Verlopen",
       "fehler": "Fout"
     }
+  },
+  "glocke": {
+    "leer": "Geen meldingen",
+    "alleGelesen": "Alles gelezen",
+    "erneut": "Opnieuw laden",
+    "ariaMitAnzahl": "Meldingen ({count} ongelezen)"
   }
 }

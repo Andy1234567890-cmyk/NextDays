@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Antal {room}",
       "infoEditorTitle": "Uppgifter om boendet",
       "infoEditorSubtitle": "Ange boendetyp, storlek och kapacitet för gäster.",
-      "statusFieldHint": "”Aktiv” betyder att boendet säljs — på portalerna, på myBestDays och vid direktbokningar. ”Utkast” syns ingenstans."
+      "statusFieldHint": "”Aktiv” betyder att boendet säljs — på portalerna, på myBestDays och vid direktbokningar. ”Utkast” syns ingenstans.",
+      "zimmerNurLokal": "Stannar i myNextDays — portalerna känner inte till denna rumstyp."
     },
     "availabilityForm": {
       "title": "Tillgänglighet",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Sök objekt …",
       "noMatch": "Inget objekt hittades."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Utan rum",
+      "umgehaengt": "Tilldelning ändrad hos Airbnb.",
+      "menue": "Rum hos Airbnb",
+      "geloest": "Bilden är inte längre kopplad till ett rum."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Rummen stämmer med Airbnb.",
+      "restHinweis": "Finns fortfarande hos Airbnb: {zimmer}. Airbnb erbjuder inget sätt att ta bort ett rum via gränssnittet — det går bara i ditt Airbnb-konto.",
+      "beiAirbnbEntfernen": "Ta bort hos Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Utgånget",
       "fehler": "Fel"
     }
+  },
+  "glocke": {
+    "leer": "Inga aviseringar",
+    "alleGelesen": "Markera alla som lästa",
+    "erneut": "Ladda om",
+    "ariaMitAnzahl": "Aviseringar ({count} olästa)"
   }
 }

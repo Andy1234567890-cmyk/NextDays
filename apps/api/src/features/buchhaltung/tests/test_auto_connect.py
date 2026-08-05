@@ -15,6 +15,7 @@ from src.features.buchhaltung.service import (
     BuchhaltungService,
     _account_holder_from,
     _connect_fields_from_profile,
+    _legal_name_from_payload,
 )
 
 _CTX = AuthContext(user_id="u", tenant_id="t1")
@@ -167,6 +168,41 @@ def test_account_holder_auto_derived() -> None:
     )
     # Nichts vorhanden → None
     assert _account_holder_from({"account_type": "individual"}) is None
+
+
+def test_legal_name_firmenname_gewinnt() -> None:
+    """Der eingetragene Firmenname ist der Rechtsname — für JEDE Rechtsform,
+    auch für ein Einzelunternehmen (Enkeltmandsvirksomhed mit CVR-Namen)."""
+    assert (
+        _legal_name_from_payload(
+            {
+                "companyName": " Ågaard Udlejning ",
+                "firstName": "Jeanine",
+                "lastName": "Ågaard",
+            }
+        )
+        == "Ågaard Udlejning"
+    )
+
+
+def test_legal_name_ohne_firmenname_ist_der_personenname() -> None:
+    """Eine natürliche Person ohne eingetragenen Firmennamen firmiert unter ihrem
+    eigenen Namen — das ist ihr Rechtsname, nicht ein Ersatzwert."""
+    assert (
+        _legal_name_from_payload(
+            {"companyName": "", "firstName": "Jeanine", "lastName": "Ågaard"}
+        )
+        == "Jeanine Ågaard"
+    )
+    assert _legal_name_from_payload({"companyName": ""}) is None
+
+
+def test_legal_name_teil_update_laesst_wert_stehen() -> None:
+    """Ohne Firmenname-Feld im Payload darf legal_name NICHT überschrieben werden
+    (sonst macht ein Adress-Update aus einer GmbH den Personennamen)."""
+    assert (
+        _legal_name_from_payload({"firstName": "Max", "lastName": "Muster"}) is None
+    )
 
 
 # --- Fake-DB -----------------------------------------------------------------

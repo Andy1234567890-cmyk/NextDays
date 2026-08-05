@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "{room} skaičius",
       "infoEditorTitle": "Būsto informacija",
       "infoEditorSubtitle": "Nurodykite būsto tipą, dydį ir svečių talpą.",
-      "statusFieldHint": "„Aktyvus“ reiškia, kad būstas parduodamas – portaluose, myBestDays ir tiesioginiuose užsakymuose. „Juodraštis“ niekur nematomas."
+      "statusFieldHint": "„Aktyvus“ reiškia, kad būstas parduodamas – portaluose, myBestDays ir tiesioginiuose užsakymuose. „Juodraštis“ niekur nematomas.",
+      "zimmerNurLokal": "Lieka myNextDays — portalai nežino šio kambario tipo."
     },
     "availabilityForm": {
       "title": "Prieinamumas",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Ieškoti objekto …",
       "noMatch": "Objektas nerastas."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Be kambario",
+      "umgehaengt": "Priskyrimas pakeistas Airbnb.",
+      "menue": "Airbnb kambarys",
+      "geloest": "Nuotrauka nebesusieta su kambariu."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Kambariai sutampa su Airbnb.",
+      "restHinweis": "Airbnb vis dar yra: {zimmer}. Airbnb nesiūlo būdo ištrinti kambarį per sąsają — tai galima tik jūsų Airbnb paskyroje.",
+      "beiAirbnbEntfernen": "Pašalinti Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Baigėsi",
       "fehler": "Klaida"
     }
+  },
+  "glocke": {
+    "leer": "Pranešimų nėra",
+    "alleGelesen": "Žymėti visus kaip skaitytus",
+    "erneut": "Įkelti iš naujo",
+    "ariaMitAnzahl": "Pranešimai ({count} neskaityti)"
   }
 }

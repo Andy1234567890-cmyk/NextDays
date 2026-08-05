@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "{room} skaits",
       "infoEditorTitle": "Naktsmītnes informācija",
       "infoEditorSubtitle": "Norādiet naktsmītnes veidu, platību un viesu ietilpību.",
-      "statusFieldHint": "“Aktīvs” nozīmē, ka naktsmītne tiek pārdota — portālos, myBestDays un tiešajās rezervācijās. “Melnraksts” nekur nav redzams."
+      "statusFieldHint": "“Aktīvs” nozīmē, ka naktsmītne tiek pārdota — portālos, myBestDays un tiešajās rezervācijās. “Melnraksts” nekur nav redzams.",
+      "zimmerNurLokal": "Paliek myNextDays — portāli nepazīst šo istabas veidu."
     },
     "availabilityForm": {
       "title": "Pieejamība",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Meklēt objektu …",
       "noMatch": "Objekts nav atrasts."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Bez telpas",
+      "umgehaengt": "Piesaiste mainīta Airbnb.",
+      "menue": "Airbnb telpa",
+      "geloest": "Fotoattēls vairs nav saistīts ar telpu."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Telpas sakrīt ar Airbnb.",
+      "restHinweis": "Airbnb joprojām ir: {zimmer}. Airbnb nepiedāvā veidu, kā dzēst telpu caur saskarni — tas iespējams tikai jūsu Airbnb kontā.",
+      "beiAirbnbEntfernen": "Noņemt Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Beidzies",
       "fehler": "Kļūda"
     }
+  },
+  "glocke": {
+    "leer": "Nav paziņojumu",
+    "alleGelesen": "Atzīmēt visus kā izlasītus",
+    "erneut": "Ielādēt atkārtoti",
+    "ariaMitAnzahl": "Paziņojumi ({count} neizlasīti)"
   }
 }

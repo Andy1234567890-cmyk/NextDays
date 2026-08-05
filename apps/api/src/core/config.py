@@ -1,7 +1,7 @@
 """Zentrale App-Konfiguration. Alle Secrets als SecretStr (PROJECT.md)."""
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,6 +28,17 @@ class Settings(BaseSettings):
 
     # --- Supabase ---
     supabase_url: str = "http://localhost:54321"
+    # Von AUSSEN (Browser/OTA) erreichbare Kong-Adresse — die EINZIGE Quelle für
+    # Storage-Links, die wir speichern. `supabase_url` ist im Container die
+    # INTERNE Adresse (`http://kong:8000`) und darf hier NIE einspringen: eine so
+    # gebaute URL landet in der DB und ist im Browser unerreichbar (so war das
+    # Firmenlogo ein kaputtes Bild und ging als toter Link an die Portale).
+    # Zwei akzeptierte Env-Namen für denselben Wert: der Supabase-Stack setzt
+    # API_EXTERNAL_URL, SUPABASE_PUBLIC_URL ist der explizite Name.
+    supabase_public_url: str = Field(
+        default="",
+        validation_alias=AliasChoices("supabase_public_url", "api_external_url"),
+    )
     supabase_anon_key: SecretStr = SecretStr("")
     supabase_service_role_key: SecretStr = SecretStr("")
     supabase_jwt_secret: SecretStr = SecretStr("")
@@ -298,6 +309,26 @@ class Settings(BaseSettings):
         """Versand ist nutzbar, wenn Server UND Absender gesetzt sind. Fehlt eins,
         ist es ein Konfig-Fehler (kein Ersatzwert) → send() schlägt fehl."""
         return bool(self.smtp_host and self.smtp_from_address)
+
+    @property
+    def storage_public_base(self) -> str:
+        """Basis-URL für Storage-Links, die GESPEICHERT und später im Browser oder
+        von einem OTA geöffnet werden.
+
+        Fehlt die Adresse, ist das ein Konfigurationsfehler → klar fehlschlagen.
+        Kein Rückfall auf `supabase_url`: die ist im Container die interne
+        Kong-Adresse und würde eine dauerhaft kaputte URL in die DB schreiben.
+        """
+        # pylint sieht durch das Field(...) nur die FieldInfo, nicht den str-Wert,
+        # den pydantic zur Laufzeit einsetzt (falscher no-member).
+        base = self.supabase_public_url.strip()  # pylint: disable=no-member
+        if not base:
+            raise RuntimeError(
+                "SUPABASE_PUBLIC_URL (bzw. API_EXTERNAL_URL) ist nicht gesetzt — "
+                "ohne die von außen erreichbare Adresse lässt sich keine "
+                "speicherbare Storage-URL bilden."
+            )
+        return base.rstrip("/")
 
     @property
     def is_local(self) -> bool:

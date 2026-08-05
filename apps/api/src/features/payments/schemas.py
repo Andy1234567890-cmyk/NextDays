@@ -82,13 +82,33 @@ class ConnectAccountResponse(BaseModel):
     die KYC-Erfassung läuft über die eigene Dashboard-UI)."""
     stripe_account_id: str        # acct_...
 
+class ConnectRequirementError(BaseModel):
+    """Ein von Stripe ZURÜCKGEWIESENES Feld samt Begründung im Klartext.
+
+    ``requirements.errors`` ist die einzige Quelle, die sagt WARUM eine Angabe
+    nicht zählt (z. B. „The provided address could not be verified"). Ohne sie
+    wirkt ein Feld gleichzeitig ausgefüllt und offen."""
+    requirement: str
+    code: str
+    reason: str
+
+
 class ConnectAccountStatus(BaseModel):
-    """Status eines verbundenen Gastgeber-Accounts (für die eigene Onboarding-UI)."""
+    """Status eines verbundenen Gastgeber-Accounts (für die eigene Onboarding-UI).
+
+    ALLE Requirement-Listen einzeln, nicht zu einer verschmolzen: „jetzt fällig",
+    „später fällig" und „in Prüfung" verlangen unterschiedliche Reaktionen, und
+    eine zusammengeworfene Liste behauptet Handlungsbedarf, wo keiner ist."""
     stripe_account_id: str
     charges_enabled: bool         # kann Zahlungen empfangen
     payouts_enabled: bool         # kann Auszahlungen erhalten
     details_submitted: bool       # KYC vollständig eingereicht
-    requirements: list[str]       # offene Pflichtfelder (leer = alles OK)
+    requirements: list[str]       # currently_due (leer = jetzt nichts offen)
+    past_due: list[str] = []      # überfällig → Account schon gesperrt
+    eventually_due: list[str] = []        # später fällig (noch keine Frist)
+    pending_verification: list[str] = []  # eingereicht, Stripe prüft
+    errors: list[ConnectRequirementError] = []
+    current_deadline: int | None = None   # Unix-Sekunden, ab wann gesperrt wird
     disabled_reason: str | None = None  # warum der Account (noch) gesperrt ist
 
 

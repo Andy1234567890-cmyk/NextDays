@@ -19,6 +19,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import public_storage_url
 
 from .schemas import HostProfile, HostProfileUpdate
 
@@ -137,7 +138,7 @@ class HostProfileService:
             ) from exc
 
         # Cache-Buster, damit der Client trotz gleichem Pfad das neue Bild lädt.
-        url = f"{storage.get_public_url(path)}?v={secrets.token_hex(4)}"
+        url = f"{public_storage_url(_AVATAR_BUCKET, path)}?v={secrets.token_hex(4)}"
         self._db.table("host_profiles").upsert(
             {
                 "user_id": ctx.user_id,

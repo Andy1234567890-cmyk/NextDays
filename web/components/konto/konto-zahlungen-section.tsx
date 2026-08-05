@@ -13,8 +13,10 @@ import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 
 import { PaymentsActivation } from "@/components/zahlungen/payments-activation";
+import { Button } from "@nextdays/ui/button";
+
 import { getMe } from "@/lib/auth";
-import { getFirmenProfil } from "@/lib/firmenprofil";
+import { getFirmenProfil, resyncStripeProfil } from "@/lib/firmenprofil";
 import {
   getConnectStatus,
   getStoredConnectAccountId,
@@ -32,6 +34,53 @@ type Loaded = {
   // und Stripe genau EINE davon (z. B. die Website) zurückgewiesen hat.
   syncError: string | null;
 };
+
+// Das Anlegen des Zahlungskontos ist beim Speichern der Stammdaten
+// fehlgeschlagen. Grund im Klartext zeigen (er kommt vom Zahlungsanbieter) und
+// einen Wiederanlauf anbieten — ohne Button war der Nutzer hier eingesperrt.
+function FehlgeschlageneAnlage({ grund }: { grund: string }) {
+  const [laeuft, setLaeuft] = useState(false);
+  const [fehler, setFehler] = useState<string | null>(null);
+
+  return (
+    <div className="flex flex-col gap-3 rounded-(--radius) border border-destructive/40 bg-destructive/5 p-3">
+      <p className="text-sm text-foreground">
+        <Icon
+          icon="ph:warning"
+          className="mr-1.5 inline size-4 align-text-bottom text-destructive"
+        />
+        Dein Zahlungskonto konnte nicht angelegt werden. Rückmeldung des
+        Zahlungsanbieters: {grund}
+      </p>
+      <div className="flex items-center gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={laeuft}
+          onClick={() => {
+            setLaeuft(true);
+            setFehler(null);
+            void (async () => {
+              const res = await resyncStripeProfil();
+              if (!res.ok) {
+                setFehler(res.error);
+                setLaeuft(false);
+                return;
+              }
+              window.location.reload();
+            })();
+          }}
+        >
+          {laeuft ? "Wird versucht …" : "Nochmal versuchen"}
+        </Button>
+        {fehler ? (
+          <span className="text-sm text-destructive">{fehler}</span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 export function KontoZahlungenSection() {
   const [state, setState] = useState<Loaded | null>(null);
@@ -63,10 +112,15 @@ export function KontoZahlungenSection() {
           const res = await getConnectStatus(accountId);
           if (res.ok) status = res.data;
           else statusError = res.error;
-          const profil = await getFirmenProfil();
-          if (profil.ok && typeof profil.data.stripeSyncError === "string") {
-            syncError = profil.data.stripeSyncError;
-          }
+        }
+        // Der Sync-Fehler wird AUCH ohne Account geladen: scheitert das
+        // automatische Anlegen (z. B. Stripe verlangt ein vollständiges
+        // Connect-Plattformprofil), gibt es keine acct_-ID — und die Karte zeigte
+        // dann nur „speichere zuerst deine Stammdaten", obwohl sie gespeichert
+        // sind und der echte Grund am Profil steht (Wurzel 5).
+        const profil = await getFirmenProfil();
+        if (profil.ok && typeof profil.data.stripeSyncError === "string") {
+          syncError = profil.data.stripeSyncError;
         }
       }
       if (!active) return;
@@ -110,18 +164,22 @@ export function KontoZahlungenSection() {
           zuerst das Onboarding ab.
         </p>
       ) : !state.accountId ? (
-        // Noch kein Stripe-Account: er entsteht automatisch, sobald die
-        // Stammdaten (mit E-Mail + Land) gespeichert sind — kein separater
-        // manueller Anlege-Schritt.
-        <p className="rounded-(--radius) border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-          <Icon
-            icon="ph:info"
-            className="mr-1.5 inline size-4 align-text-bottom"
-          />
-          Speichere zuerst deine Stammdaten (inkl. Land und E-Mail). Dein
-          Zahlungskonto wird daraus automatisch angelegt; danach erscheint hier
-          die Aktivierung.
-        </p>
+        state.syncError ? (
+          <FehlgeschlageneAnlage grund={state.syncError} />
+        ) : (
+          // Noch kein Stripe-Account: er entsteht automatisch, sobald die
+          // Stammdaten (mit E-Mail + Land) gespeichert sind — kein separater
+          // manueller Anlege-Schritt.
+          <p className="rounded-(--radius) border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+            <Icon
+              icon="ph:info"
+              className="mr-1.5 inline size-4 align-text-bottom"
+            />
+            Speichere zuerst deine Stammdaten (inkl. Land und E-Mail). Dein
+            Zahlungskonto wird daraus automatisch angelegt; danach erscheint hier
+            die Aktivierung.
+          </p>
+        )
       ) : (
         <>
           <PaymentsActivation

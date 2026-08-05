@@ -33,40 +33,66 @@ const REQUIREMENT_HINTS: {
   match: (r: string) => boolean;
   label: string;
   fieldId: string;
+  // Wo die Angabe hingehört, wenn es dafür KEIN Feld in den Stammdaten gibt.
+  // Ohne diesen Satz sucht der Nutzer ein Feld, das es nicht gibt.
+  hinweis?: string;
 }[] = [
   // Gesellschafts-spezifische Requirements ZUERST (die erste passende match
   // gewinnt) — sonst schlucken die generischen address/name-Muster sie.
   // Stripe DE führt die Handelsregisternummer im Feld company.tax_id (nicht die
   // Steuernummer) — beide Muster verweisen daher auf das HRB-Feld.
   { match: (r) => r.includes("registration_number") || r.includes("company.tax_id"), label: "Handelsregisternummer", fieldId: "companyRegister" },
+  { match: (r) => r.includes("company.vat_id"), label: "USt-IdNr.", fieldId: "vatId" },
   { match: (r) => r.includes("company.name"), label: "Firmenname", fieldId: "companyName" },
-  { match: (r) => r.includes("verification.document"), label: "Ausweis-/Registerdokument (im Zahlungskonto hochladen)", fieldId: "" },
+  { match: (r) => r.includes("company.phone"), label: "Telefon", fieldId: "phone1" },
+  { match: (r) => r.includes("company.address"), label: "Firmenadresse", fieldId: "street" },
+  { match: (r) => r.includes("company.structure"), label: "Rechtsform", fieldId: "legalForm" },
+  { match: (r) => r.includes("owners_provided") || r.includes("directors_provided") || r.includes("executives_provided"), label: "Bestätigung: alle beteiligten Personen erfasst", fieldId: "firstName" },
+  { match: (r) => r.includes("verification.document"), label: "Ausweisdokument", fieldId: "", hinweis: "Kann noch nicht über die Stammdaten eingereicht werden — bitte den Support anschreiben." },
+  { match: (r) => r.includes("verification.additional_document"), label: "Zusätzliches Dokument (Adressnachweis)", fieldId: "", hinweis: "Kann noch nicht über die Stammdaten eingereicht werden — bitte den Support anschreiben." },
   { match: (r) => r.includes("relationship.representative") || r.includes(".representative"), label: "Vertretungsberechtigte Person (Geschäftsführer)", fieldId: "firstName" },
   { match: (r) => r.includes("relationship.director") || r.includes("directors"), label: "Geschäftsführer", fieldId: "firstName" },
   { match: (r) => r.includes("relationship.owner") || r.includes("owners"), label: "Wirtschaftlich Berechtigte(r)", fieldId: "firstName" },
   { match: (r) => r.startsWith("individual.dob") || r.includes("dob"), label: "Geburtsdatum", fieldId: "ownerDob" },
+  { match: (r) => r.includes("id_number") || r.includes("ssn_last_4"), label: "Persönliche Steuer-/Ausweisnummer (z. B. CPR, USt-IdNr. der Person)", fieldId: "", hinweis: "Für dieses Land verlangt der Zahlungsanbieter eine persönliche Kennnummer, die es in den Stammdaten noch nicht gibt — bitte den Support anschreiben." },
   { match: (r) => r.includes("address"), label: "Adresse", fieldId: "street" },
   { match: (r) => r.includes("first_name") || r.includes("last_name"), label: "Name", fieldId: "firstName" },
   { match: (r) => r.includes("email"), label: "E-Mail", fieldId: "email" },
   { match: (r) => r.includes("phone"), label: "Telefon", fieldId: "phone1" },
   { match: (r) => r.includes("external_account"), label: "Bankverbindung (IBAN)", fieldId: "iban" },
   { match: (r) => r.includes("business_profile.url"), label: "Website", fieldId: "website" },
-  { match: (r) => r.includes("tos_acceptance"), label: "Zustimmung zu den Nutzungsbedingungen", fieldId: "" },
+  { match: (r) => r.includes("business_profile.mcc") || r.includes("business_profile.product_description"), label: "Beschreibung des Geschäfts", fieldId: "", hinweis: "Setzt das System automatisch (Branche Unterkünfte) — bitte den Support anschreiben, falls es offen bleibt." },
+  { match: (r) => r.includes("tos_acceptance"), label: "Zustimmung zu den Nutzungsbedingungen", fieldId: "", hinweis: "Über den Button „Zahlungen aktivieren“ unten." },
 ];
 
-type MissingField = { label: string; fieldId: string };
+type MissingField = { label: string; fieldId: string; pfad: string; hinweis?: string };
 
+// Einzelnen Stripe-Pfad benennen (für requirements.errors, wo es je Fehler
+// genau ein Feld ist). Fällt auf den Rohpfad zurück statt zu schweigen.
+function requirementLabel(pfad: string): string {
+  return REQUIREMENT_HINTS.find((h) => h.match(pfad))?.label ?? pfad;
+}
+
+// JEDES Requirement wird abgebildet — auch eines ohne passendes Muster. Ein
+// stumm verschlucktes Requirement war der Grund, warum die Karte „es fehlen
+// Pflichtangaben" behauptete und darunter NICHTS auflistete (Wurzel 5: kein
+// Nicht-Wissen als Befund). Unbekanntes erscheint mit seinem Stripe-Pfad.
 function humanizeRequirements(reqs: string[]): MissingField[] {
   const seen = new Set<string>();
   const out: MissingField[] = [];
   for (const r of reqs) {
     const hint = REQUIREMENT_HINTS.find((h) => h.match(r));
-    // tos_acceptance kommt über den Aktivieren-Button — nicht als „fehlende
-    // Stammdaten" auflisten.
-    if (hint && !r.includes("tos_acceptance") && !seen.has(hint.label)) {
-      seen.add(hint.label);
-      out.push({ label: hint.label, fieldId: hint.fieldId });
-    }
+    const label = hint?.label ?? r;
+    if (seen.has(label)) continue;
+    seen.add(label);
+    out.push({
+      label,
+      fieldId: hint?.fieldId ?? "",
+      pfad: r,
+      hinweis: hint
+        ? hint.hinweis
+        : "Unbekannte Anforderung des Zahlungsanbieters — bitte den Support anschreiben.",
+    });
   }
   return out;
 }
@@ -97,7 +123,16 @@ function focusField(fieldId: string): void {
 // eine klare Erklärung mit Handlungshinweis übersetzen. Feste Stripe-Enum-Werte;
 // unbekannte fallen auf einen allgemeinen, verständlichen Satz zurück (kein
 // roher Code mehr, aber auch kein erfundener Grund).
-function explainDisabledReason(reason: string): string {
+function explainDisabledReason(reason: string, nurTos: boolean): string {
+  // Sonderfall zuerst: sind ALLE offenen Punkte nur die ToS-Zustimmung, dann
+  // fehlt keine Angabe, sondern ein Klick. Der alte Text schickte den Nutzer auf
+  // die Suche nach Feldern, die es nicht zu füllen gab.
+  if (nurTos) {
+    return (
+      "Es fehlt nur noch deine Zustimmung: klicke auf „Zahlungen aktivieren“" +
+      " und bestätige die Bedingungen — danach ist die Freischaltung abgeschlossen."
+    );
+  }
   const MAP: Record<string, string> = {
     "requirements.past_due":
       "Es fehlen noch Pflichtangaben. Klicke unten auf ein fehlendes Feld, um direkt dorthin zu springen, trage es ein und speichere — danach ist die Freischaltung abgeschlossen.",
@@ -121,6 +156,74 @@ function explainDisabledReason(reason: string): string {
   return (
     MAP[reason] ??
     "Die Zahlungsfreischaltung ist noch nicht abgeschlossen. Ergänze offene Angaben in den Stammdaten und schließe die Einrichtung ab."
+  );
+}
+
+// Eine Requirement-Gruppe. Jede Zeile nennt das Feld im Klartext, den echten
+// Stripe-Pfad (damit im Support-Fall klar ist, worum es geht) und entweder den
+// Sprung ins Formularfeld oder — wenn es dafür kein Feld gibt — den Hinweis, wo
+// die Angabe hingehört.
+const LISTEN_TON = {
+  offen: {
+    box: "border-destructive/30 bg-destructive/5",
+    titel: "text-destructive",
+    icon: "ph:arrow-down",
+  },
+  pruefung: {
+    box: "border-border bg-muted/40",
+    titel: "text-muted-foreground",
+    icon: "ph:hourglass",
+  },
+  spaeter: {
+    box: "border-border bg-muted/20",
+    titel: "text-muted-foreground",
+    icon: "ph:clock-counter-clockwise",
+  },
+} as const;
+
+function RequirementListe({
+  titel,
+  ton,
+  felder,
+}: {
+  titel: string;
+  ton: keyof typeof LISTEN_TON;
+  felder: MissingField[];
+}) {
+  const stil = LISTEN_TON[ton];
+  return (
+    <div
+      className={`flex flex-col gap-2 rounded-(--radius) border p-3 ${stil.box}`}
+    >
+      <h4 className={`text-sm font-medium ${stil.titel}`}>{titel}</h4>
+      <ul className="flex flex-col gap-2">
+        {felder.map((m) => (
+          <li key={m.label} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            {m.fieldId && ton !== "pruefung" ? (
+              <button
+                type="button"
+                onClick={() => focusField(m.fieldId)}
+                className="flex items-center gap-1.5 rounded-full border border-destructive/30 bg-card px-2.5 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+              >
+                <Icon icon={stil.icon} className="size-3.5" />
+                {m.label}
+              </button>
+            ) : (
+              <span className="flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium">
+                <Icon icon={stil.icon} className="size-3.5" />
+                {m.label}
+              </span>
+            )}
+            {m.hinweis && (
+              <span className="text-xs text-muted-foreground">{m.hinweis}</span>
+            )}
+            <code className="text-[0.6875rem] text-muted-foreground/70">
+              {m.pfad}
+            </code>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -280,7 +383,29 @@ export function PaymentsActivation({
     );
   }
 
-  const missing = humanizeRequirements(status.requirements);
+  // currently_due + past_due zusammen: was JETZT zu tun ist. past_due ist eine
+  // Teilmenge mit abgelaufener Frist — humanizeRequirements entdoppelt über das
+  // Label, also bleibt jeder Punkt genau einmal stehen.
+  const offen = humanizeRequirements([
+    ...status.past_due,
+    ...status.requirements,
+  ]);
+  const spaeter = humanizeRequirements(status.eventually_due).filter(
+    (s) => !offen.some((o) => o.label === s.label),
+  );
+  const inPruefung = humanizeRequirements(status.pending_verification);
+  const alleOffenenPfade = [...status.past_due, ...status.requirements];
+  const nurTos =
+    alleOffenenPfade.length > 0 &&
+    alleOffenenPfade.every((r) => r.includes("tos_acceptance"));
+  const fristText =
+    status.current_deadline !== null
+      ? new Date(status.current_deadline * 1000).toLocaleDateString("de-DE", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        })
+      : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -306,8 +431,28 @@ export function PaymentsActivation({
             icon="ph:warning"
             className="mr-1.5 inline size-4 align-text-bottom"
           />
-          {explainDisabledReason(status.disabled_reason)}
+          {explainDisabledReason(status.disabled_reason, nurTos)}
         </p>
+      )}
+
+      {/* Von Stripe ZURÜCKGEWIESENE Angaben mit Originalbegründung. Ohne diesen
+          Block sieht der Nutzer ein gefülltes Feld, das trotzdem offen bleibt. */}
+      {status.errors.length > 0 && (
+        <div className="flex flex-col gap-2 rounded-(--radius) border border-amber-500/50 bg-amber-50 p-3 text-sm text-amber-900">
+          <span className="font-medium">
+            Diese Angaben hat der Zahlungsanbieter zurückgewiesen:
+          </span>
+          <ul className="flex flex-col gap-1.5">
+            {status.errors.map((e) => (
+              <li key={e.requirement + e.code} className="flex flex-col">
+                <span className="font-medium">
+                  {requirementLabel(e.requirement)}
+                </span>
+                <span className="text-amber-900/80">{e.reason}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {status.charges_enabled ? (
@@ -320,27 +465,30 @@ export function PaymentsActivation({
         </div>
       ) : (
         <>
-          {missing.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <h4 className="text-sm font-medium">
-                Fehlende Angaben — klicke ein Feld an, um direkt dorthin zu
-                springen:
-              </h4>
-              <ul className="flex flex-wrap gap-2">
-                {missing.map((m) => (
-                  <li key={m.label}>
-                    <button
-                      type="button"
-                      onClick={() => focusField(m.fieldId)}
-                      className="flex items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/5 px-2.5 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
-                    >
-                      <Icon icon="ph:arrow-down" className="size-3.5" />
-                      {m.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {offen.length > 0 && (
+            <RequirementListe
+              titel={
+                fristText
+                  ? `Jetzt offen (bis ${fristText})`
+                  : "Jetzt offen — diese Angaben verlangt der Zahlungsanbieter"
+              }
+              ton="offen"
+              felder={offen}
+            />
+          )}
+          {inPruefung.length > 0 && (
+            <RequirementListe
+              titel="Eingereicht — wird gerade geprüft"
+              ton="pruefung"
+              felder={inPruefung}
+            />
+          )}
+          {spaeter.length > 0 && (
+            <RequirementListe
+              titel="Später fällig — noch keine Frist, kannst du jetzt schon nachtragen"
+              ton="spaeter"
+              felder={spaeter}
+            />
           )}
           <Button
             type="button"

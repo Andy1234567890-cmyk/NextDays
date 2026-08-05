@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Počet: {room}",
       "infoEditorTitle": "Údaje o ubytování",
       "infoEditorSubtitle": "Zadejte typ ubytování, velikost a kapacitu pro hosty.",
-      "statusFieldHint": "„Aktivní“ znamená, že se ubytování prodává – na portálech, na myBestDays i při přímých rezervacích. „Koncept“ se nezobrazuje nikde."
+      "statusFieldHint": "„Aktivní“ znamená, že se ubytování prodává – na portálech, na myBestDays i při přímých rezervacích. „Koncept“ se nezobrazuje nikde.",
+      "zimmerNurLokal": "Zůstává v myNextDays — portály tento typ místnosti neznají."
     },
     "availabilityForm": {
       "title": "Dostupnost",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Hledat objekt …",
       "noMatch": "Objekt nenalezen."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Bez místnosti",
+      "umgehaengt": "Přiřazení na Airbnb změněno.",
+      "menue": "Místnost na Airbnb",
+      "geloest": "Fotka už není přiřazena k místnosti."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Místnosti odpovídají Airbnb.",
+      "restHinweis": "Na Airbnb stále je: {zimmer}. Airbnb nenabízí způsob, jak místnost smazat přes rozhraní — jde to jen ve vašem účtu Airbnb.",
+      "beiAirbnbEntfernen": "Odstranit na Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Vypršelo",
       "fehler": "Chyba"
     }
+  },
+  "glocke": {
+    "leer": "Žádná oznámení",
+    "alleGelesen": "Označit vše jako přečtené",
+    "erneut": "Načíst znovu",
+    "ariaMitAnzahl": "Oznámení ({count} nepřečtených)"
   }
 }

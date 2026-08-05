@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Nombre de {room}",
       "infoEditorTitle": "Détails du logement",
       "infoEditorSubtitle": "Indiquez le type de logement, la superficie et la capacité d'accueil.",
-      "statusFieldHint": "« Actif » signifie que le logement est vendu — sur les portails, sur myBestDays et en réservation directe. « Brouillon » n'est visible nulle part."
+      "statusFieldHint": "« Actif » signifie que le logement est vendu — sur les portails, sur myBestDays et en réservation directe. « Brouillon » n'est visible nulle part.",
+      "zimmerNurLokal": "Reste dans myNextDays — les portails ne connaissent pas ce type de pièce."
     },
     "availabilityForm": {
       "title": "Disponibilité",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Rechercher un bien …",
       "noMatch": "Aucun bien trouvé."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Sans pièce",
+      "umgehaengt": "Attribution modifiée sur Airbnb.",
+      "menue": "Pièce sur Airbnb",
+      "geloest": "La photo n'est plus liée à une pièce."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Les pièces correspondent à Airbnb.",
+      "restHinweis": "Toujours sur Airbnb : {zimmer}. Airbnb n'offre aucun moyen de supprimer une pièce via l'interface — cela n'est possible que dans votre compte Airbnb.",
+      "beiAirbnbEntfernen": "Supprimer sur Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Expiré",
       "fehler": "Erreur"
     }
+  },
+  "glocke": {
+    "leer": "Aucune notification",
+    "alleGelesen": "Tout marquer comme lu",
+    "erneut": "Recharger",
+    "ariaMitAnzahl": "Notifications ({count} non lues)"
   }
 }

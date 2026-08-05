@@ -17,6 +17,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from src.core.logging import get_logger
+
+# Eigener Logger statt Import aus `common`/`channex_client`: dieses Modul wird
+# VON `channex_client` eingebunden, ein Import zurück wäre ein Zirkel.
+log = get_logger("nextdays.channex.airbnb")
+
 
 class AirbnbActionsMixin:
     """Airbnb-Aktionen am Kanal — lesend, plus die drei Raum-Schreibwege."""
@@ -105,16 +111,23 @@ class AirbnbActionsMixin:
         Was er zurückgibt, ist Airbnbs eigene Antwort. Ein Erfolg wird NIE aus
         dem Status geschlossen (Wurzel 5) — der Aufrufer liest den Stand zurück.
         """
+        anfrage = {
+            "endpoint": endpoint,
+            "method": method.lower(),
+            "params": params or {},
+            "payload": payload or {},
+        }
+        # VOR dem Senden protokollieren, nicht danach: bei einem Timeout oder
+        # Abbruch stünde sonst nirgends, was hinausging. Der Fehler-Sink des
+        # Clients zeigt den Body nur bei einer Antwort mit Fehlerstatus.
+        log.info(
+            "airbnb_proxy_schreibaufruf",
+            channel_id=channel_id, endpoint=endpoint,
+            methode=anfrage["method"], params=anfrage["params"],
+            payload=anfrage["payload"],
+        )
         return self.post(
-            f"channels/{channel_id}/action/api_proxy",
-            json={
-                "request": {
-                    "endpoint": endpoint,
-                    "method": method.lower(),
-                    "params": params or {},
-                    "payload": payload or {},
-                }
-            },
+            f"channels/{channel_id}/action/api_proxy", json={"request": anfrage}
         )
 
     def create_airbnb_listing_room(
@@ -122,39 +135,71 @@ class AirbnbActionsMixin:
     ) -> dict[str, Any]:
         """Einen Raum bei Airbnb anlegen (`POST listing_rooms`).
 
-        Die Feldnamen sind die der Leseantwort — `listing_id`, `room_type`,
-        `is_private` —, weil Airbnb dieselbe Ressource beschreibt. Betten gehen
-        NICHT mit: sie hängen bei uns am Objekt (`type_attributes.beds`), nicht
-        am Zimmer (0251), und ein erfundenes Bett wäre eine Behauptung über die
-        Anzeige (Wurzel 4).
+        DER PAYLOAD IST FLACH — keine `listing_room`-Hülle. Das war die Ursache
+        von drei Fehlversuchen am Live-Listing (05.08.2026); die Hülle ist
+        naheliegend, weil die Leseantwort unter `listing_rooms[]` gruppiert, aber
+        Channex' Validator sucht die Felder direkt im Payload.
+
+        Gemessen, indem `room_type` bewusst WEGGELASSEN wurde (dann kann Airbnb
+        nichts anlegen, und man sieht nur, wie weit der Validator kommt):
+
+            payload {"listing_id": …}                    → 422 room_type is required.
+            payload {"listing_room": {"listing_id": …}}  → 422 listing_id is required.
+
+        „room_type is required" ist der Beweis, dass die Kennung angekommen ist.
+        Vorher gemessen und alle mit „listing_id is required" gescheitert:
+        Kennung nur in der Hülle · Kennung in `params` + Hülle · Kennung als
+        Query-String am Endpunkt + Hülle.
+
+        `params` gehört nicht dazu: die Doku nennt das Feld „GET Arguments"
+        (`docs/OTA/Airbnb/Airbnb Connection API.pdf`, S. 10), und beim POST wird
+        es nicht ausgewertet.
+
+        Die Feldnamen sind die der Leseantwort (`listing_id`, `room_type`,
+        `is_private`, live abgelesen) — dieselbe Ressource.
+
+        Betten gehen NICHT mit: sie hängen bei uns am Objekt
+        (`type_attributes.beds`), nicht am Zimmer (0251) — ein erfundenes Bett
+        wäre eine Behauptung über die Anzeige (Wurzel 4).
         """
         return self.airbnb_api_proxy_write(
             channel_id,
             "listing_rooms",
             "post",
             payload={
-                "listing_room": {
-                    "listing_id": listing_id,
-                    "room_type": room_type,
-                    "is_private": privat,
-                }
+                "listing_id": listing_id,
+                "room_type": room_type,
+                "is_private": privat,
             },
         )
 
     def delete_airbnb_listing_room(
         self, channel_id: str, listing_id: str, room_id: str
     ) -> dict[str, Any]:
-        """Einen Raum bei Airbnb löschen (`DELETE listing_rooms/{room_id}`).
+        """Einen Raum bei Airbnb löschen — DIESEN WEG GIBT ES BEI CHANNEX NICHT.
 
-        Die `listing_id` geht als Parameter mit: Airbnbs Raum-Ressourcen sind
-        listing-gebunden, und ohne sie träfe ein Löschen im schlimmsten Fall
-        einen Raum eines FREMDEN Listings desselben Kontos.
+        Live gemessen (05.08.2026) mit einer erfundenen Raum-ID, also ohne einen
+        echten Raum zu treffen. ALLE vier denkbaren Formen antworten
+        422 `Route not found`:
+
+            DELETE listing_rooms/{id}      DELETE listing_rooms (id im Body)
+            PUT    listing_rooms/{id}      POST   listing_rooms/{id}/delete
+
+        Zum Vergleich, im GLEICHEN Proxy: `POST listing_rooms` antwortet
+        inhaltlich (`room_type is required`), wird also erkannt. Zwei
+        verschiedene Meldungen = Channex kennt die POST-Route und die
+        Lösch-Routen nicht. Anlegen geht, Löschen nicht.
+
+        Der Aufruf bleibt hier, weil er den Messbefund dokumentiert und der
+        Aufrufer den Fehlschlag protokolliert, statt „gelöscht" zu melden
+        (Wurzel 5). Ein in unserer Maske entfernter Raum muss bis auf Weiteres im
+        Airbnb-Extranet nachgezogen werden — das sagt die Oberfläche jetzt auch.
         """
         return self.airbnb_api_proxy_write(
             channel_id,
             f"listing_rooms/{room_id}",
             "delete",
-            params={"listing_id": listing_id},
+            payload={"listing_id": listing_id},
         )
 
     def get_airbnb_listings(self, channel_id: str) -> dict[str, Any]:

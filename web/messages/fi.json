@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "{room}: määrä",
       "infoEditorTitle": "Majoituksen tiedot",
       "infoEditorSubtitle": "Anna majoitustyyppi, koko ja vieraskapasiteetti.",
-      "statusFieldHint": "”Aktiivinen” tarkoittaa, että kohdetta myydään – portaaleissa, myBestDaysissa ja suoravarauksissa. ”Luonnos” ei näy missään."
+      "statusFieldHint": "”Aktiivinen” tarkoittaa, että kohdetta myydään – portaaleissa, myBestDaysissa ja suoravarauksissa. ”Luonnos” ei näy missään.",
+      "zimmerNurLokal": "Pysyy myNextDays-palvelussa — portaalit eivät tunne tätä huonetyyppiä."
     },
     "availabilityForm": {
       "title": "Saatavuus",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Etsi kohdetta …",
       "noMatch": "Kohdetta ei löytynyt."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Ilman huonetta",
+      "umgehaengt": "Kohdistus muutettu Airbnb:ssä.",
+      "menue": "Airbnb-huone",
+      "geloest": "Kuva ei ole enää liitetty huoneeseen."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Huoneet vastaavat Airbnb:tä.",
+      "restHinweis": "Airbnb:ssä on yhä: {zimmer}. Airbnb ei tarjoa tapaa poistaa huonetta rajapinnan kautta — se onnistuu vain Airbnb-tilissäsi.",
+      "beiAirbnbEntfernen": "Poista Airbnb:ssä"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Vanhentunut",
       "fehler": "Virhe"
     }
+  },
+  "glocke": {
+    "leer": "Ei ilmoituksia",
+    "alleGelesen": "Merkitse kaikki luetuiksi",
+    "erneut": "Lataa uudelleen",
+    "ariaMitAnzahl": "Ilmoitukset ({count} lukematonta)"
   }
 }

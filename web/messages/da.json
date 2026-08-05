@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Antal {room}",
       "infoEditorTitle": "Detaljer om overnatningsstedet",
       "infoEditorSubtitle": "Angiv boligtype, størrelse og kapacitet til gæster.",
-      "statusFieldHint": "“Aktiv” betyder, at boligen sælges – på portalerne, på myBestDays og ved direkte bookinger. “Kladde” vises ingen steder."
+      "statusFieldHint": "“Aktiv” betyder, at boligen sælges – på portalerne, på myBestDays og ved direkte bookinger. “Kladde” vises ingen steder.",
+      "zimmerNurLokal": "Forbliver i myNextDays — portalerne kender ikke denne værelsestype."
     },
     "availabilityForm": {
       "title": "Tilgængelighed",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Søg objekt …",
       "noMatch": "Intet objekt fundet."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Uden værelse",
+      "umgehaengt": "Tildeling ændret hos Airbnb.",
+      "menue": "Værelse hos Airbnb",
+      "geloest": "Billedet er ikke længere knyttet til et værelse."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Værelserne stemmer overens med Airbnb.",
+      "restHinweis": "Står stadig hos Airbnb: {zimmer}. Airbnb tilbyder ingen måde at slette et værelse via grænsefladen — det kan kun gøres i din Airbnb-konto.",
+      "beiAirbnbEntfernen": "Fjern hos Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Udløbet",
       "fehler": "Fejl"
     }
+  },
+  "glocke": {
+    "leer": "Ingen notifikationer",
+    "alleGelesen": "Marker alle som læst",
+    "erneut": "Genindlæs",
+    "ariaMitAnzahl": "Notifikationer ({count} ulæste)"
   }
 }

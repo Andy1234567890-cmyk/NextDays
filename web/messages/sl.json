@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Število: {room}",
       "infoEditorTitle": "Podrobnosti nastanitve",
       "infoEditorSubtitle": "Navedite vrsto nastanitve, velikost in zmogljivost za goste.",
-      "statusFieldHint": "»Aktivno« pomeni, da se nastanitev prodaja — na portalih, na myBestDays in pri neposrednih rezervacijah. »Osnutek« ni nikjer viden."
+      "statusFieldHint": "»Aktivno« pomeni, da se nastanitev prodaja — na portalih, na myBestDays in pri neposrednih rezervacijah. »Osnutek« ni nikjer viden.",
+      "zimmerNurLokal": "Ostane v myNextDays — portali te vrste sobe ne poznajo."
     },
     "availabilityForm": {
       "title": "Razpoložljivost",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Iskanje objekta …",
       "noMatch": "Objekt ni bil najden."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Brez sobe",
+      "umgehaengt": "Dodelitev spremenjena na Airbnb.",
+      "menue": "Soba na Airbnb",
+      "geloest": "Fotografija ni več povezana s sobo."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Sobe se ujemajo z Airbnb.",
+      "restHinweis": "Na Airbnb je še vedno: {zimmer}. Airbnb ne ponuja načina za brisanje sobe prek vmesnika — to je mogoče samo v vašem računu Airbnb.",
+      "beiAirbnbEntfernen": "Odstrani na Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Poteklo",
       "fehler": "Napaka"
     }
+  },
+  "glocke": {
+    "leer": "Ni obvestil",
+    "alleGelesen": "Označi vse kot prebrano",
+    "erneut": "Znova naloži",
+    "ariaMitAnzahl": "Obvestila ({count} neprebranih)"
   }
 }

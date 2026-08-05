@@ -4455,7 +4455,8 @@
       "zimmerAnzahl": "Numero di {room}",
       "infoEditorTitle": "Dettagli dell'alloggio",
       "infoEditorSubtitle": "Indica il tipo di alloggio, la dimensione e la capacità di ospiti.",
-      "statusFieldHint": "«Attivo» significa che l'alloggio è in vendita: sui portali, su myBestDays e per le prenotazioni dirette. «Bozza» non è visibile da nessuna parte."
+      "statusFieldHint": "«Attivo» significa che l'alloggio è in vendita: sui portali, su myBestDays e per le prenotazioni dirette. «Bozza» non è visibile da nessuna parte.",
+      "zimmerNurLokal": "Resta in myNextDays: i portali non conoscono questo tipo di stanza."
     },
     "availabilityForm": {
       "title": "Disponibilità",
@@ -5075,6 +5076,17 @@
     "switcher": {
       "searchPlaceholder": "Cerca struttura …",
       "noMatch": "Nessuna struttura trovata."
+    },
+    "airbnbFotos": {
+      "ohneRaum": "Senza stanza",
+      "umgehaengt": "Assegnazione modificata su Airbnb.",
+      "menue": "Stanza su Airbnb",
+      "geloest": "La foto non è più collegata a una stanza."
+    },
+    "airbnbZimmer": {
+      "gleichstand": "Le stanze corrispondono ad Airbnb.",
+      "restHinweis": "Ancora su Airbnb: {zimmer}. Airbnb non offre alcun modo per eliminare una stanza tramite l'interfaccia — è possibile solo nel tuo account Airbnb.",
+      "beiAirbnbEntfernen": "Rimuovi su Airbnb"
     }
   },
   "calendar": {
@@ -6833,5 +6845,11 @@
       "abgelaufen": "Scaduta",
       "fehler": "Errore"
     }
+  },
+  "glocke": {
+    "leer": "Nessuna notifica",
+    "alleGelesen": "Segna tutte come lette",
+    "erneut": "Ricarica",
+    "ariaMitAnzahl": "Notifiche ({count} non lette)"
   }
 }
