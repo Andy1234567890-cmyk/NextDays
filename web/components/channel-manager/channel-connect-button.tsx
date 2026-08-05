@@ -314,6 +314,10 @@ export function ChannelConnectButton({
     setOauthConnected(false);
     setOauthHostId(null);
     setCopied(false);
+    // Die Rückmeldung eines FRÜHEREN Imports darf nicht stehen bleiben: sie
+    // beschreibt einen abgeschlossenen Vorgang („18 Objekt(e) übernommen"), und
+    // beim nächsten Öffnen liest sie sich wie das Ergebnis dieses Aufrufs.
+    setObjectImportMsg(null);
   }
 
   function close() {
@@ -441,10 +445,9 @@ export function ChannelConnectButton({
       setObjectImportMsg(
         anzahl > 0
           ? `${anzahl} Objekt(e) übernommen — du findest sie unter „Objekte“. ` +
-            "Nächster Schritt: Airbnb übergibt keine Preise, deshalb brauchen " +
-            "die Objekte je einen Grundpreis unter „Preise“. Erst danach kann " +
-            "die Anzeige zugeordnet werden, weil das Portal Objekt UND Preis " +
-            `verlangt. Danach geht dein Preis automatisch an Airbnb.${gefunden}${rest}`
+            "Preise musst du nicht abtippen: sie kommen beim Verbinden aus " +
+            "deiner Airbnb-Anzeige mit. Prüfe sie danach unter „Preise“ — von " +
+            `dort gehen deine Preise an alle Portale.${gefunden}${rest}`
           : "Noch keine Objekte gefunden. Airbnb braucht nach dem Verbinden " +
             "manchmal einen Moment — bitte in einer Minute erneut versuchen.",
       );
@@ -945,8 +948,8 @@ export function ChannelConnectButton({
                           Sobald du Airbnb bestätigt hast, hol deine Objekte
                           hierher — Name, Ort, Land und Personenzahl kommen aus
                           deinen Airbnb-Anzeigen. Du musst nichts eintippen.
-                          Preise übergibt Airbnb nicht: die setzt du einmal
-                          selbst, danach gehen sie automatisch dorthin.
+                          Auch die Preise kommen mit: sie werden beim Verbinden
+                          aus der jeweiligen Anzeige übernommen.
                         </p>
                         <Button
                           onClick={importAirbnbObjects}
@@ -990,37 +993,51 @@ export function ChannelConnectButton({
                       <Icon icon="ph:check-circle" className="size-5" />
                       Verbunden{oauthHostId ? ` · Host-ID ${oauthHostId}` : ""}
                     </p>
-                    <div className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
+                    {/* Die Massenübernahme gehört NUR in die Erstverbindung.
+                        Kommt der Kunde von einem bestimmten Objekt („Verbinden"
+                        in der Objektzeile), will er GENAU DIESES verbinden —
+                        dann alle 18 Anzeigen des Kontos als neue Objekte
+                        anzulegen ist das Gegenteil davon. Unterschieden wird an
+                        `propertyId`: gesetzt = ein Objekt ist gewählt. */}
+                    {propertyId ? (
                       <p className="text-sm text-muted-foreground">
-                        Hol zuerst deine Airbnb-Anzeigen als Objekte hierher —
-                        Name, Ort, Land und Personenzahl kommen mit. Erst danach
-                        lässt sich zuordnen, welche Anzeige zu welchem Objekt
-                        gehört. Preise übergibt Airbnb nicht: die setzt du
-                        einmal selbst, danach gehen sie automatisch dorthin.
+                        Ordne jetzt zu, welche Airbnb-Anzeige zu diesem Objekt
+                        gehört. Den Preis holen wir dabei aus der Anzeige — du
+                        musst ihn nicht eintippen.
                       </p>
-                      <Button
-                        onClick={importAirbnbObjects}
-                        disabled={pending}
-                        className="self-start"
-                      >
-                        {pending ? (
-                          <Spinner text="Objekte werden geholt …" />
-                        ) : (
-                          <>
-                            <Icon
-                              icon="ph:cloud-arrow-down"
-                              className="size-4"
-                            />
-                            Objekte übernehmen
-                          </>
-                        )}
-                      </Button>
-                      {objectImportMsg && (
+                    ) : (
+                      <div className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
                         <p className="text-sm text-muted-foreground">
-                          {objectImportMsg}
+                          Hol zuerst deine Airbnb-Anzeigen als Objekte hierher —
+                          Name, Ort, Land und Personenzahl kommen mit. Erst
+                          danach lässt sich zuordnen, welche Anzeige zu welchem
+                          Objekt gehört. Die Preise kommen beim Verbinden aus
+                          der jeweiligen Anzeige mit.
                         </p>
-                      )}
-                    </div>
+                        <Button
+                          onClick={importAirbnbObjects}
+                          disabled={pending}
+                          className="self-start"
+                        >
+                          {pending ? (
+                            <Spinner text="Objekte werden geholt …" />
+                          ) : (
+                            <>
+                              <Icon
+                                icon="ph:cloud-arrow-down"
+                                className="size-4"
+                              />
+                              Objekte übernehmen
+                            </>
+                          )}
+                        </Button>
+                        {objectImportMsg && (
+                          <p className="text-sm text-muted-foreground">
+                            {objectImportMsg}
+                          </p>
+                        )}
+                      </div>
+                    )}
                     <Button
                       variant="outline"
                       onClick={loadOAuthMapping}

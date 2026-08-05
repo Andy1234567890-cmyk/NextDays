@@ -1041,18 +1041,23 @@ class ChannelsMixin:
             db, tenant_id, local_property_id
         )
         if not local_rate_maps:
-            # UMSETZBARE Meldung: das trifft jedes aus Airbnb übernommene Objekt,
-            # weil Airbnb über Channex keinen Preis mitliefert. Channex' eigene
-            # Anleitung verlangt beim Zuordnen ausdrücklich BEIDES („Sie müssen
-            # sowohl ein Zimmer als auch einen Tarif auswählen") — ohne Preis
-            # gibt es keinen Tarif und die Anzeige bleibt „Not mapped". Der
-            # Kunde muss wissen, WO er das behebt, statt nur zu lesen, dass
-            # etwas fehlt.
+            # UMSETZBARE Meldung: Channex verlangt beim Zuordnen ausdrücklich
+            # BEIDES („Sie müssen sowohl ein Zimmer als auch einen Tarif
+            # auswählen") — ohne Preis gibt es keinen Tarif und die Anzeige
+            # bleibt „Not mapped".
+            #
+            # Bei Airbnb ist das im Normalfall KEIN Fall für Handarbeit: Airbnb
+            # liefert den Grundpreis (`GET channels/{id}/mappings/{mappingId}/
+            # pricing_settings`, docs/OTA/Airbnb/Pricing Settings.pdf; live
+            # gemessen 05.08.2026: `default_daily_price: 500`, DKK), und
+            # `_preis_von_airbnb_nachholen` holt ihn vor diesem Punkt. Wer hier
+            # ankommt, hat einen Abruf hinter sich, der keinen Preis fand —
+            # deshalb nennt die Meldung beide Wege statt nur das Formular.
             raise ChannelManagerError(
-                "Für dieses Objekt ist noch kein Preis hinterlegt — das Portal "
-                "verlangt beim Zuordnen einen Preis. Setze unter „Preise“ den "
-                "Grundpreis des Objekts, danach lässt sich die Anzeige "
-                "verbinden.",
+                "Für dieses Objekt liegt noch kein Preis vor — das Portal "
+                "verlangt beim Zuordnen einen Preis. Rufe das Objekt unter "
+                "„Synchronisierung“ erneut bei Airbnb ab, oder setze den "
+                "Grundpreis unter „Preise“ selbst.",
                 status_code=422,
             )
         # Scope je lokalem Plan auflösen, um Kanal-Pläne richtig einzusortieren.
@@ -2408,23 +2413,43 @@ class ChannelsMixin:
     #   inquiry              → Airbnb-Anfragen (Ereignisliste fürs UI)
     #   review/updated_~     → neue Gäste-Bewertung eingetroffen
     #   *_channel/listing    → Kanal-Statuswechsel (Deaktivierung sichtbar machen)
+    # Die fünf zuletzt ergänzten Namen stehen in Airbnbs eigener Ereignisliste
+    # („LiveFeedEvents HTTP API", 16 Typen) und fehlten hier: ohne Abo kommen sie
+    # gar nicht an, und ohne Journal-Abruf gäbe es keinen zweiten Weg.
+    #   booking_without_property_id      Buchung ohne zuordenbare Property
+    #   new_booking_after_modification   Änderung wurde zu einer NEUEN Buchung
+    #   general_error                    allgemeiner Fehler des Kanals
+    #   airbnb_notification              Systemmeldung von Airbnb
+    #   wubook_flooding_detected         Fremdkanal-Schutzmeldung (nur Vollzähligkeit)
     _WEBHOOK_EVENTS = (
         "ari;booking_new;booking_modification;booking_cancellation;"
         "booking_unmapped_room;booking_unmapped_rate;non_acked_booking;message;"
-        "sync_error;sync_warning;rate_error;"
+        "booking_without_property_id;new_booking_after_modification;"
+        "sync_error;sync_warning;rate_error;general_error;"
+        "wubook_flooding_detected;airbnb_notification;"
         "reservation_request;alteration_request;inquiry;review;updated_review;"
         "activate_channel;deactivate_channel;disconnect_channel;disconnect_listing"
     )
 
     # Events, die einen kontoweiten Booking-Feed-Pull auslösen.
+    #
+    # `reservation_request`/`alteration_request` stehen hier NICHT mehr: eine
+    # unbestätigte Anfrage ist keine Buchung und erzeugt deshalb keine Revision
+    # — der Pull war wirkungslos. Diese beiden laufen jetzt über das
+    # Ereignis-Journal (`live_feed`) und werden dort aufgelöst.
+    # `new_booking_after_modification` und `booking_without_property_id` sind
+    # dagegen echte Buchungs-Ereignisse und lösen den Pull aus.
     _BOOKING_PULL_EVENTS = frozenset(
         {"booking", "booking_new", "booking_modification", "booking_cancellation",
-         "non_acked_booking", "reservation_request", "alteration_request"}
+         "non_acked_booking", "new_booking_after_modification",
+         "booking_without_property_id"}
     )
     # Events, die auf ein Problem hinweisen (severity=error in der Ereignisliste).
     _ERROR_EVENTS = frozenset(
         {"booking_unmapped_room", "booking_unmapped_rate", "non_acked_booking",
-         "sync_error", "rate_error", "deactivate_channel", "disconnect_channel",
+         "sync_error", "rate_error", "general_error",
+         "booking_without_property_id", "wubook_flooding_detected",
+         "deactivate_channel", "disconnect_channel",
          "disconnect_listing"}
     )
     # Handlungspflichtige Ereignisse mit Frist (Airbnb-Anfragen: Auto-Decline
@@ -2596,12 +2621,28 @@ class ChannelsMixin:
             log.warning("channex_review_webhook_failed", error=str(exc)[:200])
 
     # Schlüssel, unter denen die Booking-Referenz einer Nachricht ankommen kann.
-    # Channex ist bei diesem Event nicht auf EINE Form festgelegt, und wir haben
-    # bislang keinen echten `message`-Webhook im Log gesehen (das Event war von
-    # der Persistenz ausgenommen). Deshalb defensiv über alle plausiblen Formen —
-    # und beim Nichttreffen wird die tatsächliche Struktur geloggt, damit sich
-    # das beim ersten echten Ereignis genau festziehen lässt.
-    _MESSAGE_BOOKING_KEYS = ("booking_id", "booking", "revision_id", "id")
+    #
+    # Die Feldnamen stammen jetzt aus Airbnbs eigenem Dokument
+    # („LiveFeedEvents HTTP API", `docs/OTA/Airbnb/LiveFeedEvents.pdf`), das die
+    # `payload`-Form eines Ereignisses wörtlich zeigt: `booking_id`,
+    # `booking_revision_id`, `booking_unique_id` — daneben, NICHT darin,
+    # `property_id`.
+    #
+    # Zwei früher geratene Schlüssel waren nachweislich falsch und sind entfernt:
+    #   `revision_id`  heißt in Wahrheit `booking_revision_id` → traf nie.
+    #   `id`           ist die EREIGNIS-ID, nicht die Buchung. Als Fallback war
+    #                  sie schädlich: `id` existiert in praktisch jedem Payload,
+    #                  also lieferte die Suche eine FALSCHE Referenz statt `None`
+    #                  — die Thread-Suche schlug fehl und das Diagnose-Logging,
+    #                  das die echte Feldform hätte zeigen sollen, lief nie an.
+    # Ein fehlender Bezug ist harmlos (Abwesenheitsantwort entfällt), ein
+    # falscher hängt die Nachricht an die falsche Buchung (Wurzel 4/5).
+    _MESSAGE_BOOKING_KEYS = (
+        "booking_id",
+        "booking_revision_id",
+        "booking_unique_id",
+        "booking",
+    )
 
     def _booking_ref_aus_message(self, payload: dict[str, Any]) -> str | None:
         inner = payload.get("payload") if isinstance(payload.get("payload"), dict) else {}
@@ -2720,18 +2761,40 @@ class ChannelsMixin:
                 payload = {"event": event, "truncated": True}
         except (TypeError, ValueError):
             payload = {"event": event, "unserializable": True}
+        zeile: dict[str, Any] = {
+            "tenant_id": tenant_id,
+            "property_id": property_id,
+            "event": event,
+            "payload": payload,
+            "severity": severity,
+        }
+        # Die Channex-Ereignis-ID ist der EINZIGE Weg, eine Airbnb-Anfrage später
+        # zu beantworten (`POST live_feed/{id}/resolve`). Sie wird deshalb aus dem
+        # Rohpayload gezogen, BEVOR der 32-KB-Deckel oben ihn ersetzt hätte.
+        live_id = self._live_feed_event_id(payload)
+        if live_id:
+            zeile["live_feed_event_id"] = live_id
         try:
-            self._db.table("channex_webhook_event").insert(
-                {
-                    "tenant_id": tenant_id,
-                    "property_id": property_id,
-                    "event": event,
-                    "payload": payload,
-                    "severity": severity,
-                }
-            ).execute()
+            self._db.table("channex_webhook_event").insert(zeile).execute()
         except Exception as exc:  # noqa: BLE001 — Persistenz nie den Ingest kippen
             log.warning("webhook_event_persist_failed", error=str(exc)[:200])
+
+    @staticmethod
+    def _live_feed_event_id(payload: dict[str, Any]) -> str | None:
+        """Die LiveFeedEvent-ID aus einem Webhook-Payload.
+
+        Airbnbs Dokument zeigt das Ereignis mit `id` auf der Attribut-Ebene und
+        `type: "live_feed_event"`. Der Webhook liefert daneben `payload` mit den
+        Sachdaten — die dortige `id` ist die der SACHE (Bewertung, Buchung), nicht
+        die des Ereignisses. Deshalb wird hier ausdrücklich der ausgewiesene
+        Ereignis-Schlüssel gelesen und NICHT irgendein `id` geraten: eine falsche
+        ID würde eine fremde Anfrage beantworten.
+        """
+        for key in ("live_feed_event_id", "event_id"):
+            wert = payload.get(key)
+            if isinstance(wert, str) and wert.strip():
+                return wert.strip()
+        return None
 
     def _enqueue_bookings_pull(self) -> None:
         """sync_bookings_feed-Job einreihen (coalesced je Minuten-Bucket)."""

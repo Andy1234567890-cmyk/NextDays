@@ -111,6 +111,7 @@ from supabase import Client
 
 from src.core.security import AuthContext
 
+from . import airbnb_listing_import as ali
 from .channex_client import ChannexError
 from .common import (
     ChannelManagerError,
@@ -603,10 +604,21 @@ class AirbnbUebernahmeMixin:
         if not listing_id or not titel or not str(titel).strip():
             return None
 
+        # Airbnbs `title` ist ein Anzeigename aus internem Namen UND Gast-Titel
+        # („020 Lille Lægehus (1966) · FeWo Lille Lægehus"). Unverändert
+        # übernommen stand die interne Bezeichnung im Gast-Titel; getrennt
+        # bleibt sie im internen Namen, wo sie hingehört.
+        gast_titel, intern = ali.titel_trennen(str(titel))
         row: dict[str, Any] = {
             "airbnb_listing_id": str(listing_id),
-            "title": str(titel).strip(),
+            "title": gast_titel,
         }
+        if intern:
+            # NICHT als `type_attributes` in die Zeile: der Update-Pfad schreibt
+            # `row` direkt, ein ganzes JSON-Objekt würde die übrigen
+            # Objekt-Details ersetzen (Wurzel 1). `_objekt_schreiben` führt den
+            # Wert unter diesem Sonderschlüssel getrennt zusammen.
+            row["_internal_name"] = intern
         for spalte, schluessel in (("city", "city"), ("country", "country_code")):
             wert = listing.get(schluessel)
             if wert:
@@ -646,11 +658,20 @@ class AirbnbUebernahmeMixin:
         auf Teneriffa mit Atlantic/Canary darf ein erneuter Abruf nicht auf
         Europe/Madrid zurückdrehen (Wurzel 1 — die Ableitung ist eine Starthilfe,
         keine dauernde Zuständigkeit). Nur LEERE Felder werden gefüllt.
+
+        Dasselbe gilt für den TITEL: er ist der Name, unter dem das Objekt im
+        Marktplatz und auf den Portalen steht. Wer ihn bei uns anpasst (etwa weil
+        Airbnbs Gast-Titel Dänisch ist und der Betrieb Deutsch verkauft), darf
+        ihn nicht beim nächsten Abruf zurückgesetzt bekommen. Das Gerüst-Objekt
+        ist die Ausnahme — sein Platzhaltertitel IST der zu ersetzende Wert.
         """
         gefiltert = dict(row)
         for feld in ("currency", "timezone"):
             if vorhanden.get(feld):
                 gefiltert.pop(feld, None)
+        titel_alt = vorhanden.get("title")
+        if titel_alt and str(titel_alt).strip() != _GERUEST_TITEL:
+            gefiltert.pop("title", None)
         return gefiltert
 
     def _objekt_schreiben(
@@ -669,9 +690,15 @@ class AirbnbUebernahmeMixin:
         sonst bliebe „Airbnb-Übernahme läuft" für immer als Geisterobjekt stehen
         (Wurzel 1: der Gegenzustand zum Anlegen ist das Füllen).
         """
+        # Der interne Name ist keine Spalte, sondern ein Schlüssel IN
+        # `type_attributes` — hier heraustrennen, damit er nie als Spalte an
+        # PostgREST geht, und pro Pfad gezielt zusammenführen.
+        row = dict(row)
+        intern = row.pop("_internal_name", None)
+
         vorhanden = (
             db.table("properties")
-            .select("id, currency, timezone")
+            .select("id, currency, timezone, title")
             .eq("tenant_id", tenant_id)
             .eq("airbnb_listing_id", row["airbnb_listing_id"])
             .limit(1)
@@ -681,6 +708,7 @@ class AirbnbUebernahmeMixin:
             db.table("properties").update(
                 self._ohne_gepflegte_felder(row, vorhanden[0])
             ).eq("id", vorhanden[0]["id"]).execute()
+            self._internen_namen_ergaenzen(db, vorhanden[0]["id"], intern)
             self._ensure_default_unit(
                 db, tenant_id, vorhanden[0]["id"], row.get("title")
             )
@@ -688,7 +716,7 @@ class AirbnbUebernahmeMixin:
 
         geruest = (
             db.table("properties")
-            .select("id, currency, timezone")
+            .select("id, currency, timezone, title")
             .eq("tenant_id", tenant_id)
             .eq("title", _GERUEST_TITEL)
             .is_("airbnb_listing_id", "null")
@@ -699,19 +727,48 @@ class AirbnbUebernahmeMixin:
             db.table("properties").update(
                 self._ohne_gepflegte_felder(row, geruest[0])
             ).eq("id", geruest[0]["id"]).execute()
+            self._internen_namen_ergaenzen(db, geruest[0]["id"], intern)
             self._ensure_default_unit(
                 db, tenant_id, geruest[0]["id"], row.get("title")
             )
             return str(geruest[0]["id"]), False
 
-        neu = (
-            db.table("properties")
-            .insert({**row, "tenant_id": tenant_id, "status": "draft"})
-            .execute()
-        ).data
+        # Beim Anlegen gibt es nichts zu erhalten — der interne Name kann direkt
+        # mit in die neue Zeile.
+        anlage = {**row, "tenant_id": tenant_id, "status": "draft"}
+        if intern:
+            anlage["type_attributes"] = {"internal_name": intern}
+        neu = (db.table("properties").insert(anlage).execute()).data
         if not neu:
             raise ChannelManagerError(
                 "Objekt konnte nicht angelegt werden.", status_code=500
             )
         self._ensure_default_unit(db, tenant_id, neu[0]["id"], row.get("title"))
         return str(neu[0]["id"]), True
+
+    @staticmethod
+    def _internen_namen_ergaenzen(
+        db: Client, property_id: str, intern: str | None
+    ) -> None:
+        """Den internen Namen in `type_attributes` ergänzen, ohne den Rest zu verlieren.
+
+        Zwei Regeln, beide aus Wurzel 1: das JSON-Objekt wird GELESEN und
+        zusammengeführt (ein blindes Update ersetzte alle übrigen
+        Objekt-Details), und ein bereits gepflegter interner Name bleibt stehen
+        — der Betrieb kennt sein Objekt unter der eigenen Bezeichnung, ein
+        erneuter Abruf darf sie nicht überschreiben.
+        """
+        if not intern:
+            return
+        rows = (
+            db.table("properties").select("type_attributes")
+            .eq("id", property_id).limit(1).execute()
+        ).data or []
+        vorhanden = (rows[0].get("type_attributes") or {}) if rows else {}
+        if not isinstance(vorhanden, dict):
+            vorhanden = {}
+        if vorhanden.get("internal_name"):
+            return
+        db.table("properties").update(
+            {"type_attributes": {**vorhanden, "internal_name": intern}}
+        ).eq("id", property_id).execute()

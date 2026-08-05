@@ -118,14 +118,46 @@ export async function logout(): Promise<void> {
 /** Aktuellen Nutzer aus FastAPI holen (null, wenn nicht eingeloggt).
  *  Nutzt currentToken() → funktioniert für BEIDE Login-Wege: FastAPI-Cookie
  *  (nd_access) UND Supabase-OAuth-Session (Google). So kommen Rolle +
- *  Berechtigungen auch bei OAuth in die Sidebar (UI-Gating). */
+ *  Berechtigungen auch bei OAuth in die Sidebar (UI-Gating).
+ *
+ *  `null` heißt hier „keine verwertbare Sitzung" — für die vielen Aufrufer, die
+ *  nur Rolle/Rechte fürs UI-Gating brauchen, ist das die richtige Antwort.
+ *  Wer über An-/Abmeldung ENTSCHEIDET, muss den Unterschied kennen und nimmt
+ *  `getSession()` (unten). */
 export async function getMe(): Promise<MeResponse | null> {
+  return (await getSession()).me;
+}
+
+/** Sitzungsprüfung MIT Unterscheidung: nicht angemeldet ≠ Fehler.
+ *
+ *  Wurzel 5: Ein blankes `catch` machte aus jedem technischen Fehler ein
+ *  „nicht angemeldet". Ein kurzer 503, ein 500 oder ein Timeout sah damit aus
+ *  wie eine abgelaufene Sitzung, und der Layout-Guard warf den eingeloggten
+ *  Nutzer mitten in der Arbeit auf /login (bei laufendem Dev-Reload
+ *  reproduzierbar). Abmelden darf nur, wessen Token wirklich ungültig ist:
+ *  401/403.
+ *
+ *  `abgemeldet: true` → wirklich keine Sitzung (kein Token oder 401/403).
+ *  `fehler` gesetzt → technisches Problem, die Sitzung gilt weiter. */
+export async function getSession(): Promise<{
+  me: MeResponse | null;
+  abgemeldet: boolean;
+  fehler: string | null;
+}> {
   const token = await currentToken();
-  if (!token) return null;
+  if (!token) return { me: null, abgemeldet: true, fehler: null };
   try {
-    return await api<MeResponse>("/auth/me", { token });
-  } catch {
-    return null;
+    const me = await api<MeResponse>("/auth/me", { token });
+    return { me, abgemeldet: false, fehler: null };
+  } catch (e) {
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+      return { me: null, abgemeldet: true, fehler: null };
+    }
+    return {
+      me: null,
+      abgemeldet: false,
+      fehler: e instanceof Error ? e.message : "Backend nicht erreichbar.",
+    };
   }
 }
 

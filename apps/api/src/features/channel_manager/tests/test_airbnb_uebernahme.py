@@ -67,13 +67,21 @@ def test_listing_zu_objekt_nimmt_nur_echte_felder() -> None:
     geratener Ersatzwert, sondern eine Tatsache über das Land — und ohne beides
     ging weder ein Preisplan (`rate_plans.currency` NOT NULL) noch die
     Aktivierung bei Channex („timezone required").
+
+    Der Titel wird dabei GETEILT: Airbnbs `title` ist der Anzeigename aus
+    internem Namen und Gast-Titel („013 Rævlingevej · The Fox House"). Vorher
+    stand dieser String vollständig in `title` — also die interne Bezeichnung in
+    dem Feld, das der Gast sieht. Der interne Teil reist als `_internal_name`
+    mit, den `_objekt_schreiben` nach `type_attributes` zusammenführt (und der
+    NIE als Spalte an PostgREST gehen darf).
     """
     row = AirbnbUebernahmeMixin._listing_zu_objekt(  # noqa: SLF001
         ECHTE_ANTWORT["data"]["listing_id_dictionary"]["values"][0]
     )
     assert row == {
         "airbnb_listing_id": "1133122057704952480",
-        "title": "013 Rævlingevej · The Fox House",
+        "title": "The Fox House",
+        "_internal_name": "013 Rævlingevej",
         "city": "Bindslev",
         "country": "DK",
         "max_guests": 6,
@@ -203,3 +211,95 @@ def test_kein_autorisierter_kanal_gibt_none() -> None:
     bisherigen Weg statt einen Kanal zu erfinden (Wurzel 4)."""
     waehler = _Waehler(_FakeChannex({"a": False, "b": False}))
     assert waehler._autorisierter_kanal(["a", "b"]) is None  # noqa: SLF001
+
+
+def test_internal_name_geht_nie_als_spalte_an_die_db() -> None:
+    """`_internal_name` ist ein Transportschlüssel, keine `properties`-Spalte.
+
+    Ginge er mit in das Insert/Update, antwortete PostgREST mit
+    „column does not exist" und die ganze Übernahme scheiterte.
+    """
+    geschrieben: list[dict[str, object]] = []
+
+    class _Tab:
+        def __init__(self, name: str) -> None:
+            self._name = name
+            self._daten: dict[str, object] | None = None
+
+        def select(self, *_a, **_k):
+            return self
+
+        def eq(self, *_a, **_k):
+            return self
+
+        def is_(self, *_a, **_k):
+            return self
+
+        def limit(self, _n: int):
+            return self
+
+        def insert(self, zeile: dict[str, object]):
+            self._daten = zeile
+            geschrieben.append(zeile)
+            return self
+
+        def update(self, zeile: dict[str, object]):
+            geschrieben.append(zeile)
+            return self
+
+        def execute(self):
+            class _Res:
+                def __init__(self, data):
+                    self.data = data
+            if self._daten is not None:
+                return _Res([{"id": "neu-1"}])
+            return _Res([])
+
+    class _Db:
+        def table(self, name: str):
+            return _Tab(name)
+
+    class _Mixin(AirbnbUebernahmeMixin):
+        @staticmethod
+        def _ensure_default_unit(*_a, **_k) -> None:
+            return None
+
+    _Mixin()._objekt_schreiben(  # noqa: SLF001
+        _Db(),
+        "tenant-1",
+        {
+            "airbnb_listing_id": "42",
+            "title": "The Fox House",
+            "_internal_name": "013 Rævlingevej",
+        },
+    )
+    assert geschrieben, "es wurde nichts geschrieben"
+    for zeile in geschrieben:
+        assert "_internal_name" not in zeile
+    # Beim Anlegen landet der interne Name im JSON-Feld, nicht als Spalte.
+    angelegt = geschrieben[0]
+    assert angelegt["type_attributes"] == {"internal_name": "013 Rævlingevej"}
+    assert angelegt["title"] == "The Fox House"
+
+
+def test_gepflegter_titel_wird_nicht_zurueckgesetzt() -> None:
+    """Wurzel 1: der Objekttitel ist der Verkaufsname — Airbnb überschreibt ihn nicht.
+
+    Verkauft der Betrieb deutsch, während Airbnbs Gast-Titel dänisch ist, muss
+    seine Fassung einen erneuten Abruf überleben.
+    """
+    gefiltert = AirbnbUebernahmeMixin._ohne_gepflegte_felder(  # noqa: SLF001
+        {"title": "The Fox House", "city": "Bindslev"},
+        {"title": "Ferienhaus Fuchsbau", "currency": "DKK"},
+    )
+    assert "title" not in gefiltert
+    assert gefiltert["city"] == "Bindslev"
+
+
+def test_geruest_titel_wird_ersetzt() -> None:
+    """Die Ausnahme: der Platzhalter IST der Wert, der ersetzt werden soll."""
+    gefiltert = AirbnbUebernahmeMixin._ohne_gepflegte_felder(  # noqa: SLF001
+        {"title": "The Fox House"},
+        {"title": "Airbnb-Übernahme läuft"},
+    )
+    assert gefiltert["title"] == "The Fox House"

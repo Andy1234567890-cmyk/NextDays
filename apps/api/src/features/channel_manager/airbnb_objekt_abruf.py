@@ -46,14 +46,30 @@ bleibt `draft`, und `draft` verkauft nichts. Kommt kein Preis von Airbnb zurück
 sagt die Antwort das (`preis_uebernommen: false`) statt Erfolg zu behaupten
 (Wurzel 5).
 
-WAS AIRBNB NICHT HERGIBT: Fotos, Beschreibungen, Ausstattung, Adresse. Dafür
-existiert bei Channex kein Weg — kein Content-Endpunkt, kein Content-Webhook,
-und `load_listing_*` liefert ausschließlich Preis-, Verfügbarkeits- und
-Buchungseinstellungen. Wer Fotos importiert (Hostaway, Guesty, Hospitable), ist
-direkter Airbnb-Partner mit eigener Airbnb-API, nicht über einen Aggregator.
-Der dokumentierte Weg für den Betrieb selbst ist die Airbnb-Datenauskunft
-(Konto → Datenschutz → persönliche Daten anfordern): ZIP mit JSON/Excel plus
-einem Ordner mit den Listing-Fotos.
+KORREKTUR EINER ZWEITEN FALSCHEN ANNAHME (05.08.2026): Hier stand, Channex gebe
+über Airbnb KEINEN Content heraus — kein Content-Endpunkt, kein Content-Webhook.
+Das ist ebenfalls widerlegt. Der von Airbnb selbst dokumentierte Weg
+(„Airbnb Connection API", `docs/OTA/Airbnb/`) war in den früheren Messreihen
+nie geprüft worden; getestet wurden nur `proxy/v2/listings`,
+`proxy/v2/calendars` und `channels/{id}/listings` (alle 500/404):
+
+    GET channels/{id}/action/listing_details?listing_id=<id>  → 200, 41 Felder
+
+Live gemessen an „020 Lille Lægehus": 6 Räume mit `is_private`, `bedrooms: 1`,
+`beds: 2`, `bathrooms: 1.0`, `total_inventory_count: 1`, Storno
+`better_strict_with_grace_period`, alle `guest_controls`, WLAN-Name und
+-Passwort, Schlüsselbox-Hinweis, 11 Ausstattungen (eine davon einem Raum
+zugeordnet) und die Gebühren (Reinigung 795, Haustier 150, Resort 25 DKK).
+Kontrolltest im gleichen Namensraum: `action/erfundene_aktion_zzz` → 400
+„action is not supported" — die 200 ist also echt.
+
+Übernommen wird das in `airbnb_listing_details_uebernehmen` (siehe unten), und
+zwar in das Format, das die Objekt-Maske liest.
+
+WAS AIRBNB WIRKLICH NICHT HERGIBT: die Wohnfläche in m². In keinem der zwölf
+Airbnb-Dokumente kommt ein Größenfeld vor, und live ist
+`property_details.listing_size` ein leeres Objekt. Auch `state` (Bundesland/
+Region) bleibt leer — dafür gibt es die Rückwärts-Geokodierung aus lat/lng.
 """
 from __future__ import annotations
 
@@ -64,6 +80,7 @@ from supabase import Client
 from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
+from . import airbnb_listing_import as ali
 from .channex_client import ChannexError
 from .common import (
     ChannelManagerError,
@@ -140,9 +157,16 @@ class AirbnbObjektAbrufMixin:
         # unserer DB, bevor irgendetwas nach außen geht.
         content: dict[str, Any] = {"uebernommen": [], "fotos": 0}
         zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        hausregeln: list[str] = []
         if zugang:
             token, _host = zugang
             content = self.airbnb_content_uebernehmen(  # type: ignore[attr-defined]
+                db, tenant_id, property_id, str(listing_id), token
+            )
+            # Die Hausregeln kommen NUR über Airbnbs eigene API — Channex liefert
+            # sie in der Mapping-Antwort unvollständig (siehe
+            # `airbnb_booking_settings_direkt`). Deshalb hier, wo der Token ist.
+            hausregeln = self._hausregeln_direkt_uebernehmen(
                 db, tenant_id, property_id, str(listing_id), token
             )
             # Nach dem Content neu laden: Adresse, Beschreibung und Ausstattung
@@ -154,6 +178,14 @@ class AirbnbObjektAbrufMixin:
             ).data
             if frisch:
                 prop = frisch[0]
+
+        # Der vollständige Content-Weg (`action/listing_details`): Zimmer,
+        # Betten, Storno, Gastregeln, WLAN, Gebühren, Einheiten. Läuft VOR der
+        # Zuordnung, damit ein Fehler dort die schon geholten Details nicht
+        # wieder wegnimmt (gleiche Begründung wie beim Content oben).
+        details = self.airbnb_listing_details_uebernehmen(
+            db, tenant_id, property_id, channel_id, str(listing_id)
+        )
 
         plan = self._preisplan_sicherstellen(db, tenant_id, prop, stammdaten)
         # Die Zuordnung IST der Lesevorgang: ihre Antwort trägt Airbnbs Preise,
@@ -171,7 +203,8 @@ class AirbnbObjektAbrufMixin:
             }
         else:
             preis = self._preise_von_airbnb(
-                db, tenant_id, property_id, str(listing_id), plan, settings
+                db, tenant_id, property_id, str(listing_id), plan, settings,
+                ersatz_preisteil=details.get("pricing_settings") or {},
             )
 
         log.info(
@@ -182,6 +215,7 @@ class AirbnbObjektAbrufMixin:
             zugeordnet=settings is not None,
             preis_uebernommen=preis.get("uebernommen"),
             content_felder=content["uebernommen"], fotos=content["fotos"],
+            details_felder=details.get("uebernommen"),
         )
         return {
             "property_id": property_id,
@@ -199,10 +233,16 @@ class AirbnbObjektAbrufMixin:
             "base_price": preis.get("base_price"),
             "min_stay": preis.get("min_stay"),
             "uebernommene_felder": sorted(
-                set((preis.get("weitere") or {}).keys()) | set(content["uebernommen"])
+                set((preis.get("weitere") or {}).keys())
+                | set(content["uebernommen"])
+                | set(details.get("uebernommen") or [])
+                | set(hausregeln)
             ),
             "fotos_uebernommen": content["fotos"],
-            "hinweis": preis.get("hinweis"),
+            # Getrennt ausgewiesen, damit sichtbar ist, was aus dem
+            # `listing_details`-Weg kam (Zimmer, Betten, Storno, WLAN …).
+            "details_uebernommen": details.get("uebernommen") or [],
+            "hinweis": preis.get("hinweis") or details.get("fehler"),
         }
 
     # --- Schritt 1: Stammdaten -------------------------------------------------
@@ -388,6 +428,7 @@ class AirbnbObjektAbrufMixin:
     def _preise_von_airbnb(
         self, db: Client, tenant_id: str, property_id: str, listing_id: str,
         plan: dict[str, Any], settings: dict[str, Any],
+        ersatz_preisteil: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Airbnbs Einstellungen übernehmen — Preis, Währung, Regeln.
 
@@ -397,14 +438,30 @@ class AirbnbObjektAbrufMixin:
         rief `execute/load_listing_price_settings`, bekam 200 „Success" und keine
         Daten, weil dieser Namensraum auf jeden Namen so antwortet.
 
-        Kommt kein Preis, wird das GESAGT (`uebernommen: false` + Hinweis) und der
-        Platzhalter bleibt stehen — statt Erfolg zu behaupten (Wurzel 5).
+        ABER: die Mapping-Antwort trägt den Preis nicht immer. Live gemessen an
+        Objekt 020 fehlte er dort, während `action/listing_details` ihn führte
+        (`default_daily_price: 504` DKK) — die Oberfläche meldete „Airbnb hat
+        keinen Preis übergeben", obwohl er vorlag. Deshalb der zweite,
+        gleichwertige Messwert als `ersatz_preisteil`. Das ist KEIN geratener
+        Ersatzwert (Wurzel 4): es ist dieselbe Angabe aus einer zweiten,
+        belegten Quelle.
+
+        Kommt aus BEIDEN kein Preis, wird das GESAGT (`uebernommen: false` +
+        Hinweis) und der Platzhalter bleibt stehen — statt Erfolg zu behaupten
+        (Wurzel 5).
         """
         preisteil = settings.get("pricing_setting") or {}
         regeln = settings.get("availability_rule") or {}
         buchung = settings.get("booking_setting") or {}
 
         preis = self._nachtpreis(preisteil)
+        if preis is None and ersatz_preisteil:
+            # Entschieden wird am WERT, nicht am Vorhandensein des Blocks: ein
+            # `pricing_setting` ohne Preis ist genauso preislos wie gar keins.
+            ersatz = self._nachtpreis(ersatz_preisteil)
+            if ersatz is not None:
+                preisteil = ersatz_preisteil
+                preis = ersatz
         if preis is None:
             return {
                 "uebernommen": False,
@@ -427,6 +484,7 @@ class AirbnbObjektAbrufMixin:
         if min_stay and min_stay >= 1:
             aenderung["min_stay"] = min_stay
         db.table("rate_plans").update(aenderung).eq("id", plan["id"]).execute()
+        self._abgeleitete_mitziehen(db, str(plan["id"]), aenderung)
         if waehrung:
             # Objektwährung mitziehen (0161: `properties.currency` ist die
             # Wahrheit) — sonst rechnen Preisplan und Objekt in verschiedenem Geld
@@ -464,6 +522,520 @@ class AirbnbObjektAbrufMixin:
             "uebernommen": True, "base_price": preis, "min_stay": min_stay,
             "waehrung": waehrung, "weitere": uebrige,
         }
+
+    def airbnb_listing_details_uebernehmen(
+        self, db: Client, tenant_id: str, property_id: str,
+        channel_id: str, listing_id: str,
+    ) -> dict[str, Any]:
+        """Alles übernehmen, was `action/listing_details` liefert.
+
+        DAS IST DER VOLLSTÄNDIGE CONTENT-WEG, und er war bis hierher nicht
+        angebunden: der Abruf holte nur Preise/Regeln aus der Mapping-Antwort,
+        weshalb die Objekt-Maske „Noch keine Zimmer" und „Noch keine
+        Schlafgelegenheiten" zeigte, obwohl Airbnb 6 Räume liefert.
+
+        Geschrieben wird dorthin, wo die Maske WIRKLICH liest — und das sind zwei
+        verschiedene Orte: die Zimmer als Zeilen in `property_rooms` (0246/0251,
+        gelesen über `listPropertyRooms`), die Betten als Zählwerk in
+        `type_attributes.beds` = {slug: n}. Ein früherer Stand füllte
+        `type_attributes.rooms`; das las niemand, weshalb die Karte weiter „Noch
+        keine Zimmer" zeigte, obwohl die Werte in der Spalte standen.
+
+        Wurzel 1: nur LEERE Felder werden gefüllt. Was der Betrieb selbst
+        gepflegt hat, bleibt unangetastet.
+        """
+        try:
+            antwort = self._channex.get_airbnb_listing_details(  # type: ignore[attr-defined]
+                channel_id, listing_id
+            )
+        except ChannexError as exc:
+            # Kein stiller Erfolg (Wurzel 5): der Aufrufer erfährt den Grund.
+            log.warning(
+                "airbnb_listing_details_fehlgeschlagen",
+                property_id=property_id, listing_id=listing_id,
+                error=str(exc)[:200],
+            )
+            return {"uebernommen": [], "fehler": str(exc)[:200]}
+
+        listing = ((antwort.get("data") or {}).get("listing")) or {}
+        if not isinstance(listing, dict) or not listing:
+            log.warning(
+                "airbnb_listing_details_leer",
+                property_id=property_id, listing_id=listing_id,
+            )
+            return {"uebernommen": [], "fehler": "Airbnb lieferte kein Listing."}
+
+        rows = (
+            db.table("properties")
+            .select("type_attributes, max_guests")
+            .eq("tenant_id", tenant_id).eq("id", property_id)
+            .limit(1).execute()
+        ).data or []
+        if not rows:
+            raise ChannelManagerError("Objekt nicht gefunden.", status_code=404)
+        alt = rows[0].get("type_attributes")
+        alt = alt if isinstance(alt, dict) else {}
+        neu = dict(alt)
+        gesetzt: list[str] = []
+
+        self._details_zimmer_betten(listing, alt, neu, gesetzt)
+        self._details_interner_name(listing, alt, neu, gesetzt)
+        self._details_kapazitaet(listing, alt, neu, gesetzt)
+        self._details_regeln(listing, alt, neu, gesetzt)
+        self._details_zugang(listing, alt, neu, gesetzt)
+        self._details_texte(channel_id, listing_id, alt, neu, gesetzt)
+
+        # Zimmer sind eine eigene Tabelle, keine Spalte — deshalb getrennt vom
+        # type_attributes-Update (siehe `_zimmer_zeilen_anlegen`).
+        if self._zimmer_zeilen_anlegen(db, tenant_id, property_id, listing):
+            gesetzt.append("zimmer")
+
+        if gesetzt:
+            db.table("properties").update({"type_attributes": neu}).eq(
+                "tenant_id", tenant_id
+            ).eq("id", property_id).execute()
+        log.info(
+            "airbnb_listing_details_uebernommen",
+            property_id=property_id, listing_id=listing_id, felder=gesetzt,
+        )
+        # Die Preiseinstellungen werden MITGEGEBEN, nicht hier verarbeitet: der
+        # Preis-Schritt liest sie sonst nur aus der Mapping-Antwort, und die
+        # trägt sie nicht immer. Live gemessen an Objekt 020: Mapping ohne Preis,
+        # `listing_details` mit `default_daily_price: 504` DKK — die Oberfläche
+        # meldete „Airbnb hat keinen Preis übergeben", obwohl er da war.
+        preise = listing.get("pricing_settings")
+        return {
+            "uebernommen": gesetzt,
+            "pricing_settings": preise if isinstance(preise, dict) else {},
+        }
+
+    @staticmethod
+    def _details_zimmer_betten(
+        listing: dict[str, Any], alt: dict[str, Any],
+        neu: dict[str, Any], gesetzt: list[str],
+    ) -> None:
+        """Schlafgelegenheiten und Airbnbs Rohform der Räume.
+
+        Die ZIMMER stehen NICHT hier: sie sind Zeilen in `property_rooms` und
+        werden von `_zimmer_zeilen_anlegen` geschrieben. `type_attributes.rooms`
+        wurde zwar gefüllt, aber von niemandem gelesen — die Karte „Zimmer" liest
+        die Tabelle (`listPropertyRooms`), und genau deshalb stand dort weiter
+        „Noch keine Zimmer", obwohl die Zählwerte in der Spalte lagen.
+        """
+        # Wurzel 1 (Gegenzustand): hier wird ABGEGLICHEN, nicht nur aufgefüllt.
+        # Ein „nur wenn leer"-Import bekommt eine ÄNDERUNG bei Airbnb nie mit:
+        # aus zwei Schlafsofas wurde eines, unsere DB zeigte weiter zwei. Der
+        # Abruf ist eine bewusste Handlung des Betriebs („Von Airbnb abrufen") —
+        # dann ist Airbnb die Wahrheit, auch wenn bei uns schon etwas steht.
+        betten = ali.betten_zaehlwerk(listing)
+        if betten and betten != (alt.get("beds") or {}):
+            neu["beds"] = betten
+            gesetzt.append("beds")
+
+        raeume = ali.raeume_uebernehmen(listing)
+        if raeume and raeume != alt.get("airbnbRaeume"):
+            # Airbnbs Rohform daneben: sie trägt die Raum-IDs, über die Fotos und
+            # Ausstattung einem Raum zugeordnet sind.
+            neu["airbnbRaeume"] = raeume
+            gesetzt.append("airbnbRaeume")
+
+    @staticmethod
+    def _abgeleitete_mitziehen(
+        db: Client, eltern_id: str, aenderung: dict[str, Any]
+    ) -> int:
+        """Währung und Mindestaufenthalt an die abgeleiteten Kanal-Pläne.
+
+        Wurzel 1 (Gegenzustand): ein Kanal-Plan (`portal_scope`, 0272) ist eine
+        ABLEITUNG des Grundplans. Ändert der Airbnb-Abruf dort Währung oder
+        Mindestaufenthalt, muss das Kind mit — sonst geht an das Portal ein
+        anderer Wert als der, den Airbnb selbst führt. Live gemessen an
+        „Feriehus Grævlinge": Grundplan nach dem Abruf `min_stay: 1`, Kanal-Plan
+        weiter `min_stay: 2` — und `min_stay` des KIND-Plans ist genau der Wert,
+        den `_upsert_channex_rate_plan` an Channex schickt.
+
+        `base_price` bleibt bewusst AUSSEN VOR: der Resolver rechnet die
+        Kindkurve immer aus der Elternkurve plus Offset
+        (`resolver._rate_plan_curve`), die Spalte im Kind ist eine tote Kopie.
+        Sie mitzuschreiben würde eine zweite Preis-Wahrheit vortäuschen
+        (Wurzel 4).
+
+        Rückgabe: Anzahl der angepassten Kinder.
+        """
+        felder = {k: v for k, v in aenderung.items() if k in ("currency", "min_stay")}
+        if not felder:
+            return 0
+        kinder = (
+            db.table("rate_plans")
+            .select("id")
+            .eq("derived_from_rate_plan_id", eltern_id)
+            .execute()
+        ).data or []
+        if not kinder:
+            return 0
+        db.table("rate_plans").update(felder).eq(
+            "derived_from_rate_plan_id", eltern_id
+        ).execute()
+        log.info(
+            "airbnb_abgeleitete_mitgezogen",
+            eltern_id=eltern_id, kinder=len(kinder), felder=sorted(felder),
+        )
+        return len(kinder)
+
+    @staticmethod
+    def _zimmer_zeilen_anlegen(
+        db: Client, tenant_id: str, property_id: str, listing: dict[str, Any]
+    ) -> int:
+        """Airbnbs Räume als Zeilen in `property_rooms`.
+
+        Das ist der Ort, den die Objekt-Maske liest — eine Zeile = ein Zimmer
+        (0246/0251). Ein Zählwerk in `type_attributes` sieht sie nicht.
+
+        `tenant_id` ist Pflicht (NOT NULL) und wird durchgereicht, nicht aus dem
+        Objekt nachgeschlagen: der Aufrufer hat es bereits gescopt geladen
+        (Wurzel 3), ein zweiter Weg dorthin wäre eine zweite Wahrheit.
+
+        Wurzel 1 (Gegenzustand): ABGLEICH, nicht nur Erstbefüllung. Ein Import,
+        der bei vorhandenen Zeilen abbricht, bekommt eine Änderung bei Airbnb nie
+        mit — ein gelöschtes Zimmer bliebe für immer stehen. Der Abruf ist eine
+        bewusste Handlung des Betriebs, also gilt Airbnbs Stand.
+
+        Wurzel 2 (Idempotenz): verglichen wird der SOLL-Bestand je (Typ, Gruppe)
+        mit dem Ist. Nur die Differenz wird eingefügt bzw. gelöscht — zweimal
+        abrufen ändert nichts und verdoppelt nichts.
+
+        Rückgabe: Anzahl der tatsächlichen Änderungen (0 = alles war schon gleich).
+        """
+        zaehlwerk = ali.zimmer_zaehlwerk(listing)
+        soll: dict[tuple[str, bool], int] = {}
+        for gruppe, privat in (("privat", True), ("gemeinschaftlich", False)):
+            for slug, anzahl in (zaehlwerk.get(gruppe) or {}).items():
+                soll[(slug, privat)] = int(anzahl)
+        if not soll:
+            # Airbnb liefert keine Räume → nichts anfassen. Alles zu löschen wäre
+            # aus einer leeren Antwort geschlossen, nicht gemessen (Wurzel 4).
+            return 0
+
+        ist_zeilen = (
+            db.table("property_rooms")
+            .select("id, raum_typ, privat")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .execute()
+        ).data or []
+        ist: dict[tuple[str, bool], list[str]] = {}
+        for zeile in ist_zeilen:
+            schluessel = (str(zeile["raum_typ"]), bool(zeile["privat"]))
+            ist.setdefault(schluessel, []).append(str(zeile["id"]))
+
+        neue: list[dict[str, Any]] = []
+        zu_loeschen: list[str] = []
+        for schluessel in set(soll) | set(ist):
+            slug, privat = schluessel
+            vorhandene = ist.get(schluessel, [])
+            fehlend = soll.get(schluessel, 0) - len(vorhandene)
+            if fehlend > 0:
+                neue.extend(
+                    {
+                        "tenant_id": tenant_id,
+                        "property_id": property_id,
+                        "raum_typ": slug,
+                        "privat": privat,
+                        "position": len(vorhandene) + i,
+                    }
+                    for i in range(fehlend)
+                )
+            elif fehlend < 0:
+                zu_loeschen.extend(vorhandene[fehlend:])
+
+        if neue:
+            db.table("property_rooms").insert(neue).execute()
+        if zu_loeschen:
+            db.table("property_rooms").delete().eq("tenant_id", tenant_id).in_(
+                "id", zu_loeschen
+            ).execute()
+        return len(neue) + len(zu_loeschen)
+
+    def _hausregeln_direkt_uebernehmen(
+        self, db: Client, tenant_id: str, property_id: str,
+        listing_id: str, token: str,
+    ) -> list[str]:
+        """Airbnbs Hausregeln über die EIGENE API holen und speichern.
+
+        Warum nicht über Channex: die Mapping-Antwort liefert `booking_setting`
+        nur als Beifang, und die Felder aus Airbnbs „House rules"-Maske fehlen
+        darin. `v2/booking_settings/{id}` gibt sie vollständig — live verifiziert,
+        siehe `airbnb_booking_settings_direkt`.
+
+        Ziel ist `type_attributes.policies`, denn dort liest sie sowohl das
+        Frontend (`web/lib/policy-meta.ts`) als auch der Channex-Push
+        (`content_sync`). Der Airbnb-Rohblock wird daneben abgelegt: er ist der
+        Beleg, woher die Werte kommen.
+
+        Nur LEERE Felder werden gefüllt (Wurzel 1) — was der Betrieb selbst
+        eingestellt hat, gilt. Rückgabe: die Namen der wirklich gesetzten Felder,
+        damit die UI nicht „übernommen" meldet, wo nichts übernommen wurde.
+        """
+        roh = self.airbnb_booking_settings_direkt(  # type: ignore[attr-defined]
+            token, listing_id
+        )
+        if not roh:
+            return []
+
+        rows = (
+            db.table("properties").select("type_attributes")
+            .eq("tenant_id", tenant_id).eq("id", property_id)
+            .limit(1).execute()
+        ).data or []
+        if not rows:
+            return []
+        attrs = rows[0].get("type_attributes") or {}
+        if not isinstance(attrs, dict):
+            attrs = {}
+        policies = attrs.get("policies")
+        policies = dict(policies) if isinstance(policies, dict) else {}
+
+        gesetzt: list[str] = []
+        # Check-in/-out: Airbnbs Zeitwerte inklusive „FLEXIBLE"/„NOT_SELECTED"
+        # und der Stunden über 23 (Doku: start bis 26, Ende bis 27).
+        for feld, wert in (
+            ("checkInTime", ali.check_in_start(roh)),
+            ("checkInTimeEnd", ali.check_in_ende(roh)),
+            ("checkOutTime", ali.check_out(roh)),
+        ):
+            if wert and not policies.get(feld):
+                policies[feld] = wert
+                gesetzt.append(feld)
+
+        regeln = ali.gastregeln_uebernehmen(roh)
+        for feld, wert in regeln.items():
+            if feld not in policies:
+                policies[feld] = wert
+                gesetzt.append(feld)
+
+        storno = ali.storno_uebernehmen(roh)
+        if storno and not policies.get("airbnbStorno"):
+            policies["airbnbStorno"] = storno
+            gesetzt.append("airbnbStorno")
+
+        sofort = ali.sofortbuchung_uebernehmen(roh)
+        if sofort and not policies.get("airbnbSofortbuchung"):
+            policies["airbnbSofortbuchung"] = sofort
+            gesetzt.append("airbnbSofortbuchung")
+
+        if not gesetzt:
+            return []
+
+        neue_attrs = {
+            **attrs,
+            "policies": policies,
+            # Rohform daneben (wie bei `airbnb.booking_setting`): Beleg der
+            # Herkunft und Vergleichsgrundlage für einen späteren Abruf.
+            "airbnbHausregeln": roh,
+        }
+        db.table("properties").update({"type_attributes": neue_attrs}).eq(
+            "tenant_id", tenant_id
+        ).eq("id", property_id).execute()
+        log.info(
+            "airbnb_hausregeln_uebernommen",
+            property_id=property_id, felder=gesetzt,
+        )
+        return gesetzt
+
+    @staticmethod
+    def _details_interner_name(
+        listing: dict[str, Any], alt: dict[str, Any],
+        neu: dict[str, Any], gesetzt: list[str],
+    ) -> None:
+        """Airbnbs internen Namen übernehmen (`listing_nickname`).
+
+        Der Gast-Titel kommt sprachweise über `_details_texte`; dies ist der
+        zweite, einsprachige Titel, den nur der Betrieb sieht. Er landet in
+        `type_attributes.internal_name`, weil `properties` dafür keine eigene
+        Spalte hat — dort liegen alle Objekt-Details ohne Spalte.
+
+        Nur ergänzen (Wurzel 1): ein selbst vergebener interner Name ist die
+        Bezeichnung, unter der der Betrieb sein Objekt kennt, und darf von einem
+        späteren Abruf nicht überschrieben werden.
+        """
+        name = ali.interner_name(listing)
+        if name and not alt.get("internal_name"):
+            neu["internal_name"] = name
+            gesetzt.append("internal_name")
+
+    @staticmethod
+    def _details_kapazitaet(
+        listing: dict[str, Any], alt: dict[str, Any],
+        neu: dict[str, Any], gesetzt: list[str],
+    ) -> None:
+        """Schlafzimmer-/Bad-Anzahl und Einheiten."""
+        kapazitaet = ali.kapazitaet_uebernehmen(listing)
+        for schluessel in ("schlafzimmer", "betten", "badezimmer", "einheiten"):
+            wert = kapazitaet.get(schluessel)
+            if wert is not None and alt.get(schluessel) in (None, "", 0):
+                neu[schluessel] = wert
+                gesetzt.append(schluessel)
+
+    @staticmethod
+    def _details_regeln(
+        listing: dict[str, Any], alt: dict[str, Any],
+        neu: dict[str, Any], gesetzt: list[str],
+    ) -> None:
+        """Storno, Sofortbuchung, Gastregeln, Verfügbarkeit, Qualität."""
+        buchung = listing.get("booking_settings")
+        buchung = buchung if isinstance(buchung, dict) else {}
+        preise = listing.get("pricing_settings")
+        preise = preise if isinstance(preise, dict) else {}
+
+        for schluessel, wert in (
+            ("airbnbStorno", ali.storno_uebernehmen(buchung)),
+            ("airbnbSofortbuchung", ali.sofortbuchung_uebernehmen(buchung)),
+            ("airbnbGastregeln", ali.gastregeln_uebernehmen(buchung) or None),
+            ("airbnbVerfuegbarkeit", ali.verfuegbarkeit_uebernehmen(listing) or None),
+            ("airbnbQualitaet", ali.qualitaet_uebernehmen(listing) or None),
+            ("airbnbGebuehren", ali.gebuehren_uebernehmen(preise) or None),
+            ("airbnbZusatzgast", ali.zusatzgast_uebernehmen(preise) or None),
+            ("airbnbAusstattung", ali.ausstattung_uebernehmen(listing) or None),
+        ):
+            # Diese `airbnb*`-Blöcke sind AIRBNBS Stand, kein eigener Wert des
+            # Betriebs — sie werden abgeglichen, nicht nur einmal befüllt
+            # (Wurzel 1). Bliebe hier „nur wenn leer" stehen, zeigte der Spiegel
+            # für immer den Stand des ersten Abrufs. Die daraus abgeleiteten
+            # `policies` unten bleiben dagegen ergänzend: dort pflegt der Betrieb
+            # selbst.
+            if wert and wert != alt.get(schluessel):
+                neu[schluessel] = wert
+                gesetzt.append(schluessel)
+
+        # Check-in-Zeiten dorthin, wo die Maske sie liest: `policies`.
+        start = ali.check_in_start(buchung)
+        ende = ali.check_in_ende(buchung)
+        aus = ali.check_out(buchung)
+        policies = dict(alt.get("policies") or {})
+        vorher = dict(policies)
+        if start and not policies.get("checkInTime"):
+            policies["checkInTime"] = start
+        if ende and not policies.get("checkInTimeEnd"):
+            policies["checkInTimeEnd"] = ende
+        if aus and not policies.get("checkOutTime"):
+            policies["checkOutTime"] = aus
+        if policies != vorher:
+            neu["policies"] = policies
+            gesetzt.append("policies")
+
+    def _details_texte(
+        self, channel_id: str, listing_id: str, alt: dict[str, Any],
+        neu: dict[str, Any], gesetzt: list[str],
+    ) -> None:
+        """Die Texte in ALLEN Sprachen, die Airbnb pflegt.
+
+        Live gemessen liefert Airbnb für Objekt 020 drei Sprachversionen
+        (de, en, da) — und die Hausregeln NUR auf Deutsch. Der bisherige Import
+        holte hart eine Sprache (`de`); bei einem dänischen Gastgeber, der nur
+        `da`/`en` gepflegt hat, kam damit gar nichts an.
+
+        Best effort: der Proxy ist ein zusätzlicher Aufruf. Fällt er aus, bleiben
+        die übrigen Details erhalten — der Grund steht im Log.
+        """
+        try:
+            antwort = self._channex.get_airbnb_listing_descriptions(  # type: ignore[attr-defined]
+                channel_id, listing_id
+            )
+        except ChannexError as exc:
+            log.info(
+                "airbnb_texte_nicht_abrufbar",
+                listing_id=listing_id, error=str(exc)[:200],
+            )
+            return
+        texte = ali.texte_mehrsprachig(antwort)
+        if not texte:
+            return
+        # Nur ergänzen, nie überschreiben (Wurzel 1) — und pro SPRACHE, damit ein
+        # selbst geschriebener deutscher Text nicht den dänischen blockiert.
+        vorher = alt.get("airbnbTexte")
+        vorher = vorher if isinstance(vorher, dict) else {}
+        zusammen = {k: dict(v) for k, v in vorher.items() if isinstance(v, dict)}
+        geaendert = False
+        for feld, je_sprache in texte.items():
+            ziel = zusammen.setdefault(feld, {})
+            for sprache, text in je_sprache.items():
+                if not ziel.get(sprache):
+                    ziel[sprache] = text
+                    geaendert = True
+        if geaendert:
+            neu["airbnbTexte"] = zusammen
+            gesetzt.append("airbnbTexte")
+
+        # Airbnbs Hausregeln SIND der Mietvertrag: bei diesem Konto stehen dort
+        # 10.487 Zeichen „MIETVEREINBARUNG & GRUNDREGELN" (Nebenkosten, Haustiere,
+        # Endreinigung, Strafgebühren). Sie lagen bisher nur unter
+        # `airbnbTexte.hausregeln` — die Oberfläche liest aber
+        # `policies.rentalAgreement`, und der Block blieb leer, obwohl der Text
+        # importiert war. Das ist derselbe Ort, an dem Lodgify sie führt
+        # („Mietvereinbarung"), also gehören sie dorthin.
+        self._mietvertrag_aus_hausregeln(zusammen, alt, neu, gesetzt)
+
+    @staticmethod
+    def _mietvertrag_aus_hausregeln(
+        texte: dict[str, Any], alt: dict[str, Any],
+        neu: dict[str, Any], gesetzt: list[str],
+    ) -> None:
+        """`airbnbTexte.hausregeln` → `policies.rentalAgreement` (je Sprache).
+
+        Nur LEERE Sprachen werden gefüllt (Wurzel 1): ein selbst geschriebener
+        Mietvertrag ist die Fassung, die der Betrieb seinen Gästen zeigt, und
+        darf von einem erneuten Abruf nicht ersetzt werden.
+        """
+        hausregeln = texte.get("hausregeln")
+        if not isinstance(hausregeln, dict) or not hausregeln:
+            return
+        policies = alt.get("policies")
+        policies = dict(policies) if isinstance(policies, dict) else {}
+        vertrag = policies.get("rentalAgreement")
+        vertrag = dict(vertrag) if isinstance(vertrag, dict) else {}
+        geaendert = False
+        for sprache, text in hausregeln.items():
+            if isinstance(text, str) and text.strip() and not vertrag.get(sprache):
+                # Airbnb schickt KLARTEXT mit `\n`; das Zielfeld rendert HTML.
+                # Ohne Umwandlung stand der ganze Vertrag als eine Textwand da.
+                vertrag[sprache] = ali.klartext_zu_absaetzen(text)
+                geaendert = True
+        if not geaendert:
+            return
+        policies["rentalAgreement"] = vertrag
+        neu["policies"] = policies
+        gesetzt.append("rentalAgreement")
+
+    @staticmethod
+    def _details_zugang(
+        listing: dict[str, Any], alt: dict[str, Any],
+        neu: dict[str, Any], gesetzt: list[str],
+    ) -> None:
+        """WLAN, Anfahrt, Check-in-Art — die Anreise-Infos für den Gast."""
+        zugang = ali.zugangsdaten_uebernehmen(listing)
+        if not zugang:
+            return
+        messaging = dict(alt.get("messaging") or {})
+        vorher = dict(messaging)
+        for quelle, ziel in (
+            ("wlanName", "wifiName"),
+            ("wlanPasswort", "wifiPassword"),
+            ("anfahrt", "directions"),
+            ("checkInHinweis", "checkIn"),
+        ):
+            wert = zugang.get(quelle)
+            if wert and not messaging.get(ziel):
+                messaging[ziel] = wert
+        if messaging != vorher:
+            neu["messaging"] = messaging
+            gesetzt.append("messaging")
+        for quelle, ziel in (
+            ("checkInArt", "checkInArt"),
+            ("wohnungszusatz", "apt"),
+        ):
+            wert = zugang.get(quelle)
+            if wert and not alt.get(ziel):
+                neu[ziel] = wert
+                gesetzt.append(ziel)
 
     def _weitere_felder_uebernehmen(
         self, db: Client, property_id: str, preisteil: dict[str, Any],

@@ -502,6 +502,13 @@ class AirbnbObjektAbrufResponse(BaseModel):
     # das 17 Bilder mit Bildtexten. 0 heißt: keine NEUEN (schon vorhandene
     # werden nicht doppelt angelegt).
     fotos_uebernommen: int = 0
+    # Was aus `action/listing_details` kam — der vollständige Content-Weg, den
+    # Airbnb selbst dokumentiert: `rooms` (Zimmer je Art, privat/gemeinschaftlich),
+    # `beds`, Schlafzimmer-/Bad-Anzahl, Einheiten, Storno, Sofortbuchung,
+    # Gastregeln, Verfügbarkeitsregeln, Gebühren, Ausstattung, WLAN und
+    # Check-in-Zeiten. Getrennt von `uebernommene_felder`, damit man sieht, ob
+    # dieser Weg gegriffen hat — leer + `hinweis` heißt: er hat es nicht.
+    details_uebernommen: list[str] = []
     hinweis: str | None = None
 
 
@@ -629,6 +636,39 @@ class WebhookEventEntry(BaseModel):
     severity: str = "info"
     resolved: bool = False
     created_at: str | None = None
+    # Ohne die Channex-Ereignis-ID ist eine Airbnb-Anfrage nicht beantwortbar —
+    # die Oberfläche muss deshalb wissen, ob sie da ist.
+    live_feed_event_id: str | None = None
+    resolution: dict | None = None
+    resolved_at: str | None = None
+
+
+class AirbnbAnfrageAntwort(BaseModel):
+    """Die Entscheidung des Betriebs zu einer Airbnb-Anfrage.
+
+    EIN Schema für drei Anfragearten, aber die gesendete Form ist je Art anders
+    (Airbnb: `accept` boolean bei Reservation Request, STRING bei Alteration).
+    Deshalb entscheidet `aktion`, welcher Bauhelfer die Form erzeugt — der Client
+    schickt NIE eine rohe `resolution` (Wurzel 3: der Anfrage nicht vertrauen).
+    """
+
+    aktion: Literal[
+        "annehmen",
+        "ablehnen",
+        "alteration_annehmen",
+        "alteration_ablehnen",
+        "alteration_zuruecknehmen",
+        "vorab_genehmigen",
+        "sonderpreis",
+    ]
+    # Nur bei `ablehnen`: einer der vier von Airbnb erlaubten Gründe.
+    grund: str | None = None
+    nachricht_an_gast: str | None = None
+    nachricht_an_airbnb: str | None = None
+    # Nur bei `vorab_genehmigen`.
+    sofortbuchung_sperren: bool = False
+    # Nur bei `sonderpreis`: GANZZAHL in Minor Units (10000 = 100,00).
+    gesamtpreis_minor: int | None = None
 
 
 class OtaChannelOverview(BaseModel):

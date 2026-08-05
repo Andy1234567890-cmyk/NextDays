@@ -1242,6 +1242,32 @@ class ContentSyncMixin:
             self._channex.update_rate_plan(channex_rate_plan_id, attrs)
             return channex_rate_plan_id
 
+        # Wurzel 2: Die Map-Zeile ist nicht die einzige Wahrheit. Fehlt sie,
+        # während der Plan bei Channex sehr wohl existiert (Abbruch nach dem
+        # POST, manuell angelegter Kanal-Plan), lief das Anlegen in
+        # „Duplication in Rate Plan title is not allowed" — der Titel ist je
+        # Property eindeutig. Live gemessen an zwei Objekten: Channex hatte drei
+        # Pläne, unsere Map kannte zwei; die Zuordnung scheiterte bei jedem
+        # Versuch aufs Neue. Deshalb VOR dem Anlegen bei Channex nachsehen und
+        # den vorhandenen Plan übernehmen statt einen zweiten zu erzeugen.
+        vorhanden = self._channex_rate_plan_nach_titel(
+            channex_property_id, channex_room_type_id, title
+        )
+        if vorhanden:
+            self._channex.update_rate_plan(vorhanden, attrs)
+            db.table("channex_rate_plan_map").upsert(
+                {
+                    "tenant_id": tenant_id,
+                    "room_type_map_id": room_type_map_id,
+                    "local_rate_plan_id": local_rate_plan_id,
+                    "title": title,
+                    "channex_rate_plan_id": vorhanden,
+                    "deleted_at": None,
+                },
+                on_conflict="channex_rate_plan_id",
+            ).execute()
+            return vorhanden
+
         created = self._channex.create_rate_plan(attrs)
         channex_rate_plan_id = (created.get("data") or {}).get("id")
         if not channex_rate_plan_id:
@@ -1257,6 +1283,43 @@ class ContentSyncMixin:
             on_conflict="channex_rate_plan_id",
         ).execute()
         return channex_rate_plan_id
+
+    def _channex_rate_plan_nach_titel(
+        self, channex_property_id: str, channex_room_type_id: str, title: str
+    ) -> str | None:
+        """Channex-Rate-Plan-ID mit diesem Titel am gegebenen Room-Type.
+
+        Der Titel ist bei Channex je Property eindeutig — er ist damit der
+        zweite verlässliche Schlüssel neben unserer Map. Gesucht wird zusätzlich
+        am Room-Type, weil ein Plan unveränderlich zu EINEM Room-Type gehört:
+        einen fremden zu übernehmen scheiterte am PUT (422 „can't be changed").
+
+        Der Room-Type steht in `relationships`, NICHT in `attributes` — live
+        gemessen an der Listen-Antwort (28 Attribut-Felder, keines davon
+        `room_type_id`). Ein Filter auf `attributes.room_type_id` hätte jeden
+        Treffer verworfen und die Suche wirkungslos gemacht.
+
+        Ein Lesefehler darf den Sync nicht kippen — dann gibt es None, und der
+        Aufrufer legt wie bisher an (schlimmstenfalls derselbe Fehler wie zuvor,
+        aber kein neuer).
+        """
+        try:
+            antwort = self._channex.get_rate_plans(channex_property_id)
+        except ChannexError as exc:  # pragma: no cover — Netzweg
+            log.warning("channex_rate_plans_unlesbar", error=str(exc)[:200])
+            return None
+        for eintrag in antwort.get("data") or []:
+            attrs = eintrag.get("attributes") or {}
+            if attrs.get("title") != title:
+                continue
+            bezug = (eintrag.get("relationships") or {}).get("room_type") or {}
+            gehoert_zu = str(((bezug.get("data") or {}).get("id")) or "")
+            if gehoert_zu != channex_room_type_id:
+                continue
+            kennung = eintrag.get("id")
+            if kennung:
+                return str(kennung)
+        return None
 
     def _prune_orphan_rate_plans(
         self, db: Client, tenant_id: str, room_type_map_id: str,

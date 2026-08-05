@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Tiek pārņemts no Airbnb un paliek myNextDays un myBestDays — rezervāciju portāli gultu izkārtojumu nepieņem.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Apraksts",
           "max_guests": "Viesu skaits",
           "street": "Iela",
-          "house_number": "Mājas numurs"
+          "house_number": "Mājas numurs",
+          "zimmer": "Telpas",
+          "beds": "Guļvietas",
+          "airbnbRaeume": "Telpu izkārtojums",
+          "airbnbStorno": "Atcelšanas noteikumi",
+          "airbnbSofortbuchung": "Tūlītēja rezervācija",
+          "airbnbTexte": "Teksti",
+          "internal_name": "Iekšējais nosaukums",
+          "policies": "Noteikumi",
+          "rentalAgreement": "Īres līgums",
+          "messaging": "Ziņojumi",
+          "kinderErlaubt": "Bērni atļauti",
+          "babysErlaubt": "Zīdaiņi atļauti",
+          "haustiereErlaubt": "Mājdzīvnieki atļauti",
+          "rauchenErlaubt": "Smēķēšana atļauta",
+          "feiernErlaubt": "Svinības atļautas",
+          "haustiereMax": "Maksimums mājdzīvnieku"
         },
         "photosTaken": "Importēti {count} foto no Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Mājsaimniece iekļauta cenā",
     "nd_housekeeper_optional": "Mājsaimniece par papildu maksu",
     "nd_laundry_included": "Veļas mazgāšanas pakalpojums iekļauts cenā",
-    "nd_laundry_optional": "Veļas mazgāšanas pakalpojums par papildu maksu"
+    "nd_laundry_optional": "Veļas mazgāšanas pakalpojums par papildu maksu",
+    "nd_living_room": "Sava viesistaba",
+    "nd_long_stay": "Iespējama ilgtermiņa uzturēšanās",
+    "nd_single_level": "Viss vienā līmenī",
+    "nd_recycling": "Atkritumu šķirošana",
+    "nd_hammock": "Šūpuļtīkls",
+    "nd_freezer": "Saldētava",
+    "nd_hangers": "Pakaramie",
+    "nd_hot_water": "Karstais ūdens",
+    "nd_dishes_silverware": "Trauki un galda piederumi",
+    "nd_baking_sheet": "Cepešpanna",
+    "nd_essentials": "Pamataprīkojums",
+    "nd_books": "Grāmatas",
+    "nd_childrens_books_toys": "Bērnu grāmatas un rotaļlietas",
+    "nd_childrens_dinnerware": "Bērnu trauki"
   },
   "zimmer": {
     "balkon": "Balkons",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terase",
     "wc": "Tualete",
     "arbeitszimmer": "Kabinets",
-    "schlafbereich": "Guļamzona"
+    "schlafbereich": "Guļamzona",
+    "hauswirtschaftsraum": "Veļas telpa"
   },
   "reviews": {
     "title": "Atsauksmes",

@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Hentes fra Airbnb og forbliver hos myNextDays og myBestDays — bookingportalerne modtager ikke sengeoversigter.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Beskrivelse",
           "max_guests": "Antal gæster",
           "street": "Vej",
-          "house_number": "Husnummer"
+          "house_number": "Husnummer",
+          "zimmer": "Værelser",
+          "beds": "Sovepladser",
+          "airbnbRaeume": "Rumfordeling",
+          "airbnbStorno": "Afbestillingsvilkår",
+          "airbnbSofortbuchung": "Øjeblikkelig booking",
+          "airbnbTexte": "Tekster",
+          "internal_name": "Internt navn",
+          "policies": "Retningslinjer",
+          "rentalAgreement": "Lejeaftale",
+          "messaging": "Beskeder",
+          "kinderErlaubt": "Børn tilladt",
+          "babysErlaubt": "Spædbørn tilladt",
+          "haustiereErlaubt": "Kæledyr tilladt",
+          "rauchenErlaubt": "Rygning tilladt",
+          "feiernErlaubt": "Fester tilladt",
+          "haustiereMax": "Maks. kæledyr"
         },
         "photosTaken": "{count} billeder hentet fra Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Husholderske inkluderet",
     "nd_housekeeper_optional": "Husholderske valgfri",
     "nd_laundry_included": "Vaskeservice inkluderet",
-    "nd_laundry_optional": "Vaskeservice valgfri"
+    "nd_laundry_optional": "Vaskeservice valgfri",
+    "nd_living_room": "Egen stue",
+    "nd_long_stay": "Langtidsophold muligt",
+    "nd_single_level": "Alt i ét plan",
+    "nd_recycling": "Affaldssortering",
+    "nd_hammock": "Hængekøje",
+    "nd_freezer": "Fryser",
+    "nd_hangers": "Bøjler",
+    "nd_hot_water": "Varmt vand",
+    "nd_dishes_silverware": "Service og bestik",
+    "nd_baking_sheet": "Bageplade",
+    "nd_essentials": "Basisudstyr",
+    "nd_books": "Bøger",
+    "nd_childrens_books_toys": "Børnebøger og legetøj",
+    "nd_childrens_dinnerware": "Børneservice"
   },
   "zimmer": {
     "balkon": "Altan",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terrasse",
     "wc": "Toilet",
     "arbeitszimmer": "Kontor",
-    "schlafbereich": "Soveområde"
+    "schlafbereich": "Soveområde",
+    "hauswirtschaftsraum": "Bryggers"
   },
   "reviews": {
     "title": "Anmeldelser",

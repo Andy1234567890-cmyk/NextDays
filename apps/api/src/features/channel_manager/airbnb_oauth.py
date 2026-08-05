@@ -13,22 +13,73 @@ from __future__ import annotations
 
 from typing import Any
 
+# Die zwei von Airbnb erlaubten Betragsarten („Airbnb Connection API",
+# `booking_amount_settings`). Allowlist statt Durchreichen: ein Tippfehler hier
+# entscheidet über JEDEN Buchungsbetrag dieses Kanals.
+BETRAG_GESAMT_BEZAHLT = "Total Paid Amount"
+BETRAG_AUSZAHLUNG = "Payout Amount"
+BETRAGSARTEN: frozenset[str] = frozenset({BETRAG_GESAMT_BEZAHLT, BETRAG_AUSZAHLUNG})
+
+# Airbnbs zwei erlaubten Mindestaufenthalts-Arten. Airbnb kennt nur EINE Art je
+# Kanal — „beides" gibt es dort nicht.
+MIN_STAY_ANREISE = "Arrival"
+MIN_STAY_DURCHGEHEND = "Through"
+MIN_STAY_ARTEN: frozenset[str] = frozenset({MIN_STAY_ANREISE, MIN_STAY_DURCHGEHEND})
+
 
 def connection_settings(settings: dict[str, Any] | None) -> dict[str, Any]:
     """Channex-Defaults für die Airbnb-`connection_link`-settings (snake_case).
 
     Nur Felder, die der connection_link-Endpunkt kennt — keine erfundenen Werte;
-    `email` nur wenn vom Aufrufer gesetzt."""
+    `email` nur wenn vom Aufrufer gesetzt.
+
+    WARUM `Total Paid Amount` (und nicht `Payout Amount`):
+    Airbnb lässt beides zu und beschreibt es als „type of total amount what will
+    be saved at Bookings". Der Unterschied ist keine Formsache, sondern eine
+    andere ZAHL: `Payout Amount` ist der Betrag NACH Abzug der Airbnb-Host-Fee,
+    `Total Paid Amount` das, was der Gast bezahlt hat.
+
+    Unser gesamter Geldpfad behandelt `attrs["amount"]` als Bruttobetrag: er wird
+    bei portal-kassierten Buchungen als `paid_amount` verbucht („der Gast hat das
+    bezahlt"), unsere Provision rechnet darauf (`gross_amount`), und in der
+    Eigentümer-Abrechnung sowie der Buchungsansicht werden Portalgebühren davon
+    noch ABGEZOGEN. Mit `Payout Amount` wäre der Wert bereits netto — die
+    Host-Fee würde doppelt abgezogen und unsere eigene Provision zu niedrig
+    fakturiert. Deshalb bestellen wir den Bruttobetrag; die Airbnb-Gebühr kommt
+    getrennt über `ota_commission` (siehe `bookings_sync`).
+
+    Nebenwirkung, die dazugehört: `Total Paid Amount` zählt in `tax_regime` zu
+    den Werten, bei denen die Steuern IM Betrag enthalten sind. Das ist genau die
+    Lesart, die zum Bruttobetrag passt.
+    """
     src = settings or {}
+    betrag = src.get("booking_amount_settings") or BETRAG_GESAMT_BEZAHLT
+    if betrag not in BETRAGSARTEN:
+        erlaubt = ", ".join(sorted(BETRAGSARTEN))
+        raise ValueError(
+            f"booking_amount_settings {betrag!r} kennt Airbnb nicht. "
+            f"Erlaubt: {erlaubt}"
+        )
+    min_stay = src.get("min_stay_type") or MIN_STAY_ANREISE
+    if min_stay not in MIN_STAY_ARTEN:
+        erlaubt = ", ".join(sorted(MIN_STAY_ARTEN))
+        raise ValueError(
+            f"min_stay_type {min_stay!r} kennt Airbnb nicht. Erlaubt: {erlaubt}"
+        )
     out: dict[str, Any] = {
-        "booking_amount_settings": src.get("booking_amount_settings")
-        or "Payout Amount",
+        "booking_amount_settings": betrag,
         "cohost_payout_calculations": bool(
             src.get("cohost_payout_calculations", False)
         ),
-        "min_stay_type": src.get("min_stay_type") or "Arrival",
+        "min_stay_type": min_stay,
         "send_email_notifications": bool(src.get("send_email_notifications", False)),
     }
+    # Airbnbs Dokument: `email` ist Pflicht, sobald Benachrichtigungen an sind.
+    # Fail-closed statt einer Verbindung, die Channex still ablehnt (Wurzel 5).
+    if out["send_email_notifications"] and not src.get("email"):
+        raise ValueError(
+            "send_email_notifications=true verlangt eine E-Mail-Adresse."
+        )
     if src.get("email"):
         out["email"] = src["email"]
     return out

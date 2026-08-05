@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Wordt overgenomen uit Airbnb en blijft bij myNextDays en myBestDays — de boekingsportalen accepteren geen bedindeling.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Beschrijving",
           "max_guests": "Aantal gasten",
           "street": "Straat",
-          "house_number": "Huisnummer"
+          "house_number": "Huisnummer",
+          "zimmer": "Kamers",
+          "beds": "Slaapplaatsen",
+          "airbnbRaeume": "Kamerindeling",
+          "airbnbStorno": "Annuleringsvoorwaarden",
+          "airbnbSofortbuchung": "Direct boeken",
+          "airbnbTexte": "Teksten",
+          "internal_name": "Interne naam",
+          "policies": "Richtlijnen",
+          "rentalAgreement": "Huurovereenkomst",
+          "messaging": "Berichten",
+          "kinderErlaubt": "Kinderen toegestaan",
+          "babysErlaubt": "Baby's toegestaan",
+          "haustiereErlaubt": "Huisdieren toegestaan",
+          "rauchenErlaubt": "Roken toegestaan",
+          "feiernErlaubt": "Feesten toegestaan",
+          "haustiereMax": "Max. huisdieren"
         },
         "photosTaken": "{count} foto's uit Airbnb overgenomen"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Huishoudster inbegrepen",
     "nd_housekeeper_optional": "Huishoudster optioneel",
     "nd_laundry_included": "Wasservice inbegrepen",
-    "nd_laundry_optional": "Wasservice optioneel"
+    "nd_laundry_optional": "Wasservice optioneel",
+    "nd_living_room": "Eigen woonkamer",
+    "nd_long_stay": "Langdurig verblijf mogelijk",
+    "nd_single_level": "Alles op één verdieping",
+    "nd_recycling": "Afvalscheiding",
+    "nd_hammock": "Hangmat",
+    "nd_freezer": "Vriezer",
+    "nd_hangers": "Kleerhangers",
+    "nd_hot_water": "Warm water",
+    "nd_dishes_silverware": "Servies en bestek",
+    "nd_baking_sheet": "Bakplaat",
+    "nd_essentials": "Basisbenodigdheden",
+    "nd_books": "Boeken",
+    "nd_childrens_books_toys": "Kinderboeken en speelgoed",
+    "nd_childrens_dinnerware": "Kinderservies"
   },
   "zimmer": {
     "balkon": "Balkon",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terras",
     "wc": "Toilet",
     "arbeitszimmer": "Studeerkamer",
-    "schlafbereich": "Slaapgedeelte"
+    "schlafbereich": "Slaapgedeelte",
+    "hauswirtschaftsraum": "Bijkeuken"
   },
   "reviews": {
     "title": "Beoordelingen",

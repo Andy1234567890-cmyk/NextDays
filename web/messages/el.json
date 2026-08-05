@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Λαμβάνεται από το Airbnb και παραμένει στο myNextDays και το myBestDays — οι πύλες κρατήσεων δεν δέχονται διάταξη κλινών.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Περιγραφή",
           "max_guests": "Αριθμός επισκεπτών",
           "street": "Οδός",
-          "house_number": "Αριθμός"
+          "house_number": "Αριθμός",
+          "zimmer": "Δωμάτια",
+          "beds": "Κλίνες",
+          "airbnbRaeume": "Διαρρύθμιση χώρων",
+          "airbnbStorno": "Όροι ακύρωσης",
+          "airbnbSofortbuchung": "Άμεση κράτηση",
+          "airbnbTexte": "Κείμενα",
+          "internal_name": "Εσωτερική ονομασία",
+          "policies": "Κανόνες",
+          "rentalAgreement": "Συμφωνητικό μίσθωσης",
+          "messaging": "Μηνύματα",
+          "kinderErlaubt": "Επιτρέπονται παιδιά",
+          "babysErlaubt": "Επιτρέπονται βρέφη",
+          "haustiereErlaubt": "Επιτρέπονται κατοικίδια",
+          "rauchenErlaubt": "Επιτρέπεται το κάπνισμα",
+          "feiernErlaubt": "Επιτρέπονται εκδηλώσεις",
+          "haustiereMax": "Μέγιστος αριθμός κατοικιδίων"
         },
         "photosTaken": "Εισήχθησαν {count} φωτογραφίες από το Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Οικιακή βοηθός συμπεριλαμβάνεται",
     "nd_housekeeper_optional": "Οικιακή βοηθός προαιρετική",
     "nd_laundry_included": "Υπηρεσία πλυντηρίου συμπεριλαμβάνεται",
-    "nd_laundry_optional": "Υπηρεσία πλυντηρίου προαιρετική"
+    "nd_laundry_optional": "Υπηρεσία πλυντηρίου προαιρετική",
+    "nd_living_room": "Ιδιωτικό σαλόνι",
+    "nd_long_stay": "Επιτρέπονται μακροχρόνιες διαμονές",
+    "nd_single_level": "Όλα σε ένα επίπεδο",
+    "nd_recycling": "Ανακύκλωση",
+    "nd_hammock": "Αιώρα",
+    "nd_freezer": "Καταψύκτης",
+    "nd_hangers": "Κρεμάστρες",
+    "nd_hot_water": "Ζεστό νερό",
+    "nd_dishes_silverware": "Πιατικά και μαχαιροπίρουνα",
+    "nd_baking_sheet": "Ταψί",
+    "nd_essentials": "Βασικός εξοπλισμός",
+    "nd_books": "Βιβλία",
+    "nd_childrens_books_toys": "Παιδικά βιβλία και παιχνίδια",
+    "nd_childrens_dinnerware": "Παιδικά σερβίτσια"
   },
   "zimmer": {
     "balkon": "Μπαλκόνι",
@@ -6695,7 +6725,8 @@
     "terrasse": "Βεράντα",
     "wc": "WC",
     "arbeitszimmer": "Γραφείο",
-    "schlafbereich": "Χώρος ύπνου"
+    "schlafbereich": "Χώρος ύπνου",
+    "hauswirtschaftsraum": "Πλυσταριό"
   },
   "reviews": {
     "title": "Κριτικές",

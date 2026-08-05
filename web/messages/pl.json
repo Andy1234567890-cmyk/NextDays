@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Pobierane z Airbnb i pozostaje w myNextDays i myBestDays — portale rezerwacyjne nie przyjmują układu łóżek.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Opis",
           "max_guests": "Liczba gości",
           "street": "Ulica",
-          "house_number": "Numer domu"
+          "house_number": "Numer domu",
+          "zimmer": "Pokoje",
+          "beds": "Miejsca do spania",
+          "airbnbRaeume": "Układ pomieszczeń",
+          "airbnbStorno": "Warunki anulowania",
+          "airbnbSofortbuchung": "Rezerwacja natychmiastowa",
+          "airbnbTexte": "Teksty",
+          "internal_name": "Nazwa wewnętrzna",
+          "policies": "Zasady",
+          "rentalAgreement": "Umowa najmu",
+          "messaging": "Wiadomości",
+          "kinderErlaubt": "Dzieci dozwolone",
+          "babysErlaubt": "Niemowlęta dozwolone",
+          "haustiereErlaubt": "Zwierzęta dozwolone",
+          "rauchenErlaubt": "Palenie dozwolone",
+          "feiernErlaubt": "Imprezy dozwolone",
+          "haustiereMax": "Maks. zwierząt"
         },
         "photosTaken": "Zaimportowano {count} zdjęć z Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Gospodyni/gospodarz wliczony w cenę",
     "nd_housekeeper_optional": "Gospodyni/gospodarz opcjonalnie",
     "nd_laundry_included": "Usługa pralnicza wliczona w cenę",
-    "nd_laundry_optional": "Usługa pralnicza opcjonalnie"
+    "nd_laundry_optional": "Usługa pralnicza opcjonalnie",
+    "nd_living_room": "Prywatny salon",
+    "nd_long_stay": "Pobyty długoterminowe możliwe",
+    "nd_single_level": "Wszystko na jednym poziomie",
+    "nd_recycling": "Segregacja odpadów",
+    "nd_hammock": "Hamak",
+    "nd_freezer": "Zamrażarka",
+    "nd_hangers": "Wieszaki",
+    "nd_hot_water": "Ciepła woda",
+    "nd_dishes_silverware": "Naczynia i sztućce",
+    "nd_baking_sheet": "Blacha do pieczenia",
+    "nd_essentials": "Wyposażenie podstawowe",
+    "nd_books": "Książki",
+    "nd_childrens_books_toys": "Książki i zabawki dla dzieci",
+    "nd_childrens_dinnerware": "Naczynia dla dzieci"
   },
   "zimmer": {
     "balkon": "Balkon",
@@ -6695,7 +6725,8 @@
     "terrasse": "Taras",
     "wc": "WC",
     "arbeitszimmer": "Gabinet",
-    "schlafbereich": "Część sypialna"
+    "schlafbereich": "Część sypialna",
+    "hauswirtschaftsraum": "Pralnia"
   },
   "reviews": {
     "title": "Opinie",

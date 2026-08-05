@@ -35,6 +35,7 @@ from .dependencies import ChannelManagerServiceDep
 from .schemas import (
     AbgabenStatusResponse,
     AirbnbAktionenPushResponse,
+    AirbnbAnfrageAntwort,
     AirbnbObjektAbrufResponse,
     AirbnbTaxSettingsRequest,
     AirbnbTaxSettingsResponse,
@@ -1083,8 +1084,28 @@ def list_webhook_events(
 def resolve_webhook_event(
     event_id: str, service: ChannelManagerServiceDep, ctx: _write
 ) -> None:
+    """Ereignis lokal als erledigt abhaken (Quittung, keine Antwort an Airbnb)."""
     try:
         service.resolve_webhook_event(ctx, event_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/events/{event_id}/airbnb-antwort")
+def airbnb_anfrage_beantworten(
+    event_id: str,
+    req: AirbnbAnfrageAntwort,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> dict:
+    """Eine Airbnb-Anfrage ANNEHMEN oder ABLEHNEN (`live_feed/{id}/resolve`).
+
+    Bewusst getrennt von `/resolve`: das dort ist eine lokale Quittung, das hier
+    geht an Airbnb und ist unwiderruflich. Airbnb lehnt eine unbeantwortete
+    Anfrage nach etwa 24 Stunden selbst ab.
+    """
+    try:
+        return service.airbnb_anfrage_beantworten(ctx, event_id, req)
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

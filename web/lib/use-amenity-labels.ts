@@ -17,13 +17,18 @@ import type {
 
 export function useAmenityLabels() {
   const t = useTranslations("amenities");
+  const tEigen = useTranslations("eigeneAusstattung");
   const tGroup = useTranslations("amenityGroups");
 
   return {
     /** Slug → Label. Unbekannter Slug (Altbestand) bleibt der Slug selbst. */
     amenityLabel: (slug: string) => {
-      const label = t.has(slug) ? t(slug) : slug;
-      return label;
+      if (t.has(slug)) return t(slug);
+      // Eigene Merkmale (`nd_*`) stehen in keinem Channex-Katalog und damit in
+      // keinem der beiden Portal-Namensräume. Ohne diesen Zweig stünde in der
+      // Übersicht der rohe Slug — sichtbar geworden an „nd_parking_included".
+      if (tEigen.has(slug)) return tEigen(slug);
+      return slug;
     },
     /** Kategorie → Gruppentitel. */
     categoryLabel: (category: AmenityCategory) => tGroup(category),
@@ -35,10 +40,17 @@ export function useAmenityLabels() {
  *  UUIDs, und die Slugs unterscheiden sich zwischen den Katalogen. */
 export function useRoomAmenityLabels() {
   const t = useTranslations("roomAmenities");
+  const tEigen = useTranslations("eigeneAusstattung");
   const tGroup = useTranslations("roomAmenityGroups");
 
   return {
-    roomAmenityLabel: (slug: string) => (t.has(slug) ? t(slug) : slug),
+    // Eigene Merkmale werden beim Speichern in `room_amenities` abgelegt und
+    // laufen deshalb über DIESEN Weg zurück in die Anzeige.
+    roomAmenityLabel: (slug: string) => {
+      if (t.has(slug)) return t(slug);
+      if (tEigen.has(slug)) return tEigen(slug);
+      return slug;
+    },
     roomCategoryLabel: (category: RoomAmenityCategory) => tGroup(category),
   };
 }

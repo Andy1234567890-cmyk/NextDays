@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Взема се от Airbnb и остава в myNextDays и myBestDays — резервационните портали не приемат разпределение на леглата.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Описание",
           "max_guests": "Брой гости",
           "street": "Улица",
-          "house_number": "Номер"
+          "house_number": "Номер",
+          "zimmer": "Стаи",
+          "beds": "Спални места",
+          "airbnbRaeume": "Разпределение на помещенията",
+          "airbnbStorno": "Условия за анулиране",
+          "airbnbSofortbuchung": "Незабавна резервация",
+          "airbnbTexte": "Текстове",
+          "internal_name": "Вътрешно име",
+          "policies": "Правила",
+          "rentalAgreement": "Договор за наем",
+          "messaging": "Съобщения",
+          "kinderErlaubt": "Деца разрешени",
+          "babysErlaubt": "Бебета разрешени",
+          "haustiereErlaubt": "Домашни любимци разрешени",
+          "rauchenErlaubt": "Пушенето разрешено",
+          "feiernErlaubt": "Партита разрешени",
+          "haustiereMax": "Максимум любимци"
         },
         "photosTaken": "Импортирани са {count} снимки от Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Домашна помощница включена",
     "nd_housekeeper_optional": "Домашна помощница по избор",
     "nd_laundry_included": "Услуга за пране включена",
-    "nd_laundry_optional": "Услуга за пране по избор"
+    "nd_laundry_optional": "Услуга за пране по избор",
+    "nd_living_room": "Собствена дневна",
+    "nd_long_stay": "Възможен дълъг престой",
+    "nd_single_level": "Всичко на едно ниво",
+    "nd_recycling": "Разделно събиране",
+    "nd_hammock": "Хамак",
+    "nd_freezer": "Фризер",
+    "nd_hangers": "Закачалки",
+    "nd_hot_water": "Топла вода",
+    "nd_dishes_silverware": "Съдове и прибори",
+    "nd_baking_sheet": "Тава за печене",
+    "nd_essentials": "Основно оборудване",
+    "nd_books": "Книги",
+    "nd_childrens_books_toys": "Детски книги и играчки",
+    "nd_childrens_dinnerware": "Детски съдове"
   },
   "zimmer": {
     "balkon": "Балкон",
@@ -6695,7 +6725,8 @@
     "terrasse": "Тераса",
     "wc": "Тоалетна",
     "arbeitszimmer": "Кабинет",
-    "schlafbereich": "Спална зона"
+    "schlafbereich": "Спална зона",
+    "hauswirtschaftsraum": "Перално помещение"
   },
   "reviews": {
     "title": "Отзиви",

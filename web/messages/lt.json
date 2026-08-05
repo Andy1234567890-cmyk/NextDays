@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Perimama iš Airbnb ir lieka myNextDays bei myBestDays — rezervacijų portalai lovų išdėstymo nepriima.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Aprašymas",
           "max_guests": "Svečių skaičius",
           "street": "Gatvė",
-          "house_number": "Namo numeris"
+          "house_number": "Namo numeris",
+          "zimmer": "Kambariai",
+          "beds": "Miegamosios vietos",
+          "airbnbRaeume": "Patalpų išdėstymas",
+          "airbnbStorno": "Atšaukimo sąlygos",
+          "airbnbSofortbuchung": "Momentinis rezervavimas",
+          "airbnbTexte": "Tekstai",
+          "internal_name": "Vidinis pavadinimas",
+          "policies": "Taisyklės",
+          "rentalAgreement": "Nuomos sutartis",
+          "messaging": "Žinutės",
+          "kinderErlaubt": "Vaikai leidžiami",
+          "babysErlaubt": "Kūdikiai leidžiami",
+          "haustiereErlaubt": "Augintiniai leidžiami",
+          "rauchenErlaubt": "Rūkyti leidžiama",
+          "feiernErlaubt": "Vakarėliai leidžiami",
+          "haustiereMax": "Daugiausia augintinių"
         },
         "photosTaken": "Importuota {count} nuotraukų iš Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Namų tvarkytoja įskaičiuota",
     "nd_housekeeper_optional": "Namų tvarkytoja už papildomą mokestį",
     "nd_laundry_included": "Skalbimo paslauga įskaičiuota",
-    "nd_laundry_optional": "Skalbimo paslauga už papildomą mokestį"
+    "nd_laundry_optional": "Skalbimo paslauga už papildomą mokestį",
+    "nd_living_room": "Atskiras svetainės kambarys",
+    "nd_long_stay": "Galimas ilgalaikis apgyvendinimas",
+    "nd_single_level": "Viskas viename aukšte",
+    "nd_recycling": "Atliekų rūšiavimas",
+    "nd_hammock": "Hamakas",
+    "nd_freezer": "Šaldiklis",
+    "nd_hangers": "Pakabos",
+    "nd_hot_water": "Karštas vanduo",
+    "nd_dishes_silverware": "Indai ir stalo įrankiai",
+    "nd_baking_sheet": "Kepimo skarda",
+    "nd_essentials": "Pagrindinė įranga",
+    "nd_books": "Knygos",
+    "nd_childrens_books_toys": "Vaikiškos knygos ir žaislai",
+    "nd_childrens_dinnerware": "Vaikiški indai"
   },
   "zimmer": {
     "balkon": "Balkonas",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terasa",
     "wc": "Tualetas",
     "arbeitszimmer": "Kabinetas",
-    "schlafbereich": "Miegamoji zona"
+    "schlafbereich": "Miegamoji zona",
+    "hauswirtschaftsraum": "Skalbykla"
   },
   "reviews": {
     "title": "Atsiliepimai",

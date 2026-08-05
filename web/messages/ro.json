@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Se preia din Airbnb și rămâne în myNextDays și myBestDays — portalurile de rezervări nu acceptă configurația paturilor.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Descriere",
           "max_guests": "Număr de oaspeți",
           "street": "Stradă",
-          "house_number": "Număr"
+          "house_number": "Număr",
+          "zimmer": "Camere",
+          "beds": "Locuri de dormit",
+          "airbnbRaeume": "Împărțirea camerelor",
+          "airbnbStorno": "Condiții de anulare",
+          "airbnbSofortbuchung": "Rezervare instantanee",
+          "airbnbTexte": "Texte",
+          "internal_name": "Nume intern",
+          "policies": "Reguli",
+          "rentalAgreement": "Contract de închiriere",
+          "messaging": "Mesaje",
+          "kinderErlaubt": "Copii permiși",
+          "babysErlaubt": "Bebeluși permiși",
+          "haustiereErlaubt": "Animale permise",
+          "rauchenErlaubt": "Fumat permis",
+          "feiernErlaubt": "Petreceri permise",
+          "haustiereMax": "Animale maxim"
         },
         "photosTaken": "{count} fotografii importate din Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Menajeră inclusă",
     "nd_housekeeper_optional": "Menajeră opțională",
     "nd_laundry_included": "Serviciu de spălătorie inclus",
-    "nd_laundry_optional": "Serviciu de spălătorie opțional"
+    "nd_laundry_optional": "Serviciu de spălătorie opțional",
+    "nd_living_room": "Living propriu",
+    "nd_long_stay": "Sejururi de lungă durată permise",
+    "nd_single_level": "Totul la același nivel",
+    "nd_recycling": "Reciclare",
+    "nd_hammock": "Hamac",
+    "nd_freezer": "Congelator",
+    "nd_hangers": "Umerașe",
+    "nd_hot_water": "Apă caldă",
+    "nd_dishes_silverware": "Veselă și tacâmuri",
+    "nd_baking_sheet": "Tavă de copt",
+    "nd_essentials": "Dotări de bază",
+    "nd_books": "Cărți",
+    "nd_childrens_books_toys": "Cărți și jucării pentru copii",
+    "nd_childrens_dinnerware": "Veselă pentru copii"
   },
   "zimmer": {
     "balkon": "Balcon",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terasă",
     "wc": "WC",
     "arbeitszimmer": "Birou",
-    "schlafbereich": "Zonă de dormit"
+    "schlafbereich": "Zonă de dormit",
+    "hauswirtschaftsraum": "Spălătorie"
   },
   "reviews": {
     "title": "Recenzii",

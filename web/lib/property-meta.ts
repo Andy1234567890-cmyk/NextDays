@@ -315,13 +315,20 @@ export type AusstattungsKategorie =
   (typeof AUSSTATTUNG_KATEGORIEN)[number];
 
 /** Slug → Kategorie. Nicht gelistete Slugs landen in `sonstiges`. */
-// Eigene Ausstattungsmerkmale — was der Channex-Katalog NICHT kennt.
+// Merkmale, die der CHANNEX-Katalog nicht kennt — das `nd_`-Präfix heißt genau
+// das und NICHTS weiter. Es sagt nicht, dass ein Portal sie nicht kennt:
 //
-// Channex fasst zusammen, wo Gäste unterscheiden: ein `heating` statt Zentral-/
-// Elektro-/Bodenheizung, ein `barbecue` statt Gas-/Elektro-/Holzkohlegrill,
-// keine Trennung privat/gemeinschaftlich bei Pool, Garten, Tennisplatz.
-// Diese Merkmale gehen an myBestDays und die eigene Website — NICHT an
-// Booking/Airbnb, dort gibt es kein Feld dafür.
+//   * Channex fasst zusammen, wo Gäste unterscheiden: ein `heating` statt
+//     Zentral-/Elektro-/Bodenheizung, ein `barbecue` statt Gas-/Elektro-/
+//     Holzkohlegrill, keine Trennung privat/gemeinschaftlich bei Pool, Garten,
+//     Tennisplatz. Diese Unterscheidungen führen wir selbst.
+//   * Ein großer Teil dieser Liste sind AIRBNB-Merkmale, die Airbnb sehr wohl
+//     führt (Parkvarianten, Hängematte, Mülltrennung, Langzeitaufenthalte …) —
+//     nur Channex hat kein Feld dafür. Sie kommen über den Airbnb-Direktimport
+//     herein und gehen über `airbnb_ausstattung_schreiben` direkt an Airbnbs
+//     eigene API zurück, NICHT über Channex. Welche das sind, steht in
+//     AIRBNB_MERKMALE; die Maske zeigt an ihnen das Airbnb-Zeichen.
+//
 // Kein Merkmal aus AMENITY_CATALOG/ROOM_AMENITY_CATALOG wird hier wiederholt.
 export const EIGENE_AUSSTATTUNG: string[] = [
   "nd_wash_basin", "nd_piano", "nd_stereo", "nd_tv_antenna", "nd_tv_satellite",
@@ -345,7 +352,49 @@ export const EIGENE_AUSSTATTUNG: string[] = [
   "nd_shared_heated_outdoor_pool", "nd_shared_indoor_pool", "nd_shared_outdoor_pool",
   "nd_all_inclusive", "nd_full_board", "nd_half_board", "nd_housekeeper_included",
   "nd_housekeeper_optional", "nd_laundry_included", "nd_laundry_optional",
+  // Merkmale, die AIRBNB kennt und Channex nicht (abgelesen aus Airbnbs
+  // „Add amenities"-Maske, 05.08.2026). Sie kommen über den Airbnb-Direktimport
+  // herein und gehen über Airbnbs eigene API wieder zurück.
+  "nd_living_room", "nd_long_stay", "nd_single_level", "nd_recycling",
+  "nd_hammock",
+  // Nachtrag: Schlüssel, die im echten Konto vorkamen und beim ersten
+  // Import-Durchlauf ohne Zuordnung protokolliert wurden. Gemessen, nicht
+  // erfunden — Channex führt für keinen davon ein Feld.
+  "nd_freezer", "nd_hangers", "nd_hot_water", "nd_dishes_silverware",
+  "nd_baking_sheet", "nd_essentials", "nd_books", "nd_childrens_books_toys",
+  "nd_childrens_dinnerware",
 ];
+
+// In WELCHE Spalte ein eigenes Merkmal gehört. `properties` führt zwei:
+// `amenities` (Objekt) und `room_amenities` (Zimmer); die Checkbox prüft genau
+// EINE davon (`gewaehlt()`). Der Airbnb-Import entscheidet das über
+// `_AIRBNB_ZU_OBJEKT`/`_AIRBNB_ZU_ZIMMER` — führte die Maske dieselben Slugs
+// pauschal als Zimmer-Merkmal, blieb die Checkbox leer, obwohl der Wert in der
+// DB stand (sichtbar geworden an „Parkmöglichkeit inklusive").
+// Was hier NICHT steht, ist ein Zimmer-Merkmal.
+export const EIGENE_AUSSTATTUNG_OBJEKT: ReadonlySet<string> = new Set([
+  "nd_living_room", "nd_gated_community", "nd_resort", "nd_canoe_kayak",
+  "nd_boat", "nd_parking_included", "nd_parking_optional", "nd_long_stay",
+  "nd_internet_broadband", "nd_single_level", "nd_recycling", "nd_hammock",
+  "nd_parking_available", "nd_garage", "nd_carport", "nd_city_centre",
+  "nd_golf_view", "nd_near_sea", "nd_rural", "nd_village", "nd_harbour_district",
+  "nd_private_garden", "nd_private_playground", "nd_private_porch",
+  "nd_private_tennis", "nd_shared_garden", "nd_shared_playground",
+  "nd_shared_porch", "nd_shared_tennis", "nd_credit_card_accepted",
+  "nd_events_allowed", "nd_pets_on_request", "nd_pets_not_allowed",
+  "nd_smoking_allowed", "nd_smoking_not_allowed", "nd_senior_friendly",
+  "nd_not_senior_friendly", "nd_not_accessible", "nd_concierge",
+  "nd_private_gym", "nd_golf_cart", "nd_golf_clubs", "nd_motorboat",
+  "nd_sailboat", "nd_sun_loungers", "nd_all_inclusive", "nd_full_board",
+  "nd_half_board", "nd_housekeeper_included", "nd_housekeeper_optional",
+  "nd_laundry_included", "nd_laundry_optional", "nd_private_dry_sauna",
+  "nd_private_steam_sauna", "nd_private_heated_indoor_pool",
+  "nd_private_heated_outdoor_pool", "nd_private_indoor_pool",
+  "nd_private_outdoor_pool", "nd_shared_dry_sauna", "nd_shared_steam_sauna",
+  "nd_shared_heated_indoor_pool", "nd_shared_heated_outdoor_pool",
+  "nd_shared_indoor_pool", "nd_shared_outdoor_pool", "nd_indoor_hot_tub",
+  "nd_outdoor_hot_tub",
+]);
 
 // Slugs, die dasselbe Merkmal bezeichnen — Channex führt sie in BEIDEN
 // Katalogen mit eigener UUID und gleichem Namen. Im Editor darf die Zeile nur
@@ -368,19 +417,36 @@ export const AUSSTATTUNG_DUBLETTEN: Record<string, string> = {
 // KEINE Vermutung und keine Ableitung aus dem Channex-Katalog: die Liste
 // bildet ab, an welchen Zeilen dort das Airbnb-Zeichen steht.
 export const AIRBNB_MERKMALE: ReadonlySet<string> = new Set([
-  "air_conditioning", "airconditioning", "beachfront", "bidet", "bike_rental",
-  "bikes_available_free", "cable_channels", "carbon_monoxide_detector", "clothing_iron",
-  "coffee_machine", "dishwasher", "fan", "fire_extinguishers", "fireplace",
-  "first_aid_kit_available", "hair_dryer", "heating", "kitchenette", "kitchenware",
-  "lake_view", "linen", "microwave", "nd_blender", "nd_central_heating", "nd_electric_heating",
-  "nd_harbour_district", "nd_indoor_hot_tub", "nd_internet_broadband", "nd_internet_dialup",
-  "nd_internet_wireless", "nd_outdoor_hot_tub", "nd_parking_available",
-  "nd_private_heated_indoor_pool", "nd_private_heated_outdoor_pool", "nd_private_indoor_pool",
-  "nd_private_outdoor_pool", "nd_resort", "nd_shared_heated_indoor_pool",
+  "air_conditioning", "airconditioning", "baby_safety_gates", "baggage_storage", "barbecue",
+  "bath", "bbq_picnic_area", "beach", "beachfront", "bicycle_rentals", "bidet",
+  "bike_rental", "bikes_available_free", "billiard", "board_games_puzzles", "body_soap",
+  "bowling", "breakfast", "cable_channels", "carbon_monoxide_detector", "cd_player",
+  "child_safety_socket_covers", "children_crib_cots", "children_highchair",
+  "cleaning_products", "clothes_drying_rack", "clothing_iron", "coffee_machine",
+  "coffee_tea_maker", "conditioner", "desk", "dining_table", "dishwasher",
+  "electric_kettle", "electric_vehicle_charging_station", "elevators", "fan",
+  "fire_extinguishers", "fire_pit", "fireplace", "first_aid_kit_available", "fitness",
+  "game_console", "garden", "hair_dryer", "heating", "hot_tub", "jacuzzi_hot_tub",
+  "kitchen", "kitchen_2", "kitchenette", "kitchenware", "lake_view", "linen", "microwave",
+  "mini_bar", "minigolf", "mosquito_net", "movie_nights", "nd_baking_sheet", "nd_blender",
+  "nd_boat", "nd_books", "nd_canoe_kayak", "nd_central_heating", "nd_charcoal_grill",
+  "nd_childrens_books_toys", "nd_childrens_dinnerware", "nd_dishes_silverware",
+  "nd_electric_heating", "nd_essentials", "nd_freezer", "nd_gated_community", "nd_hammock",
+  "nd_hangers", "nd_harbour_district", "nd_hot_water", "nd_indoor_hot_tub",
+  "nd_internet_broadband", "nd_internet_dialup", "nd_internet_wireless", "nd_living_room",
+  "nd_long_stay", "nd_outdoor_hot_tub", "nd_parking_available", "nd_parking_included",
+  "nd_parking_optional", "nd_piano", "nd_private_heated_indoor_pool",
+  "nd_private_heated_outdoor_pool", "nd_private_indoor_pool", "nd_private_outdoor_pool",
+  "nd_recycling", "nd_resort", "nd_rice_cooker", "nd_shared_heated_indoor_pool",
   "nd_shared_heated_outdoor_pool", "nd_shared_indoor_pool", "nd_shared_outdoor_pool",
-  "nd_tv_antenna", "nd_tv_satellite", "nd_underfloor_heating", "oven", "pets_allowed",
-  "refrigerator", "ski_to_door_access", "smoke_alarms", "swimming_pool", "toaster",
-  "tumble_dryer_machine", "washing_machine",
+  "nd_single_level", "nd_stereo", "nd_tv_antenna", "nd_tv_satellite",
+  "nd_underfloor_heating", "outdoor_dining_area", "outdoor_furniture", "oven", "patio",
+  "pets_allowed", "playground", "portable_wifi", "private_curtain", "private_entrance",
+  "refrigerator", "safe", "safe_deposit_box", "sauna", "seating_area", "shampoo", "shower",
+  "ski_to_door_access", "smoke_alarms", "solarium", "stove", "street_parking",
+  "sun_loungers_or_beach_chairs", "swimming_pool", "table_tennis", "toaster", "trash_cans",
+  "tumble_dryer_machine", "tv", "wardrobe_closet", "washing_machine", "waterfront", "wifi",
+  "wine_glasses", "wireless_internet",
 ]);
 
 export const AUSSTATTUNG_VON_SLUG: Record<string, AusstattungsKategorie> = {
@@ -389,7 +455,7 @@ export const AUSSTATTUNG_VON_SLUG: Record<string, AusstattungsKategorie> = {
   "bathroom": "wesentliches", "heating": "wesentliches", "kitchen": "wesentliches",
   "kitchen_2": "wesentliches", "pet_friendly": "wesentliches", "pets_allowed": "wesentliches",
   "tv": "wesentliches", "washing_machine": "wesentliches", "wifi": "wesentliches",
-  "wireless_internet": "wesentliches",
+  "wireless_internet": "wesentliches", "nd_living_room": "wesentliches",
   // bad_waschkueche (45)
   "adapted_bath": "bad_waschkueche", "additional_bathroom": "bad_waschkueche",
   "additional_toilet": "bad_waschkueche", "bath": "bad_waschkueche",
@@ -403,7 +469,9 @@ export const AUSSTATTUNG_VON_SLUG: Record<string, AusstattungsKategorie> = {
   "higher_level_toilet": "bad_waschkueche", "hypoallergenic_pillow": "bad_waschkueche",
   "ironing_facilities": "bad_waschkueche", "laundry_facilities": "bad_waschkueche",
   "linen": "bad_waschkueche", "low_bathroom_sink": "bad_waschkueche",
-  "nd_wash_basin": "bad_waschkueche", "non_feather_pillow": "bad_waschkueche",
+  "nd_wash_basin": "bad_waschkueche", "nd_hot_water": "bad_waschkueche",
+  "nd_hangers": "bad_waschkueche", "nd_essentials": "bad_waschkueche",
+  "non_feather_pillow": "bad_waschkueche",
   "pajamas": "bad_waschkueche", "pool_towels": "bad_waschkueche",
   "roll_in_shower": "bad_waschkueche", "shampoo": "bad_waschkueche",
   "shared_bathroom": "bad_waschkueche", "shower": "bad_waschkueche",
@@ -421,6 +489,7 @@ export const AUSSTATTUNG_VON_SLUG: Record<string, AusstattungsKategorie> = {
   "bike_tours": "unterhaltung", "bikes_available_free": "unterhaltung",
   "billiard": "unterhaltung", "bingo": "unterhaltung", "blu_ray_player": "unterhaltung",
   "board_games_puzzles": "unterhaltung", "book_dvd_music_library_for_children": "unterhaltung",
+  "nd_books": "unterhaltung", "nd_childrens_books_toys": "unterhaltung",
   "bowling": "unterhaltung", "cable_channels": "unterhaltung", "canoeing": "unterhaltung",
   "casino": "unterhaltung", "cd_player": "unterhaltung",
   "children_television_networks": "unterhaltung", "clubhouse": "unterhaltung",
@@ -509,6 +578,9 @@ export const AUSSTATTUNG_VON_SLUG: Record<string, AusstattungsKategorie> = {
   "nd_charcoal_grill": "kueche_esszimmer", "nd_electric_grill": "kueche_esszimmer",
   "nd_gas_grill": "kueche_esszimmer", "nd_kitchen_stove": "kueche_esszimmer",
   "nd_rice_cooker": "kueche_esszimmer", "nd_spices": "kueche_esszimmer",
+  "nd_freezer": "kueche_esszimmer", "nd_dishes_silverware": "kueche_esszimmer",
+  "nd_baking_sheet": "kueche_esszimmer",
+  "nd_childrens_dinnerware": "kueche_esszimmer",
   "nd_vacuum_cleaner": "kueche_esszimmer", "nd_water_dispenser": "kueche_esszimmer",
   "nd_water_filter": "kueche_esszimmer", "on_site_coffee_house": "kueche_esszimmer",
   "outdoor_dining_area": "kueche_esszimmer", "oven": "kueche_esszimmer",
@@ -550,7 +622,7 @@ export const AUSSTATTUNG_VON_SLUG: Record<string, AusstattungsKategorie> = {
   "secured_parking": "parkplaetze", "street_parking": "parkplaetze",
   "sun_loungers_or_beach_chairs": "parkplaetze", "sun_terrace": "parkplaetze",
   "sun_umbrellas": "parkplaetze", "tennis_court": "parkplaetze", "terrace": "parkplaetze",
-  "valet_parking": "parkplaetze",
+  "valet_parking": "parkplaetze", "nd_hammock": "parkplaetze",
   // konditionen (47)
   "24_hour_front_desk": "konditionen", "accessible_by_lift": "konditionen",
   "ada_accessible": "konditionen", "adult_only": "konditionen",
@@ -568,7 +640,8 @@ export const AUSSTATTUNG_VON_SLUG: Record<string, AusstattungsKategorie> = {
   "nd_not_accessible": "konditionen", "nd_not_senior_friendly": "konditionen",
   "nd_pets_not_allowed": "konditionen", "nd_pets_on_request": "konditionen",
   "nd_senior_friendly": "konditionen", "nd_smoking_allowed": "konditionen",
-  "nd_smoking_not_allowed": "konditionen", "non_smoking_rooms": "konditionen",
+  "nd_smoking_not_allowed": "konditionen", "nd_long_stay": "konditionen",
+  "nd_single_level": "konditionen", "non_smoking_rooms": "konditionen",
   "pet_basket": "konditionen", "pet_bowls": "konditionen",
   "private_check_in_check_out": "konditionen",
   "property_is_wheel_chair_accessible": "konditionen", "rollaway_bed": "konditionen",
@@ -643,7 +716,8 @@ export const AUSSTATTUNG_VON_SLUG: Record<string, AusstattungsKategorie> = {
   "no_plastic_cups": "sonstiges", "no_plastic_cutlery": "sonstiges",
   "no_plastic_drink_bottles": "sonstiges", "no_plastic_stirrers": "sonstiges",
   "no_plastic_straws": "sonstiges", "no_plastic_toiletries": "sonstiges",
-  "no_plastic_water_bottles": "sonstiges", "physical_distancing_guidelines": "sonstiges",
+  "no_plastic_water_bottles": "sonstiges", "nd_recycling": "sonstiges",
+  "physical_distancing_guidelines": "sonstiges",
   "physical_distancing_in_dining_areas": "sonstiges", "propane_refilling_station": "sonstiges",
   "refillable_water_stations": "sonstiges", "rv_hookup": "sonstiges",
   "rv_sanitation": "sonstiges", "sewer_hookups": "sonstiges",
@@ -1001,6 +1075,10 @@ export const ZIMMER_SLUGS = [
   // getrennt vom Schlafzimmer — sie traegt Betten, aber keine eigene
   // Ausstattung).
   "schlafbereich",
+  // Airbnb fuehrt ihn als eigene Zimmerart (`laundry_room`) und im Konto
+  // AirSmil kommt er 9-mal vor — ohne eigenen Slug waere der Import gezwungen,
+  // ihn wegzuwerfen oder auf einen fremden Raum zu raten.
+  "hauswirtschaftsraum",
 ] as const;
 
 export type ZimmerSlug = (typeof ZIMMER_SLUGS)[number];
@@ -1018,6 +1096,7 @@ export const ZIMMER_LABELS: Record<string, string> = {
   wc: "WC",
   arbeitszimmer: "Arbeitszimmer",
   schlafbereich: "Schlafbereich",
+  hauswirtschaftsraum: "Hauswirtschaftsraum",
 };
 
 export type ZimmerZaehlwerk = {

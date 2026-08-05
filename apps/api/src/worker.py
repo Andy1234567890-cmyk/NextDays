@@ -49,6 +49,10 @@ _CHANNEX_JOB_TYPES = frozenset(
     {"sync_property_content", "sync_property_taxes",
      # Airbnb-Rabattregeln je Listing (GET+PUT pricing_settings pro Mapping).
      "sync_airbnb_aktionen",
+     # Ausstattung an Airbnbs eigene API. Der Schreibaufruf selbst geht NICHT an
+     # Channex — der OAuth-Token dafür aber schon (`get_channel`), also zählt der
+     # Job mit, sonst umginge er das kontoweite Limit.
+     "sync_airbnb_ausstattung",
      "reconcile_tenant", "push_ari", "process_ari_outbox",
      "process_restriction_outbox",
      # recompute_property pusht die meisten Rate-Calls (Tagespreise über den
@@ -94,6 +98,14 @@ ICAL_BATCH = 25                      # pro Tick höchstens so viele Feeds (Fairn
 # (booking_* → sync_bookings_feed-Job); dieser Tick fängt verlorene Webhooks ab
 # (Channex wiederholt max. ~24h, danach wäre die Buchung ohne Backstop weg).
 BOOKINGS_TICK_SECONDS = 5 * 60
+# Zeit-Tick: Ereignis-Journal (Airbnbs `live_feed`). Der Buchungs-Feed oben ist
+# eine Arbeitswarteschlange und kennt NUR Buchungen — für alles andere
+# (Sync-Fehler, Airbnb-Systemmeldungen und vor allem die handlungspflichtigen
+# Anfragen) war der Webhook bisher der EINZIGE Weg. Ging er verloren, war das
+# Ereignis weg. Das Journal ist der Nachhol-Weg; 5 Minuten, weil Airbnb eine
+# unbeantwortete Anfrage nach etwa 24 Stunden selbst ablehnt und der Betrieb
+# davon möglichst früh erfahren muss.
+LIVE_FEED_TICK_SECONDS = 5 * 60
 # Restzahlungen (Split-Payment): stündlich die fälligen 'balance'-Zeilen
 # off-session belasten. Stündlich reicht (Fälligkeit ist tagesgenau), hält aber
 # die Stripe-Last niedrig.
@@ -215,6 +227,21 @@ def _handle_sync_airbnb_aktionen(
     if not svc.is_channex_configured:
         return
     svc.sync_airbnb_aktionen(payload["tenant_id"], payload["property_id"])
+
+
+def _handle_sync_airbnb_ausstattung(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Ausstattung direkt an Airbnbs API schreiben.
+
+    Neben dem Channex-Content-Sync, nicht statt seiner: was keinen Channex-
+    Facility-Eintrag hat, käme sonst bei Airbnb nie an. Ein Fehler kippt den Job
+    auf Retry (Wurzel 5) — stillschweigend „erledigt" zu melden hieße, die
+    Auswahl gilt bei uns und nicht bei Airbnb."""
+    svc = _svc(db, budget)
+    if not svc.is_channex_configured:
+        return
+    svc.sync_airbnb_ausstattung(payload["tenant_id"], payload["property_id"])
 
 
 def _handle_reconcile_tenant(
@@ -375,6 +402,19 @@ def _handle_sync_bookings_feed(
                     saved=result.saved, skipped=result.skipped)
 
 
+def _handle_sync_live_feed(
+    db: Client, _payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Airbnbs Ereignis-Journal nachziehen (`GET live_feed`).
+
+    Backstop für ALLES, was keine Buchung ist. Idempotent über die
+    Channex-Ereignis-ID (UNIQUE-Index in 0284) — ein zweiter Lauf schreibt
+    nichts doppelt."""
+    ergebnis = _svc(db, budget).live_feed_nachziehen()
+    if ergebnis.get("neu"):
+        log.info("sync_live_feed_neu", **ergebnis)
+
+
 def _handle_import_ari_property(
     db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
 ) -> None:
@@ -428,6 +468,7 @@ HANDLERS: dict[
     "sync_property_content": _handle_sync_property_content,
     "sync_property_taxes": _handle_sync_property_taxes,
     "sync_airbnb_aktionen": _handle_sync_airbnb_aktionen,
+    "sync_airbnb_ausstattung": _handle_sync_airbnb_ausstattung,
     "reconcile_tenant": _handle_reconcile_tenant,
     "reconcile_rate_plan_prices": _handle_reconcile_rate_plan_prices,
     "recompute_property": _handle_recompute_property,
@@ -435,6 +476,7 @@ HANDLERS: dict[
     "process_ari_outbox": _handle_process_ari_outbox,
     "process_restriction_outbox": _handle_process_restriction_outbox,
     "sync_bookings_feed": _handle_sync_bookings_feed,
+    "sync_live_feed": _handle_sync_live_feed,
     "import_ari_property": _handle_import_ari_property,
     "full_sync_property": _handle_full_sync_property,
 }
@@ -457,6 +499,7 @@ class Worker:
         self._last_outbox_tick = 0.0
         self._last_ical_tick = 0.0
         self._last_bookings_tick = 0.0
+        self._last_live_feed_tick = 0.0
         self._last_balance_tick = 0.0
         self._last_payout_tick = 0.0
         self._last_commission_tick = 0.0
@@ -943,6 +986,24 @@ class Worker:
         except Exception as exc:  # noqa: BLE001
             log.warning("bookings_tick_failed", error=str(exc)[:200])
 
+    async def _live_feed_tick(self, loop_time: float) -> None:
+        """Alle 5 min das Ereignis-Journal nachziehen (Backstop zum Webhook).
+
+        Konstanter Dedup-Key wie beim Buchungs-Feed: N Worker-Instanzen erzeugen
+        höchstens EINEN Job, und zwei parallele Läufe können sich nicht
+        gegenseitig die Seiten wegziehen."""
+        if loop_time - self._last_live_feed_tick < LIVE_FEED_TICK_SECONDS:
+            return
+        self._last_live_feed_tick = loop_time
+        try:
+            await asyncio.to_thread(
+                enqueue,
+                self._db, "sync_live_feed",
+                payload={}, dedup_key="sync_live_feed",
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("live_feed_tick_failed", error=str(exc)[:200])
+
     def _enqueue_full_sync_nightly(self) -> None:
         """Im nächtlichen UTC-Fenster je aktiver Channex-Property EINEN
         full_sync_property-Job pro Tag einreihen (Channex-Doku: „daily full
@@ -1063,6 +1124,7 @@ class Worker:
             await self._outbox_tick(loop_time)
             await self._ical_tick(loop_time)
             await self._bookings_tick(loop_time)
+            await self._live_feed_tick(loop_time)
             await self._balance_tick(loop_time)
             await self._payout_tick(loop_time)
             await self._commission_tick(loop_time)

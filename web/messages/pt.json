@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Importado do Airbnb e mantido no myNextDays e myBestDays — os portais de reservas não aceitam a distribuição de camas.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Descrição",
           "max_guests": "Número de hóspedes",
           "street": "Rua",
-          "house_number": "Número"
+          "house_number": "Número",
+          "zimmer": "Divisões",
+          "beds": "Camas",
+          "airbnbRaeume": "Distribuição das divisões",
+          "airbnbStorno": "Condições de cancelamento",
+          "airbnbSofortbuchung": "Reserva imediata",
+          "airbnbTexte": "Textos",
+          "internal_name": "Nome interno",
+          "policies": "Regras",
+          "rentalAgreement": "Contrato de arrendamento",
+          "messaging": "Mensagens",
+          "kinderErlaubt": "Crianças permitidas",
+          "babysErlaubt": "Bebés permitidos",
+          "haustiereErlaubt": "Animais permitidos",
+          "rauchenErlaubt": "Fumar permitido",
+          "feiernErlaubt": "Festas permitidas",
+          "haustiereMax": "Máximo de animais"
         },
         "photosTaken": "{count} fotos importadas do Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Governanta incluída",
     "nd_housekeeper_optional": "Governanta opcional",
     "nd_laundry_included": "Serviço de lavandaria incluído",
-    "nd_laundry_optional": "Serviço de lavandaria opcional"
+    "nd_laundry_optional": "Serviço de lavandaria opcional",
+    "nd_living_room": "Sala de estar privada",
+    "nd_long_stay": "Estadias longas permitidas",
+    "nd_single_level": "Tudo no mesmo piso",
+    "nd_recycling": "Reciclagem",
+    "nd_hammock": "Rede de descanso",
+    "nd_freezer": "Congelador",
+    "nd_hangers": "Cabides",
+    "nd_hot_water": "Água quente",
+    "nd_dishes_silverware": "Louça e talheres",
+    "nd_baking_sheet": "Tabuleiro de forno",
+    "nd_essentials": "Artigos essenciais",
+    "nd_books": "Livros",
+    "nd_childrens_books_toys": "Livros e brinquedos infantis",
+    "nd_childrens_dinnerware": "Louça infantil"
   },
   "zimmer": {
     "balkon": "Varanda",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terraço",
     "wc": "Lavabo",
     "arbeitszimmer": "Escritório",
-    "schlafbereich": "Zona de dormir"
+    "schlafbereich": "Zona de dormir",
+    "hauswirtschaftsraum": "Lavandaria"
   },
   "reviews": {
     "title": "Avaliações",

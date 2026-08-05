@@ -317,6 +317,16 @@ class ObjektKanalMixin:
                 "id", kanalplan[0]["id"]
             ).execute()
             self.sync_content(tenant_id, property_id=property_id)
+            # Auch hier die Zuordnung sicherstellen: existiert der Kanal-Plan
+            # schon, lief bisher NUR das Update — ob er am Kanal überhaupt
+            # zugeordnet ist, prüfte niemand. Bei „Feriehus Grævlinge" war er es
+            # nicht (Kanal mit 0 Mappings), der Aufschlag blieb eine reine
+            # Bildschirmangabe. Der Swap unten ist idempotent: ist die Rate
+            # bereits zugeordnet, ändert er nichts.
+            self._swap_channel_rate_plan(
+                db, tenant_id, channel_id,
+                von_lokal=primary_id, nach_lokal=kanalplan[0]["id"],
+            )
         else:
             db.table("rate_plans").insert({
                 "property_id": property_id,
@@ -391,15 +401,90 @@ class ObjektKanalMixin:
                 {"rate_plan_id": rid, "settings": p.get("settings") or {}}
             )
         if not getauscht:
-            log.warning(
-                "portal_adjustment_swap_ohne_treffer",
-                channel_id=channel_id, von=von_cx, nach=nach_cx,
-            )
+            # Nichts zu tauschen. Zwei sehr verschiedene Lagen — die Reihenfolge
+            # der Prüfung ist der Punkt:
+            #
+            # (a) Die ZIEL-Rate ist bereits zugeordnet. Dann ist alles in
+            #     Ordnung und es gibt nichts zu tun. Ohne diese Prüfung lief der
+            #     Code in `POST …/mappings` und Channex antwortete 422 „rate plan
+            #     already exists" — das Speichern schlug fehl, obwohl der Zustand
+            #     stimmte (Wurzel 2).
+            # (b) Der Kanal trägt für dieses Objekt gar keine Rate. Dann wird die
+            #     Zuordnung angelegt, statt still zurückzukehren: sonst stünde
+            #     der Aufschlag in der Oberfläche und ginge an kein Portal.
+            #
+            # Angelegt wird über `POST …/mappings` — NICHT über das rate_plans-
+            # Array unten: `PUT channels/{id}` antwortet darauf 200 und speichert
+            # nichts (live gemessen, siehe `create_channel_mapping`).
+            if any(p.get("rate_plan_id") == nach_cx for p in plans):
+                return
+            self._kanal_zuordnung_anlegen(db, channel_id, nach_cx, nach_lokal)
             return
         try:
             self._channex.update_channel(channel_id, {"rate_plans": neu_plans})
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
+
+    def _kanal_zuordnung_anlegen(
+        self, db: Client, channel_id: str, channex_rate_plan_id: str,
+        lokaler_plan_id: str,
+    ) -> None:
+        """Den Kanal-Plan erstmalig am Kanal zuordnen (`POST …/mappings`).
+
+        Nötig, wenn der Kanal für dieses Objekt noch keine Rate trägt — dann
+        gibt es nichts zu tauschen, und ohne diesen Schritt bliebe der Aufschlag
+        eine reine Bildschirmangabe.
+
+        Airbnb nimmt GENAU EINE Rate je Anzeige („Airbnb allows you to map only
+        1 rate plan"), deshalb ist die Listing-ID der Schlüssel. Sie steht am
+        Objekt (`properties.airbnb_listing_id`); fehlt sie, ist das Objekt keine
+        Airbnb-Anzeige und es gibt nichts zuzuordnen — das wird gesagt, nicht
+        stillschweigend übergangen (Wurzel 5).
+        """
+        plan = (
+            db.table("rate_plans")
+            .select("property_id")
+            .eq("id", lokaler_plan_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not plan:
+            raise ChannelManagerError("Preisplan nicht gefunden.", status_code=422)
+        prop = (
+            db.table("properties")
+            .select("airbnb_listing_id")
+            .eq("id", plan[0]["property_id"])
+            .limit(1)
+            .execute()
+        ).data or []
+        listing_id = prop[0].get("airbnb_listing_id") if prop else None
+        if not listing_id:
+            raise ChannelManagerError(
+                "Dieses Objekt ist bei Airbnb noch nicht zugeordnet. Rufe es "
+                "zuerst unter „Synchronisierung“ bei Airbnb ab.",
+                status_code=422,
+            )
+        try:
+            self._channex.create_channel_mapping(  # type: ignore[attr-defined]
+                channel_id, channex_rate_plan_id, {"listing_id": str(listing_id)}
+            )
+        except ChannexError as exc:
+            # „rate plan already exists" ist kein Fehler, sondern der Zielzustand
+            # (Wurzel 2). Channex kennt die Zuordnung besser als unsere Sicht auf
+            # das Kanal-Objekt — daraus einen 422 an den Nutzer zu machen hieße,
+            # ein gelungenes Speichern als gescheitert zu melden.
+            if "already exists" in str(exc).lower():
+                log.info(
+                    "portal_adjustment_mapping_bestand_bereits",
+                    channel_id=channel_id, rate_plan_id=channex_rate_plan_id,
+                )
+                return
+            raise self._wrap_channex(exc) from exc
+        log.info(
+            "portal_adjustment_mapping_angelegt",
+            channel_id=channel_id, rate_plan_id=channex_rate_plan_id,
+            listing_id=str(listing_id),
+        )
 
     @staticmethod
     def _channex_id_for_local_plan(

@@ -144,6 +144,29 @@ def try_enqueue_airbnb_aktionen(
                     error=str(exc)[:200])
 
 
+def try_enqueue_airbnb_ausstattung(
+    db: Client, tenant_id: str, property_id: str
+) -> None:
+    """Ausstattung direkt an Airbnb nachziehen (coalesced je Objekt).
+
+    Eigener Weg NEBEN dem Channex-Content-Sync, kein Ersatz dafür: Channex
+    kennt nur seinen Facility-Katalog, und ein großer Teil der Airbnb-Merkmale
+    (Parkvarianten, Hängematte, Mülltrennung, Langzeitaufenthalte …) hat dort
+    kein Feld — mangels Facility-UUID fiele es beim Sync still unter den Tisch.
+
+    Coalescing ist hier richtig: der Job überträgt immer die VOLLE Soll-Liste
+    beider Spalten, „letzter gewinnt" verliert also nichts."""
+    try:
+        enqueue(
+            db, "sync_airbnb_ausstattung", tenant_id=tenant_id,
+            payload={"tenant_id": tenant_id, "property_id": property_id},
+            dedup_key=dedup_key(tenant_id, property_id, "sync_airbnb_ausstattung"),
+        )
+    except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+        log.warning("enqueue_airbnb_ausstattung_failed", property_id=property_id,
+                    error=str(exc)[:200])
+
+
 def try_enqueue_recompute(db: Client, tenant_id: str, property_id: str) -> None:
     """DP-Recompute eines Objekts als Job einreihen (coalesced je Objekt). Der
     Handler rechnet die Tagespreise neu und pusht sie via push_rates_batch."""

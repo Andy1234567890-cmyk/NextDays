@@ -37,6 +37,7 @@ from .common import (
 from .content_sync import ContentSyncMixin
 from .csv_import import CsvImportMixin
 from .full_sync import FullSyncMixin
+from .live_feed_sync import LiveFeedSyncMixin
 from .lodgify_import import LodgifyImportMixin
 from .oauth_channels import OAuthChannelsMixin
 from .objekt_kanal import ObjektKanalMixin
@@ -84,6 +85,7 @@ class ChannelManagerService(
     AirbnbDiagnoseMixin,
     ObjektKanalMixin,
     BookingsSyncMixin,
+    LiveFeedSyncMixin,
     OtaExtrasMixin,
     ReviewsSyncMixin,
     FullSyncMixin,

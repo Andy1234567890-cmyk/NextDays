@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Hämtas från Airbnb och stannar i myNextDays och myBestDays — bokningsportalerna tar inte emot sängöversikter.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Beskrivning",
           "max_guests": "Antal gäster",
           "street": "Gata",
-          "house_number": "Husnummer"
+          "house_number": "Husnummer",
+          "zimmer": "Rum",
+          "beds": "Sovplatser",
+          "airbnbRaeume": "Rumsfördelning",
+          "airbnbStorno": "Avbokningsvillkor",
+          "airbnbSofortbuchung": "Direktbokning",
+          "airbnbTexte": "Texter",
+          "internal_name": "Internt namn",
+          "policies": "Riktlinjer",
+          "rentalAgreement": "Hyresavtal",
+          "messaging": "Meddelanden",
+          "kinderErlaubt": "Barn tillåtna",
+          "babysErlaubt": "Spädbarn tillåtna",
+          "haustiereErlaubt": "Husdjur tillåtna",
+          "rauchenErlaubt": "Rökning tillåten",
+          "feiernErlaubt": "Fester tillåtna",
+          "haustiereMax": "Max antal husdjur"
         },
         "photosTaken": "{count} bilder hämtade från Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Hushållerska ingår",
     "nd_housekeeper_optional": "Hushållerska valfritt",
     "nd_laundry_included": "Tvättservice ingår",
-    "nd_laundry_optional": "Tvättservice valfritt"
+    "nd_laundry_optional": "Tvättservice valfritt",
+    "nd_living_room": "Eget vardagsrum",
+    "nd_long_stay": "Långtidsboende möjligt",
+    "nd_single_level": "Allt på ett plan",
+    "nd_recycling": "Källsortering",
+    "nd_hammock": "Hängmatta",
+    "nd_freezer": "Frys",
+    "nd_hangers": "Klädhängare",
+    "nd_hot_water": "Varmvatten",
+    "nd_dishes_silverware": "Porslin och bestick",
+    "nd_baking_sheet": "Bakplåt",
+    "nd_essentials": "Basutrustning",
+    "nd_books": "Böcker",
+    "nd_childrens_books_toys": "Barnböcker och leksaker",
+    "nd_childrens_dinnerware": "Barnservis"
   },
   "zimmer": {
     "balkon": "Balkong",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terrass",
     "wc": "Toalett",
     "arbeitszimmer": "Arbetsrum",
-    "schlafbereich": "Sovdel"
+    "schlafbereich": "Sovdel",
+    "hauswirtschaftsraum": "Tvättstuga"
   },
   "reviews": {
     "title": "Omdömen",

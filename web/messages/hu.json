@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Az Airbnb-ből érkezik, és a myNextDays és myBestDays rendszerben marad — a foglalási portálok nem fogadnak ágyelrendezést.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Leírás",
           "max_guests": "Vendégek száma",
           "street": "Utca",
-          "house_number": "Házszám"
+          "house_number": "Házszám",
+          "zimmer": "Szobák",
+          "beds": "Alvóhelyek",
+          "airbnbRaeume": "Helyiségek elosztása",
+          "airbnbStorno": "Lemondási feltételek",
+          "airbnbSofortbuchung": "Azonnali foglalás",
+          "airbnbTexte": "Szövegek",
+          "internal_name": "Belső név",
+          "policies": "Szabályok",
+          "rentalAgreement": "Bérleti szerződés",
+          "messaging": "Üzenetek",
+          "kinderErlaubt": "Gyermekek engedélyezve",
+          "babysErlaubt": "Csecsemők engedélyezve",
+          "haustiereErlaubt": "Háziállatok engedélyezve",
+          "rauchenErlaubt": "Dohányzás engedélyezve",
+          "feiernErlaubt": "Rendezvények engedélyezve",
+          "haustiereMax": "Háziállatok maximum"
         },
         "photosTaken": "{count} fotó importálva az Airbnb-ről"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Házvezető(nő) az árban",
     "nd_housekeeper_optional": "Házvezető(nő) igény szerint",
     "nd_laundry_included": "Mosodai szolgáltatás az árban",
-    "nd_laundry_optional": "Mosodai szolgáltatás igény szerint"
+    "nd_laundry_optional": "Mosodai szolgáltatás igény szerint",
+    "nd_living_room": "Saját nappali",
+    "nd_long_stay": "Hosszú távú tartózkodás lehetséges",
+    "nd_single_level": "Minden egy szinten",
+    "nd_recycling": "Szelektív hulladékgyűjtés",
+    "nd_hammock": "Függőágy",
+    "nd_freezer": "Fagyasztó",
+    "nd_hangers": "Vállfák",
+    "nd_hot_water": "Melegvíz",
+    "nd_dishes_silverware": "Edények és evőeszközök",
+    "nd_baking_sheet": "Sütőlemez",
+    "nd_essentials": "Alapfelszerelés",
+    "nd_books": "Könyvek",
+    "nd_childrens_books_toys": "Gyerekkönyvek és játékok",
+    "nd_childrens_dinnerware": "Gyerekétkészlet"
   },
   "zimmer": {
     "balkon": "Erkély",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terasz",
     "wc": "WC",
     "arbeitszimmer": "Dolgozószoba",
-    "schlafbereich": "Alvórész"
+    "schlafbereich": "Alvórész",
+    "hauswirtschaftsraum": "Mosókonyha"
   },
   "reviews": {
     "title": "Értékelések",

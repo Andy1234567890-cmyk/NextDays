@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Jinġieb minn Airbnb u jibqa' f'myNextDays u myBestDays — il-portali tal-ibbukkjar ma jaċċettawx tqassim tas-sodod.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Deskrizzjoni",
           "max_guests": "Numru ta' mistednin",
           "street": "Triq",
-          "house_number": "Numru"
+          "house_number": "Numru",
+          "zimmer": "Kmamar",
+          "beds": "Postijiet tal-irqad",
+          "airbnbRaeume": "Tqassim tal-kmamar",
+          "airbnbStorno": "Kundizzjonijiet ta' kanċellazzjoni",
+          "airbnbSofortbuchung": "Bbukkjar immedjat",
+          "airbnbTexte": "Testi",
+          "internal_name": "Isem intern",
+          "policies": "Regoli",
+          "rentalAgreement": "Ftehim ta' kiri",
+          "messaging": "Messaġġi",
+          "kinderErlaubt": "Tfal permessi",
+          "babysErlaubt": "Trabi permessi",
+          "haustiereErlaubt": "Annimali permessi",
+          "rauchenErlaubt": "Tipjip permess",
+          "feiernErlaubt": "Parties permessi",
+          "haustiereMax": "Massimu annimali"
         },
         "photosTaken": "{count} ritratti importati minn Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Persuna tan-nadif inkluża",
     "nd_housekeeper_optional": "Persuna tan-nadif mhux obbligatorja",
     "nd_laundry_included": "Servizz tal-ħasil inkluż",
-    "nd_laundry_optional": "Servizz tal-ħasil mhux obbligatorju"
+    "nd_laundry_optional": "Servizz tal-ħasil mhux obbligatorju",
+    "nd_living_room": "Salott privat",
+    "nd_long_stay": "Soġġorni fit-tul permessi",
+    "nd_single_level": "Kollox fuq livell wieħed",
+    "nd_recycling": "Riċiklaġġ",
+    "nd_hammock": "Branda mdendla",
+    "nd_freezer": "Friża",
+    "nd_hangers": "Hangers",
+    "nd_hot_water": "Ilma sħun",
+    "nd_dishes_silverware": "Platti u pożati",
+    "nd_baking_sheet": "Trej tal-forn",
+    "nd_essentials": "Tagħmir bażiku",
+    "nd_books": "Kotba",
+    "nd_childrens_books_toys": "Kotba u ġugarelli għat-tfal",
+    "nd_childrens_dinnerware": "Platti għat-tfal"
   },
   "zimmer": {
     "balkon": "Gallarija",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terrazza",
     "wc": "Toilet",
     "arbeitszimmer": "Studju",
-    "schlafbereich": "Żona tal-irqad"
+    "schlafbereich": "Żona tal-irqad",
+    "hauswirtschaftsraum": "Kamra tal-ħasil"
   },
   "reviews": {
     "title": "Reċensjonijiet",

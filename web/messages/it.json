@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Importato da Airbnb e mantenuto in myNextDays e myBestDays — i portali di prenotazione non accettano la disposizione dei letti.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Descrizione",
           "max_guests": "Numero di ospiti",
           "street": "Via",
-          "house_number": "Numero civico"
+          "house_number": "Numero civico",
+          "zimmer": "Stanze",
+          "beds": "Posti letto",
+          "airbnbRaeume": "Distribuzione degli ambienti",
+          "airbnbStorno": "Condizioni di cancellazione",
+          "airbnbSofortbuchung": "Prenotazione immediata",
+          "airbnbTexte": "Testi",
+          "internal_name": "Nome interno",
+          "policies": "Regole",
+          "rentalAgreement": "Contratto di locazione",
+          "messaging": "Messaggi",
+          "kinderErlaubt": "Bambini ammessi",
+          "babysErlaubt": "Neonati ammessi",
+          "haustiereErlaubt": "Animali ammessi",
+          "rauchenErlaubt": "Fumo consentito",
+          "feiernErlaubt": "Feste consentite",
+          "haustiereMax": "Animali massimo"
         },
         "photosTaken": "{count} foto importate da Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Servizio di governante incluso",
     "nd_housekeeper_optional": "Servizio di governante opzionale",
     "nd_laundry_included": "Servizio lavanderia incluso",
-    "nd_laundry_optional": "Servizio lavanderia opzionale"
+    "nd_laundry_optional": "Servizio lavanderia opzionale",
+    "nd_living_room": "Soggiorno privato",
+    "nd_long_stay": "Soggiorni lunghi consentiti",
+    "nd_single_level": "Tutto su un piano",
+    "nd_recycling": "Raccolta differenziata",
+    "nd_hammock": "Amaca",
+    "nd_freezer": "Congelatore",
+    "nd_hangers": "Grucce",
+    "nd_hot_water": "Acqua calda",
+    "nd_dishes_silverware": "Stoviglie e posate",
+    "nd_baking_sheet": "Teglia da forno",
+    "nd_essentials": "Dotazione di base",
+    "nd_books": "Libri",
+    "nd_childrens_books_toys": "Libri e giochi per bambini",
+    "nd_childrens_dinnerware": "Stoviglie per bambini"
   },
   "zimmer": {
     "balkon": "Balcone",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terrazza",
     "wc": "WC",
     "arbeitszimmer": "Studio",
-    "schlafbereich": "Zona notte"
+    "schlafbereich": "Zona notte",
+    "hauswirtschaftsraum": "Lavanderia"
   },
   "reviews": {
     "title": "Recensioni",

@@ -225,9 +225,21 @@ function AirbnbAbruf({ propertyId }: { propertyId: string }) {
           {result.uebernommene_felder.length > 0 && (
             <span className="text-muted-foreground">
               {t("alsoTaken", {
-                fields: result.uebernommene_felder
-                  .map((f) => t(`field.${f}`))
-                  .join(", "),
+                // Die Feldnamen kommen aus VIER Backend-Quellen (Preis-Extras,
+                // Content, listing_details, Hausregeln). Ein dort neu
+                // hinzugekommener Name ohne Übersetzung darf die Erfolgsmeldung
+                // nicht sprengen — `t()` wirft bei MISSING_MESSAGE. Dann steht
+                // der Rohname da: unschön, aber ehrlich und ohne Absturz.
+                // Entdoppelt nach LABEL, nicht nach Feldname: `lat` und `lng`
+                // sind zwei Felder, aber eine Angabe („Koordinaten") — sonst
+                // steht sie zweimal in der Aufzählung.
+                fields: [
+                  ...new Set(
+                    result.uebernommene_felder.map((f) =>
+                      t.has(`field.${f}`) ? t(`field.${f}`) : f,
+                    ),
+                  ),
+                ].join(", "),
               })}
             </span>
           )}

@@ -20,6 +20,7 @@ from src.features.auth.staff_scope import is_staff, staff_property_ids
 from src.jobs.queue import (
     enqueue,
     try_enqueue_airbnb_aktionen,
+    try_enqueue_airbnb_ausstattung,
     try_enqueue_ari,
     try_enqueue_content_sync,
     try_enqueue_recompute,
@@ -587,6 +588,13 @@ class PropertiesService(
         # Gegenzustand muss mitgepflegt werden).
         if laengenpreise_geaendert(alte_attrs, changes):
             try_enqueue_airbnb_aktionen(self._db, tenant_id, property_id)
+        # Ausstattung zusätzlich DIREKT an Airbnb: der Channex-Content-Sync oben
+        # trägt nur, was einen Channex-Facility-Eintrag hat. Alles andere
+        # (Parkvarianten, Hängematte, Mülltrennung, Langzeitaufenthalte …) kennt
+        # Channex nicht und ließe es mangels UUID still fallen — die Auswahl sähe
+        # gespeichert aus und käme bei Airbnb nie an.
+        if {"amenities", "room_amenities"} & changes.keys():
+            try_enqueue_airbnb_ausstattung(self._db, tenant_id, property_id)
         # Maximalaufenthalt (Verfügbarkeits-Formular) an die Portale spiegeln,
         # sobald type_attributes sich ändert — sonst bliebe die Obergrenze bei
         # Booking/Airbnb veraltet. Best-effort, blockiert das Speichern nie.

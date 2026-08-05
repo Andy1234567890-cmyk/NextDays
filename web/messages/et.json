@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Võetakse Airbnb-st ja jääb myNextDays'i ja myBestDays'i — broneerimisportaalid voodite jaotust vastu ei võta.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Kirjeldus",
           "max_guests": "Külaliste arv",
           "street": "Tänav",
-          "house_number": "Majanumber"
+          "house_number": "Majanumber",
+          "zimmer": "Toad",
+          "beds": "Magamiskohad",
+          "airbnbRaeume": "Ruumijaotus",
+          "airbnbStorno": "Tühistamistingimused",
+          "airbnbSofortbuchung": "Kohene broneerimine",
+          "airbnbTexte": "Tekstid",
+          "internal_name": "Sisemine nimi",
+          "policies": "Reeglid",
+          "rentalAgreement": "Üürileping",
+          "messaging": "Sõnumid",
+          "kinderErlaubt": "Lapsed lubatud",
+          "babysErlaubt": "Imikud lubatud",
+          "haustiereErlaubt": "Lemmikloomad lubatud",
+          "rauchenErlaubt": "Suitsetamine lubatud",
+          "feiernErlaubt": "Peod lubatud",
+          "haustiereMax": "Lemmikloomi kuni"
         },
         "photosTaken": "{count} fotot imporditud Airbnb-st"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Majapidaja sisaldub",
     "nd_housekeeper_optional": "Majapidaja valikuline",
     "nd_laundry_included": "Pesuteenus sisaldub",
-    "nd_laundry_optional": "Pesuteenus valikuline"
+    "nd_laundry_optional": "Pesuteenus valikuline",
+    "nd_living_room": "Oma elutuba",
+    "nd_long_stay": "Pikaajaline viibimine võimalik",
+    "nd_single_level": "Kõik ühel korrusel",
+    "nd_recycling": "Jäätmete sortimine",
+    "nd_hammock": "Võrkkiik",
+    "nd_freezer": "Sügavkülmik",
+    "nd_hangers": "Riidepuud",
+    "nd_hot_water": "Soe vesi",
+    "nd_dishes_silverware": "Nõud ja söögiriistad",
+    "nd_baking_sheet": "Ahjuplaat",
+    "nd_essentials": "Põhivarustus",
+    "nd_books": "Raamatud",
+    "nd_childrens_books_toys": "Lasteraamatud ja mänguasjad",
+    "nd_childrens_dinnerware": "Lastenõud"
   },
   "zimmer": {
     "balkon": "Rõdu",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terrass",
     "wc": "WC",
     "arbeitszimmer": "Töötuba",
-    "schlafbereich": "Magamisala"
+    "schlafbereich": "Magamisala",
+    "hauswirtschaftsraum": "Pesuruum"
   },
   "reviews": {
     "title": "Arvustused",

@@ -1,10 +1,22 @@
 """Reine Tests für die Airbnb-OAuth-Helfer (DB-/Client-frei)."""
+import pytest
+
 from src.features.channel_manager import airbnb_oauth
 
 
 def test_connection_settings_defaults() -> None:
+    """Standard ist der BRUTTObetrag — der Geldpfad rechnet damit.
+
+    Vorher stand hier „Payout Amount" (Betrag NACH Abzug der Airbnb-Host-Fee),
+    während `bookings_sync` denselben Wert als Bruttobetrag verbucht: als
+    `paid_amount` („der Gast hat das bezahlt"), als Grundlage unserer Provision
+    und als Wert, von dem Portalgebühren erst noch abgezogen werden. Damit wurde
+    die Host-Fee doppelt abgezogen und unsere Provision zu niedrig fakturiert.
+    Airbnb erlaubt beide Werte — wir müssen den bestellen, der zur Buchhaltung
+    passt.
+    """
     s = airbnb_oauth.connection_settings(None)
-    assert s["booking_amount_settings"] == "Payout Amount"
+    assert s["booking_amount_settings"] == "Total Paid Amount"
     assert s["min_stay_type"] == "Arrival"
     assert s["cohost_payout_calculations"] is False
     assert s["send_email_notifications"] is False
@@ -100,3 +112,24 @@ def test_parse_status_token_invalid() -> None:
 def test_parse_status_empty_channel() -> None:
     # Robust gegen fehlende data/attributes (kein Crash).
     assert airbnb_oauth.parse_connection_status({})["connected"] is False
+
+
+def test_unbekannte_betragsart_wird_abgewiesen() -> None:
+    """Ein Tippfehler hier entscheidet über JEDEN Buchungsbetrag des Kanals."""
+    with pytest.raises(ValueError, match="booking_amount_settings"):
+        airbnb_oauth.connection_settings({"booking_amount_settings": "Netto"})
+
+
+def test_unbekannter_min_stay_typ_wird_abgewiesen() -> None:
+    """Airbnb kennt nur „Arrival" und „Through" — „both" gibt es dort nicht."""
+    with pytest.raises(ValueError, match="min_stay_type"):
+        airbnb_oauth.connection_settings({"min_stay_type": "both"})
+
+
+def test_benachrichtigung_ohne_mail_ist_ein_fehler() -> None:
+    """Airbnb: `email` ist Pflicht, sobald Benachrichtigungen an sind.
+
+    Fail-closed (Wurzel 5) statt einer Verbindung, die Channex still ablehnt.
+    """
+    with pytest.raises(ValueError, match="E-Mail"):
+        airbnb_oauth.connection_settings({"send_email_notifications": True})

@@ -9,12 +9,15 @@ werden.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from src.core.security import AuthContext
 
 from .channex_client import ChannexError
 from .common import ChannelManagerError, log, nur_uuids
+
+if TYPE_CHECKING:
+    from .schemas import AirbnbAnfrageAntwort
 
 
 def _rows(res: dict[str, Any]) -> list[dict[str, Any]]:
@@ -560,7 +563,10 @@ class OtaExtrasMixin:
         db = self._require_db()
         q = (
             db.table("channex_webhook_event")
-            .select("id, property_id, event, payload, severity, resolved, created_at")
+            .select(
+                "id, property_id, event, payload, severity, resolved, created_at, "
+                "live_feed_event_id, resolution, resolved_at"
+            )
             .eq("tenant_id", tenant_id)
             .order("created_at", desc=True)
             .limit(max(1, min(limit, 200)))
@@ -571,7 +577,13 @@ class OtaExtrasMixin:
 
     def resolve_webhook_event(self, ctx: AuthContext, event_id: str) -> None:
         """Ereignis als erledigt markieren (tenant-gescopt über das Update-Filter
-        selbst — kein ungescoptes Load)."""
+        selbst — kein ungescoptes Load).
+
+        Das ist die reine LOKALE Quittung („gesehen, kümmert sich jemand"). Eine
+        Airbnb-Anfredge zu BEANTWORTEN ist etwas anderes und läuft über
+        `airbnb_anfrage_aufloesen` — sonst hielte der Betrieb ein Ereignis für
+        erledigt, während der Gast bei Airbnb weiter wartet.
+        """
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
         updated = (
@@ -583,6 +595,143 @@ class OtaExtrasMixin:
         ).data or []
         if not updated:
             raise ChannelManagerError("Ereignis nicht gefunden.", status_code=404)
+
+    # -- Airbnb-Anfragen beantworten (LiveFeedEvents) --------------------------
+    def _require_airbnb_anfrage(
+        self, ctx: AuthContext, event_id: str
+    ) -> tuple[str, dict[str, Any]]:
+        """Die eine Anfrage laden — gescopt, und nur wenn sie auflösbar ist.
+
+        Wurzel 3: Load und Scope bleiben zusammen. Wurzel 9: dieselbe Prüfung wie
+        im Listenpfad (tenant), plus die Sachprüfungen, ohne die ein Aufruf bei
+        Airbnb sinnlos oder schädlich wäre.
+        """
+        from .airbnb_anfragen import AUFLOESBARE_EVENTS
+
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        zeilen = (
+            db.table("channex_webhook_event")
+            .select("id, event, severity, resolved, live_feed_event_id, property_id")
+            .eq("id", event_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not zeilen:
+            raise ChannelManagerError("Ereignis nicht gefunden.", status_code=404)
+        zeile = zeilen[0]
+
+        if zeile.get("event") not in AUFLOESBARE_EVENTS:
+            raise ChannelManagerError(
+                f"Ereignis {zeile.get('event')!r} ist keine beantwortbare "
+                "Airbnb-Anfrage.",
+                status_code=422,
+            )
+        # Wurzel 2: der Doppelklick ist real. Ein zweites „annehmen" wäre bei
+        # Airbnb ein Fehler — und zwei widersprüchliche Entscheidungen auf
+        # dieselbe Anfrage darf es gar nicht geben. Status-Guard VOR dem
+        # Seiteneffekt, UNIQUE-Index als Backstop (0284).
+        if zeile.get("resolved"):
+            raise ChannelManagerError(
+                "Diese Anfrage wurde bereits beantwortet.", status_code=409
+            )
+        live_id = zeile.get("live_feed_event_id")
+        if not isinstance(live_id, str) or not live_id.strip():
+            # Kein erfundener Ersatzwert (Wurzel 4): ohne die Channex-Ereignis-ID
+            # gibt es keinen Weg zu Airbnb. Das passiert bei Altbestand, der vor
+            # 0284 eintraf.
+            raise ChannelManagerError(
+                "Zu dieser Anfrage fehlt die Channex-Ereignis-ID — sie kann "
+                "nicht mehr an Airbnb übermittelt werden.",
+                status_code=409,
+            )
+        return tenant_id, zeile
+
+    def airbnb_anfrage_beantworten(
+        self, ctx: AuthContext, event_id: str, antwort: AirbnbAnfrageAntwort
+    ) -> dict[str, Any]:
+        """Eine Airbnb-Anfrage beantworten (Route-Eingang).
+
+        Die Sachprüfungen laufen VOR dem Bau der Antwort, damit ein unpassender
+        Wunsch (z. B. „alteration_annehmen" auf eine Voranfrage) nicht erst bei
+        Airbnb auffällt.
+        """
+        from . import airbnb_anfragen as aa
+
+        _tenant_id, zeile = self._require_airbnb_anfrage(ctx, event_id)
+        aktion = str(antwort.aktion)
+        event = str(zeile.get("event"))
+
+        # Jede Aktion passt zu genau EINER Anfrageart — sonst würde etwa ein
+        # „alteration_annehmen" auf eine Voranfrage erst bei Airbnb auffallen.
+        erwartet = aa.AKTION_ZU_EVENT.get(aktion)
+        if erwartet is None:
+            raise ChannelManagerError(f"Aktion {aktion!r} unbekannt.", status_code=422)
+        if erwartet != event:
+            raise ChannelManagerError(
+                f"Aktion {aktion!r} passt nicht zu einem Ereignis vom Typ "
+                f"{event!r}.",
+                status_code=422,
+            )
+        try:
+            resolution = aa.resolution_bauen(
+                aktion,
+                grund=antwort.grund,
+                nachricht_an_gast=antwort.nachricht_an_gast,
+                nachricht_an_airbnb=antwort.nachricht_an_airbnb,
+                sofortbuchung_sperren=antwort.sofortbuchung_sperren,
+                gesamtpreis_minor=antwort.gesamtpreis_minor,
+            )
+        except aa.AnfrageFehler as exc:
+            raise ChannelManagerError(str(exc), status_code=422) from exc
+        return self.airbnb_anfrage_aufloesen(ctx, event_id, resolution)
+
+    def airbnb_anfrage_aufloesen(
+        self, ctx: AuthContext, event_id: str, resolution: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Die Entscheidung an Airbnb senden und lokal festschreiben.
+
+        Reihenfolge mit Absicht: erst Airbnb, dann unsere Quittung. Kippt der
+        Aufruf, bleibt die Anfrage OFFEN und kann erneut beantwortet werden —
+        andersherum hielte der Betrieb sie für erledigt, während der Gast wartet
+        (fail-closed, Wurzel 5).
+        """
+        tenant_id, zeile = self._require_airbnb_anfrage(ctx, event_id)
+        live_id = str(zeile["live_feed_event_id"]).strip()
+
+        client = self._channex
+        try:
+            antwort = client.resolve_live_feed_event(live_id, resolution)
+        except ChannexError as exc:
+            log.warning(
+                "airbnb_anfrage_aufloesen_fehlgeschlagen",
+                event=zeile.get("event"), live_feed_event_id=live_id,
+                error=str(exc)[:200],
+            )
+            raise ChannelManagerError(
+                f"Airbnb hat die Antwort abgelehnt: {exc}", status_code=502
+            ) from exc
+
+        db = self._require_db()
+        try:
+            db.table("channex_webhook_event").update(
+                {
+                    "resolved": True,
+                    "resolution": resolution,
+                    "resolved_at": "now()",
+                    "resolved_by": getattr(ctx, "user_id", None),
+                }
+            ).eq("id", event_id).eq("tenant_id", tenant_id).execute()
+        except Exception as exc:  # noqa: BLE001 — Airbnb hat schon quittiert
+            # Der Seiteneffekt ist passiert; unsere Quittung fehlt nur lokal.
+            # Nicht werfen, sonst versucht der Betrieb es erneut und schickt
+            # dieselbe Entscheidung zweimal an Airbnb.
+            log.warning(
+                "airbnb_anfrage_quittung_fehlgeschlagen",
+                event_id=event_id, error=str(exc)[:200],
+            )
+        return antwort if isinstance(antwort, dict) else {}
 
     # -- Full-Sync manuell auslösen -------------------------------------------------
     def trigger_full_sync(self, ctx: AuthContext, map_id: str) -> dict[str, Any]:

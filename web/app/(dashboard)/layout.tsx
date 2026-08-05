@@ -13,7 +13,7 @@ import { Topbar } from "@/components/topbar";
 import { SupportChatButton } from "@/components/support/support-chat-button";
 import { SupportChatProvider } from "@/components/support/support-chat";
 import { SidebarInset, SidebarProvider } from "@nextdays/ui/sidebar";
-import { getMe } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 import { DiagnoseStarter } from "@/components/diagnose-starter";
@@ -24,7 +24,28 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   // 1) FastAPI-Session?
-  const me = await getMe();
+  //
+  // `getSession()` statt `getMe()`, weil hier über An-/Abmeldung ENTSCHIEDEN
+  // wird: ein technischer Fehler ist keine Abmeldung (Wurzel 5). Vorher warf
+  // jeder 503/500 den eingeloggten Nutzer mitten in der Arbeit auf /login.
+  const sitzung = await getSession();
+  const me = sitzung.me;
+  const sitzungspruefungFehler = sitzung.fehler;
+  if (sitzungspruefungFehler) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <div className="max-w-md space-y-2 text-center">
+          <p className="text-sm font-medium">
+            Die Sitzung konnte nicht geprüft werden.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {sitzungspruefungFehler} Du bist weiter angemeldet — lade die Seite
+            neu, sobald die Verbindung steht.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // 2) Sonst Supabase-OAuth-Session?
   let email = me?.email ?? "";

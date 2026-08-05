@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Tugtha isteach ó Airbnb agus fanann sé le myNextDays agus myBestDays — ní ghlacann na tairseacha áirithinte le leagan amach na leapacha.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Cur síos",
           "max_guests": "Líon aíonna",
           "street": "Sráid",
-          "house_number": "Uimhir tí"
+          "house_number": "Uimhir tí",
+          "zimmer": "Seomraí",
+          "beds": "Áiteanna codlata",
+          "airbnbRaeume": "Leagan amach na seomraí",
+          "airbnbStorno": "Coinníollacha cealaithe",
+          "airbnbSofortbuchung": "Áirithint láithreach",
+          "airbnbTexte": "Téacsanna",
+          "internal_name": "Ainm inmheánach",
+          "policies": "Rialacha",
+          "rentalAgreement": "Comhaontú cíosa",
+          "messaging": "Teachtaireachtaí",
+          "kinderErlaubt": "Páistí ceadaithe",
+          "babysErlaubt": "Naíonáin cheadaithe",
+          "haustiereErlaubt": "Peataí ceadaithe",
+          "rauchenErlaubt": "Caitheamh tobac ceadaithe",
+          "feiernErlaubt": "Imeachtaí ceadaithe",
+          "haustiereMax": "Uaslíon peataí"
         },
         "photosTaken": "Iompórtáladh {count} grianghraf ó Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Tíosach tí san áireamh",
     "nd_housekeeper_optional": "Tíosach tí roghnach",
     "nd_laundry_included": "Seirbhís níocháin san áireamh",
-    "nd_laundry_optional": "Seirbhís níocháin roghnach"
+    "nd_laundry_optional": "Seirbhís níocháin roghnach",
+    "nd_living_room": "Seomra suí príobháideach",
+    "nd_long_stay": "Fanachtaí fadtéarmacha ceadaithe",
+    "nd_single_level": "Gach rud ar aon leibhéal",
+    "nd_recycling": "Athchúrsáil",
+    "nd_hammock": "Ámóg",
+    "nd_freezer": "Reoiteoir",
+    "nd_hangers": "Crochadáin",
+    "nd_hot_water": "Uisce te",
+    "nd_dishes_silverware": "Miasa agus sceanra",
+    "nd_baking_sheet": "Bácús",
+    "nd_essentials": "Riachtanais",
+    "nd_books": "Leabhair",
+    "nd_childrens_books_toys": "Leabhair agus bréagáin do pháistí",
+    "nd_childrens_dinnerware": "Miasa do pháistí"
   },
   "zimmer": {
     "balkon": "Balcóin",
@@ -6695,7 +6725,8 @@
     "terrasse": "Léibheann",
     "wc": "Leithreas",
     "arbeitszimmer": "Oifig",
-    "schlafbereich": "Limistéar codlata"
+    "schlafbereich": "Limistéar codlata",
+    "hauswirtschaftsraum": "Seomra níocháin"
   },
   "reviews": {
     "title": "Léirmheasanna",

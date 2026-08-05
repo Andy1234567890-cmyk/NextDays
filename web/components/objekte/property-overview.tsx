@@ -46,6 +46,7 @@ import {
   AUSSTATTUNG_KATEGORIEN,
   AUSSTATTUNG_VON_SLUG,
   EIGENE_AUSSTATTUNG,
+  EIGENE_AUSSTATTUNG_OBJEKT,
   HOTEL_TYPES,
   ROOM_AMENITY_CATALOG,
   ROOM_AMENITY_SLUGS,
@@ -841,10 +842,15 @@ function AmenitiesEditor({
         einsortieren(slug, amenityLabel(slug), "property");
       }
     }
-    // Eigene Merkmale (kein Channex-Gegenstück) — landen beim Speichern in
-    // room_amenities, gehen aber nicht an die Portale.
+    // Merkmale ohne Channex-Gegenstück. Die Spalte folgt derselben Zuordnung,
+    // nach der der Airbnb-Import schreibt — sonst prüft `gewaehlt()` die andere
+    // Spalte und die Checkbox bleibt leer, obwohl der Wert in der DB steht.
     for (const slug of EIGENE_AUSSTATTUNG) {
-      einsortieren(slug, teigen(slug), "room");
+      einsortieren(
+        slug,
+        teigen(slug),
+        EIGENE_AUSSTATTUNG_OBJEKT.has(slug) ? "property" : "room",
+      );
     }
     return AUSSTATTUNG_KATEGORIEN.filter((k) => nachKategorie.get(k)?.length)
       .map((k) => ({

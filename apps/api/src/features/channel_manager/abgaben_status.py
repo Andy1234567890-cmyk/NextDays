@@ -113,6 +113,39 @@ def laengenpreis_mechanik(portale: list[str]) -> dict[str, Any]:
     }
 
 
+# Die Richtlinien-Blöcke der Objektseite. Sie sind KEINE Preisposten, aber die
+# Oberfläche stellt an ihnen dieselbe Frage („wohin geht das?") und soll dafür
+# nicht eine zweite Wahrheit führen.
+#
+# Belegt in `docs/OTA/Airbnb/Booking Settings Airbnb.pdf`: Airbnb nimmt diese
+# drei Angaben über `PUT channels/{id}/execute/update_booking_setting` —
+# `check_in_time_start`/`check_in_time_end`/`check_out_time`,
+# `instant_booking_allowed_category` und `cancellation_policy_settings`.
+# Live gegengeprüft am 05.08.2026 an `GET v2/booking_settings/{id}` (Konto
+# AirSmil, Objekt 020): genau diese Felder kommen von dort auch zurück.
+#
+# Jedes ANDERE Portal hat für dieselben Angaben kein Feld in unserem Sync-Weg →
+# `manual_portals` (im Extranet pflegen), nicht `restricted`. Der Unterschied
+# zählt: „gesperrt" heißt „der Betrieb hat es ausgeschlossen", hier ist es aber
+# die Grenze des Portals.
+RICHTLINIEN_BLOECKE = ("check_in_out", "bookability", "cancellation")
+
+
+def richtlinien_status(portale: list[str]) -> list[dict[str, Any]]:
+    """Reichweite der Richtlinien-Blöcke (Check-in/out, Buchbarkeit, Storno)."""
+    andere = sorted(p for p in portale if p != AIRBNB)
+    return [
+        {
+            "key": schluessel,
+            "kind": "block",
+            "manual_portals": andere,
+            "restricted_portals": [],
+            "internal_only": False,
+        }
+        for schluessel in RICHTLINIEN_BLOECKE
+    ]
+
+
 def preisblock_status() -> list[dict[str, Any]]:
     """Reichweite der Preis-Blöcke eines Objekts (Grundpreis, Aufschläge …).
 
@@ -183,7 +216,7 @@ class AbgabenStatusMixin:
                 self._posten_status(eintrag, kind, portale=[], nicht_gesendet={})
                 for kind, liste in (("fee", fees), ("tax", taxes))
                 for eintrag in liste
-            ] + preisblock_status() + [laengenpreis_mechanik([])]
+            ] + preisblock_status() + [laengenpreis_mechanik([])] + richtlinien_status([])
             return antwort
 
         regime = self.regime_je_portal(db, tenant_id, property_id)  # type: ignore[attr-defined]
@@ -224,7 +257,11 @@ class AbgabenStatusMixin:
             for kind, liste in (("fee", fees), ("tax", taxes))
             for eintrag in liste
         ] + self._aktionen_status(db, tenant_id, property_id, portale)
-        antwort["items"] += preisblock_status() + [laengenpreis_mechanik(portale)]
+        antwort["items"] += (
+            preisblock_status()
+            + [laengenpreis_mechanik(portale)]
+            + richtlinien_status(portale)
+        )
         return antwort
 
     def _aktionen_status(

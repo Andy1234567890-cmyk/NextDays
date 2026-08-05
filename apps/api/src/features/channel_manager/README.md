@@ -576,3 +576,106 @@ OTA-Originalmeldung (`raw.raw_message.date`/`time`, bei Booking.com Ortszeit,
 deshalb unverändert als Text). Unsere eigene Importuhr (`created_at`) wird nur
 noch verwendet, wenn keine Portal-Angabe existiert — und dann sichtbar als
 solche ausgewiesen.
+
+## Airbnb-Content: der vollständige Weg (`action/listing_details`)
+
+Hier stand lange, Channex gebe über Airbnb keinen Content heraus. Das war
+falsch — der von **Airbnb selbst** dokumentierte Pfad war in den früheren
+Messreihen nie geprüft worden (getestet wurden nur `proxy/v2/listings`,
+`proxy/v2/calendars`, `channels/{id}/listings`, alle 500/404):
+
+    GET  channels/{channel_id}/action/listings                        → 200
+    GET  channels/{channel_id}/action/listing_details?listing_id=…    → 200
+    POST channels/{channel_id}/action/api_proxy                       → 200
+         {"request":{"endpoint":"listing_descriptions","method":"get",…}}
+
+**Der `action`-Namensraum ist belastbar**, der `execute`-Namensraum daneben nicht:
+`action/erfundene_aktion_zzz` → `400 {"details":["action is not supported"]}`,
+während `execute/<beliebiger_name>` auf JEDEN Namen mit `200 Success` antwortet.
+Wer im `execute`-Raum misst, hält alles für vorhanden.
+
+Live übernommen für alle 18 Objekte des Beta-Betriebs (05.08.2026):
+
+| Airbnb-Feld | unser Ziel | Objekte |
+|---|---|---|
+| `rooms[]` (+`is_private`, `id`) | `type_attributes.rooms` = `{privat/gemeinschaftlich: {slug: n}}` | 18 |
+| `rooms[].beds[{type,quantity}]` | `type_attributes.beds` = `{slug: n}` | **3** |
+| `bedrooms`/`beds`/`bathrooms` | `schlafzimmer`/`betten`/`badezimmer` | 18 |
+| `total_inventory_count` | `einheiten` (Stückzahl des Typs, 0265) | 1 |
+| `booking_settings.cancellation_policy_settings` | `airbnbStorno` (+ unser `modus`) | 18 |
+| `booking_settings.instant_booking_allowed_category` | `airbnbSofortbuchung` | 18 |
+| `booking_settings.guest_controls.*` | `airbnbGastregeln` | 18 |
+| `check_in_time_start/_end`, `check_out_time` | `policies.checkInTime/…End/checkOutTime` | 18 |
+| `pricing_settings.standard_fees[]` | `airbnbGebuehren` | 18 |
+| `availability_rules` | `airbnbVerfuegbarkeit` | 18 |
+| `quality_standards` | `airbnbQualitaet` | 18 |
+| `amenities` (+`instruction`, Raumbezug) | `airbnbAusstattung` | 18 |
+| `wifi_network`/`wifi_password`, `check_in_option` | `messaging.*` | 8 |
+| `listing_descriptions[]` (alle Sprachen) | `airbnbTexte` = `{feld: {locale: text}}` | 18 |
+
+Drei Dinge, die dabei NICHT gehen und warum:
+
+- **Wohnfläche (m²).** Airbnb hat kein Feld dafür — in keinem der zwölf
+  Dokumente, und live ist `property_details.listing_size` ein leeres Objekt.
+  Lodgifys „30 m²" ist dort von Hand eingetragen.
+- **Bundesland/Region.** `state` ist auch hier `null`. Dafür gibt es die
+  Rückwärts-Geokodierung aus `lat`/`lng` (`region_geokodierung.py`).
+- **Betten, wo der Gastgeber sie nicht pflegt.** 15 der 18 Objekte haben
+  `beds: []` in jedem Raum — geprüft über zwei Wege (`listing_details` und
+  Airbnbs eigenes `listing_rooms` per Proxy). Aus `beds: 2` ein „Doppelbett" zu
+  machen wäre eine Falschaussage über das Objekt (Wurzel 4); die Maske bleibt
+  leer.
+
+**Sprachen:** `listing_descriptions` liefert je Sprache einen Eintrag mit
+`locale` — bei Objekt 020 drei (de, en, da), die Hausregeln nur auf Deutsch.
+Deshalb wird die Sprache NIE angenommen: derselbe Fehler hatte schon die
+Bildtexte betroffen (alle unter `en`, die deutsche Oberfläche las `de` und zeigte
+Platzhalter).
+
+## Airbnb-Anfragen beantworten (`live_feed`, Migration 0284)
+
+Airbnb schickt drei handlungspflichtige Anfragearten, die KEINE Buchung sind und
+deshalb auch keine Buchungs-Revision erzeugen: `reservation_request`, `inquiry`,
+`alteration_request`. Sie wurden abonniert und als Blob weggeschrieben — aber es
+gab keinen Weg, sie zu BEANTWORTEN. Unser `/events/{id}/resolve` setzte nur ein
+Flag in unserer eigenen Tabelle, während bei Airbnb nach ~24 h der Auto-Decline
+zuschlug.
+
+    POST /api/v1/channel-manager/events/{event_id}/airbnb-antwort
+    {"aktion": "annehmen" | "ablehnen" | "alteration_annehmen" | … }
+
+Die gesendete Form ist je Anfrageart ANDERS — das ist die Falle, wegen der
+`airbnb_anfragen.py` je Art einen eigenen Bauhelfer hat:
+
+| Anfrage | Form |
+|---|---|
+| Reservation Request | `{"accept": true}` / `{"accept": false, "reason": …}` — **Boolean** |
+| Alteration Request | `{"accept": "accept"｜"decline"｜"cancel"}` — **String** |
+| Inquiry | `{"type": "preapproval", "block_instant_booking": …}` |
+| Inquiry (Angebot) | `{"type": "special_offer", "total_price": <Minor Units>}` |
+
+`accept: true` statt `"accept"` ist ein 422, und die Frist läuft weiter.
+Ablehnungsgründe sind auf Airbnbs vier begrenzt (Allowlist, kein Freitext).
+
+**Das Journal als zweiter Weg.** `GET live_feed` ist ein Ereignis-JOURNAL (nicht
+die Arbeitswarteschlange `booking_revisions/feed`): nichts verschwindet durch ein
+Ack, man kann nach `event`/`property_id` filtern, und es enthält alle
+Ereignisarten. Ohne es war der Webhook für alles außer Buchungen der EINZIGE Weg
+— ging er verloren, war das Ereignis weg. Der 5-min-Tick `sync_live_feed` zieht
+nach; erkannt wird jedes Ereignis über `live_feed_event_id` (UNIQUE-Index 0284),
+Live-Nachweis: Lauf 1 = 4 neu, Lauf 2 = 0 neu.
+
+Kontrolltest, der die Filter belegt: `filter[event]=erfunden_zzz` → `422
+{"filter":["is_invalid"]}`. Eine 200 mit leerer Liste hätte auch „still
+ignoriert" heißen können.
+
+## Der Buchungsbetrag: Brutto, nicht Auszahlung
+
+`connection_settings` bestellt bei Airbnb jetzt `booking_amount_settings:
+"Total Paid Amount"`. Vorher stand dort `"Payout Amount"` — der Betrag NACH Abzug
+der Airbnb-Host-Fee —, während unser Geldpfad denselben Wert als Bruttobetrag
+verbucht: als `paid_amount` („der Gast hat das bezahlt"), als Grundlage unserer
+Provision und als Wert, von dem Portalgebühren erst noch abgezogen werden. Die
+Host-Fee wurde damit doppelt abgezogen und unsere Provision zu niedrig
+fakturiert. Beide Werte sind bei Airbnb erlaubt — wir müssen den bestellen, der
+zur Buchhaltung passt.

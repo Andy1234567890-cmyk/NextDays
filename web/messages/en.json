@@ -4462,7 +4462,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Imported from Airbnb and kept within myNextDays and myBestDays — the booking portals do not accept a bed layout.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5035,7 +5035,23 @@
           "description": "Description",
           "max_guests": "Guest count",
           "street": "Street",
-          "house_number": "House number"
+          "house_number": "House number",
+          "zimmer": "Rooms",
+          "beds": "Sleeping arrangements",
+          "airbnbRaeume": "Room layout",
+          "airbnbStorno": "Cancellation policy",
+          "airbnbSofortbuchung": "Instant booking",
+          "airbnbTexte": "Texts",
+          "internal_name": "Internal name",
+          "policies": "Policies",
+          "rentalAgreement": "Rental agreement",
+          "messaging": "Messages",
+          "kinderErlaubt": "Children allowed",
+          "babysErlaubt": "Infants allowed",
+          "haustiereErlaubt": "Pets allowed",
+          "rauchenErlaubt": "Smoking allowed",
+          "feiernErlaubt": "Events allowed",
+          "haustiereMax": "Maximum pets"
         },
         "photosTaken": "{count} photos imported from Airbnb"
       }
@@ -6703,7 +6719,21 @@
     "nd_housekeeper_included": "Housekeeper included",
     "nd_housekeeper_optional": "Housekeeper optional",
     "nd_laundry_included": "Laundry service included",
-    "nd_laundry_optional": "Laundry service optional"
+    "nd_laundry_optional": "Laundry service optional",
+    "nd_living_room": "Private living room",
+    "nd_long_stay": "Long-term stays allowed",
+    "nd_single_level": "Single-level home",
+    "nd_recycling": "Recycling",
+    "nd_hammock": "Hammock",
+    "nd_freezer": "Freezer",
+    "nd_hangers": "Hangers",
+    "nd_hot_water": "Hot water",
+    "nd_dishes_silverware": "Dishes and silverware",
+    "nd_baking_sheet": "Baking sheet",
+    "nd_essentials": "Essentials",
+    "nd_books": "Books",
+    "nd_childrens_books_toys": "Children's books and toys",
+    "nd_childrens_dinnerware": "Children's dinnerware"
   },
   "zimmer": {
     "balkon": "Balcony",
@@ -6716,7 +6746,8 @@
     "terrasse": "Terrace",
     "wc": "Toilet",
     "arbeitszimmer": "Study",
-    "schlafbereich": "Sleeping area"
+    "schlafbereich": "Sleeping area",
+    "hauswirtschaftsraum": "Laundry room"
   },
   "reviews": {
     "title": "Reviews",

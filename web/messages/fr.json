@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Importé depuis Airbnb et conservé dans myNextDays et myBestDays — les portails de réservation n'acceptent pas de configuration de couchage.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Description",
           "max_guests": "Nombre de voyageurs",
           "street": "Rue",
-          "house_number": "Numéro"
+          "house_number": "Numéro",
+          "zimmer": "Pièces",
+          "beds": "Couchages",
+          "airbnbRaeume": "Répartition des pièces",
+          "airbnbStorno": "Conditions d'annulation",
+          "airbnbSofortbuchung": "Réservation instantanée",
+          "airbnbTexte": "Textes",
+          "internal_name": "Nom interne",
+          "policies": "Règles",
+          "rentalAgreement": "Contrat de location",
+          "messaging": "Messages",
+          "kinderErlaubt": "Enfants autorisés",
+          "babysErlaubt": "Bébés autorisés",
+          "haustiereErlaubt": "Animaux autorisés",
+          "rauchenErlaubt": "Fumeurs autorisés",
+          "feiernErlaubt": "Fêtes autorisées",
+          "haustiereMax": "Animaux maximum"
         },
         "photosTaken": "{count} photos importées d'Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Femme de ménage incluse",
     "nd_housekeeper_optional": "Femme de ménage en option",
     "nd_laundry_included": "Service de blanchisserie inclus",
-    "nd_laundry_optional": "Service de blanchisserie en option"
+    "nd_laundry_optional": "Service de blanchisserie en option",
+    "nd_living_room": "Salon privé",
+    "nd_long_stay": "Séjours longue durée acceptés",
+    "nd_single_level": "Logement de plain-pied",
+    "nd_recycling": "Tri des déchets",
+    "nd_hammock": "Hamac",
+    "nd_freezer": "Congélateur",
+    "nd_hangers": "Cintres",
+    "nd_hot_water": "Eau chaude",
+    "nd_dishes_silverware": "Vaisselle et couverts",
+    "nd_baking_sheet": "Plaque de cuisson",
+    "nd_essentials": "Équipements de base",
+    "nd_books": "Livres",
+    "nd_childrens_books_toys": "Livres et jouets pour enfants",
+    "nd_childrens_dinnerware": "Vaisselle pour enfants"
   },
   "zimmer": {
     "balkon": "Balcon",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terrasse",
     "wc": "Toilettes",
     "arbeitszimmer": "Bureau",
-    "schlafbereich": "Coin nuit"
+    "schlafbereich": "Coin nuit",
+    "hauswirtschaftsraum": "Buanderie"
   },
   "reviews": {
     "title": "Avis",

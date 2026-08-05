@@ -27,6 +27,8 @@ import httpx
 from src.core.config import get_settings
 from src.core.logging import get_logger
 
+from .channex_airbnb_actions import AirbnbActionsMixin
+
 if TYPE_CHECKING:
     from src.jobs.channex_budget import BudgetDecision
 
@@ -183,7 +185,7 @@ class ChannexBudgetExhausted(Exception):
         self.progressed = progressed
 
 
-class ChannexClient:
+class ChannexClient(AirbnbActionsMixin):
     """Dünner, synchroner Client um die Channex-API.
 
     Synchron (httpx.Client), passend zur restlichen Service-Schicht (Supabase-
@@ -747,6 +749,68 @@ class ChannexClient:
     def ack_booking_revision(self, revision_id: str) -> dict[str, Any]:
         """Revision bestätigen (erst NACH erfolgreichem Speichern aufrufen)."""
         return self.post(f"booking_revisions/{revision_id}/ack", json={})
+
+    # ----- LiveFeedEvents (Ereignis-Journal, NICHT der Revisions-Feed) --------
+    # Airbnb-Doku „LiveFeedEvents HTTP API": ein Journal ALLER technischen
+    # Ereignisse, von denen Buchungen nur drei sind. Der Revisions-Feed oben ist
+    # eine Arbeitswarteschlange (enthält nur Un-ge-acktes, verschwindet nach dem
+    # Ack) — dieses Journal ist der einzige NACHTRÄGLICHE Abrufweg. Ohne ihn ist
+    # jedes verlorene Webhook-Ereignis unwiederbringlich weg, und die
+    # handlungspflichtigen Airbnb-Anfragen (reservation_request, inquiry,
+    # alteration_request) sind überhaupt nicht abrufbar: eine unbestätigte
+    # Anfrage ist keine Buchung, erzeugt also keine Revision.
+    #
+    # Live gegen den Produktivaccount gemessen (05.08.2026):
+    #   GET live_feed                      → 200, meta{total,limit,page,
+    #                                        order_by:"inserted_at",
+    #                                        order_direction:"desc"}
+    #   GET live_feed?filter[event]=review → 200, total=4 (echte Gästebewertungen)
+    #   filter[event]=erfunden_zzz         → 422 {"filter":["is_invalid"]}
+    #   GET erfundene_kontrolle_zzz        → 404 resource_not_found
+    # Der 422 auf einen erfundenen Ereignisnamen ist der Beweis, dass der Filter
+    # wirklich serverseitig greift — eine 200 mit leerer Liste hätte auch
+    # „stillschweigend ignoriert" bedeuten können.
+    def get_live_feed(
+        self,
+        *,
+        page: int = 1,
+        limit: int = 100,
+        event: str | None = None,
+        property_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Ereignis-Journal lesen (älteste zuerst, damit Reihenfolge stimmt).
+
+        `order[inserted_at]=asc` dreht die Vorgabe (`desc`) absichtlich um: wir
+        verarbeiten in Ereignis-Reihenfolge, sonst überholt eine Änderung ihre
+        eigene Ursache.
+        """
+        params: dict[str, Any] = {
+            "pagination[page]": page,
+            "pagination[limit]": limit,
+            "order[inserted_at]": "asc",
+        }
+        if event:
+            params["filter[event]"] = event
+        if property_id:
+            params["filter[property_id]"] = property_id
+        return self.get("live_feed", params=params)
+
+    def get_live_feed_event(self, event_id: str) -> dict[str, Any]:
+        """Ein Ereignis vollständig (`GET live_feed/:id`)."""
+        return self.get(f"live_feed/{event_id}")
+
+    def resolve_live_feed_event(
+        self, event_id: str, resolution: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Ereignis bei Airbnb auflösen (`POST live_feed/:id/resolve`).
+
+        Die `resolution` wird NICHT hier gebaut, sondern von den Bauhelfern in
+        `airbnb_anfragen.py` — die kennen die je Ereignisart unterschiedlichen
+        Formen (Boolean bei Reservation Request, STRING bei Alteration).
+        """
+        return self.post(
+            f"live_feed/{event_id}/resolve", json={"resolution": resolution}
+        )
 
     def get_booking(self, booking_id: str) -> dict[str, Any]:
         return self.get(f"bookings/{booking_id}")

@@ -211,8 +211,15 @@ export function PricingForm({ initial }: { initial: Property }) {
     filter: `property_id=eq.${p.id}`,
     onChange: () => void loadDp(),
   });
-  const multiPlan = plans.length > 1;
-  const basePlan = multiPlan ? null : (plans[0] ?? null);
+  // Kanal-Pläne (`portal_scope`, 0272) sind KEINE eigenständigen Preispläne:
+  // sie sind der abgeleitete Aufschlag EINES Portals und werden in der Karte
+  // „Preisänderung je Portal" gepflegt. In der Plan-Liste erschienen sie als
+  // zweite Zeile („Grundpreis (von Airbnb) · AirBNB, abgeleitet 1:1") — und
+  // schlimmer: sie machten `multiPlan` wahr, wodurch die Grundpreis-Eingabe
+  // verschwand, obwohl das Objekt genau EINEN Verkaufsplan hat.
+  const verkaufsplaene = plans.filter((pl) => !pl.portal_scope);
+  const multiPlan = verkaufsplaene.length > 1;
+  const basePlan = multiPlan ? null : (verkaufsplaene[0] ?? null);
   // Währung ist zentral am OBJEKT eingestellt (properties.currency, 0161) und
   // gilt für alle Rate-Plans. Anzeige-Priorität: Objektwährung → (Bestand) Plan-
   // /pricing-Währung. Leer/unbekannt rendert symbollos (lib/currency), nie ein
@@ -494,13 +501,17 @@ export function PricingForm({ initial }: { initial: Property }) {
           />
         )}
 
+        {/* Nur Verkaufspläne: der Kanal-Aufschlag gehört in die Karte darunter,
+            nicht als zweite Zeile in die Plan-Liste. */}
         <RatePlanList
-          plans={plans}
+          plans={verkaufsplaene}
           currency={cur}
           onCreate={() => setWizardOpen(true)}
           onDeleted={() => void loadPlans()}
         />
 
+        {/* Hier dagegen ALLE Pläne: die Karte liest die Kanal-Pläne
+            (`portal_scope`), um den Aufschlag je Portal anzuzeigen. */}
         <PortalAdjustmentsCard propertyId={p.id} plans={plans} />
 
         <BlockCard
@@ -1648,10 +1659,16 @@ function PortalAdjustmentsEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Ein Speichern für alle Portale: nur geänderte Werte gehen raus, jedes
-  // Portal ist ein eigener Endpoint-Aufruf (eigener Kanal-Plan). Ein Fehler
-  // bricht ab und lässt das Sheet offen — bereits gespeicherte Portale bleiben
-  // gespeichert (Teilstand ist sichtbar, weil die Karte per Realtime folgt).
+  // Ein Speichern für alle Portale; jedes Portal ist ein eigener
+  // Endpoint-Aufruf (eigener Kanal-Plan). Ein Fehler bricht ab und lässt das
+  // Sheet offen — bereits gespeicherte Portale bleiben gespeichert (Teilstand
+  // ist sichtbar, weil die Karte per Realtime folgt).
+  //
+  // JEDER Wert geht raus, auch ein unveränderter. Vorher wurde gegen den Wert
+  // in unserer DB verglichen und bei Gleichheit gar nichts gesendet — „bei uns
+  // gleich" heißt aber nicht „beim Portal angekommen". Genau so stand ein
+  // Aufschlag von 5 % in der Oberfläche, während der Kanal ihn nie erhalten
+  // hatte, und Speichern schloss nur das Fenster. Der Endpunkt ist idempotent.
   const speichern = async () => {
     const zuAendern: Array<[string, number]> = [];
     for (const c of conns) {
@@ -1661,7 +1678,7 @@ function PortalAdjustmentsEditor({
         setError(t("pricingForm.portalAdjustmentInvalid"));
         return;
       }
-      if (n !== wert(c.portal_code)) zuAendern.push([c.portal_code, n]);
+      zuAendern.push([c.portal_code, n]);
     }
     if (zuAendern.length === 0) {
       onClose();

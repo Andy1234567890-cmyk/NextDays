@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Tuodaan Airbnb:stä ja säilyy myNextDays- ja myBestDays-palveluissa — varausportaalit eivät ota vastaan vuodejakaumaa.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Kuvaus",
           "max_guests": "Vieraiden määrä",
           "street": "Katu",
-          "house_number": "Talonumero"
+          "house_number": "Talonumero",
+          "zimmer": "Huoneet",
+          "beds": "Nukkumapaikat",
+          "airbnbRaeume": "Huonejako",
+          "airbnbStorno": "Peruutusehdot",
+          "airbnbSofortbuchung": "Pikavaraus",
+          "airbnbTexte": "Tekstit",
+          "internal_name": "Sisäinen nimi",
+          "policies": "Säännöt",
+          "rentalAgreement": "Vuokrasopimus",
+          "messaging": "Viestit",
+          "kinderErlaubt": "Lapset sallittu",
+          "babysErlaubt": "Vauvat sallittu",
+          "haustiereErlaubt": "Lemmikit sallittu",
+          "rauchenErlaubt": "Tupakointi sallittu",
+          "feiernErlaubt": "Juhlat sallittu",
+          "haustiereMax": "Lemmikkejä enintään"
         },
         "photosTaken": "{count} kuvaa tuotu Airbnb:stä"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Taloudenhoitaja sisältyy hintaan",
     "nd_housekeeper_optional": "Taloudenhoitaja valinnaisena",
     "nd_laundry_included": "Pyykkipalvelu sisältyy hintaan",
-    "nd_laundry_optional": "Pyykkipalvelu valinnaisena"
+    "nd_laundry_optional": "Pyykkipalvelu valinnaisena",
+    "nd_living_room": "Oma olohuone",
+    "nd_long_stay": "Pitkäaikaismajoitus mahdollista",
+    "nd_single_level": "Kaikki samassa kerroksessa",
+    "nd_recycling": "Kierrätys",
+    "nd_hammock": "Riippumatto",
+    "nd_freezer": "Pakastin",
+    "nd_hangers": "Vaateripustimet",
+    "nd_hot_water": "Lämmin vesi",
+    "nd_dishes_silverware": "Astiat ja ruokailuvälineet",
+    "nd_baking_sheet": "Uunipelti",
+    "nd_essentials": "Perusvarustus",
+    "nd_books": "Kirjoja",
+    "nd_childrens_books_toys": "Lastenkirjoja ja leluja",
+    "nd_childrens_dinnerware": "Lasten astiat"
   },
   "zimmer": {
     "balkon": "Parveke",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terassi",
     "wc": "WC",
     "arbeitszimmer": "Työhuone",
-    "schlafbereich": "Nukkumatila"
+    "schlafbereich": "Nukkumatila",
+    "hauswirtschaftsraum": "Kodinhoitohuone"
   },
   "reviews": {
     "title": "Arvostelut",

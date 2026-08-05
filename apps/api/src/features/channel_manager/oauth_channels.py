@@ -790,6 +790,13 @@ class OAuthChannelsMixin:
                 "Keine OAuth-Verbindung für dieses Objekt.", status_code=404
             )
         channel_id = row[0]["channex_channel_id"]
+        log.info(
+            "airbnb_finalize_start",
+            tenant_id=tenant_id, property_id=property_id,
+            portal_code=portal_code, channel_id=channel_id,
+            host_id=row[0].get("ota_hotel_id"),
+            zuordnungen_vom_client=mappings,
+        )
 
         # OTA-Zimmer/Raten holen: die Zuordnung erfolgt auf Zimmer-Ebene, jede Rate
         # des OTA-Zimmers muss gemappt werden — _build_rate_plans expandiert das.
@@ -815,21 +822,63 @@ class OAuthChannelsMixin:
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
         ota_rooms = self._normalize_mapping_rooms(details)
+        log.info(
+            "airbnb_finalize_ota_zimmer",
+            property_id=property_id, channel_id=channel_id,
+            anzahl=len(ota_rooms),
+            ota_zimmer=[
+                {"id": r.get("id"), "title": r.get("title"),
+                 "raten": [x.get("id") for x in (r.get("rates") or [])]}
+                for r in ota_rooms
+            ],
+        )
+
+        # Preisplan sicherstellen, BEVOR die Nutzlast gebaut wird.
+        #
+        # Channex verlangt beim Zuordnen Zimmer UND Tarif; ohne Rate-Plan bricht
+        # `_selected_rate_plan_ids` mit 422 ab („Setze unter „Preise“ den
+        # Grundpreis"). Für ein aus Airbnb übernommenes Objekt ist das eine
+        # Sackgasse: der Kunde soll den Preis nicht abtippen, den Airbnb längst
+        # führt. Airbnb LIEFERT den Grundpreis — dokumentiert
+        # (`GET channels/{id}/mappings/{mappingId}/pricing_settings`,
+        # docs/OTA/Airbnb/Pricing Settings.pdf) und live gemessen (05.08.2026,
+        # „FeWo Lille Lægehus": `default_daily_price: 500`, `currency: "DKK"`).
+        # Die frühere Annahme „Airbnb übergibt keine Preise" war falsch.
+        #
+        # Geholt wird über den bestehenden, belegten Weg `airbnb_objekt_abrufen`
+        # (zuordnen → Preis übernehmen → Plan füllen). Kein erfundener Preis
+        # (Wurzel 4): liefert Airbnb keinen, bleibt der 422 aus dem Nutzlast-Bau
+        # mit seiner umsetzbaren Meldung stehen.
+        if portal_code in self._OAUTH_PORTALS:
+            self._preis_von_airbnb_nachholen(db, ctx, tenant_id, property_id)
 
         rate_plans = self._build_rate_plans(
             db, tenant_id, portal_code, mappings, ota_rooms
         )
+        log.info(
+            "airbnb_finalize_nutzlast_gebaut",
+            property_id=property_id, channel_id=channel_id,
+            anzahl=len(rate_plans), rate_plans=rate_plans,
+        )
 
-        # Mapping auf den bestehenden Channel setzen + aktivieren. PUT ERSETZT das
-        # rate_plans-Array (verifiziert, kein Merge) → bestehende Einträge per GET
-        # lesen und die neuen anhängen, damit weitere Zimmer unter derselben
-        # Verbindung nicht verloren gehen (Wurzel 1). Idempotent: schon vorhandene
-        # rate_plan_ids werden nicht dupliziert (Wurzel 2).
-        merged = self._merge_channel_rate_plans(channel_id, rate_plans)
-        try:
-            self._channex.update_channel(channel_id, {"rate_plans": merged})
-        except ChannexError as exc:
-            raise self._wrap_channex(exc) from exc
+        # Zuordnung schreiben — je Eintrag EIN `POST channels/{id}/mappings`,
+        # NICHT `PUT channels/{id}` mit einem `rate_plans`-Array.
+        #
+        # Der PUT-Weg antwortet 200 und speichert bei Airbnb NICHTS. Live
+        # gemessen (05.08.2026) am Kanal 9a46827b des Beta-Betriebs: nach
+        # „Verbunden und aktiviert" für „FeWo Lille Lægehus" trug der Kanal
+        # weiter genau EINEN Eintrag (Grævlinge, listing 1654285285861524234);
+        # der Eintrag für 1378994948547697321 fehlte. Der Fehler war nicht die
+        # Nutzlast: jedes Objekt hat seinen eigenen Rate-Plan, der Merge hängt
+        # ihn also korrekt an — der WEG speichert nicht.
+        # `create_channel_mapping` ist der belegte Weg (dort dokumentiert und
+        # per Rücklesen verifiziert), denselben nutzt `_kanal_zuordnung_anlegen`.
+        #
+        # Danach ZURÜCKLESEN, bevor irgendetwas als erfolgreich gilt: eine 200
+        # von Channex ist kein Beweis. Fehlt der Eintrag anschließend am Kanal,
+        # bricht dieser Aufruf ab (fail-closed, Wurzel 5) statt den Kanal zu
+        # aktivieren und „verbunden" zu melden — genau das ist live passiert.
+        self._zuordnung_schreiben_und_pruefen(channel_id, rate_plans)
 
         # VOR der Aktivierung prüfen, was Channex noch fehlt, und den Grund
         # NENNEN. Channex lässt einen Kanal ohne vollständige Angaben nicht live
@@ -840,6 +889,11 @@ class OAuthChannelsMixin:
         #     [{"relation":"Mapping","error_code":"required","entity":"Channel"},
         #      {"field":"timezone","error_code":"required","entity":"Property"}]
         offene = self._readiness_offen(channel_id)
+        log.info(
+            "airbnb_finalize_readiness",
+            property_id=property_id, channel_id=channel_id,
+            offene_punkte=offene or "keine",
+        )
         if offene:
             raise ChannelManagerError(
                 "Das Portal kann noch nicht aktiviert werden, weil Angaben "
@@ -851,6 +905,10 @@ class OAuthChannelsMixin:
             self._channex.activate_channel(channel_id)
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
+        log.info(
+            "airbnb_finalize_kanal_aktiviert",
+            property_id=property_id, channel_id=channel_id,
+        )
 
         db.table("channex_channel_connection").update(
             {"is_active": True, "last_error": None}
@@ -879,6 +937,157 @@ class OAuthChannelsMixin:
             "portal": self._portal_label(portal_code),
             "title": self._portal_label(portal_code),
             "is_active": True,
+        }
+
+    def _preis_von_airbnb_nachholen(
+        self, db: Client, ctx: AuthContext, tenant_id: str, property_id: str
+    ) -> None:
+        """Fehlt der Preisplan, ihn über den Airbnb-Abruf holen (best effort).
+
+        Betrifft jedes per „Objekte übernehmen" entstandene Objekt: die Übernahme
+        bringt Titel, Ort, Land und Kapazität, aber keinen Preis — der steht in
+        den Pricing-Settings der Anzeige und kommt erst mit dem Abruf.
+
+        Nur wenn NICHTS da ist: existiert ein Plan, ist er die Wahrheit und wird
+        nicht überschrieben (Wurzel 2 — und ein Preis, den der Betrieb selbst
+        gesetzt hat, darf Airbnb nicht überschreiben).
+
+        Best effort: schlägt der Abruf fehl, wird das GELOGGT und der Hauptpfad
+        läuft weiter — dann greift der 422 aus dem Nutzlast-Bau mit seiner
+        umsetzbaren Meldung. Ein Abruf-Fehler darf das Verbinden nicht mit einem
+        unverständlichen Grund abbrechen (Wurzel 5).
+        """
+        vorhanden = (
+            db.table("rate_plans")
+            .select("id")
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if vorhanden:
+            return
+        log.info(
+            "airbnb_finalize_preis_fehlt_abruf_startet",
+            tenant_id=tenant_id, property_id=property_id,
+        )
+        try:
+            ergebnis = self.airbnb_objekt_abrufen(  # type: ignore[attr-defined]
+                ctx, property_id
+            )
+        except (ChannexError, ChannelManagerError) as exc:
+            log.warning(
+                "airbnb_finalize_preis_abruf_fehlgeschlagen",
+                tenant_id=tenant_id, property_id=property_id,
+                error=getattr(exc, "message", str(exc)),
+            )
+            return
+        log.info(
+            "airbnb_finalize_preis_abruf_fertig",
+            tenant_id=tenant_id, property_id=property_id,
+            preis_uebernommen=ergebnis.get("preis_uebernommen"),
+            base_price=ergebnis.get("base_price"),
+            waehrung=ergebnis.get("waehrung"),
+        )
+
+    def _zuordnung_schreiben_und_pruefen(
+        self, channel_id: str, rate_plans: list[dict[str, Any]],
+    ) -> None:
+        """Jede Zuordnung einzeln am Kanal anlegen und das Ergebnis ZURÜCKLESEN.
+
+        Zwei Teile, die zusammengehören:
+
+        1. Geschrieben wird über `POST channels/{id}/mappings` (je Eintrag ein
+           Aufruf). Der naheliegende `PUT channels/{id}` mit `rate_plans`
+           antwortet 200 und speichert bei Airbnb nichts.
+        2. Danach wird der Kanal per GET gelesen und geprüft, ob JEDE gewünschte
+           `rate_plan_id` dort steht. Erst dieser Vergleich beweist das
+           Speichern. Fehlt einer, wirft die Methode — der Aufrufer darf dann
+           nicht aktivieren und nicht „verbunden" melden (Wurzel 5).
+
+        Idempotent (Wurzel 2): bereits vorhandene Einträge werden übersprungen,
+        und Channex' „already exists" gilt als Zielzustand, nicht als Fehler.
+        """
+        vorhanden = self._kanal_rate_plan_ids(channel_id)
+        log.info(
+            "airbnb_zuordnung_vorher",
+            channel_id=channel_id,
+            am_kanal=sorted(vorhanden),
+            soll=[str(p.get("rate_plan_id")) for p in rate_plans],
+        )
+        for plan in rate_plans:
+            rate_plan_id = plan.get("rate_plan_id")
+            if not rate_plan_id:
+                log.warning(
+                    "airbnb_zuordnung_ohne_rate_plan_id",
+                    channel_id=channel_id, eintrag=plan,
+                )
+                continue
+            if rate_plan_id in vorhanden:
+                log.info(
+                    "airbnb_zuordnung_uebersprungen_schon_da",
+                    channel_id=channel_id, rate_plan_id=str(rate_plan_id),
+                )
+                continue
+            log.info(
+                "airbnb_zuordnung_post_mappings",
+                channel_id=channel_id, rate_plan_id=str(rate_plan_id),
+                settings=plan.get("settings") or {},
+            )
+            try:
+                self._channex.create_channel_mapping(
+                    channel_id, str(rate_plan_id), plan.get("settings") or {}
+                )
+            except ChannexError as exc:
+                if "already exists" in str(exc).lower():
+                    log.info(
+                        "channex_oauth_zuordnung_bestand_bereits",
+                        channel_id=channel_id, rate_plan_id=rate_plan_id,
+                    )
+                    continue
+                raise self._wrap_channex(exc) from exc
+
+        # Beweis statt Statuscode: der Ist-Stand steht ausschließlich im
+        # Kanal-Objekt unter `rate_plans[]` (einen GET-Pfad für Mappings gibt es
+        # nicht — alle 404, siehe `create_channel_mapping`).
+        nachher = self._kanal_rate_plan_ids(channel_id)
+        fehlend = [
+            str(p.get("rate_plan_id"))
+            for p in rate_plans
+            if p.get("rate_plan_id") and p["rate_plan_id"] not in nachher
+        ]
+        if fehlend:
+            log.error(
+                "channex_oauth_zuordnung_nicht_gespeichert",
+                channel_id=channel_id, fehlende_rate_plans=fehlend,
+                rate_plans_am_kanal=sorted(nachher),
+            )
+            raise ChannelManagerError(
+                "Das Portal hat die Zuordnung nicht gespeichert. Die Verbindung "
+                "wurde deshalb nicht aktiviert — bitte erneut versuchen.",
+                status_code=502,
+            )
+        log.info(
+            "channex_oauth_zuordnung_geschrieben",
+            channel_id=channel_id,
+            rate_plans=[str(p.get("rate_plan_id")) for p in rate_plans],
+        )
+
+    def _kanal_rate_plan_ids(self, channel_id: str) -> set[str]:
+        """Die `rate_plan_id`s, die am Kanal WIRKLICH zugeordnet sind.
+
+        Kein best-effort: dieser Wert ist der Beweis für das Speichern, ein
+        stiller Fallback auf „leer" würde eine gelungene Zuordnung als
+        fehlgeschlagen ausweisen (und umgekehrt).
+        """
+        try:
+            kanal = self._channex.get_channel(channel_id)
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+        attrs = ((kanal.get("data") or {}).get("attributes")) or {}
+        return {
+            str(p["rate_plan_id"])
+            for p in attrs.get("rate_plans") or []
+            if (p or {}).get("rate_plan_id")
         }
 
     def _save_oauth_connection(

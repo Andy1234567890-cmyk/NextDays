@@ -24,59 +24,148 @@ export type LocalizedText = Record<Lang, string>;
 
 export const EMPTY_LOCALIZED: LocalizedText = { de: "", en: "", da: "" };
 
-// Zahlungsplan (Payment schedule).
-export type PaymentPlan = "one" | "split";
-export const PAYMENT_PLAN_OPTIONS: { value: PaymentPlan; label: string; info: string }[] = [
+// Zahlungsplan (Payment schedule): 1–3 Zahlungen. Die LETZTE Zahlung ist immer
+// der Restbetrag — deshalb hat sie keinen eigenen Betrag, nur einen Termin.
+export type PaymentPlan = "one" | "two" | "three";
+export const PAYMENT_PLAN_OPTIONS: { value: PaymentPlan; label: string }[] = [
+  { value: "one", label: "Eine Zahlung" },
+  { value: "two", label: "Zwei Zahlungen" },
+  { value: "three", label: "Drei Zahlungen" },
+];
+
+// Art des Betrages einer Zahlung/Kaution.
+export type AmountType = "percentage" | "fixed" | "percentage_or_fixed";
+export const AMOUNT_TYPE_OPTIONS: { value: AmountType; label: string }[] = [
+  { value: "percentage", label: "% der Buchung" },
+  { value: "fixed", label: "Pauschalbetrag" },
+  { value: "percentage_or_fixed", label: "Prozentsatz oder Pauschalbetrag" },
+];
+
+// Termin-Bezug einer geplanten Zahlung.
+export type SchedulePeriod =
+  | "before_checkin"
+  | "after_checkin"
+  | "before_checkout"
+  | "not_scheduled";
+export const SCHEDULE_PERIOD_OPTIONS: { value: SchedulePeriod; label: string }[] = [
+  { value: "before_checkin", label: "Tage vor Ankunft" },
+  { value: "after_checkin", label: "Tage nach Ankunft" },
+  { value: "before_checkout", label: "Tage vor Abreise" },
+  { value: "not_scheduled", label: "Nicht einplanen" },
+];
+
+// Stornoart (Guest cancellation).
+export type CancellationType = "none" | "full" | "partial";
+export const CANCELLATION_OPTIONS: { value: CancellationType; label: string; info: string }[] = [
   {
-    value: "one",
-    label: "Eine Zahlung",
-    info: "100 % der Zahlung wird bei der Reservierung berechnet.",
+    value: "none",
+    label: "Nicht erstattungsfähig",
+    info: "Geleistete Zahlungen werden nicht zurückerstattet. Noch nicht gezahlte Beträge werden erlassen.",
   },
   {
-    value: "split",
-    label: "Anzahlung + Restbetrag",
-    info: "Eine Anzahlung wird bei Buchung fällig, der Rest vor Anreise.",
+    value: "full",
+    label: "Vollständig erstattungsfähig",
+    info: "Geleistete Zahlungen werden vollständig zurückerstattet. Noch nicht gezahlte Beträge werden erlassen.",
+  },
+  {
+    value: "partial",
+    label: "Teilweise erstattungsfähig",
+    info: "",
   },
 ];
 
-// Stornotyp (Guest cancellation).
-export type CancellationType = "flexible" | "moderate" | "strict" | "non_refundable";
-export const CANCELLATION_OPTIONS: { value: CancellationType; label: string; info: string }[] = [
-  { value: "flexible", label: "Flexibel", info: "Volle Erstattung bis kurz vor Anreise." },
-  { value: "moderate", label: "Moderat", info: "Teilweise Erstattung je nach Stornozeitpunkt." },
-  { value: "strict", label: "Streng", info: "Eingeschränkte Erstattung; frühe Stornofristen." },
-  {
-    value: "non_refundable",
-    label: "Nicht erstattbar",
-    info: "Geleistete Zahlungen sind nicht erstattbar. Nicht gezahlte Beträge werden nicht berechnet.",
-  },
+// Eine Staffel der teilweisen Erstattung: „X zurück, wenn N Tage vor Anreise
+// oder früher storniert wird."
+export type RefundType = "percentage" | "flat";
+export const REFUND_TYPE_OPTIONS: { value: RefundType; label: string }[] = [
+  { value: "percentage", label: "% der geleisteten Vorauszahlung" },
+  { value: "flat", label: "Pauschalbetrag" },
 ];
+export type RefundRule = { refundType: RefundType; value: number; daysBefore: number };
+export const DEFAULT_REFUND_RULE: RefundRule = {
+  refundType: "percentage",
+  value: 100,
+  daysBefore: 30,
+};
 
 // Kaution (Security deposit).
-export type DepositMode = "none" | "amount";
+export type DepositMethod = "manual" | "card";
+export const DEPOSIT_METHOD_OPTIONS: { value: DepositMethod; label: string; info: string }[] = [
+  {
+    value: "manual",
+    label: "Kaution manuell berechnen und erstatten",
+    info: "Die Kaution ist erstattbar und wird außerhalb von myNextDays erhoben und erstattet.",
+  },
+  {
+    value: "card",
+    label: "Kaution auf Karte autorisieren (empfohlen)",
+    info: "Die Kaution wird automatisch auf der Kreditkarte des Gastes vorautorisiert.",
+  },
+];
+// Vorautorisierung: Bezug des Zeitpunkts (nur Anreise — eine Autorisierung
+// nach Abreise gibt es nicht).
+export type PreAuthPeriod = "before_checkin" | "after_checkin";
+export const PRE_AUTH_PERIOD_OPTIONS: { value: PreAuthPeriod; label: string }[] = [
+  { value: "before_checkin", label: "Tage vor Ankunft" },
+  { value: "after_checkin", label: "Tage nach Ankunft" },
+];
 
 // Strukturierte Richtlinie (eine „Policy").
 export type Policy = {
   internalName: string; // Pflicht: interner Name
   paymentPlan: PaymentPlan;
-  depositPercent: number; // Anzahlung in % (bei split)
-  remainingDaysBefore: number; // Restbetrag X Tage vor Anreise (bei split)
+  // Erste Zahlung
+  firstAmountType: AmountType;
+  firstPercent: number;
+  firstAmount: number;
+  // Zweite Zahlung (Betrag nur bei drei Zahlungen — sonst ist sie der Rest)
+  secondPercent: number;
+  secondDays: number;
+  secondPeriod: SchedulePeriod;
+  // Dritte Zahlung (Restbetrag)
+  thirdDays: number;
+  thirdPeriod: SchedulePeriod;
+  // Stornierung durch den Gast
   cancellationType: CancellationType;
-  depositMode: DepositMode; // Kaution gefordert?
-  depositAmount: number; // Kautionsbetrag (bei amount)
+  refundRules: RefundRule[];
+  // Kaution
+  depositRequired: boolean;
+  depositMethod: DepositMethod;
+  depositAmountType: AmountType;
+  depositPercentOfBooking: number;
+  depositAmount: number;
+  preAuthDays: number; // 0 oder 1
+  preAuthPeriod: PreAuthPeriod;
+  preAuthValidityDays: number; // 0–7 Tage nach Abreise
   quoteValidityHours: number; // Angebots-Gültigkeit in Stunden
 };
 
 export const DEFAULT_POLICY: Policy = {
   internalName: "",
   paymentPlan: "one",
-  depositPercent: 10,
-  remainingDaysBefore: 45,
-  cancellationType: "non_refundable",
-  depositMode: "none",
+  firstAmountType: "percentage",
+  firstPercent: 10,
+  firstAmount: 0,
+  secondPercent: 25,
+  secondDays: 45,
+  secondPeriod: "before_checkin",
+  thirdDays: 0,
+  thirdPeriod: "before_checkin",
+  cancellationType: "none",
+  refundRules: [],
+  depositRequired: false,
+  depositMethod: "card",
+  depositAmountType: "fixed",
+  depositPercentOfBooking: 0,
   depositAmount: 0,
-  quoteValidityHours: 48,
+  preAuthDays: 1,
+  preAuthPeriod: "before_checkin",
+  preAuthValidityDays: 7,
+  quoteValidityHours: 24,
 };
+
+// Wie viele Tage eine Vorautorisierung nach der Abreise gültig bleiben darf.
+export const PRE_AUTH_VALIDITY_DAYS = [0, 1, 2, 3, 4, 5, 6, 7];
 
 export type Policies = {
   // Reservation policies — strukturierte Richtlinie + optionaler Freitext (alt)
@@ -177,16 +266,111 @@ export function formatHour(value: string): string {
 
 // Liest die Richtlinien aus einem Objekt (mit Defaults aufgefüllt). Die
 // mehrsprachigen Felder werden normalisiert (alter Plain-String → de).
+// Liest eine gespeicherte Richtlinie. Vor dem Lodgify-Gleichzug hatte sie ein
+// gröberes Schema (`split`-Plan, Storno-Stufen flexibel/moderat/streng,
+// `depositMode`) — diese Altwerte werden hier auf das heutige Modell gehoben,
+// statt sie stillschweigend auf Defaults fallen zu lassen (das hätte die
+// Konditionen eines Bestandsobjekts verfälscht).
+function migratePolicy(raw: Record<string, unknown>): Policy {
+  const alt = raw as Record<string, unknown> & Partial<Policy>;
+  const legacyPlan: string = typeof alt.paymentPlan === "string" ? alt.paymentPlan : "";
+  const plan: PaymentPlan =
+    legacyPlan === "split"
+      ? "two"
+      : legacyPlan === "one" || legacyPlan === "two" || legacyPlan === "three"
+        ? legacyPlan
+        : DEFAULT_POLICY.paymentPlan;
+
+  const legacyCancellation: string =
+    typeof alt.cancellationType === "string" ? alt.cancellationType : "";
+  const cancellation: CancellationType =
+    legacyCancellation === "none" ||
+    legacyCancellation === "full" ||
+    legacyCancellation === "partial"
+      ? legacyCancellation
+      : legacyCancellation === "flexible"
+        ? "full"
+        : legacyCancellation === "moderate" || legacyCancellation === "strict"
+          ? "partial"
+          : DEFAULT_POLICY.cancellationType;
+
+  // Alt: `depositPercent` war die ANZAHLUNG (erste Zahlung), nicht die Kaution.
+  const legacyFirstPercent = typeof alt.depositPercent === "number" ? alt.depositPercent : undefined;
+  const legacyDays =
+    typeof alt.remainingDaysBefore === "number" ? alt.remainingDaysBefore : undefined;
+  const legacyDepositRequired = alt.depositMode === "amount";
+
+  const rules = Array.isArray(alt.refundRules) ? (alt.refundRules as RefundRule[]) : [];
+  return {
+    ...DEFAULT_POLICY,
+    ...(alt as Partial<Policy>),
+    paymentPlan: plan,
+    firstPercent: alt.firstPercent ?? legacyFirstPercent ?? DEFAULT_POLICY.firstPercent,
+    secondDays: alt.secondDays ?? legacyDays ?? DEFAULT_POLICY.secondDays,
+    cancellationType: cancellation,
+    refundRules: cancellation === "partial" && rules.length === 0 ? [{ ...DEFAULT_REFUND_RULE }] : rules,
+    depositRequired: alt.depositRequired ?? legacyDepositRequired,
+    depositAmountType: alt.depositAmountType ?? (legacyDepositRequired ? "fixed" : DEFAULT_POLICY.depositAmountType),
+  };
+}
+
 export function readPolicies(typeAttributes: Record<string, unknown> | undefined): Policies {
   const raw = (typeAttributes?.policies ?? {}) as Record<string, unknown>;
-  const rawPolicy = (raw.policy ?? {}) as Partial<Policy>;
+  const rawPolicy = (raw.policy ?? {}) as Record<string, unknown>;
   return {
     ...DEFAULT_POLICIES,
     ...raw,
-    policy: { ...DEFAULT_POLICY, ...rawPolicy },
+    policy: migratePolicy(rawPolicy),
     ratesInfo: toLocalized(raw.ratesInfo),
     rentalAgreement: toLocalized(raw.rentalAgreement),
   };
+}
+
+// --- Zusammenfassungen (Karte/Zuweisung) -----------------------------------
+// Aus der Richtlinie gebaute Sätze, wie sie der Betrieb auf der Karte liest.
+// `geld` formatiert einen Betrag in der Objektwährung — kein Symbol hier
+// hardcoden (Projektregel: Währung kommt aus den Daten).
+
+function periodText(period: SchedulePeriod): string {
+  return SCHEDULE_PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? "";
+}
+
+function amountText(type: AmountType, percent: number, amount: number, geld: (n: number) => string): string {
+  if (type === "fixed") return geld(amount);
+  if (type === "percentage") return `${percent} %`;
+  return `${percent} % bzw. ${geld(amount)}`;
+}
+
+export function paymentPlanSummary(p: Policy, geld: (n: number) => string): string {
+  if (p.paymentPlan === "one") return "100 % der Zahlung ist bei Buchungsabschluss fällig.";
+  const erste = `${amountText(p.firstAmountType, p.firstPercent, p.firstAmount, geld)} fällig am Buchungstag.`;
+  if (p.paymentPlan === "two") {
+    if (p.secondPeriod === "not_scheduled") return `${erste} Der Restbetrag wird nicht eingeplant.`;
+    return `${erste} Restbetrag ist fällig ${p.secondDays} Tag(e) ${periodText(p.secondPeriod)}.`;
+  }
+  const zweite = `${p.secondPercent} % fällig ${p.secondDays} Tag(e) ${periodText(p.secondPeriod)}.`;
+  return `${erste} ${zweite} Restbetrag ist fällig ${p.thirdDays} Tag(e) ${periodText(p.thirdPeriod)}.`;
+}
+
+export function cancellationSummary(p: Policy, geld: (n: number) => string): string {
+  if (p.cancellationType !== "partial") {
+    return CANCELLATION_OPTIONS.find((o) => o.value === p.cancellationType)?.info ?? "";
+  }
+  const staffeln = p.refundRules.map((r) => {
+    const wert = r.refundType === "flat" ? geld(r.value) : `${r.value} %`;
+    return `${wert} der geleisteten Zahlungen werden zurückerstattet, wenn ${r.daysBefore} Tag(e) vor Ankunft oder früher storniert wird.`;
+  });
+  return [...staffeln, "Keine Rückerstattung bei späterer Stornierung."].join(" ");
+}
+
+export function depositSummary(p: Policy, geld: (n: number) => string): string {
+  if (!p.depositRequired) return "";
+  const betrag = amountText(p.depositAmountType, p.depositPercentOfBooking, p.depositAmount, geld);
+  if (p.depositMethod === "manual") {
+    return `Eine Kaution von ${betrag} wird außerhalb von myNextDays erhoben und erstattet.`;
+  }
+  const wann = PRE_AUTH_PERIOD_OPTIONS.find((o) => o.value === p.preAuthPeriod)?.label ?? "";
+  return `Eine Vorautorisierung von ${betrag} wird ${p.preAuthDays} Tag(e) ${wann} zurückgehalten und ${p.preAuthValidityDays} Tag(e) nach Abreise storniert.`;
 }
 
 // Gibt es in irgendeiner Sprache nicht-leeren Text? (für die Vorschau)

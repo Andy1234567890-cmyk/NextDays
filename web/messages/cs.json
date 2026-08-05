@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Načítá se z Airbnb a zůstává v myNextDays a myBestDays — rezervační portály rozpis lůžek nepřijímají.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Popis",
           "max_guests": "Počet hostů",
           "street": "Ulice",
-          "house_number": "Číslo domu"
+          "house_number": "Číslo domu",
+          "zimmer": "Pokoje",
+          "beds": "Lůžka",
+          "airbnbRaeume": "Rozvržení místností",
+          "airbnbStorno": "Storno podmínky",
+          "airbnbSofortbuchung": "Okamžitá rezervace",
+          "airbnbTexte": "Texty",
+          "internal_name": "Interní název",
+          "policies": "Pravidla",
+          "rentalAgreement": "Nájemní smlouva",
+          "messaging": "Zprávy",
+          "kinderErlaubt": "Děti povoleny",
+          "babysErlaubt": "Kojenci povoleni",
+          "haustiereErlaubt": "Domácí mazlíčci povoleni",
+          "rauchenErlaubt": "Kouření povoleno",
+          "feiernErlaubt": "Oslavy povoleny",
+          "haustiereMax": "Max. mazlíčků"
         },
         "photosTaken": "Importováno {count} fotografií z Airbnb"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Hospodyně v ceně",
     "nd_housekeeper_optional": "Hospodyně volitelně",
     "nd_laundry_included": "Prádelní služby v ceně",
-    "nd_laundry_optional": "Prádelní služby volitelně"
+    "nd_laundry_optional": "Prádelní služby volitelně",
+    "nd_living_room": "Vlastní obývací pokoj",
+    "nd_long_stay": "Dlouhodobé pobyty možné",
+    "nd_single_level": "Vše v jednom podlaží",
+    "nd_recycling": "Třídění odpadu",
+    "nd_hammock": "Houpací síť",
+    "nd_freezer": "Mraznička",
+    "nd_hangers": "Ramínka",
+    "nd_hot_water": "Teplá voda",
+    "nd_dishes_silverware": "Nádobí a příbory",
+    "nd_baking_sheet": "Plech na pečení",
+    "nd_essentials": "Základní vybavení",
+    "nd_books": "Knihy",
+    "nd_childrens_books_toys": "Dětské knihy a hračky",
+    "nd_childrens_dinnerware": "Dětské nádobí"
   },
   "zimmer": {
     "balkon": "Balkon",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terasa",
     "wc": "WC",
     "arbeitszimmer": "Pracovna",
-    "schlafbereich": "Spací kout"
+    "schlafbereich": "Spací kout",
+    "hauswirtschaftsraum": "Prádelna"
   },
   "reviews": {
     "title": "Hodnocení",

@@ -48,13 +48,17 @@ verlässt sich darauf.
 """
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, Final
 
 import httpx
 from supabase import Client
 
+from src.core.supabase import load_scoped
+
+from . import airbnb_listing_import as ali
 from .bildtext_uebersetzung import bildtexte_uebersetzen, caption_mehrsprachig
-from .common import log
+from .common import ChannelManagerError, log
 from .region_geokodierung import region_aus_koordinaten
 
 AIRBNB_API = "https://api.airbnb.com"
@@ -63,6 +67,15 @@ AIRBNB_API = "https://api.airbnb.com"
 LISTINGS_PARAMS = {"has_availability": "false", "_limit": "50"}
 
 _TIMEOUT = httpx.Timeout(30.0)
+
+
+class AirbnbSchreibfehler(RuntimeError):
+    """Ein schreibender Airbnb-Aufruf ist nicht angekommen.
+
+    Eigene Klasse, damit der Aufrufer sie gezielt fangen kann, statt sie in einem
+    breiten `except Exception` zu verlieren (Wurzel 5) — ein stiller Schreibfehler
+    meldete „gespeichert", während bei Airbnb der alte Stand steht.
+    """
 
 
 def _foto_url(foto: dict[str, Any]) -> str | None:
@@ -100,21 +113,270 @@ def _strasse_und_nummer(strasse: str) -> tuple[str, str | None]:
     return strasse.strip(), None
 
 
-def _airbnb_amenities(rohe: object) -> list[str]:
-    """Airbnbs `amenities` in unser Text-Array übersetzen.
+# Airbnbs Ausstattungskatalog → unsere Katalog-Slugs, getrennt nach den ZWEI
+# Katalogen, die die Objektmaske führt.
+#
+# WARUM DIE TRENNUNG DER PUNKT IST: `properties` hat zwei Spalten — `amenities`
+# (Objekt-Ausstattung) und `room_amenities` (Zimmer-Ausstattung). Die Checkbox in
+# der Maske prüft je Eintrag GENAU EINE davon (`property-overview.tsx`,
+# `gewaehlt()`). Der Import schrieb bisher alles nach `amenities`; weil die
+# meisten Merkmale aber im Zimmer-Katalog stehen, blieb dort jede Checkbox leer,
+# obwohl die Slugs in der DB standen — sichtbar nur als Roh-Chips.
+#
+# WARUM EINE TABELLE UND KEIN `.lower()`: der alte Weg machte aus `COFFEE_MAKER`
+# ein `coffee_maker`, das in keinem Katalog existiert (unser Slug heißt
+# `coffee_machine`). Solche Slugs sind unsichtbar und gehen an kein Portal.
+#
+# GRUNDLAGE: Airbnbs vollständige „Add amenities"-Maske (139 Merkmale, abgelesen
+# 05.08.2026) UND die live gemessenen API-Schlüssel aller 18 Anzeigen des Kontos
+# (`GET v2/listings/{id}` → `amenities` mit `is_present`, 57 verschiedene).
+# Jeder Ziel-Slug ist gegen `web/lib/property-meta.ts` geprüft — die erste
+# Fassung dieser Tabelle hatte vier Slugs, die in KEINEM Katalog standen
+# (`nd_long_stay_discount`) oder im falschen (`AC`, `SMOKE_DETECTOR`, `JACUZZI`).
+#
+# DER RÜCKWEG entscheidet über die Slug-Wahl: was rausgeht, braucht eine
+# Channex-Facility-UUID (`_channex_facility_ids` lässt Unbekanntes still weg).
+# Deshalb steht hier `sun_loungers_or_beach_chairs` und nicht der eigene
+# `nd_sun_loungers` — Letzterer hat keine UUID und käme bei keinem Portal an.
+# Wo Channex kein Gegenstück HAT, steht bewusst ein eigener `nd_*`-Slug: das
+# Merkmal geht dann an myBestDays und die eigene Website, nicht an die Portale
+# (dieselbe Trennung wie in `EIGENE_AUSSTATTUNG`, property-meta.ts).
+_AIRBNB_ZU_ZIMMER: Final[dict[str, str]] = {
+    # --- direkte Treffer (Slug identisch) ---
+    "BIDET": "bidet",
+    "BODY_SOAP": "body_soap",
+    "CLEANING_PRODUCTS": "cleaning_products",
+    "CONDITIONER": "conditioner",
+    "DINING_TABLE": "dining_table",
+    "DISHWASHER": "dishwasher",
+    "GAME_CONSOLE": "game_console",
+    "HAIR_DRYER": "hair_dryer",
+    "HEATING": "heating",
+    "HOT_TUB": "hot_tub",
+    "KITCHEN": "kitchen",
+    "KITCHENETTE": "kitchenette",
+    "MICROWAVE": "microwave",
+    "MOSQUITO_NET": "mosquito_net",
+    "OUTDOOR_DINING_AREA": "outdoor_dining_area",
+    "OUTDOOR_FURNITURE": "outdoor_furniture",
+    "OVEN": "oven",
+    "PRIVATE_ENTRANCE": "private_entrance",
+    "REFRIGERATOR": "refrigerator",
+    "SHAMPOO": "shampoo",
+    "STOVE": "stove",
+    "TOASTER": "toaster",
+    "TV": "tv",
+    "WINE_GLASSES": "wine_glasses",
+    # --- gleiches Merkmal, anderer Name bei uns ---
+    "WIRELESS_INTERNET": "wireless_internet",
+    "DEDICATED_WORKSPACE": "desk",
+    "LAKE_ACCESS": "lake_view",
+    "COFFEE_MAKER": "coffee_machine",
+    "COFFEE": "coffee_tea_maker",
+    "COOKING_BASICS": "kitchenware",
+    "WASHER": "washing_machine",
+    "DRYER": "tumble_dryer_machine",
+    "DRYING_RACK_FOR_CLOTHING": "clothes_drying_rack",
+    "CLOTHES_DRYING_RACK": "clothes_drying_rack",
+    "IRON": "clothing_iron",
+    "WARDROBE_OR_CLOSET": "wardrobe_closet",
+    "CLOTHING_STORAGE": "wardrobe_closet",
+    "BOARD_GAMES": "board_games_puzzles",
+    "HOT_WATER_KETTLE": "electric_kettle",
+    "PATIO_OR_BELCONY": "patio",
+    "PATIO_OR_BALCONY": "patio",
+    "CRIB": "children_crib_cots",
+    "HIGH_CHAIR": "children_highchair",
+    "BABY_SAFETY_GATES": "baby_safety_gates",
+    "OUTLET_COVERS": "child_safety_socket_covers",
+    "POCKET_WIFI": "portable_wifi",
+    "BATHTUB": "bath",
+    "INDOOR_FIREPLACE": "fireplace",
+    "FIREPLACE": "fireplace",
+    "SAUNA": "sauna",
+    "SOUND_SYSTEM": "nd_stereo",
+    "RECORD_PLAYER": "cd_player",
+    "TRASH_COMPACTOR": "trash_cans",
+    "MINI_FRIDGE": "mini_bar",
+    "OUTDOOR_SHOWER": "shower",
+    "SHOWER_GEL": "shower",
+    # --- Nachtrag: Schlüssel, die im Konto real vorkamen und beim ersten
+    # Durchlauf ohne Zuordnung protokolliert wurden (`airbnb_ausstattung_ohne_
+    # zuordnung`, 18 Objekte). Nicht erfunden — gemessen und dann geschlossen.
+    "OUTDOOR_SEATING": "seating_area",
+    "ALFRESCO_DINING": "outdoor_dining_area",
+    "ALFRESCO_SHOWER": "shower",
+    "POUR_OVER_COFFEE": "coffee_tea_maker",
+    "ROOM_DARKENING_SHADES": "private_curtain",
+    # --- eigene Merkmale: Channex hat kein Gegenstück ---
+    "BLENDER": "nd_blender",
+    "RICE_MAKER": "nd_rice_cooker",
+    "PIANO": "nd_piano",
+    "BBQ_GRILL": "nd_charcoal_grill",
+    "BARBEQUE_UTENSILS": "barbecue",
+    "BARBECUE_UTENSILS": "barbecue",
+    "FREEZER": "nd_freezer",
+    "HANGERS": "nd_hangers",
+    "HOT_WATER": "nd_hot_water",
+    "DISHES_AND_SILVERWARE": "nd_dishes_silverware",
+    "BAKING_SHEET": "nd_baking_sheet",
+    "ESSENTIALS": "nd_essentials",
+    "BOOKS": "nd_books",
+    "CHILDRENS_BOOKS_AND_TOYS": "nd_childrens_books_toys",
+    "CHILDRENS_DINNERWARE": "nd_childrens_dinnerware",
+}
+
+_AIRBNB_ZU_OBJEKT: Final[dict[str, str]] = {
+    # --- direkte Treffer ---
+    "AIR_CONDITIONING": "air_conditioning",
+    "AC": "air_conditioning",
+    "BREAKFAST": "breakfast",
+    "FIRE_PIT": "fire_pit",
+    "SAFE": "safe",
+    "WATERFRONT": "waterfront",
+    "WIFI": "wifi",
+    "STREET_PARKING": "street_parking",
+    # --- gleiches Merkmal, anderer Name ---
+    "SMOKE_DETECTOR": "smoke_alarms",
+    "SMOKE_ALARM": "smoke_alarms",
+    "JACUZZI": "jacuzzi_hot_tub",
+    "GARDEN_OR_BACKYARD": "garden",
+    "BACKYARD": "garden",
+    "SUN_LOUNGERS": "sun_loungers_or_beach_chairs",
+    "ELEVATOR": "elevators",
+    "FIRST_AID_KIT": "first_aid_kit_available",
+    "BIKES": "bikes_available_free",
+    "CHILDRENS_BIKES": "bikes_available_free",
+    "BOWLING_ALLEY": "bowling",
+    "MINI_GOLF": "minigolf",
+    "MOVIE_THEATER": "movie_nights",
+    "POOL": "swimming_pool",
+    "PING_PONG_TABLE": "table_tennis",
+    "OUTDOOR_PLAYGROUND": "playground",
+    "PRIVATE_LIVING_ROOM": "nd_living_room",
+    "BEACH_ACCESS": "beach",
+    "SOLAR_PANELS": "solarium",
+    "GATED_COMMUNITY": "nd_gated_community",
+    "RESORT_ACCESS": "nd_resort",
+    "KAYAK": "nd_canoe_kayak",
+    "BOAT_SLIP": "nd_boat",
+    "POOL_TABLE": "billiard",
+    "CARBON_MONOXIDE_ALARM": "carbon_monoxide_detector",
+    "FIRE_EXTINGUISHER": "fire_extinguishers",
+    # --- eigene Merkmale (Channex kennt sie nicht) ---
+    # Airbnb trennt Parken fünffach (frei/bezahlt × auf/neben dem Grundstück +
+    # freies Straßenparken); Channex trennt nur nach ART. Die Gratis-Aussage
+    # bleibt deshalb ein eigenes Merkmal.
+    "FREE_PARKING_ON_PREMISES": "nd_parking_included",
+    "FREE_PARKING_OFF_PREMISES": "nd_parking_included",
+    "FREE_PARKING": "nd_parking_included",
+    "FREE_STREET_PARKING": "street_parking",
+    "PAID_PARKING_ON_PREMISES": "nd_parking_optional",
+    "PAID_PARKING_OFF_PREMISES": "nd_parking_optional",
+    "GYM": "fitness",
+    "EV_CHARGER": "electric_vehicle_charging_station",
+    "EBIKE_CHARGER": "electric_vehicle_charging_station",
+    "LONG_TERM_STAYS_ALLOWED": "nd_long_stay",
+    "LUGGAGE_DROPOFF_ALLOWED": "baggage_storage",
+    "ETHERNET_CONNECTION": "nd_internet_broadband",
+    "SINGLE_LEVEL_HOME": "nd_single_level",
+    "RECYCLING": "nd_recycling",
+    "HAMMOCK": "nd_hammock",
+    # Nachtrag aus dem Protokoll (siehe Zimmer-Tabelle): ein Grillplatz ist eine
+    # Fläche am Objekt, kein Zimmer-Merkmal.
+    "BBQ_AREA": "bbq_picnic_area",
+}
+
+
+def _airbnb_amenities(rohe: object) -> tuple[list[str], list[str]]:
+    """Airbnbs `amenities` → (Objekt-Slugs, Zimmer-Slugs).
 
     Airbnb liefert ein Objekt `{"REFRIGERATOR": {"is_present": true, …}, …}`.
     Übernommen wird nur, was `is_present` trägt — ein Eintrag mit `false` heißt
     „ausdrücklich nicht vorhanden" und darf nicht als Ausstattung gelten.
-    Unsere Spalte führt Kleinschreibung (`{wifi,heating,…}`).
+
+    Zwei Listen statt einer, weil die Maske zwei Spalten führt (siehe Tabellen
+    oben). Ein Schlüssel ohne Gegenstück wird NICHT geraten, sondern gemeldet.
     """
     if not isinstance(rohe, dict):
-        return []
-    return sorted(
-        name.lower()
-        for name, wert in rohe.items()
-        if isinstance(wert, dict) and wert.get("is_present")
-    )
+        return [], []
+    objekt: set[str] = set()
+    zimmer: set[str] = set()
+    unbekannt: list[str] = []
+    for name, wert in rohe.items():
+        if not isinstance(wert, dict) or not wert.get("is_present"):
+            continue
+        schluessel = str(name).upper()
+        if schluessel in _AIRBNB_ZU_ZIMMER:
+            zimmer.add(_AIRBNB_ZU_ZIMMER[schluessel])
+        elif schluessel in _AIRBNB_ZU_OBJEKT:
+            objekt.add(_AIRBNB_ZU_OBJEKT[schluessel])
+        else:
+            unbekannt.append(schluessel)
+    if unbekannt:
+        # Sichtbar machen, statt still zu verwerfen (Wurzel 5): so wächst die
+        # Tabelle mit belegten Werten und nicht mit Vermutungen.
+        log.info("airbnb_ausstattung_ohne_zuordnung", schluessel=sorted(unbekannt)[:20])
+    return sorted(objekt), sorted(zimmer)
+
+
+def _slug_zu_airbnb() -> dict[str, list[str]]:
+    """Unser Slug → alle Airbnb-Schlüssel, die darauf zeigen.
+
+    Mehrere Schlüssel je Slug ist der Normalfall, nicht die Ausnahme: Airbnb
+    trennt `FREE_PARKING_ON_PREMISES` von `FREE_PARKING_OFF_PREMISES`, wir führen
+    beides als `nd_parking_included`. Beim Zurückschreiben müssen deshalb ALLE
+    zugehörigen Schlüssel gesetzt werden — sonst bliebe die Hälfte der Variante
+    bei Airbnb auf dem alten Stand.
+    """
+    rueck: dict[str, list[str]] = {}
+    for tabelle in (_AIRBNB_ZU_ZIMMER, _AIRBNB_ZU_OBJEKT):
+        for schluessel, slug in tabelle.items():
+            rueck.setdefault(slug, []).append(schluessel)
+    return {slug: sorted(keys) for slug, keys in rueck.items()}
+
+
+_SLUG_ZU_AIRBNB: Final[dict[str, list[str]]] = _slug_zu_airbnb()
+
+# Alle Airbnb-Schlüssel, für die wir überhaupt zuständig sind.
+_SLUG_ZU_AIRBNB_KEYS: Final[frozenset[str]] = frozenset(
+    set(_AIRBNB_ZU_ZIMMER) | set(_AIRBNB_ZU_OBJEKT)
+)
+
+
+def airbnb_amenities_payload(
+    objekt_slugs: Sequence[str],
+    zimmer_slugs: Sequence[str],
+    bestand: object,
+) -> dict[str, dict[str, bool]]:
+    """Unsere Auswahl → Airbnbs `amenities`-Nutzlast.
+
+    Wurzel 1 (Gegenzustand): Airbnb kennt drei Zustände — gesetzt, ausdrücklich
+    nicht vorhanden (`is_present: false`) und gar nicht erwähnt. Wer nur die
+    angehakten Merkmale sendet, entfernt ein abgewähltes NIE: es bliebe bei
+    Airbnb stehen. Deshalb wird der Alt/Neu-Diff gebildet und alles, was vorher
+    `true` war und jetzt fehlt, ausdrücklich auf `false` gesetzt.
+
+    Nur Schlüssel, die wir tatsächlich zuordnen können, werden angefasst. Was
+    Airbnb führt und wir nicht kennen, bleibt unberührt — es zu löschen wäre
+    Datenverlust an fremder Stelle.
+    """
+    gewuenscht: set[str] = set()
+    for slug in (*objekt_slugs, *zimmer_slugs):
+        gewuenscht.update(_SLUG_ZU_AIRBNB.get(slug, ()))
+
+    nutzlast: dict[str, dict[str, bool]] = {
+        schluessel: {"is_present": True} for schluessel in sorted(gewuenscht)
+    }
+
+    if isinstance(bestand, dict):
+        for name, wert in bestand.items():
+            schluessel = str(name).upper()
+            if schluessel in nutzlast or schluessel not in _SLUG_ZU_AIRBNB_KEYS:
+                continue
+            if isinstance(wert, dict) and wert.get("is_present"):
+                nutzlast[schluessel] = {"is_present": False}
+    return dict(sorted(nutzlast.items()))
 
 
 class AirbnbDirektMixin:
@@ -167,6 +429,75 @@ class AirbnbDirektMixin:
         except ValueError:
             log.warning("airbnb_direkt_kein_json", pfad=pfad)
             return None
+
+    @staticmethod
+    def _airbnb_put(token: str, pfad: str, nutzlast: dict[str, Any]) -> dict[str, Any]:
+        """Einen SCHREIBENDEN Aufruf gegen Airbnbs API.
+
+        Anders als `_airbnb_get` gibt das hier bei einem Fehler NICHT `None`
+        zurück (Wurzel 5): ein verschluckter Schreibfehler meldete „gespeichert",
+        während bei Airbnb der alte Stand steht. Der Aufrufer bekommt die Wahrheit
+        und entscheidet, ob er 502 wirft oder es erneut versucht.
+        """
+        try:
+            with httpx.Client(timeout=_TIMEOUT) as client:
+                antwort = client.put(
+                    f"{AIRBNB_API}/{pfad}",
+                    headers={
+                        "X-Airbnb-OAuth-Token": token,
+                        "Content-Type": "application/json",
+                    },
+                    json=nutzlast,
+                )
+        except httpx.HTTPError as exc:
+            raise AirbnbSchreibfehler(f"Netzfehler bei {pfad}: {exc}") from exc
+        if antwort.status_code >= 400:
+            raise AirbnbSchreibfehler(
+                f"Airbnb antwortete {antwort.status_code} auf {pfad}: "
+                f"{antwort.text[:300]}"
+            )
+        try:
+            daten = antwort.json()
+        except ValueError:
+            return {}
+        return daten if isinstance(daten, dict) else {}
+
+    def airbnb_ausstattung_schreiben(
+        self,
+        token: str,
+        listing_id: str,
+        objekt_slugs: Sequence[str],
+        zimmer_slugs: Sequence[str],
+    ) -> list[str]:
+        """Unsere Ausstattungs-Auswahl zurück an Airbnb.
+
+        Der Weg geht NICHT über Channex: Channex führt nur seinen eigenen
+        Facility-Katalog, und ein großer Teil der Airbnb-Merkmale (Parkvarianten,
+        Hängematte, Mülltrennung, Langzeitaufenthalte …) hat dort kein Feld —
+        ohne Facility-UUID fiele es beim Sync still unter den Tisch.
+
+        Der Bestand wird VOR dem Schreiben gelesen, weil ohne ihn der
+        Gegenzustand fehlt (Wurzel 1): abgewählte Merkmale müssen ausdrücklich
+        auf `is_present: false`, sonst bleiben sie bei Airbnb stehen.
+
+        Rückgabe: die tatsächlich gesendeten Airbnb-Schlüssel.
+        """
+        listing = self.airbnb_listing_direkt(token, listing_id) or {}
+        nutzlast = airbnb_amenities_payload(
+            objekt_slugs, zimmer_slugs, listing.get("amenities")
+        )
+        if not nutzlast:
+            return []
+        self._airbnb_put(
+            token, f"v2/listings/{listing_id}", {"listing": {"amenities": nutzlast}}
+        )
+        log.info(
+            "airbnb_ausstattung_geschrieben",
+            listing_id=listing_id,
+            gesetzt=sum(1 for w in nutzlast.values() if w["is_present"]),
+            entfernt=sum(1 for w in nutzlast.values() if not w["is_present"]),
+        )
+        return sorted(nutzlast)
 
     def airbnb_listings_direkt(self, token: str, user_id: str) -> list[dict[str, Any]]:
         """Alle Listings des Hosts MIT Adresse, Zimmerzahl und Ausstattung.
@@ -245,6 +576,44 @@ class AirbnbDirektMixin:
         zimmer = (daten or {}).get("listing_rooms")
         return zimmer if isinstance(zimmer, list) else []
 
+    def airbnb_booking_settings_direkt(
+        self, token: str, listing_id: str
+    ) -> dict[str, Any] | None:
+        """Die Hausregeln eines Listings (`v2/booking_settings/{id}`).
+
+        DER GRUND FÜR DIESEN WEG: über Channex kommen die Hausregeln nur als
+        Beifang der Mapping-Antwort — und die Felder, die der Betrieb in Airbnbs
+        Oberfläche unter „House rules" sieht, fehlen dort. Airbnbs eigene API
+        gibt sie vollständig heraus.
+
+        Live verifiziert am 05.08.2026 (Konto AirSmil, Objekt 020):
+            GET v2/booking_settings/{id}      → 200, 938 B
+            GET v2/guest_controls/{id}        → 404 route_not_found
+            GET v2/listing_house_rules?…      → 404 route_not_found
+            GET v2/listing_expectations?…     → 404 route_not_found
+            GET v2/kontrolle_unsinn_zzz       → 404 (Kontrolltest)
+        Der 404 auf den erfundenen Pfad belegt, dass die 200 echt ist und nicht
+        ein Namensraum, der auf alles freundlich antwortet.
+
+        Gemessene Antwort, Feld für Feld deckungsgleich mit
+        `docs/OTA/Airbnb/Booking Settings Airbnb.pdf`:
+            check_in_time_start "16"        (String)
+            check_in_time_end   "FLEXIBLE"  (String — kein Zahlenwert!)
+            check_out_time      10          (Integer, laut Doku 0..23)
+            instant_booking_allowed_category "everyone"
+            cancellation_policy_category "better_strict_with_grace_period"
+            guest_controls  allows_children/infants/pets/smoking/events,
+                            children_not_allowed_details, pet_capacity
+        Genau diese Werte („3 Gäste", „1 Haustier", Check-in ab 16 Uhr) fehlten
+        nach dem Import, obwohl sie in Airbnbs Oberfläche stehen.
+
+        Best effort wie alles in diesem Modul: der Token gehört Channex und kann
+        rotieren. Kein None-Ergebnis wird zu einem erfundenen Regelsatz.
+        """
+        daten = self._airbnb_get(token, f"v2/booking_settings/{listing_id}")
+        eintrag = (daten or {}).get("booking_setting")
+        return eintrag if isinstance(eintrag, dict) else None
+
     @staticmethod
     def airbnb_stammdaten_felder(listing: dict[str, Any]) -> dict[str, Any]:
         """Die Felder eines Airbnb-Listings, die an unser Objekt gehören.
@@ -278,9 +647,23 @@ class AirbnbDirektMixin:
         gaeste = listing.get("person_capacity")
         if isinstance(gaeste, int) and gaeste > 0:
             felder["max_guests"] = gaeste
-        amenities = _airbnb_amenities(listing.get("amenities"))
-        if amenities:
-            felder["amenities"] = amenities
+        # Wohnfläche aus `property_details.listing_size` (live gemessen:
+        # {"size": 33, "size_unit": "SQUARE_METERS"}). Echte Spalten, weil nach
+        # der Fläche gefiltert wird — im Objektformular ist sie ein Pflichtfeld
+        # und blieb leer, obwohl Airbnb sie liefert.
+        gebaeude = ali.gebaeudedaten_uebernehmen(listing)
+        if gebaeude.get("flaeche") and gebaeude.get("flaecheEinheit"):
+            felder["size_value"] = gebaeude["flaeche"]
+            felder["size_unit"] = gebaeude["flaecheEinheit"]
+        objekt_ausstattung, zimmer_ausstattung = _airbnb_amenities(
+            listing.get("amenities")
+        )
+        if objekt_ausstattung:
+            felder["amenities"] = objekt_ausstattung
+        if zimmer_ausstattung:
+            # Eigene Spalte: die Maske hakt Zimmer-Merkmale nur an, wenn sie hier
+            # stehen. Lagen sie in `amenities`, blieb jede Checkbox leer.
+            felder["room_amenities"] = zimmer_ausstattung
         return felder
 
     def airbnb_content_uebernehmen(
@@ -309,8 +692,8 @@ class AirbnbDirektMixin:
         vorhanden = (
             db.table("properties")
             .select("address, street, house_number, postal_code, city, "
-                    "lat, lng, max_guests, "
-                    "amenities, description, type_attributes")
+                    "lat, lng, max_guests, size_value, size_unit, "
+                    "amenities, room_amenities, description, type_attributes")
             .eq("tenant_id", tenant_id)
             .eq("id", property_id)
             .limit(1)
@@ -340,6 +723,26 @@ class AirbnbDirektMixin:
         )
         if region_attrs is not None:
             neu["type_attributes"] = region_attrs
+
+        # Baujahr und Etagen haben keine eigene Spalte. Sie werden AUF den Stand
+        # gelegt, den die Region-Zeile oben ggf. schon erzeugt hat — ein zweites
+        # `neu["type_attributes"] = ...` würde die Region wieder wegnehmen
+        # (Wurzel 1: der Gegenzustand zum Setzen ist das Erhalten des Rests).
+        basis = neu.get("type_attributes")
+        if not isinstance(basis, dict):
+            basis = alt.get("type_attributes")
+            basis = dict(basis) if isinstance(basis, dict) else {}
+        else:
+            basis = dict(basis)
+        gebaeude = ali.gebaeudedaten_uebernehmen(listing)
+        ergaenzt = False
+        for schluessel in ("baujahr", "etagenImGebaeude", "etage"):
+            wert = gebaeude.get(schluessel)
+            if wert and not basis.get(schluessel):
+                basis[schluessel] = wert
+                ergaenzt = True
+        if ergaenzt:
+            neu["type_attributes"] = basis
 
         if neu:
             db.table("properties").update(neu).eq("tenant_id", tenant_id).eq(
@@ -507,3 +910,42 @@ class AirbnbDirektMixin:
         db.table("properties").update(
             {"photos": [str(r["url"]) for r in geordnet]}
         ).eq("id", property_id).execute()
+
+    def sync_airbnb_ausstattung(
+        self, tenant_id: str, property_id: str
+    ) -> dict[str, Any]:
+        """Die gespeicherte Ausstattung eines Objekts zurück an Airbnb.
+
+        Einstieg für den Worker (kein AuthContext): der Job trägt den Tenant
+        selbst, und die Abfrage bleibt darauf gescopt (Wurzel 3).
+
+        Zweiter Weg NEBEN dem Channex-Content-Sync. Channex trägt nur, was einen
+        Eintrag in seinem Facility-Katalog hat; die übrigen Airbnb-Merkmale
+        (Parkvarianten, Hängematte, Mülltrennung, Langzeitaufenthalte …) haben
+        dort keine UUID und fielen beim Sync still unter den Tisch.
+
+        Kein Airbnb-Objekt oder kein verbundenes Konto heißt: nichts zu tun —
+        kein Fehler. Ein FEHLGESCHLAGENER Schreibaufruf dagegen fliegt hoch
+        (`AirbnbSchreibfehler`) und kippt den Job auf Retry (Wurzel 5).
+        """
+        db = self._require_db()  # type: ignore[attr-defined]
+        prop = load_scoped(
+            db, "properties", property_id, tenant_id,
+            columns="id, airbnb_listing_id, amenities, room_amenities",
+            not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
+        )
+        listing_id = prop.get("airbnb_listing_id")
+        if not listing_id:
+            return {"listing_id": None, "geschrieben": []}
+        zugang = self._airbnb_token(db, tenant_id)
+        if not zugang:
+            log.info("airbnb_ausstattung_ohne_konto", property_id=property_id)
+            return {"listing_id": str(listing_id), "geschrieben": []}
+        token, _user_id = zugang
+        geschrieben = self.airbnb_ausstattung_schreiben(
+            token,
+            str(listing_id),
+            prop.get("amenities") or [],
+            prop.get("room_amenities") or [],
+        )
+        return {"listing_id": str(listing_id), "geschrieben": geschrieben}

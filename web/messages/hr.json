@@ -4441,7 +4441,7 @@
       "zimmerErneutLaden": "Erneut versuchen",
       "zimmerLaedt": "Zimmer werden geladen …",
       "zimmerFertig": "Fertig",
-      "zimmerBettenHinweis": "Bleibt bei myNextDays und myBestDays — die Buchungsportale nehmen keine Bettenaufstellung an.",
+      "zimmerBettenHinweis": "Preuzima se iz Airbnb-a i ostaje u myNextDays i myBestDays — portali za rezervacije ne primaju raspored kreveta.",
       "masseinheitLabel": "Maßeinheit",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
@@ -5014,7 +5014,23 @@
           "description": "Opis",
           "max_guests": "Broj gostiju",
           "street": "Ulica",
-          "house_number": "Kućni broj"
+          "house_number": "Kućni broj",
+          "zimmer": "Sobe",
+          "beds": "Ležajevi",
+          "airbnbRaeume": "Raspored prostorija",
+          "airbnbStorno": "Uvjeti otkazivanja",
+          "airbnbSofortbuchung": "Trenutna rezervacija",
+          "airbnbTexte": "Tekstovi",
+          "internal_name": "Interni naziv",
+          "policies": "Pravila",
+          "rentalAgreement": "Ugovor o najmu",
+          "messaging": "Poruke",
+          "kinderErlaubt": "Djeca dopuštena",
+          "babysErlaubt": "Dojenčad dopuštena",
+          "haustiereErlaubt": "Kućni ljubimci dopušteni",
+          "rauchenErlaubt": "Pušenje dopušteno",
+          "feiernErlaubt": "Zabave dopuštene",
+          "haustiereMax": "Najviše ljubimaca"
         },
         "photosTaken": "Uvezeno {count} fotografija s Airbnb-a"
       }
@@ -6682,7 +6698,21 @@
     "nd_housekeeper_included": "Kućanska pomoć uključena",
     "nd_housekeeper_optional": "Kućanska pomoć opcionalno",
     "nd_laundry_included": "Usluga pranja rublja uključena",
-    "nd_laundry_optional": "Usluga pranja rublja opcionalno"
+    "nd_laundry_optional": "Usluga pranja rublja opcionalno",
+    "nd_living_room": "Vlastita dnevna soba",
+    "nd_long_stay": "Dugoročni boravak moguć",
+    "nd_single_level": "Sve na jednoj razini",
+    "nd_recycling": "Razvrstavanje otpada",
+    "nd_hammock": "Viseća mreža",
+    "nd_freezer": "Zamrzivač",
+    "nd_hangers": "Vješalice",
+    "nd_hot_water": "Topla voda",
+    "nd_dishes_silverware": "Posuđe i pribor za jelo",
+    "nd_baking_sheet": "Lim za pečenje",
+    "nd_essentials": "Osnovna oprema",
+    "nd_books": "Knjige",
+    "nd_childrens_books_toys": "Dječje knjige i igračke",
+    "nd_childrens_dinnerware": "Dječje posuđe"
   },
   "zimmer": {
     "balkon": "Balkon",
@@ -6695,7 +6725,8 @@
     "terrasse": "Terasa",
     "wc": "WC",
     "arbeitszimmer": "Radna soba",
-    "schlafbereich": "Prostor za spavanje"
+    "schlafbereich": "Prostor za spavanje",
+    "hauswirtschaftsraum": "Praonica"
   },
   "reviews": {
     "title": "Ocjene",

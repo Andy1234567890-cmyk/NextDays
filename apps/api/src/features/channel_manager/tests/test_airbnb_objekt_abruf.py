@@ -198,3 +198,81 @@ def test_leere_airbnb_antwort_setzt_nichts() -> None:
         M(), _FakeDb(tabelle), "p1", {}, {}, {},
     )
     assert gesetzt == {}
+
+
+# --- Kanal-Pläne (portal_scope, 0272) müssen mitgezogen werden --------------
+#
+# Live gemessen an „Feriehus Grævlinge" (05.08.2026): Der Abruf setzte den
+# Grundplan auf `min_stay: 1` (Airbnbs Stand), der abgeleitete Kanal-Plan blieb
+# auf `min_stay: 2` stehen. `_upsert_channex_rate_plan` schickt genau den
+# min_stay des KIND-Plans an Channex — an Airbnb wären also 2 Nächte gegangen,
+# während Airbnb selbst 1 führt.
+
+
+class _KindTabelle:
+    """Merkt sich Updates, statt sie zu schreiben."""
+
+    def __init__(self, laden: list[dict], protokoll: list[tuple]) -> None:
+        self._laden = laden
+        self._protokoll = protokoll
+        self._patch: dict | None = None
+        self._filter: tuple | None = None
+
+    def select(self, *_a: str, **_k: object) -> _KindTabelle:
+        return self
+
+    def update(self, patch: dict) -> _KindTabelle:
+        self._patch = patch
+        return self
+
+    def eq(self, spalte: str, wert: object) -> _KindTabelle:
+        self._filter = (spalte, wert)
+        return self
+
+    def execute(self) -> object:
+        if self._patch is not None:
+            self._protokoll.append((self._filter, self._patch))
+            self._patch = None
+            return type("R", (), {"data": []})()
+        return type("R", (), {"data": self._laden})()
+
+
+class _KindDb:
+    def __init__(self, kinder: list[dict]) -> None:
+        self.kinder = kinder
+        self.updates: list[tuple] = []
+
+    def table(self, _name: str) -> _KindTabelle:
+        return _KindTabelle(self.kinder, self.updates)
+
+
+def test_kanalplan_erbt_waehrung_und_mindestaufenthalt() -> None:
+    """Wurzel 1: der Gegenzustand des Kind-Plans muss mitgepflegt werden."""
+    db = _KindDb([{"id": "kind-1"}])
+    anzahl = M._abgeleitete_mitziehen(  # noqa: SLF001 — Testziel
+        db, "eltern-1", {"base_price": 950.0, "currency": "DKK", "min_stay": 1}
+    )
+    assert anzahl == 1
+    (feld, wert), patch = db.updates[0]
+    assert (feld, wert) == ("derived_from_rate_plan_id", "eltern-1")
+    assert patch == {"currency": "DKK", "min_stay": 1}
+
+
+def test_kanalplan_erbt_den_preis_NICHT() -> None:
+    """`base_price` bleibt außen vor — sonst zwei Preis-Wahrheiten (Wurzel 4).
+
+    Der Resolver rechnet die Kindkurve immer aus der Elternkurve plus Offset
+    (`resolver._rate_plan_curve`); die Spalte im Kind ist eine tote Kopie.
+    """
+    db = _KindDb([{"id": "kind-1"}])
+    M._abgeleitete_mitziehen(db, "eltern-1", {"base_price": 950.0})  # noqa: SLF001
+    assert db.updates == []
+
+
+def test_ohne_kinder_kein_update() -> None:
+    """Kein Kanal-Plan → kein Schreibvorgang (Wurzel 2)."""
+    db = _KindDb([])
+    assert M._abgeleitete_mitziehen(  # noqa: SLF001
+        db, "eltern-1", {"min_stay": 1}
+    ) == 0
+    assert db.updates == []
