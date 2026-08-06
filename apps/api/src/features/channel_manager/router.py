@@ -488,6 +488,142 @@ def airbnb_objekt_abrufen(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get("/properties/{property_id}/airbnb/historie/plan")
+def airbnb_historie_plan(
+    property_id: str, von: str, bis: str,
+    service: ChannelManagerServiceDep, ctx: _read,
+) -> dict[str, object]:
+    """Wie viele Etappen ergibt dieser Zeitraum? Ohne einen Aufruf bei Airbnb.
+
+    Damit kann der Dialog sofort „das werden 27 Etappen" sagen, während der
+    Betrieb noch am Datum dreht. `property_id` steht in der Route, weil die
+    Etappen zu genau diesem Objekt gehören — der Plan selbst ist objektfrei,
+    aber ein Endpunkt ohne Objektbezug lüde dazu ein, ihn global zu nutzen.
+    """
+    _ = (property_id, ctx)
+    try:
+        return {"etappen": service.airbnb_historie_etappen_plan(von, bis)}
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/properties/{property_id}/airbnb/historie/vorschau")
+def airbnb_historie_vorschau(
+    property_id: str, von: str, bis: str,
+    service: ChannelManagerServiceDep, ctx: _read,
+) -> dict[str, object]:
+    """Was liegt im Zeitraum bei Airbnb? Liest, schreibt nichts.
+
+    Bewusst ein eigener Schritt vor dem Import: der Betrieb sieht Umfang und
+    Jahresverteilung, bevor eine einzige Zeile geschrieben wird.
+    """
+    try:
+        return service.airbnb_historie_vorschau(ctx, property_id, von=von, bis=bis)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/properties/{property_id}/airbnb/historie/etappe")
+def airbnb_historie_etappe(
+    property_id: str, von: str, bis: str, nummer: int,
+    service: ChannelManagerServiceDep, ctx: _write,
+    uebernehmen: bool = False,
+    bekannt: Annotated[list[str] | None, Body(embed=True)] = None,
+) -> dict[str, object]:
+    """GENAU EINE Etappe fahren — damit die Oberfläche den Fortschritt zeigt.
+
+    Ein Zeitraum 2020–heute sind 27 Etappen und über eine Minute Laufzeit. Als
+    ein einziger Request bliebe der Dialog so lange stumm; hier holt er Etappe
+    für Etappe und zeigt jede Zeile, sobald sie da ist.
+
+    `bekannt` = Bestätigungscodes der vorherigen Etappen. Die Etappen
+    überlappen bewusst (vierfache Abdeckung), ohne diese Liste zählte der
+    Dialog dieselbe Buchung mehrfach als „neu". Auf die Wirkung hat sie keinen
+    Einfluss — geschrieben wird ohnehin idempotent über den Code.
+
+    `uebernehmen=false` ist die Vorschau: nur zählen, nichts schreiben.
+    """
+    try:
+        return service.airbnb_historie_etappe(
+            ctx, property_id, von=von, bis=bis, nummer=nummer,
+            uebernehmen=uebernehmen, bekannt=bekannt,
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/properties/{property_id}/airbnb/buchungszeitpunkte")
+def airbnb_buchungszeitpunkte(
+    property_id: str, service: ChannelManagerServiceDep, ctx: _write,
+) -> dict[str, object]:
+    """Echtes Buchungsdatum für bestehende Buchungen nachtragen (0291).
+
+    Für alles, was über den Feed kam: dort fehlt `booked_at` (Channex liefert
+    es nicht), also stand im Posteingang unser Anlagezeitpunkt — eine Buchung
+    vom März sah aus wie „heute". Angefasst werden nur Zeilen ohne Wert.
+    """
+    try:
+        return service.airbnb_buchungszeitpunkte_nachziehen(ctx, property_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/properties/{property_id}/airbnb/historie/import")
+def airbnb_historie_import(
+    property_id: str, von: str, bis: str,
+    service: ChannelManagerServiceDep, ctx: _write,
+) -> dict[str, object]:
+    """Die Buchungshistorie DIESES Objekts holen und übernehmen.
+
+    Nur dieses eine Objekt (gefiltert auf seine `airbnb_listing_id`) — der
+    Airbnb-Kanal trägt alle Objekte des Kontos, und ein Objekt-Import darf
+    fremde nicht anfassen. Der Zeitraum kommt vom Betrieb, es gibt keinen
+    stillschweigenden Standard.
+
+    Antwort enthält `vollstaendig`: false heißt, mindestens eine Etappe ist
+    gescheitert — dann FEHLEN Buchungen, und der Lauf ist zu wiederholen.
+    """
+    try:
+        return service.airbnb_historie_importieren(
+            ctx, property_id, von=von, bis=bis
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/properties/{property_id}/veroeffentlichen/kanaele")
+def veroeffentlichen_kanaele(
+    property_id: str, service: ChannelManagerServiceDep, ctx: _read
+) -> dict[str, object]:
+    """Schritt 1 des Veröffentlichen-Dialogs: Wo geht dieses Objekt live?
+
+    Je Kanal steht dabei, ob er wählbar ist und warum nicht. Nicht verbundene
+    Portale werden mitgeliefert statt weggelassen — der Betrieb soll sehen,
+    dass es sie gibt.
+    """
+    try:
+        return service.veroeffentlichen_uebersicht(ctx, property_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/properties/{property_id}/veroeffentlichen/vorschau/{portal_code}")
+def veroeffentlichen_vorschau(
+    property_id: str, portal_code: str,
+    service: ChannelManagerServiceDep, ctx: _read,
+) -> dict[str, object]:
+    """Schritt 2: Was ändert sich bei DIESEM Portal, wenn jetzt gesendet wird?
+
+    Nur LESEND. Gibt es für ein Portal keinen Ist-Abgleich, sagt die Antwort
+    das (`vergleichbar: false` + Grund) — statt eine leere Liste zu liefern,
+    die wie „alles gleich" aussieht.
+    """
+    try:
+        return service.veroeffentlichen_vorschau(ctx, property_id, portal_code)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.get("/properties/{property_id}/airbnb/diagnose")
 def airbnb_diagnose(
     property_id: str, service: ChannelManagerServiceDep, ctx: _read

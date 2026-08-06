@@ -433,12 +433,29 @@ def _handle_sync_bookings_feed(
     (booking_*) und vom 5-min-Backstop-Tick. Revision-Fehler sind im Ergebnis
     isoliert (errors[]) — ein kompletter Feed-Ausfall wirft und geht in den
     Job-Backoff."""
-    result = _svc(db, budget).sync_bookings_all()
+    dienst = _svc(db, budget)
+    result = dienst.sync_bookings_all()
     if result.errors:
         # Teilfehler sichtbar machen; die betroffenen Revisionen bleiben un-acked
         # im Feed und kommen beim nächsten Lauf erneut.
         log.warning("sync_bookings_feed_partial", errors=result.errors[:5],
                     saved=result.saved, skipped=result.skipped)
+
+    # Im SELBEN Lauf: fehlende Buchungszeitpunkte beim Portal nachholen
+    # (0291/0292). Der Feed liefert nur seinen eigenen Eingang — ohne diesen
+    # Schritt zeigte der Posteingang eine Buchung vom März als „heute", und
+    # zwar dauerhaft, nicht nur einmal. Hier angehängt statt als eigener Tick,
+    # weil genau hier die Zeilen ohne Zeitpunkt entstehen.
+    # Best effort: eine unerreichbare Portal-API darf den Feed nicht kippen
+    # (die Buchungen sind das Wichtigere, der Zeitpunkt kommt beim nächsten
+    # Lauf) — deshalb breit gefangen und nur geloggt.
+    try:
+        geheilt = dienst.buchungszeitpunkte_heilen()
+        if geheilt.get("gesetzt"):
+            log.info("buchungszeitpunkte_nachgezogen", **geheilt)
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Feed nie
+        log.warning("buchungszeitpunkte_heilung_fehlgeschlagen",
+                    error=str(exc)[:200])
 
 
 def _handle_sync_live_feed(

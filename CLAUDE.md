@@ -112,6 +112,24 @@ schaltet im Normalfall alle an (1 Klick = OTA + Marktplatz), aber jeder Kanal is
 einzeln steuerbar. availability/stop_sell wirken kanalübergreifend (Stop-Sell
 sperrt überall), die reine Kanal-Sichtbarkeit ist pro Kanal.
 
+## Wurzel 5b — Unsere Uhr ist nie der Zeitpunkt eines fremden Ereignisses
+`created_at`/`updated_at`/Feed-Eingang beschreiben UNSERE Verarbeitung. Sie als
+Zeitpunkt einer fremden Handlung auszugeben ist eine Falschaussage, die niemand
+als Bug erkennt — sie sieht ja plausibel aus. Live passiert (06.08.2026): der
+Posteingang zeigte 22 Airbnb-Buchungen als „heute 10:48", real gebucht am
+23.03./01.06./26.07.; alle 22 trugen dieselbe Sekunde, weil der Feed sie in
+einem Rutsch holte, und die Sortierung „letzte Aktivität" war wertlos.
+- Zeitpunkt eines Fremdereignisses IMMER aus der Quelle (Airbnb `booked_at`,
+  `reservations.booked_at`/`channex_booking.booked_at`, 0291/0292) über den
+  EINEN Helfer `common.ota_buchungszeitpunkt` — neue Kanäle tragen ihren
+  Feldnamen dort ein, nicht an der Anzeigestelle.
+- Der Aggregator ist KEINE Quelle dafür: Channex' `inserted_at` ist sein
+  eigener Eingang, `ota_booked_at` ist live leer.
+- Fehlt der echte Wert: `None` und in der UI „Eingang bei uns" benennen — nie
+  auf die eigene Uhr zurückfallen (Wurzel 4).
+- Sortierungen „neueste zuerst" laufen über den Quell-Zeitstempel, nicht über
+  `updated_at`.
+
 ## Wurzel 6 — RLS erzwingt nur den MANDANTEN, nicht Rolle/Spalte/Schreibrichtung
 Ein Client mit gültigem JWT + öffentlichem anon-Key spricht PostgREST/Realtime
 DIREKT an — der FastAPI-Layer wird dabei komplett umgangen. Service-Layer-Checks
@@ -243,3 +261,30 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
   eins rein: rotieren + aus der Git-History entfernen (`git filter-repo`/BFG).
 - Sensible Tabellen NIE allein mit `enable rls` + tenant-Policy „absichern" — ohne
   `revoke`/restriktive Rollen-Policy ist der DB-Direktpfad offen (Wurzel 6).
+- NIE schreibend gegen ein fremdes Live-Konto (Airbnb/Booking/Stripe) testen ohne
+  ausdrückliche Freigabe — siehe „Schreibtests am Live-Konto".
+
+## Schreibtests am Live-Konto (UNVERHANDELBAR)
+Das Airbnb-Konto des Beta-Betriebs ist PRODUKTION: echte Inserate, echte Gäste,
+echte Buchungen. Ein Schreibaufruf dorthin ist keine Messung, sondern ein
+Eingriff in den Verkauf.
+
+Passiert am 06.08.2026: Um zu prüfen, ob `has_availability` die Sichtbarkeit
+steuert, wurde „Feriehus Kornblomst" per `PUT v2/listings/{id}` auf `true`
+gesetzt — das Inserat war damit live und buchbar. Danach wurde weitergearbeitet
+und der Rücksprung vergessen. Erst beim Zurücksetzen kam heraus, dass Airbnb
+dafür ein Pflichtfeld `deactivation_reason` verlangt: ohne diesen Fund wäre das
+Objekt dauerhaft sichtbar geblieben, ohne Weg zurück.
+
+Vor JEDEM schreibenden Fremdaufruf gegen ein Live-Konto:
+1. **Freigabe holen.** Der Nutzer entscheidet, an welchem Objekt getestet wird —
+   nicht am erstbesten aus der Liste.
+2. **Rückweg ZUERST beweisen.** Erst belegen, wie der Ausgangszustand
+   wiederhergestellt wird (welcher Endpunkt, welche Pflichtfelder), dann
+   schreiben. Kein bewiesener Rückweg → kein Schreibtest.
+3. **Ausgangszustand notieren** und im selben Durchlauf zurücksetzen — nicht in
+   einem späteren Schritt, nicht „gleich noch". Ein Abbruch dazwischen (Timeout,
+   Rückfrage, Denkpause) lässt das Live-Objekt sonst verändert stehen.
+4. **Danach gegenprüfen**, dass der Ausgangszustand wirklich wieder steht.
+Lesende Aufrufe (`GET`) sind davon frei. Ein 200 ist KEIN Beweis, dass etwas
+ankam — zurücklesen (Airbnb quittiert verworfene Nutzlasten mit 200).

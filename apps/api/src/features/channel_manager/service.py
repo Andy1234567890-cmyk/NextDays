@@ -22,6 +22,9 @@ from .airbnb_diagnose import AirbnbDiagnoseMixin
 from .airbnb_direkt import AirbnbDirektMixin
 from .airbnb_foto_raum import AirbnbFotoRaumMixin
 from .airbnb_gebuehren import AirbnbGebuehrenMixin
+from .airbnb_historie import AirbnbHistorieMixin
+from .airbnb_historie_dienst import AirbnbHistorieDienstMixin
+from .airbnb_historie_import import AirbnbHistorieImportMixin
 from .airbnb_objekt_abruf import AirbnbObjektAbrufMixin
 from .airbnb_registrierung import AirbnbRegistrierungMixin
 from .airbnb_uebernahme import AirbnbUebernahmeMixin
@@ -50,6 +53,7 @@ from .property_mapping import PropertyMappingMixin
 from .reviews_sync import ReviewsSyncMixin
 from .schemas import ChannexDebugEntry, ChannexDebugResponse, SliceHealth
 from .tax_sync import TaxSyncMixin
+from .veroeffentlichen import VeroeffentlichenMixin
 
 __all__ = [
     "ChannelManagerError",
@@ -103,6 +107,19 @@ class ChannelManagerService(
     # Registrierungsnummer (DK: BFE) aus `v2/listing_permits` zu holen — sie
     # steht in keinem der Listing-Felder.
     AirbnbRegistrierungMixin,
+    # Nach AirbnbDiagnoseMixin: der Veröffentlichungs-Dialog zeigt als Schritt 2
+    # deren Feld-Abgleich. Schaltet `published` je Mapping — der Schalter hinter
+    # Airbnbs „Unlisted", den ein reiner Statuswechsel bisher nicht erreichte.
+    VeroeffentlichenMixin,
+    # Buchungshistorie EINES Objekts direkt bei Airbnb (Channex kennt sie nicht:
+    # live 0 Buchungen im Feed, aber 462 bei Airbnb). Drei Mixins, weil Lesen
+    # und Schreiben getrennt testbar bleiben müssen: `AirbnbHistorieMixin` liest
+    # etappenweise bei Airbnb, `AirbnbHistorieImportMixin` schreibt bei uns,
+    # `AirbnbHistorieDienstMixin` ist der Route-Einstieg über beide. Nach
+    # AirbnbDirektMixin, weil der Dienst dessen `_airbnb_token` nutzt.
+    AirbnbHistorieMixin,
+    AirbnbHistorieImportMixin,
+    AirbnbHistorieDienstMixin,
     ObjektKanalMixin,
     BookingsSyncMixin,
     LiveFeedSyncMixin,

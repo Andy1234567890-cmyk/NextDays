@@ -55,6 +55,83 @@ NICHT strukturiert spezifiziert — kein geratenes Parsing; die Roh-Payloads
 liegen in `channex_booking.raw`, sobald echte Gebühren-Revisionen deren
 Struktur zeigen, wird das Feld nachgezogen.
 
+## Buchungshistorie je Objekt (`airbnb_historie*.py`, 06.08.2026)
+
+Der Feed oben liefert nur, was Channex selbst als Revision gesehen hat. Alles,
+was VOR dem Verbinden gebucht wurde, kennt es nicht — live gemessen am
+Beta-Konto:
+
+| Quelle | Buchungen |
+|---|---|
+| Channex `GET /bookings` je Objekt (6 geprüft) | 0 |
+| Channex Revisions-Feed | 0 |
+| `channex_booking` (Staging) | 0 |
+| Airbnb `GET v2/reservations` | **462** (04/2022–07/2027, 41 Inserate) |
+
+Deshalb der direkte Weg, wie schon bei Stammdaten/Fotos. Drei Module, damit
+Lesen und Schreiben getrennt testbar bleiben:
+
+- `airbnb_historie.py` — liest etappenweise bei Airbnb (nur GET)
+- `airbnb_historie_import.py` — schreibt Reservierung, Gast, Kalender
+- `airbnb_historie_dienst.py` — Route-Einstieg: Vorschau und Import
+
+**Die drei API-Eigenheiten, die den Aufbau bestimmen** (alle live gemessen, KEINE
+aus der Doku übernommen — jede verschluckt sonst still Buchungen):
+
+1. `start_date` reicht ab dem Datum **genau ein Jahr** weit, dann endet der
+   Cursor. Ein einziger Aufruf für 2020–heute liefert nur das erste Jahr.
+2. `_limit` über 50 antwortet **200 mit leerer Liste** — kein Fehler. Wer 100
+   anfragt, glaubt, es gäbe nichts.
+3. `_offset` wird ignoriert; geblättert wird über `paging.next_cursor`.
+
+**Etappen und ihre Belegung:** Schrittweite 3 Monate bei 12 Monaten Reichweite ⇒
+jede Buchung liegt in vier Etappen. Gegenprobe gefahren:
+
+| Teilung | Buchungen | Etappen | HTTP-Aufrufe |
+|---|---|---|---|
+| Quartalsschritte | 462 | 36 | 63 |
+| Monatsschritte | 462 | 108 | 187 |
+
+Die feinere Teilung findet **null** zusätzliche Buchungen — Quartalsschritte sind
+nachweislich lückenlos. Dedup über `confirmation_code` (Wurzel 2).
+
+**Nur das eigene Inserat:** gefiltert wird auf `properties.airbnb_listing_id`.
+Von den 462 Buchungen liegen 322 auf 23 Inseraten, die es bei uns nicht als
+Objekt gibt (`GET v2/listings/{id}` → 403, vom Betrieb archiviert/abgegeben) —
+sie werden gezählt und gemeldet, aber nicht geschrieben.
+
+**`vollstaendig` ist kein „hat geklappt":** false, sobald EINE Etappe scheitert.
+Ein Lauf mit 26 von 27 Etappen darf sich nicht „fertig" nennen, sonst fehlen
+Buchungen, ohne dass es jemand merkt (Wurzel 5).
+
+**Bewusste Festlegungen:** Historie wird OHNE rückwirkende Provisions-/
+Auszahlungsbuchung übernommen (kein Eingriff in ein abgeschlossenes
+Geschäftsjahr). Ein vergangener Aufenthalt wird `completed`, nicht `confirmed`.
+Die Buchung belegt GENAU EINE Einheit (sonst wären bei fünf gleichen Studios
+vier fälschlich dicht). Airbnb liefert im Reservierungs-Payload keinen
+Gastnamen — nur `guest_id` und Personenzahlen; der Name steht im Thread
+(`users[].first_name`), ohne Thread bleibt der Gast Platzhalter mit
+`needs_review` (Wurzel 4: kein erfundener „Gast von Airbnb").
+
+**Kein Upsert auf `source_channex_booking_id`** (live gescheitert, `42P10`): der
+Index `reservations_source_channex_uidx` ist PARTIELL
+(`WHERE source_channex_booking_id IS NOT NULL`), und darauf lässt PostgREST
+keine ON-CONFLICT-Klausel zu. Deshalb explizit update-oder-insert; der Index
+bleibt der Backstop gegen Doppelanlage bei zwei gleichzeitigen Läufen.
+
+**Fortschritt je Etappe** (`POST …/historie/etappe?nummer=N`): Der Gesamt-Import
+läuft über eine Minute; als EIN Request bliebe die Oberfläche so lange stumm.
+Die Oberfläche fährt deshalb Etappe für Etappe und zeigt jede Zeile, sobald sie
+fertig ist. Der Aufruf bekommt `bekannt` (die Codes der vorherigen Etappen) —
+ohne das zählte die vierfache Überlappung dieselbe Buchung mehrfach als „neu";
+auf die WIRKUNG hat die Liste keinen Einfluss (geschrieben wird ohnehin
+idempotent über den Code). `uebernehmen=false` ist der Vorschau-Modus.
+
+**Nachrichten:** `GET v2/threads/{id}/messages` (live 14 Nachrichten gelesen).
+NICHT der naheliegende Weg — `v2/messages` gibt es nicht (404), und der Thread
+liefert seine Nachrichten auch mit `_format=for_api_partners_with_posts` nicht
+mit. Die Leseroutine steht; die lokale Spiegelung braucht noch eine Tabelle.
+
 ## Steuern und Gebühren → Channex (`tax_sync.py` + `ota_abgaben.py`)
 
 Quelle sind die Objekt-Steuern (`type_attributes.pricing.taxes`) UND die

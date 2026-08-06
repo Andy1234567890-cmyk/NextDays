@@ -133,7 +133,7 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
                 "id, channex_booking_id, ota_name, ota_reservation_code, status, "
                 "arrival_date, departure_date, customer, raw, updated_at, guest_id, "
                 "is_read, is_starred, is_archived, assigned_user_id, inbox_status, "
-                "property_map_id"
+                "property_map_id, booked_at, ota_inserted_at"
             )
             .eq("tenant_id", tenant_id)
             # Genau die gewählte Ansicht (active|archived|trashed); deleted nie.
@@ -144,7 +144,17 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
             query = query.eq("assigned_user_id", ctx.user_id)
         elif unassigned:
             query = query.is_("assigned_user_id", "null")
-        res = query.order("updated_at", desc=True).limit(200).execute()
+        # Sortiert nach dem ECHTEN Buchungszeitpunkt, nicht nach `updated_at`
+        # (0291/0292): letzteres ist unsere Schreibzeit — als der Feed 22
+        # Buchungen in einem Rutsch holte, trugen alle dieselbe Sekunde und die
+        # Reihenfolge war zufällig. `nullsfirst=False`: Threads ohne
+        # Portal-Zeitpunkt ans Ende, statt die Liste anzuführen.
+        res = (
+            query.order("booked_at", desc=True, nullsfirst=False)
+            .order("updated_at", desc=True)
+            .limit(200)
+            .execute()
+        )
         rows = res.data or []
         # Reservierungs-IDs in einem Rutsch nachschlagen (Thread ↔ Reservierung).
         booking_ids = [r["channex_booking_id"] for r in rows if r.get("channex_booking_id")]
@@ -200,26 +210,25 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
     ) -> dict[str, str]:
         """Letzte Nachricht je Thread (Vorschautext in der Liste).
 
-        Nur im Sandbox-Modus: dort liegen die Nachrichten lokal. Gegen die echte
-        Channex-Messaging-API wäre das ein Request PRO Thread — das verbietet
-        sich für eine Liste mit 200 Einträgen, deshalb bleibt die Vorschau dort
-        leer, statt die Liste langsam zu machen.
+        Quelle ist der lokale Spiegel `portal_messages` (0293) — EIN Query für
+        die ganze Liste. Direkt beim Portal wäre es ein Request PRO Thread; bei
+        200 Einträgen ist das keine Liste mehr, die jemand öffnet.
         """
-        if not thread_ids or not self._sandbox_enabled():
+        if not thread_ids:
             return {}
         res = (
-            db.table("sandbox_message")
-            .select("thread_id, message, created_at")
+            db.table("portal_messages")
+            .select("thread_ref, body, sent_at")
             .eq("tenant_id", tenant_id)
-            .in_("thread_id", thread_ids)
-            .order("created_at", desc=True)
-            .limit(1000)
+            .in_("thread_ref", thread_ids)
+            .order("sent_at", desc=True)
+            .limit(2000)
             .execute()
         )
         out: dict[str, str] = {}
         for m in res.data or []:
             # Absteigend sortiert → der erste Treffer je Thread ist der jüngste.
-            out.setdefault(m["thread_id"], (m.get("message") or "").strip())
+            out.setdefault(m["thread_ref"], (m.get("body") or "").strip())
         return out
 
     def _user_names(
@@ -444,38 +453,8 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
         )
         return db, tenant_id, row, access
 
-    @staticmethod
-    def _sandbox_enabled() -> bool:
-        """Sandbox-Messaging aktiv? Dann lokaler Mock-Speicher statt Channex
-        (die echte Messaging-API ist ein separat freizuschaltendes Add-on)."""
-        from src.core.config import get_settings
-
-        return get_settings().channex_sandbox_portals
-
     def get_messages(self, ctx: AuthContext, thread_id: str) -> InboxMessagesResponse:
         db, tenant_id, row, _access = self._load_thread_scoped(ctx, thread_id)
-
-        # Sandbox: Nachrichten aus dem lokalen Mock-Speicher.
-        if self._sandbox_enabled():
-            res = (
-                db.table("sandbox_message")
-                .select("id, sender, message, created_at")
-                .eq("tenant_id", tenant_id)
-                .eq("thread_id", thread_id)
-                .order("created_at")
-                .execute()
-            )
-            items = [
-                InboxMessage(
-                    id=m.get("id"),
-                    message=m.get("message") or "",
-                    sender="property" if m.get("sender") == "property" else "guest",
-                    sent_at=m.get("created_at"),
-                )
-                for m in (res.data or [])
-            ]
-            items = self._merge_stream(db, tenant_id, thread_id, row, items)
-            return InboxMessagesResponse(items=items, total=len(items))
 
         cbid = row.get("channex_booking_id")
         if not cbid:
@@ -693,10 +672,15 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
 
         JEDE Angabe stammt von der Gegenseite, nicht von uns:
 
-        * Zeitpunkt = `channex_booking.ota_inserted_at` — Eingang der ersten
-          Booking Revision bei Channex (write-once, 0261). Vorher stand hier
-          unser `created_at`; bei einem Feed-Nachlauf trugen damit zwanzig
-          Buchungen aus drei Wochen dieselbe Sekunde.
+        * Zeitpunkt = `reservations.booked_at`, wann der Gast beim PORTAL
+          gebucht hat (0291) — erst danach Channex' Eingangszeit
+          (`ota_inserted_at`, write-once 0261), zuletzt unser `created_at`.
+          Die Reihenfolge ist bitter erkauft: Channex' `inserted_at` stand bei
+          22 Airbnb-Buchungen auf DERSELBEN Sekunde (der Feed holte sie in
+          einem Rutsch), obwohl sie vom 23.03., 01.06. und 26.07. stammten —
+          die älteste war viereinhalb Monate alt und stand im Posteingang als
+          „heute 10:48". Channex' eigenes `ota_booked_at` ist leer (live
+          geprüft); das echte Datum gibt nur das Portal her.
         * Kanal = `ota_name` aus der Buchungsmeldung („BookingCom", „Airbnb").
         * Aufgeklappt: Reservierungsnummer, An-/Abreise und — wenn das Portal
           sie mitschickt — der Buchungszeitpunkt aus der OTA-Originalmeldung.
@@ -707,10 +691,14 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
         """
         events: list[InboxMessage] = []
         raw = row.get("raw") if isinstance(row.get("raw"), dict) else {}
+        # Das echte Buchungsdatum schlägt jede Eingangszeit: nur es beantwortet
+        # „wann hat der Gast gebucht", während die anderen sagen, wann WIR oder
+        # der Aggregator davon erfahren haben.
+        gebucht = row.get("booked_at")
         ota_eingang = row.get("ota_inserted_at") or ota_zeitstempel_utc(
             raw.get("inserted_at")
         )
-        eingang = ota_eingang or row.get("created_at")
+        eingang = gebucht or ota_eingang or row.get("created_at")
         if eingang:
             fakten = [
                 InboxEventFact(label=label, value=str(wert))
@@ -833,28 +821,6 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
         # FeldFehlt wird bewusst durchgereicht — der Aufrufer (Scheduler) hält den
         # Grund an der geplanten Nachricht fest, statt „Hallo ," zu verschicken.
         text = rendern(text, self._feld_kontext(db, tenant_id, row))
-
-        # Sandbox: Antwort lokal als 'property'-Nachricht ablegen.
-        if self._sandbox_enabled():
-            ins = (
-                db.table("sandbox_message")
-                .insert(
-                    {
-                        "tenant_id": tenant_id,
-                        "thread_id": thread_id,
-                        "sender": "property",
-                        "message": text,
-                    }
-                )
-                .execute()
-            ).data
-            created = ins[0] if ins else {}
-            return InboxMessage(
-                id=created.get("id"),
-                message=text,
-                sender="property",
-                sent_at=created.get("created_at"),
-            )
 
         cbid = row.get("channex_booking_id")
         if not cbid:

@@ -602,6 +602,128 @@ export async function airbnbObjektAbrufen(
   return res;
 }
 
+// --- Buchungshistorie eines Objekts bei Airbnb -----------------------------
+//
+// Warum direkt bei Airbnb und nicht über die Portal-Anbindung: die kennt nur,
+// was sie selbst als Änderung gesehen hat. Alles, was VOR dem Verbinden
+// gebucht wurde, liegt dort nicht (live gemessen: 0 gegenüber 462 bei Airbnb).
+
+/** Eine Etappe des Laufs — die Zeile, die im Fortschritt erscheint. */
+export type HistorieEtappe = {
+  nummer: number;
+  von: string;
+  bis: string;
+  seiten: number;
+  gefunden: number;
+  /** Davon in diesem Lauf zum ersten Mal gesehen. Durch die bewusste
+   *  Überlappung der Etappen ist `gefunden` meist größer als `neu`. */
+  neu: number;
+  fehler: string | null;
+};
+
+export type HistorieVorschau = {
+  property_id: string;
+  titel: string | null;
+  listing_id: string;
+  von: string;
+  bis: string;
+  etappen: HistorieEtappe[];
+  gefunden: number;
+  mit_nachrichten: number;
+  /** Buchungen anderer Inserate desselben Kontos — werden NICHT angefasst. */
+  fremde: number;
+  /** false = mindestens eine Etappe ist gescheitert, es FEHLEN Buchungen. */
+  vollstaendig: boolean;
+  jahre: Record<string, number>;
+};
+
+export type HistorieImport = HistorieVorschau & {
+  gelesen: number;
+  angelegt: number;
+  aktualisiert: number;
+  uebersprungen: number;
+  gruende: string[];
+  fehlgeschlagene_etappen: HistorieEtappe[];
+};
+
+/** Ergebnis EINER Etappe — die Zeile, die live im Dialog erscheint. */
+export type EtappenLauf = {
+  nummer: number;
+  gesamt: number;
+  von: string;
+  bis: string;
+  gefunden: number;
+  neu: number;
+  /** Bestätigungscodes dieser Etappe. Der Dialog sammelt sie und schickt sie
+   *  als `bekannt` mit, damit die bewusste Überlappung nicht mehrfach zählt. */
+  codes: string[];
+  jahre: Record<string, number>;
+  mit_nachrichten: number;
+  fremde: number;
+  angelegt: number;
+  aktualisiert: number;
+  uebersprungen: number;
+  gruende: string[];
+  fehler: string | null;
+};
+
+/** EINE Etappe fahren. `uebernehmen: false` = Vorschau, schreibt nichts. */
+export async function airbnbHistorieEtappe(
+  propertyId: string,
+  von: string,
+  bis: string,
+  nummer: number,
+  uebernehmen: boolean,
+  bekannt: string[],
+): Promise<Result<EtappenLauf>> {
+  const p = new URLSearchParams({
+    von,
+    bis,
+    nummer: String(nummer),
+    uebernehmen: String(uebernehmen),
+  });
+  return call<EtappenLauf>(
+    `/properties/${propertyId}/airbnb/historie/etappe?${p.toString()}`,
+    { method: "POST", body: { bekannt } },
+  );
+}
+
+/** Wie viele Etappen ergibt dieser Zeitraum? Ohne Aufruf bei Airbnb. */
+export async function airbnbHistoriePlan(
+  propertyId: string,
+  von: string,
+  bis: string,
+): Promise<Result<{ etappen: { nummer: string; von: string; bis: string }[] }>> {
+  return call(
+    `/properties/${propertyId}/airbnb/historie/plan?von=${von}&bis=${bis}`,
+  );
+}
+
+/** Was liegt im Zeitraum bei Airbnb? Liest nur, schreibt nichts. */
+export async function airbnbHistorieVorschau(
+  propertyId: string,
+  von: string,
+  bis: string,
+): Promise<Result<HistorieVorschau>> {
+  return call(
+    `/properties/${propertyId}/airbnb/historie/vorschau?von=${von}&bis=${bis}`,
+  );
+}
+
+/** Die Historie DIESES Objekts holen und übernehmen. */
+export async function airbnbHistorieImportieren(
+  propertyId: string,
+  von: string,
+  bis: string,
+): Promise<Result<HistorieImport>> {
+  const res = await call<HistorieImport>(
+    `/properties/${propertyId}/airbnb/historie/import?von=${von}&bis=${bis}`,
+    { method: "POST" },
+  );
+  if (res.ok) revalidatePath(`/objekte/${propertyId}`);
+  return res;
+}
+
 export async function finalizeOAuthChannel(input: {
   property_id: string;
   portal_code: string;

@@ -23,6 +23,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import { AirbnbHistorieDialog } from "@/components/objekte/airbnb-historie-dialog";
 import { channelLogoLoose } from "@/lib/channel-logos";
 import {
   type AirbnbObjektAbrufResult,
@@ -158,9 +159,11 @@ export function PropertySync({
 // Rest angefasst wird, und ein Fehler an einem Objekt zieht die anderen nicht mit.
 function AirbnbAbruf({ propertyId }: { propertyId: string }) {
   const t = useTranslations("objects.sync.airbnbPull");
+  const th = useTranslations("objects.sync.airbnbHistorie");
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<AirbnbObjektAbrufResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [historieOffen, setHistorieOffen] = useState(false);
 
   function abrufen() {
     setError(null);
@@ -187,6 +190,23 @@ function AirbnbAbruf({ propertyId }: { propertyId: string }) {
         </Button>
         <span className="text-sm text-muted-foreground">{t("hint")}</span>
       </div>
+
+      {/* Zweiter Weg am selben Objekt: nicht die Stammdaten, sondern die
+          BUCHUNGEN von Airbnb holen. Bewusst hier und nicht in der Kanal-
+          Übersicht — dort gälte er für alle Objekte auf einmal, und der
+          Zeitraum ist eine Entscheidung je Haus. */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="outline" onClick={() => setHistorieOffen(true)}>
+          <Icon icon="ph:clock-counter-clockwise" className="size-4" />
+          {th("button")}
+        </Button>
+        <span className="text-sm text-muted-foreground">{th("hint")}</span>
+      </div>
+      <AirbnbHistorieDialog
+        propertyId={propertyId}
+        offen={historieOffen}
+        onSchliessen={() => setHistorieOffen(false)}
+      />
 
       {error && (
         <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">

@@ -193,13 +193,7 @@ class AnhangWissenMixin:
         self, row: dict, *, content: bytes, filename: str, mime: str,
         message: str | None,
     ) -> tuple[str | None, str | None]:
-        """Anhang an die OTA übergeben → (sent_at, Fehlertext).
-
-        Im Sandbox-Modus gibt es keine Channex-Messaging-API; der Anhang bleibt
-        dann bei uns liegen und wird ehrlich als „nicht übergeben" markiert
-        statt als gesendet ausgewiesen."""
-        if self._sandbox_enabled():
-            return None, "Sandbox: nicht an das Portal übergeben."
+        """Anhang an die OTA übergeben → (sent_at, Fehlertext)."""
         cbid = row.get("channex_booking_id")
         if not cbid:
             return None, "Diese Konversation hat keine Portal-Buchung."

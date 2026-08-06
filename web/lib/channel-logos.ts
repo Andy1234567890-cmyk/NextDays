@@ -16,6 +16,10 @@
 // (Channex-interne API-Konzepte, keine Marke). Diese zeigen nur den Namen.
 
 export const CHANNEL_LOGO: Record<string, string> = {
+  // Unser eigener Marktplatz — kein OTA und kein Channex-Portal, steht in der
+  // Kanal-Auswahl aber gleichberechtigt daneben (für den Betrieb ist er ein
+  // Vertriebskanal wie jeder andere). Eigenes Logo, keine Fremdmarke.
+  myBestDays: "/channels/mybestdays.png",
   // Große OTAs (echte, hochwertige Logos)
   BookingCom: "/channels/booking.svg",
   AirBNB: "/channels/airbnb.svg",

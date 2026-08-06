@@ -27,7 +27,12 @@ from src.jobs.queue import try_enqueue_recompute
 
 from .ari_push import _group_iso_days_to_ranges
 from .channex_client import ChannexError
-from .common import ChannelManagerError, log, ota_zeitstempel_utc
+from .common import (
+    ChannelManagerError,
+    log,
+    ota_buchungszeitpunkt,
+    ota_zeitstempel_utc,
+)
 from .einheiten import einheiten_zahl, freie_einheiten_spannen
 from .schemas import (
     BookingListResponse,
@@ -377,6 +382,11 @@ class BookingsSyncMixin:
             # nur beim ERSTEN Mal durch, spätere Revisionen lassen ihn stehen —
             # sonst wanderte das Buchungs-Ereignis im Verlauf nach vorn.
             "ota_inserted_at": ota_zeitstempel_utc(attrs.get("inserted_at")),
+            # Der ECHTE Buchungszeitpunkt (0292) — die Zeile darüber ist nur
+            # der Eingang beim Aggregator. Der Posteingang liest aus DIESER
+            # Tabelle, deshalb muss der Wert auch hier stehen, nicht nur in
+            # `reservations`.
+            "booked_at": ota_buchungszeitpunkt(attrs),
             "raw": attrs,
         }
         upserted = (
@@ -693,6 +703,11 @@ class BookingsSyncMixin:
             "currency": attrs.get("currency")
             or self._property_currency(db, property_id),
             "source_channex_booking_id": booking_id,
+            # WANN der Gast beim Portal gebucht hat (0291) — NICHT wann der
+            # Feed die Buchung abgeholt hat. Bleibt leer, wenn das Portal es
+            # nicht liefert; dann sagt der Posteingang „Eingang bei uns",
+            # statt einen falschen Zeitpunkt zu behaupten.
+            "booked_at": ota_buchungszeitpunkt(attrs),
             "guest_email": customer.get("mail") or customer.get("email"),
             "guest_phone": customer.get("phone"),
         }
@@ -904,6 +919,11 @@ class BookingsSyncMixin:
             # nie hart auf EUR (verfälscht PLN/CZK/CHF-Buchungen + Rechnung).
             "currency": attrs.get("currency") or self._property_currency(db, property_id),
             "source_channex_booking_id": booking_id,
+            # WANN der Gast beim Portal gebucht hat (0291) — NICHT wann der
+            # Feed die Buchung abgeholt hat. Bleibt leer, wenn das Portal es
+            # nicht liefert; dann sagt der Posteingang „Eingang bei uns",
+            # statt einen falschen Zeitpunkt zu behaupten.
+            "booked_at": ota_buchungszeitpunkt(attrs),
             "num_guests": max(1, adults + children + infants),
             "adults": adults,
             "children": children,

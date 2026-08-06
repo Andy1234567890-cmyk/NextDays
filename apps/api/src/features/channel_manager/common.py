@@ -7,7 +7,7 @@ Slice-Exception. Patch-Ziel für Tests, die Modul-Helfer ersetzen wollen
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, Final
 
 from src.core.logging import get_logger
 
@@ -890,6 +890,44 @@ def ota_zeitstempel_utc(wert: object) -> str | None:
     if not text:
         return None
     return text if _HAT_ZONE.search(text) else text + "Z"
+
+
+# Feldnamen, unter denen die Portale den ECHTEN Buchungszeitpunkt liefern.
+# Reihenfolge = Verlässlichkeit. Airbnb: `booked_at`. Booking.com legt ihn in
+# die Originalmeldung (`raw_message`), die `_ota_buchungszeit` im Posteingang
+# auspackt. Neue Kanäle tragen ihren Feldnamen HIER ein — nicht an der
+# Anzeigestelle, sonst hat der nächste Leser wieder eine eigene Regel.
+_BUCHUNGSZEIT_FELDER: Final = ("booked_at", "ota_booked_at", "created_at")
+
+
+def ota_buchungszeitpunkt(attrs: dict[str, object]) -> str | None:
+    """WANN der Gast beim Portal gebucht hat — nie, wann WIR es erfahren haben.
+
+    DER FEHLER, DEN DIESE FUNKTION VERHINDERT (live 06.08.2026): Der Posteingang
+    zeigte 22 Airbnb-Buchungen als „heute 10:48". Real gebucht waren sie am
+    23.03., 01.06. und 26.07. — die älteste viereinhalb Monate alt. Angezeigt
+    wurde der Zeitpunkt, zu dem der Feed sie in einem Rutsch abholte; alle 22
+    trugen deshalb DIESELBE Sekunde, und die Sortierung „letzte Aktivität" war
+    wertlos.
+
+    DIE REGEL, die daraus folgt und die überall gilt: Ein Zeitstempel, den WIR
+    setzen (`created_at`, Feed-Eingang, `inserted_at` des Aggregators), darf nie
+    als Zeitpunkt eines fremden Ereignisses ausgegeben werden. Er beschreibt
+    unsere Verarbeitung, nicht die Handlung des Gastes. Fehlt der echte Wert,
+    ist die Antwort `None` — die Oberfläche sagt dann „Eingang bei uns" statt
+    einen plausiblen falschen Zeitpunkt zu behaupten (Wurzel 4).
+
+    Warum `created_at` trotzdem in der Liste steht: Es ist Airbnbs eigenes
+    Anlagedatum der Reservierung (in deren Payload, nicht unseres) und liegt
+    live wenige Sekunden vor `booked_at` — ein brauchbarer Ersatz aus DERSELBEN
+    Quelle. Unser eigenes `created_at` erreicht diese Funktion nie: sie sieht
+    nur die Portal-Antwort.
+    """
+    for feld in _BUCHUNGSZEIT_FELDER:
+        wert = ota_zeitstempel_utc(attrs.get(feld))
+        if wert:
+            return wert
+    return None
 
 
 class ChannelManagerError(Exception):

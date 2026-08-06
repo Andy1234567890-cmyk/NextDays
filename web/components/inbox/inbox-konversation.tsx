@@ -542,9 +542,14 @@ export function Conversation({
                   (m.sender === "property" ? "items-end" : "items-start")
                 }
               >
+                {/* `whitespace-pre-wrap`: die Portale liefern den Text mit
+                    echten Zeilenumbrüchen (\n) — ohne das rendert eine
+                    gegliederte Willkommensnachricht als eine Textwand, in der
+                    Check-in-Zeit und Türcode untergehen. `break-words` fängt
+                    die langen Links ab, die sonst über die Blase hinauslaufen. */}
                 <div
                   className={
-                    "max-w-[80%] rounded-2xl px-3 py-2 text-sm " +
+                    "max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm " +
                     (m.sender === "property"
                       ? "bg-accent text-white"
                       : "bg-muted text-foreground")

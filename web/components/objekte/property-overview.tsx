@@ -16,6 +16,10 @@ import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { ChannelBadge } from "@nextdays/ui/channel-badge";
 
+import {
+  DeaktivierenDialog,
+  VeroeffentlichenDialog,
+} from "@/components/objekte/veroeffentlichen-dialog";
 import { useKanalZeilen } from "@/lib/use-kanal-felder";
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
@@ -61,7 +65,6 @@ import { usePropertyLabels } from "@/lib/use-property-labels";
 import {
   type Property,
   type PropertyInput,
-  type PropertyStatus,
   type PropertyType,
   publishProperty,
   updateProperty,
@@ -96,6 +99,14 @@ export function PropertyOverview({ initial }: { initial: Property }) {
   const [section, setSection] = useState<Section>(null);
   const [publishing, setPublishing] = useState(false);
   const [publishMsg, setPublishMsg] = useState<string | null>(null);
+  // Der Veröffentlichen-Dialog (Kanäle wählen → prüfen → freigeben) und die
+  // Rückfrage beim Deaktivieren. Getrennt, weil es zwei verschiedene Vorgänge
+  // sind: der eine zeigt, WOHIN es geht, der andere fragt nur nach.
+  const [dialogOffen, setDialogOffen] = useState(false);
+  const [deaktivierenOffen, setDeaktivierenOffen] = useState(false);
+  // Fehler des Veröffentlichen-Aufrufs — IM Dialog, nicht auf der Seite
+  // dahinter (dort bleibt er unsichtbar, solange der Dialog offen ist).
+  const [dialogFehler, setDialogFehler] = useState<string | null>(null);
 
   // PropertyRealtime (Layout) liefert nach externen Änderungen (anderer
   // Nutzer, Channex-Import) via router.refresh() frische Props — ohne Sync
@@ -119,16 +130,42 @@ export function PropertyOverview({ initial }: { initial: Property }) {
     return res.error;
   }
 
-  async function onPublish() {
+  // `kanaele` kommt aus dem Dialog. Der Backend-Aufruf nimmt die Auswahl noch
+  // nicht entgegen — publish() schaltet weiterhin alle verbundenen Kanäle. Die
+  // Liste hier nicht zu verschweigen ist Absicht: sobald der Endpunkt sie
+  // annimmt, wird sie durchgereicht, ohne die Oberfläche anzufassen.
+  async function onPublish(_kanaele: string[] = []) {
     setPublishing(true);
     setPublishMsg(null);
+    setDialogFehler(null);
     const res = await publishProperty(p.id);
     setPublishing(false);
     if (res.ok) {
       setP(res.data);
+      setDialogOffen(false);
       setPublishMsg(t("propertyOverview.publishSuccess"));
       // Layout-Karte (status „Entwurf"→„Aktiv") ist eine separate Server-
       // Component → ohne refresh bliebe sie auf „Entwurf" stehen.
+      router.refresh();
+    } else {
+      // IM Dialog zeigen, nicht dahinter: der Dialog bleibt offen, also sah
+      // der Betrieb die Meldung auf der Seite nie. „Nichts passiert" ist die
+      // schlechteste Rückmeldung — der Grund (z. B. fehlendes Abo) ist
+      // umsetzbar, wenn man ihn liest.
+      setDialogFehler(res.error);
+      setPublishMsg(res.error);
+    }
+  }
+
+  /** Objekt aus dem Verkauf nehmen — nach ausdrücklicher Bestätigung. */
+  async function onDeaktivieren() {
+    setPublishing(true);
+    setPublishMsg(null);
+    const res = await updateProperty(p.id, { status: "inactive" });
+    setPublishing(false);
+    setDeaktivierenOffen(false);
+    if (res.ok) {
+      setP(res.data);
       router.refresh();
     } else {
       setPublishMsg(res.error);
@@ -158,15 +195,44 @@ export function PropertyOverview({ initial }: { initial: Property }) {
               ? t("propertyOverview.statusActive")
               : t("propertyOverview.statusDraft")}
           </span>
-          {p.status !== "active" && (
-            <Button onClick={onPublish} disabled={publishing}>
+          {/* Der Knopf öffnet den Dialog, statt sofort zu senden: erst zeigen,
+              wohin es geht und was sich dort ändert. */}
+          {p.status !== "active" ? (
+            <Button onClick={() => setDialogOffen(true)} disabled={publishing}>
               {publishing
                 ? t("propertyOverview.publishing")
                 : t("propertyOverview.publish")}
             </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => setDeaktivierenOffen(true)}
+              disabled={publishing}
+            >
+              {t("veroeffentlichen.deaktivieren")}
+            </Button>
           )}
         </div>
       </div>
+
+      <VeroeffentlichenDialog
+        propertyId={p.id}
+        open={dialogOffen}
+        onClose={() => {
+          setDialogOffen(false);
+          setDialogFehler(null);
+        }}
+        onPublish={onPublish}
+        busy={publishing}
+        fehler={dialogFehler}
+      />
+      <DeaktivierenDialog
+        open={deaktivierenOffen}
+        onClose={() => setDeaktivierenOffen(false)}
+        onBestaetigen={onDeaktivieren}
+        busy={publishing}
+        titel={p.title}
+      />
       {publishMsg && (
         <p
           className={
@@ -582,7 +648,8 @@ function InfoEditor({
   const [einheit, setEinheit] = useState<FlaechenEinheit>(
     p.size_unit === "sqft" ? "sqft" : "sqm",
   );
-  const [status, setStatus] = useState<PropertyStatus>(p.status);
+  // Nur zur Anzeige — geändert wird der Status über „Veröffentlichen".
+  const status = p.status;
   const { busy, error, run } = useSaver(onSave);
   const t = useTranslations("objects");
   const belegungKanaele = useKanalZeilen("belegung");
@@ -735,28 +802,24 @@ function InfoEditor({
         </div>
       </div>
 
+      {/* Status wird hier nur ANGEZEIGT, nicht geändert.
+          Vorher stand hier ein Dropdown — ein zweiter Weg zum selben Zustand,
+          und der stille: Ein Wechsel auf „Aktiv" erreichte die Portale gar
+          nicht, weil `properties.status` im Channel-Manager nirgends gelesen
+          wird. Bei Airbnb blieben alle Objekte auf „Unlisted".
+          Verkaufen/Deaktivieren entscheidet der Betrieb jetzt oben über
+          „Veröffentlichen" — dort sieht er, WOHIN es geht und WAS sich bei den
+          Portalen ändert (Wurzel 9: ein Zustand, ein Weg). */}
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="e-status">
-          {t("propertyOverview.statusFieldLabel")}
-        </Label>
-        <p className="text-xs text-muted-foreground">
-          {t("propertyOverview.statusFieldHint")}
-        </p>
-        <Select
-          value={status}
-          onValueChange={(v) => setStatus(v as PropertyStatus)}
-        >
-          <SelectTrigger id="e-status">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label>{t("propertyOverview.statusFieldLabel")}</Label>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+            {STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {t("veroeffentlichen.statusHinweis")}
+          </span>
+        </div>
       </div>
       <SaveBar
         busy={busy}
@@ -766,7 +829,9 @@ function InfoEditor({
           run({
             property_type: type,
             max_guests: guests,
-            ...(status === p.status ? {} : { status }),
+            // KEIN `status` — der wird über „Veröffentlichen"/„Deaktivieren"
+            // gesetzt. Mitzusenden hieße, dass ein Speichern der Eckdaten den
+            // Verkaufszustand mitverändert (Wurzel 1).
             size_value: size === "" ? null : size,
             // Einheit nur mit einer Fläche — eine Einheit ohne Wert ist keine
             // Aussage (Wurzel 4).
