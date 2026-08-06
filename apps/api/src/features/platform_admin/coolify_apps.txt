@@ -1,0 +1,24 @@
+# Überwachte Anwendungen des Deploy-Monitors — Format: uuid|name
+#
+# WARUM DIESE KOPIE EXISTIERT:
+# Die führende Quelle ist scripts/ci/coolify-apps.txt (dort stehen zusätzlich
+# die watch_paths, die CI-Build und CI-Deploy steuern). Diese Datei liegt im
+# Repo-Root und damit AUSSERHALB des Docker-Build-Kontexts von apps/api — im
+# Container gibt es sie nicht (live geprüft 06.08.2026: der Import stürzte mit
+# IndexError ab, /app/scripts ist das API-eigene Skriptverzeichnis).
+#
+# Deshalb hier eine Kopie, die mit ins Image geht. Damit beide NICHT
+# auseinanderlaufen, prüft scripts/ci/apps-liste-pruefen.sh sie in der CI
+# gegeneinander — eine Abweichung ist ein Fehler, keine Warnung.
+jt5gdgragv2jzivpx4oiqfir|nextdays-kong
+y13cm245vlmvq3yv38gdbtat|nextdays-marketing
+rh4f581hqashrnmiwnxb6pcu|nextdays-plattform
+uo0irbk8eno9c9qonngzqwy2|nextdays-gastgeber
+oznosa2xmefzmfeqidezodm6|nextdays-admin
+u67kn5pj9cb2gqryt2ezsc8r|nextdays-storybook
+cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase
+kilcrxob5u434k3vsyf54ble|nextdays-api
+ly4w6vw4ffxk2987nyg5z5kt|nextdays-worker
+bln3q0n1l1se2hna8utkuag9|nextdays-web
+zcjrx4czu338zghc58d41yp7|nextdays-docs
+yih7d7kz4tkkgezqzg1zzjcs|nextdays-redis

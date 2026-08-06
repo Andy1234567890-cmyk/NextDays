@@ -32,4 +32,24 @@ while IFS='|' read -r uuid name pfade; do
 done < "$liste"
 [ "$fehler" = 0 ] || exit 1
 
-echo "coolify-apps.txt deckungsgleich mit der images-Matrix ($(echo "$aus_liste" | wc -l | tr -d ' ') Apps)."
+# Die Kopie im API-Slice (Deploy-Monitor) muss dieselben uuid|name-Paare führen.
+# Sie existiert, weil diese Datei hier im Repo-Root liegt und damit AUSSERHALB
+# des Docker-Build-Kontexts von apps/api — im Container gibt es sie nicht.
+# Läuft die Kopie weg, zeigt der Monitor eine App nicht an oder kennt eine, die
+# es nicht mehr gibt. Fail-closed: Abweichung ist ein Fehler.
+slice_liste="$wurzel/apps/api/src/features/platform_admin/coolify_apps.txt"
+if [ ! -f "$slice_liste" ]; then
+  echo "::error::$slice_liste fehlt — der Deploy-Monitor findet keine Anwendungen."
+  exit 1
+fi
+paare_quelle=$(grep -v '^\s*#' "$liste" | grep -v '^\s*$' | cut -d'|' -f1,2 | sort)
+paare_slice=$(grep -v '^\s*#' "$slice_liste" | grep -v '^\s*$' | cut -d'|' -f1,2 | sort)
+if [ "$paare_quelle" != "$paare_slice" ]; then
+  echo "::error::coolify-apps.txt und die Slice-Kopie weichen ab:"
+  diff <(echo "$paare_quelle") <(echo "$paare_slice") \
+    --label "scripts/ci/coolify-apps.txt" \
+    --label "apps/api/.../coolify_apps.txt" -u || true
+  exit 1
+fi
+
+echo "coolify-apps.txt deckungsgleich mit der images-Matrix ($(echo "$aus_liste" | wc -l | tr -d ' ') Apps) und der Slice-Kopie."

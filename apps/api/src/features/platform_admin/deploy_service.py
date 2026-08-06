@@ -4,10 +4,13 @@ Eigenes Modul statt Anbau an service.py: der Deploy-Monitor spricht KEINE
 Datenbank, sondern ausschließlich Coolify. Die Trennung hält service.py bei
 seinem Thema (mandantenübergreifende DB-Sichten).
 
-Welche Anwendungen überwacht werden, steht in `scripts/ci/coolify-apps.txt` —
-derselben Datei, aus der CI-Build und CI-Deploy lesen. Eine zweite Liste hier
-würde unweigerlich auseinanderlaufen: eine neue App stünde im Monitor und nicht
-in der CI oder umgekehrt.
+Welche Anwendungen überwacht werden, steht in `coolify_apps.txt` NEBEN diesem
+Modul. Die führende Quelle bleibt `scripts/ci/coolify-apps.txt` (dort stehen
+zusätzlich die watch_paths für CI-Build und CI-Deploy) — die liegt aber im
+Repo-Root und damit außerhalb des Docker-Build-Kontexts von `apps/api`: im
+Container existiert sie nicht (live geprüft 06.08.2026, der Import stürzte mit
+IndexError ab). Deshalb die Kopie im Slice; `scripts/ci/apps-liste-pruefen.sh`
+hält beide in der CI deckungsgleich.
 """
 from __future__ import annotations
 
@@ -22,10 +25,8 @@ from .schemas import DeployApp, DeployEintrag, DeployUebersicht, DeployVerlauf
 
 log = get_logger(__name__)
 
-# apps/api/src/features/platform_admin/ → Repo-Wurzel sind fünf Ebenen hoch.
-_APPS_DATEI = (
-    Path(__file__).resolve().parents[5] / "scripts" / "ci" / "coolify-apps.txt"
-)
+# Neben diesem Modul — geht mit ins Image, anders als der Repo-Root.
+_APPS_DATEI = Path(__file__).resolve().parent / "coolify_apps.txt"
 
 # Status, die Coolify für „läuft gerade" verwendet.
 _AKTIV = frozenset({"queued", "in_progress"})
