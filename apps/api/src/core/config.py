@@ -308,13 +308,23 @@ class Settings(BaseSettings):
     # Nur LESEN + Redeploy auslösen; Coolify bleibt Herr seiner Daten. Ohne
     # Token ist der Monitor sichtbar deaktiviert (503 mit klarer Meldung) statt
     # mit erfundenen Werten zu füllen (Wurzel 4).
-    coolify_url: str = ""
+    # NICHT `COOLIFY_URL` nennen: den Namen belegt Coolify SELBST und setzt ihn
+    # in jedem Container auf die Domains der laufenden App (live gemessen
+    # 06.08.2026 — er kam als "https://api.mynextdays.com,…" an). Ein Monitor
+    # mit diesem Namen zeigte also auf sich selbst statt auf Coolify.
+    coolify_api_url: str = Field(
+        default="",
+        validation_alias=AliasChoices("coolify_api_url", "coolify_base_url"),
+    )
     coolify_token: SecretStr = SecretStr("")
 
     @property
     def coolify_configured(self) -> bool:
         """Deploy-Monitor ist nutzbar, wenn Adresse UND Token gesetzt sind."""
-        return bool(self.coolify_url.strip() and self.coolify_token.get_secret_value().strip())
+        return bool(
+            self.coolify_api_url.strip()  # pylint: disable=no-member
+            and self.coolify_token.get_secret_value().strip()
+        )
 
     @property
     def mail_configured(self) -> bool:

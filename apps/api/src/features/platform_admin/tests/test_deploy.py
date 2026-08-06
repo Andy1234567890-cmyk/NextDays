@@ -27,7 +27,7 @@ def _einstellungen(
     token = "test-attrappe" if token is None else token
     s = MagicMock(name="settings")
     s.coolify_configured = bool(url and token)
-    s.coolify_url = url
+    s.coolify_api_url = url
     s.coolify_token.get_secret_value.return_value = token
     return s
 
@@ -40,7 +40,8 @@ def test_ohne_zugang_503_statt_leerer_liste() -> None:
         with pytest.raises(HTTPException) as exc:
             coolify.laufende_deploys()
     assert exc.value.status_code == 503
-    assert "COOLIFY_URL" in exc.value.detail
+    # Der Name muss COOLIFY_API_URL sein: COOLIFY_URL belegt Coolify selbst.
+    assert "COOLIFY_API_URL" in exc.value.detail
 
 
 # --- Coolify-Fehler werden nicht verschluckt --------------------------------

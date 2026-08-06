@@ -41,7 +41,7 @@ export default async function DeploySeite() {
         <div className="mt-8 rounded-2xl border border-dashed border-border p-8 text-center">
           <p className="text-sm font-medium">{fehler}</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Der Monitor braucht COOLIFY_URL und COOLIFY_TOKEN in der
+            Der Monitor braucht COOLIFY_API_URL und COOLIFY_TOKEN in der
             Server-Konfiguration von nextdays-api.
           </p>
         </div>

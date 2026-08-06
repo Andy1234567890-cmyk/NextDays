@@ -1603,6 +1603,51 @@ die Annahme läuft über `admin/app/einladung` (ohne Anmeldung erreichbar, siehe
 
 ---
 
+## platform_admin — Deploy-Monitor (`/api/v1/platform/deploy`)
+
+Welcher Stand läuft gerade wo, und was ist zuletzt ausgerollt worden. Die
+Quelle ist die **Coolify-REST-API**, nicht unsere Datenbank.
+
+| Methode | Pfad                                | Zweck                                                        |
+| ------- | ----------------------------------- | ------------------------------------------------------------ |
+| `GET`   | `/api/v1/platform/deploy`           | Je Anwendung der laufende bzw. letzte Deploy                   |
+| `GET`   | `/api/v1/platform/deploy/{uuid}`    | Verlauf EINER Anwendung (`limit` 1–100)                        |
+| `POST`  | `/api/v1/platform/deploy/{uuid}`    | Deploy auslösen (`require_platform_write`)                     |
+
+**Warum die API und nicht Coolifys Postgres:** die Historie liegt dort in
+`application_deployment_queue`. Direkt zu lesen wäre möglich, koppelt uns aber
+an ein internes Schema, das jedes Coolify-Update ändern darf. Live geprüft
+(06.08.2026, Coolify 4.x / Laravel 12.61.1): `GET /api/v1/deployments`,
+`GET /api/v1/deployments/applications/{uuid}`, `POST /api/v1/deploy?uuid=`.
+`POST` ist Pflicht — seit Coolify 4.2.0 quittiert `GET /api/v1/deploy` mit
+`405 endpoint changed to POST`.
+
+**Welche Anwendungen:** aus `scripts/ci/coolify-apps.txt`, derselben Datei, aus
+der CI-Build und CI-Deploy lesen. Eine zweite Liste im Backend würde
+auseinanderlaufen (App im Monitor, aber nicht in der CI — oder umgekehrt).
+
+**Konfiguration:** `COOLIFY_API_URL` + `COOLIFY_TOKEN` (Env von `nextdays-api`).
+Der Token braucht nur die Berechtigungen `read` und `deploy` — **nicht** `write`:
+damit kann er Anwendungen weder ändern noch löschen (per `DELETE /applications`
+gegengeprüft → `403`). `COOLIFY_API_URL` zeigt containerintern auf
+`http://coolify:8080` (gemeinsames Docker-Netz `coolify`), nicht ins offene Netz.
+Fehlt eines von beiden, antwortet der Monitor `503` mit klarem Grund statt eine
+leere Tabelle als „alles ruhig" auszugeben (Wurzel 4).
+
+**Fail-closed (Wurzel 5):** Coolify-Fehler werden nicht zu leeren Listen —
+abgelehnter Token/nicht erreichbar → `502`, unbekannte Anwendung → `404`. Ein
+Deploy geht ausschließlich auf UUIDs aus der geführten Liste. Lesen darf jeder
+im Backoffice (auch `platform_support`: sehen, ob etwas ausrollt, hilft bei
+jeder Störung), **auslösen** nur `platform_admin`. Protokolliert als
+`deploy.view` / `deploy.history` / `deploy.trigger`.
+
+**Kein Realtime:** es gibt keine Supabase-Tabelle zum Abonnieren. Die Seite lädt
+im Takt neu — 5 s während eines Baus, sonst 30 s.
+
+**Frontend:** `admin/app/(backoffice)/deploy` + `admin/components/deploy-tabelle.tsx`.
+
+---
+
 ## support (Live-Chat & Anfragen — implementiert)
 
 Der Support-Kanal zwischen **Kunde** und **myNextDays-Backoffice**. Ein Chat ist

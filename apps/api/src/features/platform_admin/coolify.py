@@ -42,11 +42,13 @@ def _basis_und_kopf() -> tuple[str, dict[str, str]]:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=(
-                "Deploy-Monitor ist nicht eingerichtet: COOLIFY_URL und "
+                "Deploy-Monitor ist nicht eingerichtet: COOLIFY_API_URL und "
                 "COOLIFY_TOKEN fehlen in der Server-Konfiguration."
             ),
         )
-    basis = einst.coolify_url.strip().rstrip("/")
+    # pylint sieht durch das Field(...) nur die FieldInfo, nicht den str-Wert,
+    # den pydantic zur Laufzeit einsetzt (falscher no-member).
+    basis = einst.coolify_api_url.strip().rstrip("/")  # pylint: disable=no-member
     kopf = {
         "Authorization": f"Bearer {einst.coolify_token.get_secret_value().strip()}",
         "Accept": "application/json",
