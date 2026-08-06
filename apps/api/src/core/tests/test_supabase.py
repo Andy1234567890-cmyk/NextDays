@@ -142,6 +142,9 @@ def test_public_storage_url_nutzt_externe_basis(monkeypatch) -> None:  # noqa: A
     """
     get_settings.cache_clear()
     monkeypatch.setenv("SUPABASE_URL", "http://kong:8000")
+    # Der explizite Name gewinnt laut AliasChoices — hier wird der Fallback auf
+    # API_EXTERNAL_URL geprüft, also muss er weg (in CI ist er gesetzt).
+    monkeypatch.delenv("SUPABASE_PUBLIC_URL", raising=False)
     monkeypatch.setenv("API_EXTERNAL_URL", "https://kong.example.com/")
     try:
         url = public_storage_url("company-logos", "t-1/logo.jpg")
