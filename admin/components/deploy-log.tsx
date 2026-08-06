@@ -10,8 +10,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { DeployLog } from "@/lib/backoffice";
 import { logHolen } from "@/lib/deploy-actions";
+import { useRealtime } from "@/lib/use-realtime";
 
-const TAKT_MS = 4_000;
 const LAEUFT = new Set(["queued", "in_progress"]);
 
 export function DeployLogAnsicht({
@@ -36,11 +36,17 @@ export function DeployLogAnsicht({
     }
   }, [deploymentUuid]);
 
-  useEffect(() => {
-    if (!laeuft) return;
-    const id = setInterval(nachladen, TAKT_MS);
-    return () => clearInterval(id);
-  }, [laeuft, nachladen]);
+  // Das LOG selbst wird nicht gespiegelt (50 KB je Deploy, selten gebraucht).
+  // Der AUSLOESER ist trotzdem Realtime: sobald der Worker den Fortschritt
+  // nach deploy_spiegel schreibt, holt diese Ansicht die neuen Zeilen nach.
+  // Kein Timer, keine Anfrage ohne Anlass.
+  useRealtime({
+    table: "deploy_spiegel",
+    onChange: () => {
+      if (laeuft) void nachladen();
+    },
+    debounceMs: 250,
+  });
 
   // Während des Baus am Ende bleiben, wie in einem Terminal.
   useEffect(() => {

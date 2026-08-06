@@ -14,9 +14,15 @@ import { toast } from "sonner";
 
 import type { DeployApp } from "@/lib/backoffice";
 import { deployAusloesen } from "@/lib/deploy-actions";
+import { useRealtime } from "@/lib/use-realtime";
 
-const TAKT_AKTIV_MS = 5_000;
-const TAKT_RUHE_MS = 30_000;
+// REALTIME, kein Polling: der Worker spiegelt Coolifys Zustand nach
+// public.deploy_spiegel (Migration 0294), diese Seite abonniert die Tabelle.
+// Ein Push je Aenderung statt „jeder Browser fragt alle paar Sekunden".
+//
+// Die Sekundenanzeige der Dauer ist eine reine Uhr im Browser — sie erzeugt
+// keine Anfrage, sondern laesst die bereits gelieferte Startzeit weiterlaufen.
+const TICK_MS = 1_000;
 
 /** Farbe UND Text — Status darf nie nur über Farbe erkennbar sein (WCAG 1.4.1). */
 const STATUS: Record<string, { label: string; stil: string }> = {
@@ -79,11 +85,21 @@ export function DeployTabelle({
   const [laeuftAktion, starteAktion] = useTransition();
   const [gerade, setGerade] = useState<string | null>(null);
 
+  // Push statt Polling: der Worker schreibt jede Aenderung nach
+  // deploy_spiegel, das Abo holt die frischen Daten vom Server nach.
+  useRealtime({
+    table: "deploy_spiegel",
+    onChange: () => router.refresh(),
+    debounceMs: 250,
+  });
+
+  // Reine Browser-Uhr fuer die Dauer laufender Deploys — kein Netzverkehr.
+  const [, tick] = useState(0);
   useEffect(() => {
-    const takt = aktiv ? TAKT_AKTIV_MS : TAKT_RUHE_MS;
-    const id = setInterval(() => router.refresh(), takt);
+    if (!aktiv) return;
+    const id = setInterval(() => tick((n) => n + 1), TICK_MS);
     return () => clearInterval(id);
-  }, [aktiv, router]);
+  }, [aktiv]);
 
   function ausloesen(app: DeployApp) {
     setGerade(app.uuid);

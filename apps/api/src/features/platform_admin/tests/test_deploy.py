@@ -259,3 +259,56 @@ def test_service_filtert_versteckte_zeilen_und_erkennt_stderr() -> None:
     assert log.zeilen[1].art == "stderr"
     # Unlesbarer Zeitstempel wird None, nicht "jetzt".
     assert log.zeilen[1].zeit is None
+
+
+# --- Realtime-Spiegel: Push statt Polling -----------------------------------
+
+
+def test_spiegel_schreibt_fortschreibend_und_raet_nichts() -> None:
+    """Der Worker spiegelt Coolify nach deploy_spiegel (Migration 0294).
+
+    Ohne diesen Spiegel müsste der Browser pollen. Wichtig: eine Anwendung
+    OHNE bekannten Deploy wird `unbekannt`, nicht „erfolgreich" (Wurzel 4).
+    """
+    from src.features.platform_admin import deploy_spiegel
+    from src.features.platform_admin.schemas import DeployApp, DeployUebersicht
+
+    db = MagicMock()
+    ueb = DeployUebersicht(
+        apps=[
+            DeployApp(
+                uuid="u1",
+                name="nextdays-api",
+                laeuft=True,
+                letzter=_eintrag({"status": "in_progress", "commit": "abc12345"}),
+            ),
+            DeployApp(uuid="u2", name="nextdays-web", laeuft=False, letzter=None),
+        ],
+        aktiv=True,
+    )
+    with patch.object(deploy_spiegel, "get_settings") as gs, patch.object(
+        deploy_spiegel.DeployService, "uebersicht", return_value=ueb
+    ):
+        gs.return_value.coolify_configured = True
+        aktiv = deploy_spiegel.spiegel_aktualisieren(db)
+
+    assert aktiv is True
+    zeilen = db.table.return_value.upsert.call_args[0][0]
+    assert len(zeilen) == 2
+    assert zeilen[0]["status"] == "in_progress"
+    assert zeilen[0]["commit"] == "abc12345"
+    # Kein erfundener Erfolg für eine Anwendung ohne Deploy.
+    assert zeilen[1]["status"] == "unbekannt"
+    # Fortschreiben statt ansammeln: je Anwendung genau eine Zeile.
+    assert db.table.return_value.upsert.call_args[1]["on_conflict"] == "anwendung_uuid"
+
+
+def test_spiegel_ohne_coolify_schreibt_nichts() -> None:
+    """Ohne Zugang keine Zeilen — kein leerer Spiegel, der Ruhe vortäuscht."""
+    from src.features.platform_admin import deploy_spiegel
+
+    db = MagicMock()
+    with patch.object(deploy_spiegel, "get_settings") as gs:
+        gs.return_value.coolify_configured = False
+        assert deploy_spiegel.spiegel_aktualisieren(db) is False
+    db.table.assert_not_called()

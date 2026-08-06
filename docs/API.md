@@ -1646,8 +1646,22 @@ im Backoffice (auch `platform_support`: sehen, ob etwas ausrollt, hilft bei
 jeder Störung), **auslösen** nur `platform_admin`. Protokolliert als
 `deploy.view` / `deploy.history` / `deploy.trigger`.
 
-**Kein Realtime:** es gibt keine Supabase-Tabelle zum Abonnieren. Die Seite lädt
-im Takt neu — 5 s während eines Baus, sonst 30 s.
+**Realtime, kein Polling (0294):** die Deploys liegen in Coolifys eigener
+Postgres, die wir nicht abonnieren können. Deshalb spiegelt ein Worker-Tick
+(`deploy_spiegel.spiegel_aktualisieren`, alle 5 s während eines Baus, sonst
+60 s) den Zustand nach `public.deploy_spiegel`; das Backoffice abonniert diese
+Tabelle und bekommt jede Änderung per Push. Aus „jeder offene Browser fragt
+alle paar Sekunden" wird „ein Prozess fragt, alle bekommen Push".
+
+Die Tabelle ist nur der Übertragungsweg — Coolify bleibt die Quelle der
+Wahrheit, je Anwendung wird genau eine Zeile fortgeschrieben. Schreiben darf
+nur `service_role`, lesen nur `is_platform_admin()`; Grant UND Publikation
+sind gegen die Live-DB geprüft (sonst wäre das Abo eine stumme Attrappe).
+`geprueft_at` verrät, wann der Worker zuletzt nachgesehen hat — steht der Wert
+still, ist der Spiegel veraltet.
+
+Das Build-LOG wird bewusst nicht gespiegelt (50 KB je Deploy, selten
+gebraucht): es wird live geholt, ausgelöst durch dasselbe Realtime-Signal.
 
 **Build-Logs — zweiter, getrennter Token:** Coolify blendet das Feld `logs`
 aus, solange der Token nicht `read:sensitive` hat (`ApiSensitiveData`-

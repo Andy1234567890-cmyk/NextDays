@@ -112,6 +112,11 @@ BOOKINGS_TICK_SECONDS = 5 * 60
 # unbeantwortete Anfrage nach etwa 24 Stunden selbst ablehnt und der Betrieb
 # davon möglichst früh erfahren muss.
 LIVE_FEED_TICK_SECONDS = 5 * 60
+# Deploy-Spiegel: fuellt public.deploy_spiegel, damit das Backoffice den
+# Deploy-Zustand per Realtime abonnieren kann statt zu pollen. Eng getaktet,
+# solange etwas baut (Sekunden zaehlen), sonst ruhig.
+DEPLOY_TICK_AKTIV_SECONDS = 5
+DEPLOY_TICK_RUHE_SECONDS = 60
 # Restzahlungen (Split-Payment): stündlich die fälligen 'balance'-Zeilen
 # off-session belasten. Stündlich reicht (Fälligkeit ist tagesgenau), hält aber
 # die Stripe-Last niedrig.
@@ -558,6 +563,8 @@ class Worker:
         self._last_ical_tick = 0.0
         self._last_bookings_tick = 0.0
         self._last_live_feed_tick = 0.0
+        self._last_deploy_tick = 0.0
+        self._deploy_aktiv = False
         self._last_balance_tick = 0.0
         self._last_payout_tick = 0.0
         self._last_commission_tick = 0.0
@@ -1185,6 +1192,31 @@ class Worker:
         # sonst fast nie — der von Channex verlangte tägliche Voll-Push fiele aus.
         self._enqueue_full_sync_nightly()
 
+    async def _deploy_tick(self, loop_time: float) -> None:
+        """Coolify-Zustand nach public.deploy_spiegel schreiben.
+
+        Das ist der Ersatz fuer Polling im Browser: EIN Prozess fragt Coolify,
+        das Backoffice bekommt die Aenderung per Realtime-Push. Solange etwas
+        baut, wird eng nachgesehen — sonst ruhig.
+        """
+        takt = (
+            DEPLOY_TICK_AKTIV_SECONDS if self._deploy_aktiv
+            else DEPLOY_TICK_RUHE_SECONDS
+        )
+        if loop_time - self._last_deploy_tick < takt:
+            return
+        self._last_deploy_tick = loop_time
+        try:
+            from .features.platform_admin.deploy_spiegel import spiegel_aktualisieren
+
+            self._deploy_aktiv = await asyncio.to_thread(
+                spiegel_aktualisieren, self._db
+            )
+        except Exception as exc:  # noqa: BLE001
+            # Best-effort: ein nicht erreichbares Coolify darf den Worker nicht
+            # kippen. Der Spiegel bleibt dann stehen, `geprueft_at` verraet es.
+            log.warning("deploy_spiegel_fehler", error=str(exc))
+
     async def run(self) -> None:
         log.info("worker_started", worker_id=self._worker_id, concurrency=CONCURRENCY)
         while not self._stop.is_set():
@@ -1202,6 +1234,7 @@ class Worker:
             await self._reviews_tick(loop_time)
             await self._tasks_tick(loop_time)
             await self._content_heal_tick(loop_time)
+            await self._deploy_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)
             jobs = await asyncio.to_thread(self._claim, free) if free > 0 else []
             for job in jobs:
