@@ -720,7 +720,17 @@
     "autoDay_4": "Πα",
     "autoDay_5": "Σά",
     "autoDay_6": "Κυ",
-    "whatsappWithGuest": "WhatsApp με {name}"
+    "whatsappWithGuest": "WhatsApp με {name}",
+    "formatBold": "Έντονα",
+    "formatItalic": "Πλάγια",
+    "formatBulletList": "Λίστα με κουκκίδες",
+    "formatOrderedList": "Αριθμημένη λίστα",
+    "formatUnderline": "Υπογράμμιση",
+    "formatAlign": "Στοίχιση",
+    "formatLink": "Σύνδεσμος",
+    "formatCode": "Πηγαίος κώδικας HTML",
+    "formatLinkPrompt": "URL συνδέσμου",
+    "formatResize": "Αλλαγή ύψους (διπλό κλικ: επαναφορά)"
   },
   "whatsapp": {
     "notConfigured": "Το WhatsApp δεν έχει συνδεθεί ακόμη. Καταχωρίστε τα διαπιστευτήρια (Meta Cloud API) στις ρυθμίσεις του διακομιστή και η αποστολή θα ενεργοποιηθεί.",

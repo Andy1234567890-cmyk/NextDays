@@ -720,7 +720,17 @@
     "autoDay_4": "Pe",
     "autoDay_5": "La",
     "autoDay_6": "Su",
-    "whatsappWithGuest": "WhatsApp – {name}"
+    "whatsappWithGuest": "WhatsApp – {name}",
+    "formatBold": "Lihavoitu",
+    "formatItalic": "Kursivoitu",
+    "formatBulletList": "Luettelo",
+    "formatOrderedList": "Numeroitu luettelo",
+    "formatUnderline": "Alleviivattu",
+    "formatAlign": "Tasaus",
+    "formatLink": "Linkki",
+    "formatCode": "HTML-lähdekoodi",
+    "formatLinkPrompt": "Linkin URL",
+    "formatResize": "Muuta korkeutta (kaksoisnapsautus: palauta)"
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",

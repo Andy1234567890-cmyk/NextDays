@@ -720,7 +720,17 @@
     "autoDay_4": "R",
     "autoDay_5": "L",
     "autoDay_6": "P",
-    "whatsappWithGuest": "WhatsApp kasutajaga {name}"
+    "whatsappWithGuest": "WhatsApp kasutajaga {name}",
+    "formatBold": "Rasvane",
+    "formatItalic": "Kaldkiri",
+    "formatBulletList": "Täpploend",
+    "formatOrderedList": "Nummerdatud loend",
+    "formatUnderline": "Allakriipsutatud",
+    "formatAlign": "Joondus",
+    "formatLink": "Link",
+    "formatCode": "HTML lähtekood",
+    "formatLinkPrompt": "Lingi URL",
+    "formatResize": "Muuda kõrgust (topeltklõps: lähtesta)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",

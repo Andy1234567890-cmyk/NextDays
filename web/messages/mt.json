@@ -720,7 +720,17 @@
     "autoDay_4": "Ġim",
     "autoDay_5": "Sib",
     "autoDay_6": "Ħad",
-    "whatsappWithGuest": "WhatsApp ma' {name}"
+    "whatsappWithGuest": "WhatsApp ma' {name}",
+    "formatBold": "Grassett",
+    "formatItalic": "Korsiv",
+    "formatBulletList": "Lista bil-bullets",
+    "formatOrderedList": "Lista numerata",
+    "formatUnderline": "Sottolinjat",
+    "formatAlign": "Allinjament",
+    "formatLink": "Link",
+    "formatCode": "Kodiċi sors HTML",
+    "formatLinkPrompt": "URL tal-link",
+    "formatResize": "Ibdel l-għoli (klikk doppju: irrisettja)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",

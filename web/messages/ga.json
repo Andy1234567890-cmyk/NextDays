@@ -720,7 +720,17 @@
     "autoDay_4": "Aoine",
     "autoDay_5": "Sath",
     "autoDay_6": "Domh",
-    "whatsappWithGuest": "WhatsApp le {name}"
+    "whatsappWithGuest": "WhatsApp le {name}",
+    "formatBold": "Trom",
+    "formatItalic": "Iodálach",
+    "formatBulletList": "Liosta urchar",
+    "formatOrderedList": "Liosta uimhrithe",
+    "formatUnderline": "Líne faoi",
+    "formatAlign": "Ailíniú",
+    "formatLink": "Nasc",
+    "formatCode": "Foinse HTML",
+    "formatLinkPrompt": "URL an naisc",
+    "formatResize": "Athraigh an airde (déchliceáil: athshocraigh)"
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",

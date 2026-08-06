@@ -7,7 +7,11 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
-import { FeldPicker, anCursorEinfuegen } from "@/components/inbox/feld-picker";
+import {
+  ComposerEditor,
+  type ComposerGriff,
+} from "@/components/inbox/composer-editor";
+import { FeldPicker } from "@/components/inbox/feld-picker";
 import {
   type MessageTemplate,
   createTemplate,
@@ -24,7 +28,7 @@ export function TemplatesTab() {
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
-  const textfeld = useRef<HTMLTextAreaElement>(null);
+  const editorGriff = useRef<ComposerGriff | null>(null);
 
   async function load() {
     const res = await listTemplates();
@@ -121,17 +125,34 @@ export function TemplatesTab() {
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t("templateTitle")}
         />
-        <textarea
-          ref={textfeld}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder={t("templateBody")}
-          rows={6}
-          className="resize-none rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
-        />
-        <FeldPicker
-          onInsert={(p) => anCursorEinfuegen(textfeld.current, p, body, setBody)}
-        />
+        {/* Derselbe Editor wie im Chat — eine Vorlage wird schließlich zu
+            einer Nachricht. Eigener Speicherplatz für die Höhe: hier
+            schreibt man lange Texte, im Chat kurze. */}
+        <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
+          <ComposerEditor
+            wert={body}
+            onChange={setBody}
+            platzhalter={t("templateBody")}
+            griff={editorGriff}
+            hoeheSchluessel="inbox.vorlage.hoehe"
+            griffSeite="unten"
+            leisteSeite="unten"
+            testId="inbox-template-textarea"
+            etiketten={{
+              bold: t("formatBold"),
+              italic: t("formatItalic"),
+              underline: t("formatUnderline"),
+              bulletList: t("formatBulletList"),
+              orderedList: t("formatOrderedList"),
+              align: t("formatAlign"),
+              link: t("formatLink"),
+              code: t("formatCode"),
+              linkPrompt: t("formatLinkPrompt"),
+              resize: t("formatResize"),
+            }}
+          />
+        </div>
+        <FeldPicker onInsert={(p) => editorGriff.current?.einfuegen(p)} />
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">
           {editing && (

@@ -17,7 +17,11 @@ import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import { MultiSelect } from "@nextdays/ui/multi-select";
 import { NativeSelect } from "@nextdays/ui/native-select";
-import { FeldPicker, anCursorEinfuegen } from "@/components/inbox/feld-picker";
+import {
+  ComposerEditor,
+  type ComposerGriff,
+} from "@/components/inbox/composer-editor";
+import { FeldPicker } from "@/components/inbox/feld-picker";
 import {
   type Automation,
   type AutomationTrigger,
@@ -72,7 +76,7 @@ export function AutomationsTab() {
   const [fensterTage, setFensterTage] = useState<number[]>([]);
   const [fensterVon, setFensterVon] = useState("");
   const [fensterBis, setFensterBis] = useState("");
-  const textfeld = useRef<HTMLTextAreaElement>(null);
+  const editorGriff = useRef<ComposerGriff | null>(null);
 
   const beiNachricht = trigger === "message_received";
 
@@ -389,19 +393,33 @@ export function AutomationsTab() {
         </NativeSelect>
         {!templateId && (
           <>
-            <textarea
-              ref={textfeld}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={t("autoMessage")}
-              rows={3}
-              className="resize-none rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
-            />
-            <FeldPicker
-              onInsert={(p) =>
-                anCursorEinfuegen(textfeld.current, p, message, setMessage)
-              }
-            />
+            {/* Derselbe Editor wie in Chat und Vorlagen — eine Automation
+                verschickt dieselbe Art Nachricht an denselben Gast. */}
+            <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
+              <ComposerEditor
+                wert={message}
+                onChange={setMessage}
+                platzhalter={t("autoMessage")}
+                griff={editorGriff}
+                hoeheSchluessel="inbox.automation.hoehe"
+                griffSeite="unten"
+                leisteSeite="unten"
+                testId="inbox-automation-textarea"
+                etiketten={{
+                  bold: t("formatBold"),
+                  italic: t("formatItalic"),
+                  underline: t("formatUnderline"),
+                  bulletList: t("formatBulletList"),
+                  orderedList: t("formatOrderedList"),
+                  align: t("formatAlign"),
+                  link: t("formatLink"),
+                  code: t("formatCode"),
+                  linkPrompt: t("formatLinkPrompt"),
+                  resize: t("formatResize"),
+                }}
+              />
+            </div>
+            <FeldPicker onInsert={(p) => editorGriff.current?.einfuegen(p)} />
           </>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}

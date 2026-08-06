@@ -720,7 +720,17 @@
     "autoDay_4": "Fre",
     "autoDay_5": "Lør",
     "autoDay_6": "Søn",
-    "whatsappWithGuest": "WhatsApp med {name}"
+    "whatsappWithGuest": "WhatsApp med {name}",
+    "formatBold": "Fed",
+    "formatItalic": "Kursiv",
+    "formatBulletList": "Punktliste",
+    "formatOrderedList": "Nummereret liste",
+    "formatUnderline": "Understreget",
+    "formatAlign": "Justering",
+    "formatLink": "Link",
+    "formatCode": "HTML-kildekode",
+    "formatLinkPrompt": "Link-URL",
+    "formatResize": "Juster højde (dobbeltklik: nulstil)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",

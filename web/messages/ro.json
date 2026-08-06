@@ -720,7 +720,17 @@
     "autoDay_4": "Vi",
     "autoDay_5": "Sâ",
     "autoDay_6": "Du",
-    "whatsappWithGuest": "WhatsApp cu {name}"
+    "whatsappWithGuest": "WhatsApp cu {name}",
+    "formatBold": "Aldin",
+    "formatItalic": "Cursiv",
+    "formatBulletList": "Listă cu marcatori",
+    "formatOrderedList": "Listă numerotată",
+    "formatUnderline": "Subliniat",
+    "formatAlign": "Aliniere",
+    "formatLink": "Link",
+    "formatCode": "Cod sursă HTML",
+    "formatLinkPrompt": "URL-ul linkului",
+    "formatResize": "Redimensionează (dublu clic: resetează)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",

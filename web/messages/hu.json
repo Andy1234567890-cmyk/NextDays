@@ -720,7 +720,17 @@
     "autoDay_4": "P",
     "autoDay_5": "Szo",
     "autoDay_6": "V",
-    "whatsappWithGuest": "WhatsApp – {name}"
+    "whatsappWithGuest": "WhatsApp – {name}",
+    "formatBold": "Félkövér",
+    "formatItalic": "Dőlt",
+    "formatBulletList": "Felsorolás",
+    "formatOrderedList": "Számozott lista",
+    "formatUnderline": "Aláhúzott",
+    "formatAlign": "Igazítás",
+    "formatLink": "Hivatkozás",
+    "formatCode": "HTML forráskód",
+    "formatLinkPrompt": "Hivatkozás URL-je",
+    "formatResize": "Magasság módosítása (dupla kattintás: alaphelyzet)"
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",

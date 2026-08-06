@@ -720,7 +720,17 @@
     "autoDay_4": "Fre",
     "autoDay_5": "Lör",
     "autoDay_6": "Sön",
-    "whatsappWithGuest": "WhatsApp med {name}"
+    "whatsappWithGuest": "WhatsApp med {name}",
+    "formatBold": "Fet",
+    "formatItalic": "Kursiv",
+    "formatBulletList": "Punktlista",
+    "formatOrderedList": "Numrerad lista",
+    "formatUnderline": "Understruken",
+    "formatAlign": "Justering",
+    "formatLink": "Länk",
+    "formatCode": "HTML-källkod",
+    "formatLinkPrompt": "Länk-URL",
+    "formatResize": "Ändra höjd (dubbelklick: återställ)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",

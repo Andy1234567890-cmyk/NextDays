@@ -720,7 +720,17 @@
     "autoDay_4": "Vr",
     "autoDay_5": "Za",
     "autoDay_6": "Zo",
-    "whatsappWithGuest": "WhatsApp met {name}"
+    "whatsappWithGuest": "WhatsApp met {name}",
+    "formatBold": "Vet",
+    "formatItalic": "Cursief",
+    "formatBulletList": "Opsomming",
+    "formatOrderedList": "Genummerde lijst",
+    "formatUnderline": "Onderstrepen",
+    "formatAlign": "Uitlijning",
+    "formatLink": "Link",
+    "formatCode": "HTML-broncode",
+    "formatLinkPrompt": "Link-URL",
+    "formatResize": "Hoogte aanpassen (dubbelklik: herstellen)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is nog niet verbonden. Voer de inloggegevens (Meta Cloud API) in de serverinstellingen in, dan is verzending actief.",

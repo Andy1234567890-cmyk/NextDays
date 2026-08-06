@@ -720,7 +720,17 @@
     "autoDay_4": "Sex",
     "autoDay_5": "Sáb",
     "autoDay_6": "Dom",
-    "whatsappWithGuest": "WhatsApp com {name}"
+    "whatsappWithGuest": "WhatsApp com {name}",
+    "formatBold": "Negrito",
+    "formatItalic": "Itálico",
+    "formatBulletList": "Lista com marcadores",
+    "formatOrderedList": "Lista numerada",
+    "formatUnderline": "Sublinhado",
+    "formatAlign": "Alinhamento",
+    "formatLink": "Ligação",
+    "formatCode": "Código-fonte HTML",
+    "formatLinkPrompt": "URL da ligação",
+    "formatResize": "Redimensionar (duplo clique: repor)"
   },
   "whatsapp": {
     "notConfigured": "O WhatsApp ainda não está ligado. Introduza as credenciais (Meta Cloud API) nas definições do servidor para ativar o envio.",

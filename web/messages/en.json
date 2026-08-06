@@ -720,7 +720,17 @@
     "autoDay_4": "Fri",
     "autoDay_5": "Sat",
     "autoDay_6": "Sun",
-    "whatsappWithGuest": "WhatsApp with {name}"
+    "whatsappWithGuest": "WhatsApp with {name}",
+    "formatBold": "Bold",
+    "formatItalic": "Italic",
+    "formatBulletList": "Bullet list",
+    "formatOrderedList": "Numbered list",
+    "formatUnderline": "Underline",
+    "formatAlign": "Alignment",
+    "formatLink": "Link",
+    "formatCode": "HTML source",
+    "formatLinkPrompt": "Link URL",
+    "formatResize": "Resize (double-click to reset)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",

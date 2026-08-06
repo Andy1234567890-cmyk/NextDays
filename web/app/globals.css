@@ -281,6 +281,14 @@ h1, h2, h3 {
   pointer-events: none;
 }
 
+/* Chat-Composer im Posteingang: ein Absatzwechsel muss wie EINE Leerzeile
+   aussehen — genauso, wie ihn die Nachrichtenblase daneben mit
+   `whitespace-pre-wrap` zeigt. Der geerbte Rand von 0.5rem war dafür zu
+   knapp und ließ die eingefügte Vorlage gedrängter wirken als das Original. */
+.tiptap-composer > * + * {
+  margin-top: 1lh;
+}
+
 /* Framer-Slider (Inspektor „Opazität" u. a.): dünne Spur, gefüllt bis --pct,
    kleiner runder weißer Knopf mit feinem Rand. --pct kommt inline vom Element. */
 .framer-range {

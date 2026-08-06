@@ -720,7 +720,17 @@
     "autoDay_4": "Ven",
     "autoDay_5": "Sam",
     "autoDay_6": "Dim",
-    "whatsappWithGuest": "WhatsApp avec {name}"
+    "whatsappWithGuest": "WhatsApp avec {name}",
+    "formatBold": "Gras",
+    "formatItalic": "Italique",
+    "formatBulletList": "Liste à puces",
+    "formatOrderedList": "Liste numérotée",
+    "formatUnderline": "Souligné",
+    "formatAlign": "Alignement",
+    "formatLink": "Lien",
+    "formatCode": "Code source HTML",
+    "formatLinkPrompt": "URL du lien",
+    "formatResize": "Redimensionner (double-clic : réinitialiser)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp n'est pas encore connecté. Renseignez les identifiants (Meta Cloud API) dans les paramètres du serveur pour activer l'envoi.",

@@ -720,7 +720,17 @@
     "autoDay_4": "Pią",
     "autoDay_5": "Sob",
     "autoDay_6": "Nie",
-    "whatsappWithGuest": "WhatsApp z {name}"
+    "whatsappWithGuest": "WhatsApp z {name}",
+    "formatBold": "Pogrubienie",
+    "formatItalic": "Kursywa",
+    "formatBulletList": "Lista punktowana",
+    "formatOrderedList": "Lista numerowana",
+    "formatUnderline": "Podkreślenie",
+    "formatAlign": "Wyrównanie",
+    "formatLink": "Link",
+    "formatCode": "Kod źródłowy HTML",
+    "formatLinkPrompt": "Adres URL linku",
+    "formatResize": "Zmień wysokość (dwuklik: przywróć)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nie jest jeszcze połączony. Wprowadź dane dostępowe (Meta Cloud API) w ustawieniach serwera, aby aktywować wysyłkę.",

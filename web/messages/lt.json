@@ -720,7 +720,17 @@
     "autoDay_4": "Pn",
     "autoDay_5": "Št",
     "autoDay_6": "Sk",
-    "whatsappWithGuest": "„WhatsApp“ su {name}"
+    "whatsappWithGuest": "„WhatsApp“ su {name}",
+    "formatBold": "Paryškintas",
+    "formatItalic": "Kursyvas",
+    "formatBulletList": "Sąrašas",
+    "formatOrderedList": "Numeruotas sąrašas",
+    "formatUnderline": "Pabrauktas",
+    "formatAlign": "Lygiuotė",
+    "formatLink": "Nuoroda",
+    "formatCode": "HTML pirminis kodas",
+    "formatLinkPrompt": "Nuorodos URL",
+    "formatResize": "Keisti aukštį (dvigubas spustelėjimas: atstatyti)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",

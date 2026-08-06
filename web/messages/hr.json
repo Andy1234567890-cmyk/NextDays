@@ -720,7 +720,17 @@
     "autoDay_4": "Pet",
     "autoDay_5": "Sub",
     "autoDay_6": "Ned",
-    "whatsappWithGuest": "WhatsApp s {name}"
+    "whatsappWithGuest": "WhatsApp s {name}",
+    "formatBold": "Podebljano",
+    "formatItalic": "Kurziv",
+    "formatBulletList": "Popis s grafičkim oznakama",
+    "formatOrderedList": "Numerirani popis",
+    "formatUnderline": "Podcrtano",
+    "formatAlign": "Poravnanje",
+    "formatLink": "Poveznica",
+    "formatCode": "HTML izvorni kod",
+    "formatLinkPrompt": "URL poveznice",
+    "formatResize": "Promijeni visinu (dvoklik: poništi)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp još nije povezan. Unesite pristupne podatke (Meta Cloud API) u postavkama poslužitelja, nakon toga je slanje aktivno.",

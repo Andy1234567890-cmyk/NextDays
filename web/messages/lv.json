@@ -720,7 +720,17 @@
     "autoDay_4": "Pk",
     "autoDay_5": "S",
     "autoDay_6": "Sv",
-    "whatsappWithGuest": "WhatsApp ar {name}"
+    "whatsappWithGuest": "WhatsApp ar {name}",
+    "formatBold": "Treknraksts",
+    "formatItalic": "Slīpraksts",
+    "formatBulletList": "Aizzīmju saraksts",
+    "formatOrderedList": "Numurēts saraksts",
+    "formatUnderline": "Pasvītrots",
+    "formatAlign": "Līdzinājums",
+    "formatLink": "Saite",
+    "formatCode": "HTML pirmkods",
+    "formatLinkPrompt": "Saites URL",
+    "formatResize": "Mainīt augstumu (dubultklikšķis: atiestatīt)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",

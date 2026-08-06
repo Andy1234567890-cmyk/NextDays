@@ -720,7 +720,17 @@
     "autoDay_4": "Пт",
     "autoDay_5": "Сб",
     "autoDay_6": "Нд",
-    "whatsappWithGuest": "WhatsApp с {name}"
+    "whatsappWithGuest": "WhatsApp с {name}",
+    "formatBold": "Получер",
+    "formatItalic": "Курсив",
+    "formatBulletList": "Списък",
+    "formatOrderedList": "Номериран списък",
+    "formatUnderline": "Подчертан",
+    "formatAlign": "Подравняване",
+    "formatLink": "Връзка",
+    "formatCode": "HTML изходен код",
+    "formatLinkPrompt": "URL адрес на връзката",
+    "formatResize": "Промяна на височината (двоен щрак: нулиране)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp още не е свързан. Въведете данните за достъп (Meta Cloud API) в настройките на сървъра, след което изпращането е активно.",

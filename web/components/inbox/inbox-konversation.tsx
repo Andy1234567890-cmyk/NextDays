@@ -16,6 +16,7 @@ import {
   useTransition,
 } from "react";
 
+import { ComposerEditor } from "@/components/inbox/composer-editor";
 import {
   GuestAvatar,
   HeadAction,
@@ -828,13 +829,23 @@ export function Conversation({
                 )}
               </div>
             )}
-            <textarea
-              data-testid="inbox-composer-textarea"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={t("placeholder")}
-              rows={2}
-              className="min-h-[2.5rem] w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-sm outline-none"
+            <ComposerEditor
+              wert={text}
+              onChange={setText}
+              onSenden={send}
+              platzhalter={t("placeholder")}
+              etiketten={{
+                bold: t("formatBold"),
+                italic: t("formatItalic"),
+                underline: t("formatUnderline"),
+                bulletList: t("formatBulletList"),
+                orderedList: t("formatOrderedList"),
+                align: t("formatAlign"),
+                link: t("formatLink"),
+                code: t("formatCode"),
+                linkPrompt: t("formatLinkPrompt"),
+                resize: t("formatResize"),
+              }}
             />
             {/* Werkzeuge links MIT Text (Lodgify beschriftet sie ebenfalls —
                 drei namenlose Icons neben dem Senden-Knopf raten sich schlecht),

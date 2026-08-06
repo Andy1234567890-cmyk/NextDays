@@ -6,8 +6,10 @@
 // fiele erst beim Speichern auf (der Server weist es mit 422 ab). Die Liste kommt
 // vom Server, damit Katalog und Oberfläche nicht auseinanderlaufen.
 //
-// Eingefügt wird an der Cursorposition des zugehörigen Textfeldes, nicht am Ende:
-// Platzhalter stehen fast immer mitten im Satz („Hallo {{guest_first_name}},").
+// Eingefügt wird an der Cursorposition, nicht am Ende: Platzhalter stehen fast
+// immer mitten im Satz („Hallo {{guest_first_name}},"). Wohin genau, entscheidet
+// der Aufrufer über `onInsert` — bei allen dreien ist das der `ComposerGriff`
+// des Rich-Text-Editors.
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -73,28 +75,4 @@ export function FeldPicker({
       )}
     </div>
   );
-}
-
-/** Text an der Cursorposition eines Feldes einsetzen und den Cursor dahinter
- *  stellen. Ohne das landete jeder Platzhalter am Ende und müsste von Hand an
- *  seinen Platz geschoben werden. */
-export function anCursorEinfuegen(
-  feld: HTMLTextAreaElement | HTMLInputElement | null,
-  wert: string,
-  aktuell: string,
-  setzen: (neu: string) => void,
-): void {
-  if (!feld) {
-    setzen(aktuell + wert);
-    return;
-  }
-  const start = feld.selectionStart ?? aktuell.length;
-  const ende = feld.selectionEnd ?? start;
-  const neu = aktuell.slice(0, start) + wert + aktuell.slice(ende);
-  setzen(neu);
-  // Nach dem Re-Render die Auswahl hinter das Eingefügte setzen.
-  requestAnimationFrame(() => {
-    feld.focus();
-    feld.setSelectionRange(start + wert.length, start + wert.length);
-  });
 }

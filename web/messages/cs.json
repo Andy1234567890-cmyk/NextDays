@@ -720,7 +720,17 @@
     "autoDay_4": "Pá",
     "autoDay_5": "So",
     "autoDay_6": "Ne",
-    "whatsappWithGuest": "WhatsApp s {name}"
+    "whatsappWithGuest": "WhatsApp s {name}",
+    "formatBold": "Tučné",
+    "formatItalic": "Kurzíva",
+    "formatBulletList": "Odrážky",
+    "formatOrderedList": "Číslovaný seznam",
+    "formatUnderline": "Podtržené",
+    "formatAlign": "Zarovnání",
+    "formatLink": "Odkaz",
+    "formatCode": "Zdrojový kód HTML",
+    "formatLinkPrompt": "URL odkazu",
+    "formatResize": "Změnit výšku (dvojklik: obnovit)"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatím není propojen. Zadejte přístupové údaje (Meta Cloud API) v nastavení serveru, poté bude odesílání aktivní.",
