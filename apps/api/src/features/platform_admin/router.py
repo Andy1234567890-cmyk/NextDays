@@ -14,11 +14,13 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from src.core.security import CurrentPlatformAdmin, require_platform_write
 
-from .dependencies import PlatformAdminServiceDep, TeamServiceDep
+from .dependencies import DeployServiceDep, PlatformAdminServiceDep, TeamServiceDep
 from .schemas import (
     AuditList,
     BuchungDetail,
     BuchungList,
+    DeployUebersicht,
+    DeployVerlauf,
     FinanzUebersicht,
     ModerationDecision,
     ModerationList,
@@ -736,3 +738,64 @@ def get_buchung(
         request=request,
     )
     return result
+
+
+# --- Deploy-Monitor -------------------------------------------------------
+# Quelle ist Coolify, nicht unsere DB. Lesen darf jeder im Backoffice (auch
+# platform_support: sehen, ob ein Ausrollen läuft, hilft bei jeder Störung);
+# AUSLÖSEN nur platform_admin (require_platform_write).
+
+
+@router.get("/deploy", response_model=DeployUebersicht)
+def deploy_uebersicht(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    deploy: DeployServiceDep,
+    request: Request,
+) -> DeployUebersicht:
+    """Je überwachter Anwendung der laufende bzw. letzte Deploy."""
+    ergebnis = deploy.uebersicht()
+    service.log_action(ctx, "deploy.view", request=request)
+    return ergebnis
+
+
+@router.get("/deploy/{anwendung_uuid}", response_model=DeployVerlauf)
+def deploy_verlauf(
+    anwendung_uuid: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    deploy: DeployServiceDep,
+    request: Request,
+    limit: int = Query(20, ge=1, le=100),
+) -> DeployVerlauf:
+    """Die letzten Deploys EINER Anwendung, neueste zuerst."""
+    ergebnis = deploy.verlauf(anwendung_uuid, limit=limit)
+    service.log_action(
+        ctx,
+        "deploy.history",
+        target_type="application",
+        target_id=anwendung_uuid,
+        request=request,
+    )
+    return ergebnis
+
+
+@router.post("/deploy/{anwendung_uuid}", response_model=PlatformOk)
+def deploy_ausloesen(
+    anwendung_uuid: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    deploy: DeployServiceDep,
+    request: Request,
+) -> PlatformOk:
+    """Einen Deploy anstoßen. Rollt LIVE aus — deshalb nur platform_admin."""
+    require_platform_write(ctx)
+    deploy.ausloesen(anwendung_uuid)
+    service.log_action(
+        ctx,
+        "deploy.trigger",
+        target_type="application",
+        target_id=anwendung_uuid,
+        request=request,
+    )
+    return PlatformOk()

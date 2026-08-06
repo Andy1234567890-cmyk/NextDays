@@ -591,3 +591,53 @@ export async function getSteuern(nurLuecken = false): Promise<SteuerUebersicht> 
   const q = nurLuecken ? "?nur_luecken=true" : "";
   return api<SteuerUebersicht>(`/platform/steuern${q}`, { cache: "no-store" });
 }
+
+// --- Deploy-Monitor ---------------------------------------------------------
+// Quelle ist Coolify (über FastAPI), nicht unsere Datenbank. Deshalb gibt es
+// hier auch kein Realtime: es existiert keine Tabelle, die man abonnieren
+// könnte — die Seite aktualisiert sich stattdessen im Takt (siehe Seite).
+
+export interface DeployEintrag {
+  id: number | null;
+  deployment_uuid: string | null;
+  anwendung: string;
+  anwendung_uuid: string | null;
+  status: string;
+  commit: string | null;
+  commit_nachricht: string | null;
+  gestartet_at: string | null;
+  beendet_at: string | null;
+  log_url: string | null;
+}
+
+export interface DeployApp {
+  uuid: string;
+  name: string;
+  laeuft: boolean;
+  letzter: DeployEintrag | null;
+}
+
+export interface DeployUebersicht {
+  apps: DeployApp[];
+  aktiv: boolean;
+}
+
+export interface DeployVerlauf {
+  items: DeployEintrag[];
+}
+
+/** Laufender bzw. letzter Deploy je überwachter Anwendung. */
+export async function getDeployUebersicht(): Promise<DeployUebersicht> {
+  return api<DeployUebersicht>("/platform/deploy", { cache: "no-store" });
+}
+
+/** Die letzten Deploys EINER Anwendung, neueste zuerst. */
+export async function getDeployVerlauf(
+  anwendungUuid: string,
+  limit = 20,
+): Promise<DeployVerlauf> {
+  return api<DeployVerlauf>(
+    `/platform/deploy/${anwendungUuid}?limit=${limit}`,
+    { cache: "no-store" },
+  );
+}

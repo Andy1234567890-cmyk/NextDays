@@ -304,6 +304,18 @@ class Settings(BaseSettings):
     # schriebe Kontakte in eine fremde Liste (Wurzel 4).
     brevo_list_id: int | None = None
 
+    # --- Coolify (Deploy-Monitor im Backoffice) -------------------------------
+    # Nur LESEN + Redeploy auslösen; Coolify bleibt Herr seiner Daten. Ohne
+    # Token ist der Monitor sichtbar deaktiviert (503 mit klarer Meldung) statt
+    # mit erfundenen Werten zu füllen (Wurzel 4).
+    coolify_url: str = ""
+    coolify_token: SecretStr = SecretStr("")
+
+    @property
+    def coolify_configured(self) -> bool:
+        """Deploy-Monitor ist nutzbar, wenn Adresse UND Token gesetzt sind."""
+        return bool(self.coolify_url.strip() and self.coolify_token.get_secret_value().strip())
+
     @property
     def mail_configured(self) -> bool:
         """Versand ist nutzbar, wenn Server UND Absender gesetzt sind. Fehlt eins,

@@ -576,3 +576,42 @@ class BuchungDetail(BuchungSummary):
     checked_in_at: datetime | None = None
     checked_out_at: datetime | None = None
     channel_fee: Decimal = Decimal(0)
+
+
+class DeployEintrag(BaseModel):
+    """Ein Deploy-Vorgang, wie ihn der Monitor im Backoffice zeigt.
+
+    Die Felder kommen 1:1 aus Coolify; nichts wird ergänzt oder geraten.
+    Fehlt ein Wert dort, bleibt er hier None statt ein Ersatzwert (Wurzel 4).
+    """
+
+    id: int | None = None
+    deployment_uuid: str | None = None
+    anwendung: str
+    anwendung_uuid: str | None = None
+    status: str
+    commit: str | None = None
+    commit_nachricht: str | None = None
+    gestartet_at: datetime | None = None
+    beendet_at: datetime | None = None
+    # Direktlink in die Coolify-Oberfläche (Log-Ausgabe des Baus).
+    log_url: str | None = None
+
+
+class DeployApp(BaseModel):
+    """Eine überwachte Anwendung samt ihrem letzten bekannten Deploy."""
+
+    uuid: str
+    name: str
+    laeuft: bool = False
+    letzter: DeployEintrag | None = None
+
+
+class DeployUebersicht(BaseModel):
+    apps: list[DeployApp]
+    # True, sobald irgendeine App gerade baut — das Frontend pollt dann enger.
+    aktiv: bool = False
+
+
+class DeployVerlauf(BaseModel):
+    items: list[DeployEintrag]

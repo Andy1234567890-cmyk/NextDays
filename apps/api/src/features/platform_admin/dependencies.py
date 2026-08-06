@@ -7,6 +7,7 @@ from fastapi import Depends
 
 from src.core.supabase import get_service_client
 
+from .deploy_service import DeployService
 from .service import PlatformAdminService
 from .team_service import TeamService
 
@@ -31,3 +32,11 @@ def get_team_service() -> TeamService:
 
 
 TeamServiceDep = Annotated[TeamService, Depends(get_team_service)]
+
+
+def get_deploy_service() -> DeployService:
+    # Kein DB-Client: der Deploy-Monitor spricht ausschließlich Coolify.
+    return DeployService()
+
+
+DeployServiceDep = Annotated[DeployService, Depends(get_deploy_service)]

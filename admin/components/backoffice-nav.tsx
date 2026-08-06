@@ -27,6 +27,7 @@ const PUNKTE: Punkt[] = [
   { href: "/steuern", label: "Steuern", icon: "ph:scales" },
   { href: "/support", label: "Support", icon: "ph:lifebuoy" },
   { href: "/diagnose", label: "Diagnose", icon: "ph:activity" },
+  { href: "/deploy", label: "Deploy-Monitor", icon: "ph:rocket-launch" },
   { href: "/protokoll", label: "Protokoll", icon: "ph:list-checks" },
   // Sichtbar für alle im Backoffice — wer Zugriff hat, soll nachsehen können,
   // wer sonst noch Zugriff hat. Ändern darf trotzdem nur platform_admin.
