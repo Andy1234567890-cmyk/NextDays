@@ -49,15 +49,15 @@ const RECHTS_KEYS: Record<string, string> = {
 export function MarketingFooter() {
   const t = useTranslations("footer");
 
-  // AGB/Hilfe liegen in der Haupt-App (web) → absolute Links (lib/app-url).
-  // Vor dem Start ist das Dashboard nicht öffentlich; dann ist AGB_URL leer und
-  // der Eintrag entfällt, statt auf eine Adresse zu zeigen, die niemand
-  // aufrufen kann.
-  // Alle übrigen Rechtsdokumente sind eigene Routen IN dieser App und kommen
-  // aus der Registry (content/legal), damit Footer und Seiten nicht
-  // auseinanderlaufen.
+  // Die AGB sind eine eigene Route IN dieser App (app/agb) — nicht mehr ein
+  // absoluter Link ins Dashboard: der Google-OAuth-Zustimmungsbildschirm
+  // verlangt sie als öffentlich erreichbare Adresse auf dieser Domain und
+  // prüft sie automatisiert. Sie stehen NICHT in RECHTSDOKUMENTE, weil sie
+  // sprachweise geladen werden (content/legal/agb-laden) statt als ein Modul.
+  // Hilfe liegt weiter in der web-App → absoluter Link (lib/app-url), und
+  // entfällt, solange das Dashboard nicht öffentlich ist.
   const rechtlich = [
-    ...(AGB_URL ? [{ label: t("agb"), href: AGB_URL }] : []),
+    { label: t("agb"), href: AGB_URL },
     ...RECHTSDOKUMENTE.map((eintrag) => ({
       label: t(RECHTS_KEYS[eintrag.doc.slug]),
       href: `/${eintrag.doc.slug}`,

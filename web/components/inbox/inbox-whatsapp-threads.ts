@@ -30,12 +30,18 @@ export function whatsAppToThread(c: WhatsAppConversation): InboxThread {
     // wenn der Chat einen echten Gastnamen statt der Rohnummer anzeigt.
     ota_reservation_code: c.wa_phone.replace(/\D/g, ""),
     guest_name: c.guest_name ?? `+${c.wa_phone}`,
+    // WhatsApp liefert kein Profilbild — die Initialen bleiben.
+    guest_avatar_url: null,
     guest_email: null,
     guest_phone: null,
     status: null,
     arrival_date: null,
     departure_date: null,
     last_message: c.last_message,
+    booked_at: null,
+    // Bei WhatsApp IST `last_at` das Fremdereignis (Zeitpunkt der letzten
+    // Nachricht), nicht unsere Schreibzeit — also gehört er hier hin.
+    letzte_aktivitaet: c.last_at,
     updated_at: c.last_at,
     is_read: c.is_read,
     is_starred: false,

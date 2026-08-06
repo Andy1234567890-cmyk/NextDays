@@ -25,7 +25,9 @@ from .airbnb_gebuehren import AirbnbGebuehrenMixin
 from .airbnb_historie import AirbnbHistorieMixin
 from .airbnb_historie_dienst import AirbnbHistorieDienstMixin
 from .airbnb_historie_import import AirbnbHistorieImportMixin
+from .airbnb_lesestand import AirbnbLesestandMixin
 from .airbnb_objekt_abruf import AirbnbObjektAbrufMixin
+from .airbnb_profilbilder import AirbnbProfilbilderMixin
 from .airbnb_registrierung import AirbnbRegistrierungMixin
 from .airbnb_uebernahme import AirbnbUebernahmeMixin
 from .airbnb_zimmer_push import AirbnbZimmerPushMixin
@@ -107,6 +109,11 @@ class ChannelManagerService(
     # Registrierungsnummer (DK: BFE) aus `v2/listing_permits` zu holen — sie
     # steht in keinem der Listing-Felder.
     AirbnbRegistrierungMixin,
+    # Nach AirbnbDirektMixin: nutzt dessen `_airbnb_get`/`_airbnb_token`, um das
+    # Profilbild des Gastes aus `v2/users/{id}` zu holen (0295). Weder die
+    # Reservierung noch der Thread führen ein Bildfeld — nur die Nutzer-
+    # Ressource, was lange als „Airbnb liefert keins" missverstanden wurde.
+    AirbnbProfilbilderMixin,
     # Nach AirbnbDiagnoseMixin: der Veröffentlichungs-Dialog zeigt als Schritt 2
     # deren Feld-Abgleich. Schaltet `published` je Mapping — der Schalter hinter
     # Airbnbs „Unlisted", den ein reiner Statuswechsel bisher nicht erreichte.
@@ -120,6 +127,10 @@ class ChannelManagerService(
     AirbnbHistorieMixin,
     AirbnbHistorieImportMixin,
     AirbnbHistorieDienstMixin,
+    # Nach AirbnbHistorieMixin: der Lesestand braucht dessen Bestandsabruf, um
+    # vom Bestätigungscode auf die Airbnb-Thread-ID zu kommen — Channex reicht
+    # sie nicht durch (0297).
+    AirbnbLesestandMixin,
     ObjektKanalMixin,
     BookingsSyncMixin,
     LiveFeedSyncMixin,

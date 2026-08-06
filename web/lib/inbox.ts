@@ -16,12 +16,24 @@ export type InboxThread = {
   ota_name: string | null;       // Kanal (myBestDays, Booking.com, Airbnb, …)
   ota_reservation_code: string | null;
   guest_name: string | null;
+  /** Profilbild beim Portal (0295); null = keins, dann Initialen. */
+  guest_avatar_url: string | null;
   guest_email: string | null;
   guest_phone: string | null;
   status: string | null;
   arrival_date: string | null;
   departure_date: string | null;
   last_message: string | null;
+  /** Buchungszeitpunkt beim Portal (0291/0292). */
+  booked_at: string | null;
+  /**
+   * Die Zeit, die die Liste anzeigt und nach der sie sortiert — vom Server
+   * entschieden. IMMER dieses Feld verwenden, nie `updated_at`: letzteres ist
+   * unsere Schreibzeit und stand bei 22 in einem Rutsch geholten Buchungen auf
+   * derselben Sekunde („vor 24 m" für Buchungen aus Juli). null = kein
+   * Fremdereignis bekannt; dann bleibt die Zeitangabe leer statt zu lügen.
+   */
+  letzte_aktivitaet: string | null;
   updated_at: string | null;
   is_read: boolean;
   is_starred: boolean;
@@ -218,6 +230,15 @@ export type InboxMessagesResult = {
   items: InboxMessage[];
   total: number;
   unavailable?: string | null;
+  /**
+   * Bis WANN der Gast gelesen hat (0297, Zeitpunkt beim Portal). Eine eigene
+   * Nachricht gilt als gelesen, wenn `sent_at <= guest_read_at` — der Wert ist
+   * ein Lesestand („war bis hierher") und gilt rückwirkend für alles Ältere.
+   *
+   * null/fehlend = dieser Kanal meldet keinen Lesestand (nur Airbnb tut es).
+   * Dann KEIN Häkchen — nicht „ungelesen", denn das wüssten wir nicht.
+   */
+  guest_read_at?: string | null;
 };
 
 export async function getInboxMessages(

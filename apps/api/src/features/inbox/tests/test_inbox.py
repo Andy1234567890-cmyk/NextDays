@@ -261,8 +261,6 @@ def test_list_threads_unknown_role_fails_closed() -> None:
 
 
 def test_get_messages_maps_sender(monkeypatch) -> None:  # noqa: ANN001
-    # Channex-Pfad testen → Sandbox-Modus aus.
-    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     msgs = [
         {"id": "m1", "attributes": {"message": "Hallo", "sender": "guest", "inserted_at": "t"}},
         {"id": "m2", "attributes": {"message": "Hi", "sender": "host"}},
@@ -285,7 +283,6 @@ def test_send_message_rejects_empty() -> None:
 
 
 def test_send_message_calls_channex(monkeypatch) -> None:  # noqa: ANN001
-    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     bookings = [{"id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1"}]
     fake = _FakeChannex()
     svc = InboxService(service_client=_FakeDB(bookings, []), channex=fake)
@@ -295,7 +292,6 @@ def test_send_message_calls_channex(monkeypatch) -> None:  # noqa: ANN001
 
 
 def test_get_messages_invalid_booking_id_falls_back_to_notes(monkeypatch) -> None:  # noqa: ANN001
-    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     bookings = [{"id": "th1", "tenant_id": "t1", "channex_booking_id": "sandbox-invalid"}]
     err = ChannexError(
         "Bad Request",
@@ -376,7 +372,6 @@ def test_scope_assigned_only_filters_foreign_thread_to_404() -> None:
 
 
 def test_scope_assigned_only_sees_own_thread(monkeypatch) -> None:  # noqa: ANN001
-    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     db = _FakeDB(
         [_thread(assigned_to="u")], [],
         user_role="staff", user_perms=["access_pm_features", "pm_chat"],
@@ -387,7 +382,6 @@ def test_scope_assigned_only_sees_own_thread(monkeypatch) -> None:  # noqa: ANN0
 
 
 def test_action_reply_denied_without_permission(monkeypatch) -> None:  # noqa: ANN001
-    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     db = _FakeDB(
         [_thread(assigned_to="u")], [],
         user_role="staff", user_perms=["access_pm_features", "pm_chat"],  # kein inbox_reply
@@ -399,7 +393,6 @@ def test_action_reply_denied_without_permission(monkeypatch) -> None:  # noqa: A
 
 
 def test_action_reply_allowed_with_permission(monkeypatch) -> None:  # noqa: ANN001
-    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     db = _FakeDB(
         [_thread(assigned_to="u")], [],
         user_role="staff", user_perms=["access_pm_features", "pm_chat", "inbox_reply"],
@@ -834,7 +827,6 @@ def test_fehlende_chat_app_wird_beim_lesen_selbst_geheilt(monkeypatch) -> None: 
     # Verbundenes Objekt = Chat geht. Fehlt die Anwendung trotzdem (Objekt von
     # vor der Automatik), zieht der Server sie nach und liest erneut — der
     # Benutzer bekommt den Verlauf, nicht eine Aufforderung.
-    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     bookings = [{
         "id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1",
         "ota_name": "BookingCom", "status": "new",
@@ -858,7 +850,6 @@ def test_fehlende_chat_app_wird_beim_lesen_selbst_geheilt(monkeypatch) -> None: 
 
 def test_senden_heilt_die_fehlende_chat_app_ebenfalls(monkeypatch) -> None:  # noqa: ANN001
     # Sonst wäre der Chat lesbar (Lesen heilt sich), aber nicht beantwortbar.
-    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     bookings = [{
         "id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1",
         "raw": {"property_id": "cx-prop-1"},
@@ -875,7 +866,6 @@ def test_senden_heilt_die_fehlende_chat_app_ebenfalls(monkeypatch) -> None:  # n
 def test_verlauf_ueber_den_thread_wenn_der_buchungspfad_nichts_hergibt(monkeypatch) -> None:  # noqa: ANN001
     # Die Buchung verweist über relationships.message_thread auf ihren Thread —
     # der zweite, belegte Weg zum Verlauf (u. a. Airbnb-Anfragen).
-    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     bookings = [{"id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1"}]
     err = ChannexError("Not found", status_code=404, channex_status=404, payload={})
     channex = _FakeChannex(
@@ -892,7 +882,6 @@ def test_kanal_ohne_chat_bricht_die_ansicht_nicht(monkeypatch) -> None:  # noqa:
     # Staging-Realität: Testbuchungen laufen über einen Kanal, den die
     # Nachrichten-API nicht unterstützt (422 not_supported). Der Verlauf muss
     # trotzdem stehen — mit Grund statt Fehlerseite.
-    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     bookings = [{
         "id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1",
         "ota_name": "BookingCom", "status": "new", "created_at": "2026-06-22T10:00:00Z",
@@ -905,3 +894,152 @@ def test_kanal_ohne_chat_bricht_die_ansicht_nicht(monkeypatch) -> None:  # noqa:
     out = svc.get_messages(_CTX, "th1")
     assert out.unavailable == "channel_no_chat"
     assert [m.event_title for m in out.items] == ["bookingReceived"]
+
+
+def test_letzte_aktivitaet_ist_der_portal_zeitpunkt() -> None:
+    """Die Listenzeit kommt vom Portal, nie von unserer Schreibzeit.
+
+    DER VORFALL (06.08.2026): Der Feed holte 22 Airbnb-Buchungen in einem
+    Rutsch; alle trugen dieselbe `updated_at`-Sekunde. Die Liste zeigte damit
+    Buchungen aus März, Juni und Juli einheitlich als „vor 24 m" und sortierte
+    sie zufällig. Der Fehler saß nicht in der Formatierung, sondern darin, dass
+    die Anzeige überhaupt ein Feld las, das UNSERE Verarbeitung beschreibt.
+    """
+    row = _booking_row()
+    row["booked_at"] = "2026-03-23T15:24:55Z"
+    row["updated_at"] = "2026-08-06T08:48:59Z"  # unsere Schreibzeit
+    svc = InboxService(service_client=_FakeDB([row], []), channex=_FakeChannex())
+    th = svc.list_threads(_CTX).items[0]
+    assert th.letzte_aktivitaet == "2026-03-23T15:24:55Z"
+
+
+def test_ohne_portal_zeitpunkt_bleibt_die_listenzeit_leer() -> None:
+    """Kein Rückfall auf `updated_at` — lieber keine Zeit als eine falsche.
+
+    Genau dieser Rückfall erzeugte den Vorfall. Ein leeres Feld lässt die
+    Oberfläche die Zeitangabe weglassen; ein plausibler Ersatzwert behauptet
+    eine Handlung des Gastes, die es nie gab (Wurzel 4/5b).
+    """
+    row = _booking_row()
+    row["booked_at"] = None
+    row["updated_at"] = "2026-08-06T08:48:59Z"
+    svc = InboxService(service_client=_FakeDB([row], []), channex=_FakeChannex())
+    th = svc.list_threads(_CTX).items[0]
+    assert th.letzte_aktivitaet is None
+
+
+def test_nachrichtenzeit_traegt_immer_eine_zone() -> None:
+    """Channex' Zeitstempel kommen OHNE Zone, meinen aber UTC.
+
+    Roh durchgereicht deutet der Browser „2026-08-06T07:19:55.000000" als
+    ORTSZEIT und rechnet zwei Stunden ab (CEST). Für die reine Anzeige fiel das
+    kaum auf; beim Lesestand-Vergleich (0297) hätte es das Häkchen an
+    Nachrichten gesetzt, die der Gast nie gesehen hat — die Zeiten wären
+    scheinbar VOR seinem Lesestand gelegen.
+    """
+    m = InboxService.zu_nachricht(
+        {"id": "m1", "attributes": {"message": "x", "sender": "property",
+                                    "inserted_at": "2026-08-06T07:19:55.000000"}}
+    )
+    assert m.sent_at == "2026-08-06T07:19:55.000000Z"
+
+
+def test_vorhandene_zone_bleibt_unveraendert() -> None:
+    """Ein Wert, der schon eine Zone trägt, wird nicht ein zweites Mal ergänzt."""
+    m = InboxService.zu_nachricht(
+        {"id": "m1", "attributes": {"message": "x", "sender": "guest",
+                                    "inserted_at": "2026-08-06T07:19:55+02:00"}}
+    )
+    assert m.sent_at == "2026-08-06T07:19:55+02:00"
+
+
+def test_lodgify_platzhalter_wird_uebersetzt() -> None:
+    """Aus Lodgify übernommene Vorlagen nutzen `{{WifiInformation}}`.
+
+    DER VORFALL (06.08.2026): Das Muster erfasste nur Kleinbuchstaben — der Name
+    galt gar nicht als Platzhalter. Kein 422 beim Speichern, keine Meldung beim
+    Senden; der Gast hätte wörtlich „{{WifiInformation}}" gelesen. Was wir nicht
+    erkennen, können wir auch nicht beanstanden.
+    """
+    from src.features.inbox.felder import Kontext, rendern, unbekannte_felder
+
+    text = "Internet: {{WifiInformation}}"
+    assert unbekannte_felder(text) == []
+    k = Kontext(wifi_ssid="AirSmil-Gast", wifi_password="sommer2026")
+    assert rendern(text, k) == "Internet: AirSmil-Gast / sommer2026"
+
+
+def test_wlan_ohne_passwort_nennt_nur_das_netz() -> None:
+    """Nur das, was da ist — kein „Netz / None"."""
+    from src.features.inbox.felder import Kontext, rendern
+
+    assert rendern("{{wifi}}", Kontext(wifi_ssid="Nur-Netz")) == "Nur-Netz"
+
+
+def test_echter_tippfehler_bleibt_ein_fehler() -> None:
+    """Die Alt-Namen-Tabelle darf kein Freibrief für alles Unbekannte sein."""
+    from src.features.inbox.felder import unbekannte_felder
+
+    assert unbekannte_felder("{{QuatschFeld}}") == ["QuatschFeld"]
+
+
+def test_ohne_wlan_wird_nicht_gesendet() -> None:
+    """Ist nichts gepflegt, schlägt der Versand fehl statt „Internet: " zu senden."""
+    import pytest as _pytest
+
+    from src.features.inbox.felder import FeldFehlt, Kontext, rendern
+
+    with _pytest.raises(FeldFehlt):
+        rendern("Internet: {{WifiInformation}}", Kontext())
+
+
+def test_richtext_wird_klartext_mit_gliederung() -> None:
+    """Die Objekt-Texte kommen als HTML aus dem Editor, der Chat kann nur Text.
+
+    Reines Tag-Strippen ergäbe eine Wand: eine zwölfpunktige Hausordnung
+    verklebte zu einem Absatz. Die GLIEDERUNG ist hier die Information.
+    """
+    from src.features.inbox.felder import html_zu_text
+
+    roh = (
+        "<p><strong>Hausregeln</strong></p><ul>"
+        "<li><p>Nicht rauchen</p></li><li><p>Ruhe ab 22&nbsp;Uhr</p></li></ul>"
+    )
+    assert html_zu_text(roh) == "Hausregeln\n\n- Nicht rauchen\n\n- Ruhe ab 22 Uhr"
+
+
+def test_entitaeten_werden_aufgeloest() -> None:
+    """„&amp;" im Text ist ein „&" — sonst liest der Gast das Markup mit."""
+    from src.features.inbox.felder import html_zu_text
+
+    assert html_zu_text("<p>Spülmaschine &amp; Geschirr</p>") == (
+        "Spülmaschine & Geschirr"
+    )
+
+
+def test_gastsprache_gewinnt_sonst_fallback() -> None:
+    """Gepflegt wird mehrsprachig — gesendet wird die Sprache des GASTES.
+
+    Fehlt sie, lieber Englisch/Deutsch als gar nichts: ein dänischer Gast liest
+    den deutschen Text lieber als „{{RentalRules}}" im Klartext.
+    """
+    prop = {
+        "type_attributes": {
+            "messaging": {
+                "rules": {"de": "<p>Deutsche Regeln</p>", "en": "<p>Rules</p>",
+                          "da": "<p>Danske regler</p>"},
+                "wifi": {"de": "<p>Nur Deutsch</p>", "en": "", "da": ""},
+            }
+        }
+    }
+    da = InboxService._messaging_texte(prop, "da")
+    assert da["house_rules"] == "Danske regler"
+    # Nur Deutsch gepflegt → Fallback statt leer.
+    assert da["wifi_text"] == "Nur Deutsch"
+    assert InboxService._messaging_texte(prop, "fr")["house_rules"] == "Rules"
+
+
+def test_ohne_gepflegten_text_bleibt_das_feld_leer() -> None:
+    """Kein Text → kein Eintrag; der Versand meldet dann „Feld ohne Wert"."""
+    assert InboxService._messaging_texte({"type_attributes": {}}, "de") == {}
+    assert InboxService._messaging_texte(None, "de") == {}

@@ -99,19 +99,35 @@ export function GuestAvatar({
   name,
   size = "md",
   unread,
+  bildUrl,
 }: {
   name: string | null;
   size?: "sm" | "md";
   unread?: boolean;
+  /** Profilbild beim Portal (0295). Fehlt es, bleiben es die Initialen — nie
+   *  ein Platzhalterbild, das ein Gesicht behauptet, das wir nicht haben. */
+  bildUrl?: string | null;
 }) {
   const box = size === "sm" ? "size-9" : "size-10";
   return (
     <span className={`relative ${box} shrink-0`}>
-      <span
-        className={`flex ${box} items-center justify-center rounded-full bg-secondary text-xs font-bold text-muted-foreground`}
-      >
-        {initialen(name)}
-      </span>
+      {bildUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- Fremd-CDN
+        // (a0.muscache.com); next/image bräuchte dafür einen konfigurierten
+        // Remote-Host und würde jedes Gastfoto über unseren Optimizer leiten.
+        <img
+          src={bildUrl}
+          alt=""
+          className={`${box} rounded-full object-cover`}
+          loading="lazy"
+        />
+      ) : (
+        <span
+          className={`flex ${box} items-center justify-center rounded-full bg-secondary text-xs font-bold text-muted-foreground`}
+        >
+          {initialen(name)}
+        </span>
+      )}
       {unread && (
         <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-accent ring-2 ring-card" />
       )}

@@ -892,6 +892,39 @@ def ota_zeitstempel_utc(wert: object) -> str | None:
     return text if _HAT_ZONE.search(text) else text + "Z"
 
 
+def ota_uhrzeit(wert: object) -> str | None:
+    """Eine An-/Abreise-ZEIT aus einer Portal-Payload → „HH:MM" oder None.
+
+    Die Portale liefern denselben Sachverhalt in zwei Formen, und beide müssen
+    hier durch, sonst hat der nächste Leser wieder eine eigene Regel:
+
+      * Channex: schon „HH:MM" (`arrival_hour`) — dann unverändert durchreichen.
+      * Airbnb: ein voller Zeitstempel mit ANGEHÄNGTER Zonen-Kennung,
+        `'2026-08-06T16:00+02:00[Europe/Copenhagen]'` (live gemessen an
+        `v2/reservations.check_in_datetime`). Die eckige Klammer ist Javas
+        `ZonedDateTime`-Schreibweise; `datetime.fromisoformat` scheitert daran.
+
+    Zurück kommt die ORTSZEIT der Unterkunft, wie das Portal sie meint — keine
+    Umrechnung nach UTC. „Check-in ab 16:00" ist eine Hausregel, keine
+    Zeitpunktangabe; sie in UTC zu schieben ergäbe „14:00" und wäre falsch.
+
+    Unlesbar oder leer → None. Kein geratener Ersatz wie „15:00" (Wurzel 4):
+    lieber steht in der Vorlage „Feld ohne Wert" als eine Uhrzeit, nach der sich
+    ein Gast richtet und vor verschlossener Tür steht.
+    """
+    text = str(wert).strip() if wert is not None else ""
+    if not text:
+        return None
+    # Airbnbs Zonen-Anhang abschneiden: '…+02:00[Europe/Copenhagen]'.
+    text = text.split("[", 1)[0]
+    treffer = _UHRZEIT.search(text)
+    return treffer.group(0) if treffer else None
+
+
+# „HH:MM" — als 24-h-Uhrzeit am Anfang (Channex) oder nach dem T (Airbnb).
+_UHRZEIT: Final = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d")
+
+
 # Feldnamen, unter denen die Portale den ECHTEN Buchungszeitpunkt liefern.
 # Reihenfolge = Verlässlichkeit. Airbnb: `booked_at`. Booking.com legt ihn in
 # die Originalmeldung (`raw_message`), die `_ota_buchungszeit` im Posteingang

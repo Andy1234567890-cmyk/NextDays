@@ -387,6 +387,15 @@ class BookingsSyncMixin:
             # Tabelle, deshalb muss der Wert auch hier stehen, nicht nur in
             # `reservations`.
             "booked_at": ota_buchungszeitpunkt(attrs),
+            # WELCHES OBJEKT die Buchung betrifft. Ohne diese Spalte hängt der
+            # Thread an keinem Haus: der Posteingang zeigte kein Objekt, der
+            # Objekt-Filter der Liste blieb leer, und jede Vorlage mit
+            # `{{property_name}}` scheiterte mit „Feld ohne Wert" (live an allen
+            # 22 Buchungen). Die Information lag die ganze Zeit vor — sie landete
+            # nur in `raw` und nirgends sonst.
+            "property_map_id": self._property_map_id(
+                db, tenant_id, attrs.get("property_id")
+            ),
             "raw": attrs,
         }
         upserted = (
@@ -446,6 +455,41 @@ class BookingsSyncMixin:
         if not ota_name:
             return "ota_other"
         return cls._OTA_CHANNEL_MAP.get(ota_name.strip().lower(), "ota_other")
+
+    @staticmethod
+    def _property_map_id(
+        db: Client, tenant_id: str, channex_property_id: str | None
+    ) -> str | None:
+        """channex_property_id → ID der Objekt-Zuordnung (oder None).
+
+        Anders als `_resolve_local_property` (liefert die lokale property_id für
+        die Reservierung) gibt das hier die ID der MAP-Zeile zurück — genau das,
+        was `channex_booking.property_map_id` erwartet.
+
+        None, wenn die Property nicht gemappt ist: dann gehört die Buchung zu
+        einem Inserat, das bei uns kein Objekt hat (live: 23 solche Airbnb-
+        Inserate). Die Buchung trotzdem speichern und die Zuordnung leer lassen
+        ist richtig — eine OTA-Buchung darf nie verloren gehen, nur weil das
+        Objekt fehlt (sonst blieben die Nächte frei → Überbuchung). Kein Raten
+        auf „irgendein Objekt" (Wurzel 4).
+
+        Sortiert nach `created_at`: seit 0158 kann eine geteilte Channex-
+        Property mehrere Map-Zeilen haben; ohne Sortierung wäre `limit(1)` nicht
+        reproduzierbar.
+        """
+        if not channex_property_id:
+            return None
+        treffer = (
+            db.table("channex_property_map")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("channex_property_id", str(channex_property_id))
+            .is_("deleted_at", "null")
+            .order("created_at")
+            .limit(1)
+            .execute()
+        ).data
+        return treffer[0]["id"] if treffer else None
 
     def _resolve_local_property(
         self, db: Client, tenant_id: str, channex_property_id: str,

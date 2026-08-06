@@ -57,4 +57,4 @@ export const AUFSICHTSBEHOERDE = {
 } as const;
 
 /** Gemeinsames Stand-Datum aller Rechtsdokumente dieser App. */
-export const RECHTSSTAND = "Stand: 31. Juli 2026";
+export const RECHTSSTAND = "Stand: 6. August 2026";

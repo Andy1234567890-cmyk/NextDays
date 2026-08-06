@@ -81,3 +81,72 @@ def test_payment_method_nimmt_nur_dokumentierte_werte() -> None:
     assert S._payment_method({"payment_type": "bank_transfer"}) == "bank_transfer"
     assert S._payment_method({"payment_type": "krypto"}) is None
     assert S._payment_method({"payment_type": None}) is None
+
+
+class _MapTabelle:
+    """Minimale Attrappe für `channex_property_map` (nur Lesepfad)."""
+
+    def __init__(self, zeilen: list[dict]) -> None:
+        self._zeilen = zeilen
+        self._filter: dict[str, str] = {}
+
+    def table(self, name: str) -> "_MapTabelle":
+        assert name == "channex_property_map"
+        return self
+
+    def select(self, *_a: str) -> "_MapTabelle":
+        return self
+
+    def eq(self, spalte: str, wert: str) -> "_MapTabelle":
+        self._filter[spalte] = wert
+        return self
+
+    def is_(self, *_a: str) -> "_MapTabelle":
+        return self
+
+    def order(self, *_a: str) -> "_MapTabelle":
+        return self
+
+    def limit(self, _n: int) -> "_MapTabelle":
+        return self
+
+    def execute(self) -> "_MapTabelle":
+        treffer = [
+            z for z in self._zeilen
+            if all(str(z.get(k)) == v for k, v in self._filter.items())
+        ]
+        self.data = treffer[:1]
+        return self
+
+
+def test_buchung_traegt_ihr_objekt() -> None:
+    """Die Buchung MUSS ihre Objekt-Zuordnung tragen, nicht nur `raw`.
+
+    DER VORFALL (06.08.2026): `property_map_id` wurde beim Speichern nie
+    gesetzt — live stand die Spalte bei ALLEN 22 Buchungen auf NULL, obwohl
+    `raw.property_id` und die passende Map-Zeile die ganze Zeit vorlagen. Folge:
+    kein Objektname im Posteingang, leerer Objekt-Filter, und jede Vorlage mit
+    `{{property_name}}` scheiterte mit „Feld ohne Wert".
+    """
+    from src.features.channel_manager.bookings_sync import BookingsSyncMixin
+
+    db = _MapTabelle([
+        {"id": "map-1", "tenant_id": "t1",
+         "channex_property_id": "cx-prop-1", "created_at": "2026-01-01"},
+    ])
+    treffer = BookingsSyncMixin._property_map_id(db, "t1", "cx-prop-1")
+    assert treffer == "map-1"
+
+
+def test_ungemapptes_inserat_blockiert_die_buchung_nicht() -> None:
+    """Kein Mapping → None, aber die Buchung wird trotzdem gespeichert.
+
+    Eine OTA-Buchung zu verwerfen, weil ihr Inserat bei uns kein Objekt hat
+    (live: 23 solche Airbnb-Inserate), ließe die Nächte frei — Überbuchung. Die
+    Zuordnung bleibt leer, statt auf irgendein Objekt zu raten (Wurzel 4).
+    """
+    from src.features.channel_manager.bookings_sync import BookingsSyncMixin
+
+    db = _MapTabelle([])
+    assert BookingsSyncMixin._property_map_id(db, "t1", "cx-unbekannt") is None
+    assert BookingsSyncMixin._property_map_id(db, "t1", None) is None

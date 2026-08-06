@@ -64,3 +64,45 @@ def test_reihenfolge_ist_verlaesslichkeit() -> None:
         "ota_booked_at": "2026-01-01T00:00:00Z",
         "booked_at": "2026-03-23T15:24:55Z",
     }) == "2026-03-23T15:24:55Z"
+
+
+def test_airbnb_uhrzeit_mit_zonen_anhang() -> None:
+    """Airbnbs `check_in_datetime` trägt Javas Zonen-Kennung in eckigen Klammern.
+
+    `'2026-08-06T16:00+02:00[Europe/Copenhagen]'` — live gemessen.
+    `datetime.fromisoformat` scheitert daran; ohne eigenen Parser blieb
+    `reservations.checkin_time` leer und jede Anreise-Vorlage meldete
+    „Feld ohne Wert: checkin_time".
+    """
+    from src.features.channel_manager.common import ota_uhrzeit
+
+    assert ota_uhrzeit("2026-08-06T16:00+02:00[Europe/Copenhagen]") == "16:00"
+    assert ota_uhrzeit("2026-08-09T10:00+02:00[Europe/Copenhagen]") == "10:00"
+
+
+def test_channex_uhrzeit_bleibt_wie_sie_ist() -> None:
+    """Channex liefert `arrival_hour` schon als „HH:MM"."""
+    from src.features.channel_manager.common import ota_uhrzeit
+
+    assert ota_uhrzeit("16:00") == "16:00"
+
+
+def test_uhrzeit_wird_nicht_nach_utc_gerechnet() -> None:
+    """„Check-in ab 16:00" ist eine HAUSREGEL in Ortszeit, kein Zeitpunkt.
+
+    Nach UTC geschoben stünde „14:00" da — eine Uhrzeit, zu der niemand
+    anreisen darf.
+    """
+    from src.features.channel_manager.common import ota_uhrzeit
+
+    assert ota_uhrzeit("2026-08-06T16:00+02:00[Europe/Copenhagen]") != "14:00"
+
+
+def test_ohne_uhrzeit_kein_ersatzwert() -> None:
+    """Lieber „Feld ohne Wert" als eine erfundene Zeit, nach der sich ein Gast
+    richtet und vor verschlossener Tür steht (Wurzel 4)."""
+    from src.features.channel_manager.common import ota_uhrzeit
+
+    assert ota_uhrzeit("") is None
+    assert ota_uhrzeit(None) is None
+    assert ota_uhrzeit("demnächst") is None

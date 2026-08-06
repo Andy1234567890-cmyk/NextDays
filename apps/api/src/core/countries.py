@@ -72,6 +72,48 @@ def dial_code(country: str | None) -> str | None:
     """
     return _DIAL_CODES.get((country or "").strip().upper())
 
+
+# Alle bekannten Vorwahlen ohne „+", längste zuerst: „+372" (EE) muss vor „+37"
+# geprüft werden, sonst gewänne ein kürzeres Präfix.
+_VORWAHLEN_OHNE_PLUS: tuple[str, ...] = tuple(
+    sorted((v.lstrip("+") for v in _DIAL_CODES.values()), key=len, reverse=True)
+)
+
+
+def telefon_anzeigen(roh: str | None) -> str | None:
+    """Rohe Portal-Telefonnummer → anrufbare Schreibweise mit „+".
+
+    DER ANLASS: Airbnb liefert die Nummer als `491729274456` — mit Landesvorwahl,
+    aber OHNE „+". In der Gästekarte stand damit „491729274456": kein Mensch
+    erkennt darin +49, und ein Klick darauf wählt eine falsche Nummer.
+
+    Angefasst wird nur, was eindeutig ist:
+
+      * beginnt sie mit „+", bleibt sie unverändert (schon korrekt),
+      * „00" davor → „+" (internationale Amtskennzahl),
+      * eine reine Ziffernfolge, die mit einer BEKANNTEN Vorwahl beginnt und
+        danach noch Ziffern hat, bekommt das „+".
+
+    Alles andere bleibt unverändert. Eine nationale Nummer ohne Vorwahl
+    („01721234567") lässt sich NICHT sicher zuordnen — ihr ein „+" voranzustellen
+    erzeugte eine Nummer, die es nicht gibt (Wurzel 4).
+    """
+    text = (roh or "").strip()
+    if not text:
+        return None
+    ziffern = "".join(z for z in text if z.isdigit())
+    if text.startswith("+") or not ziffern:
+        return text
+    if ziffern.startswith("00") and len(ziffern) > 2:
+        return "+" + ziffern[2:]
+    # Eine führende 0 ist die nationale Verkehrsausscheidungsziffer — solche
+    # Nummern tragen KEINE Landesvorwahl und bleiben unangetastet.
+    hat_vorwahl = not ziffern.startswith("0") and any(
+        ziffern.startswith(v) and len(ziffern) > len(v)
+        for v in _VORWAHLEN_OHNE_PLUS
+    )
+    return "+" + ziffern if hat_vorwahl else text
+
 # Name (lower-case, deutsch + englisch + Varianten) → ISO-2.
 _NAME_TO_CODE: dict[str, str] = {}
 for _code, (_de, _en) in _COUNTRIES.items():

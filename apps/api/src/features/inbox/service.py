@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 
 from supabase import Client
 
+from src.core.countries import telefon_anzeigen
+from src.core.languages import sprach_name
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.channel_manager.channex_client import ChannexClient, ChannexError
@@ -24,7 +26,8 @@ from src.features.guests.identity import (
 
 from .anhaenge import AnhangWissenMixin
 from .errors import InboxError
-from .felder import FeldFehlt, Kontext, rendern, unbekannte_felder
+from .feld_kontext import FeldKontextMixin
+from .felder import FeldFehlt, rendern, unbekannte_felder
 from .planung import PlanungMixin
 from .schemas import (
     Automation,
@@ -61,7 +64,9 @@ def _chronologisch(m: InboxMessage) -> tuple[int, str]:
     return (0, m.sent_at) if m.sent_at else (1, "")
 
 
-class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
+class InboxService(
+    PlanungMixin, VorlagenMixin, AnhangWissenMixin, FeldKontextMixin
+):
     slice_name = "inbox"
 
     def __init__(
@@ -170,6 +175,11 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
         # in der Liste; ohne sie muss man jeden Thread öffnen, um zu sehen,
         # worum es geht.
         letzte = self._last_messages(db, tenant_id, [r["id"] for r in rows])
+        # Profilbilder in EINEM Query für die ganze Liste (0295) — nicht je
+        # Zeile, sonst wären es 200 Abfragen für 200 Threads.
+        bilder = self._gast_bilder(
+            db, tenant_id, [r["guest_id"] for r in rows if r.get("guest_id")]
+        )
 
         items: list[InboxThread] = []
         for r in rows:
@@ -183,17 +193,22 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
                     channex_booking_id=cbid,
                     reservation_id=res_by_booking.get(cbid),
                     guest_id=r.get("guest_id"),
+                    guest_avatar_url=bilder.get(str(r.get("guest_id") or "")),
                     property_id=prop[0] if prop else None,
                     property_title=prop[1] if prop else None,
                     ota_name=mask.source_value(r.get("ota_name")),
                     ota_reservation_code=r.get("ota_reservation_code"),
                     guest_name=mask.name(self._guest_name(customer)),
                     guest_email=mask.contact_value(customer.get("mail") or customer.get("email")),
-                    guest_phone=mask.contact_value(customer.get("phone")),
+                    guest_phone=mask.contact_value(telefon_anzeigen(customer.get("phone"))),
                     status=r.get("status"),
                     arrival_date=r.get("arrival_date"),
                     departure_date=r.get("departure_date"),
                     last_message=letzte.get(r["id"]),
+                    booked_at=r.get("booked_at"),
+                    # Eine Regel, ein Ort: der Zeitpunkt beim Portal. Kein
+                    # Rückfall auf `updated_at` — der war der Fehler.
+                    letzte_aktivitaet=r.get("booked_at"),
                     updated_at=r.get("updated_at"),
                     is_read=bool(r.get("is_read", True)),
                     is_starred=bool(r.get("is_starred")),
@@ -230,6 +245,23 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
             # Absteigend sortiert → der erste Treffer je Thread ist der jüngste.
             out.setdefault(m["thread_ref"], (m.get("body") or "").strip())
         return out
+
+    @staticmethod
+    def _gast_bilder(
+        db: Client, tenant_id: str, guest_ids: list[str]
+    ) -> dict[str, str]:
+        """gast_id → Profilbild-URL beim Portal (0295), leer wenn keins da ist."""
+        if not guest_ids:
+            return {}
+        res = (
+            db.table("guests")
+            .select("id, avatar_url")
+            .eq("tenant_id", tenant_id)
+            .in_("id", list(set(guest_ids)))
+            .not_.is_("avatar_url", "null")
+            .execute()
+        )
+        return {str(g["id"]): g["avatar_url"] for g in (res.data or [])}
 
     def _user_names(
         self, db: Client, tenant_id: str, user_ids: list[str]
@@ -308,7 +340,15 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
             return None
         props = (
             db.table("properties")
-            .select("id, title, address, city, country, photos, timezone")
+            .select(
+                "id, title, address, city, country, photos, timezone, "
+                # Für die Platzhalter aus den übernommenen Lodgify-Vorlagen:
+                # Postleitzahl, Koordinaten (Kartenlink) und Kaution.
+                "postal_code, lat, lng, deposit_amount, "
+                # Die mehrsprachigen Gasttexte (`messaging`) liegen hier —
+                # gepflegt unter /objekte/{id}/nachrichten.
+                "type_attributes"
+            )
             .eq("tenant_id", tenant_id)
             .eq("id", str(property_id))
             .limit(1)
@@ -316,63 +356,8 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
         ).data or []
         return props[0] if props else None
 
-    def _feld_kontext(self, db: Client, tenant_id: str, row: dict) -> Kontext:
-        """Datengrundlage der Platzhalter für einen Thread.
-
-        Bewusst UNGEMASKT: der Empfänger ist der Gast selbst, dem seine eigenen
-        Daten nicht vorenthalten werden müssen. Die Rollen-Maske (§4.3) schützt
-        die ANSICHT für Mitarbeiter — sie darf nicht dazu führen, dass ein Gast
-        eine Nachricht mit „Hallo M****" bekommt.
-        """
-        customer = self._customer_of(row)
-        raw = row.get("raw") or {}
-        occ = raw.get("occupancy") or {}
-        checkin_time, checkout_time = self._ota_zeiten(raw)
-        prop = self._property_for_thread(db, tenant_id, row)
-        cents = row.get("amount_cents")
-        betrag = (cents / 100) if isinstance(cents, (int, float)) else None
-
-        tuercode = None
-        if prop and prop.get("id"):
-            portal = (
-                db.table("property_guest_portal")
-                .select("door_code")
-                .eq("property_id", str(prop["id"]))
-                .limit(1)
-                .execute()
-            ).data or []
-            tuercode = portal[0].get("door_code") if portal else None
-
-        firma = (
-            db.table("tenants")
-            .select("name")
-            .eq("id", tenant_id)
-            .limit(1)
-            .execute()
-        ).data or []
-
-        return Kontext(
-            guest_name=self._guest_name(customer),
-            guest_email=customer.get("mail") or customer.get("email"),
-            guest_phone=customer.get("phone"),
-            guest_language=customer.get("language") or customer.get("lang"),
-            check_in=row.get("arrival_date"),
-            check_out=row.get("departure_date"),
-            checkin_time=checkin_time,
-            checkout_time=checkout_time,
-            adults=occ.get("adults"),
-            children=occ.get("children"),
-            reservation_code=row.get("ota_reservation_code"),
-            channel=row.get("ota_name"),
-            total_amount=betrag,
-            currency=row.get("currency"),
-            property_name=prop.get("title") if prop else None,
-            property_address=prop.get("address") if prop else None,
-            property_city=prop.get("city") if prop else None,
-            door_code=tuercode,
-            company_name=firma[0].get("name") if firma else None,
-        )
-
+    # Feldname in `type_attributes.messaging` → unser Kontext-Feld. Gepflegt
+    # wird unter `/objekte/{id}/nachrichten` (`web/lib/messaging-meta.ts`).
     def render_for_thread(
         self, ctx: AuthContext, thread_id: str, text: str
     ) -> str:
@@ -455,11 +440,17 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
 
     def get_messages(self, ctx: AuthContext, thread_id: str) -> InboxMessagesResponse:
         db, tenant_id, row, _access = self._load_thread_scoped(ctx, thread_id)
+        # Lesestand des Gastes (0297) — an JEDER Rueckgabe, auch an den
+        # Fehlerpfaden: dass der Portal-Chat gerade klemmt, macht ein frueher
+        # gemeldetes Gelesen nicht ungueltig.
+        gelesen = row.get("guest_read_at")
 
         cbid = row.get("channex_booking_id")
         if not cbid:
             items = self._merge_stream(db, tenant_id, thread_id, row, [])
-            return InboxMessagesResponse(items=items, total=len(items))
+            return InboxMessagesResponse(
+                items=items, total=len(items), guest_read_at=gelesen
+            )
         try:
             res = self._portal_nachrichten(cbid, row, tenant_id, thread_id)
         except ChannexError as exc:
@@ -475,7 +466,9 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
                     channex_status=exc.channex_status,
                 )
                 items = self._merge_stream(db, tenant_id, thread_id, row, [])
-                return InboxMessagesResponse(items=items, total=len(items))
+                return InboxMessagesResponse(
+                items=items, total=len(items), guest_read_at=gelesen
+            )
             grund = (
                 "channel_no_chat"
                 if self._is_channel_without_chat(exc)
@@ -492,11 +485,14 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
                 )
             items = self._merge_stream(db, tenant_id, thread_id, row, [])
             return InboxMessagesResponse(
-                items=items, total=len(items), unavailable=grund
+                items=items, total=len(items), unavailable=grund,
+                guest_read_at=gelesen,
             )
         items = [self.zu_nachricht(m) for m in (res.get("data") or [])]
         items = self._merge_stream(db, tenant_id, thread_id, row, items)
-        return InboxMessagesResponse(items=items, total=len(items))
+        return InboxMessagesResponse(
+            items=items, total=len(items), guest_read_at=gelesen
+        )
 
     def _portal_nachrichten(
         self, cbid: str, row: dict, tenant_id: str, thread_id: str
@@ -618,8 +614,10 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
         return merged
 
     @staticmethod
-    def _ota_zeiten(raw: dict) -> tuple[str | None, str | None]:
-        """Erwartete An-/Abreisezeit aus der OTA-Payload.
+    def _ota_zeiten(
+        raw: dict, reservierung: dict | None = None
+    ) -> tuple[str | None, str | None]:
+        """Erwartete An-/Abreisezeit.
 
         EINE Stelle für beide Leser (Detailspalte rechts und die Platzhalter
         `{{checkin_time}}`/`{{checkout_time}}` der Automationen). Vorher stand
@@ -628,11 +626,28 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
         tatsächlich liefert („HH:MM", 24 h). Ergebnis: rechts stand „16:00",
         während dieselbe Buchung eine Anreise-Automation mit dem Vermerk
         „Feld ohne Wert: checkin_time" liegen ließ.
+
+        Zwei Quellen, in dieser Reihenfolge:
+
+        1. Die eigene Reservierung (`reservations.checkin_time`). Dort steht,
+           was beim Import vom Portal geholt wurde — bei Airbnb aus
+           `check_in_datetime`, das Channex NICHT durchreicht (live: `raw`
+           enthält weder `checkin_time` noch `arrival_hour`, während Airbnb
+           selbst „16:00" liefert).
+        2. Die Channex-Payload, für alles, was über den Feed kommt.
+
+        Kein Ersatzwert, wenn beides fehlt: „Feld ohne Wert" ist ehrlicher als
+        eine erfundene Uhrzeit, nach der sich ein Gast richtet (Wurzel 4).
         """
+        res = reservierung or {}
         occ = raw.get("occupancy") or {}
         return (
-            raw.get("checkin_time") or occ.get("checkin_time") or raw.get("arrival_hour"),
-            raw.get("checkout_time")
+            res.get("checkin_time")
+            or raw.get("checkin_time")
+            or occ.get("checkin_time")
+            or raw.get("arrival_hour"),
+            res.get("checkout_time")
+            or raw.get("checkout_time")
             or occ.get("checkout_time")
             or raw.get("departure_hour"),
         )
@@ -791,7 +806,15 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
             id=m.get("id") or a.get("id"),
             message=a.get("message") or a.get("text") or "",
             sender=sender,
-            sent_at=a.get("inserted_at") or a.get("sent_at") or a.get("time"),
+            # MIT Zone. Channex liefert „2026-08-06T07:19:55.000000" ohne jede
+            # Zonenangabe, meint aber UTC. Roh durchgereicht deutet der Browser
+            # das als ORTSZEIT (`Date.parse` → 05:19 UTC bei CEST) und schiebt
+            # die Nachricht zwei Stunden nach vorn. Für die Anzeige fiel das
+            # kaum auf; beim Lesestand-Vergleich (0297) hätte es ein Häkchen an
+            # Nachrichten gesetzt, die der Gast nie gesehen hat.
+            sent_at=ota_zeitstempel_utc(
+                a.get("inserted_at") or a.get("sent_at") or a.get("time")
+            ),
         )
 
     def send_message(
@@ -873,25 +896,27 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
         # Gäste-Aufschlüsselung + Zeiten aus der rohen OTA-Payload (falls vorhanden).
         raw = row.get("raw") or {}
         occ = raw.get("occupancy") or {}
-        checkin_time, checkout_time = self._ota_zeiten(raw)
         mask = access.mask
         total = (amount / 100) if isinstance(amount, (int, float)) else None
-        # Bezahlt-Stand aus der projizierten Reservierung — Portal-kassierte
-        # Buchungen (payment_collect='ota', 0268) führen dort paid_amount;
-        # ein hartes 0 widerspräche dem Buchungs-Slider daneben.
+        # Die eigene Reservierung: Bezahlt-Stand UND die An-/Abreisezeiten.
+        # Portal-kassierte Buchungen (payment_collect='ota', 0268) führen dort
+        # paid_amount; ein hartes 0 widerspräche dem Buchungs-Slider daneben.
         paid = 0.0
+        reservierung: dict = {}
         cbid = row.get("channex_booking_id")
         if cbid:
             res_rows = (
                 db.table("reservations")
-                .select("paid_amount")
+                .select("paid_amount, checkin_time, checkout_time")
                 .eq("tenant_id", tenant_id)
                 .eq("source_channex_booking_id", cbid)
                 .limit(1)
                 .execute()
             ).data
             if res_rows:
-                paid = float(res_rows[0].get("paid_amount") or 0)
+                reservierung = res_rows[0]
+                paid = float(reservierung.get("paid_amount") or 0)
+        checkin_time, checkout_time = self._ota_zeiten(raw, reservierung)
         return ReservationDetail(
             listing_name=listing_name,
             listing_photo=listing_photo,
@@ -899,8 +924,10 @@ class InboxService(PlanungMixin, VorlagenMixin, AnhangWissenMixin):
             rental_id=str(rental_id) if rental_id else None,
             guest_name=mask.name(self._guest_name(customer)),
             guest_email=mask.contact_value(customer.get("mail") or customer.get("email")),
-            guest_phone=mask.contact_value(customer.get("phone")),
-            guest_language=customer.get("language") or customer.get("lang"),
+            guest_phone=mask.contact_value(telefon_anzeigen(customer.get("phone"))),
+            guest_language=sprach_name(customer.get("language") or customer.get("lang"))
+            or customer.get("language")
+            or customer.get("lang"),
             guest_location=self._guest_location(customer),
             adults=occ.get("adults"),
             children=occ.get("children"),

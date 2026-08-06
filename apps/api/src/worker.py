@@ -462,6 +462,38 @@ def _handle_sync_bookings_feed(
         log.warning("buchungszeitpunkte_heilung_fehlgeschlagen",
                     error=str(exc)[:200])
 
+    # Ebenso die Profilbilder der Gäste (0295). Aus demselben Grund hier und
+    # nicht als eigener Tick: Der Feed legt die Gäste an, und er kennt die
+    # Nutzer-Ressource des Portals nicht — jeder neue Gast käme ohne Bild
+    # herein. Eine Einmal-Reparatur würde den Bestand füllen und ab der
+    # nächsten Buchung wieder einen Initialen-Kreis stehen lassen.
+    try:
+        bilder = dienst.profilbilder_heilen()
+        if bilder.get("gesetzt"):
+            log.info("profilbilder_nachgezogen", **bilder)
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Feed nie
+        log.warning("profilbild_heilung_fehlgeschlagen", error=str(exc)[:200])
+
+    # Und die An-/Abreisezeiten. Channex reicht Airbnbs `check_in_datetime`
+    # nicht durch, deshalb blieb `reservations.checkin_time` leer und jede
+    # Anreise-Vorlage meldete „Feld ohne Wert: checkin_time".
+    try:
+        zeiten = dienst.anreisezeiten_heilen()
+        if zeiten.get("gesetzt"):
+            log.info("anreisezeiten_nachgezogen", **zeiten)
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Feed nie
+        log.warning("anreisezeit_heilung_fehlgeschlagen", error=str(exc)[:200])
+
+    # Lesestand des Gastes (0297). Anders als die Heilungen darüber füllt das
+    # keine Lücke, sondern hält einen Wert AKTUELL — ein Häkchen, das einmal
+    # gesetzt und nie wieder geprüft wird, ist schlimmer als keins.
+    try:
+        gelesen = dienst.lesestaende_aktualisieren()
+        if gelesen.get("gesetzt"):
+            log.info("lesestaende_nachgezogen", **gelesen)
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Feed nie
+        log.warning("lesestand_fehlgeschlagen", error=str(exc)[:200])
+
 
 def _handle_sync_live_feed(
     db: Client, _payload: dict[str, Any], budget: ChannexBudget | None = None

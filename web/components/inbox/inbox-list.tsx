@@ -132,7 +132,7 @@ export function InboxList({
       waRes && waRes.ok ? waRes.data.items.map(whatsAppToThread) : [];
     // Gemeinsame Liste nach Aktualität (neueste zuerst); null-Daten ans Ende.
     const merged = [...ota, ...wa].sort((a, b) =>
-      (b.updated_at ?? "").localeCompare(a.updated_at ?? ""),
+      (b.letzte_aktivitaet ?? "").localeCompare(a.letzte_aktivitaet ?? ""),
     );
     setRows(merged);
     setActive((cur) =>
@@ -184,7 +184,10 @@ export function InboxList({
       return richtung * (a.arrival_date ?? "").localeCompare(b.arrival_date ?? "");
     if (sortKey === "name")
       return richtung * (a.guest_name ?? "").localeCompare(b.guest_name ?? "", locale);
-    return richtung * (a.updated_at ?? "").localeCompare(b.updated_at ?? "");
+    return (
+      richtung *
+      (a.letzte_aktivitaet ?? "").localeCompare(b.letzte_aktivitaet ?? "")
+    );
   });
   // Zusammengehörigkeit sichtbar machen: Ein WhatsApp-Verlauf mit der
   // Telefonnummer eines Gastes ist KEIN eigener Vorgang, sondern der zweite
@@ -666,6 +669,7 @@ export function InboxList({
                         <span className="mt-0.5">
                           <GuestAvatar
                             name={th.guest_name}
+                            bildUrl={th.guest_avatar_url}
                             size="sm"
                             unread={!th.is_read}
                           />
@@ -687,7 +691,7 @@ export function InboxList({
                               )}
                             </span>
                             <span className="shrink-0 text-[0.7rem] text-muted-foreground">
-                              {kurzeZeit(th.updated_at, locale)}
+                              {kurzeZeit(th.letzte_aktivitaet, locale)}
                             </span>
                           </span>
                           {/* Zeile 2: letzte Nachricht */}
@@ -775,7 +779,7 @@ export function InboxList({
                               )}
                             </span>
                             <span className="shrink-0 text-[0.7rem] text-muted-foreground">
-                              {kurzeZeit(kind.updated_at, locale)}
+                              {kurzeZeit(kind.letzte_aktivitaet, locale)}
                             </span>
                           </button>
                         </div>

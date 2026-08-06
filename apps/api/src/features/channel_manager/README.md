@@ -756,3 +756,43 @@ Provision und als Wert, von dem Portalgebühren erst noch abgezogen werden. Die
 Host-Fee wurde damit doppelt abgezogen und unsere Provision zu niedrig
 fakturiert. Beide Werte sind bei Airbnb erlaubt — wir müssen den bestellen, der
 zur Buchhaltung passt.
+
+## Was Channex NICHT durchreicht (06.08.2026)
+
+Vier Angaben, die im Posteingang sichtbar fehlten, kommen bei Channex gar nicht
+an. Alle vier liegen bei Airbnb — jeweils an einer ANDEREN Ressource als der,
+an der man sie zuerst sucht. Das ist das wiederkehrende Muster: „das Portal hat
+es nicht" ist erst belegt, wenn die Ressource geprüft wurde, an der das Feld
+fachlich hängt (Wurzel 4).
+
+| Angabe | Wo sie WIRKLICH steht | Wo NICHT |
+|---|---|---|
+| Profilbild des Gastes | `v2/users/{id}` → `picture_url_large` | `v2/reservations` (`guest` leer), `v2/threads/{id}` in allen vier Formaten |
+| An-/Abreisezeit | `v2/reservations` → `check_in_datetime` | Channex `raw` (weder `checkin_time` noch `arrival_hour`) |
+| Lesestand des Gastes | `v2/threads/{id}` → `last_message_reads` | Channex kennt gar keinen |
+| Objekt der Buchung | `raw.property_id` (war da!) | `channex_booking.property_map_id` wurde nie geschrieben |
+
+**Alle vier heilen sich selbst** — angehängt an `sync_bookings_feed`, weil genau
+dort die Zeilen ohne diese Werte entstehen (`worker._handle_sync_bookings_feed`).
+Ein Handlauf würde den Bestand einmal füllen, und ab der nächsten Buchung stünde
+wieder eine Lücke da.
+
+**Grenze JE TENANT, nicht global.** Beim ersten Lauf der Anreisezeiten füllten
+187 Zeilen fremder Betriebe das Kontingent von 200 — der betroffene Betrieb
+bekam 13 seiner 23 Werte, und die übrigen 10 wären bei jedem weiteren Tick
+erneut hinten angestanden. Eine globale Obergrenze über alle Mandanten hungert
+den Einzelnen dauerhaft aus.
+
+**Der Lesestand ist ein STAND, keine Liste.** `last_message_reads` sagt „dieser
+Nutzer war bis zu dieser Nachricht" — alles Ältere ist damit gelesen. Wer daraus
+eine Menge gelesener IDs macht, zeigt für jede ältere Nachricht fälschlich
+„ungelesen". Und es zählt der Eintrag mit Rolle `GUEST`: der `HOST`-Eintrag ist
+unser eigener Lesestand, mit ihm erschiene das Häkchen, sobald der Betrieb den
+Thread selbst geöffnet hat.
+
+**Zeitstempel ohne Zone sind eine Falle.** Channex liefert
+`2026-08-06T07:19:55.000000` — gemeint ist UTC, aber ohne Kennung deutet der
+Browser das als Ortszeit und rechnet zwei Stunden ab (CEST). Für die Anzeige
+fiel das kaum auf; beim Lesestand-Vergleich hätte es das Häkchen an Nachrichten
+gesetzt, die der Gast nie gesehen hat. `inbox.zu_nachricht` normalisiert deshalb
+über `ota_zeitstempel_utc`.

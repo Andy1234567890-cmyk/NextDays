@@ -45,8 +45,18 @@ export const SIGNUP_URL = APP_ERREICHBAR
   ? `${DASHBOARD_URL}/signup`
   : VORANMELDUNG_ZIEL;
 
-// AGB und Hilfe-Center liegen in der web-App. Vor dem Start gibt es dorthin
-// keinen öffentlichen Zugang — die Links entfallen dann (siehe Footer, der
-// leere Ziele auslässt, statt auf eine tote Adresse zu zeigen).
-export const AGB_URL = APP_ERREICHBAR ? `${DASHBOARD_URL}/agb` : "";
+/**
+ * Route der AGB — eine eigene Seite IN dieser App (`app/agb`).
+ *
+ * Früher ein absoluter Link ins Dashboard, der vor dem Start auf "" fiel. Das
+ * war an drei Stellen ein kaputter Link (`[AGB]()` in Datenschutz und AVV,
+ * leeres href im Impressum) und im Google-OAuth-Zustimmungsbildschirm ein 404
+ * auf der geprüften Adresse `mynextdays.com/agb`. Die AGB liegen deshalb jetzt
+ * hier — unabhängig davon, ob das Dashboard schon öffentlich ist.
+ */
+export const AGB_URL = "/agb";
+
+// Das Hilfe-Center liegt weiter in der web-App. Vor dem Start gibt es dorthin
+// keinen öffentlichen Zugang — der Link entfällt dann (siehe Footer, der leere
+// Ziele auslässt, statt auf eine tote Adresse zu zeigen).
 export const HILFE_URL = APP_ERREICHBAR ? `${DASHBOARD_URL}/hilfe` : "";

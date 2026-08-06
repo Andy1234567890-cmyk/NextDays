@@ -106,12 +106,37 @@ export function Conversation({
   // bei den Portalen nicht freigeschaltet). Ohne diesen Hinweis sieht die
   // Konversation aus wie „der Gast hat nichts geschrieben".
   const [chatGesperrt, setChatGesperrt] = useState<string | null>(null);
+  // Lesestand des Gastes (0297): bis zu diesem Zeitpunkt hat er gelesen.
+  // null = der Kanal meldet keinen — dann bleibt jedes Häkchen aus.
+  const [gelesenBis, setGelesenBis] = useState<string | null>(null);
+
+  /**
+   * Hat der Gast diese Nachricht gelesen?
+   *
+   * Der Lesestand ist EIN Zeitpunkt („war bis hierher"), kein Häkchen je
+   * Nachricht — alles, was davor gesendet wurde, ist damit gelesen. Ohne
+   * gemeldeten Lesestand ist die Antwort `false`, und die Oberfläche zeigt
+   * dann gar nichts: „wir wissen es nicht" ist nicht „nicht gelesen".
+   */
+  const gelesen = useCallback(
+    (sentAt: string | null) => {
+      if (!gelesenBis || !sentAt) return false;
+      // Über Zeitwerte, NICHT über String-Vergleich: die Quellen schreiben
+      // unterschiedlich („…T08:13:03+00:00" vs. „…T08:13:03Z"), und „Z" sortiert
+      // hinter „+" — ein Textvergleich hielte dieselbe Sekunde für später.
+      const a = Date.parse(sentAt);
+      const b = Date.parse(gelesenBis);
+      return Number.isFinite(a) && Number.isFinite(b) && a <= b;
+    },
+    [gelesenBis],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
     const res = await getInboxMessages(thread.id);
     setMessages(res.ok ? res.data.items : []);
     setChatGesperrt(res.ok ? (res.data.unavailable ?? null) : null);
+    setGelesenBis(res.ok ? (res.data.guest_read_at ?? null) : null);
     if (!res.ok) setError(res.error);
     setLoading(false);
   }, [thread.id]);
@@ -300,7 +325,10 @@ export function Conversation({
     <>
       {/* Kopf mit Aktions-Leiste (wie im Vorbild) */}
       <div className="flex items-center gap-3 border-b border-border p-3">
-        <GuestAvatar name={thread.guest_name} />
+        <GuestAvatar
+          name={thread.guest_name}
+          bildUrl={thread.guest_avatar_url}
+        />
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate font-semibold">
             {thread.guest_name ?? t("unknownGuest")}
@@ -558,8 +586,17 @@ export function Conversation({
                   {m.message}
                 </div>
                 {m.sent_at && (
-                  <span className="text-[0.65rem] text-muted-foreground">
+                  <span className="flex items-center gap-1 text-[0.65rem] text-muted-foreground">
                     {uhrzeit(m.sent_at, locale)}
+                    {/* Lesebestätigung nur an EIGENEN Nachrichten und nur, wenn
+                        der Kanal einen Lesestand meldet (0297, aktuell Airbnb).
+                        Fehlt er, steht hier NICHTS — ein graues Häkchen würde
+                        „noch nicht gelesen" behaupten, was wir nicht wissen. */}
+                    {m.sender === "property" && gelesen(m.sent_at) && (
+                      <span title={t("readByGuest")} className="flex">
+                        <Icon icon="ph:checks" className="size-3.5 text-accent" />
+                      </span>
+                    )}
                   </span>
                 )}
               </div>

@@ -142,6 +142,13 @@ jobs:
       - name: Enums und Labels deckungsgleich
         run: node scripts/i18n/kanal-enums-pruefen.mjs
 
+      # Jeder Platzhalter aus dem Backend-Katalog braucht sein Etikett in allen
+      # 24 Sprachen. Die Prüfung darüber vergleicht die Sprachen UNTEREINANDER
+      # und übersieht deshalb ein Feld, das in allen 24 fehlt — genau so kamen
+      # 31 neue Platzhalter ohne Beschriftung in die Oberfläche.
+      - name: Platzhalter-Etiketten vollstaendig
+        run: node scripts/i18n/pruefe-feld-labels.mjs
+
   # Die beiden Mobile-Apps (ADR-0019) hängen nicht am Wurzel-Workspace (React
   # Native braucht sein eigenes, nicht gehobenes node_modules — deshalb hat jede
   # App ein eigenes bun.lock), nutzen aber denselben Paketmanager. Matrix statt

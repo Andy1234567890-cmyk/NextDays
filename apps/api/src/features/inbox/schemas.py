@@ -18,6 +18,9 @@ class InboxThread(BaseModel):
     ota_name: str | None = None     # Kanal (myBestDays, Booking.com, Airbnb, …)
     ota_reservation_code: str | None = None
     guest_name: str | None = None
+    # Profilbild beim Portal (0295, Airbnb `v2/users/{id}`). None = das Portal
+    # führt keins; die Liste zeigt dann Initialen statt eines Platzhalters.
+    guest_avatar_url: str | None = None
     guest_email: str | None = None
     # Telefonnummer des Gastes: die Liste gruppiert daran den WhatsApp-Verlauf
     # als Unterpunkt UNTER seine Buchung (sonst steht er unverbunden daneben).
@@ -26,6 +29,24 @@ class InboxThread(BaseModel):
     arrival_date: str | None = None
     departure_date: str | None = None
     last_message: str | None = None  # Vorschau der letzten Nachricht
+    # WANN der Gast beim Portal gebucht hat (0291/0292).
+    booked_at: str | None = None
+    # Die Zeit, die in der Liste steht und nach der sie sortiert — als EIN Feld,
+    # das der Server entscheidet.
+    #
+    # WARUM NICHT `updated_at` an der Anzeigestelle (Wurzel 5b): `updated_at`
+    # ist unsere Schreibzeit. Als der Feed 22 Airbnb-Buchungen in einem Rutsch
+    # holte, trugen alle dieselbe Sekunde — die Liste zeigte Buchungen aus März,
+    # Juni und Juli als „vor 24 m". Das Feld ist zudem überladen: bei WhatsApp
+    # trägt es `last_at`, also sehr wohl ein Fremdereignis. Dieselbe Spalte
+    # bedeutet je Kanal etwas anderes, und an jeder Anzeigestelle musste man das
+    # wissen — das ist die Wurzel, nicht die Formatierung.
+    #
+    # Deshalb füllt der Server dieses Feld nach EINER Regel: der Zeitpunkt beim
+    # Portal, sonst nichts. Ist er leer, bleibt das Feld leer und die Liste
+    # zeigt statt einer Uhrzeit gar nichts — nie unsere eigene Uhr als fremdes
+    # Ereignis ausgeben (Wurzel 4).
+    letzte_aktivitaet: str | None = None
     updated_at: str | None = None
     is_read: bool = True
     is_starred: bool = False
@@ -84,6 +105,19 @@ class InboxMessagesResponse(BaseModel):
     # Chat-Anwendung ist an diesem Objekt bei Channex nicht installiert, die
     # Messaging-API antwortet dann mit 403.
     unavailable: str | None = None
+    # Bis WANN der Gast gelesen hat (0297) — Zeitpunkt beim Portal. Die
+    # Oberfläche setzt das Häkchen an jede eigene Nachricht mit
+    # `sent_at <= guest_read_at`; ein Lesestand gilt rückwirkend für alles
+    # Ältere, weil Airbnb genau das meldet („war bis hierher").
+    #
+    # Bewusst EIN Wert an der Antwort statt eines Flags je Nachricht: der
+    # Lesestand ist eine Eigenschaft des Threads. Pro Nachricht gespeichert
+    # müsste er bei jedem Lesen für alle Nachrichten neu geschrieben werden.
+    #
+    # None = dieser Kanal meldet keinen Lesestand (Channex führt gar keinen,
+    # nachgemessen). Dann zeigt die Oberfläche KEIN Häkchen — nicht „ungelesen",
+    # denn das wüssten wir nicht (Wurzel 4).
+    guest_read_at: str | None = None
 
 
 class ReservationDetail(BaseModel):

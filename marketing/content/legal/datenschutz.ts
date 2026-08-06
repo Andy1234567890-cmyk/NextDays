@@ -15,8 +15,16 @@
 //   Meta/WhatsApp (features/whatsapp/client.py → graph.facebook.com)
 //   Brevo/Sendinblue (features/newsletter/brevo_client.py → api.brevo.com)
 //   Iconify (marketing lädt Icons zur Laufzeit von api.iconify.design)
+//   Google Sign-In (web/lib/oauth-login.ts → GoTrue EXTERNAL_GOOGLE, Scopes
+//     openid/email/profile; OAuth-Client 275621779169-p776…)
 // Neuer ausgehender Dienst mit Personenbezug → hier nachtragen, sonst ist die
 // Erklärung unvollständig (Art. 13 Abs. 1 lit. e DSGVO).
+//
+// Der Abschnitt „US CLOUD Act" ist Pflichtinhalt für den Google-OAuth-
+// Zustimmungsbildschirm (Google prüft die verlinkte Erklärung). NICHT zu
+// verwechseln: CLOUD Act = US-Recht; EU Data Act (VO 2023/2854) = Cloud-
+// Wechsel/Portabilität; Cloud and AI Development Act = EU-Vorschlag vom
+// 03.06.2026, noch nicht in Kraft. Ein „EU Cloud Act" existiert nicht.
 //
 // OFFEN — betrieblich festzulegen: die Löschfrist der Server-Logfiles. Solange
 // keine Frist konfiguriert ist, wird hier bewusst KEINE Zahl behauptet.
@@ -119,6 +127,7 @@ export const datenschutz: LegalDoc = {
       paragraphs: [
         "Für die Registrierung und den Betrieb eines Kontos verarbeiten wir die Angaben, die Sie oder Ihr Betrieb eingeben: Name, Firmierung und Rechtsform, Anschrift, E-Mail-Adresse, Telefonnummer, Rolle und Berechtigungen, Registerdaten (z. B. Handelsregister- oder Umsatzsteuernummer), Bankverbindung für Auszahlungen sowie die Inhalte, die im Konto angelegt werden.",
         "Zur Absicherung des Zugangs verarbeiten wir außerdem Anmeldeprotokolle (Zeitpunkt, IP-Adresse, Gerät und Browser der Anmeldung) und — falls aktiviert — die Daten der Zwei-Faktor-Authentisierung.",
+        "Anmeldung mit Google: Sie können sich statt mit E-Mail und Passwort auch mit einem Google-Konto anmelden. Wählen Sie diesen Weg, erhalten wir von Google Ireland Limited ausschließlich Ihre E-Mail-Adresse, Ihren Namen, Ihr Profilbild und eine Kennung Ihres Google-Kontos (Bereiche „openid“, „email“, „profile“) — ausdrücklich keinen Zugriff auf Ihre E-Mails, Kontakte, Dateien oder Kalender. Ihr Google-Passwort erfahren wir nicht. Google verarbeitet den Anmeldevorgang dabei als eigener Verantwortlicher; es gilt die [Datenschutzerklärung von Google](https://policies.google.com/privacy). Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, da die Anmeldung der Vertragserfüllung dient; die Wahl dieses Anmeldewegs ist freiwillig und jederzeit durch die Anmeldung mit E-Mail und Passwort ersetzbar.",
         "Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des Nutzungsvertrags, siehe [AGB](" +
           AGB_URL +
           ")), für die Zugangssicherung Art. 6 Abs. 1 lit. f DSGVO und für steuer- und handelsrechtliche Aufbewahrung Art. 6 Abs. 1 lit. c DSGVO.",
@@ -192,11 +201,23 @@ export const datenschutz: LegalDoc = {
     },
     {
       heading: "Automatisierte Funktionen und KI",
+      paragraphs: [
+        "Für die hier beschriebenen Funktionen gilt neben der DSGVO die Verordnung (EU) 2024/1689 (KI-Verordnung, „AI Act“), deren Transparenzpflichten nach Art. 50 seit dem 2. August 2026 anwendbar sind.",
+      ],
       unterpunkte: [
         {
           titel: "Antwortvorschläge",
           paragraphs: [
             "Für Antwortvorschläge im Nachrichten-Posteingang setzen wir — sofern die Funktion für den Betrieb aktiviert ist — das Sprachmodell-Angebot von Groq, Inc., USA, ein. Dabei wird der jeweilige Nachrichtenkontext an den Dienst übermittelt. Vorschläge werden nicht automatisch versendet; über den Versand entscheidet immer ein Mensch. Eine automatisierte Entscheidungsfindung mit rechtlicher Wirkung im Sinne von Art. 22 DSGVO findet nicht statt.",
+            "Es handelt sich damit nicht um ein KI-System, das im Sinne von Art. 50 Abs. 1 der KI-Verordnung unmittelbar mit natürlichen Personen interagiert: Die Verpflichtung setzt eine DIREKTE Interaktion voraus, bei der die KI selbst mit der Person kommuniziert und nicht über einen menschlichen Vermittler. Hier schlägt die Funktion dem Betrieb einen Text vor, den ein Mitarbeiter prüft, ändern kann und selbst absendet — der Mitarbeiter ist dieser Vermittler, der Gast korrespondiert mit dem Betrieb und nicht mit einem Chatbot. Ein automatisch antwortender Assistent ist nicht im Einsatz. Nach unserer Einordnung erfüllt die Funktion auch keinen der Tatbestände für Hochrisiko-KI nach Anhang III der KI-Verordnung.",
+            "Nachrichten an Gäste sind zudem kein „Text über Angelegenheiten von öffentlichem Interesse“ im Sinne von Art. 50 Abs. 4 der KI-Verordnung: Sie werden nicht veröffentlicht, sondern individuell an eine bestimmte Person gesendet, und betreffen die Abwicklung eines Aufenthalts. Unabhängig davon greift hier die menschliche Prüfung durch den absendenden Mitarbeiter.",
+            "Sollte künftig eine Funktion angeboten werden, die selbsttätig — ohne menschliche Freigabe — an Gäste antwortet, wird der Gast zu Beginn des Dialogs sichtbar darauf hingewiesen, dass er mit einem KI-System schreibt. Ohne diesen Hinweis wird eine solche Funktion nicht bereitgestellt.",
+          ],
+        },
+        {
+          titel: "Rollen nach der KI-Verordnung",
+          paragraphs: [
+            "Für die im Produkt eingebauten KI-Funktionen sind wir Betreiber im Sinne von Art. 3 Nr. 4 der KI-Verordnung; Anbieter der zugrunde liegenden Sprachmodelle sind die jeweiligen Modellanbieter. Nutzt ein Betrieb diese Funktionen im Rahmen seiner beruflichen Tätigkeit, ist er dafür seinerseits Betreiber und trifft ihn die Pflicht zur KI-Kompetenz nach Art. 4 der KI-Verordnung, die seit dem 2. Februar 2025 unabhängig von der Unternehmensgröße gilt. Wir unterstützen dabei durch Hinweise in der Anwendung und in unserem Hilfe-Center; die Schulung der eigenen Mitarbeitenden bleibt Aufgabe des Betriebs.",
           ],
         },
         {
@@ -251,6 +272,38 @@ export const datenschutz: LegalDoc = {
         "Die Verarbeitung findet grundsätzlich innerhalb der EU statt. Bei den oben genannten Diensten mit Sitz außerhalb der EU kann es zu einer Übermittlung in ein Drittland kommen.",
         "Für Groq, Inc. und Cloudflare, Inc. (USA) stützen wir die Übermittlung auf die Standarddatenschutzklauseln der Europäischen Kommission nach Art. 46 Abs. 2 lit. c DSGVO, soweit sich der Empfänger nicht auf einen Angemessenheitsbeschluss (EU-US Data Privacy Framework) berufen kann.",
         "Für Channex.io Ltd (Vereinigtes Königreich) gilt der Angemessenheitsbeschluss der Europäischen Kommission für das Vereinigte Königreich; entfällt dieser, greifen die Standarddatenschutzklauseln.",
+      ],
+    },
+    {
+      heading: "Behördlicher Zugriff durch Drittstaaten (US CLOUD Act)",
+      paragraphs: [
+        "Anbieter, die einer US-amerikanischen Rechtshoheit unterliegen, können nach dem US-amerikanischen CLOUD Act (Clarifying Lawful Overseas Use of Data Act, 2018) verpflichtet werden, Daten an US-Behörden herauszugeben — auch dann, wenn diese Daten auf Servern innerhalb der Europäischen Union liegen. Ein solcher Zugriff kann im Widerspruch zur DSGVO stehen, und der Anbieter kann rechtlich daran gehindert sein, uns oder Sie darüber zu informieren. Weder der Angemessenheitsbeschluss zum EU-US Data Privacy Framework noch die Standarddatenschutzklauseln schließen dieses Risiko aus.",
+        "Wir begrenzen dieses Risiko, indem die tragenden Systeme — Plattform, Datenbank, Medien, Mailserver und Sicherungskopien — bei europäischen Anbietern innerhalb der EU betrieben werden und dort keine US-Rechtshoheit greift.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Betroffene Dienste",
+          paragraphs: [
+            "Eine US-Rechtshoheit kommt ausschließlich bei den folgenden, klar abgegrenzten Zusatzdiensten in Betracht:",
+          ],
+          list: [
+            "Groq, Inc. (USA) — Antwortvorschläge im Nachrichten-Posteingang, nur wenn der Betrieb die Funktion aktiviert. Übermittelt wird der jeweilige Nachrichtenkontext.",
+            "Cloudflare, Inc. (USA) — DNS-Verwaltung für Kunden-Domains. Übermittelt werden Domain- und Konfigurationsdaten, keine Gästedaten.",
+            "Google LLC (USA) — nur bei der Anmeldung mit Google und bei Übersetzungen; Vertragspartner ist jeweils die Google Ireland Limited, ein Zugriff der US-Muttergesellschaft ist dennoch nicht ausgeschlossen.",
+          ],
+        },
+        {
+          titel: "Vermeidbarkeit",
+          paragraphs: [
+            "Die Nutzung der Plattform ist ohne diese Dienste möglich: die Antwortvorschläge sind abschaltbar, die DNS-Verwaltung betrifft nur Kunden mit eigener Domain, und die Anmeldung mit Google ist eine freiwillige Alternative zur Anmeldung mit E-Mail und Passwort.",
+          ],
+        },
+        {
+          titel: "Abgrenzung zu europäischem Recht",
+          paragraphs: [
+            "Der CLOUD Act ist US-amerikanisches Recht, kein Recht der Europäischen Union. Er ist zu unterscheiden vom EU Data Act (Verordnung (EU) 2023/2854), der Wechsel und Portabilität bei Datenverarbeitungsdiensten regelt, sowie vom Cloud and AI Development Act, der sich zum Stand dieser Erklärung im europäischen Gesetzgebungsverfahren befindet.",
+          ],
+        },
       ],
     },
     {

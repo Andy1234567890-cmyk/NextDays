@@ -40,7 +40,7 @@ from src.features.guests.identity import (
     resolve_or_create_guest,
 )
 
-from .common import log, ota_buchungszeitpunkt
+from .common import log, ota_buchungszeitpunkt, ota_uhrzeit
 
 # Airbnbs `status_type` → unser Reservierungsstatus. Nur BEKANNTE Werte werden
 # übersetzt; ein unbekannter Status wird übersprungen statt zu 'confirmed'
@@ -235,6 +235,13 @@ class AirbnbHistorieImportMixin:
             # Helfer, damit jeder Kanal dieselbe Regel benutzt und niemand
             # unseren Anlagezeitpunkt als Portal-Zeit ausgibt.
             "booked_at": ota_buchungszeitpunkt(res),
+            # An-/Abreisezeit, wie das Inserat sie festlegt. Airbnb liefert sie
+            # als vollen Zeitstempel mit Zonen-Anhang
+            # (`'…T16:00+02:00[Europe/Copenhagen]'`) — der Helfer macht daraus
+            # „16:00". Ohne das blieb die Spalte leer und jede Anreise-Vorlage
+            # meldete „Feld ohne Wert: checkin_time".
+            "checkin_time": ota_uhrzeit(res.get("check_in_datetime")),
+            "checkout_time": ota_uhrzeit(res.get("check_out_datetime")),
             # Personenzahlen sind NOT NULL in der DB (Default 0 bzw. adults 1).
             # Ein `or None` bei 0 Kindern warf live einen 23502 — die Null IST
             # hier die Aussage („keine Kinder"), nicht das Fehlen einer Angabe.
@@ -282,11 +289,15 @@ class AirbnbHistorieImportMixin:
         # Zeile aktualisieren, sonst einfügen. Der Unique-Index bleibt der
         # Backstop gegen Doppelanlage bei zwei gleichzeitigen Läufen (Wurzel 2).
         if alt:
+            # Über die ID der GEFUNDENEN Zeile, nicht über den Code: gefunden
+            # wird unter zwei möglichen Spalten (`_bestehende_buchung`), und ein
+            # Filter auf nur eine davon ginge bei einer Feed-Zeile ins Leere —
+            # das Update liefe ohne Treffer durch und meldete trotzdem Erfolg.
             (
                 db.table("reservations")
                 .update(zeile)
                 .eq("tenant_id", tenant_id)
-                .eq("source_channex_booking_id", code)
+                .eq("id", alt["id"])
                 .execute()
             )
         else:
@@ -316,6 +327,42 @@ class AirbnbHistorieImportMixin:
                 db, property_id, anreise, abreise,
                 unit_id=zeile.get("unit_id"),
             )
+
+    @staticmethod
+    def _bestehende_buchung(
+        db: Client, tenant_id: str, code: str
+    ) -> dict[str, Any] | None:
+        """Kennen wir diese Portal-Buchung schon? — unter BEIDEN Schlüsseln.
+
+        WARUM ZWEI: Dieselbe Airbnb-Buchung kommt auf zwei Wegen zu uns, und
+        jeder legt sie unter einem anderen Schlüssel ab.
+
+          * Der Feed (`bookings_sync`) schreibt in `source_channex_booking_id`
+            die Channex-UUID und den Airbnb-Bestätigungscode in `external_ref`.
+          * Dieser Historien-Import kennt Channex gar nicht — er liest direkt
+            bei Airbnb und hat nur den Bestätigungscode.
+
+        Suchte man nur nach einer Spalte, träfe der Import die Feed-Zeile nicht
+        und legte die Buchung ein zweites Mal an: dieselbe Reservierung doppelt,
+        die Nächte doppelt belegt, der Kalender kaputt. Der Bestätigungscode ist
+        das einzige, was beide Wege gemeinsam haben (Wurzel 2 — real kommt alles
+        doppelt, hier sogar über zwei verschiedene Türen).
+
+        Reihenfolge: erst der eigene Schlüssel (der häufige Fall bei einem
+        zweiten Historien-Lauf), dann `external_ref` (die Feed-Zeile).
+        """
+        for spalte in ("source_channex_booking_id", "external_ref"):
+            treffer = (
+                db.table("reservations")
+                .select("id, status, check_in, check_out, unit_id, guest_id")
+                .eq("tenant_id", tenant_id)
+                .eq(spalte, code)
+                .limit(1)
+                .execute()
+            ).data
+            if treffer:
+                return treffer[0]
+        return None
 
     def _gast_der_buchung(
         self, db: Client, tenant_id: str, res: dict[str, Any], bestand: bool
