@@ -802,6 +802,12 @@ class AirbnbHistorieDienstMixin:
                 "aktualisiert": aktualisiert,
                 "updated_at": datetime.now(UTC).isoformat(),
             }).eq("id", lauf_id).execute()
+            # Denselben Stand in die Glocke: der Betrieb hat die Seite längst
+            # verlassen und sieht dort sonst 20 Minuten lang gar nichts.
+            self._glocke_fortschritt(
+                db, lauf, fertig=i, gesamt=len(objekte), objekt=titel,
+                buchungen=angelegt + aktualisiert,
+            )
 
             try:
                 eines = self.historie_eines_objekts_importieren(
@@ -899,6 +905,61 @@ class AirbnbHistorieDienstMixin:
         }
 
     @staticmethod
+    def _glocke_fortschritt(
+        db: Client, lauf: dict[str, Any], *, fertig: int, gesamt: int,
+        objekt: str, buchungen: int,
+    ) -> None:
+        """Den LAUFENDEN Stand in die Glocke schreiben, nicht erst das Ergebnis.
+
+        Der Betrieb startet den Import und verlässt die Seite — die Glocke ist
+        dann der einzige Ort, an dem er sieht, dass etwas passiert. Eine
+        Meldung erst am Ende hieße: 20 Minuten lang „Keine Benachrichtigungen",
+        obwohl der Import läuft.
+
+        EINE Meldung je Lauf, die fortgeschrieben wird (`dedup_key`), nicht 18
+        einzelne — sonst wäre die Glocke nach einem Import zugemüllt. Update
+        zuerst, Insert nur wenn nichts getroffen wurde: so entsteht die Zeile
+        beim ersten Aufruf und wird danach nur noch aktualisiert.
+
+        Best-effort: eine gescheiterte Meldung darf den Import nicht kippen.
+        """
+        user_id = lauf.get("gestartet_von")
+        if not user_id:
+            return
+        schluessel = f"airbnb_historie:{lauf['id']}"
+        text = (
+            f"Objekt {fertig} von {gesamt}"
+            + (f" · {objekt}" if objekt else "")
+            + f" · {buchungen} Buchungen eingelesen"
+        )
+        try:
+            treffer = (
+                db.table("notifications")
+                .update({"titel": "Buchungshistorie wird eingelesen",
+                         "text": text})
+                .eq("user_id", user_id)
+                .eq("dedup_key", schluessel)
+                .is_("gelesen_am", "null")
+                .execute()
+            ).data
+            if treffer:
+                return
+            db.table("notifications").insert({
+                "tenant_id": lauf["tenant_id"],
+                "user_id": user_id,
+                "kategorie": "listing_activity",
+                "titel": "Buchungshistorie wird eingelesen",
+                "text": text,
+                "ziel_pfad": "/channels",
+                "dedup_key": schluessel,
+            }).execute()
+        except Exception as exc:  # noqa: BLE001 — Meldung darf den Lauf nicht kippen
+            log.warning(
+                "airbnb_historie_glocke_fortschritt_fehlgeschlagen",
+                lauf_id=str(lauf.get("id")), error=str(exc)[:200],
+            )
+
+    @staticmethod
     def _historie_glocke(  # noqa: PLR0913 — eine Meldung mit ihren Zahlen
         db: Client, lauf: dict[str, Any], *, status: str, objekte: int,
         angelegt: int, aktualisiert: int, gescheitert: list[dict[str, str]],
@@ -926,7 +987,23 @@ class AirbnbHistorieDienstMixin:
                 f"aktualisiert. Nicht geschafft: {namen or len(gescheitert)}. "
                 "Bitte erneut einlesen."
             )
+        # Die Fortschrittsmeldung dieses Laufs wird zur Ergebnismeldung — sie
+        # trägt denselben `dedup_key`. Ein Insert daneben ergäbe zwei Zeilen zum
+        # selben Lauf, von denen eine für immer „wird eingelesen" behauptet.
+        schluessel = f"airbnb_historie:{lauf['id']}"
         try:
+            treffer = (
+                db.table("notifications")
+                .update({"titel": titel, "text": text})
+                .eq("user_id", user_id)
+                .eq("dedup_key", schluessel)
+                .is_("gelesen_am", "null")
+                .execute()
+            ).data
+            if treffer:
+                return
+            # Keine offene Zeile (der Betrieb hat sie während des Laufs
+            # gelesen) → das Ergebnis ist neu und gehört gemeldet.
             db.table("notifications").insert({
                 "tenant_id": lauf["tenant_id"],
                 "user_id": user_id,
@@ -934,7 +1011,7 @@ class AirbnbHistorieDienstMixin:
                 "titel": titel,
                 "text": text,
                 "ziel_pfad": "/channels",
-                "dedup_key": f"airbnb_historie:{lauf['id']}",
+                "dedup_key": schluessel,
             }).execute()
         except Exception as exc:  # noqa: BLE001 — Meldung darf den Lauf nicht kippen
             log.warning(
