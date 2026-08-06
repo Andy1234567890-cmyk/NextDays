@@ -20,13 +20,14 @@ andere wird gezählt und gemeldet, aber nicht geschrieben.
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Any
 
 from supabase import Client
 
 from src.core.security import AuthContext
 from src.core.supabase import load_scoped
+from src.jobs.queue import enqueue
 
 from .airbnb_historie import EtappenErgebnis, etappen_planen
 from .common import ChannelManagerError, log, ota_buchungszeitpunkt, ota_uhrzeit
@@ -537,6 +538,409 @@ class AirbnbHistorieDienstMixin:
             # Was das Portal nicht kennt, bleibt leer statt geraten (Wurzel 4).
             "ohne_datum": len(offen) - gesetzt,
         }
+
+    def airbnb_verbundene_objekte(self, ctx: AuthContext) -> list[dict[str, Any]]:
+        """Die Objekte, für die ein Historien-Import überhaupt etwas holen kann.
+
+        „Verbunden" heißt BEIDES: das Objekt trägt eine `airbnb_listing_id`
+        (sonst weiß niemand, welche Anzeige gemeint ist) UND sein Mapping steht
+        auf `sync_enabled` (sonst ist der Kanal für dieses Objekt bewusst aus).
+        Ein Objekt ohne Verknüpfung wird NICHT stillschweigend übersprungen,
+        sondern gar nicht erst angeboten — der Betrieb soll sehen, was fehlt.
+
+        Fremde Anzeigen des Airbnb-Kontos bleiben damit außen vor: der Kanal
+        trägt alle Inserate des Kontos, aber importiert wird nur, was hier auch
+        einem Objekt zugeordnet ist.
+        """
+        tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
+        return self.verbundene_objekte_des_tenants(tenant_id)
+
+    def verbundene_objekte_des_tenants(
+        self, tenant_id: str
+    ) -> list[dict[str, Any]]:
+        """Wie `airbnb_verbundene_objekte`, aber mit der Tenant-ID statt einem
+        `AuthContext` — der Weg für den Worker, der keine Sitzung hat.
+
+        Der Tenant kommt hier aus der Job-Payload und wird beim Einreihen aus
+        dem `AuthContext` gesetzt; er darf NIE aus einer Anfrage stammen
+        (Wurzel 3).
+        """
+        db = self._require_db()  # type: ignore[attr-defined]
+        objekte = (
+            db.table("properties")
+            .select("id, title, currency, airbnb_listing_id")
+            .eq("tenant_id", tenant_id)
+            .not_.is_("airbnb_listing_id", "null")
+            .order("title")
+            .execute()
+        ).data or []
+        if not objekte:
+            return []
+        erlaubt = {
+            str(z["property_id"])
+            for z in (
+                db.table("channex_property_map")
+                .select("property_id, sync_enabled")
+                .eq("tenant_id", tenant_id)
+                .eq("sync_enabled", True)
+                .execute()
+            ).data
+            or []
+        }
+        return [o for o in objekte if str(o["id"]) in erlaubt]
+
+    def airbnb_historie_alle_importieren(
+        self, ctx: AuthContext, *, von: str, bis: str,
+    ) -> dict[str, Any]:
+        """Die Historie ALLER verbundenen Objekte holen — ein Knopf, ein Lauf.
+
+        Bisher ging der Import nur objektweise. Bei 18 verbundenen Objekten
+        heißt das 18 Klicks, und wer eines übersieht, merkt es nie: der
+        Kalender sieht vollständig aus, dem Objekt fehlt nur seine Vergangenheit.
+
+        Doppelte Buchungen kann dieser Weg nicht erzeugen: `_bestehende_buchung`
+        sucht den Bestätigungscode unter BEIDEN Spalten und aktualisiert die
+        gefundene Zeile, statt eine zweite anzulegen; der UNIQUE-Index auf
+        `source_channex_booking_id` ist der Backstop, falls zwei Läufe sich
+        überholen (Wurzel 2). Ein zweiter Klick auf den Knopf ist deshalb
+        gefahrlos — er aktualisiert, er verdoppelt nicht.
+
+        Ein gescheitertes Objekt beendet den Lauf NICHT: die übrigen werden
+        fertig importiert, und der Fehler steht namentlich im Ergebnis. Sonst
+        entschiede die alphabetische Reihenfolge darüber, wessen Historie
+        ankommt (Wurzel 5 — nicht verschlucken, aber auch nicht alles kippen).
+        """
+        objekte = self.airbnb_verbundene_objekte(ctx)
+        if not objekte:
+            raise ChannelManagerError(
+                "Kein Objekt ist mit einer Airbnb-Anzeige verbunden. Ordne die "
+                "Anzeigen zuerst im Kanalmanager zu.",
+                status_code=409,
+            )
+
+        ergebnisse: list[dict[str, Any]] = []
+        angelegt = aktualisiert = uebersprungen = 0
+        gescheitert: list[dict[str, str]] = []
+        for objekt in objekte:
+            pid = str(objekt["id"])
+            try:
+                eines = self.airbnb_historie_importieren(
+                    ctx, pid, von=von, bis=bis
+                )
+            except ChannelManagerError as exc:
+                # Namentlich melden statt still überspringen: ein Objekt ohne
+                # Währung oder mit abgelaufenem Token muss auffallen.
+                gescheitert.append(
+                    {"property_id": pid,
+                     "titel": str(objekt.get("title") or ""),
+                     "grund": exc.message}
+                )
+                continue
+            angelegt += int(eines.get("angelegt") or 0)
+            aktualisiert += int(eines.get("aktualisiert") or 0)
+            uebersprungen += int(eines.get("uebersprungen") or 0)
+            ergebnisse.append(eines)
+
+        # `vollstaendig` nur, wenn KEIN Objekt gescheitert ist UND jedes seine
+        # Etappen ganz gefahren hat. Sonst fehlen Buchungen, und der Lauf ist zu
+        # wiederholen — „fertig" wäre hier eine Falschaussage.
+        vollstaendig = not gescheitert and all(
+            bool(e.get("vollstaendig")) for e in ergebnisse
+        )
+        log.info(
+            "airbnb_historie_alle_fertig",
+            objekte=len(objekte), erfolgreich=len(ergebnisse),
+            gescheitert=len(gescheitert), angelegt=angelegt,
+            aktualisiert=aktualisiert, vollstaendig=vollstaendig,
+        )
+        return {
+            "objekte": len(objekte),
+            "erfolgreich": len(ergebnisse),
+            "angelegt": angelegt,
+            "aktualisiert": aktualisiert,
+            "uebersprungen": uebersprungen,
+            "gescheitert": gescheitert,
+            "vollstaendig": vollstaendig,
+            "ergebnisse": ergebnisse,
+        }
+
+    def historie_lauf_starten(
+        self, ctx: AuthContext, *, von: str, bis: str
+    ) -> dict[str, Any]:
+        """Einen serverseitigen Lauf einreihen und seine Zeile zurückgeben.
+
+        Der Klick wartet NICHT auf den Import — er reiht nur ein. Der Worker
+        arbeitet die Objekte ab und schreibt seinen Stand in
+        `airbnb_historie_lauf`; die Oberfläche liest ihn per Realtime. Damit
+        überlebt ein Lauf das Schließen des Tabs, was er vorher nicht tat
+        (18 Objekte dauern Minuten, so lange bleibt niemand auf der Seite).
+
+        Läuft schon einer, wird DIESER zurückgegeben statt ein zweiter
+        gestartet: zwei parallele Läufe würden dieselben Buchungen gleichzeitig
+        schreiben (Wurzel 2). Der partielle Unique-Index ist der Backstop.
+        """
+        tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
+        db = self._require_db()  # type: ignore[attr-defined]
+        self._zeitraum(von, bis)  # 422 bei unbrauchbarem Datum, vor dem Insert
+
+        offen = (
+            db.table("airbnb_historie_lauf")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .eq("status", "laeuft")
+            .limit(1)
+            .execute()
+        ).data
+        if offen:
+            return dict(offen[0])
+
+        objekte = self.verbundene_objekte_des_tenants(tenant_id)
+        if not objekte:
+            raise ChannelManagerError(
+                "Kein Objekt ist mit einer Airbnb-Anzeige verbunden. Ordne die "
+                "Anzeigen zuerst im Kanalmanager zu.",
+                status_code=409,
+            )
+
+        try:
+            zeile = (
+                db.table("airbnb_historie_lauf")
+                .insert({
+                    "tenant_id": tenant_id,
+                    "gestartet_von": getattr(ctx, "user_id", None),
+                    "von": von,
+                    "bis": bis,
+                    "objekte_gesamt": len(objekte),
+                })
+                .execute()
+            ).data[0]
+        except Exception as exc:  # noqa: BLE001 — Supabase-Client, Typ variiert
+            # 23505 = der Unique-Index hat einen parallelen Start abgefangen.
+            # Das ist der ZIELZUSTAND: den bestehenden Lauf liefern.
+            if "23505" not in str(exc):
+                raise
+            bestehend = (
+                db.table("airbnb_historie_lauf")
+                .select("*")
+                .eq("tenant_id", tenant_id)
+                .eq("status", "laeuft")
+                .limit(1)
+                .execute()
+            ).data
+            if bestehend:
+                return dict(bestehend[0])
+            raise
+
+        enqueue(
+            db, "airbnb_historie_import",
+            payload={"lauf_id": str(zeile["id"]), "tenant_id": tenant_id,
+                     "von": von, "bis": bis},
+            tenant_id=tenant_id,
+            dedup_key=f"airbnb_historie_import:{tenant_id}",
+            # Ein Import ist Minutenarbeit; ein hängengebliebener Versuch soll
+            # nicht zehnmal wiederholt werden und dabei Airbnb belasten.
+            max_attempts=3,
+        )
+        log.info(
+            "airbnb_historie_lauf_gestartet",
+            tenant_id=tenant_id, lauf_id=str(zeile["id"]),
+            objekte=len(objekte), von=von, bis=bis,
+        )
+        return dict(zeile)
+
+    def historie_lauf_aktuell(self, ctx: AuthContext) -> dict[str, Any] | None:
+        """Der jüngste Lauf dieses Betriebs — für die Anzeige beim Seitenaufruf.
+
+        Ohne diesen Weg wüsste eine frisch geladene Seite nichts von einem
+        laufenden Import und böte den Knopf an, als sei nichts los.
+        """
+        tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
+        db = self._require_db()  # type: ignore[attr-defined]
+        zeilen = (
+            db.table("airbnb_historie_lauf")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        ).data
+        return dict(zeilen[0]) if zeilen else None
+
+    def historie_lauf_ausfuehren(self, lauf_id: str) -> dict[str, Any]:
+        """Den eingereihten Lauf abarbeiten — läuft im WORKER, ohne Sitzung.
+
+        Nach JEDEM Objekt wird der Stand geschrieben, nicht erst am Ende: genau
+        dafür ist die Tabelle da. Bricht der Worker mitten drin ab, steht der
+        letzte erreichte Stand da statt einer Zeile, die ewig auf 0 zeigt.
+        """
+        db = self._require_db()  # type: ignore[attr-defined]
+        lauf = (
+            db.table("airbnb_historie_lauf")
+            .select("*")
+            .eq("id", lauf_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not lauf:
+            raise ChannelManagerError("Lauf nicht gefunden.", status_code=404)
+        lauf = lauf[0]
+        tenant_id = str(lauf["tenant_id"])
+        von, bis = str(lauf["von"]), str(lauf["bis"])
+
+        objekte = self.verbundene_objekte_des_tenants(tenant_id)
+        angelegt = aktualisiert = uebersprungen = 0
+        gescheitert: list[dict[str, str]] = []
+
+        for i, objekt in enumerate(objekte):
+            pid = str(objekt["id"])
+            titel = str(objekt.get("title") or "")
+            db.table("airbnb_historie_lauf").update({
+                "objekte_fertig": i,
+                "objekte_gesamt": len(objekte),
+                "aktuelles_objekt": titel,
+                "angelegt": angelegt,
+                "aktualisiert": aktualisiert,
+                "updated_at": datetime.now(UTC).isoformat(),
+            }).eq("id", lauf_id).execute()
+
+            try:
+                eines = self.historie_eines_objekts_importieren(
+                    tenant_id, pid, von=von, bis=bis
+                )
+            except ChannelManagerError as exc:
+                # Ein Objekt scheitern lassen, die übrigen fertig fahren —
+                # sonst entscheidet die Reihenfolge, wessen Historie ankommt.
+                gescheitert.append({"titel": titel, "grund": exc.message})
+                continue
+            angelegt += int(eines.get("angelegt") or 0)
+            aktualisiert += int(eines.get("aktualisiert") or 0)
+            uebersprungen += int(eines.get("uebersprungen") or 0)
+            if not eines.get("vollstaendig"):
+                gescheitert.append(
+                    {"titel": titel, "grund": "Etappen unvollständig"}
+                )
+
+        status = "fertig" if not gescheitert else "unvollstaendig"
+        db.table("airbnb_historie_lauf").update({
+            "status": status,
+            "objekte_fertig": len(objekte),
+            "aktuelles_objekt": None,
+            "angelegt": angelegt,
+            "aktualisiert": aktualisiert,
+            "uebersprungen": uebersprungen,
+            "gescheitert": gescheitert,
+            "beendet_at": datetime.now(UTC).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
+        }).eq("id", lauf_id).execute()
+
+        log.info(
+            "airbnb_historie_lauf_fertig",
+            tenant_id=tenant_id, lauf_id=lauf_id, status=status,
+            objekte=len(objekte), angelegt=angelegt,
+            aktualisiert=aktualisiert, gescheitert=len(gescheitert),
+        )
+        self._historie_glocke(
+            db, lauf, status=status, objekte=len(objekte),
+            angelegt=angelegt, aktualisiert=aktualisiert,
+            gescheitert=gescheitert,
+        )
+        return {
+            "status": status, "objekte": len(objekte), "angelegt": angelegt,
+            "aktualisiert": aktualisiert, "gescheitert": gescheitert,
+        }
+
+    def historie_eines_objekts_importieren(
+        self, tenant_id: str, property_id: str, *, von: str, bis: str,
+    ) -> dict[str, Any]:
+        """Ein Objekt importieren — Worker-Weg, Tenant statt `AuthContext`.
+
+        Inhaltlich identisch zu `airbnb_historie_importieren`; nur die Herkunft
+        des Tenants unterscheidet sich (Job-Payload statt Sitzung). Der Tenant
+        wird beim Einreihen aus dem `AuthContext` gesetzt, nie aus einer
+        Anfrage (Wurzel 3).
+        """
+        db = self._require_db()  # type: ignore[attr-defined]
+        prop = load_scoped(
+            db, "properties", property_id, tenant_id,
+            columns="id, title, currency, airbnb_listing_id",
+            not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
+        )
+        listing_id = str(prop.get("airbnb_listing_id") or "")
+        if not listing_id:
+            raise ChannelManagerError(
+                "Dieses Objekt ist mit keiner Airbnb-Anzeige verknüpft.",
+                status_code=422,
+            )
+        waehrung = str(prop.get("currency") or "").strip()
+        if not waehrung:
+            # Wurzel 4: keine Buchung ohne echte Währung schreiben, kein „EUR".
+            raise ChannelManagerError(
+                f"Dem Objekt „{prop.get('title')}“ fehlt die Währung.",
+                status_code=422,
+            )
+        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        if not zugang:
+            raise ChannelManagerError(
+                "Es ist kein Airbnb-Konto verbunden.", status_code=409
+            )
+        start, ende = self._zeitraum(von, bis)
+
+        gelesen = self.airbnb_historie_lesen(  # type: ignore[attr-defined]
+            zugang[0], listing_id, von=start, bis=ende
+        )
+        uebernommen = self.airbnb_buchungen_uebernehmen(  # type: ignore[attr-defined]
+            db, tenant_id, property_id, gelesen.buchungen, waehrung=waehrung
+        )
+        return {
+            "angelegt": uebernommen.angelegt,
+            "aktualisiert": uebernommen.aktualisiert,
+            "uebersprungen": uebernommen.uebersprungen,
+            "vollstaendig": gelesen.vollstaendig,
+        }
+
+    @staticmethod
+    def _historie_glocke(  # noqa: PLR0913 — eine Meldung mit ihren Zahlen
+        db: Client, lauf: dict[str, Any], *, status: str, objekte: int,
+        angelegt: int, aktualisiert: int, gescheitert: list[dict[str, str]],
+    ) -> None:
+        """Das Ergebnis in die Glocke legen.
+
+        Der Betrieb hat den Lauf gestartet und die Seite verlassen — ohne diese
+        Meldung erführe er nie, ob er durchlief. Best-effort: eine gescheiterte
+        Benachrichtigung darf den fertigen Import nicht als Fehler dastehen
+        lassen (Wurzel 5).
+        """
+        user_id = lauf.get("gestartet_von")
+        if not user_id:
+            return
+        if status == "fertig":
+            titel = "Buchungshistorie eingelesen"
+            text = (
+                f"{objekte} Objekte · {angelegt} neu, {aktualisiert} aktualisiert."
+            )
+        else:
+            namen = ", ".join(g["titel"] for g in gescheitert if g.get("titel"))
+            titel = "Buchungshistorie unvollständig"
+            text = (
+                f"{objekte} Objekte · {angelegt} neu, {aktualisiert} "
+                f"aktualisiert. Nicht geschafft: {namen or len(gescheitert)}. "
+                "Bitte erneut einlesen."
+            )
+        try:
+            db.table("notifications").insert({
+                "tenant_id": lauf["tenant_id"],
+                "user_id": user_id,
+                "kategorie": "listing_activity",
+                "titel": titel,
+                "text": text,
+                "ziel_pfad": "/channels",
+                "dedup_key": f"airbnb_historie:{lauf['id']}",
+            }).execute()
+        except Exception as exc:  # noqa: BLE001 — Meldung darf den Lauf nicht kippen
+            log.warning(
+                "airbnb_historie_glocke_fehlgeschlagen",
+                lauf_id=str(lauf.get("id")), error=str(exc)[:200],
+            )
 
     @staticmethod
     def airbnb_historie_etappen_plan(von: str, bis: str) -> list[dict[str, str]]:

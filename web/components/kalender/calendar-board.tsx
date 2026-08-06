@@ -208,6 +208,19 @@ function fmtPrice(price: number | null | undefined, currency: string | null | un
   });
 }
 
+// Tagespreis IM RASTER: nur die Zahl, ohne Währung und ohne Nachkommastellen.
+// Eine Tagesspalte ist 5,5rem breit; „750,00 DKK" füllt sie fast vollständig und
+// lässt die Zeile überladen wirken (dreistellige Beträge in Kronen/Forint sind
+// der Normalfall, nicht die Ausnahme). Die Währung steht deshalb EINMAL an der
+// Objektzeile statt 30-mal im Raster. Centbeträge behalten ihre Nachkommastellen
+// nur dort, wo sie zählen (Tooltip, Rate-Grid, Vorschau) — im Überblicksraster
+// ist der gerundete Betrag die Information. Kein Fallback-Wert: fehlt der Preis,
+// bleibt es „–" (Wurzel 4).
+function fmtPriceKompakt(price: number | null | undefined, locale: string): string {
+  if (price == null) return "–";
+  return price.toLocaleString(locale, { maximumFractionDigits: 0 });
+}
+
 type Segment = {
   start: number;
   span: number;
@@ -287,8 +300,14 @@ function toSegments(
     // Adressat (z. B. TUI) + Grund unsichtbar. Nur eine echte Buchung sticht ihn.
     const stop = !res ? stopSellByDay[key(d)] : undefined;
     const s: SegStatus = res ? "booked" : stop ? "stop_sell" : rawStatus;
-    const src = res
-      ? (sourceByDay[key(d)] ?? "booking")
+    // Kanal eines gebuchten Tages kommt aus der BUCHUNG, nicht aus availability.
+    // availability.source hat den Kanal nur für Tage, die auch geladen wurden —
+    // eine Buchung, die vor dem sichtbaren Fenster beginnt, hat dort keine Zeile.
+    // Früher sprang der Balken dann auf einen erfundenen Wert ("booking" bzw.
+    // "manual") und eine Airbnb-Buchung erschien schwarz wie eine Handsperre
+    // (Wurzel 4: kein Ersatzwert, wenn die Wahrheit vorliegt — res.channel).
+    const src: AvailabilitySource = res
+      ? res.channel
       : (sourceByDay[key(d)] ?? "manual");
     if (s === "open") {
       cur = null;
@@ -1801,7 +1820,9 @@ export function CalendarBoard({
                                     der Ansicht „Preise" gepflegt. */}
                                 {view.showPrice && (
                                   <span className={`flex items-center gap-1 ${inSel ? "text-white" : "text-muted-foreground"}`}>
-                                    {fmtPrice(priceMap[key(d)], propCurrency, locale)}
+                                    <span title={fmtPrice(priceMap[key(d)], propCurrency, locale)}>
+                                      {fmtPriceKompakt(priceMap[key(d)], locale)}
+                                    </span>
                                     {priceSrcMap[key(d)] === "dynamic" && (
                                       <span
                                         title={

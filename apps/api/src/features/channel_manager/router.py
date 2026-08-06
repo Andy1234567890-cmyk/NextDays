@@ -591,6 +591,72 @@ def airbnb_historie_import(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get("/airbnb/historie/objekte")
+def airbnb_historie_objekte(
+    service: ChannelManagerServiceDep, ctx: _read
+) -> dict[str, object]:
+    """Die Objekte, für die der Sammel-Import etwas holen kann.
+
+    Verbunden = eigene `airbnb_listing_id` UND `sync_enabled` im Mapping.
+    Fremde Anzeigen des Airbnb-Kontos stehen nicht darin.
+    """
+    try:
+        objekte = service.airbnb_verbundene_objekte(ctx)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return {"items": objekte, "anzahl": len(objekte)}
+
+
+@router.post("/airbnb/historie/lauf")
+def airbnb_historie_lauf_starten(
+    von: str, bis: str, service: ChannelManagerServiceDep, ctx: _write,
+) -> dict[str, object]:
+    """Einen serverseitigen Historien-Import starten und sofort antworten.
+
+    Der Aufruf wartet NICHT auf den Import — er reiht ihn ein. Der Lauf
+    überlebt damit das Schließen der Seite; Fortschritt steht in
+    `airbnb_historie_lauf` (Realtime), das Ergebnis am Ende in der Glocke.
+    Läuft schon einer, wird dieser zurückgegeben statt ein zweiter gestartet.
+    """
+    try:
+        return service.historie_lauf_starten(ctx, von=von, bis=bis)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/airbnb/historie/lauf")
+def airbnb_historie_lauf_stand(
+    service: ChannelManagerServiceDep, ctx: _read
+) -> dict[str, object]:
+    """Der jüngste Lauf dieses Betriebs — damit eine frisch geladene Seite
+    einen noch laufenden Import erkennt, statt den Knopf anzubieten."""
+    try:
+        return {"lauf": service.historie_lauf_aktuell(ctx)}
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/airbnb/historie/import-alle")
+def airbnb_historie_import_alle(
+    von: str, bis: str, service: ChannelManagerServiceDep, ctx: _write,
+) -> dict[str, object]:
+    """Die Buchungshistorie ALLER verbundenen Objekte holen — ein Aufruf.
+
+    Nur Objekte mit Anzeigen-Verknüpfung und aktivem Mapping; fremde Inserate
+    des Kontos bleiben unangetastet. Mehrfach aufrufbar: bestehende Buchungen
+    werden über den Bestätigungscode gefunden und aktualisiert, nicht doppelt
+    angelegt.
+
+    Antwort enthält `vollstaendig`: false heißt, mindestens ein Objekt oder
+    eine Etappe ist gescheitert — dann FEHLEN Buchungen. `gescheitert` nennt
+    die betroffenen Objekte namentlich.
+    """
+    try:
+        return service.airbnb_historie_alle_importieren(ctx, von=von, bis=bis)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.get("/properties/{property_id}/veroeffentlichen/kanaele")
 def veroeffentlichen_kanaele(
     property_id: str, service: ChannelManagerServiceDep, ctx: _read

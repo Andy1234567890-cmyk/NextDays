@@ -724,6 +724,95 @@ export async function airbnbHistorieImportieren(
   return res;
 }
 
+/** Ein Objekt, für das der Sammel-Import etwas holen kann. */
+export type HistorieObjekt = {
+  id: string;
+  title: string | null;
+  currency: string | null;
+  airbnb_listing_id: string | null;
+};
+
+/** Objekte mit Anzeigen-Verknüpfung UND aktivem Mapping. Fremde Inserate des
+ *  Airbnb-Kontos stehen nicht darin. */
+export async function airbnbHistorieObjekte(): Promise<
+  Result<{ items: HistorieObjekt[]; anzahl: number }>
+> {
+  return call("/airbnb/historie/objekte");
+}
+
+/** Ein serverseitiger Historien-Lauf. Der Worker schreibt ihn fort, die
+ *  Oberfläche liest ihn per Realtime — der Betrieb muss die Seite nicht
+ *  offenhalten. */
+export type HistorieLauf = {
+  id: string;
+  status: "laeuft" | "fertig" | "unvollstaendig" | "fehler";
+  von: string;
+  bis: string;
+  objekte_gesamt: number;
+  objekte_fertig: number;
+  angelegt: number;
+  aktualisiert: number;
+  uebersprungen: number;
+  aktuelles_objekt: string | null;
+  gescheitert: { titel: string; grund: string }[];
+  fehler: string | null;
+  beendet_at: string | null;
+};
+
+/** Import serverseitig starten. Antwortet sofort; läuft im Worker weiter.
+ *  Läuft schon einer, kommt DIESER zurück statt ein zweiter. */
+export async function airbnbHistorieLaufStarten(
+  von: string,
+  bis: string,
+): Promise<Result<HistorieLauf>> {
+  return call(`/airbnb/historie/lauf?von=${von}&bis=${bis}`, {
+    method: "POST",
+  });
+}
+
+/** Der jüngste Lauf — damit eine frisch geladene Seite einen noch laufenden
+ *  Import erkennt, statt den Knopf anzubieten. */
+export async function airbnbHistorieLaufStand(): Promise<
+  Result<{ lauf: HistorieLauf | null }>
+> {
+  return call("/airbnb/historie/lauf");
+}
+
+export type HistorieSammelImport = {
+  objekte: number;
+  erfolgreich: number;
+  angelegt: number;
+  aktualisiert: number;
+  uebersprungen: number;
+  /** Objekte, die der Lauf nicht schaffte — namentlich, mit Grund. */
+  gescheitert: { property_id: string; titel: string; grund: string }[];
+  /** false = es fehlen Buchungen, der Lauf ist zu wiederholen. */
+  vollstaendig: boolean;
+  ergebnisse: HistorieImport[];
+};
+
+/** Die Historie ALLER verbundenen Objekte in EINEM Aufruf holen.
+ *
+ *  Die Oberfläche nimmt diesen Weg NICHT: sie fährt die Objekte einzeln über
+ *  `airbnbHistorieImportieren`, weil ein Lauf über 18 Objekte Minuten dauert
+ *  und der Betrieb dabei Fortschritt sehen muss. Dieser Sammel-Aufruf bleibt
+ *  für den Weg ohne offenen Browser (geplanter Lauf, Wiederholung nach einem
+ *  Abbruch) — er liefert dasselbe Ergebnis, nur ohne Zwischenstände.
+ *
+ *  Mehrfach aufrufbar: bestehende Buchungen werden über den Bestätigungscode
+ *  aktualisiert, nicht doppelt angelegt. */
+export async function airbnbHistorieAlleImportieren(
+  von: string,
+  bis: string,
+): Promise<Result<HistorieSammelImport>> {
+  const res = await call<HistorieSammelImport>(
+    `/airbnb/historie/import-alle?von=${von}&bis=${bis}`,
+    { method: "POST" },
+  );
+  if (res.ok) revalidatePath("/kalender");
+  return res;
+}
+
 export async function finalizeOAuthChannel(input: {
   property_id: string;
   portal_code: string;

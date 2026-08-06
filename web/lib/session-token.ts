@@ -17,6 +17,17 @@ const REFRESH = "nd_refresh";
 const COOKIES = { access: ACCESS, refresh: REFRESH } as const;
 
 /**
+ * Laufende Token-Tauschvorgänge, je Refresh-Token genau einer.
+ *
+ * Serverseitig, also pro Next-Prozess — und genau dort entsteht das Problem:
+ * mehrere Abfragen DERSELBEN Seite laufen im selben Prozess gleichzeitig los.
+ * Der Schlüssel ist das Refresh-Token selbst, damit sich nie zwei verschiedene
+ * Nutzer denselben Eintrag teilen. Einträge werden nach dem Tausch sofort
+ * entfernt, die Map bleibt also klein.
+ */
+const imTausch = new Map<string, Promise<string | null>>();
+
+/**
  * Access-Token für FastAPI-Aufrufe.
  *
  * Drei Quellen, in dieser Reihenfolge:
@@ -67,22 +78,43 @@ async function tokenAusRefresh(): Promise<string | null> {
   const jar = await cookies();
   const refresh = jar.get(REFRESH)?.value;
   if (!refresh) return null;
-  try {
-    const session = await api<SessionResponse>("/auth/refresh", {
-      method: "POST",
-      body: { refresh_token: refresh },
-    });
-    if (!session?.access_token) return null;
+
+  // Läuft schon ein Tausch mit GENAU DIESEM Token, hängen wir uns an ihn statt
+  // einen zweiten zu starten. Refresh-Tokens sind bei Supabase EINMAL-Tokens:
+  // von zwölf parallelen Einlösungen gewinnt eine, die übrigen elf bekommen
+  // „Invalid Refresh Token: Already Used" — und damit ist die Sitzung tot, der
+  // Nutzer fliegt raus. Genau so passiert am 06.08.2026 (18:15), als nach einem
+  // minutenlangen Import sechs Seitenabfragen gleichzeitig 401 bekamen und jede
+  // ihren eigenen Refresh startete.
+  const laufend = imTausch.get(refresh);
+  if (laufend) return laufend;
+
+  const versuch = (async () => {
     try {
-      await persistSession(session, COOKIES);
+      const session = await api<SessionResponse>("/auth/refresh", {
+        method: "POST",
+        body: { refresh_token: refresh },
+      });
+      if (!session?.access_token) return null;
+      try {
+        await persistSession(session, COOKIES);
+      } catch {
+        // Nur-Lese-Jar (Server-Component-Render) — Token trotzdem verwenden.
+      }
+      return session.access_token;
     } catch {
-      // Nur-Lese-Jar (Server-Component-Render) — Token trotzdem verwenden.
+      // Refresh-Token abgelaufen/entzogen → wirklich abgemeldet.
+      return null;
+    } finally {
+      // Immer aufräumen, auch im Fehlerfall: sonst bliebe ein totes Ergebnis
+      // für dieses Token für immer stehen und ein späterer, berechtigter
+      // Versuch bekäme das alte `null` zurück.
+      imTausch.delete(refresh);
     }
-    return session.access_token;
-  } catch {
-    // Refresh-Token abgelaufen/entzogen → wirklich abgemeldet.
-    return null;
-  }
+  })();
+
+  imTausch.set(refresh, versuch);
+  return versuch;
 }
 
 // E-Mail des eingeloggten Nutzers (Login-/Konto-E-Mail). Quelle: Supabase-User

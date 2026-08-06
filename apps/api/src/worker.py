@@ -430,6 +430,22 @@ def _handle_push_ari(
         )
 
 
+def _handle_airbnb_historie_import(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Die Buchungshistorie aller verbundenen Objekte bei Airbnb einlesen.
+
+    Läuft hier statt im Browser, weil ein Lauf über 18 Objekte Minuten dauert —
+    so lange bleibt kein Betrieb auf der Seite, und vorher brach der Import beim
+    Schließen des Tabs mittendrin ab. Der Fortschritt steht in
+    `airbnb_historie_lauf`, das Ergebnis am Ende in der Glocke.
+
+    KEIN Channex-Budget: dieser Weg ruft Airbnb direkt, nicht den Aggregator.
+    """
+    svc = _svc(db, budget)
+    svc.historie_lauf_ausfuehren(payload["lauf_id"])
+
+
 def _handle_sync_bookings_feed(
     db: Client, _payload: dict[str, Any], budget: ChannexBudget | None = None
 ) -> None:
@@ -571,6 +587,7 @@ HANDLERS: dict[
     "process_ari_outbox": _handle_process_ari_outbox,
     "process_restriction_outbox": _handle_process_restriction_outbox,
     "sync_bookings_feed": _handle_sync_bookings_feed,
+    "airbnb_historie_import": _handle_airbnb_historie_import,
     "sync_live_feed": _handle_sync_live_feed,
     "import_ari_property": _handle_import_ari_property,
     "full_sync_property": _handle_full_sync_property,

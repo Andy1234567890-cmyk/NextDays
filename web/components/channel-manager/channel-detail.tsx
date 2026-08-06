@@ -18,10 +18,13 @@ import type {
   ChannelDetail as ChannelDetailData,
   ChannelMappingRow,
   ChannexBooking,
+  HistorieLauf,
   PropertyMap,
 } from "@/lib/channex";
 import {
   activateChannel,
+  airbnbHistorieLaufStand,
+  airbnbHistorieLaufStarten,
   disconnectChannel,
   runChannelAction,
   disconnectPortalConnection,
@@ -30,6 +33,7 @@ import {
   triggerFullSync,
 } from "@/lib/channex";
 import { formatCurrency } from "@/lib/currency";
+import { useRealtime } from "@/lib/use-realtime";
 import { toast } from "sonner";
 
 // Portal-Metadaten für die Detailseite (Code = stabiler Schlüssel wie im
@@ -249,6 +253,10 @@ export function ChannelDetail({
           (detail?.actions ?? []).includes("load_future_reservations") &&
           isConnected
         }
+        // Der Historien-Import geht DIREKT an Airbnb, nicht über den
+        // Aggregator — er steht deshalb nicht im Kanal-Katalog und wird am
+        // Portal-Code erkannt.
+        istAirbnb={meta.code === "AirBNB" && isConnected}
       />
     </div>
   );
@@ -593,17 +601,44 @@ function BookingsSection({
   portalLabel,
   channelId,
   canPullFuture,
+  istAirbnb,
 }: {
   bookings: ChannexBooking[];
   configured: boolean;
   portalLabel: string;
   channelId: string | null;
   canPullFuture: boolean;
+  /** Nur Airbnb: der Historien-Import geht direkt ans Portal, nicht über den
+   *  Aggregator — er steht deshalb in keinem Kanal-Katalog. */
+  istAirbnb: boolean;
 }) {
   const t = useTranslations("channels");
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
+  // Der serverseitige Historien-Lauf. Kommt beim Seitenaufruf einmal frisch
+  // und danach per Realtime — die Seite darf jederzeit verlassen und wieder
+  // geöffnet werden, der Balken steht dann am aktuellen Stand.
+  const [lauf, setLauf] = useState<HistorieLauf | null>(null);
+
+  useEffect(() => {
+    if (!istAirbnb) return;
+    void airbnbHistorieLaufStand().then((r) => {
+      if (r.ok) setLauf(r.data.lauf);
+    });
+  }, [istAirbnb]);
+
+  useRealtime<HistorieLauf>({
+    table: "airbnb_historie_lauf",
+    enabled: istAirbnb,
+    // onEvent statt onChange: die Zeile trägt den Stand schon bei sich, ein
+    // Nachladen wäre ein zweiter Weg zur selben Wahrheit. Bei DELETE ist
+    // `new` ein leeres Objekt — dann nichts übernehmen (sonst stünde eine
+    // Zeile ohne Zahlen im Balken).
+    onEvent: (p) => {
+      if (p.new && "id" in p.new) setLauf(p.new as HistorieLauf);
+    },
+  });
 
   function handleSync() {
     setMessage(null);
@@ -640,6 +675,43 @@ function BookingsSection({
     });
   }
 
+  // Die VERGANGENHEIT holen — direkt bei Airbnb, für alle verbundenen Objekte.
+  // `load_future_reservations` (oben) liefert nur Zukünftiges und nur, was der
+  // Aggregator selbst gesehen hat; alles vor dem Verbinden fehlt dort (live
+  // gemessen: 0 gegenüber 462 bei Airbnb). Mehrfach klickbar — bestehende
+  // Buchungen werden über den Bestätigungscode aktualisiert, nicht verdoppelt.
+  //
+  // Der Klick REIHT NUR EIN, er wartet nicht: ein Lauf über 18 Objekte dauert
+  // Minuten, und so lange bleibt kein Betrieb auf der Seite. Vorher fuhr der
+  // Browser die Objekte selbst durch — Tab zu hieß Abbruch mittendrin. Jetzt
+  // arbeitet der Worker, der Fortschritt kommt per Realtime, und das Ergebnis
+  // landet am Ende in der Glocke.
+  function pullHistorie() {
+    setMessage(null);
+    setIsError(false);
+    const bis = new Date().toISOString().slice(0, 10);
+    const von = `${new Date().getFullYear() - 6}-01-01`;
+    startTransition(async () => {
+      const res = await airbnbHistorieLaufStarten(von, bis);
+      if (!res.ok) {
+        setIsError(true);
+        setMessage(res.error);
+        return;
+      }
+      setLauf(res.data);
+    });
+  }
+
+  const laeuft = lauf?.status === "laeuft";
+  // Objekte sind die Fortschritts-Einheit: „12 von 18" ist die einzige Zahl,
+  // die vor dem Lauf feststeht. Wie viele Buchungen kommen, weiß niemand
+  // vorher — deshalb steht die Buchungszahl daneben, nicht im Balken.
+  const prozent = lauf
+    ? Math.round(
+        (lauf.objekte_fertig / Math.max(1, lauf.objekte_gesamt)) * 100,
+      )
+    : 0;
+
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
@@ -647,15 +719,26 @@ function BookingsSection({
           {t("bookingsFrom", { portal: portalLabel })}{" "}
           <span className="text-muted-foreground">({bookings.length})</span>
         </h2>
-        {canPullFuture && (
+        {/* EIN Knopf für „alles Bestehende holen". Bei Airbnb geht er direkt
+            ans Portal (auch Vergangenheit, alle verbundenen Objekte); bei den
+            übrigen Portalen bleibt die Aggregator-Aktion der einzige Weg, die
+            nur Zukünftiges liefert. Zwei Knöpfe nebeneinander hätten den
+            Betrieb raten lassen, welcher der richtige ist — und der schwächere
+            hätte wie der vollständige ausgesehen. */}
+        {(istAirbnb || canPullFuture) && (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={pullFuture}
-            disabled={pending}
+            onClick={istAirbnb ? pullHistorie : pullFuture}
+            disabled={pending || laeuft}
           >
-            <Icon icon="ph:clock-counter-clockwise" className="size-4" />
+            <Icon
+              icon={
+                pending || laeuft ? "ph:spinner" : "ph:clock-counter-clockwise"
+              }
+              className={"size-4 " + (pending || laeuft ? "animate-spin" : "")}
+            />
             {t("pullFuture")}
           </Button>
         )}
@@ -664,7 +747,7 @@ function BookingsSection({
           variant="outline"
           size="sm"
           onClick={handleSync}
-          disabled={pending || !configured}
+          disabled={pending || laeuft || !configured}
         >
           <Icon
             icon={pending ? "ph:spinner" : "ph:arrows-clockwise"}
@@ -673,6 +756,70 @@ function BookingsSection({
           {pending ? t("syncing") : t("syncBookings")}
         </Button>
       </div>
+
+      {/* Fortschritt des Historien-Imports: Prozent, Objektzähler und wie viele
+          Buchungen bisher eingelesen sind. Ohne diese Zahlen wäre ein Lauf über
+          18 Objekte minutenlang nur ein drehender Spinner. */}
+      {laeuft && lauf && (
+        <div className="flex flex-col gap-1.5 rounded-2xl border border-border p-3">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="truncate">
+              {t("historieProgress", {
+                done: lauf.objekte_fertig,
+                total: lauf.objekte_gesamt,
+                property: lauf.aktuelles_objekt ?? "",
+              })}
+            </span>
+            <span className="shrink-0 tabular-nums text-muted-foreground">
+              {prozent}%
+            </span>
+          </div>
+          <div
+            role="progressbar"
+            aria-valuenow={prozent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            className="h-1.5 overflow-hidden rounded-full bg-muted"
+          >
+            <div
+              className="h-full rounded-full bg-accent transition-[width] duration-300"
+              style={{ width: `${prozent}%` }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {t("historieProgressCount", {
+              count: lauf.angelegt + lauf.aktualisiert,
+            })}
+            {" · "}
+            {t("historieKeepsRunning")}
+          </span>
+        </div>
+      )}
+
+      {/* Ergebnis des letzten Laufs — auch dann sichtbar, wenn der Betrieb
+          während des Imports weg war und die Seite neu geladen hat. */}
+      {lauf && !laeuft && lauf.beendet_at && (
+        <p
+          className={
+            "text-sm " +
+            (lauf.status === "fertig" ? "text-foreground" : "text-destructive")
+          }
+        >
+          {lauf.status === "fertig"
+            ? t("historieResult", {
+                objects: lauf.objekte_gesamt,
+                created: lauf.angelegt,
+                updated: lauf.aktualisiert,
+              })
+            : t("historieIncomplete", {
+                objects: lauf.objekte_gesamt - lauf.gescheitert.length,
+                created: lauf.angelegt,
+                failed:
+                  lauf.gescheitert.map((g) => g.titel).join(", ") ||
+                  String(lauf.gescheitert.length),
+              })}
+        </p>
+      )}
 
       {message && (
         <p
