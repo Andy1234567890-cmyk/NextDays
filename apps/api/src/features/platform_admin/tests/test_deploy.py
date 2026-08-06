@@ -194,3 +194,68 @@ def test_uebersicht_markiert_laufenden_deploy() -> None:
     # Alle anderen ohne Verlauf: kein erfundener Status.
     andere = [a for a in ueb.apps if a.uuid != laufend_uuid]
     assert all(a.letzter is None and a.laeuft is False for a in andere)
+
+
+# --- Build-Log: eigener Token, eigene Fehlerpfade ---------------------------
+
+
+def _log_einstellungen(*, log_token: str | None = None) -> MagicMock:
+    log_token = "log-attrappe" if log_token is None else log_token
+    s = _einstellungen()
+    s.coolify_logs_configured = bool(log_token)
+    s.coolify_log_token.get_secret_value.return_value = log_token
+    return s
+
+
+def test_log_ohne_eigenen_token_503() -> None:
+    """Ohne COOLIFY_LOG_TOKEN kein Log — und kein leeres 'alles gut'."""
+    with patch.object(
+        coolify, "get_settings", return_value=_log_einstellungen(log_token="")
+    ):
+        with pytest.raises(HTTPException) as exc:
+            coolify.build_log("dep-1")
+    assert exc.value.status_code == 503
+    assert "COOLIFY_LOG_TOKEN" in exc.value.detail
+
+
+def test_log_nutzt_den_log_token_nicht_den_deploy_token() -> None:
+    """Rechtetrennung: das Log liest mit dem getrennten Geheimnis."""
+    erfasst: dict[str, str] = {}
+
+    def _get(self, url, **kwargs):  # noqa: ANN001, ARG001
+        erfasst["auth"] = kwargs.get("headers", {}).get("Authorization", "")
+        return httpx.Response(200, json={"status": "finished", "logs": "[]"})
+
+    with patch.object(
+        coolify, "get_settings", return_value=_log_einstellungen()
+    ), patch("httpx.Client.get", _get):
+        coolify.build_log("dep-1")
+    assert erfasst["auth"] == "Bearer log-attrappe"
+
+
+def test_log_leer_ist_kein_fehler() -> None:
+    """Ein gerade gestarteter Deploy hat noch keine Zeilen."""
+    antwort = httpx.Response(200, json={"status": "in_progress", "logs": None})
+    with patch.object(
+        coolify, "get_settings", return_value=_log_einstellungen()
+    ), patch("httpx.Client.get", return_value=antwort):
+        zustand, zeilen = coolify.build_log("dep-1")
+    assert zustand == "in_progress"
+    assert zeilen == []
+
+
+def test_service_filtert_versteckte_zeilen_und_erkennt_stderr() -> None:
+    roh = [
+        {"output": "Schritt 1", "type": "stdout", "timestamp": "2026-08-06T08:40:08Z"},
+        {"output": "intern", "type": "stdout", "hidden": True},
+        {"output": "  ", "type": "stdout"},
+        {"output": "Fehler!", "type": "stderr", "timestamp": "kaputt"},
+    ]
+    with patch.object(coolify, "build_log", return_value=("failed", roh)):
+        log = DeployService().build_log("dep-1")
+    assert log.status == "failed"
+    # hidden und leere Zeilen fliegen raus.
+    assert [z.text for z in log.zeilen] == ["Schritt 1", "Fehler!"]
+    assert log.zeilen[1].art == "stderr"
+    # Unlesbarer Zeitstempel wird None, nicht "jetzt".
+    assert log.zeilen[1].zeit is None

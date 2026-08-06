@@ -21,6 +21,8 @@ schlägt mit 503 klar fehl (Wurzel 4).
 """
 from __future__ import annotations
 
+import json
+
 import httpx
 from fastapi import HTTPException, status
 
@@ -111,6 +113,59 @@ def verlauf(anwendung_uuid: str, limit: int = 20) -> list[dict]:
         # Coolify verpackt die Historie je nach Version in `deployments`.
         daten = daten.get("deployments", [])
     return daten if isinstance(daten, list) else []
+
+
+def build_log(deployment_uuid: str) -> tuple[str, list[dict]]:
+    """Das Build-Log EINES Deploys, Zeile für Zeile.
+
+    Eigener Token: Coolify blendet `logs` aus, solange der Token nicht
+    `read:sensitive` hat (`ApiSensitiveData`-Middleware). Diese Berechtigung
+    öffnet aber auch Webhook-Secrets und Cloud-Provider-Token — deshalb liest
+    hier ein GETRENNTER Token, der seinerseits nicht deployen darf.
+
+    Rohformat je Zeile (live gemessen 06.08.2026):
+    `{command, output, type, timestamp, hidden, batch}`.
+    """
+    einst = get_settings()
+    if not einst.coolify_logs_configured:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "Build-Logs sind nicht eingerichtet: COOLIFY_LOG_TOKEN fehlt "
+                "in der Server-Konfiguration."
+            ),
+        )
+    basis = einst.coolify_api_url.strip().rstrip("/")  # pylint: disable=no-member
+    kopf = {
+        "Authorization": f"Bearer {einst.coolify_log_token.get_secret_value().strip()}",
+        "Accept": "application/json",
+    }
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            antwort = client.get(
+                f"{basis}/api/v1/deployments/{deployment_uuid}", headers=kopf
+            )
+    except httpx.HTTPError as fehler:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Build-Log: Coolify nicht erreichbar.",
+        ) from fehler
+    _fehler_uebersetzen(antwort, "Build-Log")
+    daten = antwort.json()
+    if not isinstance(daten, dict):
+        return ("unbekannt", [])
+    zustand = str(daten.get("status") or "unbekannt")
+    roh = daten.get("logs")
+    if not roh:
+        # Kein Log da (z. B. Deploy gerade erst gestartet) ist KEIN Fehler.
+        return (zustand, [])
+    if isinstance(roh, str):
+        try:
+            roh = json.loads(roh)
+        except ValueError:
+            # Coolify liefert im Ausnahmefall reinen Text statt JSON.
+            return (zustand, [{"output": roh, "type": "stdout", "timestamp": None}])
+    return (zustand, roh if isinstance(roh, list) else [])
 
 
 def deploy_ausloesen(anwendung_uuid: str) -> dict:

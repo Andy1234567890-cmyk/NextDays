@@ -7,6 +7,7 @@
 // keine Tabelle zum Abonnieren. Stattdessen wird im Takt neu geladen, und
 // zwar enger, solange irgendwo gebaut wird (der Bau dauert Minuten, ein
 // fertiger Stand ändert sich lange nicht).
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -108,13 +109,21 @@ export function DeployTabelle({
             <th className="pb-2 pr-4 font-semibold">Commit</th>
             <th className="pb-2 pr-4 font-semibold">Gestartet</th>
             <th className="pb-2 pr-4 font-semibold">Dauer</th>
+            <th className="pb-2 pr-4 font-semibold">Ausgabe</th>
             <th className="pb-2 font-semibold">{darfDeployen ? "Aktion" : ""}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
           {apps.map((app) => (
             <tr key={app.uuid}>
-              <td className="py-3 pr-4 font-medium">{app.name}</td>
+              <td className="py-3 pr-4 font-medium">
+                <Link
+                  href={`/deploy/${app.uuid}`}
+                  className="transition hover:underline"
+                >
+                  {app.name}
+                </Link>
+              </td>
               <td className="py-3 pr-4">
                 {app.letzter ? (
                   <StatusChip status={app.letzter.status} />
@@ -143,6 +152,14 @@ export function DeployTabelle({
                 {app.letzter
                   ? dauer(app.letzter.gestartet_at, app.letzter.beendet_at)
                   : "—"}
+              </td>
+              <td className="py-3 pr-4">
+                <Link
+                  href={`/deploy/${app.uuid}`}
+                  className="rounded-full border border-border px-4 py-2 text-xs font-semibold transition hover:bg-muted"
+                >
+                  Ausgabe
+                </Link>
               </td>
               <td className="py-3">
                 {darfDeployen ? (

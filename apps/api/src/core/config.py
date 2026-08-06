@@ -317,6 +317,12 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("coolify_api_url", "coolify_base_url"),
     )
     coolify_token: SecretStr = SecretStr("")
+    # EIGENER Token nur für Build-Logs: Coolify gibt `logs` nur mit der
+    # Berechtigung `read:sensitive` heraus — und die öffnet in 8 Controllern
+    # zusätzlich Webhook-Secrets, Dateiinhalte und Cloud-Provider-Token. Der
+    # Deploy-Token bleibt deshalb eng (read+deploy), das Log-Lesen bekommt ein
+    # getrenntes Geheimnis (read+read:sensitive, darf NICHT deployen).
+    coolify_log_token: SecretStr = SecretStr("")
 
     @property
     def coolify_configured(self) -> bool:
@@ -324,6 +330,13 @@ class Settings(BaseSettings):
         return bool(
             self.coolify_api_url.strip()  # pylint: disable=no-member
             and self.coolify_token.get_secret_value().strip()
+        )
+
+    @property
+    def coolify_logs_configured(self) -> bool:
+        """Log-Ansicht ist nutzbar, wenn zusätzlich der Log-Token gesetzt ist."""
+        return bool(
+            self.coolify_configured and self.coolify_log_token.get_secret_value().strip()
         )
 
     @property

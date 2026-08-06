@@ -19,6 +19,7 @@ from .schemas import (
     AuditList,
     BuchungDetail,
     BuchungList,
+    DeployLog,
     DeployUebersicht,
     DeployVerlauf,
     FinanzUebersicht,
@@ -799,3 +800,23 @@ def deploy_ausloesen(
         request=request,
     )
     return PlatformOk()
+
+
+@router.get("/deploy/log/{deployment_uuid}", response_model=DeployLog)
+def deploy_log(
+    deployment_uuid: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    deploy: DeployServiceDep,
+    request: Request,
+) -> DeployLog:
+    """Das Build-Log EINES Deploys — im Backoffice, ohne Coolify-Zugang."""
+    ergebnis = deploy.build_log(deployment_uuid)
+    service.log_action(
+        ctx,
+        "deploy.log",
+        target_type="deployment",
+        target_id=deployment_uuid,
+        request=request,
+    )
+    return ergebnis

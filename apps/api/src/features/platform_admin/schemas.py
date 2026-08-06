@@ -615,3 +615,20 @@ class DeployUebersicht(BaseModel):
 
 class DeployVerlauf(BaseModel):
     items: list[DeployEintrag]
+
+
+class DeployLogZeile(BaseModel):
+    """Eine Zeile Build-Ausgabe eines Deploys.
+
+    `art` ist stdout/stderr — im Backoffice färbt das die Fehlerzeilen.
+    """
+
+    text: str
+    art: str = "stdout"
+    zeit: datetime | None = None
+
+
+class DeployLog(BaseModel):
+    deployment_uuid: str
+    status: str
+    zeilen: list[DeployLogZeile]

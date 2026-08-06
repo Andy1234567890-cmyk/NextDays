@@ -1092,6 +1092,10 @@ Berechtigung `manage_property_settings`. Beträge laufen durchgängig in **Cent*
 | `GET /api/v1/channel-manager/properties/{property_id}/abgaben-status` | Je Gebühr/Steuer: welche verbundenen Portale bekommen sie NICHT automatisch? Speist den Chip „Manuelle Synchronisierung". Rein lesend, gerechnet aus derselben Quelle wie der Sync (`ota_abgaben.abgaben_je_portal`) — kein zweiter Regelsatz für die Anzeige. Drei getrennte Felder je Posten: `manual_portals` (Portal nimmt ihn nicht → Chip), `restricted_portals` (per `portalScope` ausgeschlossen → Absicht), `internal_only` (optionale/Kurzaufenthalts-Gebühr, Kaution → geht bewusst nirgends hin). `currency_missing` ist ein Befund über das OBJEKT: ohne Objektwährung überträgt der Abgaben-Sync gar nichts. Die Antwort enthält zusätzlich die PROMOTIONS des Objekts (`kind: "promotion"`, `key` = Promotion-ID) mit zwei getrennten Gründen: `reason` = warum der Tagespreis sie nicht tragen kann (gilt für alle Portale außer Airbnb), `airbnb_reason` = warum Airbnb sie auch nicht über die eigene Rabattregel bekommt. Zusätzlich kommen die PREIS-BLÖCKE der Seite (`kind: "block"`) mit festen Schlüsseln — `base_price` und `extra_guest` gehen an jeden verbundenen Kanal (ARI-Push bzw. `per_person`-Rate-Plan), `short_stay` und `addons` sind `internal_only` (kein Portal hat ein Feld dafür). `length_prices` ist der Weg-Befund für die Preise nach Aufenthaltsdauer: sie gehen als Airbnb-Rabattregel raus, alle anderen Portale stehen in `manual_portals`. Zusätzlich kommt JEDER Aufenthaltsdauer-Preis als eigener Posten (`kind: "length_price"`, `key` = seine Kennung) mit `reason`/`airbnb_reason` — der aus dem Grundpreis abgeleitete Prozentsatz kann beim Abrunden auf 0 landen, dann geht auch zu Airbnb nichts. Sie speisen die Editor-Kopfzeile „Gilt für · Nicht unterstützt von" — ein Schlüssel je Block, nicht je Zeile, damit auch ein noch nicht gespeicherter Posten seine Reichweite kennt |
 | `POST /api/v1/channel-manager/properties/{property_id}/aktionen/airbnb-sync` | Promotions mit Bedingung als Airbnbs eigene Rabattregeln durchsetzen (`default_pricing_rules` je Listing-Mapping). Antwort: `{channel_id, listings, updated, rules[], skipped{}}` — `updated` zählt nur Listings mit echter Änderung (idempotent), `skipped` nennt je Promotion den Grund, warum Airbnb sie nicht als Regel nimmt. Läuft zusätzlich als Job `sync_airbnb_aktionen` nach jeder Promotion-Änderung |
 | `PUT /api/v1/channel-manager/properties/{property_id}/connections/{portal}/airbnb-tax` | Airbnb-Steuererhebung dieses Inserats: `{scenario, acknowledged, send_user_taxes}`. Steuern gehen an Airbnb NUR wenn Szenario ≠ `ineligible` UND beide Schalter an (fail-closed); stößt den Steuer-Sync an |
+| `GET /api/v1/channel-manager/properties/{property_id}/airbnb/historie/plan?von&bis` | Wie viele Etappen ergibt dieser Zeitraum? Rein rechnerisch, KEIN Aufruf bei Airbnb — damit der Dialog sofort „das werden 27 Etappen" sagen kann, während der Betrieb noch am Datum dreht. Zeitraum > 30 Jahre oder Ende vor Start → `422` |
+| `GET /api/v1/channel-manager/properties/{property_id}/airbnb/historie/vorschau?von&bis` | Was liegt im Zeitraum bei Airbnb? Liest nur, schreibt nichts. Antwort: `{gefunden, mit_nachrichten, fremde, jahre{}, etappen[], vollstaendig}` — `jahre` speist die Verteilungstabelle vor dem Import, `fremde` zählt Buchungen ANDERER Inserate desselben Kontos (werden nicht angefasst) |
+| `POST /api/v1/channel-manager/properties/{property_id}/airbnb/historie/etappe?von&bis&nummer&uebernehmen` | GENAU EINE Etappe fahren — der Weg für einen sichtbaren Fortschritt. Der Gesamt-Import läuft über eine Minute; als ein Request bliebe die Oberfläche stumm, hier holt sie Etappe für Etappe und zeigt jede Zeile sofort. Body `{bekannt: [Bestätigungscodes der vorherigen Etappen]}` — die Etappen überlappen vierfach, ohne diese Liste zählte dieselbe Buchung mehrfach als „neu" (auf die Wirkung hat sie keinen Einfluss, geschrieben wird idempotent). `uebernehmen=false` = Vorschau, schreibt nichts. Antwort: `{nummer, gesamt, von, bis, gefunden, neu, codes[], jahre{}, angelegt, aktualisiert, uebersprungen, fehler}` |
+| `POST /api/v1/channel-manager/properties/{property_id}/airbnb/historie/import?von&bis` | Buchungshistorie DIESES Objekts holen und übernehmen (Reservierung + Gast + Kalendernächte). Gefiltert auf `properties.airbnb_listing_id`; idempotent über den Bestätigungscode. Antwort ergänzt `{gelesen, angelegt, aktualisiert, uebersprungen, gruende[], fehlgeschlagene_etappen[]}`. **`vollstaendig: false` heißt: mindestens eine Etappe ist gescheitert, es FEHLEN Buchungen — der Lauf ist zu wiederholen** (kein „fertig" ohne Deckung). Vergangene Buchungen kommen OHNE rückwirkende Provisions-/Auszahlungsbuchung; fehlt dem Objekt die Währung → `422` statt geratenem Betrag |
 | `POST /api/v1/channel-manager/webhook`                             | Webhook-Empfang (ohne JWT, via geteiltem Secret-Header `X-Channex-Webhook-Secret`)              |
 
 **ARI-Push (Best-Practice: batchen, nicht einzeln).** Availability und Preise
@@ -1613,6 +1617,7 @@ Quelle ist die **Coolify-REST-API**, nicht unsere Datenbank.
 | `GET`   | `/api/v1/platform/deploy`           | Je Anwendung der laufende bzw. letzte Deploy                   |
 | `GET`   | `/api/v1/platform/deploy/{uuid}`    | Verlauf EINER Anwendung (`limit` 1–100)                        |
 | `POST`  | `/api/v1/platform/deploy/{uuid}`    | Deploy auslösen (`require_platform_write`)                     |
+| `GET`   | `/api/v1/platform/deploy/log/{deployment_uuid}` | Build-Ausgabe eines Deploys, Zeile für Zeile       |
 
 **Warum die API und nicht Coolifys Postgres:** die Historie liegt dort in
 `application_deployment_queue`. Direkt zu lesen wäre möglich, koppelt uns aber
@@ -1644,7 +1649,24 @@ jeder Störung), **auslösen** nur `platform_admin`. Protokolliert als
 **Kein Realtime:** es gibt keine Supabase-Tabelle zum Abonnieren. Die Seite lädt
 im Takt neu — 5 s während eines Baus, sonst 30 s.
 
-**Frontend:** `admin/app/(backoffice)/deploy` + `admin/components/deploy-tabelle.tsx`.
+**Build-Logs — zweiter, getrennter Token:** Coolify blendet das Feld `logs`
+aus, solange der Token nicht `read:sensitive` hat (`ApiSensitiveData`-
+Middleware, live gelesen 06.08.2026). Diese Berechtigung öffnet in 8
+Controllern zusätzlich Webhook-Secrets, Dateiinhalte und Cloud-Provider-Token —
+zu viel für einen Log-Viewer. Deshalb zwei Token: `COOLIFY_TOKEN`
+(read+deploy, kann keine Secrets lesen) und `COOLIFY_LOG_TOKEN`
+(read+read:sensitive, kann NICHT deployen). Live gegengeprüft. Fehlt der
+Log-Token, bleibt der Monitor nutzbar und nur die Ausgabe meldet `503`.
+
+Bewusst KEIN Link in die Coolify-Oberfläche: die ist nur über einen
+SSH-Tunnel erreichbar, ein Link liefe für den Betreiber ins Leere. Die
+Ausgabe wird deshalb im Backoffice selbst gerendert — `hidden`-Zeilen werden
+gefiltert (interne Schritte), `stderr` wird farblich abgesetzt, und während
+eines laufenden Baus lädt die Ansicht alle 4 s nach.
+
+**Frontend:** `admin/app/(backoffice)/deploy` (Übersicht),
+`admin/app/(backoffice)/deploy/[uuid]` (Verlauf + Ausgabe),
+`admin/components/deploy-tabelle.tsx`, `admin/components/deploy-log.tsx`.
 
 ---
 

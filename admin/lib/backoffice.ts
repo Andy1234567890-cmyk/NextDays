@@ -641,3 +641,22 @@ export async function getDeployVerlauf(
     { cache: "no-store" },
   );
 }
+
+export interface DeployLogZeile {
+  text: string;
+  art: string;
+  zeit: string | null;
+}
+
+export interface DeployLog {
+  deployment_uuid: string;
+  status: string;
+  zeilen: DeployLogZeile[];
+}
+
+/** Das Build-Log EINES Deploys — im Backoffice, ohne Coolify-Zugang. */
+export async function getDeployLog(deploymentUuid: string): Promise<DeployLog> {
+  return api<DeployLog>(`/platform/deploy/log/${deploymentUuid}`, {
+    cache: "no-store",
+  });
+}

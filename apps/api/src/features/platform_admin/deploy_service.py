@@ -21,7 +21,14 @@ from pathlib import Path
 from src.core.logging import get_logger
 
 from . import coolify
-from .schemas import DeployApp, DeployEintrag, DeployUebersicht, DeployVerlauf
+from .schemas import (
+    DeployApp,
+    DeployEintrag,
+    DeployLog,
+    DeployLogZeile,
+    DeployUebersicht,
+    DeployVerlauf,
+)
 
 log = get_logger(__name__)
 
@@ -122,6 +129,32 @@ class DeployService:
         name = dict(ueberwachte_apps()).get(anwendung_uuid, "")
         roh = coolify.verlauf(anwendung_uuid, limit=limit)
         return DeployVerlauf(items=[_eintrag(r, name_fallback=name) for r in roh])
+
+    def build_log(self, deployment_uuid: str) -> DeployLog:
+        """Das Build-Log eines Deploys, aufbereitet fürs Backoffice.
+
+        `hidden`-Zeilen filtert Coolify auch in der eigenen Oberfläche aus —
+        das sind interne Schritte, kein Bau-Fortschritt.
+        """
+        status_wert, roh = coolify.build_log(deployment_uuid)
+        zeilen: list[DeployLogZeile] = []
+        for eintrag in roh:
+            if not isinstance(eintrag, dict) or eintrag.get("hidden"):
+                continue
+            text = eintrag.get("output")
+            if not isinstance(text, str) or not text.strip():
+                continue
+            art = eintrag.get("type")
+            zeilen.append(
+                DeployLogZeile(
+                    text=text.rstrip(),
+                    art=art if art in ("stdout", "stderr") else "stdout",
+                    zeit=_zeit(eintrag.get("timestamp")),
+                )
+            )
+        return DeployLog(
+            deployment_uuid=deployment_uuid, status=status_wert, zeilen=zeilen
+        )
 
     def ausloesen(self, anwendung_uuid: str) -> dict:
         """Deploy anstoßen. Nur für in der Liste geführte Anwendungen."""

@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { ApiError } from "@nextdays/auth/errors";
 
 import { api } from "./api-server";
+import type { DeployLog } from "./backoffice";
 
 type Ergebnis = { ok: true } | { ok: false; fehler: string };
 
@@ -24,6 +25,27 @@ export async function deployAusloesen(
       ok: false,
       fehler:
         exc instanceof ApiError ? exc.message : "Deploy fehlgeschlagen.",
+    };
+  }
+}
+
+type LogErgebnis =
+  | { ok: true; data: DeployLog }
+  | { ok: false; fehler: string };
+
+/** Build-Log nachladen (Server Action, damit der Token im Cookie bleibt). */
+export async function logHolen(deploymentUuid: string): Promise<LogErgebnis> {
+  try {
+    const data = await api<DeployLog>(
+      `/platform/deploy/log/${deploymentUuid}`,
+      { cache: "no-store" },
+    );
+    return { ok: true, data };
+  } catch (exc) {
+    return {
+      ok: false,
+      fehler:
+        exc instanceof ApiError ? exc.message : "Log konnte nicht geladen werden.",
     };
   }
 }
