@@ -104,6 +104,33 @@ PLAN_NAME = "Grundpreis (von Airbnb)"
 # auffällig niedrig ist. Kein erfundener Umrechnungskurs (Wurzel 4).
 AIRBNB_MIN_PRICE_MINOR = 1000
 
+# Die Kanäle, die `type_attributes.availability` je Feld führt — Gegenstück zu
+# `PerChannel` in `web/lib/availability-meta.ts`. Ein Wert ohne diese Form fällt
+# in der Maske auf den Vorgabewert zurück, weil `mergePerChannel` ihn nicht
+# erkennt.
+_AVAILABILITY_KANAELE = ("direct", "airbnb", "booking", "google")
+
+# Die Vorgabewerte der Maske (`DEFAULT_AVAILABILITY` in
+# `web/lib/availability-meta.ts`). Ein Feld, das noch exakt darauf steht, hat
+# der Betrieb NICHT gesetzt — die Maske schreibt beim ersten Öffnen den ganzen
+# Block. Nur die Felder, die der Airbnb-Abruf füllt.
+_AVAILABILITY_VORGABE: dict[str, int | str] = {
+    "minStay": 1,
+    "maxStay": 365,
+    "bookingWindowDays": 365,
+    "advanceNotice": "00:00",
+    "preparationDays": 0,
+}
+
+
+def _je_kanal(wert: int | str) -> dict[str, Any]:
+    """Einen Wert in die `PerChannel`-Form der Maske bringen."""
+    return {
+        "custom": False,
+        "global": wert,
+        "channels": dict.fromkeys(_AVAILABILITY_KANAELE, wert),
+    }
+
 
 class AirbnbObjektAbrufMixin:
     """Ein einzelnes Airbnb-Objekt abrufen. Mixin des ChannelManagerService."""
@@ -585,6 +612,12 @@ class AirbnbObjektAbrufMixin:
         self._details_regeln(listing, alt, neu, gesetzt)
         self._details_zugang(listing, alt, neu, gesetzt)
         self._details_texte(channel_id, listing_id, alt, neu, gesetzt)
+        # Die Registrierungsnummer (DK: BFE) steht in einem EIGENEN Endpunkt
+        # (`v2/listing_permits`) — nicht im Listing. Sie fehlte deshalb, obwohl
+        # der Betrieb sie bei Airbnb gepflegt hatte.
+        self._registrierung_uebernehmen(
+            db, tenant_id, property_id, alt, neu, gesetzt
+        )
 
         # Zimmer sind eine eigene Tabelle, keine Spalte — deshalb getrennt vom
         # type_attributes-Update (siehe `_zimmer_zeilen_anlegen`).
@@ -975,6 +1008,87 @@ class AirbnbObjektAbrufMixin:
             neu["policies"] = policies
             gesetzt.append("policies")
 
+        # Airbnbs Verfügbarkeitsregeln in das Feld, das die MASKE liest.
+        AirbnbObjektAbrufMixin._verfuegbarkeit_in_maske(alt, neu, gesetzt)
+
+    @staticmethod
+    def _verfuegbarkeit_in_maske(
+        alt: dict[str, Any], neu: dict[str, Any], gesetzt: list[str]
+    ) -> None:
+        """`airbnbVerfuegbarkeit` → `availability`, wo die Oberfläche liest.
+
+        DER FEHLER, DEN DAS BEHEBT (Beta-Betrieb, 05.08.2026): Der Spiegel
+        `airbnbVerfuegbarkeit` war bei ALLEN 18 Objekten korrekt gefüllt
+        (Mindestaufenthalt, Buchungsfenster, Vorlaufzeit) — und wurde von
+        NIEMANDEM gelesen. Die Maske liest `type_attributes.availability`
+        (`web/lib/availability-meta.ts: readAvailability`); dort stand bei 14
+        von 18 Objekten gar nichts, also zeigte sie ihre Vorgabewerte. Der
+        Betrieb meldete „Mindestaufenthalt und Buchungsfenster weiter falsch",
+        obwohl die richtigen Werte in der Nachbarspalte lagen.
+
+        GEFÜLLT WIRD, WAS LEER ODER NOCH AUF DER VORGABE STEHT (Wurzel 1):
+        `availability` ist ein vom Betrieb bearbeitbarer Bereich. Wer dort
+        bewusst 3 Nächte einstellt, obwohl Airbnb 2 sagt, darf das beim
+        nächsten Abruf nicht verlieren.
+
+        Der Vorgabewert zählt aber NICHT als solche Entscheidung: die Maske
+        schreibt beim ersten Öffnen den kompletten Default-Block
+        (`DEFAULT_AVAILABILITY`, 15 Felder). Live standen dadurch bei vier
+        Objekten `minStay: 1`, während Airbnb UND unsere eigenen Rate-Pläne 2
+        führten — der Betrieb meldete „Mindestaufenthalt weiter falsch". Ein
+        Feld, das noch exakt auf der Vorgabe steht, hat niemand gesetzt.
+        """
+        spiegel = neu.get("airbnbVerfuegbarkeit") or alt.get("airbnbVerfuegbarkeit")
+        if not isinstance(spiegel, dict) or not spiegel:
+            return
+        vorhanden = alt.get("availability")
+        vorhanden = dict(vorhanden) if isinstance(vorhanden, dict) else {}
+        ziel = dict(vorhanden)
+
+        def offen(feld: str) -> bool:
+            """Leer oder noch auf dem Vorgabewert — also nicht selbst gesetzt."""
+            wert = ziel.get(feld)
+            if not wert:
+                return True
+            vorgabe = _AVAILABILITY_VORGABE.get(feld)
+            if isinstance(wert, dict) and isinstance(vorgabe, (int, str)):
+                # `PerChannel`: die Vorgabe erkennt man am globalen Wert.
+                return not wert.get("custom") and wert.get("global") == vorgabe
+            return wert == vorgabe
+
+        for quelle, feld in (("minNaechte", "minStay"), ("maxNaechte", "maxStay")):
+            wert = spiegel.get(quelle)
+            if isinstance(wert, int) and not isinstance(wert, bool) and offen(feld):
+                ziel[feld] = wert
+
+        # Buchungsfenster und Vorlaufzeit führt die Maske je Kanal
+        # (`PerChannel`): ein globaler Wert plus dieselbe Zahl in allen Kanälen.
+        # Ohne diese Form fällt `readAvailability` auf seine Vorgabe zurück.
+        voraus = spiegel.get("vorausbuchungTage")
+        if isinstance(voraus, int) and not isinstance(voraus, bool):
+            if offen("bookingWindowDays"):
+                ziel["bookingWindowDays"] = _je_kanal(voraus)
+        stunden = spiegel.get("vorlaufStunden")
+        if isinstance(stunden, int) and not isinstance(stunden, bool):
+            if offen("advanceNotice"):
+                # Airbnb zählt STUNDEN Vorlauf, die Maske führt eine Uhrzeit
+                # bzw. „24h"/„48h" (`ADVANCE_NOTICE_OPTIONS`). Nur die Werte
+                # übernehmen, die es dort wirklich gibt — kein erfundener
+                # Zwischenwert (Wurzel 4).
+                passend = {0: "00:00", 12: "12:00", 18: "18:00",
+                           24: "24h", 48: "48h"}.get(stunden)
+                if passend:
+                    ziel["advanceNotice"] = _je_kanal(passend)
+
+        wechsel = spiegel.get("wechseltage")
+        if isinstance(wechsel, int) and not isinstance(wechsel, bool):
+            if offen("preparationDays"):
+                ziel["preparationDays"] = _je_kanal(wechsel)
+
+        if ziel != vorhanden:
+            neu["availability"] = ziel
+            gesetzt.append("availability")
+
     def _details_texte(
         self, channel_id: str, listing_id: str, alt: dict[str, Any],
         neu: dict[str, Any], gesetzt: list[str],
@@ -1002,8 +1116,22 @@ class AirbnbObjektAbrufMixin:
         texte = ali.texte_mehrsprachig(antwort)
         if not texte:
             return
-        # Nur ergänzen, nie überschreiben (Wurzel 1) — und pro SPRACHE, damit ein
-        # selbst geschriebener deutscher Text nicht den dänischen blockiert.
+        # `airbnbTexte` ist ein SPIEGEL von Airbnb, kein eigener Text — er MUSS
+        # dem Original folgen, sonst friert er auf dem Stand des ersten Abrufs
+        # ein.
+        #
+        # Bis 05.08.2026 stand hier `if not ziel.get(sprache)` („nur ergänzen").
+        # Damit war ein einmal geholter Wert für immer festgeschrieben: der
+        # Beta-Betrieb benannte „Sommerhus Dora" bei Airbnb in „Feriehus Dora"
+        # um, synchronisierte erneut — und bei uns blieb der alte Name stehen,
+        # weil der Spiegel „schon gefüllt" war. Der Titel wird aus genau diesem
+        # Spiegel abgeleitet (`_landestitel`), also blieb auch er alt.
+        #
+        # Der Unterschied zu `policies.rentalAgreement` weiter unten: DAS ist
+        # ein vom Betrieb bearbeitbarer Text und wird deshalb weiterhin nur
+        # ergänzt, nie ersetzt. Hier gibt es nichts zu schützen — was der
+        # Betrieb selbst schreibt, steht in `title`/`description`, nicht im
+        # Spiegel.
         vorher = alt.get("airbnbTexte")
         vorher = vorher if isinstance(vorher, dict) else {}
         zusammen = {k: dict(v) for k, v in vorher.items() if isinstance(v, dict)}
@@ -1011,9 +1139,13 @@ class AirbnbObjektAbrufMixin:
         for feld, je_sprache in texte.items():
             ziel = zusammen.setdefault(feld, {})
             for sprache, text in je_sprache.items():
-                if not ziel.get(sprache):
-                    ziel[sprache] = text
-                    geaendert = True
+                if ziel.get(sprache) == text:
+                    continue
+                # Eine Sprache, die Airbnb NICHT (mehr) liefert, bleibt stehen:
+                # `texte` enthält nur, was heute abrufbar war, und ein
+                # Netzwerkausfall in einer Sprache darf keinen Text löschen.
+                ziel[sprache] = text
+                geaendert = True
         if geaendert:
             neu["airbnbTexte"] = zusammen
             gesetzt.append("airbnbTexte")

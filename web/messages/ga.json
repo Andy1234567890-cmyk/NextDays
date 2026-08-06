@@ -4431,7 +4431,7 @@
       "occupancyHint": "Tairgeann áiteanna do dhaoine fásta spás do dhaoine fásta agus do pháistí, agus tairgeann áiteanna do pháistí spás do pháistí amháin. Is iad na huas. aíonna (thuas) na háiteanna do dhaoine fásta.",
       "childrenSlotsFieldLabel": "Áiteanna do pháistí",
       "infantSlotsFieldLabel": "Áiteanna do naíonáin",
-      "sizeFieldLabel": "Méid (m²)",
+      "sizeFieldLabel": "Méid",
       "statusFieldLabel": "Stádas",
       "amenitiesEditorTitle": "Cuir saoráidí in eagar",
       "amenitiesOtaHint": "Cuirfear gach saoráid go huathoibríoch chuig na hardáin áirithinte (Booking.com, Airbnb agus a leithéidí).",

@@ -4431,7 +4431,7 @@
       "occupancyHint": "Os lugares de adulto oferecem espaço para adultos e crianças, os lugares de criança apenas para crianças. «Máx. hóspedes» (acima) são os lugares de adulto.",
       "childrenSlotsFieldLabel": "Lugares de criança",
       "infantSlotsFieldLabel": "Lugares de bebé",
-      "sizeFieldLabel": "Área (m²)",
+      "sizeFieldLabel": "Área",
       "statusFieldLabel": "Estado",
       "amenitiesEditorTitle": "Editar comodidades",
       "amenitiesOtaHint": "Todas as comodidades são transmitidas automaticamente aos portais de reserva (Booking.com, Airbnb & Co.).",

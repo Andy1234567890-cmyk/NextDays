@@ -4431,7 +4431,7 @@
       "occupancyHint": "Mjesta za odrasle nude prostor za odrasle i djecu, dječja mjesta samo za djecu. „Maks. gostiju” (iznad) su mjesta za odrasle.",
       "childrenSlotsFieldLabel": "Dječja mjesta",
       "infantSlotsFieldLabel": "Mjesta za malu djecu",
-      "sizeFieldLabel": "Veličina (m²)",
+      "sizeFieldLabel": "Veličina",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Uredi sadržaje",
       "amenitiesOtaHint": "Svi sadržaji automatski se šalju na portale za rezervacije (Booking.com, Airbnb i drugi).",

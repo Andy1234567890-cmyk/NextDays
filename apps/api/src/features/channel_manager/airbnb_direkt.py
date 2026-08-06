@@ -379,6 +379,15 @@ def airbnb_amenities_payload(
     return dict(sorted(nutzlast.items()))
 
 
+# Unser `properties.size_unit` (0197) → Airbnbs Schreibweise. Die Umkehrung von
+# `airbnb_listing_import._FLAECHE_EINHEIT`; hier steht sie eigenständig, damit
+# eine unbekannte Einheit NICHT auf m² fällt (Wurzel 4).
+_EINHEIT_ZU_AIRBNB: Final[dict[str, str]] = {
+    "sqm": "SQUARE_METERS",
+    "sqft": "SQUARE_FEET",
+}
+
+
 class AirbnbDirektMixin:
     """Liest Adresse, Beschreibung, Fotos und Ausstattung direkt bei Airbnb."""
 
@@ -498,6 +507,120 @@ class AirbnbDirektMixin:
             entfernt=sum(1 for w in nutzlast.values() if not w["is_present"]),
         )
         return sorted(nutzlast)
+
+    def airbnb_stammdaten_schreiben(
+        self,
+        token: str,
+        listing_id: str,
+        flaeche: float | None,
+        einheit: str | None,
+        max_gaeste: int | None,
+    ) -> dict[str, Any]:
+        """Fläche und Kapazität zurück an Airbnb.
+
+        `PUT v2/listings/{id}` mit FLACHEM Payload, bewusst am Aggregator
+        vorbei: Channex' ausgehender Payload trägt nur Verfügbarkeit, Preis und
+        Restriktionen — eine geänderte Wohnfläche käme dort nie an.
+
+        FLACH, NICHT in `{"listing": {...}}` — das ist der Punkt, an dem dieser
+        Weg zuerst scheiterte. Airbnb quittiert die umhüllte Form mit **200 und
+        tut nichts**; ein Statuscode allein beweist hier also gar nichts. Live
+        gemessen 06.08.2026 an „Feriehus Kornblomst" (69 → 70 → zurück):
+
+            {"listing": {"property_details": {...}}}  -> 200, size bleibt 69
+            {"property_details": {...}}               -> 200, size wird 70
+
+        Kontrolltest daneben: ein erfundenes Feld allein ändert nichts, der
+        Unterschied kommt also wirklich vom Payload. Dieselbe Eigenheit wie beim
+        Zimmer-Anlegen (`airbnb_zimmer_push`) — die Ausstattung nutzt weiter die
+        umhüllte Form, weil sie dort nachweislich wirkt.
+
+        Gelesen wird dasselbe Feld, das wir hier schreiben
+        (`property_details.listing_size`) — Hin- und Rückweg sind symmetrisch.
+
+        Nur gefüllte Werte gehen raus (Wurzel 4): eine fehlende Fläche ist
+        „unbekannt", nicht „0". Ohne Einheit KEINE Fläche — „69" ohne Einheit
+        wäre bei Airbnb eine Zahl, deren Bedeutung wir raten müssten, und der
+        Unterschied m²/sq ft ist Faktor 10.
+
+        Rückgabe: die gesendeten Felder plus `angekommen` — ob der Wert beim
+        Zurücklesen wirklich bei Airbnb stand. Leeres Dict = nichts zu tun.
+        """
+        nutzlast: dict[str, Any] = {}
+        einheit_airbnb = _EINHEIT_ZU_AIRBNB.get(str(einheit or "").lower())
+        if flaeche and flaeche > 0 and einheit_airbnb:
+            nutzlast["property_details"] = {
+                "listing_size": {
+                    # Airbnb liefert die Größe als Ganzzahl zurück; ein float
+                    # ohne Nachkommastelle würde als „69.0" gesendet.
+                    "size": int(flaeche) if float(flaeche).is_integer() else flaeche,
+                    "size_unit": einheit_airbnb,
+                }
+            }
+        if isinstance(max_gaeste, int) and max_gaeste > 0:
+            nutzlast["person_capacity"] = max_gaeste
+        if not nutzlast:
+            log.info(
+                "airbnb_stammdaten_nichts_zu_senden",
+                listing_id=listing_id,
+                flaeche=flaeche, einheit=einheit, max_gaeste=max_gaeste,
+            )
+            return {}
+
+        vorher = self._airbnb_stammdaten_stand(token, listing_id)
+        log.info(
+            "airbnb_stammdaten_sende",
+            listing_id=listing_id, nutzlast=nutzlast, vorher=vorher,
+        )
+        # FLACH — siehe Docstring: die `{"listing": …}`-Hülle quittiert Airbnb
+        # mit 200 und verwirft den Inhalt.
+        self._airbnb_put(token, f"v2/listings/{listing_id}", nutzlast)
+
+        # ZURÜCKLESEN, nicht dem 200 glauben. Genau hier lag der Fehler, der
+        # diesen Weg fast unbemerkt wirkungslos gemacht hätte: Airbnb quittiert
+        # eine verworfene Nutzlast mit demselben 200 wie eine übernommene.
+        nachher = self._airbnb_stammdaten_stand(token, listing_id)
+        soll = {
+            "groesse": (nutzlast.get("property_details") or {})
+            .get("listing_size", {})
+            .get("size", nachher.get("groesse")),
+            "kapazitaet": nutzlast.get("person_capacity", nachher.get("kapazitaet")),
+        }
+        angekommen = all(nachher.get(k) == v for k, v in soll.items())
+        log.info(
+            "airbnb_stammdaten_geschrieben",
+            listing_id=listing_id, felder=sorted(nutzlast),
+            vorher=vorher, nachher=nachher, angekommen=angekommen,
+        )
+        if not angekommen:
+            # Kein Absturz: der Wert steht bei uns richtig, nur Airbnb hat ihn
+            # nicht genommen. Aber sichtbar — sonst sucht man beim nächsten Mal
+            # wieder von vorn (Wurzel 5: nichts stillschweigend „done" nennen).
+            log.warning(
+                "airbnb_stammdaten_nicht_uebernommen",
+                listing_id=listing_id, gesendet=nutzlast,
+                soll=soll, ist=nachher,
+            )
+        # `angekommen` gehört in die Rückgabe, nicht nur ins Log: der Aufrufer
+        # soll unterscheiden können, ob Airbnb den Wert wirklich übernommen hat.
+        return {**nutzlast, "angekommen": angekommen}
+
+    def _airbnb_stammdaten_stand(
+        self, token: str, listing_id: str
+    ) -> dict[str, Any]:
+        """Fläche und Kapazität, wie sie GERADE bei Airbnb stehen.
+
+        Für das Vorher/Nachher im Log. Scheitert der Lesevorgang, ist das kein
+        Grund den Schreibweg zu kippen — dann steht `None` im Log statt einer
+        erfundenen Zahl.
+        """
+        listing = self._airbnb_get(token, f"v2/listings/{listing_id}") or {}
+        daten = listing.get("listing") if isinstance(
+            listing.get("listing"), dict
+        ) else listing
+        groesse = ((daten.get("property_details") or {})
+                   .get("listing_size") or {}).get("size")
+        return {"groesse": groesse, "kapazitaet": daten.get("person_capacity")}
 
     def airbnb_listings_direkt(self, token: str, user_id: str) -> list[dict[str, Any]]:
         """Alle Listings des Hosts MIT Adresse, Zimmerzahl und Ausstattung.
@@ -1068,5 +1191,42 @@ class AirbnbDirektMixin:
             str(listing_id),
             prop.get("amenities") or [],
             prop.get("room_amenities") or [],
+        )
+        return {"listing_id": str(listing_id), "geschrieben": geschrieben}
+
+    def sync_airbnb_stammdaten(
+        self, tenant_id: str, property_id: str
+    ) -> dict[str, Any]:
+        """Fläche und Kapazität eines Objekts zurück an Airbnb.
+
+        Gegenstück zum Import (`airbnb_content_uebernehmen`): dieselben Felder,
+        andere Richtung. Ohne diesen Weg war die Maske eine Einbahnstraße — der
+        Betrieb korrigierte die Wohnfläche bei uns, und bei Airbnb blieb der
+        alte Wert stehen.
+
+        Wie beim Ausstattungs-Sync: kein Airbnb-Objekt oder kein verbundenes
+        Konto heißt „nichts zu tun" (kein Fehler), ein fehlgeschlagener
+        Schreibaufruf dagegen fliegt hoch und kippt den Job auf Retry (Wurzel 5).
+        """
+        db = self._require_db()  # type: ignore[attr-defined]
+        prop = load_scoped(
+            db, "properties", property_id, tenant_id,
+            columns="id, airbnb_listing_id, size_value, size_unit, max_guests",
+            not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
+        )
+        listing_id = prop.get("airbnb_listing_id")
+        if not listing_id:
+            return {"listing_id": None, "geschrieben": {}}
+        zugang = self._airbnb_token(db, tenant_id)
+        if not zugang:
+            log.info("airbnb_stammdaten_ohne_konto", property_id=property_id)
+            return {"listing_id": str(listing_id), "geschrieben": {}}
+        token, _user_id = zugang
+        geschrieben = self.airbnb_stammdaten_schreiben(
+            token,
+            str(listing_id),
+            prop.get("size_value"),
+            prop.get("size_unit"),
+            prop.get("max_guests"),
         )
         return {"listing_id": str(listing_id), "geschrieben": geschrieben}

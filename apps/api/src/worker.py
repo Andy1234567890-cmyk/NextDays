@@ -53,6 +53,9 @@ _CHANNEX_JOB_TYPES = frozenset(
      # Channex — der OAuth-Token dafür aber schon (`get_channel`), also zählt der
      # Job mit, sonst umginge er das kontoweite Limit.
      "sync_airbnb_ausstattung",
+     # Fläche und Kapazität an Airbnbs eigene API — wie die Ausstattung: der
+     # Schreibaufruf geht direkt, der OAuth-Token kommt aber von Channex.
+     "sync_airbnb_stammdaten",
      # Zimmer an Airbnb (Gegenrichtung zum Import). Läuft über Channex'
      # api_proxy, ist also ein echter Channex-Call und zählt mit.
      "sync_airbnb_zimmer",
@@ -249,6 +252,21 @@ def _handle_sync_airbnb_ausstattung(
     if not svc.is_channex_configured:
         return
     svc.sync_airbnb_ausstattung(payload["tenant_id"], payload["property_id"])
+
+
+def _handle_sync_airbnb_stammdaten(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Fläche und Kapazität direkt an Airbnbs API schreiben.
+
+    Gegenrichtung zum Import: wir HOLEN `property_details.listing_size` von
+    Airbnb, also muss eine Korrektur bei uns auch dorthin zurück. Ein Fehler
+    kippt den Job auf Retry (Wurzel 5) — „erledigt" zu melden, während bei
+    Airbnb der alte Wert steht, wäre die schlechtere Lüge."""
+    svc = _svc(db, budget)
+    if not svc.is_channex_configured:
+        return
+    svc.sync_airbnb_stammdaten(payload["tenant_id"], payload["property_id"])
 
 
 def _handle_sync_airbnb_zimmer(
@@ -490,6 +508,7 @@ HANDLERS: dict[
     "sync_property_taxes": _handle_sync_property_taxes,
     "sync_airbnb_aktionen": _handle_sync_airbnb_aktionen,
     "sync_airbnb_ausstattung": _handle_sync_airbnb_ausstattung,
+    "sync_airbnb_stammdaten": _handle_sync_airbnb_stammdaten,
     "sync_airbnb_zimmer": _handle_sync_airbnb_zimmer,
     "reconcile_tenant": _handle_reconcile_tenant,
     "reconcile_rate_plan_prices": _handle_reconcile_rate_plan_prices,

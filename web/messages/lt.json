@@ -4431,7 +4431,7 @@
       "occupancyHint": "Suaugusiųjų vietos skirtos suaugusiesiems ir vaikams, vaikų vietos – tik vaikams. „Maks. svečių“ (aukščiau) yra suaugusiųjų vietos.",
       "childrenSlotsFieldLabel": "Vaikų vietos",
       "infantSlotsFieldLabel": "Mažamečių vietos",
-      "sizeFieldLabel": "Plotas (m²)",
+      "sizeFieldLabel": "Plotas",
       "statusFieldLabel": "Būsena",
       "amenitiesEditorTitle": "Redaguoti ausstattung",
       "amenitiesOtaHint": "Visos ausstattung savybės automatiškai perduodamos į rezervavimo portalus (Booking.com, Airbnb ir kt.).",

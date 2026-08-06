@@ -4431,7 +4431,7 @@
       "occupancyHint": "Aikuispaikat tarjoavat tilaa aikuisille ja lapsille, lapsipaikat vain lapsille. Yllä oleva „Vieraita enintään” on aikuispaikkojen määrä.",
       "childrenSlotsFieldLabel": "Lapsipaikat",
       "infantSlotsFieldLabel": "Vauvapaikat",
-      "sizeFieldLabel": "Koko (m²)",
+      "sizeFieldLabel": "Koko",
       "statusFieldLabel": "Tila",
       "amenitiesEditorTitle": "Muokkaa varusteita",
       "amenitiesOtaHint": "Kaikki varusteet välitetään automaattisesti varausportaaleihin (Booking.com, Airbnb & co.).",

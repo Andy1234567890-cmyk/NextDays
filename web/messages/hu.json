@@ -4431,7 +4431,7 @@
       "occupancyHint": "A felnőtthelyek felnőtteknek és gyerekeknek is helyet biztosítanak, a gyerekhelyek csak gyerekeknek. A „Max. vendég” (fent) a felnőtthelyek száma.",
       "childrenSlotsFieldLabel": "Gyerekhelyek",
       "infantSlotsFieldLabel": "Kisgyerekhelyek",
-      "sizeFieldLabel": "Méret (m²)",
+      "sizeFieldLabel": "Méret",
       "statusFieldLabel": "Állapot",
       "amenitiesEditorTitle": "Felszereltség szerkesztése",
       "amenitiesOtaHint": "Minden felszereltségi jellemző automatikusan átkerül a foglalási portálokra (Booking.com, Airbnb és társai).",

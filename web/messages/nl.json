@@ -4431,7 +4431,7 @@
       "occupancyHint": "Volwassenenplaatsen bieden ruimte voor volwassenen en kinderen, kinderplaatsen alleen voor kinderen. „Max. gasten” (hierboven) zijn de volwassenenplaatsen.",
       "childrenSlotsFieldLabel": "Kinderplaatsen",
       "infantSlotsFieldLabel": "Babyplaatsen",
-      "sizeFieldLabel": "Oppervlakte (m²)",
+      "sizeFieldLabel": "Oppervlakte",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Voorzieningen bewerken",
       "amenitiesOtaHint": "Alle voorzieningen worden automatisch doorgestuurd naar de boekingsportalen (Booking.com, Airbnb & co.).",

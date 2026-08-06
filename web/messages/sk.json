@@ -4431,7 +4431,7 @@
       "occupancyHint": "Miesta pre dospelých ponúkajú priestor pre dospelých aj deti, miesta pre deti len pre deti. „Max. hostí\" (vyššie) sú miesta pre dospelých.",
       "childrenSlotsFieldLabel": "Miesta pre deti",
       "infantSlotsFieldLabel": "Miesta pre batoľatá",
-      "sizeFieldLabel": "Veľkosť (m²)",
+      "sizeFieldLabel": "Veľkosť",
       "statusFieldLabel": "Stav",
       "amenitiesEditorTitle": "Upraviť vybavenie",
       "amenitiesOtaHint": "Všetky vybavenia sa automaticky prenášajú do rezervačných portálov (Booking.com, Airbnb a ďalšie).",

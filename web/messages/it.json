@@ -4431,7 +4431,7 @@
       "occupancyHint": "I posti adulti offrono spazio per adulti e bambini, i posti bambino solo per bambini. \"Ospiti max.\" (sopra) sono i posti adulti.",
       "childrenSlotsFieldLabel": "Posti bambino",
       "infantSlotsFieldLabel": "Posti neonato",
-      "sizeFieldLabel": "Superficie (m²)",
+      "sizeFieldLabel": "Superficie",
       "statusFieldLabel": "Stato",
       "amenitiesEditorTitle": "Modifica dotazioni",
       "amenitiesOtaHint": "Tutte le dotazioni vengono trasmesse automaticamente ai portali di prenotazione (Booking.com, Airbnb & Co.).",

@@ -63,6 +63,19 @@ const STATUS_ICON: Record<ChannelFieldStatus, { icon: string; ton: string }> = {
   unklar: { icon: "ph:question", ton: "text-muted-foreground" },
 };
 
+/**
+ * Reichweite AUS den Zeilen ableiten: erreicht das Feld mindestens ein Portal?
+ * Portalnamen spielen dabei keine Rolle — nur, ob eine Zeile, die nicht die
+ * eigene Plattform ist, einen übertragenden Status trägt.
+ */
+function reichweite(kanaele: ChannelFieldRow[]): Channel {
+  const traegt = kanaele.some(
+    (k) =>
+      k.name !== "myBestDays" && (k.status === "voll" || k.status === "bedingt"),
+  );
+  return traegt ? "ota" : "local";
+}
+
 export function ChannelBadge({
   channel,
   label,
@@ -70,18 +83,27 @@ export function ChannelBadge({
   kanaele,
   className = "",
 }: {
-  channel: Channel;
+  /**
+   * Grobe Stufe. Bei gesetztem `kanaele` WEGLASSEN — dann leitet das Badge die
+   * Aufschrift aus den Zeilen ab. Beides von Hand zu setzen war die Fehlerquelle:
+   * die Aufschrift kam aus `channel`, die Aufschlüsselung aus der Matrix, und
+   * nichts hielt sie zusammen (live stand an „Typ" „Booking, Airbnb & Co.",
+   * während die Matrix darunter „eingeschränkt / noch offen" zeigte).
+   */
+  channel?: Channel;
   label?: string;
   hint?: string;
   /** Eine Zeile je Portal — wenn gesetzt, zeigt der Tooltip die Aufschlüsselung. */
   kanaele?: ChannelFieldRow[];
   className?: string;
 }) {
-  const d = DEFAULTS[channel];
+  const abgeleitet: Channel =
+    channel ?? (kanaele?.length ? reichweite(kanaele) : "local");
+  const d = DEFAULTS[abgeleitet];
   const text = label ?? d.label;
   const help = hint ?? d.hint;
   const tone =
-    channel === "ota"
+    abgeleitet === "ota"
       ? "border-accent/40 bg-accent/10 text-accent"
       : "border-border bg-secondary text-muted-foreground";
 

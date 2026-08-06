@@ -4431,7 +4431,7 @@
       "occupancyHint": "Pieaugušo vietas paredzētas gan pieaugušajiem, gan bērniem, bērnu vietas — tikai bērniem. „Maks. viesu skaits“ (augstāk) ir pieaugušo vietu skaits.",
       "childrenSlotsFieldLabel": "Bērnu vietas",
       "infantSlotsFieldLabel": "Zīdaiņu vietas",
-      "sizeFieldLabel": "Platība (m²)",
+      "sizeFieldLabel": "Platība",
       "statusFieldLabel": "Statuss",
       "amenitiesEditorTitle": "Rediģēt ērtības",
       "amenitiesOtaHint": "Visas ērtības tiek automātiski nosūtītas uz rezervāciju portāliem (Booking.com, Airbnb un citiem).",

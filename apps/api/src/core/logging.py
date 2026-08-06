@@ -4,11 +4,24 @@ import sys
 
 import structlog
 
+# Fremdbibliotheken, die auf INFO jede einzelne Anfrage protokollieren. Ohne
+# Dämpfung besteht das Worker-Log fast vollständig aus „HTTP Request: POST
+# …/rpc/claim_jobs 200" — der Leerlauf-Takt der Warteschlange, mehrmals pro
+# Sekunde. Unsere eigenen Ereignisse gehen darin unter: bei der Fehlersuche am
+# Airbnb-Rückweg war die eine relevante Zeile zwischen Hunderten Takt-Zeilen
+# nicht auffindbar. Auf WARNING bleiben Fehler sichtbar, der Takt verschwindet.
+_LAUTE_BIBLIOTHEKEN = ("httpx", "httpcore", "hpack", "urllib3")
+
 
 def configure_logging(level: str = "INFO", *, json_logs: bool = False) -> None:
     log_level = getattr(logging, level.upper(), logging.INFO)
 
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=log_level)
+
+    # Nie ÜBER das gewünschte Niveau anheben: wer bewusst DEBUG einschaltet,
+    # will die Anfragen sehen.
+    for name in _LAUTE_BIBLIOTHEKEN:
+        logging.getLogger(name).setLevel(max(log_level, logging.WARNING))
 
     shared_processors: list[structlog.types.Processor] = [
         structlog.contextvars.merge_contextvars,

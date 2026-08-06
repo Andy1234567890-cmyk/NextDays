@@ -4431,7 +4431,7 @@
       "occupancyHint": "Miejsca dla dorosłych są przeznaczone dla dorosłych i dzieci, miejsca dla dzieci tylko dla dzieci. „Maks. liczba gości” (powyżej) to miejsca dla dorosłych.",
       "childrenSlotsFieldLabel": "Miejsca dla dzieci",
       "infantSlotsFieldLabel": "Miejsca dla niemowląt",
-      "sizeFieldLabel": "Powierzchnia (m²)",
+      "sizeFieldLabel": "Powierzchnia",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Edytuj wyposażenie",
       "amenitiesOtaHint": "Wszystkie elementy wyposażenia są automatycznie przekazywane do portali rezerwacyjnych (Booking.com, Airbnb i inne).",

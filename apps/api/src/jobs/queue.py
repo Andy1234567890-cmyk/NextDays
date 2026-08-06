@@ -167,6 +167,29 @@ def try_enqueue_airbnb_ausstattung(
                     error=str(exc)[:200])
 
 
+def try_enqueue_airbnb_stammdaten(
+    db: Client, tenant_id: str, property_id: str
+) -> None:
+    """Fläche und Kapazität direkt an Airbnb nachziehen (coalesced je Objekt).
+
+    Gegenrichtung zum Import: ohne diesen Job blieb eine bei uns korrigierte
+    Wohnfläche bei Airbnb auf dem alten Wert stehen, obwohl wir sie von dort
+    holen. Wie bei der Ausstattung führt der Weg an Channex vorbei — dessen
+    ausgehender Payload trägt nur Verfügbarkeit, Preis und Restriktionen.
+
+    Coalescing ist richtig: der Job sendet immer den vollen Soll-Stand beider
+    Felder, „letzter gewinnt" verliert also nichts."""
+    try:
+        enqueue(
+            db, "sync_airbnb_stammdaten", tenant_id=tenant_id,
+            payload={"tenant_id": tenant_id, "property_id": property_id},
+            dedup_key=dedup_key(tenant_id, property_id, "sync_airbnb_stammdaten"),
+        )
+    except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+        log.warning("enqueue_airbnb_stammdaten_failed", property_id=property_id,
+                    error=str(exc)[:200])
+
+
 def try_enqueue_recompute(db: Client, tenant_id: str, property_id: str) -> None:
     """DP-Recompute eines Objekts als Job einreihen (coalesced je Objekt). Der
     Handler rechnet die Tagespreise neu und pusht sie via push_rates_batch."""

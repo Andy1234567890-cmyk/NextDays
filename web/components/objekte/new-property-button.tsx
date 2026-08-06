@@ -121,7 +121,7 @@ export function NewPropertyButton({
             <div className="flex flex-col gap-1.5">
               <span className="flex flex-wrap items-center gap-2">
                 <Label htmlFor="title">{t("newPropertyButton.nameLabel")}</Label>
-                <ChannelBadge channel="ota" kanaele={titelKanaele} />
+                <ChannelBadge kanaele={titelKanaele} />
               </span>
               <Input
                 id="title"
@@ -138,7 +138,7 @@ export function NewPropertyButton({
             <div className="flex flex-col gap-1.5">
               <span className="flex flex-wrap items-center gap-2">
                 <Label>{t("newPropertyButton.typeLabel")}</Label>
-                <ChannelBadge channel="ota" kanaele={typKanaele} />
+                <ChannelBadge kanaele={typKanaele} />
               </span>
               <Select
                 value={type}
@@ -162,7 +162,7 @@ export function NewPropertyButton({
                 <Label htmlFor="guests">
                   {t("newPropertyButton.maxGuestsLabel")}
                 </Label>
-                <ChannelBadge channel="ota" kanaele={belegungKanaele} />
+                <ChannelBadge kanaele={belegungKanaele} />
               </span>
               <Input
                 id="guests"

@@ -4431,7 +4431,7 @@
       "occupancyHint": "Местата за възрастни са предвидени за възрастни и деца, местата за деца — само за деца. „Макс. гости“ (по-горе) са местата за възрастни.",
       "childrenSlotsFieldLabel": "Места за деца",
       "infantSlotsFieldLabel": "Места за бебета",
-      "sizeFieldLabel": "Площ (кв.м)",
+      "sizeFieldLabel": "Площ",
       "statusFieldLabel": "Статус",
       "amenitiesEditorTitle": "Редактиране на удобствата",
       "amenitiesOtaHint": "Всички удобства се предават автоматично към порталите за резервации (Booking.com, Airbnb & Co.).",

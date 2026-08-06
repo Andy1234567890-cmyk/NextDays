@@ -4452,7 +4452,7 @@
       "occupancyHint": "Erwachsenenplätze bieten Platz für Erwachsene und Kinder, Kinderplätze nur für Kinder. „Max. Gäste“ (oben) sind die Erwachsenenplätze.",
       "childrenSlotsFieldLabel": "Kinderplätze",
       "infantSlotsFieldLabel": "Kleinkindplätze",
-      "sizeFieldLabel": "Größe (m²)",
+      "sizeFieldLabel": "Größe",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Ausstattung bearbeiten",
       "amenitiesOtaHint": "Alle Ausstattungsmerkmale werden automatisch an die Buchungsportale (Booking.com, Airbnb & Co.) übertragen.",

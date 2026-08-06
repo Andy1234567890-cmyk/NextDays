@@ -4431,7 +4431,7 @@
       "occupancyHint": "Vuxenplatser ger plats för vuxna och barn, barnplatser endast för barn. „Max. gäster” (ovan) är vuxenplatserna.",
       "childrenSlotsFieldLabel": "Barnplatser",
       "infantSlotsFieldLabel": "Spädbarnsplatser",
-      "sizeFieldLabel": "Storlek (m²)",
+      "sizeFieldLabel": "Storlek",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Redigera utrustning",
       "amenitiesOtaHint": "Alla utrustningsegenskaper överförs automatiskt till bokningsportalerna (Booking.com, Airbnb & Co.).",

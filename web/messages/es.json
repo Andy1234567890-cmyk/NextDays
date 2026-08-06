@@ -4431,7 +4431,7 @@
       "occupancyHint": "Las plazas para adultos ofrecen espacio para adultos y niños; las plazas para niños, solo para niños. «N.º máx. de huéspedes» (arriba) son las plazas para adultos.",
       "childrenSlotsFieldLabel": "Plazas para niños",
       "infantSlotsFieldLabel": "Plazas para bebés",
-      "sizeFieldLabel": "Tamaño (m²)",
+      "sizeFieldLabel": "Tamaño",
       "statusFieldLabel": "Estado",
       "amenitiesEditorTitle": "Editar equipamiento",
       "amenitiesOtaHint": "Todas las características de equipamiento se transmiten automáticamente a los portales de reserva (Booking.com, Airbnb y otros).",

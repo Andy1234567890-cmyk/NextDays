@@ -4431,7 +4431,7 @@
       "occupancyHint": "Οι θέσεις ενηλίκων προσφέρουν χώρο για ενήλικες και παιδιά, οι θέσεις παιδιών μόνο για παιδιά. Οι «Μέγ. επισκέπτες» (παραπάνω) είναι οι θέσεις ενηλίκων.",
       "childrenSlotsFieldLabel": "Θέσεις παιδιών",
       "infantSlotsFieldLabel": "Θέσεις βρεφών",
-      "sizeFieldLabel": "Μέγεθος (m²)",
+      "sizeFieldLabel": "Μέγεθος",
       "statusFieldLabel": "Κατάσταση",
       "amenitiesEditorTitle": "Επεξεργασία παροχών",
       "amenitiesOtaHint": "Όλα τα χαρακτηριστικά παροχών μεταφέρονται αυτόματα στις πύλες κρατήσεων (Booking.com, Airbnb & Co.).",

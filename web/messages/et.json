@@ -4431,7 +4431,7 @@
       "occupancyHint": "Täiskasvanukohad mahutavad täiskasvanuid ja lapsi, lapsekohad ainult lapsi. „Maks. külalisi“ (üleval) on täiskasvanukohtade arv.",
       "childrenSlotsFieldLabel": "Lapsekohad",
       "infantSlotsFieldLabel": "Väikelapsekohad",
-      "sizeFieldLabel": "Suurus (m²)",
+      "sizeFieldLabel": "Suurus",
       "statusFieldLabel": "Staatus",
       "amenitiesEditorTitle": "Muuda mugavusi",
       "amenitiesOtaHint": "Kõik mugavused edastatakse automaatselt broneerimisportaalidesse (Booking.com, Airbnb & Co.).",

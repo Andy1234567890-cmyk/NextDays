@@ -158,12 +158,20 @@ export const FELD_GRUPPEN: { gruppe: string; felder: Feldregel[] }[] = [
         kanaele: { airbnb: ja, booking: ja, mybestdays: ja },
       },
       {
-        // Liegt in type_attributes und wird von _property_attrs nicht gemappt.
-        // Booking.com KENNT die Zimmergröße — der Aggregator hat schlicht kein
-        // Feld dafür. Airbnb kennt sie in dieser Kette nicht.
+        // Fläche UND ihre Einheit (`size_value`/`size_unit`, 0197) — bei Airbnb
+        // in BEIDE Richtungen, über die Direktanbindung statt den Aggregator:
+        //   holen:     airbnb_listing_import.gebaeudedaten_uebernehmen
+        //   schreiben: airbnb_direkt.airbnb_stammdaten_schreiben
+        //              (PUT v2/listings/{id} → property_details.listing_size)
+        // Derselbe Weg, den auch die Ausstattung geht. Der Aggregator trägt
+        // ausgehend nur Verfügbarkeit, Preis und Restriktionen — deshalb stand
+        // hier früher „kennt Airbnb nicht", was schlicht falsch war.
+        //
+        // Booking.com kennt die Zimmergröße ebenfalls, aber unser Weg über den
+        // Aggregator hat kein Feld dafür.
         feld: "groesseQm",
         kanaele: {
-          airbnb: { status: "nein", grund: "kennsNicht" },
+          airbnb: ja,
           booking: nichtUebertragbar,
           mybestdays: ja,
         },
@@ -389,13 +397,20 @@ export const FELDER: Record<string, Feldregel> = Object.fromEntries(
 );
 
 /**
- * Kurz-Kennzeichnung fürs Badge: geht das Feld an mindestens ein Portal, oder
+ * Kurz-Kennzeichnung fürs Badge: BETRIFFT das Feld mindestens ein Portal, oder
  * lebt es nur auf der eigenen Strecke?
+ *
+ * `portal` zählt mit. Vorher nicht — dadurch stand an der Fläche „Nur
+ * myBestDays", während der Tooltip darunter „Airbnb — muss im Portal gepflegt
+ * werden" zeigte. Airbnb liefert die Fläche (`property_details.listing_size`),
+ * sie ist alles andere als ein reines Eigenfeld; nur GESCHRIEBEN wird sie
+ * dort nicht. „Nur myBestDays" ist ausschließlich für Felder richtig, die
+ * kein Portal kennt.
  */
 export function istPortalfeld(feld: string): boolean {
   const regel = FELDER[feld];
   if (!regel) return false;
   return KANAELE.filter((k) => k !== "mybestdays").some((k) =>
-    ["voll", "bedingt"].includes(regel.kanaele[k].status),
+    ["voll", "bedingt", "portal"].includes(regel.kanaele[k].status),
   );
 }

@@ -292,15 +292,21 @@ export function PropertyOverview({ initial }: { initial: Property }) {
 // `feld` ist der Schlüssel aus lib/kanal-felder.ts: dann zeigt der Tooltip die
 // Aufschlüsselung je Portal (Airbnb, Booking.com, myBestDays) statt nur „geht an
 // die Portale". Ohne `feld` bleibt es beim groben Badge.
+// Die Reichweite wird AUS DER MATRIX abgeleitet, nicht je Aufrufstelle
+// behauptet. Vorher standen `channel` und `feld` nebeneinander: die sichtbare
+// Aufschrift kam aus dem handgetippten `channel`, die Aufschlüsselung im
+// Tooltip aus `feld` — nichts hielt beide zusammen. Live stand deshalb an
+// „Typ" die Aufschrift „Booking, Airbnb & Co.", während die Matrix darunter
+// `objekttyp` bei Airbnb als `bedingt` und bei Booking.com als `unklar` führt.
+// Ein Feld ohne Matrix-Eintrag bekommt gar kein Badge, statt eine Reichweite
+// zu behaupten, für die es keine Quelle gibt (Wurzel 4).
 function FieldLabel({
   htmlFor,
-  channel,
   feld,
   required,
   children,
 }: {
   htmlFor?: string;
-  channel: "ota" | "local";
   feld?: string;
   required?: boolean;
   children: React.ReactNode;
@@ -312,7 +318,7 @@ function FieldLabel({
         {children}
         {required && <span className="ml-0.5 text-destructive">*</span>}
       </Label>
-      <ChannelBadge channel={channel} kanaele={kanaele} />
+      {kanaele.length > 0 && <ChannelBadge kanaele={kanaele} />}
     </span>
   );
 }
@@ -381,14 +387,13 @@ function SectionCard({
   title,
   hint,
   onEdit,
-  channel,
   feld,
   children,
 }: {
   title: string;
   hint: string;
   onEdit: () => void;
-  channel?: "ota" | "local";
+  /** Schlüssel aus lib/kanal-felder.ts — trägt allein die Reichweite. */
   feld?: string;
   children: React.ReactNode;
 }) {
@@ -400,7 +405,7 @@ function SectionCard({
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-display text-lg font-extrabold">{title}</h3>
-            {channel && <ChannelBadge channel={channel} kanaele={kanaele} />}
+            {kanaele.length > 0 && <ChannelBadge kanaele={kanaele} />}
           </div>
           <p className="text-sm text-muted-foreground">{hint}</p>
         </div>
@@ -497,7 +502,7 @@ function NameEditor({
       title={t("propertyOverview.nameCardTitle")}
     >
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-title" channel="ota" feld="titel">
+        <FieldLabel htmlFor="e-title" feld="titel">
           {t("propertyOverview.nameFieldLabel")}
         </FieldLabel>
         <Input
@@ -507,7 +512,7 @@ function NameEditor({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-desc" channel="ota" feld="beschreibung">
+        <FieldLabel htmlFor="e-desc" feld="beschreibung">
           {t("propertyOverview.descriptionFieldLabel")}
         </FieldLabel>
         <Textarea
@@ -521,7 +526,7 @@ function NameEditor({
         </p>
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-platform-desc" channel="local" feld="plattformBeschreibung">
+        <FieldLabel htmlFor="e-platform-desc" feld="plattformBeschreibung">
           {t("propertyOverview.platformDescriptionFieldLabel")}
         </FieldLabel>
         <Textarea
@@ -599,7 +604,7 @@ function InfoEditor({
           Unterkunftstyp stand vorher in der Namens-Karte; er gehört zu den
           Eckdaten, nicht zum Text. */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel channel="ota">
+        <FieldLabel feld="objekttyp">
           {t("propertyOverview.typeFieldLabel")}
         </FieldLabel>
         <Select value={type} onValueChange={(v) => setType(v as PropertyType)}>
@@ -617,7 +622,9 @@ function InfoEditor({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-unit" channel="local">
+        {/* Dieselbe Reichweite wie die Fläche: Airbnb liefert `listing_size`
+            mit Wert UND Einheit, deshalb derselbe Matrix-Eintrag. */}
+        <FieldLabel htmlFor="e-unit" feld="groesseQm">
           {t("propertyOverview.masseinheitLabel")}
         </FieldLabel>
         <NativeSelect
@@ -632,24 +639,44 @@ function InfoEditor({
 
       {/* Größe ist Pflicht — ohne sie kann weder die eigene Strecke noch der
           Marktplatz das Objekt sauber ausweisen. Leer lassen heißt hier NICHT
-          „0", sondern „nicht speicherbar" (Wurzel 4). */}
+          „0", sondern „nicht speicherbar" (Wurzel 4).
+
+          Die Einheit steht NICHT in der Aufschrift: sie wird eine Zeile höher
+          eingestellt. Vorher hatte `sizeFieldLabel` „(m²)" in allen 24 Sprachen
+          fest eingebrannt — wer auf ft² umstellte, las darunter weiter „Größe
+          (m²)". Eine Angabe, zwei Quellen, und die zweite log. */}
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-size" channel="local" feld="groesseQm" required>
+        <FieldLabel htmlFor="e-size" feld="groesseQm" required>
           {t("propertyOverview.sizeFieldLabel")}
         </FieldLabel>
-        <Input
-          id="e-size"
-          type="number"
-          min={1}
-          value={size}
-          onChange={(e) =>
-            setSize(e.target.value === "" ? "" : Number(e.target.value))
-          }
-        />
+        <div className="relative">
+          <Input
+            id="e-size"
+            type="number"
+            min={1}
+            value={size}
+            className="pr-12"
+            onChange={(e) =>
+              setSize(e.target.value === "" ? "" : Number(e.target.value))
+            }
+          />
+          {/* Rein schmückend — die Einheit ist über die Auswahl oben bedienbar
+              und wird dort auch vorgelesen. */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+          >
+            {t(
+              einheit === "sqft"
+                ? "propertyOverview.masseinheitQft"
+                : "propertyOverview.masseinheitQm",
+            )}
+          </span>
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <FieldLabel htmlFor="e-guests" channel="ota" feld="belegung">
+        <FieldLabel htmlFor="e-guests" feld="belegung">
           {t("propertyOverview.maxGuestsFieldLabel")}
         </FieldLabel>
         <Stepper
@@ -673,7 +700,7 @@ function InfoEditor({
           <span className="font-semibold">
             {t("propertyOverview.occupancyTitle")}
           </span>
-          <ChannelBadge channel="ota" kanaele={belegungKanaele} />
+          <ChannelBadge kanaele={belegungKanaele} />
         </div>
         <p className="text-xs text-muted-foreground">
           {t("propertyOverview.occupancyHint")}

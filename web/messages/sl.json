@@ -4431,7 +4431,7 @@
       "occupancyHint": "Mesta za odrasle nudijo prostor za odrasle in otroke, mesta za otroke le za otroke. „Najv. št. gostov“ (zgoraj) so mesta za odrasle.",
       "childrenSlotsFieldLabel": "Mesta za otroke",
       "infantSlotsFieldLabel": "Mesta za dojenčke",
-      "sizeFieldLabel": "Velikost (m²)",
+      "sizeFieldLabel": "Velikost",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Uredi opremo",
       "amenitiesOtaHint": "Vse značilnosti opreme bodo samodejno posredovane rezervacijskim portalom (Booking.com, Airbnb & Co.).",

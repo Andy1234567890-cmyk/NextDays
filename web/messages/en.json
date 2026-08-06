@@ -4452,7 +4452,7 @@
       "occupancyHint": "Adult slots accommodate adults and children, children's slots only children. “Max. guests” (above) are the adult slots.",
       "childrenSlotsFieldLabel": "Children's slots",
       "infantSlotsFieldLabel": "Infant slots",
-      "sizeFieldLabel": "Size (m²)",
+      "sizeFieldLabel": "Size",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Edit amenities",
       "amenitiesOtaHint": "All amenities are automatically transferred to the booking portals (Booking.com, Airbnb & Co.).",

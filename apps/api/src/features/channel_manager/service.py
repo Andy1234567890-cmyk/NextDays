@@ -23,6 +23,7 @@ from .airbnb_direkt import AirbnbDirektMixin
 from .airbnb_foto_raum import AirbnbFotoRaumMixin
 from .airbnb_gebuehren import AirbnbGebuehrenMixin
 from .airbnb_objekt_abruf import AirbnbObjektAbrufMixin
+from .airbnb_registrierung import AirbnbRegistrierungMixin
 from .airbnb_uebernahme import AirbnbUebernahmeMixin
 from .airbnb_zimmer_push import AirbnbZimmerPushMixin
 from .ari_push import AriPushMixin
@@ -98,6 +99,10 @@ class ChannelManagerService(
     # `standard_fees` über das Mapping des Objekts. Der alte Weg
     # (`v2/pricing_settings/{listing_id}`) ist von Airbnb abgeschaltet (403).
     AirbnbGebuehrenMixin,
+    # Nach AirbnbDirektMixin: nutzt dessen `_airbnb_get`/`_airbnb_token`, um die
+    # Registrierungsnummer (DK: BFE) aus `v2/listing_permits` zu holen — sie
+    # steht in keinem der Listing-Felder.
+    AirbnbRegistrierungMixin,
     ObjektKanalMixin,
     BookingsSyncMixin,
     LiveFeedSyncMixin,

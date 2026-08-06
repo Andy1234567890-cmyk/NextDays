@@ -4431,7 +4431,7 @@
       "occupancyHint": "Voksenpladser giver plads til voksne og børn, børnepladser kun til børn. „Maks. gæster“ (ovenfor) er voksenpladserne.",
       "childrenSlotsFieldLabel": "Børnepladser",
       "infantSlotsFieldLabel": "Småbørnspladser",
-      "sizeFieldLabel": "Størrelse (m²)",
+      "sizeFieldLabel": "Størrelse",
       "statusFieldLabel": "Status",
       "amenitiesEditorTitle": "Rediger faciliteter",
       "amenitiesOtaHint": "Alle faciliteter overføres automatisk til bookingportalerne (Booking.com, Airbnb & Co.).",

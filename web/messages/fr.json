@@ -4431,7 +4431,7 @@
       "occupancyHint": "Les places adultes accueillent adultes et enfants, les places enfants uniquement des enfants. « Clients max. » (ci-dessus) correspond aux places adultes.",
       "childrenSlotsFieldLabel": "Places enfants",
       "infantSlotsFieldLabel": "Places bébés",
-      "sizeFieldLabel": "Superficie (m²)",
+      "sizeFieldLabel": "Superficie",
       "statusFieldLabel": "Statut",
       "amenitiesEditorTitle": "Modifier les équipements",
       "amenitiesOtaHint": "Tous les équipements sont automatiquement transmis aux portails de réservation (Booking.com, Airbnb & Co.).",
