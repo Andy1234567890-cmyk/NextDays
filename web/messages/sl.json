@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Preglejte in upravljajte račune, povezane z upraviteljem kanalov.",
     "accountsEmpty": "Noben račun še ni povezan.",
     "accountConnect": "Poveži račun",
-    "accountConnectCredentialHint": "Naslednji račun {portal} povežete prek „{portal} Connect“ — tam vnesete oznako hotela in dodelite sobe.",
     "accountsCheckPortalHint": "V nastavitvah računa portala preverite, da nobena druga aplikacija ni nastavljena kot ponudnik povezave.",
     "accountsLogoutHint": "Pred povezavo drugega računa se v brskalniku odjavite s portala."
   },

@@ -248,23 +248,34 @@ export function RechnungsadresseDialog({
             </p>
           </Feld>
 
-          {istFirma && (
-            <>
-              <Feld label={t("billing.companyName")} pflicht>
-                <Input
-                  value={form.company_name ?? ""}
-                  onChange={(e) => setzen("company_name", e.target.value)}
-                />
-              </Feld>
-              <Feld label="Umsatzsteuer-Identifikationsnummer">
-                <Input
-                  value={form.vat_id ?? ""}
-                  placeholder={form.country ? `${form.country}12345678` : ""}
-                  onChange={(e) => setzen("vat_id", e.target.value.toUpperCase())}
-                />
-              </Feld>
-            </>
-          )}
+          {/* Firmenname gilt für JEDE Rechtsform: auch ein Einzelunternehmen
+              (Enkeltmandsvirksomhed, sole trader) ist unter einem Namen
+              eingetragen und rechnet unter ihm ab — genau wie unter
+              Kontaktdaten im Konto. Pflicht ist er nur bei Gesellschaften;
+              bleibt er leer, rechnet die Person unter ihrem eigenen Namen ab
+              (das entscheidet der Server). Die USt-IdNr. hängt ebenso wenig am
+              Konto-Typ: Einzelunternehmer sind regelmäßig umsatzsteuer-
+              pflichtig und brauchen sie fürs Reverse-Charge. */}
+          <Feld label={t("billing.companyName")} pflicht={istFirma}>
+            <Input
+              value={form.company_name ?? ""}
+              onChange={(e) => setzen("company_name", e.target.value)}
+            />
+            {!istFirma && (
+              <p className="text-sm text-muted-foreground">
+                Der eingetragene Name deines Einzelunternehmens. Ohne Eintrag
+                erscheint dein Vor- und Nachname auf der Rechnung.
+              </p>
+            )}
+          </Feld>
+
+          <Feld label="Umsatzsteuer-Identifikationsnummer">
+            <Input
+              value={form.vat_id ?? ""}
+              placeholder={form.country ? `${form.country}12345678` : ""}
+              onChange={(e) => setzen("vat_id", e.target.value.toUpperCase())}
+            />
+          </Feld>
 
           <label className="flex items-start gap-3 text-sm text-muted-foreground">
             <Checkbox

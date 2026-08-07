@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Verifică și gestionează conturile conectate la managerul de canale.",
     "accountsEmpty": "Niciun cont conectat încă.",
     "accountConnect": "Conectează cont",
-    "accountConnectCredentialHint": "Conectezi încă un cont {portal} prin „{portal} Connect” — acolo introduci identificatorul hotelului și asociezi camerele.",
     "accountsCheckPortalHint": "Verifică în setările contului de portal că nicio altă aplicație nu este setată ca furnizor al conexiunii.",
     "accountsLogoutHint": "Deconectează-te de la portal în browser înainte de a conecta alt cont."
   },

@@ -5762,7 +5762,6 @@
     "accountsPanelIntro": "Review and manage the accounts connected to the channel manager.",
     "accountsEmpty": "No account connected yet.",
     "accountConnect": "Connect account",
-    "accountConnectCredentialHint": "You connect another {portal} account via “{portal} Connect” — there you enter the Hotel ID and map the rooms.",
     "accountsCheckPortalHint": "Check your portal account settings to make sure no other app is set as the connection provider.",
     "accountsLogoutHint": "Sign out of the portal in your browser before connecting a different account."
   },

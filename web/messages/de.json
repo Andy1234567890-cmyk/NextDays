@@ -5780,7 +5780,6 @@
     "accountsPanelIntro": "Überprüfe und verwalte die mit dem Kanalmanager verbundenen Konten.",
     "accountsEmpty": "Noch kein Konto verbunden.",
     "accountConnect": "Konto verbinden",
-    "accountConnectCredentialHint": "Ein weiteres {portal}-Konto verbindest du über „{portal} Verbinden“ — dort trägst du die Hotel-ID ein und ordnest die Zimmer zu.",
     "accountsCheckPortalHint": "Prüfe in den Einstellungen deines Portal-Kontos, dass keine andere Anwendung als Verbindungsanbieter eingetragen ist.",
     "accountsLogoutHint": "Melde dich im Browser vom Portal ab, bevor du ein anderes Konto verbindest."
   },

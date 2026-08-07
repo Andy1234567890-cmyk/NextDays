@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Vérifiez et gérez les comptes connectés au gestionnaire de canaux.",
     "accountsEmpty": "Aucun compte connecté pour le moment.",
     "accountConnect": "Connecter un compte",
-    "accountConnectCredentialHint": "Vous connectez un autre compte {portal} via « {portal} Connect » — vous y saisissez l’identifiant de l’hôtel et associez les chambres.",
     "accountsCheckPortalHint": "Vérifiez dans les paramètres de votre compte portail qu'aucune autre application n'est définie comme fournisseur de connexion.",
     "accountsLogoutHint": "Déconnectez-vous du portail dans votre navigateur avant de connecter un autre compte."
   },

@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Déan athbhreithniú ar na cuntais atá nasctha leis an mbainisteoir cainéal agus bainistigh iad.",
     "accountsEmpty": "Níl aon chuntas nasctha go fóill.",
     "accountConnect": "Nasc cuntas",
-    "accountConnectCredentialHint": "Nascann tú cuntas {portal} eile trí „{portal} Connect“ — cuireann tú aitheantóir an óstáin isteach ansin agus mapálann tú na seomraí.",
     "accountsCheckPortalHint": "Seiceáil i socruithe do chuntais tairsí nach bhfuil aon aip eile socraithe mar sholáthraí an naisc.",
     "accountsLogoutHint": "Logáil amach as an tairseach i do bhrabhsálaí sula nascann tú cuntas eile."
   },

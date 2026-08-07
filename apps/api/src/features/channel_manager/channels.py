@@ -24,7 +24,6 @@ from .ota_konten import (
     konto_zum_kanal_loesen,
     objekte_je_konto_zaehlen,
 )
-from .portal_registry import AIRBNB, portal_profil
 
 
 class ChannelsMixin:
@@ -59,9 +58,7 @@ class ChannelsMixin:
     # OAuth-Portale: KEIN eingebbares Credential, Verbindung per OAuth-URL (Airbnb).
     # Allowlist als Absicherung — zusätzlich erkennt list_supported_portals OAuth
     # automatisch daran, dass der Katalog kein abfragbares Credential-Feld hat.
-    # Die Liste kommt aus der Registry, damit „ist OAuth-Portal" nicht an zwei
-    # Stellen unabhängig gepflegt wird.
-    _OAUTH_PORTALS: frozenset[str] = frozenset({AIRBNB})
+    _OAUTH_PORTALS: frozenset[str] = frozenset({"AirBNB"})
 
     def _portal_catalog(self) -> list[dict[str, str]]:
         """Verbindbare Portale — LIVE aus dem Channex-Katalog (channels/list),
@@ -2100,8 +2097,7 @@ class ChannelsMixin:
         """
         if not property_ids or not channel_ids:
             return set()
-        # WORÜBER wird zugeordnet? Das hängt am Portal — die Antwort steht in
-        # `portal_registry`, damit sie an allen Stellen dieselbe ist:
+        # WORÜBER wird zugeordnet? Das hängt am Portal:
         #   Airbnb      → `settings.listing_id`, unsere `airbnb_listing_id`
         #   alle übrigen → `settings.room_type_code`, unser `ota_room_type_code`
         #
@@ -2112,9 +2108,8 @@ class ChannelsMixin:
         # 1264579201 „Two-Bedroom Apartment" mit Standard Rate und Wochenrate).
         # Die Folge war schlimmer als eine falsche Anzeige: `sync_enabled` hängt
         # an derselben Größe, es lief also gar kein Abgleich.
-        profil = portal_profil(portal_code)
-        ist_listing_portal = profil.kennung == "listing"
-        feld = profil.settings_feld
+        ist_airbnb = portal_code == "AirBNB"
+        feld = "listing_id" if ist_airbnb else "room_type_code"
         gemappte: set[str] = set()
         for channel_id in channel_ids:
             try:
@@ -2132,7 +2127,7 @@ class ChannelsMixin:
                     gemappte.add(str(wert))
         if not gemappte:
             return set()
-        if ist_listing_portal:
+        if ist_airbnb:
             rows = (
                 db.table("properties")
                 .select("id, airbnb_listing_id")

@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Granska och hantera kontona som är anslutna till kanalhanteraren.",
     "accountsEmpty": "Inget konto anslutet ännu.",
     "accountConnect": "Anslut konto",
-    "accountConnectCredentialHint": "Du ansluter ytterligare ett {portal}-konto via ”{portal} Connect” — där anger du hotell-id:t och kopplar rummen.",
     "accountsCheckPortalHint": "Kontrollera i portalkontots inställningar att ingen annan app är angiven som anslutningsleverantör.",
     "accountsLogoutHint": "Logga ut från portalen i webbläsaren innan du ansluter ett annat konto."
   },

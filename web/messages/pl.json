@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Sprawdź konta połączone z menedżerem kanałów i zarządzaj nimi.",
     "accountsEmpty": "Nie połączono jeszcze żadnego konta.",
     "accountConnect": "Połącz konto",
-    "accountConnectCredentialHint": "Kolejne konto {portal} połączysz przez „{portal} Connect” — tam podajesz identyfikator hotelu i przypisujesz pokoje.",
     "accountsCheckPortalHint": "Sprawdź w ustawieniach konta portalu, czy żadna inna aplikacja nie jest ustawiona jako dostawca połączenia.",
     "accountsLogoutHint": "Wyloguj się z portalu w przeglądarce, zanim połączysz inne konto."
   },

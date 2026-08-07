@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Vaata üle ja halda kanalihalduriga ühendatud kontosid.",
     "accountsEmpty": "Ühtegi kontot pole veel ühendatud.",
     "accountConnect": "Ühenda konto",
-    "accountConnectCredentialHint": "Järgmise {portal}-i konto ühendad nupu „{portal} Connect“ kaudu — seal sisestad hotelli tunnuse ja seod toad.",
     "accountsCheckPortalHint": "Kontrolli portaalikonto seadetes, et ükski teine rakendus poleks määratud ühenduse pakkujaks.",
     "accountsLogoutHint": "Logi brauseris portaalist välja, enne kui ühendad teise konto."
   },

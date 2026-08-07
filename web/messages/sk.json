@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Skontrolujte a spravujte účty pripojené k správcovi kanálov.",
     "accountsEmpty": "Zatiaľ nie je pripojený žiadny účet.",
     "accountConnect": "Pripojiť účet",
-    "accountConnectCredentialHint": "Ďalší účet {portal} pripojíte cez „{portal} Connect“ — tam zadáte označenie hotela a priradíte izby.",
     "accountsCheckPortalHint": "V nastaveniach účtu portálu overte, že ako poskytovateľ pripojenia nie je nastavená iná aplikácia.",
     "accountsLogoutHint": "Skôr než pripojíte iný účet, odhláste sa v prehliadači z portálu."
   },

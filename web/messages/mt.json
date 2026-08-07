@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Irrevedi u mmaniġġja l-kontijiet konnessi mal-maniġer tal-kanali.",
     "accountsEmpty": "Għad m'hemm l-ebda kont konness.",
     "accountConnect": "Qabbad kont",
-    "accountConnectCredentialHint": "Kont {portal} ieħor tqabbdu permezz ta’ „{portal} Connect” — hemmhekk iddaħħal l-identifikatur tal-lukanda u timmappja l-kmamar.",
     "accountsCheckPortalHint": "Iċċekkja fis-settings tal-kont tal-portal li l-ebda app oħra mhi mniżżla bħala l-fornitur tal-konnessjoni.",
     "accountsLogoutHint": "Oħroġ mill-portal fil-browser tiegħek qabel ma tqabbad kont ieħor."
   },

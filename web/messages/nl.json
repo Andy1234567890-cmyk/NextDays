@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Bekijk en beheer de accounts die met de kanaalbeheerder zijn verbonden.",
     "accountsEmpty": "Nog geen account verbonden.",
     "accountConnect": "Account verbinden",
-    "accountConnectCredentialHint": "Een ander {portal}-account verbind je via „{portal} Connect” — daar vul je het hotelkenmerk in en koppel je de kamers.",
     "accountsCheckPortalHint": "Controleer in de instellingen van je portaalaccount dat er geen andere app als verbindingsaanbieder is ingesteld.",
     "accountsLogoutHint": "Log in je browser uit bij het portaal voordat je een ander account verbindt."
   },

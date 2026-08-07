@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Peržiūrėkite ir tvarkykite prie kanalų tvarkyklės prijungtas paskyras.",
     "accountsEmpty": "Kol kas neprijungta nė viena paskyra.",
     "accountConnect": "Prijungti paskyrą",
-    "accountConnectCredentialHint": "Kitą {portal} paskyrą prijungiate per „{portal} Connect“ — ten įvedate viešbučio identifikatorių ir susiejate kambarius.",
     "accountsCheckPortalHint": "Portalo paskyros nustatymuose patikrinkite, ar jokia kita programa nenurodyta kaip ryšio teikėja.",
     "accountsLogoutHint": "Prieš prijungdami kitą paskyrą, naršyklėje atsijunkite nuo portalo."
   },

@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Gennemgå og administrér de konti, der er forbundet til kanalmanageren.",
     "accountsEmpty": "Ingen konto forbundet endnu.",
     "accountConnect": "Forbind konto",
-    "accountConnectCredentialHint": "Du forbinder endnu en {portal}-konto via ”{portal} Connect” — der indtaster du hotel-id’et og tildeler værelserne.",
     "accountsCheckPortalHint": "Kontrollér i indstillingerne for din portalkonto, at ingen anden app er angivet som forbindelsesudbyder.",
     "accountsLogoutHint": "Log ud af portalen i din browser, før du forbinder en anden konto."
   },

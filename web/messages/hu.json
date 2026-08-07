@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Tekintse át és kezelje a csatornakezelőhöz csatlakoztatott fiókokat.",
     "accountsEmpty": "Még nincs csatlakoztatott fiók.",
     "accountConnect": "Fiók csatlakoztatása",
-    "accountConnectCredentialHint": "Másik {portal}-fiókot a „{portal} Connect” gombbal csatlakoztat — ott adja meg a szálloda azonosítóját, és rendeli hozzá a szobákat.",
     "accountsCheckPortalHint": "Ellenőrizze a portálfiók beállításaiban, hogy nincs-e más alkalmazás megadva kapcsolatszolgáltatóként.",
     "accountsLogoutHint": "Jelentkezzen ki a portálról a böngészőben, mielőtt másik fiókot csatlakoztat."
   },

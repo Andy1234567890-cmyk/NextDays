@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Pārskati un pārvaldi kanālu pārvaldniekam pievienotos kontus.",
     "accountsEmpty": "Vēl nav pievienots neviens konts.",
     "accountConnect": "Pievienot kontu",
-    "accountConnectCredentialHint": "Vēl vienu {portal} kontu pievieno, izmantojot „{portal} Connect” — tur ievadi viesnīcas identifikatoru un piesaisti numurus.",
     "accountsCheckPortalHint": "Portāla konta iestatījumos pārbaudi, ka neviena cita lietotne nav norādīta kā savienojuma nodrošinātājs.",
     "accountsLogoutHint": "Pirms cita konta pievienošanas pārlūkā izrakstieties no portāla."
   },

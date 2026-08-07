@@ -5741,7 +5741,6 @@
     "accountsPanelIntro": "Verifique e faça a gestão das contas ligadas ao gestor de canais.",
     "accountsEmpty": "Ainda não há nenhuma conta ligada.",
     "accountConnect": "Ligar conta",
-    "accountConnectCredentialHint": "Liga outra conta {portal} através de «{portal} Connect» — aí introduz o identificador do hotel e associa os quartos.",
     "accountsCheckPortalHint": "Verifique nas definições da sua conta do portal que nenhuma outra aplicação está definida como fornecedor da ligação.",
     "accountsLogoutHint": "Termine sessão no portal no seu navegador antes de ligar outra conta."
   },
