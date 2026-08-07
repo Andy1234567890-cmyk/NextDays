@@ -17,11 +17,43 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
+from .ausloeser import DATUMS_TRIGGER
 from .errors import InboxError
 from .schemas import BulkUpdateResult, ScheduledMessage, ScheduledMessageList
 from .zeit import zeitzone as _zeitzone
 
 log = get_logger("nextdays.inbox")
+
+# Ab wann ist eine Automail ein Nachzügler und wird NICHT mehr verschickt?
+#
+# Ein Zeitpunkt, der über einen Tag zurückliegt, ist als Zeitpunkt nicht mehr
+# einzuhalten: „Ihre Anreise ist in 3 Tagen" an jemanden, der gestern abgereist
+# ist, richtet Schaden an. Der Fall ist real — beim Import bestehender Buchungen
+# (Bestandsübernahme, Recovery-Import) entstehen auf einen Schlag Hunderte
+# Zeilen, deren Ankerdatum längst vorbei ist. Sie werden als 'skipped'
+# festgehalten, nicht still gelöscht: die Regel HAT für diese Buchung gegriffen,
+# nur eben zu spät.
+NACHZUEGLER_STUNDEN = 24
+
+# Wie weit zurück eine Buchung noch neu geplant wird. Deckt „nach der Abreise"
+# ab (Bewertungsbitte); alles Ältere kann nur noch Nachzügler erzeugen.
+NEUPLANUNG_RUECKBLICK_TAGE = 30
+
+# Harte Obergrenze je Neuplanung (Wurzel 8: kein unbegrenzter Bereich). Wird sie
+# erreicht, steht das im Log — stilles Abschneiden sähe aus wie „alles geplant".
+NEUPLANUNG_MAX_THREADS = 2000
+
+# Spalten, die eine Planung vom Thread braucht. `status` entscheidet, ob
+# überhaupt geplant wird (storniert = nein), `booked_at` ist der Anker „Buchung".
+THREAD_COLS = (
+    "id, tenant_id, property_map_id, ota_name, arrival_date, "
+    "departure_date, booked_at, status"
+)
+
+# Zustände einer geplanten Automail, die eine Neuplanung überschreiben DARF.
+# 'sent'/'sending' sind unantastbar (sonst Doppelversand, Wurzel 2), 'failed'
+# trägt einen Fehlertext, den ein stiller Neuversuch verdecken würde.
+UEBERSCHREIBBAR = ("pending", "skipped", "cancelled")
 
 
 class PlanungMixin:
@@ -251,16 +283,23 @@ class PlanungMixin:
 
         An- und Abreise sind in `channex_booking` reine DATEN ohne Uhrzeit
         (live geprüft: `arrival_date`/`departure_date` sind `date`). Nur die
-        Buchung trägt einen echten Zeitpunkt (`created_at`). Das entscheidet,
-        was ein Versatz in Stunden/Minuten überhaupt bedeuten kann — s.
-        `_compute_send_at`.
+        Buchung trägt einen echten Zeitpunkt. Das entscheidet, was ein Versatz
+        in Stunden/Minuten überhaupt bedeuten kann — s. `_compute_send_at`.
+
+        Für den Anker „Buchung" ist das `booked_at` — der Zeitpunkt beim Portal
+        (0291/0292). NICHT `created_at`: das ist unsere Verarbeitung (Wurzel 5b).
+        Der Unterschied war live sichtbar: 30 Buchungen aus Februar bis Juni
+        wurden am 06.08. in einem Rutsch importiert und trugen dieselbe
+        `created_at` — „5 Minuten nach Buchung" hätte sie alle zur selben Minute
+        an längst abgereiste Gäste geschickt. Fehlt `booked_at`, wird nicht
+        geplant (kein Ausweichen auf die eigene Uhr).
         """
         if anchor == "arrival":
             basis = thread.get("arrival_date")
         elif anchor == "departure":
             basis = thread.get("departure_date")
         else:  # booking
-            basis = thread.get("created_at")
+            basis = thread.get("booked_at")
         if not basis:
             return None
         text = str(basis)
@@ -376,10 +415,7 @@ class PlanungMixin:
         die jede Automations-Planung braucht. None, wenn es den Thread nicht gibt."""
         thread = (
             db.table("channex_booking")
-            .select(
-                "id, tenant_id, property_map_id, ota_name, arrival_date, "
-                "departure_date, created_at"
-            )
+            .select(THREAD_COLS)
             .eq("id", thread_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -388,6 +424,14 @@ class PlanungMixin:
         if not thread:
             return None
         th = thread[0]
+        property_id, zeitzone = self._objekt_zum_thread(db, th)
+        return th, property_id, zeitzone
+
+    @staticmethod
+    def _objekt_zum_thread(
+        db: Client, th: dict
+    ) -> tuple[str | None, str | None]:
+        """(property_id, Zeitzone) zu einer Thread-Zeile."""
         property_id = None
         zeitzone = None
         if th.get("property_map_id"):
@@ -408,7 +452,7 @@ class PlanungMixin:
                 .execute()
             ).data or []
             zeitzone = prop[0].get("timezone") if prop else None
-        return th, property_id, zeitzone
+        return property_id, zeitzone
 
     def _automations(self, db: Client, tenant_id: str, trigger: str) -> list[dict]:
         return (
@@ -420,27 +464,130 @@ class PlanungMixin:
             .execute()
         ).data or []
 
+    @staticmethod
     def _einplanen(
-        self, db: Client, tenant_id: str, automation: dict, thread_id: str,
-        body: str, send_at: datetime,
+        db: Client, tenant_id: str, automation: dict, thread_id: str,
+        body: str, send_at: datetime, *, status: str = "pending",
     ) -> None:
-        """Upsert je (Automation, Thread) — der Unique-Index verhindert, dass
-        derselbe Gast dieselbe Automail zweimal bekommt (Wurzel 2)."""
-        db.table("automation_scheduled_message").upsert(
-            {
-                "tenant_id": tenant_id,
-                "automation_id": automation["id"],
-                "thread_id": thread_id,
-                "body": body,
-                "send_at": send_at.isoformat(),
-            },
-            on_conflict="automation_id,thread_id",
-        ).execute()
+        """Eine geplante Automail je (Automation, Thread) schreiben ODER
+        aktualisieren — aber NIE eine, die schon raus ist.
+
+        Kein blindes Upsert: eine Neuplanung darf einen bereits versendeten
+        Eintrag nicht auf 'pending' zurücksetzen, sonst ginge dieselbe Nachricht
+        ein zweites Mal an denselben Gast (Wurzel 2). Deshalb erst der Versuch,
+        eine noch offene Zeile zu aktualisieren; erst wenn es keine gibt, wird
+        eingefügt. Läuft parallel eine zweite Planung, fängt der Unique-Index
+        (automation_scheduled_unique) den Einfüge-Versuch ab — der Konflikt ist
+        dann die richtige Antwort und kein Fehler.
+        """
+        getroffen = (
+            db.table("automation_scheduled_message")
+            .update(
+                {
+                    "body": body,
+                    "send_at": send_at.isoformat(),
+                    "status": status,
+                    "last_error": None,
+                }
+            )
+            .eq("tenant_id", tenant_id)
+            .eq("automation_id", automation["id"])
+            .eq("thread_id", thread_id)
+            .in_("status", list(UEBERSCHREIBBAR))
+            .execute()
+        ).data
+        if getroffen:
+            return
+        try:
+            db.table("automation_scheduled_message").insert(
+                {
+                    "tenant_id": tenant_id,
+                    "automation_id": automation["id"],
+                    "thread_id": thread_id,
+                    "body": body,
+                    "send_at": send_at.isoformat(),
+                    "status": status,
+                }
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — nur der Dublettenfall ist ok
+            if "23505" not in str(exc):
+                raise
+            # Es gibt bereits eine Zeile in einem unantastbaren Zustand
+            # (sent/sending/failed). Genau so soll es sein.
+
+    @staticmethod
+    def _versandstatus(send_at: datetime, jetzt: datetime) -> str:
+        """'pending' (geht raus) oder 'skipped' (Nachzügler, geht nicht mehr raus).
+
+        Ein Versandzeitpunkt, der über `NACHZUEGLER_STUNDEN` zurückliegt, ist als
+        Zeitpunkt nicht mehr einzuhalten. Ohne diese Grenze wird jeder Import
+        bestehender Buchungen zur Nachrichtenlawine: Hunderte Zeilen mit
+        Ankerdatum in der Vergangenheit sind sofort „fällig" und gehen im
+        nächsten Versand-Tick gebündelt an längst abgereiste Gäste."""
+        return (
+            "pending"
+            if send_at >= jetzt - timedelta(hours=NACHZUEGLER_STUNDEN)
+            else "skipped"
+        )
+
+    def _plan_thread(
+        self, db: Client, tenant_id: str, th: dict, property_id: str | None,
+        zeitzone: str | None, automations: list[dict], jetzt: datetime,
+    ) -> set[str]:
+        """Alle passenden Automails EINES Threads planen.
+
+        Gibt die IDs der Automatisierungen zurück, die für diesen Thread eine
+        Zeile bekommen haben — der Aufrufer braucht sie für den Alt/Neu-Abgleich
+        (Wurzel 1): was hier NICHT geplant wurde, darf auch nicht mehr anstehen.
+        """
+        thread_id = str(th["id"])
+        # Eine stornierte Buchung bekommt keine Post mehr. Ohne diese Zeile ging
+        # die Anreise-Info an einen Gast, der abgesagt hat.
+        if (th.get("status") or "") == "cancelled":
+            return set()
+        geplant: set[str] = set()
+        for a in automations:
+            if not self._automation_matches(a, property_id, th.get("ota_name")):
+                continue
+            if a.get("use_property_timezone") and not zeitzone:
+                # Lieber nicht planen als in der falschen Zeitzone: der Betrieb
+                # hat Ortszeit AUSDRÜCKLICH verlangt, still auf UTC auszuweichen
+                # wäre ein erfundener Wert (Wurzel 4).
+                log.warning(
+                    "automation_ohne_objekt_zeitzone",
+                    tenant_id=tenant_id,
+                    automation_id=a["id"],
+                    property_id=str(property_id) if property_id else None,
+                )
+                continue
+            body = self._automation_body(db, tenant_id, a)
+            if not body:
+                continue
+            send_at = self._compute_send_at(
+                a.get("anchor") or "arrival",
+                a.get("offset_days") or 0,
+                a.get("send_time"),
+                th,
+                timezone_name=zeitzone if a.get("use_property_timezone") else None,
+                offset_unit=a.get("offset_unit") or "days",
+                offset_value=a.get("offset_value"),
+            )
+            if send_at is None:
+                continue
+            self._einplanen(
+                db, tenant_id, a, thread_id, body, send_at,
+                status=self._versandstatus(send_at, jetzt),
+            )
+            geplant.add(str(a["id"]))
+        return geplant
 
     def schedule_automations_for_thread(self, tenant_id: str, thread_id: str) -> int:
-        """Datumsgebundene Automails für einen Thread planen (booking_new,
-        before_checkin, after_checkout). Gibt die Anzahl geplanter Automails
-        zurück. Idempotent über den Unique-Index.
+        """Datumsgebundene Automails für EINEN Thread planen — der Weg beim
+        Import/Update einer Buchung. Gibt die Anzahl geplanter Automails zurück.
+
+        Idempotent: eine bereits versendete Automail bleibt unangetastet, eine
+        noch offene wird auf den aktuellen Zeitpunkt gehoben (die Daten der
+        Buchung können sich geändert haben — Umbuchung).
 
         `message_received` ist hier bewusst NICHT dabei: dieser Auslöser hängt an
         keinem Datum der Reservierung, sondern am Eingang einer Nachricht — siehe
@@ -452,40 +599,178 @@ class PlanungMixin:
         if geladen is None:
             return 0
         th, property_id, zeitzone = geladen
+        automations = self._datums_automations(db, tenant_id)
+        if (th.get("status") or "") == "cancelled":
+            # Wurzel 1: die Stornierung ist der Gegenzustand zur Buchung. Was
+            # für sie eingeplant war, muss weg — sonst begrüßt die Automail
+            # einen Gast, der abgesagt hat.
+            self._offene_stornieren(db, tenant_id, thread_id)
+            return 0
+        geplant = self._plan_thread(
+            db, tenant_id, th, property_id, zeitzone, automations,
+            datetime.now(UTC),
+        )
+        self._offene_stornieren(
+            db, tenant_id, thread_id,
+            nur={str(a["id"]) for a in automations} - geplant,
+        )
+        return len(geplant)
 
-        planned = 0
-        for trigger in ("booking_new", "before_checkin", "after_checkout"):
-            for a in self._automations(db, tenant_id, trigger):
-                if not self._automation_matches(a, property_id, th.get("ota_name")):
-                    continue
-                body = self._automation_body(db, tenant_id, a)
-                if not body:
-                    continue
-                if a.get("use_property_timezone") and not zeitzone:
-                    # Lieber nicht planen als in der falschen Zeitzone: der
-                    # Betrieb hat Ortszeit AUSDRÜCKLICH verlangt, still auf UTC
-                    # auszuweichen wäre ein erfundener Wert (Wurzel 4).
-                    log.warning(
-                        "automation_ohne_objekt_zeitzone",
-                        tenant_id=tenant_id,
-                        automation_id=a["id"],
-                        property_id=str(property_id) if property_id else None,
-                    )
-                    continue
-                send_at = self._compute_send_at(
-                    a.get("anchor") or "arrival",
-                    a.get("offset_days") or 0,
-                    a.get("send_time"),
-                    th,
-                    timezone_name=zeitzone if a.get("use_property_timezone") else None,
-                    offset_unit=a.get("offset_unit") or "days",
-                    offset_value=a.get("offset_value"),
+    @staticmethod
+    def _offene_stornieren(
+        db: Client, tenant_id: str, thread_id: str,
+        *, nur: set[str] | None = None,
+    ) -> None:
+        """Anstehende Automails dieses Threads zurücknehmen.
+
+        `nur` grenzt auf bestimmte Automatisierungen ein (die, die nicht mehr
+        passen); ohne Angabe trifft es alle — der Fall Stornierung. Nur
+        'pending' wird angefasst: was raus ist, ist raus."""
+        if nur is not None and not nur:
+            return
+        query = (
+            db.table("automation_scheduled_message")
+            .update({"status": "cancelled"})
+            .eq("tenant_id", tenant_id)
+            .eq("thread_id", thread_id)
+            .eq("status", "pending")
+        )
+        if nur is not None:
+            query = query.in_("automation_id", sorted(nur))
+        query.execute()
+
+    def _datums_automations(self, db: Client, tenant_id: str) -> list[dict]:
+        """Alle AKTIVEN datumsgebundenen Regeln des Betriebs — in EINER Abfrage.
+
+        Vorher lief je Auslöser eine eigene Abfrage; mit fünf Auslösern und einer
+        Neuplanung über hunderte Buchungen wären das tausende Rundreisen."""
+        return (
+            db.table("message_automation")
+            .select(self._AUTOMATION_COLS)
+            .eq("tenant_id", tenant_id)
+            .eq("is_active", True)
+            .in_("trigger", list(DATUMS_TRIGGER))
+            .execute()
+        ).data or []
+
+    def replan_tenant(self, tenant_id: str) -> dict:
+        """Alle datumsgebundenen Automails eines Betriebs neu berechnen.
+
+        Der Ausgleich für eine Wahrheit, die sich ändern kann, nachdem geplant
+        wurde: eine neue Regel, eine geänderte Uhrzeit, ein anderer Objekt- oder
+        Kanal-Zuschnitt, eine pausierte Regel. Bis 0307 wurde ausschließlich beim
+        Import einer Buchung geplant — eine danach angelegte Regel erreichte
+        keine einzige bestehende Buchung, und eine geänderte Regel ließ die alten
+        Zeitpunkte stehen (beides live vorgefunden).
+
+        Beide Richtungen (Wurzel 1): was jetzt gilt, wird eingeplant; was nicht
+        mehr gilt, wird storniert. Unangetastet bleibt, was bereits raus ist.
+        """
+        if self._db is None:
+            return {"threads": 0, "geplant": 0, "storniert": 0}
+        db = self._db
+        automations = self._datums_automations(db, tenant_id)
+        jetzt = datetime.now(UTC)
+        # Rückblick, damit „nach der Abreise" noch greift; alles Ältere könnte
+        # nur noch Nachzügler erzeugen.
+        ab = (jetzt.date() - timedelta(days=NEUPLANUNG_RUECKBLICK_TAGE)).isoformat()
+        threads = (
+            db.table("channex_booking")
+            .select(THREAD_COLS)
+            .eq("tenant_id", tenant_id)
+            .gte("departure_date", ab)
+            .order("departure_date")
+            .limit(NEUPLANUNG_MAX_THREADS)
+            .execute()
+        ).data or []
+        if len(threads) >= NEUPLANUNG_MAX_THREADS:
+            log.warning(
+                "automail_neuplanung_gekappt",
+                tenant_id=tenant_id,
+                limit=NEUPLANUNG_MAX_THREADS,
+            )
+        alle_ids = {str(a["id"]) for a in automations}
+        geplant_gesamt = 0
+        for th in threads:
+            property_id, zeitzone = self._objekt_zum_thread(db, th)
+            geplant = self._plan_thread(
+                db, tenant_id, th, property_id, zeitzone, automations, jetzt
+            )
+            geplant_gesamt += len(geplant)
+            self._offene_stornieren(
+                db, tenant_id, str(th["id"]), nur=alle_ids - geplant
+            )
+        # Pausierte oder auf „Nachricht empfangen" umgestellte Regeln: ihre
+        # bereits eingeplanten Nachrichten sind der Gegenzustand (Wurzel 1). Ohne
+        # diesen Schritt liefe eine deaktivierte Regel noch wochenlang weiter,
+        # weil der Versand nur die geplante Zeile kennt, nicht die Regel.
+        storniert = 0
+        stillgelegt = {
+            str(r["id"])
+            for r in (
+                db.table("message_automation")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .execute()
+            ).data or []
+        } - alle_ids
+        if stillgelegt:
+            storniert += len(
+                (
+                    db.table("automation_scheduled_message")
+                    .update({"status": "cancelled"})
+                    .eq("tenant_id", tenant_id)
+                    .eq("status", "pending")
+                    .in_("automation_id", sorted(stillgelegt))
+                    .execute()
+                ).data or []
+            )
+        # Buchungen außerhalb des Rückblicks: was dort noch ansteht, ist über
+        # einen Monat alt und käme nur noch verspätet.
+        veraltet = (
+            db.table("automation_scheduled_message")
+            .update({"status": "cancelled"})
+            .eq("tenant_id", tenant_id)
+            .eq("status", "pending")
+            .lt("send_at", (jetzt - timedelta(hours=NACHZUEGLER_STUNDEN)).isoformat())
+            .execute()
+        ).data or []
+        return {
+            "threads": len(threads),
+            "geplant": geplant_gesamt,
+            "storniert": storniert + len(veraltet),
+        }
+
+    def replan_all_tenants(self) -> dict:
+        """Neuplanung über ALLE Betriebe — der Worker-Tick.
+
+        Fängt alles ab, was zwischen zwei Planungen passiert sein kann, ohne dass
+        jemand die Regel angefasst hat: eine Buchung wurde umgebucht, storniert,
+        oder ein Objekt hat seine Zeitzone bekommen."""
+        if self._db is None:
+            raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
+        rows = (
+            self._db.table("message_automation")
+            .select("tenant_id")
+            .in_("trigger", list(DATUMS_TRIGGER))
+            .execute()
+        ).data or []
+        tenants = sorted({str(r["tenant_id"]) for r in rows})
+        gesamt = {"tenants": 0, "threads": 0, "geplant": 0, "storniert": 0}
+        for tenant_id in tenants:
+            try:
+                ergebnis = self.replan_tenant(tenant_id)
+            except Exception as exc:  # noqa: BLE001 — ein Betrieb kippt nicht alle
+                log.warning(
+                    "automail_neuplanung_fehlgeschlagen",
+                    tenant_id=tenant_id,
+                    error=str(exc)[:200],
                 )
-                if send_at is None:
-                    continue
-                self._einplanen(db, tenant_id, a, thread_id, body, send_at)
-                planned += 1
-        return planned
+                continue
+            gesamt["tenants"] += 1
+            for schluessel in ("threads", "geplant", "storniert"):
+                gesamt[schluessel] += ergebnis[schluessel]
+        return gesamt
 
     def zaehle_gastnachrichten_je_buchung(
         self, tenant_id: str, booking_ref: str

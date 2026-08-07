@@ -25,6 +25,7 @@ from src.features.guests.identity import (
 )
 
 from .anhaenge import AnhangWissenMixin
+from .ausloeser import ALLE_TRIGGER
 from .automation_mapping import (
     AUTOMATION_COLS,
     automation_payload,
@@ -1317,7 +1318,7 @@ class InboxService(
     _automation_row = staticmethod(automation_row)
     _automation_payload = staticmethod(automation_payload)
 
-    _TRIGGER = ("booking_new", "before_checkin", "after_checkout", "message_received")
+    _TRIGGER = ALLE_TRIGGER
 
     def _automation_pruefen(self, req: AutomationUpsert) -> None:
         """Eingabe abweisen, bevor die DB-Constraints als 500 durchschlagen."""
@@ -1365,6 +1366,11 @@ class InboxService(
             .insert({"tenant_id": tenant_id, **self._automation_payload(req)})
             .execute()
         ).data
+        # Sofort für die BESTEHENDEN Buchungen einplanen. Ohne diesen Schritt
+        # wirkte eine neue Regel erst bei der nächsten Buchung — live standen
+        # deshalb zwei frisch angelegte Regeln mit null geplanten Nachrichten da,
+        # obwohl 30 künftige Aufenthalte in der Liste lagen.
+        self.replan_tenant(tenant_id)
         return self._automation_row(ins[0])
 
     def update_automation(
@@ -1381,6 +1387,11 @@ class InboxService(
         ).data
         if not upd:
             raise InboxError("Automatisierung nicht gefunden.", status_code=404)
+        # Wurzel 1: die bereits eingeplanten Nachrichten sind der Gegenzustand
+        # dieser Änderung. Ohne Neuplanung blieben sie auf dem alten Zeitpunkt
+        # stehen — live stand „Anreisetag, 06:00" als −3 Tage/09:00 eingeplant,
+        # weil die Regel nach dem Import geändert wurde.
+        self.replan_tenant(tenant_id)
         return self._automation_row(upd[0])
 
     def delete_automation(self, ctx: AuthContext, automation_id: str) -> None:

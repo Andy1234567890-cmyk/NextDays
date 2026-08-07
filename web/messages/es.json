@@ -487,6 +487,8 @@
     "autoTriggerLabel": "Disparador",
     "autoTrigger_booking_new": "Con cada nueva reserva",
     "autoTrigger_before_checkin": "Antes de la llegada",
+    "autoTrigger_after_checkin": "Tras la llegada",
+    "autoTrigger_before_checkout": "Antes de la salida",
     "autoTrigger_after_checkout": "Tras la salida",
     "autoOffset": "Desfase en días",
     "autoDays": "Días",

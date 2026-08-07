@@ -26,11 +26,17 @@ und Anreise-Zeitraum.
 Regelbasierte Nachrichten (Buchungsbestätigung, Anreise-/Check-out-Info) mit
 Zeitplan und Zuweisung. Tabelle `message_automation` (0037, erweitert in 0072):
 
-- `trigger`: booking_new | before_checkin | after_checkout | **message_received**
+- `trigger`: booking_new | before_checkin | **after_checkin** |
+  **before_checkout** | after_checkout | **message_received**
   (0257 setzt einen CHECK darauf — vorher war ein Tippfehler eine still tote
-  Automation).
-- `anchor`: arrival | departure | booking — das Bezugsdatum.
+  Automation; 0307 ergänzt die zwei fehlenden Auslöser).
+- `anchor`: arrival | departure | booking — das Bezugsdatum. Seit 0307 **aus dem
+  Auslöser abgeleitet** (`ausloeser.py`), nicht frei wählbar: der Auslöser sagt
+  Anker UND Richtung. Vorher konnte eine Regel „Vor Anreise" heißen und vor der
+  ABREISE feuern (live so vorgefunden) — zwei DB-CHECKs halten das jetzt durch.
 - `offset_days`: vorzeichen-behaftetes Tagesdelta (−3 = 3 Tage vor, +1 = 1 nach).
+  Das Vorzeichen setzt der Server nach dem Auslöser; die Maske fragt nur den
+  Betrag.
 - `send_time`: Uhrzeit (z. B. 07:45). Genau EIN Zeitpunkt je Regel.
 - `property_ids[]` / `channels[]`: Zuweisung nach Unterkunft UND Kanal,
   **UND-verknüpft**; leer = alle. Kanal matcht case-insensitive auf `ota_name`
@@ -55,6 +61,24 @@ Zeitplan und Zuweisung. Tabelle `message_automation` (0037, erweitert in 0072):
   (`_compute_send_at`, UTC), Text auflösen (`_automation_body`), und EINE Zeile
   je (Automation, Thread) in `automation_scheduled_message` upserten.
   Dedup-Constraint `(automation_id, thread_id)` verhindert Doppelversand.
+- `replan_tenant(tenant_id)` / `replan_all_tenants()` (0307): rechnet die
+  geplanten Automails aus den AKTUELLEN Regeln neu — beim Anlegen/Ändern einer
+  Regel sofort, dazu stündlich im Worker (`_automail_planung_tick`) und über
+  `POST /inbox/internal/replan-automations`. Nötig, weil bis dahin
+  ausschließlich beim Buchungs-Import geplant wurde: eine NEUE Regel erreichte
+  keine bestehende Buchung, eine GEÄNDERTE ließ die alten Zeitpunkte stehen
+  (beides live vorgefunden). Beide Richtungen (Wurzel 1): was nicht mehr gilt —
+  pausierte Regel, geänderter Objekt-/Kanal-Zuschnitt, stornierte Buchung —
+  wird auf `cancelled` gesetzt. Unangetastet bleibt, was bereits raus ist
+  (`sent`/`sending`/`failed`).
+- **Nachzügler** (`_versandstatus`): ein `send_at`, das über
+  `NACHZUEGLER_STUNDEN` (24) zurückliegt, wird als `skipped` festgehalten statt
+  verspätet verschickt. Ohne diese Grenze wird jeder Bestandsimport zur
+  Nachrichtenlawine an längst abgereiste Gäste.
+- **Anker „Buchung" = `booked_at`**, der Zeitpunkt beim Portal (Wurzel 5b), NICHT
+  `created_at`. Live: 30 im selben Rutsch importierte Buchungen aus Februar bis
+  Juni trugen dieselbe `created_at` und hingen dadurch gebündelt auf einer
+  einzigen Minute. Fehlt `booked_at`, wird nicht geplant.
 - `dispatch_due_automations()`: Cron über alle Tenants — fällige pending Automails
   (`send_at ≤ now`) via `send_message` (Channex) versenden, Status → sent|failed.
   **Kein Fallback:** fehlt das Ankerdatum, wird übersprungen (kein erfundenes Datum).

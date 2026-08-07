@@ -487,6 +487,8 @@
     "autoTriggerLabel": "Attivatore",
     "autoTrigger_booking_new": "A ogni nuova prenotazione",
     "autoTrigger_before_checkin": "Prima dell'arrivo",
+    "autoTrigger_after_checkin": "Dopo l'arrivo",
+    "autoTrigger_before_checkout": "Prima della partenza",
     "autoTrigger_after_checkout": "Dopo la partenza",
     "autoOffset": "Scarto in giorni",
     "autoDays": "Giorni",

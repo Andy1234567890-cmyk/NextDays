@@ -147,6 +147,18 @@ def dispatch_automations(
     return InboxService(service_client=get_service_client()).dispatch_due_automations()
 
 
+@router.post("/internal/replan-automations", include_in_schema=False)
+def replan_automations(
+    x_internal_cron_secret: Annotated[str | None, Header()] = None,
+) -> dict:
+    """Interner Cron-Trigger: plant die datumsgebundenen Automails über ALLE
+    Tenants neu (0307). Nötig, weil eine Regel sich ändern kann, NACHDEM für sie
+    geplant wurde — neue Regel, andere Uhrzeit, pausiert, Buchung umgebucht oder
+    storniert. Wie /dispatch-automations per INTERNAL_CRON_SECRET abgesichert."""
+    require_internal_cron_secret(x_internal_cron_secret)
+    return InboxService(service_client=get_service_client()).replan_all_tenants()
+
+
 @router.get("/{thread_id}/messages", response_model=InboxMessagesResponse)
 def get_messages(
     thread_id: str, service: InboxServiceDep, bundle: _AccessDep

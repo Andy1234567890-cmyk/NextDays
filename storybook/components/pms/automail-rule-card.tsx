@@ -5,7 +5,13 @@ import { Icon } from "@iconify/react";
 
 export type AutomailRule = {
   name: string;
-  trigger: "booking_new" | "before_checkin" | "after_checkout";
+  // Der Auslöser trägt Anker UND Richtung (0307) — `anchor` folgt daraus.
+  trigger:
+    | "booking_new"
+    | "before_checkin"
+    | "after_checkin"
+    | "before_checkout"
+    | "after_checkout";
   anchor: "arrival" | "departure" | "booking";
   offsetDays: number; // <0 vor, >0 nach
   sendTime: string | null; // "HH:MM"
@@ -17,6 +23,8 @@ export type AutomailRule = {
 const TRIGGER_LABEL: Record<AutomailRule["trigger"], string> = {
   booking_new: "Bei neuer Buchung",
   before_checkin: "Vor Anreise",
+  after_checkin: "Nach Anreise",
+  before_checkout: "Vor Abreise",
   after_checkout: "Nach Abreise",
 };
 const ANCHOR_LABEL: Record<AutomailRule["anchor"], string> = {

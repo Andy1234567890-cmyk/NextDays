@@ -44,6 +44,7 @@ import {
   updateAutomation,
 } from "@/lib/inbox";
 import { listProperties } from "@/lib/properties";
+import { useRealtime } from "@/lib/use-realtime";
 
 // So viele Regeln zeigt ein Abschnitt sofort; der Rest steckt hinter
 // „Mehr anzeigen (n)" — wie bei Lodgify, damit ein Betrieb mit 15 Regeln je
@@ -99,6 +100,10 @@ export function AutomatisierenPanel({
     if (offen) load();
     else setAnsicht("menu");
   }, [offen]);
+  // Dieselben Regeln stehen im Automatisierungen-Tab. Wer sie dort ändert, soll
+  // sie hier nicht in der alten Fassung sehen (das Panel lädt sonst nur beim
+  // Öffnen). Im geschlossenen Zustand kein Abo — dann gibt es nichts zu zeigen.
+  useRealtime({ table: "message_automation", enabled: offen, onChange: load });
 
   // In der Detailansicht bleibt der Kopf LEER: der Regelname steht dort in der
   // ersten Karte. Beides zugleich wäre derselbe Text zweimal untereinander.

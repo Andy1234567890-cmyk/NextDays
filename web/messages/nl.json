@@ -487,6 +487,8 @@
     "autoTriggerLabel": "Trigger",
     "autoTrigger_booking_new": "Bij een nieuwe boeking",
     "autoTrigger_before_checkin": "Voor aankomst",
+    "autoTrigger_after_checkin": "Na aankomst",
+    "autoTrigger_before_checkout": "Voor vertrek",
     "autoTrigger_after_checkout": "Na vertrek",
     "autoOffset": "Dagen verschuiving",
     "autoDays": "Dagen",

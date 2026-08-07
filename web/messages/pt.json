@@ -487,6 +487,8 @@
     "autoTriggerLabel": "Acionador",
     "autoTrigger_booking_new": "Em cada nova reserva",
     "autoTrigger_before_checkin": "Antes da chegada",
+    "autoTrigger_after_checkin": "Após a chegada",
+    "autoTrigger_before_checkout": "Antes da partida",
     "autoTrigger_after_checkout": "Após a partida",
     "autoOffset": "Desvio em dias",
     "autoDays": "Dias",

@@ -487,6 +487,8 @@
     "autoTriggerLabel": "Spouštěč",
     "autoTrigger_booking_new": "Při nové rezervaci",
     "autoTrigger_before_checkin": "Před příjezdem",
+    "autoTrigger_after_checkin": "Po příjezdu",
+    "autoTrigger_before_checkout": "Před odjezdem",
     "autoTrigger_after_checkout": "Po odjezdu",
     "autoOffset": "Posun ve dnech",
     "autoDays": "Dny",

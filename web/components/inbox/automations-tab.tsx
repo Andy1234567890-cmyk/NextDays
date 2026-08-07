@@ -1,9 +1,14 @@
 "use client";
 
 // Automatisierungen-Tab: planbare Auto-Nachrichten (Automails). Pro Regel:
-// Trigger + Anker (Anreise/Abreise/Buchung) + Offset (Tage vor/nach) + Uhrzeit,
-// Vorlage/Text, sowie Zuweisung nach Unterkünften UND Buchungskanälen (Haken;
-// leer = alle). Anlegen, bearbeiten, aktivieren/deaktivieren, löschen.
+// Auslöser + Versatz (Betrag + Einheit) + Uhrzeit, Vorlage/Text, sowie Zuweisung
+// nach Unterkünften UND Buchungskanälen (Haken; leer = alle). Anlegen,
+// bearbeiten, aktivieren/deaktivieren, löschen.
+//
+// Der Auslöser trägt Anker UND Richtung (0307, `lib/automation-phasen`). Vorher
+// standen beide als eigene Auswahl daneben — man konnte „Vor Anreise" wählen und
+// zugleich „nach Abreise" einstellen; die Regel hieß dann anders, als sie feuerte
+// (live so vorgefunden). Die Maske fragt deshalb nur noch nach der ZAHL.
 //
 // Dasselbe Formular dient beidem: ohne Auswahl legt es an, mit `bearbeitetId`
 // speichert es die geladene Regel zurück. Getrennte Masken würden bei jeder
@@ -26,7 +31,12 @@ import {
   type ComposerGriff,
 } from "@/components/inbox/composer-editor";
 import { FeldPicker } from "@/components/inbox/feld-picker";
-import { AUTOMATION_KANAELE } from "@/lib/automation-phasen";
+import {
+  AUSLOESER_REIHENFOLGE,
+  AUTOMATION_KANAELE,
+  ankerVon,
+  richtungVon,
+} from "@/lib/automation-phasen";
 import {
   type Automation,
   type AutomationOffsetUnit,
@@ -39,16 +49,11 @@ import {
   updateAutomation,
 } from "@/lib/inbox";
 import { listProperties } from "@/lib/properties";
+import { useRealtime } from "@/lib/use-realtime";
 
-const TRIGGERS: AutomationTrigger[] = [
-  "booking_new",
-  "before_checkin",
-  "after_checkout",
-  "message_received",
-];
+const TRIGGERS: AutomationTrigger[] = AUSLOESER_REIHENFOLGE;
 // 0 = Montag … 6 = Sonntag (gleiche Zählung wie im Backend, `window_days`).
 const WOCHENTAGE = [0, 1, 2, 3, 4, 5, 6];
-const ANCHORS = ["arrival", "departure", "booking"];
 // Einheit des Versatzes (0303). Reihenfolge klein → groß, wie man sie liest.
 const EINHEITEN: AutomationOffsetUnit[] = ["minutes", "hours", "days"];
 // Kanäle: EINE Liste für Tab und Panel (s. `AUTOMATION_KANAELE`).
@@ -63,9 +68,7 @@ export function AutomationsTab() {
   const [props, setProps] = useState<Prop[]>([]);
   const [name, setName] = useState("");
   const [trigger, setTrigger] = useState<AutomationTrigger>("booking_new");
-  const [anchor, setAnchor] = useState("arrival");
-  // direction: "before" → negatives offset, "after" → positiv. days = Betrag.
-  const [direction, setDirection] = useState<"before" | "after">("before");
+  // Nur der BETRAG — die Richtung steckt im Auslöser (0307).
   const [days, setDays] = useState(3);
   const [einheit, setEinheit] = useState<AutomationOffsetUnit>("days");
   const [sendTime, setSendTime] = useState("09:00");
@@ -106,14 +109,16 @@ export function AutomationsTab() {
   useEffect(() => {
     load();
   }, []);
+  // Die Regeln lassen sich auch aus dem Panel im Posteingang-Kopf ändern (und
+  // vom Server, wenn eine Neuplanung greift). Ohne Abo zeigte dieser Tab die
+  // Fassung von vorhin — beide Oberflächen bearbeiten dieselben Zeilen.
+  useRealtime({ table: "message_automation", onChange: load });
 
   /** Formular auf „neue Regel" zurückstellen. */
   function zuruecksetzen() {
     setBearbeitetId(null);
     setName("");
     setTrigger("booking_new");
-    setAnchor("arrival");
-    setDirection("before");
     setDays(3);
     setEinheit("days");
     setSendTime("09:00");
@@ -130,16 +135,14 @@ export function AutomationsTab() {
     setError(null);
   }
 
-  /** Bestehende Regel ins Formular laden. Der Versatz wird beim Lesen wieder
-   *  in Betrag + Richtung zerlegt, weil das Formular so gebaut ist; bei einem
-   *  Server vor 0303 trägt nur `offset_days` den Wert. */
+  /** Bestehende Regel ins Formular laden. Vom Versatz bleibt nur der BETRAG —
+   *  die Richtung liest man am Auslöser ab; bei einem Server vor 0303 trägt nur
+   *  `offset_days` den Wert. */
   function bearbeiten(a: Automation) {
     const versatz = a.offset_value ?? a.offset_days ?? 0;
     setBearbeitetId(a.id);
     setName(a.name);
     setTrigger(a.trigger);
-    setAnchor(a.anchor);
-    setDirection(versatz < 0 ? "before" : "after");
     setDays(Math.abs(versatz));
     setEinheit(a.offset_unit ?? "days");
     setMitUhrzeit(Boolean(a.send_time));
@@ -167,7 +170,9 @@ export function AutomationsTab() {
       return;
     }
     setError(null);
-    const offset = direction === "before" ? -Math.abs(days) : Math.abs(days);
+    // Vorzeichen aus dem Auslöser — der Server normiert es ohnehin nach
+    // derselben Tabelle (0307); hier steht es, damit die Liste sofort stimmt.
+    const offset = richtungVon(trigger) * Math.abs(days);
     // Beim Bearbeiten bleibt der Aktiv-Zustand, wie er in der Liste steht —
     // Speichern darf eine pausierte Regel nicht stillschweigend scharfstellen.
     const bestand = bearbeitetId
@@ -176,7 +181,9 @@ export function AutomationsTab() {
     const eingabe = {
       name,
       trigger,
-      anchor,
+      // Der Server leitet den Anker aus dem Auslöser ab; mitgeschickt wird er
+      // nur, weil das Modell ihn als Feld führt.
+      anchor: ankerVon(trigger),
       // `offset_days` führt weiter die Tages-Sicht; der Server rechnet mit
       // offset_unit/offset_value (0303).
       offset_days: einheit === "days" ? offset : 0,
@@ -407,7 +414,10 @@ export function AutomationsTab() {
           </>
         ) : (
           <>
-            {/* Zeitplan: Betrag · Einheit · vor/nach · Anker (· Uhrzeit) */}
+            {/* Zeitplan: Betrag · Einheit. Richtung und Anker stehen im
+                Auslöser darüber — hier ein zweites Mal wählbar, konnten sie ihm
+                widersprechen. Der Satz darunter liest die Regel vor, damit die
+                Zahl allein nicht rätselhaft bleibt. */}
             <label className="text-sm font-medium">{t("autoSchedule")}</label>
             <div className="grid grid-cols-2 gap-2">
               <Input
@@ -428,21 +438,14 @@ export function AutomationsTab() {
                   </option>
                 ))}
               </NativeSelect>
-              <NativeSelect
-                value={direction}
-                onChange={(e) => setDirection(e.target.value as "before" | "after")}
-              >
-                <option value="before">{t("autoBefore")}</option>
-                <option value="after">{t("autoAfter")}</option>
-              </NativeSelect>
-              <NativeSelect value={anchor} onChange={(e) => setAnchor(e.target.value)}>
-                {ANCHORS.map((x) => (
-                  <option key={x} value={x}>
-                    {t(`autoAnchor_${x}` as never) ?? x}
-                  </option>
-                ))}
-              </NativeSelect>
             </div>
+            <p className="-mt-1 text-xs text-muted-foreground">
+              {days === 0
+                ? t("autoOnDayOf", { anchor: t(`autoAnchor_${ankerVon(trigger)}` as never) })
+                : `${days} ${t(`autoUnit_${einheit}` as never)} ${
+                    richtungVon(trigger) < 0 ? t("autoBefore") : t("autoAfter")
+                  } ${t(`autoAnchor_${ankerVon(trigger)}` as never)}`}
+            </p>
             {/* Uhrzeit abschaltbar. Bei Stunden/Minuten ist sie nur der Bezug,
                 von dem aus gerechnet wird — An-/Abreise tragen beim Portal
                 keine Uhrzeit, deshalb steht das als Hinweis dabei. */}

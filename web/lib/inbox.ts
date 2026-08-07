@@ -345,13 +345,21 @@ export async function saveAiSettings(
 }
 
 // --- Automatisierungen ------------------------------------------------------
-/** Auslöser einer Automatisierung. `message_received` (Abwesenheitsantwort)
- *  hängt an keinem Datum der Reservierung, sondern am Eingang einer Nachricht —
- *  dort sind anchor/offset_days/send_time bedeutungslos und stattdessen die
- *  window_*-Felder maßgeblich. */
+/** Auslöser einer Automatisierung.
+ *
+ *  Der Auslöser bestimmt Anker UND Richtung (0307): „vor Anreise" ist der Anker
+ *  Anreise mit negativem Versatz. Beides wird serverseitig daraus abgeleitet —
+ *  die Maske fragt nur noch nach dem Betrag.
+ *
+ *  `message_received` (Abwesenheitsantwort) hängt an keinem Datum der
+ *  Reservierung, sondern am Eingang einer Nachricht — dort sind anchor/
+ *  offset_days/send_time bedeutungslos und stattdessen die window_*-Felder
+ *  maßgeblich. */
 export type AutomationTrigger =
   | "booking_new"
   | "before_checkin"
+  | "after_checkin"
+  | "before_checkout"
   | "after_checkout"
   | "message_received";
 
@@ -362,8 +370,9 @@ export type Automation = {
   id: string;
   name: string;
   trigger: AutomationTrigger;
-  // anchor: Bezugsdatum (arrival|departure|booking); offset_value = vorzeichen-
-  // behafteter Versatz in offset_unit; property_ids/channels leer = alle.
+  // anchor: Bezugsdatum (arrival|departure|booking) — vom Server aus `trigger`
+  // ABGELEITET, beim Schreiben ignoriert. offset_value = vorzeichenbehafteter
+  // Versatz in offset_unit; property_ids/channels leer = alle.
   anchor: string;
   /** Tages-Sicht des Versatzes (Bestand). Bei Stunden/Minuten 0. */
   offset_days: number;

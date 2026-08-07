@@ -487,6 +487,8 @@
     "autoTriggerLabel": "Auslöser",
     "autoTrigger_booking_new": "Bei neuer Buchung",
     "autoTrigger_before_checkin": "Vor Anreise",
+    "autoTrigger_after_checkin": "Nach Anreise",
+    "autoTrigger_before_checkout": "Vor Abreise",
     "autoTrigger_after_checkout": "Nach Abreise",
     "autoOffset": "Tage Versatz",
     "autoDays": "Tage",

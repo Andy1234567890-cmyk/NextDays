@@ -157,6 +157,14 @@ TASKS_TICK_SECONDS = 60 * 60
 # lagen seit dem 25.07. unversendet). Der Worker ist der Ausführende, damit ein
 # geplanter Versand nicht von einem Eintrag abhängt, den niemand angelegt hat.
 AUTOMAILS_TICK_SECONDS = 60
+# Neuplanung der Automails (0307). Der Versand-Tick oben kennt nur fertig
+# geplante Zeilen; geplant wurde bislang ausschließlich beim Import einer
+# Buchung. Damit erreichte eine NEUE Regel keine bestehende Buchung und eine
+# GEÄNDERTE Regel ließ die alten Zeitpunkte stehen (live beides vorgefunden).
+# Stündlich reicht: die Regeln ändern sich selten, und die Planung selbst greift
+# beim Anlegen/Ändern einer Regel sofort — dieser Tick fängt die Fälle ab, in
+# denen sich die BUCHUNG ändert (Umbuchung, Stornierung).
+AUTOMAIL_PLANUNG_TICK_SECONDS = 60 * 60
 # Content-Sync-Heilung: Objekte, deren letzter Content-Push fehlgeschlagen ist
 # (channex_property_map.last_sync_status='error'), erneut einreihen. Ohne diesen
 # Tick bleibt eine lokale Änderung — Steuern, Beschreibung, Ausstattung — nach
@@ -661,6 +669,7 @@ class Worker:
         self._last_reviews_tick = 0.0
         self._last_tasks_tick = 0.0
         self._last_automails_tick = 0.0
+        self._last_automail_planung_tick = 0.0
         self._last_content_heal_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
@@ -1033,6 +1042,34 @@ class Worker:
 
         return InboxService(service_client=self._db).dispatch_due_automations()
 
+    async def _automail_planung_tick(self, loop_time: float) -> None:
+        """Automails neu planen — stündlich, über alle Tenants (0307).
+
+        Rechnet die geplanten Nachrichten aus den AKTUELLEN Regeln neu und nimmt
+        zurück, was nicht mehr gilt (pausierte Regel, stornierte Buchung). Was
+        bereits versendet wurde, bleibt unangetastet."""
+        if loop_time - self._last_automail_planung_tick < AUTOMAIL_PLANUNG_TICK_SECONDS:
+            return
+        self._last_automail_planung_tick = loop_time
+        try:
+            ergebnis = await asyncio.to_thread(self._replan_automails)
+        except Exception as exc:  # noqa: BLE001 — ein Fehler stoppt den Worker nicht
+            log.warning("automail_planung_tick_failed", error=str(exc)[:200])
+            return
+        if ergebnis.get("geplant") or ergebnis.get("storniert"):
+            log.info(
+                "automail_planung_tick",
+                tenants=ergebnis.get("tenants", 0),
+                threads=ergebnis.get("threads", 0),
+                geplant=ergebnis.get("geplant", 0),
+                storniert=ergebnis.get("storniert", 0),
+            )
+
+    def _replan_automails(self) -> dict:
+        from src.features.inbox.service import InboxService
+
+        return InboxService(service_client=self._db).replan_all_tenants()
+
     async def _tasks_tick(self, loop_time: float) -> None:
         """Stündlich wiederkehrende Aufgaben-Regeln ausrollen (0272).
 
@@ -1359,6 +1396,7 @@ class Worker:
             await self._reviews_tick(loop_time)
             await self._tasks_tick(loop_time)
             await self._automails_tick(loop_time)
+            await self._automail_planung_tick(loop_time)
             await self._content_heal_tick(loop_time)
             await self._deploy_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)

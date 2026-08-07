@@ -233,8 +233,10 @@ class AiSettings(BaseModel):
 
 
 # --- Automatisierungen ------------------------------------------------------
-# anchor: Bezugsdatum (arrival|departure|booking); offset_days = vorzeichen-
-# behaftetes Tagesdelta (−3 = 3 Tage vor, +1 = 1 Tag nach). send_time = "HH:MM".
+# Der Auslöser bestimmt Anker UND Richtung (0307, `ausloeser.py`): „vor Anreise"
+# ist Anker=arrival mit negativem Versatz. `anchor` wird deshalb serverseitig
+# abgeleitet und ist in der Anfrage bedeutungslos; `offset_value` trägt nur noch
+# den BETRAG (das Vorzeichen setzt der Auslöser). send_time = "HH:MM".
 # property_ids/channels = Zuweisung (leer = alle); UND-verknüpft (Haus UND Kanal).
 #
 # Beim Auslöser `message_received` (Abwesenheitsantwort) sind anchor/offset_days/
@@ -244,7 +246,10 @@ class AiSettings(BaseModel):
 # Zeiten, nicht die Bürozeiten).
 class AutomationBase(BaseModel):
     name: str
-    trigger: str               # booking_new|before_checkin|after_checkout|message_received
+    # booking_new|before_checkin|after_checkin|before_checkout|after_checkout|
+    # message_received — der vollständige Katalog steht in `ausloeser.py`.
+    trigger: str
+    # Abgeleitet aus `trigger`; in der Anfrage ignoriert (nur Ausgabe).
     anchor: str = "arrival"    # arrival|departure|booking
     offset_days: int = 0
     # Versatz zum Anker in der gewählten Einheit. `offset_days` bleibt für den

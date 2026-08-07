@@ -487,6 +487,8 @@
     "autoTriggerLabel": "Wyzwalacz",
     "autoTrigger_booking_new": "Przy nowej rezerwacji",
     "autoTrigger_before_checkin": "Przed przyjazdem",
+    "autoTrigger_after_checkin": "Po przyjeździe",
+    "autoTrigger_before_checkout": "Przed wyjazdem",
     "autoTrigger_after_checkout": "Po wyjeździe",
     "autoOffset": "Przesunięcie w dniach",
     "autoDays": "Dni",

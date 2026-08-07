@@ -748,7 +748,7 @@ def test_compute_send_at_after_departure() -> None:
 
 
 def test_compute_send_at_missing_anchor_is_none() -> None:
-    # booking-Anker ohne created_at → keine Planung (kein erfundenes Datum).
+    # booking-Anker ohne booked_at → keine Planung (kein erfundenes Datum).
     assert InboxService._compute_send_at("booking", 0, "12:00", {}) is None
 
 
@@ -787,14 +787,38 @@ def test_compute_send_at_ohne_uhrzeit_ist_mitternacht() -> None:
 def test_compute_send_at_stunden_nutzen_buchungsuhrzeit() -> None:
     """Nur die Buchung trägt einen echten Zeitpunkt — der zählt dann auch.
 
-    `created_at` ist ein Zeitstempel; „3 Stunden nach Buchung" muss von der
-    tatsächlichen Buchungsminute rechnen, nicht von Mitternacht.
+    `booked_at` ist der Zeitpunkt BEIM PORTAL; „3 Stunden nach Buchung" muss von
+    der tatsächlichen Buchungsminute rechnen, nicht von Mitternacht.
     """
-    th = {"created_at": "2026-07-10T14:20:00+00:00"}
+    th = {"booked_at": "2026-07-10T14:20:00+00:00"}
     dt = InboxService._compute_send_at(
         "booking", 0, None, th, offset_unit="hours", offset_value=3
     )
     assert dt == datetime(2026, 7, 10, 17, 20, tzinfo=UTC)
+
+
+def test_anker_buchung_nimmt_booked_at_nicht_unsere_uhr() -> None:
+    """Wurzel 5b: der Buchungszeitpunkt ist der des PORTALS.
+
+    DER VORFALL (07.08.2026): 30 Buchungen aus Februar bis Juni wurden am 06.08.
+    in einem Rutsch importiert. Alle trugen dieselbe `created_at` — die Regel
+    „5 Minuten nach Buchung" hatte sie deshalb gebündelt auf EINEN Zeitpunkt
+    gelegt, Monate nach der echten Buchung und nach der Abreise der Gäste.
+    """
+    th = {
+        "booked_at": "2026-02-25T05:18:54+00:00",
+        "created_at": "2026-08-06T08:49:04+00:00",
+    }
+    dt = InboxService._compute_send_at(
+        "booking", 0, None, th, offset_unit="minutes", offset_value=5
+    )
+    assert dt == datetime(2026, 2, 25, 5, 23, tzinfo=UTC)
+
+
+def test_anker_buchung_ohne_booked_at_plant_nicht() -> None:
+    """Ohne echten Buchungszeitpunkt wird NICHT auf unsere Uhr ausgewichen."""
+    th = {"created_at": "2026-08-06T08:49:04+00:00"}
+    assert InboxService._compute_send_at("booking", 0, "12:00", th) is None
 
 
 def test_compute_send_at_altbestand_rechnet_unveraendert() -> None:
@@ -843,6 +867,98 @@ def test_automation_matches_house_and_channel_and_logic() -> None:
     assert InboxService._automation_matches(a, "p-9", "Airbnb") is False
     # Kanal passt nicht (UND-Verknüpfung).
     assert InboxService._automation_matches(a, "p-1", "Booking.com") is False
+
+
+# --- Nachzügler: was zu spät kommt, geht nicht mehr raus (0307) --------------
+def test_nachzuegler_wird_nicht_mehr_versendet() -> None:
+    """DER VORFALL (07.08.2026): der Import bestehender Buchungen legte für jede
+    alte Buchung eine Automail an. Ihr Zeitpunkt lag in der Vergangenheit, war
+    also sofort „fällig" — 30 Buchungsbestätigungen standen gebündelt für Gäste
+    an, deren Aufenthalt vorbei war."""
+    jetzt = datetime(2026, 8, 7, 12, 0, tzinfo=UTC)
+    # Gerade eben fällig geworden → geht raus.
+    assert (
+        InboxService._versandstatus(datetime(2026, 8, 7, 11, 0, tzinfo=UTC), jetzt)
+        == "pending"
+    )
+    # Zwei Tage überfällig → wird festgehalten, nicht verschickt.
+    assert (
+        InboxService._versandstatus(datetime(2026, 8, 5, 9, 0, tzinfo=UTC), jetzt)
+        == "skipped"
+    )
+    # Künftig → geht raus.
+    assert (
+        InboxService._versandstatus(datetime(2026, 8, 20, 9, 0, tzinfo=UTC), jetzt)
+        == "pending"
+    )
+
+
+# --- Auslöser: Anker + Richtung kommen aus dem Auslöser (0307) ---------------
+def test_ausloeser_katalog_ist_vollstaendig() -> None:
+    """Alle sechs Auslöser — „Nach Anreise" und „Vor Abreise" fehlten bis 0307."""
+    from src.features.inbox.ausloeser import ALLE_TRIGGER
+
+    assert set(ALLE_TRIGGER) == {
+        "booking_new",
+        "before_checkin",
+        "after_checkin",
+        "before_checkout",
+        "after_checkout",
+        "message_received",
+    }
+
+
+def test_payload_leitet_anker_und_vorzeichen_aus_dem_ausloeser_ab() -> None:
+    """DER VORFALL (07.08.2026): eine Regel „Check-out-Anweisungen" stand live
+    mit trigger='before_checkin' und anchor='departure' — sie hieß „Vor Anreise"
+    und feuerte vor der ABREISE. Anker und Vorzeichen dürfen deshalb nicht mehr
+    aus der Anfrage kommen."""
+    from src.features.inbox.automation_mapping import automation_payload
+    from src.features.inbox.schemas import AutomationUpsert
+
+    p = automation_payload(
+        AutomationUpsert(
+            name="Check-out-Anweisungen",
+            trigger="before_checkout",
+            # Gegenteil von dem, was der Auslöser sagt — wird verworfen.
+            anchor="arrival",
+            offset_unit="days",
+            offset_value=1,
+            message="Text",
+        )
+    )
+    assert p["anchor"] == "departure"
+    assert p["offset_value"] == -1
+    assert p["offset_days"] == -1
+
+
+def test_payload_nach_anreise_ist_positiv() -> None:
+    from src.features.inbox.automation_mapping import automation_payload
+    from src.features.inbox.schemas import AutomationUpsert
+
+    p = automation_payload(
+        AutomationUpsert(
+            name="Willkommen",
+            trigger="after_checkin",
+            offset_unit="hours",
+            offset_value=-2,   # Betrag; das Vorzeichen setzt der Auslöser
+            message="Text",
+        )
+    )
+    assert p["anchor"] == "arrival"
+    assert p["offset_value"] == 2
+    # „in Tagen" ist bei Stunden keine Aussage.
+    assert p["offset_days"] == 0
+
+
+def test_row_meldet_keinen_widerspruechlichen_anker() -> None:
+    """Auch eine noch nicht migrierte Zeile wird widerspruchsfrei ausgeliefert."""
+    from src.features.inbox.automation_mapping import automation_row
+
+    a = automation_row(
+        {"id": "a1", "name": "Alt", "trigger": "before_checkout", "anchor": "arrival"}
+    )
+    assert a.anchor == "departure"
 
 
 # --- Platzhalter (felder.py) --------------------------------------------------

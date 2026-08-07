@@ -8,9 +8,49 @@
 // könnte vom tatsächlichen Zeitplan abweichen — dann stünde eine Regel unter
 // „Nach der Abreise", die in Wahrheit vor der Anreise feuert.
 
-import type { Automation } from "@/lib/inbox";
+import type { Automation, AutomationTrigger } from "@/lib/inbox";
 
 export type PhasenSchluessel = "before" | "during" | "after";
+
+/**
+ * Auslöser → Anker und Richtung. Spiegelt `ausloeser.py` im Backend (0307).
+ *
+ * Der Auslöser sagt beides zugleich: an welchem Datum die Regel hängt und auf
+ * welcher Seite davon sie feuert. Bis 0307 waren Anker und Richtung zusätzlich
+ * frei wählbar — eine Regel konnte „Vor Anreise" heißen und vor der ABREISE
+ * feuern (live so vorgefunden). Deshalb steht die Zuordnung hier EINMAL; die
+ * Maske fragt nur noch nach dem Betrag.
+ */
+export const AUSLOESER: Record<
+  Exclude<AutomationTrigger, "message_received">,
+  { anker: string; richtung: 1 | -1 }
+> = {
+  booking_new: { anker: "booking", richtung: 1 },
+  before_checkin: { anker: "arrival", richtung: -1 },
+  after_checkin: { anker: "arrival", richtung: 1 },
+  before_checkout: { anker: "departure", richtung: -1 },
+  after_checkout: { anker: "departure", richtung: 1 },
+};
+
+/** Die Auslöser in der Reihenfolge des Aufenthalts (Buchung → Anreise → Abreise). */
+export const AUSLOESER_REIHENFOLGE: AutomationTrigger[] = [
+  "booking_new",
+  "before_checkin",
+  "after_checkin",
+  "before_checkout",
+  "after_checkout",
+  "message_received",
+];
+
+/** Bezugsdatum des Auslösers; für `message_received` bedeutungslos. */
+export function ankerVon(trigger: AutomationTrigger): string {
+  return AUSLOESER[trigger as keyof typeof AUSLOESER]?.anker ?? "arrival";
+}
+
+/** +1 = nach dem Anker, −1 = davor. */
+export function richtungVon(trigger: AutomationTrigger): 1 | -1 {
+  return AUSLOESER[trigger as keyof typeof AUSLOESER]?.richtung ?? 1;
+}
 
 // Kanal-Werte = ota_name-Herkunft (Backend matcht case-insensitive). Der eigene
 // Marktplatz „myBestDays" ist ein eigener Kanal wie die OTAs (booking_engine
