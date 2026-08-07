@@ -225,6 +225,20 @@ class TaxSyncMixin(TaxRegimeMixin):
             scope = eintrag.get("portalScope")
             if isinstance(scope, list):
                 gebraucht |= {str(x) for x in scope if str(x) in regime}
+        # Airbnb bekommt einen Kanal-Plan NUR, wenn die Steuererhebung dort
+        # wirklich freigegeben ist (Szenario bestätigt + „Senden" an). Solange
+        # sie fail-closed aus ist, gibt es nichts anzuhängen — der Plan wäre
+        # ein leerer Träger. Genau so entstanden am 07.08.2026 unbemerkt
+        # 19 „· AirBNB"-Pläne (einer davon mit toter base_price 0, weil er im
+        # Platzhalter-Fenster des Erstabrufs kopiert wurde), die bei Channex
+        # als zusätzliche Rate-Plans neben dem Grundpreis standen und den
+        # Betrieb beim Fehlersuchen in die Irre führten. Schaltet ein Objekt
+        # die Steuererhebung später frei, legt derselbe Sync den Plan wieder
+        # an — dann trägt er tatsächlich etwas.
+        if AIRBNB in gebraucht and not self._airbnb_steuern_erlaubt(
+            db, tenant_id, property_id
+        ):
+            gebraucht.discard(AIRBNB)
 
         plan_ids = list(dict.fromkeys(channex_rate_plan_ids))
         scope_je_plan = self._portal_scope_je_channex_plan(
