@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { ChannelMark, DetailLine } from "@/components/inbox/inbox-darstellung";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import { Button } from "@nextdays/ui/button";
 import { formatCurrency } from "@/lib/currency";
 import {
@@ -113,7 +114,7 @@ export function ReservationPanel({
             {guests && <span className="text-sm text-muted-foreground">{guests}</span>}
             <span className="text-sm text-muted-foreground">
               {res.nights != null ? `${res.nights} Nächte` : ""}
-              {res.ota_name ? `, von ${res.ota_name}` : ""}
+              {res.ota_name ? `, von ${channelLabelLoose(res.ota_name)}` : ""}
             </span>
             {res.ota_reservation_code && (
               <span className="text-sm text-muted-foreground">

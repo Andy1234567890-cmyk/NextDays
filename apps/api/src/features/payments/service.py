@@ -814,7 +814,7 @@ class PaymentsService:
     # myBestDays-Portal (Direktbuchung) 8,0 % all-in". Alles andere ist
     # provisionsfrei am Charge — Direktbuchungen über die Website des Betriebs
     # ausdrücklich („provisionsfreie Direktbuchungen zusätzlich", §5), OTA-
-    # Buchungen laufen gar nicht über uns (1 % wird monatlich fakturiert).
+    # Buchungen laufen gar nicht über uns (0,5 % wird monatlich fakturiert).
     _PORTAL_CHANNELS = frozenset({"portal"})
 
     def _ist_portal_buchung(self, res: dict) -> bool:
@@ -823,7 +823,7 @@ class PaymentsService:
         Die Provision hängt am KANAL, nicht am Kontotyp: Die Preisliste kennt
         „Ein Tarif für alle. Kein Privat- oder Agentur-Modell." Derselbe Betrieb
         kann über den Marktplatz (8 %), seine eigene Website (0 %) und OTAs
-        (1 % monatlich) verkaufen.
+        (0,5 % monatlich) verkaufen.
 
         Fail-closed (Wurzel 5): Fehlt der Kanal, gilt die Buchung NICHT als
         Portal-Buchung — lieber keine Provision berechnen als eine zu Unrecht.
@@ -863,7 +863,7 @@ class PaymentsService:
         Maßgeblich ist der KANAL, nicht der Kontotyp (Preisliste §2: „Eigenes
         myBestDays-Portal (Direktbuchung) 8,0 % all-in"). Derselbe Betrieb
         verkauft über den Marktplatz mit 8 %, über seine eigene Website
-        provisionsfrei und über OTAs mit 1 %, die monatlich fakturiert wird.
+        provisionsfrei und über OTAs mit 0,5 %, die monatlich fakturiert wird.
 
         Ohne Reservierungskontext (``res=None``) wird nichts berechnet — lieber
         keine Provision als eine zu Unrecht (Wurzel 5). Der Satz kommt

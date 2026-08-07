@@ -30,6 +30,7 @@ import {
 import {
   type OtaAccount,
   disconnectChannel,
+  kanalNachtragen,
   listChannelAccounts,
   renameChannelAccount,
   startAirbnbUebernahme,
@@ -41,12 +42,22 @@ export function PortalKontenPanel({
   onOffenChange,
   portalCode,
   portalLabel,
+  connectionType,
   onGeaendert,
 }: {
   offen: boolean;
   onOffenChange: (o: boolean) => void;
   portalCode: string;
   portalLabel: string;
+  // Wie ein weiteres Konto dieses Portals verbunden wird. "oauth" = der
+  // Vermieter autorisiert beim Portal (Airbnb), "credential" = Hotel-ID
+  // eintragen (Booking.com & Co.).
+  //
+  // Ohne diese Unterscheidung startete der Knopf für JEDES Portal den
+  // Airbnb-Weg: auf der Booking.com-Seite hieß das Panel „Booking.com-Konten",
+  // schickte den Betrieb aber zu einer Airbnb-Autorisierung und legte im
+  // Hintergrund ein Airbnb-Gerüstobjekt an.
+  connectionType: "oauth" | "credential";
   onGeaendert?: () => void;
 }) {
   const t = useTranslations("channels");
@@ -66,6 +77,38 @@ export function PortalKontenPanel({
     if (offen) laden();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offen, portalCode]);
+
+  // Den Kanal abholen, den Channex nach der Autorisierung selbst angelegt hat.
+  //
+  // Bei einer neuen Verbindung entsteht der Kanal auf Channex' Seite, sobald
+  // der Vermieter bei Airbnb bestätigt — wir erfahren davon nichts (Channex
+  // schickt keine Kanal-Webhooks). Ohne dieses Nachziehen stünde das Konto
+  // dauerhaft auf „Verbindung läuft", obwohl beim Portal längst alles verbunden
+  // ist: live am 07.08.2026 trug Kanal 21ec5429 Torstens Host-ID 226976381 und
+  // gültige Tokens, während die Kontoliste „Ohne Namen / Verbindung läuft"
+  // zeigte.
+  //
+  // Ausgelöst wird es von der Kontoliste selbst: jedes Konto ohne Kanal ist ein
+  // wartender Verbindungsversuch. Das deckt beide Wege ab — den Rücksprung von
+  // Airbnb und ein später wieder geöffnetes Panel.
+  useEffect(() => {
+    if (!offen) return;
+    const wartend = konten.filter((k) => !k.channel_id);
+    if (wartend.length === 0) return;
+    let aktiv = true;
+    void Promise.all(
+      wartend.map((k) => kanalNachtragen(k.id, portalCode)),
+    ).then((ergebnisse) => {
+      // Nur neu laden, wenn wirklich etwas nachgetragen wurde — sonst löst
+      // jedes Rendern eine weitere Runde aus (die Liste ändert sich ja).
+      const etwasNeu = ergebnisse.some((r) => r.ok && r.data.neu);
+      if (aktiv && etwasNeu) laden();
+    });
+    return () => {
+      aktiv = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offen, portalCode, konten.map((k) => k.channel_id ?? "").join()]);
 
   // Realtime (0305): Beim Verbinden läuft der Kunde ZU AIRBNB und kommt
   // zurück — der Zustand ändert sich also, WÄHREND dieses Panel offen steht.
@@ -105,9 +148,28 @@ export function PortalKontenPanel({
    * landet im Popup-Blocker.
    */
   function verbinden() {
+    // Nur OAuth-Portale haben diesen Weg. Bei allen anderen läuft das
+    // Verbinden über den Assistenten (Hotel-ID + Zimmerzuordnung) — der Knopf
+    // wird dort gar nicht erst angeboten; diese Prüfung ist der Riegel dahinter.
+    if (connectionType !== "oauth") return;
     const fenster = window.open("", "_blank");
+    // Rücksprungziel ist diese Seite. Es wird HIER gelesen, nicht in der
+    // Server-Action: dort gibt es kein `window`, und die öffentliche Adresse
+    // der Anwendung kennt das Backend nicht.
+    const ziel = window.location.href;
     start(async () => {
-      const res = await startAirbnbUebernahme(true);
+      // Das begonnene Konto MITGEBEN, falls dieser Klick eine Wiederholung ist
+      // (Fenster geschlossen, Autorisierung abgebrochen, erneut versucht).
+      //
+      // Ohne diesen Bezug wählte der Server erneut selbst — und griff zum
+      // bereits autorisierten Kanal des ERSTEN Zugangs. Da Channex je
+      // Verbindung nur den zuletzt erzeugten `state` kennt, machte jeder solche
+      // Klick den vorherigen, richtigen Link ungültig. Live am 07.08.2026: ein
+      // Link für Konto B, danach drei für Konto A — Konto B blieb dauerhaft
+      // ohne Tokens, obwohl der Betrieb dreißigmal bestätigte.
+      const begonnen =
+        konten.find((k) => !k.channel_id)?.id ?? null;
+      const res = await startAirbnbUebernahme(true, ziel, begonnen);
       if (!res.ok) {
         fenster?.close();
         toast.error(res.error);
@@ -115,6 +177,9 @@ export function PortalKontenPanel({
       }
       if (fenster) fenster.location.href = res.data.oauth_url;
       else window.location.href = res.data.oauth_url;
+      // Die Liste zeigt das neue Konto sofort — sonst wirkt der Klick folgenlos,
+      // während im anderen Fenster längst Airbnb steht.
+      await laden();
     });
   }
 
@@ -158,7 +223,7 @@ export function PortalKontenPanel({
           ) : (
             <ul className="flex flex-col gap-3">
               {konten.map((k) => (
-                <li key={k.id} className="flex items-center gap-3">
+                <li key={k.id} className="flex flex-wrap items-center gap-3">
                   {/* Kein Portal liefert ein Kontobild über Channex — statt
                       eines geratenen Avatars ein neutrales Zeichen (Wurzel 4). */}
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -250,20 +315,33 @@ export function PortalKontenPanel({
 
               Dass Channex für den Autorisierungs-Link trotzdem eine Property
               braucht (live: sonst 422), ist ein technischer Zwang — der Server
-              legt sie dafür selbst an. Das gehört nicht in die Oberfläche. */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={verbinden}
-            disabled={pending}
-            className="self-start"
-          >
-            <Icon
-              icon={pending ? "ph:spinner" : "ph:plus"}
-              className={"size-4 " + (pending ? "animate-spin" : "")}
-            />
-            {t("accountConnect")}
-          </Button>
+              legt sie dafür selbst an. Das gehört nicht in die Oberfläche.
+
+              Nur für OAuth-Portale. Bei Booking.com & Co. gibt es kein „Konto
+              autorisieren": dort ist ein Zugang eine Hotel-ID, die im
+              Verbinde-Assistenten samt Zimmerzuordnung eingetragen wird. Ein
+              Knopf, der hier den Airbnb-Weg startet, führte in die Irre — er
+              tat sogar etwas: er legte ein Airbnb-Gerüstobjekt an. */}
+          {connectionType === "oauth" ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={verbinden}
+              disabled={pending}
+              className="self-start"
+            >
+              <Icon
+                icon={pending ? "ph:spinner" : "ph:plus"}
+                className={"size-4 " + (pending ? "animate-spin" : "")}
+              />
+              {t("accountConnect")}
+            </Button>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {t("accountConnectCredentialHint", { portal: portalLabel })}
+            </p>
+          )}
+
         </div>
       </SheetContent>
     </Sheet>
@@ -274,10 +352,12 @@ export function PortalKontenPanel({
 export function PortalKontenButton({
   portalCode,
   portalLabel,
+  connectionType,
   onGeaendert,
 }: {
   portalCode: string;
   portalLabel: string;
+  connectionType: "oauth" | "credential";
   onGeaendert?: () => void;
 }) {
   const t = useTranslations("channels");
@@ -308,6 +388,7 @@ export function PortalKontenButton({
         onOffenChange={setOffen}
         portalCode={portalCode}
         portalLabel={portalLabel}
+        connectionType={connectionType}
         onGeaendert={onGeaendert}
       />
     </>

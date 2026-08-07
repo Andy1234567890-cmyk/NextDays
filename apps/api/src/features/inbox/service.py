@@ -18,7 +18,10 @@ from src.core.languages import sprach_name
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.channel_manager.channex_client import ChannexClient, ChannexError
-from src.features.channel_manager.common import ota_zeitstempel_utc
+from src.features.channel_manager.common import (
+    ist_bestandsimport,
+    ota_zeitstempel_utc,
+)
 from src.features.guests.identity import (
     contact_from_ota_customer,
     resolve_or_create_guest,
@@ -1056,6 +1059,10 @@ class InboxService(
             or customer.get("language")
             or customer.get("lang"),
             guest_location=self._guest_location(customer),
+            # Bestands-Import (0308): erklärt die leeren Gastfelder darüber.
+            # Direkt aus der gestagten Payload — sie ist hier ohnehin geladen,
+            # und dort steht der Marker, den Channex mitliefert.
+            is_imported=ist_bestandsimport(raw),
             adults=occ.get("adults"),
             children=occ.get("children"),
             nights=nights,

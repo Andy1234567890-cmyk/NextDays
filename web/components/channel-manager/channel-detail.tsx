@@ -45,6 +45,11 @@ export type ChannelMeta = {
   label: string;
   logo?: string;
   icon?: string;
+  // Wie ein weiterer Zugang dieses Portals verbunden wird: "oauth" = der
+  // Vermieter autorisiert beim Portal (Airbnb), "credential" = Hotel-ID im
+  // Assistenten eintragen (Booking.com & Co.). Entscheidet, ob das
+  // Konten-Panel überhaupt einen Autorisierungs-Knopf anbietet.
+  connection_type: "oauth" | "credential";
 };
 
 type Props = {
@@ -57,15 +62,31 @@ type Props = {
   accommodationType?: "hotel" | "vacation_rental" | null;
 };
 
-// Buchungen dieses Kanals: ota_name ist der Klarname (z.B. „Booking.com").
+// Buchungen dieses Kanals.
+//
+// `ota_name` ist NICHT der Klarname, sondern Channex' Kanalcode — für
+// Booking.com „BookingCom" ohne Punkt. Verglichen wurde vorher gegen
+// `meta.label` („Booking.com"), also `"booking.com" !== "bookingcom"`: die
+// Seite meldete „Buchungen (0)", obwohl sechs vorlagen. Bei Airbnb fiel es
+// nicht auf, weil Code und Klarname dort zufällig zusammenfallen.
+//
+// Verglichen wird deshalb gegen den PORTAL-CODE, und auf der normalisierten
+// Form — dieselbe Marke steht je nach Quelle als Code, Klarname oder mit
+// Rechtsform-Zusatz in den Daten.
+function schlank(wert: string): string {
+  return wert.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 function bookingsForPortal(
   bookings: ChannexBooking[],
-  label: string,
+  portalCode: string,
 ): ChannexBooking[] {
-  const needle = label.trim().toLowerCase();
-  return bookings.filter(
-    (b) => (b.ota_name ?? "").trim().toLowerCase() === needle,
-  );
+  const needle = schlank(portalCode);
+  if (!needle) return [];
+  return bookings.filter((b) => {
+    const name = schlank(b.ota_name ?? "");
+    return name === needle || name.startsWith(needle);
+  });
 }
 
 // Map-ID eines Objekts (für Voll-Abgleich) aus den Property-Maps auflösen.
@@ -85,7 +106,7 @@ export function ChannelDetail({
   const router = useRouter();
   const [disconnecting, startDisconnect] = useTransition();
   const [activating, startActivate] = useTransition();
-  const portalBookings = bookingsForPortal(bookings, meta.label);
+  const portalBookings = bookingsForPortal(bookings, meta.code);
   const mappings = detail?.mappings ?? [];
   // Ist das Portal verbunden? (mind. eine Verbindung + Channex-Kanal vorhanden)
   const channelId = detail?.channel_id ?? null;
@@ -187,6 +208,7 @@ export function ChannelDetail({
               <PortalKontenButton
                 portalCode={meta.code}
                 portalLabel={meta.label}
+                connectionType={meta.connection_type}
                 onGeaendert={() => router.refresh()}
               />
               <Button
@@ -205,7 +227,7 @@ export function ChannelDetail({
             </div>
           ) : (
             <ChannelConnectButton
-              label={`${meta.label} verbinden`}
+              label={`${meta.label} ${t("connect")}`}
               variant="accent"
               presetPortalCode={meta.code}
               accommodationType={accommodationType}

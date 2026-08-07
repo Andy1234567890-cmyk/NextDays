@@ -92,7 +92,7 @@
       "proMonat": "na mesec",
       "tarif": "En paket za vse, vključno z 1 objektom",
       "objekte": "Vsak dodatni objekt +6/5/4 € (padajoča lestvica)",
-      "provision": "Zunanji kanali 1 % · lastni portal 8 %",
+      "provision": "Zunanji kanali 0,5 % · lastni portal 8 %",
       "cta": "Oglejte si cene"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Direktna rezervacija",
-        "items": "Lasten rezervacijski portal, rezervacijski gradnik, urejevalnik spletne strani, lastna domena, 1 % namesto 15–18 % provizije OTA"
+        "items": "Lasten rezervacijski portal, rezervacijski gradnik, urejevalnik spletne strani, lastna domena, 0,5 % namesto 15–18 % provizije OTA"
       },
       "preise": {
         "title": "Cene in prihodki",

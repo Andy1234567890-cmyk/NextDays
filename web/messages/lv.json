@@ -779,7 +779,10 @@
     "autoNoContent": "Saturs nav iestatīts.",
     "autoEditSection": "Rediģēt: {section}",
     "attachmentPreview": "Fotoattēls",
-    "attachmentAlt": "Viesa fotoattēls"
+    "attachmentAlt": "Viesa fotoattēls",
+    "translate": "Tulkot",
+    "showOriginal": "Rādīt oriģinālu",
+    "translatedFrom": "Tulkots no {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Pārskati un pārvaldi kanālu pārvaldniekam pievienotos kontus.",
     "accountsEmpty": "Vēl nav pievienots neviens konts.",
     "accountConnect": "Pievienot kontu",
+    "accountConnectCredentialHint": "Vēl vienu {portal} kontu pievieno, izmantojot „{portal} Connect” — tur ievadi viesnīcas identifikatoru un piesaisti numurus.",
     "accountsCheckPortalHint": "Portāla konta iestatījumos pārbaudi, ka neviena cita lietotne nav norādīta kā savienojuma nodrošinātājs.",
     "accountsLogoutHint": "Pirms cita konta pievienošanas pārlūkā izrakstieties no portāla."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 zvaigznes",
     "reviews": "· 921 atsauksme",
     "trial30": "Izmēģiniet 30 dienas bez maksas",
-    "bookingValue": "+1 % no rezervācijas vērtības",
+    "bookingValue": "+0,5 % no rezervācijas vērtības",
     "seePrices": "Skatīt cenas",
     "downloadApp": "Lejupielādēt lietotni",
     "copyright": "© 2026 myNextDays. Visas tiesības aizsargātas.",

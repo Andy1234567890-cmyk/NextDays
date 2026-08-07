@@ -908,7 +908,12 @@ export function CalendarBoard({
     const el = scrollRef.current;
     if (!el) return;
     let raf = 0;
+    // Der Container scrollt jetzt beide Achsen; das Spaltenfenster hängt aber
+    // nur an scrollLeft — vertikales Scrollen darf nichts neu berechnen.
+    let lastLeft = el.scrollLeft;
     const onScroll = () => {
+      if (el.scrollLeft === lastLeft) return;
+      lastLeft = el.scrollLeft;
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
@@ -1696,9 +1701,15 @@ export function CalendarBoard({
       <Card className="min-w-0 overflow-clip p-0">
         {/* Während eines Zugs (Move/Resize/Zell-Auswahl) Text-Selektion global
             unterbinden — Backstop zu ev.preventDefault (kein blaues Markieren). */}
+        {/* Höhe begrenzt + beide Achsen HIER: sonst wächst der Container mit der
+            Objektliste und die horizontale Leiste sitzt unter der letzten Zeile —
+            bei vielen Objekten erst nach ganz-unten-Scrollen erreichbar. */}
         <div
           ref={scrollRef}
-          className={"overflow-x-auto " + (interacting ? "select-none" : "")}
+          className={
+            "max-h-[calc(100vh-20rem)] overflow-auto " +
+            (interacting ? "select-none" : "")
+          }
         >
           <div style={{ width: `${LABEL + dates.length * COL}rem` }}>
             {/* Monatsband — nennt über den Tagesspalten den Monat, damit ein

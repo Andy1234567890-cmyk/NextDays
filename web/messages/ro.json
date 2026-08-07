@@ -779,7 +779,10 @@
     "autoNoContent": "Niciun conținut setat.",
     "autoEditSection": "Editează {section}",
     "attachmentPreview": "Fotografie",
-    "attachmentAlt": "Fotografie de la oaspete"
+    "attachmentAlt": "Fotografie de la oaspete",
+    "translate": "Traducere",
+    "showOriginal": "Afișează originalul",
+    "translatedFrom": "Tradus din {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Verifică și gestionează conturile conectate la managerul de canale.",
     "accountsEmpty": "Niciun cont conectat încă.",
     "accountConnect": "Conectează cont",
+    "accountConnectCredentialHint": "Conectezi încă un cont {portal} prin „{portal} Connect” — acolo introduci identificatorul hotelului și asociezi camerele.",
     "accountsCheckPortalHint": "Verifică în setările contului de portal că nicio altă aplicație nu este setată ca furnizor al conexiunii.",
     "accountsLogoutHint": "Deconectează-te de la portal în browser înainte de a conecta alt cont."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 stele",
     "reviews": "· 921 recenzii",
     "trial30": "Încearcă gratuit 30 de zile",
-    "bookingValue": "+1 % din valoarea rezervării",
+    "bookingValue": "+0,5 % din valoarea rezervării",
     "seePrices": "Vezi prețurile",
     "downloadApp": "Descarcă aplicația",
     "copyright": "© 2026 myNextDays. Toate drepturile rezervate.",

@@ -779,7 +779,10 @@
     "autoNoContent": "Inget innehåll angivet.",
     "autoEditSection": "Redigera {section}",
     "attachmentPreview": "Foto",
-    "attachmentAlt": "Foto från gästen"
+    "attachmentAlt": "Foto från gästen",
+    "translate": "Översätt",
+    "showOriginal": "Visa originalet",
+    "translatedFrom": "Översatt från {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Granska och hantera kontona som är anslutna till kanalhanteraren.",
     "accountsEmpty": "Inget konto anslutet ännu.",
     "accountConnect": "Anslut konto",
+    "accountConnectCredentialHint": "Du ansluter ytterligare ett {portal}-konto via ”{portal} Connect” — där anger du hotell-id:t och kopplar rummen.",
     "accountsCheckPortalHint": "Kontrollera i portalkontots inställningar att ingen annan app är angiven som anslutningsleverantör.",
     "accountsLogoutHint": "Logga ut från portalen i webbläsaren innan du ansluter ett annat konto."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 stjärnor",
     "reviews": "· 921 omdömen",
     "trial30": "Testa gratis i 30 dagar",
-    "bookingValue": "+1 % av bokningsvärdet",
+    "bookingValue": "+0,5 % av bokningsvärdet",
     "seePrices": "Se priser",
     "downloadApp": "Ladda ner appen",
     "copyright": "© 2026 myNextDays. Med ensamrätt.",

@@ -92,7 +92,7 @@
       "proMonat": "mjesečno",
       "tarif": "Jedan paket za sve, uklj. 1 objekt",
       "objekte": "Svaki sljedeći objekt +6/5/4 € (padajuća skala)",
-      "provision": "Vanjski kanali 1 % · vlastiti portal 8 %",
+      "provision": "Vanjski kanali 0,5 % · vlastiti portal 8 %",
       "cta": "Pogledajte cijene"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Izravna rezervacija",
-        "items": "Vlastiti portal za rezervacije, widget za rezervacije, alat za izradu stranica, vlastita domena, 1 % umjesto 15–18 % OTA provizije"
+        "items": "Vlastiti portal za rezervacije, widget za rezervacije, alat za izradu stranica, vlastita domena, 0,5 % umjesto 15–18 % OTA provizije"
       },
       "preise": {
         "title": "Cijene i prihod",

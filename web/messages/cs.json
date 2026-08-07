@@ -779,7 +779,10 @@
     "autoNoContent": "Není nastaven žádný obsah.",
     "autoEditSection": "Upravit {section}",
     "attachmentPreview": "Fotografie",
-    "attachmentAlt": "Fotografie od hosta"
+    "attachmentAlt": "Fotografie od hosta",
+    "translate": "Přeložit",
+    "showOriginal": "Zobrazit originál",
+    "translatedFrom": "Přeloženo z jazyka {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatím není propojen. Zadejte přístupové údaje (Meta Cloud API) v nastavení serveru, poté bude odesílání aktivní.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Zkontrolujte a spravujte účty připojené ke správci kanálů.",
     "accountsEmpty": "Zatím není připojen žádný účet.",
     "accountConnect": "Připojit účet",
+    "accountConnectCredentialHint": "Další účet {portal} připojíte přes „{portal} Connect“ — tam zadáte označení hotelu a přiřadíte pokoje.",
     "accountsCheckPortalHint": "V nastavení účtu portálu ověřte, že jako poskytovatel připojení není nastavena jiná aplikace.",
     "accountsLogoutHint": "Než připojíte jiný účet, odhlaste se v prohlížeči z portálu."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 hvězdičky",
     "reviews": "· 921 hodnocení",
     "trial30": "Vyzkoušet 30 dní zdarma",
-    "bookingValue": "+1 % hodnoty rezervace",
+    "bookingValue": "+0,5 % hodnoty rezervace",
     "seePrices": "Zobrazit ceny",
     "downloadApp": "Stáhnout aplikaci",
     "copyright": "© 2026 myNextDays. Všechna práva vyhrazena.",

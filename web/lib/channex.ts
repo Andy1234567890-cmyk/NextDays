@@ -426,6 +426,13 @@ export async function prepareChannel(input: {
   property_id: string;
   portal_code: string;
   settings: Record<string, PortalValue>;
+  /**
+   * WELCHES Portal-Konto (0304). Bei einer Agentur mit mehreren Zugängen je
+   * Portal entscheidet es, mit wessen Token die Anzeigen geholt werden. Ohne
+   * Angabe nimmt der Server das Konto aus der Verbindungszeile des Objekts —
+   * richtig für ein bereits zugeordnetes Objekt, aber nicht für ein neues.
+   */
+  account_id?: string | null;
 }): Promise<Result<PrepareResult>> {
   return call<PrepareResult>("/channels/prepare", {
     method: "POST",
@@ -478,6 +485,26 @@ export async function listChannelAccounts(
   );
 }
 
+/**
+ * Den Kanal abholen, den Channex nach der Autorisierung selbst angelegt hat.
+ *
+ * Bei einer neuen Verbindung legen WIR keinen Kanal an — Channex tut es, sobald
+ * der Vermieter bei Airbnb bestätigt („we will automatically create a new
+ * inactive Channel", Airbnb Connection API). Danach steht der Kanal dort, das
+ * Konto bei uns wartet aber noch ohne Kanal-ID und die Oberfläche zeigt
+ * „Verbindung läuft". Dieser Aufruf schließt die Lücke — er liest bei Channex
+ * und trägt in unsere DB nach.
+ */
+export async function kanalNachtragen(
+  accountId: string,
+  portalCode = "AirBNB",
+): Promise<Result<{ channel_id: string | null; neu: boolean }>> {
+  return call<{ channel_id: string | null; neu: boolean }>(
+    `/channels/accounts/${accountId}/kanal-nachtragen?portal_code=${portalCode}`,
+    { method: "POST" },
+  );
+}
+
 export async function renameChannelAccount(
   accountId: string,
   displayName: string | null,
@@ -509,10 +536,21 @@ export async function activateChannel(
 // an und liefert eine echte airbnb.com-OAuth-URL (öffnen ODER an Eigentümer
 // kopieren). Status wird gepollt; Mapping + Aktivierung danach über finalize.
 export type OAuthBeginResult = {
-  channel_id: string;
+  /**
+   * Null bei einer NEUEN Verbindung: den Kanal legt Channex erst an, wenn die
+   * Autorisierung eintrifft. Gesetzt nur beim Wiederverbinden.
+   */
+  channel_id: string | null;
   oauth_url: string;
   portal: string;
   status: string;
+  /**
+   * Das Konto, für das dieser Link gilt (0304). Festhalten und bei jedem
+   * Folge-Aufruf zurückgeben — sonst weiß der Server beim zweiten Klick nicht
+   * mehr, welcher Zugang gemeint war, und erzeugt den Link für den bereits
+   * verbundenen. Nur beim Mehrkonto-Weg gesetzt.
+   */
+  account_id: string | null;
 };
 export type OAuthStatusResult = {
   connected: boolean;
@@ -543,6 +581,28 @@ export async function beginChannelOAuth(input: {
    * und käme nie zum zweiten.
    */
   neues_konto?: boolean;
+  /**
+   * Wohin der Kunde nach der Autorisierung zurückkommt.
+   *
+   * Muss der Aufrufer liefern: diese Datei läuft als Server-Action, dort gibt
+   * es kein `window`. Der Server prüft die Adresse gegen die erlaubten
+   * Origins. Ohne sie bleibt der Kunde nach dem Airbnb-Login bei Channex
+   * stehen — und bei einer Agentur mit vielen Zugängen wüsste niemand, welches
+   * Konto gerade verbunden wurde.
+   */
+  redirect_uri?: string;
+  /**
+   * WELCHES Konto gerade verbunden wird (0304). Bei jedem FOLGE-Aufruf
+   * mitzugeben — der erste liefert die ID zurück, alle weiteren binden sich
+   * damit an denselben Zugang.
+   *
+   * `neues_konto` allein reicht nicht: es gilt nur für einen Aufruf. Wird der
+   * Link erneut angefordert, kommt er ohne das Kennzeichen, und der Server
+   * fällt auf den bereits autorisierten Kanal zurück — also auf das ERSTE
+   * Konto. Da Channex je Verbindung nur den zuletzt erzeugten `state` kennt,
+   * macht schon ein einziger solcher Folge-Aufruf den richtigen Link ungültig.
+   */
+  account_id?: string | null;
 }): Promise<Result<OAuthBeginResult>> {
   return call<OAuthBeginResult>(
     `/properties/${input.property_id}/channels/${input.portal_code}/oauth/begin`,
@@ -554,6 +614,8 @@ export async function beginChannelOAuth(input: {
         title: input.title,
         settings: input.settings ?? {},
         neues_konto: input.neues_konto ?? false,
+        redirect_uri: input.redirect_uri,
+        account_id: input.account_id ?? null,
       },
     },
   );
@@ -586,14 +648,27 @@ export type AirbnbUebernahmeResult = {
  */
 export async function startAirbnbUebernahme(
   /**
-   * Ein WEITERES Airbnb-Konto verbinden (0304). Dann legt der Server ein
-   * eigenes Gerüst an, statt das erste vorhandene Objekt zu nehmen — das hängt
-   * bereits am ersten Konto.
+   * Ein WEITERES Airbnb-Konto verbinden (0304). Dann legt der Server einen
+   * eigenen Kanal an, statt den vorhandenen wiederzuverwenden.
    */
   neuesKonto = false,
+  /** Rücksprung nach der Autorisierung; der Aufrufer kennt die Adresse. */
+  redirectUri?: string,
+  /**
+   * Das Konto aus einem vorherigen Aufruf. Bindet diesen Link an DENSELBEN
+   * Zugang, statt den Server erneut wählen zu lassen — ohne diesen Wert griff
+   * er zum bereits autorisierten Kanal und schickte den Kunden in den Login des
+   * ersten Kontos (live am 07.08.2026 dreimal hintereinander).
+   */
+  accountId?: string | null,
 ): Promise<Result<OAuthBeginResult>> {
+  const p = new URLSearchParams();
+  if (neuesKonto) p.set("neues_konto", "true");
+  if (redirectUri) p.set("redirect_uri", redirectUri);
+  if (accountId) p.set("account_id", accountId);
+  const query = p.toString();
   return call<OAuthBeginResult>(
-    `/airbnb/uebernahme/start${neuesKonto ? "?neues_konto=true" : ""}`,
+    `/airbnb/uebernahme/start${query ? `?${query}` : ""}`,
     { method: "POST" },
   );
 }
@@ -603,11 +678,16 @@ export async function startAirbnbUebernahme(
  * füllt das Gerüst-Objekt, jedes weitere wird ein eigenes Objekt. Idempotent —
  * ein zweiter Aufruf aktualisiert statt zu verdoppeln.
  */
-export async function uebernehmeAirbnbListings(): Promise<
-  Result<AirbnbUebernahmeResult>
-> {
+export async function uebernehmeAirbnbListings(
+  /**
+   * Von WELCHEM Konto übernommen wird (0304). Pflicht, sobald der Betrieb mehr
+   * als einen Airbnb-Zugang führt — der Server lehnt dann ohne Angabe ab,
+   * statt eines zu raten und die Anzeigen des falschen Vermieters anzulegen.
+   */
+  accountId?: string | null,
+): Promise<Result<AirbnbUebernahmeResult>> {
   const res = await call<AirbnbUebernahmeResult>(
-    "/airbnb/uebernahme/listings",
+    `/airbnb/uebernahme/listings${accountId ? `?account_id=${accountId}` : ""}`,
     { method: "POST" },
   );
   if (res.ok) revalidatePath("/objekte");
@@ -871,12 +951,19 @@ export async function finalizeOAuthChannel(input: {
   property_id: string;
   portal_code: string;
   mappings: ChannelMapping[];
+  /** Dasselbe Konto wie beim vorangegangenen `prepareChannel` (0304). */
+  account_id?: string | null;
 }): Promise<Result<ChannelConnection>> {
   const res = await call<ChannelConnection>(
     `/properties/${input.property_id}/channels/${input.portal_code}/oauth/finalize`,
     {
       method: "POST",
-      body: { property_id: input.property_id, portal_code: input.portal_code, mappings: input.mappings },
+      body: {
+        property_id: input.property_id,
+        portal_code: input.portal_code,
+        mappings: input.mappings,
+        account_id: input.account_id ?? null,
+      },
     },
   );
   if (res.ok) revalidatePath("/einstellungen");

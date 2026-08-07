@@ -92,7 +92,7 @@
       "proMonat": "mēnesī",
       "tarif": "Viens plāns visiem, ieskaitot 1 objektu",
       "objekte": "Katrs nākamais objekts +6/5/4 € (dilstoša skala)",
-      "provision": "Ārējie kanāli 1 % · savs portāls 8 %",
+      "provision": "Ārējie kanāli 0,5 % · savs portāls 8 %",
       "cta": "Skatīt cenas"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Tiešā rezervācija",
-        "items": "Savs rezervāciju portāls, rezervāciju logrīks, mājaslapu veidotājs, savs domēns, 1 % 15–18 % OTA komisijas vietā"
+        "items": "Savs rezervāciju portāls, rezervāciju logrīks, mājaslapu veidotājs, savs domēns, 0,5 % 15–18 % OTA komisijas vietā"
       },
       "preise": {
         "title": "Cenas un ieņēmumi",

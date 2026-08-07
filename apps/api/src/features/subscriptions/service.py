@@ -30,6 +30,7 @@ from src.features.owner_statements.tax import EU_COUNTRIES as _EU_LAENDER
 
 from .dynpricing import DynPricingBillingMixin
 from .errors import SubscriptionsError, field
+from .provisionsdeckel import ProvisionsdeckelMixin
 from .schemas import (
     DYNPRICING_MODULE_KEY,
     DYNPRICING_RATE,
@@ -51,11 +52,10 @@ from .schemas import (
 
 log = get_logger("nextdays.subscriptions")
 
-# Externe Provisions-Staffel (Preisliste Abschnitt 2) — NICHT magisch im Code
-# verstreut (Wurzel 4). 1 % bis 100 Objekte, 0,5 % ab 101.
-COMMISSION_RATE_STANDARD = 0.01
-COMMISSION_RATE_HIGH_VOLUME = 0.005
-COMMISSION_HIGH_VOLUME_FROM = 101  # ab dieser Objektzahl gilt der reduzierte Satz
+# Externe Provision (Preisliste Abschnitt 2) — NICHT magisch im Code verstreut
+# (Wurzel 4). Einheitlich 0,5 %, unabhängig von der Objektzahl; die frühere
+# Staffel (1 % bis 100 Objekte, 0,5 % ab 101) ist abgeschafft.
+COMMISSION_RATE_STANDARD = 0.005
 _ISO_LAND_LAENGE = 2  # ISO-3166-1 alpha-2
 _DEZEMBER = 12  # Jahreswechsel beim Einzugstag
 # OTA-Kanäle, für die die externe Provision anfällt (dieselbe Menge wie im
@@ -81,7 +81,7 @@ _MODULE_PRICE_VARIANTS: dict[str, tuple[str, str | None]] = {
 _f = field
 
 
-class SubscriptionsService(DynPricingBillingMixin):
+class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin):
     slice_name = "subscriptions"
 
     def __init__(
@@ -1109,7 +1109,7 @@ class SubscriptionsService(DynPricingBillingMixin):
         """Provisions-Übersicht für die Billing-UI: aktueller Satz + offene
         (pending) Provisionen. Tenant-gescopet (Wurzel 3)."""
         db, tenant_id = self._require(ctx)
-        rate = self.commission_rate_for_tenant(db, tenant_id)
+        rate = self.commission_rate()
         rows = (
             db.table("commission_ledger")
             .select("reservation_id, channel, currency, gross_amount, rate, "
@@ -1120,11 +1120,25 @@ class SubscriptionsService(DynPricingBillingMixin):
         ).data
         total = round(sum(float(r["commission_amount"]) for r in rows), 2)
         currency = rows[0]["currency"] if rows else None
+        # Deckel nur zur ANZEIGE. Anders als in bill_pending_commissions darf ein
+        # nicht beschaffbarer Kurs die Übersicht nicht kippen — dann bleibt das
+        # Feld leer (die UI zeigt keinen Deckel), statt einen geratenen zu nennen.
+        cap: float | None = None
+        if currency:
+            # Offene Zeilen gehören zum LAUFENDEN Monat — deshalb dessen Periode
+            # als Kurs-Stichtag, nicht die des letzten Abrechnungslaufs.
+            heute = datetime.now(UTC).date()
+            try:
+                cap = self.cap_for_currency(db, currency, f"{heute:%Y-%m}")
+            except SubscriptionsError as exc:
+                log.warning("commission_cap_unavailable", error=str(exc))
         return CommissionSummary(
             current_rate=rate,
             pending_total=total,
             pending_count=len(rows),
             currency=currency,
+            cap_amount=cap,
+            pending_capped=cap is not None and total > cap,
             rows=[CommissionRow(**r) for r in rows],
         )
 
@@ -1191,14 +1205,11 @@ class SubscriptionsService(DynPricingBillingMixin):
             f"{jahr + 1}-01-01" if monat == _DEZEMBER else f"{jahr}-{monat + 1:02d}-01"
         )
 
-    def commission_rate_for_tenant(self, db: Client, tenant_id: str) -> float:
-        """Provisions-Satz nach Objektzahl-Staffel (Preisliste): 1 % bis 100
-        Objekte, 0,5 % ab 101. Dieselbe abrechenbare Objektzahl wie das Abo
-        (status='active'), damit Abo und Provision konsistent sind (Wurzel 4:
-        Satz aus den Daten, nicht geraten)."""
-        count = self._active_property_count(db, tenant_id)
-        if count >= COMMISSION_HIGH_VOLUME_FROM:
-            return COMMISSION_RATE_HIGH_VOLUME
+    @staticmethod
+    def commission_rate() -> float:
+        """Provisions-Satz (Preisliste): einheitlich 0,5 %, unabhängig von der
+        Objektzahl. Bleibt eine eigene Methode, damit der Satz an EINER Stelle
+        bestimmt wird (Wurzel 4)."""
         return COMMISSION_RATE_STANDARD
 
     def record_commission(
@@ -1215,7 +1226,9 @@ class SubscriptionsService(DynPricingBillingMixin):
         erzeugt keine zweite Zeile). Nur solange die Zeile noch 'pending' ist wird
         der Betrag nachgezogen (eine bereits fakturierte Provision bleibt fix —
         sonst würde eine nachträgliche OTA-Preisänderung eine gestellte Rechnung
-        verfälschen). Nur externe Kanäle; eigene/portal ignorieren."""
+        verfälschen). Nur externe Kanäle; eigene/portal ignorieren. Und nur für
+        VERÖFFENTLICHTE Objekte (status='active') — ein Entwurf ist nicht im
+        Verkauf und wird nicht berechnet."""
         if self._db is None:
             raise SubscriptionsError("Subscriptions-DB nicht verfügbar.", status_code=500)
         db = self._db
@@ -1226,12 +1239,21 @@ class SubscriptionsService(DynPricingBillingMixin):
         if channel not in EXTERNAL_CHANNELS or gross_amount <= 0:
             self.cancel_commission(tenant_id, reservation_id=reservation_id)
             return
+        # Provision fällt NUR für veröffentlichte Objekte an (status='active').
+        # Ein Entwurf ist nicht im Verkauf und wird auch nicht berechnet — auch
+        # dann nicht, wenn über das verknüpfte OTA-Inserat noch Buchungen
+        # eingehen. Wird ein Objekt später zurückgezogen, muss eine offene Zeile
+        # verschwinden (Gegenzustand, Wurzel 1) — deshalb derselbe cancel-Pfad
+        # wie oben, nicht bloß ein `return`.
+        if not self._objekt_veroeffentlicht(db, tenant_id, reservation_id):
+            self.cancel_commission(tenant_id, reservation_id=reservation_id)
+            return
         if not currency:
             raise SubscriptionsError(
                 "Währung der Buchung fehlt — keine Provision ohne Währung.",
                 status_code=422,
             )
-        rate = self.commission_rate_for_tenant(db, tenant_id)
+        rate = self.commission_rate()
         commission = round(gross_amount * rate, 2)
         existing = (
             db.table("commission_ledger")
@@ -1257,6 +1279,41 @@ class SubscriptionsService(DynPricingBillingMixin):
             ).execute()
         else:
             db.table("commission_ledger").insert(payload).execute()
+
+    def _objekt_veroeffentlicht(
+        self, db: Client, tenant_id: str, reservation_id: str
+    ) -> bool:
+        """Gehört diese Reservierung zu einem VERÖFFENTLICHTEN Objekt?
+
+        Veröffentlicht = ``properties.status='active'`` (genau das, was
+        ``publish()`` setzt und ``unpublish()`` zurücknimmt). Entwürfe und
+        stillgelegte Objekte sind nicht im Verkauf und tragen keine Provision.
+
+        Beide Zugriffe sind auf den Tenant gescopet (Wurzel 3: service_role
+        umgeht RLS). Fail-CLOSED (Wurzel 5): fehlt die Reservierung, das Objekt
+        oder der Status, wird KEINE Provision erfasst — lieber nichts berechnen
+        als einem Betrieb etwas in Rechnung stellen, das wir nicht belegen können.
+        """
+        res = (
+            db.table("reservations")
+            .select("property_id")
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        property_id = res[0].get("property_id") if res else None
+        if not property_id:
+            return False
+        prop = (
+            db.table("properties")
+            .select("status")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        return bool(prop) and prop[0].get("status") == "active"
 
     def cancel_commission(self, tenant_id: str, *, reservation_id: str) -> None:
         """Storno einer OTA-Buchung → offene Provisionszeile entfernen
@@ -1329,9 +1386,11 @@ class SubscriptionsService(DynPricingBillingMixin):
     def bill_pending_commissions(self, tenant_id: str, *, period: str) -> int:
         """Monats-Worker: alle 'pending'-Provisionen eines Tenants als EIN
         Stripe-Invoice-Item auf das laufende Abo buchen, dann auf 'invoiced'
-        setzen. Idempotent: bereits fakturierte Zeilen (period gesetzt) werden
-        nicht erneut berechnet (Wurzel 2). Gibt die Zahl der abgerechneten Zeilen
-        zurück. Kein Abo → klar fehlschlagen, nicht still verschlucken (Wurzel 5)."""
+        setzen. Die Summe wird beim Monatsdeckel (250 €, in Rechnungswährung
+        umgerechnet) gekappt. Idempotent: bereits fakturierte Zeilen (period
+        gesetzt) werden nicht erneut berechnet (Wurzel 2). Gibt die Zahl der
+        abgerechneten Zeilen zurück. Kein Abo → klar fehlschlagen, nicht still
+        verschlucken (Wurzel 5)."""
         if self._db is None:
             raise SubscriptionsError("Subscriptions-DB nicht verfügbar.", status_code=500)
         db = self._db
@@ -1357,6 +1416,17 @@ class SubscriptionsService(DynPricingBillingMixin):
         total = round(sum(float(row["commission_amount"]) for row in pending), 2)
         if total <= 0:
             return 0
+        # Monatsdeckel (250 €): alles darüber ist 0 %. Bewusst HIER und nicht in
+        # record_commission — der Deckel gilt für die PERIODE, nicht je Buchung;
+        # die einzelne Ledger-Zeile behält ihren ungekappten Wert, damit
+        # nachvollziehbar bleibt, wie viel Provision entstanden wäre.
+        gedeckelt = self.cap_for_currency(db, currency, period)
+        if total > gedeckelt:
+            log.info(
+                "commissions_capped", tenant_id=tenant_id, period=period,
+                total=total, cap=gedeckelt, currency=currency,
+            )
+            total = gedeckelt
         sub_row = self._load_row(db, tenant_id)
         if not sub_row or not sub_row.get("stripe_customer_id"):
             raise SubscriptionsError(

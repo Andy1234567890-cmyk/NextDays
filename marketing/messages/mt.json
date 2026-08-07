@@ -92,7 +92,7 @@
       "proMonat": "fix-xahar",
       "tarif": "Pjan wieħed għal kulħadd, inkluża propjetà waħda",
       "objekte": "Kull propjetà addizzjonali +€6/5/4 (skala dixxendenti)",
-      "provision": "Kanali esterni 1 % · il-portal tiegħek 8 %",
+      "provision": "Kanali esterni 0.5 % · il-portal tiegħek 8 %",
       "cta": "Ara l-prezzijiet"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Booking dirett",
-        "items": "Portal tal-booking tiegħek, widget tal-booking, website builder, dominju tiegħek, 1 % minflok 15–18 % kummissjoni OTA"
+        "items": "Portal tal-booking tiegħek, widget tal-booking, website builder, dominju tiegħek, 0.5 % minflok 15–18 % kummissjoni OTA"
       },
       "preise": {
         "title": "Prezzijiet u dħul",

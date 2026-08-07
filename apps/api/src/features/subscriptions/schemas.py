@@ -163,10 +163,16 @@ class CommissionRow(BaseModel):
 class CommissionSummary(BaseModel):
     """Provisions-Übersicht (externe OTA-Buchungen) für die Billing-UI."""
 
-    current_rate: float  # aktueller Satz nach Objektzahl-Staffel
+    current_rate: float  # einheitlich 0,5 % (keine Objektzahl-Staffel)
     pending_total: float
     pending_count: int
     currency: str | None = None
+    # Monatsdeckel in der Währung der offenen Provisionen (250 €, ggf.
+    # umgerechnet). None, solange keine offenen Zeilen existieren — dann gibt es
+    # keine Währung, in der ein Deckel benannt werden könnte (Wurzel 4: kein
+    # EUR-Ersatzwert). `pending_capped` sagt, ob der Deckel schon greift.
+    cap_amount: float | None = None
+    pending_capped: bool = False
     rows: list[CommissionRow] = []
 
 

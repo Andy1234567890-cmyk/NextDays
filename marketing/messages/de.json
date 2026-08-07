@@ -92,7 +92,7 @@
       "proMonat": "pro Monat",
       "tarif": "Ein Tarif für alle, inkl. 1 Objekt",
       "objekte": "Jedes weitere Objekt +6/5/4 € (degressiv)",
-      "provision": "Externe Kanäle 1 % · eigenes Portal 8 %",
+      "provision": "Externe Kanäle 0,5 % · eigenes Portal 8 %",
       "cta": "Preise ansehen"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Direktbuchung",
-        "items": "Eigenes Buchungsportal, Buchungs-Widget, Website-Baukasten, eigene Domain, 1 % statt 15–18 % OTA-Provision"
+        "items": "Eigenes Buchungsportal, Buchungs-Widget, Website-Baukasten, eigene Domain, 0,5 % statt 15–18 % OTA-Provision"
       },
       "preise": {
         "title": "Preise & Umsatz",

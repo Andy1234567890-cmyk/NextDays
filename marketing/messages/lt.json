@@ -92,7 +92,7 @@
       "proMonat": "per mėnesį",
       "tarif": "Vienas planas visiems, įskaitant 1 objektą",
       "objekte": "Kiekvienas papildomas objektas +6/5/4 € (mažėjanti skalė)",
-      "provision": "Išoriniai kanalai 1 % · savas portalas 8 %",
+      "provision": "Išoriniai kanalai 0,5 % · savas portalas 8 %",
       "cta": "Žiūrėti kainas"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Tiesioginė rezervacija",
-        "items": "Savas rezervacijų portalas, rezervacijų valdiklis, svetainių kūrimo įrankis, savas domenas, 1 % vietoj 15–18 % OTA komisijos"
+        "items": "Savas rezervacijų portalas, rezervacijų valdiklis, svetainių kūrimo įrankis, savas domenas, 0,5 % vietoj 15–18 % OTA komisijos"
       },
       "preise": {
         "title": "Kainos ir pajamos",

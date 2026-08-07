@@ -197,6 +197,17 @@ const FORMS_BY_COUNTRY: Record<string, LegalForm[]> = {
     { key: "Ltd", label: "Ltd", type: "company" },
     { key: "Association", label: "Association", type: "non_profit" },
   ],
+  // Nicht-EU, steht aber in LAENDER (Start-Markt DACH). Die Keys sind exakt
+  // die, die der Backend-Mapper (stripe_legal_form.py) kennt — kein Zusatz wie
+  // "GmbH (CH)", sonst fällt er still auf den groben account_type zurück.
+  CH: [
+    { key: "Einzelfirma", label: "Einzelfirma", type: "individual" },
+    { key: "GmbH", label: "GmbH", type: "company" },
+    { key: "AG", label: "AG", type: "company" },
+    { key: "Kollektivgesellschaft", label: "Kollektivgesellschaft", type: "company" },
+    { key: "Verein", label: "Verein", type: "non_profit" },
+    { key: "Stiftung", label: "Stiftung", type: "non_profit" },
+  ],
 };
 
 // Fallback für Länder ohne eigene Liste: generische EU-Formen.

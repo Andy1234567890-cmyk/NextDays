@@ -27,6 +27,7 @@ from src.jobs.queue import dedup_key, enqueue, try_enqueue_tax_sync
 from .channex_client import ChannexError
 from .common import ChannelManagerError, log
 from .ota_abgaben import AIRBNB, AIRBNB_SZENARIEN, SZENARIO_INELIGIBLE
+from .portal_registry import PortalProfil, ist_airbnb, portal_profil
 
 
 class ObjektKanalMixin:
@@ -305,6 +306,7 @@ class ObjektKanalMixin:
                 self._swap_channel_rate_plan(
                     db, tenant_id, channel_id,
                     von_lokal=kp_id, nach_lokal=primary_id,
+                    portal_code=portal_code,
                 )
                 db.table("rate_plans").delete().eq("id", kp_id).execute()
                 # Channex-seitigen Rest abräumen + Kurve neu abgleichen.
@@ -326,6 +328,7 @@ class ObjektKanalMixin:
             self._swap_channel_rate_plan(
                 db, tenant_id, channel_id,
                 von_lokal=primary_id, nach_lokal=kanalplan[0]["id"],
+                portal_code=portal_code,
             )
         else:
             db.table("rate_plans").insert({
@@ -363,16 +366,22 @@ class ObjektKanalMixin:
             self._swap_channel_rate_plan(
                 db, tenant_id, channel_id,
                 von_lokal=primary_id, nach_lokal=neu[0]["id"],
+                portal_code=portal_code,
             )
         self._enqueue_price_reconcile(db, tenant_id, property_id)
         return {"portal_code": portal_code, "percent": float(percent)}
 
     def _swap_channel_rate_plan(
         self, db: Client, tenant_id: str, channel_id: str,
-        *, von_lokal: str, nach_lokal: str,
+        *, von_lokal: str, nach_lokal: str, portal_code: str,
     ) -> None:
         """Im rate_plans-Array eines Channex-Kanals jede Zuordnung von einem
         lokalen Plan auf einen anderen umhängen (Standard ↔ Kanal-Plan).
+
+        `portal_code` wird durchgereicht, weil der Zweig unten eine Zuordnung
+        ANLEGEN kann und die dafür nötige Objekt-Kennung portal-abhängig ist.
+        Vorher endete der Portal-Bezug hier — und `_kanal_zuordnung_anlegen`
+        nahm mangels besseren Wissens immer die Airbnb-Nummer.
 
         PUT ersetzt das Array komplett — gelesen wird der Ist-Stand, nur die
         rate_plan_id der betroffenen Einträge wechselt, die OTA-settings
@@ -418,7 +427,9 @@ class ObjektKanalMixin:
             # nichts (live gemessen, siehe `create_channel_mapping`).
             if any(p.get("rate_plan_id") == nach_cx for p in plans):
                 return
-            self._kanal_zuordnung_anlegen(db, channel_id, nach_cx, nach_lokal)
+            self._kanal_zuordnung_anlegen(
+                db, channel_id, nach_cx, nach_lokal, portal_code=portal_code,
+            )
             return
         try:
             self._channex.update_channel(channel_id, {"rate_plans": neu_plans})
@@ -427,7 +438,7 @@ class ObjektKanalMixin:
 
     def _kanal_zuordnung_anlegen(
         self, db: Client, channel_id: str, channex_rate_plan_id: str,
-        lokaler_plan_id: str,
+        lokaler_plan_id: str, *, portal_code: str,
     ) -> None:
         """Den Kanal-Plan erstmalig am Kanal zuordnen (`POST …/mappings`).
 
@@ -435,12 +446,24 @@ class ObjektKanalMixin:
         gibt es nichts zu tauschen, und ohne diesen Schritt bliebe der Aufschlag
         eine reine Bildschirmangabe.
 
+        WORÜBER zugeordnet wird, entscheidet das Portal (`portal_registry`):
         Airbnb nimmt GENAU EINE Rate je Anzeige („Airbnb allows you to map only
-        1 rate plan"), deshalb ist die Listing-ID der Schlüssel. Sie steht am
-        Objekt (`properties.airbnb_listing_id`); fehlt sie, ist das Objekt keine
-        Airbnb-Anzeige und es gibt nichts zuzuordnen — das wird gesagt, nicht
-        stillschweigend übergangen (Wurzel 5).
+        1 rate plan"), Schlüssel ist die Listing-ID am Objekt. Alle übrigen
+        Portale verkaufen Zimmertypen; deren Kennung steht an der VERBINDUNG,
+        weil dasselbe Objekt bei zwei Portalen unter verschiedenen Kennungen
+        läuft.
+
+        Vorher galt hier für JEDES Portal der Airbnb-Weg. Das schlug auf zwei
+        Arten fehl, beide still: hing das Objekt nicht bei Airbnb, kam eine 422
+        mit einer Airbnb-Anweisung, die ein Booking-Betrieb nicht befolgen kann;
+        hing es dort AUCH (der Normalfall bei Multi-Portal-Betrieben), ging die
+        Airbnb-Nummer als `listing_id` an den Booking-Kanal, der dieses Feld gar
+        nicht kennt.
+
+        Fehlt die Kennung, wird das gesagt statt stillschweigend übergangen
+        (Wurzel 5) — mit dem Hinweis, der zum jeweiligen Portal passt.
         """
+        profil = portal_profil(portal_code)
         plan = (
             db.table("rate_plans")
             .select("property_id")
@@ -450,23 +473,22 @@ class ObjektKanalMixin:
         ).data or []
         if not plan:
             raise ChannelManagerError("Preisplan nicht gefunden.", status_code=422)
-        prop = (
-            db.table("properties")
-            .select("airbnb_listing_id")
-            .eq("id", plan[0]["property_id"])
-            .limit(1)
-            .execute()
-        ).data or []
-        listing_id = prop[0].get("airbnb_listing_id") if prop else None
-        if not listing_id:
+        property_id = plan[0]["property_id"]
+        kennung = self._portal_objekt_kennung(
+            db, property_id, portal_code=portal_code, profil=profil
+        )
+        if not kennung:
+            label = self._portal_label(portal_code)
             raise ChannelManagerError(
-                "Dieses Objekt ist bei Airbnb noch nicht zugeordnet. Rufe es "
-                "zuerst unter „Synchronisierung“ bei Airbnb ab.",
+                f"Dieses Objekt ist bei {label} noch nicht zugeordnet. Rufe es "
+                "zuerst unter „Synchronisierung“ ab.",
                 status_code=422,
             )
         try:
             self._channex.create_channel_mapping(  # type: ignore[attr-defined]
-                channel_id, channex_rate_plan_id, {"listing_id": str(listing_id)}
+                channel_id,
+                channex_rate_plan_id,
+                {profil.settings_feld: str(kennung)},
             )
         except ChannexError as exc:
             # „rate plan already exists" ist kein Fehler, sondern der Zielzustand
@@ -483,8 +505,40 @@ class ObjektKanalMixin:
         log.info(
             "portal_adjustment_mapping_angelegt",
             channel_id=channel_id, rate_plan_id=channex_rate_plan_id,
-            listing_id=str(listing_id),
+            portal_code=portal_code, feld=profil.settings_feld,
+            kennung=str(kennung),
         )
+
+    @staticmethod
+    def _portal_objekt_kennung(
+        db: Client, property_id: str, *, portal_code: str, profil: PortalProfil,
+    ) -> str | None:
+        """Die Kennung, unter der DIESES Portal DIESES Objekt führt.
+
+        Zwei Orte, weil es zwei Modelle sind: Airbnbs Anzeigennummer gehört zum
+        Objekt (eine Anzeige = ein Objekt), der Zimmertyp-Code eines jeden
+        anderen Portals gehört zur Verbindung (dasselbe Objekt läuft bei zwei
+        Portalen unter verschiedenen Codes). Welcher Ort gilt, sagt das Profil.
+        """
+        if profil.kennung == "listing":
+            rows = (
+                db.table(profil.kennung_tabelle)
+                .select(profil.kennung_spalte)
+                .eq("id", property_id)
+                .limit(1)
+                .execute()
+            ).data or []
+        else:
+            rows = (
+                db.table(profil.kennung_tabelle)
+                .select(profil.kennung_spalte)
+                .eq("property_id", property_id)
+                .eq("ota_portal_code", portal_code)
+                .limit(1)
+                .execute()
+            ).data or []
+        wert = rows[0].get(profil.kennung_spalte) if rows else None
+        return str(wert) if wert else None
 
     @staticmethod
     def _channex_id_for_local_plan(
@@ -724,18 +778,26 @@ class ObjektKanalMixin:
         if channel_id:
             self._kanal_zuordnungen_loesen(db, tenant_id, property_id, channel_id)
 
-            listing_id = self._airbnb_listing_id(db, property_id)
-            if listing_id:
-                try:
-                    self._channex.disconnect_listing(  # type: ignore[attr-defined]
-                        channel_id, listing_id
-                    )
-                except ChannexError as exc:
-                    log.warning(
-                        "portal_trennen_listing_blieb",
-                        property_id=property_id, listing_id=listing_id,
-                        error=exc.message,
-                    )
+            # Schritt 2 gibt es NUR bei Airbnb: `disconnect_listing` ist ein
+            # Airbnb-Meta-Endpunkt (`meta/airbnb/{channel_id}/disconnect_listing`).
+            # Die Bedingung war vorher „hat das Objekt irgendeine Airbnb-Nummer"
+            # statt „ist dies der Airbnb-Kanal". Bei einem Objekt, das bei
+            # beiden Portalen hängt, ging beim Trennen von Booking.com die
+            # Airbnb-Nummer an den BOOKING-Kanal — und weil der `except` unten
+            # nur protokolliert, blieb das vollständig unsichtbar.
+            if ist_airbnb(portal_code):
+                listing_id = self._airbnb_listing_id(db, property_id)
+                if listing_id:
+                    try:
+                        self._channex.disconnect_listing(  # type: ignore[attr-defined]
+                            channel_id, listing_id
+                        )
+                    except ChannexError as exc:
+                        log.warning(
+                            "portal_trennen_listing_blieb",
+                            property_id=property_id, listing_id=listing_id,
+                            error=exc.message,
+                        )
 
         self._kanalplan_entfernen(db, property_id, portal_code)
 

@@ -73,11 +73,22 @@ def test_ota_name_to_channel() -> None:
     assert f("VRBO") == "vrbo"
     # Namensvarianten dürfen nicht durchrutschen.
     assert f("booking") == "booking"
+    # Channex' eigener Kanalcode schreibt sich OHNE Punkt — live gelesen aus
+    # `GET channels/list`. Genau daran sind sechs echte Buchungen als
+    # `ota_other` gelandet und waren im Belegungsplan nicht als Booking
+    # erkennbar (07.08.2026).
+    assert f("BookingCom") == "booking"
+    # Rechtsform-Zusätze hängen hinten an und meinen dasselbe Portal. Vorher
+    # fiel das auf `ota_other`: finanziell gleich (beide 1 % nach Preisliste
+    # §2), aber im Kalender ohne Filter und ohne Kanalfarbe.
+    assert f("Booking.com B.V.") == "booking"
+    assert f("Air BnB") == "airbnb"
     # Unbekannte/weitere OTAs → externer Sammelkanal, nicht 'portal'.
     assert f("Expedia") == "ota_other"
     assert f("Agoda") == "ota_other"
-    assert f("Booking.com B.V.") == "ota_other"
     assert f(None) == "ota_other"
+    # Ein Name, der einen Portalnamen nur ENTHÄLT, ist nicht dieses Portal.
+    assert f("Notbooking Inc") == "ota_other"
     # Der Kernschutz, explizit:
     for name in (None, "", "Expedia", "Agoda", "irgendwas"):
         assert f(name) != "portal"

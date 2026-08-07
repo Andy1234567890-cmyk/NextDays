@@ -390,7 +390,7 @@ def test_fee_cents_haengt_am_kanal_nicht_am_kontotyp() -> None:
     „Ein Tarif für alle. Kein Privat- oder Agentur-Modell." — derselbe Betrieb
     verkauft über unser Portal mit 8 %, über seine eigene Website
     provisionsfrei (§5: „provisionsfreie Direktbuchungen zusätzlich") und über
-    OTAs mit 1 %, die monatlich fakturiert wird.
+    OTAs mit 0,5 %, die monatlich fakturiert wird.
     """
     portal = {"tenant_id": "t1", "channel": "portal"}
     direkt = {"tenant_id": "t1", "channel": "direct"}
@@ -404,7 +404,7 @@ def test_fee_cents_haengt_am_kanal_nicht_am_kontotyp() -> None:
     assert svc._fee_cents(db, "t1", 12345, portal) == 987  # noqa: SLF001
     # Eigene Website des Betriebs → provisionsfrei.
     assert svc._fee_cents(db, "t1", 12000, direkt) == 0  # noqa: SLF001
-    # OTA → am Charge nichts; die 1 % laufen über die Monatsrechnung.
+    # OTA → am Charge nichts; die 0,5 % laufen über die Monatsrechnung.
     assert svc._fee_cents(db, "t1", 12000, ota) == 0  # noqa: SLF001
     # Ohne Kontext lieber nichts berechnen als zu Unrecht (Wurzel 5).
     assert svc._fee_cents(db, "t1", 12000, None) == 0  # noqa: SLF001

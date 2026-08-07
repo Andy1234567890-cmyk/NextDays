@@ -112,6 +112,7 @@ from supabase import Client
 from src.core.security import AuthContext
 
 from . import airbnb_listing_import as ali
+from .airbnb_konten import airbnb_konten
 from .channex_client import ChannexError
 from .common import (
     ChannelManagerError,
@@ -120,6 +121,7 @@ from .common import (
     log,
 )
 from .content_builder import locale_order_for_country
+from .ota_konten import konto_anlegen
 
 # Titel des Gerüst-Objekts. Bewusst erkennbar und nicht geraten: solange die
 # echten Airbnb-Daten fehlen, darf hier kein plausibler Fantasiename stehen
@@ -139,7 +141,8 @@ class AirbnbUebernahmeMixin:
     # -- a) Start: Gerüst-Objekt + OAuth-URL ----------------------------------
     def uebernahme_starten(
         self, ctx: AuthContext, *, portal_code: str = "AirBNB",
-        neues_konto: bool = False,
+        neues_konto: bool = False, redirect_uri: str | None = None,
+        account_id: str | None = None,
     ) -> dict[str, Any]:
         """Übernahme starten, OHNE dass der Kunde ein Objekt anlegt.
 
@@ -156,7 +159,22 @@ class AirbnbUebernahmeMixin:
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
 
-        property_id = self._geruest_objekt(db, tenant_id)
+        # Ein benanntes Konto ist wie ein neues zu behandeln, was den AUFHÄNGER
+        # angeht: sein Gerüst darf niemals ein Objekt eines anderen Zugangs sein.
+        eigenes_geruest = neues_konto or bool(account_id)
+        property_id = self._geruest_objekt(
+            db, tenant_id, neues_konto=eigenes_geruest
+        )
+        # Das Konto SOFORT anlegen, bevor der erste Channex-Aufruf läuft — und
+        # seine ID zurückgeben. Damit hat das Frontend ab dem ersten Moment einen
+        # stabilen Anker und kann jeden Folge-Aufruf (Link erneut anfordern,
+        # Status prüfen) an DIESES Konto binden.
+        #
+        # Ohne den Anker gab es nur das Flag `neues_konto`, das einen einzigen
+        # Request überlebte; jeder Folge-Aufruf landete beim autorisierten Kanal
+        # des ersten Zugangs (live am 07.08.2026 dreimal nacheinander).
+        if neues_konto and not account_id:
+            account_id = konto_anlegen(db, tenant_id, portal_code=portal_code)
         # Ab hier der bestehende, erprobte OAuth-Pfad — kein zweiter Weg zu
         # Channex (der erste Anlauf dieser Funktion hatte genau das gebaut).
         # Die Channex-Registrierung des Gerüsts holt `begin_channel_oauth` selbst
@@ -176,46 +194,51 @@ class AirbnbUebernahmeMixin:
             portal_code=portal_code,
             title=None,
             neues_konto=neues_konto,
+            redirect_uri=redirect_uri,
+            account_id=account_id,
         )
 
-    def _geruest_objekt(self, db: Client, tenant_id: str) -> str:
+    def _geruest_objekt(
+        self, db: Client, tenant_id: str, *, neues_konto: bool = False
+    ) -> str:
         """Objekt-ID, an der die Airbnb-Autorisierung hängen kann.
 
-        IMMER ein bestehendes Objekt, wenn der Betrieb eines hat — auch für ein
-        zweites Konto. Nur wer noch gar kein Objekt führt, bekommt ein Gerüst.
+        ERSTES Konto: ein bestehendes Objekt, wenn der Betrieb eines hat — es
+        gehört ja demselben Zugang. Sonst ein Gerüst (der Weg, den auch das
+        Onboarding nimmt: `ChannelConnectButton` ohne `presetPropertyId` →
+        `startAirbnbUebernahme()`).
 
-        Bis zum 07.08.2026 legte der Weg zum zweiten Konto hier ZWANGSWEISE ein
-        neues „Airbnb-Übernahme läuft" an. Die Begründung dafür war falsch: es
-        hieß, ein bestehendes Objekt hänge schon am ersten Konto und Channex
-        würde den neuen Kanal an dieselbe Property hängen. Tatsächlich braucht
-        nur der connection_link IRGENDEINE Property (`properties: []` → 422);
-        WELCHE, ist Channex gleichgültig, und sie wird dadurch weder dem Kanal
-        zugeordnet noch verändert. Live gegengeprüft mit „Feriehus Line", einem
-        Objekt am ERSTEN Konto:
+        ZWEITES Konto (`neues_konto=True`): IMMER ein eigenes Gerüst. Kein
+        Objekt des ersten Zugangs darf herhalten, auch nicht vorübergehend —
+        die 18 Objekte von Konto A haben mit Konto B nichts zu tun. Genau das
+        war am 07.08.2026 der Fehler: der Aufhänger „Feriehus Line" landete am
+        Kanal des zweiten Kontos und stand danach in der Oberfläche auf
+        „Pausiert".
 
-            POST meta/airbnb/connection_link  properties=[b02f3d49…]  → 200
-                 https://www.airbnb.com/oauth2/auth?scope=property_management…
-
-        Der Preis der alten Annahme stand in der Objektliste und bei Channex:
-        ein Platzhalter-Objekt je Anlauf, das niemand angelegt hat und das
-        niemand verkauft. Welche Listings zu welchem Konto gehören, entscheidet
-        ohnehin erst die Übernahme nach der Autorisierung.
+        Der Zirkel dahinter ist nicht auflösbar, nur eingrenzbar: Channex
+        verlangt für den Autorisierungslink mindestens eine Property (live
+        gemessen: `properties: []` → 422 „should have at least 1 item(s)"), das
+        zu importierende Listing existiert bei uns aber erst NACH der
+        Autorisierung. Das Gerüst überbrückt genau diese Lücke und wird beim
+        Import mit dem ersten Listing dieses Kontos gefüllt — es bleibt also
+        kein Geisterobjekt zurück (`_objekt_schreiben`).
         """
-        vorhanden = (
-            db.table("properties")
-            .select("id")
-            .eq("tenant_id", tenant_id)
-            .neq("title", GERUEST_TITEL)
-            .order("created_at")
-            .limit(1)
-            .execute()
-        ).data
-        if vorhanden:
-            return vorhanden[0]["id"]
+        if not neues_konto:
+            vorhanden = (
+                db.table("properties")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .neq("title", GERUEST_TITEL)
+                .order("created_at")
+                .limit(1)
+                .execute()
+            ).data
+            if vorhanden:
+                return vorhanden[0]["id"]
 
         # Ein früheres Gerüst wiederverwenden, bevor ein weiteres entsteht
-        # (Wurzel 2). Greift nur noch für den Betrieb ohne jedes Objekt, dessen
-        # erster Anlauf abgebrochen ist.
+        # (Wurzel 2). Der Weg zum zweiten Konto führt über Airbnb und zurück;
+        # bricht der Kunde dort ab, legte sonst jeder Anlauf ein weiteres an.
         offen = (
             db.table("properties")
             .select("id")
@@ -295,9 +318,14 @@ class AirbnbUebernahmeMixin:
 
     # -- c) Listings holen und Objekte daraus machen --------------------------
     def listings_uebernehmen(
-        self, ctx: AuthContext, *, portal_code: str = "AirBNB"
+        self, ctx: AuthContext, *, portal_code: str = "AirBNB",
+        account_id: str | None = None,
     ) -> dict[str, Any]:
-        """Airbnb-Listings des verbundenen Kontos als Objekte übernehmen.
+        """Airbnb-Listings eines verbundenen Kontos als Objekte übernehmen.
+
+        `account_id` wählt den Zugang. Pflicht, sobald der Betrieb mehr als
+        einen führt — sonst landeten die Anzeigen des einen Vermieters unter
+        dem Konto eines anderen.
 
         Liest die Listings über `channels/mapping_details` und schreibt sie in
         unsere DB: das erste füllt das Gerüst-Objekt, jedes weitere wird ein
@@ -318,34 +346,46 @@ class AirbnbUebernahmeMixin:
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
 
-        # Nur Zeilen MIT Kanal-ID: die Tabelle trägt für jedes Objekt eine Zeile
-        # je Portal, und solange dort kein Kanal angelegt wurde, ist
-        # `channex_channel_id` leer. Ohne diesen Filter hätte `limit(1)` eine
-        # leere Zeile erwischt und "nicht verbunden" gemeldet, obwohl eine andere
-        # Zeile den Kanal trägt.
-        verbindung = (
-            db.table("channex_channel_connection")
-            .select("channex_channel_id, property_id")
-            .eq("tenant_id", tenant_id)
-            .eq("ota_portal_code", portal_code)
-            .not_.is_("channex_channel_id", "null")
-            .limit(1)
-            .execute()
-        ).data
-        if not verbindung:
+        # WELCHES Konto übernommen wird, muss der Aufrufer sagen können.
+        #
+        # Vorher stand hier ein `limit(1)` über die Verbindungen — bei einem
+        # Betrieb mit zwei Zugängen (0304) traf das immer denselben Kanal, und
+        # die Listings des zweiten Kontos kamen nie an. Für eine Agentur mit
+        # hundert Vermietern wäre die Übernahme damit unbrauchbar.
+        #
+        # Quelle ist jetzt `ota_account` (das Konto trägt den Kanal), nicht die
+        # Objekt-Verbindungen: ein frisch verbundenes Konto hat noch gar keine
+        # Objekte — genau dann soll die Übernahme ja laufen.
+        konten = [
+            k for k in airbnb_konten(db, tenant_id) if k.get("channex_channel_id")
+        ]
+        if account_id:
+            konten = [k for k in konten if str(k["id"]) == account_id]
+            if not konten:
+                raise ChannelManagerError("Konto nicht gefunden.", status_code=404)
+        if not konten:
             raise ChannelManagerError(
                 "Airbnb ist noch nicht verbunden. Starte die Übernahme und "
                 "autorisiere Airbnb zuerst.",
                 status_code=409,
             )
-        channel_id = verbindung[0]["channex_channel_id"]
+        if len(konten) > 1:
+            # Nicht raten, welches gemeint ist (Wurzel 4): bei mehreren Zugängen
+            # entscheidet der Betrieb, sonst importierte man Torstens Anzeigen
+            # womöglich unter dem Konto eines anderen Vermieters.
+            raise ChannelManagerError(
+                "Es sind mehrere Airbnb-Konten verbunden. Wähle das Konto aus, "
+                "dessen Anzeigen übernommen werden sollen.",
+                status_code=409,
+            )
+        channel_id = konten[0]["channex_channel_id"]
 
         # Jeden Channex-Aufruf dieses Ablaufs in channex_debug_log schreiben.
         # Ohne gesetzten Trace-Kontext schreibt der Sink nichts, und dann ist
         # NUR am Serverlog erkennbar, was Channex geantwortet hat — im
         # Debug-Bereich der Anwendung stand nichts.
         self._trace_step(
-            tenant_id=tenant_id, property_id=verbindung[0].get("property_id"),
+            tenant_id=tenant_id, property_id=None,
             step="airbnb_uebernahme",
         )
 
@@ -376,6 +416,8 @@ class AirbnbUebernahmeMixin:
                 tenant_id=tenant_id, gesamt=len(listings), grenze=_MAX_LISTINGS,
             )
         angelegt = aktualisiert = 0
+        # Die Objekte DIESES Kontos — nur sie gehören später an seinen Kanal.
+        uebernommen: list[str] = []
         # Über den KANAL, nicht über ein Objekt: die Objekte dieses Kontos
         # entstehen hier gerade erst aus den Listings.
         zugang = self._airbnb_token_am_kanal(channel_id)
@@ -396,6 +438,7 @@ class AirbnbUebernahmeMixin:
                 uebersprungen += 1
                 continue
             objekt_id, neu = self._objekt_schreiben(db, tenant_id, row)
+            uebernommen.append(objekt_id)
             # JEDES übernommene Objekt bei Channex registrieren. Ohne diesen
             # Schritt existiert nur die lokale Zeile, aber keine
             # Channex-Property — und damit kein Ziel, auf das die Airbnb-Anzeige
@@ -448,7 +491,21 @@ class AirbnbUebernahmeMixin:
         # bestehenden Kanal öffnen und die weiteren Objekte unter „Affected
         # Properties" ergänzen. Live nachgewiesen: am Kanal hing nur die eine
         # Gerüst-Property, während 18 Anzeigen auf „Not mapped" standen.
-        am_kanal = self._kanal_properties_nachziehen(db, tenant_id, channel_id)
+        am_kanal = self._kanal_properties_nachziehen(
+            db, tenant_id, channel_id, uebernommen
+        )
+
+        # Den Aufhänger wieder abhängen (Wurzel 1: Gegenzustand).
+        #
+        # Beim Verbinden eines zweiten Kontos MUSS eine fremde Property am Kanal
+        # hängen — Channex führt `properties` als Pflichtfeld und gibt den
+        # Airbnb-Connect sonst nicht frei (live gemessen: check_readiness meldet
+        # `{"field": "properties", "error_code": "required"}`, und der Link
+        # entsteht zwar, bringt aber nie Tokens). Jetzt sind die echten Objekte
+        # dieses Kontos da, und der Aufhänger hat seinen Zweck erfüllt. Bleibt er
+        # hängen, steht ein Objekt an zwei Kanälen und fällt in unserer
+        # Oberfläche auf „Pausiert".
+        self._aufhaenger_abhaengen(db, tenant_id, channel_id, uebernommen)
 
         log.info(
             "airbnb_uebernahme_fertig",
@@ -463,23 +520,89 @@ class AirbnbUebernahmeMixin:
             "listings_gefunden": len(listings),
         }
 
+    def _aufhaenger_abhaengen(
+        self, db: Client, tenant_id: str, channel_id: str,
+        objekt_ids: list[str],
+    ) -> None:
+        """Fremde Properties vom Kanal nehmen, sobald eigene da sind.
+
+        Am Kanal darf nur stehen, was diesem Konto gehört. Alles andere ist der
+        Aufhänger, den Channex beim Verbinden erzwungen hat.
+
+        Sicherung gegen den Totalschaden: passiert NUR, wenn danach mindestens
+        eine eigene Property übrig bleibt. Sonst stünde der Kanal wieder ohne
+        `properties` da — unvollständig und ohne Connect-Freigabe. Lieber ein
+        überzähliger Eintrag als ein toter Kanal (Wurzel 5).
+
+        Best effort: schlägt es fehl, ist die Übernahme trotzdem gelaufen.
+        """
+        if not objekt_ids:
+            return
+        maps = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .in_("property_id", objekt_ids)
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        eigene = {
+            str(m["channex_property_id"]) for m in maps
+            if m.get("channex_property_id")
+        }
+        if not eigene:
+            return
+        try:
+            kanal = self._channex.get_channel(channel_id)
+            attrs = (kanal.get("data") or {}).get("attributes") or {}
+            vorhanden = {str(p) for p in (attrs.get("properties") or [])}
+            fremd = vorhanden - eigene
+            if not fremd:
+                return
+            self._channex.update_channel(
+                channel_id, {"properties": sorted(vorhanden - fremd)}
+            )
+            log.info(
+                "airbnb_uebernahme_aufhaenger_abgehaengt",
+                tenant_id=tenant_id, channel_id=channel_id,
+                abgehaengt=len(fremd), verbleibend=len(vorhanden - fremd),
+            )
+        except ChannexError as exc:  # noqa: BLE001 — Aufräumen kippt nicht die Übernahme
+            log.warning(
+                "airbnb_uebernahme_aufhaenger_abhaengen_fehlgeschlagen",
+                tenant_id=tenant_id, channel_id=channel_id,
+                error=exc.message,
+            )
+
     def _kanal_properties_nachziehen(
-        self, db: Client, tenant_id: str, channel_id: str
+        self, db: Client, tenant_id: str, channel_id: str,
+        objekt_ids: list[str] | None = None,
     ) -> int:
-        """Alle Channex-Properties dieses Betriebs an den Kanal hängen.
+        """Die Channex-Properties dieses Kontos an den Kanal hängen.
 
         Liefert die Anzahl am Kanal. Der PUT ERSETZT die Liste (kein Merge), also
         wird die bestehende gelesen und vereinigt — sonst verlöre ein Nachzug die
         vorher verbundenen Objekte (Wurzel 1). Idempotent: dieselbe Menge zweimal
         gesetzt ändert nichts (Wurzel 2).
+
+        `objekt_ids` grenzt auf die gerade übernommenen Objekte ein. Ohne diese
+        Grenze hing die Funktion ALLE Objekte des Betriebs an den Kanal — bei
+        einem zweiten Zugang (0304) also auch die 18 des ersten. Ein Objekt
+        gehört genau einem Airbnb-Konto; an einem fremden Kanal ist es dort
+        bestenfalls „Not mapped" und in unserer Oberfläche „Pausiert" (live am
+        07.08.2026 an „Rævlingehuset").
         """
-        maps = (
+        frage = (
             db.table("channex_property_map")
             .select("channex_property_id")
             .eq("tenant_id", tenant_id)
             .is_("deleted_at", "null")
-            .execute()
-        ).data or []
+        )
+        if objekt_ids is not None:
+            if not objekt_ids:
+                return 0
+            frage = frage.in_("property_id", objekt_ids)
+        maps = (frage.execute()).data or []
         unsere = {
             str(m["channex_property_id"]) for m in maps
             if m.get("channex_property_id")

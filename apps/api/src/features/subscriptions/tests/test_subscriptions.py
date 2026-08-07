@@ -8,6 +8,7 @@ Webhook-Sync (Abo + Modul-Entitlements, Gegenzustand), Idempotenz.
 """
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 import pytest
@@ -322,13 +323,29 @@ def test_webhook_idempotent_duplicate() -> None:
     assert len(db.store["tenant_subscription"]) == 1
 
 
-# --- Externe Provision (1 %/0,5 %) -----------------------------------------
+# --- Externe Provision (0,5 %) ---------------------------------------------
 def _db_with_properties(active_count: int) -> _DB:
     db = _DB()
     db.store["properties"] = [
         {"id": f"p{i}", "tenant_id": "t1", "status": "active"}
         for i in range(active_count)
     ]
+    return db
+
+
+def _mit_reservierung(
+    db: _DB, reservation_id: str, *, property_status: str = "active"
+) -> _DB:
+    """Reservierung + zugehöriges Objekt anlegen. Provision hängt am
+    Objektstatus (nur veröffentlichte Objekte), also braucht jeder
+    record_commission-Test diese Kette."""
+    prop_id = f"prop-{reservation_id}"
+    db.store.setdefault("properties", []).append(
+        {"id": prop_id, "tenant_id": "t1", "status": property_status}
+    )
+    db.store.setdefault("reservations", []).append(
+        {"id": reservation_id, "tenant_id": "t1", "property_id": prop_id}
+    )
     return db
 
 
@@ -418,26 +435,26 @@ def test_dynpricing_ohne_waehrung_faellt_klar_durch() -> None:
     assert exc.value.status_code == 422
 
 
-def test_commission_rate_staffel() -> None:
-    """1 % bis 100 Objekte, 0,5 % ab 101 (Preisliste)."""
-    svc100 = SubscriptionsService(service_client=_db_with_properties(100))
-    assert svc100.commission_rate_for_tenant(svc100._db, "t1") == 0.01  # noqa: SLF001
-    svc101 = SubscriptionsService(service_client=_db_with_properties(101))
-    assert svc101.commission_rate_for_tenant(svc101._db, "t1") == 0.005  # noqa: SLF001
+def test_commission_rate_einheitlich() -> None:
+    """Einheitlich 0,5 %, unabhängig von der Objektzahl (Preisliste) — die
+    frühere Staffel (1 % bis 100 Objekte) ist abgeschafft."""
+    assert SubscriptionsService.commission_rate() == 0.005
 
 
 def test_record_commission_only_external_and_idempotent() -> None:
-    db = _db_with_properties(5)  # 1 %
+    db = _db_with_properties(5)  # 0,5 %
+    _mit_reservierung(db, "r-portal")
+    _mit_reservierung(db, "r1")
     svc = SubscriptionsService(service_client=db)
     # Portal-Buchung → KEINE Provisionszeile (trägt die 8 % Portal-Fee).
     svc.record_commission("t1", reservation_id="r-portal", channel="portal",
                           gross_amount=200.0, currency="EUR")
     assert len(db.store["commission_ledger"]) == 0
-    # OTA-Buchung 200 € → 1 % = 2,00 €.
+    # OTA-Buchung 200 € → 0,5 % = 1,00 €.
     svc.record_commission("t1", reservation_id="r1", channel="booking",
                           gross_amount=200.0, currency="EUR")
     assert len(db.store["commission_ledger"]) == 1
-    assert db.store["commission_ledger"][0]["commission_amount"] == 2.0
+    assert db.store["commission_ledger"][0]["commission_amount"] == 1.0
     # Resync derselben Buchung → KEINE zweite Zeile (Idempotenz, Wurzel 2).
     svc.record_commission("t1", reservation_id="r1", channel="booking",
                           gross_amount=200.0, currency="EUR")
@@ -445,7 +462,7 @@ def test_record_commission_only_external_and_idempotent() -> None:
 
 
 def test_record_commission_updates_amount_while_pending() -> None:
-    db = _db_with_properties(5)
+    db = _mit_reservierung(_db_with_properties(5), "r1")
     svc = SubscriptionsService(service_client=db)
     svc.record_commission("t1", reservation_id="r1", channel="airbnb",
                           gross_amount=100.0, currency="EUR")
@@ -454,13 +471,13 @@ def test_record_commission_updates_amount_while_pending() -> None:
                           gross_amount=300.0, currency="EUR")
     row = db.store["commission_ledger"][0]
     assert row["gross_amount"] == 300.0
-    assert row["commission_amount"] == 3.0
+    assert row["commission_amount"] == 1.5
 
 
 def test_record_commission_removes_line_on_zero_amount() -> None:
     """Gegenzustand (Wurzel 1): fällt der Betrag beim Resync auf 0, muss die
     vorhandene offene Provisionszeile verschwinden (keine falsche Provision)."""
-    db = _db_with_properties(5)
+    db = _mit_reservierung(_db_with_properties(5), "r1")
     svc = SubscriptionsService(service_client=db)
     svc.record_commission("t1", reservation_id="r1", channel="booking",
                           gross_amount=200.0, currency="EUR")
@@ -473,7 +490,7 @@ def test_record_commission_removes_line_on_zero_amount() -> None:
 def test_record_commission_removes_line_on_channel_switch() -> None:
     """Gegenzustand (Wurzel 1): wird die Buchung von extern auf portal korrigiert,
     muss die externe Provisionszeile weg (portal trägt die 8 % Portal-Fee)."""
-    db = _db_with_properties(5)
+    db = _mit_reservierung(_db_with_properties(5), "r1")
     svc = SubscriptionsService(service_client=db)
     svc.record_commission("t1", reservation_id="r1", channel="booking",
                           gross_amount=200.0, currency="EUR")
@@ -484,7 +501,7 @@ def test_record_commission_removes_line_on_channel_switch() -> None:
 
 
 def test_cancel_commission_removes_pending() -> None:
-    db = _db_with_properties(5)
+    db = _mit_reservierung(_db_with_properties(5), "r1")
     svc = SubscriptionsService(service_client=db)
     svc.record_commission("t1", reservation_id="r1", channel="vrbo",
                           gross_amount=200.0, currency="EUR")
@@ -493,12 +510,62 @@ def test_cancel_commission_removes_pending() -> None:
 
 
 def test_record_commission_needs_currency() -> None:
-    db = _db_with_properties(5)
+    db = _mit_reservierung(_db_with_properties(5), "r1")
     svc = SubscriptionsService(service_client=db)
     with pytest.raises(SubscriptionsError) as exc:
         svc.record_commission("t1", reservation_id="r1", channel="booking",
                               gross_amount=200.0, currency="")
     assert exc.value.status_code == 422
+
+
+def test_record_commission_nur_veroeffentlichte_objekte() -> None:
+    """Provision NUR für veröffentlichte Objekte (status='active'). Ein Entwurf
+    ist nicht im Verkauf — eine OTA-Buchung darauf kostet keine Provision."""
+    for status in ("draft", "inactive"):
+        db = _mit_reservierung(_DB(), "r1", property_status=status)
+        svc = SubscriptionsService(service_client=db)
+        svc.record_commission("t1", reservation_id="r1", channel="booking",
+                              gross_amount=200.0, currency="EUR")
+        assert db.store["commission_ledger"] == []
+
+
+def test_record_commission_entfernt_zeile_wenn_objekt_zurueckgezogen() -> None:
+    """Gegenzustand (Wurzel 1): wird ein Objekt nach der Buchung zurückgezogen,
+    muss die offene Provisionszeile beim nächsten Resync verschwinden."""
+    db = _mit_reservierung(_DB(), "r1")
+    svc = SubscriptionsService(service_client=db)
+    svc.record_commission("t1", reservation_id="r1", channel="booking",
+                          gross_amount=200.0, currency="EUR")
+    assert len(db.store["commission_ledger"]) == 1
+    for prop in db.store["properties"]:
+        prop["status"] = "draft"  # Objekt zurückgezogen
+    svc.record_commission("t1", reservation_id="r1", channel="booking",
+                          gross_amount=200.0, currency="EUR")
+    assert db.store["commission_ledger"] == []
+
+
+def test_record_commission_fremder_tenant_bekommt_keine_provision() -> None:
+    """Wurzel 3: service_role umgeht RLS. Eine Reservierung eines FREMDEN
+    Tenants darf keine Provisionszeile erzeugen (fail-closed)."""
+    db = _mit_reservierung(_DB(), "r1")
+    for res in db.store["reservations"]:
+        res["tenant_id"] = "t2"
+    svc = SubscriptionsService(service_client=db)
+    svc.record_commission("t1", reservation_id="r1", channel="booking",
+                          gross_amount=200.0, currency="EUR")
+    assert db.store["commission_ledger"] == []
+
+
+def test_deckel_gleiche_waehrung_ohne_kurs() -> None:
+    """250-€-Monatsdeckel: bei EUR wird kein Wechselkurs gebraucht."""
+    svc = SubscriptionsService(service_client=_DB())
+    assert svc.cap_for_currency(svc._db, "EUR", "2026-08") == 250.0  # noqa: SLF001
+
+
+def test_deckel_stichtag_ist_monatserster() -> None:
+    """Der Kurs-Stichtag folgt der Periode, nicht `heute` — sonst bekäme ein
+    Wiederholungslauf einen anderen Deckel (Wurzel 2)."""
+    assert SubscriptionsService.cap_stichtag("2026-08") == date(2026, 8, 1)
 
 
 def test_bill_mixed_currency_fails() -> None:

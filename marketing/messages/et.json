@@ -92,7 +92,7 @@
       "proMonat": "kuus",
       "tarif": "Üks hinnapakett kõigile, sh 1 objekt",
       "objekte": "Iga järgmine objekt +6/5/4 € (kahanev)",
-      "provision": "Välised kanalid 1 % · oma portaal 8 %",
+      "provision": "Välised kanalid 0,5 % · oma portaal 8 %",
       "cta": "Vaata hindu"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Otsebroneering",
-        "items": "Oma broneerimisportaal, broneerimisvidin, veebilehe koostaja, oma domeen, 1 % OTA komisjonitasu asemel 15–18 %"
+        "items": "Oma broneerimisportaal, broneerimisvidin, veebilehe koostaja, oma domeen, 0,5 % OTA komisjonitasu asemel 15–18 %"
       },
       "preise": {
         "title": "Hinnad ja käive",

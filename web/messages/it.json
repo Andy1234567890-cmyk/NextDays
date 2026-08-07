@@ -779,7 +779,10 @@
     "autoNoContent": "Nessun contenuto impostato.",
     "autoEditSection": "Modifica {section}",
     "attachmentPreview": "Foto",
-    "attachmentAlt": "Foto dell'ospite"
+    "attachmentAlt": "Foto dell'ospite",
+    "translate": "Traduci",
+    "showOriginal": "Mostra originale",
+    "translatedFrom": "Tradotto dal {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp non è ancora collegato. Inserisci le credenziali (Meta Cloud API) nelle impostazioni del server per attivare l'invio.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Controlla e gestisci gli account collegati al gestore dei canali.",
     "accountsEmpty": "Nessun account ancora collegato.",
     "accountConnect": "Collega account",
+    "accountConnectCredentialHint": "Colleghi un altro account {portal} tramite «{portal} Connect»: lì inserisci l’identificativo dell’hotel e associ le camere.",
     "accountsCheckPortalHint": "Verifica nelle impostazioni del tuo account del portale che nessun'altra app sia impostata come fornitore della connessione.",
     "accountsLogoutHint": "Esci dal portale nel browser prima di collegare un altro account."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 stelle",
     "reviews": "· 921 recensioni",
     "trial30": "Prova gratis per 30 giorni",
-    "bookingValue": "+1 % del valore di prenotazione",
+    "bookingValue": "+0,5 % del valore di prenotazione",
     "seePrices": "Vedi i prezzi",
     "downloadApp": "Scarica l'app",
     "copyright": "© 2026 myNextDays. Tutti i diritti riservati.",

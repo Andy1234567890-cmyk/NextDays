@@ -159,10 +159,14 @@ export type CommissionRow = {
 };
 
 export type CommissionSummary = {
-  current_rate: number; // 0.01 / 0.005
+  current_rate: number; // 0.005 (einheitlich, keine Objektzahl-Staffel)
   pending_total: number;
   pending_count: number;
   currency: string | null;
+  // Monatsdeckel (250 €, in die Währung der offenen Provisionen umgerechnet).
+  // null, solange es keine offenen Zeilen gibt oder kein Kurs beschaffbar war.
+  cap_amount: number | null;
+  pending_capped: boolean;
   rows: CommissionRow[];
 };
 

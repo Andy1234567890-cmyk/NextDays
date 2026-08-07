@@ -387,6 +387,29 @@ def rename_channel_account(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/channels/accounts/{account_id}/kanal-nachtragen")
+def kanal_des_kontos_nachtragen(
+    account_id: str,
+    ctx: _write,
+    service: ChannelManagerServiceDep,
+    portal_code: str = "AirBNB",
+) -> dict[str, Any]:
+    """Den von Channex nach der Autorisierung angelegten Kanal übernehmen.
+
+    Bei einer neuen Verbindung legt Channex den Kanal selbst an („we will
+    automatically create a new inactive Channel", Airbnb Connection API). Er
+    steht dann dort, gehört bei uns aber noch keinem Konto. Diese Route
+    schließt die Lücke — sie schreibt NICHTS zu Channex, sie liest nur und
+    trägt in unsere DB nach.
+    """
+    try:
+        return service.kanal_des_kontos_nachtragen(
+            ctx, account_id=account_id, portal_code=portal_code
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/channels/prepare", response_model=PrepareChannelResponse)
 def prepare_channel(
     req: PrepareChannelRequest, service: ChannelManagerServiceDep, ctx: _write
@@ -398,6 +421,7 @@ def prepare_channel(
             property_id=req.property_id,
             portal_code=req.portal_code,
             settings=req.settings,
+            account_id=req.account_id,
         )
         return PrepareChannelResponse(**data)
     except ChannelManagerError as exc:
@@ -484,11 +508,23 @@ def start_airbnb_uebernahme(
     # Route sonst keinen hat — ältere Clients senden ihn nicht und bekommen
     # unverändert den Ein-Konto-Weg.
     neues_konto: bool = False,
+    # Rücksprung nach der Autorisierung. Gleiche Begründung wie beim Flag:
+    # Query, weil diese Route keinen Body hat.
+    redirect_uri: str | None = None,
+    # WELCHES Konto verbunden wird — bei jedem FOLGE-Aufruf mitzugeben. Der
+    # erste Aufruf lässt es leer und bekommt die neu angelegte ID zurück; wird
+    # der Link erneut angefordert, bindet dieser Wert ihn an dasselbe Konto.
+    # Ohne ihn fiel der Service auf den bereits autorisierten Kanal zurück und
+    # erzeugte den Link für den FALSCHEN Zugang (live am 07.08.2026).
+    account_id: str | None = None,
 ) -> OAuthBeginResponse:
     """Übernahme starten: Gerüst-Objekt anlegen + Airbnb-OAuth-URL erzeugen."""
     try:
         return OAuthBeginResponse(
-            **service.uebernahme_starten(ctx, neues_konto=neues_konto)
+            **service.uebernahme_starten(
+                ctx, neues_konto=neues_konto, redirect_uri=redirect_uri,
+                account_id=account_id,
+            )
         )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -498,11 +534,18 @@ def start_airbnb_uebernahme(
     "/airbnb/uebernahme/listings", response_model=AirbnbUebernahmeResponse
 )
 def airbnb_listings_uebernehmen(
-    service: ChannelManagerServiceDep, ctx: _write
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+    # WELCHES Konto übernommen wird. Pflicht, sobald der Betrieb mehr als einen
+    # Airbnb-Zugang führt (0304) — der Service lehnt dann ohne Angabe ab, statt
+    # eines zu raten.
+    account_id: str | None = None,
 ) -> AirbnbUebernahmeResponse:
-    """Airbnb-Listings des verbundenen Kontos als Objekte übernehmen."""
+    """Airbnb-Listings eines verbundenen Kontos als Objekte übernehmen."""
     try:
-        return AirbnbUebernahmeResponse(**service.listings_uebernehmen(ctx))
+        return AirbnbUebernahmeResponse(
+            **service.listings_uebernehmen(ctx, account_id=account_id)
+        )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -771,6 +814,8 @@ def begin_channel_oauth(
             title=req.title,
             settings=req.settings,
             neues_konto=req.neues_konto,
+            redirect_uri=req.redirect_uri,
+            account_id=req.account_id,
         )
         return OAuthBeginResponse(**result)
     except ChannelManagerError as exc:
@@ -816,6 +861,7 @@ def finalize_oauth_channel(
             property_id=property_id,
             portal_code=portal_code,
             mappings=[m.model_dump() for m in req.mappings],
+            account_id=req.account_id,
         )
         return ChannelResponse(**result)
     except ChannelManagerError as exc:

@@ -111,6 +111,13 @@ class GuestContact:
     # `name`), damit die Gästekartei Vorname/Nachname/Sprache/Nationalität hat.
     language: str | None = None
     country: str | None = None
+    # Wohnanschrift, sofern der Kanal sie liefert. Sie geht NICHT in `guests`,
+    # sondern nach `guest_addresses` (0046) — dort gehört sie hin, und dort ist
+    # bereits Platz für Straße, PLZ und Ort. Vorher endete der Weg beim Land:
+    # `city`/`address`/`zip` kamen im `customer` an und wurden verworfen.
+    city: str | None = None
+    address: str | None = None
+    zip_code: str | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 
     def full_name(self) -> str:
@@ -131,6 +138,11 @@ def contact_from_ota_customer(
         channel="ota",
         language=customer.get("language"),
         country=customer.get("country"),
+        # Vollständig übernehmen, was das Portal schickt — diese drei wurden
+        # bisher gelesen und dann fallen gelassen.
+        city=customer.get("city"),
+        address=customer.get("address"),
+        zip_code=customer.get("zip"),
         # external_ref = Reservierungscode (pro Buchung), stable_external_ref =
         # OTA-Guest-ID (pro Gast, buchungsübergreifend). Beide werden verknüpft;
         # der Resolver matcht auch über die stabile ID, sodass ein wiederkehrender
@@ -249,7 +261,7 @@ def _backfill_missing(
             cleaned = (value or "").strip()
             if cleaned and not current[0].get(column):
                 patch[column] = cleaned
-        _ensure_country_address(db, tenant_id, guest_id, contact.country)
+        _ensure_country_address(db, tenant_id, guest_id, contact)
     if patch:
         db.table("guests").update(patch).eq("id", guest_id).eq(
             "tenant_id", tenant_id
@@ -371,13 +383,35 @@ def create_placeholder_guest(
 
 
 def _ensure_country_address(
-    db: Client, tenant_id: str, guest_id: str, country: str | None
+    db: Client, tenant_id: str, guest_id: str, contact: GuestContact | None,
+    country: str | None = None,
 ) -> None:
-    """Wohnsitzland aus der Buchung als Adresse in der Gästemappe anlegen
-    (guest_addresses.country, 0046) — aber NUR, wenn der Gast noch gar keine
-    Adresse hat. Kuratierte Adressdaten werden nie überschrieben/ergänzt."""
-    cleaned = (country or "").strip()
-    if not cleaned:
+    """Wohnanschrift aus der Buchung in die Gästemappe übernehmen
+    (guest_addresses, 0046) — aber NUR, wenn der Gast noch gar keine Adresse
+    hat. Kuratierte Adressdaten werden nie überschrieben/ergänzt.
+
+    Übernommen wird ALLES, was der Kanal liefert: Straße, PLZ, Ort, Land. Vorher
+    schrieb diese Funktion ausschließlich `country` — Ort, Straße und PLZ der
+    Buchung landeten nirgends, obwohl `guest_addresses` die Spalten dafür hat
+    und die Portale sie mitsenden (Channex führt `city`/`address`/`zip` im
+    `customer`, Booking.com überträgt `<CityName>`/`<AddressLine>`/
+    `<PostalCode>`). Genau das war das leere „Ort" in der Gästekarte.
+
+    `country` bleibt als zweiter Parameter erhalten, damit Aufrufer ohne
+    vollständigen Kontakt (nur ein Länderkürzel) weiter funktionieren.
+    """
+    felder = {
+        "street": (contact.address if contact else None),
+        "postal_code": (contact.zip_code if contact else None),
+        "city": (contact.city if contact else None),
+        "country": (contact.country if contact else None) or country,
+    }
+    sauber = {
+        spalte: wert.strip()
+        for spalte, wert in felder.items()
+        if isinstance(wert, str) and wert.strip()
+    }
+    if not sauber:
         return
     existing = (
         db.table("guest_addresses")
@@ -394,8 +428,8 @@ def _ensure_country_address(
             "tenant_id": tenant_id,
             "guest_id": guest_id,
             "type": "private",
-            "country": cleaned,
             "is_primary": True,
+            **sauber,
         }
     ).execute()
 
@@ -448,7 +482,7 @@ def _create_guest(
         if channel and external_id:
             _link_external_id(db, tenant_id, matched, channel, external_id)
         if contact:
-            _ensure_country_address(db, tenant_id, matched, contact.country)
+            _ensure_country_address(db, tenant_id, matched, contact)
         return matched
     if not ins.data:
         return None
@@ -457,7 +491,7 @@ def _create_guest(
         _link_external_id(db, tenant_id, guest_id, channel, external_id)
     if contact:
         # Wohnsitzland → Adresse in der Gästemappe (nicht nationality).
-        _ensure_country_address(db, tenant_id, guest_id, contact.country)
+        _ensure_country_address(db, tenant_id, guest_id, contact)
     return guest_id
 
 

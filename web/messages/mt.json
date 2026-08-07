@@ -779,7 +779,10 @@
     "autoNoContent": "L-ebda kontenut issettjat.",
     "autoEditSection": "Editja {section}",
     "attachmentPreview": "Ritratt",
-    "attachmentAlt": "Ritratt mill-mistieden"
+    "attachmentAlt": "Ritratt mill-mistieden",
+    "translate": "Ittraduċi",
+    "showOriginal": "Uri l-oriġinal",
+    "translatedFrom": "Tradott mill-{sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Irrevedi u mmaniġġja l-kontijiet konnessi mal-maniġer tal-kanali.",
     "accountsEmpty": "Għad m'hemm l-ebda kont konness.",
     "accountConnect": "Qabbad kont",
+    "accountConnectCredentialHint": "Kont {portal} ieħor tqabbdu permezz ta’ „{portal} Connect” — hemmhekk iddaħħal l-identifikatur tal-lukanda u timmappja l-kmamar.",
     "accountsCheckPortalHint": "Iċċekkja fis-settings tal-kont tal-portal li l-ebda app oħra mhi mniżżla bħala l-fornitur tal-konnessjoni.",
     "accountsLogoutHint": "Oħroġ mill-portal fil-browser tiegħek qabel ma tqabbad kont ieħor."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 stilel",
     "reviews": "· 921 reċensjoni",
     "trial30": "Ipprova b'xejn għal 30 jum",
-    "bookingValue": "+1 % tal-valur tal-prenotazzjoni",
+    "bookingValue": "+0.5 % tal-valur tal-prenotazzjoni",
     "seePrices": "Ara l-prezzijiet",
     "downloadApp": "Niżżel l-app",
     "copyright": "© 2026 myNextDays. Id-drittijiet kollha riżervati.",

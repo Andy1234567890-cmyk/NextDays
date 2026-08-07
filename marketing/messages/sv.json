@@ -92,7 +92,7 @@
       "proMonat": "per månad",
       "tarif": "Ett pris för alla, inkl. 1 objekt",
       "objekte": "Varje ytterligare objekt +6/5/4 € (fallande skala)",
-      "provision": "Externa kanaler 1 % · egen portal 8 %",
+      "provision": "Externa kanaler 0,5 % · egen portal 8 %",
       "cta": "Se priser"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Direktbokning",
-        "items": "Egen bokningsportal, bokningswidget, webbplatsbyggare, egen domän, 1 % i stället för 15–18 % OTA-provision"
+        "items": "Egen bokningsportal, bokningswidget, webbplatsbyggare, egen domän, 0,5 % i stället för 15–18 % OTA-provision"
       },
       "preise": {
         "title": "Priser & intäkter",

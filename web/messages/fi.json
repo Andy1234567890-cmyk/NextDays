@@ -779,7 +779,10 @@
     "autoNoContent": "Sisältöä ei ole asetettu.",
     "autoEditSection": "Muokkaa: {section}",
     "attachmentPreview": "Kuva",
-    "attachmentAlt": "Vieraan lähettämä kuva"
+    "attachmentAlt": "Vieraan lähettämä kuva",
+    "translate": "Käännä",
+    "showOriginal": "Näytä alkuperäinen",
+    "translatedFrom": "Käännetty kielestä {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Tarkista ja hallitse kanavanhallintaan yhdistettyjä tilejä.",
     "accountsEmpty": "Yhtään tiliä ei ole vielä yhdistetty.",
     "accountConnect": "Yhdistä tili",
+    "accountConnectCredentialHint": "Yhdistät toisen {portal}-tilin painikkeella ”{portal} Connect” — siellä syötät hotellin tunnuksen ja kohdistat huoneet.",
     "accountsCheckPortalHint": "Tarkista portaalitilisi asetuksista, ettei mikään muu sovellus ole asetettu yhteyden tarjoajaksi.",
     "accountsLogoutHint": "Kirjaudu ulos portaalista selaimessa ennen kuin yhdistät toisen tilin."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 tähteä",
     "reviews": "· 921 arvostelua",
     "trial30": "Kokeile 30 päivää ilmaiseksi",
-    "bookingValue": "+1 % varauksen arvosta",
+    "bookingValue": "+0,5 % varauksen arvosta",
     "seePrices": "Katso hinnat",
     "downloadApp": "Lataa sovellus",
     "copyright": "© 2026 myNextDays. Kaikki oikeudet pidätetään.",

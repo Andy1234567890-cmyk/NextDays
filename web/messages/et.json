@@ -779,7 +779,10 @@
     "autoNoContent": "Sisu pole määratud.",
     "autoEditSection": "Muuda: {section}",
     "attachmentPreview": "Foto",
-    "attachmentAlt": "Külalise foto"
+    "attachmentAlt": "Külalise foto",
+    "translate": "Tõlgi",
+    "showOriginal": "Näita originaali",
+    "translatedFrom": "Tõlgitud keelest {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Vaata üle ja halda kanalihalduriga ühendatud kontosid.",
     "accountsEmpty": "Ühtegi kontot pole veel ühendatud.",
     "accountConnect": "Ühenda konto",
+    "accountConnectCredentialHint": "Järgmise {portal}-i konto ühendad nupu „{portal} Connect“ kaudu — seal sisestad hotelli tunnuse ja seod toad.",
     "accountsCheckPortalHint": "Kontrolli portaalikonto seadetes, et ükski teine rakendus poleks määratud ühenduse pakkujaks.",
     "accountsLogoutHint": "Logi brauseris portaalist välja, enne kui ühendad teise konto."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 tärni",
     "reviews": "· 921 arvustust",
     "trial30": "Proovi 30 päeva tasuta",
-    "bookingValue": "+1 % broneeringu väärtusest",
+    "bookingValue": "+0,5 % broneeringu väärtusest",
     "seePrices": "Vaata hindu",
     "downloadApp": "Laadi rakendus alla",
     "copyright": "© 2026 myNextDays. Kõik õigused kaitstud.",

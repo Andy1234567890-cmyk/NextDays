@@ -92,7 +92,7 @@
       "proMonat": "par mois",
       "tarif": "Un tarif unique pour tous, 1 hébergement inclus",
       "objekte": "Chaque hébergement supplémentaire +6/5/4 € (tarif dégressif)",
-      "provision": "Canaux externes 1 % · portail propre 8 %",
+      "provision": "Canaux externes 0,5 % · portail propre 8 %",
       "cta": "Voir les tarifs"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Réservation directe",
-        "items": "Portail de réservation dédié, widget de réservation, créateur de site web, nom de domaine propre, 1 % au lieu de 15 à 18 % de commission OTA"
+        "items": "Portail de réservation dédié, widget de réservation, créateur de site web, nom de domaine propre, 0,5 % au lieu de 15 à 18 % de commission OTA"
       },
       "preise": {
         "title": "Tarifs et revenus",

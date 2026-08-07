@@ -779,7 +779,10 @@
     "autoNoContent": "Intet indhold angivet.",
     "autoEditSection": "Redigér {section}",
     "attachmentPreview": "Billede",
-    "attachmentAlt": "Billede fra gæsten"
+    "attachmentAlt": "Billede fra gæsten",
+    "translate": "Oversæt",
+    "showOriginal": "Vis original",
+    "translatedFrom": "Oversat fra {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Gennemgå og administrér de konti, der er forbundet til kanalmanageren.",
     "accountsEmpty": "Ingen konto forbundet endnu.",
     "accountConnect": "Forbind konto",
+    "accountConnectCredentialHint": "Du forbinder endnu en {portal}-konto via ”{portal} Connect” — der indtaster du hotel-id’et og tildeler værelserne.",
     "accountsCheckPortalHint": "Kontrollér i indstillingerne for din portalkonto, at ingen anden app er angivet som forbindelsesudbyder.",
     "accountsLogoutHint": "Log ud af portalen i din browser, før du forbinder en anden konto."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 stjerner",
     "reviews": "· 921 anmeldelser",
     "trial30": "Prøv gratis i 30 dage",
-    "bookingValue": "+1 % af bookingværdien",
+    "bookingValue": "+0,5 % af bookingværdien",
     "seePrices": "Se priser",
     "downloadApp": "Download appen",
     "copyright": "© 2026 myNextDays. Alle rettigheder forbeholdes.",

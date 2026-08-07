@@ -13,7 +13,7 @@ derselbe Betrieb verkauft über drei Wege:
 |---|---|---|
 | `portal` — unser Marktplatz | **8 % all-in** (§2) | über die Plattform |
 | `direct` — eigene Website des Betriebs | **0 %** (§5) | direkt zu ihm |
-| `booking`/`airbnb`/`vrbo` | 1 % monatlich fakturiert (§2) | nie über uns |
+| `booking`/`airbnb`/`vrbo` | 0,5 % monatlich fakturiert (§2), höchstens 250 €/Monat, nur für veröffentlichte Objekte | nie über uns |
 
 Alle liefen über **Destination Charges**: `transfer_data.destination` reicht das
 Geld unmittelbar nach dem Charge an den Betrieb weiter — und die Provision hing
@@ -61,7 +61,7 @@ nicht.**
 |---|---|---|---|---|
 | `portal` | Separate Charge + Transfer | myNextDays | 8 % all-in | nach Checkout |
 | `direct` | **Direct Charge** (`Stripe-Account`) | Betrieb | 0 % | entfällt |
-| OTA | kein Charge (409) | — | 1 % monatlich | entfällt |
+| OTA | kein Charge (409) | — | 0,5 % monatlich | entfällt |
 
 Für Portal-Buchungen ist der Fluss `Gast → Plattform → Betrieb`:
 

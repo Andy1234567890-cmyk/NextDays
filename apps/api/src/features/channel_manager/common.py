@@ -6,6 +6,7 @@ Slice-Exception. Patch-Ziel für Tests, die Modul-Helfer ersetzen wollen
 """
 from __future__ import annotations
 
+import json
 import re
 from typing import Any, Final
 
@@ -957,10 +958,11 @@ _UHRZEIT: Final = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d")
 
 
 # Feldnamen, unter denen die Portale den ECHTEN Buchungszeitpunkt liefern.
-# Reihenfolge = Verlässlichkeit. Airbnb: `booked_at`. Booking.com legt ihn in
-# die Originalmeldung (`raw_message`), die `_ota_buchungszeit` im Posteingang
-# auspackt. Neue Kanäle tragen ihren Feldnamen HIER ein — nicht an der
-# Anzeigestelle, sonst hat der nächste Leser wieder eine eigene Regel.
+# Reihenfolge = Verlässlichkeit. Airbnb: `booked_at`. Booking.com liefert keins
+# davon — dort steht der Zeitpunkt nur in der Originalmeldung (`raw_message`),
+# siehe `_aus_rohmeldung` als letzte Stufe. Neue Kanäle tragen ihren Feldnamen
+# HIER ein — nicht an der Anzeigestelle, sonst hat der nächste Leser wieder
+# eine eigene Regel.
 _BUCHUNGSZEIT_FELDER: Final = ("booked_at", "ota_booked_at", "created_at")
 
 
@@ -991,7 +993,115 @@ def ota_buchungszeitpunkt(attrs: dict[str, object]) -> str | None:
         wert = ota_zeitstempel_utc(attrs.get(feld))
         if wert:
             return wert
-    return None
+    return _aus_rohmeldung(attrs.get("raw_message"))
+
+
+def _aus_rohmeldung(roh: object) -> str | None:
+    """Buchungszeitpunkt aus der Originalmeldung des Portals (`raw_message`).
+
+    Booking.com liefert KEIN `booked_at` — der Zeitpunkt steht nur in der
+    durchgereichten Meldung als `date` + `time` („2025-12-31", „10:41:55").
+    Ohne diesen Griff blieb `reservations.booked_at` leer, und der Posteingang
+    sortierte die Booking-Buchungen nach unserem Eingang: sechs Reservierungen
+    aus Dezember bis Mai standen dort als „heute", alle mit derselben Minute
+    (live 07.08.2026). Das ist derselbe Fehler, den `ota_buchungszeitpunkt` für
+    Airbnb schon verhindert — nur über ein anderes Feld.
+
+    Der Posteingang packte die beiden Felder bereits für die ANZEIGE aus
+    (`_ota_buchungszeit`), der Wert kam aber nie in der Spalte an, an der die
+    Sortierung hängt. Deshalb steht die Regel jetzt hier, im einen Helfer.
+
+    Ohne `date` gibt es nichts — dann bleibt es bei `None` und die Oberfläche
+    nennt „Eingang bei uns" (Wurzel 4).
+    """
+    if isinstance(roh, str):
+        try:
+            roh = json.loads(roh)
+        except ValueError:
+            return None
+    if not isinstance(roh, dict):
+        return None
+    datum = str(roh.get("date") or "").strip()
+    if not datum:
+        return None
+    zeit = str(roh.get("time") or "").strip()
+    return ota_zeitstempel_utc(f"{datum}T{zeit}" if zeit else datum)
+
+
+# Der `customer`-Block einer OTA-Buchung → unsere `reservations`-Spalten.
+#
+# Vollständig, nicht handverlesen. Vorher zählte der Buchungs-Sync vier Felder
+# einzeln auf (mail/phone/language/country) — `city`, `address` und `zip`
+# fielen auf den Boden, obwohl Channex sie unter genau diesen Schlüsseln führt
+# (Open-Channel-Spezifikation: name, surname, country, city, address, zip,
+# mail, phone, language, company) und Booking.com sie in `OTA_HotelResNotif`
+# überträgt (`<CityName>`, `<AddressLine>`, `<PostalCode>`). Sichtbar wurde es
+# als „Ort: —" in der Gästekarte: die Anzeige baut den Ort aus `city` +
+# `country`, der Wert kam nur nie an.
+#
+# Mehrere Quellschlüssel je Spalte, weil die Portale sie verschieden benennen
+# (`mail` bei Channex, `email` bei anderen Wegen). Der erste befüllte gewinnt.
+_GAST_FELD_QUELLEN: dict[str, tuple[str, ...]] = {
+    "guest_email": ("mail", "email"),
+    "guest_phone": ("phone", "telephone"),
+    "guest_language": ("language", "lang"),
+    "guest_country": ("country", "country_code"),
+    "guest_city": ("city",),
+    "guest_address": ("address", "address_line"),
+    "guest_zip": ("zip", "postal_code", "zip_code"),
+}
+
+
+def gastfelder_uebernehmen(customer: dict[str, object]) -> dict[str, object]:
+    """Alle Gastfelder einer OTA-Buchung → Spalten der Reservierung.
+
+    Nimmt, was das Portal liefert — kein Feld wird unterwegs verworfen. Was
+    fehlt, bleibt `None` statt einen Ersatzwert zu bekommen (Wurzel 4): ein
+    leeres Feld heißt „das Portal hat es nicht geschickt", und genau das muss
+    die Oberfläche zeigen dürfen.
+
+    Wird an EINER Stelle gepflegt, weil derselbe Block aus zwei Richtungen
+    kommt (Live-Feed und Bestands-Import) und beide dieselben Spalten füllen.
+    """
+    werte: dict[str, object] = {}
+    for spalte, schluessel in _GAST_FELD_QUELLEN.items():
+        for k in schluessel:
+            wert = customer.get(k)
+            if isinstance(wert, str):
+                wert = wert.strip()
+            if wert not in (None, "", [], {}):
+                werte[spalte] = wert
+                break
+        else:
+            werte[spalte] = None
+    return werte
+
+
+def ist_bestandsimport(attrs: dict[str, object]) -> bool:
+    """Ob diese Buchung aus einem Bestands-Import stammt (0308).
+
+    Der Import ist ein ANDERER, ärmerer Datenpfad als der Live-Eingang, und
+    genau das macht ihn zur Falle: die Gastfelder sind leer, und das sieht wie
+    ein Datenverlust aus. Booking.com holt Altbuchungen über einen eigenen
+    Endpunkt (`reservationssummary`) und liefert dort dokumentiert „only summary
+    information … no guest details, other than the guest's name"; Channex
+    schreibt dasselbe zu seinem Import-Knopf („will not include … Personal
+    Details like email, address, telephone etc."). Für Airbnbs Historien-Import
+    gilt es genauso.
+
+    Zwei Merkmale, weil `meta.is_imported` in der Channex-Doku NICHT beschrieben
+    ist — es ist live gemessen (07.08.2026, alle sechs Booking-Buchungen der
+    FeWo *Stjerneskud*), aber nicht zugesichert. Fällt es weg, trägt die Notiz
+    „Imported Booking" die Aussage weiter.
+
+    Im Zweifel `False`: eine Buchung fälschlich als Import zu markieren würde
+    echte fehlende Daten wegerklären.
+    """
+    meta = attrs.get("meta")
+    if isinstance(meta, dict) and meta.get("is_imported") is True:
+        return True
+    notes = attrs.get("notes")
+    return isinstance(notes, str) and "imported booking" in notes.lower()
 
 
 class ChannelManagerError(Exception):

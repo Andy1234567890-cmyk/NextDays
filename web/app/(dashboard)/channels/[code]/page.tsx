@@ -65,6 +65,7 @@ export default async function ChannelDetailPage({
     label: otaEntry.label,
     logo: CHANNEL_LOGO[code],
     icon: otaEntry.icon,
+    connection_type: otaEntry.connection_type,
   };
 
   // Kein `max-w`-Deckel: die Zuordnungstabelle hat sechs Spalten (Objekt,

@@ -146,6 +146,11 @@ class ReservationDetail(BaseModel):
     guest_phone: str | None = None
     guest_language: str | None = None
     guest_location: str | None = None      # Ort/Land des Gastes (aus der OTA)
+    # Aus einem Bestands-Import, nicht live eingegangen (0308). Erklärt die
+    # leeren Gastfelder oben: Booking.com liefert für Altbuchungen dokumentiert
+    # nur den Namen. Ohne diesen Hinweis sieht der erwartete Zustand wie ein
+    # Datenverlust aus.
+    is_imported: bool = False
     adults: int | None = None
     children: int | None = None
     nights: int | None = None

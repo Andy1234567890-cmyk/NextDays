@@ -92,7 +92,7 @@
       "proMonat": "al mese",
       "tarif": "Una sola tariffa per tutti, 1 struttura inclusa",
       "objekte": "Ogni struttura aggiuntiva +6/5/4 € (tariffa decrescente)",
-      "provision": "Canali esterni 1 % · portale proprio 8 %",
+      "provision": "Canali esterni 0,5 % · portale proprio 8 %",
       "cta": "Guarda i prezzi"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Prenotazione diretta",
-        "items": "Portale di prenotazione tuo, widget di prenotazione, creatore di siti, dominio proprio, 1 % invece del 15–18 % di commissione OTA"
+        "items": "Portale di prenotazione tuo, widget di prenotazione, creatore di siti, dominio proprio, 0,5 % invece del 15–18 % di commissione OTA"
       },
       "preise": {
         "title": "Tariffe e ricavi",

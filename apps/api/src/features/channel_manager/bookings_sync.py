@@ -8,6 +8,7 @@ von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 # Reservierungs-Projektion/Bestandsimport) — bewusst EIN Mixin, kein Split.
 from __future__ import annotations
 
+import re
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from uuid import uuid4
@@ -29,6 +30,8 @@ from .ari_push import _group_iso_days_to_ranges
 from .channex_client import ChannexError
 from .common import (
     ChannelManagerError,
+    gastfelder_uebernehmen,
+    ist_bestandsimport,
     log,
     ota_buchungszeitpunkt,
     ota_zeitstempel_utc,
@@ -433,13 +436,38 @@ class BookingsSyncMixin:
     # Namensvarianten wie "Booking.com B.V.") fällt auf 'ota_other' — ebenfalls
     # ein EXTERNER Kanal mit 1 % monatlich. Der echte Anbietername bleibt in
     # reservations.ota_name erhalten (Kalender-Anzeige + Posteingang).
+    # Die Schreibweise kommt von Channex und ist NICHT die des Portals: der
+    # Kanal-Code lautet dort `BookingCom` (ohne Punkt), der Anzeigename
+    # „Booking.com". Beide müssen treffen — sonst fällt eine echte
+    # Booking-Buchung auf `ota_other`, und im Kalender greift weder der Filter
+    # „Booking.com" noch die Farbe des Kanals. Live am 07.08.2026: sechs
+    # Buchungen von Torstens Hotel lagen als `ota_other` in der DB und waren im
+    # Belegungsplan nicht als Booking erkennbar.
+    # Live gelesen aus `GET channels/list` (07.08.2026): AirBNB, BookingCom,
+    # VRBO, Expedia, Agoda. Kleingeschrieben treffen `airbnb` und `vrbo`
+    # zufällig — `BookingCom` nicht. Deshalb stehen BEIDE Formen hier.
     _OTA_CHANNEL_MAP = {
         "booking.com": "booking",
         "booking": "booking",
+        "bookingcom": "booking",
         "airbnb": "airbnb",
         "vrbo": "vrbo",
         "expedia": "ota_other",
+        "agoda": "ota_other",
     }
+    # Dieselbe Zuordnung auf der normalisierten Form (nur Buchstaben/Ziffern).
+    # Fängt die Schreibvarianten ab, die der Exact-Match oben verfehlt —
+    # „Booking.com B.V.", „Air BnB", Bindestriche. Ein unbekannter Name landet
+    # weiterhin auf 'ota_other'; geraten wird nichts.
+    _OTA_CHANNEL_NORMALISIERT = {
+        re.sub(r"[^a-z0-9]", "", name): kanal
+        for name, kanal in _OTA_CHANNEL_MAP.items()
+    }
+    # Dieselben Namen als Präfix-Liste, längster zuerst: „bookingcombv" soll auf
+    # „bookingcom" treffen, nicht auf „booking".
+    _OTA_PREFIX_KANDIDATEN = sorted(
+        _OTA_CHANNEL_NORMALISIERT.items(), key=lambda p: len(p[0]), reverse=True
+    )
 
     @classmethod
     def _ota_name_to_channel(cls, ota_name: str | None) -> str:
@@ -449,12 +477,34 @@ class BookingsSyncMixin:
         Merchant of Record. Eine über den Channel-Manager eingegangene Buchung
         ist per Definition eine FREMDE Buchung — das Geld lief nie über uns.
         Fiele sie auf 'portal', entstünde doppelter Schaden: die geschuldete
-        1 % würde nie fakturiert (record_commission verwirft Nicht-OTA), und
+        0,5 % würde nie fakturiert (record_commission verwirft Nicht-OTA), und
         wir trügen die Chargeback-Haftung für eine Buchung ohne Erlös.
+
+        Verglichen wird auf der normalisierten Form (nur Buchstaben/Ziffern),
+        nicht auf dem Rohwert: „Booking.com", „BookingCom" und
+        „Booking.com B.V." sind dasselbe Portal, treffen aber als exakte
+        Schlüssel nicht. Genau daran ist der Kanal schon einmal gescheitert.
         """
         if not ota_name:
             return "ota_other"
-        return cls._OTA_CHANNEL_MAP.get(ota_name.strip().lower(), "ota_other")
+        roh = ota_name.strip().lower()
+        treffer = cls._OTA_CHANNEL_MAP.get(roh)
+        if treffer:
+            return treffer
+        schlank = re.sub(r"[^a-z0-9]", "", roh)
+        treffer = cls._OTA_CHANNEL_NORMALISIERT.get(schlank)
+        if treffer:
+            return treffer
+        # Rechtsformen und Zusätze („Booking.com B.V.", „Expedia Group") hängen
+        # HINTEN an. Deshalb der Präfix-Vergleich, längster Name zuerst — sonst
+        # würde „booking" ein „bookingcom…" vorzeitig abfangen. Nur echte
+        # Zusätze zählen: ein Name muss mit dem Portalnamen BEGINNEN, damit
+        # „notbooking" nicht trifft.
+        for name, kanal in cls._OTA_PREFIX_KANDIDATEN:
+            if schlank.startswith(name):
+                return kanal
+        return "ota_other"
+
 
     @staticmethod
     def _property_map_id(
@@ -752,8 +802,9 @@ class BookingsSyncMixin:
             # nicht liefert; dann sagt der Posteingang „Eingang bei uns",
             # statt einen falschen Zeitpunkt zu behaupten.
             "booked_at": ota_buchungszeitpunkt(attrs),
-            "guest_email": customer.get("mail") or customer.get("email"),
-            "guest_phone": customer.get("phone"),
+            # Auch im Storno-Pfad ALLE Gastfelder — eine stornierte Buchung
+            # bleibt ein Beleg, und die Karte zeigt dieselben Zeilen.
+            **gastfelder_uebernehmen(customer),
         }
         try:
             db.table("reservations").upsert(
@@ -968,14 +1019,29 @@ class BookingsSyncMixin:
             # nicht liefert; dann sagt der Posteingang „Eingang bei uns",
             # statt einen falschen Zeitpunkt zu behaupten.
             "booked_at": ota_buchungszeitpunkt(attrs),
+            # Bestands-Import statt Live-Eingang (0308). Der Import ist ein
+            # ANDERER, ärmerer Datenpfad: Booking.com holt Altbuchungen über
+            # `reservationssummary` und liefert dort dokumentiert „no guest
+            # details, other than the guest's name". Ohne diesen Marker sähen
+            # die leeren Gastfelder unten wie ein Datenverlust aus.
+            "is_imported": ist_bestandsimport(attrs),
             "num_guests": max(1, adults + children + infants),
             "adults": adults,
             "children": children,
             "infants": infants,
-            "guest_email": customer.get("mail") or customer.get("email"),
-            "guest_phone": customer.get("phone"),
-            "guest_language": customer.get("language"),
-            "guest_country": customer.get("country"),
+            # ALLE Gastfelder, die das Portal liefert — nicht eine handverlesene
+            # Auswahl. Vorher standen hier vier Zeilen (mail/phone/language/
+            # country); `city`, `address` und `zip` fielen auf den Boden, obwohl
+            # Booking.com sie in `OTA_HotelResNotif` überträgt (`<CityName>`,
+            # `<AddressLine>`, `<PostalCode>`) und Channex sie unter genau
+            # diesen Schlüsseln normalisiert. Sichtbar wurde es als „Ort: —" in
+            # der Gästekarte — `_guest_location` baut den Ort aus `city` +
+            # `country`, der Wert kam nur nie an.
+            #
+            # `gastfelder_uebernehmen` bildet den GANZEN `customer` ab. Ergänzt
+            # ein Portal ein Feld, kommt es mit, statt bis zum nächsten Bericht
+            # unbemerkt verloren zu gehen.
+            **gastfelder_uebernehmen(customer),
             # Policy-Zeiten + Preisaufschlüsselung aus der OTA-Payload (sofern
             # vorhanden; kein Erfinden — fehlt ein Feld, bleibt es leer).
             "checkin_time": attrs.get("checkin_time"),
@@ -1127,9 +1193,9 @@ class BookingsSyncMixin:
                         db, tenant_id, property_id, channel, freed_nights,
                         unit_id=alte_einheit,
                     )
-        # Externe Provision (1 %/0,5 %) für diese OTA-Buchung erfassen. Best-effort
+        # Externe Provision (0,5 %) für diese OTA-Buchung erfassen. Best-effort
         # — der Buchungs-Import darf nie an der Provision scheitern (Wurzel 5).
-        # Idempotent über reservation_id (Wurzel 2), Satz aus der Objektzahl.
+        # Idempotent über reservation_id (Wurzel 2).
         if reservation_id:
             self._record_commission_safe(
                 db, tenant_id, reservation_id, channel, total_amount, row["currency"]

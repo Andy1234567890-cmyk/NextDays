@@ -92,7 +92,7 @@
       "proMonat": "per maand",
       "tarif": "Eén tarief voor iedereen, incl. 1 accommodatie",
       "objekte": "Elke extra accommodatie +€ 6/5/4 (aflopend)",
-      "provision": "Externe kanalen 1 % · eigen portaal 8 %",
+      "provision": "Externe kanalen 0,5 % · eigen portaal 8 %",
       "cta": "Prijzen bekijken"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Directe boekingen",
-        "items": "Eigen boekingsportaal, boekingswidget, websitebouwer, eigen domein, 1 % in plaats van 15–18 % OTA-commissie"
+        "items": "Eigen boekingsportaal, boekingswidget, websitebouwer, eigen domein, 0,5 % in plaats van 15–18 % OTA-commissie"
       },
       "preise": {
         "title": "Prijzen & omzet",

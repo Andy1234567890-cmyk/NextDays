@@ -99,7 +99,7 @@ def create_payment_intent(
 
       Nötig, weil das Lastenheft (§7.1) **0 % Buchungsgebühr** auf
       Vermieter-Buchungen zusagt: Ohne Erlös darf die Plattform auch kein
-      Chargeback-Risiko tragen. Die 1 %-OTA-Provision bleibt davon unberührt —
+      Chargeback-Risiko tragen. Die 0,5 %-OTA-Provision bleibt davon unberührt —
       sie wird monatlich fakturiert (``subscriptions``), nicht am Charge
       einbehalten.
 

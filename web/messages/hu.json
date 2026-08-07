@@ -779,7 +779,10 @@
     "autoNoContent": "Nincs beállított tartalom.",
     "autoEditSection": "{section} szerkesztése",
     "attachmentPreview": "Fénykép",
-    "attachmentAlt": "A vendég fényképe"
+    "attachmentAlt": "A vendég fényképe",
+    "translate": "Fordítás",
+    "showOriginal": "Eredeti megjelenítése",
+    "translatedFrom": "Fordítva erről: {sprache}"
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Tekintse át és kezelje a csatornakezelőhöz csatlakoztatott fiókokat.",
     "accountsEmpty": "Még nincs csatlakoztatott fiók.",
     "accountConnect": "Fiók csatlakoztatása",
+    "accountConnectCredentialHint": "Másik {portal}-fiókot a „{portal} Connect” gombbal csatlakoztat — ott adja meg a szálloda azonosítóját, és rendeli hozzá a szobákat.",
     "accountsCheckPortalHint": "Ellenőrizze a portálfiók beállításaiban, hogy nincs-e más alkalmazás megadva kapcsolatszolgáltatóként.",
     "accountsLogoutHint": "Jelentkezzen ki a portálról a böngészőben, mielőtt másik fiókot csatlakoztat."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 csillag",
     "reviews": "· 921 értékelés",
     "trial30": "Próbálja ki 30 napig ingyen",
-    "bookingValue": "+1 % foglalási érték",
+    "bookingValue": "+0,5 % foglalási érték",
     "seePrices": "Árak megtekintése",
     "downloadApp": "Alkalmazás letöltése",
     "copyright": "© 2026 myNextDays. Minden jog fenntartva.",

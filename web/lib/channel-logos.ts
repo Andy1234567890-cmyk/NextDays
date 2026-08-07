@@ -107,3 +107,23 @@ export function channelLabel(code: string | null | undefined): string {
   if (!code) return "";
   return CHANNEL_LABEL[code] ?? code;
 }
+
+// Dieselbe Tabelle schreibweisen-tolerant — für Werte, die nicht aus unserem
+// Katalog kommen, sondern aus fremden Daten (`ota_name` einer Buchung).
+const LABEL_NORMALISIERT: Record<string, string> = Object.fromEntries(
+  Object.entries(CHANNEL_LABEL).map(([code, label]) => [
+    code.toLowerCase().replace(/[^a-z0-9]/g, ""),
+    label,
+  ]),
+);
+
+/** Wie `channelLabel`, akzeptiert aber auch fremde Schreibweisen.
+ *
+ *  Für Werte aus `ota_name`: Channex schreibt seinen Kanalcode `BookingCom`
+ *  ohne Punkt, und der stand so in der Buchungskarte („von BookingCom"),
+ *  direkt neben dem korrekt gerenderten Booking.com-Logo. Unbekannte Namen
+ *  bleiben unverändert — es wird nichts geraten. */
+export function channelLabelLoose(name: string | null | undefined): string {
+  if (!name) return "";
+  return LABEL_NORMALISIERT[name.toLowerCase().replace(/[^a-z0-9]/g, "")] ?? name;
+}

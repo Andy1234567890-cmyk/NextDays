@@ -7,16 +7,19 @@ von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 from __future__ import annotations
 
 from typing import Any, TypeVar
+from urllib.parse import urlparse
 from uuid import uuid4
 
 from supabase import Client
 
+from src.core.config import get_settings
 from src.core.security import AuthContext
 
 from . import airbnb_oauth
 from .channex_client import ChannexError
 from .common import ChannelManagerError, _timezone_for_country, log
 from .ota_konten import (
+    kanal_ans_konto_schreiben,
     konto_sicherstellen,
     konto_status_setzen,
     konto_zum_kanal_loesen,
@@ -27,6 +30,32 @@ from .ota_konten import (
 # zurück — ein TypeVar hält deshalb den konkreten Typ über den Scope-Helfer
 # hinweg fest, ohne ihn auf `Any` zu verlieren.
 _Q = TypeVar("_Q")
+
+
+def _geprueftes_ziel(url: str | None) -> str | None:
+    """Rücksprung-URL nur zu einem erlaubten Frontend-Origin zulassen.
+
+    Sonst wäre der Verbindungslink ein offener Weiterleiter: der Kunde klickt
+    einen Link, der nach unserer Domain aussieht, und landet nach dem
+    Airbnb-Login irgendwo. Geprüft wird gegen die konfigurierten CORS-Origins —
+    kein Hardcode einer Domain im Backend (Wurzel 4), dasselbe Muster wie bei
+    Stripe (`payments/identity._validate_return_url`).
+
+    Kein Ziel angegeben = keine Rückleitung. Eine ungültige Angabe ist dagegen
+    ein Fehler und wird gemeldet, nicht stillschweigend verworfen (Wurzel 5).
+    """
+    if not url:
+        return None
+    zerlegt = urlparse(url)
+    if zerlegt.scheme not in ("http", "https") or not zerlegt.netloc:
+        raise ChannelManagerError("Ungültige Rücksprung-Adresse.", status_code=422)
+    origin = f"{zerlegt.scheme}://{zerlegt.netloc}"
+    if origin not in get_settings().cors_origin_list:
+        raise ChannelManagerError(
+            "Rücksprung-Adresse gehört nicht zu dieser Anwendung.",
+            status_code=422,
+        )
+    return url
 
 
 class OAuthChannelsMixin:
@@ -42,7 +71,8 @@ class OAuthChannelsMixin:
     def begin_channel_oauth(
         self, ctx: AuthContext, *, property_id: str | None, portal_code: str,
         title: str | None, settings: dict[str, Any] | None = None,
-        neues_konto: bool = False,
+        neues_konto: bool = False, redirect_uri: str | None = None,
+        account_id: str | None = None,
     ) -> dict[str, Any]:
         """OAuth-Start: inaktiven Channel anlegen + echte OAuth-URL erzeugen.
 
@@ -112,6 +142,29 @@ class OAuthChannelsMixin:
         channex_property_id = self._lookup_property_mapping(
             db, tenant_id, property_id
         )
+        # Die Registrierung GEGENPRÜFEN, nicht nur nachschlagen. Unsere Zeile
+        # sagt „registriert", Channex ist aber die Wahrheit: dort kann die
+        # Property inzwischen gelöscht sein (von Hand in der Oberfläche, oder
+        # weil Channex sie mit einem entfernten Kanal mitnimmt). Unsere
+        # Mapping-Zeile bleibt davon unberührt — sie weiß es schlicht nicht.
+        #
+        # Ohne diese Prüfung ging die tote ID an Channex und der Kanal-Anlage-
+        # Aufruf scheiterte mit `422 {"property_id": ["does not exist"]}` (live
+        # am 07.08.2026 an `1060923f`, dem Übernahme-Gerüst). Der Kunde sah nur
+        # „Unprocessable Entity" und hatte keine Möglichkeit, das zu beheben:
+        # die Registrierung, die ihm fehlte, galt bei uns ja als vorhanden.
+        if channex_property_id and not self._property_bei_channex_da(
+            channex_property_id
+        ):
+            log.warning(
+                "channex_property_verschwunden",
+                tenant_id=tenant_id, property_id=property_id,
+                channex_property_id=channex_property_id,
+            )
+            # Gegenzustand (Wurzel 1): die entwertete Zeile schließen, sonst
+            # findet der nächste Durchlauf sie wieder und scheitert erneut.
+            self._mapping_schliessen(db, tenant_id, channex_property_id)
+            channex_property_id = None
         if channex_property_id is None:
             self._registrierung_nachholen(db, tenant_id, property_id)
             channex_property_id = self._require_property_mapping(
@@ -165,9 +218,36 @@ class OAuthChannelsMixin:
              and r.get("channex_channel_id")),
             None,
         )
-        if neues_konto:
+        # WELCHES KONTO wird gerade verbunden? Diese Frage entscheidet den Kanal,
+        # und sie muss aus einem ZUSTAND beantwortet werden, nicht aus einem
+        # Flag des laufenden Requests.
+        #
+        # Warum: `neues_konto` lebt nur für einen Aufruf. Jeder Folge-Aufruf
+        # (Seite neu geladen, Link erneut angefordert, Status geprüft) kam ohne
+        # das Flag und fiel unten auf `autorisiert` zurück — also auf den Kanal,
+        # der bereits Tokens hat, mithin IMMER auf Konto A.
+        #
+        # Live gemessen am 07.08.2026 (channex_debug_log, Tenant AirSmil):
+        #   13:08:39  connection_link  channel_id 8e3292d3  ← Konto B, richtig
+        #   13:09:08  connection_link  channel_id 9a46827b  ← Konto A
+        #   13:09:34  connection_link  channel_id 9a46827b  ← Konto A
+        #   13:14:35  connection_link  channel_id 9a46827b  ← Konto A
+        # Channex merkt sich je Verbindung nur den ZULETZT erzeugten `state`.
+        # Der eine richtige Link lebte damit 29 Sekunden; danach führte jeder
+        # Link nach Konto A. Kanal 8e3292d3 stand deshalb dauerhaft auf
+        # `settings: null` — nie autorisiert —, während der Betrieb dreißigmal
+        # bestätigte. Der Fehlgriff hängte zusätzlich das Gerüst per PUT an
+        # Kanal A (13:09:07), was dort 19 statt 18 Properties ergab.
+        #
+        # `account_id` ist der Gegenentwurf: es benennt das Konto explizit, steht
+        # in `ota_account` (0304) und überlebt jeden Seitenwechsel.
+        if account_id:
+            existing_channel_id = self._kanal_des_kontos(
+                db, tenant_id, account_id, portal_code
+            )
+        elif neues_konto:
             # Ein ZWEITES Portal-Konto verbinden (0304): dann darf gerade NICHT
-            # wiederverwendet werden. Die Wiederverwendung oben ist richtig,
+            # wiederverwendet werden. Die Wiederverwendung unten ist richtig,
             # solange es um dasselbe Konto geht — sie war der Fix gegen den
             # leeren Zweit-Kanal. Für ein anderes Konto ist sie die Sperre:
             # `autorisiert` gäbe den Kanal von Konto A zurück, der Kunde landete
@@ -192,9 +272,12 @@ class OAuthChannelsMixin:
             kanaele_im_betrieb=kandidaten,
             autorisierter_kanal=autorisiert,
             kanal_dieses_objekts=eigener_kanal,
+            konto_id=account_id,
             gewaehlt=existing_channel_id,
             grund=(
-                "autorisiert" if autorisiert
+                "konto benannt" if account_id
+                else "neues konto" if neues_konto
+                else "autorisiert" if autorisiert
                 else "eigene zeile" if eigener_kanal
                 else "erster im betrieb" if kandidaten
                 else "keiner - neu anlegen"
@@ -231,31 +314,69 @@ class OAuthChannelsMixin:
                 self._objekt_an_kanal_haengen(
                     channel_id, channex_property_id
                 )
-                # Host-ID des gewählten Kanals MITSCHREIBEN. Steht dort None,
-                # zeigt die UI „nicht verbunden", obwohl das Konto autorisiert
-                # ist — der Kanal trägt die Tokens ja bereits (Wurzel 4: den
-                # echten Wert nehmen, nicht leer lassen und später raten).
+                # KEINE Verbindungszeile, wenn das Konto benannt ist: dann ist
+                # `property_id` nur der Aufhänger für den Link und gehört einem
+                # ANDEREN Zugang. Eine Zeile darauf behauptet „dieses Objekt
+                # verkauft über dieses Konto" — und die Oberfläche zählt es dem
+                # falschen Konto zu.
+                #
+                # Live am 07.08.2026, 13:09:07: das Gerüst bekam hier eine Zeile
+                # mit dem Konto von Zugang A und wurde per PUT an dessen Kanal
+                # gehängt. Ergebnis: 19 Properties an Kanal A statt 18, und
+                # Konto B stand mit null Objekten da, obwohl gerade IHM der
+                # Aufhänger dienen sollte.
                 host = None
-                if channel_id == autorisiert:
-                    host = self._kanal_host_id(channel_id)
-                self._save_oauth_connection(
-                    db, tenant_id,
-                    property_id=property_id,
-                    channex_property_id=channex_property_id,
-                    portal_code=portal_code,
-                    channel_id=channel_id,
-                    host_id=host,
-                    is_active=False,
-                    last_error=None,
-                )
+                if not account_id:
+                    # Host-ID des gewählten Kanals MITSCHREIBEN. Steht dort None,
+                    # zeigt die UI „nicht verbunden", obwohl das Konto
+                    # autorisiert ist — der Kanal trägt die Tokens ja bereits
+                    # (Wurzel 4: den echten Wert nehmen, nicht leer lassen und
+                    # später raten).
+                    if channel_id == autorisiert:
+                        host = self._kanal_host_id(channel_id)
+                    self._save_oauth_connection(
+                        db, tenant_id,
+                        property_id=property_id,
+                        channex_property_id=channex_property_id,
+                        portal_code=portal_code,
+                        channel_id=channel_id,
+                        host_id=host,
+                        is_active=False,
+                        last_error=None,
+                    )
                 log.info(
                     "channex_oauth_kanal_geteilt",
                     tenant_id=tenant_id, property_id=property_id,
                     channel_id=channel_id,
                     channex_property_id=channex_property_id,
                     host_id=host,
+                    konto_benannt=bool(account_id),
                     war_autorisiert=channel_id == autorisiert,
                 )
+        elif account_id or neues_konto:
+            # NEUE Verbindung: KEINEN Kanal anlegen.
+            #
+            # Channex legt ihn selbst an, sobald die Autorisierung eintrifft —
+            # Airbnb Connection API, Notes: „when the User connects Airbnb to
+            # Channex we will automatically create a new inactive Channel."
+            # Das Feld `channel_id` im Link gehört ausschließlich zum
+            # Wiederverbinden: „Used in case of re-connection flow for already
+            # existed channel."
+            #
+            # Vorher legten wir hier per `POST /channels` selbst einen an und
+            # gaben dessen ID mit. Für Channex war das ein Re-Connect auf einen
+            # Kanal, der nie autorisiert war — es gab keinen Vorgang, dem die
+            # eintreffenden Tokens zuzuordnen gewesen wären. Vier so erzeugte
+            # Kanäle blieben nacheinander auf `settings: null` stehen
+            # (8e3292d3, 14601790, 9df93e43, da4730bc am 07.08.2026), während
+            # Airbnb den Dienst als verbunden führte. Der Kunde bestätigte
+            # dreißigmal und es passierte nichts.
+            channel_id = None
+            log.info(
+                "channex_oauth_kanal_ueberlassen",
+                tenant_id=tenant_id, property_id=property_id,
+                konto_id=account_id,
+            )
         else:
             # 1) Channel inaktiv anlegen (ohne rate_plans/settings — Mapping folgt).
             attribute: dict[str, Any] = {
@@ -288,25 +409,6 @@ class OAuthChannelsMixin:
                 is_active=False,
                 last_error=None,
             )
-            if neues_konto:
-                # Das Aufhänger-Objekt gehört NICHT zu diesem Konto.
-                #
-                # Channex verlangt beim Anlegen mindestens eine Property (und
-                # der connection_link ebenso), also steht oben eine im Payload.
-                # Für ein ZWEITES Konto ist das ein fremdes Objekt: es gehört
-                # dem ersten Zugang. Bleibt es hängen, steht dasselbe Objekt an
-                # zwei Kanälen — live am 07.08.2026 mit „Rævlingehuset"
-                # passiert, das daraufhin im Kanalmanager auf „Pausiert" fiel
-                # (17 von 18 verbunden).
-                #
-                # Deshalb wird es direkt nach der Anlage wieder gelöst. Der
-                # Link ist zu diesem Zeitpunkt noch nicht erzeugt — er wird
-                # unten mit `channex_property_id` gebaut und braucht die
-                # Property nur als Parameter, nicht als Kanal-Mitglied (live
-                # geprüft: connection_link mit einer beliebigen Property → 200).
-                # Die echten Objekte dieses Kontos kommen nach der
-                # Autorisierung aus seinen Listings.
-                self._objekt_vom_kanal_loesen(channel_id, channex_property_id)
 
         # Offene Pflichtpunkte prüfen, BEVOR der Kunde zu Airbnb geschickt wird.
         # Channex gibt den Connect nur frei, wenn der Kanal vollständig ist
@@ -314,20 +416,24 @@ class OAuthChannelsMixin:
         # becomes active"). Fehlt etwas, entstehen Kanal und Link trotzdem —
         # aber es kommen nie Tokens, und der Kunde wartet ohne Grund. Best
         # effort: ein Fehler dieser Prüfung darf den Connect nicht blockieren.
-        try:
-            offen = self._channex.check_readiness(channel_id)
-            if offen:
+        # Nur, wenn es schon einen Kanal gibt. Bei einer neuen Verbindung
+        # entsteht er erst mit der Autorisierung (Channex legt ihn an) — es gibt
+        # zu diesem Zeitpunkt nichts zu prüfen.
+        if channel_id:
+            try:
+                offen = self._channex.check_readiness(channel_id)
+                if offen:
+                    log.warning(
+                        "channex_oauth_readiness_offen",
+                        tenant_id=tenant_id, property_id=property_id,
+                        channel_id=channel_id, offene_punkte=offen,
+                    )
+            except ChannexError as exc:  # noqa: BLE001 — nur Diagnose
                 log.warning(
-                    "channex_oauth_readiness_offen",
-                    tenant_id=tenant_id, property_id=property_id,
-                    channel_id=channel_id, offene_punkte=offen,
+                    "channex_oauth_readiness_pruefung_fehlgeschlagen",
+                    tenant_id=tenant_id, channel_id=channel_id,
+                    error=exc.message,
                 )
-        except ChannexError as exc:  # noqa: BLE001 — nur Diagnose
-            log.warning(
-                "channex_oauth_readiness_pruefung_fehlgeschlagen",
-                tenant_id=tenant_id, channel_id=channel_id,
-                error=exc.message,
-            )
 
         # 2) Frischer JWT (pro Connect, kein Cache) → echte OAuth-URL.
         try:
@@ -342,6 +448,19 @@ class OAuthChannelsMixin:
             # Versuch. Vorher stand hier die Kanal-ID, und die Autorisierung
             # landete an keinem Kanal — alle blieben ohne Tokens.
             request_id = str(uuid4())
+            # Womit ordnen wir den Rücksprung wieder zu? Airbnb-Doku zum Feld
+            # `token`: „Free form token which can be used to associate incoming
+            # redirect with specific User at PMS". Bei einer Agentur mit hundert
+            # Zugängen ist das der Unterschied zwischen Zuordnen und Raten —
+            # alle hundert Rücksprünge landen sonst auf derselben Seite ohne
+            # Hinweis, welcher Vermieter gerade autorisiert hat.
+            #
+            # Das KONTO, nicht der Kanal: bei einer neuen Verbindung gibt es
+            # noch keinen Kanal (Channex legt ihn erst mit der Autorisierung
+            # an). Die Kontozeile existiert dagegen schon und überlebt den
+            # ganzen Vorgang.
+            ziel = _geprueftes_ziel(redirect_uri)
+            rueckweg_token = account_id or channel_id
             oauth_url = self._channex.create_airbnb_connection_link(
                 jwt=jwt,
                 connection_link=airbnb_oauth.connection_link_body(
@@ -351,6 +470,13 @@ class OAuthChannelsMixin:
                     request_id=request_id,
                     title=channel_title,
                     settings=settings,
+                    konto_token=rueckweg_token,
+                    redirect_uri=ziel,
+                    # Derselbe Weg zurück, aber mit `success=false` — Channex
+                    # hängt das an. Ohne dieses Ziel bliebe der Kunde bei einem
+                    # Fehlschlag auf einer Airbnb-Seite stehen und wir erführen
+                    # es nie (Wurzel 5).
+                    failure_redirect_uri=ziel,
                 ),
             )
             log.info(
@@ -365,16 +491,23 @@ class OAuthChannelsMixin:
             raise self._wrap_channex(exc) from exc
 
         # 3) Verbindung persistieren (noch nicht verbunden: kein host_id, inaktiv).
-        self._save_oauth_connection(
-            db, tenant_id,
-            property_id=property_id,
-            channex_property_id=channex_property_id,
-            portal_code=portal_code,
-            channel_id=channel_id,
-            host_id=None,
-            is_active=False,
-            last_error=None,
-        )
+        #
+        # NICHT beim zweiten Konto: dort ist `property_id` nur der Aufhänger für
+        # den Link und gehört einem ANDEREN Zugang. Eine Zeile darauf hieße „das
+        # Objekt hängt an diesem Kanal" — die Oberfläche zeigte es daraufhin als
+        # „Pausiert" (live am 07.08.2026 an „Rævlingehuset"). Das Konto ist oben
+        # schon gespeichert; seine Objekte kommen aus seinen eigenen Listings.
+        if not neues_konto and not account_id:
+            self._save_oauth_connection(
+                db, tenant_id,
+                property_id=property_id,
+                channex_property_id=channex_property_id,
+                portal_code=portal_code,
+                channel_id=channel_id,
+                host_id=None,
+                is_active=False,
+                last_error=None,
+            )
         log.info(
             "channex_oauth_begin",
             tenant_id=tenant_id, property_id=property_id,
@@ -385,6 +518,7 @@ class OAuthChannelsMixin:
             "oauth_url": oauth_url,
             "portal": self._portal_label(portal_code),
             "status": "pending",
+            "account_id": account_id,
         }
 
     def _registrierung_nachholen(
@@ -538,6 +672,100 @@ class OAuthChannelsMixin:
     _READINESS_RELATION_KLARTEXT: dict[str, str] = {
         "Mapping": "Zuordnung der Anzeigen zu deinen Objekten",
     }
+
+    def kanal_des_kontos_nachtragen(
+        self, ctx: AuthContext, *, account_id: str, portal_code: str = "AirBNB"
+    ) -> dict[str, Any]:
+        """Den von Channex angelegten Kanal einem wartenden Konto zuordnen.
+
+        Bei einer neuen Verbindung legen WIR keinen Kanal an — Channex tut es,
+        sobald die Autorisierung eintrifft. Danach steht bei Channex ein Kanal,
+        den unsere DB nicht kennt, und das Konto wartet ohne Kanal-ID. Diese
+        Methode schließt die Lücke.
+
+        Erkannt wird er als der einzige Kanal des Portals, der bei Channex
+        existiert und in `ota_account` noch keinem Konto gehört. Gibt es
+        mehrere, wird KEINER genommen: eine Verwechslung hier hängt hundert
+        Objekte an den falschen Zugang (Wurzel 4 — lieber nichts als geraten).
+        """
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        konto = self._kanal_des_kontos(db, tenant_id, account_id, portal_code)
+        if konto:
+            # Kanal steht schon — dann fehlt evtl. nur noch die Host-ID.
+            self._host_id_nachtragen(db, tenant_id, account_id, konto)
+            return {"channel_id": konto, "neu": False}
+
+        bekannt = {
+            str(r["channex_channel_id"])
+            for r in (
+                db.table("ota_account")
+                .select("channex_channel_id")
+                .eq("tenant_id", tenant_id)
+                .not_.is_("channex_channel_id", "null")
+                .execute()
+            ).data or []
+            if r.get("channex_channel_id")
+        }
+        try:
+            liste = self._channex.list_channels()
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+        offen = [
+            str(c["id"])
+            for c in (liste.get("data") or [])
+            if c.get("id")
+            and str(c["id"]) not in bekannt
+            and ((c.get("attributes") or {}).get("channel") == portal_code)
+        ]
+        if len(offen) != 1:
+            log.info(
+                "channex_neuer_kanal_nicht_eindeutig",
+                tenant_id=tenant_id, account_id=account_id, gefunden=offen,
+            )
+            return {"channel_id": None, "neu": False}
+
+        kanal_ans_konto_schreiben(
+            db, tenant_id, account_id=account_id, channel_id=offen[0]
+        )
+        self._host_id_nachtragen(db, tenant_id, account_id, offen[0])
+        log.info(
+            "channex_neuer_kanal_uebernommen",
+            tenant_id=tenant_id, account_id=account_id, channel_id=offen[0],
+        )
+        return {"channel_id": offen[0], "neu": True}
+
+    def _host_id_nachtragen(
+        self, db: Client, tenant_id: str, account_id: str, channel_id: str
+    ) -> None:
+        """Die Kennung des Kontos beim Portal aus dem Kanal übernehmen.
+
+        Airbnb gibt die Host-ID erst NACH dem Autorisieren heraus („once
+        connection is active it will show the Host ID here", Channex-Anleitung);
+        sie steht dann in den Tokens des Kanals. Bisher holte sie nur der
+        Status-Poll — und der läuft je OBJEKT. Ein frisch verbundenes Konto hat
+        aber noch keine Objekte, also blieb die Kennung leer.
+
+        Sichtbare Folge: die Kontoliste zeigte statt eines Namens die rohe
+        UUID, und die Kanal-Kachel meldete „nicht verbunden", obwohl Channex
+        gültige Tokens führte (live am 07.08.2026, Konto ba30b6f2 / Host
+        226976381).
+
+        Best effort (Wurzel 5): der Kanal ist die Verbindung, die Kennung nur
+        ihre Beschriftung. Ein Fehler hier darf das Nachtragen nicht kippen.
+        """
+        host = self._kanal_host_id(channel_id)   # meldet Lesefehler selbst
+        if not host:
+            return
+        try:
+            db.table("ota_account").update({"ota_hotel_id": str(host)}).eq(
+                "tenant_id", tenant_id
+            ).eq("id", account_id).is_("ota_hotel_id", "null").execute()
+        except Exception as exc:  # noqa: BLE001 — best effort
+            log.warning(
+                "channex_host_id_nicht_gespeichert",
+                account_id=account_id, error=str(exc)[:200],
+            )
 
     def _autorisierter_kanal(self, kandidaten: list[str]) -> str | None:
         """Der Kanal aus `kandidaten`, der bei Channex TOKENS trägt.
@@ -730,6 +958,83 @@ class OAuthChannelsMixin:
             .execute()
         ).data
         return res[0].get("currency") if res else None
+
+    def _property_bei_channex_da(self, channex_property_id: str) -> bool:
+        """Existiert diese Property bei Channex noch? (404 = nein)
+
+        Fail-CLOSED nur beim 404 — genau der sagt „gibt es nicht". Jeder andere
+        Fehler (Netz, 5xx, Ratelimit) bedeutet „unbekannt", und daraus „gelöscht"
+        zu folgern wäre falsch: der Aufrufer verwürfe eine gültige Registrierung
+        und legte bei Channex eine zweite Property an. Im Zweifel gilt sie also
+        als vorhanden, und der eigentliche Aufruf meldet den echten Fehler.
+        """
+        try:
+            self._channex.get_property(channex_property_id)
+        except ChannexError as exc:
+            if exc.status_code == 404:
+                return False
+            log.warning(
+                "channex_property_pruefung_unklar",
+                channex_property_id=channex_property_id, error=exc.message,
+            )
+        return True
+
+    @staticmethod
+    def _mapping_schliessen(
+        db: Client, tenant_id: str, channex_property_id: str
+    ) -> None:
+        """Eine Registrierung als beendet markieren, deren Property bei Channex
+        nicht mehr existiert.
+
+        `deleted_at` statt Löschen: die Zeile trägt die Historie (welche
+        Channex-ID unser Objekt einmal hatte), und ein hartes Löschen nähme sie
+        mit. Best effort — misslingt es, scheitert nur der nächste Versuch
+        wieder an derselben Stelle, es geht nichts kaputt.
+        """
+        try:
+            db.table("channex_property_map").update(
+                {"deleted_at": "now()"}
+            ).eq("tenant_id", tenant_id).eq(
+                "channex_property_id", channex_property_id
+            ).is_("deleted_at", "null").execute()
+        except Exception as exc:  # noqa: BLE001 — Aufräumen kippt den Start nicht
+            log.warning(
+                "channex_mapping_nicht_geschlossen",
+                channex_property_id=channex_property_id, error=str(exc)[:200],
+            )
+
+    @staticmethod
+    def _kanal_des_kontos(
+        db: Client, tenant_id: str, account_id: str, portal_code: str
+    ) -> str | None:
+        """Der Channex-Kanal GENAU dieses Kontos (0304), tenant-gescopet.
+
+        Rückgabe `None` heißt: das Konto besteht, hat aber noch keinen Kanal —
+        dann legt der Aufrufer einen an und schreibt ihn ans Konto. Das ist der
+        normale Zustand direkt nach „Konto verbinden".
+
+        Ein UNBEKANNTES Konto ist dagegen ein Fehler und wird abgewiesen (Wurzel
+        3: per-ID-Zugriff explizit auf den Mandanten scopen, Wurzel 5:
+        fail-closed). Stillschweigend auf „kein Kanal" zurückzufallen hieße,
+        einen weiteren Kanal für ein Konto anzulegen, das dem Betrieb gar nicht
+        gehört — bei einer Agentur mit hundert Zugängen der Unterschied zwischen
+        Zuordnen und Raten.
+        """
+        zeile = (
+            db.table("ota_account")
+            .select("channex_channel_id")
+            .eq("tenant_id", tenant_id)
+            .eq("id", account_id)
+            .eq("ota_portal_code", portal_code)
+            .limit(1)
+            .execute()
+        ).data
+        if not zeile:
+            raise ChannelManagerError(
+                "Dieses Portal-Konto gibt es nicht.", status_code=404
+            )
+        kanal = zeile[0].get("channex_channel_id")
+        return str(kanal) if kanal else None
 
     def _doppeltes_konto_abraeumen(
         self, db: Client, tenant_id: str, *, channel_id: str, host_id: str,
@@ -948,7 +1253,7 @@ class OAuthChannelsMixin:
 
     def finalize_oauth_channel(
         self, ctx: AuthContext, *, property_id: str, portal_code: str,
-        mappings: list[dict[str, Any]],
+        mappings: list[dict[str, Any]], account_id: str | None = None,
     ) -> dict[str, Any]:
         """Nach erfolgreicher OAuth-Verbindung: Mapping setzen + Channel aktivieren.
 
@@ -963,26 +1268,44 @@ class OAuthChannelsMixin:
         # `id` mitlesen: aktiviert wird EIN Kanal, also darf auch nur DESSEN
         # Zeile auf aktiv gehen (0304) — sonst meldeten bei zwei Konten beide
         # „aktiv", obwohl nur eines wirklich läuft.
-        row = (
+        frage = (
             db.table("channex_channel_connection")
             .select("id, channex_channel_id, ota_hotel_id")
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
             .eq("ota_portal_code", portal_code)
-            .order("created_at")
-            .limit(1)
-            .execute()
-        ).data
-        if not row or not row[0].get("channex_channel_id"):
+        )
+        # Ist ein Konto BENANNT, zählt nur dessen Zeile. Sonst nähme die
+        # Reihenfolge die Entscheidung ab: das Übernahme-Gerüst trägt die Zeile
+        # des ERSTEN Zugangs (es diente ihm als Aufhänger), und `finalize` lief
+        # damit gegen dessen Kanal. Live am 07.08.2026: `prepare` holte richtig
+        # Torstens Listing „FeWo *Stjerneskud*" von Kanal 21ec5429, `finalize`
+        # ging auf Kanal 9a46827b, fand dort nur die 17 AirSmil-Anzeigen und
+        # antwortete „Zugeordnetes Portal-Zimmer nicht gefunden" (422).
+        if account_id:
+            frage = frage.eq("ota_account_id", account_id)
+        row = (frage.order("created_at").limit(1).execute()).data
+        channel_id = row[0]["channex_channel_id"] if row else None
+        if not channel_id and account_id:
+            # Für ein neu verbundenes Konto gibt es noch KEINE Verbindungszeile
+            # — seine Objekte entstehen erst mit dieser Zuordnung. Der Kanal
+            # steht aber am Konto (0304), und das ist die maßgebliche Quelle.
+            channel_id = self._kanal_des_kontos(
+                db, tenant_id, account_id, portal_code
+            )
+        if not channel_id:
             raise ChannelManagerError(
                 "Keine OAuth-Verbindung für dieses Objekt.", status_code=404
             )
-        channel_id = row[0]["channex_channel_id"]
+        # Die Verbindungszeile kann fehlen (neu verbundenes Konto, s. o.) —
+        # dann gibt es nichts nachzulesen und nichts nachzuziehen.
+        zeile = row[0] if row else {}
         log.info(
             "airbnb_finalize_start",
             tenant_id=tenant_id, property_id=property_id,
             portal_code=portal_code, channel_id=channel_id,
-            host_id=row[0].get("ota_hotel_id"),
+            konto_id=account_id,
+            host_id=zeile.get("ota_hotel_id"),
             zuordnungen_vom_client=mappings,
         )
 
@@ -997,11 +1320,11 @@ class OAuthChannelsMixin:
         # den Tokens, nicht in einer Kennung; mit dem falschen Feld antwortet
         # Channex mit 400.
         kanal_settings = self._oauth_channel_settings(
-            db, tenant_id, property_id, portal_code
+            db, tenant_id, property_id, portal_code, account_id=account_id
         )
         settings = self._inject_sandbox_settings(
             portal_code, property_id,
-            kanal_settings or {"hotel_id": row[0].get("ota_hotel_id")},
+            kanal_settings or {"hotel_id": zeile.get("ota_hotel_id")},
         )
         try:
             details = self._channex.get_channel_mapping_details(
@@ -1038,6 +1361,35 @@ class OAuthChannelsMixin:
         # (Wurzel 4): liefert Airbnb keinen, bleibt der 422 aus dem Nutzlast-Bau
         # mit seiner umsetzbaren Meldung stehen.
         if portal_code in self._OAUTH_PORTALS:
+            # Die Anzeigen-Nummer ZUERST ans Objekt schreiben. Sie steht in der
+            # Zuordnung, die der Betrieb gerade getroffen hat — und der
+            # Preis-Abruf braucht sie: ohne `airbnb_listing_id` lehnt er mit
+            # „Dieses Objekt ist keine Airbnb-Anzeige" ab (live am 07.08.2026
+            # beim Übernahme-Gerüst, das die Nummer noch nicht trug).
+            #
+            # Sonst bliebe ein Zirkel: die Nummer entsteht erst durch die
+            # Zuordnung, der Preis wird aber währenddessen gebraucht.
+            self._listing_id_uebernehmen(db, tenant_id, property_id, mappings)
+            if not zeile:
+                # Auch die Verbindungszeile muss JETZT stehen, nicht erst am
+                # Ende: der Preis-Abruf sucht den Kanal über sie
+                # (`_airbnb_kanal_des_betriebs`) und meldete sonst „Es ist kein
+                # Airbnb-Konto verbunden" — bei einem Konto, das gerade
+                # verbunden wurde. Noch INAKTIV; aktiv wird sie erst, wenn
+                # Channex die Zuordnung bestätigt hat (Wurzel 5: nichts als
+                # fertig ausweisen, bevor es das ist).
+                self._save_oauth_connection(
+                    db, tenant_id,
+                    property_id=property_id,
+                    channex_property_id=self._require_property_mapping(
+                        db, tenant_id, property_id
+                    ),
+                    portal_code=portal_code,
+                    channel_id=channel_id,
+                    host_id=self._kanal_host_id(channel_id),
+                    is_active=False,
+                    last_error=None,
+                )
             self._preis_von_airbnb_nachholen(db, ctx, tenant_id, property_id)
 
         rate_plans = self._build_rate_plans(
@@ -1098,9 +1450,14 @@ class OAuthChannelsMixin:
             property_id=property_id, channel_id=channel_id,
         )
 
+        # Genau die Zeile dieses Kanals aktivieren — nicht alle des Objekts.
+        # Bei zwei Konten am selben Objekt (0304) meldeten sonst beide „aktiv",
+        # obwohl nur eines wirklich verkauft.
         db.table("channex_channel_connection").update(
             {"is_active": True, "last_error": None}
-        ).eq("tenant_id", tenant_id).eq("id", row[0]["id"]).execute()
+        ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
+            "ota_portal_code", portal_code
+        ).eq("channex_channel_id", channel_id).execute()
 
         # Initial-Vollimport (best effort) wie beim credential-Connect.
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
@@ -1124,6 +1481,47 @@ class OAuthChannelsMixin:
             "title": self._portal_label(portal_code),
             "is_active": True,
         }
+
+    @staticmethod
+    def _listing_id_uebernehmen(
+        db: Client, tenant_id: str, property_id: str,
+        mappings: list[dict[str, Any]],
+    ) -> None:
+        """Die zugeordnete Airbnb-Anzeigen-Nummer am Objekt festhalten.
+
+        Bei Airbnb IST `room_type_code` die Listing-ID (Channex mappt Anzeigen
+        als Zimmertypen, `mapping_mode: "listing"`). Sie ist die Verbindung
+        zwischen unserem Objekt und der Anzeige und wird an mehreren Stellen
+        gebraucht — Preis-Abruf, Buchungszuordnung, Status („ist bei Channex
+        wirklich gemappt", `_objekte_mit_channex_ziel`).
+
+        NICHT überschreiben, wenn schon eine steht: eine andere Nummer hieße,
+        das Objekt zeigt plötzlich auf eine fremde Anzeige (Wurzel 1). Nur die
+        Zuordnung DIESES Objekts zählt — bei einer Sammelzuordnung stehen in
+        `mappings` auch die der anderen.
+        """
+        nummer = next(
+            (
+                str(m["room_type_code"])
+                for m in mappings
+                if m.get("local_property_id") == property_id
+                and m.get("room_type_code")
+            ),
+            None,
+        )
+        if not nummer:
+            return
+        try:
+            db.table("properties").update(
+                {"airbnb_listing_id": nummer}
+            ).eq("tenant_id", tenant_id).eq("id", property_id).is_(
+                "airbnb_listing_id", "null"
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Hauptpfad läuft weiter
+            log.warning(
+                "airbnb_listing_id_nicht_gespeichert",
+                property_id=property_id, error=str(exc)[:200],
+            )
 
     def _preis_von_airbnb_nachholen(
         self, db: Client, ctx: AuthContext, tenant_id: str, property_id: str

@@ -24,6 +24,7 @@ from .ota_konten import (
     konto_zum_kanal_loesen,
     objekte_je_konto_zaehlen,
 )
+from .portal_registry import AIRBNB, portal_profil
 
 
 class ChannelsMixin:
@@ -58,7 +59,9 @@ class ChannelsMixin:
     # OAuth-Portale: KEIN eingebbares Credential, Verbindung per OAuth-URL (Airbnb).
     # Allowlist als Absicherung — zusätzlich erkennt list_supported_portals OAuth
     # automatisch daran, dass der Katalog kein abfragbares Credential-Feld hat.
-    _OAUTH_PORTALS: frozenset[str] = frozenset({"AirBNB"})
+    # Die Liste kommt aus der Registry, damit „ist OAuth-Portal" nicht an zwei
+    # Stellen unabhängig gepflegt wird.
+    _OAUTH_PORTALS: frozenset[str] = frozenset({AIRBNB})
 
     def _portal_catalog(self) -> list[dict[str, str]]:
         """Verbindbare Portale — LIVE aus dem Channex-Katalog (channels/list),
@@ -389,7 +392,7 @@ class ChannelsMixin:
 
     def prepare_channel(
         self, ctx: AuthContext, *, property_id: str, portal_code: str,
-        settings: dict[str, Any],
+        settings: dict[str, Any], account_id: str | None = None,
     ) -> dict[str, Any]:
         """Skill-Schritte 1+2: Zugangsdaten prüfen (test_connection) und die
         OTA-seitigen Zimmer/Raten holen (mapping_details). Liefert die OTA-Zimmer
@@ -412,6 +415,15 @@ class ChannelsMixin:
         channex_property_id = self._ensure_property_registered(
             db, tenant_id, property_id
         )
+        # Trace-Kontext setzen, damit `test_connection` und `mapping_details`
+        # in `channex_debug_log` landen. Ohne ihn schreibt der Sink nichts (er
+        # braucht einen Tenant) — und dann ist NICHT nachvollziehbar, welche
+        # Kennung abgefragt wurde und was das Portal geantwortet hat. Genau das
+        # fehlte am 07.08.2026 bei Booking.com: die Maske bot „Two-Bedroom
+        # Apartment" an, im Log stand zu diesem Portal kein einziger Aufruf.
+        self._trace_step(
+            tenant_id=tenant_id, property_id=property_id, step="prepare"
+        )
         settings = self._inject_sandbox_settings(portal_code, property_id, settings)
 
         # OAuth-Portale (Airbnb): die maßgeblichen Settings liegen am KANAL bei
@@ -423,7 +435,7 @@ class ChannelsMixin:
         # Deshalb hier die echten Kanal-Settings nachladen statt zu raten.
         if portal_code in self._OAUTH_PORTALS:
             kanal_settings = self._oauth_channel_settings(
-                db, tenant_id, property_id, portal_code
+                db, tenant_id, property_id, portal_code, account_id=account_id
             )
             log.info("prepare_oauth_settings",
                      portal_code=portal_code, property_id=property_id,
@@ -1857,121 +1869,6 @@ class ChannelsMixin:
         ]
         return {"items": items, "total": len(items)}
 
-    def konto_diagnose(self, ctx: AuthContext, account_id: str) -> dict[str, Any]:
-        """Was ist bei Channex WIRKLICH los mit diesem Konto?
-
-        Die Kontoliste zeigt unseren gespeicherten Stand. Der sagt beim
-        Verbinden aber nichts darüber, WARUM es hängt: „Verbindung läuft" steht
-        gleichermaßen für „Kunde hat den Airbnb-Login noch offen", „Airbnb hat
-        abgelehnt" und „Channex fehlt ein Pflichtfeld". Diese Diagnose fragt
-        deshalb den Kanal live ab und legt die drei Dinge offen, an denen es
-        tatsächlich scheitert:
-
-          * Tokens — hat Airbnb autorisiert? Ohne sie geht gar nichts.
-          * offene Pflichtpunkte — Channex gibt den Connect sonst nicht frei.
-          * Listings — was das Konto anbietet, sobald es autorisiert ist.
-
-        Nur lesend; kein Aufruf verändert etwas bei Channex oder Airbnb.
-        """
-        tenant_id = self._require_tenant(ctx)
-        db = self._require_db()
-        konto = next(
-            (
-                k
-                for k in konten_des_betriebs(db, tenant_id)
-                if str(k["id"]) == account_id
-            ),
-            None,
-        )
-        if konto is None:
-            raise ChannelManagerError("Konto nicht gefunden.", status_code=404)
-
-        channel_id = konto.get("channex_channel_id")
-        schritte: list[dict[str, Any]] = []
-
-        def schritt(name: str, ok: bool | None, text: str) -> None:
-            schritte.append({"name": name, "ok": ok, "text": text})
-
-        schritt(
-            "Kanal bei Channex",
-            bool(channel_id),
-            str(channel_id) if channel_id else "noch keiner angelegt",
-        )
-        if not channel_id:
-            return {
-                "account_id": account_id,
-                "channel_id": None,
-                "schritte": schritte,
-                "listings": [],
-            }
-
-        try:
-            kanal = self._channex.get_channel(str(channel_id))
-        except ChannexError as exc:
-            schritt("Kanal abrufbar", False, exc.message)
-            return {
-                "account_id": account_id,
-                "channel_id": str(channel_id),
-                "schritte": schritte,
-                "listings": [],
-            }
-
-        attrs = (kanal.get("data") or {}).get("attributes") or {}
-        einstellungen = attrs.get("settings") or {}
-        tokens = bool(einstellungen.get("tokens"))
-        status = airbnb_oauth.parse_connection_status(kanal)
-
-        schritt(
-            "Von Airbnb autorisiert",
-            tokens,
-            "Tokens vorhanden" if tokens
-            else "keine Tokens — der Airbnb-Login wurde nicht abgeschlossen",
-        )
-        host = status.get("host_id")
-        schritt("Host-Kennung", bool(host), str(host) if host else "—")
-        schritt(
-            "Kanal aktiv",
-            bool(attrs.get("is_active")),
-            "ja" if attrs.get("is_active")
-            else "nein — wird erst nach der Zuordnung aktiviert",
-        )
-        angehaengt = [str(p) for p in (attrs.get("properties") or [])]
-        schritt(
-            "Objekte am Kanal",
-            None,
-            f"{len(angehaengt)} — kommen aus den Listings dieses Kontos",
-        )
-        offen = self._readiness_offen(str(channel_id))
-        schritt(
-            "Pflichtangaben bei Channex", not offen, offen or "vollständig"
-        )
-
-        # Die Listings des Kontos. Ohne Tokens antwortet Channex mit einem
-        # Fehler — das ist keine Störung, sondern die Folge der fehlenden
-        # Autorisierung und wird als solche gemeldet (Wurzel 4/5).
-        listings: list[dict[str, Any]] = []
-        if tokens:
-            try:
-                listings = self._airbnb_listings_des_kanals(str(channel_id))
-                schritt(
-                    "Anzeigen bei Airbnb", True, f"{len(listings)} gefunden"
-                )
-            except ChannexError as exc:
-                schritt("Anzeigen bei Airbnb", False, exc.message)
-        else:
-            schritt(
-                "Anzeigen bei Airbnb",
-                False,
-                "erst nach der Autorisierung abrufbar",
-            )
-
-        return {
-            "account_id": account_id,
-            "channel_id": str(channel_id),
-            "schritte": schritte,
-            "listings": listings,
-        }
-
     def konto_umbenennen(
         self, ctx: AuthContext, account_id: str, display_name: str | None
     ) -> dict[str, Any]:
@@ -2082,6 +1979,7 @@ class ChannelsMixin:
                 for c in conn_by_property.values()
                 if c.get("channex_channel_id")
             },
+            portal_code=portal_code,
         )
 
         # Sync-Status je Objekt aus der Property-Map (nur nicht-gelöschte).
@@ -2180,6 +2078,8 @@ class ChannelsMixin:
         tenant_id: str,
         property_ids: list[str],
         channel_ids: set[str],
+        *,
+        portal_code: str = "AirBNB",
     ) -> set[str] | None:
         """Objekte, die bei CHANNEX wirklich zugeordnet sind.
 
@@ -2200,7 +2100,22 @@ class ChannelsMixin:
         """
         if not property_ids or not channel_ids:
             return set()
-        gemappte_listings: set[str] = set()
+        # WORÜBER wird zugeordnet? Das hängt am Portal — die Antwort steht in
+        # `portal_registry`, damit sie an allen Stellen dieselbe ist:
+        #   Airbnb      → `settings.listing_id`, unsere `airbnb_listing_id`
+        #   alle übrigen → `settings.room_type_code`, unser `ota_room_type_code`
+        #
+        # Vorher galt für ALLE der Airbnb-Weg. Bei Booking.com gibt es kein
+        # `listing_id`, also blieb die Menge leer und JEDES Objekt stand auf
+        # „nicht verbunden" — obwohl der Kanal aktiv war und beide Raten
+        # sauber gemappt (live am 07.08.2026, Hotel 12645792, Zimmertyp
+        # 1264579201 „Two-Bedroom Apartment" mit Standard Rate und Wochenrate).
+        # Die Folge war schlimmer als eine falsche Anzeige: `sync_enabled` hängt
+        # an derselben Größe, es lief also gar kein Abgleich.
+        profil = portal_profil(portal_code)
+        ist_listing_portal = profil.kennung == "listing"
+        feld = profil.settings_feld
+        gemappte: set[str] = set()
         for channel_id in channel_ids:
             try:
                 kanal = self._channex.get_channel(channel_id)
@@ -2212,23 +2127,41 @@ class ChannelsMixin:
                 return None
             attrs = ((kanal.get("data") or {}).get("attributes")) or {}
             for eintrag in attrs.get("rate_plans") or []:
-                listing = ((eintrag or {}).get("settings") or {}).get("listing_id")
-                if listing:
-                    gemappte_listings.add(str(listing))
-        if not gemappte_listings:
+                wert = ((eintrag or {}).get("settings") or {}).get(feld)
+                if wert:
+                    gemappte.add(str(wert))
+        if not gemappte:
             return set()
-        rows = (
-            db.table("properties")
-            .select("id, airbnb_listing_id")
+        if ist_listing_portal:
+            rows = (
+                db.table("properties")
+                .select("id, airbnb_listing_id")
+                .eq("tenant_id", tenant_id)
+                .in_("id", property_ids)
+                .execute()
+            ).data or []
+            return {
+                str(r["id"])
+                for r in rows
+                if r.get("airbnb_listing_id")
+                and str(r["airbnb_listing_id"]) in gemappte
+            }
+        # Nicht-Airbnb: die Zimmer-Kennung steht in der Verbindungszeile, nicht
+        # am Objekt — ein Objekt kann bei zwei Portalen unter verschiedenen
+        # Kennungen laufen.
+        zeilen = (
+            db.table("channex_channel_connection")
+            .select("property_id, ota_room_type_code")
             .eq("tenant_id", tenant_id)
-            .in_("id", property_ids)
+            .eq("ota_portal_code", portal_code)
+            .in_("property_id", property_ids)
             .execute()
         ).data or []
         return {
-            str(r["id"])
-            for r in rows
-            if r.get("airbnb_listing_id")
-            and str(r["airbnb_listing_id"]) in gemappte_listings
+            str(z["property_id"])
+            for z in zeilen
+            if z.get("ota_room_type_code")
+            and str(z["ota_room_type_code"]) in gemappte
         }
 
     def _channel_live_zustand(
@@ -2313,8 +2246,47 @@ class ChannelsMixin:
             )
         return out
 
+    @staticmethod
+    def _kanal_dieses_objekts(
+        db: Client, tenant_id: str, property_id: str, portal_code: str
+    ) -> str | None:
+        """Der Channex-Kanal, über den DIESES Objekt verkauft wird.
+
+        Bei einer Agentur mit mehreren Zugängen je Portal (0304) ist das die
+        Frage, an der alles hängt: welches der Konten gehört zu diesem Objekt?
+        Die Antwort steht in seiner Verbindungszeile — nicht in „dem" Kanal des
+        Betriebs, denn den gibt es dann nicht mehr.
+
+        Bevorzugt wird die Zeile mit KONTO. Eine Zeile ohne Konto ist ein
+        angefangener oder abgebrochener Verbindungsversuch; nähme man sie,
+        liefe der Abruf mit dem Token des falschen Zugangs und lieferte die
+        Anzeigen eines fremden Vermieters. Live am 07.08.2026: der
+        Verbinden-Dialog zeigte für Torstens Objekt „Host-ID 529591717" und
+        siebzehn Anzeigen von AirSmil.
+
+        Der Scope bleibt der Mandant (Wurzel 3): eine Agentur sieht ALLE ihre
+        Konten, aber niemals die einer anderen.
+        """
+        zeilen = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id, ota_account_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal_code)
+            .not_.is_("channex_channel_id", "null")
+            .execute()
+        ).data or []
+        if not zeilen:
+            return None
+        mit_konto = next(
+            (z for z in zeilen if z.get("ota_account_id")), None
+        )
+        gewaehlt = mit_konto or zeilen[0]
+        return str(gewaehlt["channex_channel_id"])
+
     def _oauth_channel_settings(
-        self, db: Client, tenant_id: str, property_id: str, portal_code: str
+        self, db: Client, tenant_id: str, property_id: str, portal_code: str,
+        *, account_id: str | None = None,
     ) -> dict[str, Any] | None:
         """Settings des OAuth-Kanals bei Channex lesen (dort liegen die Tokens).
 
@@ -2326,20 +2298,34 @@ class ChannelsMixin:
         None, wenn kein Kanal registriert ist oder Channex nicht erreichbar ist
         (dann behält der Aufrufer seine bisherigen Settings; ein Fehler hier darf
         den Ablauf nicht kippen, der eigentliche Aufruf meldet ihn ohnehin)."""
-        row = (
-            db.table("channex_channel_connection")
-            .select("channex_channel_id")
-            .eq("tenant_id", tenant_id)
-            .eq("property_id", property_id)
-            .eq("ota_portal_code", portal_code)
-            .not_.is_("channex_channel_id", "null")
-            .limit(1)
-            .execute()
-        ).data
-        if not row:
+        # Ein BENANNTES Konto schlägt die Zeile des Objekts. Es kommt aus der
+        # Kontoauswahl im Verbinden-Dialog und ist damit die Angabe des
+        # Betriebs — die Zeile des Objekts ist dagegen nur der bisherige Stand
+        # (und bei einem noch nicht zugeordneten Objekt schlicht falsch).
+        channel_id = None
+        if account_id:
+            zeile = (
+                db.table("ota_account")
+                .select("channex_channel_id")
+                .eq("tenant_id", tenant_id)
+                .eq("id", account_id)
+                .eq("ota_portal_code", portal_code)
+                .limit(1)
+                .execute()
+            ).data
+            if not zeile:
+                raise ChannelManagerError(
+                    "Dieses Portal-Konto gibt es nicht.", status_code=404
+                )
+            channel_id = zeile[0].get("channex_channel_id")
+        if not channel_id:
+            channel_id = self._kanal_dieses_objekts(
+                db, tenant_id, property_id, portal_code
+            )
+        if not channel_id:
             return None
         try:
-            kanal = self._channex.get_channel(row[0]["channex_channel_id"])
+            kanal = self._channex.get_channel(channel_id)
         except ChannexError:
             return None
         attrs = (kanal.get("data") or {}).get("attributes") or {}

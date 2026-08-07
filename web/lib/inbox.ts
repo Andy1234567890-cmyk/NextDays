@@ -93,6 +93,9 @@ export type ReservationDetail = {
   guest_phone: string | null;
   guest_language: string | null;
   guest_location: string | null;
+  // Aus einem Bestands-Import statt live eingegangen (0308) — erklärt, warum
+  // die Gastfelder darüber leer sind.
+  is_imported: boolean;
   adults: number | null;
   children: number | null;
   nights: number | null;

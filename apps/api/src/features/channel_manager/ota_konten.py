@@ -75,6 +75,74 @@ def konto_sicherstellen(
     return str(angelegt[0]["id"]) if angelegt else None
 
 
+def konto_anlegen(
+    db: Client, tenant_id: str, *, portal_code: str
+) -> str | None:
+    """Ein NEUES, noch kanalloses Portal-Konto anlegen und seine ID zurückgeben.
+
+    Der Anker für einen frisch begonnenen Verbindungsversuch: das Konto
+    existiert, bevor irgendein Channex-Aufruf läuft, und alle Folge-Aufrufe
+    beziehen sich darauf. Der Kanal wird später nachgetragen
+    (`kanal_ans_konto_schreiben`).
+
+    WIEDERVERWENDEN statt anhäufen (Wurzel 2): ein bereits vorhandenes Konto
+    ohne Kanal ist ein abgebrochener Versuch für genau diesen Zweck. Ohne diese
+    Prüfung entstünde bei jedem Klick auf „Konto verbinden" eine weitere Zeile
+    „Ohne Namen", und die Kontoliste füllte sich mit Karteileichen.
+    """
+    offen = (
+        db.table("ota_account")
+        .select("id")
+        .eq("tenant_id", tenant_id)
+        .eq("ota_portal_code", portal_code)
+        .is_("channex_channel_id", "null")
+        .order("created_at")
+        .limit(1)
+        .execute()
+    ).data or []
+    if offen:
+        return str(offen[0]["id"])
+    angelegt = (
+        db.table("ota_account")
+        .insert({"tenant_id": tenant_id, "ota_portal_code": portal_code})
+        .execute()
+    ).data or []
+    return str(angelegt[0]["id"]) if angelegt else None
+
+
+def kanal_ans_konto_schreiben(
+    db: Client, tenant_id: str, *, account_id: str, channel_id: str
+) -> None:
+    """Einen frisch angelegten Channex-Kanal an ein BESTEHENDES Konto hängen.
+
+    Der Unterschied zu `konto_sicherstellen`: dort ist der Kanal die Identität
+    und ein unbekannter Kanal erzeugt ein neues Konto. Hier ist das KONTO die
+    Identität — es existiert bereits, weil der Betrieb es benannt hat, und
+    bekommt nur seinen Kanal nachgetragen.
+
+    Ohne diesen Weg legte ein zweiter Verbindungsversuch desselben Kontos jedes
+    Mal eine weitere Kontozeile an, und die Kontoliste füllte sich mit „Ohne
+    Namen"-Einträgen, die alle denselben Zugang meinen.
+
+    Ein bereits gesetzter Kanal wird NICHT überschrieben (Wurzel 1): sonst
+    verlöre das Konto die Verbindung zu seinem autorisierten Kanal, und dessen
+    Tokens wären für uns nicht mehr auffindbar.
+    """
+    vorhanden = (
+        db.table("ota_account")
+        .select("id, channex_channel_id")
+        .eq("tenant_id", tenant_id)
+        .eq("id", account_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    if not vorhanden or vorhanden[0].get("channex_channel_id"):
+        return
+    db.table("ota_account").update(
+        {"channex_channel_id": str(channel_id)}
+    ).eq("tenant_id", tenant_id).eq("id", account_id).execute()
+
+
 def konto_status_setzen(
     db: Client,
     tenant_id: str,

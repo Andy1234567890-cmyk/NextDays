@@ -92,7 +92,7 @@
       "proMonat": "miesięcznie",
       "tarif": "Jeden pakiet dla wszystkich, w tym 1 obiekt",
       "objekte": "Każdy kolejny obiekt +6/5/4 € (stawka malejąca)",
-      "provision": "Kanały zewnętrzne 1 % · własny portal 8 %",
+      "provision": "Kanały zewnętrzne 0,5 % · własny portal 8 %",
       "cta": "Zobacz cennik"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Rezerwacje bezpośrednie",
-        "items": "Własny portal rezerwacyjny, widget rezerwacyjny, kreator stron, własna domena, 1 % zamiast 15–18 % prowizji OTA"
+        "items": "Własny portal rezerwacyjny, widget rezerwacyjny, kreator stron, własna domena, 0,5 % zamiast 15–18 % prowizji OTA"
       },
       "preise": {
         "title": "Ceny i przychód",

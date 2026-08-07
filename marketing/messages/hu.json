@@ -92,7 +92,7 @@
       "proMonat": "havonta",
       "tarif": "Egy csomag mindenkinek, 1 szálláshellyel",
       "objekte": "Minden további szálláshely +6/5/4 € (sávosan csökkenő)",
-      "provision": "Külső csatornák 1 % · saját portál 8 %",
+      "provision": "Külső csatornák 0,5 % · saját portál 8 %",
       "cta": "Árak megtekintése"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Közvetlen foglalás",
-        "items": "Saját foglalási portál, foglalási widget, weboldal-építő, saját domain, 1 % a 15–18 %-os OTA-jutalék helyett"
+        "items": "Saját foglalási portál, foglalási widget, weboldal-építő, saját domain, 0,5 % a 15–18 %-os OTA-jutalék helyett"
       },
       "preise": {
         "title": "Árak és bevétel",

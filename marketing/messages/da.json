@@ -92,7 +92,7 @@
       "proMonat": "om måneden",
       "tarif": "Én pris til alle, inkl. 1 bolig",
       "objekte": "Hver ekstra bolig +6/5/4 € (faldende)",
-      "provision": "Eksterne kanaler 1 % · egen portal 8 %",
+      "provision": "Eksterne kanaler 0,5 % · egen portal 8 %",
       "cta": "Se priser"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Direkte booking",
-        "items": "Egen bookingportal, booking-widget, hjemmesidebygger, eget domæne, 1 % i stedet for 15–18 % OTA-kommission"
+        "items": "Egen bookingportal, booking-widget, hjemmesidebygger, eget domæne, 0,5 % i stedet for 15–18 % OTA-kommission"
       },
       "preise": {
         "title": "Priser & omsætning",

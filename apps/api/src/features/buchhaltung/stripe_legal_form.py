@@ -138,6 +138,9 @@ _NON_PROFIT_KEYS: frozenset[str] = frozenset({
     "društvo", "drustvo", "zavod", "udruga", "zaklada",
     # GR / CY
     "σωματείο", "somateio",
+    # IE / MT / CY (englischsprachig)
+    "charity", "registered charity", "charitable organisation", "cbg",
+    "company limited by guarantee",
 })
 
 # --- Rechtsform → company.structure (EU-weit dieselben 4 Enums, live bestätigt).
@@ -163,14 +166,21 @@ _PRIVATE_CORP_KEYS = {
     # PL/CZ/SK
     "sp. z o.o.", "sp z o.o.", "spółka z o.o.", "spolka z o.o.",
     "s.r.o.", "spol. s r.o.", "d.o.o.", "j.d.o.o.",
-    # HU/RO/BG
-    "kft", "kft.", "srl (romania)", "оод", "eood", "еоод",
+    # HU/RO/BG — lateinische UND kyrillische Schreibweise (der Katalog schickt
+    # "OOD"/"EOOD", die Nutzer schreiben "ООД"/"ЕООД").
+    "kft", "kft.", "srl (romania)", "оод", "ood", "eood", "еоод",
+    # IE/CY/MT: private limited company (Ltd) — ohne diesen Key landete jede
+    # irische/zypriotische/maltesische Ltd fälschlich als individual.
+    "ltd", "ltd.", "limited", "private limited company", "teoranta",
 }
 _PUBLIC_CORP_KEYS = {
     # DE/AT
     "ag", "se", "kgaa",
     # allg. „Aktiengesellschaft"-Äquivalente
     "sa", "s.a.", "nv", "spa", "s.p.a.", "oyj", "a/s", "as", "d.d.",
+    # CZ/SK schreiben die Aktiengesellschaft mit Punkten: a.s. / akciová spol.
+    "a.s.", "a. s.", "akciová společnost", "akciova spolecnost",
+    "akciová spoločnosť", "akciova spolocnost",
     "public limited company", "plc", "ad", "ад", "nyrt", "zrt", "zrt.",
     "aktiengesellschaft", "sociedad anónima", "sociedad anonima",
     "sociedade anónima", "sociedade anonima", "société anonyme", "societe anonyme",
@@ -181,13 +191,17 @@ _INC_PARTNER_KEYS = {
     "vof", "cv", "comm.v", "commv", "sp.k.", "sp.j.", "k.s.", "v.o.s.",
     "bt", "kkt", "hb", "handelsbolag", "kb", "i/s", "k/s", "ay", "ky",
     "scs", "sapa",
+    # AT: offene Gesellschaft = Pendant zur deutschen OHG.
+    "og", "offene gesellschaft",
+    # CH (nicht EU, aber Start-Markt DACH): eingetragene Personengesellschaften.
+    "kollektivgesellschaft", "kommanditgesellschaft",
 }
 _UNINC_PARTNER_KEYS = {
     "gbr", "gesellschaft bürgerlichen rechts", "gesbr", "maatschap",
     "société de fait", "societe de fait", "sociedad civil", "società semplice",
     "societa semplice",
 }
-_COMPANY_GENERIC = {"company", "firma", "og"}   # grobes „Firma" ohne genaue Form
+_COMPANY_GENERIC = {"company", "firma"}   # grobes „Firma" ohne genaue Form
 
 # Reihenfolge = Prüfreihenfolge: konkrete Rechtsform vor grobem „Firma".
 # Vereine hängen nicht in der Tabelle, weil ihre structure vom Namen abhängt

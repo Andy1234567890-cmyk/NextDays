@@ -779,7 +779,10 @@
     "autoNoContent": "Sadržaj nije postavljen.",
     "autoEditSection": "Uredi {section}",
     "attachmentPreview": "Fotografija",
-    "attachmentAlt": "Fotografija gosta"
+    "attachmentAlt": "Fotografija gosta",
+    "translate": "Prevedi",
+    "showOriginal": "Prikaži izvornik",
+    "translatedFrom": "Prevedeno s jezika {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp još nije povezan. Unesite pristupne podatke (Meta Cloud API) u postavkama poslužitelja, nakon toga je slanje aktivno.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Pregledajte i upravljajte računima povezanima s upraviteljem kanala.",
     "accountsEmpty": "Još nije povezan nijedan račun.",
     "accountConnect": "Poveži račun",
+    "accountConnectCredentialHint": "Drugi {portal} račun povezujete putem „{portal} Connect“ — ondje unosite oznaku hotela i pridružujete sobe.",
     "accountsCheckPortalHint": "U postavkama računa portala provjerite da nijedna druga aplikacija nije postavljena kao pružatelj veze.",
     "accountsLogoutHint": "Odjavite se s portala u pregledniku prije nego povežete drugi račun."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 zvjezdice",
     "reviews": "· 921 recenzija",
     "trial30": "Isprobajte besplatno 30 dana",
-    "bookingValue": "+1 % vrijednosti rezervacije",
+    "bookingValue": "+0,5 % vrijednosti rezervacije",
     "seePrices": "Pogledaj cijene",
     "downloadApp": "Preuzmi aplikaciju",
     "copyright": "© 2026 myNextDays. Sva prava pridržana.",

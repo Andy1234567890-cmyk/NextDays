@@ -596,7 +596,7 @@ class AirbnbObjektAbrufMixin:
 
         rows = (
             db.table("properties")
-            .select("type_attributes, max_guests, title, country")
+            .select("type_attributes, max_guests, size_value, title, country")
             .eq("tenant_id", tenant_id).eq("id", property_id)
             .limit(1).execute()
         ).data or []
@@ -628,6 +628,33 @@ class AirbnbObjektAbrufMixin:
         spalten: dict[str, Any] = {}
         if gesetzt:
             spalten["type_attributes"] = neu
+        # Gästezahl und Wohnfläche sind echte SPALTEN, keine `type_attributes`
+        # (0197) — nach beiden wird gefiltert, und im Objektformular sind sie
+        # Pflichtfelder. Sie fehlten in diesem Pfad ganz: Schlafzimmer, Betten
+        # und Bad kamen an, „Max. Gäste" blieb auf 1 und „Größe" leer, obwohl
+        # Airbnb beides liefert (live am 07.08.2026, „FeWo *Stjerneskud*":
+        # person_capacity 4, listing_size 65 m²).
+        #
+        # Nur wo bei uns nichts steht (Wurzel 1): ein Wert, den der Betrieb
+        # selbst gesetzt hat, gehört ihm — der Abruf ergänzt, er korrigiert
+        # nicht.
+        gaeste = listing.get("person_capacity")
+        if (
+            isinstance(gaeste, int) and not isinstance(gaeste, bool)
+            and gaeste > 0
+            and not (rows[0].get("max_guests") or 0) > 1
+        ):
+            spalten["max_guests"] = gaeste
+            gesetzt.append("max_guests")
+        flaeche = ali.gebaeudedaten_uebernehmen(listing)
+        if (
+            flaeche.get("flaeche")
+            and flaeche.get("flaecheEinheit")
+            and not rows[0].get("size_value")
+        ):
+            spalten["size_value"] = flaeche["flaeche"]
+            spalten["size_unit"] = flaeche["flaecheEinheit"]
+            gesetzt.append("flaeche")
         # Der Titel ist eine SPALTE, kein `type_attributes`-Feld — deshalb hier
         # und nicht in `_details_texte`.
         airbnb_texte = neu.get("airbnbTexte")
@@ -954,10 +981,20 @@ class AirbnbObjektAbrufMixin:
         listing: dict[str, Any], alt: dict[str, Any],
         neu: dict[str, Any], gesetzt: list[str],
     ) -> None:
-        """Schlafzimmer-/Bad-Anzahl und Einheiten."""
+        """Schlafzimmer-/Bad-Anzahl, Einheiten und Gebäudedaten."""
         kapazitaet = ali.kapazitaet_uebernehmen(listing)
         for schluessel in ("schlafzimmer", "betten", "badezimmer", "einheiten"):
             wert = kapazitaet.get(schluessel)
+            if wert is not None and alt.get(schluessel) in (None, "", 0):
+                neu[schluessel] = wert
+                gesetzt.append(schluessel)
+
+        # Baujahr und Etagen aus `property_details`. Die WOHNFLÄCHE gehört
+        # nicht hierher — sie hat echte Spalten (`size_value`/`size_unit`, 0197)
+        # und wird in `_details_stammspalten` gesetzt.
+        gebaeude = ali.gebaeudedaten_uebernehmen(listing)
+        for schluessel in ("baujahr", "etagenImGebaeude", "etage"):
+            wert = gebaeude.get(schluessel)
             if wert is not None and alt.get(schluessel) in (None, "", 0):
                 neu[schluessel] = wert
                 gesetzt.append(schluessel)

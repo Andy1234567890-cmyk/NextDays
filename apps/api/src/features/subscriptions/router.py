@@ -202,7 +202,7 @@ def list_commission_months(
 
 @router.get("/commissions", response_model=CommissionSummary)
 def get_commissions(ctx: _billing, service: ServiceDep) -> CommissionSummary:
-    """Übersicht der offenen externen OTA-Provisionen (1 %/0,5 %) + Satz."""
+    """Übersicht der offenen externen OTA-Provisionen (0,5 %) + Satz."""
     try:
         return service.get_commission_summary(ctx)
     except SubscriptionsError as exc:

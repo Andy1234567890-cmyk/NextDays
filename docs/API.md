@@ -951,7 +951,7 @@ nicht der Kontotyp (Preisliste §1: „Ein Tarif für alle"):
 |---|---|---|---|
 | `portal` | 8 % all-in | über die Plattform | myBestDays |
 | `direct` | 0 % | Direct Charge (`Stripe-Account`) | Betrieb |
-| OTA | 0 % am Charge (1 % monatlich) | kein Charge (409) | — |
+| OTA | 0 % am Charge (0,5 % monatlich, max. 250 €) | kein Charge (409) | — |
 
 Bei den Plattform-Charges ist `on_behalf_of` der Betrieb (Settlement-Währung und
 Kartenabrechnung bleiben seine); bei Direct Charges ergibt sich das von selbst.

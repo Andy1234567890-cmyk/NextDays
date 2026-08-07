@@ -92,7 +92,7 @@
       "proMonat": "kuukaudessa",
       "tarif": "Yksi hinta kaikille, sis. 1 kohteen",
       "objekte": "Jokainen lisäkohde +6/5/4 € (aleneva)",
-      "provision": "Ulkoiset kanavat 1 % · oma portaali 8 %",
+      "provision": "Ulkoiset kanavat 0,5 % · oma portaali 8 %",
       "cta": "Katso hinnat"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Suoravaraus",
-        "items": "Oma varausportaali, varaus-widget, verkkosivueditori, oma verkkotunnus, 1 % OTA-provision 15–18 %:n sijaan"
+        "items": "Oma varausportaali, varaus-widget, verkkosivueditori, oma verkkotunnus, 0,5 % OTA-provision 15–18 %:n sijaan"
       },
       "preise": {
         "title": "Hinnat & myynti",

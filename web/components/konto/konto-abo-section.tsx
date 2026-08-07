@@ -403,7 +403,15 @@ export function KontoAboSection() {
             Booking, Airbnb &amp; Co.:{" "}
             {(state.commissions.current_rate * 100)
               .toLocaleString(locale, { maximumFractionDigits: 2 })}{" "}
-            % vom Buchungsumsatz. Wird monatlich abgerechnet.
+            % vom Buchungsumsatz Ihrer veröffentlichten Objekte. Wird monatlich
+            abgerechnet
+            {state.commissions.cap_amount !== null
+              ? `, höchstens ${formatCurrency(
+                  state.commissions.cap_amount,
+                  state.commissions.currency,
+                )} im Monat`
+              : ""}
+            .
           </p>
           {state.commissions.pending_count > 0 ? (
             <div className="mt-2 text-sm">
@@ -414,6 +422,20 @@ export function KontoAboSection() {
                   state.commissions.currency,
                 )}
               </span>
+              {/* Der Deckel greift erst beim Einzug — bis dahin zeigt die Zeile
+                  die entstandene Provision. Ohne diesen Hinweis wirkte die
+                  Abbuchung später wie ein Fehler. */}
+              {state.commissions.pending_capped &&
+                state.commissions.cap_amount !== null && (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    — eingezogen wird der Monatsdeckel von{" "}
+                    {formatCurrency(
+                      state.commissions.cap_amount,
+                      state.commissions.currency,
+                    )}
+                  </span>
+                )}
             </div>
           ) : (
             <div className="mt-2 text-sm text-muted-foreground">

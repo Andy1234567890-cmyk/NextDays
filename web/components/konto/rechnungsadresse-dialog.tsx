@@ -25,6 +25,7 @@ import {
   SheetTitle,
 } from "@nextdays/ui/sheet";
 import { LAENDER } from "@/lib/laender";
+import { legalFormsForCountry } from "@/lib/legal-forms";
 import { updateBillingAddress, type BillingAddress } from "@/lib/subscriptions";
 
 const LEER: BillingAddress = {
@@ -72,6 +73,18 @@ export function RechnungsadresseDialog({
   }, [open, address]);
 
   const istFirma = form.account_type === "company";
+
+  // Beispiel-Rechtsformen für das gewählte Land. Der Rechnungs-Kontotyp kennt
+  // nur individual/company (Stripe) — non_profit-Formen (Verein, Forening,
+  // ASBL) sind juristische Personen und gehören deshalb zu 'company'.
+  function beispiele(typ: BillingAddress["account_type"]): string {
+    if (!form.country) return "";
+    return legalFormsForCountry(form.country)
+      .filter((f) => (typ === "individual" ? f.type === "individual" : f.type !== "individual"))
+      .slice(0, 4)
+      .map((f) => f.key)
+      .join(", ");
+  }
 
   function setzen<K extends keyof BillingAddress>(
     key: K,
@@ -202,6 +215,12 @@ export function RechnungsadresseDialog({
           </Feld>
 
           <Feld label="Konto-Typ" pflicht>
+            {/* Stripe kennt nur individual/company. Ein Einzelunternehmen IST
+                steuerlich eine natürliche Person (keine juristische Person,
+                Inhaberhaftung) — also individual. Die Beispiel-Rechtsformen
+                kommen aus LEGAL_FORMS für das GEWÄHLTE Land, nicht aus einer
+                deutschen Hardcode-Liste: ein dänischer Betrieb sieht ApS/A/S,
+                ein französischer SARL/SAS. */}
             <NativeSelect
               value={form.account_type}
               onChange={(e) =>
@@ -211,16 +230,15 @@ export function RechnungsadresseDialog({
                 )
               }
             >
-              {/* Stripe kennt nur individual/company. Ein Einzelunternehmen
-                  IST steuerlich eine natürliche Person (keine juristische
-                  Person, Inhaberhaftung) — also individual. „Persönlich"
-                  allein las sich wie „Privatperson" und passte für
-                  Einzelunternehmer nicht. */}
               <option value="individual">
-                Privatperson oder Einzelunternehmen
+                {beispiele("individual")
+                  ? `Privatperson oder Einzelunternehmen (${beispiele("individual")})`
+                  : "Privatperson oder Einzelunternehmen"}
               </option>
               <option value="company">
-                Unternehmen (GmbH, UG, AG, OHG …)
+                {beispiele("company")
+                  ? `Unternehmen (${beispiele("company")})`
+                  : "Unternehmen"}
               </option>
             </NativeSelect>
             <p className="text-sm text-muted-foreground">
@@ -241,7 +259,7 @@ export function RechnungsadresseDialog({
               <Feld label="Umsatzsteuer-Identifikationsnummer">
                 <Input
                   value={form.vat_id ?? ""}
-                  placeholder={form.country ? `${form.country}12345678` : "z.B. DE123456789"}
+                  placeholder={form.country ? `${form.country}12345678` : ""}
                   onChange={(e) => setzen("vat_id", e.target.value.toUpperCase())}
                 />
               </Feld>

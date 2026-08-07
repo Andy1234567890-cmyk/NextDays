@@ -779,7 +779,10 @@
     "autoNoContent": "Turinys nenustatytas.",
     "autoEditSection": "Redaguoti: {section}",
     "attachmentPreview": "Nuotrauka",
-    "attachmentAlt": "Svečio nuotrauka"
+    "attachmentAlt": "Svečio nuotrauka",
+    "translate": "Išversti",
+    "showOriginal": "Rodyti originalą",
+    "translatedFrom": "Išversta iš {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Peržiūrėkite ir tvarkykite prie kanalų tvarkyklės prijungtas paskyras.",
     "accountsEmpty": "Kol kas neprijungta nė viena paskyra.",
     "accountConnect": "Prijungti paskyrą",
+    "accountConnectCredentialHint": "Kitą {portal} paskyrą prijungiate per „{portal} Connect“ — ten įvedate viešbučio identifikatorių ir susiejate kambarius.",
     "accountsCheckPortalHint": "Portalo paskyros nustatymuose patikrinkite, ar jokia kita programa nenurodyta kaip ryšio teikėja.",
     "accountsLogoutHint": "Prieš prijungdami kitą paskyrą, naršyklėje atsijunkite nuo portalo."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 žvaigždutės",
     "reviews": "· 921 atsiliepimas",
     "trial30": "Išbandykite 30 dienų nemokamai",
-    "bookingValue": "+1 % rezervacijos vertės",
+    "bookingValue": "+0,5 % rezervacijos vertės",
     "seePrices": "Peržiūrėti kainas",
     "downloadApp": "Atsisiųsti programėlę",
     "copyright": "© 2026 myNextDays. Visos teisės saugomos.",

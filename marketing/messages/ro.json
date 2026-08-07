@@ -92,7 +92,7 @@
       "proMonat": "pe lună",
       "tarif": "Un singur tarif pentru toți, include 1 proprietate",
       "objekte": "Fiecare proprietate suplimentară +6/5/4 € (tarif degresiv)",
-      "provision": "Canale externe 1 % · portal propriu 8 %",
+      "provision": "Canale externe 0,5 % · portal propriu 8 %",
       "cta": "Vezi prețurile"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Rezervare directă",
-        "items": "Portal de rezervări propriu, widget de rezervare, constructor de site-uri, domeniu propriu, 1 % în loc de 15–18 % comision OTA"
+        "items": "Portal de rezervări propriu, widget de rezervare, constructor de site-uri, domeniu propriu, 0,5 % în loc de 15–18 % comision OTA"
       },
       "preise": {
         "title": "Tarife și venituri",

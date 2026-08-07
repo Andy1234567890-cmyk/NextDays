@@ -92,7 +92,7 @@
       "proMonat": "al mes",
       "tarif": "Una única tarifa para todos, incl. 1 alojamiento",
       "objekte": "Cada alojamiento adicional +6/5/4 € (escala decreciente)",
-      "provision": "Canales externos 1 % · portal propio 8 %",
+      "provision": "Canales externos 0,5 % · portal propio 8 %",
       "cta": "Ver precios"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Reserva directa",
-        "items": "Portal de reservas propio, widget de reservas, creador de webs, dominio propio, 1 % en lugar del 15–18 % de comisión OTA"
+        "items": "Portal de reservas propio, widget de reservas, creador de webs, dominio propio, 0,5 % en lugar del 15–18 % de comisión OTA"
       },
       "preise": {
         "title": "Tarifas e ingresos",

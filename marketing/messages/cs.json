@@ -92,7 +92,7 @@
       "proMonat": "měsíčně",
       "tarif": "Jeden tarif pro všechny, včetně 1 objektu",
       "objekte": "Každý další objekt +6/5/4 € (klesající sazba)",
-      "provision": "Externí kanály 1 % · vlastní portál 8 %",
+      "provision": "Externí kanály 0,5 % · vlastní portál 8 %",
       "cta": "Zobrazit ceník"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Přímé rezervace",
-        "items": "Vlastní rezervační portál, rezervační widget, tvůrce webu, vlastní doména, 1 % místo 15–18 % provize OTA"
+        "items": "Vlastní rezervační portál, rezervační widget, tvůrce webu, vlastní doména, 0,5 % místo 15–18 % provize OTA"
       },
       "preise": {
         "title": "Ceny a tržby",

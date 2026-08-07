@@ -378,6 +378,15 @@ class PrepareChannelRequest(BaseModel):
     property_id: str                     # lokale Objekt-ID
     portal_code: str                     # interner Portal-Code (BookingCom …)
     settings: dict = Field(default_factory=dict)  # z.B. {"hotel_id": "..."}
+    # WELCHES Portal-Konto (0304). Bei OAuth-Portalen steckt die Identität in
+    # den Tokens des KANALS, und eine Agentur führt je Portal mehrere Zugänge —
+    # mit dem Token von Konto A holt man nie die Anzeigen von Konto B.
+    #
+    # Ohne Angabe bleibt es beim bisherigen Weg (Konto aus der Verbindungszeile
+    # des Objekts). Das ist richtig, solange das Objekt schon einem Zugang
+    # gehört; für ein neues Objekt gibt es diese Zeile noch nicht, und dann
+    # griff der Dialog stumm zum ersten Konto.
+    account_id: str | None = None
 
 
 class OtaRate(BaseModel):
@@ -479,6 +488,24 @@ class OAuthBeginRequest(BaseModel):
     # der häufige Fall ist „mein Konto verbinden", und ein versehentlich zweiter
     # Kanal am selben Konto wird von Airbnb abgelehnt.
     neues_konto: bool = False
+    # Wohin Channex nach der Autorisierung zurückleitet. Kommt vom Frontend,
+    # weil das Backend seine öffentliche Adresse nicht kennt; der Service prüft
+    # sie gegen die erlaubten Origins (kein offener Weiterleiter). Ohne diesen
+    # Wert bleibt der Kunde nach dem Airbnb-Login bei Channex stehen — bei einer
+    # Agentur mit vielen Zugängen zusätzlich ohne Hinweis, welches Konto gerade
+    # verbunden wurde.
+    redirect_uri: str | None = None
+    # WELCHES Portal-Konto gerade verbunden wird (0304). Der stabile Anker: er
+    # steht in `ota_account` und überlebt jeden Folge-Aufruf.
+    #
+    # `neues_konto` allein reichte nicht. Es gilt nur für EINEN Request; wurde
+    # der Link ein zweites Mal angefordert (Seite neu geladen, „Verbinden"
+    # nochmal geklickt), kam der Aufruf ohne das Flag und der Service fiel auf
+    # den bereits autorisierten Kanal zurück — also immer auf das ERSTE Konto.
+    # Live gemessen am 07.08.2026: ein Link für Konto B, danach drei für Konto A.
+    # Da Channex je Verbindung nur den letzten `state` kennt, war der richtige
+    # Link nach 29 Sekunden tot und Konto B blieb dauerhaft ohne Tokens.
+    account_id: str | None = None
 
 
 class AirbnbUebernahmeResponse(BaseModel):
@@ -549,10 +576,19 @@ class AirbnbObjektAbrufResponse(BaseModel):
 class OAuthBeginResponse(BaseModel):
     """Die OAuth-URL zum Öffnen ODER Kopieren (an den Eigentümer senden)."""
 
-    channel_id: str
+    # None bei einer NEUEN Verbindung: den Kanal legt Channex erst an, wenn die
+    # Autorisierung eintrifft („we will automatically create a new inactive
+    # Channel", Airbnb Connection API). Gesetzt nur beim Wiederverbinden eines
+    # bestehenden Kanals.
+    channel_id: str | None = None
     oauth_url: str
     portal: str                                       # menschlich, z.B. "Airbnb"
     status: str = "pending"
+    # Das Konto, für das dieser Link gilt (0304). Das Frontend hält es fest und
+    # gibt es bei jedem Folge-Aufruf zurück — sonst weiß der Server beim zweiten
+    # Klick nicht mehr, welcher Zugang gemeint war, und erzeugt den Link für den
+    # bereits verbundenen. Nur beim Mehrkonto-Weg gesetzt.
+    account_id: str | None = None
 
 
 class OAuthStatusResponse(BaseModel):
@@ -574,6 +610,12 @@ class OAuthFinalizeRequest(BaseModel):
     property_id: str
     portal_code: str
     mappings: list[ChannelMapping] = Field(default_factory=list)
+    # WELCHES Portal-Konto (0304) — dasselbe wie beim vorangegangenen
+    # `prepare`. Ohne Angabe nähme `finalize` die erste Verbindungszeile des
+    # Objekts; beim Übernahme-Gerüst ist das die des ERSTEN Zugangs, und die
+    # Zuordnung liefe gegen dessen Kanal (live: „Zugeordnetes Portal-Zimmer
+    # nicht gefunden", weil das Listing dort nicht existiert).
+    account_id: str | None = None
 
 
 # --- Webhook-Registrierung (Admin) ------------------------------------------

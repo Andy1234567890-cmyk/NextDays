@@ -89,7 +89,7 @@ def connection_link_body(
     *,
     group_id: str,
     channex_property_id: str,
-    channel_id: str,
+    channel_id: str | None,
     request_id: str,
     title: str,
     settings: dict[str, Any] | None,
@@ -115,17 +115,58 @@ def connection_link_body(
     Die `request_id` ist also ein Korrelations-Token für DIESEN Versuch, keine
     Objekt-/Kanal-Referenz.
 
-    `channel_id` gehört nur dazu, wenn der Kanal bereits existiert (bei uns
-    immer, weil wir ihn vorher anlegen).
+    `channel_id` gehört NUR zum Wiederverbinden eines bereits AUTORISIERTEN
+    Kanals — Airbnb-Doku, Feld `channel_id`: „Used in case of re-connection flow
+    for already existed channel." Für eine NEUE Verbindung bleibt es weg; dann
+    legt Channex den Kanal selbst an, sobald die Autorisierung eintrifft
+    („when the User connects Airbnb to Channex we will automatically create a
+    new inactive Channel", ebenda, Notes).
+
+    Das war der Fehler, an dem der zweite Zugang scheiterte: Wir legten den
+    Kanal per `POST /channels` selbst an und gaben seine ID mit — für Channex
+    also ein Re-Connect auf einen Kanal, der nie autorisiert war. Es gab keinen
+    Vorgang, dem die eintreffenden Tokens zuzuordnen wären, und der Kanal blieb
+    bei jedem Versuch auf `settings: null` stehen. Live belegt am 07.08.2026 an
+    vier nacheinander erzeugten Kanälen (8e3292d3, 14601790, 9df93e43,
+    da4730bc), während Airbnb „Channex verbunden" anzeigte.
+
+    `properties` MUSS mindestens einen Eintrag haben. Das Doku-Beispiel zeigt
+    zwar `"properties": []`, live antwortet Channex darauf aber mit
+        422 {"properties": ["should have at least 1 item(s)"]}
+    (gemessen 07.08.2026). Das übergebene Objekt ist reiner AUFHÄNGER: es wird
+    dem Kanal dadurch nicht dauerhaft zugeordnet — der Aufrufer löst es nach der
+    Kanal-Anlage wieder (`_objekt_vom_kanal_loesen`). Für hundert Konto-Links
+    genügt deshalb EIN bestehendes Objekt.
+
+    `konto_token`, `redirect_uri`, `failure_redirect_uri` sind der Weg für
+    Agenturen mit vielen Zugängen. Airbnbs Doku zum Feld `token`: „Free form
+    token which can be used to associate incoming redirect with specific User at
+    PMS". Ohne ihn kommt der Kunde von Airbnb zurück, ohne dass wir wissen, für
+    WELCHES Konto — bei hundert Vermietern ist das der Unterschied zwischen
+    Zuordnung und Raten. Channex hängt beim Rücksprung `channel_id` und `token`
+    an die `redirect_uri`; `failure_redirect_uri` fängt den Fehlschlag ab, der
+    sonst still bliebe (Wurzel 5).
     """
-    return {
+    body: dict[str, Any] = {
         "group_id": group_id,
-        "channel_id": channel_id,
         "title": title,
         "request_id": request_id,
         "properties": [channex_property_id],
         "settings": connection_settings(settings),
     }
+    # Nur beim Wiederverbinden. Channex' eigene Maske macht es genauso
+    # (Bundle index-BefbhQp2.js): `...(channelId ? {channelId} : {})`.
+    if channel_id:
+        body["channel_id"] = channel_id
+    # Nur mitschicken, was gesetzt ist — ein leerer String wäre für Channex ein
+    # Wert und würde die Rückleitung ins Nichts schicken.
+    if konto_token:
+        body["token"] = konto_token
+    if redirect_uri:
+        body["redirect_uri"] = redirect_uri
+    if failure_redirect_uri:
+        body["failure_redirect_uri"] = failure_redirect_uri
+    return body
 
 
 def parse_connection_status(channel: dict[str, Any]) -> dict[str, Any]:

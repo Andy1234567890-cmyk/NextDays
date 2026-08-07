@@ -56,7 +56,14 @@ export function PropertySync({
         <Card className="p-5 text-sm text-muted-foreground">{t("none")}</Card>
       ) : (
         connections.map((c) => (
-          <Card key={c.portal_code} className="flex flex-col gap-3 p-5">
+          // Schlüssel MIT Kanal: ein Objekt kann bei demselben Portal an
+          // mehreren Konten hängen (0304 — eine Agentur führt mehrere Zugänge).
+          // `portal_code` allein war dann doppelt, und React verwarf eine der
+          // beiden Karten.
+          <Card
+            key={`${c.portal_code}:${c.channel_id ?? c.hotel_id}`}
+            className="flex flex-col gap-3 p-5"
+          >
             <div className="flex items-center gap-2">
               {/* Echtes Portal-Logo, sonst nur der Name — kein Ersatz-Icon. */}
               {channelLogoLoose(c.portal_code) ? (

@@ -92,7 +92,7 @@
       "proMonat": "sa mhí",
       "tarif": "Plean amháin do chách, 1 áitreabh san áireamh",
       "objekte": "Gach áitreabh breise +€6/5/4 (scála íslitheach)",
-      "provision": "Cainéil sheachtracha 1 % · do thairseach féin 8 %",
+      "provision": "Cainéil sheachtracha 0.5 % · do thairseach féin 8 %",
       "cta": "Féach ar na praghsanna"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Áirithint dhíreach",
-        "items": "Do thairseach áirithinte féin, giuirléid áirithinte, tógálaí suímh, d'fhearann féin, 1 % in ionad coimisiún OTA de 15–18 %"
+        "items": "Do thairseach áirithinte féin, giuirléid áirithinte, tógálaí suímh, d'fhearann féin, 0.5 % in ionad coimisiún OTA de 15–18 %"
       },
       "preise": {
         "title": "Rátaí & ioncam",

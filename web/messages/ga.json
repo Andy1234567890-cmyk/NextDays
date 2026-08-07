@@ -779,7 +779,10 @@
     "autoNoContent": "Níl aon ábhar socraithe.",
     "autoEditSection": "Cuir {section} in eagar",
     "attachmentPreview": "Grianghraf",
-    "attachmentAlt": "Grianghraf ón aoi"
+    "attachmentAlt": "Grianghraf ón aoi",
+    "translate": "Aistrigh",
+    "showOriginal": "Taispeáin an bunleagan",
+    "translatedFrom": "Aistrithe ó {sprache}"
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",
@@ -5738,6 +5741,7 @@
     "accountsPanelIntro": "Déan athbhreithniú ar na cuntais atá nasctha leis an mbainisteoir cainéal agus bainistigh iad.",
     "accountsEmpty": "Níl aon chuntas nasctha go fóill.",
     "accountConnect": "Nasc cuntas",
+    "accountConnectCredentialHint": "Nascann tú cuntas {portal} eile trí „{portal} Connect“ — cuireann tú aitheantóir an óstáin isteach ansin agus mapálann tú na seomraí.",
     "accountsCheckPortalHint": "Seiceáil i socruithe do chuntais tairsí nach bhfuil aon aip eile socraithe mar sholáthraí an naisc.",
     "accountsLogoutHint": "Logáil amach as an tairseach i do bhrabhsálaí sula nascann tú cuntas eile."
   },
@@ -6386,7 +6390,7 @@
     "stars": "4,5 réalta",
     "reviews": "· 921 léirmheas",
     "trial30": "Bain triail as saor in aisce ar feadh 30 lá",
-    "bookingValue": "+1 % de luach na háirithinte",
+    "bookingValue": "+0.5 % de luach na háirithinte",
     "seePrices": "Féach ar na praghsanna",
     "downloadApp": "Íoslódáil an aip",
     "copyright": "© 2026 myNextDays. Gach ceart ar cosaint.",

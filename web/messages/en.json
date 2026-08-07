@@ -779,7 +779,10 @@
     "autoNoContent": "No content set.",
     "autoEditSection": "Edit {section}",
     "attachmentPreview": "Photo",
-    "attachmentAlt": "Photo from the guest"
+    "attachmentAlt": "Photo from the guest",
+    "translate": "Translate",
+    "showOriginal": "Show original",
+    "translatedFrom": "Translated from {sprache}"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",
@@ -5759,6 +5762,7 @@
     "accountsPanelIntro": "Review and manage the accounts connected to the channel manager.",
     "accountsEmpty": "No account connected yet.",
     "accountConnect": "Connect account",
+    "accountConnectCredentialHint": "You connect another {portal} account via “{portal} Connect” — there you enter the Hotel ID and map the rooms.",
     "accountsCheckPortalHint": "Check your portal account settings to make sure no other app is set as the connection provider.",
     "accountsLogoutHint": "Sign out of the portal in your browser before connecting a different account."
   },
@@ -6407,7 +6411,7 @@
     "stars": "4.5 stars",
     "reviews": "· 921 reviews",
     "trial30": "Try free for 30 days",
-    "bookingValue": "+1 % booking value",
+    "bookingValue": "+0.5 % booking value",
     "seePrices": "See prices",
     "downloadApp": "Download the app",
     "copyright": "© 2026 myNextDays. All rights reserved.",

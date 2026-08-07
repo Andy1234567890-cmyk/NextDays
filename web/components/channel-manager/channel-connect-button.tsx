@@ -17,6 +17,7 @@ import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   type ChannelMapping,
   type LocalRoomOption,
+  type OtaAccount,
   type OtaRoom,
   type PortalField,
   type PortalValue,
@@ -26,6 +27,7 @@ import {
   connectChannel,
   finalizeOAuthChannel,
   getChannelOAuthStatus,
+  listChannelAccounts,
   listChannelConnections,
   listPortals,
   prepareChannel,
@@ -237,6 +239,18 @@ export function ChannelConnectButton({
   const [oauthAufgegeben, setOauthAufgegeben] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // ALLE Portal-Konten des Betriebs (0304). Eine Agentur führt mehrere Zugänge
+  // je Portal, und beim Zuordnen muss sie sagen können, WELCHER gemeint ist —
+  // sonst greift der Dialog stumm zum ersten. Live am 07.08.2026: er zeigte
+  // „Host-ID 529591717" und siebzehn Anzeigen von AirSmil, während der Betrieb
+  // gerade Torstens Zugang (226976381) zuordnen wollte.
+  //
+  // Der Scope ist der MANDANT: eine Agentur sieht alle ihre Konten, nie die
+  // einer anderen (das erzwingt der Server, `portal_konten` filtert auf
+  // `tenant_id`).
+  const [konten, setKonten] = useState<OtaAccount[]>([]);
+  const [kontoId, setKontoId] = useState<string | null>(null);
+
   useEffect(() => {
     if (!open) return;
     startTransition(async () => {
@@ -260,6 +274,25 @@ export function ChannelConnectButton({
       }
     });
   }, [open, presetPropertyId]);
+
+  // Die Konten des Betriebs laden, sobald ein OAuth-Portal gewählt ist.
+  // Vorbelegt wird nur bei GENAU EINEM Konto — bei mehreren fragt der Dialog,
+  // statt eines zu nehmen: ein stilles „nimm das erste" ordnet die Anzeige dem
+  // falschen Vermieter zu, und das fällt erst auf, wenn dort Buchungen
+  // einlaufen (dieselbe Begründung wie bei der Objektwahl darüber).
+  useEffect(() => {
+    if (!open || !selected) return;
+    let aktiv = true;
+    void listChannelAccounts(selected.code).then((res) => {
+      if (!aktiv || !res.ok) return;
+      setKonten(res.data.items);
+      const verbunden = res.data.items.filter((k) => k.channel_id);
+      setKontoId(verbunden.length === 1 ? verbunden[0].id : null);
+    });
+    return () => {
+      aktiv = false;
+    };
+  }, [open, selected]);
 
   // Kanal-Detailseite: direkt auf das gewählte Portal springen, sobald Portale
   // UND (falls Credential-Portal) die gespeicherten Verbindungen geladen sind —
@@ -391,13 +424,17 @@ export function ChannelConnectButton({
     setCopied(false);
     setStep("oauth");
     startTransition(async () => {
+      // Rücksprungziel aus dem Browser lesen — die Server-Action kennt weder
+      // `window` noch die öffentliche Adresse dieser Anwendung.
+      const ziel = window.location.href;
       const res = propertyId
         ? await beginChannelOAuth({
             property_id: propertyId,
             portal_code: portal.code,
             neues_konto: neuesKonto,
+            redirect_uri: ziel,
           })
-        : await startAirbnbUebernahme();
+        : await startAirbnbUebernahme(false, ziel);
       if (res.ok) {
         setOauthUrl(res.data.oauth_url);
       } else {
@@ -419,7 +456,7 @@ export function ChannelConnectButton({
     setObjectImportMsg(null);
     setError(null);
     startTransition(async () => {
-      const res = await uebernehmeAirbnbListings();
+      const res = await uebernehmeAirbnbListings(kontoId);
       if (!res.ok) {
         setError(res.error);
         return;
@@ -513,6 +550,7 @@ export function ChannelConnectButton({
         property_id: propertyId,
         portal_code: selected.code,
         settings: {},
+        account_id: kontoId,
       });
       if (!res.ok) {
         setError(res.error);
@@ -678,6 +716,7 @@ export function ChannelConnectButton({
             property_id: propertyId,
             portal_code: selected.code,
             mappings,
+            account_id: kontoId,
           })
         : await connectChannel({
             property_id: propertyId,
@@ -999,6 +1038,45 @@ export function ChannelConnectButton({
                       <Icon icon="ph:check-circle" className="size-5" />
                       Verbunden{oauthHostId ? ` · Host-ID ${oauthHostId}` : ""}
                     </p>
+                    {/* WELCHER Zugang? Eine Agentur führt mehrere Airbnb-Konten
+                        (0304), und die Anzeigen kommen je Konto aus einem
+                        anderen Token. Ohne diese Wahl nahm der Dialog stumm das
+                        erste und zeigte die Anzeigen eines fremden Vermieters.
+                        Bei nur einem Konto bleibt die Zeile weg — dann gibt es
+                        nichts zu entscheiden. */}
+                    {konten.filter((k) => k.channel_id).length > 1 && (
+                      <div className="flex flex-col gap-1.5">
+                        <label
+                          htmlFor="konto-wahl"
+                          className="text-sm font-medium"
+                        >
+                          Portal-Konto
+                        </label>
+                        <NativeSelect
+                          id="konto-wahl"
+                          value={kontoId ?? ""}
+                          onChange={(e) => setKontoId(e.target.value || null)}
+                        >
+                          <option value="">— Konto wählen —</option>
+                          {konten
+                            .filter((k) => k.channel_id)
+                            .map((k) => (
+                              <option key={k.id} value={k.id}>
+                                {/* Name, sonst die Portal-Kennung. Eine rohe
+                                    UUID hilft niemandem — sie sagt nichts über
+                                    den Zugang aus. Fehlt beides, benennen wir
+                                    den Zustand („noch ohne Kennung") statt
+                                    einen Platzhalter zu erfinden (Wurzel 4). */}
+                                {k.display_name
+                                  ? k.hotel_id
+                                    ? `${k.display_name} · ${k.hotel_id}`
+                                    : k.display_name
+                                  : (k.hotel_id ?? "Zugang ohne Kennung")}
+                              </option>
+                            ))}
+                        </NativeSelect>
+                      </div>
+                    )}
                     {/* Die Massenübernahme gehört NUR in die Erstverbindung.
                         Kommt der Kunde von einem bestimmten Objekt („Verbinden"
                         in der Objektzeile), will er GENAU DIESES verbinden —
@@ -1047,7 +1125,14 @@ export function ChannelConnectButton({
                     <Button
                       variant="outline"
                       onClick={loadOAuthMapping}
-                      disabled={pending}
+                      // Ohne gewähltes Konto nicht weiter, wenn es mehrere
+                      // gibt: der Abruf liefe sonst mit dem Token eines
+                      // fremden Zugangs und zeigte dessen Anzeigen.
+                      disabled={
+                        pending ||
+                        (konten.filter((k) => k.channel_id).length > 1 &&
+                          !kontoId)
+                      }
                       className="self-start"
                     >
                       {pending ? (

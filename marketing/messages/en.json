@@ -92,7 +92,7 @@
       "proMonat": "per month",
       "tarif": "One plan for everyone, incl. 1 property",
       "objekte": "Each additional property +€6/5/4 (sliding scale)",
-      "provision": "External channels 1% · own portal 8%",
+      "provision": "External channels 0.5% · own portal 8%",
       "cta": "See pricing"
     }
   },
@@ -146,7 +146,7 @@
       },
       "direkt": {
         "title": "Direct booking",
-        "items": "Your own booking portal, booking widget, website builder, own domain, 1% instead of 15–18% OTA commission"
+        "items": "Your own booking portal, booking widget, website builder, own domain, 0.5% instead of 15–18% OTA commission"
       },
       "preise": {
         "title": "Rates & revenue",

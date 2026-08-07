@@ -362,8 +362,8 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
                 />
                 <KanalZeile
                   kanal="Booking, Airbnb & Co."
-                  satz="1 %"
-                  hinweis="ab 101 Objekten 0,5 %"
+                  satz="0,5 %"
+                  hinweis="höchstens 250 € im Monat"
                 />
                 <KanalZeile
                   kanal="myBestDays-Marktplatz"
