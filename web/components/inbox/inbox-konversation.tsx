@@ -24,7 +24,7 @@ import {
 } from "@/components/inbox/inbox-darstellung";
 import { WhatsAppChat } from "@/components/inbox/whatsapp-panel";
 import { Button } from "@nextdays/ui/button";
-import { tagLabel, tagWechsel, uhrzeit } from "@/lib/chat-format";
+import { tagLabel, tagWechsel, uhrzeit, zeitpunktLang } from "@/lib/chat-format";
 import {
   type Attachment,
   type InboxMessage,
@@ -559,7 +559,10 @@ export function Conversation({
                   <span className="whitespace-pre-wrap">{m.message}</span>
                 </div>
                 {m.sent_at && (
-                  <span className="text-[0.65rem] text-muted-foreground">
+                  <span
+                    className="text-[0.65rem] text-muted-foreground"
+                    title={zeitpunktLang(m.sent_at, locale)}
+                  >
                     {uhrzeit(m.sent_at, locale)}
                   </span>
                 )}
@@ -587,7 +590,10 @@ export function Conversation({
                   {m.message}
                 </div>
                 {m.sent_at && (
-                  <span className="flex items-center gap-1 text-[0.65rem] text-muted-foreground">
+                  <span
+                    className="flex items-center gap-1 text-[0.65rem] text-muted-foreground"
+                    title={zeitpunktLang(m.sent_at, locale)}
+                  >
                     {uhrzeit(m.sent_at, locale)}
                     {/* Lesebestätigung nur an EIGENEN Nachrichten und nur, wenn
                         der Kanal einen Lesestand meldet (0297, aktuell Airbnb).
@@ -1080,7 +1086,12 @@ function EventCard({
         />
         <span className="text-muted-foreground">{titel}</span>
         {message.sent_at && (
-          <span className="text-muted-foreground">· {uhrzeit(message.sent_at, locale)}</span>
+          <span
+            className="text-muted-foreground"
+            title={zeitpunktLang(message.sent_at, locale)}
+          >
+            · {uhrzeit(message.sent_at, locale)}
+          </span>
         )}
         {gebucht && message.event_channel && (
           <span className="flex items-center gap-1 truncate font-medium text-emerald-600 dark:text-emerald-400">

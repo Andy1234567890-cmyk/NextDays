@@ -854,11 +854,20 @@ Per Coolify-Scheduled-Task / crontab regelmäßig aufrufen, analog zu
 ```
 */5 * * * * curl -fsS -X POST https://<api-host>/api/v1/inbox/internal/dispatch-scheduled \
   -H "X-Internal-Cron-Secret: $INTERNAL_CRON_SECRET"
-# Automails (planbare Auto-Nachrichten) — minütlich, damit die Uhrzeit (z. B.
-# 07:45) zeitnah getroffen wird:
-* * * * * curl -fsS -X POST https://<api-host>/api/v1/inbox/internal/dispatch-automations \
-  -H "X-Internal-Cron-Secret: $INTERNAL_CRON_SECRET"
 ```
+
+**Automails laufen über den WORKER, nicht über Cron.** Der Tick
+`_automails_tick` (`apps/api/src/worker.py`, minütlich) versendet fällige
+Automails über alle Tenants. Der Endpunkt
+`POST /api/v1/inbox/internal/dispatch-automations` bleibt für manuelles
+Anstoßen bestehen, ist aber kein Betriebsweg mehr.
+
+Grund: Die frühere Cron-Zeile stand nur in dieser Doku — auf dem Server gab es
+sie nie (07.08.2026 geprüft: `crontab -l` leer, keine systemd-Timer). Ergebnis
+waren 8 fällige Automails, die seit dem 25.07. unversendet lagen, ohne dass
+irgendwo ein Fehler sichtbar wurde. Ein Versandweg, der von einem manuell
+angelegten Cron-Eintrag abhängt, ist genau so lange heil, bis jemand einen
+Server neu aufsetzt.
 
 **Tabellen (Migration 0040):** `channex_booking.assigned_user_id` (Zuweisung),
 `inbox_scheduled_message` (geplante Nachrichten, `status` pending→sent|failed|cancelled),

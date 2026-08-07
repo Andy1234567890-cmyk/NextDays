@@ -31,6 +31,7 @@ import {
   setConnectionActive,
   syncChannexBookings,
   triggerFullSync,
+  uebernehmeAirbnbListings,
 } from "@/lib/channex";
 import { formatCurrency } from "@/lib/currency";
 import { useRealtime } from "@/lib/use-realtime";
@@ -239,6 +240,7 @@ export function ChannelDetail({
         connectedCount={detail?.connected_count ?? 0}
         totalCount={detail?.total_count ?? mappings.length}
         accommodationType={accommodationType}
+        istAirbnb={meta.code === "AirBNB" && isConnected}
       />
 
       {/* Eingehende Buchungen dieses Kanals + manueller Sync */}
@@ -274,6 +276,7 @@ function MappingTable({
   connectedCount,
   totalCount,
   accommodationType,
+  istAirbnb,
 }: {
   mappings: ChannelMappingRow[];
   maps: PropertyMap[];
@@ -282,10 +285,47 @@ function MappingTable({
   connectedCount: number;
   totalCount: number;
   accommodationType?: "hotel" | "vacation_rental" | null;
+  /** Nur Airbnb kennt „neue Anzeigen nachholen" — dort entstehen Inserate am
+   *  Portal, nicht bei uns. */
+  istAirbnb: boolean;
 }) {
   const t = useTranslations("channels");
   const router = useRouter();
   const [suche, setSuche] = useState("");
+  const [suchtAnzeigen, setSuchtAnzeigen] = useState(false);
+  const [anzeigenMeldung, setAnzeigenMeldung] = useState<string | null>(null);
+  const [anzeigenFehler, setAnzeigenFehler] = useState(false);
+
+  /** Die Airbnb-Anzeigen erneut lesen und anlegen, was bei uns fehlt.
+   *
+   *  Idempotent über `airbnb_listing_id` — bestehende Objekte werden
+   *  aktualisiert, nicht verdoppelt. Findet der Lauf nichts Neues, sagt er das
+   *  ausdrücklich UND nennt die Zahl der bei Airbnb gefundenen Anzeigen: fehlt
+   *  dort eine, liegt es an Airbnb (nicht verbundene, pausierte oder
+   *  ausgeblendete Anzeigen liefert der Aggregator nicht) — der Betrieb muss
+   *  das sehen, statt sie bei uns vergeblich zu suchen. */
+  function anzeigenSuchen() {
+    setSuchtAnzeigen(true);
+    setAnzeigenMeldung(null);
+    void uebernehmeAirbnbListings().then((res) => {
+      setSuchtAnzeigen(false);
+      setAnzeigenFehler(!res.ok);
+      if (!res.ok) {
+        setAnzeigenMeldung(res.error);
+        return;
+      }
+      const d = res.data;
+      setAnzeigenMeldung(
+        d.created > 0
+          ? t("findNewListingsFound", {
+              created: d.created,
+              found: d.listings_gefunden,
+            })
+          : t("findNewListingsNone", { found: d.listings_gefunden }),
+      );
+      if (d.created > 0) router.refresh();
+    });
+  }
   // Hotel-ID einer BEREITS verbundenen Zeile: bei Hotels teilen alle Zimmer eine
   // Hotel-ID. Weitere Zimmer müssen sie NICHT erneut eingeben — der Assistent
   // überspringt dann den Hotel-ID-Schritt und geht direkt ins Zimmer-Mapping.
@@ -324,10 +364,41 @@ function MappingTable({
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">{t("propertiesHeading")}</h2>
-        <span className="text-sm text-muted-foreground">
-          {t("connectedOf", { connected: connectedCount, total: totalCount })}
-        </span>
+        <div className="flex items-center gap-3">
+          {/* Neue Anzeigen nachholen. Ohne diesen Knopf kam ein NACHTRÄGLICH
+              bei Airbnb angelegtes Inserat nie bei uns an: die Übernahme lief
+              nur einmal im Anschluss an die Autorisierung, und danach gab es
+              keinen Weg mehr — nur „Verbinden", das schon verbunden war. */}
+          {istAirbnb && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={anzeigenSuchen}
+              disabled={suchtAnzeigen}
+            >
+              <Icon
+                icon={suchtAnzeigen ? "ph:spinner" : "ph:magnifying-glass"}
+                className={"size-4 " + (suchtAnzeigen ? "animate-spin" : "")}
+              />
+              {t("findNewListings")}
+            </Button>
+          )}
+          <span className="text-sm text-muted-foreground">
+            {t("connectedOf", { connected: connectedCount, total: totalCount })}
+          </span>
+        </div>
       </div>
+      {anzeigenMeldung && (
+        <p
+          className={
+            "text-sm " +
+            (anzeigenFehler ? "text-destructive" : "text-foreground")
+          }
+        >
+          {anzeigenMeldung}
+        </p>
+      )}
       <Input
         value={suche}
         onChange={(e) => setSuche(e.target.value)}

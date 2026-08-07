@@ -867,10 +867,14 @@ class AriPushMixin:
         fields: dict[str, Any],
         date_from: date,
         date_to: date,
+        days: list[str] | None = None,
     ) -> int | None:
         """Restriction-`fields` (rate/min_stay/max_stay/CTA/CTD) für ALLE
         Rate-Plans der Property über den Zeitraum expandieren und gebündelt
-        pushen. Gibt die Anzahl gesendeter values zurück, oder None bei No-op
+        pushen. `days` schränkt optional auf Wochentage ein (Channex-nativ,
+        mo…su) — dafür gedacht, dass eine Regel nur an bestimmten Wochentagen
+        gilt (gesperrte Check-in/-out-Tage). Gibt die Anzahl gesendeter values
+        zurück, oder None bei No-op
         (nicht bei Channex gemanaged). Wirft ChannexError beim Sende-Fehler ODER
         einen _PendingRatePlanMapping-Sentinel, wenn das Objekt zwar managed ist,
         aber (noch) KEINE Rate-Plans gemappt hat — der Aufrufer lässt die
@@ -888,6 +892,12 @@ class AriPushMixin:
             # und der Cron ihn nachziehen, sobald das Mapping existiert.
             raise _PendingRatePlanMapping(property_id)
         values = _restriction_values(plans, fields, date_from, date_to)
+        if days is not None:
+            erlaubt = {i for i, n in enumerate(_WEEKDAY_NAMES) if n in days}
+            values = [
+                m for m in (_apply_weekday_mask(v, erlaubt) for v in values)
+                if m is not None
+            ]
         if not values:
             return 0
         # Trace-Kontext für den Client-Sink: dieser Delta-Pfad (min_stay, max_stay,
@@ -911,6 +921,7 @@ class AriPushMixin:
         date_from: date,
         date_to: date,
         log_event: str,
+        days: list[str] | None = None,
     ) -> bool:
         """Gemeinsamer Pfad für rate/max_stay/cta_ctd: Absicht in die Restriktions-
         Outbox persistieren, dann für ALLE Rate-Plans pushen und die Zeile
@@ -930,7 +941,7 @@ class AriPushMixin:
         )
         try:
             sent = self._push_restriction_values_all_plans(
-                tenant_id, property_id, fields, date_from, date_to
+                tenant_id, property_id, fields, date_from, date_to, days
             )
             self._mark_restriction_outbox(outbox_id, "done")
             if sent is not None:
@@ -1067,6 +1078,82 @@ class AriPushMixin:
         return self._push_fields_with_outbox(
             tenant_id, property_id, "cta_ctd", payload, fields, date_from, date_to,
             "cta_ctd_push_done",
+        )
+
+    def push_wochentagssperren_for_property(
+        self,
+        tenant_id: str,
+        property_id: str,
+        date_from: date,
+        date_to: date,
+        *,
+        gesperrte_anreise: frozenset[str],
+        gesperrte_abreise: frozenset[str],
+    ) -> bool:
+        """Gesperrte Check-in/-out-WOCHENTAGE aus dem Verfügbarkeits-Formular als
+        closed_to_arrival/closed_to_departure an Channex pushen.
+
+        Beide Richtungen werden IMMER vollständig gesetzt — für die gesperrten
+        Wochentage auf true, für alle übrigen auf false. Nur die gesperrten zu
+        senden wäre der klassische Wurzel-1-Fehler: entfernt der Betrieb später
+        die Sperre, bliebe sie bei den Portalen für immer stehen, weil nie
+        jemand `false` geschickt hat.
+
+        `gesperrte_*` sind Wochentagsschlüssel ('mon'…'sun', Mo=0) aus
+        `verfuegbarkeit_regeln`. Leer + leer = alles offen (ein Push, der
+        beide Flags flächendeckend auf false setzt).
+
+        Rückgabe True = Channex-Fehler/fehlendes Mapping (Job-Retry).
+        """
+        if not self._channex.is_configured or self._db is None:
+            return False
+        # 'mon'…'sun' (Formular) → 'mo'…'su' (Channex). Über den Index, weil
+        # beide Listen Mo=0 zählen; ein String-Prefix wäre bei 'sun'/'sa' falsch.
+        formular = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+        fehler = False
+        for feld, gesperrt in (
+            ("closed_to_arrival", gesperrte_anreise),
+            ("closed_to_departure", gesperrte_abreise),
+        ):
+            gesperrt_ch = [
+                _WEEKDAY_NAMES[i] for i, k in enumerate(formular) if k in gesperrt
+            ]
+            offen_ch = [
+                _WEEKDAY_NAMES[i] for i, k in enumerate(formular) if k not in gesperrt
+            ]
+            for tage, wert in ((gesperrt_ch, True), (offen_ch, False)):
+                if not tage:
+                    continue
+                if self._push_wochentag_feld(
+                    tenant_id, property_id, date_from, date_to, feld, wert, tage
+                ):
+                    fehler = True
+        return fehler
+
+    def _push_wochentag_feld(
+        self,
+        tenant_id: str,
+        property_id: str,
+        date_from: date,
+        date_to: date,
+        feld: str,
+        wert: bool,
+        tage: list[str],
+    ) -> bool:
+        """Ein CTA/CTD-Flag für eine Wochentagsmenge über den Horizont pushen.
+
+        Geht denselben Outbox-Weg wie die übrigen Restriktionen (Absicht vor dem
+        Call persistieren), damit ein Channex-Ausfall den Cron-Backstop nicht
+        umgeht. `days` ist das native Channex-Wochentagsfeld.
+        """
+        payload = {
+            "closed_to_arrival": wert if feld == "closed_to_arrival" else None,
+            "closed_to_departure": wert if feld == "closed_to_departure" else None,
+            "days": tage,
+        }
+        return self._push_fields_with_outbox(
+            tenant_id, property_id, "cta_ctd", payload, {feld: wert},
+            date_from, date_to, "wochentagssperre_push_done", days=tage,
         )
 
     @staticmethod
@@ -2009,7 +2096,18 @@ class AriPushMixin:
         fields = _restriction_fields_from_payload(kind, payload)
         if not fields:
             return []
-        return _restriction_values(plans, fields, date_from, date_to)
+        values = _restriction_values(plans, fields, date_from, date_to)
+        # Wochentags-Maske aus dem Payload wiederherstellen (gesperrte Check-in/
+        # -out-Tage). Ohne das würde der Cron-Retry die Sperre auf ALLE Tage
+        # ausdehnen — aus „samstags keine Anreise" würde „nie eine Anreise".
+        tage = payload.get("days")
+        if isinstance(tage, list) and tage:
+            erlaubt = {i for i, n in enumerate(_WEEKDAY_NAMES) if n in tage}
+            values = [
+                m for m in (_apply_weekday_mask(v, erlaubt) for v in values)
+                if m is not None
+            ]
+        return values
 
     def process_restriction_outbox(self, limit: int = 200) -> dict[str, int]:
         """Offene ari_restriction_outbox-Zeilen erneut an Channex pushen (Cron-Retry,
@@ -2113,7 +2211,17 @@ class AriPushMixin:
             for r in payload["rows"]:
                 days.update(_iso_days(str(r["date_from"]), str(r["date_to"])))
             return days
-        return set(_iso_days(str(row["date_from"]), str(row["date_to"])))
+        alle = set(_iso_days(str(row["date_from"]), str(row["date_to"])))
+        # Wochentags-Maske: eine Zeile, die nur samstags gilt, deckt auch nur die
+        # Samstage ab. Ohne diese Einschränkung würde die Zeile „freie Tage auf
+        # false" die Zeile „gesperrte Tage auf true" vollständig verdrängen
+        # (gleicher kind, gleicher Zeitraum, beide property-weit) — der Cron-
+        # Backstop höbe die gerade gesetzte Sperre wieder auf.
+        maske = payload.get("days")
+        if isinstance(maske, list) and maske:
+            erlaubt = {i for i, n in enumerate(_WEEKDAY_NAMES) if n in maske}
+            return {t for t in alle if date.fromisoformat(t).weekday() in erlaubt}
+        return alle
 
     @staticmethod
     def _rate_row_plan_ids(row: dict[str, Any]) -> set[str | None]:

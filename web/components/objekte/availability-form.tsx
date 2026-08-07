@@ -38,7 +38,6 @@ import {
   ADVANCE_NOTICE_OPTIONS,
   BOOKING_WINDOW_OPTIONS,
   CHANNEL_LABELS,
-  CHANNELS,
   CUT_OFF_TIME_OPTIONS,
   MIN_STAY_TYPE_OPTIONS,
   PREPARATION_OPTIONS,
@@ -58,8 +57,14 @@ type Section =
   | "notice"
   | "days"
   | "sales"
-  | "autoupdate"
   | null;
+
+// Kanäle, die Vorbereitungszeit/Buchungsfenster/Vorlaufzeit wirklich erreichen.
+// Channex hat für diese drei KEIN Restriktionsfeld; nur Airbnb kennt sie am
+// Listing (turnover_days, max_days_notice, booking_lead_time). Sie für
+// Booking.com anzubieten hieße, eine Einstellung zu erfassen, die nirgends
+// ankommt — dieselbe Falle wie ein erfundener Vorgabewert (Wurzel 4).
+const PER_CHANNEL_KANAELE: Channel[] = ["direct", "airbnb"];
 
 export function AvailabilityForm({ initial }: { initial: Property }) {
   const t = useTranslations("objects");
@@ -82,8 +87,6 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
     }
     return true;
   }
-
-  const ALL: Channel[] = CHANNELS;
 
   return (
     <div className="flex flex-col gap-6">
@@ -109,6 +112,10 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
         <Pill>{t("availabilityForm.nightsCount", { count: av.maxStay })}</Pill>
       </BlockCard>
 
+      {/* Vorbereitungszeit, Buchungsfenster und Vorlaufzeit haben bei Channex
+          KEIN Restriktionsfeld. Sie gehen deshalb nur an Airbnb (dessen eigene
+          Listing-Settings) und gelten bei uns direkt — Booking.com hier zu
+          nennen wäre ein Versprechen, das niemand einlöst. */}
       <BlockCard
         title={t("availabilityForm.preparation.title")}
         hint={t("availabilityForm.preparation.hint")}
@@ -126,7 +133,7 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
       <BlockCard
         title={t("availabilityForm.bookingWindow.title")}
         hint={t("availabilityForm.bookingWindow.hint")}
-        channels={ALL}
+        channels={["direct", "airbnb"]}
         actionLabel={t("availabilityForm.actionEdit")}
         onEdit={() => setSection("window")}
       >
@@ -136,7 +143,7 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
       <BlockCard
         title={t("availabilityForm.advanceNotice.title")}
         hint={t("availabilityForm.advanceNotice.hint")}
-        channels={ALL}
+        channels={["direct", "airbnb"]}
         actionLabel={t("availabilityForm.actionEdit")}
         onEdit={() => setSection("notice")}
       >
@@ -168,15 +175,14 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
         <Pill>{salesLabel(av, t)}</Pill>
       </BlockCard>
 
-      <BlockCard
-        title={t("availabilityForm.autoUpdate.title")}
-        hint={t("availabilityForm.autoUpdate.hint")}
-        channels={["direct", "airbnb", "booking", "google"]}
-        actionLabel={t("availabilityForm.actionEdit")}
-        onEdit={() => setSection("autoupdate")}
-      >
-        <Pill>{autoUpdateLabel(av, t)}</Pill>
-      </BlockCard>
+      {/* „Automatische Verfügbarkeit" gibt es hier bewusst NICHT mehr als
+          Einstellung. Wir sind der Verfügbarkeits-Master: nach jeder Buchung/
+          Storno pusht der Kalender den absoluten Wert an die Portale. Ließe man
+          Channex zusätzlich relativ nachziehen, entstünde reihenfolgeabhängig
+          ein Doppel-Dekrement (Einheit doppelt verkaufbar oder phantom-belegt).
+          Das Backend pinnt die Schalter deshalb hart auf false
+          (`common._availability_settings`) — als bedienbare Schalter waren sie
+          ein Versprechen, das nie eingelöst wurde. */}
 
       {/* Editoren */}
       {section === "min" && <MinStayEditor av={av} onSave={save} onClose={() => setSection(null)} />}
@@ -216,9 +222,6 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
       )}
       {section === "days" && <DaysEditor av={av} onSave={save} onClose={() => setSection(null)} />}
       {section === "sales" && <SalesEditor av={av} onSave={save} onClose={() => setSection(null)} />}
-      {section === "autoupdate" && (
-        <AutoUpdateEditor av={av} onSave={save} onClose={() => setSection(null)} />
-      )}
     </div>
   );
 }
@@ -238,18 +241,6 @@ function salesLabel(av: Availability, t: ReturnType<typeof useTranslations>): st
     parts.push(t("availabilityForm.sales.summaryMaxAdvance", { count: av.maxDayAdvance }));
   }
   return parts.join(" · ");
-}
-
-// Kurzbeschreibung der Auto-Aktualisierung für die Karte.
-function autoUpdateLabel(av: Availability, t: ReturnType<typeof useTranslations>): string {
-  const on: string[] = [];
-  if (av.autoUpdateOnModification) on.push(t("availabilityForm.autoUpdate.eventModification"));
-  if (av.autoUpdateOnCancellation) on.push(t("availabilityForm.autoUpdate.eventCancellation"));
-  // Neue Buchung senkt immer (Channex erzwingt das) — daher separat nennen.
-  const base = t("availabilityForm.autoUpdate.summaryBase");
-  return on.length
-    ? t("availabilityForm.autoUpdate.summaryWithEvents", { base, events: on.join(" + ") })
-    : base;
 }
 
 // --- Karten/Bausteine ------------------------------------------------------
@@ -301,7 +292,7 @@ function PerChannelPills<T extends string | number>({
   }
   return (
     <span className="flex flex-wrap items-center gap-2">
-      {CHANNELS.map((c) => (
+      {PER_CHANNEL_KANAELE.map((c) => (
         <span key={c} className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-sm">
           <ChannelLogo channel={c} />
           {labelFor(options, pc.channels[c])}
@@ -430,7 +421,7 @@ function PerChannelEditor<T extends string | number>({
     <EditorShell
       title={title}
       subtitle={subtitle}
-      channels={CHANNELS}
+      channels={PER_CHANNEL_KANAELE}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} />}
     >
@@ -460,7 +451,7 @@ function PerChannelEditor<T extends string | number>({
 
       {pc.custom && (
         <div className="flex flex-col gap-4">
-          {CHANNELS.map((c) => (
+          {PER_CHANNEL_KANAELE.map((c) => (
             <Field
               key={c}
               label={
@@ -631,66 +622,6 @@ function SalesEditor({
         </Select>
       </Field>
       <Hint>{t("availabilityForm.sales.minStayTypeHint")}</Hint>
-    </EditorShell>
-  );
-}
-
-// Automatische Verfügbarkeitsanpassung bei Buchungsereignissen (Channex).
-function AutoUpdateEditor({
-  av,
-  onSave,
-  onClose,
-}: {
-  av: Availability;
-  onSave: (next: Availability) => Promise<true | string>;
-  onClose: () => void;
-}) {
-  const t = useTranslations("objects");
-  const [v, setV] = useState(av);
-  const { busy, error, run } = useSaver(onSave);
-  return (
-    <EditorShell
-      title={t("availabilityForm.autoUpdate.title")}
-      subtitle={t("availabilityForm.autoUpdate.editorSubtitle")}
-      channels={["direct", "airbnb", "booking", "google"]}
-      onClose={onClose}
-      footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
-    >
-      <label className="flex items-start justify-between gap-3 text-sm opacity-70">
-        <span>
-          <span className="font-medium">{t("availabilityForm.autoUpdate.newBookingTitle")}</span>
-          <span className="mt-0.5 block text-muted-foreground">
-            {t("availabilityForm.autoUpdate.newBookingHint")}
-          </span>
-        </span>
-        <Switch checked disabled />
-      </label>
-
-      <label className="flex cursor-pointer items-start justify-between gap-3 text-sm">
-        <span>
-          <span className="font-medium">{t("availabilityForm.autoUpdate.modificationTitle")}</span>
-          <span className="mt-0.5 block text-muted-foreground">
-            {t("availabilityForm.autoUpdate.modificationHint")}
-          </span>
-        </span>
-        <Switch
-          checked={v.autoUpdateOnModification}
-          onCheckedChange={(c) => setV({ ...v, autoUpdateOnModification: c })}
-        />
-      </label>
-
-      <label className="flex cursor-pointer items-start justify-between gap-3 text-sm">
-        <span>
-          <span className="font-medium">{t("availabilityForm.autoUpdate.cancellationTitle")}</span>
-          <span className="mt-0.5 block text-muted-foreground">
-            {t("availabilityForm.autoUpdate.cancellationHint")}
-          </span>
-        </span>
-        <Switch
-          checked={v.autoUpdateOnCancellation}
-          onCheckedChange={(c) => setV({ ...v, autoUpdateOnCancellation: c })}
-        />
-      </label>
     </EditorShell>
   );
 }

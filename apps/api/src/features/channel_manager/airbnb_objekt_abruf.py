@@ -81,6 +81,7 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
 from . import airbnb_listing_import as ali
+from .airbnb_verfuegbarkeit import VORLAUF_ZU_OPTION
 from .channex_client import ChannexError
 from .common import (
     ChannelManagerError,
@@ -1072,11 +1073,14 @@ class AirbnbObjektAbrufMixin:
         if isinstance(stunden, int) and not isinstance(stunden, bool):
             if offen("advanceNotice"):
                 # Airbnb zählt STUNDEN Vorlauf, die Maske führt eine Uhrzeit
-                # bzw. „24h"/„48h" (`ADVANCE_NOTICE_OPTIONS`). Nur die Werte
+                # bzw. „24h"/„168h" (`ADVANCE_NOTICE_OPTIONS`). Nur die Werte
                 # übernehmen, die es dort wirklich gibt — kein erfundener
-                # Zwischenwert (Wurzel 4).
-                passend = {0: "00:00", 12: "12:00", 18: "18:00",
-                           24: "24h", 48: "48h"}.get(stunden)
+                # Zwischenwert (Wurzel 4). Die Tabelle ist die UMKEHRUNG der
+                # Schreibrichtung und liegt bewusst nur EINMAL vor
+                # (`airbnb_verfuegbarkeit`): zwei getrennte Tabellen driften
+                # auseinander und verschieben dann bei jedem Rundlauf die
+                # Einstellung des Betriebs.
+                passend = VORLAUF_ZU_OPTION.get(stunden)
                 if passend:
                     ziel["advanceNotice"] = _je_kanal(passend)
 

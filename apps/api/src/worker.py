@@ -53,6 +53,9 @@ _CHANNEX_JOB_TYPES = frozenset(
      # Channex — der OAuth-Token dafür aber schon (`get_channel`), also zählt der
      # Job mit, sonst umginge er das kontoweite Limit.
      "sync_airbnb_ausstattung",
+     # Verfügbarkeitsregeln je Listing (GET+PUT availability_settings pro
+     # Mapping) — echte Channex-Calls, zählen also mit.
+     "sync_airbnb_verfuegbarkeit",
      # Fläche und Kapazität an Airbnbs eigene API — wie die Ausstattung: der
      # Schreibaufruf geht direkt, der OAuth-Token kommt aber von Channex.
      "sync_airbnb_stammdaten",
@@ -142,6 +145,18 @@ REVIEWS_TICK_SECONDS = 60 * 60
 # reicht: die Termine sind tagesgenau und der Lauf ist idempotent (UNIQUE-Index
 # auf (rule_id, occurrence_on)), ein zweiter Durchlauf legt nichts doppelt an.
 TASKS_TICK_SECONDS = 60 * 60
+# Fällige Automails versenden (Buchungsbestätigung, Anreise-Info, Check-out …).
+# JEDE MINUTE, nicht stündlich: seit 0303 lässt sich der Versatz in Minuten
+# angeben („30 Minuten nach Buchung"), und ein Stundenraster machte daraus je
+# nach Zufall bis zu 59 Minuten Verspätung. Der Lauf ist billig — er fragt eine
+# indizierte Spalte ab und findet meistens nichts — und idempotent: `dispatch`
+# markiert jede Zeile beim Senden, ein zweiter Durchlauf schickt nichts doppelt.
+#
+# Vorher hing der Versand an einem Cron, den es auf dem Server nie gab (live
+# geprüft 07.08.2026: crontab leer, keine systemd-Timer, 8 überfällige Automails
+# lagen seit dem 25.07. unversendet). Der Worker ist der Ausführende, damit ein
+# geplanter Versand nicht von einem Eintrag abhängt, den niemand angelegt hat.
+AUTOMAILS_TICK_SECONDS = 60
 # Content-Sync-Heilung: Objekte, deren letzter Content-Push fehlgeschlagen ist
 # (channex_property_map.last_sync_status='error'), erneut einreihen. Ohne diesen
 # Tick bleibt eine lokale Änderung — Steuern, Beschreibung, Ausstattung — nach
@@ -242,6 +257,22 @@ def _handle_sync_airbnb_aktionen(
     if not svc.is_channex_configured:
         return
     svc.sync_airbnb_aktionen(payload["tenant_id"], payload["property_id"])
+
+
+def _handle_sync_airbnb_verfuegbarkeit(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Vorbereitungszeit/Buchungsfenster/Vorlaufzeit an das Airbnb-Listing.
+
+    Channex hat für diese drei kein ARI-Restriktionsfeld; sie gehen über
+    Airbnbs Listing-Settings. Der Dienst liest den Ist-Stand und schreibt nur
+    bei echter Abweichung — ohne Verbindung/Mapping tut er nichts."""
+    svc = _svc(db, budget)
+    if not svc.is_channex_configured:
+        return
+    svc.airbnb_verfuegbarkeit_schreiben(
+        payload["tenant_id"], payload["property_id"]
+    )
 
 
 def _handle_sync_airbnb_ausstattung(
@@ -395,6 +426,15 @@ def _handle_push_ari(
             min_stay=payload.get("min_stay"),
             max_stay=payload.get("max_stay"),
             rate_cents=payload.get("rate_cents"),
+        )
+    elif kind == "wochentagssperren":
+        # Gesperrte Check-in/-out-Wochentage aus dem Verfügbarkeits-Formular.
+        # Setzt beide Richtungen flächendeckend (gesperrt=true, Rest=false),
+        # damit ein Entsperren bei den Portalen ankommt.
+        failed = push.push_wochentagssperren_for_property(
+            tenant_id, property_id, _d("date_from"), _d("date_to"),
+            gesperrte_anreise=frozenset(payload.get("gesperrte_anreise") or ()),
+            gesperrte_abreise=frozenset(payload.get("gesperrte_abreise") or ()),
         )
     elif kind == "stop_sell":
         spans = [(date.fromisoformat(a), date.fromisoformat(b))
@@ -577,6 +617,7 @@ HANDLERS: dict[
     "sync_property_content": _handle_sync_property_content,
     "sync_property_taxes": _handle_sync_property_taxes,
     "sync_airbnb_aktionen": _handle_sync_airbnb_aktionen,
+    "sync_airbnb_verfuegbarkeit": _handle_sync_airbnb_verfuegbarkeit,
     "sync_airbnb_ausstattung": _handle_sync_airbnb_ausstattung,
     "sync_airbnb_stammdaten": _handle_sync_airbnb_stammdaten,
     "sync_airbnb_zimmer": _handle_sync_airbnb_zimmer,
@@ -619,6 +660,7 @@ class Worker:
         self._last_commission_tick = 0.0
         self._last_reviews_tick = 0.0
         self._last_tasks_tick = 0.0
+        self._last_automails_tick = 0.0
         self._last_content_heal_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
@@ -957,6 +999,35 @@ class Worker:
                 guest_rated=rated, expired=expired, reminders_sent=reminded,
             )
 
+    async def _automails_tick(self, loop_time: float) -> None:
+        """Fällige Automails versenden — minütlich, über alle Tenants.
+
+        `dispatch_due_automations` führt den Zustand selbst (sent/failed) und
+        ist idempotent; ein Kanal-Fehler an einer Nachricht kippt weder den Tick
+        noch die übrigen. Netzwerkarbeit im Thread, damit die Claim-Loop läuft.
+        """
+        if loop_time - self._last_automails_tick < AUTOMAILS_TICK_SECONDS:
+            return
+        self._last_automails_tick = loop_time
+        try:
+            ergebnis = await asyncio.to_thread(self._dispatch_automails)
+        except Exception as exc:  # noqa: BLE001 — ein Fehler stoppt den Worker nicht
+            log.warning("automails_tick_failed", error=str(exc)[:200])
+            return
+        # Nur protokollieren, wenn wirklich etwas passiert ist — sonst schriebe
+        # der Tick jede Minute eine Zeile ins Log.
+        if ergebnis.get("sent") or ergebnis.get("failed"):
+            log.info(
+                "automails_tick",
+                sent=ergebnis.get("sent", 0),
+                failed=ergebnis.get("failed", 0),
+            )
+
+    def _dispatch_automails(self) -> dict:
+        from src.features.inbox.service import InboxService
+
+        return InboxService(service_client=self._db).dispatch_due_automations()
+
     async def _tasks_tick(self, loop_time: float) -> None:
         """Stündlich wiederkehrende Aufgaben-Regeln ausrollen (0272).
 
@@ -1282,6 +1353,7 @@ class Worker:
             await self._commission_tick(loop_time)
             await self._reviews_tick(loop_time)
             await self._tasks_tick(loop_time)
+            await self._automails_tick(loop_time)
             await self._content_heal_tick(loop_time)
             await self._deploy_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)

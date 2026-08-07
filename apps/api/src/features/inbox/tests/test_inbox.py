@@ -100,12 +100,15 @@ class _FakeDB:
 
     def __init__(
         self, bookings, reservations,
-        *, user_role="admin", user_perms=None, updates=None,
+        *, user_role="admin", user_perms=None, updates=None, nachrichten=None,
     ) -> None:  # noqa: ANN001
         self._bookings = bookings
         self._reservations = reservations
         self._user_role = user_role
         self._user_perms = _PERMS_FULL if user_perms is None else user_perms
+        # Der lokale Nachrichten-Spiegel (portal_messages) — speist Vorschau,
+        # Absender und „letzte Aktivität" der Liste.
+        self._nachrichten = nachrichten or []
         # Sammelt update()-Patches je Tabelle (für Assertions).
         self.updates = updates if updates is not None else []
 
@@ -117,6 +120,8 @@ class _FakeDB:
             }]
         elif name == "channex_booking":
             rows = self._bookings
+        elif name == "portal_messages":
+            rows = self._nachrichten
         else:
             rows = self._reservations
         return _FakeQuery(name, rows, self.updates)
@@ -131,6 +136,7 @@ class _FakeQuery:
         self._in: tuple | None = None
         self._patch = None
         self._insert = None
+        self._sort: list = []
 
     def select(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
@@ -156,7 +162,12 @@ class _FakeQuery:
         self._in = (col, vals)
         return self
 
-    def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+    def order(self, col=None, *, desc=False, **_k):  # noqa: ANN001, ANN003, ANN201
+        # Echt sortieren statt durchreichen: `_last_messages` verlässt sich
+        # darauf, dass der ERSTE Treffer je Thread der jüngste ist. Ein
+        # no-op-`order` täuschte das nur vor.
+        if col:
+            self._sort.append((col, desc))
         return self
 
     def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
@@ -175,6 +186,9 @@ class _FakeQuery:
             if col == "__lte__":
                 continue
             rows = [r for r in rows if r.get(col) == val]
+        for col, desc in reversed(self._sort):
+            rows = sorted(rows, key=lambda r, c=col: (r.get(c) is None, r.get(c) or ""),
+                          reverse=desc)
         return rows
 
     def execute(self):  # noqa: ANN201
@@ -651,6 +665,58 @@ def test_compute_send_at_missing_anchor_is_none() -> None:
     assert InboxService._compute_send_at("booking", 0, "12:00", {}) is None
 
 
+def test_compute_send_at_stunden_vor_anreise() -> None:
+    """Stunden rechnen vom Bezugszeitpunkt, nicht vom Kalendertag.
+
+    An-/Abreise sind beim Portal reine DATEN (`arrival_date` ist eine
+    `date`-Spalte, live geprüft). Bezug ist deshalb die eingestellte Uhrzeit —
+    hier 16:00 Check-in, minus 2 Stunden.
+    """
+    th = {"arrival_date": "2026-07-10", "departure_date": "2026-07-14"}
+    dt = InboxService._compute_send_at(
+        "arrival", 0, "16:00", th, offset_unit="hours", offset_value=-2
+    )
+    assert dt == datetime(2026, 7, 10, 14, 0, tzinfo=UTC)
+
+
+def test_compute_send_at_minuten_nach_abreise() -> None:
+    """Minuten dürfen über die Tagesgrenze laufen."""
+    th = {"arrival_date": "2026-07-10", "departure_date": "2026-07-14"}
+    dt = InboxService._compute_send_at(
+        "departure", 0, "23:30", th, offset_unit="minutes", offset_value=45
+    )
+    assert dt == datetime(2026, 7, 15, 0, 15, tzinfo=UTC)
+
+
+def test_compute_send_at_ohne_uhrzeit_ist_mitternacht() -> None:
+    """Keine feste Uhrzeit → Mitternacht des Ankertags, kein geratener Wert."""
+    th = {"arrival_date": "2026-07-10"}
+    dt = InboxService._compute_send_at(
+        "arrival", 0, None, th, offset_unit="days", offset_value=-1
+    )
+    assert dt == datetime(2026, 7, 9, 0, 0, tzinfo=UTC)
+
+
+def test_compute_send_at_stunden_nutzen_buchungsuhrzeit() -> None:
+    """Nur die Buchung trägt einen echten Zeitpunkt — der zählt dann auch.
+
+    `created_at` ist ein Zeitstempel; „3 Stunden nach Buchung" muss von der
+    tatsächlichen Buchungsminute rechnen, nicht von Mitternacht.
+    """
+    th = {"created_at": "2026-07-10T14:20:00+00:00"}
+    dt = InboxService._compute_send_at(
+        "booking", 0, None, th, offset_unit="hours", offset_value=3
+    )
+    assert dt == datetime(2026, 7, 10, 17, 20, tzinfo=UTC)
+
+
+def test_compute_send_at_altbestand_rechnet_unveraendert() -> None:
+    """Ohne offset_value gilt offset_days — der Bestand darf nicht verrutschen."""
+    th = {"arrival_date": "2026-07-10"}
+    dt = InboxService._compute_send_at("arrival", -3, "07:45", th)
+    assert dt == datetime(2026, 7, 7, 7, 45, tzinfo=UTC)
+
+
 def test_automation_matches_empty_means_all() -> None:
     a = {"property_ids": None, "channels": None}
     assert InboxService._automation_matches(a, "p-1", "Airbnb") is True
@@ -926,6 +992,76 @@ def test_ohne_portal_zeitpunkt_bleibt_die_listenzeit_leer() -> None:
     svc = InboxService(service_client=_FakeDB([row], []), channex=_FakeChannex())
     th = svc.list_threads(_CTX).items[0]
     assert th.letzte_aktivitaet is None
+
+
+def test_nachricht_schlaegt_den_buchungszeitpunkt() -> None:
+    """„Letzte Aktivität" ist die letzte HANDLUNG, nicht die Buchung.
+
+    DER VORFALL (07.08.2026): Dietmar Sperle schrieb am 06.08.; im Posteingang
+    stand er auf Platz 5 mit „10. Juli" — seinem Buchungsdatum. Über ihm drei
+    Threads, in denen seit Wochen nichts passiert war. Die Spalte hieß „letzte
+    Aktivität" und zeigte etwas anderes.
+    """
+    row = _booking_row()
+    row["booked_at"] = "2026-07-10T11:15:29+00:00"
+    nachrichten = [{
+        "tenant_id": "t1", "thread_ref": row["id"], "sender": "property",
+        "body": "Liebe(r) Dietmar", "sent_at": "2026-08-06T14:55:55+00:00",
+    }]
+    svc = InboxService(
+        service_client=_FakeDB([row], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    th = svc.list_threads(_CTX).items[0]
+    assert th.letzte_aktivitaet == "2026-08-06T14:55:55+00:00"
+
+
+def test_liste_sortiert_nach_letzter_aktivitaet() -> None:
+    """Der Thread mit der jüngsten Nachricht steht oben — nicht der jüngst gebuchte.
+
+    Die Datenbank kann das nicht sortieren: der Zeitpunkt steckt in
+    `portal_messages`. Ohne die Nachsortierung im Dienst blieb die Reihenfolge
+    die der Buchungen, egal was der Frontend-Filter anbot.
+    """
+    alt = {**_booking_row(), "id": "th-alt", "booked_at": "2026-07-10T11:15:29+00:00"}
+    neu = {**_booking_row(), "id": "th-neu", "booked_at": "2026-07-22T17:44:06+00:00"}
+    nachrichten = [{
+        "tenant_id": "t1", "thread_ref": "th-alt", "sender": "guest",
+        "body": "Neue Frage", "sent_at": "2026-08-06T14:55:55+00:00",
+    }]
+    svc = InboxService(
+        service_client=_FakeDB([neu, alt], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    assert [t.id for t in svc.list_threads(_CTX).items] == ["th-alt", "th-neu"]
+
+
+def test_gemischte_zonenschreibweisen_sortieren_richtig() -> None:
+    """„Z" und „+00:00" meinen dasselbe — ein Zeichenvergleich nicht.
+
+    Im Zeichenvergleich ist „Z" > „+", also gewann die `Z`-Form immer, egal
+    welche Sekunde sie trug. Hier ist die `+00:00`-Nachricht die jüngere und
+    muss gewinnen.
+    """
+    row = _booking_row()
+    row["booked_at"] = "2026-08-06T20:00:00Z"
+    nachrichten = [{
+        "tenant_id": "t1", "thread_ref": row["id"], "sender": "guest",
+        "body": "später", "sent_at": "2026-08-06T21:00:00+00:00",
+    }]
+    svc = InboxService(
+        service_client=_FakeDB([row], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    assert svc.list_threads(_CTX).items[0].letzte_aktivitaet == "2026-08-06T21:00:00+00:00"
+
+
+def test_ohne_nachricht_bleibt_es_der_buchungszeitpunkt() -> None:
+    """Kein Spiegel-Eintrag → die Buchung ist die letzte bekannte Handlung."""
+    row = _booking_row()
+    row["booked_at"] = "2026-03-23T15:24:55Z"
+    svc = InboxService(service_client=_FakeDB([row], []), channex=_FakeChannex())
+    assert svc.list_threads(_CTX).items[0].letzte_aktivitaet == "2026-03-23T15:24:55Z"
 
 
 def test_nachrichtenzeit_traegt_immer_eine_zone() -> None:

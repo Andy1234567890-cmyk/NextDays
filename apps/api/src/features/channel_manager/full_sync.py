@@ -14,6 +14,7 @@ from supabase import Client
 
 from .ari_push import _iso_days
 from .common import log
+from .verfuegbarkeit_regeln import Wochentagsregel
 
 
 class FullSyncMixin:
@@ -324,9 +325,13 @@ class FullSyncMixin:
         - min_stay: rate_plans.min_stay als Basis, datumsgenau überschrieben
           durch rate_plan_min_stay_overrides (0150).
         - max_stay/CTA/CTD: rate_plan_restriction_overrides (0153, plan-genau);
-          CTA/CTD fällt sonst auf die Objekt-Flags in availability zurück. Kein
-          Override = offen (false) bzw. max_stay 0 (= keine Obergrenze,
-          Channex-Semantik — kein erfundener Wert).
+          CTA/CTD fällt sonst auf die Objekt-Flags in availability zurück, und
+          zuletzt auf die WOCHENTAGS-Regel aus dem Verfügbarkeits-Formular
+          (unavailableCheckIn/-CheckOut). max_stay fällt ohne Override auf den
+          Formularwert (`availability.maxStay`) zurück — vorher stand hier
+          stur 0, wodurch der nächtliche Full-Sync jeden im Formular gesetzten
+          Maximalaufenthalt wieder aufhob (Wurzel 1: der Gegenzustand wurde
+          nicht mitgepflegt). 0 bleibt „keine Obergrenze" (Channex-Semantik).
         - stop_sell: stop_sell-Zeilen (rate_plan_id null = Objekt-Ebene → alle
           Pläne, sonst plan-genau). Kanal-gescopte Stops (scope != 'all') sind
           KEIN globaler ARI-Stop und bleiben draußen.
@@ -346,6 +351,19 @@ class FullSyncMixin:
             return []
         plan_ids = [p["id"] for p in plans]
         s_iso, e_iso = start.isoformat(), end.isoformat()
+
+        # Grundregeln aus dem Verfügbarkeits-Formular (type_attributes.
+        # availability): Mindest-/Maximalaufenthalt und die gesperrten
+        # Check-in/-out-Wochentage. Sie sind der Unterbau; ein tagesgenauer
+        # Override sticht sie weiter unten aus.
+        prop = (
+            db.table("properties")
+            .select("type_attributes")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        regel = Wochentagsregel.aus_zeile(prop[0] if prop else {})
 
         min_over: dict[tuple[str, str], int] = {}
         for r in (
@@ -401,7 +419,9 @@ class FullSyncMixin:
         rows: list[dict[str, Any]] = []
         for plan in plans:
             rp_id = plan["id"]
-            base_min = int(plan.get("min_stay") or 1)
+            # Plan-Mindestaufenthalt schlägt den Objekt-Grundwert aus dem
+            # Formular; ohne Plan-Wert gilt das Formular, sonst 1 Nacht.
+            base_min = int(plan.get("min_stay") or regel.min_stay or 1)
             prices: dict[str, int] = {}
             for entry in resolver.effective_prices(
                 property_id, start, end + timedelta(days=1), rate_plan_id=rp_id
@@ -420,16 +440,33 @@ class FullSyncMixin:
                 iso = cur.isoformat()
                 over = restr_over.get((rp_id, iso)) or {}
                 flags = obj_flags.get(iso) or {}
+                # Vorrang: Plan-Override sticht alles (er ist tagesgenau und
+                # bewusst gesetzt). Ohne ihn gilt gesperrt, wenn ENTWEDER das
+                # Objekt-Tagesflag ODER die Wochentagsregel des Formulars
+                # sperrt.
+                #
+                # Das ODER ist kein Zufall: `availability.closed_to_arrival` ist
+                # NOT NULL DEFAULT false (live geprüft, 6567 Zeilen — alle
+                # false). Die Spalte kann „nicht gesetzt" gar nicht ausdrücken,
+                # taugt also nicht zum Übersteuern. Läse man sie als Vorrang,
+                # schaltete jede existierende Kalenderzeile die Wochentagsregel
+                # stumm — der Betrieb sperrt samstags die Anreise, und bei den
+                # Portalen bliebe der Samstag offen.
                 cta = over.get("closed_to_arrival")
                 if cta is None:
-                    cta = flags.get("closed_to_arrival")
+                    cta = bool(flags.get("closed_to_arrival")) or regel.cta(cur)
                 ctd = over.get("closed_to_departure")
                 if ctd is None:
-                    ctd = flags.get("closed_to_departure")
+                    ctd = bool(flags.get("closed_to_departure")) or regel.ctd(cur)
+                # Ohne tagesgenauen Override gilt der Formularwert (0 = offen).
+                roh_max = over.get("max_stay")
+                max_stay = (
+                    max(0, int(roh_max)) if roh_max is not None else regel.max_stay
+                )
                 vec = (
                     prices.get(iso),
                     min_over.get((rp_id, iso), base_min),
-                    max(0, int(over.get("max_stay") or 0)),
+                    max_stay,
                     bool(cta),
                     bool(ctd),
                     iso in stop_all or (rp_id, iso) in stop_plan,

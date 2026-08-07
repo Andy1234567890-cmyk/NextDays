@@ -9,7 +9,7 @@ Tenant-scoped (tenant_id aus dem JWT). Kein stilles Exception-Swallowing.
 """
 import json
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from supabase import Client
 
@@ -25,6 +25,11 @@ from src.features.guests.identity import (
 )
 
 from .anhaenge import AnhangWissenMixin
+from .automation_mapping import (
+    AUTOMATION_COLS,
+    automation_payload,
+    automation_row,
+)
 from .errors import InboxError
 from .feld_kontext import FeldKontextMixin
 from .felder import FeldFehlt, rendern, unbekannte_felder
@@ -51,7 +56,32 @@ if TYPE_CHECKING:
 log = get_logger("nextdays.inbox")
 
 
-def _chronologisch(m: InboxMessage) -> tuple[int, str]:
+# Vor dem Beginn jeder echten Zeitangabe — Sortier-Ersatz für Unlesbares.
+_URZEIT: Final = datetime.min.replace(tzinfo=UTC)
+
+
+def _als_zeitpunkt(wert: str | None) -> datetime:
+    """ISO-Zeichenkette → Zeitpunkt zum VERGLEICHEN (nie zum Anzeigen).
+
+    Nötig, weil dieselbe Sekunde hier in zwei Schreibweisen ankommt: PostgREST
+    liefert `…+00:00`, `ota_zeitstempel_utc` hängt ein `Z` an. Im
+    Zeichenvergleich ist „Z" > „+", also sortierte ein String-Vergleich die
+    beiden Formate gegeneinander falsch herum.
+
+    Unlesbar oder leer → `_URZEIT`, damit solche Einträge ans Ende einer
+    absteigenden Sortierung fallen, statt sie anzuführen.
+    """
+    if not wert:
+        return _URZEIT
+    try:
+        gelesen = datetime.fromisoformat(wert.replace("Z", "+00:00"))
+    except ValueError:
+        return _URZEIT
+    # Ohne Zone gilt UTC — sonst wirft der Vergleich „offset-naive vs aware".
+    return gelesen if gelesen.tzinfo else gelesen.replace(tzinfo=UTC)
+
+
+def _chronologisch(m: InboxMessage) -> tuple[int, datetime]:
     """Sortierschlüssel des Verlaufs: nach Zeit, Einträge OHNE Zeit ans Ende.
 
     Ein schlichtes `m.sent_at or ""` täte das Gegenteil — der leere String
@@ -61,7 +91,7 @@ def _chronologisch(m: InboxMessage) -> tuple[int, str]:
     stünde die letzte Kanal-Nachricht ohne Zeitstempel plötzlich ganz oben.
     Da Pythons Sortierung stabil ist, behalten sie untereinander ihre
     Eingangsreihenfolge."""
-    return (0, m.sent_at) if m.sent_at else (1, "")
+    return (0, _als_zeitpunkt(m.sent_at)) if m.sent_at else (1, _URZEIT)
 
 
 class InboxService(
@@ -137,8 +167,8 @@ class InboxService(
             .select(
                 "id, channex_booking_id, ota_name, ota_reservation_code, status, "
                 "arrival_date, departure_date, customer, raw, updated_at, guest_id, "
-                "is_read, is_starred, is_archived, assigned_user_id, inbox_status, "
-                "property_map_id, booked_at, ota_inserted_at"
+                "is_read, read_at, is_starred, is_archived, assigned_user_id, "
+                "inbox_status, property_map_id, booked_at, ota_inserted_at"
             )
             .eq("tenant_id", tenant_id)
             # Genau die gewählte Ansicht (active|archived|trashed); deleted nie.
@@ -149,11 +179,14 @@ class InboxService(
             query = query.eq("assigned_user_id", ctx.user_id)
         elif unassigned:
             query = query.is_("assigned_user_id", "null")
-        # Sortiert nach dem ECHTEN Buchungszeitpunkt, nicht nach `updated_at`
+        # VORauswahl nach dem Buchungszeitpunkt, nicht nach `updated_at`
         # (0291/0292): letzteres ist unsere Schreibzeit — als der Feed 22
         # Buchungen in einem Rutsch holte, trugen alle dieselbe Sekunde und die
         # Reihenfolge war zufällig. `nullsfirst=False`: Threads ohne
         # Portal-Zeitpunkt ans Ende, statt die Liste anzuführen.
+        # Die ENDGÜLTIGE Reihenfolge entsteht erst unten nach
+        # `letzte_aktivitaet` — die steckt in `portal_messages` und ist für
+        # die Datenbank hier nicht sortierbar.
         res = (
             query.order("booked_at", desc=True, nullsfirst=False)
             .order("updated_at", desc=True)
@@ -175,6 +208,11 @@ class InboxService(
         # in der Liste; ohne sie muss man jeden Thread öffnen, um zu sehen,
         # worum es geht.
         letzte = self._last_messages(db, tenant_id, [r["id"] for r in rows])
+        # Wann kam zuletzt eine GAST-Nachricht? Daraus wird der Lesestand
+        # abgeleitet (s. `_ist_gelesen`).
+        letzte_gast = self._letzte_gastnachricht(
+            db, tenant_id, [r["id"] for r in rows]
+        )
         # Profilbilder in EINEM Query für die ganze Liste (0295) — nicht je
         # Zeile, sonst wären es 200 Abfragen für 200 Threads.
         bilder = self._gast_bilder(
@@ -204,13 +242,16 @@ class InboxService(
                     status=r.get("status"),
                     arrival_date=r.get("arrival_date"),
                     departure_date=r.get("departure_date"),
-                    last_message=letzte.get(r["id"]),
+                    last_message=(letzte.get(r["id"]) or ("", "", ""))[0] or None,
+                    # Wer zuletzt geschrieben hat: „guest" = der Gast wartet auf
+                    # Antwort, „property" = wir haben zuletzt geschrieben.
+                    last_sender=(letzte.get(r["id"]) or ("", "", ""))[1] or None,
                     booked_at=r.get("booked_at"),
-                    # Eine Regel, ein Ort: der Zeitpunkt beim Portal. Kein
-                    # Rückfall auf `updated_at` — der war der Fehler.
-                    letzte_aktivitaet=r.get("booked_at"),
+                    letzte_aktivitaet=self._letzte_aktivitaet(
+                        r.get("booked_at"), (letzte.get(r["id"]) or ("", "", ""))[2]
+                    ),
                     updated_at=r.get("updated_at"),
-                    is_read=bool(r.get("is_read", True)),
+                    is_read=self._ist_gelesen(r, letzte_gast.get(r["id"])),
                     is_starred=bool(r.get("is_starred")),
                     is_archived=bool(r.get("is_archived")),
                     inbox_status=r.get("inbox_status") or "active",
@@ -218,23 +259,83 @@ class InboxService(
                     assigned_user_name=names.get(uid) if uid else None,
                 )
             )
+        # „Letzte Aktivität" heißt: was zuletzt passiert ist — eine Nachricht
+        # von gestern schlägt eine Buchung von letztem Monat. Threads ganz ohne
+        # Zeitpunkt fallen ans Ende (`_URZEIT`), statt die Liste anzuführen.
+        items.sort(key=lambda t: _als_zeitpunkt(t.letzte_aktivitaet), reverse=True)
         return InboxListResponse(items=items, total=len(items))
 
-    def _last_messages(
+    @staticmethod
+    def _letzte_aktivitaet(booked_at: str | None, letzte_nachricht: str) -> str | None:
+        """Wann ist in diesem Thread zuletzt etwas PASSIERT?
+
+        Der Buchungszeitpunkt allein ist es nicht: schreibt der Gast Wochen
+        nach der Buchung, bleibt der Thread sonst da stehen, wo die Buchung
+        ihn hinterlassen hat. Live war genau das der Fall — Dietmar Sperle
+        schrieb am 06.08., stand aber mit seinem Buchungsdatum (10.07.) auf
+        Platz 5, unter drei Threads ohne jede Nachricht.
+
+        Beide Werte sind Fremdereignisse (Wurzel 5b): die Buchung beim Portal,
+        die Nachricht beim Portal. Der jüngere von beiden gewinnt. Fehlen
+        beide, bleibt es `None` — die Liste zeigt dann „Eingang bei uns", statt
+        auf unsere Uhr zurückzufallen.
+
+        Verglichen wird der ZEITPUNKT, nicht die Zeichenkette: die beiden
+        Quellen schreiben dieselbe Sekunde unterschiedlich (`…+00:00` aus
+        PostgREST, `…Z` aus `ota_zeitstempel_utc`), und „Z" > „+" im
+        Zeichenvergleich — ein String-`max` kehrte die Reihenfolge genau dann
+        um, wenn die Formate gemischt sind.
+        """
+        kandidaten = [w for w in (booked_at, letzte_nachricht) if w]
+        if not kandidaten:
+            return None
+        return max(kandidaten, key=_als_zeitpunkt)
+
+    @staticmethod
+    def _ist_gelesen(row: dict, letzte_gastnachricht: str | None) -> bool:
+        """Ist dieser Thread gelesen?
+
+        `is_read` allein reicht NICHT: es ist ein Handflag, das beim Öffnen
+        eines Threads auf `true` gesetzt wird und dort für immer stehen bleibt.
+        Schreibt der Gast danach erneut, bliebe der Thread „gelesen" — und der
+        Betrieb sieht die neue Nachricht nur, wenn er zufällig hineinschaut.
+        Live war das der Zustand: alle 22 Threads `is_read = true`, während in
+        der Liste bei jedem „Neu" stand (das war der BUCHUNGS-Status, s.
+        `StatusBadge`) — beides zusammen ergab eine Anzeige, die nichts
+        unterschied.
+
+        Regel: gelesen = Flag gesetzt UND seither keine neue Gastnachricht.
+        Unsere eigenen Antworten zählen nicht (`sender = 'property'`), sonst
+        machte jede gesendete Nachricht den Thread wieder ungelesen.
+
+        Fehlt der Vergleichszeitpunkt (`read_at` nie gesetzt, etwa bei
+        Altbestand), gilt das Flag unverändert — kein erfundener Zustand
+        (Wurzel 4).
+        """
+        flag = bool(row.get("is_read", True))
+        if not flag or not letzte_gastnachricht:
+            return flag
+        seit = row.get("read_at")
+        if not seit:
+            return flag
+        return str(letzte_gastnachricht) <= str(seit)
+
+    def _letzte_gastnachricht(
         self, db: Client, tenant_id: str, thread_ids: list[str]
     ) -> dict[str, str]:
-        """Letzte Nachricht je Thread (Vorschautext in der Liste).
+        """Zeitpunkt der jüngsten GAST-Nachricht je Thread (aus dem Spiegel).
 
-        Quelle ist der lokale Spiegel `portal_messages` (0293) — EIN Query für
-        die ganze Liste. Direkt beim Portal wäre es ein Request PRO Thread; bei
-        200 Einträgen ist das keine Liste mehr, die jemand öffnet.
+        EIN Query für die ganze Liste, wie bei der Vorschau. Nur `sender =
+        'guest'`: unsere eigenen Antworten dürfen einen Thread nicht ungelesen
+        machen.
         """
         if not thread_ids:
             return {}
         res = (
             db.table("portal_messages")
-            .select("thread_ref, body, sent_at")
+            .select("thread_ref, sent_at")
             .eq("tenant_id", tenant_id)
+            .eq("sender", "guest")
             .in_("thread_ref", thread_ids)
             .order("sent_at", desc=True)
             .limit(2000)
@@ -243,7 +344,48 @@ class InboxService(
         out: dict[str, str] = {}
         for m in res.data or []:
             # Absteigend sortiert → der erste Treffer je Thread ist der jüngste.
-            out.setdefault(m["thread_ref"], (m.get("body") or "").strip())
+            out.setdefault(m["thread_ref"], str(m.get("sent_at") or ""))
+        return out
+
+    def _last_messages(
+        self, db: Client, tenant_id: str, thread_ids: list[str]
+    ) -> dict[str, tuple[str, str, str]]:
+        """Letzte Nachricht je Thread: (Vorschautext, Absender, Zeitpunkt).
+
+        Quelle ist der lokale Spiegel `portal_messages` (0293) — EIN Query für
+        die ganze Liste. Direkt beim Portal wäre es ein Request PRO Thread; bei
+        200 Einträgen ist das keine Liste mehr, die jemand öffnet.
+
+        Der Absender gehört dazu, weil er die Frage beantwortet, die man vor
+        einer langen Liste wirklich hat: „habe ich schon geantwortet?". Ohne
+        ihn sieht ein Thread, in dem der Gast wartet, genauso aus wie einer,
+        der erledigt ist.
+
+        Der Zeitpunkt ist der ECHTE Wert hinter „letzte Aktivität" — der
+        Buchungszeitpunkt ist er ausdrücklich nicht (s. `list_threads`).
+        """
+        if not thread_ids:
+            return {}
+        res = (
+            db.table("portal_messages")
+            .select("thread_ref, body, sender, sent_at")
+            .eq("tenant_id", tenant_id)
+            .in_("thread_ref", thread_ids)
+            .order("sent_at", desc=True)
+            .limit(2000)
+            .execute()
+        )
+        out: dict[str, tuple[str, str, str]] = {}
+        for m in res.data or []:
+            # Absteigend sortiert → der erste Treffer je Thread ist der jüngste.
+            out.setdefault(
+                m["thread_ref"],
+                (
+                    (m.get("body") or "").strip(),
+                    str(m.get("sender") or "guest"),
+                    str(m.get("sent_at") or ""),
+                ),
+            )
         return out
 
     @staticmethod
@@ -489,10 +631,56 @@ class InboxService(
                 guest_read_at=gelesen,
             )
         items = [self.zu_nachricht(m) for m in (res.get("data") or [])]
+        self._spiegel_schreiben(db, tenant_id, thread_id, cbid, items)
         items = self._merge_stream(db, tenant_id, thread_id, row, items)
         return InboxMessagesResponse(
             items=items, total=len(items), guest_read_at=gelesen
         )
+
+    def _spiegel_schreiben(
+        self, db: Client, tenant_id: str, thread_id: str, cbid: str,
+        items: list[InboxMessage],
+    ) -> None:
+        """Den geholten Verlauf lokal spiegeln (`portal_messages`, 0293).
+
+        Der Spiegel speist die Vorschauzeile der Thread-Liste: EIN Query für
+        alle Threads statt ein Portal-Request pro Zeile. Er wurde bisher nur
+        GELESEN und nie geschrieben — deshalb war die Tabelle leer und in der
+        Liste stand unter keinem Namen ein Vorschautext.
+
+        Idempotent über `message_ref` (UNIQUE je Tenant): derselbe Verlauf darf
+        beliebig oft geholt werden, ohne den Spiegel zu vervielfachen
+        (Wurzel 2 — der Abruf passiert bei jedem Öffnen des Threads).
+
+        Best-effort: der Chat ist die Hauptsache. Scheitert das Spiegeln, sieht
+        der Betrieb seine Nachrichten trotzdem — nur die Vorschau bleibt leer
+        (Wurzel 5: kein Nebenweg kippt den Hauptpfad).
+        """
+        zeilen = [
+            {
+                "tenant_id": tenant_id,
+                "thread_ref": thread_id,
+                "booking_ref": cbid,
+                "message_ref": str(m.id),
+                "sender": m.sender,
+                "body": (m.message or "").strip()[:4000],
+                "sent_at": m.sent_at,
+            }
+            for m in items
+            if m.id and m.sent_at
+        ]
+        if not zeilen:
+            return
+        try:
+            db.table("portal_messages").upsert(
+                zeilen, on_conflict="tenant_id,message_ref"
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Spiegel kippt den Chat nicht
+            log.warning(
+                "inbox_spiegel_fehlgeschlagen",
+                tenant_id=tenant_id, thread_id=thread_id,
+                error=str(exc)[:200],
+            )
 
     def _portal_nachrichten(
         self, cbid: str, row: dict, tenant_id: str, thread_id: str
@@ -962,6 +1150,12 @@ class InboxService(
             patch["note"] = note
         if is_read is not None:
             patch["is_read"] = bool(is_read)
+            # Zeitpunkt mitschreiben (0302): erst er macht das Flag belastbar —
+            # „gelesen" gilt nur bis zur nächsten Gastnachricht. Beim
+            # Zurücksetzen auf ungelesen wird er geleert, sonst bliebe ein
+            # alter Zeitpunkt stehen und der Thread spränge beim nächsten Laden
+            # wieder auf gelesen (Wurzel 1: der Gegenzustand gehört gepflegt).
+            patch["read_at"] = datetime.now(UTC).isoformat() if is_read else None
         if is_archived is not None:
             patch["is_archived"] = bool(is_archived)
         if remind_at is not None:
@@ -1180,56 +1374,10 @@ class InboxService(
             return None
 
     # -- Automatisierungen -----------------------------------------------------
-    _AUTOMATION_COLS = (
-        "id, name, trigger, anchor, offset_days, send_time, property_ids, "
-        "channels, template_id, message, is_active, use_property_timezone, "
-        "only_first_message, window_days, window_from, window_to"
-    )
-
-    @staticmethod
-    def _automation_row(r: dict) -> Automation:
-        """DB-Zeile → Automation: NULL-Arrays zu [], send_time auf HH:MM kürzen."""
-        st = r.get("send_time")
-        return Automation(
-            id=str(r["id"]),
-            name=r.get("name") or "",
-            trigger=r.get("trigger") or "booking_new",
-            anchor=r.get("anchor") or "arrival",
-            offset_days=r.get("offset_days") or 0,
-            send_time=str(st)[:5] if st else None,
-            property_ids=[str(p) for p in (r.get("property_ids") or [])],
-            channels=list(r.get("channels") or []),
-            template_id=str(r["template_id"]) if r.get("template_id") else None,
-            message=r.get("message"),
-            is_active=bool(r.get("is_active", True)),
-            use_property_timezone=bool(r.get("use_property_timezone")),
-            only_first_message=bool(r.get("only_first_message")),
-            window_days=[int(t) for t in (r.get("window_days") or [])],
-            window_from=str(r["window_from"])[:5] if r.get("window_from") else None,
-            window_to=str(r["window_to"])[:5] if r.get("window_to") else None,
-        )
-
-    @staticmethod
-    def _automation_payload(req: AutomationUpsert) -> dict:
-        """Upsert-Payload: leere Arrays als NULL (= „alle"), send_time HH:MM."""
-        return {
-            "name": req.name,
-            "trigger": req.trigger,
-            "anchor": req.anchor,
-            "offset_days": req.offset_days,
-            "send_time": req.send_time if req.send_time else None,
-            "property_ids": req.property_ids or None,
-            "channels": req.channels or None,
-            "template_id": req.template_id,
-            "message": req.message,
-            "is_active": req.is_active,
-            "use_property_timezone": req.use_property_timezone,
-            "only_first_message": req.only_first_message,
-            # Leeres Array als NULL = „alle Tage" (analog property_ids/channels).
-            "window_days": req.window_days or None,
-            "window_from": req.window_from or None,
-            "window_to": req.window_to or None,
-        }
+    # Spaltenliste und Abbildung liegen in `automation_mapping` (Datei-Länge).
+    _AUTOMATION_COLS = AUTOMATION_COLS
+    _automation_row = staticmethod(automation_row)
+    _automation_payload = staticmethod(automation_payload)
 
     _TRIGGER = ("booking_new", "before_checkin", "after_checkout", "message_received")
 

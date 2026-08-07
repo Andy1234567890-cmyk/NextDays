@@ -246,41 +246,83 @@ class PlanungMixin:
         return body.strip() or None
 
     @staticmethod
+    def _ankerzeit(anchor: str, thread: dict) -> tuple[str, str | None] | None:
+        """(Ankerdatum „YYYY-MM-DD", Ankeruhrzeit „HH:MM" oder None).
+
+        An- und Abreise sind in `channex_booking` reine DATEN ohne Uhrzeit
+        (live geprüft: `arrival_date`/`departure_date` sind `date`). Nur die
+        Buchung trägt einen echten Zeitpunkt (`created_at`). Das entscheidet,
+        was ein Versatz in Stunden/Minuten überhaupt bedeuten kann — s.
+        `_compute_send_at`.
+        """
+        if anchor == "arrival":
+            basis = thread.get("arrival_date")
+        elif anchor == "departure":
+            basis = thread.get("departure_date")
+        else:  # booking
+            basis = thread.get("created_at")
+        if not basis:
+            return None
+        text = str(basis)
+        # „2026-08-07T14:20:20+00:00" → Datum und Uhrzeit; „2026-08-07" → nur Datum.
+        if len(text) > 10 and text[10] in ("T", " "):
+            return text[:10], text[11:16]
+        return text[:10], None
+
+    @staticmethod
     def _compute_send_at(
         anchor: str, offset_days: int, send_time: object, thread: dict,
         *, timezone_name: str | None = None,
+        offset_unit: str = "days", offset_value: int | None = None,
     ) -> datetime | None:
-        """send_at = Ankerdatum + offset_days @ send_time. None, wenn das
-        Ankerdatum fehlt (z. B. booking ohne created_at) → Automail wird übersprungen.
+        """send_at = Ankerzeitpunkt + Versatz. None, wenn der Anker fehlt
+        (z. B. booking ohne created_at) → Automail wird übersprungen.
+
+        Der Versatz kommt in `offset_unit`/`offset_value` (minutes|hours|days).
+        Fehlt `offset_value`, gilt `offset_days` — so rechnen Altbestand und
+        Tages-Regeln unverändert weiter.
+
+        **Tage** verhalten sich wie bisher: Ankerdatum ± n Tage, dazu die
+        eingestellte Uhrzeit. Ohne Uhrzeit Mitternacht des Ankertags.
+
+        **Stunden/Minuten** rechnen vom Ankerzeitpunkt selbst — und der ist bei
+        An-/Abreise nur ein Datum, weil die Portale keine Uhrzeit dazu liefern
+        (`arrival_date` ist eine `date`-Spalte). Als Bezug dient dann die
+        eingestellte Uhrzeit; fehlt auch die, Mitternacht. Sonst wäre „2 Stunden
+        vor Anreise" eine Zeit, die wir gar nicht kennen — geraten würde daraus
+        eine Nachricht, die Stunden daneben liegt (Wurzel 4).
 
         `timezone_name` = IANA-Zone des Objekts; ohne Angabe wird die Uhrzeit als
         UTC gelesen. Für ein Objekt in Athen ging eine auf 10:00 gestellte
         Nachricht sonst um 13:00 Ortszeit raus."""
         from datetime import date, time
 
-        if anchor == "arrival":
-            base = thread.get("arrival_date")
-        elif anchor == "departure":
-            base = thread.get("departure_date")
-        else:  # booking
-            base = thread.get("created_at")
-        if not base:
+        geloest = PlanungMixin._ankerzeit(anchor, thread)
+        if geloest is None:
             return None
-        base_str = str(base)[:10]
+        datum_text, anker_uhrzeit = geloest
         try:
-            d = date.fromisoformat(base_str)
+            d = date.fromisoformat(datum_text)
         except ValueError:
             return None
+
+        betrag = offset_days if offset_value is None else offset_value
         # send_time aus DB ist "HH:MM[:SS]"; ohne Angabe Mitternacht.
         hh, mm = 0, 0
-        if send_time:
-            parts = str(send_time).split(":")
-            hh = int(parts[0])
-            mm = int(parts[1]) if len(parts) > 1 else 0
+        quelle = send_time or (anker_uhrzeit if offset_unit != "days" else None)
+        if quelle:
+            teile = str(quelle).split(":")
+            hh = int(teile[0])
+            mm = int(teile[1]) if len(teile) > 1 else 0
+
         zone = _zeitzone(timezone_name) if timezone_name else UTC
-        lokal = datetime.combine(
-            d + timedelta(days=offset_days), time(hh, mm), tzinfo=zone
-        )
+        lokal = datetime.combine(d, time(hh, mm), tzinfo=zone)
+        if offset_unit == "minutes":
+            lokal += timedelta(minutes=betrag)
+        elif offset_unit == "hours":
+            lokal += timedelta(hours=betrag)
+        else:
+            lokal += timedelta(days=betrag)
         # In UTC umrechnen: die Spalte send_at ist timestamptz, und der Scheduler
         # vergleicht gegen datetime.now(UTC).
         return lokal.astimezone(UTC)
@@ -436,6 +478,8 @@ class PlanungMixin:
                     a.get("send_time"),
                     th,
                     timezone_name=zeitzone if a.get("use_property_timezone") else None,
+                    offset_unit=a.get("offset_unit") or "days",
+                    offset_value=a.get("offset_value"),
                 )
                 if send_at is None:
                     continue

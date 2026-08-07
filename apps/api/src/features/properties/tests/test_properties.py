@@ -30,10 +30,10 @@ from src.features.properties.service import (
     PropertiesService,
     PropertyError,
     _derive_channels,
-    _max_stay_of,
     _sniff_image_ext,
 )
 from src.features.properties.steuern import normalize_taxes, nur_steuern_geaendert
+from src.features.properties.verfuegbarkeit_push import max_stay_of
 from src.main import create_app
 
 client = TestClient(create_app())
@@ -701,15 +701,15 @@ def test_update_rejects_type_switch_outside_accommodation() -> None:
 
 # --- Maximalaufenthalt aus type_attributes.availability (an die Portale) -------
 def test_max_stay_of_reads_availability() -> None:
-    assert _max_stay_of({"type_attributes": {"availability": {"maxStay": 14}}}) == 14
+    assert max_stay_of({"type_attributes": {"availability": {"maxStay": 14}}}) == 14
 
 
 def test_max_stay_of_defaults_zero_when_missing_or_invalid() -> None:
     # Kein Wert / kein Block → 0 (= keine Obergrenze). Ungültig → 0 (kein Crash).
-    assert _max_stay_of({}) == 0
-    assert _max_stay_of({"type_attributes": {}}) == 0
-    assert _max_stay_of({"type_attributes": {"availability": {"maxStay": None}}}) == 0
-    assert _max_stay_of({"type_attributes": {"availability": {"maxStay": "x"}}}) == 0
+    assert max_stay_of({}) == 0
+    assert max_stay_of({"type_attributes": {}}) == 0
+    assert max_stay_of({"type_attributes": {"availability": {"maxStay": None}}}) == 0
+    assert max_stay_of({"type_attributes": {"availability": {"maxStay": "x"}}}) == 0
 
 
 # --- Kanal-Zustands-Ableitung (Ebene B, 0162) ---------------------------------

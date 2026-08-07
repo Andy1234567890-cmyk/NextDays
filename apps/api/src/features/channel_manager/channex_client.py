@@ -28,6 +28,7 @@ from src.core.config import get_settings
 from src.core.logging import get_logger
 
 from .channex_airbnb_actions import AirbnbActionsMixin
+from .channex_listing_settings import ListingSettingsMixin
 
 if TYPE_CHECKING:
     from src.jobs.channex_budget import BudgetDecision
@@ -185,7 +186,7 @@ class ChannexBudgetExhausted(Exception):
         self.progressed = progressed
 
 
-class ChannexClient(AirbnbActionsMixin):
+class ChannexClient(AirbnbActionsMixin, ListingSettingsMixin):
     """Dünner, synchroner Client um die Channex-API.
 
     Synchron (httpx.Client), passend zur restlichen Service-Schicht (Supabase-

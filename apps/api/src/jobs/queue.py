@@ -144,6 +144,26 @@ def try_enqueue_airbnb_aktionen(
                     error=str(exc)[:200])
 
 
+def try_enqueue_airbnb_verfuegbarkeit(
+    db: Client, tenant_id: str, property_id: str
+) -> None:
+    """Verfügbarkeitsregeln an Airbnb nachziehen (coalesced je Objekt).
+
+    Betrifft die drei Formularwerte, für die Channex kein ARI-Restriktionsfeld
+    hat: Vorbereitungszeit, Buchungsfenster, Vorlaufzeit. Coalescing ist
+    richtig — der Job überträgt immer den vollen Soll-Stand des Objekts.
+    """
+    try:
+        enqueue(
+            db, "sync_airbnb_verfuegbarkeit", tenant_id=tenant_id,
+            payload={"tenant_id": tenant_id, "property_id": property_id},
+            dedup_key=dedup_key(tenant_id, property_id, "sync_airbnb_verfuegbarkeit"),
+        )
+    except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+        log.warning("enqueue_airbnb_verfuegbarkeit_failed", property_id=property_id,
+                    error=str(exc)[:200])
+
+
 def try_enqueue_airbnb_ausstattung(
     db: Client, tenant_id: str, property_id: str
 ) -> None:

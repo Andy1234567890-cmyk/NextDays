@@ -122,20 +122,28 @@ export const MIN_STAY_TYPE_OPTIONS: { value: MinStayType; label: string }[] = [
   { value: "through", label: "Durchgehend" },
 ];
 
-// Auswahloptionen.
+// Auswahloptionen. Die drei Listen unten bilden GENAU die Stufen ab, die
+// Airbnb am Listing kennt (`Airbnb.ListingSettings.AvailabilitySettings.yaml`:
+// turnover_days 0|1|2, max_days_notice -1|0|30…365, booking_lead_time
+// 0-24|48|72|168). Eine Option anzubieten, die Airbnb nicht kennt, hieße:
+// der Betrieb stellt etwas ein, das dort nie ankommt — der Wert würde beim
+// Übersetzen verworfen und die Maske zeigte stillschweigend eine Regel, die
+// nicht gilt. Umgekehrt fehlte „7 Tage vorher" (168 h), sodass ein bei Airbnb
+// gesetzter Wert beim Import verloren ging.
 export const PREPARATION_OPTIONS = [
   { value: 0, label: "Keine" },
   { value: 1, label: "1 Tag" },
   { value: 2, label: "2 Tage" },
-  { value: 3, label: "3 Tage" },
-  { value: 7, label: "7 Tage" },
 ];
 
 export const BOOKING_WINDOW_OPTIONS = [
+  { value: 30, label: "30 Tage im Voraus" },
+  { value: 60, label: "60 Tage im Voraus" },
   { value: 90, label: "90 Tage im Voraus" },
+  { value: 120, label: "120 Tage im Voraus" },
   { value: 180, label: "180 Tage im Voraus" },
+  { value: 270, label: "270 Tage im Voraus" },
   { value: 365, label: "365 Tage im Voraus" },
-  { value: 730, label: "730 Tage im Voraus" },
 ];
 
 export const ADVANCE_NOTICE_OPTIONS = [
@@ -144,6 +152,8 @@ export const ADVANCE_NOTICE_OPTIONS = [
   { value: "18:00", label: "bis 18 Uhr" },
   { value: "24h", label: "1 Tag vorher" },
   { value: "48h", label: "2 Tage vorher" },
+  { value: "72h", label: "3 Tage vorher" },
+  { value: "168h", label: "7 Tage vorher" },
 ];
 
 export function labelFor(

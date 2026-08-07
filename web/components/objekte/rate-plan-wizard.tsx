@@ -13,6 +13,8 @@ import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { formatCurrency } from "@/lib/currency";
+import { CURRENCY_OPTIONS, type Currency } from "@/lib/pricing-meta";
+import { updateProperty } from "@/lib/properties";
 import { createRatePlan, type RatePlan } from "@/lib/rates";
 
 type Step = "general" | "stay" | "pricing" | "review";
@@ -56,6 +58,14 @@ export function RatePlanWizard({
 
   const [name, setName] = useState("");
   const [minStay, setMinStay] = useState("1");
+  // Führt das Objekt (noch) keine Währung, wird sie HIER abgefragt statt den
+  // Anlegen-Knopf in einen 422 laufen zu lassen („currency: String should have
+  // at least 1 character"). Genau das passierte live am 07.08.2026 an einem
+  // selbst angelegten Objekt: der Schritt sagte „Währung: (aus dem Objekt
+  // übernommen)" — und dahinter stand nichts. Beim Anlegen gesetzt wird sie am
+  // OBJEKT (properties.currency ist die eine Quelle), nicht nur am Plan.
+  const [waehrungNeu, setWaehrungNeu] = useState<Currency | "">("");
+  const effektiveWaehrung = currency || waehrungNeu;
   // An die Buchungsportale senden. Der Grundpreis geht immer; dieser zusätzliche
   // Preis nur, wenn der Kunde es hier einschaltet.
   const [sendToPortals, setSendToPortals] = useState(false);
@@ -88,14 +98,31 @@ export function RatePlanWizard({
       : step === "stay"
         ? Number(minStay) >= 1
         : step === "pricing"
-          ? derive
-            ? !!parentId
-            : basePrice !== "" && Number(basePrice) >= 0
+          ? // Ohne Währung geht es nicht weiter: der Server lehnt den Plan sonst
+            // mit 422 ab, und der Fehler erschiene erst nach „Anlegen".
+            !!effektiveWaehrung &&
+            (derive
+              ? !!parentId
+              : basePrice !== "" && Number(basePrice) >= 0)
           : true;
 
   const submit = async () => {
     setBusy(true);
     setErr(null);
+    // Eine hier neu gewählte Währung gehört ans OBJEKT, nicht nur an diesen
+    // Plan: `properties.currency` ist die eine Quelle (0161), aus der jeder
+    // weitere Plan und die Portale sie beziehen. Erst setzen, dann anlegen —
+    // scheitert das Setzen, gibt es auch keinen Plan mit hängender Währung.
+    if (!currency && waehrungNeu) {
+      const objekt = await updateProperty(propertyId, {
+        currency: waehrungNeu,
+      });
+      if (!objekt.ok) {
+        setBusy(false);
+        setErr(objekt.error);
+        return;
+      }
+    }
     const res = await createRatePlan(
       derive
         ? {
@@ -104,7 +131,7 @@ export function RatePlanWizard({
             // Bei Ableitung erbt das Kind Basis + Währung vom Parent (Server
             // erzwingt) — die Felder sind nur Formalität der API.
             basePrice: 0,
-            currency,
+            currency: effektiveWaehrung,
             minStay: Number(minStay),
             rateMode: "derived",
             derivedFromRatePlanId: parentId,
@@ -116,7 +143,7 @@ export function RatePlanWizard({
             propertyId,
             name: name.trim(),
             basePrice: Number(basePrice),
-            currency,
+            currency: effektiveWaehrung,
             minStay: Number(minStay),
             rateMode: "manual",
             sendToPortals,
@@ -222,9 +249,37 @@ export function RatePlanWizard({
 
         {step === "pricing" && (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-muted-foreground">
-              {t("ratePlanWizard.currencyFixed", { currency })}
-            </p>
+            {currency ? (
+              <p className="text-sm text-muted-foreground">
+                {t("ratePlanWizard.currencyFixed", { currency })}
+              </p>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="rp-currency"
+                  className="text-sm font-medium"
+                >
+                  {t("ratePlanWizard.currencyLabel")}
+                </label>
+                <NativeSelect
+                  id="rp-currency"
+                  value={waehrungNeu}
+                  onChange={(e) =>
+                    setWaehrungNeu(e.target.value as Currency | "")
+                  }
+                >
+                  <option value="">{t("ratePlanWizard.currencyChoose")}</option>
+                  {CURRENCY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </NativeSelect>
+                <p className="text-sm text-muted-foreground">
+                  {t("ratePlanWizard.currencyHint")}
+                </p>
+              </div>
+            )}
 
             <div className="flex flex-col gap-2">
               <label className="flex items-center gap-2 text-sm">
@@ -353,8 +408,8 @@ export function RatePlanWizard({
                 {/* Live-Vorschau: macht „erst Betrag, dann Prozent" greifbar. */}
                 <div className="rounded-xl bg-secondary/50 p-3 text-sm">
                   {t("ratePlanWizard.previewLine", {
-                    base: formatCurrency(PREVIEW_BASE, currency),
-                    result: formatCurrency(previewOut, currency),
+                    base: formatCurrency(PREVIEW_BASE, effektiveWaehrung),
+                    result: formatCurrency(previewOut, effektiveWaehrung),
                   })}
                 </div>
               </div>
@@ -384,10 +439,10 @@ export function RatePlanWizard({
                 {derive
                   ? t("ratePlanWizard.reviewDerived", {
                       parent: parent?.name ?? "",
-                      result: formatCurrency(previewOut, currency),
-                      base: formatCurrency(PREVIEW_BASE, currency),
+                      result: formatCurrency(previewOut, effektiveWaehrung),
+                      base: formatCurrency(PREVIEW_BASE, effektiveWaehrung),
                     })
-                  : formatCurrency(Number(basePrice) || 0, currency)}
+                  : formatCurrency(Number(basePrice) || 0, effektiveWaehrung)}
               </dd>
             </div>
           </dl>

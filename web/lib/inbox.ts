@@ -24,6 +24,9 @@ export type InboxThread = {
   arrival_date: string | null;
   departure_date: string | null;
   last_message: string | null;
+  /** Absender der letzten Nachricht: "guest" = der Gast wartet auf Antwort,
+   *  "property" = wir haben zuletzt geschrieben. */
+  last_sender: string | null;
   /** Buchungszeitpunkt beim Portal (0291/0292). */
   booked_at: string | null;
   /**
@@ -346,14 +349,21 @@ export type AutomationTrigger =
   | "after_checkout"
   | "message_received";
 
+/** Einheit des Versatzes zum Anker (0303). */
+export type AutomationOffsetUnit = "minutes" | "hours" | "days";
+
 export type Automation = {
   id: string;
   name: string;
   trigger: AutomationTrigger;
-  // anchor: Bezugsdatum (arrival|departure|booking); offset_days = vorzeichen-
-  // behaftetes Tagesdelta; send_time "HH:MM"; property_ids/channels leer = alle.
+  // anchor: Bezugsdatum (arrival|departure|booking); offset_value = vorzeichen-
+  // behafteter Versatz in offset_unit; property_ids/channels leer = alle.
   anchor: string;
+  /** Tages-Sicht des Versatzes (Bestand). Bei Stunden/Minuten 0. */
   offset_days: number;
+  offset_unit: AutomationOffsetUnit;
+  offset_value: number;
+  /** "HH:MM" oder null = keine feste Uhrzeit (bei Tagen: Mitternacht). */
   send_time: string | null;
   property_ids: string[];
   channels: string[];

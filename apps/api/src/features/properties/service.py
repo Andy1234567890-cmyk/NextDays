@@ -57,6 +57,12 @@ from .schemas import (
     types_for_accommodation,
 )
 from .steuern import SteuernMixin, normalize_taxes, nur_steuern_geaendert
+from .verfuegbarkeit_push import (
+    max_stay_of,
+    push_max_stay,
+    tenant_currency,
+    verfuegbarkeit_spiegeln,
+)
 
 log = get_logger("nextdays.properties")
 
@@ -84,17 +90,6 @@ _CONTENT_FIELDS = frozenset({
 # Publish-Push versorgt die vollen 500 Tage, statt Tage 366–500 dem Nacht-Cron
 # zu überlassen (Channex-Zertifizierung Test 1 = 500 Tage aller Zimmer/Raten).
 _PUBLISH_HORIZON_DAYS = 500
-
-
-def _max_stay_of(row: dict) -> int:
-    """Maximalaufenthalt (Nächte) aus type_attributes.availability.maxStay lesen.
-    0/fehlend = keine Obergrenze. Der Kunde setzt ihn im Verfügbarkeits-Formular;
-    Channex nimmt ihn als max_stay-Restriction (an die Portale)."""
-    avail = (row.get("type_attributes") or {}).get("availability") or {}
-    try:
-        return max(0, int(avail.get("maxStay") or 0))
-    except (TypeError, ValueError):
-        return 0
 
 
 def _sniff_image_ext(content: bytes) -> str | None:
@@ -362,6 +357,19 @@ class PropertiesService(
         # die zu grauen Portale-Chips und 409 beim Verbinden führt. Serverseitig
         # klemmen (der Anfrage nicht vertrauen, Wurzel 3).
         payload["status"] = PropertyStatus.draft.value
+        # Währung vom BETRIEB übernehmen, wenn der Anleger keine mitgibt. Sie ist
+        # keine Erfindung (Wurzel 4), sondern die Währung, in der dieser Betrieb
+        # abrechnet — dieselbe Quelle, aus der `_currency_for_country` bei der
+        # Airbnb-Übernahme schöpft. Ohne sie entsteht ein Objekt, an dem KEIN
+        # Preisplan anlegbar ist (`rate_plans.currency` NOT NULL): der Wizard
+        # meldet dann „currency: String should have at least 1 character" und der
+        # Betrieb kommt nicht weiter, ohne zu erkennen, woran es liegt (live am
+        # 07.08.2026 an einem selbst angelegten Objekt). Führt der Betrieb selbst
+        # keine Währung, bleibt das Feld leer — dann fragt die Preis-Seite danach.
+        if not payload.get("currency"):
+            eigene = tenant_currency(self._db, tenant_id)
+            if eigene:
+                payload["currency"] = eigene
         res = self._db.table("properties").insert(payload).execute()
         if not res.data:
             raise PropertyError("Objekt konnte nicht angelegt werden.", status_code=500)
@@ -458,7 +466,7 @@ class PropertiesService(
             title=r.get("title") or "Unbenannt",
             currency=None,
         )
-        self._push_max_stay(tenant_id, property_id, _max_stay_of(r))
+        self._push_max_stay(tenant_id, property_id, max_stay_of(r))
         log.info("property_resynced", tenant_id=tenant_id, property_id=property_id)
         return PropertyResponse(**_row(r))
 
@@ -589,11 +597,14 @@ class PropertiesService(
         if laengenpreise_geaendert(alte_attrs, changes):
             try_enqueue_airbnb_aktionen(self._db, tenant_id, property_id)
         airbnb_direkt_nachziehen(self._db, tenant_id, property_id, changes)
-        # Maximalaufenthalt (Verfügbarkeits-Formular) an die Portale spiegeln,
-        # sobald type_attributes sich ändert — sonst bliebe die Obergrenze bei
-        # Booking/Airbnb veraltet. Best-effort, blockiert das Speichern nie.
+        # Verfügbarkeits-Formular an die Portale spiegeln (Wurzel 1: sonst
+        # blieben Mindest-/Maximalaufenthalt und die gesperrten Check-in/-out-
+        # Tage dort auf dem alten Stand). Best-effort, kippt das Speichern nie.
         if "type_attributes" in changes:
-            self._push_max_stay(tenant_id, property_id, _max_stay_of(row))
+            verfuegbarkeit_spiegeln(
+                self._db, tenant_id, property_id, row, alte_attrs, changes,
+                _PUBLISH_HORIZON_DAYS,
+            )
         # Statuswechsel (active↔draft/inactive) ändert die abrechenbare Objektzahl
         # → Abo-quantity nachziehen (Wurzel 1). Neu berechnet, daher idempotent.
         if "status" in changes:
@@ -624,18 +635,9 @@ class PropertiesService(
             )
 
     def _push_max_stay(self, tenant_id: str, property_id: str, max_stay: int) -> None:
-        """Maximalaufenthalt als ARI-Push-Job einreihen (Phase 2). 0 wird ebenfalls
-        gepusht, damit das Entfernen der Obergrenze synchronisiert wird. Deckt IMMER
-        den vollen 500-Tage-Horizont ab → coalesce=True sicher (letzter gewinnt)."""
-        from datetime import date, timedelta
-
-        today = date.today()
-        try_enqueue_ari(
-            self._db, tenant_id, property_id, "max_stay",
-            {"date_from": today.isoformat(),
-             "date_to": (today + timedelta(days=_PUBLISH_HORIZON_DAYS - 1)).isoformat(),
-             "max_stay": max_stay},
-            coalesce=True,
+        """Maximalaufenthalt als ARI-Push-Job einreihen (Phase 2)."""
+        push_max_stay(
+            self._db, tenant_id, property_id, max_stay, _PUBLISH_HORIZON_DAYS
         )
 
     IMAGE_BUCKET = "property-images"
@@ -1166,7 +1168,7 @@ class PropertiesService(
                 {"date_from": today_iso, "date_to": horizon_to, "min_stay": min_stay},
                 coalesce=True,
             )
-        max_stay = _max_stay_of(row)
+        max_stay = max_stay_of(row)
         if max_stay > 0:
             try_enqueue_ari(
                 self._db, tenant_id, property_id, "max_stay",

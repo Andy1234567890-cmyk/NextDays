@@ -30,6 +30,7 @@ from .airbnb_objekt_abruf import AirbnbObjektAbrufMixin
 from .airbnb_profilbilder import AirbnbProfilbilderMixin
 from .airbnb_registrierung import AirbnbRegistrierungMixin
 from .airbnb_uebernahme import AirbnbUebernahmeMixin
+from .airbnb_verfuegbarkeit_push import AirbnbVerfuegbarkeitPushMixin
 from .airbnb_zimmer_push import AirbnbZimmerPushMixin
 from .ari_push import AriPushMixin
 from .bookings_sync import BookingsSyncMixin
@@ -105,6 +106,10 @@ class ChannelManagerService(
     # `standard_fees` über das Mapping des Objekts. Der alte Weg
     # (`v2/pricing_settings/{listing_id}`) ist von Airbnb abgeschaltet (403).
     AirbnbGebuehrenMixin,
+    # Nach AirbnbGebuehrenMixin: nutzt dessen `_airbnb_mapping_id`, um die
+    # Verfügbarkeitsregeln zu schreiben, für die Channex kein ARI-Feld hat
+    # (Vorbereitungszeit, Buchungsfenster, Vorlaufzeit).
+    AirbnbVerfuegbarkeitPushMixin,
     # Nach AirbnbDirektMixin: nutzt dessen `_airbnb_get`/`_airbnb_token`, um die
     # Registrierungsnummer (DK: BFE) aus `v2/listing_permits` zu holen — sie
     # steht in keinem der Listing-Felder.

@@ -8,7 +8,7 @@ import { Fragment, useCallback, useEffect, useState, useTransition } from "react
 import { useTranslations, useLocale } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
-import { tagLabel, tagWechsel, uhrzeit } from "@/lib/chat-format";
+import { tagLabel, tagWechsel, uhrzeit, zeitpunktLang } from "@/lib/chat-format";
 import {
   type WhatsAppMessage,
   listWhatsAppMessages,
@@ -126,7 +126,10 @@ export function WhatsAppChat({
                   {m.body}
                 </div>
                 {m.sent_at && (
-                  <span className="text-[0.65rem] text-muted-foreground">
+                  <span
+                    className="text-[0.65rem] text-muted-foreground"
+                    title={zeitpunktLang(m.sent_at, locale)}
+                  >
                     {uhrzeit(m.sent_at, locale)}
                     {m.direction === "out" ? ` · ${m.status}` : ""}
                   </span>

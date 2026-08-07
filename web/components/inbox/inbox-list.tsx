@@ -25,6 +25,7 @@ import { useTranslations, useLocale } from "next-intl";
 
 import { AiSettingsTab } from "@/components/inbox/ai-settings-tab";
 import { AutomationsTab } from "@/components/inbox/automations-tab";
+import { AutomatisierenPanel } from "@/components/inbox/automatisieren-panel";
 import { ManageTab } from "@/components/inbox/manage-tab";
 import { WissenTab } from "@/components/inbox/wissen-tab";
 import { TemplatesTab } from "@/components/inbox/templates-tab";
@@ -32,8 +33,10 @@ import {
   ChannelTag,
   GuestAvatar,
   StatusBadge,
+  UngelesenBadge,
   fmtRange,
   kurzeZeit,
+  zeitWert,
 } from "@/components/inbox/inbox-darstellung";
 import { Conversation } from "@/components/inbox/inbox-konversation";
 import { BulkUpdateDialog } from "@/components/inbox/inbox-massenaktualisierung";
@@ -101,6 +104,7 @@ export function InboxList({
   const [fTo, setFTo] = useState(""); // Anreise bis
   const [showFilter, setShowFilter] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
+  const [showAuto, setShowAuto] = useState(false);
   // Popover „Neue WhatsApp-Nummer anschreiben" (eigenes Feld statt window.prompt).
   const [showNewWa, setShowNewWa] = useState(false);
   const [newWaPhone, setNewWaPhone] = useState("");
@@ -131,8 +135,8 @@ export function InboxList({
     const wa: InboxThread[] =
       waRes && waRes.ok ? waRes.data.items.map(whatsAppToThread) : [];
     // Gemeinsame Liste nach Aktualität (neueste zuerst); null-Daten ans Ende.
-    const merged = [...ota, ...wa].sort((a, b) =>
-      (b.letzte_aktivitaet ?? "").localeCompare(a.letzte_aktivitaet ?? ""),
+    const merged = [...ota, ...wa].sort(
+      (a, b) => zeitWert(b.letzte_aktivitaet) - zeitWert(a.letzte_aktivitaet),
     );
     setRows(merged);
     setActive((cur) =>
@@ -185,8 +189,7 @@ export function InboxList({
     if (sortKey === "name")
       return richtung * (a.guest_name ?? "").localeCompare(b.guest_name ?? "", locale);
     return (
-      richtung *
-      (a.letzte_aktivitaet ?? "").localeCompare(b.letzte_aktivitaet ?? "")
+      richtung * (zeitWert(a.letzte_aktivitaet) - zeitWert(b.letzte_aktivitaet))
     );
   });
   // Zusammengehörigkeit sichtbar machen: Ein WhatsApp-Verlauf mit der
@@ -348,18 +351,32 @@ export function InboxList({
           </button>
         ))}
         {tab === "tabInbox" && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="ml-auto"
-            onClick={() => setShowBulk(true)}
-          >
-            <Icon icon="ph:list-checks" className="size-4" />
-            {t("bulkUpdate")}
-          </Button>
+          <div className="ml-auto flex items-center gap-2">
+            {access.canManageConfig && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAuto(true)}
+              >
+                <Icon icon="ph:arrows-clockwise" className="size-4" />
+                {t("autoPanelOpen")}
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowBulk(true)}
+            >
+              <Icon icon="ph:list-checks" className="size-4" />
+              {t("bulkUpdate")}
+            </Button>
+          </div>
         )}
       </header>
+
+      <AutomatisierenPanel offen={showAuto} onOffenChange={setShowAuto} />
 
       {showBulk && (
         <BulkUpdateDialog
@@ -602,9 +619,21 @@ export function InboxList({
                 <select
                   id="inbox-sort"
                   value={sortKey}
-                  onChange={(e) =>
-                    setSortKey(e.target.value as "recent" | "arrival" | "name")
-                  }
+                  onChange={(e) => {
+                    const naechster = e.target.value as
+                      | "recent"
+                      | "arrival"
+                      | "name";
+                    setSortKey(naechster);
+                    // Richtung passend zur Frage vorbelegen, die die Sortierung
+                    // beantwortet: „letzte Aktivität" heißt neueste zuerst
+                    // (absteigend), „Anreise" heißt WER KOMMT ALS NÄCHSTES
+                    // (aufsteigend), „Name" heißt A–Z. Ohne das blieb die
+                    // Richtung auf absteigend stehen und „Anreise" zeigte die
+                    // fernste Buchung oben — technisch sortiert, aber die
+                    // Antwort auf niemandes Frage. Umschaltbar bleibt es.
+                    setSortDesc(naechster === "recent");
+                  }}
                   className="min-w-0 flex-1 cursor-pointer bg-transparent text-muted-foreground outline-none hover:text-foreground"
                 >
                   <option value="recent">{t("sortRecent")}</option>
@@ -690,19 +719,53 @@ export function InboxList({
                                 <Icon icon="ph:star-fill" className="size-3.5 shrink-0 text-amber-500" />
                               )}
                             </span>
+                            {/* Rechts steht der Wert, nach dem gerade sortiert
+                                wird. Sonst sortiert die Liste nach Anreise,
+                                zeigt aber die letzte Aktivität — und die
+                                Reihenfolge sieht nach einem Fehler aus, weil
+                                die sichtbaren Daten nicht dazu passen. */}
                             <span className="shrink-0 text-[0.7rem] text-muted-foreground">
-                              {kurzeZeit(th.letzte_aktivitaet, locale)}
+                              {sortKey === "arrival"
+                                ? kurzeZeit(th.arrival_date, locale)
+                                : kurzeZeit(th.letzte_aktivitaet, locale)}
                             </span>
                           </span>
-                          {/* Zeile 2: letzte Nachricht */}
+                          {/* Zeile 2: letzte Nachricht, mit Absender davor.
+                              Der Pfeil beantwortet „habe ich schon
+                              geantwortet?" — ohne ihn sieht ein Thread, in dem
+                              der Gast wartet, aus wie ein erledigter. */}
                           {th.last_message && (
                             <span
                               className={
-                                "truncate text-xs " +
+                                "flex items-center gap-1 truncate text-xs " +
                                 (th.is_read ? "text-muted-foreground" : "text-foreground")
                               }
                             >
-                              {th.last_message}
+                              {th.last_sender && (
+                                <span
+                                  className="shrink-0"
+                                  title={
+                                    th.last_sender === "property"
+                                      ? t("lastFromUs")
+                                      : t("lastFromGuest")
+                                  }
+                                >
+                                  <Icon
+                                    icon={
+                                      th.last_sender === "property"
+                                        ? "ph:arrow-bend-up-right"
+                                        : "ph:arrow-bend-down-left"
+                                    }
+                                    className={
+                                      "size-3 " +
+                                      (th.last_sender === "property"
+                                        ? "text-muted-foreground/60"
+                                        : "text-accent")
+                                    }
+                                  />
+                                </span>
+                              )}
+                              <span className="truncate">{th.last_message}</span>
                             </span>
                           )}
                           {/* Zeile 3: Objekt — beantwortet „um welche Unterkunft
@@ -719,6 +782,11 @@ export function InboxList({
                             <span className="min-w-0 flex-1 truncate text-[0.7rem] text-muted-foreground">
                               {fmtRange(th.arrival_date, th.departure_date, locale)}
                             </span>
+                            {/* Ungelesen ZUERST: das ist die Information, nach
+                                der man im Posteingang sucht. Der Buchungs-
+                                status steht daneben und nur, wenn er etwas
+                                Besonderes sagt (storniert/geändert). */}
+                            {!th.is_read && <UngelesenBadge />}
                             {th.status && <StatusBadge status={th.status} />}
                           </span>
                           {th.assigned_user_name && (

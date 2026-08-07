@@ -15,6 +15,28 @@ export function uhrzeit(iso: string, locale: string): string {
     : d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 }
 
+/**
+ * Datum UND Uhrzeit ausgeschrieben — für den `title`-Tooltip am Zeitstempel.
+ *
+ * Unter der Blase steht bewusst nur „16:19"; das Datum trägt der Tages-Trenner.
+ * Bei einer langen Nachricht ist dieser Trenner aber weit nach oben gescrollt,
+ * und dann sagt „16:19" allein nicht, von welchem Tag die Nachricht stammt.
+ * Der Tooltip beantwortet das, ohne die Zeile zu überladen.
+ */
+export function zeitpunktLang(iso: string, locale: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleString(locale, {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+}
+
 /** Beginnt mit dieser Nachricht ein neuer Kalendertag? */
 export function tagWechsel(vorher: string | null, jetzt: string | null): boolean {
   if (!jetzt) return false;

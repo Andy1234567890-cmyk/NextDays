@@ -160,10 +160,21 @@ export function ChannelMark({ name }: { name: string | null }) {
  * Reservierungsstatus als Pille in der Thread-Zeile (beide Vorbilder führen
  * ihn dort: eine stornierte Buchung darf man nicht erst nach dem Öffnen
  * erkennen). Werte kommen aus `channex_booking.status`.
+ *
+ * WICHTIG — das ist der Status der BUCHUNG, nicht der Lesestand der
+ * Nachrichten. `new` heißt „Neubuchung, noch nicht als geändert/storniert
+ * gemeldet", nicht „ungelesen". Live standen deshalb alle 22 Threads auf
+ * „Neu", obwohl jeder einzelne gelesen war (`is_read = true`) — die Spalte
+ * war als Lesestand gelesen worden und damit wertlos. Der Lesestand hat sein
+ * eigenes Kennzeichen (`UngelesenBadge`), und der Normalfall `new` bekommt
+ * hier gar keine Pille mehr: eine Auszeichnung, die auf JEDE Zeile zutrifft,
+ * unterscheidet nichts und verdeckt nur die, die wirklich etwas sagen
+ * (storniert/geändert).
  */
 export function StatusBadge({ status }: { status: string }) {
   const t = useTranslations("inbox");
   const key = status.trim().toLowerCase();
+  if (key === "new" || !key) return null;
   const farbe =
     key === "cancelled"
       ? "bg-destructive/10 text-destructive"
@@ -175,14 +186,28 @@ export function StatusBadge({ status }: { status: string }) {
       ? t("filterStatusCancelled")
       : key === "modified"
         ? t("filterStatusModified")
-        : key === "new"
-          ? t("filterStatusNew")
-          : status;
+        : status;
   return (
     <span
       className={`shrink-0 rounded-full px-1.5 py-0.5 text-[0.65rem] font-medium ${farbe}`}
     >
       {label}
+    </span>
+  );
+}
+
+/**
+ * Ungelesene Nachrichten — das Kennzeichen, das im Posteingang wirklich zählt.
+ *
+ * Bewusst eine eigene Pille statt nur des Punkts am Avatar: über eine lange
+ * Liste hinweg ist ein 10-px-Punkt am Bildrand nicht zu erfassen, und die
+ * fettere Schrift allein unterscheidet gelesen/ungelesen zu schwach.
+ */
+export function UngelesenBadge() {
+  const t = useTranslations("inbox");
+  return (
+    <span className="shrink-0 rounded-full bg-accent px-1.5 py-0.5 text-[0.65rem] font-semibold text-accent-foreground">
+      {t("unreadBadge")}
     </span>
   );
 }
@@ -203,6 +228,23 @@ export function kurzeZeit(iso: string | null, locale: string): string {
   if (min < 60 * 24) return rel.format(-Math.round(min / 60), "hour");
   if (min < 60 * 24 * 7) return rel.format(-Math.round(min / (60 * 24)), "day");
   return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
+}
+
+/**
+ * Zeitstempel → Millisekunden zum SORTIEREN (nicht zum Anzeigen).
+ *
+ * Ein `localeCompare` auf der Rohzeichenkette reicht hier nicht: dieselbe
+ * Sekunde kommt in zwei Schreibweisen an („…+00:00" aus der Datenbank, „…Z"
+ * aus dem Portal-Import), und im Zeichenvergleich ist „Z" > „+". Leere oder
+ * unlesbare Werte werden zu `0` (1970), damit sie bei „neueste zuerst" ans
+ * ENDE fallen — als leerer String sortierten sie nach vorn. Bewusst eine
+ * endliche Zahl statt `-Infinity`: die Differenz zweier `-Infinity` wäre
+ * `NaN`, und ein `NaN`-Vergleich macht die Sortierung unbestimmt.
+ */
+export function zeitWert(iso: string | null): number {
+  if (!iso) return 0;
+  const ms = new Date(iso).getTime();
+  return Number.isNaN(ms) ? 0 : ms;
 }
 
 export function fmtRange(a: string | null, b: string | null, locale: string): string {

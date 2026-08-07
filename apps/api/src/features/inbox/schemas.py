@@ -5,6 +5,8 @@ Posteingang für OTA-Gästekommunikation. Ein Thread entspricht einer OTA-Buchun
 gesendet (Booking.com/Airbnb/Expedia); ein optionaler KI-Antwortvorschlag (Groq)
 hilft beim Beantworten. Threads sind mit der lokalen Reservierung verknüpft.
 """
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -29,6 +31,10 @@ class InboxThread(BaseModel):
     arrival_date: str | None = None
     departure_date: str | None = None
     last_message: str | None = None  # Vorschau der letzten Nachricht
+    # Absender der letzten Nachricht: "guest" (der Gast wartet auf Antwort)
+    # oder "property" (wir haben zuletzt geschrieben). Beantwortet in der Liste
+    # die Frage „habe ich schon geantwortet?", ohne den Thread zu öffnen.
+    last_sender: str | None = None
     # WANN der Gast beim Portal gebucht hat (0291/0292).
     booked_at: str | None = None
     # Die Zeit, die in der Liste steht und nach der sie sortiert — als EIN Feld,
@@ -233,6 +239,12 @@ class AutomationBase(BaseModel):
     trigger: str               # booking_new|before_checkin|after_checkout|message_received
     anchor: str = "arrival"    # arrival|departure|booking
     offset_days: int = 0
+    # Versatz zum Anker in der gewählten Einheit. `offset_days` bleibt für den
+    # Bestand erhalten und wird bei Tages-Regeln mitgeschrieben (0303).
+    offset_unit: Literal["minutes", "hours", "days"] = "days"
+    offset_value: int = 0
+    # None = keine feste Uhrzeit. Bei Tagen heißt das Mitternacht des Ankertags;
+    # bei Stunden/Minuten bestimmt der Versatz die Zeit ohnehin selbst.
     send_time: str | None = None  # "HH:MM"
     property_ids: list[str] = []
     channels: list[str] = []

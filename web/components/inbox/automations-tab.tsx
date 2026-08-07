@@ -24,6 +24,7 @@ import {
 import { FeldPicker } from "@/components/inbox/feld-picker";
 import {
   type Automation,
+  type AutomationOffsetUnit,
   type AutomationTrigger,
   type MessageTemplate,
   createAutomation,
@@ -43,6 +44,8 @@ const TRIGGERS: AutomationTrigger[] = [
 // 0 = Montag … 6 = Sonntag (gleiche Zählung wie im Backend, `window_days`).
 const WOCHENTAGE = [0, 1, 2, 3, 4, 5, 6];
 const ANCHORS = ["arrival", "departure", "booking"];
+// Einheit des Versatzes (0303). Reihenfolge klein → groß, wie man sie liest.
+const EINHEITEN: AutomationOffsetUnit[] = ["minutes", "hours", "days"];
 // Kanal-Werte = ota_name-Herkunft (Backend matcht case-insensitive). Der eigene
 // Marktplatz „myBestDays" ist ein eigener Kanal wie die OTAs (booking_engine setzt
 // ota_name="myBestDays"), NICHT „Direkt". Altbestand wurde mit 0239 nachgezogen.
@@ -61,7 +64,11 @@ export function AutomationsTab() {
   // direction: "before" → negatives offset, "after" → positiv. days = Betrag.
   const [direction, setDirection] = useState<"before" | "after">("before");
   const [days, setDays] = useState(3);
+  const [einheit, setEinheit] = useState<AutomationOffsetUnit>("days");
   const [sendTime, setSendTime] = useState("09:00");
+  // Uhrzeit abschaltbar: ohne feste Uhrzeit bestimmt bei Stunden/Minuten der
+  // Versatz selbst die Zeit, bei Tagen gilt Mitternacht des Ankertags.
+  const [mitUhrzeit, setMitUhrzeit] = useState(true);
   const [propertyIds, setPropertyIds] = useState<string[]>([]);
   const [channels, setChannels] = useState<string[]>([]);
   const [templateId, setTemplateId] = useState("");
@@ -110,8 +117,12 @@ export function AutomationsTab() {
         name,
         trigger,
         anchor,
-        offset_days: offset,
-        send_time: sendTime || null,
+        // `offset_days` führt weiter die Tages-Sicht; der Server rechnet mit
+        // offset_unit/offset_value (0303).
+        offset_days: einheit === "days" ? offset : 0,
+        offset_unit: einheit,
+        offset_value: offset,
+        send_time: mitUhrzeit && sendTime ? sendTime : null,
         property_ids: propertyIds,
         channels,
         template_id: templateId || null,
@@ -168,13 +179,14 @@ export function AutomationsTab() {
           : "";
       return `${fenster}${tage}`;
     }
-    const abs = Math.abs(a.offset_days);
-    const dir = a.offset_days < 0 ? t("autoBefore") : t("autoAfter");
+    const abs = Math.abs(a.offset_value);
+    const dir = a.offset_value < 0 ? t("autoBefore") : t("autoAfter");
     const anchorLabel = t(`autoAnchor_${a.anchor}` as never) ?? a.anchor;
     const zone = a.use_property_timezone ? ` (${t("autoLocalTime")})` : "";
     const time = a.send_time ? ` · ${a.send_time}${zone}` : "";
     if (abs === 0) return `${anchorLabel}${time}`;
-    return `${abs} ${t("autoDays")} ${dir} ${anchorLabel}${time}`;
+    const einheitLabel = t(`autoUnit_${a.offset_unit}` as never);
+    return `${abs} ${einheitLabel} ${dir} ${anchorLabel}${time}`;
   }
 
   function assignLabel(a: Automation): string {
@@ -313,7 +325,7 @@ export function AutomationsTab() {
           </>
         ) : (
           <>
-            {/* Zeitplan: Offset (Tage) · vor/nach · Anker · Uhrzeit */}
+            {/* Zeitplan: Betrag · Einheit · vor/nach · Anker (· Uhrzeit) */}
             <label className="text-sm font-medium">{t("autoSchedule")}</label>
             <div className="grid grid-cols-2 gap-2">
               <Input
@@ -321,8 +333,19 @@ export function AutomationsTab() {
                 min={0}
                 value={days}
                 onChange={(e) => setDays(Number(e.target.value))}
-                aria-label={t("autoDays")}
+                aria-label={t("autoAmount")}
               />
+              <NativeSelect
+                value={einheit}
+                onChange={(e) => setEinheit(e.target.value as AutomationOffsetUnit)}
+                aria-label={t("autoUnit")}
+              >
+                {EINHEITEN.map((u) => (
+                  <option key={u} value={u}>
+                    {t(`autoUnit_${u}` as never)}
+                  </option>
+                ))}
+              </NativeSelect>
               <NativeSelect
                 value={direction}
                 onChange={(e) => setDirection(e.target.value as "before" | "after")}
@@ -337,13 +360,31 @@ export function AutomationsTab() {
                   </option>
                 ))}
               </NativeSelect>
+            </div>
+            {/* Uhrzeit abschaltbar. Bei Stunden/Minuten ist sie nur der Bezug,
+                von dem aus gerechnet wird — An-/Abreise tragen beim Portal
+                keine Uhrzeit, deshalb steht das als Hinweis dabei. */}
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={mitUhrzeit}
+                onChange={(e) => setMitUhrzeit(e.target.checked)}
+                className="size-4 accent-[var(--accent)]"
+              />
+              {t("autoWithTime")}
+            </label>
+            {mitUhrzeit ? (
               <Input
                 type="time"
                 value={sendTime}
                 onChange={(e) => setSendTime(e.target.value)}
                 aria-label={t("autoTime")}
               />
-            </div>
+            ) : (
+              <p className="-mt-1 text-xs text-muted-foreground">
+                {t("autoWithoutTimeHint")}
+              </p>
+            )}
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"

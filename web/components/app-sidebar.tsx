@@ -53,10 +53,11 @@ const MAIN: readonly NavItem[] = [
   { key: "dashboard", href: "/", icon: "ph:squares-four" },
   { key: "calendar", href: "/kalender", icon: "ph:calendar-blank", req: "view_calendar" },
   { key: "inbox", href: "/posteingang", icon: "ph:chat-circle", req: "pm_chat" },
-  // Ausgaben ist Tagesgeschäft (Belege kommen laufend rein) und steht deshalb
-  // flach unter dem Posteingang statt in der Betriebs-Gruppe — dort war es nur
-  // bei Ferienvermietung erreichbar, obwohl auch ein Hotel Ausgaben erfasst.
-  { key: "expenses", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
+  // Aufgaben stehen flach unter dem Posteingang: sie sind Tagesgeschäft und
+  // betreffen jede Rolle (auch Reinigung/Mitarbeiter, die die Buchhaltung nie
+  // sehen). Der Punkt steht deshalb NICHT zusätzlich in der Reservierungs-
+  // Gruppe — sonst hätte die Sidebar ihn zweimal.
+  { key: "tasks", href: "/reservierungen/aufgaben", icon: "ph:check-square", req: "view_own_tasks" },
 ];
 
 // Thematische Gruppen; werden zur Laufzeit nach Beherbergungsart gebaut.
@@ -75,6 +76,10 @@ type NavGroup = { groupKey: string; icon: string; items: readonly NavItem[] };
 const HOTEL_FINANCE: readonly NavItem[] = [
   { key: "invoices", href: "/buchhaltung", icon: "ph:receipt", req: "owner_reporting" },
   { key: "payments", href: "/buchhaltung/zahlungen", icon: "ph:credit-card", req: "owner_reporting" },
+  // Ausgaben steht in BEIDEN Sätzen: Belege kommen in jedem Betrieb laufend
+  // rein. Im Ferienvermietungs-Satz sitzt der Punkt vor dem Mahnwesen, hier
+  // bei den übrigen Finanzpunkten — sonst hätte ein Hotel keine Ausgaben mehr.
+  { key: "expenses", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
   { key: "revenue", href: "/buchhaltung/umsatz", icon: "ph:trend-up", req: "owner_reporting" },
   { key: "bankAccounts", href: "/buchhaltung/bank", icon: "ph:bank", req: "owner_reporting" },
   { key: "lists", href: "/buchhaltung/listen", icon: "ph:list-checks", req: "owner_reporting" },
@@ -86,8 +91,7 @@ const HOTEL_FINANCE: readonly NavItem[] = [
 const VR_FINANCE: readonly NavItem[] = [
   { key: "invoices", href: "/buchhaltung", icon: "ph:receipt", req: "owner_reporting" },
   { key: "quotes", href: "/buchhaltung/angebote", icon: "ph:file-text", req: "owner_reporting" },
-  // „expenses" steht jetzt oben in MAIN (unter Posteingang) — hier NICHT
-  // wiederholen, sonst hätte die Sidebar den Punkt zweimal.
+  { key: "expenses", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
   { key: "dunning", href: "/buchhaltung/mahnwesen", icon: "ph:warning-circle", req: "owner_reporting" },
   { key: "chartOfAccounts", href: "/buchhaltung/kontenplan", icon: "ph:tree-structure", req: "owner_reporting" },
   { key: "cashBook", href: "/buchhaltung/kassenbuch", icon: "ph:wallet", req: "owner_reporting" },
@@ -144,7 +148,8 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
       icon: "ph:bookmark-simple",
       items: [
         { key: "overview", href: "/reservierungen/kontrollzentrum", icon: "ph:bookmark-simple", req: "view_calendar" },
-        { key: "tasks", href: "/reservierungen/aufgaben", icon: "ph:check-square", req: "view_own_tasks" },
+        // „tasks" steht jetzt oben in MAIN (unter Posteingang) — hier NICHT
+        // wiederholen, sonst hätte die Sidebar den Punkt zweimal.
         { key: "reservationGroups", href: "/reservierungen/gruppen", icon: "ph:users-three", req: "view_calendar" },
         { key: "stopSell", href: "/stop-sell", icon: "ph:hand-palm", req: "manage_calendar" },
         { key: "settings", href: "/reservierungen/einstellungen", icon: "ph:gear", req: "manage_calendar" },

@@ -38,6 +38,10 @@ export function whatsAppToThread(c: WhatsAppConversation): InboxThread {
     arrival_date: null,
     departure_date: null,
     last_message: c.last_message,
+    // Die WhatsApp-Konversation führt keine Richtung mit — lieber KEIN Pfeil
+    // als ein geratener (Wurzel 4). Sobald `whatsapp_conversation` die
+    // Richtung der letzten Nachricht kennt, gehört sie hierher.
+    last_sender: null,
     booked_at: null,
     // Bei WhatsApp IST `last_at` das Fremdereignis (Zeitpunkt der letzten
     // Nachricht), nicht unsere Schreibzeit — also gehört er hier hin.
