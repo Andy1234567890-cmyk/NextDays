@@ -25,6 +25,7 @@ from .schemas import (
     PriceOverrideRequest,
     RestrictionRowsRequest,
     SeasonAssignRequest,
+    SeasonClearRequest,
     SeasonCreate,
     SeasonListResponse,
     SeasonPriceListResponse,
@@ -399,6 +400,24 @@ def assign_season(
     try:
         return {"days": service.assign_season(
             ctx.tenant_id, req.property_id, req.season_id, req.range
+        )}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/seasons/clear", dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def clear_season_range(
+    req: SeasonClearRequest,
+    service: CalendarServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> dict[str, int]:
+    try:
+        return {"days": service.clear_season_range(
+            ctx.tenant_id, req.property_id, req.range
         )}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

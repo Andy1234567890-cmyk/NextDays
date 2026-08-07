@@ -167,6 +167,10 @@ export function ComposerEditor({
   const senden = useRef(onSenden);
   senden.current = onSenden;
 
+  // Zuletzt aus dem Editor herausgegebener Klartext — siehe der Effekt unten,
+  // der fremde Setzungen von unserem eigenen Echo unterscheidet.
+  const letzterText = useRef<string | null>(null);
+
   // Quelltext-Ansicht: zeigt das HTML, das der Editor wirklich führt. Ohne
   // sie lässt sich nicht nachsehen, ob eine eingefügte Vorlage die Absätze
   // trägt, die man auf dem Bildschirm zu sehen glaubt.
@@ -269,15 +273,33 @@ export function ComposerEditor({
         return true;
       },
     },
-    onUpdate: ({ editor }) => onChange(editorZuText(editor)),
+    onUpdate: ({ editor }) => {
+      const text = editorZuText(editor);
+      letzterText.current = text;
+      onChange(text);
+    },
   });
 
   // Von außen gesetzter Text (Vorlage, KI-Entwurf, geleert nach dem Senden,
-  // Sprachassistent). Nur schreiben, wenn er sich WIRKLICH unterscheidet —
-  // sonst setzt jeder eigene Tastendruck den Cursor ans Ende zurück.
+  // Sprachassistent).
+  //
+  // WARUM NICHT `editorZuText(editor) === wert` ALS VERGLEICH: der Klartext ist
+  // eine VERLUSTBEHAFTETE Sicht auf das Dokument. Fett/Kursiv/Unterstrichen
+  // ändern ihn NICHT, und ein leerer Absatz am Ende wird weggetrimmt. Jede
+  // solche Eingabe sah damit nach „unverändert" aus — und beim nächsten
+  // Tastendruck, der den Klartext doch bewegte, baute `setContent` das
+  // Dokument aus `textZuHtml(wert)` neu auf und warf alle Marks weg. Genau die
+  // zwei gemeldeten Fehler: Enter wirkte wie ein Sprung ins Nichts, Fett hielt
+  // keinen Anschlag.
+  //
+  // Richtig ist, den Editor SELBST die Wahrheit führen zu lassen und nur
+  // fremde Setzungen zu übernehmen. `letzterText` merkt, was zuletzt aus dem
+  // Editor herausgegangen ist; kommt `wert` unverändert zurück, ist es unser
+  // eigenes Echo und wird ignoriert.
   useEffect(() => {
     if (!editor) return;
-    if (editorZuText(editor) === wert) return;
+    if (letzterText.current === wert) return;
+    letzterText.current = wert;
     editor.commands.setContent(textZuHtml(wert), { emitUpdate: false });
   }, [wert, editor]);
 

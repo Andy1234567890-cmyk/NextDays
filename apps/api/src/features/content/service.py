@@ -40,11 +40,13 @@ class ContentService:
 
         payload: dict[str, str] = {
             "q": req.text,
-            "target": req.target.value,
+            "target": req.target,
             "format": req.fmt,
         }
+        # Ohne `source` erkennt Google die Sprache selbst und meldet sie als
+        # `detectedSourceLanguage` zurück — im Chat der Normalfall.
         if req.source is not None:
-            payload["source"] = req.source.value
+            payload["source"] = req.source
 
         try:
             resp = httpx.post(
@@ -63,6 +65,16 @@ class ContentService:
             # Google liefert die Fehlermeldung im Body — durchreichen (gekürzt).
             detail = resp.text[:300]
             log.error("translate_api_error", status=resp.status_code, detail=detail)
+            # 400 heißt bei Google „diese Sprache kenne ich nicht" — das ist ein
+            # Fehler der Anfrage, kein Ausfall des Dienstes. Als 502 gemeldet
+            # hieße es „später nochmal versuchen", obwohl jeder Versuch scheitert.
+            # Seit die Sprachliste offen ist (kein Enum mehr), ist Google die
+            # Instanz, die über gültige Sprachen entscheidet.
+            if resp.status_code == 400:
+                raise ContentError(
+                    "Diese Sprache unterstützt der Übersetzungsdienst nicht.",
+                    status_code=422,
+                )
             raise ContentError(
                 f"Übersetzungsdienst meldete Fehler ({resp.status_code}).",
                 status_code=502,

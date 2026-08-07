@@ -167,7 +167,7 @@ class AirbnbObjektAbrufMixin:
                 "abzurufen.",
                 status_code=422,
             )
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id)
+        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)
         if not channel_id:
             raise ChannelManagerError(
                 "Es ist kein Airbnb-Konto verbunden. Verbinde zuerst Airbnb im "
@@ -185,7 +185,7 @@ class AirbnbObjektAbrufMixin:
         # Straßenfeld und keinen Grund. Jetzt ist die echte Hausadresse in
         # unserer DB, bevor irgendetwas nach außen geht.
         content: dict[str, Any] = {"uebernommen": [], "fotos": 0}
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token(db, tenant_id, property_id)  # type: ignore[attr-defined]
         hausregeln: list[str] = []
         if zugang:
             token, _host = zugang
@@ -1352,22 +1352,54 @@ class AirbnbObjektAbrufMixin:
         return None
 
     @staticmethod
-    def _airbnb_kanal_des_betriebs(db: Client, tenant_id: str) -> str | None:
-        """Die EINE Airbnb-Kanal-ID des Betriebs.
+    def _airbnb_kanal_des_betriebs(
+        db: Client, tenant_id: str, property_id: str | None = None
+    ) -> str | None:
+        """Die Airbnb-Kanal-ID FÜR DIESES OBJEKT.
 
-        Tenant-weit, nicht je Objekt: Airbnb autorisiert das KONTO, ein Betrieb
-        hat bei Channex genau einen Airbnb-Kanal, an dem alle Objekte hängen. Eine
-        Suche je `property_id` hatte live einen zweiten, leeren Kanal erzeugt, an
-        dem die Autorisierung nie ankam.
+        Airbnb autorisiert das KONTO, nicht das Objekt: ein Kanal trägt alle
+        Objekte des Kontos (Channex-Doku `channel-mapping-guides/airbnb.md`,
+        live bestätigt — Kanal 9a46827b-… hält 19 Objekte). Deshalb darf hier
+        NICHT je Objekt ein eigener Kanal entstehen; eine frühere Fassung tat
+        das und erzeugte einen zweiten, leeren Kanal, an dem die Autorisierung
+        nie ankam.
+
+        Der Kanal wird trotzdem ÜBER DAS OBJEKT gesucht, denn ein Betrieb kann
+        mehrere Konten je Portal haben (0304): eine Agentur betreut hunderte
+        Vermieter mit je eigenem Airbnb-Zugang. Ein tenant-weites „nimm den
+        ersten Kanal" träfe dort ein zufälliges fremdes Konto — und weil die
+        Abfrage keine Sortierung hatte, bei zwei Aufrufen womöglich zwei
+        verschiedene.
+
+        Ohne `property_id` (Aufrufer ohne Objektbezug) gilt weiterhin der
+        tenant-weite Weg — aber nur, solange es GENAU EIN Konto gibt. Bei
+        mehreren ist die Antwort nicht bestimmbar, und dann ist `None` richtig:
+        lieber „nicht verbunden" als der Push in ein fremdes Konto.
         """
-        rows = (
-            db.table("channex_channel_connection")
+        if property_id:
+            treffer = (
+                db.table("channex_channel_connection")
+                .select("channex_channel_id")
+                .eq("tenant_id", tenant_id)
+                .eq("property_id", str(property_id))
+                .eq("ota_portal_code", AIRBNB)
+                .not_.is_("channex_channel_id", "null")
+                .limit(1)
+                .execute()
+            ).data or []
+            if treffer:
+                return str(treffer[0]["channex_channel_id"])
+            return None
+
+        konten = (
+            db.table("ota_account")
             .select("channex_channel_id")
             .eq("tenant_id", tenant_id)
             .eq("ota_portal_code", AIRBNB)
+            .not_.is_("channex_channel_id", "null")
+            .limit(2)
             .execute()
         ).data or []
-        for row in rows:
-            if row.get("channex_channel_id"):
-                return str(row["channex_channel_id"])
+        if len(konten) == 1:
+            return str(konten[0]["channex_channel_id"])
         return None

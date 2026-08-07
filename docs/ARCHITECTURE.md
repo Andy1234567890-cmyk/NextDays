@@ -485,6 +485,30 @@ evtl. veraltete JWT). Zuweisungen sind auditiert (`channex_booking.assigned_by/a
 
 - `inbox_assignment_log`, Migration `0045`).
 
+**Nachrichteneingang — zwei Wege, ein Spiegel, ein Signal (`0293`/`0305`):**
+Eine Gastnachricht erreicht uns über zwei Wege, die BEIDE durch dieselbe
+Übersetzungsstelle laufen (`channel_manager/nachrichten_eingang.py`
+`nachricht_spiegeln`): den Channex-Webhook (`event: "message"`, schnell) und
+den Live-Feed-Tick alle 5 Minuten (`live_feed_sync`, Backstop). Gespeichert
+wird in `portal_messages`, idempotent über `(tenant_id, message_ref)` — dass
+beide Wege dieselbe Nachricht bringen, ist der Normalfall, kein Fehler.
+
+Der Verlauf im Posteingang kommt aus dem Spiegel und wird beim Öffnen durch
+den Live-Abruf beim Aggregator ERGÄNZT (`inbox/spiegel.py`, `_vereinen` über
+die Nachrichten-ID). Damit steht der Chat auch dann, wenn das Portal nicht
+antwortet. Nachrichten ohne Buchungsbezug (Airbnb-Support, Anfragen vor der
+Buchung) werden gespeichert (`portal_thread_ref`), erscheinen aber in keiner
+Thread-Liste — dort hängt jeder Eintrag an einer Buchung.
+
+Realtime läuft NICHT über `portal_messages`: die Tabelle enthält den Klartext
+der Gastnachrichten und bleibt für `anon`/`authenticated` gesperrt (Wurzel 6 —
+ein `select`-Grant öffnete sie per PostgREST-Direktpfad für jede Rolle, am
+Service-Layer und seinem Rollen-Split vorbei). Beobachtet wird stattdessen das
+inhaltsfreie Signal `channex_booking.last_message_at`; den Inhalt lädt die UI
+über die API nach. Das Signal geht nie rückwärts (das Journal garantiert keine
+Reihenfolge) und setzt `is_read=false` nur bei `sender='guest'`, damit die
+eigene Antwort den Thread nicht ungelesen macht.
+
 **Reservierungs-Storno (Migration `0050`):** Stornieren erfordert eine
 Pflicht-Begründung und ist dokumentiert — `reservations.cancel_reason/cancelled_by/
 cancelled_at` + append-only `reservation_cancellation_log`. Kanal-agnostisch
@@ -965,7 +989,7 @@ Detail-/Hilfstabellen (mit RLS, tenant-scoped):
 | Sicherheit   | `user_mfa` (`0021`)                                                                                    | TOTP-2FA pro Nutzer                                                               |
 | Onboarding   | `tenant_onboarding` (`0029`)                                                                           | Onboarding-Fortschritt des Tenants                                                |
 | Channex      | `stop_sell` (`0032`), `ari_outbox` (`0033`), `channex_tax_map` (`0034`), `channex_tax_set_map` (`0273`), `sandbox_message` (`0036`) | Stop-Sell, ARI-Outbox-Queue, Steuer-/Gebühren-Mapping, Tax-Sets je Portal (Kanal-Einschränkung), Sandbox-Mock-OTA |
-| Posteingang  | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`), `inbox_attachment` (`0259`), `inbox_knowledge_fact` (`0260`) | KI-Settings, geplante Nachrichten, Thread-Notizen, Anhänge, Wissensdatenbank (die letzten beiden für anon/authenticated gesperrt) |
+| Posteingang  | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`), `inbox_attachment` (`0259`), `inbox_knowledge_fact` (`0260`), `portal_messages` (`0293`/`0305`) | KI-Settings, geplante Nachrichten, Thread-Notizen, Anhänge, Wissensdatenbank, Nachrichten-Spiegel (die letzten drei für anon/authenticated gesperrt) |
 | WhatsApp     | `whatsapp_conversation`, `whatsapp_message` (`0041`)                                                   | WhatsApp Cloud API — im Posteingang integriert                                    |
 | Objekte      | `property_photos` (`0061`)                                                                             | Objekt-Fotos (mehrsprachige Caption, Cover, Sortierung)                           |
 | Page-Builder | `tenant_site_config`, `tenant_custom_domains` (`0086`), `site_pages`, `site_blocks` (`0087`)           | White-Label-Website je Tenant: Branding, Custom-Domains, Seiten + Blöcke (s. §12) |

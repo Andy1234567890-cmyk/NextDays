@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
+import { PortalKontenButton } from "@/components/channel-manager/portal-konten";
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import type {
@@ -179,6 +180,15 @@ export function ChannelDetail({
                   {t("activateChannel")}
                 </Button>
               )}
+              {/* Konten verwalten (0304): eigenes Panel, weil eine Agentur je
+                  Portal hunderte Zugänge führen kann. Dort wird ein weiteres
+                  Konto verbunden und ein einzelnes getrennt — hier im Kopf ist
+                  nur der Einstieg samt Zähler. */}
+              <PortalKontenButton
+                portalCode={meta.code}
+                portalLabel={meta.label}
+                onGeaendert={() => router.refresh()}
+              />
               <Button
                 type="button"
                 variant="outline"

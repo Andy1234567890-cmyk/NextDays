@@ -882,12 +882,43 @@ def ist_demo_mapping(channex_id: str | None) -> bool:
 # Buchung.
 _HAT_ZONE = re.compile(r"(Z|[+-]\d{2}:?\d{2})$")
 
+# Ein ISO-Zeitstempel und NICHTS SONST. Der Rückgabewert dieser Funktion landet
+# nicht nur in Spalten, sondern auch in PostgREST-Filterausdrücken
+# (`.or_("…last_message_at.lt.<wert>")`, 0305). `or_()` maskiert seine Filter
+# NICHT — ein Wert wie `2026-01-01Z),is_read.eq.true,(tenant_id.not.is.null`
+# schriebe dort eigene Bedingungen hinein. Die Quelle ist Portal-Payload, also
+# angreiferkontrollierbar (Wurzel 8: Client-Input, der serverseitig expandiert
+# wird, ist ein Angriff — auch aus zweiter Hand über eine OTA).
+_ISO_ZEITSTEMPEL = re.compile(
+    r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d{1,6})?"
+    r"(Z|[+-]\d{2}:?\d{2})?$"
+)
+
+
+# Platzhalter-Text einer Nachricht, die NUR aus Anhängen besteht (der Gast hat
+# bloß ein Foto geschickt — Channex setzt `message: ""` und füllt
+# `attachments`). `portal_messages.body` ist NOT NULL, und ein fertiger Satz
+# wäre hier falsch: der Server kennt die Sprache des Betrachters nicht, die
+# Worte macht die Oberfläche (`inbox.attachmentPreview`, Wurzel 4).
+#
+# Bewusst an EINER Stelle, weil ZWEI Pfade in dieselbe Spalte schreiben — der
+# Eingang (`nachrichten_eingang`) und der Nachtrag beim Öffnen
+# (`inbox.spiegel`). Zwei eigene Schreibweisen ergäben je nach Weg eine andere
+# Vorschauzeile für dieselbe Nachricht.
+NUR_ANHANG_TEXT: Final = "[attachment]"
+
 
 def ota_zeitstempel_utc(wert: object) -> str | None:
     """Channex-Zeitstempel → ISO-Zeichenkette MIT Zone. Leer/kein Text → None
-    (kein erfundener Ersatzwert, Wurzel 4)."""
+    (kein erfundener Ersatzwert, Wurzel 4).
+
+    Was nicht wie ein ISO-Zeitstempel aussieht, kommt NICHT durch: weder als
+    Spaltenwert (dort wäre es ein DB-Fehler) noch als Filterbestandteil (dort
+    wäre es eine Injection). Verworfen wird zu `None` — der Aufrufer behandelt
+    das bereits als „Zeitpunkt unbekannt" und datiert nie auf die eigene Uhr.
+    """
     text = str(wert).strip() if wert is not None else ""
-    if not text:
+    if not text or not _ISO_ZEITSTEMPEL.match(text):
         return None
     return text if _HAT_ZONE.search(text) else text + "Z"
 

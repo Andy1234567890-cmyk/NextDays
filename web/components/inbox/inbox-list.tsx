@@ -61,6 +61,7 @@ import {
   setInboxStatus,
   updateThreadFlags,
 } from "@/lib/inbox";
+import { NUR_ANHANG_TEXT } from "@/lib/chat-format";
 import { type InboxAccess } from "@/lib/inbox-access";
 import { useRealtime } from "@/lib/use-realtime";
 import {
@@ -765,7 +766,15 @@ export function InboxList({
                                   />
                                 </span>
                               )}
-                              <span className="truncate">{th.last_message}</span>
+                              {/* Reine Bildnachricht: der Server speichert ein
+                                  sprachneutrales Kürzel (er kennt die Sprache
+                                  des Betrachters nicht) — die Worte macht erst
+                                  die Oberfläche. */}
+                              <span className="truncate">
+                                {th.last_message === NUR_ANHANG_TEXT
+                                  ? t("attachmentPreview")
+                                  : th.last_message}
+                              </span>
                             </span>
                           )}
                           {/* Zeile 3: Objekt — beantwortet „um welche Unterkunft

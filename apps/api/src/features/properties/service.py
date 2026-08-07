@@ -36,6 +36,7 @@ from .gebuehren import (
     normalize_fees,
     sync_pricing_config,
 )
+from .portalfreigabe import darf_zu_den_portalen
 from .preise_kopieren import PreiseKopierenMixin
 from .rooms import RoomsMixin
 from .schemas import (
@@ -375,19 +376,14 @@ class PropertiesService(
             raise PropertyError("Objekt konnte nicht angelegt werden.", status_code=500)
         row = res.data[0]
         log.info("property_created", tenant_id=tenant_id, property_id=row["id"])
-        # Auto-Anbindung an den Channel-Manager (non-blocking): legt das Objekt
-        # automatisch beim Provider an. Schlägt das fehl, bleibt die Objekt-
-        # Anlage trotzdem erfolgreich (Fehler wird im Mapping vermerkt).
-        # currency=None: properties hat keine currency-Spalte (die liegt im
-        # rate_plan). sync_content lädt die ECHTE Objektwährung selbst und
-        # schlägt fail-closed fehl (422), wenn keine existiert — ein "EUR"-
-        # Platzhalter hier würde genau diesen Schutz aushebeln (Wurzel 4).
-        self._sync_to_channel_manager(
-            tenant_id,
-            property_id=row["id"],
-            title=row.get("title") or "Unbenannt",
-            currency=None,
-        )
+        # KEIN Channex-Sync hier. Ein neu angelegtes Objekt ist immer ein Entwurf
+        # (oben erzwungen) und geht die Portale nichts an, solange es nicht
+        # veröffentlicht ist. Übertragen wird in publish() — dort blockierend, weil
+        # Veröffentlichen die Übertragung sicherstellen MUSS.
+        #
+        # Bis zum 07.08.2026 stand hier ein Sync-Aufruf. Er legte jeden Entwurf bei
+        # Channex an (Property, Zimmertyp, Rate, Kanal-Zuordnung) und lief danach
+        # dauerhaft auf Fehler, weil ein Entwurf keinen Preisplan hat.
         # Objektzahl-Änderung an das Abo melden (Wurzel 1: Gegenzustand). Nur wenn
         # das neue Objekt bereits abrechenbar (status='active') ist — ein Entwurf
         # ändert die quantity nicht. Best-effort, kippt die Anlage nie (Wurzel 5).
@@ -438,7 +434,27 @@ class PropertiesService(
         Sync synchron (mehrere sequentielle ~3s-Channex-Calls) und blockierte den
         Request. Jetzt antwortet der Request sofort; der Worker synct im Hintergrund
         mit Channex-Token-Budget. Coalesced je Objekt → mehrfaches Speichern (z. B.
-        Galerie-Upload) erzeugt nur EINEN Sync mit dem letzten Stand."""
+        Galerie-Upload) erzeugt nur EINEN Sync mit dem letzten Stand.
+
+        ENTWÜRFE GEHEN NICHT RAUS. Ein selbst angelegtes Objekt ist bis zum
+        Veröffentlichen eine interne Notiz — es bei den Portalen anzumelden ist
+        eine Aussage nach außen, die der Betrieb nie getroffen hat. Live am
+        07.08.2026 an „FeWo Stjerneskud": bei uns um 03:56 als Entwurf angelegt,
+        um 04:09 stand die Channex-Property samt Zimmertyp und Rate, um 04:10
+        hing sie am Airbnb-Kanal — deshalb zählte Channex 20 Objekte, wo der
+        Betrieb 18 verbundene kannte. Dazu kam ein Dauerschaden: ein Entwurf hat
+        keinen Preisplan, `sync_content` schlägt dafür fail-closed mit 422 fehl,
+        der Job geht auf `error`, und der Heil-Tick (`worker.py:_content_heal_tick`)
+        reiht ihn stündlich neu ein — für ein Objekt, das gar nicht rausgehen soll.
+
+        Der Riegel sitzt hier im Wrapper und nicht an den Aufrufstellen, damit
+        ein weiterer Aufrufer ihn nicht vergessen kann. Die Bedingung selbst
+        steht in `portalfreigabe.darf_zu_den_portalen` — dieselbe, die der
+        Preis-Slice benutzt; dort ist auch die Ausnahme für die Airbnb-Übernahme
+        begründet.
+        """
+        if not darf_zu_den_portalen(self._db, tenant_id, property_id):
+            return
         try_enqueue_content_sync(
             self._db, tenant_id, property_id, title=title, currency=currency
         )
@@ -1268,15 +1284,8 @@ class PropertiesService(
             source_property_id=property_id,
             property_id=new_row["id"],
         )
-        # Wie bei create(): das neue Objekt beim Channel-Manager anlegen (non-
-        # blocking). currency=None → der Sync lädt die echte Objektwährung selbst
-        # und schlägt fail-closed fehl, falls keine existiert (Wurzel 4).
-        self._sync_to_channel_manager(
-            tenant_id,
-            property_id=new_row["id"],
-            title=new_row.get("title") or "Unbenannt",
-            currency=None,
-        )
+        # Wie bei create(): kein Channex-Sync. Die Kopie ist ein Entwurf
+        # (oben gesetzt) und geht erst beim Veröffentlichen an die Portale.
         return PropertyResponse(**_row(new_row))
 
     def unlist_website(self, ctx: AuthContext, property_id: str) -> PropertyResponse:

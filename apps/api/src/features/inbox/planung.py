@@ -487,40 +487,43 @@ class PlanungMixin:
                 planned += 1
         return planned
 
-    def zaehle_gastnachrichten(self, tenant_id: str, thread_id: str) -> int:
-        """Wie viele Gastnachrichten liegen bereits in diesem Thread?
+    def zaehle_gastnachrichten_je_buchung(
+        self, tenant_id: str, booking_ref: str
+    ) -> int:
+        """Wie viele Gastnachrichten liegen zu dieser Buchung bereits vor?
 
-        Grundlage für „nur die erste Gastnachricht". Gezählt wird über den
-        Kanal, nicht über eine eigene Tabelle — wir speichern OTA-Nachrichten
-        nicht, sondern lesen sie bei Bedarf. Ist der Kanal gerade nicht
-        erreichbar, gilt die Nachricht als NICHT die erste: eine unterlassene
-        Abwesenheitsantwort ist harmloser als eine, die einen laufenden Dialog
-        mit „Wir melden uns bald" unterbricht.
+        Grundlage für „nur die erste Gastnachricht". Quelle ist seit 0305 der
+        lokale Spiegel `portal_messages` statt eines Live-Abrufs beim
+        Aggregator: der Spiegel wird bei JEDEM Eingang geschrieben (Webhook und
+        Journal-Tick), ist also vollständig, und ein Zählen darf keinen
+        Netzaufruf kosten — es passiert im Ingest-Pfad, den der Webhook mit 200
+        quittieren muss.
+
+        Gezählt wird über die BUCHUNGS-ID, nicht über unsere Thread-Zeile: der
+        Eingangspfad kennt beim Eintreffen die Buchung, und er muss VOR dem
+        Spiegeln zählen — sonst zählt er die gerade eingetroffene Nachricht mit
+        und kein Thread wäre je „neu".
+
+        Ist der Spiegel nicht lesbar, gilt die Nachricht als NICHT die erste:
+        eine unterlassene Abwesenheitsantwort ist harmloser als eine, die einen
+        laufenden Dialog mit „Wir melden uns bald" unterbricht.
         """
-        from .service import InboxService  # noqa: PLC0415 — Zirkularität
-
         if self._db is None:
             return 1
-        row = (
-            self._db.table("channex_booking")
-            .select("channex_booking_id")
-            .eq("tenant_id", tenant_id)
-            .eq("id", thread_id)
-            .limit(1)
-            .execute()
-        ).data or []
-        cbid = row[0].get("channex_booking_id") if row else None
-        if not cbid:
-            return 1
         try:
-            res = self._channex.get_messages_for_booking(str(cbid))
+            res = (
+                self._db.table("portal_messages")
+                .select("id", count="exact")
+                .eq("tenant_id", tenant_id)
+                .eq("booking_ref", booking_ref)
+                .eq("sender", "guest")
+                .limit(1)
+                .execute()
+            )
         except Exception as exc:  # noqa: BLE001 — s. Docstring: fail zur sicheren Seite
             log.warning("gastnachrichten_zaehlen_fehlgeschlagen", error=str(exc)[:200])
             return 1
-        nachricht = InboxService.zu_nachricht
-        return sum(
-            1 for m in (res.get("data") or []) if nachricht(m).sender == "guest"
-        )
+        return int(res.count or 0)
 
     def schedule_message_received(
         self, tenant_id: str, thread_id: str, *, ist_erste_nachricht: bool

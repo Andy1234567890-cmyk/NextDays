@@ -129,7 +129,7 @@ class AirbnbDiagnoseMixin:
                 "beschreibung": {},
             }
 
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not zugang:
             return {
                 "property_id": property_id,

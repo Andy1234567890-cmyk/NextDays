@@ -41,7 +41,7 @@ from .schemas import (
 )
 
 if TYPE_CHECKING:
-    from src.features.pricing.resolver import PricingResolver
+    from src.features.pricing.resolver import EffectivePriceDay, PricingResolver
 
 log = get_logger("nextdays.calendar")
 
@@ -96,6 +96,10 @@ class CalendarService:
     def __init__(self, client: Client | None = None) -> None:
         # client optional, damit der Health-Endpoint ohne Supabase-Key läuft.
         self._client = client
+        # property_id → tenant_id bzw. (base_price, min_stay), nur für die
+        # Lebensdauer EINES Requests (der Service wird je Request neu gebaut).
+        self._tenant_cache: dict[str, str | None] = {}
+        self._rate_plan_cache: dict[str, tuple[float | None, int | None]] = {}
 
     def health(self) -> SliceHealth:
         return SliceHealth(slice=self.slice_name)
@@ -494,7 +498,12 @@ class CalendarService:
         """Basispreis + Min-Stay aus dem (ersten) Rate-Plan des Objekts.
 
         Ohne Rate-Plan → (None, None); es wird kein Preis erfunden.
+
+        Pro Request gecacht (wie _tenant_of): Saison-Aktionen materialisieren
+        mehrere Zeiträume DESSELBEN Objekts und lasen den Plan sonst je Zeitraum.
         """
+        if property_id in self._rate_plan_cache:
+            return self._rate_plan_cache[property_id]
         res = (
             self._db()
             .table("rate_plans")
@@ -506,14 +515,17 @@ class CalendarService:
         )
         rows = res.data or []
         if not rows:
+            self._rate_plan_cache[property_id] = (None, None)
             return None, None
         row = rows[0]
         base = row.get("base_price")
         min_stay = row.get("min_stay")
-        return (
+        plan = (
             float(base) if base is not None else None,
             int(min_stay) if min_stay is not None else None,
         )
+        self._rate_plan_cache[property_id] = plan
+        return plan
 
     # -- Stop-Sell (Verkaufsstopp je Tag) -------------------------------------
     def list_stop_sell(
@@ -766,9 +778,14 @@ class CalendarService:
     def _tenant_of(self, property_id: str) -> str | None:
         """tenant_id eines Objekts (für die ARI-Push-Jobs). None, wenn das Objekt
         nicht existiert, keine tenant_id trägt oder keine DB verfügbar ist —
-        best-effort, damit das Einreihen die Kalenderaktion nie kippt."""
+        best-effort, damit das Einreihen die Kalenderaktion nie kippt.
+
+        Pro Request gecacht: Zeitraum-Aktionen reihen viele Jobs für DASSELBE
+        Objekt ein; ohne Cache kostete jeder einzelne einen eigenen SELECT."""
         if self._client is None:
             return None
+        if property_id in self._tenant_cache:
+            return self._tenant_cache[property_id]
         rows = (
             self._db()
             .table("properties")
@@ -777,7 +794,9 @@ class CalendarService:
             .limit(1)
             .execute()
         ).data
-        return rows[0].get("tenant_id") if rows else None
+        tenant_id = rows[0].get("tenant_id") if rows else None
+        self._tenant_cache[property_id] = tenant_id
+        return tenant_id
 
     def _push_channex_stop_sell(
         self,
@@ -1008,6 +1027,107 @@ class CalendarService:
             a["property_id"], date.fromisoformat(a["start_date"]), end_excl
         )
 
+    def clear_season_range(
+        self, tenant_id: str, property_id: str, rng: DateRange,
+    ) -> int:
+        """Einen Datumsbereich aus ALLEN Saisons lösen (Rechtsklick im Kalender).
+
+        Anders als `unassign_season` (kippt die ganze Zuweisung) wird hier nur der
+        gewählte Ausschnitt entfernt: überlappende Zuweisungen werden gekürzt, bei
+        einem Schnitt in der Mitte gesplittet. Die freigewordenen Tage fallen auf
+        den Basispreis zurück (Overrides zurücknehmen + Channex-Push, Wurzel 1).
+        Gibt die Anzahl gelöster Tage zurück. end exklusiv."""
+        self._require_tenant_property(tenant_id, property_id)
+        last_day = rng.end - timedelta(days=1)
+        rows = (
+            self._db()
+            .table("property_season_assignments")
+            .select("id, season_id, start_date, end_date")
+            .eq("property_id", property_id)
+            .lte("start_date", last_day.isoformat())
+            .gte("end_date", rng.start.isoformat())
+            .execute()
+        ).data or []
+        cleared: set[date] = set()
+        rest_rows: list[dict] = []
+        for a in rows:
+            a_start = date.fromisoformat(a["start_date"])
+            a_end = date.fromisoformat(a["end_date"])  # inklusiv
+            cut_lo = max(a_start, rng.start)
+            cut_hi = min(a_end, last_day)
+            cur = cut_lo
+            while cur <= cut_hi:
+                cleared.add(cur)
+                cur += timedelta(days=1)
+            # Rest-Stücke links/rechts des Schnitts sammeln (alte Zeile fällt weg).
+            rest_rows.extend(
+                {
+                    "property_id": property_id, "season_id": a["season_id"],
+                    "start_date": s.isoformat(), "end_date": e.isoformat(),
+                }
+                for s, e in (
+                    (a_start, cut_lo - timedelta(days=1)),
+                    (cut_hi + timedelta(days=1), a_end),
+                ) if s <= e
+            )
+        if not cleared:
+            return 0
+        # Alle getroffenen Zuweisungen in EINEM Call weg, Reste in EINEM zurück —
+        # nicht je Zuweisung ein eigener Round-Trip.
+        self._db().table("property_season_assignments").delete().in_(
+            "id", [a["id"] for a in rows]
+        ).execute()
+        if rest_rows:
+            self._db().table("property_season_assignments").insert(
+                rest_rows
+            ).execute()
+        span_start = min(cleared)
+        span_end = max(cleared) + timedelta(days=1)
+        self._clear_overrides_to_base(property_id, span_start, span_end)
+        # Tage, die durch andere (überlappende) Saisons weiterhin belegt sind,
+        # wieder materialisieren — der Basispreis-Reset oben war zeitraumweit.
+        self._rematerialize_overlaps(tenant_id, property_id, span_start, span_end)
+        return len(cleared)
+
+    def _rematerialize_overlaps(
+        self, tenant_id: str, property_id: str, start: date, end: date,
+    ) -> None:
+        """Nach einem Basispreis-Reset über [start, end) die Tage, die noch einer
+        Saison gehören, erneut materialisieren (Gegenzustand zum groben Reset)."""
+        rows = (
+            self._db()
+            .table("property_season_assignments")
+            .select("season_id, start_date, end_date")
+            .eq("property_id", property_id)
+            .lte("start_date", (end - timedelta(days=1)).isoformat())
+            .gte("end_date", start.isoformat())
+            .order("start_date")
+            .execute()
+        ).data or []
+        if not rows:
+            return
+        # Alle beteiligten Saisons in EINEM tenant-gescopten Query (statt je
+        # Zuweisung ein _own_season) — Load und Scope bleiben zusammen (Wurzel 3).
+        seasons = {
+            s["id"]: s
+            for s in (
+                self._db()
+                .table("property_seasons")
+                .select("*, properties!inner(tenant_id)")
+                .in_("id", sorted({a["season_id"] for a in rows}))
+                .eq("properties.tenant_id", tenant_id)
+                .execute()
+            ).data or []
+        }
+        for a in rows:
+            season = seasons.get(a["season_id"])
+            if season is None:
+                continue  # gehört nicht zum Tenant → nichts materialisieren
+            lo = max(date.fromisoformat(a["start_date"]), start)
+            hi = min(date.fromisoformat(a["end_date"]) + timedelta(days=1), end)
+            if lo < hi:
+                self._materialize(tenant_id, season, lo, hi)
+
     # -- Saison-Helfer --------------------------------------------------------
     def _own_season(self, tenant_id: str, season_id: str) -> dict:
         """Saison per ID laden UND auf den Tenant scopen (Load+Scope zusammen,
@@ -1083,12 +1203,38 @@ class CalendarService:
             "property_id", property_id
         ).gte("date", start.isoformat()).lt("date", end.isoformat()).execute()
         days = self._resolver().effective_prices(property_id, start, end)
+        # Zusammenhängende Tage MIT GLEICHEM Preis in EINEN Job bündeln: der
+        # Basispreis ist über den Zeitraum meist konstant, ein Job je Tag hätte
+        # den Request auf so viele Round-Trips gestreckt wie der Zeitraum Tage hat.
+        for block_start, block_end, cents in self._preisbloecke(days):
+            self._push_channex_rate(property_id, block_start, block_end, cents)
+
+    @staticmethod
+    def _preisbloecke(
+        days: "list[EffectivePriceDay]",
+    ) -> list[tuple[date, date, int]]:
+        """Tage mit Preis zu (start, end_exklusiv, cents)-Blöcken verdichten.
+        Ein Block bricht bei Preiswechsel ODER einer Lücke (Tag ohne Preis)."""
+        blocks: list[tuple[date, date, int]] = []
+        cur_start: date | None = None
+        cur_end: date | None = None
+        cur_cents = 0
         for d in days:
-            if d.price is not None:
-                self._push_channex_rate(
-                    property_id, d.date, d.date + timedelta(days=1),
-                    round(d.price * 100),
-                )
+            if d.price is None:
+                if cur_start is not None and cur_end is not None:
+                    blocks.append((cur_start, cur_end, cur_cents))
+                cur_start, cur_end = None, None
+                continue
+            cents = round(d.price * 100)
+            if cur_start is not None and cents == cur_cents and d.date == cur_end:
+                cur_end = d.date + timedelta(days=1)
+                continue
+            if cur_start is not None and cur_end is not None:
+                blocks.append((cur_start, cur_end, cur_cents))
+            cur_start, cur_end, cur_cents = d.date, d.date + timedelta(days=1), cents
+        if cur_start is not None and cur_end is not None:
+            blocks.append((cur_start, cur_end, cur_cents))
+        return blocks
 
     def set_restrictions(
         self,
@@ -1189,6 +1335,7 @@ class CalendarService:
         self._db().table("rate_plans").update({"min_stay": min_stay}).eq(
             "property_id", property_id
         ).execute()
+        self._rate_plan_cache.pop(property_id, None)  # Cache-Gegenzustand (Wurzel 1)
         if push_channex:
             self._push_channex_rate(
                 property_id, rng.start, rng.end, None, min_stay=min_stay

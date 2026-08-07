@@ -193,7 +193,7 @@ class AirbnbGebuehrenMixin:
         Kontos (live: 18 an einem Kanal). Ohne diesen Abgleich läse man die
         Gebühren eines fremden Objekts (Wurzel 3).
         """
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not channel_id:
             return None
         mapping_id = self._airbnb_mapping_id(db, tenant_id, property_id, channel_id)

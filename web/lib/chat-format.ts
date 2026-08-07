@@ -7,6 +7,18 @@
 // Vorbild sind Lodgify und Hostaway: Tage werden mit einem Trenner gegliedert,
 // unter der Blase steht nur noch die Uhrzeit.
 
+/**
+ * Vorschautext einer Nachricht, die NUR aus Bildern besteht.
+ *
+ * Der Server speichert dieses Kürzel in `portal_messages.body` (die Spalte ist
+ * NOT NULL) statt eines fertigen Satzes: er kennt die Sprache des Betrachters
+ * nicht. Die Worte macht die Oberfläche über `inbox.attachmentPreview`.
+ *
+ * Muss mit `NUR_ANHANG_TEXT` in
+ * `apps/api/.../channel_manager/common.py` übereinstimmen.
+ */
+export const NUR_ANHANG_TEXT = "[attachment]";
+
 /** Nur die Uhrzeit unter der Blase — das Datum steht im Tages-Trenner. */
 export function uhrzeit(iso: string, locale: string): string {
   const d = new Date(iso);

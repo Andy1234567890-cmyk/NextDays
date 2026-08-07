@@ -101,6 +101,14 @@ class InboxMessage(BaseModel):
     # i18n-Kürzel, der Wert kommt unverändert von der Gegenseite.
     event_facts: list["InboxEventFact"] = []
     event_channel: str | None = None
+    # Bildanhänge der Nachricht (Channex `attributes.attachments`, live am
+    # 07.08.2026 nachgemessen: eine Liste blanker URLs). Schickt der Gast nur
+    # ein Foto, ist `message` LEER — ohne dieses Feld stand im Verlauf eine
+    # leere Blase, und „Se bildet" verwies auf ein Bild, das nie ankam.
+    #
+    # Nur URLs, die `_sichere_anhang_url` passiert haben (https, Channex-Host):
+    # der Wert kommt von der Gegenseite und landet in einem `src` (Wurzel 8).
+    attachments: list[str] = []
 
 
 class InboxMessagesResponse(BaseModel):

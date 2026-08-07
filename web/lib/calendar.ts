@@ -331,6 +331,20 @@ export async function assignSeason(input: {
   });
 }
 
+/** Einen Tagesbereich aus allen Saisons lösen (überlappende Zuweisungen werden
+ * gekürzt/gesplittet, die Tage fallen auf den Basispreis zurück). end exklusiv. */
+export async function clearSeasonRange(input: {
+  property_id: string;
+  start: string;
+  end: string;
+}): Promise<Result<{ days: number }>> {
+  const { property_id, start, end } = input;
+  return call("/calendar/seasons/clear", {
+    method: "POST",
+    body: { property_id, range: { start, end } },
+  });
+}
+
 /** Eine Zeitraum-Zuweisung entfernen (Tage fallen auf Basispreis zurück). */
 export async function unassignSeason(
   assignmentId: string,

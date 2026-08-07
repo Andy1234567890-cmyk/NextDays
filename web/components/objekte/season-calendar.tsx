@@ -19,10 +19,10 @@ import {
   type SeasonAssignment,
   type SeasonMode,
   assignSeason,
+  clearSeasonRange,
   createSeason,
   deleteSeason,
   listSeasons,
-  unassignSeason,
 } from "@/lib/calendar";
 import { formatCurrency } from "@/lib/currency";
 import type { Property } from "@/lib/properties";
@@ -79,10 +79,18 @@ export function SeasonCalendar({
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [activeSeasonId, setActiveSeasonId] = useState<string | null>(null);
   const [basePrice, setBasePrice] = useState<number | null>(null);
-  const [busy, setBusy] = useState(false);
-  // Laufende Drag-Auswahl: Start-ISO + aktuelles ISO (im selben Monat).
-  const drag = useRef<{ from: string; to: string } | null>(null);
-  const [dragRange, setDragRange] = useState<{ from: string; to: string } | null>(null);
+  // Optimistische Überlagerung, bis der Serverstand da ist: season=null → die
+  // Tage werden gelöst, sonst bekommen sie diese Saison.
+  const [pending, setPending] = useState<
+    { from: string; to: string; season: Season | null } | null
+  >(null);
+  // Laufende Drag-Auswahl: Start-ISO + aktuelles ISO, plus Richtung —
+  // linke Maustaste weist zu, rechte löst die Tage wieder (mode "clear").
+  type DragMode = "assign" | "clear";
+  const drag = useRef<{ from: string; to: string; mode: DragMode } | null>(null);
+  const [dragRange, setDragRange] = useState<
+    { from: string; to: string; mode: DragMode } | null
+  >(null);
 
   const load = useCallback(async () => {
     const res = await listSeasons(initial.id);
@@ -119,7 +127,29 @@ export function SeasonCalendar({
     onChange: () => void load(),
   });
 
-  const dayMap = useMemo(() => buildDayMap(seasons), [seasons]);
+  const dayMap = useMemo(() => {
+    const map = buildDayMap(seasons);
+    if (!pending) return map;
+    // Die noch nicht bestätigte Aktion über den Serverstand legen.
+    let cur = pending.from;
+    while (cur <= pending.to) {
+      if (pending.season) {
+        const existing = map.get(cur);
+        map.set(cur, {
+          season: pending.season,
+          // Die Zuweisungs-ID ist erst nach der Antwort bekannt; bis dahin die
+          // bisherige weiterreichen (nur fürs Tooltip relevant).
+          assignment: existing?.assignment ?? {
+            id: "", season_id: pending.season.id, start_date: cur, end_date: cur,
+          },
+        });
+      } else {
+        map.delete(cur);
+      }
+      cur = addDays(cur, 1);
+    }
+    return map;
+  }, [seasons, pending]);
   const activeSeason = seasons.find((s) => s.id === activeSeasonId) ?? null;
 
   // Preis-Label einer Saison (Fix oder ±% mit optionaler Basispreis-Vorschau).
@@ -137,41 +167,60 @@ export function SeasonCalendar({
   }
 
   // -- Drag-and-Drop über die Tage eines Monats ---------------------------
-  function onDayDown(isoDate: string) {
-    if (!activeSeasonId) {
+  function onDayDown(isoDate: string, mode: DragMode) {
+    if (mode === "assign" && !activeSeasonId) {
       toast.error(t("seasonPickFirst"));
       return;
     }
-    drag.current = { from: isoDate, to: isoDate };
-    setDragRange({ from: isoDate, to: isoDate });
+    drag.current = { from: isoDate, to: isoDate, mode };
+    setDragRange({ from: isoDate, to: isoDate, mode });
   }
   function onDayEnter(isoDate: string) {
     if (!drag.current) return;
     drag.current = { ...drag.current, to: isoDate };
-    setDragRange({ from: drag.current.from, to: isoDate });
+    setDragRange({ ...drag.current, to: isoDate });
   }
   const onUp = useCallback(async () => {
     const d = drag.current;
     drag.current = null;
     setDragRange(null);
-    if (!d || !activeSeasonId) return;
+    if (!d) return;
     const lo = d.from < d.to ? d.from : d.to;
     const hi = d.from < d.to ? d.to : d.from;
-    setBusy(true);
-    const res = await assignSeason({
-      property_id: initial.id,
-      season_id: activeSeasonId,
-      start: lo,
-      end: addDays(hi, 1), // end exklusiv
-    });
-    setBusy(false);
+    const end = addDays(hi, 1); // end exklusiv
+    // Sofort anzeigen, was passieren wird. Der Request läuft parallel; der
+    // Serverstand ersetzt die Überlagerung beim nächsten load(). Ohne das
+    // blieben die Tage bis zur Antwort unverändert und sprangen dann um.
+    const season = seasons.find((s) => s.id === activeSeasonId) ?? null;
+    if (d.mode === "clear") setPending({ from: lo, to: hi, season: null });
+    else if (season) setPending({ from: lo, to: hi, season });
+    const res =
+      d.mode === "clear"
+        ? await clearSeasonRange({ property_id: initial.id, start: lo, end })
+        : activeSeasonId
+          ? await assignSeason({
+              property_id: initial.id,
+              season_id: activeSeasonId,
+              start: lo,
+              end,
+            })
+          : null;
+    if (!res) {
+      setPending(null);
+      return;
+    }
     if (res.ok) {
-      toast.success(t("seasonDaysAssigned", { count: res.data.days }));
-      void load();
+      toast.success(
+        d.mode === "clear"
+          ? t("seasonDaysCleared", { count: res.data.days })
+          : t("seasonDaysAssigned", { count: res.data.days }),
+      );
+      await load();
     } else {
       toast.error(res.error);
     }
-  }, [activeSeasonId, initial.id, load, t]);
+    setPending(null);
+  }, [activeSeasonId, initial.id, load, seasons, t]);
 
   // Maus-Loslassen global abfangen (auch außerhalb einer Kachel).
   useEffect(() => {
@@ -179,12 +228,13 @@ export function SeasonCalendar({
     return () => window.removeEventListener("mouseup", onUp);
   }, [onUp]);
 
-  // Tag in der laufenden Drag-Auswahl?
-  function inDragRange(isoDate: string): boolean {
-    if (!dragRange) return false;
+  // Tag in der laufenden Drag-Auswahl? Gibt den Modus zurück (für die Optik:
+  // Zuweisen umrandet in Akzent, Löschen in Destructive).
+  function inDragRange(isoDate: string): DragMode | null {
+    if (!dragRange) return null;
     const lo = dragRange.from < dragRange.to ? dragRange.from : dragRange.to;
     const hi = dragRange.from < dragRange.to ? dragRange.to : dragRange.from;
-    return isoDate >= lo && isoDate <= hi;
+    return isoDate >= lo && isoDate <= hi ? dragRange.mode : null;
   }
 
   return (
@@ -269,6 +319,11 @@ export function SeasonCalendar({
               {t("seasonDragHintPrefix")}<b>{activeSeason.name}</b>{t("seasonDragHintSuffix")}
             </p>
           )}
+          {seasons.length > 0 && (
+            <p className="rounded-(--radius) bg-secondary/50 p-2 text-center text-xs text-muted-foreground">
+              {t("seasonClearHint")}
+            </p>
+          )}
         </aside>
 
         {/* 12-Monats-Gitter */}
@@ -284,12 +339,6 @@ export function SeasonCalendar({
               inDragRange={inDragRange}
               onDayDown={onDayDown}
               onDayEnter={onDayEnter}
-              onRemoveAssignment={async (assignmentId) => {
-                const res = await unassignSeason(assignmentId);
-                if (res.ok) void load();
-                else toast.error(res.error);
-              }}
-              disabled={busy}
             />
           ))}
         </div>
@@ -308,19 +357,15 @@ function MonthGrid({
   inDragRange,
   onDayDown,
   onDayEnter,
-  onRemoveAssignment,
-  disabled,
 }: {
   year: number;
   month: number;
   label: string;
   weekdays: string[];
   dayMap: Map<string, DayInfo>;
-  inDragRange: (isoDate: string) => boolean;
-  onDayDown: (isoDate: string) => void;
+  inDragRange: (isoDate: string) => "assign" | "clear" | null;
+  onDayDown: (isoDate: string, mode: "assign" | "clear") => void;
   onDayEnter: (isoDate: string) => void;
-  onRemoveAssignment: (assignmentId: string) => void;
-  disabled: boolean;
 }) {
   const t = useTranslations("seasons");
   const first = new Date(Date.UTC(year, month, 1));
@@ -351,19 +396,25 @@ function MonthGrid({
             <button
               key={isoDate}
               type="button"
-              disabled={disabled}
-              onMouseDown={() => onDayDown(isoDate)}
-              onMouseEnter={() => onDayEnter(isoDate)}
-              onDoubleClick={() => {
-                if (info) onRemoveAssignment(info.assignment.id);
+              // Rechte Taste = löschen; das native Kontextmenü unterdrückt
+              // onContextMenu, der Bereich entsteht per Rechts-Drag.
+              onMouseDown={(e) => {
+                if (e.button === 2) onDayDown(isoDate, "clear");
+                else if (e.button === 0) onDayDown(isoDate, "assign");
               }}
+              onContextMenu={(e) => e.preventDefault()}
+              onMouseEnter={() => onDayEnter(isoDate)}
               title={
                 info
                   ? t("seasonRemoveTitle", { name: info.season.name })
                   : undefined
               }
               className={`flex aspect-square items-center justify-center rounded text-xs transition-[outline] ${
-                selecting ? "outline outline-2 outline-accent" : ""
+                selecting === "clear"
+                  ? "outline outline-2 outline-destructive"
+                  : selecting === "assign"
+                    ? "outline outline-2 outline-accent"
+                    : ""
               } ${info ? "font-medium text-white" : "hover:bg-secondary"}`}
               style={info ? { backgroundColor: info.season.color } : undefined}
             >

@@ -33,7 +33,23 @@ export type InboxMessage = {
   sender: "guest" | "property" | "note";
   sent_at: string | null;
   author_name?: string | null;
+  /**
+   * Bildanhänge. Schickt der Gast NUR ein Foto, ist `message` leer — dann
+   * trägt allein diese Liste den Inhalt. Der Server hat jede URL auf https +
+   * bekannten Host geprüft (`inbox.spiegel.sichere_anhaenge`).
+   */
+  attachments?: string[];
 };
+
+/**
+ * Vorschautext einer Nachricht, die nur aus Bildern besteht. Der Server legt
+ * dieses sprachneutrale Kürzel ab (er kennt die Sprache des Betrachters
+ * nicht); die Worte macht die Oberfläche.
+ *
+ * Muss mit `NUR_ANHANG_TEXT` in
+ * `apps/api/.../channel_manager/common.py` übereinstimmen.
+ */
+export const NUR_ANHANG_TEXT = "[attachment]";
 
 /** Thread-Liste (default: aktive). */
 export async function listInboxThreads(

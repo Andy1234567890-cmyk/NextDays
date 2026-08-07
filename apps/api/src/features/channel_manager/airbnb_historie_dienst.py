@@ -30,6 +30,7 @@ from src.core.supabase import load_scoped
 from src.jobs.queue import enqueue
 
 from .airbnb_historie import EtappenErgebnis, etappen_planen
+from .airbnb_konten import kontoweise
 from .common import ChannelManagerError, log, ota_buchungszeitpunkt, ota_uhrzeit
 
 # Kein erfundener Standard-Zeitraum: fehlt eine Angabe, fragt die Oberfläche.
@@ -63,7 +64,7 @@ class AirbnbHistorieDienstMixin:
                 "zuerst bei Airbnb ab, dann steht die Verknüpfung.",
                 status_code=422,
             )
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not zugang:
             raise ChannelManagerError(
                 "Es ist kein Airbnb-Konto verbunden. Verbinde zuerst Airbnb im "
@@ -345,7 +346,10 @@ class AirbnbHistorieDienstMixin:
         # Tenants ermitteln, dann je Tenant bis zur Grenze holen.
         alle = (
             db.table("reservations")
-            .select("id, tenant_id, external_ref")
+            # `property_id` gehört dazu: bei mehreren Airbnb-Konten (0304)
+            # entscheidet das Objekt, mit WELCHEM Token die Reservierung
+            # abgefragt werden darf.
+            .select("id, tenant_id, external_ref, property_id")
             .is_("checkin_time", "null")
             .eq("channel", "airbnb")
             .not_.is_("external_ref", "null")
@@ -380,8 +384,22 @@ class AirbnbHistorieDienstMixin:
     def _anreisezeiten_eines_tenants(
         self, db: Client, tenant_id: str, zeilen: list[dict[str, Any]]
     ) -> int:
+        """Offene An-/Abreisezeiten holen — je verbundenem Konto einmal (0304).
+
+        `reservations` trägt `property_id` selbst, deshalb `hat_property=True`:
+        die Zuordnung Zeile → Konto braucht keinen Umweg über die Buchung.
+        """
+        return kontoweise(
+            db, tenant_id, zeilen, self._anreisezeiten_eines_kontos,
+            hat_property=True,
+        )
+
+    def _anreisezeiten_eines_kontos(
+        self, db: Client, tenant_id: str, zeilen: list[dict[str, Any]],
+        channel_id: str,
+    ) -> int:
         """Die offenen An-/Abreisezeiten EINES Kontos holen und setzen."""
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token_am_kanal(channel_id)  # type: ignore[attr-defined]
         if not zugang:
             return 0
 
@@ -417,15 +435,22 @@ class AirbnbHistorieDienstMixin:
     def _zeitpunkte_eines_tenants(
         self, db: Client, tenant_id: str, zeilen: list[dict[str, Any]]
     ) -> int:
+        """Offene Buchungszeitpunkte holen — je verbundenem Konto einmal (0304)."""
+        return kontoweise(db, tenant_id, zeilen, self._zeitpunkte_eines_kontos)
+
+    def _zeitpunkte_eines_kontos(
+        self, db: Client, tenant_id: str, zeilen: list[dict[str, Any]],
+        channel_id: str,
+    ) -> int:
         """Die offenen Zeitpunkte EINES Kontos beim Portal holen und setzen."""
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token_am_kanal(channel_id)  # type: ignore[attr-defined]
         if not zugang:
             return 0
         token = zugang[0]
 
         # Ein Abruf über den vollen Bestandszeitraum liefert die Zeitpunkte
-        # aller Inserate des Kontos auf einmal. Das Listing ist hier egal — wir
-        # ordnen über den Bestätigungscode zu, nicht über das Objekt.
+        # aller Inserate DIESES Kontos auf einmal. Das einzelne Listing ist
+        # dabei egal — zugeordnet wird über den Bestätigungscode.
         heute = date.today()
         gelesen = self.airbnb_historie_lesen(  # type: ignore[attr-defined]
             token, listing_id="", von=date(heute.year - 6, 1, 1),
@@ -884,7 +909,7 @@ class AirbnbHistorieDienstMixin:
                 f"Dem Objekt „{prop.get('title')}“ fehlt die Währung.",
                 status_code=422,
             )
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not zugang:
             raise ChannelManagerError(
                 "Es ist kein Airbnb-Konto verbunden.", status_code=409

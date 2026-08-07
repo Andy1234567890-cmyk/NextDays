@@ -225,7 +225,7 @@ class AirbnbZimmerPushMixin:
             not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
         )
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not listing_id or not channel_id:
             return {"verbunden": False, "stand_bekannt": True, "rest": []}
         raeume = self._airbnb_raeume_lesen(channel_id, listing_id)
@@ -294,7 +294,7 @@ class AirbnbZimmerPushMixin:
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
         if not listing_id:
             return {"gesendet": False, "grund": "kein_airbnb_objekt"}
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not channel_id:
             return {"gesendet": False, "grund": "kein_airbnb_kanal"}
 
@@ -499,13 +499,13 @@ class AirbnbZimmerPushMixin:
         `garden`), zählen mit: Airbnb verlangt auch für sie ein Foto.
         """
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not listing_id or not channel_id:
             return []
         raeume = self._airbnb_raeume_lesen(channel_id, listing_id)
         if not raeume:
             return []
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not zugang:
             # Ohne Foto-Stand keine Aussage — lieber schweigen als jedes Zimmer
             # fälschlich melden.

@@ -24,6 +24,11 @@ export const CHANNEL_LOGO: Record<string, string> = {
   BookingCom: "/channels/booking.svg",
   AirBNB: "/channels/airbnb.svg",
   Expedia: "/channels/expedia.svg",
+  // Vrbo (in Europa „FeWo-direkt") — die Logodatei lag längst im Ordner, war
+  // aber nie eingetragen, deshalb blieb der Kanal ohne Zeichen. Beide
+  // Schreibweisen zeigen auf dasselbe Logo, weil es dieselbe Marke ist.
+  Vrbo: "/channels/vrbo.svg",
+  FeWoDirekt: "/channels/vrbo.svg",
   Agoda: "/channels/agoda.svg",
   CTrip: "/channels/tripcom.svg",
   GoogleHotelARI: "/channels/google.svg",

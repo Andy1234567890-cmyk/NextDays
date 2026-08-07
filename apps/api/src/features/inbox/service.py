@@ -48,6 +48,9 @@ from .schemas import (
     TeamMember,
     TeamMemberList,
 )
+
+# Der Nachrichten-Spiegel (`portal_messages`): lesen, nachtragen, Signal setzen.
+from .spiegel import SpiegelMixin, sichere_anhaenge
 from .vorlagen import VorlagenMixin
 
 if TYPE_CHECKING:
@@ -58,7 +61,6 @@ log = get_logger("nextdays.inbox")
 
 # Vor dem Beginn jeder echten Zeitangabe — Sortier-Ersatz für Unlesbares.
 _URZEIT: Final = datetime.min.replace(tzinfo=UTC)
-
 
 def _als_zeitpunkt(wert: str | None) -> datetime:
     """ISO-Zeichenkette → Zeitpunkt zum VERGLEICHEN (nie zum Anzeigen).
@@ -95,7 +97,7 @@ def _chronologisch(m: InboxMessage) -> tuple[int, datetime]:
 
 
 class InboxService(
-    PlanungMixin, VorlagenMixin, AnhangWissenMixin, FeldKontextMixin
+    PlanungMixin, VorlagenMixin, AnhangWissenMixin, FeldKontextMixin, SpiegelMixin
 ):
     slice_name = "inbox"
 
@@ -320,74 +322,6 @@ class InboxService(
             return flag
         return str(letzte_gastnachricht) <= str(seit)
 
-    def _letzte_gastnachricht(
-        self, db: Client, tenant_id: str, thread_ids: list[str]
-    ) -> dict[str, str]:
-        """Zeitpunkt der jüngsten GAST-Nachricht je Thread (aus dem Spiegel).
-
-        EIN Query für die ganze Liste, wie bei der Vorschau. Nur `sender =
-        'guest'`: unsere eigenen Antworten dürfen einen Thread nicht ungelesen
-        machen.
-        """
-        if not thread_ids:
-            return {}
-        res = (
-            db.table("portal_messages")
-            .select("thread_ref, sent_at")
-            .eq("tenant_id", tenant_id)
-            .eq("sender", "guest")
-            .in_("thread_ref", thread_ids)
-            .order("sent_at", desc=True)
-            .limit(2000)
-            .execute()
-        )
-        out: dict[str, str] = {}
-        for m in res.data or []:
-            # Absteigend sortiert → der erste Treffer je Thread ist der jüngste.
-            out.setdefault(m["thread_ref"], str(m.get("sent_at") or ""))
-        return out
-
-    def _last_messages(
-        self, db: Client, tenant_id: str, thread_ids: list[str]
-    ) -> dict[str, tuple[str, str, str]]:
-        """Letzte Nachricht je Thread: (Vorschautext, Absender, Zeitpunkt).
-
-        Quelle ist der lokale Spiegel `portal_messages` (0293) — EIN Query für
-        die ganze Liste. Direkt beim Portal wäre es ein Request PRO Thread; bei
-        200 Einträgen ist das keine Liste mehr, die jemand öffnet.
-
-        Der Absender gehört dazu, weil er die Frage beantwortet, die man vor
-        einer langen Liste wirklich hat: „habe ich schon geantwortet?". Ohne
-        ihn sieht ein Thread, in dem der Gast wartet, genauso aus wie einer,
-        der erledigt ist.
-
-        Der Zeitpunkt ist der ECHTE Wert hinter „letzte Aktivität" — der
-        Buchungszeitpunkt ist er ausdrücklich nicht (s. `list_threads`).
-        """
-        if not thread_ids:
-            return {}
-        res = (
-            db.table("portal_messages")
-            .select("thread_ref, body, sender, sent_at")
-            .eq("tenant_id", tenant_id)
-            .in_("thread_ref", thread_ids)
-            .order("sent_at", desc=True)
-            .limit(2000)
-            .execute()
-        )
-        out: dict[str, tuple[str, str, str]] = {}
-        for m in res.data or []:
-            # Absteigend sortiert → der erste Treffer je Thread ist der jüngste.
-            out.setdefault(
-                m["thread_ref"],
-                (
-                    (m.get("body") or "").strip(),
-                    str(m.get("sender") or "guest"),
-                    str(m.get("sent_at") or ""),
-                ),
-            )
-        return out
-
     @staticmethod
     def _gast_bilder(
         db: Client, tenant_id: str, guest_ids: list[str]
@@ -587,9 +521,17 @@ class InboxService(
         # gemeldetes Gelesen nicht ungueltig.
         gelesen = row.get("guest_read_at")
 
+        # Der lokale Spiegel ist die BASIS, nicht nur die Vorschauquelle (0305).
+        # Er wird bei jedem Eingang geschrieben (Webhook + Journal-Tick), ist
+        # also vollständig — und er trägt die Anzeige auch dann, wenn der
+        # Aggregator gerade nicht antwortet. Vorher hing der gesamte Verlauf am
+        # Live-Abruf: ein Portal-Ausfall zeigte einen leeren Chat, obwohl die
+        # Nachrichten lokal vorlagen.
+        gespiegelt = self._spiegel_lesen(db, tenant_id, thread_id)
+
         cbid = row.get("channex_booking_id")
         if not cbid:
-            items = self._merge_stream(db, tenant_id, thread_id, row, [])
+            items = self._merge_stream(db, tenant_id, thread_id, row, gespiegelt)
             return InboxMessagesResponse(
                 items=items, total=len(items), guest_read_at=gelesen
             )
@@ -607,10 +549,12 @@ class InboxService(
                     channex_booking_id=cbid,
                     channex_status=exc.channex_status,
                 )
-                items = self._merge_stream(db, tenant_id, thread_id, row, [])
+                items = self._merge_stream(
+                    db, tenant_id, thread_id, row, gespiegelt
+                )
                 return InboxMessagesResponse(
-                items=items, total=len(items), guest_read_at=gelesen
-            )
+                    items=items, total=len(items), guest_read_at=gelesen
+                )
             grund = (
                 "channel_no_chat"
                 if self._is_channel_without_chat(exc)
@@ -625,62 +569,28 @@ class InboxService(
                     channex_status=exc.channex_status,
                     error=exc.message,
                 )
-            items = self._merge_stream(db, tenant_id, thread_id, row, [])
+            # Der Spiegel trägt die Anzeige weiter, auch wenn das Portal
+            # gerade nichts hergibt. `unavailable` bleibt gesetzt: der Betrieb
+            # soll wissen, dass er auf lokalem Stand schaut und eine Antwort
+            # jetzt nicht rausgeht.
+            items = self._merge_stream(db, tenant_id, thread_id, row, gespiegelt)
             return InboxMessagesResponse(
                 items=items, total=len(items), unavailable=grund,
                 guest_read_at=gelesen,
             )
-        items = [self.zu_nachricht(m) for m in (res.get("data") or [])]
-        self._spiegel_schreiben(db, tenant_id, thread_id, cbid, items)
-        items = self._merge_stream(db, tenant_id, thread_id, row, items)
+        vom_portal = [self.zu_nachricht(m) for m in (res.get("data") or [])]
+        self._spiegel_schreiben(db, tenant_id, thread_id, cbid, vom_portal)
+        # Beide Quellen zusammenführen: der Live-Abruf ist der frischere Stand,
+        # der Spiegel hält fest, was das Portal aus seinem Verlauf entfernt hat
+        # (Airbnb zeigt Support-/Systemnachrichten nicht am Buchungspfad).
+        # Schlüssel ist die Nachrichten-ID — dieselbe Identität wie im UNIQUE
+        # des Spiegels, sonst stünde jede Nachricht doppelt im Verlauf.
+        items = self._merge_stream(
+            db, tenant_id, thread_id, row, self._vereinen(vom_portal, gespiegelt)
+        )
         return InboxMessagesResponse(
             items=items, total=len(items), guest_read_at=gelesen
         )
-
-    def _spiegel_schreiben(
-        self, db: Client, tenant_id: str, thread_id: str, cbid: str,
-        items: list[InboxMessage],
-    ) -> None:
-        """Den geholten Verlauf lokal spiegeln (`portal_messages`, 0293).
-
-        Der Spiegel speist die Vorschauzeile der Thread-Liste: EIN Query für
-        alle Threads statt ein Portal-Request pro Zeile. Er wurde bisher nur
-        GELESEN und nie geschrieben — deshalb war die Tabelle leer und in der
-        Liste stand unter keinem Namen ein Vorschautext.
-
-        Idempotent über `message_ref` (UNIQUE je Tenant): derselbe Verlauf darf
-        beliebig oft geholt werden, ohne den Spiegel zu vervielfachen
-        (Wurzel 2 — der Abruf passiert bei jedem Öffnen des Threads).
-
-        Best-effort: der Chat ist die Hauptsache. Scheitert das Spiegeln, sieht
-        der Betrieb seine Nachrichten trotzdem — nur die Vorschau bleibt leer
-        (Wurzel 5: kein Nebenweg kippt den Hauptpfad).
-        """
-        zeilen = [
-            {
-                "tenant_id": tenant_id,
-                "thread_ref": thread_id,
-                "booking_ref": cbid,
-                "message_ref": str(m.id),
-                "sender": m.sender,
-                "body": (m.message or "").strip()[:4000],
-                "sent_at": m.sent_at,
-            }
-            for m in items
-            if m.id and m.sent_at
-        ]
-        if not zeilen:
-            return
-        try:
-            db.table("portal_messages").upsert(
-                zeilen, on_conflict="tenant_id,message_ref"
-            ).execute()
-        except Exception as exc:  # noqa: BLE001 — Spiegel kippt den Chat nicht
-            log.warning(
-                "inbox_spiegel_fehlgeschlagen",
-                tenant_id=tenant_id, thread_id=thread_id,
-                error=str(exc)[:200],
-            )
 
     def _portal_nachrichten(
         self, cbid: str, row: dict, tenant_id: str, thread_id: str
@@ -838,6 +748,33 @@ class InboxService(
             or raw.get("checkout_time")
             or occ.get("checkout_time")
             or raw.get("departure_hour"),
+        )
+
+    @staticmethod
+    def _zeiten_vom_objekt(
+        prop: dict | None, checkin: str | None, checkout: str | None
+    ) -> tuple[str | None, str | None]:
+        """Fehlende An-/Abreisezeit aus der HAUSREGEL des Objekts ergänzen.
+
+        Dritte und letzte Quelle nach `_ota_zeiten`. Sie steht in
+        `properties.type_attributes.policies` (`checkInTime`/`checkOutTime`) und
+        stammt bei Airbnb aus den Booking Settings des Inserats
+        (`check_in_time_start`, `check_out_time` — belegt in
+        `docs/OTA/Airbnb/Booking Settings Airbnb.pdf`).
+
+        Nötig, weil Airbnb die Uhrzeit NICHT je Reservierung mitschickt: sie ist
+        eine Eigenschaft des Hauses, nicht der Buchung. Die beiden ersten
+        Quellen sind aber beide buchungsbezogen — für eine Airbnb-Buchung liefen
+        sie deshalb regelmäßig leer, obwohl die Zeit am Objekt hinterlegt war.
+
+        Ein bereits gefundener Wert gewinnt: eine abweichende Absprache für DIESE
+        Reservierung darf die allgemeine Hausregel nicht wieder überschreiben.
+        Fehlt auch hier etwas, bleibt es None — kein erfundener Ersatz (Wurzel 4).
+        """
+        policies = ((prop or {}).get("type_attributes") or {}).get("policies") or {}
+        return (
+            checkin or policies.get("checkInTime") or None,
+            checkout or policies.get("checkOutTime") or None,
         )
 
     @staticmethod
@@ -1003,6 +940,7 @@ class InboxService(
             sent_at=ota_zeitstempel_utc(
                 a.get("inserted_at") or a.get("sent_at") or a.get("time")
             ),
+            attachments=sichere_anhaenge(a.get("attachments")),
         )
 
     def send_message(

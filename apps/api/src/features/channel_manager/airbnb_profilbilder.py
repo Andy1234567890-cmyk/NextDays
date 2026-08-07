@@ -37,6 +37,7 @@ from typing import Any, Final
 
 from supabase import Client
 
+from .airbnb_konten import kontoweise
 from .common import ChannelManagerError, log
 
 # Airbnb bietet mehrere Größen an. Wir nehmen die große: die Oberfläche zeigt
@@ -125,7 +126,10 @@ class AirbnbProfilbilderMixin:
         """
         zeilen = (
             db.table("channex_booking")
-            .select("tenant_id, guest_id, ota_reservation_code")
+            # `id` gehört dazu, damit die Buchung ihrem Airbnb-KONTO zugeordnet
+            # werden kann (0304) — ohne sie liefe der Abruf mit einem beliebigen
+            # Token eines Betriebs mit mehreren Konten.
+            .select("id, tenant_id, guest_id, ota_reservation_code")
             .eq("ota_name", "AirBNB")
             .not_.is_("guest_id", "null")
             .limit(grenze * 50)
@@ -169,8 +173,22 @@ class AirbnbProfilbilderMixin:
     def _bilder_eines_tenants(
         self, db: Client, tenant_id: str, zeilen: list[dict[str, Any]]
     ) -> int:
+        """Die offenen Bilder eines Betriebs holen — je verbundenem Konto einmal.
+
+        Der Bestandsabruf gilt je Konto: mit dem Token von Konto A liefert
+        Airbnb nur dessen Reservierungen. Bei mehreren Konten (0304) muss jede
+        Buchung deshalb mit dem Token IHRES Kontos gesucht werden.
+        """
+        return kontoweise(
+            db, tenant_id, zeilen, self._bilder_eines_kontos,
+        )
+
+    def _bilder_eines_kontos(
+        self, db: Client, tenant_id: str, zeilen: list[dict[str, Any]],
+        channel_id: str,
+    ) -> int:
         """Die offenen Bilder EINES Kontos holen und setzen."""
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token_am_kanal(channel_id)  # type: ignore[attr-defined]
         if not zugang:
             return 0
         token = zugang[0]

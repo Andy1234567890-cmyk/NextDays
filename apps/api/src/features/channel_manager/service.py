@@ -49,6 +49,7 @@ from .csv_import import CsvImportMixin
 from .full_sync import FullSyncMixin
 from .live_feed_sync import LiveFeedSyncMixin
 from .lodgify_import import LodgifyImportMixin
+from .nachrichten_eingang import NachrichtenEingangMixin
 from .oauth_channels import OAuthChannelsMixin
 from .objekt_kanal import ObjektKanalMixin
 from .ota_extras import OtaExtrasMixin
@@ -75,6 +76,12 @@ class ChannelManagerService(
     AirbnbAktionenMixin,
     PropertyMappingMixin,
     AriPushMixin,
+    # Vor ChannelsMixin und LiveFeedSyncMixin: BEIDE Eingangswege einer
+    # Gastnachricht — der Webhook (schnell) und der Journal-Tick (Backstop) —
+    # spiegeln über dieselbe `nachricht_spiegeln`. Eine zweite Parser-Kopie je
+    # Weg wäre die Doppelpflege, aus der die Zeitstempel-Fehler von 0291/0292
+    # entstanden sind.
+    NachrichtenEingangMixin,
     ChannelsMixin,
     OAuthChannelsMixin,
     # Nach OAuthChannelsMixin/PropertyMappingMixin: die Übernahme ruft deren

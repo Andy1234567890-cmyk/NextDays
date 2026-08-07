@@ -284,11 +284,15 @@ def _stand_ohne_foto(raeume: list[dict], belegt: list[str]) -> list[str]:
             return "listing-1"
 
         @staticmethod
-        def _airbnb_kanal_des_betriebs(_db: object, _tid: str) -> str:
+        def _airbnb_kanal_des_betriebs(
+            _db: object, _tid: str, _pid: str | None = None
+        ) -> str:
             return "ch-1"
 
         @staticmethod
-        def _airbnb_token(_db: object, _tid: str) -> tuple[str, str]:
+        def _airbnb_token(
+            _db: object, _tid: str, _pid: str | None = None
+        ) -> tuple[str, str]:
             return ("token", "user")
 
         def _airbnb_raeume_lesen(self, _c: str, _l: str) -> list[dict]:
@@ -366,11 +370,15 @@ def test_ohne_foto_stand_wird_nichts_gemeldet() -> None:
             return "listing-1"
 
         @staticmethod
-        def _airbnb_kanal_des_betriebs(_db: object, _tid: str) -> str:
+        def _airbnb_kanal_des_betriebs(
+            _db: object, _tid: str, _pid: str | None = None
+        ) -> str:
             return "ch-1"
 
         @staticmethod
-        def _airbnb_token(_db: object, _tid: str) -> None:
+        def _airbnb_token(
+            _db: object, _tid: str, _pid: str | None = None
+        ) -> None:
             return None
 
         def _airbnb_raeume_lesen(self, _c: str, _l: str) -> list[dict]:

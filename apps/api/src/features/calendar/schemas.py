@@ -241,6 +241,14 @@ class SeasonAssignRequest(BaseModel):
     range: DateRange
 
 
+class SeasonClearRequest(BaseModel):
+    """Einen Datumsbereich aus ALLEN Saisons lösen (Rechtsklick im Kalender).
+    Überlappende Zuweisungen werden gekürzt/gesplittet, die Tage fallen auf den
+    Basispreis zurück. end exklusiv (wie DateRange)."""
+    property_id: str
+    range: DateRange
+
+
 class SeasonAssignment(BaseModel):
     id: str
     season_id: str

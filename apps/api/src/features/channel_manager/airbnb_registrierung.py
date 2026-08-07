@@ -93,7 +93,7 @@ class AirbnbRegistrierungMixin:
             return
 
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not listing_id or not zugang:
             return
         token, _user = zugang

@@ -31,6 +31,7 @@ from typing import Any, Final
 
 from supabase import Client
 
+from .airbnb_konten import kontoweise
 from .common import ChannelManagerError, log, ota_zeitstempel_utc
 
 # Obergrenze je Lauf: ein Thread-Abruf pro Buchung, das summiert sich.
@@ -134,8 +135,22 @@ class AirbnbLesestandMixin:
     def _lesestaende_eines_tenants(
         self, db: Client, tenant_id: str, zeilen: list[dict[str, Any]]
     ) -> int:
+        """Die Lesestände eines Betriebs holen — je verbundenem Konto einmal.
+
+        Ein Betrieb kann mehrere Airbnb-Konten führen (0304). Der Bestandsabruf
+        gilt immer für GENAU EIN Konto: mit dem Token von Konto A findet man
+        die Threads von Konto B nicht. Deshalb läuft die Schleife über die
+        Konten, und jede Buchung wird nur mit dem Token ihres eigenen Kontos
+        gesucht.
+        """
+        return kontoweise(db, tenant_id, zeilen, self._lesestaende_eines_kontos)
+
+    def _lesestaende_eines_kontos(
+        self, db: Client, tenant_id: str, zeilen: list[dict[str, Any]],
+        channel_id: str,
+    ) -> int:
         """Die Lesestände EINES Kontos holen und setzen."""
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token_am_kanal(channel_id)  # type: ignore[attr-defined]
         if not zugang:
             return 0
         token = zugang[0]

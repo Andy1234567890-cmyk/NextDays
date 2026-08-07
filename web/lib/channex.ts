@@ -450,6 +450,44 @@ export async function disconnectChannel(
   return call<void>(`/channels/${channelId}`, { method: "DELETE" });
 }
 
+/**
+ * Ein Portal-Zugang eines Betriebs (0304). Ein Betrieb kann je Portal mehrere
+ * führen — Agenturen betreuen hunderte Vermieter mit je eigenem Konto.
+ */
+export type OtaAccount = {
+  id: string;
+  portal_code: string;
+  portal: string;
+  /** Kennung beim Portal. null, solange die Autorisierung läuft. */
+  hotel_id: string | null;
+  channel_id: string | null;
+  display_name: string | null;
+  is_active: boolean;
+  /** Tokens abgelaufen → der Betrieb muss neu autorisieren. */
+  token_invalid: boolean;
+  last_error: string | null;
+  connected_at: string | null;
+  properties: number;
+};
+
+export async function listChannelAccounts(
+  portalCode: string,
+): Promise<Result<{ items: OtaAccount[]; total: number }>> {
+  return call<{ items: OtaAccount[]; total: number }>(
+    `/channels/${portalCode}/accounts`,
+  );
+}
+
+export async function renameChannelAccount(
+  accountId: string,
+  displayName: string | null,
+): Promise<Result<OtaAccount>> {
+  return call<OtaAccount>(`/channels/accounts/${accountId}`, {
+    method: "PATCH",
+    body: { display_name: displayName },
+  });
+}
+
 export type ChannelActivateResult = {
   channel_active: boolean | null;
   readiness_offen: string | null;
@@ -498,6 +536,13 @@ export async function beginChannelOAuth(input: {
   portal_code: string;
   title?: string;
   settings?: Record<string, unknown>;
+  /**
+   * Ein WEITERES Portal-Konto verbinden (0304), statt den bestehenden Kanal
+   * wiederzuverwenden. Ohne das Kennzeichen gäbe der Server den bereits
+   * autorisierten Kanal zurück — der Kunde landete im Login des ERSTEN Kontos
+   * und käme nie zum zweiten.
+   */
+  neues_konto?: boolean;
 }): Promise<Result<OAuthBeginResult>> {
   return call<OAuthBeginResult>(
     `/properties/${input.property_id}/channels/${input.portal_code}/oauth/begin`,
@@ -508,6 +553,7 @@ export async function beginChannelOAuth(input: {
         portal_code: input.portal_code,
         title: input.title,
         settings: input.settings ?? {},
+        neues_konto: input.neues_konto ?? false,
       },
     },
   );
@@ -538,10 +584,18 @@ export type AirbnbUebernahmeResult = {
  * Server legt das Gerüst-Objekt an, an dem Channex die Autorisierung festmacht,
  * und liefert die echte Airbnb-OAuth-URL zurück. Der Kunde tippt keine Daten.
  */
-export async function startAirbnbUebernahme(): Promise<
-  Result<OAuthBeginResult>
-> {
-  return call<OAuthBeginResult>("/airbnb/uebernahme/start", { method: "POST" });
+export async function startAirbnbUebernahme(
+  /**
+   * Ein WEITERES Airbnb-Konto verbinden (0304). Dann legt der Server ein
+   * eigenes Gerüst an, statt das erste vorhandene Objekt zu nehmen — das hängt
+   * bereits am ersten Konto.
+   */
+  neuesKonto = false,
+): Promise<Result<OAuthBeginResult>> {
+  return call<OAuthBeginResult>(
+    `/airbnb/uebernahme/start${neuesKonto ? "?neues_konto=true" : ""}`,
+    { method: "POST" },
+  );
 }
 
 /**

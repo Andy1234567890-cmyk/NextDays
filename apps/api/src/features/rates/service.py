@@ -14,6 +14,7 @@ from supabase import Client
 from src.core.dates import merge_day_ranges
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.properties.portalfreigabe import darf_zu_den_portalen
 from src.jobs.queue import (
     dedup_key,
     enqueue,
@@ -615,6 +616,12 @@ class RatesService:
         # Löschkette (Channex-Doku „break the chain"): Content-Sync einreihen —
         # dessen Prune entfernt den verwaisten Channex-Rate-Plan (fail-closed,
         # wenn er noch an einen Kanal gemappt ist) und schließt das Mapping.
+        #
+        # Bewusst OHNE die Entwurfs-Prüfung aus `_sync_property`: dies ist ein
+        # AUFRÄUM-Weg, kein Übertragungsweg. Er entfernt etwas, das bei Channex
+        # schon steht. Ihn für Entwürfe zu sperren, hieße den Müll dort liegen zu
+        # lassen — genau der Gegenzustand, den Wurzel 1 verlangt. Existiert dort
+        # nichts, findet der Prune nichts und der Job endet folgenlos.
         try_enqueue_content_sync(
             self._db(), tenant_id, existing[0]["property_id"]
         )
@@ -1218,7 +1225,16 @@ class RatesService:
         """Channex-Content-Sync als Hintergrund-Job einreihen (Phase 2). Ein
         bepreistes Objekt fließt so an Channex, ohne dass das Speichern auf die
         mehreren sequentiellen Channex-Calls wartet. Coalesced je Objekt →
-        mehrfaches Speichern des Basispreises erzeugt nur EINEN Sync."""
+        mehrfaches Speichern des Basispreises erzeugt nur EINEN Sync.
+
+        Ein unveröffentlichtes Objekt bleibt dabei liegen: Preise zu pflegen ist
+        Vorbereitung, keine Freigabe. Sonst genügte das Anlegen eines Preisplans,
+        um einen Entwurf bei den Portalen anzumelden — der Weg, den der Riegel in
+        `properties.create` sonst nur um einen Schritt verschöbe. Beim
+        Veröffentlichen überträgt `publish()` ohnehin blockierend den vollen
+        Stand, der aktuelle Preis geht also nicht verloren."""
+        if not darf_zu_den_portalen(self._db(), tenant_id, property_id):
+            return
         try_enqueue_content_sync(
             self._db(), tenant_id, property_id, title=title, currency=currency
         )

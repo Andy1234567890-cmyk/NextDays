@@ -4,7 +4,7 @@
 // Posteingang (inbox-list) gerendert, wenn ein WhatsApp-Thread offen ist —
 // bidirektional senden/empfangen, neue Nachrichten kommen live (Realtime).
 import { Icon } from "@iconify/react";
-import { Fragment, useCallback, useEffect, useState, useTransition } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
@@ -39,6 +39,8 @@ export function WhatsAppChat({
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, startSend] = useTransition();
+  // Sprungziel „ganz unten" am Listenende.
+  const ende = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
     if (!conversationId) {
@@ -52,6 +54,15 @@ export function WhatsAppChat({
   useEffect(() => {
     load();
   }, [load]);
+
+  // Ans Ende springen — ein Chat wird von unten gelesen, der Container startet
+  // aber oben. Gleiches Sentinel-Muster wie im OTA-Verlauf nebenan
+  // (`inbox-konversation.tsx`); an der ANZAHL aufgehängt, nicht am Array:
+  // `load()` liefert bei jedem Realtime-Ereignis eine neue Referenz und risse
+  // den Nutzer sonst aus dem Lesen weiter oben.
+  useEffect(() => {
+    ende.current?.scrollIntoView({ block: "end" });
+  }, [messages.length, conversationId]);
 
   // Echtes Realtime: neue WhatsApp-Nachrichten dieser Konversation sofort.
   useRealtime({
@@ -138,6 +149,7 @@ export function WhatsAppChat({
             </Fragment>
           ))
         )}
+        <div ref={ende} />
       </div>
 
       {error && (

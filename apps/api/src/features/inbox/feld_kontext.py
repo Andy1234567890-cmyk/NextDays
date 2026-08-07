@@ -125,6 +125,19 @@ class FeldKontextMixin:
             raw, self._reservierung_zeiten(db, tenant_id, row)
         )
         prop = self._property_for_thread(db, tenant_id, row)
+        # Dritter Weg: die Hausregel am OBJEKT. Sie kommt aus Airbnbs
+        # `booking_settings` (`check_in_time_start`/`check_out_time`, importiert
+        # nach `type_attributes.policies`) und gilt für JEDE Buchung des Hauses.
+        #
+        # Ohne diesen Rückfall scheiterte die Check-in-Automail an einer Angabe,
+        # die längst da war: Airbnb schickt die Uhrzeit NICHT je Reservierung
+        # mit (die Buchungs-Payload hat keine), sondern nur als Einstellung des
+        # Inserats. Live gemessen am 07.08.2026 — „Feriehus Perlen" trug 16:00
+        # am Objekt, während die Automail „Feld ohne Wert: checkin_time" meldete
+        # und deshalb NICHT rausging.
+        checkin_time, checkout_time = self._zeiten_vom_objekt(
+            prop, checkin_time, checkout_time
+        )
         cents = row.get("amount_cents")
         betrag = (cents / 100) if isinstance(cents, (int, float)) else None
 

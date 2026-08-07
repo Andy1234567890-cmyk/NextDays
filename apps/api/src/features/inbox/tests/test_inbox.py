@@ -5,8 +5,11 @@ from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
 from src.features.channel_manager.channex_client import ChannexError
+from src.features.channel_manager.common import NUR_ANHANG_TEXT
 from src.features.inbox.felder import FeldFehlt, Kontext, rendern, unbekannte_felder
+from src.features.inbox.schemas import InboxMessage
 from src.features.inbox.service import InboxError, InboxService
+from src.features.inbox.spiegel import _vorschau, sichere_anhaenge
 from src.main import create_app
 
 client = TestClient(create_app())
@@ -286,6 +289,90 @@ def test_get_messages_maps_sender(monkeypatch) -> None:  # noqa: ANN001
     out = svc.get_messages(_CTX, "th1")
     assert [m.sender for m in out.items] == ["guest", "property"]  # host → property
     assert out.items[0].message == "Hallo"
+
+
+def test_get_messages_liefert_bildanhaenge(monkeypatch) -> None:  # noqa: ANN001
+    """Nur ein Foto, kein Text: der Anhang trägt die Nachricht.
+
+    Ohne dieses Feld stand im Verlauf eine leere graue Blase — der Gast
+    schrieb „Se bildet" und das Bild kam nie an (live 07.08.2026).
+    """
+    bild = (
+        "http://app.channex.io/api/v1/attachments/"
+        "3970612d-2d8d-464e-aced-ef5f654e8823/"
+        "70a2badb-fc87-4bfd-9bab-eacf5a8230a0/0780c002.jpeg"
+    )
+    msgs = [
+        {
+            "id": "m1",
+            "attributes": {
+                "message": "",
+                "sender": "guest",
+                "inserted_at": "2026-08-07T10:02:00.000000",
+                "attachments": [bild],
+            },
+        }
+    ]
+    bookings = [{"id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1"}]
+    svc = InboxService(
+        service_client=_FakeDB(bookings, []), channex=_FakeChannex(messages=msgs)
+    )
+    out = svc.get_messages(_CTX, "th1")
+    # `http` wird gehoben, sonst blockt der Browser das Bild als Mixed Content.
+    assert out.items[0].attachments == [bild.replace("http://", "https://", 1)]
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "javascript:alert(1)",
+        "data:image/png;base64,AAAA",
+        "https://boese.example/bild.jpeg",
+        "https://app.channex.io.boese.example/bild.jpeg",
+    ],
+)
+def test_get_messages_verwirft_unsichere_anhaenge(url: str) -> None:
+    """Der Anhang landet in einem `src` und kommt von der Gegenseite: alles
+    außer https auf einem bekannten Channex-Host fliegt raus (Wurzel 8)."""
+    msgs = [
+        {
+            "id": "m1",
+            "attributes": {
+                "message": "Se bildet",
+                "sender": "guest",
+                "inserted_at": "2026-08-07T10:02:00.000000",
+                "attachments": [url],
+            },
+        }
+    ]
+    bookings = [{"id": "th1", "tenant_id": "t1", "channex_booking_id": "cx-b1"}]
+    svc = InboxService(
+        service_client=_FakeDB(bookings, []), channex=_FakeChannex(messages=msgs)
+    )
+    assert svc.get_messages(_CTX, "th1").items[0].attachments == []
+
+
+def test_spiegel_traegt_die_bilder_weiter() -> None:
+    """Der Spiegel muss tragen, was er ersetzt (Wurzel 1).
+
+    Antwortet das Portal nicht, kommt der Verlauf allein aus `portal_messages`.
+    Ohne die Anhänge im Spiegel bliebe dann nur das Kürzel übrig — also wieder
+    eine Blase ohne Bild, der Bug von vorn.
+    """
+    bild = (
+        "https://app.channex.io/api/v1/attachments/"
+        "3970612d-2d8d-464e-aced-ef5f654e8823/"
+        "70a2badb-fc87-4bfd-9bab-eacf5a8230a0/0780c002.jpeg"
+    )
+    nachricht = InboxMessage(
+        id="m1", message="", sender="guest",
+        sent_at="2026-08-07T10:02:00Z", attachments=[bild],
+    )
+    # Schreibseite: Kürzel als `body`, Bild-URLs in `raw`.
+    assert _vorschau(nachricht) == NUR_ANHANG_TEXT
+
+    # Leseseite: aus `raw` zurück in die Nachricht, erneut geprüft.
+    assert sichere_anhaenge({"attachments": [bild]}["attachments"]) == [bild]
 
 
 def test_send_message_rejects_empty() -> None:
@@ -715,6 +802,32 @@ def test_compute_send_at_altbestand_rechnet_unveraendert() -> None:
     th = {"arrival_date": "2026-07-10"}
     dt = InboxService._compute_send_at("arrival", -3, "07:45", th)
     assert dt == datetime(2026, 7, 7, 7, 45, tzinfo=UTC)
+
+
+def test_checkin_zeit_faellt_auf_die_hausregel_zurueck() -> None:
+    """Airbnb liefert die Check-in-Zeit am INSERAT, nicht an der Buchung.
+
+    DER VORFALL (07.08.2026): Die Check-in-Automail für Mathias ging nicht raus
+    („Feld ohne Wert: checkin_time"), obwohl am Objekt „Feriehus Perlen" 16:00
+    stand — importiert aus Airbnbs Booking Settings. Beide bisherigen Quellen
+    waren buchungsbezogen und liefen bei Airbnb deshalb immer leer.
+    """
+    prop = {"type_attributes": {"policies": {"checkInTime": "16:00",
+                                             "checkOutTime": "10:00"}}}
+    assert InboxService._zeiten_vom_objekt(prop, None, None) == ("16:00", "10:00")
+
+
+def test_absprache_schlaegt_die_hausregel() -> None:
+    """Ein reservierungseigener Wert darf nicht von der Hausregel überschrieben
+    werden — sonst bekäme ein Gast mit später Anreise die Standardzeit."""
+    prop = {"type_attributes": {"policies": {"checkInTime": "16:00"}}}
+    assert InboxService._zeiten_vom_objekt(prop, "20:00", None)[0] == "20:00"
+
+
+def test_ohne_hausregel_bleibt_die_zeit_leer() -> None:
+    """Kein Objekt, keine Regel → None statt einer erfundenen Uhrzeit."""
+    assert InboxService._zeiten_vom_objekt(None, None, None) == (None, None)
+    assert InboxService._zeiten_vom_objekt({}, None, None) == (None, None)
 
 
 def test_automation_matches_empty_means_all() -> None:

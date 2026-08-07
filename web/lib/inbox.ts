@@ -65,6 +65,12 @@ export type InboxMessage = {
   event_facts?: { label: string; value: string }[];
   /** Nur bei sender="event": Herkunftskanal (BookingCom, Airbnb …). */
   event_channel?: string | null;
+  /**
+   * Bildanhänge der Nachricht. Schickt der Gast NUR ein Foto, ist `message`
+   * leer — dann trägt allein diese Liste den Inhalt. Der Server hat jede URL
+   * auf https + bekannten Host geprüft (`_sichere_anhaenge`).
+   */
+  attachments?: string[];
 };
 
 export type TeamMember = { id: string; name: string; email: string | null };
@@ -361,8 +367,12 @@ export type Automation = {
   anchor: string;
   /** Tages-Sicht des Versatzes (Bestand). Bei Stunden/Minuten 0. */
   offset_days: number;
-  offset_unit: AutomationOffsetUnit;
-  offset_value: number;
+  // Optional, weil ein Server VOR 0303 sie nicht mitschickt. Ohne dieses `?`
+  // hielt TypeScript sie für garantiert — und die Liste kippte zur Laufzeit mit
+  // `autoUnit_undefined`, statt beim Übersetzen aufzufallen. Leser nehmen
+  // ersatzweise die Tages-Sicht.
+  offset_unit?: AutomationOffsetUnit;
+  offset_value?: number;
   /** "HH:MM" oder null = keine feste Uhrzeit (bei Tagen: Mitternacht). */
   send_time: string | null;
   property_ids: string[];

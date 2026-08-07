@@ -124,7 +124,7 @@ from .content_builder import locale_order_for_country
 # Titel des Gerüst-Objekts. Bewusst erkennbar und nicht geraten: solange die
 # echten Airbnb-Daten fehlen, darf hier kein plausibler Fantasiename stehen
 # (Wurzel 4) — der Kunde soll sehen, dass die Übernahme noch läuft.
-_GERUEST_TITEL = "Airbnb-Übernahme läuft"
+GERUEST_TITEL = "Airbnb-Übernahme läuft"
 
 # Wie viele Listings eine Übernahme höchstens verarbeitet. Airbnb-Konten mit
 # hunderten Listings sind real; ohne Obergrenze wäre der Request unbegrenzt
@@ -138,7 +138,8 @@ class AirbnbUebernahmeMixin:
 
     # -- a) Start: Gerüst-Objekt + OAuth-URL ----------------------------------
     def uebernahme_starten(
-        self, ctx: AuthContext, *, portal_code: str = "AirBNB"
+        self, ctx: AuthContext, *, portal_code: str = "AirBNB",
+        neues_konto: bool = False,
     ) -> dict[str, Any]:
         """Übernahme starten, OHNE dass der Kunde ein Objekt anlegt.
 
@@ -146,6 +147,11 @@ class AirbnbUebernahmeMixin:
         Channex und gibt die echte Airbnb-OAuth-URL zurück. Hat der Betrieb
         bereits Objekte, wird das erste davon genutzt — dann entsteht kein
         zweites Gerüst.
+
+        `neues_konto=True` verbindet einen WEITEREN Portal-Zugang (0304): dann
+        wird ein eigener Kanal angelegt statt des vorhandenen. Das OBJEKT, an
+        dem der Autorisierungslink hängt, ist davon unberührt — es dient nur als
+        Aufhänger und wird dem neuen Kanal nicht zugeordnet.
         """
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
@@ -156,30 +162,76 @@ class AirbnbUebernahmeMixin:
         # Die Channex-Registrierung des Gerüsts holt `begin_channel_oauth` selbst
         # nach; sie liegt dort, weil sie für JEDEN noch nicht registrierten
         # Connect nötig ist — nicht nur für den aus der Übernahme.
+        # `neues_konto` MUSS mit: dort fällt die Entscheidung, ob ein neuer Kanal
+        # entsteht oder der vorhandene wiederverwendet wird. Ohne das Flag wählte
+        # `begin_channel_oauth` den bereits AUTORISIERTEN Kanal — also den von
+        # Konto A —, hängte das neue Gerüst dort an und schickte den Kunden in
+        # den Airbnb-Login von Konto A. Live gemessen am 07.08.2026:
+        # `channex_oauth_kanal_wahl neu_anlegen=False grund=autorisiert`, obwohl
+        # der Aufruf `?neues_konto=true` trug. Ein Kanal IST bei Channex genau
+        # ein Konto — zwei Konten am selben Kanal kann es nicht geben.
         return self.begin_channel_oauth(
             ctx,
             property_id=property_id,
             portal_code=portal_code,
             title=None,
+            neues_konto=neues_konto,
         )
 
     def _geruest_objekt(self, db: Client, tenant_id: str) -> str:
         """Objekt-ID, an der die Airbnb-Autorisierung hängen kann.
 
-        Reihenfolge: ein bestehendes Objekt (der Normalfall, wenn der Kunde
-        schon eins hat) → ein früheres Gerüst (Doppelklick/Retry) → ein neues
-        Gerüst. So entsteht bei mehrfachem Start kein Objekt-Wildwuchs.
+        IMMER ein bestehendes Objekt, wenn der Betrieb eines hat — auch für ein
+        zweites Konto. Nur wer noch gar kein Objekt führt, bekommt ein Gerüst.
+
+        Bis zum 07.08.2026 legte der Weg zum zweiten Konto hier ZWANGSWEISE ein
+        neues „Airbnb-Übernahme läuft" an. Die Begründung dafür war falsch: es
+        hieß, ein bestehendes Objekt hänge schon am ersten Konto und Channex
+        würde den neuen Kanal an dieselbe Property hängen. Tatsächlich braucht
+        nur der connection_link IRGENDEINE Property (`properties: []` → 422);
+        WELCHE, ist Channex gleichgültig, und sie wird dadurch weder dem Kanal
+        zugeordnet noch verändert. Live gegengeprüft mit „Feriehus Line", einem
+        Objekt am ERSTEN Konto:
+
+            POST meta/airbnb/connection_link  properties=[b02f3d49…]  → 200
+                 https://www.airbnb.com/oauth2/auth?scope=property_management…
+
+        Der Preis der alten Annahme stand in der Objektliste und bei Channex:
+        ein Platzhalter-Objekt je Anlauf, das niemand angelegt hat und das
+        niemand verkauft. Welche Listings zu welchem Konto gehören, entscheidet
+        ohnehin erst die Übernahme nach der Autorisierung.
         """
         vorhanden = (
             db.table("properties")
             .select("id")
             .eq("tenant_id", tenant_id)
+            .neq("title", GERUEST_TITEL)
             .order("created_at")
             .limit(1)
             .execute()
         ).data
         if vorhanden:
             return vorhanden[0]["id"]
+
+        # Ein früheres Gerüst wiederverwenden, bevor ein weiteres entsteht
+        # (Wurzel 2). Greift nur noch für den Betrieb ohne jedes Objekt, dessen
+        # erster Anlauf abgebrochen ist.
+        offen = (
+            db.table("properties")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("title", GERUEST_TITEL)
+            .eq("status", "draft")
+            .order("created_at")
+            .limit(1)
+            .execute()
+        ).data
+        if offen:
+            log.info(
+                "airbnb_uebernahme_geruest_wiederverwendet",
+                tenant_id=tenant_id, property_id=offen[0]["id"],
+            )
+            return offen[0]["id"]
 
         # Land des BETRIEBS mitgeben — nicht geraten, sondern der echte Wert aus
         # `tenants.country` (im Onboarding erfasst). Nötig, weil Channex daraus
@@ -206,7 +258,7 @@ class AirbnbUebernahmeMixin:
             db.table("properties")
             .insert({
                 "tenant_id": tenant_id,
-                "title": _GERUEST_TITEL,
+                "title": GERUEST_TITEL,
                 "status": "draft",
                 "country": land,
             })
@@ -219,7 +271,7 @@ class AirbnbUebernahmeMixin:
         property_id = neu[0]["id"]
         # Einheit sofort mit (0265): ohne sie ist das Objekt unverkäuflich und
         # eine eingehende Airbnb-Buchung liefe in 22023.
-        self._ensure_default_unit(db, tenant_id, property_id, _GERUEST_TITEL)
+        self._ensure_default_unit(db, tenant_id, property_id, GERUEST_TITEL)
         log.info(
             "airbnb_uebernahme_geruest_angelegt",
             tenant_id=tenant_id, property_id=property_id,
@@ -324,7 +376,9 @@ class AirbnbUebernahmeMixin:
                 tenant_id=tenant_id, gesamt=len(listings), grenze=_MAX_LISTINGS,
             )
         angelegt = aktualisiert = 0
-        zugang = self._airbnb_token(db, tenant_id)
+        # Über den KANAL, nicht über ein Objekt: die Objekte dieses Kontos
+        # entstehen hier gerade erst aus den Listings.
+        zugang = self._airbnb_token_am_kanal(channel_id)
         for listing in listings[:_MAX_LISTINGS]:
             row = self._listing_zu_objekt(listing)
             if row is not None and zugang:
@@ -717,7 +771,7 @@ class AirbnbUebernahmeMixin:
             if vorhanden.get(feld):
                 gefiltert.pop(feld, None)
         titel_alt = vorhanden.get("title")
-        if titel_alt and str(titel_alt).strip() != _GERUEST_TITEL:
+        if titel_alt and str(titel_alt).strip() != GERUEST_TITEL:
             gefiltert.pop("title", None)
         return gefiltert
 
@@ -765,7 +819,7 @@ class AirbnbUebernahmeMixin:
             db.table("properties")
             .select("id, currency, timezone, title")
             .eq("tenant_id", tenant_id)
-            .eq("title", _GERUEST_TITEL)
+            .eq("title", GERUEST_TITEL)
             .is_("airbnb_listing_id", "null")
             .limit(1)
             .execute()

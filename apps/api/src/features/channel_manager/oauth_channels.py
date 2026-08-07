@@ -16,6 +16,11 @@ from src.core.security import AuthContext
 from . import airbnb_oauth
 from .channex_client import ChannexError
 from .common import ChannelManagerError, _timezone_for_country, log
+from .ota_konten import (
+    konto_sicherstellen,
+    konto_status_setzen,
+    konto_zum_kanal_loesen,
+)
 
 # PostgREST-Query-Builder. Select- und Update-Builder haben keinen gemeinsamen
 # Basistyp in den Stubs, tragen aber beide `.eq()`/`.is_()` und geben sich selbst
@@ -37,6 +42,7 @@ class OAuthChannelsMixin:
     def begin_channel_oauth(
         self, ctx: AuthContext, *, property_id: str | None, portal_code: str,
         title: str | None, settings: dict[str, Any] | None = None,
+        neues_konto: bool = False,
     ) -> dict[str, Any]:
         """OAuth-Start: inaktiven Channel anlegen + echte OAuth-URL erzeugen.
 
@@ -159,9 +165,23 @@ class OAuthChannelsMixin:
              and r.get("channex_channel_id")),
             None,
         )
-        existing_channel_id = autorisiert or eigener_kanal or (
-            kandidaten[0] if kandidaten else None
-        )
+        if neues_konto:
+            # Ein ZWEITES Portal-Konto verbinden (0304): dann darf gerade NICHT
+            # wiederverwendet werden. Die Wiederverwendung oben ist richtig,
+            # solange es um dasselbe Konto geht — sie war der Fix gegen den
+            # leeren Zweit-Kanal. Für ein anderes Konto ist sie die Sperre:
+            # `autorisiert` gäbe den Kanal von Konto A zurück, der Kunde landete
+            # wieder in dessen Airbnb-Login und käme nie zu Konto B.
+            #
+            # Airbnb selbst erlaubt das: die Kopplung „nur EINE Software" gilt je
+            # KONTO, nicht je Channex-Zugang (`has_already_channel` bezieht sich
+            # auf das Airbnb-Konto). Zwei Konten = zwei Kanäle ist der Normalfall
+            # jeder Agentur.
+            existing_channel_id = None
+        else:
+            existing_channel_id = autorisiert or eigener_kanal or (
+                kandidaten[0] if kandidaten else None
+            )
         eigener = existing_channel_id is not None and (
             existing_channel_id == eigener_kanal
         )
@@ -268,6 +288,25 @@ class OAuthChannelsMixin:
                 is_active=False,
                 last_error=None,
             )
+            if neues_konto:
+                # Das Aufhänger-Objekt gehört NICHT zu diesem Konto.
+                #
+                # Channex verlangt beim Anlegen mindestens eine Property (und
+                # der connection_link ebenso), also steht oben eine im Payload.
+                # Für ein ZWEITES Konto ist das ein fremdes Objekt: es gehört
+                # dem ersten Zugang. Bleibt es hängen, steht dasselbe Objekt an
+                # zwei Kanälen — live am 07.08.2026 mit „Rævlingehuset"
+                # passiert, das daraufhin im Kanalmanager auf „Pausiert" fiel
+                # (17 von 18 verbunden).
+                #
+                # Deshalb wird es direkt nach der Anlage wieder gelöst. Der
+                # Link ist zu diesem Zeitpunkt noch nicht erzeugt — er wird
+                # unten mit `channex_property_id` gebaut und braucht die
+                # Property nur als Parameter, nicht als Kanal-Mitglied (live
+                # geprüft: connection_link mit einer beliebigen Property → 200).
+                # Die echten Objekte dieses Kontos kommen nach der
+                # Autorisierung aus seinen Listings.
+                self._objekt_vom_kanal_loesen(channel_id, channex_property_id)
 
         # Offene Pflichtpunkte prüfen, BEVOR der Kunde zu Airbnb geschickt wird.
         # Channex gibt den Connect nur frei, wenn der Kanal vollständig ist
@@ -570,6 +609,43 @@ class OAuthChannelsMixin:
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
 
+    def _objekt_vom_kanal_loesen(
+        self, channel_id: str, channex_property_id: str
+    ) -> None:
+        """Gegenstück zu `_objekt_an_kanal_haengen` (Wurzel 1).
+
+        Nötig, weil Channex beim Anlegen eines Kanals mindestens eine Property
+        verlangt, diese Property beim Verbinden eines ZWEITEN Kontos aber einem
+        FREMDEN Zugang gehört. Sie ist nur der Aufhänger für den
+        Autorisierungslink und darf nicht am Kanal hängen bleiben.
+
+        Best effort: schlägt das Lösen fehl, ist der Kanal trotzdem entstanden
+        und der Kunde kann autorisieren — die überzählige Property fällt beim
+        nächsten Abgleich auf. Ein harter Fehler hier würde den ganzen
+        Verbindungsvorgang kippen, obwohl sein Ziel bereits erreicht ist.
+        """
+        try:
+            kanal = self._channex.get_channel(channel_id)
+            attrs = (kanal.get("data") or {}).get("attributes") or {}
+            vorhanden = {str(p) for p in (attrs.get("properties") or [])}
+            if channex_property_id not in vorhanden:
+                return
+            rest = sorted(vorhanden - {channex_property_id})
+            self._channex.update_channel(channel_id, {"properties": rest})
+            log.info(
+                "channex_aufhaenger_geloest",
+                channel_id=channel_id,
+                channex_property_id=channex_property_id,
+                nachher=len(rest),
+            )
+        except ChannexError as exc:  # noqa: BLE001 — Aufräumen kippt den Connect nicht
+            log.warning(
+                "channex_aufhaenger_loesen_fehlgeschlagen",
+                channel_id=channel_id,
+                channex_property_id=channex_property_id,
+                error=exc.message,
+            )
+
     def _readiness_offen(self, channel_id: str) -> str:
         """Offene Pflichtpunkte des Kanals als lesbare, kommagetrennte Liste.
 
@@ -655,6 +731,75 @@ class OAuthChannelsMixin:
         ).data
         return res[0].get("currency") if res else None
 
+    def _doppeltes_konto_abraeumen(
+        self, db: Client, tenant_id: str, *, channel_id: str, host_id: str,
+        property_id: str | None,
+    ) -> bool:
+        """Wurde DASSELBE Portal-Konto ein zweites Mal verbunden? Dann aufräumen.
+
+        True = Dublette (der Aufrufer meldet 409). Erkannt an der Host-ID: sie
+        ist die Kennung des Kontos beim Portal, und dieselbe Kennung an zwei
+        Kanälen bedeutet zwangsläufig denselben Zugang.
+
+        Aufgeräumt wird SOFORT und vollständig (Wurzel 1 — der Gegenzustand
+        gehört zur Aktion): der überflüssige Kanal bei Channex, seine
+        Kontozeile und das Gerüst-Objekt, das nur für diesen Versuch entstanden
+        ist. Sonst bliebe nach jedem Fehlversuch ein „Airbnb-Übernahme läuft"
+        in der Objektliste stehen — live genau so passiert.
+
+        Das Gerüst wird nur gelöscht, solange es unbenutzt ist (Gerüsttitel,
+        `draft`): ein Objekt, das die Übernahme schon gefüllt hat, gehört dem
+        Betrieb und wird nie automatisch entfernt.
+        """
+        andere = (
+            db.table("ota_account")
+            .select("id, channex_channel_id")
+            .eq("tenant_id", tenant_id)
+            .eq("ota_hotel_id", host_id)
+            .neq("channex_channel_id", channel_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not andere:
+            return False
+
+        log.warning(
+            "airbnb_konto_doppelt_verbunden",
+            tenant_id=tenant_id, host_id=host_id, kanal_neu=channel_id,
+            kanal_bestehend=andere[0].get("channex_channel_id"),
+        )
+        # Den überflüssigen Kanal bei Channex entfernen — er wäre sonst ein
+        # zweiter Zugang zu denselben Inseraten.
+        try:
+            self._channex.delete_channel(channel_id)
+        except ChannexError as exc:  # noqa: BLE001 — Aufräumen kippt den 409 nicht
+            log.warning(
+                "airbnb_doppelkanal_nicht_geloescht",
+                channel_id=channel_id, error=exc.message,
+            )
+        db.table("channex_channel_connection").delete().eq(
+            "tenant_id", tenant_id
+        ).eq("channex_channel_id", channel_id).execute()
+        konto_zum_kanal_loesen(db, tenant_id, channel_id)
+        if property_id:
+            self._geruest_verwerfen(db, tenant_id, property_id)
+        return True
+
+    @staticmethod
+    def _geruest_verwerfen(db: Client, tenant_id: str, property_id: str) -> None:
+        """Ein unbenutztes Übernahme-Gerüst löschen (nur Titel + `draft`)."""
+        from .airbnb_uebernahme import GERUEST_TITEL
+
+        try:
+            db.table("properties").delete().eq("tenant_id", tenant_id).eq(
+                "id", property_id
+            ).eq("title", GERUEST_TITEL).eq("status", "draft").execute()
+        except Exception as exc:  # noqa: BLE001 — best effort
+            log.warning(
+                "airbnb_geruest_nicht_verworfen",
+                property_id=property_id, error=str(exc)[:200],
+            )
+
     def refresh_channel_oauth_status(
         self, ctx: AuthContext, *, property_id: str, portal_code: str
     ) -> dict[str, Any]:
@@ -664,9 +809,8 @@ class OAuthChannelsMixin:
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
 
-        def _scope(frage: _Q) -> _Q:
-            """Denselben Scope auf Lese- und Schreibpfad anwenden — getrennt
-            formuliert wäre er beim nächsten Eingriff auseinandergelaufen."""
+        def _lesen(frage: _Q) -> _Q:
+            """Scope zum SUCHEN der Verbindung dieses Objekts."""
             return (
                 frage.eq("tenant_id", tenant_id)
                 .eq("ota_portal_code", portal_code)
@@ -674,9 +818,12 @@ class OAuthChannelsMixin:
             )
 
         row = (
-            _scope(
-                db.table("channex_channel_connection").select("channex_channel_id")
+            _lesen(
+                db.table("channex_channel_connection").select(
+                    "id, channex_channel_id"
+                )
             )
+            .order("created_at")
             .limit(1)
             .execute()
         ).data
@@ -685,6 +832,17 @@ class OAuthChannelsMixin:
                 "Keine OAuth-Verbindung gefunden.", status_code=404
             )
         channel_id = row[0]["channex_channel_id"]
+
+        def _scope(frage: _Q) -> _Q:
+            """Scope zum SCHREIBEN: genau die Zeile, deren Kanal geprüft wurde.
+
+            Vorher war das derselbe Scope wie beim Lesen — gelesen wurde EINE
+            Zeile (`limit(1)`), geschrieben aber auf alle Zeilen des Tripels.
+            Bei zwei Konten am selben Objekt (0304) bekäme Konto B die Host-ID
+            von Konto A eingetragen, und der 404-Pfad nullte dessen Kanal-ID
+            mit, obwohl nur Konto A verschwunden ist.
+            """
+            return frage.eq("tenant_id", tenant_id).eq("id", row[0]["id"])
         # Trace-Kontext setzen, damit die ANTWORT von Channex in
         # channex_debug_log landet. Ohne ihn schrieb der Sink nichts (er braucht
         # einen Tenant) — und genau dieser Antwortinhalt ist der einzige Ort, an
@@ -748,6 +906,32 @@ class OAuthChannelsMixin:
                 {"ota_hotel_id": host_id, "last_error": last_error}
             )
         ).execute()
+        # SCHUTZ vor dem doppelt verbundenen Konto (0304): kommt aus der
+        # Autorisierung eine Host-ID zurück, die schon einem ANDEREN Konto
+        # gehört, hat der Kunde versehentlich denselben Airbnb-Zugang erneut
+        # verbunden — im Browser war er dort noch angemeldet, und Airbnb nimmt
+        # dann ohne Rückfrage das laufende Konto.
+        #
+        # Ohne diese Prüfung entstünde ein zweites Konto mit derselben Host-ID,
+        # dessen Objekte in Wahrheit dem ersten gehören. Der Fehler wird hier
+        # BENANNT und der angefangene Zugang abgeräumt, statt ihn zu behalten.
+        if host_id and self._doppeltes_konto_abraeumen(
+            db, tenant_id, channel_id=str(channel_id), host_id=str(host_id),
+            property_id=property_id,
+        ):
+            raise ChannelManagerError(
+                "Dieses Portal-Konto ist bereits verbunden. Melde dich im "
+                "Browser beim Portal ab und verbinde dann das andere Konto.",
+                status_code=409,
+            )
+
+        # Dasselbe am KONTO nachziehen: die Kontoliste zeigt Host-ID, Fehler und
+        # Verbindungszeitpunkt: sie stünde sonst dauerhaft auf „verbinde…",
+        # obwohl die Autorisierung längst durch ist.
+        konto_status_setzen(
+            db, tenant_id, channel_id=str(channel_id),
+            host_id=host_id, connected=connected, last_error=last_error,
+        )
         log.info(
             "channex_oauth_status",
             tenant_id=tenant_id, property_id=property_id,
@@ -776,12 +960,16 @@ class OAuthChannelsMixin:
             raise ChannelManagerError(
                 "Mindestens eine Zimmer/Raten-Zuordnung ist nötig.", status_code=422
             )
+        # `id` mitlesen: aktiviert wird EIN Kanal, also darf auch nur DESSEN
+        # Zeile auf aktiv gehen (0304) — sonst meldeten bei zwei Konten beide
+        # „aktiv", obwohl nur eines wirklich läuft.
         row = (
             db.table("channex_channel_connection")
-            .select("channex_channel_id, ota_hotel_id")
+            .select("id, channex_channel_id, ota_hotel_id")
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
             .eq("ota_portal_code", portal_code)
+            .order("created_at")
             .limit(1)
             .execute()
         ).data
@@ -912,9 +1100,7 @@ class OAuthChannelsMixin:
 
         db.table("channex_channel_connection").update(
             {"is_active": True, "last_error": None}
-        ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
-            "ota_portal_code", portal_code
-        ).execute()
+        ).eq("tenant_id", tenant_id).eq("id", row[0]["id"]).execute()
 
         # Initial-Vollimport (best effort) wie beim credential-Connect.
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
@@ -1090,6 +1276,8 @@ class OAuthChannelsMixin:
             if (p or {}).get("rate_plan_id")
         }
 
+    # `konto_sicherstellen` liegt in `airbnb_konten`, gilt aber portal-neutral —
+    # die Kontoidentität ist überall der Channex-Kanal.
     def _save_oauth_connection(
         self, db: Client, tenant_id: str, *, property_id: str,
         channex_property_id: str, portal_code: str, channel_id: str,
@@ -1098,6 +1286,13 @@ class OAuthChannelsMixin:
         """Upsert einer OAuth-Verbindung (Airbnb): kein hotel_id-Credential, sondern
         host_id (erst nach Verbindung). Anders als _save_channel_connection, das
         eine eingegebene Hotel-ID voraussetzt."""
+        # Das Konto zuerst: die Verbindung zeigt darauf, und der Konflikt-Key
+        # des Upserts enthält es (0304). Ohne Konto-Zeile überschriebe ein
+        # zweites Konto die Verbindung des ersten, statt danebenzustehen.
+        konto_id = konto_sicherstellen(
+            db, tenant_id,
+            portal_code=portal_code, channel_id=channel_id, host_id=host_id,
+        )
         row = {
             "tenant_id": tenant_id,
             "property_id": property_id,
@@ -1105,12 +1300,13 @@ class OAuthChannelsMixin:
             "ota_portal_code": portal_code,
             "ota_hotel_id": host_id,
             "channex_channel_id": channel_id,
+            "ota_account_id": konto_id,
             "is_active": is_active,
             "last_error": last_error,
         }
         try:
             db.table("channex_channel_connection").upsert(
-                row, on_conflict="property_id,ota_portal_code"
+                row, on_conflict="property_id,ota_portal_code,ota_account_id"
             ).execute()
         except Exception as exc:  # noqa: BLE001 — Persistenz darf Connect nicht killen
             log.warning(

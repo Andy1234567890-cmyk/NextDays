@@ -15,6 +15,15 @@ from src.core.security import AuthContext, secrets_match
 
 from .channex_client import ChannexError
 from .common import ChannelManagerError, _booking_room_type, log
+from .ota_konten import (
+    KontoNichtGefunden,
+    gehoert_kanal_dem_betrieb,
+    konten_des_betriebs,
+    konto_sicherstellen,
+    konto_umbenennen,
+    konto_zum_kanal_loesen,
+    objekte_je_konto_zaehlen,
+)
 
 
 class ChannelsMixin:
@@ -1243,15 +1252,10 @@ class ChannelsMixin:
         # dem Pfad. Ohne diese Prüfung könnte ein Tenant über eine fremde
         # Channex-Channel-ID den OTA-Kanal eines ANDEREN Betriebs deaktivieren/
         # löschen (die Channex-Calls laufen mit dem geteilten Account-Key).
-        owns = (
-            db.table("channex_channel_connection")
-            .select("id")
-            .eq("tenant_id", tenant_id)
-            .eq("channex_channel_id", channel_id)
-            .limit(1)
-            .execute()
-        ).data
-        if not owns:
+        # Auch das KONTO belegt das Eigentum (0304): ein frisch verbundener
+        # Zugang ohne abgeschlossene Autorisierung hat noch keine Objekte, und
+        # ohne diesen zweiten Beleg ließe er sich nicht mehr trennen.
+        if not gehoert_kanal_dem_betrieb(db, tenant_id, channel_id):
             raise ChannelManagerError("Kanal nicht gefunden.", status_code=404)
         try:
             self._channex.deactivate_channel(channel_id)
@@ -1270,6 +1274,11 @@ class ChannelsMixin:
         db.table("channex_channel_connection").update(
             {"is_active": False, "channex_channel_id": None}
         ).eq("tenant_id", tenant_id).eq("channex_channel_id", channel_id).execute()
+
+        # Und den Gegenzustand am Konto (Wurzel 1): der Kanal ist bei Channex
+        # gelöscht, ein Konto, das darauf zeigt, wäre eine Karteileiche, die
+        # sich nicht mehr trennen lässt.
+        konto_zum_kanal_loesen(db, tenant_id, channel_id)
 
     def activate_channel(self, ctx: AuthContext, channel_id: str) -> dict[str, Any]:
         """Einen VERBUNDENEN, aber inaktiven Channex-Kanal live schalten.
@@ -1292,15 +1301,7 @@ class ChannelsMixin:
         db = self._require_db()
         # Wurzel 3: nur einen Kanal aktivieren, der diesem Betrieb gehört —
         # die Channex-Calls laufen mit dem geteilten Account-Key.
-        owns = (
-            db.table("channex_channel_connection")
-            .select("id")
-            .eq("tenant_id", tenant_id)
-            .eq("channex_channel_id", channel_id)
-            .limit(1)
-            .execute()
-        ).data
-        if not owns:
+        if not gehoert_kanal_dem_betrieb(db, tenant_id, channel_id):
             raise ChannelManagerError("Kanal nicht gefunden.", status_code=404)
 
         aktiv, offen = self._channel_live_zustand(channel_id)
@@ -1339,12 +1340,19 @@ class ChannelsMixin:
         eingehende Buchungen werden weiterhin importiert."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
+        # `id` mitlesen: geschrieben wird GENAU DIE Zeile, deren Kanal hier
+        # geschaltet wird. Vorher lief der Update über
+        # (tenant, property, portal) — bei zwei Konten am selben Objekt (0304)
+        # wurde ein Kanal real deaktiviert, aber BEIDE Zeilen zeigten „aus":
+        # das zweite Konto verkauft weiter, während die Oberfläche Stopp meldet
+        # (fail-open, Wurzel 5).
         row = (
             db.table("channex_channel_connection")
-            .select("channex_channel_id, ota_hotel_id")
+            .select("id, channex_channel_id, ota_hotel_id")
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
             .eq("ota_portal_code", portal_code)
+            .order("created_at")
             .limit(1)
             .execute()
         ).data
@@ -1373,9 +1381,7 @@ class ChannelsMixin:
 
         db.table("channex_channel_connection").update(
             {"is_active": is_active}
-        ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
-            "ota_portal_code", portal_code
-        ).execute()
+        ).eq("tenant_id", tenant_id).eq("id", row[0]["id"]).execute()
         log.info(
             "channex_connection_toggled",
             tenant_id=tenant_id, property_id=property_id,
@@ -1671,12 +1677,18 @@ class ChannelsMixin:
             "ota_room_type_code": ota_room_type_code,
             "ota_room_title": ota_room_title,
             "channex_channel_id": channel_id,
+            # Kontozuordnung (0304): ohne sie überschriebe ein zweites Konto
+            # die Verbindung des ersten, statt danebenzustehen.
+            "ota_account_id": konto_sicherstellen(
+                db, tenant_id, portal_code=portal_code,
+                channel_id=channel_id, host_id=hotel_id,
+            ),
             "is_active": is_active,
             "last_error": last_error,
         }
         try:
             db.table("channex_channel_connection").upsert(
-                row, on_conflict="property_id,ota_portal_code"
+                row, on_conflict="property_id,ota_portal_code,ota_account_id"
             ).execute()
         except Exception as exc:  # noqa: BLE001 — Persistenz darf Connect nicht killen
             log.warning(
@@ -1820,6 +1832,172 @@ class ChannelsMixin:
         db.table("tenant_pinned_channel").delete().eq(
             "tenant_id", tenant_id
         ).eq("portal_code", portal_code).execute()
+
+    def portal_konten(self, ctx: AuthContext, portal_code: str) -> dict[str, Any]:
+        """Die verbundenen Konten eines Portals samt Objektzahl (0304)."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        konten = konten_des_betriebs(db, tenant_id, portal_code)
+        zaehler = objekte_je_konto_zaehlen(db, tenant_id)
+        items = [
+            {
+                "id": str(k["id"]),
+                "portal_code": k["ota_portal_code"],
+                "portal": self._portal_label(k["ota_portal_code"]),
+                "hotel_id": k.get("ota_hotel_id"),
+                "channel_id": k.get("channex_channel_id"),
+                "display_name": k.get("display_name"),
+                "is_active": bool(k.get("is_active", True)),
+                "token_invalid": bool(k.get("token_invalid")),
+                "last_error": k.get("last_error"),
+                "connected_at": k.get("connected_at"),
+                "properties": zaehler.get(str(k["id"]), 0),
+            }
+            for k in konten
+        ]
+        return {"items": items, "total": len(items)}
+
+    def konto_diagnose(self, ctx: AuthContext, account_id: str) -> dict[str, Any]:
+        """Was ist bei Channex WIRKLICH los mit diesem Konto?
+
+        Die Kontoliste zeigt unseren gespeicherten Stand. Der sagt beim
+        Verbinden aber nichts darüber, WARUM es hängt: „Verbindung läuft" steht
+        gleichermaßen für „Kunde hat den Airbnb-Login noch offen", „Airbnb hat
+        abgelehnt" und „Channex fehlt ein Pflichtfeld". Diese Diagnose fragt
+        deshalb den Kanal live ab und legt die drei Dinge offen, an denen es
+        tatsächlich scheitert:
+
+          * Tokens — hat Airbnb autorisiert? Ohne sie geht gar nichts.
+          * offene Pflichtpunkte — Channex gibt den Connect sonst nicht frei.
+          * Listings — was das Konto anbietet, sobald es autorisiert ist.
+
+        Nur lesend; kein Aufruf verändert etwas bei Channex oder Airbnb.
+        """
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        konto = next(
+            (
+                k
+                for k in konten_des_betriebs(db, tenant_id)
+                if str(k["id"]) == account_id
+            ),
+            None,
+        )
+        if konto is None:
+            raise ChannelManagerError("Konto nicht gefunden.", status_code=404)
+
+        channel_id = konto.get("channex_channel_id")
+        schritte: list[dict[str, Any]] = []
+
+        def schritt(name: str, ok: bool | None, text: str) -> None:
+            schritte.append({"name": name, "ok": ok, "text": text})
+
+        schritt(
+            "Kanal bei Channex",
+            bool(channel_id),
+            str(channel_id) if channel_id else "noch keiner angelegt",
+        )
+        if not channel_id:
+            return {
+                "account_id": account_id,
+                "channel_id": None,
+                "schritte": schritte,
+                "listings": [],
+            }
+
+        try:
+            kanal = self._channex.get_channel(str(channel_id))
+        except ChannexError as exc:
+            schritt("Kanal abrufbar", False, exc.message)
+            return {
+                "account_id": account_id,
+                "channel_id": str(channel_id),
+                "schritte": schritte,
+                "listings": [],
+            }
+
+        attrs = (kanal.get("data") or {}).get("attributes") or {}
+        einstellungen = attrs.get("settings") or {}
+        tokens = bool(einstellungen.get("tokens"))
+        status = airbnb_oauth.parse_connection_status(kanal)
+
+        schritt(
+            "Von Airbnb autorisiert",
+            tokens,
+            "Tokens vorhanden" if tokens
+            else "keine Tokens — der Airbnb-Login wurde nicht abgeschlossen",
+        )
+        host = status.get("host_id")
+        schritt("Host-Kennung", bool(host), str(host) if host else "—")
+        schritt(
+            "Kanal aktiv",
+            bool(attrs.get("is_active")),
+            "ja" if attrs.get("is_active")
+            else "nein — wird erst nach der Zuordnung aktiviert",
+        )
+        angehaengt = [str(p) for p in (attrs.get("properties") or [])]
+        schritt(
+            "Objekte am Kanal",
+            None,
+            f"{len(angehaengt)} — kommen aus den Listings dieses Kontos",
+        )
+        offen = self._readiness_offen(str(channel_id))
+        schritt(
+            "Pflichtangaben bei Channex", not offen, offen or "vollständig"
+        )
+
+        # Die Listings des Kontos. Ohne Tokens antwortet Channex mit einem
+        # Fehler — das ist keine Störung, sondern die Folge der fehlenden
+        # Autorisierung und wird als solche gemeldet (Wurzel 4/5).
+        listings: list[dict[str, Any]] = []
+        if tokens:
+            try:
+                listings = self._airbnb_listings_des_kanals(str(channel_id))
+                schritt(
+                    "Anzeigen bei Airbnb", True, f"{len(listings)} gefunden"
+                )
+            except ChannexError as exc:
+                schritt("Anzeigen bei Airbnb", False, exc.message)
+        else:
+            schritt(
+                "Anzeigen bei Airbnb",
+                False,
+                "erst nach der Autorisierung abrufbar",
+            )
+
+        return {
+            "account_id": account_id,
+            "channel_id": str(channel_id),
+            "schritte": schritte,
+            "listings": listings,
+        }
+
+    def konto_umbenennen(
+        self, ctx: AuthContext, account_id: str, display_name: str | None
+    ) -> dict[str, Any]:
+        """Anzeigename eines Portal-Kontos setzen."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        try:
+            zeile = konto_umbenennen(db, tenant_id, account_id, display_name)
+        except KontoNichtGefunden as exc:
+            raise ChannelManagerError(
+                "Konto nicht gefunden.", status_code=404
+            ) from exc
+        zaehler = objekte_je_konto_zaehlen(db, tenant_id)
+        return {
+            "id": str(zeile["id"]),
+            "portal_code": zeile["ota_portal_code"],
+            "portal": self._portal_label(zeile["ota_portal_code"]),
+            "hotel_id": zeile.get("ota_hotel_id"),
+            "channel_id": zeile.get("channex_channel_id"),
+            "display_name": zeile.get("display_name"),
+            "is_active": bool(zeile.get("is_active", True)),
+            "token_invalid": bool(zeile.get("token_invalid")),
+            "last_error": zeile.get("last_error"),
+            "connected_at": zeile.get("connected_at"),
+            "properties": zaehler.get(str(zeile["id"]), 0),
+        }
 
     def channel_detail(self, ctx: AuthContext, portal_code: str) -> dict[str, Any]:
         """Detailfläche EINES Kanals: eine Zuordnungszeile JE OBJEKT des Tenants
@@ -2458,9 +2636,16 @@ class ChannelsMixin:
     _ACTION_EVENTS = frozenset(
         {"reservation_request", "alteration_request", "inquiry"}
     )
-    # Hochvolumige Events, die NICHT in die Ereignisliste persistiert werden
-    # (ari feuert bei jeder Preis-/Verfügbarkeitsänderung; message läuft über
-    # den Posteingang).
+    # Hochvolumige Events, die NICHT in die EREIGNISLISTE persistiert werden
+    # (ari feuert bei jeder Preis-/Verfügbarkeitsänderung).
+    #
+    # `message` stand hier bis 0305 ebenfalls drin, mit der Begründung „läuft
+    # über den Posteingang". Das war der Denkfehler: der Posteingang HOLTE den
+    # Verlauf nur beim Öffnen und speicherte ihn nirgends. Der Ausschluss hieß
+    # damit nicht „woanders abgelegt", sondern „weggeworfen" — eine Nachricht
+    # existierte für uns erst, wenn jemand klickte. Nachrichten gehören
+    # weiterhin NICHT in die Ereignisliste (sie sind kein Systemereignis), aber
+    # sehr wohl in ihren eigenen Speicher: das erledigt jetzt Schritt 4.
     _UNPERSISTED_EVENTS = frozenset({"ari", "message"})
 
     def register_global_webhook(self, *, callback_url: str) -> dict[str, Any]:
@@ -2656,51 +2841,45 @@ class ChannelsMixin:
         return None
 
     def _nachricht_eingegangen(self, tenant_id: str, payload: dict[str, Any]) -> None:
-        """Eingegangene Gastnachricht → Abwesenheitsantworten einplanen.
+        """Eingegangene Gastnachricht: SPEICHERN, dann Abwesenheitsantwort.
+
+        Die Reihenfolge ist der Kern dieser Methode. Bis 0305 tat sie nur das
+        Zweite — die Nachricht selbst wurde verworfen, und als am 06.08.2026 der
+        Endpunkt elf Minuten lang mit 503 antwortete, waren die betroffenen
+        Nachrichten endgültig weg. Gespeichert wird deshalb ZUERST und
+        unabhängig davon, ob eine Automation greift.
+
+        Der Zähl-Stand für „erste Nachricht" wird VOR dem Spiegeln genommen:
+        danach steht die neue Nachricht bereits in der Tabelle und jeder Thread
+        sähe aus, als hätte er schon einmal Kontakt gehabt.
 
         Best effort: der Webhook wird IMMER mit 200 quittiert (sonst wiederholt
-        Channex bis ~24 h). Eine fehlgeschlagene Abwesenheitsantwort darf den
-        Ingest nicht kippen — sie ist Komfort, kein Datenpfad.
+        Channex bis ~24 h und gibt dann auf). Was hier verloren geht, holt der
+        Journal-Tick nach — er läuft durch dieselbe `nachricht_spiegeln`.
         """
         if self._db is None:
             return
-        ref = self._booking_ref_aus_message(payload)
-        if not ref:
-            log.warning(
-                "message_webhook_ohne_booking_bezug",
-                schluessel=sorted(payload.keys()),
-                innere_schluessel=sorted(
-                    (payload.get("payload") or {}).keys()
-                    if isinstance(payload.get("payload"), dict)
-                    else []
-                ),
-            )
-            return
         try:
-            rows = (
-                self._db.table("channex_booking")
-                .select("id")
-                .eq("tenant_id", tenant_id)
-                .eq("channex_booking_id", ref)
-                .limit(1)
-                .execute()
-            ).data or []
-            if not rows:
-                log.info("message_webhook_thread_unbekannt", booking_ref=ref)
-                return
-            thread_id = rows[0]["id"]
-            # „Erste Nachricht" heißt: bisher lag noch keine im Thread. Der
-            # Webhook kommt VOR unserem nächsten Lesen, also zählt der Stand
-            # davor — genau das, was die Option meint.
             from src.features.inbox.service import InboxService  # noqa: PLC0415
 
             svc = InboxService(service_client=self._db)
-            vorher = svc.zaehle_gastnachrichten(tenant_id, thread_id)
+            ref = self._booking_ref_aus_message(payload)
+            vorher = (
+                svc.zaehle_gastnachrichten_je_buchung(tenant_id, ref) if ref else 0
+            )
+
+            thread_id = self.nachricht_spiegeln(tenant_id, payload)
+            if thread_id is None:
+                # Ohne Buchungsbezug (Airbnb-Support, Anfrage vor der Buchung)
+                # gibt es keinen Thread, in dem eine Antwort erscheinen könnte.
+                # Die Nachricht IST gespeichert — nur die Automation entfällt.
+                return
+
             svc.schedule_message_received(
                 tenant_id, thread_id, ist_erste_nachricht=vorher == 0
             )
         except Exception as exc:  # noqa: BLE001 — Ingest nie kippen (200 zurück)
-            log.warning("message_webhook_automail_fehlgeschlagen", error=str(exc)[:300])
+            log.warning("message_webhook_verarbeitung_fehlgeschlagen", error=str(exc)[:300])
 
     def _resolve_webhook_property(
         self, channex_property_id: object

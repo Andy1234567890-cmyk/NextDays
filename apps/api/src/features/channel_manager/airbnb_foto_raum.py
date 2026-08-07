@@ -135,7 +135,7 @@ class AirbnbFotoRaumMixin:
         Fotos" aussehen, sonst meldet die Oberfläche jedes Zimmer als leer.
         """
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not listing_id or not zugang:
             return None
         token, _user = zugang
@@ -153,7 +153,7 @@ class AirbnbFotoRaumMixin:
         behält Airbnbs Rohwert, statt zu verschwinden.
         """
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not listing_id or not channel_id:
             return []
         raeume = self._airbnb_raeume_lesen(channel_id, listing_id)  # type: ignore[attr-defined]
@@ -217,7 +217,7 @@ class AirbnbFotoRaumMixin:
                 "Bilder lassen sich einem Zimmer zuordnen.",
                 status_code=409,
             )
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not channel_id:
             raise ChannelManagerError(
                 "Es ist kein Airbnb-Konto verbunden.", status_code=409
@@ -339,7 +339,7 @@ class AirbnbFotoRaumMixin:
         """
         try:
             lid = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
-            kanal = self._airbnb_kanal_des_betriebs(db, tenant_id)  # type: ignore[attr-defined]
+            kanal = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
             raeume = (
                 self._airbnb_raeume_lesen(kanal, lid)  # type: ignore[attr-defined]
                 if lid and kanal
@@ -481,7 +481,7 @@ class AirbnbFotoRaumMixin:
         ergäben (Wurzel 5 — kein stiller Erfolg).
         """
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
-        zugang = self._airbnb_token(db, tenant_id)  # type: ignore[attr-defined]
+        zugang = self._airbnb_token(db, tenant_id, property_id)  # type: ignore[attr-defined]
         if not listing_id or not zugang:
             raise ChannelManagerError(
                 "Der Stand bei Airbnb ist gerade nicht lesbar — die Änderung "

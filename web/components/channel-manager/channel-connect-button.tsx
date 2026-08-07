@@ -162,6 +162,7 @@ export function ChannelConnectButton({
   presetPropertyId,
   presetHotelId,
   accommodationType,
+  neuesKonto = false,
   onDone,
 }: {
   label?: string;
@@ -183,6 +184,10 @@ export function ChannelConnectButton({
   //                     eine Einheit; eine Zimmer-Tabelle gibt es hier nicht.
   // Ohne diese Angabe zeigte der Assistent allen dieselbe Hotelmaske.
   accommodationType?: "hotel" | "vacation_rental" | null;
+  // Ein WEITERES Portal-Konto verbinden statt das bestehende zu erweitern
+  // (0304). Bei einer Agentur mit mehreren Zugängen der Normalfall; ohne das
+  // Kennzeichen reicht der Server den bereits autorisierten Kanal zurück.
+  neuesKonto?: boolean;
   // Callback nach erfolgreicher Verbindung (z.B. Route refreshen).
   onDone?: () => void;
 }) {
@@ -390,6 +395,7 @@ export function ChannelConnectButton({
         ? await beginChannelOAuth({
             property_id: propertyId,
             portal_code: portal.code,
+            neues_konto: neuesKonto,
           })
         : await startAirbnbUebernahme();
       if (res.ok) {

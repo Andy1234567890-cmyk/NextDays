@@ -93,6 +93,9 @@ def connection_link_body(
     request_id: str,
     title: str,
     settings: dict[str, Any] | None,
+    konto_token: str | None = None,
+    redirect_uri: str | None = None,
+    failure_redirect_uri: str | None = None,
 ) -> dict[str, Any]:
     """Body für POST /meta/airbnb/connection_link.
 

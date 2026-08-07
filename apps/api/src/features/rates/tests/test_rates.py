@@ -309,9 +309,15 @@ def test_create_rate_plan_requires_tenant() -> None:
 
 # --- Datumsgenaue Preise pro Rate-Plan (Hotel) ------------------------------
 
-_OWN_PLAN = {"rate_plans": [
-    {"id": "rp-1", "property_id": "p-1", "properties": {"tenant_id": "t-1"}}
-]}
+# Das Objekt muss mitgeliefert werden: der Content-Sync geht nur für ein
+# veröffentlichtes Objekt raus (portalfreigabe). Ein Entwurf bliebe liegen —
+# richtig so, aber dann prüfte der Test die Einreihung nicht mehr.
+_OWN_PLAN = {
+    "rate_plans": [
+        {"id": "rp-1", "property_id": "p-1", "properties": {"tenant_id": "t-1"}}
+    ],
+    "properties": [{"id": "p-1", "tenant_id": "t-1", "status": "active"}],
+}
 
 
 def test_set_rate_plan_prices_upserts_and_enqueues(monkeypatch) -> None:  # noqa: ANN001

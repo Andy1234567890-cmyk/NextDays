@@ -3,7 +3,11 @@
 // Automatisierungen-Tab: planbare Auto-Nachrichten (Automails). Pro Regel:
 // Trigger + Anker (Anreise/Abreise/Buchung) + Offset (Tage vor/nach) + Uhrzeit,
 // Vorlage/Text, sowie Zuweisung nach Unterkünften UND Buchungskanälen (Haken;
-// leer = alle). Anlegen, aktivieren/deaktivieren, löschen.
+// leer = alle). Anlegen, bearbeiten, aktivieren/deaktivieren, löschen.
+//
+// Dasselbe Formular dient beidem: ohne Auswahl legt es an, mit `bearbeitetId`
+// speichert es die geladene Regel zurück. Getrennte Masken würden bei jeder
+// neuen Option (0303: Einheit, Ortszeit, Fenster) doppelt gepflegt.
 //
 // Der Auslöser „Nachricht empfangen" (Abwesenheitsantwort) fällt aus diesem
 // Raster: er hängt an keinem Datum der Reservierung, sondern am Eingang einer
@@ -22,6 +26,7 @@ import {
   type ComposerGriff,
 } from "@/components/inbox/composer-editor";
 import { FeldPicker } from "@/components/inbox/feld-picker";
+import { AUTOMATION_KANAELE } from "@/lib/automation-phasen";
 import {
   type Automation,
   type AutomationOffsetUnit,
@@ -46,10 +51,8 @@ const WOCHENTAGE = [0, 1, 2, 3, 4, 5, 6];
 const ANCHORS = ["arrival", "departure", "booking"];
 // Einheit des Versatzes (0303). Reihenfolge klein → groß, wie man sie liest.
 const EINHEITEN: AutomationOffsetUnit[] = ["minutes", "hours", "days"];
-// Kanal-Werte = ota_name-Herkunft (Backend matcht case-insensitive). Der eigene
-// Marktplatz „myBestDays" ist ein eigener Kanal wie die OTAs (booking_engine setzt
-// ota_name="myBestDays"), NICHT „Direkt". Altbestand wurde mit 0239 nachgezogen.
-const CHANNELS = ["myBestDays", "Booking.com", "Airbnb", "Vrbo", "Expedia"];
+// Kanäle: EINE Liste für Tab und Panel (s. `AUTOMATION_KANAELE`).
+const CHANNELS = AUTOMATION_KANAELE;
 
 type Prop = { id: string; title: string };
 
@@ -83,7 +86,10 @@ export function AutomationsTab() {
   const [fensterTage, setFensterTage] = useState<number[]>([]);
   const [fensterVon, setFensterVon] = useState("");
   const [fensterBis, setFensterBis] = useState("");
+  // null = Formular legt an, sonst wird diese Regel gespeichert.
+  const [bearbeitetId, setBearbeitetId] = useState<string | null>(null);
   const editorGriff = useRef<ComposerGriff | null>(null);
+  const formularRef = useRef<HTMLDivElement | null>(null);
 
   const beiNachricht = trigger === "message_received";
 
@@ -101,7 +107,57 @@ export function AutomationsTab() {
     load();
   }, []);
 
-  function create() {
+  /** Formular auf „neue Regel" zurückstellen. */
+  function zuruecksetzen() {
+    setBearbeitetId(null);
+    setName("");
+    setTrigger("booking_new");
+    setAnchor("arrival");
+    setDirection("before");
+    setDays(3);
+    setEinheit("days");
+    setSendTime("09:00");
+    setMitUhrzeit(true);
+    setPropertyIds([]);
+    setChannels([]);
+    setTemplateId("");
+    setMessage("");
+    setOrtszeit(false);
+    setNurErste(false);
+    setFensterTage([]);
+    setFensterVon("");
+    setFensterBis("");
+    setError(null);
+  }
+
+  /** Bestehende Regel ins Formular laden. Der Versatz wird beim Lesen wieder
+   *  in Betrag + Richtung zerlegt, weil das Formular so gebaut ist; bei einem
+   *  Server vor 0303 trägt nur `offset_days` den Wert. */
+  function bearbeiten(a: Automation) {
+    const versatz = a.offset_value ?? a.offset_days ?? 0;
+    setBearbeitetId(a.id);
+    setName(a.name);
+    setTrigger(a.trigger);
+    setAnchor(a.anchor);
+    setDirection(versatz < 0 ? "before" : "after");
+    setDays(Math.abs(versatz));
+    setEinheit(a.offset_unit ?? "days");
+    setMitUhrzeit(Boolean(a.send_time));
+    setSendTime(a.send_time ?? "09:00");
+    setPropertyIds(a.property_ids);
+    setChannels(a.channels);
+    setTemplateId(a.template_id ?? "");
+    setMessage(a.message ?? "");
+    setOrtszeit(a.use_property_timezone);
+    setNurErste(a.only_first_message);
+    setFensterTage(a.window_days);
+    setFensterVon(a.window_from ?? "");
+    setFensterBis(a.window_to ?? "");
+    setError(null);
+    formularRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function speichern() {
     if (!name.trim()) {
       setError(t("autoNameRequired"));
       return;
@@ -112,41 +168,41 @@ export function AutomationsTab() {
     }
     setError(null);
     const offset = direction === "before" ? -Math.abs(days) : Math.abs(days);
+    // Beim Bearbeiten bleibt der Aktiv-Zustand, wie er in der Liste steht —
+    // Speichern darf eine pausierte Regel nicht stillschweigend scharfstellen.
+    const bestand = bearbeitetId
+      ? items.find((x) => x.id === bearbeitetId)
+      : undefined;
+    const eingabe = {
+      name,
+      trigger,
+      anchor,
+      // `offset_days` führt weiter die Tages-Sicht; der Server rechnet mit
+      // offset_unit/offset_value (0303).
+      offset_days: einheit === "days" ? offset : 0,
+      offset_unit: einheit,
+      offset_value: offset,
+      send_time: mitUhrzeit && sendTime ? sendTime : null,
+      property_ids: propertyIds,
+      channels,
+      template_id: templateId || null,
+      message: message || null,
+      is_active: bestand?.is_active ?? true,
+      use_property_timezone: ortszeit,
+      // Die Fenster-Felder gelten nur für „Nachricht empfangen"; bei den
+      // datumsgebundenen Auslösern würden gespeicherte Reste sonst still
+      // mitwandern, wenn jemand den Auslöser später umstellt.
+      only_first_message: beiNachricht ? nurErste : false,
+      window_days: beiNachricht ? fensterTage : [],
+      window_from: beiNachricht ? fensterVon || null : null,
+      window_to: beiNachricht ? fensterBis || null : null,
+    };
     start(async () => {
-      const res = await createAutomation({
-        name,
-        trigger,
-        anchor,
-        // `offset_days` führt weiter die Tages-Sicht; der Server rechnet mit
-        // offset_unit/offset_value (0303).
-        offset_days: einheit === "days" ? offset : 0,
-        offset_unit: einheit,
-        offset_value: offset,
-        send_time: mitUhrzeit && sendTime ? sendTime : null,
-        property_ids: propertyIds,
-        channels,
-        template_id: templateId || null,
-        message: message || null,
-        is_active: true,
-        use_property_timezone: ortszeit,
-        // Die Fenster-Felder gelten nur für „Nachricht empfangen"; bei den
-        // datumsgebundenen Auslösern würden gespeicherte Reste sonst still
-        // mitwandern, wenn jemand den Auslöser später umstellt.
-        only_first_message: beiNachricht ? nurErste : false,
-        window_days: beiNachricht ? fensterTage : [],
-        window_from: beiNachricht ? fensterVon || null : null,
-        window_to: beiNachricht ? fensterBis || null : null,
-      });
+      const res = bearbeitetId
+        ? await updateAutomation(bearbeitetId, eingabe)
+        : await createAutomation(eingabe);
       if (res.ok) {
-        setName("");
-        setMessage("");
-        setDays(3);
-        setPropertyIds([]);
-        setChannels([]);
-        setFensterTage([]);
-        setFensterVon("");
-        setFensterBis("");
-        setNurErste(false);
+        zuruecksetzen();
         await load();
       } else {
         setError(res.error);
@@ -164,6 +220,9 @@ export function AutomationsTab() {
   function remove(id: string) {
     start(async () => {
       await deleteAutomation(id);
+      // Sonst zeigte das Formular weiter eine Regel, die es nicht mehr gibt,
+      // und „Speichern" liefe in ein 404.
+      if (bearbeitetId === id) zuruecksetzen();
       await load();
     });
   }
@@ -179,13 +238,16 @@ export function AutomationsTab() {
           : "";
       return `${fenster}${tage}`;
     }
-    const abs = Math.abs(a.offset_value);
-    const dir = a.offset_value < 0 ? t("autoBefore") : t("autoAfter");
+    // Rückfall auf die Tages-Sicht, solange ein Server die 0303-Felder noch
+    // nicht liefert — sonst steht dort `autoUnit_undefined` (MISSING_MESSAGE).
+    const versatz = a.offset_value ?? a.offset_days ?? 0;
+    const abs = Math.abs(versatz);
+    const dir = versatz < 0 ? t("autoBefore") : t("autoAfter");
     const anchorLabel = t(`autoAnchor_${a.anchor}` as never) ?? a.anchor;
     const zone = a.use_property_timezone ? ` (${t("autoLocalTime")})` : "";
     const time = a.send_time ? ` · ${a.send_time}${zone}` : "";
     if (abs === 0) return `${anchorLabel}${time}`;
-    const einheitLabel = t(`autoUnit_${a.offset_unit}` as never);
+    const einheitLabel = t(`autoUnit_${a.offset_unit ?? "days"}` as never);
     return `${abs} ${einheitLabel} ${dir} ${anchorLabel}${time}`;
   }
 
@@ -211,7 +273,10 @@ export function AutomationsTab() {
             {items.map((a) => (
               <li
                 key={a.id}
-                className="flex items-center gap-3 rounded-2xl border border-border p-3"
+                className={
+                  "flex items-center gap-3 rounded-2xl border p-3 " +
+                  (bearbeitetId === a.id ? "border-accent" : "border-border")
+                }
               >
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="font-medium">{a.name}</span>
@@ -239,6 +304,18 @@ export function AutomationsTab() {
                   type="button"
                   variant="outline"
                   size="icon"
+                  aria-label={t("autoEdit")}
+                  title={t("autoEdit")}
+                  onClick={() => bearbeiten(a)}
+                >
+                  <Icon icon="ph:pencil-simple" className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label={t("autoDelete")}
+                  title={t("autoDelete")}
                   onClick={() => remove(a.id)}
                 >
                   <Icon icon="ph:trash" className="size-4" />
@@ -250,8 +327,13 @@ export function AutomationsTab() {
       </div>
 
       {/* Neue Regel */}
-      <div className="col-span-12 flex flex-col gap-3 rounded-2xl border border-border p-4 lg:col-span-5">
-        <h3 className="font-semibold">{t("autoNew")}</h3>
+      <div
+        ref={formularRef}
+        className="col-span-12 flex flex-col gap-3 rounded-2xl border border-border p-4 lg:col-span-5"
+      >
+        <h3 className="font-semibold">
+          {bearbeitetId ? t("autoEditTitle") : t("autoNew")}
+        </h3>
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -464,9 +546,19 @@ export function AutomationsTab() {
           </>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <div className="flex justify-end">
-          <Button type="button" onClick={create} disabled={pending}>
-            {t("autoCreate")}
+        <div className="flex justify-end gap-2">
+          {bearbeitetId && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={zuruecksetzen}
+              disabled={pending}
+            >
+              {t("autoCancel")}
+            </Button>
+          )}
+          <Button type="button" onClick={speichern} disabled={pending}>
+            {bearbeitetId ? t("autoSave") : t("autoCreate")}
           </Button>
         </div>
       </div>

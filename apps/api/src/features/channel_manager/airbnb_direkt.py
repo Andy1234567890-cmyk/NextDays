@@ -391,16 +391,36 @@ _EINHEIT_ZU_AIRBNB: Final[dict[str, str]] = {
 class AirbnbDirektMixin:
     """Liest Adresse, Beschreibung, Fotos und Ausstattung direkt bei Airbnb."""
 
-    def _airbnb_token(self, db: Client, tenant_id: str) -> tuple[str, str] | None:
-        """(access_token, host_user_id) des Airbnb-Kanals dieses Betriebs.
+    def _airbnb_token(
+        self, db: Client, tenant_id: str, property_id: str | None = None
+    ) -> tuple[str, str] | None:
+        """(access_token, host_user_id) des Airbnb-Kontos DIESES Objekts.
 
         Der Token steht bei CHANNEX am Kanal, nicht bei uns — wir holen ihn dort
         und speichern ihn NICHT (er rotiert, und ein kopierter Token wäre ein
         zweites Geheimnis mit eigenem Ablaufdatum).
+
+        `property_id` entscheidet, WESSEN Token: ein Betrieb kann mehrere
+        Airbnb-Konten führen (0304). Ohne Objektbezug liefert die Auflösung nur
+        dann etwas, wenn es genau ein Konto gibt — sonst `None`. Ein
+        beliebiges Token wäre hier besonders schlimm: damit liefen Schreib-
+        aufrufe gegen die Inserate eines FREMDEN Vermieters.
         """
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(  # type: ignore[attr-defined]
+            db, tenant_id, property_id
+        )
         if not channel_id:
             return None
+        return self._airbnb_token_am_kanal(channel_id)
+
+    def _airbnb_token_am_kanal(self, channel_id: str) -> tuple[str, str] | None:
+        """(access_token, host_user_id) eines BEKANNTEN Kanals.
+
+        Für Abläufe, die den Kanal schon kennen und kein Objekt haben — etwa die
+        Übernahme, bei der die Objekte aus den Listings erst entstehen. Der Kanal
+        IST die Kontoidentität (ein Kanal = ein Airbnb-Konto), deshalb ist er
+        hier der richtige Bezug und nicht ein hilfsweise gesuchtes Objekt.
+        """
         try:
             kanal = self._channex.get_channel(channel_id)  # type: ignore[attr-defined]
         except Exception as exc:  # noqa: BLE001 — best effort, kein Hauptpfad
@@ -1002,7 +1022,7 @@ class AirbnbDirektMixin:
             return {}
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
         kanal = self._airbnb_kanal_des_betriebs(  # type: ignore[attr-defined]
-            db, str(zeile[0]["tenant_id"])
+            db, str(zeile[0]["tenant_id"]), property_id
         )
         if not listing_id or not kanal:
             return {}
@@ -1181,7 +1201,7 @@ class AirbnbDirektMixin:
         listing_id = prop.get("airbnb_listing_id")
         if not listing_id:
             return {"listing_id": None, "geschrieben": []}
-        zugang = self._airbnb_token(db, tenant_id)
+        zugang = self._airbnb_token(db, tenant_id, property_id)
         if not zugang:
             log.info("airbnb_ausstattung_ohne_konto", property_id=property_id)
             return {"listing_id": str(listing_id), "geschrieben": []}
@@ -1217,7 +1237,7 @@ class AirbnbDirektMixin:
         listing_id = prop.get("airbnb_listing_id")
         if not listing_id:
             return {"listing_id": None, "geschrieben": {}}
-        zugang = self._airbnb_token(db, tenant_id)
+        zugang = self._airbnb_token(db, tenant_id, property_id)
         if not zugang:
             log.info("airbnb_stammdaten_ohne_konto", property_id=property_id)
             return {"listing_id": str(listing_id), "geschrieben": {}}

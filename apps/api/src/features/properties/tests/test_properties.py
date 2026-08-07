@@ -214,6 +214,9 @@ class _PublishQuery:
     def neq(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
+    def is_(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
     def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
@@ -323,6 +326,7 @@ class _PhotoQuery:
         self._payload: dict | None = None
         self._filters: list[tuple[str, object]] = []
         self._in: list[tuple[str, list[str]]] = []
+        self._is_null: list[str] = []
         self._order: str | None = None
         self._desc = False
         self._limit: int | None = None
@@ -353,6 +357,12 @@ class _PhotoQuery:
         self._in.append((col, [str(v) for v in vals]))
         return self
 
+    def is_(self, col: str, val: object) -> "_PhotoQuery":
+        # PostgREST-`is`: nur „ist leer" wird gebraucht (deleted_at is null).
+        self._is_null.append(col)
+        assert val == "null", f"is_({col}, {val!r}) wird hier nicht nachgebildet"
+        return self
+
     def order(self, col: str, desc: bool = False) -> "_PhotoQuery":
         self._order = col
         self._desc = desc
@@ -363,8 +373,10 @@ class _PhotoQuery:
         return self
 
     def _match(self, row: dict) -> bool:
-        return all(str(row.get(c)) == str(v) for c, v in self._filters) and all(
-            str(row.get(c)) in vals for c, vals in self._in
+        return (
+            all(str(row.get(c)) == str(v) for c, v in self._filters)
+            and all(str(row.get(c)) in vals for c, vals in self._in)
+            and all(row.get(c) is None for c in self._is_null)
         )
 
     def execute(self) -> _Result:

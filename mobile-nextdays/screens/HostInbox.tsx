@@ -6,8 +6,9 @@
 // übernimmt useRealtime.
 import type { RouteProp } from "@react-navigation/native";
 import { useRoute } from "@react-navigation/native";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -25,6 +26,7 @@ import { channelMeta } from "@/lib/calendar-channels";
 import {
   getInboxMessages,
   listInboxThreads,
+  NUR_ANHANG_TEXT,
   sendInboxMessage,
   type InboxMessage,
   type InboxThread,
@@ -308,7 +310,13 @@ function ThreadRow({ thread, onPress }: { thread: InboxThread; onPress: () => vo
 
           <Row style={{ justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
             <Txt v="sm" soft={thread.is_read} numberOfLines={2} style={{ flex: 1 }}>
-              {thread.last_message ?? "—"}
+              {/* Reine Bildnachricht: der Server legt ein sprachneutrales
+                  Kürzel ab (er kennt die Sprache des Betrachters nicht) — roh
+                  stünde hier wörtlich „[attachment]". Die App führt noch kein
+                  i18n, deshalb wie überall hier fester deutscher Text. */}
+              {thread.last_message === NUR_ANHANG_TEXT
+                ? "Foto"
+                : (thread.last_message ?? "—")}
             </Txt>
             {!thread.is_read && (
               <View style={{ width: 9, height: 9, borderRadius: 999, marginTop: 5, backgroundColor: t.palette.accent }} />
@@ -351,6 +359,10 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   const [messages, setMessages] = useState<InboxMessage[] | null>(null);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const verlauf = useRef<ScrollView>(null);
+  // Steht der Verlauf am unteren Rand? Startet auf `true`, damit der erste
+  // Aufbau eines frisch geöffneten Threads immer unten landet.
+  const amEnde = useRef(true);
 
   const load = useCallback(async () => {
     const res = await getInboxMessages(thread.id);
@@ -361,8 +373,37 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
     load();
   }, [load]);
 
+  // Ein Chat wird von unten gelesen: die neueste Nachricht ist die, um die es
+  // geht. Die `ScrollView` startet oben — bei einem langen Thread landete man
+  // beim Öffnen bei der ÄLTESTEN Nachricht (gleiche Ursache wie im Web,
+  // `web/components/inbox/inbox-konversation.tsx`).
+  //
+  // Der Sprung hängt an `onContentSizeChange` der ScrollView, NICHT an einem
+  // Effekt: `scrollToEnd` rechnet mit der zuletzt GEMESSENEN Inhaltshöhe, und
+  // die meldet React Native asynchron über genau dieses Ereignis. Ein Effekt
+  // (auch mit `setTimeout(0)`) läuft davor und träfe bei langen Threads noch
+  // die alte Höhe — der Verlauf bliebe stehen. Es deckt zusätzlich das
+  // Aufgehen der Tastatur ab, bei dem sich kein Zustand ändert.
+  //
+  // `animated: false`, weil den Ausgangspunkt beim Öffnen niemand sehen will.
+  const ansEndeSpringen = useCallback(() => {
+    // Nur wenn der Nutzer bereits unten steht (oder gerade erst geöffnet hat):
+    // `load()` läuft auch bei jedem Buchungs-Update über das Realtime-Abo auf
+    // der ganzen `channex_booking`-Zeile. Ohne diese Sperre risse es einen
+    // Nutzer, der weiter oben liest, unvermittelt nach unten.
+    if (amEnde.current) verlauf.current?.scrollToEnd({ animated: false });
+  }, []);
+
   // Offener Thread live (wie Web): neue Nachrichten + Notizen.
-  useRealtime({ table: "sandbox_message", filter: `thread_id=eq.${thread.id}`, onChange: load });
+  //
+  // Die Nachricht kommt NICHT über das Abo, sondern über `load()` — die API
+  // setzt den Rollen-Datensplit durch. Beobachtet wird nur das inhaltsfreie
+  // Signal `channex_booking.last_message_at` (0305); `portal_messages` trägt
+  // den Klartext der Gastnachrichten und bleibt für `authenticated` gesperrt
+  // (Wurzel 6). Vorher stand hier `sandbox_message` — eine Test-Tabelle (0036),
+  // die im Produktivpfad nie geschrieben wird: das Abo verband sauber und
+  // bekam nie ein Event.
+  useRealtime({ table: "channex_booking", filter: `id=eq.${thread.id}`, onChange: load });
   useRealtime({ table: "inbox_thread_note", filter: `thread_id=eq.${thread.id}`, onChange: load });
 
   const send = async () => {
@@ -423,7 +464,17 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
       </Row>
 
       {!messages && <Spinner />}
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}>
+      <ScrollView
+        ref={verlauf}
+        contentContainerStyle={{ padding: 16, gap: 10 }}
+        onContentSizeChange={ansEndeSpringen}
+        scrollEventThrottle={16}
+        onScroll={(e) => {
+          const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+          const rest = contentSize.height - contentOffset.y - layoutMeasurement.height;
+          amEnde.current = rest < 80; // Toleranz: „praktisch unten"
+        }}
+      >
         {messages?.map((m, i) => {
           const mine = m.sender === "property";
           const note = m.sender === "note";
@@ -435,25 +486,47 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
                 maxWidth: "82%",
               }}
             >
-              <View
-                style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  // Blase: eigene Nachricht dunkel, fremde hell, Notiz getönt.
-                  borderRadius: 20,
-                  borderBottomRightRadius: mine && !note ? 6 : 20,
-                  borderBottomLeftRadius: !mine && !note ? 6 : 20,
-                  backgroundColor: note
-                    ? t.palette.accentSoft
-                    : mine
-                      ? t.palette.ink
-                      : t.palette.surface2,
-                }}
-              >
-                <Txt v="body" color={mine && !note ? t.palette.bg : t.palette.ink}>
-                  {m.message}
-                </Txt>
-              </View>
+              {/* Die Blase entfällt, wenn der Gast NUR ein Foto geschickt hat
+                  (Channex liefert die Nachricht dann ohne Text) — sonst stünde
+                  hier ein leerer Kasten. */}
+              {!!m.message.trim() && (
+                <View
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    // Blase: eigene Nachricht dunkel, fremde hell, Notiz getönt.
+                    borderRadius: 20,
+                    borderBottomRightRadius: mine && !note ? 6 : 20,
+                    borderBottomLeftRadius: !mine && !note ? 6 : 20,
+                    backgroundColor: note
+                      ? t.palette.accentSoft
+                      : mine
+                        ? t.palette.ink
+                        : t.palette.surface2,
+                  }}
+                >
+                  <Txt v="body" color={mine && !note ? t.palette.bg : t.palette.ink}>
+                    {m.message}
+                  </Txt>
+                </View>
+              )}
+
+              {/* Bildanhänge. Die URLs hat der Server auf https + bekannten
+                  Host geprüft — hier wird nichts nachgebessert. */}
+              {m.attachments?.map((url) => (
+                <Image
+                  key={url}
+                  source={{ uri: url }}
+                  style={{
+                    width: "100%",
+                    aspectRatio: 4 / 3,
+                    borderRadius: 20,
+                    marginTop: m.message.trim() ? 6 : 0,
+                    backgroundColor: t.palette.surface2,
+                  }}
+                  resizeMode="cover"
+                />
+              ))}
             </View>
           );
         })}

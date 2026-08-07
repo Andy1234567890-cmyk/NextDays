@@ -66,6 +66,9 @@ from .schemas import (
     OAuthBeginResponse,
     OAuthFinalizeRequest,
     OAuthStatusResponse,
+    OtaAccountList,
+    OtaAccountOut,
+    OtaAccountRename,
     PinChannelRequest,
     PinnedChannelsResponse,
     PortalPriceAdjustmentRequest,
@@ -353,6 +356,37 @@ def channel_detail(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get("/channels/{portal_code}/accounts", response_model=OtaAccountList)
+def channel_accounts(
+    portal_code: str, ctx: _read, service: ChannelManagerServiceDep
+) -> OtaAccountList:
+    """Die verbundenen Konten eines Portals (0304).
+
+    Ein Betrieb kann je Portal mehrere Zugänge führen — Agenturen betreuen
+    hunderte Vermieter mit je eigenem Airbnb-/Booking-Konto.
+    """
+    try:
+        return OtaAccountList(**service.portal_konten(ctx, portal_code))
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/channels/accounts/{account_id}", response_model=OtaAccountOut)
+def rename_channel_account(
+    account_id: str,
+    req: OtaAccountRename,
+    ctx: _write,
+    service: ChannelManagerServiceDep,
+) -> OtaAccountOut:
+    """Konto benennen. Bei 100 Konten ist „226976381" keine Auskunft."""
+    try:
+        return OtaAccountOut(
+            **service.konto_umbenennen(ctx, account_id, req.display_name)
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/channels/prepare", response_model=PrepareChannelResponse)
 def prepare_channel(
     req: PrepareChannelRequest, service: ChannelManagerServiceDep, ctx: _write
@@ -444,11 +478,18 @@ def disconnect_channel(
 # Kunden.
 @router.post("/airbnb/uebernahme/start", response_model=OAuthBeginResponse)
 def start_airbnb_uebernahme(
-    service: ChannelManagerServiceDep, ctx: _write
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+    # Ein WEITERES Airbnb-Konto verbinden (0304). Query statt Body, weil die
+    # Route sonst keinen hat — ältere Clients senden ihn nicht und bekommen
+    # unverändert den Ein-Konto-Weg.
+    neues_konto: bool = False,
 ) -> OAuthBeginResponse:
     """Übernahme starten: Gerüst-Objekt anlegen + Airbnb-OAuth-URL erzeugen."""
     try:
-        return OAuthBeginResponse(**service.uebernahme_starten(ctx))
+        return OAuthBeginResponse(
+            **service.uebernahme_starten(ctx, neues_konto=neues_konto)
+        )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -729,6 +770,7 @@ def begin_channel_oauth(
             portal_code=portal_code,
             title=req.title,
             settings=req.settings,
+            neues_konto=req.neues_konto,
         )
         return OAuthBeginResponse(**result)
     except ChannelManagerError as exc:

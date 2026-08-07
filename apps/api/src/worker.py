@@ -951,6 +951,11 @@ class Worker:
         gemeldet wurde der Fehler schon immer, nur nachgeholt hat ihn nie
         jemand. Coalescing über den bestehenden dedup_key — läuft für ein
         Objekt bereits ein Sync, entsteht kein zweiter.
+
+        Reine Entwürfe kommen hier nicht vor: Grundlage ist die Registrierung
+        (`channex_property_map`), die ein unveröffentlichtes Objekt gar nicht
+        erst bekommt. Deshalb braucht dieser Tick keine eigene Statusprüfung —
+        wer hier steht, war schon einmal bei den Portalen.
         """
         rows = (
             self._db.table("channex_property_map")

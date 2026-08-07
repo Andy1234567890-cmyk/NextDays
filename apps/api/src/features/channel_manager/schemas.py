@@ -434,6 +434,35 @@ class ConnectChannelRequest(BaseModel):
 
 
 # --- Airbnb-OAuth (white-label, ohne iFrame) --------------------------------
+class OtaAccountOut(BaseModel):
+    """Ein Portal-Zugang eines Betriebs (0304)."""
+
+    id: str
+    portal_code: str
+    portal: str
+    # Kennung beim Portal (Airbnb-Host-ID, Booking-Hotel-ID). None, solange die
+    # Autorisierung läuft — Channex meldet sie erst danach.
+    hotel_id: str | None = None
+    channel_id: str | None = None
+    display_name: str | None = None
+    is_active: bool = True
+    # Channex meldet abgelaufene Tokens → der Betrieb muss neu autorisieren.
+    token_invalid: bool = False
+    last_error: str | None = None
+    connected_at: str | None = None
+    # Wie viele Objekte an diesem Konto hängen.
+    properties: int = 0
+
+
+class OtaAccountList(BaseModel):
+    items: list[OtaAccountOut] = Field(default_factory=list)
+    total: int = 0
+
+
+class OtaAccountRename(BaseModel):
+    display_name: str | None = None
+
+
 class OAuthBeginRequest(BaseModel):
     """OAuth-Start: inaktiven Channel anlegen + echte OAuth-URL erzeugen."""
 
@@ -445,6 +474,11 @@ class OAuthBeginRequest(BaseModel):
     portal_code: str                                  # OAuth-Portal (AirBNB)
     title: str | None = None
     settings: dict = Field(default_factory=dict)      # optionale Airbnb-Settings
+    # Ein WEITERES Portal-Konto verbinden statt das bestehende wiederzuverwenden
+    # (0304 — Agenturen führen mehrere Zugänge je Portal). Standard ist `false`:
+    # der häufige Fall ist „mein Konto verbinden", und ein versehentlich zweiter
+    # Kanal am selben Konto wird von Airbnb abgelehnt.
+    neues_konto: bool = False
 
 
 class AirbnbUebernahmeResponse(BaseModel):

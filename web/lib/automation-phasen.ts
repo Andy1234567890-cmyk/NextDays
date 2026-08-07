@@ -12,6 +12,21 @@ import type { Automation } from "@/lib/inbox";
 
 export type PhasenSchluessel = "before" | "during" | "after";
 
+// Kanal-Werte = ota_name-Herkunft (Backend matcht case-insensitive). Der eigene
+// Marktplatz „myBestDays" ist ein eigener Kanal wie die OTAs (booking_engine
+// setzt ota_name="myBestDays"), NICHT „Direkt". Altbestand: 0239.
+//
+// Hier und nicht in einer der beiden Oberflächen: Tab und Panel bearbeiten
+// DIESELBE Regel. Zwei Listen hießen, dass ein Kanal je nach Weg wählbar ist
+// oder nicht — und die Regel unbemerkt einen Kanal verliert.
+export const AUTOMATION_KANAELE = [
+  "myBestDays",
+  "Booking.com",
+  "Airbnb",
+  "Vrbo",
+  "Expedia",
+];
+
 /** Die drei Abschnitte in ihrer Reihenfolge im Panel. */
 export const PHASEN: PhasenSchluessel[] = ["before", "during", "after"];
 
@@ -31,9 +46,11 @@ export function phaseVon(a: Automation): PhasenSchluessel {
   if (a.anchor === "booking") return "before";
   // Maßgeblich ist das VORZEICHEN, nicht der Betrag — deshalb ist die Einheit
   // hier gleichgültig: „2 Stunden nach Abreise" liegt so gut nach der Abreise
-  // wie „2 Tage nach Abreise".
-  if (a.anchor === "departure") return a.offset_value > 0 ? "after" : "during";
-  return a.offset_value > 0 ? "during" : "before";
+  // wie „2 Tage nach Abreise". Rückfall auf `offset_days`, solange ein Server
+  // die 0303-Felder noch nicht mitliefert.
+  const versatz = a.offset_value ?? a.offset_days ?? 0;
+  if (a.anchor === "departure") return versatz > 0 ? "after" : "during";
+  return versatz > 0 ? "during" : "before";
 }
 
 /** Hat diese Regel überhaupt einen Zeitplan? (message_received hat keinen.) */
@@ -55,5 +72,5 @@ export function zeitachse(a: Automation): number {
   // „2 Tage vor Anreise", weil 30 > 2 ist — die Zahl allein sagt nichts,
   // solange die Einheit daneben steht.
   const proEinheit = a.offset_unit === "minutes" ? 1 : a.offset_unit === "hours" ? 60 : 1440;
-  return ankerRang * 10_000_000 + a.offset_value * proEinheit;
+  return ankerRang * 10_000_000 + (a.offset_value ?? a.offset_days ?? 0) * proEinheit;
 }

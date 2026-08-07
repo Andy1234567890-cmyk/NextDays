@@ -18,6 +18,11 @@ import {
 
 import { ComposerEditor } from "@/components/inbox/composer-editor";
 import {
+  sprachName,
+  uebersetzbar,
+  useUebersetzung,
+} from "@/components/inbox/chat-uebersetzung";
+import {
   GuestAvatar,
   HeadAction,
   MenuAction,
@@ -102,7 +107,8 @@ export function Conversation({
   const [anhaenge, setAnhaenge] = useState<Attachment[]>([]);
   const [anhangLaeuft, setAnhangLaeuft] = useState(false);
   const dateiFeld = useRef<HTMLInputElement>(null);
-  const verlauf = useRef<HTMLDivElement>(null);
+  // Sentinel am Listenende — Sprungziel beim Öffnen/Nachrücken.
+  const ende = useRef<HTMLDivElement>(null);
   // Grund, warum der Portal-Chat nichts liefert (z. B. Chat für dieses Objekt
   // bei den Portalen nicht freigeschaltet). Ohne diesen Hinweis sieht die
   // Konversation aus wie „der Gast hat nichts geschrieben".
@@ -110,6 +116,10 @@ export function Conversation({
   // Lesestand des Gastes (0297): bis zu diesem Zeitpunkt hat er gelesen.
   // null = der Kanal meldet keinen — dann bleibt jedes Häkchen aus.
   const [gelesenBis, setGelesenBis] = useState<string | null>(null);
+  // Übersetzung je Nachricht. Zielsprache ist die Oberflächensprache: wer den
+  // Posteingang auf Dänisch bedient, will Dänisch lesen.
+  const { stand: uebersetzung, umschalten: uebersetzen } =
+    useUebersetzung(locale);
 
   /**
    * Hat der Gast diese Nachricht gelesen?
@@ -158,20 +168,52 @@ export function Conversation({
     loadAnhaenge();
   }, [load, loadScheduled, loadAnhaenge]);
 
+  // Ein Chat wird von unten gelesen: die neueste Nachricht ist die, um die es
+  // geht. Der Verlauf ist ein normaler `overflow-y-auto`-Container und startet
+  // deshalb IMMER oben — bei einem langen Thread landete man beim Öffnen bei
+  // der ältesten Nachricht und musste zur eigenen gerade gesendeten Antwort
+  // erst runterscrollen.
+  //
+  // Über ein Sentinel-Element am Listenende statt `scrollTop = scrollHeight`
+  // (Muster wie `gastgeber/.../chat-spalte.tsx`, `admin/.../support-konsole.tsx`):
+  // `scrollIntoView` misst beim Ausführen selbst, während eine gesetzte Höhe
+  // den Stand von VOR dem Nachladen der Iconify-Icons träfe und dann knapp
+  // über dem Ende landet.
+  //
+  // Abhängig von der ANZAHL, nicht vom Array: `load()` setzt bei jedem Lauf
+  // eine neue Referenz, und das Realtime-Abo hängt an der ganzen
+  // `channex_booking`-Zeile — jedes Buchungs-Update (Sync, Zahlung, Status)
+  // löst ein `load()` aus. Über die Referenz würde die Ansicht dem Nutzer
+  // dabei nach unten springen, während er weiter oben liest.
+  useEffect(() => {
+    ende.current?.scrollIntoView({ block: "end" });
+  }, [messages.length, thread.id]);
+
   // Der KI-Vorschlag hängt sich ans Ende des Verlaufs. Steht der schon am
   // unteren Rand, liegt der neue Block knapp darunter — man klickt und sieht
   // scheinbar nichts passieren. Das Scrollen gehört in einen Effekt: `suggest`
   // rendert über eine Transition, ein requestAnimationFrame im Klick-Handler
   // läuft daher noch VOR dem Commit und trifft die alte Höhe.
   useEffect(() => {
-    const box = verlauf.current;
-    if (ai !== null && box) box.scrollTop = box.scrollHeight;
+    if (ai !== null) ende.current?.scrollIntoView({ block: "end" });
   }, [ai]);
 
   // Echtes Realtime für den offenen Chat: neue Nachrichten + Notizen sofort.
+  //
+  // Die Nachricht selbst kommt NICHT über das Abo, sondern über `load()` — die
+  // API setzt den Rollen-Datensplit durch. Beobachtet wird nur das
+  // inhaltsfreie Signal `channex_booking.last_message_at` (0305): ein
+  // `authenticated`-SELECT auf `portal_messages` würde den Klartext der
+  // Gastnachrichten über den PostgREST-Direktpfad für jede Rolle öffnen,
+  // cleaner eingeschlossen (Wurzel 6).
+  //
+  // Vorher stand hier ein Abo auf `sandbox_message` — eine reine Test-Tabelle
+  // (0036), die im Produktivpfad nie geschrieben wird. Es verband sauber und
+  // bekam nie ein Event: genau die stumme Attrappe aus 0234. Deshalb erschien
+  // eine eingehende Nachricht erst beim manuellen Neuladen.
   useRealtime({
-    table: "sandbox_message",
-    filter: `thread_id=eq.${thread.id}`,
+    table: "channex_booking",
+    filter: `id=eq.${thread.id}`,
     onChange: load,
   });
   useRealtime({
@@ -523,10 +565,7 @@ export function Conversation({
       </div>
 
       {/* Verlauf */}
-      <div
-        ref={verlauf}
-        className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4"
-      >
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
         {loading ? (
           <p className="text-sm text-muted-foreground">…</p>
         ) : messages.length === 0 ? (
@@ -579,16 +618,102 @@ export function Conversation({
                     gegliederte Willkommensnachricht als eine Textwand, in der
                     Check-in-Zeit und Türcode untergehen. `break-words` fängt
                     die langen Links ab, die sonst über die Blase hinauslaufen. */}
-                <div
-                  className={
-                    "max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm " +
-                    (m.sender === "property"
-                      ? "bg-accent text-white"
-                      : "bg-muted text-foreground")
-                  }
-                >
-                  {m.message}
-                </div>
+                {/* Die Textblase entfällt, wenn der Gast NUR ein Foto
+                    geschickt hat (Channex liefert die Nachricht dann mit
+                    leerem Text) — sonst stünde hier ein leerer grauer Kasten,
+                    genau der Zustand vor diesem Fix. */}
+                {m.message.trim() && (
+                  <div
+                    className={
+                      "max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm " +
+                      (m.sender === "property"
+                        ? "bg-accent text-white"
+                        : "bg-muted text-foreground")
+                    }
+                  >
+                    {/* Übersetzung ersetzt den Text nur, solange sie
+                        eingeschaltet ist — das Original ist immer einen Klick
+                        entfernt und bleibt die Quelle (Wurzel 4). */}
+                    {uebersetzung[m.id ?? ""]?.sichtbar
+                      ? uebersetzung[m.id ?? ""]?.text
+                      : m.message}
+                  </div>
+                )}
+
+                {/* „Übersetzen" / „Original anzeigen" — Form von Airbnb und
+                    Booking übernommen: unscheinbarer Textknopf unter der
+                    Blase, nie automatisch. Automatisches Übersetzen kostet je
+                    Zeichen und träfe auch Nachrichten, die niemand liest. */}
+                {uebersetzbar(m.sender, m.message) && m.id && (
+                  <div className="flex max-w-[80%] flex-col items-start gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => void uebersetzen(m.id as string, m.message)}
+                      disabled={uebersetzung[m.id]?.laeuft}
+                      className="flex items-center gap-1 text-[0.7rem] font-medium text-muted-foreground hover:text-accent disabled:opacity-60"
+                    >
+                      <Icon
+                        icon={
+                          uebersetzung[m.id]?.laeuft
+                            ? "ph:spinner"
+                            : "ph:translate"
+                        }
+                        className={
+                          "size-3.5 " +
+                          (uebersetzung[m.id]?.laeuft ? "animate-spin" : "")
+                        }
+                      />
+                      {uebersetzung[m.id]?.sichtbar
+                        ? t("showOriginal")
+                        : t("translate")}
+                    </button>
+                    {/* Woher der Text stammt, sobald übersetzt wurde — sonst
+                        wüsste niemand, ob „Übersetzen" etwas getan hat, wenn
+                        Gast und Betrieb dieselbe Sprache sprechen. */}
+                    {uebersetzung[m.id]?.sichtbar &&
+                      uebersetzung[m.id]?.quelle && (
+                        <span className="text-[0.65rem] text-muted-foreground">
+                          {t("translatedFrom", {
+                            sprache: sprachName(
+                              uebersetzung[m.id]?.quelle as string,
+                              locale,
+                            ),
+                          })}
+                        </span>
+                      )}
+                    {/* Fehler stehen an der Nachricht, nicht in einem Toast,
+                        der weg ist, bevor man ihn liest. */}
+                    {uebersetzung[m.id]?.fehler && (
+                      <span className="text-[0.65rem] text-destructive">
+                        {uebersetzung[m.id]?.fehler}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Bildanhänge. Jede URL hat serverseitig die Prüfung auf
+                    https + bekannten Host passiert (`_sichere_anhaenge`) —
+                    hier wird nichts nachgebessert, was dort durchfiel.
+                    `rel="noreferrer"`, damit das Öffnen im neuen Tab dem
+                    fremden Host nicht verrät, aus welchem Thread es kam. */}
+                {m.attachments?.map((url) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="max-w-[80%] overflow-hidden rounded-2xl border border-border"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element --
+                        fremder Host, den `next/image` nicht optimieren kann. */}
+                    <img
+                      src={url}
+                      alt={t("attachmentAlt")}
+                      loading="lazy"
+                      className="block max-h-80 w-auto object-cover"
+                    />
+                  </a>
+                ))}
                 {m.sent_at && (
                   <span
                     className="flex items-center gap-1 text-[0.65rem] text-muted-foreground"
@@ -699,6 +824,10 @@ export function Conversation({
             </div>
           </div>
         )}
+
+        {/* Sprungziel „ganz unten". Steht NACH dem KI-Block, damit auch der
+            beim Aufklappen vollständig sichtbar wird. */}
+        <div ref={ende} />
       </div>
 
       {/* Anstehende geplante Nachrichten */}

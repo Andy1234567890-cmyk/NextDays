@@ -701,12 +701,17 @@ class ObjektKanalMixin:
             db, "properties", property_id, tenant_id, columns="id",
             not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
         )
+        # `id` mitlesen: getrennt wird GENAU DIESE Verbindung. Vorher lief der
+        # Update über (tenant, property, portal) und nullte die Kanal-ID ALLER
+        # Zeilen — bei zwei Konten (0304) wäre die Verbindung des zweiten in
+        # unserer DB unwiederbringlich weg, während sie bei Channex weiterläuft.
         row = (
             db.table("channex_channel_connection")
-            .select("channex_channel_id, ota_hotel_id, ota_room_type_code")
+            .select("id, channex_channel_id, ota_hotel_id, ota_room_type_code")
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
             .eq("ota_portal_code", portal_code)
+            .order("created_at")
             .limit(1)
             .execute()
         ).data or []
@@ -741,9 +746,7 @@ class ObjektKanalMixin:
                 "ota_room_type_code": None,
                 "last_error": None,
             }
-        ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
-            "ota_portal_code", portal_code
-        ).execute()
+        ).eq("tenant_id", tenant_id).eq("id", row[0]["id"]).execute()
         log.info(
             "portal_verbindung_getrennt",
             tenant_id=tenant_id, property_id=property_id, portal_code=portal_code,

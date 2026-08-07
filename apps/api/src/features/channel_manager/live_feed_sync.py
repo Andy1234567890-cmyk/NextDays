@@ -142,6 +142,17 @@ class LiveFeedSyncMixin:
             # kontoweit, white-label). Nicht persistieren — Wurzel 3.
             return False
 
+        # Nachrichten VOR dem Dedup-Check spiegeln (0305). Der Check fragt die
+        # EREIGNISLISTE — für Nachrichten ist sie aber gar nicht der Speicher
+        # (`_UNPERSISTED_EVENTS`), also stünde dort nie ein Treffer und ein
+        # späterer Aufruf käme trotzdem hier durch. Umgekehrt gilt: stünde der
+        # Spiegel-Aufruf HINTER dem Check, würde er beim ersten Durchlauf laufen
+        # und danach nie wieder — und genau das Nachziehen, für das dieser Tick
+        # existiert, fiele aus. Die Idempotenz sitzt deshalb dort, wo sie
+        # hingehört: am UNIQUE-Index von `portal_messages` (Wurzel 2).
+        if event == "message":
+            self.nachricht_spiegeln(str(tenant_id), attrs.get("payload") or {})
+
         if self._journal_ereignis_bekannt(str(tenant_id), live_id):
             return False
 
