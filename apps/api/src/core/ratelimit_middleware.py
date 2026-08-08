@@ -20,8 +20,9 @@ import asyncio
 import json
 from base64 import urlsafe_b64decode
 from collections.abc import Callable
+from hashlib import sha256
 
-from starlette.requests import Request
+from starlette.requests import ClientDisconnect, Request
 from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp
 
@@ -50,6 +51,7 @@ class _Buckets:
     def __init__(self, settings: Settings) -> None:
         self.default = parse_limit(settings.rate_limit_default)
         self.auth = parse_limit(settings.rate_limit_auth)
+        self.refresh = parse_limit(settings.rate_limit_refresh)
         self.payments = parse_limit(settings.rate_limit_payments)
         self.listings = parse_limit(settings.rate_limit_listings)
         self.listings_tenant = parse_limit(settings.rate_limit_listings_tenant)
@@ -72,11 +74,9 @@ def _is_exempt(path: str) -> bool:
 _AUTH_PATHS = (
     "/auth/login",
     "/auth/register",
-    "/auth/refresh",
     "/oauth/token",
     "/guest-auth/login",
     "/guest-auth/register",
-    "/guest-auth/refresh",
     "/guest-auth/password-reset",
     # Einladung ins Backoffice annehmen: öffentlich (die eingeladene Person hat
     # noch keine Sitzung) und setzt ein Passwort — also derselbe strenge Bucket
@@ -89,6 +89,14 @@ _AUTH_PATHS = (
     "/platform/team/passwort-vergessen",
     "/platform/team/passwort-neu",
 )
+
+# Token-Erneuerung. Eigener Bucket, gekeyt PRO NUTZER statt pro IP (siehe
+# `rate_limit_refresh` in config.py und `_subject_from_refresh_body`): das ist
+# kein Credential-Rateweg, sondern der Normalbetrieb jeder angemeldeten Sitzung.
+# Nicht sensibel → bei Redis-Ausfall fail-OPEN: ein 503 auf diesem Pfad meldet
+# sonst alle gerade aktiven Nutzer ab (Wurzel 5 — ein Ausfall des Zählers darf
+# den Hauptpfad nicht kippen).
+_REFRESH_PATHS = ("/auth/refresh", "/guest-auth/refresh")
 
 # Endpunkte, die eine KOSTENPFLICHTIGE Fremd-API anstoßen (Groq bzw. Google
 # Translate). Im Default-Bucket könnte ein einzelner eingeloggter Nutzer
@@ -146,6 +154,10 @@ _WEBHOOK_PATHS = (
 # weitere Verzweigung bedeutet.
 _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("payments", _WEBHOOK_PATHS, "payments", False),
+    # VOR "auth": /auth/refresh würde sonst über den Teilstring-Vergleich
+    # ("/auth/login" ist nicht enthalten, aber die Reihenfolge entscheidet
+    # generell) am falschen Bucket landen. Eigener Bucket, eigenes Keying.
+    ("refresh", _REFRESH_PATHS, "refresh", False),
     ("auth", _AUTH_PATHS, "auth", True),
     ("payments", ("/payments/",), "payments", True),
     ("public_support", _PUBLIC_SUPPORT_PATHS, "public_support", True),
@@ -161,6 +173,63 @@ def _select_bucket(path: str, buckets: _Buckets) -> tuple[str, Limit, bool]:
         if any(p in path for p in pfade):
             return name, getattr(buckets, attribut), sensibel
     return "default", buckets.default, False
+
+
+def _receive_mit_body(original: Callable, body: bytes | None) -> Callable:
+    """`receive`, das einen bereits gelesenen Body noch einmal ausliefert.
+
+    Wurde der Body in der Middleware nicht angefasst (`body is None`), bleibt
+    das originale `receive` unverändert — kein Umweg für die 99 % der Requests,
+    die den refresh-Bucket gar nicht treffen.
+    """
+    if body is None:
+        return original
+
+    gesendet = False
+
+    async def receive() -> dict:
+        nonlocal gesendet
+        if not gesendet:
+            gesendet = True
+            return {"type": "http.request", "body": body, "more_body": False}
+        # Nach dem Body weiter am echten Stream horchen (http.disconnect).
+        return await original()
+
+    return receive
+
+
+async def _sitzung_aus_refresh_body(request: Request) -> str | None:
+    """Stabiler Schlüssel je SITZUNG für den refresh-Bucket (oder None).
+
+    Warum nicht die IP: die Frontends sind BFFs, ihre Refresh-Aufrufe kommen
+    server-zu-server aus EINEM Container. Eine IP = alle Nutzer, und der
+    Zehnerzähler des auth-Buckets war nach zehn fremden Erneuerungen voll — der
+    nächste echte Nutzer bekam 429 und flog raus.
+
+    Warum nicht der `sub`-Claim: ein GoTrue-Refresh-Token ist ein OPAKER String,
+    kein JWT — es gibt darin keine Claims zu lesen. Der Token-Wert selbst ist
+    aber pro Sitzung stabil genug für ein Fairness-Fenster. Er wird gehasht, um
+    kein Geheimnis in einen Redis-Schlüssel (und damit in Logs/`MONITOR`) zu
+    schreiben.
+
+    Der Body wird über `request.body()` gelesen; Starlette cacht ihn in
+    `request._body`, und da die Middleware dasselbe Request-Objekt-Scope
+    weiterreicht, bleibt er für die Route lesbar (siehe `_guard`-Aufrufer).
+    """
+    try:
+        roh = await request.body()
+    except (ClientDisconnect, RuntimeError):
+        return None
+    if not roh:
+        return None
+    try:
+        daten = json.loads(roh)
+    except (ValueError, json.JSONDecodeError):
+        return None
+    token = daten.get("refresh_token") if isinstance(daten, dict) else None
+    if not isinstance(token, str) or not token:
+        return None
+    return sha256(token.encode("utf-8")).hexdigest()[:32]
 
 
 def _tenant_from_bearer(auth_header: str | None) -> str | None:
@@ -237,16 +306,69 @@ class RateLimitMiddleware:
             return
 
         response = await self._guard(request)
+        # Der refresh-Bucket liest den Request-Body, um pro Sitzung zu keyen.
+        # Damit ist der ASGI-`receive`-Stream aufgebraucht — die Route würde
+        # einen LEEREN Body sehen und jeden Refresh mit 422 abweisen. Deshalb
+        # den gepufferten Body als frisches `receive` nachreichen. Starlette
+        # cacht ihn nur auf DIESEM Request-Objekt; die Route baut ein eigenes.
+        weiter = _receive_mit_body(receive, getattr(request, "_body", None))
         if response is not None:
-            await response(scope, receive, send)
+            await response(scope, weiter, send)
             return
-        await self._app(scope, receive, send)
+        await self._app(scope, weiter, send)
+
+    async def _guard_refresh(
+        self, request: Request, limit: Limit, sensitive: bool, path: str
+    ) -> tuple[bool, Response | None]:
+        """Zählt eine Token-Erneuerung PRO SITZUNG statt pro IP.
+
+        Rückgabe ``(fertig, antwort)``: ``fertig=True`` heißt, der Fall ist hier
+        entschieden (``antwort`` ist dann die Ablehnung oder ``None`` für
+        „durchlassen"). ``fertig=False`` heißt, im Body stand kein verwertbares
+        Token — dann greift der normale IP-Pfad des Aufrufers. Zwei getrennte
+        Werte, weil ein blankes ``None`` beide Bedeutungen hätte.
+        """
+        sitzung = await _sitzung_aus_refresh_body(request)
+        if not sitzung:
+            return False, None
+        decision = await self._limiter_for_loop().check(
+            f"refresh:sitzung:{sitzung}", limit
+        )
+        if decision.degraded:
+            return True, self._handle_degraded(sensitive, path)
+        if not decision.allowed:
+            return True, self._reject(decision, "refresh", path, scope="sitzung")
+        return True, None
+
+    async def _guard_listings_ip(
+        self, ip: str | None, sensitive: bool, path: str
+    ) -> Response | None:
+        """Scraper-Guard pro IP, der VOR dem Tenant-Limit greift (eingeloggte
+        listings-Requests). Ablehnung als Response, sonst None."""
+        decision = await self._limiter_for_loop().check(
+            f"listings:ip:{ip or 'unknown'}", self._buckets.listings
+        )
+        if decision.degraded:
+            return self._handle_degraded(sensitive, path)
+        if not decision.allowed:
+            return self._reject(decision, "listings", path, scope="ip")
+        return None
 
     async def _guard(self, request: Request) -> Response | None:
         """Gibt eine 429/503-Response zurück, wenn blockiert; sonst None."""
         path = request.url.path
         bucket_name, limit, sensitive = _select_bucket(path, self._buckets)
         limiter = self._limiter_for_loop()
+
+        # Token-Erneuerung: pro Sitzung keyen, nicht pro IP (BFF-Aufrufe kommen
+        # alle aus einem Container). Ohne lesbares Token fällt es unten auf den
+        # IP-Key zurück.
+        if bucket_name == "refresh":
+            fertig, antwort = await self._guard_refresh(
+                request, limit, sensitive, path
+            )
+            if fertig:
+                return antwort
 
         tenant = _tenant_from_bearer(request.headers.get("authorization"))
 
@@ -273,13 +395,9 @@ class RateLimitMiddleware:
         # Mitarbeiter haben andere IPs → eigener Zähler, keine Aussperrung. Analog zum
         # Nicht-listings-Fairness-Bucket unten. Der IP-Scraper-Guard bleibt zusätzlich.
         if bucket_name == "listings" and tenant:
-            ip_decision = await limiter.check(
-                f"listings:ip:{ip or 'unknown'}", self._buckets.listings
-            )
-            if ip_decision.degraded:
-                return self._handle_degraded(sensitive, path)
-            if not ip_decision.allowed:
-                return self._reject(ip_decision, "listings", path, scope="ip")
+            scraper_antwort = await self._guard_listings_ip(ip, sensitive, path)
+            if scraper_antwort is not None:
+                return scraper_antwort
 
             primary_key = f"listings:tenant:{tenant}:ip:{ip or 'unknown'}"
             limit = self._buckets.listings_tenant

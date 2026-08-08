@@ -583,6 +583,36 @@ def test_refresh_401_when_session_missing() -> None:
     assert exc.value.status_code == 401
 
 
+@pytest.mark.parametrize("status", [429, 500, 502, 503])
+def test_refresh_technischer_gotrue_fehler_ist_503_nicht_401(status: int) -> None:
+    """WURZEL 5 / Ursache der willkürlichen Abmeldungen: `AuthError` ist die
+    Basisklasse auch aller TECHNISCHEN GoTrue-Fehler. Sie pauschal als 401
+    „Sitzung abgelaufen" auszuliefern warf bei jedem GoTrue-Hänger die gerade
+    aktiven Nutzer auf /login — das BFF wertet 401 als abgemeldet. Technisches
+    muss 503 sein: die Sitzung gilt weiter."""
+    from supabase_auth.errors import AuthApiError  # noqa: PLC0415
+
+    svc, anon, _service = _service_with_mocks()
+    anon.auth.refresh_session.side_effect = AuthApiError("kaputt", status, None)
+
+    with pytest.raises(AuthError) as exc:
+        svc.refresh(RefreshRequest(refresh_token="gueltig"))
+    assert exc.value.status_code == 503
+
+
+def test_refresh_verbindungsabbruch_ist_503_nicht_500() -> None:
+    """supabase-py übersetzt einen ConnectError NICHT in eine AuthError — er
+    flöge roh am `except GoTrueAuthError` vorbei und käme als 500 heraus."""
+    import httpx  # noqa: PLC0415
+
+    svc, anon, _service = _service_with_mocks()
+    anon.auth.refresh_session.side_effect = httpx.ConnectError("weg")
+
+    with pytest.raises(AuthError) as exc:
+        svc.refresh(RefreshRequest(refresh_token="gueltig"))
+    assert exc.value.status_code == 503
+
+
 # Hinweis: Route-Level-Tests für /auth/refresh laufen bewusst NICHT hier — echte
 # TestClient-Requests gegen /api/v1/auth/* teilen den Auth-Rate-Limit-Bucket
 # (10/60/IP) und würden nachfolgende Auth-Tests (z. B. register_login_me) ins

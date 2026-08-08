@@ -87,6 +87,10 @@ def test_bucket_selection_staffelung() -> None:
     b = _Buckets(s)
     assert _select_bucket("/api/v1/auth/login", b)[0] == "auth"
     assert _select_bucket("/api/v1/auth/register", b)[0] == "auth"
+    # Token-Erneuerung hat einen EIGENEN Bucket (nicht "auth"): sie ist kein
+    # Credential-Rateweg, läuft aber in jeder Sitzung regelmäßig.
+    assert _select_bucket("/api/v1/auth/refresh", b)[0] == "refresh"
+    assert _select_bucket("/api/v1/guest-auth/refresh", b)[0] == "refresh"
     assert _select_bucket("/api/v1/payments/booking/x/intent", b)[0] == "payments"
     assert _select_bucket("/api/v1/booking-engine/listings", b)[0] == "listings"
     assert _select_bucket("/api/v1/properties/x", b)[0] == "default"
@@ -189,6 +193,13 @@ def _app_with_limiter(redis_client, settings: Settings) -> FastAPI:
     @app.get("/api/v1/auth/login")
     def login() -> dict[str, str]:
         return {"ok": "yes"}
+
+    # Der Refresh-Bucket liest den Request-Body. Die Route gibt das gelesene
+    # Token zurück, damit die Tests beweisen können, dass der Body die
+    # Middleware überlebt hat.
+    @app.post("/api/v1/auth/refresh")
+    def refresh(payload: dict) -> dict[str, str]:
+        return {"gesehen": payload.get("refresh_token", "")}
 
     app.add_middleware(
         RateLimitMiddleware,
@@ -386,3 +397,51 @@ def test_disabled_limiter_passes_through() -> None:
     h = {"X-Forwarded-For": "1.2.3.4, 10.0.0.1"}
     for _ in range(5):
         assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200
+
+
+# --- Token-Erneuerung: eigener Bucket, pro Sitzung statt pro IP -------------
+def test_refresh_body_ueberlebt_die_middleware() -> None:
+    """REGRESSION: Der refresh-Bucket liest den Request-Body, um pro Sitzung zu
+    keyen. Der ASGI-`receive`-Stream ist danach aufgebraucht — ohne das
+    Nachreichen des gepufferten Bodys sähe die Route einen LEEREN Body und
+    wiese JEDE Erneuerung mit 422 ab (alle Nutzer sofort ausgeloggt)."""
+    client = TestClient(_app_with_limiter(_FakeRedis(), Settings()))
+    r = client.post("/api/v1/auth/refresh", json={"refresh_token": "tok-abc"})
+    assert r.status_code == 200
+    assert r.json()["gesehen"] == "tok-abc"
+
+
+def test_refresh_pro_sitzung_nicht_pro_ip() -> None:
+    """KERN DES FIXES: Die BFF-Frontends rufen server-zu-server aus EINEM
+    Container auf — alle Nutzer teilen sich also eine IP. Im alten auth-Bucket
+    (10/60/IP) sperrte die Aktivität FREMDER Nutzer einen Nutzer aus und meldete
+    ihn ab. Gekeyt wird deshalb je Sitzung."""
+    settings = Settings(rate_limit_refresh="2/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    # Alle Aufrufe von DERSELBEN IP (wie beim BFF), aber verschiedene Sitzungen.
+    h = {"X-Forwarded-For": "1.2.3.4"}
+    for token in ("sitzung-a", "sitzung-b", "sitzung-c", "sitzung-d"):
+        r = client.post(
+            "/api/v1/auth/refresh", json={"refresh_token": token}, headers=h
+        )
+        assert r.status_code == 200, f"{token} wurde von fremden Sitzungen ausgesperrt"
+
+    # Dieselbe Sitzung läuft dagegen sehr wohl in ihr eigenes Limit (2/60).
+    for _ in range(2):
+        client.post(
+            "/api/v1/auth/refresh", json={"refresh_token": "sitzung-a"}, headers=h
+        )
+    r = client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": "sitzung-a"}, headers=h
+    )
+    assert r.status_code == 429
+
+
+def test_refresh_ist_fail_open_bei_redis_ausfall() -> None:
+    """Wurzel 5: Ein toter Redis darf keine Abmeldewelle auslösen. /auth/refresh
+    ist bewusst NICHT sensibel — ein 503 hier würde das BFF als „Sitzung
+    beendet" werten und alle aktiven Nutzer auf /login werfen."""
+    settings = Settings(rate_limit_fail_closed_sensitive=True)
+    client = TestClient(_app_with_limiter(_FakeRedis(fail=True), settings))
+    r = client.post("/api/v1/auth/refresh", json={"refresh_token": "tok"})
+    assert r.status_code == 200

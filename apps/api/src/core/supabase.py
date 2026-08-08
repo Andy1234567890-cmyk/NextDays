@@ -110,6 +110,30 @@ def _harden(client: Client) -> Client:
     return client
 
 
+def _zustandslose_optionen(**extra: object) -> ClientOptions:
+    """ClientOptions ohne jeden Sitzungs-Zustand — Pflicht für JEDEN Client, der
+    hier gebaut wird.
+
+    supabase-py ist für EINEN Browser-Nutzer gedacht: `persist_session=True` +
+    `auto_refresh_token=True` (beides Default) legen die zuletzt gesehene Session
+    in einem prozessweiten MemoryStorage ab und starten einen `threading.Timer`,
+    der das Refresh-Token dieser Session SPÄTER VON SELBST einlöst. Auf einem
+    Server, wo derselbe Client-Instanz alle Nutzer bedient, heißt das:
+      * `sign_in`/`refresh_session` von Nutzer B überschreibt A's Zustand,
+      * A's Timer löst irgendwann A's Refresh-Token serverseitig ein und rotiert
+        es — der Browser von A kennt das neue Token nicht,
+      * A's nächster echter Refresh schickt das nun verbrauchte Token → GoTrue
+        antwortet „Invalid Refresh Token: Already Used" → 401 → Zwangs-Logout.
+    Genau das war die Ursache der willkürlichen Abmeldungen. Der Server hält
+    KEINE Sitzung: jedes Token kommt pro Request vom Aufrufer.
+    """
+    return ClientOptions(
+        auto_refresh_token=False,
+        persist_session=False,
+        **extra,  # type: ignore[arg-type]
+    )
+
+
 @lru_cache
 def get_anon_client() -> Client:
     """Client mit Anon-Key. Respektiert RLS. Default für User-gebundene Calls."""
@@ -118,6 +142,7 @@ def get_anon_client() -> Client:
         create_client(
             settings.supabase_url,
             settings.supabase_anon_key.get_secret_value(),
+            _zustandslose_optionen(),
         )
     )
 
@@ -132,9 +157,10 @@ def make_anon_client_with_user_agent(user_agent: str) -> Client:
 
     Nicht gecacht: pro Login potenziell ein anderer UA. Wird nur für den einen
     sign_in-Call verwendet und danach verworfen (der globale Client bleibt für
-    alles andere)."""
+    alles andere). Ohne `_zustandslose_optionen` hinterließe jeder dieser
+    Wegwerf-Clients einen lebenden Auto-Refresh-Thread."""
     settings = get_settings()
-    options = ClientOptions(headers={"User-Agent": user_agent})
+    options = _zustandslose_optionen(headers={"User-Agent": user_agent})
     return _harden(
         create_client(
             settings.supabase_url,
@@ -152,6 +178,7 @@ def get_service_client() -> Client:
         create_client(
             settings.supabase_url,
             settings.supabase_service_role_key.get_secret_value(),
+            _zustandslose_optionen(),
         )
     )
 

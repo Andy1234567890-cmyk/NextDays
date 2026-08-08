@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
 
 import { emailFromToken, persistSession, readToken } from "@nextdays/auth/server";
 
-import { api, type SessionResponse } from "@/lib/api";
+import { ApiError, api, type SessionResponse } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
 const ACCESS = "nd_access";
@@ -25,7 +25,7 @@ const COOKIES = { access: ACCESS, refresh: REFRESH } as const;
  * Nutzer denselben Eintrag teilen. Einträge werden nach dem Tausch sofort
  * entfernt, die Map bleibt also klein.
  */
-const imTausch = new Map<string, Promise<string | null>>();
+const imTausch = new Map<string, Promise<TauschErgebnis>>();
 
 /**
  * Access-Token für FastAPI-Aufrufe.
@@ -43,10 +43,29 @@ const imTausch = new Map<string, Promise<string | null>>();
  * existierte die ganze Zeit; er war nur nicht angeschlossen.
  */
 export async function currentToken(): Promise<string | null> {
+  return tokenHolen(false);
+}
+
+/**
+ * Wie `currentToken()`, wirft aber bei TECHNISCHEN Fehlern (429/503/Timeout)
+ * eine `ApiError` weiter, statt `null` zu liefern.
+ *
+ * Nur für Aufrufer, die über An-/Abmeldung ENTSCHEIDEN (`getSession`): dort
+ * muss „gerade nicht möglich" von „wirklich abgemeldet" unterscheidbar sein,
+ * sonst wird aus einem kurzen Backend-Aussetzer ein Rauswurf auf /login
+ * (Wurzel 5). Die übrigen ~45 Aufrufer wollen nur ein Token fürs UI-Gating und
+ * behandeln `null` als „nicht angemeldet" — für sie bleibt `currentToken()`
+ * unverändert, ein Wurf würde dort ungefangen durchschlagen.
+ */
+export async function currentTokenStreng(): Promise<string | null> {
+  return tokenHolen(true);
+}
+
+async function tokenHolen(streng: boolean): Promise<string | null> {
   const fromCookie = await readToken(ACCESS);
   if (fromCookie) return fromCookie;
 
-  const refreshed = await tokenAusRefresh();
+  const refreshed = await tokenAusRefresh(streng);
   if (refreshed) return refreshed;
 
   try {
@@ -74,7 +93,7 @@ export async function currentToken(): Promise<string | null> {
  * nicht kippen: das frische Token wird zurückgegeben und der Request läuft
  * durch; gespeichert wird es beim nächsten Aufruf aus einer Server-Action.
  */
-async function tokenAusRefresh(): Promise<string | null> {
+async function tokenAusRefresh(streng: boolean): Promise<string | null> {
   const jar = await cookies();
   const refresh = jar.get(REFRESH)?.value;
   if (!refresh) return null;
@@ -86,25 +105,53 @@ async function tokenAusRefresh(): Promise<string | null> {
   // Nutzer fliegt raus. Genau so passiert am 06.08.2026 (18:15), als nach einem
   // minutenlangen Import sechs Seitenabfragen gleichzeitig 401 bekamen und jede
   // ihren eigenen Refresh startete.
-  const laufend = imTausch.get(refresh);
-  if (laufend) return laufend;
+  // Das gecachte Promise liefert IMMER ein Ergebnis-Objekt und wirft nie:
+  // an denselben Tausch hängen sich strenge und nicht-strenge Aufrufer
+  // gleichzeitig. Würde es werfen, träfe der Wurf auch die ~45 Aufrufer, die
+  // nur `null` erwarten. Ob ein technischer Fehler weitergereicht wird,
+  // entscheidet deshalb jeder Aufrufer für sich (unten), nicht der Tausch.
+  const laufend = imTausch.get(refresh) ?? starteTausch(refresh);
 
-  const versuch = (async () => {
+  const ergebnis = await laufend;
+  if (ergebnis.token) return ergebnis.token;
+  if (streng && ergebnis.fehler) throw ergebnis.fehler;
+  return null;
+}
+
+/** Ergebnis eines Token-Tauschs. `fehler` gesetzt = technisch fehlgeschlagen
+ *  (429/503/Timeout), die Sitzung gilt weiter. Beides leer = echte Ablehnung
+ *  (401/403), der Nutzer ist wirklich abgemeldet. */
+interface TauschErgebnis {
+  token: string | null;
+  fehler: unknown;
+}
+
+function starteTausch(refresh: string): Promise<TauschErgebnis> {
+  const versuch = (async (): Promise<TauschErgebnis> => {
     try {
       const session = await api<SessionResponse>("/auth/refresh", {
         method: "POST",
         body: { refresh_token: refresh },
       });
-      if (!session?.access_token) return null;
+      if (!session?.access_token) return { token: null, fehler: null };
       try {
         await persistSession(session, COOKIES);
       } catch {
         // Nur-Lese-Jar (Server-Component-Render) — Token trotzdem verwenden.
+        // Seit es die middleware.ts gibt, ist das der Ausnahmefall: sie
+        // erneuert vorab dort, wo das Jar schreibbar ist.
       }
-      return session.access_token;
-    } catch {
-      // Refresh-Token abgelaufen/entzogen → wirklich abgemeldet.
-      return null;
+      return { token: session.access_token, fehler: null };
+    } catch (e) {
+      // Wurzel 5: NUR eine echte Ablehnung (401/403) beendet die Sitzung. Ein
+      // blankes `catch` machte hier aus JEDEM Fehler ein „abgemeldet" — 429 aus
+      // dem Rate-Limit, 503 bei nicht erreichbarem Backend, ein Timeout. Der
+      // Aufrufer sah nur `null` und konnte den Unterschied nicht mehr erkennen;
+      // der Layout-Guard warf den eingeloggten Nutzer auf /login, obwohl sein
+      // Token einwandfrei war.
+      const abgelehnt =
+        e instanceof ApiError && (e.status === 401 || e.status === 403);
+      return { token: null, fehler: abgelehnt ? null : e };
     } finally {
       // Immer aufräumen, auch im Fehlerfall: sonst bliebe ein totes Ergebnis
       // für dieses Token für immer stehen und ein späterer, berechtigter

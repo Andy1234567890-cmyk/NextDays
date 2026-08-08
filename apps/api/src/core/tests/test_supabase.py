@@ -7,6 +7,7 @@ from src.core.config import Settings, get_settings
 from src.core.supabase import (
     _MAX_RETRIES,
     _ReconnectingTransport,
+    _zustandslose_optionen,
     public_storage_url,
 )
 
@@ -166,6 +167,30 @@ def test_public_storage_url_explizite_basis_gewinnt(monkeypatch) -> None:  # noq
         )
     finally:
         get_settings.cache_clear()
+
+
+def test_clients_halten_keine_sitzung() -> None:
+    """URSACHE der willkürlichen Abmeldungen: supabase-py ist für EINEN
+    Browser-Nutzer gedacht. Mit den Defaults (`persist_session=True`,
+    `auto_refresh_token=True`) legt jeder `sign_in`/`refresh_session` die Session
+    im prozessweiten MemoryStorage ab und startet einen `threading.Timer`, der
+    das Refresh-Token SPÄTER VON SELBST einlöst und rotiert. Auf dem Server, wo
+    ein Client alle Nutzer bedient, verbrennt das fremde Tokens: der Browser
+    kennt das rotierte Token nicht, sein nächster Refresh bekommt „Already Used"
+    → 401 → Zwangsabmeldung.
+
+    Der Server hält deshalb KEINE Sitzung — jedes Token kommt pro Request vom
+    Aufrufer."""
+    optionen = _zustandslose_optionen()
+    assert optionen.auto_refresh_token is False
+    assert optionen.persist_session is False
+
+    # Auch der Wegwerf-Client für den echten Browser-User-Agent: ohne die
+    # Optionen hinterließe JEDER Login einen lebenden Auto-Refresh-Thread.
+    mit_ua = _zustandslose_optionen(headers={"User-Agent": "Mozilla/5.0"})
+    assert mit_ua.auto_refresh_token is False
+    assert mit_ua.persist_session is False
+    assert mit_ua.headers["User-Agent"] == "Mozilla/5.0"
 
 
 def test_storage_public_base_ohne_konfiguration_schlaegt_fehl() -> None:

@@ -9,7 +9,7 @@ import { clearSession, persistSession } from "@nextdays/auth/server";
 import type { LoginResponse } from "@nextdays/auth/types";
 
 import { ApiError, api, type MeResponse, type SessionResponse } from "@/lib/api";
-import { currentToken } from "@/lib/session-token";
+import { currentToken, currentTokenStreng } from "@/lib/session-token";
 import { createClient } from "@/lib/supabase/server";
 
 // Cookie-Namen dieser App (Sicherheitsgrenze — pro App explizit, ADR-0017). web
@@ -144,9 +144,14 @@ export async function getSession(): Promise<{
   abgemeldet: boolean;
   fehler: string | null;
 }> {
-  const token = await currentToken();
-  if (!token) return { me: null, abgemeldet: true, fehler: null };
   try {
+    // currentToken() innerhalb des try: die Token-Erneuerung wirft bei
+    // technischen Fehlern (429/503/Timeout) weiter, damit hier `fehler` statt
+    // `abgemeldet` herauskommt. Vorher verschluckte sie jeden Fehler zu `null`
+    // — ein kurzer Backend-Aussetzer sah damit aus wie eine abgelaufene
+    // Sitzung und warf den Nutzer auf /login.
+    const token = await currentTokenStreng();
+    if (!token) return { me: null, abgemeldet: true, fehler: null };
     const me = await api<MeResponse>("/auth/me", { token });
     return { me, abgemeldet: false, fehler: null };
   } catch (e) {

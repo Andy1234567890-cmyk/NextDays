@@ -61,6 +61,16 @@ class Settings(BaseSettings):
     rate_limit_default: str = "300/60"
     # Streng: Brute-Force-Schutz für Login/Register (pro IP).
     rate_limit_auth: str = "10/60"
+    # Token-Erneuerung. BEWUSST NICHT im auth-Bucket: /auth/refresh ist kein
+    # Credential-Rateweg (wer ein gültiges Refresh-Token hat, ist bereits
+    # angemeldet — es gibt nichts zu erraten), wird aber von JEDER Sitzung
+    # regelmäßig aufgerufen. Im 10/60-IP-Bucket war das ein Selbstschuss: die
+    # Frontends rufen server-zu-server auf, alle Nutzer teilten sich also die
+    # zehn Erneuerungen der einen Container-IP — der elfte bekam 429 und wurde
+    # abgemeldet, ausgelöst durch die Aktivität FREMDER Nutzer. Gekeyt wird
+    # deshalb pro Nutzer (sub-Claim), nicht pro IP; 60/60 deckt auch ein
+    # Dashboard mit vielen parallelen Abfragen ab.
+    rate_limit_refresh: str = "60/60"
     # Streng: teure Zahlungs-Endpunkte (pro IP).
     rate_limit_payments: str = "30/60"
     # Öffentliche (nicht-eingeloggte) Such-/Listings-/Kalender-Endpunkte:

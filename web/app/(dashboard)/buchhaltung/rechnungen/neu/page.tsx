@@ -6,11 +6,14 @@ import { redirect } from "next/navigation";
 
 import CreateInvoiceForm from "@/components/finance/create-invoice-page";
 import { NewAuthProvider, type AuthUser } from "@/contexts/NewAuthContext";
-import { getMe } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 
 export default async function RechnungNeuPage() {
-  const me = await getMe();
-  if (!me) redirect("/login");
+  // getSession statt getMe: nur eine ECHTE Abmeldung (401/403) darf umleiten,
+  // ein technischer Fehler nicht (sonst meldet ein 503 den Nutzer ab).
+  const { me, abgemeldet } = await getSession();
+  if (abgemeldet) redirect("/login");
+  if (!me) return null; // technischer Fehler — das Layout zeigt den Hinweis
 
   const companyId = me.tenant_id ?? "";
   const user: AuthUser = {

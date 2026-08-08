@@ -14,6 +14,7 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, Header, HTTPException, status
 from jwt import PyJWKClient
+from jwt.exceptions import PyJWKClientConnectionError
 from pydantic import BaseModel
 
 from .config import Settings, get_settings
@@ -21,6 +22,13 @@ from .config import Settings, get_settings
 # Erlaubte Signatur-Algorithmen (fail-closed). ES256/RS256 = modernes Supabase via
 # JWKS, HS256 = Legacy-Shared-Secret. "none" ist bewusst NICHT enthalten.
 _ALLOWED_ALGS = frozenset({"HS256", "ES256", "RS256"})
+
+# Toleranz für Uhrendrift zwischen GoTrue-Container (stellt aus) und API-Container
+# (prüft). Ohne sie lehnt `exp`/`iat`/`nbf` ein frisch ausgestelltes bzw. ein
+# gerade noch gültiges Token wegen Sekundenbruchteilen ab — für den Nutzer eine
+# grundlose Abmeldung. 30 s ist klein genug, um die Lebensdauer eines Tokens
+# nicht nennenswert zu verlängern.
+_CLOCK_SKEW_SEKUNDEN = 30
 
 
 class AuthContext(BaseModel):
@@ -42,8 +50,16 @@ class AuthContext(BaseModel):
 
 @lru_cache
 def _jwk_client(jwks_url: str) -> PyJWKClient:
-    # Cacht die öffentlichen Schlüssel pro JWKS-URL (kein Fetch je Request).
-    return PyJWKClient(jwks_url)
+    """Cacht die öffentlichen Schlüssel pro JWKS-URL (kein Fetch je Request).
+
+    `lifespan` bewusst lang und `cache_keys=True`: mit den PyJWT-Defaults
+    (300 s, kein Key-Cache) muss der Prozess alle fünf Minuten frisch gegen das
+    interne Kong holen. Genau dort reißt bekanntermaßen die Keep-Alive-
+    Verbindung ab (siehe `core.supabase`) — und ein Fehlschlag in diesem Moment
+    lässt JEDEN gleichzeitigen Request fehlschlagen. Signierschlüssel rotieren
+    selten; ein längeres Fenster senkt die Zahl der Fetches drastisch.
+    """
+    return PyJWKClient(jwks_url, cache_keys=True, lifespan=3600)
 
 
 def _jwks_url(settings: Settings) -> str:
@@ -81,15 +97,38 @@ def _decode_token(token: str, settings: Settings) -> dict[str, object]:
                     detail="JWT-Secret nicht konfiguriert.",
                 )
             return jwt.decode(
-                token, secret, algorithms=["HS256"], audience="authenticated"
+                token,
+                secret,
+                algorithms=["HS256"],
+                audience="authenticated",
+                leeway=_CLOCK_SKEW_SEKUNDEN,
             )
         # Asymmetrisch (ES256/RS256): öffentlichen Schlüssel via JWKS holen.
-        signing_key = _jwk_client(_jwks_url(settings)).get_signing_key_from_jwt(token)
+        try:
+            signing_key = _jwk_client(
+                _jwks_url(settings)
+            ).get_signing_key_from_jwt(token)
+        except PyJWKClientConnectionError as exc:
+            # Wurzel 5: NICHT als 401 durchreichen. PyJWKClientConnectionError
+            # erbt von PyJWTError, landete also im selben `except` wie ein
+            # manipuliertes Token — ein Timeout beim JWKS-Abruf meldete damit
+            # ALLE gerade aktiven Nutzer gleichzeitig ab. Der Schlüsselserver ist
+            # nicht erreichbar; über die Gültigkeit des Tokens sagt das nichts.
+            #
+            # Bewusst NUR der Verbindungsfehler: der allgemeinere
+            # PyJWKClientError deckt auch „Unable to find a signing key that
+            # matches: <kid>" ab, und das IST ein ungültiges Token → 401
+            # (fällt unten in den PyJWTError-Zweig).
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Anmeldedienst nicht erreichbar.",
+            ) from exc
         return jwt.decode(
             token,
             signing_key.key,
             algorithms=["ES256", "RS256"],
             audience="authenticated",
+            leeway=_CLOCK_SKEW_SEKUNDEN,
         )
     except jwt.PyJWTError as exc:
         raise HTTPException(

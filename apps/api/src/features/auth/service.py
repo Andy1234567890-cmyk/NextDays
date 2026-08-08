@@ -15,6 +15,7 @@ from supabase_auth import AuthResponse
 from supabase_auth.errors import AuthError as GoTrueAuthError
 
 from src.core.config import get_settings
+from src.core.gotrue_fehler import TRANSPORT_FEHLER, ist_abgelehnt
 from src.core.logging import get_logger, mask_email
 from src.core.security import AuthContext
 from src.core.supabase import make_anon_client_with_user_agent
@@ -471,15 +472,34 @@ class AuthService:
         Fail-closed (Wurzel 5): ein ungültiges/abgelaufenes/widerrufenes Token
         ist ein 401 — spezifisch die GoTrue-AuthError fangen, kein breites
         `except Exception`, das Programmierfehler verschluckt. Der Token-Wert
-        wird NICHT geloggt (nur der Fehlertext)."""
+        wird NICHT geloggt (nur der Fehlertext).
+
+        401 aber NUR bei echter Ablehnung: `AuthError` ist die Basisklasse auch
+        aller technischen GoTrue-Fehler (Timeout, 5xx, 429). Die pauschal als
+        „Sitzung abgelaufen" auszuliefern hat eingeloggte Nutzer bei jedem
+        GoTrue-Hänger auf /login geworfen — das BFF wertet 401 definitionsgemäß
+        als abgemeldet. Technisches wird deshalb 503: die Sitzung gilt weiter,
+        der Aufrufer darf es erneut versuchen."""
         try:
             res = self._anon.auth.refresh_session(
                 req.refresh_token.get_secret_value()
             )
         except GoTrueAuthError as exc:
-            log.warning("refresh_failed", error=str(exc))
+            abgelehnt = ist_abgelehnt(exc)
+            log.warning("refresh_failed", error=str(exc), abgelehnt=abgelehnt)
+            if not abgelehnt:
+                raise AuthError(
+                    "Anmeldedienst nicht erreichbar.", status_code=503
+                ) from exc
             raise AuthError(
                 "Sitzung abgelaufen.", status_code=401
+            ) from exc
+        except TRANSPORT_FEHLER as exc:
+            # Verbindungsabbruch/Timeout: das SDK übersetzt ihn nicht, er käme
+            # sonst als 500 heraus. Die Sitzung ist davon unberührt.
+            log.warning("refresh_transport_error", error=str(exc))
+            raise AuthError(
+                "Anmeldedienst nicht erreichbar.", status_code=503
             ) from exc
 
         session = res.session

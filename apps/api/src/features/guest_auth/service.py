@@ -24,6 +24,7 @@ SICHERHEITSAUFLAGEN (offene TODO, bewusst dokumentiert):
 from supabase import Client
 from supabase_auth.errors import AuthError as GoTrueAuthError
 
+from src.core.gotrue_fehler import TRANSPORT_FEHLER, ist_abgelehnt
 from src.core.logging import get_logger, mask_email
 from src.core.security import GuestContext
 
@@ -174,14 +175,28 @@ class GuestAuthService:
         """Refresh-Token → frische Session. Fail-closed (Wurzel 5): ein
         ungültiges/abgelaufenes/widerrufenes Token ist ein 401 — spezifisch die
         GoTrue-AuthError fangen, kein breites except. Der Token wird nicht
-        geloggt (nur der Fehlertext)."""
+        geloggt (nur der Fehlertext).
+
+        Technische GoTrue-Fehler (Timeout, 5xx, 429) sind KEINE Ablehnung und
+        werden 503 — sonst meldet ein Hänger des Auth-Servers eingeloggte Gäste
+        ab (dieselbe Ursache wie beim Vermieter-Refresh)."""
         try:
             res = self._anon.auth.refresh_session(
                 req.refresh_token.get_secret_value()
             )
         except GoTrueAuthError as exc:
-            log.warning("guest_refresh_failed", error=str(exc))
+            abgelehnt = ist_abgelehnt(exc)
+            log.warning("guest_refresh_failed", error=str(exc), abgelehnt=abgelehnt)
+            if not abgelehnt:
+                raise GuestAuthError(
+                    "Anmeldedienst nicht erreichbar.", status_code=503
+                ) from exc
             raise GuestAuthError("Sitzung abgelaufen.", status_code=401) from exc
+        except TRANSPORT_FEHLER as exc:
+            log.warning("guest_refresh_transport_error", error=str(exc))
+            raise GuestAuthError(
+                "Anmeldedienst nicht erreichbar.", status_code=503
+            ) from exc
         if res.session is None:
             raise GuestAuthError("Sitzung abgelaufen.", status_code=401)
         return GuestSessionResponse(

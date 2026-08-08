@@ -6,6 +6,7 @@
 // (kann der Browser nicht), injiziert es als Bearer und reicht den Request an
 // das FastAPI-Backend weiter. So bleibt der Bestand unverändert und nutzt die
 // echte NextDays-Session (FastAPI-Login ODER Supabase-OAuth).
+import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { currentToken } from "@/lib/session-token";
@@ -38,10 +39,36 @@ async function forward(req: NextRequest, path: string[]): Promise<NextResponse> 
 
   const respContentType = res.headers.get("content-type") ?? "";
   const text = await res.text();
-  return new NextResponse(text, {
+  const antwort = new NextResponse(text, {
     status: res.status,
     headers: { "content-type": respContentType || "application/json" },
   });
+  // Hat currentToken() oben die Session erneuert, hat persistSession die neuen
+  // Cookies ins Jar geschrieben — Next hängt sie aber nur an eine Response, die
+  // es selbst gebaut hat. Bei einer per `new NextResponse(...)` erzeugten
+  // Antwort gingen sie verloren: der Server hätte das Refresh-Token rotiert,
+  // der Browser behielte das verbrauchte, und der nächste Aufruf endete in
+  // „Already Used" → Zwangsabmeldung.
+  //
+  // Nur die beiden Session-Cookies und nur, wenn sich der Wert gegenüber dem
+  // Request geändert hat. Pauschal alle Cookies zu spiegeln würde fremde
+  // Cookies ohne ihre Attribute (httpOnly/secure) neu setzen und sie damit
+  // schwächen.
+  const jar = await cookies();
+  for (const name of ["nd_access", "nd_refresh"] as const) {
+    const neu = jar.get(name)?.value;
+    if (!neu || neu === req.cookies.get(name)?.value) continue;
+    antwort.cookies.set(name, neu, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      // nd_access lebt so lang wie das Token, nd_refresh 30 Tage — identisch
+      // zu persistSession in @nextdays/auth.
+      maxAge: name === "nd_refresh" ? 60 * 60 * 24 * 30 : undefined,
+    });
+  }
+  return antwort;
 }
 
 type Ctx = { params: Promise<{ path: string[] }> };

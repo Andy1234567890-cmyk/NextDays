@@ -5,14 +5,17 @@
 import { redirect } from "next/navigation";
 
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
-import { getMe } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { currentUserEmail } from "@/lib/session-token";
 
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
-  const me = await getMe();
-  if (!me) redirect("/login");
+  // getSession statt getMe: nur eine ECHTE Abmeldung (401/403) darf umleiten,
+  // ein technischer Fehler nicht (sonst meldet ein 503 den Nutzer ab).
+  const { me, abgemeldet } = await getSession();
+  if (abgemeldet) redirect("/login");
+  if (!me) return null; // technischer Fehler — das Layout zeigt den Hinweis
 
   const loginEmail = await currentUserEmail();
 
