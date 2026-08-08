@@ -24,14 +24,31 @@ import {
   type CommissionStatus,
 } from "@/lib/subscriptions";
 
-// Die Map muss ALLE Werte von `CommissionStatus` tragen — `Record` über die
-// Union macht den Zugriff total, ein Fallback wäre toter Code. Kommt im DB-Enum
-// `commission_status` (0006) ein Wert dazu, MUSS er hier ergänzt werden; tsc
-// erzwingt das dann. Genau dieses Netz fehlte, als 'paid' zum Absturz führte.
+type StatusLabel = { key: string; klasse: string };
+
+// Zwei Anforderungen, die BEIDE gelten müssen:
+//
+// 1. Totalität für die bekannten Werte: der `Record<CommissionStatus, …>` zwingt
+//    tsc, jeden Wert der Union zu belegen. Kommt im DB-Enum `commission_status`
+//    (0006) ein Wert dazu und wird in `CommissionStatus` (lib/subscriptions.ts)
+//    nachgetragen, schlägt der Build hier fehl, bis das Label existiert. Genau
+//    dieses Netz fehlte, als 'paid' zum Absturz führte.
+// 2. Rohanzeige für unbekannte Werte: die API-Grenze ist nicht typisierbar. Das
+//    Backend gibt `status` bewusst als `str` heraus (subscriptions/schemas.py:
+//    ein Literal würde bei einem neuen Enum-Wert einen 500er werfen) und
+//    service.py reicht den DB-Wert unverändert durch. `CommissionStatus` ist
+//    also eine Zusage über FREMDE Daten, die niemand zur Laufzeit prüft — ein
+//    fünfter Enum-Wert käme bei grünem tsc hier an. Deshalb wird über
+//    `statusLabel()` gelesen, das ehrlich `| undefined` liefert.
+//
+// Dieselbe Regel folgt STATUS_LABEL in konto-abo-section.tsx („Unbekanntes
+// zeigen wir roh, statt es auf ‚aktiv' zu raten", Wurzel 4) — die zwei Maps
+// behandeln den Fall bewusst gleich.
+//
 // 'pending' heißt „noch nicht fakturiert" — nicht „wird gerade eingezogen":
 // der Einzug passiert erst mit der nächsten Abo-Rechnung. Der Text steht als
 // i18n-Key hier, nicht als deutscher Literal.
-const STATUS: Record<CommissionStatus, { key: string; klasse: string }> = {
+const STATUS: Record<CommissionStatus, StatusLabel> = {
   invoiced: {
     key: "commissions.statusInvoiced",
     klasse: "bg-emerald-500/15 text-emerald-600",
@@ -49,6 +66,19 @@ const STATUS: Record<CommissionStatus, { key: string; klasse: string }> = {
     klasse: "bg-sky-500/15 text-sky-600",
   },
 };
+
+// Der Lesezugriff auf STATUS. Der Parametertyp `Partial<Record<string, …>>` ist
+// die ehrliche Sicht auf eine Map, die mit einem beliebigen API-String befragt
+// wird: `STATUS` passt ohne `as` hinein, der Rückgabetyp trägt aber das
+// `| undefined`, das ein direktes `STATUS[r.status]` verschweigt (`Record` über
+// die Union behauptet einen Treffer, den es bei einem neuen Enum-Wert nicht
+// gibt). So bleibt Punkt 1 (Totalität) erzwungen und Punkt 2 (kein Crash) wahr.
+function statusLabel(
+  map: Partial<Record<string, StatusLabel>>,
+  status: string,
+): StatusLabel | undefined {
+  return map[status];
+}
 
 function monatsName(period: string, locale: string): string {
   const [jahr, monat] = period.split("-").map(Number);
@@ -85,15 +115,14 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
       </button>
 
       <div>
+        {/* Nur die Überschrift: die Konditionen (Satz, Abrechnungsrhythmus,
+            Kanalvergleich) sind Vertragsinhalt und stehen in den AGB, nicht
+            über einer Aufstellung, die den Ist-Stand zeigt. Die Keys
+            `commissions.monthsIntro`/`monthsChannels` bleiben für die AGB
+            erhalten. */}
         <h2 className="font-display text-xl font-extrabold">
           {t("commissions.monthsTitle")}
         </h2>
-        <p className="text-sm text-muted-foreground">
-          {t("commissions.monthsIntro")}
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {t("commissions.monthsChannels")}
-        </p>
       </div>
 
       {error && (
@@ -111,7 +140,10 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
 
       {rows && rows.length === 0 && (
         <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          {t("commissions.monthsEmpty")}
+          {/* Reine Sachaussage. Die frühere Fassung erklärte im Leerzustand die
+              Konditionen (provisionsfrei / 8 % Marktplatz) — Vertragsinhalt,
+              der in die AGB gehört. Key `monthsEmpty` bleibt dafür erhalten. */}
+          {t("commissions.monthsEmptyPlain")}
         </div>
       )}
 
@@ -144,7 +176,7 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
             </thead>
             <tbody>
               {rows.map((r) => {
-                const st = STATUS[r.status];
+                const st = statusLabel(STATUS, r.status);
                 return (
                   <tr
                     key={r.period}
@@ -178,10 +210,15 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
                       </span>
                     </td>
                     <td className="px-4 py-3">
+                      {/* Unbekannter Status: neutrale Farbe und der rohe Wert
+                          der API — nicht auf ein bekanntes Label raten
+                          (Wurzel 4), wie in konto-abo-section.tsx. */}
                       <span
-                        className={`rounded-full px-3 py-0.5 text-xs font-semibold ${st.klasse}`}
+                        className={`rounded-full px-3 py-0.5 text-xs font-semibold ${
+                          st?.klasse ?? "bg-muted text-muted-foreground"
+                        }`}
                       >
-                        {t(st.key)}
+                        {st ? t(st.key) : r.status}
                       </span>
                     </td>
                   </tr>
@@ -195,8 +232,12 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
       {/* Die Tabelle zeigt die UNGEKAPPTEN Ledger-Beträge — der Deckel greift
           erst beim Fakturieren (bill_pending_commissions). Ohne diesen Hinweis
           wirkt die kleinere Belastung später wie ein Fehler. Der konkrete
-          Deckelbetrag liegt hier nicht vor und wird nicht erfunden (Wurzel 4);
-          er steht in der Übersichtskarte der Abrechnung. */}
+          Deckelbetrag liegt hier nicht vor und wird nicht erfunden (Wurzel 4).
+          Der Text verweist bewusst NICHT auf die Abrechnungskarte: dort steht
+          der Betrag nur bei `cap_amount !== null`, und das Backend lässt ihn
+          leer, sobald es keine offenen Zeilen gibt oder kein Kurs beschaffbar
+          war (service.py get_commissions). Im Normalfall „alles fakturiert"
+          hätte der Verweis ins Leere geführt. */}
       {rows && rows.length > 0 && (
         <p className="text-sm text-muted-foreground">
           {t("commissions.capHint")}

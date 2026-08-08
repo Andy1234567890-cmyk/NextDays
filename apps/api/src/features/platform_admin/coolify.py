@@ -102,6 +102,19 @@ def laufende_deploys() -> list[dict]:
     return daten if isinstance(daten, list) else []
 
 
+def anwendungen() -> list[dict]:
+    """Alle Anwendungen samt ihrer Build-Konfiguration.
+
+    Gebraucht für die `watch_paths`: sie entscheiden, ob ein Commit eine App
+    überhaupt betrifft. Sie stehen zwar auch in `scripts/ci/coolify-apps.txt`,
+    aber COOLIFY ist die ausführende Instanz — ändert dort jemand einen Pfad,
+    wäre die Repo-Kopie still veraltet, und zwar in der gefährlichen Richtung
+    („betrifft dich nicht", obwohl doch).
+    """
+    daten = _holen("/api/v1/applications", "Anwendungen")
+    return daten if isinstance(daten, list) else []
+
+
 def verlauf(anwendung_uuid: str, limit: int = 20) -> list[dict]:
     """Die letzten Deploys EINER Anwendung, neueste zuerst."""
     limit = max(1, min(MAX_EINTRAEGE, limit))

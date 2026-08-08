@@ -82,41 +82,6 @@ const STATUS_LABEL: Record<string, { key: string; klasse: string }> = {
   },
 };
 
-// Baut aus den graduated-Tiers eine lesbare Staffel-Zeile, Beträge aus Stripe.
-// Die Satzform kommt aus i18n, der Betrag bleibt formatCurrency (Wurzel 4).
-function tierLines(
-  pricing: Pricing,
-  t: (key: string, values?: Record<string, string | number>) => string,
-): string[] {
-  const cur = pricing.currency;
-  const lines: string[] = [];
-  let prev = 0;
-  pricing.grundtarif_tiers.forEach((tier) => {
-    const upTo = tier.up_to;
-    if (tier.flat_amount != null) {
-      lines.push(
-        t("subscription.tierBase", {
-          amount: formatCurrency(tier.flat_amount / 100, cur),
-        }),
-      );
-    } else if (tier.unit_amount != null) {
-      const from = prev + 1;
-      const range =
-        upTo != null
-          ? t("subscription.tierRangeBetween", { from, to: upTo })
-          : t("subscription.tierRangeFrom", { from });
-      lines.push(
-        t("subscription.tierUnit", {
-          range,
-          amount: formatCurrency(tier.unit_amount / 100, cur),
-        }),
-      );
-    }
-    if (upTo != null) prev = upTo;
-  });
-  return lines;
-}
-
 export function KontoAboSection() {
   const locale = useLocale();
   const [state, setState] = useState<Loaded | null>(null);
@@ -243,7 +208,6 @@ export function KontoAboSection() {
   }
 
   const s = state.status;
-  const p = state.pricing;
   const st = s?.status ? STATUS_LABEL[s.status] : undefined;
 
   async function onPortal() {
@@ -411,19 +375,12 @@ export function KontoAboSection() {
         </dl>
       </div>
 
-      {/* Tarif-Staffel (Beträge aus Stripe) */}
-      {p && (
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="mb-2 font-display text-base font-extrabold">
-            {t("subscription.planTitle")}
-          </div>
-          <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
-            {tierLines(p, t).map((l) => (
-              <li key={l}>{l}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* Die Preisstaffel (Grundgebühr, Objekt-Stufen) stand hier als eigene
+          Karte. Sie ist Vertragsinhalt und gehört in die AGB bzw. auf die
+          Preisseite — nicht auf eine Seite, die den laufenden Abo-Stand zeigt.
+          Was der Betrieb TATSÄCHLICH zahlt, steht weiterhin oben im Statusblock
+          (gebuchte Objekte, nächste Rechnung). Die Keys
+          `subscription.planTitle`/`tier*` bleiben für die AGB erhalten. */}
 
       {/* Rechnungsadresse */}
       <div className="rounded-2xl border border-border bg-card p-5">
@@ -477,35 +434,13 @@ export function KontoAboSection() {
           <div className="mb-1 font-display text-base font-extrabold">
             {t("commissions.cardTitle")}
           </div>
-          {/* Zwei vollständige Satzvarianten statt einer angeklebten
-              Teilphrase — nur so lässt sich der Deckel-Zusatz in jeder
-              Sprache grammatisch richtig einbauen. */}
-          <p className="text-sm text-muted-foreground">
-            {state.commissions.cap_amount !== null
-              ? t("commissions.cardRateCapped", {
-                  rate: (state.commissions.current_rate * 100).toLocaleString(
-                    locale,
-                    { maximumFractionDigits: 2 },
-                  ),
-                  cap: formatCurrency(
-                    state.commissions.cap_amount,
-                    state.commissions.currency,
-                  ),
-                })
-              : t("commissions.cardRate", {
-                  rate: (state.commissions.current_rate * 100).toLocaleString(
-                    locale,
-                    { maximumFractionDigits: 2 },
-                  ),
-                })}
-          </p>
-          {/* Provision hängt am KANAL (payments/service.py _platform_fee_bps).
-              Diese Karte deckt nur den externen Portal-Satz ab — die 8 % des
-              Marktplatzes hier zu verschweigen wäre irreführend, weil sie nicht
-              im commission_ledger stehen und in keiner Aufstellung auftauchen. */}
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("commissions.cardOtherChannels")}
-          </p>
+          {/* Die Konditionen selbst (Provisionssatz, Abrechnungsrhythmus,
+              Kanalvergleich) stehen bewusst NICHT mehr hier: sie sind
+              Vertragsinhalt und gehören in die AGB, nicht auf eine Seite, die
+              den aktuellen Stand anzeigt. Die Übersetzungen bleiben als
+              `konto.commissions.cardRate*`/`cardOtherChannels` erhalten und
+              werden dort weiterverwendet. Diese Karte zeigt nur noch, was
+              tatsächlich angefallen ist. */}
           {state.commissions.pending_count > 0 ? (
             <div className="mt-2 text-sm">
               {t("commissions.pending", {

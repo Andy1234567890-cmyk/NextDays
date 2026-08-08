@@ -312,3 +312,71 @@ def test_spiegel_ohne_coolify_schreibt_nichts() -> None:
         gs.return_value.coolify_configured = False
         assert deploy_spiegel.spiegel_aktualisieren(db) is False
     db.table.assert_not_called()
+
+
+# --- Rückstand: was liegt zwischen dem ausgerollten Stand und main? ----------
+
+
+def test_watch_pfade_streift_die_glob_endung() -> None:
+    """Coolify speichert `apps/api/**`; verglichen wird gegen `apps/api/`."""
+    from src.features.platform_admin.deploy_rueckstand import watch_pfade
+
+    assert watch_pfade("apps/api/**\ndeploy/worker/**") == (
+        "apps/api/",
+        "deploy/worker/",
+    )
+    assert watch_pfade("") == ()
+    assert watch_pfade(None) == ()
+
+
+def test_betrifft_nur_eigene_pfade() -> None:
+    """Ein Commit zählt für eine App nur, wenn er ihre watch_paths berührt.
+
+    Das ist die eigentliche Antwort auf „muss ich deployen": ein Doku-Commit
+    macht den Worker nicht deploy-bedürftig.
+    """
+    from src.features.platform_admin.deploy_rueckstand import _betrifft
+
+    dateien = ["apps/api/src/x.py", "web/app/y.tsx", "docs/z.md"]
+    assert _betrifft(dateien, ("apps/api/", "deploy/worker/")) == ["apps/api/src/x.py"]
+    assert _betrifft(dateien, ("web/", "packages/")) == ["web/app/y.tsx"]
+    assert _betrifft(dateien, ("deploy/kong/",)) == []
+
+
+def test_ohne_watch_paths_gilt_nichts_als_betroffen() -> None:
+    """Fail-closed: keine Pfade heißt „kein Commit betrifft mich".
+
+    „Betrifft alles" wäre der erfundene Wert (Wurzel 4) und führte zu einem
+    Deploy, den niemand gewollt hat.
+    """
+    from src.features.platform_admin.deploy_rueckstand import _betrifft
+
+    assert _betrifft(["apps/api/src/x.py"], ()) == []
+
+
+def test_ohne_github_token_kein_erfundener_nullwert() -> None:
+    """Kein Zugang → `commits_gesamt` bleibt None, nicht 0.
+
+    Eine 0 hieße „alles ausgerollt" — eine Aussage, die wir ohne Abruf nicht
+    treffen dürfen.
+    """
+    from src.features.platform_admin import deploy_rueckstand
+
+    with patch.object(deploy_rueckstand, "_kopf", return_value=None):
+        r = deploy_rueckstand.Sammler().fuer("abc1234", "apps/api/**")
+
+    assert r.commits_gesamt is None
+    assert r.betrifft_mich is False
+    assert r.fehler == "Kein GitHub-Zugang hinterlegt."
+
+
+def test_ohne_ausgerollten_commit_kein_vergleich() -> None:
+    """Eine nie deployte App hat keinen Bezugspunkt — das sagt sie auch."""
+    from src.features.platform_admin import deploy_rueckstand
+
+    with patch.object(deploy_rueckstand, "_kopf", return_value={"a": "b"}), \
+         patch.object(deploy_rueckstand, "_repo_pfad", return_value="o/r"):
+        r = deploy_rueckstand.Sammler().fuer(None, "apps/api/**")
+
+    assert r.commits_gesamt is None
+    assert r.fehler == "Kein ausgerollter Commit bekannt."

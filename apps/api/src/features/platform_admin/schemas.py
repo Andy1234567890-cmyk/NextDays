@@ -598,6 +598,38 @@ class DeployEintrag(BaseModel):
     log_url: str | None = None
 
 
+class OffenerCommit(BaseModel):
+    """Ein Commit auf `main`, der noch nicht ausgerollt ist."""
+
+    sha: str
+    kurz_sha: str
+    nachricht: str
+    autor: str | None = None
+    zeitpunkt: datetime | None = None
+    # Nur die Dateien, die genau DIESE Anwendung betreffen (watch_paths).
+    # Ein Commit kann mehrere Apps berühren und steht dann bei jeder.
+    dateien: list[str] = Field(default_factory=list)
+
+
+class DeployRueckstand(BaseModel):
+    """Was zwischen dem ausgerollten Stand und `main` liegt — je Anwendung.
+
+    `betrifft_mich` ist die eigentliche Antwort auf „muss ich deployen": ein
+    Commit, der nur die Doku ändert, macht den Worker nicht deploy-bedürftig.
+    Entschieden wird das über Coolifys `watch_paths` derselben Anwendung —
+    dieselbe Regel, nach der Coolify auch selbst entscheiden würde.
+    """
+
+    # None = nicht ermittelbar (kein GitHub-Zugang, unbekannter Commit).
+    # Bewusst nicht 0: „weiß ich nicht" ist keine Aussage über den Rückstand.
+    commits_gesamt: int | None = None
+    commits_relevant: int | None = None
+    betrifft_mich: bool = False
+    offene: list[OffenerCommit] = Field(default_factory=list)
+    # Warum nichts ermittelt werden konnte — steht so in der Oberfläche.
+    fehler: str | None = None
+
+
 class DeployApp(BaseModel):
     """Eine überwachte Anwendung samt ihrem letzten bekannten Deploy."""
 
@@ -605,12 +637,16 @@ class DeployApp(BaseModel):
     name: str
     laeuft: bool = False
     letzter: DeployEintrag | None = None
+    rueckstand: DeployRueckstand | None = None
 
 
 class DeployUebersicht(BaseModel):
     apps: list[DeployApp]
     # True, sobald irgendeine App gerade baut — das Frontend pollt dann enger.
     aktiv: bool = False
+    # Kopf von `main` — der Stand, gegen den alle Apps verglichen werden.
+    main_sha: str | None = None
+    main_kurz_sha: str | None = None
 
 
 class DeployVerlauf(BaseModel):

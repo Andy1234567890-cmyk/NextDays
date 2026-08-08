@@ -290,6 +290,141 @@ def test_umbuchung_zieht_provision_nach(subs: MagicMock) -> None:
     )
 
 
+def test_umbuchung_uebernimmt_die_neue_waehrung(subs: MagicMock) -> None:
+    """Objektwechsel über eine Währungsgrenze (EU-27): der neu gerechnete Betrag
+    gehört zur Währung des ZIELS. Vorher ging der neue Betrag mit der ALTEN
+    Währung an den Ledger — Betrag und Währung aus zwei Welten (Wurzel 4)."""
+    from src.features.pricing.schemas import QuoteLine, QuoteResponse  # noqa: PLC0415
+
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    svc._quote = MagicMock(  # noqa: SLF001 — Preis-Resolver im Test festnageln
+        return_value=QuoteResponse(
+            property_id="p2", check_in=date(2026, 7, 10), check_out=date(2026, 7, 12),
+            nights=2, guests=1, channel="booking", currency="DKK",
+            nightly_total=3000.0, total=3000.0,
+            lines=[QuoteLine(label="Übernachtung", amount=3000.0, kind=None)],
+        )
+    )
+    svc.move(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"),
+        RID,
+        ReservationMove(
+            property_id="p2", check_in=date(2026, 7, 10),
+            check_out=date(2026, 7, 12), reprice=True,
+        ),
+    )
+    subs.return_value.record_commission.assert_called_once_with(
+        "t1",
+        reservation_id=RID,
+        channel="booking",
+        gross_amount=3000.0,
+        currency="DKK",
+    )
+    # Auch die Reservierungszeile selbst muss die neue Währung tragen, sonst
+    # widersprächen Zeile und Ledger sich.
+    assert store["reservations"][0]["currency"] == "DKK"
+
+
+def test_angenommene_anfrage_erfasst_provision(subs: MagicMock) -> None:
+    """Annehmen macht die Anfrage verbindlich — erst dann ist sie provisions-
+    pflichtig. Ohne diesen Aufruf blieb eine im PMS erfasste externe Anfrage
+    unberechnet, während decline/expire ihren Gegenzustand längst hatten."""
+    store = _move_store(
+        check_in="2026-07-01", check_out="2026-07-03", status="requested"
+    )
+    svc = _move_db(store)
+    # Der Überbuchungs-Check in accept_request nutzt `not_.is_()`, das der
+    # schlanke Store-Stub nicht kennt — er ist hier nicht der Prüfgegenstand.
+    # Die beiden Portal-Nebenwirkungen (ARI-Push, Dynamic Pricing) ebenso.
+    svc._fremdbelegung_im_zeitraum = MagicMock(return_value=False)  # noqa: SLF001
+    svc._push_channex_availability = MagicMock()  # noqa: SLF001
+    svc._recompute_dynamic_pricing = MagicMock()  # noqa: SLF001
+    # Wie beim decline-Test ist die Antwort-Serialisierung nicht der Prüf-
+    # gegenstand; hier endet sie auf 'confirmed' und ist deshalb gültig.
+    svc.accept_request(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"), RID
+    )
+    assert store["reservations"][0]["status"] == "confirmed"
+    # Betrag/Währung aus der bestehenden Zeile (der Store legt 200,00 EUR an) —
+    # accept rechnet nicht neu, es macht die Anfrage nur verbindlich.
+    subs.return_value.record_commission.assert_called_once_with(
+        "t1",
+        reservation_id=RID,
+        channel="booking",
+        gross_amount=200.0,
+        currency="EUR",
+    )
+
+
+def _ledger_store(objekt_status: str = "active", *, offen: bool = False) -> dict:
+    """Store für den ECHTEN Ledger-Service (Muster von
+    `test_direktbuchung_erzeugt_keine_ledger_zeile`). `offen=True` legt eine
+    bestehende 'pending'-Zeile ab, damit der Gegenzustand prüfbar ist."""
+    store: dict = {
+        "reservations": [{"id": RID, "tenant_id": "t1", "property_id": "p1"}],
+        "properties": [{"id": "p1", "tenant_id": "t1", "status": objekt_status}],
+    }
+    if offen:
+        store["commission_ledger"] = [
+            {"id": "c-1", "tenant_id": "t1", "reservation_id": RID,
+             "status": "pending", "channel": "booking", "currency": "EUR"},
+        ]
+    return store
+
+
+def _ledger_service(store: dict) -> object:
+    from src.features.subscriptions.service import (  # noqa: PLC0415
+        SubscriptionsService,
+    )
+
+    db = MagicMock(name="supabase")
+    db.table.side_effect = lambda name: _LedgerQuery(store, name)
+    return SubscriptionsService(service_client=db)
+
+
+def test_kanalwechsel_auf_direkt_raeumt_die_zeile() -> None:
+    """Wandert eine Buchung von einem externen Kanal auf 'direct', muss die
+    offene Zeile weg (Gegenzustand, Wurzel 1) — sonst bliebe eine Provision für
+    einen Verkauf stehen, der keine mehr trägt. Echter Service, kein Mock."""
+    store = _ledger_store(offen=True)
+    _ledger_service(store).record_commission(
+        "t1", reservation_id=RID, channel="direct",
+        gross_amount=400.0, currency="EUR",
+    )
+    assert store["commission_ledger"] == []
+
+
+def test_zurueckgezogenes_objekt_raeumt_die_zeile() -> None:
+    """Nur veröffentlichte Objekte tragen Provision. Wird ein Objekt auf
+    'draft' zurückgezogen, verschwindet die offene Zeile (Wurzel 1) — ein
+    Entwurf ist nicht im Verkauf, auch wenn das OTA-Inserat noch liefert."""
+    store = _ledger_store(objekt_status="draft", offen=True)
+    _ledger_service(store).record_commission(
+        "t1", reservation_id=RID, channel="booking",
+        gross_amount=400.0, currency="EUR",
+    )
+    assert store["commission_ledger"] == []
+
+
+def test_fehlende_waehrung_wirft_422() -> None:
+    """Ohne Währung KEINE Provision und kein Ersatzwert (Wurzel 4) — der Service
+    schlägt klar fehl. Der Schreibpfad fängt das best-effort ab, die Buchung
+    bleibt bestehen (eigener Test), aber die Zeile entsteht bewusst nicht."""
+    from src.features.subscriptions.service import (  # noqa: PLC0415
+        SubscriptionsError,
+    )
+
+    store = _ledger_store()
+    with pytest.raises(SubscriptionsError) as exc:
+        _ledger_service(store).record_commission(
+            "t1", reservation_id=RID, channel="booking",
+            gross_amount=400.0, currency="",
+        )
+    assert exc.value.status_code == 422
+    assert not store.get("commission_ledger")
+
+
 def test_provision_kippt_die_buchung_nicht(
     monkeypatch: pytest.MonkeyPatch, subs: MagicMock
 ) -> None:

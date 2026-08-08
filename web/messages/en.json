@@ -6398,8 +6398,8 @@
       "cardRate": "Booking, Airbnb & Co.: {rate} % of the booking revenue of your published properties. A month's commissions are billed on the 1st of the following month and added to your next subscription invoice.",
       "cardRateCapped": "Booking, Airbnb & Co.: {rate} % of the booking revenue of your published properties. A month's commissions are billed on the 1st of the following month and added to your next subscription invoice, up to a maximum of {cap} per month.",
       "cardOtherChannels": "Bookings through your own website remain commission-free. Bookings through the myBestDays marketplace carry 8 %, which is withheld directly when the payment comes in — those are not included here.",
-      "pending": "Outstanding ({count} bookings): ",
-      "pendingCapHint": " — the monthly cap of {cap} is what gets charged",
+      "pending": "Outstanding ({count, plural, one {# booking} other {# bookings}}): ",
+      "pendingCapHint": " — the monthly cap of {cap} is what gets billed",
       "noPending": "No outstanding commissions at the moment.",
       "showMonths": "View monthly history",
       "backToBilling": "Billing",
@@ -6413,12 +6413,13 @@
       "colGross": "Booking revenue",
       "colCommission": "Commission",
       "colStatus": "Status",
-      "capHint": "The figure shown is the commission incurred. At most the monthly cap from your plan is billed per month — you will find that amount under Billing.",
+      "capHint": "The figure shown is the commission incurred, before any cap is applied. Per month, you are billed no more than the monthly cap included in your plan.",
       "mixedCurrencyHint": "Months with bookings in several currencies are shown without a total — the individual amounts are on the respective invoice.",
       "statusPending": "Being billed",
       "statusInvoiced": "Billed",
       "statusPaid": "Paid",
-      "statusMixed": "Partially outstanding"
+      "statusMixed": "Partially outstanding",
+      "monthsEmptyPlain": "No commissions from external portals so far."
     },
     "invoices": {
       "fees": "Fees"

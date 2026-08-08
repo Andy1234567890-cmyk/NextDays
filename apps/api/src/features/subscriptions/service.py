@@ -1200,14 +1200,10 @@ class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin):
 
     @staticmethod
     def _einzugstag(periode: str) -> str:
-        """1. des Folgemonats — der FAKTURIERUNGS-Tag, nicht der Belastungstag.
-
-        Dann bucht `bill_pending_commissions` die Provision als Invoice-Item;
-        eingezogen wird sie erst mit der nächsten Abo-Rechnung (Details dort).
-        Deshalb in der UI NIE „wird eingezogen", sondern „abgerechnet am …,
-        Einzug mit der nächsten Abo-Rechnung" — sonst steht dort eine
-        Falschaussage gegenüber dem Kunden.
-        """
+        """1. des Folgemonats — FAKTURIERUNGS-, nicht Belastungstag: dann bucht
+        `bill_pending_commissions` das Invoice-Item, eingezogen wird es mit der
+        nächsten Abo-Rechnung (Details dort). In der UI deshalb NIE „wird
+        eingezogen" — das wäre eine Falschaussage gegenüber dem Kunden."""
         jahr, monat = (int(t) for t in periode.split("-")[:2])
         return (
             f"{jahr + 1}-01-01" if monat == _DEZEMBER else f"{jahr}-{monat + 1:02d}-01"
@@ -1420,18 +1416,13 @@ class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin):
         abgerechneten Zeilen zurück. Kein Abo → klar fehlschlagen, nicht still
         verschlucken (Wurzel 5).
 
-        FAKTURIEREN ≠ EINZIEHEN, bewusst so und hier festgehalten, damit es
-        niemand für einen vergessenen Schritt hält: der Lauf erzeugt NUR ein
-        `invoice_items.create` auf den Customer, kein `invoices.create`/
-        `finalize_invoice`/`pay`. Das Item bleibt bei Stripe offen und läuft mit
-        der NÄCHSTEN regulären Abo-Rechnung mit; erst deren Einzug belastet die
-        Zahlungsmethode (Abo-Erneuerung am 17. → Belastung am 17., nicht am 1.).
-        Der Monatslauf (Worker `_commission_tick`) setzt also nur den
-        Fakturierungstag — anders als `_invoice_prorations_now` (create +
-        finalize, sofortiger Einzug), denn eine eigene finalisierte Rechnung am
-        1. ergäbe neben dem Abo zwei Belastungen im selben Monat. Für die UI:
-        `CommissionMonth.charge_date` ist der Fakturierungstag, „wird am 1.
-        eingezogen" wäre falsch."""
+        FAKTURIEREN ≠ EINZIEHEN — bewusst so, kein vergessener Schritt: der Lauf
+        macht NUR `invoice_items.create`, kein `invoices.create`/`finalize`/`pay`.
+        Das Item bleibt offen und läuft mit der NÄCHSTEN Abo-Rechnung mit, erst
+        deren Einzug belastet (Erneuerung am 17. → Belastung am 17., nicht am 1.).
+        Anders als `_invoice_prorations_now` (create+finalize, sofort), denn eine
+        eigene Rechnung am 1. ergäbe zwei Belastungen im Monat. Für die UI:
+        `charge_date` ist der Fakturierungstag, „wird eingezogen" wäre falsch."""
         if self._db is None:
             raise SubscriptionsError("Subscriptions-DB nicht verfügbar.", status_code=500)
         db = self._db

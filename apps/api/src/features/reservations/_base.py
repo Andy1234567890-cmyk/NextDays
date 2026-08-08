@@ -20,7 +20,6 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.dates import nights as _nights
-from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.einheiten_verfuegbar import freie_einheiten_spannen
 from src.core.logging import get_logger
 from src.core.security import AuthContext
@@ -153,21 +152,40 @@ class ReservationsBase:
         return list(owner_property_ids(self._db(), ctx))
 
     def _days_still_booked_by_others(
-        self, property_id: str, days: list[str], exclude_reservation_id: str
+        self,
+        property_id: str,
+        days: list[str],
+        exclude_reservation_id: str,
+        unit_id: str | None = None,
     ) -> set[str]:
         """Von `days` diejenigen, die noch durch eine ANDERE aktive Reservierung
-        desselben Objekts belegt sind (z. B. eine importierte OTA-Buchung — die
-        darf mit einer lokalen Buchung überlappen, der EXCLUDE-Constraint nimmt
-        OTA-Buchungen aus). Solche Tage dürfen beim Stornieren/Verschieben der
-        lokalen Reservierung NICHT freigegeben und NICHT an Channex zurück-
-        gemeldet werden, sonst werden real belegte Tage wieder verkaufbar."""
+        belegt sind — auf DERSELBEN Einheit, wenn `unit_id` gegeben ist, sonst
+        objektweit.
+
+        Solche Tage dürfen beim Stornieren/Verschieben der eigenen Reservierung
+        NICHT freigegeben und NICHT an Channex zurückgemeldet werden, sonst
+        werden real belegte Tage wieder verkaufbar (z. B. eine importierte
+        OTA-Buchung — die darf mit einer lokalen Buchung überlappen, der
+        EXCLUDE-Constraint nimmt OTA-Buchungen aus).
+
+        Seit 0265 hat ein Objekt n ≥ 1 Einheiten, und eine Buchung belegt GENAU
+        EINE davon. Objektweit gezählt blockierte deshalb die Buchung auf
+        Einheit 2 die Freigabe der Nacht auf Einheit 1: `release` blieb leer,
+        die Nacht wurde nie zurückgegeben und die Einheit war dauerhaft
+        unverkäuflich (Wurzel 1 — der Gegenzustand kam nie).
+
+        Fail-closed (Wurzel 5): Zeilen OHNE `unit_id` (Altbestand vor 0266)
+        zählen weiter als belegend — welche Einheit sie meinen, ist unbekannt,
+        und eine Überbuchung wiegt schwerer als eine ungenutzte Nacht. Ohne
+        `unit_id` des Aufrufers bleibt es beim objektweiten Verhalten.
+        """
         if not days:
             return set()
         lo, hi = min(days), max(days)
         rows = (
             self._db()
             .table("reservations")
-            .select("check_in, check_out, status")
+            .select("check_in, check_out, status, unit_id")
             .eq("property_id", property_id)
             .neq("id", exclude_reservation_id)
             .neq("status", "cancelled")
@@ -185,6 +203,9 @@ class ReservationsBase:
             # der Tag lokal und bei den OTAs unverkäuflich, ohne dass irgendwo
             # eine gültige Buchung stand (Wurzel 1).
             if str(r.get("status") or "") in _NICHT_BELEGEND:
+                continue
+            fremde_einheit = r.get("unit_id")
+            if unit_id and fremde_einheit and str(fremde_einheit) != str(unit_id):
                 continue
             for d in _nights(_as_date(r["check_in"]), _as_date(r["check_out"])):
                 iso = d.isoformat()
@@ -425,6 +446,7 @@ class ReservationsBase:
         *,
         recompute: bool = True,
         unit_id: str | None = None,
+        push: bool = True,
     ) -> None:
         """Gibt geräumte Nächte einer Reservierung frei — die EINE Stelle, an der
         eine Reservierung Kalendertage zurückgibt (move-Resize, cancel, künftig
@@ -442,14 +464,36 @@ class ReservationsBase:
         bleibt es beim objektweiten Verhalten von vorher.
 
         Freigegeben wird NUR für Tage, die keine andere aktive Buchung noch
-        belegt (sonst Überbuchung). Rechnet danach Dynamic Pricing neu.
+        belegt (sonst Überbuchung), und NUR Zeilen, die wirklich eine BELEGUNG
+        sind (`status='booked'`). Rechnet danach Dynamic Pricing neu.
+
+        `push=False` gibt lokal frei, meldet aber NICHT an die Portale — für
+        Aufrufer, die im selben Vorgang noch belegen (move) und deshalb erst
+        den fertigen Kalenderstand melden dürfen. Ein Push mitten im Vorgang
+        meldete die gerade geräumten Tage als frei, obwohl sie Sekunden später
+        wieder belegt sind (Überbuchungsfenster).
         """
         if not nights:
             return
-        still = self._days_still_booked_by_others(property_id, nights, reservation_id)
+        still = self._days_still_booked_by_others(
+            property_id, nights, reservation_id, unit_id
+        )
         release = [d for d in nights if d not in still]
         if not release:
             return
+        # `status='booked'` ist der entscheidende Filter, nicht bloß eine
+        # Optimierung: `availability` führt Belegung UND Sperre in derselben
+        # Zeile (Enum 0004: open|booked|blocked). Eine Sperre steht als
+        # 'blocked' — externer Kalender (`source='ical'`,
+        # external_calendar/service.py) oder manueller Block. Ohne den Filter
+        # setzte ein Storno auch sie auf 'open', und der anschließende
+        # `_release_channex`-Push meldete den Tag als frei an die Portale:
+        # Verkauf einer Nacht, die anderswo längst vergeben ist —
+        # Überbuchung. `_days_still_booked_by_others` schützt davor NICHT, es
+        # liest ausschließlich `reservations`, und eine iCal-/Manual-Sperre ist
+        # keine Reservierung. Gleiches Muster wie
+        # `bookings_sync._free_ota_nights` und der `occupied_now`-Check in
+        # writes.py.
         if unit_id:
             # Nur die eigene Einheit öffnen. `update` statt `upsert`: es gibt
             # nichts anzulegen — die Zeile dieser Einheit existiert, weil die
@@ -462,20 +506,79 @@ class ReservationsBase:
                     .eq("property_id", property_id)
                     .eq("unit_id", unit_id)
                     .eq("date", d)
+                    .eq("status", "booked")
                     .execute()
                 )
         else:
-            self._db().table("availability").upsert(
-                je_einheit(self._db(), property_id, [
-                    {"property_id": property_id, "date": d,
-                     "status": "open", "source": "manual"}
-                    for d in release
-                ]),
-                on_conflict=AVAILABILITY_CONFLICT,
-            ).execute()
-        self._release_channex(tenant_id, property_id, release)
+            # Altbestand ohne bekannte Einheit: objektweit, aber ebenfalls nur
+            # belegte Zeilen. Vorher stand hier ein `upsert` — der konnte den
+            # `status='booked'`-Filter gar nicht ausdrücken und legte für Tage
+            # ohne Zeile sogar neue 'open'-Zeilen an, auf ALLEN Einheiten des
+            # Typs. Ein `update` je Tag trifft genau die vorhandenen Zeilen.
+            for d in release:
+                (
+                    self._db()
+                    .table("availability")
+                    .update({"status": "open", "source": "manual"})
+                    .eq("property_id", property_id)
+                    .eq("date", d)
+                    .eq("status", "booked")
+                    .execute()
+                )
+        if push:
+            self._release_channex(tenant_id, property_id, release)
         if recompute:
             self._recompute_dynamic_pricing(tenant_id, property_id)
+
+    def _push_einheiten_stand(
+        self,
+        tenant_id: str,
+        property_id: str,
+        von: date,
+        bis: date,
+        *,
+        outbox_id: str | None = None,
+    ) -> None:
+        """Den FERTIGEN Kalenderstand eines Zeitraums an Channex melden — die
+        eine Stelle, an der die Zahl freier Einheiten ermittelt und gepusht wird.
+
+        Belegung und Freigabe sind dieselbe Frage („wie viele Einheiten sind an
+        diesem Tag noch verkäuflich?") und dürfen deshalb nicht zwei Antworten
+        haben. Der Belegungspfad meldete bis hierher pauschal `0` — bei einem
+        Typ mit n Einheiten (0265) nahm damit die ERSTE Buchung dem ganzen Typ
+        die Verfügbarkeit, die übrigen Einheiten waren bei Booking/Airbnb
+        unverkäuflich. `freie_einheiten_spannen` liest den Kalender (die
+        Wahrheit für Belegung) und liefert die Spannen gleicher Stückzahl fertig
+        für den Push; derselbe Weg, den `bookings_sync` schon nutzt.
+
+        `bis` ist INKLUSIV (letzte Nacht), `_push_channex_availability` nimmt
+        das Ende exklusiv. Voraussetzung: der Kalender ist für den ganzen
+        Zeitraum bereits geschrieben — sonst meldet der Push einen Zwischen-
+        stand (zu viele freie Einheiten = Überbuchungsrisiko).
+
+        `outbox_id` ist eine BEREITS geschriebene Outbox-Zeile (die RPC legt
+        beim Anlegen eine an). Sie deckt den GANZEN Zeitraum mit EINEM Wert ab
+        (dem Minimum, das die RPC kennt) — nicht eine einzelne Spanne. Zerfällt
+        der Zeitraum hier in mehrere Stückzahl-Spannen, quittiert die ERSTE
+        Spanne diese Zeile; die übrigen schreiben sich ihre eigene. Der Stand
+        bleibt korrekt, weil die eigene Zeile jeder weiteren Spanne deren echte
+        Zahl trägt und die pauschale Ausgangszeile nur nach unten abweichen
+        kann (Minimum → nie zu viele freie Einheiten gemeldet). Sie mehrfach
+        mitzugeben hieße dagegen, denselben Datensatz mit widersprüchlichen
+        Zahlen zu quittieren.
+
+        Best-effort (ari_outbox-Retry).
+        """
+        if bis < von:
+            return
+        for span_von, span_bis, frei in freie_einheiten_spannen(
+            self._db(), tenant_id, property_id, von, bis
+        ):
+            self._push_channex_availability(
+                tenant_id, property_id, span_von, span_bis + timedelta(days=1), frei,
+                outbox_id=outbox_id,
+            )
+            outbox_id = None
 
     def _release_channex(
         self, tenant_id: str, property_id: str, days: list[str]
@@ -497,13 +600,9 @@ class ReservationsBase:
         if not days:
             return
         ordered = [date.fromisoformat(d) for d in sorted(days)]
-        for von, bis, frei in freie_einheiten_spannen(
-            self._db(), tenant_id, property_id, ordered[0], ordered[-1]
-        ):
-            # `_push_channex_availability` nimmt das Ende exklusiv.
-            self._push_channex_availability(
-                tenant_id, property_id, von, bis + timedelta(days=1), frei
-            )
+        self._push_einheiten_stand(
+            tenant_id, property_id, ordered[0], ordered[-1]
+        )
 
     def _quote(
         self,

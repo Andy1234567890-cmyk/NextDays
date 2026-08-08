@@ -23,6 +23,12 @@ export default async function DeploySeite() {
   }
 
   const aktiv = uebersicht?.aktiv ?? false;
+  // Wie viele Anwendungen warten auf einen Deploy? Das ist die Zahl, wegen der
+  // jemand diese Seite öffnet — sie gehört in die erste Zeile, nicht in eine
+  // Spalte weiter unten.
+  const offen = (uebersicht?.apps ?? []).filter(
+    (a) => a.rueckstand?.betrifft_mich,
+  ).length;
 
   return (
     <div className="px-8 py-8 lg:px-12 lg:py-12">
@@ -35,7 +41,23 @@ export default async function DeploySeite() {
           : aktiv
             ? "Ein Ausrollen läuft gerade."
             : `${uebersicht?.apps.length ?? 0} Anwendungen · zuletzt ausgerollter Stand`}
+        {!fehler && uebersicht?.main_kurz_sha ? (
+          <>
+            {" · main "}
+            <span className="font-mono text-xs">
+              {uebersicht.main_kurz_sha}
+            </span>
+          </>
+        ) : null}
       </p>
+
+      {!fehler && offen > 0 ? (
+        <p className="mt-3 inline-flex rounded-full bg-amber-500/10 px-3 py-1.5 text-sm font-semibold text-amber-700 dark:text-amber-400">
+          {offen === 1
+            ? "1 Anwendung hat noch nicht ausgerollte Änderungen"
+            : `${offen} Anwendungen haben noch nicht ausgerollte Änderungen`}
+        </p>
+      ) : null}
 
       {fehler ? (
         <div className="mt-8 rounded-2xl border border-dashed border-border p-8 text-center">

@@ -72,6 +72,86 @@ function dauer(von: string | null, bis: string | null): string {
   return `${Math.floor(sek / 60)}m ${sek % 60}s`;
 }
 
+/** Was der Rückstand für DIESE App bedeutet — eine Zelle, drei Zustände. */
+function RueckstandZelle({ app }: { app: DeployApp }) {
+  const r = app.rueckstand;
+  // Nicht ermittelbar: das sagen, statt „aktuell" zu behaupten (Wurzel 4).
+  if (!r || r.commits_relevant === null) {
+    return (
+      <span
+        className="text-xs text-muted-foreground"
+        title={r?.fehler ?? undefined}
+      >
+        nicht abrufbar
+      </span>
+    );
+  }
+  if (!r.betrifft_mich) {
+    // Es kann Commits geben, die diese App nicht berühren — dann ist sie
+    // trotzdem aktuell. Die Gesamtzahl steht im Titel, damit der Unterschied
+    // nachvollziehbar bleibt.
+    return (
+      <span
+        className="text-xs text-emerald-700 dark:text-emerald-400"
+        title={
+          r.commits_gesamt
+            ? `${r.commits_gesamt} Commit(s) auf main, keiner betrifft diese Anwendung`
+            : undefined
+        }
+      >
+        aktuell
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
+      {r.commits_relevant} offen
+    </span>
+  );
+}
+
+/** Die offenen Commits einer App — aufklappbar, damit die Zeile schmal bleibt. */
+function AenderungenZelle({ app }: { app: DeployApp }) {
+  const offene = app.rueckstand?.offene ?? [];
+  if (offene.length === 0) return <span className="text-muted-foreground">—</span>;
+  return (
+    <details className="group">
+      <summary className="cursor-pointer list-none text-xs font-semibold text-muted-foreground transition hover:text-foreground">
+        {offene.length} anzeigen
+      </summary>
+      <ul className="mt-2 flex max-w-md flex-col gap-2">
+        {offene.map((c) => (
+          <li key={c.sha} className="text-xs">
+            <div className="flex gap-2">
+              <span className="shrink-0 font-mono text-muted-foreground">
+                {c.kurz_sha}
+              </span>
+              <span className="min-w-0">{c.nachricht}</span>
+            </div>
+            <div className="mt-0.5 text-muted-foreground">
+              {c.autor ?? "unbekannt"}
+              {c.zeitpunkt
+                ? ` · ${new Date(c.zeitpunkt).toLocaleString("de-DE")}`
+                : ""}
+              {c.dateien.length > 0
+                ? ` · ${c.dateien.length} Datei(en)`
+                : ""}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+/** Handlungsbedarf zuerst: was deployt werden muss, steht oben. */
+function nachDringlichkeit(a: DeployApp, b: DeployApp): number {
+  const rang = (x: DeployApp) =>
+    x.rueckstand?.betrifft_mich ? 0 : x.laeuft ? 1 : 2;
+  const d = rang(a) - rang(b);
+  return d !== 0 ? d : a.name.localeCompare(b.name);
+}
+
 export function DeployTabelle({
   apps,
   aktiv,
@@ -84,6 +164,8 @@ export function DeployTabelle({
   const router = useRouter();
   const [laeuftAktion, starteAktion] = useTransition();
   const [gerade, setGerade] = useState<string | null>(null);
+  // Kopie sortieren: `apps` ist Server-Prop und darf nicht mutiert werden.
+  const sortiert = [...apps].sort(nachDringlichkeit);
 
   // Push statt Polling: der Worker schreibt jede Aenderung nach
   // deploy_spiegel, das Abo holt die frischen Daten vom Server nach.
@@ -123,6 +205,8 @@ export function DeployTabelle({
             <th className="pb-2 pr-4 font-semibold">Anwendung</th>
             <th className="pb-2 pr-4 font-semibold">Status</th>
             <th className="pb-2 pr-4 font-semibold">Commit</th>
+            <th className="pb-2 pr-4 font-semibold">Rückstand</th>
+            <th className="pb-2 pr-4 font-semibold">Änderungen</th>
             <th className="pb-2 pr-4 font-semibold">Gestartet</th>
             <th className="pb-2 pr-4 font-semibold">Dauer</th>
             <th className="pb-2 pr-4 font-semibold">Ausgabe</th>
@@ -130,8 +214,15 @@ export function DeployTabelle({
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {apps.map((app) => (
-            <tr key={app.uuid}>
+          {sortiert.map((app) => (
+            <tr
+              key={app.uuid}
+              // Was ausgerollt werden muss, hebt sich ab — die Zeile ist die
+              // Antwort auf „welche App deploye ich jetzt".
+              className={
+                app.rueckstand?.betrifft_mich ? "bg-amber-500/[0.04]" : undefined
+              }
+            >
               <td className="py-3 pr-4 font-medium">
                 <Link
                   href={`/deploy/${app.uuid}`}
@@ -159,6 +250,12 @@ export function DeployTabelle({
                   <span className="text-muted-foreground">—</span>
                 )}
               </td>
+              <td className="whitespace-nowrap py-3 pr-4">
+                <RueckstandZelle app={app} />
+              </td>
+              <td className="py-3 pr-4 align-top">
+                <AenderungenZelle app={app} />
+              </td>
               <td className="whitespace-nowrap py-3 pr-4 font-mono text-xs text-muted-foreground">
                 {app.letzter?.gestartet_at
                   ? new Date(app.letzter.gestartet_at).toLocaleString("de-DE")
@@ -183,13 +280,22 @@ export function DeployTabelle({
                     type="button"
                     onClick={() => ausloesen(app)}
                     disabled={laeuftAktion || app.laeuft}
-                    className="rounded-full border border-border px-4 py-2 text-xs font-semibold transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                    // Steht etwas an, ist der Knopf die Hauptaktion der Zeile
+                    // und sieht auch so aus. Sonst bleibt er zurückhaltend —
+                    // ein Redeploy ohne Änderung ist selten gewollt.
+                    className={
+                      app.rueckstand?.betrifft_mich && !app.laeuft
+                        ? "whitespace-nowrap rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                        : "whitespace-nowrap rounded-full border border-border px-4 py-2 text-xs font-semibold transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                    }
                   >
                     {gerade === app.uuid
                       ? "Wird gestartet…"
                       : app.laeuft
                         ? "Läuft"
-                        : "Neu deployen"}
+                        : app.rueckstand?.betrifft_mich
+                          ? `Deployen (${app.rueckstand.commits_relevant})`
+                          : "Neu deployen"}
                   </button>
                 ) : null}
               </td>

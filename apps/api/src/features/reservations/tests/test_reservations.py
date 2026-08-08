@@ -57,17 +57,33 @@ def _service_for_create(
     property_found: bool,
     taken_days: list[dict[str, str]],
     stopped_days: list[dict[str, str]] | None = None,
+    units: list[dict[str, str]] | None = None,
 ) -> ReservationsService:
     """Mockt die im create() benutzten Tabellen-Ketten.
 
     properties.select…limit → {data: [...]}, availability.select…lt → taken_days,
-    stop_sell.select…lt → stopped_days (Stop-Sell-Guard).
+    stop_sell.select…lt → stopped_days (Stop-Sell-Guard),
+    property_units.select…eq → units.
+
+    `units` ist optional und default `None`: dann bleibt `property_units` ein
+    nackter MagicMock, der leer iteriert — genau das Verhalten, gegen das alle
+    Alt-Tests geschrieben sind (unbekannte Einheiten → strenger, objektweiter
+    409, Wurzel 5). Nur die Multi-Unit-Tests setzen den Wert und bekommen damit
+    den einheiten-genauen Pfad aus 0265/0266 zu sehen.
     """
     db = MagicMock(name="supabase")
 
     def table(name: str) -> MagicMock:
         t = MagicMock(name=f"table:{name}")
-        if name == "properties":
+        if name == "property_units" and units is not None:
+            # `einheiten_ids` hängt noch `.order(...)` an, der create()-Vorcheck
+            # nicht — beide Ketten müssen dieselbe Liste liefern.
+            chain = t.select.return_value.eq.return_value
+            chain.execute.return_value.data = units
+            chain.eq.return_value.execute.return_value.data = units
+            chain.order.return_value.execute.return_value.data = units
+            chain.eq.return_value.order.return_value.execute.return_value.data = units
+        elif name == "properties":
             chain = (
                 t.select.return_value.eq.return_value.eq.return_value.limit.return_value
             )
@@ -499,6 +515,9 @@ class _MoveQuery:
         self._eq: dict = {}
         self._neq: dict = {}
         self._is_null: list = []
+        self._not_null: list = []
+        self._in: dict = {}
+        self._negate_next = False
         self._gte: str | None = None
         self._lt: str | None = None
 
@@ -517,7 +536,23 @@ class _MoveQuery:
         # PostgREST: is_("col", "null") — hier nur der Null-Fall (detail()-
         # Rechnungs-Query, 0092).
         if val == "null":
-            self._is_null.append(col)
+            if self._negate_next:
+                self._not_null.append(col)
+            else:
+                self._is_null.append(col)
+        self._negate_next = False
+        return self
+
+    @property
+    def not_(self) -> "_MoveQuery":
+        # PostgREST: `.not_.is_(col, "null")` — der Überbuchungs-Check in
+        # accept_request fragt so nach OTA-Buchungen (source_channex_booking_id
+        # NICHT null). `not_` ist dort ein Property, kein Aufruf.
+        self._negate_next = True
+        return self
+
+    def in_(self, col, vals) -> "_MoveQuery":  # noqa: ANN001
+        self._in[col] = list(vals)
         return self
 
     def gte(self, _col, val) -> "_MoveQuery":  # noqa: ANN001
@@ -554,6 +589,12 @@ class _MoveQuery:
         for c in self._is_null:
             if r.get(c) is not None:
                 return False
+        for c in self._not_null:
+            if r.get(c) is None:
+                return False
+        for c, vals in self._in.items():
+            if r.get(c) not in vals:
+                return False
         if self._gte is not None and r.get("date", "") < self._gte:
             return False
         if self._lt is not None and r.get("date", "") >= self._lt:
@@ -569,11 +610,17 @@ class _MoveQuery:
     def upsert(self, payload, **_k) -> "_MoveQuery":  # noqa: ANN001
         rows = payload if isinstance(payload, list) else [payload]
         table = self._store.setdefault(self._name, [])
+        # Konfliktschlüssel wie in der DB: `AVAILABILITY_CONFLICT` ist
+        # (property_id, unit_id, date). Ohne `unit_id` kollabierten die Zeilen
+        # zweier Einheiten desselben Tages auf eine — ein Multi-Unit-Test wäre
+        # damit nicht abbildbar (0266).
         for row in rows:
             for i, ex in enumerate(table):
-                if ex.get("property_id") == row.get("property_id") and ex.get(
-                    "date"
-                ) == row.get("date"):
+                if (
+                    ex.get("property_id") == row.get("property_id")
+                    and ex.get("unit_id") == row.get("unit_id")
+                    and ex.get("date") == row.get("date")
+                ):
                     table[i] = {**ex, **row}
                     break
             else:

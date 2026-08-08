@@ -349,6 +349,22 @@ class Settings(BaseSettings):
             self.coolify_configured and self.coolify_log_token.get_secret_value().strip()
         )
 
+    # --- GitHub (nur LESEN) ---------------------------------------------------
+    # Beantwortet im Deploy-Monitor die Frage „was liegt zwischen dem
+    # ausgerollten Stand und main?". Ausschließlich lesend: ein Fine-grained
+    # Token mit `contents: read` auf DIESES eine Repo reicht. Fehlt er, sagt der
+    # Monitor „nicht abrufbar" — er behauptet nicht, alles sei ausgerollt
+    # (Wurzel 4: eine 0 wäre eine Aussage, die wir ohne Abruf nicht haben).
+    github_token: SecretStr = SecretStr("")
+    github_repo: str = "Nextdays-AirSmil/NextDays"
+
+    @property
+    def github_configured(self) -> bool:
+        """Rückstands-Anzeige ist nutzbar, wenn Token UND Repo gesetzt sind."""
+        return bool(
+            self.github_token.get_secret_value().strip() and self.github_repo.strip()
+        )
+
     @property
     def mail_configured(self) -> bool:
         """Versand ist nutzbar, wenn Server UND Absender gesetzt sind. Fehlt eins,

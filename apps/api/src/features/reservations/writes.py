@@ -6,11 +6,16 @@ Verfügbarkeit an Channex/OTAs; das Anlegen läuft atomar über die RPC (Wurzel 
 """
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 
 from postgrest.exceptions import APIError
 
-from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
+from src.core.einheiten import (
+    AVAILABILITY_CONFLICT,
+    einheiten_ids,
+    freie_einheit,
+    je_einheit,
+)
 from src.core.sales_channels import (
     RECEPTION,
     availability_block_hits_channel,
@@ -90,6 +95,36 @@ class WritesMixin(ReservationsBase):
                 error=str(exc)[:200],
             )
 
+    def _fremdbelegung_im_zeitraum(
+        self,
+        property_id: str,
+        reservation_id: str,
+        check_in: date,
+        check_out: date,
+    ) -> bool:
+        """Liegt im Zeitraum eine PORTAL-Buchung eines anderen Vorgangs?
+
+        Überbuchungsschutz beim Annehmen einer Anfrage: kam zwischen Anfrage und
+        accept eine OTA-Nacht herein, darf die Verfügbarkeit nicht blind auf 0
+        gepusht werden. OTA-Buchungen sind vom EXCLUDE-Constraint befreit
+        (`source_channex_booking_id`), tauchen also nicht als lokale Kollision auf.
+        """
+        return bool(
+            (
+                self._db()
+                .table("reservations")
+                .select("id")
+                .eq("property_id", property_id)
+                .neq("id", reservation_id)
+                .not_.is_("source_channex_booking_id", "null")
+                .in_("status", ["confirmed", "pending"])
+                .lt("check_in", check_out.isoformat())
+                .gt("check_out", check_in.isoformat())
+                .limit(1)
+                .execute()
+            ).data
+        )
+
     def _cancel_commission(self, tenant_id: str, reservation_id: str) -> None:
         """Storno → offene Provisionszeile entfernen (Gegenzustand, Wurzel 1) —
         sonst bliebe die Provision einer stornierten Buchung in der Monatssumme.
@@ -135,13 +170,13 @@ class WritesMixin(ReservationsBase):
             tenant_id, req.property_id, req.rate_plan_id
         )
 
-        # 2) Double-Booking-Vorcheck (früher UX-Guard): binäre availability
-        #    (1 Objekt = 1 Einheit). Der RPC bleibt der TOCTOU-sichere Backstop.
+        # 2) Double-Booking-Vorcheck (früher UX-Guard) je EINHEIT.
+        #    Der RPC bleibt der TOCTOU-sichere Backstop.
         nights = _nights(req.check_in, req.check_out)
         avail = (
             self._db()
             .table("availability")
-            .select("date,status,source")
+            .select("date,status,source,unit_id")
             .eq("property_id", req.property_id)
             .gte("date", req.check_in.isoformat())
             .lt("date", req.check_out.isoformat())
@@ -151,17 +186,38 @@ class WritesMixin(ReservationsBase):
         # aus dem Channex-Import und betrifft NUR OTAs — die Rezeption darf
         # trotzdem buchen. Echte Belegung/manuelle Sperre (booked/manual/ical)
         # blockt weiter (Überbuchungsschutz).
-        taken = [
-            r["date"]
+        #
+        # Die Frage lautet seit 0265 „gibt es EINE Einheit, die im ganzen
+        # Zeitraum frei ist?" — nicht „ist irgendein Tag irgendeiner Einheit
+        # belegt?". `availability` trägt seit 0266 eine Zeile je (Objekt,
+        # Einheit, Tag); ein Objekt mit zwei Einheiten war sonst ab der ersten
+        # Buchung an der Rezeption komplett dicht, weil der Vorcheck abwies,
+        # bevor die RPC (0275) die zweite, freie Einheit finden konnte.
+        belegte_einheiten = {
+            r.get("unit_id")
             for r in (avail.data or [])
             if r["status"] != "open"
             and availability_block_hits_channel(r.get("source"), RECEPTION)
-        ]
-        if taken:
-            raise ReservationError(
-                "Zeitraum enthält bereits belegte/gesperrte Tage.",
-                status_code=409,
-            )
+        }
+        if belegte_einheiten:
+            alle_einheiten = {
+                u["id"]
+                for u in (
+                    self._db()
+                    .table("property_units")
+                    .select("id")
+                    .eq("property_id", req.property_id)
+                    .execute()
+                ).data
+                or []
+            }
+            # Ohne bekannte Einheiten (Altbestand) bleibt es beim strengen
+            # Verhalten von vorher — lieber ablehnen als überbuchen (Wurzel 5).
+            if not alle_einheiten or not alle_einheiten - belegte_einheiten:
+                raise ReservationError(
+                    "Zeitraum enthält bereits belegte/gesperrte Tage.",
+                    status_code=409,
+                )
         # Stop-Sell-Schutz: ein Stop-Sell sperrt die Rezeptions-Buchung nur, wenn er
         # den Rezeptions-Kanal betrifft (scope='all' oder 'reception' im channels-
         # Set) UND die gebuchte Ebene trifft: Objekt-Stopp (rate_plan_id null)
@@ -296,13 +352,17 @@ class WritesMixin(ReservationsBase):
             raise ReservationError("Reservierung konnte nicht angelegt werden.", status_code=500)
 
         # Realtime: belegte Tage sofort an Channex/OTAs melden, damit keine
-        # OTA-Doppelbuchung entsteht. Buchungskalender = Wahrheit. 1 Objekt =
-        # 1 buchbare Einheit → binärer 0-Push (die Einheit ist weg → gesperrt).
-        # Die RPC hat die Outbox-Zeile bereits atomar geschrieben (Cron-Backstop);
-        # dieser Push ist die schnelle Bahn (tag-genaues Superseding macht ihn
-        # idempotent zur RPC-Zeile).
-        self._push_channex_availability(
-            tenant_id, req.property_id, req.check_in, req.check_out, 0,
+        # OTA-Doppelbuchung entsteht. Buchungskalender = Wahrheit. Gemeldet wird
+        # die ZAHL der noch freien Einheiten, nicht pauschal 0: ein Objekt ist
+        # seit 0265 ein Einheiten-TYP mit n ≥ 1 Einheiten, und die RPC hat die
+        # Belegung dieser einen Einheit bereits geschrieben — bei n = 1 ist das
+        # weiterhin genau die 0 von vorher, bei n > 1 bleiben die übrigen
+        # Einheiten verkäuflich. Die RPC hat die Outbox-Zeile atomar
+        # mitgeschrieben (Cron-Backstop); dieser Push ist die schnelle Bahn
+        # (tag-genaues Superseding macht ihn idempotent zur RPC-Zeile).
+        self._push_einheiten_stand(
+            tenant_id, req.property_id, req.check_in,
+            req.check_out - timedelta(days=1),
             outbox_id=result.get("outbox_id"),
         )
         # Dynamic Pricing der betroffenen Tage neu rechnen (Auslastung/Orphan).
@@ -494,32 +554,50 @@ class WritesMixin(ReservationsBase):
         if not prop.data:
             raise ReservationError("Objekt nicht gefunden.", status_code=404)
 
-        # Double-Booking-Schutz für die Ziel-Nächte. Eigene Alt-Tage am SELBEN
-        # Objekt zählen nicht als Konflikt (Resize/Verkürzen am Platz).
+        # Double-Booking-Schutz für die Ziel-Nächte. Eigene Alt-Tage auf der
+        # EIGENEN Einheit zählen nicht als Konflikt (Resize/Verkürzen am Platz).
         avail = (
             self._db()
             .table("availability")
-            .select("date,status,source")
+            .select("date,status,source,unit_id")
             .eq("property_id", req.property_id)
             .gte("date", req.check_in.isoformat())
             .lt("date", req.check_out.isoformat())
             .execute()
         )
         same_property = req.property_id == old_property
+        alte_unit = str(current["unit_id"]) if current.get("unit_id") else None
+        # Wie in create() je EINHEIT (0265/0266): die Frage lautet „bleibt eine
+        # Einheit im ganzen Zeitraum frei?", nicht „ist irgendein Tag irgendeiner
+        # Einheit belegt?". Objektweit gefragt war ein Typ mit zwei Einheiten ab
+        # der ersten Buchung nicht mehr umbuchbar.
         # Kanal-Trennung wie in create(): eine 'portal'-Sperre (Channex-Import)
         # betrifft nur OTAs, blockt den Rezeptions-Move nicht.
-        taken = [
-            r["date"]
+        # Der Alt-Tag-Filter ist unit-genau: eine Fremdbelegung auf einer
+        # SCHWESTEREINHEIT am selben Tag darf nicht als „eigener Alt-Tag"
+        # durchrutschen (objektweit gefragt tat sie das).
+        belegte_einheiten = {
+            r.get("unit_id")
             for r in (avail.data or [])
             if r["status"] != "open"
             and availability_block_hits_channel(r.get("source"), RECEPTION)
-            and not (same_property and r["date"] in old_nights)
-        ]
-        if taken:
-            raise ReservationError(
-                "Ziel-Zeitraum enthält bereits belegte/gesperrte Tage.",
-                status_code=409,
+            and not (
+                same_property
+                and r["date"] in old_nights
+                and r.get("unit_id") == alte_unit
             )
+        }
+        if belegte_einheiten:
+            alle_einheiten = set(
+                einheiten_ids(self._db(), req.property_id, tenant_id)
+            )
+            # Ohne bekannte Einheiten (Altbestand) bleibt es beim strengen
+            # objektweiten Verhalten von vorher (Wurzel 5).
+            if not alle_einheiten or not alle_einheiten - belegte_einheiten:
+                raise ReservationError(
+                    "Ziel-Zeitraum enthält bereits belegte/gesperrte Tage.",
+                    status_code=409,
+                )
         # Stop-Sell-Schutz für die Ziel-Nächte — wie create(), kanal- UND plan-
         # bewusst: nur Stops, die den Rezeptions-Kanal betreffen und die Ebene
         # der Reservierung treffen (Objekt-Stopp oder DEREN Rate-Plan), blocken.
@@ -553,6 +631,35 @@ class WritesMixin(ReservationsBase):
             "check_in": req.check_in.isoformat(),
             "check_out": req.check_out.isoformat(),
         }
+        # Einheit für den ZIEL-Zeitraum neu bestimmen (0265). Ohne das behielte
+        # die Buchung ihre alte `unit_id` — beim Objektwechsel zeigte sie danach
+        # auf eine Einheit eines FREMDEN Objekts, und der EXCLUDE-Constraint
+        # (0315, `coalesce(unit_id, property_id)`) prüfte gegen die falsche.
+        # `eigene_unit`/`eigene_naechte` nehmen die eigene Belegung aus der
+        # Rechnung (sonst blockiert die Buchung sich selbst) und behalten die
+        # bisherige Einheit, wo möglich — kein stilles Umziehen.
+        ziel_unit = freie_einheit(
+            self._db(), req.property_id,
+            req.check_in.isoformat(), req.check_out.isoformat(),
+            tenant_id=tenant_id,
+            eigene_unit=alte_unit if same_property else None,
+            eigene_naechte=sorted(old_nights) if same_property else None,
+        )
+        # Keine freie Einheit → der Move findet NICHT statt. Anders als beim
+        # OTA-Import (`bookings_sync`), wo eine reale Fremdbuchung vorliegt und
+        # deshalb der ganze Typ gesperrt wird, ist hier nichts von außen
+        # erzwungen: das Ziel ist voll, also 409. Die alte Einheit als Ersatz zu
+        # nehmen wäre eine Doppelbelegung — sie ist gerade als belegt erkannt
+        # worden (Wurzel 5: fail-closed, kein Ersatzwert).
+        if ziel_unit is None and einheiten_ids(
+            self._db(), req.property_id, tenant_id
+        ):
+            raise ReservationError(
+                "Ziel-Zeitraum enthält bereits belegte/gesperrte Tage.",
+                status_code=409,
+            )
+        if ziel_unit:
+            update_fields["unit_id"] = ziel_unit
         if req.reprice:
             guests_total = int(current.get("num_guests") or 1)
             quote = self._quote(
@@ -573,6 +680,12 @@ class WritesMixin(ReservationsBase):
                 pets=int(current.get("pets") or 0),
             )
             update_fields["total_amount"] = quote.total
+            # Währung MIT umziehen: beim Objektwechsel über eine Währungsgrenze
+            # (EU-27) gehört der neu gerechnete Betrag zur Währung des ZIELS.
+            # Ohne diese Zeile behielte die Zeile die alte Währung und der
+            # Provisions-Ledger bekäme Betrag und Währung aus zwei Welten
+            # (Wurzel 4). `quote.currency` kommt aus Konfig/Rate-Plan des Ziels.
+            update_fields["currency"] = quote.currency
             update_fields["quote_items"] = [
                 {
                     "label": line.label,
@@ -609,13 +722,37 @@ class WritesMixin(ReservationsBase):
                 "Reservierung konnte nicht verschoben werden.", status_code=500
             )
 
-        # Alte Belegung freigeben: nur Tage, die NICHT erneut belegt werden
-        # (beim Resize am Platz bleiben überlappende Tage booked). Zentrale
-        # Freigabe (gefiltert gegen Fremdbelegung, lokal + Channex); der Recompute
-        # läuft weiter unten gebündelt für BEIDE betroffenen Objekte.
-        release = sorted(old_nights - new_keys) if same_property else sorted(old_nights)
+        # Alte Belegung über die zentrale Freigabe zurückgeben (gefiltert gegen
+        # Fremdbelegung); der Recompute läuft unten gebündelt für BEIDE Objekte.
+        #
+        # `push=False` am GLEICHEN Objekt ist der Kern der Reihenfolge: die
+        # Freigabe pusht nicht tag-genau, sondern über die Spanne
+        # min(release)..max(release) — und die umfasst Tage, die gerade neu
+        # belegt werden, aber noch nicht geschrieben sind (alt 1.–10., neu
+        # 4.–7. → release = 1,2,3,8,9,10 deckt auch 4.–7. ab). Für sie meldete
+        # der Push eine zu hohe freie Stückzahl, beim Einheitenwechsel sogar
+        # ohne jede Zielbelegung im Kalender: ein Überbuchungsfenster. Deshalb
+        # lokal freigeben und EINMAL nach beiden Schreibvorgängen über
+        # min(alt,neu)..max(alt,neu) melden (unten). Beim OBJEKTWECHSEL gibt es
+        # diese Überlappung nicht (zwei Objekte, zwei getrennte Pushes) — dort
+        # pusht die Freigabe wie bisher selbst.
+        #
+        # Der Gegenzustand hängt an der EINHEIT, nicht nur am Zeitraum
+        # (Wurzel 1): `old_nights - new_keys` gilt nur, solange die Buchung ihre
+        # Einheit BEHÄLT. Weicht sie auf eine Schwestereinheit aus, ist auf der
+        # alten Einheit kein Alt-Tag mehr belegt — dann müssen ALLE zurück,
+        # sonst bleibt sie dauerhaft `booked` (unverkäuflich) bzw. dieselbe
+        # Reservierung belegt zwei Einheiten. `alte_unit` ist deshalb auch die
+        # Einheit der Freigabe (Stand VOR dem UPDATE oben), nicht die neue.
+        einheit_bleibt = ziel_unit is None or str(ziel_unit) == str(alte_unit)
+        release = sorted(
+            old_nights - new_keys
+            if same_property and einheit_bleibt
+            else old_nights
+        )
         self._release_nights(
-            tenant_id, old_property, release, reservation_id, recompute=False
+            tenant_id, old_property, release, reservation_id, recompute=False,
+            unit_id=alte_unit, push=not same_property,
         )
 
         # Neue Nächte belegen — aber NICHT eine parallel importierte OTA-Belegung
@@ -626,18 +763,23 @@ class WritesMixin(ReservationsBase):
         # nur die Tage belegen, die NICHT bereits von einer fremden Quelle als
         # 'booked' geführt werden (sonst würde source auf den lokalen Kanal
         # geklobbert und die OTA-Herkunft ginge verloren).
+        # Nur die Zeilen UNSERER Einheit: ohne den Filter kollabierte das Dict
+        # die n Einheiten-Zeilen desselben Tages auf einen Eintrag, und welche
+        # Quelle gewinnt, hing von der Zeilenreihenfolge ab. Eine Fremdbelegung
+        # auf einer Schwestereinheit hätte unsere Nacht blockiert (oder umgekehrt).
+        occupied_q = (
+            self._db()
+            .table("availability")
+            .select("date,status,source,unit_id")
+            .eq("property_id", req.property_id)
+            .gte("date", req.check_in.isoformat())
+            .lt("date", req.check_out.isoformat())
+            .eq("status", "booked")
+        )
+        if ziel_unit:
+            occupied_q = occupied_q.eq("unit_id", ziel_unit)
         occupied_now = {
-            r["date"]: r.get("source")
-            for r in (
-                self._db()
-                .table("availability")
-                .select("date,status,source")
-                .eq("property_id", req.property_id)
-                .gte("date", req.check_in.isoformat())
-                .lt("date", req.check_out.isoformat())
-                .eq("status", "booked")
-                .execute()
-            ).data or []
+            r["date"]: r.get("source") for r in (occupied_q.execute()).data or []
         }
         own_source = current.get("channel") or "direct"
         occupy_rows = [
@@ -657,12 +799,32 @@ class WritesMixin(ReservationsBase):
             )
         ]
         if occupy_rows:
+            # Eine Buchung belegt GENAU IHRE Einheit. Ohne `unit_id` fächert
+            # `je_einheit` auf alle Einheiten des Typs auf (die Semantik für
+            # Sperren/Freigaben) — ein Move hätte damit sämtliche Einheiten
+            # des Ziel-Objekts belegt und den Typ totalgesperrt.
             self._db().table("availability").upsert(
-                je_einheit(self._db(), req.property_id, occupy_rows),
+                je_einheit(
+                    self._db(), req.property_id, occupy_rows,
+                    tenant_id=tenant_id, unit_id=ziel_unit,
+                ),
                 on_conflict=AVAILABILITY_CONFLICT,
             ).execute()
-        self._push_channex_availability(
-            tenant_id, req.property_id, req.check_in, req.check_out, 0
+        # Jetzt steht der Kalender-ENDZUSTAND fest (Freigabe + Belegung
+        # geschrieben) — erst jetzt melden. Am gleichen Objekt deckt EIN Push
+        # den gesamten berührten Bereich min(alt,neu)..max(alt,neu) ab: er
+        # trägt sowohl die freigewordenen als auch die neu belegten Tage mit
+        # der jeweils echten Stückzahl, und keine der beiden Seiten kann die
+        # andere mit einem Zwischenstand überschreiben. Beim Objektwechsel hat
+        # die Freigabe das ALTE Objekt schon selbst gemeldet; hier bleibt nur
+        # der Zielzeitraum am NEUEN Objekt.
+        push_von, push_bis = req.check_in, req.check_out - timedelta(days=1)
+        if same_property and old_nights:
+            alt = sorted(old_nights)
+            push_von = min(push_von, date.fromisoformat(alt[0]))
+            push_bis = max(push_bis, date.fromisoformat(alt[-1]))
+        self._push_einheiten_stand(
+            tenant_id, req.property_id, push_von, push_bis
         )
         # Dynamic Pricing für BEIDE betroffenen Objekte neu rechnen — ein Move
         # ändert Auslastung + Orphan-Lücken am freigegebenen Alt-Objekt UND am neu
@@ -685,7 +847,10 @@ class WritesMixin(ReservationsBase):
             float(
                 update_fields.get("total_amount", current.get("total_amount")) or 0
             ),
-            current.get("currency"),
+            # Betrag UND Währung aus demselben Stand: bei reprice der neue Quote,
+            # sonst der unveränderte Bestand. Gemischt wäre es ein falscher
+            # Betrag-Währung-Paarung (Wurzel 4).
+            update_fields.get("currency", current.get("currency")),
         )
         log.info(
             "reservation_moved",
@@ -834,6 +999,7 @@ class WritesMixin(ReservationsBase):
         nights = _nights(_as_date(current["check_in"]), _as_date(current["check_out"]))
         self._release_nights(
             tenant_id, property_id, [d.isoformat() for d in nights], reservation_id,
+            unit_id=current.get("unit_id"),
         )
 
         # Aufgaben-Gegenzustand: Regeln mit remove_on_cancellation räumen ihre
@@ -1158,32 +1324,21 @@ class WritesMixin(ReservationsBase):
         property_id = current["property_id"]
         check_in = _as_date(current["check_in"])
         check_out = _as_date(current["check_out"])
-        # Überbuchungsschutz: kam zwischen Anfrage und accept eine OTA-Nacht rein
-        # (source_channex_booking_id-Buchung ist vom EXCLUDE-Constraint befreit),
-        # nicht blind auf 0 pushen. Prüfe echte Fremdbelegung im Zeitraum.
-        clash = (
-            self._db()
-            .table("reservations")
-            .select("id")
-            .eq("property_id", property_id)
-            .neq("id", reservation_id)
-            .not_.is_("source_channex_booking_id", "null")
-            .in_("status", ["confirmed", "pending"])
-            .lt("check_in", check_out.isoformat())
-            .gt("check_out", check_in.isoformat())
-            .limit(1)
-            .execute()
-        ).data
-        if clash:
+        if self._fremdbelegung_im_zeitraum(
+            property_id, reservation_id, check_in, check_out
+        ):
             raise ReservationError(
                 "Zeitraum wurde zwischenzeitlich über ein Portal gebucht — "
                 "die Anfrage kann nicht mehr angenommen werden.",
                 status_code=409,
             )
 
-        # Jetzt verbindlich: OTAs sperren (availability=0) + Dynamic Pricing.
-        self._push_channex_availability(
-            tenant_id, property_id, check_in, check_out, 0,
+        # Jetzt verbindlich: den Kalenderstand an die OTAs melden + Dynamic
+        # Pricing. Gemeldet wird die ZAHL noch freier Einheiten (0265), nicht
+        # pauschal 0 — die Nächte dieser Anfrage sind seit dem Anlegen belegt,
+        # eine Schwestereinheit desselben Typs bleibt aber verkäuflich.
+        self._push_einheiten_stand(
+            tenant_id, property_id, check_in, check_out - timedelta(days=1),
         )
         self._recompute_dynamic_pricing(tenant_id, property_id)
 
@@ -1193,6 +1348,18 @@ class WritesMixin(ReservationsBase):
         # aufforderung über den bestehenden Gast-Zahlpfad (create_booking_payment
         # erzeugt den Intent beim Öffnen des Checkouts). So entsteht KEIN Refund-
         # Gegenzustand bei decline/expire (Wurzel 1) — es floss nie Geld.
+        # Mit dem Annehmen wird die Anfrage zur verbindlichen Buchung — erst
+        # jetzt ist sie provisionspflichtig (Gegenstück zu decline/expire, die
+        # die Zeile entwerten). Nötig für die im PMS erfasste externe Anfrage:
+        # bei einer über den Portal-Import entstandenen liegt die Zeile schon,
+        # der Aufruf ist dank UNIQUE(reservation_id) idempotent (Wurzel 2).
+        self._record_commission(
+            tenant_id,
+            reservation_id,
+            current.get("channel"),
+            float(current.get("total_amount") or 0),
+            current.get("currency"),
+        )
         self._log_event(
             tenant_id, reservation_id, "request_accepted", by_user_id=ctx.user_id,
         )
@@ -1253,6 +1420,7 @@ class WritesMixin(ReservationsBase):
         )
         self._release_nights(
             tenant_id, property_id, [d.isoformat() for d in nights], reservation_id,
+            unit_id=current.get("unit_id"),
         )
 
         # Ledger-Gegenzustand wie im Storno (Wurzel 1): eine abgelehnte Anfrage
@@ -1287,7 +1455,7 @@ class WritesMixin(ReservationsBase):
         due = (
             self._db()
             .table("reservations")
-            .select("id, tenant_id, property_id, check_in, check_out")
+            .select("id, tenant_id, property_id, unit_id, check_in, check_out")
             .eq("status", "requested")
             .lt("request_expires_at", now)
             .limit(500)  # harte Obergrenze je Lauf (Wurzel 8), Rest im nächsten Tick
@@ -1310,6 +1478,7 @@ class WritesMixin(ReservationsBase):
                 self._release_nights(
                     r["tenant_id"], r["property_id"],
                     [d.isoformat() for d in nights], r["id"],
+                    unit_id=r.get("unit_id"),
                 )
                 # Gegenzustand wie bei decline (Wurzel 1): eine verfallene
                 # Anfrage wurde nie verkauft und darf keine offene Provisions-/

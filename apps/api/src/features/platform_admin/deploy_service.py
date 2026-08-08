@@ -20,7 +20,7 @@ from pathlib import Path
 
 from src.core.logging import get_logger
 
-from . import coolify
+from . import coolify, deploy_rueckstand
 from .schemas import (
     DeployApp,
     DeployEintrag,
@@ -95,7 +95,8 @@ class DeployService:
     """Liest den Deploy-Zustand aus Coolify. Kein Datenbankzugriff."""
 
     def uebersicht(self) -> DeployUebersicht:
-        """Je überwachter Anwendung der letzte bzw. laufende Deploy."""
+        """Je überwachter Anwendung der letzte bzw. laufende Deploy — und was
+        seither auf `main` dazugekommen ist, das GENAU DIESE App betrifft."""
         apps = ueberwachte_apps()
         # Ein Aufruf für ALLE laufenden Deploys statt einer je App.
         laufend_je_uuid: dict[str, dict] = {}
@@ -104,25 +105,62 @@ class DeployService:
             if isinstance(uuid, str) and uuid not in laufend_je_uuid:
                 laufend_je_uuid[uuid] = roh
 
+        watch_je_uuid = self._watch_paths()
+        sammler = deploy_rueckstand.Sammler()
+
         ergebnis: list[DeployApp] = []
         aktiv = False
         for uuid, name in apps:
             laufend = laufend_je_uuid.get(uuid)
             if laufend is not None:
                 eintrag = _eintrag(laufend, name_fallback=name)
-                aktiv = True
-                ergebnis.append(
-                    DeployApp(uuid=uuid, name=name, laeuft=True, letzter=eintrag)
-                )
-                continue
-            verlauf = coolify.verlauf(uuid, limit=1)
-            letzter = _eintrag(verlauf[0], name_fallback=name) if verlauf else None
-            laeuft = bool(letzter and letzter.status in _AKTIV)
+                laeuft = True
+            else:
+                verlauf = coolify.verlauf(uuid, limit=1)
+                eintrag = _eintrag(verlauf[0], name_fallback=name) if verlauf else None
+                laeuft = bool(eintrag and eintrag.status in _AKTIV)
             aktiv = aktiv or laeuft
             ergebnis.append(
-                DeployApp(uuid=uuid, name=name, laeuft=laeuft, letzter=letzter)
+                DeployApp(
+                    uuid=uuid,
+                    name=name,
+                    laeuft=laeuft,
+                    letzter=eintrag,
+                    rueckstand=sammler.fuer(
+                        eintrag.commit if eintrag else None, watch_je_uuid.get(uuid)
+                    ),
+                )
             )
-        return DeployUebersicht(apps=ergebnis, aktiv=aktiv)
+        kopf = deploy_rueckstand.main_sha() if sammler.einsatzbereit else None
+        return DeployUebersicht(
+            apps=ergebnis,
+            aktiv=aktiv,
+            main_sha=kopf,
+            main_kurz_sha=kopf[:8] if kopf else None,
+        )
+
+    @staticmethod
+    def _watch_paths() -> dict[str, str]:
+        """uuid → watch_paths, in EINEM Aufruf für alle Anwendungen.
+
+        Fällt der Abruf aus, bleibt die Zuordnung leer: dann gilt für jede App
+        „keine Pfade" und damit „kein Commit betrifft mich". Das ist die sichere
+        Richtung — es zeigt keinen Rückstand an, statt einen zu behaupten, der
+        auf geratenen Pfaden beruht (Wurzel 4).
+        """
+        try:
+            roh = coolify.anwendungen()
+        except Exception as exc:  # noqa: BLE001 — Übersicht darf nicht kippen
+            log.warning("coolify_anwendungen_fehlgeschlagen: %s", str(exc)[:200])
+            return {}
+        treffer: dict[str, str] = {}
+        for a in roh:
+            if not isinstance(a, dict):
+                continue
+            uuid, pfade = a.get("uuid"), a.get("watch_paths")
+            if isinstance(uuid, str) and isinstance(pfade, str):
+                treffer[uuid] = pfade
+        return treffer
 
     def verlauf(self, anwendung_uuid: str, limit: int = 20) -> DeployVerlauf:
         """Die letzten Deploys einer Anwendung, neueste zuerst."""

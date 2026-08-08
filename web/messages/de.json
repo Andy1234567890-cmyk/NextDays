@@ -6416,8 +6416,8 @@
       "cardRate": "Booking, Airbnb & Co.: {rate} % vom Buchungsumsatz Ihrer veröffentlichten Objekte. Die Provisionen eines Monats werden am 1. des Folgemonats abgerechnet und Ihrer nächsten Abo-Rechnung hinzugefügt.",
       "cardRateCapped": "Booking, Airbnb & Co.: {rate} % vom Buchungsumsatz Ihrer veröffentlichten Objekte. Die Provisionen eines Monats werden am 1. des Folgemonats abgerechnet und Ihrer nächsten Abo-Rechnung hinzugefügt, höchstens {cap} im Monat.",
       "cardOtherChannels": "Buchungen über Ihre eigene Website bleiben provisionsfrei. Für Buchungen über den myBestDays-Marktplatz fallen 8 % an, die direkt beim Zahlungseingang einbehalten werden — sie sind hier nicht enthalten.",
-      "pending": "Offen ({count} Buchungen): ",
-      "pendingCapHint": " — eingezogen wird der Monatsdeckel von {cap}",
+      "pending": "Offen ({count, plural, one {# Buchung} other {# Buchungen}}): ",
+      "pendingCapHint": " — abgerechnet wird der Monatsdeckel von {cap}",
       "noPending": "Aktuell keine offenen Provisionen.",
       "showMonths": "Monatsverlauf ansehen",
       "backToBilling": "Abrechnung",
@@ -6431,12 +6431,13 @@
       "colGross": "Buchungsumsatz",
       "colCommission": "Provision",
       "colStatus": "Status",
-      "capHint": "Angegeben ist die entstandene Provision. Abgerechnet wird je Monat höchstens der Monatsdeckel aus Ihrem Tarif — den Betrag finden Sie unter Abrechnung.",
+      "capHint": "Angegeben ist die entstandene Provision, noch ohne Deckelung. Abgerechnet wird je Monat höchstens der Monatsdeckel aus Ihrem Tarif.",
       "mixedCurrencyHint": "Monate mit Buchungen in mehreren Währungen werden ohne Gesamtsumme angezeigt — die Einzelbeträge stehen in der jeweiligen Rechnung.",
       "statusPending": "Wird abgerechnet",
       "statusInvoiced": "Abgerechnet",
       "statusPaid": "Bezahlt",
-      "statusMixed": "Teilweise offen"
+      "statusMixed": "Teilweise offen",
+      "monthsEmptyPlain": "Über externe Portale sind bisher keine Provisionen angefallen."
     },
     "invoices": {
       "fees": "Gebühren"

@@ -1623,10 +1623,22 @@ Quelle ist die **Coolify-REST-API**, nicht unsere Datenbank.
 
 | Methode | Pfad                                | Zweck                                                        |
 | ------- | ----------------------------------- | ------------------------------------------------------------ |
-| `GET`   | `/api/v1/platform/deploy`           | Je Anwendung der laufende bzw. letzte Deploy                   |
+| `GET`   | `/api/v1/platform/deploy`           | Je Anwendung der laufende bzw. letzte Deploy **+ Rückstand zu `main`** |
 | `GET`   | `/api/v1/platform/deploy/{uuid}`    | Verlauf EINER Anwendung (`limit` 1–100)                        |
 | `POST`  | `/api/v1/platform/deploy/{uuid}`    | Deploy auslösen (`require_platform_write`)                     |
 | `GET`   | `/api/v1/platform/deploy/log/{deployment_uuid}` | Build-Ausgabe eines Deploys, Zeile für Zeile       |
+
+**Rückstand (`rueckstand` je Anwendung):** was liegt zwischen dem ausgerollten
+Commit und `main` — und betrifft es diese Anwendung überhaupt? Die Commits
+kommen von GitHub (`/compare`), die Zuordnung Commit → Anwendung aus **Coolifys
+`watch_paths`**. Bewusst nicht aus `scripts/ci/coolify-apps.txt`: Coolify ist
+die ausführende Instanz, und eine veraltete Repo-Kopie würde still in die
+gefährliche Richtung irren („betrifft dich nicht", obwohl doch).
+
+`commits_relevant` ist die Zahl am Deploy-Knopf; `betrifft_mich` entscheidet,
+ob die Zeile hervorgehoben wird. Ohne `GITHUB_TOKEN` bleiben beide `null` und
+die Oberfläche sagt „nicht abrufbar" — eine `0` hieße „alles ausgerollt", eine
+Aussage, die ohne Abruf niemand treffen darf (Wurzel 4).
 
 **Warum die API und nicht Coolifys Postgres:** die Historie liegt dort in
 `application_deployment_queue`. Direkt zu lesen wäre möglich, koppelt uns aber

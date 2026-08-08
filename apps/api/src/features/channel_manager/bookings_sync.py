@@ -397,7 +397,7 @@ class BookingsSyncMixin:
             # 22 Buchungen). Die Information lag die ganze Zeit vor — sie landete
             # nur in `raw` und nirgends sonst.
             "property_map_id": self._property_map_id(
-                db, tenant_id, attrs.get("property_id")
+                db, tenant_id, attrs.get("property_id"), rooms=attrs.get("rooms")
             ),
             "raw": attrs,
         }
@@ -506,15 +506,24 @@ class BookingsSyncMixin:
         return "ota_other"
 
 
-    @staticmethod
     def _property_map_id(
-        db: Client, tenant_id: str, channex_property_id: str | None
+        self, db: Client, tenant_id: str, channex_property_id: str | None,
+        rooms: list[dict[str, Any]] | None = None,
     ) -> str | None:
-        """channex_property_id → ID der Objekt-Zuordnung (oder None).
+        """channex_property_id (+ room_type der Buchung) → ID der Objekt-Zuordnung.
 
         Anders als `_resolve_local_property` (liefert die lokale property_id für
         die Reservierung) gibt das hier die ID der MAP-Zeile zurück — genau das,
         was `channex_booking.property_map_id` erwartet.
+
+        Der ROOM-TYPE entscheidet, welches Objekt gemeint ist. Bei einer
+        geteilten Channex-Property (Hotel, 0158) hängen mehrere Zimmertypen
+        unter EINER Property; ein `limit(1)` über die Property-Map trifft dann
+        irgendein Geschwister-Zimmer. Für die Reservierung war das längst
+        gelöst, für den Thread nicht — mit der Folge, dass JEDE Buchung des
+        Hotels auf die zuerst gemappte Zeile zeigte: eine Double-Buchung bekam
+        die Anweisungen des Twin-Zimmers, und Regeln für das Double feuerten
+        nie. Deshalb hier derselbe Weg über `_resolve_local_property`.
 
         None, wenn die Property nicht gemappt ist: dann gehört die Buchung zu
         einem Inserat, das bei uns kein Objekt hat (live: 23 solche Airbnb-
@@ -529,6 +538,26 @@ class BookingsSyncMixin:
         """
         if not channex_property_id:
             return None
+        # Das Objekt bestimmt der Room-Type; daraus dann SEINE Map-Zeile.
+        property_id = self._resolve_local_property(
+            db, tenant_id, str(channex_property_id), rooms=rooms
+        )
+        if property_id:
+            eigene = (
+                db.table("channex_property_map")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("channex_property_id", str(channex_property_id))
+                .eq("property_id", str(property_id))
+                .is_("deleted_at", "null")
+                .order("created_at")
+                .limit(1)
+                .execute()
+            ).data
+            if eigene:
+                return eigene[0]["id"]
+        # Kein Room-Type in der Nutzlast (Ferienobjekt) oder Zimmer nicht
+        # gemappt: älteste aktive Zeile.
         treffer = (
             db.table("channex_property_map")
             .select("id")

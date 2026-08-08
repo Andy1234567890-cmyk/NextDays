@@ -610,16 +610,39 @@ export interface DeployEintrag {
   log_url: string | null;
 }
 
+/** Ein Commit auf `main`, der diese Anwendung betrifft und noch nicht live ist. */
+export interface OffenerCommit {
+  sha: string;
+  kurz_sha: string;
+  nachricht: string;
+  autor: string | null;
+  zeitpunkt: string | null;
+  /** Nur die Dateien, die unter den watch_paths DIESER App liegen. */
+  dateien: string[];
+}
+
+export interface DeployRueckstand {
+  /** null = nicht ermittelbar (kein GitHub-Zugang). Nicht 0 — das hieße „aktuell". */
+  commits_gesamt: number | null;
+  commits_relevant: number | null;
+  betrifft_mich: boolean;
+  offene: OffenerCommit[];
+  fehler: string | null;
+}
+
 export interface DeployApp {
   uuid: string;
   name: string;
   laeuft: boolean;
   letzter: DeployEintrag | null;
+  rueckstand: DeployRueckstand | null;
 }
 
 export interface DeployUebersicht {
   apps: DeployApp[];
   aktiv: boolean;
+  main_sha: string | null;
+  main_kurz_sha: string | null;
 }
 
 export interface DeployVerlauf {
