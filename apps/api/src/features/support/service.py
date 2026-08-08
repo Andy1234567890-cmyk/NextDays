@@ -496,7 +496,9 @@ class SupportService:
         Token, denn der Client hat seines in dem Fall ja noch nicht.
         """
         if req.client_msg_id:
-            vorhanden = self._public_zu_client_id(req.client_msg_id)
+            vorhanden = self._public_zu_client_id(
+                req.client_msg_id, email=str(req.email).strip().lower()
+            )
             if vorhanden is not None:
                 return vorhanden
 
@@ -639,14 +641,21 @@ class SupportService:
             return None
         return rows[0]
 
-    def _public_zu_client_id(self, client_msg_id: str) -> PublicTicket | None:
+    def _public_zu_client_id(
+        self, client_msg_id: str, *, email: str
+    ) -> PublicTicket | None:
         """Bereits mit dieser client_msg_id eröffnete Besucher-Konversation.
 
-        Anders als bei eingeloggten Meldern gibt es hier keine Identität, an der
-        man den Treffer gegenprüfen könnte — deshalb wird NUR zurückgegeben,
-        was auch wirklich eine Website-Konversation ist (source='web'), und das
-        Token wird neu vergeben (der Aufrufer ist derselbe Client, der die
-        Eröffnung wiederholt).
+        `client_msg_id` ist frei wählbarer Client-Text (max. 64 Zeichen) und
+        allein KEIN Ausweis. Ohne Gegenprobe wäre der Treffer eine Übernahme
+        fremder Konversationen: Wer einen fremden oder kollidierenden Wert
+        sendet (`"1"`, `"chat"`), bekäme den ganzen Verlauf — und weil hier ein
+        NEUES Token vergeben wird, wäre der echte Besucher zugleich ausgesperrt.
+
+        Deshalb muss die Melder-E-Mail des Treffers zur E-Mail des Aufrufers
+        passen. Der echte Doppelklick sendet dieselben Kontaktdaten und läuft
+        weiter durch; ein Fremder müsste die Adresse kennen. Zusätzlich zählt
+        nur, was wirklich eine Website-Konversation ist (`source='web'`).
         """
         rows = (
             self._db.table("support_messages")
@@ -659,13 +668,17 @@ class SupportService:
             return None
         ticket = (
             self._db.table("support_tickets")
-            .select("id, status, source")
+            .select("id, status, source, reporter_email")
             .eq("id", rows[0]["ticket_id"])
             .eq("source", "web")
+            .eq("reporter_email", email)
             .limit(1)
             .execute()
         ).data or []
         if not ticket:
+            # Kein Treffer ODER fremde Adresse → wie „nie eröffnet" behandeln:
+            # der Aufrufer bekommt eine EIGENE neue Konversation, nie eine
+            # fremde. Kein 409, das die Existenz eines fremden Tickets verriete.
             return None
 
         token = pysecrets.token_urlsafe(32)

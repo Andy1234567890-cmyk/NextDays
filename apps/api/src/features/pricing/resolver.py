@@ -29,6 +29,7 @@ from src.core.logging import get_logger
 from src.features.addons.pricing import addon_total
 
 from .schemas import (
+    MAX_QUOTE_NIGHTS,
     EffectivePriceDay,
     QuoteLine,
     QuoteRequest,
@@ -569,7 +570,24 @@ class PricingResolver:
 
         `rate_plan_id` optional (siehe effective_price): gesetzt → DESSEN
         Basispreis ist die durchgehende Grundlinie und dessen datumsgenaue
-        Preise gewinnen; None → property-weit wie bisher."""
+        Preise gewinnen; None → property-weit wie bisher.
+
+        Der Zeitraum ist gedeckelt (Wurzel 8). `/pricing/effective` reicht
+        `start`/`end` ungeprüft aus der Query hierher; `start=1000-01-01&
+        end=3000-01-01` baute ~730 000 Tagesobjekte plus vier Bereichs-Queries
+        in EINEM Request. Der Deckel sitzt hier statt in der Route, damit er für
+        jeden Aufrufer gilt — `quote` (MAX_QUOTE_NIGHTS) und das Rate-Grid
+        (_GRID_MAX_DAYS) haben ihn längst.
+        """
+        if check_out <= check_in:
+            raise PricingError(
+                "Das Ende muss nach dem Anfang liegen.", status_code=422
+            )
+        if (check_out - check_in).days > MAX_QUOTE_NIGHTS:
+            raise PricingError(
+                f"Zeitraum zu lang (höchstens {MAX_QUOTE_NIGHTS} Tage).",
+                status_code=422,
+            )
         overrides = self._load_overrides(property_id, check_in, check_out)
         dynamic = self._load_dynamic(property_id, check_in, check_out)
         config = self._load_config(property_id)
@@ -896,6 +914,7 @@ class PricingResolver:
         )
         priced = [d.price for d in per_day if d.price is not None]
         priceless = len(priced) == 0
+        unpriced_nights = len(per_day) - len(priced)
         # Längenpreis verdrängt nur den Basispreis-Anteil (nicht Overrides/Weekday).
         length_pn = config.length_price_per_night(n)
         nightly_total = 0.0
@@ -1127,6 +1146,7 @@ class PricingResolver:
             total=total,
             promo_code_applied=promo_code_applied,
             priceless=priceless,
+            unpriced_nights=unpriced_nights,
         )
 
     @staticmethod

@@ -181,6 +181,7 @@ export default function SicherheitPage() {
       <EmailSheet
         open={panel === "email"}
         current={account?.email ?? ""}
+        needsCurrent={account?.has_password ?? true}
         onClose={() => setPanel(null)}
         onSaved={reload}
       />
@@ -301,24 +302,31 @@ function NameSheet({
 function EmailSheet({
   open,
   current,
+  needsCurrent,
   onClose,
   onSaved,
 }: {
   open: boolean;
   current: string;
+  needsCurrent: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const t = useTranslations("account");
   const [value, setValue] = useState(current);
+  const [currentPw, setCurrentPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => setValue(current), [current, open]);
+  useEffect(() => {
+    setValue(current);
+    setCurrentPw("");
+    setError(null);
+  }, [current, open]);
 
   async function save() {
     setBusy(true);
     setError(null);
-    const res = await updateEmail(value);
+    const res = await updateEmail(value, currentPw || undefined);
     setBusy(false);
     if (res.ok) {
       onSaved();
@@ -342,8 +350,23 @@ function EmailSheet({
           onChange={(e) => setValue(e.target.value)}
         />
       </div>
+      {needsCurrent && (
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email-cur">{t("security.currentPassword")}</Label>
+          <Input
+            id="email-cur"
+            type="password"
+            autoComplete="current-password"
+            value={currentPw}
+            onChange={(e) => setCurrentPw(e.target.value)}
+          />
+        </div>
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button onClick={save} disabled={busy || !value.trim()}>
+      <Button
+        onClick={save}
+        disabled={busy || !value.trim() || (needsCurrent && !currentPw)}
+      >
         {busy ? "Speichern…" : "Speichern"}
       </Button>
     </PanelShell>

@@ -268,6 +268,13 @@ class StaffAssignmentResponse(BaseModel):
 
 class UpdateEmailRequest(BaseModel):
     new_email: EmailStr
+    # Re-Auth wie beim Passwortwechsel (Wurzel 7): die E-Mail ist der
+    # Wiederherstellungsweg des Kontos — wer sie ohne Nachweis tauschen kann,
+    # übernimmt per anschließendem Passwort-Reset das ganze Konto (bei einem
+    # admin damit den Tenant). Optional wie in UpdatePasswordRequest, weil
+    # OAuth-Konten kein Passwort haben; der Dienst erzwingt es genau dann,
+    # wenn eines existiert.
+    current_password: SecretStr | None = None
 
 
 class UpdateNameRequest(BaseModel):

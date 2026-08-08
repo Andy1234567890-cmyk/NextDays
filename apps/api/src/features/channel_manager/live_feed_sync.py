@@ -125,6 +125,44 @@ class LiveFeedSyncMixin:
             return None
         return live_id.strip(), event.strip()
 
+    def _nachricht_nachziehen(self, tenant_id: str, payload: dict[str, Any]) -> None:
+        """Nachricht spiegeln UND die Abwesenheitsantwort planen.
+
+        Der Tick ist der Backstop für ausgefallene Webhooks — bis hierher zog er
+        aber nur den Spiegel nach, nicht die Automation. Fiel der Webhook-
+        Endpunkt aus (real passiert: elf Minuten 503 am 06.08.2026), bekam kein
+        Gast eine Abwesenheitsantwort, obwohl die Nachrichten ankamen: das
+        Feature existierte auf diesem Weg schlicht nicht.
+
+        Wie im Webhook gilt: Zählstand VOR dem Spiegeln nehmen (danach steht die
+        neue Nachricht schon in der Tabelle und kein Thread wäre je „neu"), und
+        nur auf Gastnachrichten antworten. Mehrfaches Feuern ist über den
+        Unique-Index (automation_id, thread_id) ausgeschlossen — der Tick darf
+        dieselbe Nachricht also gefahrlos erneut sehen.
+        """
+        if self._db is None:
+            return
+        try:
+            from src.features.inbox.service import InboxService  # noqa: PLC0415
+
+            svc = InboxService(service_client=self._db)
+            ref = self._booking_ref_aus_message(payload)
+            vorher = svc.zaehle_gastnachrichten_je_buchung(tenant_id, ref) if ref else 0
+
+            thread_id = self.nachricht_spiegeln(tenant_id, payload)
+            if thread_id is None:
+                return
+            if (payload.get("sender") or "").strip().lower() != "guest":
+                return
+
+            svc.schedule_message_received(
+                tenant_id, thread_id, ist_erste_nachricht=vorher == 0
+            )
+        except Exception as exc:  # noqa: BLE001 — Tick nie kippen
+            log.warning(
+                "journal_nachricht_verarbeitung_fehlgeschlagen", error=str(exc)[:300]
+            )
+
     def _journal_ereignis_spiegeln(self, zeile: dict[str, Any]) -> bool:
         """Ein Journal-Ereignis in die Ereignisliste schreiben. True = neu."""
         if self._db is None:
@@ -151,7 +189,7 @@ class LiveFeedSyncMixin:
         # existiert, fiele aus. Die Idempotenz sitzt deshalb dort, wo sie
         # hingehört: am UNIQUE-Index von `portal_messages` (Wurzel 2).
         if event == "message":
-            self.nachricht_spiegeln(str(tenant_id), attrs.get("payload") or {})
+            self._nachricht_nachziehen(str(tenant_id), attrs.get("payload") or {})
 
         if self._journal_ereignis_bekannt(str(tenant_id), live_id):
             return False

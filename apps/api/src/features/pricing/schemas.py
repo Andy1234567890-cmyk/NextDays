@@ -127,6 +127,13 @@ class QuoteResponse(BaseModel):
     # True, wenn das Objekt keinen bepreisbaren Tag hat (kein Rate-Plan/Override/
     # Wochentagspreis) — der Aufrufer muss dann manuell bepreisen, statt 0 zu zeigen.
     priceless: bool = False
+    # Anzahl der Nächte OHNE Preis. `priceless` meldet nur den Totalausfall;
+    # bei einer TEILWEISE bepreisten Spanne (z. B. Overrides für 3 von 7 Nächten)
+    # bliebe es False, und `total` wäre still der Preis der 3 Nächte — der Gast
+    # bucht 7 und zahlt 3. Verkaufspfade müssen deshalb auf dieses Feld sehen,
+    # nicht auf `priceless` (Wurzel 4: lieber klar fehlschlagen als ein
+    # plausibler, zu niedriger Betrag).
+    unpriced_nights: int = 0
 
 
 class LastMinuteRule(BaseModel):

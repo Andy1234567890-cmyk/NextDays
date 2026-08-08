@@ -207,23 +207,35 @@ class BillingAddress(BaseModel):
 class CommissionMonth(BaseModel):
     """Ein Abrechnungsmonat der Portal-Provisionen (Kundensicht).
 
-    `period` ist YYYY-MM. Die Einzugs-Regel steht in der Preisliste: offene
-    Provisionen eines Monats werden am 1. des Folgemonats über die hinterlegte
-    Zahlungsmethode eingezogen — deshalb `charge_date`, damit der Kunde das
-    Datum nicht selbst ausrechnen muss.
+    `period` ist YYYY-MM. `charge_date` ist der 1. des Folgemonats — der Tag,
+    an dem die offenen Provisionen dieses Monats FAKTURIERT werden (als
+    Stripe-Invoice-Item auf den Kunden gebucht, `bill_pending_commissions`).
+    Der tatsächliche EINZUG passiert nicht an diesem Tag: das Invoice-Item
+    läuft mit der nächsten regulären Abo-Rechnung des Betriebs mit und wird
+    erst mit deren Belastung über die hinterlegte Zahlungsmethode gezogen.
+    UI-Texte müssen das so benennen („abgerechnet am …, Einzug mit der
+    nächsten Abo-Rechnung") — nicht „wird am 1. eingezogen".
 
-    `status` spiegelt die Ledger-Zeilen: 'pending' = noch nicht fakturiert,
-    'invoiced' = als Stripe-Invoice-Item gebucht, 'mixed' = beides (kommt vor,
-    wenn im laufenden Monat nachträglich Buchungen eintreffen).
+    `status` spiegelt die Ledger-Zeilen. Tragen alle Zeilen des Monats
+    denselben Wert, ist es GENAU dieser Wert des DB-Enums
+    `public.commission_status` (0006): 'pending' = noch nicht fakturiert,
+    'invoiced' = als Stripe-Invoice-Item gebucht, 'paid' = bezahlt.
+    Sind die Zeilen uneinheitlich, kommt der zusätzliche Sammelwert 'mixed'
+    (kommt vor, wenn im laufenden Monat nachträglich Buchungen eintreffen).
+    Wer 'paid' vergisst, baut einen Absturz für den ersten vollständig
+    bezahlten Monat — genau das ist im Frontend passiert.
     """
 
     period: str  # YYYY-MM
-    charge_date: str  # ISO-Datum, 1. des Folgemonats
+    charge_date: str  # ISO-Datum, 1. des Folgemonats = Fakturierung, nicht Einzug
     booking_count: int
     gross_total: float  # Buchungsumsatz der Periode
     commission_total: float
     currency: str | None = None
-    status: str  # pending | invoiced | mixed
+    # Bewusst `str`, nicht Literal: die Werte kommen 1:1 aus dem DB-Enum
+    # commission_status. Ein Literal hier würde bei einem künftig ergänzten
+    # Enum-Wert einen 500er werfen (ValidationError) statt ihn durchzureichen.
+    status: str  # pending | invoiced | paid (Enum) + mixed (uneinheitlicher Monat)
 
 
 class InvoiceRow(BaseModel):

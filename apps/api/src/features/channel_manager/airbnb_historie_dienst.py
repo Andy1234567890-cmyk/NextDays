@@ -608,6 +608,13 @@ class AirbnbHistorieDienstMixin:
                 .select("property_id, sync_enabled")
                 .eq("tenant_id", tenant_id)
                 .eq("sync_enabled", True)
+                # `sync_enabled` allein genügt NICHT: eine gelöschte Zuordnung
+                # behält ihren alten `sync_enabled`-Wert (beide werden gemeinsam
+                # gesetzt, aber die Zeile bleibt als Beleg stehen). Ohne diesen
+                # Filter gilt ein Objekt als verbunden, dessen Channex-Property
+                # längst weg ist — live: FeWo Stjerneskud trug drei Zeilen, zwei
+                # davon gelöscht und auf 404-Properties zeigend.
+                .is_("deleted_at", "null")
                 .execute()
             ).data
             or []

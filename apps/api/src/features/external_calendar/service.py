@@ -25,6 +25,7 @@ from src.core.dates import merge_day_ranges
 from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.jobs.queue import try_enqueue_ari
 
 from .ical import ExportEvent, build_ical, parse_ical
 
@@ -432,6 +433,7 @@ class ExternalCalendarService:
                 .execute()
             ).data
         }
+        gesperrt: list[date] = []
         for d in sorted(booked):
             iso = d.isoformat()
             cur = existing.get(iso)
@@ -441,6 +443,10 @@ class ExternalCalendarService:
                 if cur.get("external_calendar_id") != calendar_id and \
                         cur.get("status") != "open":
                     continue
+                if cur.get("external_calendar_id") == calendar_id:
+                    # Schon von diesem Feed gesperrt: der Upsert ist idempotent,
+                    # ein erneuter Push wäre reines Rauschen.
+                    continue
             db.table("availability").upsert(
                 je_einheit(db, property_id, [{
                     "property_id": property_id, "date": iso,
@@ -449,15 +455,26 @@ class ExternalCalendarService:
                 }]),
                 on_conflict=AVAILABILITY_CONFLICT,
             ).execute()
+            gesperrt.append(d)
         # Gegenzustand: von DIESEM Feed gesetzte Tage, die nicht mehr belegt sind.
-        self._clear_calendar_nights(db, property_id, calendar_id, keep=booked)
+        freigegeben = self._clear_calendar_nights(
+            db, property_id, calendar_id, keep=booked
+        )
+        # An die Portale melden (Wurzel 1). Ohne diesen Push war der iCal-Sync
+        # der EINZIGE availability-Schreibpfad ohne ARI-Meldung: eine per Feed
+        # importierte Fremdbelegung blieb bei Booking/Airbnb bis zum nächtlichen
+        # Full-Sync verkäuflich (reales Doppelbuchungsfenster von bis zu 24 h),
+        # und wieder freigewordene Tage blieben ebenso lange gesperrt.
+        self._push_availability(db, property_id, gesperrt, 0)
+        self._push_availability(db, property_id, freigegeben, 1)
 
     def _clear_calendar_nights(
         self, db: Client, property_id: str, calendar_id: str, *, keep: set[date]
-    ) -> None:
+    ) -> list[date]:
         """Alle availability-Zeilen dieses Feeds löschen, die NICHT in `keep`
         sind. Nur Zeilen mit external_calendar_id == calendar_id (fremde Sperren
-        bleiben)."""
+        bleiben). Gibt die freigewordenen Tage zurück — der Aufrufer meldet sie
+        an die Portale (Wurzel 1)."""
         existing = (
             db.table("availability").select("id, date")
             .eq("property_id", property_id)
@@ -465,9 +482,37 @@ class ExternalCalendarService:
             .execute()
         ).data
         keep_iso = {d.isoformat() for d in keep}
+        frei: list[date] = []
         for row in existing:
             if row["date"] not in keep_iso:
                 db.table("availability").delete().eq("id", row["id"]).execute()
+                frei.append(date.fromisoformat(row["date"]))
+        return frei
+
+    def _push_availability(
+        self, db: Client, property_id: str, tage: list[date], availability: int
+    ) -> None:
+        """Geänderte Tage als ARI-Job einreihen — zusammenhängende Tage in einer
+        Spanne (merge_day_ranges), damit aus einem Feed-Lauf nicht hunderte Jobs
+        werden. Vergangene Tage lässt der Push-Pfad selbst weg."""
+        if not tage:
+            return
+        # Tenant über das Objekt: der Sync läuft auch im Worker ohne AuthContext.
+        rows = (
+            db.table("properties")
+            .select("tenant_id").eq("id", property_id).limit(1).execute()
+        ).data or []
+        tenant_id = rows[0].get("tenant_id") if rows else None
+        if not tenant_id:
+            return
+        # end_exclusive=False: der ARI-Push erwartet den LETZTEN belegten Tag.
+        for start, end in merge_day_ranges(tage, end_exclusive=False):
+            try_enqueue_ari(
+                db, tenant_id, property_id, "availability",
+                {"date_from": start.isoformat(),
+                 "date_to": end.isoformat(),
+                 "availability": availability},
+            )
 
 
 def _now_iso() -> str:

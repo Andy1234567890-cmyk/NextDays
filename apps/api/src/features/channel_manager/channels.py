@@ -969,9 +969,18 @@ class ChannelsMixin:
     # welches Feld gehört. Nur belegte Schlüssel; alles andere lassen wir weg,
     # statt einen Wert zu erfinden (Wurzel 4).
     _RATE_PARAM_ROOM_KEYS: frozenset[str] = frozenset({"room_type_code", "listing_id"})
-    _RATE_PARAM_RATE_KEYS: frozenset[str] = frozenset(
-        {"rate_plan_code", "airbnb_rate_plan_id"}
-    )
+    _RATE_PARAM_RATE_KEYS: frozenset[str] = frozenset({"rate_plan_code"})
+    # `airbnb_rate_plan_id` steht im Katalog, wird aber NIE von uns gefüllt —
+    # es meint Airbnbs optionale „Rate Plans", die bei uns nicht existieren
+    # (`action/retrieve_rate_plans` → leer). Der Docstring von
+    # `_build_rate_plans` versprach genau das schon immer; der Code hat es
+    # nicht eingehalten und die LISTING-ID hineingeschrieben. Folge (live,
+    # 07.08.2026, Stjerneskud): Channex schaltete auf Rate-Plan-Pushes um,
+    # konnte die erfundene Rate nicht auflösen und sendete in jedem
+    # `RatePlanInventoryUpdate` ein leeres `rate_plans: []` — Verfügbarkeit
+    # kam an, PREISE NIE, Airbnb blieb dauerhaft auf dem Grundpreis. Die 17
+    # funktionierenden Bestands-Mappings haben das Feld nicht.
+    _RATE_PARAM_NIE_SETZEN: frozenset[str] = frozenset({"airbnb_rate_plan_id"})
 
     def _rate_plan_settings(
         self, rate_params: dict[str, Any], *, portal_code: str,
@@ -987,6 +996,9 @@ class ChannelsMixin:
         settings: dict[str, Any] = {}
         unbekannt: list[str] = []
         for key, meta in rate_params.items():
+            if key in self._RATE_PARAM_NIE_SETZEN:
+                # Bewusst weglassen — siehe Kommentar an _RATE_PARAM_NIE_SETZEN.
+                continue
             if key in self._RATE_PARAM_ROOM_KEYS:
                 settings[key] = room_code
             elif key in self._RATE_PARAM_RATE_KEYS:
@@ -2854,6 +2866,18 @@ class ChannelsMixin:
                 # Ohne Buchungsbezug (Airbnb-Support, Anfrage vor der Buchung)
                 # gibt es keinen Thread, in dem eine Antwort erscheinen könnte.
                 # Die Nachricht IST gespeichert — nur die Automation entfällt.
+                return
+
+            # NUR auf Gastnachrichten antworten. Channex liefert über denselben
+            # Webhook auch 'property' (unsere eigene Antwort, etwa direkt aus der
+            # Airbnb-App getippt) und 'system' — ungefiltert schickte die
+            # Abwesenheitsantwort dem Gast „Wir melden uns bald", nachdem die
+            # Gastgeberin ihm gerade selbst geschrieben hatte. Zusätzlich läuft
+            # das Webhook-Echo unserer EIGENEN Abwesenheitsantwort wieder hier
+            # durch (sender='property'). Der Absender ist die einzige Angabe, die
+            # das trennt — er wird deshalb hier geprüft, nicht erst in der
+            # Planung: `schedule_message_received` kennt die Nachricht nicht.
+            if (payload.get("sender") or "").strip().lower() != "guest":
                 return
 
             svc.schedule_message_received(

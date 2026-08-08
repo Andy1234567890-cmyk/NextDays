@@ -551,7 +551,8 @@ class RatesService:
         # obwohl der Rate-Plan-Default 3 zeigt (live verifiziert).
         if "min_stay" in patch and isinstance(patch["min_stay"], int):
             self._push_min_stay_restriction(
-                tenant_id, row["property_id"], patch["min_stay"]
+                tenant_id, row["property_id"], patch["min_stay"],
+                rate_plan_id=row["id"],
             )
         # Tageskurve bei Channex veraltet → Desired-State-Reconcile einreihen
         # (coalesced je Objekt) statt auf den 15-min-Tick zu warten. Auslöser:
@@ -1244,19 +1245,29 @@ class RatesService:
     _RESTRICTION_HORIZON_DAYS = 365
 
     def _push_min_stay_restriction(
-        self, tenant_id: str, property_id: str, min_stay: int
+        self, tenant_id: str, property_id: str, min_stay: int,
+        *, rate_plan_id: str,
     ) -> None:
         """Mindestaufenthalt als per-Datum-Restriction über den vollen Horizont als
         ARI-Push-Job einreihen (Phase 2). Das ist der Wert, den das Channex-
-        Kalender-UI zeigt und für Buchungen erzwingt. Deckt IMMER den ganzen
-        Horizont ab → coalesce=True sicher; der Reconcile-Tick gleicht zusätzlich ab."""
+        Kalender-UI zeigt und für Buchungen erzwingt.
+
+        `rate_plan_id` ist Pflicht: ohne ihn landet der Job im Zweig
+        `push_rate_for_property`, der die Restriktion laut eigenem Docstring auf
+        ALLE Rate-Plans des Objekts spiegelt. Bei einem Hotel mit BAR (min_stay 1)
+        und Nicht-stornierbar (min_stay 3) überschreibt dann die Änderung an EINEM
+        Plan den anderen mit — die OTAs lehnen Buchungen ab, die erlaubt sein
+        müssten (oder erlauben zu kurze). Der plan-genaue Weg
+        (`_enqueue_rate_plan_min_stay_segments`, segments mit rate_plan_id)
+        existiert längst; hier wurde er nur nicht benutzt.
+        """
         if min_stay < 1:
             return
         today = date.today()
-        try_enqueue_ari(
-            self._db(), tenant_id, property_id, "rate",
-            {"date_from": today.isoformat(),
-             "date_to": (today + timedelta(days=self._RESTRICTION_HORIZON_DAYS)).isoformat(),
-             "min_stay": min_stay},
-            coalesce=True,
+        self._enqueue_rate_plan_min_stay_segments(
+            tenant_id,
+            property_id,
+            rate_plan_id,
+            [(today, today + timedelta(days=self._RESTRICTION_HORIZON_DAYS))],
+            min_stay,
         )

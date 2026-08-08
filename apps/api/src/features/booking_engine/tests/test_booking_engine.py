@@ -338,7 +338,10 @@ def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: 
 
     monkeypatch.setattr(
         resolver_mod.PricingResolver, "quote",
-        lambda self, req: SimpleNamespace(total=300.0, currency="EUR", lines=[]),
+        lambda self, req: SimpleNamespace(
+            total=300.0, currency="EUR", lines=[],
+            priceless=False, unpriced_nights=0,
+        ),
     )
 
     req = PublicBookingRequest(
@@ -416,7 +419,10 @@ def test_public_booking_includes_addons_in_quote(monkeypatch) -> None:  # noqa: 
 
     def _fake_quote(_self, req):  # noqa: ANN001, ANN202
         captured["addons"] = list(req.addons)
-        return SimpleNamespace(total=260.0, currency="EUR", lines=[])
+        return SimpleNamespace(
+            total=260.0, currency="EUR", lines=[],
+            priceless=False, unpriced_nights=0,
+        )
 
     monkeypatch.setattr(resolver_mod.PricingResolver, "quote", _fake_quote)
 
@@ -626,7 +632,10 @@ def test_public_booking_writes_num_guests(monkeypatch) -> None:  # noqa: ANN001
     monkeypatch.setattr(
         resolver_mod.PricingResolver,
         "quote",
-        lambda _self, _req: SimpleNamespace(total=260.0, currency="EUR", lines=[]),
+        lambda _self, _req: SimpleNamespace(
+            total=260.0, currency="EUR", lines=[],
+            priceless=False, unpriced_nights=0,
+        ),
     )
 
     svc.create_public_booking(
@@ -771,3 +780,100 @@ def test_public_quote_reicht_tiere_an_den_resolver(monkeypatch) -> None:  # noqa
     assert gesehen == {"pets": 2, "guests": 2}
     assert antwort.pets_allowed is True
     assert antwort.nights == 2
+
+
+def test_public_booking_lehnt_teilweise_unbepreiste_naechte_ab(monkeypatch) -> None:  # noqa: ANN001
+    """Regression: Nächte ohne hinterlegten Preis überspringt der Quote still —
+    `total` deckte dann nur die bepreisten ab. Der Gast buchte sieben Nächte und
+    zahlte drei; bei komplett fehlenden Preisen entstand eine 0-€-Buchung.
+    `priceless` allein reicht als Schutz nicht: es meldet nur den Totalausfall."""
+    from datetime import date as _date
+    from datetime import timedelta as _delta
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    import src.features.pricing.resolver as resolver_mod
+    from src.features.booking_engine.schemas import GuestContact, PublicBookingRequest
+    from src.features.booking_engine.service import (
+        BookingEngineError,
+        BookingEngineService,
+    )
+
+    db = MagicMock(name="supabase")
+
+    def table(name: str) -> MagicMock:
+        t = MagicMock(name=f"table:{name}")
+        if name in ("availability", "stop_sell"):
+            chain = t.select.return_value.eq.return_value.gte.return_value.lt.return_value
+            chain.execute.return_value.data = []
+        return t
+
+    db.table.side_effect = table
+    svc = BookingEngineService(service_client=db)
+    monkeypatch.setattr(
+        svc, "_public_property",
+        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+    )
+    monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: "g-1")
+    monkeypatch.setattr(svc, "_push_channex", lambda *_a, **_k: None)
+    # 7 Nächte gebucht, nur 3 bepreist.
+    monkeypatch.setattr(
+        resolver_mod.PricingResolver, "quote",
+        lambda _self, _req: SimpleNamespace(
+            total=300.0, currency="EUR", lines=[],
+            priceless=False, unpriced_nights=4,
+        ),
+    )
+
+    with pytest.raises(BookingEngineError) as exc:
+        svc.create_public_booking(
+            PublicBookingRequest(
+                property_id="p-1",
+                check_in=_date.today() + _delta(days=30),
+                check_out=_date.today() + _delta(days=37),
+                guests=2,
+                contact=GuestContact(
+                    first_name="Max", last_name="Gast", email="max@example.com",
+                ),
+            )
+        )
+    assert exc.value.status_code == 422
+    # Kein Schreibvorgang: die Buchung darf gar nicht erst entstehen.
+    db.rpc.assert_not_called()
+
+
+def test_public_booking_lehnt_zu_langen_aufenthalt_ab(monkeypatch) -> None:  # noqa: ANN001
+    """Regression: der öffentliche Buchungs-Endpunkt hatte als einziger des Slices
+    keinen Span-Deckel. Ein einzelner Request mit `check_out` weit in der Zukunft
+    baute Millionen Tagesobjekte und ebenso viele availability-Zeilen (Wurzel 8)."""
+    from datetime import date as _date
+    from datetime import timedelta as _delta
+    from unittest.mock import MagicMock
+
+    from src.features.booking_engine.schemas import GuestContact, PublicBookingRequest
+    from src.features.booking_engine.service import (
+        BookingEngineError,
+        BookingEngineService,
+    )
+
+    db = MagicMock(name="supabase")
+    svc = BookingEngineService(service_client=db)
+    monkeypatch.setattr(
+        svc, "_public_property",
+        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+    )
+
+    with pytest.raises(BookingEngineError) as exc:
+        svc.create_public_booking(
+            PublicBookingRequest(
+                property_id="p-1",
+                check_in=_date.today() + _delta(days=1),
+                check_out=_date.today() + _delta(days=5000),
+                guests=2,
+                contact=GuestContact(
+                    first_name="Max", last_name="Gast", email="max@example.com",
+                ),
+            )
+        )
+    assert exc.value.status_code == 422
+    db.rpc.assert_not_called()

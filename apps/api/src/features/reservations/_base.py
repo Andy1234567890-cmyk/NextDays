@@ -21,6 +21,7 @@ from supabase import Client
 
 from src.core.dates import nights as _nights
 from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
+from src.core.einheiten_verfuegbar import freie_einheiten_spannen
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
@@ -61,6 +62,10 @@ __all__ = [
 ]
 
 log = get_logger("nextdays.reservations")
+
+# Status, die eine Nacht NICHT belegen — deckungsgleich mit der WHERE-Klausel
+# des EXCLUDE-Constraints `reservations_no_local_overlap` (0184).
+_NICHT_BELEGEND = frozenset({"cancelled", "declined", "expired"})
 
 
 def _as_date(value: object) -> date:
@@ -162,7 +167,7 @@ class ReservationsBase:
         rows = (
             self._db()
             .table("reservations")
-            .select("check_in, check_out")
+            .select("check_in, check_out, status")
             .eq("property_id", property_id)
             .neq("id", exclude_reservation_id)
             .neq("status", "cancelled")
@@ -173,6 +178,14 @@ class ReservationsBase:
         occupied: set[str] = set()
         wanted = set(days)
         for r in rows:
+            # Dieselbe Menge, die der EXCLUDE-Constraint (0184) als „belegt"
+            # führt. Der `cancelled`-Filter allein zählte auch `declined` und
+            # `expired` mit: eine abgelehnte Anfrage hielt die Nacht dann für
+            # immer besetzt — wurde die echte Buchung darauf storniert, blieb
+            # der Tag lokal und bei den OTAs unverkäuflich, ohne dass irgendwo
+            # eine gültige Buchung stand (Wurzel 1).
+            if str(r.get("status") or "") in _NICHT_BELEGEND:
+                continue
             for d in _nights(_as_date(r["check_in"]), _as_date(r["check_out"])):
                 iso = d.isoformat()
                 if iso in wanted:
@@ -411,6 +424,7 @@ class ReservationsBase:
         reservation_id: str,
         *,
         recompute: bool = True,
+        unit_id: str | None = None,
     ) -> None:
         """Gibt geräumte Nächte einer Reservierung frei — die EINE Stelle, an der
         eine Reservierung Kalendertage zurückgibt (move-Resize, cancel, künftig
@@ -418,9 +432,17 @@ class ReservationsBase:
         move()/cancel(), damit der Alt-/Neu-Diff nie an einer neuen Stelle
         vergessen werden kann (Wurzel: „Vorwärts-Schritt ohne Gegenzustand").
 
-        1 Objekt = 1 Einheit: binäre availability-Freigabe (status='open' +
-        Channex availability=1), NUR für Tage, die keine andere aktive Buchung
-        noch belegt (sonst Überbuchung). Rechnet danach Dynamic Pricing neu.
+        `unit_id` ist die Einheit DIESER Reservierung und begrenzt die Freigabe
+        auf sie. Seit 0265 hat ein Objekt n ≥ 1 Einheiten; ohne diese Grenze
+        öffnet ein Storno die Nacht auf ALLEN Einheiten und reißt die Sperre
+        einer fremden Buchung mit — der Schwesterpfad
+        `channel_manager.bookings_sync._free_ota_nights` hat genau das live
+        erlebt („Buchung B storniert, Buchung A verlor ihre Sperre") und ist
+        deshalb längst unit-genau. Fehlt der Wert (Altbestand ohne `unit_id`),
+        bleibt es beim objektweiten Verhalten von vorher.
+
+        Freigegeben wird NUR für Tage, die keine andere aktive Buchung noch
+        belegt (sonst Überbuchung). Rechnet danach Dynamic Pricing neu.
         """
         if not nights:
             return
@@ -428,14 +450,29 @@ class ReservationsBase:
         release = [d for d in nights if d not in still]
         if not release:
             return
-        self._db().table("availability").upsert(
-            je_einheit(self._db(), property_id, [
-                {"property_id": property_id, "date": d,
-                 "status": "open", "source": "manual"}
-                for d in release
-            ]),
-            on_conflict=AVAILABILITY_CONFLICT,
-        ).execute()
+        if unit_id:
+            # Nur die eigene Einheit öffnen. `update` statt `upsert`: es gibt
+            # nichts anzulegen — die Zeile dieser Einheit existiert, weil die
+            # Buchung sie belegt hat.
+            for d in release:
+                (
+                    self._db()
+                    .table("availability")
+                    .update({"status": "open", "source": "manual"})
+                    .eq("property_id", property_id)
+                    .eq("unit_id", unit_id)
+                    .eq("date", d)
+                    .execute()
+                )
+        else:
+            self._db().table("availability").upsert(
+                je_einheit(self._db(), property_id, [
+                    {"property_id": property_id, "date": d,
+                     "status": "open", "source": "manual"}
+                    for d in release
+                ]),
+                on_conflict=AVAILABILITY_CONFLICT,
+            ).execute()
         self._release_channex(tenant_id, property_id, release)
         if recompute:
             self._recompute_dynamic_pricing(tenant_id, property_id)
@@ -443,26 +480,30 @@ class ReservationsBase:
     def _release_channex(
         self, tenant_id: str, property_id: str, days: list[str]
     ) -> None:
-        """Freigegebene Tage zusammenhängend an Channex melden (availability=1).
+        """Freigegebene Tage an Channex melden — mit der ECHTEN Zahl freier
+        Einheiten, nicht pauschal 1.
 
-        Sortierte ISO-Tage werden zu Intervallen gebündelt; jedes Intervall wird
-        als [von, bis] (inklusiv) gepusht. Best-effort (ari_outbox-Retry).
+        Seit 0265 hat ein Objekt n ≥ 1 Einheiten, und Verfügbarkeit an die
+        Portale ist eine ZAHL. Ein festes `1` war doppelt falsch: Bei drei
+        Einheiten, von denen nach dem Storno zwei frei sind, meldete es 1 (zwei
+        Einheiten blieben unverkauft); belegt eine andere Buchung den Tag noch,
+        meldete es fälschlich 1 statt 0 — eine Überbuchung. `freie_einheiten_spannen`
+        liest den Kalenderstand NACH der Freigabe und liefert die Spannen
+        gleicher Stückzahl fertig für den Push; derselbe Weg, den
+        `bookings_sync._free_ota_nights` schon nutzt.
+
+        Best-effort (ari_outbox-Retry).
         """
         if not days:
             return
         ordered = [date.fromisoformat(d) for d in sorted(days)]
-        start = prev = ordered[0]
-        for cur in ordered[1:]:
-            if (cur - prev).days == 1:
-                prev = cur
-                continue
+        for von, bis, frei in freie_einheiten_spannen(
+            self._db(), tenant_id, property_id, ordered[0], ordered[-1]
+        ):
+            # `_push_channex_availability` nimmt das Ende exklusiv.
             self._push_channex_availability(
-                tenant_id, property_id, start, prev + timedelta(days=1), 1
+                tenant_id, property_id, von, bis + timedelta(days=1), frei
             )
-            start = prev = cur
-        self._push_channex_availability(
-            tenant_id, property_id, start, prev + timedelta(days=1), 1
-        )
 
     def _quote(
         self,

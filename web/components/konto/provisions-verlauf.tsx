@@ -1,25 +1,53 @@
 "use client";
 
-// Provisions-Monatsverlauf — was wird wann eingezogen. Aufbau wie der
+// Provisions-Monatsverlauf — was wird wann abgerechnet. Aufbau wie der
 // Rechnungsverlauf, damit beide Ansichten sich gleich anfühlen.
 //
-// Die Provision eines Monats wird am 1. des Folgemonats über die hinterlegte
-// Zahlungsmethode eingezogen; `charge_date` kommt fertig vom Server, damit im
-// Frontend keine zweite Datumsrechnung entsteht.
+// Diese Liste zeigt AUSSCHLIESSLICH die Provisionen externer Portale
+// (commission_ledger). Die 8 % des myBestDays-Marktplatzes werden direkt beim
+// Zahlungseingang über die Stripe-application_fee einbehalten
+// (payments/service.py) und stehen deshalb nie im Ledger — ohne diesen Hinweis
+// liest ein Betrieb mit Marktplatz-Buchungen hier „keine Provisionen".
+//
+// `charge_date` ist der FAKTURIERUNGS-Tag (1. des Folgemonats), NICHT der
+// Belastungstag: bill_pending_commissions legt nur ein Stripe-Invoice-Item an,
+// das mit der nächsten regulären Abo-Rechnung mitläuft (Docstrings
+// subscriptions/service.py `_einzugstag`, schemas.py `CommissionMonth`).
 import { Icon } from "@iconify/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { formatCurrency } from "@/lib/currency";
-import { getCommissionMonths, type CommissionMonth } from "@/lib/subscriptions";
+import {
+  getCommissionMonths,
+  type CommissionMonth,
+  type CommissionStatus,
+} from "@/lib/subscriptions";
 
-const STATUS: Record<
-  CommissionMonth["status"],
-  { label: string; klasse: string }
-> = {
-  invoiced: { label: "Abgerechnet", klasse: "bg-emerald-500/15 text-emerald-600" },
-  pending: { label: "Wird eingezogen", klasse: "bg-amber-500/15 text-amber-600" },
-  mixed: { label: "Teilweise offen", klasse: "bg-sky-500/15 text-sky-600" },
+// Die Map muss ALLE Werte von `CommissionStatus` tragen — `Record` über die
+// Union macht den Zugriff total, ein Fallback wäre toter Code. Kommt im DB-Enum
+// `commission_status` (0006) ein Wert dazu, MUSS er hier ergänzt werden; tsc
+// erzwingt das dann. Genau dieses Netz fehlte, als 'paid' zum Absturz führte.
+// 'pending' heißt „noch nicht fakturiert" — nicht „wird gerade eingezogen":
+// der Einzug passiert erst mit der nächsten Abo-Rechnung. Der Text steht als
+// i18n-Key hier, nicht als deutscher Literal.
+const STATUS: Record<CommissionStatus, { key: string; klasse: string }> = {
+  invoiced: {
+    key: "commissions.statusInvoiced",
+    klasse: "bg-emerald-500/15 text-emerald-600",
+  },
+  paid: {
+    key: "commissions.statusPaid",
+    klasse: "bg-emerald-500/15 text-emerald-600",
+  },
+  pending: {
+    key: "commissions.statusPending",
+    klasse: "bg-amber-500/15 text-amber-600",
+  },
+  mixed: {
+    key: "commissions.statusMixed",
+    klasse: "bg-sky-500/15 text-sky-600",
+  },
 };
 
 function monatsName(period: string, locale: string): string {
@@ -32,8 +60,8 @@ function monatsName(period: string, locale: string): string {
 }
 
 export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
-  const t = useTranslations("account");
   const locale = useLocale();
+  const t = useTranslations("account");
   const [rows, setRows] = useState<CommissionMonth[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,17 +81,18 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
         className="flex items-center gap-1 self-start text-sm font-medium text-muted-foreground hover:text-foreground"
       >
         <Icon icon="lucide:chevron-left" className="size-4" />
-        Abrechnung
+        {t("commissions.backToBilling")}
       </button>
 
       <div>
         <h2 className="font-display text-xl font-extrabold">
-          Provisionen je Monat
+          {t("commissions.monthsTitle")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Provisionen aus Buchungen über externe Portale. Der Betrag eines
-          Monats wird am 1. des Folgemonats über Ihre hinterlegte
-          Zahlungsmethode eingezogen.
+          {t("commissions.monthsIntro")}
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t("commissions.monthsChannels")}
         </p>
       </div>
 
@@ -76,14 +105,13 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
       {!rows && !error && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Icon icon="svg-spinners:180-ring" className="size-4" />
-          Provisionen werden geladen …
+          {t("commissions.monthsLoading")}
         </div>
       )}
 
       {rows && rows.length === 0 && (
         <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          Es sind noch keine Provisionen angefallen. Buchungen über Ihre eigene
-          Website bleiben dauerhaft provisionsfrei.
+          {t("commissions.monthsEmpty")}
         </div>
       )}
 
@@ -92,12 +120,26 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
           <table className="w-full min-w-[44rem] text-sm">
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Monat</th>
-                <th className="px-4 py-3 font-medium">Buchungen</th>
-                <th className="px-4 py-3 font-medium">Buchungsumsatz</th>
-                <th className="px-4 py-3 font-medium">Provision</th>
-                <th className="px-4 py-3 font-medium">{t("commissions.chargedOn")}</th>
-                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">
+                  {t("commissions.colMonth")}
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  {t("commissions.colBookings")}
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  {t("commissions.colGross")}
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  {t("commissions.colCommission")}
+                </th>
+                {/* `chargedOn` heißt „Abgerechnet am": der 1. ist der
+                    Fakturierungstag, nicht der Belastungstag. */}
+                <th className="px-4 py-3 font-medium">
+                  {t("commissions.chargedOn")}
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  {t("commissions.colStatus")}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -139,7 +181,7 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
                       <span
                         className={`rounded-full px-3 py-0.5 text-xs font-semibold ${st.klasse}`}
                       >
-                        {st.label}
+                        {t(st.key)}
                       </span>
                     </td>
                   </tr>
@@ -150,10 +192,20 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
         </div>
       )}
 
+      {/* Die Tabelle zeigt die UNGEKAPPTEN Ledger-Beträge — der Deckel greift
+          erst beim Fakturieren (bill_pending_commissions). Ohne diesen Hinweis
+          wirkt die kleinere Belastung später wie ein Fehler. Der konkrete
+          Deckelbetrag liegt hier nicht vor und wird nicht erfunden (Wurzel 4);
+          er steht in der Übersichtskarte der Abrechnung. */}
+      {rows && rows.length > 0 && (
+        <p className="text-sm text-muted-foreground">
+          {t("commissions.capHint")}
+        </p>
+      )}
+
       {rows && rows.some((r) => r.currency === null) && (
         <p className="text-sm text-muted-foreground">
-          Monate mit Buchungen in mehreren Währungen werden ohne Gesamtsumme
-          angezeigt — die Einzelbeträge stehen in der jeweiligen Rechnung.
+          {t("commissions.mixedCurrencyHint")}
         </p>
       )}
     </div>

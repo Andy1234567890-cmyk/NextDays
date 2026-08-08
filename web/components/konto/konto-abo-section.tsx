@@ -11,7 +11,7 @@
 // erscheinen.
 import { Icon } from "@iconify/react";
 import { useTranslations, useLocale } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
@@ -47,37 +47,69 @@ type Loaded = {
   status: SubscriptionStatus | null;
   pricing: Pricing | null;
   commissions: CommissionSummary | null;
+  // Eigenes Feld, damit `commissions === null` nicht zwei Bedeutungen trägt.
+  commissionsError: string | null;
   address: BillingAddress | null;
   error: string | null;
 };
 
-// Abo-Status → deutsches Label + Farbe. Unbekanntes zeigen wir roh, statt es
-// auf „aktiv" zu raten (Wurzel 4).
-const STATUS_LABEL: Record<string, { label: string; klasse: string }> = {
-  active: { label: "Aktiv", klasse: "bg-emerald-500/15 text-emerald-600" },
-  trialing: { label: "Testphase", klasse: "bg-sky-500/15 text-sky-600" },
-  past_due: { label: "Zahlung offen", klasse: "bg-amber-500/15 text-amber-600" },
-  canceled: { label: "Gekündigt", klasse: "bg-muted text-muted-foreground" },
-  unpaid: { label: "Unbezahlt", klasse: "bg-destructive/10 text-destructive" },
-  incomplete: { label: "Unvollständig", klasse: "bg-amber-500/15 text-amber-600" },
+// Abo-Status → i18n-Key + Farbe. Unbekanntes zeigen wir roh, statt es auf
+// „aktiv" zu raten (Wurzel 4).
+const STATUS_LABEL: Record<string, { key: string; klasse: string }> = {
+  active: {
+    key: "subscription.statusActive",
+    klasse: "bg-emerald-500/15 text-emerald-600",
+  },
+  trialing: {
+    key: "subscription.statusTrialing",
+    klasse: "bg-sky-500/15 text-sky-600",
+  },
+  past_due: {
+    key: "subscription.statusPastDue",
+    klasse: "bg-amber-500/15 text-amber-600",
+  },
+  canceled: {
+    key: "subscription.statusCanceled",
+    klasse: "bg-muted text-muted-foreground",
+  },
+  unpaid: {
+    key: "subscription.statusUnpaid",
+    klasse: "bg-destructive/10 text-destructive",
+  },
+  incomplete: {
+    key: "subscription.statusIncomplete",
+    klasse: "bg-amber-500/15 text-amber-600",
+  },
 };
 
 // Baut aus den graduated-Tiers eine lesbare Staffel-Zeile, Beträge aus Stripe.
-function tierLines(pricing: Pricing): string[] {
+// Die Satzform kommt aus i18n, der Betrag bleibt formatCurrency (Wurzel 4).
+function tierLines(
+  pricing: Pricing,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): string[] {
   const cur = pricing.currency;
   const lines: string[] = [];
   let prev = 0;
-  pricing.grundtarif_tiers.forEach((t) => {
-    const upTo = t.up_to;
-    if (t.flat_amount != null) {
+  pricing.grundtarif_tiers.forEach((tier) => {
+    const upTo = tier.up_to;
+    if (tier.flat_amount != null) {
       lines.push(
-        `Grundgebühr (inkl. 1. Objekt): ${formatCurrency(t.flat_amount / 100, cur)} / Monat`,
+        t("subscription.tierBase", {
+          amount: formatCurrency(tier.flat_amount / 100, cur),
+        }),
       );
-    } else if (t.unit_amount != null) {
+    } else if (tier.unit_amount != null) {
       const from = prev + 1;
-      const range = upTo != null ? `${from}–${upTo}` : `ab ${from}`;
+      const range =
+        upTo != null
+          ? t("subscription.tierRangeBetween", { from, to: upTo })
+          : t("subscription.tierRangeFrom", { from });
       lines.push(
-        `Objekt ${range}: +${formatCurrency(t.unit_amount / 100, cur)} / Monat`,
+        t("subscription.tierUnit", {
+          range,
+          amount: formatCurrency(tier.unit_amount / 100, cur),
+        }),
       );
     }
     if (upTo != null) prev = upTo;
@@ -97,14 +129,22 @@ export function KontoAboSection() {
   // Ländercode → Klarname. Muss VOR den frühen returns stehen (Hook-Regel).
   const t = useTranslations("account");
   const tCountry = useTranslations("countries");
-  const adressZeilen = adresseZeilen(state?.address ?? null, (c) => tCountry(c));
+  const adressZeilen = adresseZeilen(
+    state?.address ?? null,
+    (c) => tCountry(c),
+    (vatId) => t("subscription.vatLine", { vatId }),
+  );
 
-  async function load() {
+  // Stabile Referenz (leere Deps, weil `load` NUR Modul-Importe und den
+  // React-stabilen `setState` benutzt — keinen State und keine Props). Dadurch
+  // darf der Mount-Effect unten ehrlich `[load]` führen, statt die
+  // exhaustive-deps-Regel stummzuschalten.
+  const load = useCallback(async () => {
     const me = await getMe();
     if (!me) {
       setState({
         canManage: false, tenantId: null, status: null, pricing: null,
-        commissions: null, address: null, error: null,
+        commissions: null, commissionsError: null, address: null, error: null,
       });
       return;
     }
@@ -116,6 +156,7 @@ export function KontoAboSection() {
         status: null,
         pricing: null,
         commissions: null,
+        commissionsError: null,
         address: null,
         error: null,
       });
@@ -133,16 +174,23 @@ export function KontoAboSection() {
       status: statusRes.ok ? statusRes.data : null,
       pricing: pricingRes.ok ? pricingRes.data : null,
       commissions: commRes.ok ? commRes.data : null,
+      // Getrennt vom Wert: `null` heißt „geladen, aber leer", ein Fehlertext
+      // heißt „Laden fehlgeschlagen". Ohne diese Unterscheidung verschwände die
+      // Provisionskarte bei einem 500 kommentarlos (Wurzel 5).
+      commissionsError: commRes.ok ? null : commRes.error,
       address: addrRes.ok ? addrRes.data : null,
-      // Fehler sichtbar machen, nicht verschlucken (Wurzel 5).
-      error: !statusRes.ok ? statusRes.error : !pricingRes.ok ? pricingRes.error : null,
+      // Fehler sichtbar machen, nicht verschlucken (Wurzel 5) — ALLE vier
+      // Teilabrufe, nicht nur die ersten beiden.
+      error:
+        [statusRes, pricingRes, commRes, addrRes]
+          .find((r) => !r.ok)
+          ?.error ?? null,
     });
-  }
+  }, []);
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [load]);
 
   // Realtime: Abo + Modul-Änderungen (Webhook schreibt) sofort spiegeln.
   useRealtime({
@@ -171,7 +219,7 @@ export function KontoAboSection() {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Icon icon="svg-spinners:180-ring" className="size-4" />
-        Abrechnung wird geladen …
+        {t("subscription.loading")}
       </div>
     );
   }
@@ -179,7 +227,7 @@ export function KontoAboSection() {
   if (!state.canManage) {
     return (
       <p className="text-sm text-muted-foreground">
-        Für die Tarifverwaltung fehlt dir die Berechtigung.
+        {t("subscription.noPermission")}
       </p>
     );
   }
@@ -217,10 +265,11 @@ export function KontoAboSection() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="font-display text-2xl font-extrabold">Abrechnung</h2>
+        <h2 className="font-display text-2xl font-extrabold">
+          {t("subscription.title")}
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Abo-Status, Rechnungsadresse und Rechnungen — monatlich über
-          myNextDays abgerechnet.
+          {t("subscription.subtitle")}
         </p>
       </div>
 
@@ -233,10 +282,10 @@ export function KontoAboSection() {
       {/* Kopfzeile mit den beiden Sprungzielen (Lodgify-Vorbild) */}
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="outline" onClick={() => setAdresseOffen(true)}>
-          Rechnungsadresse
+          {t("subscription.billingAddress")}
         </Button>
         <Button variant="outline" onClick={() => setZeigeVerlauf(true)}>
-          Rechnungsverlauf
+          {t("subscription.invoiceHistory")}
         </Button>
       </div>
 
@@ -246,25 +295,29 @@ export function KontoAboSection() {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-display text-base font-extrabold">
-                {s?.has_subscription ? "myNextDays" : "Kein Abo"}
+                {s?.has_subscription
+                  ? t("subscription.brand")
+                  : t("subscription.noSubscription")}
               </span>
               {s?.has_subscription && (
                 <>
                   <span className="text-muted-foreground">—</span>
-                  <span className="text-sm text-muted-foreground">Monatlich</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t("subscription.monthly")}
+                  </span>
                   <span
                     className={`rounded-full px-3 py-0.5 text-xs font-semibold ${
                       st?.klasse ?? "bg-muted text-muted-foreground"
                     }`}
                   >
-                    {st?.label ?? s.status}
+                    {st ? t(st.key) : s.status}
                   </span>
                 </>
               )}
             </div>
             {s?.cancel_at_period_end && (
               <p className="mt-1 text-sm text-amber-600">
-                Endet zum Ende der laufenden Periode.
+                {t("subscription.endsAtPeriodEnd")}
               </p>
             )}
           </div>
@@ -275,7 +328,7 @@ export function KontoAboSection() {
                 {/* Hauptaktion ist unsere Tarifseite (Objekte dazubuchen) —
                     das Stripe-Portal kennt nur Zahlungsmittel und Kündigung. */}
                 <Button onClick={() => setZeigeTarife(true)}>
-                  Tarif ändern
+                  {t("subscription.changePlan")}
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -292,13 +345,13 @@ export function KontoAboSection() {
                         Stripe-Portal: dort hängen SCA/Mandate und die
                         rechtsverbindliche Bestätigung dran. */}
                     <DropdownMenuItem onSelect={() => setZeigeTarife(true)}>
-                      Abonnement ändern
+                      {t("subscription.changeSubscription")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => void onPortal()}>
-                      Zahlungsmethode verwalten
+                      {t("subscription.managePaymentMethod")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => void onPortal()}>
-                      Kündigung beantragen
+                      {t("subscription.requestCancellation")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -307,7 +360,7 @@ export function KontoAboSection() {
               // Führt auf die Tarifseite, NICHT direkt zu Stripe: der Betrieb
               // soll erst sehen, was er für seine Objektzahl zahlt.
               <Button onClick={() => setZeigeTarife(true)}>
-                Abo abschließen
+                {t("subscription.startSubscription")}
               </Button>
             )}
           </div>
@@ -324,7 +377,7 @@ export function KontoAboSection() {
                     month: "long",
                     year: "numeric",
                   })
-                : "—"
+                : t("subscription.empty")
             }
           />
           <Kennzahl
@@ -334,14 +387,22 @@ export function KontoAboSection() {
                 ? `${(state.commissions.current_rate * 100).toLocaleString(locale, {
                     maximumFractionDigits: 2,
                   })} %`
-                : "—"
+                : // Ein Ladefehler darf nicht wie „kein Satz vereinbart"
+                  // aussehen (Wurzel 5).
+                  state.commissionsError
+                  ? t("subscription.notAvailable")
+                  : t("subscription.empty")
             }
             trennstrich
           />
           {/* Mit Abo zählt die BEZAHLTE Menge (Regler beim Abschluss), nicht
               die Zahl der angelegten Objekte — wer für 5 bucht, sieht 5. */}
           <Kennzahl
-            label={s?.has_subscription ? "Gebuchte Objekte" : "Aktive Objekte"}
+            label={
+              s?.has_subscription
+                ? t("subscription.billedProperties")
+                : t("subscription.activeProperties")
+            }
             wert={String(
               (s?.has_subscription ? s?.billed_property_count : s?.property_count) ?? 0,
             )}
@@ -353,9 +414,11 @@ export function KontoAboSection() {
       {/* Tarif-Staffel (Beträge aus Stripe) */}
       {p && (
         <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="mb-2 font-display text-base font-extrabold">Tarif</div>
+          <div className="mb-2 font-display text-base font-extrabold">
+            {t("subscription.planTitle")}
+          </div>
           <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
-            {tierLines(p).map((l) => (
+            {tierLines(p, t).map((l) => (
               <li key={l}>{l}</li>
             ))}
           </ul>
@@ -367,17 +430,17 @@ export function KontoAboSection() {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="font-display text-base font-extrabold">
-              Rechnungsadresse
+              {t("subscription.billingAddress")}
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Diese Angaben erscheinen auf allen künftigen Rechnungen.
+              {t("subscription.billingAddressHint")}
             </p>
             <div className="mt-3 text-sm">
               {adressZeilen.length > 0 ? (
                 adressZeilen.map((z) => <div key={z}>{z}</div>)
               ) : (
                 <span className="text-muted-foreground">
-                  Noch keine Rechnungsadresse hinterlegt.
+                  {t("subscription.billingAddressEmpty")}
                 </span>
               )}
             </div>
@@ -393,29 +456,61 @@ export function KontoAboSection() {
         </div>
       </div>
 
-      {/* Provisionen (externe OTA-Buchungen) */}
+      {/* Provisionen (externe OTA-Buchungen). Schlägt das Laden fehl, bleibt die
+          Karte an ihrem Platz und sagt das — sie ersatzlos auszublenden hieße,
+          dem Betrieb „keine Provisionen" zu suggerieren (Wurzel 5). */}
+      {!state.commissions && state.commissionsError && (
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="mb-1 font-display text-base font-extrabold">
+            {t("commissions.cardTitle")}
+          </div>
+          {/* Kein Ersatzwert und keine Zahl an dieser Stelle (Wurzel 4) — nur
+              die Aussage, dass der Abruf fehlschlug. */}
+          <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {t("commissions.loadFailed", { error: state.commissionsError })}
+          </p>
+        </div>
+      )}
+
       {state.commissions && (
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-1 font-display text-base font-extrabold">
-            Provision externe Portale
+            {t("commissions.cardTitle")}
           </div>
+          {/* Zwei vollständige Satzvarianten statt einer angeklebten
+              Teilphrase — nur so lässt sich der Deckel-Zusatz in jeder
+              Sprache grammatisch richtig einbauen. */}
           <p className="text-sm text-muted-foreground">
-            Booking, Airbnb &amp; Co.:{" "}
-            {(state.commissions.current_rate * 100)
-              .toLocaleString(locale, { maximumFractionDigits: 2 })}{" "}
-            % vom Buchungsumsatz Ihrer veröffentlichten Objekte. Wird monatlich
-            abgerechnet
             {state.commissions.cap_amount !== null
-              ? `, höchstens ${formatCurrency(
-                  state.commissions.cap_amount,
-                  state.commissions.currency,
-                )} im Monat`
-              : ""}
-            .
+              ? t("commissions.cardRateCapped", {
+                  rate: (state.commissions.current_rate * 100).toLocaleString(
+                    locale,
+                    { maximumFractionDigits: 2 },
+                  ),
+                  cap: formatCurrency(
+                    state.commissions.cap_amount,
+                    state.commissions.currency,
+                  ),
+                })
+              : t("commissions.cardRate", {
+                  rate: (state.commissions.current_rate * 100).toLocaleString(
+                    locale,
+                    { maximumFractionDigits: 2 },
+                  ),
+                })}
+          </p>
+          {/* Provision hängt am KANAL (payments/service.py _platform_fee_bps).
+              Diese Karte deckt nur den externen Portal-Satz ab — die 8 % des
+              Marktplatzes hier zu verschweigen wäre irreführend, weil sie nicht
+              im commission_ledger stehen und in keiner Aufstellung auftauchen. */}
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("commissions.cardOtherChannels")}
           </p>
           {state.commissions.pending_count > 0 ? (
             <div className="mt-2 text-sm">
-              Offen ({state.commissions.pending_count} Buchungen):{" "}
+              {t("commissions.pending", {
+                count: state.commissions.pending_count,
+              })}
               <span className="font-semibold">
                 {formatCurrency(
                   state.commissions.pending_total,
@@ -428,18 +523,18 @@ export function KontoAboSection() {
               {state.commissions.pending_capped &&
                 state.commissions.cap_amount !== null && (
                   <span className="text-muted-foreground">
-                    {" "}
-                    — eingezogen wird der Monatsdeckel von{" "}
-                    {formatCurrency(
-                      state.commissions.cap_amount,
-                      state.commissions.currency,
-                    )}
+                    {t("commissions.pendingCapHint", {
+                      cap: formatCurrency(
+                        state.commissions.cap_amount,
+                        state.commissions.currency,
+                      ),
+                    })}
                   </span>
                 )}
             </div>
           ) : (
             <div className="mt-2 text-sm text-muted-foreground">
-              Aktuell keine offenen Provisionen.
+              {t("commissions.noPending")}
             </div>
           )}
           <Button
@@ -447,7 +542,7 @@ export function KontoAboSection() {
             className="mt-4"
             onClick={() => setZeigeProvisionen(true)}
           >
-            Monatsverlauf ansehen
+            {t("commissions.showMonths")}
           </Button>
         </div>
       )}
@@ -471,9 +566,13 @@ export function KontoAboSection() {
 // Klarnamen: gespeichert und an Stripe übertragen wird IMMER der Code (DE),
 // angezeigt wird der Landesname (Deutschland). Fehlt eine Übersetzung, bleibt
 // der Code stehen — besser ein Code als eine leere Zeile.
+//
+// `vatZeile` baut die USt-Zeile aus i18n — der Bezeichner heißt je Sprache
+// anders (USt-IdNr. / VAT ID) und darf hier kein Literal sein.
 function adresseZeilen(
   a: BillingAddress | null,
   landName: (code: string) => string,
+  vatZeile: (vatId: string) => string,
 ): string[] {
   if (!a) return [];
   const person = [a.first_name, a.last_name].filter(Boolean).join(" ").trim();
@@ -485,7 +584,7 @@ function adresseZeilen(
     a.line2,
     ort,
     a.country ? landName(a.country) : null,
-    a.vat_id ? `USt-IdNr. ${a.vat_id}` : null,
+    a.vat_id ? vatZeile(a.vat_id) : null,
   ]
     .map((z) => (z ?? "").trim())
     .filter((z) => z.length > 0);

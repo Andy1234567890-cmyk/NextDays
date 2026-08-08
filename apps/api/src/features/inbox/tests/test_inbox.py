@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from src.core.security import AuthContext
 from src.features.channel_manager.channex_client import ChannexError
 from src.features.channel_manager.common import NUR_ANHANG_TEXT
+from src.features.inbox.ausloeser import anker_von, versatz_normieren
 from src.features.inbox.felder import FeldFehlt, Kontext, rendern, unbekannte_felder
 from src.features.inbox.schemas import InboxMessage
 from src.features.inbox.service import InboxError, InboxService
@@ -775,6 +776,118 @@ def test_compute_send_at_minuten_nach_abreise() -> None:
     assert dt == datetime(2026, 7, 15, 0, 15, tzinfo=UTC)
 
 
+def test_kanalfilter_trennt_schreibweise_nicht_von_der_marke() -> None:
+    """„Booking.com" (Maske) und „BookingCom" (Buchung) sind DERSELBE Kanal.
+
+    DER VORFALL: Die Oberfläche speichert die Schreibweise der Marke, die
+    Buchungen tragen die des Aggregators. Ein Vergleich nur über
+    Groß-/Kleinschreibung trennt beide, weil der Unterschied der PUNKT ist —
+    alle Booking.com-Buchungen fielen durch jeden Kanalfilter und bekamen keine
+    einzige Automail, während dieselbe Regel für Airbnb lief.
+    """
+    regel = {
+        "channels": ["myBestDays", "Booking.com", "Airbnb", "Vrbo", "Expedia"],
+        "property_ids": [],
+    }
+    for ota in (
+        "BookingCom", "Booking.com", "AirBNB", "Airbnb", "myBestDays",
+        # Rechtsformen/Zusätze hängen hinten an — dieselbe Toleranz wie im
+        # Buchungs-Import (`_ota_name_to_channel`).
+        "Booking.com B.V.", "Expedia Group", "Air BnB",
+    ):
+        assert InboxService._automation_matches(regel, "p1", ota), ota
+    # Ein NICHT gelisteter Kanal bleibt ausgeschlossen — der Schlüssel darf
+    # nicht so grob werden, dass er fremde Kanäle einsammelt.
+    assert not InboxService._automation_matches(regel, "p1", "Agoda")
+    # Der Präfix gilt nur nach VORN: „Notbooking" beginnt nicht mit „booking…".
+    assert not InboxService._automation_matches(regel, "p1", "Notbooking")
+    # Ohne Kanalangabe greift ein gesetzter Filter nicht.
+    assert not InboxService._automation_matches(regel, "p1", None)
+    # Leere Liste heißt weiterhin „alle Kanäle".
+    assert InboxService._automation_matches(
+        {"channels": [], "property_ids": []}, "p1", "Agoda"
+    )
+
+
+def test_booked_at_bleibt_utc_trotz_objekt_zeitzone() -> None:
+    """Ein fremder Zeitpunkt darf nicht in Ortszeit uminterpretiert werden.
+
+    `booked_at` steht in UTC. Wurde daraus nur die Wanduhrzeit „22:30" behalten
+    und diese mit der Objekt-Zeitzone kombiniert, verschob sich der Zeitpunkt um
+    den UTC-Offset: „30 Minuten nach Buchung" landete auf 21:00 UTC — 90 Minuten
+    VOR der Buchung, also sofort fällig (Wurzel 5b).
+    """
+    th = {"booked_at": "2026-08-07T22:30:00+00:00"}
+    dt = InboxService._compute_send_at(
+        "booking", 0, None, th, timezone_name="Europe/Copenhagen",
+        offset_unit="minutes", offset_value=30,
+    )
+    assert dt == datetime(2026, 8, 7, 23, 0, tzinfo=UTC)
+
+
+def test_send_time_ueberstimmt_den_buchungszeitpunkt_nicht() -> None:
+    """Bei Minuten/Stunden zählt der echte Anker, nicht die Uhrzeit der Regel.
+
+    „30 Minuten nach Buchung um 10:00" ist widersprüchlich. Gewann die Uhrzeit,
+    entstand ein Versand Stunden VOR der Buchung — und er ging sofort raus, weil
+    er innerhalb der Nachzügler-Grenze lag.
+    """
+    th = {"booked_at": "2026-08-07T18:45:00+00:00"}
+    dt = InboxService._compute_send_at(
+        "booking", 0, "10:00", th, offset_unit="minutes", offset_value=30
+    )
+    assert dt == datetime(2026, 8, 7, 19, 15, tzinfo=UTC)
+
+
+def test_stunden_versatz_ist_echte_dauer_ueber_dst() -> None:
+    """Stunden sind eine Dauer, keine Wanduhr-Verschiebung.
+
+    In der Umstellungsnacht (29.03.2026, 02:00→03:00) ergab die Rechnung über
+    die lokale Wanduhr real nur 5 statt 6 Stunden.
+    """
+    th = {"booked_at": "2026-03-28T21:00:00+00:00"}
+    dt = InboxService._compute_send_at(
+        "booking", 0, None, th, timezone_name="Europe/Copenhagen",
+        offset_unit="hours", offset_value=6,
+    )
+    assert dt == datetime(2026, 3, 29, 3, 0, tzinfo=UTC)
+
+
+def test_unbrauchbare_uhrzeit_bricht_die_planung_nicht_ab() -> None:
+    """'24:00' ist in Postgres ein gültiger `time`, in Python nicht.
+
+    Ohne Abfangen riss eine einzige so konfigurierte Regel die komplette
+    Neuplanung des Betriebs ab — alle Automails blieben still stehen (Wurzel 5).
+    """
+    th = {"arrival_date": "2026-08-10", "departure_date": "2026-08-14"}
+    assert InboxService._compute_send_at(
+        "arrival", -1, "24:00:00", th, offset_unit="days", offset_value=-1
+    ) is None
+
+
+def test_planung_normiert_falsches_vorzeichen_aus_der_db() -> None:
+    """Ein DB-Vorzeichen, das dem Auslöser widerspricht, darf nicht gelten.
+
+    Live passiert (07.08.2026): „Check-out-Anweisungen" stand als
+    `before_checkout` mit `offset_value=+1` in `message_automation` — die
+    Normierung greift nur beim Speichern über die API, die Planung las den Wert
+    roh. Die Automail ging deshalb einen Tag NACH der Abreise raus, an drei
+    Gäste, die schon weg waren („wir hoffen, Du hattest einen schönen
+    Aufenthalt" als Check-out-Anweisung). Die Planung leitet Anker und
+    Vorzeichen seither selbst aus dem Auslöser ab.
+    """
+    trigger = "before_checkout"
+    versatz = versatz_normieren(trigger, 1)  # DB trug +1
+    assert versatz == -1
+    th = {"arrival_date": "2026-08-03", "departure_date": "2026-08-06"}
+    dt = InboxService._compute_send_at(
+        anker_von(trigger), versatz, "20:00", th,
+        offset_unit="days", offset_value=versatz,
+    )
+    # Vorabend der Abreise, nicht der Tag danach.
+    assert dt == datetime(2026, 8, 5, 20, 0, tzinfo=UTC)
+
+
 def test_compute_send_at_ohne_uhrzeit_ist_mitternacht() -> None:
     """Keine feste Uhrzeit → Mitternacht des Ankertags, kein geratener Wert."""
     th = {"arrival_date": "2026-07-10"}
@@ -812,7 +925,11 @@ def test_anker_buchung_nimmt_booked_at_nicht_unsere_uhr() -> None:
     dt = InboxService._compute_send_at(
         "booking", 0, None, th, offset_unit="minutes", offset_value=5
     )
-    assert dt == datetime(2026, 2, 25, 5, 23, tzinfo=UTC)
+    # Sekundengenau: „5 Minuten nach der Buchung" heißt 05:18:54 + 5 min. Vorher
+    # wurde der Zeitpunkt in Datum + „HH:MM" zerlegt und die Sekunden fielen weg;
+    # dieselbe Zerlegung verschob den Wert um den UTC-Offset des Objekts, sobald
+    # eine Objekt-Zeitzone im Spiel war.
+    assert dt == datetime(2026, 2, 25, 5, 23, 54, tzinfo=UTC)
 
 
 def test_anker_buchung_ohne_booked_at_plant_nicht() -> None:

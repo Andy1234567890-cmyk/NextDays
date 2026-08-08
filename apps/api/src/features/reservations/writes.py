@@ -44,6 +44,74 @@ _ACTOR_FROM_CTX = object()
 class WritesMixin(ReservationsBase):
     """Schreib-Endpunkte des reservations-Slice."""
 
+    def _record_commission(
+        self,
+        tenant_id: str,
+        reservation_id: str,
+        channel: str | None,
+        gross_amount: float | None,
+        currency: str | None,
+    ) -> None:
+        """Externe OTA-Provision (0,5 %) für eine im PMS angelegte/geänderte
+        Buchung erfassen — der Schwesterpfad zu
+        `channel_manager.bookings_sync._record_commission_safe`, damit eine
+        manuell erfasste Booking-/Airbnb-/Vrbo-Buchung dieselbe Ledger-Zeile
+        bekommt wie eine importierte.
+
+        Der Service entscheidet selbst, ob eine Zeile fällig ist (nur externe
+        Kanäle, nur veröffentlichte Objekte) und ist über UNIQUE(reservation_id)
+        idempotent (Wurzel 2) — hier KEINE eigene Idempotenz nachbauen. Fehlt die
+        Währung, wirft er 422; das wird bewusst nicht durch einen Ersatzwert
+        überdeckt (Wurzel 4), sondern hier best-effort geloggt.
+
+        Best-effort: eine fehlgeschlagene Erfassung darf die bereits vollzogene
+        Buchung NICHT zurückdrehen (Wurzel 5) — mit dem echten Fehlergrund im Log,
+        sonst ist der Ausfall unsichtbar.
+        """
+        if self._client is None or not channel:
+            return
+        try:
+            from src.features.subscriptions.service import (  # noqa: PLC0415
+                SubscriptionsService,
+            )
+
+            SubscriptionsService(service_client=self._client).record_commission(
+                tenant_id,
+                reservation_id=reservation_id,
+                channel=channel,
+                gross_amount=float(gross_amount or 0),
+                currency=currency or "",
+            )
+        except Exception as exc:  # noqa: BLE001 — best-effort, Buchung bleibt bestehen
+            log.warning(
+                "commission_record_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                error=str(exc)[:200],
+            )
+
+    def _cancel_commission(self, tenant_id: str, reservation_id: str) -> None:
+        """Storno → offene Provisionszeile entfernen (Gegenzustand, Wurzel 1) —
+        sonst bliebe die Provision einer stornierten Buchung in der Monatssumme.
+        Bereits fakturierte Zeilen bleiben. Best-effort wie die Erfassung."""
+        if self._client is None:
+            return
+        try:
+            from src.features.subscriptions.service import (  # noqa: PLC0415
+                SubscriptionsService,
+            )
+
+            SubscriptionsService(service_client=self._client).cancel_commission(
+                tenant_id, reservation_id=reservation_id
+            )
+        except Exception as exc:  # noqa: BLE001 — best-effort, Storno bleibt bestehen
+            log.warning(
+                "commission_cancel_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                error=str(exc)[:200],
+            )
+
     def create(self, ctx: AuthContext, req: ReservationCreate) -> ReservationResponse:
         tenant_id = self._require_tenant(ctx)
 
@@ -246,6 +314,17 @@ class WritesMixin(ReservationsBase):
         # bereits angelegte Buchung nicht kippen (Wurzel 5).
         self._record_dynpricing_usage(
             tenant_id, str(row["id"]), total_amount, row.get("currency"),
+        )
+
+        # Externe Provision (0,5 %): eine im PMS erfasste OTA-Buchung
+        # (booking/airbnb/vrbo/ota_other) ist provisionspflichtig wie eine
+        # importierte — ohne diesen Aufruf blieb sie unberechnet. Derselbe
+        # Betrag/dieselbe Währung wie bei Dynpricing, damit beide Ledger
+        # denselben Umsatz sehen. Eigene Kanäle (direct/portal) filtert der
+        # Service selbst weg.
+        self._record_commission(
+            tenant_id, str(row["id"]), row.get("channel"), total_amount,
+            row.get("currency"),
         )
 
         # Planmäßige Aufgaben aus den Regeln erzeugen (0272).
@@ -595,6 +674,19 @@ class WritesMixin(ReservationsBase):
             self._recompute_dynamic_pricing(tenant_id, old_property)
         # Aufgaben der Regeln mitziehen statt neue anzulegen (Wurzel 1, 0272).
         self._sync_task_rules(tenant_id, reservation_id)
+        # Provision nachziehen: ein Upsell (reprice) ändert den Umsatz, ein
+        # Objektwechsel kann das Objekt in einen anderen Veröffentlichungs-
+        # Status bringen — beides muss in der offenen Ledger-Zeile ankommen.
+        # Der Service zieht nur 'pending'-Zeilen nach (fakturierte bleiben fix).
+        self._record_commission(
+            tenant_id,
+            reservation_id,
+            current.get("channel"),
+            float(
+                update_fields.get("total_amount", current.get("total_amount")) or 0
+            ),
+            current.get("currency"),
+        )
         log.info(
             "reservation_moved",
             reservation_id=reservation_id,
@@ -751,6 +843,11 @@ class WritesMixin(ReservationsBase):
         # 0,5 %-Nutzungsmeldung dieser Buchung zurücknehmen (Wurzel 1) — sonst
         # bliebe der Umsatz einer stornierten Buchung in der Monatssumme.
         self._cancel_dynpricing_usage(tenant_id, reservation_id)
+
+        # Offene Provisionszeile dieser Buchung entfernen (Gegenzustand,
+        # Wurzel 1) — eine stornierte OTA-Buchung darf nicht mit abgerechnet
+        # werden.
+        self._cancel_commission(tenant_id, reservation_id)
 
         # Audit: append-only Storno-Historie (Best-Effort — Log-Fehler darf die
         # Stornierung nicht kippen).
@@ -1158,6 +1255,14 @@ class WritesMixin(ReservationsBase):
             tenant_id, property_id, [d.isoformat() for d in nights], reservation_id,
         )
 
+        # Ledger-Gegenzustand wie im Storno (Wurzel 1): eine abgelehnte Anfrage
+        # ist nie zu einer Buchung geworden und darf weder Provision noch die
+        # 0,5-%-Nutzung tragen. Anfragen aus dem OTA-Import (Request to Book)
+        # bringen beide Zeilen bereits mit — ohne diese Aufrufe wanderten sie in
+        # die Monatssumme, obwohl der Verkauf nie zustande kam.
+        self._cancel_dynpricing_usage(tenant_id, reservation_id)
+        self._cancel_commission(tenant_id, reservation_id)
+
         self._log_event(
             tenant_id, reservation_id, "request_declined", by_user_id=ctx.user_id,
             detail={"reason": clean_reason} if clean_reason else None,
@@ -1206,6 +1311,12 @@ class WritesMixin(ReservationsBase):
                     r["tenant_id"], r["property_id"],
                     [d.isoformat() for d in nights], r["id"],
                 )
+                # Gegenzustand wie bei decline (Wurzel 1): eine verfallene
+                # Anfrage wurde nie verkauft und darf keine offene Provisions-/
+                # Nutzungszeile hinterlassen. Beide Helfer sind selbst
+                # best-effort und loggen je Reservierung — kein zweiter try.
+                self._cancel_dynpricing_usage(r["tenant_id"], r["id"])
+                self._cancel_commission(r["tenant_id"], r["id"])
                 self._log_event(
                     r["tenant_id"], r["id"], "request_expired", by_user_id=None,
                 )

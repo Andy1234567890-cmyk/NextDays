@@ -678,9 +678,22 @@ class AriPushMixin:
         superseded = self._newer_covered_days(
             db, property_id, created_at, outbox_id
         )
-        push_ranges = _group_iso_days_to_ranges(
-            set(_iso_days(date_from.isoformat(), date_to.isoformat())) - superseded
-        )
+        # Vergangene Tage weglassen — Channex weist sie ab (dieselbe Begründung
+        # steht seit jeher in `_stop_sell_values`, dort ist die Klemmung drin).
+        # Ohne sie scheitert der GANZE Request, sobald eine laufende Buchung
+        # storniert/verkürzt wird: `_free_ota_nights` schickt dann eine
+        # zusammenhängende Spanne, die in der Vergangenheit beginnt. Der Cron
+        # baut dieselbe Payload zehnmal neu und gibt auf — mit der Folge, dass
+        # auch die ZUKÜNFTIGEN freigewordenen Nächte nie bei den OTAs ankommen
+        # und verkaufsgesperrt bleiben (Wurzel 1: der Gegenzustand der Freigabe
+        # wird nicht wirksam).
+        heute = date.today().isoformat()
+        tage = {
+            d
+            for d in _iso_days(date_from.isoformat(), date_to.isoformat())
+            if d >= heute
+        }
+        push_ranges = _group_iso_days_to_ranges(tage - superseded)
 
         # Trace-Kontext für den Client-Sink: der schnelle availability-Delta-Pfad
         # (Buchung/Storno/Kalender-Block, Tests 9/10). Ohne diese Zeile erschiene die
@@ -2198,30 +2211,42 @@ class AriPushMixin:
         gezählt (sonst würde ein älterer Wert für einen Lückentag fälschlich
         superseded). Generische Zeilen decken date_from..date_to durchgehend ab."""
         payload = row.get("payload") or {}
+
+        def _maskiert(tage: set[str]) -> set[str]:
+            """Wochentags-Maske anwenden: eine Zeile, die nur samstags gilt,
+            deckt auch nur die Samstage ab. Ohne diese Einschränkung verdrängt
+            die Zeile „freie Tage auf false" die Zeile „gesperrte Tage auf true"
+            vollständig (gleicher kind, gleicher Zeitraum, beide property-weit) —
+            der Cron-Backstop höbe die gerade gesetzte Sperre wieder auf.
+
+            Gilt für ALLE Zweige. Vorher stand die Prüfung erst hinter den
+            spans-/segments-Rückgaben, also genau NICHT für stop_sell: ein
+            `clear_stop_sell` mit Wochentagen zählte als Abdeckung des ganzen
+            Zeitraums und hakte eine ältere, unmaskierte `stop_sell=true`-Zeile
+            als überholt ab — Mo–Fr gingen dann nie an Channex, die OTAs
+            verkauften bis zum nächsten Full-Sync Tage, die gesperrt sein
+            sollten.
+            """
+            maske = payload.get("days")
+            if isinstance(maske, list) and maske:
+                erlaubt = {i for i, n in enumerate(_WEEKDAY_NAMES) if n in maske}
+                return {t for t in tage if date.fromisoformat(t).weekday() in erlaubt}
+            return tage
+
         days: set[str] = set()
         if row["kind"] == "stop_sell" and payload.get("spans"):
             for a, b in payload["spans"]:
                 days.update(_iso_days(str(a), str(b)))
-            return days
+            return _maskiert(days)
         if row["kind"] == "rate" and payload.get("segments") is not None:
             for seg in payload["segments"]:
                 days.update(_iso_days(str(seg["date_from"]), str(seg["date_to"])))
-            return days
+            return _maskiert(days)
         if row["kind"] == "restriction_rows" and payload.get("rows") is not None:
             for r in payload["rows"]:
                 days.update(_iso_days(str(r["date_from"]), str(r["date_to"])))
-            return days
-        alle = set(_iso_days(str(row["date_from"]), str(row["date_to"])))
-        # Wochentags-Maske: eine Zeile, die nur samstags gilt, deckt auch nur die
-        # Samstage ab. Ohne diese Einschränkung würde die Zeile „freie Tage auf
-        # false" die Zeile „gesperrte Tage auf true" vollständig verdrängen
-        # (gleicher kind, gleicher Zeitraum, beide property-weit) — der Cron-
-        # Backstop höbe die gerade gesetzte Sperre wieder auf.
-        maske = payload.get("days")
-        if isinstance(maske, list) and maske:
-            erlaubt = {i for i, n in enumerate(_WEEKDAY_NAMES) if n in maske}
-            return {t for t in alle if date.fromisoformat(t).weekday() in erlaubt}
-        return alle
+            return _maskiert(days)
+        return _maskiert(set(_iso_days(str(row["date_from"]), str(row["date_to"]))))
 
     @staticmethod
     def _rate_row_plan_ids(row: dict[str, Any]) -> set[str | None]:

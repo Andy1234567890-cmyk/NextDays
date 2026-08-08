@@ -89,6 +89,7 @@ class AccountService:
         mfa = self._get_mfa(ctx.user_id)
         auth_user = self._get_auth_user(ctx.user_id)
         has_password = self._has_password(auth_user)
+        row = self._email_nachziehen(ctx.user_id, row, auth_user)
         # Eine Identität: der Registrierende IST der Super-Admin — sein Konto
         # zeigt Name/Telefon aus den /konto-Kontaktdaten der Agentur.
         agency = (
@@ -191,10 +192,35 @@ class AccountService:
     # --- E-Mail / Name / Passwort -----------------------------------------
 
     def update_email(self, ctx: AuthContext, req: UpdateEmailRequest) -> AccountResponse:
+        """E-Mail wechseln — mit Re-Auth und Doppel-Opt-in (Wurzel 7).
+
+        Vorher konnte jeder mit einem gültigen Access-Token die Adresse ohne
+        jeden Nachweis auf eine fremde umstellen (`email_confirm=True` bestätigte
+        sie zusätzlich sofort). Ein anschließender Passwort-Reset auf die neue
+        Adresse übernimmt damit das Konto, bei einem `admin` den ganzen Tenant.
+        Der Passwortwechsel direkt darunter macht es seit jeher richtig — hier
+        fehlte dieselbe Prüfung.
+
+        `email_confirm` wird bewusst NICHT gesetzt: GoTrue verschickt dann die
+        Bestätigungsmail an die NEUE Adresse und schaltet erst nach dem Klick um.
+        Bis dahin bleibt die alte Adresse gültig — wer sich vertippt oder ein
+        fremdes Postfach angibt, sperrt sich nicht aus.
+        """
         self._ensure_user_row(ctx)
+        auth_user = self._get_auth_user(ctx.user_id)
+        # Wie in update_password: nur erzwingen, wenn überhaupt ein Passwort
+        # existiert (OAuth-Konten haben keins).
+        if self._has_password(auth_user):
+            if req.current_password is None:
+                raise AuthError("Aktuelles Passwort erforderlich.", status_code=400)
+            aktuelle_email = self._auth_email(auth_user)
+            if not aktuelle_email or not self._password_ok(
+                aktuelle_email, req.current_password.get_secret_value()
+            ):
+                raise AuthError("Aktuelles Passwort ist falsch.", status_code=401)
         try:
             self._service.auth.admin.update_user_by_id(
-                ctx.user_id, {"email": req.new_email, "email_confirm": True}
+                ctx.user_id, {"email": req.new_email}
             )
         except Exception as exc:
             log.warning("update_email_failed", user_id=ctx.user_id, error=str(exc))
@@ -202,10 +228,14 @@ class AccountService:
                 "E-Mail konnte nicht geändert werden (evtl. bereits vergeben).",
                 status_code=409,
             ) from exc
-        self._service.table("users").update({"email": req.new_email}).eq(
-            "id", ctx.user_id
-        ).execute()
-        log.info("email_updated", user_id=ctx.user_id)
+        # `public.users.email` NICHT mitziehen: die Adresse gilt erst, wenn der
+        # Nutzer den Link in der neuen Mailbox bestätigt hat. Ein sofortiger
+        # Schreibvorgang hier würde die Anzeige auf eine Adresse stellen, unter
+        # der das Konto (noch) gar nicht erreichbar ist — und liefe bei einem
+        # Fehlschlag von GoTrue auseinander (Wurzel 1). Den Spiegel gleicht
+        # `_email_nachziehen` beim nächsten Kontoabruf an, sobald GoTrue die
+        # neue Adresse führt.
+        log.info("email_update_bestaetigung_gesendet", user_id=ctx.user_id)
         return self.get_account(ctx)
 
     def update_name(self, ctx: AuthContext, req: UpdateNameRequest) -> AccountResponse:
@@ -867,6 +897,42 @@ class AccountService:
     def _get_mfa(self, user_id: str) -> dict | None:
         res = self._service.table("user_mfa").select("*").eq("user_id", user_id).execute()
         return res.data[0] if res.data else None
+
+    def _email_nachziehen(
+        self, user_id: str, row: dict, auth_user: object | None
+    ) -> dict:
+        """`public.users.email` an GoTrue angleichen, wenn sie auseinanderlaufen.
+
+        GoTrue ist die Wahrheit: dort schaltet die Adresse erst um, wenn der
+        Nutzer den Bestätigungslink in der NEUEN Mailbox geklickt hat
+        (`update_email` setzt bewusst kein `email_confirm`). Genau dann zieht
+        dieser Abgleich die Spiegelspalte nach — sie ist Anzeige- und
+        Match-Quelle und stünde sonst dauerhaft auf der alten Adresse.
+        `_ensure_user_row` leistet das nicht: es legt nur an, wenn gar keine
+        Zeile existiert.
+
+        Best-effort (Wurzel 5): schlägt der Schreibvorgang fehl, ist die
+        Anzeige aus GoTrue immer noch korrekt — der Kontoabruf darf daran
+        nicht scheitern.
+        """
+        echte_email = self._auth_email(auth_user)
+        # `_auth_email` liest ein beliebiges Attribut vom SDK-Objekt — nur ein
+        # echter String darf den Spiegel überschreiben, sonst schreibt ein
+        # unerwarteter Rückgabewert Unsinn in die Spalte (Wurzel 4).
+        if not isinstance(echte_email, str) or not echte_email.strip():
+            return row
+        if row.get("email") == echte_email:
+            return row
+        try:
+            self._service.table("users").update({"email": echte_email}).eq(
+                "id", user_id
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — reiner Spiegel, kein Hauptpfad
+            log.warning("email_spiegel_nicht_aktualisiert", user_id=user_id,
+                        error=str(exc)[:200])
+            return row
+        log.info("email_spiegel_aktualisiert", user_id=user_id)
+        return {**row, "email": echte_email}
 
     def _get_auth_user(self, user_id: str) -> object | None:
         try:

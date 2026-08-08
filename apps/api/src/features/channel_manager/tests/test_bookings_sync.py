@@ -131,10 +131,11 @@ def test_buchung_traegt_ihr_objekt() -> None:
     from src.features.channel_manager.bookings_sync import BookingsSyncMixin
 
     db = _MapTabelle([
-        {"id": "map-1", "tenant_id": "t1",
+        {"id": "map-1", "tenant_id": "t1", "property_id": "prop-1",
          "channex_property_id": "cx-prop-1", "created_at": "2026-01-01"},
     ])
-    treffer = BookingsSyncMixin._property_map_id(db, "t1", "cx-prop-1")
+    # Ohne `rooms` (Ferienobjekt) bleibt es beim 1:1-Weg über die Property-Map.
+    treffer = BookingsSyncMixin()._property_map_id(db, "t1", "cx-prop-1")
     assert treffer == "map-1"
 
 
@@ -148,5 +149,6 @@ def test_ungemapptes_inserat_blockiert_die_buchung_nicht() -> None:
     from src.features.channel_manager.bookings_sync import BookingsSyncMixin
 
     db = _MapTabelle([])
-    assert BookingsSyncMixin._property_map_id(db, "t1", "cx-unbekannt") is None
-    assert BookingsSyncMixin._property_map_id(db, "t1", None) is None
+    sync = BookingsSyncMixin()
+    assert sync._property_map_id(db, "t1", "cx-unbekannt") is None
+    assert sync._property_map_id(db, "t1", None) is None

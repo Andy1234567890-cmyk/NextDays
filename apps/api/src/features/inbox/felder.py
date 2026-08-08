@@ -548,9 +548,14 @@ def aufloesen_schluessel(roh: str) -> str:
         return roh
     return _ALTNAMEN.get(roh.lower().replace("-", "_"), roh)
 
-# `children` darf legitim 0 sein („0 Kinder" ist eine Aussage, kein fehlender
-# Wert) — anders als die übrigen Felder, bei denen leer = Datenfehler ist.
-_NULL_IST_GUELTIG = frozenset({"children"})
+# Früher stand `children` hier, damit „0 Kinder" als Aussage durchgeht. Das war
+# überflüssig und schädlich zugleich: die Prüfung darunter fragt `wert is None`,
+# und 0 ist nicht None — eine echte Null kam also ohnehin durch. Der Eintrag
+# griff einzig, wenn die Kinderzahl GAR NICHT geliefert wurde (OTA-Payload ohne
+# `occupancy.children`), und machte daraus die Behauptung „mit 0 Kindern"
+# (Wurzel 4: kein erfundener Ersatzwert). Fehlt die Angabe, fehlt sie — dann
+# meldet der Versand das Feld wie jedes andere.
+_NULL_IST_GUELTIG: frozenset[str] = frozenset()
 
 
 def benutzte_felder(text: str) -> list[str]:
@@ -596,7 +601,7 @@ def rendern(text: str, kontext: Kontext) -> str:
         if wert is None and schluessel not in _NULL_IST_GUELTIG:
             fehlt.append(schluessel)
             continue
-        werte[geschrieben] = str(wert if wert is not None else 0)
+        werte[geschrieben] = str(wert)
     if fehlt:
         raise FeldFehlt(fehlt)
     return MUSTER.sub(lambda m: werte.get(m.group(1), m.group(0)), text)

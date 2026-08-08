@@ -16,6 +16,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from typing import Any
 
+from postgrest.exceptions import APIError
 from stripe import StripeClient
 from stripe import StripeError as _StripeError
 from supabase import Client
@@ -1199,7 +1200,14 @@ class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin):
 
     @staticmethod
     def _einzugstag(periode: str) -> str:
-        """1. des Folgemonats — dann wird die Provision eingezogen."""
+        """1. des Folgemonats — der FAKTURIERUNGS-Tag, nicht der Belastungstag.
+
+        Dann bucht `bill_pending_commissions` die Provision als Invoice-Item;
+        eingezogen wird sie erst mit der nächsten Abo-Rechnung (Details dort).
+        Deshalb in der UI NIE „wird eingezogen", sondern „abgerechnet am …,
+        Einzug mit der nächsten Abo-Rechnung" — sonst steht dort eine
+        Falschaussage gegenüber dem Kunden.
+        """
         jahr, monat = (int(t) for t in periode.split("-")[:2])
         return (
             f"{jahr + 1}-01-01" if monat == _DEZEMBER else f"{jahr}-{monat + 1:02d}-01"
@@ -1223,28 +1231,28 @@ class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin):
     ) -> None:
         """Provisionszeile für eine EXTERNE OTA-Buchung anlegen/aktualisieren.
         Idempotent über UNIQUE(reservation_id) (Wurzel 2: OTA-Resync/Redelivery
-        erzeugt keine zweite Zeile). Nur solange die Zeile noch 'pending' ist wird
-        der Betrag nachgezogen (eine bereits fakturierte Provision bleibt fix —
-        sonst würde eine nachträgliche OTA-Preisänderung eine gestellte Rechnung
-        verfälschen). Nur externe Kanäle; eigene/portal ignorieren. Und nur für
-        VERÖFFENTLICHTE Objekte (status='active') — ein Entwurf ist nicht im
-        Verkauf und wird nicht berechnet."""
+        erzeugt keine zweite Zeile); SELECT und INSERT liegen nicht in einer
+        Transaktion, den Race deckt derselbe Backstop ab (23505 → UPDATE). Nur
+        solange die Zeile noch 'pending' ist wird der Betrag nachgezogen (eine
+        bereits fakturierte Provision bleibt fix — sonst würde eine nachträgliche
+        OTA-Preisänderung eine gestellte Rechnung verfälschen). Nur externe
+        Kanäle; eigene/portal ignorieren. Und nur für VERÖFFENTLICHTE Objekte
+        (status='active') — ein Entwurf ist nicht im Verkauf."""
         if self._db is None:
             raise SubscriptionsError("Subscriptions-DB nicht verfügbar.", status_code=500)
         db = self._db
-        # Kein Provisionsgrund (mehr): eigener/portal-Kanal ODER 0-Umsatz. Falls
-        # aus einer FRÜHEREN Revision noch eine offene Provisionszeile existiert
-        # (Kanalwechsel extern→eigen, oder Betrag per Resync auf 0), muss die weg
-        # (Gegenzustand, Wurzel 1) — sonst bliebe eine falsche Provision stehen.
+        # Kein Provisionsgrund (mehr): eigener/portal-Kanal ODER 0-Umsatz. Eine
+        # aus einer FRÜHEREN Revision noch offene Zeile (Kanalwechsel
+        # extern→eigen, Betrag per Resync auf 0) muss weg (Gegenzustand,
+        # Wurzel 1) — sonst bliebe eine falsche Provision stehen.
         if channel not in EXTERNAL_CHANNELS or gross_amount <= 0:
             self.cancel_commission(tenant_id, reservation_id=reservation_id)
             return
-        # Provision fällt NUR für veröffentlichte Objekte an (status='active').
-        # Ein Entwurf ist nicht im Verkauf und wird auch nicht berechnet — auch
-        # dann nicht, wenn über das verknüpfte OTA-Inserat noch Buchungen
-        # eingehen. Wird ein Objekt später zurückgezogen, muss eine offene Zeile
-        # verschwinden (Gegenzustand, Wurzel 1) — deshalb derselbe cancel-Pfad
-        # wie oben, nicht bloß ein `return`.
+        # Provision NUR für veröffentlichte Objekte (status='active'): ein
+        # Entwurf ist nicht im Verkauf — auch dann nicht, wenn über das
+        # verknüpfte OTA-Inserat noch Buchungen eingehen. Wird ein Objekt später
+        # zurückgezogen, muss eine offene Zeile verschwinden (Wurzel 1) —
+        # deshalb derselbe cancel-Pfad wie oben, nicht bloß ein `return`.
         if not self._objekt_veroeffentlicht(db, tenant_id, reservation_id):
             self.cancel_commission(tenant_id, reservation_id=reservation_id)
             return
@@ -1254,14 +1262,6 @@ class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin):
                 status_code=422,
             )
         rate = self.commission_rate()
-        commission = round(gross_amount * rate, 2)
-        existing = (
-            db.table("commission_ledger")
-            .select("id, status")
-            .eq("reservation_id", reservation_id)
-            .limit(1)
-            .execute()
-        ).data
         payload = {
             "tenant_id": tenant_id,
             "reservation_id": reservation_id,
@@ -1269,16 +1269,45 @@ class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin):
             "currency": currency,
             "gross_amount": gross_amount,
             "rate": rate,
-            "commission_amount": commission,
+            "commission_amount": round(gross_amount * rate, 2),
         }
-        if existing:
-            if existing[0]["status"] != "pending":
-                return  # schon fakturiert/bezahlt → nicht mehr anfassen
+        if self._provision_nachziehen(db, payload):
+            return
+        try:
+            db.table("commission_ledger").insert(payload).execute()
+        except APIError as exc:
+            # 23505 = UNIQUE(reservation_id) aus 0118: ein paralleler Aufruf
+            # (Doppelklick, move+reprice neben dem OTA-Resync) hat zwischen
+            # SELECT und INSERT eingefügt. Der Verlierer darf nicht scheitern,
+            # sonst bliebe SEIN Betrag ungeschrieben — zurück in den UPDATE-Pfad.
+            if getattr(exc, "code", None) != "23505":
+                raise
+            if not self._provision_nachziehen(db, payload):
+                raise
+
+    @staticmethod
+    def _provision_nachziehen(db: Client, payload: dict[str, Any]) -> bool:
+        """Bestehende Ledger-Zeile aktualisieren. True = erledigt (Zeile war da),
+        False = es gibt keine, der Aufrufer muss einfügen. Nur 'pending' wird
+        nachgezogen — eine fakturierte bleibt fix, gilt aber als erledigt. Beide
+        Zugriffe sind auf den Tenant gescopet (Wurzel 3: service_role umgeht RLS
+        — ein Fremdscope darf auch bei fremder reservation_id nicht greifen)."""
+        tenant_id = payload["tenant_id"]
+        existing = (
+            db.table("commission_ledger")
+            .select("id, status")
+            .eq("reservation_id", payload["reservation_id"])
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not existing:
+            return False
+        if existing[0]["status"] == "pending":
             db.table("commission_ledger").update(payload).eq(
                 "id", existing[0]["id"]
-            ).execute()
-        else:
-            db.table("commission_ledger").insert(payload).execute()
+            ).eq("tenant_id", tenant_id).execute()
+        return True
 
     def _objekt_veroeffentlicht(
         self, db: Client, tenant_id: str, reservation_id: str
@@ -1288,7 +1317,6 @@ class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin):
         Veröffentlicht = ``properties.status='active'`` (genau das, was
         ``publish()`` setzt und ``unpublish()`` zurücknimmt). Entwürfe und
         stillgelegte Objekte sind nicht im Verkauf und tragen keine Provision.
-
         Beide Zugriffe sind auf den Tenant gescopet (Wurzel 3: service_role
         umgeht RLS). Fail-CLOSED (Wurzel 5): fehlt die Reservierung, das Objekt
         oder der Status, wird KEINE Provision erfasst — lieber nichts berechnen
@@ -1390,7 +1418,20 @@ class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin):
         umgerechnet) gekappt. Idempotent: bereits fakturierte Zeilen (period
         gesetzt) werden nicht erneut berechnet (Wurzel 2). Gibt die Zahl der
         abgerechneten Zeilen zurück. Kein Abo → klar fehlschlagen, nicht still
-        verschlucken (Wurzel 5)."""
+        verschlucken (Wurzel 5).
+
+        FAKTURIEREN ≠ EINZIEHEN, bewusst so und hier festgehalten, damit es
+        niemand für einen vergessenen Schritt hält: der Lauf erzeugt NUR ein
+        `invoice_items.create` auf den Customer, kein `invoices.create`/
+        `finalize_invoice`/`pay`. Das Item bleibt bei Stripe offen und läuft mit
+        der NÄCHSTEN regulären Abo-Rechnung mit; erst deren Einzug belastet die
+        Zahlungsmethode (Abo-Erneuerung am 17. → Belastung am 17., nicht am 1.).
+        Der Monatslauf (Worker `_commission_tick`) setzt also nur den
+        Fakturierungstag — anders als `_invoice_prorations_now` (create +
+        finalize, sofortiger Einzug), denn eine eigene finalisierte Rechnung am
+        1. ergäbe neben dem Abo zwei Belastungen im selben Monat. Für die UI:
+        `CommissionMonth.charge_date` ist der Fakturierungstag, „wird am 1.
+        eingezogen" wäre falsch."""
         if self._db is None:
             raise SubscriptionsError("Subscriptions-DB nicht verfügbar.", status_code=500)
         db = self._db

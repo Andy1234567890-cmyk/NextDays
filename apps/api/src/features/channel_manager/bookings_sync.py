@@ -1624,11 +1624,22 @@ class BookingsSyncMixin:
         # >30 min pending (Channex-Ausfall), darf der Import den ALTEN Channex-
         # Wert nicht über die frischere lokale Wahrheit spiegeln; der Outbox-
         # Retry repariert nur Channex, nicht den lokalen Kalender.
+        #
+        # `failed` gehört aus demselben Grund dazu: Nach zehn Fehlversuchen
+        # kippt eine Absicht von `pending` auf `failed` und war damit weder
+        # „frisch" noch „offen" — der Import las dann den bei Channex NIE
+        # angekommenen alten Wert und schrieb ihn lokal zurück (gab der Host
+        # während des Ausfalls einen Tag frei, machte der Import ihn wieder
+        # `blocked`). Der nächste Full-Sync pushte die korrumpierte lokale
+        # Wahrheit — der Fehler wurde dauerhaft.
         for r in (
             db.table("ari_outbox")
             .select("date_from, date_to")
             .eq("property_id", property_id)
-            .or_(f"created_at.gte.{recent_cutoff},status.eq.pending")
+            .or_(
+                f"created_at.gte.{recent_cutoff},"
+                "status.eq.pending,status.eq.failed"
+            )
             .execute()
         ).data or []:
             if r.get("date_from") and r.get("date_to"):
@@ -1768,6 +1779,10 @@ class BookingsSyncMixin:
             # stop_sell der Channex-Default eines leeren Objekts, kein echter OTA-
             # Stop → nicht importieren (sonst 365 anonyme channex-stop_sells, die
             # alle Plattformen sperren). qty>0/echte Freigaben laufen darüber nicht.
+            # Der ECHTE Portal-Stand vor dem Warm-up-Guard — die Aufhebung unten
+            # muss darauf sehen, nicht auf das geleerte `stopped`, sonst löschte
+            # sie beim Warm-up alle bestehenden Import-Zeilen.
+            portal_stopped = set(stopped)
             if stopped and not has_pushed:
                 log.info(
                     "import_ari_stop_sell_suppressed_no_push_history",
@@ -1775,6 +1790,33 @@ class BookingsSyncMixin:
                     days=len(stopped),
                 )
                 stopped = set()
+            # Echo-Fenster für die AUFHEBUNG (Wurzel 2). `clear_stop_sell`
+            # löscht die lokale Zeile und pusht `stop_sell=false` asynchron;
+            # Channex verarbeitet ARI mit Sekunden-Verzug. Läuft der Import
+            # in dieses Fenster — oder hängt der false-Push noch in der
+            # Restriktions-Outbox —, liefert Channex den ALTEN `true`-Wert.
+            # Der Guard oben prüft nur, ob lokal ein Eintrag EXISTIERT; die
+            # Zeile wurde aber gerade gelöscht, also legte der Import den
+            # eben aufgehobenen Stop sofort wieder an. Für die Setzen-
+            # Richtung gibt es dieses Fenster längst (`recent_push_days`
+            # über `ari_outbox`) — für Restriktionen fehlte es.
+            eigene_push_tage: set[str] = set()
+            for r in (
+                db.table("ari_restriction_outbox")
+                .select("payload, status, created_at")
+                .eq("property_id", property_id)
+                .eq("kind", "stop_sell")
+                .or_(
+                    f"created_at.gte.{recent_cutoff},"
+                    "status.eq.pending,status.eq.failed"
+                )
+                .execute()
+            ).data or []:
+                for a, b in ((r.get("payload") or {}).get("spans") or []):
+                    cur, last = date.fromisoformat(str(a)), date.fromisoformat(str(b))
+                    while cur <= last:
+                        eigene_push_tage.add(cur.isoformat())
+                        cur += timedelta(days=1)
             if stopped:
                 # Nur die OBJEKT-Ebene zählt als „schon gestoppt" — ein plan-
                 # genauer Hotel-Stopp (rate_plan_id gesetzt, 0152) darf den
@@ -1810,6 +1852,10 @@ class BookingsSyncMixin:
                 for d in stopped:
                     if d in existing_stops or d in booked_days:
                         continue
+                    if d in eigene_push_tage:
+                        # Unser eigener, noch nicht durchgelaufener Push — der
+                        # Channex-Wert ist hier veraltet, nicht die Wahrheit.
+                        continue
                     db.table("stop_sell").upsert(
                         {
                             "tenant_id": tenant_id,
@@ -1820,6 +1866,46 @@ class BookingsSyncMixin:
                         on_conflict="property_id,date,rate_plan_id",
                     ).execute()
                     result["stop_sell"] += 1
+            # Gegenzustand (Wurzel 1): Ein FRÜHER importierter OTA-Stop, den das
+            # Portal inzwischen aufgehoben hat, muss auch bei uns verschwinden.
+            # Ohne diesen Schritt kannte der Import nur die Setzen-Richtung, und
+            # der nächtliche Full-Sync las die verwaiste Zeile und pushte
+            # `stop_sell: true` zurück an Channex — der extern aufgehobene Stop
+            # wurde jede Nacht neu verhängt und beim nächsten Import als „schon
+            # da" übersprungen. Ein geschlossener Kreis: der Tag blieb auf allen
+            # Portalen gesperrt, bis jemand die Zeile von Hand löschte.
+            #
+            # Angefasst werden AUSSCHLIESSLICH eigene Import-Zeilen
+            # (source='channex', objektweit): manuelle Stopps des Betriebs und
+            # plan-genaue Hotel-Stopps bleiben unberührt.
+            if has_pushed:
+                verwaist = [
+                    r["id"]
+                    for r in (
+                        db.table("stop_sell")
+                        .select("id, date")
+                        .eq("property_id", property_id)
+                        .eq("source", "channex")
+                        .is_("rate_plan_id", "null")
+                        .gte("date", d_from)
+                        .lte("date", d_to)
+                        .execute()
+                    ).data
+                    or []
+                    # Ein Tag, für den gerade unser eigener Stop-Sell-Push
+                    # unterwegs ist, ist bei Channex noch nicht gesetzt — er
+                    # darf hier nicht als „vom Portal aufgehoben" gelten.
+                    if r["date"] not in portal_stopped
+                    and r["date"] not in eigene_push_tage
+                ]
+                for stop_id in verwaist:
+                    db.table("stop_sell").delete().eq("id", stop_id).execute()
+                if verwaist:
+                    log.info(
+                        "import_ari_stop_sell_aufgehoben",
+                        tenant_id=tenant_id, property_id=property_id,
+                        days=len(verwaist),
+                    )
         return result
 
     def import_rooms_rates_for_property(

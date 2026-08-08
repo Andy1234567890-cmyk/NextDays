@@ -229,3 +229,53 @@ def test_already_exists_gilt_als_zielzustand() -> None:
     )
 
     assert "rp-neu" in channex.rate_plan_ids
+
+
+def test_airbnb_rate_plan_id_wird_nie_gesetzt() -> None:
+    """`airbnb_rate_plan_id` darf NIE aus dem rate_code gefüllt werden.
+
+    Der Katalog deklariert das Feld, aber es meint Airbnbs optionale „Rate
+    Plans", die bei uns nicht existieren. Live passiert (07.08.2026,
+    Stjerneskud): die LISTING-ID landete darin, Channex schaltete auf
+    Rate-Plan-Pushes um, konnte die erfundene Rate nicht auflösen und sendete
+    in jedem `RatePlanInventoryUpdate` ein leeres `rate_plans: []` —
+    Verfügbarkeit kam an, Preise NIE. Die 17 funktionierenden
+    Bestands-Mappings tragen das Feld nicht.
+    """
+    from src.features.channel_manager.channels import ChannelsMixin
+
+    svc = object.__new__(ChannelsMixin)
+    airbnb_params = {
+        "listing_id": {"type": "integer"},
+        "airbnb_rate_plan_id": {"type": "integer"},
+        "primary_occ": {"type": "boolean"},
+    }
+    settings = ChannelsMixin._rate_plan_settings(
+        svc, airbnb_params, portal_code="AirBNB",
+        room_code=54087677, rate_code=54087677,
+        occupancy=4, pricing_type="Standard", primary=True,
+    )
+    assert settings["listing_id"] == 54087677
+    assert "airbnb_rate_plan_id" not in settings
+    assert settings["primary_occ"] is True
+
+
+def test_booking_rate_plan_code_bleibt_erhalten() -> None:
+    """Der Fix darf Booking nicht anfassen: `rate_plan_code` wird weiter gesetzt."""
+    from src.features.channel_manager.channels import ChannelsMixin
+
+    svc = object.__new__(ChannelsMixin)
+    booking_params = {
+        "room_type_code": {"type": "integer"},
+        "rate_plan_code": {"type": "integer"},
+        "occupancy": {"type": "integer"},
+        "primary_occ": {"type": "boolean"},
+    }
+    settings = ChannelsMixin._rate_plan_settings(
+        svc, booking_params, portal_code="BookingCom",
+        room_code=1264579201, rate_code=47588686,
+        occupancy=4, pricing_type="Standard", primary=True,
+    )
+    assert settings["room_type_code"] == 1264579201
+    assert settings["rate_plan_code"] == 47588686
+    assert settings["occupancy"] == 4

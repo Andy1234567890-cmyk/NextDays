@@ -26,7 +26,7 @@ Es gibt im System **zwei völlig getrennte Geldflüsse**:
    Modul-Entitlements, kein Stripe-Customer pro Tenant).
 
 Die 8 %-Portal-Provision hängt am **Connect-Fluss (1)** (`application_fee`), die
-1 %-Extern-Provision am **Abo-Fluss (2)**. Siehe Abschnitt „Provisionen".
+0,5 %-Extern-Provision am **Abo-Fluss (2)**. Siehe Abschnitt „Provisionen".
 
 ## Nutzer-Entscheidungen (2026-07-07)
 
@@ -108,11 +108,15 @@ Feature-Zugang im System (siehe „Systemintegration").
   Buchungen, NICHT für OTA-Buchungen, die über Connect laufen. → Fee pro
   Buchungskanal bestimmen, nicht global. (Verifizieren, wie der Kanal am Charge
   hängt, bevor das gesetzt wird.)
-- **Externe Kanäle 1 % (0,5 % ab 101 Objekten):** die Buchung läuft NICHT über
-  unser Stripe → nachgelagerte **monatliche Abrechnung** als Invoice-Item aufs
-  Tenant-Abo (Summe der externen Buchungsumsätze × Satz). Staffel nach Objektzahl.
-- Provisions-Sätze **nicht hardcoden** — als Konfig/DB-Wert, pro Tenant auflösbar
-  (Objektzahl-abhängige Staffel).
+- **Externe Kanäle 0,5 % (einheitlich, keine Staffel):** die Buchung läuft NICHT
+  über unser Stripe → nachgelagerte **monatliche Abrechnung** als Invoice-Item
+  aufs Tenant-Abo (Summe der externen Buchungsumsätze × Satz). Der Satz ist seit
+  `0310_provision_einheitlich_0_5_prozent.sql` unabhängig von der Objektzahl;
+  die frühere Staffel (1 % bis 100 Objekte, 0,5 % ab 101) ist abgeschafft.
+  Bereits erfasste Ledger-Zeilen tragen ihren Satz als Snapshot in `rate` —
+  Altbestand mit 0,01 bleibt bewusst stehen, damit gestellte Rechnungen stimmen.
+- Provisions-Sätze **nicht hardcoden** — EINE benannte Konstante
+  (`subscriptions.COMMISSION_RATE_STANDARD = 0.005`) als Quelle des Satzes.
 
 ## Systemintegration (das eigentliche „im ganzen System")
 

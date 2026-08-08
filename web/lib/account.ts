@@ -96,10 +96,18 @@ export async function getAccount(): Promise<Result<Account>> {
   return call<Account>("/auth/account");
 }
 
-export async function updateEmail(newEmail: string): Promise<Result<Account>> {
+export async function updateEmail(
+  newEmail: string,
+  currentPassword?: string,
+): Promise<Result<Account>> {
   return call<Account>("/auth/account/email", {
     method: "PATCH",
-    body: { new_email: newEmail },
+    body: {
+      new_email: newEmail,
+      // Re-Auth wie beim Passwortwechsel; der Server verlangt es nur, wenn das
+      // Konto überhaupt ein Passwort hat (OAuth-Konten haben keins).
+      ...(currentPassword ? { current_password: currentPassword } : {}),
+    },
   });
 }
 

@@ -8,7 +8,7 @@ from src.core.supabase import get_service_client
 from src.core.uploads import read_upload
 
 from .authz import InboxAccess
-from .felder import FELDER
+from .felder import FELDER, FeldFehlt
 from .schemas import (
     AiReplyResponse,
     AiSettings,
@@ -179,6 +179,13 @@ def send_message(
         return service.send_message(ctx, thread_id, req.message)
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    except FeldFehlt as exc:
+        # `send_message` reicht FeldFehlt bewusst durch (der Cron hält den Grund
+        # an der geplanten Zeile fest). Am interaktiven Endpunkt ist das aber ein
+        # Eingabefehler des Nutzers, kein Serverfehler: ohne diesen Zweig
+        # antwortete ein Vorlagentext mit unbesetztem Feld mit „Internal Server
+        # Error" statt zu sagen, welches Feld fehlt (Wurzel 5).
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/{thread_id}/reservation", response_model=ReservationDetail)

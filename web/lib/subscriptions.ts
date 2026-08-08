@@ -181,8 +181,16 @@ export type CommissionMonth = {
   gross_total: number;
   commission_total: number;
   currency: string | null; // null = gemischte Währungen im Monat
-  status: "pending" | "invoiced" | "mixed";
+  // Alle Werte des DB-Enums public.commission_status (0006) plus "mixed":
+  // das Backend (get_commission_months) reicht den Zeilen-Status unverändert
+  // durch, sobald der Monat einheitlich ist, und setzt sonst "mixed". "paid"
+  // fehlte hier früher — dadurch war ein realer UI-Absturz bei einem voll
+  // bezahlten Monat für tsc unsichtbar.
+  status: CommissionStatus;
 };
+
+/** Monatsstatus der Provisionen: DB-Enum commission_status + Sammelwert. */
+export type CommissionStatus = "pending" | "invoiced" | "paid" | "mixed";
 
 export async function getCommissionMonths(
   limit = 24,

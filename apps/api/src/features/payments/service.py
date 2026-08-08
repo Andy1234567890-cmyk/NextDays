@@ -1480,7 +1480,9 @@ class PaymentsService:
             raise PaymentsError(
                 "Zahlung ist bereits vollständig erstattet.", status_code=409
             )
-        already_refunded = self._refunded_sum(db, payment["reservation_id"])
+        already_refunded = self._refunded_sum(
+            db, payment["reservation_id"], payment_id
+        )
         remaining = full_amount - already_refunded
         if remaining <= 0:
             raise PaymentsError(
@@ -1551,14 +1553,27 @@ class PaymentsService:
             gateway_ref=refund_id,
             status="succeeded",
             gateway=payment.get("gateway", "stripe"),
+            # Bezug zur erstatteten Zahlung (0313): ohne ihn rechnet
+            # `_refunded_sum` buchungsweit und liefert bei Zahlungsplänen
+            # falsche Grenzen (siehe dort).
+            extra={"parent_payment_id": payment_id},
         )
         # Voll erstattet, sobald die Summe aller Erstattungen den Ursprungsbetrag
         # erreicht (nicht nur wenn EINE Erstattung >= voller Betrag ist).
         is_full = (already_refunded + refund_amount) >= full_amount - 1e-9
         status_val = "refunded" if is_full else "partially_refunded"
         self._update_payment(db, payment_id, {"status": status_val})
+        # Die BUCHUNG ist erst erstattet, wenn ALLE ihre Zahlungen es sind —
+        # der Status EINER Zahlung darf nicht auf die Reservierung durchschlagen.
+        # Sonst gilt bei einem Zahlungsplan die ganze Buchung als 'refunded',
+        # sobald nur die Anzahlung erstattet ist, während die eingezogene
+        # Restzahlung noch offen beim Betrieb liegt.
         self._set_reservation_payment_status(
-            db, payment["reservation_id"], status_val
+            db,
+            payment["reservation_id"],
+            self._reservierungs_erstattungsstatus(
+                db, payment["reservation_id"], payment_id, status_val
+            ),
         )
         # Fee-Gegenbuchung NUR bei PayPal: Dort fließt die Provision durch
         # platform_fee_refund wirklich zurück. Bei Stripe bleibt sie bei der
@@ -1751,7 +1766,7 @@ class PaymentsService:
     ) -> dict | None:
         """Bei Storno: die geltende Kondition auswerten und den policy-konformen
         Refund auslösen. Erstattet den Prozentsatz der bereits GEZAHLTEN Beträge
-        (full + down_payment; NICHT Kaution/Refund). None, wenn nichts zu erstatten
+        (full + down_payment + balance; NICHT Kaution/Refund). None, wenn nichts zu erstatten
         ist (0 %, keine Zahlung, keine Kondition). Fehler werden hochgereicht — der
         Aufrufer (cancel) behandelt sie best-effort, damit ein Refund-Problem den
         bereits vollzogenen Storno nicht zurückdreht."""
@@ -1770,12 +1785,18 @@ class PaymentsService:
         pct = self._refund_percent_for(condition, days_before_arrival)
         if pct <= 0:
             return None
-        # Erstattbare Zahlungen: erfolgreiche Gastzahlungen (voll + Anzahlung).
+        # Erstattbare Zahlungen: erfolgreiche Gastzahlungen (voll + Anzahlung +
+        # eingezogene Restzahlung). `balance` MUSS dabei sein: bei einem
+        # Zahlungsplan zieht der Worker die Restzahlung als eigene Zeile ein
+        # (`_schedule_balance` → `charge_due_balance`, status='succeeded').
+        # Ohne sie erstattet ein 100-%-Storno einer 500er-Buchung nur die
+        # Anzahlung — der eingezogene Rest bliebe beim Betrieb liegen.
+        # Kaution (`deposit`) und Erstattungen selbst bleiben bewusst außen vor.
         pays = (
             db.table("payments")
             .select("id, amount, status, type")
             .eq("reservation_id", reservation_id)
-            .in_("type", ["full", "down_payment"])
+            .in_("type", ["full", "down_payment", "balance"])
             .in_("status", ["succeeded", "partially_refunded"])
             .execute()
         ).data or []
@@ -2403,20 +2424,75 @@ class PaymentsService:
             "client_secret": intent["client_secret"],
         }
 
-    def _refunded_sum(self, db: Client, reservation_id: str) -> float:
-        """Summe der bereits erfolgten Erstattungen dieser Buchung. payments hat
-        keine Parent-Verknüpfung (refund-Rows tragen nur reservation_id) — für den
-        Doppelklick-/Retry-Fall auf DERSELBEN Zahlung ist die Summe über
-        (reservation_id, type='refund', succeeded) die konservative, korrekte
-        Bemessungsgrundlage für den noch erstattbaren Restbetrag."""
-        rows = (
+    def _reservierungs_erstattungsstatus(
+        self, db: Client, reservation_id: str, payment_id: str, neuer_status: str
+    ) -> str:
+        """Erstattungsstatus der BUCHUNG aus dem Stand aller ihrer Zahlungen.
+
+        `refunded` nur, wenn jede erstattbare Gastzahlung (voll/Anzahlung/
+        Restzahlung) vollständig erstattet ist — sonst `partially_refunded`.
+        `payment_id`/`neuer_status` sind die gerade geschriebene Zahlung: ihr
+        Status steht in der DB zwar schon, wird hier aber explizit eingesetzt,
+        damit das Ergebnis nicht von der Sichtbarkeit des eigenen Schreibvorgangs
+        abhängt (Wurzel 2).
+        """
+        zahlungen = (
             db.table("payments")
-            .select("amount")
+            .select("id, status")
+            .eq("reservation_id", reservation_id)
+            .in_("type", ["full", "down_payment", "balance"])
+            .in_("status", ["succeeded", "partially_refunded", "refunded"])
+            .execute()
+        ).data or []
+        stati = [
+            neuer_status if str(z.get("id")) == str(payment_id) else z.get("status")
+            for z in zahlungen
+        ]
+        if stati and all(s == "refunded" for s in stati):
+            return "refunded"
+        return "partially_refunded"
+
+    def _refunded_sum(
+        self, db: Client, reservation_id: str, payment_id: str | None = None
+    ) -> float:
+        """Summe der bereits erfolgten Erstattungen — zu GENAU DIESER Zahlung.
+
+        Seit 0313 tragen refund-Zeilen `parent_payment_id`. Das ist wichtig,
+        weil der Aufrufer die Summe gegen den Betrag EINER Zahlung hält: bei
+        einer Buchung mit Zahlungsplan (Anzahlung + Restzahlung) ergäbe eine
+        buchungsweite Summe falsche Grenzen — eine schon erstattete Anzahlung
+        würde den erstattbaren Rest der Restzahlung kürzen (Gast bekommt zu
+        wenig zurück) und `is_full` schlüge zu früh an (weitere legitime
+        Erstattungen blockiert).
+
+        Ohne `payment_id` (und für Altzeilen ohne Parent-Bezug) bleibt die alte,
+        buchungsweite Summe — für Bestandsdaten die konservative Variante, die
+        eher zu wenig als zu viel erstatten lässt.
+        """
+        if payment_id is None:
+            rows = (
+                db.table("payments")
+                .select("amount")
+                .eq("reservation_id", reservation_id)
+                .eq("type", "refund")
+                .eq("status", "succeeded")
+                .execute()
+            ).data or []
+            return float(sum(float(r.get("amount") or 0) for r in rows))
+        alle = (
+            db.table("payments")
+            .select("amount, parent_payment_id")
             .eq("reservation_id", reservation_id)
             .eq("type", "refund")
             .eq("status", "succeeded")
             .execute()
         ).data or []
+        eigene = [r for r in alle if r.get("parent_payment_id") == payment_id]
+        # Altzeilen (vor 0313) haben keinen Bezug. Sie einfach zu ignorieren
+        # würde den Doppelerstattungs-Schutz für Bestandsbuchungen aushebeln
+        # (Wurzel 2) — deshalb in diesem Fall weiter buchungsweit rechnen.
+        ohne_bezug = [r for r in alle if not r.get("parent_payment_id")]
+        rows = alle if ohne_bezug else eigene
         return float(sum(float(r.get("amount") or 0) for r in rows))
 
     def _load_payment(
