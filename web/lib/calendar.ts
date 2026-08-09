@@ -39,7 +39,13 @@ export type DayAvailability = {
   closed_to_departure?: boolean;
 };
 
-type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+type Result<T> =
+  | { ok: true; data: T }
+  // `status` traegt den HTTP-Code weiter: die Sperrantrags-Seite unterscheidet
+  // damit „darfst du nicht" (403 → notFound) von „ging schief" (Fehlerkasten).
+  // Ohne ihn saehe ein Nutzer ohne APPROVE_BLOCK einen roten Kasten statt
+  // einer Seite, die es fuer ihn schlicht nicht gibt.
+  | { ok: false; error: string; status?: number };
 
 async function call<T>(
   path: string,
@@ -53,7 +59,11 @@ async function call<T>(
   } catch (exc) {
     const error =
       exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
-    return { ok: false, error };
+    return {
+      ok: false,
+      error,
+      status: exc instanceof ApiError ? exc.status : undefined,
+    };
   }
 }
 
@@ -345,6 +355,25 @@ export async function clearSeasonRange(input: {
   });
 }
 
+/** Ein Ziel, das der Server NICHT übernehmen konnte (z. B. kein Rate-Plan-
+ *  Basispreis, gegen den ein Prozentsatz rechnen könnte). Wird in der UI samt
+ *  Grund benannt statt still weggelassen. */
+export type SeasonApplySkip = { property_id: string; grund: string };
+
+/** Eine Prozent-Saison samt Zeiträumen auf weitere eigene Objekte KOPIEREN.
+ *  Kopie, keine Anbindung: spätere Änderungen an der Quelle ziehen nicht nach.
+ *  Fixbetrag-Saisons lehnt der Server ab (422) — sie sind objektspezifisch. */
+export async function applySeasonToProperties(
+  seasonId: string,
+  propertyIds: string[],
+  mitZeitraeumen: boolean,
+): Promise<Result<{ uebertragen: number; uebersprungen: SeasonApplySkip[] }>> {
+  return call(`/calendar/seasons/${seasonId}/apply`, {
+    method: "POST",
+    body: { property_ids: propertyIds, mit_zeitraeumen: mitZeitraeumen },
+  });
+}
+
 /** Eine Zeitraum-Zuweisung entfernen (Tage fallen auf Basispreis zurück). */
 export async function unassignSeason(
   assignmentId: string,
@@ -405,5 +434,76 @@ export async function bulkRestrictionsMulti(
         ...rest,
       })),
     },
+  });
+}
+
+// --- Sperr-Anträge der Eigentümer (Agentur entscheidet, 0332) ---------------
+// Der Eigentümer STELLT den Antrag im Portal (lib/portal.ts); ENTSCHIEDEN wird
+// er hier, von der Agentur. Ohne diese vier Aufrufe hatte der Workflow gar
+// keinen Aufrufer: das Backend war vollständig (calendar/router.py:462–506),
+// aber kein Frontend rief es je — jeder Antrag blieb für immer `pending`, und
+// die Benachrichtigung `block_decision` konnte nie feuern.
+
+export type Sperrantrag = {
+  id: string;
+  property_id: string;
+  property_title: string | null;
+  requested_by: string | null;
+  /** Name des Antragstellers. Bewusst OHNE E-Mail/Telefon — die
+   *  Entscheidungsliste braucht sie nicht (Wurzel 9). */
+  requested_by_name: string | null;
+  /** INKLUSIV, so wie der Eigentümer den Antrag gestellt hat („vom 1. bis
+   *  zum 5."). Die Umrechnung auf den exklusiven Kalender-Range macht der
+   *  Server, nicht die Oberfläche. */
+  start_date: string;
+  end_date: string;
+  status: string; // pending | approved | rejected
+  reason: string | null;
+  decided_by: string | null;
+  decided_at: string | null;
+  decision_note: string | null;
+  created_at: string | null;
+};
+
+/** Anträge des Mandanten. Ohne `status` alle, `pending` ist die Warteschlange. */
+export async function listBlockRequests(
+  status?: string,
+): Promise<Result<{ items: Sperrantrag[]; total: number }>> {
+  const p = status ? `?status=${encodeURIComponent(status)}` : "";
+  return call(`/calendar/block-requests${p}`);
+}
+
+/** Genehmigen — sperrt die Nächte im Kalender und meldet es an die Portale.
+ *  409, wenn der Zeitraum gebuchte Tage enthält oder schon entschieden wurde. */
+export async function approveBlockRequest(
+  id: string,
+  note: string | null,
+): Promise<Result<Sperrantrag>> {
+  return call(`/calendar/block-requests/${id}/approve`, {
+    method: "POST",
+    body: { note },
+  });
+}
+
+/** Ablehnen — kein Kalender-Effekt; die Notiz geht an den Eigentümer. */
+export async function rejectBlockRequest(
+  id: string,
+  note: string | null,
+): Promise<Result<Sperrantrag>> {
+  return call(`/calendar/block-requests/${id}/reject`, {
+    method: "POST",
+    body: { note },
+  });
+}
+
+/** Eine erteilte Genehmigung widerrufen — gibt genau die Nächte DIESES
+ *  Antrags wieder frei (0337). Nur aus 'approved'. */
+export async function revokeBlockRequest(
+  id: string,
+  note: string | null,
+): Promise<Result<Sperrantrag>> {
+  return call(`/calendar/block-requests/${id}/revoke`, {
+    method: "POST",
+    body: { note },
   });
 }

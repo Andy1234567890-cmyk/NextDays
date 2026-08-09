@@ -94,7 +94,11 @@ class RentalRow(BaseModel):
     listing_id: str
     listing: str | None = None
     channel: str
-    total_price: float
+    # GAST-Bruttopreis (total_amount + Extras). Läuft durch dieselbe Maske wie
+    # `guest`: ein Eigentümer hat keine Betrags-Sicht auf Gastdaten (§4.2) und
+    # bekommt `None` — die Zeile zeigt ihm dann „—", nie eine Null. Vorher ging
+    # der Wert ungefiltert durch und stand im Abrechnungs-PDF des Eigentümers.
+    total_price: float | None = None
     total_payout: float
     currency: str = "EUR"
     owner_payout: float = 0.0
@@ -110,7 +114,10 @@ class ListingRow(BaseModel):
     listing: str | None = None
     nights: int
     reservations: int
-    total_price: float
+    # Gast-Bruttopreis je Objekt — dieselbe Maske wie `RentalRow.total_price`.
+    # Ohne sie wäre die Objekt-Aggregation das Schlupfloch für genau die Zahl,
+    # die die Zeilen-Maske gerade verbirgt.
+    total_price: float | None = None
     total_payout: float
 
 
@@ -167,11 +174,17 @@ class CurrencyAmount(BaseModel):
 
 
 class StatementSummary(BaseModel):
-    total_price: float
+    # Gast-Mieteinnahmen (Brutto). Wie `RentalRow.total_price` maskiert: der
+    # Eigentümer sieht seine Auszahlung, nicht den Verkaufspreis (§4.2).
+    total_price: float | None = None
     total_payout: float
     expenses_total: float
     owner_payout: float
-    pm_payout: float
+    # Auszahlung der VERWALTUNG (Provisionsanteil der Agentur). Das ist ihr
+    # Ertrag, kein Posten des Eigentümers — er läuft durch dieselbe Maske und
+    # ist für den Eigentümer `None`. Er stand vorher im PDF, das er selbst aus
+    # dem Portal herunterlädt.
+    pm_payout: float | None = None
     currency: str
     booking_count: int
     # Owner-Zielwährung (aus Herkunftsland). owner_payout ist in DIESER Währung
@@ -179,8 +192,11 @@ class StatementSummary(BaseModel):
     owner_currency: str = "EUR"
     # Verwaltungs-Auszahlung bleibt in der jeweiligen Quellwährung — je Währung
     # getrennt, da Beträge verschiedener Währungen nicht addiert werden dürfen.
+    # Für den Eigentümer LEER (siehe `pm_payout`): sonst stünde derselbe
+    # Agentur-Ertrag, nur je Währung aufgeschlüsselt, wieder in seinem PDF.
     pm_payout_by_currency: list[CurrencyAmount] = Field(default_factory=list)
-    # Mieteinnahmen/Auszahlung je Quellwährung (Anzeige; keine Mischsumme).
+    # Auszahlung je Quellwährung (Anzeige; keine Mischsumme). Das sind
+    # Auszahlungs-, keine Gastpreis-Summen und bleiben daher sichtbar.
     totals_by_currency: list[CurrencyAmount] = Field(default_factory=list)
 
 
@@ -221,7 +237,8 @@ class StatementListItem(BaseModel):
     period_to: date_
     status: StatementStatus
     owner_payout: float
-    pm_payout: float
+    # Agentur-Ertrag — für den Eigentümer `None` (siehe StatementSummary).
+    pm_payout: float | None = None
     currency: str
     invoice_number: str | None = None
     created_at: str | None = None

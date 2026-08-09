@@ -78,7 +78,7 @@ export function StatementManage({
                   </span>
                 </td>
                 <td className="px-5 py-3 text-right">{formatCurrency(s.owner_payout, s.currency)}</td>
-                <td className="px-5 py-3 text-right">{formatCurrency(s.pm_payout, s.currency)}</td>
+                <td className="px-5 py-3 text-right">{s.pm_payout == null ? "—" : formatCurrency(s.pm_payout, s.currency)}</td>
                 <td className="px-5 py-3">
                   <div className="flex items-center justify-end gap-2">
                     <button

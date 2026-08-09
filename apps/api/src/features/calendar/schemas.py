@@ -271,6 +271,30 @@ class SeasonListResponse(BaseModel):
     total: int = 0
 
 
+class SeasonApplyRequest(BaseModel):
+    """Eine Prozent-Saison auf weitere eigene Objekte übertragen (Kopie).
+
+    Der Deckel von 200 Zielen ist kein Schönheitswert: die Übertragung
+    materialisiert je Ziel die Tagespreise und reiht ARI-Pushes ein — ohne
+    Obergrenze wäre eine geratene Riesenliste ein Selbst-DoS (Wurzel 8).
+    """
+    property_ids: list[str] = Field(min_length=1, max_length=200)
+    # Ohne Zeiträume wird nur die Saison-Definition angelegt (leerer Kalender).
+    mit_zeitraeumen: bool = True
+
+
+class SeasonApplySkipped(BaseModel):
+    property_id: str
+    grund: str
+
+
+class SeasonApplyResponse(BaseModel):
+    uebertragen: int = 0
+    # Nicht still weglassen (Wurzel 5): wer keinen Basispreis hat, kann einen
+    # Prozentsatz nicht materialisieren und muss in der UI benannt werden.
+    uebersprungen: list[SeasonApplySkipped] = []
+
+
 class BulkEditRequest(BaseModel):
     """Mehrere Objekte × ein Zeitraum in einem Rutsch bearbeiten (wie Hostaway).
 
@@ -372,6 +396,43 @@ class MultiRestrictionRowsRequest(BaseModel):
     Zimmer × Rate-Plans → EIN gebündelter Channex-Call je Channex-Property
     (Zertifizierung Tests 3-8 über Room-Types hinweg)."""
     rows: list[MultiRestrictionRow] = Field(min_length=1)
+
+
+# --- Sperr-Anträge der Eigentümer (Agentur-Sicht, 0332) --------------------
+
+class BlockRequestDecision(BaseModel):
+    """Entscheidung über einen Sperrantrag. Die Notiz ist optional und geht als
+    Begründung an den Eigentümer (bei Ablehnung fachlich erwartet)."""
+
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class SperrantragItem(BaseModel):
+    """Ein Sperrantrag in der Agentur-Warteschlange.
+
+    `start_date`/`end_date` sind INKLUSIV (so hat der Eigentümer sie gestellt);
+    die Umrechnung auf den exklusiven `DateRange` des Kalenders passiert im
+    Service, nicht hier.
+    """
+
+    id: str
+    property_id: str
+    property_title: str | None = None
+    requested_by: str | None = None
+    requested_by_name: str | None = None
+    start_date: date
+    end_date: date
+    status: str  # pending | approved | rejected
+    reason: str | None = None
+    decided_by: str | None = None
+    decided_at: str | None = None
+    decision_note: str | None = None
+    created_at: str | None = None
+
+
+class SperrantragListe(BaseModel):
+    items: list[SperrantragItem]
+    total: int
 
 
 class SliceHealth(BaseModel):

@@ -43,6 +43,7 @@ class _Query:
         self._filters: list[tuple[str, object]] = []
         self._in: tuple[str, list] | None = None
         self._gte: tuple[str, str] | None = None
+        self._gt: tuple[str, str] | None = None
         self._lt: tuple[str, str] | None = None
         self._lte: tuple[str, str] | None = None
         self._range: tuple[int, int] | None = None
@@ -66,6 +67,10 @@ class _Query:
 
     def gte(self, col: str, val: str) -> "_Query":
         self._gte = (col, val)
+        return self
+
+    def gt(self, col: str, val: str) -> "_Query":
+        self._gt = (col, val)
         return self
 
     def lt(self, col: str, val: str) -> "_Query":
@@ -93,6 +98,8 @@ class _Query:
             ok = str(row.get(col)) in {str(v) for v in vals}
         if ok and self._gte:
             ok = str(row.get(self._gte[0])) >= self._gte[1]
+        if ok and self._gt:
+            ok = str(row.get(self._gt[0])) > self._gt[1]
         if ok and self._lt:
             ok = str(row.get(self._lt[0])) < self._lt[1]
         if ok and self._lte:
@@ -144,16 +151,39 @@ def _tables() -> dict[str, list[dict]]:
         ],
         "reservations": [
             {
+                "id": "r-1",
                 "property_id": "p-1",
                 "tenant_id": "t-1",
+                "guest_id": "g-1",
+                "channel": "portal",
+                "ota_name": "myBestDays",
                 "check_in": "2026-01-05",
                 "check_out": "2026-01-08",
                 "status": "confirmed",
                 "total_amount": 900,
                 "channel_fee": 0,
+                "currency": "EUR",
+                "is_owner_stay": False,
             }
         ],
-        "owners": [{"id": "o-1", "tenant_id": "t-1", "user_id": "owner-1"}],
+        "guests": [{"id": "g-1", "name": "Erika Mustermann"}],
+        # 20 % Provision → 900 € Payout, 720 € netto, 3 Nächte = 240 €/Nacht.
+        "owners": [
+            {
+                "id": "o-1",
+                "tenant_id": "t-1",
+                "user_id": "owner-1",
+                "default_commission_pct": 20,
+            }
+        ],
+        "owner_properties": [
+            {
+                "id": "op-1",
+                "owner_id": "o-1",
+                "property_id": "p-1",
+                "commission_override_pct": None,
+            }
+        ],
         "owner_statements": [
             {
                 "id": "s-1",
@@ -181,6 +211,9 @@ def _tables() -> dict[str, list[dict]]:
         ],
         "block_requests": [],
         "meter_readings": [],
+        # Ein Typ mit EINER Einheit — der Normalfall (CLAUDE.md).
+        "property_units": [{"id": "u-1", "property_id": "p-1", "position": 1}],
+        "reservation_addons": [],
     }
 
 
@@ -220,6 +253,246 @@ def test_calendar_prices_masked_for_owner() -> None:
     assert res.days[0].status == "booked"
 
 
+def test_calendar_zeigt_netto_payout_je_nacht() -> None:
+    """Etappe B: der Owner sieht seinen Netto-Betrag, NICHT den Gastpreis.
+
+    900 € − 0 € Gebühr = 900 € Payout; 20 % Provision → 720 € netto auf
+    3 Nächte = 240,00 € je Nacht.
+    """
+    res = _svc().calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert [d.owner_payout_per_night for d in res.days] == [240.0, 240.0, 240.0]
+    assert all(d.currency == "EUR" for d in res.days)
+    assert all(d.owner_payout_unknown_reason is None for d in res.days)
+    # Der Gast-Gesamtpreis bleibt unsichtbar (Wurzel: §4.2).
+    assert all(d.price is None for d in res.days)
+
+
+def test_calendar_payout_summiert_ohne_rundungsverlust() -> None:
+    """100,00 € auf 3 Nächte: 33,33 + 33,33 + 33,34 = 100,00 (kein Cent weg)."""
+    tables = _tables()
+    tables["reservations"][0]["total_amount"] = 125
+    tables["reservations"][0]["channel_fee"] = 25  # Payout 100, Provision 0 %
+    tables["owners"][0]["default_commission_pct"] = 0
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    betraege = [d.owner_payout_per_night for d in res.days]
+    assert betraege == [33.33, 33.33, 33.34]
+    assert round(sum(betraege), 2) == 100.00
+
+
+def test_calendar_ohne_provision_kein_erfundener_betrag() -> None:
+    """Wurzel 4: fehlt die Provision, gibt es KEINE Zahl — nur den Grund."""
+    tables = _tables()
+    tables["owners"][0]["default_commission_pct"] = None
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert all(d.owner_payout_per_night is None for d in res.days)
+    assert {d.owner_payout_unknown_reason for d in res.days} == {"provision"}
+
+
+def test_calendar_gast_nur_vorname_und_quelle() -> None:
+    """Der Owner sieht den VORNAMEN (über die GuestMask) plus die Quelle."""
+    res = _svc().calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert {d.guest_first_name for d in res.days} == {"Erika"}  # kein Nachname
+    assert {d.booking_source for d in res.days} == {"myBestDays"}
+
+
+def test_calendar_freie_nacht_ohne_payout() -> None:
+    """Nächte ohne Buchung tragen keinen Betrag und keinen Gastnamen."""
+    res = _svc().calendar(_ctx(), "p-1", date(2026, 1, 10), date(2026, 1, 12))
+    assert all(d.owner_payout_per_night is None for d in res.days)
+    assert all(d.guest_first_name is None for d in res.days)
+    assert all(d.owner_payout_unknown_reason is None for d in res.days)
+
+
+def test_calendar_eigentuemer_aufenthalt_ohne_payout() -> None:
+    """Eigennutzung (0241) ist keine Auszahlung — sie taucht nicht auf."""
+    tables = _tables()
+    tables["reservations"][0]["is_owner_stay"] = True
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert all(d.owner_payout_per_night is None for d in res.days)
+
+
+def test_calendar_zaehlt_zusatzleistungen_wie_die_abrechnung() -> None:
+    """BEFUND 1 — Kalender und Abrechnung müssen dieselbe Zahl zeigen.
+
+    Der geteilte Helfer `naechte_payout_map` kennt `addon_total`; das Portal
+    übergab ihn NICHT, obwohl die Abrechnung Extras ausdrücklich in den
+    Owner-Split zählt (`owner_statements/service.py::_rental_rows`).
+
+    Nachrechnung mit den Zahlen aus dem Befund: total 1000, channel_fee 150,
+    Extras 200, Provision 20 %, 5 Nächte.
+      Payout      = 1000 + 200 − 150 = 1050
+      Owner-Netto = 1050 × 0,80      =  840,00   ← die Abrechnung
+      je Nacht    = 840 / 5          =  168,00
+    Ohne die Extras wären es (1000 − 150) × 0,8 = 680,00 gewesen: 160,00 zu
+    wenig, und zwar für JEDEN Eigentümer, der je ein Extra verkauft.
+    """
+    tables = _tables()
+    tables["reservations"][0].update(
+        {
+            "check_in": "2026-01-05",
+            "check_out": "2026-01-10",  # 5 Nächte
+            "total_amount": 1000,
+            "channel_fee": 150,
+        }
+    )
+    tables["reservation_addons"] = [
+        {"id": "ad-1", "reservation_id": "r-1", "total": 200, "status": "confirmed"}
+    ]
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 10))
+    betraege = [d.owner_payout_per_night for d in res.days]
+    assert betraege == [168.0, 168.0, 168.0, 168.0, 168.0]
+    # Die Summe der Nächte ist exakt der Owner-Payout des Statements.
+    assert round(sum(betraege), 2) == 840.00
+
+
+def test_calendar_stornierte_zusatzleistung_zaehlt_nicht() -> None:
+    """Abgesagte Extras fließen NICHT in den Payout — wie in der Abrechnung
+    (`_addon_sums` überspringt `status='cancelled'`)."""
+    tables = _tables()
+    tables["reservations"][0].update(
+        {"check_in": "2026-01-05", "check_out": "2026-01-10",
+         "total_amount": 1000, "channel_fee": 150}
+    )
+    tables["reservation_addons"] = [
+        {"id": "ad-1", "reservation_id": "r-1", "total": 200, "status": "cancelled"}
+    ]
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 10))
+    # (1000 − 150) × 0,8 = 680 auf 5 Nächte = 136,00
+    assert [d.owner_payout_per_night for d in res.days] == [136.0] * 5
+
+
+def _zwei_einheiten(tables: dict) -> dict:
+    """Ein Typ mit ZWEI Einheiten und zwei überlappenden Buchungen.
+
+    Buchung A: 1.–5. auf Einheit u-1 (4 Nächte, Payout 400 → 320 netto → 80/N)
+    Buchung B: 2.–6. auf Einheit u-2 (4 Nächte, Payout 800 → 640 netto → 160/N)
+    Überlappung: 2., 3., 4. — dort müssen BEIDE Beträge zusammenkommen.
+    """
+    tables["property_units"] = [
+        {"id": "u-1", "property_id": "p-1", "position": 1},
+        {"id": "u-2", "property_id": "p-1", "position": 2},
+    ]
+    gemeinsam = {
+        "property_id": "p-1",
+        "tenant_id": "t-1",
+        "channel": "portal",
+        "ota_name": "myBestDays",
+        "status": "confirmed",
+        "channel_fee": 0,
+        "currency": "EUR",
+        "is_owner_stay": False,
+    }
+    tables["reservations"] = [
+        {**gemeinsam, "id": "r-a", "unit_id": "u-1", "guest_id": "g-1",
+         "check_in": "2026-01-01", "check_out": "2026-01-05", "total_amount": 400},
+        {**gemeinsam, "id": "r-b", "unit_id": "u-2", "guest_id": "g-2",
+         "check_in": "2026-01-02", "check_out": "2026-01-06", "total_amount": 800},
+    ]
+    tables["guests"] = [
+        {"id": "g-1", "name": "Erika Mustermann"},
+        {"id": "g-2", "name": "Hans Beispiel"},
+    ]
+    return tables
+
+
+def test_calendar_mehrere_einheiten_kein_payout_verschwindet() -> None:
+    """BEFUND 2 — bei n>1 Einheiten fiel der Payout der ersten Buchung weg.
+
+    Die Nacht-Map war `dict[datum] = EINE Zeile`: die zweite Buchung
+    überschrieb die erste, und für die überlappenden Nächte sah der Eigentümer
+    nur noch B. Bei fünf identischen Studios ein Fünftel seines Geldes.
+    """
+    res = _svc(_zwei_einheiten(_tables())).calendar(
+        _ctx(), "p-1", date(2026, 1, 1), date(2026, 1, 7)
+    )
+    je_tag = {d.date.isoformat(): d for d in res.days}
+    # 1.: nur A (80). 2.–4.: A+B (80+160=240). 5.: nur B (160). 6.: frei.
+    assert je_tag["2026-01-01"].owner_payout_per_night == 80.0
+    assert je_tag["2026-01-02"].owner_payout_per_night == 240.0
+    assert je_tag["2026-01-03"].owner_payout_per_night == 240.0
+    assert je_tag["2026-01-04"].owner_payout_per_night == 240.0
+    assert je_tag["2026-01-05"].owner_payout_per_night == 160.0
+    assert je_tag["2026-01-06"].owner_payout_per_night is None
+    # Über den ganzen Aufenthalt geht nichts verloren: 320 (A) + 640 (B).
+    summe = sum(
+        d.owner_payout_per_night or 0 for d in res.days
+    )
+    assert round(summe, 2) == 960.00
+
+
+def test_calendar_mehrere_einheiten_einzelposten_und_belegung() -> None:
+    """Je Nacht steht jede belegte Einheit einzeln in `bookings`, und die
+    Belegung wird als ZAHL geführt (`units_booked`/`units_total`) — passend zur
+    Verfügbarkeit je Einheit (0266), nicht als 0/1 für den ganzen Typ."""
+    res = _svc(_zwei_einheiten(_tables())).calendar(
+        _ctx(), "p-1", date(2026, 1, 1), date(2026, 1, 7)
+    )
+    je_tag = {d.date.isoformat(): d for d in res.days}
+    tag2 = je_tag["2026-01-02"]
+    assert tag2.units_booked == 2
+    assert tag2.units_total == 2
+    assert {b.unit_id for b in tag2.bookings} == {"u-1", "u-2"}
+    assert {b.reservation_id for b in tag2.bookings} == {"r-a", "r-b"}
+    assert {b.owner_payout_per_night for b in tag2.bookings} == {80.0, 160.0}
+    # Beide Gäste einzeln — jeweils NUR der Vorname (§4.2).
+    assert {b.guest_first_name for b in tag2.bookings} == {"Erika", "Hans"}
+    # Der 1. trägt nur eine Einheit, der Typ führt aber zwei.
+    assert je_tag["2026-01-01"].units_booked == 1
+    assert je_tag["2026-01-01"].units_total == 2
+
+
+def test_calendar_mehrere_einheiten_keine_teilsumme() -> None:
+    """Ist für EINE der Buchungen kein Betrag ausweisbar, gibt es KEINE
+    Tagessumme (Wurzel 4): eine Teilsumme sähe aus wie der volle Ertrag der
+    Nacht, wäre aber zu klein. Der Einzelposten der anderen bleibt sichtbar."""
+    tables = _zwei_einheiten(_tables())
+    tables["reservations"][1]["total_amount"] = None  # B unbestimmt
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 2), date(2026, 1, 3))
+    tag = res.days[0]
+    assert tag.owner_payout_per_night is None
+    assert tag.owner_payout_unknown_reason == "betrag"
+    assert sorted(
+        b.owner_payout_per_night for b in tag.bookings if b.owner_payout_per_night
+    ) == [80.0]
+
+
+def test_earnings_rechnet_wie_kalender_und_abrechnung() -> None:
+    """Die Einnahmen-Übersicht war eine DRITTE Zahl für dasselbe Geld.
+
+    Sie summierte roh `total_amount − channel_fee`: also VOR Provision und
+    OHNE Extras. Der Eigentümer sah dort mehr, als er je bekommt, und wieder
+    etwas anderes als in Kalender und Abrechnung.
+
+    900 € + 200 € Extra − 0 € Gebühr = 1100 Payout; 20 % Provision → 880,00.
+    """
+    tables = _tables()
+    tables["reservation_addons"] = [
+        {"id": "ad-1", "reservation_id": "r-1", "total": 200, "status": "confirmed"}
+    ]
+    # Beträge sichtbar machen, sonst maskiert die Antwort ohnehin. Das
+    # Dach-Recht `access_pm_features` muss mit: ohne es entfernt
+    # `effective_permissions` alle pm_*-Kindrechte.
+    tables["users"][0]["permissions"] = ["access_pm_features", "pm_booking_total"]
+    res = _svc(tables).earnings(_ctx(), date(2026, 1, 1), date(2026, 1, 31))
+    item = next(i for i in res.items if i.property_id == "p-1")
+    assert item.payout == 880.0
+    assert res.total_payout == 880.0
+
+
+def test_earnings_ohne_provision_keine_erfundene_summe() -> None:
+    """Wurzel 4: fehlt die Provision, gibt es KEINE Summe — auch keine, die
+    aus den übrigen Buchungen zusammengerechnet ist."""
+    tables = _tables()
+    tables["users"][0]["permissions"] = ["access_pm_features", "pm_booking_total"]
+    tables["owners"][0]["default_commission_pct"] = None
+    res = _svc(tables).earnings(_ctx(), date(2026, 1, 1), date(2026, 1, 31))
+    item = next(i for i in res.items if i.property_id == "p-1")
+    assert item.payout is None
+    assert res.total_payout is None
+    # Die Nächte bleiben sichtbar — sie sind kein Betrag.
+    assert item.nights == 3
+
+
 def test_earnings_payout_masked_for_owner() -> None:
     res = _svc().earnings(_ctx(), date(2026, 1, 1), date(2026, 1, 31))
     assert res.total_payout is None  # maskiert
@@ -235,6 +508,20 @@ def test_my_statements_only_finalized_and_own() -> None:
     res = _svc().my_statements(_ctx())
     assert res.total == 1
     assert res.items[0].id == "s-1"  # nur finalized, draft (s-2) ausgeblendet
+
+
+def test_my_statements_ohne_waehrung_kein_erfundenes_eur() -> None:
+    """KLEINKRAM — hier stand `r.get("currency") or "EUR"`.
+
+    Eine dänische oder polnische Abrechnung ohne Währungsfeld wäre dem
+    Eigentümer als Euro-Betrag ausgewiesen worden. Fehlende Währung ist ein
+    Datenfehler → 422, wie `_tenant_currency` im selben Modul (Wurzel 4).
+    """
+    tables = _tables()
+    tables["owner_statements"][0]["currency"] = None
+    with pytest.raises(PortalError) as exc:
+        _svc(tables).my_statements(_ctx())
+    assert exc.value.status_code == 422
 
 
 # --- Block-Requests ----------------------------------------------------------

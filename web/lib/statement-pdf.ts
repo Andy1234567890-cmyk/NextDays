@@ -39,6 +39,15 @@ export function buildStatementHtml(st: Statement, locale: string): string {
   const isStorno = st.kind === "cancellation";
   const title = isStorno ? "Stornorechnung" : "Eigentümer-Abrechnung";
 
+  // DATEN-SPLIT (§4.2) im PDF: Der Server maskiert den Gast-Bruttopreis und den
+  // Ertrag der Verwaltung für einen Eigentümer zu `null`. Beide Spalten/Zeilen
+  // werden dann GAR NICHT gerendert — nicht als „—", nicht als 0,00. Ein
+  // Dokument, das er ausdruckt und weitergibt, soll die Zahl nicht einmal als
+  // Leerstelle andeuten. Die Agentur bekommt die Werte und damit die Spalten.
+  const zeigtGastpreis = st.rental_rows.every((r) => r.total_price !== null);
+  const zeigtVerwaltung = st.summary.pm_payout !== null;
+  const spalten = zeigtGastpreis ? 7 : 6;
+
   // Mehrere Quellwährungen? Dann je Zeile die eigene Währung zeigen + Kurszeile.
   const mixed =
     new Set(st.rental_rows.map((r) => r.currency)).size > 1 ||
@@ -52,13 +61,17 @@ export function buildStatementHtml(st: Statement, locale: string): string {
         rc !== ownerCur
           ? `${fmt(r.owner_payout_converted, ownerCur, locale)}<br><span style="color:#999;font-size:9px">${fmt(r.owner_payout, rc, locale)} · Kurs ${r.fx_rate} (${esc(r.fx_date)})</span>`
           : fmt(r.owner_payout, ownerCur, locale);
+      const gastpreis =
+        zeigtGastpreis && r.total_price !== null
+          ? `<td class="num">${fmt(r.total_price, rc, locale)}</td>`
+          : "";
       return `
       <tr>
         <td>${esc(r.guest) || "—"}</td>
         <td>${r.nights}</td>
         <td>${esc(r.listing) || "—"}</td>
         <td style="text-transform:capitalize">${esc(r.channel)}</td>
-        <td class="num">${fmt(r.total_price, rc, locale)}</td>
+        ${gastpreis}
         <td class="num">${fmt(r.total_payout, rc, locale)}</td>
         <td class="num">${conv}</td>
       </tr>`;
@@ -135,8 +148,8 @@ export function buildStatementHtml(st: Statement, locale: string): string {
 
     <div class="section-title">Vermietungs-Aktivität</div>
     <table>
-      <thead><tr><th>Gast</th><th>Nächte</th><th>Objekt</th><th>Kanal</th><th class="num">Gesamtpreis</th><th class="num">Auszahlung</th><th class="num">Eigentümer-Auszahlung</th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="7" style="color:#888">Keine Reservierungen im Zeitraum.</td></tr>`}</tbody>
+      <thead><tr><th>Gast</th><th>Nächte</th><th>Objekt</th><th>Kanal</th>${zeigtGastpreis ? `<th class="num">Gesamtpreis</th>` : ""}<th class="num">Auszahlung</th><th class="num">Eigentümer-Auszahlung</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="${spalten}" style="color:#888">Keine Reservierungen im Zeitraum.</td></tr>`}</tbody>
     </table>
 
     ${
@@ -158,7 +171,7 @@ export function buildStatementHtml(st: Statement, locale: string): string {
             `<div class="row"><span>Auszahlung (${esc(c.currency)})</span><span>${fmt(c.amount, c.currency, locale)}</span></div>`,
         )
         .join("")}
-      ${st.summary.pm_payout_by_currency
+      ${(zeigtVerwaltung ? st.summary.pm_payout_by_currency : [])
         .map(
           (c) =>
             `<div class="row"><span>Verwaltungs-Auszahlung (${esc(c.currency)})</span><span>${fmt(c.amount, c.currency, locale)}</span></div>`,
@@ -167,12 +180,20 @@ export function buildStatementHtml(st: Statement, locale: string): string {
       <div class="row grand"><span>Eigentümer-Auszahlung (${esc(ownerCur)})</span><span>${fmt(st.summary.owner_payout, ownerCur, locale)}</span></div>
     </div>`
         : `<div class="totals">
-      <div class="row"><span>Mieteinnahmen</span><span>${fmt(st.summary.total_price, cur, locale)}</span></div>
+      ${
+        st.summary.total_price !== null
+          ? `<div class="row"><span>Mieteinnahmen</span><span>${fmt(st.summary.total_price, cur, locale)}</span></div>`
+          : ""
+      }
       <div class="row"><span>Gesamt-Auszahlung</span><span>${fmt(st.summary.total_payout, cur, locale)}</span></div>
       <div class="row"><span>Ausgaben</span><span>${fmt(st.summary.expenses_total, cur, locale)}</span></div>
       ${st.tax.gross ? taxLine : ""}
       <div class="row grand"><span>Eigentümer-Auszahlung</span><span>${fmt(st.summary.owner_payout, ownerCur, locale)}</span></div>
-      <div class="row"><span>Verwaltungs-Auszahlung</span><span>${fmt(st.summary.pm_payout, cur, locale)}</span></div>
+      ${
+        st.summary.pm_payout !== null
+          ? `<div class="row"><span>Verwaltungs-Auszahlung</span><span>${fmt(st.summary.pm_payout, cur, locale)}</span></div>`
+          : ""
+      }
     </div>`
     }
 

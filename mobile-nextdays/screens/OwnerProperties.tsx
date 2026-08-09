@@ -1,8 +1,9 @@
 // Eigentümer · Meine Objekte. Zeigt AUSSCHLIESSLICH die diesem Owner
 // zugeordneten Objekte (Server erzwingt den Scope über
-// owner_property_assignments; die App zeigt nur, was sie bekommt). Realtime:
-// owner_properties (Zuordnungsänderung) + properties (Stammdaten) — RLS filtert
-// die Events serverseitig auf den Owner (Migration 0059 + Publication).
+// owner_property_assignments; die App zeigt nur, was sie bekommt). Realtime nur
+// noch auf `properties` (Stammdaten) — RLS filtert die Events serverseitig auf
+// den Owner. Die Zuordnungsänderung selbst läuft seit Migration 0337 nicht mehr
+// live; Begründung an der Stelle des ehemaligen Abos.
 import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -34,7 +35,15 @@ export default function OwnerProperties() {
     load();
   }, [load]);
 
-  useRealtime({ table: "owner_properties", onChange: load });
+  // `owner_properties` (die Zuordnung Eigentümer→Objekt) ist seit Migration 0337
+  // für `authenticated` gesperrt (Wurzel 6: revoke + raus aus der Publikation
+  // supabase_realtime) — das Abo verband sauber und bekam nie ein Event. Eine
+  // Ersatzquelle gibt es nicht: die Zuordnung ändert allein eine
+  // Verwaltungs-Aktion, und `properties` unten deckt nur die STAMMDATEN der
+  // bereits zugeordneten Objekte ab, nicht die Zuordnung selbst. Ehrlich: wird
+  // dem Eigentümer ein Objekt neu zugeordnet oder entzogen, ändert sich diese
+  // Liste nicht mehr von selbst — sichtbar erst beim Öffnen des Tabs oder per
+  // Zug-zum-Aktualisieren.
   useRealtime({ table: "properties", onChange: load });
 
   return (

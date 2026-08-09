@@ -39,11 +39,10 @@ export default async function Page({
     <OwnerStatementsForOwner
       owner={ownerRes.data}
       statements={statementsRes.ok ? statementsRes.data.items : []}
-      properties={
-        propsRes.ok
-          ? propsRes.data.items.map((p) => ({ id: p.id, title: p.title }))
-          : []
-      }
+      // Adresse und Foto kommen mit durch: die Mehrfachauswahl zeigt sie je
+      // Zeile, damit sich 18 ähnlich benannte Objekte unterscheiden lassen.
+      // Vorher wurden sie hier auf {id, title} beschnitten.
+      properties={propsRes.ok ? propsRes.data.items : []}
     />
   );
 }

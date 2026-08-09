@@ -86,3 +86,80 @@ def test_put_foreign_property_404() -> None:
     with pytest.raises(PropertyPortalError) as exc:
         svc.put(CTX, PID, GuestPortalSettings(enabled=True))
     assert exc.value.status_code == 404
+
+
+# --- Rollen-Scope: §4.2 owner / §4.3 staff ---------------------------------
+#
+# Angriff: Das Lesen hängt an VIEW_CALENDAR, das auch die owner-Rolle besitzt.
+# Ein Eigentümer konnte damit die Gastmodul-Einstellungen (Kontakt,
+# Notfall-Telefon, Selbst-Check-in, Sichtbarkeitsregeln des Türcodes) eines
+# FREMDEN Objekts desselben Betriebs abrufen — der Tenant-Filter trennt nur
+# Betriebe, nicht die Rollen darin.
+
+OTHER_PID = "99999999-9999-4999-8999-999999999999"
+
+
+def _scoped_portal_svc(role: str, assigned: list[str]) -> PropertyPortalService:
+    return PropertyPortalService(  # type: ignore[arg-type]
+        client=_DB(
+            {
+                "properties": [{"id": PID}],
+                "property_guest_portal": [
+                    {"enabled": True, "door_code": "1234", "contact_phone": "+45"}
+                ],
+                "owner_property_assignments": [
+                    {"property_id": p, "tenant_id": "t1", "user_id": "u1"}
+                    for p in assigned
+                ],
+                "staff_property_assignments": [
+                    {"property_id": p, "tenant_id": "t1", "user_id": "u1"}
+                    for p in assigned
+                ],
+            }
+        )
+    )
+
+
+def _ctx(role: str) -> AuthContext:
+    return AuthContext(user_id="u1", tenant_id="t1", role=role)
+
+
+def test_owner_foreign_property_guest_portal_is_404() -> None:
+    svc = _scoped_portal_svc("owner", assigned=[OTHER_PID])
+    with pytest.raises(PropertyPortalError) as exc:
+        svc.get(_ctx("owner"), PID, can_see_code=False)
+    assert exc.value.status_code == 404
+
+
+def test_owner_without_assignment_is_404() -> None:
+    """Fail-closed: leere Zuordnung sieht nichts."""
+    svc = _scoped_portal_svc("owner", assigned=[])
+    with pytest.raises(PropertyPortalError) as exc:
+        svc.get(_ctx("owner"), PID, can_see_code=False)
+    assert exc.value.status_code == 404
+
+
+def test_staff_foreign_property_is_404() -> None:
+    svc = _scoped_portal_svc("cleaner", assigned=[OTHER_PID])
+    with pytest.raises(PropertyPortalError) as exc:
+        svc.get(_ctx("cleaner"), PID, can_see_code=False)
+    assert exc.value.status_code == 404
+
+
+def test_owner_own_property_passes_scope() -> None:
+    """Gegenprobe: das zugeordnete Objekt bleibt lesbar."""
+    svc = _scoped_portal_svc("owner", assigned=[PID])
+    assert svc.get(_ctx("owner"), PID, can_see_code=False).enabled is True
+
+
+def test_admin_not_restricted_by_assignments() -> None:
+    svc = _scoped_portal_svc("admin", assigned=[])
+    assert svc.get(_ctx("admin"), PID, can_see_code=True).door_code == "1234"
+
+
+def test_put_also_scoped() -> None:
+    """Der Schreibpfad läuft über denselben Guard."""
+    svc = _scoped_portal_svc("owner", assigned=[OTHER_PID])
+    with pytest.raises(PropertyPortalError) as exc:
+        svc.put(_ctx("owner"), PID, GuestPortalSettings())
+    assert exc.value.status_code == 404

@@ -13,7 +13,8 @@ from src.core.security import AuthContext
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
-from .dependencies import PublicPortalServiceDep
+from .dependencies import DienstleistungsServiceDep, PublicPortalServiceDep
+from .dienstleistungen import DienstleistungError
 from .schemas import (
     BlockRequestCreate,
     BlockRequestItem,
@@ -26,6 +27,12 @@ from .schemas import (
     PortalPropertyList,
     PortalStatementList,
     SliceHealth,
+)
+from .schemas_dienstleistungen import (
+    ServiceRequestCreate,
+    ServiceRequestItem,
+    ServiceRequestList,
+    ServiceTypeList,
 )
 from .service import PortalError
 
@@ -144,4 +151,60 @@ def meter_readings(
     try:
         return service.meter_readings(ctx, property_id)
     except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Dienstleistungen beauftragen (Etappe D) --------------------------------
+# Eigener Service (`dienstleistungen.py`), weil der Auftrag ein SCHREIBpfad in
+# einen fremden Slice (`tasks`) ist und nicht in den Portal-Lesepfad gehoert.
+
+_SERVICES = require_permission(Capability.BOOK_SERVICES)  # noqa: N816  pylint: disable=invalid-name
+
+
+@router.get("/service-types", response_model=ServiceTypeList)
+def service_types(
+    service: DienstleistungsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_SERVICES)],
+) -> ServiceTypeList:
+    """Beauftragbare Leistungen: Systemvorgaben + eigene des Betriebs."""
+    try:
+        return service.catalog(ctx)
+    except DienstleistungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/service-requests",
+    response_model=ServiceRequestItem,
+    status_code=status.HTTP_201_CREATED,
+)
+def request_service(
+    req: ServiceRequestCreate,
+    service: DienstleistungsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_SERVICES)],
+) -> ServiceRequestItem:
+    """Eine Dienstleistung beauftragen — landet als Aufgabe beim Betrieb.
+
+    Idempotent (Wurzel 2): derselbe Auftrag am selben Tag liefert den
+    BESTEHENDEN zurueck, statt eine zweite Reinigung auszuloesen. Der Status
+    bleibt 201 — fuer den Aufrufer ist das Ergebnis dasselbe (der Auftrag steht),
+    und ein 200-vs-201-Unterschied wuerde nur verraten, dass er doppelt geklickt
+    hat.
+    """
+    try:
+        return service.request_service(ctx, req)
+    except DienstleistungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/service-requests", response_model=ServiceRequestList)
+def my_service_requests(
+    service: DienstleistungsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_SERVICES)],
+) -> ServiceRequestList:
+    """Die vom Eigentuemer SELBST beauftragten Leistungen — keine fremden
+    Aufgaben des Betriebs (§4.3)."""
+    try:
+        return service.my_service_requests(ctx)
+    except DienstleistungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

@@ -222,7 +222,7 @@ export function OwnerStatementsForOwner({
 
   return (
     <div className="flex flex-col gap-6">
-      <OwnerRealtime ownerId={owner.id} onChange={handleRealtime} />
+      <OwnerRealtime onChange={handleRealtime} />
       {/* Kopf: zurück + Owner-Name + Stammdaten-Zugang */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">

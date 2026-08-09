@@ -1,8 +1,9 @@
 // Eigentümer · Anfragen. Drei gebündelte Aufgaben (kein Tab-Zoo): Sperr-Anfrage
 // stellen (Objekt + Zeitraum), Status der eigenen Anfragen, Zählerstand
 // erfassen — plus Konto/Logout unten. POST-Aktionen sind gegen Doppel-Submit
-// gesperrt (busy-Guard, Wurzel 2). Realtime: block_requests + meter_readings
-// (RLS-owner-gefiltert). Datum als YYYY-MM-DD (kein Date-Picker-Package →
+// gesperrt (busy-Guard, Wurzel 2). Realtime: availability + meter_readings
+// (RLS-owner-gefiltert; block_requests ist seit 0332 gesperrt, siehe unten).
+// Datum als YYYY-MM-DD (kein Date-Picker-Package →
 // kein neuer Native-Build); ungültig → klar fehlschlagen, nichts erfinden.
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, TextInput, View } from "react-native";
@@ -100,7 +101,12 @@ export default function OwnerRequests() {
     loadReadings();
   }, [loadReadings]);
 
-  useRealtime({ table: "block_requests", onChange: loadRequests });
+  // NICHT `block_requests`: seit 0332 hat `authenticated` dort kein SELECT mehr
+  // (die Zeilen tragen jetzt Begründung und interne Entscheidungsnotiz, Wurzel
+  // 6) — ein Abo darauf wäre eine stumme Attrappe. Erlaubte Ersatz-Quelle ist
+  // `availability`: die Genehmigung eines Antrags schreibt dort die gesperrten
+  // Nächte, also genau die Wirkung, auf die diese Liste reagieren muss.
+  useRealtime({ table: "availability", onChange: loadRequests });
   useRealtime({ table: "meter_readings", onChange: loadReadings });
 
   const onRefresh = () => {

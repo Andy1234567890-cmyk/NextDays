@@ -1,8 +1,17 @@
 """Router für property_dossier (8-stufige Objektkartei).
 
-Gemountet unter /api/v1/property-dossier. Lesen: VIEW_CALENDAR. Schreiben:
-MANAGE_PROPERTIES (Kartei = Agentur-internes Objekt-Onboarding). Stufe 1
-(Eigentümer) ist read-only aus dem owners-Slice.
+Gemountet unter /api/v1/property-dossier. Lesen UND Schreiben: MANAGE_PROPERTIES
+(Kartei = Agentur-internes Objekt-Onboarding). Stufe 1 (Eigentümer) ist read-only
+aus dem owners-Slice.
+
+Das Lesen hing früher an VIEW_CALENDAR — der Fähigkeit, die auch die owner-Rolle
+besitzt (§4.2). Die Kartei gibt aber Bankverbindung (IBAN/BIC), Steuer-/USt-ID und
+CPR-Nummer des verknüpften Eigentümers heraus, dazu Türcodes/Alarm aus Stufe 3:
+das ist keine Kalenderinformation, sondern Agentur-Innensicht. Wer die Kartei
+pflegen darf (MANAGE_PROPERTIES: admin/co_admin), darf sie auch lesen; ein
+Eigentümer hat dort nichts zu suchen — auch nicht bei seinem EIGENEN Objekt, denn
+Stufe 4/5 (Serviceverträge, Handwerker-Konditionen) sind Vertriebsdaten der
+Agentur (§4.2 read-only-Portal, kein Finanz-/Vertriebseinblick).
 """
 
 from typing import Annotated
@@ -34,8 +43,10 @@ from .service import DossierError
 
 router = APIRouter(prefix="/property-dossier", tags=["property_dossier"])
 
-# Wiederverwendete Permission-Dependencies (Lesen vs. Kartei pflegen).
-_view = require_permission(Capability.VIEW_CALENDAR)
+# Wiederverwendete Permission-Dependencies. Lesen und Schreiben verlangen
+# dieselbe Fähigkeit (siehe Modul-Docstring); die zwei Namen bleiben, damit an
+# jedem Endpunkt sichtbar ist, ob er liest oder pflegt.
+_view = require_permission(Capability.MANAGE_PROPERTIES)
 _manage = require_permission(Capability.MANAGE_PROPERTIES)
 ViewCtx = Annotated[CurrentUser, Depends(_view)]
 ManageCtx = Annotated[CurrentUser, Depends(_manage)]

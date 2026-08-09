@@ -16,6 +16,7 @@ from src.features.auth.permissions import Capability
 from .schemas import (
     AvailabilityCheck,
     BlockRequest,
+    BlockRequestDecision,
     BoardResponse,
     BulkEditRequest,
     BulkEditResult,
@@ -24,6 +25,8 @@ from .schemas import (
     MultiRestrictionRowsRequest,
     PriceOverrideRequest,
     RestrictionRowsRequest,
+    SeasonApplyRequest,
+    SeasonApplyResponse,
     SeasonAssignRequest,
     SeasonClearRequest,
     SeasonCreate,
@@ -33,12 +36,15 @@ from .schemas import (
     SeasonResponse,
     SeasonUpdate,
     SliceHealth,
+    SperrantragItem,
+    SperrantragListe,
     StopSellClearRequest,
     StopSellListResponse,
     StopSellRequest,
     StopSellResetRequest,
 )
 from .service import CalendarError, CalendarService
+from .sperrantraege import SperrantragService
 
 router = APIRouter(prefix="/calendar", tags=["calendar"])
 
@@ -48,6 +54,20 @@ def get_calendar_service() -> CalendarService:
 
 
 CalendarServiceDep = Annotated[CalendarService, Depends(get_calendar_service)]
+
+
+def get_sperrantrag_service() -> SperrantragService:
+    return SperrantragService(db=get_service_client())
+
+
+SperrantragServiceDep = Annotated[
+    SperrantragService, Depends(get_sperrantrag_service)
+]
+
+# Der Guard der Agentur-Seite: nur wer entscheiden darf, sieht die Anträge.
+# Dieselbe Capability auf ALLEN vier Endpunkten — Liste und {id}-Aktionen
+# prüfen denselben Scope (Wurzel 9), der Tenant-Scope zusätzlich im Service.
+_APPROVE = require_permission(Capability.APPROVE_BLOCK)  # noqa: N816  pylint: disable=invalid-name
 
 
 @router.get("/health", response_model=SliceHealth)
@@ -387,6 +407,34 @@ def delete_season(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post(
+    "/seasons/{season_id}/apply",
+    response_model=SeasonApplyResponse,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def apply_season_to_properties(
+    season_id: str,
+    req: SeasonApplyRequest,
+    service: CalendarServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> SeasonApplyResponse:
+    """Eine Prozent-Saison auf weitere eigene Objekte übertragen (Kopie).
+
+    `fixed` wird bewusst abgelehnt (422): ein fester Nachtpreis gilt nur für das
+    Objekt, an dem er gesetzt wurde."""
+    try:
+        return SeasonApplyResponse(**service.apply_season_to_properties(
+            ctx.tenant_id, season_id, req.property_ids,
+            mit_zeitraeumen=req.mit_zeitraeumen,
+        ))
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/seasons/assign", dependencies=[
     Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
 ])
@@ -436,5 +484,65 @@ def unassign_season(
     try:
         service.unassign_season(ctx.tenant_id, assignment_id)
         return {"removed": True}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# -- Sperr-Anträge der Eigentümer (Agentur entscheidet, 0332) ---------------
+@router.get("/block-requests", response_model=SperrantragListe)
+def list_block_requests(
+    service: SperrantragServiceDep,
+    ctx: Annotated[CurrentUser, Depends(_APPROVE)],
+    status_filter: Annotated[str | None, Query(alias="status")] = None,
+) -> SperrantragListe:
+    """Sperr-Anträge des Mandanten. Ohne `status` alle, sonst gefiltert
+    (`pending` ist die Warteschlange)."""
+    try:
+        return service.liste(ctx, status=status_filter)
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/block-requests/{request_id}/approve", response_model=SperrantragItem)
+def approve_block_request(
+    request_id: str,
+    req: BlockRequestDecision,
+    service: SperrantragServiceDep,
+    ctx: Annotated[CurrentUser, Depends(_APPROVE)],
+) -> SperrantragItem:
+    """Antrag genehmigen — sperrt die Nächte im Kalender und meldet es an die
+    Portale. 409, wenn der Zeitraum gebuchte Tage enthält (der Antrag bleibt
+    dann offen) oder bereits entschieden wurde."""
+    try:
+        return service.genehmigen(ctx, request_id, req)
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/block-requests/{request_id}/reject", response_model=SperrantragItem)
+def reject_block_request(
+    request_id: str,
+    req: BlockRequestDecision,
+    service: SperrantragServiceDep,
+    ctx: Annotated[CurrentUser, Depends(_APPROVE)],
+) -> SperrantragItem:
+    """Antrag ablehnen. Kein Kalender-Effekt; die Notiz geht an den Eigentümer."""
+    try:
+        return service.ablehnen(ctx, request_id, req)
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/block-requests/{request_id}/revoke", response_model=SperrantragItem)
+def revoke_block_request(
+    request_id: str,
+    req: BlockRequestDecision,
+    service: SperrantragServiceDep,
+    ctx: Annotated[CurrentUser, Depends(_APPROVE)],
+) -> SperrantragItem:
+    """Eine erteilte Genehmigung widerrufen — gibt die gesperrten Nächte über
+    den bestehenden Unblock-Weg wieder frei (Wurzel 1). Nur aus 'approved'."""
+    try:
+        return service.zuruecknehmen(ctx, request_id, req)
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

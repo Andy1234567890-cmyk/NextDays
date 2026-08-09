@@ -41,11 +41,16 @@ export type CurrencyAmount = {
 };
 
 export type StatementSummary = {
-  total_price: number;
+  /** Gast-Mieteinnahmen (Brutto). `null` = maskiert: der Eigentümer sieht
+   *  seine Auszahlung, nicht den Verkaufspreis des Gastes (§4.2). Als „—"
+   *  rendern, NIE als 0 (Wurzel 4). */
+  total_price: number | null;
   total_payout: number;
   expenses_total: number;
   owner_payout: number;
-  pm_payout: number;
+  /** Ertrag der VERWALTUNG. `null` = maskiert (§4.2) — für den Eigentümer
+   *  gehört diese Zahl nicht in seine Abrechnung. */
+  pm_payout: number | null;
   currency: string;
   booking_count: number;
   // Owner-Zielwährung (aus Herkunftsland); owner_payout ist in DIESER Währung.
@@ -62,7 +67,8 @@ export type RentalRow = {
   listing_id: string;
   listing: string | null;
   channel: string;
-  total_price: number;
+  /** Gast-Bruttopreis der Buchung. `null` = maskiert (§4.2). */
+  total_price: number | null;
   total_payout: number;
   // Quellwährung der Buchung + Owner-Auszahlung (Buchungssatz) in Quell- und
   // Owner-Währung samt verwendetem Tageskurs/Stichtag.
@@ -78,7 +84,8 @@ export type ListingRow = {
   listing: string | null;
   nights: number;
   reservations: number;
-  total_price: number;
+  /** Gast-Bruttopreis je Objekt. `null` = maskiert (§4.2). */
+  total_price: number | null;
   total_payout: number;
 };
 
@@ -134,7 +141,8 @@ export type StatementListItem = {
   period_to: string;
   status: StatementStatus;
   owner_payout: number;
-  pm_payout: number;
+  /** Ertrag der Verwaltung. `null` = maskiert (§4.2). */
+  pm_payout: number | null;
   currency: string;
   invoice_number: string | null;
   created_at: string | null;

@@ -14,6 +14,10 @@ gerundet, 2 Nachkommastellen):
 CRUD/Erzeugung über Service-Role mit explizitem tenant-Scope (tenant_id aus dem
 verifizierten JWT). Beträge nie als float gerechnet — float nur an der API-Grenze.
 """
+# pylint: disable=too-many-lines  # kohärente Abrechnungs-Domäne (Aktivität/
+# Summen/Steuer/Storno/Rechnungsnummer). Ein Schnitt entlang dieser Grenzen
+# risse die Auszahlungsformel auseinander, die genau deshalb an EINER Stelle
+# steht — dieselbe Begründung wie in calendar/service.py und payments/service.py.
 from __future__ import annotations
 
 from datetime import date
@@ -26,6 +30,8 @@ from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows
 from src.features.auth.guest_masking import GuestMask, load_guest_mask
 
+from . import common
+from .common import PayoutUnbekannt, buchungs_payout, effektive_provision_pct
 from .currencies import currency_for_country
 from .fx import FxError, FxService
 from .schemas import (
@@ -169,8 +175,19 @@ class OwnerStatementsService:
         Override gesetzt, der ``owners.default_commission_pct``. So fließt die in
         den Stammdaten je Objekt konfigurierte Provision in die Abrechnung —
         nicht ein pauschaler Owner-Default.
+
+        Die Ableitung selbst steht im GETEILTEN Helfer
+        ``common.effektive_provision_pct`` — dieselbe Regel nutzt der
+        Eigentümer-Kalender im public_portal (Etappe B). Läge sie hier als
+        Kopie, könnten Kalender und Abrechnung verschiedene Sätze anwenden.
+
+        Abweichung zum Helfer: fehlt hier BEIDES (kein Override, kein Default),
+        gilt weiterhin 0 — die Abrechnung hat diesen Bestand seit 0063 und
+        darf an einer Altzeile ohne Satz nicht komplett scheitern. Der Kalender
+        ist dort strenger (er weist den Betrag gar nicht aus), weil er keinen
+        Bestand hat, den er brechen könnte.
         """
-        default = _d(owner.get("default_commission_pct"))
+        default = owner.get("default_commission_pct")
         rows = (
             self._db.table("owner_properties")
             .select("property_id, commission_override_pct")
@@ -179,10 +196,25 @@ class OwnerStatementsService:
         ).data or []
         out: dict[str, Decimal] = {}
         for r in rows:
-            override = r.get("commission_override_pct")
-            out[str(r["property_id"])] = (
-                _d(override) if override is not None else default
-            )
+            try:
+                pct = effektive_provision_pct(
+                    r.get("commission_override_pct"), default
+                )
+            except PayoutUnbekannt as exc:
+                # Bestandsschutz gilt NUR für den fehlenden Satz (Altzeilen
+                # ohne Provision, siehe Docstring). Ein Satz AUSSERHALB 0–100 %
+                # ist etwas anderes: ihn auf 0 zu setzen zahlte dem Eigentümer
+                # klammheimlich den vollen Betrag aus, obwohl jemand 120 %
+                # eingetragen hat. Das ist ein Datenfehler, der auffallen muss
+                # (Wurzel 4/5) — nicht einer, den die Abrechnung glattbügelt.
+                if exc.grund == "provision_ungueltig":
+                    raise StatementError(
+                        f"Ungültiger Provisionssatz am Objekt "
+                        f"{r['property_id']}: {exc.message}",
+                        status_code=422,
+                    ) from exc
+                pct = Decimal("0")
+            out[str(r["property_id"])] = pct
         return out
 
     @staticmethod
@@ -431,9 +463,19 @@ class OwnerStatementsService:
             # (provisionsfrei verkauft → keine channel_fee darauf).
             addon_total = addon_sums.get(str(r["id"]), Decimal("0"))
             price = _d(r.get("total_amount")) + addon_total
-            payout = price - _d(r.get("channel_fee"))
+            # Payout und Owner-Split über den GETEILTEN Helfer — dieselbe
+            # Formel, die der Eigentümer-Kalender je Nacht anwendet.
+            try:
+                payout = buchungs_payout(
+                    r.get("total_amount"), r.get("channel_fee"), addon_total
+                )
+            except PayoutUnbekannt:
+                # Bestandsschutz wie bei der Provision: eine Altzeile ohne
+                # total_amount galt hier bisher als 0 und darf die ganze
+                # Abrechnung nicht scheitern lassen. Der Kalender ist strenger.
+                payout = addon_total - _d(r.get("channel_fee"))
             pct = override if override is not None else cmap.get(listing_id, Decimal("0"))
-            owner_payout = payout * ((Decimal("100") - pct) / Decimal("100"))
+            owner_payout = common.owner_payout(payout, pct)
 
             # Buchungssatz in Owner-Währung umrechnen (Stichtag = Check-out).
             checkout = r.get("check_out")
@@ -461,7 +503,14 @@ class OwnerStatementsService:
                     listing_id=listing_id,
                     listing=titles.get(listing_id),
                     channel=r.get("channel") or "direct",
-                    total_price=_money(price),
+                    # DER GAST-BRUTTOPREIS läuft durch dieselbe Maske wie der
+                    # Gastname eine Zeile darüber. Er stand hier ungefiltert und
+                    # landete über `web/lib/statement-pdf.ts` im PDF, das der
+                    # Eigentümer selbst aus seinem Portal herunterlädt — genau
+                    # die Zahl, die §4.2 ihm verwehrt. `mask.amount` gibt einem
+                    # Nutzer ohne Betrags-Sicht `None`; die UI rendert dann „—",
+                    # nie eine 0 (Wurzel 4).
+                    total_price=mask.amount(_money(price)),
                     total_payout=_money(payout),
                     currency=src_currency,
                     owner_payout=_money(owner_payout),
@@ -476,15 +525,32 @@ class OwnerStatementsService:
     def _listing_rows(
         rental_rows: list[RentalRow], titles: dict[str, str]
     ) -> list[ListingRow]:
+        """Aktivität je Objekt aus den (bereits maskierten) Buchungszeilen.
+
+        `total_price` bleibt `None`, sobald EINE Zeile maskiert ist: eine
+        Aggregation über die sichtbaren Zeilen wäre für einen Eigentümer immer
+        0,00 € und damit eine glatte Falschaussage — und für einen teilweise
+        maskierten Blick eine zu kleine Summe (Wurzel 4). Die Maskierung an der
+        Zeile darf nicht durch die Summenzeile umgangen werden.
+        """
         agg: dict[str, dict] = {}
         for row in rental_rows:
             a = agg.setdefault(
                 row.listing_id,
-                {"nights": 0, "reservations": 0, "price": Decimal("0"), "payout": Decimal("0")},
+                {
+                    "nights": 0,
+                    "reservations": 0,
+                    "price": Decimal("0"),
+                    "price_sichtbar": True,
+                    "payout": Decimal("0"),
+                },
             )
             a["nights"] += row.nights
             a["reservations"] += 1
-            a["price"] += _d(row.total_price)
+            if row.total_price is None:
+                a["price_sichtbar"] = False
+            else:
+                a["price"] += _d(row.total_price)
             a["payout"] += _d(row.total_payout)
         return [
             ListingRow(
@@ -492,7 +558,7 @@ class OwnerStatementsService:
                 listing=titles.get(lid),
                 nights=a["nights"],
                 reservations=a["reservations"],
-                total_price=_money(a["price"]),
+                total_price=_money(a["price"]) if a["price_sichtbar"] else None,
                 total_payout=_money(a["payout"]),
             )
             for lid, a in agg.items()
@@ -538,13 +604,14 @@ class OwnerStatementsService:
 
     # --- Auszahlungsformel ---------------------------------------------------
 
-    def _compute_summary(
+    def _compute_summary(  # noqa: PLR0913 — Summen brauchen ihre Bezugsgrößen
         self,
         rental_rows: list[RentalRow],
         expenses: list[dict],
         owner_id: str,
         currency: str,
         owner_currency: str,
+        mask: GuestMask | None = None,
     ) -> StatementSummary:
         """Summen aus den (bereits provisioniert + umgerechnet) Rental-Zeilen.
 
@@ -552,9 +619,24 @@ class OwnerStatementsService:
         Expenses (in Owner-Währung erfasst, ungekürzt zum Owner). Verwaltungs-
         Auszahlung bleibt je QUELLWÄHRUNG getrennt (= total_payout − owner_payout
         je Reservierung), da Beträge verschiedener Währungen nicht addiert werden
-        dürfen. total_price/total_payout (Anzeige) ebenfalls je Quellwährung.
+        dürfen. total_payout (Anzeige) ebenfalls je Quellwährung.
+
+        DATEN-SPLIT (§4.2): `mask` entscheidet über die beiden Zahlen, die dem
+        Eigentümer nicht gehören — die Gast-Mieteinnahmen (`total_price`) und
+        den Ertrag der Verwaltung (`pm_payout` samt Aufschlüsselung). Ohne
+        `mask` (interne Neuberechnung ohne anfragenden Nutzer) bleiben sie
+        stehen; ausgeliefert wird die Summe nur über `get`/`preview`, und die
+        geben ihre Maske mit.
         """
-        total_price = sum((_d(r.total_price) for r in rental_rows), Decimal("0"))
+        # Sobald EINE Zeile maskiert ist, gibt es keine Mieteinnahmen-Summe:
+        # aus den sichtbaren Zeilen zu summieren ergäbe für den Eigentümer
+        # glatte 0,00 € — eine Zahl, die aussieht wie „nichts eingenommen"
+        # (Wurzel 4). Dann lieber `None` und in der UI ein „—".
+        preis_sichtbar = all(r.total_price is not None for r in rental_rows)
+        total_price = sum(
+            (_d(r.total_price) for r in rental_rows if r.total_price is not None),
+            Decimal("0"),
+        )
         total_payout = sum((_d(r.total_payout) for r in rental_rows), Decimal("0"))
         expenses_total = sum((_d(e.get("amount")) for e in expenses), Decimal("0"))
         owner_expenses = sum(
@@ -599,16 +681,22 @@ class OwnerStatementsService:
         # pm_payout_by_currency.
         pm_payout = (total_payout - owner_payout) if same_unit else Decimal("0")
 
+        # Beide Zahlen gehören nicht dem Eigentümer (siehe Docstring). `mask`
+        # ist die BESTEHENDE Maske — keine zweite Sichtbarkeitslogik daneben.
+        darf_fremde_betraege = mask is None or mask.amounts
         return StatementSummary(
-            total_price=_money(total_price),
+            total_price=(
+                _money(total_price) if preis_sichtbar and darf_fremde_betraege
+                else None
+            ),
             total_payout=_money(total_payout),
             expenses_total=_money(expenses_total),
             owner_payout=_money(owner_payout),
-            pm_payout=_money(pm_payout),
+            pm_payout=_money(pm_payout) if darf_fremde_betraege else None,
             currency=currency,
             booking_count=len(rental_rows),
             owner_currency=owner_currency,
-            pm_payout_by_currency=pm_by_list,
+            pm_payout_by_currency=pm_by_list if darf_fremde_betraege else [],
             totals_by_currency=tot_by_list,
         )
 
@@ -657,7 +745,8 @@ class OwnerStatementsService:
             ),
         )
         summary = self._compute_summary(
-            rental_rows, expenses, req.owner_id, currency, owner_currency
+            rental_rows, expenses, req.owner_id, currency, owner_currency,
+            load_guest_mask(self._db, ctx.user_id),
         )
         # Für die Anzeige: effektiver Satz (einheitlich → dieser Satz, sonst gemischt).
         commission = override if override is not None else self._effective_pct(
@@ -882,14 +971,20 @@ class OwnerStatementsService:
             if override is not None
             else self._effective_pct(cmap or {}, rental_rows)
         )
+        mask = load_guest_mask(self._db, ctx.user_id)
         if row.get("status") != "draft":
             # Eingefrorene Summen aus dem Snapshot (finalized, cancelled, Storno).
+            # Der Snapshot ist die gespeicherte Zeile — die Maske greift beim
+            # AUSLIEFERN, nicht beim Speichern: `owner_statements` trägt die
+            # ungekürzten Summen für die Buchhaltung, aber der Eigentümer
+            # bekommt Gastpreis und Verwaltungs-Ertrag daraus nicht zu sehen
+            # (§4.2). Das ist genau der Pfad, über den das Portal sein PDF holt.
             summary = StatementSummary(
-                total_price=_money(_d(row.get("total_price"))),
+                total_price=mask.amount(_money(_d(row.get("total_price")))),
                 total_payout=_money(_d(row.get("total_payout"))),
                 expenses_total=_money(_d(row.get("expenses_total"))),
                 owner_payout=_money(_d(row.get("owner_payout"))),
-                pm_payout=_money(_d(row.get("pm_payout"))),
+                pm_payout=mask.amount(_money(_d(row.get("pm_payout")))),
                 currency=row.get("currency") or self._tenant_currency(tenant_id),
                 booking_count=len(rental_rows),
                 owner_currency=row.get("owner_currency") or owner_currency,
@@ -901,6 +996,7 @@ class OwnerStatementsService:
                 str(row["owner_id"]),
                 row.get("currency") or self._tenant_currency(tenant_id),
                 owner_currency,
+                mask,
             )
         return _to_response(
             row, summary, rental_rows, listing_rows, expenses, commission_display
@@ -923,6 +1019,10 @@ class OwnerStatementsService:
         if owner_id:
             query = query.eq("owner_id", owner_id)
         rows = query.order("created_at", desc=True).execute().data or []
+        # Dieselbe Maske wie im Detail: der Verwaltungs-Ertrag ist auch in der
+        # LISTE nicht die Zahl des Eigentümers. Ohne sie hätte die Liste
+        # ausgeliefert, was das Detail gerade verbirgt.
+        mask = load_guest_mask(self._db, ctx.user_id)
         items = [
             StatementListItem(
                 id=str(r["id"]),
@@ -932,7 +1032,7 @@ class OwnerStatementsService:
                 period_to=date.fromisoformat(r["period_to"]),
                 status=r.get("status") or "draft",
                 owner_payout=_money(_d(r.get("owner_payout"))),
-                pm_payout=_money(_d(r.get("pm_payout"))),
+                pm_payout=mask.amount(_money(_d(r.get("pm_payout")))),
                 currency=r.get("currency") or self._tenant_currency(tenant_id),
                 invoice_number=r.get("invoice_number"),
                 created_at=str(r["created_at"]) if r.get("created_at") else None,
@@ -1258,17 +1358,37 @@ class OwnerStatementsService:
 
     # --- Auto-Statements -----------------------------------------------------
 
+    @staticmethod
+    def _rhythmus_fuer_zeitraum(period_from: date, period_to: date) -> str:
+        """Welcher Rhythmus zu diesem Zeitraum gehört: 'monthly' | 'yearly'.
+
+        Der Cron ruft denselben Endpunkt für beide; ohne diese Unterscheidung
+        bekäme ein Jahres-Eigentümer zwölf Jahresberichte (einmal je
+        Monatslauf) und ein Monats-Eigentümer beim Jahreslauf einen zweiten,
+        überlappenden Beleg. Die Länge des Zeitraums entscheidet: alles, was
+        über einen Monat hinausgeht, ist der Jahreslauf.
+
+        Bewusst aus dem ZEITRAUM abgeleitet und nicht als Parameter: der
+        Aufrufer ist ein Cron ohne Fachwissen, und ein zusätzlicher Schalter
+        wäre eine zweite Wahrheit, die dem Zeitraum widersprechen könnte.
+        """
+        return "yearly" if (period_to - period_from).days > 31 else "monthly"
+
     def run_auto_statements(self, period_from: date, period_to: date) -> AutoStatementRunResponse:
-        """Für jeden Owner mit statement_frequency='monthly' ein Statement je
-        Zeitraum erzeugen — sofern für diesen Zeitraum noch keines existiert
-        (1/Monat). Expenses werden nach Datum+Listing/Owner automatisch dem
-        Statement zugeordnet. Änderungen wirken nur auf KÜNFTIGE Statements
-        (bestehende werden nie angefasst)."""
+        """Für jeden Owner mit passendem Rhythmus ein Statement je Zeitraum
+        erzeugen — sofern für diesen Zeitraum noch keines existiert.
+
+        'monthly' läuft für Monats-Zeiträume, 'yearly' für längere (0331);
+        welcher gemeint ist, sagt die Länge des Zeitraums. Expenses werden nach
+        Datum+Listing/Owner automatisch dem Statement zugeordnet. Änderungen
+        wirken nur auf KÜNFTIGE Statements (bestehende werden nie angefasst).
+        """
+        rhythmus = self._rhythmus_fuer_zeitraum(period_from, period_to)
         owners = (
             self._db.table("owners")
             .select("id, tenant_id, default_commission_pct, name, email, phone, "
                     "street, house_number, postal_code, city, country, tax_id")
-            .eq("statement_frequency", "monthly")
+            .eq("statement_frequency", rhythmus)
             .execute()
         ).data or []
         generated = 0

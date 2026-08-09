@@ -16,6 +16,9 @@ from pydantic import BaseModel
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.security import AuthContext
+from src.features.auth.owner_scope import is_owner, owner_property_ids
+from src.features.auth.staff_scope import is_staff, staff_property_ids
 
 from .schemas import (
     AccessData,
@@ -52,8 +55,12 @@ class DossierError(Exception):
 class PropertyDossierService:
     slice_name = "property_dossier"
 
-    def __init__(self, client: Client | None = None) -> None:
+    def __init__(
+        self, client: Client | None = None, ctx: AuthContext | None = None
+    ) -> None:
         self._client = client
+        # Auth-Kontext des Requests; `None` nur in Unit-Tests ohne Rollenbezug.
+        self._ctx = ctx
 
     def health(self) -> SliceHealth:
         return SliceHealth(slice=self.slice_name)
@@ -70,8 +77,21 @@ class PropertyDossierService:
         return tenant_id
 
     def _require_own_property(self, tenant_id: str, property_id: str) -> None:
-        """Objekt MUSS dem Tenant gehören (sonst 404). Einziger Cross-Tenant-
-        Schutz, da Service-Role RLS umgeht (Wurzel 3)."""
+        """Objekt MUSS dem Tenant gehören (sonst 404) UND im Rollen-Scope des
+        Anfragenden liegen.
+
+        Der reine Tenant-Filter war der einzige Schutz und damit zu wenig: er
+        trennt nur Betriebe voneinander, nicht die Rollen INNERHALB eines
+        Betriebs. Ein Eigentümer, der eine fremde `property_id` desselben
+        Betriebs unterschiebt, bekäme sonst die Kartei — inklusive IBAN/BIC,
+        Steuer-ID und CPR-Nummer des fremden Eigentümers (§4.2). Der Guard am
+        Router (MANAGE_PROPERTIES) hält owner/staff bereits fern; diese Prüfung
+        ist die zweite Linie, falls die Fähigkeit je wieder geweitet wird
+        (Wurzel 3 + Wurzel 9).
+
+        Fremde Objekte ergeben dieselbe 404 wie nicht existierende — kein Orakel
+        über die Existenz eines fremden Objekts.
+        """
         try:
             UUID(str(property_id))
         except (ValueError, AttributeError, TypeError) as exc:
@@ -86,6 +106,21 @@ class PropertyDossierService:
             .execute()
         ).data
         if not owned:
+            raise DossierError("Objekt nicht gefunden.", status_code=404)
+        self._require_role_scope(property_id)
+
+    def _require_role_scope(self, property_id: str) -> None:
+        """Objekt-Scope der eingeschränkten Rollen (§4.2 owner, §4.3 staff).
+
+        Ohne Kontext (Unit-Test) wird nicht geprüft; im Request steht er immer.
+        admin/co_admin sind nicht eingeschränkt und laufen durch.
+        """
+        ctx = self._ctx
+        if ctx is None:
+            return
+        if is_owner(ctx) and property_id not in owner_property_ids(self._db(), ctx):
+            raise DossierError("Objekt nicht gefunden.", status_code=404)
+        if is_staff(ctx) and property_id not in staff_property_ids(self._db(), ctx):
             raise DossierError("Objekt nicht gefunden.", status_code=404)
 
     def _require_child(self, table: str, item_id: str, property_id: str) -> None:

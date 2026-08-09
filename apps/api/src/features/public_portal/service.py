@@ -8,6 +8,7 @@ Owner sieht Netto/Vorname, aber keinen Gastpreis/PII.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -16,7 +17,14 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows
-from src.features.auth.guest_masking import load_guest_mask
+from src.features.auth.guest_masking import GuestMask, load_guest_mask
+from src.features.owner_statements.common import (
+    PayoutUnbekannt,
+    buchungs_payout,
+    effektive_provision_pct,
+    naechte_payout_map,
+    owner_payout,
+)
 
 from .schemas import (
     BlockRequestCreate,
@@ -29,6 +37,7 @@ from .schemas import (
     PortalCalendarResponse,
     PortalEarningsItem,
     PortalEarningsResponse,
+    PortalNightBooking,
     PortalProperty,
     PortalPropertyList,
     PortalStatementItem,
@@ -43,6 +52,108 @@ _CENT = Decimal("0.01")
 
 def _money(value: Decimal) -> float:
     return float(value.quantize(_CENT, rounding=ROUND_HALF_UP))
+
+
+@dataclass(frozen=True, slots=True)
+class _Belegung:
+    """EINE Buchung, die diese Nacht belegt — eine je EINHEIT.
+
+    `betrag is None` zusammen mit `grund` heißt: nicht ausweisbar — nie eine
+    erfundene Null (Wurzel 4).
+
+    Seit 0265 hängen an einem `property_id` n ≥ 1 Einheiten
+    (`property_units`), und `reservations.unit_id` sagt, WELCHE eine Buchung
+    belegt. Zwei gleichzeitige Reservierungen am selben Objekt sind damit der
+    Normalfall, nicht die Ausnahme — fünf identische Studios unter einem Typ
+    können an derselben Nacht fünf verschiedene Gäste tragen.
+    """
+
+    reservation_id: str
+    unit_id: str | None
+    betrag: float | None
+    currency: str | None
+    grund: str | None
+    gast: str | None
+    quelle: str | None
+
+
+@dataclass(slots=True)
+class _NachtInfo:
+    """Alle Belegungen EINER Nacht plus ihre Summe.
+
+    Warum eine LISTE und nicht eine Zeile: die Nacht-Map war ein
+    ``dict[datum] = eine Buchung``. Bei einem Typ mit mehreren Einheiten
+    überschrieb die zweite Buchung die erste, und der Eigentümer sah für die
+    überlappenden Nächte nur EINEN Payout — bei fünf Studios ein Fünftel
+    seines Geldes. Die Summe ist deshalb die Summe ALLER Belegungen der Nacht.
+
+    ``summe is None`` heißt: für mindestens eine Belegung ist kein Betrag
+    ausweisbar, es wird keine Teilsumme als Gesamtsumme ausgegeben (Wurzel 4).
+    """
+
+    belegungen: list[_Belegung]
+
+    @property
+    def summe(self) -> float | None:
+        """Summe der Nacht — None, sobald EINE Belegung unbestimmt ist.
+
+        Eine Teilsumme auszuweisen wäre schlimmer als gar keine: sie sähe aus
+        wie der Ertrag der Nacht, wäre aber zu niedrig (Wurzel 4).
+        """
+        if not self.belegungen:
+            return None
+        if any(b.betrag is None for b in self.belegungen):
+            return None
+        gesamt = sum(
+            (Decimal(str(b.betrag)) for b in self.belegungen), Decimal("0")
+        )
+        return _money(gesamt)
+
+    @property
+    def currency(self) -> str | None:
+        """Währung der Nacht — nur, wenn ALLE Belegungen dieselbe tragen.
+
+        Zwei Buchungen in verschiedenen Währungen auf einem Objekt sind ein
+        Datenfehler; ihn durch die Währung der ersten Zeile zu übertünchen wäre
+        ein erfundener Wert. Dann lieber keine Währung (die UI rendert
+        symbollos) und die Einzelzeilen darunter zeigen ihre eigene.
+        """
+        waehrungen = {b.currency for b in self.belegungen if b.currency}
+        return waehrungen.pop() if len(waehrungen) == 1 else None
+
+    @property
+    def grund(self) -> str | None:
+        """Erster Grund, warum ein Betrag fehlt (stabil sortiert)."""
+        gruende = sorted({b.grund for b in self.belegungen if b.grund})
+        return gruende[0] if gruende else None
+
+
+def _als_datum(wert: object) -> date | None:
+    if isinstance(wert, date):
+        return wert
+    if not wert:
+        return None
+    try:
+        return date.fromisoformat(str(wert))
+    except ValueError:
+        return None
+
+
+def _provision_pflicht(
+    provisionen: dict[str, Decimal] | None, property_id: str
+) -> Decimal:
+    """Provisionssatz des Objekts — fehlt er, ist das ein Datenfehler.
+
+    Ein `0` als Ausweichwert wäre die teuerste Sorte Fallback: er zahlte dem
+    Eigentümer im Kalender den vollen Payout aus, während die Abrechnung später
+    die echte Provision abzieht. Zwei verschiedene Zahlen für dasselbe Geld.
+    """
+    if not provisionen or property_id not in provisionen:
+        raise PayoutUnbekannt(
+            "provision",
+            "Objekt hat keinen Eigentümer-Datensatz mit Provisionssatz.",
+        )
+    return provisionen[property_id]
 
 
 class PortalError(Exception):
@@ -112,9 +223,20 @@ class PublicPortalService:
 
     # --- Kalender (maskiert) -------------------------------------------------
 
-    def calendar(
+    def calendar(  # noqa: PLR0914 — ein Kalendertag trägt viele Einzelwerte
         self, ctx: AuthContext, property_id: str, start: date, end: date
     ) -> PortalCalendarResponse:
+        """Kalender des Eigentümers: Belegung, Gastvorname/Quelle und je
+        belegter Nacht sein NETTO-Auszahlungsbetrag (Etappe B).
+
+        Der Gast-Verkaufspreis (`price`) läuft weiter über die Maske und ist
+        für einen Eigentümer None (§4.2). Der Auszahlungsbetrag ist etwas
+        anderes: er ist SEIN Geld und darum kein Gastdatum — er hängt an
+        VIEW_OWNER_REPORTS (der Capability des Endpunkts), nicht an
+        `mask.amounts`. Sonst bekäme ein Eigentümer entweder nie einen Betrag
+        zu sehen (mask.amounts ist für ihn per Default False) oder — hätte man
+        stattdessen `price` durchgereicht — den Bruttopreis des Gastes.
+        """
         self._require_own(ctx, property_id)
         mask = load_guest_mask(self._db, ctx.user_id)
         avail = {
@@ -137,20 +259,310 @@ class PublicPortalService:
             for day in resolver.effective_prices(property_id, start, end):
                 prices[day.date.isoformat()] = day.price
 
+        nacht_info = self._payout_je_nacht(ctx, property_id, start, end, mask)
+        einheiten_gesamt = self._einheiten_zahl(property_id)
+
         days: list[PortalCalendarDay] = []
         cur = start
         while cur < end:
             iso = cur.isoformat()
+            info = nacht_info.get(iso)
+            belegungen = info.belegungen if info else []
             days.append(
                 PortalCalendarDay(
                     date=cur,
                     status=avail.get(iso, "open"),
-                    # Netto-Preis nur, wenn die Maske Beträge erlaubt.
+                    # Gastpreis nur, wenn die Maske Beträge erlaubt (für den
+                    # Eigentümer None — er sieht seinen Payout, nicht den Preis).
                     price=prices.get(iso) if mask.amounts else None,
+                    owner_payout_per_night=info.summe if info else None,
+                    currency=info.currency if info else None,
+                    owner_payout_unknown_reason=info.grund if info else None,
+                    # Erster Gast/Quelle nur als Kurzform für die Monatszelle —
+                    # die vollständige Liste steht in `bookings`.
+                    guest_first_name=belegungen[0].gast if belegungen else None,
+                    booking_source=belegungen[0].quelle if belegungen else None,
+                    bookings=[_buchung(b) for b in belegungen],
+                    units_booked=len(belegungen),
+                    units_total=einheiten_gesamt,
                 )
             )
             cur += timedelta(days=1)
         return PortalCalendarResponse(property_id=property_id, days=days)
+
+    def _einheiten_zahl(self, property_id: str) -> int:
+        """Wie viele Einheiten führt dieser Typ (0265)?
+
+        Ohne eine einzige Zeile in `property_units` gilt der Typ als
+        Ein-Einheiten-Objekt — das ist KEIN erfundener Ersatzwert, sondern das
+        dokumentierte Datenmodell: „im Normalfall genau eine" (CLAUDE.md), und
+        der ganze Altbestand vor 0265 hat gar keine Zeile.
+        """
+        rows = (
+            self._db.table("property_units")
+            .select("id")
+            .eq("property_id", property_id)
+            .execute()
+        ).data or []
+        return max(len(rows), 1)
+
+    def _payout_je_nacht(
+        self,
+        ctx: AuthContext,
+        property_id: str,
+        start: date,
+        end: date,
+        mask: GuestMask,
+    ) -> dict[str, _NachtInfo]:
+        """Je belegter Nacht im Fenster: Auszahlung, Gastvorname und Quelle.
+
+        Die Provision und die Payout-Formel kommen aus dem GETEILTEN Helfer
+        `owner_statements.common` — dieselbe Rechnung wie in der Abrechnung.
+        Stünde sie hier noch einmal, zeigte der Kalender über kurz oder lang
+        eine andere Zahl als das Statement über denselben Zeitraum.
+
+        Wurzel 4: Fehlt eine Grundlage (Provision, Betrag, Nächte, Währung),
+        wird kein Ersatzwert gesetzt — die Nacht bekommt `betrag=None` und den
+        maschinenlesbaren Grund, damit die UI „nicht ausweisbar" zeigen kann
+        statt einer erfundenen Null.
+
+        MEHRERE EINHEITEN (0265): Es wird je Nacht eine LISTE gesammelt, keine
+        einzelne Zeile. Zwei Buchungen am selben Objekt (verschiedene
+        Einheiten) sind der Normalfall; die frühere `dict[datum] = eine Zeile`
+        ließ die zweite die erste überschreiben, und der Payout der ersten war
+        für die überlappenden Nächte verschwunden.
+        """
+        tenant_id, _ = self._require(ctx)
+        # Nur Reservierungen, die das Fenster ÜBERLAPPEN: check_in < end und
+        # check_out > start (check_out ist der Abreisetag, keine Nacht mehr).
+        reservations = fetch_all_rows(
+            self._db.table("reservations")
+            .select(
+                "id, property_id, unit_id, guest_id, channel, ota_name, "
+                "check_in, check_out, status, total_amount, channel_fee, currency"
+            )
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            # Eigentümer-Aufenthalte bringen keine Auszahlung (0241) — dieselbe
+            # Ausnahme wie im Abrechnungs-Service, sonst stünde im Kalender eine
+            # 0,00-Nacht für die eigene Nutzung.
+            .eq("is_owner_stay", False)
+            .in_("status", ["confirmed", "completed"])
+            .lt("check_in", end.isoformat())
+            .gt("check_out", start.isoformat())
+            .order("id")
+        )
+        if not reservations:
+            return {}
+        provisionen = self._provision_map(tenant_id, property_id)
+        namen = self._gast_namen(
+            [str(r["guest_id"]) for r in reservations if r.get("guest_id")]
+        )
+        # Zusatzleistungen zählen in den Owner-Split (owner_statements
+        # `_rental_rows`: `price = total_amount + addon_total`, und
+        # `buchungs_payout` bekommt sie als dritten Summanden). Ohne sie hier
+        # zeigte der Kalender eine ANDERE Zahl als die Abrechnung über
+        # denselben Zeitraum — genau der Fehler, den der geteilte Helfer
+        # verhindern soll. Sichtbar wird er erst, sobald ein Extra verkauft ist.
+        addons = self._addon_summen([str(r["id"]) for r in reservations])
+        out: dict[str, _NachtInfo] = {}
+        for r in reservations:
+            self._verteile(r, provisionen, namen, addons, mask, start, end, out)
+        return out
+
+    def _addon_summen(self, reservation_ids: list[str]) -> dict[str, Decimal]:
+        """Verkaufte Zusatzleistungen je Reservierung.
+
+        DIESELBE Ableitung wie `OwnerStatementsService._addon_sums`: stornierte
+        Positionen zählen nicht, alles andere summiert sich je Reservierung.
+        Fehlt die Zeile ganz, gibt es schlicht keine Extras — das ist ein
+        echter Zustand und kein Datenloch (`buchungs_payout` nimmt `None` als
+        „keine Extras").
+        """
+        ids = sorted({r for r in reservation_ids if r})
+        if not ids:
+            return {}
+        rows = fetch_all_rows(
+            self._db.table("reservation_addons")
+            .select("reservation_id, total, status")
+            .in_("reservation_id", ids)
+            .order("id")
+        )
+        summen: dict[str, Decimal] = {}
+        for a in rows:
+            if (a.get("status") or "pending") == "cancelled":
+                continue
+            rid = str(a["reservation_id"])
+            summen[rid] = summen.get(rid, Decimal("0")) + (
+                Decimal(str(a.get("total"))) if a.get("total") is not None
+                else Decimal("0")
+            )
+        return summen
+
+    def _verteile(  # noqa: PLR0913 — eine Buchung mit ihren Bezugsdaten
+        self,
+        r: dict,
+        provisionen: dict[str, Decimal] | None,
+        namen: dict[str, str],
+        addons: dict[str, Decimal],
+        mask: GuestMask,
+        start: date,
+        end: date,
+        out: dict[str, _NachtInfo],
+    ) -> None:
+        """Eine Reservierung auf ihre Nächte im Fenster verteilen."""
+        check_in = _als_datum(r.get("check_in"))
+        check_out = _als_datum(r.get("check_out"))
+        # Gastname und Quelle laufen durch die BESTEHENDE Maske (Wurzel: keine
+        # eigene Kürzung). Ein Eigentümer hat VIEW_GUEST_LIMITED und darum
+        # weder VIEW_GUEST_NAME noch VIEW_BOOKING_SOURCE — `mask.name` gibt ihm
+        # den Vornamen. Die Quelle liefern wir ihm bewusst dennoch: der Kanal
+        # seiner eigenen Buchung ist Teil des Auszahlungsnachweises (welcher
+        # Portal-Abzug entstand), kein Gast-PII.
+        gast = mask.name(namen.get(str(r.get("guest_id"))))
+        quelle = r.get("ota_name") or r.get("channel")
+        grund: str | None = None
+        betraege: list[Decimal] = []
+        currency = (r.get("currency") or "").strip()
+        try:
+            pct = _provision_pflicht(provisionen, str(r["property_id"]))
+            naechte = (check_out - check_in).days if check_in and check_out else 0
+            nacht_werte = naechte_payout_map(
+                total_amount=r.get("total_amount"),
+                channel_fee=r.get("channel_fee"),
+                # Extras gehören in den Payout (siehe `_addon_summen`) — ohne
+                # sie wich der Kalender vom Statement ab.
+                addon_total=addons.get(str(r["id"])),
+                provision_pct=pct,
+                naechte=naechte,
+                currency=currency,
+            )
+            betraege = [n.payout for n in nacht_werte]
+        except PayoutUnbekannt as exc:
+            # Kein Ersatzwert (Wurzel 4) — der Grund wird ausgewiesen. Nicht
+            # verschluckt: er steht im Log UND in der Antwort.
+            grund = exc.grund
+            log.info(
+                "portal_payout_unbestimmt",
+                reservation_id=str(r.get("id")),
+                grund=exc.grund,
+            )
+        if check_in is None or check_out is None:
+            return
+        # Nächte der Buchung auf das angefragte Fenster zuschneiden.
+        cur = check_in
+        index = 0
+        while cur < check_out:
+            if start <= cur < end:
+                betrag = (
+                    _money(betraege[index])
+                    if betraege and index < len(betraege)
+                    else None
+                )
+                # ANHÄNGEN, nicht ersetzen: mehrere Einheiten desselben Typs
+                # können dieselbe Nacht belegen (0265). Ein `out[iso] = …`
+                # verlöre hier den Payout der zuvor eingetragenen Einheit.
+                info = out.setdefault(cur.isoformat(), _NachtInfo(belegungen=[]))
+                info.belegungen.append(
+                    _Belegung(
+                        reservation_id=str(r["id"]),
+                        unit_id=str(r["unit_id"]) if r.get("unit_id") else None,
+                        betrag=betrag,
+                        currency=currency or None,
+                        grund=grund,
+                        gast=gast,
+                        quelle=quelle,
+                    )
+                )
+            cur += timedelta(days=1)
+            index += 1
+
+    def _provision_map_fuer(
+        self, tenant_id: str, property_ids: list[str]
+    ) -> dict[str, Decimal] | None:
+        """Provisionssätze für MEHRERE Objekte (Einnahmen-Übersicht).
+
+        Baut auf derselben Ableitung auf wie `_provision_map` — Objekt-Override
+        vor Owner-Default —, nur über eine Liste. Objekte ohne gültigen Satz
+        fehlen in der Map und führen beim Aufrufer zu `PayoutUnbekannt`, statt
+        stillschweigend mit 0 % durchzugehen.
+        """
+        zusammen: dict[str, Decimal] = {}
+        for pid in property_ids:
+            teil = self._provision_map(tenant_id, pid)
+            if teil:
+                zusammen.update(teil)
+        return zusammen or None
+
+    def _provision_map(
+        self, tenant_id: str, property_id: str
+    ) -> dict[str, Decimal] | None:
+        """Effektiver Provisionssatz des Objekts: Objekt-Override, sonst der
+        Owner-Default — dieselbe Ableitung wie in der Abrechnung, hier über den
+        geteilten Helfer.
+
+        `None` heißt: zu diesem Objekt gibt es gar keinen Eigentümer-Datensatz.
+        Dann ist die Auszahlung nicht bestimmbar (kein 0-%-Fallback).
+        """
+        zuordnung = (
+            self._db.table("owner_properties")
+            .select("owner_id, property_id, commission_override_pct")
+            .eq("property_id", property_id)
+            .execute()
+        ).data or []
+        if not zuordnung:
+            return None
+        owner_ids = sorted({str(z["owner_id"]) for z in zuordnung})
+        besitzer = (
+            self._db.table("owners")
+            .select("id, default_commission_pct")
+            .eq("tenant_id", tenant_id)
+            .in_("id", owner_ids)
+            .execute()
+        ).data or []
+        defaults = {
+            str(o["id"]): o.get("default_commission_pct") for o in besitzer
+        }
+        out: dict[str, Decimal] = {}
+        for z in zuordnung:
+            owner_id = str(z["owner_id"])
+            if owner_id not in defaults:
+                continue  # fremder Mandant — nicht verwenden
+            try:
+                out[str(z["property_id"])] = effektive_provision_pct(
+                    z.get("commission_override_pct"), defaults[owner_id]
+                )
+            except PayoutUnbekannt as exc:
+                # Kein/ungültiger Satz: das Objekt bleibt aus der Map. Der
+                # Fehler darf NICHT hier hochschlagen, sonst risse eine einzige
+                # unvollständige Stammdatenzeile den ganzen Kalender ab (der
+                # Eigentümer sähe nicht einmal mehr seine Belegung). Die
+                # betroffene Nacht bekommt später einen `grund` — der Betrag
+                # fehlt sichtbar, statt erfunden oder alles zu kippen.
+                #
+                # Ein UNGÜLTIGER Satz (120 %) ist dabei mehr als eine Lücke: er
+                # wird geloggt, damit der Betrieb ihn korrigieren kann, statt
+                # dass die Zelle nur wortlos leer bleibt.
+                if exc.grund == "provision_ungueltig":
+                    log.warning(
+                        "portal_provision_ungueltig",
+                        property_id=str(z["property_id"]),
+                        fehler=exc.message,
+                    )
+                continue
+        return out or None
+
+    def _gast_namen(self, guest_ids: list[str]) -> dict[str, str]:
+        ids = sorted({g for g in guest_ids if g})
+        if not ids:
+            return {}
+        rows = (
+            self._db.table("guests")
+            .select("id, name")
+            .in_("id", ids)
+            .execute()
+        ).data or []
+        return {str(r["id"]): r.get("name") or "" for r in rows}
 
     # --- Earnings (maskiert) -------------------------------------------------
 
@@ -193,22 +605,63 @@ class PublicPortalService:
             .order("id")
         )
 
+        # DIESELBE Rechnung wie Kalender und Abrechnung: Extras zählen mit, die
+        # Provision wird abgezogen. Vorher stand hier `total_amount −
+        # channel_fee` roh — also der Betrag VOR Provision und OHNE Extras. Das
+        # war eine dritte Zahl für dasselbe Geld: die Einnahmen-Übersicht wies
+        # dem Eigentümer mehr aus, als er je bekommt.
+        addons = self._addon_summen([str(r["id"]) for r in reservations])
+        provisionen = self._provision_map_fuer(tenant_id, ids)
+
         agg: dict[str, dict] = {
-            pid: {"nights": 0, "reservations": 0, "payout": Decimal("0")} for pid in ids
+            pid: {
+                "nights": 0,
+                "reservations": 0,
+                "payout": Decimal("0"),
+                # Sobald EINE Buchung nicht ausweisbar ist, gibt es für dieses
+                # Objekt keine Summe (Wurzel 4). Eine Teilsumme sähe aus wie
+                # der volle Ertrag, wäre aber zu klein.
+                "bestimmbar": True,
+            }
+            for pid in ids
         }
         for r in reservations:
             pid = str(r["property_id"])
             a = agg.setdefault(
-                pid, {"nights": 0, "reservations": 0, "payout": Decimal("0")}
+                pid,
+                {
+                    "nights": 0,
+                    "reservations": 0,
+                    "payout": Decimal("0"),
+                    "bestimmbar": True,
+                },
             )
             a["nights"] += self._nights(r.get("check_in"), r.get("check_out"))
             a["reservations"] += 1
-            a["payout"] += Decimal(str(r.get("total_amount") or 0)) - Decimal(
-                str(r.get("channel_fee") or 0)
-            )
+            try:
+                pct = _provision_pflicht(provisionen, pid)
+                a["payout"] += owner_payout(
+                    buchungs_payout(
+                        r.get("total_amount"),
+                        r.get("channel_fee"),
+                        addons.get(str(r["id"])),
+                    ),
+                    pct,
+                )
+            except PayoutUnbekannt as exc:
+                # Kein Ersatzwert: `total_amount or 0` hätte eine Buchung ohne
+                # Betrag stillschweigend als 0-€-Buchung verbucht und die
+                # Summe zu niedrig gemacht, ohne dass es jemand sieht.
+                a["bestimmbar"] = False
+                log.info(
+                    "portal_earnings_unbestimmt",
+                    reservation_id=str(r.get("id")),
+                    grund=exc.grund,
+                )
 
         items: list[PortalEarningsItem] = []
         total = Decimal("0")
+        gesamt_bestimmbar = all(a["bestimmbar"] for a in agg.values())
         for pid, a in agg.items():
             total += a["payout"]
             items.append(
@@ -217,7 +670,11 @@ class PublicPortalService:
                     title=titles.get(pid, ""),
                     nights=a["nights"],
                     reservations=a["reservations"],
-                    payout=_money(a["payout"]) if mask.amounts else None,
+                    payout=(
+                        _money(a["payout"])
+                        if mask.amounts and a["bestimmbar"]
+                        else None
+                    ),
                     currency=currency,
                 )
             )
@@ -226,7 +683,11 @@ class PublicPortalService:
             period_from=period_from,
             period_to=period_to,
             items=items,
-            total_payout=_money(total) if mask.amounts else None,
+            # Die Gesamtsumme fällt weg, sobald IRGENDEIN Objekt unbestimmbar
+            # ist — sonst wäre sie die Summe über eine Lücke.
+            total_payout=(
+                _money(total) if mask.amounts and gesamt_bestimmbar else None
+            ),
             currency=currency,
         )
 
@@ -260,20 +721,42 @@ class PublicPortalService:
             .order("created_at", desc=True)
             .execute()
         ).data or []
-        items = [
-            PortalStatementItem(
-                id=str(r["id"]),
-                period_from=date.fromisoformat(r["period_from"]),
-                period_to=date.fromisoformat(r["period_to"]),
-                status=r.get("status") or "finalized",
-                owner_payout=_money(Decimal(str(r.get("owner_payout") or 0))),
-                currency=r.get("currency") or "EUR",
-                invoice_number=r.get("invoice_number"),
-                created_at=str(r["created_at"]) if r.get("created_at") else None,
-            )
-            for r in rows
-        ]
+        items = [self._statement_item(r) for r in rows]
         return PortalStatementList(items=items, total=len(items))
+
+    @staticmethod
+    def _statement_item(r: dict) -> PortalStatementItem:
+        """Eine finalisierte Abrechnung für die Portal-Liste.
+
+        Wurzel 4: Die Währung kommt AUS DER ZEILE. Hier stand ein
+        `or "EUR"` — bei einer Abrechnung ohne Währung wäre dem Eigentümer ein
+        dänischer oder polnischer Betrag als Euro ausgewiesen worden. Fehlt
+        sie, ist das ein Datenfehler (eine finalisierte Abrechnung ohne
+        Währung darf es nicht geben) → 422, wie `_tenant_currency` es im
+        selben Modul schon macht.
+        """
+        currency = (r.get("currency") or "").strip()
+        if not currency:
+            raise PortalError(
+                f"Abrechnung {r['id']} hat keine Währung — Betrag nicht "
+                "ausweisbar.",
+                status_code=422,
+            )
+        return PortalStatementItem(
+            id=str(r["id"]),
+            period_from=date.fromisoformat(r["period_from"]),
+            period_to=date.fromisoformat(r["period_to"]),
+            status=r.get("status") or "finalized",
+            # Auch der BETRAG kommt aus der Zeile, ohne Ausweichwert: eine
+            # finalisierte Abrechnung ohne `owner_payout` als „0,00" zu zeigen
+            # hieße, dem Eigentümer eine Auszahlung von null auszuweisen, wo in
+            # Wahrheit die Zahl fehlt (Wurzel 4). Das ist derselbe Datenfehler
+            # wie die fehlende Währung darüber → 422.
+            owner_payout=_money(_pflicht_betrag(r, "owner_payout")),
+            currency=currency,
+            invoice_number=r.get("invoice_number"),
+            created_at=str(r["created_at"]) if r.get("created_at") else None,
+        )
 
     # --- Sperrung beantragen -------------------------------------------------
 
@@ -294,6 +777,9 @@ class PublicPortalService:
                     "start_date": req.start_date.isoformat(),
                     "end_date": req.end_date.isoformat(),
                     "status": "pending",
+                    # Begründung des Eigentümers (0332) — ohne sie muss die
+                    # Agentur raten, warum gesperrt werden soll.
+                    "reason": req.reason,
                 }
             )
             .execute()
@@ -303,14 +789,44 @@ class PublicPortalService:
         log.info(
             "portal_block_requested", tenant_id=tenant_id, property_id=req.property_id
         )
+        self._melde_antrag(tenant_id, res.data[0])
         return _block(res.data[0])
+
+    def _melde_antrag(self, tenant_id: str, antrag: dict) -> None:
+        """Die Entscheider der Agentur über den neuen Antrag informieren.
+
+        Über den EINEN Dispatcher (kein eigener Mail-/SMS-Aufruf) und
+        best-effort: der Antrag ist gespeichert und darf nicht verloren gehen,
+        weil der Versand klemmt (Wurzel 5). Der Empfängerkreis (Capability
+        APPROVE_BLOCK) liegt im calendar-Slice, weil er dieselbe Frage
+        beantwortet wie der Guard am Entscheidungs-Endpunkt.
+        """
+        property_id = str(antrag["property_id"])
+        rows = (
+            self._db.table("properties")
+            .select("title")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        titel = (rows[0].get("title") if rows else None) or property_id[:8]
+        from src.features.calendar.sperrantraege import (  # noqa: PLC0415
+            melde_neuen_antrag,
+        )
+
+        melde_neuen_antrag(self._db, tenant_id, antrag, titel)
 
     def my_block_requests(self, ctx: AuthContext) -> BlockRequestList:
         tenant_id, user_id = self._require(ctx)
         rows = (
             self._db.table("block_requests")
-            .select("id, property_id, start_date, end_date, status, created_at")
+            .select(
+                "id, property_id, start_date, end_date, status, reason, "
+                "decided_at, decision_note, created_at"
+            )
             .eq("tenant_id", tenant_id)
+            # Wurzel 3/9: der Eigentümer sieht NUR seine eigenen Anträge, nicht
+            # die anderer Eigentümer desselben Mandanten.
             .eq("requested_by", user_id)
             .order("created_at", desc=True)
             .execute()
@@ -390,6 +906,37 @@ class PublicPortalService:
         return currency
 
 
+def _pflicht_betrag(r: dict, spalte: str) -> Decimal:
+    """Ein Geldbetrag, der DA SEIN MUSS. Fehlt er, ist das ein Datenfehler.
+
+    Der Unterschied zu `or 0`: eine fehlende Zahl und eine Null sind zwei
+    verschiedene Aussagen. „Deine Auszahlung ist 0,00 €" ist eine Behauptung,
+    „hier fehlt ein Wert" ist die Wahrheit — und nur die zweite fällt jemandem
+    auf, bevor der Eigentümer sich wundert (Wurzel 4).
+    """
+    wert = r.get(spalte)
+    if wert is None:
+        raise PortalError(
+            f"Abrechnung {r.get('id')} hat keinen Wert für {spalte} — Betrag "
+            "nicht ausweisbar.",
+            status_code=422,
+        )
+    return Decimal(str(wert))
+
+
+def _buchung(b: _Belegung) -> PortalNightBooking:
+    """Interne Belegung → Antwortmodell. Nichts wird ergänzt oder ersetzt."""
+    return PortalNightBooking(
+        reservation_id=b.reservation_id,
+        unit_id=b.unit_id,
+        owner_payout_per_night=b.betrag,
+        currency=b.currency,
+        payout_unknown_reason=b.grund,
+        guest_first_name=b.gast,
+        booking_source=b.quelle,
+    )
+
+
 def _block(r: dict) -> BlockRequestItem:
     return BlockRequestItem(
         id=str(r["id"]),
@@ -401,6 +948,9 @@ def _block(r: dict) -> BlockRequestItem:
         if isinstance(r["end_date"], str)
         else r["end_date"],
         status=r.get("status") or "pending",
+        reason=r.get("reason"),
+        decided_at=str(r["decided_at"]) if r.get("decided_at") else None,
+        decision_note=r.get("decision_note"),
         created_at=str(r["created_at"]) if r.get("created_at") else None,
     )
 

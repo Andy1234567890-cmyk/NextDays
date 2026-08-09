@@ -15,16 +15,21 @@ import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
 import { COUNTRIES, vatIdLabel } from "@nextdays/ui/countries";
+import { ObjektMehrfachauswahl } from "@/components/objekt-mehrfachauswahl";
+import { SprachAuswahl } from "@/components/sprache-auswahl";
 import {
+  assignOwnerProperties,
   assignOwnerProperty,
   deleteOwner,
+  inviteOwnerPortal,
   unassignOwnerProperty,
   updateOwner,
+  type FreieObjektOption,
   type Owner,
   type OwnerInput,
 } from "@/lib/owners";
 
-type PropOption = { id: string; title: string };
+type PropOption = FreieObjektOption;
 
 export function OwnerDetail({
   initial,
@@ -40,6 +45,33 @@ export function OwnerDetail({
   const router = useRouter();
   const [owner, setOwner] = useState<Owner>(initial);
   const [busy, setBusy] = useState(false);
+  // Eigener Busy-Zustand für die Einladung: sie darf den Speichern-Button
+  // nicht sperren und umgekehrt.
+  const [einladend, setEinladend] = useState(false);
+  // Mehrfachauswahl der nachträglichen Objektzuordnung. Eigener Busy-Zustand,
+  // damit sie weder das Speichern der Stammdaten noch die Einladung blockiert.
+  const [auswahl, setAuswahl] = useState<string[]>([]);
+  const [objektSuche, setObjektSuche] = useState("");
+  const [zuordnend, setZuordnend] = useState(false);
+
+  /**
+   * Portalzugang nachträglich einrichten.
+   *
+   * Der zweite Weg neben dem Häkchen im Anlege-Dialog — für Eigentümer, die
+   * schon da sind. Legt einen Login mit der Rolle `owner` an, verschickt die
+   * Einladungsmail in der hier gepflegten Sprache und verknüpft
+   * `owners.user_id`. Idempotent: existiert zu der Adresse bereits ein Login
+   * im Betrieb, wird dieser verknüpft statt ein zweiter angelegt.
+   */
+  async function portalzugangEinladen() {
+    setEinladend(true);
+    const res = await inviteOwnerPortal(owner.id);
+    setEinladend(false);
+    if (res.ok) {
+      setOwner(res.data);
+      toast.success(t("portalAccessInvited"));
+    } else toast.error(res.error);
+  }
 
   const titleById = new Map(properties.map((p) => [p.id, p.title]));
   const unassigned = properties.filter(
@@ -57,6 +89,7 @@ export function OwnerDetail({
       company: owner.company,
       email: owner.email,
       phone: owner.phone,
+      language: owner.language,
       street: owner.street,
       house_number: owner.house_number,
       postal_code: owner.postal_code,
@@ -86,14 +119,41 @@ export function OwnerDetail({
     const res = await deleteOwner(owner.id);
     if (res.ok) {
       toast.success(t("deleted"));
+      // `refresh()` VOR dem `push`: die Zielliste liegt im Router-Cache des
+      // Clients und zeigte den gerade gelöschten Eigentümer sonst weiter.
+      // `owners` ist für authenticated gesperrt (0337) und trägt daher kein
+      // Realtime-Event, das den Cache von selbst entwerten könnte.
+      router.refresh();
       router.push("/eigentuemer");
     } else toast.error(res.error);
   }
 
-  async function assign(propertyId: string) {
-    const res = await assignOwnerProperty(owner.id, { property_id: propertyId });
-    if (res.ok) setOwner(res.data);
-    else toast.error(res.error);
+  /**
+   * Mehrere Objekte auf einmal zuordnen.
+   *
+   * Vorher stand hier ein Dropdown, das je Klick GENAU EIN Objekt zuordnete —
+   * bei 18 Objekten 18 Aufrufe. Jetzt geht die ganze Auswahl in EINEM Request
+   * raus (`assignOwnerProperties`): entweder alle oder keines. Ein Objekt, das
+   * inzwischen einem anderen Eigentümer gehört, lässt den Aufruf mit 409
+   * scheitern und wird im Fehlertext NAMENTLICH genannt — kein stilles
+   * Überspringen, bei dem der Betreiber später selbst suchen müsste.
+   */
+  async function assignMany() {
+    if (auswahl.length === 0) return;
+    setZuordnend(true);
+    const res = await assignOwnerProperties(owner.id, auswahl);
+    setZuordnend(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    setOwner(res.data);
+    setAuswahl([]);
+    setObjektSuche("");
+    toast.success(t("propertiesAssigned", { count: auswahl.length }));
+    // Die Liste der zuordenbaren Objekte kommt aus der Server-Komponente und
+    // ist jetzt veraltet (die eben zugeordneten sind nicht mehr frei).
+    router.refresh();
   }
 
   async function updateLink(
@@ -170,6 +230,18 @@ export function OwnerDetail({
               onChange={(e) => set("phone", e.target.value || null)}
             />
           </Field>
+          {/* Nicht in <Field> gewickelt: das rendert ein <label> um seine
+              Kinder, und <SprachAuswahl> bringt bereits ein eigenes
+              <label for> mit — verschachtelte Labels sind ungültiges HTML und
+              brechen die Screenreader-Zuordnung. */}
+          <SprachAuswahl
+            id="owner-lang"
+            value={owner.language ?? ""}
+            onChange={(v) => set("language", v || null)}
+            label={t("fields.emailLanguage")}
+            hint={t("emailLanguageHint")}
+            allowEmpty
+          />
           <Field label={t("fields.street")}>
             <Input
               value={owner.street ?? ""}
@@ -220,6 +292,45 @@ export function OwnerDetail({
             />
           </Field>
         </div>
+      </Card>
+
+      {/* Portalzugang — der Login, mit dem dieser Eigentümer seine
+          Abrechnungen selbst einsehen kann. Getrennt von den Stammdaten,
+          weil beides auseinanderlaufen darf: die Abrechnungspartei gibt es
+          auch ohne Zugang. */}
+      <Card className="flex flex-col gap-4 p-6">
+        <h2 className="font-display text-lg font-extrabold">
+          {t("sections.portalAccess")}
+        </h2>
+        {owner.user_id ? (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Icon icon="ph:check-circle" className="size-4 text-primary" />
+            {t("portalAccessActive")}
+          </p>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <p className="max-w-lg text-sm text-muted-foreground">
+              {owner.email
+                ? t("portalAccessHint")
+                : t("portalAccessNeedsEmail")}
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => void portalzugangEinladen()}
+              // Ohne gespeicherte Adresse gibt es keinen Einmal-Link. Das
+              // Backend antwortet mit 422; der Button ist deshalb gesperrt,
+              // statt in einen vermeidbaren Fehler zu laufen.
+              disabled={einladend || !owner.email}
+            >
+              {einladend ? (
+                <Icon icon="ph:spinner" className="size-4 animate-spin" />
+              ) : (
+                <Icon icon="ph:envelope-simple" className="size-4" />
+              )}
+              {t("portalAccessInvite")}
+            </Button>
+          </div>
+        )}
       </Card>
 
       {/* Auszahlung / Provision */}
@@ -293,27 +404,43 @@ export function OwnerDetail({
 
       {/* Objekt-Zuordnung */}
       <Card className="flex flex-col gap-4 p-6">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="font-display text-lg font-extrabold">
-            {t("sections.properties")}
-          </h2>
-          {unassigned.length > 0 && (
-            <NativeSelect
-              value=""
-              onChange={(e) => {
-                if (e.target.value) void assign(e.target.value);
-              }}
-              className="w-auto"
-            >
-              <option value="">{t("addProperty")}</option>
-              {unassigned.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.title}
-                </option>
-              ))}
-            </NativeSelect>
-          )}
-        </div>
+        <h2 className="font-display text-lg font-extrabold">
+          {t("sections.properties")}
+        </h2>
+
+        {/* Objekte hinzufügen — dieselbe Mehrfachauswahl wie im Anlege-Dialog
+            (`components/objekt-mehrfachauswahl.tsx`). Vorher stand hier ein
+            Dropdown für EIN Objekt je Klick; es gibt jetzt nur noch EINEN Weg,
+            Objekte zuzuweisen. Zur Auswahl stehen nur zuordenbare Objekte —
+            `unassigned` sind die freien aus `available-properties` abzüglich
+            der bereits zugeordneten. */}
+        {unassigned.length > 0 && (
+          <div className="flex flex-col gap-3 rounded-(--radius) border border-border p-4">
+            <span className="text-sm font-medium">{t("addProperty")}</span>
+            <ObjektMehrfachauswahl
+              objekte={unassigned}
+              selected={auswahl}
+              onChange={setAuswahl}
+              suche={objektSuche}
+              onSucheChange={setObjektSuche}
+              disabled={zuordnend}
+              emptyText={t("noFreeProperties")}
+            />
+            <div className="flex justify-end">
+              <Button
+                onClick={() => void assignMany()}
+                disabled={zuordnend || auswahl.length === 0}
+              >
+                {zuordnend ? (
+                  <Icon icon="ph:spinner" className="size-4 animate-spin" />
+                ) : (
+                  <Icon icon="ph:plus" className="size-4" />
+                )}
+                {t("assignSelected", { count: auswahl.length })}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {owner.properties.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("noProperties")}</p>

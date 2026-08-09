@@ -3,7 +3,9 @@
 GET/PUT der Portal-Schalter (property_guest_portal, Migration 0121). Der Service
 läuft mit Service-Role (RLS umgangen) → JEDER Zugriff scopet EXPLIZIT über die
 property→tenant-Beziehung (Wurzel 3): das Objekt muss dem Tenant gehören, sonst
-404. Der Türcode ist sensibel und wird ohne MANAGE_PROPERTIES maskiert.
+404. Zusätzlich gilt der Objekt-Scope der Rolle (§4.2 owner, §4.3 staff) — der
+Tenant allein trennt nur Betriebe, nicht die Rollen darin. Der Türcode ist
+sensibel und wird ohne MANAGE_PROPERTIES maskiert.
 """
 from __future__ import annotations
 
@@ -13,6 +15,8 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.auth.owner_scope import is_owner, owner_property_ids
+from src.features.auth.staff_scope import is_staff, staff_property_ids
 
 from .schemas import GuestPortalSettings, SliceHealth
 
@@ -59,9 +63,19 @@ class PropertyPortalService:
             raise PropertyPortalError("Kein Tenant im Konto.", status_code=400)
         return ctx.tenant_id
 
-    def _require_own_property(self, tenant_id: str, property_id: str) -> None:
-        """Objekt MUSS dem Tenant gehören (sonst 404). Service-Role umgeht RLS,
-        also ist dieser Check der einzige Cross-Tenant-Schutz (Wurzel 3)."""
+    def _require_own_property(
+        self, tenant_id: str, property_id: str, ctx: AuthContext | None = None
+    ) -> None:
+        """Objekt MUSS dem Tenant gehören (sonst 404) UND im Objekt-Scope der
+        Rolle liegen.
+
+        Der Tenant-Filter allein trennt nur Betriebe, nicht die Rollen
+        innerhalb eines Betriebs: das Lesen hängt an VIEW_CALENDAR, das auch
+        die owner-Rolle hat (§4.2). Ein Eigentümer konnte damit die
+        Gastmodul-Einstellungen (Kontakt, Notfall-Telefon, Selbst-Check-in,
+        Sichtbarkeitsregeln des Türcodes) eines FREMDEN Objekts desselben
+        Betriebs abrufen. Fremdes Objekt → dieselbe 404 wie nicht vorhanden.
+        """
         try:
             UUID(str(property_id))
         except (ValueError, AttributeError, TypeError) as exc:
@@ -77,6 +91,12 @@ class PropertyPortalService:
         ).data
         if not owned:
             raise PropertyPortalError("Objekt nicht gefunden.", status_code=404)
+        if ctx is None:
+            return
+        if is_owner(ctx) and property_id not in owner_property_ids(self._db(), ctx):
+            raise PropertyPortalError("Objekt nicht gefunden.", status_code=404)
+        if is_staff(ctx) and property_id not in staff_property_ids(self._db(), ctx):
+            raise PropertyPortalError("Objekt nicht gefunden.", status_code=404)
 
     def get(
         self, ctx: AuthContext, property_id: str, *, can_see_code: bool
@@ -85,7 +105,7 @@ class PropertyPortalService:
         Default-Einstellungen (alles aus) — das Objekt hat schlicht noch kein
         Gastmodul konfiguriert. Türcode ohne MANAGE_PROPERTIES maskiert (None)."""
         tenant_id = self._require_tenant(ctx)
-        self._require_own_property(tenant_id, property_id)
+        self._require_own_property(tenant_id, property_id, ctx)
         rows = (
             self._db()
             .table("property_guest_portal")
@@ -110,7 +130,7 @@ class PropertyPortalService:
     ) -> GuestPortalSettings:
         """Portal-Einstellungen upserten (genau ein Datensatz je Objekt)."""
         tenant_id = self._require_tenant(ctx)
-        self._require_own_property(tenant_id, property_id)
+        self._require_own_property(tenant_id, property_id, ctx)
         payload = {"property_id": property_id, **req.model_dump()}
         self._db().table("property_guest_portal").upsert(
             payload, on_conflict="property_id"

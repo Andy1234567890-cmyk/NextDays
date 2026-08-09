@@ -188,6 +188,12 @@ class _DB:
 
 def _base_tables() -> dict[str, list[dict]]:
     return {
+        # Der anfragende Nutzer MUSS als Zeile da sein: `load_guest_mask` liest
+        # Rolle und Berechtigungen aus der DB (Quelle der Wahrheit, Wurzel 7),
+        # nicht aus dem JWT. Ohne die Zeile maskiert die Maske fail-closed, und
+        # ein Admin bekäme in diesen Tests weder Gastpreis noch Verwaltungs-
+        # Auszahlung zu sehen — richtig, aber nicht der hier geprüfte Fall.
+        "users": [{"id": "u-1", "role": "admin", "permissions": []}],
         "tenants": [
             {"id": "t-1", "name": "Agentur GmbH", "currency": "EUR", "country": "DE"}
         ],
@@ -499,6 +505,40 @@ def test_auto_run_generates_once_per_period() -> None:
     assert second.generated == 0
 
 
+def test_auto_run_ueberspringt_jahres_eigentuemer_im_monatslauf() -> None:
+    """Ein Eigentümer mit Jahresrhythmus darf beim Monatslauf NICHTS bekommen —
+    sonst hätte er zwölf „Jahresberichte" statt einem (0331)."""
+    tables = _base_tables()
+    tables["owners"][0]["statement_frequency"] = "yearly"
+    svc = _svc(tables)
+    assert svc.run_auto_statements(date(2026, 1, 1), date(2026, 1, 31)).generated == 0
+
+
+def test_auto_run_erzeugt_jahresbericht() -> None:
+    """Der Jahreslauf (Zeitraum > 1 Monat) bedient genau die yearly-Owner."""
+    tables = _base_tables()
+    tables["owners"][0]["statement_frequency"] = "yearly"
+    svc = _svc(tables)
+    lauf = svc.run_auto_statements(date(2026, 1, 1), date(2026, 12, 31))
+    assert lauf.generated == 1
+    # Und ein zweiter Lauf desselben Jahres erzeugt nichts (Wurzel 2).
+    assert svc.run_auto_statements(date(2026, 1, 1), date(2026, 12, 31)).generated == 0
+
+
+def test_auto_run_ueberspringt_monats_eigentuemer_im_jahreslauf() -> None:
+    """Umgekehrt: der Monats-Owner bekommt im Jahreslauf keinen zweiten,
+    überlappenden Beleg."""
+    svc = _svc()  # Fixture steht auf 'monthly'
+    assert svc.run_auto_statements(date(2026, 1, 1), date(2026, 12, 31)).generated == 0
+
+
+def test_rhythmus_leitet_sich_aus_dem_zeitraum_ab() -> None:
+    frequenz = OwnerStatementsService._rhythmus_fuer_zeitraum  # noqa: SLF001
+    assert frequenz(date(2026, 2, 1), date(2026, 2, 28)) == "monthly"
+    assert frequenz(date(2026, 1, 1), date(2026, 1, 31)) == "monthly"
+    assert frequenz(date(2026, 1, 1), date(2026, 12, 31)) == "yearly"
+
+
 def test_auto_run_assigns_matching_expense() -> None:
     tables = _base_tables()
     tables["owner_expenses"].append(
@@ -669,6 +709,16 @@ def _owner_ctx(user: str = "u-owner-a") -> AuthContext:
 
 def _two_owner_tables() -> dict[str, list[dict]]:
     tables = _base_tables()
+    # Die Eigentümer-Logins als echte users-Zeilen: `load_guest_mask` holt
+    # Rolle + Berechtigungen aus der DB. Ein Owner hat KEIN pm_booking_total,
+    # bekommt also mask.amounts=False — genau der Fall, den der Daten-Split
+    # §4.2 beschreibt.
+    tables["users"].extend(
+        [
+            {"id": "u-owner-a", "role": "owner", "permissions": []},
+            {"id": "u-owner-b", "role": "owner", "permissions": []},
+        ]
+    )
     tables["owners"][0]["user_id"] = "u-owner-a"  # o-1 ↔ Owner A
     tables["owners"].append(
         {
@@ -787,3 +837,61 @@ def test_visible_expenses_filters_for_owner_only() -> None:
     assert len(svc._visible_expenses(admin, exps)) == 2
     owner_view = svc._visible_expenses(owner, exps)
     assert [e["id"] for e in owner_view] == ["e1"]
+
+
+# --- Daten-Split: Gast-Bruttopreis und Verwaltungs-Ertrag (Befund 4) ---------
+
+def test_owner_sieht_weder_gastpreis_noch_verwaltungsanteil() -> None:
+    """BEFUND 4 — beides stand im PDF, das der Eigentümer selbst herunterlädt.
+
+    `_rental_rows` maskierte den GASTNAMEN korrekt, reichte aber
+    `total_price` (den Gast-Bruttopreis) eine Zeile später ungefiltert durch;
+    `statement-pdf.ts` rendert ihn als Spalte „Gesamtpreis". Zusätzlich stand
+    dort `pm_payout` — die Auszahlung der AGENTUR.
+
+    Erwartung: Der Eigentümer sieht seine Auszahlung, sonst nichts davon.
+    """
+    tables = _two_owner_tables()
+    svc = OwnerStatementsService(service_client=_DB(tables))
+    eigen = _gen(svc)  # von der Agentur erzeugt (admin)
+
+    sicht = svc.get(_owner_ctx(), eigen.id)
+    # Sein Geld sieht er.
+    assert sicht.summary.owner_payout == eigen.summary.owner_payout
+    assert sicht.summary.owner_payout > 0
+    # Der Gastpreis und der Agentur-Ertrag NICHT — und zwar als None, nicht 0.
+    assert sicht.summary.total_price is None
+    assert sicht.summary.pm_payout is None
+    assert sicht.summary.pm_payout_by_currency == []
+    assert all(r.total_price is None for r in sicht.rental_rows)
+    assert all(r.total_price is None for r in sicht.listing_rows)
+    # Auch der Gastname bleibt auf den Vornamen gekürzt (bestehende Regel).
+    assert all(
+        r.guest is None or " " not in r.guest for r in sicht.rental_rows
+    )
+
+
+def test_agentur_sieht_gastpreis_und_verwaltungsanteil_weiter() -> None:
+    """Die Gegenprobe: Für die Agentur (admin) bleibt beides sichtbar — die
+    Maskierung darf nicht die Abrechnung selbst unbrauchbar machen."""
+    tables = _two_owner_tables()
+    svc = OwnerStatementsService(service_client=_DB(tables))
+    eigen = _gen(svc)
+    sicht = svc.get(_ctx(), eigen.id)
+    assert sicht.summary.total_price is not None
+    assert sicht.summary.pm_payout is not None
+    assert all(r.total_price is not None for r in sicht.rental_rows)
+
+
+def test_owner_liste_ohne_verwaltungsanteil() -> None:
+    """Wurzel 9 — derselbe Scope im LIST-Pfad: was das Detail verbirgt, darf
+    die Liste nicht ausliefern."""
+    tables = _two_owner_tables()
+    svc = OwnerStatementsService(service_client=_DB(tables))
+    _gen(svc)
+    res = svc.list(_owner_ctx())
+    assert res.total == 1
+    assert res.items[0].owner_payout > 0
+    assert res.items[0].pm_payout is None
+    # Die Agentur bekommt ihn weiterhin.
+    assert svc.list(_ctx()).items[0].pm_payout is not None

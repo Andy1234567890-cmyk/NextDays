@@ -16,6 +16,20 @@ import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
 import { formatCurrency } from "@/lib/currency";
+
+/** Betrag ODER „—", wenn er maskiert ist.
+ *
+ *  `null` heisst hier NICHT „null Euro", sondern „dieser Nutzer darf die Zahl
+ *  nicht sehen" (Daten-Split §4.2: der Eigentuemer bekommt weder den
+ *  Gast-Bruttopreis noch den Ertrag der Verwaltung). Als 0,00 zu rendern waere
+ *  eine glatte Falschaussage, deshalb der Gedankenstrich (Wurzel 4). */
+function betragOderStrich(
+  wert: number | null | undefined,
+  waehrung: string,
+  locale?: string,
+): string {
+  return wert == null ? "—" : formatCurrency(wert, waehrung, locale);
+}
 import { downloadStatementPdf } from "@/lib/statement-pdf";
 import {
   addExpense,
@@ -211,7 +225,10 @@ export function StatementEditor({
   }
 
   const expensesTotal = st.summary.expenses_total;
-  const grandTotal = st.summary.total_price + expensesTotal;
+  // Ohne sichtbaren Gastpreis gibt es keine Gesamtsumme — sie waere sonst
+  // „0 + Ausgaben" und damit erfunden.
+  const grandTotal =
+    st.summary.total_price == null ? null : st.summary.total_price + expensesTotal;
 
   return (
     <div className="flex flex-col gap-5">
@@ -394,10 +411,10 @@ export function StatementEditor({
           {t("summaryPeriod", { from: st.period_from, to: st.period_to, count: st.summary.booking_count })}
         </p>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryCell icon="ph:money" label={t("summary.totalPrice")} value={formatCurrency(st.summary.total_price, cur)} />
+          <SummaryCell icon="ph:money" label={t("summary.totalPrice")} value={betragOderStrich(st.summary.total_price, cur)} />
           <SummaryCell icon="ph:diamond" label={t("summary.totalPayout")} value={formatCurrency(st.summary.total_payout, cur)} />
           <SummaryCell icon="ph:coins" label={t("summary.ownerPayout")} value={formatCurrency(st.summary.owner_payout, ownerCur)} />
-          <SummaryCell icon="ph:buildings" label={t("summary.pmPayout")} value={formatCurrency(st.summary.pm_payout, cur)} />
+          <SummaryCell icon="ph:buildings" label={t("summary.pmPayout")} value={betragOderStrich(st.summary.pm_payout, cur)} />
         </div>
       </Section>
 
@@ -429,7 +446,7 @@ export function StatementEditor({
             <NativeSelect className="w-auto min-w-44" disabled>
               <option>{t("grand.rentalRevenue")}</option>
             </NativeSelect>
-            <span className="text-sm">{formatCurrency(st.summary.total_price, cur)}</span>
+            <span className="text-sm">{betragOderStrich(st.summary.total_price, cur)}</span>
           </div>
           <div className="flex items-center gap-4">
             <span className="min-w-44 text-sm text-muted-foreground">{t("grand.expenses")}</span>
@@ -440,7 +457,7 @@ export function StatementEditor({
           <div className="h-px bg-border" />
           <div className="flex items-center justify-between">
             <span className="font-bold">{t("grand.total")}</span>
-            <span className="font-display text-xl font-extrabold">{formatCurrency(grandTotal, cur)}</span>
+            <span className="font-display text-xl font-extrabold">{betragOderStrich(grandTotal, cur)}</span>
           </div>
 
           {/* Steueraufschlüsselung (EN 16931) — erst nach Finalisierung gesetzt. */}
@@ -482,7 +499,7 @@ export function StatementEditor({
                 />
               </Labeled>
               <Stat label={t("summary.ownerPayout")} value={formatCurrency(st.summary.owner_payout, ownerCur)} />
-              <Stat label={t("summary.pmPayout")} value={formatCurrency(st.summary.pm_payout, cur)} />
+              <Stat label={t("summary.pmPayout")} value={betragOderStrich(st.summary.pm_payout, cur)} />
             </div>
           )}
         </div>
@@ -574,7 +591,7 @@ function RentalActivity({
                         {r.channel}
                       </span>
                     </td>
-                    <td className="py-2 pr-4 text-right">{formatCurrency(r.total_price, currency)}</td>
+                    <td className="py-2 pr-4 text-right">{betragOderStrich(r.total_price, currency)}</td>
                     <td className="py-2 text-right">{formatCurrency(r.total_payout, currency)}</td>
                   </tr>
                 ))
@@ -583,7 +600,7 @@ function RentalActivity({
                     <td className="py-2 pr-4 text-accent">{r.listing ?? "—"}</td>
                     <td className="py-2 pr-4">{r.reservations}</td>
                     <td className="py-2 pr-4">{r.nights}</td>
-                    <td className="py-2 pr-4 text-right">{formatCurrency(r.total_price, currency)}</td>
+                    <td className="py-2 pr-4 text-right">{betragOderStrich(r.total_price, currency)}</td>
                     <td className="py-2 text-right">{formatCurrency(r.total_payout, currency)}</td>
                   </tr>
                 ))}
@@ -592,7 +609,7 @@ function RentalActivity({
               <td className="py-2 pr-4">{totalNights}</td>
               <td className="py-2 pr-4" />
               {view === "reservation" && <td className="py-2 pr-4" />}
-              <td className="py-2 pr-4 text-right">{formatCurrency(statement.summary.total_price, currency)}</td>
+              <td className="py-2 pr-4 text-right">{betragOderStrich(statement.summary.total_price, currency)}</td>
               <td className="py-2 text-right">{formatCurrency(statement.summary.total_payout, currency)}</td>
             </tr>
           </tbody>

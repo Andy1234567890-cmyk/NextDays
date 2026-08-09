@@ -36,6 +36,7 @@ from .schemas import (
     PriceOverrideRequest,
     RestrictionRow,
     RestrictionRowsRequest,
+    SeasonMode,
     SliceHealth,
     StopSellDay,
 )
@@ -393,10 +394,32 @@ class CalendarService:
             conflicting_days=conflicts,
         )
 
-    def block(self, tenant_id: str, req: BlockRequest) -> int:
+    def block(
+        self,
+        tenant_id: str,
+        req: BlockRequest,
+        *,
+        block_request_id: str | None = None,
+    ) -> int:
         """Tage sperren (manuell). Idempotenter Upsert pro Tag. Gibt Anzahl zurück.
 
         Schützt vor Double-Booking: bereits gebuchte Tage werden NICHT überschrieben.
+
+        `block_request_id` verknüpft die gesperrten Nächte mit dem GENEHMIGTEN
+        Eigentümer-Antrag (0337), damit sein Widerruf gezielt nur diese Zeilen
+        wieder freigibt. `None` ist der Normalfall und kein fehlender Wert: eine
+        Agentur-Sperre (Renovierung) entsteht ohne Antrag. Der Parameter steht
+        BEWUSST nicht im HTTP-`BlockRequest` — er darf nicht vom Client kommen,
+        sonst hängte jemand seine Sperre an einen fremden Antrag (Wurzel 3).
+
+        FREMDE SPERREN BLEIBEN FREMD: Der Upsert läuft auf
+        `(property_id, unit_id, date)`. Eine Nacht, die schon von jemand
+        anderem gesperrt ist, würde durch ein blindes Schreiben SEINE Zeile
+        übernehmen — die Agentur-Sperre trüge danach die Antrags-ID und der
+        Widerruf des Antrags löschte sie doch wieder mit. Solche Tage werden
+        deshalb ausgelassen: sie sind bereits gesperrt, die Sperre ist der
+        Zielzustand, und der Antrag beansprucht nur die Nächte, die es OHNE
+        ihn nicht gäbe.
         """
         self._require_tenant_property(tenant_id, req.property_id)
         booked = [
@@ -408,15 +431,32 @@ class CalendarService:
             raise CalendarError(
                 "Zeitraum enthält bereits gebuchte Tage.", status_code=409
             )
+        fremd = (
+            self._fremde_sperrtage(req.property_id, req.range, block_request_id)
+            if block_request_id is not None
+            else frozenset()
+        )
         payload = [
             {
                 "property_id": req.property_id,
                 "date": day.isoformat(),
                 "status": AvailabilityStatus.blocked.value,
                 "source": AvailabilitySource.manual.value,
+                "block_request_id": block_request_id,
             }
             for day in req.range.nights()
+            if day.isoformat() not in fremd
         ]
+        if not payload:
+            # Alles im Zeitraum ist bereits anderweitig gesperrt. Der
+            # Zielzustand steht — es wird nichts geschrieben und nichts an
+            # Channex gemeldet, aber auch kein Fehler erfunden.
+            log.info(
+                "calendar_block_bereits_gesperrt",
+                property_id=req.property_id,
+                block_request_id=block_request_id,
+            )
+            return 0
         # Eine Sperre gilt dem ganzen Typ → je Einheit eine Zeile (0266).
         self._db().table("availability").upsert(
             je_einheit(self._db(), req.property_id, payload),
@@ -428,6 +468,32 @@ class CalendarService:
         )
         log.info("calendar_block", property_id=req.property_id, days=len(payload))
         return len(payload)
+
+    def _fremde_sperrtage(
+        self, property_id: str, rng: DateRange, block_request_id: str
+    ) -> frozenset[str]:
+        """Tage im Zeitraum, die eine ANDERE Sperre bereits hält.
+
+        „Andere" heißt: `block_request_id` ist NULL (Agentur-Sperre) oder eine
+        andere Antrags-ID. Die eigenen Zeilen sind ausgenommen — sonst könnte
+        ein Retry derselben Genehmigung seine eigene Sperre nicht mehr
+        auffrischen (Wurzel 2: retrybar bleiben).
+        """
+        rows = (
+            self._db()
+            .table("availability")
+            .select("date, block_request_id")
+            .eq("property_id", property_id)
+            .eq("status", AvailabilityStatus.blocked.value)
+            .gte("date", rng.start.isoformat())
+            .lt("date", rng.end.isoformat())
+            .execute()
+        ).data or []
+        return frozenset(
+            str(r["date"])
+            for r in rows
+            if r.get("block_request_id") != block_request_id
+        )
 
     def set_price_override(self, tenant_id: str, req: PriceOverrideRequest) -> None:
         """Tagespreis im Kalenderblatt setzen/zurücknehmen (Lastenheft §2.2).
@@ -986,6 +1052,287 @@ class CalendarService:
             self._clear_overrides_to_base(
                 season["property_id"], start, end_excl
             )
+
+    def apply_season_to_properties(
+        self, tenant_id: str, season_id: str, targets: list[str],
+        *, mit_zeitraeumen: bool = True,
+    ) -> dict[str, object]:
+        """Eine Prozent-Saison auf weitere eigene Objekte übertragen (KOPIE).
+
+        Wer 18 Häuser in derselben Region führt, hat dieselbe Hochsaison für alle
+        und malte sie bisher 18-mal von Hand. Nach dem Übertragen ist jede Saison
+        eigenständig: eine spätere Änderung an der Quelle zieht NICHT nach — das
+        ist das Hausmuster (Gebühren, Steuern, Aktionen).
+
+        NUR `percent`: ein Fixbetrag ist objektspezifisch (140 DKK für ein Studio
+        sind für ein 8-Personen-Haus falsch). Ein Prozentsatz rechnet am Ziel
+        gegen dessen EIGENEN Rate-Plan-Basispreis und ergibt dort automatisch den
+        passenden Betrag — der einzige Modus, der objektübergreifend stimmt.
+        """
+        quelle = self._own_season(tenant_id, season_id)
+        if quelle["mode"] != SeasonMode.percent.value:
+            raise CalendarError(
+                "Nur prozentuale Saisons lassen sich übertragen: ein fester "
+                "Nachtpreis gilt nur für dieses Objekt.",
+                status_code=422,
+            )
+        spans = self._season_spans(season_id) if mit_zeitraeumen else []
+        if mit_zeitraeumen and not spans:
+            # Eine UNBEMALTE Quelle „mit Zeiträumen" zu übertragen hieß faktisch
+            # „Zeiträume am Ziel löschen": `_replace_season_spans` gab die alten
+            # Tage der gleichnamigen Ziel-Saison frei und setzte nichts an ihre
+            # Stelle — mit grünem Erfolgs-Toast, während am Ziel Tage gelöscht
+            # und Basispreise an die Portale rausgingen. Das ist nie das, was der
+            # Knopf verspricht: „übertragen" überträgt, es löscht nicht.
+            # Deshalb fail-closed (Wurzel 5) statt stiller Datenverlust — wer am
+            # Ziel wirklich aufräumen will, tut das dort bewusst.
+            raise CalendarError(
+                "Diese Saison hat keine bemalten Zeiträume. Ohne Zeiträume "
+                "gäbe es am Zielobjekt nichts zu setzen — bemale sie zuerst "
+                "oder übertrage nur die Definition ohne Zeiträume.",
+                status_code=422,
+            )
+        uebertragen = 0
+        uebersprungen: list[dict[str, str]] = []
+        for ziel_id in dict.fromkeys(targets):
+            if ziel_id == quelle["property_id"]:
+                continue  # die Quelle selbst ist kein Ziel
+            # Jede Ziel-ID EINZELN scopen: der Service-Role-Key umgeht RLS, eine
+            # fremde ID ist ein Fehler, kein stilles Überspringen (Wurzel 3).
+            # Das steht bewusst VOR der Klammer unten: eine fremde ID ist kein
+            # „Ziel hat Pech gehabt", sondern ein 404 für den ganzen Aufruf.
+            self._require_tenant_property(tenant_id, ziel_id)
+            grund = self._apply_season_to_one(
+                tenant_id, quelle, ziel_id, spans, mit_zeitraeumen=mit_zeitraeumen
+            )
+            if grund is None:
+                uebertragen += 1
+            else:
+                uebersprungen.append({"property_id": ziel_id, "grund": grund})
+        log.info(
+            "calendar_season_applied", season_id=season_id,
+            uebertragen=uebertragen, uebersprungen=len(uebersprungen),
+        )
+        return {"uebertragen": uebertragen, "uebersprungen": uebersprungen}
+
+    def _apply_season_to_one(
+        self, tenant_id: str, quelle: dict, ziel_id: str,
+        spans: list[tuple[date, date]], *, mit_zeitraeumen: bool,
+    ) -> str | None:
+        """Ein einzelnes Ziel bedienen. `None` = übertragen, sonst der Grund-Slug.
+
+        Die Klammer um EIN Ziel ist der eigentliche Punkt: ohne sie riss ein
+        Fehler am 5. von 18 Objekten den ganzen Aufruf als 500 mit — Ziele 1-4
+        waren geschrieben, Ziel 5 halb (Saison und Zuweisungen da, price_overrides
+        leer), und der Betrieb sah nur „fehlgeschlagen" ohne zu wissen, welche
+        Objekte betroffen sind. Ein Ziel scheitert ab jetzt für sich und kommt
+        benannt als `uebersprungen` zurück.
+
+        Bei einem Fehler wird NICHT zurückgerollt — der Teilzustand bleibt stehen
+        und wird als solcher gemeldet. Das ist eine bewusste Entscheidung gegen
+        den vorherigen „Rollback", der selbst der schlimmere Datenverlust war:
+        er rief `_replace_season_spans` mit leerer Liste auf und löschte damit
+        ALLES, was unter dem Namen der Saison am Ziel stand — auch den seit
+        Monaten von Hand bemalten Kalender einer gleichnamigen ALTEN Saison des
+        Ziels, die mit diesem Aufruf nie etwas zu tun hatte. Der Betrieb las
+        „übersprungen — erneut versuchen" und hatte real einen Monat Hochsaison
+        verloren, während die Portale den Basispreis bekamen.
+
+        Ein ECHTER Rollback (Alt-Zustand vorher sichern, im Fehlerfall
+        zurückschreiben) wäre hier kein Gewinn: PostgREST gibt uns keine
+        Transaktion, das Zurückschreiben wäre selbst eine mehrschrittige
+        Schreibfolge, die auf halber Strecke scheitern kann — ein zweiter
+        Datenverlust-Pfad für denselben Fehlerfall.
+
+        Dass der Teilzustand ungefährlich ist, ist allerdings KEINE Eigenschaft
+        des Fehlerpfads, sondern eine, die sich der Normalpfad verdienen muss:
+        Solange `_replace_season_spans` erst löschte und dann einfügte, war ein
+        Abbruch dazwischen der schlimmste denkbare Ausgang — der vorbestehende
+        Kalender des Ziels weg, die neuen Zeiträume nie geschrieben, und ein
+        erneuter Versuch heilte nichts, weil er die Zeiträume der QUELLE schreibt.
+        Deshalb ist die Schreibfolge dort so geordnet, dass jeder Abbruch einen
+        Überschuss hinterlässt statt einer Lücke (siehe dort). Zu viel ist
+        reparabel, zu wenig nicht.
+
+        Was nach einem Abbruch stehen bleiben kann, ist damit genau zweierlei:
+        die Saison mit ihren Zeiträumen, deren Tage noch auf dem Basispreis
+        liegen (gescheitert ist `_rematerialize_season`, also der idempotente
+        Schritt), und/oder ein alter Zeitraum des Ziels, der noch nicht abgeräumt
+        wurde. Beides ist zu viel oder zu wenig Aufschlag, nie ein erfundener
+        Preis (Wurzel 4), und beides räumt derselbe Aufruf beim nächsten Mal auf.
+
+        Damit das keine stille Falschaussage wird (Wurzel 5), sagt der
+        Grund-Slug `teilweise_uebertragen` genau das: die Saison steht am Ziel,
+        die Tagespreise sind noch unvollständig, ein erneuter Versuch
+        vervollständigt sie.
+
+        Wurzel 5: KEIN breites `except Exception` über alles. Kontroll-Signale
+        (ChannexBudgetExhausted → der Worker muss den Job verzögern statt ihn
+        still als „done" zu markieren) und die Scope-/Fach-Fehler CalendarError
+        schlagen unverändert nach oben durch.
+        """
+        # Lokaler Import wie an den übrigen Channex-Berührungspunkten des
+        # Repos (recompute.py:725, worker.py:796) — der Kalender-Slice hängt
+        # sonst am Start am Channel-Manager.
+        from src.features.channel_manager.channex_client import (  # noqa: PLC0415
+            ChannexBudgetExhausted,
+        )
+
+        base, _min = self._fetch_rate_plan(ziel_id)
+        if base is None:
+            # percent ohne Basispreis kann nicht materialisieren
+            # (_season_price_for_day gibt None). Kein Serverfehler, aber es
+            # muss sichtbar sein statt still zu verschwinden (Wurzel 5).
+            return "kein_basispreis"
+        if not base:
+            # base_price = 0 ist ein DATENFEHLER (Objekt in Vorbereitung), kein
+            # Preis: `0 * 1,30` ergibt 0,00 und würde als Nachtpreis in
+            # price_overrides landen UND an die Portale gepusht — ein Objekt für
+            # 0,00 bei Booking.com ist der teuerste denkbare Ausgang. Deshalb
+            # fail-closed mit eigenem Grund statt eines plausiblen Werts
+            # (Wurzel 4). Der Vergleich ist bewusst `not base` und nicht
+            # `base is None`: 0.0 besteht jede None-Prüfung.
+            return "basispreis_null"
+        ziel_saison = self._upsert_season_copy(ziel_id, quelle)
+        try:
+            if mit_zeitraeumen:
+                self._replace_season_spans(tenant_id, ziel_saison, spans)
+            # Ohne Rematerialisierung stünden Saison und price_overrides
+            # auseinander: die UI zeigte die Saison, Kalender und Portale hätten
+            # weiter den Basispreis (der Prozentsatz wird materialisiert, 0138).
+            self._rematerialize_season(tenant_id, ziel_saison)
+        except (ChannexBudgetExhausted, CalendarError):
+            # Kontroll-Signal bzw. fachlicher Fehler: MUSS durchschlagen, sonst
+            # meldeten wir „übertragen", während der Push nie passiert ist.
+            raise
+        except Exception as exc:  # noqa: BLE001 — je Ziel klammern, siehe Docstring
+            # KEIN Rollback (siehe Docstring): der Teilzustand bleibt stehen und
+            # wird benannt. Ein „Aufräumen" hätte hier den vorbestehenden
+            # Kalender des Ziels gelöscht, nicht den halben Zustand DIESES
+            # Aufrufs.
+            log.warning(
+                "calendar_season_apply_target_partial",
+                season_id=quelle["id"], property_id=ziel_id, error=str(exc),
+            )
+            return "teilweise_uebertragen"
+        return None
+
+    def _upsert_season_copy(self, ziel_id: str, quelle: dict) -> dict:
+        """Die Saison am Ziel anlegen ODER die gleichnamige aktualisieren.
+
+        `property_seasons` trägt UNIQUE (property_id, name) (0138). Select-dann-
+        Insert wäre hier eine Race: zwei gleichzeitige Klicks lesen beide „nicht
+        vorhanden" und laufen beide in den Insert — der zweite bekäme 23505 als
+        500. Deshalb der UNIQUE als Backstop im SELBEN Statement (Wurzel 2): der
+        Konflikt wird von der DB entschieden, nicht von unserem Lesestand.
+        """
+        werte = {
+            "color": quelle["color"], "mode": quelle["mode"],
+            "amount": quelle["amount"],
+        }
+        row = (
+            self._db()
+            .table("property_seasons")
+            .upsert(
+                {"property_id": ziel_id, "name": quelle["name"], **werte},
+                on_conflict="property_id,name",
+            )
+            .execute()
+        ).data
+        if not row:
+            raise CalendarError(
+                "Saison konnte am Zielobjekt nicht angelegt werden.",
+                status_code=500,
+            )
+        # Der Upsert liefert die Zeile MIT ihrer id zurück — auch im Konfliktfall
+        # die der bestehenden. Genau die brauchen die Zeiträume unten.
+        return row[0]
+
+    def _replace_season_spans(
+        self, tenant_id: str, ziel_saison: dict, spans: list[tuple[date, date]],
+    ) -> None:
+        """Die Zeiträume der Ziel-Saison durch die der Quelle ersetzen.
+
+        Gegenzustand (Wurzel 1): die ALTEN Zeiträume dieser Saison müssen VOR dem
+        Setzen der neuen freigegeben werden — sonst blieben Tage einer früheren
+        Übertragung stehen und überlagerten sich mit den neuen. Nach dem groben
+        Basispreis-Reset werden überlappende ANDERE Saisons des Ziels wieder
+        materialisiert, damit deren Tage die Übertragung überleben.
+
+        ERSETZEN heißt: es muss etwas zum Setzen geben. Die leere Liste steigt
+        deshalb GANZ OBEN aus, VOR dem Löschen — sonst ist diese Methode ein
+        „Kalender des Ziels leeren" mit ersetzendem Namen. Genau daran hingen
+        drei Befunde derselben Wurzel: der Prüfpunkt stand früher NACH dem
+        Delete, also löschte jeder Aufruf mit leerer Liste erst alles und stellte
+        dann fest, dass er nichts zu setzen hat. Wer Tage bewusst freigeben will,
+        nimmt `clear_season_range`/`unassign_season` — die heißen so und melden
+        es auch so.
+
+        REIHENFOLGE: erst INSERT, dann DELETE — und zwar gezielt nur die vorher
+        gelesenen ALTEN Zeilen (per id), nie pauschal über `season_id`.
+
+        Der Grund ist der Abbruch auf halber Strecke. PostgREST gibt uns keine
+        Transaktion über mehrere Requests: bricht diese Folge irgendwo ab
+        (Timeout/504 — genau der Fall, für den die Fehlerklammer in
+        `_apply_season_to_one` existiert), entscheidet allein die Reihenfolge,
+        was der Betrieb danach vorfindet. Mit Delete zuerst war das Ergebnis
+        TOTALVERLUST: die eigene, gleichnamige Saison des Ziels (seit Monaten von
+        Hand bemalt) war weg, die neuen Zeiträume nie geschrieben, und der
+        Kalender ging als nackter Basispreis an die Portale. Ein erneuter Versuch
+        heilte das NICHT — er schrieb die Zeiträume der Quelle, der alte Zeitraum
+        des Ziels war unwiederbringlich.
+
+        Mit Insert zuerst ist der Zwischenzustand ein ÜBERSCHUSS statt einer
+        Lücke: kurzzeitig stehen alte und neue Zuweisungen nebeneinander. Das ist
+        ausdrücklich erlaubter Normalzustand — 0138 lässt Overlaps zu und löst
+        sie beim Materialisieren als „last win" auf, genau wie das Übermalen im
+        Kalender. Ein Abbruch kostet damit höchstens einen zu viel gefärbten
+        Zeitraum, den der nächste Versuch (oder das Aufräumen von Hand) korrigiert
+        — nie einen verlorenen. Zu viel ist reparabel, zu wenig nicht.
+
+        Das gezielte Löschen per id ist dabei der tragende Teil: ein
+        `delete().eq("season_id", …)` nach dem Insert würde die gerade
+        geschriebenen neuen Zeilen gleich mit entfernen.
+
+        Das Löschen der alten Zeilen steht VOR dem Zurücksetzen ihrer
+        Tagespreise, und diese Reihenfolge ist erzwungen, nicht beliebig:
+        `_rematerialize_overlaps` fragt die Zuweisungen, wem ein Tag noch gehört.
+        Stünden die alten Zeilen dabei noch, malte es genau die Tage sofort
+        wieder mit dem alten Saisonpreis, die es gerade freigeben soll — der
+        Gegenzustand (Wurzel 1) fiele still aus.
+
+        Der Preis dafür: bricht das Zurücksetzen danach ab, bleiben für diesen
+        Zeitraum Overrides ohne Zuweisung stehen (zu VIEL Aufschlag an den
+        Portalen, siehe `_apply_season_to_one`). Das ist der bewusst gewählte
+        Rest — sichtbar im Kalender, jederzeit über `clear_season_range`
+        korrigierbar und beim erneuten Übertragen desselben Zeitraums ohnehin
+        überschrieben. Ein verlorener Kalender wäre es nicht.
+        """
+        if not spans:
+            return
+        property_id = ziel_saison["property_id"]
+        alt = self._season_assignments(ziel_saison["id"])
+        self._db().table("property_season_assignments").insert([
+            {
+                "property_id": property_id, "season_id": ziel_saison["id"],
+                "start_date": start.isoformat(),
+                "end_date": (end_excl - timedelta(days=1)).isoformat(),  # inklusiv
+            }
+            for start, end_excl in spans
+        ]).execute()
+        if alt:
+            self._db().table("property_season_assignments").delete().in_(
+                "id", [a["id"] for a in alt]
+            ).execute()
+        for a in alt:
+            start = date.fromisoformat(a["start_date"])
+            end_excl = date.fromisoformat(a["end_date"]) + timedelta(days=1)
+            self._clear_overrides_to_base(property_id, start, end_excl)
+            # Nach dem groben Basispreis-Reset die Tage zurückholen, die noch
+            # einer Saison gehören — seit dem Insert oben zählen die NEUEN
+            # Zeiträume dieser Saison dazu, überlappende Tage behalten also
+            # direkt ihren Saisonpreis statt kurz auf den Basispreis zu fallen.
+            self._rematerialize_overlaps(tenant_id, property_id, start, end_excl)
 
     def assign_season(
         self, tenant_id: str, property_id: str, season_id: str, rng: DateRange,
@@ -1678,41 +2025,85 @@ class CalendarService:
             "stop_sell": row.stop_sell,
         }
 
-    def unblock(self, tenant_id: str, property_id: str, rng: DateRange) -> int:
+    def unblock(
+        self,
+        tenant_id: str,
+        property_id: str,
+        rng: DateRange,
+        *,
+        block_request_id: str | None = None,
+    ) -> int:
         """Manuelle Sperre im Zeitraum aufheben (öffentlicher, tenant-gescopter
-        Einstieg — Wurzel 3). Gibt die Anzahl der Tage im Zeitraum zurück."""
+        Einstieg — Wurzel 3). Gibt die Anzahl der Tage im Zeitraum zurück.
+
+        `block_request_id` schränkt die Freigabe auf die Nächte GENAU DIESES
+        genehmigten Antrags ein (0337). Ohne ihn gilt der alte, breite Weg: der
+        Agentur-Knopf „Sperre aufheben" meint tatsächlich jede manuelle Sperre
+        im gewählten Zeitraum, und das ist dort richtig.
+        """
         self._require_tenant_property(tenant_id, property_id)
-        self._unblock(property_id, rng)
+        self._unblock(property_id, rng, block_request_id=block_request_id)
         return len(list(rng.nights()))
 
-    def _unblock(self, property_id: str, rng: DateRange) -> None:
+    def _unblock(
+        self,
+        property_id: str,
+        rng: DateRange,
+        *,
+        block_request_id: str | None = None,
+    ) -> None:
         """Manuelle Sperre im Zeitraum aufheben (nur source=manual; gebuchte Tage
         bleiben unberührt). Gibt an Channex NUR die Tage frei (availability=1), die
-        danach WIRKLICH offen sind — NICHT den ganzen Range."""
-        self._db().table("availability").delete().eq(
-            "property_id", property_id
-        ).eq("status", "blocked").eq("source", "manual").gte(
-            "date", rng.start.isoformat()
-        ).lt("date", rng.end.isoformat()).execute()
-        # Tag-genau: Tage, die im Range noch belegt sind (echte Direkt-/Plattform-
-        # Reservierung ODER importierte OTA-Buchung, status='booked'), NICHT als
-        # availability=1 an Channex melden — sonst würde das Portal einen gebuchten
-        # Tag erneut verkaufbar machen (Überbuchung). Nur die tatsächlich offenen
-        # Tage freigeben, gruppiert in zusammenhängende Zeiträume.
-        still_booked = {
+        danach WIRKLICH offen sind — NICHT den ganzen Range.
+
+        WURZEL 1 — nur den EIGENEN Gegenzustand aufheben: Mit
+        `block_request_id` wird ausschliesslich gelöscht, was dieser Antrag
+        gesperrt hat. Ohne die Einschränkung riss der Widerruf eines
+        Eigentümer-Antrags (5.–7.) eine im selben Zeitraum liegende
+        AGENTUR-Sperre (1.–20., Handwerker) mit auf — beide tragen
+        `status='blocked' AND source='manual'`, es gab kein Unterscheidungs-
+        merkmal. Das Objekt war danach über Channex wieder verkäuflich.
+        """
+        query = (
+            self._db().table("availability").delete()
+            .eq("property_id", property_id)
+            .eq("status", "blocked")
+            .eq("source", "manual")
+        )
+        if block_request_id is not None:
+            query = query.eq("block_request_id", block_request_id)
+        query.gte("date", rng.start.isoformat()).lt(
+            "date", rng.end.isoformat()
+        ).execute()
+        # Tag-genau: Tage, die im Range noch belegt sind, NICHT als
+        # availability=1 an Channex melden — sonst würde das Portal einen
+        # gebuchten oder weiterhin gesperrten Tag erneut verkaufbar machen.
+        # Nur die tatsächlich offenen Tage freigeben, gruppiert in
+        # zusammenhängende Zeiträume.
+        #
+        # ZWEI Zustände zählen als „nicht frei":
+        #   * `booked` — echte Direkt-/Plattform-Reservierung oder importierte
+        #     OTA-Buchung. Sie freizugeben wäre eine Überbuchung.
+        #   * `blocked` — eine Sperre, die den obigen DELETE ÜBERLEBT hat. Nach
+        #     der gezielten Löschung (block_request_id) ist das genau die
+        #     Agentur-Sperre, die im selben Zeitraum weiterläuft. Ohne sie hier
+        #     wäre die Datenbank zwar korrekt, aber Channex bekäme trotzdem
+        #     „verfügbar" gemeldet — die Nacht wäre bei den Portalen wieder
+        #     buchbar, und der Fehler nur eine Ebene tiefer gewandert.
+        noch_belegt = {
             r["date"]
             for r in (
                 self._db()
                 .table("availability")
                 .select("date")
                 .eq("property_id", property_id)
-                .eq("status", "booked")
+                .in_("status", ["booked", "blocked"])
                 .gte("date", rng.start.isoformat())
                 .lt("date", rng.end.isoformat())
                 .execute()
             ).data or []
         }
-        for span_start, span_end in _contiguous_open_spans(rng, still_booked):
+        for span_start, span_end in _contiguous_open_spans(rng, noch_belegt):
             self._push_channex_availability(property_id, span_start, span_end, 1)
 
     def _push_channex_rate(

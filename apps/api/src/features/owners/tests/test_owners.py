@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from src.core.security import AuthContext
 from src.features.owners.schemas import (
     OwnerCreate,
+    OwnerPropertiesAssign,
     OwnerPropertyAssign,
     OwnerUpdate,
 )
@@ -50,7 +51,13 @@ class _Query:
         self._payload = payload
         return self
 
-    def upsert(self, payload: dict, on_conflict: str | None = None) -> "_Query":
+    def upsert(
+        self, payload: dict | list[dict], on_conflict: str | None = None
+    ) -> "_Query":
+        # Wie PostgREST: EIN Datensatz oder eine LISTE. Die Mehrfachzuordnung
+        # schreibt alle Objekte in einem Aufruf; nähme die Attrappe nur ein
+        # dict, liefe der Test grün an einem Schreibvorgang vorbei, den es in
+        # Wirklichkeit gab.
         self._op = "upsert"
         self._payload = payload
         self._conflict = on_conflict
@@ -108,15 +115,30 @@ class _Query:
                 created.append(row)
             return _Result(created)
         if self._op == "upsert":
-            payload = dict(self._payload)  # type: ignore[arg-type]
+            roh = self._payload
+            eintraege = roh if isinstance(roh, list) else [roh]
             keys = (self._conflict or "").split(",")
-            for row in rows:
-                if all(str(row.get(k)) == str(payload.get(k)) for k in keys):
-                    row.update(payload)
-                    return _Result([row])
-            payload.setdefault("id", f"{self._table}-{self._db.next_id()}")
-            rows.append(payload)
-            return _Result([payload])
+            ergebnis = []
+            for eintrag in eintraege:
+                payload = dict(eintrag)  # type: ignore[arg-type]
+                treffer = next(
+                    (
+                        row
+                        for row in rows
+                        if all(
+                            str(row.get(k)) == str(payload.get(k)) for k in keys
+                        )
+                    ),
+                    None,
+                )
+                if treffer is not None:
+                    treffer.update(payload)
+                    ergebnis.append(treffer)
+                    continue
+                payload.setdefault("id", f"{self._table}-{self._db.next_id()}")
+                rows.append(payload)
+                ergebnis.append(payload)
+            return _Result(ergebnis)
         selected = [r for r in rows if self._match(r)]
         if self._op == "update":
             for r in selected:
@@ -124,6 +146,20 @@ class _Query:
             return _Result(selected)
         if self._op == "delete":
             self._db.tables[self._table] = [r for r in rows if not self._match(r)]
+            # `on delete cascade` nachbilden: `owner_properties.owner_id` und
+            # `owner_property_assignments` hängen am Eigentümer (0063/0058,
+            # `confdeltype='c'` live gegen die Staging-DB geprüft). Ohne das
+            # behauptete die Attrappe, nach dem Löschen eines Eigentümers
+            # blieben seine Zuordnungen liegen — und ein Rollback-Test wäre
+            # aus dem falschen Grund rot.
+            if self._table == "owners":
+                geloescht = {str(r["id"]) for r in selected}
+                for kind in ("owner_properties",):
+                    self._db.tables[kind] = [
+                        r
+                        for r in self._db.tables.get(kind, [])
+                        if str(r.get("owner_id")) not in geloescht
+                    ]
             return _Result(selected)
         if self._order:
             selected = sorted(selected, key=lambda r: str(r.get(self._order) or ""))
@@ -377,3 +413,464 @@ def test_link_valid_owner_user_ok() -> None:
     svc = _svc({"users": [{"id": "u-own", "tenant_id": "t-1", "role": "owner"}]})
     res = svc.create(_ctx(), OwnerCreate(name="A", user_id="u-own"))
     assert res.user_id == "u-own"
+
+
+# --- Portalzugang ------------------------------------------------------------
+#
+# Der Einladungs-/Mailweg selbst (AuthService.invite → EinladungService) ist in
+# `auth/tests` abgedeckt; hier steht die Logik des owners-Slice davor und
+# danach: die 422-Sperre ohne Adresse, die Idempotenz über eine bereits
+# vorhandene Adresse und die Verknüpfung von `owners.user_id`.
+
+def test_portalzugang_ohne_email_422() -> None:
+    """Ohne Postfach kein Einmal-Link — klarer Fehler statt stillem Überspringen.
+
+    Die Prüfung greift VOR dem Insert: der Eigentümer darf nicht angelegt sein,
+    wenn der Aufruf scheitert, sonst legt der Betreiber ihn beim zweiten
+    Versuch doppelt an.
+    """
+    svc = _svc()
+    with pytest.raises(OwnerError) as exc:
+        svc.create(_ctx(), OwnerCreate(name="Ohne Adresse", portalzugang=True))
+    assert exc.value.status_code == 422
+    assert svc.list(_ctx()).total == 0
+
+
+def test_portalzugang_verknuepft_bestehenden_owner_login() -> None:
+    """Gibt es zu der Adresse schon einen owner-Login, wird DIESER verknüpft.
+
+    Das ist der Idempotenz-Anker (Wurzel 2): ein Doppelklick darf keinen
+    zweiten Nutzer und keine zweite Einladungsmail erzeugen. Weil der
+    vorhandene Nutzer wiederverwendet wird, läuft der Mailweg hier gar nicht
+    erst an — der Test kommt deshalb ohne SMTP aus.
+    """
+    svc = _svc(
+        {
+            "users": [
+                {
+                    "id": "u-own",
+                    "tenant_id": "t-1",
+                    "role": "owner",
+                    "email": "a@example.com",
+                }
+            ]
+        }
+    )
+    res = svc.create(
+        _ctx(),
+        OwnerCreate(name="A", email="a@example.com", portalzugang=True),
+    )
+    assert res.user_id == "u-own"
+    assert res.einladung_versendet is True
+
+
+def test_portalzugang_weist_fremde_rolle_ab() -> None:
+    """Ein Mitarbeiter-Login wird nicht still zum Eigentümer umgewidmet."""
+    svc = _svc(
+        {
+            "users": [
+                {
+                    "id": "u-staff",
+                    "tenant_id": "t-1",
+                    "role": "staff",
+                    "email": "s@example.com",
+                }
+            ]
+        }
+    )
+    with pytest.raises(OwnerError) as exc:
+        svc.create(
+            _ctx(),
+            OwnerCreate(name="S", email="s@example.com", portalzugang=True),
+        )
+    assert exc.value.status_code == 400
+
+
+def test_nachtraeglicher_portalzugang_ohne_email_422() -> None:
+    """Auch der Folgeschritt verlangt eine Adresse."""
+    svc = _svc()
+    owner = svc.create(_ctx(), OwnerCreate(name="Ohne Adresse"))
+    with pytest.raises(OwnerError) as exc:
+        svc.portalzugang_einladen(_ctx(), owner.id)
+    assert exc.value.status_code == 422
+
+
+def test_nachtraeglicher_portalzugang_fremder_tenant_404() -> None:
+    """Gleicher Scope wie der List-Pfad (Wurzel 9) — kein fremder Mandant."""
+    svc = _svc({"users": [{"id": "u-own", "tenant_id": "t-1", "role": "owner"}]})
+    owner = svc.create(_ctx(), OwnerCreate(name="A", email="a@example.com"))
+    with pytest.raises(OwnerError) as exc:
+        svc.portalzugang_einladen(_ctx(tenant="t-fremd"), owner.id)
+    assert exc.value.status_code == 404
+
+
+def test_geloeschter_tenant_gibt_409_statt_500() -> None:
+    """Ein gültiger Token auf einen gelöschten Mandanten darf keinen 500 werfen.
+
+    Real aufgetreten: ein Parallel-Lauf hielt noch ein gültiges JWT, während
+    der zugehörige Tenant schon weg war. `owners.tenant_id` referenziert
+    `tenants(id)`, der Insert scheiterte mit 23503, und der rohe `APIError`
+    entkam als nacktes `internal_error`-500 (Wurzel 5: client-erreichbarer
+    Input darf keinen 500 werfen). Live gegen die laufende API reproduziert
+    und danach als 409 gegengeprüft.
+    """
+    from postgrest.exceptions import APIError
+
+    class _FkDB(_DB):
+        def table(self, name: str) -> object:
+            if name == "owners":
+                raise APIError({"code": "23503", "message": "fk"})
+            return super().table(name)
+
+    svc = OwnersService(service_client=_FkDB({}))  # type: ignore[arg-type]
+    with pytest.raises(OwnerError) as exc:
+        svc.create(_ctx(), OwnerCreate(name="Geist"))
+    assert exc.value.status_code == 409
+
+
+def test_sprache_wird_zurueckgegeben() -> None:
+    """`owners.language` muss in der Antwort stehen.
+
+    Regression: `_owner_row` ließ das Feld aus, die Antwort fiel still auf den
+    Schema-Default `None` zurück. Die DB trug längst „da", die API meldete
+    `null` — und die UI zeigte nach dem Speichern wieder ein leeres
+    Sprachfeld (Wurzel 4). Live gegen die Staging-DB reproduziert.
+    """
+    svc = _svc()
+    res = svc.create(_ctx(), OwnerCreate(name="A", language="da"))
+    assert res.language == "da"
+    assert svc.get(_ctx(), res.id).language == "da"
+
+
+# --- Objektzuweisung beim ANLEGEN (Mehrfachauswahl) --------------------------
+
+def _svc_drei() -> OwnersService:
+    """Dienst mit drei freien Objekten im Tenant t-1."""
+    return _svc(
+        {
+            "properties": [
+                {"id": "p-1", "tenant_id": "t-1", "title": "Villa"},
+                {"id": "p-2", "tenant_id": "t-1", "title": "Haus"},
+                {"id": "p-3", "tenant_id": "t-1", "title": "Loft"},
+            ]
+        }
+    )
+
+
+def test_create_ordnet_mehrere_objekte_in_einem_zug_zu() -> None:
+    """Der eigentliche Auftrag: Eigentümer + seine Objekte in EINEM Aufruf."""
+    svc = _svc_drei()
+    res = svc.create(
+        _ctx(), OwnerCreate(name="A", property_ids=["p-1", "p-2", "p-3"])
+    )
+    assert {link.property_id for link in res.properties} == {"p-1", "p-2", "p-3"}
+    # Und die Zuordnung ist wirklich persistiert, nicht nur in der Antwort.
+    assert {link.property_id for link in svc.get(_ctx(), res.id).properties} == {
+        "p-1",
+        "p-2",
+        "p-3",
+    }
+
+
+def test_create_ohne_objekte_bleibt_erlaubt() -> None:
+    """Objektzuweisung ist OPTIONAL — ein Eigentümer darf ohne Objekt entstehen."""
+    svc = _svc_drei()
+    res = svc.create(_ctx(), OwnerCreate(name="A"))
+    assert res.properties == []
+
+
+def test_create_mit_fremdem_objekt_legt_keinen_eigentuemer_an() -> None:
+    """Wurzel 3 + Wurzel 5: fremde ID → Fehler UND kein halber Zustand.
+
+    Ein untergemischtes Objekt eines anderen Mandanten darf nicht zugeordnet
+    werden. Genauso wichtig: der Eigentümer darf dann nicht angelegt
+    zurückbleiben — sonst steht er ohne seine Objekte in der Liste.
+    """
+    svc = _svc_drei()
+    with pytest.raises(OwnerError) as exc:
+        svc.create(_ctx(), OwnerCreate(name="A", property_ids=["p-1", "p-fremd"]))
+    assert exc.value.status_code == 400
+    assert svc.list(_ctx()).total == 0
+
+
+def test_create_mit_bereits_vergebenem_objekt_nennt_das_objekt() -> None:
+    """Race zwischen Dialogöffnen und Speichern: 409 MIT Objektnamen."""
+    svc = _svc_drei()
+    a = svc.create(_ctx(), OwnerCreate(name="A", property_ids=["p-1"]))
+    assert a.properties
+    with pytest.raises(OwnerError) as exc:
+        svc.create(_ctx(), OwnerCreate(name="B", property_ids=["p-1", "p-2"]))
+    assert exc.value.status_code == 409
+    # Der Objektname MUSS im Text stehen — sonst muss der Betreiber bei 18
+    # Objekten selbst suchen, welches gemeint war.
+    #
+    # Der NAME des anderen Eigentümers steht ebenfalls im Text, wird hier aber
+    # nicht geprüft: er kommt aus dem eingebetteten Select `owners(name)`, und
+    # die In-Memory-Attrappe kennt keine PostgREST-Joins. Ein Test, der ihn
+    # hier fordert, würde die Attrappe testen statt den Code. Live gegen die
+    # Staging-DB gegengeprüft (siehe Slice-README).
+    assert "Villa" in exc.value.message
+    # Kein halber Zustand: B wurde zurückgenommen, p-2 blieb frei.
+    assert svc.list(_ctx()).total == 1
+    assert "p-2" in {p.id for p in svc.available_properties(_ctx(), a.id).items}
+
+
+def test_create_dedupliziert_doppelte_objekt_ids() -> None:
+    """Wurzel 2: dieselbe ID doppelt in der Auswahl erzeugt EINE Zuordnung."""
+    req = OwnerCreate(name="A", property_ids=["p-1", "p-1", "p-2"])
+    assert req.property_ids == ["p-1", "p-2"]
+
+
+def test_create_weist_leere_objekt_id_ab() -> None:
+    """Eine leere ID ist ein Fehler, kein still übersprungener Eintrag."""
+    with pytest.raises(ValidationError):
+        OwnerCreate(name="A", property_ids=["p-1", "  "])
+
+
+def test_create_begrenzt_die_objektliste() -> None:
+    """Wurzel 8: kein unbegrenzter Schreib-Hebel über die Listenlänge."""
+    with pytest.raises(ValidationError):
+        OwnerCreate(name="A", property_ids=[f"p-{i}" for i in range(501)])
+
+
+# --- Nachträgliche Mehrfachzuordnung -----------------------------------------
+
+def test_assign_properties_ordnet_mehrere_auf_einmal_zu() -> None:
+    svc = _svc_drei()
+    owner = svc.create(_ctx(), OwnerCreate(name="A"))
+    res = svc.assign_properties(_ctx(), owner.id, ["p-1", "p-3"])
+    assert {link.property_id for link in res.properties} == {"p-1", "p-3"}
+
+
+def test_assign_properties_fremder_tenant_404() -> None:
+    """Wurzel 9: derselbe Scope wie der List-Pfad, auch auf dem Batch-Weg."""
+    svc = _svc_drei()
+    owner = svc.create(_ctx(), OwnerCreate(name="A"))
+    with pytest.raises(OwnerError) as exc:
+        svc.assign_properties(_ctx(tenant="t-2"), owner.id, ["p-1"])
+    assert exc.value.status_code == 404
+
+
+def test_assign_properties_ueberspringt_belegtes_objekt_nicht_still() -> None:
+    svc = _svc_drei()
+    a = svc.create(_ctx(), OwnerCreate(name="A", property_ids=["p-1"]))
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+    with pytest.raises(OwnerError) as exc:
+        svc.assign_properties(_ctx(), b.id, ["p-1", "p-2"])
+    assert exc.value.status_code == 409
+    # Nichts halb geschrieben: p-2 hängt NICHT an B.
+    assert svc.get(_ctx(), b.id).properties == []
+    assert {link.property_id for link in svc.get(_ctx(), a.id).properties} == {"p-1"}
+
+
+def test_assign_properties_leere_liste_abgewiesen() -> None:
+    """Ein Batch-Aufruf ohne Objekte ist ein Aufrufer-Fehler, kein No-op."""
+    with pytest.raises(ValidationError):
+        OwnerPropertiesAssign(property_ids=[])
+
+
+# --- Freie Objekte (Auswahl im Anlege-Dialog) --------------------------------
+
+def test_free_properties_zeigt_nur_objekte_ohne_eigentuemer() -> None:
+    svc = _svc_drei()
+    svc.create(_ctx(), OwnerCreate(name="A", property_ids=["p-1"]))
+    frei = {p.id for p in svc.free_properties(_ctx()).items}
+    assert frei == {"p-2", "p-3"}
+
+
+def test_free_properties_liefert_adresse_und_foto() -> None:
+    """Adresse/Foto machen 18 ähnlich benannte Objekte unterscheidbar."""
+    svc = _svc(
+        {
+            "properties": [
+                {
+                    "id": "p-1",
+                    "tenant_id": "t-1",
+                    "title": "Villa",
+                    "street": "Strandvej",
+                    "house_number": "7",
+                    "city": "Skagen",
+                    "photos": ["https://example.invalid/a.jpg"],
+                }
+            ]
+        }
+    )
+    item = svc.free_properties(_ctx()).items[0]
+    assert item.subtitle == "Strandvej 7, Skagen"
+    assert item.photo == "https://example.invalid/a.jpg"
+
+
+def test_free_properties_ohne_adresse_erfindet_nichts() -> None:
+    """Wurzel 4: fehlende Adresse bleibt leer, kein Platzhaltertext."""
+    svc = _svc_drei()
+    item = svc.free_properties(_ctx()).items[0]
+    assert item.subtitle is None
+    assert item.photo is None
+
+
+# --- Portal-Sicht: owner_properties UND owner_property_assignments -----------
+
+def _svc_mit_login() -> OwnersService:
+    """Tenant mit drei Objekten und einem vorhandenen owner-Login."""
+    return _svc(
+        {
+            "properties": [
+                {"id": "p-1", "tenant_id": "t-1", "title": "Villa"},
+                {"id": "p-2", "tenant_id": "t-1", "title": "Haus"},
+                {"id": "p-3", "tenant_id": "t-1", "title": "Loft"},
+            ],
+            "users": [
+                {
+                    "id": "u-owner",
+                    "tenant_id": "t-1",
+                    "email": "e@example.invalid",
+                    "role": "owner",
+                }
+            ],
+            "owner_property_assignments": [],
+        }
+    )
+
+
+def test_portalzugang_macht_die_objekte_im_portal_sichtbar() -> None:
+    """Regression: Zugang da, Portal leer.
+
+    `owner_properties` ist die ABRECHNUNG, `owner_property_assignments` (0058)
+    die PORTAL-Sicht — nur letztere steuert `owner_can_see_property`. Der
+    owners-Slice schrieb bisher ausschließlich die erste: der Eigentümer bekam
+    einen Zugang und sah nach dem Login NICHTS.
+    """
+    svc = _svc_mit_login()
+    res = svc.create(
+        _ctx(),
+        OwnerCreate(
+            name="A",
+            email="e@example.invalid",
+            portalzugang=True,
+            property_ids=["p-1", "p-2"],
+        ),
+    )
+    assert res.user_id == "u-owner"
+    sicht = {
+        r["property_id"]
+        for r in svc._db.tables["owner_property_assignments"]  # noqa: SLF001  pylint: disable=protected-access
+    }
+    assert sicht == {"p-1", "p-2"}
+
+
+def test_nachtraegliche_zuordnung_zieht_die_portal_sicht_nach() -> None:
+    """Ein später zugeordnetes Objekt muss der Eigentümer auch SEHEN."""
+    svc = _svc_mit_login()
+    owner = svc.create(
+        _ctx(),
+        OwnerCreate(name="A", email="e@example.invalid", portalzugang=True),
+    )
+    svc.assign_properties(_ctx(), owner.id, ["p-3"])
+    sicht = {
+        r["property_id"]
+        for r in svc._db.tables["owner_property_assignments"]  # noqa: SLF001  pylint: disable=protected-access
+    }
+    assert sicht == {"p-3"}
+
+
+def test_unassign_entzieht_auch_die_portal_sicht() -> None:
+    """Wurzel 1: mit dem Eigentum endet der Einblick.
+
+    Bliebe die Zeile in `owner_property_assignments` stehen, sähe ein
+    Eigentümer Kalender und Daten eines Objekts weiter, das ihm nicht mehr
+    gehört — Zuordnung entfernt, Zugriff trotzdem offen.
+    """
+    svc = _svc_mit_login()
+    owner = svc.create(
+        _ctx(),
+        OwnerCreate(
+            name="A",
+            email="e@example.invalid",
+            portalzugang=True,
+            property_ids=["p-1", "p-2"],
+        ),
+    )
+    svc.unassign_property(_ctx(), owner.id, "p-1")
+    sicht = {
+        r["property_id"]
+        for r in svc._db.tables["owner_property_assignments"]  # noqa: SLF001  pylint: disable=protected-access
+    }
+    assert sicht == {"p-2"}
+
+
+def test_portalsicht_ist_idempotent() -> None:
+    """Wurzel 2: zweimal einladen erzeugt keine doppelten Sicht-Zeilen."""
+    svc = _svc_mit_login()
+    owner = svc.create(
+        _ctx(),
+        OwnerCreate(
+            name="A",
+            email="e@example.invalid",
+            portalzugang=True,
+            property_ids=["p-1"],
+        ),
+    )
+    svc.portalzugang_einladen(_ctx(), owner.id)
+    zeilen = svc._db.tables["owner_property_assignments"]  # noqa: SLF001  pylint: disable=protected-access
+    assert len(zeilen) == 1
+
+
+def test_ohne_portalzugang_keine_portal_sicht() -> None:
+    """Ohne Login gibt es niemanden, dem etwas sichtbar gemacht werden könnte."""
+    svc = _svc_mit_login()
+    svc.create(_ctx(), OwnerCreate(name="A", property_ids=["p-1"]))
+    assert svc._db.tables["owner_property_assignments"] == []  # noqa: SLF001  pylint: disable=protected-access
+
+
+def test_create_schreibt_keine_request_felder_in_die_owners_zeile() -> None:
+    """Regression: `property_ids` darf NICHT im Insert-Payload landen.
+
+    `property_ids` und `portalzugang` sind Steuerfelder des Requests, keine
+    Spalten von `owners` — die Objekte hängen in `owner_properties`. Blieben
+    sie im Payload, weist PostgREST den Insert mit PGRST204 ab („Could not
+    find the 'property_ids' column of 'owners'") und der Aufruf endet als 500.
+    Genau so live gegen die Staging-DB passiert; die In-Memory-Attrappe merkte
+    es nicht, weil sie jedes Feld annimmt. Deshalb prüft der Test die
+    GESCHRIEBENE Zeile statt nur die Antwort.
+    """
+    svc = _svc_drei()
+    res = svc.create(_ctx(), OwnerCreate(name="A", property_ids=["p-1"]))
+    zeile = next(
+        r
+        for r in svc._db.tables["owners"]  # noqa: SLF001  pylint: disable=protected-access
+        if str(r["id"]) == res.id
+    )
+    assert "property_ids" not in zeile
+    assert "portalzugang" not in zeile
+
+
+def test_create_nimmt_anlage_zurueck_wenn_der_portalzugang_scheitert() -> None:
+    """Regression: kein Eigentümer mit Objekten, aber ohne den Zugang.
+
+    Live gesehen (Staging): bei einer Adresse, die der Mailvalidator ablehnt,
+    standen Eigentümer UND Objektzuordnungen bereits in der DB, der Aufruf
+    endete trotzdem im Fehler. Der Betreiber sah einen fehlgeschlagenen
+    Vorgang, legte den Eigentümer erneut an — und hatte ihn doppelt.
+
+    Die Anlage muss deshalb an JEDEM Fehlschlag danach hängen, nicht nur an
+    den fachlichen `OwnerError` der Objektzuordnung.
+    """
+    svc = _svc_drei()
+
+    def _explodiert(*_a: object, **_k: object) -> dict:
+        raise RuntimeError("Einladung nicht zustellbar")
+
+    svc._portalzugang_einrichten = _explodiert  # type: ignore[method-assign]  # noqa: SLF001  pylint: disable=protected-access
+    with pytest.raises(RuntimeError):
+        svc.create(
+            _ctx(),
+            OwnerCreate(
+                name="A",
+                email="e@example.invalid",
+                portalzugang=True,
+                property_ids=["p-1"],
+            ),
+        )
+    # Weder der Eigentümer noch seine Zuordnung dürfen zurückbleiben.
+    assert svc.list(_ctx()).total == 0
+    assert "p-1" in {p.id for p in svc.free_properties(_ctx()).items}
