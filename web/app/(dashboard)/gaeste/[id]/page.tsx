@@ -23,7 +23,19 @@ export default async function GuestDetailPage({
     : guestAccessFor(null, []);
   return (
     <>
-      <RealtimeRefresh tables={["guests"]} filter={`id=eq.${id}`} />
+      {/* guests ist fuer authenticated bewusst gesperrt (Wurzel 6, Migration
+          0336) — ein Abo darauf waere eine stumme Attrappe. Ersatz ist
+          reservations, gefiltert auf DIESEN Gast: recompute_guest_aggregates()
+          schreibt Aufenthalte/Umsatz/letzten Aufenthalt nach jedem Anlegen und
+          Stornieren einer Reservierung in die guests-Zeile zurueck, dasselbe
+          Ereignis erzeugt also beide Aenderungen.
+          Der Filter wechselt bewusst von id=eq. auf guest_id=eq. — es ist eine
+          andere Tabelle, id waere hier die Reservierungs-ID und der Filter
+          damit still wirkungslos.
+          EHRLICH DAZU: eine reine Stammdaten-Aenderung (Name/Adresse) beruehrt
+          keine Reservierung und erscheint nicht mehr von selbst; sie geschieht
+          in dieser Oberflaeche, die danach neu laedt. */}
+      <RealtimeRefresh tables={["reservations"]} filter={`guest_id=eq.${id}`} />
       <GuestDetail guest={res.data} access={access} />
     </>
   );

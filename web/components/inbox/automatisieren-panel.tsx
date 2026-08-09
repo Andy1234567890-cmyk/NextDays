@@ -44,7 +44,6 @@ import {
   updateAutomation,
 } from "@/lib/inbox";
 import { listProperties } from "@/lib/properties";
-import { useRealtime } from "@/lib/use-realtime";
 
 // So viele Regeln zeigt ein Abschnitt sofort; der Rest steckt hinter
 // „Mehr anzeigen (n)" — wie bei Lodgify, damit ein Betrieb mit 15 Regeln je
@@ -100,10 +99,18 @@ export function AutomatisierenPanel({
     if (offen) load();
     else setAnsicht("menu");
   }, [offen]);
-  // Dieselben Regeln stehen im Automatisierungen-Tab. Wer sie dort ändert, soll
-  // sie hier nicht in der alten Fassung sehen (das Panel lädt sonst nur beim
-  // Öffnen). Im geschlossenen Zustand kein Abo — dann gibt es nichts zu zeigen.
-  useRealtime({ table: "message_automation", enabled: offen, onChange: load });
+  // KEIN Realtime-Abo mehr auf `message_automation`: die Tabelle ist seit
+  // Migration 0337 für `authenticated` gesperrt (Wurzel 6 — eine Regel trägt
+  // den Nachrichtentext, der an den Gast hinausgeht). Ohne SELECT-Grant passt
+  // keine Policy mehr; das Abo wäre eine stumme Attrappe.
+  //
+  // Eine erlaubte Ersatzquelle gibt es nicht: eine Regeländerung berührt keine
+  // offene Tabelle. `reservations` wäre ein stiller Ersatz und damit falsch.
+  //
+  // WAS DADURCH ENTFÄLLT: Eine Regel, die zeitgleich im Automatisierungen-Tab
+  // geändert wird, erscheint hier nicht mehr von selbst. Das Panel lädt beim
+  // Öffnen (siehe Effekt oben) und nach jeder eigenen Änderung frisch — es
+  // genügt, es einmal zu schließen und wieder zu öffnen.
 
   // In der Detailansicht bleibt der Kopf LEER: der Regelname steht dort in der
   // ersten Karte. Beides zugleich wäre derselbe Text zweimal untereinander.

@@ -24,6 +24,7 @@ import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { channelMeta } from "@/lib/calendar-channels";
 import { STATUS_META, displayStatus } from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import { dateKey } from "@/lib/calendar-views";
 import { useReservationDetail } from "@/lib/use-reservation-detail";
 
@@ -135,7 +136,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                 icon={meta.logo.kind === "icon" ? meta.logo.icon : "ph:globe"}
                 className="size-3"
               />
-              {data.ota_name ?? channelLabel(data.channel as AvailabilitySource)}
+              {data.ota_name ? channelLabelLoose(data.ota_name) : channelLabel(data.channel as AvailabilitySource)}
             </span>
           </div>
         </div>
@@ -530,7 +531,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                     <p className="rounded-(--radius) bg-amber-100 px-2.5 py-2 text-xs text-amber-800">
                       <Icon icon="ph:warning" className="mr-1 inline size-3.5" />
                       {t("bookingDetail.cancelOtaHint", {
-                        otaName: data.ota_name ? ` (${data.ota_name})` : "",
+                        otaName: data.ota_name ? ` (${channelLabelLoose(data.ota_name)})` : "",
                       })}
                     </p>
                   )}

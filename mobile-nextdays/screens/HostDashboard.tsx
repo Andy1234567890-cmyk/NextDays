@@ -24,6 +24,7 @@ import { formatCurrency } from "@/lib/currency";
 import { getDashboard, type Dashboard, type DashboardEntry } from "@/lib/dashboard";
 import type { ReservationStatus } from "@/lib/reservations";
 import { useRealtime } from "@/lib/realtime";
+import { portalLabel } from "@/lib/portal-logos";
 import { useTheme } from "@/theme/ThemeProvider";
 
 // Wie viele Zeilen je Block direkt sichtbar sind. „Anstehend" umfasst beim
@@ -386,7 +387,7 @@ function Zeile({
   const t = useTheme();
   const kanal = channelMeta(eintrag.channel);
   // Echte Herkunft zuerst: „Booking.com" statt des internen Kanal-Kürzels.
-  const herkunft = eintrag.ota_name || kanal.label;
+  const herkunft = portalLabel(eintrag.ota_name) || kanal.label;
   const tone = STATUS_TONE[eintrag.status];
   const n = naechte(eintrag.check_in, eintrag.check_out);
 

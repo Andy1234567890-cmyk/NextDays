@@ -35,7 +35,6 @@ import {
   renameChannelAccount,
   startAirbnbUebernahme,
 } from "@/lib/channex";
-import { useRealtime } from "@/lib/use-realtime";
 
 export function PortalKontenPanel({
   offen,
@@ -110,22 +109,21 @@ export function PortalKontenPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offen, portalCode, konten.map((k) => k.channel_id ?? "").join()]);
 
-  // Realtime (0305): Beim Verbinden läuft der Kunde ZU AIRBNB und kommt
-  // zurück — der Zustand ändert sich also, WÄHREND dieses Panel offen steht.
-  // Ohne Abo bliebe hier der alte Stand stehen, und eine gelungene
-  // Autorisierung sähe aus wie eine gescheiterte.
-  useRealtime({
-    table: "ota_account",
-    enabled: offen,
-    onChange: laden,
-  });
-  // Auch die Verbindungen: sie tragen `is_active` und damit die Objektzahl je
-  // Konto. Ein Trennen an anderer Stelle muss hier sofort ankommen.
-  useRealtime({
-    table: "channex_channel_connection",
-    enabled: offen,
-    onChange: laden,
-  });
+  // KEIN Realtime-Abo mehr auf `ota_account` und `channex_channel_connection`
+  // (vorher 0305): beide Tabellen sind seit Migration 0337 für
+  // `authenticated` gesperrt (Wurzel 6 — Vertriebsdaten des Portal-Anschlusses
+  // samt Kontokennungen). Ohne SELECT-Grant passt keine Policy mehr; die Abos
+  // wären stumme Attrappen.
+  //
+  // Eine erlaubte Ersatzquelle gibt es nicht: weder das Autorisieren eines
+  // Portal-Kontos noch das Trennen einer Verbindung berührt eine offene
+  // Tabelle. `properties` wäre ein stiller Ersatz und damit falsch.
+  //
+  // WAS DADURCH ENTFÄLLT: Kehrt der Kunde von der Portal-Autorisierung
+  // zurück, während dieses Panel offen steht, aktualisiert es sich nicht mehr
+  // von selbst. Das Panel lädt bei jedem Öffnen frisch (Effekt oben) und nach
+  // jeder eigenen Aktion (Umbenennen, Trennen, Nachtragen) — einmal schließen
+  // und wieder öffnen zeigt den aktuellen Stand.
 
   function speichern(konto: OtaAccount) {
     const name = entwurf.trim();

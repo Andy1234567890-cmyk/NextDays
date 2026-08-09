@@ -45,7 +45,20 @@ import {
 // (Eigentümer nur Ferienvermietung).
 // `key` = i18n-Schlüssel (Namespace "nav"), `req` = benötigte Berechtigung;
 // ohne `req` immer sichtbar. Admin sieht alles (siehe canSee).
-type NavItem = { key: string; href: string; icon: string; req?: string };
+//
+// `rollen` ist die AUSNAHME davon: eine Liste erlaubter Rollen, die VOR dem
+// Admin-Kurzschluss in canSee() geprüft wird. Nötig für Punkte, die nicht an
+// einer Berechtigung hängen, sondern an der Rolle selbst — `req` allein reicht
+// dafür nicht, weil `if (role === "admin") return true` ganz oben steht und
+// jede Berechtigungsprüfung überspringt. Ohne `rollen` verhält sich ein Punkt
+// exakt wie bisher (No-Op für alle bestehenden Einträge).
+type NavItem = {
+  key: string;
+  href: string;
+  icon: string;
+  req?: string;
+  rollen?: readonly string[];
+};
 type AccommodationType = "vacation_rental" | "hotel";
 
 // Täglich genutzte Kernbereiche (flach, wie Casona „Übersicht/Belegungsplan").
@@ -152,6 +165,13 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
         // wiederholen, sonst hätte die Sidebar den Punkt zweimal.
         { key: "reservationGroups", href: "/reservierungen/gruppen", icon: "ph:users-three", req: "view_calendar" },
         { key: "stopSell", href: "/stop-sell", icon: "ph:hand-palm", req: "manage_calendar" },
+        // Sperranträge der Eigentümer (0332). Ohne diesen Punkt war die Seite
+        // NUR per manueller URL erreichbar — jeder Antrag blieb `pending`, der
+        // Eigentümer wartete auf eine Entscheidung, die niemand sah. `req`
+        // spiegelt exakt den Guard am Endpunkt (Capability APPROVE_BLOCK,
+        // calendar/router.py) und das notFound() der Seite: wer nicht
+        // entscheiden darf, sieht den Punkt nicht.
+        { key: "blockRequests", href: "/kalender/sperrantraege", icon: "ph:calendar-x", req: "approve_block" },
         { key: "settings", href: "/reservierungen/einstellungen", icon: "ph:gear", req: "manage_calendar" },
       ],
     },
@@ -206,6 +226,22 @@ const STATIC_GROUPS: readonly NavGroup[] = [
     icon: "ph:toolbox",
     items: [
       { key: "extensions", href: "/erweiterungen", icon: "ph:puzzle-piece", req: "manage_billing" },
+      // Neuerungen: die offiziellen Ankündigungen des Plattform-Teams. Kein
+      // `req`, weil das keine Betriebs-Berechtigung ist, sondern eine Frage
+      // der Rolle — Adressat sind die Entscheider des Betriebs. Deshalb
+      // `rollen` (greift vor dem Admin-Kurzschluss oben in canSee).
+      //
+      // /neuerungen steht bewusst NICHT in OWNER_ALLOWED_HREFS oder
+      // STAFF_ALLOWED_HREFS: diese Whitelists sind das Gegenteil hiervon
+      // (sie öffnen für owner/staff), und beide Rollen sollen den Punkt gar
+      // nicht sehen. Der Serverpfad hält das gegen: /neuerungen antwortet für
+      // sie mit 404 (notFound), der Backend-Slice mit 403.
+      {
+        key: "announcements",
+        href: "/neuerungen",
+        icon: "ph:megaphone",
+        rollen: ["admin", "co_admin"],
+      },
     ],
   },
   {
@@ -248,10 +284,18 @@ const ROLE_KEYS: Record<string, string> = {
 };
 
 // Eigentümer-Portal (Lastenheft §4.2): read-only, stark reduzierte Navigation.
-// Ein Eigentümer sieht NUR diese Bereiche — Belegungskalender, seine Objekte,
-// Dynamic-Pricing-Vorschau und (per owner_reporting gegated) die Berichte.
-// Andere Punkte ohne `req` (Reservierungen, Channel Manager, Marktplatz, HR …)
-// bleiben der Agentur vorbehalten. Pfad-Präfixe (href-Vergleich).
+//
+// WICHTIG — das hier ist NUR NOCH Kosmetik, nicht die Schranke. Ein Eigentümer
+// erreicht diese Sidebar im Normalfall gar nicht mehr: das Dashboard-Layout
+// leitet die Rolle `owner` serverseitig auf ihr eigenes Portal (/portal, Route-
+// Gruppe `(portal)`, siehe lib/rollen-guard.ts). Vorher war diese Liste die
+// einzige „Absicherung" — und sie blendete lediglich Menüpunkte aus, während
+// jede direkt eingetippte Agentur-URL trotzdem rendert (Wurzel 9).
+//
+// Die Liste bleibt als zweite Schicht stehen: sollte ein Eigentümer über einen
+// Sonderweg (z. B. eine reine Supabase-OAuth-Sitzung ohne FastAPI-Rolle) doch
+// hier landen, sieht er weiterhin nicht die volle Agentur-Navigation.
+// Pfad-Präfixe (href-Vergleich).
 const OWNER_ALLOWED_HREFS: readonly string[] = [
   "/", // Dashboard
   "/kalender",
@@ -300,6 +344,12 @@ export function AppSidebar({
   // Bereiche.
   const grantSet = new Set([...permissions, ...capabilities]);
   const canSee = (item: NavItem) => {
+    // Rollen-Gate VOR dem Admin-Kurzschluss: `rollen` benennt die Rollen, für
+    // die es den Punkt überhaupt gibt. Steht es weiter unten, greift es nie —
+    // `role === "admin"` würde vorher `true` liefern. Fail-closed: eine
+    // unbekannte oder fehlende Rolle (z. B. reine Supabase-OAuth-Sitzung ohne
+    // FastAPI-Profil) sieht den Punkt nicht.
+    if (item.rollen && !(role && item.rollen.includes(role))) return false;
     if (role === "admin") return true;
     if (item.req && !grantSet.has(item.req)) return false;
     // Eigentümer (§4.2) und Mitarbeiter/Dienstleister (§4.3) haben je ein

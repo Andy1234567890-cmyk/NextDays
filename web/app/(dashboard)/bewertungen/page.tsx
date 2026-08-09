@@ -32,7 +32,16 @@ export default async function BewertungenPage() {
 
   return (
     <>
-      <RealtimeRefresh tables={["reviews", "channex_review"]} />
+      {/* channex_review ist für authenticated gesperrt (Wurzel 6, Migration
+          0337): guest_name + Bewertungstext, über ota_reservation_id mit dem
+          Gast verknüpfbar, dazu die noch unveröffentlichte Antwort.
+          KEIN Ersatz-Abo: eine neue OTA-Bewertung kommt per Channex-Feed herein
+          und erzeugt weder eine Reservierungs- noch eine Objekt-Änderung — ein
+          Umhängen wäre ein stiller Ersatz. Ersatzlos gestrichen.
+          `reviews` (Marktplatz myBestDays) bleibt offen und weiterhin live;
+          NICHT mehr live sind die Bewertungen der Portale — sie erscheinen beim
+          nächsten Seitenaufruf. */}
+      <RealtimeRefresh tables={["reviews"]} />
       <BewertungsCockpit
         initial={liste.data.items}
         initialTotal={liste.data.total}

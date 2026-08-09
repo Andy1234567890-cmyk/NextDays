@@ -7,7 +7,8 @@
 //   • Info-TEXTE (messaging in properties.type_attributes): WLAN-Info,
 //     Türzugangs-Beschreibung — mehrsprachig, dieselbe Quelle wie der
 //     Nachrichten-Reiter (keine Doppelpflege).
-// Speichern schreibt beide Quellen. Live über useRealtime auf beiden Tabellen.
+// Speichern schreibt beide Quellen. Kein Realtime-Abo: property_guest_portal
+// ist für authenticated gesperrt (Wurzel 6) — Begründung unten am Ladepfad.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
@@ -30,7 +31,6 @@ import {
   saveGuestPortal,
 } from "@/lib/property-portal";
 import { type Property, updateProperty } from "@/lib/properties";
-import { useRealtime } from "@/lib/use-realtime";
 
 const EMPTY_SETTINGS: GuestPortalSettings = {
   enabled: false,
@@ -75,11 +75,18 @@ export function GuestModuleForm({ property: initial }: { property: Property }) {
     void loadSettings();
   }, [loadSettings]);
 
-  useRealtime({
-    table: "property_guest_portal",
-    filter: `property_id=eq.${property.id}`,
-    onChange: loadSettings,
-  });
+  // property_guest_portal hat für authenticated kein SELECT-Grant — dieses Abo
+  // war schon vor Migration 0337 eine stumme Attrappe (es hat sich verbunden
+  // und nie ein Event geliefert), 0337 hat den Entzug nur als Endzustand
+  // festgeschrieben und den fehlenden for-all-Guard ergänzt.
+  // KEIN Ersatz-Abo: die Gastportal-Einstellungen eines Objekts ändern sich
+  // ausschließlich durch die Pflege in genau dieser Oberfläche, und die ruft
+  // nach dem Speichern selbst wieder loadSettings() (siehe save()). Ein
+  // Umhängen auf properties wäre ein stiller Ersatz — die Einstellungen liegen
+  // nicht in der properties-Zeile.
+  // Entfällt: ändert eine ANDERE Sitzung die Einstellungen, erscheinen sie erst
+  // beim nächsten Öffnen. Faktisch ändert sich nichts, da das Abo ohnehin nie
+  // ein Event geliefert hat.
 
   const set = <K extends keyof GuestPortalSettings>(
     key: K,

@@ -17,6 +17,7 @@ import { Button } from "@nextdays/ui/button";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { channelMeta } from "@/lib/calendar-channels";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import { STATUS_META, displayStatus } from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
 import type { CheckOutPayment } from "@/lib/reservations";
@@ -144,7 +145,7 @@ export function ReservationDetailSlider({
                 {data.created_at
                   ? ` · ${fmtDate(data.created_at.slice(0, 10))}`
                   : ""}
-                {data.ota_name ? ` · ${data.ota_name}` : ""}
+                {data.ota_name ? ` · ${channelLabelLoose(data.ota_name)}` : ""}
               </p>
             )}
           </div>
@@ -546,7 +547,7 @@ export function ReservationDetailSlider({
                           <Icon icon="ph:warning" className="mr-1 inline size-3.5" />
                           Dies storniert die Buchung nur lokal. Bitte storniere sie
                           zusätzlich direkt im Portal
-                          {data.ota_name ? ` (${data.ota_name})` : ""}.
+                          {data.ota_name ? ` (${channelLabelLoose(data.ota_name)})` : ""}.
                         </p>
                       )}
                       <textarea

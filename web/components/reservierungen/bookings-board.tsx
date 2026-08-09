@@ -31,6 +31,7 @@ import {
   occupiesNight,
 } from "@/lib/calendar-views";
 import type { PropertyType } from "@/lib/properties";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import { type Reservation, listReservations } from "@/lib/reservations";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -348,7 +349,7 @@ function BookingRow({
           {cm.logo.kind === "icon" ? (
             <Icon icon={cm.logo.icon} className="size-4" />
           ) : null}
-          #{r.ota_name ?? channelLabel(channelSource(r))}
+          #{r.ota_name ? channelLabelLoose(r.ota_name) : channelLabel(channelSource(r))}
         </span>
       </td>
       <td className="px-4 py-3 text-right tabular-nums">

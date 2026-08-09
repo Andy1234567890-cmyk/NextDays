@@ -98,17 +98,20 @@ export function PropertyChannels({
   const [p, setP] = useState<Property>(property);
   const [busy, setBusy] = useState<string | null>(null);
 
-  // Realtime: eigene Objekt-Flags + Channex-Verbindungen dieses Objekts.
+  // Realtime: eigene Objekt-Flags (Kanal-Sichtbarkeit) — properties bleibt für
+  // authenticated lesbar und trägt genau dieses Ereignis.
   useRealtime({
     table: "properties",
     filter: `id=eq.${property.id}`,
     onChange: () => router.refresh(),
   });
-  useRealtime({
-    table: "channex_channel_connection",
-    filter: `property_id=eq.${property.id}`,
-    onChange: () => router.refresh(),
-  });
+  // channex_channel_connection ist für authenticated gesperrt (Wurzel 6,
+  // Migration 0337) — Portal-Kontoverbindung, Vertriebsdaten nach §4.3.
+  // Ersatzlos gestrichen statt still umgehängt: keine offene Tabelle bildet das
+  // Verbinden/Trennen eines Portals ab. Das properties-Abo darüber bleibt und
+  // deckt die Kanal-Sichtbarkeit des Objekts weiterhin live ab; NICHT abgedeckt
+  // ist die Portal-Verbindung selbst — sie erscheint erst beim nächsten
+  // Seitenaufruf.
 
   const isActive = p.status === "active";
 

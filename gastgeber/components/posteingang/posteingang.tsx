@@ -5,12 +5,11 @@
 //   2. Chat (Nachrichten + Eingabe + Quick Replies + Block-Button im Kopf)
 //   3. Reservierungs-Panel (öffnet über den „›"-Pfeil am Gastnamen)
 //
-// Realtime (Supabase WebSocket, kein Polling): neue guest_messages/Thread-Updates
-// pflegen den State inkrementell. Nach eigenen Aktionen wird NICHT neu geladen —
-// nur das Event bzw. die Action-Antwort pflegt den State (Muster use-realtime).
+// Kein Realtime: `guest_messages` liefert dem Betrieb seit Migration 0337 keine
+// Events mehr (Begründung unten am ehemaligen Abo). Der State wird von den
+// Action-Antworten und den Ladepfaden gepflegt.
 import { useCallback, useState } from "react";
 
-import { useRealtime } from "@/lib/use-realtime";
 import type {
   HostMessage,
   HostThreadDetail,
@@ -41,48 +40,22 @@ export function Posteingang({
   const [detail, setDetail] = useState<HostThreadDetail | null>(null);
   const [panelOffen, setPanelOffen] = useState(false);
 
-  // Realtime: neue Nachricht in irgendeinem Thread → Liste + offenen Chat pflegen.
-  useRealtime<{ thread_id: string; sender: string; body: string; id: string; created_at: string }>({
-    table: "guest_messages",
-    enabled: !zugriffFehlt,
-    onEvent: (evt) => {
-      const row = evt.new;
-      if (!row?.thread_id) return;
-      // Offenen Chat inkrementell ergänzen (Duplikate meiden).
-      setDetail((d) =>
-        d && d.id === row.thread_id && !d.messages.some((m) => m.id === row.id)
-          ? {
-              ...d,
-              messages: [
-                ...d.messages,
-                {
-                  id: row.id,
-                  sender: row.sender as HostMessage["sender"],
-                  body: row.body,
-                  created_at: row.created_at,
-                },
-              ],
-            }
-          : d,
-      );
-      // Thread-Vorschau + Unread in der Liste aktualisieren.
-      setThreads((list) =>
-        list.map((t) =>
-          t.id === row.thread_id
-            ? {
-                ...t,
-                last_message: row.body,
-                last_message_at: row.created_at,
-                unread_count:
-                  row.sender === "guest" && aktivId !== row.thread_id
-                    ? t.unread_count + 1
-                    : t.unread_count,
-              }
-            : t,
-        ),
-      );
-    },
-  });
+  // Kein Realtime auf `guest_messages` mehr. Die Tabelle bleibt für
+  // `authenticated` zwar lesbar, aber Migration 0337 hat ihre RLS-Policy auf den
+  // SELBST-Scope des Gastes reduziert (`portal_guest_id = auth.uid()`); der
+  // tenant-weite Zweig ist entfallen (Wurzel 6). Für die BETRIEBS-Seite — also
+  // dieses Gastgeber-Dashboard — passt damit keine Policy mehr: das Abo verbindet
+  // sauber und liefert nie ein Event, obwohl das Prüfskript die Tabelle als
+  // „offen" ausweist. Der Nachrichteninhalt kommt für den Betrieb ohnehin
+  // ausschließlich über den host_messages-Slice (service_role), nicht über den
+  // Realtime-Payload.
+  //
+  // Eine Ersatzquelle gibt es nicht: keine für `authenticated` offene Tabelle
+  // trägt eine eingehende Gastnachricht. Ehrlich: eine NEUE Gastnachricht
+  // erscheint nicht mehr von selbst — weder als Chat-Zeile im offenen Thread
+  // noch als Vorschau/Ungelesen-Zähler in der Thread-Liste. Sichtbar wird sie
+  // erst beim nächsten Laden: `ladeListe` (Filter-/Suchwechsel),
+  // `oeffneThread` (Thread öffnen) oder `nachrichtGesendet` (nach dem Senden).
 
   const ladeListe = useCallback(
     async (f: Filter, q: string) => {

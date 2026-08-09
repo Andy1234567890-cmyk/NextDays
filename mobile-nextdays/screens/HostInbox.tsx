@@ -1,9 +1,10 @@
 // Gastgeber · Posteingang. Echte Threads + Chat über /api/v1/inbox. Antworten
-// werden optimistisch angezeigt und bei Fehler zurückgerollt. Realtime: die
-// Liste abonniert channex_booking + whatsapp_conversation, der offene Thread
-// sandbox_message + inbox_thread_note (dieselben speisenden Tabellen wie der
-// Web-Inbox, apps/web/components/inbox/inbox-list.tsx). Cleanup bei unmount
-// übernimmt useRealtime.
+// werden optimistisch angezeigt und bei Fehler zurückgerollt. Kein Realtime
+// mehr: alle speisenden Tabellen des Posteingangs (channex_booking,
+// whatsapp_conversation, inbox_thread_note) sind seit Migration 0337 für
+// `authenticated` gesperrt (Wurzel 6) — Begründung jeweils an der Stelle der
+// ehemaligen Abos. Aktualisiert wird beim Öffnen, beim Senden und per
+// Zug-zum-Aktualisieren.
 import type { RouteProp } from "@react-navigation/native";
 import { useRoute } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -23,6 +24,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
 import { channelMeta } from "@/lib/calendar-channels";
+import { portalLabel } from "@/lib/portal-logos";
 import {
   getInboxMessages,
   listInboxThreads,
@@ -31,7 +33,6 @@ import {
   type InboxMessage,
   type InboxThread,
 } from "@/lib/inbox";
-import { useRealtime } from "@/lib/realtime";
 import type { ReservationChannel } from "@/lib/reservations";
 import type { HostTabParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -82,9 +83,15 @@ function ThreadList({
     }
   }, [autoOpened, autoOpenId, threads, onOpen]);
 
-  // Speisende Tabellen der Liste (wie Web): neue/aktualisierte Konversationen.
-  useRealtime({ table: "channex_booking", onChange: load });
-  useRealtime({ table: "whatsapp_conversation", onChange: load });
+  // Kein Realtime auf der Liste. `channex_booking` und `whatsapp_conversation`
+  // sind seit Migration 0337 für `authenticated` gesperrt (Wurzel 6: revoke +
+  // raus aus der Publikation supabase_realtime) — die Abos verbanden sauber und
+  // bekamen nie ein Event. Eine Ersatzquelle gibt es nicht: eine neue
+  // Konversation entsteht aus dem Channex-/WhatsApp-Feed und schlägt sich in
+  // keiner offenen Tabelle nieder (`reservations` trägt die Buchung, nicht den
+  // Nachrichtenstand). Ehrlich: ein neuer Thread und eine eingehende Nachricht
+  // heben die Liste nicht mehr von selbst an — sichtbar erst beim Öffnen des
+  // Tabs oder per Zug-zum-Aktualisieren (RefreshControl).
 
   const [query, setQuery] = useState("");
   const [readFilter, setReadFilter] = useState<"all" | "unread">("all");
@@ -144,7 +151,7 @@ function ThreadList({
             {channels.map((c) => (
               <FilterChip
                 key={c}
-                label={c}
+                label={portalLabel(c)}
                 active={channelFilter === c}
                 onPress={() => setChannelFilter((v) => (v === c ? "all" : c))}
               />
@@ -388,23 +395,28 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   // `animated: false`, weil den Ausgangspunkt beim Öffnen niemand sehen will.
   const ansEndeSpringen = useCallback(() => {
     // Nur wenn der Nutzer bereits unten steht (oder gerade erst geöffnet hat):
-    // `load()` läuft auch bei jedem Buchungs-Update über das Realtime-Abo auf
-    // der ganzen `channex_booking`-Zeile. Ohne diese Sperre risse es einen
-    // Nutzer, der weiter oben liest, unvermittelt nach unten.
+    // `load()` läuft auch nach dem Senden und beim Zug-zum-Aktualisieren. Ohne
+    // diese Sperre risse es einen Nutzer, der weiter oben liest, unvermittelt
+    // nach unten.
     if (amEnde.current) verlauf.current?.scrollToEnd({ animated: false });
   }, []);
 
-  // Offener Thread live (wie Web): neue Nachrichten + Notizen.
+  // Kein Realtime im offenen Thread.
   //
-  // Die Nachricht kommt NICHT über das Abo, sondern über `load()` — die API
-  // setzt den Rollen-Datensplit durch. Beobachtet wird nur das inhaltsfreie
-  // Signal `channex_booking.last_message_at` (0305); `portal_messages` trägt
-  // den Klartext der Gastnachrichten und bleibt für `authenticated` gesperrt
-  // (Wurzel 6). Vorher stand hier `sandbox_message` — eine Test-Tabelle (0036),
-  // die im Produktivpfad nie geschrieben wird: das Abo verband sauber und
-  // bekam nie ein Event.
-  useRealtime({ table: "channex_booking", filter: `id=eq.${thread.id}`, onChange: load });
-  useRealtime({ table: "inbox_thread_note", filter: `thread_id=eq.${thread.id}`, onChange: load });
+  // Hier stand zuletzt ein Abo auf dem inhaltsfreien Signal
+  // `channex_booking.last_message_at` (0305) plus eines auf `inbox_thread_note`.
+  // Migration 0337 hat beide Tabellen für `authenticated` gesperrt (Wurzel 6:
+  // revoke + raus aus der Publikation supabase_realtime) — sie verbanden sauber
+  // und bekamen nie ein Event. Davor stand hier `sandbox_message` — eine
+  // Test-Tabelle (0036), die im Produktivpfad nie geschrieben wird, ebenfalls
+  // ohne ein einziges Event. `portal_messages` trägt den Klartext der
+  // Gastnachrichten und war schon vorher gesperrt.
+  //
+  // Eine Ersatzquelle gibt es nicht: keine für `authenticated` offene Tabelle
+  // trägt eine eingehende Gastnachricht oder eine interne Notiz. Ehrlich: eine
+  // Antwort des Gastes und eine von einem Kollegen angelegte Notiz erscheinen
+  // nicht mehr von selbst — der Verlauf lädt beim Öffnen des Threads und nach
+  // dem eigenen Senden neu.
 
   const send = async () => {
     const text = draft.trim();

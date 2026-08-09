@@ -74,7 +74,6 @@ import {
 } from "@/lib/policy-meta";
 import { type AbgabePostenStatus, getAbgabenStatus } from "@/lib/channex";
 import { type Property, updateProperty } from "@/lib/properties";
-import { useRealtime } from "@/lib/use-realtime";
 
 /** Was `PortalReichweite` je Editor braucht: der geladene Sync-Stand und die
  *  verbundenen Portale. `null` = nicht ladbar → die Zeile bleibt weg. */
@@ -124,12 +123,16 @@ export function PoliciesForm({
   useEffect(() => {
     void loadAbgaben();
   }, [loadAbgaben]);
-  // Verbindet/trennt der Betrieb ein Portal, ändert sich die Aussage.
-  useRealtime({
-    table: "channex_channel_connection",
-    filter: `property_id=eq.${p.id}`,
-    onChange: () => void loadAbgaben(),
-  });
+  // channex_channel_connection ist für authenticated gesperrt (Wurzel 6,
+  // Migration 0337): die Zeile trägt die Portal-Kontoverbindung des Betriebs
+  // (ota_hotel_id, Kanal-Kennungen) und gehört damit zu den Vertriebsdaten,
+  // die §4.3 vor staff/cleaner verbirgt. Ein Abo darauf liefert kein Event mehr.
+  // KEIN Ersatz-Abo: das Verbinden/Trennen eines Portals berührt keine der noch
+  // offenen Tabellen — ein Umhängen auf properties oder reservations wäre
+  // dieselbe Attrappe unter anderem Namen. Deshalb ersatzlos gestrichen.
+  // Entfällt damit: verbindet der Betrieb in einer ANDEREN Sitzung ein Portal,
+  // steht die Reichweite-Zeile bis zum nächsten Seitenaufruf auf dem alten
+  // Stand. Der Erstaufruf lädt sie weiterhin über loadAbgaben().
   const reichweite: Reichweite = {
     status: abgaben?.items ?? null,
     portale: abgaben?.portals ?? [],

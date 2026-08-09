@@ -13,7 +13,14 @@ import { PropertySwitcher } from "@/components/objekte/property-switcher";
 
 import type { PropertyStatus } from "@/lib/properties";
 
-type SubnavItem = { slug: string; titleKey: string; icon: string };
+type SubnavItem = {
+  slug: string;
+  titleKey: string;
+  icon: string;
+  /** Capability, ohne die dieser Punkt gar nicht erst verlinkt wird. Ohne
+   *  Angabe ist der Punkt fuer jeden sichtbar, der das Objekt sehen darf. */
+  capability?: string;
+};
 
 const GROUPS: { labelKey: string; items: SubnavItem[] }[] = [
   {
@@ -23,7 +30,18 @@ const GROUPS: { labelKey: string; items: SubnavItem[] }[] = [
       { slug: "fotos", titleKey: "itemPhotos", icon: "ph:image" },
       { slug: "standort", titleKey: "itemLocation", icon: "ph:map-pin" },
       { slug: "kontakt", titleKey: "itemContact", icon: "ph:address-book" },
-      { slug: "kartei", titleKey: "itemFile", icon: "ph:clipboard-text" },
+      {
+        slug: "kartei",
+        titleKey: "itemFile",
+        icon: "ph:clipboard-text",
+        // Die Objektkartei verlangt seit einem frischen Fix MANAGE_PROPERTIES
+        // (frueher VIEW_CALENDAR — das trug auch die owner-Rolle, die die
+        // Tuercodes und Zugangsdaten darin nicht sehen darf). Ohne dieses Gate
+        // fuehrte der Menuepunkt fuer staff/cleaner/owner sichtbar ins Leere:
+        // Klick → 403-Fehlerkasten. Ein Link, den der Server ohnehin abweist,
+        // wird gar nicht erst gezeigt.
+        capability: "manage_properties",
+      },
       { slug: "nachrichten", titleKey: "itemMessagesPlaceholder", icon: "ph:chat-text" },
       { slug: "compliance", titleKey: "itemCompliance", icon: "ph:seal-check" },
     ],
@@ -63,11 +81,17 @@ export function PropertySubnav({
   status,
   properties,
   addresses,
+  capabilities,
 }: {
   id: string;
   title: string;
   photo: string | null;
   status: PropertyStatus;
+  // Faehigkeiten des angemeldeten Nutzers. Punkte mit `capability` erscheinen
+  // nur, wenn sie darin stehen. Fehlt die Liste (getMe nicht ladbar), bleiben
+  // gesicherte Punkte AUS — fail-closed (Wurzel 6): lieber ein Punkt zu wenig
+  // als einer, der in einen 403 fuehrt.
+  capabilities?: readonly string[];
   // Alle Objekte des Betriebs für den Umschalter. Leer/fehlend = der Kopf
   // bleibt eine reine Anzeige (z. B. wenn die Liste nicht geladen werden
   // konnte) — statt einen Umschalter zu zeigen, der nichts zu wechseln hat.
@@ -120,7 +144,11 @@ export function PropertySubnav({
           <span className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t(`propertySubnav.${g.labelKey}`)}
           </span>
-          {g.items.map((it) => {
+          {g.items
+            .filter(
+              (it) => !it.capability || (capabilities ?? []).includes(it.capability),
+            )
+            .map((it) => {
             const href = it.slug ? `${base}/${it.slug}` : base;
             const active = isActive(it.slug);
             return (

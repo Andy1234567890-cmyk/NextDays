@@ -21,6 +21,7 @@ import { KanalMarke } from "@/components/KanalMarke";
 import { channelMeta } from "@/lib/calendar-channels";
 import { formatCurrency } from "@/lib/currency";
 import { getProperty, type Property } from "@/lib/properties";
+import { portalLabel } from "@/lib/portal-logos";
 import {
   getReservationDetail,
   type ReservationDetail as Detail,
@@ -112,7 +113,7 @@ export default function ReservationDetail() {
 
   const ort = [detail.property_city, detail.property_country].filter(Boolean).join(", ");
   const kanal = channelMeta(detail.channel);
-  const herkunft = detail.ota_name || kanal.label;
+  const herkunft = portalLabel(detail.ota_name) || kanal.label;
   const ton = STATUS_TONE[detail.status];
   const an = tagTeile(detail.check_in);
   const ab = tagTeile(detail.check_out);

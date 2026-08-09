@@ -18,14 +18,18 @@ export default async function ChannelsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
-      <RealtimeRefresh
-        tables={[
-          "channex_property_map",
-          "channex_booking",
-          "channex_channel_connection",
-          "external_calendar",
-        ]}
-      />
+      {/* `channex_property_map`, `channex_booking` und
+          `channex_channel_connection` sind seit Migration 0337 für
+          `authenticated` gesperrt (Wurzel 6) und hier ersatzlos gestrichen —
+          ohne SELECT-Grant wären es stumme Attrappen. Eine erlaubte
+          Ersatzquelle für die Verbindungsdaten gibt es nicht; sie ändern sich
+          ohnehin nur durch eigene Aktionen in dieser Oberfläche, die die Seite
+          danach selbst neu lädt. ENTFÄLLT: Verbindet ein Kollege im zweiten
+          Fenster einen Kanal, ändert sich der Verbunden-Status der Kanal-Karte
+          hier erst beim nächsten Seitenaufruf.
+          `properties` (Marktplatz-Zahl) und `external_calendar` (iCal-Zahl)
+          bleiben — sie sind offen und tragen genau die Zahlen dieser Seite. */}
+      <RealtimeRefresh tables={["properties", "external_calendar"]} />
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>

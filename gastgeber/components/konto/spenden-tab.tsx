@@ -10,7 +10,6 @@
 // konkrete Summe erklärt den Mechanismus besser als jeder Fließtext.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,7 +17,6 @@ import { formatCurrency } from "@nextdays/currency";
 
 import { setzeSpendenAnteil } from "@/lib/spenden-actions";
 import type { SpendenUebersicht } from "@/lib/spenden";
-import { useRealtime } from "@/lib/use-realtime";
 
 /** Vorgaben wie bei Airbnb. */
 const PILLEN = [100, 300, 500] as const;
@@ -51,16 +49,15 @@ export function SpendenTab({
     settings.recipient_id ?? recipients[0]?.id ?? null,
   );
   const [laeuft, setLaeuft] = useState(false);
-  const router = useRouter();
 
-  // Realtime-Pflicht: Neue Spendenzeilen entstehen serverseitig beim Bezahlen
-  // einer Buchung — ohne Abo bliebe die Übersicht stehen, bis der Nutzer neu
-  // lädt. Die Einstellung kann sich zudem in einem zweiten Tab ändern.
-  useRealtime({ table: "donations", onChange: () => router.refresh() });
-  useRealtime({
-    table: "tenant_donation_settings",
-    onChange: () => router.refresh(),
-  });
+  // Kein Realtime mehr: `donations` und `tenant_donation_settings` sind seit
+  // Migration 0337 für `authenticated` gesperrt (Wurzel 6: Finanzdaten — revoke
+  // + raus aus der Publikation supabase_realtime). Die Abos verbanden sauber und
+  // bekamen nie ein Event. Eine Ersatzquelle gibt es nicht: eine Spendenzeile
+  // entsteht serverseitig beim Bezahlen und schlägt sich in keiner offenen
+  // Tabelle nieder. Ehrlich: eine neu gebuchte Spende und eine im zweiten Tab
+  // geänderte Einstellung erscheinen erst beim nächsten Laden der Seite; der
+  // eigene Speichervorgang pflegt den State weiterhin selbst.
 
   const geaendert = bps !== settings.share_bps;
   const ueberGrenze = bps > settings.max_share_bps;

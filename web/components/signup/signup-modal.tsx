@@ -10,16 +10,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/logo";
+import { SprachUmschalter } from "@/components/auth/sprach-umschalter";
 import { SignupForm } from "@/components/signup/signup-form";
 import { Button } from "@nextdays/ui/button";
 import { signInWithProvider } from "@/lib/oauth-login";
 
-// Feature-Liste mit grünem Häkchen (deutsch).
-const FEATURES = [
-  "Kalender automatisch synchronisieren",
-  "Direktbuchungen auf der eigenen Seite",
-  "Gästenachrichten automatisieren",
-] as const;
+// Schlüssel der Feature-Liste mit grünem Häkchen. Nur die SCHLÜSSEL stehen
+// hier — die Texte kommen aus `messages/*.json` (24 Sprachen).
+const FEATURE_KEYS = ["feature1", "feature2", "feature3"] as const;
 
 type Phase = "choose" | "email" | "loading";
 
@@ -65,24 +63,33 @@ function ChooseStep({
   onStartOAuth: () => void;
   onEmail: () => void;
 }) {
+  // Zwei Namespaces: `legal` für die AGB-Einwilligung (dort gepflegt),
+  // `signup` für die Texte dieses Modals.
   const t = useTranslations("legal");
+  const s = useTranslations("signup");
   return (
     <div className="flex flex-col gap-6">
-      <Logo heightRem={1.75} />
+      {/* Logo links, Sprachumschalter rechts: die Registrierung hat keinen
+          Token, ihre Sprache kommt aus dem Browser — der Umschalter ist die
+          Korrektur, wenn das danebenliegt. */}
+      <div className="flex items-center justify-between gap-4">
+        <Logo heightRem={1.75} />
+        <SprachUmschalter />
+      </div>
 
       <div className="flex flex-col gap-2">
         <h1 className="font-display text-2xl font-extrabold leading-tight">
-          Deine Vermietung an einem Ort.
+          {s("headline")}
         </h1>
       </div>
 
       <ul className="flex flex-col gap-3">
-        {FEATURES.map((f) => (
-          <li key={f} className="flex items-center gap-3">
+        {FEATURE_KEYS.map((key) => (
+          <li key={key} className="flex items-center gap-3">
             <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
               <Icon icon="ph:check-bold" className="size-3.5" />
             </span>
-            <span className="text-sm">{f}</span>
+            <span className="text-sm">{s(key)}</span>
           </li>
         ))}
       </ul>
@@ -98,22 +105,24 @@ function ChooseStep({
           }}
         >
           <Icon icon="logos:google-icon" className="size-4" />
-          Mit Google registrieren
+          {s("withGoogle")}
         </Button>
         <Button type="button" variant="outline" className="gap-2" disabled>
           <Icon icon="ph:apple-logo-fill" className="size-4" />
-          Mit Apple registrieren
+          {s("withApple")}
         </Button>
 
         <div className="flex items-center gap-3 py-1">
           <span className="h-px flex-1 bg-border" />
-          <span className="text-xs uppercase text-muted-foreground">oder</span>
+          <span className="text-xs uppercase text-muted-foreground">
+            {s("or")}
+          </span>
           <span className="h-px flex-1 bg-border" />
         </div>
 
         <Button type="button" className="gap-2" onClick={onEmail}>
           <Icon icon="ph:envelope-simple" className="size-4" />
-          Mit E-Mail registrieren
+          {s("withEmail")}
         </Button>
       </div>
 
@@ -134,9 +143,9 @@ function ChooseStep({
       </p>
 
       <p className="text-center text-sm text-muted-foreground">
-        Schon ein Konto?{" "}
+        {s("haveAccount")}{" "}
         <Link href="/login" className="font-medium text-accent hover:underline">
-          Hier anmelden
+          {s("loginLink")}
         </Link>
       </p>
     </div>
@@ -145,16 +154,17 @@ function ChooseStep({
 
 // --- Phase 2: Laden --------------------------------------------------------
 function LoadingStep({ progress }: { progress: number }) {
+  const s = useTranslations("signup");
   return (
     <div className="flex flex-col items-center gap-6 py-6 text-center">
       <Logo heightRem={1.75} />
 
       <h2 className="font-display text-2xl font-extrabold leading-tight">
-        Deine eigene Buchungswebsite. Behalte 100&nbsp;% jeder Buchung.
+        {s("loadingHeadline")}
       </h2>
 
       <p className="text-sm text-muted-foreground">
-        Wir richten dein Konto ein …
+        {s("loadingText")}
       </p>
 
       {/* Fortschrittsbalken */}

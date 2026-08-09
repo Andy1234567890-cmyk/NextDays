@@ -55,7 +55,7 @@ import {
   uploadAttachment,
 } from "@/lib/inbox";
 import { type InboxAccess } from "@/lib/inbox-access";
-import { useRealtime } from "@/lib/use-realtime";
+import { channelLabelLoose } from "@/lib/channel-logos";
 
 // --- Konversation (Chat + KI-Vorschlag + Antwortfeld) -----------------------
 export function Conversation({
@@ -181,10 +181,9 @@ export function Conversation({
   // über dem Ende landet.
   //
   // Abhängig von der ANZAHL, nicht vom Array: `load()` setzt bei jedem Lauf
-  // eine neue Referenz, und das Realtime-Abo hängt an der ganzen
-  // `channex_booking`-Zeile — jedes Buchungs-Update (Sync, Zahlung, Status)
-  // löst ein `load()` aus. Über die Referenz würde die Ansicht dem Nutzer
-  // dabei nach unten springen, während er weiter oben liest.
+  // eine neue Referenz — jeder eigene Versand und jeder Threadwechsel löst
+  // einen Lauf aus. Über die Referenz würde die Ansicht dem Nutzer dabei nach
+  // unten springen, während er weiter oben liest.
   useEffect(() => {
     ende.current?.scrollIntoView({ block: "end" });
   }, [messages.length, thread.id]);
@@ -198,43 +197,34 @@ export function Conversation({
     if (ai !== null) ende.current?.scrollIntoView({ block: "end" });
   }, [ai]);
 
-  // Echtes Realtime für den offenen Chat: neue Nachrichten + Notizen sofort.
+  // KEIN Realtime-Abo mehr für den offenen Chat. Alle drei Quellen, die diese
+  // Ansicht speisen, sind seit Migration 0337 für `authenticated` gesperrt
+  // (Wurzel 6):
+  //   - `channex_booking` (trug bis dahin das inhaltsfreie Signal
+  //     `last_message_at` aus 0305) — die Spalten `customer`/`raw` enthalten
+  //     die Gast-Stammdaten aus dem OTA-Payload,
+  //   - `inbox_thread_note` — interne Notizen zum Gast im Klartext,
+  //   - `inbox_scheduled_message` — der Text der geplanten Nachricht.
+  // Ohne SELECT-Grant passt für `authenticated` keine Policy mehr; ein Abo
+  // darauf verbindet sich und bekommt nie ein Event.
   //
-  // Die Nachricht selbst kommt NICHT über das Abo, sondern über `load()` — die
-  // API setzt den Rollen-Datensplit durch. Beobachtet wird nur das
-  // inhaltsfreie Signal `channex_booking.last_message_at` (0305): ein
-  // `authenticated`-SELECT auf `portal_messages` würde den Klartext der
-  // Gastnachrichten über den PostgREST-Direktpfad für jede Rolle öffnen,
-  // cleaner eingeschlossen (Wurzel 6).
+  // Eine erlaubte Ersatzquelle gibt es für keine der drei. `reservations` wäre
+  // ein stiller Ersatz und damit falsch: weder eine eingehende Nachricht noch
+  // eine Notiz noch der Cron-Versand einer geplanten Nachricht berührt eine
+  // Zeile in `reservations`. Ein Abo darauf sähe live aus und verpasste genau
+  // die Ereignisse, um die es hier geht.
   //
-  // Vorher stand hier ein Abo auf `sandbox_message` — eine reine Test-Tabelle
-  // (0036), die im Produktivpfad nie geschrieben wird. Es verband sauber und
-  // bekam nie ein Event: genau die stumme Attrappe aus 0234. Deshalb erschien
-  // eine eingehende Nachricht erst beim manuellen Neuladen.
-  useRealtime({
-    table: "channex_booking",
-    filter: `id=eq.${thread.id}`,
-    onChange: load,
-  });
-  useRealtime({
-    table: "inbox_thread_note",
-    filter: `thread_id=eq.${thread.id}`,
-    onChange: load,
-  });
-  // Geplante Nachrichten: bei Versand (Cron) aus der Liste verschwinden lassen.
-  useRealtime({
-    table: "inbox_scheduled_message",
-    filter: `thread_id=eq.${thread.id}`,
-    onChange: loadScheduled,
-  });
-
-  // KEIN Realtime-Abo auf `inbox_attachment`: die Tabelle ist für
-  // `authenticated` bewusst gesperrt (Migration 0259, Wurzel 6 — an einem
-  // Anhang hängt der Türcode). Ein Abo darauf wäre eine stumme Attrappe: die
-  // Liste sähe live aus und aktualisierte nie. Eine erlaubte Ersatzquelle gibt
-  // es nicht — `channex_booking` ändert sich beim Hochladen nicht. Nach der
-  // eigenen Aktion lädt die Liste selbst neu; der Upload eines Kollegen
-  // erscheint beim nächsten Öffnen der Konversation.
+  // WAS DADURCH ENTFÄLLT:
+  //   - Eine eingehende Gastnachricht erscheint nicht mehr von selbst im
+  //     offenen Verlauf; der eigene Versand lädt weiterhin über `load()` nach.
+  //   - Notizen eines Kollegen erscheinen erst beim erneuten Öffnen des
+  //     Threads; die eigene Notiz lädt die Liste selbst nach.
+  //   - Eine geplante Nachricht verschwindet beim Cron-Versand nicht mehr
+  //     selbsttätig aus der Liste, sondern erst beim nächsten Öffnen.
+  // Der Threadwechsel lädt beides ohnehin frisch.
+  //
+  // Dasselbe galt schon vorher für `inbox_attachment` (Migration 0259 — an
+  // einem Anhang hängt der Türcode): auch dort kein Abo, aus demselben Grund.
 
   /** Vorlage einsetzen — serverseitig für DIESEN Thread aufgelöst, damit im
    *  Feld der fertige Text steht und nicht `{{guest_name}}`. Fehlt der Wert
@@ -380,7 +370,7 @@ export function Conversation({
             {/* Objekt zuerst: es beantwortet die häufigste Rückfrage beim Lesen
                 eines Threads („welche Unterkunft?"). */}
             {thread.property_title ? `${thread.property_title} · ` : ""}
-            {thread.ota_name ?? t("directChannel")}
+            {thread.ota_name ? channelLabelLoose(thread.ota_name) : t("directChannel")}
             {thread.ota_reservation_code ? ` · ${thread.ota_reservation_code}` : ""}
           </span>
         </div>

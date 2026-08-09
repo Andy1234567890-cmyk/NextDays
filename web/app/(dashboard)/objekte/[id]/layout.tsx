@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 
 import { PropertyRealtime } from "@/components/objekte/property-realtime";
 import { PropertySubnav } from "@/components/objekte/property-subnav";
+import { getMe } from "@/lib/auth";
 import { adressZeile } from "@/lib/property-address";
 import { getProperty, listProperties } from "@/lib/properties";
 
@@ -19,7 +20,14 @@ export default async function ObjektLayout({
 }) {
   const { id } = await params;
   // Objekt und Objektliste parallel: die Liste speist den Umschalter im Kopf.
-  const [res, alle] = await Promise.all([getProperty(id), listProperties()]);
+  // `me` liefert die Faehigkeiten fuer das Menue-Gate (Objektkartei verlangt
+  // MANAGE_PROPERTIES) — ohne sie stuende dort ein Link, der in einen 403
+  // fuehrt.
+  const [res, alle, me] = await Promise.all([
+    getProperty(id),
+    listProperties(),
+    getMe(),
+  ]);
   const t = await getTranslations("objects");
   if (!res.ok) {
     if (res.error.includes("nicht gefunden")) notFound();
@@ -40,6 +48,7 @@ export default async function ObjektLayout({
         title={res.data.title}
         photo={res.data.photos[0] ?? null}
         status={res.data.status}
+        capabilities={me?.capabilities}
         // Scheitert die Liste, bleibt der Kopf eine Anzeige — kein Umschalter
         // mit leerer Auswahl.
         properties={

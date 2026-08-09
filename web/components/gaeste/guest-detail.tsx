@@ -23,6 +23,7 @@ import { ReservationDetailSlider } from "@/components/kalender/reservation-detai
 import { ReservationWizard } from "@/components/kalender/reservation-wizard";
 import { STATUS_META } from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import type { GuestAccess } from "@/lib/guests-access";
 import { listProperties } from "@/lib/properties";
 import {
@@ -343,7 +344,14 @@ function NotesRailCard({ guestId, onOpen }: { guestId: string; onOpen: () => voi
     listNotes(guestId).then((r) => r.ok && setItems(r.data.items));
   }, [guestId]);
   useEffect(() => load(), [load]);
-  useRealtime({ table: "guest_notes", filter: `guest_id=eq.${guestId}`, onChange: load });
+  // guest_notes ist fuer authenticated gesperrt (Wurzel 6, Migration 0337) —
+  // Freitext des Betriebs ueber den Gast. Ein Abo darauf liefert nie ein Event.
+  // Es gibt KEINE offene Tabelle, die dieses Ereignis traegt: eine neue Notiz
+  // beruehrt weder eine Reservierung noch ein Objekt. Ein Umhaengen auf
+  // reservations waere dieselbe Attrappe unter anderem Namen, deshalb ersatzlos
+  // gestrichen. Entfaellt damit: Notizen, die eine ANDERE Sitzung anlegt,
+  // erscheinen erst beim naechsten Laden. Die eigene Aktion laedt weiterhin
+  // sofort neu (load() in save/remove weiter unten im Notizen-Tab).
   return (
     <SectionCard
       title={t("tab.notes")}
@@ -386,7 +394,11 @@ function DocumentsRailCard({ guestId, onOpen }: { guestId: string; onOpen: () =>
     listDocuments(guestId).then((r) => r.ok && setCount(r.data.total));
   }, [guestId]);
   useEffect(() => load(), [load]);
-  useRealtime({ table: "guest_documents", filter: `guest_id=eq.${guestId}`, onChange: load });
+  // guest_documents ist fuer authenticated gesperrt (Wurzel 6, Migration 0337) —
+  // die Zeile verweist per storage_path auf hochgeladene Ausweiskopien. Keine
+  // offene Tabelle traegt dieses Ereignis, deshalb ersatzlos gestrichen statt
+  // still auf reservations umgehaengt. Entfaellt: Uploads einer ANDEREN Sitzung
+  // erscheinen erst beim naechsten Laden; der eigene Upload laedt sofort neu.
   return (
     <SectionCard
       title={t("tab.documents")}
@@ -826,19 +838,16 @@ function ContactTab({ guest, access }: { guest: Guest; access: GuestAccess }) {
     loadAddr();
     loadCont();
   }, [access.contact, loadAddr, loadCont]);
-  // Realtime-Pflicht: Adressen/Kontakte anderer Sessions live spiegeln.
-  useRealtime({
-    table: "guest_addresses",
-    filter: `guest_id=eq.${guest.id}`,
-    onChange: loadAddr,
-    enabled: access.contact,
-  });
-  useRealtime({
-    table: "guest_contacts",
-    filter: `guest_id=eq.${guest.id}`,
-    onChange: loadCont,
-    enabled: access.contact,
-  });
+  // guest_addresses und guest_contacts sind fuer authenticated gesperrt
+  // (Wurzel 6, Migration 0337): sie tragen Anschrift und Kontaktdaten des
+  // Gastes und waren der Weg, die Maskierung aus guest_masking.py zu umgehen —
+  // wer guests nicht mehr lesen darf, holte Name und Anschrift eben hier.
+  // Es gibt KEINE offene Tabelle, die eine Adress-/Kontaktaenderung abbildet;
+  // ein Abo auf reservations waere ein stiller Ersatz, der nie das richtige
+  // Ereignis traegt. Deshalb ersatzlos gestrichen.
+  // Entfaellt: Adressen/Kontakte, die eine ANDERE Sitzung aendert, erscheinen
+  // erst beim naechsten Laden. Jede Aktion in dieser Oberflaeche ruft weiterhin
+  // direkt loadAddr()/loadCont() (siehe onAdd/onDelete der beiden SubLists).
 
   if (!access.contact) {
     return <Card>{t("contactMasked")}</Card>;
@@ -1098,12 +1107,12 @@ function IdentityTab({
     listIdentityDocs(guestId).then((r) => r.ok && setDocs(r.data.items));
   }, [guestId]);
   useEffect(() => load(), [load]);
-  // Realtime-Pflicht: Ausweisdokumente anderer Sessions live spiegeln.
-  useRealtime({
-    table: "guest_identity_documents",
-    filter: `guest_id=eq.${guestId}`,
-    onChange: load,
-  });
+  // guest_identity_documents ist fuer authenticated gesperrt (Wurzel 6,
+  // Migration 0337) — Ausweisnummer, ausstellendes Land, Gueltigkeit. Ein Abo
+  // liefert nie ein Event, und keine offene Tabelle traegt dieses Ereignis:
+  // ersatzlos gestrichen statt still umgehaengt.
+  // Entfaellt: Ausweisdaten, die eine ANDERE Sitzung erfasst, erscheinen erst
+  // beim naechsten Laden; add()/remove() unten laden weiterhin sofort neu.
 
   const add = async () => {
     if (!number.trim()) return;
@@ -1486,7 +1495,7 @@ function MessagesTab({ guestId }: { guestId: string }) {
             >
               <span className="flex items-center gap-2">
                 <Icon icon="ph:chat-circle" className="size-4 text-muted-foreground" />
-                {th.ota_name ?? "—"}
+                {th.ota_name ? channelLabelLoose(th.ota_name) : "—"}
               </span>
               <span className="text-muted-foreground">{th.ota_reservation_code ?? "—"}</span>
             </a>
@@ -1511,12 +1520,11 @@ function NotesTab({
     listNotes(guestId).then((r) => r.ok && setItems(r.data.items));
   }, [guestId]);
   useEffect(() => load(), [load]);
-  // Realtime-Pflicht: Notizen anderer Sessions live spiegeln.
-  useRealtime({
-    table: "guest_notes",
-    filter: `guest_id=eq.${guestId}`,
-    onChange: load,
-  });
+  // guest_notes ist fuer authenticated gesperrt (Wurzel 6, Migration 0337).
+  // Keine offene Tabelle traegt das Ereignis „neue Notiz" — ersatzlos
+  // gestrichen statt still auf reservations umgehaengt.
+  // Entfaellt: Notizen einer ANDEREN Sitzung erscheinen erst beim naechsten
+  // Laden. save()/remove() unten laden weiterhin sofort neu.
   const save = async () => {
     if (!body.trim()) return;
     const res = await addNote(guestId, { body: body.trim() });
@@ -1586,12 +1594,10 @@ function DocumentsTab({ guestId }: { guestId: string }) {
     listDocuments(guestId).then((r) => r.ok && setCount(r.data.total));
   }, [guestId]);
   useEffect(() => load(), [load]);
-  // Realtime-Pflicht: Dokumente anderer Sessions live spiegeln.
-  useRealtime({
-    table: "guest_documents",
-    filter: `guest_id=eq.${guestId}`,
-    onChange: load,
-  });
+  // guest_documents ist fuer authenticated gesperrt (Wurzel 6, Migration 0337).
+  // Kein Ersatz-Abo: keine offene Tabelle bildet einen Dokument-Upload ab.
+  // Entfaellt: Uploads einer ANDEREN Sitzung erscheinen erst beim naechsten
+  // Laden.
   return <Card>{count === null ? "…" : t("documentsCount", { count })}</Card>;
 }
 
@@ -1608,12 +1614,11 @@ function GdprTab({
     listConsents(guestId).then((r) => r.ok && setItems(r.data.items));
   }, [guestId]);
   useEffect(() => load(), [load]);
-  // Realtime-Pflicht: Einwilligungen anderer Sessions live spiegeln.
-  useRealtime({
-    table: "guest_consents",
-    filter: `guest_id=eq.${guestId}`,
-    onChange: load,
-  });
+  // guest_consents ist fuer authenticated gesperrt (Wurzel 6, Migration 0337) —
+  // der DSGVO-Einwilligungsstatus des Gastes. Kein Ersatz-Abo moeglich:
+  // eine Einwilligung beruehrt keine offene Tabelle.
+  // Entfaellt: Aenderungen einer ANDEREN Sitzung erscheinen erst beim naechsten
+  // Laden; setConsent() unten laedt weiterhin sofort neu.
   const setConsent = async (type: string, status: string) => {
     const res = await addConsent(guestId, { consent_type: type, status });
     if (res.ok) {

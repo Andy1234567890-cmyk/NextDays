@@ -98,9 +98,16 @@ export function SwitcherImport({
 
   // Realtime: neu importierte/angelegte Objekte sofort zählen (kein manuelles Reload).
   useRealtime({ table: "properties", onChange: refreshCount });
-  // Registrierung bei den Portalen: derselbe Weg, damit der Haken an Schritt 2
-  // erscheint, sobald das erste Objekt wirklich übertragen ist.
-  useRealtime({ table: "channex_property_map", onChange: refreshChannels });
+  // channex_property_map ist für authenticated gesperrt (Wurzel 6, Migration
+  // 0337) — die Portal-Kennungen des Betriebs sind Vertriebsdaten (§4.3). Ein
+  // Abo darauf liefert kein Event mehr, und keine offene Tabelle bildet die
+  // Registrierung eines Objekts bei einem Portal ab: ein Umhängen auf
+  // properties wäre ein stiller Ersatz, denn das Objekt existiert dort längst,
+  // bevor es übertragen wird. Ersatzlos gestrichen.
+  // Entfällt: der Haken an Schritt 2 erscheint nicht mehr von selbst, sobald
+  // die Übertragung im Hintergrund durchläuft. Das properties-Abo darüber
+  // bleibt und zählt neu importierte Objekte weiterhin live; die Übernahme in
+  // dieser Oberfläche ruft refreshChannels() nach ihrer eigenen Aktion.
 
   // Objekte von den Portalen holen. ZWEI Wege, weil die Portale sich
   // unterscheiden (beide live geprüft, siehe airbnb_uebernahme.py):

@@ -10,6 +10,7 @@ import { ChannelLogo } from "@/components/channel-logo";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { formatCurrency } from "@/lib/currency";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import type { Dashboard, DashboardEntry, DashboardKpi } from "@/lib/reservations";
 
 function fmtDate(iso: string): string {
@@ -37,7 +38,9 @@ function EntryRow({ entry }: { entry: DashboardEntry }) {
   const { channelLabel } = useCalendarLabels();
   // Der Klarname des Portals ist genauer als das Sammellabel des Kanals
   // („Expedia" statt „Anderes Portal"), also hat er Vorrang.
-  const channel = entry.ota_name ?? channelLabel(entry.channel as AvailabilitySource);
+  const channel = entry.ota_name
+    ? channelLabelLoose(entry.ota_name)
+    : channelLabel(entry.channel as AvailabilitySource);
   return (
     <li className="flex items-center gap-3 py-2">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">

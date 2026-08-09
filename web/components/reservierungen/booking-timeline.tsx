@@ -23,6 +23,7 @@ import {
   getReservationTimeline,
 } from "@/lib/reservations";
 import { useRealtime } from "@/lib/use-realtime";
+import { channelLabelLoose } from "@/lib/channel-logos";
 
 // Icon (auf der Achse) + Beschriftung + Filter-Kategorie je Ereignis-Art. Der
 // Kunde sieht nie „Channex"/Fachjargon ([[ui-nie-channex-nennen]]).
@@ -124,7 +125,7 @@ function cardTitle(t: T, ev: TimelineEvent, propertyTitle: string): string {
   const on = propertyTitle ? t("bookingTimeline.title.onProperty", { property: propertyTitle }) : "";
   switch (ev.kind) {
     case "created": {
-      const ota = s(d.ota_name);
+      const ota = channelLabelLoose(s(d.ota_name)) || null;
       const ch = s(d.channel);
       const src = ota ?? (ch ? channelLabel(t, ch) : null);
       return src
@@ -272,7 +273,15 @@ export function BookingTimeline({
       });
     },
   });
-  useRealtime({ table: "messages", filter: `reservation_id=eq.${reservationId}`, onChange: load });
+  // messages ist für authenticated gesperrt (Wurzel 6, Migration 0337):
+  // Nachrichteninhalt an der Buchung, den §4.3 vor staff/cleaner verbirgt. Ein
+  // Abo darauf liefert kein Event mehr.
+  // KEIN Umhängen auf reservation_events: geprüft im Backend — der Nachrichten-
+  // Pfad ruft _log_event() nicht auf, es entsteht also KEINE Event-Zeile zu
+  // einer Nachricht. Ein Abo dort wäre dieselbe Attrappe unter anderem Namen.
+  // Entfällt: eine neue Nachricht erscheint nicht mehr von selbst in der
+  // Zeitleiste. Die übrigen Zweige (Ereignisse, Aufgaben, Reservierung,
+  // Zusatzleistungen) bleiben live — siehe die Abos direkt darunter.
   useRealtime({ table: "tasks", filter: `reservation_id=eq.${reservationId}`, onChange: load });
   // payments ist für authenticated bewusst gesperrt (Wurzel 6). Jede Zahlung setzt
   // aber reservations.payment_status — deshalb hängt der Zahlungs-Zweig der

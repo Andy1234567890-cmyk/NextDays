@@ -5,9 +5,9 @@
 // 1..5). Sterne kommen aus `score_5`; fehlt eine Note, werden KEINE Sterne
 // gezeigt — eine leere Sternreihe wäre eine Null-Bewertung (Wurzel 4).
 //
-// Realtime: `reviews` speist die Marktplatz-Bewertungen, `channex_review` die
-// der Portale — dieselben speisenden Tabellen wie das Web-Cockpit
-// (web/app/(dashboard)/bewertungen/page.tsx).
+// Realtime: `reviews` speist die Marktplatz-Bewertungen. Die Portal-Bewertungen
+// (`channex_review`) sind seit Migration 0337 gesperrt und laufen nicht mehr
+// live — Begründung an der Stelle des ehemaligen Abos.
 import { useCallback, useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -69,7 +69,14 @@ export default function HostReviews() {
   }, [load]);
 
   useRealtime({ table: "reviews", onChange: load });
-  useRealtime({ table: "channex_review", onChange: load });
+  // `channex_review` (Portal-Bewertungen) ist seit Migration 0337 für
+  // `authenticated` gesperrt (Wurzel 6: revoke + raus aus der Publikation
+  // supabase_realtime) — das Abo verband sauber und bekam nie ein Event. Eine
+  // Ersatzquelle gibt es nicht: eine neue Portal-Bewertung kommt über den
+  // Channex-Feed und ändert keine offene Tabelle (insbesondere keine
+  // reservations-Zeile). Ehrlich: eine NEUE Bewertung von Booking.com/Airbnb
+  // erscheint erst beim Öffnen des Tabs oder per Zug-zum-Aktualisieren;
+  // myBestDays-Bewertungen bleiben live.
 
   async function aktualisieren() {
     setBusy(true);

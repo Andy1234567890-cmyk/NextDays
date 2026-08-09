@@ -49,7 +49,6 @@ import {
   updateAutomation,
 } from "@/lib/inbox";
 import { listProperties } from "@/lib/properties";
-import { useRealtime } from "@/lib/use-realtime";
 
 const TRIGGERS: AutomationTrigger[] = AUSLOESER_REIHENFOLGE;
 // 0 = Montag … 6 = Sonntag (gleiche Zählung wie im Backend, `window_days`).
@@ -109,10 +108,18 @@ export function AutomationsTab() {
   useEffect(() => {
     load();
   }, []);
-  // Die Regeln lassen sich auch aus dem Panel im Posteingang-Kopf ändern (und
-  // vom Server, wenn eine Neuplanung greift). Ohne Abo zeigte dieser Tab die
-  // Fassung von vorhin — beide Oberflächen bearbeiten dieselben Zeilen.
-  useRealtime({ table: "message_automation", onChange: load });
+  // KEIN Realtime-Abo mehr auf `message_automation`: die Tabelle ist seit
+  // Migration 0337 für `authenticated` gesperrt (Wurzel 6 — eine Regel trägt
+  // den Nachrichtentext, der an den Gast hinausgeht). Ohne SELECT-Grant passt
+  // keine Policy mehr; das Abo wäre eine stumme Attrappe.
+  //
+  // Eine erlaubte Ersatzquelle gibt es nicht: eine Regeländerung berührt keine
+  // offene Tabelle. `reservations` wäre ein stiller Ersatz und damit falsch.
+  //
+  // WAS DADURCH ENTFÄLLT: Eine Regel, die im Panel im Posteingang-Kopf oder
+  // von einem Kollegen geändert wird, erscheint hier nicht mehr von selbst.
+  // Die eigene Änderung lädt über `load()` ohnehin nach; fremde werden beim
+  // erneuten Öffnen des Tabs sichtbar.
 
   /** Formular auf „neue Regel" zurückstellen. */
   function zuruecksetzen() {

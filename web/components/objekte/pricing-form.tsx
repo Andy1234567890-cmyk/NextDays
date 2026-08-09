@@ -255,13 +255,15 @@ export function PricingForm({ initial }: { initial: Property }) {
   useEffect(() => {
     void loadAbgaben();
   }, [loadAbgaben]);
-  // Verbindet/trennt der Betrieb ein Portal, ändert sich die Antwort — ohne das
-  // Abo stünde der Chip bis zum nächsten Seitenaufruf falsch da.
-  useRealtime({
-    table: "channex_channel_connection",
-    filter: `property_id=eq.${p.id}`,
-    onChange: () => void loadAbgaben(),
-  });
+  // channex_channel_connection ist für authenticated gesperrt (Wurzel 6,
+  // Migration 0337) — Portal-Kontoverbindung, Vertriebsdaten nach §4.3. Ein Abo
+  // liefert kein Event mehr, und KEINE offene Tabelle bildet das Verbinden oder
+  // Trennen eines Portals ab; ein Umhängen wäre ein stiller Ersatz. Ersatzlos
+  // gestrichen.
+  // Entfällt: verbindet der Betrieb in einer ANDEREN Sitzung ein Portal, steht
+  // der Portal-Chip bis zum nächsten Seitenaufruf auf dem alten Stand — genau
+  // das, was der frühere Kommentar hier vermeiden wollte. Es ist der ehrlichere
+  // Zustand als ein Abo, das sich verbindet und nie ein Event liefert.
 
   // Fehler beim Übertragen eines Postens auf weitere Objekte. Er entsteht NACH
   // dem Speichern — also nachdem der Editor-Dialog geschlossen wurde. Deshalb

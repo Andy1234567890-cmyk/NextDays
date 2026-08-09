@@ -26,9 +26,14 @@ export default async function StopSellPage() {
   }
   return (
     <>
-      {/* Neu angelegte Partner sofort im Panel-Select, neue/gelöschte
-          Objekte sofort als Kalenderzeilen (Realtime-Pflicht). */}
-      <RealtimeRefresh tables={["travel_agencies", "properties"]} />
+      {/* Neue/gelöschte Objekte sofort als Kalenderzeilen (Realtime-Pflicht).
+          `travel_agencies` ist hier ersatzlos gestrichen: für authenticated
+          bewusst gesperrt (Wurzel 6, Migration 0337: revoke + raus aus
+          supabase_realtime), ein Abo darauf wäre eine stumme Attrappe, und
+          eine offene Tabelle mit demselben Ereignis gibt es nicht. Ehrlich
+          benannt: ein neu angelegter Partner erscheint im Panel-Select des
+          Kalenders erst beim nächsten Laden dieser Seite. */}
+      <RealtimeRefresh tables={["properties"]} />
       <StopSellCalendar
         properties={res.data.items.map((p) => ({ id: p.id, title: p.title }))}
         agencies={

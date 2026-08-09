@@ -412,26 +412,41 @@ export function replacePlaceholders(
   result = result.replace(/\[%LIEFERDATUM%\]/g, formattedServiceDate);
   result = result.replace(/\[%LEISTUNGSZEITRAUM%\]/g, data.servicePeriod || '');
 
+  // Belegwährung — kommt aus den Daten und wird an JEDE Betragsformatierung
+  // durchgereicht. Ohne sie rendert formatCurrency symbollos (reine Zahl); ein
+  // fehlender Code darf NIE als Euro dargestellt werden (Wurzel 4), sonst trägt
+  // eine dänische Rechnung ein €-Zeichen.
+  const belegWaehrung =
+    typeof dataRecord.currency === 'string' && dataRecord.currency.trim()
+      ? dataRecord.currency
+      : null;
+
   // Betrag-Platzhalter mit Formatierung - IMMER ersetzen
   const totalAmount = data.totalAmount || 0;
-  result = result.replace(/\[%GESAMTSUMME%\]/g, formatCurrency(totalAmount));
-  result = result.replace(/\[%ENDSUMME%\]/g, formatCurrency(totalAmount));
-  result = result.replace(/\[%GESAMTBETRAG%\]/g, formatCurrency(totalAmount));
-  result = result.replace(/\[%TOTAL_AMOUNT%\]/g, formatCurrency(totalAmount));
+  result = result.replace(/\[%GESAMTSUMME%\]/g, formatCurrency(totalAmount, belegWaehrung));
+  result = result.replace(/\[%ENDSUMME%\]/g, formatCurrency(totalAmount, belegWaehrung));
+  result = result.replace(/\[%GESAMTBETRAG%\]/g, formatCurrency(totalAmount, belegWaehrung));
+  result = result.replace(/\[%TOTAL_AMOUNT%\]/g, formatCurrency(totalAmount, belegWaehrung));
 
   // Alle Betragsplatzhalter - IMMER ersetzen
   const netAmount = data.subtotalAmount || data.netAmount || 0;
-  result = result.replace(/\[%NETTOBETRAG%\]/g, formatCurrency(netAmount));
-  result = result.replace(/\[%NETTOSUMME%\]/g, formatCurrency(netAmount));
-  result = result.replace(/\[%NET_AMOUNT%\]/g, formatCurrency(netAmount));
+  result = result.replace(/\[%NETTOBETRAG%\]/g, formatCurrency(netAmount, belegWaehrung));
+  result = result.replace(/\[%NETTOSUMME%\]/g, formatCurrency(netAmount, belegWaehrung));
+  result = result.replace(/\[%NET_AMOUNT%\]/g, formatCurrency(netAmount, belegWaehrung));
 
   const subtotalAmount = data.subtotalAmount || 0;
-  result = result.replace(/\[%ZWISCHENSUMME%\]/g, formatCurrency(subtotalAmount));
+  result = result.replace(/\[%ZWISCHENSUMME%\]/g, formatCurrency(subtotalAmount, belegWaehrung));
 
   const taxAmount = data.taxAmount || 0;
-  result = result.replace(/\[%STEUERBETRAG%\]/g, formatCurrency(taxAmount));
-  result = result.replace(/\[%MEHRWERTSTEUERBETRAG%\]/g, formatCurrency(taxAmount));
-  result = result.replace(/\[%UMSATZSTEUERBETRAG%\]/g, formatCurrency(taxAmount));
+  result = result.replace(/\[%STEUERBETRAG%\]/g, formatCurrency(taxAmount, belegWaehrung));
+  result = result.replace(
+    /\[%MEHRWERTSTEUERBETRAG%\]/g,
+    formatCurrency(taxAmount, belegWaehrung),
+  );
+  result = result.replace(
+    /\[%UMSATZSTEUERBETRAG%\]/g,
+    formatCurrency(taxAmount, belegWaehrung),
+  );
 
   // Steuersatz und Währung
   // Kein erfundener 19%-Default (Wurzel 4): fehlt der Satz, leer statt DE-USt.
@@ -549,14 +564,19 @@ export function replacePlaceholders(
 
   // Beträge und Finanzen
   if (data.discountAmount !== undefined)
-    result = result.replace(/\[%RABATT%\]/g, formatCurrency(data.discountAmount));
+    result = result.replace(
+      /\[%RABATT%\]/g,
+      formatCurrency(data.discountAmount, belegWaehrung),
+    );
   if (data.orderNumber) result = result.replace(/\[%BESTELLNUMMER%\]/g, data.orderNumber);
   if (data.currency) result = result.replace(/\[%WAEHRUNG%\]/g, data.currency);
 
-  // Steuersatz formatierung
-  if (data.taxAmount !== undefined) {
-    const vatRate = data.vatRate || 19;
-    result = result.replace(/\[%MEHRWERTSTEUERSATZ%\]/g, `${vatRate}%`);
+  // Steuersatz: NUR ausweisen, wenn er in den Daten steht. Der frühere Default
+  // `|| 19` erfand den deutschen Regelsatz auf jedem Beleg ohne eigenen Satz —
+  // bei 27 EU-Ländern (DK 25 %, LU 17 %) eine falsche Angabe auf einem
+  // Steuerdokument. Fehlt der Satz, bleibt der Platzhalter leer (Wurzel 4).
+  if (data.taxAmount !== undefined && typeof data.vatRate === 'number') {
+    result = result.replace(/\[%MEHRWERTSTEUERSATZ%\]/g, `${data.vatRate}%`);
   }
 
   // Projekt

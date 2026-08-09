@@ -26,7 +26,6 @@ import {
   type Pricing,
   type SubscriptionStatus,
 } from "@/lib/subscriptions";
-import { useRealtime } from "@/lib/use-realtime";
 
 import { PreisverlaufIllustration } from "./illustrationen";
 
@@ -70,19 +69,17 @@ export function ErweiterungDetail({ eintrag }: { eintrag: Erweiterung }) {
     void load();
   }, [load]);
 
-  // Realtime: Entitlement (Buchung/Kündigung, auch per Webhook) und Abo-Status.
-  useRealtime({
-    table: "tenant_module_entitlement",
-    filter: state?.tenantId ? `tenant_id=eq.${state.tenantId}` : undefined,
-    enabled: !!state?.tenantId,
-    onChange: () => void load(),
-  });
-  useRealtime({
-    table: "tenant_subscription",
-    filter: state?.tenantId ? `tenant_id=eq.${state.tenantId}` : undefined,
-    enabled: !!state?.tenantId,
-    onChange: () => void load(),
-  });
+  // Kein Realtime mehr: `tenant_module_entitlement` und `tenant_subscription`
+  // sind für authenticated bewusst gesperrt (Wurzel 6, Migration 0337: revoke +
+  // raus aus supabase_realtime), Abos darauf wären stumme Attrappen. Eine
+  // offene Tabelle, die dieselben Ereignisse trägt, gibt es nicht. Ehrlich
+  // benannt: eine Buchung oder Kündigung durch einen ZWEITEN Nutzer sowie ein
+  // Abo-/Statuswechsel, den der Stripe-Webhook serverseitig schreibt,
+  // erscheinen hier erst beim nächsten Laden der Seite.
+  // Der eigene Aktions-Pfad hing bisher AUSSCHLIESSLICH an diesem Abo — er lädt
+  // jetzt selbst nach (siehe onAktivieren/onKuendigen), sonst bliebe der
+  // Aktiv-Zustand nach dem eigenen Klick stehen.
+  // Mit den Abos entfällt auch das bisher nur dafür gehaltene tenantId.
 
   const eintragAktiv = (s: SubscriptionStatus | null) =>
     (s?.modules ?? []).some((m) => m.module_key === eintrag.moduleKey && m.active);
@@ -96,8 +93,11 @@ export function ErweiterungDetail({ eintrag }: { eintrag: Erweiterung }) {
         return;
       }
       toast.success(`${eintrag.name} ist aktiviert.`);
-      // Kein manuelles Nachladen: das Realtime-Abo auf
-      // tenant_module_entitlement liefert den neuen Zustand.
+      // Nachladen ist hier PFLICHT, kein Notnagel: `tenant_module_entitlement`
+      // ist für authenticated gesperrt (0337) und liefert kein Realtime-Event,
+      // das den Aktiv-Zustand nachziehen könnte. Ohne dies behielte der Button
+      // seine alte Beschriftung bis zum manuellen Neuladen.
+      await load();
     } finally {
       setBusy(false);
     }
@@ -112,6 +112,9 @@ export function ErweiterungDetail({ eintrag }: { eintrag: Erweiterung }) {
         return;
       }
       toast.success(`${eintrag.name} wurde gekündigt.`);
+      // Siehe onAktivieren: ohne Realtime-Quelle muss der eigene Aktions-Pfad
+      // den neuen Zustand selbst holen.
+      await load();
     } finally {
       setBusy(false);
     }

@@ -21,9 +21,17 @@ export default async function Page({
       </div>
     );
   }
-  // Objekt-Währung aus dem Rate-Plan (kein €-Hardcode). Ohne Rate-Plan null →
-  // Betrag ohne Symbol statt erfundenem Euro.
+  // Währung UND Basispreis kommen aus dem Rate-Plan — das ist die Quelle, mit
+  // der auch der Server die Prozent-Saisons materialisiert (rate_plans.base_price).
+  // Ohne Rate-Plan bleibt beides null: Betrag ohne Symbol bzw. %-Label ohne
+  // Vorschau statt erfundenem Euro/0,00 (Wurzel 4).
   const rates = await listRatePlans(id);
-  const currency = rates.ok ? (rates.data.items[0]?.currency ?? null) : null;
-  return <SeasonCalendar initial={res.data} currency={currency} />;
+  const ratePlan = rates.ok ? (rates.data.items[0] ?? null) : null;
+  return (
+    <SeasonCalendar
+      initial={res.data}
+      currency={ratePlan?.currency ?? null}
+      basePrice={ratePlan?.base_price ?? null}
+    />
+  );
 }

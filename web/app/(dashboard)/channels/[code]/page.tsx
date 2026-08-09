@@ -75,13 +75,21 @@ export default async function ChannelDetailPage({
   // Lægehus (1966) · FeWo Lille Lægehus" auf vier Zeilen umbrachen.
   return (
     <div className="flex w-full flex-col gap-6 p-6">
-      <RealtimeRefresh
-        tables={[
-          "channex_property_map",
-          "channex_booking",
-          "channex_channel_connection",
-        ]}
-      />
+      {/* Alle drei bisherigen Quellen (`channex_property_map`,
+          `channex_booking`, `channex_channel_connection`) sind seit Migration
+          0337 für `authenticated` gesperrt (Wurzel 6) — ohne SELECT-Grant
+          wären die Abos stumme Attrappen und werden deshalb ersatzlos
+          gestrichen. Eine erlaubte Ersatzquelle gibt es nicht: eine neue
+          OTA-Buchung oder eine geänderte Zuordnung berührt keine offene
+          Tabelle, und `reservations` wäre ein stiller Ersatz (die
+          Buchungsliste dieser Seite kommt aus `channex_booking`, nicht aus
+          `reservations`).
+          `properties` bleibt als Abo: die Mapping-Tabelle zeigt Titel und
+          Status der Objekte, und die Tabelle ist offen. ENTFÄLLT: Neue
+          OTA-Buchungen und Zuordnungs-/Verbindungsänderungen erscheinen nicht
+          mehr von selbst — die eigene Aktion lädt die Seite ohnehin neu,
+          fremde werden beim nächsten Seitenaufruf sichtbar. */}
+      <RealtimeRefresh tables={["properties"]} />
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[16rem_1fr]">
         {/* Links: kategorisierte Kanalnavigation (Lodgify) */}
         <aside className="lg:sticky lg:top-6 lg:self-start">

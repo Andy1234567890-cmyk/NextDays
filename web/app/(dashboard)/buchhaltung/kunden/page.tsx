@@ -5,7 +5,6 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { NewCustomerButton } from "@/components/buchhaltung/new-customer-button";
-import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Avatar, AvatarFallback } from "@nextdays/ui/avatar";
 import { Card } from "@nextdays/ui/card";
 import { listCustomers, type Customer } from "@/lib/buchhaltung";
@@ -21,7 +20,13 @@ export default async function KundenPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <RealtimeRefresh tables={["customers"]} />
+      {/* Kein Realtime mehr: `customers` ist für authenticated bewusst gesperrt
+        (Wurzel 6, Migration 0337: revoke + raus aus supabase_realtime), ein Abo
+        darauf wäre eine stumme Attrappe. Eine offene Tabelle mit demselben
+        Ereignis gibt es nicht. Ehrlich benannt: neue, geänderte oder gelöschte
+        Kunden/Lieferanten erscheinen erst beim nächsten Laden der Seite —
+        Kunden-Stammdaten pflegt der Nutzer hier selbst, die Seite lädt nach der
+        eigenen Aktion ohnehin neu. */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl font-extrabold">{t("kundenPage.title")}</h2>

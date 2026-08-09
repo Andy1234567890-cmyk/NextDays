@@ -35,7 +35,7 @@ import {
   uebernehmeAirbnbListings,
 } from "@/lib/channex";
 import { formatCurrency } from "@/lib/currency";
-import { useRealtime } from "@/lib/use-realtime";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import { toast } from "sonner";
 
 // Portal-Metadaten für die Detailseite (Code = stabiler Schlüssel wie im
@@ -731,17 +731,25 @@ function BookingsSection({
     });
   }, [istAirbnb]);
 
-  useRealtime<HistorieLauf>({
-    table: "airbnb_historie_lauf",
-    enabled: istAirbnb,
-    // onEvent statt onChange: die Zeile trägt den Stand schon bei sich, ein
-    // Nachladen wäre ein zweiter Weg zur selben Wahrheit. Bei DELETE ist
-    // `new` ein leeres Objekt — dann nichts übernehmen (sonst stünde eine
-    // Zeile ohne Zahlen im Balken).
-    onEvent: (p) => {
-      if (p.new && "id" in p.new) setLauf(p.new as HistorieLauf);
-    },
-  });
+  // KEIN Realtime-Abo mehr auf `airbnb_historie_lauf`: die Tabelle ist seit
+  // Migration 0337 für `authenticated` gesperrt (Wurzel 6 — sie ist eine
+  // Vertriebsdaten-Tabelle des Portal-Anschlusses). Ohne SELECT-Grant passt
+  // keine Policy mehr; das Abo wäre eine stumme Attrappe.
+  //
+  // Eine erlaubte Ersatzquelle gibt es NICHT. `reservations` scheidet aus: der
+  // Worker schreibt den Fortschritt (`objekte_fertig`, `objekte_gesamt`,
+  // `aktuelles_objekt`, `status`) ausschließlich nach `airbnb_historie_lauf`
+  // (`airbnb_historie_dienst.historie_lauf_ausfuehren`). Ein Objekt ohne neue
+  // Buchungen rückt den Balken weiter, ohne eine einzige Reservierungszeile zu
+  // berühren, und Start/Ende des Laufs stehen dort überhaupt nicht — ein Abo
+  // auf `reservations` wäre ein stiller Ersatz, der einen falschen Stand
+  // zeigte.
+  //
+  // WAS DADURCH ENTFÄLLT: Der Fortschrittsbalken des Historien-Imports läuft
+  // nicht mehr live mit. Der Stand kommt beim Seitenaufruf einmal frisch
+  // (Effekt oben) — ein erneutes Laden der Kanalseite zeigt den aktuellen
+  // Stand. Das Ergebnis des Laufs meldet ohnehin die Glocke
+  // (Benachrichtigung), die der Worker am Ende schreibt.
 
   function handleSync() {
     setMessage(null);
@@ -942,7 +950,7 @@ function BookingsSection({
             <li key={b.id} className="flex items-center gap-3 p-3">
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-medium">
-                  {b.ota_name ?? t("channelFallback")} ·{" "}
+                  {b.ota_name ? channelLabelLoose(b.ota_name) : t("channelFallback")} ·{" "}
                   {b.ota_reservation_code ?? b.external_id}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">

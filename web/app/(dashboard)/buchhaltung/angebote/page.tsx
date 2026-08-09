@@ -5,7 +5,6 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { NewQuoteButton } from "@/components/buchhaltung/new-quote-button";
-import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@nextdays/ui/card";
 import { listCustomers, listQuotes } from "@/lib/buchhaltung";
 import type { Customer, QuoteStatus } from "@/lib/buchhaltung";
@@ -53,7 +52,15 @@ export default async function AngebotePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <RealtimeRefresh tables={["quotes", "customers"]} />
+      {/* Kein Realtime mehr: `quotes` und `customers` sind für authenticated
+        bewusst gesperrt (Wurzel 6, Migration 0337: revoke + raus aus
+        supabase_realtime), Abos darauf wären stumme Attrappen. Eine offene
+        Tabelle, die dieselben Ereignisse trägt, gibt es nicht — ein Angebot ist
+        keine Reservierung. Ehrlich benannt: neue oder geänderte Angebote (auch
+        ein Statuswechsel auf „angenommen"/„umgewandelt") und geänderte
+        Kundennamen in der Spalte erscheinen erst beim nächsten Laden der
+        Seite. Angebote pflegt der Nutzer hier selbst, die Seite lädt nach der
+        eigenen Aktion ohnehin neu. */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl font-extrabold">{t("angebotePage.title")}</h2>

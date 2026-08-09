@@ -44,11 +44,18 @@ export function BewertungenListe({
   const [items, setItems] = useState(initial);
   const [nurOffen, setNurOffen] = useState(false);
 
-  // Realtime auf beiden Quellen: `reviews` speist myBestDays, `channex_review`
-  // die Portale. Kein Polling, kein manuelles Neuladen — router.refresh() lässt
-  // die Server Component neu laden (Muster wie objekte-liste).
+  // Realtime auf `reviews` (myBestDays-Marktplatz). Kein Polling, kein manuelles
+  // Neuladen — router.refresh() lässt die Server Component neu laden (Muster wie
+  // objekte-liste).
   useRealtime({ table: "reviews", onChange: () => router.refresh() });
-  useRealtime({ table: "channex_review", onChange: () => router.refresh() });
+  // `channex_review` (Portal-Bewertungen) ist seit Migration 0337 für
+  // `authenticated` gesperrt (Wurzel 6: revoke + raus aus der Publikation
+  // supabase_realtime) — das Abo verband sauber und bekam nie ein Event. Eine
+  // Ersatzquelle gibt es nicht: eine neue Portal-Bewertung kommt über den
+  // Channex-Feed herein und ändert keine offene Tabelle (insbesondere KEINE
+  // reservations-Zeile). Ehrlich: eine NEUE Bewertung von Booking.com/Airbnb
+  // und die Antwort darauf erscheinen erst beim nächsten Laden der Seite;
+  // myBestDays-Bewertungen bleiben live.
 
   const sichtbar = nurOffen ? items.filter((r) => !r.is_replied) : items;
 

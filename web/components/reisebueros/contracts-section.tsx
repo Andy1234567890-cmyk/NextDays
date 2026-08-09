@@ -31,7 +31,6 @@ import {
   uploadContractFile,
 } from "@/lib/travel-agencies";
 import { todayIso } from "@/lib/dates";
-import { useRealtime } from "@/lib/use-realtime";
 
 type PropertyRef = { id: string; title: string };
 
@@ -87,15 +86,18 @@ export function ContractsSection({
     if (initialContracts == null) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
-  // RealtimeRefresh (page-level) liefert frische Props — ohne Sync bliebe
-  // die Liste stale, wenn das eigene WebSocket-Event verpasst wurde
-  // (Section war unmounted) oder load() fehlschlug. openYears bleibt
+  // Frische Server-Props übernehmen — ohne Sync bliebe die Liste stale, wenn
+  // die Seite neu gerendert hat oder load() fehlschlug. openYears bleibt
   // unberührt (zugeklappte Jahre bleiben zu).
   useEffect(() => {
     if (initialContracts != null) setContracts(initialContracts);
   }, [initialContracts]);
-  // Live: Verträge + Preiszeilen per WebSocket.
-  useRealtime({ table: "travel_agency_contracts", onChange: load });
+  // Kein Realtime mehr: `travel_agency_contracts` ist für authenticated bewusst
+  // gesperrt (Wurzel 6, Migration 0337: revoke + raus aus supabase_realtime),
+  // ein Abo darauf wäre eine stumme Attrappe. Eine offene Tabelle mit demselben
+  // Ereignis gibt es nicht. Ehrlich benannt: Verträge, die ein ZWEITER Nutzer
+  // anlegt, ändert oder löscht, erscheinen hier erst beim nächsten Laden der
+  // Seite. Eigene Aktionen rufen load() selbst auf und bleiben sofort sichtbar.
 
   const byYear = useMemo(() => {
     const groups = new Map<number, AgencyContract[]>();
@@ -342,13 +344,15 @@ function ContractCard({
   useEffect(() => {
     if (ratesOpen) loadRates();
   }, [ratesOpen, loadRates]);
-  // Live: Preiszeilen dieses Vertrags.
-  useRealtime({
-    table: "travel_agency_rates",
-    filter: `contract_id=eq.${contract.id}`,
-    onChange: loadRates,
-    enabled: ratesOpen,
-  });
+  // Kein Realtime mehr: `travel_agency_rates` ist für authenticated bewusst
+  // gesperrt (Wurzel 6, Migration 0337: revoke + raus aus supabase_realtime),
+  // ein Abo darauf wäre eine stumme Attrappe. Eine offene Tabelle mit demselben
+  // Ereignis gibt es nicht — die Vertragspreise eines Reisebüros stehen in
+  // keiner der offenen Preistabellen (rate_plans/price_overrides betreffen die
+  // eigenen Objektpreise, nicht diesen Vertrag). Ehrlich benannt: Preiszeilen,
+  // die ein ZWEITER Nutzer hinzufügt oder löscht, erscheinen erst beim erneuten
+  // Aufklappen der Preisliste (loadRates läuft bei jedem Öffnen). Eigene
+  // Aktionen laden ohnehin sofort nach.
 
   function onUpload(file: File) {
     setError(null);

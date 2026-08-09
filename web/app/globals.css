@@ -178,6 +178,32 @@
   --ring: #b82028;
 }
 
+/* Neuerungen (/neuerungen) und das Ankündigungs-Popup: Marketing-Optik im
+   Dashboard. `marketing/components/marketing/section-kit.tsx` ist NICHT
+   importierbar (eigenes Next-Projekt außerhalb der @source-Pfade), deshalb
+   werden hier nur die zwei fehlenden Tokens gescopt nachgezogen — Werte 1:1
+   aus marketing/app/globals.css (Zeile 56 bzw. 123/168). Fraunces
+   (--font-display) und --accent hat web bereits.
+
+   Bewusst GESCOPT wie .help-light: die warme Fläche und der weiche Schatten
+   gehören auf diese eine Seite, das übrige Dashboard bleibt sachlich. Als
+   fertige Klassen statt Tailwind-Utilities, weil dafür sonst zwei globale
+   @theme-Tokens (--color-surface-warm, --shadow-soft) im ganzen Dashboard
+   verfügbar wären. */
+.neuerungen-flaeche {
+  --surface-warm: #fdf7f6; /* Logo-Rot, sehr stark aufgehellt */
+  --shadow-soft: 0 0.625rem 4rem rgb(184 32 40 / 0.06);
+}
+.dark .neuerungen-flaeche {
+  --surface-warm: #171314;
+}
+.neuerungen-flaeche .bg-neuerungen-flaeche {
+  background-color: var(--surface-warm);
+}
+.neuerungen-flaeche .shadow-neuerungen {
+  box-shadow: var(--shadow-soft);
+}
+
 /* Dark Mode (.dark auf <html> via next-themes). */
 .dark {
   --background: #0a0a0a;

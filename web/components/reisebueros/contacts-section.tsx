@@ -19,7 +19,6 @@ import {
   listAgencyContacts,
 } from "@/lib/travel-agencies";
 import { initialsOf } from "@/lib/initials";
-import { useRealtime } from "@/lib/use-realtime";
 
 export function ContactsSection({
   agencyId,
@@ -51,14 +50,18 @@ export function ContactsSection({
     if (initialContacts == null) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
-  // RealtimeRefresh (page-level) liefert frische Props — ohne Sync bliebe
-  // die Liste stale, wenn das eigene WebSocket-Event verpasst wurde
-  // (Section war unmounted) oder load() fehlschlug.
+  // Frische Server-Props übernehmen — ohne Sync bliebe die Liste stale, wenn
+  // die Seite neu gerendert hat oder load() fehlschlug.
   useEffect(() => {
     if (initialContacts != null) setContacts(initialContacts);
   }, [initialContacts]);
-  // Live: Kontakte dieser Kartei per WebSocket spiegeln.
-  useRealtime({ table: "travel_agency_contacts", onChange: load });
+  // Kein Realtime mehr: `travel_agency_contacts` ist für authenticated bewusst
+  // gesperrt (Wurzel 6, Migration 0337: revoke + raus aus supabase_realtime),
+  // ein Abo darauf wäre eine stumme Attrappe. Eine offene Tabelle mit demselben
+  // Ereignis gibt es nicht. Ehrlich benannt: Kontaktpersonen, die ein ZWEITER
+  // Nutzer anlegt, ändert oder löscht, erscheinen hier erst beim nächsten Laden
+  // der Seite. Eigene Aktionen (onAdd/onRemove) rufen load() selbst auf und
+  // bleiben sofort sichtbar.
 
   function onAdd() {
     if (!name.trim()) return;

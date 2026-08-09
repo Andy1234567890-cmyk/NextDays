@@ -185,40 +185,16 @@ export function ObjektEditor({
     },
   });
 
-  // Realtime: Co-Gastgeber. Nimmt jemand eine Einladung an, erscheint er hier
-  // sofort — der Eigentümer wartet genau darauf. Inkrementell, kein Reload.
-  useRealtime<Cohost>({
-    table: "property_cohosts",
-    filter: `property_id=eq.${prop.id}`,
-    onEvent: (evt) => {
-      const neu = evt.new as Cohost | undefined;
-      const alt = evt.old as Partial<Cohost> | undefined;
-      if (evt.eventType === "DELETE" && alt?.id) {
-        setCoHosts((c) => c.filter((x) => x.id !== alt.id));
-        return;
-      }
-      if (!neu?.id) return;
-      // Entzogene/abgelehnte Zuordnungen verschwinden aus der Liste — sie
-      // kommen als UPDATE (status='revoked'), nicht als DELETE.
-      if (neu.status !== "active" && neu.status !== "pending") {
-        setCoHosts((c) => c.filter((x) => x.id !== neu.id));
-        return;
-      }
-      setCoHosts((c) =>
-        c.some((x) => x.id === neu.id)
-          ? c.map((x) => (x.id === neu.id ? { ...x, ...neu } : x))
-          : [...c, neu],
-      );
-      // Angenommene Einladung: Die zugehörige offene Einladung ist damit
-      // erledigt. cohost_invitations ist für Clients gesperrt (Token-Hashes),
-      // liefert also keine Events — deshalb hier über die E-Mail abräumen.
-      if (neu.status === "active" && neu.email) {
-        setCoEinladungen((e) =>
-          e.filter((x) => x.email.toLowerCase() !== neu.email!.toLowerCase()),
-        );
-      }
-    },
-  });
+  // Kein Realtime auf den Co-Gastgebern: `property_cohosts` ist seit Migration
+  // 0337 für `authenticated` gesperrt (Wurzel 6 — revoke + raus aus der
+  // Publikation supabase_realtime), genau wie `cohost_invitations` schon vorher
+  // (Token-Hashes). Das Abo verband sauber und bekam nie ein Event. Eine
+  // Ersatzquelle gibt es nicht: die Zuordnung eines Co-Gastgebers hängt an
+  // keiner offenen Tabelle — `properties` trägt nur die Stammdaten des Objekts,
+  // nicht seine Personen. Ehrlich: nimmt ein Eingeladener seine Einladung an
+  // oder wird ihm der Zugriff entzogen, ändert sich die Liste NICHT mehr von
+  // selbst — erst beim nächsten Laden des Editors. Eigene Aktionen im
+  // CohostPanel pflegen den State weiterhin über ihre Action-Antwort.
 
   // Property-Felder SOFORT speichern (Airbnb: jede Sidebar sichert ihren eigenen
   // Wert direkt beim „Speichern"). Optimistisch nachziehen; Realtime bestätigt.

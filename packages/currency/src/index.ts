@@ -6,9 +6,14 @@
 // (Intl.NumberFormat wirft sonst "Invalid currency code"). In dem Fall wird der
 // Betrag OHNE Währungssymbol formatiert (reine Zahl) — kein erfundener Euro
 // (Projektregel: keine Fallback-Ersatzwerte), aber auch kein Crash.
+// Der Währungsparameter hat BEWUSST keinen Default: ein `= "EUR"` hätte jeden
+// Aufrufer, der die Währung schlicht vergisst, still auf Euro gesetzt — genau
+// der erfundene Ersatzwert, den Wurzel 4 verbietet. Ohne Default muss die
+// Währung übergeben werden; ist sie in den Daten nicht vorhanden, übergibt man
+// `null` und der Betrag erscheint symbollos.
 export function formatCurrency(
   amount: number,
-  currency: string | null | undefined = "EUR",
+  currency: string | null | undefined,
   locale = "de-DE",
   // Nachkommastellen — Default 2 (Beträge). Kompakte Anzeigen (z. B. Kalender-/
   // Dynamic-Pricing-Raster) setzen 0 für ganze Preise.

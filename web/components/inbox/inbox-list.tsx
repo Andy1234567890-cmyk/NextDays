@@ -63,7 +63,7 @@ import {
 } from "@/lib/inbox";
 import { NUR_ANHANG_TEXT } from "@/lib/chat-format";
 import { type InboxAccess } from "@/lib/inbox-access";
-import { useRealtime } from "@/lib/use-realtime";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import {
   listWhatsAppConversations,
 } from "@/lib/whatsapp-api";
@@ -147,14 +147,28 @@ export function InboxList({
   useEffect(() => {
     reloadThreads();
   }, [reloadThreads]);
-  useRealtime({ table: "channex_booking", onChange: reloadThreads });
-  // WhatsApp-Liste live: neue/aktualisierte Konversationen erscheinen ohne Reload.
-  useRealtime({ table: "whatsapp_conversation", onChange: reloadThreads });
+  // KEIN Realtime-Abo mehr auf `channex_booking` und `whatsapp_conversation`:
+  // beide Tabellen sind seit Migration 0337 für `authenticated` gesperrt
+  // (Wurzel 6 — sie tragen Klartext-Nachrichten und die Gast-Stammdaten aus
+  // dem OTA-Payload). Ohne SELECT-Grant passt keine Policy mehr, das Abo wäre
+  // eine stumme Attrappe: verbindet sich, liefert nie ein Event.
+  //
+  // Eine erlaubte Ersatzquelle gibt es NICHT. `reservations` wäre ein stiller
+  // Ersatz und damit falsch: eine eingehende OTA-Nachricht ändert
+  // `channex_booking.last_message_at`, aber keine Zeile in `reservations` —
+  // das Abo sähe live aus und verpasste genau das Ereignis, um das es hier
+  // geht. Für WhatsApp gibt es überhaupt keine offene Tabelle.
+  //
+  // WAS DADURCH ENTFÄLLT: Neue Threads und neue Nachrichten von Kollegen oder
+  // vom Portal erscheinen nicht mehr von selbst in dieser Liste. Der eigene
+  // Versand lädt weiterhin über `reloadThreads` nach; fremde Vorgänge werden
+  // beim Wechsel der Ansicht (Aktiv/Archiv/Papierkorb) oder beim erneuten
+  // Öffnen des Posteingangs sichtbar.
 
   // Filter-Optionen aus den geladenen Threads ableiten (nur real vorkommende).
   const channelOptions = Array.from(
     new Set(rows.map((r) => r.ota_name).filter((x): x is string => !!x)),
-  ).map((c) => ({ value: c, label: c }));
+  ).map((c) => ({ value: c, label: channelLabelLoose(c) }));
   const propertyOptions = Array.from(
     new Map(
       rows

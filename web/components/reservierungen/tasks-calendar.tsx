@@ -20,6 +20,7 @@ import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { listTenantUsers } from "@/lib/account";
 import { UNASSIGNED } from "@/lib/aufgaben-konstanten";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import {
   type CalendarBooking,
   type CalendarRow,
@@ -568,7 +569,9 @@ export function TasksCalendar() {
                             }}
                             title={t("tasksCalendar.bookingBarTitle", {
                               guests: b.guests,
-                              channel: b.ota_name ?? channelLabel(b.channel as AvailabilitySource),
+                              channel: b.ota_name
+                                ? channelLabelLoose(b.ota_name)
+                                : channelLabel(b.channel as AvailabilitySource),
                               range: bookingRange(b, locale),
                             })}
                           >
@@ -576,7 +579,9 @@ export function TasksCalendar() {
                               <Icon icon="ph:users" className="size-3.5 shrink-0" />
                               {t("tasksCalendar.bookingBarLabel", {
                                 guests: b.guests,
-                                channel: b.ota_name ?? channelLabel(b.channel as AvailabilitySource),
+                                channel: b.ota_name
+                                ? channelLabelLoose(b.ota_name)
+                                : channelLabel(b.channel as AvailabilitySource),
                               })}
                             </span>
                             <span className="truncate text-[0.7rem] leading-tight opacity-90">

@@ -14,7 +14,6 @@ import {
   listWhatsAppMessages,
   sendWhatsApp,
 } from "@/lib/whatsapp-api";
-import { useRealtime } from "@/lib/use-realtime";
 
 export function WhatsAppChat({
   conversationId,
@@ -58,19 +57,26 @@ export function WhatsAppChat({
   // Ans Ende springen — ein Chat wird von unten gelesen, der Container startet
   // aber oben. Gleiches Sentinel-Muster wie im OTA-Verlauf nebenan
   // (`inbox-konversation.tsx`); an der ANZAHL aufgehängt, nicht am Array:
-  // `load()` liefert bei jedem Realtime-Ereignis eine neue Referenz und risse
-  // den Nutzer sonst aus dem Lesen weiter oben.
+  // `load()` liefert bei jedem Aufruf eine neue Referenz und risse den Nutzer
+  // sonst aus dem Lesen weiter oben.
   useEffect(() => {
     ende.current?.scrollIntoView({ block: "end" });
   }, [messages.length, conversationId]);
 
-  // Echtes Realtime: neue WhatsApp-Nachrichten dieser Konversation sofort.
-  useRealtime({
-    table: "whatsapp_message",
-    filter: conversationId ? `conversation_id=eq.${conversationId}` : undefined,
-    enabled: !!conversationId,
-    onChange: load,
-  });
+  // KEIN Realtime-Abo mehr auf `whatsapp_message`: die Tabelle ist seit
+  // Migration 0337 für `authenticated` gesperrt (Wurzel 6 — sie trägt den
+  // Klartext der Gastnachrichten, den sonst jede Rolle über den
+  // PostgREST-Direktpfad lesen könnte, cleaner eingeschlossen). Ohne
+  // SELECT-Grant passt keine Policy mehr; das Abo wäre eine stumme Attrappe.
+  //
+  // Eine erlaubte Ersatzquelle gibt es nicht: an einer WhatsApp-Nachricht
+  // hängt keine offene Tabelle — sie berührt weder `reservations` noch
+  // `guest_messages` (das ist der Marktplatz-Posteingang, ein anderer Kanal).
+  //
+  // WAS DADURCH ENTFÄLLT: Eine eingehende Antwort des Gastes erscheint nicht
+  // mehr von selbst im offenen Chat. Der eigene Versand hängt die Nachricht
+  // direkt an (`setMessages`); die Gegenseite wird beim Wechsel der
+  // Konversation oder beim erneuten Öffnen des Verlaufs sichtbar.
 
   function send() {
     const body = text.trim();

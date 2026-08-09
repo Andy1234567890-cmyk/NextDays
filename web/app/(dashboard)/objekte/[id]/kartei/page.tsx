@@ -12,6 +12,13 @@ import { DossierStepper } from "@/components/objekte/kartei/dossier-stepper";
 import { getDossier } from "@/lib/property-dossier";
 import { getProperty } from "@/lib/properties";
 
+// Die Kartei verlangt MANAGE_PROPERTIES (frueher VIEW_CALENDAR, das auch die
+// owner-Rolle traegt — sie darf die Tuercodes und Zugangsdaten darin nicht
+// sehen). Wer sie nicht hat, fuer den gibt es diese Seite nicht: notFound
+// statt eines Fehlerkastens, dieselbe Regel wie bei /eigentuemer. Der echte
+// Schutz sitzt im Backend, der Menuepunkt ist zusaetzlich ausgeblendet
+// (property-subnav.tsx) — hier wird der Direktaufruf per URL abgefangen.
+
 export default async function KarteiPage({
   params,
 }: {
@@ -25,6 +32,7 @@ export default async function KarteiPage({
     return <div className="p-2 text-sm text-destructive">{prop.error}</div>;
   }
   if (!dossier.ok) {
+    if (dossier.status === 403) notFound();
     return <div className="p-2 text-sm text-destructive">{dossier.error}</div>;
   }
 

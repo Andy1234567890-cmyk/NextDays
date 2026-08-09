@@ -11,13 +11,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
+import { Checkbox } from "@nextdays/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@nextdays/ui/dialog";
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@nextdays/ui/popover";
+import type { ObjektAuswahlEintrag } from "@/components/objekt-mehrfachauswahl";
+import { ZuAnderenObjekten } from "@/components/objekte/pricing/zu-anderen-objekten";
 import {
   type Season,
   type SeasonAssignment,
   type SeasonMode,
+  applySeasonToProperties,
   assignSeason,
   clearSeasonRange,
   createSeason,
@@ -68,9 +78,14 @@ function buildDayMap(seasons: Season[]): Map<string, DayInfo> {
 export function SeasonCalendar({
   initial,
   currency,
+  basePrice,
 }: {
   initial: Property;
   currency: string | null;
+  // Basispreis aus dem ersten Rate-Plan des Objekts — dieselbe Quelle, mit der
+  // der Server die Prozent-Saisons materialisiert. Ohne Rate-Plan null: das
+  // %-Label zeigt dann nur den Prozentsatz, keine erfundene 0,00.
+  basePrice: number | null;
 }) {
   const t = useTranslations("seasons");
   const months = t("months").split(",");
@@ -78,7 +93,12 @@ export function SeasonCalendar({
   const [year, setYear] = useState(() => new Date().getUTCFullYear());
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [activeSeasonId, setActiveSeasonId] = useState<string | null>(null);
-  const [basePrice, setBasePrice] = useState<number | null>(null);
+  // Saison, die gerade auf andere Objekte übertragen wird (null = Dialog zu).
+  // Nur die ID, nicht das Objekt: ein Snapshot überlebte, was eine ANDERE
+  // Session inzwischen an der Saison geändert hat. Wird sie dort gelöscht oder
+  // auf `fixed` gestellt, stünde der Dialog weiter offen und sein Absenden
+  // kassierte genau den 422, den der fehlende Knopf vermeiden soll.
+  const [uebertragenId, setUebertragenId] = useState<string | null>(null);
   // Optimistische Überlagerung, bis der Serverstand da ist: season=null → die
   // Tage werden gelöst, sonst bekommen sie diese Saison.
   const [pending, setPending] = useState<
@@ -107,13 +127,6 @@ export function SeasonCalendar({
   useEffect(() => {
     void load();
   }, [load]);
-
-  // Basispreis fürs %-Vorschau-Label aus dem ersten Rate-Plan des Objekts.
-  useEffect(() => {
-    const rp = (initial.type_attributes as { pricing?: { basePrice?: number } })
-      ?.pricing?.basePrice;
-    if (typeof rp === "number") setBasePrice(rp);
-  }, [initial]);
 
   // Realtime: Saison-Änderungen anderer Sessions + resultierende Overrides.
   useRealtime({
@@ -151,6 +164,12 @@ export function SeasonCalendar({
     return map;
   }, [seasons, pending]);
   const activeSeason = seasons.find((s) => s.id === activeSeasonId) ?? null;
+  // Bei JEDEM Render gegen die frische Liste auflösen (Muster activeSeasonId):
+  // Realtime schiebt Änderungen anderer Sessions herein. Ist die Saison weg oder
+  // inzwischen `fixed`, fällt das Ergebnis auf null und der Dialog schließt sich
+  // von selbst — statt ein Absenden anzubieten, das der Server mit 422 ablehnt.
+  const uebertragenSeason =
+    seasons.find((s) => s.id === uebertragenId && s.mode === "percent") ?? null;
 
   // Preis-Label einer Saison (Fix oder ±% mit optionaler Basispreis-Vorschau).
   function priceLabel(s: Season): string {
@@ -277,7 +296,10 @@ export function SeasonCalendar({
               {seasons.map((s) => (
                 <li key={s.id}>
                   <div
-                    className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition-colors ${
+                    // pr kleiner als pl: rechts stehen zwei Icon-Knöpfe, deren
+                    // eigene Klickfläche schon Luft mitbringt. Mit dem vollen
+                    // px-3 drückten sie sichtbar über die Pill-Rundung hinaus.
+                    className={`flex items-center gap-1.5 rounded-full border py-2 pl-3 pr-1.5 text-sm transition-colors ${
                       activeSeasonId === s.id
                         ? "border-accent bg-accent/10"
                         : "border-border hover:bg-secondary/40"
@@ -297,10 +319,25 @@ export function SeasonCalendar({
                         {priceLabel(s)}
                       </span>
                     </button>
+                    {/* Übertragen rechnet am Ziel gegen dessen EIGENEN
+                        Basispreis — das geht nur prozentual. Ein Fixbetrag ist
+                        objektspezifisch, deshalb steht der Knopf dort gar nicht
+                        erst (statt ihn anzubieten und dann 422 zu kassieren). */}
+                    {s.mode === "percent" && (
+                      <button
+                        type="button"
+                        aria-label={t("seasonApplyToOthers")}
+                        title={t("seasonApplyToOthers")}
+                        className="shrink-0 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        onClick={() => setUebertragenId(s.id)}
+                      >
+                        <Icon icon="ph:copy" className="size-4" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       aria-label={t("seasonDelete")}
-                      className="shrink-0 text-muted-foreground hover:text-destructive"
+                      className="shrink-0 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
                       onClick={async () => {
                         const res = await deleteSeason(s.id);
                         if (res.ok) void load();
@@ -343,7 +380,169 @@ export function SeasonCalendar({
           ))}
         </div>
       </div>
+
+      {uebertragenSeason && (
+        <UebertragenDialog
+          propertyId={initial.id}
+          season={uebertragenSeason}
+          onClose={() => setUebertragenId(null)}
+        />
+      )}
     </div>
+  );
+}
+
+// -- Saison auf andere Objekte übertragen (Dialog) ---------------------------
+// Kopie, keine Anbindung: am Ziel entsteht eine eigenständige Saison. Das steht
+// im Dialog als Satz, weil der Nutzer sonst eine dauerhafte Verknüpfung erwartet.
+function UebertragenDialog({
+  propertyId,
+  season,
+  onClose,
+}: {
+  propertyId: string;
+  season: Season;
+  onClose: () => void;
+}) {
+  const t = useTranslations("seasons");
+  const [ziele, setZiele] = useState<string[]>([]);
+  const [mitZeitraeumen, setMitZeitraeumen] = useState(true);
+  const [saving, setSaving] = useState(false);
+  // Die Objektliste, die die Auswahl ohnehin lädt — hier nur, um die
+  // übersprungenen Ziele beim NAMEN zu nennen. Eine nackte UUID sagt dem
+  // Betrieb nicht, welches seiner 18 Häuser er ansehen muss.
+  const [objekte, setObjekte] = useState<ObjektAuswahlEintrag[]>([]);
+
+  // Grund-Slug des Servers in einen Satz übersetzen. Ein UNBEKANNTER Slug (neuer
+  // Backend-Grund, den die UI noch nicht kennt) fällt auf einen generischen Text
+  // zurück, statt next-intl mit MISSING_MESSAGE die Seite zerlegen zu lassen.
+  const bekannteGruende = [
+    "kein_basispreis",
+    "basispreis_null",
+    "teilweise_uebertragen",
+  ];
+  function grundText(grund: string): string {
+    return bekannteGruende.includes(grund)
+      ? t(`seasonApplySkipReason.${grund}`)
+      : t("seasonApplySkipReason.unbekannt");
+  }
+  function objektName(propertyId: string): string {
+    return (
+      objekte.find((o) => o.id === propertyId)?.title ??
+      // Die Liste kennt das Objekt nicht (gerade gelöscht, Rechte geändert):
+      // dann ist die ID das einzig Wahre, das wir sagen können — kein erfundener
+      // Platzhaltername.
+      propertyId
+    );
+  }
+
+  // Eine Saison OHNE bemalte Zeiträume kann „mit Zeiträumen" nichts übertragen —
+  // der Server weist genau das mit 422 ab. Der Dialog kennt die Zuweisungen
+  // bereits, also wird der Fall hier gezeigt, statt den Betrieb erst Objekte
+  // auswählen und absenden zu lassen und ihm dann einen Serverfehler zu geben.
+  const ohneZeitraeume = season.assignments.length === 0;
+
+  async function submit() {
+    if (ziele.length === 0) {
+      toast.error(t("seasonApplyPickTarget"));
+      return;
+    }
+    setSaving(true);
+    // Ohne bemalte Zeiträume gibt es nur den Weg „nur die Definition". Den
+    // Zustand des Häkchens hier NICHT mitzusenden ist der Punkt: es ist
+    // vorbelegt an und in diesem Fall gar nicht sichtbar — ungeprüft
+    // durchgereicht liefe der Aufruf in genau die 422, die der Hinweis oben
+    // gerade vermeiden soll.
+    const res = await applySeasonToProperties(
+      season.id,
+      ziele,
+      ohneZeitraeume ? false : mitZeitraeumen,
+    );
+    setSaving(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    const { uebertragen, uebersprungen } = res.data;
+    // Je übersprungenem Ziel EINE Zeile „Objektname: Grund". Vorher stand hier
+    // der rohe Slug, dreimal aneinandergereiht („kein_basispreis ·
+    // kein_basispreis · …") — daraus konnte niemand ablesen, welches Objekt
+    // gemeint ist (Wurzel 5).
+    const details = uebersprungen
+      .map((u) => `${objektName(u.property_id)}: ${grundText(u.grund)}`)
+      .join("\n");
+    if (uebertragen === 0) {
+      // Kein einziges Ziel bedient — das ist kein Erfolg. Ein grünes „Auf 0
+      // Objekt(e) übertragen" hätte der Betrieb als erledigt abgehakt.
+      toast.error(t("seasonApplyNone"), { description: details || undefined });
+      return; // Dialog bleibt offen: die Auswahl ist noch zu korrigieren.
+    }
+    if (uebersprungen.length > 0) {
+      toast.warning(
+        t("seasonApplyPartial", {
+          count: uebertragen,
+          skipped: uebersprungen.length,
+        }),
+        { description: details },
+      );
+    } else {
+      toast.success(t("seasonApplySuccess", { count: uebertragen }));
+    }
+    onClose();
+  }
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <DialogTitle>
+              {t("seasonApplyTitle", { name: season.name })}
+            </DialogTitle>
+            <DialogDescription>{t("seasonApplyCopyHint")}</DialogDescription>
+          </div>
+
+          <ZuAnderenObjekten
+            propertyId={propertyId}
+            kind="season"
+            selected={ziele}
+            onChange={setZiele}
+            onLoaded={setObjekte}
+          />
+
+          {ohneZeitraeume ? (
+            <p className="text-sm text-muted-foreground">
+              {t("seasonApplyNoSpans")}
+            </p>
+          ) : (
+            <label className="flex cursor-pointer items-start gap-3 text-sm">
+              <Checkbox
+                checked={mitZeitraeumen}
+                onCheckedChange={(v) => setMitZeitraeumen(v === true)}
+                className="mt-0.5"
+              />
+              <span>
+                <span className="block font-medium">
+                  {t("seasonApplyWithRanges")}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {t("seasonApplyWithRangesHint")}
+                </span>
+              </span>
+            </label>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose} disabled={saving}>
+              {t("seasonApplyCancel")}
+            </Button>
+            <Button onClick={submit} disabled={saving || ziele.length === 0}>
+              {saving ? t("seasonSaving") : t("seasonApplySubmit")}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

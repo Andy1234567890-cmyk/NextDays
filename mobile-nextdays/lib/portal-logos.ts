@@ -23,3 +23,30 @@ const LOGOS: Partial<Record<ReservationChannel, ImageSourcePropType>> = {
 export function portalLogo(channel: ReservationChannel): ImageSourcePropType | null {
   return LOGOS[channel] ?? null;
 }
+
+// Portal-Codes, deren technischer Name nicht der Markenname ist. Spiegelt
+// `CHANNEL_LABEL` in web/lib/channel-logos.ts — neue Codes dort UND hier
+// eintragen. Alle anderen Codes SIND der Markenname („Agoda", „Expedia") und
+// werden unverändert gezeigt; hier wird nichts geraten und nichts übersetzt.
+const PORTAL_LABEL: Record<string, string> = {
+  bookingcom: "Booking.com",
+  airbnb: "Airbnb",
+  googlehotelari: "Google",
+  ctrip: "Trip.com",
+  despegarv2: "Despegar",
+  openchannel: "Testkanal",
+};
+
+/**
+ * Anzeigename für einen `ota_name` aus einer Buchung.
+ *
+ * `ota_name` ist der Kanalcode des Aggregators, nicht der Klarname: Channex
+ * schreibt „BookingCom" ohne Punkt, und genau so stand es in der App. Der
+ * Abgleich ist schreibweisen-tolerant, weil der Wert aus fremden Daten kommt.
+ * Unbekannte Namen bleiben unverändert — besser der echte Code als ein
+ * erfundener Klarname.
+ */
+export function portalLabel(name: string | null | undefined): string {
+  if (!name) return "";
+  return PORTAL_LABEL[name.toLowerCase().replace(/[^a-z0-9]/g, "")] ?? name;
+}

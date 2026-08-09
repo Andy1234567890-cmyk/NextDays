@@ -8,7 +8,7 @@
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 
-import { channelLogoLoose } from "@/lib/channel-logos";
+import { channelLabelLoose, channelLogoLoose } from "@/lib/channel-logos";
 
 const OTA_ICON: Record<string, string> = {
   "booking.com": "simple-icons:bookingdotcom",
@@ -71,13 +71,16 @@ export function kanalAbzeichen(name: string | null): { icon: string; fg: string 
 export function ChannelTag({ channel }: { channel: string | null }) {
   const logo = channelLogoLoose(channel);
   const marke = kanalAbzeichen(channel);
+  // `channel` ist der rohe `ota_name` (Channex-Code „BookingCom") — angezeigt
+  // wird der Klarname, nicht der Code.
+  const label = channelLabelLoose(channel);
   if (logo) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={logo}
-        alt={channel ?? ""}
-        title={channel ?? undefined}
+        alt={label}
+        title={label || undefined}
         className="h-3 w-auto max-w-[4.5rem] shrink-0 object-contain object-left"
       />
     );
@@ -86,7 +89,7 @@ export function ChannelTag({ channel }: { channel: string | null }) {
   return (
     <span className={`flex shrink-0 items-center gap-1 text-[0.7rem] ${marke.fg}`}>
       <Icon icon={marke.icon} className="size-3" />
-      {channel}
+      {label}
     </span>
   );
 }

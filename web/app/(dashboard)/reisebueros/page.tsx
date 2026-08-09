@@ -1,9 +1,7 @@
-// Reisebüro-/Partner-Kartei (Liste). Server Component lädt die Partner,
-// Realtime hält die Liste live (WebSocket, kein Polling).
+// Reisebüro-/Partner-Kartei (Liste). Server Component lädt die Partner.
 import { notFound } from "next/navigation";
 
 import { AgenciesList } from "@/components/reisebueros/agencies-list";
-import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@nextdays/ui/card";
 import { listAgencies } from "@/lib/travel-agencies";
 
@@ -23,7 +21,13 @@ export default async function AgenciesPage() {
   }
   return (
     <>
-      <RealtimeRefresh tables={["travel_agencies"]} />
+      {/* Kein Realtime mehr: `travel_agencies` ist für authenticated bewusst
+        gesperrt (Wurzel 6, Migration 0337: revoke + raus aus
+        supabase_realtime), ein Abo darauf wäre eine stumme Attrappe. Eine
+        offene Tabelle mit demselben Ereignis gibt es nicht. Ehrlich benannt:
+        neue, geänderte oder gelöschte Partner erscheinen erst beim nächsten
+        Laden der Seite — die Partner-Kartei ist Stammdaten-Pflege durch den
+        Nutzer in genau dieser Oberfläche, die danach ohnehin neu lädt. */}
       <AgenciesList initial={res.data.items} />
     </>
   );

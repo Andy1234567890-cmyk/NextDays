@@ -23,6 +23,7 @@ import {
 } from "@nextdays/ui/chart";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import type { PropertyStats, StatKpi, StatMetric, StatPoint } from "@/lib/reservations";
 
 // Kanal-Segmentfarben aus dem Chart-Token-System (var(--chart-1..5)).
@@ -195,7 +196,9 @@ function ChannelDonut({
     return stats.by_channel
       .map((c, i) => ({
         key: c.ota_name ?? c.channel,
-        label: c.ota_name ?? channelLabel(c.channel as AvailabilitySource),
+        label: c.ota_name
+          ? channelLabelLoose(c.ota_name)
+          : channelLabel(c.channel as AvailabilitySource),
         value: (metric === "amount" ? c.amount : c.nights) ?? 0,
         fill: CHART_VARS[i % CHART_VARS.length],
       }))

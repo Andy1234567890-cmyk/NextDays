@@ -42,6 +42,7 @@ import {
 import type { PropertyType } from "@/lib/properties";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { usePropertyLabels } from "@/lib/use-property-labels";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import { getRateGrid } from "@/lib/rates";
 import { Input } from "@nextdays/ui/input";
 import {
@@ -431,7 +432,7 @@ function segmentLabel(
   }
   if (seg.status !== "booked") return statusLabels(t)[seg.status];
   const guest = seg.reservation?.guest_name?.trim();
-  return guest || seg.reservation?.ota_name || channelLabel(seg.source);
+  return guest || channelLabelLoose(seg.reservation?.ota_name) || channelLabel(seg.source);
 }
 
 export function CalendarBoard({
@@ -489,6 +490,30 @@ export function CalendarBoard({
   // Horizontaler Scroll-Container des Rasters — Navigation (◀/▶/Heute/Sprung)
   // scrollt ihn, statt das Startdatum zu verschieben (durchgehende Timeline).
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  // --- Auto-Scroll am Rand während eines Zugs ------------------------------
+  // Zieht der Nutzer eine Auswahl (oder einen Balken) bis an den rechten Rand,
+  // muss die Timeline mitlaufen. Ohne das endet jede neue Buchung dort, wo der
+  // sichtbare Ausschnitt endet — bei Monatsansicht nach ~4 Tagen, und man muss
+  // loslassen, scrollen, neu ansetzen.
+  //
+  // Der Zug darf NICHT an `onMouseEnter` der Zellen hängen: am Rand gibt es
+  // keine nächste Zelle, die feuern könnte, und während des reinen Scrollens
+  // (Cursor steht still) feuert ohnehin kein Maus-Event. Deshalb läuft hier ein
+  // rAF-Loop, der aus der zuletzt bekannten Cursor-Position + dem aktuellen
+  // scrollLeft die Zielspalte GEOMETRISCH bestimmt — dieselbe Rechnung wie der
+  // Balken-Zug, nur für die Zell-Auswahl.
+  const cursorRef = useRef<{ x: number; y: number } | null>(null);
+  // scrollLeft beim Greifen. Der Balken-Zug misst sein dayOffset als Pixel-Delta
+  // zum Greifpunkt; scrollt der Container darunter weg, ist der Bildschirm-Delta
+  // allein falsch. Die seither gescrollte Strecke gehört additiv dazu.
+  const dragScrollLeft = useRef(0);
+
+  // Rand-Zone und Tempo. Bewusst konservativ: die Zone ist schmal genug, dass
+  // man am Rand noch normal zielen kann, und das Tempo skaliert mit der
+  // Eindringtiefe, damit ein knapper Rand-Kontakt nicht sofort wegrast.
+  const EDGE = 4.5; // rem Randzone, in der Auto-Scroll greift
+  const EDGE_SPEED = 22; // px pro Frame bei voller Eindringtiefe
   // Filter & Suche (Paket 4b). Leerer Filter = alles sichtbar.
   const [query, setQuery] = useState("");
   const [channelFilter, setChannelFilter] = useState<AvailabilitySource | "all">("all");
@@ -691,6 +716,10 @@ export function CalendarBoard({
       ev.preventDefault();
       // Neuer Zug startet: alte Auswahl/Leiste verwerfen.
       setSel(null);
+      // Bezugspunkte für den Auto-Scroll am Rand: ohne die erste Cursor-Position
+      // liefe der rAF-Loop bis zum ersten mousemove blind.
+      cursorRef.current = { x: ev.clientX, y: ev.clientY };
+      dragScrollLeft.current = scrollRef.current?.scrollLeft ?? 0;
       setDrag({ pid, from: di, to: di });
     },
     [],
@@ -730,6 +759,9 @@ export function CalendarBoard({
       // Tag-Offset gerundet wird (greifpunkt-invariant, kein Kanten-Floor).
       barDownPos.current = { x: ev.clientX, y: ev.clientY };
       barMoved.current = false;
+      // Bezugspunkte für den Auto-Scroll am Rand (siehe dort).
+      cursorRef.current = { x: ev.clientX, y: ev.clientY };
+      dragScrollLeft.current = scrollRef.current?.scrollLeft ?? 0;
       setBarDrag({
         res,
         mode,
@@ -766,7 +798,11 @@ export function CalendarBoard({
       // (Mitte/Enden) fallen exakt auf eine Kante, wo Math.floor pro Pixel kippt
       // (der „halbe Tag"). Math.round auf dem Delta ist greifpunkt-invariant:
       // bei 0 Drift bleibt der Offset 0, erst ab ~½ Spalte kippt der Tag.
-      let dayOffset = Math.round((e.clientX - down.x) / colPx);
+      // Die seit dem Greifen gescrollte Strecke gehört zum Delta: scrollt der
+      // Auto-Scroll das Raster unter dem Cursor weg, ist der Bildschirm-Anteil
+      // allein zu klein und der Balken bliebe beim Rand-Ziehen stehen.
+      const gescrollt = (scrollRef.current?.scrollLeft ?? 0) - dragScrollLeft.current;
+      let dayOffset = Math.round((e.clientX - down.x + gescrollt) / colPx);
       // Steht der Cursor über der linken (sticky) LABEL-Spalte, verdeckt diese
       // die Tagesspalten → der X-Anteil wäre unsinnig (weggescrollte/negative
       // Spalten). Dann X einfrieren (letzten Offset behalten), nur die Zielzeile
@@ -859,6 +895,79 @@ export function CalendarBoard({
   // Einmaliger Auto-Scroll auf „heute" beim ersten Aufbau; Ref-Flag verhindert
   // Zurückspringen bei späteren Realtime-Reloads.
   const didInitialScroll = useRef(false);
+
+  useEffect(() => {
+    // Nur während eines echten Zugs. `drag` = Zell-Auswahl, `barDrag` = Balken.
+    if (!drag && !barDrag) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const colPx = COL * remPx;
+    const edgePx = EDGE * remPx;
+    let raf = 0;
+
+    const frame = () => {
+      raf = requestAnimationFrame(frame);
+      const cur = cursorRef.current;
+      if (!cur) return;
+      const r = el.getBoundingClientRect();
+      // Die linke Objektspalte liegt sticky ÜBER dem Raster — die Randzone
+      // beginnt erst rechts davon, sonst scrollt es schon beim Überfahren der
+      // Objektnamen zurück.
+      const innerLeft = r.left + LABEL * remPx;
+      // Nur scrollen, solange der Cursor ÜBER dem Raster steht. Wandert er
+      // darüber hinaus (auf die Objektspalte links, aus dem Fenster rechts,
+      // oder vertikal aus dem Board), ist die Rand-Nähe kein Zielsignal mehr:
+      // ohne diese Schranke rast die Timeline zurück, sobald man die Maus über
+      // die Objektnamen zieht — dort ist der Abstand zu `innerLeft` maximal.
+      const imRaster =
+        cur.x >= innerLeft && cur.x <= r.right && cur.y >= r.top && cur.y <= r.bottom;
+      let dx = 0;
+      if (imRaster) {
+        if (cur.x > r.right - edgePx) {
+          dx = Math.min(1, (cur.x - (r.right - edgePx)) / edgePx) * EDGE_SPEED;
+        } else if (cur.x < innerLeft + edgePx) {
+          dx = -Math.min(1, (innerLeft + edgePx - cur.x) / edgePx) * EDGE_SPEED;
+        }
+      }
+      if (dx === 0) return;
+      const vorher = el.scrollLeft;
+      el.scrollLeft = vorher + dx;
+      // Am Anschlag (Anfang/Ende der Timeline) passiert nichts mehr — dann auch
+      // die Auswahl nicht weiterzählen, sonst wüchse sie ins Leere.
+      if (el.scrollLeft === vorher) return;
+
+      // Zell-Auswahl geometrisch nachziehen: Spalte unter dem Cursor aus
+      // scrollLeft + Cursor-X. Dieselbe Rechnung wie beim Rendern der Spalten.
+      setDrag((d) => {
+        if (!d) return d;
+        const x = el.scrollLeft + (cur.x - innerLeft);
+        const di = Math.floor(x / colPx);
+        const clamped = Math.max(0, Math.min(dates.length - 1, di));
+        return clamped === d.to ? d : { ...d, to: clamped };
+      });
+      // Balken-Zug: sein dayOffset ist ein Pixel-Delta zum Greifpunkt. Der
+      // window-mousemove rechnet nur den Bildschirm-Anteil; die gescrollte
+      // Strecke kommt hier dazu, sonst bleibt der Balken beim Scrollen stehen.
+      setBarDrag((b) => {
+        const down = barDownPos.current;
+        if (!b || !down) return b;
+        const gescrollt = el.scrollLeft - dragScrollLeft.current;
+        const offset = Math.round((cur.x - down.x + gescrollt) / colPx);
+        return offset === b.dayOffset ? b : { ...b, dayOffset: offset };
+      });
+    };
+
+    const onMove = (e: MouseEvent) => {
+      cursorRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener("mousemove", onMove);
+    raf = requestAnimationFrame(frame);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(raf);
+    };
+  }, [drag, barDrag, dates.length]);
 
   // rem→px (Spaltenbreite in px = COL * rem).
   const remPx = useCallback(

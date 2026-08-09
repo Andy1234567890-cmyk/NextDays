@@ -7,12 +7,10 @@
 // der Status auf „processing", bis der Webhook „verified" setzt.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { Account } from "@/lib/konto";
 import { startIdentityVerification } from "@/lib/konto-actions";
-import { useRealtime } from "@/lib/use-realtime";
 
 type Status = Account["identity_status"];
 
@@ -41,14 +39,16 @@ const STYLE: Record<Status, { icon: string; cls: string; key: string }> = {
 
 export function IdentitaetZeile({ status }: { status: Status }) {
   const t = useTranslations("konto");
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
 
-  // Realtime: der Stripe-Webhook setzt identity_status auf der eigenen users-
-  // Zeile → ohne manuelles Neuladen umschalten (Projektregel: Detail-UI abonniert
-  // ihre speisenden Tabellen). RLS liefert nur die eigene Zeile.
-  useRealtime({ table: "users", onChange: () => router.refresh() });
+  // Kein Realtime mehr: `users` ist seit Migration 0337 für `authenticated`
+  // gesperrt (Wurzel 6: Rolle/Rechte/Kontaktdaten — revoke + raus aus der
+  // Publikation supabase_realtime). Das Abo verband sauber und bekam nie ein
+  // Event. Eine Ersatzquelle gibt es nicht: `identity_status` setzt allein der
+  // Stripe-Webhook auf der users-Zeile, keine offene Tabelle spiegelt das.
+  // Ehrlich: der Wechsel von „In Prüfung" auf „Verifiziert" erscheint erst beim
+  // nächsten Laden der Konto-Seite, nicht mehr von selbst.
 
   const s = STYLE[status];
   // Verifizieren anbieten, solange nicht verifiziert und nicht in Prüfung.

@@ -20,11 +20,9 @@ import {
   type Pricing,
   type SubscriptionStatus,
 } from "@/lib/subscriptions";
-import { useRealtime } from "@/lib/use-realtime";
 
 type Loaded = {
   canManage: boolean;
-  tenantId: string | null;
   pricing: Pricing | null;
   status: SubscriptionStatus | null;
   error: string | null;
@@ -40,7 +38,6 @@ export function ErweiterungenListe() {
     if (!me || !canManage) {
       setState({
         canManage,
-        tenantId: me?.tenant_id ?? null,
         pricing: null,
         status: null,
         error: null,
@@ -50,7 +47,6 @@ export function ErweiterungenListe() {
     const [p, s] = await Promise.all([getPricing(), getSubscriptionStatus()]);
     setState({
       canManage: true,
-      tenantId: me.tenant_id ?? null,
       pricing: p.ok ? p.data : null,
       status: s.ok ? s.data : null,
       // Fehler zeigen, nicht verschlucken (Wurzel 5).
@@ -62,20 +58,15 @@ export function ErweiterungenListe() {
     void load();
   }, [load]);
 
-  // Realtime-Pflicht: Modul gebucht/gekündigt (auch durch einen zweiten Nutzer
-  // oder den Stripe-Webhook) muss hier sofort erscheinen.
-  useRealtime({
-    table: "tenant_module_entitlement",
-    filter: state?.tenantId ? `tenant_id=eq.${state.tenantId}` : undefined,
-    enabled: !!state?.tenantId,
-    onChange: () => void load(),
-  });
-  useRealtime({
-    table: "tenant_subscription",
-    filter: state?.tenantId ? `tenant_id=eq.${state.tenantId}` : undefined,
-    enabled: !!state?.tenantId,
-    onChange: () => void load(),
-  });
+  // Kein Realtime mehr: `tenant_module_entitlement` und `tenant_subscription`
+  // sind für authenticated bewusst gesperrt (Wurzel 6, Migration 0337: revoke +
+  // raus aus supabase_realtime), Abos darauf wären stumme Attrappen. Eine
+  // offene Tabelle, die dieselben Ereignisse trägt, gibt es nicht. Ehrlich
+  // benannt: gebuchte oder gekündigte Module erscheinen in dieser Übersicht
+  // erst beim nächsten Laden — auch die, die der Stripe-Webhook serverseitig
+  // schreibt. Gebucht/gekündigt wird auf der Detailseite der Erweiterung, der
+  // Rückweg hierher lädt die Liste ohnehin neu.
+  // Mit den Abos entfällt auch das bisher nur dafür gehaltene tenantId.
 
   if (!state) {
     return (

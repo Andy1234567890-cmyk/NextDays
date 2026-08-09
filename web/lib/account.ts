@@ -1,7 +1,7 @@
 "use server";
 
 // Konto- & 2FA-Server-Actions (Sicherheit-Seite). Rufen den FastAPI-auth-Slice
-// (/auth/account, /auth/totp/*) mit dem Access-Token des eingeloggten Nutzers.
+// (/auth/account) mit dem Access-Token des eingeloggten Nutzers.
 // Token-Quelle: FastAPI-Cookie nd_access ODER die Supabase-OAuth-Session
 // (Google). Business-Logik bleibt in FastAPI (PROJECT.md §2).
 import { revalidatePath } from "next/cache";
@@ -16,6 +16,9 @@ export type Account = {
   email: string | null;
   full_name: string | null;
   has_password: boolean;
+  // ACHTUNG: seit 0341 NICHT mehr die Wahrheit ueber den zweiten Faktor —
+  // die liefert `GET /auth/mfa/status` (GoTrue). Feld bleibt, weil das Backend
+  // es weiterhin ausliefert; fuer 2FA-Entscheidungen NICHT verwenden.
   totp_enabled: boolean;
   role: UserRole | null;
   // Effektive Berechtigungs-IDs (für UI-Gating; admin = alle).
@@ -31,6 +34,10 @@ export type Account = {
   avatar_url: string | null;
   // Land des Unternehmens (ISO-2) — z. B. Vorbelegung der Telefon-Vorwahl.
   tenant_country: string | null;
+  // Zeitpunkt der SMS-Verifizierung der Telefonnummer. Seit 0341 KEIN
+  // 2FA-Signal mehr (der SMS-Faktor liegt in GoTrue) — nur noch die Info,
+  // ob die hinterlegte Nummer bestaetigt ist.
+  phone_verified_at: string | null;
 };
 
 // Ein Nutzer des eigenen Tenants (für die Objekt-Kontakt-Auswahl).
@@ -45,6 +52,11 @@ export type TenantUser = {
   // Effektive Berechtigungs-IDs des Nutzers (admin = alle). Vorbelegung
   // der Rechte-Checkboxen im Bearbeiten-Dialog.
   permissions: string[];
+  // Sprache der E-Mails an diesen Nutzer (ISO-639-1). `null` heißt „nicht
+  // erfasst" — dann greift serverseitig die Kette Betriebssprache → Englisch,
+  // und der Bearbeiten-Dialog zeigt „nicht gesetzt" statt einer erfundenen
+  // Sprache.
+  preferred_language?: string | null;
 };
 
 // Profil-/Kontaktdaten-Update (nur gesetzte Felder werden geschrieben).
@@ -60,11 +72,6 @@ export type ProfileInput = {
   avatar_url?: string | null;
 };
 
-export type TotpEnroll = {
-  secret: string;
-  otpauth_uri: string;
-  qr_data_url: string;
-};
 
 type Result<T> =
   | { ok: true; data: T }
@@ -151,12 +158,28 @@ export async function listManagedUsers(): Promise<Result<TenantUser[]>> {
 }
 
 // Neuen Nutzer anlegen (Konto → Benutzer-Wizard): Rolle + Berechtigungen.
+//
+// Bewusst OHNE `password`: der Server legt den Zugang an und verschickt eine
+// Einladungs-Mail; der Eingeladene setzt sein Passwort selbst unter
+// /einladung?token=…. Früher erzeugte der Wizard hier clientseitig ein
+// Passwort und zeigte es im Klartext an — ein Geheimnis, das der Betreiber
+// kannte, ist keins.
 export type InviteInput = {
   email: string;
-  password: string;
   full_name: string;
   role: UserRole;
   permissions: string[];
+  // Sprache, in der dieser Nutzer seine E-Mails bekommt (ISO-639-1, eine der 24
+  // Locales aus i18n/locales.ts) — beginnend mit der Einladungs-Mail.
+  //
+  // FELDNAME: `preferred_language`, wie er für Nutzer bereits etabliert ist
+  // (`users.preferred_language`, siehe `Account`/`ProfileInput` oben und
+  // docs/API.md → POST /auth/invite bzw. PATCH /auth/account/profile).
+  //
+  // Optional, weil „nicht erfasst" eine echte Antwort ist: der Server speichert
+  // dann NULL, und die Kette Betriebssprache → Englisch greift. Ein unbekannter
+  // Code wird serverseitig mit 422 abgelehnt — nicht stillschweigend ignoriert.
+  preferred_language?: string;
 };
 
 export async function inviteUser(
@@ -166,6 +189,7 @@ export async function inviteUser(
     method: "POST",
     body: input,
   });
+
   if (res.ok) revalidatePath("/konto/nutzer");
   return res;
 }
@@ -174,9 +198,16 @@ export async function inviteUser(
 // (admin/co_admin). `permissions` = null/undefined lässt die Rechte unverändert;
 // eine (auch leere) Liste ersetzt sie — das Backend klemmt auf die eigenen
 // Rechte des Bearbeitenden.
+// `preferred_language` = Sprache der E-Mails an diesen Nutzer (ISO-639-1).
+// Feldname wie bei `InviteInput`; weggelassen = unverändert.
 export async function updateManagedUser(
   userId: string,
-  input: { full_name?: string; role?: UserRole; permissions?: string[] },
+  input: {
+    full_name?: string;
+    role?: UserRole;
+    permissions?: string[];
+    preferred_language?: string;
+  },
 ): Promise<Result<TenantUser>> {
   const res = await call<TenantUser>(`/auth/account/users/${userId}`, {
     method: "PATCH",
@@ -286,18 +317,8 @@ export async function updatePassword(
   });
 }
 
-// --- TOTP-2FA --------------------------------------------------------------
-
-export async function totpEnroll(): Promise<Result<TotpEnroll>> {
-  return call<TotpEnroll>("/auth/totp/enroll", { method: "POST" });
-}
-
-export async function totpVerify(
-  code: string,
-): Promise<Result<{ totp_enabled: boolean; recovery_codes: string[] }>> {
-  return call("/auth/totp/verify", { method: "POST", body: { code } });
-}
-
-export async function totpDisable(code: string): Promise<Result<Account>> {
-  return call<Account>("/auth/totp/disable", { method: "POST", body: { code } });
-}
+// --- 2FA ------------------------------------------------------------------
+// Seit 0341 liegt die 2FA GoTrue-nativ (siehe lib/mfa.ts und lib/mfa-client.ts).
+// Die frueheren Wege ueber /auth/totp/* und /auth/phone/* sind stillgelegt
+// (das Backend antwortet dort 410) und wurden hier entfernt, damit es keine
+// zweite, tote Anbindung gibt.

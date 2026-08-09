@@ -11,7 +11,6 @@
 // versteckt — der Betrieb muss sehen, warum weniger ankommt.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -29,7 +28,6 @@ import type {
   Verrechnungsposten,
 } from "@/lib/auszahlungen";
 import type { AuszahlungsStatus } from "@/lib/payments";
-import { useRealtime } from "@/lib/use-realtime";
 
 type Uebersetzer = ReturnType<typeof useTranslations<"konto">>;
 
@@ -110,13 +108,16 @@ export function AuszahlungenTab({
   kontoinhaber: string;
 }) {
   const t = useTranslations("konto");
-  const router = useRouter();
   const [laeuft, setLaeuft] = useState(false);
 
-  // Realtime-Pflicht: Auszahlungen entstehen serverseitig (Worker), der
-  // Kontostatus über den Webhook. Ohne Abo bliebe die Ansicht stehen.
-  useRealtime({ table: "payouts", onChange: () => router.refresh() });
-  useRealtime({ table: "payout_adjustments", onChange: () => router.refresh() });
+  // Kein Realtime mehr: `payouts` und `payout_adjustments` sind seit Migration
+  // 0337 für `authenticated` gesperrt (Wurzel 6: Finanzdaten — revoke + raus aus
+  // der Publikation supabase_realtime). Die Abos verbanden sauber und bekamen
+  // nie ein Event. Eine Ersatzquelle gibt es nicht: eine Auszahlung entsteht im
+  // Worker bzw. per Webhook des Zahlungsanbieters und schlägt sich in keiner
+  // offenen Tabelle nieder (`reservations` bildet keine Auszahlung ab).
+  // Ehrlich: eine neu ausgeführte Auszahlung, eine Korrekturbuchung und der
+  // Wechsel des Kontostatus erscheinen erst beim nächsten Laden der Seite.
 
   const bereit = !!kontoStatus?.payouts_enabled;
   const fehlend = kontoStatus ? lesbareAngaben(kontoStatus.requirements, t) : [];

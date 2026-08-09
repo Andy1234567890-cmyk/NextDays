@@ -17,6 +17,7 @@ import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import { CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
 import { type DisplayStatus, STATUS_META } from "@/lib/calendar-status";
 import {
@@ -109,9 +110,11 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
           return false;
         }
         if (q) {
+          // Roher Code UND Anzeigename, sonst findet „Booking.com" die
+          // Channex-Schreibweise „BookingCom" nicht (und umgekehrt).
           const hay = `${r.guest_name} ${titleOf[r.property_id] ?? ""} ${
             r.ota_name ?? ""
-          } ${r.external_ref ?? ""}`.toLowerCase();
+          } ${channelLabelLoose(r.ota_name)} ${r.external_ref ?? ""}`.toLowerCase();
           if (!hay.includes(q)) return false;
         }
         return true;
@@ -277,7 +280,7 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
                           {cm.logo.kind === "icon" ? (
                             <Icon icon={cm.logo.icon} className="size-4" />
                           ) : null}
-                          {r.ota_name ?? channelLabel(channelSource(r))}
+                          {r.ota_name ? channelLabelLoose(r.ota_name) : channelLabel(channelSource(r))}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">
@@ -376,7 +379,7 @@ function DayColumn({
                       <Icon icon={cm.logo.icon} className="size-4" />
                     ) : null}
                     {r.total_amount == null
-                      ? r.ota_name ?? channelLabel(channelSource(r))
+                      ? r.ota_name ? channelLabelLoose(r.ota_name) : channelLabel(channelSource(r))
                       : formatCurrency(r.total_amount, r.currency)}
                   </span>
                 </button>

@@ -173,9 +173,16 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
   });
 
   const unlockedCount = documents.filter(doc => !doc.gobdStatus.isLocked).length;
-  const totalAmount = documents
-    .filter(doc => !doc.gobdStatus.isLocked)
-    .reduce((sum, doc) => sum + doc.amount, 0);
+  const unlockedDocuments = documents.filter(doc => !doc.gobdStatus.isLocked);
+  const totalAmount = unlockedDocuments.reduce((sum, doc) => sum + doc.amount, 0);
+  // Währung der Summe aus den Belegen selbst — nie hartkodiert (Wurzel 4).
+  // Eine Summe über MEHRERE Währungen ist keine gültige Zahl in einer davon:
+  // in dem Fall bleibt die Währung `null` und der Betrag wird symbollos
+  // dargestellt, statt fremde Beträge unter einem Symbol zu vermischen.
+  const belegWaehrungen = new Set(
+    unlockedDocuments.map(doc => doc.currency).filter((c): c is string => Boolean(c)),
+  );
+  const summenWaehrung = belegWaehrungen.size === 1 ? [...belegWaehrungen][0] : null;
 
   return (
     <div className="space-y-6">
@@ -232,7 +239,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
             </div>
             <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
               <div className="font-bold text-2xl text-green-600">
-                {formatCurrency(totalAmount)}
+                {formatCurrency(totalAmount, summenWaehrung)}
               </div>
               <p className="text-green-700 text-sm">{t('ManualLockManager.openAmount')}</p>
             </div>

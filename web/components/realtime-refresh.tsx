@@ -7,7 +7,14 @@
 // Channex-Import) kam. RLS gilt: der Client empfängt nur Zeilen seines Tenants.
 //
 // Verwendung in einer Server-Component-Page:
-//   <RealtimeRefresh tables={["reservations", "guests"]} />
+//   <RealtimeRefresh tables={["reservations", "availability"]} />
+//
+// NUR Tabellen nennen, auf denen `authenticated` ein SELECT-Grant hat UND die
+// in der Publikation `supabase_realtime` liegen — sonst ist das Abo eine stumme
+// Attrappe (verbindet sich, liefert nie ein Event). Sensible Tabellen (Gast-PII,
+// Finanzen, Nachrichten) sind bewusst gesperrt (Wurzel 6, Migrationen 0336/0337)
+// und taugen NICHT als Quelle; ein Re-Grant „damit das Abo wieder geht" ist der
+// falsche Weg. Gegenprobe: `bash scripts/realtime/abos-pruefen.sh`.
 import { useRouter } from "next/navigation";
 
 import { useRealtime } from "@/lib/use-realtime";
