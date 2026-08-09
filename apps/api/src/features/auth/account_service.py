@@ -14,6 +14,7 @@ from io import BytesIO
 
 import pyotp
 import qrcode
+from pydantic import SecretStr
 from supabase import Client
 
 from src.core.logging import get_logger
@@ -395,6 +396,7 @@ class AccountService:
             avatar_url=u.get("avatar_url"),
             tenant_id=u.get("tenant_id"),
             permissions=self._effective_perm_ids(u),
+            preferred_language=u.get("preferred_language"),
         )
 
     # Rollen, die die Nutzerverwaltung (Konto → Benutzer) sehen dürfen.
@@ -423,7 +425,14 @@ class AccountService:
             return []
         res = (
             self._service.table("users")
-            .select("id, email, full_name, role, tenant_id, permissions")
+            # `preferred_language` gehört in die Liste, weil der
+            # Bearbeiten-Dialog den gespeicherten Wert vorbelegen muss —
+            # ohne ihn zeigte er „nicht gesetzt" und überschriebe beim
+            # Speichern eine erfasste Sprache mit NULL.
+            .select(
+                "id, email, full_name, role, tenant_id, permissions, "
+                "preferred_language"
+            )
             .eq("tenant_id", tenant_id)
             .order("created_at")
             .execute()
@@ -460,7 +469,10 @@ class AccountService:
         """Ziel-Nutzer NUR im eigenen Tenant laden (Load+Scope in einem)."""
         res = (
             self._service.table("users")
-            .select("id, email, full_name, role, tenant_id, permissions")
+            .select(
+                "id, email, full_name, role, tenant_id, permissions, "
+                "preferred_language"
+            )
             .eq("id", user_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -478,6 +490,7 @@ class AccountService:
         full_name: str | None = None,
         role: UserRole | None = None,
         permissions: list[str] | None = None,
+        preferred_language: str | None = None,
     ) -> TenantUser:
         """Nutzer im eigenen Tenant bearbeiten (Konto → Benutzer): Name, Rolle
         und feingranulare Berechtigungen. Der Konto-Admin (Gründer) ist nicht
@@ -499,6 +512,12 @@ class AccountService:
         patch: dict = {}
         if full_name is not None and full_name.strip():
             patch["full_name"] = full_name.strip()
+        # Sprache: nur schreiben, wenn sie mitgeschickt wurde. Der Wert ist im
+        # Schema bereits gegen die 24 Locales geprüft und normalisiert
+        # („de-AT" → „de"); hier kommt entweder ein gültiger Code an oder None
+        # für „nicht mitgeschickt, also unverändert".
+        if preferred_language is not None:
+            patch["preferred_language"] = preferred_language
         role_changed = role is not None and role.value != target.get("role")
         if role_changed:
             if target.get("role") == UserRole.admin.value:
@@ -962,6 +981,28 @@ class AccountService:
             return True  # konservativ: Passwortprüfung verlangen
         providers = {getattr(i, "provider", None) for i in identities}
         return "email" in providers
+
+    def passwort_pruefen(self, ctx: AuthContext, passwort: SecretStr) -> None:
+        """Re-Auth-Huerde: stimmt das aktuelle Passwort dieses Nutzers?
+
+        Fuer sicherheitskritische Selbst-Aenderungen (Wurzel 7) — ein
+        gekapertes Session-Cookie allein soll die 2FA nicht umbauen koennen.
+
+        Fail-CLOSED: Ein Konto OHNE Passwort (reines OAuth/Google) kann sich
+        hier nicht ausweisen und bekommt 401. Das ist Absicht und kein Mangel:
+        fuer diese Konten ist der aal2-Weg der vorgesehene Nachweis. Ein
+        „kein Passwort → dann eben durchlassen" waere genau der Fallback, den
+        Wurzel 4 verbietet.
+        """
+        auth_user = self._get_auth_user(ctx.user_id)
+        email = self._auth_email(auth_user)
+        if not self._has_password(auth_user) or not email:
+            raise AuthError(
+                "Für dieses Konto ist der gelöste zweite Faktor erforderlich.",
+                status_code=401,
+            )
+        if not self._password_ok(email, passwort.get_secret_value()):
+            raise AuthError("Aktuelles Passwort ist falsch.", status_code=401)
 
     def _password_ok(self, email: str, password: str) -> bool:
         try:

@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AddressPlacesSearch } from "@/components/address-places-search";
+import { SprachAuswahl } from "@/components/sprache-auswahl";
 import { KontoBetriebsartSection } from "@/components/konto/konto-betriebsart-section";
 import { KontoZahlungenSection } from "@/components/konto/konto-zahlungen-section";
 import { Button } from "@nextdays/ui/button";
@@ -25,13 +26,6 @@ import {
 } from "@/lib/legal-forms";
 import { PhoneInput } from "@nextdays/ui/phone-input";
 import { RichTextEditor } from "@nextdays/ui/rich-text-editor";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@nextdays/ui/select";
 import { Separator } from "@nextdays/ui/separator";
 import {
   COUNTRIES,
@@ -45,15 +39,18 @@ import {
   saveFirmenProfil,
   uploadFirmenLogo,
 } from "@/lib/firmenprofil";
+import { getMe, setDefaultLanguage } from "@/lib/auth";
 
 export default function ProfilPage() {
   const t = useTranslations("account");
   const tCountry = useTranslations("countries");
-  const tCommon = useTranslations("common");
   // --- Stammdaten / Person ---
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [language, setLanguage] = useState("de");
+  // Standardsprache des BETRIEBS (`tenants.default_language`, 0335). Startwert
+  // ist LEER, nicht "de": solange nichts geladen ist, wissen wir es nicht — ein
+  // vorgegebenes "de" behauptete, der Betrieb sei deutschsprachig (Wurzel 4).
+  const [language, setLanguage] = useState("");
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
   const [phone, setPhone] = useState("");
@@ -110,6 +107,21 @@ export default function ProfilPage() {
   // Formular (Wurzel 5).
   const [loadError, setLoadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Standardsprache des Betriebs laden. EIGENER Effekt und eigener Endpunkt,
+  // weil der Wert nicht am Firmenprofil hängt, sondern am Mandanten
+  // (`tenants.default_language`, 0335) — er kommt mit `me` und wird über
+  // /auth/tenant/default-language geschrieben.
+  useEffect(() => {
+    let active = true;
+    void getMe().then((me) => {
+      if (!active) return;
+      setLanguage(me?.default_language ?? "");
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Bestehendes Firmenprofil laden — alle Felder (kein Hardcode).
   useEffect(() => {
@@ -239,9 +251,19 @@ export default function ProfilPage() {
       // passen. Leer lassen wir das Backend ableiten (_account_holder_from).
       accountHolder: accountHolder.trim() || undefined,
     });
-    setSaving(false);
     if (!res.ok) {
+      setSaving(false);
       toast.error(res.error);
+      return;
+    }
+    // Die Betriebssprache gehört dem MANDANTEN, nicht dem Firmenprofil, und
+    // geht deshalb über ihren eigenen Endpunkt raus — im selben Speichern-Klick,
+    // damit der Betreiber nicht zwei Knöpfe suchen muss. Leer heißt bewusst
+    // „nicht erfasst" (null → Englisch), nicht „Deutsch".
+    const sprache = await setDefaultLanguage(language || null);
+    setSaving(false);
+    if (!sprache.ok) {
+      toast.error(sprache.error);
       return;
     }
     toast.success(t("company.saved"));
@@ -754,20 +776,30 @@ export default function ProfilPage() {
 
           <Separator />
 
-          {/* 7) Sonstiges */}
-          <div className="flex flex-col gap-1.5 sm:max-w-sm">
-            <Label htmlFor="language">{t("company.preferredLanguage")}</Label>
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger id="language">
-                <SelectValue placeholder={t("company.chooseLanguage")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="de">{tCommon("languages.de")}</SelectItem>
-                <SelectItem value="da">{tCommon("languages.da")}</SelectItem>
-                <SelectItem value="en">{tCommon("languages.en")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* 7) Sonstiges — Standardsprache des BETRIEBS.
+              Ein ANDERES Feld als die „Sprache für E-Mails" eines einzelnen
+              Nutzers/Eigentümers (Konto → Benutzer bzw. Eigentümer-Stammdaten):
+              das hier ist die zweite Stufe der Mail-Sprachkette (eigene Wahl →
+              BETRIEB → Englisch) und greift für jeden Empfänger OHNE eigene
+              Sprachwahl.
+
+              Das Feld war reine Anzeige: es wurde nie geladen, stand fest auf
+              "de" und war in keinem Save-Payload. Das Zielfeld, auf das der
+              frühere Befund wartete, gibt es inzwischen —
+              `tenants.default_language` (0335) mit dem Endpunkt
+              PATCH /auth/tenant/default-language. Beides ist jetzt
+              angeschlossen: geladen über `me`, gespeichert im Speichern-Klick.
+              Leer bleibt erlaubt und heißt „nicht erfasst" (→ Englisch). */}
+          <SprachAuswahl
+            id="language"
+            value={language}
+            onChange={setLanguage}
+            label={t("company.preferredLanguage")}
+            hint={null}
+            allowEmpty
+            emptyLabel={t("company.chooseLanguage")}
+            className="sm:max-w-sm"
+          />
 
           <div className="flex flex-col gap-1.5">
             <Label>Beschreibung</Label>

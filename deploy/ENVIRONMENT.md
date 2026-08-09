@@ -14,6 +14,13 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 > (`environment_variables`) am 2026-06-30. 6 Coolify-Apps: `nextdays-supabase`,
 > `-web`, `-plattform`, `-storybook`, `-marketing`, `-kong`.
 
+> **Stand 08.08.2026:** `APP_BASE_URL`, `MARKETPLACE_BASE_URL` und die neun
+> `COMPANY_*`-Variablen sind in Coolify auf `nextdays-api` **gesetzt** (per API
+> geprüft). Coolify reicht Env-Änderungen erst beim **nächsten Deploy** in den
+> laufenden Container — bis dahin verschickt die Produktiv-API weiterhin Mails
+> mit dem Fußzeilen-Mangelhinweis und lässt Einladungen mit `500` scheitern.
+> Ein Redeploy von `nextdays-api` schließt das ab.
+
 ---
 
 ## App: `nextdays-supabase` (FastAPI-API + kompletter Supabase-Stack + Redis)
@@ -54,9 +61,9 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 |---|---|---|---|
 | `SMTP_HOST` | Mailcow-Server (`mail.mynextdays.dk`) | nein | Coolify-Env |
 | `SMTP_PORT` | 587 (STARTTLS; 25/465 bei Hetzner ausgehend geblockt) | nein | Coolify-Env |
-| `SMTP_USER` | echtes Mailcow-Postfach (`developer@mynextdays.dk`) | nein | Coolify-Env |
+| `SMTP_USER` | echtes Mailcow-Postfach (`info@mynextdays.dk`) | nein | Coolify-Env |
 | `SMTP_PASSWORD` | Passwort dieses Postfachs | **ja** | → Passwort-Manager |
-| `SMTP_FROM_ADDRESS` | sichtbarer Absender (`noreply@mynextdays.dk`) | nein | Coolify-Env |
+| `SMTP_FROM_ADDRESS` | sichtbarer Absender (`info@mynextdays.dk`, **nicht** `noreply@` — Begründung in [mail/README.md](mail/README.md)) | nein | Coolify-Env |
 | `SMTP_FROM_NAME` | Anzeigename (`myNextDays`) | nein | Coolify-Env |
 | `SMTP_STARTTLS` | `true` (Port 587) vs. impl. TLS (Port 465) | nein | Coolify-Env |
 | `MAIL_SANDBOX` | `true` → nur Log, kein Versand (Dev). Prod `false` | nein | Coolify-Env |
@@ -64,6 +71,47 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 > Fehlt `SMTP_HOST` oder `SMTP_FROM_ADDRESS` → Versand deaktiviert (`send()` gibt
 > 503, kein stiller Erfolg). Der Mailserver selbst läuft auf einem separaten Host
 > (`62.238.4.193`), NICHT im DB-/App-Stack.
+
+### Basis-URLs der Frontends (Ziel der Links in ausgehenden Mails)
+| Variable | Zweck | Secret? | Quelle |
+|---|---|---|---|
+| `APP_BASE_URL` | PMS-Dashboard `web/` (`https://app.mynextdays.com`). Ziel der Einladungs- und Passwort-Reset-Links für **Betriebs**-Nutzer (0334) | nein | Coolify-Env |
+| `ADMIN_BASE_URL` | Plattform-Backoffice `admin/`. Einladungslinks des **Backoffice**-Teams — bewusst getrennt von `APP_BASE_URL` | nein | Coolify-Env |
+| `MARKETING_BASE_URL` | Marketing-Seite. Bestätigungs-/Abmeldelinks der Newsletter-Mails | nein | Coolify-Env |
+| `MARKETPLACE_BASE_URL` | myBestDays-Marktplatz `plattform/`. Ziel der Bewertungs-Erinnerung an den **Gast** | nein | Coolify-Env |
+
+> Fehlt eine dieser URLs, schlägt der jeweilige Vorgang **klar fehl** (Einladung
+> `500`, Newsletter/Erinnerung wird nicht verschickt) — statt einen Link auf eine
+> geratene Domain zu verschicken (Wurzel 4).
+
+### Anbieterangaben in der Mail-Fußzeile (`COMPANY_*`)
+Pflicht für geschäftliche E-Mails (dän. e-handelslov § 7 / EU-Geschäftsbrief).
+Die Werte stehen bewusst in der Umgebung und **nicht** im Code: eine
+Registeränderung darf keinen Deploy brauchen. Dieselben Angaben pflegen die
+Frontends in `marketing/content/legal/anbieter.ts` — bei einer Änderung **beide**
+Stellen nachziehen.
+
+| Variable | Wert | Secret? |
+|---|---|---|
+| `COMPANY_LEGAL_NAME` | `myNextDays ApS` | nein |
+| `COMPANY_LEGAL_FORM` | `Anpartsselskab (ApS) dänischen Rechts` | nein |
+| `COMPANY_STREET` | `Hirtshalsvej 21` | nein |
+| `COMPANY_CITY` | `9881 Bindslev` | nein |
+| `COMPANY_COUNTRY` | `Dänemark` | nein |
+| `COMPANY_REGISTRATION_NUMBER` | `46615182` (CVR, rein 8-stellig, ohne `DK`) | nein |
+| `COMPANY_VAT_ID` | **bewusst leer** — siehe Hinweis | nein |
+| `COMPANY_CONTACT_EMAIL` | `info@mynextdays.dk` | nein |
+| `COMPANY_CONTACT_PHONE` | `+45 93 90 39 91` | nein |
+
+> **`COMPANY_VAT_ID` bleibt leer, bis die Momsregistrierung vorliegt.** VIES
+> meldete `DK46615182` am 08.08.2026 als ungültig (Kontrollabfrage
+> `DK54562519`/Lego A/S → gültig, der Dienst antwortet also korrekt). § 7 verlangt
+> die Nummer nur bei bestehender Registrierung; eine nicht erteilte Nummer zu
+> veröffentlichen wäre eine falsche Angabe. Sobald die Registrierung da ist:
+> hier setzen **und** `ustId` in `marketing/content/legal/anbieter.ts` füllen.
+
+> Fehlt `COMPANY_LEGAL_NAME`, benennt die Mail-Fußzeile den Mangel sichtbar,
+> statt eine Adresse zu erfinden oder leer zu bleiben.
 
 ### Google OAuth / APIs
 | Variable | Zweck | Secret? | Quelle |
@@ -73,6 +121,59 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 | `GOOGLE_OAUTH_SECRET` | OAuth-Client-Secret | **ja** | → Passwort-Manager |
 | `GOOGLE_MAPS_API_KEY` | Maps-API | **ja** | → Passwort-Manager |
 | `GOOGLE_TRANSLATE_API_KEY` | Translate-API | **ja** | → Passwort-Manager |
+
+### Zwei-Faktor / Passkeys (GoTrue-MFA)
+Die Schreibweise ist **nicht** einheitlich und nicht frei wählbar: die beiden
+Enroll/Verify-Schalter heißen `GOTRUE_MFA_WEB_AUTHN_*` (envconfig zerlegt das
+Go-Feld `WebAuthn` per `split_words` zu `WEB_AUTHN`), die RP-Variablen dagegen
+`GOTRUE_WEBAUTHN_*`. Mit der jeweils falschen Schreibweise startet GoTrue
+kommentarlos und lehnt jedes Enrollment mit `422` ab. Belegt in
+`deploy/supabase/docker-compose.yml:223-248`.
+
+| Variable | Zweck | Secret? | Quelle |
+|---|---|---|---|
+| `WEBAUTHN_RP_ID` | Relying-Party-ID = nackte Domain **ohne** Schema. Produktion: `app.mynextdays.com` | nein | Coolify-Env |
+| `WEBAUTHN_RP_ORIGINS` | Erlaubte Herkünfte, komma-getrennt, **mit** `https://` (Ausnahme nur localhost). Produktion: `https://app.mynextdays.com` | nein | Coolify-Env |
+| `WEBAUTHN_RP_DISPLAY_NAME` | Name im Systemdialog des Geräts (Default `myNextDays`) | nein | Coolify-Env |
+
+**Achtung:** Ein späterer Wechsel der `WEBAUTHN_RP_ID` macht **jeden bereits
+registrierten Passkey unbrauchbar** — er ist kryptografisch an genau diese
+Domain gebunden. Vor dem ersten produktiven Passkey festlegen (Details:
+`docs/OFFENE-PUNKTE.md` 1.3). `mynextdays.dk` ist reiner Mailserver und
+kommt hier NICHT vor.
+
+#### SMS-Faktor (`factor_type: phone`)
+**Zwei getrennte Systeme, nicht verwechseln.** Die `TWILIO_*`-Variablen im
+API-Abschnitt versorgen den **eigenen** OTP-Weg der FastAPI. Der SMS-**Faktor**
+läuft dagegen in GoTrue, einem eigenen Prozess mit eigener Konfiguration — die
+Werte der API wirken dort **nicht** (Wurzel 7). Fehlt der Block unten, legt
+GoTrue den Faktor zwar an (`POST /factors` → `200`), beantwortet aber jede
+Challenge mit `500 „Failed to get SMS provider"`: der Nutzer säße in einer
+Sackgasse. Live nachgewiesen am 09.08.2026.
+
+| Variable | Zweck | Secret? | Quelle |
+|---|---|---|---|
+| `GOTRUE_SMS_PROVIDER` | `twilio` — ohne diesen Wert findet GoTrue keinen Anbieter | nein | Compose |
+| `GOTRUE_SMS_TWILIO_ACCOUNT_SID` | Twilio-Konto (`AC…`) | nein | Coolify-Env |
+| `GOTRUE_SMS_TWILIO_AUTH_TOKEN` | Twilio-Token | **ja** | → Passwort-Manager |
+| `GOTRUE_SMS_TWILIO_MESSAGE_SERVICE_SID` | Absender: entweder Messaging-Service-SID (`MG…`) **oder** eine E.164-Nummer — GoTrue reicht den Wert unverändert als Twilios `From` weiter | nein | Coolify-Env |
+| `GOTRUE_SMS_OTP_LENGTH` / `GOTRUE_MFA_PHONE_OTP_LENGTH` | Codelänge (6; <6 oder >10 wird auf 6 gezwungen) | nein | Compose |
+| `GOTRUE_SMS_OTP_EXP` | Gültigkeit in Sekunden (60) | nein | Compose |
+| `GOTRUE_SMS_MAX_FREQUENCY` / `GOTRUE_MFA_PHONE_MAX_FREQUENCY` | Sperrfrist zwischen zwei SMS (`60s`) | nein | Compose |
+| `MFA_SMS_AVAILABLE` | **Schalter der Oberfläche.** `true` erst, wenn das Twilio-Konto aufgewertet ist. Default `false` → die UI führt SMS sichtbar als „nicht verfügbar" | nein | Coolify-Env (API) |
+
+**Nicht setzen:** `GOTRUE_SMS_AUTOCONFIRM` (bestätigt Nummern ohne
+Zustellnachweis) und `GOTRUE_SMS_TEST_OTP` (ein dauerhaft gültiger Festcode für
+die hinterlegten Nummern — und er wirkt ohnehin nur beim Telefon-Login, **nicht**
+beim MFA-Faktor).
+
+**Warum `MFA_SMS_AVAILABLE` vorerst `false` bleibt:** Das Twilio-Konto ist ein
+**Trial**-Konto. Ein solches sendet ausschließlich an Nummern, die vorher in der
+Twilio-Konsole verifiziert wurden (sonst Fehler `21608`), und zwar an höchstens
+fünf. Ein Kunde kann seine eigene Nummer dort nicht eintragen — der Faktor wäre
+für ihn also unbrauchbar. Zum Freischalten: Twilio-Konto aufwerten, für die
+Zielländer die Geo-Permissions setzen (nur in der Konsole möglich, nicht per
+API), dann `MFA_SMS_AVAILABLE=true` setzen und die API neu deployen.
 
 ### Integrationen (Channex / Stripe / WhatsApp / Groq)
 | Variable | Zweck | Secret? | Quelle |

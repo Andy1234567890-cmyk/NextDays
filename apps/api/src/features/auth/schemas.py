@@ -4,6 +4,7 @@ from enum import StrEnum
 from pydantic import BaseModel, EmailStr, Field, SecretStr, field_validator
 
 from src.core.countries import is_iso2_country
+from src.core.mail_sprache import SUPPORTED, normalisieren
 from src.features.owner_statements.currencies import COUNTRY_CURRENCY
 
 # Unterstützte Währungen = die Werte der Land→Währung-Map (EU27+CH/GB), gleiche
@@ -11,6 +12,29 @@ from src.features.owner_statements.currencies import COUNTRY_CURRENCY
 # das UI bietet nur diese Länder/Währungen an, ein Datensatz mit "FOO" (oder auch
 # "BRL") kann über kein UI entstehen und ist ein Datenfehler, kein legitimer Fall.
 _SUPPORTED_CURRENCIES = frozenset(COUNTRY_CURRENCY.values())
+
+
+def pruefe_sprache(v: str | None) -> str | None:
+    """Auf eine unterstuetzte Sprache normalisieren („de-AT" → „de").
+
+    DIE EINE Regel fuer jedes Sprachfeld im Contract. Als Funktion und nicht je
+    Schema kopiert: die zweite Kopie haette beim naechsten Feld den 422 durch
+    ein stilles `return None` ersetzt, und der Betreiber saesse vor einer
+    englischen Mail ohne Erklaerung.
+
+    Ein nicht unterstuetzter Code wird ABGEWIESEN statt still verworfen: der
+    Betreiber soll erfahren, dass es diese Sprache nicht gibt. Leer/None heisst
+    dagegen ehrlich „nicht erfasst" → NULL, und die Fallback-Kette
+    (Betriebssprache → Englisch) uebernimmt.
+    """
+    if v is None or not v.strip():
+        return None
+    code = normalisieren(v)
+    if code is None:
+        erlaubt = ", ".join(sorted(SUPPORTED))
+        msg = f"Sprache {v!r} wird nicht unterstützt. Erlaubt: {erlaubt}."
+        raise ValueError(msg)
+    return code
 
 
 class UserRole(StrEnum):
@@ -70,15 +94,40 @@ class InviteRequest(BaseModel):
 
     Der einladende Nutzer (admin/co_admin) bestimmt die Rolle. Owner-Rolle wird
     beim Registrieren vergeben, nicht beim Einladen.
+
+    KEIN `password` mehr (0334, bewusster Contract-Bruch): bis dahin würfelte der
+    Wizard im Browser ein Passwort und schickte es hierher — es lief damit durch
+    den Browser des Einladenden, durch jedes HTTP-Log dazwischen und musste per
+    Zuruf weitergegeben werden. Stattdessen legt der Server den Auth-Nutzer mit
+    einem Zufallspasswort an, das NIEMAND kennt, und verschickt einen Einmal-Link;
+    das Passwort setzt die eingeladene Person selbst.
     """
 
     email: EmailStr
-    password: SecretStr = Field(min_length=8)
     full_name: str = Field(min_length=1, max_length=200)
     role: UserRole
     # Feingranulare Berechtigungen (IDs aus granular_permissions.Permission). Leer =
     # Rollen-Defaults werden angewendet; Admin erhält immer alle.
     permissions: list[str] | None = None
+    # Sprache der eingeladenen Person (ISO 639-1, z. B. "da"). OPTIONAL und
+    # bewusst EXPLIZIT statt aus dem `Accept-Language`-Header abgeleitet: hier
+    # lädt der BETREIBER jemanden ein, der Header trägt also die Sprache des
+    # Einladenden, nicht die des Empfängers. Einen dänischen Eigentümer
+    # anzulegen und ihm die deutsche Browsersprache seines Verwalters
+    # zuzuschreiben wäre ein plausibel aussehender erfundener Wert (Wurzel 4).
+    # Fehlt die Angabe, greift die Kette Betriebssprache → Englisch.
+    #
+    # FELDNAME `preferred_language` — derselbe wie die Spalte, in die er fließt
+    # (`users.preferred_language`), und derselbe, den `PATCH
+    # /auth/account/profile` schon trägt. Ein zweiter Name („language") für
+    # dasselbe Datum hieße, dass das Frontend je Endpunkt raten muss, wie das
+    # Feld gerade heißt.
+    preferred_language: str | None = Field(default=None, max_length=10)
+
+    @field_validator("preferred_language")
+    @classmethod
+    def _sprache_pruefen(cls, v: str | None) -> str | None:
+        return pruefe_sprache(v)
 
 
 class InviteResponse(BaseModel):
@@ -87,6 +136,77 @@ class InviteResponse(BaseModel):
     role: UserRole
     tenant_id: str
     permissions: list[str] = []
+    # Ob die Einladungsmail rausging. Immer True, wenn der Aufruf 201 liefert —
+    # ein fehlgeschlagener Versand rollt die Anlage zurück und endet in einem
+    # Fehlerstatus (kein stiller Teilerfolg, Wurzel 5). Das Feld ist da, damit
+    # die Oberfläche „Einladung versendet an …" belegen kann, ohne es zu raten.
+    invite_mail_versendet: bool = True
+
+
+class EinladungAnnehmenRequest(BaseModel):
+    """Einladung annehmen: Token aus dem Link + selbst gewähltes Passwort.
+
+    Öffentlich (ohne Session) — der Einmal-Token IST die Berechtigung. Die
+    Mindestlänge deckt sich mit `RegisterRequest`; die verbindliche Prüfung
+    steht zusätzlich serverseitig im Dienst (der Endpunkt ist ohne Browser
+    aufrufbar).
+    """
+
+    token: str = Field(min_length=20, max_length=200)
+    password: SecretStr = Field(min_length=8)
+
+
+class PasswortVergessenRequest(BaseModel):
+    """„Passwort vergessen": Anfrage mit der E-Mail-Adresse.
+
+    Bewusst `str` und nicht `EmailStr`: eine syntaktisch ungültige Adresse würde
+    als 422 mit Feldfehler antworten und wäre damit von einer gültigen, aber
+    unbekannten Adresse (200, neutral) unterscheidbar — ein feiner, aber echter
+    Enumerations-Kanal. So beantwortet der Dienst JEDE Eingabe gleich.
+    """
+
+    email: str = Field(min_length=3, max_length=254)
+
+
+class PasswortNeuRequest(BaseModel):
+    """Neues Passwort über den Reset-Token setzen (öffentlich)."""
+
+    token: str = Field(min_length=20, max_length=200)
+    password: SecretStr = Field(min_length=8)
+
+
+class NeutraleAntwort(BaseModel):
+    """Antwort der öffentlichen Auth-Vorgänge ohne verwertbare Auskunft.
+
+    Ein und dieselbe Nachricht für jeden Ausgang — der Aufrufer erfährt daraus
+    nicht, ob ein Konto existiert (OWASP Forgot Password).
+    """
+
+    message: str
+
+
+class TokenPruefungResponse(BaseModel):
+    """Vorab-Prüfung eines Links, damit die Seite „abgelaufen" zeigen kann,
+    ohne dass der Nutzer erst ein Passwort eintippt.
+
+    `gueltig=false` fasst ungültig, abgelaufen und verbraucht ZUSAMMEN — eine
+    Unterscheidung wäre ein Orakel über fremde Tokens.
+
+    `sprache` ist die Sprache des EMPFÄNGERS (dieselbe Kette wie die Mail,
+    `core.mail_empfaenger.sprache_fuer_nutzer`), damit die verlinkte Seite in
+    derselben Sprache erscheint wie die Mail, die dorthin geführt hat. Sie ist
+    IMMER gesetzt und immer ein unterstützter Code — bei ungültigem Token der
+    Letzt-Rückfall aus `core.mail_sprache.FALLBACK` (Englisch), damit die
+    Antwort für geratene Tokens ununterscheidbar bleibt.
+
+    MEHR STEHT HIER BEWUSST NICHT (Wurzel 9): kein Name, keine E-Mail, keine
+    Rolle, kein Tenant. Der Endpunkt ist öffentlich und unauthentifiziert; alles
+    darüber hinaus wäre ein Verzeichnis über fremde Konten für jeden, der
+    Tokens durchprobiert.
+    """
+
+    gueltig: bool
+    sprache: str
 
 
 class SessionResponse(BaseModel):
@@ -168,12 +288,35 @@ class MeResponse(BaseModel):
     # Betriebsmodell (0180): 'pms' (Abo, apps/web) oder 'marketplace' (8%-Fee,
     # plattform/). Steuert, welche Oberfläche/welches Billing gilt.
     account_type: str | None = None
+    # Standardsprache des Betriebs (0335), zweite Stufe der Mail-Sprachkette.
+    # None = nicht erfasst (→ Englisch), kein erfundener Default (Wurzel 4).
+    default_language: str | None = None
 
 
 class AccommodationTypeUpdate(BaseModel):
     """Beherbergungsart des Mandanten umstellen (nur Admin)."""
 
     accommodation_type: str = Field(pattern="^(vacation_rental|hotel)$")
+
+
+class DefaultLanguageUpdate(BaseModel):
+    """Standardsprache des BETRIEBS setzen (`tenants.default_language`, 0335).
+
+    Zweite Stufe der Mail-Sprachkette (`core.mail_sprache`): sie greift für
+    jeden Empfänger ohne eigene Sprachwahl. Ohne diesen Schreibweg blieb die
+    Spalte dauerhaft NULL und die Kette fiel für ALLE solchen Empfänger
+    sofort auf Englisch durch — der dänische Betrieb bekam englische Mails.
+
+    `null`/leer ist ausdrücklich erlaubt und heißt „nicht erfasst" (→ Englisch),
+    nicht „Deutsch": ein Default wäre eine erfundene Behauptung (Wurzel 4).
+    """
+
+    default_language: str | None = Field(default=None, max_length=10)
+
+    @field_validator("default_language")
+    @classmethod
+    def _sprache_pruefen(cls, v: str | None) -> str | None:
+        return pruefe_sprache(v)
 
 
 class AccountResponse(BaseModel):
@@ -232,6 +375,10 @@ class TenantUser(BaseModel):
     avatar_url: str | None = None
     tenant_id: str | None = None
     permissions: list[str] = []
+    # Sprache der E-Mails an diesen Nutzer. Wird mitgeliefert, damit der
+    # Bearbeiten-Dialog den gespeicherten Wert anzeigen kann statt „nicht
+    # gesetzt" zu behaupten und ihn beim Speichern zu ueberschreiben.
+    preferred_language: str | None = None
 
 
 class OwnerAssignmentUpdate(BaseModel):
@@ -291,6 +438,14 @@ class UpdateManagedUserRequest(BaseModel):
     # jedes Nutzers erweitern/einschränken). None = unverändert; eine (auch
     # leere) Liste ersetzt die gespeicherten Berechtigungen.
     permissions: list[str] | None = None
+    # Sprache der E-Mails an diesen Nutzer nachträglich ändern (Konto →
+    # Benutzer → Bearbeiten). Gegen die 24 Locales geprüft wie beim Einladen.
+    preferred_language: str | None = Field(default=None, max_length=10)
+
+    @field_validator("preferred_language")
+    @classmethod
+    def _sprache_pruefen(cls, v: str | None) -> str | None:
+        return pruefe_sprache(v)
 
 
 class UpdateProfileRequest(BaseModel):
@@ -304,6 +459,12 @@ class UpdateProfileRequest(BaseModel):
     phone: str | None = Field(default=None, max_length=40)
     additional_phone: str | None = Field(default=None, max_length=40)
     hide_phones: bool | None = None
+    # Wie bei `InviteRequest` gegen die 24 unterstuetzten Locales geprueft
+    # (Validator unten). Bis 0335 stand hier nur `max_length=10`: jeder String
+    # kam durch („zh", „xx-YZ"), landete in der Spalte und war spaeter eine
+    # Sprache, fuer die es keinen Mailtext gibt. Seit 0335 traegt die Spalte
+    # zusaetzlich einen CHECK — ohne diesen Validator waere ein Tippfehler des
+    # Nutzers ein 500 aus der DB statt eines sprechenden 422.
     preferred_language: str | None = Field(default=None, max_length=10)
     # ISO-4217 (3 Grossbuchstaben) bzw. IANA-Zone — die DB prueft beides
     # zusaetzlich, damit auch ein direkter Schreibpfad nicht durchrutscht.
@@ -328,6 +489,11 @@ class UpdateProfileRequest(BaseModel):
     mailing_country: str | None = Field(default=None, max_length=2)
     emergency_contact_name: str | None = Field(default=None, max_length=200)
     emergency_contact_phone: str | None = Field(default=None, max_length=40)
+
+    @field_validator("preferred_language")
+    @classmethod
+    def _sprache_pruefen(cls, v: str | None) -> str | None:
+        return pruefe_sprache(v)
 
 
 class UpdatePasswordRequest(BaseModel):
@@ -384,3 +550,85 @@ class PhoneVerifyRequest(BaseModel):
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"
+
+
+# --- Zwei-Faktor-Authentifizierung (GoTrue-nativ, siehe mfa_service.py) -----
+
+
+class MfaFactor(BaseModel):
+    """Ein verifizierter Faktor aus `auth.mfa_factors`.
+
+    Secret und WebAuthn-Credential fehlen hier bewusst: die Oberflaeche
+    braucht sie nicht, und was nicht rausgeht, kann nicht leaken (Wurzel 6).
+    """
+
+    id: str
+    factor_type: str            # totp | phone | webauthn
+    friendly_name: str | None = None
+    status: str
+    created_at: str | None = None
+
+
+class MfaStatusResponse(BaseModel):
+    """Der 2FA-Zustand des eigenen Kontos."""
+
+    factors: list[MfaFactor] = []
+    aal: str                          # aal1 | aal2 (aus dem aktuellen Token)
+    mfa_required: bool                # Pflicht fuer diese Rolle?
+    mfa_enrolled: bool                # mindestens ein verifizierter Faktor
+    # Ende der Einrichtungsfrist (ISO). None, wenn keine Pflicht besteht oder
+    # bereits ein Faktor existiert.
+    mfa_grace_until: str | None = None
+    recovery_codes_left: int = 0
+    # Kann dieser Server den SMS-Faktor ueberhaupt ausliefern? Kommt aus der
+    # Server-Konfiguration (`mfa_sms_available`), nicht aus einer Vermutung im
+    # Browser. Ist er false, blendet die Oberflaeche den Weg nicht heimlich aus,
+    # sondern zeigt ihn sichtbar als nicht verfuegbar — ohne den Schalter liefe
+    # der Nutzer beim Anfordern des Codes in ein 500 „Failed to get SMS
+    # provider" aus GoTrue.
+    sms_available: bool = False
+
+
+class MfaReauth(BaseModel):
+    """Re-Auth fuer sicherheitskritische Selbst-Aenderungen (Wurzel 7).
+
+    Entweder das aktuelle Passwort ODER ein bereits auf aal2 gehobenes Token.
+    Beides optional, weil reine OAuth-Konten kein Passwort haben — der Service
+    lehnt ab, wenn WEDER das eine noch das andere vorliegt (fail-closed).
+    """
+
+    current_password: SecretStr | None = None
+
+
+class MfaRecoveryCodesResponse(BaseModel):
+    """Neu erzeugte Wiederherstellungscodes — einmalig im Klartext."""
+
+    codes: list[str]
+
+
+class MfaRecoveryRedeemRequest(BaseModel):
+    """Einen Wiederherstellungscode einloesen.
+
+    Laenge grosszuegig begrenzt (Format XXXXX-XXXXX, Bindestrich optional),
+    aber begrenzt: angreiferkontrollierter Input bekommt eine harte
+    Obergrenze, statt eine unbegrenzte Zeichenkette in den Hash zu geben
+    (Wurzel 8).
+    """
+
+    code: str = Field(min_length=8, max_length=32)
+
+
+class MfaAdminResetRequest(BaseModel):
+    """Plattform-Admin setzt die Faktoren eines fremden Kontos zurueck.
+
+    `reason` ist Pflicht und hat eine Mindestlaenge: der maechtigste Eingriff
+    im System darf nicht unbegruendet in der Revisionsspur stehen.
+    """
+
+    user_id: str
+    reason: str = Field(min_length=5, max_length=500)
+
+
+class MfaAdminResetResponse(BaseModel):
+    removed_factors: int
+    target_user_id: str

@@ -5,7 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.core.config import Settings, get_settings
 from src.core.ratelimit import client_ip_from_xff
-from src.core.security import AuthContext, CurrentUser, decode_token
+from src.core.security import (
+    AuthContext,
+    CurrentPlatformAdmin,
+    CurrentUser,
+    decode_token,
+    require_platform_write,
+)
 from src.core.uploads import read_upload
 from src.features.login_devices.dependencies import LoginDeviceServiceDep
 from src.features.login_devices.service import LoginDeviceService
@@ -13,23 +19,39 @@ from src.features.login_devices.service import LoginDeviceService
 from .dependencies import (
     AccountServiceDep,
     AuthServiceDep,
+    EinladungServiceDep,
+    MfaServiceDep,
     OtpServiceDep,
     OwnerAssignmentServiceDep,
     StaffAssignmentServiceDep,
     require_permission,
 )
+from .einladung_service import ZWECK_INVITE, ZWECK_RESET, EinladungError
+from .mfa_service import MfaError
 from .otp_service import OtpError
 from .permissions import Capability
 from .schemas import (
     AccommodationTypeUpdate,
     AccountResponse,
+    DefaultLanguageUpdate,
+    EinladungAnnehmenRequest,
     InviteRequest,
     InviteResponse,
     LoginRequest,
     LoginResponse,
     MeResponse,
+    MfaAdminResetRequest,
+    MfaAdminResetResponse,
+    MfaFactor,
+    MfaReauth,
+    MfaRecoveryCodesResponse,
+    MfaRecoveryRedeemRequest,
+    MfaStatusResponse,
+    NeutraleAntwort,
     OwnerAssignmentResponse,
     OwnerAssignmentUpdate,
+    PasswortNeuRequest,
+    PasswortVergessenRequest,
     PhoneDisableRequest,
     PhoneSendCodeRequest,
     PhoneVerifyRequest,
@@ -43,11 +65,9 @@ from .schemas import (
     StaffAssignmentResponse,
     StaffAssignmentUpdate,
     TenantUser,
+    TokenPruefungResponse,
     TotpDisableRequest,
-    TotpEnrollResponse,
     TotpLoginRequest,
-    TotpVerifyRequest,
-    TotpVerifyResponse,
     UpdateEmailRequest,
     UpdateManagedUserRequest,
     UpdateNameRequest,
@@ -257,6 +277,24 @@ def set_accommodation_type(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.patch("/tenant/default-language", response_model=MeResponse)
+def set_default_language(
+    req: DefaultLanguageUpdate,
+    ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_TENANT))],
+    service: AuthServiceDep,
+) -> MeResponse:
+    """Standardsprache des Betriebs setzen — Stufe 2 der Mail-Sprachkette.
+
+    Ohne diesen Endpunkt war `tenants.default_language` (0335) nur lesbar und
+    blieb dauerhaft NULL: jeder Empfänger ohne eigene Sprachwahl bekam
+    Englisch, obwohl die Kette genau das verhindern sollte.
+    """
+    try:
+        return service.set_default_language(ctx, req.default_language)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post(
     "/invite",
     response_model=InviteResponse,
@@ -282,6 +320,118 @@ def invite(
     try:
         return service.invite(req, tenant_id=ctx.tenant_id, granter_id=ctx.user_id)
     except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/invite/{user_id}/resend",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def resend_invite(
+    user_id: str,
+    service: AuthServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.MANAGE_STAFF))
+    ],
+) -> None:
+    """Einladungsmail erneut verschicken (die erste kam nicht an).
+
+    Erfordert MANAGE_STAFF — dieselbe Berechtigung wie das Einladen selbst, und
+    der Dienst prüft denselben Tenant-Scope wie die Nutzerliste (Wurzel 9). Der
+    zuvor verschickte Link wird dabei entwertet, es gilt immer nur der neueste.
+    """
+    try:
+        service.einladung_erneut_senden(ctx, user_id)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Öffentliche Token-Vorgänge (ohne Session) -----------------------------
+#
+# Bewusst OHNE Guard: wer eine Einladung annimmt, hat noch nie ein Passwort
+# gehabt, und wer seins vergessen hat, kann sich nicht anmelden. Der Einmal-Token
+# aus der Mail IST die Berechtigung — er liegt nur als SHA-256 in der DB, ist
+# zeitlich begrenzt und danach verbraucht. Ratelimit: eigener strenger Bucket
+# `auth_public` (Wurzel 8), zusätzlich eine Sperrfrist je Konto im Dienst.
+
+
+@router.get("/einladung/pruefen", response_model=TokenPruefungResponse)
+def einladung_pruefen(
+    token: str, service: EinladungServiceDep
+) -> TokenPruefungResponse:
+    """Vorab prüfen, ob ein Einladungslink noch gilt (öffentlich).
+
+    Damit die Annahmeseite „Link abgelaufen" zeigen kann, BEVOR der Nutzer ein
+    Passwort eintippt. Verbraucht den Token nicht. Antwortet immer 200 mit
+    `gueltig` — ein 404 für unbekannte Tokens wäre ein Orakel, mit dem man
+    geratene Tokens durchprobieren könnte.
+
+    Liefert zusätzlich die Sprache des Eingeladenen, damit die Seite in
+    derselben Sprache erscheint wie die Einladungsmail. Mehr gibt der Endpunkt
+    über den Token NICHT preis (siehe `TokenPruefungResponse`).
+    """
+    gueltig, sprache = service.pruefen_mit_sprache(token, ZWECK_INVITE)
+    return TokenPruefungResponse(gueltig=gueltig, sprache=sprache)
+
+
+@router.post("/einladung/annehmen", status_code=status.HTTP_204_NO_CONTENT)
+def einladung_annehmen(
+    req: EinladungAnnehmenRequest, service: EinladungServiceDep
+) -> None:
+    """Einladung annehmen und das eigene erste Passwort setzen (öffentlich).
+
+    Fehlerfälle sind bewusst NICHT unterscheidbar (abgelaufen, verbraucht,
+    erfunden) — eine genaue Auskunft würde verraten, ob ein Token existiert.
+    """
+    try:
+        service.passwort_setzen(
+            req.token, req.password.get_secret_value(), ZWECK_INVITE
+        )
+    except EinladungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/passwort-vergessen", response_model=NeutraleAntwort)
+def passwort_vergessen(
+    req: PasswortVergessenRequest, service: EinladungServiceDep
+) -> NeutraleAntwort:
+    """Reset-Link anfordern (öffentlich).
+
+    Die Antwort ist IMMER dieselbe — ein unterscheidbarer Fehler (oder Status)
+    wäre ein Verzeichnis, welche Adressen ein Konto haben. Deshalb wird hier
+    auch keine Ausnahme gemappt: der Dienst beantwortet jeden Abbruch neutral
+    und protokolliert ihn.
+    """
+    return NeutraleAntwort(message=service.passwort_reset_anfordern(req.email))
+
+
+@router.get("/passwort-neu/pruefen", response_model=TokenPruefungResponse)
+def passwort_neu_pruefen(
+    token: str, service: EinladungServiceDep
+) -> TokenPruefungResponse:
+    """Vorab prüfen, ob ein Reset-Link noch gilt (öffentlich, verbraucht nicht).
+
+    Gibt wie der Einladungs-Zwilling die Sprache des Empfängers mit zurück —
+    die Reset-Mail ging in dieser Sprache raus, die Seite dahinter muss ihr
+    folgen.
+    """
+    gueltig, sprache = service.pruefen_mit_sprache(token, ZWECK_RESET)
+    return TokenPruefungResponse(gueltig=gueltig, sprache=sprache)
+
+
+@router.post("/passwort-neu", status_code=status.HTTP_204_NO_CONTENT)
+def passwort_neu(req: PasswortNeuRequest, service: EinladungServiceDep) -> None:
+    """Neues Passwort über den Link aus der Mail setzen (öffentlich).
+
+    Nach dem Wechsel widerruft der Dienst JEDE Sitzung des Kontos: ein Reset ist
+    der Weg, den ein Kompromittierter geht — eine überlebende fremde Sitzung
+    würde ihn wirkungslos machen.
+    """
+    try:
+        service.passwort_setzen(
+            req.token, req.password.get_secret_value(), ZWECK_RESET
+        )
+    except EinladungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
@@ -427,6 +577,7 @@ def update_managed_user(
             full_name=req.full_name,
             role=req.role,
             permissions=req.permissions,
+            preferred_language=req.preferred_language,
         )
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -500,22 +651,53 @@ async def upload_avatar(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.post("/totp/enroll", response_model=TotpEnrollResponse)
-def totp_enroll(ctx: CurrentUser, service: AccountServiceDep) -> TotpEnrollResponse:
-    try:
-        return service.totp_enroll(ctx)
-    except AuthError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+# --- ABGELOESTE App-2FA (user_mfa) ------------------------------------------
+#
+# Diese beiden Endpunkte sind seit Migration 0341 STILLGELEGT (410 Gone).
+#
+# Sie legten eine 2FA an, die AUSSCHLIESSLICH in `POST /auth/login` geprueft
+# wurde. Wer sich direkt gegen GoTrue anmeldet (`POST /auth/v1/token`,
+# anon-Key), umging sie vollstaendig — und die Session, die
+# `login_totp` danach ausstellte, trug strukturell `aal1`, weil GoTrue von
+# dem zweiten Faktor nichts weiss. Zusaetzlich lag das TOTP-Secret im
+# KLARTEXT in `public.user_mfa` (Wurzel 6).
+#
+# Sie hier stehen zu lassen waere schlimmer als sie zu entfernen: es gaebe
+# ZWEI Wahrheiten darueber, ob ein Konto einen zweiten Faktor hat. Ein Nutzer,
+# der sich hier einschreibt, haette in GoTrue KEINEN Faktor — der neue Guard
+# wuerde ihn nach Ablauf der Frist trotz aktiver „2FA" aussperren, waehrend
+# sein aal1-Token bis dahin ueberall durchkaeme.
+#
+# Der Weg ist jetzt GoTrue direkt: `POST /auth/v1/factors` (totp | phone |
+# webauthn), dann `/challenge` + `/verify`. Siehe docs/API.md.
+#
+# `POST /totp/disable` bleibt BEWUSST funktionsfaehig (siehe unten): Wer aus
+# dem Altbestand noch eine `user_mfa`-Zeile hat, muss sie loswerden koennen —
+# ein Ausschalter ohne Weg zurueck waere eine Sperre (Wurzel 1).
 
 
-@router.post("/totp/verify", response_model=TotpVerifyResponse)
-def totp_verify(
-    req: TotpVerifyRequest, ctx: CurrentUser, service: AccountServiceDep
-) -> TotpVerifyResponse:
-    try:
-        return service.totp_verify(ctx, req.code)
-    except AuthError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+@router.post("/totp/enroll", status_code=status.HTTP_410_GONE)
+def totp_enroll_abgeloest() -> None:
+    """Abgeloest durch GoTrue-natives MFA (0341). Immer 410."""
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail=(
+            "Dieser Weg ist abgelöst. Die Zwei-Faktor-Authentifizierung wird "
+            "jetzt direkt über den Anmeldedienst eingerichtet."
+        ),
+    )
+
+
+@router.post("/totp/verify", status_code=status.HTTP_410_GONE)
+def totp_verify_abgeloest() -> None:
+    """Abgeloest durch GoTrue-natives MFA (0341). Immer 410."""
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail=(
+            "Dieser Weg ist abgelöst. Die Zwei-Faktor-Authentifizierung wird "
+            "jetzt direkt über den Anmeldedienst eingerichtet."
+        ),
+    )
 
 
 @router.post("/totp/disable", response_model=AccountResponse)
@@ -568,3 +750,186 @@ def phone_verify(
         service.verify_phone_code(ctx, req.phone, req.code)
     except OtpError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Zwei-Faktor-Authentifizierung (AAL2) -----------------------------------
+#
+# Enrollment, Challenge und Verify der drei echten Faktoren (TOTP, SMS/Phone,
+# WebAuthn/Passkey) laufen DIREKT gegen GoTrue (/auth/v1/factors...). Sie sind
+# hier bewusst nicht gespiegelt: GoTrue kann sie nativ (live gegen
+# auth.factor_type geprueft), und ein zweiter Weg waere eine zweite Wahrheit
+# darueber, ob jemand einen zweiten Faktor hat.
+#
+# Hier liegt nur, was GoTrue NICHT kann: der Pflicht-/Statusblick, die
+# Wiederherstellungscodes und der Admin-Reset zur Aussperr-Rettung.
+
+
+@router.get("/mfa/status", response_model=MfaStatusResponse)
+def mfa_status(
+    ctx: CurrentUser, service: MfaServiceDep, settings: SettingsDep
+) -> MfaStatusResponse:
+    """Faktoren, Pflicht-Status und Rest-Wiederherstellungscodes des EIGENEN
+    Kontos. Nutzer ausschliesslich aus dem Token (Wurzel 3) — es gibt bewusst
+    keinen `user_id`-Parameter, der einen fremden Status ausliefern koennte."""
+    try:
+        faktoren = service.faktoren(ctx.user_id)
+        rolle = service.rolle_aus_db(ctx.user_id)
+        pflicht = service.pflicht_pruefen(ctx.user_id, rolle=rolle)
+        return MfaStatusResponse(
+            factors=[
+                MfaFactor(
+                    id=str(f.get("id")),
+                    factor_type=str(f.get("factor_type")),
+                    friendly_name=f.get("friendly_name"),
+                    status=str(f.get("status")),
+                    created_at=f.get("created_at"),
+                )
+                for f in faktoren
+            ],
+            aal=ctx.aal,
+            mfa_required=pflicht.pflichtig,
+            mfa_enrolled=pflicht.hat_faktor,
+            mfa_grace_until=(
+                pflicht.grace_until.isoformat() if pflicht.grace_until else None
+            ),
+            recovery_codes_left=service.codes_offen(ctx.user_id),
+            sms_available=settings.mfa_sms_available,
+        )
+    except MfaError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/mfa/recovery-codes", response_model=MfaRecoveryCodesResponse)
+def mfa_recovery_codes_neu(
+    req: MfaReauth,
+    ctx: CurrentUser,
+    service: MfaServiceDep,
+    account: AccountServiceDep,
+) -> MfaRecoveryCodesResponse:
+    """Wiederherstellungscodes neu erzeugen — ERSETZT alle bisherigen.
+
+    Sicherheitskritische Selbst-Aenderung → Re-Auth (Wurzel 7): entweder das
+    aktuelle Passwort oder ein bereits auf aal2 gehobenes Token. Ohne diese
+    Huerde koennte ein gekapertes aal1-Cookie sich selbst einen dauerhaften
+    Zweitschluessel ausstellen.
+
+    Die Codes stehen NUR in dieser Antwort — gespeichert wird der Hash.
+    """
+    _mfa_reauth(ctx, account, req)
+    try:
+        return MfaRecoveryCodesResponse(codes=service.codes_erzeugen(ctx.user_id))
+    except MfaError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/mfa/recovery-codes/redeem", status_code=status.HTTP_204_NO_CONTENT)
+def mfa_recovery_redeem(
+    req: MfaRecoveryRedeemRequest,
+    request: Request,
+    ctx: CurrentUser,
+    service: MfaServiceDep,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> None:
+    """Einen Wiederherstellungscode einloesen (Telefon verloren).
+
+    Einmalig: der Verbrauch ist ein atomarer DB-Claim, ein zweiter Versuch mit
+    demselben Code ist 401 (Wurzel 2). Liegt im strengen `mfa`-Rate-Limit-
+    Bucket, damit der Code-Raum nicht durchprobierbar ist (Wurzel 8).
+    """
+    try:
+        service.code_einloesen(
+            ctx.user_id, req.code, ip=_client_ip(request, settings)
+        )
+    except MfaError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/mfa/factors/{factor_id}", status_code=status.HTTP_204_NO_CONTENT)
+def mfa_faktor_entfernen(
+    factor_id: str,
+    req: MfaReauth,
+    ctx: CurrentUser,
+    service: MfaServiceDep,
+    account: AccountServiceDep,
+) -> None:
+    """Einen eigenen Faktor entfernen.
+
+    Wurzel 9: `factor_id` wird gegen die Faktor-Liste DIESES Nutzers geprueft —
+    ein fremder Faktor ist 404, nicht etwa loeschbar.
+
+    Aussperr-Schutz: Der letzte Faktor eines Pflicht-Kontos geht nur, wenn noch
+    Wiederherstellungscodes uebrig sind (sonst 409).
+    """
+    _mfa_reauth(ctx, account, req)
+    try:
+        service.faktor_entfernen_erlaubt(ctx.user_id, factor_id)
+        service.faktor_entfernen(ctx.user_id, factor_id)
+    except MfaError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+def _mfa_reauth(
+    ctx: AuthContext, account: AccountServiceDep, req: MfaReauth
+) -> None:
+    """Re-Auth-Huerde fuer sicherheitskritische 2FA-Aenderungen (Wurzel 7).
+
+    Zwei gleichwertige Nachweise:
+      - das aktuelle Passwort, oder
+      - ein Token, das bereits aal2 traegt (der zweite Faktor wurde in DIESER
+        Sitzung geloest).
+
+    Fail-CLOSED: liegt keines von beiden vor, ist es 401 — auch fuer reine
+    OAuth-Konten. Fuer die ist der aal2-Weg der vorgesehene, nicht eine
+    Ausnahme „ohne Passwort einfach durch" (das waere ein Fallback, Wurzel 4).
+    """
+    if ctx.aal == "aal2":
+        return
+    if req.current_password is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Aktuelles Passwort oder gelöster zweiter Faktor erforderlich.",
+        )
+    try:
+        account.passwort_pruefen(ctx, req.current_password)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/mfa/admin/reset", response_model=MfaAdminResetResponse)
+def mfa_admin_reset(
+    req: MfaAdminResetRequest,
+    request: Request,
+    platform_ctx: CurrentPlatformAdmin,
+    service: MfaServiceDep,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> MfaAdminResetResponse:
+    """Aussperr-Rettung: alle Faktoren eines FREMDEN Kontos zuruecksetzen.
+
+    Nur der Plattform-Admin (`CurrentPlatformAdmin` prueft bei jedem Request
+    frisch gegen public.platform_admins, nicht gegen das JWT). Schreibend →
+    require_platform_write, ein reiner Support-Account darf das nicht.
+
+    Der Eingriff ist der maechtigste im System — danach kommt jemand mit
+    blossem Passwort in ein fremdes Konto. Er wird deshalb IMMER auditiert
+    (`mfa_reset_audit`), und die Begruendung ist Pflicht. Schlaegt das Audit
+    fehl, schlaegt der ganze Aufruf fehl: ein Reset ohne Spur waere schlimmer
+    als kein Reset.
+    """
+    require_platform_write(platform_ctx)
+    try:
+        entfernt = service.faktoren_zuruecksetzen(req.user_id)
+        service.reset_auditieren(
+            actor_user_id=platform_ctx.user_id,
+            actor_email=platform_ctx.email,
+            target_user_id=req.user_id,
+            target_email=service.email_von(req.user_id),
+            entfernt=entfernt,
+            reason=req.reason,
+            ip=_client_ip(request, settings),
+            user_agent=_client_user_agent(request),
+        )
+    except MfaError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return MfaAdminResetResponse(
+        removed_factors=len(entfernt), target_user_id=req.user_id
+    )

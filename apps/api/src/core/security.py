@@ -12,7 +12,7 @@ from functools import lru_cache
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from jwt import PyJWKClient
 from jwt.exceptions import PyJWKClientConnectionError
 from pydantic import BaseModel
@@ -39,6 +39,11 @@ class AuthContext(BaseModel):
     # Endpunkten, die AKTUELLE Sitzung zu erkennen (z. B. „auf allen anderen
     # Geräten abmelden" ohne sich selbst auszusperren). Bei API-Client-Tokens None.
     session_id: str | None = None
+    # Authenticator Assurance Level dieses Tokens, direkt aus dem GoTrue-Claim
+    # `aal` (aal1 = nur Passwort/OAuth, aal2 = zweiter Faktor geloest). Fehlt
+    # der Claim, steht hier "aal1" — die restriktivere Annahme, nie "aal2"
+    # (Wurzel 4/5: kein Fallback auf den bequemen Wert).
+    aal: str = "aal1"
     # Nur gesetzt, wenn der Request über einen Entwickler-API-Token kommt
     # (Client-Credentials), nicht über ein Supabase-Login-Token. Erlaubt den
     # Endpunkten, Scope + Objekt-Beschränkung des API-Clients durchzusetzen
@@ -145,6 +150,7 @@ def decode_token(token: str, settings: Settings) -> dict[str, object]:
 
 
 def get_current_user(
+    request: Request,
     settings: Annotated[Settings, Depends(get_settings)],
     authorization: Annotated[str | None, Header()] = None,
 ) -> AuthContext:
@@ -165,12 +171,44 @@ def get_current_user(
     tenant = app_meta.get("tenant_id") if isinstance(app_meta, dict) else None
     role = app_meta.get("role") if isinstance(app_meta, dict) else None
     session_id = claims.get("session_id")
-    return AuthContext(
+    # GoTrue setzt `aal` auf aal1/aal2 (live gegen auth.aal_level geprueft).
+    # Fehlt der Claim, gilt aal1 — das ist KEIN Fallback auf einen Wunschwert,
+    # sondern die restriktivere Annahme (Wurzel 5, fail-closed).
+    aal = claims.get("aal")
+    ctx = AuthContext(
         user_id=sub,
         tenant_id=tenant if isinstance(tenant, str) else None,
         role=role if isinstance(role, str) else None,
         session_id=session_id if isinstance(session_id, str) else None,
+        aal=aal if isinstance(aal, str) else "aal1",
     )
+    _mfa_gate(request, ctx)
+    return ctx
+
+
+def _mfa_gate(request: Request, ctx: AuthContext) -> None:
+    """Der AAL2-Riegel — die Stelle, an der Wurzel 7 wirklich greift.
+
+    Diese Pruefung sitzt bewusst HIER und nicht in `/api/v1/auth/login`: Der
+    direkte GoTrue-Login (`POST /auth/v1/token` mit dem oeffentlichen anon-Key)
+    umgeht jede App-Route und liefert ein voll gueltiges Token. Eine 2FA im
+    eigenen Login-Endpunkt haette einen Angreifer nie beruehrt. Geprueft wird
+    deshalb das TOKEN — egal wo es herkommt, es muss an dieser Stelle vorbei,
+    weil jeder geschuetzte Endpunkt ueber `get_current_user` laeuft.
+
+    Drei Faelle, alle fail-closed:
+      1. `aal2`                       → durch.
+      2. `aal1` + verifizierte Faktoren → 401, der Faktor ist zu loesen.
+         (Genau der Angriff: Direkt-Login mit Passwort allein.)
+      3. `aal1` + Pflichtrolle ohne Faktor → 401 nach Ablauf der Frist,
+         waehrend der Frist durch mit Aufforderungs-Header.
+
+    Der Import liegt in der Funktion, weil `features.auth` seinerseits
+    `core.security` importiert — ein Modul-Import waere ein Zirkel.
+    """
+    from src.features.auth.mfa_gate import mfa_zugang_pruefen  # noqa: PLC0415
+
+    mfa_zugang_pruefen(request, ctx)
 
 
 CurrentUser = Annotated[AuthContext, Depends(get_current_user)]
@@ -251,6 +289,7 @@ class PlatformContext(BaseModel):
 
 
 def get_current_platform_admin(
+    request: Request,
     settings: Annotated[Settings, Depends(get_settings)],
     authorization: Annotated[str | None, Header()] = None,
 ) -> PlatformContext:
@@ -308,6 +347,30 @@ def get_current_platform_admin(
 
     email = claims.get("email")
     session_id = claims.get("session_id")
+
+    # AAL2 auch hier — und zwar NACH der platform_admins-Prüfung, damit ein
+    # Fremder aus der Antwort nicht ablesen kann, wer Backoffice-Zugang hat.
+    #
+    # Dieser Guard ist ein EIGENER Einstieg, der `get_current_user` nicht
+    # aufruft: ohne diesen Aufruf wäre ausgerechnet das mächtigste Konto der
+    # Plattform (mandantenübergreifender Lesezugriff, Freigaben, Sperren) das
+    # einzige ohne Zweitfaktor-Zwang gewesen. Ein per Direkt-Login erbeutetes
+    # aal1-Token hätte das komplette Backoffice geöffnet.
+    #
+    # Bewusst über denselben Riegel wie alle anderen: die Rolle für die
+    # PFLICHT kommt aus public.users (ein Plattform-Admin ist dort in aller
+    # Regel admin) — hier wird nichts dupliziert, nur derselbe Guard erneut
+    # angewandt (Wurzel 7).
+    _mfa_gate(
+        request,
+        AuthContext(
+            user_id=sub,
+            role=None,
+            session_id=session_id if isinstance(session_id, str) else None,
+            aal=claims.get("aal") if isinstance(claims.get("aal"), str) else "aal1",
+        ),
+    )
+
     return PlatformContext(
         user_id=sub,
         email=email.lower() if isinstance(email, str) and email else None,

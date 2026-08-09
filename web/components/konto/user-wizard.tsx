@@ -3,12 +3,21 @@
 // Benutzer-Wizard („Benutzer erstellen"): Sheet von rechts, 4 Schritte
 // mit Fortschrittsanzeige. Schritt 1 Kontakt, 2 Zusatzinfos, 3 Rolle+Rechte,
 // 4 Objektzuweisung. Beim Erstellen wird der Nutzer mit Rolle + Berechtigungen
-// über /auth/invite angelegt; ein Sofort-Passwort wird generiert und angezeigt.
+// über /auth/invite angelegt; der Server verschickt eine Einladungs-Mail, der
+// Eingeladene setzt sein Passwort SELBST unter /einladung?token=…
+//
+// Früher erzeugte diese Datei clientseitig ein Passwort (`Nd-` + 14 Zeichen),
+// schickte es mit und zeigte es im Erfolgs-Schritt im Klartext an. Das ist
+// ersatzlos entfallen: ein Passwort, das der Betreiber kennt und per Chat
+// weitergibt, ist kein Geheimnis des Nutzers mehr. Kein Klartext-Passwort
+// erreicht das Frontend — weder erzeugt noch angezeigt.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { useLanguageOptions } from "@/lib/use-language-options";
 import { useEffect, useState } from "react";
+
+import { toast } from "sonner";
 
 import {
   inviteUser,
@@ -16,6 +25,7 @@ import {
   setStaffProperties,
 } from "@/lib/account";
 import type { UserRole } from "@/lib/account";
+import { einladungErneutSenden } from "@/lib/einladung";
 import { listProperties, type Property } from "@/lib/properties";
 import { Button } from "@nextdays/ui/button";
 import { Checkbox } from "@nextdays/ui/checkbox";
@@ -38,6 +48,7 @@ import {
 } from "@nextdays/ui/sheet";
 import { cn } from "@/lib/utils";
 
+import { SprachAuswahl } from "@/components/sprache-auswahl";
 import { PermissionGroups } from "./permission-groups";
 import {
   ROLE_DEFAULT_PERMISSIONS,
@@ -46,6 +57,15 @@ import {
 } from "./user-wizard-data";
 
 export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
+  const t = useTranslations("account");
+  // Vorbelegung der E-Mail-Sprache: die Sprache, in der der Betreiber GERADE
+  // arbeitet — nicht hart „de". Recherche (Smashing Magazine, Clay/Liferay):
+  // stille, überschreibbare Vorbelegung statt Pflichtauswahl aus dem Nichts.
+  // Der Betreiber legt den Nutzer meist in seinem eigenen Sprachraum an, und
+  // die Vorbelegung steht sichtbar im Feld — sie wird also bewusst bestätigt
+  // oder geändert. Ein leeres Pflichtfeld würde hier nur einen Klick erzwingen,
+  // ohne dass der Betreiber mehr weiß.
+  const uiLocale = useLocale();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
@@ -54,8 +74,8 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [hidePhones, setHidePhones] = useState(false);
-  // Schritt 2
-  const [language, setLanguage] = useState("de");
+  // Schritt 2 — `language` = Sprache der E-Mails an DIESEN Nutzer.
+  const [language, setLanguage] = useState(uiLocale);
   const [spoken, setSpoken] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   // Schritt 3
@@ -67,14 +87,17 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
   // Anlegen
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [created, setCreated] = useState<{ email: string; password: string } | null>(
-    null,
-  );
+  // Nach dem Anlegen: an WEN die Einladung ging und WELCHE user_id sie trägt
+  // (letztere braucht der „Erneut senden"-Knopf). Kein Passwort.
+  const [created, setCreated] = useState<{
+    email: string;
+    userId: string;
+  } | null>(null);
 
   const reset = () => {
     setStep(0);
     setFirstName(""); setLastName(""); setEmail(""); setHidePhones(false);
-    setLanguage("de"); setSpoken([]); setNotes("");
+    setLanguage(uiLocale); setSpoken([]); setNotes("");
     setRole(""); setPerms(new Set());
     setSelectedProps(new Set());
     setSubmitting(false); setError(null); setCreated(null);
@@ -100,29 +123,23 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
   const next = () => setStep((s) => Math.min(s + 1, last));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
-  // Sofort-Passwort generieren (wie im Admin-Bereich): Nd- + 14 Zeichen.
-  const genPassword = () => {
-    const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    const a = new Uint8Array(14);
-    crypto.getRandomValues(a);
-    return "Nd-" + Array.from(a, (n) => chars[n % chars.length]).join("");
-  };
-
   const submit = async () => {
     setError(null);
     const fullName = `${firstName} ${lastName}`.trim();
     if (!fullName || !email || !role) {
-      setError("Vorname, Nachname, E-Mail und Rolle sind erforderlich.");
+      setError(t("userWizard.requiredFields"));
       return;
     }
-    const password = genPassword();
     setSubmitting(true);
+    // Kein `password` im Request — der Server legt den Zugang an und lädt per
+    // Mail ein (siehe Kopf). `preferred_language` steuert die Sprache der
+    // Einladungs- und aller weiteren Mails an diesen Nutzer.
     const res = await inviteUser({
       email,
-      password,
       full_name: fullName,
       role: role as UserRole,
       permissions: [...perms],
+      preferred_language: language,
     });
     if (!res.ok) {
       setSubmitting(false);
@@ -142,14 +159,14 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
       if (!assignRes.ok) {
         setSubmitting(false);
         setError(
-          `Nutzer angelegt, aber Objektzuweisung fehlgeschlagen: ${assignRes.error}`,
+          t("userWizard.assignFailed", { reason: assignRes.error }),
         );
-        setCreated({ email, password });
+        setCreated({ email, userId: res.data.user_id });
         return;
       }
     }
     setSubmitting(false);
-    setCreated({ email, password });
+    setCreated({ email, userId: res.data.user_id });
   };
 
   const togglePerm = (id: string) =>
@@ -181,17 +198,19 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
       >
         <SheetHeader className="border-b">
           <SheetTitle className="font-display text-lg font-extrabold">
-            Benutzer erstellen
+            {t("userWizard.title")}
           </SheetTitle>
           <p className="text-sm text-muted-foreground">
-            {created ? "Benutzer wurde angelegt." : STEP_HINTS[step]}
+            {created
+              ? t("userWizard.createdSubtitle")
+              : t(`userWizard.stepHints.${STEP_HINT_KEYS[step]}`)}
           </p>
           {!created && <Stepper current={step} />}
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto p-4">
           {created ? (
-            <StepSuccess email={created.email} password={created.password} />
+            <StepSuccess email={created.email} userId={created.userId} />
           ) : (
             <>
               {step === 0 && (
@@ -242,7 +261,7 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
         <SheetFooter className="flex-row gap-2 border-t">
           {created ? (
             <Button type="button" className="flex-1" onClick={() => setOpen(false)}>
-              Fertig
+              {t("userWizard.done")}
             </Button>
           ) : (
             <>
@@ -253,7 +272,7 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
                 disabled={submitting}
                 onClick={() => (step === 0 ? setOpen(false) : back())}
               >
-                {step === 0 ? "Abbrechen" : "Zurück"}
+                {step === 0 ? t("userWizard.cancel") : t("userWizard.back")}
               </Button>
               <Button
                 type="button"
@@ -261,7 +280,11 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
                 disabled={submitting}
                 onClick={() => (step === last ? submit() : next())}
               >
-                {step === last ? (submitting ? "Wird erstellt…" : "Erstellen") : "Weiter"}
+                {step === last
+                  ? submitting
+                    ? t("userWizard.creating")
+                    : t("userWizard.create")
+                  : t("userWizard.next")}
               </Button>
             </>
           )}
@@ -271,12 +294,9 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
   );
 }
 
-const STEP_HINTS = [
-  "Fügen Sie die Kontaktinformationen dieses Benutzers hinzu.",
-  "Fügen Sie zusätzliche Informationen über diesen Benutzer hinzu.",
-  "Wählen Sie die Rolle und die Berechtigungen für diesen Benutzer aus.",
-  "Weisen Sie diesem Benutzer Objekte zu.",
-];
+// Schlüssel der Schritt-Hinweise (Reihenfolge = Schrittfolge). Die Texte
+// stehen in den Sprachdateien unter account.userWizard.stepHints.*.
+const STEP_HINT_KEYS = ["contact", "extra", "role", "properties"] as const;
 
 function Stepper({ current }: { current: number }) {
   return (
@@ -348,7 +368,7 @@ function StepContact(p: {
           checked={p.hidePhones}
           onCheckedChange={(v) => p.setHidePhones(Boolean(v))}
         />
-        Telefonnummern auf der Website ausblenden.
+        {t("userWizard.hidePhones")}
       </label>
     </div>
   );
@@ -378,7 +398,6 @@ function StepExtra(p: {
   notes: string; setNotes: (v: string) => void;
 }) {
   const t = useTranslations("account");
-  const tCommon = useTranslations("common");
   const sprachen = useLanguageOptions();
   const [search, setSearch] = useState("");
 
@@ -395,21 +414,18 @@ function StepExtra(p: {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="w-lang">
-          {t("userWizard.preferredLanguage")} <span className="text-destructive">*</span>
-        </Label>
-        <Select value={p.language} onValueChange={p.setLanguage}>
-          <SelectTrigger id="w-lang">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="de">{tCommon("languages.de")}</SelectItem>
-            <SelectItem value="da">{tCommon("languages.da")}</SelectItem>
-            <SelectItem value="en">{tCommon("languages.en")}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Sprache der E-Mails an diesen Nutzer. Bis hier stand ein Select mit
+          drei fest verdrahteten Sprachen (de/da/en) — bei 24 Amtssprachen und
+          Eigentümern aus aller Welt war das eine Sackgasse. Jetzt die geteilte
+          <SprachAuswahl> über alle 24 Locales. */}
+      <SprachAuswahl
+        id="w-lang"
+        value={p.language}
+        onChange={p.setLanguage}
+        label={t("userWizard.preferredLanguage")}
+        hint={t("userWizard.preferredLanguageHint")}
+        required
+      />
 
       <div className="flex flex-col gap-1.5">
         <Label>{t("userWizard.spokenLanguages")}</Label>
@@ -489,7 +505,7 @@ function StepRole(p: {
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="w-role">
-          Rolle <span className="text-destructive">*</span>
+          {t("userWizard.role")} <span className="text-destructive">*</span>
         </Label>
         <Select value={p.role} onValueChange={p.setRole}>
           <SelectTrigger id="w-role">
@@ -522,17 +538,18 @@ function StepProperties({
   selected: Set<string>;
   onToggle: (id: string, on: boolean) => void;
 }) {
+  const t = useTranslations("account");
+
   // Rollen ohne Objektbezug (admin/co_admin) brauchen keine Zuweisung.
   if (!roleNeedsProperties) {
     return (
       <div className="flex flex-col items-center gap-3 py-12 text-center">
         <Icon icon="ph:shield-check" className="size-10 text-muted-foreground" />
         <p className="font-display text-lg font-extrabold">
-          Keine Objektzuweisung nötig
+          {t("userWizard.noAssignNeeded")}
         </p>
         <p className="max-w-xs text-sm text-muted-foreground">
-          Diese Rolle hat Zugriff auf alle Objekte des Kontos. Eine Zuweisung
-          einzelner Objekte gilt nur für Eigentümer und Mitarbeiter.
+          {t("userWizard.noAssignNeededHint")}
         </p>
       </div>
     );
@@ -549,11 +566,10 @@ function StepProperties({
           className="h-32 w-auto"
         />
         <p className="font-display text-lg font-extrabold">
-          Noch keine Unterkünfte
+          {t("userWizard.noProperties")}
         </p>
         <p className="text-sm text-muted-foreground">
-          Erstellen Sie Ihre Unterkünfte, damit Sie sie später Ihren Benutzern
-          zuweisen können.
+          {t("userWizard.noPropertiesHint")}
         </p>
       </div>
     );
@@ -562,7 +578,7 @@ function StepProperties({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-muted-foreground">
-        Wählen Sie die Objekte, auf die dieser Benutzer Zugriff erhält.
+        {t("userWizard.choosePropertiesHint")}
       </p>
       <ul className="flex flex-col gap-1">
         {properties.map((p) => (
@@ -583,46 +599,67 @@ function StepProperties({
         ))}
       </ul>
       <span className="text-xs text-muted-foreground">
-        {selected.size} ausgewählt
+        {t("userWizard.selectedCount", { count: selected.size })}
       </span>
     </div>
   );
 }
 
-/* ---------- Erfolg: Zugangsdaten ---------- */
-function StepSuccess({ email, password }: { email: string; password: string }) {
+/* ---------- Erfolg: Einladung verschickt ----------
+ * Zeigt bewusst NUR die Adresse, an die eingeladen wurde. Kein Passwort — es
+ * gibt keins mehr, das der Betreiber kennen könnte.
+ *
+ * Der „Erneut senden"-Knopf sitzt zusätzlich hier, weil ein Mailproblem
+ * meistens SOFORT auffällt („ist nichts angekommen?") und der Betreiber dann
+ * noch im Wizard steht. Der reguläre Platz für den Fall „Tage später" ist die
+ * Nutzerliste (`user-list.tsx`) — beide rufen dieselbe Aktion. */
+function StepSuccess({ email, userId }: { email: string; userId: string }) {
   const t = useTranslations("account");
+  const [sending, setSending] = useState(false);
+
+  async function resend() {
+    setSending(true);
+    const res = await einladungErneutSenden(userId);
+    setSending(false);
+    if (res.ok) toast.success(t("userWizard.inviteResent"));
+    else toast.error(res.error || t("userWizard.inviteResendFailed"));
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col items-center gap-2 py-4 text-center">
         <span className="flex size-12 items-center justify-center rounded-full bg-accent/10">
-          <Icon icon="ph:check-circle" className="size-7 text-accent" />
+          <Icon icon="ph:paper-plane-tilt" className="size-7 text-accent" />
         </span>
-        <p className="font-display text-lg font-extrabold">{t("userWizard.userCreated")}</p>
+        <p className="font-display text-lg font-extrabold">
+          {t("userWizard.inviteSent")}
+        </p>
         <p className="text-sm text-muted-foreground">
-          {t("userWizard.credentialsHint")}
+          {t("userWizard.inviteSentHint")}
         </p>
       </div>
-      <div className="flex flex-col gap-2 rounded-(--radius) border border-input p-3">
-        <Field label={t("userWizard.email")} value={email} />
-        <Field label={t("userWizard.password")} value={password} mono />
-      </div>
-    </div>
-  );
-}
 
-function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <code
-        className={cn(
-          "select-all rounded bg-secondary px-2 py-1 text-sm",
-          mono && "font-mono",
-        )}
+      <div className="flex flex-col gap-2 rounded-(--radius) border border-input p-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">
+            {t("userWizard.email")}
+          </span>
+          <code className="select-all rounded bg-secondary px-2 py-1 text-sm">
+            {email}
+          </code>
+        </div>
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        disabled={sending}
+        onClick={resend}
+        className="gap-2"
       >
-        {value}
-      </code>
+        <Icon icon="ph:envelope-simple" className="size-4" aria-hidden />
+        {sending ? t("userWizard.inviteResending") : t("userWizard.inviteResend")}
+      </Button>
     </div>
   );
 }

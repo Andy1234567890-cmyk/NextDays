@@ -4,18 +4,22 @@
 // Ruft die Server-Action login() (→ FastAPI /auth/login). Bei Erfolg ins Dashboard.
 import { Icon } from "@iconify/react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Logo } from "@/components/logo";
+import { SprachUmschalter } from "@/components/auth/sprach-umschalter";
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
-import { login, loginTotp } from "@/lib/auth";
+import { ZweiterFaktorSchritt } from "@/components/auth/zweiter-faktor-schritt";
+import { login } from "@/lib/auth";
 import { signInWithProvider } from "@/lib/oauth-login";
 
 export default function LoginPage() {
+  const t = useTranslations("login");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,10 +27,14 @@ export default function LoginPage() {
   const [stay, setStay] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // 2FA-Schritt: sobald mfaToken gesetzt ist, fragt das Formular den Code ab
-  // statt E-Mail/Passwort. Der Token ist kurzlebig und nur zum Code-Einlösen.
-  const [mfaToken, setMfaToken] = useState<string | null>(null);
-  const [code, setCode] = useState("");
+  // 2FA-Schritt aktiv? Seit 0341 gibt es KEINEN mfa_token mehr — die aal1-
+  // Session aus dem Passwort-Schritt liegt bereits in den Cookies und trägt
+  // die Challenge.
+  const [mfaOffen, setMfaOffen] = useState(false);
+  // Welche zweiten Faktoren das Konto hat (vom Server, nicht geraten) und die
+  // maskierte SMS-Nummer fuer die Anzeige.
+  const [mfaMethods, setMfaMethods] = useState<string[]>([]);
+  const [mfaPhone, setMfaPhone] = useState<string | null>(null);
 
   function goDashboard() {
     // Andy begruesst im Dashboard selbst — dort liegt eine gueltige
@@ -42,25 +50,12 @@ export default function LoginPage() {
 
     const res = await login(email, password);
     if ("mfaRequired" in res && res.mfaRequired) {
-      setMfaToken(res.mfaToken);
+      setMfaOffen(true);
+      setMfaMethods(res.mfaMethods);
+      setMfaPhone(res.mfaPhoneMasked);
       setLoading(false);
       return;
     }
-    if (res.ok) {
-      goDashboard();
-    } else {
-      setError(res.error);
-      setLoading(false);
-    }
-  }
-
-  async function onSubmitCode(e: React.FormEvent) {
-    e.preventDefault();
-    if (!mfaToken) return;
-    setLoading(true);
-    setError(null);
-
-    const res = await loginTotp(mfaToken, code.trim());
     if (res.ok) {
       goDashboard();
     } else {
@@ -73,67 +68,34 @@ export default function LoginPage() {
     <main className="grid min-h-screen lg:grid-cols-2">
       {/* Linke Spalte: Formular */}
       <div className="flex flex-col px-6 py-8 lg:px-16">
-        <Logo heightRem={1.75} />
+        {/* Kopfzeile: Logo links, Sprachumschalter rechts — wie in AuthSchale.
+            Die Anmeldung hat keinen Token, ihre Sprache kommt aus dem Browser;
+            der Umschalter ist die Korrektur, wenn das danebenliegt. */}
+        <div className="flex items-center justify-between gap-4">
+          <Logo heightRem={1.75} />
+          <SprachUmschalter />
+        </div>
 
         <div className="flex flex-1 items-center justify-center">
-          {mfaToken ? (
-            <form
-              onSubmit={onSubmitCode}
-              className="flex w-full max-w-sm flex-col gap-5"
-            >
-              <h1 className="text-center font-display text-3xl font-extrabold">
-                Bestätigung
-              </h1>
-              <p className="text-center text-sm text-muted-foreground">
-                Gib den 6-stelligen Code aus deiner Authenticator-App ein.
-                Alternativ funktioniert ein Wiederherstellungscode.
-              </p>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="code">
-                  Code <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="code"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  required
-                  autoFocus
-                  placeholder="123456"
-                />
-              </div>
-
-              {error && (
-                <p className="text-sm text-destructive" role="alert">
-                  {error}
-                </p>
-              )}
-
-              <Button type="submit" disabled={loading}>
-                {loading ? "Prüfe…" : "Bestätigen"}
-              </Button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setMfaToken(null);
-                  setCode("");
-                  setError(null);
-                }}
-                className="text-center text-sm font-medium text-accent hover:underline"
-              >
-                Zurück zur Anmeldung
-              </button>
-            </form>
+          {mfaOffen ? (
+            <ZweiterFaktorSchritt
+              methods={mfaMethods}
+              phoneMasked={mfaPhone}
+              onErfolg={goDashboard}
+              onAbbruch={() => {
+                setMfaOffen(false);
+                setMfaMethods([]);
+                setMfaPhone(null);
+                setError(null);
+              }}
+            />
           ) : (
           <form
             onSubmit={onSubmit}
             className="flex w-full max-w-sm flex-col gap-5"
           >
             <h1 className="text-center font-display text-3xl font-extrabold">
-              Anmelden
+              {t("title")}
             </h1>
 
             {/* Social-Login via Supabase OAuth (Apple folgt, sobald konfiguriert) */}
@@ -145,17 +107,17 @@ export default function LoginPage() {
                 onClick={() => signInWithProvider("google")}
               >
                 <Icon icon="logos:google-icon" className="size-4" />
-                Google
+                {t("google")}
               </Button>
               <Button type="button" variant="outline" className="gap-2" disabled>
                 <Icon icon="ph:apple-logo-fill" className="size-4" />
-                Apple
+                {t("apple")}
               </Button>
             </div>
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email">
-                E-Mail <span className="text-destructive">*</span>
+                {t("emailLabel")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="email"
@@ -169,7 +131,7 @@ export default function LoginPage() {
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="password">
-                Passwort <span className="text-destructive">*</span>
+                {t("passwordLabel")} <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
                 <Input
@@ -184,7 +146,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
-                  aria-label={showPw ? "Passwort verbergen" : "Passwort anzeigen"}
+                  aria-label={showPw ? t("hidePassword") : t("showPassword")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <Icon
@@ -197,10 +159,10 @@ export default function LoginPage() {
 
             <div className="flex justify-end">
               <Link
-                href="#"
+                href="/passwort-vergessen"
                 className="text-sm font-medium text-accent hover:underline"
               >
-                Passwort vergessen?
+                {t("forgot")}
               </Link>
             </div>
 
@@ -211,7 +173,7 @@ export default function LoginPage() {
                 onChange={(e) => setStay(e.target.checked)}
                 className="size-4 rounded border-input"
               />
-              Eingeloggt bleiben
+              {t("stayLoggedIn")}
             </label>
 
             {error && (
@@ -221,16 +183,16 @@ export default function LoginPage() {
             )}
 
             <Button type="submit" disabled={loading}>
-              {loading ? "Anmelden…" : "Anmelden"}
+              {loading ? t("submitting") : t("submit")}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Noch kein myNextDays-Kunde?{" "}
+              {t("noAccount")}{" "}
               <Link
                 href="/signup"
                 className="font-medium text-accent hover:underline"
               >
-                Jetzt kostenlos testen
+                {t("signupLink")}
               </Link>
             </p>
           </form>

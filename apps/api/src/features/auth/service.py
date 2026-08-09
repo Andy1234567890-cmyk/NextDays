@@ -5,6 +5,7 @@ ins JWT app_metadata (Quelle der Wahrheit für RLS). Bricht ein Schritt ab,
 werden bereits angelegte Artefakte zurückgerollt — kein verwaister Tenant,
 kein stilles Schlucken von Fehlern (PROJECT.md).
 """
+import secrets
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -20,6 +21,7 @@ from src.core.logging import get_logger, mask_email
 from src.core.security import AuthContext
 from src.core.supabase import make_anon_client_with_user_agent
 
+from .einladung_service import EinladungError, EinladungService
 from .granular_permissions import (
     Permission,
     default_permissions_for,
@@ -74,11 +76,19 @@ class AuthError(Exception):
 class AuthService:
     slice_name = "auth"
 
-    def __init__(self, anon_client: Client, service_client: Client) -> None:
+    def __init__(
+        self,
+        anon_client: Client,
+        service_client: Client,
+        einladungen: EinladungService | None = None,
+    ) -> None:
         # anon: RLS-respektierende User-Calls (Login).
         # service: RLS-umgehende System-Calls (Tenant-/User-Anlage beim Register).
         self._anon = anon_client
         self._service = service_client
+        # Token-/Mail-Dienst der Einladung (0334). Injizierbar, damit Tests den
+        # Mailweg ersetzen können, ohne echte Mails zu verschicken.
+        self._einladung_service = einladungen
 
     def health(self) -> SliceHealth:
         return SliceHealth(slice=self.slice_name)
@@ -160,9 +170,21 @@ class AuthService:
         """Weiteren Nutzer (Mitarbeiter, Co-Admin, …) in den Tenant einladen.
 
         Legt Auth-User mit der gewünschten Rolle im BESTEHENDEN Tenant an —
-        kein neuer Tenant. Rollback des Auth-Users, falls die users-Row scheitert.
-        ``granter_id`` ist der einladende Nutzer: seine effektiven Rechte klemmen
-        die Vergabe (Wurzel 3, keine Privilege-Escalation)."""
+        kein neuer Tenant. ``granter_id`` ist der einladende Nutzer: seine
+        effektiven Rechte klemmen die Vergabe (Wurzel 3, keine
+        Privilege-Escalation).
+
+        Das Passwort kommt NICHT mehr vom Client (0334): der Auth-User entsteht
+        mit einem serverseitigen Zufallswert, den niemand kennt und der nirgends
+        ausgegeben oder geloggt wird. Gesetzt wird das echte Passwort von der
+        eingeladenen Person über den Einmal-Link aus der Mail.
+
+        ALLES-ODER-NICHTS (Wurzel 5): scheitert die users-Zeile ODER der
+        Mailversand, wird der Auth-User wieder gelöscht. Ein angelegter, aber
+        unerreichbarer Nutzer wäre ein stiller Teilerfolg — er belegt die
+        E-Mail-Adresse (ein zweiter Versuch liefe in „E-Mail bereits vergeben"),
+        taucht in Nutzerlisten auf und hat doch keinen Weg hinein. Lieber ein
+        klarer Fehler und ein sauberer zweiter Versuch."""
         if req.role is UserRole.admin:
             # Admin entsteht nur bei register (Tenant-Gründung). Einladbar sind
             # co_admin, owner (Hauseigentümer mit Daten-Split), staff, cleaner.
@@ -183,9 +205,12 @@ class AuthService:
                 req.permissions, req.role, granter=granter
             )
 
+        # Zufallspasswort, das niemand kennt — auch der einladende Admin nicht.
+        # 32 Byte aus dem CSPRNG; es dient nur dazu, das Konto anzulegen, und
+        # wird nie zurückgegeben, angezeigt oder geloggt.
         user_id = self._create_auth_user(
             email=req.email,
-            password=req.password,
+            password=SecretStr(secrets.token_urlsafe(32)),
             tenant_id=tenant_id,
             role=req.role,
         )
@@ -197,12 +222,34 @@ class AuthService:
                 email=req.email,
                 full_name=req.full_name,
                 permissions=permissions,
+                language=req.preferred_language,
             )
         except Exception:
             self._rollback_user(user_id)
             raise
+
+        # Einladungsmail. Schlägt sie fehl, wird die Anlage vollständig
+        # zurückgerollt (siehe Docstring) und der Fehler durchgereicht.
+        try:
+            self._einladungen().einladung_versenden(
+                user_id=user_id,
+                tenant_id=tenant_id,
+                email=req.email,
+                full_name=req.full_name,
+                eingeladen_von=granter_id,
+                betrieb=self._tenant_name(tenant_id),
+            )
+        except EinladungError as exc:
+            self._rollback_user_row(user_id)
+            self._rollback_user(user_id)
+            raise AuthError(exc.message, status_code=exc.status_code) from exc
+
         log.info(
-            "user_invited", tenant_id=tenant_id, role=req.role.value, email=req.email
+            "user_invited",
+            tenant_id=tenant_id,
+            role=req.role.value,
+            # Maskiert (DSGVO/CWE-532): der Klartext gehört nicht ins Log.
+            email=mask_email(req.email),
         )
         return InviteResponse(
             user_id=user_id,
@@ -211,6 +258,71 @@ class AuthService:
             tenant_id=tenant_id,
             permissions=permissions,
         )
+
+    def einladung_erneut_senden(self, ctx: AuthContext, user_id: str) -> None:
+        """Einladung erneut verschicken (die Mail kam nicht an).
+
+        Scope wie der List-Pfad (Wurzel 9): der Nutzer muss im EIGENEN Tenant
+        liegen, sonst 404 — ein Admin darf keine Einladung an einen fremden
+        Mandanten auslösen. Der alte Link wird dabei entwertet (Wurzel 1)."""
+        if not ctx.tenant_id:
+            raise AuthError("Kein Mandant im Token.", status_code=400)
+        rows = (
+            self._service.table("users")
+            .select("id, tenant_id, email, full_name")
+            .eq("id", user_id)
+            .eq("tenant_id", ctx.tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise AuthError("Nutzer nicht gefunden.", status_code=404)
+        zeile = rows[0]
+        if not zeile.get("email"):
+            raise AuthError(
+                "Zu diesem Nutzer ist keine E-Mail-Adresse hinterlegt.",
+                status_code=422,
+            )
+        try:
+            self._einladungen().einladung_erneut_senden(
+                user_id=user_id,
+                tenant_id=ctx.tenant_id,
+                email=zeile["email"],
+                full_name=zeile.get("full_name") or "",
+                eingeladen_von=ctx.user_id,
+                betrieb=self._tenant_name(ctx.tenant_id),
+            )
+        except EinladungError as exc:
+            raise AuthError(exc.message, status_code=exc.status_code) from exc
+
+    def _einladungen(self) -> EinladungService:
+        """Der Token-/Mail-Dienst (0334). Eigene Klasse, eigene Tabelle."""
+        if self._einladung_service is None:
+            self._einladung_service = EinladungService(service_client=self._service)
+        return self._einladung_service
+
+    def _tenant_name(self, tenant_id: str) -> str | None:
+        """Betriebsname für die Anrede in der Einladungsmail.
+
+        Fehlt er, bleibt die Mail ohne Betriebsnamen — sie ist dann etwas
+        unpersönlicher, aber korrekt. Ein erfundener Name wäre schlimmer
+        (Wurzel 4)."""
+        rows = (
+            self._service.table("tenants")
+            .select("name")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        return rows[0].get("name") if rows else None
+
+    def _rollback_user_row(self, user_id: str) -> None:
+        """users-Zeile nach einem gescheiterten Mailversand entfernen."""
+        try:
+            self._service.table("users").delete().eq("id", user_id).execute()
+        # Best-Effort-Rollback: jeder SDK-Fehler wird geloggt, nie verschluckt.
+        except Exception as exc:  # noqa: BLE001  pylint: disable=broad-exception-caught
+            log.error("rollback_user_row_failed", user_id=user_id, error=str(exc))
 
     def login(
         self, req: LoginRequest, user_agent: str | None = None
@@ -229,9 +341,27 @@ class AuthService:
         """
         session = self._sign_in(req.email, req.password, user_agent)
         user_id = session.user.id
+
+        # Hat der Nutzer einen NATIVEN GoTrue-Faktor (0341), ist dieser Weg
+        # nicht mehr zustaendig: Die Session, die wir hier ausstellen wuerden,
+        # traegt aal1 und wird vom zentralen Guard ohnehin abgewiesen. Der
+        # Client muss die Challenge direkt gegen GoTrue loesen
+        # (/auth/v1/factors/{id}/challenge + /verify) und bekommt von dort ein
+        # aal2-Token. Wir geben die Session trotzdem zurueck — sie ist gueltig
+        # genug, um die Faktor-Challenge zu fahren, und der Guard laesst mit
+        # ihr nur /auth/mfa/*, /auth/account und /auth/logout durch.
+        if self._hat_gotrue_faktor(user_id):
+            return LoginResponse(
+                session=self._to_session(session),
+                mfa_required=True,
+                mfa_methods=self._gotrue_faktor_typen(user_id),
+            )
+
         methods: list[str] = []
-        if self._totp_enabled(user_id):
-            methods.append("totp")
+        # BEWUSST kein `user_mfa` mehr (Wurzel 7): die alte App-2FA war ueber
+        # den GoTrue-Direktlogin umgehbar und erzeugte eine zweite Wahrheit
+        # darueber, ob ein Konto einen zweiten Faktor hat. Enrollment dafuer
+        # ist seit 0341 abgeschaltet (410); bestehende Zeilen wirken nicht mehr.
         phone = self._sms_2fa_phone(user_id)
         if phone:
             methods.append("sms")
@@ -358,6 +488,34 @@ class AuthService:
             refresh_token=res.session.refresh_token,
             expires_in=res.session.expires_in,
         )
+
+    def _hat_gotrue_faktor(self, user_id: str) -> bool:
+        """Hat der Nutzer einen VERIFIZIERTEN nativen Faktor (auth.mfa_factors)?
+
+        Fail-CLOSED (Wurzel 5): Laesst sich das nicht feststellen, gilt „ja" —
+        dann fuehrt der Login in den Faktor-Schritt statt eine Session
+        auszugeben, die der Guard hinterher ohnehin abweist. Ein „im Zweifel
+        nein" waere hier die gefaehrliche Richtung.
+        """
+        from .mfa_service import MfaError, MfaService
+
+        try:
+            return bool(MfaService(db=self._service).faktoren(user_id))
+        except MfaError:
+            log.warning("gotrue_faktor_status_unlesbar", user_id=user_id)
+            return True
+
+    def _gotrue_faktor_typen(self, user_id: str) -> list[str]:
+        """Die Typen der verifizierten Faktoren (totp/phone/webauthn) — rein
+        informativ fuer die Oberflaeche. Fehler hier duerfen den Login nicht
+        kippen, deshalb im Zweifel eine leere Liste."""
+        from .mfa_service import MfaError, MfaService
+
+        try:
+            faktoren = MfaService(db=self._service).faktoren(user_id)
+        except MfaError:
+            return []
+        return [str(f.get("factor_type")) for f in faktoren if f.get("factor_type")]
 
     def _totp_enabled(self, user_id: str) -> bool:
         row = self._mfa_row(user_id)
@@ -592,16 +750,18 @@ class AuthService:
             permissions=sorted(p.value for p in perms),
             accommodation_type=tenant_meta.get("accommodation_type"),
             account_type=tenant_meta.get("account_type"),
+            default_language=tenant_meta.get("default_language"),
         )
 
     def _tenant_meta(self, tenant_id: str | None) -> dict:
         # Mandanten-Metadaten in EINEM Abruf (0090 accommodation_type + 0180
-        # account_type) — steuert Navigation und Betriebsmodell/Billing.
+        # account_type + 0335 default_language) — steuert Navigation,
+        # Betriebsmodell/Billing und die Mail-Sprachkette.
         if not tenant_id:
             return {}
         row = (
             self._service.table("tenants")
-            .select("accommodation_type, account_type")
+            .select("accommodation_type, account_type, default_language")
             .eq("id", tenant_id)
             .limit(1)
             .execute()
@@ -620,6 +780,31 @@ class AuthService:
         res = (
             self._service.table("tenants")
             .update({"accommodation_type": value})
+            .eq("id", ctx.tenant_id)
+            .execute()
+        )
+        if not res.data:
+            raise AuthError("Mandant nicht gefunden.", status_code=404)
+        return self.me(ctx)
+
+    def set_default_language(
+        self, ctx: AuthContext, value: str | None
+    ) -> MeResponse:
+        """Standardsprache des Betriebs setzen (`tenants.default_language`).
+
+        Der Wert ist bereits durch `pruefe_sprache` im Schema normalisiert
+        („de-AT" → „de") oder auf None gefallen; ein nicht unterstützter Code
+        kam gar nicht bis hierher (422).
+
+        Wie `set_accommodation_type`: die Berechtigung (MANAGE_TENANT) prüft
+        der Router-Guard, hier wird nur der EIGENE Mandant beschrieben —
+        Service-Role umgeht RLS, der Tenant-Scope muss explizit sein (Wurzel 3).
+        """
+        if not ctx.tenant_id:
+            raise AuthError("Kein Mandant im Token.", status_code=400)
+        res = (
+            self._service.table("tenants")
+            .update({"default_language": value})
             .eq("id", ctx.tenant_id)
             .execute()
         )
@@ -688,17 +873,25 @@ class AuthService:
         email: str,
         full_name: str,
         permissions: list[str] | None = None,
+        language: str | None = None,
     ) -> None:
-        self._service.table("users").insert(
-            {
-                "id": user_id,
-                "tenant_id": tenant_id,
-                "role": role.value,
-                "email": email,
-                "full_name": full_name,
-                "permissions": permissions or [],
-            }
-        ).execute()
+        zeile: dict[str, object] = {
+            "id": user_id,
+            "tenant_id": tenant_id,
+            "role": role.value,
+            "email": email,
+            "full_name": full_name,
+            "permissions": permissions or [],
+        }
+        # NUR schreiben, wenn der Einladende die Sprache wirklich angegeben
+        # hat. Ein `"preferred_language": None` wäre zwar dasselbe Ergebnis,
+        # aber ein leeres Feld hier zu setzen hieße später, nicht mehr
+        # unterscheiden zu können zwischen „nicht erfasst" und „bewusst
+        # geleert" — und NULL ist genau die Stufe, an der die Fallback-Kette
+        # zur Betriebssprache weitergeht (core.mail_sprache).
+        if language:
+            zeile["preferred_language"] = language
+        self._service.table("users").insert(zeile).execute()
 
     def _rollback_tenant(self, tenant_id: str) -> None:
         try:

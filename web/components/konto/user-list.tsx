@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@nextdays/ui/dropdown-menu";
 import { type TenantUser, type UserRole, deleteManagedUser } from "@/lib/account";
+import { einladungErneutSenden } from "@/lib/einladung";
 
 import { OwnerPropertiesDialog } from "./owner-properties-dialog";
 import { StaffPropertiesDialog } from "./staff-properties-dialog";
@@ -49,6 +50,21 @@ export function UserList({ users }: { users: TenantUser[] }) {
   // Welcher Nutzer gerade bearbeitet wird (null = keiner).
   const [editing, setEditing] = useState<TenantUser | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Für welchen Nutzer gerade eine Einladung erneut verschickt wird.
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
+  async function handleResend(user: TenantUser) {
+    setResendingId(user.user_id);
+    const res = await einladungErneutSenden(user.user_id);
+    setResendingId(null);
+    // Die Adresse steht bewusst in der Meldung: der Betreiber soll sehen,
+    // wohin die Mail ging (Tippfehler sind die häufigste Ursache).
+    if (res.ok) {
+      toast.success(t("users.inviteResent", { email: user.email ?? "" }));
+    } else {
+      toast.error(res.error || t("users.inviteResendFailed"));
+    }
+  }
 
   async function handleDelete(user: TenantUser) {
     const label = user.full_name || user.email || "diesen Nutzer";
@@ -139,7 +155,23 @@ export function UserList({ users }: { users: TenantUser[] }) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onSelect={() => setEditing(user)}>
                     <Icon icon="ph:pencil-simple" />
-                    Bearbeiten
+                    {t("users.edit")}
+                  </DropdownMenuItem>
+                  {/* Einladung erneut senden (Mail kam nicht an).
+                      Steht bewusst bei JEDEM Nutzer und nicht nur bei den noch
+                      nicht aktivierten: `TenantUser` trägt heute kein Feld, an
+                      dem sich „noch nicht angenommen" ablesen ließe. Einen
+                      Aktivierungs-Status zu RATEN wäre eine erfundene Aussage
+                      (Wurzel 4). Liefert das Backend später ein solches Feld,
+                      gehört hier ein `user.accepted_at == null` davor.
+                      Ob erneut gesendet werden DARF, entscheidet ohnehin der
+                      Server (er lehnt einen bereits aktiven Zugang ab). */}
+                  <DropdownMenuItem
+                    disabled={resendingId === user.user_id}
+                    onSelect={() => void handleResend(user)}
+                  >
+                    <Icon icon="ph:envelope-simple" />
+                    {t("users.resendInvite")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -147,7 +179,7 @@ export function UserList({ users }: { users: TenantUser[] }) {
                     onSelect={() => void handleDelete(user)}
                   >
                     <Icon icon="ph:trash" />
-                    Löschen
+                    {t("users.delete")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

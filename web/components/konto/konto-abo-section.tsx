@@ -157,19 +157,15 @@ export function KontoAboSection() {
     void load();
   }, [load]);
 
-  // Realtime: Abo + Modul-Änderungen (Webhook schreibt) sofort spiegeln.
-  useRealtime({
-    table: "tenant_subscription",
-    filter: state?.tenantId ? `tenant_id=eq.${state.tenantId}` : undefined,
-    enabled: !!state?.tenantId,
-    onChange: () => void load(),
-  });
-  useRealtime({
-    table: "tenant_module_entitlement",
-    filter: state?.tenantId ? `tenant_id=eq.${state.tenantId}` : undefined,
-    enabled: !!state?.tenantId,
-    onChange: () => void load(),
-  });
+  // `tenant_subscription` und `tenant_module_entitlement` sind für
+  // authenticated bewusst gesperrt (Wurzel 6, Migration 0337: revoke + raus aus
+  // supabase_realtime) — Abos darauf wären stumme Attrappen. Eine offene
+  // Tabelle, die dieselben Ereignisse trägt, gibt es nicht: ein Abo-Wechsel
+  // oder ein gebuchtes/gekündigtes Modul schlägt sich in keiner Reservierung
+  // nieder. Ersatzlos gestrichen; ehrlich benannt, was dadurch NICHT mehr live
+  // ist: Abo-Status/Tarifwechsel und Modul-Buchungen — insbesondere die, die
+  // der Stripe-Webhook serverseitig schreibt, und die eines zweiten Nutzers.
+  // Beides erscheint erst beim nächsten Laden der Kontoseite.
   // commission_ledger ist für authenticated bewusst gesperrt (Wurzel 6) — ein Abo
   // darauf wäre eine stumme Attrappe. Provisionen entstehen aus Reservierungen,
   // deshalb hört die Abrechnung auf die erlaubte Quelle.

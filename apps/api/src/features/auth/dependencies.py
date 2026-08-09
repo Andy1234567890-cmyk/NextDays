@@ -8,7 +8,9 @@ from src.core.security import AuthContext, get_current_user
 from src.core.supabase import get_anon_client, get_service_client
 
 from .account_service import AccountService
+from .einladung_service import EinladungService
 from .granular_permissions import Permission, has_permission, has_pm_access
+from .mfa_service import MfaService
 from .otp_service import OtpService
 from .owner_assignment_service import OwnerAssignmentService
 from .permissions import Capability, has_capability, is_pm_capability
@@ -43,9 +45,23 @@ def get_otp_service() -> OtpService:
     return OtpService(db=get_service_client())
 
 
+def get_mfa_service() -> MfaService:
+    # Nur service_role: mfa_recovery_code/mfa_enforcement/mfa_reset_audit sind
+    # fuer anon/authenticated hart gesperrt (Wurzel 6, 0341).
+    return MfaService(db=get_service_client())
+
+
+def get_einladung_service() -> EinladungService:
+    # Nur service_role: `user_auth_tokens` ist für anon/authenticated hart
+    # gesperrt (Wurzel 6, 0334).
+    return EinladungService(service_client=get_service_client())
+
+
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 OtpServiceDep = Annotated[OtpService, Depends(get_otp_service)]
+MfaServiceDep = Annotated[MfaService, Depends(get_mfa_service)]
+EinladungServiceDep = Annotated[EinladungService, Depends(get_einladung_service)]
 OwnerAssignmentServiceDep = Annotated[
     OwnerAssignmentService, Depends(get_owner_assignment_service)
 ]

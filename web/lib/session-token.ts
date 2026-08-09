@@ -61,6 +61,50 @@ export async function currentTokenStreng(): Promise<string | null> {
   return tokenHolen(true);
 }
 
+/**
+ * Access- UND Refresh-Token der laufenden Sitzung.
+ *
+ * NUR für die 2FA-Einrichtung (lib/mfa.ts → lib/mfa-client.ts): GoTrue macht
+ * Enrollment/Verify der echten Faktoren im Browser und braucht dort eine echte
+ * Session (`supabase.auth.setSession`). Unsere Sitzung liegt in
+ * httpOnly-Cookies, an die JavaScript bewusst nicht herankommt — ohne diesen
+ * Weg könnte ein Cookie-Login-Nutzer gar keinen Faktor einrichten.
+ *
+ * Bewusst KEIN allgemeiner Helfer: wer nur ein Bearer-Token für einen
+ * FastAPI-Aufruf braucht, nimmt `currentToken()`. Das Refresh-Token hier
+ * herauszureichen ist die Ausnahme, nicht die Regel.
+ *
+ * `null`, wenn keine der beiden Token-Quellen etwas liefert. Bei reinen
+ * OAuth-Konten (Google) kommt die Session aus dem Supabase-Client, der im
+ * Browser ohnehin schon eine eigene Session hat.
+ */
+export async function sessionTokens(): Promise<{
+  access_token: string;
+  refresh_token: string;
+} | null> {
+  const jar = await cookies();
+  const refresh = jar.get(REFRESH)?.value;
+  const access = await tokenHolen(false);
+  if (access && refresh) return { access_token: access, refresh_token: refresh };
+
+  // OAuth-Welt (Google): dort führt der Supabase-Client die Session selbst.
+  try {
+    const supabase = await createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session?.access_token && session?.refresh_token) {
+      return {
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      };
+    }
+  } catch {
+    // Keine Supabase-Session — unten fail-closed mit null.
+  }
+  return null;
+}
+
 async function tokenHolen(streng: boolean): Promise<string | null> {
   const fromCookie = await readToken(ACCESS);
   if (fromCookie) return fromCookie;

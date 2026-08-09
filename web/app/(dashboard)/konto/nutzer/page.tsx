@@ -6,7 +6,6 @@ import { getTranslations } from "next-intl/server";
 
 import { UserWizard } from "@/components/konto/user-wizard";
 import { UserList } from "@/components/konto/user-list";
-import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Button } from "@nextdays/ui/button";
 import { listManagedUsers } from "@/lib/account";
 
@@ -30,7 +29,14 @@ export default async function NutzerPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <RealtimeRefresh tables={["users"]} />
+      {/* Kein Realtime mehr: `users` ist für authenticated bewusst gesperrt
+        (Wurzel 6, Migration 0337: revoke + raus aus supabase_realtime) — die
+        Tabelle trägt Rolle und Berechtigungen, sie darf gerade nicht offen
+        sein. Ein Abo darauf wäre eine stumme Attrappe, und eine offene
+        Tabelle mit demselben Ereignis gibt es nicht. Ehrlich benannt: ein
+        Benutzer, den ein ZWEITER Administrator anlegt, ändert oder entfernt,
+        erscheint hier erst beim nächsten Laden der Seite. Eigene Anlagen über
+        den Wizard bleiben sichtbar (die Seite lädt danach neu). */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="font-display text-xl font-extrabold">Benutzer</h2>

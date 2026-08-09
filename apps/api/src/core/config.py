@@ -61,6 +61,15 @@ class Settings(BaseSettings):
     rate_limit_default: str = "300/60"
     # Streng: Brute-Force-Schutz für Login/Register (pro IP).
     rate_limit_auth: str = "10/60"
+    # NOCH strenger: die öffentlichen Token-Vorgänge der Tenant-Nutzer (0334) —
+    # Einladung annehmen, Passwort vergessen, neues Passwort setzen. Härter als
+    # der Login-Bucket, weil ein Aufruf hier eine Mail an eine FREMDE Adresse
+    # auslösen bzw. einen Token durchprobieren kann und ein Treffer ein Passwort
+    # SETZT (nicht nur eines prüft). 5/60 reicht für jeden echten Nutzer bequem:
+    # man fordert einen Link an und löst ihn einmal ein. Die Sperrfrist je Konto
+    # im Dienst kommt zusätzlich obendrauf — sie schützt ein einzelnes Postfach
+    # auch vor einem Angreifer mit wechselnden IPs.
+    rate_limit_auth_public: str = "5/60"
     # Token-Erneuerung. BEWUSST NICHT im auth-Bucket: /auth/refresh ist kein
     # Credential-Rateweg (wer ein gültiges Refresh-Token hat, ist bereits
     # angemeldet — es gibt nichts zu erraten), wird aber von JEDER Sitzung
@@ -90,6 +99,13 @@ class Settings(BaseSettings):
     # könnte ein einzelner eingeloggter Nutzer erhebliche Kosten verursachen —
     # Wurzel 8 verlangt hier einen eigenen, strengen Bucket.
     rate_limit_ai: str = "20/60"
+    # AM STRENGSTEN: die 2FA-Verifikationspfade (Wurzel 8). Hier wird ein
+    # Geheimnis GEPRUEFT — ein Wiederherstellungscode bzw. ein zweiter Faktor.
+    # Der Default-Bucket (300/60) erlaubte 300 Rateversuche je Minute; das ist
+    # der Unterschied zwischen „nicht durchprobierbar" und „durchprobierbar".
+    # 5/60 reicht fuer jeden echten Nutzer bequem (man tippt einen Code einmal
+    # ab, notfalls mit einem Vertipper) und macht Bruteforce sinnlos.
+    rate_limit_mfa: str = "5/60"
 
     # Öffentlicher Support-Chat der Marketing-Seite (ohne Login). 20 Aufrufe je
     # Minute und IP reichen für eine tippende Person samt Verlaufs-Abrufen und
@@ -119,6 +135,23 @@ class Settings(BaseSettings):
     twilio_account_sid: str = ""              # AC… (kein Geheimnis i.e.S.)
     twilio_auth_token: SecretStr = SecretStr("")
     twilio_from_number: str = ""              # Twilio-Absendernummer (E.164)
+    # Ist der SMS-Faktor (GoTrue `factor_type: phone`) auf DIESEM Server
+    # wirklich nutzbar? Getrennt von den Twilio-Werten oben, weil das ZWEI
+    # verschiedene Systeme sind: die Werte oben versorgen den EIGENEN OTP-Weg
+    # der FastAPI, der Faktor laeuft dagegen in GoTrue mit dessen eigener
+    # `GOTRUE_SMS_*`-Konfiguration (Wurzel 7). Aus den Twilio-Werten der API
+    # laesst sich deshalb NICHT ableiten, ob GoTrue senden kann.
+    #
+    # Zusaetzlich haengt die Nutzbarkeit nicht nur an der Konfiguration,
+    # sondern am Twilio-Konto: ein Trial-Konto sendet ausschliesslich an zuvor
+    # in der Twilio-Konsole verifizierte Nummern (Fehler 21608) — hoechstens
+    # fuenf. Ein Kunde kann seine eigene Nummer dort nicht eintragen, der
+    # Faktor waere fuer ihn also eine Sackgasse. Darum ist das ein
+    # ausdruecklicher Schalter und keine Ableitung: Er geht erst auf `true`,
+    # wenn das Konto aufgewertet ist UND GoTrue die `GOTRUE_SMS_*`-Werte hat.
+    # Default false = die Oberflaeche weist den Weg ehrlich als nicht
+    # verfuegbar aus, statt den Nutzer in einen 500er laufen zu lassen.
+    mfa_sms_available: bool = False
     stripe_secret_key: SecretStr = SecretStr("")
     stripe_webhook_secret: SecretStr = SecretStr("")
     stripe_publishable_key: str = ""          # NEXT_PUBLIC_ im Frontend
@@ -290,6 +323,14 @@ class Settings(BaseSettings):
     # Einladung klar fehl, statt eine erfundene URL zu verschicken (Wurzel 4).
     admin_base_url: str = ""
 
+    # Öffentliche Adresse des PMS-Dashboards (web/, myNextDays). Ziel der
+    # Einladungs- und Passwort-Reset-Links für BETRIEBS-Nutzer (0334). Bewusst
+    # getrennt von `admin_base_url`: das ist das Plattform-Backoffice, eine
+    # andere Anwendung und eine andere Zielgruppe — ein Betriebs-Mitarbeiter
+    # darf dort nie landen. Fehlt sie, schlägt die Einladung klar fehl, statt
+    # eine erfundene URL zu verschicken (Wurzel 4).
+    app_base_url: str = ""
+
     # Öffentliche Adresse der Marketing-Seite (marketing/). Ziel der Bestätigungs-
     # und Abmelde-Links aus den Newsletter-Mails. Fehlt sie, wird keine
     # Voranmeldung angenommen — ein Link auf eine geratene Domain wäre wertlos.
@@ -300,6 +341,37 @@ class Settings(BaseSettings):
     # Erinnerung verschickt — eine Mail mit geratener Domain wäre wertlos
     # (Wurzel 4).
     marketplace_base_url: str = ""
+
+    # --- Anbieterangaben für die Fußzeile ausgehender E-Mails -----------------
+    # Eine geschäftliche E-Mail muss ihren Absender benennen: Firma, Rechtsform,
+    # Sitz, Registernummer und einen Kontaktweg (dänische e-handelslov § 7 für
+    # den Sitz Dänemark; die EU-Handelsregister-Richtlinie verlangt dasselbe für
+    # Geschäftsbriefe, und eine E-Mail ist einer).
+    #
+    # Diese Werte stehen bewusst NICHT im Code: eine Registeränderung (Sitz,
+    # Direktion, Momsregistrierung) darf keinen Deploy brauchen, und zwei
+    # gepflegte Wahrheiten laufen auseinander. Die Frontends ziehen dieselben
+    # Angaben aus `marketing/content/legal/anbieter.ts` (dort am 30.07.2026
+    # gegen cvrapi.dk/Dataforsyningen geprüft) — der Betrieb trägt sie hier als
+    # ENV nach.
+    #
+    # Fehlt ein Wert, entfällt die betroffene Zeile der Fußzeile; fehlt der
+    # Firmenname, benennt die Fußzeile den Mangel. Es wird NIE eine plausible
+    # Adresse oder Registernummer eingesetzt (Wurzel 4).
+    company_legal_name: str = ""
+    company_legal_form: str = ""
+    company_street: str = ""
+    company_city: str = ""
+    company_country: str = ""
+    # Die CVR-Nummer ist rein 8-stellig und existiert ab Gründung.
+    company_registration_number: str = ""
+    # Die Umsatzsteuer-Identifikationsnummer („DK" + CVR) gibt es ERST mit der
+    # Momsregistrierung. § 7 e-handelslov verlangt sie nur, wenn sie besteht —
+    # solange nicht, bleibt dieses Feld leer und die Zeile entfällt. Eine noch
+    # nicht erteilte Nummer zu veröffentlichen wäre eine falsche Angabe.
+    company_vat_id: str = ""
+    company_contact_email: str = ""
+    company_contact_phone: str = ""
 
     # --- Brevo (Newsletter/Marketing, getrennt vom eigenen Mailserver) --------
     # Der eigene Mailcow bleibt für Transaktionsmails zuständig; Brevo ist NUR

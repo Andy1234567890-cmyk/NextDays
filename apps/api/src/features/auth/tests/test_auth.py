@@ -20,6 +20,7 @@ from src.features.auth.permissions import (
 )
 from src.features.auth.schemas import (
     AccommodationTypeUpdate,
+    DefaultLanguageUpdate,
     InviteRequest,
     RefreshRequest,
     RegisterRequest,
@@ -193,7 +194,18 @@ def _service_with_mocks() -> tuple[AuthService, MagicMock, MagicMock]:
     service.table.return_value.insert.return_value.execute.return_value.data = [
         {"id": "tenant-123"}
     ]
-    return AuthService(anon_client=anon, service_client=service), anon, service
+    # Einladungs-/Mail-Dienst als Mock: die Tests prüfen die Anlage-Logik, nicht
+    # den Mailweg (der hat eigene Tests). Ohne Injektion würde hier ein echter
+    # Dienst gebaut, an APP_BASE_URL scheitern und jede Einladung zurückrollen.
+    return (
+        AuthService(
+            anon_client=anon,
+            service_client=service,
+            einladungen=MagicMock(name="einladungen"),
+        ),
+        anon,
+        service,
+    )
 
 
 def _valid_register() -> RegisterRequest:
@@ -241,9 +253,10 @@ def test_register_rolls_back_user_and_tenant_when_user_row_fails() -> None:
 # --- invite (Mitarbeiter/weitere Rollen) ---
 
 def _invite(role: UserRole, permissions: list[str] | None = None) -> InviteRequest:
+    # KEIN password mehr (0334): der Server würfelt es und verschickt einen
+    # Einmal-Link; die eingeladene Person setzt ihr Passwort selbst.
     return InviteRequest(
         email="staff@example.de",
-        password="longenough",
         full_name="Mitarbeiter",
         role=role,
         permissions=permissions,
@@ -330,6 +343,100 @@ def test_invite_rolls_back_auth_user_when_row_fails() -> None:
     with pytest.raises(RuntimeError):
         svc.invite(_invite(UserRole.cleaner), tenant_id="tenant-abc", granter_id="admin-1")
     service.auth.admin.delete_user.assert_called_with("user-789")
+
+
+# --- Sprache des Eingeladenen (0335) ---------------------------------------
+#
+# Der Contract-Teil der Mail-Mehrsprachigkeit: ohne diese Prüfungen könnte ein
+# Tippfehler („dk" statt „da") als Sprache in der Spalte landen und der
+# Eigentümer bekäme dauerhaft englische Mails, ohne dass jemand den Grund fände.
+
+
+@pytest.mark.parametrize(
+    ("eingabe", "erwartet"),
+    [
+        ("da", "da"),
+        ("DA", "da"),
+        ("de-AT", "de"),    # Regionsvariante wird auf die Basissprache gekappt
+        ("pt_BR", "pt"),    # Unterstrich-Schreibweise mancher Payloads
+        ("  fr  ", "fr"),
+        (None, None),       # nicht erfasst — NULL, dann greift die Kette
+        ("", None),
+    ],
+)
+def test_invite_normalisiert_die_sprache(
+    eingabe: str | None, erwartet: str | None
+) -> None:
+    """`de-AT` → `de` ist Auflösung, kein erfundener Wert — die bleibt."""
+    req = InviteRequest(
+        email="staff@example.de",
+        full_name="Mitarbeiter",
+        role=UserRole.staff,
+        preferred_language=eingabe,
+    )
+    assert req.preferred_language == erwartet
+
+
+@pytest.mark.parametrize("eingabe", ["zh", "xx", "dk", "klingon"])
+def test_invite_weist_unbekannte_sprache_ab(eingabe: str) -> None:
+    """422 statt stillem Verwerfen: der Betreiber soll es ERFAHREN.
+
+    Würde der Wert still auf None fallen, sähe der Betreiber eine erfolgreiche
+    Einladung und später eine englische Mail — ohne jeden Hinweis, dass seine
+    Sprachangabe verworfen wurde.
+    """
+    with pytest.raises(ValidationError) as exc:
+        InviteRequest(
+            email="staff@example.de",
+            full_name="Mitarbeiter",
+            role=UserRole.staff,
+            preferred_language=eingabe,
+        )
+    # Die Fehlermeldung nennt die erlaubten Werte, sonst muss der Betreiber raten.
+    assert "da" in str(exc.value)
+
+
+def test_invite_schreibt_die_sprache_an_den_nutzer() -> None:
+    """Die geprüfte Sprache muss auch wirklich in der users-Zeile landen."""
+    svc, _anon, service = _service_with_mocks()
+    _grant_admin(service)
+    created = MagicMock()
+    created.user.id = "user-789"
+    service.auth.admin.create_user.return_value = created
+
+    svc.invite(
+        InviteRequest(
+            email="ejer@example.dk",
+            full_name="Ejer",
+            role=UserRole.owner,
+            preferred_language="da",
+        ),
+        tenant_id="tenant-abc",
+        granter_id="admin-1",
+    )
+
+    zeile = service.table.return_value.insert.call_args.args[0]
+    assert zeile["preferred_language"] == "da"
+
+
+def test_invite_ohne_sprache_schreibt_die_spalte_gar_nicht() -> None:
+    """Kein `"preferred_language": None` — NULL entsteht durch WEGLASSEN.
+
+    Der Unterschied ist inhaltlich: die Spalte nicht zu schreiben heißt „nicht
+    erfasst" und lässt die Kette (Betriebssprache → Englisch) greifen. Einen
+    leeren Wert zu schreiben wäre dasselbe Ergebnis, aber es verwischt später
+    die Unterscheidung zwischen „nie erfasst" und „bewusst geleert".
+    """
+    svc, _anon, service = _service_with_mocks()
+    _grant_admin(service)
+    created = MagicMock()
+    created.user.id = "user-789"
+    service.auth.admin.create_user.return_value = created
+
+    svc.invite(_invite(UserRole.staff), tenant_id="tenant-abc", granter_id="admin-1")
+
+    zeile = service.table.return_value.insert.call_args.args[0]
+    assert "preferred_language" not in zeile
 
 
 # --- Integration (nur mit laufendem Supabase-Stack) ---
@@ -536,6 +643,71 @@ def test_set_accommodation_type_404_when_tenant_missing() -> None:
     service.table.return_value.update.return_value.eq.return_value.execute.return_value.data = []
     with pytest.raises(AuthError):
         svc.set_accommodation_type(ctx, "vacation_rental")
+
+
+# --- Betriebssprache (tenants.default_language, 0335) ---
+#
+# Stufe 2 der Mail-Sprachkette. Die Spalte war nur LESBAR angelegt: es gab
+# keinen Schreibweg, sie blieb dauerhaft NULL und jeder Empfänger ohne eigene
+# Sprachwahl bekam Englisch. Diese Tests halten den Weg offen.
+
+def test_default_language_normalisiert_regionalcode() -> None:
+    # „de-AT" ist eine gültige Auskunft über die Sprache — sie wird auf den
+    # unterstützten Code verkürzt, nicht abgewiesen.
+    assert DefaultLanguageUpdate(default_language="de-AT").default_language == "de"
+
+
+def test_default_language_rejects_unsupported() -> None:
+    # Ein nicht unterstützter Code wird ABGEWIESEN (422), nicht still auf None
+    # gesetzt — sonst rätselte der Betreiber vor einer englischen Mail.
+    with pytest.raises(ValidationError):
+        DefaultLanguageUpdate(default_language="klingonisch")
+
+
+def test_default_language_erlaubt_leer_ohne_erfundenen_default() -> None:
+    # Leer heißt ehrlich „nicht erfasst" → NULL. KEIN Default „de" (Wurzel 4).
+    assert DefaultLanguageUpdate(default_language=None).default_language is None
+    assert DefaultLanguageUpdate(default_language="  ").default_language is None
+
+
+def test_set_default_language_requires_tenant() -> None:
+    svc, _anon, _service = _service_with_mocks()
+    ctx = AuthContext(user_id="u1", tenant_id=None, role="admin")
+    with pytest.raises(AuthError):
+        svc.set_default_language(ctx, "da")
+
+
+def test_set_default_language_scopes_update_to_own_tenant() -> None:
+    svc, _anon, service = _service_with_mocks()
+    ctx = AuthContext(user_id="u1", tenant_id="t1", role="admin")
+    table = service.table.return_value
+    table.update.return_value.eq.return_value.execute.return_value.data = [
+        {"id": "t1"}
+    ]
+    table.select.return_value.eq.return_value.limit.return_value.execute.return_value.data = [
+        {
+            "role": "admin",
+            "permissions": None,
+            "email": "a@b.de",
+            "default_language": "da",
+        }
+    ]
+
+    res = svc.set_default_language(ctx, "da")
+
+    service.table.assert_any_call("tenants")
+    table.update.assert_called_with({"default_language": "da"})
+    # Service-Role umgeht RLS → der Tenant-Scope MUSS explizit sein (Wurzel 3).
+    table.update.return_value.eq.assert_called_with("id", "t1")
+    assert res.default_language == "da"
+
+
+def test_set_default_language_404_when_tenant_missing() -> None:
+    svc, _anon, service = _service_with_mocks()
+    ctx = AuthContext(user_id="u1", tenant_id="t1", role="admin")
+    service.table.return_value.update.return_value.eq.return_value.execute.return_value.data = []
+    with pytest.raises(AuthError):
+        svc.set_default_language(ctx, "da")
 
 
 # --- Token-Refresh (P1: Silent-Refresh für Mobile) ---

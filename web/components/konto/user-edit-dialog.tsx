@@ -27,6 +27,7 @@ import {
   updateManagedUser,
 } from "@/lib/account";
 
+import { SprachAuswahl } from "@/components/sprache-auswahl";
 import { PermissionGroups } from "./permission-groups";
 import { ROLE_DEFAULT_PERMISSIONS } from "./user-wizard-data";
 
@@ -45,6 +46,10 @@ export function UserEditDialog({
   const isAdmin = user.role === "admin";
   const [fullName, setFullName] = useState(user.full_name ?? "");
   const [role, setRole] = useState<UserRole>(user.role ?? "staff");
+  // Sprache der E-Mails an diesen Nutzer. "" = noch nicht gesetzt — bewusst
+  // KEINE Vorbelegung auf die eigene Oberflächensprache: das würde beim
+  // Speichern eine fremde Sprache setzen, die nie jemand gewählt hat (Wurzel 4).
+  const [language, setLanguage] = useState(user.preferred_language ?? "");
   // Rechte-Zustand initial aus den effektiven Rechten des Nutzers.
   const [perms, setPerms] = useState<Set<string>>(
     () => new Set(user.permissions),
@@ -73,6 +78,8 @@ export function UserEditDialog({
       role,
       // Admin behält immer alle Rechte (Backend erzwingt das) → nicht senden.
       permissions: isAdmin ? undefined : [...perms],
+      // Leer lassen heißt „nicht anfassen" — nicht „auf leer setzen".
+      preferred_language: language || undefined,
     });
     setBusy(false);
     if (res.ok) {
@@ -111,6 +118,17 @@ export function UserEditDialog({
               Die E-Mail ist das Login und kann hier nicht geändert werden.
             </p>
           </div>
+
+          {/* Sprache der E-Mails — bewusst AUSSERHALB des isAdmin-Zweigs: auch
+              der Kontoinhaber bekommt Mails und darf seine Sprache ändern. */}
+          <SprachAuswahl
+            id="ue-lang"
+            value={language}
+            onChange={setLanguage}
+            label={t("users.emailLanguage")}
+            hint={t("users.emailLanguageHint")}
+            allowEmpty
+          />
 
           {isAdmin ? (
             <p className="rounded-(--radius) border border-border bg-secondary/40 p-3 text-sm text-muted-foreground">

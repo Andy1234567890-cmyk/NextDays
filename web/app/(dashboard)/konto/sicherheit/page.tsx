@@ -1,11 +1,12 @@
 "use client";
 
 // Konto → Sicherheit, ANGEBUNDEN an den FastAPI-auth-Slice:
-// echte Konto-Daten, E-Mail/Name/Passwort ändern, TOTP-2FA (Authenticator-App).
-// SMS-2FA folgt erst mit einem SMS-Provider — Karte zeigt „demnächst".
+// echte Konto-Daten, E-Mail/Name/Passwort ändern und die Zwei-Faktor-
+// Authentifizierung (Authenticator-App, SMS, Passkey, Wiederherstellungscodes).
+// Die 2FA-Verwaltung liegt in components/konto/zwei-faktor-section.tsx.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
@@ -18,19 +19,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@nextdays/ui/sheet";
+import { ZweiFaktorSection } from "@/components/konto/zwei-faktor-section";
 import {
   type Account,
-  type TotpEnroll,
   getAccount,
-  totpDisable,
-  totpEnroll,
-  totpVerify,
   updateEmail,
   updateName,
   updatePassword,
 } from "@/lib/account";
+import { type MfaStatus, getMfaStatus } from "@/lib/mfa";
 
-type Panel = null | "email" | "name" | "password" | "totp" | "totp-disable";
+type Panel = null | "email" | "name" | "password";
 
 export default function SicherheitPage() {
   const t = useTranslations("account");
@@ -38,37 +37,51 @@ export default function SicherheitPage() {
   const [loading, setLoading] = useState(true);
   const [panel, setPanel] = useState<Panel>(null);
 
-  async function reload() {
-    const res = await getAccount();
-    if (res.ok) setAccount(res.data);
+  // Ladefehler wird ANGEZEIGT statt verschluckt: eine leere Seite sähe aus wie
+  // „kein Faktor eingerichtet" und wäre eine Falschaussage (Wurzel 4/5).
+  const [ladefehler, setLadefehler] = useState<string | null>(null);
+  // 2FA-Zustand kommt AUSSCHLIESSLICH aus /auth/mfa/status (GoTrue ist die
+  // Quelle der Wahrheit) — nie aus dem Konto-Objekt abgeleitet.
+  const [mfa, setMfa] = useState<MfaStatus | null>(null);
+
+  const reload = useCallback(async () => {
+    const [res, mfaRes] = await Promise.all([getAccount(), getMfaStatus()]);
+    if (res.ok) {
+      setAccount(res.data);
+      setLadefehler(null);
+    } else {
+      setLadefehler(res.error);
+    }
+    if (mfaRes.ok) setMfa(mfaRes.data);
+    else setMfa(null);
     setLoading(false);
-  }
+  }, []);
   useEffect(() => {
     reload();
-  }, []);
+  }, [reload]);
 
   return (
     <div className="flex flex-col gap-10">
-      <h2 className="font-display text-2xl font-extrabold">Sicherheit</h2>
+      <h2 className="font-display text-2xl font-extrabold">{t("security.title")}</h2>
 
       {loading ? (
         <p className="text-sm text-muted-foreground">{t("security.loading")}</p>
       ) : !account ? (
-        <Card className="p-5 text-sm text-destructive">
-          Konto-Daten konnten nicht geladen werden. Ist das Backend erreichbar?
+        <Card className="p-5 text-sm text-destructive" role="alert">
+          {ladefehler ?? t("security.loadFailed")}
         </Card>
       ) : (
         <>
           {/* Berechtigungsnachweise */}
           <section className="flex flex-col gap-3">
             <h3 className="font-display text-lg font-extrabold">
-              Berechtigungsnachweise
+              {t("security.credentials")}
             </h3>
 
             <Card className="flex flex-row items-start justify-between p-5">
               <div className="flex flex-col gap-1">
                 <span className="text-sm font-semibold">
-                  E-Mail und Benutzername
+                  {t("security.emailAndUsername")}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   {account.email ?? "—"}
@@ -90,9 +103,11 @@ export default function SicherheitPage() {
 
             <Card className="flex flex-row items-start justify-between p-5">
               <div className="flex flex-col gap-1">
-                <span className="text-sm font-semibold">Passwort</span>
+                <span className="text-sm font-semibold">
+                  {t("security.password")}
+                </span>
                 <span className="text-sm text-muted-foreground">
-                  {account.has_password ? "••••••••" : "Kein Passwort gesetzt"}
+                  {account.has_password ? "••••••••" : t("security.noPassword")}
                 </span>
               </div>
               <EditButton
@@ -102,72 +117,20 @@ export default function SicherheitPage() {
             </Card>
           </section>
 
-          {/* Zwei-Faktor-Authentifizierung */}
-          <section className="flex flex-col gap-3">
-            <div>
-              <h3 className="font-display text-lg font-extrabold">
-                Zwei-Faktor-Authentifizierung (2FA)
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Schützt dein Konto mit einem zweiten Faktor zusätzlich zum
-                Passwort.
-              </p>
-            </div>
-
-            {/* Authenticator-App (TOTP) — voll funktionsfähig */}
-            <Card className="flex flex-row items-start justify-between p-5">
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-semibold">
-                  Authentifizierungs-App
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  Verwendet einen Einmalcode aus einer App wie Google
-                  Authenticator oder Authy.
-                </span>
-                {account.totp_enabled && (
-                  <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                    <Icon icon="ph:check-circle" className="size-3.5" />
-                    Aktiv
-                  </span>
-                )}
-              </div>
-              {account.totp_enabled ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0 text-destructive"
-                  onClick={() => setPanel("totp-disable")}
-                >
-                  Deaktivieren
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0 text-accent"
-                  onClick={() => setPanel("totp")}
-                >
-                  Aktivieren
-                </Button>
-              )}
+          {/* Zwei-Faktor-Authentifizierung (alle vier Faktoren).
+              Ohne Status wird NICHTS behauptet — eine leere Faktorliste sähe
+              aus wie „nichts eingerichtet" und wäre eine Falschaussage. */}
+          {mfa ? (
+            <ZweiFaktorSection
+              status={mfa}
+              hatPasswort={account.has_password}
+              onGeaendert={reload}
+            />
+          ) : (
+            <Card className="p-5 text-sm text-destructive" role="alert">
+              {t("security.twoFactor.statusFailed")}
             </Card>
-
-            {/* SMS — erst mit Provider verfügbar */}
-            <Card className="flex flex-row items-start justify-between p-5 opacity-70">
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-semibold">
-                  SMS 2-Faktor-Verifizierung
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  Einmaliger SMS-Code. Verfügbar, sobald ein SMS-Anbieter
-                  konfiguriert ist.
-                </span>
-              </div>
-              <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
-                demnächst
-              </span>
-            </Card>
-          </section>
+          )}
         </>
       )}
 
@@ -188,16 +151,6 @@ export default function SicherheitPage() {
       <PasswordSheet
         open={panel === "password"}
         needsCurrent={account?.has_password ?? true}
-        onClose={() => setPanel(null)}
-        onSaved={reload}
-      />
-      <TotpSheet
-        open={panel === "totp"}
-        onClose={() => setPanel(null)}
-        onSaved={reload}
-      />
-      <TotpDisableSheet
-        open={panel === "totp-disable"}
         onClose={() => setPanel(null)}
         onSaved={reload}
       />
@@ -288,12 +241,12 @@ function NameSheet({
   return (
     <PanelShell open={open} onClose={onClose} title={t("security.editUsername")}>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name">{t("security.nameLabel")}</Label>
         <Input id="name" value={value} onChange={(e) => setValue(e.target.value)} />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button onClick={save} disabled={busy || !value.trim()}>
-        {busy ? "Speichern…" : "Speichern"}
+        {busy ? t("security.saving") : t("security.save")}
       </Button>
     </PanelShell>
   );
@@ -342,7 +295,7 @@ function EmailSheet({
       description={t("security.emailAppliesNow")}
     >
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">E-Mail</Label>
+        <Label htmlFor="email">{t("security.emailLabel")}</Label>
         <Input
           id="email"
           type="email"
@@ -367,7 +320,7 @@ function EmailSheet({
         onClick={save}
         disabled={busy || !value.trim() || (needsCurrent && !currentPw)}
       >
-        {busy ? "Speichern…" : "Speichern"}
+        {busy ? t("security.saving") : t("security.save")}
       </Button>
     </PanelShell>
   );
@@ -430,173 +383,12 @@ function PasswordSheet({
           autoComplete="new-password"
         />
         <span className="text-xs text-muted-foreground">
-          Mindestens 8 Zeichen.
+          {t("security.passwordMin")}
         </span>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button onClick={save} disabled={busy || newPw.length < 8}>
-        {busy ? "Speichern…" : "Passwort ändern"}
-      </Button>
-    </PanelShell>
-  );
-}
-
-function TotpSheet({
-  open,
-  onClose,
-  onSaved,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const t = useTranslations("account");
-  const [enroll, setEnroll] = useState<TotpEnroll | null>(null);
-  const [code, setCode] = useState("");
-  const [recovery, setRecovery] = useState<string[] | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Beim Öffnen Enrollment starten (Secret + QR holen).
-  useEffect(() => {
-    if (!open) {
-      setEnroll(null);
-      setCode("");
-      setRecovery(null);
-      setError(null);
-      return;
-    }
-    (async () => {
-      const res = await totpEnroll();
-      if (res.ok) setEnroll(res.data);
-      else setError(res.error);
-    })();
-  }, [open]);
-
-  async function verify() {
-    setBusy(true);
-    setError(null);
-    const res = await totpVerify(code);
-    setBusy(false);
-    if (res.ok) {
-      setRecovery(res.data.recovery_codes);
-      onSaved();
-    } else setError(res.error);
-  }
-
-  return (
-    <PanelShell
-      open={open}
-      onClose={onClose}
-      title={t("security.setupAuthApp")}
-      description={t("security.setupAuthAppHint")}
-    >
-      {recovery ? (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm font-semibold text-emerald-700">
-            2FA ist aktiv. Bewahre diese Wiederherstellungscodes sicher auf:
-          </p>
-          <div className="grid grid-cols-2 gap-2 rounded-(--radius) border p-3 font-mono text-sm">
-            {recovery.map((c) => (
-              <span key={c}>{c}</span>
-            ))}
-          </div>
-          <Button onClick={onClose}>Fertig</Button>
-        </div>
-      ) : enroll ? (
-        <>
-          {/* QR-Code (Data-URL aus dem Backend). <img> statt next/image, weil
-              Data-URLs sich damit ohne Loader rendern lassen. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={enroll.qr_data_url}
-            alt={t("security.qrAlt")}
-            className="mx-auto size-44 rounded-(--radius) border bg-white p-2"
-          />
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">
-              Oder manuell eingeben:
-            </span>
-            <code className="break-all rounded bg-secondary px-2 py-1 text-xs">
-              {enroll.secret}
-            </code>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="code">{t("security.sixDigitCode")}</Label>
-            <Input
-              id="code"
-              inputMode="numeric"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              maxLength={6}
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button onClick={verify} disabled={busy || code.length < 6}>
-            {busy ? "Prüfen…" : "Aktivieren"}
-          </Button>
-        </>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          {error ?? "Einrichtung wird vorbereitet …"}
-        </p>
-      )}
-    </PanelShell>
-  );
-}
-
-function TotpDisableSheet({
-  open,
-  onClose,
-  onSaved,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const t = useTranslations("account");
-  const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    setCode("");
-    setError(null);
-  }, [open]);
-
-  async function disable() {
-    setBusy(true);
-    setError(null);
-    const res = await totpDisable(code);
-    setBusy(false);
-    if (res.ok) {
-      onSaved();
-      onClose();
-    } else setError(res.error);
-  }
-
-  return (
-    <PanelShell
-      open={open}
-      onClose={onClose}
-      title={t("security.disable2fa")}
-      description={t("security.disable2faHint")}
-    >
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="dcode">Code</Label>
-        <Input
-          id="dcode"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-        />
-      </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button
-        variant="outline"
-        className="text-destructive"
-        onClick={disable}
-        disabled={busy || code.length < 6}
-      >
-        {busy ? "…" : t("security.disable2fa")}
+        {busy ? t("security.saving") : t("security.changePassword")}
       </Button>
     </PanelShell>
   );

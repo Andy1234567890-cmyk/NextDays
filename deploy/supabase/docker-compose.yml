@@ -202,6 +202,99 @@ services:
       GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
       GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_OAUTH_SECRET:-}
       GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${API_EXTERNAL_URL}/auth/v1/callback
+      # --- Zwei-Faktor-Authentifizierung (MFA/AAL2) -----------------------
+      # GoTrue v2.189.0 kann alle drei Faktoren nativ (live gegen
+      # auth.factor_type geprueft: totp, phone, webauthn). Sie werden HIER
+      # eingeschaltet statt im Anwendungscode nachgebaut — der `aal2`-Claim,
+      # den GoTrue nach bestandenem Faktor ausstellt, ist die einzige Quelle
+      # der Wahrheit fuer die Erzwingung in core.security (Wurzel 7).
+      #
+      # TOTP ist per Default an; die beiden anderen sind per Default AUS und
+      # muessen ausdruecklich gesetzt werden (MFAFactorTypeConfiguration:
+      # EnrollEnabled/VerifyEnabled default false).
+      GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
+      GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true"
+      # SMS-Faktor. NIST SP 800-63B-4 fuehrt SMS-OTP als „restricted
+      # authenticator" (SIM-Swapping/SS7) — deshalb angeboten, aber nie als
+      # empfohlener Standardweg und fuer Pflicht-Rollen nie der einzige.
+      # Nutzt dieselbe SMS-Provider-Config wie der Phone-Login (Twilio).
+      GOTRUE_MFA_PHONE_ENROLL_ENABLED: "true"
+      GOTRUE_MFA_PHONE_VERIFY_ENABLED: "true"
+      # Der SMS-ANBIETER dazu. Ohne ihn legt GoTrue den Faktor zwar an
+      # (POST /factors -> 200), beantwortet aber jede Challenge mit
+      # 500 „Failed to get SMS provider" — der Nutzer saesse in einer
+      # Sackgasse (live nachgewiesen am 09.08.2026).
+      #
+      # ACHTUNG, zwei getrennte Systeme: die TWILIO_*-Werte in apps/api/.env
+      # versorgen den EIGENEN OTP-Weg der FastAPI und wirken hier NICHT.
+      # GoTrue ist ein eigener Prozess mit eigener Konfiguration (Wurzel 7).
+      GOTRUE_SMS_PROVIDER: ${GOTRUE_SMS_PROVIDER:-}
+      GOTRUE_SMS_TWILIO_ACCOUNT_SID: ${GOTRUE_SMS_TWILIO_ACCOUNT_SID:-}
+      GOTRUE_SMS_TWILIO_AUTH_TOKEN: ${GOTRUE_SMS_TWILIO_AUTH_TOKEN:-}
+      # Entweder eine Messaging-Service-SID (MG…) ODER eine E.164-Nummer:
+      # GoTrue setzt den Wert unveraendert als Twilios `From` ein
+      # (internal/api/sms_provider/twilio.go), ein eigenes From-Feld gibt es
+      # nicht. Pflicht, sobald der Provider `twilio` ist.
+      GOTRUE_SMS_TWILIO_MESSAGE_SERVICE_SID: ${GOTRUE_SMS_TWILIO_MESSAGE_SERVICE_SID:-}
+      # 6-stellig, 60 s gueltig — passend zur OtpInput-Maske im Frontend.
+      # Werte <6 oder >10 zwingt GoTrue stillschweigend auf 6 zurueck.
+      GOTRUE_SMS_OTP_LENGTH: "6"
+      GOTRUE_SMS_OTP_EXP: "60"
+      GOTRUE_MFA_PHONE_OTP_LENGTH: "6"
+      # Sperrfrist zwischen zwei SMS an dieselbe Nummer — Kosten- und
+      # Missbrauchsschutz am GoTrue selbst, nicht nur in der App.
+      GOTRUE_SMS_MAX_FREQUENCY: "60s"
+      GOTRUE_MFA_PHONE_MAX_FREQUENCY: "60s"
+      # BEWUSST NICHT GESETZT:
+      # GOTRUE_SMS_AUTOCONFIRM wuerde Nummern ohne Zustellnachweis bestaetigen.
+      # GOTRUE_SMS_TEST_OTP ist ein dauerhaft gueltiger Festcode fuer die
+      # hinterlegten Nummern (Wurzel 4/7) — und wirkt ohnehin nur beim
+      # Telefon-Login, NICHT beim MFA-Faktor (v2.189.0: GetTestOTP wird nur in
+      # phone.go aufgerufen, nicht in challengePhoneFactor).
+      # Passkeys/WebAuthn — der phishing-resistente Faktor.
+      # Schreibweise live erkaempft: envconfig zerlegt das Go-Feld `WebAuthn`
+      # per split_words zu WEB_AUTHN — die beiden Schalter heissen deshalb
+      # GOTRUE_MFA_WEB_AUTHN_*, die RP-Variablen darunter aber GOTRUE_WEBAUTHN_*
+      # (eigenes envconfig-Tag). Beide Schreibweisen sind noetig und nicht
+      # verwechselbar; mit der jeweils falschen startet GoTrue kommentarlos und
+      # lehnt jedes Enrollment mit 422 ab.
+      GOTRUE_MFA_WEB_AUTHN_ENROLL_ENABLED: "true"
+      GOTRUE_MFA_WEB_AUTHN_VERIFY_ENABLED: "true"
+      # Relying-Party-Konfiguration fuer WebAuthn = die Domain, an die ein
+      # Passkey gebunden wird. ACHTUNG, live verifiziert: diese drei Variablen
+      # haengen NICHT unter GOTRUE_MFA_ — `WebAuthn` ist in v2.189.0 ein
+      # EIGENES Feld auf oberster Config-Ebene (configuration.go: `WebAuthn
+      # WebAuthnConfiguration`), waehrend `MFA.WebAuthn` nur die beiden
+      # Enroll/Verify-Schalter traegt. Mit GOTRUE_MFA_WEBAUTHN_RP_ID lief der
+      # Server anstandslos hoch und lehnte jedes Passkey-Enrollment trotzdem
+      # mit 422 „MFA enroll is disabled for WebAuthn" ab.
+      #
+      # Alle drei sind Pflicht, sobald Passkeys an sind (WebAuthnConfiguration.
+      # Validate()), und die Origins MUESSEN https sein — http ist nur fuer
+      # localhost/127.0.0.1 erlaubt. Werte aus der Env, KEIN Hardcode
+      # (Wurzel 4): sie sind je Umgebung andere, und ein falscher Wert macht
+      # jeden bereits registrierten Passkey unbrauchbar.
+      #
+      # WICHTIG, damit hier nicht wieder falsch gesucht wird (live geprueft
+      # 09.08.2026): GoTrue UEBERNIMMT die vom Browser gemeldete rpId. Ein
+      # Aufruf von http://localhost:3000 gegen DIESEN Server (RP_ID =
+      # supabase-kong…sslip.io) liefert eine Challenge mit rp.id = "localhost"
+      # und laeuft komplett durch. Diese Variablen sind also die VORGABE fuer
+      # die Produktivdomaene — sie sind NICHT der Grund, wenn lokal ein
+      # Enrollment scheitert. Der historische 422 kam von den falsch
+      # geschriebenen Env-Namen (siehe oben), nicht von einem Domain-Mismatch.
+      GOTRUE_WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-}
+      GOTRUE_WEBAUTHN_RP_DISPLAY_NAME: ${WEBAUTHN_RP_DISPLAY_NAME:-myNextDays}
+      GOTRUE_WEBAUTHN_RP_ORIGINS: ${WEBAUTHN_RP_ORIGINS:-}
+      # Mehrere Faktoren je Nutzer sind ausdruecklich erwuenscht (Aussperr-
+      # Schutz): wer TOTP UND Passkey hat, verliert bei einem defekten Geraet
+      # nicht den Zugang. GoTrue-Default 10.
+      GOTRUE_MFA_MAX_ENROLLED_FACTORS: "10"
+      # Bruteforce-Schutz am GoTrue selbst. Der App-Bucket (rate_limit_mfa)
+      # schuetzt nur die FastAPI-Routen — der Direktweg /auth/v1/factors/*
+      # braucht sein eigenes Limit (Wurzel 7: Kontrolle dort, wo der
+      # Angreifer wirklich einloggt). GoTrue-Default 15/min.
+      GOTRUE_MFA_RATE_LIMIT_CHALLENGE_AND_VERIFY: "10"
       GOTRUE_MAILER_AUTOCONFIRM: ${MAILER_AUTOCONFIRM:-false}
       # Echter SMTP statt Inbucket (Prod). Werte aus Coolify-Env.
       # SMTP_PORT braucht IMMER eine Zahl (GoTrue parst int) — Default 587,
