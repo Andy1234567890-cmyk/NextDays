@@ -63,6 +63,7 @@ TABELLEN=(
   channex_group_map channex_channel_connection channex_tax_map
   ota_account airbnb_historie_lauf reservation_cancellation_log
   owners co_owners owner_properties owner_expenses owner_statements
+  owner_billing_terms fee_classification
   customers quotes quote_line_items leads partners deals
   travel_agencies travel_agency_contacts travel_agency_contracts
   travel_agency_rates number_sequences
