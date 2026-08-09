@@ -283,6 +283,7 @@
       "logout": "Iziet"
     },
     "stopSell": "Pārdošanas apturēšana",
+    "blockRequests": "Bloķēšanas pieprasījumi",
     "owners": "Īpašnieki",
     "ownerStatements": "Īpašnieku norēķini",
     "portal": "Mans portāls",
@@ -315,7 +316,8 @@
     "noAccess": "Nav piekļuves",
     "dashboardLoadFailed": "Neizdevās ielādēt paneli",
     "reviews": "Atsauksmes",
-    "extensions": "Paplašinājumi"
+    "extensions": "Paplašinājumi",
+    "announcements": "Jaunumi"
   },
   "exemption": {
     "labelNamed": "Atbrīvots no nodokļa ({scheme}) — PVN nr. nav vajadzīgs",
@@ -945,6 +947,7 @@
     "newTitle": "Jauns īpašnieks",
     "create": "Izveidot",
     "created": "Īpašnieks izveidots.",
+    "createdInvited": "Īpašnieks izveidots un uzaicinājums nosūtīts.",
     "cancel": "Atcelt",
     "save": "Saglabāt",
     "saving": "Notiek saglabāšana …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Nav objektu} zero {# objektu} one {# objekts} other {# objekti}}",
     "noProperties": "Šim īpašniekam vēl nav piesaistīts neviens objekts.",
     "addProperty": "Piesaistīt objektu …",
+    "assignProperties": "Piešķirt objektus",
+    "assignPropertiesHint": "Neobligāti. Var izvēlēties tikai objektus, kuriem vēl nav īpašnieka.",
+    "noFreeProperties": "Visi objekti jau ir piešķirti īpašniekam.",
+    "assignSelected": "{count, plural, =0 {Piešķirt objektus} zero {Piešķirt # objektu} one {Piešķirt # objektu} other {Piešķirt # objektus}}",
+    "propertiesAssigned": "{count, plural, zero {# objektu piešķirti} one {# objekts piešķirts} other {# objekti piešķirti}}",
     "removeProperty": "Noņemt piesaisti",
     "sections": {
       "master": "Pamatdati",
       "payout": "Izmaksa un komisija",
-      "properties": "Objekti"
+      "properties": "Objekti",
+      "portalAccess": "Portāla piekļuve"
     },
     "frequency": {
       "none": "Nav",
@@ -989,12 +998,20 @@
       "statementFrequency": "Norēķinu periodiskums",
       "notes": "Piezīmes",
       "share": "Daļa (%)",
-      "commissionOverride": "Komisija (%) atšķirīga"
+      "commissionOverride": "Komisija (%) atšķirīga",
+      "emailLanguage": "E-pastu valoda"
     },
     "placeholders": {
       "name": "piem., Jānis Bērziņš",
       "email": "piem., janis@example.com"
-    }
+    },
+    "emailLanguageHint": "Šajā valodā īpašnieks saņem norēķinus un paziņojumus — arī bez savas piekļuves.",
+    "portalAccess": "Iestatīt portāla piekļuvi",
+    "portalAccessHint": "Īpašnieks saņem uzaicinājumu pa e-pastu un pēc tam var pats apskatīt savus norēķinus.",
+    "portalAccessNeedsEmail": "Portāla piekļuvei nepieciešama e-pasta adrese.",
+    "portalAccessInvite": "Nosūtīt uzaicinājumu",
+    "portalAccessInvited": "Uzaicinājums nosūtīts.",
+    "portalAccessActive": "Portāla piekļuve ir iestatīta."
   },
   "ownerStatements": {
     "title": "Īpašnieku norēķini",
@@ -1149,7 +1166,9 @@
     "subtitle": "Pārskats par taviem objektiem, ieņēmumiem un norēķiniem.",
     "properties": {
       "title": "Mani objekti",
-      "empty": "Tev pašlaik nav piesaistīts neviens objekts."
+      "empty": "Tev pašlaik nav piesaistīts neviens objekts.",
+      "city": "Atrašanās vieta",
+      "openCalendar": "Kalendārs"
     },
     "earnings": {
       "title": "Ieņēmumi (šomēnes)",
@@ -1175,7 +1194,24 @@
       "to": "Līdz",
       "submit": "Nosūtīt pieprasījumu",
       "sending": "Notiek sūtīšana …",
-      "requested": "Pieprasījums nosūtīts."
+      "requested": "Pieprasījums nosūtīts.",
+      "listTitle": "Mani pieprasījumi",
+      "listEmpty": "Jūs vēl neesat pieprasījis nevienu bloķējumu.",
+      "created": "Iesniegts",
+      "range": "Periods",
+      "statusLabel": "Statuss",
+      "readOnlyHint": "Bloķējumu var ievadīt tikai pārvaldība. Jūs iesniedzat pieprasījumu, lēmumu pieņem viņi.",
+      "invalidRange": "Beigu datumam jābūt vēlākam par sākuma datumu.",
+      "invalidDate": "Lūdzu, norādiet derīgu datumu.",
+      "status": {
+        "pending": "Tiek izskatīts",
+        "approved": "Apstiprināts",
+        "rejected": "Noraidīts",
+        "cancelled": "Atsaukts"
+      },
+      "reason": "Iemesls",
+      "reasonPlaceholder": "Kāpēc tas būtu jābloķē? (piem., paškā izmantošana, amatnieki)",
+      "decisionNote": "Pārvaldības piezīme"
     },
     "meter": {
       "title": "Ievadīt skaitītāja rādījumu",
@@ -1191,6 +1227,142 @@
         "electricity": "Elektrība",
         "water": "Ūdens",
         "gas": "Gāze"
+      },
+      "historyTitle": "Vēsture",
+      "historyEmpty": "Šim objektam vēl nav reģistrēts neviens skaitītāja rādījums.",
+      "appendOnlyHint": "Reģistrētie rādījumi paliek nemainīti. Labojums ir jauns ieraksts — tā vēsture paliek pilnīga.",
+      "invalidValue": "Lūdzu, norādiet skaitītāja rādījumu kā skaitli.",
+      "invalidDate": "Lūdzu, norādiet derīgu nolasīšanas datumu."
+    },
+    "logout": "Izrakstīties",
+    "loadFailed": "Datus nevarēja ielādēt.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Pārskats",
+      "calendar": "Aizņemtības kalendārs",
+      "reports": "Atskaites",
+      "blockRequests": "Bloķējumi",
+      "meterReadings": "Skaitītāju rādījumi",
+      "services": "Pakalpojumi",
+      "notifications": "Paziņojumi"
+    },
+    "overview": {
+      "occupancy": "Aizņemtība",
+      "occupancyHint": "Aizņemtās naktis izvēlētajā periodā.",
+      "nights": "Naktis",
+      "bookings": "Rezervācijas",
+      "payout": "Neto izmaksa",
+      "payoutHint": "Jūsu daļa pēc portālu komisijas atskaitīšanas.",
+      "period": "Periods",
+      "periodMonth": "Šis mēnesis",
+      "periodYear": "Šis gads",
+      "openCalendar": "Atvērt kalendāru",
+      "latestStatement": "Jaunākais norēķins",
+      "noStatement": "Vēl nav neviena norēķina"
+    },
+    "calendar": {
+      "title": "Aizņemtības kalendārs",
+      "subtitle": "Aizņemtība un jūsu neto izmaksa par nakti.",
+      "selectProperty": "Izvēlēties objektu",
+      "prevMonth": "Iepriekšējais mēnesis",
+      "nextMonth": "Nākamais mēnesis",
+      "today": "Šodien",
+      "legendSeasons": "Sezonas",
+      "legendStatus": "Aizņemtība",
+      "noSeasons": "Šim objektam nav definētas sezonas.",
+      "status": {
+        "open": "Brīvs",
+        "booked": "Aizņemts",
+        "blocked": "Bloķēts"
+      },
+      "payoutPerNight": "Neto izmaksa/nakts",
+      "guest": "Viesis",
+      "channel": "Rezervācijas avots",
+      "blockHint": "Vēlaties bloķēt periodu? Iesniedziet pieprasījumu — lēmumu pieņem pārvaldība.",
+      "blockCta": "Pieprasīt bloķējumu",
+      "weekdays": "Pr,Ot,Tr,Ce,Pk,Se,Sv",
+      "months": "Janvāris,Februāris,Marts,Aprīlis,Maijs,Jūnijs,Jūlijs,Augusts,Septembris,Oktobris,Novembris,Decembris"
+    },
+    "services": {
+      "title": "Pasūtīt pakalpojumu",
+      "hint": "Pasūtiet pakalpojumu savam objektam. Pārvaldība pieņem un ieplāno uzdevumu.",
+      "property": "Objekts",
+      "kind": "Pakalpojums",
+      "date": "Vēlamais datums",
+      "note": "Piezīme",
+      "notePlaceholder": "Kas tieši jāizdara?",
+      "submit": "Pasūtīt",
+      "sending": "Tiek nosūtīts …",
+      "sent": "Pasūtījums nosūtīts.",
+      "listTitle": "Mani pasūtījumi",
+      "listEmpty": "Jūs vēl neesat pasūtījis nevienu pakalpojumu.",
+      "invalidDate": "Lūdzu, norādiet derīgu vēlamo datumu.",
+      "noteRequired": "Lūdzu, aprakstiet vēlamo pakalpojumu.",
+      "kinds": {
+        "custom": "Cits (brīvs teksts)"
+      },
+      "status": {
+        "pending": "Tiek izskatīts",
+        "accepted": "Pieņemts",
+        "scheduled": "Ieplānots",
+        "done": "Pabeigts",
+        "rejected": "Noraidīts",
+        "cancelled": "Atsaukts"
+      },
+      "type": {
+        "endreinigung": "Noslēguma tīrīšana",
+        "hauptreinigung": "Kapitālā tīrīšana",
+        "fensterreinigung": "Logu tīrīšana",
+        "rasenmaehen": "Zāliena pļaušana",
+        "terrassenreinigung": "Terases tīrīšana"
+      },
+      "dateTo": "Līdz"
+    },
+    "notifications": {
+      "title": "Paziņojumi",
+      "hint": "Norādiet, kā vēlaties saņemt paziņojumus par katru notikumu.",
+      "channel": {
+        "email": "E-pasts",
+        "sms": "SMS",
+        "phone": "Tālrunis"
+      },
+      "locked": "Šis e-pasts ir līgumā noteikts un paliek ieslēgts.",
+      "saved": "Saglabāts.",
+      "saveFailed": "Izmaiņas nevarēja saglabāt.",
+      "categories": {
+        "listing_activity": "Rezervācijas jūsu objektos",
+        "listing_activityHint": "Jauna rezervācija, izmaiņas un atcelšana.",
+        "account_activity": "Konta aktivitāte",
+        "account_activityHint": "Pieteikšanās un izmaiņas jūsu kontā.",
+        "reminders": "Atgādinājumi",
+        "remindersHint": "Gaidāmie uzdevumi un termiņi.",
+        "messages": "Ziņas",
+        "messagesHint": "Jaunas ziņas no pārvaldības.",
+        "owner_booking": "Rezervācijas tavos objektos",
+        "owner_bookingHint": "Jauna rezervācija, izmaiņas un atcelšana.",
+        "block_decision": "Lēmums par taviem bloķēšanas pieprasījumiem",
+        "block_decisionHint": "Kad pārvaldība apstiprina vai noraida tavu pieprasījumu.",
+        "owner_service": "Pasūtītie pakalpojumi",
+        "owner_serviceHint": "Statusa maiņa pakalpojumam, ko esi pasūtījis."
+      }
+    },
+    "reports": {
+      "title": "Atskaites",
+      "subtitle": "Norēķini, kārtējais mēnesis, kā arī mēneša un gada atskaites.",
+      "currentTitle": "Pašreizējais norēķina statuss",
+      "currentHint": "Provizorisks — mēnesis vēl nav noslēdzies. Saistošs ir tikai galīgais norēķins.",
+      "monthly": "Mēneša atskaite",
+      "yearly": "Gada atskaite",
+      "month": "Mēnesis",
+      "year": "Gads",
+      "download": "Lejupielādēt PDF",
+      "downloading": "Tiek ģenerēts …",
+      "downloadFailed": "PDF nevarēja izveidot.",
+      "onlyFinalized": "Lejupielādei pieejami tikai galīgie norēķini.",
+      "status": {
+        "draft": "Tiek sagatavots",
+        "finalized": "Pabeigts",
+        "cancelled": "Atcelts"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Fiksētu summu nevar sadalīt pa atsevišķām naktīm — uz portāliem tā nenonāk, tur tā jāuztur ekstranetā.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Piemērot to pašu akciju arī citiem objektiem.",
+      "applyToOthersSeasonHint": "Izveidot to pašu sezonu arī citiem objektiem.",
       "promoReason": {
         "mindestaufenthalt": "minimālā uzturēšanās",
         "fruehbucher": "agrās rezervācijas termiņš",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Maksājumu plāns",
       "cancellationLabel": "Atcelšana",
       "depositLabel": "Depozīts",
-      "depositWithheldText": "Tiks ieturēts {amount} depozīts.",
       "noPolicyYet": "Vēl nav norādīts neviens noteikums.",
       "bookabilityCardTitle": "Rezervējamība",
       "bookabilityCardHint": "Kā tiek pieņemtas rezervācijas.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Īres līgums",
       "rentalAgreementCardHint": "Izveido īres līgumu vai norādi saiti uz to saviem viesiem.",
       "noRentalAgreementYet": "Vēl nav īres līguma.",
-      "addPolicyTitle": "Pievienot noteikumu",
       "addPolicySubtitle": "Nosaki šī jaunā noteikuma detaļas.",
       "internalNameLabel": "Iekšējais nosaukums *",
       "internalNamePlaceholder": "piem., daļēja priekšapmaksa – bez atmaksas",
       "paymentPlanGroupTitle": "Maksājumu plāns",
       "paymentCountLabel": "Maksājumu skaits",
-      "depositPercentLabel": "Priekšapmaksa (%)",
-      "remainingDaysBeforeLabel": "Atlikums (dienas pirms ierašanās)",
       "guestCancellationGroupTitle": "Atcelšana no viesa puses",
       "cancellationTypeLabel": "Atcelšanas veids",
       "depositGroupTitle": "Depozīts",
-      "depositModeNone": "Depozīts nav nepieciešams",
-      "depositModeAmount": "Depozīts kā summa",
-      "depositAmountLabelWithCurrency": "Depozīta summa ({currency})",
-      "depositAmountLabel": "Depozīta summa",
       "quoteValidityGroupTitle": "Piedāvājuma derīgums",
       "quoteValidityHoursLabel": "Derīguma termiņš (stundas) *",
       "quoteValidityHint": "Piedāvājums ir derīgs maks. {hours} stundas, kamēr statuss ir „Gaida viesi“ vai „Gaida maksājumu“.",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Ieteicams",
       "checkInTimeLabel": "Reģistrēšanās laiks",
       "checkOutTimeLabel": "Izrakstīšanās laiks",
-      "paymentSummaryFull": "100 % jāapmaksā rezervācijas brīdī.",
-      "paymentSummarySplit": "{percent} % rezervējot, atlikums {days} dienas pirms ierašanās.",
       "localizedEditorSubtitle": "Izveido tekstu un pēc vajadzības iztulko to saviem viesiem.",
-      "localizedEditorPlaceholder": "Ievadi {title} …"
+      "localizedEditorPlaceholder": "Ievadi {title} …",
+      "editPolicyTitle": "Rediģēt nosacījumus",
+      "singlePaymentHint": "100 % no maksājuma ir jāveic, pabeidzot rezervāciju.",
+      "firstPaymentHeading": "Pirmais maksājums",
+      "secondPaymentHeading": "Otrais maksājums",
+      "thirdPaymentHeading": "Trešais maksājums",
+      "amountTypeLabel": "Summas veids",
+      "percentLabel": "Procentuālā daļa",
+      "amountLabel": "Summa",
+      "currencyLabel": "Valūta",
+      "daysLabel": "Dienas",
+      "periodLabel": "Periods",
+      "firstPaymentHint": "Rezervējot tiek iekasēta tikai pirmā maksājuma fiksētā summa vai procentuālā daļa. Pārējie maksājumi tiek izrakstīti plānotajā datumā.",
+      "remainderHint": "Norādiet, kad jāiekasē atlikusī summa.",
+      "partialRulesHint": "Definējiet noteikumus daļēji atmaksājamām atcelšanām.",
+      "ruleHeading": "{number}. noteikums",
+      "ruleDelete": "Dzēst noteikumu",
+      "ruleAdd": "Pievienot noteikumu",
+      "refundTypeLabel": "Atmaksas veids",
+      "refundLabel": "Atmaksa",
+      "whenCancelledLabel": "Atceļot",
+      "depositNotRequired": "Drošības nauda nav nepieciešama",
+      "depositRequired": "Nepieciešama drošības nauda",
+      "depositMethodLabel": "Metode",
+      "preAuthTimesHeading": "Iepriekšējās autorizācijas laiki",
+      "preAuthValidityLabel": "Derīgums (dienas pēc izbraukšanas)",
+      "preAuthWarnTitle": "Iepriekšēju autorizāciju var garantēt tikai 5 dienas.",
+      "preAuthWarnBody": "Iepriekšējas autorizācijas ilgums kredītkartē ir atkarīgs no dažādiem faktoriem, piemēram, kartes izdevēja, izsniedzējbankas, maksājumu vārtejas un citiem. Tāpēc visās rezervācijās, kas ilgst nedēļu vai ilgāk, katra iepriekšējā autorizācija zaudē spēku (tiek automātiski atcelta) ik pēc 5 dienām. Mēs jūs par to informēsim, lai jūs varētu manuāli izdot jaunu iepriekšēju autorizāciju un saglabāt drošības naudu pārējam rezervācijas laikam.",
+      "assignAction": "Piešķirt nosacījumus"
     },
     "ratePlanWizard": {
       "title": "Izveidot cenu plānu",
@@ -5604,6 +5795,39 @@
       "confirmed": "Apstiprināts",
       "in_house": "Reģistrējies",
       "pending": "Opcija / provizoriski"
+    },
+    "blockRequests": {
+      "title": "Bloķēšanas pieprasījumi",
+      "subtitle": "Tavu īpašnieku pieprasījumi bloķēt savus objektus. Apstiprinājums bloķē naktis kalendārā un paziņo tās portāliem.",
+      "filter": "Statuss",
+      "filterAll": "Visi",
+      "empty": "Šajā skatā nav pieprasījumu.",
+      "requestedBy": "Pieprasīja {name}",
+      "reason": "Pamatojums",
+      "decisionNote": "Piezīme",
+      "note": "Piezīme īpašniekam",
+      "notePlaceholder": "Neobligāti — tā tiek rādīta īpašniekam.",
+      "working": "Tiek izpildīts …",
+      "status": {
+        "pending": "Atvērts",
+        "approved": "Apstiprināts",
+        "rejected": "Noraidīts"
+      },
+      "action": {
+        "approve": "Apstiprināt",
+        "reject": "Noraidīt",
+        "revoke": "Atsaukt"
+      },
+      "confirm": {
+        "approve": "Bloķēt {objekt} no {von} līdz {bis}? Naktis tiks bloķētas visos portālos.",
+        "reject": "Noraidīt pieprasījumu objektam {objekt} ({von} – {bis})?",
+        "revoke": "Atsaukt apstiprinājumu objektam {objekt} ({von} – {bis})? Naktis tiks atkal atbrīvotas."
+      },
+      "done": {
+        "approve": "Pieprasījums apstiprināts, naktis bloķētas.",
+        "reject": "Pieprasījums noraidīts.",
+        "revoke": "Apstiprinājums atsaukts, naktis atbrīvotas."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "Janvāris,Februāris,Marts,Aprīlis,Maijs,Jūnijs,Jūlijs,Augusts,Septembris,Oktobris,Novembris,Decembris",
     "name": "Nosaukums",
     "seasonAdd": "Pievienot sezonu",
+    "seasonApplyCancel": "Atcelt",
+    "seasonApplyCopyHint": "Sezona tiek izveidota kā patstāvīga kopija. Vēlākas izmaiņas šajā sezonā tur vairs NEattieksies. Uzcenojumu rēķina no mērķa objekta paša pamatcenas.",
+    "seasonApplyNone": "Nav nokopēts nevienā objektā.",
+    "seasonApplyPartial": "Nokopēts uz {count} objektiem, {skipped} izlaisti.",
+    "seasonApplyPickTarget": "Izvēlieties vismaz vienu objektu.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Nav norādīta bāzes cena — piemaksu nevar aprēķināt.",
+      "basispreis_null": "Bāzes cena ir 0 — piemaksu nevar aprēķināt.",
+      "teilweise_uebertragen": "Sezona ir objektā, dienas cenas vēl trūkst — mēģiniet vēlreiz, lai pabeigtu.",
+      "unbekannt": "Izlaists nezināma iemesla dēļ."
+    },
+    "seasonApplySubmit": "Kopēt",
+    "seasonApplySuccess": "Nokopēts uz {count} objektiem.",
+    "seasonApplyTitle": "Kopēt “{name}” uz citiem objektiem",
+    "seasonApplyToOthers": "Kopēt uz citiem objektiem",
+    "seasonApplyWithRanges": "Kopēt arī periodus",
+    "seasonApplyWithRangesHint": "Atzīmētās dienas tiek iestatītas tāpat arī mērķa objektā. Izslēgts: tikai pati sezona, bez dienām.",
     "seasonClearHint": "Velciet ar peles labo pogu pāri dienām, lai noņemtu tās no sezonas.",
     "seasonColor": "Krāsa",
     "seasonColorAria": "Krāsa {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Piemaksa (± %)",
     "seasonSurchargePlaceholder": "piem., 30 vai -15",
     "seasonValueRequired": "Lūdzu, norādiet derīgu vērtību.",
-    "weekdays": "P,O,T,C,P,S,S"
+    "weekdays": "P,O,T,C,P,S,S",
+    "seasonApplyNoSpans": "Šai sezonai nav iekrāsotu periodu. Vispirms iekrāsojiet to vai pārsūtiet tikai definīciju bez periodiem."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "QR kods autentifikācijas lietotnei",
       "sixDigitCode": "6 ciparu kods",
       "disable2fa": "Atspējot 2FA",
-      "disable2faHint": "Ievadiet pašreizējo kodu (vai atkopšanas kodu), lai izslēgtu 2FA."
+      "disable2faHint": "Ievadiet pašreizējo kodu (vai atkopšanas kodu), lai izslēgtu 2FA.",
+      "title": "Drošība",
+      "loadFailed": "Neizdevās ielādēt konta datus. Lūdzu, pārbaudiet savienojumu un mēģiniet vēlreiz.",
+      "credentials": "Pieteikšanās dati",
+      "emailAndUsername": "E-pasts un lietotājvārds",
+      "emailLabel": "E-pasts",
+      "nameLabel": "Vārds",
+      "password": "Parole",
+      "noPassword": "Parole nav iestatīta",
+      "passwordMin": "Vismaz 8 rakstzīmes.",
+      "save": "Saglabāt",
+      "saving": "Notiek saglabāšana …",
+      "changePassword": "Mainīt paroli",
+      "twoFactor": {
+        "title": "Divfaktoru autentifikācija (2FA)",
+        "intro": "Aizsargā jūsu kontu ar otru faktoru papildus parolei.",
+        "noneActive": "Otrs faktors vēl nav iestatīts. Iesakām autentifikācijas lietotni.",
+        "requiredNotice": "Jūsu lomai otrs faktors ir obligāts. Lūdzu, iestatiet to tagad.",
+        "active": "Aktīvs",
+        "setUp": "Iestatīt",
+        "totp": {
+          "title": "Autentifikācijas lietotne",
+          "description": "Vienreizējs kods no lietotnes, piemēram, Google Authenticator vai Microsoft Authenticator. Darbojas arī bez mobilā tīkla.",
+          "setupTitle": "Iestatīt autentifikācijas lietotni",
+          "setupHint": "Skenējiet QR kodu ar savu lietotni un apstipriniet ar parādīto kodu.",
+          "step1": "1. Skenējiet QR kodu",
+          "step2": "3. Ievadiet kodu no lietotnes",
+          "qrAlt": "QR kods autentifikācijas lietotnei",
+          "qrHint": "Atveriet savu autentifikācijas lietotni un skenējiet kodu.",
+          "manualTitle": "2. Vai ievadiet atslēgu manuāli",
+          "manualHint": "Izmantojiet šo atslēgu, ja nevarat noskenēt QR kodu.",
+          "showSecret": "Rādīt atslēgu",
+          "hideSecret": "Slēpt atslēgu",
+          "copySecret": "Kopēt atslēgu",
+          "copyFailed": "Kopēt neizdevās. Lūdzu, iezīmējiet atslēgu un nokopējiet to manuāli.",
+          "codeLabel": "6 ciparu kods",
+          "activate": "Aktivizēt",
+          "checking": "Notiek pārbaude …",
+          "preparing": "Tiek sagatavota iestatīšana …",
+          "enabledTitle": "Autentifikācijas lietotne ir aktīva. Tagad saglabājiet savus rezerves kodus.",
+          "friendlyName": "Autentifikācijas lietotne",
+          "replayNote": "Ņemiet vērā: kods ir derīgs līdz 90 sekundēm, un šajā laikā to var izmantot vairākkārt. Pret viltotām pieteikšanās lapām reāllaikā aizsargā tikai piekļuves atslēga."
+        },
+        "sms": {
+          "title": "SMS kods",
+          "description": "Vienreizējs kods ar SMS uz jūsu apstiprināto tālruņa numuru.",
+          "unavailable": "SMS kods šajā serverī nav pieejams, jo nav iestatīts SMS pakalpojumu sniedzējs. Lūdzu, izvēlieties autentifikācijas lietotni vai piekļuves atslēgu.",
+          "unavailableBadge": "Nav pieejams",
+          "setupTitle": "Iestatīt SMS kodu",
+          "setupHint": "Nosūtīsim kodu uz jūsu tālruņa numuru.",
+          "simSwapWarning": "Ņemiet vērā: SMS ir mazāk droša nekā autentifikācijas lietotne. Ja kāds panāk jūsu numura pārnešanu uz citu SIM karti, viņš var saņemt jūsu kodus. Ja iespējams, izvēlieties autentifikācijas lietotni vai piekļuves atslēgu.",
+          "numberLabel": "Tālruņa numurs",
+          "numberHint": "Starptautiskā formātā ar valsts kodu, piemēram, +371 …",
+          "invalidNumber": "Lūdzu, norādiet numuru starptautiskā formātā, sākot ar + un valsts kodu.",
+          "sendCode": "Nosūtīt kodu",
+          "sending": "Notiek nosūtīšana …",
+          "codeLabel": "6 ciparu kods",
+          "codeSentTo": "Nosūtījām kodu uz {phone}.",
+          "confirm": "Apstiprināt",
+          "checking": "Notiek pārbaude …",
+          "resend": "Nosūtīt kodu vēlreiz",
+          "changeNumber": "Izmantot citu numuru",
+          "friendlyName": "SMS kods"
+        },
+        "passkey": {
+          "title": "Piekļuves atslēga",
+          "description": "Pieteikšanās ar pirksta nospiedumu, sejas atpazīšanu vai drošības atslēgu. Kods nav vajadzīgs.",
+          "setupTitle": "Iestatīt piekļuves atslēgu",
+          "setupHint": "Jūsu ierīce apstiprinās jūs ar pirksta nospiedumu, sejas atpazīšanu vai drošības atslēgu.",
+          "checkingSupport": "Notiek ierīces pārbaude …",
+          "unsupportedTitle": "Šī pārlūkprogramma neatbalsta piekļuves atslēgas",
+          "unsupportedHint": "Izmantojiet mūsdienīgu pārlūkprogrammu vai tā vietā iestatiet autentifikācijas lietotni.",
+          "securityKeyOnly": "Šai ierīcei nav iebūvēta apstiprinājuma (piemēram, pirksta nospieduma vai sejas atpazīšanas). Tam būs nepieciešama pievienojama drošības atslēga.",
+          "benefitPhishing": "Aizsargā pret viltotām pieteikšanās lapām.",
+          "benefitNoCode": "Nav jāievada nekāds kods.",
+          "create": "Izveidot piekļuves atslēgu",
+          "friendlyName": "Piekļuves atslēga",
+          "recommended": "Ieteicams: drošākais no trim veidiem.",
+          "creating": "Notiek izveide …",
+          "errors": {
+            "abgebrochen": "Apstiprinājums tika atcelts vai netika atpazīts. Mēģiniet vēlreiz.",
+            "herkunftPasstNicht": "Piekļuves atslēgas šai adresei nav iespējotas. Piesakieties, izmantojot oficiālo adresi.",
+            "nichtUnterstuetzt": "Šī ierīce nevar izveidot piekļuves atslēgu. Izmantojiet autentifikācijas lietotni vai drošības atslēgu.",
+            "schonVorhanden": "Šajā ierīcē jau ir piekļuves atslēga šim kontam.",
+            "laeuftBereits": "Piekļuves atslēgas pieprasījums jau notiek. Pabeidziet vai atceliet to.",
+            "zeitUeberschritten": "Apstiprināšanas laiks ir beidzies. Mēģiniet vēlreiz.",
+            "unbekannt": "Piekļuves atslēgu neizdevās izveidot. Mēģiniet vēlreiz."
+          }
+        },
+        "recovery": {
+          "title": "Rezerves kodi",
+          "description": "Vienreiz lietojami kodi gadījumam, ja jums nav piekļuves otrajam faktoram.",
+          "left": "Atlikušo kodu skaits: {count}.",
+          "create": "Izveidot kodus",
+          "regenerate": "Izveidot jaunus kodus",
+          "regenerateHint": "Izveidojot jaunus kodus, visi līdzšinējie kodi zaudē spēku.",
+          "dialogTitle": "Rezerves kodi",
+          "dialogHint": "Vienreiz lietojami kodi gadījumam, ja jums nav piekļuves otrajam faktoram.",
+          "replaceWarning": "Uzmanību: jūsu līdzšinējie rezerves kodi vienlaikus zaudēs spēku.",
+          "passwordLabel": "Pašreizējā parole",
+          "passwordHint": "Lai apstiprinātu, ka tas tiešām esat jūs.",
+          "createNow": "Izveidot kodus",
+          "creating": "Notiek izveide …",
+          "createdTitle": "Jūsu jaunie rezerves kodi. Glabājiet tos drošā vietā.",
+          "noneReturned": "Netika izveidots neviens kods. Lūdzu, mēģiniet vēlreiz."
+        },
+        "remove": "Noņemt",
+        "removeDialog": {
+          "totpTitle": "Noņemt autentifikācijas lietotni",
+          "smsTitle": "Noņemt SMS kodu",
+          "warning": "Pēc tam šis faktors vairs neaizsargās jūsu kontu.",
+          "passwordLabel": "Pašreizējā parole",
+          "remove": "Noņemt",
+          "removing": "Notiek noņemšana …",
+          "cancel": "Atcelt",
+          "hint": "Apstipriniet noņemšanu ar savu pašreizējo paroli.",
+          "passkeyTitle": "Noņemt piekļuves atslēgu",
+          "lastFactorBlocked": "Šis ir jūsu pēdējais otrais faktors, un jūsu lomai viens ir obligāts. Vispirms izveidojiet rezerves kodus vai iestatiet vēl vienu faktoru."
+        },
+        "requiredWithDeadline": "Jūsu lomai otrs faktors ir obligāts. Iestatiet to līdz {date} — pēc tam pieteikšanās bez otrā faktora vairs nebūs iespējama.",
+        "statusFailed": "Neizdevās ielādēt divfaktoru autentifikācijas statusu. Lūdzu, pārlādējiet lapu."
+      },
+      "recovery": {
+        "lockoutWarning": "Bez šiem kodiem jūs zaudēsiet piekļuvi savam kontam, ja vairs nevarēsiet izmantot otro faktoru. Glabājiet tos drošā vietā, atsevišķi no paroles.",
+        "copy": "Kopēt",
+        "copied": "Nokopēts",
+        "copyFailed": "Kopēt neizdevās. Lūdzu, lejupielādējiet kodus vai izdrukājiet tos.",
+        "download": "Lejupielādēt",
+        "downloadFailed": "Lejupielādēt neizdevās. Lūdzu, nokopējiet kodus vai izdrukājiet tos.",
+        "print": "Drukāt",
+        "printBlocked": "Drukas logs tika bloķēts. Lūdzu, atļaujiet uznirstošos logus vai lejupielādējiet kodus.",
+        "printTitle": "myNextDays rezerves kodi",
+        "printHint": "Katrs kods darbojas tieši vienu reizi. Glabājiet šo lapu drošā vietā.",
+        "fileHeader": "myNextDays rezerves kodi — katrs kods darbojas tieši vienu reizi. Glabāt drošā vietā.",
+        "confirmSaved": "Kodi ir droši saglabāti.",
+        "confirmHint": "Atzīmējiet izvēles rūtiņu, lai pabeigtu iestatīšanu.",
+        "mustExportFirst": "Vispirms nokopējiet, lejupielādējiet vai izdrukājiet kodus.",
+        "done": "Gatavs"
+      }
     },
     "company": {
       "saved": "Dati saglabāti.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Runātās valodas",
       "searchLanguage": "Meklēt valodu…",
       "chooseRole": "Izvēlēties lomu…",
-      "userCreated": "Lietotājs izveidots",
-      "preferredLanguage": "Vēlamā valoda",
+      "preferredLanguage": "E-pastu valoda",
       "noLanguageFound": "Neviena valoda nav atrasta.",
       "firstName": "Vārds",
       "lastName": "Uzvārds",
       "email": "E-pasts",
       "phone": "Tālruņa numurs",
       "notes": "Piezīmes",
-      "password": "Parole",
-      "credentialsHint": "Nododiet šos piekļuves datus jaunajam lietotājam. Parole tiek rādīta tikai tagad."
+      "title": "Izveidot lietotāju",
+      "createdSubtitle": "Ielūgums nosūtīts.",
+      "stepHints": {
+        "contact": "Pievienojiet šī lietotāja kontaktinformāciju.",
+        "extra": "Pievienojiet papildu informāciju par šo lietotāju.",
+        "role": "Izvēlieties šī lietotāja lomu un atļaujas.",
+        "properties": "Piešķiriet šim lietotājam objektus."
+      },
+      "done": "Gatavs",
+      "cancel": "Atcelt",
+      "back": "Atpakaļ",
+      "next": "Tālāk",
+      "create": "Izveidot",
+      "creating": "Notiek izveide…",
+      "role": "Loma",
+      "requiredFields": "Vārds, uzvārds, e-pasts un loma ir obligāti.",
+      "assignFailed": "Lietotājs izveidots, bet objektu piešķiršana neizdevās: {reason}",
+      "hidePhones": "Slēpt tālruņa numurus vietnē.",
+      "noAssignNeeded": "Objektu piešķiršana nav nepieciešama",
+      "noAssignNeededHint": "Šai lomai ir piekļuve visiem konta objektiem. Atsevišķu objektu piešķiršana attiecas tikai uz īpašniekiem un darbiniekiem.",
+      "noProperties": "Vēl nav naktsmītņu",
+      "noPropertiesHint": "Izveidojiet savas naktsmītnes, lai vēlāk varētu tās piešķirt saviem lietotājiem.",
+      "choosePropertiesHint": "Izvēlieties objektus, kuriem šim lietotājam būs piekļuve.",
+      "selectedCount": "Atlasīti: {count}",
+      "inviteSent": "Ielūgums nosūtīts",
+      "inviteSentHint": "Lietotājs saņem e-pastu un pats iestata savu paroli. Saite ir derīga 7 dienas.",
+      "inviteResend": "Nosūtīt ielūgumu vēlreiz",
+      "inviteResending": "Notiek sūtīšana…",
+      "inviteResent": "Ielūgums nosūtīts vēlreiz.",
+      "inviteResendFailed": "Ielūgumu neizdevās nosūtīt vēlreiz.",
+      "preferredLanguageHint": "Šajā valodā jaunais lietotājs saņems ielūgumu un visus turpmākos e-pastus."
     },
     "tariff": {
       "oneLess": "Par vienu objektu mazāk",
@@ -6359,7 +6767,14 @@
       "updated": "Lietotājs atjaunināts.",
       "deleted": "Lietotājs dzēsts.",
       "generalPermissions": "Vispārīgās atļaujas",
-      "roleChangeHint": "Lomas maiņa piedāvā atbilstošas tiesības. Pēc tam tās var pielāgot atsevišķi."
+      "roleChangeHint": "Lomas maiņa piedāvā atbilstošas tiesības. Pēc tam tās var pielāgot atsevišķi.",
+      "edit": "Rediģēt",
+      "delete": "Dzēst",
+      "resendInvite": "Nosūtīt ielūgumu vēlreiz",
+      "inviteResent": "Ielūgums nosūtīts uz {email}.",
+      "inviteResendFailed": "Ielūgumu neizdevās nosūtīt vēlreiz.",
+      "emailLanguage": "E-pastu valoda",
+      "emailLanguageHint": "Šajā valodā šis lietotājs saņem savus e-pastus."
     },
     "staffProperties": {
       "title": "Kopīgot objektus"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "piem., viesnīca Ezera skats",
     "namePlaceholder": "Vārds un uzvārds",
     "passwordHint": "Vismaz 8 rakstzīmes",
-    "passwordRepeat": "Atkārtojiet paroli"
+    "passwordRepeat": "Atkārtojiet paroli",
+    "headline": "Visa jūsu izīrēšana vienuviet.",
+    "feature1": "Automātiska kalendāru sinhronizācija",
+    "feature2": "Tiešās rezervācijas savā vietnē",
+    "feature3": "Viesu ziņojumu automatizācija",
+    "withGoogle": "Reģistrēties ar Google",
+    "withApple": "Reģistrēties ar Apple",
+    "or": "vai",
+    "withEmail": "Reģistrēties ar e-pastu",
+    "haveAccount": "Jums jau ir konts?",
+    "loginLink": "Piesakieties šeit",
+    "loadingHeadline": "Jūsu pašu rezervāciju vietne. Paturiet 100 % no katras rezervācijas.",
+    "loadingText": "Iestatām jūsu kontu …"
   },
   "marketingSite": {
     "stars": "4,5 zvaigznes",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Atzīmēt visus kā izlasītus",
     "erneut": "Ielādēt atkārtoti",
     "ariaMitAnzahl": "Paziņojumi ({count} neizlasīti)"
+  },
+  "auth": {
+    "toLogin": "Uz pieteikšanos",
+    "genericError": "Tas šobrīd neizdevās. Lūdzu, mēģiniet vēlāk vēlreiz.",
+    "tokenMissing": {
+      "title": "Nepilnīga saite",
+      "text": "Šī saite ir nepilnīga. Lūdzu, izmantojiet pilno saiti no e-pasta — nokopējiet to un ielīmējiet adreses joslā."
+    },
+    "tokenInvalid": {
+      "title": "Saite vairs nav derīga",
+      "textInvite": "Šī ielūguma saite ir beigusies vai jau izmantota. Lūdzu, sazinieties ar savu uzņēmumu — tur ielūgumu var nosūtīt atkārtoti.",
+      "textReset": "Šī saite ir beigusies vai jau izmantota. Vienkārši pieprasiet jaunu.",
+      "retry": "Pieprasīt jaunu saiti"
+    },
+    "invite": {
+      "title": "Iestatiet savu piekļuvi",
+      "intro": "Izvēlieties paroli savai myNextDays piekļuvei. Vismaz {min} rakstzīmes."
+    },
+    "reset": {
+      "title": "Jauna parole",
+      "intro": "Izvēlieties jaunu paroli. Vismaz {min} rakstzīmes."
+    },
+    "done": {
+      "titleInvite": "Piekļuve iestatīta",
+      "titleReset": "Parole nomainīta",
+      "text": "Tagad varat pieteikties ar savu jauno paroli."
+    },
+    "forgot": {
+      "title": "Aizmirsta parole",
+      "intro": "Ievadiet savu e-pasta adresi. Nosūtīsim jums saiti jaunas paroles iestatīšanai.",
+      "emailLabel": "E-pasts",
+      "submit": "Pieprasīt saiti",
+      "sending": "Notiek sūtīšana…",
+      "sentTitle": "E-pasts ceļā",
+      "sentText": "Ja šai adresei pastāv konts, esam nosūtījuši atiestatīšanas saiti. Tā ir derīga vienu stundu.",
+      "spamHint": "Nekas nav pienācis? Lūdzu, pārbaudiet arī mēstuļu mapi.",
+      "again": "Pieprasīt vēlreiz"
+    },
+    "password": {
+      "newLabel": "Parole",
+      "repeatLabel": "Atkārtojiet paroli",
+      "submit": "Iestatīt paroli",
+      "saving": "Notiek saglabāšana…",
+      "mismatch": "Abas paroles nesakrīt.",
+      "tooWeak": "Parole neatbilst prasībām (vismaz {min} rakstzīmes).",
+      "show": "Rādīt paroli",
+      "hide": "Slēpt paroli",
+      "strengthLabel": "Stiprums: {level}",
+      "strength": {
+        "1": "vāja",
+        "2": "vidēja",
+        "3": "laba",
+        "4": "stipra"
+      },
+      "requirement": {
+        "length": "Vismaz {min} rakstzīmes",
+        "letter": "Vismaz viens burts",
+        "digit": "Vismaz viens cipars"
+      }
+    },
+    "checking": "Notiek saites pārbaude…",
+    "languageLabel": "Valoda",
+    "languageChange": "Mainīt valodu",
+    "twoFactor": {
+      "title": "Apstiprināšana",
+      "totpHint": "Ievadiet 6 ciparu kodu no savas autentifikācijas lietotnes.",
+      "smsHint": "Ievadiet 6 ciparu kodu, ko nosūtījām jums ar SMS.",
+      "smsHintWithPhone": "Ievadiet 6 ciparu kodu, ko nosūtījām uz {phone}.",
+      "codeLabel": "Kods",
+      "confirm": "Apstiprināt",
+      "checking": "Notiek pārbaude …",
+      "recoveryHint": "Ievadiet vienu no saviem rezerves kodiem.",
+      "recoveryLabel": "Rezerves kods",
+      "recoverySingleUse": "Katrs kods darbojas tieši vienu reizi.",
+      "useTotp": "Izmantot autentifikācijas lietotni",
+      "useSms": "Izmantot SMS kodu",
+      "useRecovery": "Izmantot rezerves kodu",
+      "backToLogin": "Atpakaļ uz pieteikšanos",
+      "factorMissing": "Šis faktors jūsu kontam nav pieejams. Izvēlieties citu veidu.",
+      "passkeyHint": "Apstipriniet pieteikšanos ar savu piekļuves atslēgu.",
+      "passkeyUse": "Pieteikties ar piekļuves atslēgu",
+      "usePasskey": "Izmantot piekļuves atslēgu",
+      "sendCode": "Nosūtīt kodu ar SMS",
+      "sending": "Notiek nosūtīšana …",
+      "smsSent": "Kods ir nosūtīts.",
+      "resend": "Nosūtīt kodu vēlreiz",
+      "recoveryRedeemedHint": "Kods ir izmantots, taču ar to vien pieteikšanai nepietiek. Lūdzu, piesakieties ar kādu no saviem iestatītajiem faktoriem vai vērsieties pie savas komandas."
+    },
+    "mfaSetup": {
+      "title": "Iestatīt divfaktoru autentifikāciju",
+      "intro": "Jūsu lomai otrs faktors ir obligāts. Iestatiet to tagad, lai turpinātu.",
+      "why": "Kā administratoram jums ir piekļuve finanšu datiem, viesu datiem un visa uzņēmuma iestatījumiem. Otrs faktors novērš to, ka pietiktu tikai ar nozagtu paroli.",
+      "goToSettings": "Iestatīt tagad",
+      "later": "Atgādināt vēlāk",
+      "laterHint": "Iestatīšanu vēl varat atlikt. Jautāsim vēlreiz nākamajā pieteikšanās reizē.",
+      "introWithDeadline": "Jūsu lomai otrs faktors ir obligāts. Iestatiet to līdz {date} — pēc tam pieteikšanās bez otrā faktora vairs nebūs iespējama."
+    }
+  },
+  "sprache": {
+    "label": "E-pastu valoda",
+    "hint": "Šajā valodā mēs sūtām e-pastus šai personai.",
+    "none": "— nav norādīts"
+  },
+  "neuerungen": {
+    "eyebrow": "Produkta jaunumi",
+    "titel": "Jaunumi",
+    "unterzeile": "Viss, kas mainījies myNextDays — jaunākie vispirms.",
+    "neuAnzahl": "{anzahl, plural, zero {# jaunu} one {# jauns} other {# jauni}}",
+    "ungelesen": "Jauns",
+    "veroeffentlichtAm": "Publicēts {datum}",
+    "leer": "Jaunumu vēl nav.",
+    "ladefehler": "Neizdevās ielādēt: {grund}",
+    "mehrLaden": "Ielādēt vecākus",
+    "aufklappen": "Rādīt detaļas",
+    "zuklappen": "Slēpt detaļas",
+    "kategorie": {
+      "neuerung": "Jauna funkcija",
+      "wartung": "Apkope",
+      "hinweis": "Paziņojums",
+      "wichtig": "Svarīgi"
+    },
+    "popup": {
+      "ariaLabel": "Paziņojuma saturs",
+      "gelesen": "Sapratu",
+      "wirdGespeichert": "Saglabā …",
+      "erneut": "Mēģināt vēlreiz",
+      "fehler": "Neizdevās apstiprināt: {grund}",
+      "weiter": "Tālāk",
+      "vonAnzahl": "Paziņojums {nummer}"
+    }
+  },
+  "login": {
+    "title": "Pieteikties",
+    "emailLabel": "E-pasts",
+    "passwordLabel": "Parole",
+    "showPassword": "Rādīt paroli",
+    "hidePassword": "Slēpt paroli",
+    "forgot": "Aizmirsāt paroli?",
+    "stayLoggedIn": "Palikt pieteicies",
+    "submit": "Pieteikties",
+    "submitting": "Notiek pieteikšanās…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Vēl neesat myNextDays klients?",
+    "signupLink": "Izmēģiniet bez maksas",
+    "mfaTitle": "Apstiprinājums",
+    "mfaIntro": "Ievadiet 6 ciparu kodu no autentifikācijas lietotnes. Der arī atkopšanas kods.",
+    "mfaCodeLabel": "Kods",
+    "mfaSubmit": "Apstiprināt",
+    "mfaChecking": "Notiek pārbaude…",
+    "mfaBack": "Atpakaļ uz pieteikšanos"
   }
 }

@@ -283,6 +283,7 @@
       "logout": "Log out"
     },
     "stopSell": "Stop-sell",
+    "blockRequests": "Block requests",
     "owners": "Owners",
     "ownerStatements": "Owner statements",
     "portal": "My portal",
@@ -315,7 +316,8 @@
     "noAccess": "No access",
     "dashboardLoadFailed": "The dashboard could not be loaded",
     "reviews": "Reviews",
-    "extensions": "Extensions"
+    "extensions": "Extensions",
+    "announcements": "What's new"
   },
   "exemption": {
     "labelNamed": "Tax-exempt ({scheme}) — no VAT ID required",
@@ -945,6 +947,7 @@
     "newTitle": "New owner",
     "create": "Create",
     "created": "Owner created.",
+    "createdInvited": "Owner created and invitation sent.",
     "cancel": "Cancel",
     "save": "Save",
     "saving": "Saving …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {No properties} one {# property} other {# properties}}",
     "noProperties": "No property is assigned to this owner yet.",
     "addProperty": "Assign property …",
+    "assignProperties": "Assign properties",
+    "assignPropertiesHint": "Optional. Only properties that do not yet belong to an owner can be selected.",
+    "noFreeProperties": "All properties are already assigned to an owner.",
+    "assignSelected": "{count, plural, =0 {Assign properties} one {Assign # property} other {Assign # properties}}",
+    "propertiesAssigned": "{count, plural, one {# property assigned} other {# properties assigned}}",
     "removeProperty": "Remove assignment",
     "sections": {
       "master": "Master data",
       "payout": "Payout & commission",
-      "properties": "Properties"
+      "properties": "Properties",
+      "portalAccess": "Portal access"
     },
     "frequency": {
       "none": "None",
@@ -989,12 +998,20 @@
       "statementFrequency": "Statement frequency",
       "notes": "Notes",
       "share": "Share (%)",
-      "commissionOverride": "Commission (%) override"
+      "commissionOverride": "Commission (%) override",
+      "emailLanguage": "Email language"
     },
     "placeholders": {
       "name": "e.g. John Doe",
       "email": "e.g. john@example.com"
-    }
+    },
+    "emailLanguageHint": "The owner receives statements and notifications in this language — even without their own account.",
+    "portalAccess": "Set up portal access",
+    "portalAccessHint": "The owner receives an invitation by email and can then view their statements themselves.",
+    "portalAccessNeedsEmail": "An email address is required for portal access.",
+    "portalAccessInvite": "Send invitation",
+    "portalAccessInvited": "Invitation sent.",
+    "portalAccessActive": "Portal access is set up."
   },
   "ownerStatements": {
     "title": "Owner statements",
@@ -1149,7 +1166,9 @@
     "subtitle": "Overview of your properties, earnings and statements.",
     "properties": {
       "title": "My properties",
-      "empty": "No properties are assigned to you yet."
+      "empty": "No properties are assigned to you yet.",
+      "city": "Location",
+      "openCalendar": "Calendar"
     },
     "earnings": {
       "title": "Earnings (this month)",
@@ -1175,7 +1194,24 @@
       "to": "To",
       "submit": "Send request",
       "sending": "Sending …",
-      "requested": "Request sent."
+      "requested": "Request sent.",
+      "listTitle": "My requests",
+      "listEmpty": "You have not requested a block yet.",
+      "created": "Submitted on",
+      "range": "Period",
+      "statusLabel": "Status",
+      "readOnlyHint": "Only the management can enter a block. You submit the request; the decision is theirs.",
+      "invalidRange": "The end date must be after the start date.",
+      "invalidDate": "Please enter a valid date.",
+      "status": {
+        "pending": "Under review",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "cancelled": "Withdrawn"
+      },
+      "reason": "Reason",
+      "reasonPlaceholder": "Why should it be blocked? (e.g. own use, tradespeople)",
+      "decisionNote": "Note from the management"
     },
     "meter": {
       "title": "Add meter reading",
@@ -1191,6 +1227,142 @@
         "electricity": "Electricity",
         "water": "Water",
         "gas": "Gas"
+      },
+      "historyTitle": "History",
+      "historyEmpty": "No meter reading recorded for this property yet.",
+      "appendOnlyHint": "Recorded readings stay as they are. A correction is a new entry — that keeps the history complete.",
+      "invalidValue": "Please enter the meter reading as a number.",
+      "invalidDate": "Please enter a valid reading date."
+    },
+    "logout": "Sign out",
+    "loadFailed": "Data could not be loaded.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Overview",
+      "calendar": "Occupancy calendar",
+      "reports": "Reports",
+      "blockRequests": "Blocks",
+      "meterReadings": "Meter readings",
+      "services": "Services",
+      "notifications": "Notifications"
+    },
+    "overview": {
+      "occupancy": "Occupancy",
+      "occupancyHint": "Booked nights in the selected period.",
+      "nights": "Nights",
+      "bookings": "Bookings",
+      "payout": "Net payout",
+      "payoutHint": "Your share after channel fees.",
+      "period": "Period",
+      "periodMonth": "This month",
+      "periodYear": "This year",
+      "openCalendar": "Open calendar",
+      "latestStatement": "Latest statement",
+      "noStatement": "No statement yet"
+    },
+    "calendar": {
+      "title": "Occupancy calendar",
+      "subtitle": "Occupancy and your net payout per night.",
+      "selectProperty": "Select property",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "today": "Today",
+      "legendSeasons": "Seasons",
+      "legendStatus": "Occupancy",
+      "noSeasons": "No seasons are defined for this property.",
+      "status": {
+        "open": "Available",
+        "booked": "Booked",
+        "blocked": "Blocked"
+      },
+      "payoutPerNight": "Net payout/night",
+      "guest": "Guest",
+      "channel": "Booking source",
+      "blockHint": "Want a period blocked? Submit a request — the management decides.",
+      "blockCta": "Request block",
+      "weekdays": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+      "months": "January,February,March,April,May,June,July,August,September,October,November,December"
+    },
+    "services": {
+      "title": "Book a service",
+      "hint": "Order a service for your property. The management accepts and schedules it.",
+      "property": "Property",
+      "kind": "Service",
+      "date": "Preferred date",
+      "note": "Note",
+      "notePlaceholder": "What exactly should be done?",
+      "submit": "Place order",
+      "sending": "Sending …",
+      "sent": "Order sent.",
+      "listTitle": "My orders",
+      "listEmpty": "You have not ordered a service yet.",
+      "invalidDate": "Please enter a valid preferred date.",
+      "noteRequired": "Please describe the service you need.",
+      "kinds": {
+        "custom": "Other (free text)"
+      },
+      "status": {
+        "pending": "Under review",
+        "accepted": "Accepted",
+        "scheduled": "Scheduled",
+        "done": "Completed",
+        "rejected": "Rejected",
+        "cancelled": "Withdrawn"
+      },
+      "type": {
+        "endreinigung": "Final cleaning",
+        "hauptreinigung": "Deep cleaning",
+        "fensterreinigung": "Window cleaning",
+        "rasenmaehen": "Lawn mowing",
+        "terrassenreinigung": "Terrace cleaning"
+      },
+      "dateTo": "To"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "hint": "Choose how you are notified for each event.",
+      "channel": {
+        "email": "Email",
+        "sms": "SMS",
+        "phone": "Phone"
+      },
+      "locked": "This email is contractually required and stays on.",
+      "saved": "Saved.",
+      "saveFailed": "The change could not be saved.",
+      "categories": {
+        "listing_activity": "Bookings at your properties",
+        "listing_activityHint": "New booking, change and cancellation.",
+        "account_activity": "Account activity",
+        "account_activityHint": "Sign-ins and changes to your account.",
+        "reminders": "Reminders",
+        "remindersHint": "Due tasks and dates.",
+        "messages": "Messages",
+        "messagesHint": "New messages from the management.",
+        "owner_booking": "Bookings at your properties",
+        "owner_bookingHint": "New booking, change and cancellation.",
+        "block_decision": "Decision on your block requests",
+        "block_decisionHint": "When the management approves or rejects your request.",
+        "owner_service": "Ordered services",
+        "owner_serviceHint": "Status change on a service you ordered."
+      }
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Statements, the current month and monthly and annual reports.",
+      "currentTitle": "Current statement status",
+      "currentHint": "Provisional — the month is still running. Only the finalized statement is binding.",
+      "monthly": "Monthly report",
+      "yearly": "Annual report",
+      "month": "Month",
+      "year": "Year",
+      "download": "Download PDF",
+      "downloading": "Generating …",
+      "downloadFailed": "The PDF could not be generated.",
+      "onlyFinalized": "Only finalized statements are available for download.",
+      "status": {
+        "draft": "In preparation",
+        "finalized": "Completed",
+        "cancelled": "Cancelled"
       }
     }
   },
@@ -4881,6 +5053,7 @@
       "promoFixedPortalHint": "A flat amount cannot be spread over individual nights — it does not reach the portals, where it has to be maintained in the extranet.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Apply the same promotion to other properties as well.",
+      "applyToOthersSeasonHint": "Create the same season on other properties as well.",
       "promoReason": {
         "mindestaufenthalt": "minimum stay",
         "fruehbucher": "early-booker lead time",
@@ -4981,7 +5154,6 @@
       "paymentPlanLabel": "Payment plan",
       "cancellationLabel": "Cancellation",
       "depositLabel": "Deposit",
-      "depositWithheldText": "A deposit of {amount} is withheld.",
       "noPolicyYet": "No policy stored yet.",
       "bookabilityCardTitle": "Bookability",
       "bookabilityCardHint": "How reservations are accepted.",
@@ -4995,21 +5167,14 @@
       "rentalAgreementCardTitle": "Rental agreement",
       "rentalAgreementCardHint": "Create the rental agreement or link it for your guests.",
       "noRentalAgreementYet": "No rental agreement yet.",
-      "addPolicyTitle": "Add policy",
       "addPolicySubtitle": "Set the details for this new policy.",
       "internalNameLabel": "Internal name *",
       "internalNamePlaceholder": "e.g. partial prepayment – non-refundable",
       "paymentPlanGroupTitle": "Payment plan",
       "paymentCountLabel": "Number of payments",
-      "depositPercentLabel": "Prepayment (%)",
-      "remainingDaysBeforeLabel": "Balance (days before arrival)",
       "guestCancellationGroupTitle": "Cancellation by guest",
       "cancellationTypeLabel": "Cancellation type",
       "depositGroupTitle": "Deposit",
-      "depositModeNone": "No deposit required",
-      "depositModeAmount": "Deposit as an amount",
-      "depositAmountLabelWithCurrency": "Deposit amount ({currency})",
-      "depositAmountLabel": "Deposit amount",
       "quoteValidityGroupTitle": "Quote validity",
       "quoteValidityHoursLabel": "Validity period (hours) *",
       "quoteValidityHint": "The quote is valid for a maximum of {hours} hours, as long as the status is “Waiting for guest\" or “Waiting for payment\".",
@@ -5021,10 +5186,36 @@
       "recommendedBadge": "Recommended",
       "checkInTimeLabel": "Check-in time",
       "checkOutTimeLabel": "Check-out time",
-      "paymentSummaryFull": "100 % due at reservation.",
-      "paymentSummarySplit": "{percent} % at booking, balance {days} days before arrival.",
       "localizedEditorSubtitle": "Create the text and translate it for your guests if needed.",
-      "localizedEditorPlaceholder": "Enter {title} …"
+      "localizedEditorPlaceholder": "Enter {title} …",
+      "editPolicyTitle": "Edit terms",
+      "singlePaymentHint": "100% of the payment is due when the booking is completed.",
+      "firstPaymentHeading": "First payment",
+      "secondPaymentHeading": "Second payment",
+      "thirdPaymentHeading": "Third payment",
+      "amountTypeLabel": "Amount type",
+      "percentLabel": "Percentage",
+      "amountLabel": "Amount",
+      "currencyLabel": "Currency",
+      "daysLabel": "Days",
+      "periodLabel": "Period",
+      "firstPaymentHint": "Only the fixed amount or percentage of the first payment is charged at the time of booking. The remaining payments are invoiced on their scheduled dates.",
+      "remainderHint": "Configure when the remaining balance should be charged.",
+      "partialRulesHint": "Define the rules for partially refundable cancellations.",
+      "ruleHeading": "Rule {number}",
+      "ruleDelete": "Delete rule",
+      "ruleAdd": "Add rule",
+      "refundTypeLabel": "Refund type",
+      "refundLabel": "Refund",
+      "whenCancelledLabel": "When cancelled",
+      "depositNotRequired": "A deposit is not required",
+      "depositRequired": "A deposit is required",
+      "depositMethodLabel": "Method",
+      "preAuthTimesHeading": "Pre-authorisation times",
+      "preAuthValidityLabel": "Validity (days after departure)",
+      "preAuthWarnTitle": "Pre-authorisations can only be guaranteed for 5 days.",
+      "preAuthWarnBody": "How long a pre-authorisation lasts on a credit card depends on various factors such as the card provider, the issuing bank, the payment gateway and so on. For all bookings of a week or longer, every pre-authorisation will therefore expire (be cancelled automatically) after 5 days. We will notify you so that you can manually issue a new pre-authorisation to retain the deposit for the remainder of the booking.",
+      "assignAction": "Assign terms"
     },
     "ratePlanWizard": {
       "title": "Create rate plan",
@@ -5625,6 +5816,39 @@
       "in_house": "Checked in",
       "completed": "Checked out",
       "cancelled": "Cancelled"
+    },
+    "blockRequests": {
+      "title": "Block requests",
+      "subtitle": "Requests from your owners to block their properties. Approving blocks the nights in the calendar and reports them to the channels.",
+      "filter": "Status",
+      "filterAll": "All",
+      "empty": "No requests in this view.",
+      "requestedBy": "Requested by {name}",
+      "reason": "Reason",
+      "decisionNote": "Note",
+      "note": "Note for the owner",
+      "notePlaceholder": "Optional — it is shown to the owner.",
+      "working": "Working …",
+      "status": {
+        "pending": "Open",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "action": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "revoke": "Revoke"
+      },
+      "confirm": {
+        "approve": "Block {objekt} from {von} to {bis}? The nights will be blocked on all channels.",
+        "reject": "Reject the request for {objekt} ({von} – {bis})?",
+        "revoke": "Revoke the approval for {objekt} ({von} – {bis})? The nights will be released again."
+      },
+      "done": {
+        "approve": "Request approved, nights blocked.",
+        "reject": "Request rejected.",
+        "revoke": "Approval revoked, nights released."
+      }
     }
   },
   "seasons": {
@@ -5632,6 +5856,23 @@
     "months": "January,February,March,April,May,June,July,August,September,October,November,December",
     "name": "Name",
     "seasonAdd": "Add season",
+    "seasonApplyCancel": "Cancel",
+    "seasonApplyCopyHint": "The season is created as an independent copy. Later changes to this season will NOT apply there. The surcharge is calculated against each target property’s own base price.",
+    "seasonApplyNone": "Not copied to any property.",
+    "seasonApplyPartial": "Copied to {count} property/properties, {skipped} skipped.",
+    "seasonApplyPickTarget": "Please select at least one property.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "No base price set — a surcharge cannot be calculated.",
+      "basispreis_null": "Base price is 0 — a surcharge cannot be calculated.",
+      "teilweise_uebertragen": "Season is on the property, daily rates are still missing — try again to complete it.",
+      "unbekannt": "Skipped for an unknown reason."
+    },
+    "seasonApplySubmit": "Copy",
+    "seasonApplySuccess": "Copied to {count} property/properties.",
+    "seasonApplyTitle": "Copy “{name}” to other properties",
+    "seasonApplyToOthers": "Copy to other properties",
+    "seasonApplyWithRanges": "Include the date ranges",
+    "seasonApplyWithRangesHint": "The painted days are set on the target property as well. Off: only the season itself, without any days.",
     "seasonClearHint": "Right-click and drag across the days to remove them from the season.",
     "seasonColor": "Color",
     "seasonColorAria": "Color {color}",
@@ -5658,7 +5899,8 @@
     "seasonSurchargeLabel": "Surcharge (± %)",
     "seasonSurchargePlaceholder": "e.g. 30 or -15",
     "seasonValueRequired": "Please enter a valid value.",
-    "weekdays": "M,T,W,T,F,S,S"
+    "weekdays": "M,T,W,T,F,S,S",
+    "seasonApplyNoSpans": "This season has no painted periods. Paint it first, or transfer only the definition without periods."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6286,7 +6528,145 @@
       "qrAlt": "QR code for the authenticator app",
       "sixDigitCode": "6-digit code",
       "disable2fa": "Disable 2FA",
-      "disable2faHint": "Enter a current code (or a recovery code) to switch 2FA off."
+      "disable2faHint": "Enter a current code (or a recovery code) to switch 2FA off.",
+      "title": "Security",
+      "loadFailed": "Your account details couldn't be loaded. Please check your connection and try again.",
+      "credentials": "Credentials",
+      "emailAndUsername": "Email and user name",
+      "emailLabel": "Email",
+      "nameLabel": "Name",
+      "password": "Password",
+      "noPassword": "No password set",
+      "passwordMin": "At least 8 characters.",
+      "save": "Save",
+      "saving": "Saving …",
+      "changePassword": "Change password",
+      "twoFactor": {
+        "title": "Two-factor authentication (2FA)",
+        "intro": "Protects your account with a second factor on top of your password.",
+        "noneActive": "No second factor is set up yet. We recommend the authenticator app.",
+        "requiredNotice": "A second factor is mandatory for your role. Please set one up now.",
+        "active": "Active",
+        "setUp": "Set up",
+        "totp": {
+          "title": "Authenticator app",
+          "description": "One-time code from an app such as Google Authenticator or Microsoft Authenticator. Works without mobile coverage too.",
+          "setupTitle": "Set up authenticator app",
+          "setupHint": "Scan the QR code with your app and confirm with the code it shows.",
+          "step1": "1. Scan QR code",
+          "step2": "3. Enter the code from the app",
+          "qrAlt": "QR code for the authenticator app",
+          "qrHint": "Open your authenticator app and scan the code.",
+          "manualTitle": "2. Or enter the key manually",
+          "manualHint": "Use this key if you can't scan the QR code.",
+          "showSecret": "Show key",
+          "hideSecret": "Hide key",
+          "copySecret": "Copy key",
+          "copyFailed": "Copying isn't possible. Please select the key and copy it manually.",
+          "codeLabel": "6-digit code",
+          "activate": "Activate",
+          "checking": "Checking …",
+          "preparing": "Preparing setup …",
+          "enabledTitle": "The authenticator app is active. Now save your recovery codes.",
+          "friendlyName": "Authenticator app",
+          "replayNote": "Note: a code stays valid for up to 90 seconds and can be used more than once during that time. Only a passkey protects you against real-time sign-in page fraud."
+        },
+        "sms": {
+          "title": "SMS code",
+          "description": "One-time code by text message to your confirmed phone number.",
+          "unavailable": "SMS code isn't available on this server because no SMS provider is set up. Please choose the authenticator app or a passkey instead.",
+          "unavailableBadge": "Not available",
+          "setupTitle": "Set up SMS code",
+          "setupHint": "We'll send a code to your phone number.",
+          "simSwapWarning": "Note: SMS is less secure than an authenticator app. Anyone who gets your number transferred to another SIM card can receive your codes. If possible, choose the authenticator app or a passkey.",
+          "numberLabel": "Phone number",
+          "numberHint": "International format with country code, for example +49 …",
+          "invalidNumber": "Please enter the number in international format, starting with + and the country code.",
+          "sendCode": "Send code",
+          "sending": "Sending …",
+          "codeLabel": "6-digit code",
+          "codeSentTo": "We've sent a code to {phone}.",
+          "confirm": "Confirm",
+          "checking": "Checking …",
+          "resend": "Send code again",
+          "changeNumber": "Use a different number",
+          "friendlyName": "SMS code"
+        },
+        "passkey": {
+          "title": "Passkey",
+          "description": "Sign in with your fingerprint, face recognition or a security key. No code needed.",
+          "setupTitle": "Set up passkey",
+          "setupHint": "Your device confirms it's you with your fingerprint, face recognition or a security key.",
+          "checkingSupport": "Checking device …",
+          "unsupportedTitle": "This browser doesn't support passkeys",
+          "unsupportedHint": "Use an up-to-date browser, or set up the authenticator app instead.",
+          "securityKeyOnly": "This device has no built-in confirmation (such as a fingerprint or face recognition). You'll need a plug-in security key for this.",
+          "benefitPhishing": "Protects you against fake sign-in pages.",
+          "benefitNoCode": "No code to type in.",
+          "create": "Create passkey",
+          "friendlyName": "Passkey",
+          "recommended": "Recommended: the most secure of the three options.",
+          "creating": "Creating …",
+          "errors": {
+            "abgebrochen": "The confirmation was cancelled or not recognised. Please try again.",
+            "herkunftPasstNicht": "Passkeys are not enabled for this address. Sign in via the official address.",
+            "nichtUnterstuetzt": "This device cannot create a passkey. Use the authenticator app or a security key.",
+            "schonVorhanden": "A passkey for this account already exists on this device.",
+            "laeuftBereits": "A passkey request is already running. Finish or cancel it first.",
+            "zeitUeberschritten": "The time for confirmation has expired. Please try again.",
+            "unbekannt": "The passkey could not be created. Please try again."
+          }
+        },
+        "recovery": {
+          "title": "Recovery codes",
+          "description": "Single-use codes for when you can't access your second factor.",
+          "left": "{count} codes still available.",
+          "create": "Create codes",
+          "regenerate": "Create new codes",
+          "regenerateHint": "When you create new codes, all previous ones stop working.",
+          "dialogTitle": "Recovery codes",
+          "dialogHint": "Single-use codes for when you can't access your second factor.",
+          "replaceWarning": "Caution: your previous recovery codes become invalid in the process.",
+          "passwordLabel": "Current password",
+          "passwordHint": "To confirm that it's really you.",
+          "createNow": "Create codes",
+          "creating": "Creating …",
+          "createdTitle": "Your new recovery codes. Keep them somewhere safe.",
+          "noneReturned": "No codes were created. Please try again."
+        },
+        "remove": "Remove",
+        "removeDialog": {
+          "totpTitle": "Remove authenticator app",
+          "smsTitle": "Remove SMS code",
+          "warning": "After this, that factor no longer protects your account.",
+          "passwordLabel": "Current password",
+          "remove": "Remove",
+          "removing": "Removing …",
+          "cancel": "Cancel",
+          "hint": "Confirm the removal with your current password.",
+          "passkeyTitle": "Remove passkey",
+          "lastFactorBlocked": "This is your last second factor, and your role requires one. Create recovery codes first, or set up another factor."
+        },
+        "requiredWithDeadline": "A second factor is mandatory for your role. Set it up by {date} — after that, signing in without a second factor is no longer possible.",
+        "statusFailed": "The two-factor authentication status couldn't be loaded. Please reload the page."
+      },
+      "recovery": {
+        "lockoutWarning": "Without these codes you'll lose access to your account if you can no longer use your second factor. Keep them somewhere safe, separate from your password.",
+        "copy": "Copy",
+        "copied": "Copied",
+        "copyFailed": "Copying isn't possible. Please download the codes or print them.",
+        "download": "Download",
+        "downloadFailed": "Downloading isn't possible. Please copy the codes or print them.",
+        "print": "Print",
+        "printBlocked": "The print window was blocked. Please allow pop-ups or download the codes.",
+        "printTitle": "myNextDays recovery codes",
+        "printHint": "Each code works exactly once. Keep this sheet somewhere safe.",
+        "fileHeader": "myNextDays recovery codes — each code works exactly once. Keep them safe.",
+        "confirmSaved": "I've saved the codes somewhere safe.",
+        "confirmHint": "Tick the box to finish setting up.",
+        "mustExportFirst": "Copy, download or print the codes first.",
+        "done": "Done"
+      }
     },
     "company": {
       "saved": "Data saved.",
@@ -6309,16 +6689,44 @@
       "spokenLanguages": "Spoken languages",
       "searchLanguage": "Search language…",
       "chooseRole": "Choose role…",
-      "userCreated": "User created",
-      "preferredLanguage": "Preferred language",
+      "preferredLanguage": "Email language",
       "noLanguageFound": "No language found.",
       "firstName": "First name",
       "lastName": "Last name",
       "email": "Email",
       "phone": "Phone number",
       "notes": "Notes",
-      "password": "Password",
-      "credentialsHint": "Pass these credentials on to the new user. The password is only shown now."
+      "title": "Create user",
+      "createdSubtitle": "Invitation sent.",
+      "stepHints": {
+        "contact": "Add this user's contact information.",
+        "extra": "Add additional information about this user.",
+        "role": "Choose the role and permissions for this user.",
+        "properties": "Assign properties to this user."
+      },
+      "done": "Done",
+      "cancel": "Cancel",
+      "back": "Back",
+      "next": "Next",
+      "create": "Create",
+      "creating": "Creating…",
+      "role": "Role",
+      "requiredFields": "First name, last name, email and role are required.",
+      "assignFailed": "User created, but property assignment failed: {reason}",
+      "hidePhones": "Hide phone numbers on the website.",
+      "noAssignNeeded": "No property assignment needed",
+      "noAssignNeededHint": "This role has access to all properties of the account. Assigning individual properties applies only to owners and staff.",
+      "noProperties": "No properties yet",
+      "noPropertiesHint": "Create your properties so that you can assign them to your users later.",
+      "choosePropertiesHint": "Choose the properties this user will have access to.",
+      "selectedCount": "{count} selected",
+      "inviteSent": "Invitation sent",
+      "inviteSentHint": "The user receives an email and sets their own password. The link is valid for 7 days.",
+      "inviteResend": "Resend invitation",
+      "inviteResending": "Sending…",
+      "inviteResent": "Invitation sent again.",
+      "inviteResendFailed": "The invitation could not be sent again.",
+      "preferredLanguageHint": "The new user receives the invitation and all further emails in this language."
     },
     "tariff": {
       "oneLess": "One property fewer",
@@ -6380,7 +6788,14 @@
       "updated": "User updated.",
       "deleted": "User deleted.",
       "generalPermissions": "General permissions",
-      "roleChangeHint": "Changing the role suggests matching permissions. You can adjust them individually afterwards."
+      "roleChangeHint": "Changing the role suggests matching permissions. You can adjust them individually afterwards.",
+      "edit": "Edit",
+      "delete": "Delete",
+      "resendInvite": "Resend invitation",
+      "inviteResent": "Invitation sent to {email}.",
+      "inviteResendFailed": "The invitation could not be sent again.",
+      "emailLanguage": "Email language",
+      "emailLanguageHint": "This user receives their emails in this language."
     },
     "staffProperties": {
       "title": "Share properties"
@@ -6464,7 +6879,19 @@
     "companyPlaceholder": "e.g. Hotel Lakeview",
     "namePlaceholder": "First and last name",
     "passwordHint": "At least 8 characters",
-    "passwordRepeat": "Repeat password"
+    "passwordRepeat": "Repeat password",
+    "headline": "Your rental business in one place.",
+    "feature1": "Sync calendars automatically",
+    "feature2": "Direct bookings on your own site",
+    "feature3": "Automate guest messages",
+    "withGoogle": "Sign up with Google",
+    "withApple": "Sign up with Apple",
+    "or": "or",
+    "withEmail": "Sign up with email",
+    "haveAccount": "Already have an account?",
+    "loginLink": "Sign in here",
+    "loadingHeadline": "Your own booking website. Keep 100 % of every booking.",
+    "loadingText": "Setting up your account …"
   },
   "marketingSite": {
     "stars": "4.5 stars",
@@ -7119,5 +7546,156 @@
     "alleGelesen": "Mark all read",
     "erneut": "Reload",
     "ariaMitAnzahl": "Notifications ({count} unread)"
+  },
+  "auth": {
+    "toLogin": "Back to sign in",
+    "genericError": "That didn't work just now. Please try again later.",
+    "tokenMissing": {
+      "title": "Incomplete link",
+      "text": "This link is incomplete. Please use the full link from the email — copying it and pasting it into the address bar works best."
+    },
+    "tokenInvalid": {
+      "title": "Link no longer valid",
+      "textInvite": "This invitation link has expired or has already been used. Please contact your business — they can send the invitation again.",
+      "textReset": "This link has expired or has already been used. Simply request a new one.",
+      "retry": "Request a new link"
+    },
+    "invite": {
+      "title": "Set up your access",
+      "intro": "Choose a password for your myNextDays access. At least {min} characters."
+    },
+    "reset": {
+      "title": "New password",
+      "intro": "Choose a new password. At least {min} characters."
+    },
+    "done": {
+      "titleInvite": "Access set up",
+      "titleReset": "Password changed",
+      "text": "You can now sign in with your new password."
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "intro": "Enter your email address. We'll send you a link to set a new password.",
+      "emailLabel": "Email",
+      "submit": "Request link",
+      "sending": "Sending…",
+      "sentTitle": "Email on its way",
+      "sentText": "If an account exists for this address, we've sent a reset link. It is valid for one hour.",
+      "spamHint": "Nothing arrived? Please also check your spam folder.",
+      "again": "Request again"
+    },
+    "password": {
+      "newLabel": "Password",
+      "repeatLabel": "Repeat password",
+      "submit": "Set password",
+      "saving": "Saving…",
+      "mismatch": "The two passwords do not match.",
+      "tooWeak": "The password does not meet the requirements (at least {min} characters).",
+      "show": "Show password",
+      "hide": "Hide password",
+      "strengthLabel": "Strength: {level}",
+      "strength": {
+        "1": "weak",
+        "2": "fair",
+        "3": "good",
+        "4": "strong"
+      },
+      "requirement": {
+        "length": "At least {min} characters",
+        "letter": "At least one letter",
+        "digit": "At least one digit"
+      }
+    },
+    "checking": "Checking link…",
+    "languageLabel": "Language",
+    "languageChange": "Change language",
+    "twoFactor": {
+      "title": "Confirmation",
+      "totpHint": "Enter the 6-digit code from your authenticator app.",
+      "smsHint": "Enter the 6-digit code we sent you by text message.",
+      "smsHintWithPhone": "Enter the 6-digit code we sent to {phone}.",
+      "codeLabel": "Code",
+      "confirm": "Confirm",
+      "checking": "Checking …",
+      "recoveryHint": "Enter one of your recovery codes.",
+      "recoveryLabel": "Recovery code",
+      "recoverySingleUse": "Each code works exactly once.",
+      "useTotp": "Use authenticator app",
+      "useSms": "Use SMS code",
+      "useRecovery": "Use recovery code",
+      "backToLogin": "Back to sign-in",
+      "factorMissing": "This factor isn't available for your account. Choose another option.",
+      "passkeyHint": "Confirm the sign-in with your passkey.",
+      "passkeyUse": "Sign in with passkey",
+      "usePasskey": "Use passkey",
+      "sendCode": "Send code by SMS",
+      "sending": "Sending …",
+      "smsSent": "The code has been sent.",
+      "resend": "Send code again",
+      "recoveryRedeemedHint": "The code was redeemed, but on its own it isn't enough to sign in. Please sign in with one of the factors you've set up, or contact your team."
+    },
+    "mfaSetup": {
+      "title": "Set up two-factor authentication",
+      "intro": "A second factor is mandatory for your role. Set it up now to continue.",
+      "why": "As an administrator you have access to financial data, guest data and the settings of the entire business. A second factor makes sure a stolen password alone isn't enough.",
+      "goToSettings": "Set up now",
+      "later": "Remind me later",
+      "laterHint": "You can still put this off. We'll ask again the next time you sign in.",
+      "introWithDeadline": "A second factor is mandatory for your role. Set it up by {date} — after that, signing in without a second factor is no longer possible."
+    }
+  },
+  "sprache": {
+    "label": "Email language",
+    "hint": "We send emails to this person in this language.",
+    "none": "— not specified"
+  },
+  "neuerungen": {
+    "eyebrow": "Product updates",
+    "titel": "What's new",
+    "unterzeile": "Everything that changed in myNextDays — newest first.",
+    "neuAnzahl": "{anzahl, plural, one {# new} other {# new}}",
+    "ungelesen": "New",
+    "veroeffentlichtAm": "Published on {datum}",
+    "leer": "There are no updates yet.",
+    "ladefehler": "Could not be loaded: {grund}",
+    "mehrLaden": "Load older",
+    "aufklappen": "Show details",
+    "zuklappen": "Hide details",
+    "kategorie": {
+      "neuerung": "New feature",
+      "wartung": "Maintenance",
+      "hinweis": "Notice",
+      "wichtig": "Important"
+    },
+    "popup": {
+      "ariaLabel": "Announcement content",
+      "gelesen": "Got it",
+      "wirdGespeichert": "Saving …",
+      "erneut": "Try again",
+      "fehler": "Could not be confirmed: {grund}",
+      "weiter": "Next",
+      "vonAnzahl": "Announcement {nummer}"
+    }
+  },
+  "login": {
+    "title": "Sign in",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "forgot": "Forgotten your password?",
+    "stayLoggedIn": "Stay signed in",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Not a myNextDays customer yet?",
+    "signupLink": "Try it free",
+    "mfaTitle": "Confirmation",
+    "mfaIntro": "Enter the 6-digit code from your authenticator app. A recovery code works too.",
+    "mfaCodeLabel": "Code",
+    "mfaSubmit": "Confirm",
+    "mfaChecking": "Checking…",
+    "mfaBack": "Back to sign in"
   }
 }

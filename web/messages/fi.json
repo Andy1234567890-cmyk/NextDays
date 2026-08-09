@@ -283,6 +283,7 @@
       "logout": "Kirjaudu ulos"
     },
     "stopSell": "Myynnin pysäytys",
+    "blockRequests": "Sulkupyynnöt",
     "owners": "Omistajat",
     "ownerStatements": "Omistajatilitykset",
     "portal": "Oma portaali",
@@ -315,7 +316,8 @@
     "noAccess": "Ei käyttöoikeutta",
     "dashboardLoadFailed": "Kojelautaa ei voitu ladata",
     "reviews": "Arvostelut",
-    "extensions": "Laajennukset"
+    "extensions": "Laajennukset",
+    "announcements": "Uutuudet"
   },
   "exemption": {
     "labelNamed": "Verovapaa ({scheme}) — ALV-numeroa ei tarvita",
@@ -945,6 +947,7 @@
     "newTitle": "Uusi omistaja",
     "create": "Luo",
     "created": "Omistaja luotu.",
+    "createdInvited": "Omistaja luotu ja kutsu lähetetty.",
     "cancel": "Peruuta",
     "save": "Tallenna",
     "saving": "Tallennetaan …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Ei kohteita} one {# kohde} other {# kohdetta}}",
     "noProperties": "Tälle omistajalle ei ole vielä liitetty kohdetta.",
     "addProperty": "Liitä kohde …",
+    "assignProperties": "Määritä kohteet",
+    "assignPropertiesHint": "Valinnainen. Valittavissa ovat vain kohteet, joilla ei vielä ole omistajaa.",
+    "noFreeProperties": "Kaikki kohteet on jo määritetty omistajalle.",
+    "assignSelected": "{count, plural, =0 {Määritä kohteet} one {Määritä # kohde} other {Määritä # kohdetta}}",
+    "propertiesAssigned": "{count, plural, one {# kohde määritetty} other {# kohdetta määritetty}}",
     "removeProperty": "Poista liitos",
     "sections": {
       "master": "Perustiedot",
       "payout": "Maksu & palkkio",
-      "properties": "Kohteet"
+      "properties": "Kohteet",
+      "portalAccess": "Portaalikäyttöoikeus"
     },
     "frequency": {
       "none": "Ei mitään",
@@ -989,12 +998,20 @@
       "statementFrequency": "Tilitysväli",
       "notes": "Muistiinpanot",
       "share": "Osuus (%)",
-      "commissionOverride": "Palkkio (%) poikkeava"
+      "commissionOverride": "Palkkio (%) poikkeava",
+      "emailLanguage": "Sähköpostien kieli"
     },
     "placeholders": {
       "name": "esim. Matti Meikäläinen",
       "email": "esim. matti@example.com"
-    }
+    },
+    "emailLanguageHint": "Tällä kielellä omistaja saa tilitykset ja ilmoitukset — myös ilman omaa käyttöoikeutta.",
+    "portalAccess": "Luo portaalikäyttöoikeus",
+    "portalAccessHint": "Omistaja saa kutsun sähköpostitse ja voi sen jälkeen tarkastella tilityksiään itse.",
+    "portalAccessNeedsEmail": "Portaalikäyttöoikeus edellyttää sähköpostiosoitetta.",
+    "portalAccessInvite": "Lähetä kutsu",
+    "portalAccessInvited": "Kutsu lähetetty.",
+    "portalAccessActive": "Portaalikäyttöoikeus on luotu."
   },
   "ownerStatements": {
     "title": "Omistajan tilitys",
@@ -1149,7 +1166,9 @@
     "subtitle": "Yleiskatsaus kohteistasi, tuloistasi ja tilityksistäsi.",
     "properties": {
       "title": "Omat kohteet",
-      "empty": "Sinulle ei ole tällä hetkellä liitetty kohteita."
+      "empty": "Sinulle ei ole tällä hetkellä liitetty kohteita.",
+      "city": "Sijainti",
+      "openCalendar": "Kalenteri"
     },
     "earnings": {
       "title": "Tulot (tässä kuussa)",
@@ -1175,7 +1194,24 @@
       "to": "Asti",
       "submit": "Lähetä pyyntö",
       "sending": "Lähetetään …",
-      "requested": "Pyyntö lähetetty."
+      "requested": "Pyyntö lähetetty.",
+      "listTitle": "Omat pyyntöni",
+      "listEmpty": "Et ole vielä pyytänyt estoa.",
+      "created": "Lähetetty",
+      "range": "Ajanjakso",
+      "statusLabel": "Tila",
+      "readOnlyHint": "Vain hallinto voi kirjata eston. Sinä lähetät pyynnön, päätöksen tekee hallinto.",
+      "invalidRange": "Loppupäivän on oltava alkupäivän jälkeen.",
+      "invalidDate": "Anna kelvollinen päivämäärä.",
+      "status": {
+        "pending": "Käsittelyssä",
+        "approved": "Hyväksytty",
+        "rejected": "Hylätty",
+        "cancelled": "Peruttu"
+      },
+      "reason": "Syy",
+      "reasonPlaceholder": "Miksi kohde tulisi estää? (esim. oma käyttö, käsityöläiset)",
+      "decisionNote": "Hallinnon huomautus"
     },
     "meter": {
       "title": "Kirjaa mittarilukema",
@@ -1191,6 +1227,142 @@
         "electricity": "Sähkö",
         "water": "Vesi",
         "gas": "Kaasu"
+      },
+      "historyTitle": "Historia",
+      "historyEmpty": "Tälle kohteelle ei ole vielä kirjattu mittarilukemaa.",
+      "appendOnlyHint": "Kirjatut lukemat säilyvät muuttumattomina. Korjaus on uusi kirjaus — näin historia pysyy täydellisenä.",
+      "invalidValue": "Anna mittarilukema numerona.",
+      "invalidDate": "Anna kelvollinen lukemapäivä."
+    },
+    "logout": "Kirjaudu ulos",
+    "loadFailed": "Tietoja ei voitu ladata.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Yleiskatsaus",
+      "calendar": "Käyttöastekalenteri",
+      "reports": "Raportit",
+      "blockRequests": "Varaukset (esto)",
+      "meterReadings": "Mittarilukemat",
+      "services": "Palvelut",
+      "notifications": "Ilmoitukset"
+    },
+    "overview": {
+      "occupancy": "Käyttöaste",
+      "occupancyHint": "Varatut yöt valitulla ajanjaksolla.",
+      "nights": "Yöt",
+      "bookings": "Varaukset",
+      "payout": "Nettotilitys",
+      "payoutHint": "Oma osuutesi portaalimaksujen jälkeen.",
+      "period": "Ajanjakso",
+      "periodMonth": "Tämä kuukausi",
+      "periodYear": "Tämä vuosi",
+      "openCalendar": "Avaa kalenteri",
+      "latestStatement": "Viimeisin tilitys",
+      "noStatement": "Ei vielä tilitystä"
+    },
+    "calendar": {
+      "title": "Käyttöastekalenteri",
+      "subtitle": "Käyttöaste ja nettotilityksesi per yö.",
+      "selectProperty": "Valitse kohde",
+      "prevMonth": "Edellinen kuukausi",
+      "nextMonth": "Seuraava kuukausi",
+      "today": "Tänään",
+      "legendSeasons": "Kaudet",
+      "legendStatus": "Käyttöaste",
+      "noSeasons": "Tälle kohteelle ei ole määritetty kausia.",
+      "status": {
+        "open": "Vapaa",
+        "booked": "Varattu",
+        "blocked": "Estetty"
+      },
+      "payoutPerNight": "Nettotilitys/yö",
+      "guest": "Vieras",
+      "channel": "Varauslähde",
+      "blockHint": "Haluatko estää ajanjakson? Lähetä pyyntö — hallinto päättää.",
+      "blockCta": "Pyydä estoa",
+      "weekdays": "Ma,Ti,Ke,To,Pe,La,Su",
+      "months": "Tammikuu,Helmikuu,Maaliskuu,Huhtikuu,Toukokuu,Kesäkuu,Heinäkuu,Elokuu,Syyskuu,Lokakuu,Marraskuu,Joulukuu"
+    },
+    "services": {
+      "title": "Tilaa palvelu",
+      "hint": "Tilaa palvelu kohteellesi. Hallinto hyväksyy tilauksen ja aikatauluttaa sen.",
+      "property": "Kohde",
+      "kind": "Palvelu",
+      "date": "Toivottu ajankohta",
+      "note": "Huomautus",
+      "notePlaceholder": "Mitä täsmälleen pitäisi tehdä?",
+      "submit": "Tilaa",
+      "sending": "Lähetetään …",
+      "sent": "Tilaus lähetetty.",
+      "listTitle": "Omat tilaukseni",
+      "listEmpty": "Et ole vielä tilannut palvelua.",
+      "invalidDate": "Anna kelvollinen toivottu ajankohta.",
+      "noteRequired": "Kuvaile haluamaasi palvelua.",
+      "kinds": {
+        "custom": "Muu (vapaa teksti)"
+      },
+      "status": {
+        "pending": "Käsittelyssä",
+        "accepted": "Hyväksytty",
+        "scheduled": "Aikataulutettu",
+        "done": "Valmis",
+        "rejected": "Hylätty",
+        "cancelled": "Peruttu"
+      },
+      "type": {
+        "endreinigung": "Loppusiivous",
+        "hauptreinigung": "Peruspesu",
+        "fensterreinigung": "Ikkunanpesu",
+        "rasenmaehen": "Nurmikonleikkuu",
+        "terrassenreinigung": "Terassin siivous"
+      },
+      "dateTo": "Asti"
+    },
+    "notifications": {
+      "title": "Ilmoitukset",
+      "hint": "Määritä jokaiselle tapahtumalle, miten sinulle ilmoitetaan.",
+      "channel": {
+        "email": "Sähköposti",
+        "sms": "Tekstiviesti",
+        "phone": "Puhelin"
+      },
+      "locked": "Tämä sähköposti on sopimuksen mukaan pakollinen ja pysyy päällä.",
+      "saved": "Tallennettu.",
+      "saveFailed": "Muutosta ei voitu tallentaa.",
+      "categories": {
+        "listing_activity": "Varaukset kohteissasi",
+        "listing_activityHint": "Uusi varaus, muutos ja peruutus.",
+        "account_activity": "Tilin toiminta",
+        "account_activityHint": "Kirjautumiset ja muutokset tilillesi.",
+        "reminders": "Muistutukset",
+        "remindersHint": "Erääntyvät tehtävät ja ajankohdat.",
+        "messages": "Viestit",
+        "messagesHint": "Uudet viestit hallinnolta.",
+        "owner_booking": "Varaukset kohteissasi",
+        "owner_bookingHint": "Uusi varaus, muutos ja peruutus.",
+        "block_decision": "Päätös estopyynnöistäsi",
+        "block_decisionHint": "Kun hallinto hyväksyy tai hylkää pyyntösi.",
+        "owner_service": "Tilatut palvelut",
+        "owner_serviceHint": "Tilamuutos tilaamassasi palvelussa."
+      }
+    },
+    "reports": {
+      "title": "Raportit",
+      "subtitle": "Tilitykset, kuluva kuukausi sekä kuukausi- ja vuosiraportit.",
+      "currentTitle": "Nykyinen tilitystilanne",
+      "currentHint": "Alustava — kuukausi on vielä kesken. Vain lopullinen tilitys on sitova.",
+      "monthly": "Kuukausiraportti",
+      "yearly": "Vuosiraportti",
+      "month": "Kuukausi",
+      "year": "Vuosi",
+      "download": "Lataa PDF",
+      "downloading": "Luodaan …",
+      "downloadFailed": "PDF:ää ei voitu luoda.",
+      "onlyFinalized": "Vain lopulliset tilitykset ovat ladattavissa.",
+      "status": {
+        "draft": "Valmisteilla",
+        "finalized": "Valmis",
+        "cancelled": "Peruttu"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Kiinteää summaa ei voi jakaa yksittäisille öille — se ei mene portaaleihin, joissa se on ylläpidettävä ekstranetissä.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Käytä samaa kampanjaa myös muissa kohteissa.",
+      "applyToOthersSeasonHint": "Luo sama sesonki myös muihin kohteisiin.",
       "promoReason": {
         "mindestaufenthalt": "vähimmäisoleskelu",
         "fruehbucher": "ennakkovaraajan ennakko",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Maksusuunnitelma",
       "cancellationLabel": "Peruutus",
       "depositLabel": "Vakuusmaksu",
-      "depositWithheldText": "Vakuusmaksu {amount} pidätetään.",
       "noPolicyYet": "Käytäntöä ei ole vielä määritetty.",
       "bookabilityCardTitle": "Varattavuus",
       "bookabilityCardHint": "Miten varaukset hyväksytään.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Vuokrasopimus",
       "rentalAgreementCardHint": "Luo vuokrasopimus tai linkitä se vieraillesi.",
       "noRentalAgreementYet": "Ei vielä vuokrasopimusta.",
-      "addPolicyTitle": "Lisää käytäntö",
       "addPolicySubtitle": "Määritä tämän uuden käytännön tiedot.",
       "internalNameLabel": "Sisäinen nimi *",
       "internalNamePlaceholder": "esim. Osamaksu – ei palautettavissa",
       "paymentPlanGroupTitle": "Maksusuunnitelma",
       "paymentCountLabel": "Maksujen määrä",
-      "depositPercentLabel": "Käsiraha (%)",
-      "remainingDaysBeforeLabel": "Loppusumma (päivää ennen saapumista)",
       "guestCancellationGroupTitle": "Vieraan tekemä peruutus",
       "cancellationTypeLabel": "Peruutustyyppi",
       "depositGroupTitle": "Vakuusmaksu",
-      "depositModeNone": "Vakuusmaksua ei vaadita",
-      "depositModeAmount": "Vakuusmaksu summana",
-      "depositAmountLabelWithCurrency": "Vakuusmaksun summa ({currency})",
-      "depositAmountLabel": "Vakuusmaksun summa",
       "quoteValidityGroupTitle": "Tarjouksen voimassaolo",
       "quoteValidityHoursLabel": "Voimassaoloaika (tuntia) *",
       "quoteValidityHint": "Tarjous on voimassa enintään {hours} tuntia, kunnes tila on „Odottaa vierasta” tai „Odottaa maksua”.",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Suositeltu",
       "checkInTimeLabel": "Sisäänkirjautumisaika",
       "checkOutTimeLabel": "Uloskirjautumisaika",
-      "paymentSummaryFull": "100 % maksettava varauksen yhteydessä.",
-      "paymentSummarySplit": "{percent} % varauksen yhteydessä, loppusumma {days} päivää ennen saapumista.",
       "localizedEditorSubtitle": "Luo teksti ja käännä se tarvittaessa vieraillesi.",
-      "localizedEditorPlaceholder": "Kirjoita: {title} …"
+      "localizedEditorPlaceholder": "Kirjoita: {title} …",
+      "editPolicyTitle": "Muokkaa ehtoja",
+      "singlePaymentHint": "100 % maksusta erääntyy varauksen viimeistelyn yhteydessä.",
+      "firstPaymentHeading": "Ensimmäinen maksu",
+      "secondPaymentHeading": "Toinen maksu",
+      "thirdPaymentHeading": "Kolmas maksu",
+      "amountTypeLabel": "Summan tyyppi",
+      "percentLabel": "Prosenttiosuus",
+      "amountLabel": "Summa",
+      "currencyLabel": "Valuutta",
+      "daysLabel": "Päivää",
+      "periodLabel": "Ajanjakso",
+      "firstPaymentHint": "Varauksen yhteydessä veloitetaan vain ensimmäisen maksun kiinteä summa tai prosenttiosuus. Loput maksut laskutetaan suunniteltuna ajankohtana.",
+      "remainderHint": "Määritä, milloin jäljellä oleva summa veloitetaan.",
+      "partialRulesHint": "Määritä osittain palautettavien peruutusten säännöt.",
+      "ruleHeading": "Sääntö {number}",
+      "ruleDelete": "Poista sääntö",
+      "ruleAdd": "Lisää sääntö",
+      "refundTypeLabel": "Hyvityksen tyyppi",
+      "refundLabel": "Hyvitys",
+      "whenCancelledLabel": "Peruutettaessa",
+      "depositNotRequired": "Vakuutta ei vaadita",
+      "depositRequired": "Vakuus vaaditaan",
+      "depositMethodLabel": "Menetelmä",
+      "preAuthTimesHeading": "Ennakkovaltuutuksen ajankohdat",
+      "preAuthValidityLabel": "Voimassaolo (päivää lähdön jälkeen)",
+      "preAuthWarnTitle": "Ennakkovaltuutukset voidaan taata vain 5 päiväksi.",
+      "preAuthWarnBody": "Luottokortin ennakkovaltuutuksen kesto riippuu useista tekijöistä, kuten kortin tarjoajasta, myöntävästä pankista ja maksunvälittäjästä. Siksi viikon tai sitä pidemmissä varauksissa jokainen ennakkovaltuutus vanhenee (peruuntuu automaattisesti) 5 päivän välein. Ilmoitamme siitä sinulle, jotta voit tehdä käsin uuden ennakkovaltuutuksen ja säilyttää vakuuden varauksen loppuajaksi.",
+      "assignAction": "Määritä ehdot"
     },
     "ratePlanWizard": {
       "title": "Luo hintasuunnitelma",
@@ -5604,6 +5795,39 @@
       "confirmed": "Vahvistettu",
       "in_house": "Sisäänkirjautunut",
       "pending": "Optio / alustava"
+    },
+    "blockRequests": {
+      "title": "Sulkupyynnöt",
+      "subtitle": "Omistajiesi pyynnöt sulkea kohteensa. Hyväksyntä sulkee yöt kalenterissa ja ilmoittaa ne portaaleille.",
+      "filter": "Tila",
+      "filterAll": "Kaikki",
+      "empty": "Ei pyyntöjä tässä näkymässä.",
+      "requestedBy": "Pyytäjä: {name}",
+      "reason": "Perustelu",
+      "decisionNote": "Huomautus",
+      "note": "Huomautus omistajalle",
+      "notePlaceholder": "Valinnainen — se näytetään omistajalle.",
+      "working": "Suoritetaan …",
+      "status": {
+        "pending": "Avoin",
+        "approved": "Hyväksytty",
+        "rejected": "Hylätty"
+      },
+      "action": {
+        "approve": "Hyväksy",
+        "reject": "Hylkää",
+        "revoke": "Peruuta"
+      },
+      "confirm": {
+        "approve": "Suljetaanko {objekt} {von}–{bis}? Yöt suljetaan kaikilla portaaleilla.",
+        "reject": "Hylätäänkö pyyntö kohteelle {objekt} ({von} – {bis})?",
+        "revoke": "Peruutetaanko hyväksyntä kohteelle {objekt} ({von} – {bis})? Yöt vapautetaan uudelleen."
+      },
+      "done": {
+        "approve": "Pyyntö hyväksytty, yöt suljettu.",
+        "reject": "Pyyntö hylätty.",
+        "revoke": "Hyväksyntä peruutettu, yöt vapautettu."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "tammikuu,helmikuu,maaliskuu,huhtikuu,toukokuu,kesäkuu,heinäkuu,elokuu,syyskuu,lokakuu,marraskuu,joulukuu",
     "name": "Nimi",
     "seasonAdd": "Lisää sesonki",
+    "seasonApplyCancel": "Peruuta",
+    "seasonApplyCopyHint": "Sesonki luodaan itsenäisenä kopiona. Myöhemmät muutokset tähän sesonkiin EIVÄT enää vaikuta siellä. Lisä lasketaan kohdekohteen omasta perushinnasta.",
+    "seasonApplyNone": "Ei kopioitu yhteenkään kohteeseen.",
+    "seasonApplyPartial": "Kopioitu {count} kohteeseen, {skipped} ohitettu.",
+    "seasonApplyPickTarget": "Valitse vähintään yksi kohde.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Perushintaa ei ole asetettu — lisää ei voi laskea.",
+      "basispreis_null": "Perushinta on 0 — lisää ei voi laskea.",
+      "teilweise_uebertragen": "Sesonki on kohteessa, päivähinnat puuttuvat vielä — viimeistele yrittämällä uudelleen.",
+      "unbekannt": "Ohitettu tuntemattomasta syystä."
+    },
+    "seasonApplySubmit": "Kopioi",
+    "seasonApplySuccess": "Kopioitu {count} kohteeseen.",
+    "seasonApplyTitle": "Kopioi ”{name}” muihin kohteisiin",
+    "seasonApplyToOthers": "Kopioi muihin kohteisiin",
+    "seasonApplyWithRanges": "Kopioi myös ajanjaksot",
+    "seasonApplyWithRangesHint": "Merkityt päivät asetetaan samoin kohdekohteeseen. Pois: vain sesonki ilman päiviä.",
     "seasonClearHint": "Poista päivät kaudesta vetämällä hiiren oikealla painikkeella niiden yli.",
     "seasonColor": "Väri",
     "seasonColorAria": "Väri {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Lisä (± %)",
     "seasonSurchargePlaceholder": "esim. 30 tai -15",
     "seasonValueRequired": "Anna kelvollinen arvo.",
-    "weekdays": "M,T,K,T,P,L,S"
+    "weekdays": "M,T,K,T,P,L,S",
+    "seasonApplyNoSpans": "Tällä sesongilla ei ole maalattuja jaksoja. Maalaa se ensin tai siirrä vain määritys ilman jaksoja."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "QR-koodi todennussovellukselle",
       "sixDigitCode": "6-numeroinen koodi",
       "disable2fa": "Poista 2FA käytöstä",
-      "disable2faHint": "Syötä nykyinen koodi (tai palautuskoodi) 2FA:n poistamiseksi käytöstä."
+      "disable2faHint": "Syötä nykyinen koodi (tai palautuskoodi) 2FA:n poistamiseksi käytöstä.",
+      "title": "Suojaus",
+      "loadFailed": "Tilin tietoja ei voitu ladata. Tarkista yhteytesi ja yritä uudelleen.",
+      "credentials": "Kirjautumistiedot",
+      "emailAndUsername": "Sähköposti ja käyttäjänimi",
+      "emailLabel": "Sähköposti",
+      "nameLabel": "Nimi",
+      "password": "Salasana",
+      "noPassword": "Salasanaa ei ole asetettu",
+      "passwordMin": "Vähintään 8 merkkiä.",
+      "save": "Tallenna",
+      "saving": "Tallennetaan …",
+      "changePassword": "Vaihda salasana",
+      "twoFactor": {
+        "title": "Kaksivaiheinen vahvistus (2FA)",
+        "intro": "Suojaa tilisi salasanan lisäksi toisella vahvistustavalla.",
+        "noneActive": "Toista vahvistustapaa ei ole vielä määritetty. Suosittelemme todennussovellusta.",
+        "requiredNotice": "Roolisi edellyttää toista vahvistustapaa. Määritä se nyt.",
+        "active": "Käytössä",
+        "setUp": "Määritä",
+        "totp": {
+          "title": "Todennussovellus",
+          "description": "Kertakäyttöinen koodi sovelluksesta, kuten Google Authenticator tai Microsoft Authenticator. Toimii myös ilman matkapuhelinverkkoa.",
+          "setupTitle": "Määritä todennussovellus",
+          "setupHint": "Skannaa QR-koodi sovelluksellasi ja vahvista näkyvällä koodilla.",
+          "step1": "1. Skannaa QR-koodi",
+          "step2": "3. Syötä koodi sovelluksesta",
+          "qrAlt": "QR-koodi todennussovellukselle",
+          "qrHint": "Avaa todennussovelluksesi ja skannaa koodi.",
+          "manualTitle": "2. Tai syötä avain käsin",
+          "manualHint": "Käytä tätä avainta, jos et voi skannata QR-koodia.",
+          "showSecret": "Näytä avain",
+          "hideSecret": "Piilota avain",
+          "copySecret": "Kopioi avain",
+          "copyFailed": "Kopiointi ei onnistunut. Maalaa avain ja kopioi se käsin.",
+          "codeLabel": "6-numeroinen koodi",
+          "activate": "Ota käyttöön",
+          "checking": "Tarkistetaan …",
+          "preparing": "Valmistellaan määritystä …",
+          "enabledTitle": "Todennussovellus on käytössä. Ota nyt varakoodisi talteen.",
+          "friendlyName": "Todennussovellus",
+          "replayNote": "Huomaa: koodi on voimassa enintään 90 sekuntia ja sitä voi käyttää tänä aikana useammin kuin kerran. Reaaliaikaisilta väärennetyiltä kirjautumissivuilta suojaa vain pääsyavain."
+        },
+        "sms": {
+          "title": "Tekstiviestikoodi",
+          "description": "Kertakäyttöinen koodi tekstiviestillä vahvistettuun puhelinnumeroosi.",
+          "unavailable": "Tekstiviestikoodi ei ole käytettävissä tällä palvelimella, koska SMS-palveluntarjoajaa ei ole määritetty. Valitse todennussovellus tai avainkoodi.",
+          "unavailableBadge": "Ei käytettävissä",
+          "setupTitle": "Määritä tekstiviestikoodi",
+          "setupHint": "Lähetämme koodin puhelinnumeroosi.",
+          "simSwapWarning": "Huomio: tekstiviesti on todennussovellusta heikompi suojaus. Jos joku siirrättää numerosi toiseen SIM-korttiin, hän voi vastaanottaa koodisi. Valitse mahdollisuuksien mukaan todennussovellus tai pääsyavain.",
+          "numberLabel": "Puhelinnumero",
+          "numberHint": "Kansainvälisessä muodossa maatunnuksella, esimerkiksi +358 …",
+          "invalidNumber": "Anna numero kansainvälisessä muodossa alkaen +-merkistä ja maatunnuksesta.",
+          "sendCode": "Lähetä koodi",
+          "sending": "Lähetetään …",
+          "codeLabel": "6-numeroinen koodi",
+          "codeSentTo": "Lähetimme koodin numeroon {phone}.",
+          "confirm": "Vahvista",
+          "checking": "Tarkistetaan …",
+          "resend": "Lähetä koodi uudelleen",
+          "changeNumber": "Käytä toista numeroa",
+          "friendlyName": "Tekstiviestikoodi"
+        },
+        "passkey": {
+          "title": "Pääsyavain",
+          "description": "Kirjautuminen sormenjäljellä, kasvojentunnistuksella tai suojausavaimella. Koodia ei tarvita.",
+          "setupTitle": "Määritä pääsyavain",
+          "setupHint": "Laitteesi vahvistaa henkilöllisyytesi sormenjäljellä, kasvojentunnistuksella tai suojausavaimella.",
+          "checkingSupport": "Tarkistetaan laitetta …",
+          "unsupportedTitle": "Tämä selain ei tue pääsyavaimia",
+          "unsupportedHint": "Käytä ajantasaista selainta tai määritä sen sijaan todennussovellus.",
+          "securityKeyOnly": "Tässä laitteessa ei ole sisäänrakennettua vahvistusta (kuten sormenjälkeä tai kasvojentunnistusta). Tarvitset siihen liitettävän suojausavaimen.",
+          "benefitPhishing": "Suojaa väärennetyiltä kirjautumissivuilta.",
+          "benefitNoCode": "Ei koodia näppäiltäväksi.",
+          "create": "Luo pääsyavain",
+          "friendlyName": "Pääsyavain",
+          "recommended": "Suositus: kolmesta tavasta turvallisin.",
+          "creating": "Luodaan …",
+          "errors": {
+            "abgebrochen": "Vahvistus peruutettiin tai sitä ei tunnistettu. Yritä uudelleen.",
+            "herkunftPasstNicht": "Pääsyavaimet eivät ole käytössä tässä osoitteessa. Kirjaudu virallisen osoitteen kautta.",
+            "nichtUnterstuetzt": "Tämä laite ei voi luoda pääsyavainta. Käytä todennussovellusta tai suojausavainta.",
+            "schonVorhanden": "Tälle tilille on jo pääsyavain tässä laitteessa.",
+            "laeuftBereits": "Pääsyavainpyyntö on jo käynnissä. Viimeistele tai peruuta se ensin.",
+            "zeitUeberschritten": "Vahvistuksen aika päättyi. Yritä uudelleen.",
+            "unbekannt": "Pääsyavainta ei voitu luoda. Yritä uudelleen."
+          }
+        },
+        "recovery": {
+          "title": "Varakoodit",
+          "description": "Kertakäyttöiset koodit siltä varalta, ettet pääse käyttämään toista vahvistustapaasi.",
+          "left": "Jäljellä {count} koodia.",
+          "create": "Luo koodit",
+          "regenerate": "Luo uudet koodit",
+          "regenerateHint": "Kun luot uudet koodit, kaikki aiemmat koodit lakkaavat olemasta voimassa.",
+          "dialogTitle": "Varakoodit",
+          "dialogHint": "Kertakäyttöiset koodit siltä varalta, ettet pääse käyttämään toista vahvistustapaasi.",
+          "replaceWarning": "Huomio: aiemmat varakoodisi lakkaavat samalla olemasta voimassa.",
+          "passwordLabel": "Nykyinen salasana",
+          "passwordHint": "Varmistukseksi siitä, että kyseessä olet todella sinä.",
+          "createNow": "Luo koodit",
+          "creating": "Luodaan …",
+          "createdTitle": "Uudet varakoodisi. Säilytä ne turvallisessa paikassa.",
+          "noneReturned": "Koodeja ei luotu. Yritä uudelleen."
+        },
+        "remove": "Poista",
+        "removeDialog": {
+          "totpTitle": "Poista todennussovellus",
+          "smsTitle": "Poista tekstiviestikoodi",
+          "warning": "Tämän jälkeen kyseinen vahvistustapa ei enää suojaa tiliäsi.",
+          "passwordLabel": "Nykyinen salasana",
+          "remove": "Poista",
+          "removing": "Poistetaan …",
+          "cancel": "Peruuta",
+          "hint": "Vahvista poisto nykyisellä salasanallasi.",
+          "passkeyTitle": "Poista pääsyavain",
+          "lastFactorBlocked": "Tämä on viimeinen toinen vahvistustapasi, ja roolisi edellyttää sellaista. Luo ensin varakoodit tai määritä toinen vahvistustapa."
+        },
+        "requiredWithDeadline": "Roolisi edellyttää toista vahvistustapaa. Määritä se {date} mennessä — sen jälkeen kirjautuminen ilman toista vahvistustapaa ei ole enää mahdollista.",
+        "statusFailed": "Kaksivaiheisen vahvistuksen tilaa ei voitu ladata. Lataa sivu uudelleen."
+      },
+      "recovery": {
+        "lockoutWarning": "Ilman näitä koodeja menetät pääsyn tiliisi, jos et enää voi käyttää toista vahvistustapaasi. Säilytä ne turvallisessa paikassa erillään salasanastasi.",
+        "copy": "Kopioi",
+        "copied": "Kopioitu",
+        "copyFailed": "Kopiointi ei onnistunut. Lataa koodit tai tulosta ne.",
+        "download": "Lataa",
+        "downloadFailed": "Lataus ei onnistunut. Kopioi koodit tai tulosta ne.",
+        "print": "Tulosta",
+        "printBlocked": "Tulostusikkuna estettiin. Salli ponnahdusikkunat tai lataa koodit.",
+        "printTitle": "myNextDays-varakoodit",
+        "printHint": "Jokainen koodi toimii täsmälleen kerran. Säilytä tämä arkki turvallisesti.",
+        "fileHeader": "myNextDays-varakoodit — jokainen koodi toimii täsmälleen kerran. Säilytä turvallisesti.",
+        "confirmSaved": "Olen tallentanut koodit turvallisesti.",
+        "confirmHint": "Merkitse valinta, niin määritys viimeistellään.",
+        "mustExportFirst": "Kopioi, lataa tai tulosta koodit ensin.",
+        "done": "Valmis"
+      }
     },
     "company": {
       "saved": "Tiedot tallennettu.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Puhutut kielet",
       "searchLanguage": "Hae kieltä…",
       "chooseRole": "Valitse rooli…",
-      "userCreated": "Käyttäjä luotu",
-      "preferredLanguage": "Ensisijainen kieli",
+      "preferredLanguage": "Sähköpostien kieli",
       "noLanguageFound": "Kieltä ei löytynyt.",
       "firstName": "Etunimi",
       "lastName": "Sukunimi",
       "email": "Sähköposti",
       "phone": "Puhelinnumero",
       "notes": "Huomautukset",
-      "password": "Salasana",
-      "credentialsHint": "Välitä nämä tunnukset uudelle käyttäjälle. Salasana näytetään vain nyt."
+      "title": "Luo käyttäjä",
+      "createdSubtitle": "Kutsu lähetetty.",
+      "stepHints": {
+        "contact": "Lisää tämän käyttäjän yhteystiedot.",
+        "extra": "Lisää käyttäjää koskevia lisätietoja.",
+        "role": "Valitse tämän käyttäjän rooli ja oikeudet.",
+        "properties": "Määritä kohteita tälle käyttäjälle."
+      },
+      "done": "Valmis",
+      "cancel": "Peruuta",
+      "back": "Takaisin",
+      "next": "Seuraava",
+      "create": "Luo",
+      "creating": "Luodaan…",
+      "role": "Rooli",
+      "requiredFields": "Etunimi, sukunimi, sähköposti ja rooli ovat pakollisia.",
+      "assignFailed": "Käyttäjä luotiin, mutta kohteiden määritys epäonnistui: {reason}",
+      "hidePhones": "Piilota puhelinnumerot verkkosivustolla.",
+      "noAssignNeeded": "Kohteiden määritystä ei tarvita",
+      "noAssignNeededHint": "Tällä roolilla on pääsy kaikkiin tilin kohteisiin. Yksittäisten kohteiden määritys koskee vain omistajia ja henkilökuntaa.",
+      "noProperties": "Ei vielä majoituskohteita",
+      "noPropertiesHint": "Luo majoituskohteesi, jotta voit myöhemmin määrittää ne käyttäjillesi.",
+      "choosePropertiesHint": "Valitse kohteet, joihin tällä käyttäjällä on pääsy.",
+      "selectedCount": "{count} valittu",
+      "inviteSent": "Kutsu lähetetty",
+      "inviteSentHint": "Käyttäjä saa sähköpostin ja asettaa salasanansa itse. Linkki on voimassa 7 päivää.",
+      "inviteResend": "Lähetä kutsu uudelleen",
+      "inviteResending": "Lähetetään…",
+      "inviteResent": "Kutsu lähetetty uudelleen.",
+      "inviteResendFailed": "Kutsua ei voitu lähettää uudelleen.",
+      "preferredLanguageHint": "Tällä kielellä uusi käyttäjä saa kutsun ja kaikki muut sähköpostit."
     },
     "tariff": {
       "oneLess": "Yksi kohde vähemmän",
@@ -6359,7 +6767,14 @@
       "updated": "Käyttäjä päivitetty.",
       "deleted": "Käyttäjä poistettu.",
       "generalPermissions": "Yleiset oikeudet",
-      "roleChangeHint": "Roolin vaihto ehdottaa sopivat oikeudet. Voit sen jälkeen säätää niitä yksitellen."
+      "roleChangeHint": "Roolin vaihto ehdottaa sopivat oikeudet. Voit sen jälkeen säätää niitä yksitellen.",
+      "edit": "Muokkaa",
+      "delete": "Poista",
+      "resendInvite": "Lähetä kutsu uudelleen",
+      "inviteResent": "Kutsu lähetetty osoitteeseen {email}.",
+      "inviteResendFailed": "Kutsua ei voitu lähettää uudelleen.",
+      "emailLanguage": "Sähköpostien kieli",
+      "emailLanguageHint": "Tällä kielellä tämä käyttäjä saa sähköpostinsa."
     },
     "staffProperties": {
       "title": "Jaa kohteet"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "esim. Hotelli Järvinäkymä",
     "namePlaceholder": "Etu- ja sukunimi",
     "passwordHint": "Vähintään 8 merkkiä",
-    "passwordRepeat": "Toista salasana"
+    "passwordRepeat": "Toista salasana",
+    "headline": "Koko vuokraustoimintasi yhdessä paikassa.",
+    "feature1": "Synkronoi kalenterit automaattisesti",
+    "feature2": "Suorat varaukset omilla sivuillasi",
+    "feature3": "Automatisoi viestit vieraille",
+    "withGoogle": "Rekisteröidy Googlella",
+    "withApple": "Rekisteröidy Applella",
+    "or": "tai",
+    "withEmail": "Rekisteröidy sähköpostilla",
+    "haveAccount": "Onko sinulla jo tili?",
+    "loginLink": "Kirjaudu tästä",
+    "loadingHeadline": "Oma varaussivustosi. Pidä 100 % jokaisesta varauksesta.",
+    "loadingText": "Määritämme tiliäsi …"
   },
   "marketingSite": {
     "stars": "4,5 tähteä",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Merkitse kaikki luetuiksi",
     "erneut": "Lataa uudelleen",
     "ariaMitAnzahl": "Ilmoitukset ({count} lukematonta)"
+  },
+  "auth": {
+    "toLogin": "Kirjautumiseen",
+    "genericError": "Tämä ei onnistunut juuri nyt. Yritä myöhemmin uudelleen.",
+    "tokenMissing": {
+      "title": "Puutteellinen linkki",
+      "text": "Tämä linkki on puutteellinen. Käytä sähköpostin täydellistä linkkiä — kopioi se ja liitä osoiteriville."
+    },
+    "tokenInvalid": {
+      "title": "Linkki ei ole enää voimassa",
+      "textInvite": "Tämä kutsulinkki on vanhentunut tai jo käytetty. Ota yhteyttä yritykseesi — siellä kutsu voidaan lähettää uudelleen.",
+      "textReset": "Tämä linkki on vanhentunut tai jo käytetty. Pyydä yksinkertaisesti uusi.",
+      "retry": "Pyydä uusi linkki"
+    },
+    "invite": {
+      "title": "Määritä käyttöoikeutesi",
+      "intro": "Valitse salasana myNextDays-tunnuksellesi. Vähintään {min} merkkiä."
+    },
+    "reset": {
+      "title": "Uusi salasana",
+      "intro": "Valitse uusi salasana. Vähintään {min} merkkiä."
+    },
+    "done": {
+      "titleInvite": "Käyttöoikeus määritetty",
+      "titleReset": "Salasana vaihdettu",
+      "text": "Voit nyt kirjautua sisään uudella salasanallasi."
+    },
+    "forgot": {
+      "title": "Unohtunut salasana",
+      "intro": "Anna sähköpostiosoitteesi. Lähetämme sinulle linkin, jolla voit asettaa uuden salasanan.",
+      "emailLabel": "Sähköposti",
+      "submit": "Pyydä linkki",
+      "sending": "Lähetetään…",
+      "sentTitle": "Sähköposti matkalla",
+      "sentText": "Jos tälle osoitteelle on tili, olemme lähettäneet palautuslinkin. Se on voimassa tunnin.",
+      "spamHint": "Eikö mitään saapunut? Tarkista myös roskapostikansio.",
+      "again": "Pyydä uudelleen"
+    },
+    "password": {
+      "newLabel": "Salasana",
+      "repeatLabel": "Toista salasana",
+      "submit": "Aseta salasana",
+      "saving": "Tallennetaan…",
+      "mismatch": "Salasanat eivät täsmää.",
+      "tooWeak": "Salasana ei täytä vaatimuksia (vähintään {min} merkkiä).",
+      "show": "Näytä salasana",
+      "hide": "Piilota salasana",
+      "strengthLabel": "Vahvuus: {level}",
+      "strength": {
+        "1": "heikko",
+        "2": "kohtalainen",
+        "3": "hyvä",
+        "4": "vahva"
+      },
+      "requirement": {
+        "length": "Vähintään {min} merkkiä",
+        "letter": "Vähintään yksi kirjain",
+        "digit": "Vähintään yksi numero"
+      }
+    },
+    "checking": "Linkkiä tarkistetaan…",
+    "languageLabel": "Kieli",
+    "languageChange": "Vaihda kieltä",
+    "twoFactor": {
+      "title": "Vahvistus",
+      "totpHint": "Syötä 6-numeroinen koodi todennussovelluksestasi.",
+      "smsHint": "Syötä 6-numeroinen koodi, jonka lähetimme sinulle tekstiviestillä.",
+      "smsHintWithPhone": "Syötä 6-numeroinen koodi, jonka lähetimme numeroon {phone}.",
+      "codeLabel": "Koodi",
+      "confirm": "Vahvista",
+      "checking": "Tarkistetaan …",
+      "recoveryHint": "Syötä jokin varakoodeistasi.",
+      "recoveryLabel": "Varakoodi",
+      "recoverySingleUse": "Jokainen koodi toimii täsmälleen kerran.",
+      "useTotp": "Käytä todennussovellusta",
+      "useSms": "Käytä tekstiviestikoodia",
+      "useRecovery": "Käytä varakoodia",
+      "backToLogin": "Takaisin kirjautumiseen",
+      "factorMissing": "Tämä vahvistustapa ei ole käytettävissä tililläsi. Valitse toinen tapa.",
+      "passkeyHint": "Vahvista kirjautuminen pääsyavaimellasi.",
+      "passkeyUse": "Kirjaudu pääsyavaimella",
+      "usePasskey": "Käytä pääsyavainta",
+      "sendCode": "Lähetä koodi tekstiviestillä",
+      "sending": "Lähetetään …",
+      "smsSent": "Koodi on lähetetty.",
+      "resend": "Lähetä koodi uudelleen",
+      "recoveryRedeemedHint": "Koodi on lunastettu, mutta se ei yksin riitä kirjautumiseen. Kirjaudu jollakin määrittämälläsi vahvistustavalla tai ota yhteyttä tiimiisi."
+    },
+    "mfaSetup": {
+      "title": "Määritä kaksivaiheinen vahvistus",
+      "intro": "Roolisi edellyttää toista vahvistustapaa. Määritä se nyt jatkaaksesi.",
+      "why": "Järjestelmänvalvojana sinulla on pääsy talous- ja asiakastietoihin sekä koko yrityksen asetuksiin. Toinen vahvistustapa estää sen, että varastettu salasana yksin riittäisi.",
+      "goToSettings": "Määritä nyt",
+      "later": "Muistuta myöhemmin",
+      "laterHint": "Voit vielä lykätä määritystä. Kysymme uudelleen seuraavalla kirjautumiskerralla.",
+      "introWithDeadline": "Roolisi edellyttää toista vahvistustapaa. Määritä se {date} mennessä — sen jälkeen kirjautuminen ilman toista vahvistustapaa ei ole enää mahdollista."
+    }
+  },
+  "sprache": {
+    "label": "Sähköpostien kieli",
+    "hint": "Lähetämme sähköpostit tälle henkilölle tällä kielellä.",
+    "none": "— ei määritetty"
+  },
+  "neuerungen": {
+    "eyebrow": "Tuotepäivitykset",
+    "titel": "Uutuudet",
+    "unterzeile": "Kaikki myNextDaysin muutokset — uusimmat ensin.",
+    "neuAnzahl": "{anzahl, plural, one {# uusi} other {# uutta}}",
+    "ungelesen": "Uusi",
+    "veroeffentlichtAm": "Julkaistu {datum}",
+    "leer": "Uutuuksia ei ole vielä.",
+    "ladefehler": "Lataaminen epäonnistui: {grund}",
+    "mehrLaden": "Lataa vanhemmat",
+    "aufklappen": "Näytä tiedot",
+    "zuklappen": "Piilota tiedot",
+    "kategorie": {
+      "neuerung": "Uusi ominaisuus",
+      "wartung": "Huolto",
+      "hinweis": "Tiedote",
+      "wichtig": "Tärkeää"
+    },
+    "popup": {
+      "ariaLabel": "Ilmoituksen sisältö",
+      "gelesen": "Selvä",
+      "wirdGespeichert": "Tallennetaan …",
+      "erneut": "Yritä uudelleen",
+      "fehler": "Vahvistaminen epäonnistui: {grund}",
+      "weiter": "Seuraava",
+      "vonAnzahl": "Ilmoitus {nummer}"
+    }
+  },
+  "login": {
+    "title": "Kirjaudu sisään",
+    "emailLabel": "Sähköposti",
+    "passwordLabel": "Salasana",
+    "showPassword": "Näytä salasana",
+    "hidePassword": "Piilota salasana",
+    "forgot": "Unohditko salasanasi?",
+    "stayLoggedIn": "Pysy kirjautuneena",
+    "submit": "Kirjaudu sisään",
+    "submitting": "Kirjaudutaan…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Etkö ole vielä myNextDays-asiakas?",
+    "signupLink": "Kokeile ilmaiseksi",
+    "mfaTitle": "Vahvistus",
+    "mfaIntro": "Syötä 6-numeroinen koodi todennussovelluksestasi. Myös palautuskoodi käy.",
+    "mfaCodeLabel": "Koodi",
+    "mfaSubmit": "Vahvista",
+    "mfaChecking": "Tarkistetaan…",
+    "mfaBack": "Takaisin kirjautumiseen"
   }
 }

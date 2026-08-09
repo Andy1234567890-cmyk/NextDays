@@ -283,6 +283,7 @@
       "logout": "Uitloggen"
     },
     "stopSell": "Verkoopstop",
+    "blockRequests": "Blokkeerverzoeken",
     "owners": "Eigenaren",
     "ownerStatements": "Eigenaarsafrekeningen",
     "portal": "Mijn portaal",
@@ -315,7 +316,8 @@
     "noAccess": "Geen toegang",
     "dashboardLoadFailed": "Het dashboard kon niet worden geladen",
     "reviews": "Beoordelingen",
-    "extensions": "Uitbreidingen"
+    "extensions": "Uitbreidingen",
+    "announcements": "Nieuws"
   },
   "exemption": {
     "labelNamed": "Vrijgesteld van belasting ({scheme}) — geen btw-nummer nodig",
@@ -945,6 +947,7 @@
     "newTitle": "Nieuwe eigenaar",
     "create": "Aanmaken",
     "created": "Eigenaar aangemaakt.",
+    "createdInvited": "Eigenaar aangemaakt en uitnodiging verzonden.",
     "cancel": "Annuleren",
     "save": "Opslaan",
     "saving": "Opslaan …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Geen objecten} one {# object} other {# objecten}}",
     "noProperties": "Aan deze eigenaar is nog geen object toegewezen.",
     "addProperty": "Object toewijzen …",
+    "assignProperties": "Objecten toewijzen",
+    "assignPropertiesHint": "Optioneel. Alleen objecten die nog geen eigenaar hebben, kunnen worden geselecteerd.",
+    "noFreeProperties": "Alle objecten zijn al aan een eigenaar toegewezen.",
+    "assignSelected": "{count, plural, =0 {Objecten toewijzen} one {# object toewijzen} other {# objecten toewijzen}}",
+    "propertiesAssigned": "{count, plural, one {# object toegewezen} other {# objecten toegewezen}}",
     "removeProperty": "Toewijzing verwijderen",
     "sections": {
       "master": "Stamgegevens",
       "payout": "Uitbetaling & commissie",
-      "properties": "Objecten"
+      "properties": "Objecten",
+      "portalAccess": "Portaaltoegang"
     },
     "frequency": {
       "none": "Geen",
@@ -989,12 +998,20 @@
       "statementFrequency": "Afrekeningsritme",
       "notes": "Notities",
       "share": "Aandeel (%)",
-      "commissionOverride": "Commissie (%) afw."
+      "commissionOverride": "Commissie (%) afw.",
+      "emailLanguage": "Taal voor e-mails"
     },
     "placeholders": {
       "name": "bijv. Jan Jansen",
       "email": "bijv. jan@example.com"
-    }
+    },
+    "emailLanguageHint": "In deze taal ontvangt de eigenaar afrekeningen en meldingen — ook zonder eigen toegang.",
+    "portalAccess": "Portaaltoegang instellen",
+    "portalAccessHint": "De eigenaar ontvangt een uitnodiging per e-mail en kan daarna zelf zijn afrekeningen inzien.",
+    "portalAccessNeedsEmail": "Voor portaaltoegang is een e-mailadres vereist.",
+    "portalAccessInvite": "Uitnodiging versturen",
+    "portalAccessInvited": "Uitnodiging verzonden.",
+    "portalAccessActive": "Portaaltoegang is ingesteld."
   },
   "ownerStatements": {
     "title": "Eigenaarsafrekening",
@@ -1149,7 +1166,9 @@
     "subtitle": "Overzicht van je objecten, inkomsten en afrekeningen.",
     "properties": {
       "title": "Mijn objecten",
-      "empty": "Er zijn momenteel geen objecten aan jou toegewezen."
+      "empty": "Er zijn momenteel geen objecten aan jou toegewezen.",
+      "city": "Plaats",
+      "openCalendar": "Kalender"
     },
     "earnings": {
       "title": "Inkomsten (deze maand)",
@@ -1175,7 +1194,24 @@
       "to": "Tot",
       "submit": "Aanvraag versturen",
       "sending": "Versturen …",
-      "requested": "Aanvraag verstuurd."
+      "requested": "Aanvraag verstuurd.",
+      "listTitle": "Mijn aanvragen",
+      "listEmpty": "Je hebt nog geen blokkering aangevraagd.",
+      "created": "Ingediend op",
+      "range": "Periode",
+      "statusLabel": "Status",
+      "readOnlyHint": "Alleen de beheerder kan een blokkering invoeren. Jij dient de aanvraag in; de beslissing ligt bij hen.",
+      "invalidRange": "De einddatum moet na de startdatum liggen.",
+      "invalidDate": "Voer een geldige datum in.",
+      "status": {
+        "pending": "In behandeling",
+        "approved": "Goedgekeurd",
+        "rejected": "Afgewezen",
+        "cancelled": "Ingetrokken"
+      },
+      "reason": "Reden",
+      "reasonPlaceholder": "Waarom moet het geblokkeerd worden? (bijv. eigen gebruik, vakmensen)",
+      "decisionNote": "Opmerking van het beheer"
     },
     "meter": {
       "title": "Meterstand registreren",
@@ -1191,6 +1227,142 @@
         "electricity": "Elektriciteit",
         "water": "Water",
         "gas": "Gas"
+      },
+      "historyTitle": "Geschiedenis",
+      "historyEmpty": "Voor dit object is nog geen meterstand geregistreerd.",
+      "appendOnlyHint": "Geregistreerde standen blijven ongewijzigd staan. Een correctie is een nieuwe invoer — zo blijft de geschiedenis compleet.",
+      "invalidValue": "Voer de meterstand als getal in.",
+      "invalidDate": "Voer een geldige aflezingsdatum in."
+    },
+    "logout": "Afmelden",
+    "loadFailed": "Gegevens konden niet worden geladen.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Overzicht",
+      "calendar": "Bezettingskalender",
+      "reports": "Rapporten",
+      "blockRequests": "Blokkeringen",
+      "meterReadings": "Meterstanden",
+      "services": "Diensten",
+      "notifications": "Meldingen"
+    },
+    "overview": {
+      "occupancy": "Bezetting",
+      "occupancyHint": "Bezette nachten in de gekozen periode.",
+      "nights": "Nachten",
+      "bookings": "Boekingen",
+      "payout": "Netto-uitbetaling",
+      "payoutHint": "Jouw aandeel na aftrek van de portaalkosten.",
+      "period": "Periode",
+      "periodMonth": "Deze maand",
+      "periodYear": "Dit jaar",
+      "openCalendar": "Kalender openen",
+      "latestStatement": "Laatste afrekening",
+      "noStatement": "Nog geen afrekening"
+    },
+    "calendar": {
+      "title": "Bezettingskalender",
+      "subtitle": "Bezetting en jouw netto-uitbetaling per nacht.",
+      "selectProperty": "Object kiezen",
+      "prevMonth": "Vorige maand",
+      "nextMonth": "Volgende maand",
+      "today": "Vandaag",
+      "legendSeasons": "Seizoenen",
+      "legendStatus": "Bezetting",
+      "noSeasons": "Voor dit object zijn geen seizoenen ingesteld.",
+      "status": {
+        "open": "Vrij",
+        "booked": "Bezet",
+        "blocked": "Geblokkeerd"
+      },
+      "payoutPerNight": "Netto-uitbetaling/nacht",
+      "guest": "Gast",
+      "channel": "Boekingsbron",
+      "blockHint": "Wil je een periode laten blokkeren? Dien een aanvraag in — de beheerder beslist.",
+      "blockCta": "Blokkering aanvragen",
+      "weekdays": "Ma,Di,Wo,Do,Vr,Za,Zo",
+      "months": "Januari,Februari,Maart,April,Mei,Juni,Juli,Augustus,September,Oktober,November,December"
+    },
+    "services": {
+      "title": "Dienst boeken",
+      "hint": "Bestel een dienst voor je object. De beheerder neemt de opdracht aan en plant deze in.",
+      "property": "Object",
+      "kind": "Dienst",
+      "date": "Gewenste datum",
+      "note": "Opmerking",
+      "notePlaceholder": "Wat moet er precies gebeuren?",
+      "submit": "Bestellen",
+      "sending": "Wordt verzonden …",
+      "sent": "Opdracht verzonden.",
+      "listTitle": "Mijn opdrachten",
+      "listEmpty": "Je hebt nog geen dienst besteld.",
+      "invalidDate": "Voer een geldige gewenste datum in.",
+      "noteRequired": "Beschrijf de gewenste dienst.",
+      "kinds": {
+        "custom": "Overig (vrije tekst)"
+      },
+      "status": {
+        "pending": "In behandeling",
+        "accepted": "Geaccepteerd",
+        "scheduled": "Ingepland",
+        "done": "Voltooid",
+        "rejected": "Afgewezen",
+        "cancelled": "Ingetrokken"
+      },
+      "type": {
+        "endreinigung": "Eindschoonmaak",
+        "hauptreinigung": "Grote schoonmaak",
+        "fensterreinigung": "Ramen wassen",
+        "rasenmaehen": "Gras maaien",
+        "terrassenreinigung": "Terras schoonmaken"
+      },
+      "dateTo": "Tot"
+    },
+    "notifications": {
+      "title": "Meldingen",
+      "hint": "Stel per gebeurtenis in hoe je op de hoogte wordt gebracht.",
+      "channel": {
+        "email": "E-mail",
+        "sms": "SMS",
+        "phone": "Telefoon"
+      },
+      "locked": "Deze e-mail is contractueel verplicht en blijft ingeschakeld.",
+      "saved": "Opgeslagen.",
+      "saveFailed": "Wijziging kon niet worden opgeslagen.",
+      "categories": {
+        "listing_activity": "Boekingen op jouw objecten",
+        "listing_activityHint": "Nieuwe boeking, wijziging en annulering.",
+        "account_activity": "Accountactiviteit",
+        "account_activityHint": "Aanmeldingen en wijzigingen aan je account.",
+        "reminders": "Herinneringen",
+        "remindersHint": "Openstaande taken en afspraken.",
+        "messages": "Berichten",
+        "messagesHint": "Nieuwe berichten van de beheerder.",
+        "owner_booking": "Boekingen bij jouw accommodaties",
+        "owner_bookingHint": "Nieuwe boeking, wijziging en annulering.",
+        "block_decision": "Beslissing over jouw blokkeringsverzoeken",
+        "block_decisionHint": "Wanneer het beheer jouw verzoek goedkeurt of afwijst.",
+        "owner_service": "Bestelde diensten",
+        "owner_serviceHint": "Statuswijziging bij een door jou bestelde dienst."
+      }
+    },
+    "reports": {
+      "title": "Rapporten",
+      "subtitle": "Afrekeningen, lopende maand en maand- en jaarrapporten.",
+      "currentTitle": "Huidige afrekeningsstatus",
+      "currentHint": "Voorlopig — de maand loopt nog. Alleen de definitieve afrekening is bindend.",
+      "monthly": "Maandrapport",
+      "yearly": "Jaarrapport",
+      "month": "Maand",
+      "year": "Jaar",
+      "download": "PDF downloaden",
+      "downloading": "Wordt gegenereerd …",
+      "downloadFailed": "PDF kon niet worden gegenereerd.",
+      "onlyFinalized": "Alleen definitieve afrekeningen zijn beschikbaar voor download.",
+      "status": {
+        "draft": "In voorbereiding",
+        "finalized": "Afgerond",
+        "cancelled": "Geannuleerd"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Een vast bedrag kan niet over afzonderlijke nachten worden verdeeld — het gaat niet naar de portalen, daar moet het in het extranet worden onderhouden.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Dezelfde actie ook op andere objecten toepassen.",
+      "applyToOthersSeasonHint": "Hetzelfde seizoen ook bij andere objecten aanmaken.",
       "promoReason": {
         "mindestaufenthalt": "minimumverblijf",
         "fruehbucher": "vroegboekerstermijn",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Betalingsplan",
       "cancellationLabel": "Annulering",
       "depositLabel": "Borg",
-      "depositWithheldText": "Er wordt een borg van {amount} ingehouden.",
       "noPolicyYet": "Nog geen beleid vastgelegd.",
       "bookabilityCardTitle": "Boekbaarheid",
       "bookabilityCardHint": "Hoe reserveringen worden geaccepteerd.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Huurovereenkomst",
       "rentalAgreementCardHint": "Maak de huurovereenkomst aan of link ernaartoe voor je gasten.",
       "noRentalAgreementYet": "Nog geen huurovereenkomst.",
-      "addPolicyTitle": "Beleid toevoegen",
       "addPolicySubtitle": "Stel de details voor dit nieuwe beleid in.",
       "internalNameLabel": "Interne naam *",
       "internalNamePlaceholder": "bijv. Gedeeltelijke aanbetaling – niet terugbetaalbaar",
       "paymentPlanGroupTitle": "Betalingsplan",
       "paymentCountLabel": "Aantal betalingen",
-      "depositPercentLabel": "Aanbetaling (%)",
-      "remainingDaysBeforeLabel": "Restbedrag (dagen vóór aankomst)",
       "guestCancellationGroupTitle": "Annulering door gast",
       "cancellationTypeLabel": "Annuleringstype",
       "depositGroupTitle": "Borg",
-      "depositModeNone": "Geen borg vereist",
-      "depositModeAmount": "Borg als bedrag",
-      "depositAmountLabelWithCurrency": "Borgbedrag ({currency})",
-      "depositAmountLabel": "Borgbedrag",
       "quoteValidityGroupTitle": "Geldigheid offerte",
       "quoteValidityHoursLabel": "Geldigheidsduur (uren) *",
       "quoteValidityHint": "De offerte is max. {hours} uur geldig, zolang de status „Wacht op gast” of „Wacht op betaling” is.",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Aanbevolen",
       "checkInTimeLabel": "Check-intijd",
       "checkOutTimeLabel": "Check-outtijd",
-      "paymentSummaryFull": "100 % verschuldigd bij de reservering.",
-      "paymentSummarySplit": "{percent} % bij boeking, restbedrag {days} dagen vóór aankomst.",
       "localizedEditorSubtitle": "Maak de tekst en vertaal deze indien nodig voor je gasten.",
-      "localizedEditorPlaceholder": "{title} invoeren …"
+      "localizedEditorPlaceholder": "{title} invoeren …",
+      "editPolicyTitle": "Voorwaarden bewerken",
+      "singlePaymentHint": "100 % van de betaling is verschuldigd bij het afronden van de boeking.",
+      "firstPaymentHeading": "Eerste betaling",
+      "secondPaymentHeading": "Tweede betaling",
+      "thirdPaymentHeading": "Derde betaling",
+      "amountTypeLabel": "Soort bedrag",
+      "percentLabel": "Percentage",
+      "amountLabel": "Bedrag",
+      "currencyLabel": "Valuta",
+      "daysLabel": "Dagen",
+      "periodLabel": "Periode",
+      "firstPaymentHint": "Bij de boeking wordt alleen het vaste bedrag of het percentage van de eerste betaling in rekening gebracht. De overige betalingen worden op het geplande moment gefactureerd.",
+      "remainderHint": "Stel in wanneer het restbedrag in rekening moet worden gebracht.",
+      "partialRulesHint": "Definieer de regels voor gedeeltelijk restitueerbare annuleringen.",
+      "ruleHeading": "Regel {number}",
+      "ruleDelete": "Regel verwijderen",
+      "ruleAdd": "Regel toevoegen",
+      "refundTypeLabel": "Soort restitutie",
+      "refundLabel": "Restitutie",
+      "whenCancelledLabel": "Bij annulering",
+      "depositNotRequired": "Er is geen borg vereist",
+      "depositRequired": "Er is een borg vereist",
+      "depositMethodLabel": "Methode",
+      "preAuthTimesHeading": "Tijdstippen van pre-autorisatie",
+      "preAuthValidityLabel": "Geldigheid (dagen na vertrek)",
+      "preAuthWarnTitle": "Pre-autorisaties kunnen slechts voor 5 dagen worden gegarandeerd.",
+      "preAuthWarnBody": "Hoe lang een pre-autorisatie op een creditcard blijft staan, hangt af van verschillende factoren, zoals de kaartaanbieder, de uitgevende bank, de betaalgateway enzovoort. Daarom verloopt bij alle boekingen van een week of langer elke pre-autorisatie (wordt automatisch geannuleerd) om de 5 dagen. We stellen u op de hoogte, zodat u handmatig een nieuwe pre-autorisatie kunt uitgeven om de borg voor de rest van de boeking te behouden.",
+      "assignAction": "Voorwaarden toewijzen"
     },
     "ratePlanWizard": {
       "title": "Prijsplan aanmaken",
@@ -5604,6 +5795,39 @@
       "confirmed": "Bevestigd",
       "in_house": "Ingecheckt",
       "pending": "Optie / voorlopig"
+    },
+    "blockRequests": {
+      "title": "Blokkeerverzoeken",
+      "subtitle": "Verzoeken van je eigenaren om hun objecten te blokkeren. Een goedkeuring blokkeert de nachten in de kalender en meldt ze aan de portalen.",
+      "filter": "Status",
+      "filterAll": "Alle",
+      "empty": "Geen verzoeken in deze weergave.",
+      "requestedBy": "Aangevraagd door {name}",
+      "reason": "Reden",
+      "decisionNote": "Opmerking",
+      "note": "Opmerking voor de eigenaar",
+      "notePlaceholder": "Optioneel — hij wordt aan de eigenaar getoond.",
+      "working": "Wordt uitgevoerd …",
+      "status": {
+        "pending": "Open",
+        "approved": "Goedgekeurd",
+        "rejected": "Afgewezen"
+      },
+      "action": {
+        "approve": "Goedkeuren",
+        "reject": "Afwijzen",
+        "revoke": "Intrekken"
+      },
+      "confirm": {
+        "approve": "{objekt} van {von} tot {bis} blokkeren? De nachten worden op alle portalen geblokkeerd.",
+        "reject": "Verzoek voor {objekt} ({von} – {bis}) afwijzen?",
+        "revoke": "Goedkeuring voor {objekt} ({von} – {bis}) intrekken? De nachten worden weer vrijgegeven."
+      },
+      "done": {
+        "approve": "Verzoek goedgekeurd, nachten geblokkeerd.",
+        "reject": "Verzoek afgewezen.",
+        "revoke": "Goedkeuring ingetrokken, nachten vrijgegeven."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "januari,februari,maart,april,mei,juni,juli,augustus,september,oktober,november,december",
     "name": "Naam",
     "seasonAdd": "Seizoen toevoegen",
+    "seasonApplyCancel": "Annuleren",
+    "seasonApplyCopyHint": "Het seizoen wordt als zelfstandige kopie aangemaakt. Latere wijzigingen aan dit seizoen werken daar NIET meer door. De toeslag rekent tegen de eigen basisprijs van het doelobject.",
+    "seasonApplyNone": "Naar geen enkel object gekopieerd.",
+    "seasonApplyPartial": "Naar {count} object(en) gekopieerd, {skipped} overgeslagen.",
+    "seasonApplyPickTarget": "Selecteer minstens één object.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Geen basisprijs ingesteld — een toeslag kan niet worden berekend.",
+      "basispreis_null": "De basisprijs is 0 — een toeslag kan niet worden berekend.",
+      "teilweise_uebertragen": "Seizoen staat bij het object, de dagprijzen ontbreken nog — probeer opnieuw om het te voltooien.",
+      "unbekannt": "Overgeslagen om een onbekende reden."
+    },
+    "seasonApplySubmit": "Kopiëren",
+    "seasonApplySuccess": "Naar {count} object(en) gekopieerd.",
+    "seasonApplyTitle": "“{name}” naar andere objecten kopiëren",
+    "seasonApplyToOthers": "Kopiëren naar andere objecten",
+    "seasonApplyWithRanges": "Periodes meekopiëren",
+    "seasonApplyWithRangesHint": "De ingekleurde dagen worden ook op het doelobject gezet. Uit: alleen het seizoen zelf, zonder dagen.",
     "seasonClearHint": "Sleep met de rechtermuisknop over de dagen om ze uit het seizoen te halen.",
     "seasonColor": "Kleur",
     "seasonColorAria": "Kleur {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Toeslag (± %)",
     "seasonSurchargePlaceholder": "bijv. 30 of -15",
     "seasonValueRequired": "Voer een geldige waarde in.",
-    "weekdays": "M,D,W,D,V,Z,Z"
+    "weekdays": "M,D,W,D,V,Z,Z",
+    "seasonApplyNoSpans": "Dit seizoen heeft geen ingekleurde periodes. Kleur het eerst in of draag alleen de definitie zonder periodes over."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "QR-code voor de authenticator-app",
       "sixDigitCode": "6-cijferige code",
       "disable2fa": "2FA uitschakelen",
-      "disable2faHint": "Voer een actuele code (of een herstelcode) in om 2FA uit te schakelen."
+      "disable2faHint": "Voer een actuele code (of een herstelcode) in om 2FA uit te schakelen.",
+      "title": "Beveiliging",
+      "loadFailed": "De accountgegevens konden niet worden geladen. Controleer je verbinding en probeer het opnieuw.",
+      "credentials": "Inloggegevens",
+      "emailAndUsername": "E-mail en gebruikersnaam",
+      "emailLabel": "E-mail",
+      "nameLabel": "Naam",
+      "password": "Wachtwoord",
+      "noPassword": "Geen wachtwoord ingesteld",
+      "passwordMin": "Minimaal 8 tekens.",
+      "save": "Opslaan",
+      "saving": "Opslaan …",
+      "changePassword": "Wachtwoord wijzigen",
+      "twoFactor": {
+        "title": "Tweestapsverificatie (2FA)",
+        "intro": "Beschermt je account met een tweede factor naast je wachtwoord.",
+        "noneActive": "Er is nog geen tweede factor ingesteld. We raden de authenticator-app aan.",
+        "requiredNotice": "Voor jouw rol is een tweede factor verplicht. Stel er nu een in.",
+        "active": "Actief",
+        "setUp": "Instellen",
+        "totp": {
+          "title": "Authenticator-app",
+          "description": "Eenmalige code uit een app zoals Google Authenticator of Microsoft Authenticator. Werkt ook zonder mobiel netwerk.",
+          "setupTitle": "Authenticator-app instellen",
+          "setupHint": "Scan de QR-code met je app en bevestig met de code die wordt getoond.",
+          "step1": "1. QR-code scannen",
+          "step2": "3. Code uit de app invoeren",
+          "qrAlt": "QR-code voor de authenticator-app",
+          "qrHint": "Open je authenticator-app en scan de code.",
+          "manualTitle": "2. Of de sleutel handmatig invoeren",
+          "manualHint": "Gebruik deze sleutel als je de QR-code niet kunt scannen.",
+          "showSecret": "Sleutel tonen",
+          "hideSecret": "Sleutel verbergen",
+          "copySecret": "Sleutel kopiëren",
+          "copyFailed": "Kopiëren is niet mogelijk. Selecteer de sleutel en kopieer hem handmatig.",
+          "codeLabel": "6-cijferige code",
+          "activate": "Activeren",
+          "checking": "Bezig met controleren …",
+          "preparing": "Instellen wordt voorbereid …",
+          "enabledTitle": "De authenticator-app is actief. Bewaar nu je herstelcodes.",
+          "friendlyName": "Authenticator-app",
+          "replayNote": "Let op: een code blijft tot 90 seconden geldig en kan in die tijd meerdere keren worden gebruikt. Alleen een passkey beschermt tegen realtime fraude met inlogpagina's."
+        },
+        "sms": {
+          "title": "Sms-code",
+          "description": "Eenmalige code per sms naar je bevestigde telefoonnummer.",
+          "unavailable": "Sms-code is niet beschikbaar op deze server omdat er geen sms-provider is ingesteld. Kies in plaats daarvan de authenticator-app of een passkey.",
+          "unavailableBadge": "Niet beschikbaar",
+          "setupTitle": "Sms-code instellen",
+          "setupHint": "We sturen een code naar je telefoonnummer.",
+          "simSwapWarning": "Let op: sms is minder veilig dan een authenticator-app. Wie je nummer naar een andere simkaart laat overzetten, kan je codes ontvangen. Kies indien mogelijk de authenticator-app of een passkey.",
+          "numberLabel": "Telefoonnummer",
+          "numberHint": "Internationaal formaat met landnummer, bijvoorbeeld +49 …",
+          "invalidNumber": "Voer het nummer in internationaal formaat in, beginnend met + en het landnummer.",
+          "sendCode": "Code versturen",
+          "sending": "Bezig met versturen …",
+          "codeLabel": "6-cijferige code",
+          "codeSentTo": "We hebben een code naar {phone} gestuurd.",
+          "confirm": "Bevestigen",
+          "checking": "Bezig met controleren …",
+          "resend": "Code opnieuw versturen",
+          "changeNumber": "Ander nummer gebruiken",
+          "friendlyName": "Sms-code"
+        },
+        "passkey": {
+          "title": "Passkey",
+          "description": "Inloggen met je vingerafdruk, gezichtsherkenning of een beveiligingssleutel. Geen code nodig.",
+          "setupTitle": "Passkey instellen",
+          "setupHint": "Je apparaat bevestigt wie je bent met je vingerafdruk, gezichtsherkenning of een beveiligingssleutel.",
+          "checkingSupport": "Apparaat wordt gecontroleerd …",
+          "unsupportedTitle": "Deze browser ondersteunt geen passkeys",
+          "unsupportedHint": "Gebruik een actuele browser of stel in plaats daarvan de authenticator-app in.",
+          "securityKeyOnly": "Dit apparaat heeft geen ingebouwde bevestiging (zoals vingerafdruk of gezichtsherkenning). Daarvoor heb je een beveiligingssleutel nodig die je aansluit.",
+          "benefitPhishing": "Beschermt tegen nagemaakte inlogpagina's.",
+          "benefitNoCode": "Geen code om over te typen.",
+          "create": "Passkey aanmaken",
+          "friendlyName": "Passkey",
+          "recommended": "Aanbevolen: de veiligste van de drie manieren.",
+          "creating": "Bezig met aanmaken …",
+          "errors": {
+            "abgebrochen": "De bevestiging is geannuleerd of niet herkend. Probeer het opnieuw.",
+            "herkunftPasstNicht": "Passkeys zijn niet ingeschakeld voor dit adres. Meld je aan via het officiële adres.",
+            "nichtUnterstuetzt": "Dit apparaat kan geen passkey aanmaken. Gebruik de authenticator-app of een beveiligingssleutel.",
+            "schonVorhanden": "Er bestaat op dit apparaat al een passkey voor dit account.",
+            "laeuftBereits": "Er loopt al een passkey-aanvraag. Rond deze eerst af of annuleer ze.",
+            "zeitUeberschritten": "De tijd voor bevestiging is verstreken. Probeer het opnieuw.",
+            "unbekannt": "De passkey kon niet worden aangemaakt. Probeer het opnieuw."
+          }
+        },
+        "recovery": {
+          "title": "Herstelcodes",
+          "description": "Eenmalig te gebruiken codes voor als je geen toegang hebt tot je tweede factor.",
+          "left": "Nog {count} codes beschikbaar.",
+          "create": "Codes aanmaken",
+          "regenerate": "Nieuwe codes aanmaken",
+          "regenerateHint": "Als je nieuwe codes aanmaakt, vervallen alle vorige codes.",
+          "dialogTitle": "Herstelcodes",
+          "dialogHint": "Eenmalig te gebruiken codes voor als je geen toegang hebt tot je tweede factor.",
+          "replaceWarning": "Let op: je huidige herstelcodes worden hiermee ongeldig.",
+          "passwordLabel": "Huidig wachtwoord",
+          "passwordHint": "Ter bevestiging dat jij het echt bent.",
+          "createNow": "Codes aanmaken",
+          "creating": "Bezig met aanmaken …",
+          "createdTitle": "Je nieuwe herstelcodes. Bewaar ze op een veilige plek.",
+          "noneReturned": "Er zijn geen codes aangemaakt. Probeer het opnieuw."
+        },
+        "remove": "Verwijderen",
+        "removeDialog": {
+          "totpTitle": "Authenticator-app verwijderen",
+          "smsTitle": "Sms-code verwijderen",
+          "warning": "Daarna beschermt deze factor je account niet meer.",
+          "passwordLabel": "Huidig wachtwoord",
+          "remove": "Verwijderen",
+          "removing": "Bezig met verwijderen …",
+          "cancel": "Annuleren",
+          "hint": "Bevestig het verwijderen met je huidige wachtwoord.",
+          "passkeyTitle": "Passkey verwijderen",
+          "lastFactorBlocked": "Dit is je laatste tweede factor en voor jouw rol is er één verplicht. Maak eerst herstelcodes aan of stel een andere factor in."
+        },
+        "requiredWithDeadline": "Voor jouw rol is een tweede factor verplicht. Stel hem uiterlijk {date} in — daarna is inloggen zonder tweede factor niet meer mogelijk.",
+        "statusFailed": "De status van de tweestapsverificatie kon niet worden geladen. Laad de pagina opnieuw."
+      },
+      "recovery": {
+        "lockoutWarning": "Zonder deze codes verlies je de toegang tot je account als je je tweede factor niet meer kunt gebruiken. Bewaar ze op een veilige plek, los van je wachtwoord.",
+        "copy": "Kopiëren",
+        "copied": "Gekopieerd",
+        "copyFailed": "Kopiëren is niet mogelijk. Download de codes of print ze.",
+        "download": "Downloaden",
+        "downloadFailed": "Downloaden is niet mogelijk. Kopieer de codes of print ze.",
+        "print": "Printen",
+        "printBlocked": "Het printvenster is geblokkeerd. Sta pop-ups toe of download de codes.",
+        "printTitle": "Herstelcodes myNextDays",
+        "printHint": "Elke code werkt precies één keer. Bewaar dit blad op een veilige plek.",
+        "fileHeader": "Herstelcodes myNextDays — elke code werkt precies één keer. Veilig bewaren.",
+        "confirmSaved": "Ik heb de codes veilig opgeslagen.",
+        "confirmHint": "Vink het vakje aan om het instellen af te ronden.",
+        "mustExportFirst": "Kopieer, download of print de codes eerst.",
+        "done": "Klaar"
+      }
     },
     "company": {
       "saved": "Gegevens opgeslagen.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Gesproken talen",
       "searchLanguage": "Taal zoeken…",
       "chooseRole": "Rol kiezen…",
-      "userCreated": "Gebruiker aangemaakt",
-      "preferredLanguage": "Voorkeurstaal",
+      "preferredLanguage": "Taal voor e-mails",
       "noLanguageFound": "Geen taal gevonden.",
       "firstName": "Voornaam",
       "lastName": "Achternaam",
       "email": "E-mail",
       "phone": "Telefoonnummer",
       "notes": "Opmerkingen",
-      "password": "Wachtwoord",
-      "credentialsHint": "Geef deze inloggegevens door aan de nieuwe gebruiker. Het wachtwoord wordt alleen nu getoond."
+      "title": "Gebruiker aanmaken",
+      "createdSubtitle": "Uitnodiging verstuurd.",
+      "stepHints": {
+        "contact": "Voeg de contactgegevens van deze gebruiker toe.",
+        "extra": "Voeg aanvullende informatie over deze gebruiker toe.",
+        "role": "Kies de rol en de rechten voor deze gebruiker.",
+        "properties": "Wijs objecten toe aan deze gebruiker."
+      },
+      "done": "Klaar",
+      "cancel": "Annuleren",
+      "back": "Terug",
+      "next": "Verder",
+      "create": "Aanmaken",
+      "creating": "Wordt aangemaakt…",
+      "role": "Rol",
+      "requiredFields": "Voornaam, achternaam, e-mail en rol zijn verplicht.",
+      "assignFailed": "Gebruiker aangemaakt, maar objecttoewijzing mislukt: {reason}",
+      "hidePhones": "Telefoonnummers op de website verbergen.",
+      "noAssignNeeded": "Geen objecttoewijzing nodig",
+      "noAssignNeededHint": "Deze rol heeft toegang tot alle objecten van het account. Toewijzing van afzonderlijke objecten geldt alleen voor eigenaren en medewerkers.",
+      "noProperties": "Nog geen accommodaties",
+      "noPropertiesHint": "Maak uw accommodaties aan, zodat u ze later aan uw gebruikers kunt toewijzen.",
+      "choosePropertiesHint": "Kies de objecten waartoe deze gebruiker toegang krijgt.",
+      "selectedCount": "{count} geselecteerd",
+      "inviteSent": "Uitnodiging verstuurd",
+      "inviteSentHint": "De gebruiker ontvangt een e-mail en stelt zelf een wachtwoord in. De link is 7 dagen geldig.",
+      "inviteResend": "Uitnodiging opnieuw versturen",
+      "inviteResending": "Wordt verzonden…",
+      "inviteResent": "Uitnodiging opnieuw verstuurd.",
+      "inviteResendFailed": "De uitnodiging kon niet opnieuw worden verstuurd.",
+      "preferredLanguageHint": "In deze taal ontvangt de nieuwe gebruiker de uitnodiging en alle verdere e-mails."
     },
     "tariff": {
       "oneLess": "Eén accommodatie minder",
@@ -6359,7 +6767,14 @@
       "updated": "Gebruiker bijgewerkt.",
       "deleted": "Gebruiker verwijderd.",
       "generalPermissions": "Algemene rechten",
-      "roleChangeHint": "Een rolwijziging stelt passende rechten voor. Je kunt ze daarna afzonderlijk aanpassen."
+      "roleChangeHint": "Een rolwijziging stelt passende rechten voor. Je kunt ze daarna afzonderlijk aanpassen.",
+      "edit": "Bewerken",
+      "delete": "Verwijderen",
+      "resendInvite": "Uitnodiging opnieuw versturen",
+      "inviteResent": "Uitnodiging verstuurd naar {email}.",
+      "inviteResendFailed": "De uitnodiging kon niet opnieuw worden verstuurd.",
+      "emailLanguage": "Taal voor e-mails",
+      "emailLanguageHint": "In deze taal ontvangt deze gebruiker zijn e-mails."
     },
     "staffProperties": {
       "title": "Accommodaties delen"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "bijv. Hotel Meerzicht",
     "namePlaceholder": "Voor- en achternaam",
     "passwordHint": "Minstens 8 tekens",
-    "passwordRepeat": "Wachtwoord herhalen"
+    "passwordRepeat": "Wachtwoord herhalen",
+    "headline": "Je hele verhuur op één plek.",
+    "feature1": "Agenda's automatisch synchroniseren",
+    "feature2": "Directe boekingen op je eigen site",
+    "feature3": "Gastberichten automatiseren",
+    "withGoogle": "Registreren met Google",
+    "withApple": "Registreren met Apple",
+    "or": "of",
+    "withEmail": "Registreren met e-mail",
+    "haveAccount": "Heb je al een account?",
+    "loginLink": "Log hier in",
+    "loadingHeadline": "Je eigen boekingswebsite. Houd 100 % van elke boeking.",
+    "loadingText": "We richten je account in …"
   },
   "marketingSite": {
     "stars": "4,5 sterren",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Alles gelezen",
     "erneut": "Opnieuw laden",
     "ariaMitAnzahl": "Meldingen ({count} ongelezen)"
+  },
+  "auth": {
+    "toLogin": "Naar aanmelden",
+    "genericError": "Dat lukte nu niet. Probeer het later opnieuw.",
+    "tokenMissing": {
+      "title": "Onvolledige link",
+      "text": "Deze link is onvolledig. Gebruik de volledige link uit de e-mail — kopieer en plak hem in de adresbalk."
+    },
+    "tokenInvalid": {
+      "title": "Link niet meer geldig",
+      "textInvite": "Deze uitnodigingslink is verlopen of al gebruikt. Neem contact op met uw bedrijf — daar kan de uitnodiging opnieuw worden verstuurd.",
+      "textReset": "Deze link is verlopen of al gebruikt. Vraag eenvoudig een nieuwe aan.",
+      "retry": "Nieuwe link aanvragen"
+    },
+    "invite": {
+      "title": "Toegang instellen",
+      "intro": "Kies een wachtwoord voor uw myNextDays-toegang. Minimaal {min} tekens."
+    },
+    "reset": {
+      "title": "Nieuw wachtwoord",
+      "intro": "Kies een nieuw wachtwoord. Minimaal {min} tekens."
+    },
+    "done": {
+      "titleInvite": "Toegang ingesteld",
+      "titleReset": "Wachtwoord gewijzigd",
+      "text": "U kunt nu inloggen met uw nieuwe wachtwoord."
+    },
+    "forgot": {
+      "title": "Wachtwoord vergeten",
+      "intro": "Voer uw e-mailadres in. We sturen u een link waarmee u een nieuw wachtwoord kunt instellen.",
+      "emailLabel": "E-mail",
+      "submit": "Link aanvragen",
+      "sending": "Wordt verzonden…",
+      "sentTitle": "E-mail onderweg",
+      "sentText": "Als er een account bestaat voor dit adres, hebben we een herstellink verstuurd. Deze is één uur geldig.",
+      "spamHint": "Niets ontvangen? Kijk ook in uw spammap.",
+      "again": "Opnieuw aanvragen"
+    },
+    "password": {
+      "newLabel": "Wachtwoord",
+      "repeatLabel": "Wachtwoord herhalen",
+      "submit": "Wachtwoord instellen",
+      "saving": "Wordt opgeslagen…",
+      "mismatch": "De twee wachtwoorden komen niet overeen.",
+      "tooWeak": "Het wachtwoord voldoet niet aan de eisen (minimaal {min} tekens).",
+      "show": "Wachtwoord tonen",
+      "hide": "Wachtwoord verbergen",
+      "strengthLabel": "Sterkte: {level}",
+      "strength": {
+        "1": "zwak",
+        "2": "matig",
+        "3": "goed",
+        "4": "sterk"
+      },
+      "requirement": {
+        "length": "Minimaal {min} tekens",
+        "letter": "Minimaal één letter",
+        "digit": "Minimaal één cijfer"
+      }
+    },
+    "checking": "Link wordt gecontroleerd…",
+    "languageLabel": "Taal",
+    "languageChange": "Taal wijzigen",
+    "twoFactor": {
+      "title": "Bevestiging",
+      "totpHint": "Voer de 6-cijferige code uit je authenticator-app in.",
+      "smsHint": "Voer de 6-cijferige code in die we je per sms hebben gestuurd.",
+      "smsHintWithPhone": "Voer de 6-cijferige code in die we naar {phone} hebben gestuurd.",
+      "codeLabel": "Code",
+      "confirm": "Bevestigen",
+      "checking": "Bezig met controleren …",
+      "recoveryHint": "Voer een van je herstelcodes in.",
+      "recoveryLabel": "Herstelcode",
+      "recoverySingleUse": "Elke code werkt precies één keer.",
+      "useTotp": "Authenticator-app gebruiken",
+      "useSms": "Sms-code gebruiken",
+      "useRecovery": "Herstelcode gebruiken",
+      "backToLogin": "Terug naar inloggen",
+      "factorMissing": "Deze factor is niet beschikbaar voor je account. Kies een andere manier.",
+      "passkeyHint": "Bevestig het inloggen met je passkey.",
+      "passkeyUse": "Inloggen met passkey",
+      "usePasskey": "Passkey gebruiken",
+      "sendCode": "Code per sms versturen",
+      "sending": "Bezig met versturen …",
+      "smsSent": "De code is verstuurd.",
+      "resend": "Code opnieuw versturen",
+      "recoveryRedeemedHint": "De code is ingewisseld, maar is op zichzelf niet genoeg om in te loggen. Log in met een van de factoren die je hebt ingesteld of neem contact op met je team."
+    },
+    "mfaSetup": {
+      "title": "Tweestapsverificatie instellen",
+      "intro": "Voor jouw rol is een tweede factor verplicht. Stel hem nu in om verder te gaan.",
+      "why": "Als beheerder heb je toegang tot financiële gegevens, gastgegevens en de instellingen van het hele bedrijf. Een tweede factor zorgt ervoor dat een gestolen wachtwoord alleen niet genoeg is.",
+      "goToSettings": "Nu instellen",
+      "later": "Later herinneren",
+      "laterHint": "Je kunt het instellen nog uitstellen. We vragen het bij de volgende keer inloggen opnieuw.",
+      "introWithDeadline": "Voor jouw rol is een tweede factor verplicht. Stel hem uiterlijk {date} in — daarna is inloggen zonder tweede factor niet meer mogelijk."
+    }
+  },
+  "sprache": {
+    "label": "Taal voor e-mails",
+    "hint": "In deze taal sturen we e-mails naar deze persoon.",
+    "none": "— niet opgegeven"
+  },
+  "neuerungen": {
+    "eyebrow": "Productupdates",
+    "titel": "Nieuws",
+    "unterzeile": "Alles wat er in myNextDays is veranderd — nieuwste eerst.",
+    "neuAnzahl": "{anzahl, plural, one {# nieuw} other {# nieuw}}",
+    "ungelesen": "Nieuw",
+    "veroeffentlichtAm": "Gepubliceerd op {datum}",
+    "leer": "Er is nog geen nieuws.",
+    "ladefehler": "Kon niet worden geladen: {grund}",
+    "mehrLaden": "Oudere laden",
+    "aufklappen": "Details tonen",
+    "zuklappen": "Details verbergen",
+    "kategorie": {
+      "neuerung": "Nieuwe functie",
+      "wartung": "Onderhoud",
+      "hinweis": "Mededeling",
+      "wichtig": "Belangrijk"
+    },
+    "popup": {
+      "ariaLabel": "Inhoud van de aankondiging",
+      "gelesen": "Begrepen",
+      "wirdGespeichert": "Bezig met opslaan …",
+      "erneut": "Opnieuw proberen",
+      "fehler": "Kon niet worden bevestigd: {grund}",
+      "weiter": "Volgende",
+      "vonAnzahl": "Aankondiging {nummer}"
+    }
+  },
+  "login": {
+    "title": "Inloggen",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Wachtwoord",
+    "showPassword": "Wachtwoord tonen",
+    "hidePassword": "Wachtwoord verbergen",
+    "forgot": "Wachtwoord vergeten?",
+    "stayLoggedIn": "Ingelogd blijven",
+    "submit": "Inloggen",
+    "submitting": "Inloggen…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Nog geen myNextDays-klant?",
+    "signupLink": "Probeer het gratis",
+    "mfaTitle": "Bevestiging",
+    "mfaIntro": "Voer de 6-cijferige code uit je authenticator-app in. Een herstelcode werkt ook.",
+    "mfaCodeLabel": "Code",
+    "mfaSubmit": "Bevestigen",
+    "mfaChecking": "Controleren…",
+    "mfaBack": "Terug naar inloggen"
   }
 }

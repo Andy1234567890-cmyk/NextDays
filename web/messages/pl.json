@@ -283,6 +283,7 @@
       "logout": "Wyloguj się"
     },
     "stopSell": "Wstrzymanie sprzedaży",
+    "blockRequests": "Wnioski o blokadę",
     "owners": "Właściciele",
     "ownerStatements": "Rozliczenia właścicieli",
     "portal": "Mój portal",
@@ -315,7 +316,8 @@
     "noAccess": "Brak dostępu",
     "dashboardLoadFailed": "Nie udało się wczytać pulpitu",
     "reviews": "Opinie",
-    "extensions": "Rozszerzenia"
+    "extensions": "Rozszerzenia",
+    "announcements": "Nowości"
   },
   "exemption": {
     "labelNamed": "Zwolniony z podatku ({scheme}) — NIP niepotrzebny",
@@ -945,6 +947,7 @@
     "newTitle": "Nowy właściciel",
     "create": "Utwórz",
     "created": "Właściciel utworzony.",
+    "createdInvited": "Utworzono właściciela i wysłano zaproszenie.",
     "cancel": "Anuluj",
     "save": "Zapisz",
     "saving": "Zapisywanie …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Brak obiektów} one {# obiekt} few {# obiekty} many {# obiektów} other {# obiektu}}",
     "noProperties": "Do tego właściciela nie przypisano jeszcze żadnego obiektu.",
     "addProperty": "Przypisz obiekt …",
+    "assignProperties": "Przypisz obiekty",
+    "assignPropertiesHint": "Opcjonalnie. Wybrać można tylko obiekty, które nie mają jeszcze właściciela.",
+    "noFreeProperties": "Wszystkie obiekty są już przypisane do właściciela.",
+    "assignSelected": "{count, plural, =0 {Przypisz obiekty} one {Przypisz # obiekt} few {Przypisz # obiekty} many {Przypisz # obiektów} other {Przypisz # obiektu}}",
+    "propertiesAssigned": "{count, plural, one {Przypisano # obiekt} few {Przypisano # obiekty} many {Przypisano # obiektów} other {Przypisano # obiektu}}",
     "removeProperty": "Usuń przypisanie",
     "sections": {
       "master": "Dane podstawowe",
       "payout": "Wypłata i prowizja",
-      "properties": "Obiekty"
+      "properties": "Obiekty",
+      "portalAccess": "Dostęp do portalu"
     },
     "frequency": {
       "none": "Brak",
@@ -989,12 +998,20 @@
       "statementFrequency": "Rytm rozliczeń",
       "notes": "Notatki",
       "share": "Udział (%)",
-      "commissionOverride": "Prowizja (%) odmienna"
+      "commissionOverride": "Prowizja (%) odmienna",
+      "emailLanguage": "Język wiadomości e-mail"
     },
     "placeholders": {
       "name": "np. Jan Kowalski",
       "email": "np. jan@example.com"
-    }
+    },
+    "emailLanguageHint": "W tym języku właściciel otrzymuje rozliczenia i powiadomienia — także bez własnego dostępu.",
+    "portalAccess": "Skonfiguruj dostęp do portalu",
+    "portalAccessHint": "Właściciel otrzyma zaproszenie e-mailem i będzie mógł samodzielnie przeglądać swoje rozliczenia.",
+    "portalAccessNeedsEmail": "Do dostępu do portalu wymagany jest adres e-mail.",
+    "portalAccessInvite": "Wyślij zaproszenie",
+    "portalAccessInvited": "Zaproszenie wysłane.",
+    "portalAccessActive": "Dostęp do portalu jest skonfigurowany."
   },
   "ownerStatements": {
     "title": "Rozliczenia właścicieli",
@@ -1149,7 +1166,9 @@
     "subtitle": "Przegląd Twoich obiektów, przychodów i rozliczeń.",
     "properties": {
       "title": "Moje obiekty",
-      "empty": "Nie masz obecnie przypisanych żadnych obiektów."
+      "empty": "Nie masz obecnie przypisanych żadnych obiektów.",
+      "city": "Miejscowość",
+      "openCalendar": "Kalendarz"
     },
     "earnings": {
       "title": "Przychody (bieżący miesiąc)",
@@ -1175,7 +1194,24 @@
       "to": "Do",
       "submit": "Wyślij wniosek",
       "sending": "Wysyłanie …",
-      "requested": "Wniosek wysłany."
+      "requested": "Wniosek wysłany.",
+      "listTitle": "Moje wnioski",
+      "listEmpty": "Nie złożyłeś jeszcze żadnego wniosku o blokadę.",
+      "created": "Złożono",
+      "range": "Okres",
+      "statusLabel": "Status",
+      "readOnlyHint": "Tylko zarządca może wprowadzić blokadę. Ty składasz wniosek, decyzja należy do niego.",
+      "invalidRange": "Data zakończenia musi być późniejsza niż data rozpoczęcia.",
+      "invalidDate": "Podaj prawidłową datę.",
+      "status": {
+        "pending": "W trakcie weryfikacji",
+        "approved": "Zatwierdzony",
+        "rejected": "Odrzucony",
+        "cancelled": "Wycofany"
+      },
+      "reason": "Powód",
+      "reasonPlaceholder": "Dlaczego ma zostać zablokowane? (np. użytek własny, fachowcy)",
+      "decisionNote": "Uwaga zarządu"
     },
     "meter": {
       "title": "Zapisz stan licznika",
@@ -1191,6 +1227,142 @@
         "electricity": "Prąd",
         "water": "Woda",
         "gas": "Gaz"
+      },
+      "historyTitle": "Historia",
+      "historyEmpty": "Dla tego obiektu nie zarejestrowano jeszcze żadnego odczytu licznika.",
+      "appendOnlyHint": "Zarejestrowane odczyty pozostają niezmienione. Korekta to nowy wpis — dzięki temu historia pozostaje kompletna.",
+      "invalidValue": "Podaj odczyt licznika jako liczbę.",
+      "invalidDate": "Podaj prawidłową datę odczytu."
+    },
+    "logout": "Wyloguj się",
+    "loadFailed": "Nie udało się załadować danych.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Przegląd",
+      "calendar": "Kalendarz obłożenia",
+      "reports": "Raporty",
+      "blockRequests": "Blokady",
+      "meterReadings": "Odczyty liczników",
+      "services": "Usługi",
+      "notifications": "Powiadomienia"
+    },
+    "overview": {
+      "occupancy": "Obłożenie",
+      "occupancyHint": "Zarezerwowane noce w wybranym okresie.",
+      "nights": "Noce",
+      "bookings": "Rezerwacje",
+      "payout": "Wypłata netto",
+      "payoutHint": "Twój udział po odliczeniu opłat portali.",
+      "period": "Okres",
+      "periodMonth": "Ten miesiąc",
+      "periodYear": "Ten rok",
+      "openCalendar": "Otwórz kalendarz",
+      "latestStatement": "Ostatnie rozliczenie",
+      "noStatement": "Brak rozliczeń"
+    },
+    "calendar": {
+      "title": "Kalendarz obłożenia",
+      "subtitle": "Obłożenie i Twoja wypłata netto za noc.",
+      "selectProperty": "Wybierz obiekt",
+      "prevMonth": "Poprzedni miesiąc",
+      "nextMonth": "Następny miesiąc",
+      "today": "Dziś",
+      "legendSeasons": "Sezony",
+      "legendStatus": "Obłożenie",
+      "noSeasons": "Dla tego obiektu nie zdefiniowano sezonów.",
+      "status": {
+        "open": "Wolne",
+        "booked": "Zajęte",
+        "blocked": "Zablokowane"
+      },
+      "payoutPerNight": "Wypłata netto/noc",
+      "guest": "Gość",
+      "channel": "Źródło rezerwacji",
+      "blockHint": "Chcesz zablokować okres? Złóż wniosek — decyduje zarządca.",
+      "blockCta": "Złóż wniosek o blokadę",
+      "weekdays": "Pon,Wt,Śr,Czw,Pt,Sob,Niedz",
+      "months": "Styczeń,Luty,Marzec,Kwiecień,Maj,Czerwiec,Lipiec,Sierpień,Wrzesień,Październik,Listopad,Grudzień"
+    },
+    "services": {
+      "title": "Zamów usługę",
+      "hint": "Zleć usługę dla swojego obiektu. Zarządca przyjmuje zlecenie i ustala termin.",
+      "property": "Obiekt",
+      "kind": "Usługa",
+      "date": "Preferowany termin",
+      "note": "Uwaga",
+      "notePlaceholder": "Co dokładnie ma zostać wykonane?",
+      "submit": "Zleć",
+      "sending": "Wysyłanie …",
+      "sent": "Zlecenie wysłane.",
+      "listTitle": "Moje zlecenia",
+      "listEmpty": "Nie zleciłeś jeszcze żadnej usługi.",
+      "invalidDate": "Podaj prawidłowy preferowany termin.",
+      "noteRequired": "Opisz żądaną usługę.",
+      "kinds": {
+        "custom": "Inne (dowolny tekst)"
+      },
+      "status": {
+        "pending": "W trakcie weryfikacji",
+        "accepted": "Przyjęte",
+        "scheduled": "Zaplanowane",
+        "done": "Wykonane",
+        "rejected": "Odrzucone",
+        "cancelled": "Wycofane"
+      },
+      "type": {
+        "endreinigung": "Sprzątanie końcowe",
+        "hauptreinigung": "Sprzątanie gruntowne",
+        "fensterreinigung": "Mycie okien",
+        "rasenmaehen": "Koszenie trawnika",
+        "terrassenreinigung": "Sprzątanie tarasu"
+      },
+      "dateTo": "Do"
+    },
+    "notifications": {
+      "title": "Powiadomienia",
+      "hint": "Ustal dla każdego zdarzenia, jak chcesz być powiadamiany.",
+      "channel": {
+        "email": "E-mail",
+        "sms": "SMS",
+        "phone": "Telefon"
+      },
+      "locked": "Ten adres e-mail jest wymagany umową i pozostaje włączony.",
+      "saved": "Zapisano.",
+      "saveFailed": "Nie udało się zapisać zmiany.",
+      "categories": {
+        "listing_activity": "Rezerwacje w Twoich obiektach",
+        "listing_activityHint": "Nowa rezerwacja, zmiana i anulowanie.",
+        "account_activity": "Aktywność konta",
+        "account_activityHint": "Logowania i zmiany na Twoim koncie.",
+        "reminders": "Przypomnienia",
+        "remindersHint": "Zaległe zadania i terminy.",
+        "messages": "Wiadomości",
+        "messagesHint": "Nowe wiadomości od zarządcy.",
+        "owner_booking": "Rezerwacje w twoich obiektach",
+        "owner_bookingHint": "Nowa rezerwacja, zmiana i anulowanie.",
+        "block_decision": "Decyzja w sprawie twoich wniosków o blokadę",
+        "block_decisionHint": "Gdy zarządca zaakceptuje lub odrzuci twój wniosek.",
+        "owner_service": "Zamówione usługi",
+        "owner_serviceHint": "Zmiana statusu zamówionej przez ciebie usługi."
+      }
+    },
+    "reports": {
+      "title": "Raporty",
+      "subtitle": "Rozliczenia, bieżący miesiąc oraz raporty miesięczne i roczne.",
+      "currentTitle": "Bieżący status rozliczenia",
+      "currentHint": "Wstępny — miesiąc jeszcze trwa. Wiążące jest dopiero rozliczenie finalne.",
+      "monthly": "Raport miesięczny",
+      "yearly": "Raport roczny",
+      "month": "Miesiąc",
+      "year": "Rok",
+      "download": "Pobierz PDF",
+      "downloading": "Generowanie …",
+      "downloadFailed": "Nie udało się wygenerować pliku PDF.",
+      "onlyFinalized": "Do pobrania dostępne są tylko rozliczenia finalne.",
+      "status": {
+        "draft": "W przygotowaniu",
+        "finalized": "Zakończone",
+        "cancelled": "Anulowane"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Kwoty stałej nie da się rozłożyć na poszczególne noce — nie trafia do portali, tam trzeba ją prowadzić w ekstranecie.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Zastosuj tę samą promocję również do innych obiektów.",
+      "applyToOthersSeasonHint": "Utwórz ten sam sezon także w innych obiektach.",
       "promoReason": {
         "mindestaufenthalt": "minimalny pobyt",
         "fruehbucher": "wyprzedzenie wczesnej rezerwacji",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Plan płatności",
       "cancellationLabel": "Anulowanie",
       "depositLabel": "Kaucja",
-      "depositWithheldText": "Zostanie pobrana kaucja w wysokości {amount}.",
       "noPolicyYet": "Nie przypisano jeszcze żadnej zasady.",
       "bookabilityCardTitle": "Możliwość rezerwacji",
       "bookabilityCardHint": "Jak przyjmowane są rezerwacje.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Umowa najmu",
       "rentalAgreementCardHint": "Utwórz umowę najmu lub udostępnij link do niej swoim gościom.",
       "noRentalAgreementYet": "Brak jeszcze umowy najmu.",
-      "addPolicyTitle": "Dodaj zasadę",
       "addPolicySubtitle": "Ustal szczegóły dla tej nowej zasady.",
       "internalNameLabel": "Nazwa wewnętrzna *",
       "internalNamePlaceholder": "np. Zaliczka częściowa – bezzwrotna",
       "paymentPlanGroupTitle": "Plan płatności",
       "paymentCountLabel": "Liczba płatności",
-      "depositPercentLabel": "Zaliczka (%)",
-      "remainingDaysBeforeLabel": "Kwota pozostała (dni przed przyjazdem)",
       "guestCancellationGroupTitle": "Anulowanie przez gościa",
       "cancellationTypeLabel": "Rodzaj anulowania",
       "depositGroupTitle": "Kaucja",
-      "depositModeNone": "Kaucja niewymagana",
-      "depositModeAmount": "Kaucja jako kwota",
-      "depositAmountLabelWithCurrency": "Kwota kaucji ({currency})",
-      "depositAmountLabel": "Kwota kaucji",
       "quoteValidityGroupTitle": "Ważność oferty",
       "quoteValidityHoursLabel": "Okres ważności (godziny) *",
       "quoteValidityHint": "Oferta jest ważna maks. {hours} godzin, dopóki status to „Oczekuje na gościa” lub „Oczekuje na płatność”.",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Zalecane",
       "checkInTimeLabel": "Godzina zameldowania",
       "checkOutTimeLabel": "Godzina wymeldowania",
-      "paymentSummaryFull": "100% płatne przy rezerwacji.",
-      "paymentSummarySplit": "{percent}% przy rezerwacji, pozostała kwota {days} dni przed przyjazdem.",
       "localizedEditorSubtitle": "Utwórz tekst i w razie potrzeby przetłumacz go dla swoich gości.",
-      "localizedEditorPlaceholder": "Wpisz {title} …"
+      "localizedEditorPlaceholder": "Wpisz {title} …",
+      "editPolicyTitle": "Edytuj warunki",
+      "singlePaymentHint": "100 % płatności jest wymagane przy finalizacji rezerwacji.",
+      "firstPaymentHeading": "Pierwsza płatność",
+      "secondPaymentHeading": "Druga płatność",
+      "thirdPaymentHeading": "Trzecia płatność",
+      "amountTypeLabel": "Rodzaj kwoty",
+      "percentLabel": "Procent",
+      "amountLabel": "Kwota",
+      "currencyLabel": "Waluta",
+      "daysLabel": "Dni",
+      "periodLabel": "Okres",
+      "firstPaymentHint": "Przy rezerwacji pobierana jest wyłącznie stała kwota lub procent pierwszej płatności. Pozostałe płatności są fakturowane w zaplanowanym terminie.",
+      "remainderHint": "Określ, kiedy ma zostać pobrana pozostała kwota.",
+      "partialRulesHint": "Zdefiniuj zasady dla anulowań z częściowym zwrotem.",
+      "ruleHeading": "Reguła {number}",
+      "ruleDelete": "Usuń regułę",
+      "ruleAdd": "Dodaj regułę",
+      "refundTypeLabel": "Rodzaj zwrotu",
+      "refundLabel": "Zwrot",
+      "whenCancelledLabel": "W przypadku anulowania",
+      "depositNotRequired": "Kaucja nie jest wymagana",
+      "depositRequired": "Kaucja jest wymagana",
+      "depositMethodLabel": "Metoda",
+      "preAuthTimesHeading": "Terminy preautoryzacji",
+      "preAuthValidityLabel": "Ważność (dni po wyjeździe)",
+      "preAuthWarnTitle": "Preautoryzacje można zagwarantować tylko na 5 dni.",
+      "preAuthWarnBody": "Czas trwania preautoryzacji na karcie kredytowej zależy od różnych czynników, takich jak dostawca karty, bank wydający, bramka płatnicza itd. Dlatego przy wszystkich rezerwacjach trwających tydzień lub dłużej każda preautoryzacja wygasa (jest automatycznie anulowana) co 5 dni. Powiadomimy Cię o tym, abyś mógł ręcznie wystawić nową preautoryzację i zachować kaucję na pozostałą część rezerwacji.",
+      "assignAction": "Przypisz warunki"
     },
     "ratePlanWizard": {
       "title": "Utwórz plan cenowy",
@@ -5604,6 +5795,39 @@
       "confirmed": "Potwierdzona",
       "in_house": "Zameldowany",
       "pending": "Opcja / wstępnie"
+    },
+    "blockRequests": {
+      "title": "Wnioski o blokadę",
+      "subtitle": "Wnioski Twoich właścicieli o zablokowanie ich obiektów. Zatwierdzenie blokuje noce w kalendarzu i zgłasza je do portali.",
+      "filter": "Status",
+      "filterAll": "Wszystkie",
+      "empty": "Brak wniosków w tym widoku.",
+      "requestedBy": "Wnioskujący: {name}",
+      "reason": "Uzasadnienie",
+      "decisionNote": "Uwaga",
+      "note": "Uwaga dla właściciela",
+      "notePlaceholder": "Opcjonalnie — zostanie pokazana właścicielowi.",
+      "working": "Wykonywanie …",
+      "status": {
+        "pending": "Otwarty",
+        "approved": "Zatwierdzony",
+        "rejected": "Odrzucony"
+      },
+      "action": {
+        "approve": "Zatwierdź",
+        "reject": "Odrzuć",
+        "revoke": "Cofnij"
+      },
+      "confirm": {
+        "approve": "Zablokować {objekt} od {von} do {bis}? Noce zostaną zablokowane na wszystkich portalach.",
+        "reject": "Odrzucić wniosek dla {objekt} ({von} – {bis})?",
+        "revoke": "Cofnąć zatwierdzenie dla {objekt} ({von} – {bis})? Noce zostaną ponownie zwolnione."
+      },
+      "done": {
+        "approve": "Wniosek zatwierdzony, noce zablokowane.",
+        "reject": "Wniosek odrzucony.",
+        "revoke": "Zatwierdzenie cofnięte, noce zwolnione."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "Styczeń,Luty,Marzec,Kwiecień,Maj,Czerwiec,Lipiec,Sierpień,Wrzesień,Październik,Listopad,Grudzień",
     "name": "Nazwa",
     "seasonAdd": "Dodaj sezon",
+    "seasonApplyCancel": "Anuluj",
+    "seasonApplyCopyHint": "Sezon zostanie utworzony jako niezależna kopia. Późniejsze zmiany tego sezonu NIE będą już tam obowiązywać. Dopłata liczona jest od własnej ceny bazowej obiektu docelowego.",
+    "seasonApplyNone": "Nie skopiowano do żadnego obiektu.",
+    "seasonApplyPartial": "Skopiowano do {count} obiektów, pominięto {skipped}.",
+    "seasonApplyPickTarget": "Wybierz co najmniej jeden obiekt.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Brak ceny bazowej — nie można obliczyć dopłaty.",
+      "basispreis_null": "Cena bazowa wynosi 0 — nie można obliczyć dopłaty.",
+      "teilweise_uebertragen": "Sezon jest przy obiekcie, brakuje jeszcze cen dziennych — spróbuj ponownie, aby zakończyć.",
+      "unbekannt": "Pominięto z nieznanego powodu."
+    },
+    "seasonApplySubmit": "Skopiuj",
+    "seasonApplySuccess": "Skopiowano do {count} obiektów.",
+    "seasonApplyTitle": "Skopiuj „{name}” do innych obiektów",
+    "seasonApplyToOthers": "Skopiuj do innych obiektów",
+    "seasonApplyWithRanges": "Skopiuj także okresy",
+    "seasonApplyWithRangesHint": "Zaznaczone dni zostaną ustawione tak samo w obiekcie docelowym. Wyłączone: tylko sam sezon, bez dni.",
     "seasonClearHint": "Przeciągnij prawym przyciskiem myszy po dniach, aby usunąć je z sezonu.",
     "seasonColor": "Kolor",
     "seasonColorAria": "Kolor {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Dopłata (± %)",
     "seasonSurchargePlaceholder": "np. 30 lub -15",
     "seasonValueRequired": "Podaj prawidłową wartość.",
-    "weekdays": "P,W,Ś,C,P,S,N"
+    "weekdays": "P,W,Ś,C,P,S,N",
+    "seasonApplyNoSpans": "Ten sezon nie ma zaznaczonych okresów. Najpierw go zaznacz lub przenieś tylko definicję bez okresów."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "Kod QR dla aplikacji uwierzytelniającej",
       "sixDigitCode": "6-cyfrowy kod",
       "disable2fa": "Wyłącz 2FA",
-      "disable2faHint": "Wprowadź aktualny kod (lub kod odzyskiwania), aby wyłączyć 2FA."
+      "disable2faHint": "Wprowadź aktualny kod (lub kod odzyskiwania), aby wyłączyć 2FA.",
+      "title": "Bezpieczeństwo",
+      "loadFailed": "Nie udało się wczytać danych konta. Sprawdź połączenie i spróbuj ponownie.",
+      "credentials": "Dane logowania",
+      "emailAndUsername": "E-mail i nazwa użytkownika",
+      "emailLabel": "E-mail",
+      "nameLabel": "Imię i nazwisko",
+      "password": "Hasło",
+      "noPassword": "Nie ustawiono hasła",
+      "passwordMin": "Co najmniej 8 znaków.",
+      "save": "Zapisz",
+      "saving": "Zapisywanie …",
+      "changePassword": "Zmień hasło",
+      "twoFactor": {
+        "title": "Uwierzytelnianie dwuskładnikowe (2FA)",
+        "intro": "Chroni Twoje konto dodatkowym składnikiem obok hasła.",
+        "noneActive": "Nie skonfigurowano jeszcze drugiego składnika. Zalecamy aplikację uwierzytelniającą.",
+        "requiredNotice": "Dla Twojej roli drugi składnik jest obowiązkowy. Skonfiguruj go teraz.",
+        "active": "Aktywne",
+        "setUp": "Skonfiguruj",
+        "totp": {
+          "title": "Aplikacja uwierzytelniająca",
+          "description": "Jednorazowy kod z aplikacji takiej jak Google Authenticator lub Microsoft Authenticator. Działa również bez zasięgu sieci komórkowej.",
+          "setupTitle": "Konfiguracja aplikacji uwierzytelniającej",
+          "setupHint": "Zeskanuj kod QR w swojej aplikacji i potwierdź wyświetlonym kodem.",
+          "step1": "1. Zeskanuj kod QR",
+          "step2": "3. Wprowadź kod z aplikacji",
+          "qrAlt": "Kod QR dla aplikacji uwierzytelniającej",
+          "qrHint": "Otwórz aplikację uwierzytelniającą i zeskanuj kod.",
+          "manualTitle": "2. Albo wprowadź klucz ręcznie",
+          "manualHint": "Użyj tego klucza, jeśli nie możesz zeskanować kodu QR.",
+          "showSecret": "Pokaż klucz",
+          "hideSecret": "Ukryj klucz",
+          "copySecret": "Kopiuj klucz",
+          "copyFailed": "Kopiowanie nie powiodło się. Zaznacz klucz i skopiuj go ręcznie.",
+          "codeLabel": "6-cyfrowy kod",
+          "activate": "Aktywuj",
+          "checking": "Sprawdzanie …",
+          "preparing": "Przygotowywanie konfiguracji …",
+          "enabledTitle": "Aplikacja uwierzytelniająca jest aktywna. Zabezpiecz teraz swoje kody odzyskiwania.",
+          "friendlyName": "Aplikacja uwierzytelniająca",
+          "replayNote": "Wskazówka: kod pozostaje ważny do 90 sekund i w tym czasie może zostać użyty wielokrotnie. Przed oszustwem na fałszywej stronie logowania w czasie rzeczywistym chroni tylko klucz dostępu."
+        },
+        "sms": {
+          "title": "Kod SMS",
+          "description": "Jednorazowy kod wysyłany SMS-em na Twój potwierdzony numer telefonu.",
+          "unavailable": "Kod SMS nie jest dostępny na tym serwerze, ponieważ nie skonfigurowano dostawcy SMS. Wybierz aplikację uwierzytelniającą lub klucz dostępu.",
+          "unavailableBadge": "Niedostępne",
+          "setupTitle": "Konfiguracja kodu SMS",
+          "setupHint": "Wyślemy Ci kod na Twój numer telefonu.",
+          "simSwapWarning": "Uwaga: SMS jest mniej bezpieczny niż aplikacja uwierzytelniająca. Osoba, która przeniesie Twój numer na inną kartę SIM, może odbierać Twoje kody. Jeśli to możliwe, wybierz aplikację uwierzytelniającą lub klucz dostępu.",
+          "numberLabel": "Numer telefonu",
+          "numberHint": "Format międzynarodowy z numerem kierunkowym kraju, na przykład +48 …",
+          "invalidNumber": "Podaj numer w formacie międzynarodowym, zaczynając od + i numeru kierunkowego kraju.",
+          "sendCode": "Wyślij kod",
+          "sending": "Wysyłanie …",
+          "codeLabel": "6-cyfrowy kod",
+          "codeSentTo": "Wysłaliśmy kod na numer {phone}.",
+          "confirm": "Potwierdź",
+          "checking": "Sprawdzanie …",
+          "resend": "Wyślij kod ponownie",
+          "changeNumber": "Użyj innego numeru",
+          "friendlyName": "Kod SMS"
+        },
+        "passkey": {
+          "title": "Klucz dostępu",
+          "description": "Logowanie odciskiem palca, rozpoznawaniem twarzy lub kluczem bezpieczeństwa. Bez wpisywania kodu.",
+          "setupTitle": "Konfiguracja klucza dostępu",
+          "setupHint": "Twoje urządzenie potwierdzi Twoją tożsamość odciskiem palca, rozpoznawaniem twarzy lub kluczem bezpieczeństwa.",
+          "checkingSupport": "Sprawdzanie urządzenia …",
+          "unsupportedTitle": "Ta przeglądarka nie obsługuje kluczy dostępu",
+          "unsupportedHint": "Użyj aktualnej przeglądarki albo skonfiguruj zamiast tego aplikację uwierzytelniającą.",
+          "securityKeyOnly": "To urządzenie nie ma wbudowanego potwierdzania tożsamości (na przykład odciskiem palca lub rozpoznawaniem twarzy). Potrzebujesz do tego podłączanego klucza bezpieczeństwa.",
+          "benefitPhishing": "Chroni przed fałszywymi stronami logowania.",
+          "benefitNoCode": "Bez przepisywania kodu.",
+          "create": "Utwórz klucz dostępu",
+          "friendlyName": "Klucz dostępu",
+          "recommended": "Zalecane: najbezpieczniejszy z trzech sposobów.",
+          "creating": "Tworzenie …",
+          "errors": {
+            "abgebrochen": "Potwierdzenie zostało anulowane lub nie zostało rozpoznane. Spróbuj ponownie.",
+            "herkunftPasstNicht": "Klucze dostępu nie są włączone dla tego adresu. Zaloguj się przez oficjalny adres.",
+            "nichtUnterstuetzt": "To urządzenie nie może utworzyć klucza dostępu. Użyj aplikacji uwierzytelniającej lub klucza bezpieczeństwa.",
+            "schonVorhanden": "Na tym urządzeniu istnieje już klucz dostępu dla tego konta.",
+            "laeuftBereits": "Żądanie klucza dostępu jest już w toku. Zakończ je lub anuluj.",
+            "zeitUeberschritten": "Czas na potwierdzenie upłynął. Spróbuj ponownie.",
+            "unbekannt": "Nie udało się utworzyć klucza dostępu. Spróbuj ponownie."
+          }
+        },
+        "recovery": {
+          "title": "Kody odzyskiwania",
+          "description": "Kody jednorazowego użytku na wypadek, gdybyś nie miał dostępu do swojego drugiego składnika.",
+          "left": "Dostępnych kodów: {count}.",
+          "create": "Wygeneruj kody",
+          "regenerate": "Wygeneruj nowe kody",
+          "regenerateHint": "Po wygenerowaniu nowych kodów wszystkie dotychczasowe tracą ważność.",
+          "dialogTitle": "Kody odzyskiwania",
+          "dialogHint": "Kody jednorazowego użytku na wypadek, gdybyś nie miał dostępu do swojego drugiego składnika.",
+          "replaceWarning": "Uwaga: Twoje dotychczasowe kody odzyskiwania stracą przy tym ważność.",
+          "passwordLabel": "Aktualne hasło",
+          "passwordHint": "Dla potwierdzenia, że to naprawdę Ty.",
+          "createNow": "Wygeneruj kody",
+          "creating": "Generowanie …",
+          "createdTitle": "Twoje nowe kody odzyskiwania. Przechowuj je w bezpiecznym miejscu.",
+          "noneReturned": "Nie wygenerowano żadnych kodów. Spróbuj ponownie."
+        },
+        "remove": "Usuń",
+        "removeDialog": {
+          "totpTitle": "Usuń aplikację uwierzytelniającą",
+          "smsTitle": "Usuń kod SMS",
+          "warning": "Od tej chwili ten składnik nie będzie już chronić Twojego konta.",
+          "passwordLabel": "Aktualne hasło",
+          "remove": "Usuń",
+          "removing": "Usuwanie …",
+          "cancel": "Anuluj",
+          "hint": "Potwierdź usunięcie swoim aktualnym hasłem.",
+          "passkeyTitle": "Usuń klucz dostępu",
+          "lastFactorBlocked": "To jest Twój ostatni drugi składnik, a dla Twojej roli jest on obowiązkowy. Najpierw wygeneruj kody odzyskiwania lub skonfiguruj kolejny składnik."
+        },
+        "requiredWithDeadline": "Dla Twojej roli drugi składnik jest obowiązkowy. Skonfiguruj go do {date} — po tym terminie logowanie bez drugiego składnika nie będzie już możliwe.",
+        "statusFailed": "Nie udało się wczytać stanu uwierzytelniania dwuskładnikowego. Odśwież stronę."
+      },
+      "recovery": {
+        "lockoutWarning": "Bez tych kodów stracisz dostęp do swojego konta, jeśli nie będziesz mógł już korzystać z drugiego składnika. Przechowuj je w bezpiecznym miejscu, oddzielnie od hasła.",
+        "copy": "Kopiuj",
+        "copied": "Skopiowano",
+        "copyFailed": "Kopiowanie nie powiodło się. Pobierz kody lub je wydrukuj.",
+        "download": "Pobierz",
+        "downloadFailed": "Pobieranie nie powiodło się. Skopiuj kody lub je wydrukuj.",
+        "print": "Drukuj",
+        "printBlocked": "Okno drukowania zostało zablokowane. Zezwól na wyskakujące okienka lub pobierz kody.",
+        "printTitle": "Kody odzyskiwania myNextDays",
+        "printHint": "Każdy kod działa dokładnie raz. Przechowuj tę kartkę w bezpiecznym miejscu.",
+        "fileHeader": "Kody odzyskiwania myNextDays — każdy kod działa dokładnie raz. Przechowuj je bezpiecznie.",
+        "confirmSaved": "Zapisałem kody w bezpiecznym miejscu.",
+        "confirmHint": "Zaznacz pole, aby zakończyć konfigurację.",
+        "mustExportFirst": "Najpierw skopiuj, pobierz lub wydrukuj kody.",
+        "done": "Gotowe"
+      }
     },
     "company": {
       "saved": "Dane zapisane.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Języki, którymi się posługuje",
       "searchLanguage": "Szukaj języka…",
       "chooseRole": "Wybierz rolę…",
-      "userCreated": "Użytkownik utworzony",
-      "preferredLanguage": "Preferowany język",
+      "preferredLanguage": "Język wiadomości e-mail",
       "noLanguageFound": "Nie znaleziono języka.",
       "firstName": "Imię",
       "lastName": "Nazwisko",
       "email": "E-mail",
       "phone": "Numer telefonu",
       "notes": "Uwagi",
-      "password": "Hasło",
-      "credentialsHint": "Przekaż te dane dostępowe nowemu użytkownikowi. Hasło jest wyświetlane tylko teraz."
+      "title": "Utwórz użytkownika",
+      "createdSubtitle": "Zaproszenie wysłane.",
+      "stepHints": {
+        "contact": "Dodaj dane kontaktowe tego użytkownika.",
+        "extra": "Dodaj dodatkowe informacje o tym użytkowniku.",
+        "role": "Wybierz rolę i uprawnienia dla tego użytkownika.",
+        "properties": "Przypisz obiekty do tego użytkownika."
+      },
+      "done": "Gotowe",
+      "cancel": "Anuluj",
+      "back": "Wstecz",
+      "next": "Dalej",
+      "create": "Utwórz",
+      "creating": "Tworzenie…",
+      "role": "Rola",
+      "requiredFields": "Imię, nazwisko, e-mail i rola są wymagane.",
+      "assignFailed": "Użytkownik utworzony, ale przypisanie obiektów nie powiodło się: {reason}",
+      "hidePhones": "Ukryj numery telefonów na stronie internetowej.",
+      "noAssignNeeded": "Przypisanie obiektów nie jest potrzebne",
+      "noAssignNeededHint": "Ta rola ma dostęp do wszystkich obiektów konta. Przypisywanie pojedynczych obiektów dotyczy tylko właścicieli i pracowników.",
+      "noProperties": "Brak obiektów",
+      "noPropertiesHint": "Utwórz swoje obiekty, aby móc je później przypisać użytkownikom.",
+      "choosePropertiesHint": "Wybierz obiekty, do których ten użytkownik będzie mieć dostęp.",
+      "selectedCount": "Wybrano: {count}",
+      "inviteSent": "Zaproszenie wysłane",
+      "inviteSentHint": "Użytkownik otrzyma wiadomość e-mail i sam ustawi hasło. Link jest ważny przez 7 dni.",
+      "inviteResend": "Wyślij zaproszenie ponownie",
+      "inviteResending": "Wysyłanie…",
+      "inviteResent": "Zaproszenie wysłane ponownie.",
+      "inviteResendFailed": "Nie udało się ponownie wysłać zaproszenia.",
+      "preferredLanguageHint": "W tym języku nowy użytkownik otrzyma zaproszenie i wszystkie kolejne wiadomości e-mail."
     },
     "tariff": {
       "oneLess": "Jeden obiekt mniej",
@@ -6359,7 +6767,14 @@
       "updated": "Użytkownik zaktualizowany.",
       "deleted": "Użytkownik usunięty.",
       "generalPermissions": "Uprawnienia ogólne",
-      "roleChangeHint": "Zmiana roli proponuje odpowiednie uprawnienia. Możesz je potem dostosować pojedynczo."
+      "roleChangeHint": "Zmiana roli proponuje odpowiednie uprawnienia. Możesz je potem dostosować pojedynczo.",
+      "edit": "Edytuj",
+      "delete": "Usuń",
+      "resendInvite": "Wyślij zaproszenie ponownie",
+      "inviteResent": "Zaproszenie wysłane na adres {email}.",
+      "inviteResendFailed": "Nie udało się ponownie wysłać zaproszenia.",
+      "emailLanguage": "Język wiadomości e-mail",
+      "emailLanguageHint": "W tym języku ten użytkownik otrzymuje swoje wiadomości e-mail."
     },
     "staffProperties": {
       "title": "Udostępnij obiekty"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "np. Hotel Widok na Jezioro",
     "namePlaceholder": "Imię i nazwisko",
     "passwordHint": "Co najmniej 8 znaków",
-    "passwordRepeat": "Powtórz hasło"
+    "passwordRepeat": "Powtórz hasło",
+    "headline": "Cały Twój wynajem w jednym miejscu.",
+    "feature1": "Automatyczna synchronizacja kalendarzy",
+    "feature2": "Rezerwacje bezpośrednie na własnej stronie",
+    "feature3": "Automatyzacja wiadomości do gości",
+    "withGoogle": "Zarejestruj się przez Google",
+    "withApple": "Zarejestruj się przez Apple",
+    "or": "lub",
+    "withEmail": "Zarejestruj się e-mailem",
+    "haveAccount": "Masz już konto?",
+    "loginLink": "Zaloguj się tutaj",
+    "loadingHeadline": "Własna strona rezerwacji. Zatrzymaj 100 % każdej rezerwacji.",
+    "loadingText": "Konfigurujemy Twoje konto …"
   },
   "marketingSite": {
     "stars": "4,5 gwiazdki",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Oznacz wszystkie jako przeczytane",
     "erneut": "Załaduj ponownie",
     "ariaMitAnzahl": "Powiadomienia ({count} nieprzeczytanych)"
+  },
+  "auth": {
+    "toLogin": "Do logowania",
+    "genericError": "To się teraz nie udało. Spróbuj ponownie później.",
+    "tokenMissing": {
+      "title": "Niepełny link",
+      "text": "Ten link jest niepełny. Użyj pełnego linku z wiadomości e-mail — skopiuj go i wklej do paska adresu."
+    },
+    "tokenInvalid": {
+      "title": "Link już nieważny",
+      "textInvite": "Ten link z zaproszeniem wygasł lub został już użyty. Skontaktuj się ze swoim obiektem — tam można wysłać zaproszenie ponownie.",
+      "textReset": "Ten link wygasł lub został już użyty. Po prostu poproś o nowy.",
+      "retry": "Poproś o nowy link"
+    },
+    "invite": {
+      "title": "Skonfiguruj dostęp",
+      "intro": "Wybierz hasło do swojego dostępu myNextDays. Co najmniej {min} znaków."
+    },
+    "reset": {
+      "title": "Nowe hasło",
+      "intro": "Wybierz nowe hasło. Co najmniej {min} znaków."
+    },
+    "done": {
+      "titleInvite": "Dostęp skonfigurowany",
+      "titleReset": "Hasło zmienione",
+      "text": "Możesz teraz zalogować się nowym hasłem."
+    },
+    "forgot": {
+      "title": "Nie pamiętasz hasła",
+      "intro": "Podaj swój adres e-mail. Wyślemy Ci link umożliwiający ustawienie nowego hasła.",
+      "emailLabel": "E-mail",
+      "submit": "Poproś o link",
+      "sending": "Wysyłanie…",
+      "sentTitle": "E-mail w drodze",
+      "sentText": "Jeśli dla tego adresu istnieje konto, wysłaliśmy link do zresetowania hasła. Jest ważny przez godzinę.",
+      "spamHint": "Nic nie dotarło? Sprawdź także folder spam.",
+      "again": "Poproś ponownie"
+    },
+    "password": {
+      "newLabel": "Hasło",
+      "repeatLabel": "Powtórz hasło",
+      "submit": "Ustaw hasło",
+      "saving": "Zapisywanie…",
+      "mismatch": "Oba hasła nie są takie same.",
+      "tooWeak": "Hasło nie spełnia wymagań (co najmniej {min} znaków).",
+      "show": "Pokaż hasło",
+      "hide": "Ukryj hasło",
+      "strengthLabel": "Siła: {level}",
+      "strength": {
+        "1": "słabe",
+        "2": "średnie",
+        "3": "dobre",
+        "4": "silne"
+      },
+      "requirement": {
+        "length": "Co najmniej {min} znaków",
+        "letter": "Co najmniej jedna litera",
+        "digit": "Co najmniej jedna cyfra"
+      }
+    },
+    "checking": "Sprawdzanie linku…",
+    "languageLabel": "Język",
+    "languageChange": "Zmień język",
+    "twoFactor": {
+      "title": "Potwierdzenie",
+      "totpHint": "Wprowadź 6-cyfrowy kod ze swojej aplikacji uwierzytelniającej.",
+      "smsHint": "Wprowadź 6-cyfrowy kod, który wysłaliśmy Ci SMS-em.",
+      "smsHintWithPhone": "Wprowadź 6-cyfrowy kod, który wysłaliśmy na numer {phone}.",
+      "codeLabel": "Kod",
+      "confirm": "Potwierdź",
+      "checking": "Sprawdzanie …",
+      "recoveryHint": "Wprowadź jeden ze swoich kodów odzyskiwania.",
+      "recoveryLabel": "Kod odzyskiwania",
+      "recoverySingleUse": "Każdy kod działa dokładnie raz.",
+      "useTotp": "Użyj aplikacji uwierzytelniającej",
+      "useSms": "Użyj kodu SMS",
+      "useRecovery": "Użyj kodu odzyskiwania",
+      "backToLogin": "Powrót do logowania",
+      "factorMissing": "Ten składnik nie jest dostępny dla Twojego konta. Wybierz inny sposób.",
+      "passkeyHint": "Potwierdź logowanie swoim kluczem dostępu.",
+      "passkeyUse": "Zaloguj się kluczem dostępu",
+      "usePasskey": "Użyj klucza dostępu",
+      "sendCode": "Wyślij kod SMS-em",
+      "sending": "Wysyłanie …",
+      "smsSent": "Kod został wysłany.",
+      "resend": "Wyślij kod ponownie",
+      "recoveryRedeemedHint": "Kod został wykorzystany, ale sam nie wystarcza do zalogowania. Zaloguj się jednym ze skonfigurowanych składników lub zwróć się do swojego zespołu."
+    },
+    "mfaSetup": {
+      "title": "Skonfiguruj uwierzytelnianie dwuskładnikowe",
+      "intro": "Dla Twojej roli drugi składnik jest obowiązkowy. Skonfiguruj go teraz, aby kontynuować.",
+      "why": "Jako administrator masz dostęp do danych finansowych, danych gości i ustawień całego obiektu. Drugi składnik sprawia, że samo skradzione hasło nie wystarczy.",
+      "goToSettings": "Skonfiguruj teraz",
+      "later": "Przypomnij później",
+      "laterHint": "Możesz jeszcze odłożyć konfigurację. Zapytamy ponownie przy następnym logowaniu.",
+      "introWithDeadline": "Dla Twojej roli drugi składnik jest obowiązkowy. Skonfiguruj go do {date} — po tym terminie logowanie bez drugiego składnika nie będzie już możliwe."
+    }
+  },
+  "sprache": {
+    "label": "Język wiadomości e-mail",
+    "hint": "W tym języku wysyłamy e-maile do tej osoby.",
+    "none": "— nie podano"
+  },
+  "neuerungen": {
+    "eyebrow": "Aktualizacje produktu",
+    "titel": "Nowości",
+    "unterzeile": "Wszystko, co zmieniło się w myNextDays — najnowsze na górze.",
+    "neuAnzahl": "{anzahl, plural, one {# nowa} few {# nowe} other {# nowych}}",
+    "ungelesen": "Nowe",
+    "veroeffentlichtAm": "Opublikowano {datum}",
+    "leer": "Nie ma jeszcze żadnych nowości.",
+    "ladefehler": "Nie udało się wczytać: {grund}",
+    "mehrLaden": "Wczytaj starsze",
+    "aufklappen": "Pokaż szczegóły",
+    "zuklappen": "Ukryj szczegóły",
+    "kategorie": {
+      "neuerung": "Nowa funkcja",
+      "wartung": "Konserwacja",
+      "hinweis": "Informacja",
+      "wichtig": "Ważne"
+    },
+    "popup": {
+      "ariaLabel": "Treść ogłoszenia",
+      "gelesen": "Rozumiem",
+      "wirdGespeichert": "Zapisywanie …",
+      "erneut": "Spróbuj ponownie",
+      "fehler": "Nie udało się potwierdzić: {grund}",
+      "weiter": "Dalej",
+      "vonAnzahl": "Ogłoszenie {nummer}"
+    }
+  },
+  "login": {
+    "title": "Zaloguj się",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Hasło",
+    "showPassword": "Pokaż hasło",
+    "hidePassword": "Ukryj hasło",
+    "forgot": "Nie pamiętasz hasła?",
+    "stayLoggedIn": "Pozostań zalogowany",
+    "submit": "Zaloguj się",
+    "submitting": "Logowanie…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Nie jesteś jeszcze klientem myNextDays?",
+    "signupLink": "Wypróbuj za darmo",
+    "mfaTitle": "Potwierdzenie",
+    "mfaIntro": "Wprowadź 6-cyfrowy kod z aplikacji uwierzytelniającej. Kod odzyskiwania też zadziała.",
+    "mfaCodeLabel": "Kod",
+    "mfaSubmit": "Potwierdź",
+    "mfaChecking": "Sprawdzanie…",
+    "mfaBack": "Powrót do logowania"
   }
 }

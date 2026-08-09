@@ -283,6 +283,7 @@
       "logout": "Odhlásiť sa"
     },
     "stopSell": "Zastavenie predaja",
+    "blockRequests": "Žiadosti o blokovanie",
     "owners": "Vlastníci",
     "ownerStatements": "Vyúčtovania vlastníkov",
     "portal": "Môj portál",
@@ -315,7 +316,8 @@
     "noAccess": "Bez prístupu",
     "dashboardLoadFailed": "Nástenku sa nepodarilo načítať",
     "reviews": "Hodnotenia",
-    "extensions": "Rozšírenia"
+    "extensions": "Rozšírenia",
+    "announcements": "Novinky"
   },
   "exemption": {
     "labelNamed": "Oslobodené od dane ({scheme}) — IČ DPH nie je potrebné",
@@ -945,6 +947,7 @@
     "newTitle": "Nový vlastník",
     "create": "Vytvoriť",
     "created": "Vlastník vytvorený.",
+    "createdInvited": "Vlastník bol vytvorený a pozvánka odoslaná.",
     "cancel": "Zrušiť",
     "save": "Uložiť",
     "saving": "Ukladá sa …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Žiadne objekty} one {# objekt} few {# objekty} other {# objektov}}",
     "noProperties": "Tomuto vlastníkovi zatiaľ nie je priradený žiadny objekt.",
     "addProperty": "Priradiť objekt …",
+    "assignProperties": "Priradiť objekty",
+    "assignPropertiesHint": "Voliteľné. Vybrať možno len objekty, ktoré ešte nemajú vlastníka.",
+    "noFreeProperties": "Všetky objekty sú už priradené vlastníkovi.",
+    "assignSelected": "{count, plural, =0 {Priradiť objekty} one {Priradiť # objekt} few {Priradiť # objekty} many {Priradiť # objektu} other {Priradiť # objektov}}",
+    "propertiesAssigned": "{count, plural, one {Priradený # objekt} few {Priradené # objekty} many {Priradené # objektu} other {Priradených # objektov}}",
     "removeProperty": "Odstrániť priradenie",
     "sections": {
       "master": "Kmeňové údaje",
       "payout": "Výplata a provízia",
-      "properties": "Objekty"
+      "properties": "Objekty",
+      "portalAccess": "Prístup k portálu"
     },
     "frequency": {
       "none": "Žiadna",
@@ -989,12 +998,20 @@
       "statementFrequency": "Rytmus vyúčtovania",
       "notes": "Poznámky",
       "share": "Podiel (%)",
-      "commissionOverride": "Provízia (%) odchýlka"
+      "commissionOverride": "Provízia (%) odchýlka",
+      "emailLanguage": "Jazyk e-mailov"
     },
     "placeholders": {
       "name": "napr. Ján Novák",
       "email": "napr. jan@example.com"
-    }
+    },
+    "emailLanguageHint": "V tomto jazyku dostáva vlastník vyúčtovania a upozornenia — aj bez vlastného prístupu.",
+    "portalAccess": "Nastaviť prístup k portálu",
+    "portalAccessHint": "Vlastník dostane pozvánku e-mailom a potom si môže sám prezerať svoje vyúčtovania.",
+    "portalAccessNeedsEmail": "Na prístup k portálu je potrebná e-mailová adresa.",
+    "portalAccessInvite": "Odoslať pozvánku",
+    "portalAccessInvited": "Pozvánka odoslaná.",
+    "portalAccessActive": "Prístup k portálu je nastavený."
   },
   "ownerStatements": {
     "title": "Vyúčtovanie vlastníka",
@@ -1149,7 +1166,9 @@
     "subtitle": "Prehľad vašich objektov, príjmov a vyúčtovaní.",
     "properties": {
       "title": "Moje objekty",
-      "empty": "Momentálne vám nie sú priradené žiadne objekty."
+      "empty": "Momentálne vám nie sú priradené žiadne objekty.",
+      "city": "Lokalita",
+      "openCalendar": "Kalendár"
     },
     "earnings": {
       "title": "Príjmy (tento mesiac)",
@@ -1175,7 +1194,24 @@
       "to": "Do",
       "submit": "Odoslať žiadosť",
       "sending": "Odosiela sa …",
-      "requested": "Žiadosť odoslaná."
+      "requested": "Žiadosť odoslaná.",
+      "listTitle": "Moje žiadosti",
+      "listEmpty": "Zatiaľ ste nepožiadali o žiadne blokovanie.",
+      "created": "Podané dňa",
+      "range": "Obdobie",
+      "statusLabel": "Stav",
+      "readOnlyHint": "Blokovanie môže zadať iba správa. Vy podávate žiadosť, rozhodnutie je na nej.",
+      "invalidRange": "Dátum ukončenia musí byť neskorší ako dátum začiatku.",
+      "invalidDate": "Zadajte platný dátum.",
+      "status": {
+        "pending": "V posudzovaní",
+        "approved": "Schválená",
+        "rejected": "Zamietnutá",
+        "cancelled": "Stiahnutá"
+      },
+      "reason": "Dôvod",
+      "reasonPlaceholder": "Prečo by malo byť blokované? (napr. vlastné použitie, remeselníci)",
+      "decisionNote": "Poznámka od správy"
     },
     "meter": {
       "title": "Zaznamenať stav merača",
@@ -1191,6 +1227,142 @@
         "electricity": "Elektrina",
         "water": "Voda",
         "gas": "Plyn"
+      },
+      "historyTitle": "História",
+      "historyEmpty": "Pre tento objekt zatiaľ nie je zaznamenaný žiadny stav merača.",
+      "appendOnlyHint": "Zaznamenané stavy zostávajú nezmenené. Oprava je nový záznam — takto zostáva história úplná.",
+      "invalidValue": "Zadajte stav merača ako číslo.",
+      "invalidDate": "Zadajte platný dátum odčítania."
+    },
+    "logout": "Odhlásiť sa",
+    "loadFailed": "Údaje sa nepodarilo načítať.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Prehľad",
+      "calendar": "Kalendár obsadenosti",
+      "reports": "Správy",
+      "blockRequests": "Blokovania",
+      "meterReadings": "Stavy meračov",
+      "services": "Služby",
+      "notifications": "Upozornenia"
+    },
+    "overview": {
+      "occupancy": "Obsadenosť",
+      "occupancyHint": "Obsadené noci vo zvolenom období.",
+      "nights": "Noci",
+      "bookings": "Rezervácie",
+      "payout": "Čistá výplata",
+      "payoutHint": "Váš podiel po odpočítaní poplatkov portálov.",
+      "period": "Obdobie",
+      "periodMonth": "Tento mesiac",
+      "periodYear": "Tento rok",
+      "openCalendar": "Otvoriť kalendár",
+      "latestStatement": "Posledné vyúčtovanie",
+      "noStatement": "Zatiaľ žiadne vyúčtovanie"
+    },
+    "calendar": {
+      "title": "Kalendár obsadenosti",
+      "subtitle": "Obsadenosť a vaša čistá výplata za noc.",
+      "selectProperty": "Vybrať objekt",
+      "prevMonth": "Predchádzajúci mesiac",
+      "nextMonth": "Nasledujúci mesiac",
+      "today": "Dnes",
+      "legendSeasons": "Sezóny",
+      "legendStatus": "Obsadenosť",
+      "noSeasons": "Pre tento objekt nie sú definované žiadne sezóny.",
+      "status": {
+        "open": "Voľné",
+        "booked": "Obsadené",
+        "blocked": "Blokované"
+      },
+      "payoutPerNight": "Čistá výplata/noc",
+      "guest": "Hosť",
+      "channel": "Zdroj rezervácie",
+      "blockHint": "Chcete zablokovať obdobie? Podajte žiadosť — rozhoduje správa.",
+      "blockCta": "Požiadať o blokovanie",
+      "weekdays": "Po,Ut,St,Št,Pi,So,Ne",
+      "months": "Január,Február,Marec,Apríl,Máj,Jún,Júl,August,September,Október,November,December"
+    },
+    "services": {
+      "title": "Objednať službu",
+      "hint": "Objednajte službu pre svoj objekt. Správa objednávku prijme a naplánuje.",
+      "property": "Objekt",
+      "kind": "Služba",
+      "date": "Požadovaný termín",
+      "note": "Poznámka",
+      "notePlaceholder": "Čo presne sa má urobiť?",
+      "submit": "Objednať",
+      "sending": "Odosiela sa …",
+      "sent": "Objednávka odoslaná.",
+      "listTitle": "Moje objednávky",
+      "listEmpty": "Zatiaľ ste neobjednali žiadnu službu.",
+      "invalidDate": "Zadajte platný požadovaný termín.",
+      "noteRequired": "Opíšte požadovanú službu.",
+      "kinds": {
+        "custom": "Iné (voľný text)"
+      },
+      "status": {
+        "pending": "V posudzovaní",
+        "accepted": "Prijatá",
+        "scheduled": "Naplánovaná",
+        "done": "Dokončená",
+        "rejected": "Zamietnutá",
+        "cancelled": "Stiahnutá"
+      },
+      "type": {
+        "endreinigung": "Záverečné upratovanie",
+        "hauptreinigung": "Generálne upratovanie",
+        "fensterreinigung": "Umývanie okien",
+        "rasenmaehen": "Kosenie trávnika",
+        "terrassenreinigung": "Upratovanie terasy"
+      },
+      "dateTo": "Do"
+    },
+    "notifications": {
+      "title": "Upozornenia",
+      "hint": "Nastavte, ako chcete byť upozornení pre každú udalosť.",
+      "channel": {
+        "email": "E-mail",
+        "sms": "SMS",
+        "phone": "Telefón"
+      },
+      "locked": "Tento e-mail je zmluvne povinný a zostáva zapnutý.",
+      "saved": "Uložené.",
+      "saveFailed": "Zmenu sa nepodarilo uložiť.",
+      "categories": {
+        "listing_activity": "Rezervácie vo vašich objektoch",
+        "listing_activityHint": "Nová rezervácia, zmena a zrušenie.",
+        "account_activity": "Aktivita účtu",
+        "account_activityHint": "Prihlásenia a zmeny vášho účtu.",
+        "reminders": "Pripomienky",
+        "remindersHint": "Nesplnené úlohy a termíny.",
+        "messages": "Správy",
+        "messagesHint": "Nové správy od správy.",
+        "owner_booking": "Rezervácie v tvojich objektoch",
+        "owner_bookingHint": "Nová rezervácia, zmena a zrušenie.",
+        "block_decision": "Rozhodnutie o tvojich žiadostiach o blokáciu",
+        "block_decisionHint": "Keď správa tvoju žiadosť schváli alebo zamietne.",
+        "owner_service": "Objednané služby",
+        "owner_serviceHint": "Zmena stavu služby, ktorú si objednal."
+      }
+    },
+    "reports": {
+      "title": "Správy",
+      "subtitle": "Vyúčtovania, aktuálny mesiac a mesačné a ročné správy.",
+      "currentTitle": "Aktuálny stav vyúčtovania",
+      "currentHint": "Predbežné — mesiac ešte prebieha. Záväzné je až finalizované vyúčtovanie.",
+      "monthly": "Mesačná správa",
+      "yearly": "Ročná správa",
+      "month": "Mesiac",
+      "year": "Rok",
+      "download": "Stiahnuť PDF",
+      "downloading": "Generuje sa …",
+      "downloadFailed": "PDF sa nepodarilo vygenerovať.",
+      "onlyFinalized": "Na stiahnutie sú k dispozícii iba finalizované vyúčtovania.",
+      "status": {
+        "draft": "V príprave",
+        "finalized": "Dokončené",
+        "cancelled": "Zrušené"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Pevnú sumu nemožno rozdeliť na jednotlivé noci — na portály nejde, tam ju treba spravovať v extranete.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Použiť tú istú akciu aj pri ďalších objektoch.",
+      "applyToOthersSeasonHint": "Vytvoriť rovnakú sezónu aj pri iných objektoch.",
       "promoReason": {
         "mindestaufenthalt": "minimálny pobyt",
         "fruehbucher": "predstih včasnej rezervácie",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Platobný plán",
       "cancellationLabel": "Stornovanie",
       "depositLabel": "Kaucia",
-      "depositWithheldText": "Zadrží sa kaucia vo výške {amount}.",
       "noPolicyYet": "Zatiaľ nie je priradená žiadna zásada.",
       "bookabilityCardTitle": "Rezervovateľnosť",
       "bookabilityCardHint": "Ako sa prijímajú rezervácie.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Zmluva o prenájme",
       "rentalAgreementCardHint": "Vytvorte zmluvu o prenájme alebo ju prepojte pre svojich hostí.",
       "noRentalAgreementYet": "Zatiaľ žiadna zmluva o prenájme.",
-      "addPolicyTitle": "Pridať zásadu",
       "addPolicySubtitle": "Nastavte podrobnosti pre túto novú zásadu.",
       "internalNameLabel": "Interný názov *",
       "internalNamePlaceholder": "napr. Čiastočná záloha – nevratná",
       "paymentPlanGroupTitle": "Platobný plán",
       "paymentCountLabel": "Počet platieb",
-      "depositPercentLabel": "Záloha (%)",
-      "remainingDaysBeforeLabel": "Zostatok (dní pred príchodom)",
       "guestCancellationGroupTitle": "Stornovanie hosťom",
       "cancellationTypeLabel": "Typ storna",
       "depositGroupTitle": "Kaucia",
-      "depositModeNone": "Kaucia nie je vyžadovaná",
-      "depositModeAmount": "Kaucia ako suma",
-      "depositAmountLabelWithCurrency": "Suma kaucie ({currency})",
-      "depositAmountLabel": "Suma kaucie",
       "quoteValidityGroupTitle": "Platnosť ponuky",
       "quoteValidityHoursLabel": "Doba platnosti (hodín) *",
       "quoteValidityHint": "Ponuka je platná maximálne {hours} hodín, pokiaľ je stav „Čaká na hosťa\" alebo „Čaká na platbu\".",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Odporúčané",
       "checkInTimeLabel": "Čas check-in",
       "checkOutTimeLabel": "Čas check-out",
-      "paymentSummaryFull": "100 % splatných pri rezervácii.",
-      "paymentSummarySplit": "{percent} % pri rezervácii, zostatok {days} dní pred príchodom.",
       "localizedEditorSubtitle": "Vytvorte text a v prípade potreby ho preložte pre svojich hostí.",
-      "localizedEditorPlaceholder": "Zadajte {title} …"
+      "localizedEditorPlaceholder": "Zadajte {title} …",
+      "editPolicyTitle": "Upraviť podmienky",
+      "singlePaymentHint": "100 % platby je splatných pri dokončení rezervácie.",
+      "firstPaymentHeading": "Prvá platba",
+      "secondPaymentHeading": "Druhá platba",
+      "thirdPaymentHeading": "Tretia platba",
+      "amountTypeLabel": "Typ sumy",
+      "percentLabel": "Percento",
+      "amountLabel": "Suma",
+      "currencyLabel": "Mena",
+      "daysLabel": "Dni",
+      "periodLabel": "Obdobie",
+      "firstPaymentHint": "Pri rezervácii sa účtuje iba pevná suma alebo percento prvej platby. Zvyšné platby sa fakturujú v naplánovanom termíne.",
+      "remainderHint": "Nastavte, kedy sa má účtovať zvyšná suma.",
+      "partialRulesHint": "Definujte pravidlá pre čiastočne vratné storná.",
+      "ruleHeading": "Pravidlo {number}",
+      "ruleDelete": "Odstrániť pravidlo",
+      "ruleAdd": "Pridať pravidlo",
+      "refundTypeLabel": "Typ vrátenia",
+      "refundLabel": "Vrátenie",
+      "whenCancelledLabel": "Pri stornovaní",
+      "depositNotRequired": "Kaucia sa nevyžaduje",
+      "depositRequired": "Kaucia sa vyžaduje",
+      "depositMethodLabel": "Metóda",
+      "preAuthTimesHeading": "Časy predautorizácie",
+      "preAuthValidityLabel": "Platnosť (dni po odchode)",
+      "preAuthWarnTitle": "Predautorizácie možno zaručiť len na 5 dní.",
+      "preAuthWarnBody": "Trvanie predautorizácie na kreditnej karte závisí od rôznych faktorov, ako je poskytovateľ karty, vydávajúca banka, platobná brána a podobne. Pri všetkých rezerváciách v dĺžke jedného týždňa alebo dlhšie preto každá predautorizácia vyprší (automaticky sa zruší) každých 5 dní. Upozorníme vás, aby ste mohli ručne vystaviť novú predautorizáciu a ponechať si kauciu na zvyšok rezervácie.",
+      "assignAction": "Priradiť podmienky"
     },
     "ratePlanWizard": {
       "title": "Vytvoriť cenový plán",
@@ -5604,6 +5795,39 @@
       "confirmed": "Potvrdené",
       "in_house": "Prihlásený",
       "pending": "Opcia / predbežne"
+    },
+    "blockRequests": {
+      "title": "Žiadosti o blokovanie",
+      "subtitle": "Žiadosti tvojich vlastníkov o zablokovanie ich objektov. Schválenie zablokuje noci v kalendári a nahlási ich portálom.",
+      "filter": "Stav",
+      "filterAll": "Všetky",
+      "empty": "V tomto zobrazení nie sú žiadne žiadosti.",
+      "requestedBy": "Žiada {name}",
+      "reason": "Odôvodnenie",
+      "decisionNote": "Poznámka",
+      "note": "Poznámka pre vlastníka",
+      "notePlaceholder": "Nepovinné — zobrazí sa vlastníkovi.",
+      "working": "Prebieha …",
+      "status": {
+        "pending": "Otvorená",
+        "approved": "Schválená",
+        "rejected": "Zamietnutá"
+      },
+      "action": {
+        "approve": "Schváliť",
+        "reject": "Zamietnuť",
+        "revoke": "Odvolať"
+      },
+      "confirm": {
+        "approve": "Zablokovať {objekt} od {von} do {bis}? Noci budú zablokované na všetkých portáloch.",
+        "reject": "Zamietnuť žiadosť pre {objekt} ({von} – {bis})?",
+        "revoke": "Odvolať schválenie pre {objekt} ({von} – {bis})? Noci budú znovu uvoľnené."
+      },
+      "done": {
+        "approve": "Žiadosť schválená, noci zablokované.",
+        "reject": "Žiadosť zamietnutá.",
+        "revoke": "Schválenie odvolané, noci uvoľnené."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "Január,Február,Marec,Apríl,Máj,Jún,Júl,August,September,Október,November,December",
     "name": "Názov",
     "seasonAdd": "Pridať sezónu",
+    "seasonApplyCancel": "Zrušiť",
+    "seasonApplyCopyHint": "Sezóna sa vytvorí ako samostatná kópia. Neskoršie zmeny tejto sezóny sa tam už NEprejavia. Príplatok sa počíta z vlastnej základnej ceny cieľového objektu.",
+    "seasonApplyNone": "Neskopírované na žiadny objekt.",
+    "seasonApplyPartial": "Skopírované do {count} objektov, {skipped} preskočených.",
+    "seasonApplyPickTarget": "Vyberte aspoň jeden objekt.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Nie je nastavená základná cena — príplatok sa nedá vypočítať.",
+      "basispreis_null": "Základná cena je 0 — príplatok sa nedá vypočítať.",
+      "teilweise_uebertragen": "Sezóna je pri objekte, denné ceny ešte chýbajú — skúste to znova na dokončenie.",
+      "unbekannt": "Preskočené z neznámeho dôvodu."
+    },
+    "seasonApplySubmit": "Skopírovať",
+    "seasonApplySuccess": "Skopírované do {count} objektov.",
+    "seasonApplyTitle": "Skopírovať „{name}“ do iných objektov",
+    "seasonApplyToOthers": "Skopírovať do iných objektov",
+    "seasonApplyWithRanges": "Skopírovať aj obdobia",
+    "seasonApplyWithRangesHint": "Označené dni sa nastavia rovnako aj v cieľovom objekte. Vypnuté: len samotná sezóna, bez dní.",
     "seasonClearHint": "Pravým tlačidlom myši potiahnite cez dni, aby ste ich odstránili zo sezóny.",
     "seasonColor": "Farba",
     "seasonColorAria": "Farba {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Príplatok (± %)",
     "seasonSurchargePlaceholder": "napr. 30 alebo -15",
     "seasonValueRequired": "Zadajte platnú hodnotu.",
-    "weekdays": "P,U,S,Š,P,S,N"
+    "weekdays": "P,U,S,Š,P,S,N",
+    "seasonApplyNoSpans": "Táto sezóna nemá vyfarbené obdobia. Najprv ju vyfarbite alebo preneste iba definíciu bez období."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "QR kód pre overovaciu aplikáciu",
       "sixDigitCode": "Šesťmiestny kód",
       "disable2fa": "Vypnúť 2FA",
-      "disable2faHint": "Zadajte aktuálny kód (alebo záložný kód) na vypnutie 2FA."
+      "disable2faHint": "Zadajte aktuálny kód (alebo záložný kód) na vypnutie 2FA.",
+      "title": "Zabezpečenie",
+      "loadFailed": "Údaje účtu sa nepodarilo načítať. Skontrolujte pripojenie a skúste to znova.",
+      "credentials": "Prihlasovacie údaje",
+      "emailAndUsername": "E-mail a používateľské meno",
+      "emailLabel": "E-mail",
+      "nameLabel": "Meno",
+      "password": "Heslo",
+      "noPassword": "Nie je nastavené žiadne heslo",
+      "passwordMin": "Najmenej 8 znakov.",
+      "save": "Uložiť",
+      "saving": "Ukladanie …",
+      "changePassword": "Zmeniť heslo",
+      "twoFactor": {
+        "title": "Dvojfaktorové overenie (2FA)",
+        "intro": "Chráni váš účet druhým faktorom navyše k heslu.",
+        "noneActive": "Zatiaľ nie je nastavený žiadny druhý faktor. Odporúčame overovaciu aplikáciu.",
+        "requiredNotice": "Pre vašu rolu je druhý faktor povinný. Nastavte si ho teraz.",
+        "active": "Aktívne",
+        "setUp": "Nastaviť",
+        "totp": {
+          "title": "Overovacia aplikácia",
+          "description": "Jednorazový kód z aplikácie, ako je Google Authenticator alebo Microsoft Authenticator. Funguje aj bez mobilného signálu.",
+          "setupTitle": "Nastavenie overovacej aplikácie",
+          "setupHint": "Naskenujte QR kód svojou aplikáciou a potvrďte zobrazeným kódom.",
+          "step1": "1. Naskenujte QR kód",
+          "step2": "3. Zadajte kód z aplikácie",
+          "qrAlt": "QR kód pre overovaciu aplikáciu",
+          "qrHint": "Otvorte svoju overovaciu aplikáciu a naskenujte kód.",
+          "manualTitle": "2. Alebo zadajte kľúč ručne",
+          "manualHint": "Použite tento kľúč, ak nemôžete naskenovať QR kód.",
+          "showSecret": "Zobraziť kľúč",
+          "hideSecret": "Skryť kľúč",
+          "copySecret": "Kopírovať kľúč",
+          "copyFailed": "Kopírovanie sa nepodarilo. Označte kľúč a skopírujte ho ručne.",
+          "codeLabel": "6-miestny kód",
+          "activate": "Aktivovať",
+          "checking": "Prebieha overenie …",
+          "preparing": "Príprava nastavenia …",
+          "enabledTitle": "Overovacia aplikácia je aktívna. Teraz si zabezpečte záložné kódy.",
+          "friendlyName": "Overovacia aplikácia",
+          "replayNote": "Upozornenie: kód zostáva platný až 90 sekúnd a počas tohto času sa dá použiť opakovane. Pred podvodnou prihlasovacou stránkou v reálnom čase ochráni jedine prístupový kľúč."
+        },
+        "sms": {
+          "title": "Kód cez SMS",
+          "description": "Jednorazový kód zaslaný SMS na vaše potvrdené telefónne číslo.",
+          "unavailable": "Kód cez SMS nie je na tomto serveri dostupný, pretože nie je nastavený poskytovateľ SMS. Vyberte si overovaciu aplikáciu alebo prístupový kľúč.",
+          "unavailableBadge": "Nie je dostupné",
+          "setupTitle": "Nastavenie kódu cez SMS",
+          "setupHint": "Pošleme vám kód na vaše telefónne číslo.",
+          "simSwapWarning": "Upozornenie: SMS je menej bezpečná než overovacia aplikácia. Kto si dá vaše číslo previesť na inú SIM kartu, môže prijímať vaše kódy. Ak je to možné, zvoľte overovaciu aplikáciu alebo prístupový kľúč.",
+          "numberLabel": "Telefónne číslo",
+          "numberHint": "Medzinárodný formát s predvoľbou krajiny, napríklad +421 …",
+          "invalidNumber": "Zadajte číslo v medzinárodnom formáte, začínajúce znakom + a predvoľbou krajiny.",
+          "sendCode": "Odoslať kód",
+          "sending": "Odosielanie …",
+          "codeLabel": "6-miestny kód",
+          "codeSentTo": "Kód sme odoslali na číslo {phone}.",
+          "confirm": "Potvrdiť",
+          "checking": "Prebieha overenie …",
+          "resend": "Odoslať kód znova",
+          "changeNumber": "Použiť iné číslo",
+          "friendlyName": "Kód cez SMS"
+        },
+        "passkey": {
+          "title": "Prístupový kľúč",
+          "description": "Prihlásenie odtlačkom prsta, rozpoznaním tváre alebo bezpečnostným kľúčom. Bez zadávania kódu.",
+          "setupTitle": "Nastavenie prístupového kľúča",
+          "setupHint": "Vaše zariadenie vás overí odtlačkom prsta, rozpoznaním tváre alebo bezpečnostným kľúčom.",
+          "checkingSupport": "Kontrola zariadenia …",
+          "unsupportedTitle": "Tento prehliadač nepodporuje prístupové kľúče",
+          "unsupportedHint": "Použite aktuálny prehliadač alebo si namiesto toho nastavte overovaciu aplikáciu.",
+          "securityKeyOnly": "Toto zariadenie nemá vstavané overenie (napríklad odtlačkom prsta alebo rozpoznaním tváre). Budete na to potrebovať bezpečnostný kľúč na pripojenie.",
+          "benefitPhishing": "Chráni pred podvodnými prihlasovacími stránkami.",
+          "benefitNoCode": "Žiadny kód na prepisovanie.",
+          "create": "Vytvoriť prístupový kľúč",
+          "friendlyName": "Prístupový kľúč",
+          "recommended": "Odporúčané: najbezpečnejší z troch spôsobov.",
+          "creating": "Prebieha vytvorenie …",
+          "errors": {
+            "abgebrochen": "Potvrdenie bolo zrušené alebo nebolo rozpoznané. Skúste to znova.",
+            "herkunftPasstNicht": "Prístupové kľúče nie sú pre túto adresu povolené. Prihláste sa cez oficiálnu adresu.",
+            "nichtUnterstuetzt": "Toto zariadenie nedokáže vytvoriť prístupový kľúč. Použite overovaciu aplikáciu alebo bezpečnostný kľúč.",
+            "schonVorhanden": "Pre tento účet už na tomto zariadení existuje prístupový kľúč.",
+            "laeuftBereits": "Požiadavka na prístupový kľúč už prebieha. Dokončite ju alebo zrušte.",
+            "zeitUeberschritten": "Čas na potvrdenie uplynul. Skúste to znova.",
+            "unbekannt": "Prístupový kľúč sa nepodarilo vytvoriť. Skúste to znova."
+          }
+        },
+        "recovery": {
+          "title": "Záložné kódy",
+          "description": "Jednorazovo použiteľné kódy pre prípad, že nebudete mať prístup k svojmu druhému faktoru.",
+          "left": "Zostávajúci počet kódov: {count}.",
+          "create": "Vytvoriť kódy",
+          "regenerate": "Vytvoriť nové kódy",
+          "regenerateHint": "Vytvorením nových kódov stratia všetky doterajšie platnosť.",
+          "dialogTitle": "Záložné kódy",
+          "dialogHint": "Jednorazovo použiteľné kódy pre prípad, že nebudete mať prístup k svojmu druhému faktoru.",
+          "replaceWarning": "Pozor: vaše doterajšie záložné kódy tým stratia platnosť.",
+          "passwordLabel": "Aktuálne heslo",
+          "passwordHint": "Na potvrdenie, že ste to naozaj vy.",
+          "createNow": "Vytvoriť kódy",
+          "creating": "Prebieha vytvorenie …",
+          "createdTitle": "Vaše nové záložné kódy. Uschovajte ich na bezpečnom mieste.",
+          "noneReturned": "Nevytvorili sa žiadne kódy. Skúste to znova."
+        },
+        "remove": "Odstrániť",
+        "removeDialog": {
+          "totpTitle": "Odstrániť overovaciu aplikáciu",
+          "smsTitle": "Odstrániť kód cez SMS",
+          "warning": "Potom už tento faktor váš účet nechráni.",
+          "passwordLabel": "Aktuálne heslo",
+          "remove": "Odstrániť",
+          "removing": "Prebieha odstránenie …",
+          "cancel": "Zrušiť",
+          "hint": "Potvrďte odstránenie svojím aktuálnym heslom.",
+          "passkeyTitle": "Odstrániť prístupový kľúč",
+          "lastFactorBlocked": "Toto je váš posledný druhý faktor a pre vašu rolu je povinný. Najprv si vytvorte záložné kódy alebo nastavte ďalší faktor."
+        },
+        "requiredWithDeadline": "Pre vašu rolu je druhý faktor povinný. Nastavte si ho do {date} — potom už prihlásenie bez druhého faktora nebude možné.",
+        "statusFailed": "Stav dvojfaktorového overenia sa nepodarilo načítať. Načítajte stránku znova."
+      },
+      "recovery": {
+        "lockoutWarning": "Bez týchto kódov stratíte prístup k svojmu účtu, ak už nebudete môcť použiť svoj druhý faktor. Uschovajte ich na bezpečnom mieste, oddelene od hesla.",
+        "copy": "Kopírovať",
+        "copied": "Skopírované",
+        "copyFailed": "Kopírovanie sa nepodarilo. Stiahnite si kódy alebo si ich vytlačte.",
+        "download": "Stiahnuť",
+        "downloadFailed": "Stiahnutie sa nepodarilo. Skopírujte si kódy alebo si ich vytlačte.",
+        "print": "Tlač",
+        "printBlocked": "Okno tlače bolo zablokované. Povoľte vyskakovacie okná alebo si kódy stiahnite.",
+        "printTitle": "Záložné kódy myNextDays",
+        "printHint": "Každý kód funguje práve raz. Uschovajte tento list na bezpečnom mieste.",
+        "fileHeader": "Záložné kódy myNextDays — každý kód funguje práve raz. Uschovajte ich bezpečne.",
+        "confirmSaved": "Kódy som si bezpečne uložil.",
+        "confirmHint": "Zaškrtnutím dokončíte nastavenie.",
+        "mustExportFirst": "Najprv si kódy skopírujte, stiahnite alebo vytlačte.",
+        "done": "Hotovo"
+      }
     },
     "company": {
       "saved": "Údaje uložené.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Hovorené jazyky",
       "searchLanguage": "Hľadať jazyk…",
       "chooseRole": "Vybrať rolu…",
-      "userCreated": "Používateľ vytvorený",
-      "preferredLanguage": "Preferovaný jazyk",
+      "preferredLanguage": "Jazyk e-mailov",
       "noLanguageFound": "Nenašiel sa žiadny jazyk.",
       "firstName": "Meno",
       "lastName": "Priezvisko",
       "email": "E-mail",
       "phone": "Telefónne číslo",
       "notes": "Poznámky",
-      "password": "Heslo",
-      "credentialsHint": "Odovzdajte tieto prístupové údaje novému používateľovi. Heslo sa zobrazuje iba teraz."
+      "title": "Vytvoriť používateľa",
+      "createdSubtitle": "Pozvánka odoslaná.",
+      "stepHints": {
+        "contact": "Pridajte kontaktné údaje tohto používateľa.",
+        "extra": "Pridajte doplňujúce informácie o tomto používateľovi.",
+        "role": "Zvoľte rolu a oprávnenia pre tohto používateľa.",
+        "properties": "Priraďte tomuto používateľovi objekty."
+      },
+      "done": "Hotovo",
+      "cancel": "Zrušiť",
+      "back": "Späť",
+      "next": "Ďalej",
+      "create": "Vytvoriť",
+      "creating": "Vytvára sa…",
+      "role": "Rola",
+      "requiredFields": "Meno, priezvisko, e-mail a rola sú povinné.",
+      "assignFailed": "Používateľ vytvorený, ale priradenie objektov zlyhalo: {reason}",
+      "hidePhones": "Skryť telefónne čísla na webovej stránke.",
+      "noAssignNeeded": "Priradenie objektov nie je potrebné",
+      "noAssignNeededHint": "Táto rola má prístup ku všetkým objektom účtu. Priradenie jednotlivých objektov sa týka len vlastníkov a zamestnancov.",
+      "noProperties": "Zatiaľ žiadne ubytovanie",
+      "noPropertiesHint": "Vytvorte svoje ubytovania, aby ste ich neskôr mohli priradiť svojim používateľom.",
+      "choosePropertiesHint": "Zvoľte objekty, ku ktorým bude mať tento používateľ prístup.",
+      "selectedCount": "Vybraté: {count}",
+      "inviteSent": "Pozvánka odoslaná",
+      "inviteSentHint": "Používateľ dostane e-mail a heslo si nastaví sám. Odkaz je platný 7 dní.",
+      "inviteResend": "Odoslať pozvánku znova",
+      "inviteResending": "Odosiela sa…",
+      "inviteResent": "Pozvánka odoslaná znova.",
+      "inviteResendFailed": "Pozvánku sa nepodarilo odoslať znova.",
+      "preferredLanguageHint": "V tomto jazyku dostane nový používateľ pozvánku a všetky ďalšie e-maily."
     },
     "tariff": {
       "oneLess": "O jeden objekt menej",
@@ -6359,7 +6767,14 @@
       "updated": "Používateľ aktualizovaný.",
       "deleted": "Používateľ odstránený.",
       "generalPermissions": "Všeobecné oprávnenia",
-      "roleChangeHint": "Zmena roly navrhne zodpovedajúce práva. Potom ich môžete upraviť jednotlivo."
+      "roleChangeHint": "Zmena roly navrhne zodpovedajúce práva. Potom ich môžete upraviť jednotlivo.",
+      "edit": "Upraviť",
+      "delete": "Odstrániť",
+      "resendInvite": "Odoslať pozvánku znova",
+      "inviteResent": "Pozvánka odoslaná na {email}.",
+      "inviteResendFailed": "Pozvánku sa nepodarilo odoslať znova.",
+      "emailLanguage": "Jazyk e-mailov",
+      "emailLanguageHint": "V tomto jazyku dostáva tento používateľ svoje e-maily."
     },
     "staffProperties": {
       "title": "Zdieľať objekty"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "napr. Hotel Výhľad na jazero",
     "namePlaceholder": "Meno a priezvisko",
     "passwordHint": "Aspoň 8 znakov",
-    "passwordRepeat": "Zopakovať heslo"
+    "passwordRepeat": "Zopakovať heslo",
+    "headline": "Celý váš prenájom na jednom mieste.",
+    "feature1": "Automatická synchronizácia kalendárov",
+    "feature2": "Priame rezervácie na vlastnej stránke",
+    "feature3": "Automatizácia správ pre hostí",
+    "withGoogle": "Zaregistrovať sa cez Google",
+    "withApple": "Zaregistrovať sa cez Apple",
+    "or": "alebo",
+    "withEmail": "Zaregistrovať sa e-mailom",
+    "haveAccount": "Už máte účet?",
+    "loginLink": "Prihláste sa tu",
+    "loadingHeadline": "Vlastná rezervačná stránka. Nechajte si 100 % z každej rezervácie.",
+    "loadingText": "Pripravujeme váš účet …"
   },
   "marketingSite": {
     "stars": "4,5 hviezdičky",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Označiť všetko ako prečítané",
     "erneut": "Načítať znova",
     "ariaMitAnzahl": "Oznámenia ({count} neprečítaných)"
+  },
+  "auth": {
+    "toLogin": "Na prihlásenie",
+    "genericError": "Teraz sa to nepodarilo. Skúste to prosím neskôr.",
+    "tokenMissing": {
+      "title": "Neúplný odkaz",
+      "text": "Tento odkaz je neúplný. Použite prosím celý odkaz z e-mailu — skopírujte ho a vložte do adresného riadka."
+    },
+    "tokenInvalid": {
+      "title": "Odkaz už nie je platný",
+      "textInvite": "Tento pozvánkový odkaz vypršal alebo už bol použitý. Obráťte sa prosím na svoju prevádzku — pozvánku tam možno odoslať znova.",
+      "textReset": "Tento odkaz vypršal alebo už bol použitý. Jednoducho si vyžiadajte nový.",
+      "retry": "Vyžiadať nový odkaz"
+    },
+    "invite": {
+      "title": "Nastavte si prístup",
+      "intro": "Zvoľte heslo pre svoj prístup myNextDays. Najmenej {min} znakov."
+    },
+    "reset": {
+      "title": "Nové heslo",
+      "intro": "Zvoľte nové heslo. Najmenej {min} znakov."
+    },
+    "done": {
+      "titleInvite": "Prístup nastavený",
+      "titleReset": "Heslo zmenené",
+      "text": "Teraz sa môžete prihlásiť svojím novým heslom."
+    },
+    "forgot": {
+      "title": "Zabudnuté heslo",
+      "intro": "Zadajte svoju e-mailovú adresu. Pošleme vám odkaz, ktorým si nastavíte nové heslo.",
+      "emailLabel": "E-mail",
+      "submit": "Vyžiadať odkaz",
+      "sending": "Odosiela sa…",
+      "sentTitle": "E-mail je na ceste",
+      "sentText": "Ak k tejto adrese existuje účet, odoslali sme odkaz na obnovenie. Je platný jednu hodinu.",
+      "spamHint": "Nič neprišlo? Pozrite sa prosím aj do priečinka spam.",
+      "again": "Vyžiadať znova"
+    },
+    "password": {
+      "newLabel": "Heslo",
+      "repeatLabel": "Zopakovať heslo",
+      "submit": "Nastaviť heslo",
+      "saving": "Ukladá sa…",
+      "mismatch": "Obe heslá sa nezhodujú.",
+      "tooWeak": "Heslo nespĺňa požiadavky (najmenej {min} znakov).",
+      "show": "Zobraziť heslo",
+      "hide": "Skryť heslo",
+      "strengthLabel": "Sila: {level}",
+      "strength": {
+        "1": "slabé",
+        "2": "stredné",
+        "3": "dobré",
+        "4": "silné"
+      },
+      "requirement": {
+        "length": "Najmenej {min} znakov",
+        "letter": "Najmenej jedno písmeno",
+        "digit": "Najmenej jedna číslica"
+      }
+    },
+    "checking": "Odkaz sa overuje…",
+    "languageLabel": "Jazyk",
+    "languageChange": "Zmeniť jazyk",
+    "twoFactor": {
+      "title": "Potvrdenie",
+      "totpHint": "Zadajte 6-miestny kód zo svojej overovacej aplikácie.",
+      "smsHint": "Zadajte 6-miestny kód, ktorý sme vám poslali SMS.",
+      "smsHintWithPhone": "Zadajte 6-miestny kód, ktorý sme poslali na číslo {phone}.",
+      "codeLabel": "Kód",
+      "confirm": "Potvrdiť",
+      "checking": "Prebieha overenie …",
+      "recoveryHint": "Zadajte jeden zo svojich záložných kódov.",
+      "recoveryLabel": "Záložný kód",
+      "recoverySingleUse": "Každý kód funguje práve raz.",
+      "useTotp": "Použiť overovaciu aplikáciu",
+      "useSms": "Použiť kód cez SMS",
+      "useRecovery": "Použiť záložný kód",
+      "backToLogin": "Späť na prihlásenie",
+      "factorMissing": "Tento faktor nie je pre váš účet dostupný. Zvoľte iný spôsob.",
+      "passkeyHint": "Potvrďte prihlásenie svojím prístupovým kľúčom.",
+      "passkeyUse": "Prihlásiť sa prístupovým kľúčom",
+      "usePasskey": "Použiť prístupový kľúč",
+      "sendCode": "Odoslať kód cez SMS",
+      "sending": "Odosielanie …",
+      "smsSent": "Kód bol odoslaný.",
+      "resend": "Odoslať kód znova",
+      "recoveryRedeemedHint": "Kód bol uplatnený, sám osebe však na prihlásenie nestačí. Prihláste sa niektorým zo svojich nastavených faktorov alebo sa obráťte na svoj tím."
+    },
+    "mfaSetup": {
+      "title": "Nastavenie dvojfaktorového overenia",
+      "intro": "Pre vašu rolu je druhý faktor povinný. Nastavte si ho teraz, aby ste mohli pokračovať.",
+      "why": "Ako správca máte prístup k finančným údajom, údajom hostí a nastaveniam celej prevádzky. Druhý faktor zabezpečí, že samotné odcudzené heslo nestačí.",
+      "goToSettings": "Nastaviť teraz",
+      "later": "Pripomenúť neskôr",
+      "laterHint": "Nastavenie môžete ešte odložiť. Spýtame sa znova pri ďalšom prihlásení.",
+      "introWithDeadline": "Pre vašu rolu je druhý faktor povinný. Nastavte si ho do {date} — potom už prihlásenie bez druhého faktora nebude možné."
+    }
+  },
+  "sprache": {
+    "label": "Jazyk e-mailov",
+    "hint": "V tomto jazyku posielame e-maily tejto osobe.",
+    "none": "— neuvedené"
+  },
+  "neuerungen": {
+    "eyebrow": "Novinky v produkte",
+    "titel": "Novinky",
+    "unterzeile": "Všetko, čo sa v myNextDays zmenilo — najnovšie hore.",
+    "neuAnzahl": "{anzahl, plural, one {# nová} few {# nové} other {# nových}}",
+    "ungelesen": "Nové",
+    "veroeffentlichtAm": "Zverejnené {datum}",
+    "leer": "Zatiaľ tu nie sú žiadne novinky.",
+    "ladefehler": "Načítanie zlyhalo: {grund}",
+    "mehrLaden": "Načítať staršie",
+    "aufklappen": "Zobraziť podrobnosti",
+    "zuklappen": "Skryť podrobnosti",
+    "kategorie": {
+      "neuerung": "Nová funkcia",
+      "wartung": "Údržba",
+      "hinweis": "Oznámenie",
+      "wichtig": "Dôležité"
+    },
+    "popup": {
+      "ariaLabel": "Obsah oznámenia",
+      "gelesen": "Rozumiem",
+      "wirdGespeichert": "Ukladá sa …",
+      "erneut": "Skúsiť znova",
+      "fehler": "Nepodarilo sa potvrdiť: {grund}",
+      "weiter": "Ďalej",
+      "vonAnzahl": "Oznámenie {nummer}"
+    }
+  },
+  "login": {
+    "title": "Prihlásiť sa",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Heslo",
+    "showPassword": "Zobraziť heslo",
+    "hidePassword": "Skryť heslo",
+    "forgot": "Zabudli ste heslo?",
+    "stayLoggedIn": "Zostať prihlásený",
+    "submit": "Prihlásiť sa",
+    "submitting": "Prihlasovanie…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Ešte nie ste zákazníkom myNextDays?",
+    "signupLink": "Vyskúšajte zadarmo",
+    "mfaTitle": "Potvrdenie",
+    "mfaIntro": "Zadajte šesťmiestny kód z overovacej aplikácie. Funguje aj záložný kód.",
+    "mfaCodeLabel": "Kód",
+    "mfaSubmit": "Potvrdiť",
+    "mfaChecking": "Overuje sa…",
+    "mfaBack": "Späť na prihlásenie"
   }
 }

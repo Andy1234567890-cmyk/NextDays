@@ -283,6 +283,7 @@
       "logout": "Logáil amach"
     },
     "stopSell": "Stop díola",
+    "blockRequests": "Iarratais bhactha",
     "owners": "Úinéirí",
     "ownerStatements": "Ráitis úinéirí",
     "portal": "Mo thairseach",
@@ -315,7 +316,8 @@
     "noAccess": "Gan rochtain",
     "dashboardLoadFailed": "Níorbh fhéidir an painéal a lódáil",
     "reviews": "Léirmheasanna",
-    "extensions": "Breiseáin"
+    "extensions": "Breiseáin",
+    "announcements": "Nuacht"
   },
   "exemption": {
     "labelNamed": "Díolúine cánach ({scheme}) — níl uimhir CBL ag teastáil",
@@ -945,6 +947,7 @@
     "newTitle": "Úinéir nua",
     "create": "Cruthaigh",
     "created": "Úinéir cruthaithe.",
+    "createdInvited": "Cruthaíodh an t-úinéir agus seoladh an cuireadh.",
     "cancel": "Cealaigh",
     "save": "Sábháil",
     "saving": "Á shábháil …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Níl aon réadmhaoin ann} one {# réadmhaoin} two {# réadmhaoin} few {# réadmhaoin} many {# réadmhaoin} other {# réadmhaoin}}",
     "noProperties": "Níl aon réadmhaoin sannta don úinéir seo fós.",
     "addProperty": "Sann réadmhaoin …",
+    "assignProperties": "Sann réadmhaoine",
+    "assignPropertiesHint": "Roghnach. Ní féidir ach réadmhaoine nach bhfuil úinéir acu fós a roghnú.",
+    "noFreeProperties": "Tá gach réadmhaoin sannta d'úinéir cheana féin.",
+    "assignSelected": "{count, plural, =0 {Sann réadmhaoine} one {Sann # réadmhaoin} two {Sann # réadmhaoin} few {Sann # réadmhaoin} many {Sann # réadmhaoin} other {Sann # réadmhaoin}}",
+    "propertiesAssigned": "{count, plural, one {Sannadh # réadmhaoin} two {Sannadh # réadmhaoin} few {Sannadh # réadmhaoin} many {Sannadh # réadmhaoin} other {Sannadh # réadmhaoin}}",
     "removeProperty": "Bain an sannachán",
     "sections": {
       "master": "Máistirshonraí",
       "payout": "Íocaíocht & coimisiún",
-      "properties": "Réadmhaoin"
+      "properties": "Réadmhaoin",
+      "portalAccess": "Rochtain ar an tairseach"
     },
     "frequency": {
       "none": "Ceann ar bith",
@@ -989,12 +998,20 @@
       "statementFrequency": "Rithim ráitis",
       "notes": "Nótaí",
       "share": "Sciar (%)",
-      "commissionOverride": "Coimisiún (%) sáraithe"
+      "commissionOverride": "Coimisiún (%) sáraithe",
+      "emailLanguage": "Teanga na ríomhphost"
     },
     "placeholders": {
       "name": "m.sh. Seán Ó Murchú",
       "email": "m.sh. sean@example.com"
-    }
+    },
+    "emailLanguageHint": "Sa teanga seo a fhaigheann an t-úinéir ráitis agus fógraí — fiú gan rochtain dá chuid féin.",
+    "portalAccess": "Socraigh rochtain ar an tairseach",
+    "portalAccessHint": "Faigheann an t-úinéir cuireadh ar r-phost agus is féidir leis a ráitis a fheiceáil é féin ina dhiaidh sin.",
+    "portalAccessNeedsEmail": "Tá seoladh r-phoist ag teastáil le haghaidh rochtain ar an tairseach.",
+    "portalAccessInvite": "Seol cuireadh",
+    "portalAccessInvited": "Cuireadh seolta.",
+    "portalAccessActive": "Tá rochtain ar an tairseach socraithe."
   },
   "ownerStatements": {
     "title": "Ráitis úinéirí",
@@ -1149,7 +1166,9 @@
     "subtitle": "Forléargas ar do réadmhaoin, do bhrabús agus do ráitis.",
     "properties": {
       "title": "Mo réadmhaoin",
-      "empty": "Níl aon réadmhaoin sannta duit faoi láthair."
+      "empty": "Níl aon réadmhaoin sannta duit faoi láthair.",
+      "city": "Suíomh",
+      "openCalendar": "Féilire"
     },
     "earnings": {
       "title": "Ioncam (an mhí seo)",
@@ -1175,7 +1194,24 @@
       "to": "Go",
       "submit": "Seol iarratas",
       "sending": "Á sheoladh …",
-      "requested": "Iarratas seolta."
+      "requested": "Iarratas seolta.",
+      "listTitle": "M'iarratais",
+      "listEmpty": "Níor iarr tú bacainn go fóill.",
+      "created": "Curtha isteach an",
+      "range": "Tréimhse",
+      "statusLabel": "Stádas",
+      "readOnlyHint": "Ní féidir ach leis an mbainistíocht bacainn a chur isteach. Cuireann tusa an t-iarratas isteach; is fúthu siúd an cinneadh.",
+      "invalidRange": "Caithfidh an dáta deiridh a bheith tar éis an dáta tosaigh.",
+      "invalidDate": "Cuir isteach dáta bailí le do thoil.",
+      "status": {
+        "pending": "Á scrúdú",
+        "approved": "Ceadaithe",
+        "rejected": "Diúltaithe",
+        "cancelled": "Tarraingthe siar"
+      },
+      "reason": "Cúis",
+      "reasonPlaceholder": "Cén fáth ar cheart é a bhlocáil? (m.sh. úsáid phearsanta, ceardaithe)",
+      "decisionNote": "Nóta ón mbainistíocht"
     },
     "meter": {
       "title": "Cláraigh léamh méadair",
@@ -1191,6 +1227,142 @@
         "electricity": "Leictreachas",
         "water": "Uisce",
         "gas": "Gás"
+      },
+      "historyTitle": "Stair",
+      "historyEmpty": "Níl aon léamh méadair taifeadta don mhaoin seo go fóill.",
+      "appendOnlyHint": "Fanann léamha taifeadta gan athrú. Is iontráil nua í ceartúchán — mar sin fanann an stair iomlán.",
+      "invalidValue": "Cuir isteach an léamh méadair mar uimhir le do thoil.",
+      "invalidDate": "Cuir isteach dáta léimh bailí le do thoil."
+    },
+    "logout": "Sínigh amach",
+    "loadFailed": "Níorbh fhéidir na sonraí a lódáil.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Forbhreathnú",
+      "calendar": "Féilire áitíochta",
+      "reports": "Tuairiscí",
+      "blockRequests": "Bacainní",
+      "meterReadings": "Léamha méadair",
+      "services": "Seirbhísí",
+      "notifications": "Fógraí"
+    },
+    "overview": {
+      "occupancy": "Áitíocht",
+      "occupancyHint": "Oícheanta áirithinte sa tréimhse roghnaithe.",
+      "nights": "Oícheanta",
+      "bookings": "Áirithintí",
+      "payout": "Íocaíocht ghlan",
+      "payoutHint": "Do sciar tar éis táillí an tairseach.",
+      "period": "Tréimhse",
+      "periodMonth": "An mhí seo",
+      "periodYear": "An bhliain seo",
+      "openCalendar": "Oscail an féilire",
+      "latestStatement": "An ráiteas is déanaí",
+      "noStatement": "Níl aon ráiteas ann fós"
+    },
+    "calendar": {
+      "title": "Féilire áitíochta",
+      "subtitle": "Áitíocht agus d'íocaíocht ghlan in aghaidh na hoíche.",
+      "selectProperty": "Roghnaigh maoin",
+      "prevMonth": "An mhí roimhe seo",
+      "nextMonth": "An mhí seo chugainn",
+      "today": "Inniu",
+      "legendSeasons": "Séasúir",
+      "legendStatus": "Áitíocht",
+      "noSeasons": "Níl aon séasúr socraithe don mhaoin seo.",
+      "status": {
+        "open": "Saor",
+        "booked": "Áirithinte",
+        "blocked": "Bactha"
+      },
+      "payoutPerNight": "Íocaíocht ghlan/oíche",
+      "guest": "Aoi",
+      "channel": "Foinse na háirithinte",
+      "blockHint": "Ar mhaith leat tréimhse a bhacadh? Cuir isteach iarratas — is í an bhainistíocht a chinneann.",
+      "blockCta": "Iarr bacainn",
+      "weekdays": "Luan,Máirt,Céad,Déar,Aoine,Sath,Domh",
+      "months": "Eanáir,Feabhra,Márta,Aibreán,Bealtaine,Meitheamh,Iúil,Lúnasa,Meán Fómhair,Deireadh Fómhair,Samhain,Nollaig"
+    },
+    "services": {
+      "title": "Cuir seirbhís in áirithe",
+      "hint": "Ordaigh seirbhís do do mhaoin. Glacann an bhainistíocht leis an ordú agus socraíonn siad sceideal.",
+      "property": "Maoin",
+      "kind": "Seirbhís",
+      "date": "Dáta roghnaithe",
+      "note": "Nóta",
+      "notePlaceholder": "Cad go díreach ba chóir a dhéanamh?",
+      "submit": "Ordaigh",
+      "sending": "Á sheoladh …",
+      "sent": "Ordú seolta.",
+      "listTitle": "M'orduithe",
+      "listEmpty": "Níor ordaigh tú seirbhís go fóill.",
+      "invalidDate": "Cuir isteach dáta roghnaithe bailí le do thoil.",
+      "noteRequired": "Déan cur síos ar an tseirbhís atá ag teastáil uait le do thoil.",
+      "kinds": {
+        "custom": "Eile (téacs saor)"
+      },
+      "status": {
+        "pending": "Á scrúdú",
+        "accepted": "Glactha leis",
+        "scheduled": "Sceidealaithe",
+        "done": "Críochnaithe",
+        "rejected": "Diúltaithe",
+        "cancelled": "Tarraingthe siar"
+      },
+      "type": {
+        "endreinigung": "Glanadh deiridh",
+        "hauptreinigung": "Príomhghlanadh",
+        "fensterreinigung": "Glanadh fuinneog",
+        "rasenmaehen": "Bearradh faiche",
+        "terrassenreinigung": "Glanadh an teirse"
+      },
+      "dateTo": "Go"
+    },
+    "notifications": {
+      "title": "Fógraí",
+      "hint": "Socraigh do gach imeacht conas ba mhaith leat fógra a fháil.",
+      "channel": {
+        "email": "Ríomhphost",
+        "sms": "SMS",
+        "phone": "Teileafón"
+      },
+      "locked": "Tá an ríomhphost seo riachtanach de réir conartha agus fanann sé ar siúl.",
+      "saved": "Sábháilte.",
+      "saveFailed": "Níorbh fhéidir an t-athrú a shábháil.",
+      "categories": {
+        "listing_activity": "Áirithintí ar do mhaoine",
+        "listing_activityHint": "Áirithint nua, athrú agus cealú.",
+        "account_activity": "Gníomhaíocht cuntais",
+        "account_activityHint": "Logálacha isteach agus athruithe ar do chuntas.",
+        "reminders": "Meabhrúcháin",
+        "remindersHint": "Tascanna agus dátaí atá dlite.",
+        "messages": "Teachtaireachtaí",
+        "messagesHint": "Teachtaireachtaí nua ón mbainistíocht.",
+        "owner_booking": "Áirithintí ar do mhaoine",
+        "owner_bookingHint": "Áirithint nua, athrú agus cealú.",
+        "block_decision": "Cinneadh ar d'iarratais bhactha",
+        "block_decisionHint": "Nuair a fhaomhann nó a dhiúltaíonn an bhainistíocht d'iarratas.",
+        "owner_service": "Seirbhísí a ordaíodh",
+        "owner_serviceHint": "Athrú stádais ar sheirbhís a d'ordaigh tú."
+      }
+    },
+    "reports": {
+      "title": "Tuairiscí",
+      "subtitle": "Ráitis, an mhí reatha chomh maith le tuairiscí míosúla agus bliantúla.",
+      "currentTitle": "Stádas reatha an ráitis",
+      "currentHint": "Sealadach — tá an mhí fós ar siúl. Ní bhíonn ach an ráiteas críochnaithe ceangailteach.",
+      "monthly": "Tuairisc mhíosúil",
+      "yearly": "Tuairisc bhliantúil",
+      "month": "Mí",
+      "year": "Bliain",
+      "download": "Íoslódáil PDF",
+      "downloading": "Á ghiniúint …",
+      "downloadFailed": "Níorbh fhéidir an PDF a ghiniúint.",
+      "onlyFinalized": "Níl ach ráitis chríochnaithe ar fáil le híoslódáil.",
+      "status": {
+        "draft": "Á ullmhú",
+        "finalized": "Críochnaithe",
+        "cancelled": "Cealaithe"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Ní féidir suim sheasta a roinnt ar na hoícheanta — ní shroicheann sí na portail, agus ní mór í a chothabháil san eistreánat ansin.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Cuir an tairiscint chéanna i bhfeidhm ar mhaoine eile freisin.",
+      "applyToOthersSeasonHint": "Cruthaigh an séasúr céanna ar réadmhaoine eile freisin.",
       "promoReason": {
         "mindestaufenthalt": "fanacht íosta",
         "fruehbucher": "tréimhse áirithinte luaithe",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Plean íocaíochta",
       "cancellationLabel": "Cealú",
       "depositLabel": "Éarlais",
-      "depositWithheldText": "Coinnfear éarlais {amount} siar.",
       "noPolicyYet": "Níl aon pholasaí sannta fós.",
       "bookabilityCardTitle": "Inchurtha in áirithe",
       "bookabilityCardHint": "Conas a ghlactar le háirithintí.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Conradh cíosa",
       "rentalAgreementCardHint": "Cruthaigh an conradh cíosa nó nasc chuige do d'aíonna.",
       "noRentalAgreementYet": "Níl aon chonradh cíosa ann fós.",
-      "addPolicyTitle": "Cuir polasaí leis",
       "addPolicySubtitle": "Socraigh sonraí an pholasaí nua seo.",
       "internalNameLabel": "Ainm inmheánach *",
       "internalNamePlaceholder": "m.sh. Réamhíocaíocht pháirteach – neamh-inaisíoctha",
       "paymentPlanGroupTitle": "Plean íocaíochta",
       "paymentCountLabel": "Líon na n-íocaíochtaí",
-      "depositPercentLabel": "Réamhíocaíocht (%)",
-      "remainingDaysBeforeLabel": "Iarmhéid (laethanta roimh theacht)",
       "guestCancellationGroupTitle": "Cealú ag an aoi",
       "cancellationTypeLabel": "Cineál cealaithe",
       "depositGroupTitle": "Éarlais",
-      "depositModeNone": "Ní gá éarlais",
-      "depositModeAmount": "Éarlais mar mhéid",
-      "depositAmountLabelWithCurrency": "Méid na héarlaise ({currency})",
-      "depositAmountLabel": "Méid na héarlaise",
       "quoteValidityGroupTitle": "Bailíocht an luacháin",
       "quoteValidityHoursLabel": "Fad bailíochta (uaireanta) *",
       "quoteValidityHint": "Tá an luacháin bailí ar feadh {hours} uair an chloig ar a mhéad, fad atá an stádas \"Ag fanacht leis an aoi\" nó \"Ag fanacht le híocaíocht\".",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Molta",
       "checkInTimeLabel": "Am seiceála isteach",
       "checkOutTimeLabel": "Am seiceála amach",
-      "paymentSummaryFull": "100 % dlite tráth na háirithinte.",
-      "paymentSummarySplit": "{percent} % ag am na háirithinte, iarmhéid {days} lá roimh theacht.",
       "localizedEditorSubtitle": "Cruthaigh an téacs agus aistrigh é más gá do d'aíonna.",
-      "localizedEditorPlaceholder": "Cuir isteach {title} …"
+      "localizedEditorPlaceholder": "Cuir isteach {title} …",
+      "editPolicyTitle": "Cuir na téarmaí in eagar",
+      "singlePaymentHint": "Tá 100 % den íocaíocht dlite nuair a chuirtear an t-áirithint i gcrích.",
+      "firstPaymentHeading": "An chéad íocaíocht",
+      "secondPaymentHeading": "An dara híocaíocht",
+      "thirdPaymentHeading": "An tríú híocaíocht",
+      "amountTypeLabel": "Cineál na suime",
+      "percentLabel": "Céatadán",
+      "amountLabel": "Suim",
+      "currencyLabel": "Airgeadra",
+      "daysLabel": "Laethanta",
+      "periodLabel": "Tréimhse",
+      "firstPaymentHint": "Ag am an áirithinte ní ghearrtar ach suim sheasta nó céatadán na chéad íocaíochta. Déantar na híocaíochtaí eile a bhilleáil ar an dáta sceidealta.",
+      "remainderHint": "Socraigh cathain ba cheart an t-iarmhéid a ghearradh.",
+      "partialRulesHint": "Sainmhínigh na rialacha do chealuithe atá in-aisíoctha go páirteach.",
+      "ruleHeading": "Riail {number}",
+      "ruleDelete": "Scrios an riail",
+      "ruleAdd": "Cuir riail leis",
+      "refundTypeLabel": "Cineál an aisíoca",
+      "refundLabel": "Aisíoc",
+      "whenCancelledLabel": "Nuair a chealaítear",
+      "depositNotRequired": "Níl éarlais ag teastáil",
+      "depositRequired": "Tá éarlais ag teastáil",
+      "depositMethodLabel": "Modh",
+      "preAuthTimesHeading": "Amanna réamhúdaraithe",
+      "preAuthValidityLabel": "Bailíocht (laethanta tar éis imeachta)",
+      "preAuthWarnTitle": "Ní féidir réamhúdaruithe a ráthú ach ar feadh 5 lá.",
+      "preAuthWarnBody": "Braitheann fad réamhúdaraithe ar chárta creidmheasa ar fhachtóirí éagsúla, amhail soláthraí an chárta, an banc eisiúna, an geata íocaíochta agus araile. Dá bhrí sin, i gcás gach áirithinte seachtaine nó níos faide, rachaidh gach réamhúdarú in éag (cealaítear go huathoibríoch é) gach 5 lá. Cuirfimid in iúl duit é le go bhféadfaidh tú réamhúdarú nua a eisiúint de láimh agus an éarlais a choinneáil don chuid eile den áirithint.",
+      "assignAction": "Sann na téarmaí"
     },
     "ratePlanWizard": {
       "title": "Cruthaigh plean praghsála",
@@ -5604,6 +5795,39 @@
       "confirmed": "Deimhnithe",
       "in_house": "Seiceáilte isteach",
       "pending": "Rogha / sealadach"
+    },
+    "blockRequests": {
+      "title": "Iarratais bhactha",
+      "subtitle": "Iarratais ó d'úinéirí a n-oibiachtaí a bhac. Cuireann ceadú bac ar na hoícheanta san fhéilire agus tuairiscíonn sé do na tairseacha iad.",
+      "filter": "Stádas",
+      "filterAll": "Uile",
+      "empty": "Níl aon iarratas sa radharc seo.",
+      "requestedBy": "Iarrtha ag {name}",
+      "reason": "Cúis",
+      "decisionNote": "Nóta",
+      "note": "Nóta don úinéir",
+      "notePlaceholder": "Roghnach — taispeántar don úinéir é.",
+      "working": "Á dhéanamh …",
+      "status": {
+        "pending": "Oscailte",
+        "approved": "Ceadaithe",
+        "rejected": "Diúltaithe"
+      },
+      "action": {
+        "approve": "Ceadaigh",
+        "reject": "Diúltaigh",
+        "revoke": "Cúlghair"
+      },
+      "confirm": {
+        "approve": "Bac {objekt} ó {von} go {bis}? Cuirfear bac ar na hoícheanta ar gach tairseach.",
+        "reject": "Diúltaigh don iarratas ar {objekt} ({von} – {bis})?",
+        "revoke": "Cúlghair an ceadú ar {objekt} ({von} – {bis})? Scaoilfear na hoícheanta arís."
+      },
+      "done": {
+        "approve": "Iarratas ceadaithe, oícheanta bactha.",
+        "reject": "Iarratas diúltaithe.",
+        "revoke": "Ceadú cúlghairthe, oícheanta scaoilte."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "Eanáir,Feabhra,Márta,Aibreán,Bealtaine,Meitheamh,Iúil,Lúnasa,Meán Fómhair,Deireadh Fómhair,Samhain,Nollaig",
     "name": "Ainm",
     "seasonAdd": "Cuir séasúr leis",
+    "seasonApplyCancel": "Cealaigh",
+    "seasonApplyCopyHint": "Cruthaítear an séasúr mar chóip neamhspleách. NÍ bheidh feidhm ag athruithe níos déanaí ar an séasúr seo ansin. Ríomhtar an breismhuirear i gcoinne bhunphraghas an réadmhaoin sprice féin.",
+    "seasonApplyNone": "Níor cóipeáladh chuig aon áit chónaithe.",
+    "seasonApplyPartial": "Cóipeáilte chuig {count} réadmhaoin, {skipped} fágtha ar lár.",
+    "seasonApplyPickTarget": "Roghnaigh réadmhaoin amháin ar a laghad.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Níl bunphraghas socraithe — ní féidir formhuirear a ríomh.",
+      "basispreis_null": "Is 0 an bunphraghas — ní féidir formhuirear a ríomh.",
+      "teilweise_uebertragen": "Tá an séasúr ar an áit, tá na praghsanna laethúla in easnamh fós — bain triail eile as chun é a chríochnú.",
+      "unbekannt": "Scipeáilte ar chúis anaithnid."
+    },
+    "seasonApplySubmit": "Cóipeáil",
+    "seasonApplySuccess": "Cóipeáilte chuig {count} réadmhaoin.",
+    "seasonApplyTitle": "Cóipeáil “{name}” chuig réadmhaoine eile",
+    "seasonApplyToOthers": "Cóipeáil chuig réadmhaoine eile",
+    "seasonApplyWithRanges": "Cóipeáil na tréimhsí freisin",
+    "seasonApplyWithRangesHint": "Socraítear na laethanta marcáilte mar an gcéanna ar an réadmhaoin sprice. As: an séasúr amháin, gan laethanta.",
     "seasonClearHint": "Deaschliceáil agus tarraing thar na laethanta chun iad a bhaint den séasúr.",
     "seasonColor": "Dath",
     "seasonColorAria": "Dath {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Formhuirear (± %)",
     "seasonSurchargePlaceholder": "m.sh. 30 nó -15",
     "seasonValueRequired": "Cuir luach bailí ar fáil le do thoil.",
-    "weekdays": "L,M,C,D,A,S,D"
+    "weekdays": "L,M,C,D,A,S,D",
+    "seasonApplyNoSpans": "Níl aon tréimhsí péinteáilte ag an séasúr seo. Péinteáil ar dtús é, nó aistrigh an sainmhíniú amháin gan tréimhsí."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "Cód QR don aip fhíordheimhnithe",
       "sixDigitCode": "Cód 6 dhigit",
       "disable2fa": "Díchumasaigh 2FA",
-      "disable2faHint": "Cuir cód reatha (nó cód aisghabhála) isteach chun 2FA a mhúchadh."
+      "disable2faHint": "Cuir cód reatha (nó cód aisghabhála) isteach chun 2FA a mhúchadh.",
+      "title": "Slándáil",
+      "loadFailed": "Níorbh fhéidir sonraí an chuntais a lódáil. Seiceáil do cheangal agus bain triail eile as.",
+      "credentials": "Dintiúir",
+      "emailAndUsername": "Ríomhphost agus ainm úsáideora",
+      "emailLabel": "Ríomhphost",
+      "nameLabel": "Ainm",
+      "password": "Pasfhocal",
+      "noPassword": "Níl aon phasfhocal socraithe",
+      "passwordMin": "8 gcarachtar ar a laghad.",
+      "save": "Sábháil",
+      "saving": "Á shábháil …",
+      "changePassword": "Athraigh an pasfhocal",
+      "twoFactor": {
+        "title": "Fíordheimhniú dhá fhachtóir (2FA)",
+        "intro": "Cosnaíonn sé do chuntas le dara fachtóir sa bhreis ar an bpasfhocal.",
+        "noneActive": "Níl aon dara fachtóir socraithe fós. Molaimid an aip fhíordheimhnithe.",
+        "requiredNotice": "Tá dara fachtóir riachtanach don ról atá agat. Socraigh anois é.",
+        "active": "Gníomhach",
+        "setUp": "Socraigh",
+        "totp": {
+          "title": "Aip fhíordheimhnithe",
+          "description": "Cód aonuaire ó aip ar nós Google Authenticator nó Microsoft Authenticator. Oibríonn sé fiú gan líonra soghluaiste.",
+          "setupTitle": "Socraigh an aip fhíordheimhnithe",
+          "setupHint": "Scan an cód QR le d'aip agus deimhnigh leis an gcód a thaispeántar.",
+          "step1": "1. Scan an cód QR",
+          "step2": "3. Cuir an cód ón aip isteach",
+          "qrAlt": "Cód QR don aip fhíordheimhnithe",
+          "qrHint": "Oscail d'aip fhíordheimhnithe agus scan an cód.",
+          "manualTitle": "2. Nó cuir an eochair isteach de láimh",
+          "manualHint": "Úsáid an eochair seo mura féidir leat an cód QR a scanadh.",
+          "showSecret": "Taispeáin an eochair",
+          "hideSecret": "Folaigh an eochair",
+          "copySecret": "Cóipeáil an eochair",
+          "copyFailed": "Níorbh fhéidir cóipeáil. Roghnaigh an eochair agus cóipeáil de láimh í.",
+          "codeLabel": "Cód 6 dhigit",
+          "activate": "Gníomhachtaigh",
+          "checking": "Á sheiceáil …",
+          "preparing": "An socrú á ullmhú …",
+          "enabledTitle": "Tá an aip fhíordheimhnithe gníomhach. Sábháil do chóid chúltaca anois.",
+          "friendlyName": "Aip fhíordheimhnithe",
+          "replayNote": "Tabhair faoi deara: fanann cód bailí ar feadh suas le 90 soicind agus is féidir é a úsáid níos mó ná uair amháin le linn na tréimhse sin. Ní chosnaíonn ach eochair rochtana ar leathanaigh logála isteach bhréagacha i bhfíor-am."
+        },
+        "sms": {
+          "title": "Cód SMS",
+          "description": "Cód aonuaire trí SMS chuig d'uimhir ghutháin dheimhnithe.",
+          "unavailable": "Níl an cód SMS ar fáil ar an bhfreastalaí seo mar níl soláthraí SMS socraithe. Roghnaigh an aip fíordheimhnithe nó eochair rochtana ina ionad.",
+          "unavailableBadge": "Níl ar fáil",
+          "setupTitle": "Socraigh an cód SMS",
+          "setupHint": "Seolfaimid cód chuig d'uimhir ghutháin.",
+          "simSwapWarning": "Tabhair faoi deara: níl SMS chomh sábháilte le haip fhíordheimhnithe. Is féidir le duine ar bith a aistríonn d'uimhir chuig cárta SIM eile do chóid a fháil. Más féidir, roghnaigh an aip fhíordheimhnithe nó eochair rochtana.",
+          "numberLabel": "Uimhir ghutháin",
+          "numberHint": "I bhformáid idirnáisiúnta le cód tíre, mar shampla +353 …",
+          "invalidNumber": "Cuir an uimhir isteach i bhformáid idirnáisiúnta, ag tosú le + agus an cód tíre.",
+          "sendCode": "Seol an cód",
+          "sending": "Á sheoladh …",
+          "codeLabel": "Cód 6 dhigit",
+          "codeSentTo": "Sheolamar cód chuig {phone}.",
+          "confirm": "Deimhnigh",
+          "checking": "Á sheiceáil …",
+          "resend": "Seol an cód arís",
+          "changeNumber": "Úsáid uimhir eile",
+          "friendlyName": "Cód SMS"
+        },
+        "passkey": {
+          "title": "Eochair rochtana",
+          "description": "Logáil isteach le méarlorg, le haithint aghaidhe nó le heochair shlándála. Níl aon chód de dhíth.",
+          "setupTitle": "Socraigh eochair rochtana",
+          "setupHint": "Deimhníonn do ghléas thú le méarlorg, le haithint aghaidhe nó le heochair shlándála.",
+          "checkingSupport": "An gléas á sheiceáil …",
+          "unsupportedTitle": "Ní thacaíonn an brabhsálaí seo le heochracha rochtana",
+          "unsupportedHint": "Úsáid brabhsálaí reatha nó socraigh an aip fhíordheimhnithe ina áit.",
+          "securityKeyOnly": "Níl deimhniú ionsuite ar an ngléas seo (méarlorg nó aithint aghaidhe, mar shampla). Beidh eochair shlándála le plugáil isteach de dhíth ort chuige sin.",
+          "benefitPhishing": "Cosnaíonn sé ar leathanaigh logála isteach bhréagacha.",
+          "benefitNoCode": "Níl aon chód le clóscríobh.",
+          "create": "Cruthaigh eochair rochtana",
+          "friendlyName": "Eochair rochtana",
+          "recommended": "Molta: an ceann is sábháilte den trí bhealach.",
+          "creating": "Á cruthú …",
+          "errors": {
+            "abgebrochen": "Cuireadh an dearbhú ar ceal nó níor aithníodh é. Bain triail eile as.",
+            "herkunftPasstNicht": "Níl eochracha rochtana cumasaithe don seoladh seo. Sínigh isteach tríd an seoladh oifigiúil.",
+            "nichtUnterstuetzt": "Ní féidir leis an ngléas seo eochair rochtana a chruthú. Úsáid an aip fíordheimhnithe nó eochair slándála.",
+            "schonVorhanden": "Tá eochair rochtana ann cheana don chuntas seo ar an ngléas seo.",
+            "laeuftBereits": "Tá iarratas ar eochair rochtana ar siúl cheana. Críochnaigh nó cuir ar ceal é.",
+            "zeitUeberschritten": "Tá an t-am le haghaidh dearbhaithe caite. Bain triail eile as.",
+            "unbekannt": "Níorbh fhéidir an eochair rochtana a chruthú. Bain triail eile as."
+          }
+        },
+        "recovery": {
+          "title": "Cóid chúltaca",
+          "description": "Cóid aonuaire ar eagla nach mbeadh rochtain agat ar do dhara fachtóir.",
+          "left": "Cóid atá fágtha: {count}.",
+          "create": "Cruthaigh cóid",
+          "regenerate": "Cruthaigh cóid nua",
+          "regenerateHint": "Nuair a chruthaítear cóid nua, cailleann na cinn go léir a bhí ann go dtí seo a mbailíocht.",
+          "dialogTitle": "Cóid chúltaca",
+          "dialogHint": "Cóid aonuaire ar eagla nach mbeadh rochtain agat ar do dhara fachtóir.",
+          "replaceWarning": "Aire: caillfidh na cóid chúltaca a bhí agat go dtí seo a mbailíocht ag an am céanna.",
+          "passwordLabel": "Pasfhocal reatha",
+          "passwordHint": "Mar dheimhniú gur tusa atá ann i ndáiríre.",
+          "createNow": "Cruthaigh cóid",
+          "creating": "Á gcruthú …",
+          "createdTitle": "Do chóid chúltaca nua. Coinnigh in áit shábháilte iad.",
+          "noneReturned": "Níor cruthaíodh aon chód. Bain triail eile as le do thoil."
+        },
+        "remove": "Bain",
+        "removeDialog": {
+          "totpTitle": "Bain an aip fhíordheimhnithe",
+          "smsTitle": "Bain an cód SMS",
+          "warning": "Ina dhiaidh sin ní chosnóidh an fachtóir seo do chuntas a thuilleadh.",
+          "passwordLabel": "Pasfhocal reatha",
+          "remove": "Bain",
+          "removing": "Á bhaint …",
+          "cancel": "Cealaigh",
+          "hint": "Deimhnigh an bhaint le do phasfhocal reatha.",
+          "passkeyTitle": "Bain an eochair rochtana",
+          "lastFactorBlocked": "Seo é an dara fachtóir deireanach atá agat agus tá ceann amháin riachtanach don ról atá agat. Cruthaigh cóid chúltaca ar dtús nó socraigh fachtóir eile."
+        },
+        "requiredWithDeadline": "Tá dara fachtóir riachtanach don ról atá agat. Socraigh faoin {date} é — ina dhiaidh sin ní bheidh sé indéanta logáil isteach gan dara fachtóir.",
+        "statusFailed": "Níorbh fhéidir stádas an fhíordheimhnithe dhá fhachtóir a lódáil. Athlódáil an leathanach le do thoil."
+      },
+      "recovery": {
+        "lockoutWarning": "Gan na cóid seo caillfidh tú rochtain ar do chuntas mura féidir leat do dhara fachtóir a úsáid a thuilleadh. Coinnigh in áit shábháilte iad, scartha ó do phasfhocal.",
+        "copy": "Cóipeáil",
+        "copied": "Cóipeáilte",
+        "copyFailed": "Níorbh fhéidir cóipeáil. Íoslódáil na cóid nó priontáil iad.",
+        "download": "Íoslódáil",
+        "downloadFailed": "Níorbh fhéidir íoslódáil. Cóipeáil na cóid nó priontáil iad.",
+        "print": "Priontáil",
+        "printBlocked": "Cuireadh bac ar an bhfuinneog phriontála. Ceadaigh preabfhuinneoga nó íoslódáil na cóid.",
+        "printTitle": "Cóid chúltaca myNextDays",
+        "printHint": "Oibríonn gach cód aon uair amháin. Coinnigh an leathanach seo go sábháilte.",
+        "fileHeader": "Cóid chúltaca myNextDays — oibríonn gach cód aon uair amháin. Coinnigh go sábháilte iad.",
+        "confirmSaved": "Shábháil mé na cóid go sábháilte.",
+        "confirmHint": "Cuir tic sa bhosca chun an socrú a chríochnú.",
+        "mustExportFirst": "Cóipeáil, íoslódáil nó priontáil na cóid ar dtús.",
+        "done": "Déanta"
+      }
     },
     "company": {
       "saved": "Sábháladh na sonraí.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Teangacha labhartha",
       "searchLanguage": "Cuardaigh teanga…",
       "chooseRole": "Roghnaigh ról…",
-      "userCreated": "Cruthaíodh an t-úsáideoir",
-      "preferredLanguage": "Teanga is fearr leat",
+      "preferredLanguage": "Teanga na ríomhphost",
       "noLanguageFound": "Níor aimsíodh aon teanga.",
       "firstName": "Céad ainm",
       "lastName": "Sloinne",
       "email": "Ríomhphost",
       "phone": "Uimhir theileafóin",
       "notes": "Nótaí",
-      "password": "Pasfhocal",
-      "credentialsHint": "Tabhair na dintiúir seo don úsáideoir nua. Ní thaispeántar an pasfhocal ach anois."
+      "title": "Cruthaigh úsáideoir",
+      "createdSubtitle": "Cuireadh seolta.",
+      "stepHints": {
+        "contact": "Cuir sonraí teagmhála an úsáideora seo leis.",
+        "extra": "Cuir eolas breise faoin úsáideoir seo leis.",
+        "role": "Roghnaigh an ról agus na ceadanna don úsáideoir seo.",
+        "properties": "Sann réadmhaoine don úsáideoir seo."
+      },
+      "done": "Déanta",
+      "cancel": "Cealaigh",
+      "back": "Ar ais",
+      "next": "Ar aghaidh",
+      "create": "Cruthaigh",
+      "creating": "Á chruthú…",
+      "role": "Ról",
+      "requiredFields": "Tá an chéad ainm, an sloinne, an ríomhphost agus an ról riachtanach.",
+      "assignFailed": "Cruthaíodh an t-úsáideoir, ach theip ar shannadh na réadmhaoine: {reason}",
+      "hidePhones": "Folaigh uimhreacha teileafóin ar an suíomh gréasáin.",
+      "noAssignNeeded": "Níl gá le sannadh réadmhaoine",
+      "noAssignNeededHint": "Tá rochtain ag an ról seo ar réadmhaoine uile an chuntais. Ní bhaineann sannadh réadmhaoine aonair ach le húinéirí agus foireann.",
+      "noProperties": "Gan aon lóistín go fóill",
+      "noPropertiesHint": "Cruthaigh do chuid lóistín ionas gur féidir leat iad a shannadh do d'úsáideoirí níos déanaí.",
+      "choosePropertiesHint": "Roghnaigh na réadmhaoine a mbeidh rochtain ag an úsáideoir seo orthu.",
+      "selectedCount": "{count} roghnaithe",
+      "inviteSent": "Cuireadh seolta",
+      "inviteSentHint": "Faigheann an t-úsáideoir ríomhphost agus socraíonn sé a phasfhocal féin. Tá an nasc bailí ar feadh 7 lá.",
+      "inviteResend": "Seol an cuireadh arís",
+      "inviteResending": "Á sheoladh…",
+      "inviteResent": "Cuireadh seolta arís.",
+      "inviteResendFailed": "Níorbh fhéidir an cuireadh a sheoladh arís.",
+      "preferredLanguageHint": "Sa teanga seo a gheobhaidh an t-úsáideoir nua an cuireadh agus gach ríomhphost eile."
     },
     "tariff": {
       "oneLess": "Áit amháin níos lú",
@@ -6359,7 +6767,14 @@
       "updated": "Nuashonraíodh an t-úsáideoir.",
       "deleted": "Scriosadh an t-úsáideoir.",
       "generalPermissions": "Ceadanna ginearálta",
-      "roleChangeHint": "Molann athrú róil na cearta cuí. Is féidir iad a choigeartú ina dhiaidh sin ceann ar cheann."
+      "roleChangeHint": "Molann athrú róil na cearta cuí. Is féidir iad a choigeartú ina dhiaidh sin ceann ar cheann.",
+      "edit": "Cuir in eagar",
+      "delete": "Scrios",
+      "resendInvite": "Seol an cuireadh arís",
+      "inviteResent": "Cuireadh seolta chuig {email}.",
+      "inviteResendFailed": "Níorbh fhéidir an cuireadh a sheoladh arís.",
+      "emailLanguage": "Teanga na ríomhphost",
+      "emailLanguageHint": "Sa teanga seo a fhaigheann an t-úsáideoir seo a chuid ríomhphost."
     },
     "staffProperties": {
       "title": "Comhroinn áiteanna"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "m.sh. Óstán Radharc na Locha",
     "namePlaceholder": "Céad ainm agus sloinne",
     "passwordHint": "8 gcarachtar ar a laghad",
-    "passwordRepeat": "Athdheimhnigh an pasfhocal"
+    "passwordRepeat": "Athdheimhnigh an pasfhocal",
+    "headline": "Do ghnó cíosa ar fad in aon áit amháin.",
+    "feature1": "Sioncronaigh féilirí go huathoibríoch",
+    "feature2": "Áirithintí díreacha ar do shuíomh féin",
+    "feature3": "Uathoibrigh teachtaireachtaí do na haíonna",
+    "withGoogle": "Cláraigh le Google",
+    "withApple": "Cláraigh le Apple",
+    "or": "nó",
+    "withEmail": "Cláraigh le ríomhphost",
+    "haveAccount": "An bhfuil cuntas agat cheana?",
+    "loginLink": "Sínigh isteach anseo",
+    "loadingHeadline": "Do shuíomh áirithinte féin. Coinnigh 100 % de gach áirithint.",
+    "loadingText": "Táimid ag socrú do chuntais …"
   },
   "marketingSite": {
     "stars": "4,5 réalta",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Marcáil uile mar léite",
     "erneut": "Athlódáil",
     "ariaMitAnzahl": "Fógraí ({count} gan léamh)"
+  },
+  "auth": {
+    "toLogin": "Chuig an logáil isteach",
+    "genericError": "Níor éirigh leis sin anois. Bain triail eile as níos déanaí.",
+    "tokenMissing": {
+      "title": "Nasc neamhiomlán",
+      "text": "Tá an nasc seo neamhiomlán. Bain úsáid as an nasc iomlán ón ríomhphost — cóipeáil é agus greamaigh sa bharra seoltaí é."
+    },
+    "tokenInvalid": {
+      "title": "Níl an nasc bailí a thuilleadh",
+      "textInvite": "Tá an nasc cuiridh seo imithe in éag nó úsáidte cheana. Déan teagmháil le do ghnó — is féidir an cuireadh a sheoladh arís ansin.",
+      "textReset": "Tá an nasc seo imithe in éag nó úsáidte cheana. Iarr ceann nua go simplí.",
+      "retry": "Iarr nasc nua"
+    },
+    "invite": {
+      "title": "Socraigh do rochtain",
+      "intro": "Roghnaigh pasfhocal do do rochtain myNextDays. {min} carachtar ar a laghad."
+    },
+    "reset": {
+      "title": "Pasfhocal nua",
+      "intro": "Roghnaigh pasfhocal nua. {min} carachtar ar a laghad."
+    },
+    "done": {
+      "titleInvite": "Rochtain socraithe",
+      "titleReset": "Pasfhocal athraithe",
+      "text": "Is féidir leat logáil isteach anois le do phasfhocal nua."
+    },
+    "forgot": {
+      "title": "Pasfhocal dearmadta",
+      "intro": "Cuir isteach do sheoladh ríomhphoist. Seolfaimid nasc chugat chun pasfhocal nua a shocrú.",
+      "emailLabel": "Ríomhphost",
+      "submit": "Iarr nasc",
+      "sending": "Á sheoladh…",
+      "sentTitle": "Ríomhphost ar a bhealach",
+      "sentText": "Má tá cuntas ann don seoladh seo, sheolamar nasc athshocraithe. Tá sé bailí ar feadh uair an chloig.",
+      "spamHint": "Nár tháinig aon rud? Seiceáil d'fhillteán turscair freisin.",
+      "again": "Iarr arís"
+    },
+    "password": {
+      "newLabel": "Pasfhocal",
+      "repeatLabel": "Athdheimhnigh an pasfhocal",
+      "submit": "Socraigh pasfhocal",
+      "saving": "Á shábháil…",
+      "mismatch": "Níl an dá phasfhocal mar an gcéanna.",
+      "tooWeak": "Ní chomhlíonann an pasfhocal na riachtanais ({min} carachtar ar a laghad).",
+      "show": "Taispeáin an pasfhocal",
+      "hide": "Folaigh an pasfhocal",
+      "strengthLabel": "Neart: {level}",
+      "strength": {
+        "1": "lag",
+        "2": "measartha",
+        "3": "maith",
+        "4": "láidir"
+      },
+      "requirement": {
+        "length": "{min} carachtar ar a laghad",
+        "letter": "Litir amháin ar a laghad",
+        "digit": "Digit amháin ar a laghad"
+      }
+    },
+    "checking": "An nasc á sheiceáil…",
+    "languageLabel": "Teanga",
+    "languageChange": "Athraigh an teanga",
+    "twoFactor": {
+      "title": "Deimhniú",
+      "totpHint": "Cuir isteach an cód 6 dhigit ó d'aip fhíordheimhnithe.",
+      "smsHint": "Cuir isteach an cód 6 dhigit a sheolamar chugat trí SMS.",
+      "smsHintWithPhone": "Cuir isteach an cód 6 dhigit a sheolamar chuig {phone}.",
+      "codeLabel": "Cód",
+      "confirm": "Deimhnigh",
+      "checking": "Á sheiceáil …",
+      "recoveryHint": "Cuir isteach ceann de do chóid chúltaca.",
+      "recoveryLabel": "Cód cúltaca",
+      "recoverySingleUse": "Oibríonn gach cód aon uair amháin.",
+      "useTotp": "Úsáid an aip fhíordheimhnithe",
+      "useSms": "Úsáid an cód SMS",
+      "useRecovery": "Úsáid cód cúltaca",
+      "backToLogin": "Ar ais chuig an logáil isteach",
+      "factorMissing": "Níl an fachtóir seo ar fáil do do chuntas. Roghnaigh bealach eile.",
+      "passkeyHint": "Deimhnigh an logáil isteach le d'eochair rochtana.",
+      "passkeyUse": "Logáil isteach le heochair rochtana",
+      "usePasskey": "Úsáid eochair rochtana",
+      "sendCode": "Seol an cód trí SMS",
+      "sending": "Á sheoladh …",
+      "smsSent": "Seoladh an cód.",
+      "resend": "Seol an cód arís",
+      "recoveryRedeemedHint": "Úsáideadh an cód, ach ní leor é leis féin chun logáil isteach. Logáil isteach le ceann de na fachtóirí atá socraithe agat nó déan teagmháil le d'fhoireann."
+    },
+    "mfaSetup": {
+      "title": "Socraigh fíordheimhniú dhá fhachtóir",
+      "intro": "Tá dara fachtóir riachtanach don ról atá agat. Socraigh anois é chun leanúint ar aghaidh.",
+      "why": "Mar riarthóir tá rochtain agat ar shonraí airgeadais, ar shonraí aíonna agus ar shocruithe an ghnó ar fad. Cuireann dara fachtóir cosc air go mbeadh pasfhocal goidte leis féin dóthanach.",
+      "goToSettings": "Socraigh anois",
+      "later": "Cuir i gcuimhne dom níos déanaí",
+      "laterHint": "Is féidir leat an socrú a chur ar athló fós. Fiafróimid arís díot ag an gcéad logáil isteach eile.",
+      "introWithDeadline": "Tá dara fachtóir riachtanach don ról atá agat. Socraigh faoin {date} é — ina dhiaidh sin ní bheidh sé indéanta logáil isteach gan dara fachtóir."
+    }
+  },
+  "sprache": {
+    "label": "Teanga na ríomhphost",
+    "hint": "Sa teanga seo a sheolaimid ríomhphoist chuig an duine seo.",
+    "none": "— gan sonrú"
+  },
+  "neuerungen": {
+    "eyebrow": "Nuashonruithe táirge",
+    "titel": "Nuacht",
+    "unterzeile": "Gach rud atá athraithe in myNextDays — an ceann is nuaí ar dtús.",
+    "neuAnzahl": "{anzahl, plural, one {# nua} other {# nua}}",
+    "ungelesen": "Nua",
+    "veroeffentlichtAm": "Foilsithe ar {datum}",
+    "leer": "Níl aon nuacht ann fós.",
+    "ladefehler": "Níorbh fhéidir é a lódáil: {grund}",
+    "mehrLaden": "Lódáil cinn níos sine",
+    "aufklappen": "Taispeáin sonraí",
+    "zuklappen": "Folaigh sonraí",
+    "kategorie": {
+      "neuerung": "Gné nua",
+      "wartung": "Cothabháil",
+      "hinweis": "Fógra",
+      "wichtig": "Tábhachtach"
+    },
+    "popup": {
+      "ariaLabel": "Ábhar an fhógra",
+      "gelesen": "Tuigthe",
+      "wirdGespeichert": "Á shábháil …",
+      "erneut": "Bain triail eile as",
+      "fehler": "Níorbh fhéidir é a dhearbhú: {grund}",
+      "weiter": "Ar aghaidh",
+      "vonAnzahl": "Fógra {nummer}"
+    }
+  },
+  "login": {
+    "title": "Sínigh isteach",
+    "emailLabel": "Ríomhphost",
+    "passwordLabel": "Pasfhocal",
+    "showPassword": "Taispeáin an pasfhocal",
+    "hidePassword": "Folaigh an pasfhocal",
+    "forgot": "An ndearna tú dearmad ar do phasfhocal?",
+    "stayLoggedIn": "Fan sínithe isteach",
+    "submit": "Sínigh isteach",
+    "submitting": "Ag síniú isteach…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Nach custaiméir myNextDays thú fós?",
+    "signupLink": "Bain triail as saor in aisce",
+    "mfaTitle": "Deimhniú",
+    "mfaIntro": "Cuir isteach an cód 6 dhigit ó d'aip fíordheimhnithe. Oibríonn cód aisghabhála freisin.",
+    "mfaCodeLabel": "Cód",
+    "mfaSubmit": "Deimhnigh",
+    "mfaChecking": "Á sheiceáil…",
+    "mfaBack": "Ar ais chuig an síniú isteach"
   }
 }

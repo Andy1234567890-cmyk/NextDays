@@ -283,6 +283,7 @@
       "logout": "Logga ut"
     },
     "stopSell": "Försäljningsstopp",
+    "blockRequests": "Blockeringsförfrågningar",
     "owners": "Ägare",
     "ownerStatements": "Ägaravräkningar",
     "portal": "Min portal",
@@ -315,7 +316,8 @@
     "noAccess": "Ingen åtkomst",
     "dashboardLoadFailed": "Instrumentpanelen kunde inte läsas in",
     "reviews": "Omdömen",
-    "extensions": "Tillägg"
+    "extensions": "Tillägg",
+    "announcements": "Nyheter"
   },
   "exemption": {
     "labelNamed": "Skattebefriad ({scheme}) — inget momsreg.nr krävs",
@@ -945,6 +947,7 @@
     "newTitle": "Ny ägare",
     "create": "Skapa",
     "created": "Ägare skapad.",
+    "createdInvited": "Ägaren har skapats och inbjudan har skickats.",
     "cancel": "Avbryt",
     "save": "Spara",
     "saving": "Sparar …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Inga objekt} one {# objekt} other {# objekt}}",
     "noProperties": "Denna ägare har inget objekt tilldelat ännu.",
     "addProperty": "Tilldela objekt …",
+    "assignProperties": "Tilldela objekt",
+    "assignPropertiesHint": "Valfritt. Endast objekt som ännu inte har en ägare kan väljas.",
+    "noFreeProperties": "Alla objekt är redan tilldelade en ägare.",
+    "assignSelected": "{count, plural, =0 {Tilldela objekt} one {Tilldela # objekt} other {Tilldela # objekt}}",
+    "propertiesAssigned": "{count, plural, one {# objekt tilldelat} other {# objekt tilldelade}}",
     "removeProperty": "Ta bort tilldelning",
     "sections": {
       "master": "Stamdata",
       "payout": "Utbetalning & provision",
-      "properties": "Objekt"
+      "properties": "Objekt",
+      "portalAccess": "Portalåtkomst"
     },
     "frequency": {
       "none": "Ingen",
@@ -989,12 +998,20 @@
       "statementFrequency": "Avräkningsrytm",
       "notes": "Anteckningar",
       "share": "Andel (%)",
-      "commissionOverride": "Provision (%) avv."
+      "commissionOverride": "Provision (%) avv.",
+      "emailLanguage": "Språk för e-post"
     },
     "placeholders": {
       "name": "t.ex. Anna Andersson",
       "email": "t.ex. anna@example.com"
-    }
+    },
+    "emailLanguageHint": "På det här språket får ägaren avräkningar och aviseringar — även utan eget konto.",
+    "portalAccess": "Skapa portalåtkomst",
+    "portalAccessHint": "Ägaren får en inbjudan via e-post och kan därefter själv se sina avräkningar.",
+    "portalAccessNeedsEmail": "En e-postadress krävs för portalåtkomst.",
+    "portalAccessInvite": "Skicka inbjudan",
+    "portalAccessInvited": "Inbjudan skickad.",
+    "portalAccessActive": "Portalåtkomst är skapad."
   },
   "ownerStatements": {
     "title": "Ägaravräkning",
@@ -1149,7 +1166,9 @@
     "subtitle": "Översikt över dina objekt, intäkter och avräkningar.",
     "properties": {
       "title": "Mina objekt",
-      "empty": "Inga objekt är för närvarande tilldelade dig."
+      "empty": "Inga objekt är för närvarande tilldelade dig.",
+      "city": "Ort",
+      "openCalendar": "Kalender"
     },
     "earnings": {
       "title": "Intäkter (denna månad)",
@@ -1175,7 +1194,24 @@
       "to": "Till",
       "submit": "Skicka begäran",
       "sending": "Skickar …",
-      "requested": "Begäran skickad."
+      "requested": "Begäran skickad.",
+      "listTitle": "Mina förfrågningar",
+      "listEmpty": "Du har inte begärt någon spärrning ännu.",
+      "created": "Inskickad den",
+      "range": "Period",
+      "statusLabel": "Status",
+      "readOnlyHint": "Endast förvaltningen kan registrera en spärrning. Du skickar förfrågan; beslutet ligger hos dem.",
+      "invalidRange": "Slutdatumet måste ligga efter startdatumet.",
+      "invalidDate": "Ange ett giltigt datum.",
+      "status": {
+        "pending": "Under granskning",
+        "approved": "Godkänd",
+        "rejected": "Avvisad",
+        "cancelled": "Återkallad"
+      },
+      "reason": "Anledning",
+      "reasonPlaceholder": "Varför ska det spärras? (t.ex. eget bruk, hantverkare)",
+      "decisionNote": "Anteckning från förvaltningen"
     },
     "meter": {
       "title": "Registrera mätarställning",
@@ -1191,6 +1227,142 @@
         "electricity": "El",
         "water": "Vatten",
         "gas": "Gas"
+      },
+      "historyTitle": "Historik",
+      "historyEmpty": "Ingen mätarställning har registrerats för detta objekt ännu.",
+      "appendOnlyHint": "Registrerade avläsningar förblir oförändrade. En korrigering är en ny post — så förblir historiken fullständig.",
+      "invalidValue": "Ange mätarställningen som ett tal.",
+      "invalidDate": "Ange ett giltigt avläsningsdatum."
+    },
+    "logout": "Logga ut",
+    "loadFailed": "Det gick inte att läsa in data.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Översikt",
+      "calendar": "Beläggningskalender",
+      "reports": "Rapporter",
+      "blockRequests": "Spärrningar",
+      "meterReadings": "Mätarställningar",
+      "services": "Tjänster",
+      "notifications": "Aviseringar"
+    },
+    "overview": {
+      "occupancy": "Beläggning",
+      "occupancyHint": "Bokade nätter under vald period.",
+      "nights": "Nätter",
+      "bookings": "Bokningar",
+      "payout": "Nettoutbetalning",
+      "payoutHint": "Din andel efter portalavgifter.",
+      "period": "Period",
+      "periodMonth": "Denna månad",
+      "periodYear": "Detta år",
+      "openCalendar": "Öppna kalender",
+      "latestStatement": "Senaste avräkning",
+      "noStatement": "Ingen avräkning ännu"
+    },
+    "calendar": {
+      "title": "Beläggningskalender",
+      "subtitle": "Beläggning och din nettoutbetalning per natt.",
+      "selectProperty": "Välj objekt",
+      "prevMonth": "Föregående månad",
+      "nextMonth": "Nästa månad",
+      "today": "Idag",
+      "legendSeasons": "Säsonger",
+      "legendStatus": "Beläggning",
+      "noSeasons": "Inga säsonger är definierade för detta objekt.",
+      "status": {
+        "open": "Ledig",
+        "booked": "Bokad",
+        "blocked": "Spärrad"
+      },
+      "payoutPerNight": "Nettoutbetalning/natt",
+      "guest": "Gäst",
+      "channel": "Bokningskälla",
+      "blockHint": "Vill du spärra en period? Skicka en förfrågan — förvaltningen beslutar.",
+      "blockCta": "Begär spärrning",
+      "weekdays": "Mån,Tis,Ons,Tor,Fre,Lör,Sön",
+      "months": "Januari,Februari,Mars,April,Maj,Juni,Juli,Augusti,September,Oktober,November,December"
+    },
+    "services": {
+      "title": "Boka en tjänst",
+      "hint": "Beställ en tjänst för ditt objekt. Förvaltningen tar emot och schemalägger uppdraget.",
+      "property": "Objekt",
+      "kind": "Tjänst",
+      "date": "Önskat datum",
+      "note": "Anteckning",
+      "notePlaceholder": "Vad exakt ska göras?",
+      "submit": "Beställ",
+      "sending": "Skickar …",
+      "sent": "Beställning skickad.",
+      "listTitle": "Mina beställningar",
+      "listEmpty": "Du har inte beställt någon tjänst ännu.",
+      "invalidDate": "Ange ett giltigt önskat datum.",
+      "noteRequired": "Beskriv den önskade tjänsten.",
+      "kinds": {
+        "custom": "Övrigt (fritext)"
+      },
+      "status": {
+        "pending": "Under granskning",
+        "accepted": "Accepterad",
+        "scheduled": "Schemalagd",
+        "done": "Utförd",
+        "rejected": "Avvisad",
+        "cancelled": "Återkallad"
+      },
+      "type": {
+        "endreinigung": "Slutstädning",
+        "hauptreinigung": "Storstädning",
+        "fensterreinigung": "Fönsterputsning",
+        "rasenmaehen": "Gräsklippning",
+        "terrassenreinigung": "Terrasstädning"
+      },
+      "dateTo": "Till"
+    },
+    "notifications": {
+      "title": "Aviseringar",
+      "hint": "Ange hur du vill bli underrättad för varje händelse.",
+      "channel": {
+        "email": "E-post",
+        "sms": "SMS",
+        "phone": "Telefon"
+      },
+      "locked": "Denna e-postadress är avtalsmässigt obligatorisk och förblir aktiv.",
+      "saved": "Sparat.",
+      "saveFailed": "Ändringen kunde inte sparas.",
+      "categories": {
+        "listing_activity": "Bokningar på dina objekt",
+        "listing_activityHint": "Ny bokning, ändring och avbokning.",
+        "account_activity": "Kontoaktivitet",
+        "account_activityHint": "Inloggningar och ändringar av ditt konto.",
+        "reminders": "Påminnelser",
+        "remindersHint": "Förfallna uppgifter och datum.",
+        "messages": "Meddelanden",
+        "messagesHint": "Nya meddelanden från förvaltningen.",
+        "owner_booking": "Bokningar på dina boenden",
+        "owner_bookingHint": "Ny bokning, ändring och avbokning.",
+        "block_decision": "Beslut om dina spärransökningar",
+        "block_decisionHint": "När förvaltningen godkänner eller avslår din ansökan.",
+        "owner_service": "Beställda tjänster",
+        "owner_serviceHint": "Statusändring på en tjänst du har beställt."
+      }
+    },
+    "reports": {
+      "title": "Rapporter",
+      "subtitle": "Avräkningar, innevarande månad samt månads- och årsrapporter.",
+      "currentTitle": "Aktuell avräkningsstatus",
+      "currentHint": "Preliminärt — månaden pågår fortfarande. Endast den slutförda avräkningen är bindande.",
+      "monthly": "Månadsrapport",
+      "yearly": "Årsrapport",
+      "month": "Månad",
+      "year": "År",
+      "download": "Ladda ner PDF",
+      "downloading": "Genererar …",
+      "downloadFailed": "PDF:en kunde inte genereras.",
+      "onlyFinalized": "Endast slutförda avräkningar finns tillgängliga för nedladdning.",
+      "status": {
+        "draft": "Under förberedelse",
+        "finalized": "Avslutad",
+        "cancelled": "Avbruten"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Ett fast belopp kan inte fördelas över enskilda nätter — det går inte till portalerna, där måste det skötas i extranätet.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Använd samma kampanj även för andra objekt.",
+      "applyToOthersSeasonHint": "Skapa samma säsong även för andra objekt.",
       "promoReason": {
         "mindestaufenthalt": "minsta vistelse",
         "fruehbucher": "framförhållning för tidig bokning",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Betalningsplan",
       "cancellationLabel": "Avbokning",
       "depositLabel": "Deposition",
-      "depositWithheldText": "En deposition på {amount} hålls inne.",
       "noPolicyYet": "Inget villkor angivet ännu.",
       "bookabilityCardTitle": "Bokningsbarhet",
       "bookabilityCardHint": "Hur reservationer accepteras.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Hyresavtal",
       "rentalAgreementCardHint": "Skapa hyresavtalet eller länka till det för dina gäster.",
       "noRentalAgreementYet": "Inget hyresavtal ännu.",
-      "addPolicyTitle": "Lägg till villkor",
       "addPolicySubtitle": "Ange detaljerna för detta nya villkor.",
       "internalNameLabel": "Internt namn *",
       "internalNamePlaceholder": "t.ex. Delbetalning – ej återbetalningsbar",
       "paymentPlanGroupTitle": "Betalningsplan",
       "paymentCountLabel": "Antal betalningar",
-      "depositPercentLabel": "Handpenning (%)",
-      "remainingDaysBeforeLabel": "Restbelopp (dagar före ankomst)",
       "guestCancellationGroupTitle": "Avbokning av gäst",
       "cancellationTypeLabel": "Avbokningstyp",
       "depositGroupTitle": "Deposition",
-      "depositModeNone": "Ingen deposition krävs",
-      "depositModeAmount": "Deposition som belopp",
-      "depositAmountLabelWithCurrency": "Depositionsbelopp ({currency})",
-      "depositAmountLabel": "Depositionsbelopp",
       "quoteValidityGroupTitle": "Erbjudandets giltighet",
       "quoteValidityHoursLabel": "Giltighetstid (timmar) *",
       "quoteValidityHint": "Erbjudandet gäller i högst {hours} timmar, så länge statusen är „Väntar på gäst” eller „Väntar på betalning”.",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Rekommenderas",
       "checkInTimeLabel": "Incheckningstid",
       "checkOutTimeLabel": "Utcheckningstid",
-      "paymentSummaryFull": "100 % förfaller vid reservationen.",
-      "paymentSummarySplit": "{percent} % vid bokning, restbelopp {days} dagar före ankomst.",
       "localizedEditorSubtitle": "Skapa texten och översätt den vid behov för dina gäster.",
-      "localizedEditorPlaceholder": "Ange {title} …"
+      "localizedEditorPlaceholder": "Ange {title} …",
+      "editPolicyTitle": "Redigera villkor",
+      "singlePaymentHint": "100 % av betalningen förfaller när bokningen slutförs.",
+      "firstPaymentHeading": "Första betalningen",
+      "secondPaymentHeading": "Andra betalningen",
+      "thirdPaymentHeading": "Tredje betalningen",
+      "amountTypeLabel": "Typ av belopp",
+      "percentLabel": "Procentsats",
+      "amountLabel": "Belopp",
+      "currencyLabel": "Valuta",
+      "daysLabel": "Dagar",
+      "periodLabel": "Period",
+      "firstPaymentHint": "Vid bokningen debiteras endast det fasta beloppet eller procentsatsen för den första betalningen. Övriga betalningar faktureras vid den planerade tidpunkten.",
+      "remainderHint": "Ange när det återstående beloppet ska debiteras.",
+      "partialRulesHint": "Definiera reglerna för delvis återbetalningsbara avbokningar.",
+      "ruleHeading": "Regel {number}",
+      "ruleDelete": "Ta bort regel",
+      "ruleAdd": "Lägg till regel",
+      "refundTypeLabel": "Typ av återbetalning",
+      "refundLabel": "Återbetalning",
+      "whenCancelledLabel": "Vid avbokning",
+      "depositNotRequired": "Ingen deposition krävs",
+      "depositRequired": "Deposition krävs",
+      "depositMethodLabel": "Metod",
+      "preAuthTimesHeading": "Tider för förauktorisering",
+      "preAuthValidityLabel": "Giltighet (dagar efter avresa)",
+      "preAuthWarnTitle": "Förauktoriseringar kan endast garanteras i 5 dagar.",
+      "preAuthWarnBody": "Hur länge en förauktorisering ligger kvar på ett kreditkort beror på olika faktorer, såsom kortleverantören, den utfärdande banken, betalningsgatewayen och så vidare. Därför löper varje förauktorisering ut (avbryts automatiskt) var 5:e dag vid alla bokningar på en vecka eller längre. Vi meddelar dig så att du manuellt kan utfärda en ny förauktorisering och behålla depositionen för resten av bokningen.",
+      "assignAction": "Tilldela villkor"
     },
     "ratePlanWizard": {
       "title": "Skapa prisplan",
@@ -5604,6 +5795,39 @@
       "confirmed": "Bekräftad",
       "in_house": "Incheckad",
       "pending": "Option / preliminär"
+    },
+    "blockRequests": {
+      "title": "Blockeringsförfrågningar",
+      "subtitle": "Förfrågningar från dina ägare om att blockera sina objekt. Ett godkännande blockerar nätterna i kalendern och rapporterar dem till portalerna.",
+      "filter": "Status",
+      "filterAll": "Alla",
+      "empty": "Inga förfrågningar i den här vyn.",
+      "requestedBy": "Begärd av {name}",
+      "reason": "Motivering",
+      "decisionNote": "Anteckning",
+      "note": "Anteckning till ägaren",
+      "notePlaceholder": "Valfritt — den visas för ägaren.",
+      "working": "Utförs …",
+      "status": {
+        "pending": "Öppen",
+        "approved": "Godkänd",
+        "rejected": "Avvisad"
+      },
+      "action": {
+        "approve": "Godkänn",
+        "reject": "Avvisa",
+        "revoke": "Återkalla"
+      },
+      "confirm": {
+        "approve": "Blockera {objekt} från {von} till {bis}? Nätterna blockeras på alla portaler.",
+        "reject": "Avvisa förfrågan för {objekt} ({von} – {bis})?",
+        "revoke": "Återkalla godkännandet för {objekt} ({von} – {bis})? Nätterna frigörs igen."
+      },
+      "done": {
+        "approve": "Förfrågan godkänd, nätter blockerade.",
+        "reject": "Förfrågan avvisad.",
+        "revoke": "Godkännande återkallat, nätter frigjorda."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "januari,februari,mars,april,maj,juni,juli,augusti,september,oktober,november,december",
     "name": "Namn",
     "seasonAdd": "Lägg till säsong",
+    "seasonApplyCancel": "Avbryt",
+    "seasonApplyCopyHint": "Säsongen skapas som en fristående kopia. Senare ändringar av den här säsongen slår INTE igenom där. Påslaget räknas mot målobjektets eget grundpris.",
+    "seasonApplyNone": "Kopierades inte till någon fastighet.",
+    "seasonApplyPartial": "Kopierad till {count} objekt, {skipped} hoppades över.",
+    "seasonApplyPickTarget": "Välj minst ett objekt.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Inget grundpris angivet — ett påslag kan inte beräknas.",
+      "basispreis_null": "Baspriset är 0 — ett tillägg kan inte beräknas.",
+      "teilweise_uebertragen": "Säsongen finns på objektet, dagspriserna saknas fortfarande — försök igen för att slutföra.",
+      "unbekannt": "Överhoppad av okänd anledning."
+    },
+    "seasonApplySubmit": "Kopiera",
+    "seasonApplySuccess": "Kopierad till {count} objekt.",
+    "seasonApplyTitle": "Kopiera ”{name}” till andra objekt",
+    "seasonApplyToOthers": "Kopiera till andra objekt",
+    "seasonApplyWithRanges": "Kopiera även perioderna",
+    "seasonApplyWithRangesHint": "De markerade dagarna sätts likadant på målobjektet. Av: endast säsongen, utan dagar.",
     "seasonClearHint": "Högerklicka och dra över dagarna för att ta bort dem från säsongen.",
     "seasonColor": "Färg",
     "seasonColorAria": "Färg {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Tillägg (± %)",
     "seasonSurchargePlaceholder": "t.ex. 30 eller -15",
     "seasonValueRequired": "Ange ett giltigt värde.",
-    "weekdays": "M,T,O,T,F,L,S"
+    "weekdays": "M,T,O,T,F,L,S",
+    "seasonApplyNoSpans": "Den här säsongen har inga målade perioder. Måla den först eller överför endast definitionen utan perioder."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "QR-kod för autentiseringsappen",
       "sixDigitCode": "6-siffrig kod",
       "disable2fa": "Inaktivera 2FA",
-      "disable2faHint": "Ange en aktuell kod (eller en återställningskod) för att stänga av 2FA."
+      "disable2faHint": "Ange en aktuell kod (eller en återställningskod) för att stänga av 2FA.",
+      "title": "Säkerhet",
+      "loadFailed": "Kontouppgifterna kunde inte läsas in. Kontrollera din anslutning och försök igen.",
+      "credentials": "Inloggningsuppgifter",
+      "emailAndUsername": "E-post och användarnamn",
+      "emailLabel": "E-post",
+      "nameLabel": "Namn",
+      "password": "Lösenord",
+      "noPassword": "Inget lösenord angivet",
+      "passwordMin": "Minst 8 tecken.",
+      "save": "Spara",
+      "saving": "Sparar …",
+      "changePassword": "Ändra lösenord",
+      "twoFactor": {
+        "title": "Tvåfaktorsautentisering (2FA)",
+        "intro": "Skyddar ditt konto med en andra faktor utöver lösenordet.",
+        "noneActive": "Du har ännu inte konfigurerat någon andra faktor. Vi rekommenderar autentiseringsappen.",
+        "requiredNotice": "En andra faktor är obligatorisk för din roll. Konfigurera en nu.",
+        "active": "Aktiv",
+        "setUp": "Konfigurera",
+        "totp": {
+          "title": "Autentiseringsapp",
+          "description": "Engångskod från en app som Google Authenticator eller Microsoft Authenticator. Fungerar även utan mobilnät.",
+          "setupTitle": "Konfigurera autentiseringsapp",
+          "setupHint": "Skanna QR-koden med din app och bekräfta med koden som visas.",
+          "step1": "1. Skanna QR-koden",
+          "step2": "3. Ange koden från appen",
+          "qrAlt": "QR-kod för autentiseringsappen",
+          "qrHint": "Öppna din autentiseringsapp och skanna koden.",
+          "manualTitle": "2. Eller ange nyckeln manuellt",
+          "manualHint": "Använd den här nyckeln om du inte kan skanna QR-koden.",
+          "showSecret": "Visa nyckel",
+          "hideSecret": "Dölj nyckel",
+          "copySecret": "Kopiera nyckel",
+          "copyFailed": "Det går inte att kopiera. Markera nyckeln och kopiera den manuellt.",
+          "codeLabel": "6-siffrig kod",
+          "activate": "Aktivera",
+          "checking": "Kontrollerar …",
+          "preparing": "Förbereder konfigurationen …",
+          "enabledTitle": "Autentiseringsappen är aktiv. Spara nu dina återställningskoder på ett säkert ställe.",
+          "friendlyName": "Autentiseringsapp",
+          "replayNote": "Obs: en kod är giltig i upp till 90 sekunder och kan användas flera gånger under den tiden. Endast en lösenordsnyckel skyddar mot bedrägeri med inloggningssidor i realtid."
+        },
+        "sms": {
+          "title": "SMS-kod",
+          "description": "Engångskod via SMS till ditt bekräftade telefonnummer.",
+          "unavailable": "SMS-kod är inte tillgänglig på den här servern eftersom ingen SMS-leverantör är konfigurerad. Välj autentiseringsappen eller en nyckel i stället.",
+          "unavailableBadge": "Inte tillgänglig",
+          "setupTitle": "Konfigurera SMS-kod",
+          "setupHint": "Vi skickar en kod till ditt telefonnummer.",
+          "simSwapWarning": "Obs: SMS är mindre säkert än en autentiseringsapp. Den som får ditt nummer flyttat till ett annat SIM-kort kan ta emot dina koder. Välj om möjligt autentiseringsappen eller en lösenordsnyckel.",
+          "numberLabel": "Telefonnummer",
+          "numberHint": "Internationellt format med landsnummer, till exempel +49 …",
+          "invalidNumber": "Ange numret i internationellt format, med inledande + och landsnummer.",
+          "sendCode": "Skicka kod",
+          "sending": "Skickar …",
+          "codeLabel": "6-siffrig kod",
+          "codeSentTo": "Vi har skickat en kod till {phone}.",
+          "confirm": "Bekräfta",
+          "checking": "Kontrollerar …",
+          "resend": "Skicka koden igen",
+          "changeNumber": "Använd ett annat nummer",
+          "friendlyName": "SMS-kod"
+        },
+        "passkey": {
+          "title": "Lösenordsnyckel",
+          "description": "Inloggning med fingeravtryck, ansiktsigenkänning eller en säkerhetsnyckel. Ingen kod behövs.",
+          "setupTitle": "Konfigurera lösenordsnyckel",
+          "setupHint": "Din enhet bekräftar att det är du med fingeravtryck, ansiktsigenkänning eller en säkerhetsnyckel.",
+          "checkingSupport": "Kontrollerar enheten …",
+          "unsupportedTitle": "Den här webbläsaren har inte stöd för lösenordsnycklar",
+          "unsupportedHint": "Använd en uppdaterad webbläsare eller konfigurera autentiseringsappen i stället.",
+          "securityKeyOnly": "Den här enheten har ingen inbyggd bekräftelse (som fingeravtryck eller ansiktsigenkänning). Till det behöver du en säkerhetsnyckel att ansluta.",
+          "benefitPhishing": "Skyddar mot falska inloggningssidor.",
+          "benefitNoCode": "Ingen kod att skriva in.",
+          "create": "Skapa lösenordsnyckel",
+          "friendlyName": "Lösenordsnyckel",
+          "recommended": "Rekommenderas: den säkraste av de tre metoderna.",
+          "creating": "Skapar …",
+          "errors": {
+            "abgebrochen": "Bekräftelsen avbröts eller kändes inte igen. Försök igen.",
+            "herkunftPasstNicht": "Passkeys är inte aktiverade för den här adressen. Logga in via den officiella adressen.",
+            "nichtUnterstuetzt": "Den här enheten kan inte skapa en passkey. Använd autentiseringsappen eller en säkerhetsnyckel.",
+            "schonVorhanden": "Det finns redan en passkey för det här kontot på den här enheten.",
+            "laeuftBereits": "En passkey-begäran pågår redan. Slutför eller avbryt den först.",
+            "zeitUeberschritten": "Tiden för bekräftelse har gått ut. Försök igen.",
+            "unbekannt": "Det gick inte att skapa passkeyen. Försök igen."
+          }
+        },
+        "recovery": {
+          "title": "Återställningskoder",
+          "description": "Engångskoder för när du inte kommer åt din andra faktor.",
+          "left": "Det finns {count} koder kvar.",
+          "create": "Skapa koder",
+          "regenerate": "Skapa nya koder",
+          "regenerateHint": "När du skapar nya koder slutar alla tidigare koder att gälla.",
+          "dialogTitle": "Återställningskoder",
+          "dialogHint": "Engångskoder för när du inte kommer åt din andra faktor.",
+          "replaceWarning": "Observera: dina nuvarande återställningskoder blir då ogiltiga.",
+          "passwordLabel": "Nuvarande lösenord",
+          "passwordHint": "För att bekräfta att det verkligen är du.",
+          "createNow": "Skapa koder",
+          "creating": "Skapar …",
+          "createdTitle": "Dina nya återställningskoder. Förvara dem på ett säkert ställe.",
+          "noneReturned": "Inga koder skapades. Försök igen."
+        },
+        "remove": "Ta bort",
+        "removeDialog": {
+          "totpTitle": "Ta bort autentiseringsappen",
+          "smsTitle": "Ta bort SMS-koden",
+          "warning": "Därefter skyddar den här faktorn inte längre ditt konto.",
+          "passwordLabel": "Nuvarande lösenord",
+          "remove": "Ta bort",
+          "removing": "Tar bort …",
+          "cancel": "Avbryt",
+          "hint": "Bekräfta borttagningen med ditt nuvarande lösenord.",
+          "passkeyTitle": "Ta bort lösenordsnyckeln",
+          "lastFactorBlocked": "Det här är din sista andra faktor och din roll kräver en. Skapa först återställningskoder eller konfigurera ytterligare en faktor."
+        },
+        "requiredWithDeadline": "En andra faktor är obligatorisk för din roll. Konfigurera den senast den {date} — därefter går det inte längre att logga in utan en andra faktor.",
+        "statusFailed": "Statusen för tvåfaktorsautentiseringen kunde inte laddas. Ladda om sidan."
+      },
+      "recovery": {
+        "lockoutWarning": "Utan de här koderna förlorar du åtkomsten till ditt konto om du inte längre kan använda din andra faktor. Förvara dem på ett säkert ställe, skilt från ditt lösenord.",
+        "copy": "Kopiera",
+        "copied": "Kopierad",
+        "copyFailed": "Det går inte att kopiera. Ladda ned koderna eller skriv ut dem.",
+        "download": "Ladda ned",
+        "downloadFailed": "Det går inte att ladda ned. Kopiera koderna eller skriv ut dem.",
+        "print": "Skriv ut",
+        "printBlocked": "Utskriftsfönstret blockerades. Tillåt popup-fönster eller ladda ned koderna.",
+        "printTitle": "Återställningskoder myNextDays",
+        "printHint": "Varje kod fungerar exakt en gång. Förvara det här bladet på ett säkert ställe.",
+        "fileHeader": "Återställningskoder myNextDays — varje kod fungerar exakt en gång. Förvaras säkert.",
+        "confirmSaved": "Jag har sparat koderna på ett säkert ställe.",
+        "confirmHint": "Kryssa i rutan för att slutföra konfigurationen.",
+        "mustExportFirst": "Kopiera, ladda ned eller skriv ut koderna först.",
+        "done": "Klar"
+      }
     },
     "company": {
       "saved": "Uppgifter sparade.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Talade språk",
       "searchLanguage": "Sök språk…",
       "chooseRole": "Välj roll…",
-      "userCreated": "Användare skapad",
-      "preferredLanguage": "Föredraget språk",
+      "preferredLanguage": "Språk för e-post",
       "noLanguageFound": "Inget språk hittades.",
       "firstName": "Förnamn",
       "lastName": "Efternamn",
       "email": "E-post",
       "phone": "Telefonnummer",
       "notes": "Anmärkningar",
-      "password": "Lösenord",
-      "credentialsHint": "Vidarebefordra dessa inloggningsuppgifter till den nya användaren. Lösenordet visas bara nu."
+      "title": "Skapa användare",
+      "createdSubtitle": "Inbjudan skickad.",
+      "stepHints": {
+        "contact": "Lägg till kontaktuppgifterna för den här användaren.",
+        "extra": "Lägg till ytterligare information om den här användaren.",
+        "role": "Välj roll och behörigheter för den här användaren.",
+        "properties": "Tilldela objekt till den här användaren."
+      },
+      "done": "Klar",
+      "cancel": "Avbryt",
+      "back": "Tillbaka",
+      "next": "Nästa",
+      "create": "Skapa",
+      "creating": "Skapar…",
+      "role": "Roll",
+      "requiredFields": "Förnamn, efternamn, e-post och roll krävs.",
+      "assignFailed": "Användaren skapades, men tilldelningen av objekt misslyckades: {reason}",
+      "hidePhones": "Dölj telefonnummer på webbplatsen.",
+      "noAssignNeeded": "Ingen objekttilldelning behövs",
+      "noAssignNeededHint": "Den här rollen har åtkomst till alla objekt i kontot. Tilldelning av enskilda objekt gäller endast ägare och personal.",
+      "noProperties": "Inga boenden ännu",
+      "noPropertiesHint": "Skapa dina boenden så att du senare kan tilldela dem till dina användare.",
+      "choosePropertiesHint": "Välj de objekt som den här användaren ska ha åtkomst till.",
+      "selectedCount": "{count} valda",
+      "inviteSent": "Inbjudan skickad",
+      "inviteSentHint": "Användaren får ett e-postmeddelande och väljer själv sitt lösenord. Länken är giltig i 7 dagar.",
+      "inviteResend": "Skicka inbjudan igen",
+      "inviteResending": "Skickar…",
+      "inviteResent": "Inbjudan skickad igen.",
+      "inviteResendFailed": "Inbjudan kunde inte skickas igen.",
+      "preferredLanguageHint": "På det här språket får den nya användaren inbjudan och alla övriga e-postmeddelanden."
     },
     "tariff": {
       "oneLess": "Ett objekt färre",
@@ -6359,7 +6767,14 @@
       "updated": "Användare uppdaterad.",
       "deleted": "Användare borttagen.",
       "generalPermissions": "Allmänna behörigheter",
-      "roleChangeHint": "Ett rollbyte föreslår passande rättigheter. Du kan sedan justera dem enskilt."
+      "roleChangeHint": "Ett rollbyte föreslår passande rättigheter. Du kan sedan justera dem enskilt.",
+      "edit": "Redigera",
+      "delete": "Ta bort",
+      "resendInvite": "Skicka inbjudan igen",
+      "inviteResent": "Inbjudan skickad till {email}.",
+      "inviteResendFailed": "Inbjudan kunde inte skickas igen.",
+      "emailLanguage": "Språk för e-post",
+      "emailLanguageHint": "På det här språket får den här användaren sin e-post."
     },
     "staffProperties": {
       "title": "Dela objekt"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "t.ex. Hotell Sjöutsikt",
     "namePlaceholder": "För- och efternamn",
     "passwordHint": "Minst 8 tecken",
-    "passwordRepeat": "Upprepa lösenordet"
+    "passwordRepeat": "Upprepa lösenordet",
+    "headline": "Hela din uthyrning på ett ställe.",
+    "feature1": "Synkronisera kalendrar automatiskt",
+    "feature2": "Direktbokningar på din egen webbplats",
+    "feature3": "Automatisera meddelanden till gäster",
+    "withGoogle": "Registrera dig med Google",
+    "withApple": "Registrera dig med Apple",
+    "or": "eller",
+    "withEmail": "Registrera dig med e-post",
+    "haveAccount": "Har du redan ett konto?",
+    "loginLink": "Logga in här",
+    "loadingHeadline": "Din egen bokningswebbplats. Behåll 100 % av varje bokning.",
+    "loadingText": "Vi ställer in ditt konto …"
   },
   "marketingSite": {
     "stars": "4,5 stjärnor",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Markera alla som lästa",
     "erneut": "Ladda om",
     "ariaMitAnzahl": "Aviseringar ({count} olästa)"
+  },
+  "auth": {
+    "toLogin": "Till inloggningen",
+    "genericError": "Det gick inte just nu. Försök igen senare.",
+    "tokenMissing": {
+      "title": "Ofullständig länk",
+      "text": "Den här länken är ofullständig. Använd hela länken från e-postmeddelandet — kopiera den och klistra in den i adressfältet."
+    },
+    "tokenInvalid": {
+      "title": "Länken är inte längre giltig",
+      "textInvite": "Den här inbjudningslänken har gått ut eller har redan använts. Kontakta din verksamhet — där kan inbjudan skickas igen.",
+      "textReset": "Den här länken har gått ut eller har redan använts. Begär helt enkelt en ny.",
+      "retry": "Begär en ny länk"
+    },
+    "invite": {
+      "title": "Ställ in din åtkomst",
+      "intro": "Välj ett lösenord för din myNextDays-åtkomst. Minst {min} tecken."
+    },
+    "reset": {
+      "title": "Nytt lösenord",
+      "intro": "Välj ett nytt lösenord. Minst {min} tecken."
+    },
+    "done": {
+      "titleInvite": "Åtkomsten är klar",
+      "titleReset": "Lösenordet har ändrats",
+      "text": "Du kan nu logga in med ditt nya lösenord."
+    },
+    "forgot": {
+      "title": "Glömt lösenord",
+      "intro": "Ange din e-postadress. Vi skickar dig en länk där du kan välja ett nytt lösenord.",
+      "emailLabel": "E-post",
+      "submit": "Begär länk",
+      "sending": "Skickar…",
+      "sentTitle": "E-posten är på väg",
+      "sentText": "Om det finns ett konto för den här adressen har vi skickat en återställningslänk. Den är giltig i en timme.",
+      "spamHint": "Inget som kommit fram? Titta även i skräppostmappen.",
+      "again": "Begär igen"
+    },
+    "password": {
+      "newLabel": "Lösenord",
+      "repeatLabel": "Upprepa lösenord",
+      "submit": "Ange lösenord",
+      "saving": "Sparar…",
+      "mismatch": "De två lösenorden stämmer inte överens.",
+      "tooWeak": "Lösenordet uppfyller inte kraven (minst {min} tecken).",
+      "show": "Visa lösenord",
+      "hide": "Dölj lösenord",
+      "strengthLabel": "Styrka: {level}",
+      "strength": {
+        "1": "svagt",
+        "2": "medel",
+        "3": "bra",
+        "4": "starkt"
+      },
+      "requirement": {
+        "length": "Minst {min} tecken",
+        "letter": "Minst en bokstav",
+        "digit": "Minst en siffra"
+      }
+    },
+    "checking": "Länken kontrolleras…",
+    "languageLabel": "Språk",
+    "languageChange": "Byt språk",
+    "twoFactor": {
+      "title": "Bekräftelse",
+      "totpHint": "Ange den 6-siffriga koden från din autentiseringsapp.",
+      "smsHint": "Ange den 6-siffriga koden som vi har skickat till dig via SMS.",
+      "smsHintWithPhone": "Ange den 6-siffriga koden som vi har skickat till {phone}.",
+      "codeLabel": "Kod",
+      "confirm": "Bekräfta",
+      "checking": "Kontrollerar …",
+      "recoveryHint": "Ange en av dina återställningskoder.",
+      "recoveryLabel": "Återställningskod",
+      "recoverySingleUse": "Varje kod fungerar exakt en gång.",
+      "useTotp": "Använd autentiseringsappen",
+      "useSms": "Använd SMS-kod",
+      "useRecovery": "Använd återställningskod",
+      "backToLogin": "Tillbaka till inloggningen",
+      "factorMissing": "Den här faktorn är inte tillgänglig för ditt konto. Välj en annan metod.",
+      "passkeyHint": "Bekräfta inloggningen med din lösenordsnyckel.",
+      "passkeyUse": "Logga in med lösenordsnyckel",
+      "usePasskey": "Använd lösenordsnyckel",
+      "sendCode": "Skicka kod via SMS",
+      "sending": "Skickar …",
+      "smsSent": "Koden har skickats.",
+      "resend": "Skicka koden igen",
+      "recoveryRedeemedHint": "Koden har lösts in, men den räcker inte på egen hand för att logga in. Logga in med en av de faktorer du har konfigurerat eller kontakta ditt team."
+    },
+    "mfaSetup": {
+      "title": "Konfigurera tvåfaktorsautentisering",
+      "intro": "En andra faktor är obligatorisk för din roll. Konfigurera den nu för att fortsätta.",
+      "why": "Som administratör har du åtkomst till ekonomiska uppgifter, gästuppgifter och inställningarna för hela verksamheten. En andra faktor gör att ett stulet lösenord inte räcker på egen hand.",
+      "goToSettings": "Konfigurera nu",
+      "later": "Påminn mig senare",
+      "laterHint": "Du kan fortfarande skjuta upp konfigurationen. Vi frågar igen vid nästa inloggning.",
+      "introWithDeadline": "En andra faktor är obligatorisk för din roll. Konfigurera den senast den {date} — därefter går det inte längre att logga in utan en andra faktor."
+    }
+  },
+  "sprache": {
+    "label": "Språk för e-post",
+    "hint": "På det här språket skickar vi e-post till den här personen.",
+    "none": "— ej angivet"
+  },
+  "neuerungen": {
+    "eyebrow": "Produktnyheter",
+    "titel": "Nyheter",
+    "unterzeile": "Allt som har ändrats i myNextDays — nyast först.",
+    "neuAnzahl": "{anzahl, plural, one {# ny} other {# nya}}",
+    "ungelesen": "Ny",
+    "veroeffentlichtAm": "Publicerad {datum}",
+    "leer": "Det finns inga nyheter ännu.",
+    "ladefehler": "Kunde inte laddas: {grund}",
+    "mehrLaden": "Ladda äldre",
+    "aufklappen": "Visa detaljer",
+    "zuklappen": "Dölj detaljer",
+    "kategorie": {
+      "neuerung": "Ny funktion",
+      "wartung": "Underhåll",
+      "hinweis": "Information",
+      "wichtig": "Viktigt"
+    },
+    "popup": {
+      "ariaLabel": "Meddelandets innehåll",
+      "gelesen": "Uppfattat",
+      "wirdGespeichert": "Sparar …",
+      "erneut": "Försök igen",
+      "fehler": "Kunde inte bekräftas: {grund}",
+      "weiter": "Nästa",
+      "vonAnzahl": "Meddelande {nummer}"
+    }
+  },
+  "login": {
+    "title": "Logga in",
+    "emailLabel": "E-post",
+    "passwordLabel": "Lösenord",
+    "showPassword": "Visa lösenord",
+    "hidePassword": "Dölj lösenord",
+    "forgot": "Glömt ditt lösenord?",
+    "stayLoggedIn": "Håll mig inloggad",
+    "submit": "Logga in",
+    "submitting": "Loggar in…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Inte myNextDays-kund än?",
+    "signupLink": "Prova gratis",
+    "mfaTitle": "Bekräftelse",
+    "mfaIntro": "Ange den 6-siffriga koden från din autentiseringsapp. En återställningskod fungerar också.",
+    "mfaCodeLabel": "Kod",
+    "mfaSubmit": "Bekräfta",
+    "mfaChecking": "Kontrollerar…",
+    "mfaBack": "Tillbaka till inloggningen"
   }
 }

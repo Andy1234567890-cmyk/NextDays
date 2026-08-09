@@ -283,6 +283,7 @@
       "logout": "Abmelden"
     },
     "stopSell": "Stop-Sell",
+    "blockRequests": "Sperranträge",
     "owners": "Eigentümer",
     "ownerStatements": "Eigentümer-Abrechnung",
     "portal": "Mein Portal",
@@ -315,7 +316,8 @@
     "noAccess": "Kein Zugriff",
     "dashboardLoadFailed": "Dashboard konnte nicht geladen werden",
     "reviews": "Bewertungen",
-    "extensions": "Erweiterungen"
+    "extensions": "Erweiterungen",
+    "announcements": "Neuerungen"
   },
   "exemption": {
     "labelNamed": "Steuerbefreit ({scheme}) — keine USt-ID nötig",
@@ -945,6 +947,7 @@
     "newTitle": "Neuer Eigentümer",
     "create": "Anlegen",
     "created": "Eigentümer angelegt.",
+    "createdInvited": "Eigentümer angelegt und Einladung verschickt.",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "saving": "Speichert …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Keine Objekte} one {# Objekt} other {# Objekte}}",
     "noProperties": "Diesem Eigentümer ist noch kein Objekt zugeordnet.",
     "addProperty": "Objekt zuordnen …",
+    "assignProperties": "Objekte zuordnen",
+    "assignPropertiesHint": "Optional. Zur Auswahl stehen nur Objekte, die noch keinem Eigentümer gehören.",
+    "noFreeProperties": "Alle Objekte sind bereits einem Eigentümer zugeordnet.",
+    "assignSelected": "{count, plural, =0 {Objekte zuordnen} one {# Objekt zuordnen} other {# Objekte zuordnen}}",
+    "propertiesAssigned": "{count, plural, one {# Objekt zugeordnet} other {# Objekte zugeordnet}}",
     "removeProperty": "Zuordnung entfernen",
     "sections": {
       "master": "Stammdaten",
       "payout": "Auszahlung & Provision",
-      "properties": "Objekte"
+      "properties": "Objekte",
+      "portalAccess": "Portalzugang"
     },
     "frequency": {
       "none": "Keine",
@@ -989,12 +998,20 @@
       "statementFrequency": "Abrechnungs-Rhythmus",
       "notes": "Notizen",
       "share": "Anteil (%)",
-      "commissionOverride": "Provision (%) abw."
+      "commissionOverride": "Provision (%) abw.",
+      "emailLanguage": "Sprache für E-Mails"
     },
     "placeholders": {
       "name": "z. B. Max Mustermann",
       "email": "z. B. max@example.com"
-    }
+    },
+    "emailLanguageHint": "In dieser Sprache erhält der Eigentümer Abrechnungen und Benachrichtigungen — auch ohne eigenen Zugang.",
+    "portalAccess": "Portalzugang einrichten",
+    "portalAccessHint": "Der Eigentümer bekommt eine Einladung per E-Mail und kann seine Abrechnungen danach selbst einsehen.",
+    "portalAccessNeedsEmail": "Für den Portalzugang wird eine E-Mail-Adresse gebraucht.",
+    "portalAccessInvite": "Einladung senden",
+    "portalAccessInvited": "Einladung verschickt.",
+    "portalAccessActive": "Portalzugang ist eingerichtet."
   },
   "ownerStatements": {
     "title": "Eigentümer-Abrechnung",
@@ -1149,7 +1166,9 @@
     "subtitle": "Übersicht über deine Objekte, Einnahmen und Abrechnungen.",
     "properties": {
       "title": "Meine Objekte",
-      "empty": "Dir sind aktuell keine Objekte zugeordnet."
+      "empty": "Dir sind aktuell keine Objekte zugeordnet.",
+      "city": "Ort",
+      "openCalendar": "Kalender"
     },
     "earnings": {
       "title": "Einnahmen (dieser Monat)",
@@ -1175,7 +1194,24 @@
       "to": "Bis",
       "submit": "Antrag senden",
       "sending": "Sendet …",
-      "requested": "Antrag gesendet."
+      "requested": "Antrag gesendet.",
+      "listTitle": "Meine Anträge",
+      "listEmpty": "Du hast noch keine Sperrung beantragt.",
+      "created": "Gestellt am",
+      "range": "Zeitraum",
+      "statusLabel": "Status",
+      "readOnlyHint": "Eine Sperrung trägt die Verwaltung ein. Du stellst den Antrag, entscheiden kann ihn nur die Verwaltung.",
+      "invalidRange": "Das Enddatum muss nach dem Startdatum liegen.",
+      "invalidDate": "Bitte ein gültiges Datum angeben.",
+      "status": {
+        "pending": "In Prüfung",
+        "approved": "Genehmigt",
+        "rejected": "Abgelehnt",
+        "cancelled": "Zurückgezogen"
+      },
+      "reason": "Grund",
+      "reasonPlaceholder": "Warum soll gesperrt werden? (z. B. Eigennutzung, Handwerker)",
+      "decisionNote": "Anmerkung der Verwaltung"
     },
     "meter": {
       "title": "Zählerstand erfassen",
@@ -1191,6 +1227,142 @@
         "electricity": "Strom",
         "water": "Wasser",
         "gas": "Gas"
+      },
+      "historyTitle": "Verlauf",
+      "historyEmpty": "Für dieses Objekt ist noch kein Zählerstand erfasst.",
+      "appendOnlyHint": "Erfasste Stände bleiben unverändert stehen. Eine Korrektur ist ein neuer Eintrag — so bleibt der Verlauf lückenlos.",
+      "invalidValue": "Bitte einen Zählerstand als Zahl angeben.",
+      "invalidDate": "Bitte ein gültiges Ablesedatum angeben."
+    },
+    "logout": "Abmelden",
+    "loadFailed": "Daten konnten nicht geladen werden.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Übersicht",
+      "calendar": "Belegungskalender",
+      "reports": "Berichte",
+      "blockRequests": "Sperrungen",
+      "meterReadings": "Zählerstände",
+      "services": "Dienstleistungen",
+      "notifications": "Benachrichtigungen"
+    },
+    "overview": {
+      "occupancy": "Belegung",
+      "occupancyHint": "Belegte Nächte im gewählten Zeitraum.",
+      "nights": "Nächte",
+      "bookings": "Buchungen",
+      "payout": "Netto-Auszahlung",
+      "payoutHint": "Dein Anteil nach Abzug der Portal-Gebühren.",
+      "period": "Zeitraum",
+      "periodMonth": "Dieser Monat",
+      "periodYear": "Dieses Jahr",
+      "openCalendar": "Kalender öffnen",
+      "latestStatement": "Letzte Abrechnung",
+      "noStatement": "Noch keine Abrechnung"
+    },
+    "calendar": {
+      "title": "Belegungskalender",
+      "subtitle": "Belegung und deine Netto-Auszahlung je Nacht.",
+      "selectProperty": "Objekt wählen",
+      "prevMonth": "Voriger Monat",
+      "nextMonth": "Nächster Monat",
+      "today": "Heute",
+      "legendSeasons": "Saisons",
+      "legendStatus": "Belegung",
+      "noSeasons": "Für dieses Objekt sind keine Saisons hinterlegt.",
+      "status": {
+        "open": "Frei",
+        "booked": "Belegt",
+        "blocked": "Gesperrt"
+      },
+      "payoutPerNight": "Netto-Auszahlung/Nacht",
+      "guest": "Gast",
+      "channel": "Buchungsquelle",
+      "blockHint": "Einen Zeitraum sperren lassen? Stelle einen Antrag — die Verwaltung entscheidet.",
+      "blockCta": "Sperrung beantragen",
+      "weekdays": "Mo,Di,Mi,Do,Fr,Sa,So",
+      "months": "Januar,Februar,März,April,Mai,Juni,Juli,August,September,Oktober,November,Dezember"
+    },
+    "services": {
+      "title": "Dienstleistung buchen",
+      "hint": "Beauftrage eine Leistung für dein Objekt. Die Verwaltung nimmt den Auftrag an und terminiert ihn.",
+      "property": "Objekt",
+      "kind": "Leistung",
+      "date": "Wunschtermin",
+      "note": "Anmerkung",
+      "notePlaceholder": "Was genau soll gemacht werden?",
+      "submit": "Beauftragen",
+      "sending": "Sendet …",
+      "sent": "Auftrag gesendet.",
+      "listTitle": "Meine Aufträge",
+      "listEmpty": "Du hast noch keine Dienstleistung beauftragt.",
+      "invalidDate": "Bitte einen gültigen Wunschtermin angeben.",
+      "noteRequired": "Bitte beschreibe die gewünschte Leistung.",
+      "kinds": {
+        "custom": "Sonstiges (Freitext)"
+      },
+      "status": {
+        "pending": "In Prüfung",
+        "accepted": "Angenommen",
+        "scheduled": "Terminiert",
+        "done": "Erledigt",
+        "rejected": "Abgelehnt",
+        "cancelled": "Zurückgezogen"
+      },
+      "type": {
+        "endreinigung": "Endreinigung",
+        "hauptreinigung": "Hauptreinigung",
+        "fensterreinigung": "Fensterreinigung",
+        "rasenmaehen": "Rasenmähen",
+        "terrassenreinigung": "Terrassenreinigung"
+      },
+      "dateTo": "Bis"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "hint": "Lege je Ereignis fest, wie du benachrichtigt wirst.",
+      "channel": {
+        "email": "E-Mail",
+        "sms": "SMS",
+        "phone": "Telefon"
+      },
+      "locked": "Diese E-Mail ist vertraglich nötig und bleibt an.",
+      "saved": "Gespeichert.",
+      "saveFailed": "Änderung konnte nicht gespeichert werden.",
+      "categories": {
+        "listing_activity": "Buchungen an deinen Objekten",
+        "listing_activityHint": "Buchungseingang, Änderung und Storno.",
+        "account_activity": "Kontoaktivität",
+        "account_activityHint": "Anmeldungen und Änderungen an deinem Konto.",
+        "reminders": "Erinnerungen",
+        "remindersHint": "Fällige Aufgaben und Termine.",
+        "messages": "Nachrichten",
+        "messagesHint": "Neue Nachrichten der Verwaltung.",
+        "owner_booking": "Buchungen an deinen Objekten",
+        "owner_bookingHint": "Buchungseingang, Änderung und Storno.",
+        "block_decision": "Entscheidung zu deinen Sperr-Anträgen",
+        "block_decisionHint": "Wenn die Verwaltung deinen Antrag genehmigt oder ablehnt.",
+        "owner_service": "Beauftragte Dienstleistungen",
+        "owner_serviceHint": "Statuswechsel an einem von dir beauftragten Auftrag."
+      }
+    },
+    "reports": {
+      "title": "Berichte",
+      "subtitle": "Abrechnungen, laufender Monat sowie Monats- und Jahresberichte.",
+      "currentTitle": "Aktueller Abrechnungsstand",
+      "currentHint": "Vorläufig — der Monat läuft noch. Verbindlich ist erst die finalisierte Abrechnung.",
+      "monthly": "Monatsbericht",
+      "yearly": "Jahresbericht",
+      "month": "Monat",
+      "year": "Jahr",
+      "download": "PDF herunterladen",
+      "downloading": "Erzeugt …",
+      "downloadFailed": "PDF konnte nicht erzeugt werden.",
+      "onlyFinalized": "Nur finalisierte Abrechnungen stehen zum Download bereit.",
+      "status": {
+        "draft": "In Vorbereitung",
+        "finalized": "Abgeschlossen",
+        "cancelled": "Storniert"
       }
     }
   },
@@ -4897,6 +5069,7 @@
         "inaktiv": "Aktion ist nicht aktiv"
       },
       "applyToOthersPromoHint": "Dieselbe Promotion auch bei anderen Objekten anwenden.",
+      "applyToOthersSeasonHint": "Dieselbe Saison auch bei anderen Objekten anlegen.",
       "promoConditionsTitle": "Bedingungen",
       "promoValueHint": "% des Gesamtwerts der Buchung (exkl. Gebühren, Steuern und Promotions)",
       "promoAssignSubtitle": "Neue oder bestehende Promotion hinzufügen.",
@@ -5643,6 +5816,39 @@
       "in_house": "Eingecheckt",
       "completed": "Ausgecheckt",
       "cancelled": "Storniert"
+    },
+    "blockRequests": {
+      "title": "Sperranträge",
+      "subtitle": "Anträge deiner Eigentümer auf Sperrung ihrer Objekte. Eine Genehmigung sperrt die Nächte im Kalender und meldet sie an die Portale.",
+      "filter": "Status",
+      "filterAll": "Alle",
+      "empty": "Keine Anträge in dieser Ansicht.",
+      "requestedBy": "Beantragt von {name}",
+      "reason": "Begründung",
+      "decisionNote": "Anmerkung",
+      "note": "Anmerkung für den Eigentümer",
+      "notePlaceholder": "Optional — sie wird dem Eigentümer angezeigt.",
+      "working": "Wird ausgeführt …",
+      "status": {
+        "pending": "Offen",
+        "approved": "Genehmigt",
+        "rejected": "Abgelehnt"
+      },
+      "action": {
+        "approve": "Genehmigen",
+        "reject": "Ablehnen",
+        "revoke": "Zurücknehmen"
+      },
+      "confirm": {
+        "approve": "{objekt} vom {von} bis {bis} sperren? Die Nächte werden auf allen Portalen gesperrt.",
+        "reject": "Antrag für {objekt} ({von} – {bis}) ablehnen?",
+        "revoke": "Genehmigung für {objekt} ({von} – {bis}) zurücknehmen? Die Nächte werden wieder freigegeben."
+      },
+      "done": {
+        "approve": "Antrag genehmigt, Nächte gesperrt.",
+        "reject": "Antrag abgelehnt.",
+        "revoke": "Genehmigung zurückgenommen, Nächte freigegeben."
+      }
     }
   },
   "seasons": {
@@ -5650,6 +5856,23 @@
     "months": "Januar,Februar,März,April,Mai,Juni,Juli,August,September,Oktober,November,Dezember",
     "name": "Name",
     "seasonAdd": "Saison hinzufügen",
+    "seasonApplyCancel": "Abbrechen",
+    "seasonApplyCopyHint": "Die Saison wird als eigenständige Kopie angelegt. Spätere Änderungen an dieser Saison wirken dort NICHT mehr. Der Aufschlag rechnet am Zielobjekt gegen dessen eigenen Basispreis.",
+    "seasonApplyNone": "Auf kein Objekt übertragen.",
+    "seasonApplyPartial": "Auf {count} Objekt(e) übertragen, {skipped} übersprungen.",
+    "seasonApplyPickTarget": "Bitte mindestens ein Objekt auswählen.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Kein Basispreis hinterlegt — ein Aufschlag lässt sich nicht berechnen.",
+      "basispreis_null": "Basispreis ist 0 — ein Aufschlag lässt sich nicht berechnen.",
+      "teilweise_uebertragen": "Saison steht am Objekt, die Tagespreise fehlen noch — erneut versuchen vervollständigt sie.",
+      "unbekannt": "Aus einem unbekannten Grund übersprungen."
+    },
+    "seasonApplySubmit": "Übertragen",
+    "seasonApplySuccess": "Auf {count} Objekt(e) übertragen.",
+    "seasonApplyTitle": "„{name}“ auf andere Objekte übertragen",
+    "seasonApplyToOthers": "Auf andere Objekte übertragen",
+    "seasonApplyWithRanges": "Zeiträume mitübertragen",
+    "seasonApplyWithRangesHint": "Die bemalten Tage werden am Zielobjekt genauso gesetzt. Aus: nur die Saison selbst, ohne Tage.",
     "seasonClearHint": "Mit rechter Maustaste über die Tage ziehen, um sie aus der Saison zu lösen.",
     "seasonColor": "Farbe",
     "seasonColorAria": "Farbe {color}",
@@ -5676,7 +5899,8 @@
     "seasonSurchargeLabel": "Aufschlag (± %)",
     "seasonSurchargePlaceholder": "z. B. 30 oder -15",
     "seasonValueRequired": "Bitte einen gültigen Wert angeben.",
-    "weekdays": "M,D,M,D,F,S,S"
+    "weekdays": "M,D,M,D,F,S,S",
+    "seasonApplyNoSpans": "Diese Saison hat keine bemalten Zeiträume. Bemale sie zuerst oder übertrage nur die Definition ohne Zeiträume."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6304,7 +6528,145 @@
       "qrAlt": "QR-Code für die Authenticator-App",
       "sixDigitCode": "6-stelliger Code",
       "disable2fa": "2FA deaktivieren",
-      "disable2faHint": "Gib einen aktuellen Code (oder einen Wiederherstellungscode) ein, um die 2FA abzuschalten."
+      "disable2faHint": "Gib einen aktuellen Code (oder einen Wiederherstellungscode) ein, um die 2FA abzuschalten.",
+      "title": "Sicherheit",
+      "loadFailed": "Konto-Daten konnten nicht geladen werden. Bitte prüfe deine Verbindung und versuche es erneut.",
+      "credentials": "Berechtigungsnachweise",
+      "emailAndUsername": "E-Mail und Benutzername",
+      "emailLabel": "E-Mail",
+      "nameLabel": "Name",
+      "password": "Passwort",
+      "noPassword": "Kein Passwort gesetzt",
+      "passwordMin": "Mindestens 8 Zeichen.",
+      "save": "Speichern",
+      "saving": "Speichern …",
+      "changePassword": "Passwort ändern",
+      "twoFactor": {
+        "title": "Zwei-Faktor-Authentifizierung (2FA)",
+        "intro": "Schützt dein Konto mit einem zweiten Faktor zusätzlich zum Passwort.",
+        "noneActive": "Es ist noch kein zweiter Faktor eingerichtet. Wir empfehlen die Authentifizierungs-App.",
+        "requiredNotice": "Für deine Rolle ist ein zweiter Faktor verpflichtend. Bitte richte jetzt einen ein.",
+        "active": "Aktiv",
+        "setUp": "Einrichten",
+        "totp": {
+          "title": "Authentifizierungs-App",
+          "description": "Einmalcode aus einer App wie Google Authenticator oder Microsoft Authenticator. Funktioniert auch ohne Mobilfunknetz.",
+          "setupTitle": "Authentifizierungs-App einrichten",
+          "setupHint": "Scanne den QR-Code mit deiner App und bestätige mit dem angezeigten Code.",
+          "step1": "1. QR-Code scannen",
+          "step2": "3. Code aus der App eingeben",
+          "qrAlt": "QR-Code für die Authentifizierungs-App",
+          "qrHint": "Öffne deine Authentifizierungs-App und scanne den Code.",
+          "manualTitle": "2. Oder Schlüssel manuell eingeben",
+          "manualHint": "Nutze diesen Schlüssel, wenn du den QR-Code nicht scannen kannst.",
+          "showSecret": "Schlüssel anzeigen",
+          "hideSecret": "Schlüssel verbergen",
+          "copySecret": "Schlüssel kopieren",
+          "copyFailed": "Kopieren nicht möglich. Bitte markiere den Schlüssel und kopiere ihn von Hand.",
+          "codeLabel": "6-stelliger Code",
+          "activate": "Aktivieren",
+          "checking": "Wird geprüft …",
+          "preparing": "Einrichtung wird vorbereitet …",
+          "enabledTitle": "Die Authentifizierungs-App ist aktiv. Sichere jetzt deine Wiederherstellungscodes.",
+          "friendlyName": "Authentifizierungs-App",
+          "replayNote": "Hinweis: Ein Code bleibt bis zu 90 Sekunden gültig und kann in dieser Zeit mehrfach verwendet werden. Gegen Anmeldeseiten-Betrug in Echtzeit schützt nur ein Passkey."
+        },
+        "sms": {
+          "title": "SMS-Code",
+          "description": "Einmalcode per SMS an deine bestätigte Telefonnummer.",
+          "unavailable": "SMS-Code ist auf diesem Server nicht verfügbar, weil kein SMS-Anbieter eingerichtet ist. Bitte wähle die Authentifizierungs-App oder einen Passkey.",
+          "unavailableBadge": "Nicht verfügbar",
+          "setupTitle": "SMS-Code einrichten",
+          "setupHint": "Wir senden dir einen Code an deine Telefonnummer.",
+          "simSwapWarning": "Hinweis: SMS ist weniger sicher als eine Authentifizierungs-App. Wer deine Rufnummer auf eine andere SIM-Karte übertragen lässt, kann deine Codes empfangen. Wenn möglich, wähle die Authentifizierungs-App oder einen Passkey.",
+          "numberLabel": "Telefonnummer",
+          "numberHint": "Internationales Format mit Ländervorwahl, zum Beispiel +49 …",
+          "invalidNumber": "Bitte gib die Nummer im internationalen Format an, beginnend mit + und der Ländervorwahl.",
+          "sendCode": "Code senden",
+          "sending": "Wird gesendet …",
+          "codeLabel": "6-stelliger Code",
+          "codeSentTo": "Wir haben einen Code an {phone} gesendet.",
+          "confirm": "Bestätigen",
+          "checking": "Wird geprüft …",
+          "resend": "Code erneut senden",
+          "changeNumber": "Andere Nummer verwenden",
+          "friendlyName": "SMS-Code"
+        },
+        "passkey": {
+          "title": "Passkey",
+          "description": "Anmeldung per Fingerabdruck, Gesichtserkennung oder Sicherheitsschlüssel. Kein Code nötig.",
+          "setupTitle": "Passkey einrichten",
+          "setupHint": "Dein Gerät bestätigt dich per Fingerabdruck, Gesichtserkennung oder Sicherheitsschlüssel.",
+          "checkingSupport": "Gerät wird geprüft …",
+          "unsupportedTitle": "Dieser Browser unterstützt keine Passkeys",
+          "unsupportedHint": "Nutze einen aktuellen Browser oder richte stattdessen die Authentifizierungs-App ein.",
+          "securityKeyOnly": "Dieses Gerät hat keine eingebaute Bestätigung (etwa Fingerabdruck oder Gesichtserkennung). Du brauchst dafür einen Sicherheitsschlüssel zum Anstecken.",
+          "benefitPhishing": "Schützt vor gefälschten Anmeldeseiten.",
+          "benefitNoCode": "Kein Code zum Abtippen.",
+          "create": "Passkey erstellen",
+          "friendlyName": "Passkey",
+          "recommended": "Empfohlen: der sicherste der drei Wege.",
+          "creating": "Wird erstellt …",
+          "errors": {
+            "abgebrochen": "Die Bestätigung wurde abgebrochen oder nicht erkannt. Versuche es erneut.",
+            "herkunftPasstNicht": "Passkeys sind für diese Adresse nicht freigegeben. Melde dich über die offizielle Adresse an.",
+            "nichtUnterstuetzt": "Dieses Gerät kann keinen Passkey erstellen. Nutze die Authentifizierungs-App oder einen Sicherheitsschlüssel.",
+            "schonVorhanden": "Für dieses Konto gibt es auf diesem Gerät bereits einen Passkey.",
+            "laeuftBereits": "Es läuft bereits eine Passkey-Abfrage. Schließe sie ab oder brich sie ab.",
+            "zeitUeberschritten": "Die Zeit für die Bestätigung ist abgelaufen. Versuche es erneut.",
+            "unbekannt": "Der Passkey konnte nicht erstellt werden. Versuche es erneut."
+          }
+        },
+        "recovery": {
+          "title": "Wiederherstellungscodes",
+          "description": "Einmal verwendbare Codes für den Fall, dass du keinen Zugriff auf deinen zweiten Faktor hast.",
+          "left": "Noch {count} Codes verfügbar.",
+          "create": "Codes erzeugen",
+          "regenerate": "Neue Codes erzeugen",
+          "regenerateHint": "Beim Erzeugen neuer Codes verlieren alle bisherigen ihre Gültigkeit.",
+          "dialogTitle": "Wiederherstellungscodes",
+          "dialogHint": "Einmal verwendbare Codes für den Fall, dass du keinen Zugriff auf deinen zweiten Faktor hast.",
+          "replaceWarning": "Achtung: Deine bisherigen Wiederherstellungscodes werden dabei ungültig.",
+          "passwordLabel": "Aktuelles Passwort",
+          "passwordHint": "Zur Bestätigung, dass du es wirklich bist.",
+          "createNow": "Codes erzeugen",
+          "creating": "Wird erzeugt …",
+          "createdTitle": "Deine neuen Wiederherstellungscodes. Bewahre sie sicher auf.",
+          "noneReturned": "Es wurden keine Codes erzeugt. Bitte versuche es erneut."
+        },
+        "remove": "Entfernen",
+        "removeDialog": {
+          "totpTitle": "Authentifizierungs-App entfernen",
+          "smsTitle": "SMS-Code entfernen",
+          "warning": "Danach schützt dieser Faktor dein Konto nicht mehr.",
+          "passwordLabel": "Aktuelles Passwort",
+          "remove": "Entfernen",
+          "removing": "Wird entfernt …",
+          "cancel": "Abbrechen",
+          "hint": "Bestätige die Entfernung mit deinem aktuellen Passwort.",
+          "passkeyTitle": "Passkey entfernen",
+          "lastFactorBlocked": "Das ist dein letzter zweiter Faktor und für deine Rolle ist einer verpflichtend. Erzeuge zuerst Wiederherstellungscodes oder richte einen weiteren Faktor ein."
+        },
+        "requiredWithDeadline": "Für deine Rolle ist ein zweiter Faktor verpflichtend. Richte ihn bis zum {date} ein — danach ist die Anmeldung ohne zweiten Faktor nicht mehr möglich.",
+        "statusFailed": "Der Status der Zwei-Faktor-Authentifizierung konnte nicht geladen werden. Bitte lade die Seite neu."
+      },
+      "recovery": {
+        "lockoutWarning": "Ohne diese Codes verlierst du den Zugang zu deinem Konto, wenn du deinen zweiten Faktor nicht mehr nutzen kannst. Bewahre sie an einem sicheren Ort auf, getrennt von deinem Passwort.",
+        "copy": "Kopieren",
+        "copied": "Kopiert",
+        "copyFailed": "Kopieren nicht möglich. Bitte lade die Codes herunter oder drucke sie aus.",
+        "download": "Herunterladen",
+        "downloadFailed": "Herunterladen nicht möglich. Bitte kopiere die Codes oder drucke sie aus.",
+        "print": "Drucken",
+        "printBlocked": "Das Druckfenster wurde blockiert. Bitte erlaube Pop-ups oder lade die Codes herunter.",
+        "printTitle": "Wiederherstellungscodes myNextDays",
+        "printHint": "Jeder Code funktioniert genau einmal. Bewahre dieses Blatt sicher auf.",
+        "fileHeader": "Wiederherstellungscodes myNextDays — jeder Code funktioniert genau einmal. Sicher aufbewahren.",
+        "confirmSaved": "Ich habe die Codes sicher gespeichert.",
+        "confirmHint": "Setze das Häkchen, um die Einrichtung abzuschließen.",
+        "mustExportFirst": "Kopiere, lade oder drucke die Codes zuerst.",
+        "done": "Fertig"
+      }
     },
     "company": {
       "saved": "Daten gespeichert.",
@@ -6327,16 +6689,44 @@
       "spokenLanguages": "Gesprochene Sprachen",
       "searchLanguage": "Sprache suchen…",
       "chooseRole": "Rolle wählen…",
-      "userCreated": "Benutzer erstellt",
-      "preferredLanguage": "Bevorzugte Sprache",
+      "preferredLanguage": "Sprache für E-Mails",
       "noLanguageFound": "Keine Sprache gefunden.",
       "firstName": "Vorname",
       "lastName": "Nachname",
       "email": "E-Mail",
       "phone": "Telefonnummer",
       "notes": "Anmerkungen",
-      "password": "Passwort",
-      "credentialsHint": "Geben Sie diese Zugangsdaten an den neuen Benutzer weiter. Das Passwort wird nur jetzt angezeigt."
+      "title": "Benutzer erstellen",
+      "createdSubtitle": "Einladung verschickt.",
+      "stepHints": {
+        "contact": "Fügen Sie die Kontaktinformationen dieses Benutzers hinzu.",
+        "extra": "Fügen Sie zusätzliche Informationen über diesen Benutzer hinzu.",
+        "role": "Wählen Sie die Rolle und die Berechtigungen für diesen Benutzer aus.",
+        "properties": "Weisen Sie diesem Benutzer Objekte zu."
+      },
+      "done": "Fertig",
+      "cancel": "Abbrechen",
+      "back": "Zurück",
+      "next": "Weiter",
+      "create": "Erstellen",
+      "creating": "Wird erstellt…",
+      "role": "Rolle",
+      "requiredFields": "Vorname, Nachname, E-Mail und Rolle sind erforderlich.",
+      "assignFailed": "Nutzer angelegt, aber Objektzuweisung fehlgeschlagen: {reason}",
+      "hidePhones": "Telefonnummern auf der Website ausblenden.",
+      "noAssignNeeded": "Keine Objektzuweisung nötig",
+      "noAssignNeededHint": "Diese Rolle hat Zugriff auf alle Objekte des Kontos. Eine Zuweisung einzelner Objekte gilt nur für Eigentümer und Mitarbeiter.",
+      "noProperties": "Noch keine Unterkünfte",
+      "noPropertiesHint": "Erstellen Sie Ihre Unterkünfte, damit Sie sie später Ihren Benutzern zuweisen können.",
+      "choosePropertiesHint": "Wählen Sie die Objekte, auf die dieser Benutzer Zugriff erhält.",
+      "selectedCount": "{count} ausgewählt",
+      "inviteSent": "Einladung verschickt",
+      "inviteSentHint": "Der Benutzer erhält eine E-Mail und setzt sein Passwort selbst. Der Link ist 7 Tage gültig.",
+      "inviteResend": "Einladung erneut senden",
+      "inviteResending": "Wird gesendet…",
+      "inviteResent": "Einladung erneut verschickt.",
+      "inviteResendFailed": "Die Einladung konnte nicht erneut verschickt werden.",
+      "preferredLanguageHint": "In dieser Sprache erhält der neue Benutzer die Einladung und alle weiteren E-Mails."
     },
     "tariff": {
       "oneLess": "Ein Objekt weniger",
@@ -6398,7 +6788,14 @@
       "updated": "Nutzer aktualisiert.",
       "deleted": "Nutzer gelöscht.",
       "generalPermissions": "Allgemeine Berechtigungen",
-      "roleChangeHint": "Ein Rollenwechsel schlägt passende Rechte vor. Du kannst sie danach einzeln anpassen."
+      "roleChangeHint": "Ein Rollenwechsel schlägt passende Rechte vor. Du kannst sie danach einzeln anpassen.",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "resendInvite": "Einladung erneut senden",
+      "inviteResent": "Einladung an {email} verschickt.",
+      "inviteResendFailed": "Die Einladung konnte nicht erneut verschickt werden.",
+      "emailLanguage": "Sprache für E-Mails",
+      "emailLanguageHint": "In dieser Sprache erhält dieser Benutzer seine E-Mails."
     },
     "staffProperties": {
       "title": "Objekte freigeben"
@@ -6482,7 +6879,19 @@
     "companyPlaceholder": "z. B. Hotel Seeblick",
     "namePlaceholder": "Vor- und Nachname",
     "passwordHint": "Mindestens 8 Zeichen",
-    "passwordRepeat": "Passwort wiederholen"
+    "passwordRepeat": "Passwort wiederholen",
+    "headline": "Deine Vermietung an einem Ort.",
+    "feature1": "Kalender automatisch synchronisieren",
+    "feature2": "Direktbuchungen auf der eigenen Seite",
+    "feature3": "Gästenachrichten automatisieren",
+    "withGoogle": "Mit Google registrieren",
+    "withApple": "Mit Apple registrieren",
+    "or": "oder",
+    "withEmail": "Mit E-Mail registrieren",
+    "haveAccount": "Schon ein Konto?",
+    "loginLink": "Hier anmelden",
+    "loadingHeadline": "Deine eigene Buchungswebsite. Behalte 100 % jeder Buchung.",
+    "loadingText": "Wir richten dein Konto ein …"
   },
   "marketingSite": {
     "stars": "4,5 Sterne",
@@ -7137,5 +7546,156 @@
     "alleGelesen": "Alle gelesen",
     "erneut": "Erneut laden",
     "ariaMitAnzahl": "Benachrichtigungen ({count} ungelesen)"
+  },
+  "auth": {
+    "toLogin": "Zur Anmeldung",
+    "genericError": "Das hat gerade nicht geklappt. Bitte später erneut versuchen.",
+    "tokenMissing": {
+      "title": "Link unvollständig",
+      "text": "Dieser Link ist nicht vollständig. Bitte den kompletten Link aus der E-Mail verwenden — am besten kopieren und in die Adresszeile einfügen."
+    },
+    "tokenInvalid": {
+      "title": "Link nicht mehr gültig",
+      "textInvite": "Dieser Einladungslink ist abgelaufen oder wurde bereits verwendet. Bitte wende dich an deinen Betrieb — dort kann die Einladung erneut verschickt werden.",
+      "textReset": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Fordere einfach einen neuen an.",
+      "retry": "Neuen Link anfordern"
+    },
+    "invite": {
+      "title": "Zugang einrichten",
+      "intro": "Vergib ein Passwort für deinen myNextDays-Zugang. Mindestens {min} Zeichen."
+    },
+    "reset": {
+      "title": "Neues Passwort",
+      "intro": "Vergib ein neues Passwort. Mindestens {min} Zeichen."
+    },
+    "done": {
+      "titleInvite": "Zugang eingerichtet",
+      "titleReset": "Passwort geändert",
+      "text": "Du kannst dich jetzt mit deinem neuen Passwort anmelden."
+    },
+    "forgot": {
+      "title": "Passwort vergessen",
+      "intro": "Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort setzen kannst.",
+      "emailLabel": "E-Mail",
+      "submit": "Link anfordern",
+      "sending": "Wird gesendet…",
+      "sentTitle": "E-Mail unterwegs",
+      "sentText": "Falls zu dieser Adresse ein Konto besteht, haben wir einen Link zum Zurücksetzen verschickt. Er ist eine Stunde gültig.",
+      "spamHint": "Nichts angekommen? Sieh bitte auch im Spam-Ordner nach.",
+      "again": "Erneut anfordern"
+    },
+    "password": {
+      "newLabel": "Passwort",
+      "repeatLabel": "Passwort wiederholen",
+      "submit": "Passwort setzen",
+      "saving": "Wird gespeichert…",
+      "mismatch": "Die beiden Passwörter stimmen nicht überein.",
+      "tooWeak": "Das Passwort erfüllt die Anforderungen nicht (mindestens {min} Zeichen).",
+      "show": "Passwort anzeigen",
+      "hide": "Passwort verbergen",
+      "strengthLabel": "Stärke: {level}",
+      "strength": {
+        "1": "schwach",
+        "2": "mittel",
+        "3": "gut",
+        "4": "stark"
+      },
+      "requirement": {
+        "length": "Mindestens {min} Zeichen",
+        "letter": "Mindestens ein Buchstabe",
+        "digit": "Mindestens eine Ziffer"
+      }
+    },
+    "checking": "Link wird geprüft…",
+    "languageLabel": "Sprache",
+    "languageChange": "Sprache ändern",
+    "twoFactor": {
+      "title": "Bestätigung",
+      "totpHint": "Gib den 6-stelligen Code aus deiner Authentifizierungs-App ein.",
+      "smsHint": "Gib den 6-stelligen Code ein, den wir dir per SMS gesendet haben.",
+      "smsHintWithPhone": "Gib den 6-stelligen Code ein, den wir an {phone} gesendet haben.",
+      "codeLabel": "Code",
+      "confirm": "Bestätigen",
+      "checking": "Wird geprüft …",
+      "recoveryHint": "Gib einen deiner Wiederherstellungscodes ein.",
+      "recoveryLabel": "Wiederherstellungscode",
+      "recoverySingleUse": "Jeder Code funktioniert genau einmal.",
+      "useTotp": "Authentifizierungs-App verwenden",
+      "useSms": "SMS-Code verwenden",
+      "useRecovery": "Wiederherstellungscode verwenden",
+      "backToLogin": "Zurück zur Anmeldung",
+      "factorMissing": "Dieser Faktor ist für dein Konto nicht verfügbar. Wähle einen anderen Weg.",
+      "passkeyHint": "Bestätige die Anmeldung mit deinem Passkey.",
+      "passkeyUse": "Mit Passkey anmelden",
+      "usePasskey": "Passkey verwenden",
+      "sendCode": "Code per SMS senden",
+      "sending": "Wird gesendet …",
+      "smsSent": "Der Code wurde gesendet.",
+      "resend": "Code erneut senden",
+      "recoveryRedeemedHint": "Der Code wurde eingelöst, reicht für die Anmeldung allein aber nicht aus. Bitte melde dich mit einem deiner eingerichteten Faktoren an oder wende dich an dein Team."
+    },
+    "mfaSetup": {
+      "title": "Zwei-Faktor-Authentifizierung einrichten",
+      "intro": "Für deine Rolle ist ein zweiter Faktor verpflichtend. Richte ihn jetzt ein, um fortzufahren.",
+      "why": "Als Administrator hast du Zugriff auf Finanzdaten, Gastdaten und die Einstellungen des gesamten Betriebs. Ein zweiter Faktor verhindert, dass ein gestohlenes Passwort allein ausreicht.",
+      "goToSettings": "Jetzt einrichten",
+      "later": "Später erinnern",
+      "laterHint": "Du kannst die Einrichtung noch aufschieben. Wir fragen bei der nächsten Anmeldung erneut.",
+      "introWithDeadline": "Für deine Rolle ist ein zweiter Faktor verpflichtend. Richte ihn bis zum {date} ein — danach ist die Anmeldung ohne zweiten Faktor nicht mehr möglich."
+    }
+  },
+  "sprache": {
+    "label": "Sprache für E-Mails",
+    "hint": "In dieser Sprache verschicken wir E-Mails an diese Person.",
+    "none": "— keine Angabe"
+  },
+  "neuerungen": {
+    "eyebrow": "Produkt-Updates",
+    "titel": "Neuerungen",
+    "unterzeile": "Alles, was sich bei myNextDays getan hat — neueste zuerst.",
+    "neuAnzahl": "{anzahl, plural, one {# neu} other {# neu}}",
+    "ungelesen": "Neu",
+    "veroeffentlichtAm": "Veröffentlicht am {datum}",
+    "leer": "Es gibt noch keine Neuerungen.",
+    "ladefehler": "Konnte nicht geladen werden: {grund}",
+    "mehrLaden": "Ältere laden",
+    "aufklappen": "Details anzeigen",
+    "zuklappen": "Details ausblenden",
+    "kategorie": {
+      "neuerung": "Neuerung",
+      "wartung": "Wartung",
+      "hinweis": "Hinweis",
+      "wichtig": "Wichtig"
+    },
+    "popup": {
+      "ariaLabel": "Inhalt der Ankündigung",
+      "gelesen": "Verstanden",
+      "wirdGespeichert": "Wird gespeichert …",
+      "erneut": "Erneut versuchen",
+      "fehler": "Konnte nicht bestätigt werden: {grund}",
+      "weiter": "Weiter",
+      "vonAnzahl": "Ankündigung {nummer}"
+    }
+  },
+  "login": {
+    "title": "Anmelden",
+    "emailLabel": "E-Mail",
+    "passwordLabel": "Passwort",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort verbergen",
+    "forgot": "Passwort vergessen?",
+    "stayLoggedIn": "Eingeloggt bleiben",
+    "submit": "Anmelden",
+    "submitting": "Anmelden…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Noch kein myNextDays-Kunde?",
+    "signupLink": "Jetzt kostenlos testen",
+    "mfaTitle": "Bestätigung",
+    "mfaIntro": "Gib den 6-stelligen Code aus deiner Authenticator-App ein. Alternativ funktioniert ein Wiederherstellungscode.",
+    "mfaCodeLabel": "Code",
+    "mfaSubmit": "Bestätigen",
+    "mfaChecking": "Prüfe…",
+    "mfaBack": "Zurück zur Anmeldung"
   }
 }

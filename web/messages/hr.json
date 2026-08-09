@@ -283,6 +283,7 @@
       "logout": "Odjava"
     },
     "stopSell": "Zaustavljanje prodaje",
+    "blockRequests": "Zahtjevi za blokiranje",
     "owners": "Vlasnici",
     "ownerStatements": "Obračuni vlasnika",
     "portal": "Moj portal",
@@ -315,7 +316,8 @@
     "noAccess": "Nema pristupa",
     "dashboardLoadFailed": "Nadzornu ploču nije bilo moguće učitati",
     "reviews": "Ocjene",
-    "extensions": "Proširenja"
+    "extensions": "Proširenja",
+    "announcements": "Novosti"
   },
   "exemption": {
     "labelNamed": "Oslobođeno poreza ({scheme}) — PDV broj nije potreban",
@@ -945,6 +947,7 @@
     "newTitle": "Novi vlasnik",
     "create": "Izradi",
     "created": "Vlasnik izrađen.",
+    "createdInvited": "Vlasnik je stvoren i pozivnica je poslana.",
     "cancel": "Odustani",
     "save": "Spremi",
     "saving": "Spremanje …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Nema objekata} one {# objekt} few {# objekta} other {# objekata}}",
     "noProperties": "Ovom vlasniku još nije dodijeljen nijedan objekt.",
     "addProperty": "Dodijeli objekt …",
+    "assignProperties": "Dodijeli objekte",
+    "assignPropertiesHint": "Neobavezno. Mogu se odabrati samo objekti koji još nemaju vlasnika.",
+    "noFreeProperties": "Svi objekti već su dodijeljeni vlasniku.",
+    "assignSelected": "{count, plural, =0 {Dodijeli objekte} one {Dodijeli # objekt} few {Dodijeli # objekta} other {Dodijeli # objekata}}",
+    "propertiesAssigned": "{count, plural, one {Dodijeljen # objekt} few {Dodijeljena # objekta} other {Dodijeljeno # objekata}}",
     "removeProperty": "Ukloni dodjelu",
     "sections": {
       "master": "Matični podaci",
       "payout": "Isplata i provizija",
-      "properties": "Objekti"
+      "properties": "Objekti",
+      "portalAccess": "Pristup portalu"
     },
     "frequency": {
       "none": "Nijedna",
@@ -989,12 +998,20 @@
       "statementFrequency": "Ritam obračuna",
       "notes": "Bilješke",
       "share": "Udio (%)",
-      "commissionOverride": "Provizija (%) odstupanje"
+      "commissionOverride": "Provizija (%) odstupanje",
+      "emailLanguage": "Jezik e-pošte"
     },
     "placeholders": {
       "name": "npr. Ivan Horvat",
       "email": "npr. ivan@example.com"
-    }
+    },
+    "emailLanguageHint": "Na tom jeziku vlasnik prima obračune i obavijesti — i bez vlastitog pristupa.",
+    "portalAccess": "Postavi pristup portalu",
+    "portalAccessHint": "Vlasnik prima pozivnicu e-poštom i nakon toga može sam pregledavati svoje obračune.",
+    "portalAccessNeedsEmail": "Za pristup portalu potrebna je adresa e-pošte.",
+    "portalAccessInvite": "Pošalji pozivnicu",
+    "portalAccessInvited": "Pozivnica poslana.",
+    "portalAccessActive": "Pristup portalu je postavljen."
   },
   "ownerStatements": {
     "title": "Obračun vlasnika",
@@ -1149,7 +1166,9 @@
     "subtitle": "Pregled tvojih objekata, prihoda i obračuna.",
     "properties": {
       "title": "Moji objekti",
-      "empty": "Trenutno ti nije dodijeljen nijedan objekt."
+      "empty": "Trenutno ti nije dodijeljen nijedan objekt.",
+      "city": "Mjesto",
+      "openCalendar": "Kalendar"
     },
     "earnings": {
       "title": "Prihod (ovaj mjesec)",
@@ -1175,7 +1194,24 @@
       "to": "Do",
       "submit": "Pošalji zahtjev",
       "sending": "Šalje se …",
-      "requested": "Zahtjev poslan."
+      "requested": "Zahtjev poslan.",
+      "listTitle": "Moji zahtjevi",
+      "listEmpty": "Još nisi podnio/podnijela zahtjev za blokadu.",
+      "created": "Podneseno",
+      "range": "Razdoblje",
+      "statusLabel": "Status",
+      "readOnlyHint": "Blokadu unosi samo uprava. Ti podnosiš zahtjev, odluku donosi uprava.",
+      "invalidRange": "Datum završetka mora biti nakon datuma početka.",
+      "invalidDate": "Unesi važeći datum.",
+      "status": {
+        "pending": "U provjeri",
+        "approved": "Odobreno",
+        "rejected": "Odbijeno",
+        "cancelled": "Povučeno"
+      },
+      "reason": "Razlog",
+      "reasonPlaceholder": "Zašto bi trebalo biti blokirano? (npr. vlastito korištenje, majstori)",
+      "decisionNote": "Napomena uprave"
     },
     "meter": {
       "title": "Unesi stanje brojila",
@@ -1191,6 +1227,142 @@
         "electricity": "Struja",
         "water": "Voda",
         "gas": "Plin"
+      },
+      "historyTitle": "Povijest",
+      "historyEmpty": "Za ovaj objekt još nije zabilježeno očitanje brojila.",
+      "appendOnlyHint": "Zabilježena očitanja ostaju nepromijenjena. Ispravak je novi unos — tako povijest ostaje potpuna.",
+      "invalidValue": "Unesi očitanje brojila kao broj.",
+      "invalidDate": "Unesi važeći datum očitanja."
+    },
+    "logout": "Odjava",
+    "loadFailed": "Podatke nije bilo moguće učitati.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Pregled",
+      "calendar": "Kalendar popunjenosti",
+      "reports": "Izvještaji",
+      "blockRequests": "Blokade",
+      "meterReadings": "Očitanja brojila",
+      "services": "Usluge",
+      "notifications": "Obavijesti"
+    },
+    "overview": {
+      "occupancy": "Popunjenost",
+      "occupancyHint": "Rezervirane noćenja u odabranom razdoblju.",
+      "nights": "Noćenja",
+      "bookings": "Rezervacije",
+      "payout": "Neto isplata",
+      "payoutHint": "Tvoj udio nakon naknada portala.",
+      "period": "Razdoblje",
+      "periodMonth": "Ovaj mjesec",
+      "periodYear": "Ova godina",
+      "openCalendar": "Otvori kalendar",
+      "latestStatement": "Zadnji obračun",
+      "noStatement": "Još nema obračuna"
+    },
+    "calendar": {
+      "title": "Kalendar popunjenosti",
+      "subtitle": "Popunjenost i tvoja neto isplata po noćenju.",
+      "selectProperty": "Odaberi objekt",
+      "prevMonth": "Prethodni mjesec",
+      "nextMonth": "Sljedeći mjesec",
+      "today": "Danas",
+      "legendSeasons": "Sezone",
+      "legendStatus": "Popunjenost",
+      "noSeasons": "Za ovaj objekt nisu definirane sezone.",
+      "status": {
+        "open": "Slobodno",
+        "booked": "Rezervirano",
+        "blocked": "Blokirano"
+      },
+      "payoutPerNight": "Neto isplata/noćenje",
+      "guest": "Gost",
+      "channel": "Izvor rezervacije",
+      "blockHint": "Želiš blokirati razdoblje? Podnesi zahtjev — odlučuje uprava.",
+      "blockCta": "Zatraži blokadu",
+      "weekdays": "Pon,Uto,Sri,Čet,Pet,Sub,Ned",
+      "months": "Siječanj,Veljača,Ožujak,Travanj,Svibanj,Lipanj,Srpanj,Kolovoz,Rujan,Listopad,Studeni,Prosinac"
+    },
+    "services": {
+      "title": "Naruči uslugu",
+      "hint": "Naruči uslugu za svoj objekt. Uprava prihvaća nalog i određuje termin.",
+      "property": "Objekt",
+      "kind": "Usluga",
+      "date": "Željeni termin",
+      "note": "Napomena",
+      "notePlaceholder": "Što točno treba obaviti?",
+      "submit": "Naruči",
+      "sending": "Šalje se …",
+      "sent": "Nalog poslan.",
+      "listTitle": "Moji nalozi",
+      "listEmpty": "Još nisi naručio/naručila uslugu.",
+      "invalidDate": "Unesi važeći željeni termin.",
+      "noteRequired": "Opiši željenu uslugu.",
+      "kinds": {
+        "custom": "Ostalo (slobodan tekst)"
+      },
+      "status": {
+        "pending": "U provjeri",
+        "accepted": "Prihvaćeno",
+        "scheduled": "Zakazano",
+        "done": "Obavljeno",
+        "rejected": "Odbijeno",
+        "cancelled": "Povučeno"
+      },
+      "type": {
+        "endreinigung": "Završno čišćenje",
+        "hauptreinigung": "Generalno čišćenje",
+        "fensterreinigung": "Pranje prozora",
+        "rasenmaehen": "Košnja trave",
+        "terrassenreinigung": "Čišćenje terase"
+      },
+      "dateTo": "Do"
+    },
+    "notifications": {
+      "title": "Obavijesti",
+      "hint": "Odredi za svaki događaj kako želiš biti obaviješten/obaviještena.",
+      "channel": {
+        "email": "E-pošta",
+        "sms": "SMS",
+        "phone": "Telefon"
+      },
+      "locked": "Ova e-pošta je ugovorno obvezna i ostaje uključena.",
+      "saved": "Spremljeno.",
+      "saveFailed": "Promjenu nije bilo moguće spremiti.",
+      "categories": {
+        "listing_activity": "Rezervacije na tvojim objektima",
+        "listing_activityHint": "Nova rezervacija, izmjena i otkazivanje.",
+        "account_activity": "Aktivnost računa",
+        "account_activityHint": "Prijave i izmjene na tvom računu.",
+        "reminders": "Podsjetnici",
+        "remindersHint": "Zadaci i termini koji dospijevaju.",
+        "messages": "Poruke",
+        "messagesHint": "Nove poruke od uprave.",
+        "owner_booking": "Rezervacije u tvojim objektima",
+        "owner_bookingHint": "Nova rezervacija, promjena i otkazivanje.",
+        "block_decision": "Odluka o tvojim zahtjevima za blokadu",
+        "block_decisionHint": "Kada uprava odobri ili odbije tvoj zahtjev.",
+        "owner_service": "Naručene usluge",
+        "owner_serviceHint": "Promjena statusa usluge koju si naručio."
+      }
+    },
+    "reports": {
+      "title": "Izvještaji",
+      "subtitle": "Obračuni, tekući mjesec te mjesečni i godišnji izvještaji.",
+      "currentTitle": "Trenutno stanje obračuna",
+      "currentHint": "Privremeno — mjesec je još u tijeku. Obvezujući je samo finaliziran obračun.",
+      "monthly": "Mjesečni izvještaj",
+      "yearly": "Godišnji izvještaj",
+      "month": "Mjesec",
+      "year": "Godina",
+      "download": "Preuzmi PDF",
+      "downloading": "Izrađuje se …",
+      "downloadFailed": "PDF nije bilo moguće izraditi.",
+      "onlyFinalized": "Za preuzimanje su dostupni samo finalizirani obračuni.",
+      "status": {
+        "draft": "U pripremi",
+        "finalized": "Završeno",
+        "cancelled": "Otkazano"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Fiksni iznos ne može se raspodijeliti na pojedina noćenja — ne ide na portale, tamo ga treba održavati u ekstranetu.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Primijeni istu akciju i na druge objekte.",
+      "applyToOthersSeasonHint": "Stvori istu sezonu i na drugim objektima.",
       "promoReason": {
         "mindestaufenthalt": "najmanji broj noćenja",
         "fruehbucher": "rok rane rezervacije",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Plan plaćanja",
       "cancellationLabel": "Otkazivanje",
       "depositLabel": "Kaucija",
-      "depositWithheldText": "Zadržava se kaucija u iznosu od {amount}.",
       "noPolicyYet": "Još nije dodijeljeno pravilo.",
       "bookabilityCardTitle": "Mogućnost rezervacije",
       "bookabilityCardHint": "Kako se rezervacije prihvaćaju.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Ugovor o najmu",
       "rentalAgreementCardHint": "Izradi ugovor o najmu ili ga poveži za svoje goste.",
       "noRentalAgreementYet": "Još nema ugovora o najmu.",
-      "addPolicyTitle": "Dodaj pravilo",
       "addPolicySubtitle": "Odredi detalje za ovo novo pravilo.",
       "internalNameLabel": "Interni naziv *",
       "internalNamePlaceholder": "npr. djelomično plaćanje – nije povratno",
       "paymentPlanGroupTitle": "Plan plaćanja",
       "paymentCountLabel": "Broj plaćanja",
-      "depositPercentLabel": "Predujam (%)",
-      "remainingDaysBeforeLabel": "Preostali iznos (dani prije dolaska)",
       "guestCancellationGroupTitle": "Otkazivanje od strane gosta",
       "cancellationTypeLabel": "Vrsta otkazivanja",
       "depositGroupTitle": "Kaucija",
-      "depositModeNone": "Kaucija nije potrebna",
-      "depositModeAmount": "Kaucija kao iznos",
-      "depositAmountLabelWithCurrency": "Iznos kaucije ({currency})",
-      "depositAmountLabel": "Iznos kaucije",
       "quoteValidityGroupTitle": "Valjanost ponude",
       "quoteValidityHoursLabel": "Trajanje valjanosti (sati) *",
       "quoteValidityHint": "Ponuda vrijedi najviše {hours} sati, dok je status „Čeka gosta” ili „Čeka plaćanje”.",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Preporučeno",
       "checkInTimeLabel": "Vrijeme check-ina",
       "checkOutTimeLabel": "Vrijeme check-outa",
-      "paymentSummaryFull": "100 % dospijeva pri rezervaciji.",
-      "paymentSummarySplit": "{percent} % pri rezervaciji, preostali iznos {days} dana prije dolaska.",
       "localizedEditorSubtitle": "Izradi tekst i po potrebi ga prevedi za svoje goste.",
-      "localizedEditorPlaceholder": "Unesi {title} …"
+      "localizedEditorPlaceholder": "Unesi {title} …",
+      "editPolicyTitle": "Uredi uvjete",
+      "singlePaymentHint": "100 % plaćanja dospijeva pri dovršetku rezervacije.",
+      "firstPaymentHeading": "Prvo plaćanje",
+      "secondPaymentHeading": "Drugo plaćanje",
+      "thirdPaymentHeading": "Treće plaćanje",
+      "amountTypeLabel": "Vrsta iznosa",
+      "percentLabel": "Postotak",
+      "amountLabel": "Iznos",
+      "currencyLabel": "Valuta",
+      "daysLabel": "Dani",
+      "periodLabel": "Razdoblje",
+      "firstPaymentHint": "Pri rezervaciji naplaćuje se samo fiksni iznos ili postotak prvog plaćanja. Preostala plaćanja fakturiraju se na planirani datum.",
+      "remainderHint": "Odredite kada će se naplatiti preostali iznos.",
+      "partialRulesHint": "Definirajte pravila za djelomično povratne otkaze.",
+      "ruleHeading": "Pravilo {number}",
+      "ruleDelete": "Izbriši pravilo",
+      "ruleAdd": "Dodaj pravilo",
+      "refundTypeLabel": "Vrsta povrata",
+      "refundLabel": "Povrat",
+      "whenCancelledLabel": "U slučaju otkaza",
+      "depositNotRequired": "Polog nije potreban",
+      "depositRequired": "Polog je potreban",
+      "depositMethodLabel": "Metoda",
+      "preAuthTimesHeading": "Vremena predautorizacije",
+      "preAuthValidityLabel": "Valjanost (dana nakon odjave)",
+      "preAuthWarnTitle": "Predautorizacije se mogu jamčiti samo 5 dana.",
+      "preAuthWarnBody": "Trajanje predautorizacije na kreditnoj kartici ovisi o različitim čimbenicima, kao što su izdavatelj kartice, banka izdavateljica, platni pristupnik i slično. Zato kod svih rezervacija od tjedan dana ili duže svaka predautorizacija istječe (automatski se poništava) svakih 5 dana. Obavijestit ćemo vas kako biste ručno mogli izdati novu predautorizaciju i zadržati polog za preostali dio rezervacije.",
+      "assignAction": "Dodijeli uvjete"
     },
     "ratePlanWizard": {
       "title": "Izradi cjenik",
@@ -5604,6 +5795,39 @@
       "confirmed": "Potvrđeno",
       "in_house": "Prijavljen",
       "pending": "Opcija / privremeno"
+    },
+    "blockRequests": {
+      "title": "Zahtjevi za blokiranje",
+      "subtitle": "Zahtjevi tvojih vlasnika za blokiranje njihovih objekata. Odobrenje blokira noćenja u kalendaru i prijavljuje ih portalima.",
+      "filter": "Status",
+      "filterAll": "Svi",
+      "empty": "Nema zahtjeva u ovom prikazu.",
+      "requestedBy": "Zatražio/la {name}",
+      "reason": "Obrazloženje",
+      "decisionNote": "Napomena",
+      "note": "Napomena za vlasnika",
+      "notePlaceholder": "Neobavezno — prikazuje se vlasniku.",
+      "working": "Izvršava se …",
+      "status": {
+        "pending": "Otvoren",
+        "approved": "Odobren",
+        "rejected": "Odbijen"
+      },
+      "action": {
+        "approve": "Odobri",
+        "reject": "Odbij",
+        "revoke": "Opozovi"
+      },
+      "confirm": {
+        "approve": "Blokirati {objekt} od {von} do {bis}? Noćenja će biti blokirana na svim portalima.",
+        "reject": "Odbiti zahtjev za {objekt} ({von} – {bis})?",
+        "revoke": "Opozvati odobrenje za {objekt} ({von} – {bis})? Noćenja će ponovno biti oslobođena."
+      },
+      "done": {
+        "approve": "Zahtjev odobren, noćenja blokirana.",
+        "reject": "Zahtjev odbijen.",
+        "revoke": "Odobrenje opozvano, noćenja oslobođena."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "Siječanj,Veljača,Ožujak,Travanj,Svibanj,Lipanj,Srpanj,Kolovoz,Rujan,Listopad,Studeni,Prosinac",
     "name": "Naziv",
     "seasonAdd": "Dodaj sezonu",
+    "seasonApplyCancel": "Odustani",
+    "seasonApplyCopyHint": "Sezona se stvara kao samostalna kopija. Kasnije izmjene ove sezone tamo se VIŠE ne primjenjuju. Doplata se računa prema vlastitoj osnovnoj cijeni ciljnog objekta.",
+    "seasonApplyNone": "Nije kopirano ni na jedan objekt.",
+    "seasonApplyPartial": "Kopirano na {count} objekata, {skipped} preskočeno.",
+    "seasonApplyPickTarget": "Odaberite barem jedan objekt.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Osnovna cijena nije postavljena — doplata se ne može izračunati.",
+      "basispreis_null": "Osnovna cijena je 0 — doplata se ne može izračunati.",
+      "teilweise_uebertragen": "Sezona je na objektu, dnevne cijene još nedostaju — pokušajte ponovno za dovršetak.",
+      "unbekannt": "Preskočeno iz nepoznatog razloga."
+    },
+    "seasonApplySubmit": "Kopiraj",
+    "seasonApplySuccess": "Kopirano na {count} objekata.",
+    "seasonApplyTitle": "Kopiraj „{name}“ na druge objekte",
+    "seasonApplyToOthers": "Kopiraj na druge objekte",
+    "seasonApplyWithRanges": "Kopiraj i razdoblja",
+    "seasonApplyWithRangesHint": "Označeni dani postavljaju se jednako na ciljnom objektu. Isključeno: samo sezona, bez dana.",
     "seasonClearHint": "Desnom tipkom miša povucite preko dana da ih uklonite iz sezone.",
     "seasonColor": "Boja",
     "seasonColorAria": "Boja {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Doplata (± %)",
     "seasonSurchargePlaceholder": "npr. 30 ili -15",
     "seasonValueRequired": "Molimo unesite valjanu vrijednost.",
-    "weekdays": "P,U,S,Č,P,S,N"
+    "weekdays": "P,U,S,Č,P,S,N",
+    "seasonApplyNoSpans": "Ova sezona nema obojana razdoblja. Prvo je obojajte ili prenesite samo definiciju bez razdoblja."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "QR kod za aplikaciju za autentifikaciju",
       "sixDigitCode": "Šesteroznamenkasti kod",
       "disable2fa": "Isključi 2FA",
-      "disable2faHint": "Unesite trenutni kod (ili kod za oporavak) da biste isključili 2FA."
+      "disable2faHint": "Unesite trenutni kod (ili kod za oporavak) da biste isključili 2FA.",
+      "title": "Sigurnost",
+      "loadFailed": "Podatke računa nije bilo moguće učitati. Provjerite vezu i pokušajte ponovno.",
+      "credentials": "Podaci za prijavu",
+      "emailAndUsername": "E-pošta i korisničko ime",
+      "emailLabel": "E-pošta",
+      "nameLabel": "Ime",
+      "password": "Lozinka",
+      "noPassword": "Lozinka nije postavljena",
+      "passwordMin": "Najmanje 8 znakova.",
+      "save": "Spremi",
+      "saving": "Spremanje …",
+      "changePassword": "Promijeni lozinku",
+      "twoFactor": {
+        "title": "Dvofaktorska autentifikacija (2FA)",
+        "intro": "Štiti vaš račun drugim faktorom uz lozinku.",
+        "noneActive": "Drugi faktor još nije postavljen. Preporučujemo aplikaciju za autentifikaciju.",
+        "requiredNotice": "Za vašu je ulogu drugi faktor obvezan. Postavite ga sada.",
+        "active": "Aktivno",
+        "setUp": "Postavi",
+        "totp": {
+          "title": "Aplikacija za autentifikaciju",
+          "description": "Jednokratni kôd iz aplikacije poput Google Authenticatora ili Microsoft Authenticatora. Radi i bez mobilne mreže.",
+          "setupTitle": "Postavljanje aplikacije za autentifikaciju",
+          "setupHint": "Skenirajte QR kôd svojom aplikacijom i potvrdite prikazanim kodom.",
+          "step1": "1. Skenirajte QR kôd",
+          "step2": "3. Unesite kôd iz aplikacije",
+          "qrAlt": "QR kôd za aplikaciju za autentifikaciju",
+          "qrHint": "Otvorite svoju aplikaciju za autentifikaciju i skenirajte kôd.",
+          "manualTitle": "2. Ili ručno unesite ključ",
+          "manualHint": "Upotrijebite ovaj ključ ako ne možete skenirati QR kôd.",
+          "showSecret": "Prikaži ključ",
+          "hideSecret": "Sakrij ključ",
+          "copySecret": "Kopiraj ključ",
+          "copyFailed": "Kopiranje nije uspjelo. Označite ključ i kopirajte ga ručno.",
+          "codeLabel": "6-znamenkasti kôd",
+          "activate": "Aktiviraj",
+          "checking": "Provjera …",
+          "preparing": "Priprema postavljanja …",
+          "enabledTitle": "Aplikacija za autentifikaciju je aktivna. Sada pohranite svoje kodove za oporavak.",
+          "friendlyName": "Aplikacija za autentifikaciju",
+          "replayNote": "Napomena: kôd ostaje valjan do 90 sekundi i u tom se razdoblju može upotrijebiti više puta. Od prijevare lažnom stranicom za prijavu u stvarnom vremenu štiti jedino pristupni ključ."
+        },
+        "sms": {
+          "title": "Kôd SMS-om",
+          "description": "Jednokratni kôd SMS-om na vaš potvrđeni broj telefona.",
+          "unavailable": "SMS kod nije dostupan na ovom poslužitelju jer nije postavljen SMS pružatelj usluge. Odaberite aplikaciju za autentifikaciju ili pristupni ključ.",
+          "unavailableBadge": "Nije dostupno",
+          "setupTitle": "Postavljanje koda SMS-om",
+          "setupHint": "Poslat ćemo vam kôd na vaš broj telefona.",
+          "simSwapWarning": "Napomena: SMS je manje siguran od aplikacije za autentifikaciju. Tko vaš broj prenese na drugu SIM karticu, može primati vaše kodove. Ako je moguće, odaberite aplikaciju za autentifikaciju ili pristupni ključ.",
+          "numberLabel": "Broj telefona",
+          "numberHint": "Međunarodni format s pozivnim brojem države, na primjer +385 …",
+          "invalidNumber": "Unesite broj u međunarodnom formatu, počevši sa + i pozivnim brojem države.",
+          "sendCode": "Pošalji kôd",
+          "sending": "Slanje …",
+          "codeLabel": "6-znamenkasti kôd",
+          "codeSentTo": "Poslali smo kôd na broj {phone}.",
+          "confirm": "Potvrdi",
+          "checking": "Provjera …",
+          "resend": "Ponovno pošalji kôd",
+          "changeNumber": "Upotrijebi drugi broj",
+          "friendlyName": "Kôd SMS-om"
+        },
+        "passkey": {
+          "title": "Pristupni ključ",
+          "description": "Prijava otiskom prsta, prepoznavanjem lica ili sigurnosnim ključem. Kôd nije potreban.",
+          "setupTitle": "Postavljanje pristupnog ključa",
+          "setupHint": "Vaš vas uređaj potvrđuje otiskom prsta, prepoznavanjem lica ili sigurnosnim ključem.",
+          "checkingSupport": "Provjera uređaja …",
+          "unsupportedTitle": "Ovaj preglednik ne podržava pristupne ključeve",
+          "unsupportedHint": "Upotrijebite noviji preglednik ili umjesto toga postavite aplikaciju za autentifikaciju.",
+          "securityKeyOnly": "Ovaj uređaj nema ugrađenu potvrdu identiteta (primjerice otiskom prsta ili prepoznavanjem lica). Za to vam treba sigurnosni ključ za priključivanje.",
+          "benefitPhishing": "Štiti od lažnih stranica za prijavu.",
+          "benefitNoCode": "Bez prepisivanja koda.",
+          "create": "Izradi pristupni ključ",
+          "friendlyName": "Pristupni ključ",
+          "recommended": "Preporučeno: najsigurniji od triju načina.",
+          "creating": "Izrada u tijeku …",
+          "errors": {
+            "abgebrochen": "Potvrda je otkazana ili nije prepoznata. Pokušajte ponovno.",
+            "herkunftPasstNicht": "Pristupni ključevi nisu omogućeni za ovu adresu. Prijavite se putem službene adrese.",
+            "nichtUnterstuetzt": "Ovaj uređaj ne može stvoriti pristupni ključ. Upotrijebite aplikaciju za autentifikaciju ili sigurnosni ključ.",
+            "schonVorhanden": "Na ovom uređaju već postoji pristupni ključ za ovaj račun.",
+            "laeuftBereits": "Zahtjev za pristupni ključ već je u tijeku. Dovršite ga ili otkažite.",
+            "zeitUeberschritten": "Vrijeme za potvrdu je isteklo. Pokušajte ponovno.",
+            "unbekannt": "Pristupni ključ nije bilo moguće stvoriti. Pokušajte ponovno."
+          }
+        },
+        "recovery": {
+          "title": "Kodovi za oporavak",
+          "description": "Kodovi za jednokratnu upotrebu za slučaj da nemate pristup svom drugom faktoru.",
+          "left": "Broj dostupnih kodova: {count}.",
+          "create": "Izradi kodove",
+          "regenerate": "Izradi nove kodove",
+          "regenerateHint": "Izradom novih kodova svi dosadašnji gube valjanost.",
+          "dialogTitle": "Kodovi za oporavak",
+          "dialogHint": "Kodovi za jednokratnu upotrebu za slučaj da nemate pristup svom drugom faktoru.",
+          "replaceWarning": "Pozor: vaši dosadašnji kodovi za oporavak time gube valjanost.",
+          "passwordLabel": "Trenutačna lozinka",
+          "passwordHint": "Radi potvrde da ste to doista vi.",
+          "createNow": "Izradi kodove",
+          "creating": "Izrada u tijeku …",
+          "createdTitle": "Vaši novi kodovi za oporavak. Pohranite ih na sigurno mjesto.",
+          "noneReturned": "Nijedan kôd nije izrađen. Pokušajte ponovno."
+        },
+        "remove": "Ukloni",
+        "removeDialog": {
+          "totpTitle": "Ukloni aplikaciju za autentifikaciju",
+          "smsTitle": "Ukloni kôd SMS-om",
+          "warning": "Nakon toga taj faktor više ne štiti vaš račun.",
+          "passwordLabel": "Trenutačna lozinka",
+          "remove": "Ukloni",
+          "removing": "Uklanjanje …",
+          "cancel": "Odustani",
+          "hint": "Potvrdite uklanjanje svojom trenutačnom lozinkom.",
+          "passkeyTitle": "Ukloni pristupni ključ",
+          "lastFactorBlocked": "Ovo je vaš posljednji drugi faktor, a za vašu je ulogu jedan obvezan. Najprije izradite kodove za oporavak ili postavite dodatni faktor."
+        },
+        "requiredWithDeadline": "Za vašu je ulogu drugi faktor obvezan. Postavite ga do {date} — nakon toga prijava bez drugog faktora više neće biti moguća.",
+        "statusFailed": "Stanje dvofaktorske autentifikacije nije bilo moguće učitati. Ponovno učitajte stranicu."
+      },
+      "recovery": {
+        "lockoutWarning": "Bez tih kodova izgubit ćete pristup svom računu ako više ne budete mogli upotrebljavati svoj drugi faktor. Čuvajte ih na sigurnom mjestu, odvojeno od lozinke.",
+        "copy": "Kopiraj",
+        "copied": "Kopirano",
+        "copyFailed": "Kopiranje nije uspjelo. Preuzmite kodove ili ih ispišite.",
+        "download": "Preuzmi",
+        "downloadFailed": "Preuzimanje nije uspjelo. Kopirajte kodove ili ih ispišite.",
+        "print": "Ispiši",
+        "printBlocked": "Prozor za ispis je blokiran. Dopustite skočne prozore ili preuzmite kodove.",
+        "printTitle": "Kodovi za oporavak myNextDays",
+        "printHint": "Svaki kôd radi točno jednom. Čuvajte ovaj list na sigurnom mjestu.",
+        "fileHeader": "Kodovi za oporavak myNextDays — svaki kôd radi točno jednom. Čuvajte ih na sigurnom.",
+        "confirmSaved": "Kodove sam sigurno pohranio.",
+        "confirmHint": "Označite kućicu da dovršite postavljanje.",
+        "mustExportFirst": "Najprije kopirajte, preuzmite ili ispišite kodove.",
+        "done": "Gotovo"
+      }
     },
     "company": {
       "saved": "Podaci spremljeni.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Govoreni jezici",
       "searchLanguage": "Traži jezik…",
       "chooseRole": "Odaberi ulogu…",
-      "userCreated": "Korisnik izrađen",
-      "preferredLanguage": "Preferirani jezik",
+      "preferredLanguage": "Jezik e-pošte",
       "noLanguageFound": "Nije pronađen nijedan jezik.",
       "firstName": "Ime",
       "lastName": "Prezime",
       "email": "E-pošta",
       "phone": "Broj telefona",
       "notes": "Napomene",
-      "password": "Lozinka",
-      "credentialsHint": "Proslijedite ove pristupne podatke novom korisniku. Lozinka se prikazuje samo sada."
+      "title": "Stvori korisnika",
+      "createdSubtitle": "Pozivnica poslana.",
+      "stepHints": {
+        "contact": "Dodajte kontaktne podatke ovog korisnika.",
+        "extra": "Dodajte dodatne informacije o ovom korisniku.",
+        "role": "Odaberite ulogu i dopuštenja za ovog korisnika.",
+        "properties": "Dodijelite objekte ovom korisniku."
+      },
+      "done": "Gotovo",
+      "cancel": "Odustani",
+      "back": "Natrag",
+      "next": "Dalje",
+      "create": "Stvori",
+      "creating": "Stvara se…",
+      "role": "Uloga",
+      "requiredFields": "Ime, prezime, e-pošta i uloga su obvezni.",
+      "assignFailed": "Korisnik je stvoren, ali dodjela objekata nije uspjela: {reason}",
+      "hidePhones": "Sakrij telefonske brojeve na web-mjestu.",
+      "noAssignNeeded": "Dodjela objekata nije potrebna",
+      "noAssignNeededHint": "Ova uloga ima pristup svim objektima računa. Dodjela pojedinačnih objekata vrijedi samo za vlasnike i osoblje.",
+      "noProperties": "Još nema smještaja",
+      "noPropertiesHint": "Stvorite svoje smještaje kako biste ih kasnije mogli dodijeliti svojim korisnicima.",
+      "choosePropertiesHint": "Odaberite objekte kojima će ovaj korisnik imati pristup.",
+      "selectedCount": "Odabrano: {count}",
+      "inviteSent": "Pozivnica poslana",
+      "inviteSentHint": "Korisnik prima e-poruku i sam postavlja svoju lozinku. Poveznica vrijedi 7 dana.",
+      "inviteResend": "Ponovno pošalji pozivnicu",
+      "inviteResending": "Šalje se…",
+      "inviteResent": "Pozivnica ponovno poslana.",
+      "inviteResendFailed": "Pozivnicu nije bilo moguće ponovno poslati.",
+      "preferredLanguageHint": "Na tom jeziku novi korisnik prima pozivnicu i sve daljnje poruke e-pošte."
     },
     "tariff": {
       "oneLess": "Jedan objekt manje",
@@ -6359,7 +6767,14 @@
       "updated": "Korisnik ažuriran.",
       "deleted": "Korisnik izbrisan.",
       "generalPermissions": "Opća ovlaštenja",
-      "roleChangeHint": "Promjena uloge predlaže odgovarajuća prava. Zatim ih možete pojedinačno prilagoditi."
+      "roleChangeHint": "Promjena uloge predlaže odgovarajuća prava. Zatim ih možete pojedinačno prilagoditi.",
+      "edit": "Uredi",
+      "delete": "Izbriši",
+      "resendInvite": "Ponovno pošalji pozivnicu",
+      "inviteResent": "Pozivnica poslana na {email}.",
+      "inviteResendFailed": "Pozivnicu nije bilo moguće ponovno poslati.",
+      "emailLanguage": "Jezik e-pošte",
+      "emailLanguageHint": "Na tom jeziku ovaj korisnik prima svoju e-poštu."
     },
     "staffProperties": {
       "title": "Podijeli objekte"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "npr. Hotel Pogled na jezero",
     "namePlaceholder": "Ime i prezime",
     "passwordHint": "Najmanje 8 znakova",
-    "passwordRepeat": "Ponovite lozinku"
+    "passwordRepeat": "Ponovite lozinku",
+    "headline": "Cijeli vaš najam na jednom mjestu.",
+    "feature1": "Automatska sinkronizacija kalendara",
+    "feature2": "Izravne rezervacije na vlastitoj stranici",
+    "feature3": "Automatizacija poruka gostima",
+    "withGoogle": "Registrirajte se putem Googlea",
+    "withApple": "Registrirajte se putem Applea",
+    "or": "ili",
+    "withEmail": "Registrirajte se e-poštom",
+    "haveAccount": "Već imate račun?",
+    "loginLink": "Prijavite se ovdje",
+    "loadingHeadline": "Vlastita stranica za rezervacije. Zadržite 100 % svake rezervacije.",
+    "loadingText": "Postavljamo vaš račun …"
   },
   "marketingSite": {
     "stars": "4,5 zvjezdice",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Označi sve kao pročitano",
     "erneut": "Ponovno učitaj",
     "ariaMitAnzahl": "Obavijesti ({count} nepročitanih)"
+  },
+  "auth": {
+    "toLogin": "Na prijavu",
+    "genericError": "To sada nije uspjelo. Pokušajte ponovno kasnije.",
+    "tokenMissing": {
+      "title": "Nepotpuna poveznica",
+      "text": "Ova poveznica je nepotpuna. Upotrijebite cijelu poveznicu iz e-poruke — kopirajte je i zalijepite u adresnu traku."
+    },
+    "tokenInvalid": {
+      "title": "Poveznica više nije važeća",
+      "textInvite": "Ova poveznica pozivnice istekla je ili je već upotrijebljena. Obratite se svojem objektu — ondje se pozivnica može poslati ponovno.",
+      "textReset": "Ova poveznica je istekla ili je već upotrijebljena. Jednostavno zatražite novu.",
+      "retry": "Zatraži novu poveznicu"
+    },
+    "invite": {
+      "title": "Postavite svoj pristup",
+      "intro": "Odaberite lozinku za svoj myNextDays pristup. Najmanje {min} znakova."
+    },
+    "reset": {
+      "title": "Nova lozinka",
+      "intro": "Odaberite novu lozinku. Najmanje {min} znakova."
+    },
+    "done": {
+      "titleInvite": "Pristup postavljen",
+      "titleReset": "Lozinka promijenjena",
+      "text": "Sada se možete prijaviti svojom novom lozinkom."
+    },
+    "forgot": {
+      "title": "Zaboravljena lozinka",
+      "intro": "Unesite svoju adresu e-pošte. Poslat ćemo vam poveznicu za postavljanje nove lozinke.",
+      "emailLabel": "E-pošta",
+      "submit": "Zatraži poveznicu",
+      "sending": "Šalje se…",
+      "sentTitle": "E-poruka je na putu",
+      "sentText": "Ako za ovu adresu postoji račun, poslali smo poveznicu za ponovno postavljanje. Vrijedi jedan sat.",
+      "spamHint": "Ništa nije stiglo? Provjerite i mapu neželjene pošte.",
+      "again": "Zatraži ponovno"
+    },
+    "password": {
+      "newLabel": "Lozinka",
+      "repeatLabel": "Ponovi lozinku",
+      "submit": "Postavi lozinku",
+      "saving": "Sprema se…",
+      "mismatch": "Dvije se lozinke ne podudaraju.",
+      "tooWeak": "Lozinka ne ispunjava zahtjeve (najmanje {min} znakova).",
+      "show": "Prikaži lozinku",
+      "hide": "Sakrij lozinku",
+      "strengthLabel": "Jačina: {level}",
+      "strength": {
+        "1": "slaba",
+        "2": "srednja",
+        "3": "dobra",
+        "4": "jaka"
+      },
+      "requirement": {
+        "length": "Najmanje {min} znakova",
+        "letter": "Najmanje jedno slovo",
+        "digit": "Najmanje jedna znamenka"
+      }
+    },
+    "checking": "Poveznica se provjerava…",
+    "languageLabel": "Jezik",
+    "languageChange": "Promijeni jezik",
+    "twoFactor": {
+      "title": "Potvrda",
+      "totpHint": "Unesite 6-znamenkasti kôd iz svoje aplikacije za autentifikaciju.",
+      "smsHint": "Unesite 6-znamenkasti kôd koji smo vam poslali SMS-om.",
+      "smsHintWithPhone": "Unesite 6-znamenkasti kôd koji smo poslali na broj {phone}.",
+      "codeLabel": "Kôd",
+      "confirm": "Potvrdi",
+      "checking": "Provjera …",
+      "recoveryHint": "Unesite jedan od svojih kodova za oporavak.",
+      "recoveryLabel": "Kôd za oporavak",
+      "recoverySingleUse": "Svaki kôd radi točno jednom.",
+      "useTotp": "Upotrijebi aplikaciju za autentifikaciju",
+      "useSms": "Upotrijebi kôd SMS-om",
+      "useRecovery": "Upotrijebi kôd za oporavak",
+      "backToLogin": "Natrag na prijavu",
+      "factorMissing": "Ovaj faktor nije dostupan za vaš račun. Odaberite drugi način.",
+      "passkeyHint": "Potvrdite prijavu svojim pristupnim ključem.",
+      "passkeyUse": "Prijavi se pristupnim ključem",
+      "usePasskey": "Upotrijebi pristupni ključ",
+      "sendCode": "Pošalji kôd SMS-om",
+      "sending": "Slanje …",
+      "smsSent": "Kôd je poslan.",
+      "resend": "Ponovno pošalji kôd",
+      "recoveryRedeemedHint": "Kôd je iskorišten, ali sam po sebi nije dovoljan za prijavu. Prijavite se jednim od svojih postavljenih faktora ili se obratite svojem timu."
+    },
+    "mfaSetup": {
+      "title": "Postavljanje dvofaktorske autentifikacije",
+      "intro": "Za vašu je ulogu drugi faktor obvezan. Postavite ga sada da biste nastavili.",
+      "why": "Kao administrator imate pristup financijskim podacima, podacima gostiju i postavkama cijelog objekta. Drugi faktor sprječava da ukradena lozinka sama bude dovoljna.",
+      "goToSettings": "Postavi sada",
+      "later": "Podsjeti me poslije",
+      "laterHint": "Postavljanje još možete odgoditi. Pitat ćemo vas ponovno pri sljedećoj prijavi.",
+      "introWithDeadline": "Za vašu je ulogu drugi faktor obvezan. Postavite ga do {date} — nakon toga prijava bez drugog faktora više neće biti moguća."
+    }
+  },
+  "sprache": {
+    "label": "Jezik e-pošte",
+    "hint": "Na tom jeziku šaljemo e-poštu ovoj osobi.",
+    "none": "— nije navedeno"
+  },
+  "neuerungen": {
+    "eyebrow": "Novosti u proizvodu",
+    "titel": "Novosti",
+    "unterzeile": "Sve što se promijenilo u myNextDaysu — najnovije prvo.",
+    "neuAnzahl": "{anzahl, plural, one {# nova} few {# nove} other {# novih}}",
+    "ungelesen": "Novo",
+    "veroeffentlichtAm": "Objavljeno {datum}",
+    "leer": "Još nema novosti.",
+    "ladefehler": "Učitavanje nije uspjelo: {grund}",
+    "mehrLaden": "Učitaj starije",
+    "aufklappen": "Prikaži pojedinosti",
+    "zuklappen": "Sakrij pojedinosti",
+    "kategorie": {
+      "neuerung": "Nova značajka",
+      "wartung": "Održavanje",
+      "hinweis": "Obavijest",
+      "wichtig": "Važno"
+    },
+    "popup": {
+      "ariaLabel": "Sadržaj obavijesti",
+      "gelesen": "Razumijem",
+      "wirdGespeichert": "Spremanje …",
+      "erneut": "Pokušaj ponovno",
+      "fehler": "Potvrda nije uspjela: {grund}",
+      "weiter": "Dalje",
+      "vonAnzahl": "Obavijest {nummer}"
+    }
+  },
+  "login": {
+    "title": "Prijava",
+    "emailLabel": "E-pošta",
+    "passwordLabel": "Lozinka",
+    "showPassword": "Prikaži lozinku",
+    "hidePassword": "Sakrij lozinku",
+    "forgot": "Zaboravili ste lozinku?",
+    "stayLoggedIn": "Ostani prijavljen",
+    "submit": "Prijava",
+    "submitting": "Prijava…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Još niste korisnik myNextDaysa?",
+    "signupLink": "Isprobajte besplatno",
+    "mfaTitle": "Potvrda",
+    "mfaIntro": "Unesite šesteroznamenkasti kod iz aplikacije za autentifikaciju. Radi i kod za oporavak.",
+    "mfaCodeLabel": "Kod",
+    "mfaSubmit": "Potvrdi",
+    "mfaChecking": "Provjeravam…",
+    "mfaBack": "Natrag na prijavu"
   }
 }

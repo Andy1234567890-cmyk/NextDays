@@ -283,6 +283,7 @@
       "logout": "Oħroġ"
     },
     "stopSell": "Waqfien tal-bejgħ",
+    "blockRequests": "Talbiet għal imblukkar",
     "owners": "Sidien",
     "ownerStatements": "Rendikonti tas-sidien",
     "portal": "Il-portal tiegħi",
@@ -315,7 +316,8 @@
     "noAccess": "L-ebda aċċess",
     "dashboardLoadFailed": "Id-dashboard ma setax jitgħabba",
     "reviews": "Reċensjonijiet",
-    "extensions": "Estensjonijiet"
+    "extensions": "Estensjonijiet",
+    "announcements": "Novitajiet"
   },
   "exemption": {
     "labelNamed": "Eżenti mit-taxxa ({scheme}) — l-ebda VAT meħtieġa",
@@ -945,6 +947,7 @@
     "newTitle": "Sid ġdid",
     "create": "Oħloq",
     "created": "Is-sid ġie maħluq.",
+    "createdInvited": "Is-sid inħoloq u l-istedina ntbagħtet.",
     "cancel": "Ikkanċella",
     "save": "Issejvja",
     "saving": "Qed jissejvja …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {L-ebda proprjetà} one {# proprjetà} two {# proprjetajiet} few {# proprjetajiet} many {# proprjetà} other {# proprjetà}}",
     "noProperties": "Lil dan is-sid għad m'hemmx proprjetà assenjata.",
     "addProperty": "Assenja proprjetà …",
+    "assignProperties": "Assenja proprjetajiet",
+    "assignPropertiesHint": "Fakultattiv. Jistgħu jintgħażlu biss proprjetajiet li għadhom m'għandhomx sid.",
+    "noFreeProperties": "Il-proprjetajiet kollha diġà huma assenjati lil sid.",
+    "assignSelected": "{count, plural, =0 {Assenja proprjetajiet} one {Assenja # proprjetà} two {Assenja # proprjetajiet} few {Assenja # proprjetajiet} many {Assenja # proprjetajiet} other {Assenja # proprjetajiet}}",
+    "propertiesAssigned": "{count, plural, one {# proprjetà assenjata} two {# proprjetajiet assenjati} few {# proprjetajiet assenjati} many {# proprjetajiet assenjati} other {# proprjetajiet assenjati}}",
     "removeProperty": "Neħħi l-assenjazzjoni",
     "sections": {
       "master": "Dejta ewlenija",
       "payout": "Ħlas u kummissjoni",
-      "properties": "Proprjetajiet"
+      "properties": "Proprjetajiet",
+      "portalAccess": "Aċċess għall-portal"
     },
     "frequency": {
       "none": "L-ebda",
@@ -989,12 +998,20 @@
       "statementFrequency": "Rittmu tar-rendikont",
       "notes": "Noti",
       "share": "Sehem (%)",
-      "commissionOverride": "Kummissjoni (%) differenti"
+      "commissionOverride": "Kummissjoni (%) differenti",
+      "emailLanguage": "Lingwa tal-e-mails"
     },
     "placeholders": {
       "name": "eż. Max Mustermann",
       "email": "eż. max@example.com"
-    }
+    },
+    "emailLanguageHint": "F'din il-lingwa s-sid jirċievi r-rapporti u n-notifiki — anke mingħajr aċċess tiegħu stess.",
+    "portalAccess": "Issettja l-aċċess għall-portal",
+    "portalAccessHint": "Is-sid jirċievi stedina bl-email u wara jkun jista' jara r-rendikonti tiegħu huwa stess.",
+    "portalAccessNeedsEmail": "Għall-aċċess għall-portal hemm bżonn indirizz tal-email.",
+    "portalAccessInvite": "Ibgħat stedina",
+    "portalAccessInvited": "L-istedina ntbagħtet.",
+    "portalAccessActive": "L-aċċess għall-portal huwa ssettjat."
   },
   "ownerStatements": {
     "title": "Rendikonti tas-sidien",
@@ -1149,7 +1166,9 @@
     "subtitle": "Ħarsa ġenerali tal-proprjetajiet, id-dħul u r-rendikonti tiegħek.",
     "properties": {
       "title": "Il-proprjetajiet tiegħi",
-      "empty": "Bħalissa m'għandekx proprjetajiet assenjati."
+      "empty": "Bħalissa m'għandekx proprjetajiet assenjati.",
+      "city": "Lokalità",
+      "openCalendar": "Kalendarju"
     },
     "earnings": {
       "title": "Dħul (dan ix-xahar)",
@@ -1175,7 +1194,24 @@
       "to": "Sa",
       "submit": "Ibgħat it-talba",
       "sending": "Qed jintbagħat …",
-      "requested": "It-talba ntbagħtet."
+      "requested": "It-talba ntbagħtet.",
+      "listTitle": "It-talbiet tiegħi",
+      "listEmpty": "Għadek ma talabtx imblukkar.",
+      "created": "Ippreżentata fi",
+      "range": "Perjodu",
+      "statusLabel": "Status",
+      "readOnlyHint": "Biss il-ġestjoni tista' ddaħħal imblukkar. Int tibgħat it-talba; id-deċiżjoni hija tagħhom.",
+      "invalidRange": "Id-data tat-tmiem trid tkun wara d-data tal-bidu.",
+      "invalidDate": "Jekk jogħġbok daħħal data valida.",
+      "status": {
+        "pending": "Qed tiġi rivduta",
+        "approved": "Approvata",
+        "rejected": "Miċħuda",
+        "cancelled": "Irtirata"
+      },
+      "reason": "Raġuni",
+      "reasonPlaceholder": "Għaliex għandu jiġi mblukkat? (pereż. użu proprju, ħaddiema)",
+      "decisionNote": "Nota mill-amministrazzjoni"
     },
     "meter": {
       "title": "Irreġistra qari tal-arloġġ",
@@ -1191,6 +1227,142 @@
         "electricity": "Elettriku",
         "water": "Ilma",
         "gas": "Gass"
+      },
+      "historyTitle": "Storja",
+      "historyEmpty": "Għal din il-proprjetà għadu ma ġie rreġistrat l-ebda qari tal-arloġġ.",
+      "appendOnlyHint": "Il-qari rreġistrat jibqa' mingħajr tibdil. Korrezzjoni hija entrata ġdida — hekk l-istorja tibqa' sħiħa.",
+      "invalidValue": "Jekk jogħġbok daħħal il-qari tal-arloġġ bħala numru.",
+      "invalidDate": "Jekk jogħġbok daħħal data ta' qari valida."
+    },
+    "logout": "Oħroġ",
+    "loadFailed": "Id-data ma setgħetx tiġi kkargata.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Ħarsa ġenerali",
+      "calendar": "Kalendarju tal-okkupazzjoni",
+      "reports": "Rapporti",
+      "blockRequests": "Imblukkar",
+      "meterReadings": "Qari tal-arloġġi",
+      "services": "Servizzi",
+      "notifications": "Notifiki"
+    },
+    "overview": {
+      "occupancy": "Okkupazzjoni",
+      "occupancyHint": "Iljieli okkupati fil-perjodu magħżul.",
+      "nights": "Iljieli",
+      "bookings": "Prenotazzjonijiet",
+      "payout": "Ħlas nett",
+      "payoutHint": "Is-sehem tiegħek wara t-tariffi tal-portali.",
+      "period": "Perjodu",
+      "periodMonth": "Dan ix-xahar",
+      "periodYear": "Din is-sena",
+      "openCalendar": "Iftaħ il-kalendarju",
+      "latestStatement": "L-aħħar dikjarazzjoni",
+      "noStatement": "Għad m'hemm l-ebda dikjarazzjoni"
+    },
+    "calendar": {
+      "title": "Kalendarju tal-okkupazzjoni",
+      "subtitle": "L-okkupazzjoni u l-ħlas nett tiegħek għal kull lejl.",
+      "selectProperty": "Agħżel proprjetà",
+      "prevMonth": "Ix-xahar ta' qabel",
+      "nextMonth": "Ix-xahar li jmiss",
+      "today": "Illum",
+      "legendSeasons": "Staġuni",
+      "legendStatus": "Okkupazzjoni",
+      "noSeasons": "Għal din il-proprjetà m'hemm l-ebda staġun definit.",
+      "status": {
+        "open": "Ħieles",
+        "booked": "Okkupat",
+        "blocked": "Imblukkat"
+      },
+      "payoutPerNight": "Ħlas nett/lejl",
+      "guest": "Mistieden",
+      "channel": "Sors tal-prenotazzjoni",
+      "blockHint": "Trid tibblokka perjodu? Ibgħat talba — il-ġestjoni tiddeċiedi.",
+      "blockCta": "Itlob imblukkar",
+      "weekdays": "Tn,Tl,Er,Ħa,Ġi,Sib,Ħad",
+      "months": "Jannar,Frar,Marzu,April,Mejju,Ġunju,Lulju,Awwissu,Settembru,Ottubru,Novembru,Diċembru"
+    },
+    "services": {
+      "title": "Ibbukkja servizz",
+      "hint": "Ordna servizz għall-proprjetà tiegħek. Il-ġestjoni taċċetta u tiskeda x-xogħol.",
+      "property": "Proprjetà",
+      "kind": "Servizz",
+      "date": "Data ppreferuta",
+      "note": "Nota",
+      "notePlaceholder": "X'għandu jsir eżattament?",
+      "submit": "Ordna",
+      "sending": "Qed jintbagħat …",
+      "sent": "L-ordni ntbagħtet.",
+      "listTitle": "L-ordnijiet tiegħi",
+      "listEmpty": "Għadek ma ordnajt l-ebda servizz.",
+      "invalidDate": "Jekk jogħġbok daħħal data ppreferuta valida.",
+      "noteRequired": "Jekk jogħġbok iddeskrivi s-servizz mixtieq.",
+      "kinds": {
+        "custom": "Oħra (test liberu)"
+      },
+      "status": {
+        "pending": "Qed tiġi rivduta",
+        "accepted": "Aċċettata",
+        "scheduled": "Skedata",
+        "done": "Lest",
+        "rejected": "Miċħuda",
+        "cancelled": "Irtirata"
+      },
+      "type": {
+        "endreinigung": "Tindif finali",
+        "hauptreinigung": "Tindif komplut",
+        "fensterreinigung": "Tindif tat-twieqi",
+        "rasenmaehen": "Qtugħ tal-ħaxix",
+        "terrassenreinigung": "Tindif tat-terrazza"
+      },
+      "dateTo": "Sa"
+    },
+    "notifications": {
+      "title": "Notifiki",
+      "hint": "Iddefinixxi kif trid tiġi nnotifikat għal kull avveniment.",
+      "channel": {
+        "email": "Email",
+        "sms": "SMS",
+        "phone": "Telefon"
+      },
+      "locked": "Dan l-email huwa meħtieġ kuntrattwalment u jibqa' mixgħul.",
+      "saved": "Issejvjat.",
+      "saveFailed": "Il-bidla ma setgħetx tiġi ssejvjata.",
+      "categories": {
+        "listing_activity": "Prenotazzjonijiet fil-proprjetajiet tiegħek",
+        "listing_activityHint": "Prenotazzjoni ġdida, bidla u kanċellazzjoni.",
+        "account_activity": "Attività tal-kont",
+        "account_activityHint": "Logins u bidliet fil-kont tiegħek.",
+        "reminders": "Tfakkiriet",
+        "remindersHint": "Xogħlijiet u dati dovuti.",
+        "messages": "Messaġġi",
+        "messagesHint": "Messaġġi ġodda mill-ġestjoni.",
+        "owner_booking": "Prenotazzjonijiet fil-proprjetajiet tiegħek",
+        "owner_bookingHint": "Prenotazzjoni ġdida, bidla u kanċellazzjoni.",
+        "block_decision": "Deċiżjoni dwar it-talbiet tiegħek għal imblukkar",
+        "block_decisionHint": "Meta l-amministrazzjoni tapprova jew tirrifjuta t-talba tiegħek.",
+        "owner_service": "Servizzi ordnati",
+        "owner_serviceHint": "Bidla fl-istatus ta' servizz li ordnajt."
+      }
+    },
+    "reports": {
+      "title": "Rapporti",
+      "subtitle": "Dikjarazzjonijiet, ix-xahar kurrenti u rapporti ta' kull xahar u kull sena.",
+      "currentTitle": "Status attwali tad-dikjarazzjoni",
+      "currentHint": "Proviżorju — ix-xahar għadu għaddej. Torbot biss id-dikjarazzjoni finalizzata.",
+      "monthly": "Rapport ta' kull xahar",
+      "yearly": "Rapport annwali",
+      "month": "Xahar",
+      "year": "Sena",
+      "download": "Niżżel il-PDF",
+      "downloading": "Qed jinħoloq …",
+      "downloadFailed": "Il-PDF ma setax jinħoloq.",
+      "onlyFinalized": "Biss id-dikjarazzjonijiet finalizzati huma disponibbli għat-tniżżil.",
+      "status": {
+        "draft": "Qed titħejja",
+        "finalized": "Ikkompletata",
+        "cancelled": "Ikkanċellata"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Ammont fiss ma jistax jinqasam fuq l-iljieli individwali — ma jaslux fil-portali, u hemm irid jinżamm fl-extranet.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Applika l-istess promozzjoni għal proprjetajiet oħra wkoll.",
+      "applyToOthersSeasonHint": "Oħloq l-istess staġun ukoll f’oġġetti oħra.",
       "promoReason": {
         "mindestaufenthalt": "żjara minima",
         "fruehbucher": "perjodu ta' booking bikri",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Pjan ta' ħlas",
       "cancellationLabel": "Kanċellazzjoni",
       "depositLabel": "Depożitu",
-      "depositWithheldText": "Se jinżamm depożitu ta' {amount}.",
       "noPolicyYet": "Għadha l-ebda politika ddepożitata.",
       "bookabilityCardTitle": "Prenotabbiltà",
       "bookabilityCardHint": "Kif jiġu aċċettati r-riżervazzjonijiet.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Kuntratt tal-kiri",
       "rentalAgreementCardHint": "Oħloq il-kuntratt tal-kiri jew orbtu għall-mistednin tiegħek.",
       "noRentalAgreementYet": "Għadu l-ebda kuntratt tal-kiri.",
-      "addPolicyTitle": "Żid politika",
       "addPolicySubtitle": "Iffissa d-dettalji għal din il-politika l-ġdida.",
       "internalNameLabel": "Isem intern *",
       "internalNamePlaceholder": "eż. Ħlas parzjali – mhux rimborsabbli",
       "paymentPlanGroupTitle": "Pjan ta' ħlas",
       "paymentCountLabel": "Għadd ta' ħlasijiet",
-      "depositPercentLabel": "Akkont (%)",
-      "remainingDaysBeforeLabel": "Bilanċ li fadal (jiem qabel il-wasla)",
       "guestCancellationGroupTitle": "Kanċellazzjoni mill-mistieden",
       "cancellationTypeLabel": "Tip ta' kanċellazzjoni",
       "depositGroupTitle": "Depożitu",
-      "depositModeNone": "L-ebda depożitu meħtieġ",
-      "depositModeAmount": "Depożitu bħala ammont",
-      "depositAmountLabelWithCurrency": "Ammont tad-depożitu ({currency})",
-      "depositAmountLabel": "Ammont tad-depożitu",
       "quoteValidityGroupTitle": "Validità tal-offerta",
       "quoteValidityHoursLabel": "Tul tal-validità (sigħat) *",
       "quoteValidityHint": "L-offerta hija valida għal massimu ta' {hours} sigħat, sakemm l-istatus huwa \"Qed jistenna lill-mistieden\" jew \"Qed jistenna l-ħlas\".",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Rakkomandat",
       "checkInTimeLabel": "Ħin tal-check-in",
       "checkOutTimeLabel": "Ħin tal-check-out",
-      "paymentSummaryFull": "100 % dovuti mar-riżervazzjoni.",
-      "paymentSummarySplit": "{percent} % mal-prenotazzjoni, il-bilanċ li fadal {days} jum(ijiem) qabel il-wasla.",
       "localizedEditorSubtitle": "Oħloq it-test u traduċih jekk ikun hemm bżonn għall-mistednin tiegħek.",
-      "localizedEditorPlaceholder": "Daħħal {title} …"
+      "localizedEditorPlaceholder": "Daħħal {title} …",
+      "editPolicyTitle": "Immodifika l-kundizzjonijiet",
+      "singlePaymentHint": "100 % tal-ħlas huwa dovut mal-konklużjoni tal-prenotazzjoni.",
+      "firstPaymentHeading": "L-ewwel ħlas",
+      "secondPaymentHeading": "It-tieni ħlas",
+      "thirdPaymentHeading": "It-tielet ħlas",
+      "amountTypeLabel": "Tip ta’ ammont",
+      "percentLabel": "Perċentwal",
+      "amountLabel": "Ammont",
+      "currencyLabel": "Munita",
+      "daysLabel": "Jiem",
+      "periodLabel": "Perjodu",
+      "firstPaymentHint": "Mal-prenotazzjoni jiġi ċċarġjat biss l-ammont fiss jew il-perċentwal tal-ewwel ħlas. Il-ħlasijiet li jifdal jiġu fatturati fid-data skedata tagħhom.",
+      "remainderHint": "Iddefinixxi meta għandu jiġi ċċarġjat il-bilanċ li jifdal.",
+      "partialRulesHint": "Iddefinixxi r-regoli għal kanċellazzjonijiet rimborsabbli parzjalment.",
+      "ruleHeading": "Regola {number}",
+      "ruleDelete": "Ħassar ir-regola",
+      "ruleAdd": "Żid regola",
+      "refundTypeLabel": "Tip ta’ rimborż",
+      "refundLabel": "Rimborż",
+      "whenCancelledLabel": "Meta tiġi kkanċellata",
+      "depositNotRequired": "Ma hija meħtieġa l-ebda depożitu",
+      "depositRequired": "Huwa meħtieġ depożitu",
+      "depositMethodLabel": "Metodu",
+      "preAuthTimesHeading": "Ħinijiet tal-preawtorizzazzjoni",
+      "preAuthValidityLabel": "Validità (jiem wara t-tluq)",
+      "preAuthWarnTitle": "Il-preawtorizzazzjonijiet jistgħu jiġu garantiti biss għal 5 ijiem.",
+      "preAuthWarnBody": "Kemm iddum preawtorizzazzjoni fuq karta ta’ kreditu jiddependi minn diversi fatturi, bħall-fornitur tal-karta, il-bank emittenti, il-gateway tal-ħlas u l-bqija. Għalhekk, fil-prenotazzjonijiet kollha ta’ ġimgħa jew aktar, kull preawtorizzazzjoni tiskadi (tiġi kkanċellata awtomatikament) kull 5 ijiem. Aħna ninnotifikawk sabiex tkun tista’ toħroġ manwalment preawtorizzazzjoni ġdida u żżomm id-depożitu għall-bqija tal-prenotazzjoni.",
+      "assignAction": "Assenja l-kundizzjonijiet"
     },
     "ratePlanWizard": {
       "title": "Oħloq pjan tal-prezzijiet",
@@ -5604,6 +5795,39 @@
       "confirmed": "Ikkonfermata",
       "in_house": "Għamel check-in",
       "pending": "Għażla / provviżorja"
+    },
+    "blockRequests": {
+      "title": "Talbiet għal imblukkar",
+      "subtitle": "Talbiet mis-sidien tiegħek biex jimblukkaw l-oġġetti tagħhom. Approvazzjoni timblokka l-iljieli fil-kalendarju u tirrapportahom lill-portali.",
+      "filter": "Status",
+      "filterAll": "Kollha",
+      "empty": "L-ebda talba f'din il-veduta.",
+      "requestedBy": "Mitlub minn {name}",
+      "reason": "Raġuni",
+      "decisionNote": "Nota",
+      "note": "Nota għas-sid",
+      "notePlaceholder": "Fakultattiv — tintwera lis-sid.",
+      "working": "Qed jitwettaq …",
+      "status": {
+        "pending": "Miftuħa",
+        "approved": "Approvata",
+        "rejected": "Miċħuda"
+      },
+      "action": {
+        "approve": "Approva",
+        "reject": "Iċħad",
+        "revoke": "Irrevoka"
+      },
+      "confirm": {
+        "approve": "Timblokka {objekt} mill-{von} sal-{bis}? L-iljieli jiġu mblukkati fil-portali kollha.",
+        "reject": "Tiċħad it-talba għal {objekt} ({von} – {bis})?",
+        "revoke": "Tirrevoka l-approvazzjoni għal {objekt} ({von} – {bis})? L-iljieli jerġgħu jiġu rilaxxati."
+      },
+      "done": {
+        "approve": "Talba approvata, iljieli mblukkati.",
+        "reject": "Talba miċħuda.",
+        "revoke": "Approvazzjoni rrevokata, iljieli rilaxxati."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "Jannar,Frar,Marzu,April,Mejju,Ġunju,Lulju,Awwissu,Settembru,Ottubru,Novembru,Diċembru",
     "name": "Isem",
     "seasonAdd": "Żid staġun",
+    "seasonApplyCancel": "Ikkanċella",
+    "seasonApplyCopyHint": "L-istaġun jinħoloq bħala kopja indipendenti. Bidliet aktar tard f’dan l-istaġun MA jgħoddux aktar hemm. Iż-żieda tinħadem fuq il-prezz bażi tal-oġġett destinatarju stess.",
+    "seasonApplyNone": "Ma ġiet ikkupjata fl-ebda proprjetà.",
+    "seasonApplyPartial": "Ikkupjat lejn {count} oġġett(i), {skipped} maqbuża.",
+    "seasonApplyPickTarget": "Agħżel mill-inqas oġġett wieħed.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "L-ebda prezz bażi mhu stabbilit — ma tistax tiġi kkalkulata żieda.",
+      "basispreis_null": "Il-prezz bażi huwa 0 — ma tistax tiġi kkalkulata żieda.",
+      "teilweise_uebertragen": "L-istaġun qiegħed fil-proprjetà, il-prezzijiet ta' kuljum għadhom nieqsa — erġa' pprova biex tlestih.",
+      "unbekannt": "Maqbuż għal raġuni mhux magħrufa."
+    },
+    "seasonApplySubmit": "Ikkopja",
+    "seasonApplySuccess": "Ikkupjat lejn {count} oġġett(i).",
+    "seasonApplyTitle": "Ikkopja “{name}” lejn oġġetti oħra",
+    "seasonApplyToOthers": "Ikkopja lejn oġġetti oħra",
+    "seasonApplyWithRanges": "Ikkopja wkoll il-perjodi",
+    "seasonApplyWithRangesHint": "Il-ġranet immarkati jiġu stabbiliti l-istess fuq l-oġġett destinatarju. Mitfi: l-istaġun biss, bla ġranet.",
     "seasonClearHint": "Ikklikkja bil-lemin u kaxkar fuq il-jiem biex tneħħihom mill-istaġun.",
     "seasonColor": "Kulur",
     "seasonColorAria": "Kulur {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Sovrataxxa (± %)",
     "seasonSurchargePlaceholder": "eż. 30 jew -15",
     "seasonValueRequired": "Jekk jogħġbok daħħal valur validu.",
-    "weekdays": "T,T,E,Ħ,Ġ,S,Ħ"
+    "weekdays": "T,T,E,Ħ,Ġ,S,Ħ",
+    "seasonApplyNoSpans": "Dan l-istaġun m'għandu l-ebda perjodi mmarkati. Immarkah l-ewwel, jew ittrasferixxi biss id-definizzjoni mingħajr perjodi."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "Kodiċi QR għall-app ta' awtentikazzjoni",
       "sixDigitCode": "Kodiċi ta' 6 ċifri",
       "disable2fa": "Iddiżattiva 2FA",
-      "disable2faHint": "Daħħal kodiċi attwali (jew kodiċi ta' rkupru) biex titfi l-2FA."
+      "disable2faHint": "Daħħal kodiċi attwali (jew kodiċi ta' rkupru) biex titfi l-2FA.",
+      "title": "Sigurtà",
+      "loadFailed": "Ma stajniex intellgħu d-dejta tal-kont. Jekk jogħġbok iċċekkja l-konnessjoni tiegħek u erġa' pprova.",
+      "credentials": "Kredenzjali",
+      "emailAndUsername": "Email u isem tal-utent",
+      "emailLabel": "Email",
+      "nameLabel": "Isem",
+      "password": "Password",
+      "noPassword": "L-ebda password mhi ssettjata",
+      "passwordMin": "Mill-inqas 8 karattri.",
+      "save": "Issejvja",
+      "saving": "Qed jiġi salvat …",
+      "changePassword": "Ibdel il-password",
+      "twoFactor": {
+        "title": "Awtentikazzjoni b'żewġ fatturi (2FA)",
+        "intro": "Tipproteġi l-kont tiegħek b'tieni fattur flimkien mal-password.",
+        "noneActive": "Għadu ma ġie ssettjat l-ebda tieni fattur. Nirrakkomandaw l-app ta' awtentikazzjoni.",
+        "requiredNotice": "Għar-rwol tiegħek it-tieni fattur huwa obbligatorju. Jekk jogħġbok issettjah issa.",
+        "active": "Attiv",
+        "setUp": "Issettja",
+        "totp": {
+          "title": "App ta' awtentikazzjoni",
+          "description": "Kodiċi ta' darba minn app bħal Google Authenticator jew Microsoft Authenticator. Jaħdem ukoll mingħajr netwerk mobbli.",
+          "setupTitle": "Issettja l-app ta' awtentikazzjoni",
+          "setupHint": "Skennja l-kodiċi QR bl-app tiegħek u kkonferma bil-kodiċi li jidher.",
+          "step1": "1. Skennja l-kodiċi QR",
+          "step2": "3. Daħħal il-kodiċi mill-app",
+          "qrAlt": "Kodiċi QR għall-app ta' awtentikazzjoni",
+          "qrHint": "Iftaħ l-app ta' awtentikazzjoni tiegħek u skennja l-kodiċi.",
+          "manualTitle": "2. Jew daħħal iċ-ċavetta manwalment",
+          "manualHint": "Uża din iċ-ċavetta jekk ma tistax tiskennja l-kodiċi QR.",
+          "showSecret": "Uri ċ-ċavetta",
+          "hideSecret": "Aħbi ċ-ċavetta",
+          "copySecret": "Ikkopja ċ-ċavetta",
+          "copyFailed": "L-ikkupjar ma rnexxiex. Jekk jogħġbok immarka ċ-ċavetta u kkopjaha manwalment.",
+          "codeLabel": "Kodiċi ta' 6 ċifri",
+          "activate": "Attiva",
+          "checking": "Qed jiġi vverifikat …",
+          "preparing": "Qed titħejja s-setup …",
+          "enabledTitle": "L-app ta' awtentikazzjoni hija attiva. Issa aħżen il-kodiċijiet ta' rkupru tiegħek.",
+          "friendlyName": "App ta' awtentikazzjoni",
+          "replayNote": "Nota: kodiċi jibqa' validu sa 90 sekonda u f'dan iż-żmien jista' jintuża aktar minn darba. Kontra paġni ta' login foloz f'ħin reali jipproteġi biss passkey."
+        },
+        "sms": {
+          "title": "Kodiċi bl-SMS",
+          "description": "Kodiċi ta' darba bl-SMS fuq in-numru tat-telefon ikkonfermat tiegħek.",
+          "unavailable": "Il-kodiċi bl-SMS mhuwiex disponibbli fuq dan is-server għax ma hemm ebda fornitur tal-SMS issettjat. Agħżel l-app tal-awtentikazzjoni jew passkey minflok.",
+          "unavailableBadge": "Mhux disponibbli",
+          "setupTitle": "Issettja l-kodiċi bl-SMS",
+          "setupHint": "Nibagħtulek kodiċi fuq in-numru tat-telefon tiegħek.",
+          "simSwapWarning": "Nota: l-SMS hija inqas sigura minn app ta' awtentikazzjoni. Min jirnexxilu jittrasferixxi n-numru tiegħek fuq SIM card oħra jista' jirċievi l-kodiċijiet tiegħek. Jekk possibbli, agħżel l-app ta' awtentikazzjoni jew passkey.",
+          "numberLabel": "Numru tat-telefon",
+          "numberHint": "F'format internazzjonali bil-kodiċi tal-pajjiż, pereżempju +356 …",
+          "invalidNumber": "Jekk jogħġbok daħħal in-numru f'format internazzjonali, li jibda b'+ u l-kodiċi tal-pajjiż.",
+          "sendCode": "Ibgħat il-kodiċi",
+          "sending": "Qed jintbagħat …",
+          "codeLabel": "Kodiċi ta' 6 ċifri",
+          "codeSentTo": "Bgħatna kodiċi fuq {phone}.",
+          "confirm": "Ikkonferma",
+          "checking": "Qed jiġi vverifikat …",
+          "resend": "Erġa' ibgħat il-kodiċi",
+          "changeNumber": "Uża numru ieħor",
+          "friendlyName": "Kodiċi bl-SMS"
+        },
+        "passkey": {
+          "title": "Passkey",
+          "description": "Login bil-marka tas-swaba', bir-rikonoxximent tal-wiċċ jew b'ċavetta ta' sigurtà. Mingħajr kodiċi.",
+          "setupTitle": "Issettja passkey",
+          "setupHint": "L-apparat tiegħek jikkonfermak bil-marka tas-swaba', bir-rikonoxximent tal-wiċċ jew b'ċavetta ta' sigurtà.",
+          "checkingSupport": "Qed jiġi vverifikat l-apparat …",
+          "unsupportedTitle": "Dan il-browser ma jsostnix il-passkeys",
+          "unsupportedHint": "Uża browser aġġornat jew minflok issettja l-app ta' awtentikazzjoni.",
+          "securityKeyOnly": "Dan l-apparat m'għandux konferma integrata (bħal marka tas-swaba' jew rikonoxximent tal-wiċċ). Għal dan ikollok bżonn ċavetta ta' sigurtà biex tqabbad.",
+          "benefitPhishing": "Tipproteġi minn paġni ta' login foloz.",
+          "benefitNoCode": "L-ebda kodiċi x'tittajpja.",
+          "create": "Oħloq passkey",
+          "friendlyName": "Passkey",
+          "recommended": "Rakkomandat: l-aktar sigur mit-tliet modi.",
+          "creating": "Qed jinħoloq …",
+          "errors": {
+            "abgebrochen": "Il-konferma ġiet ikkanċellata jew ma ġietx rikonoxxuta. Erġa' pprova.",
+            "herkunftPasstNicht": "Il-passkeys mhumiex attivati għal din l-indirizz. Idħol permezz tal-indirizz uffiċjali.",
+            "nichtUnterstuetzt": "Dan l-apparat ma jistax joħloq passkey. Uża l-app tal-awtentikazzjoni jew ċavetta tas-sigurtà.",
+            "schonVorhanden": "Diġà teżisti passkey għal dan il-kont fuq dan l-apparat.",
+            "laeuftBereits": "Diġà għaddejja talba għal passkey. Lestiha jew ikkanċellaha.",
+            "zeitUeberschritten": "Il-ħin għall-konferma skada. Erġa' pprova.",
+            "unbekannt": "Il-passkey ma setgħetx tinħoloq. Erġa' pprova."
+          }
+        },
+        "recovery": {
+          "title": "Kodiċijiet ta' rkupru",
+          "description": "Kodiċijiet li jintużaw darba biss f'każ li ma jkollokx aċċess għat-tieni fattur tiegħek.",
+          "left": "Kodiċijiet li għad fadal: {count}.",
+          "create": "Oħloq kodiċijiet",
+          "regenerate": "Oħloq kodiċijiet ġodda",
+          "regenerateHint": "Meta toħloq kodiċijiet ġodda, dawk kollha ta' qabel jitilfu l-validità tagħhom.",
+          "dialogTitle": "Kodiċijiet ta' rkupru",
+          "dialogHint": "Kodiċijiet li jintużaw darba biss f'każ li ma jkollokx aċċess għat-tieni fattur tiegħek.",
+          "replaceWarning": "Attenzjoni: il-kodiċijiet ta' rkupru preċedenti tiegħek jitilfu l-validità fl-istess ħin.",
+          "passwordLabel": "Password attwali",
+          "passwordHint": "Bħala konferma li tassew inti.",
+          "createNow": "Oħloq kodiċijiet",
+          "creating": "Qed jinħolqu …",
+          "createdTitle": "Il-kodiċijiet ta' rkupru ġodda tiegħek. Żommhom f'post sigur.",
+          "noneReturned": "Ma nħoloq l-ebda kodiċi. Jekk jogħġbok erġa' pprova."
+        },
+        "remove": "Neħħi",
+        "removeDialog": {
+          "totpTitle": "Neħħi l-app ta' awtentikazzjoni",
+          "smsTitle": "Neħħi l-kodiċi bl-SMS",
+          "warning": "Wara dan, dan il-fattur ma jibqax jipproteġi l-kont tiegħek.",
+          "passwordLabel": "Password attwali",
+          "remove": "Neħħi",
+          "removing": "Qed jitneħħa …",
+          "cancel": "Ikkanċella",
+          "hint": "Ikkonferma t-tneħħija bil-password attwali tiegħek.",
+          "passkeyTitle": "Neħħi l-passkey",
+          "lastFactorBlocked": "Dan huwa l-aħħar tieni fattur tiegħek u għar-rwol tiegħek wieħed huwa obbligatorju. L-ewwel oħloq kodiċijiet ta' rkupru jew issettja fattur ieħor."
+        },
+        "requiredWithDeadline": "Għar-rwol tiegħek it-tieni fattur huwa obbligatorju. Issettjah sa {date} — wara dan, il-login mingħajr tieni fattur ma jibqax possibbli.",
+        "statusFailed": "L-istatus tal-awtentikazzjoni b'żewġ fatturi ma setax jitgħabba. Jekk jogħġbok erġa' agħbi l-paġna."
+      },
+      "recovery": {
+        "lockoutWarning": "Mingħajr dawn il-kodiċijiet titlef l-aċċess għall-kont tiegħek jekk ma tkunx tista' tuża aktar it-tieni fattur. Żommhom f'post sigur, separatament mill-password tiegħek.",
+        "copy": "Ikkopja",
+        "copied": "Ikkupjat",
+        "copyFailed": "L-ikkupjar ma rnexxiex. Jekk jogħġbok niżżel il-kodiċijiet jew ipprintjahom.",
+        "download": "Niżżel",
+        "downloadFailed": "It-tniżżil ma rnexxiex. Jekk jogħġbok ikkopja l-kodiċijiet jew ipprintjahom.",
+        "print": "Ipprintja",
+        "printBlocked": "It-tieqa tal-ipprintjar ġiet imblukkata. Jekk jogħġbok ippermetti l-pop-ups jew niżżel il-kodiċijiet.",
+        "printTitle": "Kodiċijiet ta' rkupru myNextDays",
+        "printHint": "Kull kodiċi jaħdem eżattament darba. Żomm din il-karta f'post sigur.",
+        "fileHeader": "Kodiċijiet ta' rkupru myNextDays — kull kodiċi jaħdem eżattament darba. Żommhom f'post sigur.",
+        "confirmSaved": "Ħżint il-kodiċijiet f'post sigur.",
+        "confirmHint": "Immarka l-kaxxa biex tlesti s-setup.",
+        "mustExportFirst": "L-ewwel ikkopja, niżżel jew ipprintja l-kodiċijiet.",
+        "done": "Lest"
+      }
     },
     "company": {
       "saved": "Id-data ġiet salvata.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Lingwi mitkellma",
       "searchLanguage": "Fittex lingwa…",
       "chooseRole": "Agħżel rwol…",
-      "userCreated": "L-utent inħoloq",
-      "preferredLanguage": "Lingwa preferuta",
+      "preferredLanguage": "Lingwa tal-e-mails",
       "noLanguageFound": "Ma nstabet l-ebda lingwa.",
       "firstName": "Isem",
       "lastName": "Kunjom",
       "email": "Email",
       "phone": "Numru tat-telefon",
       "notes": "Noti",
-      "password": "Password",
-      "credentialsHint": "Għaddi dawn il-kredenzjali lill-utent il-ġdid. Il-password tintwera issa biss."
+      "title": "Oħloq utent",
+      "createdSubtitle": "L-istedina ntbagħtet.",
+      "stepHints": {
+        "contact": "Żid id-dettalji ta' kuntatt ta' dan l-utent.",
+        "extra": "Żid informazzjoni addizzjonali dwar dan l-utent.",
+        "role": "Agħżel ir-rwol u l-permessi għal dan l-utent.",
+        "properties": "Assenja proprjetajiet lil dan l-utent."
+      },
+      "done": "Lest",
+      "cancel": "Ikkanċella",
+      "back": "Lura",
+      "next": "Li jmiss",
+      "create": "Oħloq",
+      "creating": "Qed jinħoloq…",
+      "role": "Rwol",
+      "requiredFields": "L-isem, il-kunjom, l-email u r-rwol huma meħtieġa.",
+      "assignFailed": "L-utent inħoloq, iżda l-assenjazzjoni tal-proprjetajiet falliet: {reason}",
+      "hidePhones": "Aħbi n-numri tat-telefon fuq il-websajt.",
+      "noAssignNeeded": "M'hemmx bżonn assenjazzjoni ta' proprjetajiet",
+      "noAssignNeededHint": "Dan ir-rwol għandu aċċess għall-proprjetajiet kollha tal-kont. L-assenjazzjoni ta' proprjetajiet individwali tapplika biss għal sidien u persunal.",
+      "noProperties": "Għad m'hemmx akkomodazzjonijiet",
+      "noPropertiesHint": "Oħloq l-akkomodazzjonijiet tiegħek biex tkun tista' tassenjahom aktar tard lill-utenti tiegħek.",
+      "choosePropertiesHint": "Agħżel il-proprjetajiet li dan l-utent se jkollu aċċess għalihom.",
+      "selectedCount": "{count} magħżula",
+      "inviteSent": "L-istedina ntbagħtet",
+      "inviteSentHint": "L-utent jirċievi email u jissettja l-password tiegħu stess. Il-link huwa validu għal 7 ijiem.",
+      "inviteResend": "Erġa' ibgħat l-istedina",
+      "inviteResending": "Qed jintbagħat…",
+      "inviteResent": "L-istedina ntbagħtet mill-ġdid.",
+      "inviteResendFailed": "L-istedina ma setgħetx tintbagħat mill-ġdid.",
+      "preferredLanguageHint": "F'din il-lingwa l-utent il-ġdid jirċievi l-istedina u l-e-mails l-oħra kollha."
     },
     "tariff": {
       "oneLess": "Proprjetà waħda inqas",
@@ -6359,7 +6767,14 @@
       "updated": "L-utent ġie aġġornat.",
       "deleted": "L-utent tħassar.",
       "generalPermissions": "Permessi ġenerali",
-      "roleChangeHint": "Il-bidla tar-rwol tissuġġerixxi d-drittijiet xierqa. Wara tista' taġġustahom wieħed wieħed."
+      "roleChangeHint": "Il-bidla tar-rwol tissuġġerixxi d-drittijiet xierqa. Wara tista' taġġustahom wieħed wieħed.",
+      "edit": "Editja",
+      "delete": "Ħassar",
+      "resendInvite": "Erġa' ibgħat l-istedina",
+      "inviteResent": "L-istedina ntbagħtet lil {email}.",
+      "inviteResendFailed": "L-istedina ma setgħetx tintbagħat mill-ġdid.",
+      "emailLanguage": "Lingwa tal-e-mails",
+      "emailLanguageHint": "F'din il-lingwa dan l-utent jirċievi l-e-mails tiegħu."
     },
     "staffProperties": {
       "title": "Ikkondividi proprjetajiet"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "eż. Lukanda Veduta tal-Lag",
     "namePlaceholder": "Isem u kunjom",
     "passwordHint": "Mill-inqas 8 karattri",
-    "passwordRepeat": "Irrepeti l-password"
+    "passwordRepeat": "Irrepeti l-password",
+    "headline": "Il-kiri tiegħek kollu f'post wieħed.",
+    "feature1": "Sinkronizza l-kalendarji awtomatikament",
+    "feature2": "Prenotazzjonijiet diretti fis-sit tiegħek",
+    "feature3": "Awtomatizza l-messaġġi lill-mistednin",
+    "withGoogle": "Irreġistra b'Google",
+    "withApple": "Irreġistra b'Apple",
+    "or": "jew",
+    "withEmail": "Irreġistra bl-email",
+    "haveAccount": "Diġà għandek kont?",
+    "loginLink": "Idħol minn hawn",
+    "loadingHeadline": "Is-sit tal-prenotazzjonijiet tiegħek. Żomm 100 % ta' kull prenotazzjoni.",
+    "loadingText": "Qed nissettjaw il-kont tiegħek …"
   },
   "marketingSite": {
     "stars": "4,5 stilel",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Immarka kollox bħala moqri",
     "erneut": "Erġa' tella'",
     "ariaMitAnzahl": "Notifiki ({count} mhux moqrija)"
+  },
+  "auth": {
+    "toLogin": "Lejn il-login",
+    "genericError": "Dan ma rnexxiex issa. Jekk jogħġbok erġa' pprova aktar tard.",
+    "tokenMissing": {
+      "title": "Link mhux komplut",
+      "text": "Dan il-link mhuwiex komplut. Jekk jogħġbok uża l-link sħiħ mill-email — ikkopjah u waħħlu fil-barra tal-indirizz."
+    },
+    "tokenInvalid": {
+      "title": "Il-link m'għadux validu",
+      "textInvite": "Dan il-link tal-istedina skada jew diġà ntuża. Jekk jogħġbok ikkuntattja lin-negozju tiegħek — hemmhekk l-istedina tista' terġa' tintbagħat.",
+      "textReset": "Dan il-link skada jew diġà ntuża. Sempliċiment itlob wieħed ġdid.",
+      "retry": "Itlob link ġdid"
+    },
+    "invite": {
+      "title": "Issettja l-aċċess tiegħek",
+      "intro": "Agħżel password għall-aċċess myNextDays tiegħek. Mill-inqas {min} karattri."
+    },
+    "reset": {
+      "title": "Password ġdida",
+      "intro": "Agħżel password ġdida. Mill-inqas {min} karattri."
+    },
+    "done": {
+      "titleInvite": "L-aċċess ġie ssettjat",
+      "titleReset": "Il-password inbidlet",
+      "text": "Issa tista' tidħol bil-password il-ġdida tiegħek."
+    },
+    "forgot": {
+      "title": "Insejt il-password",
+      "intro": "Daħħal l-indirizz tal-email tiegħek. Nibagħtulek link biex tissettja password ġdida.",
+      "emailLabel": "Email",
+      "submit": "Itlob link",
+      "sending": "Qed jintbagħat…",
+      "sentTitle": "L-email fi triqtha",
+      "sentText": "Jekk jeżisti kont għal dan l-indirizz, bgħatna link biex terġa' tissettja. Huwa validu għal siegħa.",
+      "spamHint": "Ma wasal xejn? Iċċekkja wkoll il-folder tal-ispam.",
+      "again": "Itlob mill-ġdid"
+    },
+    "password": {
+      "newLabel": "Password",
+      "repeatLabel": "Irrepeti l-password",
+      "submit": "Issettja l-password",
+      "saving": "Qed jiġi salvat…",
+      "mismatch": "Iż-żewġ passwords ma jaqblux.",
+      "tooWeak": "Il-password ma tissodisfax ir-rekwiżiti (mill-inqas {min} karattri).",
+      "show": "Uri l-password",
+      "hide": "Aħbi l-password",
+      "strengthLabel": "Saħħa: {level}",
+      "strength": {
+        "1": "dgħajfa",
+        "2": "medja",
+        "3": "tajba",
+        "4": "b'saħħitha"
+      },
+      "requirement": {
+        "length": "Mill-inqas {min} karattri",
+        "letter": "Mill-inqas ittra waħda",
+        "digit": "Mill-inqas ċifra waħda"
+      }
+    },
+    "checking": "Il-link qed jiġi ċċekkjat…",
+    "languageLabel": "Lingwa",
+    "languageChange": "Ibdel il-lingwa",
+    "twoFactor": {
+      "title": "Konferma",
+      "totpHint": "Daħħal il-kodiċi ta' 6 ċifri mill-app ta' awtentikazzjoni tiegħek.",
+      "smsHint": "Daħħal il-kodiċi ta' 6 ċifri li bgħatnielek bl-SMS.",
+      "smsHintWithPhone": "Daħħal il-kodiċi ta' 6 ċifri li bgħatna fuq {phone}.",
+      "codeLabel": "Kodiċi",
+      "confirm": "Ikkonferma",
+      "checking": "Qed jiġi vverifikat …",
+      "recoveryHint": "Daħħal wieħed mill-kodiċijiet ta' rkupru tiegħek.",
+      "recoveryLabel": "Kodiċi ta' rkupru",
+      "recoverySingleUse": "Kull kodiċi jaħdem eżattament darba.",
+      "useTotp": "Uża l-app ta' awtentikazzjoni",
+      "useSms": "Uża l-kodiċi bl-SMS",
+      "useRecovery": "Uża kodiċi ta' rkupru",
+      "backToLogin": "Lura għal-login",
+      "factorMissing": "Dan il-fattur mhuwiex disponibbli għall-kont tiegħek. Agħżel mod ieħor.",
+      "passkeyHint": "Ikkonferma l-login bil-passkey tiegħek.",
+      "passkeyUse": "Idħol bil-passkey",
+      "usePasskey": "Uża passkey",
+      "sendCode": "Ibgħat il-kodiċi bl-SMS",
+      "sending": "Qed jintbagħat …",
+      "smsSent": "Il-kodiċi ntbagħat.",
+      "resend": "Erġa' ibgħat il-kodiċi",
+      "recoveryRedeemedHint": "Il-kodiċi ġie użat, iżda waħdu mhuwiex biżżejjed għal-login. Jekk jogħġbok idħol b'wieħed mill-fatturi li ssettjajt jew ikkuntattja lit-tim tiegħek."
+    },
+    "mfaSetup": {
+      "title": "Issettja l-awtentikazzjoni b'żewġ fatturi",
+      "intro": "Għar-rwol tiegħek it-tieni fattur huwa obbligatorju. Issettjah issa biex tkompli.",
+      "why": "Bħala amministratur għandek aċċess għad-dejta finanzjarja, id-dejta tal-mistednin u s-settings tan-negozju kollu. It-tieni fattur jipprevjeni li password misruqa waħedha tkun biżżejjed.",
+      "goToSettings": "Issettja issa",
+      "later": "Fakkarni aktar tard",
+      "laterHint": "Tista' għadek tipposponi s-setup. Nerġgħu nistaqsuk fil-login li jmiss.",
+      "introWithDeadline": "Għar-rwol tiegħek it-tieni fattur huwa obbligatorju. Issettjah sa {date} — wara dan, il-login mingħajr tieni fattur ma jibqax possibbli."
+    }
+  },
+  "sprache": {
+    "label": "Lingwa tal-e-mails",
+    "hint": "F'din il-lingwa nibagħtu e-mails lil din il-persuna.",
+    "none": "— mhux speċifikat"
+  },
+  "neuerungen": {
+    "eyebrow": "Aġġornamenti tal-prodott",
+    "titel": "Novitajiet",
+    "unterzeile": "Kull ma nbidel f'myNextDays — l-aktar riċenti l-ewwel.",
+    "neuAnzahl": "{anzahl, plural, one {# ġdid} other {# ġodda}}",
+    "ungelesen": "Ġdid",
+    "veroeffentlichtAm": "Ippubblikat fi {datum}",
+    "leer": "Għad m'hemm l-ebda novità.",
+    "ladefehler": "Ma setax jitgħabba: {grund}",
+    "mehrLaden": "Agħbi eqdem",
+    "aufklappen": "Uri d-dettalji",
+    "zuklappen": "Aħbi d-dettalji",
+    "kategorie": {
+      "neuerung": "Funzjoni ġdida",
+      "wartung": "Manutenzjoni",
+      "hinweis": "Avviż",
+      "wichtig": "Importanti"
+    },
+    "popup": {
+      "ariaLabel": "Kontenut tal-avviż",
+      "gelesen": "Fhimt",
+      "wirdGespeichert": "Qed jinħażen …",
+      "erneut": "Erġa' pprova",
+      "fehler": "Ma setax jiġi kkonfermat: {grund}",
+      "weiter": "Li jmiss",
+      "vonAnzahl": "Avviż {nummer}"
+    }
+  },
+  "login": {
+    "title": "Idħol",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "showPassword": "Uri l-password",
+    "hidePassword": "Aħbi l-password",
+    "forgot": "Insejt il-password?",
+    "stayLoggedIn": "Ibqa' mdaħħal",
+    "submit": "Idħol",
+    "submitting": "Dieħel…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Għadek mhux klijent ta' myNextDays?",
+    "signupLink": "Ipprova b'xejn",
+    "mfaTitle": "Konferma",
+    "mfaIntro": "Daħħal il-kodiċi ta' 6 ċifri mill-app tal-awtentikazzjoni. Jaħdem ukoll kodiċi ta' rkupru.",
+    "mfaCodeLabel": "Kodiċi",
+    "mfaSubmit": "Ikkonferma",
+    "mfaChecking": "Qed jiġi ċċekkjat…",
+    "mfaBack": "Lura għad-dħul"
   }
 }

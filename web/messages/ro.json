@@ -283,6 +283,7 @@
       "logout": "Deconectare"
     },
     "stopSell": "Oprire vânzare",
+    "blockRequests": "Cereri de blocare",
     "owners": "Proprietari",
     "ownerStatements": "Deconturi proprietari",
     "portal": "Portalul meu",
@@ -315,7 +316,8 @@
     "noAccess": "Fără acces",
     "dashboardLoadFailed": "Panoul nu a putut fi încărcat",
     "reviews": "Recenzii",
-    "extensions": "Extensii"
+    "extensions": "Extensii",
+    "announcements": "Noutăți"
   },
   "exemption": {
     "labelNamed": "Scutit de impozit ({scheme}) — nu este necesar cod TVA",
@@ -945,6 +947,7 @@
     "newTitle": "Proprietar nou",
     "create": "Creează",
     "created": "Proprietar creat.",
+    "createdInvited": "Proprietar creat și invitație trimisă.",
     "cancel": "Anulează",
     "save": "Salvează",
     "saving": "Se salvează …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Nicio proprietate} one {# proprietate} few {# proprietăți} other {# de proprietăți}}",
     "noProperties": "Acestui proprietar nu îi este alocată încă nicio proprietate.",
     "addProperty": "Alocă proprietate …",
+    "assignProperties": "Atribuie proprietăți",
+    "assignPropertiesHint": "Opțional. Pot fi selectate doar proprietățile care nu au încă un proprietar.",
+    "noFreeProperties": "Toate proprietățile sunt deja atribuite unui proprietar.",
+    "assignSelected": "{count, plural, =0 {Atribuie proprietăți} one {Atribuie # proprietate} few {Atribuie # proprietăți} other {Atribuie # de proprietăți}}",
+    "propertiesAssigned": "{count, plural, one {# proprietate atribuită} few {# proprietăți atribuite} other {# de proprietăți atribuite}}",
     "removeProperty": "Elimină alocarea",
     "sections": {
       "master": "Date de bază",
       "payout": "Plată & comision",
-      "properties": "Proprietăți"
+      "properties": "Proprietăți",
+      "portalAccess": "Acces la portal"
     },
     "frequency": {
       "none": "Niciuna",
@@ -989,12 +998,20 @@
       "statementFrequency": "Ritm de decontare",
       "notes": "Note",
       "share": "Cotă (%)",
-      "commissionOverride": "Comision (%) diferit"
+      "commissionOverride": "Comision (%) diferit",
+      "emailLanguage": "Limba e-mailurilor"
     },
     "placeholders": {
       "name": "de ex. Ion Popescu",
       "email": "de ex. ion@example.com"
-    }
+    },
+    "emailLanguageHint": "În această limbă proprietarul primește deconturile și notificările — chiar și fără acces propriu.",
+    "portalAccess": "Configurează accesul la portal",
+    "portalAccessHint": "Proprietarul primește o invitație prin e-mail și își poate consulta apoi singur deconturile.",
+    "portalAccessNeedsEmail": "Pentru accesul la portal este necesară o adresă de e-mail.",
+    "portalAccessInvite": "Trimite invitația",
+    "portalAccessInvited": "Invitație trimisă.",
+    "portalAccessActive": "Accesul la portal este configurat."
   },
   "ownerStatements": {
     "title": "Deconturi proprietari",
@@ -1149,7 +1166,9 @@
     "subtitle": "Prezentare generală a proprietăților, veniturilor și deconturilor tale.",
     "properties": {
       "title": "Proprietățile mele",
-      "empty": "În prezent nu îți este alocată nicio proprietate."
+      "empty": "În prezent nu îți este alocată nicio proprietate.",
+      "city": "Localitate",
+      "openCalendar": "Calendar"
     },
     "earnings": {
       "title": "Venituri (luna aceasta)",
@@ -1175,7 +1194,24 @@
       "to": "Până la",
       "submit": "Trimite cererea",
       "sending": "Se trimite …",
-      "requested": "Cerere trimisă."
+      "requested": "Cerere trimisă.",
+      "listTitle": "Cererile mele",
+      "listEmpty": "Nu ai solicitat încă nicio blocare.",
+      "created": "Trimisă la",
+      "range": "Perioadă",
+      "statusLabel": "Stare",
+      "readOnlyHint": "Doar administrația poate introduce o blocare. Tu trimiți cererea; decizia le aparține.",
+      "invalidRange": "Data de sfârșit trebuie să fie după data de început.",
+      "invalidDate": "Te rugăm să introduci o dată validă.",
+      "status": {
+        "pending": "În verificare",
+        "approved": "Aprobată",
+        "rejected": "Respinsă",
+        "cancelled": "Retrasă"
+      },
+      "reason": "Motiv",
+      "reasonPlaceholder": "De ce ar trebui blocat? (de ex. uz propriu, meseriași)",
+      "decisionNote": "Notă din partea administrării"
     },
     "meter": {
       "title": "Înregistrează index contor",
@@ -1191,6 +1227,142 @@
         "electricity": "Energie electrică",
         "water": "Apă",
         "gas": "Gaz"
+      },
+      "historyTitle": "Istoric",
+      "historyEmpty": "Pentru această proprietate nu este încă înregistrată nicio citire de contor.",
+      "appendOnlyHint": "Citirile înregistrate rămân neschimbate. O corectare este o intrare nouă — astfel istoricul rămâne complet.",
+      "invalidValue": "Te rugăm să introduci citirea contorului ca număr.",
+      "invalidDate": "Te rugăm să introduci o dată de citire validă."
+    },
+    "logout": "Deconectare",
+    "loadFailed": "Datele nu au putut fi încărcate.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Prezentare generală",
+      "calendar": "Calendar de ocupare",
+      "reports": "Rapoarte",
+      "blockRequests": "Blocări",
+      "meterReadings": "Citiri contoare",
+      "services": "Servicii",
+      "notifications": "Notificări"
+    },
+    "overview": {
+      "occupancy": "Ocupare",
+      "occupancyHint": "Nopți ocupate în perioada selectată.",
+      "nights": "Nopți",
+      "bookings": "Rezervări",
+      "payout": "Plată netă",
+      "payoutHint": "Partea ta după deducerea comisioanelor portalurilor.",
+      "period": "Perioadă",
+      "periodMonth": "Luna aceasta",
+      "periodYear": "Anul acesta",
+      "openCalendar": "Deschide calendarul",
+      "latestStatement": "Ultimul decont",
+      "noStatement": "Niciun decont încă"
+    },
+    "calendar": {
+      "title": "Calendar de ocupare",
+      "subtitle": "Ocuparea și plata ta netă pe noapte.",
+      "selectProperty": "Selectează proprietatea",
+      "prevMonth": "Luna anterioară",
+      "nextMonth": "Luna următoare",
+      "today": "Astăzi",
+      "legendSeasons": "Sezoane",
+      "legendStatus": "Ocupare",
+      "noSeasons": "Pentru această proprietate nu sunt definite sezoane.",
+      "status": {
+        "open": "Liber",
+        "booked": "Ocupat",
+        "blocked": "Blocat"
+      },
+      "payoutPerNight": "Plată netă/noapte",
+      "guest": "Oaspete",
+      "channel": "Sursa rezervării",
+      "blockHint": "Vrei să blochezi o perioadă? Trimite o cerere — administrația decide.",
+      "blockCta": "Solicită blocare",
+      "weekdays": "Lun,Mar,Mie,Joi,Vin,Sâm,Dum",
+      "months": "Ianuarie,Februarie,Martie,Aprilie,Mai,Iunie,Iulie,August,Septembrie,Octombrie,Noiembrie,Decembrie"
+    },
+    "services": {
+      "title": "Comandă un serviciu",
+      "hint": "Comandă un serviciu pentru proprietatea ta. Administrația acceptă și programează comanda.",
+      "property": "Proprietate",
+      "kind": "Serviciu",
+      "date": "Data dorită",
+      "note": "Observație",
+      "notePlaceholder": "Ce anume trebuie făcut?",
+      "submit": "Comandă",
+      "sending": "Se trimite …",
+      "sent": "Comandă trimisă.",
+      "listTitle": "Comenzile mele",
+      "listEmpty": "Nu ai comandat încă niciun serviciu.",
+      "invalidDate": "Te rugăm să introduci o dată dorită validă.",
+      "noteRequired": "Te rugăm să descrii serviciul dorit.",
+      "kinds": {
+        "custom": "Altele (text liber)"
+      },
+      "status": {
+        "pending": "În verificare",
+        "accepted": "Acceptată",
+        "scheduled": "Programată",
+        "done": "Finalizată",
+        "rejected": "Respinsă",
+        "cancelled": "Retrasă"
+      },
+      "type": {
+        "endreinigung": "Curățenie finală",
+        "hauptreinigung": "Curățenie generală",
+        "fensterreinigung": "Curățare geamuri",
+        "rasenmaehen": "Tuns iarba",
+        "terrassenreinigung": "Curățare terasă"
+      },
+      "dateTo": "Până la"
+    },
+    "notifications": {
+      "title": "Notificări",
+      "hint": "Stabilește pentru fiecare eveniment cum vrei să fii notificat.",
+      "channel": {
+        "email": "E-mail",
+        "sms": "SMS",
+        "phone": "Telefon"
+      },
+      "locked": "Acest e-mail este necesar contractual și rămâne activ.",
+      "saved": "Salvat.",
+      "saveFailed": "Modificarea nu a putut fi salvată.",
+      "categories": {
+        "listing_activity": "Rezervări la proprietățile tale",
+        "listing_activityHint": "Rezervare nouă, modificare și anulare.",
+        "account_activity": "Activitate cont",
+        "account_activityHint": "Autentificări și modificări ale contului tău.",
+        "reminders": "Mementouri",
+        "remindersHint": "Sarcini și termene scadente.",
+        "messages": "Mesaje",
+        "messagesHint": "Mesaje noi de la administrație.",
+        "owner_booking": "Rezervări la proprietățile tale",
+        "owner_bookingHint": "Rezervare nouă, modificare și anulare.",
+        "block_decision": "Decizie privind cererile tale de blocare",
+        "block_decisionHint": "Când administrația aprobă sau respinge cererea ta.",
+        "owner_service": "Servicii comandate",
+        "owner_serviceHint": "Schimbare de stare la un serviciu pe care l-ai comandat."
+      }
+    },
+    "reports": {
+      "title": "Rapoarte",
+      "subtitle": "Decontări, luna curentă, precum și rapoarte lunare și anuale.",
+      "currentTitle": "Starea actuală a decontului",
+      "currentHint": "Provizoriu — luna este încă în curs. Este obligatoriu doar decontul finalizat.",
+      "monthly": "Raport lunar",
+      "yearly": "Raport anual",
+      "month": "Lună",
+      "year": "An",
+      "download": "Descarcă PDF",
+      "downloading": "Se generează …",
+      "downloadFailed": "PDF-ul nu a putut fi generat.",
+      "onlyFinalized": "Doar decontările finalizate sunt disponibile pentru descărcare.",
+      "status": {
+        "draft": "În pregătire",
+        "finalized": "Finalizat",
+        "cancelled": "Anulat"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "O sumă fixă nu poate fi repartizată pe nopți — nu ajunge la portaluri, unde trebuie întreținută în extranet.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Aplicați aceeași promoție și la alte proprietăți.",
+      "applyToOthersSeasonHint": "Creează același sezon și la alte obiecte.",
       "promoReason": {
         "mindestaufenthalt": "sejur minim",
         "fruehbucher": "avans pentru rezervare timpurie",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Plan de plată",
       "cancellationLabel": "Anulare",
       "depositLabel": "Garanție",
-      "depositWithheldText": "Se reține o garanție de {amount}.",
       "noPolicyYet": "Încă nu este atribuită nicio politică.",
       "bookabilityCardTitle": "Posibilitate de rezervare",
       "bookabilityCardHint": "Modul în care sunt acceptate rezervările.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Contract de închiriere",
       "rentalAgreementCardHint": "Creează contractul de închiriere sau adaugă un link către el pentru oaspeții tăi.",
       "noRentalAgreementYet": "Încă nu există contract de închiriere.",
-      "addPolicyTitle": "Adaugă politică",
       "addPolicySubtitle": "Stabilește detaliile pentru această politică nouă.",
       "internalNameLabel": "Nume intern *",
       "internalNamePlaceholder": "de ex. Plată parțială – nerambursabilă",
       "paymentPlanGroupTitle": "Plan de plată",
       "paymentCountLabel": "Numărul de plăți",
-      "depositPercentLabel": "Avans (%)",
-      "remainingDaysBeforeLabel": "Rest de plată (zile înainte de sosire)",
       "guestCancellationGroupTitle": "Anulare de către oaspete",
       "cancellationTypeLabel": "Tip de anulare",
       "depositGroupTitle": "Garanție",
-      "depositModeNone": "Nu este necesară nicio garanție",
-      "depositModeAmount": "Garanție ca sumă",
-      "depositAmountLabelWithCurrency": "Suma garanției ({currency})",
-      "depositAmountLabel": "Suma garanției",
       "quoteValidityGroupTitle": "Valabilitatea ofertei",
       "quoteValidityHoursLabel": "Durata de valabilitate (ore) *",
       "quoteValidityHint": "Oferta este valabilă maxim {hours} ore, atâta timp cât statusul este „Se așteaptă oaspetele” sau „Se așteaptă plata”.",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Recomandat",
       "checkInTimeLabel": "Ora de check-in",
       "checkOutTimeLabel": "Ora de check-out",
-      "paymentSummaryFull": "100 % scadent la rezervare.",
-      "paymentSummarySplit": "{percent} % la rezervare, restul de plată cu {days} zile înainte de sosire.",
       "localizedEditorSubtitle": "Creează textul și tradu-l dacă este necesar pentru oaspeții tăi.",
-      "localizedEditorPlaceholder": "Introdu {title} …"
+      "localizedEditorPlaceholder": "Introdu {title} …",
+      "editPolicyTitle": "Editează condițiile",
+      "singlePaymentHint": "100 % din plată este scadentă la finalizarea rezervării.",
+      "firstPaymentHeading": "Prima plată",
+      "secondPaymentHeading": "A doua plată",
+      "thirdPaymentHeading": "A treia plată",
+      "amountTypeLabel": "Tipul sumei",
+      "percentLabel": "Procent",
+      "amountLabel": "Sumă",
+      "currencyLabel": "Monedă",
+      "daysLabel": "Zile",
+      "periodLabel": "Perioadă",
+      "firstPaymentHint": "La rezervare se percepe doar suma fixă sau procentul primei plăți. Plățile rămase sunt facturate la data programată.",
+      "remainderHint": "Configurați când urmează să fie percepută suma rămasă.",
+      "partialRulesHint": "Definiți regulile pentru anulările parțial rambursabile.",
+      "ruleHeading": "Regula {number}",
+      "ruleDelete": "Șterge regula",
+      "ruleAdd": "Adaugă o regulă",
+      "refundTypeLabel": "Tipul rambursării",
+      "refundLabel": "Rambursare",
+      "whenCancelledLabel": "În caz de anulare",
+      "depositNotRequired": "Nu este necesară o garanție",
+      "depositRequired": "Este necesară o garanție",
+      "depositMethodLabel": "Metodă",
+      "preAuthTimesHeading": "Termenele preautorizării",
+      "preAuthValidityLabel": "Valabilitate (zile după plecare)",
+      "preAuthWarnTitle": "Preautorizările pot fi garantate doar timp de 5 zile.",
+      "preAuthWarnBody": "Durata unei preautorizări pe un card de credit depinde de diferiți factori, precum furnizorul cardului, banca emitentă, procesatorul de plăți și așa mai departe. De aceea, la toate rezervările de o săptămână sau mai lungi, fiecare preautorizare expiră (este anulată automat) la fiecare 5 zile. Vă vom notifica, pentru ca dumneavoastră să puteți emite manual o nouă preautorizare și să păstrați garanția pentru restul rezervării.",
+      "assignAction": "Atribuie condițiile"
     },
     "ratePlanWizard": {
       "title": "Creează plan de prețuri",
@@ -5604,6 +5795,39 @@
       "confirmed": "Confirmată",
       "in_house": "Sosit",
       "pending": "Opțiune / provizoriu"
+    },
+    "blockRequests": {
+      "title": "Cereri de blocare",
+      "subtitle": "Cereri ale proprietarilor tăi de a-și bloca obiectele. O aprobare blochează nopțile în calendar și le raportează portalurilor.",
+      "filter": "Stare",
+      "filterAll": "Toate",
+      "empty": "Nicio cerere în această vizualizare.",
+      "requestedBy": "Solicitat de {name}",
+      "reason": "Motiv",
+      "decisionNote": "Observație",
+      "note": "Observație pentru proprietar",
+      "notePlaceholder": "Opțional — îi este afișată proprietarului.",
+      "working": "Se execută …",
+      "status": {
+        "pending": "Deschisă",
+        "approved": "Aprobată",
+        "rejected": "Respinsă"
+      },
+      "action": {
+        "approve": "Aprobă",
+        "reject": "Respinge",
+        "revoke": "Revocă"
+      },
+      "confirm": {
+        "approve": "Blochezi {objekt} de la {von} până la {bis}? Nopțile vor fi blocate pe toate portalurile.",
+        "reject": "Respingi cererea pentru {objekt} ({von} – {bis})?",
+        "revoke": "Revoci aprobarea pentru {objekt} ({von} – {bis})? Nopțile vor fi eliberate din nou."
+      },
+      "done": {
+        "approve": "Cerere aprobată, nopți blocate.",
+        "reject": "Cerere respinsă.",
+        "revoke": "Aprobare revocată, nopți eliberate."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "ianuarie,februarie,martie,aprilie,mai,iunie,iulie,august,septembrie,octombrie,noiembrie,decembrie",
     "name": "Nume",
     "seasonAdd": "Adaugă sezon",
+    "seasonApplyCancel": "Anulează",
+    "seasonApplyCopyHint": "Sezonul este creat ca o copie independentă. Modificările ulterioare ale acestui sezon NU se mai aplică acolo. Suplimentul se calculează la prețul de bază propriu al obiectului țintă.",
+    "seasonApplyNone": "Nu a fost copiat în nicio proprietate.",
+    "seasonApplyPartial": "Copiat în {count} obiect(e), {skipped} omis(e).",
+    "seasonApplyPickTarget": "Selectează cel puțin un obiect.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Niciun preț de bază setat — suplimentul nu poate fi calculat.",
+      "basispreis_null": "Prețul de bază este 0 — nu se poate calcula un supliment.",
+      "teilweise_uebertragen": "Sezonul este la proprietate, prețurile zilnice lipsesc încă — încercați din nou pentru a finaliza.",
+      "unbekannt": "Omis dintr-un motiv necunoscut."
+    },
+    "seasonApplySubmit": "Copiază",
+    "seasonApplySuccess": "Copiat în {count} obiect(e).",
+    "seasonApplyTitle": "Copiază „{name}” în alte obiecte",
+    "seasonApplyToOthers": "Copiază în alte obiecte",
+    "seasonApplyWithRanges": "Copiază și perioadele",
+    "seasonApplyWithRangesHint": "Zilele marcate se setează identic la obiectul țintă. Dezactivat: doar sezonul, fără zile.",
     "seasonClearHint": "Trage cu clic dreapta peste zile pentru a le elimina din sezon.",
     "seasonColor": "Culoare",
     "seasonColorAria": "Culoare {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Supliment (± %)",
     "seasonSurchargePlaceholder": "ex. 30 sau -15",
     "seasonValueRequired": "Indică o valoare validă.",
-    "weekdays": "L,M,M,J,V,S,D"
+    "weekdays": "L,M,M,J,V,S,D",
+    "seasonApplyNoSpans": "Acest sezon nu are perioade colorate. Colorați-l mai întâi sau transferați doar definiția fără perioade."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "Cod QR pentru aplicația de autentificare",
       "sixDigitCode": "Cod din 6 cifre",
       "disable2fa": "Dezactivează 2FA",
-      "disable2faHint": "Introduceți un cod actual (sau un cod de recuperare) pentru a dezactiva 2FA."
+      "disable2faHint": "Introduceți un cod actual (sau un cod de recuperare) pentru a dezactiva 2FA.",
+      "title": "Securitate",
+      "loadFailed": "Datele contului nu au putut fi încărcate. Verificați conexiunea și încercați din nou.",
+      "credentials": "Date de autentificare",
+      "emailAndUsername": "E-mail și nume de utilizator",
+      "emailLabel": "E-mail",
+      "nameLabel": "Nume",
+      "password": "Parolă",
+      "noPassword": "Nicio parolă setată",
+      "passwordMin": "Cel puțin 8 caractere.",
+      "save": "Salvează",
+      "saving": "Se salvează …",
+      "changePassword": "Schimbă parola",
+      "twoFactor": {
+        "title": "Autentificare în doi pași (2FA)",
+        "intro": "Vă protejează contul cu un al doilea factor, pe lângă parolă.",
+        "noneActive": "Încă nu este configurat niciun al doilea factor. Vă recomandăm aplicația de autentificare.",
+        "requiredNotice": "Pentru rolul dumneavoastră, al doilea factor este obligatoriu. Configurați-l acum.",
+        "active": "Activ",
+        "setUp": "Configurează",
+        "totp": {
+          "title": "Aplicație de autentificare",
+          "description": "Cod de unică folosință dintr-o aplicație precum Google Authenticator sau Microsoft Authenticator. Funcționează și fără rețea mobilă.",
+          "setupTitle": "Configurarea aplicației de autentificare",
+          "setupHint": "Scanați codul QR cu aplicația dumneavoastră și confirmați cu codul afișat.",
+          "step1": "1. Scanați codul QR",
+          "step2": "3. Introduceți codul din aplicație",
+          "qrAlt": "Cod QR pentru aplicația de autentificare",
+          "qrHint": "Deschideți aplicația de autentificare și scanați codul.",
+          "manualTitle": "2. Sau introduceți cheia manual",
+          "manualHint": "Folosiți această cheie dacă nu puteți scana codul QR.",
+          "showSecret": "Afișează cheia",
+          "hideSecret": "Ascunde cheia",
+          "copySecret": "Copiază cheia",
+          "copyFailed": "Copierea nu a reușit. Selectați cheia și copiați-o manual.",
+          "codeLabel": "Cod din 6 cifre",
+          "activate": "Activează",
+          "checking": "Se verifică …",
+          "preparing": "Se pregătește configurarea …",
+          "enabledTitle": "Aplicația de autentificare este activă. Puneți acum la păstrare codurile de recuperare.",
+          "friendlyName": "Aplicație de autentificare",
+          "replayNote": "Observație: un cod rămâne valabil până la 90 de secunde și poate fi folosit de mai multe ori în acest interval. Împotriva fraudei în timp real cu pagini de autentificare falsificate protejează doar o cheie de acces."
+        },
+        "sms": {
+          "title": "Cod prin SMS",
+          "description": "Cod de unică folosință trimis prin SMS la numărul dumneavoastră de telefon confirmat.",
+          "unavailable": "Codul prin SMS nu este disponibil pe acest server, deoarece nu este configurat niciun furnizor SMS. Alege aplicația de autentificare sau o cheie de acces.",
+          "unavailableBadge": "Indisponibil",
+          "setupTitle": "Configurarea codului prin SMS",
+          "setupHint": "Vă trimitem un cod la numărul dumneavoastră de telefon.",
+          "simSwapWarning": "Atenție: SMS-ul este mai puțin sigur decât o aplicație de autentificare. Cine reușește să vă transfere numărul pe altă cartelă SIM vă poate primi codurile. Dacă este posibil, alegeți aplicația de autentificare sau o cheie de acces.",
+          "numberLabel": "Număr de telefon",
+          "numberHint": "Format internațional cu prefixul țării, de exemplu +40 …",
+          "invalidNumber": "Introduceți numărul în format internațional, începând cu + și prefixul țării.",
+          "sendCode": "Trimite codul",
+          "sending": "Se trimite …",
+          "codeLabel": "Cod din 6 cifre",
+          "codeSentTo": "Am trimis un cod la {phone}.",
+          "confirm": "Confirmă",
+          "checking": "Se verifică …",
+          "resend": "Retrimite codul",
+          "changeNumber": "Folosește alt număr",
+          "friendlyName": "Cod prin SMS"
+        },
+        "passkey": {
+          "title": "Cheie de acces",
+          "description": "Autentificare cu amprentă, recunoaștere facială sau cheie de securitate. Fără cod.",
+          "setupTitle": "Configurarea cheii de acces",
+          "setupHint": "Dispozitivul dumneavoastră vă confirmă identitatea prin amprentă, recunoaștere facială sau cheie de securitate.",
+          "checkingSupport": "Se verifică dispozitivul …",
+          "unsupportedTitle": "Acest browser nu acceptă chei de acces",
+          "unsupportedHint": "Folosiți un browser actualizat sau configurați în schimb aplicația de autentificare.",
+          "securityKeyOnly": "Acest dispozitiv nu are confirmare integrată a identității (de exemplu amprentă sau recunoaștere facială). Pentru aceasta aveți nevoie de o cheie de securitate care se conectează la dispozitiv.",
+          "benefitPhishing": "Vă protejează de paginile de autentificare falsificate.",
+          "benefitNoCode": "Niciun cod de introdus.",
+          "create": "Creează cheia de acces",
+          "friendlyName": "Cheie de acces",
+          "recommended": "Recomandat: cea mai sigură dintre cele trei metode.",
+          "creating": "Se creează …",
+          "errors": {
+            "abgebrochen": "Confirmarea a fost anulată sau nu a fost recunoscută. Încercați din nou.",
+            "herkunftPasstNicht": "Cheile de acces nu sunt activate pentru această adresă. Conectați-vă prin adresa oficială.",
+            "nichtUnterstuetzt": "Acest dispozitiv nu poate crea o cheie de acces. Folosiți aplicația de autentificare sau o cheie de securitate.",
+            "schonVorhanden": "Există deja o cheie de acces pentru acest cont pe acest dispozitiv.",
+            "laeuftBereits": "O solicitare de cheie de acces este deja în curs. Finalizați-o sau anulați-o.",
+            "zeitUeberschritten": "Timpul pentru confirmare a expirat. Încercați din nou.",
+            "unbekannt": "Cheia de acces nu a putut fi creată. Încercați din nou."
+          }
+        },
+        "recovery": {
+          "title": "Coduri de recuperare",
+          "description": "Coduri de unică folosință pentru cazul în care nu aveți acces la al doilea factor.",
+          "left": "Coduri disponibile: {count}.",
+          "create": "Creează coduri",
+          "regenerate": "Creează coduri noi",
+          "regenerateHint": "La crearea de coduri noi, toate cele existente își pierd valabilitatea.",
+          "dialogTitle": "Coduri de recuperare",
+          "dialogHint": "Coduri de unică folosință pentru cazul în care nu aveți acces la al doilea factor.",
+          "replaceWarning": "Atenție: codurile dumneavoastră de recuperare existente își pierd astfel valabilitatea.",
+          "passwordLabel": "Parola actuală",
+          "passwordHint": "Pentru a confirma că sunteți într-adevăr dumneavoastră.",
+          "createNow": "Creează coduri",
+          "creating": "Se creează …",
+          "createdTitle": "Noile dumneavoastră coduri de recuperare. Păstrați-le într-un loc sigur.",
+          "noneReturned": "Nu a fost creat niciun cod. Încercați din nou."
+        },
+        "remove": "Elimină",
+        "removeDialog": {
+          "totpTitle": "Elimină aplicația de autentificare",
+          "smsTitle": "Elimină codul prin SMS",
+          "warning": "După aceea, acest factor nu vă mai protejează contul.",
+          "passwordLabel": "Parola actuală",
+          "remove": "Elimină",
+          "removing": "Se elimină …",
+          "cancel": "Anulează",
+          "hint": "Confirmați eliminarea cu parola dumneavoastră actuală.",
+          "passkeyTitle": "Elimină cheia de acces",
+          "lastFactorBlocked": "Acesta este ultimul dumneavoastră al doilea factor, iar pentru rolul dumneavoastră este obligatoriu unul. Creați mai întâi coduri de recuperare sau configurați un alt factor."
+        },
+        "requiredWithDeadline": "Pentru rolul dumneavoastră, al doilea factor este obligatoriu. Configurați-l până la {date} — după această dată autentificarea fără al doilea factor nu mai este posibilă.",
+        "statusFailed": "Starea autentificării în doi pași nu a putut fi încărcată. Reîncărcați pagina."
+      },
+      "recovery": {
+        "lockoutWarning": "Fără aceste coduri pierdeți accesul la contul dumneavoastră dacă nu mai puteți folosi al doilea factor. Păstrați-le într-un loc sigur, separat de parolă.",
+        "copy": "Copiază",
+        "copied": "Copiat",
+        "copyFailed": "Copierea nu a reușit. Descărcați codurile sau tipăriți-le.",
+        "download": "Descarcă",
+        "downloadFailed": "Descărcarea nu a reușit. Copiați codurile sau tipăriți-le.",
+        "print": "Tipărește",
+        "printBlocked": "Fereastra de tipărire a fost blocată. Permiteți ferestrele pop-up sau descărcați codurile.",
+        "printTitle": "Coduri de recuperare myNextDays",
+        "printHint": "Fiecare cod funcționează exact o singură dată. Păstrați această foaie într-un loc sigur.",
+        "fileHeader": "Coduri de recuperare myNextDays — fiecare cod funcționează exact o singură dată. Păstrați-le în siguranță.",
+        "confirmSaved": "Am salvat codurile în siguranță.",
+        "confirmHint": "Bifați caseta pentru a finaliza configurarea.",
+        "mustExportFirst": "Copiați, descărcați sau tipăriți mai întâi codurile.",
+        "done": "Gata"
+      }
     },
     "company": {
       "saved": "Datele au fost salvate.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Limbi vorbite",
       "searchLanguage": "Caută limba…",
       "chooseRole": "Alege rolul…",
-      "userCreated": "Utilizator creat",
-      "preferredLanguage": "Limba preferată",
+      "preferredLanguage": "Limba e-mailurilor",
       "noLanguageFound": "Nu a fost găsită nicio limbă.",
       "firstName": "Prenume",
       "lastName": "Nume",
       "email": "E-mail",
       "phone": "Număr de telefon",
       "notes": "Observații",
-      "password": "Parolă",
-      "credentialsHint": "Transmiteți aceste date de acces noului utilizator. Parola este afișată doar acum."
+      "title": "Creați utilizator",
+      "createdSubtitle": "Invitație trimisă.",
+      "stepHints": {
+        "contact": "Adăugați datele de contact ale acestui utilizator.",
+        "extra": "Adăugați informații suplimentare despre acest utilizator.",
+        "role": "Alegeți rolul și permisiunile pentru acest utilizator.",
+        "properties": "Atribuiți obiecte acestui utilizator."
+      },
+      "done": "Gata",
+      "cancel": "Anulați",
+      "back": "Înapoi",
+      "next": "Mai departe",
+      "create": "Creați",
+      "creating": "Se creează…",
+      "role": "Rol",
+      "requiredFields": "Prenumele, numele, e-mailul și rolul sunt obligatorii.",
+      "assignFailed": "Utilizator creat, dar atribuirea obiectelor a eșuat: {reason}",
+      "hidePhones": "Ascundeți numerele de telefon pe site.",
+      "noAssignNeeded": "Nu este necesară atribuirea de obiecte",
+      "noAssignNeededHint": "Acest rol are acces la toate obiectele contului. Atribuirea obiectelor individuale se aplică doar proprietarilor și personalului.",
+      "noProperties": "Încă nicio unitate de cazare",
+      "noPropertiesHint": "Creați unitățile dumneavoastră de cazare pentru a le putea atribui ulterior utilizatorilor.",
+      "choosePropertiesHint": "Alegeți obiectele la care acest utilizator va avea acces.",
+      "selectedCount": "{count} selectate",
+      "inviteSent": "Invitație trimisă",
+      "inviteSentHint": "Utilizatorul primește un e-mail și își setează singur parola. Linkul este valabil 7 zile.",
+      "inviteResend": "Retrimiteți invitația",
+      "inviteResending": "Se trimite…",
+      "inviteResent": "Invitație retrimisă.",
+      "inviteResendFailed": "Invitația nu a putut fi retrimisă.",
+      "preferredLanguageHint": "În această limbă noul utilizator va primi invitația și toate celelalte e-mailuri."
     },
     "tariff": {
       "oneLess": "O proprietate mai puțin",
@@ -6359,7 +6767,14 @@
       "updated": "Utilizator actualizat.",
       "deleted": "Utilizator șters.",
       "generalPermissions": "Permisiuni generale",
-      "roleChangeHint": "Schimbarea rolului propune drepturile potrivite. Le puteți ajusta apoi individual."
+      "roleChangeHint": "Schimbarea rolului propune drepturile potrivite. Le puteți ajusta apoi individual.",
+      "edit": "Editați",
+      "delete": "Ștergeți",
+      "resendInvite": "Retrimiteți invitația",
+      "inviteResent": "Invitație trimisă la {email}.",
+      "inviteResendFailed": "Invitația nu a putut fi retrimisă.",
+      "emailLanguage": "Limba e-mailurilor",
+      "emailLanguageHint": "În această limbă acest utilizator își primește e-mailurile."
     },
     "staffProperties": {
       "title": "Partajează proprietăți"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "de ex. Hotel Vedere la Lac",
     "namePlaceholder": "Prenume și nume",
     "passwordHint": "Cel puțin 8 caractere",
-    "passwordRepeat": "Repetați parola"
+    "passwordRepeat": "Repetați parola",
+    "headline": "Toată închirierea ta într-un singur loc.",
+    "feature1": "Sincronizează calendarele automat",
+    "feature2": "Rezervări directe pe propriul site",
+    "feature3": "Automatizează mesajele către oaspeți",
+    "withGoogle": "Înregistrează-te cu Google",
+    "withApple": "Înregistrează-te cu Apple",
+    "or": "sau",
+    "withEmail": "Înregistrează-te cu e-mail",
+    "haveAccount": "Ai deja un cont?",
+    "loginLink": "Autentifică-te aici",
+    "loadingHeadline": "Propriul tău site de rezervări. Păstrează 100 % din fiecare rezervare.",
+    "loadingText": "Îți configurăm contul …"
   },
   "marketingSite": {
     "stars": "4,5 stele",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Marchează toate ca citite",
     "erneut": "Reîncarcă",
     "ariaMitAnzahl": "Notificări ({count} necitite)"
+  },
+  "auth": {
+    "toLogin": "Către autentificare",
+    "genericError": "Nu a funcționat acum. Vă rugăm să încercați mai târziu.",
+    "tokenMissing": {
+      "title": "Link incomplet",
+      "text": "Acest link este incomplet. Vă rugăm să folosiți linkul complet din e-mail — copiați-l și lipiți-l în bara de adrese."
+    },
+    "tokenInvalid": {
+      "title": "Linkul nu mai este valabil",
+      "textInvite": "Acest link de invitație a expirat sau a fost deja folosit. Vă rugăm să contactați unitatea dumneavoastră — invitația poate fi trimisă din nou.",
+      "textReset": "Acest link a expirat sau a fost deja folosit. Solicitați pur și simplu unul nou.",
+      "retry": "Solicitați un link nou"
+    },
+    "invite": {
+      "title": "Configurați-vă accesul",
+      "intro": "Alegeți o parolă pentru accesul dumneavoastră myNextDays. Cel puțin {min} caractere."
+    },
+    "reset": {
+      "title": "Parolă nouă",
+      "intro": "Alegeți o parolă nouă. Cel puțin {min} caractere."
+    },
+    "done": {
+      "titleInvite": "Acces configurat",
+      "titleReset": "Parolă modificată",
+      "text": "Acum vă puteți autentifica cu noua parolă."
+    },
+    "forgot": {
+      "title": "Parolă uitată",
+      "intro": "Introduceți adresa dumneavoastră de e-mail. Vă vom trimite un link pentru a seta o parolă nouă.",
+      "emailLabel": "E-mail",
+      "submit": "Solicitați link",
+      "sending": "Se trimite…",
+      "sentTitle": "E-mailul este pe drum",
+      "sentText": "Dacă există un cont pentru această adresă, am trimis un link de resetare. Este valabil o oră.",
+      "spamHint": "Nu a sosit nimic? Verificați și folderul spam.",
+      "again": "Solicitați din nou"
+    },
+    "password": {
+      "newLabel": "Parolă",
+      "repeatLabel": "Repetați parola",
+      "submit": "Setați parola",
+      "saving": "Se salvează…",
+      "mismatch": "Cele două parole nu coincid.",
+      "tooWeak": "Parola nu îndeplinește cerințele (cel puțin {min} caractere).",
+      "show": "Afișați parola",
+      "hide": "Ascundeți parola",
+      "strengthLabel": "Putere: {level}",
+      "strength": {
+        "1": "slabă",
+        "2": "medie",
+        "3": "bună",
+        "4": "puternică"
+      },
+      "requirement": {
+        "length": "Cel puțin {min} caractere",
+        "letter": "Cel puțin o literă",
+        "digit": "Cel puțin o cifră"
+      }
+    },
+    "checking": "Se verifică linkul…",
+    "languageLabel": "Limbă",
+    "languageChange": "Schimbă limba",
+    "twoFactor": {
+      "title": "Confirmare",
+      "totpHint": "Introduceți codul din 6 cifre din aplicația dumneavoastră de autentificare.",
+      "smsHint": "Introduceți codul din 6 cifre pe care vi l-am trimis prin SMS.",
+      "smsHintWithPhone": "Introduceți codul din 6 cifre pe care l-am trimis la {phone}.",
+      "codeLabel": "Cod",
+      "confirm": "Confirmă",
+      "checking": "Se verifică …",
+      "recoveryHint": "Introduceți unul dintre codurile dumneavoastră de recuperare.",
+      "recoveryLabel": "Cod de recuperare",
+      "recoverySingleUse": "Fiecare cod funcționează exact o singură dată.",
+      "useTotp": "Folosește aplicația de autentificare",
+      "useSms": "Folosește codul prin SMS",
+      "useRecovery": "Folosește codul de recuperare",
+      "backToLogin": "Înapoi la autentificare",
+      "factorMissing": "Acest factor nu este disponibil pentru contul dumneavoastră. Alegeți altă metodă.",
+      "passkeyHint": "Confirmați autentificarea cu cheia dumneavoastră de acces.",
+      "passkeyUse": "Autentificare cu cheia de acces",
+      "usePasskey": "Folosește cheia de acces",
+      "sendCode": "Trimite codul prin SMS",
+      "sending": "Se trimite …",
+      "smsSent": "Codul a fost trimis.",
+      "resend": "Retrimite codul",
+      "recoveryRedeemedHint": "Codul a fost folosit, dar singur nu este suficient pentru autentificare. Autentificați-vă cu unul dintre factorii configurați sau adresați-vă echipei dumneavoastră."
+    },
+    "mfaSetup": {
+      "title": "Configurați autentificarea în doi pași",
+      "intro": "Pentru rolul dumneavoastră, al doilea factor este obligatoriu. Configurați-l acum pentru a continua.",
+      "why": "În calitate de administrator aveți acces la datele financiare, la datele oaspeților și la setările întregii unități. Al doilea factor împiedică o parolă furată să fie suficientă prin ea însăși.",
+      "goToSettings": "Configurează acum",
+      "later": "Amintește-mi mai târziu",
+      "laterHint": "Puteți amâna configurarea. Vă vom întreba din nou la următoarea autentificare.",
+      "introWithDeadline": "Pentru rolul dumneavoastră, al doilea factor este obligatoriu. Configurați-l până la {date} — după această dată autentificarea fără al doilea factor nu mai este posibilă."
+    }
+  },
+  "sprache": {
+    "label": "Limba e-mailurilor",
+    "hint": "În această limbă trimitem e-mailuri acestei persoane.",
+    "none": "— nespecificat"
+  },
+  "neuerungen": {
+    "eyebrow": "Noutăți despre produs",
+    "titel": "Noutăți",
+    "unterzeile": "Tot ce s-a schimbat în myNextDays — cele mai noi primele.",
+    "neuAnzahl": "{anzahl, plural, one {# nouă} few {# noi} other {# noi}}",
+    "ungelesen": "Nou",
+    "veroeffentlichtAm": "Publicat pe {datum}",
+    "leer": "Încă nu există noutăți.",
+    "ladefehler": "Nu s-a putut încărca: {grund}",
+    "mehrLaden": "Încarcă mai vechi",
+    "aufklappen": "Afișează detaliile",
+    "zuklappen": "Ascunde detaliile",
+    "kategorie": {
+      "neuerung": "Funcție nouă",
+      "wartung": "Mentenanță",
+      "hinweis": "Anunț",
+      "wichtig": "Important"
+    },
+    "popup": {
+      "ariaLabel": "Conținutul anunțului",
+      "gelesen": "Am înțeles",
+      "wirdGespeichert": "Se salvează …",
+      "erneut": "Încearcă din nou",
+      "fehler": "Nu s-a putut confirma: {grund}",
+      "weiter": "Mai departe",
+      "vonAnzahl": "Anunțul {nummer}"
+    }
+  },
+  "login": {
+    "title": "Autentificare",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Parolă",
+    "showPassword": "Afișează parola",
+    "hidePassword": "Ascunde parola",
+    "forgot": "Ai uitat parola?",
+    "stayLoggedIn": "Rămâi autentificat",
+    "submit": "Autentificare",
+    "submitting": "Se autentifică…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Încă nu ești client myNextDays?",
+    "signupLink": "Încearcă gratuit",
+    "mfaTitle": "Confirmare",
+    "mfaIntro": "Introdu codul din 6 cifre din aplicația de autentificare. Funcționează și un cod de recuperare.",
+    "mfaCodeLabel": "Cod",
+    "mfaSubmit": "Confirmă",
+    "mfaChecking": "Se verifică…",
+    "mfaBack": "Înapoi la autentificare"
   }
 }

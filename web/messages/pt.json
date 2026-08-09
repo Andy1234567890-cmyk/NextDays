@@ -283,6 +283,7 @@
       "logout": "Terminar sessão"
     },
     "stopSell": "Parar venda",
+    "blockRequests": "Pedidos de bloqueio",
     "owners": "Proprietários",
     "ownerStatements": "Extratos de proprietários",
     "portal": "O meu portal",
@@ -315,7 +316,8 @@
     "noAccess": "Sem acesso",
     "dashboardLoadFailed": "Não foi possível carregar o painel",
     "reviews": "Avaliações",
-    "extensions": "Extensões"
+    "extensions": "Extensões",
+    "announcements": "Novidades"
   },
   "exemption": {
     "labelNamed": "Isento de imposto ({scheme}) — sem NIF/IVA necessário",
@@ -945,6 +947,7 @@
     "newTitle": "Novo proprietário",
     "create": "Criar",
     "created": "Proprietário criado.",
+    "createdInvited": "Proprietário criado e convite enviado.",
     "cancel": "Cancelar",
     "save": "Guardar",
     "saving": "A guardar …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Nenhuma acomodação} one {# acomodação} many {# acomodações} other {# acomodações}}",
     "noProperties": "Ainda não há nenhum objeto atribuído a este proprietário.",
     "addProperty": "Atribuir objeto …",
+    "assignProperties": "Atribuir propriedades",
+    "assignPropertiesHint": "Opcional. Só podem ser selecionadas as propriedades que ainda não têm proprietário.",
+    "noFreeProperties": "Todas as propriedades já estão atribuídas a um proprietário.",
+    "assignSelected": "{count, plural, =0 {Atribuir propriedades} one {Atribuir # propriedade} other {Atribuir # propriedades}}",
+    "propertiesAssigned": "{count, plural, one {# propriedade atribuída} other {# propriedades atribuídas}}",
     "removeProperty": "Remover atribuição",
     "sections": {
       "master": "Dados mestre",
       "payout": "Pagamento e comissão",
-      "properties": "Objetos"
+      "properties": "Objetos",
+      "portalAccess": "Acesso ao portal"
     },
     "frequency": {
       "none": "Nenhuma",
@@ -989,12 +998,20 @@
       "statementFrequency": "Periodicidade do extrato",
       "notes": "Notas",
       "share": "Quota (%)",
-      "commissionOverride": "Comissão (%) diferente"
+      "commissionOverride": "Comissão (%) diferente",
+      "emailLanguage": "Idioma dos e-mails"
     },
     "placeholders": {
       "name": "p. ex. João Silva",
       "email": "p. ex. joao@exemplo.com"
-    }
+    },
+    "emailLanguageHint": "Neste idioma o proprietário recebe acertos de contas e notificações — mesmo sem acesso próprio.",
+    "portalAccess": "Configurar acesso ao portal",
+    "portalAccessHint": "O proprietário recebe um convite por e-mail e pode depois consultar os seus acertos de contas.",
+    "portalAccessNeedsEmail": "É necessário um endereço de e-mail para o acesso ao portal.",
+    "portalAccessInvite": "Enviar convite",
+    "portalAccessInvited": "Convite enviado.",
+    "portalAccessActive": "O acesso ao portal está configurado."
   },
   "ownerStatements": {
     "title": "Extratos de proprietário",
@@ -1149,7 +1166,9 @@
     "subtitle": "Visão geral dos seus objetos, receitas e extratos.",
     "properties": {
       "title": "Os meus objetos",
-      "empty": "De momento não tem objetos atribuídos."
+      "empty": "De momento não tem objetos atribuídos.",
+      "city": "Localidade",
+      "openCalendar": "Calendário"
     },
     "earnings": {
       "title": "Receitas (este mês)",
@@ -1175,7 +1194,24 @@
       "to": "Até",
       "submit": "Enviar pedido",
       "sending": "A enviar …",
-      "requested": "Pedido enviado."
+      "requested": "Pedido enviado.",
+      "listTitle": "Os meus pedidos",
+      "listEmpty": "Ainda não pediu nenhum bloqueio.",
+      "created": "Enviado em",
+      "range": "Período",
+      "statusLabel": "Estado",
+      "readOnlyHint": "Só a gestão pode inserir um bloqueio. Você envia o pedido; a decisão é deles.",
+      "invalidRange": "A data de fim deve ser posterior à data de início.",
+      "invalidDate": "Indique uma data válida.",
+      "status": {
+        "pending": "Em análise",
+        "approved": "Aprovado",
+        "rejected": "Rejeitado",
+        "cancelled": "Retirado"
+      },
+      "reason": "Motivo",
+      "reasonPlaceholder": "Por que deve ser bloqueado? (por ex., uso próprio, técnicos)",
+      "decisionNote": "Nota da administração"
     },
     "meter": {
       "title": "Registar leitura de contador",
@@ -1191,6 +1227,142 @@
         "electricity": "Eletricidade",
         "water": "Água",
         "gas": "Gás"
+      },
+      "historyTitle": "Histórico",
+      "historyEmpty": "Ainda não há nenhuma leitura de contador registada para este objeto.",
+      "appendOnlyHint": "As leituras registadas permanecem inalteradas. Uma correção é uma nova entrada — assim o histórico mantém-se completo.",
+      "invalidValue": "Indique a leitura do contador como um número.",
+      "invalidDate": "Indique uma data de leitura válida."
+    },
+    "logout": "Sair",
+    "loadFailed": "Não foi possível carregar os dados.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Visão geral",
+      "calendar": "Calendário de ocupação",
+      "reports": "Relatórios",
+      "blockRequests": "Bloqueios",
+      "meterReadings": "Leituras de contadores",
+      "services": "Serviços",
+      "notifications": "Notificações"
+    },
+    "overview": {
+      "occupancy": "Ocupação",
+      "occupancyHint": "Noites ocupadas no período selecionado.",
+      "nights": "Noites",
+      "bookings": "Reservas",
+      "payout": "Pagamento líquido",
+      "payoutHint": "A sua parte após as taxas dos portais.",
+      "period": "Período",
+      "periodMonth": "Este mês",
+      "periodYear": "Este ano",
+      "openCalendar": "Abrir calendário",
+      "latestStatement": "Última fatura",
+      "noStatement": "Ainda sem fatura"
+    },
+    "calendar": {
+      "title": "Calendário de ocupação",
+      "subtitle": "Ocupação e o seu pagamento líquido por noite.",
+      "selectProperty": "Selecionar objeto",
+      "prevMonth": "Mês anterior",
+      "nextMonth": "Mês seguinte",
+      "today": "Hoje",
+      "legendSeasons": "Épocas",
+      "legendStatus": "Ocupação",
+      "noSeasons": "Não existem épocas definidas para este objeto.",
+      "status": {
+        "open": "Livre",
+        "booked": "Ocupado",
+        "blocked": "Bloqueado"
+      },
+      "payoutPerNight": "Pagamento líquido/noite",
+      "guest": "Hóspede",
+      "channel": "Fonte da reserva",
+      "blockHint": "Quer bloquear um período? Envie um pedido — a gestão decide.",
+      "blockCta": "Pedir bloqueio",
+      "weekdays": "Seg,Ter,Qua,Qui,Sex,Sáb,Dom",
+      "months": "Janeiro,Fevereiro,Março,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro"
+    },
+    "services": {
+      "title": "Reservar um serviço",
+      "hint": "Encomende um serviço para o seu objeto. A gestão aceita e agenda a tarefa.",
+      "property": "Objeto",
+      "kind": "Serviço",
+      "date": "Data pretendida",
+      "note": "Observação",
+      "notePlaceholder": "O que exatamente deve ser feito?",
+      "submit": "Encomendar",
+      "sending": "A enviar …",
+      "sent": "Pedido enviado.",
+      "listTitle": "As minhas encomendas",
+      "listEmpty": "Ainda não encomendou nenhum serviço.",
+      "invalidDate": "Indique uma data pretendida válida.",
+      "noteRequired": "Descreva o serviço pretendido.",
+      "kinds": {
+        "custom": "Outro (texto livre)"
+      },
+      "status": {
+        "pending": "Em análise",
+        "accepted": "Aceite",
+        "scheduled": "Agendado",
+        "done": "Concluído",
+        "rejected": "Rejeitado",
+        "cancelled": "Retirado"
+      },
+      "type": {
+        "endreinigung": "Limpeza final",
+        "hauptreinigung": "Limpeza profunda",
+        "fensterreinigung": "Limpeza de janelas",
+        "rasenmaehen": "Corte de relva",
+        "terrassenreinigung": "Limpeza do terraço"
+      },
+      "dateTo": "Até"
+    },
+    "notifications": {
+      "title": "Notificações",
+      "hint": "Defina como quer ser notificado para cada evento.",
+      "channel": {
+        "email": "E-mail",
+        "sms": "SMS",
+        "phone": "Telefone"
+      },
+      "locked": "Este e-mail é contratualmente obrigatório e permanece ativo.",
+      "saved": "Guardado.",
+      "saveFailed": "Não foi possível guardar a alteração.",
+      "categories": {
+        "listing_activity": "Reservas nos seus objetos",
+        "listing_activityHint": "Nova reserva, alteração e cancelamento.",
+        "account_activity": "Atividade da conta",
+        "account_activityHint": "Início de sessão e alterações à sua conta.",
+        "reminders": "Lembretes",
+        "remindersHint": "Tarefas e prazos pendentes.",
+        "messages": "Mensagens",
+        "messagesHint": "Novas mensagens da gestão.",
+        "owner_booking": "Reservas nos teus alojamentos",
+        "owner_bookingHint": "Nova reserva, alteração e cancelamento.",
+        "block_decision": "Decisão sobre os teus pedidos de bloqueio",
+        "block_decisionHint": "Quando a gestão aprova ou rejeita o teu pedido.",
+        "owner_service": "Serviços encomendados",
+        "owner_serviceHint": "Mudança de estado num serviço que encomendaste."
+      }
+    },
+    "reports": {
+      "title": "Relatórios",
+      "subtitle": "Faturas, mês em curso e relatórios mensais e anuais.",
+      "currentTitle": "Estado atual da fatura",
+      "currentHint": "Provisório — o mês ainda está em curso. Só a fatura finalizada é vinculativa.",
+      "monthly": "Relatório mensal",
+      "yearly": "Relatório anual",
+      "month": "Mês",
+      "year": "Ano",
+      "download": "Descarregar PDF",
+      "downloading": "A gerar …",
+      "downloadFailed": "Não foi possível gerar o PDF.",
+      "onlyFinalized": "Só as faturas finalizadas estão disponíveis para download.",
+      "status": {
+        "draft": "Em preparação",
+        "finalized": "Concluído",
+        "cancelled": "Cancelado"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Um valor fixo não pode ser distribuído pelas noites — não chega aos portais, onde tem de ser mantido na extranet.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Aplicar a mesma promoção também a outros imóveis.",
+      "applyToOthersSeasonHint": "Criar a mesma época também noutros alojamentos.",
       "promoReason": {
         "mindestaufenthalt": "estadia mínima",
         "fruehbucher": "antecedência de reserva antecipada",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Plano de pagamento",
       "cancellationLabel": "Cancelamento",
       "depositLabel": "Caução",
-      "depositWithheldText": "Será retida uma caução de {amount}.",
       "noPolicyYet": "Ainda não há política definida.",
       "bookabilityCardTitle": "Modalidade de reserva",
       "bookabilityCardHint": "Como as reservas são aceites.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Contrato de arrendamento",
       "rentalAgreementCardHint": "Cria o contrato de arrendamento ou disponibiliza a hiperligação aos teus hóspedes.",
       "noRentalAgreementYet": "Ainda não há contrato de arrendamento.",
-      "addPolicyTitle": "Adicionar política",
       "addPolicySubtitle": "Define os detalhes desta nova política.",
       "internalNameLabel": "Nome interno *",
       "internalNamePlaceholder": "p. ex. Pagamento parcial – não reembolsável",
       "paymentPlanGroupTitle": "Plano de pagamento",
       "paymentCountLabel": "Número de pagamentos",
-      "depositPercentLabel": "Sinal (%)",
-      "remainingDaysBeforeLabel": "Valor restante (dias antes da chegada)",
       "guestCancellationGroupTitle": "Cancelamento pelo hóspede",
       "cancellationTypeLabel": "Tipo de cancelamento",
       "depositGroupTitle": "Caução",
-      "depositModeNone": "Sem caução necessária",
-      "depositModeAmount": "Caução como valor",
-      "depositAmountLabelWithCurrency": "Valor da caução ({currency})",
-      "depositAmountLabel": "Valor da caução",
       "quoteValidityGroupTitle": "Validade do orçamento",
       "quoteValidityHoursLabel": "Duração de validade (horas) *",
       "quoteValidityHint": "O orçamento é válido por, no máximo, {hours} horas, enquanto o estado for «A aguardar hóspede» ou «A aguardar pagamento».",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Recomendado",
       "checkInTimeLabel": "Hora de check-in",
       "checkOutTimeLabel": "Hora de check-out",
-      "paymentSummaryFull": "100 % devido no momento da reserva.",
-      "paymentSummarySplit": "{percent} % na reserva, valor restante {days} dias antes da chegada.",
       "localizedEditorSubtitle": "Cria o texto e traduz-o, se necessário, para os teus hóspedes.",
-      "localizedEditorPlaceholder": "Introduzir {title} …"
+      "localizedEditorPlaceholder": "Introduzir {title} …",
+      "editPolicyTitle": "Editar condições",
+      "singlePaymentHint": "100 % do pagamento é devido no momento em que a reserva é concluída.",
+      "firstPaymentHeading": "Primeiro pagamento",
+      "secondPaymentHeading": "Segundo pagamento",
+      "thirdPaymentHeading": "Terceiro pagamento",
+      "amountTypeLabel": "Tipo de montante",
+      "percentLabel": "Percentagem",
+      "amountLabel": "Montante",
+      "currencyLabel": "Moeda",
+      "daysLabel": "Dias",
+      "periodLabel": "Período",
+      "firstPaymentHint": "Na reserva é cobrado apenas o montante fixo ou a percentagem do primeiro pagamento. Os restantes pagamentos são faturados na data prevista.",
+      "remainderHint": "Configure quando o valor restante deve ser cobrado.",
+      "partialRulesHint": "Defina as regras para cancelamentos parcialmente reembolsáveis.",
+      "ruleHeading": "Regra {number}",
+      "ruleDelete": "Eliminar regra",
+      "ruleAdd": "Adicionar regra",
+      "refundTypeLabel": "Tipo de reembolso",
+      "refundLabel": "Reembolso",
+      "whenCancelledLabel": "Em caso de cancelamento",
+      "depositNotRequired": "Não é exigida caução",
+      "depositRequired": "É exigida caução",
+      "depositMethodLabel": "Método",
+      "preAuthTimesHeading": "Prazos de pré-autorização",
+      "preAuthValidityLabel": "Validade (dias após a partida)",
+      "preAuthWarnTitle": "As pré-autorizações só podem ser garantidas durante 5 dias.",
+      "preAuthWarnBody": "A duração de uma pré-autorização num cartão de crédito depende de vários fatores, como o fornecedor do cartão, o banco emissor, o gateway de pagamento, entre outros. Por isso, em todas as reservas de uma semana ou mais, cada pré-autorização expira (é cancelada automaticamente) a cada 5 dias. Iremos notificá-lo para que possa emitir manualmente uma nova pré-autorização e manter a caução durante o restante da reserva.",
+      "assignAction": "Atribuir condições"
     },
     "ratePlanWizard": {
       "title": "Criar plano de preços",
@@ -5604,6 +5795,39 @@
       "confirmed": "Confirmado",
       "in_house": "Entrada efetuada",
       "pending": "Opção / provisório"
+    },
+    "blockRequests": {
+      "title": "Pedidos de bloqueio",
+      "subtitle": "Pedidos dos teus proprietários para bloquear os seus objetos. Uma aprovação bloqueia as noites no calendário e comunica-as aos portais.",
+      "filter": "Estado",
+      "filterAll": "Todos",
+      "empty": "Sem pedidos nesta vista.",
+      "requestedBy": "Pedido por {name}",
+      "reason": "Motivo",
+      "decisionNote": "Observação",
+      "note": "Observação para o proprietário",
+      "notePlaceholder": "Opcional — é mostrada ao proprietário.",
+      "working": "A executar …",
+      "status": {
+        "pending": "Aberto",
+        "approved": "Aprovado",
+        "rejected": "Recusado"
+      },
+      "action": {
+        "approve": "Aprovar",
+        "reject": "Recusar",
+        "revoke": "Revogar"
+      },
+      "confirm": {
+        "approve": "Bloquear {objekt} de {von} a {bis}? As noites serão bloqueadas em todos os portais.",
+        "reject": "Recusar o pedido para {objekt} ({von} – {bis})?",
+        "revoke": "Revogar a aprovação para {objekt} ({von} – {bis})? As noites serão novamente libertadas."
+      },
+      "done": {
+        "approve": "Pedido aprovado, noites bloqueadas.",
+        "reject": "Pedido recusado.",
+        "revoke": "Aprovação revogada, noites libertadas."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "janeiro,fevereiro,março,abril,maio,junho,julho,agosto,setembro,outubro,novembro,dezembro",
     "name": "Nome",
     "seasonAdd": "Adicionar época",
+    "seasonApplyCancel": "Cancelar",
+    "seasonApplyCopyHint": "A época é criada como uma cópia independente. Alterações posteriores a esta época já NÃO se aplicam lá. O acréscimo é calculado sobre o preço base do próprio alojamento de destino.",
+    "seasonApplyNone": "Não copiada para nenhum imóvel.",
+    "seasonApplyPartial": "Copiada para {count} alojamento(s), {skipped} ignorado(s).",
+    "seasonApplyPickTarget": "Selecione pelo menos um alojamento.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Sem preço base definido — não é possível calcular um acréscimo.",
+      "basispreis_null": "O preço base é 0 — não é possível calcular um acréscimo.",
+      "teilweise_uebertragen": "A época está no imóvel, os preços diários ainda faltam — tente novamente para concluir.",
+      "unbekannt": "Ignorado por um motivo desconhecido."
+    },
+    "seasonApplySubmit": "Copiar",
+    "seasonApplySuccess": "Copiada para {count} alojamento(s).",
+    "seasonApplyTitle": "Copiar «{name}» para outros alojamentos",
+    "seasonApplyToOthers": "Copiar para outros alojamentos",
+    "seasonApplyWithRanges": "Copiar também os períodos",
+    "seasonApplyWithRangesHint": "Os dias marcados são definidos da mesma forma no alojamento de destino. Desligado: apenas a época, sem dias.",
     "seasonClearHint": "Clique com o botão direito e arraste sobre os dias para os retirar da temporada.",
     "seasonColor": "Cor",
     "seasonColorAria": "Cor {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Suplemento (± %)",
     "seasonSurchargePlaceholder": "ex. 30 ou -15",
     "seasonValueRequired": "Indica um valor válido.",
-    "weekdays": "S,T,Q,Q,S,S,D"
+    "weekdays": "S,T,Q,Q,S,S,D",
+    "seasonApplyNoSpans": "Esta época não tem períodos pintados. Pinte-a primeiro ou transfira apenas a definição sem períodos."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "Código QR para a aplicação de autenticação",
       "sixDigitCode": "Código de 6 dígitos",
       "disable2fa": "Desativar 2FA",
-      "disable2faHint": "Introduza um código atual (ou um código de recuperação) para desligar a 2FA."
+      "disable2faHint": "Introduza um código atual (ou um código de recuperação) para desligar a 2FA.",
+      "title": "Segurança",
+      "loadFailed": "Não foi possível carregar os dados da conta. Verifique a sua ligação e tente novamente.",
+      "credentials": "Credenciais",
+      "emailAndUsername": "E-mail e nome de utilizador",
+      "emailLabel": "E-mail",
+      "nameLabel": "Nome",
+      "password": "Palavra-passe",
+      "noPassword": "Nenhuma palavra-passe definida",
+      "passwordMin": "No mínimo 8 caracteres.",
+      "save": "Guardar",
+      "saving": "A guardar …",
+      "changePassword": "Alterar palavra-passe",
+      "twoFactor": {
+        "title": "Autenticação de dois fatores (2FA)",
+        "intro": "Protege a sua conta com um segundo fator, além da palavra-passe.",
+        "noneActive": "Ainda não configurou nenhum segundo fator. Recomendamos a aplicação de autenticação.",
+        "requiredNotice": "Para a sua função, um segundo fator é obrigatório. Configure um agora.",
+        "active": "Ativo",
+        "setUp": "Configurar",
+        "totp": {
+          "title": "Aplicação de autenticação",
+          "description": "Código de utilização única de uma aplicação como o Google Authenticator ou o Microsoft Authenticator. Funciona mesmo sem rede móvel.",
+          "setupTitle": "Configurar a aplicação de autenticação",
+          "setupHint": "Digitalize o código QR com a sua aplicação e confirme com o código apresentado.",
+          "step1": "1. Digitalizar o código QR",
+          "step2": "3. Introduzir o código da aplicação",
+          "qrAlt": "Código QR para a aplicação de autenticação",
+          "qrHint": "Abra a sua aplicação de autenticação e digitalize o código.",
+          "manualTitle": "2. Ou introduzir a chave manualmente",
+          "manualHint": "Utilize esta chave se não conseguir digitalizar o código QR.",
+          "showSecret": "Mostrar chave",
+          "hideSecret": "Ocultar chave",
+          "copySecret": "Copiar chave",
+          "copyFailed": "Não é possível copiar. Selecione a chave e copie-a manualmente.",
+          "codeLabel": "Código de 6 dígitos",
+          "activate": "Ativar",
+          "checking": "A verificar …",
+          "preparing": "A preparar a configuração …",
+          "enabledTitle": "A aplicação de autenticação está ativa. Guarde agora os seus códigos de recuperação.",
+          "friendlyName": "Aplicação de autenticação",
+          "replayNote": "Nota: um código permanece válido até 90 segundos e, durante esse período, pode ser utilizado mais do que uma vez. Só uma chave de acesso protege contra a fraude em tempo real com páginas de início de sessão."
+        },
+        "sms": {
+          "title": "Código por SMS",
+          "description": "Código de utilização única por SMS para o seu número de telefone confirmado.",
+          "unavailable": "O código por SMS não está disponível neste servidor porque não há nenhum fornecedor de SMS configurado. Escolha a aplicação de autenticação ou uma chave de acesso.",
+          "unavailableBadge": "Indisponível",
+          "setupTitle": "Configurar o código por SMS",
+          "setupHint": "Enviamos-lhe um código para o seu número de telefone.",
+          "simSwapWarning": "Nota: o SMS é menos seguro do que uma aplicação de autenticação. Quem conseguir transferir o seu número para outro cartão SIM pode receber os seus códigos. Se possível, escolha a aplicação de autenticação ou uma chave de acesso.",
+          "numberLabel": "Número de telefone",
+          "numberHint": "Formato internacional com indicativo do país, por exemplo +49 …",
+          "invalidNumber": "Introduza o número em formato internacional, começando por + e o indicativo do país.",
+          "sendCode": "Enviar código",
+          "sending": "A enviar …",
+          "codeLabel": "Código de 6 dígitos",
+          "codeSentTo": "Enviámos um código para {phone}.",
+          "confirm": "Confirmar",
+          "checking": "A verificar …",
+          "resend": "Enviar o código novamente",
+          "changeNumber": "Utilizar outro número",
+          "friendlyName": "Código por SMS"
+        },
+        "passkey": {
+          "title": "Chave de acesso",
+          "description": "Início de sessão com impressão digital, reconhecimento facial ou chave de segurança. Sem códigos.",
+          "setupTitle": "Configurar chave de acesso",
+          "setupHint": "O seu dispositivo confirma a sua identidade com a impressão digital, o reconhecimento facial ou uma chave de segurança.",
+          "checkingSupport": "A verificar o dispositivo …",
+          "unsupportedTitle": "Este navegador não suporta chaves de acesso",
+          "unsupportedHint": "Utilize um navegador atualizado ou configure antes a aplicação de autenticação.",
+          "securityKeyOnly": "Este dispositivo não tem confirmação integrada (como impressão digital ou reconhecimento facial). Para isso precisa de uma chave de segurança que se liga ao dispositivo.",
+          "benefitPhishing": "Protege contra páginas de início de sessão falsas.",
+          "benefitNoCode": "Sem códigos para escrever.",
+          "create": "Criar chave de acesso",
+          "friendlyName": "Chave de acesso",
+          "recommended": "Recomendado: a mais segura das três opções.",
+          "creating": "A criar …",
+          "errors": {
+            "abgebrochen": "A confirmação foi cancelada ou não foi reconhecida. Tente novamente.",
+            "herkunftPasstNicht": "As passkeys não estão ativadas para este endereço. Inicie sessão através do endereço oficial.",
+            "nichtUnterstuetzt": "Este dispositivo não consegue criar uma passkey. Use a aplicação de autenticação ou uma chave de segurança.",
+            "schonVorhanden": "Já existe uma passkey para esta conta neste dispositivo.",
+            "laeuftBereits": "Já está em curso um pedido de passkey. Conclua-o ou cancele-o.",
+            "zeitUeberschritten": "O tempo para a confirmação expirou. Tente novamente.",
+            "unbekannt": "Não foi possível criar a passkey. Tente novamente."
+          }
+        },
+        "recovery": {
+          "title": "Códigos de recuperação",
+          "description": "Códigos de utilização única para quando não tiver acesso ao seu segundo fator.",
+          "left": "Ainda estão disponíveis {count} códigos.",
+          "create": "Gerar códigos",
+          "regenerate": "Gerar novos códigos",
+          "regenerateHint": "Ao gerar novos códigos, todos os anteriores deixam de ser válidos.",
+          "dialogTitle": "Códigos de recuperação",
+          "dialogHint": "Códigos de utilização única para quando não tiver acesso ao seu segundo fator.",
+          "replaceWarning": "Atenção: os seus códigos de recuperação atuais deixarão de ser válidos.",
+          "passwordLabel": "Palavra-passe atual",
+          "passwordHint": "Para confirmar que é mesmo você.",
+          "createNow": "Gerar códigos",
+          "creating": "A gerar …",
+          "createdTitle": "Os seus novos códigos de recuperação. Guarde-os num local seguro.",
+          "noneReturned": "Não foi gerado nenhum código. Tente novamente."
+        },
+        "remove": "Remover",
+        "removeDialog": {
+          "totpTitle": "Remover a aplicação de autenticação",
+          "smsTitle": "Remover o código por SMS",
+          "warning": "A partir daí, este fator deixa de proteger a sua conta.",
+          "passwordLabel": "Palavra-passe atual",
+          "remove": "Remover",
+          "removing": "A remover …",
+          "cancel": "Cancelar",
+          "hint": "Confirme a remoção com a sua palavra-passe atual.",
+          "passkeyTitle": "Remover a chave de acesso",
+          "lastFactorBlocked": "Este é o seu último segundo fator e a sua função exige um. Gere primeiro códigos de recuperação ou configure outro fator."
+        },
+        "requiredWithDeadline": "Para a sua função, um segundo fator é obrigatório. Configure-o até {date} — a partir daí, deixa de ser possível iniciar sessão sem um segundo fator.",
+        "statusFailed": "Não foi possível carregar o estado da autenticação de dois fatores. Recarregue a página."
+      },
+      "recovery": {
+        "lockoutWarning": "Sem estes códigos perde o acesso à sua conta se deixar de poder utilizar o seu segundo fator. Guarde-os num local seguro, separados da sua palavra-passe.",
+        "copy": "Copiar",
+        "copied": "Copiado",
+        "copyFailed": "Não é possível copiar. Transfira os códigos ou imprima-os.",
+        "download": "Transferir",
+        "downloadFailed": "Não é possível transferir. Copie os códigos ou imprima-os.",
+        "print": "Imprimir",
+        "printBlocked": "A janela de impressão foi bloqueada. Permita as janelas pop-up ou transfira os códigos.",
+        "printTitle": "Códigos de recuperação myNextDays",
+        "printHint": "Cada código funciona apenas uma vez. Guarde esta folha num local seguro.",
+        "fileHeader": "Códigos de recuperação myNextDays — cada código funciona apenas uma vez. Guardar em local seguro.",
+        "confirmSaved": "Guardei os códigos num local seguro.",
+        "confirmHint": "Assinale a caixa para concluir a configuração.",
+        "mustExportFirst": "Copie, transfira ou imprima primeiro os códigos.",
+        "done": "Concluído"
+      }
     },
     "company": {
       "saved": "Dados guardados.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Idiomas falados",
       "searchLanguage": "Procurar idioma…",
       "chooseRole": "Escolher função…",
-      "userCreated": "Utilizador criado",
-      "preferredLanguage": "Idioma preferido",
+      "preferredLanguage": "Idioma dos e-mails",
       "noLanguageFound": "Nenhum idioma encontrado.",
       "firstName": "Nome próprio",
       "lastName": "Apelido",
       "email": "E-mail",
       "phone": "Número de telefone",
       "notes": "Observações",
-      "password": "Palavra-passe",
-      "credentialsHint": "Transmita estas credenciais ao novo utilizador. A palavra-passe só é mostrada agora."
+      "title": "Criar utilizador",
+      "createdSubtitle": "Convite enviado.",
+      "stepHints": {
+        "contact": "Adicione os dados de contacto deste utilizador.",
+        "extra": "Adicione informações adicionais sobre este utilizador.",
+        "role": "Escolha a função e as permissões deste utilizador.",
+        "properties": "Atribua alojamentos a este utilizador."
+      },
+      "done": "Concluído",
+      "cancel": "Cancelar",
+      "back": "Voltar",
+      "next": "Seguinte",
+      "create": "Criar",
+      "creating": "A criar…",
+      "role": "Função",
+      "requiredFields": "Nome próprio, apelido, e-mail e função são obrigatórios.",
+      "assignFailed": "Utilizador criado, mas a atribuição de alojamentos falhou: {reason}",
+      "hidePhones": "Ocultar números de telefone no site.",
+      "noAssignNeeded": "Não é necessária atribuição de alojamentos",
+      "noAssignNeededHint": "Esta função tem acesso a todos os alojamentos da conta. A atribuição de alojamentos individuais aplica-se apenas a proprietários e colaboradores.",
+      "noProperties": "Ainda sem alojamentos",
+      "noPropertiesHint": "Crie os seus alojamentos para os poder atribuir mais tarde aos seus utilizadores.",
+      "choosePropertiesHint": "Escolha os alojamentos a que este utilizador terá acesso.",
+      "selectedCount": "{count} selecionados",
+      "inviteSent": "Convite enviado",
+      "inviteSentHint": "O utilizador recebe um e-mail e define ele próprio a palavra-passe. A ligação é válida durante 7 dias.",
+      "inviteResend": "Reenviar convite",
+      "inviteResending": "A enviar…",
+      "inviteResent": "Convite reenviado.",
+      "inviteResendFailed": "Não foi possível reenviar o convite.",
+      "preferredLanguageHint": "Neste idioma o novo utilizador receberá o convite e todos os restantes e-mails."
     },
     "tariff": {
       "oneLess": "Menos um alojamento",
@@ -6359,7 +6767,14 @@
       "updated": "Utilizador atualizado.",
       "deleted": "Utilizador eliminado.",
       "generalPermissions": "Permissões gerais",
-      "roleChangeHint": "Mudar de função sugere as permissões adequadas. Depois pode ajustá-las individualmente."
+      "roleChangeHint": "Mudar de função sugere as permissões adequadas. Depois pode ajustá-las individualmente.",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "resendInvite": "Reenviar convite",
+      "inviteResent": "Convite enviado para {email}.",
+      "inviteResendFailed": "Não foi possível reenviar o convite.",
+      "emailLanguage": "Idioma dos e-mails",
+      "emailLanguageHint": "Neste idioma este utilizador recebe os seus e-mails."
     },
     "staffProperties": {
       "title": "Partilhar alojamentos"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "p. ex. Hotel Vista Lago",
     "namePlaceholder": "Nome próprio e apelido",
     "passwordHint": "Pelo menos 8 caracteres",
-    "passwordRepeat": "Repetir palavra-passe"
+    "passwordRepeat": "Repetir palavra-passe",
+    "headline": "Todo o seu arrendamento num só lugar.",
+    "feature1": "Sincronizar calendários automaticamente",
+    "feature2": "Reservas diretas no seu próprio site",
+    "feature3": "Automatizar as mensagens aos hóspedes",
+    "withGoogle": "Registar-se com o Google",
+    "withApple": "Registar-se com a Apple",
+    "or": "ou",
+    "withEmail": "Registar-se com e-mail",
+    "haveAccount": "Já tem uma conta?",
+    "loginLink": "Inicie sessão aqui",
+    "loadingHeadline": "O seu próprio site de reservas. Fique com 100 % de cada reserva.",
+    "loadingText": "Estamos a configurar a sua conta …"
   },
   "marketingSite": {
     "stars": "4,5 estrelas",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Marcar todas como lidas",
     "erneut": "Recarregar",
     "ariaMitAnzahl": "Notificações ({count} não lidas)"
+  },
+  "auth": {
+    "toLogin": "Ir para o início de sessão",
+    "genericError": "Isso não funcionou agora. Tente novamente mais tarde.",
+    "tokenMissing": {
+      "title": "Ligação incompleta",
+      "text": "Esta ligação está incompleta. Utilize a ligação completa do e-mail — copie-a e cole-a na barra de endereços."
+    },
+    "tokenInvalid": {
+      "title": "Ligação já não é válida",
+      "textInvite": "Esta ligação de convite expirou ou já foi utilizada. Contacte o seu estabelecimento — poderá enviar o convite novamente.",
+      "textReset": "Esta ligação expirou ou já foi utilizada. Basta solicitar uma nova.",
+      "retry": "Solicitar nova ligação"
+    },
+    "invite": {
+      "title": "Configurar o seu acesso",
+      "intro": "Escolha uma palavra-passe para o seu acesso myNextDays. Pelo menos {min} caracteres."
+    },
+    "reset": {
+      "title": "Nova palavra-passe",
+      "intro": "Escolha uma nova palavra-passe. Pelo menos {min} caracteres."
+    },
+    "done": {
+      "titleInvite": "Acesso configurado",
+      "titleReset": "Palavra-passe alterada",
+      "text": "Já pode iniciar sessão com a sua nova palavra-passe."
+    },
+    "forgot": {
+      "title": "Palavra-passe esquecida",
+      "intro": "Introduza o seu endereço de e-mail. Enviar-lhe-emos uma ligação para definir uma nova palavra-passe.",
+      "emailLabel": "E-mail",
+      "submit": "Solicitar ligação",
+      "sending": "A enviar…",
+      "sentTitle": "E-mail a caminho",
+      "sentText": "Se existir uma conta para este endereço, enviámos uma ligação de reposição. É válida durante uma hora.",
+      "spamHint": "Não recebeu nada? Verifique também a pasta de spam.",
+      "again": "Solicitar novamente"
+    },
+    "password": {
+      "newLabel": "Palavra-passe",
+      "repeatLabel": "Repetir palavra-passe",
+      "submit": "Definir palavra-passe",
+      "saving": "A guardar…",
+      "mismatch": "As duas palavras-passe não coincidem.",
+      "tooWeak": "A palavra-passe não cumpre os requisitos (pelo menos {min} caracteres).",
+      "show": "Mostrar palavra-passe",
+      "hide": "Ocultar palavra-passe",
+      "strengthLabel": "Segurança: {level}",
+      "strength": {
+        "1": "fraca",
+        "2": "média",
+        "3": "boa",
+        "4": "forte"
+      },
+      "requirement": {
+        "length": "Pelo menos {min} caracteres",
+        "letter": "Pelo menos uma letra",
+        "digit": "Pelo menos um algarismo"
+      }
+    },
+    "checking": "A verificar a ligação…",
+    "languageLabel": "Idioma",
+    "languageChange": "Alterar idioma",
+    "twoFactor": {
+      "title": "Confirmação",
+      "totpHint": "Introduza o código de 6 dígitos da sua aplicação de autenticação.",
+      "smsHint": "Introduza o código de 6 dígitos que lhe enviámos por SMS.",
+      "smsHintWithPhone": "Introduza o código de 6 dígitos que enviámos para {phone}.",
+      "codeLabel": "Código",
+      "confirm": "Confirmar",
+      "checking": "A verificar …",
+      "recoveryHint": "Introduza um dos seus códigos de recuperação.",
+      "recoveryLabel": "Código de recuperação",
+      "recoverySingleUse": "Cada código funciona apenas uma vez.",
+      "useTotp": "Utilizar a aplicação de autenticação",
+      "useSms": "Utilizar o código por SMS",
+      "useRecovery": "Utilizar um código de recuperação",
+      "backToLogin": "Voltar ao início de sessão",
+      "factorMissing": "Este fator não está disponível para a sua conta. Escolha outra opção.",
+      "passkeyHint": "Confirme o início de sessão com a sua chave de acesso.",
+      "passkeyUse": "Iniciar sessão com chave de acesso",
+      "usePasskey": "Utilizar chave de acesso",
+      "sendCode": "Enviar código por SMS",
+      "sending": "A enviar …",
+      "smsSent": "O código foi enviado.",
+      "resend": "Enviar o código novamente",
+      "recoveryRedeemedHint": "O código foi utilizado, mas por si só não é suficiente para iniciar sessão. Inicie sessão com um dos fatores que configurou ou contacte a sua equipa."
+    },
+    "mfaSetup": {
+      "title": "Configurar a autenticação de dois fatores",
+      "intro": "Para a sua função, um segundo fator é obrigatório. Configure-o agora para continuar.",
+      "why": "Enquanto administrador, tem acesso a dados financeiros, a dados dos hóspedes e às definições de todo o negócio. Um segundo fator impede que uma palavra-passe roubada seja suficiente por si só.",
+      "goToSettings": "Configurar agora",
+      "later": "Lembrar mais tarde",
+      "laterHint": "Ainda pode adiar a configuração. Voltaremos a perguntar no próximo início de sessão.",
+      "introWithDeadline": "Para a sua função, um segundo fator é obrigatório. Configure-o até {date} — a partir daí, deixa de ser possível iniciar sessão sem um segundo fator."
+    }
+  },
+  "sprache": {
+    "label": "Idioma dos e-mails",
+    "hint": "Enviamos e-mails a esta pessoa neste idioma.",
+    "none": "— não indicado"
+  },
+  "neuerungen": {
+    "eyebrow": "Atualizações do produto",
+    "titel": "Novidades",
+    "unterzeile": "Tudo o que mudou no myNextDays — as mais recentes primeiro.",
+    "neuAnzahl": "{anzahl, plural, one {# nova} other {# novas}}",
+    "ungelesen": "Novo",
+    "veroeffentlichtAm": "Publicado a {datum}",
+    "leer": "Ainda não há novidades.",
+    "ladefehler": "Não foi possível carregar: {grund}",
+    "mehrLaden": "Carregar mais antigas",
+    "aufklappen": "Mostrar detalhes",
+    "zuklappen": "Ocultar detalhes",
+    "kategorie": {
+      "neuerung": "Nova funcionalidade",
+      "wartung": "Manutenção",
+      "hinweis": "Aviso",
+      "wichtig": "Importante"
+    },
+    "popup": {
+      "ariaLabel": "Conteúdo do anúncio",
+      "gelesen": "Entendido",
+      "wirdGespeichert": "A guardar …",
+      "erneut": "Tentar novamente",
+      "fehler": "Não foi possível confirmar: {grund}",
+      "weiter": "Seguinte",
+      "vonAnzahl": "Anúncio {nummer}"
+    }
+  },
+  "login": {
+    "title": "Iniciar sessão",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Palavra-passe",
+    "showPassword": "Mostrar palavra-passe",
+    "hidePassword": "Ocultar palavra-passe",
+    "forgot": "Esqueceu-se da palavra-passe?",
+    "stayLoggedIn": "Manter a sessão iniciada",
+    "submit": "Iniciar sessão",
+    "submitting": "A iniciar sessão…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Ainda não é cliente myNextDays?",
+    "signupLink": "Experimente gratuitamente",
+    "mfaTitle": "Confirmação",
+    "mfaIntro": "Introduza o código de 6 dígitos da sua aplicação de autenticação. Um código de recuperação também funciona.",
+    "mfaCodeLabel": "Código",
+    "mfaSubmit": "Confirmar",
+    "mfaChecking": "A verificar…",
+    "mfaBack": "Voltar ao início de sessão"
   }
 }

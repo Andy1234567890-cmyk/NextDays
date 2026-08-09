@@ -283,6 +283,7 @@
       "logout": "Kijelentkezés"
     },
     "stopSell": "Értékesítés leállítása",
+    "blockRequests": "Zárolási kérelmek",
     "owners": "Tulajdonosok",
     "ownerStatements": "Tulajdonosi elszámolások",
     "portal": "Saját portál",
@@ -315,7 +316,8 @@
     "noAccess": "Nincs hozzáférés",
     "dashboardLoadFailed": "Az irányítópultot nem sikerült betölteni",
     "reviews": "Értékelések",
-    "extensions": "Kiegészítők"
+    "extensions": "Kiegészítők",
+    "announcements": "Újdonságok"
   },
   "exemption": {
     "labelNamed": "Adómentes ({scheme}) — nincs szükség adószámra",
@@ -945,6 +947,7 @@
     "newTitle": "Új tulajdonos",
     "create": "Létrehozás",
     "created": "Tulajdonos létrehozva.",
+    "createdInvited": "A tulajdonos létrejött, a meghívó elment.",
     "cancel": "Mégse",
     "save": "Mentés",
     "saving": "Mentés …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Nincs ingatlan} one {# ingatlan} other {# ingatlan}}",
     "noProperties": "Ehhez a tulajdonoshoz még nincs hozzárendelve ingatlan.",
     "addProperty": "Ingatlan hozzárendelése …",
+    "assignProperties": "Ingatlanok hozzárendelése",
+    "assignPropertiesHint": "Nem kötelező. Csak olyan ingatlanok választhatók, amelyeknek még nincs tulajdonosa.",
+    "noFreeProperties": "Minden ingatlan már hozzá van rendelve egy tulajdonoshoz.",
+    "assignSelected": "{count, plural, =0 {Ingatlanok hozzárendelése} one {# ingatlan hozzárendelése} other {# ingatlan hozzárendelése}}",
+    "propertiesAssigned": "{count, plural, one {# ingatlan hozzárendelve} other {# ingatlan hozzárendelve}}",
     "removeProperty": "Hozzárendelés eltávolítása",
     "sections": {
       "master": "Törzsadatok",
       "payout": "Kifizetés és jutalék",
-      "properties": "Ingatlanok"
+      "properties": "Ingatlanok",
+      "portalAccess": "Portálhozzáférés"
     },
     "frequency": {
       "none": "Nincs",
@@ -989,12 +998,20 @@
       "statementFrequency": "Elszámolási gyakoriság",
       "notes": "Megjegyzések",
       "share": "Részesedés (%)",
-      "commissionOverride": "Jutalék (%) eltérés"
+      "commissionOverride": "Jutalék (%) eltérés",
+      "emailLanguage": "E-mailek nyelve"
     },
     "placeholders": {
       "name": "pl. Kovács János",
       "email": "pl. janos@example.com"
-    }
+    },
+    "emailLanguageHint": "Ezen a nyelven kapja a tulajdonos az elszámolásokat és értesítéseket — saját hozzáférés nélkül is.",
+    "portalAccess": "Portálhozzáférés beállítása",
+    "portalAccessHint": "A tulajdonos e-mailben kap meghívót, és ezután maga tekintheti meg az elszámolásait.",
+    "portalAccessNeedsEmail": "A portálhozzáféréshez e-mail-cím szükséges.",
+    "portalAccessInvite": "Meghívó küldése",
+    "portalAccessInvited": "Meghívó elküldve.",
+    "portalAccessActive": "A portálhozzáférés be van állítva."
   },
   "ownerStatements": {
     "title": "Tulajdonosi elszámolás",
@@ -1149,7 +1166,9 @@
     "subtitle": "Áttekintés az ingatlanaidról, bevételeidről és elszámolásaidról.",
     "properties": {
       "title": "Ingatlanaim",
-      "empty": "Jelenleg nincs hozzád rendelt ingatlan."
+      "empty": "Jelenleg nincs hozzád rendelt ingatlan.",
+      "city": "Helyszín",
+      "openCalendar": "Naptár"
     },
     "earnings": {
       "title": "Bevételek (ebben a hónapban)",
@@ -1175,7 +1194,24 @@
       "to": "Eddig",
       "submit": "Kérés küldése",
       "sending": "Küldés …",
-      "requested": "Kérés elküldve."
+      "requested": "Kérés elküldve.",
+      "listTitle": "Kérelmeim",
+      "listEmpty": "Még nem kértél zárolást.",
+      "created": "Beküldve",
+      "range": "Időszak",
+      "statusLabel": "Állapot",
+      "readOnlyHint": "Zárolást csak az üzemeltető rögzíthet. Te nyújtod be a kérelmet, a döntés az övék.",
+      "invalidRange": "A záró dátumnak a kezdő dátum után kell lennie.",
+      "invalidDate": "Adj meg érvényes dátumot.",
+      "status": {
+        "pending": "Elbírálás alatt",
+        "approved": "Jóváhagyva",
+        "rejected": "Elutasítva",
+        "cancelled": "Visszavonva"
+      },
+      "reason": "Indok",
+      "reasonPlaceholder": "Miért kell zárolni? (pl. saját használat, kivitelezők)",
+      "decisionNote": "Kezelőség megjegyzése"
     },
     "meter": {
       "title": "Mérőállás rögzítése",
@@ -1191,6 +1227,142 @@
         "electricity": "Áram",
         "water": "Víz",
         "gas": "Gáz"
+      },
+      "historyTitle": "Előzmények",
+      "historyEmpty": "Ehhez az ingatlanhoz még nincs rögzített óraállás.",
+      "appendOnlyHint": "A rögzített óraállások változatlanul megmaradnak. A javítás egy új bejegyzés — így az előzmények teljesek maradnak.",
+      "invalidValue": "Add meg az óraállást számként.",
+      "invalidDate": "Adj meg érvényes leolvasási dátumot."
+    },
+    "logout": "Kijelentkezés",
+    "loadFailed": "Az adatokat nem sikerült betölteni.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Áttekintés",
+      "calendar": "Foglaltsági naptár",
+      "reports": "Jelentések",
+      "blockRequests": "Zárolások",
+      "meterReadings": "Óraállások",
+      "services": "Szolgáltatások",
+      "notifications": "Értesítések"
+    },
+    "overview": {
+      "occupancy": "Foglaltság",
+      "occupancyHint": "Foglalt éjszakák a kiválasztott időszakban.",
+      "nights": "Éjszakák",
+      "bookings": "Foglalások",
+      "payout": "Nettó kifizetés",
+      "payoutHint": "A te részesedésed a portál díjai után.",
+      "period": "Időszak",
+      "periodMonth": "Ez a hónap",
+      "periodYear": "Ez az év",
+      "openCalendar": "Naptár megnyitása",
+      "latestStatement": "Legutóbbi elszámolás",
+      "noStatement": "Még nincs elszámolás"
+    },
+    "calendar": {
+      "title": "Foglaltsági naptár",
+      "subtitle": "Foglaltság és a nettó kifizetésed éjszakánként.",
+      "selectProperty": "Ingatlan kiválasztása",
+      "prevMonth": "Előző hónap",
+      "nextMonth": "Következő hónap",
+      "today": "Ma",
+      "legendSeasons": "Szezonok",
+      "legendStatus": "Foglaltság",
+      "noSeasons": "Ehhez az ingatlanhoz nincsenek szezonok megadva.",
+      "status": {
+        "open": "Szabad",
+        "booked": "Foglalt",
+        "blocked": "Zárolt"
+      },
+      "payoutPerNight": "Nettó kifizetés/éjszaka",
+      "guest": "Vendég",
+      "channel": "Foglalás forrása",
+      "blockHint": "Zároltatnál egy időszakot? Nyújts be kérelmet — a döntés az üzemeltetőé.",
+      "blockCta": "Zárolás kérése",
+      "weekdays": "H,K,Sze,Cs,P,Szo,V",
+      "months": "Január,Február,Március,Április,Május,Június,Július,Augusztus,Szeptember,Október,November,December"
+    },
+    "services": {
+      "title": "Szolgáltatás megrendelése",
+      "hint": "Rendelj szolgáltatást az ingatlanodhoz. Az üzemeltető elfogadja a megrendelést és ütemezi.",
+      "property": "Ingatlan",
+      "kind": "Szolgáltatás",
+      "date": "Kívánt időpont",
+      "note": "Megjegyzés",
+      "notePlaceholder": "Pontosan mit kell elvégezni?",
+      "submit": "Megrendelés",
+      "sending": "Küldés …",
+      "sent": "Megrendelés elküldve.",
+      "listTitle": "Megrendeléseim",
+      "listEmpty": "Még nem rendeltél szolgáltatást.",
+      "invalidDate": "Adj meg érvényes kívánt időpontot.",
+      "noteRequired": "Írd le a kívánt szolgáltatást.",
+      "kinds": {
+        "custom": "Egyéb (szabad szöveg)"
+      },
+      "status": {
+        "pending": "Elbírálás alatt",
+        "accepted": "Elfogadva",
+        "scheduled": "Ütemezve",
+        "done": "Elvégezve",
+        "rejected": "Elutasítva",
+        "cancelled": "Visszavonva"
+      },
+      "type": {
+        "endreinigung": "Végtakarítás",
+        "hauptreinigung": "Nagytakarítás",
+        "fensterreinigung": "Ablaktisztítás",
+        "rasenmaehen": "Fűnyírás",
+        "terrassenreinigung": "Terasz takarítása"
+      },
+      "dateTo": "Eddig"
+    },
+    "notifications": {
+      "title": "Értesítések",
+      "hint": "Add meg eseményenként, hogyan szeretnél értesítést kapni.",
+      "channel": {
+        "email": "E-mail",
+        "sms": "SMS",
+        "phone": "Telefon"
+      },
+      "locked": "Ez az e-mail cím szerződés szerint kötelező, és bekapcsolva marad.",
+      "saved": "Mentve.",
+      "saveFailed": "A módosítást nem sikerült menteni.",
+      "categories": {
+        "listing_activity": "Foglalások az ingatlanjaidon",
+        "listing_activityHint": "Új foglalás, módosítás és lemondás.",
+        "account_activity": "Fiók tevékenység",
+        "account_activityHint": "Bejelentkezések és módosítások a fiókodon.",
+        "reminders": "Emlékeztetők",
+        "remindersHint": "Esedékes feladatok és időpontok.",
+        "messages": "Üzenetek",
+        "messagesHint": "Új üzenetek az üzemeltetőtől.",
+        "owner_booking": "Foglalások az ingatlanjaidnál",
+        "owner_bookingHint": "Új foglalás, módosítás és lemondás.",
+        "block_decision": "Döntés a zárolási kérelmeidről",
+        "block_decisionHint": "Ha a kezelőség jóváhagyja vagy elutasítja a kérelmedet.",
+        "owner_service": "Megrendelt szolgáltatások",
+        "owner_serviceHint": "Állapotváltozás egy általad megrendelt szolgáltatásnál."
+      }
+    },
+    "reports": {
+      "title": "Jelentések",
+      "subtitle": "Elszámolások, a folyó hónap, valamint havi és éves jelentések.",
+      "currentTitle": "Aktuális elszámolási állapot",
+      "currentHint": "Ideiglenes — a hónap még folyamatban van. Csak a véglegesített elszámolás kötelező érvényű.",
+      "monthly": "Havi jelentés",
+      "yearly": "Éves jelentés",
+      "month": "Hónap",
+      "year": "Év",
+      "download": "PDF letöltése",
+      "downloading": "Létrehozás …",
+      "downloadFailed": "A PDF-et nem sikerült létrehozni.",
+      "onlyFinalized": "Letöltésre csak a véglegesített elszámolások állnak rendelkezésre.",
+      "status": {
+        "draft": "Előkészítés alatt",
+        "finalized": "Lezárva",
+        "cancelled": "Sztornózva"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Az átalányösszeg nem osztható szét az egyes éjszakákra — a portálokra nem jut el, ott az extranetben kell kezelni.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Ugyanezt az akciót más objektumokra is alkalmazza.",
+      "applyToOthersSeasonHint": "Ugyanezt a szezont más objektumoknál is létrehozza.",
       "promoReason": {
         "mindestaufenthalt": "minimális tartózkodás",
         "fruehbucher": "előre foglalási időelőny",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Fizetési terv",
       "cancellationLabel": "Lemondás",
       "depositLabel": "Kaució",
-      "depositWithheldText": "{amount} összegű kaució kerül visszatartásra.",
       "noPolicyYet": "Még nincs megadva irányelv.",
       "bookabilityCardTitle": "Foglalhatóság",
       "bookabilityCardHint": "Hogyan fogadják el a foglalásokat.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Bérleti szerződés",
       "rentalAgreementCardHint": "Hozd létre a bérleti szerződést, vagy linkeld be a vendégeidnek.",
       "noRentalAgreementYet": "Még nincs bérleti szerződés.",
-      "addPolicyTitle": "Irányelv hozzáadása",
       "addPolicySubtitle": "Add meg ennek az új irányelvnek a részleteit.",
       "internalNameLabel": "Belső név *",
       "internalNamePlaceholder": "pl. részfoglaló – nem visszatérítendő",
       "paymentPlanGroupTitle": "Fizetési terv",
       "paymentCountLabel": "Fizetések száma",
-      "depositPercentLabel": "Előleg (%)",
-      "remainingDaysBeforeLabel": "Fennmaradó összeg (nap érkezés előtt)",
       "guestCancellationGroupTitle": "Lemondás a vendég részéről",
       "cancellationTypeLabel": "Lemondási típus",
       "depositGroupTitle": "Kaució",
-      "depositModeNone": "Nincs szükség kaucióra",
-      "depositModeAmount": "Kaució összegként",
-      "depositAmountLabelWithCurrency": "Kaució összege ({currency})",
-      "depositAmountLabel": "Kaució összege",
       "quoteValidityGroupTitle": "Ajánlat érvényessége",
       "quoteValidityHoursLabel": "Érvényességi idő (óra) *",
       "quoteValidityHint": "Az ajánlat max. {hours} óráig érvényes, amíg a státusz „Vendégre vár” vagy „Fizetésre vár”.",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Ajánlott",
       "checkInTimeLabel": "Check-in időpont",
       "checkOutTimeLabel": "Check-out időpont",
-      "paymentSummaryFull": "100% a foglaláskor esedékes.",
-      "paymentSummarySplit": "{percent}% foglaláskor, a fennmaradó összeg {days} nappal érkezés előtt.",
       "localizedEditorSubtitle": "Hozd létre a szöveget, és szükség esetén fordítsd le a vendégeidnek.",
-      "localizedEditorPlaceholder": "{title} megadása …"
+      "localizedEditorPlaceholder": "{title} megadása …",
+      "editPolicyTitle": "Feltételek szerkesztése",
+      "singlePaymentHint": "A fizetendő összeg 100 %-a a foglalás véglegesítésekor esedékes.",
+      "firstPaymentHeading": "Első fizetés",
+      "secondPaymentHeading": "Második fizetés",
+      "thirdPaymentHeading": "Harmadik fizetés",
+      "amountTypeLabel": "Az összeg típusa",
+      "percentLabel": "Százalék",
+      "amountLabel": "Összeg",
+      "currencyLabel": "Pénznem",
+      "daysLabel": "Nap",
+      "periodLabel": "Időszak",
+      "firstPaymentHint": "A foglaláskor csak az első fizetés fix összegét vagy százalékát számítjuk fel. A további fizetéseket a tervezett időpontban számlázzuk ki.",
+      "remainderHint": "Állítsa be, mikor kerüljön felszámításra a fennmaradó összeg.",
+      "partialRulesHint": "Határozza meg a részlegesen visszatérítendő lemondások szabályait.",
+      "ruleHeading": "{number}. szabály",
+      "ruleDelete": "Szabály törlése",
+      "ruleAdd": "Szabály hozzáadása",
+      "refundTypeLabel": "A visszatérítés típusa",
+      "refundLabel": "Visszatérítés",
+      "whenCancelledLabel": "Lemondás esetén",
+      "depositNotRequired": "Kaució nem szükséges",
+      "depositRequired": "Kaució szükséges",
+      "depositMethodLabel": "Módszer",
+      "preAuthTimesHeading": "Előengedélyezés időpontjai",
+      "preAuthValidityLabel": "Érvényesség (nap az elutazás után)",
+      "preAuthWarnTitle": "Az előengedélyezés csak 5 napra garantálható.",
+      "preAuthWarnBody": "Az, hogy egy előengedélyezés meddig él a hitelkártyán, több tényezőtől függ, például a kártyaszolgáltatótól, a kibocsátó banktól, a fizetési átjárótól és így tovább. Ezért minden egy hetes vagy hosszabb foglalás esetén minden előengedélyezés 5 naponta lejár (automatikusan törlődik). Értesítjük Önt, hogy kézzel új előengedélyezést adhasson ki, és így megtarthassa a kauciót a foglalás hátralévő részére.",
+      "assignAction": "Feltételek hozzárendelése"
     },
     "ratePlanWizard": {
       "title": "Árterv létrehozása",
@@ -5604,6 +5795,39 @@
       "confirmed": "Megerősítve",
       "in_house": "Bejelentkezett",
       "pending": "Opció / előzetes"
+    },
+    "blockRequests": {
+      "title": "Zárolási kérelmek",
+      "subtitle": "A tulajdonosaid kérelmei az objektumaik zárolására. A jóváhagyás zárolja az éjszakákat a naptárban, és jelenti azokat a portáloknak.",
+      "filter": "Állapot",
+      "filterAll": "Összes",
+      "empty": "Nincs kérelem ebben a nézetben.",
+      "requestedBy": "Kérelmező: {name}",
+      "reason": "Indoklás",
+      "decisionNote": "Megjegyzés",
+      "note": "Megjegyzés a tulajdonosnak",
+      "notePlaceholder": "Nem kötelező — a tulajdonos látja.",
+      "working": "Folyamatban …",
+      "status": {
+        "pending": "Nyitott",
+        "approved": "Jóváhagyva",
+        "rejected": "Elutasítva"
+      },
+      "action": {
+        "approve": "Jóváhagyás",
+        "reject": "Elutasítás",
+        "revoke": "Visszavonás"
+      },
+      "confirm": {
+        "approve": "Zárolod a(z) {objekt} objektumot {von} és {bis} között? Az éjszakák minden portálon zárolva lesznek.",
+        "reject": "Elutasítod a kérelmet a(z) {objekt} objektumra ({von} – {bis})?",
+        "revoke": "Visszavonod a jóváhagyást a(z) {objekt} objektumra ({von} – {bis})? Az éjszakák ismét felszabadulnak."
+      },
+      "done": {
+        "approve": "Kérelem jóváhagyva, éjszakák zárolva.",
+        "reject": "Kérelem elutasítva.",
+        "revoke": "Jóváhagyás visszavonva, éjszakák felszabadítva."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "Január,Február,Március,Április,Május,Június,Július,Augusztus,Szeptember,Október,November,December",
     "name": "Név",
     "seasonAdd": "Szezon hozzáadása",
+    "seasonApplyCancel": "Mégse",
+    "seasonApplyCopyHint": "A szezon önálló másolatként jön létre. A szezon későbbi módosításai ott már NEM érvényesülnek. A felár a célobjektum saját alapárához képest számolódik.",
+    "seasonApplyNone": "Egyetlen ingatlanra sem lett átmásolva.",
+    "seasonApplyPartial": "{count} objektumra másolva, {skipped} kihagyva.",
+    "seasonApplyPickTarget": "Válassz legalább egy objektumot.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Nincs megadva alapár — a felár nem számítható ki.",
+      "basispreis_null": "Az alapár 0 — a felár nem számítható ki.",
+      "teilweise_uebertragen": "A szezon az ingatlanon van, a napi árak még hiányoznak — próbálja újra a befejezéshez.",
+      "unbekannt": "Ismeretlen okból kihagyva."
+    },
+    "seasonApplySubmit": "Másolás",
+    "seasonApplySuccess": "{count} objektumra másolva.",
+    "seasonApplyTitle": "„{name}” másolása más objektumokra",
+    "seasonApplyToOthers": "Másolás más objektumokra",
+    "seasonApplyWithRanges": "Az időszakok másolása is",
+    "seasonApplyWithRangesHint": "A megjelölt napok ugyanígy bekerülnek a célobjektumba. Kikapcsolva: csak maga a szezon, napok nélkül.",
     "seasonClearHint": "Húzza a jobb egérgombbal a napok fölé, hogy kivegye őket a szezonból.",
     "seasonColor": "Szín",
     "seasonColorAria": "Szín: {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Felár (± %)",
     "seasonSurchargePlaceholder": "pl. 30 vagy -15",
     "seasonValueRequired": "Adj meg egy érvényes értéket.",
-    "weekdays": "H,K,Sz,Cs,P,Szo,V"
+    "weekdays": "H,K,Sz,Cs,P,Szo,V",
+    "seasonApplyNoSpans": "Ennek a szezonnak nincsenek megrajzolt időszakai. Először rajzolja meg, vagy csak a definíciót vigye át időszakok nélkül."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "QR-kód a hitelesítő alkalmazáshoz",
       "sixDigitCode": "6 jegyű kód",
       "disable2fa": "2FA kikapcsolása",
-      "disable2faHint": "Adjon meg egy aktuális kódot (vagy helyreállítási kódot) a 2FA kikapcsolásához."
+      "disable2faHint": "Adjon meg egy aktuális kódot (vagy helyreállítási kódot) a 2FA kikapcsolásához.",
+      "title": "Biztonság",
+      "loadFailed": "A fiókadatokat nem sikerült betölteni. Ellenőrizze a kapcsolatot, és próbálja újra.",
+      "credentials": "Bejelentkezési adatok",
+      "emailAndUsername": "E-mail-cím és felhasználónév",
+      "emailLabel": "E-mail-cím",
+      "nameLabel": "Név",
+      "password": "Jelszó",
+      "noPassword": "Nincs beállítva jelszó",
+      "passwordMin": "Legalább 8 karakter.",
+      "save": "Mentés",
+      "saving": "Mentés …",
+      "changePassword": "Jelszó módosítása",
+      "twoFactor": {
+        "title": "Kétlépcsős azonosítás (2FA)",
+        "intro": "A jelszó mellett egy második lépéssel védi a fiókját.",
+        "noneActive": "Még nincs beállítva második lépés. A hitelesítő alkalmazást ajánljuk.",
+        "requiredNotice": "Az Ön szerepköréhez kötelező a második lépés. Állítsa be most.",
+        "active": "Aktív",
+        "setUp": "Beállítás",
+        "totp": {
+          "title": "Hitelesítő alkalmazás",
+          "description": "Egyszer használatos kód olyan alkalmazásból, mint a Google Authenticator vagy a Microsoft Authenticator. Mobilhálózat nélkül is működik.",
+          "setupTitle": "Hitelesítő alkalmazás beállítása",
+          "setupHint": "Olvassa be a QR-kódot az alkalmazásával, és erősítse meg a megjelenített kóddal.",
+          "step1": "1. Olvassa be a QR-kódot",
+          "step2": "3. Adja meg az alkalmazásban látható kódot",
+          "qrAlt": "QR-kód a hitelesítő alkalmazáshoz",
+          "qrHint": "Nyissa meg a hitelesítő alkalmazását, és olvassa be a kódot.",
+          "manualTitle": "2. Vagy adja meg a kulcsot kézzel",
+          "manualHint": "Használja ezt a kulcsot, ha nem tudja beolvasni a QR-kódot.",
+          "showSecret": "Kulcs megjelenítése",
+          "hideSecret": "Kulcs elrejtése",
+          "copySecret": "Kulcs másolása",
+          "copyFailed": "A másolás nem sikerült. Jelölje ki a kulcsot, és másolja ki kézzel.",
+          "codeLabel": "6 jegyű kód",
+          "activate": "Aktiválás",
+          "checking": "Ellenőrzés …",
+          "preparing": "A beállítás előkészítése …",
+          "enabledTitle": "A hitelesítő alkalmazás aktív. Most mentse el biztonságosan a helyreállítási kódjait.",
+          "friendlyName": "Hitelesítő alkalmazás",
+          "replayNote": "Megjegyzés: egy kód legfeljebb 90 másodpercig marad érvényes, és ezalatt többször is felhasználható. A valós idejű, hamis bejelentkezési oldallal elkövetett csalás ellen csak azonosítókulcs véd."
+        },
+        "sms": {
+          "title": "SMS-kód",
+          "description": "Egyszer használatos kód SMS-ben a megerősített telefonszámára.",
+          "unavailable": "Az SMS-kód ezen a kiszolgálón nem érhető el, mert nincs beállítva SMS-szolgáltató. Válaszd inkább a hitelesítő alkalmazást vagy egy azonosítókulcsot.",
+          "unavailableBadge": "Nem érhető el",
+          "setupTitle": "SMS-kód beállítása",
+          "setupHint": "Küldünk egy kódot a telefonszámára.",
+          "simSwapWarning": "Megjegyzés: az SMS kevésbé biztonságos, mint a hitelesítő alkalmazás. Aki a telefonszámát másik SIM-kártyára viteti át, megkaphatja a kódjait. Ha lehetséges, válassza a hitelesítő alkalmazást vagy egy azonosítókulcsot.",
+          "numberLabel": "Telefonszám",
+          "numberHint": "Nemzetközi formátum országhívószámmal, például +36 …",
+          "invalidNumber": "Adja meg a számot nemzetközi formátumban, + jellel és az országhívószámmal kezdve.",
+          "sendCode": "Kód küldése",
+          "sending": "Küldés …",
+          "codeLabel": "6 jegyű kód",
+          "codeSentTo": "Kódot küldtünk a következő számra: {phone}.",
+          "confirm": "Megerősítés",
+          "checking": "Ellenőrzés …",
+          "resend": "Kód újraküldése",
+          "changeNumber": "Másik szám használata",
+          "friendlyName": "SMS-kód"
+        },
+        "passkey": {
+          "title": "Azonosítókulcs",
+          "description": "Bejelentkezés ujjlenyomattal, arcfelismeréssel vagy biztonsági kulccsal. Kód nem szükséges.",
+          "setupTitle": "Azonosítókulcs beállítása",
+          "setupHint": "Az eszköze ujjlenyomattal, arcfelismeréssel vagy biztonsági kulccsal azonosítja Önt.",
+          "checkingSupport": "Eszköz ellenőrzése …",
+          "unsupportedTitle": "Ez a böngésző nem támogatja az azonosítókulcsokat",
+          "unsupportedHint": "Használjon korszerű böngészőt, vagy állítsa be helyette a hitelesítő alkalmazást.",
+          "securityKeyOnly": "Ezen az eszközön nincs beépített azonosítás (például ujjlenyomat vagy arcfelismerés). Ehhez csatlakoztatható biztonsági kulcsra van szüksége.",
+          "benefitPhishing": "Véd a hamis bejelentkezési oldalaktól.",
+          "benefitNoCode": "Nem kell kódot begépelni.",
+          "create": "Azonosítókulcs létrehozása",
+          "friendlyName": "Azonosítókulcs",
+          "recommended": "Ajánlott: a három mód közül a legbiztonságosabb.",
+          "creating": "Létrehozás folyamatban …",
+          "errors": {
+            "abgebrochen": "A megerősítést megszakították, vagy nem sikerült felismerni. Próbálja újra.",
+            "herkunftPasstNicht": "A azonosítókulcsok nincsenek engedélyezve ehhez a címhez. Jelentkezzen be a hivatalos címen.",
+            "nichtUnterstuetzt": "Ez az eszköz nem tud azonosítókulcsot létrehozni. Használja a hitelesítő alkalmazást vagy biztonsági kulcsot.",
+            "schonVorhanden": "Ehhez a fiókhoz már van azonosítókulcs ezen az eszközön.",
+            "laeuftBereits": "Már folyamatban van egy azonosítókulcs-kérés. Fejezze be vagy szakítsa meg.",
+            "zeitUeberschritten": "A megerősítésre szánt idő lejárt. Próbálja újra.",
+            "unbekannt": "Az azonosítókulcs létrehozása nem sikerült. Próbálja újra."
+          }
+        },
+        "recovery": {
+          "title": "Helyreállítási kódok",
+          "description": "Egyszer felhasználható kódok arra az esetre, ha nem fér hozzá a második lépéshez.",
+          "left": "Elérhető kódok száma: {count}.",
+          "create": "Kódok létrehozása",
+          "regenerate": "Új kódok létrehozása",
+          "regenerateHint": "Új kódok létrehozásakor az összes eddigi érvényét veszti.",
+          "dialogTitle": "Helyreállítási kódok",
+          "dialogHint": "Egyszer felhasználható kódok arra az esetre, ha nem fér hozzá a második lépéshez.",
+          "replaceWarning": "Figyelem: az eddigi helyreállítási kódjai ezzel érvénytelenné válnak.",
+          "passwordLabel": "Jelenlegi jelszó",
+          "passwordHint": "Annak megerősítésére, hogy valóban Ön az.",
+          "createNow": "Kódok létrehozása",
+          "creating": "Létrehozás folyamatban …",
+          "createdTitle": "Az új helyreállítási kódjai. Őrizze őket biztonságos helyen.",
+          "noneReturned": "Nem jött létre kód. Próbálja meg újra."
+        },
+        "remove": "Eltávolítás",
+        "removeDialog": {
+          "totpTitle": "Hitelesítő alkalmazás eltávolítása",
+          "smsTitle": "SMS-kód eltávolítása",
+          "warning": "Ezután ez a lépés már nem védi a fiókját.",
+          "passwordLabel": "Jelenlegi jelszó",
+          "remove": "Eltávolítás",
+          "removing": "Eltávolítás folyamatban …",
+          "cancel": "Mégse",
+          "hint": "Erősítse meg az eltávolítást a jelenlegi jelszavával.",
+          "passkeyTitle": "Azonosítókulcs eltávolítása",
+          "lastFactorBlocked": "Ez az utolsó második lépése, az Ön szerepköréhez pedig kötelező egy ilyen. Előbb hozzon létre helyreállítási kódokat, vagy állítson be további lépést."
+        },
+        "requiredWithDeadline": "Az Ön szerepköréhez kötelező a második lépés. Állítsa be {date} dátumig — ezt követően a bejelentkezés második lépés nélkül már nem lehetséges.",
+        "statusFailed": "A kétlépcsős azonosítás állapotát nem sikerült betölteni. Töltse be újra az oldalt."
+      },
+      "recovery": {
+        "lockoutWarning": "Ezek nélkül a kódok nélkül elveszíti a hozzáférést a fiókjához, ha a második lépést már nem tudja használni. Őrizze őket biztonságos helyen, a jelszavától elkülönítve.",
+        "copy": "Másolás",
+        "copied": "Másolva",
+        "copyFailed": "A másolás nem sikerült. Töltse le vagy nyomtassa ki a kódokat.",
+        "download": "Letöltés",
+        "downloadFailed": "A letöltés nem sikerült. Másolja ki vagy nyomtassa ki a kódokat.",
+        "print": "Nyomtatás",
+        "printBlocked": "A nyomtatási ablakot letiltotta a böngésző. Engedélyezze a felugró ablakokat, vagy töltse le a kódokat.",
+        "printTitle": "myNextDays helyreállítási kódok",
+        "printHint": "Minden kód pontosan egyszer működik. Őrizze ezt a lapot biztonságos helyen.",
+        "fileHeader": "myNextDays helyreállítási kódok — minden kód pontosan egyszer működik. Őrizze őket biztonságosan.",
+        "confirmSaved": "Biztonságosan elmentettem a kódokat.",
+        "confirmHint": "Jelölje be a négyzetet a beállítás befejezéséhez.",
+        "mustExportFirst": "Előbb másolja ki, töltse le vagy nyomtassa ki a kódokat.",
+        "done": "Kész"
+      }
     },
     "company": {
       "saved": "Adatok mentve.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Beszélt nyelvek",
       "searchLanguage": "Nyelv keresése…",
       "chooseRole": "Szerepkör kiválasztása…",
-      "userCreated": "Felhasználó létrehozva",
-      "preferredLanguage": "Előnyben részesített nyelv",
+      "preferredLanguage": "E-mailek nyelve",
       "noLanguageFound": "Nem található nyelv.",
       "firstName": "Keresztnév",
       "lastName": "Vezetéknév",
       "email": "E-mail",
       "phone": "Telefonszám",
       "notes": "Megjegyzések",
-      "password": "Jelszó",
-      "credentialsHint": "Adja át ezeket a hozzáférési adatokat az új felhasználónak. A jelszó csak most jelenik meg."
+      "title": "Felhasználó létrehozása",
+      "createdSubtitle": "Meghívó elküldve.",
+      "stepHints": {
+        "contact": "Adja hozzá a felhasználó kapcsolattartási adatait.",
+        "extra": "Adjon meg további információkat erről a felhasználóról.",
+        "role": "Válassza ki a felhasználó szerepkörét és jogosultságait.",
+        "properties": "Rendeljen objektumokat ehhez a felhasználóhoz."
+      },
+      "done": "Kész",
+      "cancel": "Mégse",
+      "back": "Vissza",
+      "next": "Tovább",
+      "create": "Létrehozás",
+      "creating": "Létrehozás…",
+      "role": "Szerepkör",
+      "requiredFields": "A keresztnév, a vezetéknév, az e-mail és a szerepkör kötelező.",
+      "assignFailed": "A felhasználó létrejött, de az objektum-hozzárendelés nem sikerült: {reason}",
+      "hidePhones": "Telefonszámok elrejtése a weboldalon.",
+      "noAssignNeeded": "Nincs szükség objektum-hozzárendelésre",
+      "noAssignNeededHint": "Ez a szerepkör a fiók minden objektumához hozzáfér. Az egyes objektumok hozzárendelése csak tulajdonosokra és munkatársakra vonatkozik.",
+      "noProperties": "Még nincsenek szálláshelyek",
+      "noPropertiesHint": "Hozza létre szálláshelyeit, hogy később hozzárendelhesse őket a felhasználóihoz.",
+      "choosePropertiesHint": "Válassza ki az objektumokat, amelyekhez a felhasználó hozzáfér.",
+      "selectedCount": "{count} kiválasztva",
+      "inviteSent": "Meghívó elküldve",
+      "inviteSentHint": "A felhasználó e-mailt kap, és maga állítja be a jelszavát. A hivatkozás 7 napig érvényes.",
+      "inviteResend": "Meghívó újraküldése",
+      "inviteResending": "Küldés…",
+      "inviteResent": "A meghívót újra elküldtük.",
+      "inviteResendFailed": "A meghívót nem sikerült újraküldeni.",
+      "preferredLanguageHint": "Ezen a nyelven kapja az új felhasználó a meghívót és minden további e-mailt."
     },
     "tariff": {
       "oneLess": "Eggyel kevesebb szálláshely",
@@ -6359,7 +6767,14 @@
       "updated": "Felhasználó frissítve.",
       "deleted": "Felhasználó törölve.",
       "generalPermissions": "Általános jogosultságok",
-      "roleChangeHint": "A szerepkör módosítása megfelelő jogosultságokat javasol. Ezeket utána egyenként módosíthatja."
+      "roleChangeHint": "A szerepkör módosítása megfelelő jogosultságokat javasol. Ezeket utána egyenként módosíthatja.",
+      "edit": "Szerkesztés",
+      "delete": "Törlés",
+      "resendInvite": "Meghívó újraküldése",
+      "inviteResent": "Meghívó elküldve a következő címre: {email}.",
+      "inviteResendFailed": "A meghívót nem sikerült újraküldeni.",
+      "emailLanguage": "E-mailek nyelve",
+      "emailLanguageHint": "Ezen a nyelven kapja ez a felhasználó az e-mailjeit."
     },
     "staffProperties": {
       "title": "Szálláshelyek megosztása"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "pl. Hotel Tóparti kilátás",
     "namePlaceholder": "Vezeték- és keresztnév",
     "passwordHint": "Legalább 8 karakter",
-    "passwordRepeat": "Jelszó megismétlése"
+    "passwordRepeat": "Jelszó megismétlése",
+    "headline": "A teljes bérbeadás egy helyen.",
+    "feature1": "Naptárak automatikus szinkronizálása",
+    "feature2": "Közvetlen foglalások a saját oldalon",
+    "feature3": "Vendégüzenetek automatizálása",
+    "withGoogle": "Regisztráció Google-fiókkal",
+    "withApple": "Regisztráció Apple-fiókkal",
+    "or": "vagy",
+    "withEmail": "Regisztráció e-maillel",
+    "haveAccount": "Már van fiókja?",
+    "loginLink": "Jelentkezzen be itt",
+    "loadingHeadline": "Saját foglalási weboldal. Tartsa meg minden foglalás 100 %-át.",
+    "loadingText": "Beállítjuk a fiókját …"
   },
   "marketingSite": {
     "stars": "4,5 csillag",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Összes olvasottnak jelölése",
     "erneut": "Újratöltés",
     "ariaMitAnzahl": "Értesítések ({count} olvasatlan)"
+  },
+  "auth": {
+    "toLogin": "A bejelentkezéshez",
+    "genericError": "Ez most nem sikerült. Kérjük, próbálja meg később.",
+    "tokenMissing": {
+      "title": "Hiányos hivatkozás",
+      "text": "Ez a hivatkozás hiányos. Kérjük, használja az e-mailben szereplő teljes hivatkozást — másolja ki és illessze be a címsorba."
+    },
+    "tokenInvalid": {
+      "title": "A hivatkozás már nem érvényes",
+      "textInvite": "Ez a meghívó hivatkozás lejárt vagy már felhasználták. Kérjük, forduljon a szálláshelyéhez — ott újra elküldhetik a meghívót.",
+      "textReset": "Ez a hivatkozás lejárt vagy már felhasználták. Egyszerűen kérjen újat.",
+      "retry": "Új hivatkozás kérése"
+    },
+    "invite": {
+      "title": "Hozzáférés beállítása",
+      "intro": "Válasszon jelszót a myNextDays-hozzáféréséhez. Legalább {min} karakter."
+    },
+    "reset": {
+      "title": "Új jelszó",
+      "intro": "Válasszon új jelszót. Legalább {min} karakter."
+    },
+    "done": {
+      "titleInvite": "A hozzáférés beállítva",
+      "titleReset": "A jelszó megváltozott",
+      "text": "Most már bejelentkezhet az új jelszavával."
+    },
+    "forgot": {
+      "title": "Elfelejtett jelszó",
+      "intro": "Adja meg e-mail-címét. Küldünk egy hivatkozást, amellyel új jelszót állíthat be.",
+      "emailLabel": "E-mail",
+      "submit": "Hivatkozás kérése",
+      "sending": "Küldés…",
+      "sentTitle": "Az e-mail úton van",
+      "sentText": "Ha ehhez a címhez tartozik fiók, elküldtünk egy visszaállítási hivatkozást. Egy óráig érvényes.",
+      "spamHint": "Nem érkezett semmi? Kérjük, nézze meg a spam mappát is.",
+      "again": "Kérés újra"
+    },
+    "password": {
+      "newLabel": "Jelszó",
+      "repeatLabel": "Jelszó megismétlése",
+      "submit": "Jelszó beállítása",
+      "saving": "Mentés…",
+      "mismatch": "A két jelszó nem egyezik.",
+      "tooWeak": "A jelszó nem felel meg a követelményeknek (legalább {min} karakter).",
+      "show": "Jelszó megjelenítése",
+      "hide": "Jelszó elrejtése",
+      "strengthLabel": "Erősség: {level}",
+      "strength": {
+        "1": "gyenge",
+        "2": "közepes",
+        "3": "jó",
+        "4": "erős"
+      },
+      "requirement": {
+        "length": "Legalább {min} karakter",
+        "letter": "Legalább egy betű",
+        "digit": "Legalább egy számjegy"
+      }
+    },
+    "checking": "A hivatkozás ellenőrzése…",
+    "languageLabel": "Nyelv",
+    "languageChange": "Nyelv módosítása",
+    "twoFactor": {
+      "title": "Megerősítés",
+      "totpHint": "Adja meg a hitelesítő alkalmazásában látható 6 jegyű kódot.",
+      "smsHint": "Adja meg a 6 jegyű kódot, amelyet SMS-ben küldtünk Önnek.",
+      "smsHintWithPhone": "Adja meg a 6 jegyű kódot, amelyet a következő számra küldtünk: {phone}.",
+      "codeLabel": "Kód",
+      "confirm": "Megerősítés",
+      "checking": "Ellenőrzés …",
+      "recoveryHint": "Adja meg az egyik helyreállítási kódját.",
+      "recoveryLabel": "Helyreállítási kód",
+      "recoverySingleUse": "Minden kód pontosan egyszer működik.",
+      "useTotp": "Hitelesítő alkalmazás használata",
+      "useSms": "SMS-kód használata",
+      "useRecovery": "Helyreállítási kód használata",
+      "backToLogin": "Vissza a bejelentkezéshez",
+      "factorMissing": "Ez a lépés nem érhető el a fiókjához. Válasszon másik módot.",
+      "passkeyHint": "Erősítse meg a bejelentkezést az azonosítókulcsával.",
+      "passkeyUse": "Bejelentkezés azonosítókulccsal",
+      "usePasskey": "Azonosítókulcs használata",
+      "sendCode": "Kód küldése SMS-ben",
+      "sending": "Küldés …",
+      "smsSent": "A kódot elküldtük.",
+      "resend": "Kód újraküldése",
+      "recoveryRedeemedHint": "A kódot beváltottuk, önmagában azonban nem elegendő a bejelentkezéshez. Jelentkezzen be a beállított lépései egyikével, vagy forduljon a csapatához."
+    },
+    "mfaSetup": {
+      "title": "Kétlépcsős azonosítás beállítása",
+      "intro": "Az Ön szerepköréhez kötelező a második lépés. A folytatáshoz állítsa be most.",
+      "why": "Adminisztrátorként hozzáfér a pénzügyi adatokhoz, a vendégadatokhoz és az egész szálláshely beállításaihoz. A második lépés megakadályozza, hogy egy ellopott jelszó önmagában elegendő legyen.",
+      "goToSettings": "Beállítás most",
+      "later": "Emlékeztessen később",
+      "laterHint": "A beállítást még elhalaszthatja. A következő bejelentkezéskor újra rákérdezünk.",
+      "introWithDeadline": "Az Ön szerepköréhez kötelező a második lépés. Állítsa be {date} dátumig — ezt követően a bejelentkezés második lépés nélkül már nem lehetséges."
+    }
+  },
+  "sprache": {
+    "label": "E-mailek nyelve",
+    "hint": "Ezen a nyelven küldünk e-mailt ennek a személynek.",
+    "none": "— nincs megadva"
+  },
+  "neuerungen": {
+    "eyebrow": "Termékfrissítések",
+    "titel": "Újdonságok",
+    "unterzeile": "Minden, ami a myNextDaysben változott — a legújabb elöl.",
+    "neuAnzahl": "{anzahl, plural, one {# új} other {# új}}",
+    "ungelesen": "Új",
+    "veroeffentlichtAm": "Közzétéve: {datum}",
+    "leer": "Még nincsenek újdonságok.",
+    "ladefehler": "Nem sikerült betölteni: {grund}",
+    "mehrLaden": "Régebbiek betöltése",
+    "aufklappen": "Részletek megjelenítése",
+    "zuklappen": "Részletek elrejtése",
+    "kategorie": {
+      "neuerung": "Új funkció",
+      "wartung": "Karbantartás",
+      "hinweis": "Tájékoztatás",
+      "wichtig": "Fontos"
+    },
+    "popup": {
+      "ariaLabel": "A közlemény tartalma",
+      "gelesen": "Értem",
+      "wirdGespeichert": "Mentés …",
+      "erneut": "Újrapróbálkozás",
+      "fehler": "Nem sikerült megerősíteni: {grund}",
+      "weiter": "Tovább",
+      "vonAnzahl": "{nummer}. közlemény"
+    }
+  },
+  "login": {
+    "title": "Bejelentkezés",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Jelszó",
+    "showPassword": "Jelszó megjelenítése",
+    "hidePassword": "Jelszó elrejtése",
+    "forgot": "Elfelejtette a jelszavát?",
+    "stayLoggedIn": "Maradjak bejelentkezve",
+    "submit": "Bejelentkezés",
+    "submitting": "Bejelentkezés…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Még nem myNextDays-ügyfél?",
+    "signupLink": "Próbálja ki ingyen",
+    "mfaTitle": "Megerősítés",
+    "mfaIntro": "Adja meg a hitelesítő alkalmazás 6 jegyű kódját. Helyreállítási kód is működik.",
+    "mfaCodeLabel": "Kód",
+    "mfaSubmit": "Megerősítés",
+    "mfaChecking": "Ellenőrzés…",
+    "mfaBack": "Vissza a bejelentkezéshez"
   }
 }

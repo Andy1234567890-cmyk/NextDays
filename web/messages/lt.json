@@ -283,6 +283,7 @@
       "logout": "Atsijungti"
     },
     "stopSell": "Pardavimo stabdymas",
+    "blockRequests": "Blokavimo prašymai",
     "owners": "Savininkai",
     "ownerStatements": "Savininkų ataskaitos",
     "portal": "Mano portalas",
@@ -315,7 +316,8 @@
     "noAccess": "Nėra prieigos",
     "dashboardLoadFailed": "Nepavyko įkelti skydelio",
     "reviews": "Atsiliepimai",
-    "extensions": "Papildymai"
+    "extensions": "Papildymai",
+    "announcements": "Naujienos"
   },
   "exemption": {
     "labelNamed": "Atleista nuo mokesčio ({scheme}) — PVM kodas nereikalingas",
@@ -945,6 +947,7 @@
     "newTitle": "Naujas savininkas",
     "create": "Sukurti",
     "created": "Savininkas sukurtas.",
+    "createdInvited": "Savininkas sukurtas ir kvietimas išsiųstas.",
     "cancel": "Atšaukti",
     "save": "Išsaugoti",
     "saving": "Išsaugoma …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Objektų nėra} one {# objektas} few {# objektai} other {# objektų}}",
     "noProperties": "Šiam savininkui dar nepriskirtas nė vienas objektas.",
     "addProperty": "Priskirti objektą …",
+    "assignProperties": "Priskirti objektus",
+    "assignPropertiesHint": "Neprivaloma. Galima pasirinkti tik objektus, kurie dar neturi savininko.",
+    "noFreeProperties": "Visi objektai jau priskirti savininkui.",
+    "assignSelected": "{count, plural, =0 {Priskirti objektus} one {Priskirti # objektą} few {Priskirti # objektus} many {Priskirti # objekto} other {Priskirti # objektų}}",
+    "propertiesAssigned": "{count, plural, one {Priskirtas # objektas} few {Priskirti # objektai} many {Priskirta # objekto} other {Priskirta # objektų}}",
     "removeProperty": "Pašalinti priskyrimą",
     "sections": {
       "master": "Pagrindiniai duomenys",
       "payout": "Išmoka ir komisinis",
-      "properties": "Objektai"
+      "properties": "Objektai",
+      "portalAccess": "Prieiga prie portalo"
     },
     "frequency": {
       "none": "Jokio",
@@ -989,12 +998,20 @@
       "statementFrequency": "Ataskaitų periodiškumas",
       "notes": "Pastabos",
       "share": "Dalis (%)",
-      "commissionOverride": "Komisinis (%) išimtis"
+      "commissionOverride": "Komisinis (%) išimtis",
+      "emailLanguage": "El. laiškų kalba"
     },
     "placeholders": {
       "name": "pvz., Jonas Jonaitis",
       "email": "pvz., jonas@example.com"
-    }
+    },
+    "emailLanguageHint": "Šia kalba savininkas gauna ataskaitas ir pranešimus — net ir neturėdamas savo prieigos.",
+    "portalAccess": "Nustatyti prieigą prie portalo",
+    "portalAccessHint": "Savininkas gauna kvietimą el. paštu ir vėliau gali pats peržiūrėti savo atsiskaitymus.",
+    "portalAccessNeedsEmail": "Prieigai prie portalo reikalingas el. pašto adresas.",
+    "portalAccessInvite": "Siųsti kvietimą",
+    "portalAccessInvited": "Kvietimas išsiųstas.",
+    "portalAccessActive": "Prieiga prie portalo nustatyta."
   },
   "ownerStatements": {
     "title": "Savininkų ataskaita",
@@ -1149,7 +1166,9 @@
     "subtitle": "Jūsų objektų, pajamų ir ataskaitų apžvalga.",
     "properties": {
       "title": "Mano objektai",
-      "empty": "Šiuo metu jums nepriskirtas nė vienas objektas."
+      "empty": "Šiuo metu jums nepriskirtas nė vienas objektas.",
+      "city": "Vietovė",
+      "openCalendar": "Kalendorius"
     },
     "earnings": {
       "title": "Pajamos (šį mėnesį)",
@@ -1175,7 +1194,24 @@
       "to": "Iki",
       "submit": "Siųsti prašymą",
       "sending": "Siunčiama …",
-      "requested": "Prašymas išsiųstas."
+      "requested": "Prašymas išsiųstas.",
+      "listTitle": "Mano prašymai",
+      "listEmpty": "Kol kas neprašėte jokio blokavimo.",
+      "created": "Pateikta",
+      "range": "Laikotarpis",
+      "statusLabel": "Būsena",
+      "readOnlyHint": "Blokavimą gali įvesti tik administracija. Jūs pateikiate prašymą, sprendimą priima jie.",
+      "invalidRange": "Pabaigos data turi būti vėlesnė už pradžios datą.",
+      "invalidDate": "Nurodykite galiojančią datą.",
+      "status": {
+        "pending": "Peržiūrima",
+        "approved": "Patvirtinta",
+        "rejected": "Atmesta",
+        "cancelled": "Atšaukta"
+      },
+      "reason": "Priežastis",
+      "reasonPlaceholder": "Kodėl turėtų būti užblokuota? (pvz., naudojimas sau, meistrai)",
+      "decisionNote": "Valdymo pastaba"
     },
     "meter": {
       "title": "Įvesti skaitiklio rodmenį",
@@ -1191,6 +1227,142 @@
         "electricity": "Elektra",
         "water": "Vanduo",
         "gas": "Dujos"
+      },
+      "historyTitle": "Istorija",
+      "historyEmpty": "Šiam objektui dar neįrašytas joks skaitiklio rodmuo.",
+      "appendOnlyHint": "Įrašyti rodmenys lieka nepakitę. Pataisymas yra naujas įrašas — taip istorija išlieka pilna.",
+      "invalidValue": "Nurodykite skaitiklio rodmenį kaip skaičių.",
+      "invalidDate": "Nurodykite galiojančią nuskaitymo datą."
+    },
+    "logout": "Atsijungti",
+    "loadFailed": "Nepavyko įkelti duomenų.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Apžvalga",
+      "calendar": "Užimtumo kalendorius",
+      "reports": "Ataskaitos",
+      "blockRequests": "Blokavimai",
+      "meterReadings": "Skaitiklių rodmenys",
+      "services": "Paslaugos",
+      "notifications": "Pranešimai"
+    },
+    "overview": {
+      "occupancy": "Užimtumas",
+      "occupancyHint": "Užimtos naktys pasirinktu laikotarpiu.",
+      "nights": "Naktys",
+      "bookings": "Užsakymai",
+      "payout": "Grynasis išmokėjimas",
+      "payoutHint": "Tavo dalis atskaičius portalų mokesčius.",
+      "period": "Laikotarpis",
+      "periodMonth": "Šis mėnuo",
+      "periodYear": "Šie metai",
+      "openCalendar": "Atverti kalendorių",
+      "latestStatement": "Paskutinė ataskaita",
+      "noStatement": "Ataskaitų dar nėra"
+    },
+    "calendar": {
+      "title": "Užimtumo kalendorius",
+      "subtitle": "Užimtumas ir tavo grynasis išmokėjimas už naktį.",
+      "selectProperty": "Pasirinkti objektą",
+      "prevMonth": "Ankstesnis mėnuo",
+      "nextMonth": "Kitas mėnuo",
+      "today": "Šiandien",
+      "legendSeasons": "Sezonai",
+      "legendStatus": "Užimtumas",
+      "noSeasons": "Šiam objektui sezonai nenustatyti.",
+      "status": {
+        "open": "Laisva",
+        "booked": "Užimta",
+        "blocked": "Užblokuota"
+      },
+      "payoutPerNight": "Grynasis išmokėjimas/naktis",
+      "guest": "Svečias",
+      "channel": "Užsakymo šaltinis",
+      "blockHint": "Norite užblokuoti laikotarpį? Pateikite prašymą — sprendžia administracija.",
+      "blockCta": "Prašyti blokavimo",
+      "weekdays": "Pr,An,Tr,Kt,Pn,Št,Sk",
+      "months": "Sausis,Vasaris,Kovas,Balandis,Gegužė,Birželis,Liepa,Rugpjūtis,Rugsėjis,Spalis,Lapkritis,Gruodis"
+    },
+    "services": {
+      "title": "Užsisakyti paslaugą",
+      "hint": "Užsakykite paslaugą savo objektui. Administracija priima ir suplanuoja užduotį.",
+      "property": "Objektas",
+      "kind": "Paslauga",
+      "date": "Pageidaujama data",
+      "note": "Pastaba",
+      "notePlaceholder": "Ką tiksliai reikia atlikti?",
+      "submit": "Užsakyti",
+      "sending": "Siunčiama …",
+      "sent": "Užsakymas išsiųstas.",
+      "listTitle": "Mano užsakymai",
+      "listEmpty": "Kol kas neužsisakėte jokios paslaugos.",
+      "invalidDate": "Nurodykite galiojančią pageidaujamą datą.",
+      "noteRequired": "Aprašykite pageidaujamą paslaugą.",
+      "kinds": {
+        "custom": "Kita (laisvas tekstas)"
+      },
+      "status": {
+        "pending": "Peržiūrima",
+        "accepted": "Priimta",
+        "scheduled": "Suplanuota",
+        "done": "Atlikta",
+        "rejected": "Atmesta",
+        "cancelled": "Atšaukta"
+      },
+      "type": {
+        "endreinigung": "Baigiamasis valymas",
+        "hauptreinigung": "Kapitalinis valymas",
+        "fensterreinigung": "Langų valymas",
+        "rasenmaehen": "Vejos pjovimas",
+        "terrassenreinigung": "Terasos valymas"
+      },
+      "dateTo": "Iki"
+    },
+    "notifications": {
+      "title": "Pranešimai",
+      "hint": "Nustatykite, kaip norite būti informuoti apie kiekvieną įvykį.",
+      "channel": {
+        "email": "El. paštas",
+        "sms": "SMS",
+        "phone": "Telefonas"
+      },
+      "locked": "Šis el. paštas privalomas pagal sutartį ir lieka įjungtas.",
+      "saved": "Išsaugota.",
+      "saveFailed": "Nepavyko išsaugoti pakeitimo.",
+      "categories": {
+        "listing_activity": "Užsakymai jūsų objektuose",
+        "listing_activityHint": "Naujas užsakymas, keitimas ir atšaukimas.",
+        "account_activity": "Paskyros veikla",
+        "account_activityHint": "Prisijungimai ir paskyros pakeitimai.",
+        "reminders": "Priminimai",
+        "remindersHint": "Artėjančios užduotys ir terminai.",
+        "messages": "Žinutės",
+        "messagesHint": "Naujos žinutės iš administracijos.",
+        "owner_booking": "Rezervacijos tavo objektuose",
+        "owner_bookingHint": "Nauja rezervacija, pakeitimas ir atšaukimas.",
+        "block_decision": "Sprendimas dėl tavo blokavimo prašymų",
+        "block_decisionHint": "Kai valdymas patvirtina arba atmeta tavo prašymą.",
+        "owner_service": "Užsakytos paslaugos",
+        "owner_serviceHint": "Būsenos pasikeitimas užsakytoje paslaugoje."
+      }
+    },
+    "reports": {
+      "title": "Ataskaitos",
+      "subtitle": "Ataskaitos, einamasis mėnuo bei mėnesio ir metų ataskaitos.",
+      "currentTitle": "Dabartinė ataskaitos būsena",
+      "currentHint": "Preliminaru — mėnuo dar nesibaigė. Įpareigojanti yra tik galutinė ataskaita.",
+      "monthly": "Mėnesio ataskaita",
+      "yearly": "Metinė ataskaita",
+      "month": "Mėnuo",
+      "year": "Metai",
+      "download": "Atsisiųsti PDF",
+      "downloading": "Generuojama …",
+      "downloadFailed": "Nepavyko sugeneruoti PDF.",
+      "onlyFinalized": "Atsisiųsti galima tik galutines ataskaitas.",
+      "status": {
+        "draft": "Ruošiama",
+        "finalized": "Baigta",
+        "cancelled": "Atšaukta"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Fiksuotos sumos negalima paskirstyti atskiroms naktims — į portalus ji nepatenka, ten ją reikia tvarkyti ekstranete.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Taikyti tą pačią akciją ir kitiems objektams.",
+      "applyToOthersSeasonHint": "Sukurti tą patį sezoną ir kituose objektuose.",
       "promoReason": {
         "mindestaufenthalt": "minimalus apsistojimas",
         "fruehbucher": "ankstyvo rezervavimo terminas",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Mokėjimo planas",
       "cancellationLabel": "Atšaukimas",
       "depositLabel": "Užstatas",
-      "depositWithheldText": "Bus sulaikytas {amount} užstatas.",
       "noPolicyYet": "Taisyklė dar nenustatyta.",
       "bookabilityCardTitle": "Rezervavimo galimybė",
       "bookabilityCardHint": "Kaip priimamos rezervacijos.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Nuomos sutartis",
       "rentalAgreementCardHint": "Sukurkite nuomos sutartį arba pateikite nuorodą savo svečiams.",
       "noRentalAgreementYet": "Nuomos sutarties dar nėra.",
-      "addPolicyTitle": "Pridėti taisyklę",
       "addPolicySubtitle": "Nustatykite šios naujos taisyklės duomenis.",
       "internalNameLabel": "Vidinis pavadinimas *",
       "internalNamePlaceholder": "pvz., Dalinis avansas – negrąžinamas",
       "paymentPlanGroupTitle": "Mokėjimo planas",
       "paymentCountLabel": "Mokėjimų skaičius",
-      "depositPercentLabel": "Avansas (%)",
-      "remainingDaysBeforeLabel": "Likutis (dienos prieš atvykimą)",
       "guestCancellationGroupTitle": "Svečio atšaukimas",
       "cancellationTypeLabel": "Atšaukimo rūšis",
       "depositGroupTitle": "Užstatas",
-      "depositModeNone": "Užstatas nereikalingas",
-      "depositModeAmount": "Užstatas kaip suma",
-      "depositAmountLabelWithCurrency": "Užstato suma ({currency})",
-      "depositAmountLabel": "Užstato suma",
       "quoteValidityGroupTitle": "Pasiūlymo galiojimas",
       "quoteValidityHoursLabel": "Galiojimo trukmė (valandomis) *",
       "quoteValidityHint": "Pasiūlymas galioja ne ilgiau kaip {hours} val., kol būsena yra „Laukiama svečio“ arba „Laukiama mokėjimo“.",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Rekomenduojama",
       "checkInTimeLabel": "Įsiregistravimo laikas",
       "checkOutTimeLabel": "Išsiregistravimo laikas",
-      "paymentSummaryFull": "100 % mokama rezervuojant.",
-      "paymentSummarySplit": "{percent} % rezervuojant, likutis – {days} d. prieš atvykimą.",
       "localizedEditorSubtitle": "Sukurkite tekstą ir prireikus išverskite jį savo svečiams.",
-      "localizedEditorPlaceholder": "Įveskite {title} …"
+      "localizedEditorPlaceholder": "Įveskite {title} …",
+      "editPolicyTitle": "Redaguoti sąlygas",
+      "singlePaymentHint": "100 % mokėjimo sumos sumokama užbaigiant rezervaciją.",
+      "firstPaymentHeading": "Pirmasis mokėjimas",
+      "secondPaymentHeading": "Antrasis mokėjimas",
+      "thirdPaymentHeading": "Trečiasis mokėjimas",
+      "amountTypeLabel": "Sumos tipas",
+      "percentLabel": "Procentas",
+      "amountLabel": "Suma",
+      "currencyLabel": "Valiuta",
+      "daysLabel": "Dienos",
+      "periodLabel": "Laikotarpis",
+      "firstPaymentHint": "Rezervuojant nuskaitoma tik fiksuota pirmojo mokėjimo suma arba procentas. Likę mokėjimai išrašomi suplanuotu laiku.",
+      "remainderHint": "Nustatykite, kada turi būti nuskaityta likusi suma.",
+      "partialRulesHint": "Apibrėžkite iš dalies grąžinamų atšaukimų taisykles.",
+      "ruleHeading": "{number} taisyklė",
+      "ruleDelete": "Ištrinti taisyklę",
+      "ruleAdd": "Pridėti taisyklę",
+      "refundTypeLabel": "Grąžinimo tipas",
+      "refundLabel": "Grąžinimas",
+      "whenCancelledLabel": "Atšaukus",
+      "depositNotRequired": "Užstatas nereikalingas",
+      "depositRequired": "Reikalingas užstatas",
+      "depositMethodLabel": "Metodas",
+      "preAuthTimesHeading": "Išankstinio autorizavimo terminai",
+      "preAuthValidityLabel": "Galiojimas (dienos po išvykimo)",
+      "preAuthWarnTitle": "Išankstinį autorizavimą galima garantuoti tik 5 dienoms.",
+      "preAuthWarnBody": "Išankstinio autorizavimo trukmė kredito kortelėje priklauso nuo įvairių veiksnių, pavyzdžiui, kortelės tiekėjo, ją išdavusio banko, mokėjimų sistemos ir kt. Todėl visose savaitės ar ilgesnės trukmės rezervacijose kiekvienas išankstinis autorizavimas nustoja galioti (automatiškai atšaukiamas) kas 5 dienas. Jums pranešime, kad galėtumėte rankiniu būdu atlikti naują išankstinį autorizavimą ir išlaikyti užstatą likusiam rezervacijos laikui.",
+      "assignAction": "Priskirti sąlygas"
     },
     "ratePlanWizard": {
       "title": "Sukurti kainų planą",
@@ -5604,6 +5795,39 @@
       "confirmed": "Patvirtinta",
       "in_house": "Atvykęs",
       "pending": "Opcija / preliminariai"
+    },
+    "blockRequests": {
+      "title": "Blokavimo prašymai",
+      "subtitle": "Tavo savininkų prašymai užblokuoti jų objektus. Patvirtinimas užblokuoja naktis kalendoriuje ir praneša jas portalams.",
+      "filter": "Būsena",
+      "filterAll": "Visi",
+      "empty": "Šiame rodinyje prašymų nėra.",
+      "requestedBy": "Prašė {name}",
+      "reason": "Pagrindimas",
+      "decisionNote": "Pastaba",
+      "note": "Pastaba savininkui",
+      "notePlaceholder": "Neprivaloma — ji rodoma savininkui.",
+      "working": "Vykdoma …",
+      "status": {
+        "pending": "Atviras",
+        "approved": "Patvirtintas",
+        "rejected": "Atmestas"
+      },
+      "action": {
+        "approve": "Patvirtinti",
+        "reject": "Atmesti",
+        "revoke": "Atšaukti"
+      },
+      "confirm": {
+        "approve": "Užblokuoti {objekt} nuo {von} iki {bis}? Naktys bus užblokuotos visuose portaluose.",
+        "reject": "Atmesti prašymą objektui {objekt} ({von} – {bis})?",
+        "revoke": "Atšaukti patvirtinimą objektui {objekt} ({von} – {bis})? Naktys vėl bus atlaisvintos."
+      },
+      "done": {
+        "approve": "Prašymas patvirtintas, naktys užblokuotos.",
+        "reject": "Prašymas atmestas.",
+        "revoke": "Patvirtinimas atšauktas, naktys atlaisvintos."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "Sausis,Vasaris,Kovas,Balandis,Gegužė,Birželis,Liepa,Rugpjūtis,Rugsėjis,Spalis,Lapkritis,Gruodis",
     "name": "Pavadinimas",
     "seasonAdd": "Pridėti sezoną",
+    "seasonApplyCancel": "Atšaukti",
+    "seasonApplyCopyHint": "Sezonas sukuriamas kaip savarankiška kopija. Vėlesni šio sezono pakeitimai ten NEBEgalios. Antkainis skaičiuojamas nuo paties tikslinio objekto bazinės kainos.",
+    "seasonApplyNone": "Nenukopijuota į jokį objektą.",
+    "seasonApplyPartial": "Nukopijuota į {count} objektų, {skipped} praleista.",
+    "seasonApplyPickTarget": "Pasirinkite bent vieną objektą.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Nenustatyta bazinė kaina — priedo apskaičiuoti negalima.",
+      "basispreis_null": "Bazinė kaina yra 0 — priedo apskaičiuoti negalima.",
+      "teilweise_uebertragen": "Sezonas yra objekte, dienos kainų dar trūksta — pabandykite dar kartą, kad užbaigtumėte.",
+      "unbekannt": "Praleista dėl nežinomos priežasties."
+    },
+    "seasonApplySubmit": "Kopijuoti",
+    "seasonApplySuccess": "Nukopijuota į {count} objektų.",
+    "seasonApplyTitle": "Kopijuoti „{name}“ į kitus objektus",
+    "seasonApplyToOthers": "Kopijuoti į kitus objektus",
+    "seasonApplyWithRanges": "Kopijuoti ir laikotarpius",
+    "seasonApplyWithRangesHint": "Pažymėtos dienos taip pat nustatomos tiksliniame objekte. Išjungta: tik pats sezonas, be dienų.",
     "seasonClearHint": "Dešiniuoju pelės klavišu vilkite per dienas, kad pašalintumėte jas iš sezono.",
     "seasonColor": "Spalva",
     "seasonColorAria": "Spalva {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Priemoka (± %)",
     "seasonSurchargePlaceholder": "pvz., 30 arba -15",
     "seasonValueRequired": "Prašome nurodyti tinkamą reikšmę.",
-    "weekdays": "P,A,T,K,P,Š,S"
+    "weekdays": "P,A,T,K,P,Š,S",
+    "seasonApplyNoSpans": "Šis sezonas neturi pažymėtų laikotarpių. Pirmiausia jį pažymėkite arba perkelkite tik apibrėžimą be laikotarpių."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "QR kodas autentifikavimo programėlei",
       "sixDigitCode": "6 skaitmenų kodas",
       "disable2fa": "Išjungti 2FA",
-      "disable2faHint": "Įveskite dabartinį kodą (arba atkūrimo kodą), kad išjungtumėte 2FA."
+      "disable2faHint": "Įveskite dabartinį kodą (arba atkūrimo kodą), kad išjungtumėte 2FA.",
+      "title": "Sauga",
+      "loadFailed": "Nepavyko įkelti paskyros duomenų. Patikrinkite ryšį ir bandykite dar kartą.",
+      "credentials": "Prisijungimo duomenys",
+      "emailAndUsername": "El. paštas ir naudotojo vardas",
+      "emailLabel": "El. paštas",
+      "nameLabel": "Vardas",
+      "password": "Slaptažodis",
+      "noPassword": "Slaptažodis nenustatytas",
+      "passwordMin": "Bent 8 simboliai.",
+      "save": "Įrašyti",
+      "saving": "Įrašoma …",
+      "changePassword": "Keisti slaptažodį",
+      "twoFactor": {
+        "title": "Dviejų veiksnių autentifikavimas (2FA)",
+        "intro": "Apsaugo jūsų paskyrą antruoju veiksniu – papildomai prie slaptažodžio.",
+        "noneActive": "Antrasis veiksnys dar nenustatytas. Rekomenduojame autentifikavimo programėlę.",
+        "requiredNotice": "Jūsų vaidmeniui antrasis veiksnys yra privalomas. Nustatykite jį dabar.",
+        "active": "Aktyvus",
+        "setUp": "Nustatyti",
+        "totp": {
+          "title": "Autentifikavimo programėlė",
+          "description": "Vienkartinis kodas iš programėlės, pavyzdžiui, „Google Authenticator“ arba „Microsoft Authenticator“. Veikia ir be mobiliojo ryšio.",
+          "setupTitle": "Nustatyti autentifikavimo programėlę",
+          "setupHint": "Nuskaitykite QR kodą savo programėle ir patvirtinkite rodomu kodu.",
+          "step1": "1. Nuskaitykite QR kodą",
+          "step2": "3. Įveskite kodą iš programėlės",
+          "qrAlt": "QR kodas autentifikavimo programėlei",
+          "qrHint": "Atidarykite autentifikavimo programėlę ir nuskaitykite kodą.",
+          "manualTitle": "2. Arba įveskite raktą rankiniu būdu",
+          "manualHint": "Naudokite šį raktą, jei negalite nuskaityti QR kodo.",
+          "showSecret": "Rodyti raktą",
+          "hideSecret": "Slėpti raktą",
+          "copySecret": "Kopijuoti raktą",
+          "copyFailed": "Nukopijuoti nepavyko. Pažymėkite raktą ir nukopijuokite jį rankiniu būdu.",
+          "codeLabel": "6 skaitmenų kodas",
+          "activate": "Aktyvinti",
+          "checking": "Tikrinama …",
+          "preparing": "Ruošiama sąranka …",
+          "enabledTitle": "Autentifikavimo programėlė aktyvi. Dabar išsaugokite atsarginius kodus.",
+          "friendlyName": "Autentifikavimo programėlė",
+          "replayNote": "Atkreipkite dėmesį: kodas galioja iki 90 sekundžių ir per tą laiką jį galima panaudoti kelis kartus. Nuo suklastotų prisijungimo puslapių realiuoju laiku apsaugo tik prieigos raktas."
+        },
+        "sms": {
+          "title": "SMS kodas",
+          "description": "Vienkartinis kodas SMS žinute į jūsų patvirtintą telefono numerį.",
+          "unavailable": "SMS kodas šiame serveryje neprieinamas, nes nesukonfigūruotas SMS teikėjas. Pasirinkite tapatybės nustatymo programėlę arba prieigos raktą.",
+          "unavailableBadge": "Neprieinama",
+          "setupTitle": "Nustatyti SMS kodą",
+          "setupHint": "Išsiųsime kodą į jūsų telefono numerį.",
+          "simSwapWarning": "Atkreipkite dėmesį: SMS yra mažiau saugi nei autentifikavimo programėlė. Jei kas nors perkels jūsų numerį į kitą SIM kortelę, jis galės gauti jūsų kodus. Jei įmanoma, rinkitės autentifikavimo programėlę arba prieigos raktą.",
+          "numberLabel": "Telefono numeris",
+          "numberHint": "Tarptautiniu formatu su šalies kodu, pavyzdžiui, +370 …",
+          "invalidNumber": "Nurodykite numerį tarptautiniu formatu, pradedant + ir šalies kodu.",
+          "sendCode": "Siųsti kodą",
+          "sending": "Siunčiama …",
+          "codeLabel": "6 skaitmenų kodas",
+          "codeSentTo": "Kodą išsiuntėme numeriu {phone}.",
+          "confirm": "Patvirtinti",
+          "checking": "Tikrinama …",
+          "resend": "Siųsti kodą dar kartą",
+          "changeNumber": "Naudoti kitą numerį",
+          "friendlyName": "SMS kodas"
+        },
+        "passkey": {
+          "title": "Prieigos raktas",
+          "description": "Prisijungimas piršto atspaudu, veido atpažinimu arba saugos raktu. Kodo nereikia.",
+          "setupTitle": "Nustatyti prieigos raktą",
+          "setupHint": "Jūsų įrenginys patvirtins jus piršto atspaudu, veido atpažinimu arba saugos raktu.",
+          "checkingSupport": "Tikrinamas įrenginys …",
+          "unsupportedTitle": "Ši naršyklė nepalaiko prieigos raktų",
+          "unsupportedHint": "Naudokite naujesnę naršyklę arba vietoj to nustatykite autentifikavimo programėlę.",
+          "securityKeyOnly": "Šis įrenginys neturi integruoto patvirtinimo (pavyzdžiui, piršto atspaudo ar veido atpažinimo). Tam reikės prijungiamo saugos rakto.",
+          "benefitPhishing": "Apsaugo nuo suklastotų prisijungimo puslapių.",
+          "benefitNoCode": "Nereikia rinkti jokio kodo.",
+          "create": "Sukurti prieigos raktą",
+          "friendlyName": "Prieigos raktas",
+          "recommended": "Rekomenduojama: saugiausias iš trijų būdų.",
+          "creating": "Kuriama …",
+          "errors": {
+            "abgebrochen": "Patvirtinimas buvo atšauktas arba neatpažintas. Bandykite dar kartą.",
+            "herkunftPasstNicht": "Prieigos raktai šiam adresui neįjungti. Prisijunkite oficialiu adresu.",
+            "nichtUnterstuetzt": "Šis įrenginys negali sukurti prieigos rakto. Naudokite tapatybės nustatymo programėlę arba saugos raktą.",
+            "schonVorhanden": "Šiame įrenginyje jau yra šios paskyros prieigos raktas.",
+            "laeuftBereits": "Prieigos rakto užklausa jau vykdoma. Užbaikite ją arba atšaukite.",
+            "zeitUeberschritten": "Patvirtinimo laikas baigėsi. Bandykite dar kartą.",
+            "unbekannt": "Nepavyko sukurti prieigos rakto. Bandykite dar kartą."
+          }
+        },
+        "recovery": {
+          "title": "Atsarginiai kodai",
+          "description": "Vienkartiniai kodai tam atvejui, jei neturėsite prieigos prie antrojo veiksnio.",
+          "left": "Likusių kodų skaičius: {count}.",
+          "create": "Sukurti kodus",
+          "regenerate": "Sukurti naujus kodus",
+          "regenerateHint": "Sukūrus naujus kodus, visi ankstesni kodai nustoja galioti.",
+          "dialogTitle": "Atsarginiai kodai",
+          "dialogHint": "Vienkartiniai kodai tam atvejui, jei neturėsite prieigos prie antrojo veiksnio.",
+          "replaceWarning": "Dėmesio: kartu nustos galioti ir ankstesni jūsų atsarginiai kodai.",
+          "passwordLabel": "Dabartinis slaptažodis",
+          "passwordHint": "Kad patvirtintumėte, jog tai tikrai jūs.",
+          "createNow": "Sukurti kodus",
+          "creating": "Kuriama …",
+          "createdTitle": "Nauji jūsų atsarginiai kodai. Laikykite juos saugioje vietoje.",
+          "noneReturned": "Nebuvo sukurta jokių kodų. Bandykite dar kartą."
+        },
+        "remove": "Pašalinti",
+        "removeDialog": {
+          "totpTitle": "Pašalinti autentifikavimo programėlę",
+          "smsTitle": "Pašalinti SMS kodą",
+          "warning": "Po to šis veiksnys jūsų paskyros nebeapsaugos.",
+          "passwordLabel": "Dabartinis slaptažodis",
+          "remove": "Pašalinti",
+          "removing": "Šalinama …",
+          "cancel": "Atšaukti",
+          "hint": "Patvirtinkite pašalinimą dabartiniu slaptažodžiu.",
+          "passkeyTitle": "Pašalinti prieigos raktą",
+          "lastFactorBlocked": "Tai paskutinis jūsų antrasis veiksnys, o jūsų vaidmeniui vienas yra privalomas. Pirmiausia sukurkite atsarginius kodus arba nustatykite dar vieną veiksnį."
+        },
+        "requiredWithDeadline": "Jūsų vaidmeniui antrasis veiksnys yra privalomas. Nustatykite jį iki {date} — po to prisijungti be antrojo veiksnio nebebus galima.",
+        "statusFailed": "Nepavyko įkelti dviejų veiksnių autentifikavimo būsenos. Įkelkite puslapį iš naujo."
+      },
+      "recovery": {
+        "lockoutWarning": "Be šių kodų prarasite prieigą prie paskyros, jei nebegalėsite naudoti antrojo veiksnio. Laikykite juos saugioje vietoje, atskirai nuo slaptažodžio.",
+        "copy": "Kopijuoti",
+        "copied": "Nukopijuota",
+        "copyFailed": "Nukopijuoti nepavyko. Atsisiųskite kodus arba juos atsispausdinkite.",
+        "download": "Atsisiųsti",
+        "downloadFailed": "Atsisiųsti nepavyko. Nukopijuokite kodus arba juos atsispausdinkite.",
+        "print": "Spausdinti",
+        "printBlocked": "Spausdinimo langas buvo užblokuotas. Leiskite iškylančiuosius langus arba atsisiųskite kodus.",
+        "printTitle": "„myNextDays“ atsarginiai kodai",
+        "printHint": "Kiekvienas kodas veikia lygiai vieną kartą. Laikykite šį lapą saugioje vietoje.",
+        "fileHeader": "„myNextDays“ atsarginiai kodai — kiekvienas kodas veikia lygiai vieną kartą. Laikykite saugioje vietoje.",
+        "confirmSaved": "Kodus saugiai išsaugojau.",
+        "confirmHint": "Pažymėkite langelį, kad užbaigtumėte sąranką.",
+        "mustExportFirst": "Pirmiausia nukopijuokite, atsisiųskite arba atsispausdinkite kodus.",
+        "done": "Baigta"
+      }
     },
     "company": {
       "saved": "Duomenys išsaugoti.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Kalbos, kuriomis kalbama",
       "searchLanguage": "Ieškoti kalbos…",
       "chooseRole": "Pasirinkti vaidmenį…",
-      "userCreated": "Naudotojas sukurtas",
-      "preferredLanguage": "Pageidaujama kalba",
+      "preferredLanguage": "El. laiškų kalba",
       "noLanguageFound": "Kalbų nerasta.",
       "firstName": "Vardas",
       "lastName": "Pavardė",
       "email": "El. paštas",
       "phone": "Telefono numeris",
       "notes": "Pastabos",
-      "password": "Slaptažodis",
-      "credentialsHint": "Perduokite šiuos prisijungimo duomenis naujam naudotojui. Slaptažodis rodomas tik dabar."
+      "title": "Sukurti naudotoją",
+      "createdSubtitle": "Kvietimas išsiųstas.",
+      "stepHints": {
+        "contact": "Pridėkite šio naudotojo kontaktinius duomenis.",
+        "extra": "Pridėkite papildomos informacijos apie šį naudotoją.",
+        "role": "Pasirinkite šio naudotojo vaidmenį ir teises.",
+        "properties": "Priskirkite šiam naudotojui objektus."
+      },
+      "done": "Baigta",
+      "cancel": "Atšaukti",
+      "back": "Atgal",
+      "next": "Toliau",
+      "create": "Sukurti",
+      "creating": "Kuriama…",
+      "role": "Vaidmuo",
+      "requiredFields": "Vardas, pavardė, el. paštas ir vaidmuo yra privalomi.",
+      "assignFailed": "Naudotojas sukurtas, bet objektų priskyrimas nepavyko: {reason}",
+      "hidePhones": "Slėpti telefono numerius svetainėje.",
+      "noAssignNeeded": "Objektų priskirti nereikia",
+      "noAssignNeededHint": "Šis vaidmuo turi prieigą prie visų paskyros objektų. Atskirų objektų priskyrimas galioja tik savininkams ir darbuotojams.",
+      "noProperties": "Dar nėra apgyvendinimo vietų",
+      "noPropertiesHint": "Sukurkite savo apgyvendinimo vietas, kad vėliau galėtumėte jas priskirti savo naudotojams.",
+      "choosePropertiesHint": "Pasirinkite objektus, prie kurių šis naudotojas turės prieigą.",
+      "selectedCount": "Pasirinkta: {count}",
+      "inviteSent": "Kvietimas išsiųstas",
+      "inviteSentHint": "Naudotojas gauna el. laišką ir pats nusistato slaptažodį. Nuoroda galioja 7 dienas.",
+      "inviteResend": "Siųsti kvietimą dar kartą",
+      "inviteResending": "Siunčiama…",
+      "inviteResent": "Kvietimas išsiųstas dar kartą.",
+      "inviteResendFailed": "Kvietimo nepavyko išsiųsti dar kartą.",
+      "preferredLanguageHint": "Šia kalba naujas naudotojas gaus kvietimą ir visus kitus el. laiškus."
     },
     "tariff": {
       "oneLess": "Vienu objektu mažiau",
@@ -6359,7 +6767,14 @@
       "updated": "Naudotojas atnaujintas.",
       "deleted": "Naudotojas ištrintas.",
       "generalPermissions": "Bendrosios teisės",
-      "roleChangeHint": "Pakeitus vaidmenį siūlomos atitinkamos teisės. Vėliau jas galite koreguoti po vieną."
+      "roleChangeHint": "Pakeitus vaidmenį siūlomos atitinkamos teisės. Vėliau jas galite koreguoti po vieną.",
+      "edit": "Redaguoti",
+      "delete": "Ištrinti",
+      "resendInvite": "Siųsti kvietimą dar kartą",
+      "inviteResent": "Kvietimas išsiųstas adresu {email}.",
+      "inviteResendFailed": "Kvietimo nepavyko išsiųsti dar kartą.",
+      "emailLanguage": "El. laiškų kalba",
+      "emailLanguageHint": "Šia kalba šis naudotojas gauna savo el. laiškus."
     },
     "staffProperties": {
       "title": "Bendrinti objektus"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "pvz., viešbutis Ežero vaizdas",
     "namePlaceholder": "Vardas ir pavardė",
     "passwordHint": "Bent 8 simboliai",
-    "passwordRepeat": "Pakartokite slaptažodį"
+    "passwordRepeat": "Pakartokite slaptažodį",
+    "headline": "Visa jūsų nuoma vienoje vietoje.",
+    "feature1": "Automatinis kalendorių sinchronizavimas",
+    "feature2": "Tiesioginiai užsakymai savo svetainėje",
+    "feature3": "Žinučių svečiams automatizavimas",
+    "withGoogle": "Registruotis su Google",
+    "withApple": "Registruotis su Apple",
+    "or": "arba",
+    "withEmail": "Registruotis el. paštu",
+    "haveAccount": "Jau turite paskyrą?",
+    "loginLink": "Prisijunkite čia",
+    "loadingHeadline": "Jūsų pačių užsakymų svetainė. Pasilikite 100 % kiekvieno užsakymo.",
+    "loadingText": "Ruošiame jūsų paskyrą …"
   },
   "marketingSite": {
     "stars": "4,5 žvaigždutės",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Žymėti visus kaip skaitytus",
     "erneut": "Įkelti iš naujo",
     "ariaMitAnzahl": "Pranešimai ({count} neskaityti)"
+  },
+  "auth": {
+    "toLogin": "Į prisijungimą",
+    "genericError": "Dabar nepavyko. Bandykite vėliau dar kartą.",
+    "tokenMissing": {
+      "title": "Neišsami nuoroda",
+      "text": "Ši nuoroda neišsami. Naudokite visą nuorodą iš el. laiško — nukopijuokite ją ir įklijuokite į adreso juostą."
+    },
+    "tokenInvalid": {
+      "title": "Nuoroda nebegalioja",
+      "textInvite": "Ši kvietimo nuoroda nebegalioja arba jau panaudota. Kreipkitės į savo įmonę — ten kvietimą galima išsiųsti dar kartą.",
+      "textReset": "Ši nuoroda nebegalioja arba jau panaudota. Tiesiog paprašykite naujos.",
+      "retry": "Prašyti naujos nuorodos"
+    },
+    "invite": {
+      "title": "Nustatykite savo prieigą",
+      "intro": "Pasirinkite slaptažodį savo myNextDays prieigai. Bent {min} simbolių."
+    },
+    "reset": {
+      "title": "Naujas slaptažodis",
+      "intro": "Pasirinkite naują slaptažodį. Bent {min} simbolių."
+    },
+    "done": {
+      "titleInvite": "Prieiga nustatyta",
+      "titleReset": "Slaptažodis pakeistas",
+      "text": "Dabar galite prisijungti su savo nauju slaptažodžiu."
+    },
+    "forgot": {
+      "title": "Pamiršote slaptažodį",
+      "intro": "Įveskite savo el. pašto adresą. Atsiųsime jums nuorodą naujam slaptažodžiui nustatyti.",
+      "emailLabel": "El. paštas",
+      "submit": "Prašyti nuorodos",
+      "sending": "Siunčiama…",
+      "sentTitle": "El. laiškas pakeliui",
+      "sentText": "Jei šiam adresui yra paskyra, išsiuntėme atkūrimo nuorodą. Ji galioja vieną valandą.",
+      "spamHint": "Nieko negavote? Patikrinkite ir šlamšto aplanką.",
+      "again": "Prašyti dar kartą"
+    },
+    "password": {
+      "newLabel": "Slaptažodis",
+      "repeatLabel": "Pakartokite slaptažodį",
+      "submit": "Nustatyti slaptažodį",
+      "saving": "Įrašoma…",
+      "mismatch": "Slaptažodžiai nesutampa.",
+      "tooWeak": "Slaptažodis neatitinka reikalavimų (bent {min} simbolių).",
+      "show": "Rodyti slaptažodį",
+      "hide": "Slėpti slaptažodį",
+      "strengthLabel": "Stiprumas: {level}",
+      "strength": {
+        "1": "silpnas",
+        "2": "vidutinis",
+        "3": "geras",
+        "4": "stiprus"
+      },
+      "requirement": {
+        "length": "Bent {min} simbolių",
+        "letter": "Bent viena raidė",
+        "digit": "Bent vienas skaitmuo"
+      }
+    },
+    "checking": "Tikrinama nuoroda…",
+    "languageLabel": "Kalba",
+    "languageChange": "Keisti kalbą",
+    "twoFactor": {
+      "title": "Patvirtinimas",
+      "totpHint": "Įveskite 6 skaitmenų kodą iš savo autentifikavimo programėlės.",
+      "smsHint": "Įveskite 6 skaitmenų kodą, kurį jums išsiuntėme SMS žinute.",
+      "smsHintWithPhone": "Įveskite 6 skaitmenų kodą, kurį išsiuntėme numeriu {phone}.",
+      "codeLabel": "Kodas",
+      "confirm": "Patvirtinti",
+      "checking": "Tikrinama …",
+      "recoveryHint": "Įveskite vieną iš savo atsarginių kodų.",
+      "recoveryLabel": "Atsarginis kodas",
+      "recoverySingleUse": "Kiekvienas kodas veikia lygiai vieną kartą.",
+      "useTotp": "Naudoti autentifikavimo programėlę",
+      "useSms": "Naudoti SMS kodą",
+      "useRecovery": "Naudoti atsarginį kodą",
+      "backToLogin": "Grįžti į prisijungimą",
+      "factorMissing": "Šis veiksnys jūsų paskyrai nepasiekiamas. Pasirinkite kitą būdą.",
+      "passkeyHint": "Patvirtinkite prisijungimą savo prieigos raktu.",
+      "passkeyUse": "Prisijungti prieigos raktu",
+      "usePasskey": "Naudoti prieigos raktą",
+      "sendCode": "Siųsti kodą SMS žinute",
+      "sending": "Siunčiama …",
+      "smsSent": "Kodas išsiųstas.",
+      "resend": "Siųsti kodą dar kartą",
+      "recoveryRedeemedHint": "Kodas panaudotas, tačiau vien jo prisijungti nepakanka. Prisijunkite vienu iš savo nustatytų veiksnių arba kreipkitės į savo komandą."
+    },
+    "mfaSetup": {
+      "title": "Nustatyti dviejų veiksnių autentifikavimą",
+      "intro": "Jūsų vaidmeniui antrasis veiksnys yra privalomas. Nustatykite jį dabar, kad galėtumėte tęsti.",
+      "why": "Kaip administratorius turite prieigą prie finansinių duomenų, svečių duomenų ir visos įmonės nustatymų. Antrasis veiksnys neleidžia, kad pakaktų vien pavogto slaptažodžio.",
+      "goToSettings": "Nustatyti dabar",
+      "later": "Priminti vėliau",
+      "laterHint": "Sąranką dar galite atidėti. Paklausime dar kartą kito prisijungimo metu.",
+      "introWithDeadline": "Jūsų vaidmeniui antrasis veiksnys yra privalomas. Nustatykite jį iki {date} — po to prisijungti be antrojo veiksnio nebebus galima."
+    }
+  },
+  "sprache": {
+    "label": "El. laiškų kalba",
+    "hint": "Šia kalba siunčiame el. laiškus šiam asmeniui.",
+    "none": "— nenurodyta"
+  },
+  "neuerungen": {
+    "eyebrow": "Produkto naujienos",
+    "titel": "Naujienos",
+    "unterzeile": "Viskas, kas pasikeitė myNextDays — naujausios viršuje.",
+    "neuAnzahl": "{anzahl, plural, one {# nauja} few {# naujos} other {# naujų}}",
+    "ungelesen": "Nauja",
+    "veroeffentlichtAm": "Paskelbta {datum}",
+    "leer": "Naujienų kol kas nėra.",
+    "ladefehler": "Nepavyko įkelti: {grund}",
+    "mehrLaden": "Įkelti senesnes",
+    "aufklappen": "Rodyti išsamiau",
+    "zuklappen": "Slėpti išsamią informaciją",
+    "kategorie": {
+      "neuerung": "Nauja funkcija",
+      "wartung": "Techninė priežiūra",
+      "hinweis": "Pranešimas",
+      "wichtig": "Svarbu"
+    },
+    "popup": {
+      "ariaLabel": "Skelbimo turinys",
+      "gelesen": "Supratau",
+      "wirdGespeichert": "Įrašoma …",
+      "erneut": "Bandyti dar kartą",
+      "fehler": "Nepavyko patvirtinti: {grund}",
+      "weiter": "Toliau",
+      "vonAnzahl": "Skelbimas {nummer}"
+    }
+  },
+  "login": {
+    "title": "Prisijungti",
+    "emailLabel": "El. paštas",
+    "passwordLabel": "Slaptažodis",
+    "showPassword": "Rodyti slaptažodį",
+    "hidePassword": "Slėpti slaptažodį",
+    "forgot": "Pamiršote slaptažodį?",
+    "stayLoggedIn": "Likti prisijungus",
+    "submit": "Prisijungti",
+    "submitting": "Jungiamasi…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Dar ne myNextDays klientas?",
+    "signupLink": "Išbandykite nemokamai",
+    "mfaTitle": "Patvirtinimas",
+    "mfaIntro": "Įveskite 6 skaitmenų kodą iš autentifikavimo programėlės. Tinka ir atkūrimo kodas.",
+    "mfaCodeLabel": "Kodas",
+    "mfaSubmit": "Patvirtinti",
+    "mfaChecking": "Tikrinama…",
+    "mfaBack": "Atgal į prisijungimą"
   }
 }

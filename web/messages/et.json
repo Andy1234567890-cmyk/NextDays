@@ -283,6 +283,7 @@
       "logout": "Logi välja"
     },
     "stopSell": "Müügi peatamine",
+    "blockRequests": "Blokeerimistaotlused",
     "owners": "Omanikud",
     "ownerStatements": "Omanike arveldused",
     "portal": "Minu portaal",
@@ -315,7 +316,8 @@
     "noAccess": "Juurdepääs puudub",
     "dashboardLoadFailed": "Töölauda ei õnnestunud laadida",
     "reviews": "Arvustused",
-    "extensions": "Laiendused"
+    "extensions": "Laiendused",
+    "announcements": "Uudised"
   },
   "exemption": {
     "labelNamed": "Maksuvaba ({scheme}) — KMKR-numbrit pole vaja",
@@ -945,6 +947,7 @@
     "newTitle": "Uus omanik",
     "create": "Loo",
     "created": "Omanik loodud.",
+    "createdInvited": "Omanik loodud ja kutse saadetud.",
     "cancel": "Tühista",
     "save": "Salvesta",
     "saving": "Salvestamine …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Objekte pole} one {# objekt} other {# objekti}}",
     "noProperties": "Sellele omanikule pole veel ühtegi objekti seotud.",
     "addProperty": "Seosta objekt …",
+    "assignProperties": "Määra objektid",
+    "assignPropertiesHint": "Valikuline. Valida saab ainult objekte, millel pole veel omanikku.",
+    "noFreeProperties": "Kõik objektid on juba omanikule määratud.",
+    "assignSelected": "{count, plural, =0 {Määra objektid} one {Määra # objekt} other {Määra # objekti}}",
+    "propertiesAssigned": "{count, plural, one {# objekt määratud} other {# objekti määratud}}",
     "removeProperty": "Eemalda seos",
     "sections": {
       "master": "Põhiandmed",
       "payout": "Väljamakse ja komisjonitasu",
-      "properties": "Objektid"
+      "properties": "Objektid",
+      "portalAccess": "Portaali juurdepääs"
     },
     "frequency": {
       "none": "Puudub",
@@ -989,12 +998,20 @@
       "statementFrequency": "Arvelduse rütm",
       "notes": "Märkmed",
       "share": "Osalus (%)",
-      "commissionOverride": "Komisjonitasu (%) erand"
+      "commissionOverride": "Komisjonitasu (%) erand",
+      "emailLanguage": "E-kirjade keel"
     },
     "placeholders": {
       "name": "nt Jaan Tamm",
       "email": "nt jaan@example.com"
-    }
+    },
+    "emailLanguageHint": "Selles keeles saab omanik arveldused ja teated — ka ilma oma kontota.",
+    "portalAccess": "Seadista portaali juurdepääs",
+    "portalAccessHint": "Omanik saab kutse e-postiga ja saab seejärel ise oma arveldusi vaadata.",
+    "portalAccessNeedsEmail": "Portaali juurdepääsuks on vaja e-posti aadressi.",
+    "portalAccessInvite": "Saada kutse",
+    "portalAccessInvited": "Kutse saadetud.",
+    "portalAccessActive": "Portaali juurdepääs on seadistatud."
   },
   "ownerStatements": {
     "title": "Omanike arveldused",
@@ -1149,7 +1166,9 @@
     "subtitle": "Ülevaade sinu objektidest, tuludest ja arveldustest.",
     "properties": {
       "title": "Minu objektid",
-      "empty": "Sulle pole hetkel ühtegi objekti seotud."
+      "empty": "Sulle pole hetkel ühtegi objekti seotud.",
+      "city": "Asukoht",
+      "openCalendar": "Kalender"
     },
     "earnings": {
       "title": "Tulud (see kuu)",
@@ -1175,7 +1194,24 @@
       "to": "Kuni",
       "submit": "Saada taotlus",
       "sending": "Saatmine …",
-      "requested": "Taotlus saadetud."
+      "requested": "Taotlus saadetud.",
+      "listTitle": "Minu taotlused",
+      "listEmpty": "Sa pole veel blokeeringut taotlenud.",
+      "created": "Esitatud",
+      "range": "Periood",
+      "statusLabel": "Staatus",
+      "readOnlyHint": "Blokeeringu sisestab ainult haldus. Sina esitad taotluse, otsustab ainult haldus.",
+      "invalidRange": "Lõppkuupäev peab olema pärast algkuupäeva.",
+      "invalidDate": "Palun sisesta kehtiv kuupäev.",
+      "status": {
+        "pending": "Läbivaatamisel",
+        "approved": "Kinnitatud",
+        "rejected": "Tagasi lükatud",
+        "cancelled": "Tagasi võetud"
+      },
+      "reason": "Põhjus",
+      "reasonPlaceholder": "Miks tuleks blokeerida? (nt oma kasutus, käsitöölised)",
+      "decisionNote": "Halduse märkus"
     },
     "meter": {
       "title": "Sisesta näidu lugem",
@@ -1191,6 +1227,142 @@
         "electricity": "Elekter",
         "water": "Vesi",
         "gas": "Gaas"
+      },
+      "historyTitle": "Ajalugu",
+      "historyEmpty": "Selle objekti kohta pole veel mõõdiku näitu registreeritud.",
+      "appendOnlyHint": "Registreeritud näidud jäävad muutumatuks. Parandus on uus kanne — nii jääb ajalugu terviklikuks.",
+      "invalidValue": "Palun sisesta mõõdiku näit arvuna.",
+      "invalidDate": "Palun sisesta kehtiv näidu kuupäev."
+    },
+    "logout": "Logi välja",
+    "loadFailed": "Andmeid ei õnnestunud laadida.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Ülevaade",
+      "calendar": "Täituvuskalender",
+      "reports": "Aruanded",
+      "blockRequests": "Blokeeringud",
+      "meterReadings": "Mõõdikute näidud",
+      "services": "Teenused",
+      "notifications": "Teavitused"
+    },
+    "overview": {
+      "occupancy": "Täituvus",
+      "occupancyHint": "Broneeritud ööd valitud perioodil.",
+      "nights": "Ööd",
+      "bookings": "Broneeringud",
+      "payout": "Netoväljamakse",
+      "payoutHint": "Sinu osa pärast portaali tasusid.",
+      "period": "Periood",
+      "periodMonth": "Sel kuul",
+      "periodYear": "Sel aastal",
+      "openCalendar": "Ava kalender",
+      "latestStatement": "Viimane arvestus",
+      "noStatement": "Arvestust veel pole"
+    },
+    "calendar": {
+      "title": "Täituvuskalender",
+      "subtitle": "Täituvus ja sinu netoväljamakse öö kohta.",
+      "selectProperty": "Vali objekt",
+      "prevMonth": "Eelmine kuu",
+      "nextMonth": "Järgmine kuu",
+      "today": "Täna",
+      "legendSeasons": "Hooajad",
+      "legendStatus": "Täituvus",
+      "noSeasons": "Sellele objektile pole hooaegu määratud.",
+      "status": {
+        "open": "Vaba",
+        "booked": "Broneeritud",
+        "blocked": "Blokeeritud"
+      },
+      "payoutPerNight": "Netoväljamakse/öö",
+      "guest": "Külaline",
+      "channel": "Broneeringu allikas",
+      "blockHint": "Soovid perioodi blokeerida? Esita taotlus — otsustab haldus.",
+      "blockCta": "Taotle blokeeringut",
+      "weekdays": "E,T,K,N,R,L,P",
+      "months": "Jaanuar,Veebruar,Märts,Aprill,Mai,Juuni,Juuli,August,September,Oktoober,November,Detsember"
+    },
+    "services": {
+      "title": "Telli teenus",
+      "hint": "Telli oma objektile teenus. Haldus võtab tellimuse vastu ja planeerib selle.",
+      "property": "Objekt",
+      "kind": "Teenus",
+      "date": "Soovitud kuupäev",
+      "note": "Märkus",
+      "notePlaceholder": "Mida täpselt tuleb teha?",
+      "submit": "Telli",
+      "sending": "Saadan …",
+      "sent": "Tellimus saadetud.",
+      "listTitle": "Minu tellimused",
+      "listEmpty": "Sa pole veel ühtegi teenust tellinud.",
+      "invalidDate": "Palun sisesta kehtiv soovitud kuupäev.",
+      "noteRequired": "Palun kirjelda soovitud teenust.",
+      "kinds": {
+        "custom": "Muu (vabatekst)"
+      },
+      "status": {
+        "pending": "Läbivaatamisel",
+        "accepted": "Vastu võetud",
+        "scheduled": "Planeeritud",
+        "done": "Tehtud",
+        "rejected": "Tagasi lükatud",
+        "cancelled": "Tagasi võetud"
+      },
+      "type": {
+        "endreinigung": "Lõppkoristus",
+        "hauptreinigung": "Põhikoristus",
+        "fensterreinigung": "Akende pesu",
+        "rasenmaehen": "Muruniitmine",
+        "terrassenreinigung": "Terrassi koristus"
+      },
+      "dateTo": "Kuni"
+    },
+    "notifications": {
+      "title": "Teavitused",
+      "hint": "Määra iga sündmuse kohta, kuidas sind teavitatakse.",
+      "channel": {
+        "email": "E-post",
+        "sms": "SMS",
+        "phone": "Telefon"
+      },
+      "locked": "See e-post on lepingu kohaselt kohustuslik ja jääb sisse lülitatuks.",
+      "saved": "Salvestatud.",
+      "saveFailed": "Muudatust ei õnnestunud salvestada.",
+      "categories": {
+        "listing_activity": "Broneeringud sinu objektidel",
+        "listing_activityHint": "Uus broneering, muudatus ja tühistamine.",
+        "account_activity": "Konto tegevus",
+        "account_activityHint": "Sisselogimised ja muudatused sinu kontol.",
+        "reminders": "Meeldetuletused",
+        "remindersHint": "Tähtajaga ülesanded ja kohtumised.",
+        "messages": "Sõnumid",
+        "messagesHint": "Uued sõnumid haldusest.",
+        "owner_booking": "Broneeringud sinu majutusüksustes",
+        "owner_bookingHint": "Uus broneering, muudatus ja tühistamine.",
+        "block_decision": "Otsus sinu blokeerimistaotluste kohta",
+        "block_decisionHint": "Kui haldus kinnitab või lükkab tagasi sinu taotluse.",
+        "owner_service": "Tellitud teenused",
+        "owner_serviceHint": "Staatuse muutus teenusel, mille sa tellisid."
+      }
+    },
+    "reports": {
+      "title": "Aruanded",
+      "subtitle": "Arvestused, jooksev kuu ning kuu- ja aastaaruanded.",
+      "currentTitle": "Praegune arvestuse seis",
+      "currentHint": "Esialgne — kuu on veel pooleli. Siduv on ainult lõplik arvestus.",
+      "monthly": "Kuuaruanne",
+      "yearly": "Aastaaruanne",
+      "month": "Kuu",
+      "year": "Aasta",
+      "download": "Laadi PDF alla",
+      "downloading": "Genereerin …",
+      "downloadFailed": "PDF-i ei õnnestunud luua.",
+      "onlyFinalized": "Alla laadida saab ainult lõplikke arvestusi.",
+      "status": {
+        "draft": "Ettevalmistamisel",
+        "finalized": "Lõpetatud",
+        "cancelled": "Tühistatud"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Kindlat summat ei saa üksikutele öödele jagada — portaalidesse see ei jõua, seal tuleb seda hallata ekstranetis.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Rakenda sama kampaania ka teistele objektidele.",
+      "applyToOthersSeasonHint": "Loo sama hooaeg ka teistele objektidele.",
       "promoReason": {
         "mindestaufenthalt": "minimaalne viibimine",
         "fruehbucher": "varase broneeringu etteteatamine",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Makseplaan",
       "cancellationLabel": "Tühistamine",
       "depositLabel": "Tagatis",
-      "depositWithheldText": "Tagatis summas {amount} peetakse kinni.",
       "noPolicyYet": "Reeglit pole veel määratud.",
       "bookabilityCardTitle": "Broneeritavus",
       "bookabilityCardHint": "Kuidas reservatsioone vastu võetakse.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Üürileping",
       "rentalAgreementCardHint": "Loo üürileping või lisa link oma külalistele.",
       "noRentalAgreementYet": "Üürilepingut veel pole.",
-      "addPolicyTitle": "Lisa reegel",
       "addPolicySubtitle": "Määra selle uue reegli üksikasjad.",
       "internalNameLabel": "Sisemine nimi *",
       "internalNamePlaceholder": "nt Osamakse – tagastamatu",
       "paymentPlanGroupTitle": "Makseplaan",
       "paymentCountLabel": "Maksete arv",
-      "depositPercentLabel": "Ettemaks (%)",
-      "remainingDaysBeforeLabel": "Jääksumma (päeva enne saabumist)",
       "guestCancellationGroupTitle": "Külalise tühistamine",
       "cancellationTypeLabel": "Tühistamise liik",
       "depositGroupTitle": "Tagatis",
-      "depositModeNone": "Tagatist ei nõuta",
-      "depositModeAmount": "Tagatis summana",
-      "depositAmountLabelWithCurrency": "Tagatissumma ({currency})",
-      "depositAmountLabel": "Tagatissumma",
       "quoteValidityGroupTitle": "Pakkumise kehtivus",
       "quoteValidityHoursLabel": "Kehtivusaeg (tundides) *",
       "quoteValidityHint": "Pakkumine kehtib maksimaalselt {hours} tundi, kuni staatus on „Ootab külalist“ või „Ootab makset“.",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Soovitatud",
       "checkInTimeLabel": "Sisseregistreerimise aeg",
       "checkOutTimeLabel": "Väljaregistreerimise aeg",
-      "paymentSummaryFull": "100 % tuleb tasuda reserveerimisel.",
-      "paymentSummarySplit": "{percent} % broneerimisel, jääksumma {days} päeva enne saabumist.",
       "localizedEditorSubtitle": "Loo tekst ja tõlgi see vajaduse korral oma külaliste jaoks.",
-      "localizedEditorPlaceholder": "Sisesta {title} …"
+      "localizedEditorPlaceholder": "Sisesta {title} …",
+      "editPolicyTitle": "Muuda tingimusi",
+      "singlePaymentHint": "100 % maksest kuulub tasumisele broneeringu vormistamisel.",
+      "firstPaymentHeading": "Esimene makse",
+      "secondPaymentHeading": "Teine makse",
+      "thirdPaymentHeading": "Kolmas makse",
+      "amountTypeLabel": "Summa liik",
+      "percentLabel": "Protsent",
+      "amountLabel": "Summa",
+      "currencyLabel": "Valuuta",
+      "daysLabel": "Päevad",
+      "periodLabel": "Ajavahemik",
+      "firstPaymentHint": "Broneerimisel võetakse tasu ainult esimese makse kindlalt summalt või protsendilt. Ülejäänud maksed arveldatakse kavandatud ajal.",
+      "remainderHint": "Määrake, millal jääksumma tuleb arveldada.",
+      "partialRulesHint": "Määrake osaliselt tagastatavate tühistamiste reeglid.",
+      "ruleHeading": "Reegel {number}",
+      "ruleDelete": "Kustuta reegel",
+      "ruleAdd": "Lisa reegel",
+      "refundTypeLabel": "Tagasimakse liik",
+      "refundLabel": "Tagasimakse",
+      "whenCancelledLabel": "Tühistamise korral",
+      "depositNotRequired": "Tagatisraha ei ole nõutav",
+      "depositRequired": "Tagatisraha on nõutav",
+      "depositMethodLabel": "Meetod",
+      "preAuthTimesHeading": "Eelautoriseerimise ajad",
+      "preAuthValidityLabel": "Kehtivus (päeva pärast lahkumist)",
+      "preAuthWarnTitle": "Eelautoriseerimist saab tagada ainult 5 päevaks.",
+      "preAuthWarnBody": "Krediitkaardi eelautoriseerimise kestus sõltub mitmest tegurist, näiteks kaardi pakkujast, väljastavast pangast, makselahendusest jne. Seetõttu aegub kõigi nädala või pikemate broneeringute puhul iga eelautoriseerimine (tühistatakse automaatselt) iga 5 päeva järel. Anname teile teada, et saaksite käsitsi väljastada uue eelautoriseerimise ja hoida tagatisraha broneeringu ülejäänud osa jaoks.",
+      "assignAction": "Määra tingimused"
     },
     "ratePlanWizard": {
       "title": "Loo hinnaplaan",
@@ -5604,6 +5795,39 @@
       "confirmed": "Kinnitatud",
       "in_house": "Sisse registreeritud",
       "pending": "Optsioon / esialgne"
+    },
+    "blockRequests": {
+      "title": "Blokeerimistaotlused",
+      "subtitle": "Sinu omanike taotlused oma objektide blokeerimiseks. Heakskiit blokeerib ööd kalendris ja teatab need portaalidele.",
+      "filter": "Olek",
+      "filterAll": "Kõik",
+      "empty": "Selles vaates pole taotlusi.",
+      "requestedBy": "Taotleja: {name}",
+      "reason": "Põhjendus",
+      "decisionNote": "Märkus",
+      "note": "Märkus omanikule",
+      "notePlaceholder": "Valikuline — seda näidatakse omanikule.",
+      "working": "Täidetakse …",
+      "status": {
+        "pending": "Avatud",
+        "approved": "Heaks kiidetud",
+        "rejected": "Tagasi lükatud"
+      },
+      "action": {
+        "approve": "Kiida heaks",
+        "reject": "Lükka tagasi",
+        "revoke": "Tühista"
+      },
+      "confirm": {
+        "approve": "Kas blokeerida {objekt} {von}–{bis}? Ööd blokeeritakse kõigis portaalides.",
+        "reject": "Kas lükata tagasi taotlus objektile {objekt} ({von} – {bis})?",
+        "revoke": "Kas tühistada heakskiit objektile {objekt} ({von} – {bis})? Ööd vabastatakse uuesti."
+      },
+      "done": {
+        "approve": "Taotlus heaks kiidetud, ööd blokeeritud.",
+        "reject": "Taotlus tagasi lükatud.",
+        "revoke": "Heakskiit tühistatud, ööd vabastatud."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "Jaanuar,Veebruar,Märts,Aprill,Mai,Juuni,Juuli,August,September,Oktoober,November,Detsember",
     "name": "Nimi",
     "seasonAdd": "Lisa hooaeg",
+    "seasonApplyCancel": "Loobu",
+    "seasonApplyCopyHint": "Hooaeg luuakse iseseisva koopiana. Hilisemad muudatused selles hooajas EI kandu sinna edasi. Lisatasu arvutatakse siht-objekti enda baashinnast.",
+    "seasonApplyNone": "Ei kopeeritud ühelegi objektile.",
+    "seasonApplyPartial": "Kopeeritud {count} objektile, {skipped} vahele jäetud.",
+    "seasonApplyPickTarget": "Vali vähemalt üks objekt.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Baashinda pole määratud — lisatasu ei saa arvutada.",
+      "basispreis_null": "Baashind on 0 — lisatasu ei saa arvutada.",
+      "teilweise_uebertragen": "Hooaeg on objektil, päevahinnad on veel puudu — proovige lõpetamiseks uuesti.",
+      "unbekannt": "Vahele jäetud teadmata põhjusel."
+    },
+    "seasonApplySubmit": "Kopeeri",
+    "seasonApplySuccess": "Kopeeritud {count} objektile.",
+    "seasonApplyTitle": "Kopeeri „{name}“ teistele objektidele",
+    "seasonApplyToOthers": "Kopeeri teistele objektidele",
+    "seasonApplyWithRanges": "Kopeeri ka perioodid",
+    "seasonApplyWithRangesHint": "Märgitud päevad seatakse samamoodi siht-objektil. Väljas: ainult hooaeg ise, ilma päevadeta.",
     "seasonClearHint": "Lohista parema hiirenupuga üle päevade, et need hooajast eemaldada.",
     "seasonColor": "Värv",
     "seasonColorAria": "Värv {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Lisatasu (± %)",
     "seasonSurchargePlaceholder": "nt 30 või -15",
     "seasonValueRequired": "Palun sisestage kehtiv väärtus.",
-    "weekdays": "E,T,K,N,R,L,P"
+    "weekdays": "E,T,K,N,R,L,P",
+    "seasonApplyNoSpans": "Sellel hooajal pole värvitud perioode. Värvige see esmalt või kandke üle ainult määratlus ilma perioodideta."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "QR-kood autentimisrakenduse jaoks",
       "sixDigitCode": "6-kohaline kood",
       "disable2fa": "Lülita 2FA välja",
-      "disable2faHint": "Sisesta praegune kood (või taastekood), et 2FA välja lülitada."
+      "disable2faHint": "Sisesta praegune kood (või taastekood), et 2FA välja lülitada.",
+      "title": "Turvalisus",
+      "loadFailed": "Konto andmeid ei õnnestunud laadida. Kontrolli ühendust ja proovi uuesti.",
+      "credentials": "Sisselogimisandmed",
+      "emailAndUsername": "E-post ja kasutajanimi",
+      "emailLabel": "E-post",
+      "nameLabel": "Nimi",
+      "password": "Parool",
+      "noPassword": "Parool on määramata",
+      "passwordMin": "Vähemalt 8 märki.",
+      "save": "Salvesta",
+      "saving": "Salvestamine …",
+      "changePassword": "Muuda parooli",
+      "twoFactor": {
+        "title": "Kaheastmeline autentimine (2FA)",
+        "intro": "Kaitseb sinu kontot lisaks paroolile teise teguriga.",
+        "noneActive": "Teist tegurit pole veel seadistatud. Soovitame autentimisrakendust.",
+        "requiredNotice": "Sinu rolli puhul on teine tegur kohustuslik. Palun seadista see kohe.",
+        "active": "Aktiivne",
+        "setUp": "Seadista",
+        "totp": {
+          "title": "Autentimisrakendus",
+          "description": "Ühekordne kood rakendusest nagu Google Authenticator või Microsoft Authenticator. Töötab ka ilma mobiilsidevõrguta.",
+          "setupTitle": "Seadista autentimisrakendus",
+          "setupHint": "Skanni QR-kood oma rakendusega ja kinnita kuvatava koodiga.",
+          "step1": "1. Skanni QR-kood",
+          "step2": "3. Sisesta rakenduse kood",
+          "qrAlt": "QR-kood autentimisrakenduse jaoks",
+          "qrHint": "Ava oma autentimisrakendus ja skanni kood.",
+          "manualTitle": "2. Või sisesta võti käsitsi",
+          "manualHint": "Kasuta seda võtit, kui sa ei saa QR-koodi skannida.",
+          "showSecret": "Näita võtit",
+          "hideSecret": "Peida võti",
+          "copySecret": "Kopeeri võti",
+          "copyFailed": "Kopeerimine ei õnnestunud. Palun märgista võti ja kopeeri see käsitsi.",
+          "codeLabel": "6-kohaline kood",
+          "activate": "Aktiveeri",
+          "checking": "Kontrollimine …",
+          "preparing": "Seadistuse ettevalmistamine …",
+          "enabledTitle": "Autentimisrakendus on aktiivne. Salvesta nüüd oma varukoodid.",
+          "friendlyName": "Autentimisrakendus",
+          "replayNote": "Pane tähele: kood kehtib kuni 90 sekundit ja seda saab selle aja jooksul mitu korda kasutada. Reaalajas toimuvate võltsitud sisselogimislehtede vastu kaitseb ainult pääsuvõti."
+        },
+        "sms": {
+          "title": "SMS-kood",
+          "description": "Ühekordne kood SMS-iga sinu kinnitatud telefoninumbrile.",
+          "unavailable": "SMS-kood ei ole selles serveris saadaval, kuna SMS-teenusepakkuja pole seadistatud. Vali autentimisrakendus või pääsuvõti.",
+          "unavailableBadge": "Pole saadaval",
+          "setupTitle": "Seadista SMS-kood",
+          "setupHint": "Saadame koodi sinu telefoninumbrile.",
+          "simSwapWarning": "Pane tähele: SMS on vähem turvaline kui autentimisrakendus. Kui keegi laseb sinu numbri teisele SIM-kaardile üle kanda, saab ta sinu koodid kätte. Võimalusel vali autentimisrakendus või pääsuvõti.",
+          "numberLabel": "Telefoninumber",
+          "numberHint": "Rahvusvahelises vormingus koos riigikoodiga, näiteks +372 …",
+          "invalidNumber": "Palun sisesta number rahvusvahelises vormingus, alustades märgist + ja riigikoodist.",
+          "sendCode": "Saada kood",
+          "sending": "Saatmine …",
+          "codeLabel": "6-kohaline kood",
+          "codeSentTo": "Saatsime koodi numbrile {phone}.",
+          "confirm": "Kinnita",
+          "checking": "Kontrollimine …",
+          "resend": "Saada kood uuesti",
+          "changeNumber": "Kasuta teist numbrit",
+          "friendlyName": "SMS-kood"
+        },
+        "passkey": {
+          "title": "Pääsuvõti",
+          "description": "Sisselogimine sõrmejälje, näotuvastuse või turvavõtmega. Koodi pole vaja.",
+          "setupTitle": "Seadista pääsuvõti",
+          "setupHint": "Sinu seade kinnitab sind sõrmejälje, näotuvastuse või turvavõtmega.",
+          "checkingSupport": "Seadme kontrollimine …",
+          "unsupportedTitle": "See brauser ei toeta pääsuvõtmeid",
+          "unsupportedHint": "Kasuta ajakohast brauserit või seadista selle asemel autentimisrakendus.",
+          "securityKeyOnly": "Sellel seadmel puudub sisseehitatud kinnitus (näiteks sõrmejälg või näotuvastus). Selleks on sul vaja ühendatavat turvavõtit.",
+          "benefitPhishing": "Kaitseb võltsitud sisselogimislehtede eest.",
+          "benefitNoCode": "Koodi pole vaja sisestada.",
+          "create": "Loo pääsuvõti",
+          "friendlyName": "Pääsuvõti",
+          "recommended": "Soovitatav: kolmest viisist kõige turvalisem.",
+          "creating": "Luuakse …",
+          "errors": {
+            "abgebrochen": "Kinnitus katkestati või seda ei tuvastatud. Proovige uuesti.",
+            "herkunftPasstNicht": "Pääsuvõtmed pole selle aadressi jaoks lubatud. Logige sisse ametliku aadressi kaudu.",
+            "nichtUnterstuetzt": "See seade ei saa pääsuvõtit luua. Kasutage autentimisrakendust või turvavõtit.",
+            "schonVorhanden": "Selle konto pääsuvõti on selles seadmes juba olemas.",
+            "laeuftBereits": "Pääsuvõtme taotlus on juba pooleli. Lõpetage või tühistage see.",
+            "zeitUeberschritten": "Kinnitamise aeg sai läbi. Proovige uuesti.",
+            "unbekannt": "Pääsuvõtit ei õnnestunud luua. Proovige uuesti."
+          }
+        },
+        "recovery": {
+          "title": "Varukoodid",
+          "description": "Ühekordselt kasutatavad koodid juhuks, kui sul pole ligipääsu oma teisele tegurile.",
+          "left": "Saadaval veel {count} koodi.",
+          "create": "Loo koodid",
+          "regenerate": "Loo uued koodid",
+          "regenerateHint": "Uute koodide loomisel kaotavad kõik senised koodid kehtivuse.",
+          "dialogTitle": "Varukoodid",
+          "dialogHint": "Ühekordselt kasutatavad koodid juhuks, kui sul pole ligipääsu oma teisele tegurile.",
+          "replaceWarning": "Tähelepanu: sinu senised varukoodid kaotavad seejuures kehtivuse.",
+          "passwordLabel": "Praegune parool",
+          "passwordHint": "Kinnituseks, et see oled tõesti sina.",
+          "createNow": "Loo koodid",
+          "creating": "Luuakse …",
+          "createdTitle": "Sinu uued varukoodid. Hoia neid turvalises kohas.",
+          "noneReturned": "Ühtegi koodi ei loodud. Palun proovi uuesti."
+        },
+        "remove": "Eemalda",
+        "removeDialog": {
+          "totpTitle": "Eemalda autentimisrakendus",
+          "smsTitle": "Eemalda SMS-kood",
+          "warning": "Pärast seda see tegur sinu kontot enam ei kaitse.",
+          "passwordLabel": "Praegune parool",
+          "remove": "Eemalda",
+          "removing": "Eemaldamine …",
+          "cancel": "Loobu",
+          "hint": "Kinnita eemaldamine oma praeguse parooliga.",
+          "passkeyTitle": "Eemalda pääsuvõti",
+          "lastFactorBlocked": "See on sinu viimane teine tegur ja sinu rolli puhul on üks kohustuslik. Loo esmalt varukoodid või seadista veel üks tegur."
+        },
+        "requiredWithDeadline": "Sinu rolli puhul on teine tegur kohustuslik. Seadista see hiljemalt {date} — pärast seda ei ole sisselogimine ilma teise tegurita enam võimalik.",
+        "statusFailed": "Kaheastmelise autentimise olekut ei õnnestunud laadida. Palun laadi leht uuesti."
+      },
+      "recovery": {
+        "lockoutWarning": "Ilma nende koodideta kaotad ligipääsu oma kontole, kui sa ei saa enam oma teist tegurit kasutada. Hoia neid turvalises kohas, paroolist eraldi.",
+        "copy": "Kopeeri",
+        "copied": "Kopeeritud",
+        "copyFailed": "Kopeerimine ei õnnestunud. Palun laadi koodid alla või prindi need välja.",
+        "download": "Laadi alla",
+        "downloadFailed": "Allalaadimine ei õnnestunud. Palun kopeeri koodid või prindi need välja.",
+        "print": "Prindi",
+        "printBlocked": "Prindiaken blokeeriti. Palun luba hüpikaknad või laadi koodid alla.",
+        "printTitle": "myNextDaysi varukoodid",
+        "printHint": "Iga kood toimib täpselt ühe korra. Hoia seda lehte turvaliselt.",
+        "fileHeader": "myNextDaysi varukoodid — iga kood toimib täpselt ühe korra. Hoia turvaliselt.",
+        "confirmSaved": "Olen koodid turvaliselt salvestanud.",
+        "confirmHint": "Märgi ruut, et seadistus lõpule viia.",
+        "mustExportFirst": "Kõigepealt kopeeri, laadi alla või prindi koodid.",
+        "done": "Valmis"
+      }
     },
     "company": {
       "saved": "Andmed salvestatud.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Räägitavad keeled",
       "searchLanguage": "Otsi keelt…",
       "chooseRole": "Vali roll…",
-      "userCreated": "Kasutaja loodud",
-      "preferredLanguage": "Eelistatud keel",
+      "preferredLanguage": "E-kirjade keel",
       "noLanguageFound": "Ühtegi keelt ei leitud.",
       "firstName": "Eesnimi",
       "lastName": "Perekonnanimi",
       "email": "E-post",
       "phone": "Telefoninumber",
       "notes": "Märkused",
-      "password": "Parool",
-      "credentialsHint": "Edasta need juurdepääsuandmed uuele kasutajale. Parooli näidatakse ainult praegu."
+      "title": "Loo kasutaja",
+      "createdSubtitle": "Kutse saadetud.",
+      "stepHints": {
+        "contact": "Lisage selle kasutaja kontaktandmed.",
+        "extra": "Lisage selle kasutaja kohta lisateavet.",
+        "role": "Valige selle kasutaja roll ja õigused.",
+        "properties": "Määrake sellele kasutajale objektid."
+      },
+      "done": "Valmis",
+      "cancel": "Tühista",
+      "back": "Tagasi",
+      "next": "Edasi",
+      "create": "Loo",
+      "creating": "Loomine…",
+      "role": "Roll",
+      "requiredFields": "Eesnimi, perekonnanimi, e-post ja roll on kohustuslikud.",
+      "assignFailed": "Kasutaja loodi, kuid objektide määramine ebaõnnestus: {reason}",
+      "hidePhones": "Peida telefoninumbrid veebisaidil.",
+      "noAssignNeeded": "Objektide määramine pole vajalik",
+      "noAssignNeededHint": "Sellel rollil on juurdepääs konto kõigile objektidele. Üksikute objektide määramine kehtib ainult omanikele ja töötajatele.",
+      "noProperties": "Veel pole majutuskohti",
+      "noPropertiesHint": "Looge oma majutuskohad, et saaksite need hiljem oma kasutajatele määrata.",
+      "choosePropertiesHint": "Valige objektid, millele see kasutaja juurdepääsu saab.",
+      "selectedCount": "Valitud: {count}",
+      "inviteSent": "Kutse saadetud",
+      "inviteSentHint": "Kasutaja saab e-kirja ja määrab parooli ise. Link kehtib 7 päeva.",
+      "inviteResend": "Saada kutse uuesti",
+      "inviteResending": "Saatmine…",
+      "inviteResent": "Kutse saadeti uuesti.",
+      "inviteResendFailed": "Kutset ei õnnestunud uuesti saata.",
+      "preferredLanguageHint": "Selles keeles saab uus kasutaja kutse ja kõik edasised e-kirjad."
     },
     "tariff": {
       "oneLess": "Üks objekt vähem",
@@ -6359,7 +6767,14 @@
       "updated": "Kasutaja uuendatud.",
       "deleted": "Kasutaja kustutatud.",
       "generalPermissions": "Üldised õigused",
-      "roleChangeHint": "Rolli vahetus pakub sobivad õigused. Seejärel saad neid ükshaaval kohandada."
+      "roleChangeHint": "Rolli vahetus pakub sobivad õigused. Seejärel saad neid ükshaaval kohandada.",
+      "edit": "Muuda",
+      "delete": "Kustuta",
+      "resendInvite": "Saada kutse uuesti",
+      "inviteResent": "Kutse saadetud aadressile {email}.",
+      "inviteResendFailed": "Kutset ei õnnestunud uuesti saata.",
+      "emailLanguage": "E-kirjade keel",
+      "emailLanguageHint": "Selles keeles saab see kasutaja oma e-kirjad."
     },
     "staffProperties": {
       "title": "Jaga objekte"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "nt hotell Järvevaade",
     "namePlaceholder": "Ees- ja perekonnanimi",
     "passwordHint": "Vähemalt 8 märki",
-    "passwordRepeat": "Korda parooli"
+    "passwordRepeat": "Korda parooli",
+    "headline": "Kogu sinu üürileandmine ühes kohas.",
+    "feature1": "Sünkroniseeri kalendrid automaatselt",
+    "feature2": "Otsebroneeringud omaenda lehel",
+    "feature3": "Automatiseeri sõnumid külalistele",
+    "withGoogle": "Registreeru Google'iga",
+    "withApple": "Registreeru Apple'iga",
+    "or": "või",
+    "withEmail": "Registreeru e-postiga",
+    "haveAccount": "Kas sul on juba konto?",
+    "loginLink": "Logi siit sisse",
+    "loadingHeadline": "Sinu oma broneerimisleht. Jäta endale 100 % igast broneeringust.",
+    "loadingText": "Seadistame sinu kontot …"
   },
   "marketingSite": {
     "stars": "4,5 tärni",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Märgi kõik loetuks",
     "erneut": "Laadi uuesti",
     "ariaMitAnzahl": "Teated ({count} lugemata)"
+  },
+  "auth": {
+    "toLogin": "Sisselogimisse",
+    "genericError": "See ei õnnestunud praegu. Proovige hiljem uuesti.",
+    "tokenMissing": {
+      "title": "Puudulik link",
+      "text": "See link on puudulik. Kasutage e-kirjas olevat täislinki — kopeerige see ja kleepige aadressiribale."
+    },
+    "tokenInvalid": {
+      "title": "Link ei kehti enam",
+      "textInvite": "See kutselink on aegunud või juba kasutatud. Pöörduge oma ettevõtte poole — seal saab kutse uuesti saata.",
+      "textReset": "See link on aegunud või juba kasutatud. Taotlege lihtsalt uus.",
+      "retry": "Taotle uut linki"
+    },
+    "invite": {
+      "title": "Seadistage oma juurdepääs",
+      "intro": "Valige parool oma myNextDaysi juurdepääsuks. Vähemalt {min} märki."
+    },
+    "reset": {
+      "title": "Uus parool",
+      "intro": "Valige uus parool. Vähemalt {min} märki."
+    },
+    "done": {
+      "titleInvite": "Juurdepääs on seadistatud",
+      "titleReset": "Parool on muudetud",
+      "text": "Nüüd saate uue parooliga sisse logida."
+    },
+    "forgot": {
+      "title": "Unustatud parool",
+      "intro": "Sisestage oma e-posti aadress. Saadame teile lingi uue parooli määramiseks.",
+      "emailLabel": "E-post",
+      "submit": "Taotle linki",
+      "sending": "Saatmine…",
+      "sentTitle": "E-kiri on teel",
+      "sentText": "Kui sellele aadressile on konto olemas, saatsime lähtestamislingi. See kehtib ühe tunni.",
+      "spamHint": "Midagi ei saabunud? Vaadake ka rämpsposti kausta.",
+      "again": "Taotle uuesti"
+    },
+    "password": {
+      "newLabel": "Parool",
+      "repeatLabel": "Korrake parooli",
+      "submit": "Määra parool",
+      "saving": "Salvestamine…",
+      "mismatch": "Kaks parooli ei kattu.",
+      "tooWeak": "Parool ei vasta nõuetele (vähemalt {min} märki).",
+      "show": "Näita parooli",
+      "hide": "Peida parool",
+      "strengthLabel": "Tugevus: {level}",
+      "strength": {
+        "1": "nõrk",
+        "2": "keskmine",
+        "3": "hea",
+        "4": "tugev"
+      },
+      "requirement": {
+        "length": "Vähemalt {min} märki",
+        "letter": "Vähemalt üks täht",
+        "digit": "Vähemalt üks number"
+      }
+    },
+    "checking": "Linki kontrollimine…",
+    "languageLabel": "Keel",
+    "languageChange": "Muuda keelt",
+    "twoFactor": {
+      "title": "Kinnitamine",
+      "totpHint": "Sisesta 6-kohaline kood oma autentimisrakendusest.",
+      "smsHint": "Sisesta 6-kohaline kood, mille saatsime sulle SMS-iga.",
+      "smsHintWithPhone": "Sisesta 6-kohaline kood, mille saatsime numbrile {phone}.",
+      "codeLabel": "Kood",
+      "confirm": "Kinnita",
+      "checking": "Kontrollimine …",
+      "recoveryHint": "Sisesta üks oma varukoodidest.",
+      "recoveryLabel": "Varukood",
+      "recoverySingleUse": "Iga kood toimib täpselt ühe korra.",
+      "useTotp": "Kasuta autentimisrakendust",
+      "useSms": "Kasuta SMS-koodi",
+      "useRecovery": "Kasuta varukoodi",
+      "backToLogin": "Tagasi sisselogimisse",
+      "factorMissing": "See tegur ei ole sinu konto jaoks saadaval. Vali mõni muu viis.",
+      "passkeyHint": "Kinnita sisselogimine oma pääsuvõtmega.",
+      "passkeyUse": "Logi sisse pääsuvõtmega",
+      "usePasskey": "Kasuta pääsuvõtit",
+      "sendCode": "Saada kood SMS-iga",
+      "sending": "Saadetakse …",
+      "smsSent": "Kood on saadetud.",
+      "resend": "Saada kood uuesti",
+      "recoveryRedeemedHint": "Kood lunastati, kuid ainuüksi sellest sisselogimiseks ei piisa. Palun logi sisse mõne seadistatud teguriga või pöördu oma meeskonna poole."
+    },
+    "mfaSetup": {
+      "title": "Seadista kaheastmeline autentimine",
+      "intro": "Sinu rolli puhul on teine tegur kohustuslik. Seadista see kohe, et jätkata.",
+      "why": "Administraatorina on sul ligipääs finantsandmetele, külaliste andmetele ja kogu ettevõtte seadetele. Teine tegur hoiab ära selle, et varastatud paroolist üksi piisaks.",
+      "goToSettings": "Seadista kohe",
+      "later": "Tuleta hiljem meelde",
+      "laterHint": "Võid seadistuse veel edasi lükata. Küsime uuesti järgmisel sisselogimisel.",
+      "introWithDeadline": "Sinu rolli puhul on teine tegur kohustuslik. Seadista see hiljemalt {date} — pärast seda ei ole sisselogimine ilma teise tegurita enam võimalik."
+    }
+  },
+  "sprache": {
+    "label": "E-kirjade keel",
+    "hint": "Selles keeles saadame sellele isikule e-kirju.",
+    "none": "— määramata"
+  },
+  "neuerungen": {
+    "eyebrow": "Tooteuuendused",
+    "titel": "Uudised",
+    "unterzeile": "Kõik, mis myNextDaysis muutunud on — uusimad ees.",
+    "neuAnzahl": "{anzahl, plural, one {# uus} other {# uut}}",
+    "ungelesen": "Uus",
+    "veroeffentlichtAm": "Avaldatud {datum}",
+    "leer": "Uudiseid pole veel.",
+    "ladefehler": "Laadimine ebaõnnestus: {grund}",
+    "mehrLaden": "Laadi vanemad",
+    "aufklappen": "Näita üksikasju",
+    "zuklappen": "Peida üksikasjad",
+    "kategorie": {
+      "neuerung": "Uus funktsioon",
+      "wartung": "Hooldus",
+      "hinweis": "Teade",
+      "wichtig": "Oluline"
+    },
+    "popup": {
+      "ariaLabel": "Teate sisu",
+      "gelesen": "Selge",
+      "wirdGespeichert": "Salvestan …",
+      "erneut": "Proovi uuesti",
+      "fehler": "Kinnitamine ebaõnnestus: {grund}",
+      "weiter": "Edasi",
+      "vonAnzahl": "Teade {nummer}"
+    }
+  },
+  "login": {
+    "title": "Logi sisse",
+    "emailLabel": "E-post",
+    "passwordLabel": "Parool",
+    "showPassword": "Näita parooli",
+    "hidePassword": "Peida parool",
+    "forgot": "Unustasid parooli?",
+    "stayLoggedIn": "Jää sisselogituks",
+    "submit": "Logi sisse",
+    "submitting": "Sisselogimine…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Pole veel myNextDaysi klient?",
+    "signupLink": "Proovi tasuta",
+    "mfaTitle": "Kinnitus",
+    "mfaIntro": "Sisesta 6-kohaline kood autentimisrakendusest. Sobib ka taastekood.",
+    "mfaCodeLabel": "Kood",
+    "mfaSubmit": "Kinnita",
+    "mfaChecking": "Kontrollin…",
+    "mfaBack": "Tagasi sisselogimisse"
   }
 }

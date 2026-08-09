@@ -283,6 +283,7 @@
       "logout": "Log ud"
     },
     "stopSell": "Salgsstop",
+    "blockRequests": "Spærreanmodninger",
     "owners": "Ejere",
     "ownerStatements": "Ejerafregninger",
     "portal": "Min portal",
@@ -315,7 +316,8 @@
     "noAccess": "Ingen adgang",
     "dashboardLoadFailed": "Dashboardet kunne ikke indlæses",
     "reviews": "Anmeldelser",
-    "extensions": "Udvidelser"
+    "extensions": "Udvidelser",
+    "announcements": "Nyheder"
   },
   "exemption": {
     "labelNamed": "Momsfritaget ({scheme}) — intet momsnr. nødvendigt",
@@ -945,6 +947,7 @@
     "newTitle": "Ny ejer",
     "create": "Opret",
     "created": "Ejer oprettet.",
+    "createdInvited": "Ejer oprettet, og invitation er sendt.",
     "cancel": "Annuller",
     "save": "Gem",
     "saving": "Gemmer …",
@@ -958,11 +961,17 @@
     "propertyCount": "{count, plural, =0 {Ingen objekter} one {# objekt} other {# objekter}}",
     "noProperties": "Denne ejer har endnu ikke fået tildelt et objekt.",
     "addProperty": "Tildel objekt …",
+    "assignProperties": "Tildel objekter",
+    "assignPropertiesHint": "Valgfrit. Kun objekter, der endnu ikke har en ejer, kan vælges.",
+    "noFreeProperties": "Alle objekter er allerede tildelt en ejer.",
+    "assignSelected": "{count, plural, =0 {Tildel objekter} one {Tildel # objekt} other {Tildel # objekter}}",
+    "propertiesAssigned": "{count, plural, one {# objekt tildelt} other {# objekter tildelt}}",
     "removeProperty": "Fjern tildeling",
     "sections": {
       "master": "Stamdata",
       "payout": "Udbetaling & provision",
-      "properties": "Objekter"
+      "properties": "Objekter",
+      "portalAccess": "Portaladgang"
     },
     "frequency": {
       "none": "Ingen",
@@ -989,12 +998,20 @@
       "statementFrequency": "Afregningsrytme",
       "notes": "Noter",
       "share": "Andel (%)",
-      "commissionOverride": "Provision (%) afv."
+      "commissionOverride": "Provision (%) afv.",
+      "emailLanguage": "Sprog til e-mails"
     },
     "placeholders": {
       "name": "f.eks. Jens Jensen",
       "email": "f.eks. jens@example.com"
-    }
+    },
+    "emailLanguageHint": "På dette sprog modtager ejeren afregninger og beskeder — også uden egen adgang.",
+    "portalAccess": "Opret portaladgang",
+    "portalAccessHint": "Ejeren modtager en invitation på e-mail og kan derefter selv se sine afregninger.",
+    "portalAccessNeedsEmail": "Der kræves en e-mailadresse til portaladgang.",
+    "portalAccessInvite": "Send invitation",
+    "portalAccessInvited": "Invitation sendt.",
+    "portalAccessActive": "Portaladgang er oprettet."
   },
   "ownerStatements": {
     "title": "Ejerafregninger",
@@ -1149,7 +1166,9 @@
     "subtitle": "Overblik over dine objekter, indtægter og afregninger.",
     "properties": {
       "title": "Mine objekter",
-      "empty": "Der er aktuelt ikke tildelt dig nogen objekter."
+      "empty": "Der er aktuelt ikke tildelt dig nogen objekter.",
+      "city": "Sted",
+      "openCalendar": "Kalender"
     },
     "earnings": {
       "title": "Indtægter (denne måned)",
@@ -1175,7 +1194,24 @@
       "to": "Til",
       "submit": "Send anmodning",
       "sending": "Sender …",
-      "requested": "Anmodning sendt."
+      "requested": "Anmodning sendt.",
+      "listTitle": "Mine anmodninger",
+      "listEmpty": "Du har endnu ikke anmodet om en blokering.",
+      "created": "Indsendt den",
+      "range": "Periode",
+      "statusLabel": "Status",
+      "readOnlyHint": "Kun udlejer kan oprette en blokering. Du indsender anmodningen, men beslutningen er udlejers.",
+      "invalidRange": "Slutdatoen skal ligge efter startdatoen.",
+      "invalidDate": "Angiv venligst en gyldig dato.",
+      "status": {
+        "pending": "Under behandling",
+        "approved": "Godkendt",
+        "rejected": "Afvist",
+        "cancelled": "Trukket tilbage"
+      },
+      "reason": "Årsag",
+      "reasonPlaceholder": "Hvorfor skal det spærres? (f.eks. egen brug, håndværkere)",
+      "decisionNote": "Bemærkning fra administrationen"
     },
     "meter": {
       "title": "Registrer måleraflæsning",
@@ -1191,6 +1227,142 @@
         "electricity": "El",
         "water": "Vand",
         "gas": "Gas"
+      },
+      "historyTitle": "Historik",
+      "historyEmpty": "Der er endnu ikke registreret nogen målerstand for dette objekt.",
+      "appendOnlyHint": "Registrerede stande forbliver uændrede. En korrektion er en ny indtastning — sådan forbliver historikken fuldstændig.",
+      "invalidValue": "Angiv venligst målerstanden som et tal.",
+      "invalidDate": "Angiv venligst en gyldig aflæsningsdato."
+    },
+    "logout": "Log ud",
+    "loadFailed": "Data kunne ikke indlæses.",
+    "amountHidden": "—",
+    "nav": {
+      "overview": "Oversigt",
+      "calendar": "Belægningskalender",
+      "reports": "Rapporter",
+      "blockRequests": "Blokeringer",
+      "meterReadings": "Målerstande",
+      "services": "Ydelser",
+      "notifications": "Notifikationer"
+    },
+    "overview": {
+      "occupancy": "Belægning",
+      "occupancyHint": "Belagte nætter i den valgte periode.",
+      "nights": "Nætter",
+      "bookings": "Bookinger",
+      "payout": "Nettoudbetaling",
+      "payoutHint": "Din andel efter portalgebyrer.",
+      "period": "Periode",
+      "periodMonth": "Denne måned",
+      "periodYear": "Dette år",
+      "openCalendar": "Åbn kalender",
+      "latestStatement": "Seneste afregning",
+      "noStatement": "Endnu ingen afregning"
+    },
+    "calendar": {
+      "title": "Belægningskalender",
+      "subtitle": "Belægning og din nettoudbetaling pr. nat.",
+      "selectProperty": "Vælg objekt",
+      "prevMonth": "Forrige måned",
+      "nextMonth": "Næste måned",
+      "today": "I dag",
+      "legendSeasons": "Sæsoner",
+      "legendStatus": "Belægning",
+      "noSeasons": "Der er ikke angivet nogen sæsoner for dette objekt.",
+      "status": {
+        "open": "Ledig",
+        "booked": "Booket",
+        "blocked": "Blokeret"
+      },
+      "payoutPerNight": "Nettoudbetaling/nat",
+      "guest": "Gæst",
+      "channel": "Bookingkilde",
+      "blockHint": "Vil du have en periode blokeret? Indsend en anmodning — det er udlejer, der beslutter.",
+      "blockCta": "Anmod om blokering",
+      "weekdays": "Man,Tir,Ons,Tor,Fre,Lør,Søn",
+      "months": "Januar,Februar,Marts,April,Maj,Juni,Juli,August,September,Oktober,November,December"
+    },
+    "services": {
+      "title": "Bestil en ydelse",
+      "hint": "Bestil en ydelse til dit objekt. Udlejer accepterer opgaven og planlægger den.",
+      "property": "Objekt",
+      "kind": "Ydelse",
+      "date": "Ønsket dato",
+      "note": "Bemærkning",
+      "notePlaceholder": "Hvad præcis skal der udføres?",
+      "submit": "Bestil",
+      "sending": "Sender …",
+      "sent": "Opgave sendt.",
+      "listTitle": "Mine bestillinger",
+      "listEmpty": "Du har endnu ikke bestilt en ydelse.",
+      "invalidDate": "Angiv venligst en gyldig ønsket dato.",
+      "noteRequired": "Beskriv venligst den ønskede ydelse.",
+      "kinds": {
+        "custom": "Andet (fritekst)"
+      },
+      "status": {
+        "pending": "Under behandling",
+        "accepted": "Accepteret",
+        "scheduled": "Planlagt",
+        "done": "Udført",
+        "rejected": "Afvist",
+        "cancelled": "Trukket tilbage"
+      },
+      "type": {
+        "endreinigung": "Slutrengøring",
+        "hauptreinigung": "Hovedrengøring",
+        "fensterreinigung": "Vinduespudsning",
+        "rasenmaehen": "Græsslåning",
+        "terrassenreinigung": "Terrasserengøring"
+      },
+      "dateTo": "Til"
+    },
+    "notifications": {
+      "title": "Notifikationer",
+      "hint": "Vælg for hver hændelse, hvordan du bliver underrettet.",
+      "channel": {
+        "email": "E-mail",
+        "sms": "SMS",
+        "phone": "Telefon"
+      },
+      "locked": "Denne e-mail er kontraktligt påkrævet og forbliver aktiv.",
+      "saved": "Gemt.",
+      "saveFailed": "Ændringen kunne ikke gemmes.",
+      "categories": {
+        "listing_activity": "Bookinger på dine objekter",
+        "listing_activityHint": "Ny booking, ændring og afbestilling.",
+        "account_activity": "Kontoaktivitet",
+        "account_activityHint": "Logins og ændringer på din konto.",
+        "reminders": "Påmindelser",
+        "remindersHint": "Forfaldne opgaver og aftaler.",
+        "messages": "Beskeder",
+        "messagesHint": "Nye beskeder fra udlejer.",
+        "owner_booking": "Bookinger på dine ejendomme",
+        "owner_bookingHint": "Ny booking, ændring og aflysning.",
+        "block_decision": "Beslutning om dine spærringsanmodninger",
+        "block_decisionHint": "Når administrationen godkender eller afviser din anmodning.",
+        "owner_service": "Bestilte ydelser",
+        "owner_serviceHint": "Statusændring på en ydelse, du har bestilt."
+      }
+    },
+    "reports": {
+      "title": "Rapporter",
+      "subtitle": "Afregninger, den løbende måned samt måneds- og årsrapporter.",
+      "currentTitle": "Aktuel afregningsstatus",
+      "currentHint": "Foreløbig — måneden er stadig i gang. Kun den endelige afregning er bindende.",
+      "monthly": "Månedsrapport",
+      "yearly": "Årsrapport",
+      "month": "Måned",
+      "year": "År",
+      "download": "Download PDF",
+      "downloading": "Genererer …",
+      "downloadFailed": "PDF'en kunne ikke genereres.",
+      "onlyFinalized": "Kun endelige afregninger kan downloades.",
+      "status": {
+        "draft": "Under udarbejdelse",
+        "finalized": "Afsluttet",
+        "cancelled": "Annulleret"
       }
     }
   },
@@ -4860,6 +5032,7 @@
       "promoFixedPortalHint": "Et fast beløb kan ikke fordeles på de enkelte nætter — det går ikke til portalerne, hvor det skal vedligeholdes i ekstranettet.",
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Anvend den samme kampagne på andre objekter.",
+      "applyToOthersSeasonHint": "Opret den samme sæson på andre objekter.",
       "promoReason": {
         "mindestaufenthalt": "minimumsophold",
         "fruehbucher": "varsel for tidlig booking",
@@ -4960,7 +5133,6 @@
       "paymentPlanLabel": "Betalingsplan",
       "cancellationLabel": "Annullering",
       "depositLabel": "Depositum",
-      "depositWithheldText": "Et depositum på {amount} tilbageholdes.",
       "noPolicyYet": "Endnu ingen retningslinje angivet.",
       "bookabilityCardTitle": "Bookbarhed",
       "bookabilityCardHint": "Hvordan reservationer accepteres.",
@@ -4974,21 +5146,14 @@
       "rentalAgreementCardTitle": "Lejekontrakt",
       "rentalAgreementCardHint": "Opret lejekontrakten eller link til den for dine gæster.",
       "noRentalAgreementYet": "Endnu ingen lejekontrakt.",
-      "addPolicyTitle": "Tilføj retningslinje",
       "addPolicySubtitle": "Fastlæg detaljerne for denne nye retningslinje.",
       "internalNameLabel": "Internt navn *",
       "internalNamePlaceholder": "f.eks. Delvis forudbetaling – kan ikke refunderes",
       "paymentPlanGroupTitle": "Betalingsplan",
       "paymentCountLabel": "Antal betalinger",
-      "depositPercentLabel": "Forudbetaling (%)",
-      "remainingDaysBeforeLabel": "Restbeløb (dage før ankomst)",
       "guestCancellationGroupTitle": "Annullering fra gæst",
       "cancellationTypeLabel": "Annulleringstype",
       "depositGroupTitle": "Depositum",
-      "depositModeNone": "Intet depositum påkrævet",
-      "depositModeAmount": "Depositum som beløb",
-      "depositAmountLabelWithCurrency": "Depositumbeløb ({currency})",
-      "depositAmountLabel": "Depositumbeløb",
       "quoteValidityGroupTitle": "Tilbudsgyldighed",
       "quoteValidityHoursLabel": "Gyldighedsperiode (timer) *",
       "quoteValidityHint": "Tilbuddet er gyldigt i højst {hours} timer, så længe status er „Venter på gæst\" eller „Venter på betaling\".",
@@ -5000,10 +5165,36 @@
       "recommendedBadge": "Anbefalet",
       "checkInTimeLabel": "Check-in-tidspunkt",
       "checkOutTimeLabel": "Check-out-tidspunkt",
-      "paymentSummaryFull": "100 % forfalder ved reservationen.",
-      "paymentSummarySplit": "{percent} % ved booking, restbeløb {days} dage før ankomst.",
       "localizedEditorSubtitle": "Opret teksten, og oversæt den efter behov til dine gæster.",
-      "localizedEditorPlaceholder": "Indtast {title} …"
+      "localizedEditorPlaceholder": "Indtast {title} …",
+      "editPolicyTitle": "Rediger betingelser",
+      "singlePaymentHint": "100 % af betalingen forfalder, når bookingen afsluttes.",
+      "firstPaymentHeading": "Første betaling",
+      "secondPaymentHeading": "Anden betaling",
+      "thirdPaymentHeading": "Tredje betaling",
+      "amountTypeLabel": "Beløbstype",
+      "percentLabel": "Procentsats",
+      "amountLabel": "Beløb",
+      "currencyLabel": "Valuta",
+      "daysLabel": "Dage",
+      "periodLabel": "Periode",
+      "firstPaymentHint": "Ved bookingen opkræves kun det faste beløb eller procentsatsen for den første betaling. De resterende betalinger faktureres på det planlagte tidspunkt.",
+      "remainderHint": "Angiv, hvornår restbeløbet skal opkræves.",
+      "partialRulesHint": "Definer reglerne for delvist refunderbare afbestillinger.",
+      "ruleHeading": "Regel {number}",
+      "ruleDelete": "Slet regel",
+      "ruleAdd": "Tilføj regel",
+      "refundTypeLabel": "Refusionstype",
+      "refundLabel": "Refusion",
+      "whenCancelledLabel": "Ved afbestilling",
+      "depositNotRequired": "Der kræves ikke depositum",
+      "depositRequired": "Der kræves depositum",
+      "depositMethodLabel": "Metode",
+      "preAuthTimesHeading": "Tidspunkter for forhåndsgodkendelse",
+      "preAuthValidityLabel": "Gyldighed (dage efter afrejse)",
+      "preAuthWarnTitle": "Forhåndsgodkendelser kan kun garanteres i 5 dage.",
+      "preAuthWarnBody": "Hvor længe en forhåndsgodkendelse holder på et kreditkort, afhænger af flere faktorer såsom kortudbyderen, den udstedende bank, betalingsgatewayen osv. Derfor udløber alle forhåndsgodkendelser (annulleres automatisk) hver 5. dag ved alle bookinger på en uge eller længere. Vi giver dig besked, så du manuelt kan udstede en ny forhåndsgodkendelse og beholde depositummet for resten af bookingen.",
+      "assignAction": "Tildel betingelser"
     },
     "ratePlanWizard": {
       "title": "Opret prisplan",
@@ -5604,6 +5795,39 @@
       "confirmed": "Bekræftet",
       "in_house": "Tjekket ind",
       "pending": "Option / foreløbig"
+    },
+    "blockRequests": {
+      "title": "Spærreanmodninger",
+      "subtitle": "Anmodninger fra dine ejere om at spærre deres objekter. En godkendelse spærrer nætterne i kalenderen og melder dem til portalerne.",
+      "filter": "Status",
+      "filterAll": "Alle",
+      "empty": "Ingen anmodninger i denne visning.",
+      "requestedBy": "Anmodet af {name}",
+      "reason": "Begrundelse",
+      "decisionNote": "Bemærkning",
+      "note": "Bemærkning til ejeren",
+      "notePlaceholder": "Valgfrit — den vises for ejeren.",
+      "working": "Udføres …",
+      "status": {
+        "pending": "Åben",
+        "approved": "Godkendt",
+        "rejected": "Afvist"
+      },
+      "action": {
+        "approve": "Godkend",
+        "reject": "Afvis",
+        "revoke": "Tilbagekald"
+      },
+      "confirm": {
+        "approve": "Spær {objekt} fra {von} til {bis}? Nætterne spærres på alle portaler.",
+        "reject": "Afvis anmodningen for {objekt} ({von} – {bis})?",
+        "revoke": "Tilbagekald godkendelsen for {objekt} ({von} – {bis})? Nætterne frigives igen."
+      },
+      "done": {
+        "approve": "Anmodning godkendt, nætter spærret.",
+        "reject": "Anmodning afvist.",
+        "revoke": "Godkendelse tilbagekaldt, nætter frigivet."
+      }
     }
   },
   "seasons": {
@@ -5611,6 +5835,23 @@
     "months": "januar,februar,marts,april,maj,juni,juli,august,september,oktober,november,december",
     "name": "Navn",
     "seasonAdd": "Tilføj sæson",
+    "seasonApplyCancel": "Annuller",
+    "seasonApplyCopyHint": "Sæsonen oprettes som en selvstændig kopi. Senere ændringer af denne sæson slår IKKE igennem der. Tillægget beregnes ud fra målobjektets egen grundpris.",
+    "seasonApplyNone": "Ikke kopieret til nogen ejendom.",
+    "seasonApplyPartial": "Overført til {count} objekt(er), {skipped} sprunget over.",
+    "seasonApplyPickTarget": "Vælg mindst ét objekt.",
+    "seasonApplySkipReason": {
+      "kein_basispreis": "Ingen grundpris angivet — et tillæg kan ikke beregnes.",
+      "basispreis_null": "Basisprisen er 0 — et tillæg kan ikke beregnes.",
+      "teilweise_uebertragen": "Sæsonen er overført, men dagspriserne mangler stadig — prøv igen for at fuldføre.",
+      "unbekannt": "Sprunget over af ukendt årsag."
+    },
+    "seasonApplySubmit": "Overfør",
+    "seasonApplySuccess": "Overført til {count} objekt(er).",
+    "seasonApplyTitle": "Overfør “{name}” til andre objekter",
+    "seasonApplyToOthers": "Overfør til andre objekter",
+    "seasonApplyWithRanges": "Overfør også perioderne",
+    "seasonApplyWithRangesHint": "De markerede dage sættes også på målobjektet. Fra: kun selve sæsonen, uden dage.",
     "seasonClearHint": "Højreklik og træk hen over dagene for at fjerne dem fra sæsonen.",
     "seasonColor": "Farve",
     "seasonColorAria": "Farve {color}",
@@ -5637,7 +5878,8 @@
     "seasonSurchargeLabel": "Tillæg (± %)",
     "seasonSurchargePlaceholder": "f.eks. 30 eller -15",
     "seasonValueRequired": "Angiv venligst en gyldig værdi.",
-    "weekdays": "M,T,O,T,F,L,S"
+    "weekdays": "M,T,O,T,F,L,S",
+    "seasonApplyNoSpans": "Denne sæson har ingen markerede perioder. Markér den først, eller overfør kun definitionen uden perioder."
   },
   "channels": {
     "title": "Channel Manager",
@@ -6265,7 +6507,145 @@
       "qrAlt": "QR-kode til godkendelsesappen",
       "sixDigitCode": "6-cifret kode",
       "disable2fa": "Deaktivér 2FA",
-      "disable2faHint": "Indtast en aktuel kode (eller en genoprettelseskode) for at slå 2FA fra."
+      "disable2faHint": "Indtast en aktuel kode (eller en genoprettelseskode) for at slå 2FA fra.",
+      "title": "Sikkerhed",
+      "loadFailed": "Kontooplysningerne kunne ikke indlæses. Tjek din forbindelse, og prøv igen.",
+      "credentials": "Loginoplysninger",
+      "emailAndUsername": "E-mail og brugernavn",
+      "emailLabel": "E-mail",
+      "nameLabel": "Navn",
+      "password": "Adgangskode",
+      "noPassword": "Ingen adgangskode angivet",
+      "passwordMin": "Mindst 8 tegn.",
+      "save": "Gem",
+      "saving": "Gemmer …",
+      "changePassword": "Skift adgangskode",
+      "twoFactor": {
+        "title": "Tofaktorgodkendelse (2FA)",
+        "intro": "Beskytter din konto med en anden faktor ud over adgangskoden.",
+        "noneActive": "Du har endnu ikke konfigureret en anden faktor. Vi anbefaler godkendelsesappen.",
+        "requiredNotice": "En anden faktor er obligatorisk for din rolle. Konfigurer en nu.",
+        "active": "Aktiv",
+        "setUp": "Konfigurer",
+        "totp": {
+          "title": "Godkendelsesapp",
+          "description": "Engangskode fra en app som Google Authenticator eller Microsoft Authenticator. Virker også uden mobilnet.",
+          "setupTitle": "Konfigurer godkendelsesapp",
+          "setupHint": "Scan QR-koden med din app, og bekræft med den viste kode.",
+          "step1": "1. Scan QR-koden",
+          "step2": "3. Indtast koden fra appen",
+          "qrAlt": "QR-kode til godkendelsesappen",
+          "qrHint": "Åbn din godkendelsesapp, og scan koden.",
+          "manualTitle": "2. Eller indtast nøglen manuelt",
+          "manualHint": "Brug denne nøgle, hvis du ikke kan scanne QR-koden.",
+          "showSecret": "Vis nøgle",
+          "hideSecret": "Skjul nøgle",
+          "copySecret": "Kopiér nøgle",
+          "copyFailed": "Kopiering er ikke mulig. Markér nøglen, og kopiér den manuelt.",
+          "codeLabel": "6-cifret kode",
+          "activate": "Aktivér",
+          "checking": "Kontrollerer …",
+          "preparing": "Forbereder konfigurationen …",
+          "enabledTitle": "Godkendelsesappen er aktiv. Gem nu dine genoprettelseskoder et sikkert sted.",
+          "friendlyName": "Godkendelsesapp",
+          "replayNote": "Bemærk: en kode er gyldig i op til 90 sekunder og kan bruges flere gange i det tidsrum. Kun en loginnøgle beskytter mod svindel med login-sider i realtid."
+        },
+        "sms": {
+          "title": "SMS-kode",
+          "description": "Engangskode via SMS til dit bekræftede telefonnummer.",
+          "unavailable": "SMS-kode er ikke tilgængelig på denne server, fordi der ikke er konfigureret en SMS-udbyder. Vælg i stedet en godkendelsesapp eller en adgangsnøgle.",
+          "unavailableBadge": "Ikke tilgængelig",
+          "setupTitle": "Konfigurer SMS-kode",
+          "setupHint": "Vi sender dig en kode til dit telefonnummer.",
+          "simSwapWarning": "Bemærk: SMS er mindre sikkert end en godkendelsesapp. Den, der får dit nummer overført til et andet SIM-kort, kan modtage dine koder. Vælg om muligt godkendelsesappen eller en loginnøgle.",
+          "numberLabel": "Telefonnummer",
+          "numberHint": "Internationalt format med landekode, for eksempel +49 …",
+          "invalidNumber": "Angiv nummeret i internationalt format, der begynder med + og landekoden.",
+          "sendCode": "Send kode",
+          "sending": "Sender …",
+          "codeLabel": "6-cifret kode",
+          "codeSentTo": "Vi har sendt en kode til {phone}.",
+          "confirm": "Bekræft",
+          "checking": "Kontrollerer …",
+          "resend": "Send koden igen",
+          "changeNumber": "Brug et andet nummer",
+          "friendlyName": "SMS-kode"
+        },
+        "passkey": {
+          "title": "Loginnøgle",
+          "description": "Log ind med fingeraftryk, ansigtsgenkendelse eller en sikkerhedsnøgle. Ingen kode nødvendig.",
+          "setupTitle": "Konfigurer loginnøgle",
+          "setupHint": "Din enhed bekræfter, at det er dig, med fingeraftryk, ansigtsgenkendelse eller en sikkerhedsnøgle.",
+          "checkingSupport": "Kontrollerer enheden …",
+          "unsupportedTitle": "Denne browser understøtter ikke loginnøgler",
+          "unsupportedHint": "Brug en opdateret browser, eller konfigurer godkendelsesappen i stedet.",
+          "securityKeyOnly": "Denne enhed har ingen indbygget bekræftelse (som fingeraftryk eller ansigtsgenkendelse). Til det skal du bruge en sikkerhedsnøgle, du sætter i.",
+          "benefitPhishing": "Beskytter mod falske login-sider.",
+          "benefitNoCode": "Ingen kode at taste ind.",
+          "create": "Opret loginnøgle",
+          "friendlyName": "Loginnøgle",
+          "recommended": "Anbefalet: den sikreste af de tre muligheder.",
+          "creating": "Opretter …",
+          "errors": {
+            "abgebrochen": "Bekræftelsen blev afbrudt eller ikke genkendt. Prøv igen.",
+            "herkunftPasstNicht": "Passkeys er ikke aktiveret for denne adresse. Log ind via den officielle adresse.",
+            "nichtUnterstuetzt": "Denne enhed kan ikke oprette en passkey. Brug godkendelsesappen eller en sikkerhedsnøgle.",
+            "schonVorhanden": "Der findes allerede en passkey til denne konto på denne enhed.",
+            "laeuftBereits": "En passkey-forespørgsel kører allerede. Afslut eller annuller den først.",
+            "zeitUeberschritten": "Tiden til bekræftelse er udløbet. Prøv igen.",
+            "unbekannt": "Passkeyen kunne ikke oprettes. Prøv igen."
+          }
+        },
+        "recovery": {
+          "title": "Genoprettelseskoder",
+          "description": "Engangskoder til de gange, hvor du ikke har adgang til din anden faktor.",
+          "left": "Der er stadig {count} koder tilbage.",
+          "create": "Opret koder",
+          "regenerate": "Opret nye koder",
+          "regenerateHint": "Når du opretter nye koder, mister alle de hidtidige deres gyldighed.",
+          "dialogTitle": "Genoprettelseskoder",
+          "dialogHint": "Engangskoder til de gange, hvor du ikke har adgang til din anden faktor.",
+          "replaceWarning": "Vær opmærksom: dine hidtidige genoprettelseskoder bliver dermed ugyldige.",
+          "passwordLabel": "Nuværende adgangskode",
+          "passwordHint": "Som bekræftelse på, at det virkelig er dig.",
+          "createNow": "Opret koder",
+          "creating": "Opretter …",
+          "createdTitle": "Dine nye genoprettelseskoder. Opbevar dem et sikkert sted.",
+          "noneReturned": "Der blev ikke oprettet nogen koder. Prøv igen."
+        },
+        "remove": "Fjern",
+        "removeDialog": {
+          "totpTitle": "Fjern godkendelsesapp",
+          "smsTitle": "Fjern SMS-kode",
+          "warning": "Derefter beskytter denne faktor ikke længere din konto.",
+          "passwordLabel": "Nuværende adgangskode",
+          "remove": "Fjern",
+          "removing": "Fjerner …",
+          "cancel": "Annuller",
+          "hint": "Bekræft fjernelsen med din nuværende adgangskode.",
+          "passkeyTitle": "Fjern loginnøgle",
+          "lastFactorBlocked": "Det er din sidste anden faktor, og din rolle kræver en. Opret først genoprettelseskoder, eller konfigurer en anden faktor."
+        },
+        "requiredWithDeadline": "En anden faktor er obligatorisk for din rolle. Konfigurer den senest den {date} — derefter er det ikke længere muligt at logge ind uden en anden faktor.",
+        "statusFailed": "Status for tofaktorgodkendelsen kunne ikke indlæses. Genindlæs siden."
+      },
+      "recovery": {
+        "lockoutWarning": "Uden disse koder mister du adgangen til din konto, hvis du ikke længere kan bruge din anden faktor. Opbevar dem et sikkert sted, adskilt fra din adgangskode.",
+        "copy": "Kopiér",
+        "copied": "Kopieret",
+        "copyFailed": "Kopiering er ikke mulig. Download koderne, eller udskriv dem.",
+        "download": "Download",
+        "downloadFailed": "Download er ikke mulig. Kopiér koderne, eller udskriv dem.",
+        "print": "Udskriv",
+        "printBlocked": "Udskriftsvinduet blev blokeret. Tillad pop op-vinduer, eller download koderne.",
+        "printTitle": "Genoprettelseskoder myNextDays",
+        "printHint": "Hver kode virker præcis én gang. Opbevar dette ark et sikkert sted.",
+        "fileHeader": "Genoprettelseskoder myNextDays — hver kode virker præcis én gang. Opbevares sikkert.",
+        "confirmSaved": "Jeg har gemt koderne et sikkert sted.",
+        "confirmHint": "Sæt flueben for at afslutte konfigurationen.",
+        "mustExportFirst": "Kopiér, download eller udskriv koderne først.",
+        "done": "Færdig"
+      }
     },
     "company": {
       "saved": "Data gemt.",
@@ -6288,16 +6668,44 @@
       "spokenLanguages": "Talte sprog",
       "searchLanguage": "Søg sprog…",
       "chooseRole": "Vælg rolle…",
-      "userCreated": "Bruger oprettet",
-      "preferredLanguage": "Foretrukket sprog",
+      "preferredLanguage": "Sprog til e-mails",
       "noLanguageFound": "Intet sprog fundet.",
       "firstName": "Fornavn",
       "lastName": "Efternavn",
       "email": "E-mail",
       "phone": "Telefonnummer",
       "notes": "Bemærkninger",
-      "password": "Adgangskode",
-      "credentialsHint": "Videregiv disse adgangsoplysninger til den nye bruger. Adgangskoden vises kun nu."
+      "title": "Opret bruger",
+      "createdSubtitle": "Invitation sendt.",
+      "stepHints": {
+        "contact": "Tilføj denne brugers kontaktoplysninger.",
+        "extra": "Tilføj yderligere oplysninger om denne bruger.",
+        "role": "Vælg rolle og tilladelser for denne bruger.",
+        "properties": "Tildel objekter til denne bruger."
+      },
+      "done": "Færdig",
+      "cancel": "Annuller",
+      "back": "Tilbage",
+      "next": "Videre",
+      "create": "Opret",
+      "creating": "Opretter…",
+      "role": "Rolle",
+      "requiredFields": "Fornavn, efternavn, e-mail og rolle er påkrævet.",
+      "assignFailed": "Bruger oprettet, men tildeling af objekter mislykkedes: {reason}",
+      "hidePhones": "Skjul telefonnumre på hjemmesiden.",
+      "noAssignNeeded": "Ingen objekttildeling nødvendig",
+      "noAssignNeededHint": "Denne rolle har adgang til alle kontoens objekter. Tildeling af enkelte objekter gælder kun ejere og medarbejdere.",
+      "noProperties": "Ingen boliger endnu",
+      "noPropertiesHint": "Opret dine boliger, så du senere kan tildele dem til dine brugere.",
+      "choosePropertiesHint": "Vælg de objekter, denne bruger får adgang til.",
+      "selectedCount": "{count} valgt",
+      "inviteSent": "Invitation sendt",
+      "inviteSentHint": "Brugeren modtager en e-mail og vælger selv sin adgangskode. Linket er gyldigt i 7 dage.",
+      "inviteResend": "Send invitation igen",
+      "inviteResending": "Sender…",
+      "inviteResent": "Invitationen er sendt igen.",
+      "inviteResendFailed": "Invitationen kunne ikke sendes igen.",
+      "preferredLanguageHint": "På dette sprog modtager den nye bruger invitationen og alle øvrige e-mails."
     },
     "tariff": {
       "oneLess": "Én bolig færre",
@@ -6359,7 +6767,14 @@
       "updated": "Bruger opdateret.",
       "deleted": "Bruger slettet.",
       "generalPermissions": "Generelle rettigheder",
-      "roleChangeHint": "Et rolleskift foreslår passende rettigheder. Du kan derefter justere dem enkeltvis."
+      "roleChangeHint": "Et rolleskift foreslår passende rettigheder. Du kan derefter justere dem enkeltvis.",
+      "edit": "Rediger",
+      "delete": "Slet",
+      "resendInvite": "Send invitation igen",
+      "inviteResent": "Invitation sendt til {email}.",
+      "inviteResendFailed": "Invitationen kunne ikke sendes igen.",
+      "emailLanguage": "Sprog til e-mails",
+      "emailLanguageHint": "På dette sprog modtager denne bruger sine e-mails."
     },
     "staffProperties": {
       "title": "Del boliger"
@@ -6443,7 +6858,19 @@
     "companyPlaceholder": "f.eks. Hotel Søudsigt",
     "namePlaceholder": "For- og efternavn",
     "passwordHint": "Mindst 8 tegn",
-    "passwordRepeat": "Gentag adgangskode"
+    "passwordRepeat": "Gentag adgangskode",
+    "headline": "Hele din udlejning ét sted.",
+    "feature1": "Synkronisér kalendere automatisk",
+    "feature2": "Direkte bookinger på din egen side",
+    "feature3": "Automatisér beskeder til gæster",
+    "withGoogle": "Tilmeld dig med Google",
+    "withApple": "Tilmeld dig med Apple",
+    "or": "eller",
+    "withEmail": "Tilmeld dig med e-mail",
+    "haveAccount": "Har du allerede en konto?",
+    "loginLink": "Log ind her",
+    "loadingHeadline": "Din egen bookingside. Behold 100 % af hver booking.",
+    "loadingText": "Vi opretter din konto …"
   },
   "marketingSite": {
     "stars": "4,5 stjerner",
@@ -7098,5 +7525,156 @@
     "alleGelesen": "Marker alle som læst",
     "erneut": "Genindlæs",
     "ariaMitAnzahl": "Notifikationer ({count} ulæste)"
+  },
+  "auth": {
+    "toLogin": "Til login",
+    "genericError": "Det lykkedes ikke lige nu. Prøv igen senere.",
+    "tokenMissing": {
+      "title": "Ufuldstændigt link",
+      "text": "Dette link er ufuldstændigt. Brug det fulde link fra e-mailen — kopiér det og indsæt det i adresselinjen."
+    },
+    "tokenInvalid": {
+      "title": "Linket er ikke længere gyldigt",
+      "textInvite": "Dette invitationslink er udløbet eller allerede brugt. Kontakt din virksomhed — de kan sende invitationen igen.",
+      "textReset": "Dette link er udløbet eller allerede brugt. Anmod blot om et nyt.",
+      "retry": "Anmod om nyt link"
+    },
+    "invite": {
+      "title": "Opret din adgang",
+      "intro": "Vælg en adgangskode til din myNextDays-adgang. Mindst {min} tegn."
+    },
+    "reset": {
+      "title": "Ny adgangskode",
+      "intro": "Vælg en ny adgangskode. Mindst {min} tegn."
+    },
+    "done": {
+      "titleInvite": "Adgang oprettet",
+      "titleReset": "Adgangskode ændret",
+      "text": "Du kan nu logge ind med din nye adgangskode."
+    },
+    "forgot": {
+      "title": "Glemt adgangskode",
+      "intro": "Indtast din e-mailadresse. Vi sender dig et link, så du kan vælge en ny adgangskode.",
+      "emailLabel": "E-mail",
+      "submit": "Anmod om link",
+      "sending": "Sender…",
+      "sentTitle": "E-mailen er på vej",
+      "sentText": "Hvis der findes en konto til denne adresse, har vi sendt et nulstillingslink. Det er gyldigt i én time.",
+      "spamHint": "Intet modtaget? Se også i din spammappe.",
+      "again": "Anmod igen"
+    },
+    "password": {
+      "newLabel": "Adgangskode",
+      "repeatLabel": "Gentag adgangskode",
+      "submit": "Vælg adgangskode",
+      "saving": "Gemmer…",
+      "mismatch": "De to adgangskoder er ikke ens.",
+      "tooWeak": "Adgangskoden opfylder ikke kravene (mindst {min} tegn).",
+      "show": "Vis adgangskode",
+      "hide": "Skjul adgangskode",
+      "strengthLabel": "Styrke: {level}",
+      "strength": {
+        "1": "svag",
+        "2": "middel",
+        "3": "god",
+        "4": "stærk"
+      },
+      "requirement": {
+        "length": "Mindst {min} tegn",
+        "letter": "Mindst ét bogstav",
+        "digit": "Mindst ét tal"
+      }
+    },
+    "checking": "Linket kontrolleres…",
+    "languageLabel": "Sprog",
+    "languageChange": "Skift sprog",
+    "twoFactor": {
+      "title": "Bekræftelse",
+      "totpHint": "Indtast den 6-cifrede kode fra din godkendelsesapp.",
+      "smsHint": "Indtast den 6-cifrede kode, vi har sendt dig via SMS.",
+      "smsHintWithPhone": "Indtast den 6-cifrede kode, vi har sendt til {phone}.",
+      "codeLabel": "Kode",
+      "confirm": "Bekræft",
+      "checking": "Kontrollerer …",
+      "recoveryHint": "Indtast en af dine genoprettelseskoder.",
+      "recoveryLabel": "Genoprettelseskode",
+      "recoverySingleUse": "Hver kode virker præcis én gang.",
+      "useTotp": "Brug godkendelsesappen",
+      "useSms": "Brug SMS-kode",
+      "useRecovery": "Brug genoprettelseskode",
+      "backToLogin": "Tilbage til login",
+      "factorMissing": "Denne faktor er ikke tilgængelig for din konto. Vælg en anden mulighed.",
+      "passkeyHint": "Bekræft login med din loginnøgle.",
+      "passkeyUse": "Log ind med loginnøgle",
+      "usePasskey": "Brug loginnøgle",
+      "sendCode": "Send kode via SMS",
+      "sending": "Sender …",
+      "smsSent": "Koden er sendt.",
+      "resend": "Send koden igen",
+      "recoveryRedeemedHint": "Koden er indløst, men den er ikke nok til login i sig selv. Log ind med en af de faktorer, du har konfigureret, eller kontakt dit team."
+    },
+    "mfaSetup": {
+      "title": "Konfigurer tofaktorgodkendelse",
+      "intro": "En anden faktor er obligatorisk for din rolle. Konfigurer den nu for at fortsætte.",
+      "why": "Som administrator har du adgang til økonomidata, gæstedata og indstillingerne for hele virksomheden. En anden faktor forhindrer, at en stjålet adgangskode alene er nok.",
+      "goToSettings": "Konfigurer nu",
+      "later": "Påmind mig senere",
+      "laterHint": "Du kan stadig udskyde konfigurationen. Vi spørger igen ved næste login.",
+      "introWithDeadline": "En anden faktor er obligatorisk for din rolle. Konfigurer den senest den {date} — derefter er det ikke længere muligt at logge ind uden en anden faktor."
+    }
+  },
+  "sprache": {
+    "label": "Sprog til e-mails",
+    "hint": "Vi sender e-mails til denne person på dette sprog.",
+    "none": "— ikke angivet"
+  },
+  "neuerungen": {
+    "eyebrow": "Produktnyheder",
+    "titel": "Nyheder",
+    "unterzeile": "Alt det nye i myNextDays — nyeste først.",
+    "neuAnzahl": "{anzahl, plural, one {# ny} other {# nye}}",
+    "ungelesen": "Ny",
+    "veroeffentlichtAm": "Offentliggjort den {datum}",
+    "leer": "Der er endnu ingen nyheder.",
+    "ladefehler": "Kunne ikke indlæses: {grund}",
+    "mehrLaden": "Indlæs ældre",
+    "aufklappen": "Vis detaljer",
+    "zuklappen": "Skjul detaljer",
+    "kategorie": {
+      "neuerung": "Ny funktion",
+      "wartung": "Vedligeholdelse",
+      "hinweis": "Bemærkning",
+      "wichtig": "Vigtigt"
+    },
+    "popup": {
+      "ariaLabel": "Meddelelsens indhold",
+      "gelesen": "Forstået",
+      "wirdGespeichert": "Gemmer …",
+      "erneut": "Prøv igen",
+      "fehler": "Kunne ikke bekræftes: {grund}",
+      "weiter": "Videre",
+      "vonAnzahl": "Meddelelse {nummer}"
+    }
+  },
+  "login": {
+    "title": "Log ind",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Adgangskode",
+    "showPassword": "Vis adgangskode",
+    "hidePassword": "Skjul adgangskode",
+    "forgot": "Har du glemt din adgangskode?",
+    "stayLoggedIn": "Forbliv logget ind",
+    "submit": "Log ind",
+    "submitting": "Logger ind…",
+    "google": "Google",
+    "apple": "Apple",
+    "noAccount": "Endnu ikke myNextDays-kunde?",
+    "signupLink": "Prøv gratis nu",
+    "mfaTitle": "Bekræftelse",
+    "mfaIntro": "Indtast den 6-cifrede kode fra din authenticator-app. En gendannelseskode virker også.",
+    "mfaCodeLabel": "Kode",
+    "mfaSubmit": "Bekræft",
+    "mfaChecking": "Kontrollerer…",
+    "mfaBack": "Tilbage til login"
   }
 }
