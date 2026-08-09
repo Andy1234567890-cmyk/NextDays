@@ -64,6 +64,7 @@ import { EinschraenkungenEditor } from "@/components/objekte/pricing/einschraenk
 import { ExtraEditor } from "@/components/objekte/pricing/extra-editor";
 import { GebuehrAuswahl } from "@/components/objekte/pricing/gebuehr-auswahl";
 import { GebuehrEditor } from "@/components/objekte/pricing/gebuehren-editor";
+import { GebuehrenZuordnung } from "@/components/objekte/pricing/gebuehren-zuordnung";
 import {
   PortalReichweite,
   PortalReichweiteChip,
@@ -172,6 +173,11 @@ type Section =
 
 export function PricingForm({ initial }: { initial: Property }) {
   const t = useTranslations("objects");
+  // Eigener Namensraum: die Gebühren-Zuordnung gehört fachlich zur
+  // Abrechnungs-Konfiguration (owner_billing) und wird an zwei Orten
+  // verwendet — hier und im Eigentümer-Slide-over. Ein zweiter Satz Texte
+  // unter `objects` würde beim ersten Wortlaut-Wechsel auseinanderlaufen.
+  const tBilling = useTranslations("ownerBilling");
   const locale = useLocale();
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
@@ -655,6 +661,18 @@ export function PricingForm({ initial }: { initial: Property }) {
           ) : undefined
         }
       />
+
+      {/* Wem gehört welche Gebühr? Steht direkt unter der Gebührenliste, weil
+          es dieselben Posten betrifft — die Zuordnung gilt aber für den
+          GESAMTEN Betrieb (je Gebührenart), nicht nur für dieses Objekt.
+          Deshalb der eigene Abschnitt statt eines Feldes je Gebühr: 19
+          gleichartige Reinigungsgebühren brauchen EINE Entscheidung. */}
+      <PreisAbschnitt
+        title={tBilling("classifyTitle")}
+        hint={tBilling("classifyScopeHint")}
+      >
+        <GebuehrenZuordnung />
+      </PreisAbschnitt>
 
       {/* Was bei Airbnb schon hinterlegt ist, muss der Betrieb nicht abtippen.
           Rendert nichts, wenn das Objekt nicht bei Airbnb hängt oder dort

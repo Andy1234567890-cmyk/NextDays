@@ -3,6 +3,12 @@
 // Slide-over mit den Stammdaten/Auszahlungs-Einstellungen + Objekt-Zuordnung
 // eines Eigentümers (die frühere Detail-Maske). Von der Eigentümer-Statement-
 // Seite aus über „Stammdaten" erreichbar.
+//
+// Darunter der ABRECHNUNGSVERTRAG mit Zeitachse. Er steht bewusst hier und
+// nicht auf einer eigenen Seite: der Provisionssatz gehört zu den
+// Auszahlungs-Einstellungen, die direkt darüber gepflegt werden. Getrennt
+// bliebe für die Agentur unklar, welche der beiden Angaben gilt.
+import { Abrechnungsvertrag } from "@/components/eigentuemer/abrechnungsvertrag";
 import { OwnerDetail } from "@/components/eigentuemer/owner-detail";
 import {
   Sheet,
@@ -37,6 +43,7 @@ export function OwnerMasterSheet({
           <SheetDescription>{owner.name}</SheetDescription>
         </SheetHeader>
         <OwnerDetail initial={owner} properties={properties} embedded />
+        <Abrechnungsvertrag ownerId={owner.id} properties={properties} />
       </SheetContent>
     </Sheet>
   );
