@@ -302,7 +302,19 @@ export async function getAiReply(
 }
 
 // --- Vorlagen ---------------------------------------------------------------
-export type MessageTemplate = { id: string; title: string; body: string };
+/** Eine Nachrichten-Vorlage.
+ *
+ *  `body_html` ist das AUTORENFORMAT (was der Vorlagen-Editor führt),
+ *  `body` der daraus SERVERSEITIG abgeleitete Klartext — und der bleibt die
+ *  Versandquelle: die Portale übertragen im Gast-Chat keinen Rich-Text.
+ *  `body_html === ""` heißt „noch nie formatiert" (Bestandsvorlage); der
+ *  Editor baut seinen Inhalt dann aus `body` auf. */
+export type MessageTemplate = {
+  id: string;
+  title: string;
+  body: string;
+  body_html: string;
+};
 
 export async function listTemplates(): Promise<
   Result<{ items: MessageTemplate[]; total: number }>
@@ -310,16 +322,20 @@ export async function listTemplates(): Promise<
   return call<{ items: MessageTemplate[]; total: number }>("/templates");
 }
 
+/** Anlegen/Ändern schicken NUR `body_html`. Ein mitgeschicktes `body` ignoriert
+ *  der Server ohnehin — er leitet den Klartext selbst ab, damit es genau EINE
+ *  Umwandlung gibt (`felder.html_zu_text`) und nicht zwei, die auseinander
+ *  laufen. */
 export async function createTemplate(input: {
   title: string;
-  body: string;
+  body_html: string;
 }): Promise<Result<MessageTemplate>> {
   return call<MessageTemplate>("/templates", { method: "POST", body: input });
 }
 
 export async function updateTemplate(
   id: string,
-  input: { title: string; body: string },
+  input: { title: string; body_html: string },
 ): Promise<Result<MessageTemplate>> {
   return call<MessageTemplate>(`/templates/${id}`, { method: "PUT", body: input });
 }

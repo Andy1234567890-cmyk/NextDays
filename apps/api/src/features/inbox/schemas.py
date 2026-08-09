@@ -7,7 +7,50 @@ hilft beim Beantworten. Threads sind mit der lokalen Reservierung verknüpft.
 """
 from typing import Literal
 
-from pydantic import BaseModel
+import nh3
+from pydantic import BaseModel, field_validator
+
+# --- Allowlist für Vorlagen-HTML (Wurzel 8) ---------------------------------
+# Eigene Liste im Slice statt Import aus announcements/site_config: die
+# Slice-Grenze ist Absicht (siehe announcements/schemas.py). Die Angreifermodelle
+# unterscheiden sich, und wer eine Liste ändert, hat NICHT die andere geändert.
+#
+# Was eine Nachrichten-Vorlage darf, ist durch ihr ZIEL begrenzt: der Text geht
+# als KLARTEXT an Airbnb/Booking (`html_zu_text`). Alles, was im Klartext keine
+# Entsprechung hat, wäre reine Editor-Zierde, die beim Gast spurlos verschwindet
+# — und jedes zusätzlich erlaubte Element ist Angriffsfläche ohne Gegenwert.
+#
+# BEWUSST NICHT dabei:
+#   `img`      — eine Vorlage überträgt kein Bild; ein `src` auf einen fremden
+#                Host meldete IP und Zeitpunkt jedes Betrachters weiter.
+#   `span`/`style` — Inline-CSS ist im Klartext bedeutungslos.
+#   `h1`–`h6`, `blockquote`, `pre` — der Chat kennt keine Überschriftenebene.
+_VORLAGEN_TAGS = {
+    "p", "br", "strong", "b", "em", "i", "u", "s", "ul", "ol", "li", "a",
+}
+# `rel` NICHT hier — nh3 setzt es selbst via `link_rel` (sonst ValueError).
+_VORLAGEN_ATTRS = {"a": {"href", "title"}}
+
+
+def sanitize_vorlagen_html(value: str | None) -> str:
+    """Vorlagen-HTML serverseitig mit echtem Allowlist-Parser säubern.
+
+    nh3 (ammonia, Rust) PARST das HTML, statt es per Regex zu beschneiden:
+    `<script>`, `onerror=`, `javascript:`-hrefs und `data:`-URIs fallen damit
+    weg, unabhängig von der Schreibweise. „HTML NIE per Regex säubern"
+    (CLAUDE.md, Wurzel 8) — ein Regex-Sanitizer ist eine Aufzählung der Angriffe,
+    an die der Autor gerade gedacht hat.
+
+    Gesäubert wird beim SPEICHERN, in create UND update: läge der Validator nur
+    am POST, wäre PUT das Loch, durch das rohes HTML einläuft.
+    """
+    return nh3.clean(
+        value or "",
+        tags=_VORLAGEN_TAGS,
+        attributes=_VORLAGEN_ATTRS,
+        url_schemes={"http", "https", "mailto", "tel"},
+        link_rel="noopener noreferrer nofollow",
+    )
 
 
 class InboxThread(BaseModel):
@@ -195,9 +238,19 @@ class AiReplyResponse(BaseModel):
 
 # --- Vorlagen ---------------------------------------------------------------
 class MessageTemplate(BaseModel):
+    """Eine Vorlage in BEIDEN Formen.
+
+    `body_html` ist das AUTORENFORMAT (der Editor arbeitet damit), `body` der
+    daraus abgeleitete Klartext und die VERSANDQUELLE — Airbnb und Booking
+    übertragen im Gast-Chat nur Text. Leeres `body_html` heißt „noch nie
+    formatiert": das Frontend baut sich daraus per `textZuHtml` einen
+    Editor-Inhalt aus dem Klartext (kein Backfill nötig).
+    """
+
     id: str
     title: str
     body: str
+    body_html: str = ""
 
 
 class MessageTemplateList(BaseModel):
@@ -206,8 +259,22 @@ class MessageTemplateList(BaseModel):
 
 
 class TemplateUpsert(BaseModel):
+    """Was der Editor schickt. Maßgeblich ist `body_html`.
+
+    `body` wird ENTGEGENGENOMMEN, aber NICHT übernommen: der Server leitet den
+    Klartext selbst aus dem gesäuberten `body_html` ab (Wurzel 3 — der Anfrage
+    nicht vertrauen). Sonst könnte ein Client harmloses HTML zeigen und einen
+    ganz anderen Text versenden lassen, denn der Versand nimmt `body`.
+    """
+
     title: str
-    body: str
+    body: str = ""
+    body_html: str = ""
+
+    @field_validator("body_html")
+    @classmethod
+    def _html_saeubern(cls, wert: str) -> str:
+        return sanitize_vorlagen_html(wert)
 
 
 # --- Platzhalter (Felder) ----------------------------------------------------

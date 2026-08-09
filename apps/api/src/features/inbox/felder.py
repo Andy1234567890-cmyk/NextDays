@@ -27,9 +27,11 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from html import unescape
+from html.parser import HTMLParser
 
 # {{ feld }} — Leerzeichen innen erlaubt, damit ein aus der UI eingefügtes Feld
 # auch nach manuellem Nachtippen noch greift.
@@ -40,7 +42,35 @@ from decimal import Decimal, InvalidOperation
 # „{{WifiInformation}}". Was wir nicht erkennen, können wir auch nicht
 # beanstanden; deshalb lieber erkennen und dann sauber ablehnen oder übersetzen
 # (`aufloesen_schluessel`).
-MUSTER = re.compile(r"\{\{\s*([A-Za-z0-9_-]+)\s*\}\}")
+#
+# WHITESPACE MITTENDRIN — auch ZEILENUMBRÜCHE: Seit der Editor HTML schreibt,
+# kann ein Platzhalter über zwei BLÖCKE zerrissen werden. Wer mitten in
+# `{{guest_name}}` Enter drückt, erzeugt `<p>Hallo {{guest</p><p>_name}}</p>`;
+# nach `html_zu_text` steht dort „{{guest\n\n_name}}". Mit dem alten Muster (nur
+# `[A-Za-z0-9_-]` innen) war das KEIN Platzhalter mehr: kein 422 beim Speichern,
+# keine Meldung beim Versand — der Gast las wörtlich „{{guest". Der eingebettete
+# Whitespace wird deshalb hier MIT erfasst und erst in
+# `_schluessel_normalisieren` herausgenommen. Der Treffer selbst behält seine
+# Rohform, damit `MUSTER.sub` genau das ersetzt, was im Text steht.
+#
+# Der einfache Fall (`{{guest<strong>_name</strong>}}`) löst sich schon dadurch,
+# dass `html_zu_text` VOR der Prüfung läuft und die Tags ersatzlos entfernt —
+# diese Reihenfolge ist deshalb zwingend (vorlagen.create_template).
+MUSTER = re.compile(r"\{\{\s*([A-Za-z0-9_-][A-Za-z0-9_\-\s]*?)\s*\}\}")
+
+# Innerer Whitespace eines Platzhalternamens (inkl. Umbruch) — der Riss, den ein
+# Absatzwechsel mitten im Namen hinterlassen hat.
+_INNEN_WHITESPACE = re.compile(r"\s+")
+
+
+def _schluessel_normalisieren(roh: str) -> str:
+    """Roher Musterfund → Name ohne eingebetteten Whitespace.
+
+    „guest\\n\\n_name" → „guest_name". Ein Katalog-Schlüssel enthält NIE
+    Whitespace; das Zusammenziehen kann also keinen gültigen Namen zerstören,
+    rettet aber den im Editor zerrissenen.
+    """
+    return _INNEN_WHITESPACE.sub("", roh)
 
 
 class FeldFehlt(Exception):
@@ -127,45 +157,296 @@ class Kontext:
     company_website: str | None = None
 
 
-# Block-Elemente, die im Klartext einen Zeilenumbruch bedeuten. `li` bekommt
-# zusätzlich einen Aufzählungsstrich — eine Hausordnung ohne Gliederung ist im
-# Chat unlesbar.
-_UMBRUCH_TAGS = re.compile(
-    r"</\s*(p|div|h[1-6]|li|ul|ol|tr|blockquote)\s*>|<\s*br\s*/?>", re.I
-)
-_LISTENPUNKT = re.compile(r"<\s*li[^>]*>", re.I)
-_ALLE_TAGS = re.compile(r"<[^>]+>")
-_ENTITAETEN = {
-    "&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">",
-    "&quot;": '"', "&#39;": "'", "&apos;": "'",
-}
+# Drei oder mehr Umbrüche → eine Leerzeile. Läuft ERST NACH der Absatz- und
+# Listenbildung: davor wüsste man nicht, welcher Umbruch aus einer Absatzgrenze
+# stammt und welcher aus dem Einrücken der Quelle.
 _LEERZEILEN = re.compile(r"\n{3,}")
+
+# Blöcke, deren ENDE eine Leerzeile bedeutet (ein Absatz steht für sich). `li`
+# ist bewusst NICHT dabei — zwischen den Punkten EINER Liste gehört ein
+# einfacher Umbruch, sonst zerfällt die Liste beim Zurücklesen in n Einzellisten
+# (`textZuHtml` im Composer trennt Absätze an der Leerzeile).
+_ABSATZ_TAGS = frozenset(
+    {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "tr", "table"}
+)
+_LISTEN_TAGS = frozenset({"ul", "ol"})
+# Ersatzlos entfernt, ohne Ersatzzeichen: ein „*fett*" im Portal-Chat wäre nur
+# ein weiteres Zeichen, das der Gast mitliest — Airbnb rendert kein Markdown.
+_INLINE_TAGS = frozenset({"strong", "b", "em", "i", "u", "s", "strike", "span", "code"})
+
+# Tags, deren INHALT kein Text ist, sondern Programm bzw. Stilregeln.
+# `HTMLParser` reicht diesen Inhalt als ganz normale Daten durch — ohne diese
+# Sperre landete „alert(1)" aus einem `<script>` als sichtbarer Satz in der
+# Nachricht an den Gast. Der frühere `nh3.clean(tags=set())`-Weg in
+# `host_messages` verwarf ihn; dieser Parser muss dasselbe tun.
+_STUMME_TAGS = frozenset({"script", "style", "template", "title", "head", "noscript"})
+
+# Einrückung je Verschachtelungsebene einer Liste.
+_EINRUECKUNG = "  "
+
+
+@dataclass
+class _Liste:
+    """Eine offene Liste im Durchlauf: geordnet? und der nächste Zähler."""
+
+    geordnet: bool
+    zaehler: int = 1
+    # Nur für die Einrückung: die Ebene ergibt sich aus der Stapeltiefe.
+    ebene: int = 0
+
+
+@dataclass
+class _Sammler:
+    """Der bisher erzeugte Klartext als Stücke (billiger als str-Konkatenation)."""
+
+    stuecke: list[str] = field(default_factory=list)
+
+    def text(self, wert: str) -> None:
+        if wert:
+            self.stuecke.append(wert)
+
+    def umbruch(self, anzahl: int) -> None:
+        """Am Ende so viele „\\n" sicherstellen, wie verlangt — ohne sie zu
+        verdoppeln. Zwei aufeinanderfolgende `</p>` sollen EINE Leerzeile geben,
+        nicht zwei."""
+        vorhanden = 0
+        for stueck in reversed(self.stuecke):
+            rest = stueck
+            while rest.endswith("\n"):
+                vorhanden += 1
+                rest = rest[:-1]
+            if rest:
+                break
+        else:
+            return  # noch nichts geschrieben → führende Umbrüche unterdrücken
+        if anzahl > vorhanden:
+            self.stuecke.append("\n" * (anzahl - vorhanden))
+
+    def fertig(self) -> str:
+        return "".join(self.stuecke)
+
+
+class _KlartextParser(HTMLParser):
+    """HTML → Klartext mit erhaltener Gliederung.
+
+    WARUM EIN PARSER UND KEIN REGEX: Nummerierung ist ein ZUSTAND. Ein `<li>`
+    weiß aus sich heraus nicht, ob es das zweite oder das siebte seiner Liste
+    ist, ob seine Liste geordnet ist und auf welcher Ebene sie liegt — ein
+    einzelnes `re.sub` kann das prinzipiell nicht wissen und machte deshalb aus
+    JEDEM `<li>` ein „- ". Aus „1. 2. 3." im Editor wurde beim Gast „- - -",
+    und beim Zurücklesen war die Nummerierung endgültig weg.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._aus = _Sammler()
+        self._listen: list[_Liste] = []
+        # Ziel des offenen `<a>`: wird beim `</a>` als „ (URL)" nachgestellt.
+        self._link_ziel: str | None = None
+        self._link_text: list[str] = []
+        # True zwischen dem Setzen einer Listenmarke und dem ersten Textzeichen
+        # dahinter (siehe `_absatz_umbrueche`).
+        self._nach_marke = False
+        # Tiefe offener `_STUMME_TAGS` — solange > 0 wird nichts ausgegeben.
+        self._stumm = 0
+
+    # -- Ausgabe ----------------------------------------------------------
+    def _schreiben(self, wert: str) -> None:
+        """Text an die richtige Senke — im Link erst sammeln, sonst direkt."""
+        if self._link_ziel is not None:
+            self._link_text.append(wert)
+            self._nach_marke = False
+            return
+        self._aus.text(wert)
+
+    # -- HTMLParser-Haken --------------------------------------------------
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        name = tag.lower()
+        if name in _STUMME_TAGS:
+            self._stumm += 1
+            return
+        if self._stumm:
+            return
+        if name == "br":
+            # Weicher Umbruch INNERHALB eines Absatzes: genau ein „\n". Im
+            # offenen Link gehört er in den gesammelten Linktext, sonst direkt
+            # in die Ausgabe (dort ohne zu verdoppeln).
+            if self._link_ziel is not None:
+                self._schreiben("\n")
+            else:
+                self._aus.umbruch(1)
+            return
+        if name in _LISTEN_TAGS:
+            self._liste_oeffnen(name, attrs)
+            return
+        if name == "li":
+            self._punkt_oeffnen()
+            return
+        if name == "a":
+            self._link_ziel = self._href(attrs)
+            self._link_text = []
+            return
+        if name in _ABSATZ_TAGS:
+            self._aus.umbruch(self._absatz_umbrueche())
+
+    def handle_startendtag(
+        self, tag: str, attrs: list[tuple[str, str | None]]
+    ) -> None:
+        # `<br/>` erreicht `handle_starttag` NICHT — ohne diesen Zweig fielen
+        # alle selbstschließenden Umbrüche still unter den Tisch.
+        self.handle_starttag(tag, attrs)
+
+    def handle_endtag(self, tag: str) -> None:
+        name = tag.lower()
+        if name in _STUMME_TAGS:
+            self._stumm = max(0, self._stumm - 1)
+            return
+        if self._stumm:
+            return
+        if name == "a":
+            self._link_schliessen()
+        elif name in _LISTEN_TAGS:
+            if self._listen:
+                self._listen.pop()
+            # Nach der Liste beginnt ein neuer Absatz — es sei denn, sie steckte
+            # in einem Punkt der äußeren Liste. Dort würde die Leerzeile die
+            # äußere Liste in zwei Listen zerschneiden.
+            self._aus.umbruch(1 if self._listen else 2)
+        elif name == "li":
+            # Zwischen den Punkten EINER Liste nur ein Umbruch.
+            self._aus.umbruch(1)
+        elif name in _ABSATZ_TAGS:
+            self._aus.umbruch(self._absatz_umbrueche())
+        # `_INLINE_TAGS` (strong/em/u/…) fallen ersatzlos durch: kein „*", kein
+        # „_" — die Portale rendern im Gast-Chat kein Markdown.
+
+    def handle_data(self, data: str) -> None:
+        if self._stumm:
+            return  # Skript-/Stil-Inhalt ist kein Text für den Gast
+        # Der Zeilenumbruch der QUELLE ist Formatierung des Markups, nicht des
+        # Textes (`<p>\n  Hallo\n</p>`). Er wird zu einem Leerzeichen — die
+        # echten Umbrüche kommen ausschließlich aus den Tags.
+        wert = re.sub(r"\s+", " ", data.replace("\xa0", " "))
+        if not wert.strip():
+            # Reiner Zwischenraum zwischen zwei Blöcken: nur behalten, wenn
+            # mitten in einer Zeile (sonst entstünden führende Leerzeichen).
+            if wert and self._aus.stuecke and not self._aus.fertig().endswith("\n"):
+                self._schreiben(" ")
+            return
+        self._nach_marke = False
+        self._schreiben(wert)
+
+    # -- Zustand ------------------------------------------------------------
+    def _absatz_umbrueche(self) -> int:
+        """Wie viele Umbrüche eine Absatzgrenze hier bedeutet.
+
+        TipTap verpackt jeden Listenpunkt in ein eigenes `<p>`
+        (`<li><p>Nicht rauchen</p></li>`). Nähme man dieses `<p>` wörtlich als
+        Absatz, risse es den Punkt von seiner Marke los — aus „- Nicht rauchen"
+        wurde „-\\n\\nNicht rauchen", also ein leerer Aufzählungspunkt gefolgt
+        von einer Textwand. INNERHALB einer Liste zählt eine Absatzgrenze
+        deshalb nur als einfacher Umbruch.
+        """
+        if not self._listen:
+            return 2
+        # Direkt HINTER der Marke („- ", „1. ") darf gar nicht umgebrochen
+        # werden — sonst stünde die Marke allein auf ihrer Zeile.
+        return 0 if self._nach_marke else 1
+
+    def _liste_oeffnen(self, name: str, attrs: list[tuple[str, str | None]]) -> None:
+        start = 1
+        if name == "ol":
+            for schluessel, wert in attrs:
+                if schluessel.lower() == "start" and wert:
+                    try:
+                        start = int(wert.strip())
+                    except ValueError:
+                        start = 1  # kaputtes Attribut → normale Zählung
+        self._listen.append(
+            _Liste(geordnet=name == "ol", zaehler=start, ebene=len(self._listen))
+        )
+        # Eine Liste beginnt einen neuen Block. Steckt sie IN einem Punkt
+        # (Verschachtelung), reicht ein einfacher Umbruch — sonst risse die
+        # Leerzeile die äußere Liste auseinander.
+        self._aus.umbruch(1 if len(self._listen) > 1 else 2)
+
+    def _punkt_oeffnen(self) -> None:
+        self._aus.umbruch(1)
+        if not self._listen:
+            # `<li>` ohne Liste (kommt aus fremdem Markup vor) — wie `ul`.
+            self._aus.text("- ")
+            self._nach_marke = True
+            return
+        aktuell = self._listen[-1]
+        if aktuell.geordnet:
+            marke = f"{aktuell.zaehler}. "
+            aktuell.zaehler += 1
+        else:
+            marke = "- "
+        self._aus.text(_EINRUECKUNG * aktuell.ebene + marke)
+        self._nach_marke = True
+
+    @staticmethod
+    def _href(attrs: list[tuple[str, str | None]]) -> str:
+        for schluessel, wert in attrs:
+            if schluessel.lower() == "href" and wert:
+                return wert.strip()
+        return ""
+
+    def _link_schliessen(self) -> None:
+        ziel = self._link_ziel or ""
+        text = "".join(self._link_text)
+        self._link_ziel = None
+        self._link_text = []
+        if not text.strip():
+            # Linktext leer → wenigstens die URL, sonst wäre der Link weg.
+            self._aus.text(ziel)
+            return
+        # Ziel in Klammern HINTER den Text — außer der Text IST schon die URL.
+        # Dieselbe Regel wie `knotenText` im Composer (composer-editor.tsx),
+        # damit Hin- und Rückweg dasselbe Ergebnis liefern.
+        self._aus.text(text if not ziel or ziel == text.strip() else f"{text} ({ziel})")
+
+    def ergebnis(self) -> str:
+        return self._aus.fertig()
 
 
 def html_zu_text(roh: str) -> str:
-    """Rich-Text aus der Objektpflege → Klartext für eine Chat-Nachricht.
+    """Rich-Text aus Editor/Objektpflege → Klartext für eine Chat-Nachricht.
 
-    DER GRUND: Die Objekt-Texte („Hausordnung", „Check-out") werden unter
-    `/objekte/{id}/nachrichten` in einem Rich-Text-Editor gepflegt und liegen
-    als HTML vor (`<p>`, `<strong>`, `<ul><li>`). Unverändert in eine
+    DER GRUND: Die Objekt-Texte („Hausordnung", „Check-out") und seit dem
+    Formatierungs-Editor auch die Nachrichten-VORLAGEN liegen als HTML vor
+    (`<p>`, `<strong>`, `<ul><li>`, `<a href>`). Unverändert in eine
     Portal-Nachricht gesetzt, liest der Gast die Tags mit — Airbnb und
     Booking.com übertragen reinen Text.
 
     Kein Tag-Strippen allein (`nh3.clean(tags=set())`): das ergäbe eine
     Textwand, in der eine zwölfpunktige Hausordnung zu einem Absatz verklebt.
-    Die GLIEDERUNG ist hier die Information — deshalb werden Block-Enden zu
-    Zeilenumbrüchen und Listenpunkte zu „- ".
+    Die GLIEDERUNG ist hier die Information. Vier Regeln machen sie aus:
+
+    * `<ol>` zählt („1. ", „2. ") und achtet auf `start`; `<ul>` setzt „- ".
+    * `</p>` ist eine LEERZEILE, `<br>` nur ein Umbruch.
+    * Zwischen den Punkten EINER Liste steht ein einfacher Umbruch — mit einer
+      Leerzeile zerfiele die Liste beim Zurücklesen in n Einzellisten.
+    * `<a href="URL">Text</a>` wird zu „Text (URL)": ein Ziel, das nur im
+      `href` steht, wäre im Portal-Chat verloren.
+
+    Diese Funktion ist damit die exakte Umkehrung von `textZuHtml`/
+    `dokumentZuText` im Composer — die Rundreise Klartext → HTML → Klartext
+    muss ab der ersten Generation stabil sein.
     """
     if not roh:
         return ""
-    text = _LISTENPUNKT.sub("\n- ", roh)
-    text = _UMBRUCH_TAGS.sub("\n", text)
-    text = _ALLE_TAGS.sub("", text)
-    for entitaet, zeichen in _ENTITAETEN.items():
-        text = text.replace(entitaet, zeichen)
-    # Zeilenweise trimmen: das Markup hinterlässt Einrückungen, die im Chat
-    # wie ein Formatierungsfehler aussehen.
-    zeilen = [z.strip() for z in text.split("\n")]
+    parser = _KlartextParser()
+    parser.feed(roh)
+    parser.close()
+    # `convert_charrefs=True` löst die Entitäten bereits im Parser auf; der
+    # zweite Durchgang fängt nur, was in Attributwerten steckte (Link-Ziele).
+    text = unescape(parser.ergebnis())
+    # Zeilenweise trimmen — aber die Einrückung verschachtelter Listenpunkte
+    # bleibt: sie IST die Gliederung, kein Markup-Rest.
+    zeilen = [z.rstrip() if z.startswith(_EINRUECKUNG) else z.strip()
+              for z in text.split("\n")]
     return _LEERZEILEN.sub("\n\n", "\n".join(zeilen)).strip()
 
 
@@ -559,11 +840,17 @@ _NULL_IST_GUELTIG: frozenset[str] = frozenset()
 
 
 def benutzte_felder(text: str) -> list[str]:
-    """Alle Feldschlüssel, die im Text vorkommen (Reihenfolge, ohne Dubletten)."""
+    """Alle Feldschlüssel, die im Text vorkommen (Reihenfolge, ohne Dubletten).
+
+    Ein im Editor über zwei Absätze zerrissener Name kommt hier ZUSAMMENGEZOGEN
+    an („{{guest\\n\\n_name}}" → „guest_name") — sonst gälte er weder als
+    bekannt noch als unbekannt und der Gast läse den Rohtext.
+    """
     gesehen: list[str] = []
     for treffer in MUSTER.findall(text or ""):
-        if treffer not in gesehen:
-            gesehen.append(treffer)
+        name = _schluessel_normalisieren(treffer)
+        if name and name not in gesehen:
+            gesehen.append(name)
     return gesehen
 
 
@@ -604,4 +891,9 @@ def rendern(text: str, kontext: Kontext) -> str:
         werte[geschrieben] = str(wert)
     if fehlt:
         raise FeldFehlt(fehlt)
-    return MUSTER.sub(lambda m: werte.get(m.group(1), m.group(0)), text)
+    # Nachgeschlagen wird der NORMALISIERTE Name, ersetzt der ROHE Treffer —
+    # ein zerrissenes „{{guest\\n\\n_name}}" verschwindet damit vollständig, statt
+    # seinen zweiten Teil im Text stehen zu lassen.
+    return MUSTER.sub(
+        lambda m: werte.get(_schluessel_normalisieren(m.group(1)), m.group(0)), text
+    )

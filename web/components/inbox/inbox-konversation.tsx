@@ -229,7 +229,14 @@ export function Conversation({
   /** Vorlage einsetzen — serverseitig für DIESEN Thread aufgelöst, damit im
    *  Feld der fertige Text steht und nicht `{{guest_name}}`. Fehlt der Wert
    *  eines Feldes (422), wird der Rohtext eingesetzt und der Grund gezeigt:
-   *  besser sichtbar unvollständig als klammheimlich falsch. */
+   *  besser sichtbar unvollständig als klammheimlich falsch.
+   *
+   *  Übergeben wird `tpl.body` (KLARTEXT), nicht `tpl.body_html`: der
+   *  Chat-Composer ist und bleibt Klartext, weil die Portale im Gast-Chat
+   *  keinen Rich-Text übertragen. `body` ist genau der serverseitig aus dem
+   *  HTML abgeleitete Text — die Gliederung (Listen, Absätze, Links) steckt
+   *  darin bereits als Zeichen, und `textZuHtml` im Composer macht daraus im
+   *  Editor wieder echte Knoten. */
   function vorlageEinfuegen(body: string) {
     setShowTemplates(false);
     void (async () => {
@@ -965,7 +972,6 @@ export function Conversation({
                 underline: t("formatUnderline"),
                 bulletList: t("formatBulletList"),
                 orderedList: t("formatOrderedList"),
-                align: t("formatAlign"),
                 link: t("formatLink"),
                 code: t("formatCode"),
                 linkPrompt: t("formatLinkPrompt"),

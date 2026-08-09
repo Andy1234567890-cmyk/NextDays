@@ -9,6 +9,8 @@ import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import {
   ComposerEditor,
+  htmlIstLeer,
+  textZuHtml,
   type ComposerGriff,
 } from "@/components/inbox/composer-editor";
 import { FeldPicker } from "@/components/inbox/feld-picker";
@@ -25,7 +27,10 @@ export function TemplatesTab() {
   const [items, setItems] = useState<MessageTemplate[]>([]);
   const [editing, setEditing] = useState<MessageTemplate | null>(null);
   const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
+  // Das AUTORENFORMAT der Vorlage ist HTML (`body_html`). Den Klartext für den
+  // Versand (`body`) leitet der Server daraus ab — er ist die Versandquelle,
+  // wird hier aber nie geschrieben; ein mitgeschicktes `body` ignoriert die API.
+  const [bodyHtml, setBodyHtml] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const editorGriff = useRef<ComposerGriff | null>(null);
@@ -41,19 +46,22 @@ export function TemplatesTab() {
   function reset() {
     setEditing(null);
     setTitle("");
-    setBody("");
+    setBodyHtml("");
     setError(null);
   }
 
   function save() {
-    if (!title.trim() || !body.trim()) {
+    // Leer-Prüfung auf den INHALT, nicht auf die Zeichenkette: ein leerer
+    // Editor liefert „<p></p>" — das ist als String nicht leer, als Nachricht
+    // schon.
+    if (!title.trim() || htmlIstLeer(bodyHtml)) {
       setError(t("templateRequired"));
       return;
     }
     start(async () => {
       const res = editing
-        ? await updateTemplate(editing.id, { title, body })
-        : await createTemplate({ title, body });
+        ? await updateTemplate(editing.id, { title, body_html: bodyHtml })
+        : await createTemplate({ title, body_html: bodyHtml });
       if (res.ok) {
         reset();
         await load();
@@ -66,7 +74,11 @@ export function TemplatesTab() {
   function edit(tpl: MessageTemplate) {
     setEditing(tpl);
     setTitle(tpl.title);
-    setBody(tpl.body);
+    // `body_html === ""` heißt „noch nie formatiert" (Bestandsvorlage). Dann
+    // baut `textZuHtml` den Editor-Inhalt aus dem vorhandenen Klartext auf —
+    // Aufzählungen und Absätze werden dabei wieder zu echten Knoten, sodass
+    // sich die Vorlage sofort weiterschreiben lässt.
+    setBodyHtml(tpl.body_html || textZuHtml(tpl.body));
     setError(null);
   }
 
@@ -94,6 +106,11 @@ export function TemplatesTab() {
               >
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="font-medium">{tpl.title}</span>
+                  {/* BEWUSST der Klartext `body`, kein `dangerouslySetInnerHTML`
+                      auf `body_html`: die Zeile ist ein zweizeiliger Anriss,
+                      Formatierung brächte dort nichts — sie öffnete nur einen
+                      HTML-Sink ohne Not. Eine sichere Render-Komponente gibt es
+                      im Repo nicht. */}
                   <span className="line-clamp-2 text-sm text-muted-foreground">
                     {tpl.body}
                   </span>
@@ -127,11 +144,14 @@ export function TemplatesTab() {
         />
         {/* Derselbe Editor wie im Chat — eine Vorlage wird schließlich zu
             einer Nachricht. Eigener Speicherplatz für die Höhe: hier
-            schreibt man lange Texte, im Chat kurze. */}
+            schreibt man lange Texte, im Chat kurze.
+            `format="html"`: hier ist HTML das Autorenformat (siehe
+            Kopfkommentar von `composer-editor`), im Chat bleibt es Klartext. */}
         <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
           <ComposerEditor
-            wert={body}
-            onChange={setBody}
+            wert={bodyHtml}
+            onChange={setBodyHtml}
+            format="html"
             platzhalter={t("templateBody")}
             griff={editorGriff}
             hoeheSchluessel="inbox.vorlage.hoehe"
@@ -144,7 +164,6 @@ export function TemplatesTab() {
               underline: t("formatUnderline"),
               bulletList: t("formatBulletList"),
               orderedList: t("formatOrderedList"),
-              align: t("formatAlign"),
               link: t("formatLink"),
               code: t("formatCode"),
               linkPrompt: t("formatLinkPrompt"),

@@ -527,7 +527,15 @@ export function AutomationsTab() {
         {!templateId && (
           <>
             {/* Derselbe Editor wie in Chat und Vorlagen — eine Automation
-                verschickt dieselbe Art Nachricht an denselben Gast. */}
+                verschickt dieselbe Art Nachricht an denselben Gast.
+
+                BEWUSST OHNE `format="html"`. Anders als die Vorlage hat dieser
+                Freitext KEINE HTML-Spalte: `message_automation.message` fließt
+                in `planung._automation_body` an genau derselben Stelle in den
+                Versand wie `message_template.body` — als KLARTEXT. Stellte man
+                den Editor hier auf HTML um, stünde das Markup wörtlich in der
+                Nachricht beim Gast. Wer das ändern will, braucht zuerst eine
+                eigene `message_html`-Spalte samt Ableitung im Backend. */}
             <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
               <ComposerEditor
                 wert={message}
@@ -544,7 +552,6 @@ export function AutomationsTab() {
                   underline: t("formatUnderline"),
                   bulletList: t("formatBulletList"),
                   orderedList: t("formatOrderedList"),
-                  align: t("formatAlign"),
                   link: t("formatLink"),
                   code: t("formatCode"),
                   linkPrompt: t("formatLinkPrompt"),

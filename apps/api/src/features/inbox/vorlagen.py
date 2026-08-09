@@ -11,7 +11,7 @@ from src.core.security import AuthContext
 
 from .ai import GroqClient, GroqError
 from .errors import InboxError
-from .felder import unbekannte_felder
+from .felder import html_zu_text, unbekannte_felder
 from .schemas import (
     AiReplyResponse,
     AiSettings,
@@ -74,47 +74,85 @@ class VorlagenMixin:
                 "Unbekannte Felder: " + ", ".join(unbekannt), status_code=422
             )
 
+    @staticmethod
+    def _klartext_ableiten(req: TemplateUpsert) -> str:
+        """Versand-Klartext aus dem gesäuberten HTML — SERVERSEITIG (Wurzel 3).
+
+        Der Client schickt beides, maßgeblich ist aber nur `body_html`: Würde
+        `req.body` übernommen, könnte eine Anfrage harmloses HTML zeigen und
+        einen ganz anderen Text an den Gast schicken lassen, denn der Versand
+        nimmt `body`. Zwei Felder, die auseinanderlaufen können, sind eine
+        Einladung — hier gibt es deshalb nur EINE Quelle.
+
+        Der Rückfall auf `req.body` greift ausschließlich, wenn gar kein HTML
+        kam (Altbestand, `host_messages`-Textarea) — dann IST der Klartext die
+        Eingabe und wird nicht erfunden.
+        """
+        if req.body_html.strip():
+            return html_zu_text(req.body_html)
+        return req.body
+
+    @staticmethod
+    def _als_vorlage(r: dict) -> MessageTemplate:
+        """DB-Zeile → Antwort. `body_html` fehlt bei Altbestand → leer."""
+        return MessageTemplate(
+            id=r["id"],
+            title=r["title"],
+            body=r["body"] or "",
+            body_html=r.get("body_html") or "",
+        )
+
     def list_templates(self, ctx: AuthContext) -> MessageTemplateList:
         db, tenant_id = self._require(ctx)
         res = (
             db.table("message_template")
-            .select("id, title, body")
+            .select("id, title, body, body_html")
             .eq("tenant_id", tenant_id)
             .order("title")
             .execute()
         )
-        items = [MessageTemplate(**r) for r in (res.data or [])]
+        items = [self._als_vorlage(r) for r in (res.data or [])]
         return MessageTemplateList(items=items, total=len(items))
 
     def create_template(self, ctx: AuthContext, req: TemplateUpsert) -> MessageTemplate:
         db, tenant_id = self._require(ctx)
-        if not req.title.strip() or not req.body.strip():
+        # Reihenfolge ZWINGEND: erst säubern (Validator), dann Klartext ableiten,
+        # dann prüfen. Ein `{{guest<strong>_name</strong>}}` aus dem Editor ist
+        # erst nach `html_zu_text` wieder ein erkennbarer Platzhalter.
+        body = self._klartext_ableiten(req)
+        if not req.title.strip() or not body.strip():
             raise InboxError("Titel und Text sind nötig.", status_code=422)
-        self._felder_pruefen(req.body)
+        self._felder_pruefen(body)
         ins = (
             db.table("message_template")
-            .insert({"tenant_id": tenant_id, "title": req.title, "body": req.body})
+            .insert(
+                {
+                    "tenant_id": tenant_id,
+                    "title": req.title,
+                    "body": body,
+                    "body_html": req.body_html,
+                }
+            )
             .execute()
         ).data
-        r = ins[0]
-        return MessageTemplate(id=r["id"], title=r["title"], body=r["body"])
+        return self._als_vorlage(ins[0])
 
     def update_template(
         self, ctx: AuthContext, template_id: str, req: TemplateUpsert
     ) -> MessageTemplate:
         db, tenant_id = self._require(ctx)
-        self._felder_pruefen(req.body)
+        body = self._klartext_ableiten(req)
+        self._felder_pruefen(body)
         upd = (
             db.table("message_template")
-            .update({"title": req.title, "body": req.body})
+            .update({"title": req.title, "body": body, "body_html": req.body_html})
             .eq("tenant_id", tenant_id)
             .eq("id", template_id)
             .execute()
         ).data
         if not upd:
             raise InboxError("Vorlage nicht gefunden.", status_code=404)
-        r = upd[0]
-        return MessageTemplate(id=r["id"], title=r["title"], body=r["body"])
+        return self._als_vorlage(upd[0])
 
     def delete_template(self, ctx: AuthContext, template_id: str) -> None:
         db, tenant_id = self._require(ctx)

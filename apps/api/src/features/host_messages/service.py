@@ -23,6 +23,7 @@ from src.features.auth.granular_permissions import effective_permissions
 from src.features.auth.guest_masking import GuestMask, mask_for
 from src.features.auth.schemas import UserRole
 from src.features.guest_blocks.service import GuestBlockService
+from src.features.inbox.felder import html_zu_text
 
 from .schemas import (
     HostMessageView,
@@ -54,8 +55,18 @@ def _now_iso() -> str:
 
 
 def _sanitize(raw: str) -> str:
-    """Host-Nachricht zu reinem Text säubern (Wurzel 8) + Länge cappen (→422)."""
-    clean = nh3.clean(raw or "", tags=set()).strip()
+    """Host-Nachricht zu reinem Text säubern (Wurzel 8) + Länge cappen (→422).
+
+    NICHT `nh3.clean(tags=set())` allein: das entfernt die Tags OHNE Ersatz.
+    Aus `<p>A</p><p>B</p>` wurde damit „AB" — zwei Absätze zu einem Wort
+    verklebt —, und reines Markup (`<p></p>`) schlug als „Nachricht ist leer"
+    fehl, obwohl der Absender etwas geschrieben hatte. Deshalb erst
+    `html_zu_text` (macht aus den Blöcken echte Umbrüche) und danach nh3 als
+    Backstop auf dessen Ergebnis: was der Parser als Text ausgegeben hat, darf
+    keine Tags mehr enthalten.
+    """
+    text = html_zu_text(raw or "") if "<" in (raw or "") else (raw or "")
+    clean = nh3.clean(text, tags=set()).strip()
     if not clean:
         raise HostMessagesError("Nachricht ist leer.", status_code=422)
     if len(clean) > _MAX_BODY_LEN:
@@ -310,6 +321,13 @@ class HostMessagesService:
                     "tenant_id": ctx.tenant_id,
                     "title": req.title,
                     "body": req.body,
+                    # KLARTEXT GEWINNT: Dieser Editor ist ein schlichtes
+                    # `textarea` — er kennt kein `body_html`. Bliebe dort ein
+                    # alter HTML-Stand stehen, zeigte der Vorlagen-Editor im PMS
+                    # weiter die alte Fassung, während der Versand längst den
+                    # neuen Text nähme. Lieber die Formatierung ehrlich
+                    # verlieren als zwei auseinanderlaufende Wahrheiten führen.
+                    "body_html": "",
                     "property_ids": req.property_ids,
                 }
             )
@@ -331,6 +349,8 @@ class HostMessagesService:
                 {
                     "title": req.title,
                     "body": req.body,
+                    # Klartext gewinnt — Begründung bei `create_quick_reply`.
+                    "body_html": "",
                     "property_ids": req.property_ids,
                     "updated_at": _now_iso(),
                 }

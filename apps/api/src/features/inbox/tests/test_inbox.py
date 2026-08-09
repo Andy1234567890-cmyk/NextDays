@@ -1480,6 +1480,12 @@ def test_richtext_wird_klartext_mit_gliederung() -> None:
 
     Reines Tag-Strippen ergäbe eine Wand: eine zwölfpunktige Hausordnung
     verklebte zu einem Absatz. Die GLIEDERUNG ist hier die Information.
+
+    KORRIGIERTE ERWARTUNG: Zwischen den Punkten EINER Liste steht ein
+    EINFACHER Umbruch. Vorher zementierte dieser Test dort eine Leerzeile —
+    und eine Leerzeile trennt Absätze. Beim Zurücklesen in den Editor
+    (`textZuHtml`) zerfiel die eine Liste damit in n Einzellisten mit je einem
+    Punkt, und jede weitere Bearbeitungsrunde trieb sie weiter auseinander.
     """
     from src.features.inbox.felder import html_zu_text
 
@@ -1487,7 +1493,7 @@ def test_richtext_wird_klartext_mit_gliederung() -> None:
         "<p><strong>Hausregeln</strong></p><ul>"
         "<li><p>Nicht rauchen</p></li><li><p>Ruhe ab 22&nbsp;Uhr</p></li></ul>"
     )
-    assert html_zu_text(roh) == "Hausregeln\n\n- Nicht rauchen\n\n- Ruhe ab 22 Uhr"
+    assert html_zu_text(roh) == "Hausregeln\n\n- Nicht rauchen\n- Ruhe ab 22 Uhr"
 
 
 def test_entitaeten_werden_aufgeloest() -> None:
@@ -1525,3 +1531,257 @@ def test_ohne_gepflegten_text_bleibt_das_feld_leer() -> None:
     """Kein Text → kein Eintrag; der Versand meldet dann „Feld ohne Wert"."""
     assert InboxService._messaging_texte({"type_attributes": {}}, "de") == {}
     assert InboxService._messaging_texte(None, "de") == {}
+
+
+def test_nummerierte_liste_bleibt_nummeriert() -> None:
+    """`<ol>` zählt. Ein einzelnes `re.sub` konnte das prinzipiell nicht.
+
+    Vorher machte `_LISTENPUNKT.sub("\\n- ", …)` aus JEDEM `<li>` einen Strich:
+    Wer im Editor „1. 2. 3." schrieb, bei dem las der Gast „- - -". Die
+    Nummerierung ist ein ZUSTAND (welche Liste, welcher Punkt, welche Ebene),
+    den nur ein Durchlauf kennen kann.
+    """
+    from src.features.inbox.felder import html_zu_text
+
+    roh = "<ol><li><p>Schlüssel holen</p></li><li><p>Tür öffnen</p></li></ol>"
+    assert html_zu_text(roh) == "1. Schlüssel holen\n2. Tür öffnen"
+
+
+def test_ol_start_attribut_wird_beachtet() -> None:
+    """Eine bei 3 fortgesetzte Liste beginnt bei 3, nicht wieder bei 1."""
+    from src.features.inbox.felder import html_zu_text
+
+    roh = '<ol start="3"><li>Drei</li><li>Vier</li></ol>'
+    assert html_zu_text(roh) == "3. Drei\n4. Vier"
+
+
+def test_verschachtelte_liste_wird_eingerueckt() -> None:
+    """Die innere Liste zählt eigenständig und rückt ein.
+
+    Wichtig ist der SCHLUSS der inneren Liste: dort darf keine Leerzeile
+    entstehen, sonst risse sie die äußere Liste in zwei Listen.
+    """
+    from src.features.inbox.felder import html_zu_text
+
+    roh = "<ul><li>Anreise<ol><li>Code</li><li>Tür</li></ol></li><li>Abreise</li></ul>"
+    assert html_zu_text(roh) == "- Anreise\n  1. Code\n  2. Tür\n- Abreise"
+
+
+def test_absatz_gibt_leerzeile_umbruch_nur_eine_zeile() -> None:
+    """`</p>` ist eine LEERZEILE, `<br>` nur ein Umbruch.
+
+    Vorher lieferten beide „\\n" — die Leerzeilen zwischen Absätzen fielen
+    ersatzlos weg und der Gast bekam eine Textwand.
+    """
+    from src.features.inbox.felder import html_zu_text
+
+    assert html_zu_text("<p>Erster</p><p>Zweiter</p>") == "Erster\n\nZweiter"
+    assert html_zu_text("<p>Oben<br>Unten</p>") == "Oben\nUnten"
+
+
+def test_link_behaelt_sein_ziel() -> None:
+    """„schreib uns hier" ohne URL wäre im Portal-Chat wertlos.
+
+    Der Gast kann im Chat nichts anklicken — steht das Ziel nur im `href`, ist
+    es weg. Ausnahme: Der Text IST schon die URL, dann bliebe sie doppelt
+    stehen. Gleiche Regel wie `knotenText` im Composer.
+    """
+    from src.features.inbox.felder import html_zu_text
+
+    assert html_zu_text('<p>Buchen: <a href="https://a.dk/b">hier</a></p>') == (
+        "Buchen: hier (https://a.dk/b)"
+    )
+    assert html_zu_text('<p><a href="https://a.dk">https://a.dk</a></p>') == (
+        "https://a.dk"
+    )
+
+
+def test_auszeichnung_faellt_ersatzlos_weg() -> None:
+    """`<strong>`/`<em>`/`<u>` verschwinden OHNE Ersatzzeichen.
+
+    Ein „*fett*" wäre nur ein weiteres Zeichen, das der Gast mitliest — die
+    Portale rendern im Chat kein Markdown.
+    """
+    from src.features.inbox.felder import html_zu_text
+
+    roh = "<p><strong>Sehr</strong> <em>wichtig</em> und <u>dringend</u></p>"
+    assert html_zu_text(roh) == "Sehr wichtig und dringend"
+
+
+def test_skriptinhalt_erreicht_den_gast_nicht() -> None:
+    """`HTMLParser` reicht den INHALT von `<script>` als Daten durch.
+
+    Ohne Sperre stand „alert(1)" als sichtbarer Satz in der Nachricht — der
+    frühere `nh3.clean(tags=set())`-Weg hatte ihn verworfen.
+    """
+    from src.features.inbox.felder import html_zu_text
+
+    assert html_zu_text("<p>Hi</p><script>alert(1)</script>") == "Hi"
+
+
+def test_rundreise_ist_ab_generation_eins_stabil() -> None:
+    """Klartext → HTML → Klartext darf nicht driften.
+
+    DER GEMESSENE FEHLER: Aus „1." wurde beim Zurücklesen „- ", und weil
+    zwischen den Punkten eine Leerzeile stand, zerfiel die Liste ab der zweiten
+    Generation in n Einzellisten.
+    """
+    from src.features.inbox.felder import html_zu_text
+
+    # Was der Composer aus Klartext baut (`textZuHtml`, composer-editor.tsx).
+    html = (
+        "<p>Ablauf:</p>"
+        "<ol><li>Schlüsselbox öffnen</li><li>Code eingeben</li></ol>"
+        "<p>Danach:</p><ul><li>WLAN verbinden</li><li>Heizung prüfen</li></ul>"
+    )
+    erste = html_zu_text(html)
+    assert erste == (
+        "Ablauf:\n\n1. Schlüsselbox öffnen\n2. Code eingeben\n\n"
+        "Danach:\n\n- WLAN verbinden\n- Heizung prüfen"
+    )
+    # Zweite Generation: derselbe Klartext, erneut durch den Editor gereicht —
+    # `textZuHtml` baut daraus exakt dieselbe Struktur zurück.
+    assert html_zu_text(html) == erste
+
+
+def test_platzhalter_ueber_blockgrenze_wird_erkannt() -> None:
+    """Wer mitten im Platzhalter Enter drückt, zerreißt ihn über zwei Absätze.
+
+    `<p>Hallo {{guest</p><p>_name}}</p>` ergab „{{guest\\n\\n_name}}". Das galt
+    weder als bekanntes noch als unbekanntes Feld: kein 422 beim Speichern,
+    keine Meldung beim Versand — der Gast las wörtlich „{{guest".
+    """
+    from src.features.inbox.felder import benutzte_felder, html_zu_text
+
+    text = html_zu_text("<p>Hallo {{guest</p><p>_name}}</p>")
+    assert benutzte_felder(text) == ["guest_name"]
+    assert unbekannte_felder(text) == []
+    # Ersetzt wird der GANZE zerrissene Ausdruck — kein Rest bleibt stehen.
+    assert rendern(text, Kontext(guest_name="Frau Meier")) == "Hallo Frau Meier"
+
+
+def test_platzhalter_mit_auszeichnung_ueberlebt_die_umwandlung() -> None:
+    """Der einfache Fall löst sich über die REIHENFOLGE.
+
+    `{{guest<strong>_name</strong>}}` ist erst nach `html_zu_text` wieder ein
+    erkennbarer Platzhalter — deshalb prüft und rendert der Service IMMER auf
+    dem abgeleiteten Klartext, nie auf dem HTML.
+    """
+    from src.features.inbox.felder import html_zu_text
+
+    text = html_zu_text("<p>Hallo {{guest<strong>_name</strong>}}</p>")
+    assert rendern(text, Kontext(guest_name="Herr Jensen")) == "Hallo Herr Jensen"
+
+
+def test_echter_tippfehler_bleibt_auch_zerrissen_ein_fehler() -> None:
+    """Die Whitespace-Toleranz darf kein Freibrief für Unbekanntes sein."""
+    assert unbekannte_felder("{{Quatsch\nFeld}}") == ["QuatschFeld"]
+
+
+def test_sanitizer_wirft_skript_und_bild_weg() -> None:
+    """Wurzel 8: Allowlist-Parser beim SPEICHERN, nie Regex.
+
+    `<script>`, ein `onerror`-Bild und ein `javascript:`-Ziel dürfen die
+    Vorlage nicht erreichen — sie wird im Dashboard des Betriebs gerendert.
+    """
+    from src.features.inbox.schemas import sanitize_vorlagen_html
+
+    sauber = sanitize_vorlagen_html(
+        '<p>Hallo<script>alert(1)</script></p>'
+        '<img src="x" onerror="alert(2)">'
+        '<p><a href="javascript:alert(3)">klick</a></p>'
+    )
+    assert "script" not in sauber.lower()
+    assert "<img" not in sauber.lower()
+    assert "onerror" not in sauber.lower()
+    assert "javascript:" not in sauber.lower()
+    assert "Hallo" in sauber and "klick" in sauber
+
+
+def test_sanitizer_behaelt_die_gliederung_und_echte_links() -> None:
+    """Was der Klartext abbilden kann, muss durchkommen — sonst wäre der
+    Editor ein Formatierer ohne Wirkung."""
+    from src.features.inbox.schemas import sanitize_vorlagen_html
+
+    sauber = sanitize_vorlagen_html(
+        '<p><strong>Titel</strong></p><ol><li>Eins</li></ol>'
+        '<p><a href="https://a.dk">Seite</a></p>'
+    )
+    assert "<ol>" in sauber and "<li>" in sauber and "<strong>" in sauber
+    assert 'href="https://a.dk"' in sauber
+    # nh3 setzt rel selbst (link_rel) — ein Ziel-Tab darf uns nicht übernehmen.
+    assert "noopener" in sauber
+
+
+def test_upsert_saeubert_body_html_im_validator() -> None:
+    """Der Validator hängt am FELD, greift also in POST UND PUT."""
+    from src.features.inbox.schemas import TemplateUpsert
+
+    req = TemplateUpsert(title="T", body_html='<p>ok</p><script>alert(1)</script>')
+    assert "script" not in req.body_html.lower()
+    assert "ok" in req.body_html
+
+
+def test_create_template_leitet_klartext_selbst_ab() -> None:
+    """Der Versand-Klartext kommt vom SERVER, nie vom Client (Wurzel 3).
+
+    Der Client schickt hier absichtlich ein `body`, das mit seinem `body_html`
+    nichts zu tun hat. Würde es übernommen, könnte eine Anfrage im Editor
+    harmloses HTML zeigen und dem Gast einen ganz anderen Text schicken — denn
+    versendet wird `body`.
+    """
+    from src.features.inbox.schemas import TemplateUpsert
+
+    updates: list = []
+    svc = InboxService(
+        service_client=_FakeDB([], [], updates=updates), channex=_FakeChannex()
+    )
+    req = TemplateUpsert(
+        title="Anreise",
+        body="ICH BIN GELOGEN",
+        body_html="<p>Hallo</p><ol><li>Code</li><li>Tür</li></ol>",
+    )
+    out = svc.create_template(_CTX, req)
+
+    assert out.body == "Hallo\n\n1. Code\n2. Tür"
+    assert "GELOGEN" not in out.body
+    # Auch in der DB steht der abgeleitete Text, nicht der geschickte.
+    geschrieben = [
+        p for (t, m, p) in updates if t == "message_template" and m == "insert"
+    ]
+    assert geschrieben and geschrieben[0]["body"] == "Hallo\n\n1. Code\n2. Tür"
+    assert geschrieben[0]["body_html"] == req.body_html
+
+
+def test_create_template_weist_zerrissenen_tippfehler_ab() -> None:
+    """Geprüft wird der ABGELEITETE Klartext — sonst rutschte ein über zwei
+    Absätze zerrissener Tippfehler ungeprüft durch."""
+    from src.features.inbox.schemas import TemplateUpsert
+
+    svc = InboxService(service_client=_FakeDB([], []), channex=_FakeChannex())
+    req = TemplateUpsert(title="T", body_html="<p>Hallo {{guest</p><p>_nmae}}</p>")
+    with pytest.raises(InboxError) as exc:
+        svc.create_template(_CTX, req)
+    assert exc.value.status_code == 422
+    assert "guest_nmae" in exc.value.message
+
+
+def test_host_sanitize_verklebt_absaetze_nicht_mehr() -> None:
+    """host_messages liest DIESELBE Tabelle und hatte denselben Fehler.
+
+    `nh3.clean(tags=set())` entfernt Tags OHNE Umbruch-Ersatz: aus
+    `<p>A</p><p>B</p>` wurde „AB" — zwei Absätze zu einem Wort verklebt. Und
+    reines Markup (`<p></p>`) schlug als „Nachricht ist leer" fehl, obwohl der
+    Absender etwas geschrieben hatte.
+    """
+    from src.features.host_messages.service import HostMessagesError, _sanitize
+
+    assert _sanitize("<p>A</p><p>B</p>") == "A\n\nB"
+    assert _sanitize("<ol><li>Eins</li><li>Zwei</li></ol>") == "1. Eins\n2. Zwei"
+    # Klartext ohne Markup bleibt unangetastet (der Normalfall dieses Feldes).
+    assert _sanitize("Einfach Text") == "Einfach Text"
+    # Skript-Inhalt darf nicht als Text durchrutschen.
+    assert "alert" not in _sanitize("<p>Hi</p><script>alert(1)</script>")
+    # Wirklich leer bleibt ein 422.
+    with pytest.raises(HostMessagesError):
+        _sanitize("<p></p>")
