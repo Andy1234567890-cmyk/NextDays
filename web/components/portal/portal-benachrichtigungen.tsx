@@ -19,11 +19,11 @@ import { toast } from "sonner";
 
 import { Card, CardContent } from "@nextdays/ui/card";
 import { Switch } from "@nextdays/ui/switch";
+import { setzeBenachrichtigungen } from "@/lib/portal-benachrichtigungen";
 import {
   PORTAL_KATEGORIEN,
   type NotificationOverview,
-  setzeBenachrichtigungen,
-} from "@/lib/portal-benachrichtigungen";
+} from "@/lib/portal-benachrichtigungen-typen";
 
 export function PortalBenachrichtigungen({
   overview,

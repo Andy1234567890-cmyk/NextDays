@@ -213,6 +213,14 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
   einem frühen Return, unvollständige Hook-Dependencies, verschluckte Fehler
   ohne `cause`. Warnungen (`any`, `<img>`) brechen noch nicht ab — neue keine
   dazu. Geteilte Pakete: `bun run lint:packages`.
+- Frontend: `bunx next build` in jeder berührten App muss durchlaufen. `tsc` und
+  ESLint reichen NICHT — sie prüfen keine Next.js-Direktiven-Regeln. Ein
+  `"use server"`-Modul darf AUSSCHLIESSLICH async functions exportieren (ein
+  `const`/Objekt darin bricht erst „Collecting page data" mit
+  `A "use server" file can only export async functions`); Werte und Typen
+  gehören in eine Nachbardatei ohne die Direktive. Genau so ging ein kaputter
+  Build committet+gepusht durch beide Prüfungen. Buildfehler werden behoben,
+  nie per `ignoreBuildErrors` unterdrückt (Wurzel 4/5).
 - Kanal/Enum berührt? `node scripts/i18n/kanal-enums-pruefen.mjs` — hält
   DB-Enum → Pydantic → Frontend-Unions → Kanal-Meta → `calendar.channel.*`
   aller 24 Sprachen deckungsgleich. Ein neuer Backend-Kanalwert ohne diese
