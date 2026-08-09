@@ -638,6 +638,13 @@ class DeployApp(BaseModel):
     laeuft: bool = False
     letzter: DeployEintrag | None = None
     rueckstand: DeployRueckstand | None = None
+    # Wann der Worker zuletzt nach DIESER App gesehen hat (deploy_spiegel).
+    # None = der Worker hat für sie noch nie geschrieben — die App wird
+    # geführt, steht im Spiegel aber nicht. Sichtbar leer statt still fehlend.
+    geprueft_at: datetime | None = None
+    # Wann sich zuletzt fachlich etwas geändert hat. Bleibt stehen, während
+    # `geprueft_at` weiterläuft — genau daran erkennt man „läuft, tut nichts".
+    aktualisiert_at: datetime | None = None
 
 
 class DeployUebersicht(BaseModel):
@@ -647,6 +654,11 @@ class DeployUebersicht(BaseModel):
     # Kopf von `main` — der Stand, gegen den alle Apps verglichen werden.
     main_sha: str | None = None
     main_kurz_sha: str | None = None
+    # ÄLTESTER `geprueft_at` über alle Zeilen: „der Spiegel als Ganzes ist
+    # mindestens so alt". Steht der Wert still, läuft der Worker-Job nicht mehr
+    # und die Oberfläche darf keine Ruhe vortäuschen (Migration 0294).
+    # None = keine einzige Zeile im Spiegel (Worker hat nie geschrieben).
+    spiegel_geprueft_at: datetime | None = None
 
 
 class DeployVerlauf(BaseModel):

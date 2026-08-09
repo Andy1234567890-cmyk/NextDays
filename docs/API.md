@@ -2162,12 +2162,14 @@ die Annahme läuft über `admin/app/einladung` (ohne Anmeldung erreichbar, siehe
 
 ## platform_admin — Deploy-Monitor (`/api/v1/platform/deploy`)
 
-Welcher Stand läuft gerade wo, und was ist zuletzt ausgerollt worden. Die
-Quelle ist die **Coolify-REST-API**, nicht unsere Datenbank.
+Welcher Stand läuft gerade wo, und was ist zuletzt ausgerollt worden. Quelle
+der Wahrheit ist die **Coolify-REST-API** — die Übersicht liest sie aber aus
+unserem Spiegel `public.deploy_spiegel` (siehe „Realtime" unten), nicht bei
+jedem Request live.
 
 | Methode | Pfad                                | Zweck                                                        |
 | ------- | ----------------------------------- | ------------------------------------------------------------ |
-| `GET`   | `/api/v1/platform/deploy`           | Je Anwendung der laufende bzw. letzte Deploy **+ Rückstand zu `main`** |
+| `GET`   | `/api/v1/platform/deploy`           | Je Anwendung der laufende bzw. letzte Deploy **+ Rückstand zu `main`** — **aus `deploy_spiegel`, ein Query** |
 | `GET`   | `/api/v1/platform/deploy/{uuid}`    | Verlauf EINER Anwendung (`limit` 1–100)                        |
 | `POST`  | `/api/v1/platform/deploy/{uuid}`    | Deploy auslösen (`require_platform_write`)                     |
 | `GET`   | `/api/v1/platform/deploy/log/{deployment_uuid}` | Build-Ausgabe eines Deploys, Zeile für Zeile       |
@@ -2196,7 +2198,11 @@ an ein internes Schema, das jedes Coolify-Update ändern darf. Live geprüft
 der CI-Build und CI-Deploy lesen. Eine zweite Liste im Backend würde
 auseinanderlaufen (App im Monitor, aber nicht in der CI — oder umgekehrt).
 
-**Konfiguration:** `COOLIFY_API_URL` + `COOLIFY_TOKEN` (Env von `nextdays-api`).
+**Konfiguration:** `COOLIFY_API_URL` + `COOLIFY_TOKEN` — inzwischen bei
+`nextdays-api` UND beim **Worker** (er führt den Spiegel-Tick). Der Worker
+hängt dafür im Docker-Netz `coolify` (`deploy/worker/docker-compose.yml`),
+sonst löst er den Host `coolify` nicht auf. Das ist AUSGEHENDER Verkehr; die
+Regel „der Worker braucht kein coolify/Traefik-Netz" gilt für eingehenden.
 Der Token braucht nur die Berechtigungen `read` und `deploy` — **nicht** `write`:
 damit kann er Anwendungen weder ändern noch löschen (per `DELETE /applications`
 gegengeprüft → `403`). `COOLIFY_API_URL` zeigt containerintern auf
@@ -2222,8 +2228,51 @@ Die Tabelle ist nur der Übertragungsweg — Coolify bleibt die Quelle der
 Wahrheit, je Anwendung wird genau eine Zeile fortgeschrieben. Schreiben darf
 nur `service_role`, lesen nur `is_platform_admin()`; Grant UND Publikation
 sind gegen die Live-DB geprüft (sonst wäre das Abo eine stumme Attrappe).
-`geprueft_at` verrät, wann der Worker zuletzt nachgesehen hat — steht der Wert
-still, ist der Spiegel veraltet.
+
+**Der Lesepfad liest den Spiegel (0345).** Bis dahin tat er es NICHT: `GET
+/deploy` rief bei jedem Request live Coolify ab — ein Aufruf für die laufenden
+Deploys, ein `verlauf`-Aufruf JE nicht laufender App (~10 seriell), dazu
+`watch_paths` und der GitHub-`/compare` je ausgerolltem Commit mit 20 s
+Timeout. Weil das Backoffice bei jedem Realtime-Event neu lädt und der Worker
+während eines Baus alle 5 s schrieb, kostete jedes Event mehrere Sekunden —
+das war das „ruckelt / hängt hinterher". Ereignis-Quelle und Daten-Quelle
+waren verschieden. Seit 0345 sind sie dieselbe Tabelle und der Request ist ein
+Query. Die beiden Wege heißen im Code ausdrücklich so:
+`DeployService.uebersicht_von_coolify()` (nur Worker-Tick, teuer) und
+`DeployService.uebersicht_aus_spiegel(db)` (Request-Pfad).
+
+Dafür trägt der Spiegel seit 0345 alles, was `DeployUebersicht` ausliefert:
+`deploy_id`, `anwendung`, `log_url`, `laeuft`, `main_sha` und `rueckstand`
+(als JSONB). Der **Rückstand wird im Worker-Tick ermittelt**, nicht mehr im
+Request — deshalb braucht jetzt der **Worker** `GITHUB_TOKEN`/`GITHUB_REPO`
+(bisher hatte sie nur `nextdays-api`). Fehlt das Token, bleibt `rueckstand`
+`null` und die Oberfläche sagt „nicht abrufbar"; es wird keine `0` geraten.
+
+**Frische des Spiegels:** `geprueft_at` (je App) verrät, wann der Worker
+zuletzt nachgesehen hat, `aktualisiert_at`, wann sich zuletzt fachlich etwas
+geändert hat — beides wird jetzt ausgeliefert. `spiegel_geprueft_at` auf der
+Übersicht ist der **älteste** `geprueft_at` über alle Zeilen („der Spiegel als
+Ganzes ist mindestens so alt"); der jüngste würde eine einzelne frische Zeile
+als „alles aktuell" ausgeben. Steht der Wert still, arbeitet der Worker-Job
+nicht mehr — die Oberfläche muss das zeigen statt Ruhe vorzutäuschen.
+
+**Kein Event-Dauerfeuer:** der Worker schreibt nur, wenn sich der *fachliche*
+Zustand geändert hat (`_FACHLICH` in `deploy_spiegel.py`). Ein bedingungsloses
+`upsert` je Tick wäre auch ohne Änderung ein UPDATE und damit ein
+Realtime-Event — im 5-Sekunden-Takt ein Dauerfeuer aus Ereignissen ohne
+Informationsgehalt. Damit „wann haben wir zuletzt geschaut" trotzdem sichtbar
+bleibt, läuft `geprueft_at` in einem eigenen, langsamen Takt mit
+(`GEPRUEFT_HEARTBEAT_SECONDS`, 5 Minuten). Der Vergleich normalisiert
+Zeitstempel und JSONB, sonst sähe jeder Tick eine Änderung, wo keine ist.
+
+**Der Job ist im Log sichtbar (Wurzel 5):** ohne Coolify-Zugang stieg
+`spiegel_aktualisieren` früher mit einem stummen `return False` aus und der
+Erfolgspfad loggte nur auf `debug` — bei `LOG_LEVEL=INFO` war nicht
+unterscheidbar, ob der Job arbeitete oder gar nichts tat. Genau deshalb blieb
+der leere Spiegel stundenlang unbemerkt. Jetzt: fehlender Zugang →
+`warning deploy_spiegel_uebersprungen` mit Grund, tatsächliches Schreiben →
+`info deploy_spiegel_geschrieben` (mit Zeilenzahl); der unveränderte Ruhefall
+bleibt auf `debug`, damit das Log nicht zuläuft.
 
 Das Build-LOG wird bewusst nicht gespiegelt (50 KB je Deploy, selten
 gebraucht): es wird live geholt, ausgelöst durch dasselbe Realtime-Signal.

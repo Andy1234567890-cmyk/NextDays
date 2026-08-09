@@ -1,8 +1,23 @@
 """Deploy-Monitor: Coolify-Rohdaten in die Sicht des Backoffice übersetzen.
 
-Eigenes Modul statt Anbau an service.py: der Deploy-Monitor spricht KEINE
-Datenbank, sondern ausschließlich Coolify. Die Trennung hält service.py bei
-seinem Thema (mandantenübergreifende DB-Sichten).
+ZWEI WEGE, EINE ÜBERSETZUNG:
+
+* `uebersicht_von_coolify()` fragt Coolify (und GitHub) live. Das ist teuer —
+  ein Aufruf für die laufenden Deploys, einer JE nicht laufender App für den
+  letzten Stand, dazu `watch_paths` und der GitHub-`/compare` je ausgerolltem
+  Commit. Diesen Weg geht nur noch der WORKER, einmal je Tick.
+* `uebersicht_aus_spiegel(db)` liest denselben Zustand aus
+  `public.deploy_spiegel` — ein Query, Millisekunden. Diesen Weg geht der
+  Request-Pfad des Backoffice.
+
+WARUM DIE TRENNUNG: Das Backoffice abonniert `deploy_spiegel` per Realtime und
+lädt bei jedem Event neu. Solange der Lesepfad live Coolify fragte, löste jedes
+Event eine mehrsekündige serielle HTTP-Kette aus — während eines Baus schreibt
+der Worker alle 5 s, also Dauerfeuer mit Sekunden-Roundtrip. Genau das war das
+„ruckelt / hängt hinterher". Seit dem Umbau sind Ereignis-Quelle und
+Daten-Quelle DIESELBE Tabelle.
+
+Quelle der Wahrheit bleibt Coolify; der Spiegel ist der Übertragungsweg.
 
 Welche Anwendungen überwacht werden, steht in `coolify_apps.txt` NEBEN diesem
 Modul. Die führende Quelle bleibt `scripts/ci/coolify-apps.txt` (dort stehen
@@ -18,6 +33,9 @@ from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import ValidationError
+from supabase import Client
+
 from src.core.logging import get_logger
 
 from . import coolify, deploy_rueckstand
@@ -26,6 +44,7 @@ from .schemas import (
     DeployEintrag,
     DeployLog,
     DeployLogZeile,
+    DeployRueckstand,
     DeployUebersicht,
     DeployVerlauf,
 )
@@ -37,6 +56,9 @@ _APPS_DATEI = Path(__file__).resolve().parent / "coolify_apps.txt"
 
 # Status, die Coolify für „läuft gerade" verwendet.
 _AKTIV = frozenset({"queued", "in_progress"})
+
+# Der Spiegel (Migration 0294/0345) — die Lesequelle des Request-Pfads.
+_TABELLE = "deploy_spiegel"
 
 
 @lru_cache(maxsize=1)
@@ -91,12 +113,67 @@ def _eintrag(roh: dict, *, name_fallback: str = "") -> DeployEintrag:
     )
 
 
-class DeployService:
-    """Liest den Deploy-Zustand aus Coolify. Kein Datenbankzugriff."""
+def _spiegel_eintrag(zeile: dict, *, name_fallback: str) -> DeployEintrag | None:
+    """Eine `deploy_spiegel`-Zeile zurück in einen DeployEintrag.
 
-    def uebersicht(self) -> DeployUebersicht:
+    None, wenn die Zeile gar keinen Deploy beschreibt: `status='unbekannt'`
+    ohne `deployment_uuid` heißt „diese App hat bei Coolify keinen Deploy" —
+    dafür ist im Schema `letzter=None` vorgesehen, kein leerer Eintrag.
+    """
+    status_wert = zeile.get("status")
+    if not isinstance(status_wert, str) or not status_wert:
+        return None
+    if status_wert == "unbekannt" and not zeile.get("deployment_uuid"):
+        return None
+    roh_id = zeile.get("deploy_id")
+    anwendung = zeile.get("anwendung")
+    return DeployEintrag(
+        id=roh_id if isinstance(roh_id, int) else None,
+        deployment_uuid=zeile.get("deployment_uuid") or None,
+        anwendung=anwendung or name_fallback or "unbekannt",
+        anwendung_uuid=zeile.get("anwendung_uuid") or None,
+        status=status_wert,
+        commit=zeile.get("commit") or None,
+        commit_nachricht=zeile.get("commit_nachricht") or None,
+        gestartet_at=_zeit(zeile.get("gestartet_at")),
+        beendet_at=_zeit(zeile.get("beendet_at")),
+        log_url=zeile.get("log_url") or None,
+    )
+
+
+def _spiegel_rueckstand(roh: object) -> DeployRueckstand | None:
+    """Das JSONB `rueckstand` zurück ins Schema.
+
+    Fehlt es oder ist es unlesbar, wird NICHTS geraten (Wurzel 4): None heißt
+    „der Worker hat den Rückstand (noch) nicht ermittelt". Eine leere
+    `DeployRueckstand()` hieße dagegen „nichts offen" — eine Aussage, die wir
+    ohne GitHub-Abruf nicht treffen dürfen.
+    """
+    if not isinstance(roh, dict) or not roh:
+        return None
+    try:
+        return DeployRueckstand.model_validate(roh)
+    except ValidationError as exc:
+        # Wurzel 5: nicht still verschlucken. Der Spiegel trägt dann etwas,
+        # das unser Schema nicht kennt — das ist ein Fehler, kein Normalfall.
+        log.warning("deploy_spiegel_rueckstand_unlesbar", error=str(exc)[:200])
+        return None
+
+
+class DeployService:
+    """Übersetzt den Deploy-Zustand für das Backoffice.
+
+    Zwei Quellen, bewusst getrennt (siehe Modul-Docstring): `…_von_coolify`
+    für den Worker-Tick, `…_aus_spiegel` für den Request-Pfad.
+    """
+
+    def uebersicht_von_coolify(self) -> DeployUebersicht:
         """Je überwachter Anwendung der letzte bzw. laufende Deploy — und was
-        seither auf `main` dazugekommen ist, das GENAU DIESE App betrifft."""
+        seither auf `main` dazugekommen ist, das GENAU DIESE App betrifft.
+
+        TEUER (viele serielle HTTP-Aufrufe gegen Coolify und GitHub). Nur für
+        den Worker-Tick gedacht; der Request-Pfad nimmt `uebersicht_aus_spiegel`.
+        """
         apps = ueberwachte_apps()
         # Ein Aufruf für ALLE laufenden Deploys statt einer je App.
         laufend_je_uuid: dict[str, dict] = {}
@@ -137,6 +214,67 @@ class DeployService:
             aktiv=aktiv,
             main_sha=kopf,
             main_kurz_sha=kopf[:8] if kopf else None,
+        )
+
+    @staticmethod
+    def uebersicht_aus_spiegel(db: Client) -> DeployUebersicht:
+        """Denselben Zustand aus `public.deploy_spiegel` — ein Query.
+
+        Der Request-Pfad des Backoffice. Weil das Frontend genau diese Tabelle
+        abonniert, ist damit die Ereignis-Quelle auch die Daten-Quelle: ein
+        Realtime-Event löst ein Neuladen aus, das Millisekunden dauert statt
+        Sekunden.
+
+        Die geführte App-Liste bleibt die Reihenfolge und die Vollständigkeit:
+        eine Anwendung, die wir führen, für die der Worker aber noch keine
+        Zeile geschrieben hat, erscheint mit `letzter=None` und
+        `geprueft_at=None` — sichtbar leer, statt stillschweigend zu fehlen
+        (Wurzel 4).
+        """
+        antwort = db.table(_TABELLE).select("*").execute()
+        je_uuid: dict[str, dict] = {}
+        for zeile in antwort.data or []:
+            uuid = zeile.get("anwendung_uuid")
+            if isinstance(uuid, str):
+                je_uuid[uuid] = zeile
+
+        apps: list[DeployApp] = []
+        aktiv = False
+        kopf: str | None = None
+        for uuid, name in ueberwachte_apps():
+            zeile = je_uuid.get(uuid)
+            if zeile is None:
+                apps.append(DeployApp(uuid=uuid, name=name))
+                continue
+            laeuft = bool(zeile.get("laeuft"))
+            aktiv = aktiv or laeuft
+            # main_sha ist je Zeile gespiegelt, gilt aber für den ganzen
+            # Vergleich — der erste vorhandene Wert genügt.
+            if kopf is None and isinstance(zeile.get("main_sha"), str):
+                kopf = zeile["main_sha"]
+            apps.append(
+                DeployApp(
+                    uuid=uuid,
+                    name=zeile.get("name") or name,
+                    laeuft=laeuft,
+                    letzter=_spiegel_eintrag(zeile, name_fallback=name),
+                    rueckstand=_spiegel_rueckstand(zeile.get("rueckstand")),
+                    geprueft_at=_zeit(zeile.get("geprueft_at")),
+                    aktualisiert_at=_zeit(zeile.get("aktualisiert_at")),
+                )
+            )
+        return DeployUebersicht(
+            apps=apps,
+            aktiv=aktiv,
+            main_sha=kopf,
+            main_kurz_sha=kopf[:8] if kopf else None,
+            # Der älteste Blick über alle Zeilen: steht DER still, ist der
+            # Spiegel veraltet. Der jüngste würde eine einzelne fortgeschriebene
+            # Zeile als „alles frisch" ausgeben.
+            spiegel_geprueft_at=min(
+                (a.geprueft_at for a in apps if a.geprueft_at is not None),
+                default=None,
+            ),
         )
 
     @staticmethod

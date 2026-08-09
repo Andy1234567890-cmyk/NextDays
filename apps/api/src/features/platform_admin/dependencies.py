@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import Depends
+from supabase import Client
 
 from src.core.supabase import get_service_client
 
@@ -35,8 +36,24 @@ TeamServiceDep = Annotated[TeamService, Depends(get_team_service)]
 
 
 def get_deploy_service() -> DeployService:
-    # Kein DB-Client: der Deploy-Monitor spricht ausschließlich Coolify.
+    # Der Service selbst hält keinen Client: die teuren Wege sprechen Coolify,
+    # der Lesepfad bekommt den Client als Argument (get_deploy_db).
     return DeployService()
 
 
 DeployServiceDep = Annotated[DeployService, Depends(get_deploy_service)]
+
+
+def get_deploy_db() -> Client:
+    """service_role für den Lese-Zugriff auf `public.deploy_spiegel`.
+
+    Wurzel 6: die Tabelle ist für anon/authenticated auf `select` beschränkt
+    und die Policy verlangt `is_platform_admin()`. Der Request-Pfad läuft
+    trotzdem über service_role, weil die API mit dem Service-Client arbeitet —
+    die Autorisierung erzwingt der Guard `CurrentPlatformAdmin` am Endpunkt,
+    genau wie beim übrigen Backoffice.
+    """
+    return get_service_client()
+
+
+DeployDbDep = Annotated[Client, Depends(get_deploy_db)]

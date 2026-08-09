@@ -6,6 +6,7 @@ Schwerpunkte, weil hier live ausgerollt wird:
 3. Ein Deploy geht nur auf eine Anwendung, die wir wirklich führen
    (fail-closed gegen frei gewählte UUIDs).
 """
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -186,7 +187,7 @@ def test_uebersicht_markiert_laufenden_deploy() -> None:
             }
         ],
     ), patch.object(coolify, "verlauf", return_value=[]):
-        ueb = DeployService().uebersicht()
+        ueb = DeployService().uebersicht_von_coolify()
 
     assert ueb.aktiv is True
     treffer = [a for a in ueb.apps if a.uuid == laufend_uuid]
@@ -264,6 +265,18 @@ def test_service_filtert_versteckte_zeilen_und_erkennt_stderr() -> None:
 # --- Realtime-Spiegel: Push statt Polling -----------------------------------
 
 
+def _spiegel_db(bestand: list[dict] | None = None) -> MagicMock:
+    """DB-Attrappe, deren `select` einen definierten Ist-Stand liefert.
+
+    `spiegel_aktualisieren` liest den Spiegel VOR dem Schreiben, um nur bei
+    echter Änderung zu schreiben — ohne definierten Ist-Stand liefe der Test
+    gegen einen MagicMock und prüfte nichts.
+    """
+    db = MagicMock()
+    db.table.return_value.select.return_value.execute.return_value.data = bestand or []
+    return db
+
+
 def test_spiegel_schreibt_fortschreibend_und_raet_nichts() -> None:
     """Der Worker spiegelt Coolify nach deploy_spiegel (Migration 0294).
 
@@ -273,7 +286,7 @@ def test_spiegel_schreibt_fortschreibend_und_raet_nichts() -> None:
     from src.features.platform_admin import deploy_spiegel
     from src.features.platform_admin.schemas import DeployApp, DeployUebersicht
 
-    db = MagicMock()
+    db = _spiegel_db()
     ueb = DeployUebersicht(
         apps=[
             DeployApp(
@@ -287,7 +300,7 @@ def test_spiegel_schreibt_fortschreibend_und_raet_nichts() -> None:
         aktiv=True,
     )
     with patch.object(deploy_spiegel, "get_settings") as gs, patch.object(
-        deploy_spiegel.DeployService, "uebersicht", return_value=ueb
+        deploy_spiegel.DeployService, "uebersicht_von_coolify", return_value=ueb
     ):
         gs.return_value.coolify_configured = True
         aktiv = deploy_spiegel.spiegel_aktualisieren(db)
@@ -380,3 +393,264 @@ def test_ohne_ausgerollten_commit_kein_vergleich() -> None:
 
     assert r.commits_gesamt is None
     assert r.fehler == "Kein ausgerollter Commit bekannt."
+
+
+# --- Kein Event-Dauerfeuer: nur bei echter Änderung schreiben ---------------
+
+
+def test_spiegel_schreibt_nicht_wenn_sich_nichts_geaendert_hat() -> None:
+    """Der Kern des Realtime-Umbaus: unveränderter Zustand → KEIN UPDATE.
+
+    Jedes UPDATE ist ein Realtime-Event, und jedes Event lässt das Backoffice
+    neu laden. Im 5-Sekunden-Takt während eines Baus wäre ein bedingungsloses
+    `upsert` Dauerfeuer aus Ereignissen ohne Informationsgehalt — genau das
+    ließ die Oberfläche ruckeln.
+    """
+    from src.features.platform_admin import deploy_spiegel
+    from src.features.platform_admin.schemas import DeployApp, DeployUebersicht
+
+    jetzt = datetime.now(UTC)
+    bestand = [{
+        "anwendung_uuid": "u1",
+        "name": "nextdays-api",
+        "status": "finished",
+        "deployment_uuid": "dep-1",
+        "commit": "abc12345",
+        "commit_nachricht": None,
+        "gestartet_at": None,
+        "beendet_at": None,
+        "deploy_id": None,
+        "anwendung": "nextdays-api",
+        "log_url": None,
+        "laeuft": False,
+        "rueckstand": None,
+        "main_sha": None,
+        # Frisch geprüft: auch der Heartbeat ist noch nicht fällig.
+        "geprueft_at": jetzt.isoformat(),
+        "aktualisiert_at": jetzt.isoformat(),
+    }]
+    db = _spiegel_db(bestand)
+    ueb = DeployUebersicht(apps=[DeployApp(
+        uuid="u1",
+        name="nextdays-api",
+        laeuft=False,
+        letzter=_eintrag({
+            "deployment_uuid": "dep-1",
+            "application_name": "nextdays-api",
+            "status": "finished",
+            "commit": "abc12345",
+        }),
+    )])
+    with patch.object(deploy_spiegel, "get_settings") as gs, patch.object(
+        deploy_spiegel.DeployService, "uebersicht_von_coolify", return_value=ueb
+    ):
+        gs.return_value.coolify_configured = True
+        deploy_spiegel.spiegel_aktualisieren(db)
+
+    db.table.return_value.upsert.assert_not_called()
+
+
+def test_spiegel_schreibt_bei_statuswechsel() -> None:
+    """Die Gegenprobe: ändert sich der Status wirklich, MUSS geschrieben werden."""
+    from src.features.platform_admin import deploy_spiegel
+    from src.features.platform_admin.schemas import DeployApp, DeployUebersicht
+
+    jetzt = datetime.now(UTC)
+    bestand = [{
+        "anwendung_uuid": "u1",
+        "name": "nextdays-api",
+        "status": "finished",
+        "laeuft": False,
+        "geprueft_at": jetzt.isoformat(),
+        "aktualisiert_at": jetzt.isoformat(),
+    }]
+    db = _spiegel_db(bestand)
+    ueb = DeployUebersicht(apps=[DeployApp(
+        uuid="u1",
+        name="nextdays-api",
+        laeuft=True,
+        letzter=_eintrag({"status": "in_progress", "application_name": "nextdays-api"}),
+    )])
+    with patch.object(deploy_spiegel, "get_settings") as gs, patch.object(
+        deploy_spiegel.DeployService, "uebersicht_von_coolify", return_value=ueb
+    ):
+        gs.return_value.coolify_configured = True
+        deploy_spiegel.spiegel_aktualisieren(db)
+
+    zeilen = db.table.return_value.upsert.call_args[0][0]
+    assert len(zeilen) == 1
+    assert zeilen[0]["status"] == "in_progress"
+    assert zeilen[0]["laeuft"] is True
+    # Fachliche Änderung → beide Zeitstempel laufen mit.
+    assert zeilen[0]["aktualisiert_at"] == zeilen[0]["geprueft_at"]
+
+
+def test_geprueft_at_laeuft_auch_ohne_aenderung_mit() -> None:
+    """„Wann haben wir zuletzt geschaut" muss sichtbar bleiben.
+
+    Sonst sieht ein hängender Worker aus wie „alles ruhig". Der Heartbeat
+    schreibt `geprueft_at` fort — `aktualisiert_at` bleibt aber stehen, genau
+    daran erkennt die Oberfläche „läuft, tut aber nichts".
+    """
+    from src.features.platform_admin import deploy_spiegel
+    from src.features.platform_admin.schemas import DeployApp, DeployUebersicht
+
+    alt = datetime.now(UTC) - timedelta(
+        seconds=deploy_spiegel.GEPRUEFT_HEARTBEAT_SECONDS + 60
+    )
+    bestand = [{
+        "anwendung_uuid": "u1",
+        "name": "nextdays-api",
+        "status": "unbekannt",
+        "laeuft": False,
+        "geprueft_at": alt.isoformat(),
+        "aktualisiert_at": alt.isoformat(),
+    }]
+    db = _spiegel_db(bestand)
+    ueb = DeployUebersicht(
+        apps=[DeployApp(uuid="u1", name="nextdays-api", laeuft=False, letzter=None)]
+    )
+    with patch.object(deploy_spiegel, "get_settings") as gs, patch.object(
+        deploy_spiegel.DeployService, "uebersicht_von_coolify", return_value=ueb
+    ):
+        gs.return_value.coolify_configured = True
+        deploy_spiegel.spiegel_aktualisieren(db)
+
+    zeilen = db.table.return_value.upsert.call_args[0][0]
+    assert zeilen[0]["geprueft_at"] != alt.isoformat()
+    # Fachlich unverändert → aktualisiert_at bleibt der ALTE Wert.
+    assert zeilen[0]["aktualisiert_at"] == alt.isoformat()
+
+
+def test_rueckstand_wird_mitgespiegelt() -> None:
+    """Der GitHub-/compare gehört in den Worker-Tick, nicht in den Request.
+
+    Er war der teuerste Teil des alten Lesepfads (ein Aufruf je ausgerolltem
+    Commit, 20 s Timeout) — bei jedem Realtime-Event erneut.
+    """
+    from src.features.platform_admin import deploy_spiegel
+    from src.features.platform_admin.schemas import (
+        DeployApp,
+        DeployRueckstand,
+        DeployUebersicht,
+    )
+
+    db = _spiegel_db()
+    ueb = DeployUebersicht(
+        apps=[DeployApp(
+            uuid="u1",
+            name="nextdays-api",
+            rueckstand=DeployRueckstand(
+                commits_gesamt=7, commits_relevant=2, betrifft_mich=True
+            ),
+        )],
+        main_sha="deadbeefcafe",
+    )
+    with patch.object(deploy_spiegel, "get_settings") as gs, patch.object(
+        deploy_spiegel.DeployService, "uebersicht_von_coolify", return_value=ueb
+    ):
+        gs.return_value.coolify_configured = True
+        deploy_spiegel.spiegel_aktualisieren(db)
+
+    zeile = db.table.return_value.upsert.call_args[0][0][0]
+    assert zeile["rueckstand"]["commits_relevant"] == 2
+    assert zeile["rueckstand"]["betrifft_mich"] is True
+    assert zeile["main_sha"] == "deadbeefcafe"
+
+
+# --- Lesepfad: aus dem Spiegel, nicht live aus Coolify ----------------------
+
+
+def test_uebersicht_aus_spiegel_ruft_coolify_nicht_an() -> None:
+    """Der eigentliche Fix: der Request-Pfad fasst Coolify nicht mehr an.
+
+    Vorher löste jedes Realtime-Event eine serielle HTTP-Kette aus (ein Aufruf
+    für die laufenden Deploys, einer JE nicht laufender App, dazu watch_paths
+    und GitHub). Jetzt ist es ein Query.
+    """
+    apps = ueberwachte_apps()
+    uuid, name = apps[0]
+    db = _spiegel_db([{
+        "anwendung_uuid": uuid,
+        "name": name,
+        "status": "finished",
+        "deployment_uuid": "dep-9",
+        "commit": "abc12345",
+        "deploy_id": 919,
+        "anwendung": name,
+        "log_url": "https://coolify.example.com/log/9",
+        "laeuft": False,
+        "rueckstand": {"commits_gesamt": 3, "commits_relevant": 1,
+                       "betrifft_mich": True, "offene": [], "fehler": None},
+        "main_sha": "cafebabe1234",
+        "geprueft_at": "2026-08-09T10:00:00+00:00",
+        "aktualisiert_at": "2026-08-09T09:00:00+00:00",
+    }])
+
+    with patch.object(coolify, "laufende_deploys", side_effect=AssertionError(
+        "Der Lesepfad darf Coolify nicht mehr anfassen"
+    )), patch.object(coolify, "verlauf", side_effect=AssertionError("desgleichen")):
+        ueb = DeployService.uebersicht_aus_spiegel(db)
+
+    treffer = next(a for a in ueb.apps if a.uuid == uuid)
+    assert treffer.letzter is not None
+    assert treffer.letzter.id == 919
+    assert treffer.letzter.log_url == "https://coolify.example.com/log/9"
+    assert treffer.rueckstand is not None
+    assert treffer.rueckstand.commits_relevant == 1
+    assert ueb.main_sha == "cafebabe1234"
+    assert ueb.main_kurz_sha == "cafebabe"
+    # geprueft_at wird ausgeliefert — das Frontend zeigt damit „steht still".
+    assert treffer.geprueft_at is not None
+    assert treffer.aktualisiert_at is not None
+
+
+def test_uebersicht_aus_spiegel_fuehrt_apps_ohne_zeile_leer() -> None:
+    """Eine geführte App ohne Spiegel-Zeile fehlt nicht, sie ist sichtbar leer.
+
+    Stillschweigendes Weglassen wäre der gefährliche Weg: die App verschwände
+    aus dem Monitor, statt zu zeigen, dass über sie nichts bekannt ist.
+    """
+    db = _spiegel_db([])
+    ueb = DeployService.uebersicht_aus_spiegel(db)
+
+    assert len(ueb.apps) == len(ueberwachte_apps())
+    assert all(a.letzter is None for a in ueb.apps)
+    assert all(a.rueckstand is None for a in ueb.apps)
+    assert all(a.geprueft_at is None for a in ueb.apps)
+    assert ueb.aktiv is False
+    # Kein erfundener Rückstand und kein erfundener main-Stand.
+    assert ueb.main_sha is None
+    # Leerer Spiegel → „nie geprüft", nicht „gerade eben".
+    assert ueb.spiegel_geprueft_at is None
+
+
+def test_spiegel_geprueft_at_ist_der_aelteste_wert() -> None:
+    """Der ÄLTESTE Blick zählt: eine frische Zeile darf nicht Frische vortäuschen."""
+    apps = ueberwachte_apps()
+    db = _spiegel_db([
+        {"anwendung_uuid": apps[0][0], "name": apps[0][1], "status": "finished",
+         "geprueft_at": "2026-08-09T10:00:00+00:00"},
+        {"anwendung_uuid": apps[1][0], "name": apps[1][1], "status": "finished",
+         "geprueft_at": "2026-08-09T08:00:00+00:00"},
+    ])
+    ueb = DeployService.uebersicht_aus_spiegel(db)
+    assert ueb.spiegel_geprueft_at is not None
+    assert ueb.spiegel_geprueft_at.hour == 8
+
+
+def test_spiegel_ohne_deploy_liefert_keinen_leeren_eintrag() -> None:
+    """`status='unbekannt'` ohne deployment_uuid heißt: es gibt keinen Deploy."""
+    apps = ueberwachte_apps()
+    db = _spiegel_db([{
+        "anwendung_uuid": apps[0][0],
+        "name": apps[0][1],
+        "status": "unbekannt",
+        "deployment_uuid": None,
+        "geprueft_at": "2026-08-09T10:00:00+00:00",
+    }])
+    ueb = DeployService.uebersicht_aus_spiegel(db)
+    treffer = next(a for a in ueb.apps if a.uuid == apps[0][0])
+    assert treffer.letzter is None
+    # Der Blick des Workers ist trotzdem bekannt.
+    assert treffer.geprueft_at is not None

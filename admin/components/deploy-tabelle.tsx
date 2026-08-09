@@ -1,12 +1,9 @@
 "use client";
 
-// Deploy-Monitor: Statusliste + Redeploy. Client-Komponente, weil zwei Dinge
-// Interaktivität brauchen: der Takt-Refresh und der Knopf.
+// Deploy-Monitor: Statusliste + Redeploy.
 //
-// KEIN Realtime: die Daten liegen in Coolify, nicht in Supabase — es gibt
-// keine Tabelle zum Abonnieren. Stattdessen wird im Takt neu geladen, und
-// zwar enger, solange irgendwo gebaut wird (der Bau dauert Minuten, ein
-// fertiger Stand ändert sich lange nicht).
+// Realtime statt Polling: der Worker spiegelt Coolifys Zustand nach
+// public.deploy_spiegel (Migration 0294/0345), diese Tabelle abonniert ihn.
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -16,13 +13,16 @@ import type { DeployApp } from "@/lib/backoffice";
 import { deployAusloesen } from "@/lib/deploy-actions";
 import { useRealtime } from "@/lib/use-realtime";
 
-// REALTIME, kein Polling: der Worker spiegelt Coolifys Zustand nach
-// public.deploy_spiegel (Migration 0294), diese Seite abonniert die Tabelle.
-// Ein Push je Aenderung statt „jeder Browser fragt alle paar Sekunden".
-//
-// Die Sekundenanzeige der Dauer ist eine reine Uhr im Browser — sie erzeugt
-// keine Anfrage, sondern laesst die bereits gelieferte Startzeit weiterlaufen.
+// Treibt nur die Sekundenanzeige der Dauer — kein Netzverkehr.
 const TICK_MS = 1_000;
+
+// Ab wann gilt der Spiegel als stehengeblieben. Der Worker stempelt geprueft_at
+// auch ohne fachliche Aenderung alle 5 Minuten (Heartbeat,
+// GEPRUEFT_HEARTBEAT_SECONDS) — die Schwelle muss deutlich darueber liegen,
+// sonst meldet die Anzeige einen gesunden Worker als tot. Drei verpasste
+// Heartbeats sind eindeutig. Exportiert, damit die Seite fuer ihren Banner
+// dieselbe Schwelle benutzt und beide nicht auseinanderlaufen.
+export const SPIEGEL_STILL_MS = 15 * 60 * 1000;
 
 /** Farbe UND Text — Status darf nie nur über Farbe erkennbar sein (WCAG 1.4.1). */
 const STATUS: Record<string, { label: string; stil: string }> = {
@@ -63,13 +63,70 @@ function StatusChip({ status }: { status: string }) {
   );
 }
 
-function dauer(von: string | null, bis: string | null): string {
+function dauer(von: string | null, bis: string | null, jetzt: number): string {
   if (!von) return "—";
   const start = new Date(von).getTime();
-  const ende = bis ? new Date(bis).getTime() : Date.now();
+  const ende = bis ? new Date(bis).getTime() : jetzt;
   const sek = Math.max(0, Math.round((ende - start) / 1000));
   if (sek < 60) return `${sek}s`;
   return `${Math.floor(sek / 60)}m ${sek % 60}s`;
+}
+
+/** „vor 3 Min." — grobe Angabe, die Zeile hat keinen Platz für mehr. */
+function seit(ms: number): string {
+  const min = Math.floor(ms / 60000);
+  if (min < 1) return "gerade eben";
+  if (min < 60) return `vor ${min} Min.`;
+  const std = Math.floor(min / 60);
+  if (std < 24) return `vor ${std} Std.`;
+  return `vor ${Math.floor(std / 24)} Tag(en)`;
+}
+
+/**
+ * Wie frisch ist der Blick des Workers auf DIESE App?
+ *
+ * Wurzel 5b: `geprueft_at` ist UNSERE Uhr — wann WIR zuletzt bei Coolify
+ * nachgesehen haben. Es ist ausdrücklich NICHT der Zeitpunkt eines
+ * Coolify-Ereignisses und wird auch nirgends so beschriftet.
+ *
+ * Wurzel 4/5: fehlt das Feld (älterer Lesepfad), wird nichts behauptet — weder
+ * „aktuell" noch „veraltet". Steht es still, sagt die Zeile das sichtbar,
+ * statt alte Daten stillschweigend als aktuellen Stand auszugeben.
+ */
+function SpiegelZelle({ app, jetzt }: { app: DeployApp; jetzt: number }) {
+  if (!app.geprueft_at) {
+    return (
+      <span
+        className="text-xs text-muted-foreground"
+        title="Der Worker hat für diese Anwendung noch nichts in den Spiegel geschrieben."
+      >
+        —
+      </span>
+    );
+  }
+  const alter = jetzt - new Date(app.geprueft_at).getTime();
+  const still = alter >= SPIEGEL_STILL_MS;
+  if (!still) {
+    return (
+      <span
+        className="text-xs text-muted-foreground"
+        title={`Zuletzt bei Coolify nachgesehen: ${new Date(app.geprueft_at).toLocaleString("de-DE")}`}
+      >
+        {seit(alter)}
+      </span>
+    );
+  }
+  return (
+    <span
+      className="inline-flex whitespace-nowrap rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400"
+      title={
+        `Wir haben zuletzt am ${new Date(app.geprueft_at).toLocaleString("de-DE")} bei Coolify nachgesehen. ` +
+        "Der angezeigte Stand kann veraltet sein — vermutlich läuft der Spiegel-Job im Worker nicht."
+      }
+    >
+      Spiegel steht still ({seit(alter)})
+    </span>
+  );
 }
 
 /** Was der Rückstand für DIESE App bedeutet — eine Zelle, drei Zustände. */
@@ -175,11 +232,19 @@ export function DeployTabelle({
     debounceMs: 250,
   });
 
-  // Reine Browser-Uhr fuer die Dauer laufender Deploys — kein Netzverkehr.
-  const [, tick] = useState(0);
+  // Reine Browser-Uhr — kein Netzverkehr. Sie treibt zwei Anzeigen: die Dauer
+  // laufender Deploys (sekundengenau) und das Alter des Spiegels.
+  //
+  // Sie laeuft deshalb AUCH ohne laufenden Deploy, nur langsamer. Ein
+  // stehengebliebener Spiegel zeigt sich gerade dann, wenn nichts mehr passiert
+  // — haetten wir die Uhr wie bisher an `aktiv` gehaengt, waere der Hinweis
+  // „Spiegel steht still" nie von selbst erschienen.
+  const [jetzt, setJetzt] = useState(() => Date.now());
   useEffect(() => {
-    if (!aktiv) return;
-    const id = setInterval(() => tick((n) => n + 1), TICK_MS);
+    const id = setInterval(
+      () => setJetzt(Date.now()),
+      aktiv ? TICK_MS : 30_000,
+    );
     return () => clearInterval(id);
   }, [aktiv]);
 
@@ -209,6 +274,9 @@ export function DeployTabelle({
             <th className="pb-2 pr-4 font-semibold">Änderungen</th>
             <th className="pb-2 pr-4 font-semibold">Gestartet</th>
             <th className="pb-2 pr-4 font-semibold">Dauer</th>
+            {/* UNSERE Uhr, nicht Coolifys — die Spalte heisst deshalb
+                „Nachgesehen" und nicht etwa „Aktualisiert" (Wurzel 5b). */}
+            <th className="pb-2 pr-4 font-semibold">Nachgesehen</th>
             <th className="pb-2 pr-4 font-semibold">Ausgabe</th>
             <th className="pb-2 font-semibold">{darfDeployen ? "Aktion" : ""}</th>
           </tr>
@@ -263,8 +331,15 @@ export function DeployTabelle({
               </td>
               <td className="whitespace-nowrap py-3 pr-4 text-muted-foreground">
                 {app.letzter
-                  ? dauer(app.letzter.gestartet_at, app.letzter.beendet_at)
+                  ? dauer(
+                      app.letzter.gestartet_at,
+                      app.letzter.beendet_at,
+                      jetzt,
+                    )
                   : "—"}
+              </td>
+              <td className="whitespace-nowrap py-3 pr-4">
+                <SpiegelZelle app={app} jetzt={jetzt} />
               </td>
               <td className="py-3 pr-4">
                 <Link

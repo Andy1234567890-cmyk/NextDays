@@ -1495,6 +1495,17 @@ flowchart TB
     A1 -.->|"Transfer: DPF"| GOOG
 ```
 
+> **Worker spricht Coolifys API (Deploy-Spiegel):** Der Worker hängt neben
+> `supabase-internal` auch im Docker-Netz `coolify`
+> ([`deploy/worker/docker-compose.yml`](../deploy/worker/docker-compose.yml)).
+> Er liest dort den Deploy-Zustand und schreibt ihn nach `public.deploy_spiegel`,
+> damit das Backoffice ihn per Realtime abonnieren kann statt zu pollen (Details:
+> [API.md → Deploy-Monitor](API.md#platform_admin--deploy-monitor-apiv1platformdeploy)).
+> Das ist **ausgehender** Verkehr — die Regel „der Worker braucht kein
+> coolify/Traefik-Netz" gilt für eingehenden: er nimmt weiterhin nichts an
+> (keine Ports, keine Traefik-Labels). Ohne diesen Netz-Eintrag löst
+> `COOLIFY_API_URL` den Host `coolify` nicht auf und der Monitor bleibt leer.
+
 > **Mailserver bewusst auf separatem Host:** Ein Mailserver braucht exklusive Ports
 > (25/465/587/…) und eine saubere IP-Reputation und darf beim Crash NICHT den
 > DB-Stack mitreißen (Regel „Worker nie in DB-Stack"). Deshalb läuft Mailcow auf

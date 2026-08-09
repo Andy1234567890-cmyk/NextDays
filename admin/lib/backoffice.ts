@@ -593,9 +593,9 @@ export async function getSteuern(nurLuecken = false): Promise<SteuerUebersicht> 
 }
 
 // --- Deploy-Monitor ---------------------------------------------------------
-// Quelle ist Coolify (über FastAPI), nicht unsere Datenbank. Deshalb gibt es
-// hier auch kein Realtime: es existiert keine Tabelle, die man abonnieren
-// könnte — die Seite aktualisiert sich stattdessen im Takt (siehe Seite).
+// Coolify bleibt die Quelle der Wahrheit, gelesen wird aber sein Spiegel in
+// unserer DB (public.deploy_spiegel, Migration 0294/0345) — deshalb ist die
+// Seite abonnierbar und braucht keinen Takt-Refresh.
 
 export interface DeployEintrag {
   id: number | null;
@@ -636,6 +636,14 @@ export interface DeployApp {
   laeuft: boolean;
   letzter: DeployEintrag | null;
   rueckstand: DeployRueckstand | null;
+  /** UNSERE Uhr: wann der Worker zuletzt nach dieser App gesehen hat (Wurzel
+   *  5b — kein Zeitpunkt eines Coolify-Ereignisses). Optional, weil der
+   *  Lesepfad das Feld erst seit dem Spiegel-Umbau liefert; fehlt es, zeigt die
+   *  Tabelle keinen Frische-Hinweis statt zu raten. */
+  geprueft_at?: string | null;
+  /** Wann sich fachlich zuletzt etwas geändert hat. Bleibt stehen, während
+   *  geprueft_at weiterläuft. */
+  aktualisiert_at?: string | null;
 }
 
 export interface DeployUebersicht {
@@ -643,6 +651,9 @@ export interface DeployUebersicht {
   aktiv: boolean;
   main_sha: string | null;
   main_kurz_sha: string | null;
+  /** Ältester geprueft_at über alle Zeilen — „der Spiegel ist mindestens so
+   *  alt". Steht er still, läuft der Worker-Job nicht mehr. */
+  spiegel_geprueft_at?: string | null;
 }
 
 export interface DeployVerlauf {

@@ -4,21 +4,23 @@
 // Coolify: dessen Oberfläche ist nur über einen SSH-Tunnel erreichbar, ein
 // Link liefe für den Betreiber ins Leere.
 //
-// Client-Komponente, weil das Log während eines laufenden Baus nachwachsen
-// muss — es wird im Takt nachgeladen und rollt ans Ende.
+// Client-Komponente, weil das Log während eines laufenden Baus nachwächst.
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { DeployLog } from "@/lib/backoffice";
 import { logHolen } from "@/lib/deploy-actions";
-import { useRealtime } from "@/lib/use-realtime";
+import { type RealtimePayload, useRealtime } from "@/lib/use-realtime";
 
 const LAEUFT = new Set(["queued", "in_progress"]);
 
 export function DeployLogAnsicht({
   deploymentUuid,
+  anwendungUuid,
   start,
 }: {
   deploymentUuid: string;
+  /** Anwendung, zu der dieser Deploy gehört — Primärschlüssel im Spiegel. */
+  anwendungUuid: string;
   start: DeployLog;
 }) {
   const [log, setLog] = useState<DeployLog>(start);
@@ -36,16 +38,52 @@ export function DeployLogAnsicht({
     }
   }, [deploymentUuid]);
 
+  // Beim Uebergang „laeuft" -> „fertig" GENAU EINMAL final nachladen.
+  //
+  // Ohne das fehlten dauerhaft die letzten Zeilen: der Realtime-Auslöser unten
+  // holt nur nach, solange `laeuft` true ist — und `laeuft` stammt aus genau
+  // dem Log, das er nachlädt. Sobald der Deploy fertig war, kippte `laeuft` auf
+  // false und die Ansicht lud NIE WIEDER nach; der Abschluss des Builds war nur
+  // über den manuellen Knopf zu sehen.
+  const warLaeuft = useRef(laeuft);
+  useEffect(() => {
+    const vorher = warLaeuft.current;
+    warLaeuft.current = laeuft;
+    if (vorher && !laeuft) void nachladen();
+  }, [laeuft, nachladen]);
+
   // Das LOG selbst wird nicht gespiegelt (50 KB je Deploy, selten gebraucht).
-  // Der AUSLOESER ist trotzdem Realtime: sobald der Worker den Fortschritt
-  // nach deploy_spiegel schreibt, holt diese Ansicht die neuen Zeilen nach.
-  // Kein Timer, keine Anfrage ohne Anlass.
-  useRealtime({
-    table: "deploy_spiegel",
-    onChange: () => {
-      if (laeuft) void nachladen();
+  // Der AUSLOESER ist trotzdem Realtime: schreibt der Worker den Fortschritt
+  // nach deploy_spiegel, holt diese Ansicht die neuen Zeilen nach.
+  //
+  // Bewusst OHNE Server-Filter, dafuer mit Pruefung auf die eigene Anwendung im
+  // Callback: `deploy_spiegel` hat REPLICA IDENTITY DEFAULT (angelegt in 0294,
+  // lange nach dem projektweiten `replica identity full` aus 0054). Ein
+  // serverseitiger Filter waere damit nicht fuer jede Ereignisart verlaesslich
+  // — und ein Filter, der zu viel wegfiltert, ist wieder eine stumme Attrappe.
+  // Die Pruefung hier haengt nicht daran: sie nimmt `new` ODER `old`.
+  //
+  // onEvent statt onChange, weil nur der Payload verraet, WELCHE Anwendung
+  // gemeint ist. Der Debounce, den onChange mitbraechte, wird deshalb unten
+  // selbst gehalten — sonst zieht jeder Worker-Tick 50 KB Log.
+  const nachladeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (nachladeTimer.current) clearTimeout(nachladeTimer.current);
     },
-    debounceMs: 250,
+    [],
+  );
+
+  useRealtime<{ anwendung_uuid?: string }>({
+    table: "deploy_spiegel",
+    onEvent: (payload: RealtimePayload<{ anwendung_uuid?: string }>) => {
+      const betroffen =
+        payload.new?.anwendung_uuid ?? payload.old?.anwendung_uuid;
+      if (betroffen !== anwendungUuid) return;
+      if (!laeuft) return;
+      if (nachladeTimer.current) clearTimeout(nachladeTimer.current);
+      nachladeTimer.current = setTimeout(() => void nachladen(), 250);
+    },
   });
 
   // Während des Baus am Ende bleiben, wie in einem Terminal.

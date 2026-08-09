@@ -13,8 +13,11 @@
 // den Anwesenheits-Kanal dürfen ausschließlich Backoffice-Nutzer.
 import { useEffect, useRef, useState } from "react";
 
-import { adminSessionToken } from "@/lib/session";
-import { getRealtimeClient } from "@/lib/use-realtime";
+import {
+  getRealtimeClient,
+  realtimeAuthSetzen,
+  registriereFremdkanal,
+} from "@/lib/use-realtime";
 
 /** Kanal einer Konversation (Tippt-Anzeige beider Seiten). */
 const konversationsTopic = (id: string) => `support:${id}`;
@@ -60,23 +63,47 @@ export function useTypingChannel(
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let abgebrochen = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    const debug = registriereFremdkanal(
+      "broadcast:typing",
+      konversationsTopic(conversationId),
+    );
 
     (async () => {
-      const token = await adminSessionToken();
-      if (token) await supabase.realtime.setAuth(token);
-      if (abgebrochen) return;
+      // Ohne Argument: der accessToken-Callback des Clients liefert den Token
+      // und frischt ihn bei Reconnect/Heartbeat selbst auf.
+      const hatToken = await realtimeAuthSetzen(supabase);
+      debug.setzeToken(hatToken);
+      if (!hatToken) {
+        // `private: true` heißt: RLS auf realtime.messages entscheidet. Ohne
+        // Token ist der Join anon und der Kanal bleibt stumm — melden statt
+        // eine tote Tippt-Anzeige als „niemand tippt" auszugeben.
+        debug.setzeStatus("KEIN_TOKEN");
+        console.warn(
+          "[realtime] Tippt-Kanal: kein Admin-Token, Kanal bleibt stumm.",
+        );
+      }
+      if (abgebrochen) {
+        debug.abmelden();
+        return;
+      }
 
       channel = supabase.channel(konversationsTopic(conversationId), {
         config: { private: true, broadcast: { self: false } },
       });
       channel
         .on("broadcast", { event: "typing" }, ({ payload }) => {
+          debug.zaehleEvent();
           if ((payload as { seite?: string })?.seite === seite) return;
           setGegenseiteTippt(true);
           if (timer) clearTimeout(timer);
           timer = setTimeout(() => setGegenseiteTippt(false), TIPP_TIMEOUT_MS);
         })
-        .subscribe();
+        .subscribe((status, err) => {
+          debug.setzeStatus(status, err);
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            console.warn(`[realtime] Tippt-Kanal: ${status}`, err ?? "");
+          }
+        });
 
       sendenRef.current = (payload) => {
         void channel?.send({ type: "broadcast", event: "typing", payload });
@@ -88,6 +115,7 @@ export function useTypingChannel(
       if (timer) clearTimeout(timer);
       sendenRef.current = null;
       setGegenseiteTippt(false);
+      debug.abmelden();
       if (channel) void supabase.removeChannel(channel);
     };
   }, [conversationId, seite, aktiv]);
@@ -122,21 +150,41 @@ export function useTeamPresence(
     const supabase = getRealtimeClient();
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let abgebrochen = false;
+    const debug = registriereFremdkanal("presence:team", PRESENCE_TOPIC);
 
     (async () => {
-      const token = await adminSessionToken();
-      if (token) await supabase.realtime.setAuth(token);
-      if (abgebrochen) return;
+      const hatToken = await realtimeAuthSetzen(supabase);
+      debug.setzeToken(hatToken);
+      if (!hatToken) {
+        debug.setzeStatus("KEIN_TOKEN");
+        console.warn(
+          "[realtime] Anwesenheits-Kanal: kein Admin-Token, Kanal bleibt stumm.",
+        );
+      }
+      if (abgebrochen) {
+        debug.abmelden();
+        return;
+      }
 
       channel = supabase.channel(PRESENCE_TOPIC, {
         config: { private: true, presence: { key: crypto.randomUUID() } },
       });
       channel
         .on("presence", { event: "sync" }, () => {
+          debug.zaehleEvent();
           const stand = channel?.presenceState() ?? {};
           setTeamOnline(Object.keys(stand).length > 0);
         })
-        .subscribe((status) => {
+        .subscribe((status, err) => {
+          debug.setzeStatus(status, err);
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            // Scheitert der Join, meldet sich das Team NICHT als anwesend —
+            // der Kunde sieht dann „niemand da", obwohl jemand da ist. Vorher
+            // fiel dieser Fall komplett unter den Tisch.
+            console.warn(`[realtime] Anwesenheits-Kanal: ${status}`, err ?? "");
+            setTeamOnline(false);
+            return;
+          }
           if (status !== "SUBSCRIBED" || !melden) return;
           void channel?.track({ rolle: "agent" });
         });
@@ -145,6 +193,7 @@ export function useTeamPresence(
     return () => {
       abgebrochen = true;
       setTeamOnline(false);
+      debug.abmelden();
       if (channel) void supabase.removeChannel(channel);
     };
   }, [melden, aktiv]);

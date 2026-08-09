@@ -7,9 +7,12 @@
 # den kompletten Supabase-Stack herunter). Als isolierte App bleibt ein Worker-
 # Crash folgenlos für die DB: er restartet nur sich selbst.
 #
-# Der Worker nimmt KEINEN HTTP-Verkehr an (kein Traefik/coolify-Netz nötig). Er
+# Der Worker nimmt KEINEN HTTP-Verkehr an (keine Traefik-Labels, keine Ports). Er
 # erreicht Kong (SUPABASE_URL=http://kong:8000) und Redis über das stabile externe
 # Netz "supabase-internal" per Servicename — dieselbe Mechanik wie der Kong-Stack.
+# Zusätzlich hängt er im Netz "coolify" — NUR AUSGEHEND, um Coolifys API für den
+# Deploy-Spiegel zu erreichen (siehe networks beim Service). Eingehend bleibt er
+# unerreichbar.
 #
 # Voraussetzung: redis ist im DB-Stack zusätzlich in supabase-internal (alias
 # redis) — siehe deploy/supabase/docker-compose.yml.
@@ -26,9 +29,19 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "src.worker"]
     networks:
-      # NUR das stabile externe Netz zu kong/rest/redis. KEIN coolify/Traefik —
-      # der Worker ist nicht von außen erreichbar und braucht keinen Ingress.
+      # Das stabile externe Netz zu kong/rest/redis.
       - supabase-internal
+      # AUSGEHEND zu Coolifys eigener API (Host `coolify`), für den
+      # Deploy-Spiegel: der Worker liest den Deploy-Zustand aus Coolify und
+      # schreibt ihn nach public.deploy_spiegel, damit das Backoffice ihn per
+      # Realtime abonnieren kann. Ohne dieses Netz löst `COOLIFY_API_URL` den
+      # Host `coolify` nicht auf, der Job steigt bei jedem Tick aus und der
+      # Monitor bleibt leer.
+      #
+      # Kein Widerspruch zur Regel „Worker braucht keinen Ingress": die gilt
+      # für EINGEHENDEN Verkehr (Traefik-Labels, exponierte Ports). Der Worker
+      # nimmt weiterhin nichts an — er ruft nur heraus, wie die api es auch tut.
+      - coolify
     environment:
       APP_ENV: ${APP_ENV:-production}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -49,6 +62,20 @@ services:
       # Kontoweites Channex-Budget (Token-Bucket im Worker).
       CHANNEX_ACCOUNT_BUDGET: ${CHANNEX_ACCOUNT_BUDGET:-200/60}
       CHANNEX_PROPERTY_BUDGET: ${CHANNEX_PROPERTY_BUDGET:-20/60}
+      # --- Deploy-Spiegel ---------------------------------------------------
+      # Coolifys API-Zugang. COOLIFY_TOKEN/COOLIFY_API_URL injiziert Coolify in
+      # jeden von ihm verwalteten Container selbst; hier stehen sie trotzdem
+      # ausdrücklich, damit die Abhängigkeit sichtbar ist und der Stack auch
+      # ausserhalb von Coolify (lokal, anderer Host) lauffähig bleibt.
+      COOLIFY_API_URL: ${COOLIFY_API_URL:-}
+      COOLIFY_TOKEN: ${COOLIFY_TOKEN:-}
+      # GitHub für den Rückstand („was liegt zwischen ausgerolltem Stand und
+      # main"). Seit der Rückstand im Worker-Tick ermittelt und mitgespiegelt
+      # wird (statt bei jedem Seitenaufbau der API), braucht IHN der Worker —
+      # bisher hatte nur die api das Token. Fehlt es, bleibt `rueckstand` NULL
+      # und die Oberfläche sagt „kein GitHub-Zugang" (kein geratener Nullwert).
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_REPO: ${GITHUB_REPO:-}
     healthcheck:
       # Echter Liveness-Check: der Run-Loop schreibt je Durchlauf einen Heartbeat
       # (src/worker.py, HEARTBEAT_PATH); ist die Datei älter als 120 s, hängt der
@@ -72,3 +99,12 @@ networks:
   supabase-internal:
     external: true
     name: supabase-internal
+  # Coolifys eigenes Netz — von Coolify selbst angelegt, hier nur mitbenutzt.
+  # external + name, damit Coolify kein zweites Netz gleichen Namens erzeugt.
+  # Ohne diesen Eintrag überlebt der Deploy-Spiegel keinen Worker-Deploy: er
+  # lief zuletzt nur, weil das Netz von Hand per `docker network connect
+  # coolify worker-…` angehängt worden war — und das ist beim nächsten
+  # Neuanlegen des Containers weg.
+  coolify:
+    external: true
+    name: coolify

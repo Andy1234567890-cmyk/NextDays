@@ -14,7 +14,12 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from src.core.security import CurrentPlatformAdmin, require_platform_write
 
-from .dependencies import DeployServiceDep, PlatformAdminServiceDep, TeamServiceDep
+from .dependencies import (
+    DeployDbDep,
+    DeployServiceDep,
+    PlatformAdminServiceDep,
+    TeamServiceDep,
+)
 from .schemas import (
     AuditList,
     BuchungDetail,
@@ -742,9 +747,15 @@ def get_buchung(
 
 
 # --- Deploy-Monitor -------------------------------------------------------
-# Quelle ist Coolify, nicht unsere DB. Lesen darf jeder im Backoffice (auch
-# platform_support: sehen, ob ein Ausrollen läuft, hilft bei jeder Störung);
-# AUSLÖSEN nur platform_admin (require_platform_write).
+# Quelle der Wahrheit ist Coolify. Die ÜBERSICHT liest sie aber aus unserem
+# Spiegel `public.deploy_spiegel` (0294/0345), den der Worker fortschreibt —
+# siehe deploy_service.py: das Backoffice abonniert genau diese Tabelle, also
+# muss der Lesepfad dieselbe Tabelle lesen, sonst kostet jedes Realtime-Event
+# eine mehrsekündige Coolify-Kette. Verlauf und Build-Log kommen weiterhin
+# live aus Coolify (selten geöffnet, zu groß zum Spiegeln).
+# Lesen darf jeder im Backoffice (auch platform_support: sehen, ob ein
+# Ausrollen läuft, hilft bei jeder Störung); AUSLÖSEN nur platform_admin
+# (require_platform_write).
 
 
 @router.get("/deploy", response_model=DeployUebersicht)
@@ -752,10 +763,16 @@ def deploy_uebersicht(
     ctx: CurrentPlatformAdmin,
     service: PlatformAdminServiceDep,
     deploy: DeployServiceDep,
+    db: DeployDbDep,
     request: Request,
 ) -> DeployUebersicht:
-    """Je überwachter Anwendung der laufende bzw. letzte Deploy."""
-    ergebnis = deploy.uebersicht()
+    """Je überwachter Anwendung der laufende bzw. letzte Deploy.
+
+    Aus dem Spiegel, nicht live aus Coolify: ein Query statt ~12 serieller
+    HTTP-Aufrufe. `spiegel_geprueft_at` sagt, wie frisch der Spiegel ist —
+    steht er still, arbeitet der Worker-Job nicht mehr.
+    """
+    ergebnis = deploy.uebersicht_aus_spiegel(db)
     service.log_action(ctx, "deploy.view", request=request)
     return ergebnis
 

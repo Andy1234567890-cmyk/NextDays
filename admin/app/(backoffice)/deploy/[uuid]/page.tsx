@@ -1,6 +1,9 @@
 // Deploy-Verlauf EINER Anwendung samt Build-Ausgabe. Das Log kommt aus
 // Coolify über unsere API — Coolify selbst ist nur per SSH-Tunnel erreichbar,
 // deshalb wird hier alles im Backoffice gezeigt statt verlinkt.
+//
+// `uuid` aus dem Pfad ist die Coolify-Anwendungs-UUID und zugleich der
+// Primärschlüssel im Spiegel — die Log-Ansicht filtert damit ihr Realtime-Abo.
 import Link from "next/link";
 
 import { ApiError } from "@nextdays/auth/errors";
@@ -156,7 +159,11 @@ export default async function DeployDetailSeite({
               </p>
             </div>
           ) : log && zielUuid ? (
-            <DeployLogAnsicht deploymentUuid={zielUuid} start={log} />
+            <DeployLogAnsicht
+              deploymentUuid={zielUuid}
+              anwendungUuid={uuid}
+              start={log}
+            />
           ) : null}
         </>
       )}

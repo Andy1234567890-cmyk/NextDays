@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { getPlatformMe } from "@/lib/backoffice";
 
 import { BackofficeNav } from "@/components/backoffice-nav";
+import { RealtimeDebugPanel } from "@/components/realtime-debug-panel";
 
 export default async function BackofficeLayout({
   children,
@@ -27,6 +28,15 @@ export default async function BackofficeLayout({
     <div className="flex min-h-screen">
       <BackofficeNav email={me.email} rolle={me.platform_role} />
       <main className="min-w-0 flex-1">{children}</main>
+      {/* Realtime-Overlay: zeigt je Seite, ob die Abos wirklich verbinden und
+          Events ankommen — ein stummes Abo ist sonst nicht von „ruhig" zu
+          unterscheiden. Beide Bedingungen sind Build-Zeit-Konstanten, in
+          Produktion faellt die Komponente aus dem Bundle. Auf Staging per
+          NEXT_PUBLIC_REALTIME_DEBUG=1 zuschaltbar. */}
+      {(process.env.NODE_ENV !== "production" ||
+        process.env.NEXT_PUBLIC_REALTIME_DEBUG === "1") && (
+        <RealtimeDebugPanel />
+      )}
     </div>
   );
 }
