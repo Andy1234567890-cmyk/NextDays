@@ -5,6 +5,34 @@
 **Vorläufer:** `SECURITY-AUDIT-AUTH.md`, `SECURITY-AUDIT-2.md`, `SECURITY-AUDIT-MEGA.md`. Mehrere frühere Befunde wurden zwischenzeitlich **gefixt** (siehe „Seit letztem Audit geschlossen") — dieser Report spiegelt den aktuellen Stand.
 **Markierung:** [Sicher] = im Code verifiziert · [Wahrscheinlich] = starke Indizien, Live-Bestätigung offen · [Vermutung].
 
+> ### ⚠ Stand 2026-08-08: die Haupt-Kill-Chain ist GESCHLOSSEN
+>
+> Dieser Report ist eine **Momentaufnahme vom 2026-07-16** und wird als solche
+> stehen gelassen (er belegt, wie der Befund entstand). Der schwerste Punkt —
+> **SB-1/SB-2/PG-1, der PostgREST-Rollen-Bypass** — ist mit den Migrationen
+> **`0336`, `0337_direktpfad_sensible_tabellen_schliessen` und `0339`** behoben.
+> Damit sind die folgenden Aussagen im Text **überholt**:
+>
+> - „keine DML-`revoke` auf `public.users`" (Zeile 31) → `0337` entzieht
+>   `select,insert,update,delete` auf `public.users` von `anon, authenticated`.
+> - „in der gesamten Migrationskette gibt es **kein** `revoke
+>   insert/update/delete on public.users from authenticated`" (Detail SB-2/PG-1)
+>   → gibt es jetzt, für `users` und rund 130 weitere Tabellen.
+> - „`storybook_chat` anon read+write" (RT1/SB-3) → `anon` hat dort seit `0337`
+>   gar keine Rechte mehr; die Lese-Policy verlangt eine angemeldete `auth.uid()`.
+> - „Default-`authenticated`-Grant ist intakt" / „Kein `revoke create on schema
+>   public`" (Verifikationstabelle) → beides widerrufen (`0336`/`0337`), inklusive
+>   der Default-Privilegien auf Tabellen und Sequenzen.
+> - Das Fazit „alle DB-seitigen Voraussetzungen der Kill-Chain sind erfüllt und
+>   bestätigt" gilt nicht mehr.
+>
+> Der vorgeschlagene **Fix ist genau der umgesetzte** — Details, was bewusst offen
+> bleibt (Leseschicht für `authenticated`, zwei anon-lesbare Taxonomie-Tabellen)
+> und wie man es nachprüft (`scripts/security/direktpfad-pruefen.sh`), stehen in
+> [ARCHITECTURE.md §6.2](ARCHITECTURE.md#62-db-direktpfad-geschlossen-wurzel-6-migrationen-03360339).
+> Unverändert **offen** bleiben die Punkte, die diese Migrationen nicht berühren:
+> GoTrue-Direktpfad (Captcha/`aal2`), PG-2/PG-3/PG-4 und die Business-Logic-Befunde.
+
 ---
 
 ## Executive Summary — die eine Kill-Chain, die alles bricht

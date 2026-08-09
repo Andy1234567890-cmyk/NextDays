@@ -2,6 +2,23 @@
 
 **Datum:** 2026-07-16 · **Kontext:** Bewertung gegen die 5 vom Gründer genannten Angriffsklassen, aus Startup-Sicht (begrenztes Budget → Fokus auf kostenlose/config-basierte, hochwirksame Maßnahmen).
 **Grundlage:** Audit 1/2, Mega-Audit, Red-Team (10 Domänen) + Verifikation des aktuellen Code-Stands am 2026-07-16.
+> ### ⚠ Stand 2026-08-08: die kritische DB-Grant-Lücke ist GESCHLOSSEN
+>
+> Dieser Bericht ist eine **Momentaufnahme vom 2026-07-16**. Der als „schwerster
+> offener Punkt der ganzen Auditreihe" bezeichnete Befund **SB-1/SB-2/PG-1**
+> (PostgREST-Rollen-Bypass) ist mit den Migrationen `0336`,
+> `0337_direktpfad_sensible_tabellen_schliessen` und `0339` behoben — genau so,
+> wie unter „Sofort-Paket" vorgeschlagen. Überholt sind damit: die Statuszeile
+> „noch OFFEN", die Aussage „es gibt **kein** `revoke insert/update/delete` auf
+> `{users,payments,commissions,guests}`", die Ampel „🟠 gemischt — PostgREST-
+> Rollen-Bypass offen (kritisch)" in Klasse 3 sowie die Zusammenfassung „(a) eine
+> kritische DB-Grant-Lücke". Was bewusst offen bleibt und wie man es nachprüft:
+> [ARCHITECTURE.md §6.2](ARCHITECTURE.md#62-db-direktpfad-geschlossen-wurzel-6-migrationen-03360339)
+> und `scripts/security/direktpfad-pruefen.sh`.
+>
+> **Weiterhin offen** (von diesen Migrationen nicht berührt): GoTrue-Direktpfad
+> (Captcha/Leaked-Password/`aal2`), DDoS/WAF-Schicht, Supply-Chain/CI-Pinning.
+
 **Ehrliche Vorbemerkung:** Von den 5 Klassen kann eine Plattform 3 technisch adressieren (Stuffing/Brute-Force, Software-Schwachstellen, DDoS). Phishing/Social-Engineering und Malware/Supply-Chain sind überwiegend Prozess-/Menschen-Themen — Code kann dort nur den **Schaden begrenzen**.
 
 ---
@@ -12,11 +29,11 @@
 |---|----------------|--------------|-----------|
 | 1 | Phishing & Social Engineering | 🟡 teilweise | MFA nicht serverseitig erzwungen; E-Mail-Wechsel ohne Re-Auth |
 | 2 | Credential Stuffing & Brute Force | 🟡 teilweise | App-Ratelimit vorhanden, aber direkt-GoTrue umgehbar; kein Captcha/Leaked-PW; MFA optional |
-| 3 | Software-Schwachstellen-Ausnutzung | 🟠 gemischt | **PostgREST-Rollen-Bypass offen (kritisch)**; sonst viel gehärtet |
+| 3 | Software-Schwachstellen-Ausnutzung | 🟢 gehärtet (seit 08.08.) | PostgREST-Rollen-Bypass mit `0336`/`0337`/`0339` geschlossen; Rest wie unten |
 | 4 | DDoS | 🔴 Lücke | Nur App-Ratelimit; keine bestätigte Netzwerk-/WAF-Schicht (Cloudflare) |
 | 5 | Malware & infizierte Updates (Supply-Chain) | 🟡 teilweise | CI-Actions ungepinnt; committed Credential; Mobile-Debug-Keystore |
 
-**Gesamtbild:** Der App-Code ist nach den letzten Runden überdurchschnittlich sauber. Die Rest-Risiken liegen (a) in **einer** kritischen DB-Grant-Lücke, (b) im **Auth-Flow** (MFA/Takeover) und (c) an den **Rändern** (Netzwerk-DDoS, Supply-Chain) — dort, wo Startups typischerweise nichts stehen haben. Alle Sofort-Maßnahmen unten sind kostenlos oder Config.
+**Gesamtbild:** Der App-Code ist nach den letzten Runden überdurchschnittlich sauber. Die Rest-Risiken lagen (a) in **einer** kritischen DB-Grant-Lücke — seit 2026-08-08 geschlossen, s. Banner —, (b) im **Auth-Flow** (MFA/Takeover) und (c) an den **Rändern** (Netzwerk-DDoS, Supply-Chain) — dort, wo Startups typischerweise nichts stehen haben. Alle Sofort-Maßnahmen unten sind kostenlos oder Config.
 
 ---
 
@@ -52,14 +69,14 @@
 
 **Was uns schützt (viel gehärtet):** Dependencies `pip-audit`-sauber (alle Pins ≥ Fix-Version); Next.js 15.5.19 (über allen 2025/26-CVEs, inkl. Middleware-Bypass CVE-2025-29927); Stripe-Webhook fail-closed + idempotent; SSRF-iCal mit IP-Pinning; Injection sauber (parametrisiert); XSS im Page-Builder serverseitig via `nh3` sanitisiert; Payment-Races idempotent; RLS explizit verankert (Migration 0154).
 
-**Kritische Lücke — noch OFFEN:**
-- **SB-1/SB-2/PG-1 [Wahrscheinlich, offen — verifiziert: kein DML-`revoke`]** — Die RLS erzwingt nur **Mandanten**-Trennung. `authenticated` hat per Supabase-Default volles DML auf `public`-Tabellen; es gibt **kein** `revoke insert/update/delete on public.{users,payments,commissions,guests}`. Ein Low-Priv-Nutzer (cleaner) kann mit seinem echten JWT + anon-Key **direkt PostgREST** ansprechen und (a) alle Finanzdaten/Gast-PII lesen, (b) via `PATCH users role=admin` sich selbst zum Admin machen. Die gesamte Rollen-Trennung lebt nur im FastAPI-Layer und wird DB-seitig umgangen. **Das ist der schwerste offene Punkt der ganzen Auditreihe.**
+**Kritische Lücke — seit 2026-08-08 GESCHLOSSEN (`0336`/`0337`/`0339`), der Befund von damals:**
+- **SB-1/SB-2/PG-1 [Wahrscheinlich, offen — verifiziert: kein DML-`revoke`]** — Die RLS erzwingt nur **Mandanten**-Trennung. `authenticated` hat per Supabase-Default volles DML auf `public`-Tabellen; es gibt **kein** `revoke insert/update/delete on public.{users,payments,commissions,guests}`. Ein Low-Priv-Nutzer (cleaner) kann mit seinem echten JWT + anon-Key **direkt PostgREST** ansprechen und (a) alle Finanzdaten/Gast-PII lesen, (b) via `PATCH users role=admin` sich selbst zum Admin machen. Die gesamte Rollen-Trennung lebt nur im FastAPI-Layer und wird DB-seitig umgangen. **Das war der schwerste offene Punkt der ganzen Auditreihe — behoben mit `0336`/`0337`/`0339`.**
   - *Der R-4-Fix (0155) hat genau diese Erkenntnis für `user_mfa` schon dokumentiert („column-REVOKE greift nicht, solange das pauschale Tabellen-GRANT besteht") — sie muss nur auf die sensiblen Tabellen verallgemeinert werden.*
 
 **Weitere offene 🟡 (Red-Team):** FE-1 (unauth PDF-Render → SSRF, `apps/web/.../generate-pdf-single`), BL-1 (staff umgeht Task-Assignee-Scope), BL-2 (User-Enumeration), PG-2 (Objekt-Scope-Helper fail-open), U-2 (kein Magic-Byte-Check).
 
 **Startup-Maßnahmen:**
-1. **Sofort:** Härtungs-Migration `revoke insert,update,delete on public.{users,payments,commissions,guests,…} from authenticated,anon;` + `revoke create on schema public from anon,authenticated;` + restriktive Rollen-Policies. Kostenlos, schließt SB-1/SB-2/PG-1. (Ich kann sie schreiben.)
+1. ~~**Sofort:** Härtungs-Migration `revoke insert,update,delete on public.{users,payments,commissions,guests,…} from authenticated,anon;` + `revoke create on schema public from anon,authenticated;` + restriktive Rollen-Policies.~~ **Erledigt** mit `0336`/`0337`/`0339`.
 2. FE-1 authentifizieren + interne IPs/Sub-Resources im PDF-Render blocken.
 3. `pip-audit` + `npm audit` in CI als Gate (kostenlos, verhindert Rückfall).
 
@@ -97,7 +114,7 @@
 
 ## Sofort-Paket (heute, alles kostenlos — größter Schutz pro Aufwand)
 1. **INF-1** — committed Passwort rotieren + entfernen. *(Minuten)*
-2. **SB-1/SB-2/PG-1** — `revoke`-Härtungs-Migration (PostgREST-Rollen-Bypass schließen). *(1 Migration)*
+2. ~~**SB-1/SB-2/PG-1** — `revoke`-Härtungs-Migration (PostgREST-Rollen-Bypass schließen).~~ **Erledigt** (`0336`/`0337`/`0339`).
 3. **Supabase Attack Protection** — Captcha + Leaked-Password + MFA-Enforcement im Dashboard. *(Config)*
 4. **Cloudflare** vor die Domains — DDoS/WAF/Bot. *(Config)*
 5. **CI härten** — Actions SHA-pinnen, `permissions`, Dependabot/Secret-Scanning an. *(Config)*
