@@ -56,3 +56,49 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* TipTap-Rich-Text-Editor (Ankündigungen).
+   Bewusste Kopie aus web/app/globals.css: der Editor liegt in @nextdays/ui und
+   bringt seine Klassen NICHT selbst mit — ohne diese Regeln rendern Listen,
+   Zitate und der Platzhalter unformatiert. Der `.tiptap-composer`-Block aus web
+   gehört zum Posteingang und hat hier keine Entsprechung. */
+.tiptap > * + * {
+  margin-top: 0.5rem;
+}
+.tiptap ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.tiptap ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.tiptap blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 0.75rem;
+  color: var(--muted-foreground);
+}
+.tiptap a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.tiptap hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.75rem 0;
+}
+/* Platzhalter, solange leer. */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+/* Screenshots im Inhalt: nie über die Spaltenbreite hinaus, Seitenverhältnis
+   bleibt erhalten. Gilt für Editor UND Vorschau (beide tragen `.tiptap`). */
+.tiptap img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 1rem;
+}

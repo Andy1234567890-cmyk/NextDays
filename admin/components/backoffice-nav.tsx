@@ -26,6 +26,15 @@ const PUNKTE: Punkt[] = [
   { href: "/finanzen", label: "Stripe & Finanzen", icon: "ph:currency-eur" },
   { href: "/steuern", label: "Steuern", icon: "ph:scales" },
   { href: "/support", label: "Support", icon: "ph:lifebuoy" },
+  // nurAdmin: eine Ankündigung geht an ALLE Betriebe und kann als Popup jedes
+  // Kunden-Dashboard unterbrechen. platform_support darf so etwas nicht
+  // auslösen — der Server erzwingt es zusätzlich (require_platform_write).
+  {
+    href: "/ankuendigungen",
+    label: "Ankündigungen",
+    icon: "ph:megaphone",
+    nurAdmin: true,
+  },
   { href: "/diagnose", label: "Diagnose", icon: "ph:activity" },
   { href: "/deploy", label: "Deploy-Monitor", icon: "ph:rocket-launch" },
   { href: "/protokoll", label: "Protokoll", icon: "ph:list-checks" },
