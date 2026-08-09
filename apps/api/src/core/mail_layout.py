@@ -104,8 +104,17 @@ class MailLayoutError(Exception):
 
 
 # Wurzel des Repos — von hier aus liegen die Logodateien der beiden Marken.
-# `mail_layout.py` steht in `apps/api/src/core/`, also vier Ebenen tiefer.
-_REPO = Path(__file__).resolve().parents[4]
+# `mail_layout.py` steht im Repo unter `apps/api/src/core/`, also vier Ebenen
+# tiefer. Im Container gibt es diese Ebenen NICHT: das Image kopiert nur
+# `apps/api` nach `/app`, die Datei liegt dort auf `/app/src/core/` und hat nur
+# vier Vorfahren (Index 0–3). `parents[4]` warf deshalb beim IMPORT einen
+# IndexError und riss den ganzen API-Prozess mit hoch — am 09.08.2026 live:
+# uvicorn-Worker starteten in Dauerschleife, der Healthcheck blieb unhealthy.
+# Fehlt die Ebene, gibt es hier keine Repo-Wurzel und damit keine Logos; das
+# ist derselbe fail-soft-Fall, den `_logo_datei` ohnehin abfängt (Kopf zeigt
+# den Markennamen als Text). Kein erfundener Ersatzpfad (Wurzel 4).
+_PFAD = Path(__file__).resolve()
+_REPO = _PFAD.parents[4] if len(_PFAD.parents) > 4 else None
 
 # Die Logodateien. ACHTUNG, die beiden Marken legen sie UNTERSCHIEDLICH ab —
 # derselbe Pfad für beide anzunehmen wäre falsch (am 08.08.2026 geprüft):
@@ -113,8 +122,12 @@ _REPO = Path(__file__).resolve().parents[4]
 #   myBestDays → plattform/public/  (direkt, ohne Unterordner)
 # Verwendet wird jeweils die `-light`-Variante: sie sitzt im Layout auf einer
 # schwarzen Kopffläche und ist nur hell lesbar.
-_LOGO_NEXTDAYS = _REPO / "marketing/public/marketing/brand/mynextdays-logo-light.png"
-_LOGO_BESTDAYS = _REPO / "plattform/public/mybestdays-logo-light.png"
+_LOGO_NEXTDAYS = (
+    _REPO / "marketing/public/marketing/brand/mynextdays-logo-light.png"
+    if _REPO is not None
+    else None
+)
+_LOGO_BESTDAYS = _REPO / "plattform/public/mybestdays-logo-light.png" if _REPO is not None else None
 
 # Anzeigebreite des Logos in der Mail. Die Dateien sind ~1470 px breit; bei 180 px
 # Anzeige bleibt gut das Doppelte an Pixeln übrig, das Logo ist also auf
@@ -168,13 +181,18 @@ def marke_bestdays(settings: Settings | None = None) -> Marke:
     )
 
 
-def _logo_datei(pfad: Path) -> Path | None:
-    """Der Logopfad — oder None, wenn die Datei nicht da ist.
+def _logo_datei(pfad: Path | None) -> Path | None:
+    """Der Logopfad — oder None, wenn es ihn nicht gibt.
 
     Fail-soft und bewusst nicht fail-closed: ein fehlendes Logo ist ein
     Schönheitsfehler, kein Grund, eine Einladung oder einen Passwort-Reset
     nicht zuzustellen. Der Kopf zeigt dann den Markennamen als Text.
+
+    `None` kommt herein, wenn schon die Repo-Wurzel fehlt (im Container liegt
+    nur `apps/api` unter `/app`) — derselbe Fall wie eine fehlende Datei.
     """
+    if pfad is None:
+        return None
     return pfad if pfad.is_file() else None
 
 
