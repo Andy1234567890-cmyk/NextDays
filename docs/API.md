@@ -27,7 +27,7 @@ damit findet der Support den Fall im Backoffice wieder. Zentrale Handler in
 
 ## Slices
 
-Jeder der 26 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
+Die Vertical Slices stellen jeweils mindestens einen Health-Endpoint bereit:
 
 | Slice            | Health-Endpoint                                                              |
 | ---------------- | ---------------------------------------------------------------------------- |
@@ -57,6 +57,7 @@ Jeder der 26 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | crm              | `GET /api/v1/crm/health`                                                     |
 | dashboard        | `GET /api/v1/dashboard/health`                                               |
 | content          | `GET /api/v1/content/health`                                                 |
+| announcements    | `GET /api/v1/announcements/health` (Neuerungen vom Backoffice, s.u.)         |
 
 Antwort-Schema:
 
@@ -141,21 +142,185 @@ Erfordert `MANAGE_TENANT` (Admin). Body:
 
 ### `POST /api/v1/auth/invite` → `201`
 
-Legt weiteren Nutzer im eigenen Tenant an (Konto → Benutzer-Wizard). Erfordert
-`MANAGE_STAFF` (admin/co_admin). Rolle aus dem Request
-(`co_admin|owner|staff|cleaner`; `admin` entsteht nur per register). Tenant aus
-dem eingeloggten Nutzer. `permissions` ist optional — fehlt es, werden die
-Rollen-Defaults gesetzt; ungültige IDs werden gefiltert, Admin erhält immer alle.
+Legt weiteren Nutzer im eigenen Tenant an (Konto → Benutzer-Wizard) **und
+verschickt die Einladungsmail**. Erfordert `MANAGE_STAFF` (admin/co_admin).
+Rolle aus dem Request (`co_admin|owner|staff|cleaner`; `admin` entsteht nur per
+register). Tenant aus dem eingeloggten Nutzer. `permissions` ist optional —
+fehlt es, werden die Rollen-Defaults gesetzt; ungültige IDs werden gefiltert,
+Admin erhält immer alle.
+
+> **⚠ CONTRACT-BRUCH (0334): `password` entfällt.** Bis dahin würfelte der
+> Wizard im Browser ein Passwort (`Nd-`+14) und schickte es hierher — es lief
+> damit durch den Browser des Einladenden, durch jedes HTTP-Log dazwischen und
+> musste per Zuruf weitergegeben werden. **Ein mitgesendetes `password` wird
+> jetzt mit `422` abgelehnt** (Pydantic `extra`-Verhalten des Modells beachten:
+> das Feld existiert schlicht nicht mehr). Stattdessen legt der Server den
+> Auth-Nutzer mit einem Zufallspasswort an, das niemand kennt, und verschickt
+> einen Einmal-Link; das Passwort setzt die eingeladene Person selbst über
+> `POST /auth/einladung/annehmen`. Der Wizard darf also **kein Passwort mehr
+> erzeugen, anzeigen oder zum Kopieren anbieten**.
+
+**Alles-oder-nichts:** Scheitert der Mailversand, wird die komplette Anlage
+(Auth-Nutzer + `users`-Zeile) zurückgerollt und der Aufruf endet in einem
+Fehlerstatus (`502`/`503`). Es gibt keinen stillen Teilerfolg — ein `201`
+bedeutet immer: Nutzer angelegt UND Mail raus.
+
+**`preferred_language` (optional, 0335)** — die Sprache, in der dieser Nutzer
+seine E-Mails bekommt, beginnend mit der Einladungsmail. ISO 639-1, eine der 24
+EU-Amtssprachen (`bg cs da de el en es et fi fr ga hr hu it lt lv mt nl pl pt
+ro sk sl sv`). Regionsvarianten werden auf die Basissprache gekappt
+(`de-AT` → `de`, `pt_BR` → `pt`); ein **nicht unterstützter Code ergibt `422`**
+mit der Liste der erlaubten Werte — er wird NICHT stillschweigend verworfen,
+sonst fände der Betreiber später eine englische Mail vor und rätselte.
+Weggelassen/leer heißt ehrlich „nicht erfasst" → die Spalte bleibt `NULL` und
+es greift die Kette **Sprache am Empfänger → `tenants.default_language` →
+Englisch**. Bewusst wird die Sprache NICHT aus dem `Accept-Language` des
+Aufrufers abgeleitet: hier lädt der *Betreiber* jemanden ein, sein Header sagt
+über den Empfänger nichts (Wurzel 4). Englisch ist der letzte Rückfall, nicht
+Deutsch — Deutsch wäre eine inhaltliche Behauptung über den Empfänger.
 
 ```json
-// Request
-{ "email": "staff@example.de", "password": "min8zeichen",
+// Request  (KEIN password mehr)
+{ "email": "staff@example.de",
   "full_name": "Mitarbeiter", "role": "staff",
+  "preferred_language": "da",
   "permissions": ["edit_property", "pm_chat"] }
 // Response 201
 { "user_id": "uuid", "email": "staff@example.de", "role": "staff",
-  "tenant_id": "uuid", "permissions": ["edit_property", "pm_chat"] }
+  "tenant_id": "uuid", "permissions": ["edit_property", "pm_chat"],
+  "invite_mail_versendet": true }
 ```
+
+| Status | Bedeutung                                                        |
+| ------ | ---------------------------------------------------------------- |
+| `201`  | Nutzer angelegt **und** Einladungsmail versendet                  |
+| `400`  | `admin` kann nicht eingeladen werden (entsteht nur per register)  |
+| `409`  | E-Mail bereits vergeben                                           |
+| `500`  | `APP_BASE_URL` nicht konfiguriert (kein Link erzeugbar)           |
+| `502`/`503` | Mailversand fehlgeschlagen → Anlage vollständig zurückgerollt |
+
+### `POST /api/v1/auth/invite/{user_id}/resend` → `204`
+
+Einladungsmail erneut verschicken (die erste kam nicht an). Erfordert
+`MANAGE_STAFF`; der Nutzer muss im **eigenen** Tenant liegen (sonst `404`).
+Der zuvor verschickte Link wird dabei entwertet — es gilt immer nur der
+neueste. Eigene Sperrfrist von einer Minute je Nutzer (`429`).
+
+| Status | Bedeutung                                             |
+| ------ | ----------------------------------------------------- |
+| `204`  | neue Einladungsmail ist raus                          |
+| `404`  | Nutzer gehört nicht zum eigenen Tenant / existiert nicht |
+| `422`  | zu dem Nutzer ist keine E-Mail hinterlegt             |
+| `429`  | Sperrfrist seit der letzten Einladung läuft noch      |
+
+### Öffentliche Token-Vorgänge (ohne Session) — Einladung & Passwort vergessen
+
+Alle folgenden Endpunkte sind **unauthentifiziert**: wer eine Einladung annimmt,
+hatte nie ein Passwort, und wer seins vergessen hat, kann sich nicht anmelden.
+Der Einmal-Token aus der Mail **ist** die Berechtigung.
+
+Eigenschaften des Tokens (0334, Tabelle `public.user_auth_tokens`):
+
+- 32 Byte aus dem CSPRNG (`secrets.token_urlsafe`, ~43 Zeichen), in der DB liegt
+  **nur der SHA-256** — ein DB-Leser bekommt keinen benutzbaren Link.
+- **Einladung 7 Tage**, **Reset 1 Stunde** gültig.
+- **Einmalig**: die Einlösung läuft über einen bedingten UPDATE
+  (Compare-and-Set), ein zweiter Klick wirkt nicht noch einmal.
+- Nach erfolgreichem Setzen werden **alle weiteren offenen Tokens** des Nutzers
+  entwertet; nach einem **Reset** zusätzlich **alle Sitzungen widerrufen**.
+- Eigener strenger Rate-Limit-Bucket `auth_public` (**5/60 je IP**, fail-closed)
+  plus Sperrfrist je Konto — deutlich strenger als der Login-Bucket.
+
+**Fehler sind bewusst nicht unterscheidbar.** Ungültig, abgelaufen und bereits
+verbraucht antworten alle mit `400` und derselben Meldung; das Frontend fasst
+sie zu einem Zustand zusammen (kein Orakel über fremde Tokens).
+
+#### `GET /api/v1/auth/einladung/pruefen?token=…` → `200`
+
+Vorab-Prüfung, damit die Seite „Link abgelaufen" zeigen kann, **bevor** der
+Nutzer ein Passwort eintippt. Verbraucht den Token nicht. Antwortet immer `200`
+(ein `404` wäre ein Orakel):
+
+```json
+{ "gueltig": true, "sprache": "da" }
+```
+
+`sprache` ist die Sprache des **Empfängers** (ISO-639-1, eine der 24
+EU-Amtssprachen) — dieselbe Kette wie der Mailversand
+(`core.mail_empfaenger.sprache_fuer_nutzer`: eigene Wahl → Betriebssprache →
+Englisch). Die Annahmeseite rendert damit in derselben Sprache, in der die
+Einladungsmail verschickt wurde; ohne dieses Feld fiel sie auf die
+Oberflächen-Basissprache zurück, und ein dänischer Eigentümer bekam eine
+dänische Mail und eine deutsche Seite.
+
+Das Feld ist **immer** gesetzt. Bei `gueltig: false` steht dort der
+Letzt-Rückfall `"en"` (`core.mail_sprache.FALLBACK`) — die Antwort auf einen
+geratenen Token ist damit für jeden geratenen Token identisch und taugt nicht
+zur Unterscheidung.
+
+Mehr gibt der Endpunkt über den Token **nicht** preis: kein Name, keine
+E-Mail-Adresse, keine Rolle, kein Tenant. Er ist öffentlich und
+unauthentifiziert; alles darüber hinaus wäre ein Verzeichnis über fremde Konten
+für jeden, der Tokens durchprobiert (Wurzel 9).
+
+#### `POST /api/v1/auth/einladung/annehmen` → `204`
+
+```json
+// Request
+{ "token": "…", "password": "mindestens8zeichen" }
+```
+
+| Status | Bedeutung                                                    |
+| ------ | ------------------------------------------------------------ |
+| `204`  | Passwort gesetzt — der Nutzer kann sich jetzt normal anmelden |
+| `400`  | Link ungültig, abgelaufen oder bereits benutzt               |
+| `422`  | Passwort erfüllt die Mindestanforderungen nicht (< 8 Zeichen) |
+| `502`  | Passwort konnte in GoTrue nicht gesetzt werden               |
+
+Nach `204` **nicht** automatisch anmelden — der Nutzer wird zur regulären
+Anmeldung geführt (OWASP: kein Auto-Login nach Passwort-Vorgang).
+
+#### `POST /api/v1/auth/passwort-vergessen` → `200`
+
+```json
+// Request
+{ "email": "chef@example.de" }
+// Response 200 — IMMER, egal ob die Adresse existiert
+{ "message": "Falls zu dieser Adresse ein Konto gehört, ist eine E-Mail mit einem Link unterwegs." }
+```
+
+**Immer `200` mit derselben Nachricht** — kein Konto, ungültige Adresse,
+Sperrfrist und Mailfehler sind an der Antwort nicht zu unterscheiden
+(User-Enumeration, OWASP Forgot Password). Auch eine syntaktisch kaputte Adresse
+gibt `200`, nicht `422`. Das Frontend zeigt entsprechend **immer** denselben
+neutralen Text und darf daraus nichts ableiten. Eine Mail geht nur raus, wenn es
+zu der Adresse genau **einen** aktiven Tenant-Nutzer gibt (Gäste und
+Backoffice-Zugänge haben eigene Wege).
+
+#### `GET /api/v1/auth/passwort-neu/pruefen?token=…` → `200`
+
+Wie die Einladungs-Prüfung, für den Reset-Link:
+`{ "gueltig": true|false, "sprache": "da" }` — inklusive der Sprache des
+Empfängers und derselben Zurückhaltung bei allem anderen (siehe oben).
+
+#### `POST /api/v1/auth/passwort-neu` → `204`
+
+```json
+// Request
+{ "token": "…", "password": "mindestens8zeichen" }
+```
+
+Statuscodes wie bei `einladung/annehmen`. Nach Erfolg sind **alle Sitzungen des
+Kontos widerrufen** — der Nutzer meldet sich neu an.
+
+**Frontend-Routen (der Server baut die Links so):** die Mails zeigen auf
+`{APP_BASE_URL}/einladung?token=…` bzw. `{APP_BASE_URL}/passwort-neu?token=…`.
+`APP_BASE_URL` ist die öffentliche Adresse des PMS-Dashboards (`web/`) und muss
+gesetzt sein — fehlt sie, schlägt die Einladung mit `500` fehl, statt einen Link
+auf eine geratene Domain zu verschicken.
+
+Der bestehende `PATCH /api/v1/auth/account/password` (Passwortwechsel **mit**
+Session) bleibt unverändert davon.
 
 **Berechtigungsmodell (..):** Zwei Ebenen — die rollenbasierte
 **Capability-Matrix** (intern, `permissions.py`, schützt Slice-Endpoints) und die
@@ -178,14 +343,104 @@ provisioniert (Tenant + `users`-Row).
 | `GET /api/v1/auth/account`               | Konto-/Profil-Übersicht (E-Mail, Name, Rolle, Telefon, Sprachen, Website, Beschreibung, Avatar, `has_password`, `totp_enabled`)                                                                                                                  |
 | `GET /api/v1/auth/account/users`         | Nutzer des eigenen Tenants (für die Objekt-Kontakt-Auswahl) — `user_id`, Name, E-Mail, Rolle, Telefon, Avatar, `tenant_id`, `permissions`                                                                                                        |
 | `GET /api/v1/auth/account/managed-users` | Nutzerverwaltung (Konto → Benutzer): **Admin** sieht alle Nutzer plattformweit, Owner/Co-Admin nur den eigenen Tenant; normale Benutzer (staff/cleaner) → `403`                                                                                  |
+| `PATCH /api/v1/auth/account/users/{user_id}` | Nutzer im eigenen Tenant bearbeiten (admin/co_admin): `full_name`, `role`, `permissions`, `preferred_language` — nur gesendete Felder werden geschrieben; `preferred_language` wie bei `POST /auth/invite` gegen die 24 Locales geprüft (`422` bei unbekanntem Code) |
 | `PATCH /api/v1/auth/account/email`       | E-Mail ändern (`{ "new_email": "…" }`)                                                                                                                                                                                                           |
 | `PATCH /api/v1/auth/account/name`        | Anzeigename ändern (`{ "full_name": "…" }`)                                                                                                                                                                                                      |
-| `PATCH /api/v1/auth/account/profile`     | Profil-/Kontaktdaten ändern (.. „Edit contact information"): `full_name`, `phone`, `additional_phone`, `hide_phones`, `preferred_language`, `spoken_languages`, `website`, `description`, `avatar_url` — nur gesendete Felder werden geschrieben |
+| `PATCH /api/v1/auth/account/profile`     | Profil-/Kontaktdaten ändern (.. „Edit contact information"): `full_name`, `phone`, `additional_phone`, `hide_phones`, `preferred_language`, `spoken_languages`, `website`, `description`, `avatar_url` — nur gesendete Felder werden geschrieben. `preferred_language` wird seit 0335 gegen die 24 EU-Amtssprachen geprüft (`de-AT` → `de`; unbekannter Code → `422` statt stillem Verwerfen) |
 | `POST /api/v1/auth/account/avatar`       | Profilbild hochladen (`multipart/form-data`, Feld `file`) → legt in den `avatars`-Bucket (`{user_id}/avatar.<ext>`) und setzt `avatar_url`. Läuft über den Service-Client, daher für beide Login-Wege nutzbar                                    |
 | `PATCH /api/v1/auth/account/password`    | Passwort ändern (`{ "current_password"?, "new_password" }`)                                                                                                                                                                                      |
 | `POST /api/v1/auth/totp/enroll`          | TOTP-Enrollment starten → `secret`, `otpauth_uri`, `qr_data_url`                                                                                                                                                                                 |
 | `POST /api/v1/auth/totp/verify`          | Enrollment per Code bestätigen → `recovery_codes`                                                                                                                                                                                                |
 | `POST /api/v1/auth/totp/disable`         | 2FA mit gültigem Code (oder Recovery) abschalten                                                                                                                                                                                                 |
+
+### Zwei-Faktor-Authentifizierung (MFA/AAL2) — GoTrue-nativ
+
+Die 2FA liegt **vollständig in GoTrue** (`auth.mfa_factors`, `auth.mfa_challenges`),
+nicht in einer eigenen Tabelle. Das ist der Kern von Wurzel 7: der direkte
+GoTrue-Login (`POST /auth/v1/token`, anon-Key) umgeht jede App-Route. Eine 2FA,
+die nur in `/api/v1/auth/login` sitzt, ist über diesen Weg wirkungslos. GoTrue
+stellt nach bestandenem zweiten Faktor ein Token mit `aal: "aal2"` aus — dieser
+Claim ist die **einzige** Quelle der Wahrheit und wird bei JEDEM Request geprüft,
+egal über welchen Weg das Token entstanden ist.
+
+**Faktoren.** GoTrue v2.189.0 kann alle vier Wege nativ (live gegen
+`auth.factor_type` geprüft: `totp`, `phone`, `webauthn`):
+
+| Faktor              | `factor_type` | Enrollment                                              |
+| ------------------- | ------------- | ------------------------------------------------------- |
+| Authenticator-App   | `totp`        | GoTrue `POST /auth/v1/factors` → QR-Code + Secret        |
+| SMS (Twilio)        | `phone`       | GoTrue `POST /auth/v1/factors` mit `phone` (E.164)       |
+| Passkey / WebAuthn  | `webauthn`    | GoTrue `POST /auth/v1/factors` → Challenge im Browser    |
+| Wiederherstellung   | —             | `POST /api/v1/auth/mfa/recovery-codes` (eigene Tabelle)  |
+
+Wiederherstellungscodes sind der einzige Faktor, den GoTrue nicht kennt. Sie
+liegen in `public.mfa_recovery_code` — **nur als SHA-256-Hash**, einmal
+einlösbar (Claim vor Wirkung, Wurzel 2), Direktpfad gesperrt (Wurzel 6).
+
+| Methode & Pfad                                  | Zweck                                                                                                                       |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/v1/auth/mfa/status`                   | Faktoren des eigenen Kontos: `factors[]` (`id`, `factor_type`, `friendly_name`, `status`), `aal`, `mfa_required`, `mfa_grace_until`, `recovery_codes_left` |
+| `POST /api/v1/auth/mfa/recovery-codes`          | Wiederherstellungscodes **neu** erzeugen (ersetzt alle alten) → `codes[]` **einmalig im Klartext**. Verlangt Re-Auth: `password` **oder** `aal2`-Token |
+| `POST /api/v1/auth/mfa/recovery-codes/redeem`   | Code einlösen (`{ "code": "…" }`) → Session mit `aal2`. Einmalig; danach `401`                                             |
+| `DELETE /api/v1/auth/mfa/factors/{factor_id}`   | Faktor entfernen. Verlangt Re-Auth (`password` oder `aal2`) und lässt den **letzten** Faktor eines Pflicht-Kontos nur zu, wenn Wiederherstellungscodes übrig sind |
+| `POST /api/v1/auth/mfa/admin/reset`             | **Aussperr-Rettung**: Plattform-Admin setzt die Faktoren eines anderen Nutzers zurück (`{ "user_id": "…", "reason": "…" }`). Auditiert in `platform_audit_log` |
+
+Enrollment/Challenge/Verify der drei echten Faktoren laufen **direkt gegen
+GoTrue** (`/auth/v1/factors`, `/auth/v1/factors/{id}/challenge`,
+`/auth/v1/factors/{id}/verify`) — bewusst nicht durch die FastAPI gespiegelt:
+was GoTrue nativ kann, wird nicht nachgebaut, sonst gäbe es zwei Wahrheiten.
+
+**Erzwingung (fail-closed).** `admin` und `co_admin` MÜSSEN einen zweiten Faktor
+haben. Die Rolle dafür kommt aus der **DB** (`public.users.role`), nicht aus dem
+JWT — eine entzogene Rolle wirkt sofort (Wurzel 7). Geprüft wird zentral in
+`core.security.get_current_user`, also auf jedem Endpunkt:
+
+| Zustand des Tokens                             | Antwort                                                                       |
+| ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| `aal2`                                         | Durchgelassen                                                                   |
+| `aal1`, Nutzer hat verifizierte Faktoren       | `401` + `X-MFA-Required: challenge` → Faktor lösen                              |
+| `aal1`, Pflicht-Rolle ohne Faktor, in Frist    | Durchgelassen + `X-MFA-Enrollment-Required: <ISO-Datum>` (Aufforderung)         |
+| `aal1`, Pflicht-Rolle ohne Faktor, Frist vorbei | `401` + `X-MFA-Required: enroll` — nur `/auth/mfa/*` und `/auth/account` offen |
+
+Die **Übergangsfrist** (`public.mfa_enforcement`, Standard 14 Tage ab erstem
+Login) verhindert, dass Bestandskonten mit dem Einspielen der Migration sofort
+ausgesperrt sind — die Sperre greift erst, wenn der Nutzer Zeit zum Einrichten
+hatte. Sie gilt nur für das *Fehlen* eines Faktors: wer einen Faktor hat, muss
+ihn ab sofort lösen (keine Frist).
+
+**Aussperr-Schutz.** Drei Wege zurück: (1) Wiederherstellungscodes,
+(2) ein zweiter Faktor (mehrere sind erlaubt, bis zu 10), (3) der
+Plattform-Admin-Reset. Der letzte Faktor lässt sich nur entfernen, wenn noch
+Wiederherstellungscodes übrig sind — sonst `409`.
+
+**Rate-Limit.** Eigener strenger Bucket `mfa` (Wurzel 8) für alle
+Verifikations-/Einlöse-Pfade, getrennt vom `auth`-Bucket. Zusätzlich am GoTrue
+selbst `GOTRUE_MFA_RATE_LIMIT_CHALLENGE_AND_VERIFY=10` — der App-Bucket schützt
+nur die FastAPI-Routen, der Direktweg `/auth/v1/factors/*` braucht sein eigenes
+Limit (Wurzel 7).
+
+**Bekannte Grenze: TOTP-Replay innerhalb des 30-s-Fensters.** GoTrue v2.189.0
+merkt sich den verbrauchten Zeitschritt NICHT (`verifyTOTPFactor` ruft
+`totp.ValidateCustom` mit `Skew: 1` und schreibt danach keinen
+`last_used_step`). Ein und derselbe 6-stellige Code lässt sich deshalb
+innerhalb seines Gültigkeitsfensters mehrfach einlösen — live gegen die
+Staging-Umgebung reproduziert (zweite Einlösung: HTTP 200). Was das praktisch
+begrenzt:
+
+- Jede **Challenge** ist einmalig und an die IP gebunden
+  (`validateChallenge`: `challenge.VerifiedAt != nil || challenge.IPAddress !=
+  currentIP` → 422). Ein zweiter Einlöseversuch braucht also eine NEUE
+  Challenge von derselben IP.
+- Das Zeitfenster ist ≤ 90 s (30 s Periode + Skew 1).
+- `GOTRUE_MFA_RATE_LIMIT_CHALLENGE_AND_VERIFY=10` deckelt die Versuche.
+
+Der Angreifer muss den Code also live mitlesen und ihn von derselben IP
+innerhalb von maximal 90 Sekunden verwenden — Phishing/Echtzeit-MITM, kein
+späterer Replay. Bewusst NICHT selbst nachgebaut: eine eigene
+Timestep-Buchführung neben GoTrue wäre eine zweite Wahrheit über „Code schon
+benutzt" (dieselbe Klasse Fehler, die 0341 gerade beseitigt). Der saubere Weg
+ist der phishing-resistente Faktor: **Passkeys/WebAuthn sind aktiv** und für
+Pflicht-Rollen der empfohlene Weg.
 
 Die **Profilfelder** (Telefon, Sprachen, Website, Beschreibung, Avatar) liegen
 als eigene Spalten in `public.users`. Der **Objekt-Hauptkontakt** (..
@@ -615,6 +870,72 @@ Capability `manage_calendar` (Stop-Sell-Schreibpfade außerdem die
 ```
 
 `start` inklusive, `end` exklusiv (Check-out-Tag ist wieder frei).
+
+### Sperr-Anträge entscheiden (`0332`/`0333`/`0337`)
+
+Der Eigentümer **stellt** den Antrag im Portal
+(`POST /api/v1/public-portal/block-requests`), die Agentur **entscheidet** ihn
+hier — denn eine Genehmigung ist eine Kalender-Aktion: sie sperrt Nächte in
+`availability` und meldet das über die ARI-Outbox an die Portale.
+
+Alle vier Endpunkte hängen an derselben Capability **`APPROVE_BLOCK`**
+(admin/co_admin, Cohost-Vollstufe) — Liste und `{id}`-Aktionen prüfen denselben
+Scope (Wurzel 9), der Tenant-Scope zusätzlich im Service.
+
+| Methode | Pfad                                                | Beschreibung                                              |
+| ------- | --------------------------------------------------- | --------------------------------------------------------- |
+| `GET`   | `/api/v1/calendar/block-requests?status=`           | Anträge des Mandanten; ohne `status` alle, sonst `pending`\|`approved`\|`rejected` |
+| `POST`  | `/api/v1/calendar/block-requests/{id}/approve`      | Genehmigen — sperrt die Nächte und pusht `availability=0`  |
+| `POST`  | `/api/v1/calendar/block-requests/{id}/reject`       | Ablehnen — kein Kalender-Effekt                            |
+| `POST`  | `/api/v1/calendar/block-requests/{id}/revoke`       | Erteilte Genehmigung widerrufen, Nächte wieder freigeben   |
+
+Body der drei Aktionen: `{ "note": "…" }` (optional, max. 2000 Zeichen) — die
+Anmerkung geht an den Eigentümer.
+
+| Status | Bedeutung                                                                                     |
+| ------ | --------------------------------------------------------------------------------------------- |
+| `200`  | entschieden; Antwort ist der aktualisierte Antrag                                              |
+| `400`  | kein Tenant im Konto                                                                            |
+| `403`  | ohne `APPROVE_BLOCK`                                                                            |
+| `404`  | Antrag gehört nicht zum eigenen Tenant / existiert nicht                                        |
+| `409`  | bereits entschieden; oder `approve` auf einen Zeitraum mit **gebuchten** Tagen; oder es liegt für das Objekt im Zeitraum schon eine genehmigte Sperrung; oder `revoke` auf einen nicht genehmigten Antrag |
+| `422`  | Enddatum vor Startdatum; Zeitraum > **730 Nächte**; `status`-Filter unbekannt; `note` zu lang    |
+
+- **Zustandsautomat:** `pending → approved → (revoke) → rejected` bzw.
+  `pending → rejected`. Der Übergang läuft als bedingter UPDATE
+  (Compare-and-Set auf dem Ausgangsstatus) — ein zweiter Klick entscheidet nicht
+  ein zweites Mal (Wurzel 2). Schlägt danach die Kalender-Aktion fehl, wird der
+  Statuswechsel **zurückgerollt** (`approved` → wieder `pending`, `rejected` →
+  wieder `approved`); es gibt keinen genehmigten Antrag ohne gesperrte Nächte.
+- **Datumsgrenzen:** `start_date`/`end_date` des Antrags sind **inklusiv** („vom
+  1. bis zum 5."); die Umrechnung auf den exklusiven Kalender-Range passiert erst
+  bei der Genehmigung.
+- **Keine zwei genehmigten Sperrungen über demselben Zeitraum:** DB-Backstop ist
+  die EXCLUDE-Constraint `block_requests_kein_ueberlapp` (GiST über
+  `property_id` + `daterange(start,end,'[]')`, nur `status='approved'`, `0333`).
+  Der Konflikt (SQLSTATE `23P01`) wird gezielt auf `409` abgebildet — nicht
+  verschluckt (Wurzel 5).
+- **Freigeben gibt nur die EIGENEN Nächte zurück (Wurzel 1):**
+  `availability.block_request_id` (`0337`) sagt, welche Sperrnacht zu welchem
+  Antrag gehört. `approve` überschreibt keine fremde Sperrung, `revoke` löscht
+  nur Nächte mit der eigenen ID — eine parallele Handwerker-Sperre der Agentur
+  bleibt stehen.
+- **Der Eigentümer sieht nicht, WER entschieden hat:** `BlockRequestItem` im
+  Portal trägt `decided_at`/`decision_note`, aber kein `decided_by`; die
+  Agentur-Liste (`SperrantragItem`) trägt zusätzlich `decided_by` +
+  `requested_by_name` (nur Name — nie E-Mail/Telefon, §4.3).
+- **Meldungen:** neuer Antrag → Kategorie `block_request` an alle Nutzer mit
+  `APPROVE_BLOCK` (Ziel `/kalender/sperrantraege`); Entscheidung →
+  `block_decision` an den Antragsteller (Ziel `/portal/sperrungen`), in **seiner**
+  Sprache. Dedup-Key `block_request:<id>` bzw.
+  `block_decision:<id>:<status>`.
+- **Kein Realtime auf `block_requests`:** Seit `0332` ist auch `select` für
+  `anon`/`authenticated` entzogen — ein Abo darauf wäre eine stumme Attrappe.
+  Die Warteschlange hört stattdessen auf `availability`.
+
+**Frontend:** `web/app/(dashboard)/kalender/sperrantraege` +
+`web/components/kalender/sperrantrag-queue.tsx` (Agentur),
+`web/app/(portal)/portal/sperrungen` (Eigentümer).
 
 ---
 
@@ -1324,6 +1645,15 @@ Tenant-geschützt (`MANAGE_OWNERS`).
 | `POST`   | `/api/v1/owners/{owner_id}/properties`               | Objekt zuweisen (Anteil + Provisions-Override) |
 | `DELETE` | `/api/v1/owners/{owner_id}/properties/{property_id}` | Zuweisung aufheben                             |
 
+**`language` (optional, 0335)** — die Korrespondenzsprache der Eigentümer-PARTEI
+(`owners.language`, ISO 639-1). Sie hängt am Stammdatensatz und **nicht** am
+Login, weil ein Eigentümer Abrechnungs- und Buchungsmails auch OHNE Zugang
+bekommt: `user_id` darf leer bleiben, die Mails gehen trotzdem raus — für genau
+diese Empfänger gäbe es sonst keine Sprachauskunft. Prüfung wie bei
+`POST /auth/invite`: 24 EU-Amtssprachen, `de-AT` → `de`, unbekannter Code →
+`422`. `NULL` = nicht erfasst → Kette `tenants.default_language` → Englisch.
+Ein Default `"de"` gibt es bewusst nicht (Wurzel 4).
+
 ---
 
 ## owner_statements (Auszahlungs-Abrechnung — implementiert)
@@ -1348,6 +1678,220 @@ am Check-out (kein Fallback → 502). Reporting-/Billing-geschützt.
 | `PATCH`  | `/api/v1/owner-statements/expenses/{id}` | Ausgabe ändern                       |
 | `DELETE` | `/api/v1/owner-statements/expenses/{id}` | Ausgabe löschen                      |
 | `POST`   | `/api/v1/owner-statements/auto-run`      | Periodische Auto-Abrechnung auslösen |
+
+`auto-run` bedient beide Rhythmen aus `owners.statement_frequency`
+(`none | monthly | yearly`, 0331). Welcher gemeint ist, sagt die LÄNGE des
+übergebenen Zeitraums: bis 31 Tage `monthly`, darüber `yearly`. Ohne diese
+Unterscheidung bekäme ein Jahres-Eigentümer zwölf „Jahresberichte" (einen je
+Monatslauf) und ein Monats-Eigentümer im Jahreslauf einen zweiten,
+überlappenden Beleg.
+
+**PDF:** bewusst KEIN Backend-Endpunkt. Gerendert wird über die Next-Route
+`/api/v1/generate-pdf-single` (Playwright/Chromium, im Python-Backend nicht
+verfügbar) aus `web/lib/statement-pdf.ts`. Diese Route ist bereits
+auth-pflichtig, auf den Storage-Host allowlisted, gegen interne IPs gesperrt
+und auf 2 MB HTML gedeckelt (Wurzel 8). Ein zweiter, serverseitiger Renderer
+wäre eine Dublette mit eigenem SSRF-Vektor; den Scope trägt der Datenpfad:
+`GET /api/v1/owner-statements/{id}` gibt einem Eigentümer nur die EIGENE
+Abrechnung (`_require_statement_visible`, sonst 404).
+
+---
+
+## public_portal (Eigentümer-Self-Service, §4.2 — implementiert)
+
+Der eingeloggte Eigentümer sieht ausschließlich die ihm über
+`owner_property_assignments` zugeordneten Objekte (fail-closed: keine Zuordnung
+→ sieht nichts); Beträge/Gastdaten laufen durch `guest_masking`.
+
+| Methode | Pfad                                    | Capability          | Beschreibung                     |
+| ------- | --------------------------------------- | ------------------- | -------------------------------- |
+| `GET`   | `/api/v1/public-portal/properties`      | `VIEW_CALENDAR`     | Eigene Objekte                   |
+| `GET`   | `/api/v1/public-portal/calendar`        | `VIEW_CALENDAR`     | Belegung (maskiert)              |
+| `GET`   | `/api/v1/public-portal/earnings`        | `VIEW_OWNER_REPORTS`| Einnahmen im Zeitraum            |
+| `GET`   | `/api/v1/public-portal/statements`      | `VIEW_OWNER_REPORTS`| Finalisierte Abrechnungen        |
+| `POST`  | `/api/v1/public-portal/block-requests`  | `REQUEST_BLOCK`     | Sperrung beantragen              |
+| `GET`   | `/api/v1/public-portal/block-requests`  | `REQUEST_BLOCK`     | Eigene Anträge                   |
+| `POST`  | `/api/v1/public-portal/meter-readings`  | `ADD_METER_READING` | Zählerstand erfassen             |
+| `GET`   | `/api/v1/public-portal/meter-readings`  | `ADD_METER_READING` | Zählerstände eines Objekts       |
+| `GET`   | `/api/v1/public-portal/service-types`   | `BOOK_SERVICES`     | Katalog beauftragbarer Leistungen |
+| `POST`  | `/api/v1/public-portal/service-requests`| `BOOK_SERVICES`     | Dienstleistung beauftragen       |
+| `GET`   | `/api/v1/public-portal/service-requests`| `BOOK_SERVICES`     | Eigene Aufträge                  |
+
+### Kalender: Netto-Auszahlung je Nacht
+
+Der Eigentümer sieht **nicht** den Gast-Verkaufspreis (`price` ist für ihn immer
+`null`, §4.2), sondern was IHM diese Nacht einbringt. Je Tag:
+
+```json
+{
+  "date": "2026-05-02", "status": "booked",
+  "price": null,
+  "owner_payout_per_night": 128.5, "currency": "DKK",
+  "owner_payout_unknown_reason": null,
+  "guest_first_name": "Lena", "booking_source": "airbnb",
+  "units_booked": 3, "units_total": 5,
+  "bookings": [
+    { "reservation_id": "uuid", "unit_id": "uuid",
+      "owner_payout_per_night": 42.83, "currency": "DKK",
+      "payout_unknown_reason": null,
+      "guest_first_name": "Lena", "booking_source": "airbnb" }
+  ]
+}
+```
+
+- **Eine Zeile je EINHEIT.** Seit `0265` führt ein `property_id` n ≥ 1 Einheiten
+  (`property_units`), und `reservations.unit_id` sagt, welche belegt ist. Ein Typ
+  mit fünf identischen Studios kann dieselbe Nacht fünfmal belegt haben — jede
+  Buchung ist Geld des Eigentümers. `bookings` führt sie einzeln auf,
+  `owner_payout_per_night` auf Tagesebene ist ihre **Summe**, damit die
+  Monatsansicht eine Zahl je Zelle zeigen kann. `unit_id: null` heißt: noch nicht
+  auf eine Einheit gelegt (Altbestand vor `0265`, oder genau eine Einheit).
+- **`units_booked` / `units_total`** — „3 von 5 belegt" statt nur „belegt";
+  passend zur Verfügbarkeit je Einheit (`0266`).
+- **Die Rechnung** ist dieselbe wie in der Abrechnung — beide rufen
+  `owner_statements/common.py`: `total_amount` + Extras − `channel_fee`, davon der
+  Anteil nach Provision (`owner_properties.commission_override_pct` ??
+  `owners.default_commission_pct`), gleichmäßig über die Nächte verteilt; die
+  letzte Nacht trägt die Rundungsdifferenz, sodass die Summe der Nächte exakt dem
+  Buchungs-Payout entspricht (sonst fehlte dem Eigentümer im Kalender ein Cent
+  gegenüber seiner Abrechnung).
+- **Kein erfundener Betrag (Wurzel 4):** Ist auch nur EINE Buchung der Nacht
+  unbestimmt, bleibt `owner_payout_per_night` `null` — eine Teilsumme sähe aus wie
+  der volle Ertrag. `owner_payout_unknown_reason` sagt warum
+  (`provision` | `provision_ungueltig` | `betrag` | `naechte`). `currency` kommt
+  aus den Daten und ist `null`, wenn die Buchungen der Nacht verschiedene
+  Währungen tragen — es wird nie ein `"EUR"` ergänzt.
+- **Gastdaten** laufen über die zentrale `GuestMask`: nur der Vorname, und bei
+  mehreren belegten Einheiten der erste (stabil sortiert).
+
+### Sperrwünsche (Eigentümer-Seite)
+
+`POST /block-requests` nimmt `{property_id, start_date, end_date, reason?}` —
+Daten **inklusiv**, `end_date` vor `start_date` ist `422`, `reason` max. 2000
+Zeichen. Die Antwort trägt `status`, `reason`, `decided_at` und
+`decision_note`, aber bewusst **kein `decided_by`**: dass entschieden wurde und
+mit welcher Begründung, geht den Eigentümer an — wer intern zuständig war, nicht.
+Entschieden wird auf der Agentur-Seite unter
+[`/api/v1/calendar/block-requests`](#sperr-antr%C3%A4ge-entscheiden-033203330337).
+
+### Dienstleistungen buchen (0330)
+
+Der Auftrag entsteht als `tasks`-Zeile und erscheint damit im globalen
+Aufgabenkalender (`GET /api/v1/tasks/calendar`) — deshalb setzt der Service
+`start_at`/`due_at`, denn der Kalender filtert auf `start_at or due_at`.
+
+- **Katalog:** `service_types` — `tenant_id IS NULL` = Systemvorgabe
+  (endreinigung, hauptreinigung, fensterreinigung, rasenmaehen,
+  terrassenreinigung), sonst eigener Typ des Betriebs. Die Antwort trägt nur
+  den stabilen `key`; beschriftet wird über `portal.services.type.<key>` in
+  `web/messages/*.json` (24 Sprachen). Nicht zu verwechseln mit
+  `property_addons` (0074) — das ist die Leistung, die der GAST kauft.
+- **Entweder/oder:** `service_type_id` ODER `freitext` (max. 200 Zeichen),
+  nie beides, nie keines → 422. `notiz` max. 2000 Zeichen; Steuerzeichen
+  werden beim Speichern entfernt (Header-Injection, Wurzel 8). Termin nicht in
+  der Vergangenheit und max. 730 Tage voraus → 422. `property_id` und
+  `service_type_id` müssen UUIDs sein → 422 (sonst liefe der Wert bis Postgres
+  durch und würfe dort 22P02 = angreifergesteuerter 500). Max. 20 Aufträge je
+  Nutzer und Termin → 422; die Liste ist auf 200 Einträge gedeckelt (der
+  Dedup-Key enthält bei Freitext den Text, also ist jeder abweichende Wortlaut
+  ein neuer, legitimer Auftrag — ohne Grenze wäre das ein Flutungsvektor).
+- **Idempotenz (Wurzel 2):** Dedup-Key aus Nutzer + Objekt + Leistung + Tag,
+  gebildet VOR dem Insert; Backstop ist der UNIQUE-Index
+  `tasks_request_dedup_uq`. Ein Doppelklick liefert den bestehenden Auftrag.
+- **Zuweisung (Wurzel 4):** `property_service_assignees` (Stamm-Dienstleister
+  je Objekt und Typ), sonst der Objekt-Mitarbeiter aus
+  `staff_property_assignments`, wenn es GENAU EINEN gibt. Sonst bleibt der
+  Auftrag unzugewiesen — kein erfundener Empfänger.
+- **Datensplit (§4.3):** Die Antwort nennt nur `zugewiesen: true|false`, nie
+  wer ausführt, und keine Kosten.
+
+---
+
+## notification_settings — Präferenzen + Glocke (`/api/v1/notification-settings`)
+
+Die Benachrichtigungs-Einstellungen des **eingeloggten Kontos** und dessen
+Meldungsglocke. Der Scope läuft überall über die eigene `user_id` aus dem
+Kontext — auch `{id}/gelesen` prüft den Nutzer, nicht nur den Tenant (Wurzel 9).
+
+| Methode | Pfad                                                    | Zweck                                                    |
+| ------- | ------------------------------------------------------- | -------------------------------------------------------- |
+| `GET`   | `/api/v1/notification-settings`                         | Alle Kategorien mit Kanal-Zustand und Sperr-Information   |
+| `GET`   | `/api/v1/notification-settings/raw`                     | Die flachen Präferenzen (ein `bool` je Kategorie × Kanal) |
+| `PATCH` | `/api/v1/notification-settings`                         | Einzelne Präferenzen ändern (nur gesendete Felder)        |
+| `GET`   | `/api/v1/notification-settings/glocke?nur_ungelesen&limit` | Eigene Meldungen **plus** Zähler `ungelesen` in einem Aufruf |
+| `POST`  | `/api/v1/notification-settings/glocke/{id}/gelesen`     | Eine Meldung quittieren → `204`, idempotent               |
+| `POST`  | `/api/v1/notification-settings/glocke/alle-gelesen`     | Alle eigenen Meldungen quittieren → `{ "gelesen": n }`    |
+
+`PATCH` lässt die **Pflicht-E-Mails** an (`email_pflicht`-Kategorien) und pflegt
+beim Sammel-Opt-out die Marketing-Kanäle mit. `glocke/{id}/gelesen` ist bewusst
+auch für fremde IDs kein Fehler — sonst wäre die Antwort ein Orakel darüber,
+welche Meldungs-IDs existieren.
+
+---
+
+## Benachrichtigungen bei Ereignissen (0331)
+
+`notification_settings/ereignisse.py` ist die eine Stelle, die aus einem
+fachlichen Ereignis eine Benachrichtigung macht; versendet wird ausschließlich
+über den Dispatcher (Präferenz-Prüfung + Glocke). Alle Aufrufe sind
+best-effort — ein Versandfehler kippt nie das auslösende Geschäft (Wurzel 5).
+
+| Kategorie       | Empfänger              | Auslöser                                        |
+| --------------- | ---------------------- | ----------------------------------------------- |
+| `task_assigned` | der zugewiesene Nutzer | `tasks.create_task`, `engine._insert_task`, Portal-Auftrag |
+| `owner_booking` | Eigentümer des Objekts | `reservations/_base._log_event` (created/moved/cancelled), OTA-Neuanlage in `bookings_sync` |
+| `owner_service` | Besteller der Leistung | `tasks.complete_task`, sofern `requested_by` gesetzt ist |
+| `block_request`  | alle mit `APPROVE_BLOCK` | neuer Sperrantrag eines Eigentümers (`0332`) |
+| `block_decision` | der antragstellende Eigentümer | `approve`/`reject`/`revoke` eines Sperrantrags (`0332`) |
+
+Die fünf Kategorien stehen im Katalog (`notification_settings/katalog.py`) und
+sind damit im Tab „Konto → Benachrichtigungen" einzeln je Kanal (E-Mail/SMS)
+schaltbar. Bewusst **getrennte** Kategorien statt einer Sammelkategorie, weil die
+EMPFÄNGER verschieden sind: sonst könnte ein Eigentümer die Antwort auf den
+eigenen Antrag nur abschalten, indem er auch fremde Anträge abschaltet, und eine
+Reinigungskraft bekäme SMS zu Buchungen fremder Objekte. `email_pflicht` trägt
+nur `owner_booking` (Buchung/Änderung/Storno am eigenen Objekt ist die
+vertragliche Kerninformation) — ein Sperrantrag ist eine interne Abstimmung und
+darf abbestellt werden.
+
+- **Fan-out:** Eigentümer werden über BEIDE Zuordnungswege gesucht und
+  vereinigt — `owner_property_assignments` (Portal) und `owners.user_id` über
+  `owner_properties` (Abrechnung). Wer nur in einem steht, würde sonst nichts
+  erfahren. Ohne Treffer wird niemand benachrichtigt (fail-closed, kein
+  Ausweichen auf „dann eben die Admins").
+- **Dedup (Wurzel 2):** `buchung:<kind>:<reservation_id>` bzw.
+  `aufgabe_zugewiesen:<task_id>:<assignee_id>`. Der Schlüssel beschreibt das
+  EREIGNIS, nicht den Versandzeitpunkt — Webhook-Redelivery und Re-Sync laufen
+  am partiellen UNIQUE-Index aus 0287 auf. Beim Aufgaben-Schlüssel steht der
+  Empfänger bewusst mit drin, damit eine Umverteilung den neuen Zuständigen
+  erreicht.
+- **Datensplit (Wurzel 3):** Der Eigentümer erhält Vorname + Quelle, nie den
+  Gast-Gesamtpreis und nie Kontaktdaten. `owner_booking` hat
+  `email_pflicht=True` (vertragliche Kerninformation), `task_assigned` nicht.
+- **Zwei Betreffe, und das ist Absicht.** `betreff`/`text` speisen die **Glocke**
+  und bleiben unübersetzt: sie werden in der Oberfläche gelesen, die ihre eigene
+  Sprachwahl hat, und sie sind eine gespeicherte Zeile — sie in der Sprache des
+  Empfängers einzufrieren wäre falsch, sobald er die Oberflächensprache wechselt.
+  `betreff_key`/`text_key` (+ `…_werte`) sind die Katalogschlüssel für die
+  **E-Mail**: sie verlässt das Haus und erreicht keinen Message-Katalog mehr, muss
+  also in der Sprache des EMPFÄNGERS geschrieben sein. Aufgelöst wird erst hier,
+  weil derselbe `sende()`-Aufruf im Fan-out mehrere Empfänger mit verschiedenen
+  Sprachen bedient; ein vom Aufrufer fertig übersetzter Titel wäre die Sprache des
+  ERSTEN Empfängers für alle. `text_key` darf eine Liste sein (Absätze). Fehlt ein
+  Schlüssel, geht `betreff`/`text` hinaus wie bisher — kein Aufrufer bricht, keine
+  Mail wird leer. Platzhalterwerte, die selbst übersetzt gehören (Katalog-Aufgaben
+  wie `endreinigung`), reisen als `Katalogwert`; Objektnamen, Vornamen und
+  Zeiträume gehen unverändert durch. Der Rahmen der Mail kommt aus
+  `core/mail_layout` (siehe [ARCHITECTURE §10](ARCHITECTURE.md#10-backend-aufbau-vertical-slices)),
+  die Sprache aus der Kette Empfänger → `tenants.default_language` → Englisch.
+- **Der `dedup_key` gilt für ALLE Kanäle, nicht nur die Glocke.** Erkennt der
+  partielle UNIQUE-Index (`notifications_dedup_offen_uq`, `0287`) dieselbe Meldung
+  als bereits offen, entfallen auch E-Mail und SMS. Vorher lief die Kanalschleife
+  weiter: fünf Umbuchungen derselben Reservierung ergaben eine Glocke und **fünf**
+  Mails plus fünf SMS — und `owner_booking` ist `email_pflicht`, also nicht
+  abwählbar (Wurzel 2 — der Schlüssel war ein Riegel für einen von drei Kanälen).
+  Der Portal-Auftrag meldet zusätzlich nur bei ECHTER Neuanlage
+  (`_insert_idempotent` liefert `(zeile, neu)`).
 
 ---
 
@@ -1793,3 +2337,111 @@ Schutz statt Login:
 **Frontend:** Kunden-Widget `web/components/support/support-chat.tsx`
 (geöffnet über „Hilfe erhalten" im Konto-Menü), Agenten-Konsole
 `admin/components/support-konsole.tsx` (`/support`).
+
+---
+
+## announcements (Ankündigungen/Neuerungen — implementiert)
+
+Der Weg vom myNextDays-Backoffice zur **Betriebsleitung** des Kunden: das Team
+schreibt eine Neuerung, der Kunde sieht sie beim nächsten Login als Popup und
+im Verlauf unter „Neuerungen". Zwei Router im selben Slice, weil es zwei
+getrennte Welten sind — die Redaktion (`platform_admins`) und der Empfang
+(Tenant-Nutzer).
+
+`announcements` trägt bewusst **kein `tenant_id`**: eine Ankündigung gilt für
+alle Betriebe. Was pro Betrieb existiert, ist die Quittung
+(`announcement_reads`, Migration `0337_ankuendigungen`).
+
+### Empfang im Dashboard (`/api/v1/announcements`)
+
+**Nur Betriebsleitung.** Alle drei Endpunkte hängen an
+`require_role(admin, co_admin)` UND prüfen die Rolle zusätzlich frisch aus
+`public.users` (Wurzel 7 — eine entzogene Rolle gilt sonst bis Token-Ablauf).
+Ein `staff`/`cleaner`/`owner` bekommt `403`.
+
+| Methode | Pfad                                          | Zweck                                                        |
+| ------- | --------------------------------------------- | ------------------------------------------------------------ |
+| `GET`   | `/api/v1/announcements/health`                | Slice-Health (ohne Auth)                                     |
+| `GET`   | `/api/v1/announcements?limit&offset`          | Verlauf: nur `veroeffentlicht`, neueste zuerst, plus `ungelesen` |
+| `GET`   | `/api/v1/announcements/popup`                 | Die EINE noch offene Popup-Ankündigung + Anzahl `offen`      |
+| `POST`  | `/api/v1/announcements/{id}/quittieren`       | Gelesen-Quittung setzen (idempotent)                         |
+
+| Status | Bedeutung                                                                    |
+| ------ | ---------------------------------------------------------------------------- |
+| `200`  | Erfolg (auch `quittieren`: `{ "ok": true, "neu": true\|false }`)             |
+| `401`  | keine gültige Anmeldung                                                      |
+| `403`  | kein Mandant im Token, oder die Rolle ist nicht `admin`/`co_admin`           |
+| `404`  | `quittieren` auf eine nicht (mehr) veröffentlichte Ankündigung               |
+| `422`  | `limit` außerhalb 1–200 bzw. `offset` < 0                                    |
+
+- **`limit`** 1–200 (Standard 50), **`offset`** ≥ 0.
+- **Kein Rückblick vor der Anmeldung:** Es zählt nur, was **nach**
+  `tenants.created_at` veröffentlicht wurde — ein frisch angelegter Betrieb
+  soll nicht mit der Historie aller früheren Neuerungen begrüßt werden.
+- **`gueltig_bis`** filtert nur das **Popup**, nicht den Verlauf: eine abgelaufene
+  Wartungsmeldung soll nicht mehr aufpoppen, aber nachlesbar bleiben.
+- **`neu: false`** bei `quittieren` heißt „war schon quittiert" — der Aufruf ist
+  über den UNIQUE-Index `announcement_reads_uq (announcement_id, user_id)`
+  idempotent (Wurzel 2), ein Doppelklick ist kein Fehler.
+
+### Redaktion im Backoffice (`/api/v1/platform/announcements`)
+
+Zugang über `get_current_platform_admin` (`platform_admins`, `0202`);
+**Schreibaktionen** zusätzlich über `require_platform_write` — `platform_support`
+darf lesen, aber nichts ändern (`403`). Jede Schreibaktion landet im
+Backoffice-Protokoll (`announcement.create` / `.update` / `.publish` /
+`.retract` / `.delete` / `.image_upload`).
+
+| Methode  | Pfad                                                  | Zweck                                                    |
+| -------- | ----------------------------------------------------- | -------------------------------------------------------- |
+| `GET`    | `/api/v1/platform/announcements?limit&offset`         | Alle Ankündigungen **inkl. Entwürfe**, neueste zuerst    |
+| `GET`    | `/api/v1/platform/announcements/{id}`                 | Eine Ankündigung                                          |
+| `POST`   | `/api/v1/platform/announcements`                      | Anlegen → immer als `entwurf` (`201`)                     |
+| `PATCH`  | `/api/v1/platform/announcements/{id}`                 | Titel/Inhalt/Kurztext/Kategorie/Popup/Gültigkeit ändern   |
+| `POST`   | `/api/v1/platform/announcements/{id}/veroeffentlichen`| Sichtbar schalten                                         |
+| `POST`   | `/api/v1/platform/announcements/{id}/zurueckziehen`   | Auf `archiviert` setzen                                   |
+| `DELETE` | `/api/v1/platform/announcements/{id}`                 | Löschen — **nur Entwürfe** (`204`)                        |
+| `POST`   | `/api/v1/platform/announcements/{id}/bild`            | Bild in den Inhalt hochladen (`multipart`, Feld `file`)   |
+
+| Status | Bedeutung                                                                        |
+| ------ | -------------------------------------------------------------------------------- |
+| `201`  | angelegt (Status ist immer `entwurf`, nicht setzbar)                              |
+| `204`  | Entwurf gelöscht                                                                  |
+| `400`  | Upload ohne Datei                                                                 |
+| `403`  | kein Backoffice-Zugang, oder `platform_support` versucht zu schreiben             |
+| `404`  | Ankündigung existiert nicht                                                       |
+| `409`  | `DELETE` auf eine veröffentlichte/archivierte Ankündigung → erst zurückziehen     |
+| `413`  | Datei größer als 10 MB                                                            |
+| `422`  | Veröffentlichen ohne Titel; leere Datei; Dateityp weder PNG noch WebP             |
+| `500`  | Insert lieferte keine Zeile zurück                                                |
+
+- **Status-Automat:** `entwurf → veroeffentlicht → archiviert`. `status` ist per
+  Schema **nicht** setzbar; die Übergänge laufen ausschließlich über die beiden
+  Aktions-Endpunkte. `veroeffentlicht_am` wird nur beim ERSTEN Veröffentlichen
+  gesetzt — ein erneutes Veröffentlichen datiert die Meldung nicht auf heute um
+  und lässt sie nicht bei jedem wieder aufpoppen.
+- **Zurückziehen löscht keine Quittungen.** Wer sie gelesen hatte, bekommt sie
+  bei einem späteren erneuten Veröffentlichen nicht noch einmal.
+- **Kategorien:** `neuerung | wartung | hinweis | wichtig`.
+- **`inhalt_html` wird beim SPEICHERN sanitisiert** (Wurzel 8): Allowlist-Parser
+  `nh3` mit fester Tag-/Attribut-Liste, `url_schemes` nur `http/https/mailto/tel`,
+  `link_rel="noopener noreferrer nofollow"`. `<img src>` wird zusätzlich gegen die
+  **eigene** Storage-Basis geprüft — ein Bild von fremdem Host fliegt raus (kein
+  Tracking-Pixel im Kundendashboard), und das dann leere `<img>` wird entfernt.
+- **Upload:** Typ nur über **Magic Bytes** (PNG-Signatur bzw. `RIFF`…`WEBP`), der
+  vom Client gemeldete `content_type` wird verworfen. Kein SVG (Stored-XSS), kein
+  JPEG/GIF. Ablage `announcement-images/{announcement_id}/{zufall}.{png|webp}`,
+  Bucket öffentlich (`0338`, 10 MB, nur `image/png`/`image/webp`) mit
+  unerratbarem Dateinamen — dasselbe Muster wie `property-images` (`0062`).
+  Beim Löschen eines Entwurfs werden seine Bilder mit entfernt (best-effort).
+
+**Kein Realtime.** `announcements`/`announcement_reads` sind für
+`anon`/`authenticated` vollständig gesperrt (`revoke all` + restriktive
+`deny_all`-Policy, `0337`); ein Abo wäre eine stumme Attrappe. Die Zusage lautet
+deshalb „erscheint beim nächsten Login", nicht „sofort"; das Backoffice
+aktualisiert nach jeder Aktion über `revalidatePath`.
+
+**Frontend:** Redaktion `admin/app/(backoffice)/ankuendigungen` (+ `/neu`,
+`/[id]`) mit `admin/lib/announcements.ts`; Empfang
+`web/app/(dashboard)/neuerungen` und das Popup über `web/lib/announcements.ts`
+(`listAnnouncements`, `popupAnnouncement`, `quittiereAnnouncement`).

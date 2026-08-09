@@ -95,8 +95,8 @@ C4Container
         Container(mobile_nextdays, "myNextDays-App", "React Native 0.86 + React Navigation (mobile-nextdays)", "Native PMS-App für den Betrieb, Eigentümer und Mitarbeiter (iOS/Android)")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(builder, "Website-Renderer", "Next.js (builder/, Port 3200)", "Öffentliche White-Label-Websites der Vermieter (Page-Builder); Host→Tenant über den by-domain-Resolver")
-        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 29 Vertical Slices unter /api/v1; Redis-Rate-Limiter als ASGI-Middleware (429 + Retry-After)")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "182 Tabellen (Migrationen 0001–0267), Multi-Tenant, RLS, tenant_id")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, Vertical Slices unter /api/v1; Redis-Rate-Limiter als ASGI-Middleware (429 + Retry-After)")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "195 Tabellen (Migrationen 0001–0339), Multi-Tenant, RLS, tenant_id; sensible Tabellen zusätzlich per revoke gegen den DB-Direktpfad gesperrt (§6.2)")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer + Rate-Limiter-Zähler")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
@@ -142,10 +142,11 @@ flowchart TB
     subgraph API["API Backend (FastAPI) — /api/v1"]
         subgraph CORE["core/ (Querschnitt)"]
             CFG["config · logging · supabase · security (JWT ES256/JWKS)"]
+            MAIL["mail · mail_layout · mail_sprache · mail_texte · mail_empfaenger — Markenrahmen + Empfängersprache (24 EU-Sprachen, Kette Empfänger→Betrieb→en)"]
         end
         subgraph DONE["Slices mit Logik"]
-            AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix + ..-Berechtigungen (pro Nutzer)"]
-            CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override (liest Preis via pricing-Resolver)"]
+            AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix + ..-Berechtigungen (pro Nutzer); Einladung + Passwort-vergessen über Einmal-Tokens (einladung_service, user_auth_tokens 0334) — eigener Weg, weil GoTrue keinen Mailzugang hat"]
+            CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override (liest Preis via pricing-Resolver); Sperr-Anträge der Eigentümer entscheiden (sperrantraege.py, APPROVE_BLOCK): genehmigen sperrt Nächte + pusht ARI, widerrufen gibt nur die eigenen wieder frei (availability.block_request_id)"]
             PRICE["pricing — Preis-Resolver (effective_price + quote) + Dynamic-Pricing-Engine (dynamic_prices; Regeln + gelernte Pickup-Kurve/Wetter; enabled = überall gültig inkl. OTA-Push)"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
             BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht) + Firmenprofil/Logo; Nummernkreise (next_document_number)"]
@@ -163,7 +164,9 @@ flowchart TB
             SUB["subscriptions — Abo-Billing Tenant→myNextDays: Grundgebühr + Objekt-Staffel (graduated) + Zusatzmodule; Stripe Subscription/Checkout/Portal, Adaptive Pricing (27 EU); Modul-Entitlements"]
             CM["channel_manager — Channex (ARI-Push, Buchungs-Import, Webhooks, Hotel-ID-Flow, Stop-Sell, ARI-Outbox, Bewertungs-Spiegel channex_review via reviews_sync)"]
             BOOK["booking_engine — eigene Direktbuchungs-Strecke (provisionsfrei) + Buchungs-Widget"]
-            PORTAL["public_portal — White-Label-Gäste-Portal (Phase 2-Struktur, 9 Routen)"]
+            PORTAL["public_portal — Eigentümer-Self-Service (§4.2): eigene Objekte, Kalender mit Netto-Auszahlung JE NACHT (owner_statements/common.py), Berichte, Sperrwünsche, Zählerstände, Dienstleistungen beauftragen (dienstleistungen.py, 0330 — Auftrag wird eine tasks-Zeile)"]
+            NOTIF["notification_settings — Präferenzen je Kategorie×Kanal + Glocke; dispatcher (Präferenz→Glocke/Mail/SMS, dedup über alle Kanäle) + ereignisse.py als EINE Stelle, die aus einem Fachereignis eine Meldung macht"]
+            ANN["announcements — Neuerungen vom Backoffice an die Betriebsleitung: zwei Router (/announcements Empfang, /platform/announcements Redaktion), Inhalt beim Speichern nh3-sanitisiert, Bilder nur PNG/WebP per Magic-Byte"]
             WA["whatsapp — WhatsApp Cloud API (Conversations/Messages, im Posteingang integriert)"]
             TAG["travel_agencies — Reisebüro-Kartei (Profile, Verträge nach Jahren, Saison-Preise, Vertragsdateien)"]
             REV["reviews — Bewertungs-Cockpit des Betriebs: EINE Liste über alle Kanäle (public.reviews = myBestDays 1..5 + channex_review = Portale 0..10, normalisiert auf UnifiedReview), antworten (Portal zuerst, dann Spiegel), Betrieb→Gast (Zwei-Wege), Automatik (Auto-Bewertung + Gast-Erinnerung, review_automation/-_log), Zwei-Wege-Sichtbarkeit (publication.py, 14 Tage). OTA-Bewertungen sind INTERN — öffentlich nur eigene, verifizierte myBestDays-Bewertungen"]
@@ -174,7 +177,7 @@ flowchart TB
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 182 Tabellen (Migrationen 0001–0267), RLS")]
+    DB[("Postgres — 195 Tabellen (Migrationen 0001–0339), RLS + revoke-Härtung")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -360,14 +363,14 @@ erDiagram
 **Marktplatz-Tabellen (angelegt, mit RLS; Geschäftslogik in Phase 2):** `portal_guests`,
 `reviews`, `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 Das Kern-Diagramm oben zeigt bewusst nur die zentralen Entitäten; alle übrigen der
-**182 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
+**195 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
 
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
 
 ### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009 ff.)
 
-Das Modell ist auf **182 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
+Das Modell ist auf **195 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
 echte Supabase-Projekt. Zur Lesbarkeit hier nach Bereich gruppiert (Details in den
 jeweiligen Migrationen):
 
@@ -978,6 +981,145 @@ Objekte sich bei den Portalen eine Kennung teilen; das tut das Gebäude:
   registrieren). Endpunkte: `GET/POST /properties/buildings`, Zuordnung über
   `PATCH /properties/{id}` (`building_id`, Leerstring löst).
 
+### Eigentümer-Portal, Einladungen & Ankündigungen (`0330`–`0339`)
+
+```mermaid
+erDiagram
+    TENANT ||--o{ SERVICE_TYPE : "eigene Leistungsarten"
+    SERVICE_TYPE ||--o{ PROPERTY_SERVICE_ASSIGNEE : "Stamm-Dienstleister"
+    PROPERTY ||--o{ PROPERTY_SERVICE_ASSIGNEE : "je Objekt"
+    SERVICE_TYPE ||--o{ TASK : "Auftrag als Aufgabe"
+    PROPERTY ||--o{ BLOCK_REQUEST : "Sperrwunsch"
+    BLOCK_REQUEST ||--o{ AVAILABILITY : "gesperrte Nächte"
+    TENANT ||--o{ USER_AUTH_TOKEN : "Einladung/Reset"
+    ANNOUNCEMENT ||--o{ ANNOUNCEMENT_READ : "Quittung"
+    TENANT ||--o{ ANNOUNCEMENT_READ : "je Betrieb"
+
+    SERVICE_TYPE {
+        uuid id PK
+        uuid tenant_id FK "NULL = Systemvorgabe"
+        text key "endreinigung|hauptreinigung|…"
+        text kategorie "default 'cleaning'"
+        bool aktiv
+        int sortierung
+        int standard_dauer_minuten
+    }
+    PROPERTY_SERVICE_ASSIGNEE {
+        uuid id PK
+        uuid tenant_id FK
+        uuid property_id FK
+        uuid service_type_id FK
+        uuid assignee_id FK "users"
+    }
+    TASK {
+        uuid service_type_id FK "0330"
+        uuid requested_by FK "Besteller im Portal"
+        text request_dedup_key "UNIQUE tasks_request_dedup_uq"
+    }
+    BLOCK_REQUEST {
+        uuid id PK
+        uuid tenant_id FK
+        uuid property_id FK
+        uuid requested_by FK
+        date start_date "INKLUSIV"
+        date end_date "INKLUSIV"
+        enum status "pending|approved|rejected"
+        text reason "0332"
+        uuid decided_by FK
+        timestamptz decided_at "0332"
+        text decision_note "0332"
+    }
+    AVAILABILITY {
+        uuid block_request_id FK "0337, on delete set null"
+    }
+    USER_AUTH_TOKEN {
+        uuid id PK
+        uuid user_id
+        uuid tenant_id FK
+        text zweck "invite|reset"
+        text token_hash "SHA-256, UNIQUE"
+        timestamptz expires_at
+        timestamptz used_at "NULL = offen"
+        uuid created_by "bei reset NULL"
+    }
+    ANNOUNCEMENT {
+        uuid id PK
+        text titel
+        text inhalt_html "nh3-sanitisiert"
+        text status "entwurf|veroeffentlicht|archiviert"
+        text kategorie "neuerung|wartung|hinweis|wichtig"
+        timestamptz veroeffentlicht_am
+        timestamptz gueltig_bis
+        bool als_popup
+        uuid erstellt_von FK "auth.users"
+    }
+    ANNOUNCEMENT_READ {
+        uuid id PK
+        uuid announcement_id FK
+        uuid user_id "kein FK"
+        uuid tenant_id FK
+        timestamptz quittiert_am
+    }
+```
+
+- **`0330` Dienstleistungs-Katalog** — `service_types` (`tenant_id IS NULL` =
+  Systemvorgabe: endreinigung, hauptreinigung, fensterreinigung, rasenmaehen,
+  terrassenreinigung; sonst eigener Typ des Betriebs, je zwei UNIQUE-Indizes für
+  System- und Tenant-Schlüssel) und `property_service_assignees` (Stamm-
+  Dienstleister je Objekt und Typ). `tasks` bekommt `service_type_id`,
+  `requested_by` und `request_dedup_key` — Letzterer mit UNIQUE-Backstop
+  `tasks_request_dedup_uq`, damit ein Doppelklick im Portal keine zweite Reinigung
+  auslöst (Wurzel 2). Nicht zu verwechseln mit `property_addons` (`0074`): das ist
+  die Leistung, die der **Gast** kauft.
+- **`0331` Benachrichtigungen** — sechs Spalten an `notification_settings`
+  (`task_assigned_*`, `owner_booking_*`, `owner_service_*`) und
+  `owners.statement_frequency` um **`yearly`** erweitert (CHECK jetzt
+  `none | monthly | yearly`). Der Auto-Run erzeugt je Rhythmus genau ein Statement
+  pro Zeitraum; welcher gemeint ist, sagt die Länge des Zeitraums (bis 31 Tage
+  `monthly`, darüber `yearly`).
+- **`0332`/`0333`/`0337` Sperranträge** — `block_requests` bekommt `reason`,
+  `decided_at`, `decision_note` plus einen partiellen Index auf die offene
+  Warteschlange; `select` wird `anon`/`authenticated` entzogen (der Schreibpfad war
+  seit `0229` zu). `0333_sperrantrag_ueberlappung` fügt die
+  EXCLUDE-Constraint `block_requests_kein_ueberlapp` hinzu (GiST über
+  `property_id` + `daterange(start,end,'[]')`, nur `status='approved'`,
+  `btree_gist`) — zwei genehmigte Sperrungen über demselben Zeitraum sind damit
+  auf DB-Ebene unmöglich, nicht nur „im Service geprüft".
+  `0337_availability_sperrantrag_bezug` hängt `availability.block_request_id` an
+  (`on delete set null`): erst damit weiß der Widerruf, welche Sperrnächte ihm
+  gehören, und lässt eine parallele Handwerker-Sperre der Agentur stehen (Wurzel 1).
+- **`0334` Einladung & Passwort-Reset** — `user_auth_tokens`: 32 Byte aus dem
+  CSPRNG, in der DB liegt **nur der SHA-256** (UNIQUE), Klartext existiert
+  ausschließlich im Mail-Link. `zweck` ist `invite` (7 Tage) oder `reset`
+  (1 Stunde); `used_at` wird per bedingtem UPDATE gesetzt (`where used_at is
+  null`) und ist damit der Einmaligkeits-Riegel. Bei `reset` bleibt `created_by`
+  bewusst `NULL` — der Anfordernde ist nicht angemeldet, seine Identität wäre
+  geraten. Voll gesperrt für `anon`/`authenticated` (`revoke all` + restriktive
+  `deny_all`-Policy).
+- **`0335` Empfänger-Sprache** — `owners.language` und `tenants.default_language`,
+  beide nullable ohne Default, mit CHECK gegen die 24 EU-Amtssprachen; derselbe
+  CHECK wird auf dem bestehenden `users.preferred_language` nachgetragen.
+  Details zur Kette: [§10 Mailversand](#mailversand-layout-sprache-texte-coremail).
+- **`0337_ankuendigungen` / `0338`** — `announcements` (bewusst **ohne**
+  `tenant_id`: eine Ankündigung gilt für alle Betriebe) und `announcement_reads`
+  (die Quittung, UNIQUE je `announcement_id` + `user_id`). Beide sind für
+  `anon`/`authenticated` vollständig gesperrt und **nicht** in
+  `supabase_realtime` — die Zusage lautet „erscheint beim nächsten Login", nicht
+  „sofort". `0338` legt den öffentlichen Bucket `announcement-images` an (10 MB,
+  nur `image/png`/`image/webp`); geschützt wird über den unerratbaren Dateinamen,
+  wie bei `property-images` (`0062`).
+- **`0336`/`0337`/`0339` DB-Härtung** — siehe [§6.2](#62-db-direktpfad-geschlossen-wurzel-6-migrationen-03360339).
+
+> **Nummernkollisionen:** `0333` und `0337` sind je mehrfach vergeben
+> (`0333_kanal_aus_ota_name_nachziehen` / `0333_sperrantrag_ueberlappung`;
+> `0337_ankuendigungen` / `0337_availability_sperrantrag_bezug` /
+> `0337_direktpfad_sensible_tabellen_schliessen`). Das ist bewusst so belassen:
+> `apply-migrations.sh` sortiert nach **Dateiname**, innerhalb einer Nummer also
+> stabil und reproduzierbar, und `schema_migrations` trackt den Dateinamen — eine
+> Umbenennung würde die Migration ein zweites Mal laufen lassen. Regeln und die
+> nächste freie Nummer stehen in
+> [supabase/migrations/README.md](../supabase/migrations/README.md).
+
 ### Weitere Tabellen nach Bereich
 
 Über die oben im ER-Diagramm gezeigten Kern-Entitäten hinaus existieren diese
@@ -986,15 +1128,17 @@ Detail-/Hilfstabellen (mit RLS, tenant-scoped):
 | Bereich      | Tabellen                                                                                               | Zweck                                                                             |
 | ------------ | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
 | Buchhaltung  | `quotes`, `quote_line_items` (`0024`), `number_sequences` (`0025`)                                     | Angebote + GoBD-Nummernkreise                                                     |
-| Sicherheit   | `user_mfa` (`0021`)                                                                                    | TOTP-2FA pro Nutzer                                                               |
+| Sicherheit   | `user_mfa` (`0021`), `user_auth_tokens` (`0334`)                                                       | TOTP-2FA pro Nutzer; Einmal-Tokens für Einladung/Passwort-Reset (nur SHA-256, voll gesperrt) |
+| Eigentümer-Portal | `block_requests` (`0014`/`0332`/`0333`), `service_types`, `property_service_assignees` (`0330`), `meter_readings` | Sperranträge mit Genehmigungs-Workflow und Überlappungssperre; Katalog beauftragbarer Leistungen + Stamm-Dienstleister je Objekt; Zählerstände |
+| Ankündigungen | `announcements`, `announcement_reads` (`0337`)                                                        | Neuerungen vom Backoffice an die Betriebsleitung + Gelesen-Quittung (ohne `tenant_id`, voll gesperrt, kein Realtime) |
 | Onboarding   | `tenant_onboarding` (`0029`)                                                                           | Onboarding-Fortschritt des Tenants                                                |
 | Channex      | `stop_sell` (`0032`), `ari_outbox` (`0033`), `channex_tax_map` (`0034`), `channex_tax_set_map` (`0273`), `sandbox_message` (`0036`) | Stop-Sell, ARI-Outbox-Queue, Steuer-/Gebühren-Mapping, Tax-Sets je Portal (Kanal-Einschränkung), Sandbox-Mock-OTA |
-| Posteingang  | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`), `inbox_attachment` (`0259`), `inbox_knowledge_fact` (`0260`), `portal_messages` (`0293`/`0305`) | KI-Settings, geplante Nachrichten, Thread-Notizen, Anhänge, Wissensdatenbank, Nachrichten-Spiegel (die letzten drei für anon/authenticated gesperrt) |
+| Posteingang  | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`), `inbox_attachment` (`0259`), `inbox_knowledge_fact` (`0260`), `portal_messages` (`0293`/`0305`) | KI-Settings, geplante Nachrichten, Thread-Notizen, Anhänge, Wissensdatenbank, Nachrichten-Spiegel — seit `0337` **alle sechs** für anon/authenticated gesperrt (vorher nur die letzten drei) |
 | WhatsApp     | `whatsapp_conversation`, `whatsapp_message` (`0041`)                                                   | WhatsApp Cloud API — im Posteingang integriert                                    |
 | Objekte      | `property_photos` (`0061`)                                                                             | Objekt-Fotos (mehrsprachige Caption, Cover, Sortierung)                           |
 | Page-Builder | `tenant_site_config`, `tenant_custom_domains` (`0086`), `site_pages`, `site_blocks` (`0087`)           | White-Label-Website je Tenant: Branding, Custom-Domains, Seiten + Blöcke (s. §12) |
 | Reisebüros   | `travel_agencies`, `travel_agency_contacts`, `travel_agency_contracts`, `travel_agency_rates` (`0088`) | Partner-Kartei mit Verträgen + Saison-Preisen                                     |
-| Bewertungen  | `reviews` (`0006`/`0181`/`0186`), `guest_reviews_by_host` (`0186`), `channex_review` (`0262`), `review_automation`, `review_automation_log` (`0263`), `guest_review_queue` (`0267`) | Gast→Objekt (öffentlich lesbar über Spalten-GRANT), Betrieb→Gast (nur service_role), Portal-Bewertungen (SELECT fürs Realtime-Abo, Schreiben nur Server), Automatik + Idempotenz-Log (voll gesperrt) |
+| Bewertungen  | `reviews` (`0006`/`0181`/`0186`), `guest_reviews_by_host` (`0186`), `channex_review` (`0262`), `review_automation`, `review_automation_log` (`0263`), `guest_review_queue` (`0267`) | Gast→Objekt (Schreiben seit `0337` entzogen, `anon`-Lesen seit `0339` entzogen — der öffentliche Weg läuft über den API-Slice `guest_reviews`, nicht mehr über den DB-Direktpfad), Betrieb→Gast (nur service_role), Portal-Bewertungen `channex_review` (seit `0337` für anon/authenticated gesperrt und aus `supabase_realtime` entfernt — das frühere Realtime-Abo darauf gibt es nicht mehr), Automatik + Idempotenz-Log (voll gesperrt) |
 
 ---
 
@@ -1054,12 +1198,101 @@ Schreibzugriff.
 - **API-Durchsetzung:** Da die FastAPI-Slices den Service-Role-Key nutzen (RLS umgangen),
   setzt die Pricing-API den Scope zusätzlich explizit durch (`overview()` filtert auf
   zugeordnete Objekte; `update()` → 403 für owner).
-- **UI:** Sidebar reduziert für owner (`OWNER_ALLOWED_HREFS`: Dashboard, Kalender,
-  Objekte, Dynamic Pricing, Berichte). Die UI ist nur Komfort — die Sicherheit liegt
-  in RLS + API.
+- **UI:** Der Eigentümer bekommt eine **eigene Fläche** statt eines reduzierten
+  Agentur-Dashboards: die Route-Gruppe `web/app/(portal)/portal/*` (Übersicht,
+  Kalender, Berichte, Sperrungen, Zählerstände, Dienstleistungen,
+  Benachrichtigungen) mit eigener Sidebar/Topbar
+  (`web/components/portal/portal-sidebar.tsx`). Die Weiche sitzt **serverseitig**
+  in den beiden Layouts (`web/lib/rollen-guard.ts`), bewusst nicht in der
+  Middleware: die erneuert nur Tokens und ist seit CVE-2025-29927
+  (`x-middleware-subrequest`) keine Auth-Schranke. Das frühere Ausblenden von
+  Menüpunkten (`OWNER_ALLOWED_HREFS` in `components/app-sidebar.tsx`) war reine
+  Navigations-Kosmetik — wer `/buchhaltung` in die Adresszeile tippte, landete
+  trotzdem im Agentur-Layout. Der Guard ist die zweite Verteidigungslinie, nicht
+  die einzige: den Datenscope erzwingt weiterhin FastAPI
+  (`require_permission` + Owner-Scope im `public_portal`-Service).
 - **Abrechnung:** Der `owner_statements`-Slice setzt denselben Scope durch — eine
   Abrechnung umfasst nur die dem Eigentümer zugeordneten Objekte (`owner_properties`),
   deren Reservierungen, Provision je Objekt und Auszahlung (s. Datenmodell).
+  Zusätzlich läuft die **Betragsmaske**: `total_price` (Gast-Bruttopreis) und
+  `pm_payout`/`pm_payout_by_currency` (Ertrag der Verwaltung) sind für den
+  Eigentümer `None` — er sieht seine Auszahlung, nicht den Verkaufspreis und
+  nicht die Marge der Agentur. Beide standen vorher im PDF, das er sich selbst
+  aus dem Portal herunterlädt.
+- **Eine Auszahlungsformel für zwei Slices:** `owner_statements/common.py` ist die
+  einzige Stelle, die rechnet — `owner_statements` (Abrechnung) und
+  `public_portal` (Netto-Auszahlung je NACHT im Eigentümer-Kalender) rufen
+  dieselbe Kette auf: `buchungs_payout` (`total_amount` + Extras − `channel_fee`)
+  → `effektive_provision_pct` (`owner_properties.commission_override_pct` ??
+  `owners.default_commission_pct`) → `owner_payout` → `payout_je_nacht`
+  (gleichmäßig über die Nächte, letzte Nacht trägt die Rundungsdifferenz, sodass
+  die Summe exakt dem Buchungs-Payout entspricht). Ohne diesen Ort stünde die
+  Formel zweimal im Code und liefe auseinander — der Kalender zeigte eine andere
+  Zahl als die Abrechnung über denselben Zeitraum. Fehlt eine Rechengrundlage,
+  gibt es **keinen** Ersatzwert: `PayoutUnbekannt` benennt den Grund
+  (`provision` | `provision_ungueltig` | `betrag` | `naechte`), und die UI zeigt
+  eine leere Zelle mit erkennbarem Grund statt einer erfundenen Zahl (Wurzel 4).
+
+### 6.2 DB-Direktpfad geschlossen (Wurzel 6, Migrationen `0336`–`0339`)
+
+RLS erzwingt nur den **Mandanten**. Ein Client mit gültigem JWT und dem
+öffentlichen anon-Key spricht PostgREST/Realtime direkt an und umgeht FastAPI
+samt Rollen-Datensplit (§4.3), Gast-Maskierung und Owner-read-only komplett.
+Supabase grantet `anon`/`authenticated` per Default volles DML auf `public` —
+solange dieser Grant steht, sind Service-Layer-Prüfungen gegen ein `curl` auf
+`/rest/v1/<tabelle>` wirkungslos. Diese vier Migrationen schließen das:
+
+- **`0336` Gast-PII** — `revoke select,insert,update,delete on public.guests from
+  anon, authenticated`, zusätzliche restriktive `for all`-Policy
+  `guests_tenant_restrict`, `guests` aus der Publication `supabase_realtime`
+  entfernt. Zusätzlich `alter default privileges … revoke select on tables`
+  (Rollen `supabase_admin` und `postgres`), damit eine künftige Tabelle nicht
+  wieder offen entsteht.
+- **`0337_direktpfad_sensible_tabellen_schliessen`** — die Fortsetzung über
+  **alle** sensiblen Tabellen: Gast-Akte, Nachrichten/Posteingang/WhatsApp,
+  OTA-Inbound (`channex_*`, `ota_account`), Eigentümer/Vertrieb/Buchhaltung
+  (`owners`, `owner_properties`, `customers`, `quotes`, `travel_agency*`,
+  `number_sequences`), Auszahlungen/Abos, Nutzer und Zugänge (`users`,
+  `user_mfa`, `user_auth_tokens`, `login_devices`, `platform_admins`,
+  `api_clients`), Gebäude- und Objekt-Interna (`property_access`,
+  `property_guest_portal`, `property_housebook`, …). Dazu 40 Policies (37 davon
+  `as restrictive for all`, Kindtabellen über ein `exists(...)` auf die Eltern),
+  76 Tabellen aus `supabase_realtime` entfernt, `revoke create on schema public
+  from anon, authenticated` als Backstop und der Entzug der Default-Privilegien
+  auf Tabellen und Sequenzen.
+- **`0339`** — kürzt das anon-Leserecht katalogseitig auf das Nötige: eine
+  Schleife entzieht `anon` auf **jeder** `public`-Tabelle mit verbliebenem
+  `select` sämtliche Rechte. Übrig bleiben **genau zwei**:
+  `property_categories` und `property_subtypes` (die öffentliche
+  myBestDays-Taxonomie).
+
+**Bewusst offen bleibt** eine Leseschicht für `authenticated` (Schreibrechte
+entzogen, RLS entscheidet die Zeilen): `reservations`, `properties` +
+Objekt-Detailtabellen, `availability`/`stop_sell`, Preis- und Rate-Plan-Tabellen,
+`tasks`/Checklisten, `site_pages`/`site_blocks`, `notifications`,
+`support_tickets`/`support_messages` u. a. — sie speisen die Realtime-Abos der
+Oberfläche. Für den Gast (`portal_guest`) bleiben `guest_message_threads` und
+`guest_messages` lesbar, jetzt aber ausschließlich über die eigene
+`auth.uid()`-Policy statt über den Tenant.
+
+**Folge für Realtime:** Jedes Abo auf eine der geschlossenen Tabellen ist seither
+eine **stumme Attrappe** — die UI sieht live aus und aktualisiert nie. Betroffene
+Ansichten hören auf eine erlaubte Quelle (meist `reservations`) oder verzichten
+auf das Abo. Prüfen mit `bash scripts/realtime/abos-pruefen.sh`.
+
+**Verifikation:** `bash scripts/security/direktpfad-pruefen.sh` (nicht von Hand
+prüfen). Das Skript geht per SSH auf die Server-DB und probiert für 99 Tabellen
+je Rolle (`anon`, `authenticated`) SELECT/INSERT/UPDATE/DELETE innerhalb einer
+zurückgerollten Transaktion durch. Entscheidend: **eine leere Ergebnismenge gilt
+NICHT als Beweis** — nur `SQLSTATE 42501` (`insufficient_privilege`) zählt als
+„dicht". Danach prüft es gegen, dass `service_role` alle Tabellen weiterhin lesen
+UND schreiben kann, damit die Härtung nicht den FastAPI-Pfad mit abgeklemmt hat.
+Exit 0 nur, wenn alle drei Stufen sauber sind.
+
+**Regel für jede neue Tabelle** (auch in
+[supabase/migrations/README.md](../supabase/migrations/README.md) festgehalten):
+RLS + tenant-Policy reicht bei sensiblen Daten NICHT — zusätzlich `revoke` und
+eine restriktive Rollen-Policy, danach `direktpfad-pruefen.sh`.
 
 ---
 
@@ -1310,15 +1543,92 @@ Gemeinsame Infrastruktur in `apps/api/src/core/`:
 | `logging.py`  | structlog (Console lokal, JSON in Produktion)                         |
 | `supabase.py` | Client-Factory — Anon (RLS) und Service-Role (System) getrennt; jeder Client bekommt einen Retry-Transport gegen tote Keep-Alive-Verbindungen (Kong beendet idle HTTP/2, teils erst NACH den Headern → der Body wird schon im Transport gelesen). Nach begonnener Antwort wird nur GET/HEAD/OPTIONS wiederholt, sonst liefe ein POST doppelt (Wurzel 2). |
 | `security.py` | Supabase-JWT-Verifikation (ES256/JWKS) → `AuthContext`, `CurrentUser` |
+| `mail.py`     | SMTP-Versand (`MailService`, `OutboundMessage`) — Transport, MIME, Header |
+| `mail_sprache.py` | Sprachregel: `SUPPORTED` (24 EU-Amtssprachen), `FALLBACK = "en"`, `normalisieren`, `aufloesen` |
+| `mail_texte.py`   | Der Mail-Textkatalog `TEXTE[schlüssel][sprache]` + `text()`; `MailTextFehlt` bei unbekanntem Schlüssel |
+| `mail_empfaenger.py` | Woher die Sprache eines Empfängers kommt (`users`/`owners`/`tenants`) |
+| `mail_layout.py`  | Der Marken-Rahmen: `MailInhalt` → `GerenderteMail` (Text **und** HTML) |
 
-**Slices (26):** `auth` · `properties` · `rates` · `pricing` · `calendar` ·
-`reservations` · `guests` · `inbox` · `whatsapp` · `payments` ·
+### Mailversand: Layout, Sprache, Texte (`core/mail_*`)
+
+Vier Schichten, bewusst getrennt — `mail_sprache` (Regel) ← `mail_texte`
+(Wortlaut) und `mail_empfaenger` (DB-Lesung) ← `mail_layout` (Form); `mail.py`
+kennt keine davon und weiß nur von SMTP und MIME.
+
+**Sprache — eine Kette, kein Default.** `aufloesen(*quellen)` nimmt die erste
+Quelle, die eine unterstützte Sprache liefert:
+
+1. **am Empfänger** — `users.preferred_language`, `owners.language`,
+   `guests.language`, `portal_guests.preferred_locale`
+2. **am Betrieb** — `tenants.default_language`
+3. **Englisch** (`FALLBACK`)
+
+Regionsvarianten werden auf die Basissprache gekappt (`de-AT` → `de`, `pt_BR` →
+`pt`); ein unbekannter Code ergibt `None`, damit die Kette **weiterläuft** statt
+sofort auf Englisch zu fallen. Es gibt bewusst **keine** Stufe „Browsersprache
+des Aufrufers": beim Anlegen eines Eigentümers sitzt der *Betreiber* an der
+Tastatur, sein `Accept-Language` sagt über den Empfänger nichts (Wurzel 4).
+Englisch statt Deutsch als letzter Rückfall, weil Deutsch eine inhaltliche
+Behauptung über den Empfänger wäre. Die Spalten kamen mit **`0335`**
+(`owners.language`, `tenants.default_language`), zusammen mit einem CHECK gegen
+die 24 Codes auf beiden neuen Spalten **und** auf dem bestehenden
+`users.preferred_language` — `NULL` bleibt erlaubt und heißt ehrlich „nicht
+erfasst", ein `not null default 'de'` wäre ein erfundener Wert.
+
+**Texte** liegen als Python-Dict `TEXTE[schlüssel][sprache]` in `mail_texte.py`,
+nicht in `web/messages/*.json`: der Backend-Container hat das Frontend-Verzeichnis
+nicht, und Mailtexte ändern sich mit einem Geschäfts-/Rechtsprozess, nicht mit
+der Oberfläche. Jeder Schlüssel trägt alle 24 Sprachen, und jede Übersetzung muss
+dieselben `{platzhalter}` enthalten — beides erzwingt `test_mail_texte.py`. Ein
+unbekannter **Schlüssel** wirft `MailTextFehlt` (Programmierfehler, fail-closed:
+lieber keine Mail als ein roher Key im Postfach); eine unbekannte **Sprache**
+fällt still auf Englisch.
+
+**Layout.** `mail_rendern(MailInhalt, marke=…)` erzeugt aus EINER Quelle die
+Text- und die HTML-Fassung. Tabellenlayout mit ausschließlich inline gesetzten
+Styles, 600 px Inhaltsbreite — Outlook 2016/2019/2021 rendert mit der
+Word-Engine, dort gibt es kein Flexbox/Grid und keine verlässliche
+`<style>`-Kaskade. Zwei Marken, zwei Absender: `marke_nextdays` (Standard, PMS)
+und `marke_bestdays` (Marktplatz — heute nur die Bewertungserinnerung an den
+Gast). Das **Logo reist als CID-Anhang** (`inline_bilder`, `LOGO_CID`), nicht als
+URL und nicht als Data-URI: Data-URIs verwerfen Gmail und Outlook, und eine
+gehostete URL bräuchte einen öffentlich erreichbaren Host mit gültigem Zertifikat
+— lokal und auf Staging gibt es den nicht. Der Kopfbereich setzt seine **eigene
+dunkle Fläche** und trägt die `-light`-Logovariante, damit die Darstellung auch
+nach der Dunkelmodus-Invertierung von Apple Mail stimmt. Jeder eingesetzte Wert
+läuft durch `html.escape`; Link-Ziele werden gegen die Schema-Allowlist
+`http`/`https`/`mailto` geprüft und sonst fail-closed abgelehnt
+(`MailLayoutError`, Wurzel 8) — nicht „bereinigt". Fehlen die Anbieterangaben
+(`COMPANY_LEGAL_NAME`), steht das als **sichtbarer Satz** im Fuß, statt still zu
+fehlen.
+
+**Kopfzeilen (`mail.py`).** `Date` (RFC 5322 §3.6) und `X-Mailer` werden gesetzt,
+weil rspamd eine Testmail sonst mit `MISSING_DATE`/`MISSING_XM_UA` bewertet und
+sie im Spam landete — weder Python (`EmailMessage` setzt kein `Date`) noch das
+eigene Postfix (`always_add_missing_headers = no`) ergänzt sie. Marketing-Mails
+erkennt `OutboundMessage` an einer gesetzten `unsubscribe_url` und bekommen
+`List-Unsubscribe` + `List-Unsubscribe-Post` (RFC 8058 One-Click); alles andere
+ist transaktional und bekommt stattdessen `Auto-Submitted: auto-generated`
+(RFC 3834), damit keine Abwesenheitsnotiz zurückläuft.
+
+**Wer sendet so:** `auth/einladung_service` (Einladung, Passwort-Reset),
+`notification_settings/dispatcher` (alle Glocken-Kategorien),
+`reviews/automation` (Gast-Erinnerung, myBestDays), `newsletter/service`,
+`platform_admin/team_service` (Backoffice-Einladung/-Reset),
+`calendar/sperrantraege` und `channel_manager/airbnb_zimmer_push`.
+
+**Slices (Auswahl, namentlich):** `auth` · `properties` · `rates` · `pricing` ·
+`calendar` · `reservations` · `guests` · `inbox` · `whatsapp` · `payments` ·
 `channel_manager` · `booking_engine` · `addons` · `owners` · `owner_statements` ·
 `buchhaltung` · `travel_agencies` · `reviews` · `guest_reviews` · `site_config` ·
-`ocr` · `public_portal` · `tasks` · `crm` · `dashboard` · `content`.
-(26 namentlich + interne
-Slice-Bausteine — Router-Prefixe je unter `/api/v1`; `site_config` mountet zwei
-Router: `/site-config` (Dashboard) und `/site` (öffentlicher Resolver).)
+`ocr` · `public_portal` · `tasks` · `crm` · `dashboard` · `content` ·
+`notification_settings` · `announcements`. Der Ordner
+`apps/api/src/features/` führt darüber hinaus weitere Slice-Bausteine
+(`platform_admin`, `support`, `payouts`, `subscriptions`, `guest_*`, …) —
+Router-Prefixe je unter `/api/v1`. Zwei Slices mounten **zwei** Router:
+`site_config` (`/site-config` fürs Dashboard, `/site` als öffentlicher Resolver)
+und `announcements` (`/announcements` für die Betriebsleitung,
+`/platform/announcements` fürs Backoffice).
 
 Die kleineren (`ocr`, `crm`) sind Health-/Gerüst-Slices; `dashboard`/`content`
 minimal. Der Rest ist mit Geschäftslogik ausgebaut: u. a. `tasks`
@@ -1380,11 +1690,19 @@ in Entwicklung befindlichen Komponenten.
 
 ```
 apps/web/                # Next.js — App-Gerüst (Dashboard/Portal)
-├── app/                 # Route-Gruppen (auth)/(dashboard)/(public)
+├── app/                 # Route-Gruppen (auth)/(dashboard)/(portal)/(public)
+│   ├── (auth)/          # Anmeldung + die Token-Strecken ohne Session:
+│   │                    #   einladung/ · passwort-vergessen/ · passwort-neu/
+│   ├── (dashboard)/     # Agentur-Fläche (admin/co_admin/staff/cleaner), u. a.
+│   │                    #   kalender/sperrantraege/ · neuerungen/
+│   ├── (portal)/portal/ # Eigentümer-Fläche (Rolle owner) mit eigener Sidebar:
+│   │                    #   kalender · berichte · sperrungen · zaehlerstaende
+│   │                    #   · dienstleistungen · benachrichtigungen
 │   └── (public)/marketing/   # Öffentliche Marketing-Landingpage (kein Auth-Gate)
 ├── components/marketing/     # Sektions-Komponenten der Landingpage (Hero, Trial, …)
 ├── public/marketing/channels/ # Buchungskanal-Logos (Booking.com, Airbnb, …)
 ├── public/marketing/reviews/  # Review-Plattform-Logos (Capterra, Trustpilot, …)
+├── lib/rollen-guard.ts  # Serverseitige Weiche (dashboard) ↔ (portal), Wurzel 9
 └── lib/supabase/        # Browser- + Server-Client (@supabase/ssr)
 
 apps/storybook/          # Design-System + Auth-Proxy (eigenes Package, eigene Coolify-App)
@@ -1448,8 +1766,13 @@ flowchart LR
 Realtime** (Tabelle `storybook_chat`, Migration `0020`, Publication
 `supabase_realtime`). Der Chat nutzt **dieselbe Login-Session** (SSR-Browser-
 Client) — der Anzeigename kommt automatisch aus dem eingeloggten Account, keine
-zweite Anmeldung. RLS erlaubt anonymem Schlüssel nur `SELECT` + `INSERT`; der
-Chat ist bewusst von allen PMS-/Kundendaten getrennt.
+zweite Anmeldung. Seit `0337` hat der **anonyme** Schlüssel auf `storybook_chat`
+gar keine Rechte mehr (`revoke select,insert,update,delete … from anon`); lesen
+und schreiben darf nur noch `authenticated` (`update`/`delete` entzogen), und die
+Lese-Policy `storybook_chat_read` verlangt eine angemeldete `auth.uid()`. Vorher
+durfte der anon-Key `SELECT` + `INSERT` — ein nicht angemeldeter Besucher konnte
+also mitlesen und schreiben. Der Chat ist bewusst von allen PMS-/Kundendaten
+getrennt.
 
 **Grundsatz Realtime statt Polling:** Datengetriebene Ansichten aktualisieren sich
 über **Supabase Realtime (WebSocket, `postgres_changes`)** — kein Polling, kein
@@ -1612,6 +1935,41 @@ psql. Seitdem läuft es über `/api/v1/platform/team` und die Seite
 Rollen: `platform_admin` (voll, inkl. Freigaben/Sperren/Team) und
 `platform_support` (lesend + Support-Konversationen). Durchgesetzt wird das über
 `require_platform_write`, nicht über die Navigation.
+
+### Einladung & Passwort vergessen für Betriebs-Nutzer (`0334`)
+
+Derselbe Mechanismus wie beim Backoffice, jetzt für die Nutzer eines Betriebs
+(`auth/einladung_service.py`, Tabelle `user_auth_tokens`) — und aus demselben
+Grund selbst gebaut: GoTrue hat keinen SMTP-Zugang (`GOTRUE_SMTP_HOST` leer),
+`reset_password_email()` läuft dort ins Leere.
+
+- **Contract-Bruch gegenüber vorher:** `POST /auth/invite` nahm ein `password`
+  entgegen, das der Wizard **im Browser** würfelte und per Zuruf weitergab — es
+  lief damit durch den Browser des Einladenden und durch jedes HTTP-Log
+  dazwischen. Das Feld gibt es nicht mehr; der Server legt den Auth-Nutzer mit
+  einem Zufallspasswort an, das niemand kennt, und verschickt einen Einmal-Link.
+- **Alles-oder-nichts:** Scheitert der Mailversand, wird die komplette Anlage
+  (Auth-Nutzer + `users`-Zeile) zurückgerollt. Ein `201` bedeutet immer: Nutzer
+  angelegt UND Mail raus — es entsteht nie ein Konto, zu dem niemand den Zugang
+  bekommen hat (Wurzel 1).
+- **Token:** 32 Byte CSPRNG, in der DB nur der SHA-256; **Einladung 7 Tage**,
+  **Reset 1 Stunde**; Einlösung als bedingter UPDATE (`where used_at is null`),
+  also einmalig. Nach dem Setzen werden alle weiteren offenen Tokens des Nutzers
+  entwertet, nach einem **Reset** zusätzlich alle Sitzungen widerrufen.
+- **Kein Orakel:** `passwort-vergessen` antwortet IMMER `200` mit demselben Text,
+  auch bei unbekannter oder syntaktisch kaputter Adresse; ungültig, abgelaufen
+  und verbraucht sind an der Fehlerantwort nicht zu unterscheiden. Eigener
+  strenger Rate-Limit-Bucket `auth_public` (5/60 je IP, fail-closed) plus
+  Sperrfrist je Konto.
+- **Frontend:** `web/app/(auth)/einladung`, `…/passwort-vergessen`,
+  `…/passwort-neu` — alle drei ohne Anmeldung erreichbar, Berechtigung ist der
+  Token. Die Links baut der Server aus `APP_BASE_URL`; fehlt die, schlägt die
+  Einladung mit `500` fehl, statt einen Link auf eine geratene Domain zu
+  verschicken (Wurzel 4).
+
+Die Mail selbst kommt aus dem Markenrahmen und in der Sprache des Empfängers
+(`preferred_language` → `tenants.default_language` → Englisch) — siehe
+[§10 Mailversand](#mailversand-layout-sprache-texte-coremail).
 
 ### Support-Live-Chat (Kunde ↔ Backoffice)
 
