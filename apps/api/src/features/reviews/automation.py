@@ -29,6 +29,9 @@ from supabase import Client
 from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.mail import MailError, MailService, OutboundMessage
+from src.core.mail_empfaenger import sprache_fuer_gast
+from src.core.mail_layout import Aktion, MailInhalt, mail_rendern, marke_bestdays
+from src.core.mail_texte import text
 from src.core.supabase import get_service_client
 
 from .queue import ReviewQueue
@@ -132,20 +135,55 @@ class ReviewAutomation:
                 continue
             if not self._claim(db, tenant_id, str(res["id"]), "guest_reminder"):
                 continue
-            objekt = titel.get(str(res["property_id"])) or "deinem Aufenthalt"
+            # Sprache des GASTES: sie steht an der Buchung (`guest_language`,
+            # aus der OTA-Payload `customer.language`) — die einzige echte
+            # Auskunft über einen Gast, der bei uns kein Konto hat. Fehlt sie,
+            # greift die Betriebssprache und zuletzt Englisch. Nie Deutsch als
+            # stiller Rückfall (Wurzel 4).
+            sprache = sprache_fuer_gast(
+                db, guest_language=res.get("guest_language"), tenant_id=tenant_id
+            )
+            objekt = titel.get(str(res["property_id"])) or text(
+                "reviews.erinnerung.objekt_fallback", sprache
+            )
             link = f"{basis}/bewertungen?reservation={res['id']}"
+            # Marke ist myBestDays: der Empfänger ist ein GAST des Marktplatzes,
+            # nicht der Betrieb. Das Layout ist dasselbe, nur Kopf und Absender
+            # wechseln (CLAUDE.md „Zwei Marken").
+            mail = mail_rendern(
+                MailInhalt(
+                    titel=text(
+                        "reviews.erinnerung.betreff", sprache, objekt=objekt
+                    ),
+                    absaetze=[
+                        text(
+                            "reviews.erinnerung.absatz_hoffnung", sprache,
+                            objekt=objekt,
+                        ),
+                        text("reviews.erinnerung.absatz_nutzen", sprache),
+                    ],
+                    aktion=Aktion(
+                        text=text("reviews.erinnerung.aktion", sprache),
+                        url=link,
+                    ),
+                    # Bewusst ein eigener Gruß statt des Standardgrußes: diese
+                    # Mail BITTET um etwas, „Vielen Dank!" ist der passende
+                    # Ton. Er kommt aus dem Katalog, ist also übersetzt.
+                    gruss=text("reviews.erinnerung.gruss", sprache),
+                    sprache=sprache,
+                ),
+                marke=marke_bestdays(),
+            )
             try:
                 self._mailer().send(
                     OutboundMessage(
                         to=empfaenger,
-                        subject=f"Wie war es bei {objekt}?",
-                        text=(
-                            f"Hallo,\n\nwir hoffen, es hat dir bei {objekt} gefallen. "
-                            "Deine Bewertung hilft anderen Gästen bei der Auswahl "
-                            "und dem Gastgeber beim Besserwerden.\n\n"
-                            f"Jetzt bewerten: {link}\n\n"
-                            "Vielen Dank!"
+                        subject=text(
+                            "reviews.erinnerung.betreff", sprache, objekt=objekt
                         ),
+                        text=mail.text,
+                        html=mail.html,
+                        inline_bilder=mail.inline_bilder,
                     )
                 )
             except MailError as exc:
@@ -177,7 +215,9 @@ class ReviewAutomation:
         von = bis - timedelta(days=_LOOKBACK_DAYS)
         return (
             db.table("reservations")
-            .select("id, property_id, guest_email, check_out, status")
+            .select(
+                "id, property_id, guest_email, check_out, status, guest_language"
+            )
             .eq("tenant_id", tenant_id)
             .in_("status", list(_ELIGIBLE_STATUS))
             .lte("check_out", bis.isoformat())

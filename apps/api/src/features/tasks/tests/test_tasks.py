@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
+from src.core.security import AuthContext
 from src.features.tasks.schemas import (
     InventoryItemCreate,
     SubstitutionRequest,
@@ -14,6 +15,9 @@ from src.features.tasks.service import TaskError, TasksService
 from src.main import create_app
 
 client = TestClient(create_app())
+
+# Buchungs-ID für die Scope-Tests (muss eine UUID sein, Wurzel 5).
+RES_ID = "55555555-5555-4555-8555-555555555555"
 
 
 def test_tasks_health() -> None:
@@ -115,22 +119,33 @@ def test_create_task_defaults_open() -> None:
 
 def test_list_by_reservation_scopes_tenant_and_reservation() -> None:
     svc, m = _svc()
+    # Die Buchung wird ZUERST gescopt geladen (Wurzel 9) — dieselbe Chain
+    # (select.eq.eq.limit) beantwortet den Vorab-Load.
+    (
+        m.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value
+    ).execute.return_value.data = [{"id": RES_ID, "property_id": "p1"}]
     chain = (
         m.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value
     )
     chain.execute.return_value.data = [
-        {"id": "t1", "tenant_id": "T", "reservation_id": "r1",
+        {"id": "t1", "tenant_id": "T", "reservation_id": RES_ID,
          "title": "Endreinigung", "status": "open", "property_id": "p1"},
     ]
-    tasks = svc.list_by_reservation("T", "r1")
+    tasks = svc.list_by_reservation("T", RES_ID)
     assert [t.title for t in tasks] == ["Endreinigung"]
-    assert tasks[0].reservation_id == "r1"
-    # Beide Filter gesetzt: tenant_id + reservation_id (Wurzel 3 — kein
-    # ungescopter Roh-Zugriff per ID).
-    eq_calls = m.table.return_value.select.return_value.eq.call_args_list
-    assert eq_calls[0].args == ("tenant_id", "T")
-    second_eq = m.table.return_value.select.return_value.eq.return_value.eq
-    assert second_eq.call_args.args == ("reservation_id", "r1")
+    assert tasks[0].reservation_id == RES_ID
+    # Zwei gescopte Abfragen: erst die Buchung per (id, tenant_id), dann ihre
+    # Aufgaben per (tenant_id, reservation_id) — kein ungescopter Roh-Zugriff
+    # per ID (Wurzel 3), und der Vorab-Load ist der Wurzel-9-Guard.
+    eq_calls = [c.args for c in m.table.return_value.select.return_value.eq.call_args_list]
+    assert ("id", RES_ID) in eq_calls          # Buchung zuerst geladen
+    assert ("tenant_id", "T") in eq_calls      # Aufgaben tenant-gescopt
+    second_eq = [
+        c.args
+        for c in m.table.return_value.select.return_value.eq.return_value.eq.call_args_list
+    ]
+    assert ("tenant_id", "T") in second_eq     # Buchung tenant-gescopt
+    assert ("reservation_id", RES_ID) in second_eq
 
 
 def test_set_status_updates_scoped_and_returns_task() -> None:
@@ -312,3 +327,134 @@ def test_filter_bucket_teilt_zeitlich_nicht_nach_status() -> None:
     done = {t.id for t in TasksService._filter_bucket(tasks, "done")}
     assert done == {"erledigt", "storniert"}
     assert len(TasksService._filter_bucket(tasks, None)) == 5
+
+
+# --- Wurzel 9: by-reservation scopt wie der Buchungs-Slice ------------------
+#
+# Angriff: Ein Eigentümer schiebt die reservation_id einer Buchung an einem
+# NICHT zugeordneten Objekt desselben Betriebs unter. Der reservations-Slice
+# 404t das (reads.detail), dieser Pfad tat es nicht — der Item-Pfad gab mehr
+# her als der List-Pfad.
+
+OWN_PROP = "p-own"
+FOREIGN_PROP = "p-fremd"
+
+
+class _TaskTableFake:
+    def __init__(self, rows: list[dict]) -> None:
+        self._rows = rows
+
+    def select(self, *_a: object, **_k: object) -> "_TaskTableFake":
+        return self
+
+    def order(self, *_a: object, **_k: object) -> "_TaskTableFake":
+        return self
+
+    def limit(self, *_a: object, **_k: object) -> "_TaskTableFake":
+        return self
+
+    def eq(self, col: str, val: object) -> "_TaskTableFake":
+        return _TaskTableFake([r for r in self._rows if r.get(col) == val])
+
+    def execute(self) -> object:
+        from types import SimpleNamespace
+
+        return SimpleNamespace(data=list(self._rows))
+
+
+class _TaskDBFake:
+    def __init__(self, tables: dict[str, list[dict]]) -> None:
+        self._tables = tables
+
+    def table(self, name: str) -> _TaskTableFake:
+        return _TaskTableFake(list(self._tables.get(name, [])))
+
+
+def _resv_svc(assigned: list[str], resv_property: str) -> TasksService:
+    """Buchung an `resv_property`; `assigned` = Objekte des Anfragenden."""
+    return TasksService(
+        client=_TaskDBFake(  # type: ignore[arg-type]
+            {
+                "reservations": [
+                    {"id": RES_ID, "tenant_id": "T", "property_id": resv_property}
+                ],
+                "tasks": [
+                    {
+                        "id": "task-1",
+                        "tenant_id": "T",
+                        "reservation_id": RES_ID,
+                        "property_id": resv_property,
+                        "title": "Endreinigung",
+                        "status": "open",
+                    }
+                ],
+                "owner_property_assignments": [
+                    {"property_id": p, "tenant_id": "T", "user_id": "u1"}
+                    for p in assigned
+                ],
+                "staff_property_assignments": [
+                    {"property_id": p, "tenant_id": "T", "user_id": "u1"}
+                    for p in assigned
+                ],
+            }
+        )
+    )
+
+
+def _owner_task_ctx() -> AuthContext:
+    return AuthContext(user_id="u1", tenant_id="T", role="owner")
+
+
+def test_by_reservation_foreign_property_is_404() -> None:
+    """Eigentümer + fremdes Objekt → 404 wie im reservations-Slice."""
+    svc = _resv_svc(assigned=[OWN_PROP], resv_property=FOREIGN_PROP)
+    with pytest.raises(TaskError) as exc:
+        svc.list_by_reservation("T", RES_ID, _owner_task_ctx())
+    assert exc.value.status_code == 404
+
+
+def test_by_reservation_without_assignment_is_404() -> None:
+    """Fail-closed: keine Zuordnung → nichts."""
+    svc = _resv_svc(assigned=[], resv_property=OWN_PROP)
+    with pytest.raises(TaskError) as exc:
+        svc.list_by_reservation("T", RES_ID, _owner_task_ctx())
+    assert exc.value.status_code == 404
+
+
+def test_by_reservation_staff_scope_applies() -> None:
+    """§4.3: derselbe Schnitt für staff/cleaner."""
+    svc = _resv_svc(assigned=[OWN_PROP], resv_property=FOREIGN_PROP)
+    ctx = AuthContext(user_id="u1", tenant_id="T", role="cleaner")
+    with pytest.raises(TaskError) as exc:
+        svc.list_by_reservation("T", RES_ID, ctx)
+    assert exc.value.status_code == 404
+
+
+def test_by_reservation_own_property_returns_tasks() -> None:
+    """Gegenprobe: das zugeordnete Objekt liefert die Aufgaben."""
+    svc = _resv_svc(assigned=[OWN_PROP], resv_property=OWN_PROP)
+    tasks = svc.list_by_reservation("T", RES_ID, _owner_task_ctx())
+    assert [t.id for t in tasks] == ["task-1"]
+
+
+def test_by_reservation_admin_not_restricted() -> None:
+    """admin sieht die Aufgaben auch ohne Zuordnung."""
+    svc = _resv_svc(assigned=[], resv_property=FOREIGN_PROP)
+    ctx = AuthContext(user_id="u1", tenant_id="T", role="admin")
+    assert len(svc.list_by_reservation("T", RES_ID, ctx)) == 1
+
+
+def test_by_reservation_foreign_tenant_is_404() -> None:
+    """Cross-Tenant bleibt 404 (Wurzel 3)."""
+    svc = _resv_svc(assigned=[OWN_PROP], resv_property=OWN_PROP)
+    with pytest.raises(TaskError) as exc:
+        svc.list_by_reservation("FREMD", RES_ID, _owner_task_ctx())
+    assert exc.value.status_code == 404
+
+
+def test_by_reservation_non_uuid_is_404_not_500() -> None:
+    """Wurzel 5: Fehl-Input darf keinen 500 werfen."""
+    svc = _resv_svc(assigned=[OWN_PROP], resv_property=OWN_PROP)
+    with pytest.raises(TaskError) as exc:
+        svc.list_by_reservation("T", "not-a-uuid", _owner_task_ctx())
+    assert exc.value.status_code == 404

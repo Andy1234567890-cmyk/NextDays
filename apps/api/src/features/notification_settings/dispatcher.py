@@ -16,18 +16,102 @@ Jeder Ausgang steht im Ergebnis, und der Aufrufer kann ihn auswerten.
 """
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from supabase import Client
 
+from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.mail import MailError, MailService, OutboundMessage
+from src.core.mail_empfaenger import betriebs_sprache
+from src.core.mail_layout import (
+    Aktion,
+    GerenderteMail,
+    MailInhalt,
+    mail_rendern,
+)
+from src.core.mail_sprache import aufloesen
+from src.core.mail_texte import text as mail_text
 from src.features.auth.sms import SmsError, send_sms
 
 from .katalog import NACH_SCHLUESSEL, Kanal
 from .service import NotificationSettingsService
 
 log = get_logger("nextdays.notification_dispatch")
+
+# Der Markenname für die übersetzten Sätze. Benachrichtigungen an den BETRIEB
+# sind immer myNextDays — die Glocke und diese Mails gehören zur Verwaltung,
+# nicht zum Marktplatz (CLAUDE.md „Zwei Marken").
+_MARKE = "myNextDays"
+
+# Marker, den `_glocke` an `uebersprungen` haengt, wenn der partielle
+# UNIQUE-Index (`notifications_dedup_offen_uq`) dieselbe Meldung bereits OFFEN
+# vorgefunden hat. Als Konstante, weil `sende()` daran erkennt, dass auch
+# E-Mail und SMS entfallen muessen — ein hier geaenderter Text wuerde die
+# Entdopplung sonst still ausser Kraft setzen.
+_GLOCKE_BEREITS_OFFEN = "bereits offen"
+
+
+def _glocke_entdoppelt(ergebnis: Zustellung) -> bool:
+    """Hat die Glocke die Meldung als bereits vorhanden abgewiesen?"""
+    return any(
+        _GLOCKE_BEREITS_OFFEN in eintrag for eintrag in ergebnis.uebersprungen
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class Katalogwert:
+    """Ein Platzhalter-Wert, der SELBST uebersetzt werden muss.
+
+    Der Fall dahinter: „Neue Aufgabe: {titel}" ist uebersetzbar, aber `titel`
+    ist mal ein Freitext des Nutzers („Poolpumpe pruefen" — bleibt, wie er ist)
+    und mal eine Systemvorgabe aus 0330 (`endreinigung` — muss „Slutrengoering"
+    heissen, wenn der Empfaenger Daene ist).
+
+    Der Aufrufer kann das nicht selbst aufloesen: die Sprache steht erst HIER
+    fest, denn sie haengt am Empfaenger, und derselbe `sende()`-Aufruf bedient
+    im Fan-out mehrere Empfaenger mit verschiedenen Sprachen. Ein vom Aufrufer
+    fertig uebersetzter Titel waere die Sprache des ERSTEN Empfaengers fuer
+    alle — genau der Fehler, den diese Schicht verhindern soll.
+    """
+
+    schluessel: str
+
+
+def _wert_aufloesen(wert: object, sprache: str) -> object:
+    """Einen Platzhalterwert in die Empfaengersprache bringen.
+
+    Alles ausser `Katalogwert` geht unveraendert durch: Objektnamen, Vornamen
+    und Zeitraeume sind Daten, keine Uebersetzungen.
+    """
+    if isinstance(wert, Katalogwert):
+        return mail_text(wert.schluessel, sprache)
+    return wert
+
+
+def _werte_aufloesen(
+    werte: dict[str, object] | None, sprache: str
+) -> dict[str, object]:
+    if not werte:
+        return {}
+    return {k: _wert_aufloesen(v, sprache) for k, v in werte.items()}
+
+
+def _absaetze_rendern(
+    schluessel: str | Sequence[str],
+    sprache: str,
+    werte: dict[str, object] | None,
+) -> str:
+    """Einen oder mehrere Katalogtexte zu Absaetzen verbinden.
+
+    Ein einzelner Schluessel bleibt ein einzelner Absatz; eine Liste ergibt
+    mehrere, durch Leerzeile getrennt — dieselbe Trennung, die das Mail-Layout
+    als Absatzgrenze liest.
+    """
+    keys = [schluessel] if isinstance(schluessel, str) else list(schluessel)
+    gefuellt = _werte_aufloesen(werte, sprache)
+    return "\n\n".join(mail_text(k, sprache, **gefuellt) for k in keys)
 
 
 @dataclass(slots=True)
@@ -62,12 +146,15 @@ class NotificationDispatcher:
         schluessel: str,
         betreff: str,
         text: str,
-        html: str | None = None,
         tenant_id: str | None = None,
         ziel_pfad: str | None = None,
         property_id: str | None = None,
         dedup_key: str | None = None,
         inapp: bool = True,
+        betreff_key: str | None = None,
+        betreff_werte: dict[str, object] | None = None,
+        text_key: str | Sequence[str] | None = None,
+        text_werte: dict[str, object] | None = None,
     ) -> Zustellung:
         """Eine Benachrichtigung ueber alle vom Nutzer erlaubten Kanaele.
 
@@ -82,6 +169,40 @@ class NotificationDispatcher:
 
         `ziel_pfad` ist der RELATIVE Pfad, auf den der Klick fuehrt; `dedup_key`
         verhindert, dass derselbe Zustand bei jedem Sync erneut meldet (Wurzel 2).
+
+        Das HTML der Mail entsteht HIER aus `betreff`/`text`/`ziel_pfad` — es
+        gab dafuer frueher einen `html`-Parameter, den kein einziger Aufrufer je
+        gefuellt hat: jede Benachrichtigungsmail ging als nackter Text raus.
+        Den Aufrufer eine Mail formatieren zu lassen waere ohnehin die falsche
+        Ebene; er kennt das Ereignis, nicht das Layout.
+
+        ZWEI BETREFFE, und das ist Absicht:
+        `betreff` ist der Text fuer die GLOCKE. Er bleibt, wie der Aufrufer ihn
+        baut — die Glocke wird in der Oberflaeche gelesen, die ihre eigene
+        Sprache hat, und dort steht neben der Meldung ohnehin der Objekttitel
+        in Originalschreibweise.
+        `betreff_key` (+ `betreff_werte`) ist der Katalogschluessel fuer die
+        E-MAIL. Sie verlaesst das Haus und erreicht keinen Message-Katalog mehr
+        — sie muss in der Sprache des EMPFAENGERS geschrieben sein, nicht in
+        der des Servers. Fehlt der Schluessel, geht `betreff` hinaus wie
+        bisher; so bleibt jeder Aufrufer lauffaehig, der noch nicht umgestellt
+        ist, ohne dass eine Mail leer wird.
+        `text_key` (+ `text_werte`) ist dasselbe fuer den RUMPF. Er ist eigens
+        noetig, weil Betreff und Rumpf verschiedene Saetze sind: „Sperrantrag
+        genehmigt: Haus A" im Betreff, „Dein Sperrantrag fuer Haus A
+        (01.–05.) wurde genehmigt." im Rumpf. Ohne diesen Parameter blieb der
+        Rumpf deutsch, waehrend der Betreff schon uebersetzt war — eine Mail,
+        die in der Mitte die Sprache wechselt.
+        `text_key` darf eine LISTE sein: dann wird jeder Schluessel gerendert
+        und die Stuecke werden zu Absaetzen verbunden. Das deckt den haeufigen
+        Fall „Grundsatz + optionale Anmerkung" ab, ohne dass der Aufrufer den
+        zweiten Absatz selbst uebersetzen muesste — er kennt die Sprache des
+        Empfaengers gar nicht.
+
+        DIE GLOCKE bleibt bei `betreff`/`text` und wird NICHT uebersetzt: sie
+        wird in der Oberflaeche gelesen, die ihre eigene Sprachwahl hat, und
+        sie ist eine gespeicherte Zeile — sie in der Sprache des Empfaengers
+        einzufrieren waere falsch, sobald er die Oberflaechensprache wechselt.
         """
         kategorie = NACH_SCHLUESSEL.get(schluessel)
         if kategorie is None:
@@ -97,6 +218,29 @@ class NotificationDispatcher:
                 titel=betreff, text=text, ziel_pfad=ziel_pfad,
                 property_id=property_id, dedup_key=dedup_key, ergebnis=ergebnis,
             )
+            if _glocke_entdoppelt(ergebnis):
+                # DIE ENTDOPPLUNG GILT FUER ALLE KANAELE, nicht nur die Glocke.
+                # Der partielle UNIQUE-Index hat dieselbe Meldung als bereits
+                # OFFEN erkannt — dann ist sie auch schon verschickt worden.
+                # Ohne dieses Return lief die Kanalschleife trotzdem weiter:
+                # fuenf Umbuchungen derselben Reservierung ergaben eine Glocke
+                # und FUENF Mails plus fuenf SMS, und `owner_booking` ist
+                # email_pflicht, also nicht abwaehlbar (Wurzel 2 — der
+                # `dedup_key` war nur fuer einen von drei Kanaelen ein Riegel).
+                #
+                # Der Aufrufer sieht das am Ergebnis: `uebersprungen` traegt
+                # den Grund, `gesendet` bleibt leer. Nichts wird still als
+                # „zugestellt" gebucht (Wurzel 5).
+                for kanal in kategorie.kanaele:
+                    if kanal is not Kanal.PHONE:
+                        ergebnis.uebersprungen.append(
+                            f"{kanal.value} (bereits gemeldet)"
+                        )
+                log.info(
+                    "notification_dedup_uebersprungen",
+                    user_id=user_id, kategorie=schluessel, dedup_key=dedup_key,
+                )
+                return ergebnis
 
         for kanal in kategorie.kanaele:
             if kanal is Kanal.PHONE:
@@ -106,7 +250,12 @@ class NotificationDispatcher:
             if not self._settings.soll_senden(user_id, schluessel, kanal):
                 ergebnis.uebersprungen.append(kanal.value)
                 continue
-            self._sende_kanal(kanal, empfaenger, betreff, text, html, ergebnis)
+            self._sende_kanal(
+                kanal, empfaenger, betreff, text, ziel_pfad, ergebnis,
+                betreff_key=betreff_key, betreff_werte=betreff_werte,
+                text_key=text_key, text_werte=text_werte,
+                tenant_id=tenant_id,
+            )
 
         log.info(
             "notification_dispatched",
@@ -160,7 +309,9 @@ class NotificationDispatcher:
             # korrekt (die Meldung steht bereits), jeden anderen Fehler aber
             # NICHT zu verschlucken (Wurzel 5) — er landet im Ergebnis.
             if "23505" in str(exc):
-                ergebnis.uebersprungen.append(f"{Kanal.INAPP.value} (bereits offen)")
+                ergebnis.uebersprungen.append(
+                    f"{Kanal.INAPP.value} ({_GLOCKE_BEREITS_OFFEN})"
+                )
                 return
             log.warning(
                 "notification_glocke_fehlgeschlagen",
@@ -170,27 +321,65 @@ class NotificationDispatcher:
             return
         ergebnis.gesendet.append(Kanal.INAPP.value)
 
-    def _sende_kanal(
+    def _sende_kanal(  # noqa: PLR0913 — Kanal, Ziel, Inhalt, Ergebnis
         self,
         kanal: Kanal,
         empfaenger: dict[str, str | None],
         betreff: str,
         text: str,
-        html: str | None,
+        ziel_pfad: str | None,
         ergebnis: Zustellung,
+        *,
+        betreff_key: str | None = None,
+        betreff_werte: dict[str, object] | None = None,
+        text_key: str | Sequence[str] | None = None,
+        text_werte: dict[str, object] | None = None,
+        tenant_id: str | None = None,
     ) -> None:
-        """Einen Kanal bedienen. Fehler landen im Ergebnis, nie im Aufrufer."""
+        """Einen Kanal bedienen. Fehler landen im Ergebnis, nie im Aufrufer.
+
+        Die SMS bleibt bewusst nackter Text: dort gibt es kein Layout, und
+        jedes Zeichen kostet. Sie geht in DERSELBEN Sprache raus wie die Mail —
+        eine SMS ist genauso eine Nachricht nach draussen.
+        """
         ziel = empfaenger.get("email" if kanal is Kanal.EMAIL else "phone")
         if not ziel:
             ergebnis.fehlgeschlagen[kanal.value] = "keine Adresse hinterlegt"
             return
+        sprache = aufloesen(
+            empfaenger.get("preferred_language"),
+            betriebs_sprache(self._db, tenant_id),
+        )
+        # Betreff und Rumpf der AUSGEHENDEN Nachricht: aus dem Katalog, wenn
+        # der Aufrufer einen Schluessel mitgibt, sonst der Rohtext von oben.
+        betreff_aussen = (
+            mail_text(
+                betreff_key, sprache, **_werte_aufloesen(betreff_werte, sprache)
+            )
+            if betreff_key
+            else betreff
+        )
+        text_aussen = (
+            _absaetze_rendern(text_key, sprache, text_werte)
+            if text_key
+            else text
+        )
         try:
             if kanal is Kanal.EMAIL:
+                mail = self._mail_bauen(
+                    betreff_aussen, text_aussen, ziel_pfad, sprache
+                )
                 self._mail.send(
-                    OutboundMessage(to=ziel, subject=betreff, text=text, html=html)
+                    OutboundMessage(
+                        to=ziel,
+                        subject=betreff_aussen,
+                        text=mail.text,
+                        html=mail.html,
+                        inline_bilder=mail.inline_bilder,
+                    )
                 )
             else:
-                send_sms(ziel, f"{betreff}\n\n{text}")
+                send_sms(ziel, f"{betreff_aussen}\n\n{text_aussen}")
         except (MailError, SmsError) as exc:
             # Spezifisch gefangen (Wurzel 5): der andere Kanal laeuft weiter,
             # der Fehlschlag bleibt aber sichtbar — kein stiller Erfolg.
@@ -198,15 +387,61 @@ class NotificationDispatcher:
             return
         ergebnis.gesendet.append(kanal.value)
 
+    @staticmethod
+    def _mail_bauen(
+        betreff: str, text: str, ziel_pfad: str | None, sprache: str
+    ) -> GerenderteMail:
+        """Benachrichtigung ins gemeinsame Mail-Layout giessen.
+
+        `betreff` ist die Ueberschrift, `text` der Rumpf — beide kommen als
+        reiner Text herein und werden im Layout escaped (Wurzel 8): ein
+        Objekttitel oder Gastname mit spitzen Klammern darf keine Injektion
+        ergeben.
+
+        Der Button entsteht NUR, wenn ein `ziel_pfad` da ist UND die Adresse des
+        Dashboards konfiguriert ist. Fehlt sie, gibt es keinen Link — eine
+        geratene Domain waere ein erfundener Wert (Wurzel 4), und die Mail sagt
+        ohne Button immer noch alles Noetige.
+        """
+        roh = getattr(get_settings(), "app_base_url", "")
+        basis = roh.rstrip("/") if isinstance(roh, str) else ""
+        aktion = (
+            Aktion(
+                text=mail_text(
+                    "benachrichtigung.aktion", sprache, marke=_MARKE
+                ),
+                url=f"{basis}{ziel_pfad}",
+            )
+            if ziel_pfad and basis
+            else None
+        )
+        return mail_rendern(
+            MailInhalt(
+                titel=betreff,
+                absaetze=[text] if text else [],
+                aktion=aktion,
+                sprache=sprache,
+            )
+        )
+
     def _empfaenger(self, user_id: str) -> dict[str, str | None]:
-        """E-Mail und Telefonnummer des Nutzers. Scope auf die eigene id."""
+        """E-Mail, Telefonnummer und SPRACHE des Nutzers. Scope auf die eigene id.
+
+        Die Sprache kommt aus derselben Zeile mit: sie wird für Betreff und
+        Rumpf gebraucht, und eine zweite Abfrage dafür wäre ein Roundtrip je
+        Benachrichtigung.
+        """
         rows = (
             self._db.table("users")
-            .select("email, phone")
+            .select("email, phone, preferred_language")
             .eq("id", user_id)
             .limit(1)
             .execute()
         ).data or []
         if not rows:
-            return {"email": None, "phone": None}
-        return {"email": rows[0].get("email"), "phone": rows[0].get("phone")}
+            return {"email": None, "phone": None, "preferred_language": None}
+        return {
+            "email": rows[0].get("email"),
+            "phone": rows[0].get("phone"),
+            "preferred_language": rows[0].get("preferred_language"),
+        }

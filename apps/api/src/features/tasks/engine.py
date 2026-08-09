@@ -35,6 +35,7 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.features.notification_settings.ereignisse import melde_aufgaben_zuweisung
 
 from .schemas import TaskSource, TaskStatus
 
@@ -349,6 +350,22 @@ def _insert_task(
         return None
     task_id = str(res.data[0]["id"])
     _copy_checklist(db, task_id, items)
+    # Der Zugewiesene erfährt von der Aufgabe (0331). Genau hier, weil dies der
+    # EINZIGE Insert-Punkt der Engine ist — und nur bei echter Neuanlage: ein
+    # 23505 oben ist oben schon abgebogen, ein zweiter Lauf meldet also nicht
+    # erneut (Wurzel 2). Der Rest der Entdopplung liegt im dedup_key.
+    melde_aufgaben_zuweisung(
+        db,
+        tenant_id=str(payload.get("tenant_id") or ""),
+        task_id=task_id,
+        assignee_id=(
+            str(payload["assignee_id"]) if payload.get("assignee_id") else None
+        ),
+        titel=str(payload.get("title") or ""),
+        property_id=(
+            str(payload["property_id"]) if payload.get("property_id") else None
+        ),
+    )
     return task_id
 
 

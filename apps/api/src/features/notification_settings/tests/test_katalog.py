@@ -21,18 +21,39 @@ from src.features.notification_settings.katalog import (
 from src.features.notification_settings.schemas import NotificationSettings
 
 # tests/ → notification_settings/ → features/ → src/ → api/ → apps/ → Repo-Wurzel
-MIGRATION = (
-    Path(__file__).resolve().parents[6]
-    / "supabase"
-    / "migrations"
-    / "0225_notification_settings.sql"
+MIGRATIONS_DIR = Path(__file__).resolve().parents[6] / "supabase" / "migrations"
+
+# 0225 legt die Tabelle an; spätere Migrationen ergänzen Spalten (0331: Aufgaben
+# und Eigentümer-Meldungen, 0332: Sperr-Antrags-Workflow). Der Katalog muss die
+# SUMME aller abdecken — würde hier nur 0225 gelesen, schlüge der Test bei jeder
+# legitimen Erweiterung fehl und der eigentliche Schutz ginge verloren.
+MIGRATIONEN = (
+    "0225_notification_settings.sql",
+    "0331_benachrichtigungen_aufgaben_buchungen.sql",
+    "0332_sperrantrag_genehmigung.sql",
 )
 
 
 def _migrations_spalten() -> set[str]:
-    """Die bool-Spalten aus der Migration (ohne user_id/updated_at)."""
-    sql = MIGRATION.read_text(encoding="utf-8")
-    return set(re.findall(r"^\s{4}([a-z_]+) boolean", sql, flags=re.MULTILINE))
+    """Die bool-Spalten aus allen notification_settings-Migrationen.
+
+    `create table` rückt die Spalten mit 4 Leerzeichen ein, `alter table ... add
+    column if not exists` ebenfalls — beide Formen werden erfasst.
+    """
+    spalten: set[str] = set()
+    for name in MIGRATIONEN:
+        sql = (MIGRATIONS_DIR / name).read_text(encoding="utf-8")
+        spalten |= set(
+            re.findall(r"^\s{4}([a-z_]+)\s+boolean", sql, flags=re.MULTILINE)
+        )
+        spalten |= set(
+            re.findall(
+                r"add column if not exists\s+([a-z_]+)\s+boolean",
+                sql,
+                flags=re.MULTILINE,
+            )
+        )
+    return spalten
 
 
 def test_katalog_deckt_migration_exakt_ab() -> None:

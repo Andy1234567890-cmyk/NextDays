@@ -6,13 +6,19 @@ unterkunftslos). Supabase-Client injiziert → mockbar.
 """
 import secrets
 from datetime import UTC, date, datetime
+from uuid import UUID
 
 from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.auth.staff_scope import is_staff, staff_property_ids
 from src.features.media.service import sign_task_photo
+from src.features.notification_settings.ereignisse import (
+    melde_aufgaben_zuweisung,
+    melde_dienstleistung_erledigt,
+)
 
 from .engine import materialize_recurring, sync_for_reservation
 from .schedule_label import schedule_label
@@ -103,6 +109,18 @@ class TasksService:
                 "needs_inspection": req.needs_inspection,
             },
         )
+        # Der Zugewiesene erfährt von seiner Aufgabe (0331). Best-effort und
+        # NACH dem Insert: schlägt der Versand fehl, ist die Aufgabe trotzdem
+        # angelegt (Wurzel 5 — der Nebenpfad kippt den Hauptpfad nicht; die
+        # Funktion fängt intern breit).
+        melde_aufgaben_zuweisung(
+            self._db(),
+            tenant_id=tenant_id,
+            task_id=str(row["id"]),
+            assignee_id=req.assignee_id,
+            titel=req.title,
+            property_id=req.property_id,
+        )
         return self._to_task(row)
 
     def list_tasks(
@@ -131,12 +149,18 @@ class TasksService:
         return tasks
 
     def list_by_reservation(
-        self, tenant_id: str, reservation_id: str
+        self, tenant_id: str, reservation_id: str, ctx: AuthContext | None = None
     ) -> list[Task]:
-        """Aufgaben zu einer Buchung (PM-Detailseite). Tenant-scoped: der
-        Service läuft mit service_role (RLS umgangen), also filtert der explizite
-        tenant_id-Filter fremde Aufgaben aus (Wurzel 3). Die reservation_id ist
-        zusätzlich gebunden — keine ungescopte Roh-Abfrage per ID."""
+        """Aufgaben zu einer Buchung (PM-Detailseite).
+
+        ZUERST die Buchung selbst im Rollen-Scope laden, DANN ihre Aufgaben
+        (Wurzel 9). Der reine tenant_id-Filter reichte nicht: der
+        reservations-Slice 404t eine fremde Buchung (`reads.detail`), dieser
+        Pfad tat es nicht — ein Eigentümer konnte über eine untergeschobene
+        reservation_id die Aufgaben eines nicht zugeordneten Objekts lesen. Der
+        Item-Pfad darf nicht mehr hergeben als der List-Pfad.
+        """
+        self._require_own_reservation(tenant_id, reservation_id, ctx)
         res = (
             self._db()
             .table("tasks")
@@ -147,6 +171,41 @@ class TasksService:
             .execute()
         )
         return [self._to_task(r) for r in (res.data or [])]
+
+    def _require_own_reservation(
+        self, tenant_id: str, reservation_id: str, ctx: AuthContext | None = None
+    ) -> None:
+        """Die Buchung MUSS dem Tenant gehören UND im Objekt-Scope der Rolle
+        liegen (§4.2 owner, §4.3 staff) — sonst 404 wie „nicht vorhanden".
+
+        Ohne `ctx` bleibt es beim reinen Tenant-Scope (interne Aufrufer).
+        """
+        try:
+            # Nicht-UUID würde Postgres mit 22P02 quittieren → nutzergetriebener
+            # 500 (Wurzel 5). Fachlich ist das schlicht „nicht gefunden".
+            UUID(str(reservation_id))
+        except (ValueError, AttributeError, TypeError) as exc:
+            raise TaskError(
+                "Reservierung nicht gefunden.", status_code=404
+            ) from exc
+        rows = (
+            self._db()
+            .table("reservations")
+            .select("id, property_id")
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            raise TaskError("Reservierung nicht gefunden.", status_code=404)
+        if ctx is None:
+            return
+        prop = rows[0].get("property_id")
+        if is_owner(ctx) and prop not in owner_property_ids(self._db(), ctx):
+            raise TaskError("Reservierung nicht gefunden.", status_code=404)
+        if is_staff(ctx) and prop not in staff_property_ids(self._db(), ctx):
+            raise TaskError("Reservierung nicht gefunden.", status_code=404)
 
     def delete_task(self, tenant_id: str, task_id: str) -> None:
         """Aufgabe löschen (Kalender-Popup). Tenant-scoped (Wurzel 3)."""
@@ -892,6 +951,16 @@ class TasksService:
         )
         if not res.data:
             raise TaskError("Aufgabe nicht gefunden.", status_code=404)
+        # Hat ein EIGENTÜMER diese Leistung beauftragt (0330), erfährt er von
+        # ihrem Abschluss (Kategorie `owner_service`, 0331). Nur dann — eine
+        # gewöhnliche Betriebsaufgabe geht ihn nichts an (§4.3). Best-effort;
+        # die Funktion fängt intern breit (Wurzel 5).
+        melde_dienstleistung_erledigt(
+            self._db(),
+            tenant_id=tenant_id,
+            task_id=task_id,
+            zeile=res.data[0],
+        )
         return self.get_detail(tenant_id, task_id, ctx)
 
     def list_inspection(

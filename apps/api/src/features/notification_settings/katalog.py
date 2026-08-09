@@ -82,6 +82,30 @@ KATALOG: tuple[Kategorie, ...] = (
     Kategorie("host_policies", Tab.KONTO, "aktivitaet", _MAIL_SMS, email_pflicht=True),
     Kategorie("reminders", Tab.KONTO, "erinnerungen", _MAIL_SMS),
     Kategorie("messages", Tab.KONTO, "nachrichten", _MAIL_SMS),
+    # --- Betrieb: Aufgaben und Eigentümer-Meldungen (0331) ----------------
+    # Eigene Kategorien statt „listing_activity" mitzubenutzen, weil die
+    # EMPFAENGER verschieden sind: task_assigned geht an einen Mitarbeiter,
+    # owner_* an den Eigentuemer. Sonst bekaeme eine Reinigungskraft SMS zu
+    # Buchungen fremder Objekte, und ein Eigentuemer koennte die Auftrags-
+    # Mails nur zusammen mit seinen Buchungsmeldungen abschalten.
+    Kategorie("task_assigned", Tab.KONTO, "aufgaben", _MAIL_SMS),
+    # E-Mail Pflicht: Buchung/Aenderung/Storno am eigenen Objekt ist die
+    # vertragliche Kerninformation des Eigentuemers (wie guest_policies).
+    Kategorie("owner_booking", Tab.KONTO, "aktivitaet", _MAIL_SMS, email_pflicht=True),
+    Kategorie("owner_service", Tab.KONTO, "aufgaben", _MAIL_SMS),
+    # --- Sperr-Antrags-Workflow (0332) ------------------------------------
+    # Wieder getrennte Kategorien wegen der EMPFAENGER: „block_request" geht an
+    # die Entscheider der Agentur (APPROVE_BLOCK), „block_decision" an den
+    # antragstellenden Eigentuemer. Zusammengelegt koennte ein Eigentuemer die
+    # Antwort auf seinen eigenen Antrag nur abschalten, indem er auch die
+    # Antraege fremder Leute abschaltet — und umgekehrt.
+    #
+    # email_pflicht NEIN: ein Sperrantrag ist eine interne Abstimmung, keine
+    # vertragliche Kerninformation wie eine Stornierung (owner_booking). Wer
+    # taeglich Antraege bearbeitet, darf den Mail-Kanal abwaehlen — die Glocke
+    # bleibt ohnehin an.
+    Kategorie("block_request", Tab.KONTO, "aktivitaet", _MAIL_SMS),
+    Kategorie("block_decision", Tab.KONTO, "aktivitaet", _MAIL_SMS),
 )
 
 NACH_SCHLUESSEL: dict[str, Kategorie] = {k.schluessel: k for k in KATALOG}

@@ -1,0 +1,414 @@
+"""Ereignis-Benachrichtigungen: Aufgaben-Zuweisung und Buchungen (Etappe E).
+
+DIE EINE STELLE, die aus einem fachlichen Ereignis eine Benachrichtigung macht.
+Die ausloesenden Slices (tasks, reservations, channel_manager) rufen hier EINE
+Funktion — sie kennen weder Empfaenger-Aufloesung noch Kanalwahl noch Dedup.
+Ohne diese Schicht wuerde jeder Slice seinen eigenen Fan-out bauen, und der
+dritte haette den Dedup vergessen.
+
+Fan-out-Regeln, aus denen alles Weitere folgt:
+  * Aufgaben-Zuweisung → an den ZUGEWIESENEN, niemanden sonst.
+  * Buchung/Aenderung/Storno → an den EIGENTUEMER des betroffenen Objekts.
+    Es gibt ZWEI Zuordnungswege, die auseinanderlaufen koennen (nachgeprueft):
+    `owner_property_assignments` (Login ↔ Objekt, das Portal) und
+    `owners.user_id` + `owner_properties` (Owner-Partei ↔ Objekt, die
+    Abrechnung). Beide werden gefragt und die Nutzer-IDs vereinigt — wer nur
+    ueber einen Weg eingetragen ist, wuerde sonst nichts erfahren.
+
+Wurzel 2 (Doppelmeldungen): Webhook-Redelivery und Re-Sync liefern dasselbe
+Ereignis mehrfach. Jede Meldung traegt darum einen `dedup_key`, der das
+EREIGNIS beschreibt (Reservierung + Art), nicht den Zeitpunkt des Versands.
+Der partielle UNIQUE-Index aus 0287 laesst die zweite Meldung auflaufen,
+solange die erste ungelesen ist.
+
+Wurzel 3 (Datensplit §4.2/§4.3): Der Eigentuemer erfaehrt VORNAME und QUELLE,
+nie den Gast-Gesamtpreis, nie Kontaktdaten. Der Text wird hier gebaut, nicht
+vom Aufrufer uebergeben — sonst reichte ein unachtsamer Aufrufer den vollen
+Namen durch.
+
+Wurzel 5 (Best-effort): Benachrichtigungen sind Nebenpfad. Keine Funktion hier
+darf das ausloesende Geschaeft (Aufgabe anlegen, Buchung schreiben) kippen —
+jede faengt breit und markiert das mit `# noqa: BLE001`.
+"""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from supabase import Client
+
+from src.core.logging import get_logger
+from src.core.mail_sprache import FALLBACK
+from src.core.mail_texte import text as mail_text
+
+if TYPE_CHECKING:  # nur fuer die Typannotation — zur Laufzeit waere es ein Zyklus
+    from .dispatcher import NotificationDispatcher
+
+log = get_logger("nextdays.benachrichtigungs_ereignisse")
+
+# Katalog-Schluessel (0331). Als Konstanten, damit ein Tippfehler beim Aufrufer
+# nicht erst zur Laufzeit im ValueError des Dispatchers auffaellt.
+SCHLUESSEL_AUFGABE = "task_assigned"
+SCHLUESSEL_BUCHUNG = "owner_booking"
+SCHLUESSEL_LEISTUNG = "owner_service"
+
+# Die Ereignisarten, ueber die der Eigentuemer informiert wird. Bewusst eine
+# geschlossene Menge: `checked_in`/`repriced` & Co. sind Betriebsvorgaenge, mit
+# denen ein Eigentuemer nicht behelligt wird.
+#
+# Der Wert ist der KATALOG-SCHLUESSEL des Mail-Betreffs (`core.mail_texte`).
+# Bis 0335 stand hier deutscher Klartext, weil eine versendete Mail keinen
+# Message-Katalog mehr erreicht — den gibt es serverseitig inzwischen, samt
+# Empfaengersprache. Ein dänischer Eigentuemer bekam sonst „Neue Buchung"
+# im Postfach.
+_BUCHUNG_BETREFF_KEY = {
+    "created": "benachrichtigung.buchung_neu",
+    "moved": "benachrichtigung.buchung_geaendert",
+    "cancelled": "benachrichtigung.buchung_storniert",
+}
+BUCHUNGS_EREIGNISSE = frozenset(_BUCHUNG_BETREFF_KEY)
+
+# Die Glocke bleibt deutschsprachig-neutral? Nein — sie bekommt denselben Satz
+# in der Sprache des BETRIEBS-Bestands. Sie ist eine gespeicherte Zeile, die
+# die Oberflaeche liest; deren Sprachwahl kann sich spaeter aendern. Damit dort
+# kein roher Schluessel steht, wird der Betreff fuer die Glocke im FALLBACK
+# gerendert — sichtbar an EINER Stelle statt als 24 Sonderfaelle in der UI.
+_GLOCKEN_SPRACHE = FALLBACK
+
+# Die Systemvorgaben aus 0330 fuer den Mail-Betreff → Katalog-Schluessel. Muss
+# mit den `key`-Werten der Migration uebereinstimmen — ein Test wacht darueber.
+_AUFGABEN_SCHLUESSEL = {
+    "endreinigung": "aufgabe.endreinigung",
+    "hauptreinigung": "aufgabe.hauptreinigung",
+    "fensterreinigung": "aufgabe.fensterreinigung",
+    "rasenmaehen": "aufgabe.rasenmaehen",
+    "terrassenreinigung": "aufgabe.terrassenreinigung",
+}
+
+
+def _dispatcher(db: Client) -> NotificationDispatcher:
+    """Lokaler Import — der Dispatcher zieht Mail/SMS/Settings nach, und ein
+    Import auf Modulebene machte daraus einen Zyklus (tasks → hier →
+    dispatcher → service → ...)."""
+    from .dispatcher import NotificationDispatcher  # noqa: PLC0415
+
+    return NotificationDispatcher(db)
+
+
+# --- Aufgaben ---------------------------------------------------------------
+
+
+def melde_aufgaben_zuweisung(
+    db: Client,
+    *,
+    tenant_id: str,
+    task_id: str,
+    assignee_id: str | None,
+    titel: str,
+    property_id: str | None = None,
+) -> None:
+    """„Dir wurde eine Aufgabe zugewiesen."
+
+    Idempotent ueber `dedup_key = aufgabe_zugewiesen:<task_id>:<assignee_id>`:
+    Der Schluessel traegt den EMPFAENGER mit, damit eine Umverteilung (A → B →
+    A) den neuen Zustaendigen wirklich erreicht — ein Schluessel nur aus der
+    task_id wuerde die zweite Zuweisung an A stumm schlucken. Wird dagegen
+    dieselbe Aufgabe mehrfach gespeichert, ohne dass sich der Zustaendige
+    aendert, greift die Entdopplung wie gewollt.
+
+    Ohne `assignee_id` passiert NICHTS: eine unzugewiesene Aufgabe hat keinen
+    Empfaenger, und „an alle" waere geraten (Wurzel 4).
+    """
+    if not assignee_id:
+        return
+    try:
+        # Die Tenant-Pruefung steht INNERHALB des try, obwohl sie eine
+        # Vorbedingung ist: sie fragt die Datenbank, und ein transienter
+        # DB-Fehler hier duerfte den Aufrufer nicht kippen. Stuende sie davor,
+        # bekaeme der Client nach erfolgreich angelegter Aufgabe einen 500 —
+        # und weil `create_task` nicht idempotent ist, erzeugte sein Retry eine
+        # ZWEITE Aufgabe (Wurzel 5 kippt dann Wurzel 2).
+        if not _gehoert_zum_tenant(db, assignee_id, tenant_id):
+            # Der Dispatcher loest den Empfaenger allein ueber `users.id` auf,
+            # ohne Tenant-Filter. Die Pruefung gehoert deshalb hierher: eine
+            # Aufgabe darf niemanden ausserhalb ihres Mandanten anschreiben
+            # (Wurzel 3).
+            log.warning(
+                "aufgaben_benachrichtigung_fremder_empfaenger",
+                tenant_id=tenant_id, task_id=task_id,
+            )
+            return
+        _dispatcher(db).sende(
+            user_id=assignee_id,
+            schluessel=SCHLUESSEL_AUFGABE,
+            # Zwei Fassungen desselben Satzes: `betreff` fuellt die GLOCKE
+            # (Oberflaeche, eigene Sprachwahl), `betreff_key` die E-MAIL in der
+            # Sprache des Empfaengers. `titel` ist bei Portal-Auftraegen der
+            # Katalog-Schluessel (`endreinigung`) und wird als `Katalogwert`
+            # durchgereicht, damit der Dispatcher ihn erst dann uebersetzt,
+            # wenn die Empfaengersprache feststeht. Ein FREITEXT des
+            # Eigentuemers bleibt unangetastet: er hat ihn in seiner Sprache
+            # geschrieben, er ist die Wahrheit.
+            betreff=mail_text(
+                "benachrichtigung.aufgabe_neu",
+                _GLOCKEN_SPRACHE,
+                titel=_aufgaben_titel(titel, _GLOCKEN_SPRACHE),
+            ),
+            betreff_key="benachrichtigung.aufgabe_neu",
+            betreff_werte={"titel": _titel_wert(titel)},
+            # Kein zusaetzlicher Fliesstext: der Titel IST die Meldung.
+            text="",
+            tenant_id=tenant_id,
+            ziel_pfad=f"/aufgaben/{task_id}",
+            property_id=property_id,
+            dedup_key=f"aufgabe_zugewiesen:{task_id}:{assignee_id}",
+        )
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad, darf die Aufgabe nicht kippen
+        log.warning(
+            "aufgaben_benachrichtigung_fehlgeschlagen",
+            task_id=task_id, error=str(exc)[:200],
+        )
+
+
+def melde_dienstleistung_erledigt(
+    db: Client,
+    *,
+    tenant_id: str,
+    task_id: str,
+    zeile: dict,
+) -> None:
+    """„Deine beauftragte Leistung ist erledigt" — an den Besteller.
+
+    Empfaenger ist `tasks.requested_by`, also der Eigentuemer, der den Auftrag
+    ueber das Portal ausgeloest hat (0330). Fehlt das Feld, ist es eine
+    gewoehnliche Betriebsaufgabe — dann passiert NICHTS: der Eigentuemer hat
+    mit dem Tagesgeschaeft des Betriebs nichts zu tun (§4.3).
+
+    Ohne diese Funktion waere die Kategorie `owner_service` ein Schalter im
+    Konto, den niemand ausloest — tote Dekoration (Wurzel 4).
+    """
+    besteller = zeile.get("requested_by")
+    if not besteller:
+        return
+    try:
+        roh = str(zeile.get("title") or "")
+        _dispatcher(db).sende(
+            user_id=str(besteller),
+            schluessel=SCHLUESSEL_LEISTUNG,
+            betreff=mail_text(
+                "benachrichtigung.leistung_erledigt",
+                _GLOCKEN_SPRACHE,
+                titel=_aufgaben_titel(roh, _GLOCKEN_SPRACHE),
+            ),
+            betreff_key="benachrichtigung.leistung_erledigt",
+            betreff_werte={"titel": _titel_wert(roh)},
+            text="",
+            tenant_id=tenant_id,
+            ziel_pfad="/portal/dienstleistungen",
+            property_id=(
+                str(zeile["property_id"]) if zeile.get("property_id") else None
+            ),
+            # Ein Abschluss je Auftrag (Wurzel 2). Wird die Aufgabe erneut
+            # abgeschlossen (Doppelklick, Wiedereroeffnung), meldet der
+            # UNIQUE-Index die offene Meldung als bereits vorhanden.
+            dedup_key=f"leistung_erledigt:{task_id}",
+        )
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Abschluss nicht
+        log.warning(
+            "leistung_benachrichtigung_fehlgeschlagen",
+            task_id=task_id, error=str(exc)[:200],
+        )
+
+
+# --- Buchungen --------------------------------------------------------------
+
+
+def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Feldern
+    db: Client,
+    *,
+    tenant_id: str,
+    reservation_id: str,
+    kind: str,
+    property_id: str | None = None,
+    gast_vorname: str | None = None,
+    quelle: str | None = None,
+) -> None:
+    """Buchungseingang / Aenderung / Storno an den Eigentuemer des Objekts.
+
+    `kind` sind die Ereignisarten der Zeitleiste (0122): created | moved |
+    cancelled. Alles andere wird ignoriert — der Aufrufer muss nicht filtern.
+
+    Der Inhalt respektiert den Datensplit (Wurzel 3): NUR Vorname und Quelle
+    gehen mit, nie der Gast-Gesamtpreis und nie Kontaktdaten. Der Aufrufer
+    liefert bereits den Vornamen; hier wird zusaetzlich abgeschnitten, falls
+    doch ein voller Name durchgereicht wird — Verteidigung in der Tiefe.
+    """
+    if kind not in BUCHUNGS_EREIGNISSE:
+        return
+    if not property_id:
+        # Ohne Objektbezug gibt es keinen Eigentuemer — und „an alle Owner des
+        # Mandanten" waere ein Datenleck (fremde Objekte).
+        return
+    try:
+        empfaenger = eigentuemer_nutzer_ids(db, tenant_id, property_id)
+        if not empfaenger:
+            return
+        vorname = _nur_vorname(gast_vorname)
+        objekt = _objekt_titel(db, tenant_id, property_id)
+        text = " · ".join(t for t in (vorname, quelle) if t)
+        dispatcher = _dispatcher(db)
+        for user_id in sorted(empfaenger):
+            dispatcher.sende(
+                user_id=user_id,
+                schluessel=SCHLUESSEL_BUCHUNG,
+                # Derselbe `sende()`-Aufruf speist die Glocke UND eine E-Mail
+                # (`owner_booking` ist email_pflicht). Die Glocke bekommt den
+                # fertigen Satz, die Mail den Katalog-Schluessel — sie geht in
+                # der Sprache des jeweiligen Eigentuemers raus, und im Fan-out
+                # ueber mehrere Eigentuemer kann die je Empfaenger verschieden
+                # sein.
+                betreff=mail_text(
+                    _BUCHUNG_BETREFF_KEY[kind], _GLOCKEN_SPRACHE, objekt=objekt
+                ),
+                betreff_key=_BUCHUNG_BETREFF_KEY[kind],
+                betreff_werte={"objekt": objekt},
+                # Der Rumpf ist reine DATENZEILE (Vorname · Quelle) — nichts
+                # daran ist uebersetzbar, darum kein `text_key`.
+                text=text,
+                tenant_id=tenant_id,
+                ziel_pfad=f"/portal/buchungen/{reservation_id}",
+                property_id=property_id,
+                # Wurzel 2: Der Schluessel beschreibt das EREIGNIS, nicht den
+                # Versandzeitpunkt. Webhook-Redelivery und Re-Sync erzeugen
+                # denselben Schluessel und laufen am UNIQUE-Index auf.
+                dedup_key=f"buchung:{kind}:{reservation_id}",
+            )
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad, darf die Buchung nicht kippen
+        log.warning(
+            "buchungs_benachrichtigung_fehlgeschlagen",
+            reservation_id=reservation_id, kind=kind, error=str(exc)[:200],
+        )
+
+
+def eigentuemer_nutzer_ids(
+    db: Client, tenant_id: str, property_id: str
+) -> set[str]:
+    """Login-Nutzer, die als Eigentuemer dieses Objekts gelten.
+
+    BEIDE Zuordnungswege, weil sie unabhaengig gepflegt werden und
+    auseinanderlaufen koennen:
+      1. `owner_property_assignments` — der Weg des Portals (Login ↔ Objekt).
+      2. `owners.user_id` ueber `owner_properties` — der Weg der Abrechnung
+         (Owner-Partei ↔ Objekt). Ein Eigentuemer, der nur hier steht, wuerde
+         ueber Weg 1 nie erreicht.
+    Beide sind auf den Mandanten gescopt (Wurzel 3). Leere Menge = niemand wird
+    benachrichtigt (fail-closed) — kein Ausweichen auf „dann eben die Admins".
+    """
+    ids: set[str] = set()
+    zuordnungen = (
+        db.table("owner_property_assignments")
+        .select("user_id")
+        .eq("tenant_id", tenant_id)
+        .eq("property_id", property_id)
+        .execute()
+    ).data or []
+    ids.update(str(r["user_id"]) for r in zuordnungen if r.get("user_id"))
+
+    parteien = (
+        db.table("owner_properties")
+        .select("owner_id")
+        .eq("property_id", property_id)
+        .execute()
+    ).data or []
+    owner_ids = [str(r["owner_id"]) for r in parteien if r.get("owner_id")]
+    if owner_ids:
+        # Der Tenant-Filter steht hier, nicht bei owner_properties: die
+        # Link-Tabelle traegt keine tenant_id (Scope laeuft ueber den Owner).
+        besitzer = (
+            db.table("owners")
+            .select("user_id")
+            .eq("tenant_id", tenant_id)
+            .in_("id", sorted(owner_ids))
+            .execute()
+        ).data or []
+        ids.update(str(r["user_id"]) for r in besitzer if r.get("user_id"))
+    return ids
+
+
+# --- Helfer -----------------------------------------------------------------
+
+
+def _titel_wert(titel: str) -> object:
+    """Aufgabentitel als Platzhalterwert fuer den Dispatcher.
+
+    Eine Systemvorgabe aus 0330 wird als `Katalogwert` gereicht — der
+    Dispatcher uebersetzt sie erst, wenn die Empfaengersprache feststeht.
+    Freitext geht als roher String durch: er ist bereits die Sprache dessen,
+    der ihn geschrieben hat, und ihn zu „uebersetzen" hiesse, ihn zu
+    verfaelschen.
+    """
+    from .dispatcher import Katalogwert  # noqa: PLC0415 — Zyklus, siehe _dispatcher
+
+    schluessel = _AUFGABEN_SCHLUESSEL.get(titel)
+    return Katalogwert(schluessel) if schluessel else titel
+
+
+def _aufgaben_titel(titel: str, sprache: str) -> str:
+    """Katalog-Schluessel → lesbare Bezeichnung in der gewuenschten Sprache.
+
+    Nur fuer die Systemvorgaben aus 0330. Alles andere (Freitext des
+    Eigentuemers, eigene Typen des Betriebs, Titel aus Regeln) geht UNVERAENDERT
+    durch — es ist bereits Klartext, und ihn zu „uebersetzen" hiesse, den Text
+    des Nutzers zu verfaelschen.
+
+    Bewusst hier und nicht in der DB: die DB traegt den stabilen Schluessel
+    (das bleibt richtig, die Oberflaeche uebersetzt ihn in 24 Sprachen). Diese
+    Zuordnung uebersetzt ihn fuer die Mail, die den Message-Katalog des
+    Frontends nicht erreicht.
+    """
+    schluessel = _AUFGABEN_SCHLUESSEL.get(titel)
+    return mail_text(schluessel, sprache) if schluessel else titel
+
+
+def _objekt_titel(db: Client, tenant_id: str, property_id: str) -> str:
+    """Objektname fuer den Betreff — tenant-gescopt (Wurzel 3).
+
+    Ohne Titel bleibt die ID-Kurzform: der Eigentuemer muss erkennen koennen,
+    WELCHES seiner Objekte gemeint ist, und ein erfundener Name („Ihr Objekt")
+    waere schlechter als die Kennung (Wurzel 4). Dieselbe Notloesung nutzt
+    `airbnb_zimmer_push._an_die_glocke`.
+    """
+    rows = (
+        db.table("properties")
+        .select("title")
+        .eq("id", property_id)
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    titel = (rows[0].get("title") if rows else None) or ""
+    return titel.strip() or property_id[:8]
+
+
+def _gehoert_zum_tenant(db: Client, user_id: str, tenant_id: str) -> bool:
+    rows = (
+        db.table("users")
+        .select("id")
+        .eq("id", user_id)
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    return bool(rows)
+
+
+def _nur_vorname(name: str | None) -> str | None:
+    """Erstes Wort — dieselbe Regel wie `guest_masking._first_name_only`.
+
+    Bewusst nicht importiert: dort haengt sie an einer `GuestMask`, die hier
+    keinen Sinn ergibt (es gibt keinen anfragenden Nutzer, nur einen
+    Empfaenger). Die Regel ist eine Zeile; ein halber Import waere teurer.
+    """
+    if not name:
+        return None
+    erstes = name.strip().split(" ")[0].strip()
+    return erstes or None

@@ -102,9 +102,14 @@ def tasks_by_reservation(
         AuthContext, Depends(require_permission(Capability.VIEW_CALENDAR))
     ],
 ) -> list[Task]:
-    """Aufgaben zu einer Buchung (PM-Detailseite). Wer die Buchung sieht
-    (VIEW_CALENDAR), sieht ihre Aufgaben; tenant-scoped im Service."""
-    return service.list_by_reservation(_tenant(ctx), reservation_id)
+    """Aufgaben zu einer Buchung (PM-Detailseite). Wer die Buchung sieht, sieht
+    ihre Aufgaben — und zwar mit demselben Scope wie der Buchungs-Slice: der
+    `ctx` geht mit in den Service, der die Buchung zuerst im Owner-/Staff-Scope
+    lädt und sonst 404t (Wurzel 9)."""
+    try:
+        return service.list_by_reservation(_tenant(ctx), reservation_id, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.delete("/{task_id}", status_code=204)
