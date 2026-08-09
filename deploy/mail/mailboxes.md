@@ -6,12 +6,12 @@ per Mailcow-API (siehe unten).
 
 | Adresse | Zweck | Anzeigename (Vorschlag) |
 |---|---|---|
-| `info@mynextdays.dk` | Allgemeine Anfragen / zentrale Info-Adresse | myNextDays Info |
+| `info@mynextdays.dk` | Allgemeine Anfragen / zentrale Info-Adresse **und** SMTP-Login + sichtbarer Absender der App (`SMTP_USER` = `SMTP_FROM_ADDRESS`) | myNextDays Info |
 | `support@mynextdays.dk` | Kundensupport / Ticket-Eingang | myNextDays Support |
 | `verkauf@mynextdays.dk` | Vertrieb / Sales-Anfragen | myNextDays Verkauf |
 | `torsten@mynextdays.dk` | Persönliches Postfach Torsten | Torsten |
 | `jeanine@mynextdays.dk` | Persönliches Postfach Jeanine | Jeanine |
-| `developer@mynextdays.dk` | Technik / System-Absender für die App (SMTP-Login) | myNextDays Developer |
+| `developer@mynextdays.dk` | Technisches Postfach (Monitoring, Zertifikats-/Blacklist-Benachrichtigungen). **Nicht** der SMTP-Login der App — der läuft über `info@` | myNextDays Developer |
 
 ## Angelegte Aliase (Pflicht + Standard) — alle → `info@mynextdays.dk`
 
@@ -22,17 +22,19 @@ Diese Aliase sind bereits angelegt (Ziel: Sammel-Postfach `info@`):
 | `abuse@mynextdays.dk` | **Beschwerde-/Missbrauchs-Kontakt** — hierüber erreichen Blacklist-Betreiber, andere Mailprovider und ggf. Behörden den Serverbetreiber. **RFC 2142 Pflicht.** Fehlt sie, verpuffen Beschwerden und man landet unbemerkt auf Blacklists. | ✅ Pflicht |
 | `postmaster@mynextdays.dk` | RFC-Pflicht-Adresse + **Ziel der DMARC-Reports** (`rua`/`ruf`). | ✅ Pflicht |
 | `hostmaster@mynextdays.dk` | RFC-2142-Standard (DNS-/Domain-Kontakt). | empfohlen |
-| `noreply@mynextdays.dk` | Sichtbarer Absender automatischer Transaktions-Mails (`SMTP_FROM_ADDRESS`). | empfohlen |
+| `noreply@mynextdays.dk` | Angelegt, aber **nicht** als Absender im Einsatz — Transaktionsmails gehen von `info@` (siehe [README.md](README.md), Abschnitt „Absenderadresse"). | optional |
 
 > Ziel aller vier ist aktuell `info@`. Bei Bedarf kann `abuse@`/`postmaster@` auf ein
 > überwachtes Support-Postfach umgeleitet werden — wichtig ist nur, dass die Mails
 > tatsächlich **gelesen** werden (sonst ist der Alias wertlos).
 
 ## Hinweise
-- **`developer@`** ist der SMTP-Login der App (`SMTP_USER`). Ein starkes, eigenes
-  Passwort setzen; NICHT das Admin-Passwort wiederverwenden. Der sichtbare Absender
-  (`SMTP_FROM_ADDRESS`) kann davon abweichen (z.B. `noreply@`), solange die Domain
-  DKIM-signiert wird.
+- **`info@`** ist der SMTP-Login der App (`SMTP_USER`) **und** der sichtbare
+  Absender (`SMTP_FROM_ADDRESS`) — bewusst dieselbe Adresse, damit der
+  Reputationsaufbau nicht auf zwei Identitäten zerfällt und Antworten in einem
+  gelesenen Postfach landen. Für den Login ein App-Passwort mit **nur**
+  SMTP-Recht verwenden (in Mailcow einzeln widerrufbar); NICHT das
+  Admin-Passwort wiederverwenden. Die Domain muss DKIM-signiert sein.
 - Jedes Postfach bekommt eine **Quota** (Speicherlimit) in der UI — großzügig, aber
   nicht unbegrenzt.
 - Für Sammel-Adressen (`info`, `support`, `verkauf`) kann später eine

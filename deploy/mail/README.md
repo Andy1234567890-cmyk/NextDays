@@ -109,13 +109,33 @@ Die API versendet über `core/mail.py` (`MailService`) per **SMTP-Submission
 ```
 SMTP_HOST=mail.mynextdays.dk
 SMTP_PORT=587
-SMTP_USER=developer@mynextdays.dk     # ein echtes Mailcow-Postfach
+SMTP_USER=info@mynextdays.dk          # ein echtes Mailcow-Postfach
 SMTP_PASSWORD=<Postfach-Passwort>
-SMTP_FROM_ADDRESS=noreply@mynextdays.dk
+SMTP_FROM_ADDRESS=info@mynextdays.dk
 SMTP_FROM_NAME=myNextDays
 SMTP_STARTTLS=true
 MAIL_SANDBOX=false
 ```
+
+#### Absenderadresse: `info@`, NICHT `noreply@` (entschieden am 08.08.2026)
+
+Der sichtbare Absender aller Transaktionsmails ist `info@mynextdays.dk` — ein
+Postfach, das tatsächlich gelesen wird. `noreply@` ist bewusst NICHT im Einsatz:
+
+- **Zustellbarkeit.** Antworten sind ein Engagement-Signal. Eine Adresse, die
+  niemand anschreiben kann, sammelt keine Antworten, wird seltener ins Adressbuch
+  übernommen und häufiger als Spam gemeldet — beides drückt die Reputation. Für
+  einen frisch aufgesetzten Mailserver ohne Sende-Historie (unser Fall) wiegt das
+  besonders schwer, weil Apple/iCloud und Google die Reputation erst aufbauen.
+- **Ein Absender, nicht zwei.** Wechselnde Absenderadressen verteilen den
+  Reputationsaufbau auf mehrere Identitäten und verlangsamen ihn. `SMTP_USER` und
+  `SMTP_FROM_ADDRESS` sind deshalb dieselbe Adresse.
+- **Erwartbarkeit.** Ein Gastgeber, der auf eine Einladungs- oder Statement-Mail
+  antwortet, erreicht damit den Betreiber, statt ins Leere zu schreiben.
+
+Der Alias `noreply@` bleibt angelegt (er zeigt ohnehin auf `info@`), wird aber
+nicht als Absender verwendet. Wer das ändern will, ändert es an genau dieser
+Stelle und in `deploy/ENVIRONMENT.md` mit — es gibt nur diese eine Wahrheit.
 
 - Fehlt `SMTP_HOST` oder `SMTP_FROM_ADDRESS` → Versand ist deaktiviert, `send()`
   gibt `503` (kein stiller Erfolg, kein erfundener Absender — Wurzel 4).

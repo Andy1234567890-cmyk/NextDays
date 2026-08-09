@@ -9,11 +9,16 @@
 // Registeränderung (Direktion, Sitz, Momsregistrierung) → hier nachziehen und
 // das Stand-Datum der betroffenen Dokumente hochsetzen.
 //
-// OFFEN — vor dem Live-Gang klären: Die Umsatzsteuer-Identifikationsnummer
-// DK46615182 wird vom EU-VIES-Dienst am 30.07.2026 als NICHT gültig
-// zurückgemeldet (Kontrollabfrage mit DK54562519/Lego A/S lieferte gültig, der
+// OFFEN — sobald die Momsregistrierung vorliegt: Die Umsatzsteuer-
+// Identifikationsnummer DK46615182 wird vom EU-VIES-Dienst als NICHT gültig
+// zurückgemeldet — geprüft am 30.07.2026 und erneut am 08.08.2026
+// (Kontrollabfrage mit DK54562519/Lego A/S lieferte beide Male gültig, der
 // Dienst funktioniert also). Plausibel, weil die Gesellschaft erst am
 // 01.07.2026 gegründet wurde und die Momsregistrierung noch aussteht.
+// `ustId` steht deshalb auf null. Sobald die Registrierung erteilt ist, hier
+// auf "DK46615182" setzen UND `COMPANY_VAT_ID` in der Backend-Umgebung
+// (Coolify-App `nextdays-api` + `apps/api/.env`) gleichlautend füllen — sonst
+// zeigen Impressum und Mail-Fußzeile Unterschiedliches.
 // § 7 der dänischen E-handelslov verlangt die Umsatzsteuer-Identifikationsnummer
 // nur bei bestehender Momsregistrierung — liegt sie nicht vor, muss `ustId` auf
 // null gesetzt werden (die Zeile entfällt dann automatisch), statt eine nicht
@@ -37,7 +42,12 @@ export const ANBIETER = {
   // die Umsatzsteuer-Identifikationsnummer (Momsnummer).
   cvr: "46615182",
   // null, solange keine Momsregistrierung vorliegt — dann entfällt die Zeile.
-  ustId: "DK46615182" as string | null,
+  // Erneut gegen VIES geprüft am 08.08.2026: DK46615182 → isValid=false
+  // (Kontrollabfrage DK54562519/Lego A/S → isValid=true, der Dienst antwortet
+  // also korrekt). Die Momsregistrierung steht weiterhin aus. Sobald sie
+  // vorliegt: hier auf "DK46615182" setzen UND COMPANY_VAT_ID in der
+  // Backend-Umgebung (Coolify + apps/api/.env) gleichlautend füllen.
+  ustId: null as string | null,
   direktion: ["Jeanine Ågaard", "Torsten Ågaard"],
 } as const;
 

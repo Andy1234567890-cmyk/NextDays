@@ -5,6 +5,7 @@ erfundener Absender), W5 (SMTP-Fehler wird als MailError re-raised, nie als
 „gesendet" durchgewunken). Kein echter Netzwerk-Call: _deliver wird gemockt bzw.
 der Sandbox-Modus genutzt.
 """
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,9 +19,13 @@ def _settings(**over: object) -> Settings:
     base: dict[str, object] = {
         "smtp_host": "mail.mynextdays.dk",
         "smtp_port": 587,
-        "smtp_user": "developer@mynextdays.dk",
+        # Login und sichtbarer Absender sind bewusst DIESELBE Adresse — siehe
+        # deploy/mail/README.md, Abschnitt „Absenderadresse": ein `noreply@`
+        # sammelt keine Antworten, was den Reputationsaufbau bremst, und zwei
+        # verschiedene Absender verteilen ihn auf zwei Identitäten.
+        "smtp_user": "info@mynextdays.dk",
         "smtp_password": SecretStr("geheim"),
-        "smtp_from_address": "noreply@mynextdays.dk",
+        "smtp_from_address": "info@mynextdays.dk",
         "smtp_from_name": "myNextDays",
         "smtp_starttls": True,
         "mail_sandbox": False,
@@ -120,7 +125,7 @@ def test_successful_send_returns_message_id() -> None:
     assert captured["recipients"] == ["a@x.de", "b@x.de"]
     email = captured["email"]
     assert email["Subject"] == "Ihre Rechnung"  # type: ignore[index]
-    assert "noreply@mynextdays.dk" in email["From"]  # type: ignore[index]
+    assert "info@mynextdays.dk" in email["From"]  # type: ignore[index]
 
 
 def test_html_alternative_is_attached() -> None:
@@ -133,3 +138,86 @@ def test_reply_to_header_set() -> None:
     svc = MailService(_settings())
     built = svc._build(_msg(reply_to="support@mynextdays.dk"))
     assert built["Reply-To"] == "support@mynextdays.dk"
+
+
+# --- Zustellbarkeits-Header -------------------------------------------------
+
+
+def test_date_header_gesetzt() -> None:
+    """`Date` ist RFC-5322-Pflicht — es fehlte, rspamd gab dafür MISSING_DATE.
+
+    Weder Python noch unser Postfix (`always_add_missing_headers = no`)
+    ergänzen den Header; ohne diese Zeile geht jede Mail ohne Datum raus.
+    """
+    svc = MailService(_settings())
+    built = svc._build(_msg())
+    assert built["Date"]
+    # Ein RFC-5322-Datum trägt Wochentag und Zeitzonen-Offset.
+    assert "," in built["Date"]
+    assert "+" in built["Date"] or "-" in built["Date"]
+
+
+def test_x_mailer_gesetzt() -> None:
+    """Ohne Absenderhinweis wertet rspamd die Mail als Skript (MISSING_XM_UA)."""
+    svc = MailService(_settings())
+    assert svc._build(_msg())["X-Mailer"] == "myNextDays"
+
+
+def test_transaktionsmail_ist_auto_generated_ohne_abmeldeweg() -> None:
+    """Von einer Reset-Mail kann sich niemand abmelden — kein List-Unsubscribe.
+
+    Stattdessen `Auto-Submitted`, das Abwesenheitsnotizen unterdrückt (RFC 3834).
+    """
+    built = MailService(_settings())._build(_msg())
+    assert built["Auto-Submitted"] == "auto-generated"
+    assert built["List-Unsubscribe"] is None
+
+
+def test_inline_bild_wird_als_related_teil_eingebettet() -> None:
+    """Das Logo muss IM HTML-Teil haengen, sonst bleibt der Rahmen leer.
+
+    Live belegt am 08.08.2026: eine URL-Einbindung ergab in Apple Mail nur den
+    Alt-Text. Ein Anhang auf oberster Ebene waere ebenfalls falsch — er
+    erschiene als Dateianhang, und `cid:` im Rumpf liefe weiter ins Leere.
+    """
+    logo = Path(__file__).resolve().parents[5] / (
+        "marketing/public/marketing/brand/mynextdays-logo-light.png"
+    )
+    assert logo.is_file(), "Logodatei fehlt — Testvoraussetzung"
+
+    built = MailService(_settings())._build(
+        _msg(
+            html='<p><img src="cid:nd-logo"></p>',
+            inline_bilder={"nd-logo": logo},
+        )
+    )
+    teile = [t.get_content_type() for t in built.walk()]
+    assert "multipart/related" in teile
+    assert "image/png" in teile
+    bild = next(t for t in built.walk() if t.get_content_type() == "image/png")
+    assert bild["Content-ID"] == "<nd-logo>"
+    assert bild.get_content_disposition() == "inline"
+    assert len(bild.get_payload(decode=True)) == logo.stat().st_size
+
+
+def test_fehlendes_inline_bild_kippt_die_mail_nicht() -> None:
+    """Ein fehlendes Logo darf keinen Passwort-Reset blockieren (fail-soft)."""
+    built = MailService(_settings())._build(
+        _msg(
+            html="<p><img src='cid:nd-logo'></p>",
+            inline_bilder={"nd-logo": Path("/gibt/es/nicht.png")},
+        )
+    )
+    assert "text/html" in [t.get_content_type() for t in built.walk()]
+    assert "image/png" not in [t.get_content_type() for t in built.walk()]
+
+
+def test_marketingmail_traegt_ein_klick_abmeldung() -> None:
+    """Mit Abmeldeweg gilt die Mail als Marketing → RFC 8058."""
+    built = MailService(_settings())._build(
+        _msg(unsubscribe_url="https://www.mynextdays.com/abmelden?t=x")
+    )
+    assert built["List-Unsubscribe"] == "<https://www.mynextdays.com/abmelden?t=x>"
+    assert built["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
+    # Marketing ist keine Auto-Antwort auf eine Handlung des Empfängers.
+    assert built["Auto-Submitted"] is None
