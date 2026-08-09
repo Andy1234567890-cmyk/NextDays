@@ -42,14 +42,20 @@ def list_media(
     property_: bool = True,
     property_id: str | None = None,
 ) -> MediaListResponse:
-    """Bilder-Karten (Buchungs- + Objektfotos), tenant-scoped. Query-Toggles
-    `booking`/`property_` steuern die Quellen; `property_id` filtert auf ein
-    Objekt."""
+    """Bilder-Karten (Buchungs- + Objektfotos), tenant- UND rollen-scoped.
+
+    Query-Toggles `booking`/`property_` steuern die Quellen; `property_id`
+    filtert auf ein Objekt — begrenzt aber NICHT den Zugriff. Der `ctx` geht
+    deshalb mit in den Service: dort schneidet der Owner-/Staff-Scope die
+    Liste auf die zugeordneten Objekte (§4.2/§4.3). Ohne ihn sah ein
+    Eigentümer alle Fotos des Betriebs.
+    """
     items = service.list_media(
         _tenant(ctx),
         include_booking=booking,
         include_property=property_,
         property_id=property_id,
+        ctx=ctx,
     )
     return MediaListResponse(items=items)
 
@@ -61,7 +67,9 @@ def delete_media(
     service: MediaServiceDep,
     ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_TASKS))],
 ) -> None:
+    """Bild löschen. Derselbe Objekt-Scope wie die Liste (Wurzel 9): ein
+    Mitarbeiter darf nicht löschen, was er nicht einmal sehen darf."""
     try:
-        service.delete_media(_tenant(ctx), kind, media_id)
+        service.delete_media(_tenant(ctx), kind, media_id, ctx=ctx)
     except MediaError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

@@ -99,6 +99,36 @@ def test_bucket_selection_staffelung() -> None:
     assert _select_bucket("/api/v1/booking-engine/listings", b)[2] is False
 
 
+def test_oeffentliche_token_endpunkte_haben_eigenen_strengen_bucket() -> None:
+    """Die öffentlichen Token-Vorgänge (0334) gehören NICHT in den Login-Bucket.
+
+    Sie beginnen alle mit /auth/ und würden über den Teilstring-Vergleich sonst
+    im laxeren `auth`-Bucket landen. Hier ist strenger nötig: ein Aufruf kann
+    eine Mail an eine FREMDE Adresse auslösen, die Prüf-Endpunkte beantworten
+    „gibt es diesen Token?", und ein Treffer SETZT ein Passwort.
+    """
+    from src.core.ratelimit_middleware import _Buckets  # noqa: PLC0415
+
+    b = _Buckets(Settings())
+    for pfad in (
+        "/api/v1/auth/einladung/pruefen",
+        "/api/v1/auth/einladung/annehmen",
+        "/api/v1/auth/passwort-vergessen",
+        "/api/v1/auth/passwort-neu",
+        "/api/v1/auth/passwort-neu/pruefen",
+    ):
+        bucket, limit, sensibel = _select_bucket(pfad, b)
+        assert bucket == "auth_public", pfad
+        # Sensibel → fail-closed: lieber abweisen als bei Redis-Ausfall den
+        # Zugangsweg zu jedem Konto öffnen.
+        assert sensibel is True, pfad
+        # Strenger als der Login-Bucket, nicht nur anders benannt.
+        assert limit.max < b.auth.max, pfad
+
+    # Gegenprobe: der normale Login bleibt im auth-Bucket.
+    assert _select_bucket("/api/v1/auth/login", b)[0] == "auth"
+
+
 def test_provider_webhooks_sind_nicht_fail_closed() -> None:
     """KRITISCH (Vorfall 29.07.2026): Eingehende Webhooks duerfen bei einem
     Redis-Ausfall NICHT mit 503 abgewiesen werden.

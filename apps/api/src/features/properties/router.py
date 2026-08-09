@@ -46,6 +46,14 @@ _MANAGE_IMAGES = require_granular_permission(  # noqa: N816  pylint: disable=inv
     Permission.PM_MANAGE_PROPERTY_IMAGES
 )
 
+# Struktur des Bestands ändern (Gebäude anlegen, Objekt in n Einheiten
+# aufteilen). Dieselbe Befugnis wie das Anlegen eines Objekts — beides ist
+# Stammdaten-Pflege des BETRIEBS. Als Alias, weil zwei Endpunkte sie teilen.
+_MANAGE_STRUKTUR = Annotated[  # pylint: disable=invalid-name
+    AuthContext,
+    Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+]
+
 router = APIRouter(prefix="/properties", tags=["properties"])
 
 
@@ -114,9 +122,16 @@ def list_buildings(ctx: CurrentUser, service: PropertiesServiceDep) -> list[dict
 
 @router.post("/buildings", status_code=status.HTTP_201_CREATED)
 def create_building(
-    req: BuildingCreate, ctx: CurrentUser, service: PropertiesServiceDep
+    req: BuildingCreate, ctx: _MANAGE_STRUKTUR, service: PropertiesServiceDep
 ) -> dict:
-    """Gebäude anlegen. Objekte darin teilen sich später EINE Portal-Kennung."""
+    """Gebäude anlegen. Objekte darin teilen sich später EINE Portal-Kennung.
+
+    Autorisierung wie beim Anlegen eines Objekts (Wurzel 9): Vorher hing der
+    Endpunkt nur an `CurrentUser` — gemessen konnte ein `owner` damit ein
+    Gebäude im Mandanten der Agentur anlegen (201). Ein Gebäude entscheidet,
+    welche Objekte bei den Portalen unter EINER Kennung stehen; das ist
+    Stammdaten-Pflege des Betriebs, nicht Sache eines Eigentümers (§4.2).
+    """
     try:
         return service.create_building(ctx, req.name)
     except PropertyError as exc:
@@ -138,11 +153,16 @@ def list_units(
 def set_unit_count(
     property_id: str,
     req: UnitCountRequest,
-    ctx: CurrentUser,
+    ctx: _MANAGE_STRUKTUR,
     service: PropertiesServiceDep,
 ) -> list[dict]:
     """Objekt in n identische Einheiten aufteilen. Verkleinern nur, solange die
-    wegfallenden Einheiten frei sind (409 sonst)."""
+    wegfallenden Einheiten frei sind (409 sonst).
+
+    Autorisierung wie beim Anlegen/Ändern eines Objekts (Wurzel 9): vorher nur
+    `CurrentUser`. Die Stückzahl ist die Verfügbarkeit, die an die Portale
+    gemeldet wird — wer sie ändert, greift direkt in den Verkauf ein.
+    """
     try:
         return service.set_unit_count(ctx, property_id, req.count)
     except PropertyError as exc:

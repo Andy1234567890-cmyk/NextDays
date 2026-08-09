@@ -51,12 +51,14 @@ class _Buckets:
     def __init__(self, settings: Settings) -> None:
         self.default = parse_limit(settings.rate_limit_default)
         self.auth = parse_limit(settings.rate_limit_auth)
+        self.auth_public = parse_limit(settings.rate_limit_auth_public)
         self.refresh = parse_limit(settings.rate_limit_refresh)
         self.payments = parse_limit(settings.rate_limit_payments)
         self.listings = parse_limit(settings.rate_limit_listings)
         self.listings_tenant = parse_limit(settings.rate_limit_listings_tenant)
         self.tenant = parse_limit(settings.rate_limit_tenant)
         self.ai = parse_limit(settings.rate_limit_ai)
+        self.mfa = parse_limit(settings.rate_limit_mfa)
         self.public_support = parse_limit(settings.rate_limit_public_support)
 
 
@@ -88,6 +90,33 @@ _AUTH_PATHS = (
     # Login; die Sperrfrist je Konto sitzt zusätzlich im Service.
     "/platform/team/passwort-vergessen",
     "/platform/team/passwort-neu",
+)
+
+# ÖFFENTLICHE Token-Vorgänge der Tenant-Nutzer (0334): Einladung annehmen,
+# Passwort vergessen, neues Passwort setzen — plus die beiden Vorab-Prüfungen.
+# Eigener, NOCH strengerer Bucket als `auth`, weil hier drei Dinge zusammenkommen,
+# die es beim Login nicht gibt (Wurzel 8):
+#   • Jeder Aufruf von /passwort-vergessen kann eine Mail an eine FREMDE Adresse
+#     auslösen — im Login-Bucket (10/60) wäre das ein bequemer Mail-Bomber.
+#   • Die Prüf-Endpunkte beantworten „gibt es diesen Token?" und wären sonst der
+#     billigste Weg, den Token-Raum durchzuprobieren.
+#   • Ein Treffer setzt ein Passwort, ist also mächtiger als ein Login-Versuch.
+# Sensibel → fail-closed: lieber eine Anfrage abweisen als bei Redis-Ausfall den
+# Zugangsweg zu jedem Konto öffnen.
+# 2FA-Verifikation: eigener, strengster Bucket (Wurzel 8). Diese Pfade pruefen
+# ein Geheimnis (Wiederherstellungscode) bzw. bauen den zweiten Faktor um —
+# sie gehoeren nicht in den Default-Bucket und auch nicht in den laxeren
+# Login-Bucket. Sensibel = bei Redis-Ausfall fail-CLOSED: lieber kein
+# Code-Versuch als ein ungezaehlter.
+_MFA_PATHS = (
+    "/auth/mfa/",
+)
+
+_AUTH_PUBLIC_PATHS = (
+    "/auth/einladung/pruefen",
+    "/auth/einladung/annehmen",
+    "/auth/passwort-vergessen",
+    "/auth/passwort-neu",
 )
 
 # Token-Erneuerung. Eigener Bucket, gekeyt PRO NUTZER statt pro IP (siehe
@@ -158,6 +187,12 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     # ("/auth/login" ist nicht enthalten, aber die Reihenfolge entscheidet
     # generell) am falschen Bucket landen. Eigener Bucket, eigenes Keying.
     ("refresh", _REFRESH_PATHS, "refresh", False),
+    # VOR "auth": diese Pfade beginnen alle mit /auth/ und würden sonst im
+    # laxeren Login-Bucket landen. Der erste Treffer gewinnt.
+    # VOR "auth": /auth/mfa/* beginnt mit /auth/ und wuerde sonst im laxeren
+    # Login-Bucket landen. Der erste Treffer gewinnt.
+    ("mfa", _MFA_PATHS, "mfa", True),
+    ("auth_public", _AUTH_PUBLIC_PATHS, "auth_public", True),
     ("auth", _AUTH_PATHS, "auth", True),
     ("payments", ("/payments/",), "payments", True),
     ("public_support", _PUBLIC_SUPPORT_PATHS, "public_support", True),

@@ -64,6 +64,8 @@ from typing import Any
 
 from supabase import Client
 
+from src.core.mail_sprache import FALLBACK
+from src.core.mail_texte import text as mail_text
 from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
@@ -225,7 +227,9 @@ class AirbnbZimmerPushMixin:
             not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
         )
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(  # type: ignore[attr-defined]
+            db, tenant_id, property_id
+        )
         if not listing_id or not channel_id:
             return {"verbunden": False, "stand_bekannt": True, "rest": []}
         raeume = self._airbnb_raeume_lesen(channel_id, listing_id)
@@ -294,7 +298,9 @@ class AirbnbZimmerPushMixin:
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
         if not listing_id:
             return {"gesendet": False, "grund": "kein_airbnb_objekt"}
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(  # type: ignore[attr-defined]
+            db, tenant_id, property_id
+        )
         if not channel_id:
             return {"gesendet": False, "grund": "kein_airbnb_kanal"}
 
@@ -383,11 +389,10 @@ class AirbnbZimmerPushMixin:
             return
         self._an_die_glocke(
             db, tenant_id, property_id,
-            betreff=f"{len(stand)} Zimmer ohne Foto bei Airbnb",
-            text=(
-                "Airbnb zeigt Gästen die Fototour nur, wenn jedes Zimmer ein "
-                "Foto hat. Betroffen: " + ", ".join(stand)
-            ),
+            betreff_key="airbnb.zimmer_ohne_foto",
+            text_key="airbnb.rumpf_ohne_foto",
+            anzahl=len(stand),
+            raeume=", ".join(stand),
             ziel_pfad=f"/objekte/{property_id}/fotos",
             dedup_key=f"airbnb_foto_fehlt:{property_id}",
         )
@@ -417,12 +422,10 @@ class AirbnbZimmerPushMixin:
             namen.append(AIRBNB_RAUM_AUF_SLUG.get(art) or art or str(raum_id))
         self._an_die_glocke(
             db, tenant_id, property_id,
-            betreff=f"{len(namen)} Zimmer bei Airbnb noch vorhanden",
-            text=(
-                "Airbnb bietet keinen Weg, ein Zimmer über die Schnittstelle zu "
-                "löschen. Bitte im Airbnb-Konto unter Fototour entfernen: "
-                + ", ".join(sorted(namen))
-            ),
+            betreff_key="airbnb.zimmer_noch_vorhanden",
+            text_key="airbnb.rumpf_noch_vorhanden",
+            anzahl=len(namen),
+            raeume=", ".join(sorted(namen)),
             ziel_pfad=f"/objekte/{property_id}",
             # Je Zimmer eigener Schlüssel: löscht der Betrieb zwei Zimmer
             # nacheinander, darf die zweite Meldung nicht an der ersten
@@ -437,15 +440,21 @@ class AirbnbZimmerPushMixin:
         tenant_id: str,
         property_id: str,
         *,
-        betreff: str,
-        text: str,
+        betreff_key: str,
+        text_key: str,
+        anzahl: int,
+        raeume: str,
         ziel_pfad: str,
         dedup_key: str,
     ) -> None:
-        """Eine In-App-Meldung an alle Admins des Betriebs.
+        """Eine Meldung an alle Admins des Betriebs.
 
-        Nur die Glocke: eine E-Mail je Sync-Lauf wäre Spam, und der Zustand ist
-        in der Anwendung zu beheben, nicht im Postfach.
+        `listing_activity` trägt laut Katalog `email_pflicht=True` — die
+        Meldung geht also NICHT nur an die Glocke, sondern auch ins Postfach.
+        Betreff und Rumpf kommen deshalb als Katalog-SCHLÜSSEL herein und
+        werden vom Dispatcher in der Sprache des jeweiligen Admins gerendert;
+        vorher standen hier deutsche Sätze, die jeden nicht-deutschen Betrieb
+        auf Deutsch erreichten.
         """
         empfaenger = (
             db.table("users")
@@ -464,7 +473,13 @@ class AirbnbZimmerPushMixin:
             .limit(1)
             .execute()
         ).data
+        # Ohne Titel die ID-Kurzform: der Betrieb muss erkennen können, WELCHES
+        # Objekt gemeint ist. Ein erfundener Name („Ihr Objekt") wäre schlechter
+        # als die Kennung (Wurzel 4) — dieselbe Notlösung wie in `ereignisse`.
         objekt = (titel[0].get("title") if titel else None) or property_id[:8]
+        werte: dict[str, object] = {
+            "objekt": objekt, "anzahl": anzahl, "raeume": raeume,
+        }
         from src.features.notification_settings.dispatcher import (  # noqa: PLC0415
             NotificationDispatcher,
         )
@@ -474,8 +489,12 @@ class AirbnbZimmerPushMixin:
             dispatcher.sende(
                 user_id=str(nutzer["id"]),
                 schluessel="listing_activity",
-                betreff=f"{objekt}: {betreff}",
-                text=text,
+                betreff=mail_text(betreff_key, FALLBACK, **werte),
+                text=mail_text(text_key, FALLBACK, **werte),
+                betreff_key=betreff_key,
+                betreff_werte=werte,
+                text_key=text_key,
+                text_werte=werte,
                 tenant_id=tenant_id,
                 property_id=property_id,
                 ziel_pfad=ziel_pfad,
@@ -499,7 +518,9 @@ class AirbnbZimmerPushMixin:
         `garden`), zählen mit: Airbnb verlangt auch für sie ein Foto.
         """
         listing_id = self._airbnb_listing_id(db, property_id)  # type: ignore[attr-defined]
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(  # type: ignore[attr-defined]
+            db, tenant_id, property_id
+        )
         if not listing_id or not channel_id:
             return []
         raeume = self._airbnb_raeume_lesen(channel_id, listing_id)

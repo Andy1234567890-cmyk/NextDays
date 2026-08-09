@@ -33,6 +33,8 @@ from supabase import Client
 from src.core.config import Settings, get_settings
 from src.core.logging import get_logger, mask_email
 from src.core.mail import MailError, MailService, OutboundMessage
+from src.core.mail_layout import Aktion, MailInhalt, mail_rendern
+from src.core.mail_texte import text
 from src.core.security import PlatformContext
 
 from .schemas import (
@@ -47,6 +49,19 @@ from .schemas import (
 )
 
 log = get_logger("nextdays.platform_team")
+
+_MARKE = "myNextDays"
+
+# Die Sprache der BACKOFFICE-Mails. Anders als bei Betriebs-Nutzern gibt es
+# hier keine Empfängersprache: `platform_admins` trägt keine Sprachspalte
+# (live geprüft), und die Empfänger sind die eigenen Plattform-Betreiber —
+# eine Handvoll interner Konten, kein europaweites Publikum. Statt eine
+# Spalte für drei Personen zu erfinden, steht die Sprache hier bewusst als
+# EINE benannte Konstante: sichtbar, an einer Stelle änderbar und nicht als
+# stiller Deutsch-Rückfall über 24 Sprachen verteilt (Wurzel 4).
+# Englisch, nicht Deutsch, aus demselben Grund wie in `core.mail_sprache`:
+# der nächste Betreiber muss kein Deutsch können.
+_BACKOFFICE_SPRACHE = "en"
 
 # Harte Obergrenze (Wurzel 8). Das Betreiber-Team ist klein; wer hier an die
 # Grenze stößt, hat ein anderes Problem als die Seitengröße.
@@ -517,22 +532,39 @@ class TeamService:
         den Link zurück und die klare Ansage, dass er ihn selbst weitergeben
         muss (Wurzel 4/5).
         """
-        von = actor.email or "dem myNextDays-Team"
-        text = (
-            "Hallo,\n\n"
-            f"{von} hat dir Zugang zum myNextDays-Backoffice eingerichtet.\n\n"
-            "Setze hier dein Passwort (der Link ist 72 Stunden gültig und nur "
-            "einmal verwendbar):\n"
-            f"{link}\n\n"
-            "Wenn du damit nichts anfangen kannst, ignoriere diese Mail — ohne "
-            "gesetztes Passwort passiert nichts.\n"
+        sprache = _BACKOFFICE_SPRACHE
+        von = actor.email or text("layout.absender", sprache, marke=_MARKE)
+        mail = mail_rendern(
+            MailInhalt(
+                titel=text("backoffice.einladung.titel", sprache),
+                absaetze=[
+                    text(
+                        "backoffice.einladung.absatz", sprache,
+                        von=von, marke=_MARKE,
+                    ),
+                    text("backoffice.einladung.absatz_passwort", sprache),
+                ],
+                aktion=Aktion(
+                    text=text("auth.einladung.aktion", sprache), url=link
+                ),
+                hinweise=[
+                    text("backoffice.einladung.hinweis_gueltig", sprache),
+                    text("auth.einladung.hinweis_ignorieren", sprache),
+                ],
+                sprache=sprache,
+            ),
+            settings=self._settings,
         )
         try:
             self._mail.send(
                 OutboundMessage(
                     to=email,
-                    subject="Dein Zugang zum myNextDays-Backoffice",
-                    text=text,
+                    subject=text(
+                        "backoffice.einladung.betreff", sprache, marke=_MARKE
+                    ),
+                    text=mail.text,
+                    html=mail.html,
+                    inline_bilder=mail.inline_bilder,
                 )
             )
         except MailError as exc:
@@ -563,21 +595,33 @@ class TeamService:
 
         Wirft `MailError` weiter — der Aufrufer nimmt den Token dann zurück.
         """
-        text = (
-            "Hallo,\n\n"
-            "für deinen Zugang zum myNextDays-Backoffice wurde ein neues "
-            "Passwort angefordert.\n\n"
-            "Setze es hier (der Link ist eine Stunde gültig und nur einmal "
-            "verwendbar):\n"
-            f"{link}\n\n"
-            "Warst das nicht du, ignoriere diese Mail — dein bisheriges "
-            "Passwort bleibt dann unverändert gültig.\n"
+        sprache = _BACKOFFICE_SPRACHE
+        mail = mail_rendern(
+            MailInhalt(
+                titel=text("backoffice.reset.titel", sprache),
+                absaetze=[
+                    text("backoffice.reset.absatz", sprache, marke=_MARKE)
+                ],
+                aktion=Aktion(
+                    text=text("auth.reset.aktion", sprache), url=link
+                ),
+                hinweise=[
+                    text("auth.reset.hinweis_gueltig", sprache),
+                    text("auth.reset.hinweis_ignorieren", sprache),
+                ],
+                sprache=sprache,
+            ),
+            settings=self._settings,
         )
         self._mail.send(
             OutboundMessage(
                 to=email,
-                subject="Neues Passwort für das myNextDays-Backoffice",
-                text=text,
+                subject=text(
+                    "backoffice.reset.betreff", sprache, marke=_MARKE
+                ),
+                text=mail.text,
+                html=mail.html,
+                inline_bilder=mail.inline_bilder,
             )
         )
 

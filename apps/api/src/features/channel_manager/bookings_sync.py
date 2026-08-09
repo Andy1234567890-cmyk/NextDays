@@ -24,6 +24,7 @@ from src.features.guests.identity import (
     create_placeholder_guest,
     resolve_or_create_guest,
 )
+from src.features.notification_settings.ereignisse import melde_buchungs_ereignis
 from src.jobs.queue import try_enqueue_recompute
 
 from .ari_push import _group_iso_days_to_ranges
@@ -729,6 +730,26 @@ class BookingsSyncMixin:
                     tenant_id, property_id, von, bis, frei,
                 )
 
+    @staticmethod
+    def _gast_name(db: Client, tenant_id: str, guest_id: str | None) -> str | None:
+        """Gastname aus `guests`, tenant-gescopt (Wurzel 3).
+
+        Nur für die Eigentümer-Benachrichtigung; der Empfänger sieht davon
+        ohnehin bloß den Vornamen (`melde_buchungs_ereignis` kürzt). Ohne
+        verknüpften Gast bleibt es None — kein Platzhalter (Wurzel 4).
+        """
+        if not guest_id:
+            return None
+        rows = (
+            db.table("guests")
+            .select("name")
+            .eq("id", guest_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        return rows[0].get("name") if rows else None
+
     def _property_currency(self, db: Client, property_id: str) -> str | None:
         """Objekt-Währung: zentrale properties.currency (0161, die Wahrheit),
         sonst der älteste Rate-Plan (Bestand ohne gesetzte Objektwährung). Beides
@@ -1164,6 +1185,22 @@ class BookingsSyncMixin:
                         kind="created",
                         error=str(exc)[:200],
                     )
+                # Der Eigentümer erfährt von der eingehenden Portal-Buchung
+                # (0331). Wie der Event-Insert nur bei NEUanlage — eine
+                # Revision/Redelivery derselben Buchung landet im `if existing`-
+                # Zweig und meldet nicht erneut. Zusätzlich hängt am Dedup-Key
+                # der Meldung die reservation_id, sodass auch ein Re-Import
+                # nach Löschen der Staging-Zeile keine zweite Glocke auslöst
+                # (Wurzel 2). Best-effort: die Funktion fängt intern breit.
+                melde_buchungs_ereignis(
+                    db,
+                    tenant_id=tenant_id,
+                    reservation_id=str(reservation_id),
+                    kind="created",
+                    property_id=property_id,
+                    gast_vorname=self._gast_name(db, tenant_id, guest_id),
+                    quelle=ota_name or channel,
+                )
 
         if already_checked_out:
             # Auch Kalender/Channex nicht mehr anfassen: die OTA-Revision kann

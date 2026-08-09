@@ -4,6 +4,7 @@ Schwerpunkt ist der GUARD, nicht die Fachlogik: dieser Slice ist der einzige,
 der mandantenübergreifend arbeitet. Ein Loch hier öffnet alle Betriebe
 gegenseitig — die Tests decken deshalb vor allem die Ablehnungspfade ab.
 """
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -21,8 +22,20 @@ def _settings() -> MagicMock:
     return MagicMock(name="settings")
 
 
-def _claims(sub: str = "u1", email: str = "a@b.de") -> dict:
-    return {"sub": sub, "email": email, "session_id": "s1"}
+def _request() -> SimpleNamespace:
+    """Minimaler Request-Ersatz. Der Guard liest nur `url.path` (fuer die
+    Enrollment-Ausnahmen) und schreibt ggf. an `state`."""
+    return SimpleNamespace(
+        url=SimpleNamespace(path="/api/v1/platform/tenants"),
+        state=SimpleNamespace(),
+    )
+
+
+def _claims(sub: str = "u1", email: str = "a@b.de", aal: str = "aal2") -> dict:
+    """Standardmaessig ein aal2-Token: das Backoffice verlangt seit 0341 den
+    geloesten zweiten Faktor (Wurzel 7). Die Tests, die genau das pruefen,
+    setzen aal explizit auf aal1."""
+    return {"sub": sub, "email": email, "session_id": "s1", "aal": aal}
 
 
 def _db_with_admin(role: str | None) -> MagicMock:
@@ -42,13 +55,13 @@ def _db_with_admin(role: str | None) -> MagicMock:
 def test_guard_rejects_missing_authorization() -> None:
     """Ohne Authorization-Header: 401, bevor irgendetwas geprüft wird."""
     with pytest.raises(HTTPException) as exc:
-        get_current_platform_admin(settings=_settings(), authorization=None)
+        get_current_platform_admin(_request(), settings=_settings(), authorization=None)
     assert exc.value.status_code == 401
 
 
 def test_guard_rejects_non_bearer_scheme() -> None:
     with pytest.raises(HTTPException) as exc:
-        get_current_platform_admin(settings=_settings(), authorization="Basic abc")
+        get_current_platform_admin(_request(), settings=_settings(), authorization="Basic abc")
     assert exc.value.status_code == 401
 
 
@@ -67,7 +80,7 @@ def test_guard_rejects_user_not_in_platform_admins() -> None:
     ):
         with pytest.raises(HTTPException) as exc:
             get_current_platform_admin(
-                settings=_settings(), authorization="Bearer tok"
+                _request(), settings=_settings(), authorization="Bearer tok"
             )
     assert exc.value.status_code == 403
 
@@ -83,7 +96,7 @@ def test_guard_rejects_unknown_role_value() -> None:
     ):
         with pytest.raises(HTTPException) as exc:
             get_current_platform_admin(
-                settings=_settings(), authorization="Bearer tok"
+                _request(), settings=_settings(), authorization="Bearer tok"
             )
     assert exc.value.status_code == 403
 
@@ -92,7 +105,7 @@ def test_guard_rejects_token_without_sub() -> None:
     with patch("src.core.security._decode_token", return_value={"email": "a@b.de"}):
         with pytest.raises(HTTPException) as exc:
             get_current_platform_admin(
-                settings=_settings(), authorization="Bearer tok"
+                _request(), settings=_settings(), authorization="Bearer tok"
             )
     assert exc.value.status_code == 401
 
@@ -109,7 +122,7 @@ def test_guard_accepts_platform_admin() -> None:
         ),
     ):
         ctx = get_current_platform_admin(
-            settings=_settings(), authorization="Bearer tok"
+            _request(), settings=_settings(), authorization="Bearer tok"
         )
     assert ctx.user_id == "u1"
     assert ctx.platform_role == "platform_admin"
@@ -126,7 +139,7 @@ def test_guard_accepts_support_but_not_as_admin() -> None:
         ),
     ):
         ctx = get_current_platform_admin(
-            settings=_settings(), authorization="Bearer tok"
+            _request(), settings=_settings(), authorization="Bearer tok"
         )
     assert ctx.platform_role == "platform_support"
     assert ctx.is_admin is False
@@ -144,7 +157,7 @@ def test_guard_lowercases_email() -> None:
         ),
     ):
         ctx = get_current_platform_admin(
-            settings=_settings(), authorization="Bearer tok"
+            _request(), settings=_settings(), authorization="Bearer tok"
         )
     assert ctx.email == "gross@beispiel.de"
 
@@ -523,3 +536,54 @@ def test_vorgaenge_limit_gedeckelt() -> None:
     )
     aufrufe = [c.args[0] for c in limit_mock.call_args_list]
     assert all(a <= 200 for a in aufrufe) if aufrufe else True
+
+
+# --- Guard: Zweitfaktor-Zwang (Wurzel 7, Migration 0341) --------------------
+
+
+def test_guard_verlangt_aal2_bei_vorhandenem_faktor() -> None:
+    """Das Backoffice ist das mächtigste Konto der Plattform (mandanten-
+    übergreifend). Ein per GoTrue-Direktlogin erbeutetes aal1-Token darf es
+    NICHT öffnen, sobald der Nutzer einen zweiten Faktor hat.
+
+    Ohne diesen Riegel wäre `get_current_platform_admin` der einzige Einstieg
+    ohne Zweitfaktor-Zwang gewesen — er ruft `get_current_user` nicht auf.
+    """
+    mfa = MagicMock()
+    mfa.faktoren.return_value = [{"id": "f-1", "factor_type": "totp"}]
+    with (
+        patch("src.core.security._decode_token", return_value=_claims(aal="aal1")),
+        patch(
+            "src.core.supabase.get_service_client",
+            return_value=_db_with_admin("platform_admin"),
+        ),
+        patch("src.features.auth.mfa_gate.MfaService", lambda db: mfa),
+        patch("src.features.auth.mfa_gate.get_service_client", MagicMock()),
+    ):
+        with pytest.raises(HTTPException) as exc:
+            get_current_platform_admin(
+                _request(), settings=_settings(), authorization="Bearer tok"
+            )
+    assert exc.value.status_code == 401
+    assert exc.value.headers["X-MFA-Required"] == "challenge"
+
+
+def test_guard_prueft_zweitfaktor_erst_nach_backoffice_rolle() -> None:
+    """Reihenfolge: Wer NICHT im Backoffice ist, bekommt 403 — nicht 401 mit
+    2FA-Hinweis. Sonst verriete die Antwort, wer Backoffice-Zugang hat."""
+    mfa = MagicMock()
+    mfa.faktoren.return_value = [{"id": "f-1", "factor_type": "totp"}]
+    with (
+        patch("src.core.security._decode_token", return_value=_claims(aal="aal1")),
+        patch(
+            "src.core.supabase.get_service_client",
+            return_value=_db_with_admin(None),
+        ),
+        patch("src.features.auth.mfa_gate.MfaService", lambda db: mfa),
+        patch("src.features.auth.mfa_gate.get_service_client", MagicMock()),
+    ):
+        with pytest.raises(HTTPException) as exc:
+            get_current_platform_admin(
+                _request(), settings=_settings(), authorization="Bearer tok"
+            )
+    assert exc.value.status_code == 403

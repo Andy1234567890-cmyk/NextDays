@@ -420,6 +420,88 @@ class ReservationsBase:
                 kind=kind,
                 error=str(exc)[:200],
             )
+        # Der Eigentümer erfährt von Buchung/Umzug/Storno an SEINEM Objekt
+        # (0331). Bewusst HIER und nicht an den neun Aufrufern in writes.py:
+        # jedes Ereignis der Zeitleiste läuft durch diese eine Stelle, ein
+        # zweiter Event-Pfad entstünde sonst von allein. Die Funktion filtert
+        # selbst auf die Ereignisarten, die den Eigentümer angehen, und ist
+        # best-effort (fängt intern breit, Wurzel 5).
+        self._melde_eigentuemer(tenant_id, reservation_id, kind)
+
+    def _melde_eigentuemer(
+        self, tenant_id: str, reservation_id: str, kind: str
+    ) -> None:
+        """Objekt + maskierte Gastangaben nachladen und den Eigentümer melden.
+
+        Nachladen statt Durchreichen: `_log_event` bekommt von seinen Aufrufern
+        kein `property_id` und keinen Gastnamen, und diese neun Signaturen
+        umzubauen wäre ein größerer Eingriff als eine Abfrage im Nebenpfad.
+
+        Was mitgeht, ist der Datensplit (Wurzel 3): NUR Vorname und Kanal —
+        `total_amount` wird gar nicht erst geladen, damit es auch niemand
+        versehentlich in den Text nimmt.
+        """
+        from src.features.notification_settings.ereignisse import (  # noqa: PLC0415
+            BUCHUNGS_EREIGNISSE,
+            melde_buchungs_ereignis,
+        )
+
+        if kind not in BUCHUNGS_EREIGNISSE or self._client is None:
+            return
+        try:
+            rows = (
+                self._db()
+                .table("reservations")
+                .select("property_id, guest_id, channel, ota_name")
+                .eq("id", reservation_id)
+                .eq("tenant_id", tenant_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            if not rows:
+                return
+            row = rows[0]
+            melde_buchungs_ereignis(
+                self._db(),
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                kind=kind,
+                property_id=(
+                    str(row["property_id"]) if row.get("property_id") else None
+                ),
+                # Der Name hängt an `guests`, nicht an der Reservierung. Der
+                # volle Name wird geladen, aber `melde_buchungs_ereignis`
+                # schneidet ihn auf den Vornamen zurück (§4.2) — die Maskierung
+                # steht an EINER Stelle, nicht an jedem Aufrufer.
+                gast_vorname=self._gast_name(tenant_id, row.get("guest_id")),
+                quelle=row.get("ota_name") or row.get("channel"),
+            )
+        except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt die Buchung nicht
+            log.warning(
+                "owner_benachrichtigung_fehlgeschlagen",
+                reservation_id=reservation_id,
+                kind=kind,
+                error=str(exc)[:200],
+            )
+
+    def _gast_name(self, tenant_id: str, guest_id: str | None) -> str | None:
+        """Gastname aus `guests` — tenant-gescopt (Wurzel 3).
+
+        Ohne verknüpften Gast (OTA-Import ohne Gästezeile) bleibt es None; die
+        Meldung nennt dann nur die Quelle. Kein Platzhalter-Name (Wurzel 4).
+        """
+        if not guest_id:
+            return None
+        rows = (
+            self._db()
+            .table("guests")
+            .select("name")
+            .eq("id", guest_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        return rows[0].get("name") if rows else None
 
     def _load_owned(self, tenant_id: str, reservation_id: str) -> dict:
         """Reservierung tenant-scoped laden (404, wenn fremd/fehlend)."""

@@ -9,6 +9,9 @@ gefilterte Task-Menge; Service-Role umgeht RLS.
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.security import AuthContext
+from src.features.auth.owner_scope import is_owner, owner_property_ids
+from src.features.auth.staff_scope import is_staff, staff_property_ids
 
 from .schemas import MediaItem, MediaKind
 
@@ -62,12 +65,28 @@ class MediaService:
         include_booking: bool = True,
         include_property: bool = True,
         property_id: str | None = None,
+        ctx: AuthContext | None = None,
     ) -> list[MediaItem]:
+        """Bilder-Karten des Tenants, eingeschränkt auf den Objekt-Scope der
+        Rolle (§4.2 owner, §4.3 staff).
+
+        `property_id` ist ein FILTER des Nutzers, KEIN Scope: ohne ihn bekäme
+        ein Eigentümer sonst sämtliche Objekt- und Buchungsfotos des ganzen
+        Betriebs. Der Scope wird deshalb serverseitig aus der Rolle abgeleitet
+        und der Filter nur als Schnittmenge darauf angewandt (Wurzel 3) —
+        dasselbe Muster wie `reservations.reads.list`.
+        """
+        scope = self._role_scope(ctx)
+        if scope is not None and not scope:
+            return []  # fail-closed: ohne Zuordnung keine Bilder
+        pids = self._scoped_property_ids(scope, property_id)
+        if pids is not None and not pids:
+            return []
         items: list[MediaItem] = []
         if include_property:
-            items.extend(self._property_photos(tenant_id, property_id))
+            items.extend(self._property_photos(tenant_id, property_id, pids))
         if include_booking:
-            items.extend(self._booking_photos(tenant_id, property_id))
+            items.extend(self._booking_photos(tenant_id, property_id, pids))
         # Neueste zuerst; None-Datum ans Ende.
         items.sort(
             key=lambda m: (m.uploaded_at is not None, m.uploaded_at),
@@ -75,12 +94,44 @@ class MediaService:
         )
         return items
 
+    # --- Rollen-Scope (§4.2 owner, §4.3 staff) ---
+
+    def _role_scope(self, ctx: AuthContext | None) -> set[str] | None:
+        """Objekt-IDs, auf die die Rolle eingeschränkt ist.
+
+        `None` = keine Einschränkung (admin/co_admin sehen den ganzen Tenant).
+        Menge (ggf. leer) = nur diese Objekte, fail-closed.
+        """
+        if ctx is None:
+            return None
+        if is_owner(ctx):
+            return owner_property_ids(self._db(), ctx)
+        if is_staff(ctx):
+            return staff_property_ids(self._db(), ctx)
+        return None
+
+    @staticmethod
+    def _scoped_property_ids(
+        scope: set[str] | None, property_id: str | None
+    ) -> set[str] | None:
+        """Rollen-Scope und Nutzer-Filter zur Schnittmenge verbinden.
+
+        Ein vom Client übergebenes `property_id` darf den Scope NIE ausweiten:
+        liegt es außerhalb, bleibt die Menge leer (→ keine Bilder), statt den
+        Filter einfach zu übernehmen.
+        """
+        if scope is None:
+            return {property_id} if property_id else None
+        if property_id:
+            return {property_id} & scope
+        return scope
+
     # --- Objektfotos (property_photos, URL fertig) ---
 
     def _property_photos(
-        self, tenant_id: str, property_id: str | None
+        self, tenant_id: str, property_id: str | None, scope: set[str] | None
     ) -> list[MediaItem]:
-        pids = self._owned_property_ids(tenant_id, property_id)
+        pids = self._owned_property_ids(tenant_id, property_id, scope)
         if not pids:
             return []
         titles = self._property_titles(tenant_id, pids)
@@ -108,7 +159,7 @@ class MediaService:
     # --- Buchungs-/Aufgabenfotos (checklist_photos, signierte URL) ---
 
     def _booking_photos(
-        self, tenant_id: str, property_id: str | None
+        self, tenant_id: str, property_id: str | None, scope: set[str] | None
     ) -> list[MediaItem]:
         # 1) Tasks des Tenants (optional auf Objekt gefiltert) → item-Menge.
         task_q = (
@@ -119,7 +170,16 @@ class MediaService:
         )
         if property_id:
             task_q = task_q.eq("property_id", property_id)
+        elif scope is not None:
+            task_q = task_q.in_("property_id", list(scope))
         tasks = {t["id"]: t for t in (task_q.execute().data or [])}
+        if scope is not None:
+            # Aufgaben OHNE Objektbezug (Pool: Lager/Büro) fallen für die
+            # eingeschränkten Rollen heraus — ihre Fotos gehören keinem der
+            # zugeordneten Objekte, sind also außerhalb des Scopes.
+            tasks = {
+                tid: t for tid, t in tasks.items() if t.get("property_id") in scope
+            }
         if not tasks:
             return []
         items = (
@@ -178,16 +238,25 @@ class MediaService:
 
     # --- Löschen ---
 
-    def delete_media(self, tenant_id: str, kind: str, media_id: str) -> None:
+    def delete_media(
+        self,
+        tenant_id: str,
+        kind: str,
+        media_id: str,
+        ctx: AuthContext | None = None,
+    ) -> None:
+        scope = self._role_scope(ctx)
         if kind == "property":
-            self._delete_property_photo(tenant_id, media_id)
+            self._delete_property_photo(tenant_id, media_id, scope)
         elif kind == "booking":
-            self._delete_booking_photo(tenant_id, media_id)
+            self._delete_booking_photo(tenant_id, media_id, scope)
         else:
             raise MediaError("Unbekannte Bildart.", status_code=422)
 
-    def _delete_property_photo(self, tenant_id: str, media_id: str) -> None:
-        # Nur eigene Objektfotos (über property→tenant).
+    def _delete_property_photo(
+        self, tenant_id: str, media_id: str, scope: set[str] | None = None
+    ) -> None:
+        # Nur eigene Objektfotos (über property→tenant + Rollen-Scope).
         row = (
             self._db()
             .table("property_photos")
@@ -198,12 +267,14 @@ class MediaService:
         ).data
         if not row:
             raise MediaError("Bild nicht gefunden.", status_code=404)
-        owned = self._owned_property_ids(tenant_id, row[0]["property_id"])
+        owned = self._owned_property_ids(tenant_id, row[0]["property_id"], scope)
         if not owned:
             raise MediaError("Bild nicht gefunden.", status_code=404)
         self._db().table("property_photos").delete().eq("id", media_id).execute()
 
-    def _delete_booking_photo(self, tenant_id: str, media_id: str) -> None:
+    def _delete_booking_photo(
+        self, tenant_id: str, media_id: str, scope: set[str] | None = None
+    ) -> None:
         # checklist_photos → item → task(tenant). IDOR-Guard über die Kette.
         photo = (
             self._db()
@@ -228,13 +299,17 @@ class MediaService:
         owns = (
             self._db()
             .table("tasks")
-            .select("id")
+            .select("id, property_id")
             .eq("id", item[0]["task_id"])
             .eq("tenant_id", tenant_id)
             .limit(1)
             .execute()
         ).data
         if not owns:
+            raise MediaError("Bild nicht gefunden.", status_code=404)
+        # Rollen-Scope: das Foto hängt über die Aufgabe an einem Objekt, das im
+        # Scope liegen MUSS (Wurzel 9 — gleicher Scope wie der List-Pfad).
+        if scope is not None and owns[0].get("property_id") not in scope:
             raise MediaError("Bild nicht gefunden.", status_code=404)
         path = photo[0].get("storage_path")
         if path:
@@ -247,8 +322,15 @@ class MediaService:
     # --- Helfer ---
 
     def _owned_property_ids(
-        self, tenant_id: str, property_id: str | None
+        self,
+        tenant_id: str,
+        property_id: str | None,
+        scope: set[str] | None = None,
     ) -> set[str]:
+        """Objekte des Tenants, zusätzlich auf den Rollen-Scope geschnitten.
+
+        `scope=None` = keine Rollen-Einschränkung (admin/co_admin).
+        """
         q = (
             self._db()
             .table("properties")
@@ -257,7 +339,10 @@ class MediaService:
         )
         if property_id:
             q = q.eq("id", property_id)
-        return {r["id"] for r in (q.execute().data or [])}
+        pids = {r["id"] for r in (q.execute().data or [])}
+        if scope is not None:
+            pids &= scope
+        return pids
 
     def _property_titles(
         self, tenant_id: str, ids: set[str | None]

@@ -20,6 +20,10 @@ from .core.ratelimit_middleware import RateLimitMiddleware
 from .core.request_context import merke_ursache as _merke_fehlerursache
 from .core.request_context import neue_request_id
 from .features.addons.router import router as addons_router
+from .features.announcements.router import (
+    platform_router as announcements_platform_router,
+)
+from .features.announcements.router import router as announcements_router
 from .features.api_clients.router import router as api_clients_router
 from .features.auth.router import router as auth_router
 from .features.booking_conditions.router import router as booking_conditions_router
@@ -54,6 +58,7 @@ from .features.notification_settings.router import (
     router as notification_settings_router,
 )
 from .features.ocr.router import router as ocr_router
+from .features.owner_billing.router import router as owner_billing_router
 from .features.owner_statements.router import router as owner_statements_router
 from .features.owners.router import router as owners_router
 from .features.payments.router import router as payments_router
@@ -91,6 +96,7 @@ _SLICE_ROUTERS = [
     property_dossier_router,
     owners_router,
     owner_statements_router,
+    owner_billing_router,
     addons_router,
     rates_router,
     pricing_router,
@@ -116,9 +122,16 @@ _SLICE_ROUTERS = [
     privacy_settings_router,
     payments_router,
     payouts_router,
-    # Plattform-Backoffice: EINZIGER mandantenübergreifender Router (eigener
-    # Guard CurrentPlatformAdmin, DB-geprüfte Rolle, vollständiges Audit-Log).
+    # Plattform-Backoffice: mandantenübergreifende Router. Beide arbeiten
+    # bewusst quer zu allen Betrieben und tragen deshalb denselben Schutz —
+    # Guard CurrentPlatformAdmin, DB-geprüfte Rolle, require_platform_write vor
+    # jedem Schreibzugriff, vollständiges Audit-Log. Ein Endpunkt hier ohne
+    # diesen Guard wäre ein Totalausfall der Mandantentrennung.
     platform_admin_router,
+    # Redaktion der offiziellen Ankündigungen (0337).
+    announcements_platform_router,
+    # Zugehöriger Kunden-Lesepfad — tenant-gescopt, nicht übergreifend.
+    announcements_router,
     subscriptions_router,
     newsletter_router,
     support_router,
@@ -192,7 +205,18 @@ def create_app() -> FastAPI:
         # Ohne expose_headers bleibt X-Request-Id für Browser-JS unsichtbar
         # (CORS gibt nur die einfachen Antwort-Header frei). Der Diagnose-
         # Reporter braucht ihn, um einen Fehler der Backend-Ursache zuzuordnen.
-        expose_headers=["X-Request-Id"],
+        #
+        # X-MFA-Required / X-MFA-Enrollment-Required steuern die 2FA-Oberfläche:
+        # Der Browser MUSS unterscheiden können, ob ein 401 „Sitzung abgelaufen"
+        # (→ /login) oder „zweiter Faktor fehlt" (→ Faktor lösen bzw. einrichten)
+        # bedeutet. Ohne den Eintrag hier liest JS den Header nicht — der
+        # Header wird zwar gesendet, ist aber für die App unsichtbar, und die
+        # Oberfläche würde den Nutzer bei fehlender 2FA auf den Login werfen.
+        expose_headers=[
+            "X-Request-Id",
+            "X-MFA-Required",
+            "X-MFA-Enrollment-Required",
+        ],
     )
 
     # Host-Header-Injection (Cache-Poisoning, Password-Reset-Poisoning): nur die
@@ -215,6 +239,17 @@ def create_app() -> FastAPI:
         request.state.request_id = neue_request_id()
 
         resp = await call_next(request)
+
+        # 2FA-Aufforderung: Der Guard (features.auth.mfa_gate) hat den Request
+        # durchgelassen, weil die Einrichtungsfrist noch läuft — die
+        # Oberfläche soll aber JETZT auffordern, nicht erst am Fristende. Der
+        # Wert steht am request.state, weil eine Dependency keine Header an
+        # eine erfolgreiche Antwort hängen kann. Fehlt er, passiert nichts
+        # (kein erfundener Default, Wurzel 4).
+        faellig = getattr(request.state, "mfa_enrollment_required", None)
+        if faellig:
+            resp.headers["X-MFA-Enrollment-Required"] = str(faellig)
+
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
         resp.headers.setdefault("X-Frame-Options", "DENY")
         resp.headers.setdefault("Referrer-Policy", "no-referrer")
