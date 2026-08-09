@@ -166,7 +166,7 @@ flowchart TB
             BOOK["booking_engine — eigene Direktbuchungs-Strecke (provisionsfrei) + Buchungs-Widget"]
             PORTAL["public_portal — Eigentümer-Self-Service (§4.2): eigene Objekte, Kalender mit Netto-Auszahlung JE NACHT (owner_statements/common.py), Berichte, Sperrwünsche, Zählerstände, Dienstleistungen beauftragen (dienstleistungen.py, 0330 — Auftrag wird eine tasks-Zeile)"]
             NOTIF["notification_settings — Präferenzen je Kategorie×Kanal + Glocke; dispatcher (Präferenz→Glocke/Mail/SMS, dedup über alle Kanäle) + ereignisse.py als EINE Stelle, die aus einem Fachereignis eine Meldung macht"]
-            ANN["announcements — Neuerungen vom Backoffice an die Betriebsleitung: zwei Router (/announcements Empfang, /platform/announcements Redaktion), Inhalt beim Speichern nh3-sanitisiert, Bilder nur PNG/WebP per Magic-Byte"]
+            ANN["announcements — Neuerungen vom Backoffice an die Betriebsleitung: zwei Router (/announcements Empfang, /platform/announcements Redaktion), Inhalt beim Speichern nh3-sanitisiert, Bilder nur PNG/WebP per Magic-Byte, 24 Sprachfassungen beim Verfassen erzeugt (0347) — von Hand geprüfte Fassungen sind vor maschineller Überschreibung geschützt"]
             WA["whatsapp — WhatsApp Cloud API (Conversations/Messages, im Posteingang integriert)"]
             TAG["travel_agencies — Reisebüro-Kartei (Profile, Verträge nach Jahren, Saison-Preise, Vertragsdateien)"]
             REV["reviews — Bewertungs-Cockpit des Betriebs: EINE Liste über alle Kanäle (public.reviews = myBestDays 1..5 + channex_review = Portale 0..10, normalisiert auf UnifiedReview), antworten (Portal zuerst, dann Spiegel), Betrieb→Gast (Zwei-Wege), Automatik (Auto-Bewertung + Gast-Erinnerung, review_automation/-_log), Zwei-Wege-Sichtbarkeit (publication.py, 14 Tage). OTA-Bewertungen sind INTERN — öffentlich nur eigene, verifizierte myBestDays-Bewertungen"]
@@ -1060,6 +1060,18 @@ erDiagram
         uuid tenant_id FK
         timestamptz quittiert_am
     }
+    ANNOUNCEMENT_TRANSLATION {
+        uuid id PK
+        uuid announcement_id FK
+        text sprache "24 EU-Amtssprachen, UNIQUE je Ankuendigung"
+        text titel
+        text kurztext
+        text inhalt_html "nh3-gesaeubert, auch die Dienst-Antwort"
+        bool geprueft "true = vom Menschen, maschinell unantastbar"
+        uuid geprueft_von FK "auth.users"
+        timestamptz geprueft_am
+        text quelle_hash "sha256 des Quelltextes: Idempotenz + veraltet"
+    }
 ```
 
 - **`0330` Dienstleistungs-Katalog** — `service_types` (`tenant_id IS NULL` =
@@ -1108,6 +1120,20 @@ erDiagram
   „sofort". `0338` legt den öffentlichen Bucket `announcement-images` an (10 MB,
   nur `image/png`/`image/webp`); geschützt wird über den unerratbaren Dateinamen,
   wie bei `property-images` (`0062`).
+- **`0347_ankuendigung_uebersetzungen`** — `announcement_translations`: eine
+  Zeile je (Ankündigung, Sprache) mit Titel, Kurztext und Inhalt in allen 24
+  EU-Amtssprachen. Übersetzt wird **beim Verfassen** (Google Cloud Translation
+  v2, derselbe Zugang wie `content`/`channel_manager`), nicht beim Lesen: der
+  Text trägt rechtliche Aussagen und Geldbeträge und muss vor dem
+  Veröffentlichen prüfbar sein.
+  `geprueft = true` markiert eine von einem Menschen korrigierte Fassung; jedes
+  maschinelle Schreiben trägt `where geprueft = false`, eine geprüfte Zeile ist
+  für den Automaten also **nicht adressierbar**. `quelle_hash` (sha256 über die
+  drei übersetzbaren Felder) trägt die Idempotenz (Wurzel 2: ein zweiter Lauf
+  mit unverändertem Text macht null API-Aufrufe) und die Anzeige „veraltet".
+  Fällt der Dienst aus, wird **nichts** geschrieben (Wurzel 5) und nie der
+  Ausgangstext als Übersetzung abgelegt (Wurzel 4). Wie die Mutter-Tabelle für
+  `anon`/`authenticated` vollständig gesperrt und nicht in `supabase_realtime`.
 - **`0336`/`0337`/`0339` DB-Härtung** — siehe [§6.2](#62-db-direktpfad-geschlossen-wurzel-6-migrationen-03360339).
 
 > **Nummernkollisionen:** `0333` und `0337` sind je mehrfach vergeben
@@ -1130,7 +1156,7 @@ Detail-/Hilfstabellen (mit RLS, tenant-scoped):
 | Buchhaltung  | `quotes`, `quote_line_items` (`0024`), `number_sequences` (`0025`)                                     | Angebote + GoBD-Nummernkreise                                                     |
 | Sicherheit   | `user_mfa` (`0021`), `user_auth_tokens` (`0334`)                                                       | TOTP-2FA pro Nutzer; Einmal-Tokens für Einladung/Passwort-Reset (nur SHA-256, voll gesperrt) |
 | Eigentümer-Portal | `block_requests` (`0014`/`0332`/`0333`), `service_types`, `property_service_assignees` (`0330`), `meter_readings` | Sperranträge mit Genehmigungs-Workflow und Überlappungssperre; Katalog beauftragbarer Leistungen + Stamm-Dienstleister je Objekt; Zählerstände |
-| Ankündigungen | `announcements`, `announcement_reads` (`0337`)                                                        | Neuerungen vom Backoffice an die Betriebsleitung + Gelesen-Quittung (ohne `tenant_id`, voll gesperrt, kein Realtime) |
+| Ankündigungen | `announcements`, `announcement_reads` (`0337`), `announcement_translations` (`0347`)                  | Neuerungen vom Backoffice an die Betriebsleitung + Gelesen-Quittung (ohne `tenant_id`, voll gesperrt, kein Realtime) + eine Fassung je EU-Amtssprache (`geprueft` schützt vor maschineller Überschreibung) |
 | Onboarding   | `tenant_onboarding` (`0029`)                                                                           | Onboarding-Fortschritt des Tenants                                                |
 | Channex      | `stop_sell` (`0032`), `ari_outbox` (`0033`), `channex_tax_map` (`0034`), `channex_tax_set_map` (`0273`), `sandbox_message` (`0036`) | Stop-Sell, ARI-Outbox-Queue, Steuer-/Gebühren-Mapping, Tax-Sets je Portal (Kanal-Einschränkung), Sandbox-Mock-OTA |
 | Posteingang  | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`), `inbox_attachment` (`0259`), `inbox_knowledge_fact` (`0260`), `portal_messages` (`0293`/`0305`) | KI-Settings, geplante Nachrichten, Thread-Notizen, Anhänge, Wissensdatenbank, Nachrichten-Spiegel — seit `0337` **alle sechs** für anon/authenticated gesperrt (vorher nur die letzten drei) |

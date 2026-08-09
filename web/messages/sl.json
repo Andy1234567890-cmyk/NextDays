@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Dodeli objekte} one {Dodeli # objekt} two {Dodeli # objekta} few {Dodeli # objekte} other {Dodeli # objektov}}",
     "propertiesAssigned": "{count, plural, one {Dodeljen # objekt} two {Dodeljena # objekta} few {Dodeljeni # objekti} other {Dodeljenih # objektov}}",
     "removeProperty": "Odstrani dodelitev",
+    "shareInvalid": "Vnesite delež med 0 in 100.",
     "sections": {
       "master": "Matični podatki",
       "payout": "Izplačilo in provizija",
@@ -998,7 +999,7 @@
       "statementFrequency": "Ritem obračunavanja",
       "notes": "Opombe",
       "share": "Delež (%)",
-      "commissionOverride": "Provizija (%) odstopanje",
+      "commissionOverride": "Provizija (%)",
       "emailLanguage": "Jezik e-pošte"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Za dostop do portala je potreben e-poštni naslov.",
     "portalAccessInvite": "Pošlji vabilo",
     "portalAccessInvited": "Vabilo poslano.",
-    "portalAccessActive": "Dostop do portala je nastavljen."
+    "portalAccessActive": "Dostop do portala je nastavljen.",
+    "commissionNotAgreed": "ni dogovorjeno",
+    "assignableCount": "Izbranih {count} od {total} za dodajanje",
+    "assignedHeading": "{count, plural, one {# dodeljen objekt} two {# dodeljena objekta} few {# dodeljeni objekti} other {# dodeljenih objektov}}",
+    "info": {
+      "aria": "Pojasnilo za: {feld}",
+      "share": "Lastniški delež na tem objektu. Pri 100 % se celotno izplačilo pripiše temu lastniku, pri manjšem deležu sorazmerno.",
+      "commission": "Standardna stopnja provizije za tega lastnika. Če polje ostane prazno, stopnja še ni dogovorjena — izplačilo se takrat ne izračuna, temveč se prikaže kot pomišljaj.",
+      "commissionOverride": "Velja samo za ta en objekt in prepiše standardno stopnjo lastnika. Če polje ostane prazno, velja standardna stopnja."
+    }
   },
   "ownerStatements": {
     "title": "Obračun lastnika",
@@ -1063,7 +1073,14 @@
       "checkOut": "Odhod",
       "statuses": "Status rezervacije",
       "statusCount": "{count} statusov",
-      "title": "Filtri"
+      "title": "Filtri",
+      "resetAll": "Ponastavi vse filtre",
+      "remove": "Ponastavi {feld}",
+      "statusesNone": "Brez izbire",
+      "statusesSearch": "Iskanje statusa …",
+      "statusesNoMatch": "Ni najdenega statusa.",
+      "statusesSelectAll": "Izberi vse",
+      "statusesCount": "Izbranih {count} od {total}"
     },
     "reservationStatus": {
       "pending": "Odprto",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Osnutek",
-      "finalized": "Finalizirano"
+      "finalized": "Finalizirano",
+      "cancelled": "Stornirano"
     },
     "sections": {
       "data": "Podatki",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Skupna cena",
       "totalPayout": "Skupno izplačilo",
       "ownerPayout": "Izplačilo lastniku",
-      "pmPayout": "Izplačilo upravljalcu"
+      "pmPayout": "Izplačilo upravljalcu",
+      "commissionMissing": "Za vsaj eno nepremičnino ni določena stopnja provizije. Izplačil zato ni mogoče izračunati — vnesite stopnjo v matične podatke lastnika ali pri nepremičnini."
     },
     "rental": {
       "perReservation": "Na rezervacijo",
@@ -1136,13 +1155,28 @@
       "reservation": "Rezervacija",
       "owner": "Lastnik",
       "hideAll": "Skrij vse",
-      "assignOwner": "Dodeli lastniku"
+      "assignOwner": "Dodeli lastniku",
+      "intro": "Zneski, ki se lastniku dodatno izplačajo ali se mu obračunajo v breme. V izplačilo se vštejejo v celoti — brez odbitka provizije.",
+      "direction": "Smer",
+      "toOwner": "V korist lastnika",
+      "toOwnerHint": "Prejme dodatno izplačilo, npr. odškodnino za škodo.",
+      "toOwnerShort": "V korist",
+      "fromOwner": "V breme lastnika",
+      "fromOwnerHint": "Odšteje se od njegovega izplačila, npr. material in delovni čas.",
+      "fromOwnerShort": "V breme",
+      "sumToOwner": "Skupaj v korist:",
+      "sumFromOwner": "Skupaj v breme:",
+      "receipt": "Dokazilo",
+      "openReceipt": "Odpri dokazilo",
+      "createdBy": "Vnesel/vnesla {name}",
+      "saveFirst": "Obračunske postavke sodijo k shranjenemu obračunu. Shrani obračun, nato lahko tukaj vnašaš postavke.",
+      "missingFields": "Prosimo, izpolni še: {felder}."
     },
     "grand": {
       "rentalRevenue": "Prihodki od oddajanja",
       "expenses": "Stroški in dodatki",
       "total": "Skupaj",
-      "deductPercentage": "Odbitek provizije (%)"
+      "deductPercentage": "Provizija (%)"
     },
     "manage": {
       "owner": "Lastnik",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Uredi",
     "attachments": {
-      "drop": "Spusti datoteke za nalaganje ali brskaj"
+      "drop": "Spusti datoteke za nalaganje ali brskaj",
+      "viaExpenses": "Dokazila sodijo k posamezni postavki: naloži jih v razdelku »Stroški in dodatki« neposredno pri ustrezni vrstici."
     },
     "masterData": "Matični podatki",
     "preview": "Predogled",
     "previewTitle": "Predogled dokumenta",
-    "close": "Zapri"
+    "close": "Zapri",
+    "info": {
+      "aria": "Pojasnilo za: {feld}",
+      "totalPrice": "Znesek, ki ga je gost skupaj plačal za svoje bivanje — pred odbitkom provizij portalov in upravljalske provizije.",
+      "totalPayout": "Znesek, ki po odbitku provizij portalov prispe k upravljalcu. Iz njega se oblikujeta delež lastnika in delež upravljalca.",
+      "ownerPayout": "Delež, ki se izplača lastniku: skupno izplačilo, zmanjšano za provizijo in povečano za obračunske postavke.",
+      "pmPayout": "Delež, ki ostane upravljalcu — provizija od oddajanja. Obračunske postavke tukaj niso vključene.",
+      "expenses": {
+        "title": "V dobro in v breme",
+        "direction": "»V dobro lastnika« poveča njegovo izplačilo, na primer povračilo stroškov. »V breme lastnika« ga zmanjša, na primer material ali delovni čas upravljalca.",
+        "noCommission": "Ti zneski gredo v izplačilo v celoti — od njih se provizija ne obračuna.",
+        "aria": "Pojasnilo o obračunskih postavkah"
+      },
+      "dash": {
+        "title": "Kaj pomeni pomišljaj",
+        "meaning": "Pomišljaj pomeni »ni vneseno« — ne »nič«. Vrednosti ni mogoče izračunati, ker manjka podatek.",
+        "whereToFix": "Če manjka stopnja provizije, jo vnesi v matične podatke lastnika ali kot odstopajočo stopnjo pri posameznem objektu.",
+        "aria": "Pojasnilo o pomišljaju namesto zneska",
+        "inline": "Pomišljaj pomeni manjkajočo vrednost, ne 0,00."
+      },
+      "deductPercentage": "Stopnja provizije, s katero računa ta obračun. Prazno pomeni: velja stopnja iz matičnih podatkov lastnika oz. odstopajoča stopnja pri posameznem objektu.",
+      "status": {
+        "title": "Trije statusi obračuna",
+        "draft": "Osnutek: še spremenljiv. Zneski se ob vsaki spremembi ponovno izračunajo.",
+        "finalized": "Finalizirano: številka računa je dodeljena, vsote so zamrznjene. Spremembe niso več mogoče.",
+        "cancelled": "Stornirano: razveljavljeno s storno računom. Izvirni račun ostane ohranjen kot dokazilo."
+      },
+      "finalize": {
+        "title": "Finaliziraj obračun",
+        "what": "Pri finaliziranju se dodeli številka računa in vse vsote se zamrznejo kot dokazilo.",
+        "irreversible": "Tega ni mogoče razveljaviti. Finaliziran račun je mogoče odpraviti le še s storno računom."
+      },
+      "basis": "Določa, kdaj rezervacija pade v obdobje: pri prihodu po dnevu prihoda, pri odhodu po dnevu odhoda. Rezervacija čez prehod meseca pristane glede na izbiro v enem ali drugem mesecu.",
+      "statuses": "Obračunajo se samo rezervacije z enim od izbranih statusov. Privzeto so to potrjene in zaključene rezervacije — stornirane praviloma ne sodijo v izplačilo."
+    }
   },
   "ownerBilling": {
     "title": "Pogodba o obračunu",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Zavezano proviziji",
     "commissionableYes": "Da — všteva se v provizijo",
-    "commissionableNo": "Ne — brez provizije"
+    "commissionableNo": "Ne — brez provizije",
+    "infoAria": "Pojasnilo za: {feld}"
   },
   "portal": {
     "title": "Moj portal",

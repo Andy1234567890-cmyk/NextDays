@@ -18,6 +18,7 @@ import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
@@ -324,7 +325,7 @@ export function Abrechnungsvertrag({
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {!editId && (
-              <Feld label={t("scope")} hint={t("scopeHint")}>
+              <Feld label={t("scope")} hint={t("scopeHint")} ariaLabel={t("infoAria", { feld: t("scope") })}>
                 <NativeSelect
                   value={form.property_id}
                   onChange={(e) => set("property_id", e.target.value)}
@@ -338,7 +339,7 @@ export function Abrechnungsvertrag({
                 </NativeSelect>
               </Feld>
             )}
-            <Feld label={t("commissionPct")} hint={t("commissionPctHint")}>
+            <Feld label={t("commissionPct")} hint={t("commissionPctHint")} ariaLabel={t("infoAria", { feld: t("commissionPct") })}>
               <Input
                 type="number"
                 min={0}
@@ -355,7 +356,7 @@ export function Abrechnungsvertrag({
                 onChange={(e) => set("gueltig_ab", e.target.value)}
               />
             </Feld>
-            <Feld label={t("validTo")} hint={t("validToHint")}>
+            <Feld label={t("validTo")} hint={t("validToHint")} ariaLabel={t("infoAria", { feld: t("validTo") })}>
               <Input
                 type="date"
                 value={form.gueltig_bis}
@@ -379,7 +380,7 @@ export function Abrechnungsvertrag({
                   onChange={(e) => set("min_betrag", e.target.value)}
                 />
               </Feld>
-              <Feld label={t("currency")} hint={t("currencyHint")}>
+              <Feld label={t("currency")} hint={t("currencyHint")} ariaLabel={t("infoAria", { feld: t("currency") })}>
                 <Input
                   value={form.min_currency}
                   maxLength={3}
@@ -405,7 +406,7 @@ export function Abrechnungsvertrag({
                   onChange={(e) => set("pauschale_betrag", e.target.value)}
                 />
               </Feld>
-              <Feld label={t("currency")} hint={t("currencyHint")}>
+              <Feld label={t("currency")} hint={t("currencyHint")} ariaLabel={t("infoAria", { feld: t("currency") })}>
                 <Input
                   value={form.pauschale_currency}
                   maxLength={3}
@@ -426,7 +427,7 @@ export function Abrechnungsvertrag({
                   <option value="je_nacht">{t("basis.je_nacht")}</option>
                 </NativeSelect>
               </Feld>
-              <Feld label={t("flatFeeTiming")} hint={t("flatFeeTimingHint")}>
+              <Feld label={t("flatFeeTiming")} hint={t("flatFeeTimingHint")} ariaLabel={t("infoAria", { feld: t("flatFeeTiming") })}>
                 <NativeSelect
                   value={form.pauschale_zeitpunkt}
                   onChange={(e) =>
@@ -489,17 +490,28 @@ export function Abrechnungsvertrag({
 function Feld({
   label,
   hint,
+  ariaLabel,
   children,
 }: {
   label: string;
+  /** Erklärung zum Feld. Steht als Info-Symbol NEBEN der Beschriftung statt
+   *  als Kleingedrucktes darunter: die Maske hat elf Felder, elf Hinweiszeilen
+   *  darunter liest niemand mehr. Per Klick geöffnet, damit sie auch auf
+   *  Touchgeräten erreichbar ist. */
   hint?: string;
+  /** Beschriftung des Info-Knopfes — MUSS aus der Übersetzung kommen. Ein hier
+   *  zusammengebauter deutscher Zusatz („… — Erklärung") bliebe in 23 Sprachen
+   *  deutsch und wäre für Screenreader die einzige Textquelle. */
+  ariaLabel?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        {label}
+        {hint && ariaLabel && <InfoHinweis text={hint} ariaLabel={ariaLabel} />}
+      </span>
       {children}
-      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
     </label>
   );
 }

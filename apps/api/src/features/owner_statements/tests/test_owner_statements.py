@@ -8,10 +8,13 @@ from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError as PydanticValidationError
 
 from src.core.security import AuthContext
 from src.features.owner_statements.schemas import (
     ExpenseCreate,
+    ExpenseDirection,
+    ExpenseUpdate,
     StatementGenerateRequest,
     StatementUpdate,
 )
@@ -307,25 +310,129 @@ def test_commission_override_in_request() -> None:
     assert st.summary.pm_payout == 140.0
 
 
-def test_owner_expense_reduces_owner_payout() -> None:
+def test_fehlende_provision_ist_kein_null_prozent() -> None:
+    """Ohne vereinbarten Satz gibt es KEINE Auszahlungszahl — auch keine 0.
+
+    Der live reproduzierte Fehler (AirSmil, 09.08.2026): `owners.
+    default_commission_pct` war `not null default 0`, ein nie ausgefüllter
+    Satz kam deshalb als 0 % durch. Die Abrechnung wies die volle
+    Auszahlung dem Eigentümer zu (32.120,45 DKK) und der Verwaltung 0,00 —
+    eine Falschaussage über Geld, die plausibel aussah.
+
+    Erwartet: owner_payout/pm_payout/commission_pct sind `None` und der
+    Grund steht maschinenlesbar dabei, damit die UI sagen kann, WAS fehlt.
+    """
+    svc = _svc()
+    # Weder Objekt-Override noch Owner-Default: der Satz ist unbekannt.
+    svc._db.tables["owners"][0]["default_commission_pct"] = None  # noqa: SLF001
+    for link in svc._db.tables["owner_properties"]:  # noqa: SLF001
+        link["commission_override_pct"] = None
+    st = _gen(svc)
+
+    assert st.summary.owner_payout is None
+    assert st.summary.pm_payout is None
+    assert st.commission_pct is None
+    assert st.summary.payout_unbekannt == "provision"
+    # Die Buchungen selbst bleiben sichtbar — nur die Auszahlung fehlt.
+    assert st.summary.total_payout == 1400.0
+    assert st.summary.booking_count == 2
+    assert all(r.owner_payout is None for r in st.rental_rows)
+    assert all(r.payout_unbekannt == "provision" for r in st.rental_rows)
+
+
+def test_manueller_override_sticht_fehlenden_stammsatz() -> None:
+    """Fehlt der Stammsatz, rettet ein ausdrücklicher Override die Abrechnung.
+
+    Sonst wäre der fehlende Stammdatensatz eine Sackgasse: der Betreiber
+    könnte nicht einmal mit einem bewusst eingegebenen Satz abrechnen.
+    """
+    svc = _svc()
+    svc._db.tables["owners"][0]["default_commission_pct"] = None  # noqa: SLF001
+    for link in svc._db.tables["owner_properties"]:  # noqa: SLF001
+        link["commission_override_pct"] = None
+    st = _gen(svc, commission_pct=10)
+
+    assert st.summary.owner_payout == 1260.0
+    assert st.summary.pm_payout == 140.0
+    assert st.summary.payout_unbekannt is None
+
+
+def test_verrechnungsposten_zulasten_wird_voll_abgezogen() -> None:
+    """„Glühbirnen für 200 gekauft" → GENAU 200 weniger, nicht 160.
+
+    Der Kern des bis 09.08.2026 bestehenden Fehlers: der Posten wurde mit
+    `× (100 − eff)/100` gekürzt, also wie Umsatz provisioniert. Bei 20 %
+    Provision landete der Betrieb bei 160 statt 200.
+    """
     svc = _svc()
     st = _gen(svc)
-    # Owner-zugeordnete Ausgabe -200 → mindert Owner-Payout VOR Provision.
     svc.add_expense(
         _ctx(),
         ExpenseCreate(
-            concept="Reparatur",
+            concept="Glühbirnen",
             date=date(2026, 1, 10),
+            direction=ExpenseDirection.from_owner,
             owner_id="o-1",
-            amount=-200,
+            amount=200,
             statement_id=st.id,
         ),
     )
     updated = svc.get(_ctx(), st.id)
-    # owner_payout = (1400 - 200) * 0.8 = 960; pm = 1400 - 960 = 440.
-    assert updated.summary.owner_payout == 960.0
-    assert updated.summary.pm_payout == 440.0
+    # owner_payout = 1120 (Buchungssätze) − 200 (voll) = 920. Der alte,
+    # falsche Weg hätte 1120 − 160 = 960 ergeben.
+    assert updated.summary.owner_payout == 920.0
+    assert updated.summary.pm_payout == 480.0
     assert updated.summary.expenses_total == -200.0
+    assert updated.summary.expenses_from_owner == 200.0
+    assert updated.summary.expenses_to_owner == 0.0
+
+
+def test_verrechnungsposten_zugunsten_erhoeht_auszahlung_voll() -> None:
+    """Schadenskompensation 300 → GENAU 300 mehr, ungekürzt."""
+    svc = _svc()
+    st = _gen(svc)
+    svc.add_expense(
+        _ctx(),
+        ExpenseCreate(
+            concept="Schadenskompensation",
+            date=date(2026, 1, 11),
+            direction=ExpenseDirection.to_owner,
+            owner_id="o-1",
+            amount=300,
+            statement_id=st.id,
+        ),
+    )
+    updated = svc.get(_ctx(), st.id)
+    assert updated.summary.owner_payout == 1420.0  # 1120 + 300
+    assert updated.summary.expenses_total == 300.0
+    assert updated.summary.expenses_to_owner == 300.0
+    assert updated.summary.expenses_from_owner == 0.0
+
+
+def test_beide_richtungen_getrennt_ausgewiesen() -> None:
+    """Netto-Null verbirgt nicht, dass zwei Posten gegeneinander stehen."""
+    svc = _svc()
+    st = _gen(svc)
+    for richtung, betrag, text in (
+        (ExpenseDirection.to_owner, 500, "Kompensation"),
+        (ExpenseDirection.from_owner, 500, "Material"),
+    ):
+        svc.add_expense(
+            _ctx(),
+            ExpenseCreate(
+                concept=text,
+                date=date(2026, 1, 12),
+                direction=richtung,
+                owner_id="o-1",
+                amount=betrag,
+                statement_id=st.id,
+            ),
+        )
+    s = svc.get(_ctx(), st.id).summary
+    assert s.expenses_total == 0.0
+    assert s.expenses_to_owner == 500.0
+    assert s.expenses_from_owner == 500.0
+    assert s.owner_payout == 1120.0  # unverändert, weil sie sich aufheben
 
 
 def test_listing_expense_not_in_owner_payout_but_in_expenses_total() -> None:
@@ -337,14 +444,254 @@ def test_listing_expense_not_in_owner_payout_but_in_expenses_total() -> None:
         ExpenseCreate(
             concept="Cleaning",
             date=date(2026, 1, 16),
+            direction=ExpenseDirection.from_owner,
             listing_id="p-1",
-            amount=-100,
+            amount=100,
             statement_id=st.id,
         ),
     )
     updated = svc.get(_ctx(), st.id)
     assert updated.summary.owner_payout == 1120.0  # unverändert
     assert updated.summary.expenses_total == -100.0
+
+
+def test_fremder_posten_zaehlt_nicht_mit() -> None:
+    """Posten eines FREMDEN Tenants dürfen die Summe nicht verändern.
+
+    `_expenses_for_statement` filterte nur über `statement_id` — der Scope hing
+    allein daran, dass jeder Aufrufer die Abrechnung vorher selbst gescopet
+    hatte. Die Service-Role umgeht RLS, deshalb wird hier explizit gescopet
+    (Wurzel 3: Load und Scope nicht trennen).
+    """
+    tables = _base_tables()
+    svc = _svc(tables)
+    st = _gen(svc)
+    svc.add_expense(
+        _ctx(),
+        ExpenseCreate(
+            concept="Eigener Posten",
+            date=date(2026, 1, 10),
+            direction=ExpenseDirection.from_owner,
+            owner_id="o-1",
+            amount=100,
+            statement_id=st.id,
+        ),
+    )
+    # Fremde Zeile mit DERSELBEN statement_id, aber anderem Tenant.
+    tables["owner_expenses"].append(
+        {
+            "id": "fremd-1",
+            "tenant_id": "t-fremd",
+            "statement_id": st.id,
+            "concept": "Fremder Posten",
+            "date": "2026-01-11",
+            "direction": "from_owner",
+            "owner_id": "o-1",
+            "amount": 9999,
+            "currency": "EUR",
+            "hidden_from_owner": False,
+        }
+    )
+    geladen = svc.get(_ctx(), st.id)
+    konzepte = [e.concept for e in geladen.expenses]
+    assert "Fremder Posten" not in konzepte
+    assert geladen.summary.expenses_total == -100.0
+
+
+def test_betrag_muss_positiv_sein() -> None:
+    """Die Richtung steht in `direction`; ein negativer Betrag ist ein
+    Eingabefehler und keine zweite Ausdrucksform derselben Sache."""
+    for ungueltig in (-200, 0):
+        with pytest.raises(PydanticValidationError):
+            ExpenseCreate(
+                concept="X",
+                date=date(2026, 1, 10),
+                direction=ExpenseDirection.from_owner,
+                amount=ungueltig,
+            )
+
+
+def test_richtung_ist_pflicht() -> None:
+    """Ohne Richtung ist der Posten nicht interpretierbar → 422 statt Raten."""
+    with pytest.raises(PydanticValidationError):
+        ExpenseCreate(concept="X", date=date(2026, 1, 10), amount=200)
+
+
+def test_waehrung_kommt_vom_objekt_nicht_vom_betrieb() -> None:
+    """Der Betrieb rechnet in EUR, das Objekt in DKK → der Posten ist DKK.
+
+    Ohne diese Reihenfolge würde ein dänisches Objekt still in EUR verrechnet
+    und der Betrag um den Wechselkurs verschoben, ohne dass es auffiele.
+    """
+    tables = _base_tables()
+    tables["properties"][0]["currency"] = "DKK"
+    svc = _svc(tables)
+    exp = svc.add_expense(
+        _ctx(),
+        ExpenseCreate(
+            concept="Glühbirnen",
+            date=date(2026, 1, 10),
+            direction=ExpenseDirection.from_owner,
+            listing_id="p-1",
+            amount=200,
+        ),
+    )
+    assert exp.currency == "DKK"
+
+
+def test_posten_in_fremder_waehrung_wird_nicht_stumm_addiert() -> None:
+    """Ein DKK-Posten darf NICHT in eine EUR-Abrechnung eingerechnet werden.
+
+    Genau das tat der Code bis 09.08.2026: `owner_payout` steht in der Währung
+    des Eigentümers (die Buchungssätze sind dorthin umgerechnet), die Posten
+    flossen aber roh und ohne Umrechnung hinein. 200 DKK wurden damit wie 200
+    EUR abgezogen — rund 27 EUR zu viel, an einer Zahl, die plausibel aussieht.
+    Umgerechnet wird bewusst NICHT (ein Kurs zum Erfassungstag wäre eine
+    erfundene Zahl in einem Beleg): 422 statt still falsch (Wurzel 4).
+    """
+    tables = _base_tables()
+    tables["properties"][0]["currency"] = "DKK"
+    svc = _svc(tables)
+    st = _gen(svc)
+    with pytest.raises(StatementError) as exc:
+        svc.add_expense(
+            _ctx(),
+            ExpenseCreate(
+                concept="Glühbirnen",
+                date=date(2026, 1, 10),
+                direction=ExpenseDirection.from_owner,
+                listing_id="p-1",
+                amount=200,
+                statement_id=st.id,
+            ),
+        )
+    assert exc.value.status_code == 422
+    assert "DKK" in exc.value.message
+
+
+def test_waehrung_faellt_auf_den_betrieb_zurueck_ohne_objekt() -> None:
+    """Ohne Objektbezug gilt die Währung des Betriebs — aus den Daten, nicht
+    aus einer Konstante."""
+    svc = _svc()
+    st = _gen(svc)
+    exp = svc.add_expense(
+        _ctx(),
+        ExpenseCreate(
+            concept="Kompensation",
+            date=date(2026, 1, 10),
+            direction=ExpenseDirection.to_owner,
+            owner_id="o-1",
+            amount=200,
+            statement_id=st.id,
+        ),
+    )
+    assert exp.currency == "EUR"  # tenants.currency in den Testdaten
+
+
+def test_ohne_waehrung_irgendwo_klarer_fehler_statt_euro() -> None:
+    """Weder Posten noch Objekt noch Betrieb tragen eine Währung → 422.
+    NIE ein untergeschobenes „EUR" (Wurzel 4)."""
+    tables = _base_tables()
+    tables["tenants"][0]["currency"] = None
+    svc = _svc(tables)
+    with pytest.raises(StatementError) as exc:
+        svc.add_expense(
+            _ctx(),
+            ExpenseCreate(
+                concept="Material",
+                date=date(2026, 1, 10),
+                direction=ExpenseDirection.from_owner,
+                amount=200,
+            ),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_abzug_darf_nicht_ausgeblendet_werden() -> None:
+    """Ein Posten ZULASTEN muss für den Eigentümer sichtbar bleiben — sonst
+    sähe er eine geminderte Auszahlung ohne die mindernde Zeile."""
+    svc = _svc()
+    st = _gen(svc)
+    with pytest.raises(StatementError) as exc:
+        svc.add_expense(
+            _ctx(),
+            ExpenseCreate(
+                concept="Heimlicher Abzug",
+                date=date(2026, 1, 10),
+                direction=ExpenseDirection.from_owner,
+                owner_id="o-1",
+                amount=200,
+                hidden_from_owner=True,
+                statement_id=st.id,
+            ),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_abzug_nicht_per_update_verstecken() -> None:
+    """Die Regel greift am ERGEBNIS: erst zugunsten+versteckt anlegen, dann auf
+    zulasten drehen, wäre sonst der Weg an ihr vorbei."""
+    svc = _svc()
+    st = _gen(svc)
+    exp = svc.add_expense(
+        _ctx(),
+        ExpenseCreate(
+            concept="Gutschrift",
+            date=date(2026, 1, 10),
+            direction=ExpenseDirection.to_owner,
+            owner_id="o-1",
+            amount=200,
+            hidden_from_owner=True,
+            statement_id=st.id,
+        ),
+    )
+    with pytest.raises(StatementError) as exc:
+        svc.update_expense(
+            _ctx(), exp.id, ExpenseUpdate(direction=ExpenseDirection.from_owner)
+        )
+    assert exc.value.status_code == 422
+
+
+def test_erfasser_wird_mitgeschrieben() -> None:
+    """Nachvollziehbarkeit: wer hat den Posten angelegt."""
+    svc = _svc()
+    st = _gen(svc)
+    exp = svc.add_expense(
+        _ctx(),
+        ExpenseCreate(
+            concept="Material",
+            date=date(2026, 1, 10),
+            direction=ExpenseDirection.from_owner,
+            owner_id="o-1",
+            amount=200,
+            statement_id=st.id,
+        ),
+    )
+    assert exp.created_by == "u-1"
+    assert exp.created_at is not None
+
+
+def test_signed_amount_traegt_das_vorzeichen() -> None:
+    """Das Vorzeichen entsteht an EINER Stelle und steht im Antwortmodell —
+    keine Anzeigestelle rechnet es selbst aus."""
+    svc = _svc()
+    st = _gen(svc)
+    zulasten = svc.add_expense(
+        _ctx(),
+        ExpenseCreate(
+            concept="Material", date=date(2026, 1, 10),
+            direction=ExpenseDirection.from_owner, amount=200, statement_id=st.id,
+        ),
+    )
+    zugunsten = svc.add_expense(
+        _ctx(),
+        ExpenseCreate(
+            concept="Kompensation", date=date(2026, 1, 10),
+            direction=ExpenseDirection.to_owner, amount=300, statement_id=st.id,
+        ),
+    )
+    assert (zulasten.amount, zulasten.signed_amount) == (200.0, -200.0)
+    assert (zugunsten.amount, zugunsten.signed_amount) == (300.0, 300.0)
 
 
 def test_status_filter_excludes_cancelled() -> None:
@@ -430,6 +777,105 @@ def test_cancel_creates_storno_with_negated_amounts() -> None:
     with pytest.raises(StatementError) as exc:
         svc.cancel(_ctx(), fin.id)
     assert exc.value.status_code == 409
+
+
+def _mit_beiden_richtungen(svc: OwnerStatementsService):
+    """Statement mit je einem Posten pro Richtung (500 zugunsten / 200 zulasten)."""
+    st = _gen(svc)
+    for richtung, betrag, text in (
+        (ExpenseDirection.to_owner, 500, "Schadenskompensation"),
+        (ExpenseDirection.from_owner, 200, "Glühbirnen"),
+    ):
+        svc.add_expense(
+            _ctx(),
+            ExpenseCreate(
+                concept=text,
+                date=date(2026, 1, 12),
+                direction=richtung,
+                owner_id="o-1",
+                amount=betrag,
+                statement_id=st.id,
+            ),
+        )
+    return st
+
+
+def test_richtungssummen_ueberleben_die_finalisierung() -> None:
+    """Regression: der Snapshot-Pfad meldete beide Richtungen als 0.
+
+    `get()` baut die Summary für alles ausser Entwürfen aus der GESPEICHERTEN
+    Zeile neu auf. Bis 0348 setzte er dort nur `expenses_total`; die beiden
+    Richtungsfelder fielen auf ihren Pydantic-Default 0.0 zurück. Damit meldete
+    ausgerechnet die finalisierte Abrechnung — das Dokument, das der Eigentümer
+    wirklich bekommt — „keine Verrechnungsposten", obwohl 500 und 200 darauf
+    stehen. Der Entwurf davor zeigte sie korrekt, was den Fehler unsichtbar
+    machte.
+    """
+    svc = _svc()
+    st = _mit_beiden_richtungen(svc)
+
+    # Entwurf: live gerechnet, war auch vorher korrekt.
+    entwurf = svc.get(_ctx(), st.id).summary
+    assert (entwurf.expenses_to_owner, entwurf.expenses_from_owner) == (500.0, 200.0)
+
+    fin = svc.finalize(_ctx(), st.id).summary
+    # DAS ist der Kern: dieselben Zahlen aus dem Snapshot, nicht 0.
+    assert fin.expenses_to_owner == 500.0
+    assert fin.expenses_from_owner == 200.0
+    # Netto bleibt konsistent zu den beiden Bestandteilen.
+    assert fin.expenses_total == 300.0
+    assert fin.expenses_total == fin.expenses_to_owner - fin.expenses_from_owner
+
+    # Erneutes Lesen geht über denselben Snapshot-Pfad und darf nicht kippen.
+    erneut = svc.get(_ctx(), st.id).summary
+    assert (erneut.expenses_to_owner, erneut.expenses_from_owner) == (500.0, 200.0)
+
+
+def test_richtungssummen_im_storno_gespiegelt() -> None:
+    """Die Gegenbuchung dreht BEIDE Richtungen mit, nicht nur die Nettozahl.
+
+    Ein Storno mit −300 netto, aber 0/0 in den Richtungen behauptete, es habe
+    nie Verrechnungsposten gegeben (Wurzel 4).
+    """
+    svc = _svc()
+    st = _mit_beiden_richtungen(svc)
+    fin = svc.finalize(_ctx(), st.id)
+    storno = svc.cancel(_ctx(), fin.id).summary
+
+    assert storno.expenses_to_owner == -fin.summary.expenses_to_owner == -500.0
+    assert storno.expenses_from_owner == -fin.summary.expenses_from_owner == -200.0
+    assert storno.expenses_total == -fin.summary.expenses_total == -300.0
+    # Auch im Storno bleibt die Netto-Zahl die Differenz ihrer Bestandteile.
+    assert (
+        storno.expenses_total
+        == storno.expenses_to_owner - storno.expenses_from_owner
+    )
+
+    # Das stornierte Original läuft ebenfalls über den Snapshot-Pfad.
+    orig = svc.get(_ctx(), fin.id).summary
+    assert (orig.expenses_to_owner, orig.expenses_from_owner) == (500.0, 200.0)
+
+
+def test_snapshot_summary_setzt_jedes_feld() -> None:
+    """Kein Feld der Summary fällt auf dem Snapshot-Pfad auf einen Default.
+
+    Die eigentliche Fehlerklasse: ein weggelassenes Pydantic-Feld liefert still
+    eine plausible 0 bzw. eine leere Liste. Dieser Test hält den Snapshot-Pfad
+    darauf fest, dass er JEDES Feld aus der gespeicherten Zeile bedient.
+    """
+    svc = _svc()
+    st = _mit_beiden_richtungen(svc)
+    fin = svc.finalize(_ctx(), st.id).summary
+
+    # Die Aufschlüsselungen je Währung waren die zweite stille Leerstelle.
+    assert [(c.currency, c.amount) for c in fin.totals_by_currency] == [
+        (fin.owner_currency, fin.total_payout)
+    ]
+    assert [(c.currency, c.amount) for c in fin.pm_payout_by_currency] == [
+        (fin.owner_currency, fin.pm_payout)
+    ]
+    # Kein Feld des Modells ist unbesetzt geblieben.
+    assert set(fin.model_fields_set) == set(type(fin).model_fields)
 
 
 def test_cancel_requires_finalized() -> None:
@@ -570,7 +1016,10 @@ def test_expense_hidden_from_owner_flag_roundtrips() -> None:
         ExpenseCreate(
             concept="Intern",
             date=date(2026, 1, 9),
-            amount=-50,
+            # Nur ein Posten ZUGUNSTEN darf ausgeblendet werden — ein Abzug
+            # nicht (test_abzug_darf_nicht_ausgeblendet_werden).
+            direction=ExpenseDirection.to_owner,
+            amount=50,
             hidden_from_owner=True,
             statement_id=st.id,
         ),
@@ -797,6 +1246,7 @@ def test_owner_writes_forbidden() -> None:
             _owner_ctx(),
             ExpenseCreate(
                 concept="X", amount=1, date=date(2026, 1, 2), owner_id="o-1",
+                direction=ExpenseDirection.from_owner,
             ),
         ),
     ):

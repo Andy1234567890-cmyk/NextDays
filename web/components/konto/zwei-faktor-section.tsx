@@ -12,7 +12,7 @@
 // läuft und wie viele Wiederherstellungscodes übrig sind. Nichts davon wird
 // hier abgeleitet oder geraten.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -37,6 +37,7 @@ export function ZweiFaktorSection({
   onGeaendert: () => void;
 }) {
   const t = useTranslations("account.security.twoFactor");
+  const locale = useLocale();
   const [assistent, setAssistent] = useState<Assistent>(null);
   const [zuEntfernen, setZuEntfernen] = useState<MfaFactor | null>(null);
 
@@ -71,7 +72,7 @@ export function ZweiFaktorSection({
           />
           <p className="text-sm text-destructive">
             {frist
-              ? t("requiredWithDeadline", { date: datumFormatieren(frist) })
+              ? t("requiredWithDeadline", { date: datumFormatieren(frist, locale) })
               : t("requiredNotice")}
           </p>
         </div>
@@ -213,11 +214,16 @@ export function ZweiFaktorSection({
 
 /** ISO-Datum → lokale Kurzform. Bewusst ohne Bibliothek und ohne Annahme über
  *  das Format: ist der Wert nicht lesbar, wird er unverändert gezeigt statt
- *  ein „Invalid Date" zu behaupten. */
-function datumFormatieren(iso: string): string {
+ *  ein „Invalid Date" zu behaupten.
+ *
+ *  `locale` kommt als Parameter herein (Projektmuster, vgl. `monatsName` in
+ *  `provisions-verlauf.tsx`) — ein Hook ginge in einer Hilfsfunktion nicht.
+ *  Ohne dieses Argument nähme `toLocaleDateString` die Sprache des BROWSERS
+ *  statt der eingestellten Oberflächensprache. */
+function datumFormatieren(iso: string, locale: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(undefined, {
+  return d.toLocaleDateString(locale, {
     year: "numeric",
     month: "long",
     day: "numeric",

@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Objecten toewijzen} one {# object toewijzen} other {# objecten toewijzen}}",
     "propertiesAssigned": "{count, plural, one {# object toegewezen} other {# objecten toegewezen}}",
     "removeProperty": "Toewijzing verwijderen",
+    "shareInvalid": "Voer een aandeel tussen 0 en 100 in.",
     "sections": {
       "master": "Stamgegevens",
       "payout": "Uitbetaling & commissie",
@@ -998,7 +999,7 @@
       "statementFrequency": "Afrekeningsritme",
       "notes": "Notities",
       "share": "Aandeel (%)",
-      "commissionOverride": "Commissie (%) afw.",
+      "commissionOverride": "Commissie (%)",
       "emailLanguage": "Taal voor e-mails"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Voor portaaltoegang is een e-mailadres vereist.",
     "portalAccessInvite": "Uitnodiging versturen",
     "portalAccessInvited": "Uitnodiging verzonden.",
-    "portalAccessActive": "Portaaltoegang is ingesteld."
+    "portalAccessActive": "Portaaltoegang is ingesteld.",
+    "commissionNotAgreed": "niet afgesproken",
+    "assignableCount": "{count} van {total} geselecteerd om toe te voegen",
+    "assignedHeading": "{count, plural, one {# toegewezen object} other {# toegewezen objecten}}",
+    "info": {
+      "aria": "Uitleg bij {feld}",
+      "share": "Het eigendomsaandeel in dit object. Bij 100 % wordt de volledige uitbetaling aan deze eigenaar toegerekend, bij minder naar rato.",
+      "commission": "Het standaard commissiepercentage voor deze eigenaar. Blijft het veld leeg, dan is er nog geen percentage afgesproken — de uitbetaling wordt dan niet berekend, maar als streepje weergegeven.",
+      "commissionOverride": "Geldt alleen voor dit ene object en overschrijft het standaardpercentage van de eigenaar. Blijft het veld leeg, dan geldt het standaardpercentage."
+    }
   },
   "ownerStatements": {
     "title": "Eigenaarsafrekening",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Reserveringsstatus",
       "statusCount": "{count} status(sen)",
-      "title": "Filters"
+      "title": "Filters",
+      "resetAll": "Alle filters wissen",
+      "remove": "{feld} wissen",
+      "statusesNone": "Niets geselecteerd",
+      "statusesSearch": "Status zoeken …",
+      "statusesNoMatch": "Geen status gevonden.",
+      "statusesSelectAll": "Alles selecteren",
+      "statusesCount": "{count} van {total} geselecteerd"
     },
     "reservationStatus": {
       "pending": "Open",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Concept",
-      "finalized": "Gefinaliseerd"
+      "finalized": "Gefinaliseerd",
+      "cancelled": "Gestorneerd"
     },
     "sections": {
       "data": "Gegevens",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Totaalprijs",
       "totalPayout": "Totale uitbetaling",
       "ownerPayout": "Uitbetaling eigenaar",
-      "pmPayout": "Uitbetaling beheer"
+      "pmPayout": "Uitbetaling beheer",
+      "commissionMissing": "Voor minstens één object is geen commissiepercentage vastgelegd. De uitbetalingen kunnen daarom niet worden berekend — voer het percentage in bij de stamgegevens van de eigenaar of bij het object."
     },
     "rental": {
       "perReservation": "Per reservering",
@@ -1136,13 +1155,28 @@
       "reservation": "Reservering",
       "owner": "Eigenaar",
       "hideAll": "Alles verbergen",
-      "assignOwner": "Toewijzen aan de eigenaar"
+      "assignOwner": "Toewijzen aan de eigenaar",
+      "intro": "Bedragen die extra aan de eigenaar worden uitbetaald of met hem worden verrekend. Ze tellen volledig mee in de uitbetaling — zonder commissieaftrek.",
+      "direction": "Richting",
+      "toOwner": "Ten gunste van de eigenaar",
+      "toOwnerHint": "Hij krijgt extra uitbetaald, bijv. schadevergoeding.",
+      "toOwnerShort": "Ten gunste",
+      "fromOwner": "Ten laste van de eigenaar",
+      "fromOwnerHint": "Wordt van zijn uitbetaling afgetrokken, bijv. materiaal en arbeidstijd.",
+      "fromOwnerShort": "Ten laste",
+      "sumToOwner": "Totaal ten gunste:",
+      "sumFromOwner": "Totaal ten laste:",
+      "receipt": "Bewijsstuk",
+      "openReceipt": "Bewijsstuk openen",
+      "createdBy": "Vastgelegd door {name}",
+      "saveFirst": "Verrekenposten horen bij een opgeslagen afrekening. Sla de afrekening op, daarna kun je hier posten vastleggen.",
+      "missingFields": "Nog invullen: {felder}."
     },
     "grand": {
       "rentalRevenue": "Huurinkomsten",
       "expenses": "Uitgaven & extra's",
       "total": "Totaal",
-      "deductPercentage": "Commissie aftrekken (%)"
+      "deductPercentage": "Commissie (%)"
     },
     "manage": {
       "owner": "Eigenaar",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Bewerken",
     "attachments": {
-      "drop": "Sleep bestanden hierheen om te uploaden of Bladeren"
+      "drop": "Sleep bestanden hierheen om te uploaden of Bladeren",
+      "viaExpenses": "Bewijsstukken horen bij de afzonderlijke post: upload ze in ‘Uitgaven & extra's’ direct bij de betreffende regel."
     },
     "masterData": "Stamgegevens",
     "preview": "Voorbeeld",
     "previewTitle": "Documentvoorbeeld",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "info": {
+      "aria": "Uitleg bij {feld}",
+      "totalPrice": "Wat de gast in totaal voor zijn verblijf heeft betaald — vóór aftrek van portaalkosten en commissie.",
+      "totalPayout": "Wat er na aftrek van de portaalkosten bij het bedrijf binnenkomt. Uit dit bedrag worden het eigenaars- en het beheersdeel gevormd.",
+      "ownerPayout": "Het deel dat aan de eigenaar wordt uitbetaald: totale uitbetaling minus commissie, plus de verrekenposten.",
+      "pmPayout": "Het deel dat bij het bedrijf blijft — de commissie op de verhuur. Verrekenposten zitten hier niet in.",
+      "expenses": {
+        "title": "Ten gunste en ten laste",
+        "direction": "‘Ten gunste van de eigenaar’ verhoogt zijn uitbetaling, bijvoorbeeld een vergoeding. ‘Ten laste van de eigenaar’ verlaagt die, bijvoorbeeld materiaal of arbeidstijd van het bedrijf.",
+        "noCommission": "Deze bedragen tellen volledig mee in de uitbetaling — er wordt geen commissie over berekend.",
+        "aria": "Uitleg bij verrekenposten"
+      },
+      "dash": {
+        "title": "Wat het streepje betekent",
+        "meaning": "Een streepje betekent ‘niet vastgelegd’ — niet ‘nul’. De waarde kan niet worden berekend omdat een gegeven ontbreekt.",
+        "whereToFix": "Ontbreekt het commissiepercentage, voer het dan in bij de stamgegevens van de eigenaar of als afwijkend percentage bij het afzonderlijke object.",
+        "aria": "Uitleg bij het streepje in plaats van een bedrag",
+        "inline": "Een streepje staat voor een ontbrekende waarde, niet voor 0,00."
+      },
+      "deductPercentage": "Het commissiepercentage waarmee deze afrekening rekent. Leeg betekent: het percentage uit de stamgegevens van de eigenaar geldt, of het afwijkende percentage bij het afzonderlijke object.",
+      "status": {
+        "title": "De drie statussen van een afrekening",
+        "draft": "Concept: nog aanpasbaar. Bedragen worden bij elke wijziging opnieuw berekend.",
+        "finalized": "Gefinaliseerd: factuurnummer toegekend, totalen bevroren. Wijzigingen zijn niet meer mogelijk.",
+        "cancelled": "Gestorneerd: opgeheven door een creditfactuur. De originele factuur blijft als bewijsstuk bestaan."
+      },
+      "finalize": {
+        "title": "Afrekening finaliseren",
+        "what": "Bij het finaliseren wordt het factuurnummer toegekend en worden alle totalen als bewijsstuk bevroren.",
+        "irreversible": "Dit kan niet ongedaan worden gemaakt. Een gefinaliseerde factuur kan alleen nog door een creditfactuur worden opgeheven."
+      },
+      "basis": "Bepaalt wanneer een boeking binnen de periode valt: bij Check-in op de aankomstdag, bij Check-out op de vertrekdag. Een boeking over de maandwisseling heen valt afhankelijk van je keuze in de ene of de andere maand.",
+      "statuses": "Alleen boekingen met een van de geselecteerde statussen worden afgerekend. Standaard zijn dat bevestigde en afgeronde boekingen — geannuleerde horen normaal gesproken niet in een uitbetaling."
+    }
   },
   "ownerBilling": {
     "title": "Afrekeningscontract",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Commissieplichtig",
     "commissionableYes": "Ja — telt mee in de commissie",
-    "commissionableNo": "Nee — commissievrij"
+    "commissionableNo": "Nee — commissievrij",
+    "infoAria": "Uitleg bij {feld}"
   },
   "portal": {
     "title": "Mijn portaal",

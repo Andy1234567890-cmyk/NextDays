@@ -6,11 +6,12 @@
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
@@ -44,6 +45,26 @@ export function OwnerDetail({
   const tCountry = useTranslations("countries");
   const router = useRouter();
   const [owner, setOwner] = useState<Owner>(initial);
+  // Frische Server-Props übernehmen. `useState(initial)` liest den Wert NUR
+  // beim ersten Mount: nach `router.refresh()` (eigene Zuordnung) oder einer
+  // Änderung in einem anderen Tab lieferte der Server längst die neue Liste,
+  // während diese Maske weiter den Mount-Stand zeigte — die Zuordnung war in
+  // der DB, die Oberfläche behauptete das Gegenteil. Die Maske hängt in einem
+  // Sheet, das beim Schließen NICHT abgebaut wird, deshalb kann der Mount
+  // beliebig lange zurückliegen.
+  //
+  // Der Vergleich auf `updated_at` + Objektliste statt auf Objektidentität:
+  // die Server-Komponente liefert bei jedem Refresh ein NEUES Objekt, ein
+  // reines `[initial]` würde also auch dann überschreiben, wenn sich nichts
+  // geändert hat — und dabei ungespeicherte Eingaben des Nutzers verwerfen.
+  const initialSignatur = `${initial.updated_at ?? ""}|${initial.properties
+    .map((p) => `${p.property_id}:${p.ownership_share}:${p.commission_override_pct ?? ""}`)
+    .sort()
+    .join(",")}`;
+  useEffect(() => {
+    setOwner(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial.id, initialSignatur]);
   const [busy, setBusy] = useState(false);
   // Eigener Busy-Zustand für die Einladung: sie darf den Speichern-Button
   // nicht sperren und umgekehrt.
@@ -53,6 +74,10 @@ export function OwnerDetail({
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [objektSuche, setObjektSuche] = useState("");
   const [zuordnend, setZuordnend] = useState(false);
+  // Letzter Fehlschlag der Zuordnung, sichtbar AM Panel. Ein Toast allein
+  // reicht nicht: er verschwindet, und genau die Meldung „diese Objekte
+  // gehören schon X" ist die, die der Betreiber lesen und abarbeiten muss.
+  const [zuordnenFehler, setZuordnenFehler] = useState<string | null>(null);
 
   /**
    * Portalzugang nachträglich einrichten.
@@ -139,20 +164,38 @@ export function OwnerDetail({
    * Überspringen, bei dem der Betreiber später selbst suchen müsste.
    */
   async function assignMany() {
-    if (auswahl.length === 0) return;
+    // Doppelklick-Schutz VOR dem Seiteneffekt (Wurzel 2): ohne ihn setzen zwei
+    // schnelle Klicks zwei Requests ab. Der zweite lief in die Vorab-Prüfung
+    // des Dienstes und meldete „gehört bereits einem anderen Eigentümer" —
+    // eine Fehlermeldung für eine Zuordnung, die gerade erfolgreich war.
+    if (auswahl.length === 0 || zuordnend) return;
     setZuordnend(true);
+    // Die Auswahl festhalten: `res` kann sie nicht mehr liefern, und der
+    // Zähler in der Erfolgsmeldung muss die WIRKLICH gesendete Menge nennen.
+    const gesendet = auswahl.length;
     const res = await assignOwnerProperties(owner.id, auswahl);
     setZuordnend(false);
     if (!res.ok) {
+      // Sichtbar UND stehenbleibend: der Text nennt bei einem Konflikt die
+      // betroffenen Objekte samt fremdem Eigentümer. Ein Toast, der nach drei
+      // Sekunden verschwindet, ist bei 18 Objekten nicht lesbar — deshalb
+      // bleibt der Fehler zusätzlich als Zeile am Panel stehen (Wurzel 5:
+      // kein Fehlschlag darf als Erfolg durchgehen). Die Auswahl bleibt
+      // erhalten, damit der Nutzer korrigieren statt neu anhaken muss.
+      setZuordnenFehler(res.error);
       toast.error(res.error);
       return;
     }
+    setZuordnenFehler(null);
     setOwner(res.data);
     setAuswahl([]);
     setObjektSuche("");
-    toast.success(t("propertiesAssigned", { count: auswahl.length }));
+    toast.success(t("propertiesAssigned", { count: gesendet }));
     // Die Liste der zuordenbaren Objekte kommt aus der Server-Komponente und
     // ist jetzt veraltet (die eben zugeordneten sind nicht mehr frei).
+    // `owner_properties` ist für `authenticated` gesperrt (Wurzel 6, 0337) und
+    // trägt daher kein Realtime-Event — `refresh()` ist hier der einzige Weg,
+    // nicht eine vermeidbare Zusatzrunde.
     router.refresh();
   }
 
@@ -161,19 +204,38 @@ export function OwnerDetail({
     share: number,
     commission: number | null,
   ) {
+    // `Number("")` ist 0 und `Number("abc")` ist NaN — beides würde als echter
+    // Anteil gespeichert bzw. vom Server mit 422 abgewiesen. Ein Feld, das der
+    // Nutzer leert, darf keinen erfundenen Wert bekommen (Wurzel 4): der alte
+    // Wert bleibt stehen und die Maske sagt, was zu tun ist.
+    if (!Number.isFinite(share)) {
+      toast.error(t("shareInvalid"));
+      setOwner((o) => ({ ...o }));
+      return;
+    }
     const res = await assignOwnerProperty(owner.id, {
       property_id: propertyId,
       ownership_share: share,
       commission_override_pct: commission,
     });
     if (res.ok) setOwner(res.data);
-    else toast.error(res.error);
+    else {
+      toast.error(res.error);
+      // Der Server hat NICHT gespeichert — die Felder sind unkontrolliert und
+      // zeigen sonst weiter den eingetippten Wert, der nirgends steht. Ein
+      // Zustands-Neuaufbau setzt sie auf den zuletzt bestätigten Stand zurück.
+      setOwner((o) => ({ ...o }));
+    }
   }
 
   async function unassign(propertyId: string) {
     const res = await unassignOwnerProperty(owner.id, propertyId);
-    if (res.ok) setOwner(res.data);
-    else toast.error(res.error);
+    if (res.ok) {
+      setOwner(res.data);
+      // Das Objekt ist wieder frei und gehört zurück in die Auswahlliste, die
+      // aus der Server-Komponente kommt.
+      router.refresh();
+    } else toast.error(res.error);
   }
 
   return (
@@ -361,15 +423,30 @@ export function OwnerDetail({
               onChange={(e) => set("bank_name", e.target.value || null)}
             />
           </Field>
-          <Field label={t("fields.commission")}>
+          <Field
+            label={t("fields.commission")}
+            info={t("info.commission")}
+            infoAria={t("info.aria", { feld: t("fields.commission") })}
+          >
+            {/* Leeres Feld = KEIN Satz vereinbart (null), nicht 0 %. Vorher
+                stand hier zwangsläufig eine Zahl, und ein nie ausgefüllter
+                Satz sah aus wie „0 % vereinbart" — die Abrechnung zahlte dem
+                Eigentümer daraufhin 100 % aus (Wurzel 4). `Number("")` wäre 0
+                und genau dieser erfundene Wert. */}
             <Input
               type="number"
               min={0}
               max={100}
               step={0.5}
-              value={owner.default_commission_pct}
+              value={owner.default_commission_pct ?? ""}
+              placeholder={t("commissionNotAgreed")}
               onChange={(e) =>
-                set("default_commission_pct", Number(e.target.value))
+                set(
+                  "default_commission_pct",
+                  e.target.value.trim() === ""
+                    ? null
+                    : Number(e.target.value),
+                )
               }
             />
           </Field>
@@ -417,6 +494,11 @@ export function OwnerDetail({
         {unassigned.length > 0 && (
           <div className="flex flex-col gap-3 rounded-(--radius) border border-border p-4">
             <span className="text-sm font-medium">{t("addProperty")}</span>
+            {/* Eigener Zähltext: „0/18 ausgewählt" las der Betreiber als
+                „0 von 18 Objekten gehören diesem Eigentümer" und hielt seine
+                bestehende Zuordnung für verschwunden. Hier steht jetzt, dass
+                es um die AUSWAHL zum Hinzufügen geht; die bereits zugeordneten
+                Objekte stehen darunter mit eigener Überschrift. */}
             <ObjektMehrfachauswahl
               objekte={unassigned}
               selected={auswahl}
@@ -425,7 +507,16 @@ export function OwnerDetail({
               onSucheChange={setObjektSuche}
               disabled={zuordnend}
               emptyText={t("noFreeProperties")}
+              countLabel={(n, m) => t("assignableCount", { count: n, total: m })}
             />
+            {zuordnenFehler && (
+              <p
+                role="alert"
+                className="rounded-(--radius) border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                {zuordnenFehler}
+              </p>
+            )}
             <div className="flex justify-end">
               <Button
                 onClick={() => void assignMany()}
@@ -446,6 +537,11 @@ export function OwnerDetail({
           <p className="text-sm text-muted-foreground">{t("noProperties")}</p>
         ) : (
           <div className="flex flex-col gap-3">
+            {/* Sagt ausdrücklich, WAS diese Liste ist: die dem Eigentümer
+                zugeordneten Objekte — im Unterschied zur Auswahl darüber. */}
+            <p className="text-sm font-medium text-muted-foreground">
+              {t("assignedHeading", { count: owner.properties.length })}
+            </p>
             {owner.properties.map((link) => (
               <div
                 key={link.property_id}
@@ -456,8 +552,24 @@ export function OwnerDetail({
                     {titleById.get(link.property_id) ?? link.property_id}
                   </p>
                 </div>
-                <Field label={t("fields.share")} className="w-28">
+                {/* Breite auf den LÄNGSTEN Übersetzungstext ausgelegt, nicht
+                    auf den deutschen: „Anteil (%)" ist kurz, estnisch/maltesisch
+                    deutlich länger. Zu schmal + Info-Symbol = zweizeiliger Kopf
+                    und versetzte „i". */}
+                <Field
+                  label={t("fields.share")}
+                  className="w-40"
+                  info={t("info.share")}
+                  infoAria={t("info.aria", { feld: t("fields.share") })}
+                >
+                  {/* `key` am bestätigten Wert: das Feld ist unkontrolliert
+                      (Tippen ohne Rundreise zum Server). Ohne den Schlüssel
+                      behielte es nach einem abgelehnten Speichern den
+                      eingetippten Wert und zeigte eine Zahl, die nirgends
+                      gespeichert ist. Ändert sich der bestätigte Wert, baut
+                      React das Feld neu auf. */}
                   <Input
+                    key={`share-${link.property_id}-${link.ownership_share}`}
                     type="number"
                     min={0}
                     max={100}
@@ -472,19 +584,39 @@ export function OwnerDetail({
                     }
                   />
                 </Field>
-                <Field label={t("fields.commissionOverride")} className="w-36">
+                <Field
+                  label={t("fields.commissionOverride")}
+                  className="w-40"
+                  info={t("info.commissionOverride")}
+                  infoAria={t("info.aria", {
+                    feld: t("fields.commissionOverride"),
+                  })}
+                >
+                  {/* Leeres Feld = KEIN Override (null), nicht 0: dann gilt der
+                      Owner-Standard, den der Platzhalter anzeigt. `Number("")`
+                      wäre 0 und damit eine erfundene Null-Provision. */}
                   <Input
+                    key={`comm-${link.property_id}-${link.commission_override_pct ?? ""}`}
                     type="number"
                     min={0}
                     max={100}
                     step={0.5}
-                    placeholder={`${owner.default_commission_pct}`}
+                    // Der Platzhalter zeigt, was ohne Override gilt: der
+                    // Owner-Standard. Ist auch der nicht vereinbart, steht
+                    // dort der Hinweis statt eines wörtlichen „null".
+                    placeholder={
+                      owner.default_commission_pct == null
+                        ? t("commissionNotAgreed")
+                        : `${owner.default_commission_pct}`
+                    }
                     defaultValue={link.commission_override_pct ?? ""}
                     onBlur={(e) =>
                       void updateLink(
                         link.property_id,
                         link.ownership_share,
-                        e.target.value === "" ? null : Number(e.target.value),
+                        e.target.value.trim() === ""
+                          ? null
+                          : Number(e.target.value),
                       )
                     }
                   />
@@ -509,15 +641,32 @@ export function OwnerDetail({
 function Field({
   label,
   className,
+  info,
+  infoAria,
   children,
 }: {
   label: string;
   className?: string;
+  /** Erklärtext hinter einem „i" — für Felder, deren Wirkung man nicht rät
+   *  (Provisions-Override, Eigentumsanteil). */
+  info?: string;
+  infoAria?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className={`flex flex-col gap-1 ${className ?? ""}`}>
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      {/* `min-w-0` + `truncate` am TEXT, nicht `nowrap` an der Zeile: bei einer
+          Übersetzung, die selbst für die verbreiterte Spalte zu lang ist,
+          bricht das Label dann nicht zweizeilig um (was das „i" versetzt) und
+          läuft auch nicht über den Rand hinaus — es wird gekürzt, während das
+          Info-Symbol seinen Platz behält. Der vollständige Text bleibt über
+          `title` und das Info-Symbol erreichbar. */}
+      <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        <span className="min-w-0 truncate" title={label}>
+          {label}
+        </span>
+        {info && infoAria && <InfoHinweis text={info} ariaLabel={infoAria} />}
+      </span>
       {children}
     </label>
   );

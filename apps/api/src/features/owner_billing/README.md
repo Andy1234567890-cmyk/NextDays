@@ -148,19 +148,32 @@ sonst ergäbe dieselbe Abrechnung je nach Erzeugungstag eine andere Zahl.
 Offen, bewusst nicht in dieser Etappe entschieden: ob die Reinigungsgebühr beim
 Betrieb bleibt. Genau deshalb rät die Migration nichts.
 
-### Nebenbefund `owners.default_commission_pct`
+### Nebenbefund `owners.default_commission_pct` — behoben (0349, 09.08.2026)
 
-Die Spalte ist `numeric not null default 0`. Wer einen Eigentümer anlegt, ohne
-einen Satz einzugeben, bekommt still 0 % Provision — der Eigentümer erhält
-100 %, der Betrieb nichts. Ein bestehender Wurzel-4-Verstoß:
-`common.effektive_provision_pct` würde bei `NULL` korrekt
-`PayoutUnbekannt("provision")` werfen, nur kommt dort nie `NULL` an.
+Die Spalte war `numeric not null default 0`. Wer einen Eigentümer anlegte, ohne
+einen Satz einzugeben, bekam still 0 % Provision — der Eigentümer erhielt
+100 %, der Betrieb nichts. Live reproduziert am Betrieb AirSmil, Eigentümer
+„Andy Staudinger", 8 Booking-Buchungen: Gesamt-Auszahlung 32.120,45 DKK,
+Eigentümer-Auszahlung 32.120,45 DKK, **Verwaltungs-Auszahlung 0,00 DKK**.
 
-Nicht in dieser Etappe gefixt, weil sich die vorhandene `0` nicht deuten lässt
-— sie kann „bewusst 0 % vereinbart" **oder** „nie ausgefüllt" heißen; ein
-pauschales `update … set … = null where … = 0` zerstörte bewusste Nullsätze.
-Die Bereinigung gehört an den Umstieg und läuft in drei Schritten, **ohne eine
-einzige Bestandszeile zu ändern**:
+**Migration 0349** macht den Zustand „nicht vereinbart" darstellbar
+(`drop not null`, `drop default`) und ändert **keine einzige Bestandszeile** —
+eine vorhandene `0` bleibt eine `0` und rechnet unverändert weiter, weil sie
+„bewusst 0 % vereinbart" heißen kann. NULL entsteht nur dort, wo ab jetzt
+bewusst nichts eingetragen wird.
+
+Damit ist `common.effektive_provision_pct` erstmals wirksam: bei NULL wirft es
+`PayoutUnbekannt("provision")`. `_commission_map` fängt das nicht mehr ab
+(dort stand bis 09.08.2026 ein `pct = Decimal("0")`), sondern lässt das Objekt
+aus der Karte fallen; die Auszahlungs-Zahlen der betroffenen Abrechnung sind
+dann `None` + `payout_unbekannt="provision"`, und die Oberfläche zeigt „—"
+samt Hinweis, WO der Satz zu pflegen ist. `owner_statements.owner_payout`
+wurde dafür ebenfalls nullable (dieselbe Migration): 0346 hatte es noch als
+„immer berechenbar" eingestuft — das galt nur, solange der fehlende Satz
+still als 0 % durchging.
+
+Die Deutung der ALTBESTANDS-Nullen bleibt wie geplant Sache des Umstiegs und
+läuft in drei Schritten, **ohne eine einzige Bestandszeile zu ändern**:
 
 1. `owner_billing_terms` wird führend. Dort ist `provisions_pct` `not null`
    ohne Default — die Lücke kann gar nicht erst entstehen.

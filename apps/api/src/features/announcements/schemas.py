@@ -10,6 +10,7 @@ durch das rohes HTML einläuft.
 from __future__ import annotations
 
 import re
+from datetime import UTC, date, datetime, time
 from enum import StrEnum
 
 import nh3
@@ -19,6 +20,9 @@ from src.core.supabase import public_storage_url
 
 # Bucket der Screenshots (0338). Auch vom Service für Upload/Aufräumen genutzt.
 BILD_BUCKET = "announcement-images"
+
+# Ein reines Datum ohne Uhrzeit, wie es `<input type="date">` liefert.
+_NUR_DATUM = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 # Eigene Allowlist statt Import aus site_config: die Slice-Grenze ist Absicht.
 # DIVERGENZ-HINWEIS: site_config._RICH_TEXT_TAGS ist fast identisch, kennt aber
@@ -127,6 +131,51 @@ def sanitize_inhalt(value: str | None) -> str:
     return _leere_bilder_entfernen(sauber) if "<img" in sauber else sauber
 
 
+def normalisiere_gueltig_bis(value: str | None) -> str | None:
+    """„Popup nur bis" auf das ENDE des genannten Tages legen.
+
+    Das Backoffice-Formular ist ein `<input type="date">` und schickt deshalb
+    ein reines Datum (`2026-08-09`). Postgres castet das zu MITTERNACHT — und
+    Mitternacht ist der ANFANG des Tages, nicht sein Ende. Die Folge war ein
+    Feld, das das Gegenteil seiner Beschriftung tat: „gültig bis heute"
+    bedeutete „seit heute früh abgelaufen", das Popup war nie zu sehen. Genau
+    so verschwand die erste echte Ankündigung (gueltig_bis = 2026-08-09
+    00:00:00+00, gesetzt am selben Tag um 09:52 — bereits ~10 Stunden tot).
+
+    Ein reines Datum wird deshalb auf `23:59:59.999999+00` desselben Tages
+    gehoben: der gewählte Tag zählt vollständig mit, wie die Beschriftung
+    („begrenzt das Popup tageweise") es zusagt.
+
+    Ein Wert MIT Uhrzeit bleibt unangetastet — wer eine Uhrzeit angibt, meint
+    sie auch. Unlesbares wird abgelehnt (422) statt still auf einen
+    Ersatzwert zu fallen (Wurzel 4/5): ein stumm verworfenes Ablaufdatum
+    hieße, das Popup läuft unbegrenzt.
+    """
+    if value is None:
+        return None
+    roh = value.strip()
+    if not roh:
+        # Leerstring = bewusstes Leeren des Feldes → „unbegrenzt".
+        return None
+    if _NUR_DATUM.fullmatch(roh):
+        try:
+            tag = date.fromisoformat(roh)
+        except ValueError as exc:
+            raise ValueError(f"Kein gültiges Datum: {roh!r}") from exc
+        return datetime.combine(
+            tag, time(23, 59, 59, 999999), tzinfo=UTC
+        ).isoformat()
+    try:
+        gelesen = datetime.fromisoformat(roh.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"Kein gültiger Zeitpunkt: {roh!r}") from exc
+    # Naiv angegebene Uhrzeit als UTC deuten — sonst vergleicht der Service
+    # später aware gegen naive und wirft TypeError.
+    if gelesen.tzinfo is None:
+        gelesen = gelesen.replace(tzinfo=UTC)
+    return gelesen.isoformat()
+
+
 class AnnouncementStatus(StrEnum):
     """Lebenszyklus einer Ankündigung (Spiegel des CHECK in 0337)."""
 
@@ -219,6 +268,9 @@ class AnnouncementCreate(BaseModel):
     gueltig_bis: str | None = None
 
     _v_inhalt = field_validator("inhalt_html")(sanitize_inhalt)
+    # Reines Datum → Tagesende. Ohne das begrenzt „gültig bis heute" das Popup
+    # auf einen bereits vergangenen Moment (Mitternacht).
+    _v_gueltig_bis = field_validator("gueltig_bis")(normalisiere_gueltig_bis)
 
 
 class AnnouncementUpdate(BaseModel):
@@ -235,6 +287,11 @@ class AnnouncementUpdate(BaseModel):
     als_popup: bool | None = None
     gueltig_bis: str | None = None
 
+    # Derselbe Validator wie beim Anlegen — läge er nur am POST, käme über
+    # PATCH wieder ein Mitternachts-Wert herein (dieselbe Begründung wie bei
+    # `inhalt_html`).
+    _v_gueltig_bis = field_validator("gueltig_bis")(normalisiere_gueltig_bis)
+
     @field_validator("inhalt_html")
     @classmethod
     def _v_inhalt(cls, v: str | None) -> str | None:
@@ -247,6 +304,68 @@ class BildResponse(BaseModel):
     """Antwort des Upload-Endpunkts: die URL, die der Editor ins <img> setzt."""
 
     url: str
+
+
+# === Übersetzungen (0347) ===================================================
+class AnnouncementUebersetzung(BaseModel):
+    """Eine Fassung in EINER Sprache.
+
+    `geprueft` ist das tragende Feld: true heißt, ein Mensch hat sie im
+    Backoffice bearbeitet und verantwortet sie — kein automatischer Lauf fasst
+    sie danach noch an (0347).
+
+    `veraltet` steht bewusst NICHT in der DB, sondern wird beim Lesen aus dem
+    Vergleich `quelle_hash != aktueller Hash des Originals` errechnet. Als
+    gespeicherte Spalte wäre es ein zweiter Wahrheitsträger, der bei jeder
+    Textänderung an 24 Zeilen nachgezogen werden müsste — und beim ersten
+    vergessenen Nachziehen stünde „aktuell" an einer veralteten Fassung.
+    """
+
+    sprache: str
+    titel: str
+    kurztext: str | None = None
+    inhalt_html: str = ""
+    geprueft: bool = False
+    geprueft_am: str | None = None
+    # true = das Original wurde geändert, seit diese Fassung entstand.
+    veraltet: bool = False
+
+
+class UebersetzungsUebersicht(BaseModel):
+    """Backoffice-Blick auf den Sprachstand einer Ankündigung.
+
+    `fehlend` ist die Liste der Sprachen OHNE Fassung — sie wird ausgegeben,
+    statt sie das Frontend aus 24 minus vorhandene errechnen zu lassen. Sonst
+    stünde die Sprachliste im Frontend ein zweites Mal und liefe beim
+    Hinzufügen einer Sprache auseinander.
+    """
+
+    items: list[AnnouncementUebersetzung] = Field(default_factory=list)
+    fehlend: list[str] = Field(default_factory=list)
+    # Sprachen, deren Fassung geprüft ist, aber nicht mehr zum aktuellen
+    # Original passt. Der Redakteur muss sie ansehen; überschrieben werden sie
+    # NICHT (das ist der Sinn von `geprueft`).
+    veraltet: list[str] = Field(default_factory=list)
+
+
+class UebersetzungUpdate(BaseModel):
+    """Backoffice: eine Fassung von Hand korrigieren.
+
+    Jedes Schreiben über diesen Weg setzt `geprueft = true` — das ist nicht
+    optional. Wer eine Fassung anfasst, verantwortet sie ab diesem Moment, und
+    genau daran hängt der Schutz vor dem nächsten Übersetzungslauf. Ein
+    Schalter „ja, aber trotzdem überschreibbar" wäre eine Falle: er sähe nach
+    einer Feinheit aus und hebelte die einzige Garantie aus, die dieser Slice
+    gibt.
+    """
+
+    titel: str = Field(min_length=1, max_length=200)
+    kurztext: str | None = Field(default=None, max_length=500)
+    inhalt_html: str = ""
+
+    # Dieselbe Allowlist wie beim Original — eine korrigierte Fassung geht
+    # denselben Weg ins Dashboard und darf kein zweites, laxeres Tor haben.
+    _v_inhalt = field_validator("inhalt_html")(sanitize_inhalt)
 
 
 class SliceHealth(BaseModel):

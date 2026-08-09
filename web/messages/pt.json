@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Atribuir propriedades} one {Atribuir # propriedade} other {Atribuir # propriedades}}",
     "propertiesAssigned": "{count, plural, one {# propriedade atribuída} other {# propriedades atribuídas}}",
     "removeProperty": "Remover atribuição",
+    "shareInvalid": "Introduza uma quota entre 0 e 100.",
     "sections": {
       "master": "Dados mestre",
       "payout": "Pagamento e comissão",
@@ -998,7 +999,7 @@
       "statementFrequency": "Periodicidade do extrato",
       "notes": "Notas",
       "share": "Quota (%)",
-      "commissionOverride": "Comissão (%) diferente",
+      "commissionOverride": "Comissão (%)",
       "emailLanguage": "Idioma dos e-mails"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "É necessário um endereço de e-mail para o acesso ao portal.",
     "portalAccessInvite": "Enviar convite",
     "portalAccessInvited": "Convite enviado.",
-    "portalAccessActive": "O acesso ao portal está configurado."
+    "portalAccessActive": "O acesso ao portal está configurado.",
+    "commissionNotAgreed": "não acordado",
+    "assignableCount": "{count} de {total} selecionados para adicionar",
+    "assignedHeading": "{count, plural, one {# objeto atribuído} other {# objetos atribuídos}}",
+    "info": {
+      "aria": "Explicação de {feld}",
+      "share": "A quota de propriedade neste objeto. Com 100 %, o pagamento integral é atribuído a este proprietário; com menos, na proporção correspondente.",
+      "commission": "A taxa de comissão padrão para este proprietário. Se o campo ficar vazio, ainda não há nenhuma taxa acordada — o pagamento não é então calculado, mas apresentado como um travessão.",
+      "commissionOverride": "Aplica-se apenas a este objeto e substitui a taxa padrão do proprietário. Se o campo ficar vazio, aplica-se a taxa padrão."
+    }
   },
   "ownerStatements": {
     "title": "Extratos de proprietário",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Estados da reserva",
       "statusCount": "{count} estados",
-      "title": "Filtros"
+      "title": "Filtros",
+      "resetAll": "Repor todos os filtros",
+      "remove": "Repor {feld}",
+      "statusesNone": "Nenhum selecionado",
+      "statusesSearch": "Procurar estado …",
+      "statusesNoMatch": "Nenhum estado encontrado.",
+      "statusesSelectAll": "Selecionar tudo",
+      "statusesCount": "{count} de {total} selecionados"
     },
     "reservationStatus": {
       "pending": "Pendente",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Rascunho",
-      "finalized": "Finalizado"
+      "finalized": "Finalizado",
+      "cancelled": "Anulada"
     },
     "sections": {
       "data": "Dados",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Preço total",
       "totalPayout": "Pagamento total",
       "ownerPayout": "Pagamento ao proprietário",
-      "pmPayout": "Pagamento à administração"
+      "pmPayout": "Pagamento à administração",
+      "commissionMissing": "Não está definida uma taxa de comissão para pelo menos um imóvel. Por isso, os pagamentos não podem ser calculados — introduza a taxa nos dados do proprietário ou no imóvel."
     },
     "rental": {
       "perReservation": "Por reserva",
@@ -1136,13 +1155,28 @@
       "reservation": "Reserva",
       "owner": "Proprietário",
       "hideAll": "Ocultar tudo",
-      "assignOwner": "Atribuir ao proprietário"
+      "assignOwner": "Atribuir ao proprietário",
+      "intro": "Montantes pagos adicionalmente ao proprietário ou debitados ao mesmo. São considerados na íntegra no pagamento, sem dedução de comissão.",
+      "direction": "Sentido",
+      "toOwner": "A favor do proprietário",
+      "toOwnerHint": "Recebe um pagamento adicional, p. ex. compensação por danos.",
+      "toOwnerShort": "A favor",
+      "fromOwner": "A cargo do proprietário",
+      "fromOwnerHint": "É deduzido do seu pagamento, p. ex. material e horas de trabalho.",
+      "fromOwnerShort": "A cargo",
+      "sumToOwner": "Total a favor:",
+      "sumFromOwner": "Total a cargo:",
+      "receipt": "Comprovativo",
+      "openReceipt": "Abrir comprovativo",
+      "createdBy": "Registado por {name}",
+      "saveFirst": "As rubricas de compensação pertencem a um extrato guardado. Guarda o extrato e, em seguida, podes registar rubricas aqui.",
+      "missingFields": "Ainda falta preencher: {felder}."
     },
     "grand": {
       "rentalRevenue": "Receita de arrendamento",
       "expenses": "Despesas e extras",
       "total": "Total",
-      "deductPercentage": "Deduzir percentagem (%)"
+      "deductPercentage": "Comissão (%)"
     },
     "manage": {
       "owner": "Proprietário",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Editar",
     "attachments": {
-      "drop": "Largue os ficheiros para carregar ou Procurar"
+      "drop": "Largue os ficheiros para carregar ou Procurar",
+      "viaExpenses": "Os comprovativos ficam associados a cada rubrica: carrega-os em «Despesas e extras», diretamente na respetiva linha."
     },
     "masterData": "Dados mestre",
     "preview": "Pré-visualização",
     "previewTitle": "Pré-visualização do documento",
-    "close": "Fechar"
+    "close": "Fechar",
+    "info": {
+      "aria": "Explicação de {feld}",
+      "totalPrice": "O que o hóspede pagou no total pela sua estadia — antes da dedução das taxas dos portais e da comissão.",
+      "totalPayout": "O que chega à empresa após a dedução das taxas dos portais. É a partir deste montante que se formam a parte do proprietário e a da administração.",
+      "ownerPayout": "A parte que é paga ao proprietário: o pagamento total menos a comissão, mais as rubricas de compensação.",
+      "pmPayout": "A parte que fica na empresa — a comissão sobre o arrendamento. As rubricas de compensação não estão aqui incluídas.",
+      "expenses": {
+        "title": "A favor e a cargo",
+        "direction": "«A favor do proprietário» aumenta o seu pagamento, por exemplo um reembolso. «A cargo do proprietário» reduz-o, por exemplo material ou horas de trabalho da empresa.",
+        "noCommission": "Estes montantes são considerados na íntegra no pagamento — sobre eles não é cobrada qualquer comissão.",
+        "aria": "Explicação das rubricas de compensação"
+      },
+      "dash": {
+        "title": "O que significa o travessão",
+        "meaning": "Um travessão significa «não registado» — e não «zero». O valor não pode ser calculado porque falta uma indicação.",
+        "whereToFix": "Se faltar a taxa de comissão, introduz-a nos dados do proprietário ou como taxa diferente no objeto em causa.",
+        "aria": "Explicação do travessão em vez de um montante",
+        "inline": "Um travessão representa um valor em falta, não 0,00."
+      },
+      "deductPercentage": "A taxa de comissão com que este acerto de contas calcula. Vazio significa: aplica-se a taxa dos dados-mestre do proprietário ou a taxa divergente definida no objeto individual.",
+      "status": {
+        "title": "Os três estados de um acerto de contas",
+        "draft": "Rascunho: ainda alterável. Os montantes são recalculados a cada alteração.",
+        "finalized": "Finalizado: número de fatura atribuído, totais congelados. Já não são possíveis alterações.",
+        "cancelled": "Cancelado: anulado através de uma fatura de anulação. A fatura original mantém-se como comprovativo."
+      },
+      "finalize": {
+        "title": "Finalizar o acerto de contas",
+        "what": "Ao finalizar, o número de fatura é atribuído e todos os totais são congelados como comprovativo.",
+        "irreversible": "Isto não pode ser anulado. Uma fatura finalizada só pode ser anulada através de uma fatura de anulação."
+      },
+      "basis": "Define quando uma reserva entra no período: com Check-in pelo dia de chegada, com Check-out pelo dia de partida. Uma reserva que atravessa a mudança de mês fica num mês ou no outro consoante a escolha.",
+      "statuses": "Só as reservas com um dos estados selecionados são liquidadas. Por predefinição são as reservas confirmadas e concluídas — as canceladas normalmente não pertencem a um pagamento."
+    }
   },
   "ownerBilling": {
     "title": "Contrato de faturação",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Sujeito a comissão",
     "commissionableYes": "Sim — entra no cálculo da comissão",
-    "commissionableNo": "Não — isento de comissão"
+    "commissionableNo": "Não — isento de comissão",
+    "infoAria": "Explicação de {feld}"
   },
   "portal": {
     "title": "O meu portal",

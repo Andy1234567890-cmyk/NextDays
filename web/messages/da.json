@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Tildel objekter} one {Tildel # objekt} other {Tildel # objekter}}",
     "propertiesAssigned": "{count, plural, one {# objekt tildelt} other {# objekter tildelt}}",
     "removeProperty": "Fjern tildeling",
+    "shareInvalid": "Angiv en andel mellem 0 og 100.",
     "sections": {
       "master": "Stamdata",
       "payout": "Udbetaling & provision",
@@ -998,7 +999,7 @@
       "statementFrequency": "Afregningsrytme",
       "notes": "Noter",
       "share": "Andel (%)",
-      "commissionOverride": "Provision (%) afv.",
+      "commissionOverride": "Provision (%)",
       "emailLanguage": "Sprog til e-mails"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Der kræves en e-mailadresse til portaladgang.",
     "portalAccessInvite": "Send invitation",
     "portalAccessInvited": "Invitation sendt.",
-    "portalAccessActive": "Portaladgang er oprettet."
+    "portalAccessActive": "Portaladgang er oprettet.",
+    "commissionNotAgreed": "ikke aftalt",
+    "assignableCount": "{count} af {total} valgt til tilføjelse",
+    "assignedHeading": "{count, plural, one {# tildelt objekt} other {# tildelte objekter}}",
+    "info": {
+      "aria": "Forklaring til {feld}",
+      "share": "Ejerandelen i dette objekt. Ved 100 % henføres hele udbetalingen til denne ejer, ved mindre tilsvarende forholdsmæssigt.",
+      "commission": "Standardprovisionssatsen for denne ejer. Hvis feltet står tomt, er der endnu ikke aftalt nogen sats — udbetalingen beregnes så ikke, men vises som en tankestreg.",
+      "commissionOverride": "Gælder kun for dette ene objekt og tilsidesætter ejerens standardsats. Hvis feltet står tomt, gælder standardsatsen."
+    }
   },
   "ownerStatements": {
     "title": "Ejerafregninger",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-ud",
       "statuses": "Reservationsstatusser",
       "statusCount": "{count} status(ser)",
-      "title": "Filtre"
+      "title": "Filtre",
+      "resetAll": "Nulstil alle filtre",
+      "remove": "Nulstil {feld}",
+      "statusesNone": "Ingen valgt",
+      "statusesSearch": "Søg status …",
+      "statusesNoMatch": "Ingen status fundet.",
+      "statusesSelectAll": "Vælg alle",
+      "statusesCount": "{count} af {total} valgt"
     },
     "reservationStatus": {
       "pending": "Åben",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Kladde",
-      "finalized": "Finaliseret"
+      "finalized": "Finaliseret",
+      "cancelled": "Annulleret"
     },
     "sections": {
       "data": "Data",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Samlet pris",
       "totalPayout": "Samlet udbetaling",
       "ownerPayout": "Ejerudbetaling",
-      "pmPayout": "Administrationsudbetaling"
+      "pmPayout": "Administrationsudbetaling",
+      "commissionMissing": "Der er ikke angivet en provisionssats for mindst én ejendom. Udbetalingerne kan derfor ikke beregnes — angiv satsen i ejerens stamdata eller på ejendommen."
     },
     "rental": {
       "perReservation": "Pr. reservation",
@@ -1136,13 +1155,28 @@
       "reservation": "Reservation",
       "owner": "Ejer",
       "hideAll": "Skjul alle",
-      "assignOwner": "Tildel til ejer"
+      "assignOwner": "Tildel til ejer",
+      "intro": "Beløb, der udbetales ekstra til ejeren, eller som modregnes hos ejeren. De indgår fuldt ud i udbetalingen — uden fradrag af provision.",
+      "direction": "Retning",
+      "toOwner": "Til fordel for ejeren",
+      "toOwnerHint": "Ejeren får udbetalt ekstra, f.eks. skadeskompensation.",
+      "toOwnerShort": "Til fordel",
+      "fromOwner": "Modregnes hos ejeren",
+      "fromOwnerHint": "Trækkes fra udbetalingen, f.eks. materialer og arbejdstid.",
+      "fromOwnerShort": "Modregnes",
+      "sumToOwner": "I alt til fordel:",
+      "sumFromOwner": "I alt modregnet:",
+      "receipt": "Bilag",
+      "openReceipt": "Åbn bilag",
+      "createdBy": "Registreret af {name}",
+      "saveFirst": "Modregningsposter hører til en gemt afregning. Gem afregningen, derefter kan du registrere poster her.",
+      "missingFields": "Mangler stadig at blive udfyldt: {felder}."
     },
     "grand": {
       "rentalRevenue": "Lejeindtægter",
       "expenses": "Udgifter & ekstra",
       "total": "I alt",
-      "deductPercentage": "Fratræk provision (%)"
+      "deductPercentage": "Provision (%)"
     },
     "manage": {
       "owner": "Ejer",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Rediger",
     "attachments": {
-      "drop": "Slip filer for at uploade, eller gennemse"
+      "drop": "Slip filer for at uploade, eller gennemse",
+      "viaExpenses": "Bilag hører til den enkelte post: upload dem under „Udgifter & ekstra“ direkte på den pågældende linje."
     },
     "masterData": "Stamdata",
     "preview": "Forhåndsvisning",
     "previewTitle": "Bilagsforhåndsvisning",
-    "close": "Luk"
+    "close": "Luk",
+    "info": {
+      "aria": "Forklaring til {feld}",
+      "totalPrice": "Hvad gæsten samlet har betalt for sit ophold — før fradrag af portalgebyrer og provision.",
+      "totalPayout": "Hvad der kommer ind hos virksomheden efter fradrag af portalgebyrerne. Ud fra dette beløb dannes ejerens og administrationens andel.",
+      "ownerPayout": "Den andel, der udbetales til ejeren: den samlede udbetaling minus provision, plus modregningsposterne.",
+      "pmPayout": "Den andel, der bliver hos virksomheden — provisionen af udlejningen. Modregningsposter indgår ikke her.",
+      "expenses": {
+        "title": "Til fordel og modregnet",
+        "direction": "„Til fordel for ejeren“ øger hans udbetaling, for eksempel en godtgørelse. „Modregnes hos ejeren“ mindsker den, for eksempel materialer eller virksomhedens arbejdstid.",
+        "noCommission": "Disse beløb indgår fuldt ud i udbetalingen — der beregnes ingen provision af dem.",
+        "aria": "Forklaring til modregningsposter"
+      },
+      "dash": {
+        "title": "Hvad tankestregen betyder",
+        "meaning": "En tankestreg betyder „ikke registreret“ — ikke „nul“. Værdien kan ikke beregnes, fordi en oplysning mangler.",
+        "whereToFix": "Mangler provisionssatsen, så angiv den i ejerens stamdata eller som afvigende sats på det enkelte objekt.",
+        "aria": "Forklaring til tankestregen i stedet for et beløb",
+        "inline": "En tankestreg står for en manglende værdi, ikke for 0,00."
+      },
+      "deductPercentage": "Den provisionssats, denne afregning regner med. Tom betyder: satsen fra ejerens stamdata gælder, eller den afvigende sats på det enkelte objekt.",
+      "status": {
+        "title": "En afregnings tre tilstande",
+        "draft": "Kladde: kan stadig ændres. Beløbene beregnes på ny ved hver ændring.",
+        "finalized": "Finaliseret: fakturanummer tildelt, summer låst. Ændringer er ikke længere mulige.",
+        "cancelled": "Annulleret: ophævet ved en kreditnota. Den oprindelige faktura bevares som bilag."
+      },
+      "finalize": {
+        "title": "Finaliser afregning",
+        "what": "Ved finalisering tildeles fakturanummeret, og alle summer låses som bilag.",
+        "irreversible": "Det kan ikke fortrydes. En finaliseret faktura kan kun ophæves ved en kreditnota."
+      },
+      "basis": "Bestemmer, hvornår en booking falder i perioden: ved Check-in efter ankomstdagen, ved Check-ud efter afrejsedagen. En booking hen over månedsskiftet lander i den ene eller den anden måned alt efter valget.",
+      "statuses": "Kun bookinger med en af de valgte statusser bliver afregnet. Standard er bekræftede og afsluttede bookinger — annullerede hører normalt ikke til i en udbetaling."
+    }
   },
   "ownerBilling": {
     "title": "Afregningsaftale",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Provisionspligtigt",
     "commissionableYes": "Ja — indgår i provisionen",
-    "commissionableNo": "Nej — provisionsfrit"
+    "commissionableNo": "Nej — provisionsfrit",
+    "infoAria": "Forklaring til {feld}"
   },
   "portal": {
     "title": "Min portal",

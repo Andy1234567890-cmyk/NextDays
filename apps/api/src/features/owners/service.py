@@ -137,11 +137,23 @@ class OwnersService:
         # Objekt-Anzahl + effektive Provisions-Spanne je Eigentümer in einem
         # Rutsch (kein N+1). Effektiv = Override je Objekt, sonst Owner-Default.
         owner_ids = [str(r["id"]) for r in rows]
-        default_by_owner = {
-            str(r["id"]): float(r.get("default_commission_pct") or 0) for r in rows
+        # `or 0` stand hier bis 09.08.2026 und machte den FEHLENDEN Satz zu
+        # einer 0, die als „0 %" in der Spanne landete. NULL bleibt jetzt NULL.
+        default_by_owner: dict[str, float | None] = {
+            str(r["id"]): (
+                float(r["default_commission_pct"])
+                if r.get("default_commission_pct") is not None
+                else None
+            )
+            for r in rows
         }
         counts: dict[str, int] = {oid: 0 for oid in owner_ids}
         eff_by_owner: dict[str, list[float]] = {oid: [] for oid in owner_ids}
+        # Objekte, deren effektiver Satz WEDER am Objekt NOCH am Eigentümer
+        # steht. Sie dürfen nicht in die Spanne einfließen (das wäre wieder die
+        # erfundene 0), müssen aber sichtbar bleiben — sonst zeigte die Karte
+        # eine saubere Spanne und verschwiege, dass ein Teil ungeklärt ist.
+        offen_by_owner: dict[str, int] = {oid: 0 for oid in owner_ids}
         if owner_ids:
             links = (
                 self._db.table("owner_properties")
@@ -156,8 +168,11 @@ class OwnersService:
                 eff = (
                     float(override)
                     if override is not None
-                    else default_by_owner.get(oid, 0.0)
+                    else default_by_owner.get(oid)
                 )
+                if eff is None:
+                    offen_by_owner[oid] = offen_by_owner.get(oid, 0) + 1
+                    continue
                 eff_by_owner.setdefault(oid, []).append(eff)
         items = [
             OwnerListItem(
@@ -173,6 +188,7 @@ class OwnersService:
                     if eff_by_owner.get(str(r["id"]))
                     else None
                 ),
+                commission_missing_count=offen_by_owner.get(str(r["id"]), 0),
             )
             for r in rows
         ]
@@ -883,7 +899,16 @@ def _owner_row(r: dict) -> dict:
         "bic": r.get("bic"),
         "bank_name": r.get("bank_name"),
         "account_holder": r.get("account_holder"),
-        "default_commission_pct": float(r.get("default_commission_pct") or 0),
+        # `or 0` stand hier bis 09.08.2026 und machte aus einem FEHLENDEN Satz
+        # eine 0, die der Client nicht mehr von einer vereinbarten 0 %
+        # unterscheiden konnte — die Maske zeigte „0 %", wo nichts vereinbart
+        # war (Wurzel 4). NULL bleibt jetzt NULL; die UI zeigt dafür ein leeres
+        # Feld mit Hinweis statt einer erfundenen Zahl.
+        "default_commission_pct": (
+            float(r["default_commission_pct"])
+            if r.get("default_commission_pct") is not None
+            else None
+        ),
         "default_payout_method": r.get("default_payout_method"),
         "statement_frequency": r.get("statement_frequency") or "none",
         "notes": r.get("notes"),

@@ -77,11 +77,16 @@ export function AnkuendigungPopup() {
     // Absichtlich einmalig: „einmal pro Sitzung" ist genau diese Semantik.
   }, []);
 
-  // Autofokus auf den Bestätigungsknopf — er ist der einzige Ausweg und muss
-  // deshalb sofort erreichbar sein (siehe Esc-Kommentar unten).
-  useEffect(() => {
-    if (aktuell) bestaetigenRef.current?.focus();
-  }, [aktuell]);
+  // Der Fokus beim Öffnen wird NICHT hier gesetzt, sondern in
+  // `onOpenAutoFocus` am DialogContent. Grund: Radix setzt den Startfokus
+  // selbst, und zwar NACH dem Effekt — ein `focus()` aus einem `useEffect`
+  // heraus verliert dieses Rennen. Real gemessen landete der Fokus dadurch
+  // auf dem scrollbaren Textbereich (dem ersten fokussierbaren Element im
+  // Dialog), der daraufhin den blauen Standardring des Browsers zeigte.
+  //
+  // Beim WECHSEL innerhalb der Kette greift `onOpenAutoFocus` nicht (der
+  // Dialog bleibt ja offen) — dort ist der Fokus aber ohnehin schon auf dem
+  // Knopf, der den Wechsel ausgelöst hat.
 
   const bestaetigen = useCallback(async () => {
     if (!aktuell || speichert) return;
@@ -133,22 +138,53 @@ export function AnkuendigungPopup() {
     <Dialog open>
       <DialogContent
         showCloseButton={false}
-        className="max-h-[85vh] max-w-2xl overflow-hidden p-0"
-        aria-describedby={undefined}
-        // Esc und Overlay-Klick sind gesperrt, weil sie sonst am
-        // Quittierungspfad vorbei schließen würden — die Ankündigung wäre
-        // weggeklickt und käme beim nächsten Login wieder.
+        // Höhe (`max-h-[90dvh]`) und Spalten-Flex kommen aus DialogContent —
+        // hier NICHT wiederholen. Zwei Höhenangaben auf zwei Ebenen waren der
+        // Grund, warum der Fuß aus dem Fenster rutschen konnte.
         //
-        // Das ist KEIN Keyboard-Trap nach WCAG 2.1.2: der Ausweg ist genau
-        // einen Tastendruck weit entfernt (der Bestätigungsknopf hat beim
-        // Öffnen den Fokus, Enter/Leertaste schließt). Bitte nicht als Bug
-        // „reparieren" — ohne diese Sperre ist das Feature offen wie ein
-        // Scheunentor.
+        // `overflow-hidden` überschreibt bewusst das `overflow-y-auto` des
+        // Dialogs: dieser Popup hat einen EIGENEN Scrollbereich (der Textteil).
+        // Ohne das gäbe es zwei ineinander liegende Scrollbalken, und der
+        // äußere würde den Fuß wegscrollen, statt ihn stehen zu lassen.
+        className="max-w-2xl overflow-hidden p-0"
+        aria-describedby={undefined}
+        // Startfokus auf den Bestätigungsknopf statt auf das erste
+        // fokussierbare Element (das ist der scrollbare Textbereich — er bekam
+        // dadurch sichtbar den Fokusring, obwohl niemand ihn angesteuert hat).
+        // Der Knopf ist der Ausweg aus dem Dialog und damit die richtige
+        // Startposition; der Textbereich bleibt per Tab erreichbar.
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          bestaetigenRef.current?.focus();
+        }}
+        // Overlay-Klick UND Escape bleiben gesperrt: beides würde die
+        // Ankündigung ungelesen wegwischen. Quittieren ist endgültig — der
+        // Server liefert eine quittierte Ankündigung nie wieder aus. Eine
+        // versehentlich gedrückte Escape-Taste (der Reflex, mit dem man jedes
+        // Modal schließt) darf deshalb NICHT dasselbe auslösen wie der bewusste
+        // Klick auf „Verstanden"; sonst ist der Inhalt für diesen Nutzer
+        // dauerhaft verloren, ohne dass er ihn je gesehen hat.
+        //
+        // Das ist KEIN Keyboard-Trap nach WCAG 2.1.2: der Ausweg ist einen
+        // Tastendruck weit entfernt — der Bestätigungsknopf hat beim Öffnen den
+        // Fokus (`onOpenAutoFocus` oben), Enter/Leertaste quittiert und
+        // schließt. Der Knopf ist bei knapper Fensterhöhe auch wirklich
+        // erreichbar: der Fuß ist `shrink-0` in einer auf `max-h-[90dvh]`
+        // begrenzten Flex-Spalte, gemessen bei 700px UND 500px Fensterhöhe.
+        // Bitte nicht als Bug „reparieren" — ohne diese Sperre ist das Feature
+        // offen wie ein Scheunentor.
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <div className="neuerungen-flaeche flex max-h-[85vh] flex-col bg-background text-foreground">
+        {/* Diese Fläche erbt ihre Höhe vom Dialog (Flex-Item in dessen Spalte)
+            und gibt sie als eigene Spalte an Kopf/Text/Fuß weiter. `min-h-0`
+            ist hier PFLICHT: die Default-Mindesthöhe eines Flex-Items ist
+            `auto` = Inhaltshöhe. Ohne das wächst die Fläche auf die volle
+            Textlänge (real gemessen: 2826px bei 700px Fenster) und schiebt den
+            Fuß aus dem Bild, statt dass der Text in der Mitte scrollt.
+            Bewusst KEINE eigene `max-h` — die Höhe gehört dem Dialog. */}
+        <div className="neuerungen-flaeche flex min-h-0 flex-1 flex-col bg-background text-foreground">
           <div className="shrink-0 space-y-3 border-b border-border px-6 pb-5 pt-6">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
@@ -168,10 +204,21 @@ export function AnkuendigungPopup() {
 
           {/* Scrollbarer Inhalt: fokussierbar + benannt, damit er auch per
               Tastatur gescrollt werden kann (sonst ist langer Text für
-              Tastaturnutzer unerreichbar). `aria-live` meldet den Wechsel
-              innerhalb der Kette, ohne den Fokus zu verschieben. */}
+              Tastaturnutzer unerreichbar). `tabIndex` bleibt deshalb — es zu
+              entfernen wäre ein Barrierefreiheits-Rückschritt.
+              `aria-live` meldet den Wechsel innerhalb der Kette, ohne den
+              Fokus zu verschieben.
+
+              `focus-visible:` statt `focus:`: der Browser-Standardring
+              erschien bei JEDEM Fokus, also auch bei reiner Mausbedienung —
+              als blauer Rahmen um den Textblock, den niemand angefordert hat.
+              `focus-visible` zeigt ihn nur bei Tastaturnutzung, also genau
+              dann, wenn er die Orientierung trägt. Der Ring nutzt das
+              semantische `ring`-Token statt Chrome-Blau; `outline-none` allein
+              (ohne Ersatz) wäre der falsche Weg — dann sähe ein
+              Tastaturnutzer gar nicht mehr, wo er steht. */}
           <div
-            className="min-h-0 flex-1 overflow-y-auto px-6 py-5"
+            className="min-h-0 flex-1 overflow-y-auto px-6 py-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
             tabIndex={0}
             role="region"
             aria-label={t("popup.ariaLabel")}

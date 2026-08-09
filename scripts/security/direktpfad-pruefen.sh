@@ -82,6 +82,7 @@ TABELLEN=(
   tenants tenant_custom_domains tenant_onboarding
   staff_property_assignments owner_property_assignments
   jobs ari_outbox ari_restriction_outbox support_diagnostics
+  announcements announcement_reads announcement_translations
   schema_migrations
 )
 

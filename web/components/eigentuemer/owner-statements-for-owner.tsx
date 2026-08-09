@@ -50,6 +50,25 @@ export function OwnerStatementsForOwner({
     setList(statements);
   }, [statements]);
   const [masterOpen, setMasterOpen] = useState(false);
+  // Die Objekte, die diesem Eigentümer WIRKLICH gehören.
+  //
+  // `properties` kommt aus `/owners/{id}/available-properties` und heißt
+  // „zuordenbar": seine Objekte PLUS alle herrenlosen des Betriebs. Für den
+  // Zuordnungs-Dialog ist genau das richtig, für die ABRECHNUNG ist es falsch
+  // — ein Verrechnungsposten oder ein Vertrag auf einem fremden (nur gerade
+  // freien) Objekt verrechnet Kosten, die nichts mit dieser Auszahlung zu tun
+  // haben, und zieht über `properties.currency` sogar eine fremde Währung in
+  // die Abrechnung. Maßgeblich ist deshalb `owner.properties`
+  // (= `owner_properties`, die echte Zuordnung), nicht die Auswahlliste.
+  //
+  // Die Titel stammen weiterhin aus `properties`: dort stehen sie, und
+  // `owner.properties` trägt nur IDs. Fehlt ein Titel, steht die ID da — sie
+  // ist unschön, aber wahr; ein erfundener Platzhalter wäre es nicht (Wurzel 4).
+  const titelById = new Map(properties.map((p) => [p.id, p.title]));
+  const eigeneObjekte: PropOption[] = owner.properties.map((l) => ({
+    id: l.property_id,
+    title: titelById.get(l.property_id) ?? l.property_id,
+  }));
   const previewLoaded = useRef(false);
   // current in einer ref spiegeln, damit der Realtime-Callback den aktuellen
   // Stand sieht (kein Stale-Closure), ohne das Abo neu aufzubauen.
@@ -102,6 +121,8 @@ export function OwnerStatementsForOwner({
       total_price: 0,
       total_payout: 0,
       expenses_total: 0,
+      expenses_to_owner: 0,
+      expenses_from_owner: 0,
       owner_payout: 0,
       pm_payout: 0,
       // Leerzustand-Platzhalter (alle Betraege 0) — keine erfundene Waehrung
@@ -111,6 +132,9 @@ export function OwnerStatementsForOwner({
       owner_currency: "",
       pm_payout_by_currency: [],
       totals_by_currency: [],
+      // Leerzustand, noch nichts gerechnet — kein Grund für eine fehlende
+      // Auszahlung, also auch kein Hinweis (der käme erst mit echten Daten).
+      payout_unbekannt: null,
     },
     rental_rows: [],
     listing_rows: [],
@@ -266,7 +290,7 @@ export function OwnerStatementsForOwner({
       {tab === "edit" ? (
         <StatementEditor
           statement={current ?? draft}
-          properties={properties}
+          properties={eigeneObjekte}
           onChange={setCurrent}
           onListChange={setList}
           onReprice={loadPreview}

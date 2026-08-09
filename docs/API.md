@@ -2411,9 +2411,20 @@ Ein `staff`/`cleaner`/`owner` bekommt `403`.
 | Methode | Pfad                                          | Zweck                                                        |
 | ------- | --------------------------------------------- | ------------------------------------------------------------ |
 | `GET`   | `/api/v1/announcements/health`                | Slice-Health (ohne Auth)                                     |
-| `GET`   | `/api/v1/announcements?limit&offset`          | Verlauf: nur `veroeffentlicht`, neueste zuerst, plus `ungelesen` |
-| `GET`   | `/api/v1/announcements/popup`                 | Die EINE noch offene Popup-Ankündigung + Anzahl `offen`      |
+| `GET`   | `/api/v1/announcements?limit&offset&sprache`  | Verlauf: nur `veroeffentlicht`, neueste zuerst, plus `ungelesen` |
+| `GET`   | `/api/v1/announcements/popup?sprache`         | Die EINE noch offene Popup-Ankündigung + Anzahl `offen`      |
 | `POST`  | `/api/v1/announcements/{id}/quittieren`       | Gelesen-Quittung setzen (idempotent)                         |
+
+`sprache` (ISO-639-1) bestimmt die ausgelieferte Fassung (`0347`). Das Frontend
+schickt das Ergebnis seiner EINEN Auflösungskette mit (`web/i18n/aufloesung.ts`:
+Cookie → Token-Sprache → `Accept-Language` → Englisch); **keine
+IP-Geolokalisierung**. Bewusst ein Query-Parameter statt `Accept-Language`
+serverseitig zu lesen: der Header trägt die Browser-Einstellung, die Oberfläche
+folgt aber dem Sprachumschalter — zwei Quellen ergäben Popup auf Dänisch und
+Dashboard auf Schwedisch. Fehlt die Fassung einer Sprache, kommt der
+**Originaltext** (kein erfundener Ersatz, Wurzel 4): das ist der einzige real
+existierende Text der Ankündigung. Eine Wartungsmeldung nicht zuzustellen, weil
+ihre lettische Fassung fehlt, wäre schlechter, als sie deutsch zuzustellen.
 
 | Status | Bedeutung                                                                    |
 | ------ | ---------------------------------------------------------------------------- |
@@ -2451,6 +2462,37 @@ Backoffice-Protokoll (`announcement.create` / `.update` / `.publish` /
 | `POST`   | `/api/v1/platform/announcements/{id}/zurueckziehen`   | Auf `archiviert` setzen                                   |
 | `DELETE` | `/api/v1/platform/announcements/{id}`                 | Löschen — **nur Entwürfe** (`204`)                        |
 | `POST`   | `/api/v1/platform/announcements/{id}/bild`            | Bild in den Inhalt hochladen (`multipart`, Feld `file`)   |
+| `GET`    | `/api/v1/platform/announcements/{id}/uebersetzungen`  | Sprachstand: Fassungen, `fehlend`, `veraltet`             |
+| `POST`   | `/api/v1/platform/announcements/{id}/uebersetzen?sprache` | Fehlende/veraltete Fassungen erzeugen — **geprüfte bleiben unberührt** |
+| `PUT`    | `/api/v1/platform/announcements/{id}/uebersetzungen/{sprache}` | Fassung von Hand korrigieren → gilt danach als **geprüft** |
+
+#### Übersetzungen (`0347`)
+
+Übersetzt wird **beim Verfassen**, nicht beim Lesen: der Text trägt rechtliche
+Aussagen und Geldbeträge und muss vor dem Veröffentlichen prüfbar sein. Dienst
+ist Google Cloud Translation v2 — derselbe Zugang wie in `content` und
+`channel_manager` (`GOOGLE_TRANSLATE_API_KEY`), kein zweiter Weg.
+
+* **Der Schutz geprüfter Fassungen** ist die zentrale Zusage: `geprueft = true`
+  heißt, ein Mensch verantwortet die Fassung. Jedes maschinelle Schreiben trägt
+  `where geprueft = false` — eine geprüfte Zeile ist für den Automaten nicht
+  adressierbar, auch nicht über `?sprache=`. Wer sie verwerfen will, bearbeitet
+  sie von Hand.
+* **Idempotenz (Wurzel 2):** `quelle_hash` (sha256 über Titel+Kurztext+Inhalt)
+  entscheidet, ob etwas zu tun ist. Ein zweiter Lauf mit unverändertem Text
+  macht **null** API-Aufrufe. `als_popup` umzuschalten ist keine Textänderung.
+* **Fail-closed (Wurzel 5/4):** Fällt der Dienst aus, wird **keine** Zeile
+  geschrieben und der Fehler propagiert (`503`; `422` bei zu langem Text —
+  Retry sinnlos). Es wird nie der Ausgangstext als „Übersetzung" abgelegt.
+* **Formaterhalt:** Inhalt geht als `format=html`, Titel/Kurztext als
+  `format=text`. Überschriften, Listen und Fettungen überleben (live geprüft).
+  Die Antwort ist Fremd-Input und läuft durch dieselbe nh3-Allowlist wie das
+  Original (Wurzel 8).
+* **Kosten (Wurzel 8):** `/uebersetzen` liegt im strengen `_AI_PATHS`-Bucket
+  (`rate_limit_ai`), nicht im Default — ein Aufruf stößt bis zu 23 Sprachen an.
+* **`veraltet`** wird beim Lesen aus dem Hash-Vergleich berechnet, nicht
+  gespeichert: eine zweite Wahrheit müsste bei jeder Textänderung an 24 Zeilen
+  nachgezogen werden.
 
 | Status | Bedeutung                                                                        |
 | ------ | -------------------------------------------------------------------------------- |

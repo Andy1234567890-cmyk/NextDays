@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Card } from "@nextdays/ui/card";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { formatCurrency } from "@/lib/currency";
 import {
   deleteStatement,
@@ -53,9 +54,38 @@ export function StatementManage({
             <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
               <th className="px-5 py-3 font-medium">{t("manage.owner")}</th>
               <th className="px-5 py-3 font-medium">{t("manage.period")}</th>
-              <th className="px-5 py-3 font-medium">{t("manage.status")}</th>
-              <th className="px-5 py-3 text-right font-medium">{t("summary.ownerPayout")}</th>
-              <th className="px-5 py-3 text-right font-medium">{t("summary.pmPayout")}</th>
+              <th className="px-5 py-3 font-medium">
+                <span className="flex items-center gap-1.5">
+                  {t("manage.status")}
+                  <InfoHinweis
+                    titel={t("info.status.title")}
+                    text={[
+                      t("info.status.draft"),
+                      t("info.status.finalized"),
+                      t("info.status.cancelled"),
+                    ]}
+                    ariaLabel={t("info.aria", { feld: t("manage.status") })}
+                  />
+                </span>
+              </th>
+              <th className="px-5 py-3 text-right font-medium">
+                <span className="flex items-center justify-end gap-1.5">
+                  {t("summary.ownerPayout")}
+                  <InfoHinweis
+                    text={[t("info.ownerPayout"), t("info.dash.meaning")]}
+                    ariaLabel={t("info.aria", { feld: t("summary.ownerPayout") })}
+                  />
+                </span>
+              </th>
+              <th className="px-5 py-3 text-right font-medium">
+                <span className="flex items-center justify-end gap-1.5">
+                  {t("summary.pmPayout")}
+                  <InfoHinweis
+                    text={[t("info.pmPayout"), t("info.dash.meaning")]}
+                    ariaLabel={t("info.aria", { feld: t("summary.pmPayout") })}
+                  />
+                </span>
+              </th>
               <th className="px-5 py-3" />
             </tr>
           </thead>
@@ -77,7 +107,10 @@ export function StatementManage({
                     {t(`status.${s.status}`)}
                   </span>
                 </td>
-                <td className="px-5 py-3 text-right">{formatCurrency(s.owner_payout, s.currency)}</td>
+                {/* `null` = nicht berechenbar (kein Provisionssatz). Als „—", nie als
+                    0,00 — sonst behauptet die Liste eine Auszahlung von null
+                    Kronen, wo nur der Satz fehlt (Wurzel 4). */}
+                <td className="px-5 py-3 text-right">{s.owner_payout == null ? "—" : formatCurrency(s.owner_payout, s.currency)}</td>
                 <td className="px-5 py-3 text-right">{s.pm_payout == null ? "—" : formatCurrency(s.pm_payout, s.currency)}</td>
                 <td className="px-5 py-3">
                   <div className="flex items-center justify-end gap-2">

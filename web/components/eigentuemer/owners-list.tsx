@@ -414,10 +414,24 @@ function CreateOwnerDialog({
 }
 
 // Effektive Provision für die Karte: einheitlich → ein Wert, sonst Spanne.
-// Ohne zugeordnete Objekte (min/max null) der Owner-Default.
+//
+// „—" heisst „kein Satz hinterlegt" und ist NICHT dasselbe wie „0 %": ohne
+// Satz zahlt die Abrechnung gar nichts aus, statt dem Eigentümer alles zu
+// geben (Wurzel 4). Ein „0%" an dieser Stelle hat den fehlenden Satz jahrelang
+// wie eine getroffene Vereinbarung aussehen lassen.
+//
+// `commission_missing_count` > 0 heisst: ein TEIL der Objekte hat keinen Satz.
+// Dann steht der Hinweis neben der Spanne der übrigen — die Karte darf nicht
+// vollständig gepflegt aussehen, wenn sie es nicht ist.
 function commissionLabel(o: OwnerListItem): string {
   const lo = o.commission_min;
   const hi = o.commission_max;
-  if (lo == null || hi == null) return `${o.default_commission_pct}%`;
-  return lo === hi ? `${lo}%` : `${lo}–${hi}%`;
+  const spanne =
+    lo == null || hi == null ? null : lo === hi ? `${lo}%` : `${lo}–${hi}%`;
+  if (spanne == null) {
+    return o.default_commission_pct == null
+      ? "—"
+      : `${o.default_commission_pct}%`;
+  }
+  return o.commission_missing_count > 0 ? `${spanne} · —` : spanne;
 }

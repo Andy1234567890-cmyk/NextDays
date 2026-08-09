@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Přiřadit objekty} one {Přiřadit # objekt} few {Přiřadit # objekty} many {Přiřadit # objektu} other {Přiřadit # objektů}}",
     "propertiesAssigned": "{count, plural, one {Přiřazen # objekt} few {Přiřazeny # objekty} many {Přiřazeno # objektu} other {Přiřazeno # objektů}}",
     "removeProperty": "Odebrat přiřazení",
+    "shareInvalid": "Zadejte podíl mezi 0 a 100.",
     "sections": {
       "master": "Kmenová data",
       "payout": "Výplata a provize",
@@ -998,7 +999,7 @@
       "statementFrequency": "Rytmus vyúčtování",
       "notes": "Poznámky",
       "share": "Podíl (%)",
-      "commissionOverride": "Provize (%) odch.",
+      "commissionOverride": "Provize (%)",
       "emailLanguage": "Jazyk e-mailů"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Pro přístup k portálu je potřeba e-mailová adresa.",
     "portalAccessInvite": "Odeslat pozvánku",
     "portalAccessInvited": "Pozvánka odeslána.",
-    "portalAccessActive": "Přístup k portálu je nastaven."
+    "portalAccessActive": "Přístup k portálu je nastaven.",
+    "commissionNotAgreed": "nesjednáno",
+    "assignableCount": "Vybráno {count} z {total} k přidání",
+    "assignedHeading": "{count, plural, one {# přiřazený objekt} few {# přiřazené objekty} other {# přiřazených objektů}}",
+    "info": {
+      "aria": "Vysvětlení k: {feld}",
+      "share": "Vlastnický podíl na tomto objektu. Při 100 % se celá výplata připíše tomuto vlastníkovi, při nižším podílu poměrně.",
+      "commission": "Standardní sazba provize pro tohoto vlastníka. Zůstane-li pole prázdné, není sazba dosud sjednána — výplata se pak nevypočítá, ale zobrazí se jako pomlčka.",
+      "commissionOverride": "Platí pouze pro tento jeden objekt a přepisuje standardní sazbu vlastníka. Zůstane-li pole prázdné, platí standardní sazba."
+    }
   },
   "ownerStatements": {
     "title": "Vyúčtování vlastníků",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Stav rezervace",
       "statusCount": "{count} stavů",
-      "title": "Filtry"
+      "title": "Filtry",
+      "resetAll": "Zrušit všechny filtry",
+      "remove": "Zrušit: {feld}",
+      "statusesNone": "Nic nevybráno",
+      "statusesSearch": "Hledat stav …",
+      "statusesNoMatch": "Žádný stav nenalezen.",
+      "statusesSelectAll": "Vybrat vše",
+      "statusesCount": "Vybráno {count} z {total}"
     },
     "reservationStatus": {
       "pending": "Otevřeno",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Návrh",
-      "finalized": "Finalizováno"
+      "finalized": "Finalizováno",
+      "cancelled": "Stornováno"
     },
     "sections": {
       "data": "Data",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Celková cena",
       "totalPayout": "Celková výplata",
       "ownerPayout": "Výplata vlastníkovi",
-      "pmPayout": "Výplata správci"
+      "pmPayout": "Výplata správci",
+      "commissionMissing": "U nejméně jedné nemovitosti není nastavena sazba provize. Výplaty proto nelze vypočítat — zadejte sazbu v kmenových datech vlastníka nebo u nemovitosti."
     },
     "rental": {
       "perReservation": "Za rezervaci",
@@ -1136,13 +1155,28 @@
       "reservation": "Rezervace",
       "owner": "Vlastník",
       "hideAll": "Skrýt vše",
-      "assignOwner": "Přiřadit vlastníkovi"
+      "assignOwner": "Přiřadit vlastníkovi",
+      "intro": "Částky, které se vlastníkovi navíc vyplácejí nebo které se mu naopak zúčtovávají. Do výplaty vstupují v plné výši — bez odečtu provize.",
+      "direction": "Směr",
+      "toOwner": "Ve prospěch vlastníka",
+      "toOwnerHint": "Obdrží doplatek, např. náhradu škody.",
+      "toOwnerShort": "Ve prospěch",
+      "fromOwner": "K tíži vlastníka",
+      "fromOwnerHint": "Odečte se z jeho výplaty, např. materiál a pracovní čas.",
+      "fromOwnerShort": "K tíži",
+      "sumToOwner": "Celkem ve prospěch:",
+      "sumFromOwner": "Celkem k tíži:",
+      "receipt": "Doklad",
+      "openReceipt": "Otevřít doklad",
+      "createdBy": "Zadal(a) {name}",
+      "saveFirst": "Zúčtovací položky patří k uloženému vyúčtování. Ulož vyúčtování, poté zde můžeš zadávat položky.",
+      "missingFields": "Ještě prosím doplň: {felder}."
     },
     "grand": {
       "rentalRevenue": "Příjmy z pronájmu",
       "expenses": "Výdaje a extra položky",
       "total": "Celkem",
-      "deductPercentage": "Odečíst provizi (%)"
+      "deductPercentage": "Provize (%)"
     },
     "manage": {
       "owner": "Vlastník",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Upravit",
     "attachments": {
-      "drop": "Přetáhněte soubory pro nahrání nebo procházet"
+      "drop": "Přetáhněte soubory pro nahrání nebo procházet",
+      "viaExpenses": "Doklady patří k jednotlivé položce: nahraj je v části „Výdaje a extra položky“ přímo u příslušného řádku."
     },
     "masterData": "Kmenová data",
     "preview": "Náhled",
     "previewTitle": "Náhled dokladu",
-    "close": "Zavřít"
+    "close": "Zavřít",
+    "info": {
+      "aria": "Vysvětlení k: {feld}",
+      "totalPrice": "Částka, kterou host celkem zaplatil za svůj pobyt — před odečtením poplatků portálů a provize.",
+      "totalPayout": "Částka, která po odečtení poplatků portálů dorazí správci. Z ní se počítá podíl vlastníka a podíl správy.",
+      "ownerPayout": "Podíl vyplácený vlastníkovi: celková výplata snížená o provizi a zvýšená o zúčtovací položky.",
+      "pmPayout": "Podíl, který zůstává správci — provize z pronájmu. Zúčtovací položky zde nejsou zahrnuty.",
+      "expenses": {
+        "title": "Ve prospěch a k tíži",
+        "direction": "„Ve prospěch vlastníka“ jeho výplatu zvyšuje, například vrácení nákladů. „K tíži vlastníka“ ji snižuje, například materiál nebo pracovní čas správy.",
+        "noCommission": "Tyto částky vstupují do výplaty v plné výši — provize se z nich nepočítá.",
+        "aria": "Vysvětlení k zúčtovacím položkám"
+      },
+      "dash": {
+        "title": "Co znamená pomlčka",
+        "meaning": "Pomlčka znamená „nezadáno“ — nikoli „nula“. Hodnotu nelze vypočítat, protože chybí údaj.",
+        "whereToFix": "Pokud chybí sazba provize, zadej ji v kmenových datech vlastníka nebo jako odchylnou sazbu u jednotlivého objektu.",
+        "aria": "Vysvětlení k pomlčce místo částky",
+        "inline": "Pomlčka znamená chybějící hodnotu, nikoli 0,00."
+      },
+      "deductPercentage": "Sazba provize, se kterou toto vyúčtování počítá. Prázdné znamená: platí sazba z kmenových dat vlastníka, případně odlišná sazba u konkrétního objektu.",
+      "status": {
+        "title": "Tři stavy vyúčtování",
+        "draft": "Návrh: stále upravitelný. Částky se při každé změně přepočítají.",
+        "finalized": "Finalizováno: přiděleno číslo faktury, součty zmrazeny. Změny už nejsou možné.",
+        "cancelled": "Stornováno: zrušeno dobropisem. Původní faktura zůstává zachována jako doklad."
+      },
+      "finalize": {
+        "title": "Finalizovat vyúčtování",
+        "what": "Při finalizaci se přidělí číslo faktury a všechny součty se zmrazí jako doklad.",
+        "irreversible": "Tento krok nelze vzít zpět. Finalizovanou fakturu lze zrušit už jen dobropisem."
+      },
+      "basis": "Určuje, kdy rezervace spadá do daného období: u volby Check-in rozhoduje den příjezdu, u volby Check-out den odjezdu. Rezervace přes přelom měsíce spadne podle volby do jednoho, nebo do druhého měsíce.",
+      "statuses": "Zúčtovány jsou pouze rezervace s některým z vybraných stavů. Výchozí jsou potvrzené a dokončené rezervace — zrušené do výplaty obvykle nepatří."
+    }
   },
   "ownerBilling": {
     "title": "Smlouva o vyúčtování",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Podléhá provizi",
     "commissionableYes": "Ano — vstupuje do provize",
-    "commissionableNo": "Ne — bez provize"
+    "commissionableNo": "Ne — bez provize",
+    "infoAria": "Vysvětlení k: {feld}"
   },
   "portal": {
     "title": "Můj portál",

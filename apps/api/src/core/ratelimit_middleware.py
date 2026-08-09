@@ -130,7 +130,12 @@ _REFRESH_PATHS = ("/auth/refresh", "/guest-auth/refresh")
 # Endpunkte, die eine KOSTENPFLICHTIGE Fremd-API anstoßen (Groq bzw. Google
 # Translate). Im Default-Bucket könnte ein einzelner eingeloggter Nutzer
 # erhebliche Kosten verursachen — eigener strenger Bucket (Wurzel 8).
-_AI_PATHS = ("/dashboard/voice", "/content/translate")
+# `/uebersetzen` ist der Ankündigungs-Übersetzungslauf: EIN Aufruf löst bis zu
+# 23 Sprachen à zwei Google-Requests aus — der teuerste Einzelaufruf des
+# Systems. Er steht ohne führenden Pfad in der Liste, weil die ID dazwischen
+# liegt (`/platform/announcements/{id}/uebersetzen`) und hier per Teilstring
+# verglichen wird.
+_AI_PATHS = ("/dashboard/voice", "/content/translate", "/uebersetzen")
 
 # UNAUTHENTIFIZIERTE Kontaktaufnahme von der Marketing-Seite. Jeder Aufruf legt
 # einen Datensatz an bzw. schreibt in einen fremden Verlauf — im

@@ -54,6 +54,7 @@ export function ObjektMehrfachauswahl({
   onSucheChange,
   disabled = false,
   emptyText,
+  countLabel,
 }: {
   /** Die auswählbaren Objekte — die Aufrufstelle hat sie bereits gefiltert. */
   objekte: ObjektAuswahlEintrag[];
@@ -65,6 +66,14 @@ export function ObjektMehrfachauswahl({
   disabled?: boolean;
   /** Satz, wenn gar nichts zur Auswahl steht (je Aufrufstelle ein anderer). */
   emptyText: string;
+  /**
+   * Beschriftung des Zählers. Der Standard „0/18 ausgewählt" beschreibt die
+   * AUSWAHL in dieser Liste — auf der Eigentümer-Seite las der Betreiber ihn
+   * als „diesem Eigentümer sind 0 von 18 Objekten zugeordnet" und hielt seine
+   * bestehende Zuordnung für verloren. Wo die Verwechslung möglich ist, sagt
+   * die Aufrufstelle es unmissverständlich.
+   */
+  countLabel?: (ausgewaehlt: number, gesamt: number) => string;
 }) {
   const t = useTranslations("objects.pricingForm");
 
@@ -123,10 +132,12 @@ export function ObjektMehrfachauswahl({
       </div>
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">
-          {t("selectedCount", {
-            count: selected.length,
-            total: objekte.length,
-          })}
+          {countLabel
+            ? countLabel(selected.length, objekte.length)
+            : t("selectedCount", {
+                count: selected.length,
+                total: objekte.length,
+              })}
         </span>
         <button
           type="button"

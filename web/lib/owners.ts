@@ -50,7 +50,10 @@ export type Owner = {
   bic: string | null;
   bank_name: string | null;
   account_holder: string | null;
-  default_commission_pct: number;
+  /** Standard-Provisionssatz. `null` = noch nicht vereinbart — NICHT 0 %.
+   *  Ohne Satz weist die Abrechnung die Auszahlungen als „—" aus, statt dem
+   *  Eigentümer stillschweigend 100 % zuzuschlagen (Wurzel 4). */
+  default_commission_pct: number | null;
   default_payout_method: string | null;
   statement_frequency: StatementFrequency;
   notes: string | null;
@@ -74,6 +77,9 @@ export type OwnerListItem = Omit<Owner, "properties"> & {
   // Owner-Default). null = noch keine Objekte zugeordnet.
   commission_min: number | null;
   commission_max: number | null;
+  /** Wie viele zugeordnete Objekte KEINEN Satz haben. > 0 heisst: die Spanne
+   *  oben beschreibt nur einen Teil. */
+  commission_missing_count: number;
 };
 
 export type OwnerInput = Partial<

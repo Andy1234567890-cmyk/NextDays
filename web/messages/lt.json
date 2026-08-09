@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Priskirti objektus} one {Priskirti # objektą} few {Priskirti # objektus} many {Priskirti # objekto} other {Priskirti # objektų}}",
     "propertiesAssigned": "{count, plural, one {Priskirtas # objektas} few {Priskirti # objektai} many {Priskirta # objekto} other {Priskirta # objektų}}",
     "removeProperty": "Pašalinti priskyrimą",
+    "shareInvalid": "Įveskite dalį nuo 0 iki 100.",
     "sections": {
       "master": "Pagrindiniai duomenys",
       "payout": "Išmoka ir komisinis",
@@ -998,7 +999,7 @@
       "statementFrequency": "Ataskaitų periodiškumas",
       "notes": "Pastabos",
       "share": "Dalis (%)",
-      "commissionOverride": "Komisinis (%) išimtis",
+      "commissionOverride": "Komisinis (%)",
       "emailLanguage": "El. laiškų kalba"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Prieigai prie portalo reikalingas el. pašto adresas.",
     "portalAccessInvite": "Siųsti kvietimą",
     "portalAccessInvited": "Kvietimas išsiųstas.",
-    "portalAccessActive": "Prieiga prie portalo nustatyta."
+    "portalAccessActive": "Prieiga prie portalo nustatyta.",
+    "commissionNotAgreed": "nesutarta",
+    "assignableCount": "Pridėti pasirinkta {count} iš {total}",
+    "assignedHeading": "{count, plural, one {# priskirtas objektas} few {# priskirti objektai} many {# priskirto objekto} other {# priskirtų objektų}}",
+    "info": {
+      "aria": "Lauko {feld} paaiškinimas",
+      "share": "Nuosavybės dalis šiame objekte. Esant 100 % visa išmoka priskiriama šiam savininkui, esant mažiau — atitinkamai proporcingai.",
+      "commission": "Numatytasis šio savininko komisinio dydis. Jei laukas lieka tuščias, dydis dar nesutartas — tada išmoka neskaičiuojama, o rodoma brūkšniu.",
+      "commissionOverride": "Galioja tik šiam vienam objektui ir pakeičia numatytąjį savininko dydį. Jei laukas lieka tuščias, galioja numatytasis dydis."
+    }
   },
   "ownerStatements": {
     "title": "Savininkų ataskaita",
@@ -1063,7 +1073,14 @@
       "checkOut": "Išsiregistravimas",
       "statuses": "Rezervacijos būsenos",
       "statusCount": "{count} būsena(-os)",
-      "title": "Filtrai"
+      "title": "Filtrai",
+      "resetAll": "Atstatyti visus filtrus",
+      "remove": "Atstatyti: {feld}",
+      "statusesNone": "Nieko nepasirinkta",
+      "statusesSearch": "Ieškoti būsenos …",
+      "statusesNoMatch": "Būsenų nerasta.",
+      "statusesSelectAll": "Pasirinkti visas",
+      "statusesCount": "Pasirinkta {count} iš {total}"
     },
     "reservationStatus": {
       "pending": "Laukiama",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Juodraštis",
-      "finalized": "Finalizuota"
+      "finalized": "Finalizuota",
+      "cancelled": "Stornuota"
     },
     "sections": {
       "data": "Duomenys",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Bendra kaina",
       "totalPayout": "Bendra išmoka",
       "ownerPayout": "Savininko išmoka",
-      "pmPayout": "Valdytojo išmoka"
+      "pmPayout": "Valdytojo išmoka",
+      "commissionMissing": "Bent vienam objektui nenustatytas komisinio dydis. Todėl išmokų apskaičiuoti negalima — įveskite dydį savininko pagrindiniuose duomenyse arba prie objekto."
     },
     "rental": {
       "perReservation": "Pagal rezervaciją",
@@ -1136,13 +1155,28 @@
       "reservation": "Rezervacija",
       "owner": "Savininkas",
       "hideAll": "Slėpti visas",
-      "assignOwner": "Priskirti savininkui"
+      "assignOwner": "Priskirti savininkui",
+      "intro": "Sumos, papildomai išmokamos savininkui arba iš jo išskaičiuojamos. Jos į išmoką įskaitomos visa apimtimi — neatskaičius komisinių.",
+      "direction": "Kryptis",
+      "toOwner": "Savininko naudai",
+      "toOwnerHint": "Jis gauna papildomą išmoką, pvz., žalos kompensaciją.",
+      "toOwnerShort": "Naudai",
+      "fromOwner": "Savininko sąskaita",
+      "fromOwnerHint": "Išskaičiuojama iš jo išmokos, pvz., medžiagos ir darbo laikas.",
+      "fromOwnerShort": "Išskaita",
+      "sumToOwner": "Iš viso naudai:",
+      "sumFromOwner": "Iš viso išskaičiuota:",
+      "receipt": "Pateisinamasis dokumentas",
+      "openReceipt": "Atverti dokumentą",
+      "createdBy": "Užregistravo {name}",
+      "saveFirst": "Užskaitos įrašai priklauso išsaugotai ataskaitai. Išsaugokite ataskaitą, tada čia galėsite įvesti įrašus.",
+      "missingFields": "Dar užpildykite: {felder}."
     },
     "grand": {
       "rentalRevenue": "Nuomos pajamos",
       "expenses": "Išlaidos ir papildomos paslaugos",
       "total": "Iš viso",
-      "deductPercentage": "Atskaityti komisinį (%)"
+      "deductPercentage": "Komisinis (%)"
     },
     "manage": {
       "owner": "Savininkas",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Redaguoti",
     "attachments": {
-      "drop": "Vilkite failus, kad įkeltumėte, arba naršykite"
+      "drop": "Vilkite failus, kad įkeltumėte, arba naršykite",
+      "viaExpenses": "Dokumentai pridedami prie atskiro įrašo: įkelkite juos skiltyje „Išlaidos ir papildomos paslaugos“ tiesiai prie atitinkamos eilutės."
     },
     "masterData": "Pagrindiniai duomenys",
     "preview": "Peržiūra",
     "previewTitle": "Dokumento peržiūra",
-    "close": "Uždaryti"
+    "close": "Uždaryti",
+    "info": {
+      "aria": "Lauko {feld} paaiškinimas",
+      "totalPrice": "Kiek svečias iš viso sumokėjo už savo viešnagę — prieš atskaitant portalų mokesčius ir komisinius.",
+      "totalPayout": "Kiek įmonė gauna atskaičius portalų mokesčius. Iš šios sumos formuojama savininko ir valdytojo dalis.",
+      "ownerPayout": "Dalis, kuri išmokama savininkui: bendra išmoka atėmus komisinius ir pridėjus užskaitos įrašus.",
+      "pmPayout": "Dalis, kuri lieka įmonei — komisiniai už nuomą. Užskaitos įrašai čia neįskaičiuoti.",
+      "expenses": {
+        "title": "Naudai ir sąskaita",
+        "direction": "„Savininko naudai“ padidina jo išmoką, pavyzdžiui, kompensacija. „Savininko sąskaita“ ją sumažina, pavyzdžiui, įmonės medžiagos ar darbo laikas.",
+        "noCommission": "Šios sumos į išmoką įskaitomos visa apimtimi — nuo jų komisiniai neskaičiuojami.",
+        "aria": "Užskaitos įrašų paaiškinimas"
+      },
+      "dash": {
+        "title": "Ką reiškia brūkšnys",
+        "meaning": "Brūkšnys reiškia „neįvesta“ — o ne „nulis“. Reikšmės apskaičiuoti negalima, nes trūksta duomenų.",
+        "whereToFix": "Jei trūksta komisinio dydžio, įveskite jį savininko pagrindiniuose duomenyse arba kaip kitokį dydį prie atskiro objekto.",
+        "aria": "Brūkšnio vietoj sumos paaiškinimas",
+        "inline": "Brūkšnys žymi trūkstamą reikšmę, o ne 0,00."
+      },
+      "deductPercentage": "Komisinio tarifas, pagal kurį skaičiuojama ši ataskaita. Tuščia reiškia: galioja tarifas iš savininko pagrindinių duomenų arba atskiro objekto skirtingas tarifas.",
+      "status": {
+        "title": "Trys ataskaitos būsenos",
+        "draft": "Juodraštis: dar keičiamas. Sumos perskaičiuojamos po kiekvieno pakeitimo.",
+        "finalized": "Finalizuota: sąskaitos numeris suteiktas, sumos užšaldytos. Pakeitimai nebegalimi.",
+        "cancelled": "Stornuota: panaikinta stornavimo sąskaita. Originali sąskaita išlieka kaip pagrindžiantis dokumentas."
+      },
+      "finalize": {
+        "title": "Ataskaitos finalizavimas",
+        "what": "Finalizuojant suteikiamas sąskaitos numeris, o visos sumos užšaldomos kaip pagrindžiantis dokumentas.",
+        "irreversible": "To atšaukti nebegalima. Finalizuotą sąskaitą galima panaikinti tik stornavimo sąskaita."
+      },
+      "basis": "Nustato, kada rezervacija patenka į laikotarpį: pagal įsiregistravimą — pagal atvykimo dieną, pagal išsiregistravimą — pagal išvykimo dieną. Rezervacija per mėnesių sandūrą, priklausomai nuo pasirinkimo, patenka į vieną arba kitą mėnesį.",
+      "statuses": "Apskaitomos tik rezervacijos, turinčios vieną iš pasirinktų būsenų. Pagal numatytuosius nustatymus tai patvirtintos ir baigtos rezervacijos — atšauktos paprastai į išmoką neįtraukiamos."
+    }
   },
   "ownerBilling": {
     "title": "Atsiskaitymo sutartis",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Apmokestinama komisiniais",
     "commissionableYes": "Taip — įskaičiuojama į komisinius",
-    "commissionableNo": "Ne — be komisinių"
+    "commissionableNo": "Ne — be komisinių",
+    "infoAria": "Lauko {feld} paaiškinimas"
   },
   "portal": {
     "title": "Mano portalas",

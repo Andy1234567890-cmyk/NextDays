@@ -221,6 +221,16 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
   gehören in eine Nachbardatei ohne die Direktive. Genau so ging ein kaputter
   Build committet+gepusht durch beide Prüfungen. Buildfehler werden behoben,
   nie per `ignoreBuildErrors` unterdrückt (Wurzel 4/5).
+  **WANN: EINMAL, direkt vor Commit/Push — NICHT je Arbeitsschritt und NICHT
+  je Agent.** `next build` löscht und schreibt `.next` neu; der Dev-Server des
+  Nutzers benutzt DENSELBEN Ordner und verliert dabei seine Dateien
+  (`ENOENT … routes-manifest.json`, jede Seite 500). Passiert am 09.08.2026:
+  mehrere Agenten bauten parallel, während der Nutzer arbeitete — seine
+  Oberfläche war reihenweise tot, ohne dass am Code etwas falsch war.
+  Wer während einer laufenden Sitzung bauen MUSS, baut in einem eigenen
+  Verzeichnis (`--distDir`) oder in einem eigenen Worktree, nie in das `.next`
+  des Nutzers hinein. Einzelne Agenten prüfen mit `tsc --noEmit` + `bun run
+  lint`; den Build fährt EIN Durchlauf am Ende.
 - Kanal/Enum berührt? `node scripts/i18n/kanal-enums-pruefen.mjs` — hält
   DB-Enum → Pydantic → Frontend-Unions → Kanal-Meta → `calendar.channel.*`
   aller 24 Sprachen deckungsgleich. Ein neuer Backend-Kanalwert ohne diese

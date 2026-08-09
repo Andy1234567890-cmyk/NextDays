@@ -35,6 +35,14 @@ export function OwnerMasterSheet({
   properties: PropOption[];
 }) {
   const t = useTranslations("ownerStatements");
+  // Siehe Kommentar am `Abrechnungsvertrag` unten: `properties` ist die
+  // ZUORDENBARE Liste (seine + herrenlose), `owner.properties` die echte
+  // Zuordnung. Titel aus der Liste, ID als Rückfall — kein Platzhalter.
+  const titelById = new Map(properties.map((p) => [p.id, p.title]));
+  const eigeneObjekte: PropOption[] = owner.properties.map((l) => ({
+    id: l.property_id,
+    title: titelById.get(l.property_id) ?? l.property_id,
+  }));
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="flex w-full flex-col gap-4 overflow-y-auto sm:max-w-2xl">
@@ -43,7 +51,12 @@ export function OwnerMasterSheet({
           <SheetDescription>{owner.name}</SheetDescription>
         </SheetHeader>
         <OwnerDetail initial={owner} properties={properties} embedded />
-        <Abrechnungsvertrag ownerId={owner.id} properties={properties} />
+        {/* Der Vertrag bekommt NUR die zugeordneten Objekte, die
+            Zuordnungs-Maske darüber die volle zuordenbare Liste. `properties`
+            ist „frei ODER seins" — ein Provisionssatz auf einem gerade
+            herrenlosen fremden Objekt wäre eine Vereinbarung über etwas, das
+            diesem Eigentümer nicht gehört (Wurzel 3/9). */}
+        <Abrechnungsvertrag ownerId={owner.id} properties={eigeneObjekte} />
       </SheetContent>
     </Sheet>
   );

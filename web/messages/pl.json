@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Przypisz obiekty} one {Przypisz # obiekt} few {Przypisz # obiekty} many {Przypisz # obiektów} other {Przypisz # obiektu}}",
     "propertiesAssigned": "{count, plural, one {Przypisano # obiekt} few {Przypisano # obiekty} many {Przypisano # obiektów} other {Przypisano # obiektu}}",
     "removeProperty": "Usuń przypisanie",
+    "shareInvalid": "Podaj udział z zakresu od 0 do 100.",
     "sections": {
       "master": "Dane podstawowe",
       "payout": "Wypłata i prowizja",
@@ -998,7 +999,7 @@
       "statementFrequency": "Rytm rozliczeń",
       "notes": "Notatki",
       "share": "Udział (%)",
-      "commissionOverride": "Prowizja (%) odmienna",
+      "commissionOverride": "Prowizja (%)",
       "emailLanguage": "Język wiadomości e-mail"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Do dostępu do portalu wymagany jest adres e-mail.",
     "portalAccessInvite": "Wyślij zaproszenie",
     "portalAccessInvited": "Zaproszenie wysłane.",
-    "portalAccessActive": "Dostęp do portalu jest skonfigurowany."
+    "portalAccessActive": "Dostęp do portalu jest skonfigurowany.",
+    "commissionNotAgreed": "nieustalone",
+    "assignableCount": "Wybrano {count} z {total} do dodania",
+    "assignedHeading": "{count, plural, one {# przypisany obiekt} few {# przypisane obiekty} many {# przypisanych obiektów} other {# przypisanego obiektu}}",
+    "info": {
+      "aria": "Objaśnienie do: {feld}",
+      "share": "Udział własnościowy w tym obiekcie. Przy 100 % cała wypłata jest przypisywana temu właścicielowi, przy mniejszym udziale — proporcjonalnie.",
+      "commission": "Standardowa stawka prowizji dla tego właściciela. Jeśli pole pozostanie puste, stawka nie jest jeszcze ustalona — wypłata nie zostanie wtedy obliczona, lecz pokazana jako myślnik.",
+      "commissionOverride": "Obowiązuje tylko dla tego jednego obiektu i zastępuje standardową stawkę właściciela. Jeśli pole pozostanie puste, obowiązuje stawka standardowa."
+    }
   },
   "ownerStatements": {
     "title": "Rozliczenia właścicieli",
@@ -1063,7 +1073,14 @@
       "checkOut": "Wymeldowanie",
       "statuses": "Statusy rezerwacji",
       "statusCount": "{count} statusów",
-      "title": "Filtry"
+      "title": "Filtry",
+      "resetAll": "Wyczyść wszystkie filtry",
+      "remove": "Wyczyść: {feld}",
+      "statusesNone": "Nic nie wybrano",
+      "statusesSearch": "Szukaj statusu …",
+      "statusesNoMatch": "Nie znaleziono statusu.",
+      "statusesSelectAll": "Zaznacz wszystko",
+      "statusesCount": "Wybrano {count} z {total}"
     },
     "reservationStatus": {
       "pending": "Oczekująca",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Szkic",
-      "finalized": "Sfinalizowane"
+      "finalized": "Sfinalizowane",
+      "cancelled": "Anulowane"
     },
     "sections": {
       "data": "Dane",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Cena całkowita",
       "totalPayout": "Wypłata całkowita",
       "ownerPayout": "Wypłata dla właściciela",
-      "pmPayout": "Wypłata dla zarządcy"
+      "pmPayout": "Wypłata dla zarządcy",
+      "commissionMissing": "Dla co najmniej jednego obiektu nie ustawiono stawki prowizji. Wypłat nie można obliczyć — wprowadź stawkę w danych podstawowych właściciela lub przy obiekcie."
     },
     "rental": {
       "perReservation": "Za rezerwację",
@@ -1136,13 +1155,28 @@
       "reservation": "Rezerwacja",
       "owner": "Właściciel",
       "hideAll": "Ukryj wszystkie",
-      "assignOwner": "Przypisz do właściciela"
+      "assignOwner": "Przypisz do właściciela",
+      "intro": "Kwoty wypłacane właścicielowi dodatkowo lub rozliczane z nim. Są uwzględniane w pełnej wysokości w wypłacie — bez potrącenia prowizji.",
+      "direction": "Kierunek",
+      "toOwner": "Na rzecz właściciela",
+      "toOwnerHint": "Otrzymuje dodatkową wypłatę, np. odszkodowanie za szkodę.",
+      "toOwnerShort": "Na rzecz",
+      "fromOwner": "Na obciążenie właściciela",
+      "fromOwnerHint": "Jest potrącane z jego wypłaty, np. materiały i czas pracy.",
+      "fromOwnerShort": "Obciążenie",
+      "sumToOwner": "Suma na rzecz:",
+      "sumFromOwner": "Suma obciążeń:",
+      "receipt": "Dowód",
+      "openReceipt": "Otwórz dowód",
+      "createdBy": "Zarejestrował(a) {name}",
+      "saveFirst": "Pozycje rozliczeniowe należą do zapisanego rozliczenia. Zapisz rozliczenie, a potem będzie można dodawać tu pozycje.",
+      "missingFields": "Uzupełnij jeszcze: {felder}."
     },
     "grand": {
       "rentalRevenue": "Przychód z wynajmu",
       "expenses": "Wydatki i dodatki",
       "total": "Razem",
-      "deductPercentage": "Odlicz prowizję (%)"
+      "deductPercentage": "Prowizja (%)"
     },
     "manage": {
       "owner": "Właściciel",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Edytuj",
     "attachments": {
-      "drop": "Upuść pliki, aby je przesłać, lub przeglądaj"
+      "drop": "Upuść pliki, aby je przesłać, lub przeglądaj",
+      "viaExpenses": "Dokumenty są powiązane z pojedynczą pozycją: prześlij je w sekcji „Wydatki i dodatki” bezpośrednio przy danym wierszu."
     },
     "masterData": "Dane podstawowe",
     "preview": "Podgląd",
     "previewTitle": "Podgląd dokumentu",
-    "close": "Zamknij"
+    "close": "Zamknij",
+    "info": {
+      "aria": "Objaśnienie do: {feld}",
+      "totalPrice": "Kwota, którą gość zapłacił łącznie za swój pobyt — przed potrąceniem opłat portali i prowizji.",
+      "totalPayout": "Kwota, która trafia do zarządcy po potrąceniu opłat portali. Z niej wyliczany jest udział właściciela i zarządcy.",
+      "ownerPayout": "Udział wypłacany właścicielowi: wypłata całkowita pomniejszona o prowizję, powiększona o pozycje rozliczeniowe.",
+      "pmPayout": "Udział pozostający u zarządcy — prowizja od wynajmu. Pozycje rozliczeniowe nie są tu uwzględnione.",
+      "expenses": {
+        "title": "Na korzyść i na obciążenie",
+        "direction": "„Na korzyść właściciela” zwiększa jego wypłatę, na przykład zwrot kosztów. „Na obciążenie właściciela” ją zmniejsza, na przykład materiały lub czas pracy zarządcy.",
+        "noCommission": "Te kwoty wchodzą w całości do wypłaty — nie nalicza się od nich prowizji.",
+        "aria": "Objaśnienie do pozycji rozliczeniowych"
+      },
+      "dash": {
+        "title": "Co oznacza myślnik",
+        "meaning": "Myślnik oznacza „nie ustalono” — a nie „zero”. Wartości nie da się obliczyć, ponieważ brakuje danych.",
+        "whereToFix": "Jeśli brakuje stawki prowizji, wprowadź ją w danych podstawowych właściciela albo jako odmienną stawkę przy pojedynczym obiekcie.",
+        "aria": "Objaśnienie do myślnika zamiast kwoty",
+        "inline": "Myślnik oznacza brakującą wartość, a nie 0,00."
+      },
+      "deductPercentage": "Stawka prowizji, według której liczone jest to rozliczenie. Puste oznacza: obowiązuje stawka z danych podstawowych właściciela lub odmienna stawka ustawiona przy pojedynczym obiekcie.",
+      "status": {
+        "title": "Trzy stany rozliczenia",
+        "draft": "Szkic: nadal edytowalny. Kwoty są przeliczane przy każdej zmianie.",
+        "finalized": "Sfinalizowane: numer faktury nadany, sumy zamrożone. Zmiany nie są już możliwe.",
+        "cancelled": "Anulowane: uchylone fakturą korygującą. Faktura oryginalna pozostaje jako dokument."
+      },
+      "finalize": {
+        "title": "Finalizacja rozliczenia",
+        "what": "Przy finalizacji nadawany jest numer faktury, a wszystkie sumy zostają zamrożone jako dokument.",
+        "irreversible": "Tego nie można cofnąć. Sfinalizowaną fakturę można uchylić już tylko fakturą korygującą."
+      },
+      "basis": "Określa, kiedy rezerwacja wpada w dany okres: przy opcji Zameldowanie decyduje dzień przyjazdu, przy opcji Wymeldowanie — dzień wyjazdu. Rezerwacja na przełomie miesiąca trafia do jednego lub drugiego miesiąca zależnie od wyboru.",
+      "statuses": "Rozliczane są tylko rezerwacje o jednym z wybranych statusów. Domyślnie są to rezerwacje potwierdzone i zakończone — anulowane zwykle nie należą do wypłaty."
+    }
   },
   "ownerBilling": {
     "title": "Umowa rozliczeniowa",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Podlega prowizji",
     "commissionableYes": "Tak — wliczane do prowizji",
-    "commissionableNo": "Nie — zwolnione z prowizji"
+    "commissionableNo": "Nie — zwolnione z prowizji",
+    "infoAria": "Objaśnienie do: {feld}"
   },
   "portal": {
     "title": "Mój portal",

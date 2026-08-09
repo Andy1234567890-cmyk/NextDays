@@ -35,10 +35,26 @@ from .schemas import (
     Announcement,
     AnnouncementCreate,
     AnnouncementList,
+    AnnouncementUebersetzung,
     AnnouncementUpdate,
     PopupResponse,
     QuittierenResponse,
     SliceHealth,
+    UebersetzungsUebersicht,
+    UebersetzungUpdate,
+    sanitize_inhalt,
+)
+
+# `UebersetzungError` wird hier bewusst NICHT importiert: der Service fängt ihn
+# nicht. Er läuft unverändert bis zum Router durch, der ihn auf 503/422 abbildet
+# (Wurzel 5 — ein Ausfall des Übersetzungsdienstes darf nicht als „fertig"
+# durchgehen und nicht in einen anderen Fehlertyp umgedeutet werden).
+from .uebersetzung import (
+    QUELLSPRACHE,
+    ZIELSPRACHEN,
+    fassung_erzeugen,
+    laengen_pruefen,
+    quelle_hash,
 )
 
 log = get_logger("nextdays.announcements")
@@ -55,6 +71,11 @@ _SPALTEN = (
 # Obergrenzen (Wurzel 8 — jeder unbegrenzte Bereich bekommt eine harte Grenze).
 _POPUP_KANDIDATEN = 50
 _LISTE_MAX = 200
+
+# Spalten der Übersetzungstabelle (0347).
+_U_SPALTEN = (
+    "sprache, titel, kurztext, inhalt_html, geprueft, geprueft_am, quelle_hash"
+)
 
 # Magic-Bytes der beiden erlaubten Bildformate. Der vom Client mitgeschickte
 # content_type wird bewusst ignoriert: er ist frei wählbar und damit kein
@@ -218,7 +239,14 @@ class AnnouncementService:
         ).data or []
         return {str(r["announcement_id"]) for r in rows}
 
-    def liste(self, ctx: AuthContext, *, limit: int = 50, offset: int = 0) -> AnnouncementList:
+    def liste(
+        self,
+        ctx: AuthContext,
+        *,
+        limit: int = 50,
+        offset: int = 0,
+        sprache: str | None = None,
+    ) -> AnnouncementList:
         """Historie für /neuerungen. Nur Veröffentlichtes, neueste zuerst.
 
         `gueltig_bis` filtert hier bewusst NICHT: ein abgelaufenes
@@ -256,9 +284,16 @@ class AnnouncementService:
         # verschweigen hieße, das Frontend raten zu lassen.
         for item in items:
             item.quittiert = item.id in quittiert
+
+        # Die Fassung in der Sprache des Lesers auflegen. EIN Roundtrip für die
+        # ganze Seite; fehlt eine Fassung, bleibt der Originaltext stehen
+        # (siehe `_anwenden`).
+        if sprache:
+            fassungen = self._fassungen_fuer([i.id for i in items], sprache)
+            items = [self._anwenden(i, fassungen.get(i.id)) for i in items]
         return AnnouncementList(items=items, total=len(items), ungelesen=ungelesen)
 
-    def popup(self, ctx: AuthContext) -> PopupResponse:
+    def popup(self, ctx: AuthContext, *, sprache: str | None = None) -> PopupResponse:
         """Die älteste noch nicht quittierte Ankündigung — oder keine.
 
         AUFSTEIGEND sortiert: wer zwei Wochen weg war, bekommt sie in
@@ -296,7 +331,14 @@ class AnnouncementService:
         offen = [k for k in kandidaten if k.id not in quittiert]
         if not offen:
             return PopupResponse(item=None, offen=0)
-        return PopupResponse(item=offen[0], offen=len(offen))
+        erste = offen[0]
+        # Nur für die EINE gezeigte Ankündigung nachschlagen — die übrigen
+        # `offen` sind bloß eine Zahl („1 von 3") und werden nie gerendert.
+        if sprache:
+            erste = self._anwenden(
+                erste, self._fassungen_fuer([erste.id], sprache).get(erste.id)
+            )
+        return PopupResponse(item=erste, offen=len(offen))
 
     def quittieren(self, ctx: AuthContext, announcement_id: str) -> QuittierenResponse:
         """Aktives Schließen festhalten. Idempotent (Wurzel 2).
@@ -436,6 +478,13 @@ class AnnouncementService:
         row = self._laden(announcement_id)
         if not (row.get("titel") or "").strip():
             raise AnnouncementError("Ohne Titel nicht veröffentlichbar.", status_code=422)
+        # Die `de`-Zeile beim Veröffentlichen sicher spiegeln. Sie ist der
+        # Originaltext und entsteht ohne API-Aufruf; ohne sie hätte eine nie
+        # übersetzte Ankündigung überhaupt keine Fassung, und der Sprachstand
+        # im Backoffice zeigte „24 fehlend" statt „23 fehlend".
+        self._original_schreiben(
+            announcement_id, row, self._quelle_hash_von(row)
+        )
         patch: dict[str, Any] = {
             "status": "veroeffentlicht",
             "updated_at": datetime.now(UTC).isoformat(),
@@ -547,3 +596,352 @@ class AnnouncementService:
             pfad, content, {"content-type": mime, "upsert": "false"}
         )
         return public_storage_url(BILD_BUCKET, pfad)
+
+    # === Übersetzungen (0347) ==============================================
+    # DIE ZUSAGE DIESES ABSCHNITTS: eine Fassung mit `geprueft = true` wird von
+    # keinem automatischen Lauf verändert. Sie steht nicht nur als if-Zweig im
+    # Code, sondern als `.eq("geprueft", False)` in der WHERE-Klausel JEDES
+    # maschinellen Schreibens — eine geprüfte Zeile ist für den Automaten
+    # schlicht nicht adressierbar. Ein vergessener if-Zweig wäre ein Bug; eine
+    # vergessene WHERE-Klausel schreibt gar nichts.
+
+    def _uebersetzungen_laden(self, announcement_id: str) -> list[dict]:
+        rows = (
+            self._db.table("announcement_translations")
+            .select(_U_SPALTEN)
+            .eq("announcement_id", announcement_id)
+            .execute()
+        ).data or []
+        return list(rows)
+
+    def _quelle_hash_von(self, row: dict) -> str:
+        return quelle_hash(
+            row.get("titel") or "",
+            row.get("kurztext"),
+            row.get("inhalt_html") or "",
+        )
+
+    def uebersicht(self, announcement_id: str) -> UebersetzungsUebersicht:
+        """Sprachstand fürs Backoffice: vorhanden, fehlend, veraltet.
+
+        `veraltet` wird hier BERECHNET (Hash-Vergleich), nicht gelesen — siehe
+        die Begründung am Schema. Die Quellsprache zählt mit: sie ist eine
+        vollwertige Fassung (das Original), nur eben nie maschinell erzeugt.
+        """
+        row = self._laden(announcement_id)
+        aktueller = self._quelle_hash_von(row)
+        vorhanden = self._uebersetzungen_laden(announcement_id)
+
+        items: list[AnnouncementUebersetzung] = []
+        veraltet: list[str] = []
+        for r in sorted(vorhanden, key=lambda x: str(x.get("sprache") or "")):
+            ist_veraltet = (r.get("quelle_hash") or "") != aktueller
+            sprache = str(r.get("sprache") or "")
+            if ist_veraltet:
+                veraltet.append(sprache)
+            items.append(
+                AnnouncementUebersetzung(
+                    sprache=sprache,
+                    titel=r.get("titel") or "",
+                    kurztext=r.get("kurztext"),
+                    inhalt_html=r.get("inhalt_html") or "",
+                    geprueft=bool(r.get("geprueft")),
+                    geprueft_am=r.get("geprueft_am"),
+                    veraltet=ist_veraltet,
+                )
+            )
+
+        da = {str(r.get("sprache") or "") for r in vorhanden}
+        # Sortiert, damit die Backoffice-Liste eine stabile Reihenfolge hat und
+        # nicht bei jedem Laden springt.
+        fehlend = sorted(({QUELLSPRACHE} | ZIELSPRACHEN) - da)
+        return UebersetzungsUebersicht(
+            items=items, fehlend=fehlend, veraltet=sorted(veraltet)
+        )
+
+    def _original_schreiben(self, announcement_id: str, row: dict, hash_: str) -> None:
+        """Die `de`-Fassung aus dem Original spiegeln.
+
+        Sie ist KEINE Übersetzung und geht deshalb nie an Google. Sie liegt
+        trotzdem als Zeile vor, damit der Lesepfad EINEN Weg hat: „hol die
+        Fassung in Sprache X" — statt für Deutsch einen Sonderfall zu kennen,
+        der irgendwann an einer der beiden Lesestellen fehlt.
+
+        `geprueft = true`, weil ein Mensch sie geschrieben hat. Damit ist sie
+        zugleich vor jedem maschinellen Lauf geschützt — was richtig ist: das
+        Original zu „übersetzen" hieße, es zu verändern.
+        """
+        self._db.table("announcement_translations").upsert(
+            {
+                "announcement_id": announcement_id,
+                "sprache": QUELLSPRACHE,
+                "titel": row.get("titel") or "",
+                "kurztext": row.get("kurztext"),
+                "inhalt_html": row.get("inhalt_html") or "",
+                "geprueft": True,
+                "quelle_hash": hash_,
+                "updated_at": datetime.now(UTC).isoformat(),
+            },
+            on_conflict="announcement_id,sprache",
+        ).execute()
+
+    def uebersetzen(
+        self, announcement_id: str, *, nur_sprache: str | None = None
+    ) -> UebersetzungsUebersicht:
+        """Fehlende und veraltete Fassungen erzeugen. Geprüfte bleiben stehen.
+
+        WAS ÜBERSETZT WIRD (und was nicht):
+          * fehlt eine Sprache          → wird erzeugt
+          * vorhanden, NICHT geprüft,
+            Quelltext geändert          → wird ersetzt
+          * vorhanden, NICHT geprüft,
+            Quelltext unverändert       → NICHTS (Wurzel 2: kein zweiter
+                                          bezahlter Aufruf bei Doppelklick)
+          * vorhanden, GEPRÜFT          → NIEMALS angefasst, auch nicht bei
+                                          geändertem Original
+
+        `nur_sprache` ist der Knopf „diese eine Sprache neu übersetzen" aus dem
+        Backoffice. Er überschreibt eine GEPRÜFTE Fassung ebenfalls nicht — wer
+        eine geprüfte Fassung verwerfen will, bearbeitet sie von Hand. Ein Weg,
+        der die einzige Garantie des Slice aushebelt, darf nicht hinter einem
+        beiläufigen Knopf liegen.
+
+        FAIL-CLOSED (Wurzel 5): Scheitert eine Sprache, wird die Exception
+        durchgereicht. Bereits geschriebene Sprachen bleiben stehen — sie sind
+        korrekt, und sie wegzuwerfen hieße, für sie erneut zu bezahlen. Der
+        Vorgang ist wiederholbar: beim nächsten Lauf sind genau die fehlenden
+        noch offen (der Hash der geschriebenen passt ja bereits).
+        """
+        row = self._laden(announcement_id)
+        titel = row.get("titel") or ""
+        kurztext = row.get("kurztext")
+        inhalt = row.get("inhalt_html") or ""
+        # Vor dem ERSTEN API-Aufruf prüfen, nicht je Sprache (Wurzel 8).
+        laengen_pruefen(titel, kurztext, inhalt)
+        aktueller = quelle_hash(titel, kurztext, inhalt)
+
+        # Das Original als `de`-Zeile spiegeln. Idempotent per upsert.
+        self._original_schreiben(announcement_id, row, aktueller)
+
+        if nur_sprache is not None and nur_sprache not in ZIELSPRACHEN:
+            raise AnnouncementError(
+                f"Unbekannte oder nicht übersetzbare Sprache: {nur_sprache!r}.",
+                status_code=422,
+            )
+
+        bestand = {
+            str(r.get("sprache") or ""): r
+            for r in self._uebersetzungen_laden(announcement_id)
+        }
+        ziele = {nur_sprache} if nur_sprache else set(ZIELSPRACHEN)
+
+        offen: list[str] = []
+        for sprache in sorted(ziele):
+            vorhanden = bestand.get(sprache)
+            if vorhanden is None:
+                offen.append(sprache)
+                continue
+            if vorhanden.get("geprueft"):
+                # Der Schutz. Auch bei geändertem Original und auch bei
+                # `nur_sprache` — die Fassung gehört einem Menschen.
+                continue
+            if (vorhanden.get("quelle_hash") or "") != aktueller:
+                offen.append(sprache)
+            # Sonst: identischer Quelltext, maschinelle Fassung liegt vor →
+            # nichts zu tun (Idempotenz).
+
+        for sprache in offen:
+            neuer_titel, neuer_kurztext, neuer_inhalt = fassung_erzeugen(
+                titel=titel,
+                kurztext=kurztext,
+                inhalt_html=inhalt,
+                ziel=sprache,
+            )
+            # Was der Dienst zurückgibt, ist Fremd-Input (Wurzel 8) — dieselbe
+            # nh3-Allowlist wie beim Original, nicht eine zweite hier gebaute.
+            self._fassung_schreiben(
+                announcement_id,
+                sprache,
+                titel=neuer_titel,
+                kurztext=neuer_kurztext,
+                inhalt_html=sanitize_inhalt(neuer_inhalt),
+                hash_=aktueller,
+            )
+
+        log.info(
+            "ankuendigung_uebersetzt",
+            announcement_id=announcement_id,
+            erzeugt=len(offen),
+            nur_sprache=nur_sprache,
+        )
+        return self.uebersicht(announcement_id)
+
+    def _fassung_schreiben(
+        self,
+        announcement_id: str,
+        sprache: str,
+        *,
+        titel: str,
+        kurztext: str | None,
+        inhalt_html: str,
+        hash_: str,
+    ) -> None:
+        """Eine MASCHINELLE Fassung ablegen — niemals über eine geprüfte.
+
+        Zwei unabhängige Riegel, und beide sind nötig:
+          1. `update ... .eq("geprueft", False)` — trifft eine geprüfte Zeile
+             nicht. Das ist der eigentliche Schutz.
+          2. `insert` nur, wenn (1) nichts getroffen hat. Der UNIQUE-Index aus
+             0347 verhindert dabei, dass ein gleichzeitiger zweiter Lauf eine
+             zweite Zeile für dieselbe Sprache anlegt.
+
+        Bewusst KEIN `upsert`: ein Upsert auf (announcement_id, sprache) würde
+        die geprüfte Zeile überschreiben — der Konflikt ist ja genau sie. Die
+        WHERE-Klausel des Updates ist der Grund, warum das hier nicht passieren
+        kann.
+        """
+        jetzt = datetime.now(UTC).isoformat()
+        werte = {
+            "titel": titel,
+            "kurztext": kurztext,
+            "inhalt_html": inhalt_html,
+            "quelle_hash": hash_,
+            "geprueft": False,
+            "updated_at": jetzt,
+        }
+        getroffen = (
+            self._db.table("announcement_translations")
+            .update(werte)
+            .eq("announcement_id", announcement_id)
+            .eq("sprache", sprache)
+            .eq("geprueft", False)
+            .execute()
+        ).data or []
+        if getroffen:
+            return
+        # Keine Zeile getroffen: entweder gibt es sie noch nicht (Normalfall)
+        # oder sie ist geprüft (dann darf sie nicht entstehen). Ein Insert
+        # scheitert im zweiten Fall am UNIQUE-Index — und das ist die richtige
+        # Antwort, nicht ein stilles Überschreiben.
+        try:
+            self._db.table("announcement_translations").insert(
+                {
+                    "announcement_id": announcement_id,
+                    "sprache": sprache,
+                    **werte,
+                }
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Konflikt gezielt deuten
+            # 23505 = unique_violation: die Zeile ist inzwischen da (paralleler
+            # Lauf) oder sie ist geprüft. Beides ist KEIN Fehler dieses Laufs —
+            # der gewünschte Zustand liegt vor. Jeden anderen Fehler
+            # weiterreichen (Wurzel 5: kein breites Verschlucken).
+            if "23505" not in str(exc) and "duplicate key" not in str(exc):
+                raise
+            log.info(
+                "ankuendigung_fassung_bereits_vorhanden",
+                announcement_id=announcement_id,
+                sprache=sprache,
+            )
+
+    def fassung_korrigieren(
+        self, announcement_id: str, sprache: str, req: UebersetzungUpdate, *,
+        geprueft_von: str,
+    ) -> AnnouncementUebersetzung:
+        """Eine Fassung von Hand korrigieren — sie gilt danach als geprüft.
+
+        Ab diesem Moment ist sie vor jedem automatischen Lauf geschützt. Der
+        `quelle_hash` wird auf den AKTUELLEN Stand des Originals gesetzt: der
+        Redakteur hat die Fassung gerade gegen dieses Original geprüft, also
+        ist sie in Bezug darauf aktuell. Würde man den alten Hash stehen
+        lassen, erschiene die eben korrigierte Fassung sofort wieder als
+        „veraltet".
+        """
+        row = self._laden(announcement_id)
+        if sprache != QUELLSPRACHE and sprache not in ZIELSPRACHEN:
+            raise AnnouncementError(
+                f"Unbekannte Sprache: {sprache!r}.", status_code=422
+            )
+        jetzt = datetime.now(UTC).isoformat()
+        hash_ = self._quelle_hash_von(row)
+        werte = {
+            "titel": req.titel.strip(),
+            "kurztext": (req.kurztext or "").strip() or None,
+            "inhalt_html": req.inhalt_html,
+            "geprueft": True,
+            "geprueft_von": geprueft_von,
+            "geprueft_am": jetzt,
+            "quelle_hash": hash_,
+            "updated_at": jetzt,
+        }
+        # Hier ist ein Upsert richtig — anders als beim maschinellen Schreiben:
+        # ein MENSCH korrigiert bewusst und darf jede Fassung überschreiben,
+        # auch eine bereits geprüfte (etwa die eines Kollegen).
+        self._db.table("announcement_translations").upsert(
+            {
+                "announcement_id": announcement_id,
+                "sprache": sprache,
+                **werte,
+            },
+            on_conflict="announcement_id,sprache",
+        ).execute()
+        if sprache == QUELLSPRACHE:
+            # Die `de`-Zeile IST das Original. Sie nur in der Übersetzungs-
+            # tabelle zu ändern hieße, zwei verschiedene deutsche Texte zu
+            # führen — den in `announcements` und den hier. Also mitziehen.
+            self._db.table("announcements").update(
+                {
+                    "titel": werte["titel"],
+                    "kurztext": werte["kurztext"],
+                    "inhalt_html": werte["inhalt_html"],
+                    "updated_at": jetzt,
+                }
+            ).eq("id", announcement_id).execute()
+        return AnnouncementUebersetzung(
+            sprache=sprache,
+            titel=str(werte["titel"]),
+            kurztext=werte["kurztext"],
+            inhalt_html=str(werte["inhalt_html"]),
+            geprueft=True,
+            geprueft_am=jetzt,
+            veraltet=False,
+        )
+
+    def _fassungen_fuer(
+        self, ids: list[str], sprache: str
+    ) -> dict[str, dict]:
+        """Die Fassungen mehrerer Ankündigungen in EINER Sprache.
+
+        Ein Roundtrip für die ganze Liste statt einer je Zeile — sonst wären es
+        bei 20 Einträgen 20 Abfragen. Gibt eine Map announcement_id → Zeile.
+        """
+        if not ids:
+            return {}
+        rows = (
+            self._db.table("announcement_translations")
+            .select("announcement_id, titel, kurztext, inhalt_html")
+            .eq("sprache", sprache)
+            .in_("announcement_id", ids)
+            .execute()
+        ).data or []
+        return {str(r["announcement_id"]): r for r in rows}
+
+    def _anwenden(self, item: Announcement, fassung: dict | None) -> Announcement:
+        """Die Fassung auf die Ankündigung legen — oder das Original lassen.
+
+        KEIN FALLBACK-VERSTOSS (Wurzel 4): Gibt es keine Fassung, wird NICHTS
+        erfunden — der Leser sieht den ORIGINALTEXT, also den einzigen real
+        existierenden Text dieser Ankündigung, unverändert und vollständig. Ein
+        Fallback wäre, einen fehlenden Wert durch einen plausibel aussehenden
+        Ersatz zu ersetzen; hier wird stattdessen die vorhandene Wahrheit
+        gezeigt. Die Alternative — die Ankündigung ausblenden — wäre schädlich:
+        eine Wartungsankündigung nicht zuzustellen, weil ihre lettische Fassung
+        fehlt, ist schlechter als sie auf Deutsch zuzustellen. Das Backoffice
+        sieht die Lücke als „fehlend" und kann sie schließen.
+        """
+        if not fassung:
+            return item
+        item.titel = fassung.get("titel") or item.titel
+        item.kurztext = fassung.get("kurztext")
+        item.inhalt_html = fassung.get("inhalt_html") or ""
+        return item

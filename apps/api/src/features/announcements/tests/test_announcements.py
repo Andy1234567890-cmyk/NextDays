@@ -23,11 +23,18 @@ from src.features.announcements.schemas import (
     BILD_BUCKET,
     AnnouncementCreate,
     AnnouncementUpdate,
+    UebersetzungUpdate,
+    normalisiere_gueltig_bis,
     sanitize_inhalt,
 )
 from src.features.announcements.service import (
     AnnouncementError,
     AnnouncementService,
+)
+from src.features.announcements.uebersetzung import (
+    MAX_ZEICHEN,
+    UebersetzungError,
+    quelle_hash,
 )
 
 EIGENE_BASIS = public_storage_url(BILD_BUCKET, "")
@@ -143,6 +150,21 @@ class _Write:
                 if vorhanden:
                     self._db.ignorierte_upserts += 1
                     return _Result([])
+            if self._art == "upsert" and self._kwargs.get("on_conflict"):
+                # `on_conflict="a,b"` — eine vorhandene Zeile mit denselben
+                # Konfliktspalten wird AKTUALISIERT statt verdoppelt. Ohne das
+                # entstünden im Doppel zwei Zeilen je Sprache, und der UNIQUE-
+                # Index aus 0347 wäre im Test nicht abgebildet.
+                schluessel = [
+                    s.strip()
+                    for s in str(self._kwargs["on_conflict"]).split(",")
+                ]
+                for r in rows:
+                    if all(
+                        r.get(k) == self._payload.get(k) for k in schluessel
+                    ):
+                        r.update(self._payload)
+                        return _Result([r])
             neu = {"id": f"row{len(rows) + 1}", **self._payload}
             rows.append(neu)
             return _Result([neu])
@@ -176,6 +198,7 @@ def _db(**tables: list[dict]) -> _DB:
         "tenants": [{"id": "t1", "created_at": "2020-01-01T00:00:00+00:00"}],
         "announcements": [],
         "announcement_reads": [],
+        "announcement_translations": [],
     }
     basis.update(tables)
     return _DB(basis)
@@ -639,3 +662,277 @@ def test_aktualisieren_unbekannte_id_ist_404() -> None:
             "gibtsnicht", AnnouncementUpdate(titel="x")
         )
     assert exc.value.status_code == 404
+
+
+# === „Popup nur bis": reines Datum meint den GANZEN Tag ======================
+# Live-Befund vom 09.08.2026: Das Backoffice-Formular ist ein
+# `<input type="date">` und schickte `2026-08-09`. Postgres castet das zu
+# MITTERNACHT — dem ANFANG des Tages. Die erste echte Ankündigung war damit
+# beim Speichern (09:52) bereits ~10 Stunden abgelaufen, das Popup erschien
+# nie. Genau diese Rückwärts-Bedeutung fangen die folgenden Tests ab.
+def test_gueltig_bis_reines_datum_wird_tagesende() -> None:
+    """Der gewählte Tag zählt VOLLSTÄNDIG mit, nicht bis Mitternacht davor."""
+    assert normalisiere_gueltig_bis("2026-08-09") == (
+        "2026-08-09T23:59:59.999999+00:00"
+    )
+
+
+def test_gueltig_bis_mit_uhrzeit_bleibt_unveraendert() -> None:
+    """Wer eine Uhrzeit angibt, meint sie auch — kein Hochschieben."""
+    assert normalisiere_gueltig_bis("2026-08-20T10:00:00Z") == (
+        "2026-08-20T10:00:00+00:00"
+    )
+
+
+def test_gueltig_bis_leer_ist_unbegrenzt() -> None:
+    """Leeres Feld = keine Grenze (None), nicht ein erfundenes Datum."""
+    assert normalisiere_gueltig_bis(None) is None
+    assert normalisiere_gueltig_bis("   ") is None
+
+
+def test_gueltig_bis_unlesbar_wird_abgelehnt() -> None:
+    """Kein stiller Ersatzwert (Wurzel 4/5): ein still verworfenes Ablaufdatum
+    hieße, das Popup läuft unbegrenzt weiter."""
+    with pytest.raises(ValueError, match="Kein gültiger Zeitpunkt"):
+        normalisiere_gueltig_bis("morgen")
+
+
+def test_create_normalisiert_gueltig_bis() -> None:
+    """Der Validator hängt am POST …"""
+    req = AnnouncementCreate(titel="t", gueltig_bis="2026-08-09")
+    assert req.gueltig_bis == "2026-08-09T23:59:59.999999+00:00"
+
+
+def test_update_normalisiert_gueltig_bis() -> None:
+    """… UND am PATCH — sonst käme über das Ändern wieder ein
+    Mitternachts-Wert herein (dieselbe Lücke wie bei `inhalt_html`)."""
+    req = AnnouncementUpdate(gueltig_bis="2026-08-09")
+    assert req.gueltig_bis == "2026-08-09T23:59:59.999999+00:00"
+
+
+# === Übersetzungen (0347) ===================================================
+# Die EINE Zusage dieses Abschnitts: eine geprüfte Fassung wird von keinem
+# automatischen Lauf verändert. Der Text trägt rechtliche Aussagen und
+# Geldbeträge — ein überschriebener korrigierter Betrag wäre der teuerste
+# denkbare Fehler dieses Slice. Entsprechend liegt der Schwerpunkt hier.
+
+
+def _fassung(**over: object) -> dict:
+    zeile = {
+        "announcement_id": "a1",
+        "sprache": "sv",
+        "titel": "Ny funktion",
+        "kurztext": "kort",
+        "inhalt_html": "<p>Hej</p>",
+        "geprueft": False,
+        "geprueft_am": None,
+        "quelle_hash": "alt",
+    }
+    zeile.update(over)
+    return zeile
+
+
+def test_geprueft_ueberlebt_neuen_lauf(monkeypatch: pytest.MonkeyPatch) -> None:
+    """DER KERN: eine von Hand korrigierte Fassung wird NICHT überschrieben.
+
+    Aufbau: das Original hat sich geändert (der Hash passt nicht mehr), die
+    schwedische Fassung ist aber geprüft. Ein Übersetzungslauf muss sie in Ruhe
+    lassen — obwohl sie nach Hash-Vergleich „veraltet" ist. Genau hier lag die
+    Gefahr: „veraltet" verführt dazu, neu zu übersetzen.
+    """
+    db = _db(
+        announcements=[_ankuendigung()],
+        announcement_translations=[
+            _fassung(
+                sprache="sv",
+                titel="VON HAND KORRIGIERT",
+                geprueft=True,
+                quelle_hash="veralteter-hash",
+            )
+        ],
+    )
+    gerufen: list[str] = []
+
+    def _fake(*, titel: str, kurztext: object, inhalt_html: str, ziel: str):
+        gerufen.append(ziel)
+        return (f"T-{ziel}", f"K-{ziel}", f"<p>I-{ziel}</p>")
+
+    monkeypatch.setattr(
+        "src.features.announcements.service.fassung_erzeugen", _fake
+    )
+    AnnouncementService(db).uebersetzen("a1", nur_sprache="sv")
+
+    # Kein API-Aufruf für die geprüfte Sprache — sie ist unerreichbar.
+    assert "sv" not in gerufen
+    sv = [
+        r
+        for r in db.tables["announcement_translations"]
+        if r["sprache"] == "sv"
+    ]
+    assert len(sv) == 1
+    assert sv[0]["titel"] == "VON HAND KORRIGIERT"
+    assert sv[0]["geprueft"] is True
+
+
+def test_maschinelle_fassung_wird_bei_textaenderung_ersetzt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Die Gegenprobe: NICHT geprüft + Original geändert → neu übersetzt.
+
+    Ohne diesen Fall wäre der Schutz oben wertlos, weil er auch alles andere
+    einfrieren könnte."""
+    db = _db(
+        announcements=[_ankuendigung()],
+        announcement_translations=[
+            _fassung(sprache="sv", geprueft=False, quelle_hash="veraltet")
+        ],
+    )
+    monkeypatch.setattr(
+        "src.features.announcements.service.fassung_erzeugen",
+        lambda **k: (f"T-{k['ziel']}", None, "<p>neu</p>"),
+    )
+    AnnouncementService(db).uebersetzen("a1", nur_sprache="sv")
+    sv = [
+        r
+        for r in db.tables["announcement_translations"]
+        if r["sprache"] == "sv"
+    ][0]
+    assert sv["titel"] == "T-sv"
+    assert sv["geprueft"] is False
+
+
+def test_zweiter_lauf_ohne_textaenderung_ruft_nichts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Wurzel 2: Doppelklick/Retry darf keinen zweiten bezahlten Lauf auslösen.
+
+    Der Quelltext ist unverändert, also passt der Hash — es gibt nichts zu tun.
+    """
+    db = _db(announcements=[_ankuendigung()])
+    aufrufe: list[str] = []
+
+    def _fake(**k: object):
+        aufrufe.append(str(k["ziel"]))
+        return ("t", None, "<p>i</p>")
+
+    monkeypatch.setattr(
+        "src.features.announcements.service.fassung_erzeugen", _fake
+    )
+    service = AnnouncementService(db)
+    service.uebersetzen("a1")
+    erste_runde = len(aufrufe)
+    assert erste_runde == 23  # 24 Sprachen minus die Quellsprache
+
+    service.uebersetzen("a1")
+    assert len(aufrufe) == erste_runde, "zweiter Lauf hat erneut übersetzt"
+    # Und keine doppelten Zeilen (UNIQUE-Backstop im Doppel abgebildet).
+    sprachen = [r["sprache"] for r in db.tables["announcement_translations"]]
+    assert len(sprachen) == len(set(sprachen)) == 24
+
+
+def test_dienstausfall_schreibt_keine_zeile(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Wurzel 5/4: Fällt der Dienst aus, gibt es KEINE Fassung — und schon gar
+    nicht den deutschen Ausgangstext unter `sv`."""
+
+    def _kaputt(**_k: object):
+        raise UebersetzungError("Dienst weg.")
+
+    monkeypatch.setattr(
+        "src.features.announcements.service.fassung_erzeugen", _kaputt
+    )
+    db = _db(announcements=[_ankuendigung()])
+    with pytest.raises(UebersetzungError):
+        AnnouncementService(db).uebersetzen("a1", nur_sprache="sv")
+
+    fremd = [
+        r
+        for r in db.tables["announcement_translations"]
+        if r["sprache"] != "de"
+    ]
+    assert fremd == [], "es wurde eine Fassung ohne Übersetzung abgelegt"
+
+
+def test_korrigieren_setzt_geprueft_und_schuetzt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Eine Korrektur macht die Fassung geprüft — und damit unantastbar."""
+    db = _db(
+        announcements=[_ankuendigung()],
+        announcement_translations=[_fassung(sprache="da", geprueft=False)],
+    )
+    service = AnnouncementService(db)
+    service.fassung_korrigieren(
+        "a1",
+        "da",
+        UebersetzungUpdate(
+            titel="Rettet af et menneske",
+            kurztext=None,
+            inhalt_html="<p>Rettet</p>",
+        ),
+        geprueft_von="admin1",
+    )
+    da = [
+        r
+        for r in db.tables["announcement_translations"]
+        if r["sprache"] == "da"
+    ][0]
+    assert da["geprueft"] is True
+    assert da["geprueft_von"] == "admin1"
+
+    # Ein anschließender Lauf lässt sie stehen.
+    monkeypatch.setattr(
+        "src.features.announcements.service.fassung_erzeugen",
+        lambda **k: ("MASCHINE", None, "<p>x</p>"),
+    )
+    service.uebersetzen("a1", nur_sprache="da")
+    da2 = [
+        r
+        for r in db.tables["announcement_translations"]
+        if r["sprache"] == "da"
+    ][0]
+    assert da2["titel"] == "Rettet af et menneske"
+
+
+def test_leser_ohne_fassung_bekommt_das_original() -> None:
+    """Kein Fallback-Verstoß: fehlt die Fassung, kommt der ORIGINALTEXT — der
+    einzige real existierende Text. Nicht eine leere oder erfundene Zeile."""
+    db = _db(announcements=[_ankuendigung(titel="Deutsches Original")])
+    liste = AnnouncementService(db).liste(_ctx(), sprache="lv")
+    assert liste.items[0].titel == "Deutsches Original"
+
+
+def test_leser_bekommt_seine_sprache() -> None:
+    """Und liegt sie vor, gewinnt sie."""
+    db = _db(
+        announcements=[_ankuendigung(titel="Deutsches Original")],
+        announcement_translations=[
+            _fassung(sprache="sv", titel="Svensk version")
+        ],
+    )
+    liste = AnnouncementService(db).liste(_ctx(), sprache="sv")
+    assert liste.items[0].titel == "Svensk version"
+
+
+def test_zu_langer_text_wird_abgelehnt() -> None:
+    """Wurzel 8: harte Obergrenze VOR dem ersten API-Aufruf → 422."""
+    db = _db(announcements=[_ankuendigung(inhalt_html="x" * (MAX_ZEICHEN + 1))])
+    with pytest.raises(UebersetzungError) as exc:
+        AnnouncementService(db).uebersetzen("a1")
+    assert exc.value.status_code == 422
+
+
+def test_hash_ignoriert_nicht_uebersetzbare_felder() -> None:
+    """`als_popup` umzuschalten ist keine Textänderung und darf keinen
+    (kostenpflichtigen) Neu-Lauf auslösen."""
+    a = quelle_hash("t", "k", "<p>i</p>")
+    b = quelle_hash("t", "k", "<p>i</p>")
+    assert a == b
+    assert quelle_hash("t", "k", "<p>anders</p>") != a
+
+
+def test_hash_trennt_die_felder() -> None:
+    """Ohne Trennzeichen ergäben Titel „AB"/Kurztext „C" und „A"/„BC" denselben
+    Hash — eine Änderung bliebe unbemerkt und die Übersetzung veraltete still."""
+    assert quelle_hash("AB", "C", "") != quelle_hash("A", "BC", "")

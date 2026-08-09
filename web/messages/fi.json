@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Määritä kohteet} one {Määritä # kohde} other {Määritä # kohdetta}}",
     "propertiesAssigned": "{count, plural, one {# kohde määritetty} other {# kohdetta määritetty}}",
     "removeProperty": "Poista liitos",
+    "shareInvalid": "Anna osuus väliltä 0–100.",
     "sections": {
       "master": "Perustiedot",
       "payout": "Maksu & palkkio",
@@ -998,7 +999,7 @@
       "statementFrequency": "Tilitysväli",
       "notes": "Muistiinpanot",
       "share": "Osuus (%)",
-      "commissionOverride": "Palkkio (%) poikkeava",
+      "commissionOverride": "Provisio (%)",
       "emailLanguage": "Sähköpostien kieli"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Portaalikäyttöoikeus edellyttää sähköpostiosoitetta.",
     "portalAccessInvite": "Lähetä kutsu",
     "portalAccessInvited": "Kutsu lähetetty.",
-    "portalAccessActive": "Portaalikäyttöoikeus on luotu."
+    "portalAccessActive": "Portaalikäyttöoikeus on luotu.",
+    "commissionNotAgreed": "ei sovittu",
+    "assignableCount": "{count} / {total} valittu lisättäväksi",
+    "assignedHeading": "{count, plural, one {# määritetty kohde} other {# määritettyä kohdetta}}",
+    "info": {
+      "aria": "Selitys kohtaan {feld}",
+      "share": "Omistusosuus tästä kohteesta. Sadan prosentin osuudella koko maksu kohdistetaan tälle omistajalle, pienemmällä osuudella vastaavassa suhteessa.",
+      "commission": "Tämän omistajan oletusprovisioprosentti. Jos kenttä jää tyhjäksi, prosentista ei ole vielä sovittu — maksua ei tällöin lasketa, vaan se näytetään ajatusviivana.",
+      "commissionOverride": "Koskee vain tätä yhtä kohdetta ja ohittaa omistajan oletusprosentin. Jos kenttä jää tyhjäksi, käytetään oletusprosenttia."
+    }
   },
   "ownerStatements": {
     "title": "Omistajan tilitys",
@@ -1063,7 +1073,14 @@
       "checkOut": "Uloskirjautuminen",
       "statuses": "Varauksen tilat",
       "statusCount": "{count} tilaa",
-      "title": "Suodattimet"
+      "title": "Suodattimet",
+      "resetAll": "Tyhjennä kaikki suodattimet",
+      "remove": "Tyhjennä: {feld}",
+      "statusesNone": "Ei valintoja",
+      "statusesSearch": "Hae tilaa …",
+      "statusesNoMatch": "Tilaa ei löytynyt.",
+      "statusesSelectAll": "Valitse kaikki",
+      "statusesCount": "{count} / {total} valittu"
     },
     "reservationStatus": {
       "pending": "Avoin",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Luonnos",
-      "finalized": "Vahvistettu"
+      "finalized": "Vahvistettu",
+      "cancelled": "Hyvitetty"
     },
     "sections": {
       "data": "Tiedot",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Kokonaishinta",
       "totalPayout": "Kokonaismaksu",
       "ownerPayout": "Omistajan maksu",
-      "pmPayout": "Kiinteistönhoitajan maksu"
+      "pmPayout": "Kiinteistönhoitajan maksu",
+      "commissionMissing": "Vähintään yhdelle kohteelle ei ole asetettu provisioprosenttia. Maksuja ei voida laskea — syötä prosentti omistajan perustietoihin tai kohteelle."
     },
     "rental": {
       "perReservation": "Varausta kohden",
@@ -1136,13 +1155,28 @@
       "reservation": "Varaus",
       "owner": "Omistaja",
       "hideAll": "Piilota kaikki",
-      "assignOwner": "Kohdista omistajalle"
+      "assignOwner": "Kohdista omistajalle",
+      "intro": "Summat, jotka maksetaan omistajalle lisäksi tai peritään häneltä. Ne huomioidaan täysimääräisinä maksussa — ilman provision vähennystä.",
+      "direction": "Suunta",
+      "toOwner": "Omistajan hyväksi",
+      "toOwnerHint": "Hän saa lisämaksun, esim. vahingonkorvauksen.",
+      "toOwnerShort": "Hyväksi",
+      "fromOwner": "Omistajan vahingoksi",
+      "fromOwnerHint": "Vähennetään hänen maksustaan, esim. materiaalit ja työaika.",
+      "fromOwnerShort": "Vähennys",
+      "sumToOwner": "Yhteensä hyväksi:",
+      "sumFromOwner": "Yhteensä vähennyksiä:",
+      "receipt": "Tosite",
+      "openReceipt": "Avaa tosite",
+      "createdBy": "Kirjannut {name}",
+      "saveFirst": "Kuittauserät kuuluvat tallennettuun tilitykseen. Tallenna tilitys, minkä jälkeen voit kirjata eriä tähän.",
+      "missingFields": "Täytä vielä: {felder}."
     },
     "grand": {
       "rentalRevenue": "Vuokratulot",
       "expenses": "Kulut ja lisät",
       "total": "Yhteensä",
-      "deductPercentage": "Vähennä palkkio (%)"
+      "deductPercentage": "Provisio (%)"
     },
     "manage": {
       "owner": "Omistaja",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Muokkaa",
     "attachments": {
-      "drop": "Pudota tiedostot ladattavaksi tai selaa"
+      "drop": "Pudota tiedostot ladattavaksi tai selaa",
+      "viaExpenses": "Tositteet liitetään yksittäiseen erään: lataa ne kohdassa ”Kulut & lisät” suoraan kyseiselle riville."
     },
     "masterData": "Perustiedot",
     "preview": "Esikatselu",
     "previewTitle": "Asiakirjan esikatselu",
-    "close": "Sulje"
+    "close": "Sulje",
+    "info": {
+      "aria": "Selitys kohtaan {feld}",
+      "totalPrice": "Se, mitä vieras on maksanut oleskelustaan yhteensä — ennen portaalimaksujen ja provision vähentämistä.",
+      "totalPayout": "Se, mitä yritykselle jää portaalimaksujen vähentämisen jälkeen. Tästä summasta muodostetaan omistajan ja hallinnon osuus.",
+      "ownerPayout": "Omistajalle maksettava osuus: kokonaismaksu vähennettynä provisiolla ja lisättynä kuittauserillä.",
+      "pmPayout": "Osuus, joka jää yritykselle — vuokrauksesta perittävä provisio. Kuittauseriä ei lasketa tähän mukaan.",
+      "expenses": {
+        "title": "Hyväksi ja vahingoksi",
+        "direction": "”Omistajan hyväksi” kasvattaa hänen maksuaan, esimerkiksi hyvityksenä. ”Omistajan vahingoksi” pienentää sitä, esimerkiksi yrityksen materiaalien tai työajan osalta.",
+        "noCommission": "Nämä summat huomioidaan maksussa täysimääräisinä — niistä ei peritä provisiota.",
+        "aria": "Selitys kuittauseristä"
+      },
+      "dash": {
+        "title": "Mitä ajatusviiva tarkoittaa",
+        "meaning": "Ajatusviiva tarkoittaa ”ei kirjattu” — ei ”nolla”. Arvoa ei voida laskea, koska jokin tieto puuttuu.",
+        "whereToFix": "Jos provisioprosentti puuttuu, syötä se omistajan perustietoihin tai poikkeavana prosenttina yksittäiselle kohteelle.",
+        "aria": "Selitys summan tilalla olevalle ajatusviivalle",
+        "inline": "Ajatusviiva tarkoittaa puuttuvaa arvoa, ei arvoa 0,00."
+      },
+      "deductPercentage": "Palkkioprosentti, jolla tämä tilitys lasketaan. Tyhjä tarkoittaa: voimassa on omistajan perustiedoissa oleva prosentti tai yksittäiselle kohteelle asetettu poikkeava prosentti.",
+      "status": {
+        "title": "Tilityksen kolme tilaa",
+        "draft": "Luonnos: vielä muokattavissa. Summat lasketaan uudelleen jokaisen muutoksen yhteydessä.",
+        "finalized": "Vahvistettu: laskunumero annettu, summat lukittu. Muutokset eivät ole enää mahdollisia.",
+        "cancelled": "Hyvitetty: kumottu hyvityslaskulla. Alkuperäinen lasku säilyy tositteena."
+      },
+      "finalize": {
+        "title": "Vahvista tilitys lopulliseksi",
+        "what": "Vahvistettaessa annetaan laskunumero ja kaikki summat lukitaan tositteeksi.",
+        "irreversible": "Tätä ei voi perua. Vahvistetun laskun voi kumota enää vain hyvityslaskulla."
+      },
+      "basis": "Määrittää, milloin varaus osuu jaksoon: valinnalla Sisäänkirjautuminen ratkaisee saapumispäivä, valinnalla Uloskirjautuminen lähtöpäivä. Kuukauden vaihteen yli menevä varaus osuu valinnan mukaan joko edelliseen tai seuraavaan kuukauteen.",
+      "statuses": "Vain varaukset, joilla on jokin valituista tiloista, tilitetään. Oletuksena ovat vahvistetut ja päättyneet varaukset — perutut eivät yleensä kuulu maksuun."
+    }
   },
   "ownerBilling": {
     "title": "Tilityssopimus",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Provisionalainen",
     "commissionableYes": "Kyllä — lasketaan provisioon",
-    "commissionableNo": "Ei — provisiovapaa"
+    "commissionableNo": "Ei — provisiovapaa",
+    "infoAria": "Selitys kohtaan {feld}"
   },
   "portal": {
     "title": "Oma portaali",

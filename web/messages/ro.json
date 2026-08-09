@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Atribuie proprietăți} one {Atribuie # proprietate} few {Atribuie # proprietăți} other {Atribuie # de proprietăți}}",
     "propertiesAssigned": "{count, plural, one {# proprietate atribuită} few {# proprietăți atribuite} other {# de proprietăți atribuite}}",
     "removeProperty": "Elimină alocarea",
+    "shareInvalid": "Introduceți o cotă între 0 și 100.",
     "sections": {
       "master": "Date de bază",
       "payout": "Plată & comision",
@@ -998,7 +999,7 @@
       "statementFrequency": "Ritm de decontare",
       "notes": "Note",
       "share": "Cotă (%)",
-      "commissionOverride": "Comision (%) diferit",
+      "commissionOverride": "Comision (%)",
       "emailLanguage": "Limba e-mailurilor"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Pentru accesul la portal este necesară o adresă de e-mail.",
     "portalAccessInvite": "Trimite invitația",
     "portalAccessInvited": "Invitație trimisă.",
-    "portalAccessActive": "Accesul la portal este configurat."
+    "portalAccessActive": "Accesul la portal este configurat.",
+    "commissionNotAgreed": "neconvenit",
+    "assignableCount": "{count} din {total} selectate pentru adăugare",
+    "assignedHeading": "{count, plural, one {# proprietate alocată} few {# proprietăți alocate} other {# de proprietăți alocate}}",
+    "info": {
+      "aria": "Explicație pentru: {feld}",
+      "share": "Cota de proprietate asupra acestei proprietăți. La 100 % întreaga plată este atribuită acestui proprietar, la mai puțin — proporțional.",
+      "commission": "Comisionul standard pentru acest proprietar. Dacă rămâne gol, comisionul nu este încă convenit — plata nu va fi calculată, ci afișată ca linie de pauză.",
+      "commissionOverride": "Se aplică doar acestei proprietăți și înlocuiește comisionul standard al proprietarului. Dacă rămâne gol, se aplică comisionul standard."
+    }
   },
   "ownerStatements": {
     "title": "Deconturi proprietari",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Statusuri rezervare",
       "statusCount": "{count} statusuri",
-      "title": "Filtre"
+      "title": "Filtre",
+      "resetAll": "Resetează toate filtrele",
+      "remove": "Resetează {feld}",
+      "statusesNone": "Nimic selectat",
+      "statusesSearch": "Caută status …",
+      "statusesNoMatch": "Niciun status găsit.",
+      "statusesSelectAll": "Selectează tot",
+      "statusesCount": "{count} din {total} selectate"
     },
     "reservationStatus": {
       "pending": "În așteptare",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Ciornă",
-      "finalized": "Finalizat"
+      "finalized": "Finalizat",
+      "cancelled": "Stornată"
     },
     "sections": {
       "data": "Date",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Preț total",
       "totalPayout": "Plată totală",
       "ownerPayout": "Plată proprietar",
-      "pmPayout": "Plată administrator"
+      "pmPayout": "Plată administrator",
+      "commissionMissing": "Pentru cel puțin o proprietate nu este setat un comision. Plățile nu pot fi calculate — introdu comisionul în datele proprietarului sau la proprietate."
     },
     "rental": {
       "perReservation": "Pe rezervare",
@@ -1136,13 +1155,28 @@
       "reservation": "Rezervare",
       "owner": "Proprietar",
       "hideAll": "Ascunde tot",
-      "assignOwner": "Alocă proprietarului"
+      "assignOwner": "Alocă proprietarului",
+      "intro": "Sume plătite suplimentar proprietarului sau decontate de la acesta. Ele intră integral în plată — fără deducerea comisionului.",
+      "direction": "Sens",
+      "toOwner": "În favoarea proprietarului",
+      "toOwnerHint": "Primește o plată suplimentară, de ex. o despăgubire pentru daune.",
+      "toOwnerShort": "În favoarea",
+      "fromOwner": "În sarcina proprietarului",
+      "fromOwnerHint": "Se deduce din plata sa, de ex. materiale și timp de lucru.",
+      "fromOwnerShort": "În sarcina",
+      "sumToOwner": "Total în favoare:",
+      "sumFromOwner": "Total în sarcină:",
+      "receipt": "Document justificativ",
+      "openReceipt": "Deschide documentul",
+      "createdBy": "Înregistrat de {name}",
+      "saveFirst": "Pozițiile de decontare aparțin unui decont salvat. Salvează decontul, apoi poți înregistra aici poziții.",
+      "missingFields": "Te rugăm să mai completezi: {felder}."
     },
     "grand": {
       "rentalRevenue": "Venituri din închiriere",
       "expenses": "Cheltuieli & extra",
       "total": "Total",
-      "deductPercentage": "Deduce comisionul (%)"
+      "deductPercentage": "Comision (%)"
     },
     "manage": {
       "owner": "Proprietar",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Editează",
     "attachments": {
-      "drop": "Trage fișierele pentru încărcare sau răsfoiește"
+      "drop": "Trage fișierele pentru încărcare sau răsfoiește",
+      "viaExpenses": "Documentele justificative aparțin fiecărei poziții în parte: încarcă-le în secțiunea „Cheltuieli & extra” direct la rândul respectiv."
     },
     "masterData": "Date de bază",
     "preview": "Previzualizare",
     "previewTitle": "Previzualizare document",
-    "close": "Închide"
+    "close": "Închide",
+    "info": {
+      "aria": "Explicație pentru: {feld}",
+      "totalPrice": "Suma pe care oaspetele a plătit-o în total pentru sejurul său — înainte de deducerea comisioanelor portalurilor și a comisionului de administrare.",
+      "totalPayout": "Suma care ajunge la administrator după deducerea comisioanelor portalurilor. Din ea se formează partea proprietarului și partea administratorului.",
+      "ownerPayout": "Partea plătită proprietarului: plata totală minus comisionul, plus pozițiile de decontare.",
+      "pmPayout": "Partea care rămâne la administrator — comisionul pentru închiriere. Pozițiile de decontare nu sunt incluse aici.",
+      "expenses": {
+        "title": "În favoarea și în sarcina proprietarului",
+        "direction": "„În favoarea proprietarului” îi mărește plata, de exemplu o rambursare. „În sarcina proprietarului” o reduce, de exemplu materiale sau timpul de lucru al administratorului.",
+        "noCommission": "Aceste sume intră integral în plată — pentru ele nu se calculează comision.",
+        "aria": "Explicație privind pozițiile de decontare"
+      },
+      "dash": {
+        "title": "Ce înseamnă linia de pauză",
+        "meaning": "O linie de pauză înseamnă „neînregistrat” — nu „zero”. Valoarea nu poate fi calculată, deoarece lipsește o informație.",
+        "whereToFix": "Dacă lipsește comisionul, introdu-l în datele de bază ale proprietarului sau ca valoare diferită la proprietatea respectivă.",
+        "aria": "Explicație pentru linia de pauză în locul unei sume",
+        "inline": "O linie de pauză înseamnă o valoare lipsă, nu 0,00."
+      },
+      "deductPercentage": "Cota de comision cu care calculează acest decont. Gol înseamnă: se aplică cota din datele de bază ale proprietarului, respectiv cota diferită de la obiectul individual.",
+      "status": {
+        "title": "Cele trei stări ale unui decont",
+        "draft": "Ciornă: încă modificabil. Sumele se recalculează la fiecare modificare.",
+        "finalized": "Finalizat: numărul facturii a fost atribuit, sumele sunt înghețate. Modificările nu mai sunt posibile.",
+        "cancelled": "Anulat: desființat printr-o factură de stornare. Factura originală rămâne păstrată ca document justificativ."
+      },
+      "finalize": {
+        "title": "Finalizează decontul",
+        "what": "La finalizare se atribuie numărul facturii, iar toate sumele sunt înghețate ca document justificativ.",
+        "irreversible": "Acest lucru nu poate fi anulat. O factură finalizată mai poate fi desființată doar printr-o factură de stornare."
+      },
+      "basis": "Stabilește când o rezervare intră în perioadă: la check-in după ziua sosirii, la check-out după ziua plecării. O rezervare care trece dintr-o lună în alta ajunge, în funcție de alegere, într-una sau în cealaltă lună.",
+      "statuses": "Se decontează doar rezervările cu unul dintre statusurile selectate. Implicit sunt rezervările confirmate și finalizate — cele anulate nu intră în mod normal într-o plată."
+    }
   },
   "ownerBilling": {
     "title": "Contract de decontare",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Supus comisionului",
     "commissionableYes": "Da — intră în calculul comisionului",
-    "commissionableNo": "Nu — fără comision"
+    "commissionableNo": "Nu — fără comision",
+    "infoAria": "Explicație pentru: {feld}"
   },
   "portal": {
     "title": "Portalul meu",

@@ -5,10 +5,11 @@
 // Routenwechsel zeigte er beim Umschalten weiterhin den zuletzt geladenen Text.
 import { notFound } from "next/navigation";
 
-import { getAnkuendigung } from "@/lib/announcements";
+import { getAnkuendigung, getFassungen } from "@/lib/announcements";
 import { getPlatformMe } from "@/lib/backoffice";
 
 import { AnkuendigungFormular } from "@/components/ankuendigungen/ankuendigung-formular";
+import { UebersetzungenPanel } from "@/components/ankuendigungen/uebersetzungen-panel";
 
 export default async function AnkuendigungSeite({
   params,
@@ -27,10 +28,24 @@ export default async function AnkuendigungSeite({
     notFound();
   }
 
+  // Der Sprachstand hängt an derselben Ankündigung und wird deshalb hier
+  // mitgeladen — ein zweiter Roundtrip aus dem Client heraus würde den Bereich
+  // erst nach dem ersten Rendern erscheinen lassen.
+  const uebersicht = await getFassungen(id);
+
   return (
-    <AnkuendigungFormular
-      vorhanden={ankuendigung}
-      darfSchreiben={me.can_write}
-    />
+    <>
+      <AnkuendigungFormular
+        vorhanden={ankuendigung}
+        darfSchreiben={me.can_write}
+      />
+      <div className="px-8 pb-12 lg:px-12">
+        <UebersetzungenPanel
+          announcementId={id}
+          uebersicht={uebersicht}
+          darfSchreiben={me.can_write}
+        />
+      </div>
+    </>
   );
 }

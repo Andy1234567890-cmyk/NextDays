@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Dodijeli objekte} one {Dodijeli # objekt} few {Dodijeli # objekta} other {Dodijeli # objekata}}",
     "propertiesAssigned": "{count, plural, one {Dodijeljen # objekt} few {Dodijeljena # objekta} other {Dodijeljeno # objekata}}",
     "removeProperty": "Ukloni dodjelu",
+    "shareInvalid": "Unesite udio između 0 i 100.",
     "sections": {
       "master": "Matični podaci",
       "payout": "Isplata i provizija",
@@ -998,7 +999,7 @@
       "statementFrequency": "Ritam obračuna",
       "notes": "Bilješke",
       "share": "Udio (%)",
-      "commissionOverride": "Provizija (%) odstupanje",
+      "commissionOverride": "Provizija (%)",
       "emailLanguage": "Jezik e-pošte"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Za pristup portalu potrebna je adresa e-pošte.",
     "portalAccessInvite": "Pošalji pozivnicu",
     "portalAccessInvited": "Pozivnica poslana.",
-    "portalAccessActive": "Pristup portalu je postavljen."
+    "portalAccessActive": "Pristup portalu je postavljen.",
+    "commissionNotAgreed": "nije dogovoreno",
+    "assignableCount": "Odabrano {count} od {total} za dodavanje",
+    "assignedHeading": "{count, plural, one {# dodijeljen objekt} few {# dodijeljena objekta} other {# dodijeljenih objekata}}",
+    "info": {
+      "aria": "Objašnjenje za: {feld}",
+      "share": "Vlasnički udio u ovom objektu. Pri 100 % cijela se isplata pripisuje ovom vlasniku, pri manjem udjelu razmjerno.",
+      "commission": "Standardna stopa provizije za ovog vlasnika. Ostane li polje prazno, stopa još nije dogovorena — isplata se tada ne izračunava, nego se prikazuje kao crtica.",
+      "commissionOverride": "Vrijedi samo za ovaj jedan objekt i nadjačava standardnu stopu vlasnika. Ostane li polje prazno, vrijedi standardna stopa."
+    }
   },
   "ownerStatements": {
     "title": "Obračun vlasnika",
@@ -1063,7 +1073,14 @@
       "checkOut": "Odjava",
       "statuses": "Statusi rezervacije",
       "statusCount": "{count} statusa",
-      "title": "Filtri"
+      "title": "Filtri",
+      "resetAll": "Poništi sve filtre",
+      "remove": "Poništi {feld}",
+      "statusesNone": "Ništa odabrano",
+      "statusesSearch": "Pretraži status …",
+      "statusesNoMatch": "Nije pronađen status.",
+      "statusesSelectAll": "Odaberi sve",
+      "statusesCount": "Odabrano {count} od {total}"
     },
     "reservationStatus": {
       "pending": "Na čekanju",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Nacrt",
-      "finalized": "Finalizirano"
+      "finalized": "Finalizirano",
+      "cancelled": "Stornirano"
     },
     "sections": {
       "data": "Podaci",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Ukupna cijena",
       "totalPayout": "Ukupna isplata",
       "ownerPayout": "Isplata vlasniku",
-      "pmPayout": "Isplata upravitelju"
+      "pmPayout": "Isplata upravitelju",
+      "commissionMissing": "Za najmanje jednu nekretninu nije postavljena stopa provizije. Isplate se stoga ne mogu izračunati — unesite stopu u matične podatke vlasnika ili na nekretnini."
     },
     "rental": {
       "perReservation": "Po rezervaciji",
@@ -1136,13 +1155,28 @@
       "reservation": "Rezervacija",
       "owner": "Vlasnik",
       "hideAll": "Sakrij sve",
-      "assignOwner": "Dodijeli vlasniku"
+      "assignOwner": "Dodijeli vlasniku",
+      "intro": "Iznosi koji se vlasniku dodatno isplaćuju ili mu se obračunavaju na teret. U isplatu ulaze u punom iznosu — bez odbitka provizije.",
+      "direction": "Smjer",
+      "toOwner": "U korist vlasnika",
+      "toOwnerHint": "Prima dodatnu isplatu, npr. naknadu štete.",
+      "toOwnerShort": "U korist",
+      "fromOwner": "Na teret vlasnika",
+      "fromOwnerHint": "Odbija se od njegove isplate, npr. materijal i radno vrijeme.",
+      "fromOwnerShort": "Na teret",
+      "sumToOwner": "Ukupno u korist:",
+      "sumFromOwner": "Ukupno na teret:",
+      "receipt": "Dokaz",
+      "openReceipt": "Otvori dokaz",
+      "createdBy": "Unio/unijela {name}",
+      "saveFirst": "Obračunske stavke pripadaju spremljenom obračunu. Spremi obračun, nakon toga ovdje možeš unositi stavke.",
+      "missingFields": "Molimo ispuni još: {felder}."
     },
     "grand": {
       "rentalRevenue": "Prihod od iznajmljivanja",
       "expenses": "Troškovi i dodatne stavke",
       "total": "Ukupno",
-      "deductPercentage": "Odbij proviziju (%)"
+      "deductPercentage": "Provizija (%)"
     },
     "manage": {
       "owner": "Vlasnik",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Uredi",
     "attachments": {
-      "drop": "Ispusti datoteke za učitavanje ili odaberi"
+      "drop": "Ispusti datoteke za učitavanje ili odaberi",
+      "viaExpenses": "Dokazi pripadaju pojedinačnoj stavci: učitaj ih u odjeljku „Troškovi i dodatne stavke” izravno uz odgovarajući redak."
     },
     "masterData": "Matični podaci",
     "preview": "Pregled",
     "previewTitle": "Pregled dokumenta",
-    "close": "Zatvori"
+    "close": "Zatvori",
+    "info": {
+      "aria": "Objašnjenje za: {feld}",
+      "totalPrice": "Iznos koji je gost ukupno platio za svoj boravak — prije odbitka naknada portala i provizije.",
+      "totalPayout": "Iznos koji nakon odbitka naknada portala dolazi upravitelju. Iz njega se tvore udio vlasnika i udio upravitelja.",
+      "ownerPayout": "Udio koji se isplaćuje vlasniku: ukupna isplata umanjena za proviziju i uvećana za obračunske stavke.",
+      "pmPayout": "Udio koji ostaje upravitelju — provizija na iznajmljivanje. Obračunske stavke ovdje nisu uključene.",
+      "expenses": {
+        "title": "U korist i na teret",
+        "direction": "„U korist vlasnika” povećava njegovu isplatu, primjerice povrat troškova. „Na teret vlasnika” je umanjuje, primjerice materijal ili radno vrijeme upravitelja.",
+        "noCommission": "Ti iznosi ulaze u isplatu u punom iznosu — na njih se ne obračunava provizija.",
+        "aria": "Objašnjenje obračunskih stavki"
+      },
+      "dash": {
+        "title": "Što znači crtica",
+        "meaning": "Crtica znači „nije uneseno” — a ne „nula”. Vrijednost se ne može izračunati jer nedostaje podatak.",
+        "whereToFix": "Ako nedostaje stopa provizije, unesi je u matične podatke vlasnika ili kao odstupajuću stopu na pojedinom objektu.",
+        "aria": "Objašnjenje crtice umjesto iznosa",
+        "inline": "Crtica označava vrijednost koja nedostaje, a ne 0,00."
+      },
+      "deductPercentage": "Stopa provizije s kojom računa ovaj obračun. Prazno znači: vrijedi stopa iz matičnih podataka vlasnika odnosno odstupajuća stopa na pojedinom objektu.",
+      "status": {
+        "title": "Tri stanja obračuna",
+        "draft": "Nacrt: još se može mijenjati. Iznosi se pri svakoj promjeni ponovno izračunavaju.",
+        "finalized": "Finalizirano: dodijeljen je broj računa, iznosi su zamrznuti. Promjene više nisu moguće.",
+        "cancelled": "Stornirano: poništeno storno-računom. Izvorni račun ostaje sačuvan kao dokaz."
+      },
+      "finalize": {
+        "title": "Finaliziraj obračun",
+        "what": "Pri finaliziranju dodjeljuje se broj računa i svi se iznosi zamrzavaju kao dokaz.",
+        "irreversible": "To se ne može poništiti. Finalizirani račun može se ukinuti još samo storno-računom."
+      },
+      "basis": "Određuje kada rezervacija pada u razdoblje: kod prijave prema danu dolaska, kod odjave prema danu odlaska. Rezervacija preko prijelaza mjeseca završava, ovisno o odabiru, u jednom ili drugom mjesecu.",
+      "statuses": "Obračunavaju se samo rezervacije s jednim od odabranih statusa. Zadano su to potvrđene i završene rezervacije — otkazane u pravilu ne pripadaju u isplatu."
+    }
   },
   "ownerBilling": {
     "title": "Ugovor o obračunu",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Podliježe proviziji",
     "commissionableYes": "Da — ulazi u proviziju",
-    "commissionableNo": "Ne — bez provizije"
+    "commissionableNo": "Ne — bez provizije",
+    "infoAria": "Objašnjenje za: {feld}"
   },
   "portal": {
     "title": "Moj portal",

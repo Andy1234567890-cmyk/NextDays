@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Assign properties} one {Assign # property} other {Assign # properties}}",
     "propertiesAssigned": "{count, plural, one {# property assigned} other {# properties assigned}}",
     "removeProperty": "Remove assignment",
+    "shareInvalid": "Please enter a share between 0 and 100.",
     "sections": {
       "master": "Master data",
       "payout": "Payout & commission",
@@ -998,7 +999,7 @@
       "statementFrequency": "Statement frequency",
       "notes": "Notes",
       "share": "Share (%)",
-      "commissionOverride": "Commission (%) override",
+      "commissionOverride": "Commission (%)",
       "emailLanguage": "Email language"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "An email address is required for portal access.",
     "portalAccessInvite": "Send invitation",
     "portalAccessInvited": "Invitation sent.",
-    "portalAccessActive": "Portal access is set up."
+    "portalAccessActive": "Portal access is set up.",
+    "commissionNotAgreed": "not agreed",
+    "assignableCount": "{count} of {total} selected to add",
+    "assignedHeading": "{count, plural, one {# assigned property} other {# assigned properties}}",
+    "info": {
+      "aria": "Explanation of {feld}",
+      "share": "The ownership share in this property. At 100 % the full payout is attributed to this owner, at less than that it is apportioned accordingly.",
+      "commission": "The default commission rate for this owner. If the field is left empty, no rate has been agreed yet — the payout is then not calculated but shown as a dash.",
+      "commissionOverride": "Applies to this one property only and overrides the owner's default rate. If the field is left empty, the default rate applies."
+    }
   },
   "ownerStatements": {
     "title": "Owner statements",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Reservation statuses",
       "statusCount": "{count} statuses",
-      "title": "Filters"
+      "title": "Filters",
+      "resetAll": "Reset all filters",
+      "remove": "Reset {feld}",
+      "statusesNone": "None selected",
+      "statusesSearch": "Search status …",
+      "statusesNoMatch": "No status found.",
+      "statusesSelectAll": "Select all",
+      "statusesCount": "{count} of {total} selected"
     },
     "reservationStatus": {
       "pending": "Pending",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Draft",
-      "finalized": "Finalized"
+      "finalized": "Finalized",
+      "cancelled": "Cancelled"
     },
     "sections": {
       "data": "Data",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Total Price",
       "totalPayout": "Total Payout",
       "ownerPayout": "Owner Payout",
-      "pmPayout": "Property Manager Payout"
+      "pmPayout": "Property Manager Payout",
+      "commissionMissing": "No commission rate is set for at least one property. The payouts cannot be calculated — enter the rate in the owner's master data or on the property."
     },
     "rental": {
       "perReservation": "Per reservation",
@@ -1136,13 +1155,28 @@
       "reservation": "Reservation",
       "owner": "Owner",
       "hideAll": "Hide all",
-      "assignOwner": "Assign to owner"
+      "assignOwner": "Assign to owner",
+      "intro": "Amounts paid out to the owner on top, or charged back to them. They count in full towards the payout — no commission is deducted.",
+      "direction": "Direction",
+      "toOwner": "In favour of the owner",
+      "toOwnerHint": "They receive an additional payment, e.g. damage compensation.",
+      "toOwnerShort": "In favour",
+      "fromOwner": "Charged to the owner",
+      "fromOwnerHint": "Deducted from their payout, e.g. materials and labour.",
+      "fromOwnerShort": "Charged",
+      "sumToOwner": "Total in favour:",
+      "sumFromOwner": "Total charged:",
+      "receipt": "Receipt",
+      "openReceipt": "Open receipt",
+      "createdBy": "Recorded by {name}",
+      "saveFirst": "Offset items belong to a saved statement. Save the statement first, then you can record items here.",
+      "missingFields": "Still to be filled in: {felder}."
     },
     "grand": {
       "rentalRevenue": "Rental Revenue",
       "expenses": "Expenses and Extras",
       "total": "Total",
-      "deductPercentage": "Deduct percentage (%)"
+      "deductPercentage": "Commission (%)"
     },
     "manage": {
       "owner": "Owner",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Edit",
     "attachments": {
-      "drop": "Drop files to upload or Browse"
+      "drop": "Drop files to upload or Browse",
+      "viaExpenses": "Receipts belong to the individual item: upload them under “Expenses & extras” directly on the relevant row."
     },
     "masterData": "Master data",
     "preview": "Preview",
     "previewTitle": "Document preview",
-    "close": "Close"
+    "close": "Close",
+    "info": {
+      "aria": "Explanation of {feld}",
+      "totalPrice": "What the guest paid in total for their stay — before portal fees and commission are deducted.",
+      "totalPayout": "What reaches the business after the portal fees have been deducted. The owner's and the management's share are derived from this amount.",
+      "ownerPayout": "The share paid out to the owner: total payout less commission, plus the offset items.",
+      "pmPayout": "The share that stays with the business — the commission on the rental. Offset items are not included here.",
+      "expenses": {
+        "title": "In favour and charged",
+        "direction": "“In favour of the owner” increases their payout, for example a reimbursement. “Charged to the owner” reduces it, for example materials or the business's labour time.",
+        "noCommission": "These amounts count in full towards the payout — no commission is charged on them.",
+        "aria": "Explanation of offset items"
+      },
+      "dash": {
+        "title": "What the dash means",
+        "meaning": "A dash means “not recorded” — not “zero”. The value cannot be calculated because a detail is missing.",
+        "whereToFix": "If the commission rate is missing, enter it in the owner's master data or as a differing rate on the individual property.",
+        "aria": "Explanation of the dash instead of an amount",
+        "inline": "A dash stands for a missing value, not for 0.00."
+      },
+      "deductPercentage": "The commission rate this statement calculates with. Empty means: the rate from the owner's master data applies, or the differing rate set on the individual property.",
+      "status": {
+        "title": "The three states of a statement",
+        "draft": "Draft: still editable. Amounts are recalculated on every change.",
+        "finalized": "Finalized: invoice number assigned, totals frozen. Changes are no longer possible.",
+        "cancelled": "Cancelled: reversed by a cancellation invoice. The original invoice remains on record as a document."
+      },
+      "finalize": {
+        "title": "Finalize statement",
+        "what": "On finalizing, the invoice number is assigned and all totals are frozen as a document of record.",
+        "irreversible": "This cannot be undone. A finalized invoice can only be reversed by a cancellation invoice."
+      },
+      "basis": "Determines when a booking falls within the period: with Check-in by the arrival day, with Check-out by the departure day. A booking spanning the turn of the month lands in one month or the other depending on your choice.",
+      "statuses": "Only bookings with one of the selected statuses are settled. The default is confirmed and completed bookings — cancelled ones normally do not belong in a payout."
+    }
   },
   "ownerBilling": {
     "title": "Billing agreement",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Commissionable",
     "commissionableYes": "Yes — counts towards the commission",
-    "commissionableNo": "No — commission-free"
+    "commissionableNo": "No — commission-free",
+    "infoAria": "Explanation of {feld}"
   },
   "portal": {
     "title": "My portal",

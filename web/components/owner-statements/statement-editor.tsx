@@ -12,7 +12,9 @@ import { toast } from "sonner";
 import { Button } from "@nextdays/ui/button";
 import { StatementPreviewModal } from "@/components/owner-statements/statement-preview-modal";
 import { DatePicker } from "@nextdays/ui/date-picker";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { Input } from "@nextdays/ui/input";
+import { MultiSelect } from "@nextdays/ui/multi-select";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
 import { formatCurrency } from "@/lib/currency";
@@ -36,12 +38,15 @@ import {
   cancelStatement,
   deleteExpense,
   deleteStatement,
+  expenseReceiptUrl,
   finalizeStatement,
   generateStatement,
   getStatement,
   updateExpense,
   updateStatement,
+  uploadExpenseReceipt,
   type Expense,
+  type ExpenseDirection,
   type Statement,
   type StatementHeader,
   type StatementListItem,
@@ -50,6 +55,25 @@ import {
 export type PropOption = { id: string; title: string };
 
 const STATUS_OPTIONS = ["pending", "confirmed", "cancelled", "completed"];
+
+/** Ausgangszustand der Filter — derselbe, mit dem die Seite eine neue
+ *  Abrechnung öffnet (`owner-statements-for-owner.tsx`).
+ *
+ *  „Zurücksetzen" heisst hier bewusst NICHT „kein Filter": ein Zeitraum ist
+ *  Pflicht (ohne ihn gäbe es keine Abrechnung), und „alle Reservierungs-Status"
+ *  würde Stornos mitrechnen. Der ehrliche Ausgangszustand ist deshalb der
+ *  laufende Monat mit den abrechenbaren Status — genau das, was der Nutzer beim
+ *  Öffnen sieht. Ein leerer Zeitraum wäre ein erfundener Zustand, den die
+ *  Abrechnung gar nicht kennt (Wurzel 4). */
+const STANDARD_BASIS = "check_in" as const;
+const STANDARD_STATUS = ["confirmed", "completed"] as const;
+
+/** Mengenvergleich ohne Rücksicht auf die Reihenfolge — die Auswahl-Reihenfolge
+ *  ist keine Information, „confirmed,completed" und „completed,confirmed" sind
+ *  derselbe Filter. */
+function gleicheMenge(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && [...a].sort().join() === [...b].sort().join();
+}
 const EXPENSE_CATEGORIES = ["Cleaning", "Utilities", "Maintenance", "TV", "Goods", "Other"];
 const CHANNEL_DOT: Record<string, string> = {
   direct: "bg-emerald-500",
@@ -123,7 +147,7 @@ export function StatementEditor({
         // Override nur durchreichen, wenn der Nutzer ihn manuell gesetzt hat.
         commission_pct:
           patch.commission_pct ??
-          (commissionTouched ? st.commission_pct : undefined),
+          (commissionTouched ? st.commission_pct ?? undefined : undefined),
       });
       return;
     }
@@ -224,6 +248,47 @@ export function StatementEditor({
     } else toast.error(res.error);
   }
 
+  // Ausgangs-Zeitraum: laufender Monat — dieselbe Rechnung wie beim Öffnen der
+  // Seite. Bewusst aus dem heutigen Datum abgeleitet und nicht aus dem
+  // Statement: „zurücksetzen" soll dorthin führen, wo man ohne Zutun landet.
+  const heute = new Date();
+  const monatsAnfang = new Date(heute.getFullYear(), heute.getMonth(), 1)
+    .toISOString()
+    .slice(0, 10);
+  const monatsEnde = new Date(heute.getFullYear(), heute.getMonth() + 1, 0)
+    .toISOString()
+    .slice(0, 10);
+
+  // Wie viele Filter weichen vom Ausgangszustand ab? Das ist die Zahl, die der
+  // Knopf trägt — und die nach dem Zurücksetzen 0 sein MUSS.
+  const aktiveFilter =
+    (st.period_from !== monatsAnfang ? 1 : 0) +
+    (st.period_to !== monatsEnde ? 1 : 0) +
+    (st.basis !== STANDARD_BASIS ? 1 : 0) +
+    (gleicheMenge(st.reservation_statuses, STANDARD_STATUS) ? 0 : 1);
+
+  /** Einen einzelnen Filter auf seinen Ausgangswert bringen. Der lokale Zustand
+   *  wird sofort gesetzt (die Chips sollen ohne Verzögerung stimmen), das
+   *  Neuberechnen übernimmt `persist` wie bei jeder anderen Filteränderung. */
+  async function filterZuruecksetzen(patch: {
+    period_from?: string;
+    period_to?: string;
+    basis?: Statement["basis"];
+    reservation_statuses?: string[];
+  }) {
+    setSt((s) => ({ ...s, ...patch }));
+    await persist(patch);
+  }
+
+  async function alleFilterZuruecksetzen() {
+    await filterZuruecksetzen({
+      period_from: monatsAnfang,
+      period_to: monatsEnde,
+      basis: STANDARD_BASIS,
+      reservation_statuses: [...STANDARD_STATUS],
+    });
+  }
+
   const expensesTotal = st.summary.expenses_total;
   // Ohne sichtbaren Gastpreis gibt es keine Gesamtsumme — sie waere sonst
   // „0 + Ausgaben" und damit erfunden.
@@ -259,9 +324,19 @@ export function StatementEditor({
             {t("download")}
           </Button>
           {!finalized && !isNew && (
-            <Button variant="outline" onClick={() => void finalize()}>
-              {t("finalize")}
-            </Button>
+            <span className="flex items-center gap-1.5">
+              <Button variant="outline" onClick={() => void finalize()}>
+                {t("finalize")}
+              </Button>
+              {/* Finalisieren vergibt die Rechnungsnummer und friert die
+                  Summen ein — rückgängig geht danach nur noch über eine
+                  Stornorechnung. Das MUSS vor dem Klick dastehen. */}
+              <InfoHinweis
+                titel={t("info.finalize.title")}
+                text={[t("info.finalize.what"), t("info.finalize.irreversible")]}
+                ariaLabel={t("info.aria", { feld: t("finalize") })}
+              />
+            </span>
           )}
           {/* Storno: nur bei finalisierter, normaler, noch nicht stornierter
               Rechnung. Eine Stornorechnung selbst lässt sich nicht stornieren. */}
@@ -300,15 +375,75 @@ export function StatementEditor({
         >
           <Icon icon="ph:funnel" className="size-4" />
           {t("filters.title")}
-          <span className="flex size-5 items-center justify-center rounded-full bg-accent text-xs text-accent-foreground">
-            {2 + (st.reservation_statuses.length > 0 ? 1 : 0) + 1}
-          </span>
+          {/* Gezählt wird, WIE VIELE Filter vom Ausgangszustand abweichen —
+              nicht wie viele Filterfelder es gibt. Vorher stand hier fest
+              `2 + … + 1`: die Zahl war praktisch immer 4, egal was eingestellt
+              war, und sagte damit nichts (Wurzel 4). Der Status-Filter zählt
+              als EIN Filter, auch wenn er zwei Werte trägt. */}
+          {aktiveFilter > 0 && (
+            <span className="flex size-5 items-center justify-center rounded-full bg-accent text-xs text-accent-foreground">
+              {aktiveFilter}
+            </span>
+          )}
         </button>
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <Chip>{t("filters.from")}: {st.period_from}</Chip>
-          <Chip>{t("filters.to")}: {st.period_to}</Chip>
-          <Chip>{st.basis === "check_in" ? t("filters.checkIn") : t("filters.checkOut")}</Chip>
-          <Chip>{t("filters.statusCount", { count: st.reservation_statuses.length })}</Chip>
+          {/* Die Chips zeigen die aktiven Filter UND entfernen sie. Vorher
+              waren sie reine Anzeige ohne Klickziel — man sah, dass gefiltert
+              wird, hatte aber keinen Weg zurück (Wurzel 5). Nur abweichende
+              Werte bekommen ein „x": den Zeitraum kann man nicht „leeren", er
+              geht auf den laufenden Monat zurück. */}
+          <ChipEntfernbar
+            label={`${t("filters.from")}: ${st.period_from}`}
+            onRemove={
+              st.period_from !== monatsAnfang
+                ? () => void filterZuruecksetzen({ period_from: monatsAnfang })
+                : undefined
+            }
+            entfernenLabel={t("filters.remove", { feld: t("filters.from") })}
+            disabled={finalized}
+          />
+          <ChipEntfernbar
+            label={`${t("filters.to")}: ${st.period_to}`}
+            onRemove={
+              st.period_to !== monatsEnde
+                ? () => void filterZuruecksetzen({ period_to: monatsEnde })
+                : undefined
+            }
+            entfernenLabel={t("filters.remove", { feld: t("filters.to") })}
+            disabled={finalized}
+          />
+          <ChipEntfernbar
+            label={st.basis === "check_in" ? t("filters.checkIn") : t("filters.checkOut")}
+            onRemove={
+              st.basis !== STANDARD_BASIS
+                ? () => void filterZuruecksetzen({ basis: STANDARD_BASIS })
+                : undefined
+            }
+            entfernenLabel={t("filters.remove", { feld: t("filters.basis") })}
+            disabled={finalized}
+          />
+          <ChipEntfernbar
+            label={t("filters.statusCount", { count: st.reservation_statuses.length })}
+            onRemove={
+              !gleicheMenge(st.reservation_statuses, STANDARD_STATUS)
+                ? () =>
+                    void filterZuruecksetzen({
+                      reservation_statuses: [...STANDARD_STATUS],
+                    })
+                : undefined
+            }
+            entfernenLabel={t("filters.remove", { feld: t("filters.statuses") })}
+            disabled={finalized}
+          />
+          {aktiveFilter > 0 && !finalized && (
+            <button
+              type="button"
+              onClick={() => void alleFilterZuruecksetzen()}
+              className="rounded-full px-2.5 py-1 font-medium text-accent underline-offset-4 hover:underline"
+            >
+              {t("filters.resetAll")}
+            </button>
+          )}
           {finalized && (
             <span className="rounded-full bg-foreground px-2.5 py-1 font-medium text-background">
               {t("status.finalized")}
@@ -333,7 +468,11 @@ export function StatementEditor({
               onCommit={(v) => void persist({ period_to: v })}
             />
           </Labeled>
-          <Labeled label={t("filters.basis")}>
+          <Labeled
+            label={t("filters.basis")}
+            info={t("info.basis")}
+            infoAria={t("info.aria", { feld: t("filters.basis") })}
+          >
             <NativeSelect
               value={st.basis}
               onChange={(e) => {
@@ -346,30 +485,34 @@ export function StatementEditor({
               <option value="check_out">{t("filters.checkOut")}</option>
             </NativeSelect>
           </Labeled>
-          <Labeled label={t("filters.statuses")}>
-            <div className="flex flex-wrap gap-1">
-              {STATUS_OPTIONS.map((s) => {
-                const on = st.reservation_statuses.includes(s);
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => {
-                      const next = on
-                        ? st.reservation_statuses.filter((x) => x !== s)
-                        : [...st.reservation_statuses, s];
-                      setSt((prev) => ({ ...prev, reservation_statuses: next }));
-                      void persist({ reservation_statuses: next });
-                    }}
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-                      on ? "bg-foreground text-background" : "bg-secondary text-muted-foreground"
-                    }`}
-                  >
-                    {t(`reservationStatus.${s}`)}
-                  </button>
-                );
-              })}
-            </div>
+          {/* Mehrfach-Auswahlfeld statt vier loser Schaltflächen: die brachen
+              in eine zweite Zeile um und liessen die Spalte höher werden als
+              ihre Nachbarn. Die MEHRFACHauswahl bleibt erhalten (mehrere Status
+              gleichzeitig) — ein einfaches Auswahlfeld wäre ein
+              Funktionsverlust. `MultiSelect` ist dieselbe Komponente wie in den
+              übrigen Filtern des Projekts, inkl. Tastatur- und
+              Touch-Bedienung. */}
+          <Labeled
+            label={t("filters.statuses")}
+            info={t("info.statuses")}
+            infoAria={t("info.aria", { feld: t("filters.statuses") })}
+          >
+            <MultiSelect
+              options={STATUS_OPTIONS.map((s) => ({
+                value: s,
+                label: t(`reservationStatus.${s}`),
+              }))}
+              selected={st.reservation_statuses}
+              onChange={(next) => {
+                setSt((prev) => ({ ...prev, reservation_statuses: next }));
+                void persist({ reservation_statuses: next });
+              }}
+              placeholder={t("filters.statusesNone")}
+              searchPlaceholder={t("filters.statusesSearch")}
+              emptyHint={t("filters.statusesNoMatch")}
+              selectAllLabel={t("filters.statusesSelectAll")}
+              countLabel={(n, m) => t("filters.statusesCount", { count: n, total: m })}
+            />
           </Labeled>
         </div>
       )}
@@ -410,42 +553,119 @@ export function StatementEditor({
         <p className="mb-3 text-sm text-muted-foreground">
           {t("summaryPeriod", { from: st.period_from, to: st.period_to, count: st.summary.booking_count })}
         </p>
+        {/* Ein „—" allein sagt nur, DASS etwas fehlt. Diese Zeile sagt, WAS zu
+            tun ist (Wurzel 5) — sonst sucht der Betreiber die Ursache einer
+            leeren Auszahlung in den Buchungen statt in den Stammdaten. */}
+        {st.summary.payout_unbekannt === "provision" && (
+          <p
+            role="alert"
+            className="mb-3 rounded-(--radius) border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+          >
+            {t("summary.commissionMissing")}
+          </p>
+        )}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryCell icon="ph:money" label={t("summary.totalPrice")} value={betragOderStrich(st.summary.total_price, cur)} />
-          <SummaryCell icon="ph:diamond" label={t("summary.totalPayout")} value={formatCurrency(st.summary.total_payout, cur)} />
-          <SummaryCell icon="ph:coins" label={t("summary.ownerPayout")} value={formatCurrency(st.summary.owner_payout, ownerCur)} />
-          <SummaryCell icon="ph:buildings" label={t("summary.pmPayout")} value={betragOderStrich(st.summary.pm_payout, cur)} />
+          <SummaryCell
+            icon="ph:money"
+            label={t("summary.totalPrice")}
+            value={betragOderStrich(st.summary.total_price, cur)}
+            info={t("info.totalPrice")}
+            infoAria={t("info.aria", { feld: t("summary.totalPrice") })}
+          />
+          <SummaryCell
+            icon="ph:diamond"
+            label={t("summary.totalPayout")}
+            value={formatCurrency(st.summary.total_payout, cur)}
+            info={t("info.totalPayout")}
+            infoAria={t("info.aria", { feld: t("summary.totalPayout") })}
+          />
+          <SummaryCell
+            icon="ph:coins"
+            label={t("summary.ownerPayout")}
+            value={betragOderStrich(st.summary.owner_payout, ownerCur)}
+            info={t("info.ownerPayout")}
+            infoAria={t("info.aria", { feld: t("summary.ownerPayout") })}
+          />
+          <SummaryCell
+            icon="ph:buildings"
+            label={t("summary.pmPayout")}
+            value={betragOderStrich(st.summary.pm_payout, cur)}
+            info={t("info.pmPayout")}
+            infoAria={t("info.aria", { feld: t("summary.pmPayout") })}
+          />
         </div>
+        {/* Steht irgendwo ein „—", MUSS erklärt sein, dass das „nicht erfasst"
+            heißt und nicht „null". Der Unterschied entscheidet, ob der
+            Betreiber einen Datenfehler sucht oder eine 0 für bare Münze
+            nimmt (Wurzel 4). */}
+        {(st.summary.total_price == null ||
+          st.summary.owner_payout == null ||
+          st.summary.pm_payout == null) && (
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <InfoHinweis
+              titel={t("info.dash.title")}
+              text={[t("info.dash.meaning"), t("info.dash.whereToFix")]}
+              ariaLabel={t("info.dash.aria")}
+            />
+            {t("info.dash.inline")}
+          </p>
+        )}
       </Section>
 
       {/* Rental activity */}
       <RentalActivity statement={st} t={t} currency={cur} />
 
       {/* Expenses & extras */}
-      {/* Expenses brauchen eine gespeicherte Abrechnung (statement_id). */}
+      {/* Verrechnungsposten hängen an einer gespeicherten Abrechnung
+          (`statement_id`) — im Vorschau-Modus gibt es die noch nicht. Früher
+          wurde der Bereich deshalb einfach im gesperrten Zustand gezeigt: keine
+          Knöpfe, kein Hinweis. Der Nutzer sah eine leere Tabelle „Noch keine
+          Ausgaben" und KEINEN Weg, welche anzulegen — der Bereich sah kaputt
+          aus, nicht ungespeichert (Wurzel 5: kein stiller Fehlschlag). Jetzt
+          sagt der Bereich, WARUM er noch nicht bedienbar ist und WAS zu tun
+          ist, und der Hinweis führt direkt zum Speichern. */}
       <ExpensesSection
         statement={st}
         properties={properties}
         finalized={finalized || isNew}
+        gesperrtWeilUngespeichert={isNew && !finalized}
+        onSave={() => void save()}
+        busy={busy}
         currency={cur}
         onRefresh={refresh}
         t={t}
       />
 
-      {/* Attachments */}
+      {/* Attachments — bewusst KEINE Ablagefläche.
+          Hier stand eine gestrichelte „Dateien zum Hochladen ablegen oder
+          durchsuchen"-Fläche OHNE Datei-Feld und ohne Handler: Klicken tat
+          nichts, Ziehen tat nichts. Eine Oberfläche, die eine Funktion
+          verspricht, die es nicht gibt, ist schlimmer als keine — der Nutzer
+          hält sein Ablegen für gescheitert und sucht den Fehler bei sich
+          (Wurzel 5). Belege hängen an der EINZELNEN Zeile in „Ausgaben &
+          Extras" (Spalte Beleg) — dorthin verweist dieser Text. */}
       <Section title={t("sections.attachments")} defaultOpen>
-        <div className="flex items-center justify-center rounded-(--radius) border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          {t("attachments.drop")}
-        </div>
+        <p className="text-sm text-muted-foreground">
+          {t("attachments.viaExpenses")}
+        </p>
       </Section>
 
       {/* Grand total */}
       <Section title={t("sections.grandTotal")} defaultOpen>
         <div className="flex flex-col gap-3">
+          {/* Beschriftung, KEIN Auswahlfeld.
+              Hier stand ein dauerhaft `disabled` Auswahlfeld mit genau EINER
+              Option („Mieteinnahmen"). Es sah nach einer Wahl aus, bot keine
+              und bewirkte nichts — dieselbe Attrappe wie die frühere
+              Anhänge-Ablagefläche. Geprüft: weder `Statement` noch das
+              Pydantic-Schema kennen ein Feld für eine Bemessungsgrundlage oder
+              eine zweite Einnahmeart; hinter dem Feld steckt also keine
+              unfertige Funktion, sondern nur Zierrat. Die Zeile ist jetzt
+              aufgebaut wie die „Ausgaben & Extras"-Zeile darunter. */}
           <div className="flex items-center gap-4">
-            <NativeSelect className="w-auto min-w-44" disabled>
-              <option>{t("grand.rentalRevenue")}</option>
-            </NativeSelect>
+            <span className="min-w-44 text-sm text-muted-foreground">
+              {t("grand.rentalRevenue")}
+            </span>
             <span className="text-sm">{betragOderStrich(st.summary.total_price, cur)}</span>
           </div>
           <div className="flex items-center gap-4">
@@ -484,21 +704,36 @@ export function StatementEditor({
           )}
           {!finalized && (
             <div className="mt-2 flex flex-wrap items-end gap-3">
-              <Labeled label={t("grand.deductPercentage")} className="w-40">
+              {/* `w-44`, weil neben dem Label noch das Info-Symbol steht und
+                  die längste Übersetzung („Komisjonitasu (%)") sonst umbricht —
+                  dann stünde das Eingabefeld tiefer als die beiden Kennzahlen
+                  daneben. */}
+              <Labeled
+                label={t("grand.deductPercentage")}
+                className="w-44"
+                info={t("info.deductPercentage")}
+                infoAria={t("info.aria", { feld: t("grand.deductPercentage") })}
+              >
                 <Input
                   type="number"
                   min={0}
                   max={100}
                   step={0.5}
-                  value={st.commission_pct}
+                  // Kein Satz vereinbart -> leeres Feld. Eine 0 haette
+                  // behauptet, 0 % seien vereinbart (Wurzel 4).
+                  value={st.commission_pct ?? ""}
                   onChange={(e) => {
                     setCommissionTouched(true);
-                    setSt((s) => ({ ...s, commission_pct: Number(e.target.value) }));
+                    const roh = e.target.value.trim();
+                    setSt((s) => ({
+                      ...s,
+                      commission_pct: roh === "" ? null : Number(roh),
+                    }));
                   }}
                   onBlur={() => void persist({ commission_pct: st.commission_pct })}
                 />
               </Labeled>
-              <Stat label={t("summary.ownerPayout")} value={formatCurrency(st.summary.owner_payout, ownerCur)} />
+              <Stat label={t("summary.ownerPayout")} value={betragOderStrich(st.summary.owner_payout, ownerCur)} />
               <Stat label={t("summary.pmPayout")} value={betragOderStrich(st.summary.pm_payout, cur)} />
             </div>
           )}
@@ -564,8 +799,24 @@ function RentalActivity({
                   <th className="py-2 pr-4 font-medium">{t("rental.nights")}</th>
                   <th className="py-2 pr-4 font-medium">{t("rental.listing")}</th>
                   <th className="py-2 pr-4 font-medium">{t("rental.channel")}</th>
-                  <th className="py-2 pr-4 text-right font-medium">{t("rental.totalPrice")}</th>
-                  <th className="py-2 text-right font-medium">{t("rental.totalPayout")}</th>
+                  <th className="py-2 pr-4 text-right font-medium">
+                    <span className="flex items-center justify-end gap-1.5">
+                      {t("rental.totalPrice")}
+                      <InfoHinweis
+                        text={t("info.totalPrice")}
+                        ariaLabel={t("info.aria", { feld: t("rental.totalPrice") })}
+                      />
+                    </span>
+                  </th>
+                  <th className="py-2 text-right font-medium">
+                    <span className="flex items-center justify-end gap-1.5">
+                      {t("rental.totalPayout")}
+                      <InfoHinweis
+                        text={t("info.totalPayout")}
+                        ariaLabel={t("info.aria", { feld: t("rental.totalPayout") })}
+                      />
+                    </span>
+                  </th>
                 </>
               ) : (
                 <>
@@ -628,6 +879,9 @@ function ExpensesSection({
   statement,
   properties,
   finalized,
+  gesperrtWeilUngespeichert,
+  onSave,
+  busy,
   currency,
   onRefresh,
   t,
@@ -635,6 +889,10 @@ function ExpensesSection({
   statement: Statement;
   properties: PropOption[];
   finalized: boolean;
+  /** Nur der Vorschau-Fall: noch nicht gespeichert (≠ finalisiert). */
+  gesperrtWeilUngespeichert: boolean;
+  onSave: () => void;
+  busy: boolean;
   currency: string;
   onRefresh: () => Promise<void>;
   t: ReturnType<typeof useTranslations>;
@@ -642,31 +900,34 @@ function ExpensesSection({
   const titleById = new Map(properties.map((p) => [p.id, p.title]));
   const guestByRes = new Map(statement.rental_rows.map((r) => [r.reservation_id, r.guest]));
   const [adding, setAdding] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  async function add(form: {
-    concept: string;
-    date: string;
-    category: string;
-    listing_id: string;
-    reservation_id: string;
-    assign_owner: boolean;
-    amount: number;
-  }) {
+  async function add(form: AddExpenseValues) {
     const res = await addExpense({
       statement_id: statement.id,
       concept: form.concept,
       date: form.date,
+      direction: form.direction,
       category: form.category || null,
       listing_id: form.listing_id || null,
       reservation_id: form.reservation_id || null,
       owner_id: form.assign_owner ? statement.owner_id : null,
       amount: form.amount,
     });
-    if (res.ok) {
-      setAdding(false);
-      await onRefresh();
-      toast.success(t("expenses.added"));
-    } else toast.error(res.error);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    // Beleg im zweiten Schritt: er hängt an der ID, die es erst nach dem
+    // Anlegen gibt. Schlägt nur der Upload fehl, bleibt der Posten bestehen —
+    // der Nutzer bekommt das gesagt und kann den Beleg nachreichen.
+    if (form.receipt) {
+      const up = await uploadExpenseReceipt(res.data.id, form.receipt);
+      if (!up.ok) toast.error(up.error);
+    }
+    setAdding(false);
+    await onRefresh();
+    toast.success(t("expenses.added"));
   }
 
   async function toggleHidden(e: Expense) {
@@ -681,22 +942,84 @@ function ExpensesSection({
     else toast.error(res.error);
   }
 
+  /** Beleg öffnen: die URL ist signiert und läuft ab, darum wird sie bei jedem
+   *  Klick frisch geholt statt im Zustand gehalten. */
+  async function openReceipt(e: Expense) {
+    setBusyId(e.id);
+    const res = await expenseReceiptUrl(e.id);
+    setBusyId(null);
+    if (res.ok) window.open(res.data.url, "_blank", "noopener,noreferrer");
+    else toast.error(res.error);
+  }
+
   async function hideAll() {
     await Promise.all(
       statement.expenses
-        .filter((e) => !e.hidden_from_owner)
+        // Ein Posten ZULASTEN muss sichtbar bleiben (Backend lehnt ihn mit 422
+        // ab). Ihn hier erst gar nicht mitzuschicken erspart dem Nutzer eine
+        // Fehlermeldung für etwas, das er nicht gemeint hat.
+        .filter((e) => !e.hidden_from_owner && e.direction !== "from_owner")
         .map((e) => updateExpense(e.id, { hidden_from_owner: true })),
     );
     await onRefresh();
   }
 
+  const versteckbar = statement.expenses.some(
+    (e) => !e.hidden_from_owner && e.direction !== "from_owner",
+  );
+
+  // Die beiden Richtungssummen werden aus den ANGEZEIGTEN Posten abgeleitet,
+  // nicht aus `summary.expenses_to_owner/_from_owner` gelesen. Grund: auf dem
+  // Snapshot-Pfad (finalisiert/storniert) baut das Backend die Summary aus der
+  // gespeicherten Zeile neu auf und setzt nur `expenses_total` — die beiden
+  // Richtungsfelder fallen dort auf ihren Schema-Default 0.0 zurück. Aus einer
+  // gelieferten 0 lässt sich „es gab keine" und „das Feld wurde nicht gefüllt"
+  // nicht unterscheiden; genau daran verschwänden bei einer finalisierten
+  // Abrechnung beide Zeilen, obwohl Posten da sind (Wurzel 4).
+  // Aus den Zeilen gerechnet stimmt es auf BEIDEN Pfaden und passt immer zu
+  // dem, was direkt darüber in der Tabelle steht.
+  const summeZugunsten = statement.expenses
+    .filter((e) => e.direction !== "from_owner")
+    .reduce((s, e) => s + Math.abs(e.amount), 0);
+  const summeZulasten = statement.expenses
+    .filter((e) => e.direction === "from_owner")
+    .reduce((s, e) => s + Math.abs(e.amount), 0);
+
   return (
-    <Section title={t("sections.expenses")} defaultOpen>
+    <Section
+      title={t("sections.expenses")}
+      defaultOpen
+      info={
+        <InfoHinweis
+          titel={t("info.expenses.title")}
+          text={[
+            t("info.expenses.direction"),
+            t("info.expenses.noCommission"),
+          ]}
+          ariaLabel={t("info.expenses.aria")}
+        />
+      }
+    >
+      <p className="pb-3 text-sm text-muted-foreground">{t("expenses.intro")}</p>
+      {/* Der Bereich ist im Vorschau-Modus nicht bedienbar. Das MUSS dastehen:
+          eine leere Tabelle ohne Knöpfe ist von „kaputt" nicht zu
+          unterscheiden. */}
+      {gesperrtWeilUngespeichert && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-(--radius) border border-border bg-secondary p-3">
+          <p className="text-sm text-muted-foreground">
+            {t("expenses.saveFirst")}
+          </p>
+          <Button size="sm" onClick={onSave} disabled={busy}>
+            {busy ? t("saving") : t("save")}
+          </Button>
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
               <th className="py-2 pr-4 font-medium">{t("expenses.concept")}</th>
+              <th className="py-2 pr-4 font-medium">{t("expenses.direction")}</th>
               <th className="py-2 pr-4 font-medium">{t("expenses.date")}</th>
               <th className="py-2 pr-4 font-medium">{t("expenses.category")}</th>
               <th className="py-2 pr-4 font-medium">{t("expenses.listing")}</th>
@@ -707,38 +1030,87 @@ function ExpensesSection({
             </tr>
           </thead>
           <tbody>
-            {statement.expenses.map((e) => (
-              <tr key={e.id} className="border-b border-border">
-                <td className="py-2 pr-4">{e.concept}</td>
-                <td className="py-2 pr-4">{e.date}</td>
-                <td className="py-2 pr-4">{e.category ?? "—"}</td>
-                <td className="py-2 pr-4 text-accent">{e.listing_id ? titleById.get(e.listing_id) ?? "—" : "—"}</td>
-                <td className="py-2 pr-4 text-accent">
-                  {e.reservation_id ? guestByRes.get(e.reservation_id) ?? "—" : "—"}
-                </td>
-                <td className="py-2 pr-4">{e.owner_id ? statement.header.owner_name ?? "—" : "—"}</td>
-                <td className={`py-2 pr-4 text-right font-medium ${e.amount < 0 ? "text-destructive" : ""}`}>
-                  {formatCurrency(e.amount, currency)}
-                </td>
-                <td className="py-2">
-                  {!finalized && (
+            {statement.expenses.map((e) => {
+              const zulasten = e.direction === "from_owner";
+              return (
+                <tr key={e.id} className="border-b border-border">
+                  <td className="py-2 pr-4">
+                    <span>{e.concept}</span>
+                    {/* Wer hat den Posten wann erfasst — die Abrechnung muss
+                        nachvollziehbar sein, nicht nur rechnerisch stimmen. */}
+                    {e.created_by_name && (
+                      <span className="block text-xs text-muted-foreground">
+                        {t("expenses.createdBy", { name: e.created_by_name })}
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-2 pr-4">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs ${
+                        zulasten
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      }`}
+                    >
+                      {zulasten ? t("expenses.fromOwnerShort") : t("expenses.toOwnerShort")}
+                    </span>
+                  </td>
+                  <td className="py-2 pr-4">{e.date}</td>
+                  <td className="py-2 pr-4">{e.category ?? "—"}</td>
+                  <td className="py-2 pr-4 text-accent">{e.listing_id ? titleById.get(e.listing_id) ?? "—" : "—"}</td>
+                  <td className="py-2 pr-4 text-accent">
+                    {e.reservation_id ? guestByRes.get(e.reservation_id) ?? "—" : "—"}
+                  </td>
+                  <td className="py-2 pr-4">{e.owner_id ? statement.header.owner_name ?? "—" : "—"}</td>
+                  {/* Währung des POSTENS, nicht die der Abrechnung: ein DKK-
+                      Objekt unter einem EUR-Betrieb behält seine Währung. Fehlt
+                      sie, rendert formatCurrency symbollos (Wurzel 4). */}
+                  <td className={`py-2 pr-4 text-right font-medium ${zulasten ? "text-destructive" : ""}`}>
+                    {formatCurrency(e.signed_amount, e.currency ?? currency)}
+                  </td>
+                  <td className="py-2">
                     <div className="flex items-center justify-end gap-2 text-muted-foreground">
-                      <Icon icon="ph:paperclip" className="size-4" />
-                      <button type="button" onClick={() => void toggleHidden(e)} aria-label={t("expenses.toggleHidden")} title={e.hidden_from_owner ? t("expenses.hidden") : t("expenses.visible")} className="hover:text-foreground">
-                        <Icon icon={e.hidden_from_owner ? "ph:eye-slash" : "ph:eye"} className="size-4" />
-                      </button>
-                      <button type="button" onClick={() => void remove(e)} aria-label={t("delete")} className="hover:text-destructive">
-                        <Icon icon="ph:trash" className="size-4" />
-                      </button>
+                      {e.has_receipt && (
+                        <button
+                          type="button"
+                          onClick={() => void openReceipt(e)}
+                          disabled={busyId === e.id}
+                          aria-label={t("expenses.openReceipt")}
+                          title={e.file_name ?? t("expenses.openReceipt")}
+                          className="hover:text-foreground disabled:opacity-50"
+                        >
+                          <Icon icon="ph:paperclip" className="size-4" />
+                        </button>
+                      )}
+                      {!finalized && (
+                        <>
+                          {/* Ein Abzug darf nicht ausgeblendet werden — der
+                              Schalter erscheint für ihn gar nicht erst. */}
+                          {!zulasten && (
+                            <button type="button" onClick={() => void toggleHidden(e)} aria-label={t("expenses.toggleHidden")} title={e.hidden_from_owner ? t("expenses.hidden") : t("expenses.visible")} className="hover:text-foreground">
+                              <Icon icon={e.hidden_from_owner ? "ph:eye-slash" : "ph:eye"} className="size-4" />
+                            </button>
+                          )}
+                          <button type="button" onClick={() => void remove(e)} aria-label={t("delete")} className="hover:text-destructive">
+                            <Icon icon="ph:trash" className="size-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
-                  )}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                </tr>
+              );
+            })}
             {statement.expenses.length > 0 && (
               <tr className="font-bold">
-                <td className="py-2 pr-4" colSpan={6}>{t("expenses.total")}</td>
-                <td className="py-2 pr-4 text-right text-destructive">{formatCurrency(statement.summary.expenses_total, currency)}</td>
+                <td className="py-2 pr-4" colSpan={7}>{t("expenses.total")}</td>
+                <td
+                  className={`py-2 pr-4 text-right ${
+                    statement.summary.expenses_total < 0 ? "text-destructive" : ""
+                  }`}
+                >
+                  {formatCurrency(statement.summary.expenses_total, currency)}
+                </td>
                 <td />
               </tr>
             )}
@@ -749,9 +1121,28 @@ function ExpensesSection({
         )}
       </div>
 
+      {/* Beide Richtungen EINZELN: eine Nettozahl allein verbirgt, dass z. B.
+          500 Kompensation und 500 Material gegeneinander stehen. */}
+      {statement.expenses.length > 0 && (
+        <div className="mt-3 flex flex-wrap justify-end gap-x-6 gap-y-1 text-sm">
+          <span className="text-muted-foreground">
+            {t("expenses.sumToOwner")}{" "}
+            <span className="font-medium text-foreground">
+              {formatCurrency(summeZugunsten, currency)}
+            </span>
+          </span>
+          <span className="text-muted-foreground">
+            {t("expenses.sumFromOwner")}{" "}
+            <span className="font-medium text-foreground">
+              {formatCurrency(summeZulasten, currency)}
+            </span>
+          </span>
+        </div>
+      )}
+
       {!finalized && (
         <div className="mt-3 flex items-center justify-end gap-4 text-sm">
-          {statement.expenses.some((e) => !e.hidden_from_owner) && (
+          {versteckbar && (
             <button type="button" onClick={() => void hideAll()} className="text-accent">
               {t("expenses.hideAll")}
             </button>
@@ -776,6 +1167,18 @@ function ExpensesSection({
   );
 }
 
+type AddExpenseValues = {
+  concept: string;
+  date: string;
+  direction: ExpenseDirection;
+  category: string;
+  listing_id: string;
+  reservation_id: string;
+  assign_owner: boolean;
+  amount: number;
+  receipt: File | null;
+};
+
 function AddExpenseForm({
   properties,
   reservations,
@@ -785,30 +1188,95 @@ function AddExpenseForm({
 }: {
   properties: PropOption[];
   reservations: { id: string; label: string }[];
-  onAdd: (f: {
-    concept: string;
-    date: string;
-    category: string;
-    listing_id: string;
-    reservation_id: string;
-    assign_owner: boolean;
-    amount: number;
-  }) => void;
+  onAdd: (f: AddExpenseValues) => void;
   onCancel: () => void;
   t: ReturnType<typeof useTranslations>;
 }) {
   const [concept, setConcept] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  // Kein vorbelegter Standard: der Nutzer soll die Richtung BEWUSST wählen.
+  // Eine Vorauswahl wäre der Nachfolger des alten „-0" im Betragsfeld — man
+  // übersieht sie und bucht in die falsche Richtung.
+  const [direction, setDirection] = useState<ExpenseDirection | "">("");
   const [category, setCategory] = useState("Cleaning");
   const [listingId, setListingId] = useState("");
   const [reservationId, setReservationId] = useState("");
   const [assignOwner, setAssignOwner] = useState(false);
-  const [amount, setAmount] = useState("-0");
+  const [amount, setAmount] = useState("");
+  const [receipt, setReceipt] = useState<File | null>(null);
+
+  const betrag = Number(amount);
+  // Welche Pflichtangabe fehlt — EINZELN, nicht als ein Ja/Nein. Vorher war der
+  // Knopf nur `disabled`: der Nutzer klickte, nichts passierte, und nichts
+  // sagte ihm warum (genau der stille Fehlschlag, den Wurzel 5 verbietet).
+  // Jetzt wird der Versuch zugelassen und benennt beim Absenden die Lücke.
+  const fehltRichtung = direction === "";
+  const fehltKonzept = concept.trim() === "";
+  const fehltBetrag = !(betrag > 0);
+  const gueltig = !fehltRichtung && !fehltKonzept && !fehltBetrag;
+  // Erst nach einem Absende-Versuch markieren — sonst leuchtet das Formular
+  // rot, bevor der Nutzer überhaupt getippt hat.
+  const [versucht, setVersucht] = useState(false);
+  const zeigeFehler = versucht && !gueltig;
+
+  const fehlend = [
+    fehltRichtung ? t("expenses.direction") : null,
+    fehltKonzept ? t("expenses.concept") : null,
+    fehltBetrag ? t("expenses.amount") : null,
+  ].filter((x): x is string => x !== null);
 
   return (
     <div className="mt-3 grid grid-cols-1 gap-3 rounded-(--radius) border border-border p-4 sm:grid-cols-6">
+      {/* Die Richtung ist die erste und wichtigste Frage — nicht ein Vorzeichen
+          im Betragsfeld, das man beim Eintippen vergisst. */}
+      <fieldset className="sm:col-span-6">
+        <legend
+          className={`flex items-center gap-1.5 pb-2 text-sm font-medium ${
+            zeigeFehler && fehltRichtung ? "text-destructive" : "text-muted-foreground"
+          }`}
+        >
+          {t("expenses.direction")}
+          <InfoHinweis
+            titel={t("info.expenses.title")}
+            text={[t("info.expenses.direction"), t("info.expenses.noCommission")]}
+            ariaLabel={t("info.expenses.aria")}
+          />
+        </legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {(
+            [
+              ["to_owner", "expenses.toOwner", "expenses.toOwnerHint", "ph:arrow-up-right"],
+              ["from_owner", "expenses.fromOwner", "expenses.fromOwnerHint", "ph:arrow-down-left"],
+            ] as const
+          ).map(([wert, label, hint, icon]) => (
+            <button
+              key={wert}
+              type="button"
+              onClick={() => setDirection(wert)}
+              aria-pressed={direction === wert}
+              className={`flex items-start gap-3 rounded-(--radius) border p-3 text-left transition-colors ${
+                direction === wert
+                  ? "border-accent bg-accent/5"
+                  : "border-border hover:border-accent/50"
+              }`}
+            >
+              <Icon icon={icon} className="mt-0.5 size-5 shrink-0 text-accent" />
+              <span>
+                <span className="block text-sm font-medium">{t(label)}</span>
+                <span className="block text-xs text-muted-foreground">{t(hint)}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
       <Labeled label={t("expenses.concept")} className="sm:col-span-2">
-        <Input value={concept} onChange={(e) => setConcept(e.target.value)} />
+        <Input
+          value={concept}
+          aria-invalid={zeigeFehler && fehltKonzept}
+          className={zeigeFehler && fehltKonzept ? "border-destructive" : undefined}
+          onChange={(e) => setConcept(e.target.value)}
+        />
       </Labeled>
       <Labeled label={t("expenses.date")}>
         <DatePicker value={date} onChange={setDate} />
@@ -824,8 +1292,18 @@ function AddExpenseForm({
           {properties.map((p) => (<option key={p.id} value={p.id}>{p.title}</option>))}
         </NativeSelect>
       </Labeled>
+      {/* Immer POSITIV — die Richtung steht oben. min=0 verhindert schon in der
+          Eingabe, dass jemand das alte Minuszeichen wiederbelebt. */}
       <Labeled label={t("expenses.amount")}>
-        <Input type="number" step={0.01} value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <Input
+          type="number"
+          step={0.01}
+          min={0}
+          value={amount}
+          aria-invalid={zeigeFehler && fehltBetrag}
+          className={zeigeFehler && fehltBetrag ? "border-destructive" : undefined}
+          onChange={(e) => setAmount(e.target.value)}
+        />
       </Labeled>
       <Labeled label={t("expenses.reservation")}>
         <NativeSelect value={reservationId} onChange={(e) => setReservationId(e.target.value)}>
@@ -833,15 +1311,53 @@ function AddExpenseForm({
           {reservations.map((r) => (<option key={r.id} value={r.id}>{r.label}</option>))}
         </NativeSelect>
       </Labeled>
+      <Labeled label={t("expenses.receipt")} className="sm:col-span-2">
+        <Input
+          type="file"
+          accept="application/pdf,image/jpeg,image/png,image/webp"
+          onChange={(e) => setReceipt(e.target.files?.[0] ?? null)}
+        />
+      </Labeled>
       <label className="flex items-end gap-2 pb-2 text-sm">
         <input type="checkbox" checked={assignOwner} onChange={(e) => setAssignOwner(e.target.checked)} />
         {t("expenses.assignOwner")}
       </label>
+      {/* Sagt beim Absende-Versuch, WAS fehlt. `role="alert"` liest der
+          Screenreader sofort vor — der Knopf allein könnte es nicht. */}
+      {zeigeFehler && (
+        <p
+          role="alert"
+          className="rounded-(--radius) border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive sm:col-span-6"
+        >
+          {t("expenses.missingFields", { felder: fehlend.join(", ") })}
+        </p>
+      )}
       <div className="flex items-end gap-2 sm:col-span-6">
+        {/* NICHT `disabled`: ein toter Knopf sagt nicht, was fehlt. Der Klick
+            wird angenommen und beantwortet — entweder mit dem Posten oder mit
+            der Liste der fehlenden Angaben. `aria-disabled` hält die
+            Information für Screenreader erhalten, ohne den Klick zu
+            verschlucken. */}
         <Button
           size="sm"
-          onClick={() => onAdd({ concept, date, category, listing_id: listingId, reservation_id: reservationId, assign_owner: assignOwner, amount: Number(amount) })}
-          disabled={!concept.trim()}
+          aria-disabled={!gueltig}
+          onClick={() => {
+            setVersucht(true);
+            // `gueltig` schliesst `direction === ""` bereits ein und verengt
+            // den Typ — ein zweiter Vergleich waere toter Code.
+            if (!gueltig) return;
+            onAdd({
+              concept,
+              date,
+              direction,
+              category,
+              listing_id: listingId,
+              reservation_id: reservationId,
+              assign_owner: assignOwner,
+              amount: betrag,
+              receipt,
+            });
+          }}
         >
           {t("expenses.add")}
         </Button>
@@ -857,21 +1373,29 @@ function Section({
   title,
   children,
   right,
+  info,
   defaultOpen = false,
 }: {
   title: string;
   children: React.ReactNode;
   right?: React.ReactNode;
+  /** Info-Symbol neben der Überschrift. Steht BEWUSST außerhalb des
+   *  Auf-/Zuklapp-Knopfes: verschachtelte Knöpfe sind ungültiges HTML und der
+   *  Klick auf das „i" würde sonst zusätzlich die Sektion zuklappen. */
+  info?: React.ReactNode;
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <section className="border-b border-border pb-5">
       <div className="flex items-center justify-between gap-4 py-3">
-        <button type="button" onClick={() => setOpen((v) => !v)} className="flex items-center gap-2">
-          <h2 className="font-display text-lg font-extrabold">{title}</h2>
-          <Icon icon={open ? "ph:caret-up" : "ph:caret-down"} className="size-4 text-muted-foreground" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setOpen((v) => !v)} className="flex items-center gap-2">
+            <h2 className="font-display text-lg font-extrabold">{title}</h2>
+            <Icon icon={open ? "ph:caret-up" : "ph:caret-down"} className="size-4 text-muted-foreground" />
+          </button>
+          {info}
+        </div>
         {right}
       </div>
       {open && children}
@@ -879,14 +1403,71 @@ function Section({
   );
 }
 
-function Chip({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-full bg-secondary px-2.5 py-1 text-muted-foreground">{children}</span>;
+/** Filter-Chip, der seinen Filter auch ENTFERNT.
+ *
+ *  Ersetzt den früheren reinen Anzeige-`Chip` — den gibt es nicht mehr, weil
+ *  jeder Chip dieser Reihe einen Filter darstellt und ihn deshalb auch
+ *  zurücksetzen können muss.
+ *
+ *  Ohne `onRemove` (Wert entspricht dem Ausgangszustand) bleibt es ein reiner
+ *  Anzeige-Chip ohne „x" — ein Entfernen-Knopf, der nichts zu entfernen hat,
+ *  wäre die nächste Attrappe. `whitespace-nowrap` ist hier richtig und nicht
+ *  die verbotene Abkürzung: der Chip ist ein umflossenes Element in einer
+ *  `flex-wrap`-Reihe, er weicht bei Platzmangel in die nächste ZEILE aus statt
+ *  seinen eigenen Text zu brechen. */
+function ChipEntfernbar({
+  label,
+  onRemove,
+  entfernenLabel,
+  disabled,
+}: {
+  label: string;
+  onRemove?: () => void;
+  entfernenLabel: string;
+  disabled?: boolean;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-secondary px-2.5 py-1 text-muted-foreground">
+      {label}
+      {onRemove && !disabled && (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={entfernenLabel}
+          title={entfernenLabel}
+          className="rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Icon icon="ph:x" className="size-3" />
+        </button>
+      )}
+    </span>
+  );
 }
 
-function Labeled({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
+function Labeled({
+  label,
+  className,
+  info,
+  infoAria,
+  children,
+}: {
+  label: string;
+  className?: string;
+  /** Erklärtext hinter einem „i" — für Felder, deren Wirkung man nicht rät. */
+  info?: string;
+  infoAria?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className={`flex flex-col gap-1 ${className ?? ""}`}>
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      {/* Siehe `Field` in owner-detail.tsx: `truncate` statt Umbruch, damit ein
+          langes Label das Info-Symbol nicht in eine zweite Zeile schiebt. */}
+      <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        <span className="min-w-0 truncate" title={label}>
+          {label}
+        </span>
+        {info && infoAria && <InfoHinweis text={info} ariaLabel={infoAria} />}
+      </span>
       {children}
     </label>
   );
@@ -920,12 +1501,27 @@ function HeaderField({
   );
 }
 
-function SummaryCell({ icon, label, value }: { icon: string; label: string; value: string }) {
+function SummaryCell({
+  icon,
+  label,
+  value,
+  info,
+  infoAria,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+  /** Erklärt, WAS diese Kennzahl ist — die vier unterscheiden sich nur im
+   *  Namen, und „Gesamt-Auszahlung" vs. „Eigentümer-Auszahlung" errät niemand. */
+  info?: string;
+  infoAria?: string;
+}) {
   return (
     <div className="flex flex-col items-center gap-1 text-center">
       <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <Icon icon={icon} className="size-4 text-accent" />
         {label}
+        {info && infoAria && <InfoHinweis text={info} ariaLabel={infoAria} />}
       </span>
       <span className="font-display text-2xl font-extrabold">{value}</span>
     </div>

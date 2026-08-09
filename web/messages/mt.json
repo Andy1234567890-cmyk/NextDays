@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Assenja proprjetajiet} one {Assenja # proprjetà} two {Assenja # proprjetajiet} few {Assenja # proprjetajiet} many {Assenja # proprjetajiet} other {Assenja # proprjetajiet}}",
     "propertiesAssigned": "{count, plural, one {# proprjetà assenjata} two {# proprjetajiet assenjati} few {# proprjetajiet assenjati} many {# proprjetajiet assenjati} other {# proprjetajiet assenjati}}",
     "removeProperty": "Neħħi l-assenjazzjoni",
+    "shareInvalid": "Daħħal sehem bejn 0 u 100.",
     "sections": {
       "master": "Dejta ewlenija",
       "payout": "Ħlas u kummissjoni",
@@ -998,7 +999,7 @@
       "statementFrequency": "Rittmu tar-rendikont",
       "notes": "Noti",
       "share": "Sehem (%)",
-      "commissionOverride": "Kummissjoni (%) differenti",
+      "commissionOverride": "Kummissjoni (%)",
       "emailLanguage": "Lingwa tal-e-mails"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Għall-aċċess għall-portal hemm bżonn indirizz tal-email.",
     "portalAccessInvite": "Ibgħat stedina",
     "portalAccessInvited": "L-istedina ntbagħtet.",
-    "portalAccessActive": "L-aċċess għall-portal huwa ssettjat."
+    "portalAccessActive": "L-aċċess għall-portal huwa ssettjat.",
+    "commissionNotAgreed": "mhux miftiehem",
+    "assignableCount": "{count} minn {total} magħżula biex jiżdiedu",
+    "assignedHeading": "{count, plural, one {# proprjetà assenjata} two {# proprjetajiet assenjati} few {# proprjetajiet assenjati} many {# proprjetajiet assenjati} other {# proprjetajiet assenjati}}",
+    "info": {
+      "aria": "Spjegazzjoni dwar {feld}",
+      "share": "Is-sehem ta' proprjetà f'din il-proprjetà. B'100 % il-ħlas sħiħ jiġi attribwit lil dan is-sid, b'inqas minn hekk proporzjonalment.",
+      "commission": "Ir-rata ta' kummissjoni prestabbilita għal dan is-sid. Jekk il-kaxxa titħalla vojta, għadha ma ġiet miftiehma l-ebda rata — il-ħlas imbagħad ma jiġix ikkalkulat, iżda jintwera bħala sing.",
+      "commissionOverride": "Japplika biss għal din il-proprjetà waħda u jissostitwixxi r-rata prestabbilita tas-sid. Jekk il-kaxxa titħalla vojta, tapplika r-rata prestabbilita."
+    }
   },
   "ownerStatements": {
     "title": "Rendikonti tas-sidien",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Status tar-riżervazzjoni",
       "statusCount": "{count} status",
-      "title": "Filtri"
+      "title": "Filtri",
+      "resetAll": "Irrisettja l-filtri kollha",
+      "remove": "Irrisettja {feld}",
+      "statusesNone": "Xejn magħżul",
+      "statusesSearch": "Fittex status …",
+      "statusesNoMatch": "Ma nstab l-ebda status.",
+      "statusesSelectAll": "Agħżel kollox",
+      "statusesCount": "{count} minn {total} magħżula"
     },
     "reservationStatus": {
       "pending": "Miftuħ",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Abbozz",
-      "finalized": "Iffinalizzat"
+      "finalized": "Iffinalizzat",
+      "cancelled": "Ikkanċellata"
     },
     "sections": {
       "data": "Dejta",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Prezz totali",
       "totalPayout": "Ħlas totali",
       "ownerPayout": "Ħlas lis-sid",
-      "pmPayout": "Ħlas lill-amministrazzjoni"
+      "pmPayout": "Ħlas lill-amministrazzjoni",
+      "commissionMissing": "Għal mill-inqas proprjetà waħda ma hemmx rata ta' kummissjoni stabbilita. Il-ħlasijiet għalhekk ma jistgħux jiġu kkalkulati — daħħal ir-rata fid-data prinċipali tal-proprjetarju jew fil-proprjetà."
     },
     "rental": {
       "perReservation": "Għal kull riżervazzjoni",
@@ -1136,13 +1155,28 @@
       "reservation": "Riżervazzjoni",
       "owner": "Sid",
       "hideAll": "Aħbi kollox",
-      "assignOwner": "Assenja lis-sid"
+      "assignOwner": "Assenja lis-sid",
+      "intro": "Ammonti li jitħallsu addizzjonalment lis-sid jew li jiġu mnaqqsa minnu. Jgħoddu bis-sħiħ fil-ħlas — mingħajr tnaqqis ta' kummissjoni.",
+      "direction": "Direzzjoni",
+      "toOwner": "Favur is-sid",
+      "toOwnerHint": "Jirċievi ħlas addizzjonali, eż. kumpens għal ħsara.",
+      "toOwnerShort": "Favur",
+      "fromOwner": "A karigu tas-sid",
+      "fromOwnerHint": "Jitnaqqas mill-ħlas tiegħu, eż. materjal u ħin tax-xogħol.",
+      "fromOwnerShort": "A karigu",
+      "sumToOwner": "Total favur:",
+      "sumFromOwner": "Total a karigu:",
+      "receipt": "Irċevuta",
+      "openReceipt": "Iftaħ l-irċevuta",
+      "createdBy": "Irreġistrat minn {name}",
+      "saveFirst": "Il-partiti ta' tpaċija jappartjenu għal rendikont issejvjat. Issejvja r-rendikont, u wara tkun tista' ddaħħal il-partiti hawn.",
+      "missingFields": "Jekk jogħġbok imla wkoll: {felder}."
     },
     "grand": {
       "rentalRevenue": "Dħul mill-kiri",
       "expenses": "Spejjeż u extras",
       "total": "Total",
-      "deductPercentage": "Naqqas il-kummissjoni (%)"
+      "deductPercentage": "Kummissjoni (%)"
     },
     "manage": {
       "owner": "Sid",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Editja",
     "attachments": {
-      "drop": "Waqqa' fajls biex tella'hom jew fittex"
+      "drop": "Waqqa' fajls biex tella'hom jew fittex",
+      "viaExpenses": "Ir-riċevuti jitqabbdu mal-partita individwali: tellagħhom taħt “Spejjeż u extras” direttament fuq ir-ringiela rilevanti."
     },
     "masterData": "Dejta ewlenija",
     "preview": "Previżjoni",
     "previewTitle": "Previżjoni tad-dokument",
-    "close": "Agħlaq"
+    "close": "Agħlaq",
+    "info": {
+      "aria": "Spjegazzjoni dwar {feld}",
+      "totalPrice": "Dak li l-mistieden ħallas b'kollox għaż-żjara tiegħu — qabel jitnaqqsu t-tariffi tal-portali u l-kummissjoni.",
+      "totalPayout": "Dak li jasal għand l-operat wara li jitnaqqsu t-tariffi tal-portali. Minn dan l-ammont jinħadmu s-sehem tas-sid u dak tal-amministrazzjoni.",
+      "ownerPayout": "Is-sehem li jitħallas lis-sid: il-ħlas totali nieqes il-kummissjoni, flimkien mal-partiti ta' tpaċija.",
+      "pmPayout": "Is-sehem li jibqa' għand l-operat — il-kummissjoni fuq il-kiri. Il-partiti ta' tpaċija mhumiex inklużi hawn.",
+      "expenses": {
+        "title": "Favur u a karigu",
+        "direction": "“Favur is-sid” iżid il-ħlas tiegħu, pereżempju rimborż. “A karigu tas-sid” inaqqsu, pereżempju materjal jew ħin tax-xogħol tal-operat.",
+        "noCommission": "Dawn l-ammonti jgħoddu bis-sħiħ fil-ħlas — fuqhom ma tiġi kkalkulata l-ebda kummissjoni.",
+        "aria": "Spjegazzjoni dwar il-partiti ta' tpaċija"
+      },
+      "dash": {
+        "title": "Xi tfisser is-sing",
+        "meaning": "Sing ifisser “mhux irreġistrat” — mhux “żero”. Il-valur ma jistax jiġi kkalkulat għax hemm dettall nieqes.",
+        "whereToFix": "Jekk ir-rata ta' kummissjoni hija nieqsa, daħħalha fid-data bażika tas-sid jew bħala rata differenti fuq il-proprjetà individwali.",
+        "aria": "Spjegazzjoni dwar is-sing minflok ammont",
+        "inline": "Sing jindika valur nieqes, mhux 0,00."
+      },
+      "deductPercentage": "Ir-rata tal-kummissjoni li biha jikkalkula dan ir-rapport. Vojt ifisser: tapplika r-rata mid-data bażika tas-sid jew ir-rata differenti fuq il-proprjetà individwali.",
+      "status": {
+        "title": "It-tliet stati ta' rapport",
+        "draft": "Abbozz: għadu jista' jinbidel. L-ammonti jerġgħu jiġu kkalkulati ma' kull bidla.",
+        "finalized": "Iffinalizzat: in-numru tal-fattura ġie assenjat, it-totali ġew iffriżati. Bidliet ma għadhomx possibbli.",
+        "cancelled": "Ikkanċellat: imħassar permezz ta' fattura ta' kanċellazzjoni. Il-fattura oriġinali tibqa' bħala dokument ta' prova."
+      },
+      "finalize": {
+        "title": "Iffinalizza r-rapport",
+        "what": "Mal-finalizzazzjoni jiġi assenjat in-numru tal-fattura u t-totali kollha jiġu ffriżati bħala dokument ta' prova.",
+        "irreversible": "Dan ma jistax jiġi rtirat. Fattura ffinalizzata tista' titħassar biss permezz ta' fattura ta' kanċellazzjoni."
+      },
+      "basis": "Jiddetermina meta riżervazzjoni taqa' fil-perjodu: bic-check-in skont il-jum tal-wasla, bic-check-out skont il-jum tat-tluq. Riżervazzjoni li taqsam minn xahar għall-ieħor tispiċċa, skont l-għażla, f'xahar jew fl-ieħor.",
+      "statuses": "Jiġu kkalkulati biss ir-riżervazzjonijiet b'wieħed mill-istatus magħżula. B'mod awtomatiku dawn huma r-riżervazzjonijiet ikkonfermati u kompluti — dawk ikkanċellati normalment ma jidħlux fi ħlas."
+    }
   },
   "ownerBilling": {
     "title": "Kuntratt tar-rendikont",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Soġġett għal kummissjoni",
     "commissionableYes": "Iva — jidħol fil-kummissjoni",
-    "commissionableNo": "Le — mingħajr kummissjoni"
+    "commissionableNo": "Le — mingħajr kummissjoni",
+    "infoAria": "Spjegazzjoni dwar {feld}"
   },
   "portal": {
     "title": "Il-portal tiegħi",

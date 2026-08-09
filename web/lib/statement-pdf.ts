@@ -18,6 +18,20 @@ function fmt(amount: number, currency: string, locale: string): string {
   }).format(amount);
 }
 
+/** Betrag ODER „—", wenn es die Zahl nicht gibt.
+ *
+ *  `null` heisst hier „nicht berechenbar" (kein Provisionssatz hinterlegt)
+ *  bzw. „maskiert" (§4.2) — NIE „0,00". Im PDF wiegt das besonders schwer:
+ *  das Dokument bekommt der Eigentuemer in die Hand, und eine erfundene Null
+ *  darin ist eine schriftliche Falschaussage ueber Geld (Wurzel 4). */
+function fmtOderStrich(
+  amount: number | null | undefined,
+  currency: string,
+  locale: string,
+): string {
+  return amount == null ? "—" : fmt(amount, currency, locale);
+}
+
 function esc(s: string | null | undefined): string {
   return (s ?? "")
     .replace(/&/g, "&amp;")
@@ -31,6 +45,21 @@ function line(value: string | null | undefined, strong = false): string {
   const v = esc(value);
   return strong ? `<p><strong>${v}</strong></p>` : `<p>${v}</p>`;
 }
+
+// Die Beschriftungen dieses Dokuments sind — wie der ganze Rest der Datei
+// (Titel, „Aussteller", „Vermietungs-Aktivität") — deutsch. Das PDF ist der
+// Beleg zwischen Betrieb und Eigentümer, kein Oberflächentext. Hier stehen sie
+// gebündelt, damit eine spätere Übersetzung EINE Stelle hat statt Dutzender
+// Template-Literale.
+const txt = {
+  toOwner: "zugunsten",
+  fromOwner: "zulasten",
+  settlement: "Verrechnungsposten",
+  direction: "Richtung",
+  sumToOwner: "Verrechnung zugunsten",
+  sumFromOwner: "Verrechnung zulasten",
+  settlementNet: "Verrechnung (netto)",
+} as const;
 
 export function buildStatementHtml(st: Statement, locale: string): string {
   const h = st.header;
@@ -48,6 +77,51 @@ export function buildStatementHtml(st: Statement, locale: string): string {
   const zeigtVerwaltung = st.summary.pm_payout !== null;
   const spalten = zeigtGastpreis ? 7 : 6;
 
+  // Die Richtungssummen werden aus den POSTEN abgeleitet, nicht aus der
+  // Summary gelesen. Auf dem Snapshot-Pfad (finalisiert/storniert) baut das
+  // Backend die Summary aus der gespeicherten Zeile neu auf und setzt dort nur
+  // `expenses_total`; `expenses_to_owner/_from_owner` fallen auf ihren
+  // Schema-Default 0.0 zurück. Aus einer gelieferten 0 lässt sich „es gab
+  // keine" und „das Feld wurde nicht gefüllt" nicht unterscheiden — genau das
+  // PDF einer finalisierten Abrechnung, also das, was der Eigentümer wirklich
+  // in die Hand bekommt, verlöre dadurch beide Zeilen (Wurzel 4). Aus den
+  // Posten gerechnet stimmt es auf BEIDEN Pfaden und kann der Postentabelle
+  // darüber nicht widersprechen.
+  //
+  // Summiert wird je WÄHRUNG getrennt: die Tabelle zeigt jeden Betrag in der
+  // Währung des Postens, quer darüber addiert man sonst DKK auf EUR. Nur wenn
+  // ausschliesslich eine Währung vorkommt, ist eine einzelne Summe überhaupt
+  // eine zulässige Aussage; sonst bekommt jede Zeile ihr Währungskürzel.
+  const postenWaehrungen = new Set(st.expenses.map((e) => e.currency || cur));
+  const eineWaehrung = postenWaehrungen.size <= 1;
+  const verrechnungBlock = (): string => {
+    if (!st.expenses.length) return "";
+    // Bei gemischten Währungen je Währung eine eigene Zeilengruppe — eine
+    // zusammengezählte Zahl wäre schlicht falsch (Wurzel 4).
+    return [...postenWaehrungen]
+      .map((wc) => {
+        const zu = st.expenses
+          .filter((e) => (e.currency || cur) === wc && e.direction !== "from_owner")
+          .reduce((s, e) => s + Math.abs(e.amount), 0);
+        const ab = st.expenses
+          .filter((e) => (e.currency || cur) === wc && e.direction === "from_owner")
+          .reduce((s, e) => s + Math.abs(e.amount), 0);
+        const suffix = eineWaehrung ? "" : ` (${esc(wc)})`;
+        return [
+          zu > 0
+            ? `<div class="row"><span>${txt.sumToOwner}${suffix}</span><span>${fmt(zu, wc, locale)}</span></div>`
+            : "",
+          ab > 0
+            ? `<div class="row"><span>${txt.sumFromOwner}${suffix}</span><span>−${fmt(ab, wc, locale)}</span></div>`
+            : "",
+          zu > 0 && ab > 0
+            ? `<div class="row"><span>${txt.settlementNet}${suffix}</span><span>${fmt(zu - ab, wc, locale)}</span></div>`
+            : "",
+        ].join("");
+      })
+      .join("");
+  };
+
   // Mehrere Quellwährungen? Dann je Zeile die eigene Währung zeigen + Kurszeile.
   const mixed =
     new Set(st.rental_rows.map((r) => r.currency)).size > 1 ||
@@ -59,8 +133,8 @@ export function buildStatementHtml(st: Statement, locale: string): string {
       // Owner-Auszahlung umgerechnet + Kurs-Hinweis, wenn Währung abweicht.
       const conv =
         rc !== ownerCur
-          ? `${fmt(r.owner_payout_converted, ownerCur, locale)}<br><span style="color:#999;font-size:9px">${fmt(r.owner_payout, rc, locale)} · Kurs ${r.fx_rate} (${esc(r.fx_date)})</span>`
-          : fmt(r.owner_payout, ownerCur, locale);
+          ? `${fmtOderStrich(r.owner_payout_converted, ownerCur, locale)}<br><span style="color:#999;font-size:9px">${fmtOderStrich(r.owner_payout, rc, locale)} · Kurs ${r.fx_rate} (${esc(r.fx_date)})</span>`
+          : fmtOderStrich(r.owner_payout, ownerCur, locale);
       const gastpreis =
         zeigtGastpreis && r.total_price !== null
           ? `<td class="num">${fmt(r.total_price, rc, locale)}</td>`
@@ -78,16 +152,23 @@ export function buildStatementHtml(st: Statement, locale: string): string {
     })
     .join("");
 
+  // Verrechnungsposten: der Eigentümer muss SEHEN, wofür etwas abgezogen oder
+  // gutgeschrieben wurde — sonst ist die Abrechnung nicht prüfbar. Darum eigene
+  // Richtungsspalte im Klartext statt nur eines Minuszeichens am Betrag, und
+  // die Währung des POSTENS (ein DKK-Objekt behält DKK, Wurzel 4).
   const expenses = st.expenses
-    .map(
-      (e) => `
+    .map((e) => {
+      const zulasten = e.direction === "from_owner";
+      const richtung = zulasten ? txt.fromOwner : txt.toOwner;
+      return `
       <tr>
-        <td>${esc(e.concept)}</td>
+        <td>${esc(e.concept)}${e.created_by_name ? `<br><span style="color:#999;font-size:9px">${esc(e.created_by_name)}</span>` : ""}</td>
         <td>${esc(e.date)}</td>
+        <td>${richtung}</td>
         <td>${esc(e.category) || "—"}</td>
-        <td class="num">${fmt(e.amount, cur, locale)}</td>
-      </tr>`,
-    )
+        <td class="num"${zulasten ? ' style="color:#b42318"' : ""}>${fmt(e.signed_amount, e.currency || cur, locale)}</td>
+      </tr>`;
+    })
     .join("");
 
   const taxLine =
@@ -154,9 +235,9 @@ export function buildStatementHtml(st: Statement, locale: string): string {
 
     ${
       st.expenses.length
-        ? `<div class="section-title">Ausgaben & Extras</div>
+        ? `<div class="section-title">${txt.settlement}</div>
            <table>
-             <thead><tr><th>Konzept</th><th>Datum</th><th>Kategorie</th><th class="num">Betrag</th></tr></thead>
+             <thead><tr><th>Konzept</th><th>Datum</th><th>${txt.direction}</th><th>Kategorie</th><th class="num">Betrag</th></tr></thead>
              <tbody>${expenses}</tbody>
            </table>`
         : ""
@@ -177,7 +258,10 @@ export function buildStatementHtml(st: Statement, locale: string): string {
             `<div class="row"><span>Verwaltungs-Auszahlung (${esc(c.currency)})</span><span>${fmt(c.amount, c.currency, locale)}</span></div>`,
         )
         .join("")}
-      <div class="row grand"><span>Eigentümer-Auszahlung (${esc(ownerCur)})</span><span>${fmt(st.summary.owner_payout, ownerCur, locale)}</span></div>
+      ${/* Auch bei gemischten Währungen gehören die Verrechnungsposten in die
+           Summen — sonst zeigt das Dokument eine Postentabelle, deren Beträge
+           in keiner Summe auftauchen. */ verrechnungBlock()}
+      <div class="row grand"><span>Eigentümer-Auszahlung (${esc(ownerCur)})</span><span>${fmtOderStrich(st.summary.owner_payout, ownerCur, locale)}</span></div>
     </div>`
         : `<div class="totals">
       ${
@@ -186,9 +270,14 @@ export function buildStatementHtml(st: Statement, locale: string): string {
           : ""
       }
       <div class="row"><span>Gesamt-Auszahlung</span><span>${fmt(st.summary.total_payout, cur, locale)}</span></div>
-      <div class="row"><span>Ausgaben</span><span>${fmt(st.summary.expenses_total, cur, locale)}</span></div>
+      ${
+        /* Beide Richtungen EINZELN ausweisen: eine Nettozahl allein verbirgt,
+           dass z. B. 500 Kompensation und 500 Material gegeneinanderstehen —
+           der Eigentümer sähe „0,00" und wüsste nicht, wofür. */
+        verrechnungBlock()
+      }
       ${st.tax.gross ? taxLine : ""}
-      <div class="row grand"><span>Eigentümer-Auszahlung</span><span>${fmt(st.summary.owner_payout, ownerCur, locale)}</span></div>
+      <div class="row grand"><span>Eigentümer-Auszahlung</span><span>${fmtOderStrich(st.summary.owner_payout, ownerCur, locale)}</span></div>
       ${
         st.summary.pm_payout !== null
           ? `<div class="row"><span>Verwaltungs-Auszahlung</span><span>${fmt(st.summary.pm_payout, cur, locale)}</span></div>`

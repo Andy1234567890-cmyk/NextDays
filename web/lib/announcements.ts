@@ -4,6 +4,8 @@
 // Login + Historie unter /neuerungen. Gegen den announcements-Slice
 // (/api/v1/announcements). Der Scope kommt im Backend aus dem Token (Rolle
 // admin/co_admin, eigener Mandant) — hier wird nie eine Nutzer-ID mitgegeben.
+import { getLocale } from "next-intl/server";
+
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
@@ -53,6 +55,24 @@ type Ergebnis<T> =
   | { ok: true; data: T }
   | { ok: false; error: string; status?: number };
 
+/**
+ * Die Sprache dieses Betrachters als Query-Anhang (`?sprache=da`).
+ *
+ * `getLocale()` ist das Ergebnis der EINEN Auflösungskette des Projekts
+ * (`i18n/aufloesung.ts`: Cookie → Token-Sprache → Accept-Language → Englisch)
+ * — hier wird sie angewendet, nicht neu erfunden. Ausdrücklich KEINE
+ * IP-Geolokalisierung: der Aufenthaltsort ist keine Auskunft über die Sprache.
+ *
+ * Das Backend liefert für eine Sprache ohne Fassung den deutschen
+ * Originaltext. Das ist kein Fallback im Sinne von Wurzel 4, sondern der
+ * einzige real existierende Text dieser Ankündigung — erfunden wird nichts.
+ */
+async function spracheAnhaengen(pfad: string): Promise<string> {
+  const locale = await getLocale();
+  const trenner = pfad.includes("?") ? "&" : "?";
+  return `${pfad}${trenner}sprache=${encodeURIComponent(locale)}`;
+}
+
 async function call<T>(
   pfad: string,
   method: "GET" | "POST" = "GET",
@@ -83,7 +103,7 @@ export async function listAnnouncements(
   offset = 0,
 ): Promise<Ergebnis<AnnouncementListe>> {
   return call<AnnouncementListe>(
-    `?limit=${limit}&offset=${offset}`,
+    await spracheAnhaengen(`?limit=${limit}&offset=${offset}`),
   );
 }
 
@@ -95,7 +115,7 @@ export async function listAnnouncements(
  * Nach jeder erfolgreichen Quittierung wird hier erneut gefragt.
  */
 export async function popupAnnouncement(): Promise<Ergebnis<PopupAntwort>> {
-  return call<PopupAntwort>("/popup");
+  return call<PopupAntwort>(await spracheAnhaengen("/popup"));
 }
 
 /**

@@ -7,10 +7,11 @@ interner Cron-Trigger (geteiltes Secret, wie DP-Recompute).
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 
 from src.core.security import AuthContext, require_internal_cron_secret
 from src.core.supabase import get_service_client
+from src.core.uploads import read_upload_named
 from src.features.auth.dependencies import require_granular_permission
 from src.features.auth.granular_permissions import Permission
 
@@ -18,6 +19,7 @@ from .dependencies import OwnerStatementsServiceDep
 from .schemas import (
     AutoStatementRunResponse,
     ExpenseCreate,
+    ExpenseReceiptUrlResponse,
     ExpenseResponse,
     ExpenseUpdate,
     SliceHealth,
@@ -177,6 +179,40 @@ def delete_expense(
 ) -> None:
     try:
         service.delete_expense(ctx, expense_id)
+    except StatementError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/expenses/{expense_id}/receipt", response_model=ExpenseResponse)
+async def upload_expense_receipt(
+    expense_id: str,
+    request: Request,
+    service: OwnerStatementsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_REPORTING)],
+) -> ExpenseResponse:
+    """Beleg/Nachweis (multipart „file") an einen Verrechnungsposten hängen.
+
+    Landet im PRIVATEN Bucket owner-expense-receipts; der Typ wird im Service
+    an den echten Anfangsbytes geprüft, nicht am Client-content_type."""
+    # Inhalt UND Original-Dateiname in EINEM Durchlauf: nach `read_upload` ist
+    # das Formular geschlossen, ein zweites `request.form()` liefert nur noch
+    # geschlossene Dateien (siehe `read_upload_named`).
+    content, _content_type, file_name = await read_upload_named(request)
+    try:
+        return service.upload_receipt(ctx, expense_id, content, file_name)
+    except StatementError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/expenses/{expense_id}/receipt", response_model=ExpenseReceiptUrlResponse)
+def expense_receipt_url(
+    expense_id: str,
+    service: OwnerStatementsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_REPORTING)],
+) -> ExpenseReceiptUrlResponse:
+    """Signierte, zeitlich begrenzte Download-URL für den Beleg."""
+    try:
+        return service.receipt_url(ctx, expense_id)
     except StatementError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Priradiť objekty} one {Priradiť # objekt} few {Priradiť # objekty} many {Priradiť # objektu} other {Priradiť # objektov}}",
     "propertiesAssigned": "{count, plural, one {Priradený # objekt} few {Priradené # objekty} many {Priradené # objektu} other {Priradených # objektov}}",
     "removeProperty": "Odstrániť priradenie",
+    "shareInvalid": "Zadajte podiel medzi 0 a 100.",
     "sections": {
       "master": "Kmeňové údaje",
       "payout": "Výplata a provízia",
@@ -998,7 +999,7 @@
       "statementFrequency": "Rytmus vyúčtovania",
       "notes": "Poznámky",
       "share": "Podiel (%)",
-      "commissionOverride": "Provízia (%) odchýlka",
+      "commissionOverride": "Provízia (%)",
       "emailLanguage": "Jazyk e-mailov"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Na prístup k portálu je potrebná e-mailová adresa.",
     "portalAccessInvite": "Odoslať pozvánku",
     "portalAccessInvited": "Pozvánka odoslaná.",
-    "portalAccessActive": "Prístup k portálu je nastavený."
+    "portalAccessActive": "Prístup k portálu je nastavený.",
+    "commissionNotAgreed": "nedohodnuté",
+    "assignableCount": "Vybraných {count} z {total} na pridanie",
+    "assignedHeading": "{count, plural, one {# priradený objekt} few {# priradené objekty} other {# priradených objektov}}",
+    "info": {
+      "aria": "Vysvetlenie k: {feld}",
+      "share": "Vlastnícky podiel na tomto objekte. Pri 100 % sa celá výplata pripíše tomuto vlastníkovi, pri nižšom podiele pomerne.",
+      "commission": "Štandardná sadzba provízie pre tohto vlastníka. Ak pole zostane prázdne, sadzba ešte nie je dohodnutá — výplata sa potom nevypočíta, ale zobrazí sa ako pomlčka.",
+      "commissionOverride": "Platí len pre tento jeden objekt a prepisuje štandardnú sadzbu vlastníka. Ak pole zostane prázdne, platí štandardná sadzba."
+    }
   },
   "ownerStatements": {
     "title": "Vyúčtovanie vlastníka",
@@ -1063,7 +1073,14 @@
       "checkOut": "Odchod",
       "statuses": "Stavy rezervácií",
       "statusCount": "{count} stavov",
-      "title": "Filtre"
+      "title": "Filtre",
+      "resetAll": "Zrušiť všetky filtre",
+      "remove": "Zrušiť: {feld}",
+      "statusesNone": "Nič nevybrané",
+      "statusesSearch": "Hľadať stav …",
+      "statusesNoMatch": "Nenašiel sa žiadny stav.",
+      "statusesSelectAll": "Vybrať všetko",
+      "statusesCount": "Vybraných {count} z {total}"
     },
     "reservationStatus": {
       "pending": "Otvorená",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Návrh",
-      "finalized": "Finalizované"
+      "finalized": "Finalizované",
+      "cancelled": "Stornované"
     },
     "sections": {
       "data": "Údaje",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Celková cena",
       "totalPayout": "Celková výplata",
       "ownerPayout": "Výplata vlastníkovi",
-      "pmPayout": "Výplata správcovi"
+      "pmPayout": "Výplata správcovi",
+      "commissionMissing": "Pri najmenej jednej nehnuteľnosti nie je nastavená sadzba provízie. Výplaty preto nemožno vypočítať — zadajte sadzbu v kmeňových údajoch vlastníka alebo pri nehnuteľnosti."
     },
     "rental": {
       "perReservation": "Za rezerváciu",
@@ -1136,13 +1155,28 @@
       "reservation": "Rezervácia",
       "owner": "Vlastník",
       "hideAll": "Skryť všetko",
-      "assignOwner": "Priradiť vlastníkovi"
+      "assignOwner": "Priradiť vlastníkovi",
+      "intro": "Sumy, ktoré sa vlastníkovi navyše vyplácajú alebo ktoré sa mu naopak zúčtujú. Do výplaty vstupujú v plnej výške — bez odpočtu provízie.",
+      "direction": "Smer",
+      "toOwner": "V prospech vlastníka",
+      "toOwnerHint": "Dostane doplatok, napr. náhradu škody.",
+      "toOwnerShort": "V prospech",
+      "fromOwner": "Na ťarchu vlastníka",
+      "fromOwnerHint": "Odpočíta sa z jeho výplaty, napr. materiál a pracovný čas.",
+      "fromOwnerShort": "Na ťarchu",
+      "sumToOwner": "Spolu v prospech:",
+      "sumFromOwner": "Spolu na ťarchu:",
+      "receipt": "Doklad",
+      "openReceipt": "Otvoriť doklad",
+      "createdBy": "Zadal(a) {name}",
+      "saveFirst": "Zúčtovacie položky patria k uloženému vyúčtovaniu. Ulož vyúčtovanie, potom tu môžeš zadávať položky.",
+      "missingFields": "Ešte prosím doplň: {felder}."
     },
     "grand": {
       "rentalRevenue": "Príjmy z prenájmu",
       "expenses": "Výdavky a extra položky",
       "total": "Spolu",
-      "deductPercentage": "Odpočítať percento (%)"
+      "deductPercentage": "Provízia (%)"
     },
     "manage": {
       "owner": "Vlastník",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Upraviť",
     "attachments": {
-      "drop": "Presuňte súbory na nahranie alebo prehľadávajte"
+      "drop": "Presuňte súbory na nahranie alebo prehľadávajte",
+      "viaExpenses": "Doklady patria k jednotlivej položke: nahraj ich v časti „Výdavky a extra položky“ priamo pri príslušnom riadku."
     },
     "masterData": "Kmeňové údaje",
     "preview": "Náhľad",
     "previewTitle": "Náhľad dokladu",
-    "close": "Zavrieť"
+    "close": "Zavrieť",
+    "info": {
+      "aria": "Vysvetlenie k: {feld}",
+      "totalPrice": "Suma, ktorú hosť celkovo zaplatil za svoj pobyt — pred odpočítaním poplatkov portálov a provízie.",
+      "totalPayout": "Suma, ktorá po odpočítaní poplatkov portálov príde správcovi. Z nej sa tvorí podiel vlastníka a podiel správy.",
+      "ownerPayout": "Podiel vyplácaný vlastníkovi: celková výplata znížená o províziu a zvýšená o zúčtovacie položky.",
+      "pmPayout": "Podiel, ktorý zostáva správcovi — provízia z prenájmu. Zúčtovacie položky tu nie sú zahrnuté.",
+      "expenses": {
+        "title": "V prospech a na ťarchu",
+        "direction": "„V prospech vlastníka“ jeho výplatu zvyšuje, napríklad náhrada nákladov. „Na ťarchu vlastníka“ ju znižuje, napríklad materiál alebo pracovný čas správy.",
+        "noCommission": "Tieto sumy vstupujú do výplaty v plnej výške — provízia sa z nich nepočíta.",
+        "aria": "Vysvetlenie k zúčtovacím položkám"
+      },
+      "dash": {
+        "title": "Čo znamená pomlčka",
+        "meaning": "Pomlčka znamená „nezadané“ — nie „nula“. Hodnotu nemožno vypočítať, pretože chýba údaj.",
+        "whereToFix": "Ak chýba sadzba provízie, zadaj ju v kmeňových údajoch vlastníka alebo ako odchylnú sadzbu pri jednotlivom objekte.",
+        "aria": "Vysvetlenie k pomlčke namiesto sumy",
+        "inline": "Pomlčka znamená chýbajúcu hodnotu, nie 0,00."
+      },
+      "deductPercentage": "Sadzba provízie, s ktorou toto vyúčtovanie počíta. Prázdne znamená: platí sadzba z kmeňových údajov vlastníka, prípadne odlišná sadzba pri konkrétnom objekte.",
+      "status": {
+        "title": "Tri stavy vyúčtovania",
+        "draft": "Návrh: stále upraviteľný. Sumy sa pri každej zmene prepočítajú.",
+        "finalized": "Finalizované: pridelené číslo faktúry, súčty zmrazené. Zmeny už nie sú možné.",
+        "cancelled": "Stornované: zrušené dobropisom. Pôvodná faktúra zostáva zachovaná ako doklad."
+      },
+      "finalize": {
+        "title": "Finalizovať vyúčtovanie",
+        "what": "Pri finalizácii sa pridelí číslo faktúry a všetky súčty sa zmrazia ako doklad.",
+        "irreversible": "Tento krok sa nedá vrátiť späť. Finalizovanú faktúru možno zrušiť už len dobropisom."
+      },
+      "basis": "Určuje, kedy rezervácia spadá do daného obdobia: pri voľbe Príchod rozhoduje deň príchodu, pri voľbe Odchod deň odchodu. Rezervácia cez prelom mesiaca spadne podľa voľby do jedného alebo druhého mesiaca.",
+      "statuses": "Zúčtované sú len rezervácie s niektorým z vybraných stavov. Predvolené sú potvrdené a dokončené rezervácie — stornované do výplaty zvyčajne nepatria."
+    }
   },
   "ownerBilling": {
     "title": "Zmluva o vyúčtovaní",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Podlieha provízii",
     "commissionableYes": "Áno — vstupuje do provízie",
-    "commissionableNo": "Nie — bez provízie"
+    "commissionableNo": "Nie — bez provízie",
+    "infoAria": "Vysvetlenie k: {feld}"
   },
   "portal": {
     "title": "Môj portál",

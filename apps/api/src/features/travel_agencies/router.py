@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
-from src.core.uploads import read_upload
+from src.core.uploads import read_upload_named
 from src.features.auth.dependencies import require_granular_permission
 from src.features.auth.granular_permissions import Permission
 
@@ -188,11 +188,10 @@ async def upload_contract_file(
     service: ServiceDep,
     ctx: _partners,
 ) -> ContractResponse:
-    content, content_type = await read_upload(request)
-    # Original-Dateiname aus der (von read_upload bereits geparsten, gecachten)
-    # Form — reines Metadatum; fehlt er, bleibt file_name null.
-    form = await request.form()
-    file_name = getattr(form.get("file"), "filename", None)
+    # Inhalt UND Original-Dateiname in EINEM Durchlauf: nach `read_upload` ist
+    # das Formular geschlossen, ein zweites `request.form()` liefert nur noch
+    # geschlossene Dateien (siehe `read_upload_named`).
+    content, content_type, file_name = await read_upload_named(request)
     try:
         return service.upload_contract_file(
             _tenant(ctx), agency_id, contract_id, content, content_type, file_name

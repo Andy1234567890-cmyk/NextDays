@@ -44,7 +44,15 @@ class OwnerBase(BaseModel):
     account_holder: str | None = None
 
     # Provision + Auszahlungs-/Statement-Konfig.
-    default_commission_pct: float = Field(default=0, ge=0, le=100)
+    #
+    # NULL = noch nicht vereinbart, NICHT 0 %. Bis 09.08.2026 stand hier
+    # `default=0`: wer einen Eigentümer anlegte, ohne einen Satz einzugeben,
+    # schickte damit eine echte 0 an die DB und der Betrieb bekam bei jeder
+    # Abrechnung dieses Eigentümers 0,00 — der Eigentümer 100 %. Live belegt
+    # (AirSmil, 8 Booking-Buchungen): Gesamt-Auszahlung 32.120,45 DKK,
+    # Verwaltungs-Auszahlung 0,00 DKK. Ein fehlender Satz ist ein Datenfehler
+    # und muss als solcher sichtbar werden (Wurzel 4), kein bequemer Nullwert.
+    default_commission_pct: float | None = Field(default=None, ge=0, le=100)
     default_payout_method: str | None = None
     statement_frequency: StatementFrequency = StatementFrequency.none
     notes: str | None = None
@@ -190,8 +198,16 @@ class OwnerListItem(OwnerBase):
     # Effektive Provisions-Spanne über die Objekte: je Objekt der Override, sonst
     # der Owner-Default. Bei Gleichheit zeigt die UI einen Wert, sonst eine Spanne.
     # None, wenn (noch) keine Objekte zugeordnet sind.
+    # None, wenn (noch) keine Objekte zugeordnet sind ODER für KEINES ein Satz
+    # feststeht — eine Spanne aus lauter unbekannten Sätzen gibt es nicht.
     commission_min: float | None = None
     commission_max: float | None = None
+    # Wie viele der zugeordneten Objekte KEINEN Satz haben (weder Override noch
+    # Owner-Default). > 0 heißt: die Spanne oben beschreibt nur einen Teil, für
+    # den Rest ist die Provision offen. Ohne diese Zahl sähe eine Karte mit
+    # teils ungeklärten Sätzen genauso aus wie eine vollständig gepflegte
+    # (Wurzel 4 — die Lücke muss sichtbar sein, nicht weggerundet).
+    commission_missing_count: int = 0
     created_at: str | None = None
     updated_at: str | None = None
 

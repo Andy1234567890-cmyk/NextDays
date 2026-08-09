@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Ingatlanok hozzárendelése} one {# ingatlan hozzárendelése} other {# ingatlan hozzárendelése}}",
     "propertiesAssigned": "{count, plural, one {# ingatlan hozzárendelve} other {# ingatlan hozzárendelve}}",
     "removeProperty": "Hozzárendelés eltávolítása",
+    "shareInvalid": "Adjon meg 0 és 100 közötti részesedést.",
     "sections": {
       "master": "Törzsadatok",
       "payout": "Kifizetés és jutalék",
@@ -998,7 +999,7 @@
       "statementFrequency": "Elszámolási gyakoriság",
       "notes": "Megjegyzések",
       "share": "Részesedés (%)",
-      "commissionOverride": "Jutalék (%) eltérés",
+      "commissionOverride": "Jutalék (%)",
       "emailLanguage": "E-mailek nyelve"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "A portálhozzáféréshez e-mail-cím szükséges.",
     "portalAccessInvite": "Meghívó küldése",
     "portalAccessInvited": "Meghívó elküldve.",
-    "portalAccessActive": "A portálhozzáférés be van állítva."
+    "portalAccessActive": "A portálhozzáférés be van állítva.",
+    "commissionNotAgreed": "nincs megállapodva",
+    "assignableCount": "{count} / {total} kiválasztva hozzáadásra",
+    "assignedHeading": "{count, plural, one {# hozzárendelt ingatlan} other {# hozzárendelt ingatlan}}",
+    "info": {
+      "aria": "Magyarázat ehhez: {feld}",
+      "share": "A tulajdoni hányad ezen az ingatlanon. 100 %-nál a teljes kifizetés ehhez a tulajdonoshoz kerül, ennél kevesebbnél arányosan.",
+      "commission": "Az alapértelmezett jutalékkulcs ehhez a tulajdonoshoz. Ha a mező üresen marad, még nincs megállapodott kulcs — a kifizetés ekkor nem kerül kiszámításra, hanem gondolatjelként jelenik meg.",
+      "commissionOverride": "Csak erre az egy ingatlanra érvényes, és felülírja a tulajdonos alapértelmezett kulcsát. Ha a mező üresen marad, az alapértelmezett kulcs érvényes."
+    }
   },
   "ownerStatements": {
     "title": "Tulajdonosi elszámolás",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Foglalás státuszai",
       "statusCount": "{count} státusz",
-      "title": "Szűrők"
+      "title": "Szűrők",
+      "resetAll": "Összes szűrő visszaállítása",
+      "remove": "{feld} visszaállítása",
+      "statusesNone": "Nincs kiválasztva",
+      "statusesSearch": "Státusz keresése …",
+      "statusesNoMatch": "Nincs találat státuszra.",
+      "statusesSelectAll": "Összes kijelölése",
+      "statusesCount": "{count} / {total} kiválasztva"
     },
     "reservationStatus": {
       "pending": "Függőben",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Piszkozat",
-      "finalized": "Véglegesítve"
+      "finalized": "Véglegesítve",
+      "cancelled": "Sztornózva"
     },
     "sections": {
       "data": "Adatok",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Teljes ár",
       "totalPayout": "Teljes kifizetés",
       "ownerPayout": "Tulajdonosi kifizetés",
-      "pmPayout": "Kezelési kifizetés"
+      "pmPayout": "Kezelési kifizetés",
+      "commissionMissing": "Legalább egy ingatlanhoz nincs megadva jutalékkulcs. A kifizetések ezért nem számíthatók ki — add meg a kulcsot a tulajdonos törzsadatainál vagy az ingatlannál."
     },
     "rental": {
       "perReservation": "Foglalásonként",
@@ -1136,13 +1155,28 @@
       "reservation": "Foglalás",
       "owner": "Tulajdonos",
       "hideAll": "Összes elrejtése",
-      "assignOwner": "Hozzárendelés a tulajdonoshoz"
+      "assignOwner": "Hozzárendelés a tulajdonoshoz",
+      "intro": "A tulajdonosnak többletként kifizetett vagy vele szemben elszámolt összegek. Teljes egészében beszámítanak a kifizetésbe — jutaléklevonás nélkül.",
+      "direction": "Irány",
+      "toOwner": "A tulajdonos javára",
+      "toOwnerHint": "Többletkifizetést kap, pl. kárkompenzációt.",
+      "toOwnerShort": "Javára",
+      "fromOwner": "A tulajdonos terhére",
+      "fromOwnerHint": "Levonásra kerül a kifizetéséből, pl. anyag és munkaidő.",
+      "fromOwnerShort": "Terhére",
+      "sumToOwner": "Összesen javára:",
+      "sumFromOwner": "Összesen terhére:",
+      "receipt": "Bizonylat",
+      "openReceipt": "Bizonylat megnyitása",
+      "createdBy": "Rögzítette: {name}",
+      "saveFirst": "Az elszámolási tételek egy mentett elszámoláshoz tartoznak. Mentsd az elszámolást, utána tudsz itt tételeket rögzíteni.",
+      "missingFields": "Kérjük, töltsd még ki: {felder}."
     },
     "grand": {
       "rentalRevenue": "Bérbeadási bevétel",
       "expenses": "Kiadások és extrák",
       "total": "Összesen",
-      "deductPercentage": "Jutalék levonása (%)"
+      "deductPercentage": "Jutalék (%)"
     },
     "manage": {
       "owner": "Tulajdonos",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Szerkesztés",
     "attachments": {
-      "drop": "Húzd ide a feltöltendő fájlokat, vagy tallózz"
+      "drop": "Húzd ide a feltöltendő fájlokat, vagy tallózz",
+      "viaExpenses": "A bizonylatok az egyes tételekhez tartoznak: a „Kiadások és extrák” részben töltsd fel őket közvetlenül az adott sornál."
     },
     "masterData": "Törzsadatok",
     "preview": "Előnézet",
     "previewTitle": "Bizonylat előnézete",
-    "close": "Bezárás"
+    "close": "Bezárás",
+    "info": {
+      "aria": "Magyarázat ehhez: {feld}",
+      "totalPrice": "Az az összeg, amelyet a vendég összesen fizetett a tartózkodásáért — a portáldíjak és a jutalék levonása előtt.",
+      "totalPayout": "Az az összeg, amely a portáldíjak levonása után a kezelőhöz beérkezik. Ebből képződik a tulajdonosi és a kezelői részesedés.",
+      "ownerPayout": "A tulajdonosnak kifizetett rész: a teljes kifizetés a jutalékkal csökkentve, az elszámolási tételekkel növelve.",
+      "pmPayout": "Az a rész, amely a kezelőnél marad — a bérbeadás utáni jutalék. Az elszámolási tételek ebben nincsenek benne.",
+      "expenses": {
+        "title": "Javára és terhére",
+        "direction": "A „tulajdonos javára” növeli a kifizetését, például egy költségtérítés. A „tulajdonos terhére” csökkenti azt, például anyag vagy a kezelő munkaideje.",
+        "noCommission": "Ezek az összegek teljes egészében beleszámítanak a kifizetésbe — utánuk nem számolunk jutalékot.",
+        "aria": "Az elszámolási tételek magyarázata"
+      },
+      "dash": {
+        "title": "Mit jelent a gondolatjel",
+        "meaning": "A gondolatjel azt jelenti: „nincs megadva” — nem azt, hogy „nulla”. Az érték nem számítható ki, mert hiányzik egy adat.",
+        "whereToFix": "Ha hiányzik a jutalékkulcs, add meg a tulajdonos törzsadatainál, vagy eltérő kulcsként az adott ingatlannál.",
+        "aria": "Magyarázat az összeg helyett álló gondolatjelhez",
+        "inline": "A gondolatjel hiányzó értéket jelöl, nem 0,00-t."
+      },
+      "deductPercentage": "A jutalékkulcs, amellyel ez az elszámolás számol. Üresen hagyva a tulajdonos törzsadataiban megadott kulcs, illetve az egyes objektumnál eltérően beállított kulcs érvényes.",
+      "status": {
+        "title": "Az elszámolás három állapota",
+        "draft": "Piszkozat: még módosítható. Az összegek minden módosításnál újraszámolódnak.",
+        "finalized": "Véglegesítve: a számla sorszáma kiosztva, az összegek befagyasztva. Módosítás már nem lehetséges.",
+        "cancelled": "Sztornózva: sztornószámlával érvénytelenítve. Az eredeti számla bizonylatként megmarad."
+      },
+      "finalize": {
+        "title": "Elszámolás véglegesítése",
+        "what": "A véglegesítéskor kiosztásra kerül a számla sorszáma, és minden összeg bizonylatként befagyasztódik.",
+        "irreversible": "Ez nem vonható vissza. Egy véglegesített számla már csak sztornószámlával érvényteleníthető."
+      },
+      "basis": "Meghatározza, hogy egy foglalás mikor esik az időszakba: check-in esetén az érkezés napja szerint, check-out esetén a távozás napja szerint. A hónapfordulón átnyúló foglalás a választástól függően az egyik vagy a másik hónapba kerül.",
+      "statuses": "Csak a kiválasztott státuszok valamelyikével rendelkező foglalások kerülnek elszámolásra. Alapértelmezés a visszaigazolt és a lezárt foglalás — a lemondottak rendszerint nem tartoznak a kifizetésbe."
+    }
   },
   "ownerBilling": {
     "title": "Elszámolási szerződés",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Jutalékköteles",
     "commissionableYes": "Igen — beleszámít a jutalékba",
-    "commissionableNo": "Nem — jutalékmentes"
+    "commissionableNo": "Nem — jutalékmentes",
+    "infoAria": "Magyarázat ehhez: {feld}"
   },
   "portal": {
     "title": "Portálom",

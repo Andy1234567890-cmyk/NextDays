@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Attribuer des biens} one {Attribuer # bien} other {Attribuer # biens}}",
     "propertiesAssigned": "{count, plural, one {# bien attribué} other {# biens attribués}}",
     "removeProperty": "Retirer le rattachement",
+    "shareInvalid": "Saisissez une part comprise entre 0 et 100.",
     "sections": {
       "master": "Données de base",
       "payout": "Versement & commission",
@@ -998,7 +999,7 @@
       "statementFrequency": "Fréquence de facturation",
       "notes": "Notes",
       "share": "Part (%)",
-      "commissionOverride": "Commission (%) dérog.",
+      "commissionOverride": "Commission (%)",
       "emailLanguage": "Langue des e-mails"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Une adresse e-mail est nécessaire pour l'accès au portail.",
     "portalAccessInvite": "Envoyer l'invitation",
     "portalAccessInvited": "Invitation envoyée.",
-    "portalAccessActive": "L'accès au portail est configuré."
+    "portalAccessActive": "L'accès au portail est configuré.",
+    "commissionNotAgreed": "non convenu",
+    "assignableCount": "{count} sur {total} sélectionnés à ajouter",
+    "assignedHeading": "{count, plural, one {# bien attribué} other {# biens attribués}}",
+    "info": {
+      "aria": "Explication de {feld}",
+      "share": "La part de propriété sur ce bien. À 100 %, la totalité du versement est attribuée à ce propriétaire ; en dessous, elle est répartie au prorata.",
+      "commission": "Le taux de commission standard pour ce propriétaire. Si le champ reste vide, aucun taux n'est encore convenu — le versement n'est alors pas calculé mais affiché sous forme de tiret.",
+      "commissionOverride": "S'applique uniquement à ce bien et remplace le taux standard du propriétaire. Si le champ reste vide, le taux standard s'applique."
+    }
   },
   "ownerStatements": {
     "title": "Relevés propriétaires",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Statuts de réservation",
       "statusCount": "{count} statuts",
-      "title": "Filtres"
+      "title": "Filtres",
+      "resetAll": "Réinitialiser tous les filtres",
+      "remove": "Réinitialiser {feld}",
+      "statusesNone": "Aucun sélectionné",
+      "statusesSearch": "Rechercher un statut …",
+      "statusesNoMatch": "Aucun statut trouvé.",
+      "statusesSelectAll": "Tout sélectionner",
+      "statusesCount": "{count} sur {total} sélectionnés"
     },
     "reservationStatus": {
       "pending": "En attente",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Brouillon",
-      "finalized": "Finalisé"
+      "finalized": "Finalisé",
+      "cancelled": "Annulée"
     },
     "sections": {
       "data": "Données",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Prix total",
       "totalPayout": "Versement total",
       "ownerPayout": "Versement au propriétaire",
-      "pmPayout": "Versement à la gestion locative"
+      "pmPayout": "Versement à la gestion locative",
+      "commissionMissing": "Aucun taux de commission n'est défini pour au moins un bien. Les versements ne peuvent donc pas être calculés — saisissez le taux dans les données du propriétaire ou sur le bien."
     },
     "rental": {
       "perReservation": "Par réservation",
@@ -1136,13 +1155,28 @@
       "reservation": "Réservation",
       "owner": "Propriétaire",
       "hideAll": "Tout masquer",
-      "assignOwner": "Attribuer au propriétaire"
+      "assignOwner": "Attribuer au propriétaire",
+      "intro": "Montants versés en plus au propriétaire ou refacturés à celui-ci. Ils sont intégralement pris en compte dans le versement — sans déduction de commission.",
+      "direction": "Sens",
+      "toOwner": "En faveur du propriétaire",
+      "toOwnerHint": "Il perçoit un montant supplémentaire, p. ex. une indemnisation de dommage.",
+      "toOwnerShort": "En faveur",
+      "fromOwner": "À la charge du propriétaire",
+      "fromOwnerHint": "Déduit de son versement, p. ex. matériel et temps de travail.",
+      "fromOwnerShort": "À charge",
+      "sumToOwner": "Total en faveur :",
+      "sumFromOwner": "Total à charge :",
+      "receipt": "Justificatif",
+      "openReceipt": "Ouvrir le justificatif",
+      "createdBy": "Saisi par {name}",
+      "saveFirst": "Les postes de compensation appartiennent à un relevé enregistré. Enregistrez le relevé, vous pourrez ensuite saisir des postes ici.",
+      "missingFields": "Encore à compléter : {felder}."
     },
     "grand": {
       "rentalRevenue": "Revenus locatifs",
       "expenses": "Dépenses et extras",
       "total": "Total",
-      "deductPercentage": "Déduire un pourcentage (%)"
+      "deductPercentage": "Commission (%)"
     },
     "manage": {
       "owner": "Propriétaire",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Modifier",
     "attachments": {
-      "drop": "Déposez des fichiers à téléverser ou parcourez"
+      "drop": "Déposez des fichiers à téléverser ou parcourez",
+      "viaExpenses": "Les justificatifs sont rattachés à chaque poste : téléversez-les dans « Dépenses & extras », directement sur la ligne concernée."
     },
     "masterData": "Données de base",
     "preview": "Aperçu",
     "previewTitle": "Aperçu du document",
-    "close": "Fermer"
+    "close": "Fermer",
+    "info": {
+      "aria": "Explication de {feld}",
+      "totalPrice": "Ce que le client a payé au total pour son séjour — avant déduction des frais de portail et de la commission.",
+      "totalPayout": "Ce qui revient à la gestion locative après déduction des frais de portail. C'est à partir de ce montant que sont calculées les parts du propriétaire et de la gestion.",
+      "ownerPayout": "La part versée au propriétaire : le versement total moins la commission, plus les postes de compensation.",
+      "pmPayout": "La part qui reste à la gestion locative — la commission sur la location. Les postes de compensation n'y sont pas inclus.",
+      "expenses": {
+        "title": "En faveur et à charge",
+        "direction": "« En faveur du propriétaire » augmente son versement, par exemple un remboursement. « À la charge du propriétaire » le diminue, par exemple du matériel ou le temps de travail de la gestion locative.",
+        "noCommission": "Ces montants sont intégralement pris en compte dans le versement — aucune commission n'est appliquée dessus.",
+        "aria": "Explication des postes de compensation"
+      },
+      "dash": {
+        "title": "Ce que signifie le tiret",
+        "meaning": "Un tiret signifie « non renseigné » — et non « zéro ». La valeur ne peut pas être calculée, car une information manque.",
+        "whereToFix": "Si le taux de commission manque, saisissez-le dans les données du propriétaire ou comme taux dérogatoire sur le bien concerné.",
+        "aria": "Explication du tiret à la place d'un montant",
+        "inline": "Un tiret représente une valeur manquante, pas 0,00."
+      },
+      "deductPercentage": "Le taux de commission utilisé pour le calcul de ce décompte. Vide signifie : le taux issu des données de base du propriétaire s'applique, ou le taux différent défini sur l'objet concerné.",
+      "status": {
+        "title": "Les trois états d'un décompte",
+        "draft": "Brouillon : encore modifiable. Les montants sont recalculés à chaque modification.",
+        "finalized": "Finalisé : numéro de facture attribué, totaux figés. Aucune modification n'est plus possible.",
+        "cancelled": "Annulé : annulé par une facture d'annulation. La facture d'origine reste conservée comme justificatif."
+      },
+      "finalize": {
+        "title": "Finaliser le décompte",
+        "what": "Lors de la finalisation, le numéro de facture est attribué et tous les totaux sont figés comme justificatif.",
+        "irreversible": "Cette opération est irréversible. Une facture finalisée ne peut plus être annulée que par une facture d'annulation."
+      },
+      "basis": "Détermine à quel moment une réservation entre dans la période : avec Check-in selon le jour d'arrivée, avec Check-out selon le jour de départ. Une réservation à cheval sur deux mois tombe dans l'un ou l'autre mois selon votre choix.",
+      "statuses": "Seules les réservations ayant l'un des statuts sélectionnés sont décomptées. Par défaut : les réservations confirmées et terminées — les réservations annulées n'ont normalement pas leur place dans un versement."
+    }
   },
   "ownerBilling": {
     "title": "Contrat de gestion",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Soumis à commission",
     "commissionableYes": "Oui — entre dans le calcul de la commission",
-    "commissionableNo": "Non — hors commission"
+    "commissionableNo": "Non — hors commission",
+    "infoAria": "Explication de {feld}"
   },
   "portal": {
     "title": "Mon portail",

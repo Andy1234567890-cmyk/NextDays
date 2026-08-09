@@ -298,6 +298,37 @@ h1, h2, h3 {
   border-top: 1px solid var(--border);
   margin: 0.75rem 0;
 }
+/* Vorformatierter Text: `white-space: pre` bricht NICHT um, und ohne eigenen
+   Scrollcontainer schiebt eine einzige lange Zeile das ganze Layout auf. Real
+   gemessen im Ankündigungs-Popup: ein als Code-Block eingefügter Kundentext
+   ergab scrollWidth 56843px bei 624px Container — der Nutzer musste im Dialog
+   nach rechts scrollen.
+   Regel aus CLAUDE.md: breiter Inhalt scrollt in SEINEM EIGENEN Container,
+   der Rahmen drumherum nie. Deshalb `overflow-x: auto` am `pre` (nicht
+   `hidden` — abgeschnittener Code wäre unlesbar) und zusätzlich `min-width: 0`,
+   damit das Flex-Kind überhaupt schrumpfen darf. */
+.tiptap pre {
+  overflow-x: auto;
+  min-width: 0;
+  max-width: 100%;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+/* Einzelne `code`-Schnipsel im Fließtext brechen dagegen um: sie sind Teil des
+   Satzes, kein eigener Block. `anywhere` fängt lange URLs/IDs ohne Leerzeichen
+   ab, die sonst ebenfalls das Layout aufschieben. */
+.tiptap code {
+  overflow-wrap: anywhere;
+}
+.tiptap pre code {
+  /* Im Block gilt die Formatierung des `pre` — hier NICHT umbrechen, sonst
+     zerfällt die Einrückung, für die der Block überhaupt da ist. */
+  overflow-wrap: normal;
+}
 /* Platzhalter, solange leer. */
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

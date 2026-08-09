@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Piešķirt objektus} zero {Piešķirt # objektu} one {Piešķirt # objektu} other {Piešķirt # objektus}}",
     "propertiesAssigned": "{count, plural, zero {# objektu piešķirti} one {# objekts piešķirts} other {# objekti piešķirti}}",
     "removeProperty": "Noņemt piesaisti",
+    "shareInvalid": "Ievadiet daļu no 0 līdz 100.",
     "sections": {
       "master": "Pamatdati",
       "payout": "Izmaksa un komisija",
@@ -998,7 +999,7 @@
       "statementFrequency": "Norēķinu periodiskums",
       "notes": "Piezīmes",
       "share": "Daļa (%)",
-      "commissionOverride": "Komisija (%) atšķirīga",
+      "commissionOverride": "Komisija (%)",
       "emailLanguage": "E-pastu valoda"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Portāla piekļuvei nepieciešama e-pasta adrese.",
     "portalAccessInvite": "Nosūtīt uzaicinājumu",
     "portalAccessInvited": "Uzaicinājums nosūtīts.",
-    "portalAccessActive": "Portāla piekļuve ir iestatīta."
+    "portalAccessActive": "Portāla piekļuve ir iestatīta.",
+    "commissionNotAgreed": "nav norunāts",
+    "assignableCount": "Pievienošanai atlasīti {count} no {total}",
+    "assignedHeading": "{count, plural, zero {# piešķirtu objektu} one {# piešķirts objekts} other {# piešķirti objekti}}",
+    "info": {
+      "aria": "Skaidrojums par lauku {feld}",
+      "share": "Īpašuma daļa šajā objektā. Ja tie ir 100 %, visa izmaksa tiek attiecināta uz šo īpašnieku, ja mazāk — attiecīgi proporcionāli.",
+      "commission": "Šī īpašnieka noklusējuma komisijas likme. Ja lauks paliek tukšs, likme vēl nav norunāta — izmaksa tad netiek aprēķināta, bet tiek parādīta kā domuzīme.",
+      "commissionOverride": "Attiecas tikai uz šo vienu objektu un aizstāj īpašnieka noklusējuma likmi. Ja lauks paliek tukšs, spēkā ir noklusējuma likme."
+    }
   },
   "ownerStatements": {
     "title": "Īpašnieku norēķini",
@@ -1063,7 +1073,14 @@
       "checkOut": "Izrakstīšanās",
       "statuses": "Rezervācijas statusi",
       "statusCount": "{count} statusi",
-      "title": "Filtri"
+      "title": "Filtri",
+      "resetAll": "Atiestatīt visus filtrus",
+      "remove": "Atiestatīt: {feld}",
+      "statusesNone": "Nav izvēlēts",
+      "statusesSearch": "Meklēt statusu …",
+      "statusesNoMatch": "Statuss nav atrasts.",
+      "statusesSelectAll": "Atlasīt visus",
+      "statusesCount": "Atlasīti {count} no {total}"
     },
     "reservationStatus": {
       "pending": "Gaida apstiprinājumu",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Melnraksts",
-      "finalized": "Finalizēts"
+      "finalized": "Finalizēts",
+      "cancelled": "Anulēts"
     },
     "sections": {
       "data": "Dati",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Kopējā cena",
       "totalPayout": "Kopējā izmaksa",
       "ownerPayout": "Īpašnieka izmaksa",
-      "pmPayout": "Pārvaldnieka izmaksa"
+      "pmPayout": "Pārvaldnieka izmaksa",
+      "commissionMissing": "Vismaz vienam objektam nav norādīta komisijas likme. Tāpēc izmaksas nevar aprēķināt — ievadiet likmi īpašnieka pamatdatos vai pie objekta."
     },
     "rental": {
       "perReservation": "Par katru rezervāciju",
@@ -1136,13 +1155,28 @@
       "reservation": "Rezervācija",
       "owner": "Īpašnieks",
       "hideAll": "Slēpt visus",
-      "assignOwner": "Piesaistīt īpašniekam"
+      "assignOwner": "Piesaistīt īpašniekam",
+      "intro": "Summas, kas papildus tiek izmaksātas īpašniekam vai ieturētas no viņa. Tās pilnā apmērā tiek iekļautas izmaksā — bez komisijas atskaitīšanas.",
+      "direction": "Virziens",
+      "toOwner": "Par labu īpašniekam",
+      "toOwnerHint": "Viņš saņem papildu izmaksu, piem., zaudējumu atlīdzību.",
+      "toOwnerShort": "Par labu",
+      "fromOwner": "Uz īpašnieka rēķina",
+      "fromOwnerHint": "Tiek atskaitīts no viņa izmaksas, piem., materiāli un darba laiks.",
+      "fromOwnerShort": "Ieturējums",
+      "sumToOwner": "Kopā par labu:",
+      "sumFromOwner": "Kopā ieturēts:",
+      "receipt": "Attaisnojuma dokuments",
+      "openReceipt": "Atvērt dokumentu",
+      "createdBy": "Reģistrēja {name}",
+      "saveFirst": "Norēķinu pozīcijas pieder saglabātam norēķinam. Saglabājiet norēķinu, pēc tam šeit varēsiet ievadīt pozīcijas.",
+      "missingFields": "Lūdzu, aizpildiet vēl: {felder}."
     },
     "grand": {
       "rentalRevenue": "Īres ieņēmumi",
       "expenses": "Izdevumi un papildpozīcijas",
       "total": "Kopā",
-      "deductPercentage": "Atskaitīt komisiju (%)"
+      "deductPercentage": "Komisija (%)"
     },
     "manage": {
       "owner": "Īpašnieks",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Rediģēt",
     "attachments": {
-      "drop": "Nomet failus, lai augšupielādētu, vai izvēlies"
+      "drop": "Nomet failus, lai augšupielādētu, vai izvēlies",
+      "viaExpenses": "Attaisnojuma dokumenti pieder atsevišķai pozīcijai: augšupielādējiet tos sadaļā “Izdevumi un papildpozīcijas” tieši pie attiecīgās rindas."
     },
     "masterData": "Pamatdati",
     "preview": "Priekšskatījums",
     "previewTitle": "Dokumenta priekšskatījums",
-    "close": "Aizvērt"
+    "close": "Aizvērt",
+    "info": {
+      "aria": "Skaidrojums par lauku {feld}",
+      "totalPrice": "Summa, ko viesis kopumā samaksājis par savu uzturēšanos — pirms portālu maksu un komisijas atskaitīšanas.",
+      "totalPayout": "Summa, kas pēc portālu maksu atskaitīšanas nonāk pie uzņēmuma. No šīs summas veido īpašnieka un pārvaldnieka daļu.",
+      "ownerPayout": "Daļa, kas tiek izmaksāta īpašniekam: kopējā izmaksa mīnus komisija, plus norēķinu pozīcijas.",
+      "pmPayout": "Daļa, kas paliek uzņēmumam — komisija par iznomāšanu. Norēķinu pozīcijas šeit nav iekļautas.",
+      "expenses": {
+        "title": "Par labu un uz rēķina",
+        "direction": "“Par labu īpašniekam” palielina viņa izmaksu, piemēram, atlīdzība. “Uz īpašnieka rēķina” to samazina, piemēram, uzņēmuma materiāli vai darba laiks.",
+        "noCommission": "Šīs summas pilnā apmērā tiek iekļautas izmaksā — no tām komisija netiek aprēķināta.",
+        "aria": "Skaidrojums par norēķinu pozīcijām"
+      },
+      "dash": {
+        "title": "Ko nozīmē domuzīme",
+        "meaning": "Domuzīme nozīmē “nav norādīts” — nevis “nulle”. Vērtību nevar aprēķināt, jo trūkst kādas ziņas.",
+        "whereToFix": "Ja trūkst komisijas likmes, ievadiet to īpašnieka pamatdatos vai kā atšķirīgu likmi pie atsevišķa objekta.",
+        "aria": "Skaidrojums par domuzīmi summas vietā",
+        "inline": "Domuzīme apzīmē trūkstošu vērtību, nevis 0,00."
+      },
+      "deductPercentage": "Komisijas likme, ar kuru rēķina šis pārskats. Tukšs nozīmē: ir spēkā likme no īpašnieka pamatdatiem vai atšķirīgā likme pie atsevišķa objekta.",
+      "status": {
+        "title": "Trīs pārskata stāvokļi",
+        "draft": "Melnraksts: vēl maināms. Summas tiek pārrēķinātas ar katru izmaiņu.",
+        "finalized": "Finalizēts: rēķina numurs piešķirts, summas iesaldētas. Izmaiņas vairs nav iespējamas.",
+        "cancelled": "Anulēts: atcelts ar anulēšanas rēķinu. Oriģinālais rēķins saglabājas kā attaisnojuma dokuments."
+      },
+      "finalize": {
+        "title": "Pārskata finalizēšana",
+        "what": "Finalizējot tiek piešķirts rēķina numurs un visas summas tiek iesaldētas kā attaisnojuma dokuments.",
+        "irreversible": "To nevar atsaukt. Finalizētu rēķinu var atcelt tikai ar anulēšanas rēķinu."
+      },
+      "basis": "Nosaka, kad rezervācija iekrīt periodā: pēc reģistrēšanās — pēc ierašanās dienas, pēc izrakstīšanās — pēc izbraukšanas dienas. Rezervācija, kas pāriet no viena mēneša otrā, atkarībā no izvēles nonāk vienā vai otrā mēnesī.",
+      "statuses": "Tiek norēķinātas tikai rezervācijas ar kādu no izvēlētajiem statusiem. Pēc noklusējuma tās ir apstiprinātas un pabeigtas rezervācijas — atceltās parasti neietilpst izmaksā."
+    }
   },
   "ownerBilling": {
     "title": "Norēķinu līgums",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Apliekams ar komisiju",
     "commissionableYes": "Jā — tiek ieskaitīts komisijā",
-    "commissionableNo": "Nē — bez komisijas"
+    "commissionableNo": "Nē — bez komisijas",
+    "infoAria": "Skaidrojums par lauku {feld}"
   },
   "portal": {
     "title": "Mans portāls",

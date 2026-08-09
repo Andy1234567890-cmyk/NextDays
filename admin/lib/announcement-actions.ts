@@ -11,7 +11,12 @@ import { revalidatePath } from "next/cache";
 
 import { ApiError } from "@nextdays/auth/errors";
 
-import type { Ankuendigung, AnkuendigungKategorie } from "./announcements";
+import type {
+  Ankuendigung,
+  AnkuendigungFassung,
+  AnkuendigungKategorie,
+  FassungsUebersicht,
+} from "./announcements";
 import { api } from "./api-server";
 
 type Ergebnis<T> = { ok: true; data: T } | { ok: false; fehler: string };
@@ -19,7 +24,7 @@ type Ergebnis<T> = { ok: true; data: T } | { ok: false; fehler: string };
 async function call<T>(
   pfad: string,
   opts: {
-    method?: "GET" | "POST" | "PATCH" | "DELETE";
+    method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
     body?: unknown;
   } = {},
   fehlertext = "Aktion fehlgeschlagen.",
@@ -123,6 +128,54 @@ export async function loeschen(id: string): Promise<Ergebnis<null>> {
     `/platform/announcements/${id}`,
     { method: "DELETE" },
     "Löschen fehlgeschlagen.",
+  );
+  if (res.ok) aufraeumen(id);
+  return res;
+}
+
+// === Übersetzungen (0347) ==================================================
+
+/**
+ * Fehlende und veraltete Fassungen erzeugen lassen.
+ *
+ * GEPRÜFTE Fassungen bleiben unberührt — auch mit `sprache`. Wer eine geprüfte
+ * Fassung verwerfen will, bearbeitet sie von Hand; ein Knopf, der die einzige
+ * Garantie dieses Bereichs aushebelt, wäre eine Falle.
+ *
+ * Der Aufruf ist teuer (bis zu 23 Sprachen à zwei Google-Requests) und läuft
+ * serverseitig im strengen Rate-Limit-Bucket. Fällt der Dienst aus, kommt ein
+ * Fehler — kein stilles „fertig" und keine Zeile mit dem deutschen Text darin.
+ */
+export async function uebersetzen(
+  id: string,
+  sprache?: string,
+): Promise<Ergebnis<FassungsUebersicht>> {
+  const suffix = sprache ? `?sprache=${encodeURIComponent(sprache)}` : "";
+  const res = await call<FassungsUebersicht>(
+    `/platform/announcements/${id}/uebersetzen${suffix}`,
+    { method: "POST" },
+    "Übersetzen fehlgeschlagen.",
+  );
+  if (res.ok) aufraeumen(id);
+  return res;
+}
+
+/**
+ * Eine Fassung von Hand korrigieren.
+ *
+ * Sie gilt danach als GEPRÜFT und ist damit vor jedem automatischen Lauf
+ * geschützt. Das ist keine Nebenwirkung, sondern der Zweck: der Text enthält
+ * rechtliche Aussagen und Geldbeträge.
+ */
+export async function fassungSpeichern(
+  id: string,
+  sprache: string,
+  eingabe: { titel: string; kurztext: string | null; inhalt_html: string },
+): Promise<Ergebnis<AnkuendigungFassung>> {
+  const res = await call<AnkuendigungFassung>(
+    `/platform/announcements/${id}/uebersetzungen/${encodeURIComponent(sprache)}`,
+    { method: "PUT", body: eingabe },
+    "Fassung konnte nicht gespeichert werden.",
   );
   if (res.ok) aufraeumen(id);
   return res;

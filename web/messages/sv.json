@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Tilldela objekt} one {Tilldela # objekt} other {Tilldela # objekt}}",
     "propertiesAssigned": "{count, plural, one {# objekt tilldelat} other {# objekt tilldelade}}",
     "removeProperty": "Ta bort tilldelning",
+    "shareInvalid": "Ange en andel mellan 0 och 100.",
     "sections": {
       "master": "Stamdata",
       "payout": "Utbetalning & provision",
@@ -998,7 +999,7 @@
       "statementFrequency": "Avräkningsrytm",
       "notes": "Anteckningar",
       "share": "Andel (%)",
-      "commissionOverride": "Provision (%) avv.",
+      "commissionOverride": "Provision (%)",
       "emailLanguage": "Språk för e-post"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "En e-postadress krävs för portalåtkomst.",
     "portalAccessInvite": "Skicka inbjudan",
     "portalAccessInvited": "Inbjudan skickad.",
-    "portalAccessActive": "Portalåtkomst är skapad."
+    "portalAccessActive": "Portalåtkomst är skapad.",
+    "commissionNotAgreed": "ej avtalat",
+    "assignableCount": "{count} av {total} valda att lägga till",
+    "assignedHeading": "{count, plural, one {# tilldelat objekt} other {# tilldelade objekt}}",
+    "info": {
+      "aria": "Förklaring till {feld}",
+      "share": "Ägarandelen i detta objekt. Vid 100 % tillskrivs hela utbetalningen denna ägare, vid mindre i motsvarande proportion.",
+      "commission": "Standardprovisionssatsen för denna ägare. Om fältet lämnas tomt är ingen sats avtalad ännu — utbetalningen beräknas då inte, utan visas som ett tankstreck.",
+      "commissionOverride": "Gäller endast för detta enda objekt och åsidosätter ägarens standardsats. Om fältet lämnas tomt gäller standardsatsen."
+    }
   },
   "ownerStatements": {
     "title": "Ägaravräkning",
@@ -1063,7 +1073,14 @@
       "checkOut": "Utcheckning",
       "statuses": "Bokningsstatus",
       "statusCount": "{count} status",
-      "title": "Filter"
+      "title": "Filter",
+      "resetAll": "Återställ alla filter",
+      "remove": "Återställ {feld}",
+      "statusesNone": "Inget valt",
+      "statusesSearch": "Sök status …",
+      "statusesNoMatch": "Ingen status hittades.",
+      "statusesSelectAll": "Välj alla",
+      "statusesCount": "{count} av {total} valda"
     },
     "reservationStatus": {
       "pending": "Öppen",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Utkast",
-      "finalized": "Finaliserad"
+      "finalized": "Finaliserad",
+      "cancelled": "Makulerad"
     },
     "sections": {
       "data": "Data",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Totalpris",
       "totalPayout": "Total utbetalning",
       "ownerPayout": "Ägarutbetalning",
-      "pmPayout": "Förvaltningsutbetalning"
+      "pmPayout": "Förvaltningsutbetalning",
+      "commissionMissing": "Ingen provisionssats är angiven för minst ett objekt. Utbetalningarna kan därför inte beräknas — ange satsen i ägarens stamdata eller på objektet."
     },
     "rental": {
       "perReservation": "Per bokning",
@@ -1136,13 +1155,28 @@
       "reservation": "Bokning",
       "owner": "Ägare",
       "hideAll": "Dölj alla",
-      "assignOwner": "Tilldela ägaren"
+      "assignOwner": "Tilldela ägaren",
+      "intro": "Belopp som betalas ut extra till ägaren eller som dras av från ägaren. De räknas fullt ut i utbetalningen — utan provisionsavdrag.",
+      "direction": "Riktning",
+      "toOwner": "Till ägarens fördel",
+      "toOwnerHint": "Ägaren får extra utbetalt, t.ex. skadeersättning.",
+      "toOwnerShort": "Till fördel",
+      "fromOwner": "Dras från ägaren",
+      "fromOwnerHint": "Dras av från utbetalningen, t.ex. material och arbetstid.",
+      "fromOwnerShort": "Avdrag",
+      "sumToOwner": "Summa till fördel:",
+      "sumFromOwner": "Summa avdrag:",
+      "receipt": "Kvitto",
+      "openReceipt": "Öppna kvitto",
+      "createdBy": "Registrerat av {name}",
+      "saveFirst": "Avräkningsposter hör till en sparad avräkning. Spara avräkningen, därefter kan du registrera poster här.",
+      "missingFields": "Återstår att fylla i: {felder}."
     },
     "grand": {
       "rentalRevenue": "Hyresintäkter",
       "expenses": "Utgifter & extra",
       "total": "Totalt",
-      "deductPercentage": "Dra av provision (%)"
+      "deductPercentage": "Provision (%)"
     },
     "manage": {
       "owner": "Ägare",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Redigera",
     "attachments": {
-      "drop": "Släpp filer för att ladda upp eller Bläddra"
+      "drop": "Släpp filer för att ladda upp eller Bläddra",
+      "viaExpenses": "Kvitton hör till den enskilda posten: ladda upp dem under ”Utgifter & extra” direkt på den aktuella raden."
     },
     "masterData": "Stamdata",
     "preview": "Förhandsgranskning",
     "previewTitle": "Förhandsgranskning av verifikat",
-    "close": "Stäng"
+    "close": "Stäng",
+    "info": {
+      "aria": "Förklaring till {feld}",
+      "totalPrice": "Vad gästen totalt har betalat för sin vistelse — före avdrag för portalavgifter och provision.",
+      "totalPayout": "Vad som når verksamheten efter avdrag för portalavgifterna. Utifrån detta belopp bildas ägarens och förvaltningens andel.",
+      "ownerPayout": "Den andel som betalas ut till ägaren: total utbetalning minus provision, plus avräkningsposterna.",
+      "pmPayout": "Den andel som stannar hos verksamheten — provisionen på uthyrningen. Avräkningsposter ingår inte här.",
+      "expenses": {
+        "title": "Till fördel och avdrag",
+        "direction": "”Till ägarens fördel” ökar utbetalningen, till exempel en ersättning. ”Dras från ägaren” minskar den, till exempel material eller verksamhetens arbetstid.",
+        "noCommission": "Dessa belopp räknas fullt ut i utbetalningen — ingen provision tas ut på dem.",
+        "aria": "Förklaring till avräkningsposter"
+      },
+      "dash": {
+        "title": "Vad tankstrecket betyder",
+        "meaning": "Ett tankstreck betyder ”inte registrerat” — inte ”noll”. Värdet går inte att beräkna eftersom en uppgift saknas.",
+        "whereToFix": "Saknas provisionssatsen, ange den i ägarens stamdata eller som avvikande sats på det enskilda objektet.",
+        "aria": "Förklaring till tankstrecket i stället för ett belopp",
+        "inline": "Ett tankstreck står för ett saknat värde, inte för 0,00."
+      },
+      "deductPercentage": "Den provisionssats som denna avräkning räknar med. Tomt betyder: satsen från ägarens grunduppgifter gäller, eller den avvikande satsen på det enskilda objektet.",
+      "status": {
+        "title": "En avräknings tre tillstånd",
+        "draft": "Utkast: fortfarande ändringsbart. Beloppen beräknas om vid varje ändring.",
+        "finalized": "Finaliserad: fakturanummer tilldelat, summorna låsta. Ändringar är inte längre möjliga.",
+        "cancelled": "Makulerad: upphävd genom en kreditfaktura. Originalfakturan finns kvar som underlag."
+      },
+      "finalize": {
+        "title": "Finalisera avräkning",
+        "what": "Vid finalisering tilldelas fakturanumret och alla summor låses som underlag.",
+        "irreversible": "Detta går inte att ångra. En finaliserad faktura kan endast upphävas genom en kreditfaktura."
+      },
+      "basis": "Avgör när en bokning hamnar inom perioden: vid Incheckning efter ankomstdagen, vid Utcheckning efter avresedagen. En bokning över månadsskiftet hamnar i den ena eller den andra månaden beroende på valet.",
+      "statuses": "Endast bokningar med någon av de valda statusarna avräknas. Standard är bekräftade och avslutade bokningar — avbokade hör normalt inte hemma i en utbetalning."
+    }
   },
   "ownerBilling": {
     "title": "Avräkningsavtal",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Provisionsgrundande",
     "commissionableYes": "Ja — ingår i provisionen",
-    "commissionableNo": "Nej — provisionsfri"
+    "commissionableNo": "Nej — provisionsfri",
+    "infoAria": "Förklaring till {feld}"
   },
   "portal": {
     "title": "Min portal",

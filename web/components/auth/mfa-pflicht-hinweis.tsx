@@ -13,7 +13,7 @@
 // ohne die Sicherheit zu erhöhen. Nach Fristablauf übernimmt ohnehin der
 // Server — dann trägt kein Frontend-Riegel mehr die Verantwortung.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -30,6 +30,7 @@ export function MfaPflichtHinweis({
   fristIso: string | null;
 }) {
   const t = useTranslations("auth.mfaSetup");
+  const locale = useLocale();
   const pfad = usePathname();
   const [zurueckgestellt, setZurueckgestellt] = useState(true);
 
@@ -44,10 +45,20 @@ export function MfaPflichtHinweis({
   // die Einrichtung ohnehin direkt darunter.
   if (zurueckgestellt || pfad === "/konto/sicherheit") return null;
 
+  // Die Frist ist personenbezogen (14 Tage ab der ersten Anmeldung DIESES
+  // Kontos, `mfa_service.GRACE_DAUER`) und kommt als ISO-Wert aus
+  // `mfa_grace_until`. Hier wird sie nur noch angezeigt — kein Datum wird
+  // berechnet, geraten oder ersetzt.
+  //
+  // Formatiert wird mit der APP-Sprache (`useLocale()`), nicht mit
+  // `undefined`: `undefined` nimmt die Sprache des BROWSERS. Wer die Oberfläche
+  // auf Deutsch nutzt, aber einen englischen Browser hat, las bisher
+  // „August 23, 2026" mitten im deutschen Satz. Dass es meist richtig aussah,
+  // war Zufall — Browser- und App-Sprache stimmten überein.
   const frist = fristIso ? new Date(fristIso) : null;
   const fristLesbar =
     frist && !Number.isNaN(frist.getTime())
-      ? frist.toLocaleDateString(undefined, {
+      ? frist.toLocaleDateString(locale, {
           year: "numeric",
           month: "long",
           day: "numeric",

@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Assegna strutture} one {Assegna # struttura} other {Assegna # strutture}}",
     "propertiesAssigned": "{count, plural, one {# struttura assegnata} other {# strutture assegnate}}",
     "removeProperty": "Rimuovi associazione",
+    "shareInvalid": "Inserisci una quota compresa tra 0 e 100.",
     "sections": {
       "master": "Dati anagrafici",
       "payout": "Pagamento e commissione",
@@ -998,7 +999,7 @@
       "statementFrequency": "Frequenza rendiconto",
       "notes": "Note",
       "share": "Quota (%)",
-      "commissionOverride": "Commissione (%) diversa",
+      "commissionOverride": "Commissione (%)",
       "emailLanguage": "Lingua delle e-mail"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Per l'accesso al portale è necessario un indirizzo e-mail.",
     "portalAccessInvite": "Invia invito",
     "portalAccessInvited": "Invito inviato.",
-    "portalAccessActive": "L'accesso al portale è configurato."
+    "portalAccessActive": "L'accesso al portale è configurato.",
+    "commissionNotAgreed": "non concordato",
+    "assignableCount": "{count} di {total} selezionati da aggiungere",
+    "assignedHeading": "{count, plural, one {# struttura assegnata} other {# strutture assegnate}}",
+    "info": {
+      "aria": "Spiegazione di {feld}",
+      "share": "La quota di proprietà su questo alloggio. Al 100 % l'intero pagamento viene attribuito a questo proprietario, con un valore inferiore in misura proporzionale.",
+      "commission": "La percentuale di commissione standard per questo proprietario. Se il campo resta vuoto, non è ancora stata concordata alcuna percentuale — il pagamento non viene quindi calcolato, ma indicato con una lineetta.",
+      "commissionOverride": "Vale solo per questo alloggio e sostituisce la percentuale standard del proprietario. Se il campo resta vuoto, si applica la percentuale standard."
+    }
   },
   "ownerStatements": {
     "title": "Rendiconti proprietari",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Stato prenotazioni",
       "statusCount": "{count} stati",
-      "title": "Filtri"
+      "title": "Filtri",
+      "resetAll": "Reimposta tutti i filtri",
+      "remove": "Reimposta {feld}",
+      "statusesNone": "Nessuno selezionato",
+      "statusesSearch": "Cerca stato …",
+      "statusesNoMatch": "Nessuno stato trovato.",
+      "statusesSelectAll": "Seleziona tutto",
+      "statusesCount": "{count} di {total} selezionati"
     },
     "reservationStatus": {
       "pending": "In attesa",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Bozza",
-      "finalized": "Finalizzato"
+      "finalized": "Finalizzato",
+      "cancelled": "Stornata"
     },
     "sections": {
       "data": "Dati",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Prezzo totale",
       "totalPayout": "Pagamento totale",
       "ownerPayout": "Pagamento proprietario",
-      "pmPayout": "Pagamento gestione"
+      "pmPayout": "Pagamento gestione",
+      "commissionMissing": "Per almeno un immobile non è impostata una percentuale di commissione. I pagamenti non possono quindi essere calcolati — inserisci la percentuale nei dati anagrafici del proprietario o sull'immobile."
     },
     "rental": {
       "perReservation": "Per prenotazione",
@@ -1136,13 +1155,28 @@
       "reservation": "Prenotazione",
       "owner": "Proprietario",
       "hideAll": "Nascondi tutto",
-      "assignOwner": "Assegna al proprietario"
+      "assignOwner": "Assegna al proprietario",
+      "intro": "Importi corrisposti in aggiunta al proprietario o addebitati allo stesso. Confluiscono per intero nel pagamento, senza detrazione della commissione.",
+      "direction": "Direzione",
+      "toOwner": "A favore del proprietario",
+      "toOwnerHint": "Riceve un importo aggiuntivo, ad es. un risarcimento danni.",
+      "toOwnerShort": "A favore",
+      "fromOwner": "A carico del proprietario",
+      "fromOwnerHint": "Viene detratto dal suo pagamento, ad es. materiali e ore di lavoro.",
+      "fromOwnerShort": "A carico",
+      "sumToOwner": "Totale a favore:",
+      "sumFromOwner": "Totale a carico:",
+      "receipt": "Giustificativo",
+      "openReceipt": "Apri giustificativo",
+      "createdBy": "Registrato da {name}",
+      "saveFirst": "Le voci di compensazione appartengono a un rendiconto salvato. Salva il rendiconto, poi potrai registrare qui le voci.",
+      "missingFields": "Ancora da compilare: {felder}."
     },
     "grand": {
       "rentalRevenue": "Ricavi da locazione",
       "expenses": "Spese ed extra",
       "total": "Totale",
-      "deductPercentage": "Detrai commissione (%)"
+      "deductPercentage": "Commissione (%)"
     },
     "manage": {
       "owner": "Proprietario",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Modifica",
     "attachments": {
-      "drop": "Rilascia i file da caricare o Sfoglia"
+      "drop": "Rilascia i file da caricare o Sfoglia",
+      "viaExpenses": "I giustificativi sono legati alla singola voce: caricali in «Spese ed extra», direttamente sulla riga corrispondente."
     },
     "masterData": "Dati anagrafici",
     "preview": "Anteprima",
     "previewTitle": "Anteprima documento",
-    "close": "Chiudi"
+    "close": "Chiudi",
+    "info": {
+      "aria": "Spiegazione di {feld}",
+      "totalPrice": "Quanto l'ospite ha pagato complessivamente per il suo soggiorno — al lordo delle commissioni dei portali e della commissione di gestione.",
+      "totalPayout": "Quanto arriva alla struttura dopo la detrazione delle commissioni dei portali. Da questo importo si ricavano la quota del proprietario e quella della gestione.",
+      "ownerPayout": "La quota versata al proprietario: pagamento totale meno la commissione, più le voci di compensazione.",
+      "pmPayout": "La quota che resta alla struttura — la commissione sulla locazione. Le voci di compensazione non sono comprese.",
+      "expenses": {
+        "title": "A favore e a carico",
+        "direction": "«A favore del proprietario» aumenta il suo pagamento, ad esempio un rimborso. «A carico del proprietario» lo riduce, ad esempio materiali oppure ore di lavoro della struttura.",
+        "noCommission": "Questi importi confluiscono per intero nel pagamento — su di essi non viene calcolata alcuna commissione.",
+        "aria": "Spiegazione delle voci di compensazione"
+      },
+      "dash": {
+        "title": "Che cosa significa la lineetta",
+        "meaning": "Una lineetta significa «non rilevato» — non «zero». Il valore non può essere calcolato perché manca un dato.",
+        "whereToFix": "Se manca la percentuale di commissione, inseriscila nei dati anagrafici del proprietario oppure come percentuale diversa sul singolo alloggio.",
+        "aria": "Spiegazione della lineetta al posto di un importo",
+        "inline": "Una lineetta indica un valore mancante, non 0,00."
+      },
+      "deductPercentage": "L'aliquota di commissione con cui viene calcolato questo rendiconto. Vuoto significa: vale l'aliquota dei dati anagrafici del proprietario oppure l'aliquota differente impostata sul singolo oggetto.",
+      "status": {
+        "title": "I tre stati di un rendiconto",
+        "draft": "Bozza: ancora modificabile. Gli importi vengono ricalcolati a ogni modifica.",
+        "finalized": "Finalizzato: numero di fattura assegnato, totali congelati. Non sono più possibili modifiche.",
+        "cancelled": "Stornato: annullato tramite una fattura di storno. La fattura originale resta come documento giustificativo."
+      },
+      "finalize": {
+        "title": "Finalizza il rendiconto",
+        "what": "Con la finalizzazione viene assegnato il numero di fattura e tutti i totali vengono congelati come documento giustificativo.",
+        "irreversible": "L'operazione non può essere annullata. Una fattura finalizzata può essere revocata solo tramite una fattura di storno."
+      },
+      "basis": "Stabilisce quando una prenotazione rientra nel periodo: con Check-in in base al giorno di arrivo, con Check-out in base al giorno di partenza. Una prenotazione a cavallo tra due mesi finisce nell'uno o nell'altro mese a seconda della scelta.",
+      "statuses": "Vengono conteggiate solo le prenotazioni con uno degli stati selezionati. Per impostazione predefinita sono quelle confermate e concluse — quelle annullate di norma non rientrano in un pagamento."
+    }
   },
   "ownerBilling": {
     "title": "Contratto di rendicontazione",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Soggetto a commissione",
     "commissionableYes": "Sì — rientra nel calcolo della commissione",
-    "commissionableNo": "No — esente da commissione"
+    "commissionableNo": "No — esente da commissione",
+    "infoAria": "Spiegazione di {feld}"
   },
   "portal": {
     "title": "Il mio portale",

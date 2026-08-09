@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Asignar alojamientos} one {Asignar # alojamiento} other {Asignar # alojamientos}}",
     "propertiesAssigned": "{count, plural, one {# alojamiento asignado} other {# alojamientos asignados}}",
     "removeProperty": "Quitar asignación",
+    "shareInvalid": "Introduce una participación entre 0 y 100.",
     "sections": {
       "master": "Datos maestros",
       "payout": "Pago y comisión",
@@ -998,7 +999,7 @@
       "statementFrequency": "Periodicidad de liquidación",
       "notes": "Notas",
       "share": "Cuota (%)",
-      "commissionOverride": "Comisión (%) distinta",
+      "commissionOverride": "Comisión (%)",
       "emailLanguage": "Idioma de los correos"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Se necesita una dirección de correo electrónico para el acceso al portal.",
     "portalAccessInvite": "Enviar invitación",
     "portalAccessInvited": "Invitación enviada.",
-    "portalAccessActive": "El acceso al portal está configurado."
+    "portalAccessActive": "El acceso al portal está configurado.",
+    "commissionNotAgreed": "sin acordar",
+    "assignableCount": "{count} de {total} seleccionados para añadir",
+    "assignedHeading": "{count, plural, one {# alojamiento asignado} other {# alojamientos asignados}}",
+    "info": {
+      "aria": "Explicación de {feld}",
+      "share": "La cuota de propiedad sobre este alojamiento. Con el 100 % se imputa el pago íntegro a este propietario; con menos, la parte proporcional correspondiente.",
+      "commission": "La tasa de comisión estándar para este propietario. Si el campo queda vacío, todavía no hay ninguna tasa acordada — el pago no se calcula, sino que se muestra como un guion.",
+      "commissionOverride": "Solo se aplica a este alojamiento y sustituye la tasa estándar del propietario. Si el campo queda vacío, rige la tasa estándar."
+    }
   },
   "ownerStatements": {
     "title": "Liquidaciones de propietarios",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Estados de reserva",
       "statusCount": "{count} estados",
-      "title": "Filtros"
+      "title": "Filtros",
+      "resetAll": "Restablecer todos los filtros",
+      "remove": "Restablecer {feld}",
+      "statusesNone": "Ninguno seleccionado",
+      "statusesSearch": "Buscar estado …",
+      "statusesNoMatch": "No se ha encontrado ningún estado.",
+      "statusesSelectAll": "Seleccionar todo",
+      "statusesCount": "{count} de {total} seleccionados"
     },
     "reservationStatus": {
       "pending": "Pendiente",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Borrador",
-      "finalized": "Finalizada"
+      "finalized": "Finalizada",
+      "cancelled": "Anulada"
     },
     "sections": {
       "data": "Datos",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Precio total",
       "totalPayout": "Pago total",
       "ownerPayout": "Pago al propietario",
-      "pmPayout": "Pago a la administración"
+      "pmPayout": "Pago a la administración",
+      "commissionMissing": "No hay una tasa de comisión definida para al menos un alojamiento. Por eso no se pueden calcular los pagos — introduce la tasa en los datos maestros del propietario o en el alojamiento."
     },
     "rental": {
       "perReservation": "Por reserva",
@@ -1136,13 +1155,28 @@
       "reservation": "Reserva",
       "owner": "Propietario",
       "hideAll": "Ocultar todo",
-      "assignOwner": "Asignar al propietario"
+      "assignOwner": "Asignar al propietario",
+      "intro": "Importes que se abonan adicionalmente al propietario o que se le repercuten. Se computan íntegramente en la liquidación, sin deducir comisión.",
+      "direction": "Sentido",
+      "toOwner": "A favor del propietario",
+      "toOwnerHint": "Recibe un pago adicional, p. ej. una compensación por daños.",
+      "toOwnerShort": "A favor",
+      "fromOwner": "A cargo del propietario",
+      "fromOwnerHint": "Se descuenta de su liquidación, p. ej. material y horas de trabajo.",
+      "fromOwnerShort": "A cargo",
+      "sumToOwner": "Total a favor:",
+      "sumFromOwner": "Total a cargo:",
+      "receipt": "Justificante",
+      "openReceipt": "Abrir justificante",
+      "createdBy": "Registrado por {name}",
+      "saveFirst": "Las partidas compensatorias pertenecen a una liquidación guardada. Guarda la liquidación y después podrás registrar partidas aquí.",
+      "missingFields": "Todavía falta rellenar: {felder}."
     },
     "grand": {
       "rentalRevenue": "Ingresos por alquiler",
       "expenses": "Gastos y extras",
       "total": "Total",
-      "deductPercentage": "Deducir comisión (%)"
+      "deductPercentage": "Comisión (%)"
     },
     "manage": {
       "owner": "Propietario",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Editar",
     "attachments": {
-      "drop": "Suelta archivos para subirlos o Explorar"
+      "drop": "Suelta archivos para subirlos o Explorar",
+      "viaExpenses": "Los justificantes van en cada partida: súbelos en «Gastos y extras», directamente en la fila correspondiente."
     },
     "masterData": "Datos maestros",
     "preview": "Vista previa",
     "previewTitle": "Vista previa del documento",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "info": {
+      "aria": "Explicación de {feld}",
+      "totalPrice": "Lo que el huésped ha pagado en total por su estancia — antes de descontar las comisiones de los portales y la comisión de gestión.",
+      "totalPayout": "Lo que recibe la empresa tras descontar las comisiones de los portales. A partir de este importe se calculan la parte del propietario y la de la administración.",
+      "ownerPayout": "La parte que se abona al propietario: el pago total menos la comisión, más las partidas compensatorias.",
+      "pmPayout": "La parte que se queda la empresa — la comisión sobre el alquiler. Las partidas compensatorias no están incluidas aquí.",
+      "expenses": {
+        "title": "A favor y a cargo",
+        "direction": "«A favor del propietario» aumenta su pago, por ejemplo un reembolso. «A cargo del propietario» lo reduce, por ejemplo material u horas de trabajo de la empresa.",
+        "noCommission": "Estos importes se computan íntegramente en el pago — sobre ellos no se aplica comisión.",
+        "aria": "Explicación de las partidas compensatorias"
+      },
+      "dash": {
+        "title": "Qué significa el guion",
+        "meaning": "Un guion significa «no registrado» — no «cero». El valor no se puede calcular porque falta un dato.",
+        "whereToFix": "Si falta la tasa de comisión, introdúcela en los datos maestros del propietario o como tasa distinta en el alojamiento concreto.",
+        "aria": "Explicación del guion en lugar de un importe",
+        "inline": "Un guion representa un valor que falta, no 0,00."
+      },
+      "deductPercentage": "El porcentaje de comisión con el que calcula esta liquidación. Vacío significa: se aplica el porcentaje de los datos maestros del propietario o el porcentaje diferente definido en el objeto concreto.",
+      "status": {
+        "title": "Los tres estados de una liquidación",
+        "draft": "Borrador: todavía modificable. Los importes se recalculan con cada cambio.",
+        "finalized": "Finalizada: número de factura asignado, totales congelados. Ya no se pueden hacer cambios.",
+        "cancelled": "Anulada: revocada mediante una factura de anulación. La factura original se conserva como justificante."
+      },
+      "finalize": {
+        "title": "Finalizar la liquidación",
+        "what": "Al finalizar se asigna el número de factura y todos los totales quedan congelados como justificante.",
+        "irreversible": "Esto no se puede deshacer. Una factura finalizada solo puede anularse mediante una factura de anulación."
+      },
+      "basis": "Determina cuándo una reserva entra en el periodo: con Check-in según el día de llegada, con Check-out según el día de salida. Una reserva que abarca el cambio de mes cae en un mes o en otro según la opción elegida.",
+      "statuses": "Solo se liquidan las reservas con uno de los estados seleccionados. Por defecto son las reservas confirmadas y completadas — las canceladas normalmente no forman parte de una liquidación."
+    }
   },
   "ownerBilling": {
     "title": "Contrato de liquidación",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Sujeto a comisión",
     "commissionableYes": "Sí — entra en el cálculo de la comisión",
-    "commissionableNo": "No — exento de comisión"
+    "commissionableNo": "No — exento de comisión",
+    "infoAria": "Explicación de {feld}"
   },
   "portal": {
     "title": "Mi portal",

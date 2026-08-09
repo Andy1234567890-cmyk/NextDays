@@ -5,11 +5,19 @@ gerundet, 2 Nachkommastellen):
 
     Total Price   = Σ reservations.total_amount  (Owner-Objekte, Zeitraum, Filter)
     Total Payout  = Σ (total_amount − channel_fee)
-    Owner Expenses= Σ owner_expenses, die dem Owner zugeordnet sind (amount)
-    Owner Payout  = (Total Payout − Owner Expenses) × (1 − commission_pct/100)
+    Verrechnung   = Σ(Posten zugunsten) − Σ(Posten zulasten)   [1:1, s. u.]
+    Owner Payout  = Σ (Buchungssatz × (1 − commission_pct/100)) + Verrechnung
     PM Payout     = Total Payout − Owner Payout
-    Grand total   = Rental Revenue (Total Price) − Expenses; „Deduct percentage"
-                    = commission_pct.
+    Grand total   = Rental Revenue (Total Price) + Verrechnung; „Deduct
+                    percentage" = commission_pct.
+
+VERRECHNUNGSPOSTEN GEHEN 1:1 EIN — nicht provisioniert. Bis 09.08.2026 wurden
+sie mit ``× (100 − eff)/100`` gekürzt, also wie Umsatz behandelt: für
+„Glühbirnen für 200 DKK gekauft" bekam der Betrieb bei 20 % Provision nur
+160 DKK zurück statt 200. Ein Verrechnungsposten ist aber kein Umsatz, an dem
+die Verwaltung mitverdient, sondern eine ausgelegte Auslage bzw. eine
+zugesagte Kompensation — er verschiebt die Auszahlung um genau seinen Betrag.
+Die Provision bemisst sich weiterhin ausschließlich an den Buchungen.
 
 CRUD/Erzeugung über Service-Role mit explizitem tenant-Scope (tenant_id aus dem
 verifizierten JWT). Beträge nie als float gerechnet — float nur an der API-Grenze.
@@ -20,6 +28,7 @@ verifizierten JWT). Beträge nie als float gerechnet — float nur an der API-Gr
 # steht — dieselbe Begründung wie in calendar/service.py und payments/service.py.
 from __future__ import annotations
 
+import secrets
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -38,6 +47,8 @@ from .schemas import (
     AutoStatementRunResponse,
     CurrencyAmount,
     ExpenseCreate,
+    ExpenseDirection,
+    ExpenseReceiptUrlResponse,
     ExpenseResponse,
     ExpenseUpdate,
     ListingRow,
@@ -58,6 +69,58 @@ log = get_logger("nextdays.owner_statements")
 
 _CENT = Decimal("0.01")
 
+# Maske für die INTERNE Berechnung des Summen-Snapshots. `owner_statements`
+# trägt die ungekürzten Zahlen für die Buchhaltung; die Maskierung nach §4.2
+# greift beim AUSLIEFERN (`get`/`list`/`preview`), nicht beim Speichern.
+#
+# Das ist keine Umgehung des Daten-Splits, sondern seine Voraussetzung: würde
+# hier die Maske des gerade anfragenden Nutzers gelten, hinge der GESPEICHERTE
+# Buchhaltungswert davon ab, WER zufällig gespeichert hat — ein Eigentümer, der
+# eine Ausgabe anlegt, schriebe den Gastpreis dauerhaft auf `None`. Genau daran
+# scheiterte das Anlegen jeder Abrechnung mit 23502.
+#
+# Diese Maske verlässt den Service NIE: sie geht ausschließlich in
+# `_refresh_summary`, dessen Ergebnis in die DB-Spalten fließt. Jeder Lesepfad
+# lädt weiterhin `load_guest_mask(self._db, ctx.user_id)`.
+_MASKE_INTERN = GuestMask(
+    full_name=False,   # Gastnamen fließen nicht in den Summen-Snapshot
+    contact=False,
+    amounts=True,      # Beträge MÜSSEN hier vollständig sein
+    source=False,
+    id_docs=False,
+)
+
+# Beleg zum Verrechnungsposten: PRIVATER Bucket (0344), Zugriff ausschließlich
+# über eine vom Backend signierte URL — ein Kaufbeleg trägt Adressen und
+# Betragsdetails und gehört nicht in einen öffentlichen Bucket.
+_BELEG_BUCKET = "owner-expense-receipts"
+_BELEG_MAX_BYTES = 10 * 1024 * 1024  # 10 MB (deckt das Bucket-Limit ab)
+_BELEG_URL_TTL = 3600  # Sekunden
+_BELEG_EXT_MIME = {
+    "pdf": "application/pdf",
+    "jpg": "image/jpeg",
+    "png": "image/png",
+    "webp": "image/webp",
+}
+
+
+def _sniff_beleg_ext(content: bytes) -> str | None:
+    """Dateityp des Belegs aus den MAGIC-BYTES bestimmen (Wurzel 8).
+
+    Der vom Client gemeldete ``content_type`` wird bewusst ignoriert: er ist
+    frei wählbar und sagt nichts über den echten Inhalt. ``None`` heißt „kein
+    erlaubter Belegtyp" — der Aufrufer lehnt mit 415 ab.
+    """
+    if content.startswith(b"%PDF-"):
+        return "pdf"
+    if content.startswith(b"\xff\xd8\xff"):
+        return "jpg"
+    if content.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if content[:4] == b"RIFF" and content[8:12] == b"WEBP":
+        return "webp"
+    return None
+
 
 def _d(value: object) -> Decimal:
     """In Decimal wandeln (über str, um Float-Artefakte zu vermeiden)."""
@@ -69,6 +132,110 @@ def _d(value: object) -> Decimal:
 def _money(value: Decimal) -> float:
     """Kaufmännisch auf 2 Nachkommastellen runden, als float für die API."""
     return float(value.quantize(_CENT, rounding=ROUND_HALF_UP))
+
+
+def _kommission_anzeige(
+    commission_display: Decimal | None, row: dict
+) -> float | None:
+    """Anzuzeigender Provisionssatz — oder `None`, wenn keiner feststeht.
+
+    Reihenfolge: der frisch berechnete Anzeige-Satz (Vorschau/Live-Summe),
+    sonst der gespeicherte Satz der Zeile. Ist beides leer, gibt es keinen
+    Satz; `_d(None)` wäre hier 0 und behauptete „0 % Provision vereinbart",
+    was dem Eigentümer die volle Auszahlung zuspricht (Wurzel 4).
+    """
+    if commission_display is not None:
+        return _money(commission_display)
+    gespeichert = row.get("commission_pct")
+    return _money(_d(gespeichert)) if gespeichert is not None else None
+
+
+def _negiert(value: object) -> float | None:
+    """Betrag der Gegenbuchung: Vorzeichen drehen, NULL bleibt NULL.
+
+    Gibt `float` zurueck, nicht `Decimal`. Die Storno-Nutzlast geht als JSON an
+    PostgREST, und `Decimal` ist nicht JSON-serialisierbar — ein `-_d(...)`
+    direkt im Payload liess `cancel()` gegen die echte DB mit `TypeError`
+    abbrechen (die In-Memory-Fake-DB der Tests nimmt `Decimal` klaglos an, daher
+    fiel es dort nie auf). Diese eine Stelle haelt Vorzeichen UND Serialisierung
+    zusammen, damit nicht jede Zeile des Payloads es einzeln richtig machen
+    muss.
+
+    NULL bleibt NULL (0346): die Gegenbuchung einer unbekannten Zahl ist keine
+    0, sondern wieder unbekannt (Wurzel 4).
+    """
+    if value is None:
+        return None
+    return _money(-_d(value))
+
+
+def _negiert_pflicht(value: object) -> float:
+    """Wie `_negiert`, aber fuer die `not null`-Betragsspalten.
+
+    Diese Spalten sind immer belegt; ein fehlender Wert waere ein Datenfehler
+    und keine 0. Statt still einen Ersatzwert zu setzen, faellt der Fall hier
+    hart auf — sonst truege eine unveraenderbare Stornorechnung eine erfundene
+    Null (Wurzel 4/5).
+    """
+    negiert = _negiert(value)
+    if negiert is None:
+        raise StatementError(
+            "Der Beleg trägt keinen vollständigen Betrags-Snapshot und lässt "
+            "sich daher nicht stornieren.",
+            status_code=422,
+        )
+    return negiert
+
+
+def _ist_zulasten(row: dict) -> bool:
+    """Mindert dieser Verrechnungsposten die Auszahlung des Eigentümers?
+
+    Liest AUSSCHLIESSLICH `direction` (0344), nie das Vorzeichen von `amount` —
+    das ist seit 0344 per Check-Constraint immer positiv. Fehlt `direction`,
+    ist die Zeile nicht interpretierbar; sie als „zugunsten" zu lesen zahlte
+    dem Eigentümer eine Auslage aus, statt sie einzuziehen. Darum
+    fail-closed auf `from_owner` — dieselbe Richtung wie der DB-Default.
+    """
+    return str(row.get("direction") or ExpenseDirection.from_owner) == (
+        ExpenseDirection.from_owner.value
+    )
+
+
+def _signed_amount(row: dict) -> Decimal:
+    """Wirkbetrag des Postens auf die Auszahlung: +amount bzw. −amount.
+
+    Die EINE Stelle, an der aus Richtung + positivem Betrag ein Vorzeichen
+    wird. Summe, Antwortmodell und PDF greifen alle hierauf zu, damit nicht
+    drei Stellen dieselbe Regel unterschiedlich implementieren.
+    """
+    betrag = _d(row.get("amount")).copy_abs()
+    return -betrag if _ist_zulasten(row) else betrag
+
+
+def _richtungssummen(expenses: list[dict]) -> tuple[Decimal, Decimal, Decimal]:
+    """Verrechnungsposten zu (netto, zugunsten, zulasten) verdichten.
+
+    Die EINE Ableitung fuer beide Wege in den Snapshot: `_compute_summary`
+    (Entwurf, live gerechnet) und `_snapshot_schreiben` (was in die Spalten
+    faellt). Vorher stand die Aufteilung nur in `_compute_summary`; der
+    Snapshot-Pfad kannte sie gar nicht und lieferte den Pydantic-Default 0.
+    Genau dieses Auseinanderlaufen soll die gemeinsame Quelle verhindern.
+
+    Das Vorzeichen kommt ausschliesslich aus `_signed_amount`; die beiden
+    Richtungsbetraege bleiben — wie in der DB — POSITIV. netto ist damit
+    zugunsten − zulasten und wird nicht getrennt gebildet, sonst koennten die
+    drei Zahlen einander widersprechen.
+    """
+    zugunsten = sum(
+        (_d(e.get("amount")).copy_abs() for e in expenses if not _ist_zulasten(e)),
+        Decimal("0"),
+    )
+    zulasten = sum(
+        (_d(e.get("amount")).copy_abs() for e in expenses if _ist_zulasten(e)),
+        Decimal("0"),
+    )
+    netto = sum((_signed_amount(e) for e in expenses), Decimal("0"))
+    return netto, zugunsten, zulasten
 
 
 class StatementError(Exception):
@@ -181,11 +348,19 @@ class OwnerStatementsService:
         Eigentümer-Kalender im public_portal (Etappe B). Läge sie hier als
         Kopie, könnten Kalender und Abrechnung verschiedene Sätze anwenden.
 
-        Abweichung zum Helfer: fehlt hier BEIDES (kein Override, kein Default),
-        gilt weiterhin 0 — die Abrechnung hat diesen Bestand seit 0063 und
-        darf an einer Altzeile ohne Satz nicht komplett scheitern. Der Kalender
-        ist dort strenger (er weist den Betrag gar nicht aus), weil er keinen
-        Bestand hat, den er brechen könnte.
+        Fehlt BEIDES (kein Override, kein Default), steht für dieses Objekt
+        KEIN Satz fest — das Objekt fehlt dann in der Rückgabe. Bis 09.08.2026
+        stand hier ein `pct = Decimal("0")`: der fehlende Satz wurde zu 0 %
+        geglättet, der Eigentümer bekam 100 % der Auszahlung und der Betrieb
+        nichts. Live belegt am Betrieb AirSmil (8 Booking-Buchungen):
+        Gesamt-Auszahlung 32.120,45 DKK, Verwaltungs-Auszahlung 0,00 DKK.
+        Das ist keine Rundung, sondern eine Falschaussage über Geld (Wurzel 4)
+        — und sie sah plausibel aus, weil 0,00 eine gültige Zahl ist.
+
+        Ein fehlender Satz lässt die Abrechnung NICHT scheitern: die Buchungen
+        des Objekts bleiben in der Aufstellung, nur die davon abhängigen
+        Auszahlungs-Zahlen werden als unbekannt ausgewiesen („—") statt
+        erfunden. So sieht der Betreiber genau, welches Objekt ihm fehlt.
         """
         default = owner.get("default_commission_pct")
         rows = (
@@ -201,57 +376,63 @@ class OwnerStatementsService:
                     r.get("commission_override_pct"), default
                 )
             except PayoutUnbekannt as exc:
-                # Bestandsschutz gilt NUR für den fehlenden Satz (Altzeilen
-                # ohne Provision, siehe Docstring). Ein Satz AUSSERHALB 0–100 %
-                # ist etwas anderes: ihn auf 0 zu setzen zahlte dem Eigentümer
-                # klammheimlich den vollen Betrag aus, obwohl jemand 120 %
-                # eingetragen hat. Das ist ein Datenfehler, der auffallen muss
-                # (Wurzel 4/5) — nicht einer, den die Abrechnung glattbügelt.
+                # Ein Satz AUSSERHALB 0–100 % ist ein echter Eingabefehler und
+                # bleibt ein harter 422: ihn stillschweigend zu verwerfen
+                # zahlte dem Eigentümer den vollen Betrag aus, obwohl jemand
+                # 120 % eingetragen hat (Wurzel 4/5).
                 if exc.grund == "provision_ungueltig":
                     raise StatementError(
                         f"Ungültiger Provisionssatz am Objekt "
                         f"{r['property_id']}: {exc.message}",
                         status_code=422,
                     ) from exc
-                pct = Decimal("0")
+                # FEHLENDER Satz: das Objekt kommt NICHT in die Karte. Die
+                # Aufrufer erkennen daran „für dieses Objekt ist die Provision
+                # offen" und weisen die abhängigen Beträge als „—" aus, statt
+                # eine 0 zu erfinden.
+                continue
             out[str(r["property_id"])] = pct
         return out
 
     @staticmethod
     def _effective_pct(
         commission_map: dict[str, Decimal], rental_rows: list[RentalRow]
-    ) -> Decimal:
+    ) -> Decimal | None:
         """Anzuzeigender Provisionssatz: sind alle betroffenen Objekte gleich,
         dieser Satz; bei gemischten Sätzen der gewichtete Schnitt über den Payout.
         Nur für die Anzeige (commission_pct im Response) — die Rechnung selbst
-        läuft pro Objekt über die commission_map."""
-        rates = {commission_map.get(r.listing_id, Decimal("0")) for r in rental_rows}
-        if len(rates) == 1:
-            return next(iter(rates))
+        läuft pro Objekt über die commission_map.
+
+        `None`, sobald für EIN betroffenes Objekt kein Satz feststeht. Bis
+        09.08.2026 zählte ein fehlender Satz hier als 0 % und zog den
+        angezeigten Schnitt nach unten — die Maske behauptete einen
+        Provisionssatz, den niemand vereinbart hatte (Wurzel 4).
+        """
         if not rental_rows:
-            return Decimal("0")
+            return None
+        raten = [commission_map.get(r.listing_id) for r in rental_rows]
+        if any(p is None for p in raten):
+            return None
+        eindeutig = set(raten)
+        if len(eindeutig) == 1:
+            return next(iter(eindeutig))
         base = sum((_d(r.total_payout) for r in rental_rows), Decimal("0"))
         if base == 0:
-            return Decimal("0")
+            return None
         weighted = sum(
             (
-                _d(r.total_payout) * commission_map.get(r.listing_id, Decimal("0"))
+                _d(r.total_payout) * commission_map[r.listing_id]
                 for r in rental_rows
             ),
             Decimal("0"),
         )
         return (weighted / base).quantize(Decimal("0.01"))
 
-    @staticmethod
-    def _effective_rate_from_rows(rental_rows: list[RentalRow]) -> Decimal:
-        """Effektiver Provisionssatz aus den fertigen Zeilen (1 − owner/total),
-        gewichtet über den Payout — für die Kürzung der Owner-Expense vor
-        Provision. 0 bei leerer/abwesender Bemessungsgrundlage."""
-        base = sum((_d(r.total_payout) for r in rental_rows), Decimal("0"))
-        if base == 0:
-            return Decimal("0")
-        owner = sum((_d(r.owner_payout) for r in rental_rows), Decimal("0"))
-        return ((base - owner) / base * Decimal("100")).quantize(Decimal("0.01"))
+    # `_effective_rate_from_rows` gab es hier bis 09.08.2026: den über den
+    # Payout gewichteten Provisionssatz, EINZIG dazu da, die Verrechnungsposten
+    # zu kürzen. Mit der 1:1-Verrechnung (Modul-Docstring) hat er keinen
+    # Aufrufer mehr und ist ersatzlos entfallen — er stehenzulassen lüde ein,
+    # den Fehler wieder anzuschließen.
 
     def _owner_currency(self, owner: dict, tenant_id: str) -> str:
         """Zielwährung des Owners aus seinem Herkunftsland; fehlt das Land oder
@@ -474,8 +655,15 @@ class OwnerStatementsService:
                 # total_amount galt hier bisher als 0 und darf die ganze
                 # Abrechnung nicht scheitern lassen. Der Kalender ist strenger.
                 payout = addon_total - _d(r.get("channel_fee"))
-            pct = override if override is not None else cmap.get(listing_id, Decimal("0"))
-            owner_payout = common.owner_payout(payout, pct)
+            # Steht für dieses Objekt kein Satz fest, ist die Auszahlung dieser
+            # Zeile NICHT berechenbar. Bis 09.08.2026 sprang hier ein
+            # `Decimal("0")` ein und machte daraus „Eigentümer bekommt alles,
+            # Betrieb nichts" (Wurzel 4). Ein manueller Override sticht den
+            # fehlenden Stammdatensatz weiterhin — dann ist der Satz ja gesetzt.
+            pct = override if override is not None else cmap.get(listing_id)
+            owner_payout = (
+                common.owner_payout(payout, pct) if pct is not None else None
+            )
 
             # Buchungssatz in Owner-Währung umrechnen (Stichtag = Check-out).
             checkout = r.get("check_out")
@@ -493,7 +681,9 @@ class OwnerStatementsService:
                     rate = self._fx.get_rate(fx_date, src_currency, owner_currency)
                 except FxError as exc:
                     raise StatementError(str(exc), status_code=502) from exc
-            owner_payout_conv = owner_payout * rate
+            owner_payout_conv = (
+                owner_payout * rate if owner_payout is not None else None
+            )
 
             rows.append(
                 RentalRow(
@@ -513,10 +703,17 @@ class OwnerStatementsService:
                     total_price=mask.amount(_money(price)),
                     total_payout=_money(payout),
                     currency=src_currency,
-                    owner_payout=_money(owner_payout),
-                    owner_payout_converted=_money(owner_payout_conv),
+                    owner_payout=(
+                        _money(owner_payout) if owner_payout is not None else None
+                    ),
+                    owner_payout_converted=(
+                        _money(owner_payout_conv)
+                        if owner_payout_conv is not None
+                        else None
+                    ),
                     fx_rate=float(rate),
                     fx_date=fx_date,
+                    payout_unbekannt=None if owner_payout is not None else "provision",
                 )
             )
         return rows
@@ -566,10 +763,20 @@ class OwnerStatementsService:
 
     # --- Expenses ------------------------------------------------------------
 
-    def _expenses_for_statement(self, statement_id: str) -> list[dict]:
+    def _expenses_for_statement(
+        self, tenant_id: str, statement_id: str
+    ) -> list[dict]:
+        """Posten einer Abrechnung — geladen UND gescopet in EINEM Aufruf.
+
+        Der `tenant_id`-Filter ist nicht redundant, auch wenn jeder heutige
+        Aufrufer die Abrechnung vorher über `_statement_row` gescopet hat: die
+        Service-Role umgeht RLS, ein Load per Fremd-ID ohne eigenen Scope ist
+        also nur so lange harmlos, wie der Aufrufer daran denkt (Wurzel 3).
+        """
         return (
             self._db.table("owner_expenses")
             .select("*")
+            .eq("tenant_id", tenant_id)
             .eq("statement_id", statement_id)
             .order("date")
             .execute()
@@ -584,6 +791,47 @@ class OwnerStatementsService:
         if not self._is_owner(ctx):
             return expenses
         return [e for e in expenses if not e.get("hidden_from_owner")]
+
+    @staticmethod
+    def _pruefe_posten_waehrung(
+        expenses: list[dict], owner_currency: str
+    ) -> None:
+        """Verrechnungsposten müssen in der Auszahlungswährung stehen.
+
+        Seit 0344 trägt JEDER Posten seine eigene Währung. Die Auszahlung
+        entsteht aber in der Währung des Eigentümers (`owner_payout_converted`
+        ist bereits dorthin umgerechnet), und die Posten fließen 1:1 ohne
+        Umrechnung hinein. Ein DKK-Posten in einer EUR-Abrechnung würde also
+        stellenweise addiert, als wären 200 DKK gleich 200 EUR — eine
+        Verschiebung um den ganzen Wechselkurs, die niemand als Fehler sieht,
+        weil das Ergebnis plausibel aussieht (Wurzel 4).
+
+        Es wird bewusst NICHT still umgerechnet: ein Kurs zum Erfassungstag
+        wäre eine erfundene Zahl in einer Abrechnung, die auch zur Rechnung
+        wird. Stattdessen klar fehlschlagen (422), damit der Posten in der
+        richtigen Währung erfasst wird.
+
+        Posten ohne Währung (Altbestand vor 0344, dort wo weder Objekt noch
+        Betrieb eine hergab) werden NICHT beanstandet — für sie gilt weiterhin
+        die Abrechnungswährung, und ein 422 würde eine bestehende Abrechnung
+        unlesbar machen, ohne dass jemand die alte Zeile noch korrigieren kann.
+        """
+        abweichend = sorted(
+            {
+                waehrung
+                for e in expenses
+                if (waehrung := str(e.get("currency") or "").strip().upper())
+                and waehrung != owner_currency.strip().upper()
+            }
+        )
+        if abweichend:
+            raise StatementError(
+                "Verrechnungsposten in "
+                f"{', '.join(abweichend)} lassen sich nicht in eine Abrechnung "
+                f"in {owner_currency} einrechnen. Bitte die Posten in der "
+                "Abrechnungswährung erfassen.",
+                status_code=422,
+            )
 
     def _owner_unbound_expenses(
         self, tenant_id: str, owner_id: str, period_from: date, period_to: date
@@ -615,8 +863,8 @@ class OwnerStatementsService:
     ) -> StatementSummary:
         """Summen aus den (bereits provisioniert + umgerechnet) Rental-Zeilen.
 
-        Owner-Payout = Σ owner_payout_converted (in Owner-Währung) + Owner-
-        Expenses (in Owner-Währung erfasst, ungekürzt zum Owner). Verwaltungs-
+        Owner-Payout = Σ owner_payout_converted (in Owner-Währung) + die
+        Verrechnungsposten, VOLL (1:1, siehe Modul-Docstring). Verwaltungs-
         Auszahlung bleibt je QUELLWÄHRUNG getrennt (= total_payout − owner_payout
         je Reservierung), da Beträge verschiedener Währungen nicht addiert werden
         dürfen. total_payout (Anzeige) ebenfalls je Quellwährung.
@@ -638,35 +886,66 @@ class OwnerStatementsService:
             Decimal("0"),
         )
         total_payout = sum((_d(r.total_payout) for r in rental_rows), Decimal("0"))
-        expenses_total = sum((_d(e.get("amount")) for e in expenses), Decimal("0"))
+        # Die Posten werden UNUMGERECHNET zur Auszahlung addiert; das ist nur
+        # zulässig, wenn sie in derselben Einheit stehen (siehe
+        # `_pruefe_posten_waehrung`).
+        self._pruefe_posten_waehrung(expenses, owner_currency)
+        # Wirkbetrag je Posten: +amount zugunsten, −amount zulasten. EINE
+        # Ableitung (`_richtungssummen` über `_signed_amount`) für Summe,
+        # Snapshot-Spalten, Antwortmodell und PDF.
+        expenses_total, zugunsten, zulasten = _richtungssummen(expenses)
         owner_expenses = sum(
-            (_d(e.get("amount")) for e in expenses if str(e.get("owner_id")) == owner_id),
+            (
+                _signed_amount(e)
+                for e in expenses
+                if str(e.get("owner_id")) == owner_id
+            ),
             Decimal("0"),
         )
 
-        # Owner-Payout: umgerechnete Buchungssätze (in Owner-Währung) + Owner-
-        # Expenses. Die Expense mindert die Bemessungsgrundlage VOR Provision —
-        # daher mit dem effektiven Satz gekürzt (konsistent zur Per-Reservierung-
-        # Provision; bei einheitlichem Satz = (payout − expense) × factor).
-        eff = self._effective_rate_from_rows(rental_rows)
-        owner_payout = owner_expenses * ((Decimal("100") - eff) / Decimal("100")) + sum(
-            (_d(r.owner_payout_converted) for r in rental_rows), Decimal("0")
+        # Owner-Payout: umgerechnete Buchungssätze (in Owner-Währung) + die
+        # Verrechnungsposten VOLL. Bis 09.08.2026 stand hier
+        # `owner_expenses * ((100 − eff) / 100)` — der Posten wurde also mit dem
+        # Provisionssatz gekürzt, als wäre er Umsatz. Für eine ausgelegte
+        # Auslage über 200 DKK bekam der Betrieb bei 20 % nur 160 DKK zurück.
+        # Ein Verrechnungsposten ist kein Umsatz: er verschiebt die Auszahlung
+        # um genau seinen Betrag, die Provision hängt allein an den Buchungen.
+        # Steht für EINE Zeile der Provisionssatz nicht fest, gibt es keine
+        # Eigentümer-Auszahlung für diesen Zeitraum: die fehlende Zeile
+        # einfach zu überspringen ergäbe eine zu kleine Summe, die wie eine
+        # vollständige aussieht (Wurzel 4). Dann ist die Zahl `None` und die
+        # UI zeigt „—" samt Grund, bis der Satz gepflegt ist.
+        provision_offen = any(r.owner_payout_converted is None for r in rental_rows)
+        owner_payout = (
+            None
+            if provision_offen
+            else owner_expenses
+            + sum((_d(r.owner_payout_converted) for r in rental_rows), Decimal("0"))
         )
 
         # Verwaltungs-Auszahlung + Roh-Summen je Quellwährung gruppieren.
+        # Bei offener Provision gibt es den Verwaltungsanteil nicht: er ist
+        # genau die Differenz, die ohne Satz unbekannt ist. Die Roh-Summe je
+        # Währung (`tot_by`) bleibt davon unberührt — sie hängt nicht an der
+        # Provision und ist weiterhin eine wahre Zahl.
         pm_by: dict[str, Decimal] = {}
         tot_by: dict[str, Decimal] = {}
         for r in rental_rows:
-            pm_by[r.currency] = pm_by.get(r.currency, Decimal("0")) + (
-                _d(r.total_payout) - _d(r.owner_payout)
-            )
+            if not provision_offen:
+                pm_by[r.currency] = pm_by.get(r.currency, Decimal("0")) + (
+                    _d(r.total_payout) - _d(r.owner_payout)
+                )
             tot_by[r.currency] = tot_by.get(r.currency, Decimal("0")) + _d(r.total_payout)
         # Single-Currency UND Owner-Währung == Quellwährung: die Owner-Expense
         # fließt in den Verwaltungsanteil (pm = total_payout − owner_payout, beide
         # in derselben Währung). Sonst (Mehrwährung oder abweichende Owner-Währung)
         # bleibt der PM-Anteil je Quellwährung roh, da owner_payout in einer
         # ANDEREN Währung steht und nicht abgezogen werden darf.
-        same_unit = len(pm_by) == 1 and next(iter(pm_by)) == owner_currency
+        same_unit = (
+            not provision_offen
+            and len(pm_by) == 1
+            and next(iter(pm_by)) == owner_currency
+        )
         if same_unit:
             only = next(iter(pm_by))
             pm_by[only] = total_payout - owner_payout
@@ -676,10 +955,15 @@ class OwnerStatementsService:
         tot_by_list = [
             CurrencyAmount(currency=c, amount=_money(a)) for c, a in tot_by.items()
         ]
-        # pm_payout (Skalar, Kompat): nur bei gleicher Einheit der korrekte
-        # Verwaltungsanteil; sonst nicht als Mischsumme darstellbar → 0, Detail in
-        # pm_payout_by_currency.
-        pm_payout = (total_payout - owner_payout) if same_unit else Decimal("0")
+        # pm_payout (Skalar): nur bei gleicher Einheit der korrekte
+        # Verwaltungsanteil. Bei gemischten Währungen gibt es diese eine Zahl
+        # NICHT — eine Mischsumme aus DKK und EUR wäre bedeutungslos. Hier
+        # stand bis 09.08.2026 ein `Decimal("0")`: ein erfundener Ersatzwert
+        # (Wurzel 4), der eine Agentur-Auszahlung von „0,00" behauptete, wo in
+        # Wahrheit mehrere Beträge in mehreren Währungen anfielen. Die
+        # Aufschlüsselung steht in `pm_payout_by_currency`; der Skalar ist dann
+        # `None` und die UI zeigt „—".
+        pm_payout = (total_payout - owner_payout) if same_unit else None
 
         # Beide Zahlen gehören nicht dem Eigentümer (siehe Docstring). `mask`
         # ist die BESTEHENDE Maske — keine zweite Sichtbarkeitslogik daneben.
@@ -691,13 +975,26 @@ class OwnerStatementsService:
             ),
             total_payout=_money(total_payout),
             expenses_total=_money(expenses_total),
-            owner_payout=_money(owner_payout),
-            pm_payout=_money(pm_payout) if darf_fremde_betraege else None,
+            expenses_to_owner=_money(zugunsten),
+            expenses_from_owner=_money(zulasten),
+            owner_payout=(
+                _money(owner_payout) if owner_payout is not None else None
+            ),
+            pm_payout=(
+                _money(pm_payout)
+                if pm_payout is not None and darf_fremde_betraege
+                else None
+            ),
             currency=currency,
             booking_count=len(rental_rows),
             owner_currency=owner_currency,
             pm_payout_by_currency=pm_by_list if darf_fremde_betraege else [],
             totals_by_currency=tot_by_list,
+            # Der Grund, warum Auszahlungs-Zahlen fehlen. Ohne ihn stünde in
+            # der Maske ein „—" ohne Erklärung, und der Betreiber wüsste nicht,
+            # dass ein Provisionssatz fehlt (Wurzel 5: ein Fehlschlag muss
+            # sagen, was zu tun ist).
+            payout_unbekannt="provision" if provision_offen else None,
         )
 
     # --- Erzeugen / Lesen / Aktualisieren -----------------------------------
@@ -763,7 +1060,9 @@ class OwnerStatementsService:
             "reservation_statuses": req.reservation_statuses,
             "status": "draft",
             "kind": "invoice",
-            "commission_pct": float(commission),
+            # None, solange für ein Objekt kein Satz feststeht — die Vorschau
+            # ist nicht gespeichert, hier steht also nur die Anzeige-Zahl.
+            "commission_pct": float(commission) if commission is not None else None,
             "currency": currency,
             **header.model_dump(),
         }
@@ -884,8 +1183,19 @@ class OwnerStatementsService:
         return rows[0]
 
     def _build_activity(
-        self, tenant_id: str, row: dict, user_id: str | None
+        self, tenant_id: str, row: dict, mask: GuestMask
     ) -> tuple[list[RentalRow], list[ListingRow], dict[str, str]]:
+        """Aktivitätszeilen einer gespeicherten Abrechnung unter EINER Maske.
+
+        Die Maske kommt vom Aufrufer, nicht aus einer `user_id` in dieser
+        Methode. Der Unterschied ist der Kern des 23502-Fehlers: der interne
+        Refresh hat hier `user_id=None` durchgereicht, was
+        `load_guest_mask` fail-closed zur VOLL maskierten Maske auflöste
+        (`amounts=False`). Damit war jede `RentalRow.total_price` `None` und
+        die persistierte Summe ebenfalls — obwohl der Snapshot fachlich
+        gerade die UNGEKÜRZTEN Zahlen tragen muss. Wer speichert, gibt
+        `_MASKE_INTERN` mit; wer ausliefert, die Maske des Anfragenden.
+        """
         owner = self._owner(tenant_id, str(row["owner_id"]))
         owner_currency = self._owner_currency(owner, tenant_id)
         override, cmap = self._commission_for_row(tenant_id, row)
@@ -900,8 +1210,7 @@ class OwnerStatementsService:
             list(row.get("reservation_statuses") or []),
         )
         rental_rows = self._rental_rows(
-            reservations, titles, owner_currency, override, cmap,
-            load_guest_mask(self._db, user_id),
+            reservations, titles, owner_currency, override, cmap, mask
         )
         listing_rows = self._listing_rows(rental_rows, titles)
         return rental_rows, listing_rows, titles
@@ -925,9 +1234,13 @@ class OwnerStatementsService:
         """Summen aus aktueller Aktivität + Expenses neu berechnen und im draft
         persistieren. Finalisierte Statements werden NICHT verändert."""
         row = self._statement_row(tenant_id, statement_id)
-        # Nur Summen — die Gastnamen fließen nicht in die Antwort; fail-closed Maske.
-        rental_rows, _listings, _titles = self._build_activity(tenant_id, row, None)
-        expenses = self._expenses_for_statement(statement_id)
+        # UNGEKÜRZT rechnen (siehe `_MASKE_INTERN`): der Snapshot ist der
+        # Buchhaltungswert, nicht die Sicht des gerade Anfragenden. Gastnamen
+        # bleiben trotzdem maskiert — sie fließen nicht in Summen.
+        rental_rows, _listings, _titles = self._build_activity(
+            tenant_id, row, _MASKE_INTERN
+        )
+        expenses = self._expenses_for_statement(tenant_id, statement_id)
         owner = self._owner(tenant_id, str(row["owner_id"]))
         owner_currency = self._owner_currency(owner, tenant_id)
         summary = self._compute_summary(
@@ -936,6 +1249,7 @@ class OwnerStatementsService:
             str(row["owner_id"]),
             row.get("currency") or self._tenant_currency(tenant_id),
             owner_currency,
+            _MASKE_INTERN,
         )
         if row.get("status") != "finalized":
             self._db.table("owner_statements").update(
@@ -943,6 +1257,12 @@ class OwnerStatementsService:
                     "total_price": summary.total_price,
                     "total_payout": summary.total_payout,
                     "expenses_total": summary.expenses_total,
+                    # Die beiden Richtungen gehören MIT in den Snapshot. Ohne
+                    # sie trüge die Zeile nur die Nettozahl, und der Lesepfad
+                    # für finalisierte Belege fiel auf den Default 0 zurück
+                    # (0348).
+                    "expenses_to_owner": summary.expenses_to_owner,
+                    "expenses_from_owner": summary.expenses_from_owner,
                     "owner_payout": summary.owner_payout,
                     "pm_payout": summary.pm_payout,
                     "owner_currency": summary.owner_currency,
@@ -950,17 +1270,97 @@ class OwnerStatementsService:
             ).eq("tenant_id", tenant_id).eq("id", statement_id).execute()
         return summary
 
+    def _snapshot_summary(  # noqa: PLR0913 — der Snapshot braucht seine Bezüge
+        self,
+        row: dict,
+        rental_rows: list[RentalRow],
+        mask: GuestMask,
+        tenant_id: str,
+        owner_currency_fallback: str,
+    ) -> StatementSummary:
+        """Eingefrorene Summen aus der GESPEICHERTEN Zeile (finalized,
+        cancelled, Storno).
+
+        Der Snapshot ist die gespeicherte Zeile — die Maske greift beim
+        AUSLIEFERN, nicht beim Speichern: `owner_statements` trägt die
+        ungekürzten Summen für die Buchhaltung, aber der Eigentümer bekommt
+        Gastpreis und Verwaltungs-Ertrag daraus nicht zu sehen (§4.2). Das ist
+        genau der Pfad, über den das Portal sein PDF holt.
+
+        Ein NULL in der Spalte heißt „diese Zahl gibt es nicht" (0346) und muss
+        NULL bleiben. `_d(None)` ergäbe 0 und machte daraus die Aussage „0,00
+        eingenommen" bzw. „keine Provision" (Wurzel 4).
+
+        JEDES Feld der Summary wird hier gesetzt. Ein weggelassenes Feld fällt
+        still auf seinen Pydantic-Default zurück und liefert eine erfundene,
+        plausibel aussehende 0 bzw. eine leere Liste — genau so meldeten
+        `expenses_to_owner`/`expenses_from_owner` bei jeder finalisierten
+        Abrechnung 0, obwohl Posten vorlagen (0348).
+        """
+        currency = row.get("currency") or self._tenant_currency(tenant_id)
+        owner_currency = row.get("owner_currency") or owner_currency_fallback
+        # Die Aufschlüsselung je Quellwährung wird aus den EINGEFRORENEN
+        # Skalaren gebildet, nicht aus den live nachgeladenen Rental-Zeilen:
+        # sonst stünde neben der Snapshot-Summe eine heute berechnete
+        # Aufschlüsselung, die ihr widersprechen kann. Zulässig ist das, weil
+        # `finalize` gemischte Quellwährungen mit 422 ablehnt — ein
+        # finalisierter Beleg hat genau EINE Währung, und der Skalar IST damit
+        # bereits die vollständige Aufschlüsselung.
+        pm_payout = _d(row["pm_payout"]) if row.get("pm_payout") is not None else None
+        darf_fremde_betraege = mask.amounts
+        return StatementSummary(
+            total_price=(
+                mask.amount(_money(_d(row["total_price"])))
+                if row.get("total_price") is not None
+                else None
+            ),
+            total_payout=_money(_d(row.get("total_payout"))),
+            expenses_total=_money(_d(row.get("expenses_total"))),
+            expenses_to_owner=_money(_d(row.get("expenses_to_owner"))),
+            expenses_from_owner=_money(_d(row.get("expenses_from_owner"))),
+            # NULL im Snapshot heißt „war nicht berechenbar" (kein
+            # Provisionssatz). `_d(None)` wäre 0 und machte daraus wieder eine
+            # Auszahlung von 0,00 — genau der Ersatzwert, den 0349 beseitigt.
+            owner_payout=(
+                _money(_d(row["owner_payout"]))
+                if row.get("owner_payout") is not None
+                else None
+            ),
+            pm_payout=(
+                mask.amount(_money(pm_payout)) if pm_payout is not None else None
+            ),
+            currency=currency,
+            booking_count=len(rental_rows),
+            owner_currency=owner_currency,
+            pm_payout_by_currency=(
+                [CurrencyAmount(currency=owner_currency, amount=_money(pm_payout))]
+                if pm_payout is not None and darf_fremde_betraege
+                else []
+            ),
+            totals_by_currency=[
+                CurrencyAmount(
+                    currency=owner_currency,
+                    amount=_money(_d(row.get("total_payout"))),
+                )
+            ],
+            # Der Snapshot trägt den Grund nicht als eigene Spalte; er ist aus
+            # der fehlenden Auszahlung eindeutig ableitbar.
+            payout_unbekannt=(
+                None if row.get("owner_payout") is not None else "provision"
+            ),
+        )
+
     def get(self, ctx: AuthContext, statement_id: str) -> StatementResponse:
         tenant_id = self._require_tenant(ctx)
         row = self._statement_row(tenant_id, statement_id)
         self._require_statement_visible(ctx, tenant_id, row)
         rental_rows, listing_rows, _titles = self._build_activity(
-            tenant_id, row, ctx.user_id
+            tenant_id, row, load_guest_mask(self._db, ctx.user_id)
         )
         # Owner sieht als hidden_from_owner markierte Ausgaben weder gelistet noch
         # (bei Live-Summen) eingerechnet. Finalisierte Summen bleiben Snapshot.
         expenses = self._visible_expenses(
-            ctx, self._expenses_for_statement(statement_id)
+            ctx, self._expenses_for_statement(tenant_id, statement_id)
         )
         override, cmap = self._commission_for_row(tenant_id, row)
         owner = self._owner(tenant_id, str(row["owner_id"]))
@@ -979,15 +1379,11 @@ class OwnerStatementsService:
             # ungekürzten Summen für die Buchhaltung, aber der Eigentümer
             # bekommt Gastpreis und Verwaltungs-Ertrag daraus nicht zu sehen
             # (§4.2). Das ist genau der Pfad, über den das Portal sein PDF holt.
-            summary = StatementSummary(
-                total_price=mask.amount(_money(_d(row.get("total_price")))),
-                total_payout=_money(_d(row.get("total_payout"))),
-                expenses_total=_money(_d(row.get("expenses_total"))),
-                owner_payout=_money(_d(row.get("owner_payout"))),
-                pm_payout=mask.amount(_money(_d(row.get("pm_payout")))),
-                currency=row.get("currency") or self._tenant_currency(tenant_id),
-                booking_count=len(rental_rows),
-                owner_currency=row.get("owner_currency") or owner_currency,
+            # Ein NULL in der Spalte heißt „diese Zahl gibt es nicht" (0346) und
+            # muss NULL bleiben. `_d(None)` ergäbe 0 und machte daraus die
+            # Aussage „0,00 eingenommen" bzw. „keine Provision" (Wurzel 4).
+            summary = self._snapshot_summary(
+                row, rental_rows, mask, tenant_id, owner_currency
             )
         else:
             summary = self._compute_summary(
@@ -1031,8 +1427,21 @@ class OwnerStatementsService:
                 period_from=date.fromisoformat(r["period_from"]),
                 period_to=date.fromisoformat(r["period_to"]),
                 status=r.get("status") or "draft",
-                owner_payout=_money(_d(r.get("owner_payout"))),
-                pm_payout=mask.amount(_money(_d(r.get("pm_payout")))),
+                # NULL bleibt NULL — wie im Detail (0349): eine 0,00 in der
+                # Liste läse sich als „nichts auszuzahlen", wo in Wahrheit nur
+                # der Provisionssatz fehlt.
+                owner_payout=(
+                    _money(_d(r["owner_payout"]))
+                    if r.get("owner_payout") is not None
+                    else None
+                ),
+                # NULL bleibt NULL (0346) — wie im Detail, sonst zeigte die
+                # Liste eine 0,00, wo es die Zahl gar nicht gibt.
+                pm_payout=(
+                    mask.amount(_money(_d(r["pm_payout"])))
+                    if r.get("pm_payout") is not None
+                    else None
+                ),
                 currency=r.get("currency") or self._tenant_currency(tenant_id),
                 invoice_number=r.get("invoice_number"),
                 created_at=str(r["created_at"]) if r.get("created_at") else None,
@@ -1104,6 +1513,20 @@ class OwnerStatementsService:
             )
         # Summen vor dem Einfrieren auf den letzten Stand bringen.
         summary = self._refresh_summary(tenant_id, statement_id)
+
+        # Ohne darstellbaren PM-Payout gibt es keine Bemessungsgrundlage. Das
+        # passiert bei gemischten Quellwährungen (siehe `_compute_summary`).
+        # `_d(None)` wäre hier 0 — dann trüge eine fortlaufend nummerierte,
+        # unveränderbare Rechnung 0,00 Steuer auf einen Umsatz, den es real
+        # gibt. Lieber klar fehlschlagen (Wurzel 4/5) als still falsch
+        # festschreiben.
+        if summary.pm_payout is None:
+            raise StatementError(
+                "Die Abrechnung enthält Buchungen in mehreren Währungen — "
+                "daraus lässt sich keine einzelne Bemessungsgrundlage für die "
+                "Rechnung bilden. Bitte je Währung getrennt abrechnen.",
+                status_code=422,
+            )
 
         # Steuer auf den Provisions-/PM-Payout (steuerbarer Umsatz der Agentur).
         profile = self._tenant_tax_profile(tenant_id)
@@ -1186,15 +1609,24 @@ class OwnerStatementsService:
             "buyer_vat_id": row.get("buyer_vat_id"),
             "tax_category": row.get("tax_category") or "S",
             "tax_rate": row.get("tax_rate") or 0,
-            # Beträge negiert (Gegenbuchung).
-            "total_price": -_d(row.get("total_price")),
-            "total_payout": -_d(row.get("total_payout")),
-            "expenses_total": -_d(row.get("expenses_total")),
-            "owner_payout": -_d(row.get("owner_payout")),
-            "pm_payout": -_d(row.get("pm_payout")),
-            "net_amount": -_d(row.get("net_amount")),
-            "tax_amount": -_d(row.get("tax_amount")),
-            "gross_amount": -_d(row.get("gross_amount")),
+            # Beträge negiert (Gegenbuchung). Was im Original NULL ist, bleibt
+            # im Storno NULL (0346): die Gegenbuchung einer unbekannten Zahl
+            # ist keine 0, sondern wieder unbekannt (Wurzel 4).
+            "total_price": _negiert(row.get("total_price")),
+            "total_payout": _negiert_pflicht(row.get("total_payout")),
+            "expenses_total": _negiert_pflicht(row.get("expenses_total")),
+            # Die beiden Richtungen werden MITGESPIEGELT. Ohne sie stünde im
+            # Storno-Beleg eine negierte Nettozahl neben zwei Nullen — die
+            # Gegenbuchung behauptete dann, es habe nie Verrechnungsposten
+            # gegeben (Wurzel 4). Das Vorzeichen dreht wie bei jedem anderen
+            # Betrag der Gegenbuchung.
+            "expenses_to_owner": _negiert_pflicht(row.get("expenses_to_owner")),
+            "expenses_from_owner": _negiert_pflicht(row.get("expenses_from_owner")),
+            "owner_payout": _negiert_pflicht(row.get("owner_payout")),
+            "pm_payout": _negiert(row.get("pm_payout")),
+            "net_amount": _negiert_pflicht(row.get("net_amount")),
+            "tax_amount": _negiert_pflicht(row.get("tax_amount")),
+            "gross_amount": _negiert_pflicht(row.get("gross_amount")),
             "tax_exemption_reason": row.get("tax_exemption_reason"),
             "notes": reason,
             # Kopf-Snapshot übernehmen.
@@ -1288,18 +1720,180 @@ class OwnerStatementsService:
             tenant_id, "reservations", data.get("reservation_id"), "Reservierung"
         )
 
+    def _expense_owner_id(self, tenant_id: str, data: dict) -> str | None:
+        """Der Eigentümer, zu dem dieser Verrechnungsposten gehört.
+
+        Zwei Wege, weil das Formular beide schickt: ausdrücklich als
+        `owner_id`, oder mittelbar über die Abrechnung (`statement_id`), die
+        ihren Eigentümer trägt. Ohne beides gibt es keinen Eigentümer-Bezug —
+        dann greift die Objekt-Prüfung unten nicht, und der Posten bleibt ein
+        reiner Tenant-Posten (das ist ein gültiger Fall, siehe
+        `_pruefe_objekt_gehoert_eigentuemer`).
+        """
+        owner_id = data.get("owner_id")
+        if owner_id:
+            return str(owner_id)
+        statement_id = data.get("statement_id")
+        if not statement_id:
+            return None
+        rows = (
+            self._db.table("owner_statements")
+            .select("owner_id")
+            .eq("tenant_id", tenant_id)
+            .eq("id", str(statement_id))
+            .limit(1)
+            .execute()
+        ).data or []
+        return str(rows[0]["owner_id"]) if rows else None
+
+    def _pruefe_objekt_gehoert_eigentuemer(self, tenant_id: str, data: dict) -> None:
+        """Objekt UND Reservierung müssen zum Eigentümer des Postens gehören.
+
+        Wurzel 3/9: `_validate_expense_fks` prüft nur den MANDANTEN. Damit ließ
+        sich ein Posten auf ein Objekt buchen, das diesem Eigentümer gar nicht
+        gehört — live nachgestellt mit einem direkten Aufruf: Objekt eines
+        fremden Eigentümers, Antwort 201. Fachlich ist das eine Verrechnung
+        fremder Kosten mit dieser Auszahlung, und über
+        `_expense_currency` zieht das fremde Objekt zusätzlich seine Währung in
+        die Abrechnung.
+
+        Das Objekt ist bewusst OPTIONAL (die Auswahl hat einen „—"-Eintrag):
+        Posten wie eine Jahrespauschale oder eine Gutschrift betreffen den
+        Eigentümer als Ganzes, nicht ein einzelnes Objekt. Geprüft wird
+        deshalb nur, WENN ein Objekt angegeben ist.
+
+        Ohne Eigentümer-Bezug (weder `owner_id` noch `statement_id`) gibt es
+        nichts zu prüfen — der Tenant-Scope aus `_validate_expense_fks` bleibt
+        die Grenze.
+
+        404 statt 403: der Aufrufer darf nicht erfahren, ob die fremde ID
+        existiert (dieselbe Antwort wie für „gibt es nicht").
+        """
+        listing_id = data.get("listing_id")
+        reservation_id = data.get("reservation_id")
+        if not listing_id and not reservation_id:
+            return
+        owner_id = self._expense_owner_id(tenant_id, data)
+        if not owner_id:
+            return
+        erlaubt = set(self._owner_property_ids(owner_id))
+        if listing_id and str(listing_id) not in erlaubt:
+            raise StatementError("Objekt nicht gefunden.", status_code=404)
+        if reservation_id:
+            # Die Reservierung hängt über ihr Objekt am Eigentümer. Ohne diese
+            # Prüfung ließe sich ein Posten an die Buchung eines fremden
+            # Objekts hängen, obwohl das Objekt-Feld jetzt gesperrt ist.
+            rows = (
+                self._db.table("reservations")
+                .select("property_id")
+                .eq("tenant_id", tenant_id)
+                .eq("id", str(reservation_id))
+                .limit(1)
+                .execute()
+            ).data or []
+            gehoert = rows and str(rows[0].get("property_id") or "") in erlaubt
+            if not gehoert:
+                raise StatementError(
+                    "Reservierung nicht gefunden.", status_code=404
+                )
+
+    def _expense_currency(self, tenant_id: str, data: dict) -> str:
+        """Währung des Verrechnungspostens — aus den Daten, nie geraten.
+
+        Reihenfolge: ausdrücklich mitgegebene Währung → Währung des bezogenen
+        Objekts → Währung des Betriebs. Das OBJEKT geht vor: ein dänisches
+        Objekt unter einem EUR-Betrieb verrechnet in DKK, und ein
+        untergeschobenes EUR verschöbe den Betrag um den Wechselkurs, ohne dass
+        es jemand als Fehler sähe.
+
+        Gibt auch der Betrieb nichts her, wirft `_tenant_currency` selbst 422
+        („Mandanten-Währung fehlt") — genau der klare Fehler statt eines
+        erfundenen „EUR" (Wurzel 4). Darum steht hier bewusst kein eigener
+        Fallback-Zweig hinter dem Aufruf.
+        """
+        angegeben = str(data.get("currency") or "").strip().upper()
+        if angegeben:
+            return angegeben
+        listing_id = data.get("listing_id")
+        if listing_id:
+            rows = (
+                self._db.table("properties")
+                .select("currency")
+                .eq("tenant_id", tenant_id)
+                .eq("id", str(listing_id))
+                .limit(1)
+                .execute()
+            ).data or []
+            objekt_waehrung = str((rows[0].get("currency") if rows else "") or "").strip()
+            if objekt_waehrung:
+                return objekt_waehrung.upper()
+        return self._tenant_currency(tenant_id).strip().upper()
+
+    @staticmethod
+    def _pruefe_sichtbarkeit(data: dict) -> None:
+        """Ein Posten ZULASTEN des Eigentümers darf nicht ausgeblendet werden.
+
+        Sonst sähe er eine geminderte Auszahlung, ohne die Zeile zu sehen, die
+        sie mindert — seine Abrechnung wäre nicht prüfbar. Die DB hält das per
+        Check-Constraint (0344); hier steht die verständliche Meldung, damit
+        der Nutzer keinen rohen 23514 bekommt.
+        """
+        if (
+            data.get("direction") == ExpenseDirection.from_owner.value
+            and data.get("hidden_from_owner")
+        ):
+            raise StatementError(
+                "Ein Posten zulasten des Eigentümers muss für ihn sichtbar "
+                "bleiben — sonst ist die Abrechnung nicht nachvollziehbar.",
+                status_code=422,
+            )
+
+    def _erfasser(self, ctx: AuthContext) -> dict:
+        """Wer legt den Posten an — für die Nachvollziehbarkeit an der Zeile.
+
+        Der Name wird als SNAPSHOT mitgeschrieben: wird der Mitarbeiter später
+        gelöscht, setzt der FK `created_by` auf null, aber die Abrechnung
+        bleibt lesbar („erfasst von …"). Findet sich kein Name, bleibt das Feld
+        leer — kein erfundenes „System" (Wurzel 4).
+        """
+        rows = (
+            self._db.table("users")
+            .select("id, full_name, email")
+            .eq("id", ctx.user_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        user = rows[0] if rows else {}
+        name = str(user.get("full_name") or user.get("email") or "").strip()
+        return {
+            "created_by": ctx.user_id if user else None,
+            "created_by_name": name or None,
+        }
+
     def add_expense(self, ctx: AuthContext, req: ExpenseCreate) -> ExpenseResponse:
         tenant_id = self._require_tenant(ctx)
         self._forbid_owner_writes(ctx)
         payload = req.model_dump(mode="json")
         # Alle Fremdschlüssel müssen DIESEM Tenant gehören (kein Fremd-FK).
         self._validate_expense_fks(tenant_id, payload)
+        # ... und Objekt/Reservierung zusätzlich zum EIGENTÜMER des Postens
+        # (Wurzel 3/9 — der Tenant-Scope allein erlaubte fremde Objekte).
+        self._pruefe_objekt_gehoert_eigentuemer(tenant_id, payload)
+        self._pruefe_sichtbarkeit(payload)
         payload["tenant_id"] = tenant_id
+        payload["currency"] = self._expense_currency(tenant_id, payload)
+        payload.update(self._erfasser(ctx))
         res = self._db.table("owner_expenses").insert(payload).execute()
         if not res.data:
             raise StatementError("Position konnte nicht angelegt werden.", status_code=500)
         if req.statement_id:
             self._refresh_summary(tenant_id, req.statement_id)
+        log.info(
+            "owner_expense_added",
+            tenant_id=tenant_id,
+            expense_id=str(res.data[0]["id"]),
+            direction=payload["direction"],
+        )
         return _expense(res.data[0])
 
     def update_expense(
@@ -1320,6 +1914,19 @@ class OwnerStatementsService:
         changes = req.model_dump(mode="json", exclude_unset=True)
         # Neu gesetzte Fremdschlüssel müssen ebenfalls DIESEM Tenant gehören.
         self._validate_expense_fks(tenant_id, changes)
+        # Eigentümer-Scope am ERGEBNIS prüfen, nicht am Fragment: wer nur die
+        # `listing_id` ändert, schickt keine `owner_id` mit — gegen das
+        # Fragment allein fiele die Prüfung mangels Eigentümer-Bezug aus und
+        # das fremde Objekt käme genau hier durch (Wurzel 9).
+        self._pruefe_objekt_gehoert_eigentuemer(
+            tenant_id, {**existing[0], **changes}
+        )
+        # Sichtbarkeit am ERGEBNIS prüfen, nicht am Änderungs-Fragment: wer nur
+        # `direction` auf `from_owner` dreht, während `hidden_from_owner` schon
+        # true in der Zeile steht, käme sonst an der Regel vorbei.
+        self._pruefe_sichtbarkeit({**existing[0], **changes})
+        if "currency" in changes:
+            changes["currency"] = self._expense_currency(tenant_id, changes)
         if changes:
             self._db.table("owner_expenses").update(changes).eq(
                 "tenant_id", tenant_id
@@ -1330,6 +1937,7 @@ class OwnerStatementsService:
         updated = (
             self._db.table("owner_expenses")
             .select("*")
+            .eq("tenant_id", tenant_id)
             .eq("id", expense_id)
             .limit(1)
             .execute()
@@ -1341,7 +1949,7 @@ class OwnerStatementsService:
         self._forbid_owner_writes(ctx)
         existing = (
             self._db.table("owner_expenses")
-            .select("statement_id")
+            .select("statement_id, storage_path")
             .eq("tenant_id", tenant_id)
             .eq("id", expense_id)
             .limit(1)
@@ -1352,9 +1960,130 @@ class OwnerStatementsService:
         self._db.table("owner_expenses").delete().eq("tenant_id", tenant_id).eq(
             "id", expense_id
         ).execute()
+        # Beleg erst NACH dem Löschen der Zeile entfernen: schlüge das Löschen
+        # fehl, zeigte storage_path sonst auf eine schon entfernte Datei.
+        self._beleg_entfernen(existing[0].get("storage_path"))
         statement_id = existing[0].get("statement_id")
         if statement_id:
             self._refresh_summary(tenant_id, str(statement_id))
+
+    # --- Beleg zum Verrechnungsposten (privater Bucket) ----------------------
+
+    def _own_expense(self, tenant_id: str, expense_id: str) -> dict:
+        """Einen Posten per ID laden UND scopen in einem Schritt (Wurzel 3)."""
+        rows = (
+            self._db.table("owner_expenses")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .eq("id", expense_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise StatementError("Position nicht gefunden.", status_code=404)
+        return rows[0]
+
+    def _beleg_entfernen(self, storage_path: object) -> None:
+        """Beleg-Datei best-effort aus dem Bucket räumen.
+
+        Bewusst best-effort (`# noqa: BLE001`): eine verwaiste Datei im privaten
+        Bucket ist ein Aufräum-Rückstand, kein Grund, dem Nutzer das Löschen
+        oder Ersetzen des Postens zu verweigern.
+        """
+        if not storage_path:
+            return
+        try:
+            self._db.storage.from_(_BELEG_BUCKET).remove([str(storage_path)])
+        except Exception as exc:  # noqa: BLE001 — Aufräumen darf den Hauptpfad nie kippen
+            log.warning("owner_expense_receipt_cleanup_failed", error=str(exc))
+
+    def upload_receipt(
+        self,
+        ctx: AuthContext,
+        expense_id: str,
+        content: bytes,
+        file_name: str | None,
+    ) -> ExpenseResponse:
+        """Beleg/Nachweis an einen Verrechnungsposten hängen.
+
+        Der Dateityp kommt aus den ECHTEN Anfangsbytes, nicht aus dem
+        Client-`content_type` (Wurzel 8) — sonst lüde ein als `image/png`
+        deklariertes HTML in einen Bucket, dessen Inhalte wir später signiert
+        ausliefern.
+        """
+        tenant_id = self._require_tenant(ctx)
+        self._forbid_owner_writes(ctx)
+        posten = self._own_expense(tenant_id, expense_id)
+        ext = _sniff_beleg_ext(content)
+        if not ext:
+            raise StatementError(
+                "Nur PDF, JPEG, PNG oder WebP erlaubt.", status_code=415
+            )
+        if len(content) > _BELEG_MAX_BYTES:
+            raise StatementError("Beleg ist zu groß (max. 10 MB).", status_code=413)
+        path = f"{tenant_id}/{expense_id}/{secrets.token_hex(8)}.{ext}"
+        try:
+            self._db.storage.from_(_BELEG_BUCKET).upload(
+                path, content, {"content-type": _BELEG_EXT_MIME[ext]}
+            )
+        except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich als 502
+            log.warning(
+                "owner_expense_receipt_upload_failed", expense_id=expense_id, error=str(exc)
+            )
+            raise StatementError("Upload fehlgeschlagen.", status_code=502) from exc
+        # ERST die Zeile auf die neue Datei zeigen lassen, DANN die alte
+        # aufräumen (sonst zeigte storage_path bei einem Update-Fehler auf eine
+        # bereits gelöschte Datei — der Beleg wäre weg).
+        res = (
+            self._db.table("owner_expenses")
+            .update({"storage_path": path, "file_name": file_name})
+            .eq("tenant_id", tenant_id)
+            .eq("id", expense_id)
+            .execute()
+        )
+        if not res.data:
+            raise StatementError("Speichern fehlgeschlagen.", status_code=500)
+        self._beleg_entfernen(posten.get("storage_path"))
+        log.info("owner_expense_receipt_uploaded", expense_id=expense_id)
+        return _expense(res.data[0])
+
+    def receipt_url(
+        self, ctx: AuthContext, expense_id: str
+    ) -> ExpenseReceiptUrlResponse:
+        """Signierte, zeitlich begrenzte Download-URL für den Beleg.
+
+        Der Eigentümer darf seinen eigenen Beleg sehen (er soll den Abzug ja
+        prüfen können) — aber nur an einem Posten, der IHM zugeordnet und für
+        ihn nicht ausgeblendet ist. Derselbe Scope wie in `_visible_expenses`,
+        an der Einzelressource erneut geprüft (Wurzel 9).
+        """
+        tenant_id = self._require_tenant(ctx)
+        posten = self._own_expense(tenant_id, expense_id)
+        if self._is_owner(ctx):
+            eigener = self._owner_self_id(ctx, tenant_id)
+            if not eigener or str(posten.get("owner_id")) != eigener:
+                raise StatementError("Position nicht gefunden.", status_code=404)
+            if posten.get("hidden_from_owner"):
+                raise StatementError("Position nicht gefunden.", status_code=404)
+        path = posten.get("storage_path")
+        if not path:
+            raise StatementError("Kein Beleg hinterlegt.", status_code=404)
+        try:
+            signed = self._db.storage.from_(_BELEG_BUCKET).create_signed_url(
+                str(path), _BELEG_URL_TTL
+            )
+        except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich als 502
+            log.warning(
+                "owner_expense_receipt_sign_failed", expense_id=expense_id, error=str(exc)
+            )
+            raise StatementError("Download nicht möglich.", status_code=502) from exc
+        url = None
+        if isinstance(signed, dict):
+            # supabase-py benennt den Key je nach Version unterschiedlich.
+            url = signed.get("signedURL") or signed.get("signedUrl")
+        if not url:
+            raise StatementError("Download nicht möglich.", status_code=502)
+        return ExpenseReceiptUrlResponse(url=str(url), expires_in=_BELEG_URL_TTL)
 
     # --- Auto-Statements -----------------------------------------------------
 
@@ -1419,7 +2148,15 @@ class OwnerStatementsService:
                         "basis": "check_in",
                         "reservation_statuses": ["confirmed", "completed"],
                         "status": "draft",
-                        "commission_pct": float(_d(owner.get("default_commission_pct"))),
+                        # NULL bleibt NULL: ohne vereinbarten Satz trägt der
+                        # Entwurf keinen — die Summen weisen die Auszahlung
+                        # dann als „—" aus, statt 100 % an den Eigentümer zu
+                        # buchen (Wurzel 4).
+                        "commission_pct": (
+                            float(_d(owner["default_commission_pct"]))
+                            if owner.get("default_commission_pct") is not None
+                            else None
+                        ),
                         "currency": currency,
                         **header.model_dump(),
                     }
@@ -1472,13 +2209,25 @@ def _expense(r: dict) -> ExpenseResponse:
         statement_id=str(r["statement_id"]) if r.get("statement_id") else None,
         concept=r["concept"],
         date=date.fromisoformat(r["date"]) if isinstance(r["date"], str) else r["date"],
+        direction=ExpenseDirection(
+            str(r.get("direction") or ExpenseDirection.from_owner.value)
+        ),
         category=r.get("category"),
         listing_id=str(r["listing_id"]) if r.get("listing_id") else None,
         reservation_id=str(r["reservation_id"]) if r.get("reservation_id") else None,
         owner_id=str(r["owner_id"]) if r.get("owner_id") else None,
-        amount=_money(_d(r.get("amount"))),
+        amount=_money(_d(r.get("amount")).copy_abs()),
+        signed_amount=_money(_signed_amount(r)),
+        # Die Währung kommt aus der Zeile. Fehlt sie (Altbestand ohne Objekt-
+        # und Tenant-Währung), bleibt sie leer — die UI rendert dann symbollos,
+        # statt ein „EUR" zu erfinden (Wurzel 4).
+        currency=(str(r["currency"]).strip().upper() or None) if r.get("currency") else None,
         attachment_url=r.get("attachment_url"),
         hidden_from_owner=bool(r.get("hidden_from_owner")),
+        created_by=str(r["created_by"]) if r.get("created_by") else None,
+        created_by_name=r.get("created_by_name"),
+        file_name=r.get("file_name"),
+        has_receipt=bool(r.get("storage_path")),
         created_at=str(r["created_at"]) if r.get("created_at") else None,
         updated_at=str(r["updated_at"]) if r.get("updated_at") else None,
     )
@@ -1525,11 +2274,9 @@ def _to_response(
         reservation_statuses=list(row.get("reservation_statuses") or []),
         status=row.get("status") or "draft",
         kind=row.get("kind") or "invoice",
-        commission_pct=_money(
-            commission_display
-            if commission_display is not None
-            else _d(row.get("commission_pct"))
-        ),
+        # Kein Satz vereinbart → kein angezeigter Satz. `_d(None)` wäre 0 und
+        # behauptete „0 % Provision" (Wurzel 4); die UI zeigt stattdessen „—".
+        commission_pct=_kommission_anzeige(commission_display, row),
         header=header,
         summary=summary,
         invoice_date=(

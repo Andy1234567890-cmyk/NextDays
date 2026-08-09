@@ -36,17 +36,40 @@ class TaxBreakdown(BaseModel):
     exemption_reason: str | None = None
 
 
-# --- Expenses & Extras -------------------------------------------------------
+# --- Verrechnungsposten (Expenses & Extras) ----------------------------------
+
+
+class ExpenseDirection(StrEnum):
+    """Richtung eines Verrechnungspostens — die Fachfrage, nicht ein Vorzeichen.
+
+    ``to_owner``   zugunsten des Eigentümers: er bekommt zusätzlich etwas
+                   ausgezahlt (z. B. Schadenskompensation).
+    ``from_owner`` zulasten des Eigentümers: der Betrieb verrechnet etwas
+                   gegen ihn (z. B. Material/Arbeitszeit — Glühbirnen).
+
+    Der Betrag bleibt in BEIDEN Fällen positiv. Vorher hing die Richtung an
+    einem Minuszeichen in ``amount``, das beim Eintippen still verlorenging.
+    """
+
+    to_owner = "to_owner"
+    from_owner = "from_owner"
 
 
 class ExpenseBase(BaseModel):
     concept: str = Field(min_length=1, max_length=300)
     date: date_
+    direction: ExpenseDirection
     category: str | None = None
     listing_id: str | None = None
     reservation_id: str | None = None
     owner_id: str | None = None
-    amount: float
+    # Immer POSITIV — die Richtung steht in `direction`. `gt=0` statt `ge=0`:
+    # ein Posten über 0,00 ist keine Verrechnung, sondern ein Eingabefehler.
+    amount: float = Field(gt=0)
+    # Währung des Postens (ISO-4217). Optional in der Anfrage: fehlt sie, leitet
+    # der Service sie aus Objekt/Eigentümer/Tenant ab und meldet 422, wenn auch
+    # das nichts hergibt — nie ein erfundenes "EUR" (Wurzel 4).
+    currency: str | None = Field(default=None, min_length=3, max_length=3)
     attachment_url: str | None = None
     hidden_from_owner: bool = False
 
@@ -58,11 +81,13 @@ class ExpenseCreate(ExpenseBase):
 class ExpenseUpdate(BaseModel):
     concept: str | None = Field(default=None, min_length=1, max_length=300)
     date: date_ | None = None
+    direction: ExpenseDirection | None = None
     category: str | None = None
     listing_id: str | None = None
     reservation_id: str | None = None
     owner_id: str | None = None
-    amount: float | None = None
+    amount: float | None = Field(default=None, gt=0)
+    currency: str | None = Field(default=None, min_length=3, max_length=3)
     attachment_url: str | None = None
     hidden_from_owner: bool | None = None
 
@@ -71,8 +96,25 @@ class ExpenseResponse(ExpenseBase):
     id: str
     tenant_id: str
     statement_id: str | None = None
+    # Vorzeichenbehafteter Wirkbetrag für die Anzeige/Summe: +amount bei
+    # `to_owner`, −amount bei `from_owner`. EINE abgeleitete Zahl an EINER
+    # Stelle — sonst rechnete jede Anzeigestelle das Vorzeichen neu.
+    signed_amount: float
+    # Nachvollziehbarkeit: wer hat den Posten wann angelegt.
+    created_by: str | None = None
+    created_by_name: str | None = None
+    # Beleg im privaten Bucket (Download nur über signierte URL).
+    file_name: str | None = None
+    has_receipt: bool = False
     created_at: str | None = None
     updated_at: str | None = None
+
+
+class ExpenseReceiptUrlResponse(BaseModel):
+    """Zeitlich begrenzte, signierte Download-URL für den Beleg."""
+
+    url: str
+    expires_in: int
 
 
 # --- Rental activity ---------------------------------------------------------
@@ -101,10 +143,20 @@ class RentalRow(BaseModel):
     total_price: float | None = None
     total_payout: float
     currency: str = "EUR"
-    owner_payout: float = 0.0
-    owner_payout_converted: float = 0.0
+    # None = für dieses Objekt steht KEIN Provisionssatz fest (weder
+    # `owner_properties.commission_override_pct` noch
+    # `owners.default_commission_pct`). Bis 09.08.2026 stand hier eine 0.0, die
+    # aus dem fehlenden Satz eine Auszahlung von 100 % an den Eigentümer machte
+    # — eine Falschaussage über Geld, die plausibel aussah (Wurzel 4). Die UI
+    # zeigt „—" und benennt den Grund, statt eine Zahl zu erfinden.
+    owner_payout: float | None = None
+    owner_payout_converted: float | None = None
     fx_rate: float = 1.0
     fx_date: date_ | None = None
+    # Maschinenlesbar, WARUM die Auszahlung dieser Zeile fehlt. Heute nur
+    # "provision"; der Name folgt `PayoutUnbekannt.grund`, damit neue Gründe
+    # ohne zweite Namenswelt dazukommen können.
+    payout_unbekannt: str | None = None
 
 
 class ListingRow(BaseModel):
@@ -178,8 +230,26 @@ class StatementSummary(BaseModel):
     # Eigentümer sieht seine Auszahlung, nicht den Verkaufspreis (§4.2).
     total_price: float | None = None
     total_payout: float
+    # Netto-Wirkung aller Verrechnungsposten auf die Auszahlung: Σ(zugunsten) −
+    # Σ(zulasten). Negativ heißt „unterm Strich wird abgezogen".
     expenses_total: float
-    owner_payout: float
+    # Die beiden Richtungen zusätzlich EINZELN, damit die Abrechnung sie
+    # getrennt ausweisen kann. Eine Nettozahl allein verbirgt, dass 500 an
+    # Kompensation und 500 an Material gegeneinander stehen.
+    #
+    # PFLICHTFELDER, bewusst OHNE Default: ein Default macht aus „dieser Pfad
+    # hat den Wert nicht gesetzt" ein plausibel aussehendes „0,00" (Wurzel 4).
+    # Genau daran meldete der Snapshot-Pfad (finalisiert/storniert) beide
+    # Richtungen als 0, obwohl Verrechnungsposten vorlagen — im Dokument, das
+    # der Eigentümer tatsächlich bekommt. Ohne Default schlägt ein neuer Pfad,
+    # der sie vergisst, sofort und laut fehl statt still falsch zu liefern.
+    expenses_to_owner: float
+    expenses_from_owner: float
+    # None = für mindestens ein betroffenes Objekt steht kein Provisionssatz
+    # fest, die Auszahlung ist damit nicht berechenbar (`payout_unbekannt`
+    # nennt den Grund). Bis 09.08.2026 stand hier zwingend eine Zahl, und ein
+    # fehlender Satz kam als volle Auszahlung an den Eigentümer heraus.
+    owner_payout: float | None = None
     # Auszahlung der VERWALTUNG (Provisionsanteil der Agentur). Das ist ihr
     # Ertrag, kein Posten des Eigentümers — er läuft durch dieselbe Maske und
     # ist für den Eigentümer `None`. Er stand vorher im PDF, das er selbst aus
@@ -198,6 +268,10 @@ class StatementSummary(BaseModel):
     # Auszahlung je Quellwährung (Anzeige; keine Mischsumme). Das sind
     # Auszahlungs-, keine Gastpreis-Summen und bleiben daher sichtbar.
     totals_by_currency: list[CurrencyAmount] = Field(default_factory=list)
+    # Maschinenlesbarer Grund, warum `owner_payout`/`pm_payout` fehlen — heute
+    # nur "provision" (kein Satz hinterlegt). Die UI macht daraus den Hinweis,
+    # WAS zu tun ist; ohne ihn wäre das „—" eine stumme Lücke (Wurzel 5).
+    payout_unbekannt: str | None = None
 
 
 class StatementResponse(BaseModel):
@@ -210,7 +284,10 @@ class StatementResponse(BaseModel):
     reservation_statuses: list[str]
     status: StatementStatus
     kind: StatementKind = StatementKind.invoice
-    commission_pct: float
+    # None = kein Provisionssatz vereinbart (weder je Objekt noch als
+    # Owner-Standard). Die Maske zeigt dafür „—" und den Hinweis, dass der
+    # Satz zu pflegen ist — nie eine erfundene 0 (Wurzel 4).
+    commission_pct: float | None = None
     header: StatementHeader
     summary: StatementSummary
     # Beleg-/Steuer-Metadaten (EN 16931) — bei Finalisierung gesetzt.
@@ -236,7 +313,9 @@ class StatementListItem(BaseModel):
     period_from: date_
     period_to: date_
     status: StatementStatus
-    owner_payout: float
+    # None = nicht berechenbar (kein Provisionssatz hinterlegt), siehe
+    # StatementSummary.owner_payout. Die Liste zeigt dann „—" statt 0,00.
+    owner_payout: float | None = None
     # Agentur-Ertrag — für den Eigentümer `None` (siehe StatementSummary).
     pm_payout: float | None = None
     currency: str

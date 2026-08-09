@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Sann réadmhaoine} one {Sann # réadmhaoin} two {Sann # réadmhaoin} few {Sann # réadmhaoin} many {Sann # réadmhaoin} other {Sann # réadmhaoin}}",
     "propertiesAssigned": "{count, plural, one {Sannadh # réadmhaoin} two {Sannadh # réadmhaoin} few {Sannadh # réadmhaoin} many {Sannadh # réadmhaoin} other {Sannadh # réadmhaoin}}",
     "removeProperty": "Bain an sannachán",
+    "shareInvalid": "Cuir isteach sciar idir 0 agus 100.",
     "sections": {
       "master": "Máistirshonraí",
       "payout": "Íocaíocht & coimisiún",
@@ -998,7 +999,7 @@
       "statementFrequency": "Rithim ráitis",
       "notes": "Nótaí",
       "share": "Sciar (%)",
-      "commissionOverride": "Coimisiún (%) sáraithe",
+      "commissionOverride": "Coimisiún (%)",
       "emailLanguage": "Teanga na ríomhphost"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Tá seoladh r-phoist ag teastáil le haghaidh rochtain ar an tairseach.",
     "portalAccessInvite": "Seol cuireadh",
     "portalAccessInvited": "Cuireadh seolta.",
-    "portalAccessActive": "Tá rochtain ar an tairseach socraithe."
+    "portalAccessActive": "Tá rochtain ar an tairseach socraithe.",
+    "commissionNotAgreed": "gan chomhaontú",
+    "assignableCount": "{count} as {total} roghnaithe le cur leis",
+    "assignedHeading": "{count, plural, one {# réadmhaoin sannta} two {# réadmhaoin shannta} few {# réadmhaoin shannta} many {# réadmhaoin shannta} other {# réadmhaoin sannta}}",
+    "info": {
+      "aria": "Míniú ar {feld}",
+      "share": "An sciar úinéireachta sa réadmhaoin seo. Ag 100 % cuirtear an íocaíocht iomlán chun sochair don úinéir seo, agus faoina bhun sin go comhréireach.",
+      "commission": "An ráta coimisiúin réamhshocraithe don úinéir seo. Má fhágtar an réimse folamh, níl aon ráta comhaontaithe fós — ní ríomhtar an íocaíocht ansin, ach taispeántar dais ina hionad.",
+      "commissionOverride": "Ní bhaineann sé ach leis an réadmhaoin aonair seo agus sáraíonn sé ráta réamhshocraithe an úinéara. Má fhágtar an réimse folamh, is é an ráta réamhshocraithe a bheidh i bhfeidhm."
+    }
   },
   "ownerStatements": {
     "title": "Ráitis úinéirí",
@@ -1063,7 +1073,14 @@
       "checkOut": "Seiceáil amach",
       "statuses": "Stádais na n-áirithintí",
       "statusCount": "{count} stádas",
-      "title": "Scagairí"
+      "title": "Scagairí",
+      "resetAll": "Athshocraigh gach scagaire",
+      "remove": "Athshocraigh {feld}",
+      "statusesNone": "Faic roghnaithe",
+      "statusesSearch": "Cuardaigh stádas …",
+      "statusesNoMatch": "Níor aimsíodh stádas.",
+      "statusesSelectAll": "Roghnaigh uile",
+      "statusesCount": "{count} as {total} roghnaithe"
     },
     "reservationStatus": {
       "pending": "Ar feitheamh",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Dréacht",
-      "finalized": "Curtha i gcrích"
+      "finalized": "Curtha i gcrích",
+      "cancelled": "Cealaithe"
     },
     "sections": {
       "data": "Sonraí",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Iomlán an phraghais",
       "totalPayout": "Iomlán na híocaíochta",
       "ownerPayout": "Íocaíocht an úinéara",
-      "pmPayout": "Íocaíocht na bainistíochta"
+      "pmPayout": "Íocaíocht na bainistíochta",
+      "commissionMissing": "Níl ráta coimisiúin socraithe do mhaoin amháin ar a laghad. Ní féidir na híocaíochtaí a ríomh dá bhrí sin — cuir an ráta isteach i mbunsonraí an úinéara nó ag an maoin."
     },
     "rental": {
       "perReservation": "In aghaidh na háirithinte",
@@ -1136,13 +1155,28 @@
       "reservation": "Áirithint",
       "owner": "Úinéir",
       "hideAll": "Folaigh uile",
-      "assignOwner": "Sann don úinéir"
+      "assignOwner": "Sann don úinéir",
+      "intro": "Suimeanna a íoctar leis an úinéir sa bhreis nó a ghearrtar air. Cuirtear san áireamh iad ina n-iomláine san íocaíocht — gan coimisiún a bhaint.",
+      "direction": "Treo",
+      "toOwner": "I bhfabhar an úinéara",
+      "toOwnerHint": "Faigheann sé íocaíocht bhreise, m.sh. cúiteamh damáiste.",
+      "toOwnerShort": "I bhfabhar",
+      "fromOwner": "Ar chostas an úinéara",
+      "fromOwnerHint": "Baintear as a íocaíocht é, m.sh. ábhair agus am oibre.",
+      "fromOwnerShort": "Ar chostas",
+      "sumToOwner": "Iomlán i bhfabhar:",
+      "sumFromOwner": "Iomlán ar chostas:",
+      "receipt": "Admháil",
+      "openReceipt": "Oscail an admháil",
+      "createdBy": "Taifeadta ag {name}",
+      "saveFirst": "Baineann míreanna fritháirimh le ráiteas atá sábháilte. Sábháil an ráiteas, agus ina dhiaidh sin is féidir leat míreanna a chur isteach anseo.",
+      "missingFields": "Líon isteach fós: {felder}."
     },
     "grand": {
       "rentalRevenue": "Ioncam cíosa",
       "expenses": "Costais & breisithe",
       "total": "Iomlán",
-      "deductPercentage": "Bain coimisiún (%)"
+      "deductPercentage": "Coimisiún (%)"
     },
     "manage": {
       "owner": "Úinéir",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Cuir in eagar",
     "attachments": {
-      "drop": "Leag comhaid le huaslódáil nó Brabhsáil"
+      "drop": "Leag comhaid le huaslódáil nó Brabhsáil",
+      "viaExpenses": "Baineann na hadmhálacha leis an mír aonair: uaslódáil iad faoi „Costais & breisithe“ díreach ag an líne ábhartha."
     },
     "masterData": "Máistirshonraí",
     "preview": "Réamhamharc",
     "previewTitle": "Réamhamharc doiciméid",
-    "close": "Dún"
+    "close": "Dún",
+    "info": {
+      "aria": "Míniú ar {feld}",
+      "totalPrice": "An méid iomlán a d'íoc an t-aoi as a fhanacht — sula mbaintear táillí na dtairseach agus an coimisiún as.",
+      "totalPayout": "An méid a thagann chuig an ngnó tar éis táillí na dtairseach a bhaint as. Ón méid seo a chruthaítear sciar an úinéara agus sciar na bainistíochta.",
+      "ownerPayout": "An sciar a íoctar leis an úinéir: an íocaíocht iomlán lúide an coimisiún, móide na míreanna fritháirimh.",
+      "pmPayout": "An sciar a fhanann ag an ngnó — an coimisiún ar an ligean ar cíos. Níl na míreanna fritháirimh san áireamh anseo.",
+      "expenses": {
+        "title": "I bhfabhar agus ar chostas",
+        "direction": "Méadaíonn „I bhfabhar an úinéara“ a íocaíocht, mar shampla aisíocaíocht. Laghdaíonn „Ar chostas an úinéara“ í, mar shampla ábhair nó am oibre an ghnó.",
+        "noCommission": "Cuirtear na suimeanna seo san áireamh ina n-iomláine san íocaíocht — ní ghearrtar coimisiún orthu.",
+        "aria": "Míniú ar na míreanna fritháirimh"
+      },
+      "dash": {
+        "title": "Brí an dais",
+        "meaning": "Ciallaíonn dais „gan taifeadadh“ — ní „nialas“. Ní féidir an luach a ríomh mar go bhfuil sonra ar iarraidh.",
+        "whereToFix": "Mura bhfuil an ráta coimisiúin ann, cuir isteach i mbunsonraí an úinéara é nó mar ráta difriúil ag an réadmhaoin aonair.",
+        "aria": "Míniú ar an dais in ionad suime",
+        "inline": "Seasann dais do luach atá ar iarraidh, ní do 0,00."
+      },
+      "deductPercentage": "An ráta coimisiúin a úsáideann an ráiteas seo sa ríomh. Ciallaíonn folamh: baineann an ráta ó bhunsonraí an úinéara nó an ráta difriúil ag an maoin aonair.",
+      "status": {
+        "title": "Trí staid ráitis",
+        "draft": "Dréacht: fós inathraithe. Ríomhtar na suimeanna as an nua le gach athrú.",
+        "finalized": "Curtha i gcrích: uimhir shonraisc sannta, na hiomláin reoite. Níl athruithe indéanta a thuilleadh.",
+        "cancelled": "Cealaithe: curtha ar neamhní le sonrasc cealaithe. Fanann an bunsonrasc ann mar dhoiciméad tacaíochta."
+      },
+      "finalize": {
+        "title": "Cuir an ráiteas i gcrích",
+        "what": "Nuair a chuirtear i gcrích é, sanntar uimhir an tsonraisc agus reoitear gach iomlán mar dhoiciméad tacaíochta.",
+        "irreversible": "Ní féidir é seo a chur ar ais. Ní féidir sonrasc atá curtha i gcrích a chur ar neamhní ach le sonrasc cealaithe."
+      },
+      "basis": "Socraíonn sé cathain a thiteann áirithint isteach sa tréimhse: le seiceáil isteach de réir lá an teachta, le seiceáil amach de réir lá an imeachta. Áirithint a leanann thar dheireadh na míosa, tagann sí i mí amháin nó sa mhí eile de réir do rogha.",
+      "statuses": "Ní shocraítear ach áirithintí a bhfuil ceann de na stádais roghnaithe orthu. Is iad áirithintí deimhnithe agus críochnaithe an réamhshocrú — de ghnáth ní bhaineann áirithintí cealaithe le híocaíocht."
+    }
   },
   "ownerBilling": {
     "title": "Conradh socraíochta",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Faoi réir coimisiúin",
     "commissionableYes": "Tá — cuirtear san áireamh sa choimisiún é",
-    "commissionableNo": "Níl — saor ó choimisiún"
+    "commissionableNo": "Níl — saor ó choimisiún",
+    "infoAria": "Míniú ar {feld}"
   },
   "portal": {
     "title": "Mo thairseach",

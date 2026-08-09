@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Määra objektid} one {Määra # objekt} other {Määra # objekti}}",
     "propertiesAssigned": "{count, plural, one {# objekt määratud} other {# objekti määratud}}",
     "removeProperty": "Eemalda seos",
+    "shareInvalid": "Sisestage osalus vahemikus 0 kuni 100.",
     "sections": {
       "master": "Põhiandmed",
       "payout": "Väljamakse ja komisjonitasu",
@@ -998,7 +999,7 @@
       "statementFrequency": "Arvelduse rütm",
       "notes": "Märkmed",
       "share": "Osalus (%)",
-      "commissionOverride": "Komisjonitasu (%) erand",
+      "commissionOverride": "Komisjonitasu (%)",
       "emailLanguage": "E-kirjade keel"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Portaali juurdepääsuks on vaja e-posti aadressi.",
     "portalAccessInvite": "Saada kutse",
     "portalAccessInvited": "Kutse saadetud.",
-    "portalAccessActive": "Portaali juurdepääs on seadistatud."
+    "portalAccessActive": "Portaali juurdepääs on seadistatud.",
+    "commissionNotAgreed": "kokku leppimata",
+    "assignableCount": "{count} / {total} valitud lisamiseks",
+    "assignedHeading": "{count, plural, one {# määratud objekt} other {# määratud objekti}}",
+    "info": {
+      "aria": "Selgitus välja {feld} kohta",
+      "share": "Omandiosa selles objektis. 100% puhul arvestatakse kogu väljamakse sellele omanikule, väiksema osa puhul vastavalt proportsioonile.",
+      "commission": "Selle omaniku vaikimisi komisjonitasu määr. Kui väli jääb tühjaks, ei ole määra veel kokku lepitud — väljamakset siis ei arvutata, vaid näidatakse mõttekriipsuna.",
+      "commissionOverride": "Kehtib ainult selle ühe objekti kohta ja tühistab omaniku vaikimisi määra. Kui väli jääb tühjaks, kehtib vaikimisi määr."
+    }
   },
   "ownerStatements": {
     "title": "Omanike arveldused",
@@ -1063,7 +1073,14 @@
       "checkOut": "Väljaregistreerimine",
       "statuses": "Broneeringu staatused",
       "statusCount": "{count} staatust",
-      "title": "Filtrid"
+      "title": "Filtrid",
+      "resetAll": "Lähtesta kõik filtrid",
+      "remove": "Lähtesta {feld}",
+      "statusesNone": "Valikuta",
+      "statusesSearch": "Otsi staatust …",
+      "statusesNoMatch": "Staatust ei leitud.",
+      "statusesSelectAll": "Vali kõik",
+      "statusesCount": "Valitud {count} / {total}"
     },
     "reservationStatus": {
       "pending": "Ootel",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Mustand",
-      "finalized": "Finaliseeritud"
+      "finalized": "Finaliseeritud",
+      "cancelled": "Tühistatud"
     },
     "sections": {
       "data": "Andmed",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Kogusumma",
       "totalPayout": "Kogu väljamakse",
       "ownerPayout": "Omaniku väljamakse",
-      "pmPayout": "Halduri väljamakse"
+      "pmPayout": "Halduri väljamakse",
+      "commissionMissing": "Vähemalt ühel objektil pole komisjonitasu määra määratud. Väljamakseid ei saa seetõttu arvutada — sisesta määr omaniku põhiandmetesse või objektile."
     },
     "rental": {
       "perReservation": "Broneeringu kohta",
@@ -1136,13 +1155,28 @@
       "reservation": "Broneering",
       "owner": "Omanik",
       "hideAll": "Peida kõik",
-      "assignOwner": "Määra omanikule"
+      "assignOwner": "Määra omanikule",
+      "intro": "Summad, mis makstakse omanikule lisaks või arvestatakse temalt maha. Need arvestatakse väljamaksesse täies ulatuses — komisjonitasu maha arvamata.",
+      "direction": "Suund",
+      "toOwner": "Omaniku kasuks",
+      "toOwnerHint": "Ta saab lisamakse, nt kahjuhüvitise.",
+      "toOwnerShort": "Kasuks",
+      "fromOwner": "Omaniku kahjuks",
+      "fromOwnerHint": "Arvatakse tema väljamaksest maha, nt materjalid ja tööaeg.",
+      "fromOwnerShort": "Kahjuks",
+      "sumToOwner": "Kokku kasuks:",
+      "sumFromOwner": "Kokku kahjuks:",
+      "receipt": "Tõend",
+      "openReceipt": "Ava tõend",
+      "createdBy": "Sisestas {name}",
+      "saveFirst": "Tasaarvestuskirjed kuuluvad salvestatud arveldusse. Salvesta arveldus, seejärel saad siia kirjeid lisada.",
+      "missingFields": "Palun täida veel: {felder}."
     },
     "grand": {
       "rentalRevenue": "Üürikäive",
       "expenses": "Kulud ja lisad",
       "total": "Kokku",
-      "deductPercentage": "Maha arvata komisjonitasu (%)"
+      "deductPercentage": "Komisjonitasu (%)"
     },
     "manage": {
       "owner": "Omanik",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Muuda",
     "attachments": {
-      "drop": "Lohista failid üleslaadimiseks või sirvi"
+      "drop": "Lohista failid üleslaadimiseks või sirvi",
+      "viaExpenses": "Tõendid käivad üksiku kirje juurde: laadi need üles jaotises „Kulud ja lisad“ otse vastaval real."
     },
     "masterData": "Põhiandmed",
     "preview": "Eelvaade",
     "previewTitle": "Dokumendi eelvaade",
-    "close": "Sulge"
+    "close": "Sulge",
+    "info": {
+      "aria": "Selgitus välja {feld} kohta",
+      "totalPrice": "See, mille külaline oma viibimise eest kokku maksis — enne portaalitasude ja komisjonitasu mahaarvamist.",
+      "totalPayout": "See, mis pärast portaalitasude mahaarvamist ettevõttele laekub. Sellest summast moodustatakse omaniku ja halduse osa.",
+      "ownerPayout": "Osa, mis makstakse omanikule välja: kogu väljamakse miinus komisjonitasu, pluss tasaarvestuskirjed.",
+      "pmPayout": "Osa, mis jääb ettevõttele — väljaüürimiselt võetav komisjonitasu. Tasaarvestuskirjeid siin ei arvestata.",
+      "expenses": {
+        "title": "Kasuks ja kahjuks",
+        "direction": "„Omaniku kasuks“ suurendab tema väljamakset, näiteks hüvitis. „Omaniku kahjuks“ vähendab seda, näiteks ettevõtte materjal või tööaeg.",
+        "noCommission": "Need summad lähevad väljamaksesse täies ulatuses — neilt komisjonitasu ei arvestata.",
+        "aria": "Selgitus tasaarvestuskirjete kohta"
+      },
+      "dash": {
+        "title": "Mida mõttekriips tähendab",
+        "meaning": "Mõttekriips tähendab „ei ole sisestatud“ — mitte „null“. Väärtust ei saa arvutada, sest üks andmeväli puudub.",
+        "whereToFix": "Kui komisjonitasu määr puudub, sisesta see omaniku põhiandmetesse või erineva määrana üksiku objekti juurde.",
+        "aria": "Selgitus summa asemel oleva mõttekriipsu kohta",
+        "inline": "Mõttekriips tähistab puuduvat väärtust, mitte summat 0,00."
+      },
+      "deductPercentage": "Komisjonitasu määr, millega see aruanne arvestab. Tühi tähendab: kehtib omaniku põhiandmetes olev määr või üksiku objekti juures seatud erinev määr.",
+      "status": {
+        "title": "Aruande kolm olekut",
+        "draft": "Mustand: veel muudetav. Summad arvutatakse iga muudatuse korral uuesti.",
+        "finalized": "Finaliseeritud: arve number on antud, summad on külmutatud. Muudatused ei ole enam võimalikud.",
+        "cancelled": "Tühistatud: tühistusarvega kehtetuks tunnistatud. Algne arve jääb tõendina alles."
+      },
+      "finalize": {
+        "title": "Aruande finaliseerimine",
+        "what": "Finaliseerimisel antakse arve number ja kõik summad külmutatakse tõendina.",
+        "irreversible": "Seda ei saa tagasi võtta. Finaliseeritud arvet saab kehtetuks tunnistada üksnes tühistusarvega."
+      },
+      "basis": "Määrab, millal broneering langeb perioodi: sisseregistreerimise puhul saabumispäeva järgi, väljaregistreerimise puhul lahkumispäeva järgi. Kuuvahetust ületav broneering satub valikust olenevalt ühte või teise kuusse.",
+      "statuses": "Arvestatakse ainult broneeringuid, millel on üks valitud staatustest. Vaikimisi on need kinnitatud ja lõpetatud broneeringud — tühistatud ei kuulu tavaliselt väljamaksesse."
+    }
   },
   "ownerBilling": {
     "title": "Arveldusleping",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Komisjonitasu alune",
     "commissionableYes": "Jah — arvestatakse komisjonitasu sisse",
-    "commissionableNo": "Ei — komisjonivaba"
+    "commissionableNo": "Ei — komisjonivaba",
+    "infoAria": "Selgitus välja {feld} kohta"
   },
   "portal": {
     "title": "Minu portaal",

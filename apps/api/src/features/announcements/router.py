@@ -21,6 +21,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
+from src.core.mail_sprache import normalisieren
 from src.core.security import (
     AuthContext,
     CurrentPlatformAdmin,
@@ -36,13 +37,33 @@ from .schemas import (
     Announcement,
     AnnouncementCreate,
     AnnouncementList,
+    AnnouncementUebersetzung,
     AnnouncementUpdate,
     BildResponse,
     PopupResponse,
     QuittierenResponse,
     SliceHealth,
+    UebersetzungsUebersicht,
+    UebersetzungUpdate,
 )
 from .service import AnnouncementError
+from .uebersetzung import UebersetzungError
+
+# Sprache des Lesers. `None` = keine Angabe → Originaltext (siehe
+# `service._anwenden`). Die Auflösung Cookie → Token → Accept-Language
+# passiert im Frontend (`web/i18n/aufloesung.ts`); hier kommt das Ergebnis an.
+# Bewusst als Query-Parameter und nicht aus `Accept-Language` gelesen: der
+# Header trägt die BROWSER-Einstellung, die Oberfläche folgt aber dem
+# Sprachumschalter des Nutzers. Zwei Quellen ergäben Popup auf Dänisch und
+# Dashboard auf Schwedisch.
+# Der Default steht am Parameter (`= None`), NICHT hier: FastAPI verbietet einen
+# Default innerhalb von `Annotated[...]` und wirft sonst beim Import der App
+# („`Query` default value cannot be set in `Annotated`").
+_SprachParam = Query(
+    min_length=2,
+    max_length=5,
+    description="ISO-639-1 der Leser-Sprache; ohne Angabe der Originaltext.",
+)
 
 # Erstnutzer von `require_role`: der Guard existiert seit Langem und ist
 # getestet, wurde bisher aber von keinem Router verwendet.
@@ -60,6 +81,27 @@ def _fehler(exc: AnnouncementError) -> HTTPException:
     return HTTPException(status_code=exc.status_code, detail=exc.message)
 
 
+def _uebersetzungsfehler(exc: UebersetzungError) -> HTTPException:
+    """Der Ausfall des Übersetzungsdienstes, unverschluckt weitergereicht.
+
+    503 (Dienst weg/nicht konfiguriert) und 422 (Text zu lang) bleiben
+    unterscheidbar: beim einen hilft ein erneuter Versuch, beim anderen nicht.
+    """
+    return HTTPException(status_code=exc.status_code, detail=exc.message)
+
+
+def _sprache(roh: str | None) -> str | None:
+    """Rohen Sprachwert auf einen unterstützten Code bringen — sonst `None`.
+
+    `None` heißt „keine brauchbare Angabe" und führt zum Originaltext. Bewusst
+    KEIN Rückfall auf eine Ersatzsprache: eine unbekannte Angabe (`zh`, ein
+    Tippfehler) durch Englisch zu ersetzen wäre ein erfundener Wert. Nutzt
+    dieselbe Normalisierung wie Mail und Oberfläche (`de-AT` → `de`), damit
+    alle drei denselben Code errechnen.
+    """
+    return normalisieren(roh)
+
+
 # === Kundendashboard ========================================================
 @router.get("/health", response_model=SliceHealth)
 def health(service: AnnouncementServiceDep) -> SliceHealth:
@@ -72,10 +114,17 @@ def liste(
     ctx: Annotated[AuthContext, Depends(_LEITUNG)],
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
+    sprache: Annotated[str | None, _SprachParam] = None,
 ) -> AnnouncementList:
-    """Historie für /neuerungen — nur Veröffentlichtes, neueste zuerst."""
+    """Historie für /neuerungen — nur Veröffentlichtes, neueste zuerst.
+
+    `sprache` bestimmt die ausgelieferte Fassung. Fehlt sie für eine Zeile,
+    kommt deren Originaltext — nicht eine leere Zeile (Wurzel 4).
+    """
     try:
-        return service.liste(ctx, limit=limit, offset=offset)
+        return service.liste(
+            ctx, limit=limit, offset=offset, sprache=_sprache(sprache)
+        )
     except AnnouncementError as exc:
         raise _fehler(exc) from exc
 
@@ -84,6 +133,7 @@ def liste(
 def popup(
     service: AnnouncementServiceDep,
     ctx: Annotated[AuthContext, Depends(_LEITUNG)],
+    sprache: Annotated[str | None, _SprachParam] = None,
 ) -> PopupResponse:
     """Die EINE Ankündigung, die jetzt unterbrechen darf — oder `item: null`.
 
@@ -91,7 +141,7 @@ def popup(
     puffern: so bleibt die Reihenfolge Server-Sache.
     """
     try:
-        return service.popup(ctx)
+        return service.popup(ctx, sprache=_sprache(sprache))
     except AnnouncementError as exc:
         raise _fehler(exc) from exc
 
@@ -288,3 +338,105 @@ async def bild_hochladen(
         request=request,
     )
     return BildResponse(url=url)
+
+
+# === Übersetzungen (0347) ===================================================
+@platform_router.get(
+    "/{announcement_id}/uebersetzungen", response_model=UebersetzungsUebersicht
+)
+def uebersetzungen(
+    announcement_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: AnnouncementServiceDep,
+) -> UebersetzungsUebersicht:
+    """Sprachstand: vorhandene Fassungen, fehlende und veraltete Sprachen.
+
+    Lesen darf auch `platform_support` — der Sprachstand ist eine Auskunft,
+    keine Aktion.
+    """
+    _ = ctx
+    try:
+        return service.uebersicht(announcement_id)
+    except AnnouncementError as exc:
+        raise _fehler(exc) from exc
+
+
+@platform_router.post(
+    "/{announcement_id}/uebersetzen", response_model=UebersetzungsUebersicht
+)
+def uebersetzen(
+    announcement_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: AnnouncementServiceDep,
+    request: Request,
+    sprache: Annotated[str | None, Query(
+        min_length=2, max_length=5,
+        description="Nur diese eine Sprache neu übersetzen; ohne Angabe alle "
+                    "fehlenden und veralteten.",
+    )] = None,
+) -> UebersetzungsUebersicht:
+    """Fehlende und veraltete Fassungen erzeugen. GEPRÜFTE bleiben unberührt.
+
+    Dieser Endpunkt stößt eine KOSTENPFLICHTIGE Fremd-API an (bis zu 23
+    Sprachen à zwei Aufrufe) und läuft deshalb im strengen `_AI_PATHS`-Bucket
+    der Ratelimit-Middleware, nicht im Default (Wurzel 8).
+
+    Fällt der Dienst aus, kommt 503 bzw. 422 — kein stilles „fertig" und
+    keine Zeile mit dem Ausgangstext darin (Wurzel 4/5). Der Vorgang ist
+    wiederholbar: bereits erzeugte Fassungen werden beim nächsten Lauf nicht
+    erneut bezahlt.
+    """
+    require_platform_write(ctx)
+    try:
+        ergebnis = service.uebersetzen(announcement_id, nur_sprache=sprache)
+    except UebersetzungError as exc:
+        # NICHT in AnnouncementError umdeuten: der Unterschied zwischen „Dienst
+        # weg" (503, später erneut) und „Text zu lang" (422, Retry sinnlos) ist
+        # genau die Information, die der Redakteur braucht.
+        raise _uebersetzungsfehler(exc) from exc
+    except AnnouncementError as exc:
+        raise _fehler(exc) from exc
+    audit.record(
+        service.db,
+        ctx,
+        "announcement.translate",
+        target_type="announcement",
+        target_id=announcement_id,
+        request=request,
+    )
+    return ergebnis
+
+
+@platform_router.put(
+    "/{announcement_id}/uebersetzungen/{sprache}",
+    response_model=AnnouncementUebersetzung,
+)
+def fassung_korrigieren(
+    announcement_id: str,
+    sprache: str,
+    req: UebersetzungUpdate,
+    ctx: CurrentPlatformAdmin,
+    service: AnnouncementServiceDep,
+    request: Request,
+) -> AnnouncementUebersetzung:
+    """Eine Fassung von Hand korrigieren — danach ist sie geprüft.
+
+    Ab diesem Aufruf ist die Fassung vor jedem automatischen Lauf geschützt.
+    Das ist keine Nebenwirkung, sondern der Zweck (siehe `UebersetzungUpdate`).
+    """
+    require_platform_write(ctx)
+    try:
+        item = service.fassung_korrigieren(
+            announcement_id, sprache, req, geprueft_von=ctx.user_id
+        )
+    except AnnouncementError as exc:
+        raise _fehler(exc) from exc
+    audit.record(
+        service.db,
+        ctx,
+        "announcement.translation_edit",
+        target_type="announcement",
+        target_id=f"{announcement_id}:{sprache}",
+        request=request,
+    )
+    return item

@@ -967,6 +967,7 @@
     "assignSelected": "{count, plural, =0 {Objekte zuordnen} one {# Objekt zuordnen} other {# Objekte zuordnen}}",
     "propertiesAssigned": "{count, plural, one {# Objekt zugeordnet} other {# Objekte zugeordnet}}",
     "removeProperty": "Zuordnung entfernen",
+    "shareInvalid": "Bitte einen Anteil zwischen 0 und 100 eingeben.",
     "sections": {
       "master": "Stammdaten",
       "payout": "Auszahlung & Provision",
@@ -998,7 +999,7 @@
       "statementFrequency": "Abrechnungs-Rhythmus",
       "notes": "Notizen",
       "share": "Anteil (%)",
-      "commissionOverride": "Provision (%) abw.",
+      "commissionOverride": "Provision (%)",
       "emailLanguage": "Sprache für E-Mails"
     },
     "placeholders": {
@@ -1011,7 +1012,16 @@
     "portalAccessNeedsEmail": "Für den Portalzugang wird eine E-Mail-Adresse gebraucht.",
     "portalAccessInvite": "Einladung senden",
     "portalAccessInvited": "Einladung verschickt.",
-    "portalAccessActive": "Portalzugang ist eingerichtet."
+    "portalAccessActive": "Portalzugang ist eingerichtet.",
+    "commissionNotAgreed": "nicht vereinbart",
+    "assignableCount": "{count} von {total} zum Hinzufügen ausgewählt",
+    "assignedHeading": "{count, plural, one {# zugeordnetes Objekt} other {# zugeordnete Objekte}}",
+    "info": {
+      "aria": "Erklärung zu {feld}",
+      "share": "Der Eigentumsanteil an diesem Objekt. Bei 100 % wird die volle Auszahlung diesem Eigentümer zugerechnet, bei weniger entsprechend anteilig.",
+      "commission": "Der Standard-Provisionssatz für diesen Eigentümer. Bleibt das Feld leer, ist noch kein Satz vereinbart — die Auszahlung wird dann nicht berechnet, sondern als Gedankenstrich ausgewiesen.",
+      "commissionOverride": "Gilt nur für dieses eine Objekt und überschreibt den Standardsatz des Eigentümers. Bleibt das Feld leer, gilt der Standardsatz."
+    }
   },
   "ownerStatements": {
     "title": "Eigentümer-Abrechnung",
@@ -1063,7 +1073,14 @@
       "checkOut": "Check-out",
       "statuses": "Reservierungs-Status",
       "statusCount": "{count} Status",
-      "title": "Filter"
+      "title": "Filter",
+      "resetAll": "Alle Filter zurücksetzen",
+      "remove": "{feld} zurücksetzen",
+      "statusesNone": "Keine ausgewählt",
+      "statusesSearch": "Status suchen …",
+      "statusesNoMatch": "Kein Status gefunden.",
+      "statusesSelectAll": "Alle auswählen",
+      "statusesCount": "{count} von {total} ausgewählt"
     },
     "reservationStatus": {
       "pending": "Offen",
@@ -1073,7 +1090,8 @@
     },
     "status": {
       "draft": "Entwurf",
-      "finalized": "Finalisiert"
+      "finalized": "Finalisiert",
+      "cancelled": "Storniert"
     },
     "sections": {
       "data": "Daten",
@@ -1105,7 +1123,8 @@
       "totalPrice": "Gesamtpreis",
       "totalPayout": "Gesamt-Auszahlung",
       "ownerPayout": "Eigentümer-Auszahlung",
-      "pmPayout": "Verwaltungs-Auszahlung"
+      "pmPayout": "Verwaltungs-Auszahlung",
+      "commissionMissing": "Für mindestens ein Objekt ist kein Provisionssatz hinterlegt. Die Auszahlungen lassen sich deshalb nicht berechnen — trage den Satz in den Stammdaten des Eigentümers oder am Objekt ein."
     },
     "rental": {
       "perReservation": "Pro Reservierung",
@@ -1136,13 +1155,28 @@
       "reservation": "Reservierung",
       "owner": "Eigentümer",
       "hideAll": "Alle ausblenden",
-      "assignOwner": "Dem Eigentümer zuweisen"
+      "assignOwner": "Dem Eigentümer zuweisen",
+      "intro": "Beträge, die zusätzlich an den Eigentümer ausgezahlt oder von ihm verrechnet werden. Sie gehen voll in die Auszahlung ein — ohne Provisionsabzug.",
+      "direction": "Richtung",
+      "toOwner": "Zugunsten des Eigentümers",
+      "toOwnerHint": "Er bekommt zusätzlich ausgezahlt, z. B. Schadenskompensation.",
+      "toOwnerShort": "Zugunsten",
+      "fromOwner": "Zulasten des Eigentümers",
+      "fromOwnerHint": "Wird von seiner Auszahlung abgezogen, z. B. Material und Arbeitszeit.",
+      "fromOwnerShort": "Zulasten",
+      "sumToOwner": "Summe zugunsten:",
+      "sumFromOwner": "Summe zulasten:",
+      "receipt": "Beleg",
+      "openReceipt": "Beleg öffnen",
+      "createdBy": "Erfasst von {name}",
+      "saveFirst": "Verrechnungsposten gehören zu einer gespeicherten Abrechnung. Speichere die Abrechnung, danach kannst du hier Posten erfassen.",
+      "missingFields": "Bitte noch ausfüllen: {felder}."
     },
     "grand": {
       "rentalRevenue": "Mieteinnahmen",
       "expenses": "Ausgaben & Extras",
       "total": "Gesamt",
-      "deductPercentage": "Provision abziehen (%)"
+      "deductPercentage": "Provision (%)"
     },
     "manage": {
       "owner": "Eigentümer",
@@ -1154,12 +1188,47 @@
     },
     "edit": "Bearbeiten",
     "attachments": {
-      "drop": "Dateien zum Hochladen ablegen oder durchsuchen"
+      "drop": "Dateien zum Hochladen ablegen oder durchsuchen",
+      "viaExpenses": "Belege hängen am einzelnen Posten: Lade sie in „Ausgaben & Extras“ direkt an der jeweiligen Zeile hoch."
     },
     "masterData": "Stammdaten",
     "preview": "Vorschau",
     "previewTitle": "Beleg-Vorschau",
-    "close": "Schließen"
+    "close": "Schließen",
+    "info": {
+      "aria": "Erklärung zu {feld}",
+      "totalPrice": "Was der Gast insgesamt für seinen Aufenthalt bezahlt hat — vor Abzug von Portalgebühren und Provision.",
+      "totalPayout": "Was nach Abzug der Portalgebühren beim Betrieb ankommt. Aus diesem Betrag werden Eigentümer- und Verwaltungsanteil gebildet.",
+      "ownerPayout": "Der Anteil, der an den Eigentümer ausgezahlt wird: Gesamt-Auszahlung abzüglich Provision, zuzüglich der Verrechnungsposten.",
+      "pmPayout": "Der Anteil, der beim Betrieb bleibt — die Provision auf die Vermietung. Verrechnungsposten sind hier nicht enthalten.",
+      "expenses": {
+        "title": "Zugunsten und zulasten",
+        "direction": "„Zugunsten des Eigentümers“ erhöht seine Auszahlung, zum Beispiel eine Erstattung. „Zulasten des Eigentümers“ mindert sie, zum Beispiel Material oder Arbeitszeit des Betriebs.",
+        "noCommission": "Diese Beträge gehen voll in die Auszahlung ein — auf sie wird keine Provision berechnet.",
+        "aria": "Erklärung zu Verrechnungsposten"
+      },
+      "dash": {
+        "title": "Was der Gedankenstrich bedeutet",
+        "meaning": "Ein Gedankenstrich heißt „nicht erfasst“ — nicht „null“. Der Wert lässt sich nicht berechnen, weil eine Angabe fehlt.",
+        "whereToFix": "Fehlt der Provisionssatz, trage ihn in den Stammdaten des Eigentümers ein oder als abweichenden Satz am einzelnen Objekt.",
+        "aria": "Erklärung zum Gedankenstrich statt eines Betrags",
+        "inline": "Ein Gedankenstrich steht für einen fehlenden Wert, nicht für 0,00."
+      },
+      "deductPercentage": "Der Provisionssatz, mit dem diese Abrechnung rechnet. Leer bedeutet: es gilt der Satz aus den Stammdaten des Eigentümers bzw. der abweichende Satz am einzelnen Objekt.",
+      "status": {
+        "title": "Die drei Zustände einer Abrechnung",
+        "draft": "Entwurf: noch änderbar. Beträge werden bei jeder Änderung neu berechnet.",
+        "finalized": "Finalisiert: Rechnungsnummer vergeben, Summen eingefroren. Änderungen sind nicht mehr möglich.",
+        "cancelled": "Storniert: durch eine Stornorechnung aufgehoben. Die ursprüngliche Rechnung bleibt als Beleg bestehen."
+      },
+      "finalize": {
+        "title": "Abrechnung finalisieren",
+        "what": "Beim Finalisieren wird die Rechnungsnummer vergeben und alle Summen werden als Beleg eingefroren.",
+        "irreversible": "Das lässt sich nicht rückgängig machen. Eine finalisierte Rechnung kann nur noch durch eine Stornorechnung aufgehoben werden."
+      },
+      "basis": "Legt fest, wann eine Buchung in den Zeitraum fällt: bei Check-in nach dem Anreisetag, bei Check-out nach dem Abreisetag. Eine Buchung über den Monatswechsel landet je nach Wahl im einen oder anderen Monat.",
+      "statuses": "Nur Buchungen mit einem der gewählten Status werden abgerechnet. Standard sind bestätigte und abgeschlossene Buchungen — stornierte gehören normalerweise nicht in eine Auszahlung."
+    }
   },
   "ownerBilling": {
     "title": "Abrechnungsvertrag",
@@ -1229,7 +1298,8 @@
     },
     "commissionable": "Provisionspflichtig",
     "commissionableYes": "Ja — fließt in die Provision ein",
-    "commissionableNo": "Nein — provisionsfrei"
+    "commissionableNo": "Nein — provisionsfrei",
+    "infoAria": "Erklärung zu {feld}"
   },
   "portal": {
     "title": "Mein Portal",

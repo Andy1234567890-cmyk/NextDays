@@ -125,7 +125,11 @@ export function MyStatements({
                 </span>
               </div>
               <span className="shrink-0 text-sm font-semibold">
-                {formatCurrency(s.owner_payout, s.currency, locale)}
+                {/* Siehe StatementListItem.owner_payout: `null` heisst „noch
+                    kein Provisionssatz hinterlegt", nicht „0,00". */}
+                {s.owner_payout == null
+                  ? "—"
+                  : formatCurrency(s.owner_payout, s.currency, locale)}
               </span>
               {s.status === "finalized" && (
                 <Button

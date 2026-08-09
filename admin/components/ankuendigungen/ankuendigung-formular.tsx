@@ -271,8 +271,8 @@ export function AnkuendigungFormular({
             className="w-full rounded-xl border border-border bg-transparent px-3.5 py-2 text-sm outline-none focus-visible:border-foreground disabled:opacity-60"
           />
           <span className="mt-1.5 block text-xs text-muted-foreground">
-            Bewusst kurz und einfach halten: der Inhalt wird nicht übersetzt,
-            das Dashboard drumherum schon.
+            Bewusst kurz und einfach halten — er wird in 23 weitere Sprachen
+            übersetzt (Bereich „Sprachen" unten).
           </span>
         </label>
 
