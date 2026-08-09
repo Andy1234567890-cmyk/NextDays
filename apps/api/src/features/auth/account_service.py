@@ -16,7 +16,13 @@ import pyotp
 import qrcode
 from pydantic import SecretStr
 from supabase import Client
+from supabase_auth.errors import AuthError as GoTrueAuthError
 
+from src.core.gotrue_fehler import (
+    STOERUNG_MELDUNG,
+    TRANSPORT_FEHLER,
+    stoerung_oder_ablehnung,
+)
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import public_storage_url
@@ -1005,14 +1011,24 @@ class AccountService:
             raise AuthError("Aktuelles Passwort ist falsch.", status_code=401)
 
     def _password_ok(self, email: str, password: str) -> bool:
+        """True = Passwort stimmt, False = GoTrue hat es abgelehnt.
+
+        Eine STÖRUNG ist keins von beidem und darf hier nicht als False
+        durchrutschen (Wurzel 5): „Aktuelles Passwort ist falsch." wäre bei einem
+        GoTrue-Ausfall eine Falschaussage über das Konto des Nutzers. Solche
+        Fälle brechen deshalb mit 503 ab, statt die Re-Auth-Hürde mit einer
+        erfundenen Antwort zu bedienen.
+        """
         try:
             res = self._anon.auth.sign_in_with_password(
                 {"email": email, "password": password}
             )
-            return res.session is not None
-        # Falsche Zugangsdaten/SDK-Fehler bedeuten schlicht: Passwort nicht ok.
-        except Exception:  # noqa: BLE001  pylint: disable=broad-exception-caught
+        except (GoTrueAuthError, *TRANSPORT_FEHLER) as exc:
+            if stoerung_oder_ablehnung(exc):
+                log.warning("reauth_password_check_stoerung", error=str(exc))
+                raise AuthError(STOERUNG_MELDUNG, status_code=503) from exc
             return False
+        return res.session is not None
 
 
 def _qr_data_url(otpauth_uri: str) -> str:

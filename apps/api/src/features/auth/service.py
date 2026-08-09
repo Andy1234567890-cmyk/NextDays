@@ -16,7 +16,12 @@ from supabase_auth import AuthResponse
 from supabase_auth.errors import AuthError as GoTrueAuthError
 
 from src.core.config import get_settings
-from src.core.gotrue_fehler import TRANSPORT_FEHLER, ist_abgelehnt
+from src.core.gotrue_fehler import (
+    STOERUNG_MELDUNG,
+    TRANSPORT_FEHLER,
+    ist_abgelehnt,
+    stoerung_oder_ablehnung,
+)
 from src.core.logging import get_logger, mask_email
 from src.core.security import AuthContext
 from src.core.supabase import make_anon_client_with_user_agent
@@ -470,12 +475,36 @@ class AuthService:
     def _sign_in(
         self, email: str, password: SecretStr, user_agent: str | None = None
     ) -> AuthResponse:
+        """E-Mail + Passwort gegen GoTrue prüfen.
+
+        Fail-closed, aber EHRLICH (Wurzel 5): Ein breites `except Exception`
+        machte hier aus JEDEM Fehler ein 401 „Login fehlgeschlagen." — ein
+        GoTrue-503, ein Kong-Hänger und ein Verbindungsabbruch waren von einem
+        falschen Passwort nicht zu unterscheiden. Live passiert (09.08.2026):
+        der Supabase-Stack lag, das Backoffice meldete „Login fehlgeschlagen.",
+        und der Betreiber verdächtigte stundenlang sein Passwort und seine 2FA
+        statt der Infrastruktur.
+
+        Die Unterscheidung ist dieselbe wie in `refresh()` — sie liegt in
+        `stoerung_oder_ablehnung`, damit es keine zweite Auslegung davon gibt,
+        was „abgelehnt" heißt. Eine echte Ablehnung bleibt bewusst dieselbe
+        neutrale Meldung für „Mail unbekannt" wie für „Passwort falsch" (keine
+        Nutzer-Enumeration).
+        """
         try:
             res = self._anon_for_ua(user_agent).auth.sign_in_with_password(
                 {"email": email, "password": password.get_secret_value()}
             )
-        except Exception as exc:
-            log.warning("login_failed", email=mask_email(email), error=str(exc))
+        except (GoTrueAuthError, *TRANSPORT_FEHLER) as exc:
+            stoerung = stoerung_oder_ablehnung(exc)
+            log.warning(
+                "login_failed",
+                email=mask_email(email),
+                error=str(exc),
+                stoerung=stoerung,
+            )
+            if stoerung:
+                raise AuthError(STOERUNG_MELDUNG, status_code=503) from exc
             raise AuthError("Login fehlgeschlagen.", status_code=401) from exc
         if res.session is None or res.user is None:
             raise AuthError("Login fehlgeschlagen.", status_code=401)
@@ -594,13 +623,19 @@ class AuthService:
         Admin-Endpoint, der ein Refresh-Token generiert, und tauschen es sofort
         gegen eine Access/Refresh-Session. Der verify_otp-Call ERZEUGT die
         Session-Zeile in auth.sessions → er muss den Browser-UA tragen, damit der
-        Geräteverlauf das echte Gerät zeigt (nicht den Server-Client)."""
+        Geräteverlauf das echte Gerät zeigt (nicht den Server-Client).
+
+        Der zweite Faktor ist an dieser Stelle BEREITS bewiesen — ein Fehler hier
+        ist deshalb nie ein Urteil über die Anmeldedaten des Nutzers. Eine
+        Störung wird 503 (Wurzel 5); ein 401 „Login fehlgeschlagen." sähe für den
+        Nutzer aus wie ein falscher Code und schickte ihn den Faktor-Schritt
+        endlos wiederholen."""
         try:
             auth_user = self._service.auth.admin.get_user_by_id(user_id)
             email = getattr(auth_user.user, "email", None)
-        except Exception as exc:  # noqa: BLE001 — in AuthError übersetzen
+        except (GoTrueAuthError, *TRANSPORT_FEHLER) as exc:
             log.warning("mfa_session_user_lookup_failed", user_id=user_id, error=str(exc))
-            raise AuthError("Login fehlgeschlagen.", status_code=401) from exc
+            raise AuthError(STOERUNG_MELDUNG, status_code=503) from exc
         if not email:
             raise AuthError("Login fehlgeschlagen.", status_code=401)
         try:
@@ -612,8 +647,16 @@ class AuthService:
             verified = self._anon_for_ua(user_agent).auth.verify_otp(
                 {"token_hash": token_hash, "type": "magiclink"}
             )
-        except Exception as exc:  # noqa: BLE001 — in AuthError übersetzen
-            log.warning("mfa_session_issue_failed", user_id=user_id, error=str(exc))
+        except (GoTrueAuthError, *TRANSPORT_FEHLER) as exc:
+            stoerung = stoerung_oder_ablehnung(exc)
+            log.warning(
+                "mfa_session_issue_failed",
+                user_id=user_id,
+                error=str(exc),
+                stoerung=stoerung,
+            )
+            if stoerung:
+                raise AuthError(STOERUNG_MELDUNG, status_code=503) from exc
             raise AuthError("Login fehlgeschlagen.", status_code=401) from exc
         if verified.session is None:
             raise AuthError("Login fehlgeschlagen.", status_code=401)

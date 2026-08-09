@@ -24,7 +24,12 @@ SICHERHEITSAUFLAGEN (offene TODO, bewusst dokumentiert):
 from supabase import Client
 from supabase_auth.errors import AuthError as GoTrueAuthError
 
-from src.core.gotrue_fehler import TRANSPORT_FEHLER, ist_abgelehnt
+from src.core.gotrue_fehler import (
+    STOERUNG_MELDUNG,
+    TRANSPORT_FEHLER,
+    ist_abgelehnt,
+    stoerung_oder_ablehnung,
+)
 from src.core.logging import get_logger, mask_email
 from src.core.security import GuestContext
 
@@ -152,7 +157,13 @@ class GuestAuthService:
 
     def login(self, req: GuestLoginRequest) -> GuestSessionResponse:
         """E-Mail + Passwort → Session. Kein MFA für Gäste (fail-closed 401 bei
-        falschen Daten, kein breites except, das Signale verschluckt)."""
+        falschen Daten, kein breites except, das Signale verschluckt).
+
+        Wie beim Vermieter-Login (`auth.service._sign_in`) ist ein technischer
+        GoTrue-Fehler KEINE Ablehnung der Zugangsdaten: 5xx/429/Timeout werden
+        503, damit ein Ausfall nicht wie ein falsches Passwort aussieht. Ein roher
+        Transportfehler käme sonst zusätzlich als 500 heraus, weil das SDK ihn
+        nicht in eine AuthError übersetzt."""
         try:
             res = self._anon.auth.sign_in_with_password(
                 {
@@ -160,8 +171,16 @@ class GuestAuthService:
                     "password": req.password.get_secret_value(),
                 }
             )
-        except GoTrueAuthError as exc:
-            log.warning("guest_login_failed", email=mask_email(req.email), error=str(exc))
+        except (GoTrueAuthError, *TRANSPORT_FEHLER) as exc:
+            stoerung = stoerung_oder_ablehnung(exc)
+            log.warning(
+                "guest_login_failed",
+                email=mask_email(req.email),
+                error=str(exc),
+                stoerung=stoerung,
+            )
+            if stoerung:
+                raise GuestAuthError(STOERUNG_MELDUNG, status_code=503) from exc
             raise GuestAuthError("Login fehlgeschlagen.", status_code=401) from exc
         if res.session is None:
             raise GuestAuthError("Login fehlgeschlagen.", status_code=401)

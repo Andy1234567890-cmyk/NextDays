@@ -23,6 +23,30 @@ import { ADMIN_COOKIES } from "./api-server";
 
 export type LoginErgebnis = { ok: true } | { ok: false; fehler: string };
 
+/** Meldung bei einer STÖRUNG (Backend/Anmeldedienst weg, 5xx).
+ *
+ * Ein Ausfall darf NIE wie eine Ablehnung der Zugangsdaten aussehen (Wurzel 5):
+ * am 09.08.2026 lag der Auth-Stack, das Backoffice meldete „Anmeldung
+ * fehlgeschlagen." — und der Betreiber suchte den Fehler stundenlang bei seinem
+ * Passwort und seiner 2FA statt bei der Infrastruktur.
+ *
+ * Kein i18n-Key: das Backoffice ist bewusst ohne next-intl gebaut (siehe
+ * admin/app/layout.tsx) und trägt durchgehend deutsche Literale.
+ */
+const STOERUNG_MELDUNG =
+  "Anmeldedienst derzeit nicht erreichbar. Das liegt nicht an deinen " +
+  "Zugangsdaten — bitte später erneut versuchen.";
+
+/** Ist dieser Fehler eine Störung (→ ehrliche Meldung) statt einer Ablehnung?
+ *
+ * 5xx UND alles, was kein ApiError ist: `packages/auth/src/server.ts` wirft bei
+ * einem Transportfehler bereits `ApiError(503, "Backend nicht erreichbar.")` —
+ * diese Information wurde hier bisher weggeworfen. Nur 401/403 sind ein echtes
+ * Urteil über die Zugangsdaten. */
+function istStoerung(exc: unknown): boolean {
+  return !(exc instanceof ApiError) || exc.status >= 500;
+}
+
 /**
  * Anmeldung am Backoffice. Zweistufig:
  *   1. /auth/login → Session (wie jeder andere Nutzer)
@@ -56,19 +80,24 @@ export async function anmelden(
     }
     session = res.session;
   } catch (exc) {
+    // Störung ehrlich benennen; nur eine echte Ablehnung (401/403) bekommt die
+    // Meldung des Servers.
     return {
       ok: false,
-      fehler:
-        exc instanceof ApiError
-          ? exc.message
-          : "Anmeldung fehlgeschlagen.",
+      fehler: istStoerung(exc) ? STOERUNG_MELDUNG : (exc as ApiError).message,
     };
   }
 
   // Berechtigungsprüfung VOR dem Setzen der Cookies.
   try {
     await sharedApi("/platform/me", { token: session.access_token });
-  } catch {
+  } catch (exc) {
+    if (istStoerung(exc)) {
+      // Der Login selbst hat funktioniert — hier ist der Dienst weg. Das als
+      // „Anmeldung fehlgeschlagen" auszugeben, war die Falschaussage: sie
+      // beschuldigt die Zugangsdaten, die gerade nachweislich gestimmt haben.
+      return { ok: false, fehler: STOERUNG_MELDUNG };
+    }
     // Bewusst dieselbe neutrale Meldung wie bei falschem Passwort: kein Hinweis
     // darauf, dass die Zugangsdaten stimmten, aber die Rolle fehlt.
     return { ok: false, fehler: "Anmeldung fehlgeschlagen." };

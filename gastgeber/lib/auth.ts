@@ -86,6 +86,21 @@ export async function login(
   }
 }
 
+/** Meldung bei einer STÖRUNG (5xx / Dienst nicht erreichbar).
+ *
+ * Wurzel 5: Ein Ausfall darf nie wie eine Ablehnung aussehen. „Code ist
+ * ungültig." bei einem GoTrue-Ausfall schickt den Nutzer den zweiten Faktor
+ * endlos neu eingeben, obwohl sein Code stimmt. */
+const STOERUNG_MELDUNG =
+  "Anmeldedienst derzeit nicht erreichbar. Das liegt nicht an deinem Code — " +
+  "bitte später erneut versuchen.";
+
+/** Störung (→ ehrliche Meldung) statt Ablehnung? Alles, was kein ApiError ist
+ *  (Transportfehler), plus jeder 5xx. Nur 4xx ist ein echtes Urteil. */
+function istStoerung(exc: unknown): boolean {
+  return !(exc instanceof ApiError) || exc.status >= 500;
+}
+
 export async function loginTotp(
   mfaToken: string,
   code: string,
@@ -101,10 +116,8 @@ export async function loginTotp(
     await persistSession(res.session, HOST_COOKIES);
     return { ok: true };
   } catch (exc) {
-    return {
-      ok: false,
-      error: exc instanceof ApiError ? exc.message : "Code ist ungültig.",
-    };
+    if (istStoerung(exc)) return { ok: false, error: STOERUNG_MELDUNG };
+    return { ok: false, error: (exc as ApiError).message };
   }
 }
 
@@ -125,10 +138,8 @@ export async function loginSms(
     await persistSession(res.session, HOST_COOKIES);
     return { ok: true };
   } catch (exc) {
-    return {
-      ok: false,
-      error: exc instanceof ApiError ? exc.message : "Code ist ungültig.",
-    };
+    if (istStoerung(exc)) return { ok: false, error: STOERUNG_MELDUNG };
+    return { ok: false, error: (exc as ApiError).message };
   }
 }
 

@@ -68,9 +68,19 @@ export async function login(
     await persistSession(res.session, COOKIES);
     return { ok: true };
   } catch (exc) {
-    const error =
-      exc instanceof ApiError ? exc.message : "Login fehlgeschlagen.";
-    return { ok: false, error };
+    // Wurzel 5: Eine STÖRUNG (5xx, Backend/Anmeldedienst weg) ist kein Urteil
+    // über die Zugangsdaten. Sie als „Login fehlgeschlagen." auszugeben, lässt
+    // den Nutzer sein Passwort verdächtigen, während in Wahrheit die
+    // Infrastruktur liegt — genau so verlief der Ausfall vom 09.08.2026.
+    if (!(exc instanceof ApiError) || exc.status >= 500) {
+      return {
+        ok: false,
+        error:
+          "Anmeldedienst derzeit nicht erreichbar. Das liegt nicht an deinen " +
+          "Zugangsdaten — bitte später erneut versuchen.",
+      };
+    }
+    return { ok: false, error: exc.message };
   }
 }
 

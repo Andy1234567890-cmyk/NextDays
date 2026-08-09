@@ -22,6 +22,7 @@ from src.features.auth.schemas import (
     AccommodationTypeUpdate,
     DefaultLanguageUpdate,
     InviteRequest,
+    LoginRequest,
     RefreshRequest,
     RegisterRequest,
     UserRole,
@@ -791,3 +792,74 @@ def test_refresh_verbindungsabbruch_ist_503_nicht_500() -> None:
 # Limit treiben. Das 401-Mapping ist über die Service-Unit-Tests oben
 # deterministisch abgedeckt; die Schema-Validierung über
 # test_refresh_request_rejects_missing_token.
+
+
+# --- Login: Störung != Ablehnung (Wurzel 5) ---
+#
+# Gegenstück zu den refresh-Tests oben. `_sign_in` verwandelte per breitem
+# `except Exception` JEDEN Fehler in ein 401 „Login fehlgeschlagen." — am
+# 09.08.2026 lag der Supabase-Stack, und der Betreiber suchte den Ausfall
+# stundenlang bei seinem Passwort und seiner 2FA.
+
+def _login_request() -> LoginRequest:
+    return LoginRequest(email="owner@example.de", password="longenough")
+
+
+@pytest.mark.parametrize("status", [429, 500, 502, 503])
+def test_login_technischer_gotrue_fehler_ist_503_nicht_401(status: int) -> None:
+    """GoTrue-5xx/429 ist ein Betriebszustand, kein Urteil über das Passwort."""
+    from supabase_auth.errors import AuthApiError  # noqa: PLC0415
+
+    svc, anon, _service = _service_with_mocks()
+    anon.auth.sign_in_with_password.side_effect = AuthApiError(
+        "kaputt", status, None
+    )
+
+    with pytest.raises(AuthError) as exc:
+        svc.login(_login_request())
+    assert exc.value.status_code == 503
+    # Die Meldung darf NICHT nach falschen Zugangsdaten klingen.
+    assert "fehlgeschlagen" not in exc.value.message.lower()
+
+
+def test_login_verbindungsabbruch_ist_503_nicht_401() -> None:
+    """supabase-py übersetzt einen ConnectError NICHT in eine AuthError — er
+    flöge am `except GoTrueAuthError` vorbei und wurde vom alten breiten
+    `except Exception` als 401 getarnt."""
+    import httpx  # noqa: PLC0415
+
+    svc, anon, _service = _service_with_mocks()
+    anon.auth.sign_in_with_password.side_effect = httpx.ConnectError("weg")
+
+    with pytest.raises(AuthError) as exc:
+        svc.login(_login_request())
+    assert exc.value.status_code == 503
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 422])
+def test_login_echte_ablehnung_bleibt_401(status: int) -> None:
+    """Falsche Zugangsdaten bleiben 401 — und zwar mit derselben neutralen
+    Meldung für „Mail unbekannt" wie für „Passwort falsch" (keine
+    Nutzer-Enumeration)."""
+    from supabase_auth.errors import AuthApiError  # noqa: PLC0415
+
+    svc, anon, _service = _service_with_mocks()
+    anon.auth.sign_in_with_password.side_effect = AuthApiError(
+        "invalid login credentials", status, None
+    )
+
+    with pytest.raises(AuthError) as exc:
+        svc.login(_login_request())
+    assert exc.value.status_code == 401
+    assert exc.value.message == "Login fehlgeschlagen."
+
+
+def test_login_ohne_session_bleibt_401() -> None:
+    svc, anon, _service = _service_with_mocks()
+    anon.auth.sign_in_with_password.return_value = MagicMock(
+        session=None, user=None
+    )
+
+    with pytest.raises(AuthError) as exc:
+        svc.login(_login_request())
+    assert exc.value.status_code == 401

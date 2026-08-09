@@ -48,3 +48,27 @@ def ist_abgelehnt(exc: GoTrueAuthError) -> bool:
     # Fehler ohne Statuscode (z. B. AuthInvalidJwtError beim lokalen Parsen des
     # übergebenen Tokens): das Token ist syntaktisch unbrauchbar → Ablehnung.
     return True
+
+
+# Der Text, den ein Nutzer bei einer STÖRUNG sieht. Bewusst EIN Wert für alle
+# Slices: „Login fehlgeschlagen" darf niemals die Antwort auf einen Ausfall
+# sein, und die ehrliche Meldung soll überall gleich lauten.
+STOERUNG_MELDUNG = "Anmeldedienst nicht erreichbar. Bitte später erneut versuchen."
+
+
+def stoerung_oder_ablehnung(exc: BaseException) -> bool:
+    """True = STÖRUNG (→ 503), False = echte Ablehnung (→ 401).
+
+    Der EINE Ort, an dem ein GoTrue-Fehler in „Infrastruktur kaputt" vs.
+    „Anmeldedaten abgelehnt" übersetzt wird. `refresh()` hat diese Unterscheidung
+    zuerst bekommen; `_sign_in()` verwandelte dagegen JEDEN Fehler in ein 401 —
+    ein GoTrue-503 sah dadurch aus wie ein falsches Passwort, und der Betreiber
+    suchte den Ausfall stundenlang bei seinem eigenen Konto.
+
+    Alles, was KEIN GoTrue-Auth-Fehler ist (Transportfehler, Timeout, beliebige
+    SDK-/Programmierfehler), gilt als Störung: eine Ablehnung der Zugangsdaten
+    kann GoTrue ausschließlich als AuthError ausdrücken.
+    """
+    if isinstance(exc, GoTrueAuthError):
+        return not ist_abgelehnt(exc)
+    return True
