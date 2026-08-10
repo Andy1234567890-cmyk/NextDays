@@ -10,6 +10,7 @@ die noch keine public.users-Row haben, werden hier lazy provisioniert
 import base64
 import hashlib
 import secrets
+from datetime import UTC, datetime
 from io import BytesIO
 
 import pyotp
@@ -73,7 +74,29 @@ _PERSONAL_USER_FIELDS = frozenset(
         "preferred_language",
         "preferred_currency",
         "preferred_timezone",
+        # Seit 0356 gibt es diese Spalten wirklich (vorher standen sie nur im
+        # Contract). Sie gehören der PERSON, nicht dem Betrieb: die zweite
+        # Telefonnummer, ob die Nummern öffentlich stehen, welche Sprachen sie
+        # spricht, ihr Profilbild und ihre Selbstbeschreibung. Nur `phone` und
+        # `website` bleiben beim Admin die Agenturdaten aus /konto und werden
+        # dorthin gespiegelt. Ohne diese Einträge würden sie beim Admin
+        # herausgefiltert und die Eingabe verschwände lautlos.
+        "additional_phone",
+        "hide_phones",
+        "spoken_languages",
+        "description",
+        "avatar_url",
+        "notes",
     }
+)
+
+# Spalten, die die Nutzerverwaltung (Liste + Detailseite) von `users` liest.
+# EINE Stelle, damit Liste und Detail nie auseinanderlaufen — ein Feld, das nur
+# die Liste lädt, wäre auf der Detailseite still leer (Wurzel 9 in der Anzeige).
+_MANAGED_USER_COLUMNS = (
+    "id, email, full_name, role, tenant_id, permissions, preferred_language, "
+    "phone, additional_phone, hide_phones, spoken_languages, notes, "
+    "avatar_url, deactivated_at, created_at"
 )
 
 TOTP_ISSUER = "NextDays"
@@ -393,6 +416,9 @@ class AccountService:
         return users
 
     def _to_tenant_user(self, u: dict) -> TenantUser:
+        # `deactivated_at` ist die Wahrheit, `is_active` nur ihre Ableitung —
+        # nicht zwei unabhängige Felder, die auseinanderlaufen können.
+        gesperrt_am = u.get("deactivated_at")
         return TenantUser(
             user_id=u["id"],
             email=u.get("email"),
@@ -403,6 +429,13 @@ class AccountService:
             tenant_id=u.get("tenant_id"),
             permissions=self._effective_perm_ids(u),
             preferred_language=u.get("preferred_language"),
+            additional_phone=u.get("additional_phone"),
+            hide_phones=bool(u.get("hide_phones")),
+            spoken_languages=u.get("spoken_languages") or [],
+            notes=u.get("notes"),
+            deactivated_at=gesperrt_am,
+            is_active=gesperrt_am is None,
+            created_at=u.get("created_at"),
         )
 
     # Rollen, die die Nutzerverwaltung (Konto → Benutzer) sehen dürfen.
@@ -431,14 +464,12 @@ class AccountService:
             return []
         res = (
             self._service.table("users")
-            # `preferred_language` gehört in die Liste, weil der
-            # Bearbeiten-Dialog den gespeicherten Wert vorbelegen muss —
-            # ohne ihn zeigte er „nicht gesetzt" und überschriebe beim
-            # Speichern eine erfasste Sprache mit NULL.
-            .select(
-                "id, email, full_name, role, tenant_id, permissions, "
-                "preferred_language"
-            )
+            # Dieselben Spalten wie die Detailseite (_MANAGED_USER_COLUMNS):
+            # u. a. `preferred_language`, weil der Bearbeiten-Dialog den
+            # gespeicherten Wert vorbelegen muss — ohne ihn zeigte er „nicht
+            # gesetzt" und überschriebe beim Speichern eine erfasste Sprache
+            # mit NULL.
+            .select(_MANAGED_USER_COLUMNS)
             .eq("tenant_id", tenant_id)
             .order("created_at")
             .execute()
@@ -475,10 +506,7 @@ class AccountService:
         """Ziel-Nutzer NUR im eigenen Tenant laden (Load+Scope in einem)."""
         res = (
             self._service.table("users")
-            .select(
-                "id, email, full_name, role, tenant_id, permissions, "
-                "preferred_language"
-            )
+            .select(_MANAGED_USER_COLUMNS)
             .eq("id", user_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -487,6 +515,30 @@ class AccountService:
         if not res.data:
             raise AuthError("Nutzer nicht gefunden.", status_code=404)
         return res.data[0]
+
+    def get_managed_user(self, ctx: AuthContext, user_id: str) -> TenantUser:
+        """Ein Nutzer der Verwaltung (Konto → Benutzer → Detailseite).
+
+        Wurzel 9: DERSELBE Scope wie der List-Pfad — Leserolle aus
+        ``_USER_MGMT_ROLES`` und Ziel im EIGENEN Tenant, sonst 404. Ein reiner
+        `get_current_user` hier wäre eine IDOR: jeder eingeloggte Mitarbeiter
+        könnte die Kontaktdaten, Rechte und Anmerkungen jedes Kollegen lesen,
+        obwohl ihm die Liste 403 gibt.
+        """
+        row = self._ensure_user_row(ctx)
+        role = self._role_of(row) or self._role_of({"role": ctx.role})
+        if role not in self._USER_MGMT_ROLES:
+            raise AuthError(
+                "Keine Berechtigung für die Nutzerverwaltung.", status_code=403
+            )
+        tenant_id = row.get("tenant_id") or ctx.tenant_id
+        if not tenant_id:
+            raise AuthError("Kein Unternehmen zugeordnet.", status_code=403)
+        target = self._own_managed_user(tenant_id, user_id)
+        nutzer = self._to_tenant_user(target)
+        # Der Kontoinhaber wird — wie in der Liste — mit den Agenturdaten aus
+        # /konto angezeigt. Keine zweite Anzeige-Wahrheit für dieselbe Person.
+        return self._merge_agency_into_admin([nutzer], tenant_id)[0]
 
     def update_managed_user(
         self,
@@ -497,6 +549,7 @@ class AccountService:
         role: UserRole | None = None,
         permissions: list[str] | None = None,
         preferred_language: str | None = None,
+        kontakt: dict | None = None,
     ) -> TenantUser:
         """Nutzer im eigenen Tenant bearbeiten (Konto → Benutzer): Name, Rolle
         und feingranulare Berechtigungen. Der Konto-Admin (Gründer) ist nicht
@@ -506,7 +559,13 @@ class AccountService:
         Rechte-Logik: werden ``permissions`` explizit mitgeschickt, gewinnen sie
         (auf die Rechte des Bearbeitenden geklemmt, Wurzel 3). Wird NUR die Rolle
         gewechselt (ohne explizite Rechte), greifen die Default-Rechte der neuen
-        Rolle. Ohne beides bleiben die Rechte unverändert."""
+        Rolle. Ohne beides bleiben die Rechte unverändert.
+
+        ``kontakt`` sind die gesendeten Kontakt-/Zusatzfelder der Detailseite
+        (phone, additional_phone, hide_phones, spoken_languages, notes) —
+        bereits auf „gesendet" gefiltert. Ein Leerstring darin heißt LÖSCHEN
+        (→ NULL): eine falsch eingetragene Nummer muss auch wieder wegkönnen
+        (Wurzel 1)."""
         editor_row, tenant_id = self._require_user_write(ctx)
         target = self._own_managed_user(tenant_id, user_id)
         # Effektive Rechte des Bearbeitenden — klemmen jede Rechtevergabe.
@@ -524,6 +583,7 @@ class AccountService:
         # für „nicht mitgeschickt, also unverändert".
         if preferred_language is not None:
             patch["preferred_language"] = preferred_language
+        patch.update(self._kontakt_patch(kontakt))
         role_changed = role is not None and role.value != target.get("role")
         if role_changed:
             if target.get("role") == UserRole.admin.value:
@@ -583,6 +643,188 @@ class AccountService:
             tenant_id=tenant_id, user_id=user_id, fields=sorted(patch),
         )
         return self._to_tenant_user(updated)
+
+    # Kontaktfelder der Detailseite, die als Text ankommen und leer = NULL sind.
+    _KONTAKT_TEXTFELDER = ("phone", "additional_phone", "notes")
+
+    @staticmethod
+    def _kontakt_patch(kontakt: dict | None) -> dict:
+        """Gesendete Kontakt-/Zusatzfelder in einen DB-Patch übersetzen.
+
+        Leerstring → NULL: „nicht erfasst" und „gelöscht" sind derselbe Zustand,
+        und ein `""` in der Spalte wäre ein Wert, der aussieht wie eine Angabe.
+        Nicht gesendete Felder tauchen hier gar nicht auf und bleiben unverändert.
+        """
+        if not kontakt:
+            return {}
+        patch: dict = {}
+        for feld in AccountService._KONTAKT_TEXTFELDER:
+            if feld in kontakt:
+                wert = kontakt[feld]
+                text = wert.strip() if isinstance(wert, str) else wert
+                patch[feld] = text or None
+        if "hide_phones" in kontakt:
+            patch["hide_phones"] = bool(kontakt["hide_phones"])
+        if "spoken_languages" in kontakt:
+            sprachen = kontakt["spoken_languages"]
+            patch["spoken_languages"] = sprachen if isinstance(sprachen, list) else []
+        return patch
+
+    # Wie lange GoTrue den Login sperrt. Bewusst eine sehr lange, aber ENDLICHE
+    # Frist: die Admin-API kennt kein „für immer", und ein `null` würde die
+    # Sperre sofort aufheben. 100 Jahre sind operativ endgültig; aufgehoben wird
+    # sie ausschließlich über activate_managed_user (Wurzel 1: der Gegenzustand
+    # sitzt am selben Schalter).
+    LOGIN_SPERRE_DAUER = "876000h"
+
+    def deactivate_managed_user(
+        self, ctx: AuthContext, user_id: str
+    ) -> tuple[TenantUser, bool]:
+        """Zugang sperren, ohne ihn zu löschen (Konto → Benutzer → Deaktivieren).
+
+        Warum es das getrennt vom Löschen gibt: eine Reinigungskraft in
+        Elternzeit, ein Eigentümer im Streit, ein Mitarbeiter mit verlorenem
+        Handy — in allen drei Fällen soll der Zugang SOFORT dicht sein, die
+        Zuordnungen und die Historie aber stehen bleiben. Löschen wäre nicht
+        umkehrbar.
+
+        Drei Riegel, weil einer nicht reicht (Wurzel 7):
+          1. `users.deactivated_at` — die Wahrheit, die alle Wege lesen.
+          2. GoTrue-`ban_duration` — sperrt den DIREKTEN Login gegen
+             `/auth/v1/token` mit dem öffentlichen anon-Key und verhindert das
+             Erneuern des Refresh-Tokens. Ohne diesen Schritt käme der Zugang am
+             FastAPI-Layer vorbei weiter an PostgREST.
+          3. `aktiv_gate` in `core.security` — wirft 401 für ein SCHON
+             ausgestelltes Token, das sonst bis zu einer Stunde weitergälte.
+
+        Reihenfolge: erst das Feld, dann der Bann. Bricht der Bann ab, steht der
+        Nutzer als deaktiviert in der Liste UND das aktiv_gate greift — der
+        Vorgang ist wiederholbar und niemand hält ihn für erledigt (der
+        Rückgabewert sagt, ob der Anmeldedienst mitgezogen hat).
+        """
+        row, tenant_id = self._require_user_write(ctx)
+        if user_id == row.get("id"):
+            raise AuthError(
+                "Das eigene Login kann nicht deaktiviert werden.", status_code=400
+            )
+        target = self._own_managed_user(tenant_id, user_id)
+        if target.get("role") == UserRole.admin.value:
+            raise AuthError(
+                "Der Kontoinhaber (Admin) kann nicht deaktiviert werden.",
+                status_code=400,
+            )
+        if target.get("deactivated_at"):
+            # Idempotent (Wurzel 2): Doppelklick/Retry darf keinen Fehler und
+            # keinen zweiten Zeitstempel erzeugen — der erste bleibt stehen.
+            return self._to_tenant_user(target), self._login_sperren(user_id)
+
+        # Unsere Uhr ist hier die richtige Quelle: das Deaktivieren IST unser
+        # Ereignis (Wurzel 5b betrifft FREMDE Ereignisse). Bewusst ISO-8601 mit
+        # UTC-Offset und nicht der String "now()" — den würde Postgres als Text
+        # für eine timestamptz-Spalte ablehnen.
+        res = (
+            self._service.table("users")
+            .update({
+                "deactivated_at": datetime.now(UTC).isoformat(),
+                "deactivated_by": row.get("id"),
+            })
+            .eq("id", user_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        gesperrt = self._login_sperren(user_id)
+        updated = res.data[0] if res.data else self._own_managed_user(
+            tenant_id, user_id
+        )
+        log.info(
+            "managed_user_deactivated",
+            tenant_id=tenant_id, user_id=user_id, login_gesperrt=gesperrt,
+        )
+        return self._to_tenant_user(updated), gesperrt
+
+    def activate_managed_user(
+        self, ctx: AuthContext, user_id: str
+    ) -> tuple[TenantUser, bool]:
+        """Zugang wieder freischalten (Gegenzustand zu deactivate, Wurzel 1).
+
+        Hebt BEIDES auf: den Zeitstempel und den GoTrue-Bann. Nur eines von
+        beiden zurückzunehmen hinterlässt einen Nutzer, der in der Liste aktiv
+        aussieht und sich nicht anmelden kann (oder umgekehrt).
+        """
+        _, tenant_id = self._require_user_write(ctx)
+        target = self._own_managed_user(tenant_id, user_id)
+        entsperrt = self._login_entsperren(user_id)
+        if not target.get("deactivated_at"):
+            return self._to_tenant_user(target), entsperrt
+        res = (
+            self._service.table("users")
+            .update({"deactivated_at": None, "deactivated_by": None})
+            .eq("id", user_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        updated = res.data[0] if res.data else self._own_managed_user(
+            tenant_id, user_id
+        )
+        log.info(
+            "managed_user_activated",
+            tenant_id=tenant_id, user_id=user_id, login_entsperrt=entsperrt,
+        )
+        return self._to_tenant_user(updated), entsperrt
+
+    def _login_sperren(self, user_id: str) -> bool:
+        """GoTrue-Bann setzen. True = der Anmeldedienst hat übernommen.
+
+        Kein Weiterwerfen: das Feld steht schon, und das aktiv_gate hält den
+        Zugang auch ohne Bann dicht. Ein harter Fehler hier würde einen
+        wirksamen Vorgang als gescheitert melden. Der Rückgabewert wird
+        durchgereicht und in der Oberfläche benannt — nicht verschluckt
+        (Wurzel 5: best-effort ist erlaubt, stilles „done" nicht).
+        """
+        try:
+            self._service.auth.admin.update_user_by_id(
+                user_id, {"ban_duration": self.LOGIN_SPERRE_DAUER}
+            )
+            return True
+        except Exception as exc:  # noqa: BLE001 — Teilerfolg melden, nicht kippen
+            log.warning(
+                "managed_user_login_ban_failed",
+                user_id=user_id, error=str(exc)[:200],
+            )
+            return False
+
+    def _login_entsperren(self, user_id: str) -> bool:
+        """GoTrue-Bann aufheben („none" ist der dokumentierte Aus-Wert)."""
+        try:
+            self._service.auth.admin.update_user_by_id(
+                user_id, {"ban_duration": "none"}
+            )
+            return True
+        except Exception as exc:  # noqa: BLE001 — Teilerfolg melden, nicht kippen
+            log.warning(
+                "managed_user_login_unban_failed",
+                user_id=user_id, error=str(exc)[:200],
+            )
+            return False
+
+    def ist_gesperrt(self, user_id: str) -> bool:
+        """Trägt dieser Zugang eine Deaktivierung? (Für das aktiv_gate.)
+
+        Fail-CLOSED wäre hier falsch: ein Ausfall der DB würde JEDEN Nutzer
+        aussperren. Ein Lesefehler wird deshalb durchgeworfen, damit der Aufrufer
+        entscheidet — er antwortet mit 503 („Anmeldedienst nicht erreichbar"),
+        nicht mit 401 („du bist gesperrt"). Beides ist restriktiv, nur eines ist
+        wahr.
+        """
+        res = (
+            self._service.table("users")
+            .select("deactivated_at")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+        rows = res.data or []
+        return bool(rows and rows[0].get("deactivated_at"))
 
     def delete_managed_user(self, ctx: AuthContext, user_id: str) -> None:
         """Nutzer aus dem eigenen Tenant löschen (Konto → Benutzer).

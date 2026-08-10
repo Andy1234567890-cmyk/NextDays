@@ -736,7 +736,19 @@ class OtaExtrasMixin:
     # -- Full-Sync manuell auslösen -------------------------------------------------
     def trigger_full_sync(self, ctx: AuthContext, map_id: str) -> dict[str, Any]:
         """Voll-Abgleich DB→Channex für ein Objekt sofort einreihen (zusätzlich
-        zum nächtlichen Lauf) — z. B. nach einem vermuteten Drift."""
+        zum nächtlichen Lauf) — z. B. nach einem vermuteten Drift.
+
+        `vollstaendig=True`: der Knopf holt ALLE Buchungen zurück (kein
+        3-Tage-Fenster) UND die Gespräche des Posteingangs. Genau das erwartet
+        der Betrieb, wenn er „Voll-Abgleich" drückt.
+
+        EIGENER Dedup-Suffix: Der nächtliche Job trägt denselben Schlüssel ohne
+        Suffix. Lag er noch offen (er wird gestaffelt eingereiht), verschluckte
+        das Coalescing den manuellen Job — der Betrieb drückte den Knopf, bekam
+        202 zurück, und es lief der ENGE Nachtlauf ohne Buchungshistorie und
+        ohne Nachrichten. Zwei verschiedene Aufträge brauchen zwei Schlüssel;
+        Doppelklick auf den Knopf selbst bleibt weiterhin coalesced (Wurzel 2).
+        """
         pm = self._require_own_property_map(ctx, map_id)
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
@@ -745,9 +757,14 @@ class OtaExtrasMixin:
 
             enqueue(
                 db, "full_sync_property", tenant_id=tenant_id,
-                payload={"tenant_id": tenant_id, "property_id": pm["property_id"]},
+                payload={
+                    "tenant_id": tenant_id,
+                    "property_id": pm["property_id"],
+                    "vollstaendig": True,
+                },
                 dedup_key=dedup_key(
-                    tenant_id, pm["property_id"], "full_sync_property"
+                    tenant_id, pm["property_id"], "full_sync_property",
+                    suffix="manuell",
                 ),
             )
         except Exception as exc:  # noqa: BLE001 — Einreihen sichtbar fehlschlagen

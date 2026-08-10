@@ -765,6 +765,52 @@ class ChannelsMixin:
             ota_room_title=room_title,
         )
 
+        # Bestehende Reservierungen beim PORTAL ANSTOSSEN — vor dem Abholen.
+        #
+        # `import_bookings_for_property` (gleich darunter) FRAGT Channex nach dem,
+        # was Channex bereits gesehen hat. Ein soeben angelegter Kanal hat aber
+        # nichts gesehen: Booking.com schickt die vorhandenen Reservierungen erst,
+        # wenn man sie anfordert („Pull Future Reservations"). Ohne diesen Schritt
+        # holte der Connect zuverlässig NICHTS und der Betrieb stand vor einem
+        # frisch verbundenen Objekt ohne eine einzige Buchung — live 10.08.2026 bei
+        # „Feriehus Britt": Kanal angelegt und aktiv, Buchungen im Extranet
+        # vorhanden, bei Channex null.
+        #
+        # Reihenfolge ist der ganze Punkt: erst anstoßen, dann abholen. Der Kanal
+        # steht zu diesem Zeitpunkt bereits (angelegt + aktiviert), sonst hätte die
+        # Aktion kein Ziel.
+        #
+        # Nur wenn der Katalog die Aktion für dieses Portal führt — nicht jedes
+        # Portal kennt sie, und ein erfundener Aufruf wäre ein 404 im Log
+        # (Wurzel 4: nichts raten, den Katalog fragen).
+        _aktionen = self._channel_spec(portal_code).get("actions") or []
+        log.info(
+            "connect_pull_future_pruefung",
+            portal_code=portal_code, channel_id=channel_id,
+            katalog_aktionen=_aktionen,
+            wird_angestossen=bool(
+                channel_id and "load_future_reservations" in _aktionen
+            ),
+        )
+        if channel_id and "load_future_reservations" in _aktionen:
+            try:
+                self._channex.run_channel_action(
+                    channel_id, "load_future_reservations"
+                )
+                log.info(
+                    "connect_pull_future_angestossen",
+                    channel_id=channel_id, portal_code=portal_code,
+                    hotel_id=settings.get("hotel_id"),
+                )
+            except ChannexError as exc:
+                # Best effort: das Portal liefert die Buchungen sonst mit dem
+                # nächsten Knopfdruck oder über den Feed — der Connect selbst darf
+                # daran nicht scheitern (Wurzel 5).
+                log.warning(
+                    "channex_pull_future_failed",
+                    channel_id=channel_id, error=exc.message,
+                )
+
         # Initial-Vollimport (best effort): bestehende Buchungen, ARI/Preise,
         # Room-Types/Rate-Plans. Channel ist live; ein Import-Fehler darf den
         # Connect NICHT scheitern lassen (per Cron/erneutem Connect nachholbar).
@@ -790,6 +836,36 @@ class ChannelsMixin:
                 db, "full_sync_property", tenant_id=tenant_id,
                 payload={"tenant_id": tenant_id, "property_id": property_id},
                 dedup_key=dedup_key(tenant_id, property_id, "full_sync_property"),
+            )
+            # NACHHOLEN, verzögert: Der Anstoß oben ist ein AUFTRAG ans Portal,
+            # keine Antwort. Booking.com stellt die Reservierungen erst danach
+            # bereit — der Import wenige Zeilen später kommt zwangsläufig zu früh
+            # und holt null. Ohne diesen zweiten Lauf bliebe ein frisch
+            # verbundenes Objekt leer, bis jemand von Hand nachfasst (live
+            # 10.08.2026 „Feriehus Britt": Kanal aktiv, Buchungen im Extranet,
+            # bei Channex null).
+            #
+            # `vollstaendig=True`: derselbe Weg wie der manuelle Voll-Abgleich —
+            # ALLE Buchungen ohne 3-Tage-Fenster plus die Gespräche. Eigener
+            # dedup-Suffix, damit er weder den Go-Live-Push oben noch den
+            # nächtlichen Lauf verdrängt.
+            enqueue(
+                db, "full_sync_property", tenant_id=tenant_id,
+                payload={
+                    "tenant_id": tenant_id,
+                    "property_id": property_id,
+                    "vollstaendig": True,
+                },
+                dedup_key=dedup_key(
+                    tenant_id, property_id, "full_sync_property",
+                    suffix="nach-connect",
+                ),
+                delay_seconds=180,
+            )
+            log.info(
+                "connect_nachhollauf_eingereiht",
+                property_id=property_id, channel_id=channel_id,
+                portal_code=portal_code, verzoegerung_s=180,
             )
         except Exception as exc:  # noqa: BLE001 — Connect nie am Enqueue kippen
             log.warning(
@@ -1217,7 +1293,7 @@ class ChannelsMixin:
 
     def run_channel_action(
         self, ctx: AuthContext, *, channel_id: str, action: str
-    ) -> dict[str, Any]:
+    ) -> dict[str, str | int]:
         """Eine kanal-eigene Aktion auslösen — z.B. „zukünftige Buchungen laden"
         (`load_future_reservations`) bei einem Objekt, das VOR der Verbindung
         schon Buchungen im Portal hatte.
@@ -1253,17 +1329,75 @@ class ChannelsMixin:
         # der zweite Zustand muss mitgepflegt werden, sonst sieht der Kunde die
         # Buchungen im Portal, aber nicht bei uns).
         channex_property_id = owns[0].get("channex_property_id")
+        geholt = {"fetched": 0, "saved": 0, "skipped": 0}
         if channex_property_id:
             try:
-                self.import_bookings_for_property(tenant_id, channex_property_id)
+                geholt = self._nach_aktion_einsammeln(
+                    tenant_id, channex_property_id, action
+                )
             except (ChannexError, ChannelManagerError) as exc:
                 log.warning(
                     "channex_action_import_failed",
                     channel_id=channel_id, action=action,
                     error=getattr(exc, "message", str(exc)),
                 )
-        log.info("channex_channel_action", channel_id=channel_id, action=action)
-        return {"status": "ok", "action": action}
+        log.info(
+            "channex_channel_action", channel_id=channel_id, action=action,
+            **geholt,
+        )
+        # Die ECHTE Zahl zurückgeben, nicht nur „ok": die Oberfläche soll sagen
+        # können, was angekommen ist (siehe _nach_aktion_einsammeln).
+        return {"status": "ok", "action": action, **geholt}
+
+    # Wie lange nach einem Portal-Auftrag auf dessen Ergebnis gewartet wird.
+    #
+    # `load_future_reservations` ist ein AUFTRAG, keine Antwort: Channex quittiert
+    # mit `{"data": null}` (live gemessen) und liefert die Buchungen erst, wenn das
+    # Portal sie geschickt hat. Live am 10.08.2026 bei „Feriehus Britt": Auftrag um
+    # 18:07:50.498, unser Abruf 18:07:50.731 → 2 Buchungen; die 10 echten trafen
+    # 18:07:51.190 ein, also 460 ms NACH dem Abruf. Der Knopf meldete „nichts
+    # Neues", während zehn Buchungen unterwegs waren — genau daraus entsteht der
+    # Fehlschluss „das Portal hat keine".
+    #
+    # Deshalb kurz nachfassen statt einmal ins Leere greifen. Die Obergrenze ist
+    # bewusst klein: der Aufruf hängt an einem Knopfdruck, und was länger braucht,
+    # holt ohnehin der Webhook bzw. der Feed-Tick nach (beides live belegt — die
+    # zehn Buchungen standen eine Minute später vollständig in der DB).
+    _AKTION_WARTE_RUNDEN = 4
+    _AKTION_WARTE_SEKUNDEN = 2.0
+
+    def _nach_aktion_einsammeln(
+        self, tenant_id: str, channex_property_id: str, action: str
+    ) -> dict[str, int]:
+        """Nach einem Portal-Auftrag die Buchungen einsammeln — mit Nachfassen.
+
+        Nur für Aktionen, die beim Portal etwas ANFORDERN. Alles andere wird
+        wie bisher genau einmal abgeholt: ein Warteschleifen-Aufruf ohne Anlass
+        würde den Knopfdruck grundlos verzögern.
+
+        Abgebrochen wird, sobald etwas ankommt — im Normalfall ist das die
+        zweite Runde. Kommt nichts, war beim Portal wirklich nichts; das ist
+        dann eine belegte Aussage und keine Vermutung mehr.
+        """
+        import time  # noqa: PLC0415 — nur hier gebraucht
+
+        geholt = self.import_bookings_for_property(tenant_id, channex_property_id)
+        if action != "load_future_reservations" or geholt.get("fetched"):
+            return geholt
+
+        for runde in range(1, self._AKTION_WARTE_RUNDEN + 1):
+            time.sleep(self._AKTION_WARTE_SEKUNDEN)
+            geholt = self.import_bookings_for_property(
+                tenant_id, channex_property_id
+            )
+            log.info(
+                "channex_action_nachgefasst",
+                channex_property_id=channex_property_id, runde=runde,
+                **geholt,
+            )
+            if geholt.get("fetched"):
+                return geholt
+        return geholt
 
     def disconnect_channel(self, ctx: AuthContext, channel_id: str) -> None:
         """Kanal trennen: erst deaktivieren (sonst 422 'is active'), dann löschen."""
@@ -1934,9 +2068,13 @@ class ChannelsMixin:
         # Der Enum `property_status` kennt genau drei Werte (`draft, active,
         # inactive`) — ein Filter auf einen erfundenen Wert antwortet 400 und
         # kippte die ganze Seite auf 422.
+        # `building_id` mit in die Zeile: es entscheidet, ob ein Objekt seine
+        # Portal-Kennung mit einem anderen TEILT (Gebäude, 0264) oder eine eigene
+        # hat. Die Oberfläche braucht das, um beim Verbinden nicht die Hotel-ID
+        # eines FREMDEN Objekts vorzugeben — siehe `shares_building` unten.
         props = (
             db.table("properties")
-            .select("id, title, status")
+            .select("id, title, status, building_id")
             .eq("tenant_id", tenant_id)
             .in_("status", ["draft", "active"])
             .order("title")
@@ -2004,6 +2142,27 @@ class ChannelsMixin:
             ).data or []:
                 sync_by_property[m["property_id"]] = m
 
+        # Welche Gebäude haben schon eine verbundene Hotel-ID? Nur INNERHALB
+        # eines Gebäudes darf die Oberfläche eine bestehende Kennung für ein
+        # weiteres Objekt vorschlagen (ein Hotel: mehrere Zimmertypen, EINE
+        # Hotel-ID). Objekte ohne Gebäude teilen NICHTS.
+        #
+        # WARUM DAS HIER STEHT: Die Oberfläche leitete die vorzuschlagende
+        # Hotel-ID aus der ERSTEN verbundenen Zeile der Liste ab — ohne jeden
+        # Bezug zum Gebäude. Beim Beta-Betrieb (live geprüft 10.08.2026: 19
+        # Objekte, ALLE ohne `building_id`, jedes ein eigenes Ferienhaus mit
+        # eigener Booking.com-Hotel-ID) hieß das: sobald EIN Objekt verbunden
+        # war, übernahm der Assistent für jedes weitere dessen Hotel-ID,
+        # übersprang die Eingabe und zeigte die Zimmer des falschen Hauses. Die
+        # verbleibenden 16 Objekte ließen sich gar nicht mehr verbinden — es gab
+        # keine Fläche, ihre eigene Kennung einzutragen.
+        gebaeude_mit_kennung = {
+            str(p["building_id"])
+            for p in props
+            if p.get("building_id")
+            and conn_by_property.get(p["id"], {}).get("ota_hotel_id")
+        }
+
         mappings: list[dict[str, Any]] = []
         for p in props:
             pid = p["id"]
@@ -2025,6 +2184,14 @@ class ChannelsMixin:
                     "property_id": pid,
                     "property_title": p.get("title"),
                     "property_photo": cover_by_property.get(pid),
+                    # Teilt dieses Objekt seine Portal-Kennung mit einem schon
+                    # verbundenen? Nur dann darf die Oberfläche dessen Hotel-ID
+                    # übernehmen; sonst hat das Objekt eine EIGENE (siehe
+                    # gebaeude_mit_kennung).
+                    "shares_building": bool(
+                        p.get("building_id")
+                        and str(p["building_id"]) in gebaeude_mit_kennung
+                    ),
                     "ota_hotel_id": c.get("ota_hotel_id"),
                     "ota_room_type_code": c.get("ota_room_type_code"),
                     "ota_room_title": c.get("ota_room_title"),
@@ -2047,17 +2214,22 @@ class ChannelsMixin:
                 }
             )
 
-        # Bei Hotels teilen sich alle Zimmer EINEN Channex-Kanal (eine Hotel-ID) —
-        # die channel_id einer beliebigen bestehenden Verbindung reicht zum
-        # Trennen des ganzen Portals („alles lösen").
-        channel_id = next(
-            (
-                c.get("channex_channel_id")
+        # ALLE Kanäle dieses Portals — je eigener Portal-Kennung einer.
+        #
+        # Bei einem Hotel teilen sich die Zimmertypen EINEN Kanal (eine
+        # Hotel-ID); bei einzelnen Ferienhäusern hat JEDES seinen eigenen. Wer
+        # eine portalweite Aktion auf „irgendeinem" Kanal auslöst, trifft dann
+        # genau ein Haus. Deshalb die vollständige Liste, stabil sortiert.
+        channel_ids = sorted(
+            {
+                str(c["channex_channel_id"])
                 for c in conn_by_property.values()
                 if c.get("channex_channel_id")
-            ),
-            None,
+            }
         )
+        # `channel_id` bleibt der erste — „Verbindung trennen" auf Portal-Ebene
+        # und der Readiness-Blick brauchen genau einen Vertreter.
+        channel_id = channel_ids[0] if channel_ids else None
         # Läuft der Kanal bei Channex überhaupt? Verbunden ≠ aktiv (siehe
         # ChannelDetailResponse.channel_active). Best effort: fällt der Abruf
         # aus, bleibt das Feld None und die UI zeigt keinen Zustand statt einen
@@ -2075,6 +2247,7 @@ class ChannelsMixin:
             "connected_count": sum(1 for m in mappings if m["is_active"]),
             "total_count": len(mappings),
             "channel_id": channel_id,
+            "channel_ids": channel_ids,
             "actions": self._channel_spec(portal_code).get("actions") or [],
             "channel_active": channel_active,
             "readiness_offen": readiness_offen,

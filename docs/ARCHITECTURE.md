@@ -467,6 +467,32 @@ Marktplatz-Tabellen (`portal_guests`, `reviews`, `commissions`) wie oben.
    **Admin sieht alle Nutzer plattformweit**, Owner/Co-Admin nur den eigenen
    Tenant.
 
+**Nutzerverwaltung: Liste + Detailseite (Migration 0356).** `/konto/nutzer`
+listet die Tenant-Mitglieder mit Rolle und Zugangs-Status; jede Zeile führt auf
+`/konto/nutzer/<id>` mit vier Abschnitten (Kontaktdaten, Zusätzliche
+Informationen, Rolle und Berechtigungen, Zugewiesene Objekte), jeder über ein
+eigenes Sheet bearbeitbar. Die Detailroute prüft **denselben Scope wie der
+List-Pfad** (`GET /auth/account/users/{id}`, Wurzel 9) — ohne diese Re-Prüfung
+wäre sie eine IDOR auf Kontaktdaten, Rechte und interne Anmerkungen fremder
+Nutzer. `users` trägt dafür seit 0356 `additional_phone`, `hide_phones`,
+`spoken_languages`, `notes`, `website`, `description`, `avatar_url` — Felder, die
+der Contract (`AccountResponse`/`UpdateProfileRequest`) schon vorher versprach,
+für die es aber KEINE Spalte gab: `PATCH /auth/account/profile` und der
+Avatar-Upload liefen darauf in einen Fehler, die Wizard-Eingaben verschwanden
+lautlos. Kein neues Grant: `users` bleibt für `anon`/`authenticated` gesperrt
+(0337) und ist bewusst nicht in `supabase_realtime` — die Nutzerverwaltung lädt
+deshalb serverseitig und aktualisiert per `router.refresh()`, statt ein stummes
+Abo vorzutäuschen.
+
+**Zugang sperren statt löschen (0356).** `users.deactivated_at`/`deactivated_by`
++ GoTrue-`ban_duration` + der Riegel `auth/aktiv_gate.py` in
+`core.security.get_current_user`. Drei Stellen, weil keine allein reicht: das
+Feld sperrt nichts, der Bann lässt ein bereits ausgestelltes Access-Token bis zu
+einer Stunde weiterlaufen, und ein reiner App-Riegel wäre über den direkten
+GoTrue-Login umgangen (Wurzel 7). Die Antwort trägt `login_gesperrt` getrennt
+vom Feld-Zustand, damit ein Teilerfolg benannt und nicht als „erledigt"
+ausgegeben wird. Details: `docs/API.md` → „Deaktivierte Zugänge".
+
 **Enterprise-Posteingang & DSGVO-Daten-Split (drei unabhängige Achsen):** Der
 Posteingang-Zugriff läuft **nicht** über den groben Rollen-Guard, sondern über die
 feingranularen Berechtigungen — `inbox/authz.py` löst aus `users.permissions` ein

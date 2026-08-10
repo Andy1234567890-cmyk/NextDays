@@ -183,7 +183,26 @@ def get_current_user(
         aal=aal if isinstance(aal, str) else "aal1",
     )
     _mfa_gate(request, ctx)
+    _aktiv_gate(ctx)
     return ctx
+
+
+def _aktiv_gate(ctx: AuthContext) -> None:
+    """Der Riegel für DEAKTIVIERTE Zugänge (0356).
+
+    Sitzt hier und nicht im Login: der GoTrue-Bann, den das Deaktivieren
+    zusätzlich setzt, stoppt neue Anmeldungen und das Erneuern des Tokens — ein
+    bereits ausgestelltes Access-Token bliebe aber bis zu einer Stunde gültig.
+    Genau in dieser Stunde will man den Zugang zu haben. Geprüft wird deshalb
+    das TOKEN, an jedem geschützten Endpunkt.
+
+    NACH dem MFA-Riegel: die Reihenfolge ist gleichgültig (beide werfen 401),
+    aber so bleibt der bestehende Pfad unverändert. Import in der Funktion,
+    weil `features.auth` seinerseits `core.security` importiert.
+    """
+    from src.features.auth.aktiv_gate import aktiv_zugang_pruefen  # noqa: PLC0415
+
+    aktiv_zugang_pruefen(ctx)
 
 
 def _mfa_gate(request: Request, ctx: AuthContext) -> None:

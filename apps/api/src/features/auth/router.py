@@ -39,6 +39,7 @@ from .schemas import (
     InviteResponse,
     LoginRequest,
     LoginResponse,
+    ManagedUserDeactivateResponse,
     MeResponse,
     MfaAdminResetRequest,
     MfaAdminResetResponse,
@@ -562,6 +563,21 @@ def list_managed_users(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get("/account/users/{user_id}", response_model=TenantUser)
+def get_managed_user(
+    user_id: str, ctx: CurrentUser, service: AccountServiceDep
+) -> TenantUser:
+    """Ein Nutzer der Verwaltung (Konto → Benutzer → Detailseite).
+
+    Gleicher Scope wie der List-Pfad (Wurzel 9): Leserolle + eigener Tenant,
+    sonst 403/404. Ohne diese Re-Prüfung wäre die Detailseite eine IDOR auf
+    Kontaktdaten, Rechte und interne Anmerkungen fremder Nutzer."""
+    try:
+        return service.get_managed_user(ctx, user_id)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.patch("/account/users/{user_id}", response_model=TenantUser)
 def update_managed_user(
     user_id: str,
@@ -578,9 +594,56 @@ def update_managed_user(
             role=req.role,
             permissions=req.permissions,
             preferred_language=req.preferred_language,
+            # Nur die WIRKLICH gesendeten Kontaktfelder weitergeben: sonst
+            # könnte ein Aufruf, der nur die Rolle ändert, gleichzeitig die
+            # Telefonnummer leeren (`None` heißt hier „nicht mitgeschickt").
+            kontakt=req.model_dump(
+                include={
+                    "phone",
+                    "additional_phone",
+                    "hide_phones",
+                    "spoken_languages",
+                    "notes",
+                },
+                exclude_unset=True,
+            ),
         )
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/account/users/{user_id}/deactivate",
+    response_model=ManagedUserDeactivateResponse,
+)
+def deactivate_managed_user(
+    user_id: str, ctx: CurrentUser, service: AccountServiceDep
+) -> ManagedUserDeactivateResponse:
+    """Zugang sperren, ohne zu löschen (Konto → Benutzer → Deaktivieren).
+
+    Setzt `users.deactivated_at` UND den GoTrue-Bann. `login_gesperrt=false`
+    heißt: das Feld steht, der Anmeldedienst hat aber nicht mitgezogen — die
+    Oberfläche benennt das, statt einen Teilerfolg als „erledigt" auszugeben."""
+    try:
+        nutzer, gesperrt = service.deactivate_managed_user(ctx, user_id)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return ManagedUserDeactivateResponse(user=nutzer, login_gesperrt=gesperrt)
+
+
+@router.post(
+    "/account/users/{user_id}/activate",
+    response_model=ManagedUserDeactivateResponse,
+)
+def activate_managed_user(
+    user_id: str, ctx: CurrentUser, service: AccountServiceDep
+) -> ManagedUserDeactivateResponse:
+    """Zugang wieder freischalten (Gegenzustand zu deactivate, Wurzel 1)."""
+    try:
+        nutzer, entsperrt = service.activate_managed_user(ctx, user_id)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return ManagedUserDeactivateResponse(user=nutzer, login_gesperrt=not entsperrt)
 
 
 @router.delete("/account/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)

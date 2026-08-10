@@ -179,11 +179,22 @@ Aufrufers abgeleitet: hier lädt der *Betreiber* jemanden ein, sein Header sagt
 über den Empfänger nichts (Wurzel 4). Englisch ist der letzte Rückfall, nicht
 Deutsch — Deutsch wäre eine inhaltliche Behauptung über den Empfänger.
 
+**Kontakt-/Zusatzangaben (optional, 0356)** — `phone`, `additional_phone`,
+`hide_phones`, `spoken_languages`, `notes`. Sie kommen aus Schritt 1 und 2 des
+Wizards und landen in derselben `users`-Zeile wie Name und Rolle. Bis 0356 gab es
+diese Felder im Contract NICHT, obwohl die Oberfläche sie abfragte: die Eingabe
+war eine Attrappe und verschwand beim Speichern. `spoken_languages` ist rein
+informativ (Gäste-/Aufgabenzuteilung) und wird — anders als
+`preferred_language` — NICHT gegen die 24 Locales geprüft; nur auf 40 Einträge
+begrenzt (`422` darüber), Leereinträge und Dubletten fallen weg.
+
 ```json
 // Request  (KEIN password mehr)
 { "email": "staff@example.de",
   "full_name": "Mitarbeiter", "role": "staff",
   "preferred_language": "da",
+  "phone": "+45 20304050",
+  "spoken_languages": ["Dänisch", "Englisch"],
   "permissions": ["edit_property", "pm_chat"] }
 // Response 201
 { "user_id": "uuid", "email": "staff@example.de", "role": "staff",
@@ -343,7 +354,10 @@ provisioniert (Tenant + `users`-Row).
 | `GET /api/v1/auth/account`               | Konto-/Profil-Übersicht (E-Mail, Name, Rolle, Telefon, Sprachen, Website, Beschreibung, Avatar, `has_password`, `totp_enabled`)                                                                                                                  |
 | `GET /api/v1/auth/account/users`         | Nutzer des eigenen Tenants (für die Objekt-Kontakt-Auswahl) — `user_id`, Name, E-Mail, Rolle, Telefon, Avatar, `tenant_id`, `permissions`                                                                                                        |
 | `GET /api/v1/auth/account/managed-users` | Nutzerverwaltung (Konto → Benutzer): **Admin** sieht alle Nutzer plattformweit, Owner/Co-Admin nur den eigenen Tenant; normale Benutzer (staff/cleaner) → `403`                                                                                  |
-| `PATCH /api/v1/auth/account/users/{user_id}` | Nutzer im eigenen Tenant bearbeiten (admin/co_admin): `full_name`, `role`, `permissions`, `preferred_language` — nur gesendete Felder werden geschrieben; `preferred_language` wie bei `POST /auth/invite` gegen die 24 Locales geprüft (`422` bei unbekanntem Code) |
+| `GET /api/v1/auth/account/users/{user_id}` | Ein Nutzer der Verwaltung (Detailseite `/konto/nutzer/<id>`). **Gleicher Scope wie der List-Pfad** (Wurzel 9): Leserolle admin/co_admin/owner + Ziel im eigenen Tenant, sonst `403`/`404`. Liefert zusätzlich `additional_phone`, `hide_phones`, `spoken_languages`, `notes`, `deactivated_at`, `is_active`, `created_at` |
+| `PATCH /api/v1/auth/account/users/{user_id}` | Nutzer im eigenen Tenant bearbeiten (admin/co_admin): `full_name`, `role`, `permissions`, `preferred_language`, `phone`, `additional_phone`, `hide_phones`, `spoken_languages`, `notes` — nur gesendete Felder werden geschrieben; ein **Leerstring** in einem Textfeld heißt löschen (→ `NULL`). `preferred_language` wie bei `POST /auth/invite` gegen die 24 Locales geprüft (`422` bei unbekanntem Code); `spoken_languages` auf 40 Einträge begrenzt (`422` darüber) |
+| `POST /api/v1/auth/account/users/{user_id}/deactivate` | Zugang sperren, ohne zu löschen (admin/co_admin). Setzt `users.deactivated_at` **und** einen GoTrue-`ban_duration`. Antwort: `{ user, login_gesperrt }` — `login_gesperrt: false` heißt Teilerfolg (Feld steht, Anmeldedienst nicht) und wird von der Oberfläche benannt. Eigenes Login und Kontoinhaber → `400`. Idempotent (Wurzel 2) |
+| `POST /api/v1/auth/account/users/{user_id}/activate` | Gegenzustand: hebt Zeitstempel **und** GoTrue-Bann auf. Antwort wie oben; `login_gesperrt: true` heißt hier, dass der Bann noch hängt |
 | `PATCH /api/v1/auth/account/email`       | E-Mail ändern (`{ "new_email": "…" }`)                                                                                                                                                                                                           |
 | `PATCH /api/v1/auth/account/name`        | Anzeigename ändern (`{ "full_name": "…" }`)                                                                                                                                                                                                      |
 | `PATCH /api/v1/auth/account/profile`     | Profil-/Kontaktdaten ändern (.. „Edit contact information"): `full_name`, `phone`, `additional_phone`, `hide_phones`, `preferred_language`, `spoken_languages`, `website`, `description`, `avatar_url` — nur gesendete Felder werden geschrieben. `preferred_language` wird seit 0335 gegen die 24 EU-Amtssprachen geprüft (`de-AT` → `de`; unbekannter Code → `422` statt stillem Verwerfen) |
@@ -352,6 +366,29 @@ provisioniert (Tenant + `users`-Row).
 | `POST /api/v1/auth/totp/enroll`          | TOTP-Enrollment starten → `secret`, `otpauth_uri`, `qr_data_url`                                                                                                                                                                                 |
 | `POST /api/v1/auth/totp/verify`          | Enrollment per Code bestätigen → `recovery_codes`                                                                                                                                                                                                |
 | `POST /api/v1/auth/totp/disable`         | 2FA mit gültigem Code (oder Recovery) abschalten                                                                                                                                                                                                 |
+
+### Deaktivierte Zugänge — drei Riegel, nicht einer (0356)
+
+Ein gesperrter Zugang wird an DREI Stellen durchgesetzt, weil keine davon allein
+reicht:
+
+1. **`users.deactivated_at`** — die Wahrheit, die alle Wege lesen. Sperrt selbst
+   nichts.
+2. **GoTrue-`ban_duration`** (`auth.users.banned_until`) — blockt den DIREKTEN
+   Login (`POST /auth/v1/token`, öffentlicher anon-Key) und das Erneuern des
+   Refresh-Tokens. Ohne diesen Schritt käme der Zugang am FastAPI-Layer vorbei
+   weiter an PostgREST/Realtime (Wurzel 7).
+3. **`aktiv_gate`** in `core.security.get_current_user` — wirft `401` für ein
+   BEREITS ausgestelltes Access-Token. Ohne diesen Riegel hätte der Gesperrte
+   noch die Restlaufzeit seines Tokens (bis zu einer Stunde) vollen Zugriff —
+   also genau die Zeitspanne, in der man ihn sperren will.
+
+Der Riegel ist fail-closed für die Sperre, aber **nicht** für einen Lesefehler:
+ist `deactivated_at` gerade nicht abfragbar, antwortet er `503`
+(„Konto konnte nicht geprüft werden"), nicht `401`. Ein Datenbankausfall darf
+nicht als Kontosperre ausgegeben werden — beides ist restriktiv, nur eines ist
+wahr (Wurzel 4/5). API-Client-Token (Client-Credentials) überspringen den Riegel:
+dahinter steht kein `users`-Zugang, ihre Sperre ist der Widerruf des Secrets.
 
 ### Zwei-Faktor-Authentifizierung (MFA/AAL2) — GoTrue-nativ
 

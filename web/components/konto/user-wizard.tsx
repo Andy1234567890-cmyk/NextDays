@@ -11,10 +11,15 @@
 // ersatzlos entfallen: ein Passwort, das der Betreiber kennt und per Chat
 // weitergibt, ist kein Geheimnis des Nutzers mehr. Kein Klartext-Passwort
 // erreicht das Frontend — weder erzeugt noch angezeigt.
+//
+// Ebenfalls behoben (0356): Telefonnummer, Zusatznummer, „Nummern ausblenden",
+// gesprochene Sprachen und Anmerkung waren ATTRAPPEN — die Felder standen in
+// Schritt 1/2, hingen an keinem Zustand und gingen nicht in den Request. Wer
+// eine Nummer eintrug, fand danach ein leeres Feld. Jetzt tragen sie Zustand,
+// gehen mit `POST /auth/invite` mit und landen in derselben `users`-Zeile wie
+// Name und Rolle.
 import { Icon } from "@iconify/react";
 import { useLocale, useTranslations } from "next-intl";
-
-import { useLanguageOptions } from "@/lib/use-language-options";
 import { useEffect, useState } from "react";
 
 import { toast } from "sonner";
@@ -31,6 +36,7 @@ import { Button } from "@nextdays/ui/button";
 import { Checkbox } from "@nextdays/ui/checkbox";
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
+import { PhoneInput } from "@nextdays/ui/phone-input";
 import {
   Select,
   SelectContent,
@@ -46,9 +52,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@nextdays/ui/sheet";
+import { Textarea } from "@nextdays/ui/textarea";
 import { cn } from "@/lib/utils";
 
 import { SprachAuswahl } from "@/components/sprache-auswahl";
+import { GesprocheneSprachen } from "./gesprochene-sprachen";
 import { PermissionGroups } from "./permission-groups";
 import {
   ROLE_DEFAULT_PERMISSIONS,
@@ -56,7 +64,15 @@ import {
   WIZARD_STEPS,
 } from "./user-wizard-data";
 
-export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
+export function UserWizard({
+  trigger,
+  tenantCountry = null,
+}: {
+  trigger: React.ReactNode;
+  /** Land des Betriebs (ISO-2) — Vorbelegung der Telefon-Vorwahl. `null` heißt
+   *  „nicht erfasst"; dann bleibt es bei der Vorgabe des Telefonfelds. */
+  tenantCountry?: string | null;
+}) {
   const t = useTranslations("account");
   // Vorbelegung der E-Mail-Sprache: die Sprache, in der der Betreiber GERADE
   // arbeitet — nicht hart „de". Recherche (Smashing Magazine, Clay/Liferay):
@@ -73,6 +89,8 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [additionalPhone, setAdditionalPhone] = useState("");
   const [hidePhones, setHidePhones] = useState(false);
   // Schritt 2 — `language` = Sprache der E-Mails an DIESEN Nutzer.
   const [language, setLanguage] = useState(uiLocale);
@@ -96,7 +114,8 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
 
   const reset = () => {
     setStep(0);
-    setFirstName(""); setLastName(""); setEmail(""); setHidePhones(false);
+    setFirstName(""); setLastName(""); setEmail("");
+    setPhone(""); setAdditionalPhone(""); setHidePhones(false);
     setLanguage(uiLocale); setSpoken([]); setNotes("");
     setRole(""); setPerms(new Set());
     setSelectedProps(new Set());
@@ -140,6 +159,13 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
       role: role as UserRole,
       permissions: [...perms],
       preferred_language: language,
+      // Nur Ausgefülltes mitschicken: ein leerer String wäre in der Spalte ein
+      // Wert, der wie eine Angabe aussieht. Leer bleibt NULL/Default.
+      phone: phone.trim() || undefined,
+      additional_phone: additionalPhone.trim() || undefined,
+      hide_phones: hidePhones,
+      spoken_languages: spoken,
+      notes: notes.trim() || undefined,
     });
     if (!res.ok) {
       setSubmitting(false);
@@ -218,7 +244,11 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
                   firstName={firstName} setFirstName={setFirstName}
                   lastName={lastName} setLastName={setLastName}
                   email={email} setEmail={setEmail}
+                  phone={phone} setPhone={setPhone}
+                  additionalPhone={additionalPhone}
+                  setAdditionalPhone={setAdditionalPhone}
                   hidePhones={hidePhones} setHidePhones={setHidePhones}
+                  land={tenantCountry}
                 />
               )}
               {step === 1 && (
@@ -333,12 +363,20 @@ function Stepper({ current }: { current: number }) {
   );
 }
 
-/* ---------- Schritt 1: Kontakt ---------- */
+/* ---------- Schritt 1: Kontakt ----------
+ * Die Telefonfelder laufen über <PhoneInput> (geteilte Komponente, alle 27
+ * EU-Staaten + CH/UK). Vorher stand hier ein eigenes Select mit FÜNF fest
+ * verdrahteten Vorwahlen (DE/AT/CH/DK/US) neben einem Input ohne Zustand: eine
+ * Auswahl, die nichts speichert, und eine Länderliste, die einen belgischen
+ * Eigentümer nicht abbilden kann. */
 function StepContact(p: {
   firstName: string; setFirstName: (v: string) => void;
   lastName: string; setLastName: (v: string) => void;
   email: string; setEmail: (v: string) => void;
+  phone: string; setPhone: (v: string) => void;
+  additionalPhone: string; setAdditionalPhone: (v: string) => void;
   hidePhones: boolean; setHidePhones: (v: boolean) => void;
+  land: string | null;
 }) {
   const t = useTranslations("account");
   return (
@@ -348,19 +386,23 @@ function StepContact(p: {
       <FieldText label={t("userWizard.email")} required type="email" value={p.email} onChange={p.setEmail} />
 
       <div className="flex flex-col gap-1.5">
-        <Label>{t("userWizard.phone")}</Label>
-        <div className="flex gap-2">
-          <PhoneCountry />
-          <Input type="tel" placeholder="+49 1525 1239026" className="flex-1" />
-        </div>
+        <Label htmlFor="w-phone">{t("userWizard.phone")}</Label>
+        <PhoneInput
+          id="w-phone"
+          value={p.phone}
+          onChange={p.setPhone}
+          defaultCountry={p.land ?? undefined}
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label>{t("userWizard.extraPhone")}</Label>
-        <div className="flex gap-2">
-          <PhoneCountry />
-          <Input type="tel" placeholder="+1 2015550123" className="flex-1" />
-        </div>
+        <Label htmlFor="w-phone2">{t("userWizard.extraPhone")}</Label>
+        <PhoneInput
+          id="w-phone2"
+          value={p.additionalPhone}
+          onChange={p.setAdditionalPhone}
+          defaultCountry={p.land ?? undefined}
+        />
       </div>
 
       <label className="flex items-center gap-2 text-sm">
@@ -374,23 +416,6 @@ function StepContact(p: {
   );
 }
 
-function PhoneCountry() {
-  return (
-    <Select defaultValue="de">
-      <SelectTrigger className="w-32 shrink-0">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="de">DE +49</SelectItem>
-        <SelectItem value="at">AT +43</SelectItem>
-        <SelectItem value="ch">CH +41</SelectItem>
-        <SelectItem value="dk">DK +45</SelectItem>
-        <SelectItem value="us">US +1</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-}
-
 /* ---------- Schritt 2: Zusatzinfos ---------- */
 function StepExtra(p: {
   language: string; setLanguage: (v: string) => void;
@@ -398,20 +423,6 @@ function StepExtra(p: {
   notes: string; setNotes: (v: string) => void;
 }) {
   const t = useTranslations("account");
-  const sprachen = useLanguageOptions();
-  const [search, setSearch] = useState("");
-
-  const toggle = (lang: string) =>
-    p.setSpoken(
-      p.spoken.includes(lang)
-        ? p.spoken.filter((l) => l !== lang)
-        : [...p.spoken, lang],
-    );
-
-  const filtered = sprachen.filter((l) =>
-    l.label.toLowerCase().includes(search.trim().toLowerCase()),
-  );
-
   return (
     <div className="flex flex-col gap-5">
       {/* Sprache der E-Mails an diesen Nutzer. Bis hier stand ein Select mit
@@ -427,66 +438,15 @@ function StepExtra(p: {
         required
       />
 
-      <div className="flex flex-col gap-1.5">
-        <Label>{t("userWizard.spokenLanguages")}</Label>
-        {p.spoken.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {p.spoken.map((l) => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => toggle(l)}
-                className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs"
-              >
-                <Icon icon="ph:x" className="size-3" />
-                {l}
-              </button>
-            ))}
-          </div>
-        )}
-        <div className="rounded-(--radius) border border-input">
-          {/* Suchfeld */}
-          <div className="flex items-center gap-2 border-b border-input px-3">
-            <Icon
-              icon="ph:magnifying-glass"
-              className="size-4 shrink-0 text-muted-foreground"
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("userWizard.searchLanguage")}
-              className="w-full bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
-            />
-          </div>
-          {/* Gefilterte Liste */}
-          <div className="max-h-48 overflow-y-auto">
-            {filtered.length === 0 ? (
-              <p className="px-3 py-4 text-sm text-muted-foreground">
-                {t("userWizard.noLanguageFound")}
-              </p>
-            ) : (
-              filtered.map((l) => (
-                <label
-                  key={l.value}
-                  className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-secondary/50"
-                >
-                  <Checkbox
-                    checked={p.spoken.includes(l.value)}
-                    onCheckedChange={() => toggle(l.value)}
-                  />
-                  {l.label}
-                </label>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Chips + Suche + Liste liegen jetzt in <GesprocheneSprachen> — dieselbe
+          Komponente nutzt die Detailseite. */}
+      <GesprocheneSprachen value={p.spoken} onChange={p.setSpoken} />
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="w-notes">{t("userWizard.notes")}</Label>
-        <Input
+        <Textarea
           id="w-notes"
+          rows={3}
           value={p.notes}
           onChange={(e) => p.setNotes(e.target.value)}
         />

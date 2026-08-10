@@ -341,6 +341,10 @@ export type ChannelMappingRow = {
   property_title: string | null;
   /** Titelbild des Objekts (Cover, sonst erstes Foto); null = keins. */
   property_photo: string | null;
+  /** Teilt dieses Objekt seine Portal-Kennung mit einem bereits verbundenen
+   *  (gemeinsames Gebäude)? Nur dann darf der Assistent die bestehende
+   *  Hotel-ID übernehmen; sonst hat das Objekt eine EIGENE Kennung. */
+  shares_building: boolean;
   ota_hotel_id: string | null;
   // OTA-Zimmertyp, auf den dieses Objekt gemappt ist (Code + Klarname) — die
   // Anzeige nutzt Titel/Code, nicht die Hotel-ID (für alle Zimmer gleich).
@@ -363,6 +367,11 @@ export type ChannelDetail = {
   // Channex-Kanal-ID des Portals (Hotels: alle Zimmer teilen einen Kanal); für
   // „Verbindung trennen". null = nicht verbunden.
   channel_id: string | null;
+  /** ALLE Kanal-IDs dieses Portals — eine je eigener Portal-Kennung. Bei
+   *  einzelnen Ferienhäusern hat jedes Haus seine eigene Hotel-ID und damit
+   *  einen eigenen Kanal; portalweite Aktionen müssen über ALLE laufen, nicht
+   *  über `channel_id` (das ist nur ein Vertreter). */
+  channel_ids: string[];
   // Kanal-eigene Aktionen aus dem Katalog (z.B. "load_future_reservations").
   actions: string[];
   // Läuft der Kanal bei Channex? Verbunden ≠ aktiv — Channex legt Kanäle
@@ -374,14 +383,29 @@ export type ChannelDetail = {
 };
 
 // Eine kanal-eigene Aktion auslösen. Welche es gibt, sagt `ChannelDetail.actions`.
+/** Ergebnis einer Kanal-Aktion. `fetched`/`saved` sind die ECHTEN Zahlen des
+ *  anschließenden Buchungs-Imports — ohne sie könnte die Oberfläche nur „ok"
+ *  melden, während das Portal gerade nichts geliefert hat (oder zehn Buchungen
+ *  unterwegs sind). */
 export async function runChannelAction(
   channelId: string,
   action: string,
-): Promise<Result<{ status: string; action: string }>> {
-  return call<{ status: string; action: string }>(
-    `/channels/${channelId}/actions/${action}`,
-    { method: "POST" },
-  );
+): Promise<
+  Result<{
+    status: string;
+    action: string;
+    fetched?: number;
+    saved?: number;
+    skipped?: number;
+  }>
+> {
+  return call<{
+    status: string;
+    action: string;
+    fetched?: number;
+    saved?: number;
+    skipped?: number;
+  }>(`/channels/${channelId}/actions/${action}`, { method: "POST" });
 }
 
 export async function channelDetail(

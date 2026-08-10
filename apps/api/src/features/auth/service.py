@@ -228,6 +228,16 @@ class AuthService:
                 full_name=req.full_name,
                 permissions=permissions,
                 language=req.preferred_language,
+                # Kontakt-/Zusatzangaben aus dem Wizard. Bis 0356 sammelte die
+                # Oberflaeche sie ein und verwarf sie — sie stehen jetzt in
+                # derselben Zeile wie Name und Rolle.
+                kontakt={
+                    "phone": req.phone,
+                    "additional_phone": req.additional_phone,
+                    "hide_phones": req.hide_phones,
+                    "spoken_languages": req.spoken_languages,
+                    "notes": req.notes,
+                },
             )
         except Exception:
             self._rollback_user(user_id)
@@ -917,6 +927,7 @@ class AuthService:
         full_name: str,
         permissions: list[str] | None = None,
         language: str | None = None,
+        kontakt: dict[str, object] | None = None,
     ) -> None:
         zeile: dict[str, object] = {
             "id": user_id,
@@ -926,6 +937,21 @@ class AuthService:
             "full_name": full_name,
             "permissions": permissions or [],
         }
+        # Kontakt-/Zusatzangaben nur schreiben, wenn wirklich etwas kam. Ein
+        # leeres Feld hier zu setzen hiesse dieselbe Verwechslung wie bei der
+        # Sprache unten: „nicht erfasst" und „bewusst geleert" wuerden gleich
+        # aussehen. `hide_phones` und `spoken_languages` haben in der DB einen
+        # Default (false / []) — ohne Angabe greift der, kein erfundener Wert.
+        for feld, wert in (kontakt or {}).items():
+            if isinstance(wert, str):
+                text = wert.strip()
+                if text:
+                    zeile[feld] = text
+            elif isinstance(wert, bool):
+                if wert:
+                    zeile[feld] = True
+            elif wert:
+                zeile[feld] = wert
         # NUR schreiben, wenn der Einladende die Sprache wirklich angegeben
         # hat. Ein `"preferred_language": None` wäre zwar dasselbe Ergebnis,
         # aber ein leeres Feld hier zu setzen hieße später, nicht mehr

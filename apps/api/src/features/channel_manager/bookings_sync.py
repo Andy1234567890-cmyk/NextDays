@@ -789,9 +789,24 @@ class BookingsSyncMixin:
             and attrs.get("arrival_date")
             and attrs.get("departure_date")
         ):
+            # WELCHES Feld fehlt — sonst ist „incomplete" eine Sackgasse: die
+            # Buchung verschwindet, und niemand kann sagen, ob das Portal die
+            # Property, den Zeitraum oder die ID nicht geliefert hat.
             log.warning(
                 "reservation_skip_incomplete",
                 tenant_id=tenant_id, booking_id=booking_id,
+                fehlend=[
+                    name
+                    for name, wert in (
+                        ("booking_id", booking_id),
+                        ("property_id", attrs.get("property_id")),
+                        ("arrival_date", attrs.get("arrival_date")),
+                        ("departure_date", attrs.get("departure_date")),
+                    )
+                    if not wert
+                ],
+                ota_name=attrs.get("ota_name"),
+                ota_reservation_code=attrs.get("ota_reservation_code"),
             )
             return False
         # Status-Whitelist: nur echte Buchungs-Zustände projizieren. Ein
@@ -857,9 +872,33 @@ class BookingsSyncMixin:
             **gastfelder_uebernehmen(customer),
         }
         try:
-            db.table("reservations").upsert(
-                row, on_conflict="source_channex_booking_id"
-            ).execute()
+            # Kennt der Historien-Import die Buchung schon (dort ist der
+            # Bestätigungscode die `source_channex_booking_id`), findet ein
+            # Upsert auf der Aggregator-ID sie NICHT und läuft in den UNIQUE auf
+            # `(tenant_id, external_ref)` — dieselbe Falle wie im Live-Pfad
+            # oben. Deshalb zuerst über den Code suchen und dann gezielt
+            # aktualisieren; nur wirklich Unbekanntes wird angelegt (Wurzel 2).
+            ota_code = attrs.get("ota_reservation_code")
+            bekannt = (
+                (
+                    db.table("reservations")
+                    .select("id")
+                    .eq("tenant_id", tenant_id)
+                    .eq("external_ref", ota_code)
+                    .limit(1)
+                    .execute()
+                ).data
+                if ota_code
+                else None
+            )
+            if bekannt:
+                db.table("reservations").update(row).eq(
+                    "id", bekannt[0]["id"]
+                ).execute()
+            else:
+                db.table("reservations").upsert(
+                    row, on_conflict="source_channex_booking_id"
+                ).execute()
         except Exception as exc:  # noqa: BLE001 — Import darf nicht kippen
             log.warning(
                 "import_cancelled_reservation_failed",
@@ -895,27 +934,63 @@ class BookingsSyncMixin:
             db, tenant_id, channex_property_id, rooms=attrs.get("rooms"),
         )
         if not property_id:
+            # Mit Buchungs-Kennung: „kein Mapping" ist der häufigste Grund, warum
+            # ein frisch verbundenes Objekt leer bleibt — dann muss im Log stehen,
+            # WELCHE Buchung es traf und zu welcher Channex-Property sie gehört.
             log.warning(
                 "reservation_skip_no_property",
                 tenant_id=tenant_id,
                 channex_property_id=channex_property_id,
+                booking_id=booking_id,
+                ota_name=attrs.get("ota_name"),
+                ota_reservation_code=attrs.get("ota_reservation_code"),
             )
             return False
 
         ota_name = attrs.get("ota_name")
         channel = self._ota_name_to_channel(ota_name)
         status_in = (attrs.get("status") or "new").lower()
+        _spalten = (
+            "id, checked_out_at, check_in, check_out, property_id,"
+            " payment_collect, unit_id"
+        )
         existing = (
             db.table("reservations")
-            .select(
-                "id, checked_out_at, check_in, check_out, property_id,"
-                " payment_collect, unit_id"
-            )
+            .select(_spalten)
             .eq("tenant_id", tenant_id)
             .eq("source_channex_booking_id", booking_id)
             .limit(1)
             .execute()
         ).data
+        # ZWEITER WEG über den Bestätigungscode des Portals.
+        #
+        # Dieselbe Buchung erreicht uns auf ZWEI Wegen, die verschiedene IDs
+        # mitbringen: der Airbnb-Historien-Import legt den Bestätigungscode als
+        # `source_channex_booking_id` ab (er kennt keine Aggregator-ID), Channex
+        # liefert später seine eigene UUID. Wer nur über die Aggregator-ID sucht,
+        # findet die eigene Zeile nicht, versucht ein INSERT und läuft in den
+        # UNIQUE auf `(tenant_id, external_ref)` — 23505, die Buchung fällt aus
+        # dem Import (live 10.08.2026: `HMPDNF98M4`, Rævehulen; 170 der 177
+        # Buchungen dieses Betriebs tragen den Code statt einer UUID, wären also
+        # alle betroffen, sobald Channex sie liefert).
+        #
+        # Der Bestätigungscode ist die Identität der Buchung BEIM PORTAL und
+        # damit die stabilere Klammer über beide Wege — deshalb ist er auch der
+        # UNIQUE. Gefundene Zeilen werden aktualisiert statt neu angelegt
+        # (Wurzel 2: real kommt alles doppelt, hier sogar über zwei Kanäle).
+        #
+        # Nur wenn ein Code vorliegt: ohne ihn gäbe `is_(None)` die erstbeste
+        # code-lose Zeile zurück und ließe zwei fremde Buchungen verschmelzen.
+        ota_code = attrs.get("ota_reservation_code")
+        if not existing and ota_code:
+            existing = (
+                db.table("reservations")
+                .select(_spalten)
+                .eq("tenant_id", tenant_id)
+                .eq("external_ref", ota_code)
+                .limit(1)
+                .execute()
+            ).data
         # Nach echtem Check-out (0091) ist der Aufenthalt abgeschlossen — ein
         # OTA-Resync darf status='completed' nicht mehr überschreiben (weder
         # auf confirmed zurückdrehen noch nachträglich stornieren + freigeben).
@@ -1518,6 +1593,20 @@ class BookingsSyncMixin:
             )
             data = resp.get("data") or []
             result["fetched"] += len(data)
+            # Was liefert der Aggregator für DIESE Property wirklich? Ohne diese
+            # Zeile ist ein leeres Ergebnis nicht von einem Filter-/Mapping-
+            # Fehler zu unterscheiden — beides sieht als „0 Buchungen" gleich aus.
+            log.info(
+                "import_bookings_seite",
+                channex_property_id=channex_property_id, seite=page,
+                geliefert=len(data),
+                gesamt_laut_channex=(resp.get("meta") or {}).get("total"),
+                inserted_after=inserted_after, arrival_from=arrival_from,
+                otas=sorted({
+                    str((i.get("attributes") or i).get("ota_name") or "?")
+                    for i in data
+                }),
+            )
             for item in data:
                 attrs = item.get("attributes") or item
                 try:
@@ -2119,18 +2208,40 @@ class BookingsSyncMixin:
             attrs = rp.get("attributes") or {}
             if not cx_rp_id:
                 continue
-            cx_rt_id = attrs.get("room_type_id")
+            # Zu welchem Zimmertyp gehört dieser Preis? Die Zuordnung steht in
+            # `relationships.room_type`, NICHT in den Attributen.
+            #
+            # `attributes.room_type_id` existiert bei Channex gar nicht (live
+            # geprüft 10.08.2026, Einzelabruf: die Attributliste kennt das Feld
+            # nicht) — `.get()` lieferte deshalb immer None, die Suche fand nie
+            # einen Zimmertyp, und JEDER Rate-Plan wurde übersprungen. Sichtbar
+            # als `import_rate_plan_no_room_type` bei jedem Connect und
+            # `rate_plans=0` trotz vorhandener Preise. Ohne dieses Mapping geht
+            # für das Objekt KEIN Preis an die Portale.
+            rel = rp.get("relationships") or {}
+            cx_rt_id = ((rel.get("room_type") or {}).get("data") or {}).get(
+                "id"
+            ) or attrs.get("room_type_id")
             rt_map = (
-                db.table("channex_room_type_map")
-                .select("id, local_unit_ref")
-                .eq("tenant_id", tenant_id)
-                .eq("channex_room_type_id", cx_rt_id)
-                .is_("deleted_at", "null")
-                .limit(1)
-                .execute()
-            ).data
+                (
+                    db.table("channex_room_type_map")
+                    .select("id, local_unit_ref")
+                    .eq("tenant_id", tenant_id)
+                    .eq("channex_room_type_id", cx_rt_id)
+                    .is_("deleted_at", "null")
+                    .limit(1)
+                    .execute()
+                ).data
+                if cx_rt_id
+                else None
+            )
             if not rt_map:
-                log.warning("import_rate_plan_no_room_type", channex_rate_plan_id=cx_rp_id)
+                log.warning(
+                    "import_rate_plan_no_room_type",
+                    channex_rate_plan_id=cx_rp_id,
+                    channex_room_type_id=cx_rt_id,
+                    titel=attrs.get("title"),
+                )
                 continue
             # Bereits gemappt? Dann NICHTS anfassen — der Upsert würde die Map
             # sonst auf die aktuelle rt_map-Zeile umhängen (Gegenstück zum

@@ -607,9 +607,14 @@ def _handle_full_sync_property(
 ) -> None:
     """Nächtlicher Voll-Push DB→Channex (Availability über den ganzen Horizont +
     Recompute-Enqueue für Preise/Min-Stay). Heilt Drift aus verlorenen
-    Delta-Pushes."""
+    Delta-Pushes.
+
+    `vollstaendig` setzt nur der manuelle Knopf: dann werden zusätzlich ALLE
+    Buchungen (ohne 3-Tage-Fenster) und die Gespräche zurückgeholt. Ältere Jobs
+    ohne das Feld bleiben der nächtliche Lauf."""
     _svc(db, budget).full_sync_property(
-        payload["tenant_id"], payload["property_id"]
+        payload["tenant_id"], payload["property_id"],
+        vollstaendig=bool(payload.get("vollstaendig")),
     )
 
 

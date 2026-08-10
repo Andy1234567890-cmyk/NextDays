@@ -818,6 +818,12 @@ class ChannelMappingRow(BaseModel):
     property_title: str | None = None
     # Titelbild des Objekts (Cover, sonst erstes Foto); None = keins vorhanden.
     property_photo: str | None = None
+    # Teilt dieses Objekt seine Portal-Kennung mit einem BEREITS verbundenen
+    # Objekt (gemeinsames Gebäude, 0264)? Nur dann darf der Verbinde-Assistent
+    # die vorhandene Hotel-ID übernehmen und die Eingabe überspringen. Ohne
+    # Gebäude ist jedes Objekt ein eigenes Haus mit EIGENER Kennung — dort wäre
+    # eine übernommene Hotel-ID die eines fremden Objekts.
+    shares_building: bool = False
     ota_hotel_id: str | None = None
     # OTA-Zimmertyp, auf den DIESES Objekt gemappt ist (unter der Hotel-ID):
     # Code (z. B. Booking room_type_code 651942003) + Klarname (z. B. „Double Room").
@@ -847,6 +853,17 @@ class ChannelDetailResponse(BaseModel):
     # Channex-Kanal-ID des Portals (bei Hotels teilen sich alle Zimmer einen Kanal
     # = eine Hotel-ID). Für „Verbindung trennen" auf Portal-Ebene. None = nicht verbunden.
     channel_id: str | None = None
+    # ALLE Kanal-IDs dieses Portals — eine je eigener Portal-Kennung.
+    #
+    # `channel_id` (oben) ist „irgendeine" und stammt aus der Hotel-Annahme: EIN
+    # Hotel = EINE Hotel-ID = EIN Kanal. Bei einem Betrieb mit vielen einzelnen
+    # Ferienhäusern ist jedes Haus eine EIGENE Booking.com-Hotel-ID und damit ein
+    # EIGENER Channex-Kanal. Jede Aktion, die „für dieses Portal" gilt, muss
+    # deshalb über ALLE Kanäle laufen, nicht über den erstbesten — sonst wirkt
+    # ein Knopfdruck auf genau ein Haus und die übrigen bleiben unberührt
+    # (live 10.08.2026: „Bestehende Buchungen laden" stieß von 18 Häusern immer
+    # nur eines an, weshalb Kornblomst dauerhaft ohne Buchungen blieb).
+    channel_ids: list[str] = Field(default_factory=list)
     # Kanal-eigene Aktionen aus dem Katalog (z.B. load_future_reservations).
     # Die UI bietet nur an, was der Kanal wirklich kann.
     actions: list[str] = Field(default_factory=list)

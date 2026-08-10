@@ -32,7 +32,7 @@ class FullSyncMixin:
     _FULL_SYNC_DAYS = 500
 
     def full_sync_property(
-        self, tenant_id: str, property_id: str
+        self, tenant_id: str, property_id: str, *, vollstaendig: bool = False
     ) -> dict[str, int]:
         """Voll-Abgleich der Channex-Property, zu der das Objekt gehört.
 
@@ -43,7 +43,18 @@ class FullSyncMixin:
         je Wert). Das entspricht der Zertifizierung Test 1: „2 API calls —
         500 days availability (all rooms), 500 days rates & restrictions (all
         rates)". Nicht-geteilte Objekte (Ferienobjekt) verhalten sich wie
-        bisher (Scope = genau ein Objekt)."""
+        bisher (Scope = genau ein Objekt).
+
+        ``vollstaendig`` unterscheidet die zwei Anlässe, die vorher denselben
+        engen Rückholpfad benutzten:
+
+        * ``False`` (nächtlicher Lauf): der Rückhol-Teil dient allein der
+          Feed-Retention (~30 Min) und schaut deshalb nur 3 Tage zurück. Jede
+          Nacht die ganze Historie zu ziehen wäre eine Dauerlast ohne Ertrag.
+        * ``True`` (Knopf „Voll-Abgleich"): der Betrieb erwartet dort ALLE
+          Buchungen und die Gespräche — nicht die letzten drei Tage. Genau das
+          fehlte: der Knopf hieß „Voll-Abgleich" und holte ein 3-Tage-Fenster,
+          Nachrichten überhaupt nicht."""
         if not self._channex.is_configured or self._db is None:
             return {"availability_values": 0, "days": 0}
         db = self._db
@@ -126,22 +137,34 @@ class FullSyncMixin:
         # fallen bei Channex nach ~30 Min PERMANENT aus dem Feed (Retention-Doku).
         # Fiel der Worker/Redis länger aus oder wurde ein Mapping erst spät aktiv,
         # wären die Buchungen dieses Fensters sonst verloren (Kalender bliebe
-        # offen → Überbuchung). Der nächtliche GET /bookings holt sie nach —
-        # idempotent über channex_booking_id (kein Doppel-Insert), EINMAL je
-        # Channex-Property (deckt alle Zimmer ab). Fenster großzügig: 3 Tage.
+        # offen → Überbuchung). Der GET /bookings holt sie nach — idempotent über
+        # channex_booking_id (kein Doppel-Insert), EINMAL je Channex-Property
+        # (deckt alle Zimmer ab).
+        #
+        # Nachts reichen 3 Tage (nur die Retention-Lücke heilen). Beim manuellen
+        # Voll-Abgleich wird KEIN Fenster gesetzt: dort ist die Erwartung „hole
+        # alles", auch die Buchung von vor einem halben Jahr.
+        #
+        # EHRLICHE GRENZE (Channex-Doku, belegt in import_existing_bookings):
+        # Channex liefert nur, was es selbst als Revision gesehen hat. Buchungen
+        # von VOR dem Connect sind darüber nicht rückholbar — der Knopf holt den
+        # vollen Channex-Bestand, nicht die volle Portal-Historie.
+        channex_property_id = states[0]["mapping"]["channex_property_id"]
         try:
             recovery_from = (
-                datetime.now(UTC) - timedelta(days=3)
-            ).strftime("%Y-%m-%dT%H:%M:%S")
+                None if vollstaendig
+                else (datetime.now(UTC) - timedelta(days=3)).strftime(
+                    "%Y-%m-%dT%H:%M:%S"
+                )
+            )
             rec = self.import_bookings_for_property(
-                tenant_id, states[0]["mapping"]["channex_property_id"],
-                inserted_after=recovery_from,
+                tenant_id, channex_property_id, inserted_after=recovery_from,
             )
             if rec.get("saved"):
                 log.info(
                     "channex_full_sync_recovery",
                     tenant_id=tenant_id, property_id=property_id,
-                    recovered=rec["saved"],
+                    recovered=rec["saved"], vollstaendig=vollstaendig,
                 )
         except ChannexBudgetExhausted:
             raise  # Kontroll-Signal (Wurzel 5) — Job verzögern statt still „done"
@@ -150,6 +173,22 @@ class FullSyncMixin:
                 "channex_full_sync_recovery_failed",
                 property_id=property_id, error=str(exc)[:200],
             )
+
+        # Posteingang nachholen — nur beim manuellen Voll-Abgleich. Der Betrieb
+        # drückt den Knopf, WEIL etwas fehlt; Nachrichten hatten bis hierher
+        # keinen Nachhol-Weg (nur Webhook + Journal, und das Journal vergisst
+        # nach einem Monat). Nachts läuft das absichtlich nicht: es wären zwei
+        # Requests je Thread je Objekt je Nacht, ohne dass jemand etwas vermisst.
+        if vollstaendig:
+            try:
+                self.nachrichten_nachholen(tenant_id, channex_property_id)
+            except ChannexBudgetExhausted:
+                raise  # Kontroll-Signal (Wurzel 5)
+            except Exception as exc:  # noqa: BLE001 — Nachtrag kippt den Lauf nicht
+                log.warning(
+                    "channex_full_sync_nachrichten_failed",
+                    property_id=property_id, error=str(exc)[:200],
+                )
 
         log.info(
             "channex_full_sync_pushed",

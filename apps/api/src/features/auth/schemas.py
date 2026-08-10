@@ -37,6 +37,27 @@ def pruefe_sprache(v: str | None) -> str | None:
     return code
 
 
+def begrenze_sprachliste(v: list[str] | None) -> list[str] | None:
+    """Gesprochene Sprachen säubern und HART begrenzen.
+
+    Jeder unbegrenzte Bereich bekommt eine Obergrenze (Wurzel 8): ohne sie
+    landet eine Liste mit 100000 Einträgen in `users.spoken_languages` und wird
+    danach bei jedem Laden der Nutzerliste mitgeschleppt. 40 ist mehr, als ein
+    Mensch spricht, und weniger, als schadet. Leere Einträge fallen raus,
+    Dubletten ebenfalls — die Reihenfolge der ersten Nennung bleibt.
+    """
+    if v is None:
+        return None
+    sauber: list[str] = []
+    for eintrag in v:
+        text = eintrag.strip()[:80]
+        if text and text not in sauber:
+            sauber.append(text)
+    if len(sauber) > 40:
+        raise ValueError("Höchstens 40 gesprochene Sprachen.")
+    return sauber
+
+
 class UserRole(StrEnum):
     admin = "admin"        # voller Systemzugriff (Lastenheft §4.1)
     co_admin = "co_admin"  # operative Rechte Eigentümer + Mitarbeiter kombiniert
@@ -123,11 +144,30 @@ class InviteRequest(BaseModel):
     # dasselbe Datum hieße, dass das Frontend je Endpunkt raten muss, wie das
     # Feld gerade heißt.
     preferred_language: str | None = Field(default=None, max_length=10)
+    # Kontakt- und Zusatzangaben aus dem Benutzer-Wizard (Schritt 1 + 2). Bis
+    # 0356 sammelte der Wizard sie ein und WARF SIE WEG — die Felder standen in
+    # der Oberfläche, gingen aber nie in den Request. Wer eine Telefonnummer
+    # eintrug, fand danach ein leeres Feld (Wurzel 4: eine Eingabe, die nichts
+    # bewirkt, ist eine Falschaussage der Oberfläche).
+    phone: str | None = Field(default=None, max_length=40)
+    additional_phone: str | None = Field(default=None, max_length=40)
+    hide_phones: bool = False
+    # Gesprochene Sprachen: rein informativ (Gäste-/Aufgabenzuteilung), NICHT
+    # die Sprache der E-Mails — die steht in `preferred_language`. Deshalb hier
+    # KEINE Prüfung gegen die 24 Locales: „Thai" darf ein Mitarbeiter sprechen,
+    # auch wenn es die Oberfläche nicht gibt.
+    spoken_languages: list[str] | None = None
+    notes: str | None = Field(default=None, max_length=5000)
 
     @field_validator("preferred_language")
     @classmethod
     def _sprache_pruefen(cls, v: str | None) -> str | None:
         return pruefe_sprache(v)
+
+    @field_validator("spoken_languages")
+    @classmethod
+    def _sprachen_begrenzen(cls, v: list[str] | None) -> list[str] | None:
+        return begrenze_sprachliste(v)
 
 
 class InviteResponse(BaseModel):
@@ -379,6 +419,42 @@ class TenantUser(BaseModel):
     # Bearbeiten-Dialog den gespeicherten Wert anzeigen kann statt „nicht
     # gesetzt" zu behaupten und ihn beim Speichern zu ueberschreiben.
     preferred_language: str | None = None
+    # Kontakt-/Zusatzangaben (Detailseite Konto → Benutzer → <Person>). Alle
+    # optional, weil Altbestand sie nicht gepflegt hat — leer heisst „nicht
+    # erfasst", nicht „leer gesetzt".
+    additional_phone: str | None = None
+    hide_phones: bool = False
+    spoken_languages: list[str] = []
+    notes: str | None = None
+    # Zugang gesperrt? `deactivated_at` ist die Wahrheit (NULL = aktiv);
+    # `is_active` ist daraus abgeleitet und steht nur da, damit die Oberflaeche
+    # keinen Zeitstempel-Vergleich nachbauen muss.
+    deactivated_at: str | None = None
+    is_active: bool = True
+    # Wann dieser Zugang angelegt wurde — die Liste sortiert danach, und die
+    # Detailseite benennt es („Mitglied seit"). UNSERE Uhr ist hier die richtige
+    # Quelle: das Anlegen IST unser Ereignis (kein Fall von Wurzel 5b).
+    created_at: str | None = None
+
+
+class ManagedUserDeactivateResponse(BaseModel):
+    """Ergebnis von Deaktivieren/Aktivieren eines Zugangs.
+
+    Traegt den vollstaendigen Nutzer zurueck (nicht nur ein ok), damit die
+    Oberflaeche den neuen Zustand ANZEIGEN kann, ohne ihn zu raten.
+    """
+
+    user: TenantUser
+    # Zustand des ANMELDEDIENSTES (GoTrue) nach der Aktion: True = der Login ist
+    # dort gebannt. Steht getrennt neben `user.is_active`, weil beides
+    # auseinanderlaufen KANN — genau dieser Fall darf nicht verschwiegen werden
+    # (Wurzel 5: kein stilles „done" bei Teilerfolg):
+    #   * deaktiviert + login_gesperrt=false → das Feld steht, der Bann nicht.
+    #     Der FastAPI-Riegel (aktiv_gate) haelt zu, der Direktpfad laeuft bis
+    #     zum Token-Ablauf weiter → Vorgang wiederholen.
+    #   * aktiviert + login_gesperrt=true → freigeschaltet, aber der Bann haengt
+    #     noch: die Person kann sich nicht anmelden, obwohl sie aktiv aussieht.
+    login_gesperrt: bool
 
 
 class OwnerAssignmentUpdate(BaseModel):
@@ -441,11 +517,26 @@ class UpdateManagedUserRequest(BaseModel):
     # Sprache der E-Mails an diesen Nutzer nachträglich ändern (Konto →
     # Benutzer → Bearbeiten). Gegen die 24 Locales geprüft wie beim Einladen.
     preferred_language: str | None = Field(default=None, max_length=10)
+    # Kontaktdaten und Zusatzangaben der Detailseite. Wie oben: gesendet =
+    # gesetzt, weggelassen = unverändert. Leerstring bedeutet ausdrücklich
+    # „gelöscht" (der Service macht daraus NULL) — nur so lässt sich eine
+    # falsch eingetragene Nummer auch wieder entfernen (Wurzel 1: der
+    # Gegenzustand muss erreichbar sein).
+    phone: str | None = Field(default=None, max_length=40)
+    additional_phone: str | None = Field(default=None, max_length=40)
+    hide_phones: bool | None = None
+    spoken_languages: list[str] | None = None
+    notes: str | None = Field(default=None, max_length=5000)
 
     @field_validator("preferred_language")
     @classmethod
     def _sprache_pruefen(cls, v: str | None) -> str | None:
         return pruefe_sprache(v)
+
+    @field_validator("spoken_languages")
+    @classmethod
+    def _sprachen_begrenzen(cls, v: list[str] | None) -> list[str] | None:
+        return begrenze_sprachliste(v)
 
 
 class UpdateProfileRequest(BaseModel):
@@ -494,6 +585,11 @@ class UpdateProfileRequest(BaseModel):
     @classmethod
     def _sprache_pruefen(cls, v: str | None) -> str | None:
         return pruefe_sprache(v)
+
+    @field_validator("spoken_languages")
+    @classmethod
+    def _sprachen_begrenzen(cls, v: list[str] | None) -> list[str] | None:
+        return begrenze_sprachliste(v)
 
 
 class UpdatePasswordRequest(BaseModel):

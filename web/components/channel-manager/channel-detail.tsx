@@ -281,6 +281,7 @@ export function ChannelDetail({
         configured={configured}
         portalLabel={meta.label}
         channelId={channelId}
+        channelIds={detail?.channel_ids ?? []}
         // „Zukünftige Buchungen laden" bietet nicht jedes Portal an — der
         // Kanal-Katalog sagt, was geht (kein geratener Knopf).
         canPullFuture={
@@ -358,9 +359,20 @@ function MappingTable({
       if (d.created > 0) router.refresh();
     });
   }
-  // Hotel-ID einer BEREITS verbundenen Zeile: bei Hotels teilen alle Zimmer eine
-  // Hotel-ID. Weitere Zimmer müssen sie NICHT erneut eingeben — der Assistent
-  // überspringt dann den Hotel-ID-Schritt und geht direkt ins Zimmer-Mapping.
+  // Hotel-ID einer BEREITS verbundenen Zeile: bei einem Hotel teilen alle
+  // Zimmertypen EINE Hotel-ID. Weitere Zimmer müssen sie dann nicht erneut
+  // eingeben — der Assistent überspringt den Hotel-ID-Schritt und geht direkt
+  // ins Zimmer-Mapping.
+  //
+  // Das gilt aber NUR innerhalb eines Gebäudes, und darüber entscheidet der
+  // Server (`shares_building`, aus `properties.building_id`). Vorher wurde die
+  // ID hier stur aus der ersten verbundenen Zeile genommen und JEDER Zeile
+  // mitgegeben. Bei einem Betrieb mit lauter einzelnen Ferienhäusern — jedes mit
+  // eigener Booking.com-Hotel-ID — war damit nach der ERSTEN Verbindung keine
+  // weitere mehr möglich: der Assistent sprang mit der fremden Hotel-ID ins
+  // Mapping und bot nirgends eine Fläche, die eigene einzutragen (live
+  // 10.08.2026: 19 Objekte ohne Gebäude, 2 verbunden, die übrigen 16
+  // unverbindbar).
   const connectedHotelId =
     mappings.find((m) => m.connected && m.ota_hotel_id)?.ota_hotel_id ?? null;
 
@@ -685,7 +697,10 @@ function MappingRow({
               variant="accent"
               presetPortalCode={portalCode}
               presetPropertyId={row.property_id}
-              presetHotelId={connectedHotelId}
+              // Nur wenn dieses Objekt die Kennung wirklich TEILT (gemeinsames
+              // Gebäude mit einem verbundenen Objekt). Sonst hat es seine eigene
+              // Hotel-ID und muss danach gefragt werden.
+              presetHotelId={row.shares_building ? connectedHotelId : null}
               accommodationType={accommodationType}
               onDone={onConnected}
             />
@@ -703,6 +718,7 @@ function BookingsSection({
   configured,
   portalLabel,
   channelId,
+  channelIds,
   canPullFuture,
   istAirbnb,
 }: {
@@ -710,12 +726,16 @@ function BookingsSection({
   configured: boolean;
   portalLabel: string;
   channelId: string | null;
+  /** ALLE Kanäle dieses Portals (eine Kennung = ein Kanal). „Bestehende
+   *  Buchungen laden" läuft über jeden einzelnen. */
+  channelIds: string[];
   canPullFuture: boolean;
   /** Nur Airbnb: der Historien-Import geht direkt ans Portal, nicht über den
    *  Aggregator — er steht deshalb in keinem Kanal-Katalog. */
   istAirbnb: boolean;
 }) {
   const t = useTranslations("channels");
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
@@ -771,18 +791,53 @@ function BookingsSection({
     });
   }
 
-  // Buchungen holen, die VOR dem Verbinden im Portal entstanden sind.
+  // Buchungen holen, die VOR dem Verbinden im Portal entstanden sind — für
+  // JEDEN Kanal dieses Portals.
+  //
+  // Vorher lief das nur auf `channelId`, also auf EINEM beliebigen Kanal. Das
+  // stammt aus der Hotel-Annahme (ein Hotel, eine Hotel-ID, ein Kanal). Bei
+  // einzelnen Ferienhäusern hat jedes seine eigene Hotel-ID und damit einen
+  // eigenen Kanal: der Knopf stieß von 18 Häusern genau eines an, und die
+  // übrigen 17 bekamen ihre bestehenden Buchungen NIE — sichtbar daran, dass
+  // „Feriehus Kornblomst" dauerhaft ohne Buchung blieb, während der Aggregator
+  // für dessen Hotel-ID auch nichts hatte (nie angestoßen).
+  //
+  // Nacheinander, nicht parallel: es sind schreibende Portal-Aktionen, und
+  // Channex deckelt die Aufrufe je Konto und Minute.
   function pullFuture() {
-    if (!channelId) return;
+    const ids = channelIds.length > 0 ? channelIds : channelId ? [channelId] : [];
+    if (ids.length === 0) return;
     setMessage(null);
     startTransition(async () => {
-      const res = await runChannelAction(channelId, "load_future_reservations");
-      setIsError(!res.ok);
+      const fehler: string[] = [];
+      // Was WIRKLICH angekommen ist. Der Server fasst nach dem Portal-Auftrag
+      // nach und liefert die echten Zahlen; ohne sie stünde hier „wird geladen",
+      // auch wenn null Buchungen kamen — und genau daraus entsteht der
+      // Fehlschluss „das Portal hat keine" (Wurzel 4: keine geschönte Aussage).
+      let geholt = 0;
+      for (const id of ids) {
+        const res = await runChannelAction(id, "load_future_reservations");
+        if (!res.ok) fehler.push(res.error);
+        else geholt += res.data.saved ?? 0;
+      }
+      setIsError(fehler.length > 0);
+      // Teilerfolg ist der Normalfall bei vielen Kennungen — ihn als Erfolg oder
+      // als Totalausfall darzustellen wäre beides falsch (Wurzel 4/5).
       setMessage(
-        res.ok
-          ? t("pullFutureStarted")
-          : res.error,
+        fehler.length === 0
+          ? geholt > 0
+            ? t("pullFutureDone", { count: geholt })
+            : t("pullFutureEmpty")
+          : fehler.length === ids.length
+            ? fehler[0]
+            : t("pullFuturePartial", {
+                ok: ids.length - fehler.length,
+                total: ids.length,
+                error: fehler[0],
+              }),
       );
+      // Die geholten Buchungen sollen sofort in der Liste stehen.
+      if (geholt > 0) router.refresh();
     });
   }
 

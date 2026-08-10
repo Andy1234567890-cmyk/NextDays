@@ -67,6 +67,14 @@ _MAX_BODY = 4000
 # Antwort eine ungelesene Gastnachricht.
 _SENDER = frozenset({"guest", "property", "system"})
 
+# Blätter-Deckel des Nachhol-Wegs (`nachrichten_nachholen`). Jeder unbegrenzte
+# Bereich bekommt eine harte Obergrenze (Wurzel 8) — sonst bestimmt allein die
+# Gegenseite, wie viele Requests ein Lauf macht. 20×100 Threads bzw. 10×100
+# Nachrichten je Thread liegen weit über allem, was live vorkommt; das Erreichen
+# des Deckels wird geloggt statt still abzuschneiden.
+_MAX_THREAD_SEITEN = 20
+_MAX_VERLAUF_SEITEN = 10
+
 
 def _text(wert: object) -> str | None:
     """Nicht-leerer Text oder None."""
@@ -161,9 +169,11 @@ def geprueft(payload: dict[str, Any]) -> dict[str, str] | None:
 
 
 class NachrichtenEingangMixin:
-    """Portal-Nachrichten spiegeln — geteilt von Webhook und Journal-Tick."""
+    """Portal-Nachrichten spiegeln — geteilt von Webhook, Journal-Tick und
+    dem Nachhol-Weg des Voll-Abgleichs."""
 
     _db: Client | None
+    _channex: Any
 
     def nachricht_spiegeln(
         self, tenant_id: str, roh: dict[str, Any]
@@ -237,6 +247,134 @@ class NachrichtenEingangMixin:
                 tenant_id, thread_id, felder["sender"], felder["sent_at"]
             )
         return thread_id
+
+    def nachrichten_nachholen(
+        self, tenant_id: str, channex_property_id: str
+    ) -> dict[str, int]:
+        """Alle Threads EINER Channex-Property durchgehen und ihre Nachrichten
+        spiegeln — der Nachhol-Weg für den Posteingang.
+
+        WARUM ES DEN BRAUCHT: Nachrichten hatten bis hierher NUR flüchtige
+        Eingänge. Der Webhook ist ein einmaliger Zuruf, und das Ereignis-Journal,
+        aus dem der 5-Minuten-Tick liest, vergisst nach einem Monat. Wer in
+        dieser Zeit nicht lief (Worker aus, Objekt erst später verbunden, Kanal
+        erst jetzt angelegt), hatte KEINEN Weg, die Nachrichten je zu bekommen —
+        der „Voll-Abgleich" schob nur ARI nach draußen und holte Buchungen, aber
+        nie ein Gespräch. Die Threads beim Aggregator sind dagegen dauerhaft
+        abrufbar und damit die einzige belastbare Quelle für Altbestand.
+
+        Läuft durch dieselbe `nachricht_spiegeln` wie Webhook und Tick — die
+        Payload-Form ist identisch, und der Feldname gehört einmal notiert
+        (Modul-Docstring). Damit ist der Lauf auch idempotent: `(tenant_id,
+        message_ref)` fängt jede Wiederholung ab (Wurzel 2).
+
+        Scope (Wurzel 3): der Thread-Endpunkt ist KONTOWEIT — er liefert die
+        Threads aller Mandanten des Channex-Kontos. Übernommen wird nur, was per
+        `relationships.property` an der übergebenen Channex-Property hängt; alles
+        andere fliegt raus, statt „schon irgendwie" beim aufrufenden Tenant zu
+        landen.
+        """
+        gezaehlt = {"threads": 0, "nachrichten": 0, "gespiegelt": 0}
+        if self._db is None or not getattr(self._channex, "is_configured", False):
+            return gezaehlt
+
+        for thread_id in self._thread_ids_der_property(channex_property_id):
+            gezaehlt["threads"] += 1
+            for payload in self._thread_nachrichten(thread_id):
+                gezaehlt["nachrichten"] += 1
+                # Der Verlauf einer Thread-Collection trägt die `booking_id`
+                # NICHT je Nachricht (Channex-Doku „Messages collection": nur
+                # id/message/sender/inserted_at). Ohne sie fände
+                # `nachricht_spiegeln` keine Buchung und legte jede Nachricht am
+                # Portal-Thread ab — sichtbar in keiner Thread-Liste. Die
+                # Zuordnung steht am THREAD, also wird sie von dort ergänzt;
+                # `message_thread_id` ebenso, damit eine Vorgeschichte später
+                # umgehängt werden kann.
+                if self.nachricht_spiegeln(tenant_id, payload):
+                    gezaehlt["gespiegelt"] += 1
+
+        log.info(
+            "nachrichten_nachgeholt",
+            tenant_id=tenant_id, channex_property_id=channex_property_id,
+            **gezaehlt,
+        )
+        return gezaehlt
+
+    def _thread_ids_der_property(
+        self, channex_property_id: str
+    ) -> list[tuple[str, str | None]]:
+        """(thread_id, booking_id) aller Threads dieser Channex-Property.
+
+        Blättert bis zum Deckel und bricht bei einer Teilseite ab. Der Deckel ist
+        eine harte Obergrenze (Wurzel 8): die Seitenzahl bestimmt sonst allein
+        die Gegenseite. Wird er erreicht, steht das im Log — kein stilles
+        Abschneiden.
+        """
+        raus: list[tuple[str, str | None]] = []
+        for seite in range(1, _MAX_THREAD_SEITEN + 1):
+            try:
+                res = self._channex.list_message_threads(page=seite, limit=100)
+            except Exception as exc:  # noqa: BLE001 — Nachtrag kippt den Lauf nicht
+                log.warning(
+                    "nachrichten_threads_abruf_fehlgeschlagen",
+                    channex_property_id=channex_property_id, seite=seite,
+                    error=str(exc)[:200],
+                )
+                return raus
+            zeilen = res.get("data") if isinstance(res.get("data"), list) else []
+            for zeile in zeilen:
+                rel = zeile.get("relationships") or {}
+                prop = (rel.get("property") or {}).get("data") or {}
+                if str(prop.get("id") or "") != channex_property_id:
+                    continue  # fremder Mandant / andere Property → raus
+                tid = _text(zeile.get("id")) or _text(
+                    (zeile.get("attributes") or {}).get("id")
+                )
+                if not tid:
+                    continue
+                buchung = (rel.get("booking") or {}).get("data") or {}
+                raus.append((tid, _text(buchung.get("id"))))
+            if len(zeilen) < 100:
+                return raus
+        log.warning(
+            "nachrichten_thread_seiten_deckel",
+            channex_property_id=channex_property_id, seiten=_MAX_THREAD_SEITEN,
+        )
+        return raus
+
+    def _thread_nachrichten(
+        self, thread: tuple[str, str | None]
+    ) -> list[dict[str, Any]]:
+        """Den Verlauf EINES Threads als Eingangs-Payloads.
+
+        Die Zuordnung des Threads (Buchung, Thread-ID) wird je Nachricht
+        ergänzt, weil der Verlauf sie nicht mitbringt — siehe Aufrufer.
+        """
+        thread_id, booking_id = thread
+        raus: list[dict[str, Any]] = []
+        for seite in range(1, _MAX_VERLAUF_SEITEN + 1):
+            try:
+                res = self._channex.get_thread_messages(
+                    thread_id, page=seite, limit=100
+                )
+            except Exception as exc:  # noqa: BLE001 — ein Thread kippt nicht alle
+                log.warning(
+                    "nachrichten_verlauf_abruf_fehlgeschlagen",
+                    thread_id=thread_id, error=str(exc)[:200],
+                )
+                return raus
+            zeilen = res.get("data") if isinstance(res.get("data"), list) else []
+            for zeile in zeilen:
+                attrs = zeile.get("attributes")
+                payload = dict(attrs if isinstance(attrs, dict) else zeile)
+                payload.setdefault("id", zeile.get("id"))
+                payload["message_thread_id"] = thread_id
+                if booking_id:
+                    payload["booking_id"] = booking_id
+                raus.append(payload)
+            if len(zeilen) < 100:
+                break
+        return raus
 
     def _vorgeschichte_nachziehen(
         self, tenant_id: str, portal_thread: str, thread_id: str

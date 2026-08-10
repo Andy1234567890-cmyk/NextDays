@@ -57,6 +57,16 @@ export type TenantUser = {
   // und der Bearbeiten-Dialog zeigt „nicht gesetzt" statt einer erfundenen
   // Sprache.
   preferred_language?: string | null;
+  // Kontakt-/Zusatzangaben der Detailseite (/konto/nutzer/<id>, Migration 0356).
+  additional_phone?: string | null;
+  hide_phones?: boolean;
+  spoken_languages?: string[];
+  notes?: string | null;
+  // Zugang gesperrt? `deactivated_at` ist die Wahrheit (null = aktiv),
+  // `is_active` nur die Ableitung daraus — nie unabhängig setzen.
+  deactivated_at?: string | null;
+  is_active?: boolean;
+  created_at?: string | null;
 };
 
 // Profil-/Kontaktdaten-Update (nur gesetzte Felder werden geschrieben).
@@ -180,6 +190,14 @@ export type InviteInput = {
   // dann NULL, und die Kette Betriebssprache → Englisch greift. Ein unbekannter
   // Code wird serverseitig mit 422 abgelehnt — nicht stillschweigend ignoriert.
   preferred_language?: string;
+  // Kontakt-/Zusatzangaben aus dem Wizard (Schritt 1 + 2). Bis 0356 standen die
+  // Felder in der Oberfläche, gingen aber NICHT mit — die Eingabe war eine
+  // Attrappe. Optional, weil „nicht erfasst" eine echte Antwort ist.
+  phone?: string;
+  additional_phone?: string;
+  hide_phones?: boolean;
+  spoken_languages?: string[];
+  notes?: string;
 };
 
 export async function inviteUser(
@@ -207,13 +225,70 @@ export async function updateManagedUser(
     role?: UserRole;
     permissions?: string[];
     preferred_language?: string;
+    // Kontaktdaten/Zusatzangaben (Detailseite). NUR mitgeschickte Felder werden
+    // gesetzt. Ein Leerstring heißt ausdrücklich „löschen" (Server macht NULL) —
+    // nur so lässt sich eine falsch eingetragene Nummer wieder entfernen.
+    phone?: string;
+    additional_phone?: string;
+    hide_phones?: boolean;
+    spoken_languages?: string[];
+    notes?: string;
   },
 ): Promise<Result<TenantUser>> {
   const res = await call<TenantUser>(`/auth/account/users/${userId}`, {
     method: "PATCH",
     body: input,
   });
-  if (res.ok) revalidatePath("/konto/nutzer");
+  if (res.ok) {
+    revalidatePath("/konto/nutzer");
+    revalidatePath(`/konto/nutzer/${userId}`);
+  }
+  return res;
+}
+
+// Ein Nutzer der Verwaltung (Detailseite /konto/nutzer/<id>). Gleicher Scope wie
+// die Liste — staff/cleaner erhalten 403, fremde Tenants 404.
+export async function getManagedUser(
+  userId: string,
+): Promise<Result<TenantUser>> {
+  return call<TenantUser>(`/auth/account/users/${userId}`);
+}
+
+// Antwort von Deaktivieren/Aktivieren. `login_gesperrt` = Zustand des
+// ANMELDEDIENSTES; er kann von `user.is_active` abweichen (Teilerfolg), und
+// genau das benennt die Oberfläche statt es zu verschweigen.
+export type UserStatusResult = {
+  user: TenantUser;
+  login_gesperrt: boolean;
+};
+
+// Zugang sperren, ohne zu löschen. Zuordnungen und Historie bleiben stehen.
+export async function deactivateManagedUser(
+  userId: string,
+): Promise<Result<UserStatusResult>> {
+  const res = await call<UserStatusResult>(
+    `/auth/account/users/${userId}/deactivate`,
+    { method: "POST" },
+  );
+  if (res.ok) {
+    revalidatePath("/konto/nutzer");
+    revalidatePath(`/konto/nutzer/${userId}`);
+  }
+  return res;
+}
+
+// Gegenzustand: Zugang wieder freischalten (Feld UND GoTrue-Bann).
+export async function activateManagedUser(
+  userId: string,
+): Promise<Result<UserStatusResult>> {
+  const res = await call<UserStatusResult>(
+    `/auth/account/users/${userId}/activate`,
+    { method: "POST" },
+  );
+  if (res.ok) {
+    revalidatePath("/konto/nutzer");
+    revalidatePath(`/konto/nutzer/${userId}`);
+  }
   return res;
 }
 

@@ -450,9 +450,13 @@ def connect_channel(
 @router.post("/channels/{channel_id}/actions/{action}")
 def run_channel_action(
     channel_id: str, action: str, service: ChannelManagerServiceDep, ctx: _write
-) -> dict[str, str]:
+) -> dict[str, str | int]:
     """Kanal-eigene Aktion auslösen (z.B. zukünftige Buchungen laden). Welche
-    Aktionen es gibt, sagt der Kanal selbst — der Service prüft das."""
+    Aktionen es gibt, sagt der Kanal selbst — der Service prüft das.
+
+    Rückgabe trägt neben `status`/`action` die ZAHLEN des anschließenden Imports
+    (`fetched`/`saved`/`skipped`) — deshalb `str | int`. Ohne sie könnte die
+    Oberfläche nur „ok" melden, während das Portal nichts geliefert hat."""
     try:
         return service.run_channel_action(ctx, channel_id=channel_id, action=action)
     except ChannelManagerError as exc:

@@ -266,3 +266,206 @@ def test_update_managed_user_staff_editor_forbidden() -> None:
     with pytest.raises(AuthError) as exc:
         svc.update_managed_user(ctx, "u-2", full_name="X")
     assert exc.value.status_code == 403
+
+
+# --- Kontaktfelder der Detailseite (0356) ---------------------------------
+
+
+def test_update_managed_user_writes_contact_fields() -> None:
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": [], "tenant_id": "t-1",
+              "email": "s@x.de", "full_name": "S"}
+    svc, captured = _svc_for_update(editor, target)
+    svc.update_managed_user(
+        _admin_ctx(),
+        "u-2",
+        kontakt={
+            "phone": " +4520304050 ",
+            "hide_phones": True,
+            "spoken_languages": ["Dänisch", "Englisch"],
+            "notes": "Schlüssel liegt im Büro",
+        },
+    )
+    assert captured["phone"] == "+4520304050"          # getrimmt
+    assert captured["hide_phones"] is True
+    assert captured["spoken_languages"] == ["Dänisch", "Englisch"]
+    assert captured["notes"] == "Schlüssel liegt im Büro"
+    assert "additional_phone" not in captured           # nicht gesendet = unverändert
+
+
+def test_update_managed_user_empty_string_clears_field() -> None:
+    # Leerstring heißt LÖSCHEN → NULL, damit eine falsche Nummer wieder weg kann.
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": [], "tenant_id": "t-1",
+              "email": "s@x.de", "full_name": "S", "additional_phone": "+4511"}
+    svc, captured = _svc_for_update(editor, target)
+    svc.update_managed_user(_admin_ctx(), "u-2", kontakt={"additional_phone": ""})
+    assert captured["additional_phone"] is None
+
+
+def test_invite_request_limits_spoken_languages() -> None:
+    from src.features.auth.schemas import InviteRequest
+    with pytest.raises(ValidationError):
+        InviteRequest(
+            email="a@b.de", full_name="A", role="staff",
+            spoken_languages=[f"S{i}" for i in range(41)],
+        )
+
+
+def test_invite_request_dedupes_and_trims_spoken_languages() -> None:
+    from src.features.auth.schemas import InviteRequest
+    req = InviteRequest(
+        email="a@b.de", full_name="A", role="staff",
+        spoken_languages=[" Dänisch ", "Dänisch", "", "Englisch"],
+    )
+    assert req.spoken_languages == ["Dänisch", "Englisch"]
+
+
+# --- Deaktivieren / Aktivieren (0356) -------------------------------------
+
+
+def _svc_for_status(
+    editor: dict, target: dict, *, ban_ok: bool = True
+) -> tuple[AccountService, dict, list]:
+    """Wie _svc_for_update, plus Aufzeichnung der GoTrue-Admin-Aufrufe."""
+    svc, captured = _svc_for_update(editor, target)
+    calls: list = []
+
+    def update_user_by_id(user_id: str, attrs: dict) -> MagicMock:
+        calls.append((user_id, attrs))
+        if not ban_ok:
+            raise RuntimeError("GoTrue weg")
+        return MagicMock()
+
+    svc._service.auth.admin.update_user_by_id.side_effect = update_user_by_id
+    return svc, captured, calls
+
+
+def test_deactivate_sets_timestamp_and_bans_login() -> None:
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": [], "tenant_id": "t-1",
+              "email": "s@x.de", "full_name": "S", "deactivated_at": None}
+    svc, captured, calls = _svc_for_status(editor, target)
+    nutzer, gesperrt = svc.deactivate_managed_user(_admin_ctx(), "u-2")
+    assert captured["deactivated_at"]                       # Zeitstempel gesetzt
+    assert captured["deactivated_by"] == "admin-1"
+    assert calls == [("u-2", {"ban_duration": AccountService.LOGIN_SPERRE_DAUER})]
+    assert gesperrt is True
+    assert nutzer.is_active is False
+
+
+def test_deactivate_reports_partial_success_when_gotrue_fails() -> None:
+    # Feld steht, Bann nicht → login_gesperrt=False, KEIN stilles „done".
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": [], "tenant_id": "t-1",
+              "email": "s@x.de", "full_name": "S", "deactivated_at": None}
+    svc, captured, _calls = _svc_for_status(editor, target, ban_ok=False)
+    _nutzer, gesperrt = svc.deactivate_managed_user(_admin_ctx(), "u-2")
+    assert captured["deactivated_at"]
+    assert gesperrt is False
+
+
+def test_deactivate_is_idempotent() -> None:
+    # Doppelklick/Retry: der erste Zeitstempel bleibt stehen (Wurzel 2).
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": [], "tenant_id": "t-1",
+              "email": "s@x.de", "full_name": "S",
+              "deactivated_at": "2026-08-01T10:00:00+00:00"}
+    svc, captured, _calls = _svc_for_status(editor, target)
+    nutzer, _gesperrt = svc.deactivate_managed_user(_admin_ctx(), "u-2")
+    assert "deactivated_at" not in captured
+    assert nutzer.deactivated_at == "2026-08-01T10:00:00+00:00"
+
+
+def test_deactivate_refuses_own_login() -> None:
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    svc, _captured, _calls = _svc_for_status(editor, editor)
+    with pytest.raises(AuthError) as exc:
+        svc.deactivate_managed_user(_admin_ctx(), "admin-1")
+    assert exc.value.status_code == 400
+
+
+def test_deactivate_refuses_account_owner() -> None:
+    editor = {"id": "ca-1", "role": "co_admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1",
+              "email": "a@x.de", "full_name": "A", "deactivated_at": None}
+    svc, _captured, _calls = _svc_for_status(editor, target)
+    ctx = AuthContext(user_id="ca-1", tenant_id="t-1", role="co_admin")
+    with pytest.raises(AuthError) as exc:
+        svc.deactivate_managed_user(ctx, "admin-1")
+    assert exc.value.status_code == 400
+
+
+def test_activate_clears_timestamp_and_unbans() -> None:
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": [], "tenant_id": "t-1",
+              "email": "s@x.de", "full_name": "S",
+              "deactivated_at": "2026-08-01T10:00:00+00:00"}
+    svc, captured, calls = _svc_for_status(editor, target)
+    nutzer, entsperrt = svc.activate_managed_user(_admin_ctx(), "u-2")
+    assert captured["deactivated_at"] is None
+    assert captured["deactivated_by"] is None
+    assert calls == [("u-2", {"ban_duration": "none"})]
+    assert entsperrt is True
+    assert nutzer.is_active is True
+
+
+def test_activate_unbans_even_when_already_active() -> None:
+    # Der Bann kann hängen, obwohl das Feld leer ist (Teilerfolg von vorher) —
+    # dann muss Aktivieren ihn TROTZDEM lösen, sonst bleibt der Login zu.
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": [], "tenant_id": "t-1",
+              "email": "s@x.de", "full_name": "S", "deactivated_at": None}
+    svc, captured, calls = _svc_for_status(editor, target)
+    _nutzer, entsperrt = svc.activate_managed_user(_admin_ctx(), "u-2")
+    assert calls == [("u-2", {"ban_duration": "none"})]
+    assert "deactivated_at" not in captured
+    assert entsperrt is True
+
+
+def test_get_managed_user_forbidden_for_staff() -> None:
+    # Wurzel 9: die Detailseite prüft denselben Scope wie die Liste.
+    editor = {"id": "st-1", "role": "staff", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "cleaner", "permissions": [], "tenant_id": "t-1"}
+    svc, _captured = _svc_for_update(editor, target)
+    ctx = AuthContext(user_id="st-1", tenant_id="t-1", role="staff")
+    with pytest.raises(AuthError) as exc:
+        svc.get_managed_user(ctx, "u-2")
+    assert exc.value.status_code == 403
+
+
+def test_get_managed_user_returns_contact_fields() -> None:
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": [], "tenant_id": "t-1",
+              "email": "s@x.de", "full_name": "S", "phone": "+45111",
+              "additional_phone": "+45222", "hide_phones": True,
+              "spoken_languages": ["Dänisch"], "notes": "N",
+              "deactivated_at": None, "created_at": "2026-01-02T00:00:00+00:00"}
+    svc, _captured = _svc_for_update(editor, target)
+    nutzer = svc.get_managed_user(_admin_ctx(), "u-2")
+    assert nutzer.additional_phone == "+45222"
+    assert nutzer.hide_phones is True
+    assert nutzer.spoken_languages == ["Dänisch"]
+    assert nutzer.notes == "N"
+    assert nutzer.is_active is True
+    assert nutzer.created_at == "2026-01-02T00:00:00+00:00"
+
+
+def test_ist_gesperrt_reads_column() -> None:
+    service_client = MagicMock()
+    (
+        service_client.table.return_value.select.return_value.eq.return_value
+        .limit.return_value.execute.return_value
+    ) = MagicMock(data=[{"deactivated_at": "2026-08-01T10:00:00+00:00"}])
+    svc = AccountService(anon_client=MagicMock(), service_client=service_client)
+    assert svc.ist_gesperrt("u-2") is True
+
+
+def test_ist_gesperrt_false_for_active() -> None:
+    service_client = MagicMock()
+    (
+        service_client.table.return_value.select.return_value.eq.return_value
+        .limit.return_value.execute.return_value
+    ) = MagicMock(data=[{"deactivated_at": None}])
+    svc = AccountService(anon_client=MagicMock(), service_client=service_client)
+    assert svc.ist_gesperrt("u-2") is False
