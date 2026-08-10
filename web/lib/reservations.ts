@@ -52,6 +52,16 @@ export type ReservationInput = {
   // Optional: bestehenden Gast fest verknüpfen (z. B. aus der Gästekarte) —
   // Backend nutzt ihn statt einen neuen anzulegen (keine Dublette).
   guest_id?: string;
+  // Eigentümer-Aufenthalt (0241): sperrt den Kalender wie jede Buchung, ist
+  // aber kein Umsatz. Betrag/Anzahlung/Kanalgebühr erzwingt der Server auf 0 —
+  // das Frontend schickt deshalb keinen Preis mit, sondern nur dieses Flag.
+  is_owner_stay?: boolean;
+  // Der verwaltete Eigentümer (owners, 0063), der den Aufenthalt nutzt (0353).
+  // Er tritt an die Stelle des Gastes: mit gesetzter owner_id legt das Backend
+  // KEINE Gast-Zeile an (`guest_id = null`) — ein Eigentümer gehört nicht in
+  // die Gästekartei. Nur zusammen mit `is_owner_stay: true` erlaubt, sonst
+  // weist der Server mit 422 ab (schemas.py `_owner_nur_bei_eigennutzung`).
+  owner_id?: string;
 };
 
 export type Reservation = {
@@ -74,6 +84,8 @@ export type Reservation = {
   // Echter Check-in/Check-out-Zustand (0091) — null = noch nicht erfolgt.
   checked_in_at: string | null;
   checked_out_at: string | null;
+  // Eigentümer-Aufenthalt (0241): eigener Kalenderbalken, kein Umsatz.
+  is_owner_stay: boolean;
 };
 
 export type QuoteItem = { label: string; amount: number };
@@ -136,6 +148,9 @@ export type ReservationDetail = {
   // Echter Check-in/Check-out-Zustand (0091) — null = noch nicht erfolgt.
   checked_in_at: string | null;
   checked_out_at: string | null;
+  // Eigentümer-Aufenthalt (0241): die Detailansicht kennzeichnet ihn und lässt
+  // Geld-/Rechnungsteile weg — es gibt dort keine zu zeigen.
+  is_owner_stay: boolean;
   // Aktive Rechnung zur Buchung (Booking→Invoice-Brücke 0092), null = keine.
   invoice: ReservationInvoiceInfo | null;
   cancel_reason: string | null;
@@ -175,6 +190,8 @@ export type DashboardEntry = {
   check_in: string;
   check_out: string;
   status: ReservationStatus;
+  // Eigentümer-Aufenthalt (0241): in den Listen sichtbar, aber kein Umsatz.
+  is_owner_stay: boolean;
 };
 
 export type DashboardKpi = {

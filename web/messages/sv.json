@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Ja, ta bort alla",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Inga bokningar i denna flik.",
       "loading": "Laddar…",
       "nights": "{count, plural, one {# natt} other {# nätter}}",
-      "children": "{count, plural, one {# barn} other {# barn}}"
+      "children": "{count, plural, one {# barn} other {# barn}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Land",
       "openGuestCard": "Öppna gästkort",
       "photos": "Bilder",
-      "noPhotosFound": "Inga bilder hittades för denna bokning."
+      "noPhotosFound": "Inga bilder hittades för denna bokning.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Dagens utcheckningar",
@@ -5620,12 +5626,14 @@
         "open": "Ledig",
         "booked": "Bokad",
         "blocked": "Blockerad",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "alla kanaler",
       "nightsCount": "{count, plural, one {# natt} other {# nätter}}",
-      "daysCount": "{count, plural, one {# dag} other {# dagar}}"
+      "daysCount": "{count, plural, one {# dag} other {# dagar}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Vy",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Bokning utan offert",
       "blocking": "Blockerar…",
       "createBlockedPeriod": "Skapa blockerad period",
-      "priceMinStayBlock": "Pris / Minsta vistelse / Blockering …"
+      "priceMinStayBlock": "Pris / Minsta vistelse / Blockering …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Antal gäster inställt för detta objekt",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "blandade valutor",
       "occupancy": "Beläggning",
       "propertyNights": "{booked}/{total} objektnätter",
-      "revenue": "Omsättning"
+      "revenue": "Omsättning",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Stäng",
@@ -5861,14 +5877,39 @@
       "overview": "Översikt",
       "feesHint": "Städning m.m.",
       "personsValue": "{count} pers.",
-      "guestsLabel": "Gäster"
+      "guestsLabel": "Gäster",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Stäng",
       "revenueInvoice": "Omsättning och faktura",
       "invoiced": "Fakturerat",
       "stillOpen": "Fortfarande öppna",
-      "cancelReasonPlaceholder": "Orsak till avbokningen (dokumenteras) …"
+      "cancelReasonPlaceholder": "Orsak till avbokningen (dokumenteras) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Massredigering",

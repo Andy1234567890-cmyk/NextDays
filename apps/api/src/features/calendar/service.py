@@ -16,6 +16,7 @@ from supabase import Client
 
 from src.core.dates import merge_day_ranges
 from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
+from src.core.einheiten_verfuegbar import freie_einheiten_spannen
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner, owner_property_ids
@@ -59,27 +60,6 @@ def _default_stop_sell_scope(row: dict) -> None:
     rückwärtskompatibel (all = alle Kanäle, wie bisher)."""
     row.setdefault("scope", "all")
     row.setdefault("channels", [])
-
-
-def _contiguous_open_spans(
-    rng: "DateRange", booked_iso: set[str]
-) -> list[tuple[date, date]]:
-    """Zusammenhängende [start, end)-Zeiträume der Tage in `rng`, die NICHT in
-    `booked_iso` (belegte ISO-Tage) liegen. Für den tag-genauen Channex-Freigabe-
-    Push: gebuchte Tage unterbrechen einen Span, sodass availability=1 nie für einen
-    belegten Tag gesendet wird. `end` ist exklusiv (wie DateRange)."""
-    spans: list[tuple[date, date]] = []
-    span_start: date | None = None
-    for day in rng.nights():
-        if day.isoformat() in booked_iso:
-            if span_start is not None:
-                spans.append((span_start, day))  # end exklusiv = erster belegter Tag
-                span_start = None
-        elif span_start is None:
-            span_start = day
-    if span_start is not None:
-        spans.append((span_start, rng.end))
-    return spans
 
 
 class CalendarError(Exception):
@@ -441,19 +421,25 @@ class CalendarService:
         deshalb ausgelassen: sie sind bereits gesperrt, die Sperre ist der
         Zielzustand, und der Antrag beansprucht nur die Nächte, die es OHNE
         ihn nicht gäbe.
+
+        `req.unit_id` (0353) begrenzt die Sperre auf EINE Einheit des Typs:
+        beim Typ mit fünf gleichen Studios nimmt die Eigennutzung eines Studios
+        nur dieses aus dem Verkauf, die übrigen vier bleiben buchbar. Ohne
+        Angabe gilt die Sperre wie bisher dem ganzen Typ (alle Einheiten).
         """
         self._require_tenant_property(tenant_id, req.property_id)
-        booked = [
-            d.date
-            for d in self._days_for(req.property_id, req.range)
-            if d.status == AvailabilityStatus.booked
-        ]
+        unit_id = self._require_tenant_unit(
+            tenant_id, req.property_id, req.unit_id
+        )
+        booked = self._belegte_tage(req.property_id, req.range, unit_id)
         if booked:
             raise CalendarError(
                 "Zeitraum enthält bereits gebuchte Tage.", status_code=409
             )
         fremd = (
-            self._fremde_sperrtage(req.property_id, req.range, block_request_id)
+            self._fremde_sperrtage(
+                req.property_id, req.range, block_request_id, unit_id
+            )
             if block_request_id is not None
             else frozenset()
         )
@@ -478,20 +464,87 @@ class CalendarService:
                 block_request_id=block_request_id,
             )
             return 0
-        # Eine Sperre gilt dem ganzen Typ → je Einheit eine Zeile (0266).
+        # Ohne benannte Einheit gilt die Sperre dem ganzen Typ → je Einheit eine
+        # Zeile (0266); mit Einheit genau deren Zeile (0353).
         self._db().table("availability").upsert(
-            je_einheit(self._db(), req.property_id, payload),
+            je_einheit(
+                self._db(), req.property_id, payload,
+                tenant_id=tenant_id, unit_id=unit_id,
+            ),
             on_conflict=AVAILABILITY_CONFLICT,
         ).execute()
-        # Realtime: gesperrte Tage sofort an Channex/OTAs (availability=0).
-        self._push_channex_availability(
-            req.property_id, req.range.start, req.range.end, 0
-        )
+        # Realtime: den fertigen Stand an die Portale. Hier stand ein festes `0`
+        # — richtig, solange eine Sperre immer ALLE Einheiten traf. Seit die
+        # Sperre eine einzelne Einheit meinen kann (0353), nähme das dem ganzen
+        # Typ die Verfügbarkeit; gemeldet wird die echte Zahl der übrigen
+        # freien Einheiten. Der Upsert ist bereits geschrieben, der Helfer sieht
+        # also den Zustand NACH der Sperre.
+        self._push_einheiten_stand(req.property_id, req.range)
         log.info("calendar_block", property_id=req.property_id, days=len(payload))
         return len(payload)
 
+    def _require_tenant_unit(
+        self, tenant_id: str, property_id: str, unit_id: str | None
+    ) -> str | None:
+        """Die benannte Einheit gehört zu DIESEM Objekt und DIESEM Mandanten.
+
+        Wurzel 3: Der Service läuft mit dem Service-Role-Key und umgeht RLS.
+        Eine ungeprüft übernommene `unit_id` aus dem Request wanderte direkt in
+        die `availability`-Zeile — damit ließe sich über eine geratene UUID die
+        Einheit eines FREMDEN Objekts sperren (und über den Widerruf wieder
+        freigeben). Beide Filter in DERSELBEN Abfrage, damit Load und Scope
+        nicht auseinanderfallen.
+
+        `None` bleibt `None`: keine Angabe heißt „der ganze Typ" und ist kein
+        fehlender Wert, der zu ersetzen wäre (Wurzel 4).
+        """
+        if unit_id is None:
+            return None
+        rows = (
+            self._db()
+            .table("property_units")
+            .select("id")
+            .eq("id", unit_id)
+            .eq("property_id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            raise CalendarError(
+                "Einheit gehört nicht zu diesem Objekt.", status_code=422
+            )
+        return unit_id
+
+    def _belegte_tage(
+        self, property_id: str, rng: DateRange, unit_id: str | None
+    ) -> list[str]:
+        """Gebuchte Tage, die einer Sperre im Weg stehen.
+
+        OHNE Einheit gilt die Sperre dem ganzen Typ: JEDE gebuchte Nacht
+        irgendeiner Einheit steht ihr im Weg (das bisherige Verhalten über
+        `_days_for`). MIT Einheit zählt nur deren eigene Belegung — die Buchung
+        auf Studio 1 darf die Eigennutzung von Studio 3 nicht verhindern.
+        """
+        query = (
+            self._db()
+            .table("availability")
+            .select("date, unit_id")
+            .eq("property_id", property_id)
+            .eq("status", AvailabilityStatus.booked.value)
+            .gte("date", rng.start.isoformat())
+            .lt("date", rng.end.isoformat())
+        )
+        if unit_id is not None:
+            query = query.eq("unit_id", unit_id)
+        return [str(r["date"]) for r in (query.execute()).data or []]
+
     def _fremde_sperrtage(
-        self, property_id: str, rng: DateRange, block_request_id: str
+        self,
+        property_id: str,
+        rng: DateRange,
+        block_request_id: str,
+        unit_id: str | None = None,
     ) -> frozenset[str]:
         """Tage im Zeitraum, die eine ANDERE Sperre bereits hält.
 
@@ -499,8 +552,13 @@ class CalendarService:
         andere Antrags-ID. Die eigenen Zeilen sind ausgenommen — sonst könnte
         ein Retry derselben Genehmigung seine eigene Sperre nicht mehr
         auffrischen (Wurzel 2: retrybar bleiben).
+
+        `unit_id` grenzt die Frage auf die zu sperrende Einheit ein: eine
+        fremde Sperre auf Studio 1 darf den Antrag auf Studio 3 nicht um seine
+        Nächte bringen (sonst schriebe er gar nichts und meldete „bereits
+        gesperrt", obwohl Studio 3 offen ist).
         """
-        rows = (
+        query = (
             self._db()
             .table("availability")
             .select("date, block_request_id")
@@ -508,8 +566,10 @@ class CalendarService:
             .eq("status", AvailabilityStatus.blocked.value)
             .gte("date", rng.start.isoformat())
             .lt("date", rng.end.isoformat())
-            .execute()
-        ).data or []
+        )
+        if unit_id is not None:
+            query = query.eq("unit_id", unit_id)
+        rows = (query.execute()).data or []
         return frozenset(
             str(r["date"])
             for r in rows
@@ -2067,6 +2127,7 @@ class CalendarService:
         rng: DateRange,
         *,
         block_request_id: str | None = None,
+        unit_id: str | None = None,
     ) -> int:
         """Manuelle Sperre im Zeitraum aufheben (öffentlicher, tenant-gescopter
         Einstieg — Wurzel 3). Gibt die Anzahl der Tage im Zeitraum zurück.
@@ -2075,9 +2136,18 @@ class CalendarService:
         genehmigten Antrags ein (0337). Ohne ihn gilt der alte, breite Weg: der
         Agentur-Knopf „Sperre aufheben" meint tatsächlich jede manuelle Sperre
         im gewählten Zeitraum, und das ist dort richtig.
+
+        `unit_id` ist der Gegenzustand zur einheiten-genauen Sperre (0353):
+        wurde nur Studio 3 gesperrt, darf das Aufheben auch nur Studio 3 öffnen
+        — sonst risse es die Sperren der Schwestereinheiten mit auf (Wurzel 1).
+        Die Zugehörigkeit wird serverseitig geprüft.
         """
         self._require_tenant_property(tenant_id, property_id)
-        self._unblock(property_id, rng, block_request_id=block_request_id)
+        geprueft = self._require_tenant_unit(tenant_id, property_id, unit_id)
+        self._unblock(
+            property_id, rng,
+            block_request_id=block_request_id, unit_id=geprueft,
+        )
         return len(list(rng.nights()))
 
     def _unblock(
@@ -2086,10 +2156,11 @@ class CalendarService:
         rng: DateRange,
         *,
         block_request_id: str | None = None,
+        unit_id: str | None = None,
     ) -> None:
         """Manuelle Sperre im Zeitraum aufheben (nur source=manual; gebuchte Tage
-        bleiben unberührt). Gibt an Channex NUR die Tage frei (availability=1), die
-        danach WIRKLICH offen sind — NICHT den ganzen Range.
+        bleiben unberührt). Meldet danach den ECHTEN Kalenderstand an die
+        Portale — je Tag die Zahl der freien Einheiten.
 
         WURZEL 1 — nur den EIGENEN Gegenzustand aufheben: Mit
         `block_request_id` wird ausschliesslich gelöscht, was dieser Antrag
@@ -2098,6 +2169,23 @@ class CalendarService:
         AGENTUR-Sperre (1.–20., Handwerker) mit auf — beide tragen
         `status='blocked' AND source='manual'`, es gab kein Unterscheidungs-
         merkmal. Das Objekt war danach über Channex wieder verkäuflich.
+
+        DER MELDE-FEHLER, DEN 0353 SCHLIESST: Hier ging je zusammenhängender
+        offener Spanne ein festes `availability=1` raus. Bei einem Typ mit n
+        Einheiten (0265/0266) sind nach dem Aufheben aber bis zu n Einheiten
+        frei — die übrigen n−1 blieben bei den Portalen unverkäuflich, bis
+        irgendein anderer Vorgang den Stand zufällig korrigierte. Umgekehrt
+        deckte die Spannen-Rechnung („belegt = irgendeine Zeile gebucht oder
+        gesperrt") einen Tag komplett zu, an dem nur EINE von fünf Einheiten
+        belegt war. `_push_einheiten_stand` beantwortet beides mit derselben
+        Rechnung wie der Buchungs- und der OTA-Pfad: die echte Stückzahl je
+        Tag, gruppiert in Spannen gleichen Werts. Die Sonderbehandlung
+        „gebuchte Tage aus dem Push aussparen" entfällt damit ersatzlos — ein
+        voll belegter Tag ergibt schlicht die Zahl 0.
+
+        `unit_id` grenzt die Freigabe auf EINE Einheit ein — der Gegenzustand
+        zur einheiten-genauen Sperre (0353). Der Aufrufer hat sie bereits
+        gescopt (`unblock`); dieser interne Weg prüft nicht erneut.
         """
         query = (
             self._db().table("availability").delete()
@@ -2107,39 +2195,15 @@ class CalendarService:
         )
         if block_request_id is not None:
             query = query.eq("block_request_id", block_request_id)
+        if unit_id is not None:
+            query = query.eq("unit_id", unit_id)
         query.gte("date", rng.start.isoformat()).lt(
             "date", rng.end.isoformat()
         ).execute()
-        # Tag-genau: Tage, die im Range noch belegt sind, NICHT als
-        # availability=1 an Channex melden — sonst würde das Portal einen
-        # gebuchten oder weiterhin gesperrten Tag erneut verkaufbar machen.
-        # Nur die tatsächlich offenen Tage freigeben, gruppiert in
-        # zusammenhängende Zeiträume.
-        #
-        # ZWEI Zustände zählen als „nicht frei":
-        #   * `booked` — echte Direkt-/Plattform-Reservierung oder importierte
-        #     OTA-Buchung. Sie freizugeben wäre eine Überbuchung.
-        #   * `blocked` — eine Sperre, die den obigen DELETE ÜBERLEBT hat. Nach
-        #     der gezielten Löschung (block_request_id) ist das genau die
-        #     Agentur-Sperre, die im selben Zeitraum weiterläuft. Ohne sie hier
-        #     wäre die Datenbank zwar korrekt, aber Channex bekäme trotzdem
-        #     „verfügbar" gemeldet — die Nacht wäre bei den Portalen wieder
-        #     buchbar, und der Fehler nur eine Ebene tiefer gewandert.
-        noch_belegt = {
-            r["date"]
-            for r in (
-                self._db()
-                .table("availability")
-                .select("date")
-                .eq("property_id", property_id)
-                .in_("status", ["booked", "blocked"])
-                .gte("date", rng.start.isoformat())
-                .lt("date", rng.end.isoformat())
-                .execute()
-            ).data or []
-        }
-        for span_start, span_end in _contiguous_open_spans(rng, noch_belegt):
-            self._push_channex_availability(property_id, span_start, span_end, 1)
+        # Der DELETE lief VOR diesem Push — der Stand, den `_push_einheiten_stand`
+        # gleich liest, ist also der Zustand NACH der Freigabe. Umgekehrt meldete
+        # er die eben freigegebenen Nächte weiter als belegt.
+        self._push_einheiten_stand(property_id, rng)
 
     def _push_channex_rate(
         self,
@@ -2161,6 +2225,49 @@ class CalendarService:
              "date_to": (end - timedelta(days=1)).isoformat(),  # end exklusiv
              "rate_cents": rate_cents, "min_stay": min_stay},
         )
+
+    def _push_einheiten_stand(self, property_id: str, rng: DateRange) -> None:
+        """Den FERTIGEN Kalenderstand eines Zeitraums an die Portale melden —
+        mit der ECHTEN Zahl freier Einheiten je Tag.
+
+        WARUM NICHT MEHR 0/1: Ein Objekt ist seit 0265 ein Einheiten-TYP mit
+        n >= 1 Einheiten, und Verfügbarkeit an die Portale ist eine ZAHL
+        (SiteMinder `BookingLimit`, Booking.com „rooms available to sell"). Ein
+        festes `1` beim Aufheben einer Sperre war bei n > 1 zu WENIG: die
+        übrigen n−1 Einheiten blieben unverkäuflich, obwohl der Kalender sie
+        offen führte. Ein festes `0` beim Sperren wird zu VIEL, sobald eine
+        Sperre nur eine einzelne Einheit betrifft (0353) — sie nähme dem ganzen
+        Typ die Verfügbarkeit.
+
+        `freie_einheiten_spannen` liest den Kalender (die Wahrheit für Belegung)
+        und liefert die Spannen gleicher Stückzahl fertig für den Push. Es ist
+        derselbe Weg, den `reservations._push_einheiten_stand` und
+        `bookings_sync` schon gehen — die Frage „wie viele Einheiten sind an
+        diesem Tag noch verkäuflich?" darf nicht zwei Antworten haben.
+
+        VORAUSSETZUNG: Der Kalender ist für den ganzen Zeitraum bereits
+        geschrieben. Der Helfer meldet den IST-Stand; wird er vor dem Schreiben
+        gerufen, meldet er den Zustand von VORHER (beim Sperren zu viele freie
+        Einheiten = Überbuchungsrisiko, beim Freigeben zu wenige = verschenkter
+        Verkauf).
+
+        ENDE-KONVENTION: `rng.end` ist EXKLUSIV (der ganze Kalender rechnet so),
+        `freie_einheiten_spannen` nimmt `bis` INKLUSIV und gibt seine Spannen
+        ebenfalls mit inklusivem Ende zurück. Beide Grenzen werden deshalb hier
+        umgerechnet — an genau EINER Stelle, statt die Konvention über den Slice
+        zu verteilen. `rng` hat mindestens eine Nacht (DateRange erzwingt
+        end > start), `rng.end - 1` liegt also nie vor `rng.start`.
+        """
+        tenant_id = self._tenant_of(property_id)
+        if tenant_id is None:
+            return
+        for span_von, span_bis, frei in freie_einheiten_spannen(
+            self._db(), tenant_id, property_id,
+            rng.start, rng.end - timedelta(days=1),
+        ):
+            self._push_channex_availability(
+                property_id, span_von, span_bis + timedelta(days=1), frei
+            )
 
     def _push_channex_availability(
         self, property_id: str, start: date, end: date, availability: int

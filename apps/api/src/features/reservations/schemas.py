@@ -70,11 +70,37 @@ class ReservationCreate(BaseModel):
     # ein mitgeschickter total_amount wird bewusst ignoriert, nicht abgelehnt,
     # damit derselbe Anlegen-Weg für beides gilt.
     is_owner_stay: bool = False
+    # Der verwaltete Eigentümer (owners, 0063), der den Aufenthalt nutzt —
+    # der Personenbezug eines Eigentümer-Aufenthalts (0353). Bei
+    # `is_owner_stay=true` tritt er an die Stelle des Gastes: der Eigentümer ist
+    # kein Gast und gehört nicht in die Gästekartei (Loyalty-Aggregate,
+    # Marketing-Segmente). Der Service prüft die Zugehörigkeit zum Mandanten
+    # UND zum Objekt serverseitig (Wurzel 3).
+    owner_id: str | None = None
+    # Die Einheit, die belegt werden soll (property_units, 0265). None = die RPC
+    # wählt die erste freie (0275). Für den Eigentümer-Aufenthalt aus einem
+    # Sperrantrag ist es die im Antrag benannte Einheit.
+    unit_id: str | None = None
 
     @model_validator(mode="after")
     def _check_order(self) -> "ReservationCreate":
         if self.check_out <= self.check_in:
             raise ValueError("check_out muss nach check_in liegen")
+        return self
+
+    @model_validator(mode="after")
+    def _owner_nur_bei_eigennutzung(self) -> "ReservationCreate":
+        """Ein Eigentümer an einer GAST-Buchung wäre eine stille Falschaussage.
+
+        `owner_id` bedeutet „diese Belegung ist die Eigennutzung dieser Person"
+        und schließt Umsatz aus (0241). Stünde er an einer normalen Buchung,
+        träte die Zeile in der Eigentümer-Auswertung als Eigennutzung auf,
+        während sie gleichzeitig als Umsatz zählt — zwei Wahrheiten in einer
+        Zeile. Fail-closed statt den Wert still zu verwerfen (Wurzel 5).
+        """
+        if self.owner_id and not self.is_owner_stay:
+            msg = "owner_id nur bei is_owner_stay=true"
+            raise ValueError(msg)
         return self
 
 

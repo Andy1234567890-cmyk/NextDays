@@ -290,6 +290,61 @@ class AvailablePropertiesResponse(BaseModel):
     items: list[AvailableProperty]
 
 
+class OwnerKontakt(BaseModel):
+    """Der Eigentümer eines Objekts — NUR was ein Personenbezug braucht.
+
+    BEWUSST NICHT von `OwnerBase` abgeleitet (Wurzel 9: keine Felder an eine
+    Route, die sie nicht braucht). `OwnerBase` trägt IBAN/BIC/Kontoinhaber,
+    Steuer-/USt-ID, den Provisionssatz, die Abrechnungsfrequenz und interne
+    Notizen. Nichts davon wird gebraucht, um eine Eigennutzung anzulegen — und
+    eine Route, die es trotzdem ausliefert, ist Recon-Material: sie erschließt
+    die Bankverbindung und den Verwaltungsvertrag jedes Eigentümers über eine
+    Objekt-ID. Ein späteres Feld an `OwnerBase` liefe hier sonst automatisch
+    mit raus, ohne dass es jemand entscheidet.
+
+    Was drin ist und warum:
+      * `id` — der Wert, der als `reservations.owner_id` gespeichert wird.
+      * `name`/`company` — die Anzeige („Eigennutzung: Herr Ohm").
+      * `email`/`phone` — der Kontakt für Rückfragen zum Aufenthalt.
+      * `country`/`language` — Anschreiben in SEINER Sprache (0335) statt in
+        der des Betriebs.
+    """
+
+    id: str
+    name: str
+    company: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    country: str | None = None
+    language: str | None = None
+
+
+class OwnerByPropertyResponse(BaseModel):
+    """Antwort auf „wem gehört dieses Objekt?".
+
+    `owner` ist NULLABLE, und das ist der Kern dieser Antwortform: ein Objekt
+    ohne zugeordneten Eigentümer ist ein gültiger Zustand (die Zuordnung ist
+    optional, `owner_properties` ist nicht Pflicht), KEIN Fehler. Ein 404 hätte
+    hier zwei Bedeutungen vermischt — „Objekt gibt es nicht / gehört einem
+    fremden Mandanten" und „Objekt gibt es, hat aber keinen Eigentümer" — und
+    der Aufrufer könnte „nachgesehen, keiner da" nicht von „Abruf
+    fehlgeschlagen" unterscheiden (Wurzel 4/5).
+
+    Deshalb die klare Trennung:
+      * 200 mit `owner: null`  → nachgesehen, es ist keiner zugeordnet.
+      * 404                    → das Objekt existiert nicht oder gehört einem
+                                 anderen Mandanten (bewusst dieselbe Meldung,
+                                 kein Existenz-Leak).
+      * 4xx/5xx sonst          → der Abruf ist gescheitert.
+
+    Genau EIN Eintrag, keine Liste: seit 0073 (`unique (property_id)`) gehört
+    ein Objekt genau einem Eigentümer.
+    """
+
+    property_id: str
+    owner: OwnerKontakt | None = None
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

@@ -211,8 +211,20 @@ def _tables() -> dict[str, list[dict]]:
         ],
         "block_requests": [],
         "meter_readings": [],
-        # Ein Typ mit EINER Einheit — der Normalfall (CLAUDE.md).
-        "property_units": [{"id": "u-1", "property_id": "p-1", "position": 1}],
+        # Ein Typ mit EINER Einheit — der Normalfall (CLAUDE.md). `tenant_id`
+        # steht dran, weil der Sperrantrag die Einheit gegen Objekt UND Mandant
+        # scopt (0353, Wurzel 3).
+        "property_units": [
+            {
+                "id": "u-1", "tenant_id": "t-1", "property_id": "p-1",
+                "position": 1,
+            },
+            # Einheit eines FREMDEN Objekts — Zielscheibe des Scope-Tests.
+            {
+                "id": "u-fremd", "tenant_id": "t-1", "property_id": "p-2",
+                "position": 1,
+            },
+        ],
         "reservation_addons": [],
     }
 
@@ -547,6 +559,53 @@ def test_request_block_foreign_property_404() -> None:
             ),
         )
     assert exc.value.status_code == 404
+
+
+def test_request_block_fuer_eine_einheit(  ) -> None:
+    """0353: der Eigentümer kann EINE Einheit beantragen statt des ganzen Typs.
+
+    Bei fünf gleichen Studios nahm der Antrag vorher zwangsläufig alle fünf aus
+    dem Verkauf, obwohl er nur eines nutzen will.
+    """
+    tables = _tables()
+    item = _svc(tables).request_block(
+        _ctx(),
+        BlockRequestCreate(
+            property_id="p-1", unit_id="u-1",
+            start_date=date(2026, 3, 1), end_date=date(2026, 3, 5),
+        ),
+    )
+    assert item.unit_id == "u-1"
+    assert tables["block_requests"][0]["unit_id"] == "u-1"
+
+
+def test_request_block_ohne_einheit_meint_den_ganzen_typ() -> None:
+    """Gegenprobe: ohne Angabe bleibt es beim bisherigen Verhalten."""
+    tables = _tables()
+    item = _svc(tables).request_block(
+        _ctx(),
+        BlockRequestCreate(
+            property_id="p-1", start_date=date(2026, 3, 1),
+            end_date=date(2026, 3, 5),
+        ),
+    )
+    assert item.unit_id is None
+    assert tables["block_requests"][0]["unit_id"] is None
+
+
+def test_request_block_fremde_einheit_422() -> None:
+    """Wurzel 3: eine `unit_id` aus dem Request ist ungeprüft nichts wert —
+    sonst ließe sich über eine geratene UUID die Einheit eines fremden Objekts
+    beantragen und bei der Genehmigung belegen."""
+    with pytest.raises(PortalError) as exc:
+        _svc().request_block(
+            _ctx(),
+            BlockRequestCreate(
+                property_id="p-1", unit_id="u-fremd",
+                start_date=date(2026, 3, 1), end_date=date(2026, 3, 5),
+            ),
+        )
+    assert exc.value.status_code == 422
 
 
 # --- Zählerstände ------------------------------------------------------------

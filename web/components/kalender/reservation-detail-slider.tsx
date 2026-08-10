@@ -18,7 +18,12 @@ import type { AvailabilitySource } from "@/lib/calendar";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { channelMeta } from "@/lib/calendar-channels";
 import { channelLabelLoose } from "@/lib/channel-logos";
-import { STATUS_META, displayStatus } from "@/lib/calendar-status";
+import {
+  OWNER_STAY_BAR,
+  OWNER_STAY_ICON,
+  STATUS_META,
+  displayStatus,
+} from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
 import type { CheckOutPayment } from "@/lib/reservations";
 import { useReservationDetail } from "@/lib/use-reservation-detail";
@@ -63,6 +68,10 @@ export function ReservationDetailSlider({
   const isCancelled = data?.status === "cancelled";
   // OTA-Buchung erkannt am echten Portal-Namen (channel "portal" sammelt 40+ OTAs).
   const isOta = !!data && data.channel !== "direct";
+  // Eigentümer-Aufenthalt (0241): belegt den Kalender, erzeugt aber keinen
+  // Umsatz — Beträge, Rechnungs- und Zusatzleistungs-Aktionen entfallen hier,
+  // weil es sie zu diesem Aufenthalt nicht gibt (kein leeres 0-Formular).
+  const isOwnerStay = !!data?.is_owner_stay;
 
   const submitCancel = async () => {
     const ok = await d.submitCancel(reason);
@@ -169,13 +178,31 @@ export function ReservationDetailSlider({
                     {statusLabel(status)}
                   </span>
                 )}
-                {meta && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
-                    <Icon icon={meta.logo.kind === "icon" ? meta.logo.icon : "ph:globe"} className="size-3" />
-                    {channelLabel(data.channel as AvailabilitySource)}
+                {/* Eigentümer-Aufenthalt statt Kanal: er kommt von keinem
+                    Vertriebsweg — ein „Direkt"-Abzeichen wäre irreführend. */}
+                {isOwnerStay ? (
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${OWNER_STAY_BAR}`}
+                  >
+                    <Icon icon={OWNER_STAY_ICON} className="size-3" />
+                    {t("slider.ownerStay")}
                   </span>
+                ) : (
+                  meta && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
+                      <Icon icon={meta.logo.kind === "icon" ? meta.logo.icon : "ph:globe"} className="size-3" />
+                      {channelLabel(data.channel as AvailabilitySource)}
+                    </span>
+                  )
                 )}
               </div>
+
+              {/* Erklärung: warum hier keine Beträge stehen. */}
+              {isOwnerStay && (
+                <p className="rounded-(--radius) border bg-secondary/40 p-3 text-sm text-muted-foreground">
+                  {t("slider.ownerStayHint")}
+                </p>
+              )}
 
               {/* Objekt + Belegung */}
               <div>
@@ -216,9 +243,11 @@ export function ReservationDetailSlider({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-display text-xl font-extrabold">
-                    {money(data.total_amount, data.currency)}
-                  </p>
+                  {!isOwnerStay && (
+                    <p className="font-display text-xl font-extrabold">
+                      {money(data.total_amount, data.currency)}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {data.nights} Nächte
                   </p>
@@ -239,7 +268,7 @@ export function ReservationDetailSlider({
                   erzeugt serverseitig verpflichtend die finale Rechnung —
                   schlägt sie fehl (z. B. Steuersatz fehlt), bleibt der Gast
                   eingecheckt und der Fehler steht hier im Klartext. */}
-              {!isCancelled && !d.checkoutResult && (
+              {!isCancelled && !d.checkoutResult && !isOwnerStay && (
                 <>
                   {!data.checked_in_at && data.status === "confirmed" && (
                     <div className="flex flex-col gap-2">
@@ -359,6 +388,7 @@ export function ReservationDetailSlider({
               {/* Umsatz & Rechnung (Layout-Referenz Casona: Aufschlüsselung,
                   Gesamt, in Rechnung gestellt/bezahlt/noch offen, Aktionen).
                   Vorab-Rechnung erst NACH Check-in (fachliche Regel). */}
+              {!isOwnerStay && (
               <Section title={t("slider.revenueInvoice")}>
                 <dl className="flex flex-col gap-1.5 text-sm">
                   {data.quote_items.map((q, i) => (
@@ -452,10 +482,12 @@ export function ReservationDetailSlider({
                   </div>
                 )}
               </Section>
+              )}
 
               {/* Zusatzleistungen — Schnelltaste: Extra-Angebote zu dieser
-                  Buchung dazubuchen (jeder Kanal, auch OTA wie Booking). */}
-              {!isCancelled && (
+                  Buchung dazubuchen (jeder Kanal, auch OTA wie Booking).
+                  Bei einer Eigennutzung gibt es nichts zu verkaufen. */}
+              {!isCancelled && !isOwnerStay && (
                 <ReservationAddonsSection
                   reservationId={reservationId}
                   currency={data.currency}

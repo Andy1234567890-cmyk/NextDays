@@ -1,16 +1,22 @@
-"""Tests des Sperrantrags-Workflows (Etappe A).
+"""Tests des Sperrantrags-Workflows (Etappe A + Eigentümer-Sperrzeiten 0353).
 
 Schwerpunkt sind die Wurzeln, an denen dieser Workflow real scheitern würde:
-* Wurzel 2 — Doppelklick auf „genehmigen" darf nicht zweimal sperren.
-* Wurzel 1 — der Widerruf muss die Nächte wieder freigeben.
-* Wurzel 3/9 — ein fremder Mandant darf den Antrag nicht sehen/entscheiden.
+* Wurzel 2 — Doppelklick auf „genehmigen" darf nicht zweimal belegen.
+* Wurzel 1 — der Widerruf muss die Nächte wieder freigeben, und NUR die eigenen.
+* Wurzel 3/9 — ein fremder Mandant darf den Antrag nicht sehen/entscheiden;
+  eine `unit_id` aus dem Request wird serverseitig gescopt.
 * Der 409-Fall: gebuchte Tage im Zeitraum → Antrag bleibt OFFEN.
+* 0353 — die Genehmigung erzeugt eine Reservierung mit `is_owner_stay=true` und
+  `owner_id`, keine anonyme Sperre mehr.
 
-In-Memory-Fake-DB (kein Netz, keine Test-DB).
+In-Memory-Fake-DB (kein Netz, keine Test-DB). Sie bildet inzwischen auch den
+Reservierungs-Pfad ab (RPC `create_reservation_atomic`), weil die Genehmigung
+über ihn läuft — genau das ist die Aussage von 0353: EIN Weg.
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
+from typing import Any
 
 import pytest
 
@@ -22,28 +28,53 @@ from src.features.calendar.sperrantraege import (
     melde_neuen_antrag,
 )
 
+# Feste UUIDs: `reservations`-Pfade prüfen die ID-Form (`_require_uuid`), ein
+# „b-1" käme dort nie an.
+ANTRAG = "11111111-1111-4111-8111-111111111111"
+ANTRAG_FREMD = "99999999-9999-4999-8999-999999999999"
+OBJEKT = "22222222-2222-4222-8222-222222222222"
+OBJEKT_FREMD = "88888888-8888-4888-8888-888888888888"
+EINHEIT_A = "33333333-3333-4333-8333-333333333333"
+EINHEIT_B = "44444444-4444-4444-8444-444444444444"
+EINHEIT_FREMD = "77777777-7777-4777-8777-777777777777"
+EIGENTUEMER = "55555555-5555-4555-8555-555555555555"
+
 
 def _ctx(user: str = "admin-1", tenant: str = "t-1") -> AuthContext:
     return AuthContext(user_id=user, tenant_id=tenant, role="admin")
 
 
 class _Result:
-    def __init__(self, data: list[dict]) -> None:
+    def __init__(self, data: Any) -> None:
         self.data = data
 
 
 class _Query:
-    """Minimaler PostgREST-Nachbau: eq/in_/gte/lt + select/insert/update/delete."""
+    """Minimaler PostgREST-Nachbau: eq/neq/in_/gte/lt/lte + CRUD.
+
+    Kennt zusätzlich den `!inner`-Embed in der Form, in der der Code ihn nutzt
+    (`owners!inner(tenant_id)` + `.eq("owners.tenant_id", …)`): der Filter wird
+    über die verknüpfte Tabelle aufgelöst statt ignoriert. Würde er ignoriert,
+    liefen die Scope-Tests ins Leere und bewiesen nichts.
+    """
+
+    # Embed-Spalte → (Zieltabelle, Fremdschlüssel in der eigenen Zeile).
+    _EMBEDS = {
+        "owners": ("owners", "owner_id"),
+        "properties": ("properties", "property_id"),
+    }
 
     def __init__(self, db: _DB, table: str) -> None:
         self._db = db
         self._table = table
         self._op = "select"
-        self._payload: dict | None = None
+        self._payload: Any = None
         self._filters: list[tuple[str, object]] = []
+        self._neq: list[tuple[str, object]] = []
         self._in: tuple[str, list] | None = None
         self._gte: tuple[str, str] | None = None
         self._lt: tuple[str, str] | None = None
+        self._lte: tuple[str, str] | None = None
 
     def select(self, *_a: object, **_k: object) -> _Query:
         self._op = "select"
@@ -56,7 +87,7 @@ class _Query:
 
     def upsert(self, payload: object, **_k: object) -> _Query:
         self._op = "upsert"
-        self._payload = payload  # type: ignore[assignment]
+        self._payload = payload
         return self
 
     def update(self, payload: dict) -> _Query:
@@ -72,6 +103,10 @@ class _Query:
         self._filters.append((col, val))
         return self
 
+    def neq(self, col: str, val: object) -> _Query:
+        self._neq.append((col, val))
+        return self
+
     def in_(self, col: str, vals: list) -> _Query:
         self._in = (col, vals)
         return self
@@ -82,6 +117,10 @@ class _Query:
 
     def lt(self, col: str, val: str) -> _Query:
         self._lt = (col, val)
+        return self
+
+    def lte(self, col: str, val: str) -> _Query:
+        self._lte = (col, val)
         return self
 
     def gt(self, *_a: object) -> _Query:
@@ -96,12 +135,6 @@ class _Query:
     def is_(self, *_a: object) -> _Query:
         return self
 
-    def neq(self, *_a: object) -> _Query:
-        return self
-
-    def lte(self, *_a: object) -> _Query:
-        return self
-
     def order(self, *_a: object, **_k: object) -> _Query:
         return self
 
@@ -111,8 +144,26 @@ class _Query:
     def range(self, *_a: object) -> _Query:
         return self
 
+    def _feld(self, row: dict, col: str) -> object:
+        """Spaltenwert — auch über einen `!inner`-Embed („owners.tenant_id")."""
+        if "." not in col:
+            return row.get(col)
+        embed, feld = col.split(".", 1)
+        ziel, fk = self._EMBEDS.get(embed, (embed, f"{embed}_id"))
+        treffer = [
+            r
+            for r in self._db.tables.get(ziel, [])
+            if str(r.get("id")) == str(row.get(fk))
+        ]
+        return treffer[0].get(feld) if treffer else None
+
     def _match(self, row: dict) -> bool:
-        ok = all(str(row.get(c)) == str(v) for c, v in self._filters)
+        ok = all(
+            str(self._feld(row, c)) == str(v) for c, v in self._filters
+        )
+        ok = ok and all(
+            str(self._feld(row, c)) != str(v) for c, v in self._neq
+        )
         if ok and self._in:
             col, vals = self._in
             ok = str(row.get(col)) in {str(v) for v in vals}
@@ -120,16 +171,22 @@ class _Query:
             ok = str(row.get(self._gte[0])) >= self._gte[1]
         if ok and self._lt:
             ok = str(row.get(self._lt[0])) < self._lt[1]
+        if ok and self._lte:
+            ok = str(row.get(self._lte[0])) <= self._lte[1]
         return ok
 
     def execute(self) -> _Result:
         rows = self._db.tables.setdefault(self._table, [])
         if self._op == "insert":
-            row = dict(self._payload or {})
-            row.setdefault("id", f"{self._table}-{self._db.next_id()}")
-            row.setdefault("created_at", "2026-06-25T00:00:00Z")
-            rows.append(row)
-            return _Result([row])
+            neu = self._payload if isinstance(self._payload, list) else [self._payload]
+            angelegt = []
+            for eintrag in neu:
+                row = dict(eintrag)
+                row.setdefault("id", f"{self._table}-{self._db.next_id()}")
+                row.setdefault("created_at", "2026-06-25T00:00:00Z")
+                rows.append(row)
+                angelegt.append(row)
+            return _Result(angelegt)
         if self._op == "upsert":
             payload = self._payload
             neu = payload if isinstance(payload, list) else [payload]
@@ -158,6 +215,77 @@ class _Query:
         return _Result([r for r in rows if self._match(r)])
 
 
+class _RPC:
+    """`create_reservation_atomic` (0275/0318/0351) in der Fake-DB.
+
+    Bildet ab, worauf die Tests sich stützen: Einheitenwahl (Vorgabe gewinnt,
+    sonst erste freie), Ablehnung bei belegter Einheit, Reservierungszeile und
+    `availability`-Belegung je Einheit. Der Rest der echten Funktion (Stop-Sell,
+    Advisory-Lock, Outbox-Minimum) ist hier nicht Gegenstand.
+    """
+
+    def __init__(self, db: _DB, name: str, params: dict) -> None:
+        self._db = db
+        self._name = name
+        self._params = params
+
+    def execute(self) -> _Result:
+        if self._name != "create_reservation_atomic":
+            raise AssertionError(f"Unerwartete RPC: {self._name}")
+        res = dict(self._params["p_reservation"])
+        pid = str(res["property_id"])
+        tage = _tage(str(res["check_in"]), str(res["check_out"]))
+        belegt = {
+            (str(r.get("unit_id")), str(r.get("date")))
+            for r in self._db.tables.get("availability", [])
+            if r.get("property_id") == pid and r.get("status") != "open"
+        }
+        einheiten = [
+            str(u["id"])
+            for u in self._db.tables.get("property_units", [])
+            if u.get("property_id") == pid
+        ]
+        vorgabe = res.get("unit_id")
+        if vorgabe:
+            kandidaten = [str(vorgabe)]
+        else:
+            kandidaten = einheiten
+        unit = next(
+            (u for u in kandidaten if all((u, t) not in belegt for t in tage)),
+            None,
+        )
+        if unit is None:
+            raise _RPCKonflikt("Zeitraum enthält bereits belegte/gesperrte Tage.")
+        res["unit_id"] = unit
+        # UUID-Form, weil der Storno-Pfad die ID prüft (`_require_uuid`).
+        res.setdefault("id", f"aaaaaaaa-0000-4000-8000-{self._db.next_id():012d}")
+        res.setdefault("status", "confirmed")
+        self._db.tables.setdefault("reservations", []).append(res)
+        for tag in tage:
+            self._db.tables.setdefault("availability", []).append(
+                {
+                    "property_id": pid,
+                    "unit_id": unit,
+                    "date": tag,
+                    "status": "booked",
+                    "source": self._params.get("p_source") or "direct",
+                }
+            )
+        return _Result({"reservation": res, "outbox_id": None})
+
+
+class _RPCKonflikt(Exception):
+    """Der RS409 der echten RPC — vom Aufrufer als 409 gemappt."""
+
+
+def _tage(von: str, bis_exkl: str) -> list[str]:
+    start, ende = date.fromisoformat(von), date.fromisoformat(bis_exkl)
+    return [
+        (start + timedelta(days=i)).isoformat()
+        for i in range((ende - start).days)
+    ]
+
+
 class _DB:
     def __init__(self, tables: dict[str, list[dict]]) -> None:
         self.tables = tables
@@ -170,8 +298,23 @@ class _DB:
     def table(self, name: str) -> _Query:
         return _Query(self, name)
 
+    def rpc(self, name: str, params: dict) -> _RPC:
+        return _RPC(self, name, params)
 
-def _tables() -> dict[str, list[dict]]:
+
+def _tables(*, einheiten: int = 1, mit_eigentuemer: bool = True) -> dict[str, list[dict]]:
+    units = [
+        {
+            "id": uid,
+            "tenant_id": "t-1",
+            "property_id": OBJEKT,
+            "name": name,
+            "position": pos,
+        }
+        for pos, (uid, name) in enumerate(
+            [(EINHEIT_A, "Studio 1"), (EINHEIT_B, "Studio 2")][:einheiten]
+        )
+    ]
     return {
         "users": [
             {"id": "admin-1", "tenant_id": "t-1", "role": "admin", "name": "Chefin"},
@@ -180,16 +323,38 @@ def _tables() -> dict[str, list[dict]]:
             {"id": "clean-1", "tenant_id": "t-1", "role": "cleaner", "name": "Putz"},
         ],
         "properties": [
-            {"id": "p-1", "tenant_id": "t-1", "title": "Villa"},
-            {"id": "p-9", "tenant_id": "t-9", "title": "Fremd"},
+            {"id": OBJEKT, "tenant_id": "t-1", "title": "Villa"},
+            {"id": OBJEKT_FREMD, "tenant_id": "t-9", "title": "Fremd"},
         ],
-        "property_units": [{"id": "u-1", "property_id": "p-1"}],
+        "property_units": [
+            *units,
+            # Einheit eines FREMDEN Objekts — Zielscheibe der Scope-Tests.
+            {
+                "id": EINHEIT_FREMD,
+                "tenant_id": "t-9",
+                "property_id": OBJEKT_FREMD,
+                "name": "Fremdstudio",
+                "position": 0,
+            },
+        ],
+        "owners": (
+            [{"id": EIGENTUEMER, "tenant_id": "t-1", "name": "Herr Ohm"}]
+            if mit_eigentuemer
+            else []
+        ),
+        "owner_properties": (
+            [{"id": "op-1", "owner_id": EIGENTUEMER, "property_id": OBJEKT}]
+            if mit_eigentuemer
+            else []
+        ),
         "availability": [],
+        "reservations": [],
         "block_requests": [
             {
-                "id": "b-1",
+                "id": ANTRAG,
                 "tenant_id": "t-1",
-                "property_id": "p-1",
+                "property_id": OBJEKT,
+                "unit_id": None,
                 "requested_by": "owner-1",
                 "start_date": "2026-03-01",
                 "end_date": "2026-03-03",  # INKLUSIV → 3 Nächte
@@ -198,9 +363,10 @@ def _tables() -> dict[str, list[dict]]:
                 "created_at": "2026-02-01T00:00:00Z",
             },
             {
-                "id": "b-9",
+                "id": ANTRAG_FREMD,
                 "tenant_id": "t-9",  # FREMDER Mandant
-                "property_id": "p-9",
+                "property_id": OBJEKT_FREMD,
+                "unit_id": None,
                 "requested_by": "owner-9",
                 "start_date": "2026-03-01",
                 "end_date": "2026-03-03",
@@ -212,6 +378,13 @@ def _tables() -> dict[str, list[dict]]:
         "notifications": [],
         "ari_outbox": [],
         "channex_property_map": [],
+        "rate_plans": [],
+        "price_overrides": [],
+        "stop_sell": [],
+        "reservation_events": [],
+        "reservation_cancellation_log": [],
+        "task_rules": [],
+        "tasks": [],
     }
 
 
@@ -223,11 +396,25 @@ def _entscheidung(note: str | None = None) -> BlockRequestDecision:
     return BlockRequestDecision(note=note)
 
 
+def _eigennutzungen(tables: dict[str, list[dict]]) -> list[dict]:
+    return [
+        r
+        for r in tables["reservations"]
+        if r.get("is_owner_stay") and r.get("status") != "cancelled"
+    ]
+
+
+def _belegte_tage(tables: dict[str, list[dict]]) -> list[str]:
+    return sorted(
+        r["date"] for r in tables["availability"] if r["status"] == "booked"
+    )
+
+
 # --- Scope (Wurzel 3 / 9) ----------------------------------------------------
 
 def test_liste_nur_eigener_mandant() -> None:
     res = _svc().liste(_ctx())
-    assert [i.id for i in res.items] == ["b-1"]  # b-9 (t-9) fehlt
+    assert [i.id for i in res.items] == [ANTRAG]  # der fremde fehlt
     assert res.items[0].property_title == "Villa"
     assert res.items[0].requested_by_name == "Herr Ohm"
 
@@ -246,78 +433,105 @@ def test_liste_unbekannter_status_422() -> None:
 def test_fremder_antrag_404() -> None:
     """Wurzel 9: die {id}-Aktion prüft denselben Scope wie die Liste."""
     with pytest.raises(CalendarError) as exc:
-        _svc().genehmigen(_ctx(), "b-9", _entscheidung())
+        _svc().genehmigen(_ctx(), ANTRAG_FREMD, _entscheidung())
     assert exc.value.status_code == 404
 
 
-# --- Genehmigen --------------------------------------------------------------
+# --- Genehmigen (0353: Eigentümer-Aufenthalt statt anonymer Sperre) ----------
 
-def test_genehmigen_sperrt_die_naechte() -> None:
+def test_genehmigen_legt_eigentuemer_aufenthalt_an() -> None:
+    """Der Kern von 0353: die Genehmigung erzeugt eine ZUORDENBARE Belegung.
+
+    Vorher entstand eine anonyme `blocked`-Nacht — der Kalender war zu, aber
+    weder Buchungsliste noch Abrechnung noch Statistik konnten sagen, WER das
+    Objekt genutzt hat. Genau die Lücke sollte 0241 (`is_owner_stay`) schließen;
+    der Sperrantrag hat sie nie benutzt.
+    """
     tables = _tables()
-    svc = _svc(tables)
-    item = svc.genehmigen(_ctx(), "b-1", _entscheidung("passt"))
+    item = _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung("passt"))
     assert item.status == "approved"
     assert item.decided_by == "admin-1"
     assert item.decided_at is not None
     assert item.decision_note == "passt"
-    # end_date ist INKLUSIV → 1., 2. und 3. März gesperrt (3 Nächte).
-    gesperrt = sorted(
-        r["date"] for r in tables["availability"] if r["status"] == "blocked"
-    )
-    assert gesperrt == ["2026-03-01", "2026-03-02", "2026-03-03"]
-    assert all(r["source"] == "manual" for r in tables["availability"])
+
+    aufenthalte = _eigennutzungen(tables)
+    assert len(aufenthalte) == 1
+    res = aufenthalte[0]
+    assert res["owner_id"] == EIGENTUEMER      # der Personenbezug
+    assert res["block_request_id"] == ANTRAG   # der Anker für den Widerruf
+    assert res["guest_id"] is None             # ein Eigentümer ist kein Gast
+    assert res["total_amount"] == 0            # kein Umsatz (0241)
+    # end_date ist INKLUSIV → 1., 2. und 3. März belegt (3 Nächte).
+    assert _belegte_tage(tables) == [
+        "2026-03-01", "2026-03-02", "2026-03-03",
+    ]
+
+
+def test_genehmigen_ohne_eigentuemer_422_und_bleibt_offen() -> None:
+    """Wurzel 4: eine Eigennutzung ohne Eigentümer wäre wieder die anonyme
+    Sperre. Kein Ersatzwert — klar fehlschlagen, und der Antrag bleibt offen."""
+    tables = _tables(mit_eigentuemer=False)
+    with pytest.raises(CalendarError) as exc:
+        _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert exc.value.status_code == 422
+    assert tables["reservations"] == []
+    assert tables["block_requests"][0]["status"] == "pending"
+    # Der Antrag wurde nicht einmal geclaimt — kein Zustand zum Zurückrollen.
+    assert "decided_at" not in tables["block_requests"][0]
 
 
 def test_genehmigen_ist_idempotent() -> None:
-    """Wurzel 2: der zweite Klick bekommt 409 und sperrt NICHT erneut."""
+    """Wurzel 2: der zweite Klick bekommt 409 und belegt NICHT erneut."""
     tables = _tables()
     svc = _svc(tables)
-    svc.genehmigen(_ctx(), "b-1", _entscheidung())
-    anzahl = len(tables["availability"])
+    svc.genehmigen(_ctx(), ANTRAG, _entscheidung())
+    anzahl = len(tables["reservations"])
     with pytest.raises(CalendarError) as exc:
-        svc.genehmigen(_ctx(), "b-1", _entscheidung())
+        svc.genehmigen(_ctx(), ANTRAG, _entscheidung())
     assert exc.value.status_code == 409
     assert "bereits genehmigt" in exc.value.message
-    assert len(tables["availability"]) == anzahl  # kein zweiter Write
+    assert len(tables["reservations"]) == anzahl  # keine zweite Belegung
 
 
 def test_genehmigen_bei_gebuchtem_tag_409_und_bleibt_offen() -> None:
-    """Der Antrag darf NICHT still als genehmigt gelten, wenn nicht gesperrt
+    """Der Antrag darf NICHT still als genehmigt gelten, wenn nicht belegt
     werden konnte (sonst zeigt das Portal eine Sperre, die es nicht gibt)."""
     tables = _tables()
     tables["availability"].append(
         {
-            "property_id": "p-1",
+            "property_id": OBJEKT,
             "date": "2026-03-02",
             "status": "booked",
             "source": "airbnb",
-            "unit_id": "u-1",
+            "unit_id": EINHEIT_A,
         }
     )
     svc = _svc(tables)
-    with pytest.raises(CalendarError) as exc:
-        svc.genehmigen(_ctx(), "b-1", _entscheidung())
-    assert exc.value.status_code == 409
+    with pytest.raises(Exception) as exc:  # noqa: PT011 — Fehlerklasse ist hier egal
+        svc.genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert not isinstance(exc.value, AssertionError)
     antrag = tables["block_requests"][0]
     assert antrag["status"] == "pending"  # zurückgerollt
     assert antrag["decided_by"] is None
     assert antrag["decided_at"] is None
+    assert _eigennutzungen(tables) == []
 
 
 def test_ablehnen_sperrt_nichts() -> None:
     tables = _tables()
-    item = _svc(tables).ablehnen(_ctx(), "b-1", _entscheidung("leider nein"))
+    item = _svc(tables).ablehnen(_ctx(), ANTRAG, _entscheidung("leider nein"))
     assert item.status == "rejected"
     assert item.decision_note == "leider nein"
     assert tables["availability"] == []
+    assert tables["reservations"] == []
 
 
 def test_ablehnen_nach_genehmigung_409() -> None:
     tables = _tables()
     svc = _svc(tables)
-    svc.genehmigen(_ctx(), "b-1", _entscheidung())
+    svc.genehmigen(_ctx(), ANTRAG, _entscheidung())
     with pytest.raises(CalendarError) as exc:
-        svc.ablehnen(_ctx(), "b-1", _entscheidung())
+        svc.ablehnen(_ctx(), ANTRAG, _entscheidung())
     assert exc.value.status_code == 409
 
 
@@ -326,50 +540,63 @@ def test_ablehnen_nach_genehmigung_409() -> None:
 def test_zuruecknehmen_gibt_naechte_frei() -> None:
     tables = _tables()
     svc = _svc(tables)
-    svc.genehmigen(_ctx(), "b-1", _entscheidung())
-    assert len(tables["availability"]) == 3
-    item = svc.zuruecknehmen(_ctx(), "b-1", _entscheidung("doch nicht"))
+    svc.genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert len(_belegte_tage(tables)) == 3
+    item = svc.zuruecknehmen(_ctx(), ANTRAG, _entscheidung("doch nicht"))
     assert item.status == "rejected"
-    # Die manuelle Sperre ist weg — das Objekt ist wieder verkäuflich.
-    assert [r for r in tables["availability"] if r["status"] == "blocked"] == []
+    # Die Eigennutzung ist storniert und die Nächte sind wieder offen.
+    assert _eigennutzungen(tables) == []
+    assert _belegte_tage(tables) == []
+
+
+def test_zuruecknehmen_trifft_nur_die_eigene_eigennutzung() -> None:
+    """WURZEL 1 — nur der EIGENE Gegenzustand.
+
+    Eine zweite, unabhängig erfasste Eigennutzung im selben Zeitraum (anderes
+    Objekt derselben Agentur, oder von Hand angelegt) darf der Widerruf NICHT
+    mitstornieren. Gefunden wird ausschließlich über `block_request_id`.
+    """
+    tables = _tables()
+    svc = _svc(tables)
+    svc.genehmigen(_ctx(), ANTRAG, _entscheidung())
+    fremde = {
+        "id": "bbbbbbbb-0000-4000-8000-000000000001",
+        "tenant_id": "t-1",
+        "property_id": OBJEKT,
+        "unit_id": EINHEIT_A,
+        "check_in": "2026-03-01",
+        "check_out": "2026-03-04",
+        "status": "confirmed",
+        "is_owner_stay": True,
+        "owner_id": EIGENTUEMER,
+        # KEIN Antragsbezug: von Hand erfasst.
+        "block_request_id": None,
+    }
+    tables["reservations"].append(fremde)
+    svc.zuruecknehmen(_ctx(), ANTRAG, _entscheidung())
+    assert [r["id"] for r in _eigennutzungen(tables)] == [fremde["id"]]
 
 
 def test_zuruecknehmen_nur_aus_genehmigt() -> None:
     with pytest.raises(CalendarError) as exc:
-        _svc().zuruecknehmen(_ctx(), "b-1", _entscheidung())
+        _svc().zuruecknehmen(_ctx(), ANTRAG, _entscheidung())
     assert exc.value.status_code == 409
 
 
-def test_zuruecknehmen_laesst_gebuchte_nacht_stehen() -> None:
-    """Der Unblock-Weg löscht nur manuelle Sperren — eine zwischenzeitlich
-    eingegangene Buchung bleibt gebucht (kein Doppelverkauf)."""
-    tables = _tables()
-    svc = _svc(tables)
-    svc.genehmigen(_ctx(), "b-1", _entscheidung())
-    # Zwischendurch kommt eine OTA-Buchung auf einen der Tage.
-    for r in tables["availability"]:
-        if r["date"] == "2026-03-02":
-            r["status"] = "booked"
-            r["source"] = "airbnb"
-    svc.zuruecknehmen(_ctx(), "b-1", _entscheidung())
-    verbleibend = [r for r in tables["availability"] if r["date"] == "2026-03-02"]
-    assert verbleibend and verbleibend[0]["status"] == "booked"
-
-
 def test_rollback_auch_bei_nicht_fachlichem_fehler() -> None:
-    """Wurzel 1/5: NICHT nur der 409 lässt die Sperre ausfallen — auch ein
-    Netz-/DB-Fehler. Der Antrag darf dann nicht 'approved' ohne Sperre bleiben.
+    """Wurzel 1/5: NICHT nur der 409 lässt die Belegung ausfallen — auch ein
+    Netz-/DB-Fehler. Der Antrag darf dann nicht 'approved' ohne Belegung
+    bleiben.
     """
     tables = _tables()
     svc = _svc(tables)
 
-    class _Kaputt:
-        def block(self, *_a: object, **_k: object) -> int:
-            raise RuntimeError("PostgREST weg")
+    def _kaputt(*_a: object, **_k: object) -> None:
+        raise RuntimeError("PostgREST weg")
 
-    svc._calendar = _Kaputt()  # noqa: SLF001 — gezielt den Seiteneffekt kippen
+    svc._eigennutzung_anlegen = _kaputt  # type: ignore[method-assign]  # noqa: SLF001
     with pytest.raises(RuntimeError):
-        svc.genehmigen(_ctx(), "b-1", _entscheidung())
+        svc.genehmigen(_ctx(), ANTRAG, _entscheidung())
     antrag = tables["block_requests"][0]
     assert antrag["status"] == "pending"  # zurückgerollt, nicht „approved"
     assert antrag["decided_at"] is None
@@ -382,10 +609,76 @@ def test_rollback_ist_tenant_gescopt() -> None:
     svc = _svc(tables)
     # Fremder Antrag steht auf pending; ein Rollback mit unserem ctx darf ihn
     # nicht berühren (anderer tenant + anderer Status).
-    svc._zuruecksetzen(_ctx(), "b-9")  # noqa: SLF001 — gezielt der Rollback
-    fremd = next(r for r in tables["block_requests"] if r["id"] == "b-9")
+    svc._zuruecksetzen(_ctx(), ANTRAG_FREMD)  # noqa: SLF001 — gezielt der Rollback
+    fremd = next(
+        r for r in tables["block_requests"] if r["id"] == ANTRAG_FREMD
+    )
     assert fremd["status"] == "pending"
     assert "decided_at" not in fremd  # unverändert
+
+
+# --- Einheiten (0353, Stufe 3) -----------------------------------------------
+
+def test_antrag_auf_eine_einheit_belegt_nur_diese() -> None:
+    """Der Kern von Stufe 3: bei einem Typ mit zwei Studios nimmt die
+    Eigennutzung eines Studios nur DIESES aus dem Verkauf."""
+    tables = _tables(einheiten=2)
+    tables["block_requests"][0]["unit_id"] = EINHEIT_B
+    _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+
+    res = _eigennutzungen(tables)[0]
+    assert res["unit_id"] == EINHEIT_B
+    belegte_einheiten = {
+        r["unit_id"] for r in tables["availability"] if r["status"] == "booked"
+    }
+    assert belegte_einheiten == {EINHEIT_B}  # Studio 1 bleibt verkäuflich
+
+
+def test_antrag_ohne_einheit_belegt_weiterhin_eine_freie() -> None:
+    """Gegenprobe: ohne Angabe bleibt es beim bisherigen Verhalten — die RPC
+    wählt eine Einheit. Der Fix darf den Normalfall nicht ändern."""
+    tables = _tables(einheiten=2)
+    _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+    res = _eigennutzungen(tables)[0]
+    assert res["unit_id"] in {EINHEIT_A, EINHEIT_B}
+
+
+def test_zwei_antraege_auf_verschiedene_einheiten_gehen_beide() -> None:
+    """Zwei Eigentümer-Wünsche auf VERSCHIEDENE Studios desselben Typs sind
+    gleichzeitig erfüllbar — vorher nahm der erste Antrag den ganzen Typ."""
+    tables = _tables(einheiten=2)
+    tables["block_requests"][0]["unit_id"] = EINHEIT_A
+    zweiter = dict(tables["block_requests"][0])
+    zweiter["id"] = "66666666-6666-4666-8666-666666666666"
+    zweiter["unit_id"] = EINHEIT_B
+    zweiter["status"] = "pending"
+    tables["block_requests"].append(zweiter)
+
+    svc = _svc(tables)
+    svc.genehmigen(_ctx(), ANTRAG, _entscheidung())
+    svc.genehmigen(_ctx(), zweiter["id"], _entscheidung())
+
+    assert {r["unit_id"] for r in _eigennutzungen(tables)} == {
+        EINHEIT_A, EINHEIT_B,
+    }
+
+
+def test_liste_zeigt_den_einheitennamen() -> None:
+    """Eine nackte UUID in der Warteschlange wäre keine Entscheidungsgrundlage."""
+    tables = _tables(einheiten=2)
+    tables["block_requests"][0]["unit_id"] = EINHEIT_B
+    item = _svc(tables).liste(_ctx()).items[0]
+    assert item.unit_id == EINHEIT_B
+    assert item.unit_name == "Studio 2"
+
+
+def test_entscheidung_liefert_den_einheitennamen_mit() -> None:
+    """Direkt nach dem Klick darf die Oberfläche nicht auf eine UUID
+    zurückfallen, wo eine Sekunde vorher „Studio 2" stand."""
+    tables = _tables(einheiten=2)
+    tables["block_requests"][0]["unit_id"] = EINHEIT_B
+    item = _svc(tables).ablehnen(_ctx(), ANTRAG, _entscheidung())
+    assert item.unit_name == "Studio 2"
 
 
 # --- Grenzen -----------------------------------------------------------------
@@ -395,7 +688,7 @@ def test_zu_langer_zeitraum_422() -> None:
     tables = _tables()
     tables["block_requests"][0]["end_date"] = "2099-03-01"
     with pytest.raises(CalendarError) as exc:
-        _svc(tables).genehmigen(_ctx(), "b-1", _entscheidung())
+        _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
     assert exc.value.status_code == 422
 
 
@@ -403,7 +696,7 @@ def test_end_vor_start_422() -> None:
     tables = _tables()
     tables["block_requests"][0]["end_date"] = "2026-02-01"
     with pytest.raises(CalendarError) as exc:
-        _svc(tables).genehmigen(_ctx(), "b-1", _entscheidung())
+        _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
     assert exc.value.status_code == 422
 
 
@@ -444,11 +737,11 @@ def _agentur_sperre(tables: dict[str, list[dict]], *tage: str) -> None:
     for tag in tage:
         tables["availability"].append(
             {
-                "property_id": "p-1",
+                "property_id": OBJEKT,
                 "date": tag,
                 "status": "blocked",
                 "source": "manual",
-                "unit_id": "u-1",
+                "unit_id": EINHEIT_A,
                 # KEIN Antragsbezug: eine Betriebssperre entsteht ohne Antrag
                 # (0337). Genau daran wird sie jetzt erkannt.
                 "block_request_id": None,
@@ -456,32 +749,25 @@ def _agentur_sperre(tables: dict[str, list[dict]], *tage: str) -> None:
         )
 
 
-def test_genehmigen_haengt_die_antrags_id_an_die_naechte() -> None:
-    """0337: die gesperrten Nächte tragen, WELCHER Antrag sie gesperrt hat."""
-    tables = _tables()
-    _svc(tables).genehmigen(_ctx(), "b-1", _entscheidung())
-    gesperrt = [r for r in tables["availability"] if r["status"] == "blocked"]
-    assert len(gesperrt) == 3
-    assert {r["block_request_id"] for r in gesperrt} == {"b-1"}
-
-
 def test_widerruf_laesst_agentur_sperre_stehen() -> None:
     """BEFUND 6 — der Widerruf riss die Sperre des BETRIEBS mit auf.
 
     Ablauf: Die Agentur sperrt 1.–5. März wegen Handwerkern. Ein Eigentümer
-    beantragt 1.–3., die Agentur genehmigt und nimmt später zurück. Vorher
-    löschte `_unblock` ALLES mit `status='blocked' AND source='manual'` im
-    Zeitraum — die Handwerker-Sperre für 1.–3. war mit weg und das Objekt über
-    die Portale wieder buchbar.
+    beantragt 1.–3. Seit 0353 scheitert die Genehmigung daran, dass die Einheit
+    im Zeitraum gesperrt ist (die Sperre steht ja) — der Antrag bleibt offen,
+    und die Handwerker-Sperre steht unangetastet. Vorher entstand daneben eine
+    zweite `blocked`-Zeile, deren Widerruf die Handwerker-Sperre mitriss.
     """
-    tables = _tables()
+    tables = _tables(einheiten=2)
     _agentur_sperre(
         tables, "2026-03-01", "2026-03-02", "2026-03-03", "2026-03-04",
         "2026-03-05",
     )
+    tables["block_requests"][0]["unit_id"] = EINHEIT_A
     svc = _svc(tables)
-    svc.genehmigen(_ctx(), "b-1", _entscheidung())
-    svc.zuruecknehmen(_ctx(), "b-1", _entscheidung("doch nicht"))
+    with pytest.raises(Exception) as exc:  # noqa: PT011 — Klasse hier nebensächlich
+        svc.genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert not isinstance(exc.value, AssertionError)
 
     verbleibend = sorted(
         r["date"] for r in tables["availability"] if r["status"] == "blocked"
@@ -490,42 +776,34 @@ def test_widerruf_laesst_agentur_sperre_stehen() -> None:
     assert verbleibend == [
         "2026-03-01", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05",
     ]
-    # Und keine dieser Zeilen trägt noch einen Antragsbezug.
-    assert all(
-        r.get("block_request_id") is None
-        for r in tables["availability"]
-        if r["status"] == "blocked"
-    )
+    assert tables["block_requests"][0]["status"] == "pending"
 
 
-def test_widerruf_meldet_weiter_gesperrte_tage_nicht_als_frei() -> None:
-    """Der Fehler darf auch nicht eine Ebene tiefer wandern: bleibt die
-    Agentur-Sperre in der DB stehen, darf an Channex trotzdem KEIN
-    `availability=1` für diese Tage gehen — sonst wäre die Nacht bei den
-    Portalen wieder verkäuflich, obwohl der Kalender sie sperrt."""
+def test_widerruf_eines_altbestand_antrags_raeumt_die_blocked_zeilen() -> None:
+    """Anträge, die VOR 0353 genehmigt wurden, haben eine anonyme
+    `blocked`-Nacht mit `availability.block_request_id` (0337) hinterlassen.
+
+    Ihr Widerruf muss weiter funktionieren — ohne den Unblock-Weg wäre jeder
+    dieser Anträge unwiderrufbar und das Objekt dauerhaft gesperrt.
+    """
     tables = _tables()
-    _agentur_sperre(tables, "2026-03-01", "2026-03-02", "2026-03-03")
-    svc = _svc(tables)
-    svc.genehmigen(_ctx(), "b-1", _entscheidung())
-    vorher = len(tables["ari_outbox"])
-    svc.zuruecknehmen(_ctx(), "b-1", _entscheidung())
-    # Kein einziger Freigabe-Job für die weiterhin gesperrten Tage.
-    neue = tables["ari_outbox"][vorher:]
-    freigaben = [
-        j for j in neue
-        if (j.get("payload") or {}).get("availability") == 1
-    ]
-    assert freigaben == []
-
-
-def test_widerruf_ohne_fremde_sperre_gibt_weiterhin_frei() -> None:
-    """Die Gegenprobe: ohne konkurrierende Sperre bleibt der Widerruf, was er
-    war — die Nächte werden frei. Der Fix darf den Normalfall nicht lähmen."""
-    tables = _tables()
-    svc = _svc(tables)
-    svc.genehmigen(_ctx(), "b-1", _entscheidung())
-    svc.zuruecknehmen(_ctx(), "b-1", _entscheidung())
-    assert [r for r in tables["availability"] if r["status"] == "blocked"] == []
+    antrag = tables["block_requests"][0]
+    antrag["status"] = "approved"
+    for tag in ("2026-03-01", "2026-03-02", "2026-03-03"):
+        tables["availability"].append(
+            {
+                "property_id": OBJEKT,
+                "date": tag,
+                "status": "blocked",
+                "source": "manual",
+                "unit_id": EINHEIT_A,
+                "block_request_id": ANTRAG,
+            }
+        )
+    _svc(tables).zuruecknehmen(_ctx(), ANTRAG, _entscheidung())
+    assert [
+        r for r in tables["availability"] if r["status"] == "blocked"
+    ] == []
 
 
 # --- Sprache der Entscheider-Meldung (0335) ---

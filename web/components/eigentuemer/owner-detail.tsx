@@ -23,7 +23,6 @@ import {
   assignOwnerProperty,
   deleteOwner,
   inviteOwnerPortal,
-  resendOwnerEmailConfirmation,
   resendOwnerInvite,
   unassignOwnerProperty,
   updateOwner,
@@ -88,9 +87,6 @@ export function OwnerDetail({
   const [bestaetigungAn, setBestaetigungAn] = useState<string | null>(
     initial.email_bestaetigung_an ?? null,
   );
-  // Eigener Busy-Zustand für das erneute Senden der ADRESS-Bestätigung —
-  // ein anderer Knopf als die Einladung, in einem anderen Zustand.
-  const [bestaetigungSendend, setBestaetigungSendend] = useState(false);
   // Mehrfachauswahl der nachträglichen Objektzuordnung. Eigener Busy-Zustand,
   // damit sie weder das Speichern der Stammdaten noch die Einladung blockiert.
   const [auswahl, setAuswahl] = useState<string[]>([]);
@@ -190,29 +186,6 @@ export function OwnerDetail({
           ? t("emailChangePending", { email: res.data.email_bestaetigung_an })
           : t("saved"),
       );
-    } else toast.error(res.error);
-  }
-
-  /**
-   * Die Bestätigung zum Adresswechsel erneut verschicken.
-   *
-   * Die Mail geht an die NEUE Adresse — also an genau den Wert, der beim
-   * Wechsel schiefgehen kann. Ohne diesen Knopf bliebe der Vorgang hängen:
-   * Stammdaten neu, Anmeldung alt, und kein Weg, das aufzulösen.
-   *
-   * Der Fehlschlag wird nicht verschluckt: die Serverantwort geht wörtlich in
-   * den Toast, weil genau die aussagekräftigen Fälle (409 „Adresse bereits
-   * vergeben", 422 „keine Adresse hinterlegt") dem Betreiber sagen, was zu
-   * tun ist.
-   */
-  async function emailBestaetigungErneutSenden() {
-    if (bestaetigungSendend) return;
-    setBestaetigungSendend(true);
-    const res = await resendOwnerEmailConfirmation(owner.id);
-    setBestaetigungSendend(false);
-    if (res.ok) {
-      setBestaetigungAn(res.data.email);
-      toast.success(t("emailChangeResent", { email: res.data.email }));
     } else toast.error(res.error);
   }
 
@@ -457,7 +430,7 @@ export function OwnerDetail({
         {bestaetigungAn && (
           <div
             role="status"
-            className="flex flex-wrap items-center justify-between gap-4 rounded-(--radius) border border-border bg-muted/40 p-4"
+            className="rounded-(--radius) border border-border bg-muted/40 p-4"
           >
             <p className="max-w-xl text-sm text-muted-foreground">
               <Icon
@@ -466,18 +439,6 @@ export function OwnerDetail({
               />
               {t("emailChangePendingHint", { email: bestaetigungAn })}
             </p>
-            <Button
-              variant="outline"
-              onClick={() => void emailBestaetigungErneutSenden()}
-              disabled={bestaetigungSendend}
-            >
-              {bestaetigungSendend ? (
-                <Icon icon="ph:spinner" className="size-4 animate-spin" />
-              ) : (
-                <Icon icon="ph:paper-plane-tilt" className="size-4" />
-              )}
-              {t("emailChangeResend")}
-            </Button>
           </div>
         )}
         {owner.user_id ? (

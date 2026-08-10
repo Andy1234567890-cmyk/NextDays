@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Да, премахни всички",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Няма резервации в този раздел.",
       "loading": "Зареждане…",
       "nights": "{count, plural, one {# нощувка} other {# нощувки}}",
-      "children": "{count, plural, one {# дете} other {# деца}}"
+      "children": "{count, plural, one {# дете} other {# деца}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Държава",
       "openGuestCard": "Отвори картата на госта",
       "photos": "Снимки",
-      "noPhotosFound": "За тази резервация не бяха намерени снимки."
+      "noPhotosFound": "За тази резервация не бяха намерени снимки.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Днешни напускания",
@@ -5620,12 +5626,14 @@
         "open": "Свободно",
         "booked": "Резервирано",
         "blocked": "Блокирано",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "всички канали",
       "nightsCount": "{count, plural, one {# нощ} other {# нощи}}",
-      "daysCount": "{count, plural, one {# ден} other {# дни}}"
+      "daysCount": "{count, plural, one {# ден} other {# дни}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Изглед",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Резервация без оферта",
       "blocking": "Блокиране…",
       "createBlockedPeriod": "Създай период на блокиране",
-      "priceMinStayBlock": "Цена / Min-Stay / Блокиране …"
+      "priceMinStayBlock": "Цена / Min-Stay / Блокиране …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Брой гости, зададен за този обект",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "смесени валути",
       "occupancy": "Заетост",
       "propertyNights": "{booked}/{total} обект-нощувки",
-      "revenue": "Оборот"
+      "revenue": "Оборот",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Затвори",
@@ -5861,14 +5877,39 @@
       "overview": "Преглед",
       "feesHint": "Почистване и др.",
       "personsValue": "{count} души",
-      "guestsLabel": "Гости"
+      "guestsLabel": "Гости",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Затвори",
       "revenueInvoice": "Оборот и фактура",
       "invoiced": "Фактурирано",
       "stillOpen": "Все още открити",
-      "cancelReasonPlaceholder": "Причина за анулирането (ще бъде документирана) …"
+      "cancelReasonPlaceholder": "Причина за анулирането (ще бъде документирана) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Групова редакция",

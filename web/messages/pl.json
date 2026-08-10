@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Tak, usuń wszystkie",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Brak rezerwacji w tej zakładce.",
       "loading": "Ładowanie…",
       "nights": "{count, plural, one {# noc} few {# noce} many {# nocy} other {# nocy}}",
-      "children": "{count, plural, one {# dziecko} few {# dzieci} many {# dzieci} other {# dziecka}}"
+      "children": "{count, plural, one {# dziecko} few {# dzieci} many {# dzieci} other {# dziecka}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Kraj",
       "openGuestCard": "Otwórz kartę gościa",
       "photos": "Zdjęcia",
-      "noPhotosFound": "Dla tej rezerwacji nie znaleziono żadnych zdjęć."
+      "noPhotosFound": "Dla tej rezerwacji nie znaleziono żadnych zdjęć.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Dzisiejsze wymeldowania",
@@ -5620,12 +5626,14 @@
         "open": "Wolne",
         "booked": "Zarezerwowane",
         "blocked": "Zablokowane",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "wszystkie kanały",
       "nightsCount": "{count, plural, one {# noc} few {# noce} many {# nocy} other {# nocy}}",
-      "daysCount": "{count, plural, one {# dzień} few {# dni} many {# dni} other {# dni}}"
+      "daysCount": "{count, plural, one {# dzień} few {# dni} many {# dni} other {# dni}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Widok",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Rezerwacja bez oferty",
       "blocking": "Blokowanie…",
       "createBlockedPeriod": "Utwórz okres blokady",
-      "priceMinStayBlock": "Cena / minimalny pobyt / blokada …"
+      "priceMinStayBlock": "Cena / minimalny pobyt / blokada …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Liczba osób ustawiona dla tego obiektu",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "różne waluty",
       "occupancy": "Obłożenie",
       "propertyNights": "{booked}/{total} nocy obiektowych",
-      "revenue": "Przychód"
+      "revenue": "Przychód",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Zamknij",
@@ -5861,14 +5877,39 @@
       "overview": "Przegląd",
       "feesHint": "Sprzątanie itp.",
       "personsValue": "{count} os.",
-      "guestsLabel": "Goście"
+      "guestsLabel": "Goście",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Zamknij",
       "revenueInvoice": "Przychód i faktura",
       "invoiced": "Zafakturowano",
       "stillOpen": "Wciąż otwarte",
-      "cancelReasonPlaceholder": "Powód anulowania (zostanie udokumentowany) …"
+      "cancelReasonPlaceholder": "Powód anulowania (zostanie udokumentowany) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Edycja zbiorcza",

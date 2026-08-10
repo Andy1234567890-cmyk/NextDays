@@ -80,6 +80,9 @@ class _Query:
     def lt(self, *_a, **_k) -> "_Query":
         return self
 
+    def lte(self, *_a, **_k) -> "_Query":
+        return self
+
     def delete(self) -> "_Query":
         self._op = "delete"
         return self
@@ -103,6 +106,24 @@ class _Query:
 
     def upsert(self, payload, **_k) -> "_Query":  # noqa: ANN001
         self._store.setdefault("_upserts", []).append((self._name, payload))
+        # Der Upsert landet AUCH im Store, nicht nur im Protokoll: Pfade, die
+        # nach dem Schreiben den Ist-Stand lesen (der Verfügbarkeits-Push
+        # zählt die freien Einheiten NACH der Sperre), sähen sonst immer den
+        # Zustand von vorher — der Test würde den Fehler nicht zeigen, den er
+        # ausschließen soll.
+        rows = self._store.setdefault(self._name, [])
+        for eintrag in payload if isinstance(payload, list) else [payload]:
+            treffer = [
+                r
+                for r in rows
+                if r.get("property_id") == eintrag.get("property_id")
+                and r.get("date") == eintrag.get("date")
+                and r.get("unit_id") == eintrag.get("unit_id")
+            ]
+            if treffer:
+                treffer[0].update(eintrag)
+            else:
+                rows.append(dict(eintrag))
         return self
 
     def execute(self) -> _Res:
@@ -113,12 +134,36 @@ class _Query:
             self._store.setdefault("_delete_filters", []).append(
                 (self._name, dict(self._eq))
             )
+            # Und wirklich löschen — nach demselben „nur bekannte Spalten"-
+            # Prinzip wie beim select. Ein Delete, der nur protokolliert,
+            # könnte den Gegenzustand nicht beweisen: der Freigabe-Test sähe
+            # die gelöschten Zeilen weiter im Store und wäre wertlos.
+            rows = list(self._store.get(self._name, []))
+            getroffen = rows
+            for col, val in self._eq.items():
+                if any(col in r for r in rows):
+                    getroffen = [
+                        r for r in getroffen if str(r.get(col)) == str(val)
+                    ]
+            # In-place (`[:] =`) statt neu binden: Tests halten oft eine
+            # Referenz auf genau diese Liste und sähen sonst den Stand von vor
+            # dem Löschen.
+            uebrig = [r for r in rows if r not in getroffen]
+            self._store.setdefault(self._name, [])[:] = uebrig
             return _Res([])
         rows = list(self._store.get(self._name, []))
         # in_-Filter unterstützen (properties-Tenant-Lookup im bulk_edit).
         if self._in is not None:
             col, vals = self._in
             rows = [r for r in rows if r.get(col) in vals]
+        # eq-Filter NUR auf Spalten anwenden, die die Zeilen überhaupt führen.
+        # Die meisten Tests hier hinterlegen Kurz-Zeilen ohne tenant_id/status;
+        # ein pauschaler Filter machte sie alle leer. Für Tests, die den Scope
+        # BEWEISEN wollen (Einheit gehört zum Objekt/Mandanten), zählt genau
+        # diese Prüfung — dort tragen die Zeilen die Spalte.
+        for col, val in self._eq.items():
+            if any(col in r for r in rows):
+                rows = [r for r in rows if str(r.get(col)) == str(val)]
         return _Res(rows)
 
 
@@ -231,6 +276,274 @@ def test_block_open_days_upserts() -> None:
     payload = upserts[0][1]
     assert len(payload) == 3
     assert all(p["status"] == "blocked" for p in payload)
+
+
+# --- Verfügbarkeits-Push: die ECHTE Stückzahl, nie eine feste 0/1 (0353) ---
+
+def _ari_jobs(monkeypatch) -> list[dict]:  # noqa: ANN001
+    """`try_enqueue_ari` abfangen und die gemeldeten Werte einsammeln."""
+    from src.features.calendar import service as cal_service
+
+    jobs: list[dict] = []
+    monkeypatch.setattr(
+        cal_service, "try_enqueue_ari",
+        lambda _db, _tenant, _pid, kind, fields: jobs.append(
+            {"kind": kind, **fields}
+        ),
+    )
+    return jobs
+
+
+def _mehrfamilien_store() -> dict:
+    """Ein Objekt-TYP mit DREI identischen Einheiten (0265) und leerem Kalender."""
+    return {
+        "properties": [{"id": "p1", "tenant_id": "t1"}],
+        "property_units": [
+            {"id": "u1", "property_id": "p1", "tenant_id": "t1", "position": 0},
+            {"id": "u2", "property_id": "p1", "tenant_id": "t1", "position": 1},
+            {"id": "u3", "property_id": "p1", "tenant_id": "t1", "position": 2},
+        ],
+        "availability": [],
+    }
+
+
+def test_unblock_meldet_alle_freien_einheiten_nicht_pauschal_eins(
+    monkeypatch,  # noqa: ANN001
+) -> None:
+    """DER BUG AUS STUFE 1: `_unblock` pushte je offener Spanne ein festes `1`.
+
+    Bei einem Typ mit drei Einheiten blieben damit zwei bei den Portalen
+    unverkäuflich — der Kalender führte sie offen, Booking/Airbnb sahen
+    „1 verfügbar". Gemeldet werden MUSS die Stückzahl (SiteMinder
+    `BookingLimit`, Booking.com „rooms available to sell").
+    """
+    jobs = _ari_jobs(monkeypatch)
+    svc, _ = _service(**_mehrfamilien_store())
+    svc.unblock(
+        "t1", "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 4))
+    )
+    verfuegbar = [j for j in jobs if j["kind"] == "availability"]
+    assert verfuegbar and all(j["availability"] == 3 for j in verfuegbar)
+
+
+def test_unblock_meldet_belegten_tag_als_null_statt_ihn_auszusparen(
+    monkeypatch,  # noqa: ANN001
+) -> None:
+    """Der Gegenzustand bleibt gewahrt: ein weiterhin belegter Tag darf NICHT
+    als frei gemeldet werden.
+
+    Vorher wurde er aus dem Push ausgespart (Spannen-Trick), jetzt trägt er
+    schlicht die Zahl 0 — dieselbe Aussage, aber ohne die Sonderbehandlung, und
+    mit der Fähigkeit, „eine von drei Einheiten belegt" als 2 zu melden statt
+    den ganzen Tag zuzumachen.
+    """
+    jobs = _ari_jobs(monkeypatch)
+    store = _mehrfamilien_store()
+    store["availability"] = [
+        # Alle drei Einheiten am 2.5. gebucht → dieser Tag ist wirklich zu.
+        {"property_id": "p1", "unit_id": u, "date": "2026-05-02",
+         "status": "booked", "source": "airbnb"}
+        for u in ("u1", "u2", "u3")
+    ]
+    svc, _ = _service(**store)
+    svc.unblock(
+        "t1", "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 4))
+    )
+    werte = {
+        (j["date_from"], j["date_to"]): j["availability"]
+        for j in jobs
+        if j["kind"] == "availability"
+    }
+    assert werte[("2026-05-02", "2026-05-02")] == 0
+    assert werte[("2026-05-01", "2026-05-01")] == 3
+    assert werte[("2026-05-03", "2026-05-03")] == 3
+
+
+def test_unblock_meldet_teilbelegten_tag_mit_der_restzahl(
+    monkeypatch,  # noqa: ANN001
+) -> None:
+    """Der zweite Teil desselben Fehlers: ein Tag, an dem EINE von drei
+    Einheiten belegt ist, wurde komplett aus dem Push genommen. Die übrigen
+    zwei blieben unverkäuflich, obwohl sie frei sind."""
+    jobs = _ari_jobs(monkeypatch)
+    store = _mehrfamilien_store()
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": "u1", "date": "2026-05-02",
+         "status": "booked", "source": "airbnb"},
+    ]
+    svc, _ = _service(**store)
+    svc.unblock(
+        "t1", "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 4))
+    )
+    werte = {
+        (j["date_from"], j["date_to"]): j["availability"]
+        for j in jobs
+        if j["kind"] == "availability"
+    }
+    assert werte[("2026-05-02", "2026-05-02")] == 2
+
+
+def test_block_einer_einheit_meldet_die_uebrigen_als_frei(
+    monkeypatch,  # noqa: ANN001
+) -> None:
+    """Stufe 3 + der Gegen-Fehler zu Stufe 1: `block` pushte ein festes `0`.
+
+    Solange eine Sperre IMMER alle Einheiten traf, stimmte das. Sperrt sie nur
+    eine von drei (Eigennutzung eines Studios), nähme die feste 0 dem ganzen
+    Typ die Verfügbarkeit — zwei verkäufliche Einheiten wären bei den Portalen
+    tot.
+    """
+    jobs = _ari_jobs(monkeypatch)
+    svc, store = _service(**_mehrfamilien_store())
+    req = BlockRequest(
+        property_id="p1",
+        range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+        unit_id="u2",
+    )
+    assert svc.block("t1", req) == 2
+    # Nur die eine Einheit bekommt Sperr-Zeilen.
+    payload = [u[1] for u in store["_upserts"] if u[0] == "availability"][0]
+    assert {p["unit_id"] for p in payload} == {"u2"}
+    verfuegbar = [j for j in jobs if j["kind"] == "availability"]
+    assert verfuegbar and all(j["availability"] == 2 for j in verfuegbar)
+
+
+def test_block_ohne_einheit_sperrt_weiterhin_den_ganzen_typ(
+    monkeypatch,  # noqa: ANN001
+) -> None:
+    """Gegenprobe: ohne `unit_id` bleibt es beim bisherigen Verhalten — alle
+    Einheiten zu, Verfügbarkeit 0. Der Fix darf den Normalfall nicht ändern."""
+    jobs = _ari_jobs(monkeypatch)
+    svc, store = _service(**_mehrfamilien_store())
+    req = BlockRequest(
+        property_id="p1",
+        range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+    )
+    svc.block("t1", req)
+    payload = [u[1] for u in store["_upserts"] if u[0] == "availability"][0]
+    assert {p["unit_id"] for p in payload} == {"u1", "u2", "u3"}
+    verfuegbar = [j for j in jobs if j["kind"] == "availability"]
+    assert verfuegbar and all(j["availability"] == 0 for j in verfuegbar)
+
+
+# --- Einheiten-Scope (Wurzel 3): unit_id aus dem Request ist ungeprüft nichts ---
+
+def test_block_lehnt_fremde_einheit_ab() -> None:
+    """Eine `unit_id`, die zu einem ANDEREN Objekt gehört, wanderte ungeprüft
+    in die availability-Zeile — damit ließe sich über eine geratene UUID die
+    Einheit eines fremden Objekts sperren."""
+    store = _mehrfamilien_store()
+    store["property_units"].append(
+        {"id": "u-fremd", "property_id": "p9", "tenant_id": "t1", "position": 0}
+    )
+    svc, _ = _service(**store)
+    req = BlockRequest(
+        property_id="p1",
+        range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+        unit_id="u-fremd",
+    )
+    with pytest.raises(CalendarError) as exc:
+        svc.block("t1", req)
+    assert exc.value.status_code == 422
+
+
+def test_block_lehnt_einheit_eines_fremden_mandanten_ab() -> None:
+    """Zweite Achse desselben Scopes: dieselbe property_id, aber die Einheit
+    hängt an einem fremden Mandanten (Datenfehler oder Angriff)."""
+    store = _mehrfamilien_store()
+    store["property_units"].append(
+        {"id": "u-t9", "property_id": "p1", "tenant_id": "t9", "position": 9}
+    )
+    svc, _ = _service(**store)
+    req = BlockRequest(
+        property_id="p1",
+        range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+        unit_id="u-t9",
+    )
+    with pytest.raises(CalendarError) as exc:
+        svc.block("t1", req)
+    assert exc.value.status_code == 422
+
+
+def test_block_einer_freien_einheit_trotz_buchung_auf_der_schwestereinheit(
+) -> None:
+    """Eine Buchung auf Studio 1 darf die Eigennutzung von Studio 2 nicht
+    verhindern — vorher prüfte `block` objektweit und wies mit 409 ab."""
+    store = _mehrfamilien_store()
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": "u1", "date": "2026-05-01",
+         "status": "booked", "source": "airbnb"},
+    ]
+    svc, _ = _service(**store)
+    req = BlockRequest(
+        property_id="p1",
+        range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+        unit_id="u2",
+    )
+    assert svc.block("t1", req) == 2
+
+
+def test_unblock_einer_einheit_laesst_die_anderen_gesperrt() -> None:
+    """Wurzel 1 — der Gegenzustand hat denselben Zuschnitt wie die Aktion.
+
+    Wurde nur Studio 2 gesperrt, darf das Aufheben auch nur Studio 2 öffnen.
+    Ohne den Einheiten-Filter riss ein Aufheben die Sperren der Schwester-
+    einheiten mit auf, und drei Studios wären wieder verkäuflich, obwohl nur
+    eines freigegeben wurde.
+    """
+    store = _mehrfamilien_store()
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": u, "date": "2026-05-01",
+         "status": "blocked", "source": "manual"}
+        for u in ("u1", "u2", "u3")
+    ]
+    svc, _ = _service(**store)
+    svc.unblock(
+        "t1", "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+        unit_id="u2",
+    )
+    verbleibend = {
+        r["unit_id"]
+        for r in store["availability"]
+        if r["status"] == "blocked"
+    }
+    assert verbleibend == {"u1", "u3"}
+
+
+def test_unblock_lehnt_fremde_einheit_ab() -> None:
+    """Wurzel 3 auch auf dem Freigabe-Weg: eine ungeprüfte `unit_id` gäbe die
+    Einheit eines fremden Objekts frei."""
+    store = _mehrfamilien_store()
+    store["property_units"].append(
+        {"id": "u-fremd", "property_id": "p9", "tenant_id": "t1", "position": 0}
+    )
+    svc, _ = _service(**store)
+    with pytest.raises(CalendarError) as exc:
+        svc.unblock(
+            "t1", "p1",
+            DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+            unit_id="u-fremd",
+        )
+    assert exc.value.status_code == 422
+
+
+def test_block_der_gebuchten_einheit_bleibt_409() -> None:
+    """Die Gegenprobe: GENAU diese Einheit ist belegt → weiterhin 409, kein
+    Überschreiben einer Buchung."""
+    store = _mehrfamilien_store()
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": "u2", "date": "2026-05-01",
+         "status": "booked", "source": "airbnb"},
+    ]
+    svc, _ = _service(**store)
+    req = BlockRequest(
+        property_id="p1",
+        range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+        unit_id="u2",
+    )
+    with pytest.raises(CalendarError) as exc:
+        svc.block("t1", req)
+    assert exc.value.status_code == 409
 
 
 # --- price override: setzen und zurücknehmen ---

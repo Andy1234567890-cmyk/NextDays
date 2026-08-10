@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Jah, eemalda kõik",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Selles vahekaardis broneeringuid pole.",
       "loading": "Laadib…",
       "nights": "{count, plural, one {# öö} other {# ööd}}",
-      "children": "{count, plural, one {# laps} other {# last}}"
+      "children": "{count, plural, one {# laps} other {# last}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Riik",
       "openGuestCard": "Ava külaliskaart",
       "photos": "Fotod",
-      "noPhotosFound": "Selle broneeringu kohta pilte ei leitud."
+      "noPhotosFound": "Selle broneeringu kohta pilte ei leitud.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Tänased väljaregistreerimised",
@@ -5620,12 +5626,14 @@
         "open": "Vaba",
         "booked": "Broneeritud",
         "blocked": "Suletud",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "kõik kanalid",
       "nightsCount": "{count, plural, one {# öö} other {# ööd}}",
-      "daysCount": "{count, plural, one {# päev} other {# päeva}}"
+      "daysCount": "{count, plural, one {# päev} other {# päeva}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Vaade",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Broneering ilma pakkumiseta",
       "blocking": "Suletakse…",
       "createBlockedPeriod": "Loo suletud periood",
-      "priceMinStayBlock": "Hind / minimaalne viibimine / sulgemine …"
+      "priceMinStayBlock": "Hind / minimaalne viibimine / sulgemine …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Selle majutuse jaoks määratud külaliste arv",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "segavaluutad",
       "occupancy": "Täituvus",
       "propertyNights": "{booked}/{total} objektiööd",
-      "revenue": "Käive"
+      "revenue": "Käive",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Sulge",
@@ -5861,14 +5877,39 @@
       "overview": "Ülevaade",
       "feesHint": "Koristus jne",
       "personsValue": "{count} in.",
-      "guestsLabel": "Külalised"
+      "guestsLabel": "Külalised",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Sulge",
       "revenueInvoice": "Käive ja arve",
       "invoiced": "Arveldatud",
       "stillOpen": "Veel avatud",
-      "cancelReasonPlaceholder": "Tühistamise põhjus (dokumenteeritakse) …"
+      "cancelReasonPlaceholder": "Tühistamise põhjus (dokumenteeritakse) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Hulgimuutmine",

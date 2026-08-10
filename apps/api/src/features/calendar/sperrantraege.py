@@ -41,15 +41,15 @@ from .schemas import (
     SperrantragItem,
     SperrantragListe,
 )
-from .service import BlockRequest, CalendarError, CalendarService
+from .service import CalendarError, CalendarService
 
 log = get_logger("nextdays.sperrantraege")
 
 # Spalten, die der Agentur-Blick braucht. Explizit statt "*", damit ein später
 # ergänztes sensibles Feld nicht automatisch mit ausgeliefert wird.
 _SPALTEN = (
-    "id, tenant_id, property_id, requested_by, start_date, end_date, status, "
-    "reason, decided_by, decided_at, decision_note, created_at"
+    "id, tenant_id, property_id, unit_id, requested_by, start_date, end_date, "
+    "status, reason, decided_by, decided_at, decision_note, created_at"
 )
 
 # Ein Antrag darf nicht beliebig weit in die Zukunft sperren — ein Tippfehler
@@ -66,6 +66,12 @@ MAX_SPERR_NAECHTE = 730
 GENEHMIGT = "genehmigt"
 ABGELEHNT = "abgelehnt"
 ZURUECKGENOMMEN = "zurueckgenommen"
+
+# Auditgrund für den Storno der Eigennutzung, wenn die Entscheidung keine
+# Anmerkung trägt. Bewusst ein interner Protokolltext und kein Kundentext: er
+# landet in `reservations.cancel_reason` (Audit-Spur der Agentur), nicht in
+# einer Mail an den Eigentümer — die geht über die Katalog-Schlüssel raus.
+_STORNO_GRUND = "Genehmigung des Sperrantrags zurückgenommen"
 
 _ENTSCHEIDUNGS_TEXTE: dict[str, tuple[str, str]] = {
     GENEHMIGT: (
@@ -141,7 +147,10 @@ class SperrantragService:
         rows = query.order("created_at", desc=False).execute().data or []
         titel = self._titel({str(r["property_id"]) for r in rows})
         namen = self._namen({str(r["requested_by"]) for r in rows if r.get("requested_by")})
-        items = [_item(r, titel, namen) for r in rows]
+        einheiten = self._einheiten_namen(
+            {str(r["unit_id"]) for r in rows if r.get("unit_id")}
+        )
+        items = [_item(r, titel, namen, einheiten) for r in rows]
         return SperrantragListe(items=items, total=len(items))
 
     def _titel(self, property_ids: set[str]) -> dict[str, str]:
@@ -154,6 +163,41 @@ class SperrantragService:
             .execute()
         ).data or []
         return {str(r["id"]): r.get("title") or "" for r in rows}
+
+    def _einheiten_namen(self, unit_ids: set[str]) -> dict[str, str]:
+        """Anzeigenamen der beantragten Einheiten („Studio 3").
+
+        Ohne sie stünde in der Warteschlange eine nackte UUID, und die Agentur
+        könnte nicht erkennen, WELCHE der fünf identischen Einheiten der
+        Eigentümer meint — die Entscheidung hinge an einer unlesbaren Angabe.
+        """
+        if not unit_ids:
+            return {}
+        rows = (
+            self._db.table("property_units")
+            .select("id, name")
+            .in_("id", sorted(unit_ids))
+            .execute()
+        ).data or []
+        return {str(r["id"]): r.get("name") or "" for r in rows}
+
+    def _einzel_item(self, antrag: dict) -> SperrantragItem:
+        """Antwort auf eine EINZEL-Entscheidung (approve/reject/revoke).
+
+        Zieht Objekttitel und Einheitenname genauso nach wie der Listenpfad —
+        sonst zeigte die Oberfläche direkt nach der Entscheidung eine nackte
+        UUID, wo eine Sekunde vorher „Studio 3" stand. Der Antragsteller-Name
+        bleibt hier bewusst weg: die Entscheiderin hat ihn gerade vor sich, und
+        ein weiterer users-Lookup je Klick trüge nichts bei.
+        """
+        return _item(
+            antrag,
+            self._titel({str(antrag["property_id"])}),
+            {},
+            self._einheiten_namen(
+                {str(antrag["unit_id"])} if antrag.get("unit_id") else set()
+            ),
+        )
 
     def _namen(self, user_ids: set[str]) -> dict[str, str]:
         """Namen der Antragsteller. Bewusst OHNE E-Mail/Telefon (Wurzel 9):
@@ -174,15 +218,32 @@ class SperrantragService:
     def genehmigen(
         self, ctx: AuthContext, antrag_id: str, req: BlockRequestDecision
     ) -> SperrantragItem:
-        """Antrag genehmigen und die Nächte im Kalender sperren.
+        """Antrag genehmigen: der Zeitraum wird als EIGENTÜMER-AUFENTHALT belegt.
+
+        WAS SICH GEGENÜBER DER ERSTEN FASSUNG GEÄNDERT HAT (und warum):
+        Bis hierher erzeugte die Genehmigung eine anonyme `blocked`-Nacht über
+        `CalendarService.block`. Der Kalender war damit zwar zu, aber der ganze
+        0241-Apparat (`reservations.is_owner_stay`) blieb ungenutzt: nirgends
+        stand, WER das Objekt nutzt. Weder die Buchungsliste noch die
+        Eigentümer-Abrechnung noch die Belegungsstatistik konnten den Aufenthalt
+        von einer Handwerker-Sperre unterscheiden — genau die Lücke, die 0241
+        schließen sollte.
+
+        Jetzt entsteht eine Reservierung mit `is_owner_stay=true` und
+        `owner_id`. Damit greifen Kalenderbelegung, Verfügbarkeits-Push an die
+        Portale, Ausschluss aus Umsatz/Statement und der Personenbezug über
+        EINEN Weg (Wurzel 1) — statt über einen zweiten, parallel gepflegten
+        Sperr-Pfad, der bei jeder Änderung mitgezogen werden müsste.
 
         REIHENFOLGE IST DER KERN (Wurzel 2): Erst wird der Antrag per bedingtem
-        UPDATE von 'pending' auf 'approved' GECLAIMT, dann gesperrt. Ein
+        UPDATE von 'pending' auf 'approved' GECLAIMT, dann belegt. Ein
         Doppelklick/Retry verliert das Rennen um den Claim und bekommt 409 —
-        ohne den Claim würden zwei parallele Requests beide sperren und beide
-        eine Benachrichtigung auslösen.
+        ohne den Claim würden zwei parallele Requests beide belegen und beide
+        eine Benachrichtigung auslösen. Der UNIQUE-Index
+        `reservations_block_request_aktiv_idx` (0353) ist der DB-seitige
+        Backstop dazu.
 
-        Schlägt das Sperren fehl (409: der Zeitraum enthält gebuchte Tage), wird
+        Schlägt das Belegen fehl (409: der Zeitraum enthält gebuchte Tage), wird
         der Claim ZURÜCKGEROLLT: der Antrag steht wieder auf 'pending'. Genau
         das verlangt die Vorgabe — ein Antrag, dessen Sperre nicht ausgeführt
         werden konnte, darf nicht als genehmigt gelten, sonst zeigt das Portal
@@ -190,6 +251,10 @@ class SperrantragService:
         """
         antrag = self._laden(ctx, antrag_id)
         rng = self._range(antrag)
+        # Der Eigentümer steht VOR dem Claim fest. Fehlt er, scheitert die
+        # Genehmigung, ohne den Antrag angefasst zu haben — ein Claim, den man
+        # gleich wieder zurückrollt, ist eine überflüssige Zustandsänderung.
+        owner_id = self._eigentuemer(ctx, str(antrag["property_id"]))
         try:
             geclaimt = self._claim(
                 antrag_id,
@@ -199,11 +264,11 @@ class SperrantragService:
                 note=req.note,
             )
         except Exception as exc:  # noqa: BLE001 — auf 23P01 geprüft, sonst re-raise
-            # Der EXCLUDE-Constraint aus 0333 (23P01) schlägt zu, wenn für
-            # dieses Objekt bereits ein GENEHMIGTER Antrag im Zeitraum liegt.
-            # Das ist eine fachliche Aussage und kein 500 — dem Nutzer sagen,
-            # WAS kollidiert. Jeder andere Fehler wird NICHT verschluckt
-            # (Wurzel 5) und fliegt unverändert weiter.
+            # Der EXCLUDE-Constraint aus 0333/0353 (23P01) schlägt zu, wenn für
+            # dieses Objekt und dieselbe Einheit bereits ein GENEHMIGTER Antrag
+            # im Zeitraum liegt. Das ist eine fachliche Aussage und kein 500 —
+            # dem Nutzer sagen, WAS kollidiert. Jeder andere Fehler wird NICHT
+            # verschluckt (Wurzel 5) und fliegt unverändert weiter.
             if "23P01" not in str(exc) and "block_requests_kein_ueberlapp" not in str(exc):
                 raise
             raise CalendarError(
@@ -218,24 +283,17 @@ class SperrantragService:
                 status_code=409,
             )
         try:
-            self._calendar.block(
-                ctx.tenant_id,
-                BlockRequest(property_id=str(antrag["property_id"]), range=rng),
-                # 0337: die gesperrten Nächte tragen die Antrags-ID, damit der
-                # Widerruf sie GEZIELT wieder freigibt und nicht jede andere
-                # manuelle Sperre im selben Zeitraum mitreißt (Wurzel 1).
-                block_request_id=antrag_id,
-            )
+            self._eigennutzung_anlegen(ctx, antrag, owner_id, rng)
         except BaseException:
             # Gegenzustand pflegen (Wurzel 1): der Claim war eine Zustands-
             # änderung, die ohne den Seiteneffekt keinen Bestand haben darf.
             #
-            # BEWUSST BaseException und nicht nur CalendarError: nicht nur der
-            # fachliche 409 („enthält bereits gebuchte Tage") lässt die Sperre
-            # ausfallen, sondern auch ein Netz-/PostgREST-Fehler im Upsert. Wer
-            # hier nur CalendarError fängt, lässt genau diese Fälle als
-            # „approved ohne eine einzige gesperrte Nacht" stehen — der
-            # Zustand, den dieser Block verhindern soll. Es wird NICHTS
+            # BEWUSST BaseException und nicht nur CalendarError/ReservationError:
+            # nicht nur der fachliche 409 („enthält bereits gebuchte Tage") lässt
+            # die Belegung ausfallen, sondern auch ein Netz-/PostgREST-Fehler im
+            # RPC-Aufruf. Wer hier nur die fachliche Ausnahme fängt, lässt genau
+            # diese Fälle als „approved ohne eine einzige belegte Nacht" stehen —
+            # der Zustand, den dieser Block verhindern soll. Es wird NICHTS
             # verschluckt (Wurzel 5): sofort re-raise, der Aufrufer sieht den
             # Originalfehler.
             self._zuruecksetzen(ctx, antrag_id)
@@ -245,11 +303,100 @@ class SperrantragService:
             tenant_id=ctx.tenant_id,
             antrag_id=antrag_id,
             property_id=str(antrag["property_id"]),
+            unit_id=str(antrag["unit_id"]) if antrag.get("unit_id") else None,
+            owner_id=owner_id,
             naechte=len(rng.nights()),
         )
         neu = self._laden(ctx, antrag_id)
         self._melde_entscheidung(ctx, neu, GENEHMIGT)
-        return _item(neu, self._titel({str(neu["property_id"])}), {})
+        return self._einzel_item(neu)
+
+    def _eigentuemer(self, ctx: AuthContext, property_id: str) -> str:
+        """Der verwaltete Eigentümer DIESES Objekts (`owners`, 0063).
+
+        Eindeutig ohne jede Annahme: seit 0073 (`unique (property_id)`) gehört
+        ein Objekt genau EINEM Eigentümer. Es wird also nichts geraten und
+        nichts über `requested_by` rückgeschlossen — der Antragsteller kann ein
+        Verwalter im Auftrag sein, der Eigentümer der Sache ist trotzdem der am
+        Objekt hinterlegte.
+
+        Fehlt der Eintrag, ist das ein Datenfehler und KEIN Fall für einen
+        Ersatzwert (Wurzel 4): eine Eigennutzung ohne Eigentümer wäre genau die
+        anonyme Sperre, die dieser Umbau abschafft. Klar fehlschlagen mit der
+        Aussage, was zu tun ist.
+        """
+        rows = (
+            self._db.table("owner_properties")
+            .select("owner_id, owners!inner(id, tenant_id)")
+            .eq("property_id", property_id)
+            .eq("owners.tenant_id", ctx.tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows or not rows[0].get("owner_id"):
+            raise CalendarError(
+                "Dem Objekt ist kein Eigentümer zugeordnet — die Eigennutzung "
+                "kann niemandem zugeschrieben werden. Bitte zuerst unter "
+                "Eigentümer das Objekt zuordnen.",
+                status_code=422,
+            )
+        return str(rows[0]["owner_id"])
+
+    def _eigennutzung_anlegen(
+        self,
+        ctx: AuthContext,
+        antrag: dict,
+        owner_id: str,
+        rng: DateRange,
+    ) -> None:
+        """Die genehmigte Sperre als Eigentümer-Aufenthalt buchen.
+
+        Über den BESTEHENDEN Reservierungs-Schreibpfad, nicht über einen
+        eigenen Insert: dort hängen der atomare RPC (Advisory-Lock,
+        Einheitenwahl, EXCLUDE-Backstop), die Kalenderbelegung je Einheit, die
+        ARI-Outbox-Zeile in derselben Transaktion und der Verfügbarkeits-Push
+        mit der echten Stückzahl. Ein zweiter Insert daneben müsste all das
+        nachbauen und liefe beim ersten Zusatz auseinander (Wurzel 1: ein Weg).
+
+        `check_out` ist EXKLUSIV wie überall im Kalender; `rng.end` ist es
+        bereits (`_range` rechnet das inklusive `end_date` des Antrags einmalig
+        um). Es wird hier NICHT noch einmal verschoben.
+
+        Der Kanal ist `direct`: die Belegung entsteht im Haus, nicht über ein
+        Portal. Ein OTA-Kanal löste die Provisionslogik aus — für einen
+        Aufenthalt ohne Umsatz.
+        """
+        from src.features.reservations.schemas import (  # noqa: PLC0415
+            ReservationChannel,
+            ReservationCreate,
+            ReservationStatus,
+        )
+        from src.features.reservations.service import (  # noqa: PLC0415
+            ReservationsService,
+        )
+
+        ReservationsService(service_client=self._db).create(
+            ctx,
+            ReservationCreate(
+                property_id=str(antrag["property_id"]),
+                check_in=rng.start,
+                check_out=rng.end,
+                channel=ReservationChannel.direct,
+                status=ReservationStatus.confirmed,
+                is_owner_stay=True,
+                owner_id=owner_id,
+                # Die im Antrag benannte Einheit (0353). None = der Antrag meint
+                # den Typ; die RPC wählt dann die erste freie Einheit.
+                unit_id=(
+                    str(antrag["unit_id"]) if antrag.get("unit_id") else None
+                ),
+            ),
+            # 0353: die Reservierung trägt die Antrags-ID, damit der Widerruf
+            # GENAU sie storniert und nicht eine zweite, unabhängig erfasste
+            # Eigennutzung im selben Zeitraum mitreißt (Wurzel 1). Bewusst
+            # KEIN Feld im HTTP-Schema — es darf nicht vom Client kommen.
+            block_request_id=str(antrag["id"]),
+        )
 
     def ablehnen(
         self, ctx: AuthContext, antrag_id: str, req: BlockRequestDecision
@@ -270,7 +417,7 @@ class SperrantragService:
         )
         neu = self._laden(ctx, antrag_id)
         self._melde_entscheidung(ctx, neu, ABGELEHNT)
-        return _item(neu, self._titel({str(neu["property_id"])}), {})
+        return self._einzel_item(neu)
 
     def zuruecknehmen(
         self, ctx: AuthContext, antrag_id: str, req: BlockRequestDecision
@@ -278,24 +425,40 @@ class SperrantragService:
         """Eine bereits erteilte Genehmigung widerrufen.
 
         WURZEL 1 — der Gegenzustand, und zwar NUR der eigene: Die Genehmigung
-        hat Nächte gesperrt; ihr Widerruf MUSS sie wieder freigeben, sonst
+        hat den Zeitraum belegt; ihr Widerruf MUSS ihn wieder freigeben, sonst
         bliebe das Objekt für immer blockiert, ohne dass noch ein Antrag darauf
-        hinweist. Freigegeben wird über den BESTEHENDEN Weg
-        `CalendarService.unblock` — MIT der Antrags-ID (0337), sodass genau die
-        Zeilen verschwinden, die diese Genehmigung erzeugt hat.
+        hinweist. Es gibt dafür GENAU EINEN Anker, nie eine Suche über
+        (Objekt, Zeitraum): sonst risse der Widerruf eine zweite, unabhängig
+        erfasste Belegung im selben Zeitraum mit.
 
-        Ohne die ID löschte der Widerruf alles mit `status='blocked' AND
-        source='manual'` im Zeitraum. Eine Agentur-Sperre (Renovierung 1.–20.)
-        trägt dieselbe Signatur wie eine genehmigte Antragssperre (5.–7.) — der
-        Widerruf des Antrags riss also die Handwerker-Sperre für diese drei
-        Nächte mit auf, und das Objekt war wieder verkäuflich. Der
+        ZWEI FORMEN, BEIDE ZU BEDIENEN — der Bestand ist der Grund:
+        * Genehmigungen AB 0353 haben eine Reservierung mit
+          `is_owner_stay=true` und `block_request_id` erzeugt. Sie wird über den
+          bestehenden Storno-Weg zurückgenommen; der gibt die Nächte über
+          `_release_nights` frei und meldet die echte Stückzahl an die Portale.
+        * Genehmigungen DAVOR haben eine anonyme `blocked`-Nacht mit
+          `availability.block_request_id` (0337) erzeugt. Für sie bleibt
+          `CalendarService.unblock` MIT der Antrags-ID der Weg. Ihn hier
+          wegzulassen hieße, jeden vor dem Umbau genehmigten Antrag dauerhaft
+          unwiderrufbar zu machen — das Objekt bliebe gesperrt.
+
+        Beide Wege laufen unbedingt, nicht als Entweder-oder: welche Form
+        vorliegt, entscheidet der Fund der Reservierung, und ein Antrag, der
+        (durch einen abgebrochenen Lauf) beides hinterlassen hat, muss beides
+        loswerden. Der Unblock ohne passende Zeilen ist ein No-op.
+
+        Ohne die Antrags-ID löschte der Widerruf alles mit `status='blocked'
+        AND source='manual'` im Zeitraum. Eine Agentur-Sperre (Renovierung
+        1.–20.) trägt dieselbe Signatur wie eine genehmigte Antragssperre
+        (5.–7.) — der Widerruf des Antrags riss also die Handwerker-Sperre für
+        diese drei Nächte mit auf, und das Objekt war wieder verkäuflich. Der
         EXCLUDE-Constraint aus 0333 greift dagegen nicht: er sichert nur, dass
         nicht zwei GENEHMIGTE Anträge überlappen; hier steht auf der Gegenseite
         gar kein Antrag.
 
-        An Channex geht tag-genau nur, was danach WIRKLICH offen ist — weder
-        eine inzwischen eingegangene Buchung noch eine weiterlaufende
-        Agentur-Sperre wird neu zum Verkauf gemeldet.
+        An die Portale geht danach der echte Kalenderstand — weder eine
+        inzwischen eingegangene Buchung noch eine weiterlaufende Agentur-Sperre
+        wird neu zum Verkauf gemeldet.
 
         Zielzustand ist 'rejected': das Enum aus 0014 kennt nur die drei
         Zustände, und ein Zurück auf 'pending' würde den Antrag erneut in der
@@ -313,11 +476,17 @@ class SperrantragService:
                 status_code=409,
             )
         try:
+            self._eigennutzung_stornieren(ctx, antrag_id, req.note)
             self._calendar.unblock(
                 ctx.tenant_id,
                 str(antrag["property_id"]),
                 rng,
                 block_request_id=antrag_id,
+                # Die Einheit des Antrags. Bei Altbestand ist sie NULL und der
+                # Unblock bleibt objektweit — genau so wurde damals gesperrt.
+                unit_id=(
+                    str(antrag["unit_id"]) if antrag.get("unit_id") else None
+                ),
             )
         except BaseException:
             # Wie beim Genehmigen (siehe dort): ohne die Freigabe darf der
@@ -334,7 +503,53 @@ class SperrantragService:
         )
         neu = self._laden(ctx, antrag_id)
         self._melde_entscheidung(ctx, neu, ZURUECKGENOMMEN)
-        return _item(neu, self._titel({str(neu["property_id"])}), {})
+        return self._einzel_item(neu)
+
+    def _eigennutzung_stornieren(
+        self, ctx: AuthContext, antrag_id: str, note: str | None
+    ) -> None:
+        """Die aus DIESEM Antrag entstandene Eigennutzung zurücknehmen.
+
+        Gefunden wird sie über `reservations.block_request_id` (0353) — nicht
+        über (Objekt, Zeitraum, is_owner_stay). Diese Suche träfe eine zweite,
+        unabhängig erfasste Eigennutzung im selben Zeitraum mit und stornierte
+        eine Belegung, mit der dieser Antrag nichts zu tun hat (Wurzel 1: nur
+        den eigenen Gegenzustand aufheben).
+
+        Tenant-gescopt in DERSELBEN Abfrage (Wurzel 3) und auf die lebenden
+        Zustände begrenzt: eine bereits stornierte Zeile ist der Zielzustand,
+        ein zweiter Storno darauf gäbe 409 und ließe den Widerruf scheitern,
+        obwohl nichts mehr zu tun ist (Wurzel 2: retrybar bleiben).
+
+        Kein Treffer heißt: der Antrag stammt aus der Zeit vor 0353 und hat
+        eine anonyme `blocked`-Nacht hinterlassen. Das ist kein Fehler — der
+        Aufrufer räumt sie im selben Zug über `unblock` ab.
+        """
+        rows = (
+            self._db.table("reservations")
+            .select("id")
+            .eq("block_request_id", antrag_id)
+            .eq("tenant_id", ctx.tenant_id)
+            .neq("status", "cancelled")
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return
+        from src.features.reservations.service import (  # noqa: PLC0415
+            ReservationsService,
+        )
+
+        # `cancel` verlangt eine Begründung (Pflicht, wird auditiert), die
+        # Anmerkung der Entscheidung ist dagegen optional. Fehlt sie, steht
+        # hier der VORGANG als Grund — das ist keine erfundene Angabe, sondern
+        # die belegbare Tatsache, warum storniert wurde (Wurzel 4: kein
+        # plausibler Ersatz für eine fehlende Nutzereingabe, sondern eine
+        # eigene, wahre Aussage).
+        grund = (note or "").strip() or f"{_STORNO_GRUND} ({antrag_id})"
+        ReservationsService(service_client=self._db).cancel(
+            ctx, str(rows[0]["id"]), grund
+        )
 
     # --- Zustandswechsel -----------------------------------------------------
 
@@ -595,14 +810,20 @@ def _als_datum(wert: object) -> date:
 
 
 def _item(
-    r: dict, titel: dict[str, str], namen: dict[str, str]
+    r: dict,
+    titel: dict[str, str],
+    namen: dict[str, str],
+    einheiten: dict[str, str] | None = None,
 ) -> SperrantragItem:
     pid = str(r["property_id"])
+    uid = str(r["unit_id"]) if r.get("unit_id") else None
     requested_by = str(r["requested_by"]) if r.get("requested_by") else None
     return SperrantragItem(
         id=str(r["id"]),
         property_id=pid,
         property_title=titel.get(pid),
+        unit_id=uid,
+        unit_name=(einheiten or {}).get(uid or ""),
         requested_by=requested_by,
         requested_by_name=namen.get(requested_by or ""),
         start_date=_als_datum(r["start_date"]),

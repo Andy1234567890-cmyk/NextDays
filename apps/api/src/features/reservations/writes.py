@@ -4,6 +4,12 @@ Mixin auf `ReservationsBase`; `service.py` komponiert es in `ReservationsService
 Jede Belegung/Freigabe pflegt den Kalender-Gegenzustand (Wurzel 1) und pusht die
 Verfügbarkeit an Channex/OTAs; das Anlegen läuft atomar über die RPC (Wurzel 2).
 """
+# pylint: disable=too-many-lines  # kohärente Schreib-Domäne (Anlegen/Move/
+# Storno/Check-in-out). Die vier Vorgänge teilen sich Alt-/Neu-Diff,
+# Einheitenwahl und Push-Reihenfolge; ein Split trennte genau die Stellen, die
+# beim Ändern zusammen gelesen werden müssen (gleiches Muster wie
+# calendar/service.py und channel_manager/bookings_sync.py). Die Scope-Helfer
+# liegen bereits geteilt in `_base.py`.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
@@ -147,7 +153,23 @@ class WritesMixin(ReservationsBase):
                 error=str(exc)[:200],
             )
 
-    def create(self, ctx: AuthContext, req: ReservationCreate) -> ReservationResponse:
+    def create(
+        self,
+        ctx: AuthContext,
+        req: ReservationCreate,
+        *,
+        block_request_id: str | None = None,
+    ) -> ReservationResponse:
+        """Reservierung anlegen — auch der Eigentümer-Aufenthalt (0241/0353).
+
+        `block_request_id` verknüpft die Reservierung mit dem GENEHMIGTEN
+        Sperrantrag, aus dem sie entstanden ist, damit sein Widerruf genau
+        diese Zeile storniert und nur ihre Nächte freigibt (Wurzel 1). Der
+        Parameter steht BEWUSST nicht im HTTP-`ReservationCreate` — er darf
+        nicht vom Client kommen, sonst hängte jemand seine Buchung an einen
+        fremden Antrag und dessen Widerruf stornierte sie (Wurzel 3). Gleiche
+        Begründung wie beim gleichnamigen Parameter in `CalendarService.block`.
+        """
         tenant_id = self._require_tenant(ctx)
 
         # 1) Property gehört dem Tenant? (sonst fremde Belegung möglich)
@@ -169,6 +191,11 @@ class WritesMixin(ReservationsBase):
         rate_plan_id = self._resolve_rate_plan(
             tenant_id, req.property_id, req.rate_plan_id
         )
+        # 1d) Vorgegebene Einheit serverseitig scopen (Wurzel 3). Die RPC prüft
+        #     die Zugehörigkeit zum Objekt ebenfalls, aber ohne den Mandanten —
+        #     und sie wirft dafür 22023, was der Router als 500 sähe. Hier fällt
+        #     es als sauberer 422 auf, mit demselben Scope wie der Rate-Plan.
+        unit_id = self._require_own_unit(tenant_id, req.property_id, req.unit_id)
 
         # 2) Double-Booking-Vorcheck (früher UX-Guard) je EINHEIT.
         #    Der RPC bleibt der TOCTOU-sichere Backstop.
@@ -200,20 +227,30 @@ class WritesMixin(ReservationsBase):
             and availability_block_hits_channel(r.get("source"), RECEPTION)
         }
         if belegte_einheiten:
-            alle_einheiten = {
-                u["id"]
-                for u in (
-                    self._db()
-                    .table("property_units")
-                    .select("id")
-                    .eq("property_id", req.property_id)
-                    .execute()
-                ).data
-                or []
-            }
-            # Ohne bekannte Einheiten (Altbestand) bleibt es beim strengen
-            # Verhalten von vorher — lieber ablehnen als überbuchen (Wurzel 5).
-            if not alle_einheiten or not alle_einheiten - belegte_einheiten:
+            # Ist die Einheit VORGEGEBEN, lautet die Frage nicht mehr „gibt es
+            # irgendeine freie?", sondern „ist GENAU DIESE frei?". Ohne die
+            # Unterscheidung ließe der Vorcheck eine Buchung auf eine belegte
+            # Einheit durch, solange eine Schwestereinheit frei ist — die RPC
+            # wiese sie danach ab, aber mit einem Umweg über den Advisory-Lock.
+            if unit_id:
+                frei = unit_id not in belegte_einheiten
+            else:
+                alle_einheiten = {
+                    u["id"]
+                    for u in (
+                        self._db()
+                        .table("property_units")
+                        .select("id")
+                        .eq("property_id", req.property_id)
+                        .execute()
+                    ).data
+                    or []
+                }
+                # Ohne bekannte Einheiten (Altbestand) bleibt es beim strengen
+                # Verhalten von vorher — lieber ablehnen als überbuchen
+                # (Wurzel 5).
+                frei = bool(alle_einheiten and alle_einheiten - belegte_einheiten)
+            if not frei:
                 raise ReservationError(
                     "Zeitraum enthält bereits belegte/gesperrte Tage.",
                     status_code=409,
@@ -243,14 +280,34 @@ class WritesMixin(ReservationsBase):
                 "aufheben.", status_code=409
             )
 
-        # 3) Gast anlegen (oder bestehenden per E-Mail wiederverwenden). JEDE
-        #    Reservierung MUSS einen Gast tragen — Branchenstandard (Cloudbeds,
-        #    Mews, RoomRaccoon, Guesty verlangen alle mind. einen Namen; ein
-        #    Zimmer OHNE Gast sperrt man über den Sperrzeitraum, nicht als
-        #    Reservierung). Liefert der Resolver None (kein Name/E-Mail/Telefon),
-        #    ist die Buchung unvollständig → 422 statt guest-loser Reservierung.
-        guest_id = self._upsert_guest(tenant_id, req)
-        if guest_id is None:
+        # 3) WER belegt? Jede Reservierung MUSS einen Personenbezug tragen —
+        #    Branchenstandard (Cloudbeds, Mews, RoomRaccoon, Guesty verlangen
+        #    alle mindestens einen Namen). Es gibt genau zwei Formen davon:
+        #
+        #    a) Der GAST (Normalfall): angelegt oder per E-Mail/Telefon
+        #       wiederverwendet. Liefert der Resolver None (kein Name, keine
+        #       E-Mail, kein Telefon), ist die Buchung unvollständig → 422.
+        #    b) Der EIGENTÜMER (0241 + 0353): bei einem Eigentümer-Aufenthalt
+        #       ist der „Gast" der Eigentümer, und er hängt über `owner_id` an
+        #       `owners` — NICHT als Gast-Freitext in `guests`. Ein Eigentümer
+        #       ist kein Gast: eine Gast-Zeile für ihn verfälschte die
+        #       Loyalty-Aggregate (Aufenthalte/Umsatz je Gast, siehe
+        #       `recompute_guest_aggregates` weiter unten), die Gästekartei und
+        #       jedes Marketing-Segment, das darauf aufsetzt. `guest_id` bleibt
+        #       darum leer.
+        #
+        #    Was es NICHT geben darf, ist eine Reservierung ohne beides — der
+        #    CHECK `reservations_owner_stay_person` (0353) ist der DB-seitige
+        #    Riegel dazu (fail-closed, Wurzel 5).
+        owner_id = self._require_own_owner(
+            tenant_id, req.property_id, req.owner_id
+        )
+        # Mit Eigentümer-Bezug wird der Gast-Resolver gar nicht erst gefragt:
+        # sonst legte ein mitgeschickter Kontakt (die Oberfläche füllt das
+        # Formular vor) NEBEN dem Eigentümer noch eine Gast-Zeile an, und die
+        # Belegung hätte zwei Personenbezüge.
+        guest_id = None if owner_id else self._upsert_guest(tenant_id, req)
+        if guest_id is None and owner_id is None:
             raise ReservationError(
                 "Bitte einen Gast angeben (mindestens Name, E-Mail oder Telefon). "
                 "Zum Sperren ohne Gast einen Sperrzeitraum anlegen.",
@@ -311,8 +368,21 @@ class WritesMixin(ReservationsBase):
             "total_amount": total_amount,
             # Eigentümer-Aufenthalt (0241): sperrt den Kalender wie jede Buchung
             # (derselbe atomare RPC-Pfad, derselbe Channex-Push), zählt aber
-            # nirgends als Umsatz.
+            # nirgends als Umsatz. `owner_id` (0353) trägt dazu den
+            # Personenbezug — ohne ihn wüsste niemand, WER da war.
             "is_owner_stay": req.is_owner_stay,
+            **({"owner_id": owner_id} if owner_id else {}),
+            # Der Sperrantrag, aus dem diese Belegung entstanden ist (0353) —
+            # der Anker, an dem der Widerruf genau sie wiederfindet (Wurzel 1).
+            **(
+                {"block_request_id": block_request_id}
+                if block_request_id
+                else {}
+            ),
+            # Die vorgegebene Einheit. Ohne sie wählt die RPC die erste freie
+            # (0275); mit ihr prüft sie die Zugehörigkeit zum Objekt selbst und
+            # belegt genau diese.
+            **({"unit_id": unit_id} if unit_id else {}),
             "quote_items": quote_items,
             "currency": currency,
             # Belegung (Gästezahl) für Balken + Detailansicht.

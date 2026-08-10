@@ -152,7 +152,15 @@ def unblock(
     ],
 ) -> dict[str, int]:
     try:
-        return {"unblocked_days": service.unblock(ctx.tenant_id, req.property_id, req.range)}
+        return {
+            "unblocked_days": service.unblock(
+                ctx.tenant_id, req.property_id, req.range,
+                # Einheiten-genaues Aufheben (0353) als Gegenzustand zur
+                # einheiten-genauen Sperre — sonst öffnete ein Aufheben von
+                # „Studio 3" auch die Sperren der Schwestereinheiten.
+                unit_id=req.unit_id,
+            )
+        }
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

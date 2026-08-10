@@ -22,7 +22,12 @@ import { Card } from "@nextdays/ui/card";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { channelMeta } from "@/lib/calendar-channels";
-import { STATUS_META, displayStatus } from "@/lib/calendar-status";
+import {
+  OWNER_STAY_BAR,
+  OWNER_STAY_ICON,
+  STATUS_META,
+  displayStatus,
+} from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
 import { channelLabelLoose } from "@/lib/channel-logos";
 import { dateKey } from "@/lib/calendar-views";
@@ -98,6 +103,9 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
   const meta = channelMeta(data.channel as AvailabilitySource);
   const isCancelled = data.status === "cancelled";
   const isOta = data.channel !== "direct";
+  // Eigentümer-Aufenthalt (0241): belegt den Kalender, ist aber kein Umsatz —
+  // Zahlungen, Rechnung und Zusatzleistungen entfallen, weil es sie nicht gibt.
+  const isOwnerStay = data.is_owner_stay;
   const refLabel = data.external_ref ?? data.id.slice(0, 8);
 
   // Zahlungs-Fortschritt (..-Balken). Nur mit sichtbaren Beträgen; sonst
@@ -131,13 +139,24 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               <span className={`size-2 rounded-full ${STATUS_META[status].dotBg}`} />
               {statusLabel(status)}
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
-              <Icon
-                icon={meta.logo.kind === "icon" ? meta.logo.icon : "ph:globe"}
-                className="size-3"
-              />
-              {data.ota_name ? channelLabelLoose(data.ota_name) : channelLabel(data.channel as AvailabilitySource)}
-            </span>
+            {/* Eigentümer-Aufenthalt statt Kanal — er kommt von keinem
+                Vertriebsweg, ein „Direkt"-Abzeichen wäre irreführend. */}
+            {isOwnerStay ? (
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${OWNER_STAY_BAR}`}
+              >
+                <Icon icon={OWNER_STAY_ICON} className="size-3" />
+                {t("bookingDetail.ownerStay")}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
+                <Icon
+                  icon={meta.logo.kind === "icon" ? meta.logo.icon : "ph:globe"}
+                  className="size-3"
+                />
+                {data.ota_name ? channelLabelLoose(data.ota_name) : channelLabel(data.channel as AvailabilitySource)}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -223,9 +242,11 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-display text-2xl font-extrabold">
-                  {money(data.total_amount, data.currency)}
-                </p>
+                {!isOwnerStay && (
+                  <p className="font-display text-2xl font-extrabold">
+                    {money(data.total_amount, data.currency)}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   {t("bookingDetail.nightsCount", { count: data.nights })}
                 </p>
@@ -245,8 +266,10 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               </p>
             )}
 
-            {/* Check-in / Check-out (Front-Desk-Aktionen) */}
-            {!isCancelled && !d.checkoutResult && (
+            {/* Check-in / Check-out (Front-Desk-Aktionen). Beim Eigentümer-
+                Aufenthalt entfällt beides: der Check-out erzwingt eine finale
+                Rechnung, und die gibt es hier nicht. */}
+            {!isCancelled && !d.checkoutResult && !isOwnerStay && (
               <div className="flex flex-col gap-2">
                 {!data.checked_in_at && data.status === "confirmed" && (
                   <>
@@ -356,9 +379,18 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                 </Button>
               </div>
             )}
+
+            {/* Erklärung: warum hier keine Beträge/Rechnung stehen. */}
+            {isOwnerStay && (
+              <p className="rounded-(--radius) border bg-secondary/40 p-3 text-sm text-muted-foreground">
+                {t("bookingDetail.ownerStayHint")}
+              </p>
+            )}
           </Card>
 
-          {/* Zahlungen (..-Fortschrittsbalken) */}
+          {/* Zahlungen (..-Fortschrittsbalken) — beim Eigentümer-Aufenthalt
+              gibt es keine; die Karte entfällt komplett. */}
+          {!isOwnerStay && (
           <Card className="flex flex-col gap-3 p-5">
             <h2 className="font-display text-lg font-bold">
               {t("bookingDetail.payments")}
@@ -466,9 +498,10 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               </>
             )}
           </Card>
+          )}
 
-          {/* Zusatzleistungen */}
-          {!isCancelled && (
+          {/* Zusatzleistungen — bei einer Eigennutzung gibt es nichts zu verkaufen. */}
+          {!isCancelled && !isOwnerStay && (
             <Card className="p-5">
               <ReservationAddonsSection
                 reservationId={reservationId}
@@ -590,7 +623,9 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
             lng={data.property_lng}
           />
 
-          {/* Kostenaufteilungsdetails */}
+          {/* Kostenaufteilungsdetails — beim Eigentümer-Aufenthalt gibt es
+              keine Positionen und keine Rechnung. */}
+          {!isOwnerStay && (
           <Card className="flex flex-col gap-3 p-5">
             <h2 className="font-display text-lg font-bold">
               {t("bookingDetail.costBreakdownDetails")}
@@ -641,6 +676,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               </dl>
             )}
           </Card>
+          )}
 
           {/* Kundendaten (maskiert) */}
           <Card className="flex flex-col gap-3 p-5">

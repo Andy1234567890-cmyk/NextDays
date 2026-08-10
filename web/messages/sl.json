@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Da, odstrani vse",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "V tem zavihku ni rezervacij.",
       "loading": "Nalaganje …",
       "nights": "{count, plural, one {# nočitev} two {# nočitvi} few {# nočitve} other {# nočitev}}",
-      "children": "{count, plural, one {# otrok} two {# otroka} few {# otroci} other {# otrok}}"
+      "children": "{count, plural, one {# otrok} two {# otroka} few {# otroci} other {# otrok}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Država",
       "openGuestCard": "Odpri kartico gosta",
       "photos": "Fotografije",
-      "noPhotosFound": "Za to rezervacijo ni bilo najdenih slik."
+      "noPhotosFound": "Za to rezervacijo ni bilo najdenih slik.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Današnje odjave",
@@ -5620,12 +5626,14 @@
         "open": "Prosto",
         "booked": "Zasedeno",
         "blocked": "Blokirano",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "vsi kanali",
       "nightsCount": "{count, plural, one {# noč} two {# noči} few {# noči} other {# noči}}",
-      "daysCount": "{count, plural, one {# dan} two {# dneva} few {# dni} other {# dni}}"
+      "daysCount": "{count, plural, one {# dan} two {# dneva} few {# dni} other {# dni}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Pogled",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Rezervacija brez ponudbe",
       "blocking": "Blokiranje…",
       "createBlockedPeriod": "Ustvari blokirano obdobje",
-      "priceMinStayBlock": "Cena / minimalno bivanje / blokada …"
+      "priceMinStayBlock": "Cena / minimalno bivanje / blokada …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Število oseb, nastavljeno za to nastanitev",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "mešane valute",
       "occupancy": "Zasedenost",
       "propertyNights": "{booked}/{total} objekt-noči",
-      "revenue": "Promet"
+      "revenue": "Promet",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Zapri",
@@ -5861,14 +5877,39 @@
       "overview": "Pregled",
       "feesHint": "Čiščenje itd.",
       "personsValue": "{count} os.",
-      "guestsLabel": "Gostje"
+      "guestsLabel": "Gostje",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Zapri",
       "revenueInvoice": "Promet in račun",
       "invoiced": "Zaračunano",
       "stillOpen": "Še odprto",
-      "cancelReasonPlaceholder": "Razlog stornacije (bo dokumentiran) …"
+      "cancelReasonPlaceholder": "Razlog stornacije (bo dokumentiran) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Množično urejanje",

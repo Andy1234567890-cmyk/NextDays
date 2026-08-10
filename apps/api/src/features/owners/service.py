@@ -13,12 +13,15 @@ from supabase import Client
 
 from src.core.logging import get_logger, mask_email
 from src.core.security import AuthContext
+from src.core.supabase import load_scoped
 from src.features.properties.schemas import types_for_accommodation
 
 from .schemas import (
     AvailablePropertiesResponse,
     AvailableProperty,
+    OwnerByPropertyResponse,
     OwnerCreate,
+    OwnerKontakt,
     OwnerListItem,
     OwnerListResponse,
     OwnerPropertyAssign,
@@ -1069,6 +1072,92 @@ class OwnersService:
         # `owner_id=None` heißt: kein Eigentümer, dem schon etwas gehören
         # könnte — es bleiben genau die freien Objekte übrig.
         return self._zuordenbare_objekte(tenant_id, None)
+
+    def by_property(
+        self, ctx: AuthContext, property_id: str
+    ) -> OwnerByPropertyResponse:
+        """Wem gehört DIESES Objekt? — der Personenbezug für die Eigennutzung.
+
+        WARUM ES DIESEN WEG BRAUCHT: Wer eine Eigennutzung anlegt (0353,
+        `reservations.owner_id`), muss den Eigentümer des gewählten Objekts
+        kennen. Über die vorhandenen Routen ging das nur als N+1: alle
+        Eigentümer listen (`OwnerListItem` trägt nur `property_count`, keine
+        property_ids), dann für jeden mit Objekten das Detail laden und den
+        Treffer suchen. Bei 40 Eigentümern sind das 41 Abrufe für eine Frage,
+        die eine Zeile in `owner_properties` beantwortet.
+
+        WARUM IM owners-SLICE UND NICHT AM OBJEKT: Die Antwort besteht aus
+        Eigentümer-Stammdaten. Läge sie am properties-Slice, müsste der
+        `owners`-Zugriff samt seines Feldzuschnitts dort ein zweites Mal
+        entstehen — und der Zuschnitt ist hier die eigentliche Arbeit
+        (`OwnerKontakt` statt `OwnerBase`). Das Objekt ist der EINGANG, nicht
+        der Inhalt; deshalb `/owners/by-property/{property_id}`.
+
+        ZWEI SCOPES, beide über den Mandanten aus dem verifizierten Token
+        (Wurzel 3):
+        1. Das OBJEKT gehört dem Mandanten — `load_scoped` filtert per
+           (id, tenant_id) in EINER Abfrage und wirft sonst 404. Ohne diese
+           Prüfung ließe sich über eine geratene property_id der Eigentümer
+           eines fremden Betriebs samt Kontaktdaten auslesen.
+        2. Der EIGENTÜMER gehört dem Mandanten — die Zuordnung wird über
+           `owners.tenant_id` gegengeprüft. Das ist kein doppelter Boden ohne
+           Grund: `owner_properties` trägt selbst keine tenant_id, ein
+           fehlgeleiteter Link zeigte sonst ungeprüft auf einen fremden
+           Stammsatz.
+
+        KEIN EIGENTÜMER IST KEIN FEHLER: Die Zuordnung ist optional. In dem
+        Fall kommt 200 mit `owner=None` zurück — der Aufrufer unterscheidet
+        „nachgesehen, keiner da" von „Abruf fehlgeschlagen" (Wurzel 4/5). Ein
+        404 hätte beide Aussagen in einen Statuscode gepackt.
+        """
+        tenant_id = self._require_tenant(ctx)
+        # Load und Scope untrennbar (Wurzel 3) — kein roher Load mit
+        # nachträglichem `!= tenant_id`.
+        load_scoped(
+            self._db,
+            "properties",
+            property_id,
+            tenant_id,
+            columns="id",
+            not_found=OwnerError("Objekt nicht gefunden.", status_code=404),
+        )
+        # `owners!inner` erzwingt den Mandanten des STAMMSATZES in derselben
+        # Abfrage; ein Link auf einen fremden Eigentümer fällt damit heraus,
+        # statt seine Kontaktdaten auszuliefern.
+        rows = (
+            self._db.table("owner_properties")
+            .select(
+                "owner_id, "
+                "owners!inner(id, tenant_id, name, company, email, phone, "
+                "country, language)"
+            )
+            .eq("property_id", property_id)
+            .eq("owners.tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return OwnerByPropertyResponse(property_id=property_id, owner=None)
+        eigentuemer = rows[0].get("owners") or {}
+        # PostgREST liefert einen 1:1-Embed als Objekt, ältere Fassungen als
+        # einelementige Liste. Beides annehmen, statt sich auf eine Form zu
+        # verlassen, die eine Client-Version später ändert.
+        if isinstance(eigentuemer, list):
+            eigentuemer = eigentuemer[0] if eigentuemer else {}
+        if not eigentuemer:
+            return OwnerByPropertyResponse(property_id=property_id, owner=None)
+        return OwnerByPropertyResponse(
+            property_id=property_id,
+            owner=OwnerKontakt(
+                id=str(eigentuemer["id"]),
+                name=eigentuemer.get("name") or "",
+                company=eigentuemer.get("company"),
+                email=eigentuemer.get("email"),
+                phone=eigentuemer.get("phone"),
+                country=eigentuemer.get("country"),
+                language=eigentuemer.get("language"),
+            ),
+        )
 
     def _zuordenbare_objekte(
         self, tenant_id: str, owner_id: str | None

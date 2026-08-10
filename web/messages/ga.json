@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Sea, bain gach ceann",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Níl aon áirithint sa chluaisín seo.",
       "loading": "Á lódáil…",
       "nights": "{count, plural, one {# oíche} two {# oíche} few {# oíche} many {# n-oíche} other {# oíche}}",
-      "children": "{count, plural, one {# pháiste} two {# pháiste} few {# pháiste} many {# bpáiste} other {# páiste}}"
+      "children": "{count, plural, one {# pháiste} two {# pháiste} few {# pháiste} many {# bpáiste} other {# páiste}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Tír",
       "openGuestCard": "Oscail cárta an aoi",
       "photos": "Grianghraif",
-      "noPhotosFound": "Níor aimsíodh aon ghrianghraf don áirithint seo."
+      "noPhotosFound": "Níor aimsíodh aon ghrianghraf don áirithint seo.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Seiceálacha amach inniu",
@@ -5620,12 +5626,14 @@
         "open": "Saor",
         "booked": "Curtha in áirithe",
         "blocked": "Blocáilte",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "gach cainéal",
       "nightsCount": "{count, plural, one {# oíche} two {# oíche} few {# oíche} many {# n-oíche} other {# oíche}}",
-      "daysCount": "{count, plural, one {# lá} two {# lá} few {# lá} many {# lá} other {# lá}}"
+      "daysCount": "{count, plural, one {# lá} two {# lá} few {# lá} many {# lá} other {# lá}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Amharc",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Áirithint gan luachan",
       "blocking": "Ag blocáil…",
       "createBlockedPeriod": "Cruthaigh tréimhse bhlocáilte",
-      "priceMinStayBlock": "Praghas / Fanacht Íosta / Blocáil …"
+      "priceMinStayBlock": "Praghas / Fanacht Íosta / Blocáil …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Líon na n-aíonna socraithe don áit seo",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "airgeadraí measctha",
       "occupancy": "Áitíocht",
       "propertyNights": "{booked}/{total} oíche áite",
-      "revenue": "Ioncam"
+      "revenue": "Ioncam",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Dún",
@@ -5861,14 +5877,39 @@
       "overview": "Forléargas",
       "feesHint": "Glanadh srl.",
       "personsValue": "{count} duine",
-      "guestsLabel": "Aíonna"
+      "guestsLabel": "Aíonna",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Dún",
       "revenueInvoice": "Ioncam agus sonrasc",
       "invoiced": "Sonraisc eisithe",
       "stillOpen": "Fós oscailte",
-      "cancelReasonPlaceholder": "Cúis an chealaithe (déanfar é a dhoiciméadú) …"
+      "cancelReasonPlaceholder": "Cúis an chealaithe (déanfar é a dhoiciméadú) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Eagarthóireacht ollmhór",

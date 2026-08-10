@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Ja, ophæv alle",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Ingen bookinger under denne fane.",
       "loading": "Indlæser…",
       "nights": "{count, plural, one {# nat} other {# nætter}}",
-      "children": "{count, plural, one {# barn} other {# børn}}"
+      "children": "{count, plural, one {# barn} other {# børn}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Land",
       "openGuestCard": "Åbn gæstekort",
       "photos": "Billeder",
-      "noPhotosFound": "Der blev ikke fundet billeder til denne booking."
+      "noPhotosFound": "Der blev ikke fundet billeder til denne booking.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Dagens check-outs",
@@ -5620,12 +5626,14 @@
         "open": "Ledig",
         "booked": "Booket",
         "blocked": "Spærret",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "alle kanaler",
       "nightsCount": "{count, plural, one {# nat} other {# nætter}}",
-      "daysCount": "{count, plural, one {# dag} other {# dage}}"
+      "daysCount": "{count, plural, one {# dag} other {# dage}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Visning",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Reservation uden tilbud",
       "blocking": "Spærrer…",
       "createBlockedPeriod": "Opret spærret periode",
-      "priceMinStayBlock": "Pris / min. ophold / spærring …"
+      "priceMinStayBlock": "Pris / min. ophold / spærring …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Antal personer indstillet for denne bolig",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "blandede valutaer",
       "occupancy": "Belægning",
       "propertyNights": "{booked}/{total} bolignætter",
-      "revenue": "Omsætning"
+      "revenue": "Omsætning",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Luk",
@@ -5861,14 +5877,39 @@
       "overview": "Oversigt",
       "feesHint": "Rengøring osv.",
       "personsValue": "{count} pers.",
-      "guestsLabel": "Gæster"
+      "guestsLabel": "Gæster",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Luk",
       "revenueInvoice": "Omsætning og faktura",
       "invoiced": "Faktureret",
       "stillOpen": "Stadig åben",
-      "cancelReasonPlaceholder": "Årsag til annullering (dokumenteres) …"
+      "cancelReasonPlaceholder": "Årsag til annullering (dokumenteres) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Masseredigering",

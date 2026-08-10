@@ -767,12 +767,15 @@ class PublicPortalService:
         self._require_own(ctx, req.property_id)
         if req.end_date < req.start_date:
             raise PortalError("Enddatum vor Startdatum.", status_code=400)
+        unit_id = self._require_own_unit(tenant_id, req.property_id, req.unit_id)
         res = (
             self._db.table("block_requests")
             .insert(
                 {
                     "tenant_id": tenant_id,
                     "property_id": req.property_id,
+                    # Die gewünschte Einheit (0353). NULL = das ganze Objekt.
+                    "unit_id": unit_id,
                     "requested_by": user_id,
                     "start_date": req.start_date.isoformat(),
                     "end_date": req.end_date.isoformat(),
@@ -791,6 +794,37 @@ class PublicPortalService:
         )
         self._melde_antrag(tenant_id, res.data[0])
         return _block(res.data[0])
+
+    def _require_own_unit(
+        self, tenant_id: str, property_id: str, unit_id: str | None
+    ) -> str | None:
+        """Die gewünschte Einheit gehört zu DIESEM Objekt und Mandanten.
+
+        Wurzel 3: Der Service läuft mit dem Service-Role-Key und umgeht RLS.
+        Eine ungeprüft übernommene `unit_id` landete im Antrag und würde bei der
+        Genehmigung zur Belegung — über eine geratene UUID ließe sich damit die
+        Einheit eines FREMDEN Objekts beantragen. Beide Filter in DERSELBEN
+        Abfrage, damit Load und Scope nicht auseinanderfallen (Wurzel 9: der
+        Item-Scope ist derselbe wie der des Objekts eine Zeile darüber).
+
+        `None` bleibt `None`: keine Angabe heißt „das ganze Objekt".
+        """
+        if not unit_id:
+            return None
+        rows = (
+            self._db.table("property_units")
+            .select("id")
+            .eq("id", unit_id)
+            .eq("property_id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            raise PortalError(
+                "Einheit gehört nicht zu diesem Objekt.", status_code=422
+            )
+        return unit_id
 
     def _melde_antrag(self, tenant_id: str, antrag: dict) -> None:
         """Die Entscheider der Agentur über den neuen Antrag informieren.
@@ -821,8 +855,8 @@ class PublicPortalService:
         rows = (
             self._db.table("block_requests")
             .select(
-                "id, property_id, start_date, end_date, status, reason, "
-                "decided_at, decision_note, created_at"
+                "id, property_id, unit_id, start_date, end_date, status, "
+                "reason, decided_at, decision_note, created_at"
             )
             .eq("tenant_id", tenant_id)
             # Wurzel 3/9: der Eigentümer sieht NUR seine eigenen Anträge, nicht
@@ -941,6 +975,7 @@ def _block(r: dict) -> BlockRequestItem:
     return BlockRequestItem(
         id=str(r["id"]),
         property_id=str(r["property_id"]),
+        unit_id=str(r["unit_id"]) if r.get("unit_id") else None,
         start_date=date.fromisoformat(r["start_date"])
         if isinstance(r["start_date"], str)
         else r["start_date"],

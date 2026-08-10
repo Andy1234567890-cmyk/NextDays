@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Igen, mindet feloldom",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Nincs foglalás ebben a fülben.",
       "loading": "Betöltés…",
       "nights": "{count, plural, one {# éjszaka} other {# éjszaka}}",
-      "children": "{count, plural, one {# gyerek} other {# gyerek}}"
+      "children": "{count, plural, one {# gyerek} other {# gyerek}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Ország",
       "openGuestCard": "Vendégkártya megnyitása",
       "photos": "Fotók",
-      "noPhotosFound": "Ehhez a foglaláshoz nem található kép."
+      "noPhotosFound": "Ehhez a foglaláshoz nem található kép.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Mai kijelentkezések",
@@ -5620,12 +5626,14 @@
         "open": "Szabad",
         "booked": "Foglalt",
         "blocked": "Zárolt",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "minden csatorna",
       "nightsCount": "{count, plural, one {# éjszaka} other {# éjszaka}}",
-      "daysCount": "{count, plural, one {# nap} other {# nap}}"
+      "daysCount": "{count, plural, one {# nap} other {# nap}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Nézet",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Foglalás ajánlat nélkül",
       "blocking": "Zárolás…",
       "createBlockedPeriod": "Zárolt időszak létrehozása",
-      "priceMinStayBlock": "Ár / Min-Stay / Zárolás …"
+      "priceMinStayBlock": "Ár / Min-Stay / Zárolás …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Ehhez a szálláshelyhez beállított létszám",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "vegyes pénznemek",
       "occupancy": "Kihasználtság",
       "propertyNights": "{booked}/{total} szálláséjszaka",
-      "revenue": "Bevétel"
+      "revenue": "Bevétel",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Bezárás",
@@ -5861,14 +5877,39 @@
       "overview": "Áttekintés",
       "feesHint": "Takarítás stb.",
       "personsValue": "{count} fő",
-      "guestsLabel": "Vendégek"
+      "guestsLabel": "Vendégek",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Bezárás",
       "revenueInvoice": "Bevétel és számla",
       "invoiced": "Kiszámlázva",
       "stillOpen": "Még nyitott",
-      "cancelReasonPlaceholder": "A lemondás indoka (dokumentálásra kerül) …"
+      "cancelReasonPlaceholder": "A lemondás indoka (dokumentálásra kerül) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Tömeges szerkesztés",

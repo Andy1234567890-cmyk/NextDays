@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Taip, pašalinti visus",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Šioje skiltyje rezervacijų nėra.",
       "loading": "Įkeliama…",
       "nights": "{count, plural, one {# naktis} few {# naktys} other {# naktų}}",
-      "children": "{count, plural, one {# vaikas} few {# vaikai} other {# vaikų}}"
+      "children": "{count, plural, one {# vaikas} few {# vaikai} other {# vaikų}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Šalis",
       "openGuestCard": "Atidaryti svečio kortelę",
       "photos": "Nuotraukos",
-      "noPhotosFound": "Šiai rezervacijai nuotraukų nerasta."
+      "noPhotosFound": "Šiai rezervacijai nuotraukų nerasta.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Šiandienos išvykimai",
@@ -5620,12 +5626,14 @@
         "open": "Laisva",
         "booked": "Užsakyta",
         "blocked": "Užblokuota",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "visi kanalai",
       "nightsCount": "{count, plural, one {# naktis} few {# naktys} many {# nakties} other {# naktų}}",
-      "daysCount": "{count, plural, one {# diena} few {# dienos} many {# dienos} other {# dienų}}"
+      "daysCount": "{count, plural, one {# diena} few {# dienos} many {# dienos} other {# dienų}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Rodinys",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Rezervacija be pasiūlymo",
       "blocking": "Blokuoti…",
       "createBlockedPeriod": "Sukurti blokavimo laikotarpį",
-      "priceMinStayBlock": "Kaina / Min-Stay / Blokavimas …"
+      "priceMinStayBlock": "Kaina / Min-Stay / Blokavimas …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Šiam objektui nustatytas svečių skaičius",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "mišrios valiutos",
       "occupancy": "Užimtumas",
       "propertyNights": "{booked}/{total} objekto naktų",
-      "revenue": "Apyvarta"
+      "revenue": "Apyvarta",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Uždaryti",
@@ -5861,14 +5877,39 @@
       "overview": "Apžvalga",
       "feesHint": "Valymas ir kt.",
       "personsValue": "{count} asm.",
-      "guestsLabel": "Svečiai"
+      "guestsLabel": "Svečiai",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Uždaryti",
       "revenueInvoice": "Apyvarta ir sąskaita",
       "invoiced": "Išrašyta sąskaita",
       "stillOpen": "Dar neapmokėta",
-      "cancelReasonPlaceholder": "Atšaukimo priežastis (bus fiksuojama) …"
+      "cancelReasonPlaceholder": "Atšaukimo priežastis (bus fiksuojama) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Masinis redagavimas",

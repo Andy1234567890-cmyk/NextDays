@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Jā, noņemt visus",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Šajā cilnē nav rezervāciju.",
       "loading": "Ielādē…",
       "nights": "{count, plural, zero {# nakšu} one {# nakts} other {# naktis}}",
-      "children": "{count, plural, zero {# bērnu} one {# bērns} other {# bērni}}"
+      "children": "{count, plural, zero {# bērnu} one {# bērns} other {# bērni}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Valsts",
       "openGuestCard": "Atvērt viesa karti",
       "photos": "Attēli",
-      "noPhotosFound": "Šai rezervācijai attēli nav atrasti."
+      "noPhotosFound": "Šai rezervācijai attēli nav atrasti.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Šodienas izrakstīšanās",
@@ -5620,12 +5626,14 @@
         "open": "Brīvs",
         "booked": "Rezervēts",
         "blocked": "Bloķēts",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "visi kanāli",
       "nightsCount": "{count, plural, zero {# nakšu} one {# nakts} other {# naktis}}",
-      "daysCount": "{count, plural, zero {# dienu} one {# diena} other {# dienas}}"
+      "daysCount": "{count, plural, zero {# dienu} one {# diena} other {# dienas}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Skats",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Rezervācija bez piedāvājuma",
       "blocking": "Bloķēt…",
       "createBlockedPeriod": "Izveidot bloķēšanas periodu",
-      "priceMinStayBlock": "Cena / minimālā uzturēšanās / bloķēšana …"
+      "priceMinStayBlock": "Cena / minimālā uzturēšanās / bloķēšana …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Šim objektam iestatītais viesu skaits",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "dažādas valūtas",
       "occupancy": "Noslogojums",
       "propertyNights": "{booked}/{total} objektu naktis",
-      "revenue": "Apgrozījums"
+      "revenue": "Apgrozījums",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Aizvērt",
@@ -5861,14 +5877,39 @@
       "overview": "Pārskats",
       "feesHint": "Uzkopšana u. c.",
       "personsValue": "{count} pers.",
-      "guestsLabel": "Viesi"
+      "guestsLabel": "Viesi",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Aizvērt",
       "revenueInvoice": "Apgrozījums un rēķins",
       "invoiced": "Iekļauts rēķinā",
       "stillOpen": "Vēl atvērti",
-      "cancelReasonPlaceholder": "Atcelšanas iemesls (tiks dokumentēts) …"
+      "cancelReasonPlaceholder": "Atcelšanas iemesls (tiks dokumentēts) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Masveida rediģēšana",

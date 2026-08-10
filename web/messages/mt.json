@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Iva, neħħi kollox",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "L-ebda prenotazzjoni f'din it-tab.",
       "loading": "Qed jitgħabba…",
       "nights": "{count, plural, one {# lejl} two {# iljieli} few {# iljieli} many {# lejl} other {# lejl}}",
-      "children": "{count, plural, one {# tifel/tifla} two {# tfal} few {# tfal} many {# tifel/tifla} other {# tifel/tifla}}"
+      "children": "{count, plural, one {# tifel/tifla} two {# tfal} few {# tfal} many {# tifel/tifla} other {# tifel/tifla}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Pajjiż",
       "openGuestCard": "Iftaħ il-kartella tal-mistieden",
       "photos": "Ritratti",
-      "noPhotosFound": "Għal din il-prenotazzjoni ma nstab l-ebda ritratt."
+      "noPhotosFound": "Għal din il-prenotazzjoni ma nstab l-ebda ritratt.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Il-check-outs tal-lum",
@@ -5620,12 +5626,14 @@
         "open": "Ħieles",
         "booked": "Ibbukkjat",
         "blocked": "Imblukkat",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "il-kanali kollha",
       "nightsCount": "{count, plural, one {# lejl} two {# lejl} few {# iljieli} many {# lejl} other {# lejl}}",
-      "daysCount": "{count, plural, one {# jum} two {# jumejn} few {# ijiem} many {# jum} other {# jum}}"
+      "daysCount": "{count, plural, one {# jum} two {# jumejn} few {# ijiem} many {# jum} other {# jum}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Veduta",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Riżervazzjoni mingħajr kwotazzjoni",
       "blocking": "Qed jimblokka…",
       "createBlockedPeriod": "Oħloq perjodu mblukkat",
-      "priceMinStayBlock": "Prezz / Soġġorn Minimu / Imblukkar …"
+      "priceMinStayBlock": "Prezz / Soġġorn Minimu / Imblukkar …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Numru ta' mistednin issettjat għal din il-proprjetà",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "muniti mħallta",
       "occupancy": "Okkupazzjoni",
       "propertyNights": "{booked}/{total} iljieli ta' proprjetà",
-      "revenue": "Dħul"
+      "revenue": "Dħul",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Agħlaq",
@@ -5861,14 +5877,39 @@
       "overview": "Ħarsa ġenerali",
       "feesHint": "Tindif eċċ.",
       "personsValue": "{count} pers.",
-      "guestsLabel": "Mistednin"
+      "guestsLabel": "Mistednin",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Agħlaq",
       "revenueInvoice": "Dħul u fattura",
       "invoiced": "Fatturat",
       "stillOpen": "Għadhom miftuħa",
-      "cancelReasonPlaceholder": "Raġuni tal-kanċellazzjoni (tiġi ddokumentata) …"
+      "cancelReasonPlaceholder": "Raġuni tal-kanċellazzjoni (tiġi ddokumentata) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Editjar bl-ingrossa",

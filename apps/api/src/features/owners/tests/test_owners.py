@@ -25,6 +25,30 @@ def _ctx(tenant: str | None = "t-1") -> AuthContext:
     return AuthContext(user_id="u-1", tenant_id=tenant, role="admin")
 
 
+# Embed-Name im Select → (Zieltabelle, Fremdschlüssel in der eigenen Zeile).
+_EMBED_ZIEL: dict[str, tuple[str, str]] = {
+    "owners": ("owners", "owner_id"),
+    "properties": ("properties", "property_id"),
+}
+
+
+def _embeds_aus_select(spalten: str) -> dict[str, list[str]]:
+    """`"owner_id, owners!inner(id, name)"` → `{"owners": ["id", "name"]}`.
+
+    Bewusst schlicht: nur die eine Verschachtelungsebene, die der Slice nutzt.
+    Mehr nachzubauen hieße, PostgREST zu implementieren statt es zu prüfen.
+    """
+    embeds: dict[str, list[str]] = {}
+    rest = spalten
+    while "(" in rest:
+        kopf, _, rest = rest.partition("(")
+        inner, _, rest = rest.partition(")")
+        name = kopf.split(",")[-1].strip().split("!")[0].strip()
+        if name:
+            embeds[name] = [s.strip() for s in inner.split(",") if s.strip()]
+    return embeds
+
+
 class _Result:
     def __init__(self, data: list[dict]) -> None:
         self.data = data
@@ -41,9 +65,15 @@ class _Query:
         self._neq: list[tuple[str, object]] = []
         self._in: tuple[str, list] | None = None
         self._order: str | None = None
+        self._embeds: dict[str, list[str]] = {}
 
-    def select(self, *_a: object, **_k: object) -> "_Query":
+    def select(self, *a: object, **_k: object) -> "_Query":
         self._op = "select"
+        # Embed-Spalten aus dem Select merken (`owners!inner(id, name, …)`),
+        # damit `execute` die verknüpfte Zeile mitliefert — sonst käme
+        # `row["owners"]` als None zurück und ein Test auf den Feld-Zuschnitt
+        # bewiese nichts.
+        self._embeds = _embeds_aus_select(str(a[0]) if a else "")
         return self
 
     def insert(self, payload: dict | list[dict]) -> "_Query":
@@ -91,14 +121,54 @@ class _Query:
     def limit(self, _n: int) -> "_Query":
         return self
 
+    def _feld(self, row: dict, col: str) -> object:
+        """Spaltenwert — auch über einen `!inner`-Embed („owners.tenant_id").
+
+        Ohne diese Auflösung liefe der Filter `.eq("owners.tenant_id", …)` ins
+        Leere: der Scope-Test bewiese dann nichts, obwohl er grün ist (Wurzel 3
+        wird gerade an dieser Stelle erzwungen).
+        """
+        if "." not in col:
+            return row.get(col)
+        embed, feld = col.split(".", 1)
+        ziel = _EMBED_ZIEL.get(embed, (embed, f"{embed}_id"))
+        treffer = [
+            r
+            for r in self._db.tables.get(ziel[0], [])
+            if str(r.get("id")) == str(row.get(ziel[1]))
+        ]
+        return treffer[0].get(feld) if treffer else None
+
     def _match(self, row: dict) -> bool:
-        ok = all(str(row.get(c)) == str(v) for c, v in self._filters)
+        ok = all(str(self._feld(row, c)) == str(v) for c, v in self._filters)
         if ok and self._neq:
-            ok = all(str(row.get(c)) != str(v) for c, v in self._neq)
+            ok = all(str(self._feld(row, c)) != str(v) for c, v in self._neq)
         if ok and self._in:
             col, vals = self._in
             ok = str(row.get(col)) in {str(v) for v in vals}
         return ok
+
+    def _mit_embeds(self, row: dict) -> dict:
+        """Verknüpfte Zeilen an die Antwort hängen, wie PostgREST es tut.
+
+        NUR die im Select genannten Spalten — genau das ist der Punkt: ein
+        Test, der den Feld-Zuschnitt prüft (keine IBAN, keine Provision), muss
+        an einer Attrappe scheitern, die pauschal die ganze Zeile anhängt.
+        """
+        if not self._embeds:
+            return dict(row)
+        angereichert = dict(row)
+        for embed, spalten in self._embeds.items():
+            tabelle, fk = _EMBED_ZIEL.get(embed, (embed, f"{embed}_id"))
+            treffer = [
+                r
+                for r in self._db.tables.get(tabelle, [])
+                if str(r.get("id")) == str(row.get(fk))
+            ]
+            angereichert[embed] = (
+                {k: treffer[0].get(k) for k in spalten} if treffer else None
+            )
+        return angereichert
 
     def execute(self) -> _Result:
         rows = self._db.tables.setdefault(self._table, [])
@@ -169,7 +239,7 @@ class _Query:
         # `update` still mitgewandert — ein Alt/Neu-Vergleich im Dienst
         # (Wurzel 1) hätte hier grün gelogen, während er live den Unterschied
         # sieht.
-        return _Result([dict(r) for r in selected])
+        return _Result([self._mit_embeds(r) for r in selected])
 
 
 class _AuthUser:
@@ -1218,3 +1288,179 @@ def test_create_nimmt_anlage_zurueck_wenn_der_portalzugang_scheitert() -> None:
     # Weder der Eigentümer noch seine Zuordnung dürfen zurückbleiben.
     assert svc.list(_ctx()).total == 0
     assert "p-1" in {p.id for p in svc.free_properties(_ctx()).items}
+
+
+# --- Eigentümer eines Objekts (GET /owners/by-property/{property_id}) --------
+#
+# Der Personenbezug für die Eigennutzung (0353, `reservations.owner_id`).
+# Vorher gab es diesen Weg nicht: das Frontend listete alle Eigentümer und lud
+# für jeden mit Objekten das Detail nach — ein N+1 für eine Frage, die eine
+# Zeile in `owner_properties` beantwortet.
+
+def _svc_mit_eigentuemer() -> OwnersService:
+    """Ein Objekt mit Eigentümer, plus ein Objekt eines FREMDEN Mandanten."""
+    return _svc(
+        {
+            "properties": [
+                {"id": "p-1", "tenant_id": "t-1", "title": "Villa"},
+                {"id": "p-2", "tenant_id": "t-1", "title": "Haus ohne Owner"},
+                {"id": "p-9", "tenant_id": "t-9", "title": "Fremd"},
+            ],
+            "owners": [
+                {
+                    "id": "o-1",
+                    "tenant_id": "t-1",
+                    "name": "Herr Ohm",
+                    "company": "Ohm GmbH",
+                    "email": "ohm@example.invalid",
+                    "phone": "+49 111",
+                    "country": "DE",
+                    "language": "de",
+                    # Felder, die die Antwort NICHT tragen darf.
+                    "iban": "DE00 1234",
+                    "bic": "GENODE",
+                    "default_commission_pct": 18.0,
+                    "notes": "intern: zahlt spät",
+                    "tax_id": "12/345/67890",
+                },
+                {
+                    "id": "o-9",
+                    "tenant_id": "t-9",
+                    "name": "Fremder Eigentümer",
+                    "email": "fremd@example.invalid",
+                },
+            ],
+            "owner_properties": [
+                {"id": "op-1", "owner_id": "o-1", "property_id": "p-1"},
+                # Ein Link am FREMDEN Objekt — die Route darf ihn nie erreichen.
+                {"id": "op-9", "owner_id": "o-9", "property_id": "p-9"},
+            ],
+        }
+    )
+
+
+def test_by_property_liefert_den_eigentuemer() -> None:
+    res = _svc_mit_eigentuemer().by_property(_ctx(), "p-1")
+    assert res.property_id == "p-1"
+    assert res.owner is not None
+    assert res.owner.id == "o-1"
+    assert res.owner.name == "Herr Ohm"
+    assert res.owner.company == "Ohm GmbH"
+    assert res.owner.email == "ohm@example.invalid"
+    assert res.owner.language == "de"
+
+
+def test_by_property_liefert_keine_finanz_oder_bankdaten() -> None:
+    """Wurzel 9: keine Felder an eine Route, die sie nicht braucht.
+
+    Für das Anlegen einer Eigennutzung reichen Name/Kontakt/Sprache. IBAN,
+    Provisionssatz, Steuer-ID und interne Notizen wären Recon-Material, das
+    sich über eine Objekt-ID erschließen ließe. `OwnerKontakt` erbt deshalb
+    NICHT von `OwnerBase` — dieser Test hält fest, dass ein später an
+    `OwnerBase` ergänztes Feld hier nicht automatisch mitläuft.
+    """
+    res = _svc_mit_eigentuemer().by_property(_ctx(), "p-1")
+    assert res.owner is not None
+    felder = set(res.owner.model_dump().keys())
+    assert felder == {
+        "id", "name", "company", "email", "phone", "country", "language",
+    }
+    for verboten in (
+        "iban", "bic", "account_holder", "default_commission_pct",
+        "default_payout_method", "statement_frequency", "notes", "tax_id",
+        "vat_id", "user_id", "tenant_id",
+    ):
+        assert verboten not in felder
+
+
+def test_by_property_ohne_eigentuemer_ist_kein_fehler() -> None:
+    """Wurzel 4/5: „nachgesehen, keiner da" MUSS von „Abruf fehlgeschlagen"
+    unterscheidbar bleiben.
+
+    Ein Objekt ohne Zuordnung ist ein gültiger Zustand — 200 mit `owner=None`,
+    nicht 404. Ein 404 hätte diesen Fall mit „Objekt gibt es nicht" vermischt,
+    und der Aufrufer müsste raten, ob er einen Eigentümer anlegen soll oder
+    ob der Abruf kaputt war.
+    """
+    res = _svc_mit_eigentuemer().by_property(_ctx(), "p-2")
+    assert res.property_id == "p-2"
+    assert res.owner is None
+
+
+def test_by_property_fremder_tenant_404() -> None:
+    """Wurzel 3: der Scope wird serverseitig erzwungen.
+
+    Ohne ihn ließe sich über eine geratene property_id der Eigentümer eines
+    fremden Betriebs samt Name, E-Mail und Telefon auslesen. Dieselbe Meldung
+    wie bei einem gar nicht existierenden Objekt — kein Existenz-Leak.
+    """
+    with pytest.raises(OwnerError) as exc:
+        _svc_mit_eigentuemer().by_property(_ctx(), "p-9")
+    assert exc.value.status_code == 404
+
+
+def test_by_property_unbekanntes_objekt_404() -> None:
+    with pytest.raises(OwnerError) as exc:
+        _svc_mit_eigentuemer().by_property(_ctx(), "p-gibt-es-nicht")
+    assert exc.value.status_code == 404
+
+
+def test_by_property_ohne_tenant_400() -> None:
+    with pytest.raises(OwnerError) as exc:
+        _svc_mit_eigentuemer().by_property(_ctx(tenant=None), "p-1")
+    assert exc.value.status_code == 400
+
+
+def test_by_property_ignoriert_einen_fremden_eigentuemer_am_eigenen_objekt() -> None:
+    """Zweite Scope-Achse: `owner_properties` trägt selbst KEINE tenant_id.
+
+    Zeigte ein Link (Datenfehler, manipulierter Direktpfad) vom eigenen Objekt
+    auf den Stammsatz eines fremden Mandanten, lieferte ein ungeprüfter Join
+    dessen Kontaktdaten aus. Der `owners!inner`-Filter auf `tenant_id` fängt
+    das ab; die Antwort ist dann „kein Eigentümer" — nicht der fremde.
+    """
+    svc = _svc(
+        {
+            "properties": [{"id": "p-1", "tenant_id": "t-1", "title": "Villa"}],
+            "owners": [
+                {"id": "o-9", "tenant_id": "t-9", "name": "Fremder"},
+            ],
+            "owner_properties": [
+                {"id": "op-x", "owner_id": "o-9", "property_id": "p-1"},
+            ],
+        }
+    )
+    assert svc.by_property(_ctx(), "p-1").owner is None
+
+
+def test_by_property_route_verlangt_manage_owners() -> None:
+    """Wurzel 9: Autorisierung, nicht bloß Authentifizierung.
+
+    Der Guard ist derselbe `MANAGE_OWNERS` wie an allen anderen Routen des
+    Slice — er trägt laut Rollen-Matrix nur admin/co_admin. `staff`, `cleaner`
+    und `owner` erreichen die Eigentümer-Kontaktdaten damit nicht.
+    """
+    from src.features.auth.permissions import Capability, has_capability
+    from src.features.auth.schemas import UserRole
+
+    assert has_capability(UserRole.admin, Capability.MANAGE_OWNERS) is True
+    assert has_capability(UserRole.co_admin, Capability.MANAGE_OWNERS) is True
+    assert has_capability(UserRole.owner, Capability.MANAGE_OWNERS) is False
+    assert has_capability(UserRole.staff, Capability.MANAGE_OWNERS) is False
+    assert has_capability(UserRole.cleaner, Capability.MANAGE_OWNERS) is False
+
+
+def test_by_property_route_steht_vor_der_platzhalter_route() -> None:
+    """FastAPI wertet Routen in Deklarationsreihenfolge aus.
+
+    Stünde `/by-property/{property_id}` nach `/{owner_id}`, läse FastAPI
+    „by-property" als owner_id und die Route wäre nie erreichbar — ein Fehler,
+    den keine Typprüfung findet und der erst im Betrieb als 404 auffällt.
+    """
+    from src.features.owners.router import router
+
+    pfade = [getattr(r, "path", "") for r in router.routes]
+    assert "/owners/by-property/{property_id}" in pfade
+    assert pfade.index("/owners/by-property/{property_id}") < pfade.index(
+        "/owners/{owner_id}"
+    )

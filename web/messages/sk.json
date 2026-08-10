@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Áno, zrušiť všetko",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "V tejto záložke nie sú žiadne rezervácie.",
       "loading": "Načítava sa…",
       "nights": "{count, plural, one {# noc} few {# noci} other {# nocí}}",
-      "children": "{count, plural, one {# dieťa} few {# deti} other {# detí}}"
+      "children": "{count, plural, one {# dieťa} few {# deti} other {# detí}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Krajina",
       "openGuestCard": "Otvoriť kartu hosťa",
       "photos": "Fotografie",
-      "noPhotosFound": "K tejto rezervácii neboli nájdené žiadne fotografie."
+      "noPhotosFound": "K tejto rezervácii neboli nájdené žiadne fotografie.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Dnešné check-outy",
@@ -5620,12 +5626,14 @@
         "open": "Voľné",
         "booked": "Obsadené",
         "blocked": "Blokované",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "všetky kanály",
       "nightsCount": "{count, plural, one {# noc} few {# noci} many {# noci} other {# nocí}}",
-      "daysCount": "{count, plural, one {# deň} few {# dni} many {# dňa} other {# dní}}"
+      "daysCount": "{count, plural, one {# deň} few {# dni} many {# dňa} other {# dní}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Zobrazenie",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Rezervácia bez ponuky",
       "blocking": "Blokovanie…",
       "createBlockedPeriod": "Vytvoriť blokované obdobie",
-      "priceMinStayBlock": "Cena / min. pobyt / blokácia …"
+      "priceMinStayBlock": "Cena / min. pobyt / blokácia …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Počet osôb nastavený pre tento objekt",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "zmiešané meny",
       "occupancy": "Obsadenosť",
       "propertyNights": "{booked}/{total} objektonocí",
-      "revenue": "Tržby"
+      "revenue": "Tržby",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Zavrieť",
@@ -5861,14 +5877,39 @@
       "overview": "Prehľad",
       "feesHint": "Upratovanie a pod.",
       "personsValue": "{count} os.",
-      "guestsLabel": "Hostia"
+      "guestsLabel": "Hostia",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Zavrieť",
       "revenueInvoice": "Tržby a faktúra",
       "invoiced": "Fakturované",
       "stillOpen": "Ešte otvorené",
-      "cancelReasonPlaceholder": "Dôvod stornovania (bude zdokumentovaný) …"
+      "cancelReasonPlaceholder": "Dôvod stornovania (bude zdokumentovaný) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Hromadná úprava",

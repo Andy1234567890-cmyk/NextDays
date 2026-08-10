@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@nextdays/ui/card";
 import { ChannelLogo } from "@/components/channel-logo";
 import type { AvailabilitySource } from "@/lib/calendar";
+import { OWNER_STAY_ICON } from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { channelLabelLoose } from "@/lib/channel-logos";
@@ -35,16 +36,24 @@ function ChangeBadge({ change }: { change: number | null }) {
 }
 
 function EntryRow({ entry }: { entry: DashboardEntry }) {
+  const t = useTranslations("calendar");
   const { channelLabel } = useCalendarLabels();
   // Der Klarname des Portals ist genauer als das Sammellabel des Kanals
-  // („Expedia" statt „Anderes Portal"), also hat er Vorrang.
-  const channel = entry.ota_name
-    ? channelLabelLoose(entry.ota_name)
-    : channelLabel(entry.channel as AvailabilitySource);
+  // („Expedia" statt „Anderes Portal"), also hat er Vorrang. Ein Eigentümer-
+  // Aufenthalt (0241) kommt von keinem Kanal — dort steht die Art.
+  const channel = entry.is_owner_stay
+    ? t("calendarBoard.ownerStay")
+    : entry.ota_name
+      ? channelLabelLoose(entry.ota_name)
+      : channelLabel(entry.channel as AvailabilitySource);
   return (
     <li className="flex items-center gap-3 py-2">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-        <ChannelLogo source={entry.channel as AvailabilitySource} className="size-4" />
+        {entry.is_owner_stay ? (
+          <Icon icon={OWNER_STAY_ICON} className="size-4" />
+        ) : (
+          <ChannelLogo source={entry.channel as AvailabilitySource} className="size-4" />
+        )}
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">

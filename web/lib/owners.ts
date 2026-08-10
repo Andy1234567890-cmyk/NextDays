@@ -133,6 +133,49 @@ export async function getOwner(id: string): Promise<Result<Owner>> {
   return call(`/owners/${id}`);
 }
 
+/**
+ * Der Eigentümer EINES Objekts — oder `null`, wenn für das Objekt keiner
+ * hinterlegt ist.
+ *
+ * Ein Objekt gehört genau einem Eigentümer (unique, Migration 0073), der
+ * Eigentümer ist aus der property_id also eindeutig bestimmbar. Genau das
+ * braucht der Reservierungs-Assistent bei der Art „Eigennutzung": den
+ * Personenbezug (`reservations.owner_id`, 0353) BESTÄTIGEN statt abtippen.
+ *
+ * Warum der Umweg über Liste + Details: `GET /owners` liefert nur
+ * `property_count`, nicht die zugeordneten property_ids — nur die Detail-
+ * Antwort (`OwnerResponse.properties`) trägt sie. Einen Endpunkt
+ * „Eigentümer zu Objekt X" gibt es (noch) nicht. Die Auflösung läuft deshalb
+ * hier auf dem Server, nicht im Browser: der Client macht EINEN Aufruf.
+ *
+ * `null` heisst „kein Eigentümer hinterlegt" und ist ein gültiges Ergebnis.
+ * Ein Ladefehler kommt als `ok: false` zurück und darf davon NICHT
+ * unterschiedslos behandelt werden (Wurzel 4): fehlende Berechtigung
+ * (403) oder ein Netzfehler sind keine Aussage über die Stammdaten.
+ */
+export async function getPropertyOwner(
+  propertyId: string,
+): Promise<Result<Owner | null>> {
+  const liste = await listOwners();
+  if (!liste.ok) return liste;
+  // Ohne Objekte kann der Eigentümer nicht der gesuchte sein — die Details
+  // dieser Einträge brauchen wir gar nicht erst zu holen.
+  const kandidaten = liste.data.items.filter((o) => o.property_count > 0);
+  const details = await Promise.all(kandidaten.map((o) => getOwner(o.id)));
+  // Ein einzelner fehlgeschlagener Detail-Abruf macht die Antwort unvollständig:
+  // dann ließe sich „keiner hinterlegt" nicht mehr von „nicht nachgesehen"
+  // unterscheiden. Also fehlschlagen statt raten (Wurzel 5).
+  const fehler = details.find((d) => !d.ok);
+  if (fehler && !fehler.ok) return fehler;
+  for (const d of details) {
+    if (!d.ok) continue;
+    if (d.data.properties.some((p) => p.property_id === propertyId)) {
+      return { ok: true, data: d.data };
+    }
+  }
+  return { ok: true, data: null };
+}
+
 export async function createOwner(
   input: OwnerInput & {
     /**

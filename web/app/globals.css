@@ -413,6 +413,34 @@ h1, h2, h3 {
   }
 }
 
+/* Kalender: Sperre vs. Stop-Sell auf einen Blick unterscheidbar.
+   Beides sind ZWEI getrennte Achsen (Sperre = Verfügbarkeit 0, Stop-Sell =
+   Rate-Plan-Restriktion) und können am selben Tag GLEICHZEITIG gelten. Vorher
+   überdeckte ein Balken den anderen, beide sahen gleich aus — genau daran hat
+   ein Nutzer eine echte Sperre für einen Stop-Sell gehalten.
+     * stop-sell-stripes       — Warnfarbe mit Schrägstreifen (Stop-Sell allein)
+     * blocked-stop-sell-stripes — neutraler Sperr-Grund MIT Warnstreifen
+                                   (beides gilt gleichzeitig)
+   Farben kommen aus den semantischen Tokens, damit Hell/Dunkel mitwandern. */
+@utility stop-sell-stripes {
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--warning) 92%, black) 0,
+    color-mix(in oklab, var(--warning) 92%, black) 0.375rem,
+    var(--warning) 0.375rem,
+    var(--warning) 0.75rem
+  );
+}
+@utility blocked-stop-sell-stripes {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--warning) 0,
+    var(--warning) 0.375rem,
+    transparent 0.375rem,
+    transparent 0.9375rem
+  );
+}
+
 /* Google-Places-Autocomplete-Dropdown: Google hängt die Vorschlagsliste
    (.pac-container) unten an <body> mit z-index:1000. In einem Slide-over/Dialog
    liegt der Overlay-Layer darüber → die Vorschläge sind unsichtbar/nicht

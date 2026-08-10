@@ -503,6 +503,73 @@ class ReservationsBase:
         ).data or []
         return rows[0].get("name") if rows else None
 
+    def _require_own_unit(
+        self, tenant_id: str, property_id: str, unit_id: str | None
+    ) -> str | None:
+        """Die vorgegebene Einheit gehört zu DIESEM Objekt und Mandanten.
+
+        Wurzel 3: Der Service läuft mit dem Service-Role-Key und umgeht RLS.
+        Eine ungeprüft übernommene `unit_id` wanderte in die Reservierung und
+        in die `availability`-Zeile — über eine geratene UUID ließe sich die
+        Einheit eines FREMDEN Objekts belegen. Beide Filter in DERSELBEN
+        Abfrage, damit Load und Scope nicht auseinanderfallen.
+
+        `None` bleibt `None`: keine Angabe heißt „die RPC wählt die erste
+        freie" (0275) und ist kein fehlender Wert (Wurzel 4).
+        """
+        if unit_id is None:
+            return None
+        rows = (
+            self._db()
+            .table("property_units")
+            .select("id")
+            .eq("id", unit_id)
+            .eq("property_id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            raise ReservationError(
+                "Einheit gehört nicht zu diesem Objekt.", status_code=422
+            )
+        return unit_id
+
+    def _require_own_owner(
+        self, tenant_id: str, property_id: str, owner_id: str | None
+    ) -> str | None:
+        """Der angegebene Eigentümer gehört zum Mandanten UND zu DIESEM Objekt.
+
+        ZWEI Stufen, beide nötig (Wurzel 3/9):
+        1. Der Eigentümer gehört dem Mandanten — sonst hinge über eine geratene
+           UUID der Eigentümer eines fremden Betriebs an unserer Belegung.
+        2. Ihm gehört DIESES Objekt (`owner_properties`, 0063/0073) — sonst
+           könnte man dem Eigentümer von Objekt A eine Eigennutzung an Objekt B
+           zuschreiben. Das ist nicht bloß eine falsche Zeile: „Eigennutzung"
+           schließt Umsatz aus (0241) und taucht in der Abrechnung des Falschen
+           auf.
+
+        Fail-closed: kein Treffer → 422, kein stilles Verwerfen des Werts
+        (das ergäbe einen Eigentümer-Aufenthalt ohne Eigentümer).
+        """
+        if not owner_id:
+            return None
+        rows = (
+            self._db()
+            .table("owner_properties")
+            .select("owner_id, owners!inner(tenant_id)")
+            .eq("owner_id", owner_id)
+            .eq("property_id", property_id)
+            .eq("owners.tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            raise ReservationError(
+                "Eigentümer gehört nicht zu diesem Objekt.", status_code=422
+            )
+        return owner_id
+
     def _load_owned(self, tenant_id: str, reservation_id: str) -> dict:
         """Reservierung tenant-scoped laden (404, wenn fremd/fehlend)."""
         _require_uuid(reservation_id)

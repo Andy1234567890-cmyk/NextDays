@@ -142,6 +142,13 @@ class BlockRequestCreate(BaseModel):
     property_id: str
     start_date: date_
     end_date: date_
+    # Die gewünschte Einheit (property_units, 0265/0353). None = das ganze
+    # Objekt, also alle seine Einheiten — der Normalfall bei einem Objekt mit
+    # einer Einheit. Bei einem Typ mit fünf gleichen Studios kann der
+    # Eigentümer damit EINES für sich beantragen, statt den ganzen Typ aus dem
+    # Verkauf zu nehmen. Der Service prüft die Zugehörigkeit zum Objekt
+    # serverseitig (Wurzel 3).
+    unit_id: str | None = None
     # Warum gesperrt werden soll (Eigennutzung, Handwerker …). Optional, aber
     # die Agentur kann ohne sie schlecht entscheiden.
     reason: str | None = Field(default=None, max_length=2000)
@@ -160,6 +167,8 @@ class BlockRequestCreate(BaseModel):
 class BlockRequestItem(BaseModel):
     id: str
     property_id: str
+    # Die beantragte Einheit (0353). None = das ganze Objekt.
+    unit_id: str | None = None
     start_date: date_
     end_date: date_
     status: str

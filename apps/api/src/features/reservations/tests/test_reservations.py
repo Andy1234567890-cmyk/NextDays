@@ -58,6 +58,7 @@ def _service_for_create(
     taken_days: list[dict[str, str]],
     stopped_days: list[dict[str, str]] | None = None,
     units: list[dict[str, str]] | None = None,
+    owner_links: list[dict[str, str]] | None = None,
 ) -> ReservationsService:
     """Mockt die im create() benutzten Tabellen-Ketten.
 
@@ -70,6 +71,10 @@ def _service_for_create(
     Alt-Tests geschrieben sind (unbekannte Einheiten → strenger, objektweiter
     409, Wurzel 5). Nur die Multi-Unit-Tests setzen den Wert und bekommen damit
     den einheiten-genauen Pfad aus 0265/0266 zu sehen.
+
+    `owner_links` speist `owner_properties` (0353): der Eigentümer-Aufenthalt
+    prüft darüber, ob der angegebene Eigentümer DIESES Objekt besitzt. Default
+    `None` = leer → jede owner_id wird abgelehnt (fail-closed).
     """
     db = MagicMock(name="supabase")
 
@@ -83,6 +88,15 @@ def _service_for_create(
             chain.eq.return_value.execute.return_value.data = units
             chain.order.return_value.execute.return_value.data = units
             chain.eq.return_value.order.return_value.execute.return_value.data = units
+            # `_require_own_unit`: select.eq(id).eq(property_id).eq(tenant).limit
+            scope = chain.eq.return_value.eq.return_value.limit.return_value
+            scope.execute.return_value.data = units
+        elif name == "owner_properties":
+            chain = (
+                t.select.return_value.eq.return_value.eq.return_value
+                .eq.return_value.limit.return_value
+            )
+            chain.execute.return_value.data = owner_links or []
         elif name == "properties":
             chain = (
                 t.select.return_value.eq.return_value.eq.return_value.limit.return_value
@@ -1111,6 +1125,185 @@ def test_create_requires_guest_contact(monkeypatch) -> None:  # noqa: ANN001
         service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
     assert exc.value.status_code == 422
     assert "Gast" in exc.value.message
+
+
+# --- Eigentümer-Aufenthalt (0241 + 0353) -------------------------------------
+
+def _owner_stay_service(monkeypatch, **kw) -> tuple[ReservationsService, MagicMock]:  # noqa: ANN001, ANN003
+    """Wie `_rpc_service`, aber ohne Gast-Mock: der Eigentümer-Aufenthalt soll
+    genau OHNE Gast durchlaufen. Der Kontakt bleibt leer, der echte Resolver
+    würde also None liefern — und darf gar nicht erst gefragt werden."""
+    from types import SimpleNamespace
+
+    service = _service_for_create(
+        property_found=True, taken_days=[], stopped_days=[], **kw
+    )
+    db = service._client  # noqa: SLF001 — Test greift auf den Mock zu
+    gefragt: list[bool] = []
+    monkeypatch.setattr(
+        service,
+        "_upsert_guest",
+        lambda *_a, **_k: (gefragt.append(True), None)[1],
+    )
+    quote = SimpleNamespace(total=300.0, currency="CHF", lines=[])
+    monkeypatch.setattr(service, "_quote", lambda *_a, **_k: quote)
+    mask = MagicMock()
+    mask.name.side_effect = lambda v: v or ""
+    mask.amount.side_effect = lambda v: v
+    mask.amounts = True
+    mask.source_value.side_effect = lambda v: v
+    monkeypatch.setattr(
+        "src.features.reservations.writes.load_guest_mask", lambda *_a: mask
+    )
+    service._gast_gefragt = gefragt  # type: ignore[attr-defined]  # noqa: SLF001
+    return service, db
+
+
+def _rpc_row(db: MagicMock) -> dict:
+    row = {
+        "id": "r-1", "property_id": "p1", "guest_id": None, "channel": "direct",
+        "check_in": "2026-05-01", "check_out": "2026-05-03",
+        "status": "confirmed", "total_amount": 0.0, "currency": "CHF",
+        "ota_name": None, "external_ref": None,
+    }
+    db.rpc.return_value.execute.return_value.data = {
+        "reservation": row, "outbox_id": None,
+    }
+    return row
+
+
+def _atomic_params(db: MagicMock) -> dict:
+    calls = [
+        c for c in db.rpc.call_args_list if c.args[0] == "create_reservation_atomic"
+    ]
+    assert len(calls) == 1
+    return calls[0].args[1]["p_reservation"]
+
+
+def test_owner_stay_ohne_gast_traegt_den_eigentuemer(monkeypatch) -> None:  # noqa: ANN001
+    """DER KERN VON 0353: der „Gast" eines Eigentümer-Aufenthalts ist der
+    EIGENTÜMER — als `owner_id` an `owners`, nicht als Freitext in `guests`.
+
+    Eine Gast-Zeile für den Eigentümer verfälschte Loyalty-Aggregate
+    (Aufenthalte/Umsatz je Gast), Gästekartei und Marketing-Segmente. Der
+    Gast-Zwang bleibt für jede gewöhnliche Buchung bestehen; hier erfüllt ihn
+    der Eigentümer-Bezug.
+    """
+    service, db = _owner_stay_service(
+        monkeypatch, owner_links=[{"owner_id": "own-1"}]
+    )
+    _rpc_row(db)
+    req = ReservationCreate(
+        property_id="p1", check_in=date(2026, 5, 1), check_out=date(2026, 5, 3),
+        is_owner_stay=True, owner_id="own-1",
+    )
+    service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    row = _atomic_params(db)
+    assert row["owner_id"] == "own-1"
+    assert row["is_owner_stay"] is True
+    assert row["guest_id"] is None
+    assert row["total_amount"] == 0
+    # Der Gast-Resolver wurde gar nicht erst gefragt — sonst entstünde neben
+    # dem Eigentümer noch eine Gast-Zeile aus dem vorbefüllten Formular.
+    assert service._gast_gefragt == []  # noqa: SLF001
+
+
+def test_owner_stay_ohne_eigentuemer_bleibt_beim_gast_zwang(monkeypatch) -> None:  # noqa: ANN001
+    """Ohne BEIDES — kein Gast, kein Eigentümer — bleibt es beim 422. Der
+    Personenbezug ist nicht optional geworden, er hat nur eine zweite Form."""
+    service = _service_for_create(
+        property_found=True, taken_days=[], stopped_days=[]
+    )
+    monkeypatch.setattr(service, "_upsert_guest", lambda *_a, **_k: None)
+    req = ReservationCreate(
+        property_id="p1", check_in=date(2026, 5, 1), check_out=date(2026, 5, 3),
+        is_owner_stay=True,
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    assert exc.value.status_code == 422
+
+
+def test_fremder_eigentuemer_wird_abgelehnt(monkeypatch) -> None:  # noqa: ANN001
+    """Wurzel 3: eine `owner_id` aus dem Request ist ungeprüft nichts wert.
+
+    Gehört der Eigentümer nicht zu DIESEM Objekt, ist die Zeile nicht bloß
+    falsch — „Eigennutzung" schließt Umsatz aus (0241) und erschiene in der
+    Abrechnung des Falschen. Fail-closed statt den Wert still zu verwerfen.
+    """
+    service, db = _owner_stay_service(monkeypatch, owner_links=[])
+    _rpc_row(db)
+    req = ReservationCreate(
+        property_id="p1", check_in=date(2026, 5, 1), check_out=date(2026, 5, 3),
+        is_owner_stay=True, owner_id="own-fremd",
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    assert exc.value.status_code == 422
+    assert "Eigentümer" in exc.value.message
+
+
+def test_owner_id_ohne_owner_stay_ist_ungueltig() -> None:
+    """Ein Eigentümer an einer GAST-Buchung wäre eine stille Falschaussage:
+    die Zeile zählte als Umsatz UND erschiene als Eigennutzung."""
+    with pytest.raises(ValueError, match="owner_id"):
+        ReservationCreate(
+            property_id="p1", check_in=date(2026, 5, 1),
+            check_out=date(2026, 5, 3), owner_id="own-1",
+        )
+
+
+def test_block_request_id_landet_an_der_reservierung(monkeypatch) -> None:  # noqa: ANN001
+    """Wurzel 1: der Anker, an dem der Widerruf der Genehmigung GENAU diese
+    Belegung wiederfindet — statt über (Objekt, Zeitraum) zu raten und eine
+    zweite Eigennutzung mitzustornieren."""
+    service, db = _owner_stay_service(
+        monkeypatch, owner_links=[{"owner_id": "own-1"}]
+    )
+    _rpc_row(db)
+    req = ReservationCreate(
+        property_id="p1", check_in=date(2026, 5, 1), check_out=date(2026, 5, 3),
+        is_owner_stay=True, owner_id="own-1",
+    )
+    service.create(
+        AuthContext(user_id="u1", tenant_id="t1"), req, block_request_id="ba-1"
+    )
+    assert _atomic_params(db)["block_request_id"] == "ba-1"
+
+
+def test_vorgegebene_einheit_geht_an_die_rpc(monkeypatch) -> None:  # noqa: ANN001
+    """Stufe 3: die im Antrag benannte Einheit muss bis zur RPC durchkommen —
+    sonst wählt sie irgendeine freie und der Eigentümer bekommt ein anderes
+    Studio als beantragt."""
+    service, db = _owner_stay_service(
+        monkeypatch,
+        owner_links=[{"owner_id": "own-1"}],
+        units=[{"id": "u2"}],
+    )
+    _rpc_row(db)
+    req = ReservationCreate(
+        property_id="p1", check_in=date(2026, 5, 1), check_out=date(2026, 5, 3),
+        is_owner_stay=True, owner_id="own-1", unit_id="u2",
+    )
+    service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    assert _atomic_params(db)["unit_id"] == "u2"
+
+
+def test_fremde_einheit_wird_abgelehnt(monkeypatch) -> None:  # noqa: ANN001
+    """Wurzel 3, zweite Achse: eine `unit_id`, die nicht zu Objekt+Mandant
+    gehört, würde sonst eine fremde Einheit belegen."""
+    service, db = _owner_stay_service(
+        monkeypatch, owner_links=[{"owner_id": "own-1"}], units=[]
+    )
+    _rpc_row(db)
+    req = ReservationCreate(
+        property_id="p1", check_in=date(2026, 5, 1), check_out=date(2026, 5, 3),
+        is_owner_stay=True, owner_id="own-1", unit_id="u-fremd",
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    assert exc.value.status_code == 422
+    assert "Einheit" in exc.value.message
 
 
 def test_map_booking_conflict_codes() -> None:

@@ -15,6 +15,7 @@ from .dependencies import OwnersServiceDep
 from .schemas import (
     AvailablePropertiesResponse,
     EmailBestaetigungResponse,
+    OwnerByPropertyResponse,
     OwnerCreate,
     OwnerListResponse,
     OwnerPropertiesAssign,
@@ -158,6 +159,37 @@ def free_properties(
     """
     try:
         return service.free_properties(ctx)
+    except OwnerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/by-property/{property_id}", response_model=OwnerByPropertyResponse
+)
+def owner_by_property(
+    property_id: str,
+    service: OwnersServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> OwnerByPropertyResponse:
+    """Der Eigentümer eines Objekts — der Personenbezug für die Eigennutzung.
+
+    Steht wie `free-properties` bewusst VOR `GET /{owner_id}`: FastAPI wertet
+    Routen in Deklarationsreihenfolge aus; nach der Platzhalter-Route würde
+    `by-property` als `owner_id` gelesen und ergäbe ein 404.
+
+    Guard ist derselbe `MANAGE_OWNERS` wie an allen anderen Routen dieses
+    Slice (Wurzel 9: Autorisierung, nicht bloß Authentifizierung). Das trägt
+    laut Rollen-Matrix nur admin/co_admin — `staff`/`cleaner` haben an
+    Eigentümer-Kontaktdaten nichts zu suchen, und ein `owner` erreicht die
+    Route ebenfalls nicht: er ist nach §4.2 read-only und legt gar keine
+    Reservierungen an, für die dieser Wert nötig wäre.
+
+    Kein zugeordneter Eigentümer ist KEIN Fehler → 200 mit `owner: null`. 404
+    heißt ausschließlich: Objekt existiert nicht oder gehört einem fremden
+    Mandanten (siehe `OwnerByPropertyResponse`).
+    """
+    try:
+        return service.by_property(ctx, property_id)
     except OwnerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

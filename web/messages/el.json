@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Ναι, άρση όλων",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Καμία κράτηση σε αυτή την καρτέλα.",
       "loading": "Φόρτωση…",
       "nights": "{count, plural, one {# διανυκτέρευση} other {# διανυκτερεύσεις}}",
-      "children": "{count, plural, one {# παιδί} other {# παιδιά}}"
+      "children": "{count, plural, one {# παιδί} other {# παιδιά}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Χώρα",
       "openGuestCard": "Άνοιγμα κάρτας επισκέπτη",
       "photos": "Φωτογραφίες",
-      "noPhotosFound": "Δεν βρέθηκαν εικόνες για αυτή την κράτηση."
+      "noPhotosFound": "Δεν βρέθηκαν εικόνες για αυτή την κράτηση.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Σημερινές αναχωρήσεις",
@@ -5620,12 +5626,14 @@
         "open": "Ελεύθερο",
         "booked": "Κλεισμένο",
         "blocked": "Μπλοκαρισμένο",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "όλα τα κανάλια",
       "nightsCount": "{count, plural, one {# διανυκτέρευση} other {# διανυκτερεύσεις}}",
-      "daysCount": "{count, plural, one {# ημέρα} other {# ημέρες}}"
+      "daysCount": "{count, plural, one {# ημέρα} other {# ημέρες}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Προβολή",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Κράτηση χωρίς προσφορά",
       "blocking": "Μπλοκάρισμα…",
       "createBlockedPeriod": "Δημιουργία μπλοκαρισμένης περιόδου",
-      "priceMinStayBlock": "Τιμή / ελάχιστη διαμονή / μπλοκάρισμα …"
+      "priceMinStayBlock": "Τιμή / ελάχιστη διαμονή / μπλοκάρισμα …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Αριθμός ατόμων που έχει οριστεί για αυτό το κατάλυμα",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "μεικτά νομίσματα",
       "occupancy": "Πληρότητα",
       "propertyNights": "{booked}/{total} διανυκτερεύσεις καταλύματος",
-      "revenue": "Τζίρος"
+      "revenue": "Τζίρος",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Κλείσιμο",
@@ -5861,14 +5877,39 @@
       "overview": "Επισκόπηση",
       "feesHint": "Καθαριότητα κ.λπ.",
       "personsValue": "{count} άτ.",
-      "guestsLabel": "Επισκέπτες"
+      "guestsLabel": "Επισκέπτες",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Κλείσιμο",
       "revenueInvoice": "Τζίρος και τιμολόγιο",
       "invoiced": "Τιμολογήθηκε",
       "stillOpen": "Ακόμη ανοιχτά",
-      "cancelReasonPlaceholder": "Αιτία ακύρωσης (θα καταγραφεί) …"
+      "cancelReasonPlaceholder": "Αιτία ακύρωσης (θα καταγραφεί) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Μαζική επεξεργασία",

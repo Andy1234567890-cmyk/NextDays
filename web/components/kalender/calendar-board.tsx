@@ -28,14 +28,24 @@ import {
   type DayAvailability,
   blockRange,
   unblockRange,
+  clearStopSell,
   type StopSellDay,
+  type StopSellSource,
   getBoard,
 } from "@/lib/calendar";
+import {
+  type AgencyOption,
+  StopSellPanel,
+  type StopSellSelection,
+} from "@/components/stop-sell/stop-sell-panel";
+import { listAgencies } from "@/lib/travel-agencies";
 import { CHANNEL_META, CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
 import { ChannelLogo } from "@/components/channel-logo";
 import { explainFactors } from "@/lib/dp-factors";
 import {
   type DisplayStatus,
+  OWNER_STAY_BAR,
+  OWNER_STAY_ICON,
   STATUS_META,
   reservationStatus,
 } from "@/lib/calendar-status";
@@ -116,17 +126,37 @@ const CHUNK_DAYS = 90;
 const PREFETCH_AHEAD_DAYS = 180;
 const PREFETCH_BEHIND_DAYS = 90;
 
-// Segment-Status: availability-Status plus „stop_sell" (Stop-Sell aus der
-// stop_sell-Tabelle — der Tag ist frei, wird aber nicht aktiv verkauft; der
-// Balken zeigt Adressat/Grund, z. B. „Stop-Sell · TUI · Renovierung").
-type SegStatus = AvailabilityStatus | "stop_sell";
+// Segment-Status: availability-Status plus zwei Stop-Sell-Zustände. Sperre und
+// Stop-Sell sind ZWEI GETRENNTE ACHSEN und können am selben Tag gleichzeitig
+// gelten:
+//   blocked            — Verfügbarkeit 0 (availability.blocked). Der Tag ist zu.
+//   stop_sell          — Tag verfügbar, wird aber nicht aktiv verkauft
+//                        (stop_sell-Zeile mit Grund/Adressat).
+//   blocked_stop_sell  — BEIDES gilt. Früher gewann der Stop-Sell die Anzeige
+//                        und die Sperre darunter war unsichtbar; ein Nutzer hat
+//                        deshalb eine echte Sperre für einen Stop-Sell gehalten.
+type SegStatus = AvailabilityStatus | "stop_sell" | "blocked_stop_sell";
 
+// Jeder Zustand hat eine EIGENE, auf einen Blick unterscheidbare Darstellung:
+// Sperre = massiver neutraler Block, Stop-Sell = Warnfarbe mit Schrägstreifen,
+// beides = neutraler Block MIT Warnstreifen darüber (weder das eine noch das
+// andere für sich). Farben aus den semantischen Tokens (keine Hex-Werte).
 const SEG_STYLE: Record<SegStatus, string> = {
   open: "",
   booked: "bg-accent/85 text-white",
-  blocked: "bg-neutral-700 text-white",
-  stop_sell: "bg-warning/90 text-white",
+  blocked: "bg-foreground text-background",
+  stop_sell: "stop-sell-stripes text-warning-foreground",
+  blocked_stop_sell: "bg-foreground blocked-stop-sell-stripes text-background",
 };
+
+/** Zu welchen Zuständen gehört ein Stop-Sell? (Balken-Details, Kontextmenü) */
+function hasStopSell(status: SegStatus): boolean {
+  return status === "stop_sell" || status === "blocked_stop_sell";
+}
+/** Zu welchen Zuständen gehört eine availability-Sperre? */
+function hasBlock(status: SegStatus): boolean {
+  return status === "blocked" || status === "blocked_stop_sell";
+}
 // STATUS_LABEL aus t (Modul-Level-Konstante kann kein useTranslations nutzen) —
 // Funktion erhält t als Parameter, aufgerufen innerhalb der Komponente.
 function statusLabels(t: (key: string) => string): Record<SegStatus, string> {
@@ -135,6 +165,7 @@ function statusLabels(t: (key: string) => string): Record<SegStatus, string> {
     booked: t("calendarBoard.status.booked"),
     blocked: t("calendarBoard.status.blocked"),
     stop_sell: t("calendarBoard.status.stopSell"),
+    blocked_stop_sell: t("calendarBoard.status.blockedAndStopSell"),
   };
 }
 
@@ -231,6 +262,22 @@ type Segment = {
   stopSell?: StopSellDay; // Stop-Sell-Details (Grund/Adressat) bei status=stop_sell
 };
 
+// Rechtsklick-Kontextmenü auf einem Sperr-/Stop-Sell-Balken: Position am Cursor
+// plus alles, was die Einträge zum Handeln brauchen. `stopSellSource` entscheidet
+// über die Zulässigkeit von „Stop-Sell aufheben" — ein Portal-Stopp (channex)
+// spiegelt den Stand BEIM PORTAL und darf hier nicht lokal weggewischt werden.
+type BarMenu = {
+  x: number;
+  y: number;
+  pid: string;
+  title: string;
+  start: string; // YYYY-MM-DD, inklusiv
+  end: string; // YYYY-MM-DD, EXKLUSIV (wie blockRange/unblockRange)
+  status: SegStatus;
+  blockSource: AvailabilitySource;
+  stopSellSource?: StopSellSource;
+};
+
 // Laufendes Verschieben/Resizen eines bestehenden Buchungsbalkens.
 // mode: "move" = ganzer Balken (Tag- + Objektwechsel), "start"/"end" = Kante.
 type BarDrag = {
@@ -250,13 +297,15 @@ function debugOrigin(seg: Segment): string {
   const typ =
     seg.status === "blocked"
       ? "SPERRE (availability.blocked)"
-      : seg.status === "stop_sell"
-        ? "STOP-SELL"
-        : seg.status === "booked"
-          ? "BUCHUNG"
-          : "FREI";
+      : seg.status === "blocked_stop_sell"
+        ? "SPERRE (availability.blocked) + STOP-SELL"
+        : seg.status === "stop_sell"
+          ? "STOP-SELL"
+          : seg.status === "booked"
+            ? "BUCHUNG"
+            : "FREI";
   const parts = [typ, `Quelle: ${seg.source}`];
-  if (seg.status === "stop_sell" && seg.stopSell) {
+  if (hasStopSell(seg.status) && seg.stopSell) {
     const st = seg.stopSell;
     parts.push(`stop_sell.source: ${st.source}`);
     parts.push(`scope: ${st.scope ?? "all"}`);
@@ -294,13 +343,21 @@ function toSegments(
     // Move ist nicht mehr die Quelle des Balkens → kein Split-Brain zweier Quellen.)
     const rawAvail = statusByDay[key(d)] ?? "open";
     const rawStatus: AvailabilityStatus = rawAvail === "booked" && !res ? "open" : rawAvail;
-    // Stop-Sell: der Tag wird nicht verkauft — eigener Balken mit
-    // Grund/Adressat statt nur „Gesperrt". Der Stop-Sell hat Vorrang vor der
-    // generischen availability-Sperre (blocked): OTAs/Channex setzen an
-    // denselben Tagen oft BEIDES (blocked + stop_sell); ohne Vorrang bliebe der
-    // Adressat (z. B. TUI) + Grund unsichtbar. Nur eine echte Buchung sticht ihn.
+    // Stop-Sell: der Tag wird nicht verkauft — eigener Balken mit Grund/Adressat
+    // statt nur „Gesperrt". Sperre und Stop-Sell sind ZWEI Achsen und liegen an
+    // denselben Tagen oft BEIDE an (OTAs/Channex setzen häufig blocked +
+    // stop_sell). Früher gewann der Stop-Sell die Anzeige und die Sperre darunter
+    // war unsichtbar — beides sah gleich aus, und ein Nutzer hielt eine echte
+    // Sperre für einen Stop-Sell. Jetzt bekommt die Überlagerung einen EIGENEN
+    // Zustand mit eigener Darstellung; nur eine echte Buchung sticht beides.
     const stop = !res ? stopSellByDay[key(d)] : undefined;
-    const s: SegStatus = res ? "booked" : stop ? "stop_sell" : rawStatus;
+    const s: SegStatus = res
+      ? "booked"
+      : stop
+        ? rawStatus === "blocked"
+          ? "blocked_stop_sell"
+          : "stop_sell"
+        : rawStatus;
     // Kanal eines gebuchten Tages kommt aus der BUCHUNG, nicht aus availability.
     // availability.source hat den Kanal nur für Tage, die auch geladen wurden —
     // eine Buchung, die vor dem sichtbaren Fenster beginnt, hat dort keine Zeile.
@@ -324,7 +381,7 @@ function toSegments(
     // Stop-Sell-Segmente nur bündeln, wenn Grund + Adressat gleich bleiben
     // (sonst verschluckt ein Balken die Details des nächsten).
     const sameStop =
-      s !== "stop_sell" ||
+      !hasStopSell(s) ||
       (cur?.stopSell?.reason === stop?.reason &&
         cur?.stopSell?.agency_id === stop?.agency_id &&
         cur?.stopSell?.source === stop?.source);
@@ -426,19 +483,26 @@ function segmentLabel(
   t: (key: string) => string,
   channelLabel: (s: AvailabilitySource) => string,
 ): string {
-  if (seg.status === "stop_sell") {
+  if (hasStopSell(seg.status)) {
     // Adressat sichtbar machen: Reisebüro-Name (z. B. TUI), sonst Herkunft.
     const who =
       seg.stopSell?.agency_name ||
       (seg.stopSell?.source === "channex"
         ? t("calendarBoard.stopSellOta")
         : t("calendarBoard.stopSellAllChannels"));
-    return [t("calendarBoard.status.stopSell"), who, seg.stopSell?.reason]
+    // Liegt zusätzlich eine Sperre darauf, führt das Label mit BEIDEM — sonst
+    // liest sich der Balken wie ein reiner Stop-Sell (Tag wäre noch verfügbar).
+    return [statusLabels(t)[seg.status], who, seg.stopSell?.reason]
       .filter(Boolean)
       .join(" · ");
   }
   if (seg.status !== "booked") return statusLabels(t)[seg.status];
   const guest = seg.reservation?.guest_name?.trim();
+  // Eigentümer-Aufenthalt: ohne Namen NICHT auf den Kanal zurückfallen — das
+  // liest sich sonst wie eine Portalbuchung, obwohl gar keine dahintersteht.
+  if (seg.reservation?.is_owner_stay) {
+    return guest || t("calendarBoard.ownerStay");
+  }
   return guest || channelLabelLoose(seg.reservation?.ota_name) || channelLabel(seg.source);
 }
 
@@ -534,7 +598,13 @@ export function CalendarBoard({
   const [sel, setSel] = useState<{ pid: string; from: number; to: number } | null>(null);
   const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
   // Reservierungs-Assistent: Zeitraum (YYYY-MM-DD) + Objekt, wenn offen.
-  const [wizard, setWizard] = useState<{ pid: string; checkIn: string; checkOut: string } | null>(null);
+  // ownerStay: der Assistent startet dann mit vorbelegter Art „Eigennutzung".
+  const [wizard, setWizard] = useState<{
+    pid: string;
+    checkIn: string;
+    checkOut: string;
+    ownerStay?: boolean;
+  } | null>(null);
   // Bulk-Edit-Dialog: Objekt + Zeitraum der aufgezogenen Selektion.
   const [bulk, setBulk] = useState<{ pid: string; checkIn: string; checkOut: string } | null>(null);
   // Hotel: Preispläne des Objekts, für das der Bulk-Dialog offen ist — damit eine
@@ -585,6 +655,32 @@ export function CalendarBoard({
     { pid: string; title: string; start: string; end: string } | null
   >(null);
   const [saving, setSaving] = useState(false);
+
+  // Stop-Sell aus dem Belegungsplan heraus: dasselbe Panel wie im Stop-Sell-
+  // Kalender (EINE Wahrheit — keine zweite Kopie der Stop-Sell-Logik), nur mit
+  // vorbelegtem Objekt + Zeitraum und als Overlay von rechts.
+  const [stopSellSel, setStopSellSel] = useState<StopSellSelection | null>(null);
+  // Reisebüros/Veranstalter für die Adressaten-Auswahl im Panel. Erst geladen,
+  // wenn das Panel wirklich aufgeht (der Belegungsplan braucht sie sonst nie).
+  const [agencies, setAgencies] = useState<AgencyOption[]>([]);
+  useEffect(() => {
+    if (!stopSellSel) return;
+    let cancelled = false;
+    void listAgencies().then((res) => {
+      // Fehler hier NICHT verschlucken (Wurzel 5): ohne Partnerliste ist der
+      // Stop-Sell trotzdem setzbar (Adressat „alle"), aber der Nutzer soll
+      // sehen, dass die Auswahl fehlt statt ein leeres Select zu deuten.
+      if (cancelled) return;
+      if (res.ok) setAgencies(res.data.items.map((a) => ({ id: a.id, name: a.name })));
+      else toast.error(res.error);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [stopSellSel]);
+
+  // Rechtsklick-Kontextmenü auf einem Balken (Sperre/Stop-Sell aufheben).
+  const [barMenu, setBarMenu] = useState<BarMenu | null>(null);
 
   // Balken-Interaktion: bestehende Buchung verschieben (move) ODER an den
   // Kanten resizen (Check-in/out). `barDrag` hält den laufenden Zug; `dayOffset`
@@ -1487,6 +1583,13 @@ export function CalendarBoard({
   useRealtime({ table: "dp_settings", onChange: load, enabled: !interacting });
 
   // Ausgewählten Zeitraum sperren (blockRange, end exklusiv).
+  //
+  // KEIN load() nach der eigenen Aktion (Projektregel „Realtime, kein manuelles
+  // Reload"): blockRange schreibt `availability`, und das availability-Abo oben
+  // ist inkrementell und live (Grant + Publikation gegen die Live-DB geprüft,
+  // scripts/realtime/abos-pruefen.sh). Die geschriebenen Tage kommen als
+  // INSERT/UPDATE zurück und landen per Payload in avail/sources — ein
+  // Vollreload würde dasselbe Ergebnis nur teurer und mit Flackern erzeugen.
   const confirmBlock = useCallback(async () => {
     if (!sel || !start) return;
     const lo = Math.min(sel.from, sel.to);
@@ -1499,12 +1602,14 @@ export function CalendarBoard({
     if (res.ok) {
       setSel(null);
       setMenuAt(null);
-      await load();
+    } else {
+      toast.error(res.error);
     }
-  }, [sel, start, load]);
+  }, [sel, start]);
 
   // Geklickte manuelle Sperre aufheben (unblockRange, gibt frei gewordene Tage
-  // an Channex zurück). Popup bestätigt, danach neu laden.
+  // an Channex zurück). Kein load(): dasselbe availability-Abo pflegt die Tage
+  // (DELETE → Tag fällt auf „open" zurück).
   const confirmUnblock = useCallback(async () => {
     if (!unblockAt) return;
     setSaving(true);
@@ -1512,11 +1617,30 @@ export function CalendarBoard({
     setSaving(false);
     if (res.ok) {
       setUnblockAt(null);
-      await load();
     } else {
-      toast.error(res.error || "Sperre konnte nicht aufgehoben werden.");
+      toast.error(res.error);
     }
-  }, [unblockAt, load]);
+  }, [unblockAt]);
+
+  // Stop-Sell eines Balkens aufheben (Rechtsklick → Kontextmenü). Läuft über den
+  // VORHANDENEN Weg `clearStopSell` (derselbe, den das Stop-Sell-Panel nutzt) —
+  // kein neuer, ungeprüfter Aufruf. include_portal bleibt bewusst false: der
+  // Backend-Weg löscht damit ausschließlich `source='manual'`, Portal-Stopps
+  // bleiben stehen. Genau deshalb bietet das Menü den Eintrag bei einem
+  // Portal-Stopp gar nicht erst an (siehe Rendering) — sonst behauptete die
+  // Oberfläche eine Aufhebung, die beim Portal nie stattfand.
+  const confirmClearStopSell = useCallback(async () => {
+    if (!barMenu || barMenu.stopSellSource !== "manual") return;
+    setSaving(true);
+    const res = await clearStopSell(barMenu.pid, barMenu.start, barMenu.end);
+    setSaving(false);
+    if (res.ok) {
+      setBarMenu(null);
+      // Das stop_sell-Abo (Vollreload-Modus) zieht die Zellen nach.
+    } else {
+      toast.error(res.error);
+    }
+  }, [barMenu]);
 
   // ◀/▶: im „Monat"-Fenster echte KALENDERMONATE springen (auf den 1. des Vor-/
   // Folgemonats), sonst um den Granularitäts-Schritt. Der 28-Tage-Sprung ließ den
@@ -1687,12 +1811,26 @@ export function CalendarBoard({
 
       {/* Legende: Status + Vertriebskanäle (Herkunft je Farbe/Logo). */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-        {(["open", "blocked", "stop_sell"] as SegStatus[]).map((s) => (
+        {/* Sperre, Stop-Sell und die Überlagerung beider sind drei eigene
+            Einträge — sie sehen im Raster verschieden aus und bedeuten
+            Verschiedenes (Sperre = zu, Stop-Sell = frei, aber nicht verkauft). */}
+        {(["open", "blocked", "stop_sell", "blocked_stop_sell"] as SegStatus[]).map((s) => (
           <span key={s} className="flex items-center gap-1.5">
-            <span className={`inline-block size-3 rounded-sm border ${s === "open" ? "bg-background" : SEG_STYLE[s]}`} />
+            <span
+              className={`inline-block size-3 rounded-sm border ${s === "open" ? "bg-background" : SEG_STYLE[s]}`}
+            />
             {statusLabels(t)[s]}
           </span>
         ))}
+        {/* Eigentümer-Aufenthalt (0241): belegt, aber kein Kanal und kein Umsatz. */}
+        <span className="flex items-center gap-1.5">
+          <span
+            className={`inline-flex size-4 items-center justify-center rounded-sm ${OWNER_STAY_BAR}`}
+          >
+            <Icon icon={OWNER_STAY_ICON} className="size-2.5" />
+          </span>
+          {t("calendarBoard.ownerStay")}
+        </span>
         <span className="h-3 w-px bg-border" aria-hidden />
         {CHANNEL_SOURCES.map((src) => (
           <span key={src} className="flex items-center gap-1.5">
@@ -1748,11 +1886,26 @@ export function CalendarBoard({
             const hi = Math.max(sel.from, sel.to);
             const checkIn = key(addDays(start, lo));
             const checkOut = key(addDays(start, hi + 1)); // end exklusiv
-            if (action === "bulk") {
+            if (action === "stop_sell") {
+              // Vorhandenes Stop-Sell-Panel mit vorbelegtem Objekt + Zeitraum
+              // öffnen (Enden INKLUSIV, so erwartet es die Auswahl dort).
+              setStopSellSel({
+                propertyId: sel.pid,
+                propertyTitle:
+                  properties.find((p) => p.id === sel.pid)?.title ?? "",
+                start: checkIn,
+                end: key(addDays(start, hi)),
+              });
+            } else if (action === "bulk") {
               setBulk({ pid: sel.pid, checkIn, checkOut });
             } else {
-              // Reservierung: Wizard mit gezogenem Zeitraum öffnen.
-              setWizard({ pid: sel.pid, checkIn, checkOut });
+              // Reservierung/Eigennutzung: Wizard mit gezogenem Zeitraum öffnen.
+              setWizard({
+                pid: sel.pid,
+                checkIn,
+                checkOut,
+                ownerStay: action === "owner_stay",
+              });
             }
             setMenuAt(null);
             setSel(null);
@@ -2031,13 +2184,20 @@ export function CalendarBoard({
                           ? reservationStatus(seg.reservation, todayKey)
                           : null;
                         const statusMeta = dispStatus ? STATUS_META[dispStatus] : null;
+                        // Eigentümer-Aufenthalt (0241): belegt wie eine Buchung,
+                        // aber kein Vertriebskanal und kein Umsatz — deshalb weder
+                        // Kanalfarbe noch Kanal-Logo, sondern eigene Kennzeichnung.
+                        const ownerStay =
+                          seg.status === "booked" && !!seg.reservation?.is_owner_stay;
                         const nights = seg.span;
                         const barTitle = view.showDebug
                           ? debugOrigin(seg)
                           : seg.status === "booked"
                             ? [
                               segmentLabel(seg, t, channelLabel),
-                              channelLabel(seg.source as AvailabilitySource),
+                              ownerStay
+                                ? t("calendarBoard.ownerStay")
+                                : channelLabel(seg.source as AvailabilitySource),
                               dispStatus ? statusLabel(dispStatus) : null,
                               t("calendarBoard.nightsCount", { count: nights }),
                             ]
@@ -2051,8 +2211,11 @@ export function CalendarBoard({
                         // unterscheidbaren Balken (amber + gestrichelt) statt der
                         // Kanalfarbe — eine Option darf nicht wie eine feste
                         // Buchung aussehen. Bestätigt/eingecheckt unverändert.
-                        const bookedBar =
-                          statusMeta?.barClass ?? `${meta.barBg} ${meta.barFg}`;
+                        // Eigentümer-Aufenthalt vor allem anderen: er ist per
+                        // Definition bestätigt, hat also nie den Options-Stil.
+                        const bookedBar = ownerStay
+                          ? OWNER_STAY_BAR
+                          : (statusMeta?.barClass ?? `${meta.barBg} ${meta.barFg}`);
                         const barClass = `${seg.status === "booked"
                           ? bookedBar
                           : SEG_STYLE[seg.status]
@@ -2096,18 +2259,30 @@ export function CalendarBoard({
                         };
                         const barInner = (
                           <>
-                            {seg.status === "booked" && (
-                              <ChannelLogo source={seg.source} />
-                            )}
-                            {seg.status === "blocked" && (
+                            {seg.status === "booked" &&
+                              (ownerStay ? (
+                                <Icon
+                                  icon={OWNER_STAY_ICON}
+                                  className="size-3 shrink-0"
+                                />
+                              ) : (
+                                <ChannelLogo source={seg.source} />
+                              ))}
+                            {/* Zwei Achsen, zwei Symbole: Schloss = Sperre
+                                (Verfügbarkeit 0), Verbotszeichen = Stop-Sell.
+                                Liegt beides auf dem Tag, stehen BEIDE Symbole
+                                nebeneinander — der Balken ist dann weder als
+                                reine Sperre noch als reiner Stop-Sell lesbar. */}
+                            {hasBlock(seg.status) && (
                               <Icon icon="ph:lock-simple" className="size-3 shrink-0" />
                             )}
-                            {seg.status === "stop_sell" && (
+                            {hasStopSell(seg.status) && (
                               <Icon icon="ph:prohibit" className="size-3 shrink-0" />
                             )}
                             {/* Status-Punkt (OPERA-Stil): bestätigt/Option/
-                              eingecheckt/ausgecheckt/storniert. */}
-                            {statusMeta && (
+                              eingecheckt/ausgecheckt/storniert. Beim Eigentümer-
+                              Aufenthalt entfällt er — er ist immer bestätigt. */}
+                            {statusMeta && !ownerStay && (
                               <span
                                 className={`size-1.5 shrink-0 rounded-full ring-1 ring-white/60 ${statusMeta.dotBg}`}
                               />
@@ -2115,7 +2290,7 @@ export function CalendarBoard({
                             <span className="truncate">
                               {view.showDebug
                                 ? `⟨${seg.status}⟩ ${seg.source}${
-                                    seg.status === "stop_sell"
+                                    hasStopSell(seg.status)
                                       ? ` /ss:${seg.stopSell?.source ?? "?"}:${
                                           seg.stopSell?.scope ?? "all"
                                         }`
@@ -2135,11 +2310,38 @@ export function CalendarBoard({
                             )}
                           </>
                         );
+                        // Rechtsklick auf einen Sperr-/Stop-Sell-Balken öffnet das
+                        // Kontextmenü (aufheben / Grund ändern). Einheitlich für
+                        // BEIDE Achsen — der Nutzer sieht ja auch beide Balken.
+                        // Buchungsbalken bleiben davon unberührt (sie haben Klick
+                        // + Drag + Detail-Slider).
+                        const contextable =
+                          !!start && (hasBlock(seg.status) || hasStopSell(seg.status));
+                        const onBarContextMenu = contextable
+                          ? (ev: React.MouseEvent) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            setBarMenu({
+                              x: ev.clientX,
+                              y: ev.clientY,
+                              pid: p.id,
+                              title: p.title,
+                              start: key(addDays(start, seg.start)),
+                              end: key(addDays(start, seg.start + seg.span)),
+                              status: seg.status,
+                              blockSource: seg.source,
+                              stopSellSource: seg.stopSell?.source,
+                            });
+                          }
+                          : undefined;
                         // Manuelle Sperre ist per Klick aufhebbar (Popup) — OTA-/
                         // gebuchte Sperren nicht. Öffnet das Unblock-Popup mit dem
                         // Zeitraum des Balkens (Spalten → ISO, end exklusiv).
+                        // Bei blocked_stop_sell bleibt der Klick auf der SPERRE:
+                        // sie ist der Zustand, der den Tag wirklich zumacht; der
+                        // Stop-Sell darunter läuft über das Rechtsklick-Menü.
                         const unblockable =
-                          seg.status === "blocked" &&
+                          hasBlock(seg.status) &&
                           seg.source === "manual" &&
                           !!start;
                         if (unblockable) {
@@ -2147,7 +2349,8 @@ export function CalendarBoard({
                             <button
                               key={i}
                               type="button"
-                              title={t("board.unblock")}
+                              title={barTitle}
+                              onContextMenu={onBarContextMenu}
                               onClick={(ev) => {
                                 ev.stopPropagation();
                                 setUnblockAt({
@@ -2169,6 +2372,7 @@ export function CalendarBoard({
                             <div
                               key={i}
                               title={barTitle}
+                              onContextMenu={onBarContextMenu}
                               className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium ${barClass} ${dragging ? "pointer-events-none" : ""}`}
                               style={barStyle}
                             >
@@ -2252,6 +2456,126 @@ export function CalendarBoard({
         </div>
       </Card>
 
+      {/* Stop-Sell aus dem Belegungsplan: DASSELBE Panel wie im Stop-Sell-
+          Kalender (Grundauswahl, Notiz, Wochentagsmaske, Adressat) — nur mit
+          vorbelegtem Objekt/Zeitraum und als Overlay. Bewusst keine zweite
+          Kopie der Stop-Sell-Logik. */}
+      {stopSellSel && (
+        <StopSellPanel
+          variant="overlay"
+          selection={stopSellSel}
+          stops={Object.values(stopSell[stopSellSel.propertyId] ?? {})}
+          bookedDates={
+            new Set(
+              Object.keys(
+                reservationsByDay(resByProp[stopSellSel.propertyId] ?? []),
+              ),
+            )
+          }
+          agencies={agencies}
+          onClose={() => setStopSellSel(null)}
+          // Kein load(): das stop_sell-Abo liefert die neuen Zeilen.
+          onDone={() => setStopSellSel(null)}
+        />
+      )}
+
+      {/* Rechtsklick-Menü auf einem Sperr-/Stop-Sell-Balken */}
+      {barMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onMouseDown={() => setBarMenu(null)} />
+          <div
+            className="fixed z-50 w-64 overflow-hidden rounded-(--radius) border bg-popover py-1 text-popover-foreground shadow-md"
+            style={{
+              left: `min(${barMenu.x}px, calc(100vw - 17rem))`,
+              top: `${barMenu.y + 8}px`,
+            }}
+          >
+            <p className="px-3 py-1.5 text-xs text-muted-foreground">
+              {barMenu.title} · {statusLabels(t)[barMenu.status]}
+            </p>
+            <div className="my-1 h-px bg-border" />
+
+            {/* Sperre aufheben — nur bei einer EIGENEN (manuellen) Sperre.
+                Eine vom Portal/aus einer Buchung stammende Sperre gehört uns
+                nicht; dafür gibt es hier keinen Weg. */}
+            {hasBlock(barMenu.status) && barMenu.blockSource === "manual" && (
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  setUnblockAt({
+                    pid: barMenu.pid,
+                    title: barMenu.title,
+                    start: barMenu.start,
+                    end: barMenu.end,
+                  });
+                  setBarMenu(null);
+                }}
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent/10 disabled:pointer-events-none disabled:text-muted-foreground/50"
+              >
+                <Icon icon="ph:lock-simple-open" className="size-4 shrink-0 text-muted-foreground" />
+                {t("board.unblock")}
+              </button>
+            )}
+
+            {/* Stop-Sell aufheben — NUR bei einem manuell gesetzten Stopp.
+                Ein Portal-Stopp (source=channex) spiegelt den Stand beim Portal;
+                der Backend-Weg löscht ihn ohne include_portal gar nicht. Statt
+                stillschweigend nichts zu tun, steht der Eintrag hier deaktiviert
+                mit Begründung — aufgehoben wird er dort, wo er herkommt. */}
+            {hasStopSell(barMenu.status) &&
+              (barMenu.stopSellSource === "manual" ? (
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={confirmClearStopSell}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent/10 disabled:pointer-events-none disabled:text-muted-foreground/50"
+                >
+                  <Icon icon="ph:prohibit" className="size-4 shrink-0 text-muted-foreground" />
+                  {saving
+                    ? t("board.stopSellClearing")
+                    : t("board.stopSellClear")}
+                </button>
+              ) : (
+                <div className="flex items-start gap-3 px-3 py-2.5 text-sm">
+                  <Icon icon="ph:lock-simple" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <span className="flex flex-col">
+                    <span className="font-medium text-muted-foreground/70">
+                      {t("board.stopSellClear")}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {t("board.stopSellPortalLocked")}
+                    </span>
+                  </span>
+                </div>
+              ))}
+
+            {/* Grund ändern = neu setzen mit Grund (dasselbe Panel). Nur für
+                eigene Stopps — an einem Portal-Stopp ändert das nichts. */}
+            {hasStopSell(barMenu.status) && barMenu.stopSellSource === "manual" && (
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  setStopSellSel({
+                    propertyId: barMenu.pid,
+                    propertyTitle: barMenu.title,
+                    start: barMenu.start,
+                    // Panel erwartet das Ende INKLUSIV, barMenu.end ist exklusiv.
+                    end: key(addDays(new Date(`${barMenu.end}T00:00:00`), -1)),
+                  });
+                  setBarMenu(null);
+                }}
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent/10 disabled:pointer-events-none disabled:text-muted-foreground/50"
+              >
+                <Icon icon="ph:note-pencil" className="size-4 shrink-0 text-muted-foreground" />
+                {t("board.stopSellEditReason")}
+              </button>
+            )}
+          </div>
+        </>
+      )}
+
       {/* Reservierungs-Assistent (3 Schritte, eigene Komponente) */}
       {wizard && (
         <ReservationWizard
@@ -2263,6 +2587,7 @@ export function CalendarBoard({
           checkIn={wizard.checkIn}
           checkOut={wizard.checkOut}
           basePrice={0}
+          initialOwnerStay={wizard.ownerStay ?? false}
         />
       )}
 

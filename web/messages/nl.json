@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Ja, alles opheffen",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Geen boekingen in dit tabblad.",
       "loading": "Laden…",
       "nights": "{count, plural, one {# nacht} other {# nachten}}",
-      "children": "{count, plural, one {# kind} other {# kinderen}}"
+      "children": "{count, plural, one {# kind} other {# kinderen}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Land",
       "openGuestCard": "Gastkaart openen",
       "photos": "Foto's",
-      "noPhotosFound": "Voor deze boeking zijn geen afbeeldingen gevonden."
+      "noPhotosFound": "Voor deze boeking zijn geen afbeeldingen gevonden.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Check-outs van vandaag",
@@ -5620,12 +5626,14 @@
         "open": "Vrij",
         "booked": "Geboekt",
         "blocked": "Geblokkeerd",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "alle kanalen",
       "nightsCount": "{count, plural, one {# nacht} other {# nachten}}",
-      "daysCount": "{count, plural, one {# dag} other {# dagen}}"
+      "daysCount": "{count, plural, one {# dag} other {# dagen}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Weergave",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Reservering zonder offerte",
       "blocking": "Blokkeren…",
       "createBlockedPeriod": "Geblokkeerde periode aanmaken",
-      "priceMinStayBlock": "Prijs / Minimumverblijf / Blokkering …"
+      "priceMinStayBlock": "Prijs / Minimumverblijf / Blokkering …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Voor dit object ingesteld aantal personen",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "gemengde valuta",
       "occupancy": "Bezetting",
       "propertyNights": "{booked}/{total} accommodatienachten",
-      "revenue": "Omzet"
+      "revenue": "Omzet",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Sluiten",
@@ -5861,14 +5877,39 @@
       "overview": "Overzicht",
       "feesHint": "Schoonmaak enz.",
       "personsValue": "{count} pers.",
-      "guestsLabel": "Gasten"
+      "guestsLabel": "Gasten",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Sluiten",
       "revenueInvoice": "Omzet en factuur",
       "invoiced": "Gefactureerd",
       "stillOpen": "Nog open",
-      "cancelReasonPlaceholder": "Reden van annulering (wordt gedocumenteerd) …"
+      "cancelReasonPlaceholder": "Reden van annulering (wordt gedocumenteerd) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Bulkbewerking",

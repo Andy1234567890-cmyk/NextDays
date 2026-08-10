@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Sí, quitar todos",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "No hay reservas en esta pestaña.",
       "loading": "Cargando…",
       "nights": "{count, plural, one {# noche} other {# noches}}",
-      "children": "{count, plural, one {# niño} other {# niños}}"
+      "children": "{count, plural, one {# niño} other {# niños}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "País",
       "openGuestCard": "Abrir ficha del huésped",
       "photos": "Fotos",
-      "noPhotosFound": "No se han encontrado fotos para esta reserva."
+      "noPhotosFound": "No se han encontrado fotos para esta reserva.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Salidas de hoy",
@@ -5620,12 +5626,14 @@
         "open": "Libre",
         "booked": "Reservado",
         "blocked": "Bloqueado",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "todos los canales",
       "nightsCount": "{count, plural, one {# noche} other {# noches}}",
-      "daysCount": "{count, plural, one {# día} other {# días}}"
+      "daysCount": "{count, plural, one {# día} other {# días}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Vista",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Reserva sin presupuesto",
       "blocking": "Bloqueando…",
       "createBlockedPeriod": "Crear periodo bloqueado",
-      "priceMinStayBlock": "Precio / Estancia mínima / Bloqueo …"
+      "priceMinStayBlock": "Precio / Estancia mínima / Bloqueo …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Número de personas configurado para este alojamiento",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "monedas mixtas",
       "occupancy": "Ocupación",
       "propertyNights": "{booked}/{total} noches-alojamiento",
-      "revenue": "Ingresos"
+      "revenue": "Ingresos",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Cerrar",
@@ -5861,14 +5877,39 @@
       "overview": "Resumen",
       "feesHint": "Limpieza, etc.",
       "personsValue": "{count} pers.",
-      "guestsLabel": "Huéspedes"
+      "guestsLabel": "Huéspedes",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Cerrar",
       "revenueInvoice": "Ingresos y factura",
       "invoiced": "Facturado",
       "stillOpen": "Aún abiertos",
-      "cancelReasonPlaceholder": "Motivo de la cancelación (se documentará) …"
+      "cancelReasonPlaceholder": "Motivo de la cancelación (se documentará) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Edición masiva",

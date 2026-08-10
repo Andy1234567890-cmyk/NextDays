@@ -115,6 +115,14 @@ class BoardResponse(BaseModel):
 class BlockRequest(BaseModel):
     property_id: str
     range: DateRange
+    # Einheit, die gesperrt werden soll (property_units, 0265/0353). None = der
+    # ganze Einheiten-TYP, also alle Einheiten des Objekts — der Normalfall bei
+    # einem Objekt mit einer Einheit und das bisherige Verhalten. Bei einem Typ
+    # mit fünf gleichen Studios nimmt eine Sperre mit `unit_id` nur dieses eine
+    # aus dem Verkauf. Der Service prüft die Zugehörigkeit zu property_id UND
+    # Mandant serverseitig (Wurzel 3) — der Wert kommt aus dem Request und ist
+    # ungeprüft nichts wert.
+    unit_id: str | None = None
 
 
 class PriceOverrideRequest(BaseModel):
@@ -430,6 +438,11 @@ class SperrantragItem(BaseModel):
     id: str
     property_id: str
     property_title: str | None = None
+    # Die beantragte Einheit (0353). None = der ganze Einheiten-TYP. Die Agentur
+    # MUSS das sehen: „Studio 3 vom 1.–5." ist eine andere Entscheidung als
+    # „alle fünf Studios vom 1.–5.".
+    unit_id: str | None = None
+    unit_name: str | None = None
     requested_by: str | None = None
     requested_by_name: str | None = None
     start_date: date

@@ -27,6 +27,17 @@ export type StatusMeta = {
   barClass?: string;
 };
 
+/**
+ * Eigentümer-Aufenthalt (0241) — EINE Darstellungsquelle für Balken, Legende
+ * und Detailansichten. Bewusst weder Kanalfarbe (das ist kein Vertriebsweg,
+ * es gibt keinen Umsatz) noch der dunkle Sperr-Block (die Nacht ist belegt,
+ * nicht nur gesperrt): heller Balken mit klarer, durchgezogener Kontur.
+ */
+export const OWNER_STAY_BAR =
+  "bg-secondary text-secondary-foreground border-2 border-foreground/60";
+/** Symbol des Eigentümer-Aufenthalts (Balken, Legende, Abzeichen). */
+export const OWNER_STAY_ICON = "ph:house-line";
+
 export const STATUS_META: Record<DisplayStatus, StatusMeta> = {
   pending: {
     dotBg: "bg-warning",

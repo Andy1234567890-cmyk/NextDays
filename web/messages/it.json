@@ -413,7 +413,10 @@
     "resetContinue": "Continue",
     "resetConfirm": "Sì, rimuovi tutti",
     "resetting": "Resetting …",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
+    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
+    "reasonRequired": "Bitte einen Grund wählen."
   },
   "inbox": {
     "title": "Inbox",
@@ -3919,7 +3922,8 @@
       "emptyState": "Nessuna prenotazione in questa scheda.",
       "loading": "Caricamento…",
       "nights": "{count, plural, one {# notte} many {# notti} other {# notti}}",
-      "children": "{count, plural, one {# bambino} many {# bambini} other {# bambini}}"
+      "children": "{count, plural, one {# bambino} many {# bambini} other {# bambini}}",
+      "ownerStay": "Eigennutzung"
     },
     "kpiDetail": {
       "metric": {
@@ -4328,7 +4332,9 @@
       "country": "Paese",
       "openGuestCard": "Apri scheda ospite",
       "photos": "Foto",
-      "noPhotosFound": "Per questa prenotazione non è stata trovata alcuna foto."
+      "noPhotosFound": "Per questa prenotazione non è stata trovata alcuna foto.",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "dashboard": {
       "todayCheckouts": "Check-out di oggi",
@@ -5620,12 +5626,14 @@
         "open": "Libero",
         "booked": "Prenotato",
         "blocked": "Bloccato",
-        "stopSell": "Stop-Sell"
+        "stopSell": "Stop-Sell",
+        "blockedAndStopSell": "Gesperrt + Stop-Sell"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "tutti i canali",
       "nightsCount": "{count, plural, one {# notte} other {# notti}}",
-      "daysCount": "{count, plural, one {# giorno} other {# giorni}}"
+      "daysCount": "{count, plural, one {# giorno} other {# giorni}}",
+      "ownerStay": "Eigentümer-Aufenthalt"
     },
     "calendarViews": {
       "viewLabel": "Vista",
@@ -5644,7 +5652,11 @@
       "reservationWithoutQuote": "Prenotazione senza preventivo",
       "blocking": "Blocco…",
       "createBlockedPeriod": "Crea periodo bloccato",
-      "priceMinStayBlock": "Prezzo / Soggiorno minimo / Blocco …"
+      "priceMinStayBlock": "Prezzo / Soggiorno minimo / Blocco …",
+      "ownerStay": "Eigennutzung eintragen",
+      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
+      "setStopSell": "Stop-Sell setzen",
+      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Numero di ospiti impostato per questa struttura",
@@ -5845,7 +5857,11 @@
       "mixedCurrencies": "valute miste",
       "occupancy": "Occupazione",
       "propertyNights": "{booked}/{total} notti-struttura",
-      "revenue": "Fatturato"
+      "revenue": "Fatturato",
+      "stopSellClear": "Stop-Sell aufheben",
+      "stopSellClearing": "Hebe auf…",
+      "stopSellEditReason": "Grund ändern",
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },
     "wizard": {
       "close": "Chiudi",
@@ -5861,14 +5877,39 @@
       "overview": "Panoramica",
       "feesHint": "Pulizia ecc.",
       "personsValue": "{count} pers.",
-      "guestsLabel": "Ospiti"
+      "guestsLabel": "Ospiti",
+      "stayKind": "Art des Aufenthalts",
+      "stayKindGuest": "Gastbuchung",
+      "stayKindOwner": "Eigennutzung",
+      "ownerLabel": "Eigentümer",
+      "ownerContact": "Kontaktdaten des Eigentümers",
+      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "steps": {
+        "details": "Details",
+        "prices": "Preise & Extras",
+        "policy": "Richtlinien"
+      },
+      "headings": {
+        "details": "Reservierungsdetails",
+        "prices": "Preise & Extras festlegen",
+        "policy": "Richtlinien festlegen"
+      },
+      "ownerSection": "Eigentümer",
+      "ownerLoading": "Eigentümer wird ermittelt…",
+      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
+      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
+      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
+      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
     },
     "slider": {
       "close": "Chiudi",
       "revenueInvoice": "Ricavi e fattura",
       "invoiced": "Fatturato",
       "stillOpen": "Ancora aperti",
-      "cancelReasonPlaceholder": "Motivo dell'annullamento (verrà documentato) …"
+      "cancelReasonPlaceholder": "Motivo dell'annullamento (verrà documentato) …",
+      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
     },
     "bulk": {
       "title": "Modifica in blocco",

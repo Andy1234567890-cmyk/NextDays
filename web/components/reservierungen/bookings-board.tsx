@@ -21,7 +21,7 @@ import { Card } from "@nextdays/ui/card";
 import { Input } from "@nextdays/ui/input";
 import { channelMeta } from "@/lib/calendar-channels";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
-import { STATUS_META } from "@/lib/calendar-status";
+import { OWNER_STAY_ICON, STATUS_META } from "@/lib/calendar-status";
 import {
   channelSource,
   dateKey,
@@ -342,15 +342,24 @@ function BookingRow({
       </td>
       <td className="px-4 py-3">
         {/* Quelle in Kanalfarbe mit #-Präfix (.. „#booking.com"/„#airbnb").
-            Farbe aus channelMeta.textFg (Token-System), kein Inline-Hex. */}
-        <span
-          className={"inline-flex items-center gap-1.5 font-semibold " + cm.textFg}
-        >
-          {cm.logo.kind === "icon" ? (
-            <Icon icon={cm.logo.icon} className="size-4" />
-          ) : null}
-          #{r.ota_name ? channelLabelLoose(r.ota_name) : channelLabel(channelSource(r))}
-        </span>
+            Farbe aus channelMeta.textFg (Token-System), kein Inline-Hex.
+            Eigentümer-Aufenthalt (0241) hat keinen Vertriebskanal — dort steht
+            die Art statt eines irreführenden „#Direkt". */}
+        {r.is_owner_stay ? (
+          <span className="inline-flex items-center gap-1.5 font-semibold text-muted-foreground">
+            <Icon icon={OWNER_STAY_ICON} className="size-4" />
+            {t("bookingsBoard.ownerStay")}
+          </span>
+        ) : (
+          <span
+            className={"inline-flex items-center gap-1.5 font-semibold " + cm.textFg}
+          >
+            {cm.logo.kind === "icon" ? (
+              <Icon icon={cm.logo.icon} className="size-4" />
+            ) : null}
+            #{r.ota_name ? channelLabelLoose(r.ota_name) : channelLabel(channelSource(r))}
+          </span>
+        )}
       </td>
       <td className="px-4 py-3 text-right tabular-nums">
         {/* Gäste: Personen-Icon + Zahl; Kinder-Icon nur wenn Kinder dabei sind

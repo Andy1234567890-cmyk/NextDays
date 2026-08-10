@@ -35,7 +35,12 @@ export type StopSellSelection = {
 
 // Grund-Auswahl wie Guesty (Owner block / Maintenance / Do not sell / Other);
 // gespeichert wird der lokalisierte Text als reason-Freitext (+ Notiz).
+// Der Grund ist PFLICHT: ein Stop-Sell ohne Begründung ist Wochen später nicht
+// mehr nachvollziehbar (warum steht dieser Tag zu?). Bei „Sonstiges" ist der
+// gewählte Schlüssel selbst nichtssagend, dort ist zusätzlich die Notiz Pflicht.
 const REASON_KEYS = ["reasonOwner", "reasonMaintenance", "reasonDoNotSell", "reasonOther"] as const;
+
+type ReasonKey = (typeof REASON_KEYS)[number];
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -58,6 +63,7 @@ export function StopSellPanel({
   agencies,
   onClose,
   onDone,
+  variant = "inline",
 }: {
   selection: StopSellSelection;
   /** Alle Stop-Sell-Tage des Objekts (der Kalender hält sie ohnehin vor). */
@@ -69,6 +75,9 @@ export function StopSellPanel({
   agencies: AgencyOption[];
   onClose: () => void;
   onDone: () => void;
+  /** Als eingebettetes Panel (Stop-Sell-Kalender, Standard) oder als Overlay
+   *  von rechts (aus dem Belegungsplan heraus, wo es keine Panel-Spalte gibt). */
+  variant?: "inline" | "overlay";
 }) {
   const t = useTranslations("stopSell");
   const locale = useLocale();
@@ -77,8 +86,11 @@ export function StopSellPanel({
   const [weekdays, setWeekdays] = useState<Set<number>>(
     new Set([0, 1, 2, 3, 4, 5, 6]),
   );
-  const [reasonKey, setReasonKey] = useState<(typeof REASON_KEYS)[number] | null>(null);
+  const [reasonKey, setReasonKey] = useState<ReasonKey | null>(null);
   const [note, setNote] = useState("");
+  // Erst nach einem Absendeversuch die Pflichtfeld-Meldung zeigen (kein rotes
+  // Panel, bevor der Nutzer überhaupt etwas getan hat).
+  const [touched, setTouched] = useState(false);
   // Adressat der Stop-Sell-Meldung ("" = alle Reiseanbieter).
   const [agencyId, setAgencyId] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -144,12 +156,24 @@ export function StopSellPanel({
     });
   }
 
+  // Pflichtgrund (eine Stelle für alle Aufrufer — Stop-Sell-Kalender UND
+  // Belegungsplan): ein Grund MUSS gewählt sein, bei „Sonstiges" zusätzlich eine
+  // Notiz, sonst wäre der gespeicherte Grund inhaltsleer. Kein erfundener
+  // Ersatzgrund (Wurzel 4) — es wird schlicht nicht gesendet.
+  const reasonMissing = reasonKey === null;
+  const noteMissing = reasonKey === "reasonOther" && note.trim() === "";
+  const reasonInvalid = reasonMissing || noteMissing;
+  const reasonText =
+    reasonKey === null || noteMissing
+      ? null
+      : t(reasonKey) + (note.trim() ? ` — ${note.trim()}` : "");
+
   function onApply() {
     setError(null);
+    setTouched(true);
+    const reason = reasonText;
+    if (reason === null) return;
     startTransition(async () => {
-      const reason = reasonKey
-        ? t(reasonKey) + (note.trim() ? ` — ${note.trim()}` : "")
-        : note.trim() || undefined;
       // Plan-Zeile (Hotel): Stopp GENAU für diesen Rate-Plan über den
       // gebündelten Restriktions-Weg — alle Bereiche in EINEM Portale-Call.
       const res = ratePlan
@@ -160,7 +184,7 @@ export function StopSellPanel({
             end: isoPlus(e, 1), // exklusiv
             rate_plan_id: ratePlan.id,
             stop_sell: true,
-            ...(reason ? { reason } : {}),
+            reason,
           })),
         )
         : await setStopSell(
@@ -193,8 +217,14 @@ export function StopSellPanel({
     });
   }
 
-  return (
-    <aside className="flex w-full shrink-0 flex-col gap-4 rounded-(--radius) border border-border bg-card p-4 lg:w-80">
+  const panel = (
+    <aside
+      className={
+        variant === "overlay"
+          ? "flex h-full w-full max-w-sm shrink-0 flex-col gap-4 overflow-y-auto border-l border-border bg-card p-4 shadow-2xl"
+          : "flex w-full shrink-0 flex-col gap-4 rounded-(--radius) border border-border bg-card p-4 lg:w-80"
+      }
+    >
       <header className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-col">
           <span className="text-sm font-semibold">{t("selection")}</span>
@@ -267,9 +297,12 @@ export function StopSellPanel({
         </label>
       )}
 
-      {/* Grund (Guesty-Muster) + Notiz */}
+      {/* Grund (Guesty-Muster) + Notiz — beides PFLICHT, siehe REASON_KEYS. */}
       <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-muted-foreground">{t("reasonLabel")}</span>
+        <span className="text-xs font-medium text-muted-foreground">
+          {t("reasonLabel")}{" "}
+          <span aria-hidden className="text-destructive">*</span>
+        </span>
         <div className="flex flex-wrap gap-1">
           {REASON_KEYS.map((key) => (
             <button
@@ -290,8 +323,17 @@ export function StopSellPanel({
         <Input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder={t("noteLabel")}
+          placeholder={
+            reasonKey === "reasonOther" ? t("noteRequiredLabel") : t("noteLabel")
+          }
+          error={touched && noteMissing}
         />
+        {touched && reasonMissing && (
+          <p className="text-xs text-destructive">{t("reasonRequired")}</p>
+        )}
+        {touched && noteMissing && (
+          <p className="text-xs text-destructive">{t("noteRequired")}</p>
+        )}
       </div>
 
       <p className="text-xs text-muted-foreground">
@@ -313,7 +355,10 @@ export function StopSellPanel({
       {error && <p className="text-xs text-destructive">{error}</p>}
 
       <div className="mt-auto flex flex-col gap-2">
-        <Button onClick={onApply} disabled={pending || affected.length === 0}>
+        <Button
+          onClick={onApply}
+          disabled={pending || affected.length === 0 || reasonInvalid}
+        >
           <Icon icon="ph:hand-palm" className="size-4" />
           {t("apply")}
         </Button>
@@ -353,4 +398,22 @@ export function StopSellPanel({
       </div>
     </aside>
   );
+
+  // Overlay-Variante (aus dem Belegungsplan): dasselbe Panel, nur von rechts
+  // eingeblendet — der Kalender hat dort keine Panel-Spalte. Klick auf den
+  // Hintergrund schließt.
+  if (variant === "overlay") {
+    return (
+      <div className="fixed inset-0 z-[70] flex justify-end bg-foreground/40">
+        <button
+          type="button"
+          aria-label={t("close")}
+          onClick={onClose}
+          className="flex-1 cursor-default"
+        />
+        {panel}
+      </div>
+    );
+  }
+  return panel;
 }
