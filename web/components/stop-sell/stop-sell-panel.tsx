@@ -8,6 +8,7 @@
 import { Icon } from "@iconify/react";
 import { useMemo, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
@@ -191,8 +192,27 @@ export function StopSellPanel({
           selection.propertyId, from, isoPlus(to, 1), reason, weekdayArg,
           agencyId || undefined,
         );
-      if (res.ok) onDone();
-      else setError(res.error);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      // Der Server überspringt GEBUCHTE Tage — ein verkaufter Tag lässt sich
+      // nicht stoppen — und meldet das als `skipped_booked`. Diese Zahl wurde
+      // bisher verworfen: ein Stopp über zehn Tage, von denen sieben belegt
+      // waren, meldete stumm Erfolg. Wurde KEIN Tag gestoppt, ist das kein
+      // Erfolg, sondern eine Fehlanzeige (Wurzel 5).
+      const werte = res.data as
+        | { stopped_days?: number; skipped_booked?: number }
+        | undefined;
+      const uebersprungen = werte?.skipped_booked ?? 0;
+      if (werte?.stopped_days === 0 && uebersprungen > 0) {
+        setError(t("skippedBookedAll", { count: uebersprungen }));
+        return;
+      }
+      if (uebersprungen > 0) {
+        toast.warning(t("skippedBooked", { count: uebersprungen }));
+      }
+      onDone();
     });
   }
 

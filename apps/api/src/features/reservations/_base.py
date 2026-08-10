@@ -840,4 +840,11 @@ class ReservationsBase:
             children=int(r.get("children") or 0),
             checked_in_at=r.get("checked_in_at"),
             checked_out_at=r.get("checked_out_at"),
+            # Eigentümer-Aufenthalt (0241): OHNE dieses Feld fiel die Antwort auf
+            # den Standardwert False zurück, und der Kalender zeichnete den
+            # Aufenthalt als normale Buchung — mit dem Kanal aus `channel`
+            # ('direct'), also als „Direkt". Er sah damit aus wie eigener
+            # Vertrieb und zählte für den Betrachter als Umsatzbuchung, obwohl
+            # er per CHECK keinen Betrag tragen kann.
+            is_owner_stay=bool(r.get("is_owner_stay")),
         )

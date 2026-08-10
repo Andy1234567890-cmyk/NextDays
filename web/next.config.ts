@@ -7,6 +7,13 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Ausgabeverzeichnis überschreibbar (NEXT_DIST_DIR). `next build` löscht und
+  // schreibt sein Zielverzeichnis neu — läuft ein Build gegen dasselbe `.next`,
+  // in dem der Dev-Server des Nutzers arbeitet, verliert dieser mitten im
+  // Betrieb seine Dateien (ENOENT auf routes-manifest.json, jede Seite 500).
+  // Ein Prüf-Build vor dem Commit setzt deshalb ein eigenes Verzeichnis; ohne
+  // die Variable bleibt es beim Standard `.next` (Docker/CI unverändert).
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   // Schlanker, eigenständiger Server-Output für den Docker-Runtime-Stage
   // (kopiert nur die wirklich benötigten Dateien + node_modules-Teilmenge).
   output: "standalone",

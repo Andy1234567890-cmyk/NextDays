@@ -416,7 +416,9 @@
     "cancel": "Cancel",
     "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
     "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen."
+    "reasonRequired": "Bitte einen Grund wählen.",
+    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
+    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
   },
   "inbox": {
     "title": "Inbox",
@@ -5860,6 +5862,7 @@
       "revenue": "Omsättning",
       "stopSellClear": "Stop-Sell aufheben",
       "stopSellClearing": "Hebe auf…",
+      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
       "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
     },

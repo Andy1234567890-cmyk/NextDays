@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -13,14 +17,34 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./*"],
-      "@tasko/ui": ["./vendor/tasko-ui/index.ts"],
-      "@tasko/ui/cn": ["./vendor/tasko-ui/lib/cn.ts"],
-      "@tasko/ui/*": ["./vendor/tasko-ui/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@tasko/ui": [
+        "./vendor/tasko-ui/index.ts"
+      ],
+      "@tasko/ui/cn": [
+        "./vendor/tasko-ui/lib/cn.ts"
+      ],
+      "@tasko/ui/*": [
+        "./vendor/tasko-ui/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "next-env.d.ts",
+    "/private/tmp/claude-501/-Users-andystaudinger-NextDays/026343b6-75fe-49b7-88e1-74b49b3c3c20/scratchpad/next-build/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

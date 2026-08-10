@@ -193,7 +193,8 @@ export async function clearStopSell(
   end: string,
   weekdays?: number[],
   includePortal?: boolean,
-): Promise<Result<{ status: string }>> {
+  includeRatePlans?: boolean,
+): Promise<Result<{ status: string; cleared_days?: number }>> {
   return call("/calendar/stop-sell/clear", {
     method: "POST",
     body: {
@@ -201,6 +202,7 @@ export async function clearStopSell(
       range: { start, end },
       weekdays: weekdays ?? null,
       include_portal: includePortal ?? false,
+      include_rate_plans: includeRatePlans ?? false,
     },
   });
 }

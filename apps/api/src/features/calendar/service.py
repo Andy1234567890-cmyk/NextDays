@@ -19,6 +19,7 @@ from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.einheiten_verfuegbar import freie_einheiten_spannen
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import fetch_all_rows
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.jobs.queue import try_enqueue_ari
 
@@ -199,7 +200,30 @@ class CalendarService:
         """Tagesliste aus availability-Zeilen + effektiven Preisen bauen. Eine
         Quelle für Einzel- (get_availability) und Batch-Pfad (get_board), damit
         beide identische DayAvailability liefern."""
-        by_date = {r["date"]: r for r in rows}
+        # Seit dem Einheiten-Modell (0266) liegt je Tag EINE ZEILE JE EINHEIT
+        # vor. Ein blosses Dictionary behielte davon die zuletzt gelesene —
+        # welche das ist, bestimmt die Reihenfolge, die PostgREST ohne `order`
+        # zufällig liefert. Ein Typ mit fünf Einheiten zeigte denselben Tag
+        # deshalb mal gesperrt, mal frei (Wurzel 4: kein Zufallswert).
+        #
+        # Der Kalender zeigt EINE Zeile je Objekt, also braucht er einen
+        # deterministischen Vorrang: der restriktivste Zustand gewinnt. Eine
+        # gebuchte Einheit macht den Tag „gebucht", eine gesperrte „gesperrt" —
+        # nur wenn ALLE Einheiten offen sind, ist der Tag offen. Die tatsächlich
+        # freie Stückzahl geht ohnehin getrennt an die Portale
+        # (`freie_einheiten_spannen`); hier geht es allein um die Anzeige.
+        vorrang = {
+            AvailabilityStatus.booked.value: 3,
+            AvailabilityStatus.blocked.value: 2,
+            AvailabilityStatus.open.value: 1,
+        }
+        by_date: dict[str, dict] = {}
+        for r in rows:
+            vorhanden = by_date.get(r["date"])
+            if vorhanden is None or vorrang.get(r["status"], 0) > vorrang.get(
+                vorhanden["status"], 0
+            ):
+                by_date[r["date"]] = r
         result: list[DayAvailability] = []
         for day in rng.nights():
             key = day.isoformat()
@@ -271,15 +295,25 @@ class CalendarService:
 
         start_iso, end_iso = rng.start.isoformat(), rng.end.isoformat()
         # 1 Query: availability aller Objekte im Zeitraum.
-        avail_rows = (
+        # PAGINIERT (Wurzel 4/5): PostgREST cappt jede Antwort bei 1000 Zeilen.
+        # Der Kalender fragt 19 Objekte × 120 Tage = 2280 Zeilen an — die Antwort
+        # brach also nach 1000 ab, und ALLES danach fehlte lautlos. Live
+        # beobachtet: eine gesetzte Sperre stand korrekt in der Datenbank, kam
+        # aber nie in der Oberfläche an, weil ihre Zeilen jenseits des Caps
+        # lagen. Kein Fehler, keine Warnung — die fehlenden Tage wurden schlicht
+        # als „offen" ergänzt, der Kalender zeigte verkäuflich, was gesperrt war.
+        # `fetch_all_rows` verlangt eine stabile Sortierung, sonst kann die
+        # Seitenbildung Zeilen doppeln oder überspringen.
+        avail_rows = fetch_all_rows(
             self._db()
             .table("availability")
             .select("property_id,date,status,source,closed_to_arrival,closed_to_departure")
             .in_("property_id", pids)
             .gte("date", start_iso)
             .lt("date", end_iso)
-            .execute()
-        ).data or []
+            .order("property_id")
+            .order("date")
+        )
         avail_by_pid: dict[str, list[dict]] = {}
         for r in avail_rows:
             avail_by_pid.setdefault(r["property_id"], []).append(r)
@@ -338,7 +372,9 @@ class CalendarService:
     ) -> dict[str, list[StopSellDay]]:
         """Stop-Sells aller Objekte im Zeitraum (eine `.in_()`-Query) inkl.
         travel_agencies-Name fürs Balken-Label — gruppiert nach property_id."""
-        rows = (
+        # Paginiert wie die Verfügbarkeit: bei vielen Objekten × langem Zeitraum
+        # reißt der 1000-Zeilen-Cap sonst die späteren Stopps ab.
+        rows = fetch_all_rows(
             self._db()
             .table("stop_sell")
             .select(
@@ -348,9 +384,9 @@ class CalendarService:
             .in_("property_id", property_ids)
             .gte("date", rng.start.isoformat())
             .lt("date", rng.end.isoformat())
+            .order("property_id")
             .order("date")
-            .execute()
-        ).data or []
+        )
         out: dict[str, list[StopSellDay]] = {}
         for row in rows:
             agency = row.pop("travel_agencies", None) or {}
@@ -818,30 +854,38 @@ class CalendarService:
         weekdays: list[int] | None = None,
         *,
         include_portal: bool = False,
-    ) -> None:
+        include_rate_plans: bool = False,
+    ) -> dict[str, int]:
         """Verkaufsstopp aufheben. Standard: nur manuelle Stops — Channex-Stops
         (source=channex) bleiben, die spiegeln den OTA-Stand und werden per Import
         gepflegt. Mit include_portal=True werden AUCH Portal-Stops entfernt (für
         versehentlich/über einen Test gesetzte Stops); die Tage werden dann auch an
         den OTAs geöffnet. An Channex wird stop_sell=false NUR für Tage gepusht, die
-        danach wirklich keinen Stop mehr haben (sonst würden OTA-Stops geöffnet)."""
+        danach wirklich keinen Stop mehr haben (sonst würden OTA-Stops geöffnet).
+
+        `include_rate_plans` hebt zusätzlich die plan-genauen Stopps desselben
+        Tages auf. Der Belegungsplan BRAUCHT das: er zeigt eine Zeile je OBJEKT
+        und kennt keine Rate-Pläne — sein Balken steht auch dann da, wenn der
+        Stopp an einem Plan hängt. Ohne das Flag lief der Klick dort ins Leere
+        (der Filter unten warf die Zeile weg), der Balken blieb stehen, und es
+        sah aus, als täte der Knopf nichts. Für die plan-genaue Hotel-Ansicht
+        bleibt der Standard `False`, damit das Aufheben eines Objekt-Stopps
+        nicht die Stopps einzelner Raten mitreißt (Wurzel 1)."""
         self._require_tenant_property(tenant_id, property_id)
         wanted = [d for d in rng.nights() if not weekdays or d.weekday() in weekdays]
         if not wanted:
-            return
+            return {"cleared_days": 0}
         query = (
-            self._db()
-            .table("stop_sell")
-            .delete()
-            .eq("property_id", property_id)
+            self._db().table("stop_sell").delete().eq("property_id", property_id)
+        )
+        if not include_rate_plans:
             # NUR die Objekt-Ebene (Wurzel 1): `set_stop_sell` schreibt bewusst
             # ausschließlich Zeilen mit rate_plan_id IS NULL. Ohne diesen Filter
             # riss das Aufheben eines Objekt-Stopps alle plan-genauen Hotel-
             # Stopps desselben Tages mit (über bulk_restrictions gesetzt) und
             # pushte sie zusätzlich als stop_sell=false an die OTAs — die
             # gestoppte Rate war wieder verkäuflich, ohne Weg zurück.
-            .is_("rate_plan_id", "null")
-        )
+            query = query.is_("rate_plan_id", "null")
         # Standard: nur manuelle Stops löschen. include_portal: auch Channex/Portal.
         if not include_portal:
             query = query.eq("source", "manual")
@@ -851,7 +895,12 @@ class CalendarService:
             query = query.gte("date", rng.start.isoformat()).lt(
                 "date", rng.end.isoformat()
             )
-        query.execute()
+        # Anzahl der WIRKLICH gelöschten Zeilen — sie geht an den Aufrufer
+        # zurück. Ein DELETE, der nichts trifft, ist für PostgREST kein Fehler:
+        # die Route meldete deshalb „ok", während der Balken im Kalender stehen
+        # blieb (live beobachtet). Ohne diese Zahl kann die Oberfläche „nichts
+        # gefunden" nicht von „aufgehoben" unterscheiden (Wurzel 5).
+        geloescht = len(query.execute().data or [])
         # Verbleibende Stops (z. B. source=channex) dürfen nicht geöffnet werden.
         remaining = {
             row["date"]
@@ -879,7 +928,12 @@ class CalendarService:
             merge_day_ranges(open_days, end_exclusive=False),
             stop_sell=False,
         )
-        log.info("calendar_stop_sell_cleared", property_id=property_id)
+        log.info(
+            "calendar_stop_sell_cleared",
+            property_id=property_id,
+            geloescht=geloescht,
+        )
+        return {"cleared_days": geloescht}
 
     def reset_all_stop_sell(
         self, tenant_id: str, property_id: str | None = None

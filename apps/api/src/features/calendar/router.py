@@ -227,13 +227,16 @@ def clear_stop_sell(
     ctx: Annotated[
         CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
     ],
-) -> dict[str, str]:
+) -> dict[str, str | int]:
     try:
-        service.clear_stop_sell(
+        # `cleared_days` geht bewusst mit raus: ein Aufruf, der nichts findet,
+        # ist kein Fehler, darf sich aber auch nicht wie ein Erfolg anfühlen.
+        ergebnis = service.clear_stop_sell(
             ctx.tenant_id, req.property_id, req.range, req.weekdays,
             include_portal=req.include_portal,
+            include_rate_plans=req.include_rate_plans,
         )
-        return {"status": "ok"}
+        return {"status": "ok", **ergebnis}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

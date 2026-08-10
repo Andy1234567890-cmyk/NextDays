@@ -90,6 +90,13 @@ class _Query:
     def order(self, *_a, **_k) -> "_Query":
         return self
 
+    def range(self, *_a, **_k) -> "_Query":
+        """`fetch_all_rows` blättert mit .range() über den 1000-Zeilen-Cap
+        hinweg. Der Doppelgänger hält seine Zeilen ohnehin komplett im
+        Speicher — er gibt sie in EINER Seite zurück, und weil die kleiner als
+        die Seitengröße ist, endet die Schleife nach dem ersten Durchlauf."""
+        return self
+
     def limit(self, *_a, **_k) -> "_Query":
         return self
 

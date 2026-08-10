@@ -499,6 +499,11 @@ class WritesMixin(ReservationsBase):
             currency=(row.get("currency") or "") if mask.amounts else "",
             ota_name=mask.source_value(row.get("ota_name")),
             external_ref=row.get("external_ref"),
+            # Wie in `_base._row`: ohne dieses Feld meldet die Antwort direkt
+            # nach dem Anlegen einen Eigentümer-Aufenthalt als normale Buchung
+            # zurück, und die Oberfläche zeichnet ihn bis zum nächsten
+            # Vollreload als „Direkt".
+            is_owner_stay=bool(row.get("is_owner_stay")),
         )
 
     def _resolve_rate_plan(

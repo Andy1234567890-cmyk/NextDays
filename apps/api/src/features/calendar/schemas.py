@@ -196,6 +196,11 @@ class StopSellClearRequest(BaseModel):
     # Für versehentlich/über einen Test gesetzte Stops. Öffnet die Tage dann auch
     # an den OTAs (stop_sell=false-Push) — bewusst, daher opt-in.
     include_portal: bool = False
+    # include_rate_plans: zusätzlich die plan-genauen Stopps desselben Tages
+    # aufheben. Der Belegungsplan zeigt eine Zeile je OBJEKT und kennt keine
+    # Rate-Pläne — dort MUSS das an, sonst löscht der Klick die Zeile nicht, auf
+    # die der Nutzer zeigt. Die plan-genaue Ansicht lässt es aus (Wurzel 1).
+    include_rate_plans: bool = False
 
     @model_validator(mode="after")
     def _check_weekdays(self) -> "StopSellClearRequest":

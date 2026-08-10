@@ -484,12 +484,16 @@ function segmentLabel(
   channelLabel: (s: AvailabilitySource) => string,
 ): string {
   if (hasStopSell(seg.status)) {
-    // Adressat sichtbar machen: Reisebüro-Name (z. B. TUI), sonst Herkunft.
+    // Adressat sichtbar machen: Reisebüro-Name (z. B. TUI), sonst Reichweite.
+    //
+    // Der Stopp gilt IMMER für alle Kanäle — die Vorgabe kommt von uns, die
+    // Portale führen sie nur aus. `source='channex'` heißt nicht „das Portal
+    // wollte das", sondern nur, dass der Import diese Zeile aus dem Feed
+    // zurückgeschrieben hat (`bookings_sync.py:1991`). Das frühere Label „OTA"
+    // behauptete eine fremde Entscheidung und war der Grund, warum das
+    // Aufheben gesperrt schien.
     const who =
-      seg.stopSell?.agency_name ||
-      (seg.stopSell?.source === "channex"
-        ? t("calendarBoard.stopSellOta")
-        : t("calendarBoard.stopSellAllChannels"));
+      seg.stopSell?.agency_name || t("calendarBoard.stopSellAllChannels");
     // Liegt zusätzlich eine Sperre darauf, führt das Label mit BEIDEM — sonst
     // liest sich der Balken wie ein reiner Stop-Sell (Tag wäre noch verfügbar).
     return [statusLabels(t)[seg.status], who, seg.stopSell?.reason]
@@ -1333,6 +1337,9 @@ export function CalendarBoard({
         const stops: StopSellDay[] = it?.stop_sell ?? [];
         return [p.id, days, stops] as const;
       });
+      // Diagnose (nur Entwicklung): was der Server WIRKLICH als gesperrt sendet.
+      // Zusammen mit der [SPERRE]-Ausgabe beim Zeichnen zeigt das, ob der Status
+      // schon in der Antwort fehlt oder erst danach verloren geht.
       // Merge-Helfer: pro State-Map die neuen Tage einspielen (replace = ersetzen).
       const mergeInto = <V,>(
         prev: Record<string, Record<string, V>>,
@@ -1599,48 +1606,101 @@ export function CalendarBoard({
     setSaving(true);
     const res = await blockRange(sel.pid, s, e);
     setSaving(false);
-    if (res.ok) {
-      setSel(null);
-      setMenuAt(null);
-    } else {
+    if (!res.ok) {
       toast.error(res.error);
+      return;
     }
+    // Eigene Änderung SOFORT anwenden, statt allein auf das availability-Abo zu
+    // warten. Eine Sperre schreibt seit dem Einheiten-Modell (0266) EINE ZEILE
+    // JE EINHEIT — das Abo bekommt also n Ereignisse für denselben Tag und
+    // setzt sie nacheinander. Bleibt eines aus oder kommt es verspätet, blieb
+    // der Tag hier auf „frei" stehen, während die Datenbank längst `blocked`
+    // sagte: die Sperre war gesetzt und trotzdem unsichtbar (live beobachtet).
+    // Das Abo bestätigt/korrigiert diesen Stand danach idempotent.
+    const nights: string[] = [];
+    for (let i = lo; i <= hi; i += 1) nights.push(key(addDays(start, i)));
+    setAvail((prev) => {
+      const day = { ...(prev[sel.pid] ?? {}) };
+      for (const dk of nights) day[dk] = "blocked";
+      return { ...prev, [sel.pid]: day };
+    });
+    setSources((prev) => {
+      const day = { ...(prev[sel.pid] ?? {}) };
+      for (const dk of nights) day[dk] = "manual";
+      return { ...prev, [sel.pid]: day };
+    });
+    setSel(null);
+    setMenuAt(null);
   }, [sel, start]);
 
   // Geklickte manuelle Sperre aufheben (unblockRange, gibt frei gewordene Tage
-  // an Channex zurück). Kein load(): dasselbe availability-Abo pflegt die Tage
-  // (DELETE → Tag fällt auf „open" zurück).
+  // an Channex zurück). Der Gegenzustand wird — wie beim Sperren — sofort
+  // angewendet: das DELETE trifft eine Zeile JE EINHEIT, und auf n einzelne
+  // Abo-Ereignisse zu warten hieße, den Balken bis zum letzten stehen zu lassen.
   const confirmUnblock = useCallback(async () => {
     if (!unblockAt) return;
     setSaving(true);
     const res = await unblockRange(unblockAt.pid, unblockAt.start, unblockAt.end);
     setSaving(false);
-    if (res.ok) {
-      setUnblockAt(null);
-    } else {
+    if (!res.ok) {
       toast.error(res.error);
+      return;
     }
+    setAvail((prev) => {
+      const day = { ...(prev[unblockAt.pid] ?? {}) };
+      // `end` ist exklusiv — der letzte Tag der Sperre ist end-1.
+      for (
+        let d = new Date(`${unblockAt.start}T00:00:00`);
+        key(d) < unblockAt.end;
+        d = addDays(d, 1)
+      ) {
+        delete day[key(d)];
+      }
+      return { ...prev, [unblockAt.pid]: day };
+    });
+    setUnblockAt(null);
   }, [unblockAt]);
 
   // Stop-Sell eines Balkens aufheben (Rechtsklick → Kontextmenü). Läuft über den
-  // VORHANDENEN Weg `clearStopSell` (derselbe, den das Stop-Sell-Panel nutzt) —
-  // kein neuer, ungeprüfter Aufruf. include_portal bleibt bewusst false: der
-  // Backend-Weg löscht damit ausschließlich `source='manual'`, Portal-Stopps
-  // bleiben stehen. Genau deshalb bietet das Menü den Eintrag bei einem
-  // Portal-Stopp gar nicht erst an (siehe Rendering) — sonst behauptete die
-  // Oberfläche eine Aufhebung, die beim Portal nie stattfand.
+  // VORHANDENEN Weg `clearStopSell` (derselbe, den das Stop-Sell-Panel nutzt).
+  //
+  // `include_portal` ist IMMER true, und das ist kein Vorschlaghammer: Der
+  // Betrieb entscheidet über seine Verfügbarkeit, nicht das Portal. Ein
+  // `source='channex'`-Stopp ist fast nie eine fremde Entscheidung, sondern
+  // unser eigener Stopp, den der Import aus dem Channex-Feed zurückgespiegelt
+  // hat (`bookings_sync.py:1991`) — die Herkunftsangabe beschreibt den WEG,
+  // über den die Zeile zu uns kam, nicht wer sie wollte. Ohne das Flag löscht
+  // der Backend-Weg nur `source='manual'`, der Klick tat sichtbar nichts, und
+  // der Balken blieb stehen.
+  //
+  // Der Backend-Weg pusht `stop_sell=false` NUR für Tage, die danach wirklich
+  // keinen Stopp mehr tragen (plan-genaue Hotel-Stopps bleiben unberührt) —
+  // die Tage werden also auch an den OTAs wieder geöffnet.
   const confirmClearStopSell = useCallback(async () => {
-    if (!barMenu || barMenu.stopSellSource !== "manual") return;
+    if (!barMenu) return;
     setSaving(true);
-    const res = await clearStopSell(barMenu.pid, barMenu.start, barMenu.end);
+    // `include_rate_plans` ist hier ebenfalls immer an: Der Belegungsplan zeigt
+    // eine Zeile je OBJEKT und kennt keine Rate-Pläne. Sein Balken steht auch
+    // dann da, wenn der Stopp an einem Plan hängt — ohne das Flag warf der
+    // Server genau diese Zeile weg und der Klick blieb wirkungslos.
+    const res = await clearStopSell(
+      barMenu.pid, barMenu.start, barMenu.end, undefined, true, true,
+    );
     setSaving(false);
-    if (res.ok) {
-      setBarMenu(null);
-      // Das stop_sell-Abo (Vollreload-Modus) zieht die Zellen nach.
-    } else {
+    if (!res.ok) {
       toast.error(res.error);
+      return;
     }
-  }, [barMenu]);
+    // Ein Aufruf, der nichts gefunden hat, darf sich nicht wie ein Erfolg
+    // anfühlen: vorher meldete der Server „ok", während der Balken stehen
+    // blieb, und der Nutzer klickte ins Leere (Wurzel 5).
+    if (res.data?.cleared_days === 0) {
+      toast.error(t("board.stopSellClearNothing"));
+      return;
+    }
+    setBarMenu(null);
+    // Das stop_sell-Abo (Vollreload-Modus) zieht die Zellen nach.
+  }, [barMenu, t]);
 
   // ◀/▶: im „Monat"-Fenster echte KALENDERMONATE springen (auf den 1. des Vor-/
   // Folgemonats), sonst um den Granularitäts-Schritt. Der 28-Tage-Sprung ließ den
@@ -2054,6 +2114,9 @@ export function CalendarBoard({
                   resList.find((r) => r.currency)?.currency ??
                   null;
                 const segs = toSegments(statusMap, sourceMap, resMap, dates, stopMap);
+                // Diagnose (nur Entwicklung): zeigt je Objekt, welche Tage der
+                // Server als gesperrt liefert und ob daraus ein Balken wurde.
+                // Entfernen, sobald die Sperr-Anzeige belegt funktioniert.
                 return (
                   <div key={p.id} data-row-pid={p.id} className="flex border-b last:border-b-0">
                     {/* Objektspalte (eigene Komponente, sticky links) */}
@@ -2226,23 +2289,38 @@ export function CalendarBoard({
                         const dragging = !!barDrag;
                         const isThisDragged =
                           barDrag?.res.id === seg.reservation?.id && !!seg.reservation;
-                        // Halbtags-Logik (Hotel-Standard): ein Buchungsbalken beginnt
-                        // am Anreisetag erst zur Tagesmitte (Check-in nachmittags) und
-                        // reicht am Abreisetag bis zur Tagesmitte (Check-out vormittags).
-                        // So teilen sich ab- und anreisender Gast denselben Wechseltag,
-                        // ohne dass die Balken wie eine Doppelbuchung kollidieren.
-                        // seg.span = belegte Nächte [check_in .. check_out); der Balken
-                        // läuft daher VORNE eine halbe Spalte später los (Anreisemitte)
-                        // und HINTEN eine halbe Spalte weiter (in den Abreisetag bis zu
-                        // dessen Mitte). Nur für Buchungen, deren echte Kante im Fenster
-                        // liegt (am Fensterrand abgeschnitten → volle Kante).
+                        // Halbtags-Logik (Hotel-Standard) — gilt für JEDEN Balken,
+                        // nicht nur für Buchungen: der Tag gehört morgens noch der
+                        // Abreise und ab nachmittags der Anreise. Ein Balken beginnt
+                        // deshalb zur Tagesmitte und läuft am letzten Tag bis zur
+                        // Tagesmitte aus. So teilen sich zwei aufeinanderfolgende
+                        // Belegungen den Wechseltag, statt sich zu überlagern.
+                        //
+                        // Früher galt das NUR für Buchungen. Eine Sperre direkt nach
+                        // einer Abreise startete hart am linken Spaltenrand und schob
+                        // sich sichtbar unter den abreisenden Gast — der Wechseltag
+                        // sah aus wie eine Doppelbelegung.
+                        //
+                        // seg.span = belegte Nächte [start .. ende); am Fensterrand
+                        // abgeschnittene Kanten bleiben voll, weil dort die echte
+                        // Kante außerhalb liegt und ein Versatz eine Kante vortäuschte.
                         const firstDayKey = key(dates[0]);
                         const lastDayKey = key(dates[dates.length - 1]);
                         const isBooking = seg.status === "booked" && !!seg.reservation;
-                        const startsAtCheckIn =
-                          isBooking && seg.reservation!.check_in >= firstDayKey;
-                        // Abreisetag = letzte belegte Nacht + 1; sichtbar, solange er
-                        // im Fenster liegt (Segment endet sonst hart am Fensterrand).
+                        // Vorne: echte Kante im Fenster? Bei Buchungen entscheidet das
+                        // Check-in-Datum. Ein Nicht-Buchungs-Balken (Sperre,
+                        // Stop-Sell) bekommt den Versatz NUR, wenn direkt davor eine
+                        // Buchung endet — dort läuft der Buchungsbalken bis zur
+                        // Tagesmitte, und ohne Versatz schöbe sich die Sperre
+                        // sichtbar darunter. Steht davor nichts, beginnt sie bündig:
+                        // ein Versatz ins Leere täuschte eine Anreise vor.
+                        const vortag = dates[seg.start - 1];
+                        const nachAbreise =
+                          !isBooking && !!vortag && !!resMap[key(vortag)];
+                        const startsAtCheckIn = isBooking
+                          ? seg.reservation!.check_in >= firstDayKey
+                          : nachAbreise;
+                        // Hinten: nur Buchungen laufen in den Abreisetag aus.
                         const endsAtCheckOut =
                           isBooking && seg.reservation!.check_out <= lastDayKey;
                         const leftPad = startsAtCheckIn ? HALF_DAY : 0;
@@ -2518,41 +2596,27 @@ export function CalendarBoard({
               </button>
             )}
 
-            {/* Stop-Sell aufheben — NUR bei einem manuell gesetzten Stopp.
-                Ein Portal-Stopp (source=channex) spiegelt den Stand beim Portal;
-                der Backend-Weg löscht ihn ohne include_portal gar nicht. Statt
-                stillschweigend nichts zu tun, steht der Eintrag hier deaktiviert
-                mit Begründung — aufgehoben wird er dort, wo er herkommt. */}
-            {hasStopSell(barMenu.status) &&
-              (barMenu.stopSellSource === "manual" ? (
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={confirmClearStopSell}
-                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent/10 disabled:pointer-events-none disabled:text-muted-foreground/50"
-                >
-                  <Icon icon="ph:prohibit" className="size-4 shrink-0 text-muted-foreground" />
-                  {saving
-                    ? t("board.stopSellClearing")
-                    : t("board.stopSellClear")}
-                </button>
-              ) : (
-                <div className="flex items-start gap-3 px-3 py-2.5 text-sm">
-                  <Icon icon="ph:lock-simple" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  <span className="flex flex-col">
-                    <span className="font-medium text-muted-foreground/70">
-                      {t("board.stopSellClear")}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {t("board.stopSellPortalLocked")}
-                    </span>
-                  </span>
-                </div>
-              ))}
+            {/* Stop-Sell aufheben — für JEDEN Stopp, unabhängig von der
+                Herkunft. Über die eigene Verfügbarkeit entscheidet der Betrieb;
+                `source` sagt nur, über welchen Weg die Zeile hereinkam. */}
+            {hasStopSell(barMenu.status) && (
+              <button
+                type="button"
+                disabled={saving}
+                onClick={confirmClearStopSell}
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent/10 disabled:pointer-events-none disabled:text-muted-foreground/50"
+              >
+                <Icon icon="ph:prohibit" className="size-4 shrink-0 text-muted-foreground" />
+                {saving
+                  ? t("board.stopSellClearing")
+                  : t("board.stopSellClear")}
+              </button>
+            )}
 
-            {/* Grund ändern = neu setzen mit Grund (dasselbe Panel). Nur für
-                eigene Stopps — an einem Portal-Stopp ändert das nichts. */}
-            {hasStopSell(barMenu.status) && barMenu.stopSellSource === "manual" && (
+            {/* Grund ändern = neu setzen mit Grund (dasselbe Panel). Auch für
+                importierte Stopps: das Neusetzen schreibt eine eigene Zeile mit
+                Grund und macht aus dem herkunftslosen Balken einen erklärten. */}
+            {hasStopSell(barMenu.status) && (
               <button
                 type="button"
                 disabled={saving}
