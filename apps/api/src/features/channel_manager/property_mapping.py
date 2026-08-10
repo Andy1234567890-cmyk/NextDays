@@ -556,7 +556,8 @@ class PropertyMappingMixin:
 
         # Channex ist die Quelle der Wahrheit. Bei Ausfall NICHT schließen.
         try:
-            data = self._channex.list_channels().get("data") or []
+            res_channels = self._channex.list_channels()
+            data = res_channels.get("data") or []
         except ChannexError as exc:
             log.warning(
                 "reconcile_channels_list_unreachable",
@@ -567,6 +568,27 @@ class PropertyMappingMixin:
             ch.get("id") or (ch.get("attributes") or {}).get("id")
             for ch in data
         }
+        # FAIL-CLOSED gegen eine unvollständige Liste (Wurzel 5).
+        #
+        # Diese Methode LÖSCHT Verbindungen — sie setzt `channex_channel_id` auf
+        # NULL, und danach steht das Objekt in der Oberfläche auf „nicht
+        # verbunden". Eine zu kurze Liste ist deshalb kein Schönheitsfehler,
+        # sondern Datenverlust: `list_channels()` ging ohne Seitenangabe raus und
+        # lieferte zehn statt fünfzehn Kanäle, worauf vier Objekte geschlossen
+        # wurden, deren Kanäle bei Channex aktiv liefen (live 10.08.2026).
+        #
+        # Die Pagination ist im Client behoben. Hier steht der Riegel dahinter:
+        # Wenn Channex weniger Zeilen liefert, als es selbst als `total` meldet,
+        # ist die Liste NICHT vollständig — dann wird nichts geschlossen. Lieber
+        # eine verwaiste Zeile stehen lassen (der nächste Lauf räumt sie) als
+        # eine lebende Verbindung kappen.
+        gesamt = (res_channels.get("meta") or {}).get("total")
+        if isinstance(gesamt, int) and len(data) < gesamt:
+            log.warning(
+                "reconcile_channels_liste_unvollstaendig",
+                tenant_id=tenant_id, geliefert=len(data), gesamt=gesamt,
+            )
+            return
 
         orphan_ids = [
             row["id"]

@@ -7,7 +7,11 @@ Eckdaten (aus der Channex-Doku):
   - Auth: Header `user-api-key: <KEY>`
   - Body bei POST/PUT immer gewrappt: {"<entity>": {...}}  (z.B. {"property": {...}})
   - Antwort enthält mind. eins von: data | meta | error
-  - Pagination: pagination[page]=…&pagination[limit]=… (max 100)
+  - Pagination: pagination[page]=…&pagination[limit]=… (max 100). PFLICHT bei
+    jeder Collection: ohne Angabe liefert Channex nur ZEHN Zeilen und weist
+    nirgends darauf hin (nur `meta.total` verrät es). Dafür gibt es
+    `_alle_seiten` — neue Listen-Aufrufe gehen darüber, nie über ein blankes
+    `self.get(...)`.
   - Filter: filter[feld]=… / filter[feld][gte|lte|not|gt|lt]=…
   - Rate-Limits (pro Property/Minute): 20 ARI gesamt, je 10 Availability/Restrictions
     → bei Überschreitung HTTP 429; wir warten und versuchen erneut (Backoff).
@@ -525,6 +529,56 @@ class ChannexClient(AirbnbActionsMixin, ListingSettingsMixin):
     def delete(self, path: str, *, params: dict[str, Any] | None = None) -> dict[str, Any]:
         return self._request("DELETE", path, params=params)
 
+    # Channex' Default-Seitengröße ist 10 — auf JEDER Collection. Wer ohne
+    # `pagination[limit]` fragt, bekommt zehn Zeilen und keinen Hinweis darauf,
+    # dass mehr da sind (die Zahl steht nur in `meta.total`, das niemand las).
+    _SEITE = 100
+    _MAX_SEITEN = 50
+
+    def _alle_seiten(
+        self, pfad: str, params: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Eine Channex-Collection VOLLSTÄNDIG lesen.
+
+        Live gemessen am 10.08.2026 lieferten mehrere Aufrufe stillschweigend
+        nur die ersten zehn Zeilen: `channels` 10 von 15, `room_types` 10 von
+        19, `rate_plans` 10 von 64. Kein Anzeigefehler —
+        `reconcile_channel_connections` nimmt die Kanal-Liste als Wahrheit und
+        schließt, was darin fehlt (`channex_channel_id = NULL`). So standen vier
+        Objekte auf „nicht verbunden", obwohl ihre Kanäle aktiv liefen; sortiert
+        wird nach `title`, alle heißen „Booking.com", welche herausfallen ist
+        Zufall. Steht hier EINMAL, damit die nächste Collection den Fehler nicht
+        wiederholt. `meta.total` wird durchgereicht: `len(data) < total` heißt
+        unvollständig → nichts löschen.
+        """
+        basis = dict(params or {})
+        alle: list[dict[str, Any]] = []
+        meta: dict[str, Any] = {}
+        for seite in range(1, self._MAX_SEITEN + 1):
+            res = self._request(
+                "GET",
+                pfad,
+                params={
+                    **basis,
+                    "pagination[page]": seite,
+                    "pagination[limit]": self._SEITE,
+                },
+            )
+            rows = res.get("data")
+            rows = rows if isinstance(rows, list) else []
+            alle.extend(rows)
+            meta = res.get("meta") or meta
+            if len(rows) < self._SEITE:
+                break
+        else:
+            # Deckel erreicht — sichtbar machen statt still abschneiden
+            # (Wurzel 8: jede Obergrenze wird benannt).
+            log.warning(
+                "channex_collection_deckel",
+                pfad=pfad, seiten=self._MAX_SEITEN, gesammelt=len(alle),
+            )
+        return {"data": alle, "meta": meta}
+
     # ----- Groups (je Tenant eine Group im Whitelabel-Konto) ------------------
     def create_group(self, title: str) -> dict[str, Any]:
         """Legt eine Channex-Group an (nur `title` ist Pflicht). Group-ID liegt
@@ -591,8 +645,11 @@ class ChannexClient(AirbnbActionsMixin, ListingSettingsMixin):
         return self.put(f"room_types/{channex_id}", json={"room_type": attributes})
 
     def get_room_types(self, property_id: str) -> dict[str, Any]:
-        """Room-Types einer Property (für den Import). filter[property_id]."""
-        return self.get("room_types", params={"filter[property_id]": property_id})
+        """ALLE Room-Types einer Property (für den Import). filter[property_id].
+        Blättert vollständig — ohne Pagination kamen zehn von neunzehn."""
+        return self._alle_seiten(
+            "room_types", {"filter[property_id]": property_id}
+        )
 
     def delete_room_type(self, channex_id: str, *, force: bool = False) -> dict[str, Any]:
         """Room-Type löschen. Ohne `force` Fehler, wenn an einen Kanal gemappt —
@@ -608,9 +665,12 @@ class ChannexClient(AirbnbActionsMixin, ListingSettingsMixin):
         return self.put(f"rate_plans/{channex_id}", json={"rate_plan": attributes})
 
     def get_rate_plans(self, property_id: str) -> dict[str, Any]:
-        """Rate-Plans einer Property (für den Import). filter[property_id].
-        Bei READ kommt options[].rate als Dezimalstring zurück."""
-        return self.get("rate_plans", params={"filter[property_id]": property_id})
+        """ALLE Rate-Plans einer Property (für den Import). filter[property_id].
+        Bei READ kommt options[].rate als Dezimalstring zurück. Blättert
+        vollständig (ohne Pagination kamen zehn von 64 — siehe _alle_seiten)."""
+        return self._alle_seiten(
+            "rate_plans", {"filter[property_id]": property_id}
+        )
 
     def delete_rate_plan(self, channex_id: str, *, force: bool = False) -> dict[str, Any]:
         """Rate-Plan löschen. Ohne `force` Fehler, wenn an einen Kanal gemappt —
@@ -892,9 +952,11 @@ class ChannexClient(AirbnbActionsMixin, ListingSettingsMixin):
         return self.get("channels/list")
 
     def list_channels(self, *, property_id: str | None = None) -> dict[str, Any]:
-        """Bereits verbundene Kanäle (optional auf eine Property gefiltert)."""
-        params = {"filter[property_id]": property_id} if property_id else None
-        return self.get("channels", params=params)
+        """ALLE verbundenen Kanäle (optional auf eine Property gefiltert)."""
+        return self._alle_seiten(
+            "channels",
+            {"filter[property_id]": property_id} if property_id else {},
+        )
 
     def get_channel(self, channel_id: str) -> dict[str, Any]:
         return self.get(f"channels/{channel_id}")
