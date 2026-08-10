@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Send invitation",
     "portalAccessInvited": "Invitation sent.",
     "portalAccessActive": "Portal access is set up.",
+    "portalAccessResend": "Resend invitation",
+    "portalAccessResendHint": "If the email did not arrive or the link has expired, the invitation can be sent again. The new link is valid for 7 days and points to this environment; the previously sent link stops working.",
+    "portalAccessResent": "Invitation sent again.",
     "commissionNotAgreed": "not agreed",
     "assignableCount": "{count} of {total} selected to add",
     "assignedHeading": "{count, plural, one {# assigned property} other {# assigned properties}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Want a period blocked? Submit a request — the management decides.",
       "blockCta": "Request block",
       "weekdays": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
-      "months": "January,February,March,April,May,June,July,August,September,October,November,December"
+      "months": "January,February,March,April,May,June,July,August,September,October,November,December",
+      "nights": "{count, plural, one {# night} other {# nights}}",
+      "payoutStay": "Payout for stay",
+      "moreUnits": "{count, plural, one {# more unit} other {# more units}}",
+      "unitsBooked": "{booked} of {total} units booked",
+      "bandStart": "Start of the available period",
+      "bandEnd": "End of the available period"
     },
     "services": {
       "title": "Book a service",
@@ -7699,6 +7708,10 @@
       "textInvite": "This invitation link has expired or has already been used. Please contact your business — they can send the invitation again.",
       "textReset": "This link has expired or has already been used. Simply request a new one.",
       "retry": "Request a new link"
+    },
+    "tooMany": {
+      "title": "Too many attempts",
+      "text": "This page was loaded too many times. Please wait a minute and try again with the same link — it is still valid."
     },
     "invite": {
       "title": "Set up your access",

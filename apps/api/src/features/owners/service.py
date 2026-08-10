@@ -498,6 +498,62 @@ class OwnersService:
             einladung_versendet=True,
         )
 
+    def einladung_erneut_senden(self, ctx: AuthContext, owner_id: str) -> None:
+        """Die Zugangs-Einladung noch einmal verschicken.
+
+        Der Fall: der Zugang IST eingerichtet (`owners.user_id` steht), aber die
+        Mail ist nie angekommen oder der Sieben-Tage-Token ist abgelaufen. Ohne
+        diesen Weg bliebe dem Eigentümer nur „Passwort vergessen" — was er nicht
+        findet, weil er das Produkt noch nie gesehen hat.
+
+        Abgrenzung zu `portalzugang_einladen`: dort gibt es noch KEINEN Login,
+        hier gibt es ihn schon. Beide Zustände sind an `owners.user_id`
+        unterscheidbar, und die Oberfläche zeigt je Zustand genau einen Knopf.
+
+        Kein zweiter Mailweg (Wurzel 2/4): der Versand läuft über
+        `AuthService.einladung_erneut_senden` — dieselbe Stelle, die
+        /konto/nutzer benutzt. Dort sitzen Sperrfrist (1 Minute je Konto),
+        Token-Entwertung und die Einladungsvorlage. Ein eigener Versand hier
+        wäre die Kopie, die beim nächsten Sicherheitsfix vergessen würde.
+
+        Scope (Wurzel 3/9): der Eigentümer wird über `_get_row(tenant_id, ...)`
+        geladen — derselbe Helfer und derselbe Scope wie der List-Pfad, 404 bei
+        fremdem Mandanten. Der `user_id` kommt damit aus der GESCOPTEN Zeile,
+        nie aus der Anfrage; ein Aufrufer kann keine fremde Nutzer-ID
+        unterschieben.
+        """
+        # pylint: disable=import-outside-toplevel
+        from src.core.supabase import get_anon_client
+        from src.features.auth.service import AuthError, AuthService
+
+        tenant_id = self._require_tenant(ctx)
+        row = self._get_row(tenant_id, owner_id)
+        user_id = row.get("user_id")
+        if not user_id:
+            # Kein Login = nichts zum erneut Senden. Der richtige Weg ist
+            # `portalzugang_einladen`; hier still einen Zugang anzulegen wäre
+            # eine andere Handlung als die, auf die geklickt wurde.
+            raise OwnerError(
+                "Für diesen Eigentümer gibt es noch keinen Portalzugang.",
+                status_code=409,
+            )
+        if not (row.get("email") or "").strip():
+            raise OwnerError(
+                "Für die Einladung wird eine E-Mail-Adresse gebraucht.",
+                status_code=422,
+            )
+        try:
+            AuthService(
+                anon_client=get_anon_client(), service_client=self._db
+            ).einladung_erneut_senden(ctx, str(user_id))
+        except AuthError as exc:
+            raise OwnerError(exc.message, status_code=exc.status_code) from exc
+        log.info(
+            "owner_einladung_erneut_versendet",
+            tenant_id=tenant_id,
+            owner_id=owner_id,
+        )
+
     def _portalzugang_einrichten(self, ctx: AuthContext, row: dict) -> dict:
         """Login-Nutzer anlegen, einladen und mit dem Eigentümer verknüpfen.
 

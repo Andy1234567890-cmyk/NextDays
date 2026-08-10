@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Trimite invitația",
     "portalAccessInvited": "Invitație trimisă.",
     "portalAccessActive": "Accesul la portal este configurat.",
+    "portalAccessResend": "Retrimite invitația",
+    "portalAccessResendHint": "Dacă e-mailul nu a ajuns sau linkul a expirat, invitația poate fi trimisă din nou. Noul link este valabil 7 zile și duce către acest mediu; linkul trimis anterior încetează să funcționeze.",
+    "portalAccessResent": "Invitația a fost retrimisă.",
     "commissionNotAgreed": "neconvenit",
     "assignableCount": "{count} din {total} selectate pentru adăugare",
     "assignedHeading": "{count, plural, one {# proprietate alocată} few {# proprietăți alocate} other {# de proprietăți alocate}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Vrei să blochezi o perioadă? Trimite o cerere — administrația decide.",
       "blockCta": "Solicită blocare",
       "weekdays": "Lun,Mar,Mie,Joi,Vin,Sâm,Dum",
-      "months": "Ianuarie,Februarie,Martie,Aprilie,Mai,Iunie,Iulie,August,Septembrie,Octombrie,Noiembrie,Decembrie"
+      "months": "Ianuarie,Februarie,Martie,Aprilie,Mai,Iunie,Iulie,August,Septembrie,Octombrie,Noiembrie,Decembrie",
+      "nights": "{count, plural, one {# noapte} few {# nopți} other {# de nopți}}",
+      "payoutStay": "Plată pentru sejur",
+      "moreUnits": "{count, plural, one {# unitate în plus} few {# unități în plus} other {# de unități în plus}}",
+      "unitsBooked": "{booked} din {total} unități ocupate",
+      "bandStart": "Începutul perioadei disponibile",
+      "bandEnd": "Sfârșitul perioadei disponibile"
     },
     "services": {
       "title": "Comandă un serviciu",
@@ -7678,6 +7687,10 @@
       "textInvite": "Acest link de invitație a expirat sau a fost deja folosit. Vă rugăm să contactați unitatea dumneavoastră — invitația poate fi trimisă din nou.",
       "textReset": "Acest link a expirat sau a fost deja folosit. Solicitați pur și simplu unul nou.",
       "retry": "Solicitați un link nou"
+    },
+    "tooMany": {
+      "title": "Prea multe încercări",
+      "text": "Pagina a fost încărcată de prea multe ori. Așteptați un minut și încercați din nou cu același link — rămâne valabil."
     },
     "invite": {
       "title": "Configurați-vă accesul",

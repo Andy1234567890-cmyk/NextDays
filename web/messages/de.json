@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Einladung senden",
     "portalAccessInvited": "Einladung verschickt.",
     "portalAccessActive": "Portalzugang ist eingerichtet.",
+    "portalAccessResend": "Einladung erneut senden",
+    "portalAccessResendHint": "Kam die E-Mail nicht an oder ist der Link abgelaufen, kann die Einladung erneut verschickt werden. Der neue Link gilt 7 Tage und führt auf diese Umgebung; der zuvor verschickte Link wird ungültig.",
+    "portalAccessResent": "Einladung erneut verschickt.",
     "commissionNotAgreed": "nicht vereinbart",
     "assignableCount": "{count} von {total} zum Hinzufügen ausgewählt",
     "assignedHeading": "{count, plural, one {# zugeordnetes Objekt} other {# zugeordnete Objekte}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Einen Zeitraum sperren lassen? Stelle einen Antrag — die Verwaltung entscheidet.",
       "blockCta": "Sperrung beantragen",
       "weekdays": "Mo,Di,Mi,Do,Fr,Sa,So",
-      "months": "Januar,Februar,März,April,Mai,Juni,Juli,August,September,Oktober,November,Dezember"
+      "months": "Januar,Februar,März,April,Mai,Juni,Juli,August,September,Oktober,November,Dezember",
+      "nights": "{count, plural, one {# Nacht} other {# Nächte}}",
+      "payoutStay": "Auszahlung Aufenthalt",
+      "moreUnits": "{count, plural, one {# weitere Einheit} other {# weitere Einheiten}}",
+      "unitsBooked": "{booked} von {total} Einheiten belegt",
+      "bandStart": "Anfang des verfügbaren Zeitraums",
+      "bandEnd": "Ende des verfügbaren Zeitraums"
     },
     "services": {
       "title": "Dienstleistung buchen",
@@ -7699,6 +7708,10 @@
       "textInvite": "Dieser Einladungslink ist abgelaufen oder wurde bereits verwendet. Bitte wende dich an deinen Betrieb — dort kann die Einladung erneut verschickt werden.",
       "textReset": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Fordere einfach einen neuen an.",
       "retry": "Neuen Link anfordern"
+    },
+    "tooMany": {
+      "title": "Zu viele Versuche",
+      "text": "Die Seite wurde zu oft geladen. Warte bitte eine Minute und versuche es dann erneut mit demselben Link — er bleibt gültig."
     },
     "invite": {
       "title": "Zugang einrichten",

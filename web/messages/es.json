@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Enviar invitación",
     "portalAccessInvited": "Invitación enviada.",
     "portalAccessActive": "El acceso al portal está configurado.",
+    "portalAccessResend": "Reenviar invitación",
+    "portalAccessResendHint": "Si el correo no llegó o el enlace caducó, la invitación se puede enviar de nuevo. El nuevo enlace es válido 7 días y lleva a este entorno; el enlace enviado antes deja de funcionar.",
+    "portalAccessResent": "Invitación reenviada.",
     "commissionNotAgreed": "sin acordar",
     "assignableCount": "{count} de {total} seleccionados para añadir",
     "assignedHeading": "{count, plural, one {# alojamiento asignado} other {# alojamientos asignados}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "¿Quieres bloquear un período? Envía una solicitud — la administración decide.",
       "blockCta": "Solicitar bloqueo",
       "weekdays": "Lun,Mar,Mié,Jue,Vie,Sáb,Dom",
-      "months": "Enero,Febrero,Marzo,Abril,Mayo,Junio,Julio,Agosto,Septiembre,Octubre,Noviembre,Diciembre"
+      "months": "Enero,Febrero,Marzo,Abril,Mayo,Junio,Julio,Agosto,Septiembre,Octubre,Noviembre,Diciembre",
+      "nights": "{count, plural, one {# noche} other {# noches}}",
+      "payoutStay": "Pago de la estancia",
+      "moreUnits": "{count, plural, one {# unidad más} other {# unidades más}}",
+      "unitsBooked": "{booked} de {total} unidades ocupadas",
+      "bandStart": "Inicio del período disponible",
+      "bandEnd": "Fin del período disponible"
     },
     "services": {
       "title": "Reservar un servicio",
@@ -7678,6 +7687,10 @@
       "textInvite": "Este enlace de invitación ha caducado o ya se ha utilizado. Póngase en contacto con su empresa: allí pueden enviar la invitación de nuevo.",
       "textReset": "Este enlace ha caducado o ya se ha utilizado. Solicite simplemente uno nuevo.",
       "retry": "Solicitar un enlace nuevo"
+    },
+    "tooMany": {
+      "title": "Demasiados intentos",
+      "text": "La página se ha cargado demasiadas veces. Espera un minuto y vuelve a intentarlo con el mismo enlace: sigue siendo válido."
     },
     "invite": {
       "title": "Configurar su acceso",

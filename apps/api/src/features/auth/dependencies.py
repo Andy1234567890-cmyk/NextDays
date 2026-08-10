@@ -13,7 +13,12 @@ from .granular_permissions import Permission, has_permission, has_pm_access
 from .mfa_service import MfaService
 from .otp_service import OtpService
 from .owner_assignment_service import OwnerAssignmentService
-from .permissions import Capability, has_capability, is_pm_capability
+from .permissions import (
+    Capability,
+    has_capability,
+    is_pm_capability,
+    pm_umbrella_applies,
+)
 from .schemas import UserRole
 from .service import AuthService
 from .staff_assignment_service import StaffAssignmentService
@@ -99,6 +104,11 @@ def require_permission(cap: Capability) -> Callable[..., AuthContext]:
     Rechte-Dialog auch auf Bereiche, die nur an der Rolle hängen (Kontrollzentrum,
     Buchungen, Aufgaben). Nicht-PM-Capabilities bleiben rein rollenbasiert (kein
     DB-Zugriff nötig).
+
+    Das Dach gilt nur für die PMS-Rollen (``pm_umbrella_applies``). Ein ``owner``
+    kann ACCESS_PM_FEATURES konstruktiv nie haben und würde sonst seine einzige
+    PM-Capability (VIEW_CALENDAR) verlieren — das Eigentümer-Portal wäre dicht.
+    Er behält exakt sein Rollen-Set, ohne Zuwachs.
     """
 
     if not is_pm_capability(cap):
@@ -118,13 +128,18 @@ def require_permission(cap: Capability) -> Callable[..., AuthContext]:
         ctx: Annotated[AuthContext, Depends(get_current_user)],
         service: AccountServiceDep,
     ) -> AuthContext:
-        if not has_capability(ctx.role, cap):
+        # Rolle aus der DB (Quelle der Wahrheit, Wurzel 7) — nicht ctx.role aus
+        # dem JWT, das eine entzogene Rolle bis Token-Ablauf weiterträgt. Sie
+        # entscheidet auch, ob das Dach überhaupt gilt: dieselbe Regel wie in
+        # /auth/me (effective_capabilities → pm_umbrella_applies), keine
+        # zweite Kopie.
+        role, stored = service.role_and_permissions(ctx)
+        if not has_capability(role, cap):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Unzureichende Berechtigung.",
             )
-        role, stored = service.role_and_permissions(ctx)
-        if not has_pm_access(role, stored):
+        if pm_umbrella_applies(role) and not has_pm_access(role, stored):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Kein Zugriff auf das PM-Modul.",

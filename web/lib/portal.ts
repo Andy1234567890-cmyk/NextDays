@@ -51,6 +51,37 @@ export async function getOwnerProperties(): Promise<
 
 // --- Belegungskalender (read-only, maskiert) --------------------------------
 
+/**
+ * EINE Buchung, die eine Nacht belegt — eine Zeile je EINHEIT (0265).
+ * Spiegelt apps/api/.../public_portal/schemas.py:PortalNightBooking.
+ *
+ * Seit 0265 führt ein Objekt (= ein Einheiten-TYP) n ≥ 1 Einheiten; dieselbe
+ * Nacht kann daher mehrere Buchungen tragen. Die verdichteten Felder auf
+ * `PortalCalendarDay` (guest_first_name, booking_source) beschreiben nur die
+ * ERSTE davon — wer sie neben der SUMME `owner_payout_per_night` rendert,
+ * ordnet den Gesamtbetrag einem einzelnen Gast zu. Deshalb rendert die UI
+ * je Buchung einen eigenen Chip aus dieser Liste.
+ */
+export type PortalNightBooking = {
+  /** Klammert die Nächte EINES Aufenthalts zusammen (Chip über den Aufenthalt
+   *  statt je Nacht) und ist der Schlüssel für die Aufenthaltssumme. */
+  reservation_id: string;
+  /** Belegte Einheit; `null` = Buchung liegt auf dem Typ als Ganzes
+   *  (Altbestand vor 0265 oder Objekt mit genau einer Einheit). */
+  unit_id: string | null;
+  /** Netto-Auszahlung des Eigentümers für DIESE Buchung in DIESER Nacht.
+   *  `null` = nicht ausweisbar → „—", nie eine 0 (Wurzel 4). */
+  owner_payout_per_night: number | null;
+  /** Währung DIESES Betrags, aus den Daten. Kein €-Fallback. */
+  currency: string | null;
+  /** provision | betrag | naechte — warum kein Betrag ausgewiesen wird. */
+  payout_unknown_reason: string | null;
+  /** NUR der Vorname (zentrale GuestMask, §4.2). */
+  guest_first_name: string | null;
+  /** Buchungsquelle (ota_name, sonst channel) — für Logo und Kanalfarbe. */
+  booking_source: string | null;
+};
+
 export type PortalCalendarDay = {
   date: string; // YYYY-MM-DD
   status: string; // open | booked | blocked
@@ -73,11 +104,20 @@ export type PortalCalendarDay = {
   /** provision | betrag | naechte — warum kein Betrag ausgewiesen wird. */
   owner_payout_unknown_reason: string | null;
   /** NUR der Vorname (zentrale GuestMask). Der volle Name erscheint im
-   *  Eigentümer-Pfad nie (§4.2). */
+   *  Eigentümer-Pfad nie (§4.2). Bei mehreren belegten Einheiten der ERSTE —
+   *  die vollständige Aufstellung steht in `bookings`. */
   guest_first_name: string | null;
   /** Buchungsquelle der Nacht (ota_name, sonst channel) — für das echte
-   *  Portal-Logo aus lib/channel-logos.ts. */
+   *  Portal-Logo aus lib/channel-logos.ts. Ebenfalls nur die ERSTE Buchung. */
   booking_source: string | null;
+  /** Alle Buchungen dieser Nacht, eine je belegter EINHEIT. Leer = keine
+   *  Buchung. Die drei Felder oben sind nur ihre Verdichtung. */
+  bookings: PortalNightBooking[];
+  /** Wie viele Einheiten des Typs an diesem Tag belegt sind. */
+  units_booked: number;
+  /** Wie viele Einheiten der Typ überhaupt führt (property_units). Ohne diese
+   *  Zahl ist `units_booked` nicht einzuordnen. */
+  units_total: number;
 };
 
 export type PortalCalendar = {

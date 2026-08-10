@@ -67,6 +67,29 @@ const TOKEN_SEITEN: Record<string, string> = {
 };
 
 /**
+ * Ist das eine echte Dokument-Navigation — oder nur RSC/Prefetch/Server-Action?
+ *
+ * Der Grund für diese Schranke: der Server-Action-POST des Formulars geht auf
+ * DIESELBE URL zurück (`/passwort-neu?token=…`), also mit Pfad UND Token. Er
+ * sah damit für `tokenSprache` exakt aus wie die Navigation und löste eine
+ * zweite Prüfung am Backend aus. Zusammen mit der Vorab-Prüfung im Formular
+ * waren das drei Treffer auf den Bucket `auth_public` (5/60s/IP) pro
+ * Seitenaufruf — ein Nutzer war nach zwei Aufrufen ausgesperrt und kam nicht
+ * mehr an sein Passwort.
+ *
+ * Fehlt `Sec-Fetch-Dest` (alte Browser), gilt die Anfrage über die
+ * RSC-Negativprobe weiterhin als Dokument: die Sprache lieber einmal zu viel
+ * auflösen als die Seite in der falschen Sprache zeigen — genau der Bug, für
+ * den `tokenSprache` überhaupt existiert.
+ */
+function istDokumentAnfrage(req: NextRequest): boolean {
+  if (req.headers.get("rsc") === "1") return false;
+  if (req.headers.get("next-action")) return false;
+  const ziel = req.headers.get("sec-fetch-dest");
+  return ziel === null || ziel === "document";
+}
+
+/**
  * Sprache des Token-Empfängers beim Backend erfragen (nur Token-Seiten).
  *
  * WARUM IN DER MIDDLEWARE und nicht in der Seite: `i18n/request.ts` läuft, noch
@@ -88,6 +111,8 @@ async function tokenSprache(req: NextRequest): Promise<string | null> {
   if (!pfad) return null;
   const token = req.nextUrl.searchParams.get("token");
   if (!token) return null;
+  // Die Sprache wird EINMAL pro Dokument-Render gebraucht (`i18n/request.ts`).
+  if (!istDokumentAnfrage(req)) return null;
   try {
     const res = await fetch(
       `${BACKEND}/api/v1${pfad}?token=${encodeURIComponent(token)}`,

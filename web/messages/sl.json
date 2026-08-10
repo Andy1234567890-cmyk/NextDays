@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Pošlji vabilo",
     "portalAccessInvited": "Vabilo poslano.",
     "portalAccessActive": "Dostop do portala je nastavljen.",
+    "portalAccessResend": "Znova pošlji vabilo",
+    "portalAccessResendHint": "Če e-pošta ni prispela ali je povezava potekla, lahko vabilo pošljete znova. Nova povezava velja 7 dni in vodi v to okolje; prej poslana povezava preneha veljati.",
+    "portalAccessResent": "Vabilo je bilo znova poslano.",
     "commissionNotAgreed": "ni dogovorjeno",
     "assignableCount": "Izbranih {count} od {total} za dodajanje",
     "assignedHeading": "{count, plural, one {# dodeljen objekt} two {# dodeljena objekta} few {# dodeljeni objekti} other {# dodeljenih objektov}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Želite blokirati obdobje? Oddajte zahtevo — odloča upravljanje.",
       "blockCta": "Zahtevaj blokado",
       "weekdays": "Pon,Tor,Sre,Čet,Pet,Sob,Ned",
-      "months": "Januar,Februar,Marec,April,Maj,Junij,Julij,Avgust,September,Oktober,November,December"
+      "months": "Januar,Februar,Marec,April,Maj,Junij,Julij,Avgust,September,Oktober,November,December",
+      "nights": "{count, plural, one {# noč} two {# noči} few {# noči} other {# noči}}",
+      "payoutStay": "Izplačilo za bivanje",
+      "moreUnits": "{count, plural, one {# dodatna enota} two {# dodatni enoti} few {# dodatne enote} other {# dodatnih enot}}",
+      "unitsBooked": "Zasedenih {booked} od {total} enot",
+      "bandStart": "Začetek razpoložljivega obdobja",
+      "bandEnd": "Konec razpoložljivega obdobja"
     },
     "services": {
       "title": "Naroči storitev",
@@ -7678,6 +7687,10 @@
       "textInvite": "Ta povezava za povabilo je potekla ali je bila že uporabljena. Obrnite se na svoj obrat — tam lahko povabilo pošljejo znova.",
       "textReset": "Ta povezava je potekla ali je bila že uporabljena. Preprosto zahtevajte novo.",
       "retry": "Zahtevaj novo povezavo"
+    },
+    "tooMany": {
+      "title": "Preveč poskusov",
+      "text": "Stran je bila naložena prevečkrat. Počakajte minuto in poskusite znova z isto povezavo — še vedno velja."
     },
     "invite": {
       "title": "Nastavite svoj dostop",

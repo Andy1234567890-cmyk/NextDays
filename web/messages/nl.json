@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Uitnodiging versturen",
     "portalAccessInvited": "Uitnodiging verzonden.",
     "portalAccessActive": "Portaaltoegang is ingesteld.",
+    "portalAccessResend": "Uitnodiging opnieuw versturen",
+    "portalAccessResendHint": "Als de e-mail niet is aangekomen of de link is verlopen, kan de uitnodiging opnieuw worden verstuurd. De nieuwe link is 7 dagen geldig en verwijst naar deze omgeving; de eerder verstuurde link werkt niet meer.",
+    "portalAccessResent": "Uitnodiging opnieuw verstuurd.",
     "commissionNotAgreed": "niet afgesproken",
     "assignableCount": "{count} van {total} geselecteerd om toe te voegen",
     "assignedHeading": "{count, plural, one {# toegewezen object} other {# toegewezen objecten}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Wil je een periode laten blokkeren? Dien een aanvraag in — de beheerder beslist.",
       "blockCta": "Blokkering aanvragen",
       "weekdays": "Ma,Di,Wo,Do,Vr,Za,Zo",
-      "months": "Januari,Februari,Maart,April,Mei,Juni,Juli,Augustus,September,Oktober,November,December"
+      "months": "Januari,Februari,Maart,April,Mei,Juni,Juli,Augustus,September,Oktober,November,December",
+      "nights": "{count, plural, one {# nacht} other {# nachten}}",
+      "payoutStay": "Uitbetaling verblijf",
+      "moreUnits": "{count, plural, one {# extra eenheid} other {# extra eenheden}}",
+      "unitsBooked": "{booked} van {total} eenheden geboekt",
+      "bandStart": "Begin van de beschikbare periode",
+      "bandEnd": "Einde van de beschikbare periode"
     },
     "services": {
       "title": "Dienst boeken",
@@ -7678,6 +7687,10 @@
       "textInvite": "Deze uitnodigingslink is verlopen of al gebruikt. Neem contact op met uw bedrijf — daar kan de uitnodiging opnieuw worden verstuurd.",
       "textReset": "Deze link is verlopen of al gebruikt. Vraag eenvoudig een nieuwe aan.",
       "retry": "Nieuwe link aanvragen"
+    },
+    "tooMany": {
+      "title": "Te veel pogingen",
+      "text": "Deze pagina is te vaak geladen. Wacht een minuut en probeer het opnieuw met dezelfde link — die blijft geldig."
     },
     "invite": {
       "title": "Toegang instellen",

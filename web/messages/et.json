@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Saada kutse",
     "portalAccessInvited": "Kutse saadetud.",
     "portalAccessActive": "Portaali juurdepääs on seadistatud.",
+    "portalAccessResend": "Saada kutse uuesti",
+    "portalAccessResendHint": "Kui e-kiri ei jõudnud kohale või link on aegunud, saab kutse uuesti saata. Uus link kehtib 7 päeva ja viib sellesse keskkonda; varem saadetud link muutub kehtetuks.",
+    "portalAccessResent": "Kutse saadeti uuesti.",
     "commissionNotAgreed": "kokku leppimata",
     "assignableCount": "{count} / {total} valitud lisamiseks",
     "assignedHeading": "{count, plural, one {# määratud objekt} other {# määratud objekti}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Soovid perioodi blokeerida? Esita taotlus — otsustab haldus.",
       "blockCta": "Taotle blokeeringut",
       "weekdays": "E,T,K,N,R,L,P",
-      "months": "Jaanuar,Veebruar,Märts,Aprill,Mai,Juuni,Juuli,August,September,Oktoober,November,Detsember"
+      "months": "Jaanuar,Veebruar,Märts,Aprill,Mai,Juuni,Juuli,August,September,Oktoober,November,Detsember",
+      "nights": "{count, plural, one {# öö} other {# ööd}}",
+      "payoutStay": "Väljamakse peatumise eest",
+      "moreUnits": "{count, plural, one {# üksus veel} other {# üksust veel}}",
+      "unitsBooked": "Hõivatud {booked} / {total} üksust",
+      "bandStart": "Saadaoleva perioodi algus",
+      "bandEnd": "Saadaoleva perioodi lõpp"
     },
     "services": {
       "title": "Telli teenus",
@@ -7678,6 +7687,10 @@
       "textInvite": "See kutselink on aegunud või juba kasutatud. Pöörduge oma ettevõtte poole — seal saab kutse uuesti saata.",
       "textReset": "See link on aegunud või juba kasutatud. Taotlege lihtsalt uus.",
       "retry": "Taotle uut linki"
+    },
+    "tooMany": {
+      "title": "Liiga palju katseid",
+      "text": "Lehte laaditi liiga palju kordi. Oota üks minut ja proovi sama lingiga uuesti — see kehtib endiselt."
     },
     "invite": {
       "title": "Seadistage oma juurdepääs",

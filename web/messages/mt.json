@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Ibgħat stedina",
     "portalAccessInvited": "L-istedina ntbagħtet.",
     "portalAccessActive": "L-aċċess għall-portal huwa ssettjat.",
+    "portalAccessResend": "Erġa' ibgħat l-istedina",
+    "portalAccessResendHint": "Jekk l-email ma waslitx jew il-link skada, l-istedina tista' terġa' tintbagħat. Il-link il-ġdid huwa validu għal 7 ijiem u jwassal għal dan l-ambjent; il-link mibgħut qabel ma jibqax jaħdem.",
+    "portalAccessResent": "L-istedina reġgħet intbagħtet.",
     "commissionNotAgreed": "mhux miftiehem",
     "assignableCount": "{count} minn {total} magħżula biex jiżdiedu",
     "assignedHeading": "{count, plural, one {# proprjetà assenjata} two {# proprjetajiet assenjati} few {# proprjetajiet assenjati} many {# proprjetajiet assenjati} other {# proprjetajiet assenjati}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Trid tibblokka perjodu? Ibgħat talba — il-ġestjoni tiddeċiedi.",
       "blockCta": "Itlob imblukkar",
       "weekdays": "Tn,Tl,Er,Ħa,Ġi,Sib,Ħad",
-      "months": "Jannar,Frar,Marzu,April,Mejju,Ġunju,Lulju,Awwissu,Settembru,Ottubru,Novembru,Diċembru"
+      "months": "Jannar,Frar,Marzu,April,Mejju,Ġunju,Lulju,Awwissu,Settembru,Ottubru,Novembru,Diċembru",
+      "nights": "{count, plural, one {# lejl} other {# iljieli}}",
+      "payoutStay": "Ħlas għaż-żjara",
+      "moreUnits": "{count, plural, one {# unità oħra} other {# unitajiet oħra}}",
+      "unitsBooked": "{booked} minn {total} unitajiet mibgħuta",
+      "bandStart": "Bidu tal-perjodu disponibbli",
+      "bandEnd": "Tmiem tal-perjodu disponibbli"
     },
     "services": {
       "title": "Ibbukkja servizz",
@@ -7678,6 +7687,10 @@
       "textInvite": "Dan il-link tal-istedina skada jew diġà ntuża. Jekk jogħġbok ikkuntattja lin-negozju tiegħek — hemmhekk l-istedina tista' terġa' tintbagħat.",
       "textReset": "Dan il-link skada jew diġà ntuża. Sempliċiment itlob wieħed ġdid.",
       "retry": "Itlob link ġdid"
+    },
+    "tooMany": {
+      "title": "Wisq tentattivi",
+      "text": "Din il-paġna ntgħabbiet wisq drabi. Stenna minuta u erġa' pprova bl-istess link — għadu validu."
     },
     "invite": {
       "title": "Issettja l-aċċess tiegħek",

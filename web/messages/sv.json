@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Skicka inbjudan",
     "portalAccessInvited": "Inbjudan skickad.",
     "portalAccessActive": "Portalåtkomst är skapad.",
+    "portalAccessResend": "Skicka inbjudan igen",
+    "portalAccessResendHint": "Om e-postmeddelandet inte kom fram eller länken har gått ut kan inbjudan skickas igen. Den nya länken gäller i 7 dagar och leder till den här miljön; den tidigare skickade länken slutar fungera.",
+    "portalAccessResent": "Inbjudan har skickats igen.",
     "commissionNotAgreed": "ej avtalat",
     "assignableCount": "{count} av {total} valda att lägga till",
     "assignedHeading": "{count, plural, one {# tilldelat objekt} other {# tilldelade objekt}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Vill du spärra en period? Skicka en förfrågan — förvaltningen beslutar.",
       "blockCta": "Begär spärrning",
       "weekdays": "Mån,Tis,Ons,Tor,Fre,Lör,Sön",
-      "months": "Januari,Februari,Mars,April,Maj,Juni,Juli,Augusti,September,Oktober,November,December"
+      "months": "Januari,Februari,Mars,April,Maj,Juni,Juli,Augusti,September,Oktober,November,December",
+      "nights": "{count, plural, one {# natt} other {# nätter}}",
+      "payoutStay": "Utbetalning för vistelsen",
+      "moreUnits": "{count, plural, one {# enhet till} other {# enheter till}}",
+      "unitsBooked": "{booked} av {total} enheter bokade",
+      "bandStart": "Början på den tillgängliga perioden",
+      "bandEnd": "Slutet på den tillgängliga perioden"
     },
     "services": {
       "title": "Boka en tjänst",
@@ -7678,6 +7687,10 @@
       "textInvite": "Den här inbjudningslänken har gått ut eller har redan använts. Kontakta din verksamhet — där kan inbjudan skickas igen.",
       "textReset": "Den här länken har gått ut eller har redan använts. Begär helt enkelt en ny.",
       "retry": "Begär en ny länk"
+    },
+    "tooMany": {
+      "title": "För många försök",
+      "text": "Sidan har laddats för många gånger. Vänta en minut och försök igen med samma länk — den är fortfarande giltig."
     },
     "invite": {
       "title": "Ställ in din åtkomst",

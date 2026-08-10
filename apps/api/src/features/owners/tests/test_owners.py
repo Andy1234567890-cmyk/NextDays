@@ -504,6 +504,48 @@ def test_nachtraeglicher_portalzugang_fremder_tenant_404() -> None:
     assert exc.value.status_code == 404
 
 
+def test_erneut_senden_ohne_portalzugang_409() -> None:
+    """Ohne Login gibt es nichts erneut zu senden.
+
+    Der Knopf gehört zum Zustand „hat Zugang". Wird er trotzdem auf einen
+    Eigentümer ohne `user_id` abgesetzt (veraltete Seite, direkter Aufruf),
+    ist die richtige Antwort ein klarer Konflikt — NICHT still einen Zugang
+    anzulegen. Das wäre eine andere Handlung als die, auf die geklickt wurde
+    (dafür gibt es `portalzugang_einladen`).
+    """
+    svc = _svc()
+    owner = svc.create(_ctx(), OwnerCreate(name="Ohne Zugang", email="a@example.com"))
+    with pytest.raises(OwnerError) as exc:
+        svc.einladung_erneut_senden(_ctx(), owner.id)
+    assert exc.value.status_code == 409
+
+
+def test_erneut_senden_fremder_tenant_404() -> None:
+    """Gleicher Scope wie der List-Pfad (Wurzel 9).
+
+    Entscheidend ist, dass der 404 kommt, BEVOR irgendetwas mit dem Login
+    passiert: die `user_id` stammt aus der gescopten Zeile, nie aus der
+    Anfrage. Ein Admin eines fremden Mandanten kann damit keine Einladung an
+    ein fremdes Konto auslösen.
+    """
+    svc = _svc({"users": [{"id": "u-own", "tenant_id": "t-1", "role": "owner"}]})
+    owner = svc.create(
+        _ctx(), OwnerCreate(name="A", email="a@example.com", user_id="u-own")
+    )
+    with pytest.raises(OwnerError) as exc:
+        svc.einladung_erneut_senden(_ctx(tenant="t-fremd"), owner.id)
+    assert exc.value.status_code == 404
+
+
+def test_erneut_senden_ohne_email_422() -> None:
+    """Ein Login ohne hinterlegte Adresse hat kein Ziel für die Mail."""
+    svc = _svc({"users": [{"id": "u-own", "tenant_id": "t-1", "role": "owner"}]})
+    owner = svc.create(_ctx(), OwnerCreate(name="A", user_id="u-own"))
+    with pytest.raises(OwnerError) as exc:
+        svc.einladung_erneut_senden(_ctx(), owner.id)
+    assert exc.value.status_code == 422
+
+
 def test_geloeschter_tenant_gibt_409_statt_500() -> None:
     """Ein gültiger Token auf einen gelöschten Mandanten darf keinen 500 werfen.
 

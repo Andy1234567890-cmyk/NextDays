@@ -129,6 +129,39 @@ def test_oeffentliche_token_endpunkte_haben_eigenen_strengen_bucket() -> None:
     assert _select_bucket("/api/v1/auth/login", b)[0] == "auth"
 
 
+def test_einladung_erneut_senden_hat_eigenen_strengen_bucket() -> None:
+    """„Erneut senden" verschickt Mail an FREMDE Adressen — nicht Default.
+
+    Beide Wege (Mitarbeiter unter /konto/nutzer, Eigentümer unter
+    /eigentuemer) landeten sonst im Default-Bucket (300/60): 300 Mails je
+    Minute an fremde Postfächer aus einem einzigen eingeloggten Konto
+    (Wurzel 8). `/auth/invite/{id}/resend` beginnt zudem mit /auth/ und muss
+    VOR dem auth-Bucket greifen.
+    """
+    from src.core.ratelimit_middleware import _Buckets  # noqa: PLC0415
+
+    b = _Buckets(Settings())
+    for pfad in (
+        "/api/v1/auth/invite/u-1/resend",
+        "/api/v1/owners/o-1/portalzugang/erneut-senden",
+    ):
+        bucket, limit, sensibel = _select_bucket(pfad, b)
+        assert bucket == "einladung_resend", pfad
+        # Fail-closed: eine abgewiesene Einladung ist harmlos (der Betreiber
+        # klickt gleich noch einmal), ein ungezählter Mailversand nicht.
+        assert sensibel is True, pfad
+        assert limit.max < b.default.max, pfad
+
+    # Gegenprobe: das ERSTMALIGE Einladen (POST /auth/invite, ohne Slash
+    # dahinter) ist kein Wiederholungsweg und bleibt, wo es war.
+    assert _select_bucket("/api/v1/auth/invite", b)[0] != "einladung_resend"
+    # Gegenprobe: das erstmalige Einrichten des Portalzugangs ebenfalls nicht.
+    assert (
+        _select_bucket("/api/v1/owners/o-1/portalzugang", b)[0]
+        != "einladung_resend"
+    )
+
+
 def test_provider_webhooks_sind_nicht_fail_closed() -> None:
     """KRITISCH (Vorfall 29.07.2026): Eingehende Webhooks duerfen bei einem
     Redis-Ausfall NICHT mit 503 abgewiesen werden.

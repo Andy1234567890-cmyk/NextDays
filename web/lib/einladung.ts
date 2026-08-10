@@ -18,11 +18,18 @@ import { currentToken } from "@/lib/session-token";
  *  wird. Der Server unterscheidet aus Sicherheitsgründen nicht zwischen
  *  „ungültig", „abgelaufen" und „schon benutzt" (das wäre ein Orakel), daher
  *  fasst `ungueltig` alle drei zusammen und die UI nennt sie gemeinsam. */
-export type TokenFehler = "ungueltig" | "schwach" | "fehler";
+export type TokenFehler = "ungueltig" | "schwach" | "fehler" | "zuOft";
 
 export type TokenErgebnis =
   | { ok: true }
   | { ok: false; grund: TokenFehler };
+
+/** Ergebnis der Vorab-Prüfung. `zuOft` ist ein EIGENER Zustand und kein
+ *  „ungültig": der Link kann völlig in Ordnung sein, es wurde nur zu oft
+ *  geladen. Ihn als ungültig auszugeben wäre eine Falschaussage, die den
+ *  Nutzer auf „neuen Link anfordern" schickt — und der neue Link liefe in
+ *  dasselbe Limit (Wurzel 5b: kein plausibel aussehender Ersatzbefund). */
+export type PruefErgebnis = "gueltig" | "ungueltig" | "zuOft";
 
 /** Ordnet den HTTP-Status einem Anzeigezustand zu. Bewusst KEIN Durchreichen
  *  des Server-Textes an die Oberfläche: die Meldungen sind übersetzt (24
@@ -34,6 +41,9 @@ function grundAusFehler(exc: unknown): TokenFehler {
   if ([400, 401, 403, 404, 410].includes(exc.status)) return "ungueltig";
   // 422: Passwortregeln des Servers nicht erfüllt.
   if (exc.status === 422) return "schwach";
+  // 429: Ratelimit `auth_public` (5/60s/IP). Eigener Zweig — vorher lief das in
+  // den generischen Fehler und der Nutzer erfuhr nicht, dass Warten hilft.
+  if (exc.status === 429) return "zuOft";
   return "fehler";
 }
 
@@ -50,11 +60,17 @@ function grundAusFehler(exc: unknown): TokenFehler {
  * erreichbar) gilt hier bewusst als „gültig": dann läuft der Nutzer in das
  * Formular und bekommt beim Absenden die echte Antwort. Ihn wegen einer
  * kurzen Störung auf „Link ungültig" zu schicken wäre eine Falschaussage.
+ *
+ * AUSNAHME davon ist `429`: das ist keine kurze Störung, sondern eine Sperre,
+ * die genau so lange anhält, bis das Fenster abgelaufen ist. Würde sie hier als
+ * „gültig" durchgehen, liefe der Nutzer ins Formular, tippte ein Passwort und
+ * bekäme beim Absenden erneut `429` — mit einem Text, der ihm nicht sagt, dass
+ * Warten hilft. Deshalb ein eigener Rückgabewert.
  */
 export async function tokenPruefen(
   vorgang: "einladung" | "reset",
   token: string,
-): Promise<boolean> {
+): Promise<PruefErgebnis> {
   const pfad =
     vorgang === "einladung"
       ? "/auth/einladung/pruefen"
@@ -63,9 +79,10 @@ export async function tokenPruefen(
     const res = await api<{ gueltig: boolean }>(
       `${pfad}?token=${encodeURIComponent(token)}`,
     );
-    return res.gueltig;
-  } catch {
-    return true; // siehe oben — im Zweifel weiterlaufen lassen
+    return res.gueltig ? "gueltig" : "ungueltig";
+  } catch (exc) {
+    if (exc instanceof ApiError && exc.status === 429) return "zuOft";
+    return "gueltig"; // siehe oben — im Zweifel weiterlaufen lassen
   }
 }
 

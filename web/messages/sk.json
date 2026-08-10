@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Odoslať pozvánku",
     "portalAccessInvited": "Pozvánka odoslaná.",
     "portalAccessActive": "Prístup k portálu je nastavený.",
+    "portalAccessResend": "Odoslať pozvánku znova",
+    "portalAccessResendHint": "Ak e-mail nedorazil alebo odkaz vypršal, pozvánku možno odoslať znova. Nový odkaz platí 7 dní a vedie do tohto prostredia; predtým odoslaný odkaz prestane platiť.",
+    "portalAccessResent": "Pozvánka bola odoslaná znova.",
     "commissionNotAgreed": "nedohodnuté",
     "assignableCount": "Vybraných {count} z {total} na pridanie",
     "assignedHeading": "{count, plural, one {# priradený objekt} few {# priradené objekty} other {# priradených objektov}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Chcete zablokovať obdobie? Podajte žiadosť — rozhoduje správa.",
       "blockCta": "Požiadať o blokovanie",
       "weekdays": "Po,Ut,St,Št,Pi,So,Ne",
-      "months": "Január,Február,Marec,Apríl,Máj,Jún,Júl,August,September,Október,November,December"
+      "months": "Január,Február,Marec,Apríl,Máj,Jún,Júl,August,September,Október,November,December",
+      "nights": "{count, plural, one {# noc} few {# noci} many {# noci} other {# nocí}}",
+      "payoutStay": "Výplata za pobyt",
+      "moreUnits": "{count, plural, one {# ďalšia jednotka} few {# ďalšie jednotky} many {# ďalšej jednotky} other {# ďalších jednotiek}}",
+      "unitsBooked": "Obsadené {booked} z {total} jednotiek",
+      "bandStart": "Začiatok dostupného obdobia",
+      "bandEnd": "Koniec dostupného obdobia"
     },
     "services": {
       "title": "Objednať službu",
@@ -7678,6 +7687,10 @@
       "textInvite": "Tento pozvánkový odkaz vypršal alebo už bol použitý. Obráťte sa prosím na svoju prevádzku — pozvánku tam možno odoslať znova.",
       "textReset": "Tento odkaz vypršal alebo už bol použitý. Jednoducho si vyžiadajte nový.",
       "retry": "Vyžiadať nový odkaz"
+    },
+    "tooMany": {
+      "title": "Príliš veľa pokusov",
+      "text": "Stránka sa načítala príliš veľakrát. Počkajte minútu a skúste to znova s rovnakým odkazom — stále platí."
     },
     "invite": {
       "title": "Nastavte si prístup",

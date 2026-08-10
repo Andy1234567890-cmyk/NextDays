@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Send invitation",
     "portalAccessInvited": "Invitation sendt.",
     "portalAccessActive": "Portaladgang er oprettet.",
+    "portalAccessResend": "Send invitation igen",
+    "portalAccessResendHint": "Hvis e-mailen ikke kom frem, eller linket er udløbet, kan invitationen sendes igen. Det nye link gælder i 7 dage og fører til dette miljø; det tidligere sendte link bliver ugyldigt.",
+    "portalAccessResent": "Invitationen er sendt igen.",
     "commissionNotAgreed": "ikke aftalt",
     "assignableCount": "{count} af {total} valgt til tilføjelse",
     "assignedHeading": "{count, plural, one {# tildelt objekt} other {# tildelte objekter}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Vil du have en periode blokeret? Indsend en anmodning — det er udlejer, der beslutter.",
       "blockCta": "Anmod om blokering",
       "weekdays": "Man,Tir,Ons,Tor,Fre,Lør,Søn",
-      "months": "Januar,Februar,Marts,April,Maj,Juni,Juli,August,September,Oktober,November,December"
+      "months": "Januar,Februar,Marts,April,Maj,Juni,Juli,August,September,Oktober,November,December",
+      "nights": "{count, plural, one {# nat} other {# nætter}}",
+      "payoutStay": "Udbetaling for opholdet",
+      "moreUnits": "{count, plural, one {# enhed mere} other {# enheder mere}}",
+      "unitsBooked": "{booked} af {total} enheder booket",
+      "bandStart": "Starten på den tilgængelige periode",
+      "bandEnd": "Slutningen på den tilgængelige periode"
     },
     "services": {
       "title": "Bestil en ydelse",
@@ -7678,6 +7687,10 @@
       "textInvite": "Dette invitationslink er udløbet eller allerede brugt. Kontakt din virksomhed — de kan sende invitationen igen.",
       "textReset": "Dette link er udløbet eller allerede brugt. Anmod blot om et nyt.",
       "retry": "Anmod om nyt link"
+    },
+    "tooMany": {
+      "title": "For mange forsøg",
+      "text": "Siden er blevet indlæst for mange gange. Vent et minut, og prøv igen med det samme link — det er stadig gyldigt."
     },
     "invite": {
       "title": "Opret din adgang",

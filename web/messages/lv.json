@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Nosūtīt uzaicinājumu",
     "portalAccessInvited": "Uzaicinājums nosūtīts.",
     "portalAccessActive": "Portāla piekļuve ir iestatīta.",
+    "portalAccessResend": "Nosūtīt uzaicinājumu vēlreiz",
+    "portalAccessResendHint": "Ja e-pasts nav pienācis vai saite ir beigusies, uzaicinājumu var nosūtīt vēlreiz. Jaunā saite ir derīga 7 dienas un ved uz šo vidi; iepriekš nosūtītā saite kļūst nederīga.",
+    "portalAccessResent": "Uzaicinājums nosūtīts vēlreiz.",
     "commissionNotAgreed": "nav norunāts",
     "assignableCount": "Pievienošanai atlasīti {count} no {total}",
     "assignedHeading": "{count, plural, zero {# piešķirtu objektu} one {# piešķirts objekts} other {# piešķirti objekti}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Vēlaties bloķēt periodu? Iesniedziet pieprasījumu — lēmumu pieņem pārvaldība.",
       "blockCta": "Pieprasīt bloķējumu",
       "weekdays": "Pr,Ot,Tr,Ce,Pk,Se,Sv",
-      "months": "Janvāris,Februāris,Marts,Aprīlis,Maijs,Jūnijs,Jūlijs,Augusts,Septembris,Oktobris,Novembris,Decembris"
+      "months": "Janvāris,Februāris,Marts,Aprīlis,Maijs,Jūnijs,Jūlijs,Augusts,Septembris,Oktobris,Novembris,Decembris",
+      "nights": "{count, plural, zero {# nakšu} one {# nakts} other {# naktis}}",
+      "payoutStay": "Izmaksa par uzturēšanos",
+      "moreUnits": "{count, plural, zero {vēl # vienību} one {vēl # vienība} other {vēl # vienības}}",
+      "unitsBooked": "Aizņemtas {booked} no {total} vienībām",
+      "bandStart": "Pieejamā perioda sākums",
+      "bandEnd": "Pieejamā perioda beigas"
     },
     "services": {
       "title": "Pasūtīt pakalpojumu",
@@ -7678,6 +7687,10 @@
       "textInvite": "Šī ielūguma saite ir beigusies vai jau izmantota. Lūdzu, sazinieties ar savu uzņēmumu — tur ielūgumu var nosūtīt atkārtoti.",
       "textReset": "Šī saite ir beigusies vai jau izmantota. Vienkārši pieprasiet jaunu.",
       "retry": "Pieprasīt jaunu saiti"
+    },
+    "tooMany": {
+      "title": "Pārāk daudz mēģinājumu",
+      "text": "Lapa tika ielādēta pārāk daudz reižu. Uzgaidiet minūti un mēģiniet vēlreiz ar to pašu saiti — tā joprojām ir derīga."
     },
     "invite": {
       "title": "Iestatiet savu piekļuvi",

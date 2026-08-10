@@ -60,6 +60,7 @@ class _Buckets:
         self.ai = parse_limit(settings.rate_limit_ai)
         self.mfa = parse_limit(settings.rate_limit_mfa)
         self.public_support = parse_limit(settings.rate_limit_public_support)
+        self.einladung_resend = parse_limit(settings.rate_limit_einladung_resend)
 
 
 def _is_exempt(path: str) -> bool:
@@ -117,6 +118,23 @@ _AUTH_PUBLIC_PATHS = (
     "/auth/einladung/annehmen",
     "/auth/passwort-vergessen",
     "/auth/passwort-neu",
+)
+
+# EINGELOGGTE Endpunkte, die eine Einladungsmail an eine FREMDE Adresse
+# auslösen: „erneut senden" für Mitarbeiter (/konto/nutzer) und für Eigentümer
+# (/eigentuemer). Sie standen bis hierher im Default-Bucket (300/60) — für einen
+# Vorgang, der ein fremdes Postfach befüllt, ist das kein Dach (Wurzel 8).
+#
+# Die Sperrfrist je Konto im Dienst (`_RESEND_COOLDOWN`, 1 Minute) bleibt die
+# eigentliche Bremse und deckt den Doppelklick ab; sie hängt aber am ZIELKONTO.
+# Dieser Bucket deckt die andere Achse: EIN Aufrufer, der reihum viele
+# verschiedene Empfänger anschreibt — dagegen hilft keine Sperrfrist je Konto.
+# Sensibel → fail-closed: fällt Redis aus, ist eine abgewiesene Einladung
+# harmlos (der Betreiber klickt gleich noch einmal), ein ungezählter
+# Mailversand an fremde Postfächer nicht.
+_EINLADUNG_RESEND_PATHS = (
+    "/invite/",
+    "/portalzugang/erneut-senden",
 )
 
 # Token-Erneuerung. Eigener Bucket, gekeyt PRO NUTZER statt pro IP (siehe
@@ -198,6 +216,9 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     # Login-Bucket landen. Der erste Treffer gewinnt.
     ("mfa", _MFA_PATHS, "mfa", True),
     ("auth_public", _AUTH_PUBLIC_PATHS, "auth_public", True),
+    # VOR "auth": `/auth/invite/{id}/resend` beginnt mit /auth/ und läge sonst
+    # im Login-Bucket. Der erste Treffer gewinnt.
+    ("einladung_resend", _EINLADUNG_RESEND_PATHS, "einladung_resend", True),
     ("auth", _AUTH_PATHS, "auth", True),
     ("payments", ("/payments/",), "payments", True),
     ("public_support", _PUBLIC_SUPPORT_PATHS, "public_support", True),

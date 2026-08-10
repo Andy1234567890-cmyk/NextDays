@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Pošalji pozivnicu",
     "portalAccessInvited": "Pozivnica poslana.",
     "portalAccessActive": "Pristup portalu je postavljen.",
+    "portalAccessResend": "Ponovno pošalji pozivnicu",
+    "portalAccessResendHint": "Ako e-pošta nije stigla ili je poveznica istekla, pozivnica se može poslati ponovno. Nova poveznica vrijedi 7 dana i vodi u ovo okruženje; prethodno poslana poveznica prestaje vrijediti.",
+    "portalAccessResent": "Pozivnica je ponovno poslana.",
     "commissionNotAgreed": "nije dogovoreno",
     "assignableCount": "Odabrano {count} od {total} za dodavanje",
     "assignedHeading": "{count, plural, one {# dodijeljen objekt} few {# dodijeljena objekta} other {# dodijeljenih objekata}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Želiš blokirati razdoblje? Podnesi zahtjev — odlučuje uprava.",
       "blockCta": "Zatraži blokadu",
       "weekdays": "Pon,Uto,Sri,Čet,Pet,Sub,Ned",
-      "months": "Siječanj,Veljača,Ožujak,Travanj,Svibanj,Lipanj,Srpanj,Kolovoz,Rujan,Listopad,Studeni,Prosinac"
+      "months": "Siječanj,Veljača,Ožujak,Travanj,Svibanj,Lipanj,Srpanj,Kolovoz,Rujan,Listopad,Studeni,Prosinac",
+      "nights": "{count, plural, one {# noć} few {# noći} other {# noći}}",
+      "payoutStay": "Isplata za boravak",
+      "moreUnits": "{count, plural, one {# dodatna jedinica} few {# dodatne jedinice} other {# dodatnih jedinica}}",
+      "unitsBooked": "Zauzeto {booked} od {total} jedinica",
+      "bandStart": "Početak dostupnog razdoblja",
+      "bandEnd": "Kraj dostupnog razdoblja"
     },
     "services": {
       "title": "Naruči uslugu",
@@ -7678,6 +7687,10 @@
       "textInvite": "Ova poveznica pozivnice istekla je ili je već upotrijebljena. Obratite se svojem objektu — ondje se pozivnica može poslati ponovno.",
       "textReset": "Ova poveznica je istekla ili je već upotrijebljena. Jednostavno zatražite novu.",
       "retry": "Zatraži novu poveznicu"
+    },
+    "tooMany": {
+      "title": "Previše pokušaja",
+      "text": "Stranica je učitana previše puta. Pričekajte minutu i pokušajte ponovno s istom poveznicom — i dalje je važeća."
     },
     "invite": {
       "title": "Postavite svoj pristup",

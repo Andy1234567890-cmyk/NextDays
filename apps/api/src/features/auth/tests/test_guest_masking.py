@@ -4,6 +4,13 @@ from src.features.auth.granular_permissions import (
     effective_permissions,
 )
 from src.features.auth.guest_masking import mask_for
+from src.features.auth.permissions import (
+    Capability,
+    capabilities_for,
+    effective_capabilities,
+    is_pm_capability,
+    pm_umbrella_applies,
+)
 from src.features.auth.schemas import UserRole
 
 
@@ -81,3 +88,73 @@ def test_pm_umbrella_admin_always_full() -> None:
     eff = effective_permissions(UserRole.admin, [])
     assert Permission.PM_CHAT in eff
     assert Permission.ACCESS_PM_FEATURES in eff
+
+
+# --- PM-Dach auf Capability-Ebene: gilt NICHT für owner ---------------------
+# Der Eigentümer sah im Portal „Kein Zugriff auf das PM-Modul." und eine leere
+# Objektliste, weil VIEW_CALENDAR eine PM-Capability ist und das Dach
+# (ACCESS_PM_FEATURES) auch auf ihn angewandt wurde. Er kann das Dach
+# konstruktiv nie besitzen (_OWNER enthält es bewusst nicht), also entzog ihm
+# die Brücke seine einzige PM-Capability. Das Dach gilt nur für die PMS-Rollen.
+
+def test_pm_dach_gilt_nicht_fuer_owner() -> None:
+    # Ohne Dach behält der Eigentümer VIEW_CALENDAR — sonst ist /portal dicht.
+    caps = effective_capabilities(UserRole.owner, has_pm_access=False)
+    assert Capability.VIEW_CALENDAR in caps
+    assert caps == capabilities_for(UserRole.owner)  # exakt sein Rollen-Set
+    assert not pm_umbrella_applies(UserRole.owner)
+
+
+def test_owner_gewinnt_durch_die_ausnahme_nichts_dazu() -> None:
+    # §4.2: read-only. Die Ausnahme darf ihm keine Schreib-/Finanz-Capability
+    # verschaffen — sie hebt nur den Abzug auf, sie addiert nicht.
+    caps = effective_capabilities(UserRole.owner, has_pm_access=False)
+    for verboten in (
+        Capability.MANAGE_CALENDAR,
+        Capability.MANAGE_TASKS,
+        Capability.MANAGE_PROPERTIES,
+        Capability.VIEW_FINANCES,
+    ):
+        assert verboten not in caps
+
+
+def test_pm_dach_bleibt_fuer_pms_rollen_wirksam() -> None:
+    # Der Entzug muss für co_admin/staff/cleaner weiter greifen, sonst wäre der
+    # PM-Entzug im Rechte-Dialog entwertet. Geprüft wird je Rolle an DEREN
+    # eigenen PM-Capabilities (staff/cleaner haben VIEW_CALENDAR gar nicht,
+    # sondern VIEW_OWN_TASKS) — ohne Dach müssen sie alle verschwinden.
+    for rolle in (UserRole.co_admin, UserRole.staff, UserRole.cleaner):
+        assert pm_umbrella_applies(rolle)
+        mit = effective_capabilities(rolle, has_pm_access=True)
+        ohne = effective_capabilities(rolle, has_pm_access=False)
+        pm_der_rolle = {c for c in mit if is_pm_capability(c)}
+        assert pm_der_rolle  # jede dieser Rollen hat PM-Fläche
+        assert not any(is_pm_capability(c) for c in ohne)
+        assert ohne == mit - pm_der_rolle
+        assert ohne < mit
+
+
+def test_pm_dach_entzieht_co_admin_den_kalender() -> None:
+    # VIEW_CALENDAR ist der Kern des Entzugs bei den PMS-Rollen, die ihn haben.
+    assert Capability.VIEW_CALENDAR in effective_capabilities(
+        UserRole.co_admin, has_pm_access=True
+    )
+    assert Capability.VIEW_CALENDAR not in effective_capabilities(
+        UserRole.co_admin, has_pm_access=False
+    )
+
+
+def test_pm_dach_unbekannte_rolle_fail_closed() -> None:
+    # Wurzel 5: unbekannte/fehlende Rolle → Dach greift UND leere Menge.
+    assert pm_umbrella_applies(None)
+    assert pm_umbrella_applies("hausmeister")
+    assert effective_capabilities(None, has_pm_access=False) == frozenset()
+    assert effective_capabilities("hausmeister", has_pm_access=False) == frozenset()
+    # Auch mit Dach bleibt eine unbekannte Rolle leer.
+    assert effective_capabilities("hausmeister", has_pm_access=True) == frozenset()
+
+
+def test_view_calendar_bleibt_pm_capability() -> None:
+    # Die Ausnahme sitzt an der ROLLE, nicht an der Capability: VIEW_CALENDAR
+    # muss PM-Capability bleiben, sonst verlöre staff/co_admin den Entzug.
+    assert is_pm_capability(Capability.VIEW_CALENDAR)

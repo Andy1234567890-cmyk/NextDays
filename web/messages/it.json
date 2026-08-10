@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Invia invito",
     "portalAccessInvited": "Invito inviato.",
     "portalAccessActive": "L'accesso al portale è configurato.",
+    "portalAccessResend": "Invia di nuovo l'invito",
+    "portalAccessResendHint": "Se l'e-mail non è arrivata o il link è scaduto, l'invito può essere inviato di nuovo. Il nuovo link è valido 7 giorni e porta a questo ambiente; il link inviato in precedenza smette di funzionare.",
+    "portalAccessResent": "Invito inviato di nuovo.",
     "commissionNotAgreed": "non concordato",
     "assignableCount": "{count} di {total} selezionati da aggiungere",
     "assignedHeading": "{count, plural, one {# struttura assegnata} other {# strutture assegnate}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Vuoi far bloccare un periodo? Invia una richiesta: decide la gestione.",
       "blockCta": "Richiedi blocco",
       "weekdays": "Lun,Mar,Mer,Gio,Ven,Sab,Dom",
-      "months": "Gennaio,Febbraio,Marzo,Aprile,Maggio,Giugno,Luglio,Agosto,Settembre,Ottobre,Novembre,Dicembre"
+      "months": "Gennaio,Febbraio,Marzo,Aprile,Maggio,Giugno,Luglio,Agosto,Settembre,Ottobre,Novembre,Dicembre",
+      "nights": "{count, plural, one {# notte} other {# notti}}",
+      "payoutStay": "Pagamento per il soggiorno",
+      "moreUnits": "{count, plural, one {# unità in più} other {# unità in più}}",
+      "unitsBooked": "{booked} di {total} unità occupate",
+      "bandStart": "Inizio del periodo disponibile",
+      "bandEnd": "Fine del periodo disponibile"
     },
     "services": {
       "title": "Prenota un servizio",
@@ -7678,6 +7687,10 @@
       "textInvite": "Questo link di invito è scaduto o è già stato utilizzato. Contatta la tua struttura: potrà inviare nuovamente l'invito.",
       "textReset": "Questo link è scaduto o è già stato utilizzato. Richiedine semplicemente uno nuovo.",
       "retry": "Richiedi un nuovo link"
+    },
+    "tooMany": {
+      "title": "Troppi tentativi",
+      "text": "La pagina è stata caricata troppe volte. Attendi un minuto e riprova con lo stesso link: è ancora valido."
     },
     "invite": {
       "title": "Configura il tuo accesso",

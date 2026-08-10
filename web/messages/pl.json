@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Wyślij zaproszenie",
     "portalAccessInvited": "Zaproszenie wysłane.",
     "portalAccessActive": "Dostęp do portalu jest skonfigurowany.",
+    "portalAccessResend": "Wyślij zaproszenie ponownie",
+    "portalAccessResendHint": "Jeśli e-mail nie dotarł lub link wygasł, zaproszenie można wysłać ponownie. Nowy link jest ważny 7 dni i prowadzi do tego środowiska; wcześniej wysłany link przestaje działać.",
+    "portalAccessResent": "Zaproszenie wysłano ponownie.",
     "commissionNotAgreed": "nieustalone",
     "assignableCount": "Wybrano {count} z {total} do dodania",
     "assignedHeading": "{count, plural, one {# przypisany obiekt} few {# przypisane obiekty} many {# przypisanych obiektów} other {# przypisanego obiektu}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Chcesz zablokować okres? Złóż wniosek — decyduje zarządca.",
       "blockCta": "Złóż wniosek o blokadę",
       "weekdays": "Pon,Wt,Śr,Czw,Pt,Sob,Niedz",
-      "months": "Styczeń,Luty,Marzec,Kwiecień,Maj,Czerwiec,Lipiec,Sierpień,Wrzesień,Październik,Listopad,Grudzień"
+      "months": "Styczeń,Luty,Marzec,Kwiecień,Maj,Czerwiec,Lipiec,Sierpień,Wrzesień,Październik,Listopad,Grudzień",
+      "nights": "{count, plural, one {# noc} few {# noce} many {# nocy} other {# nocy}}",
+      "payoutStay": "Wypłata za pobyt",
+      "moreUnits": "{count, plural, one {# kolejna jednostka} few {# kolejne jednostki} many {# kolejnych jednostek} other {# kolejnych jednostek}}",
+      "unitsBooked": "Zajęte jednostki: {booked} z {total}",
+      "bandStart": "Początek dostępnego okresu",
+      "bandEnd": "Koniec dostępnego okresu"
     },
     "services": {
       "title": "Zamów usługę",
@@ -7678,6 +7687,10 @@
       "textInvite": "Ten link z zaproszeniem wygasł lub został już użyty. Skontaktuj się ze swoim obiektem — tam można wysłać zaproszenie ponownie.",
       "textReset": "Ten link wygasł lub został już użyty. Po prostu poproś o nowy.",
       "retry": "Poproś o nowy link"
+    },
+    "tooMany": {
+      "title": "Zbyt wiele prób",
+      "text": "Strona była ładowana zbyt wiele razy. Odczekaj minutę i spróbuj ponownie z tym samym linkiem — nadal jest ważny."
     },
     "invite": {
       "title": "Skonfiguruj dostęp",

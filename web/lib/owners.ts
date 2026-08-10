@@ -166,6 +166,26 @@ export async function inviteOwnerPortal(
   return call(`/owners/${ownerId}/portalzugang`, { method: "POST" });
 }
 
+/**
+ * Die Zugangs-Einladung an einen BEREITS eingeladenen Eigentümer erneut senden.
+ *
+ * Für den Fall, dass die erste Mail nie ankam oder der Sieben-Tage-Token
+ * abgelaufen ist. Setzt einen Portalzugang voraus (`owner.user_id`); ohne ihn
+ * antwortet der Server mit 409 — dann ist `inviteOwnerPortal` der richtige Weg.
+ *
+ * Der alte Link wird dabei ENTWERTET: es gilt immer nur der neueste, sonst
+ * wüchse mit jedem Klick die Zahl gültiger Zugänge zu demselben Konto.
+ *
+ * Antwort ist 204 ohne Inhalt — an den Stammdaten ändert sich nichts.
+ */
+export async function resendOwnerInvite(
+  ownerId: string,
+): Promise<Result<null>> {
+  return call(`/owners/${ownerId}/portalzugang/erneut-senden`, {
+    method: "POST",
+  });
+}
+
 export async function updateOwner(
   id: string,
   input: OwnerInput,

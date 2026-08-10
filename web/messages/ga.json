@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Seol cuireadh",
     "portalAccessInvited": "Cuireadh seolta.",
     "portalAccessActive": "Tá rochtain ar an tairseach socraithe.",
+    "portalAccessResend": "Seol an cuireadh arís",
+    "portalAccessResendHint": "Mura bhfuair an ríomhphost nó má tá an nasc imithe in éag, is féidir an cuireadh a sheoladh arís. Tá an nasc nua bailí ar feadh 7 lá agus téann sé chuig an timpeallacht seo; scoireann an nasc a seoladh roimhe seo d'obair.",
+    "portalAccessResent": "Seoladh an cuireadh arís.",
     "commissionNotAgreed": "gan chomhaontú",
     "assignableCount": "{count} as {total} roghnaithe le cur leis",
     "assignedHeading": "{count, plural, one {# réadmhaoin sannta} two {# réadmhaoin shannta} few {# réadmhaoin shannta} many {# réadmhaoin shannta} other {# réadmhaoin sannta}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Ar mhaith leat tréimhse a bhacadh? Cuir isteach iarratas — is í an bhainistíocht a chinneann.",
       "blockCta": "Iarr bacainn",
       "weekdays": "Luan,Máirt,Céad,Déar,Aoine,Sath,Domh",
-      "months": "Eanáir,Feabhra,Márta,Aibreán,Bealtaine,Meitheamh,Iúil,Lúnasa,Meán Fómhair,Deireadh Fómhair,Samhain,Nollaig"
+      "months": "Eanáir,Feabhra,Márta,Aibreán,Bealtaine,Meitheamh,Iúil,Lúnasa,Meán Fómhair,Deireadh Fómhair,Samhain,Nollaig",
+      "nights": "{count, plural, one {# oíche} two {# oíche} few {# oíche} many {# n-oíche} other {# oíche}}",
+      "payoutStay": "Íocaíocht as an bhfanacht",
+      "moreUnits": "{count, plural, one {# aonad eile} two {# aonad eile} few {# aonad eile} many {# n-aonad eile} other {# aonad eile}}",
+      "unitsBooked": "{booked} as {total} aonad in áirithe",
+      "bandStart": "Tús na tréimhse atá ar fáil",
+      "bandEnd": "Deireadh na tréimhse atá ar fáil"
     },
     "services": {
       "title": "Cuir seirbhís in áirithe",
@@ -7678,6 +7687,10 @@
       "textInvite": "Tá an nasc cuiridh seo imithe in éag nó úsáidte cheana. Déan teagmháil le do ghnó — is féidir an cuireadh a sheoladh arís ansin.",
       "textReset": "Tá an nasc seo imithe in éag nó úsáidte cheana. Iarr ceann nua go simplí.",
       "retry": "Iarr nasc nua"
+    },
+    "tooMany": {
+      "title": "An iomarca iarrachtaí",
+      "text": "Lódáladh an leathanach seo rómhinic. Fan nóiméad agus bain triail eile as leis an nasc céanna — tá sé bailí i gcónaí."
     },
     "invite": {
       "title": "Socraigh do rochtain",

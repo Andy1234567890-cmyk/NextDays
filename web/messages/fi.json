@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Lähetä kutsu",
     "portalAccessInvited": "Kutsu lähetetty.",
     "portalAccessActive": "Portaalikäyttöoikeus on luotu.",
+    "portalAccessResend": "Lähetä kutsu uudelleen",
+    "portalAccessResendHint": "Jos sähköposti ei tullut perille tai linkki on vanhentunut, kutsun voi lähettää uudelleen. Uusi linkki on voimassa 7 päivää ja johtaa tähän ympäristöön; aiemmin lähetetty linkki lakkaa toimimasta.",
+    "portalAccessResent": "Kutsu lähetettiin uudelleen.",
     "commissionNotAgreed": "ei sovittu",
     "assignableCount": "{count} / {total} valittu lisättäväksi",
     "assignedHeading": "{count, plural, one {# määritetty kohde} other {# määritettyä kohdetta}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Haluatko estää ajanjakson? Lähetä pyyntö — hallinto päättää.",
       "blockCta": "Pyydä estoa",
       "weekdays": "Ma,Ti,Ke,To,Pe,La,Su",
-      "months": "Tammikuu,Helmikuu,Maaliskuu,Huhtikuu,Toukokuu,Kesäkuu,Heinäkuu,Elokuu,Syyskuu,Lokakuu,Marraskuu,Joulukuu"
+      "months": "Tammikuu,Helmikuu,Maaliskuu,Huhtikuu,Toukokuu,Kesäkuu,Heinäkuu,Elokuu,Syyskuu,Lokakuu,Marraskuu,Joulukuu",
+      "nights": "{count, plural, one {# yö} other {# yötä}}",
+      "payoutStay": "Maksu oleskelusta",
+      "moreUnits": "{count, plural, one {# yksikkö lisää} other {# yksikköä lisää}}",
+      "unitsBooked": "{booked}/{total} yksikköä varattu",
+      "bandStart": "Käytettävissä olevan jakson alku",
+      "bandEnd": "Käytettävissä olevan jakson loppu"
     },
     "services": {
       "title": "Tilaa palvelu",
@@ -7678,6 +7687,10 @@
       "textInvite": "Tämä kutsulinkki on vanhentunut tai jo käytetty. Ota yhteyttä yritykseesi — siellä kutsu voidaan lähettää uudelleen.",
       "textReset": "Tämä linkki on vanhentunut tai jo käytetty. Pyydä yksinkertaisesti uusi.",
       "retry": "Pyydä uusi linkki"
+    },
+    "tooMany": {
+      "title": "Liian monta yritystä",
+      "text": "Sivu ladattiin liian monta kertaa. Odota minuutti ja yritä uudelleen samalla linkillä — se on edelleen voimassa."
     },
     "invite": {
       "title": "Määritä käyttöoikeutesi",

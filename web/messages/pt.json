@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Enviar convite",
     "portalAccessInvited": "Convite enviado.",
     "portalAccessActive": "O acesso ao portal está configurado.",
+    "portalAccessResend": "Reenviar convite",
+    "portalAccessResendHint": "Se o e-mail não chegou ou o link expirou, o convite pode ser enviado novamente. O novo link é válido por 7 dias e leva a este ambiente; o link enviado anteriormente deixa de funcionar.",
+    "portalAccessResent": "Convite reenviado.",
     "commissionNotAgreed": "não acordado",
     "assignableCount": "{count} de {total} selecionados para adicionar",
     "assignedHeading": "{count, plural, one {# objeto atribuído} other {# objetos atribuídos}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Quer bloquear um período? Envie um pedido — a gestão decide.",
       "blockCta": "Pedir bloqueio",
       "weekdays": "Seg,Ter,Qua,Qui,Sex,Sáb,Dom",
-      "months": "Janeiro,Fevereiro,Março,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro"
+      "months": "Janeiro,Fevereiro,Março,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro",
+      "nights": "{count, plural, one {# noite} other {# noites}}",
+      "payoutStay": "Pagamento da estadia",
+      "moreUnits": "{count, plural, one {# unidade adicional} other {# unidades adicionais}}",
+      "unitsBooked": "{booked} de {total} unidades ocupadas",
+      "bandStart": "Início do período disponível",
+      "bandEnd": "Fim do período disponível"
     },
     "services": {
       "title": "Reservar um serviço",
@@ -7678,6 +7687,10 @@
       "textInvite": "Esta ligação de convite expirou ou já foi utilizada. Contacte o seu estabelecimento — poderá enviar o convite novamente.",
       "textReset": "Esta ligação expirou ou já foi utilizada. Basta solicitar uma nova.",
       "retry": "Solicitar nova ligação"
+    },
+    "tooMany": {
+      "title": "Demasiadas tentativas",
+      "text": "Esta página foi carregada demasiadas vezes. Aguarde um minuto e tente novamente com a mesma ligação — continua válida."
     },
     "invite": {
       "title": "Configurar o seu acesso",

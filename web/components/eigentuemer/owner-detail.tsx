@@ -23,6 +23,7 @@ import {
   assignOwnerProperty,
   deleteOwner,
   inviteOwnerPortal,
+  resendOwnerInvite,
   unassignOwnerProperty,
   updateOwner,
   type FreieObjektOption,
@@ -69,6 +70,11 @@ export function OwnerDetail({
   // Eigener Busy-Zustand für die Einladung: sie darf den Speichern-Button
   // nicht sperren und umgekehrt.
   const [einladend, setEinladend] = useState(false);
+  // Eigener Busy-Zustand für das erneute Senden: es ist ein anderer Knopf in
+  // einem anderen Zustand und darf weder Speichern noch Zuordnen sperren.
+  // Er ist zugleich die Doppelklick-Bremse in der Oberfläche — die
+  // verbindliche Sperre sitzt serverseitig (Sperrfrist je Konto + Ratelimit).
+  const [erneutSendend, setErneutSendend] = useState(false);
   // Mehrfachauswahl der nachträglichen Objektzuordnung. Eigener Busy-Zustand,
   // damit sie weder das Speichern der Stammdaten noch die Einladung blockiert.
   const [auswahl, setAuswahl] = useState<string[]>([]);
@@ -96,6 +102,29 @@ export function OwnerDetail({
       setOwner(res.data);
       toast.success(t("portalAccessInvited"));
     } else toast.error(res.error);
+  }
+
+  /**
+   * Zugangs-Einladung erneut verschicken.
+   *
+   * Anderer Zustand als oben: hier GIBT es den Login schon (`owner.user_id`),
+   * die Mail ist nur nie angekommen oder der Sieben-Tage-Token ist abgelaufen.
+   * Ohne diesen Weg bliebe dem Eigentümer nur „Passwort vergessen" — was er
+   * nicht findet, weil er das Produkt noch nie gesehen hat.
+   *
+   * Der Fehlschlag wird NICHT verschluckt: die Serverantwort geht wörtlich in
+   * den Toast. Das ist hier wesentlich, weil genau die aussagekräftigen Fälle
+   * sonst wie ein Erfolg aussähen — 503 „Mailversand ist nicht eingerichtet",
+   * 429 „die letzte Einladung ist gerade erst rausgegangen", 422 „keine
+   * Adresse hinterlegt". Jede dieser Meldungen sagt dem Betreiber, was zu tun
+   * ist; ein pauschales „hat nicht geklappt" täte das nicht.
+   */
+  async function einladungErneutSenden() {
+    setErneutSendend(true);
+    const res = await resendOwnerInvite(owner.id);
+    setErneutSendend(false);
+    if (res.ok) toast.success(t("portalAccessResent"));
+    else toast.error(res.error);
   }
 
   const titleById = new Map(properties.map((p) => [p.id, p.title]));
@@ -365,10 +394,33 @@ export function OwnerDetail({
           {t("sections.portalAccess")}
         </h2>
         {owner.user_id ? (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Icon icon="ph:check-circle" className="size-4 text-primary" />
-            {t("portalAccessActive")}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="max-w-lg">
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Icon icon="ph:check-circle" className="size-4 text-primary" />
+                {t("portalAccessActive")}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t("portalAccessResendHint")}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => void einladungErneutSenden()}
+              // Ohne hinterlegte Adresse gibt es kein Ziel für die Mail. Das
+              // Backend antwortet mit 422; der Knopf ist deshalb gesperrt,
+              // statt in einen vermeidbaren Fehler zu laufen — dieselbe Regel
+              // wie beim erstmaligen Einrichten.
+              disabled={erneutSendend || !owner.email}
+            >
+              {erneutSendend ? (
+                <Icon icon="ph:spinner" className="size-4 animate-spin" />
+              ) : (
+                <Icon icon="ph:paper-plane-tilt" className="size-4" />
+              )}
+              {t("portalAccessResend")}
+            </Button>
+          </div>
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-4">
             <p className="max-w-lg text-sm text-muted-foreground">

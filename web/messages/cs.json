@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Odeslat pozvánku",
     "portalAccessInvited": "Pozvánka odeslána.",
     "portalAccessActive": "Přístup k portálu je nastaven.",
+    "portalAccessResend": "Odeslat pozvánku znovu",
+    "portalAccessResendHint": "Pokud e-mail nedorazil nebo odkaz vypršel, lze pozvánku odeslat znovu. Nový odkaz platí 7 dní a vede do tohoto prostředí; dříve odeslaný odkaz přestane platit.",
+    "portalAccessResent": "Pozvánka byla odeslána znovu.",
     "commissionNotAgreed": "nesjednáno",
     "assignableCount": "Vybráno {count} z {total} k přidání",
     "assignedHeading": "{count, plural, one {# přiřazený objekt} few {# přiřazené objekty} other {# přiřazených objektů}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Chceš nechat blokovat období? Podej žádost — rozhoduje správa.",
       "blockCta": "Požádat o blokaci",
       "weekdays": "Po,Út,St,Čt,Pá,So,Ne",
-      "months": "Leden,Únor,Březen,Duben,Květen,Červen,Červenec,Srpen,Září,Říjen,Listopad,Prosinec"
+      "months": "Leden,Únor,Březen,Duben,Květen,Červen,Červenec,Srpen,Září,Říjen,Listopad,Prosinec",
+      "nights": "{count, plural, one {# noc} few {# noci} many {# noci} other {# nocí}}",
+      "payoutStay": "Výplata za pobyt",
+      "moreUnits": "{count, plural, one {# další jednotka} few {# další jednotky} many {# další jednotky} other {# dalších jednotek}}",
+      "unitsBooked": "Obsazeno {booked} z {total} jednotek",
+      "bandStart": "Začátek dostupného období",
+      "bandEnd": "Konec dostupného období"
     },
     "services": {
       "title": "Objednat službu",
@@ -7678,6 +7687,10 @@
       "textInvite": "Tento pozvánkový odkaz vypršel nebo již byl použit. Obraťte se prosím na svůj provoz — pozvánku tam lze odeslat znovu.",
       "textReset": "Tento odkaz vypršel nebo již byl použit. Jednoduše si vyžádejte nový.",
       "retry": "Vyžádat nový odkaz"
+    },
+    "tooMany": {
+      "title": "Příliš mnoho pokusů",
+      "text": "Stránka byla načtena příliš častokrát. Počkejte minutu a zkuste to znovu se stejným odkazem — zůstává platný."
     },
     "invite": {
       "title": "Nastavte si přístup",

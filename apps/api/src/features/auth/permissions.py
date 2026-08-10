@@ -219,6 +219,40 @@ def is_pm_capability(cap: Capability) -> bool:
     return cap in _PM_CAPABILITIES
 
 
+# Rollen, für die das PM-Dach überhaupt gilt: die PMS-Rollen, die im
+# Rechte-Dialog einen PM-Zugriff bekommen oder entzogen kriegen können.
+# `owner` steht bewusst NICHT hier: ein Eigentümer kann ACCESS_PM_FEATURES
+# konstruktiv nie besitzen (`_OWNER` in granular_permissions.py enthält es
+# nicht, weil er die PM-Fläche nicht haben soll). Würde das Dach auch für ihn
+# gelten, verlöre er JEDE PM-Capability — auch VIEW_CALENDAR, seine einzige.
+# Genau das sperrte das Eigentümer-Portal aus (403 „Kein Zugriff auf das
+# PM-Modul." auf GET /public-portal/properties), obwohl §4.2 ihm den lesenden
+# Blick auf SEINE Objekte ausdrücklich zubilligt. Der Entzug bleibt für
+# admin/co_admin/staff/cleaner voll wirksam.
+_PM_UMBRELLA_ROLES: frozenset[UserRole] = frozenset({
+    UserRole.admin,
+    UserRole.co_admin,
+    UserRole.staff,
+    UserRole.cleaner,
+})
+
+
+def pm_umbrella_applies(role: UserRole | str | None) -> bool:
+    """Gilt das PM-Dach (ACCESS_PM_FEATURES) für diese Rolle?
+
+    Fail-closed (Wurzel 5): unbekannte/fehlende Rolle → True, das Dach greift.
+    Solche Rollen haben ohnehin die leere Capability-Menge
+    (``capabilities_for``), das Ergebnis bleibt also in jedem Fall leer — aber
+    die Regel selbst öffnet nichts, wenn hier je etwas anderes durchkommt."""
+    if role is None:
+        return True
+    try:
+        role_enum = UserRole(role)
+    except ValueError:
+        return True
+    return role_enum in _PM_UMBRELLA_ROLES
+
+
 def effective_capabilities(
     role: UserRole | str | None, *, has_pm_access: bool
 ) -> frozenset[Capability]:
@@ -227,8 +261,11 @@ def effective_capabilities(
 
     Eine Quelle der Wahrheit für Guard (require_permission) UND UI (me →
     Sidebar-Gating). Admin hat immer das Dach (effective_permissions gibt ihm
-    ACCESS_PM_FEATURES), verliert hier also nichts."""
+    ACCESS_PM_FEATURES), verliert hier also nichts. Für Rollen, die das Dach nie
+    tragen können (``pm_umbrella_applies`` → False, aktuell ``owner``), wird es
+    gar nicht erst angewandt — sie behalten ihr Rollen-Set unverändert und
+    gewinnen dadurch nichts hinzu."""
     caps = capabilities_for(role)
-    if has_pm_access:
+    if has_pm_access or not pm_umbrella_applies(role):
         return caps
     return caps - _PM_CAPABILITIES

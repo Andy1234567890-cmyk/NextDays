@@ -1809,9 +1809,16 @@ class BookingsSyncMixin:
                     date_to=d_to,
                     restrictions="rate,min_stay_arrival,stop_sell",
                 )
+                restr_ok = True
             except ChannexError as exc:
                 log.warning("import_ari_restrictions_failed", error=exc.message)
                 restr = {"data": {}}
+                # fail-CLOSED (Wurzel 5): Ein fehlgeschlagener GET ist KEIN
+                # Beleg dafür, dass das Portal seine Stops aufgehoben hat. Ohne
+                # dieses Flag räumte der Aufhebungs-Pfad unten alle importierten
+                # Portal-Stops des Chunks weg — ein Lesefehler öffnete Tage, die
+                # das Portal gesperrt hat.
+                restr_ok = False
             # WICHTIG: zurückgelesene OTA-Raten NICHT als price_override
             # schreiben. price_override ist per Architektur die MANUELLE
             # Host-Überschreibung und gewinnt im Resolver über dynamic_prices.
@@ -1866,20 +1873,44 @@ class BookingsSyncMixin:
             # eben aufgehobenen Stop sofort wieder an. Für die Setzen-
             # Richtung gibt es dieses Fenster längst (`recent_push_days`
             # über `ari_outbox`) — für Restriktionen fehlte es.
+            # BEIDE Push-Arten zählen. Der Delta-Pfad schreibt kind='stop_sell'
+            # mit payload["spans"] = [[von, bis], …]; der nächtliche Full-Sync
+            # schreibt kind='restriction_rows' mit payload["rows"] = [{date_from,
+            # date_to, stop_sell, …}, …]. Wer nur auf 'stop_sell'/'spans' sieht,
+            # erkennt die Full-Sync-Pushes NICHT als eigenes Echo und importiert
+            # sie als echten OTA-Stop zurück (live: Kornblomst 09.-12.08.2026,
+            # Rævehulen 14.-19.08.2026 — beide aus einer lokalen Handsperre
+            # entstanden). Danach ist der Tag als source='channex' zementiert:
+            # `set_stop_sell` überspringt ihn und `clear_stop_sell` fasst ihn
+            # ohne include_portal nicht an.
             eigene_push_tage: set[str] = set()
             for r in (
                 db.table("ari_restriction_outbox")
-                .select("payload, status, created_at")
+                .select("payload, kind, status, created_at")
                 .eq("property_id", property_id)
-                .eq("kind", "stop_sell")
+                .in_("kind", ["stop_sell", "restriction_rows"])
                 .or_(
                     f"created_at.gte.{recent_cutoff},"
                     "status.eq.pending,status.eq.failed"
                 )
                 .execute()
             ).data or []:
-                for a, b in ((r.get("payload") or {}).get("spans") or []):
-                    cur, last = date.fromisoformat(str(a)), date.fromisoformat(str(b))
+                payload = r.get("payload") or {}
+                spannen: list[tuple[str, str]] = [
+                    (str(a), str(b)) for a, b in (payload.get("spans") or [])
+                ]
+                # Nur Zeilen mit stop_sell=True sind ein Stop-Sell-Echo; eine
+                # reine Preis-/min_stay-Zeile desselben Tages darf einen echten
+                # OTA-Stop nicht verdecken.
+                for row in payload.get("rows") or []:
+                    if not (row or {}).get("stop_sell"):
+                        continue
+                    von = row.get("date_from") or row.get("date")
+                    bis = row.get("date_to") or row.get("date")
+                    if von and bis:
+                        spannen.append((str(von), str(bis)))
+                for a, b in spannen:
+                    cur, last = date.fromisoformat(a), date.fromisoformat(b)
                     while cur <= last:
                         eigene_push_tage.add(cur.isoformat())
                         cur += timedelta(days=1)
@@ -1944,7 +1975,7 @@ class BookingsSyncMixin:
             # Angefasst werden AUSSCHLIESSLICH eigene Import-Zeilen
             # (source='channex', objektweit): manuelle Stopps des Betriebs und
             # plan-genaue Hotel-Stopps bleiben unberührt.
-            if has_pushed:
+            if has_pushed and restr_ok:
                 verwaist = [
                     r["id"]
                     for r in (

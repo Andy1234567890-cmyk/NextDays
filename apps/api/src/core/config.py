@@ -106,6 +106,15 @@ class Settings(BaseSettings):
     # 5/60 reicht fuer jeden echten Nutzer bequem (man tippt einen Code einmal
     # ab, notfalls mit einem Vertipper) und macht Bruteforce sinnlos.
     rate_limit_mfa: str = "5/60"
+    # „Einladung erneut senden" (Mitarbeiter unter /konto/nutzer, Eigentümer
+    # unter /eigentuemer). Eingeloggt, aber jeder Aufruf schickt eine Mail an
+    # eine FREMDE Adresse — der Default-Bucket (300/60) ist dafür kein Dach
+    # (Wurzel 8). 10/60 pro IP: ein Betreiber, der nach einem Mailproblem
+    # reihum mehrere Personen neu einlädt, kommt bequem durch; ein Skript, das
+    # damit Postfächer flutet, nicht. Die Sperrfrist je ZIELKONTO (1 Minute,
+    # `einladung_service._RESEND_COOLDOWN`) bleibt zusätzlich bestehen und
+    # deckt den Doppelklick auf denselben Empfänger ab.
+    rate_limit_einladung_resend: str = "10/60"
 
     # Öffentlicher Support-Chat der Marketing-Seite (ohne Login). 20 Aufrufe je
     # Minute und IP reichen für eine tippende Person samt Verlaufs-Abrufen und

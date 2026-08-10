@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Meghívó küldése",
     "portalAccessInvited": "Meghívó elküldve.",
     "portalAccessActive": "A portálhozzáférés be van állítva.",
+    "portalAccessResend": "Meghívó újraküldése",
+    "portalAccessResendHint": "Ha az e-mail nem érkezett meg vagy a hivatkozás lejárt, a meghívó újraküldhető. Az új hivatkozás 7 napig érvényes és erre a környezetre mutat; a korábban küldött hivatkozás érvénytelenné válik.",
+    "portalAccessResent": "A meghívót újraküldtük.",
     "commissionNotAgreed": "nincs megállapodva",
     "assignableCount": "{count} / {total} kiválasztva hozzáadásra",
     "assignedHeading": "{count, plural, one {# hozzárendelt ingatlan} other {# hozzárendelt ingatlan}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Zároltatnál egy időszakot? Nyújts be kérelmet — a döntés az üzemeltetőé.",
       "blockCta": "Zárolás kérése",
       "weekdays": "H,K,Sze,Cs,P,Szo,V",
-      "months": "Január,Február,Március,Április,Május,Június,Július,Augusztus,Szeptember,Október,November,December"
+      "months": "Január,Február,Március,Április,Május,Június,Július,Augusztus,Szeptember,Október,November,December",
+      "nights": "{count, plural, one {# éjszaka} other {# éjszaka}}",
+      "payoutStay": "Kifizetés a tartózkodásért",
+      "moreUnits": "{count, plural, one {# további egység} other {# további egység}}",
+      "unitsBooked": "{total} egységből {booked} foglalt",
+      "bandStart": "Az elérhető időszak kezdete",
+      "bandEnd": "Az elérhető időszak vége"
     },
     "services": {
       "title": "Szolgáltatás megrendelése",
@@ -7678,6 +7687,10 @@
       "textInvite": "Ez a meghívó hivatkozás lejárt vagy már felhasználták. Kérjük, forduljon a szálláshelyéhez — ott újra elküldhetik a meghívót.",
       "textReset": "Ez a hivatkozás lejárt vagy már felhasználták. Egyszerűen kérjen újat.",
       "retry": "Új hivatkozás kérése"
+    },
+    "tooMany": {
+      "title": "Túl sok próbálkozás",
+      "text": "Az oldal túl sokszor lett betöltve. Várjon egy percet, majd próbálja újra ugyanazzal a hivatkozással — az továbbra is érvényes."
     },
     "invite": {
       "title": "Hozzáférés beállítása",

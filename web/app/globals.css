@@ -395,6 +395,24 @@ h1, h2, h3 {
   cursor: pointer;
 }
 
+/* Scrollbalken ausblenden, Scrollen erhalten.
+   Bewusst plattformübergreifend, nicht nur WebKit:
+     * `scrollbar-width: none`      — Firefox (Standard-Eigenschaft)
+     * `-ms-overflow-style: none`   — altes Edge/IE
+     * `::-webkit-scrollbar`        — Chrome, Safari, neues Edge
+   NUR die Darstellung verschwindet: Mausrad, Trackpad, Tastatur (Pfeile,
+   Bild auf/ab, Pos1/Ende) und die Fokus-Bildlauflogik bleiben unberührt, weil
+   das Element scrollbar bleibt (`overflow` wird NICHT angefasst).
+   Als `@utility` angelegt (Tailwind v4), damit es sich wie eine normale
+   Utility-Klasse verhält und in jeder App des Monorepos gleich heißt. */
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Google-Places-Autocomplete-Dropdown: Google hängt die Vorschlagsliste
    (.pac-container) unten an <body> mit z-index:1000. In einem Slide-over/Dialog
    liegt der Overlay-Layer darüber → die Vorschläge sind unsichtbar/nicht

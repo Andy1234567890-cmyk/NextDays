@@ -56,9 +56,10 @@ export function PasswortSetzenFormular({
       return;
     }
     let aktiv = true;
-    void tokenPruefen(vorgang, token).then((gueltig) => {
+    void tokenPruefen(vorgang, token).then((ergebnis) => {
       if (!aktiv) return;
-      if (!gueltig) setFehler("ungueltig");
+      if (ergebnis === "ungueltig") setFehler("ungueltig");
+      else if (ergebnis === "zuOft") setFehler("zuOft");
       setPruefend(false);
     });
     return () => {
@@ -103,6 +104,12 @@ export function PasswortSetzenFormular({
   }
 
   // --- Zustand: Link ohne Token ---
+  // Häufigster Grund: der Link wurde beim Kopieren aus dem Mail-Programm hinter
+  // dem `?` abgeschnitten. Beim Reset kommt der Nutzer allein weiter, wenn er
+  // sich einen frischen Link holen kann — „Zur Anmeldung" allein ist an dieser
+  // Stelle eine Sackgasse (er kennt sein Passwort ja gerade nicht). Bei der
+  // Einladung gibt es diesen Selbstbedienungsweg bewusst NICHT: eine Einladung
+  // verschickt der Betrieb, nicht der Eingeladene.
   if (!token) {
     return (
       <Zustand
@@ -110,6 +117,28 @@ export function PasswortSetzenFormular({
         ton="warnung"
         titel={t("tokenMissing.title")}
         text={t("tokenMissing.text")}
+      >
+        {vorgang === "reset" && (
+          <Button asChild className="w-full">
+            <Link href="/passwort-vergessen">{t("tokenInvalid.retry")}</Link>
+          </Button>
+        )}
+        <LinkZurAnmeldung label={t("toLogin")} />
+      </Zustand>
+    );
+  }
+
+  // --- Zustand: Ratelimit (429) ---
+  // Bewusst VOR dem „ungültig"-Zustand und getrennt von ihm: der Link ist
+  // vermutlich in Ordnung, es wurde nur zu oft geladen. Hier darf KEIN
+  // „neuen Link anfordern" stehen — ein neuer Link liefe in dasselbe Limit.
+  if (fehler === "zuOft") {
+    return (
+      <Zustand
+        icon="ph:hourglass-medium"
+        ton="warnung"
+        titel={t("tooMany.title")}
+        text={t("tooMany.text")}
       >
         <LinkZurAnmeldung label={t("toLogin")} />
       </Zustand>
@@ -225,6 +254,16 @@ export function PasswortSetzenFormular({
       {fehler === "fehler" && (
         <p className="text-sm text-destructive" role="alert">
           {t("genericError")}
+        </p>
+      )}
+      {/* Warum der Knopf noch nicht geht. Ohne diese Zeile ist ein zu kurzes
+          Passwort eine stumme Sackgasse: `disabled` verhindert das Absenden,
+          und die Meldung `schwach` erscheint nur NACH einem Absenden, das
+          `disabled` gerade unmöglich macht. Genau so kam in den Logs kein
+          einziger POST an. */}
+      {!absendbar && !laeuft && passwort.length > 0 && !passwortGenuegt(passwort) && (
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {t("password.tooWeak", { min: PASSWORT_MIN_LAENGE })}
         </p>
       )}
 

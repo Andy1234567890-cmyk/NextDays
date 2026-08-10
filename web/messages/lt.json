@@ -1013,6 +1013,9 @@
     "portalAccessInvite": "Siųsti kvietimą",
     "portalAccessInvited": "Kvietimas išsiųstas.",
     "portalAccessActive": "Prieiga prie portalo nustatyta.",
+    "portalAccessResend": "Siųsti kvietimą iš naujo",
+    "portalAccessResendHint": "Jei el. laiškas nepasiekė arba nuoroda nebegalioja, kvietimą galima išsiųsti dar kartą. Nauja nuoroda galioja 7 dienas ir veda į šią aplinką; anksčiau išsiųsta nuoroda nebegalioja.",
+    "portalAccessResent": "Kvietimas išsiųstas iš naujo.",
     "commissionNotAgreed": "nesutarta",
     "assignableCount": "Pridėti pasirinkta {count} iš {total}",
     "assignedHeading": "{count, plural, one {# priskirtas objektas} few {# priskirti objektai} many {# priskirto objekto} other {# priskirtų objektų}}",
@@ -1421,7 +1424,13 @@
       "blockHint": "Norite užblokuoti laikotarpį? Pateikite prašymą — sprendžia administracija.",
       "blockCta": "Prašyti blokavimo",
       "weekdays": "Pr,An,Tr,Kt,Pn,Št,Sk",
-      "months": "Sausis,Vasaris,Kovas,Balandis,Gegužė,Birželis,Liepa,Rugpjūtis,Rugsėjis,Spalis,Lapkritis,Gruodis"
+      "months": "Sausis,Vasaris,Kovas,Balandis,Gegužė,Birželis,Liepa,Rugpjūtis,Rugsėjis,Spalis,Lapkritis,Gruodis",
+      "nights": "{count, plural, one {# naktis} few {# naktys} many {# nakties} other {# naktų}}",
+      "payoutStay": "Išmoka už apsistojimą",
+      "moreUnits": "{count, plural, one {dar # vienetas} few {dar # vienetai} many {dar # vieneto} other {dar # vienetų}}",
+      "unitsBooked": "Užimta {booked} iš {total} vienetų",
+      "bandStart": "Galimo laikotarpio pradžia",
+      "bandEnd": "Galimo laikotarpio pabaiga"
     },
     "services": {
       "title": "Užsisakyti paslaugą",
@@ -7678,6 +7687,10 @@
       "textInvite": "Ši kvietimo nuoroda nebegalioja arba jau panaudota. Kreipkitės į savo įmonę — ten kvietimą galima išsiųsti dar kartą.",
       "textReset": "Ši nuoroda nebegalioja arba jau panaudota. Tiesiog paprašykite naujos.",
       "retry": "Prašyti naujos nuorodos"
+    },
+    "tooMany": {
+      "title": "Per daug bandymų",
+      "text": "Puslapis buvo įkeltas per daug kartų. Palaukite minutę ir bandykite dar kartą su ta pačia nuoroda — ji tebegalioja."
     },
     "invite": {
       "title": "Nustatykite savo prieigą",

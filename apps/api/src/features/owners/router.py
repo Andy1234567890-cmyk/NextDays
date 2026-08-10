@@ -116,6 +116,33 @@ def portalzugang_einladen(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post(
+    "/{owner_id}/portalzugang/erneut-senden",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def portalzugang_erneut_senden(
+    owner_id: str,
+    service: OwnersServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+    _staff: Annotated[AuthContext, Depends(_MANAGE_STAFF)],
+) -> None:
+    """Die Zugangs-Einladung an einen bereits eingeladenen Eigentümer erneut senden.
+
+    Dieselben BEIDEN Berechtigungen wie das erstmalige Einrichten: eine erneute
+    Einladung erzeugt einen neuen gültigen Zugangslink zu einem Login und ist
+    damit eine Handlung der Zugangsvergabe, nicht der Stammdatenpflege
+    (Wurzel 9). Der Dienst lädt den Eigentümer über denselben Scope-Helfer wie
+    der List-Pfad und antwortet bei fremdem Mandanten mit 404.
+
+    204 statt der Eigentümer-Zeile: an den Stammdaten ändert sich nichts. Der
+    Zustand „hat Zugang" stand vorher schon und steht danach immer noch.
+    """
+    try:
+        service.einladung_erneut_senden(ctx, owner_id)
+    except OwnerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.get("/free-properties", response_model=AvailablePropertiesResponse)
 def free_properties(
     service: OwnersServiceDep,
