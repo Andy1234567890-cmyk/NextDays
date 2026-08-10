@@ -172,17 +172,34 @@ class _Query:
         return _Result([dict(r) for r in selected])
 
 
+class _AuthUser:
+    def __init__(self, email: str | None) -> None:
+        self.email = email
+
+
+class _AuthUserAntwort:
+    def __init__(self, user: _AuthUser | None) -> None:
+        self.user = user
+
+
 class _AuthAdmin:
-    """Attrappe der GoTrue-Admin-API — nur `update_user_by_id`.
+    """Attrappe der GoTrue-Admin-API — `update_user_by_id` und `get_user_by_id`.
 
     Sie zeichnet die Aufrufe AUF, statt sie bloss zu schlucken: die Tests
     müssen belegen können, dass der Adresswechsel OHNE `email_confirm`
     rausging (Doppel-Opt-in, Wurzel 7) — ein `email_confirm=True` wäre die
     sofortige Umstellung, die den Eigentümer bei einem Tippfehler aussperrt.
+
+    `anmelde_emails` bildet das Doppel-Opt-in nach: `update_user_by_id` ändert
+    die Anmelde-Adresse NICHT. GoTrue schaltet sie erst um, wenn der Empfänger
+    den Bestätigungslink klickt — bis dahin meldet `get_user_by_id` weiterhin
+    die alte. Eine Attrappe, die sofort umschaltet, wäre in genau dem Punkt
+    unrealistisch, um den es hier geht.
     """
 
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict]] = []
+        self.anmelde_emails: dict[str, str] = {}
         # Wenn gesetzt, wirft der nächste Aufruf — für den Kollisionsfall
         # (Adresse in einem ANDEREN Betrieb bereits vergeben; das sieht die
         # Vorprüfung im Dienst nicht, nur GoTrue).
@@ -192,6 +209,9 @@ class _AuthAdmin:
         self.calls.append((user_id, dict(attrs)))
         if self.raises is not None:
             raise self.raises
+
+    def get_user_by_id(self, user_id: str) -> _AuthUserAntwort:
+        return _AuthUserAntwort(_AuthUser(self.anmelde_emails.get(user_id)))
 
 
 class _Auth:
@@ -591,8 +611,15 @@ def test_erneut_senden_ohne_email_422() -> None:
 # drei Eigenschaften fest, an denen der neue Weg hängt: der GoTrue-Aufruf ohne
 # `email_confirm`, der sichtbare Zwischenzustand und das Protokoll.
 
-def _mit_login(email: str = "alt@example.com") -> tuple[OwnersService, str]:
-    """Eigentümer MIT verknüpftem Portalzugang — der Normalfall dieser Tests."""
+def _mit_login(
+    email: str = "alt@example.com", anmelde_email: str | None = None
+) -> tuple[OwnersService, str]:
+    """Eigentümer MIT verknüpftem Portalzugang — der Normalfall dieser Tests.
+
+    `anmelde_email` trennt die beiden Adressen absichtlich: so entsteht der
+    Bestandsfall, bei dem `owners.email` bereits die neue Adresse trägt, der
+    Login aber noch auf der alten steht.
+    """
     svc = _svc(
         {
             "users": [
@@ -608,6 +635,10 @@ def _mit_login(email: str = "alt@example.com") -> tuple[OwnersService, str]:
     owner = svc.create(
         _ctx(), OwnerCreate(name="A", email=email, user_id="u-own")
     )
+    svc._db.auth.admin.anmelde_emails["u-own"] = (  # noqa: SLF001  pylint: disable=protected-access
+        anmelde_email or email
+    )
+    svc._db.auth.admin.calls.clear()  # noqa: SLF001  pylint: disable=protected-access
     return svc, owner.id
 
 
@@ -636,6 +667,47 @@ def test_email_wechsel_meldet_den_zwischenzustand() -> None:
     res = svc.update(_ctx(), owner_id, OwnerUpdate(email="neu@example.com"))
     assert res.email_bestaetigung_an == "neu@example.com"
     assert res.email == "neu@example.com"
+
+
+def test_abweichende_anmeldeadresse_heilt_beim_speichern() -> None:
+    """Der Bestandsfall: `owners.email` neu, Login noch alt — Speichern zieht nach.
+
+    So entstanden die Datensätze vor 0352: das Speichern schrieb nur
+    `owners.email`. Verglich man danach die neue Adresse gegen den alten
+    `owners`-Wert, waren beide gleich — „keine Änderung" —, und der Datensatz
+    konnte sich nie mehr heilen. Die Maske zeigte eine Adresse, mit der man
+    sich nicht anmelden kann, ohne jedes sichtbare Zeichen (Wurzel 5b).
+    Bezugsgrösse ist deshalb die Anmelde-Adresse: hier ist das Feld unverändert
+    und der Wechsel wird trotzdem erkannt.
+    """
+    svc, owner_id = _mit_login(
+        email="neu@example.com", anmelde_email="alt@example.com"
+    )
+    res = svc.update(_ctx(), owner_id, OwnerUpdate(email="neu@example.com"))
+    assert svc._db.auth.admin.calls == [  # noqa: SLF001  pylint: disable=protected-access
+        ("u-own", {"email": "neu@example.com"})
+    ]
+    assert res.email_bestaetigung_an == "neu@example.com"
+
+
+def test_offener_wechsel_ist_auch_ohne_speichern_sichtbar() -> None:
+    """`GET` meldet den offenen Wechsel — sonst ist er nach Neuladen unsichtbar.
+
+    Der Zwischenzustand lebt in GoTrue und überdauert die Sitzung, in der er
+    ausgelöst wurde. Hinge der Hinweis nur an der Antwort des Speichervorgangs,
+    wäre er nach einem Neuladen weg — und mit ihm der Knopf, mit dem sich die
+    Bestätigung erneut anstossen lässt.
+    """
+    svc, owner_id = _mit_login(
+        email="neu@example.com", anmelde_email="alt@example.com"
+    )
+    assert svc.get(_ctx(), owner_id).email_bestaetigung_an == "neu@example.com"
+
+
+def test_uebereinstimmende_adressen_melden_keinen_wechsel() -> None:
+    """Stimmen Stammdaten und Login überein, ist NICHTS offen — kein Hinweis."""
+    svc, owner_id = _mit_login()
+    assert svc.get(_ctx(), owner_id).email_bestaetigung_an is None
 
 
 def test_email_unveraendert_stoesst_keinen_wechsel_an() -> None:

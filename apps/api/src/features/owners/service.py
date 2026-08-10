@@ -197,7 +197,18 @@ class OwnersService:
     def get(self, ctx: AuthContext, owner_id: str) -> OwnerResponse:
         tenant_id = self._require_tenant(ctx)
         row = self._get_row(tenant_id, owner_id)
-        return OwnerResponse(**_owner_row(row), properties=self._links(owner_id))
+        antwort = OwnerResponse(**_owner_row(row), properties=self._links(owner_id))
+        # Läuft die Stammdaten-Adresse von der Anmelde-Adresse auseinander, ist
+        # ein Wechsel offen: GoTrue wartet auf die Bestätigung des Eigentümers.
+        # Das gehört in JEDE Antwort, nicht nur in die des auslösenden
+        # Speichervorgangs — sonst ist der Zustand nach einem Neuladen der Seite
+        # unsichtbar, obwohl er weiterbesteht, und der Knopf zum erneuten
+        # Anstossen unerreichbar (Wurzel 5b).
+        anmelde = self._anmelde_email(row)
+        stammdaten = (row.get("email") or "").strip()
+        if anmelde and stammdaten and anmelde.casefold() != stammdaten.casefold():
+            antwort.email_bestaetigung_an = stammdaten
+        return antwort
 
     def create(self, ctx: AuthContext, req: OwnerCreate) -> OwnerResponse:
         """Eigentümer anlegen — auf Wunsch samt Portalzugang.
@@ -724,15 +735,27 @@ class OwnersService:
             )
         return antwort
 
-    @staticmethod
-    def _geaenderte_email(vorher: dict, changes: dict) -> str | None:
+    def _geaenderte_email(self, vorher: dict, changes: dict) -> str | None:
         """Die NEUE Adresse, falls dieser Aufruf sie wirklich ändert — sonst None.
 
-        „Wirklich" heisst: das Feld wurde mitgeschickt UND unterscheidet sich
-        vom Bestand. Die Maske schickt beim Speichern immer alle Felder mit;
-        ohne diesen Vergleich löste jedes Speichern eines Telefonnummern-
-        Tippfehlers einen GoTrue-Adresswechsel samt Bestätigungsmail aus
-        (Wurzel 2: dieselbe Adresse noch einmal zu setzen ist keine Änderung).
+        Bezugsgrösse ist die ANMELDE-Adresse, nicht der alte `owners`-Wert.
+        Zuerst stand hier der Vergleich gegen `owners.email` — und damit konnte
+        ein Datensatz, dessen beide Adressen bereits auseinanderlaufen, sich nie
+        wieder heilen: `owners.email` trug die neue Adresse, der Login die alte,
+        der Vergleich meldete „keine Änderung", und die Maske zeigte weiterhin
+        eine Adresse, mit der man sich nicht anmelden kann (Wurzel 5b — die
+        stille Falschaussage, die niemand als Bug erkennt). Gegen den Login
+        verglichen verschwindet der Sonderfall: jedes Speichern zieht nach, was
+        noch nicht nachgezogen ist.
+
+        Ohne Portalzugang gibt es keine Anmelde-Adresse; dann bleibt der alte
+        `owners`-Wert die Bezugsgrösse, damit das Protokoll den Wechsel der
+        reinen Korrespondenzadresse trotzdem festhält.
+
+        Die Maske schickt beim Speichern immer alle Felder mit; ohne diesen
+        Vergleich löste jedes Speichern eines Telefonnummern-Tippfehlers einen
+        GoTrue-Adresswechsel samt Bestätigungsmail aus (Wurzel 2: dieselbe
+        Adresse noch einmal zu setzen ist keine Änderung).
 
         Gross-/Kleinschreibung im lokalen Teil ist bei GoTrue nicht
         unterscheidend (die Adresse wird beim Anlegen kleingeschrieben
@@ -742,10 +765,40 @@ class OwnersService:
         if "email" not in changes:
             return None
         neu = (changes.get("email") or "").strip()
-        alt = (vorher.get("email") or "").strip()
-        if not neu or neu.casefold() == alt.casefold():
+        if not neu:
+            return None
+        alt = self._anmelde_email(vorher) or (vorher.get("email") or "").strip()
+        if neu.casefold() == alt.strip().casefold():
             return None
         return neu
+
+    def _anmelde_email(self, vorher: dict) -> str | None:
+        """Die Adresse, mit der sich dieser Eigentümer WIRKLICH anmeldet.
+
+        Quelle ist GoTrue, nicht der Spiegel `public.users`: der wird nur beim
+        Abruf des EIGENEN Kontos nachgezogen (`AccountService._email_nachziehen`)
+        und läuft für einen fremden Eigentümer daher beliebig lange nach. Für
+        die Frage „stimmt die Stammdaten-Adresse mit dem Login überein" wäre er
+        eine Quelle, die genau dann falsch liegt, wenn es darauf ankommt.
+
+        Kein Portalzugang oder GoTrue nicht erreichbar → None. Der Aufrufer
+        fällt dann auf den alten `owners`-Wert zurück; lieber ein Wechsel zu
+        wenig erkannt als ein Adresswechsel, der auf einer geratenen
+        Bezugsgrösse beruht (Wurzel 4).
+        """
+        user_id = vorher.get("user_id")
+        if not user_id:
+            return None
+        try:
+            res = self._db.auth.admin.get_user_by_id(str(user_id))
+        except Exception as exc:  # noqa: BLE001 — Aufrufer behandelt None konservativ
+            log.warning(
+                "owner_anmelde_email_nicht_lesbar",
+                owner_id=vorher.get("id"),
+                error=str(exc)[:200],
+            )
+            return None
+        return getattr(res.user, "email", None) if res and res.user else None
 
     def _email_wechsel_pruefen(self, vorher: dict, neue_email: str) -> dict | None:
         """Vorprüfung des Adresswechsels — wirft, BEVOR etwas geschrieben wird.
