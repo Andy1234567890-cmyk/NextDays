@@ -307,9 +307,16 @@ function toSegments(
     // Früher sprang der Balken dann auf einen erfundenen Wert ("booking" bzw.
     // "manual") und eine Airbnb-Buchung erschien schwarz wie eine Handsperre
     // (Wurzel 4: kein Ersatzwert, wenn die Wahrheit vorliegt — res.channel).
+    // Ein Stop-Sell-Tag trägt seine Herkunft in der stop_sell-Zeile selbst —
+    // eine availability-Zeile muss dafür gar nicht existieren (Portal-Stops
+    // haben oft keine). Der frühere Fallback behauptete dort "manual", also
+    // eine Handsperre, die es nie gab (Wurzel 4), und zerriss den Balken
+    // zusätzlich an der Chunk-Grenze in zwei Segmente mit verschiedener Quelle,
+    // weil `toSegments` bei source-Wechsel splittet.
     const src: AvailabilitySource = res
       ? res.channel
-      : (sourceByDay[key(d)] ?? "manual");
+      : (sourceByDay[key(d)] ??
+        (stop?.source === "channex" ? "portal" : "manual"));
     if (s === "open") {
       cur = null;
       return;

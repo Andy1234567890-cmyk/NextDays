@@ -10,7 +10,7 @@ laufenden Stack. Kein stilles Exception-Swallowing (PROJECT.md).
 # Preis/Stop-Sell/Saisons/Bulk) — ein Split zerrisse die eng gekoppelte
 # Spiegelungs- und Push-Logik (gleiches Muster wie ari_push.py).
 from datetime import date, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from supabase import Client
 
@@ -382,12 +382,33 @@ class CalendarService:
     def check_availability(
         self, ctx: AuthContext, property_id: str, rng: DateRange
     ) -> AvailabilityCheck:
-        """Double-Booking-Schutz: frei nur, wenn KEIN Tag booked/blocked ist."""
+        """Double-Booking-Schutz: frei nur, wenn KEIN Tag booked/blocked ODER
+        per Stop-Sell gesperrt ist."""
         conflicts: list[date] = [
             d.date
             for d in self.get_availability(ctx, property_id, rng)
             if d.status != AvailabilityStatus.open
         ]
+        # Stop-Sell zählt als Konflikt (Wurzel 1): Er lebt in einer eigenen
+        # Tabelle und taucht in `availability` nicht auf, blockt die Buchung
+        # aber hart (RPC wirft RS409). Ohne diesen Zweig meldete `/calendar/check`
+        # für einen komplett gestoppten Zeitraum `available: true` — jeder
+        # Konsument sah einen freien Zeitraum, der beim Buchen mit 409 abbrach.
+        # Nur die Objekt-Ebene: ein plan-genauer Hotel-Stopp sperrt nicht den Typ.
+        belegt = {d.isoformat() for d in conflicts}
+        for row in (
+            self._db()
+            .table("stop_sell")
+            .select("date")
+            .eq("property_id", property_id)
+            .is_("rate_plan_id", "null")
+            .gte("date", rng.start.isoformat())
+            .lt("date", rng.end.isoformat())
+            .execute()
+        ).data or []:
+            if row["date"] not in belegt:
+                conflicts.append(date.fromisoformat(row["date"]))
+        conflicts.sort()
         return AvailabilityCheck(
             property_id=property_id,
             available=not conflicts,
@@ -622,9 +643,6 @@ class CalendarService:
             _default_stop_sell_scope(row)
         return rows
 
-    # Channex-Wochentags-Codes (Index = date.weekday(): 0=Montag … 6=Sonntag).
-    _CHANNEX_DAYS = ("mo", "tu", "we", "th", "fr", "sa", "su")
-
     def set_stop_sell(
         self,
         tenant_id: str,
@@ -690,14 +708,24 @@ class CalendarService:
         days = [d for d in days if d.isoformat() not in channex_days]
         if not days:
             return {"stopped_days": 0, "skipped_booked": skipped_booked}
+        # `reason`/`agency_id` nur mitschreiben, wenn sie auch gesetzt sind
+        # (Wurzel 1): PostgREST erzeugt `ON CONFLICT DO UPDATE SET` für JEDE
+        # gelieferte Spalte, also überschrieb ein späterer Stopp ohne Grund die
+        # Angaben eines früheren still mit NULL — ein Stopp „Renovierung, TUI"
+        # verlor Grund und Adressat, sobald jemand denselben Tag erneut stoppte.
+        # Der Upsert bleibt einheitlich (eine Payload-Form für alle Zeilen);
+        # ein explizites Leeren geht weiterhin über clear_stop_sell.
+        felder: dict[str, Any] = {"source": "manual"}
+        if reason is not None:
+            felder["reason"] = reason
+        if agency_id is not None:
+            felder["agency_id"] = agency_id
         payload = [
             {
                 "tenant_id": tenant_id,
                 "property_id": property_id,
                 "date": day.isoformat(),
-                "reason": reason,
-                "source": "manual",
-                "agency_id": agency_id,
+                **felder,
             }
             for day in days
         ]
@@ -746,6 +774,13 @@ class CalendarService:
             .table("stop_sell")
             .delete()
             .eq("property_id", property_id)
+            # NUR die Objekt-Ebene (Wurzel 1): `set_stop_sell` schreibt bewusst
+            # ausschließlich Zeilen mit rate_plan_id IS NULL. Ohne diesen Filter
+            # riss das Aufheben eines Objekt-Stopps alle plan-genauen Hotel-
+            # Stopps desselben Tages mit (über bulk_restrictions gesetzt) und
+            # pushte sie zusätzlich als stop_sell=false an die OTAs — die
+            # gestoppte Rate war wieder verkäuflich, ohne Weg zurück.
+            .is_("rate_plan_id", "null")
         )
         # Standard: nur manuelle Stops löschen. include_portal: auch Channex/Portal.
         if not include_portal:
@@ -772,18 +807,18 @@ class CalendarService:
             or []
         }
         open_days = [d for d in wanted if d.isoformat() not in remaining]
-        if not remaining:
-            # Nichts bleibt gesperrt → EIN Range-Push (mit nativer Wochentags-Maske).
-            self._push_channex_stop_sell(
-                property_id,
-                [(rng.start, rng.end - timedelta(days=1))],
-                stop_sell=False,
-                days=[self._CHANNEX_DAYS[w] for w in weekdays] if weekdays else None,
-            )
-        else:
-            self._push_channex_stop_sell(
-                property_id, merge_day_ranges(open_days, end_exclusive=False), stop_sell=False
-            )
+        # Symmetrisch zu `set_stop_sell` (Wurzel 1): NUR die tatsächlich
+        # geöffneten Tage pushen, als komprimierte Spannen. Der frühere
+        # Sonderfall „nichts bleibt gesperrt → EIN roher Range-Push über
+        # rng.start..rng.end" meldete `stop_sell=false` auch für Tage, die nie
+        # gesperrt waren — inklusive GEBUCHTER Nächte (Überbuchungsrisiko) und
+        # inklusive fremder Portal-Stops außerhalb unseres Wissens. Ein Stopp am
+        # 05.06. aufzuheben öffnete so den ganzen Juni.
+        self._push_channex_stop_sell(
+            property_id,
+            merge_day_ranges(open_days, end_exclusive=False),
+            stop_sell=False,
+        )
         log.info("calendar_stop_sell_cleared", property_id=property_id)
 
     def reset_all_stop_sell(

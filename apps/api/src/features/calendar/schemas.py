@@ -5,6 +5,7 @@ Bildet die availability-Tabelle ab (Migration 0004): eine Zeile pro
 """
 from datetime import date
 from enum import StrEnum
+from typing import ClassVar
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -36,10 +37,21 @@ class DateRange(BaseModel):
     start: date
     end: date  # exklusiv (Check-out-Tag ist wieder frei)
 
+    # Harte Obergrenze (Wurzel 8): Jeder Aufrufer materialisiert `nights()` und
+    # expandiert es je Rate-Plan zu Upsert- und Channex-Zeilen. Ohne Deckel baut
+    # ein `end=2226-01-01` ~73.000 Tage × n Rate-Plans auf — ein Selbst-DoS über
+    # einen ganz normalen Request. 5 Jahre liegen weit über jedem echten
+    # Planungshorizont (Full-Sync pusht 500 Tage).
+    MAX_NIGHTS: ClassVar[int] = 1830
+
     @model_validator(mode="after")
     def _check_order(self) -> "DateRange":
         if self.end <= self.start:
             raise ValueError("end muss nach start liegen")
+        if (self.end - self.start).days > self.MAX_NIGHTS:
+            raise ValueError(
+                f"Zeitraum zu groß (max. {self.MAX_NIGHTS} Nächte)"
+            )
         return self
 
     def nights(self) -> list[date]:

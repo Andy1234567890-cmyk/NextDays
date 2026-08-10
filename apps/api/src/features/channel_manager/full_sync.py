@@ -13,6 +13,7 @@ from typing import Any
 from supabase import Client
 
 from .ari_push import _iso_days
+from .channex_client import ChannexBudgetExhausted
 from .common import log
 from .verfuegbarkeit_regeln import Wochentagsregel
 
@@ -106,6 +107,15 @@ class FullSyncMixin:
             rows_by_property = {k: v for k, v in rows_by_property.items() if v}
             if rows_by_property:
                 self.push_restriction_rows_multi(tenant_id, rows_by_property)
+        except ChannexBudgetExhausted:
+            # Kontroll-Signal, NICHT verschlucken (Wurzel 5): Die Ausnahme ist
+            # bewusst keine ChannexError-Unterklasse, damit sie bis zum Worker
+            # durchschlägt und der Job verzögert wiederholt wird. Wurde sie hier
+            # gefangen, fiel der GESAMTE Restriktions-Teil (alle Preise,
+            # min_stay, stop_sell über 500 Tage) still aus und der Full-Sync
+            # meldete Erfolg — der nächtliche Heilungsmechanismus war tot, ohne
+            # dass es irgendwo sichtbar wurde.
+            raise
         except Exception as exc:  # noqa: BLE001 — Rate-Teil kippt nie den Avail-Teil
             log.warning(
                 "full_sync_rates_failed",
@@ -133,6 +143,8 @@ class FullSyncMixin:
                     tenant_id=tenant_id, property_id=property_id,
                     recovered=rec["saved"],
                 )
+        except ChannexBudgetExhausted:
+            raise  # Kontroll-Signal (Wurzel 5) — Job verzögern statt still „done"
         except Exception as exc:  # noqa: BLE001 — Recovery nie den Full-Sync kippen
             log.warning(
                 "channex_full_sync_recovery_failed",
