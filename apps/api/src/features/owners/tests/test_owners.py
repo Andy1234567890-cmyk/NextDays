@@ -64,6 +64,7 @@ class _Query:
         self._filters: list[tuple[str, object]] = []
         self._neq: list[tuple[str, object]] = []
         self._in: tuple[str, list] | None = None
+        self._is: list[tuple[str, object]] = []
         self._order: str | None = None
         self._embeds: dict[str, list[str]] = {}
 
@@ -114,6 +115,15 @@ class _Query:
         self._in = (col, vals)
         return self
 
+    def is_(self, col: str, val: object) -> "_Query":
+        # PostgREST-`is` prüft NULL-Sein (`.is_("guest_id", "null")`). Muss echt
+        # filtern: `eigennutzungen_laden` grenzt damit auf Aufenthalte OHNE Gast
+        # ein — eine Attrappe, die den Filter durchwinkt, zählte auch echte
+        # Gastbuchungen mit und der Test bewiese das Gegenteil von dem, was er
+        # behauptet.
+        self._is.append((col, val))
+        return self
+
     def order(self, col: str, **_k: object) -> "_Query":
         self._order = col
         return self
@@ -146,6 +156,11 @@ class _Query:
         if ok and self._in:
             col, vals = self._in
             ok = str(row.get(col)) in {str(v) for v in vals}
+        for col, val in self._is if ok else []:
+            ist_null = self._feld(row, col) is None
+            ok = ist_null if str(val) == "null" else not ist_null
+            if not ok:
+                break
         return ok
 
     def _mit_embeds(self, row: dict) -> dict:
@@ -270,15 +285,26 @@ class _AuthAdmin:
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict]] = []
         self.anmelde_emails: dict[str, str] = {}
+        # Gelöschte Logins — der Beweis, dass mit dem Eigentümer auch sein
+        # Zugang verschwindet und sich niemand danach noch anmelden kann.
+        self.geloeschte: list[str] = []
         # Wenn gesetzt, wirft der nächste Aufruf — für den Kollisionsfall
         # (Adresse in einem ANDEREN Betrieb bereits vergeben; das sieht die
         # Vorprüfung im Dienst nicht, nur GoTrue).
         self.raises: Exception | None = None
+        # Wenn gesetzt, wirft `delete_user` — für den Fall, dass GoTrue den
+        # Login nicht löschen kann und der ganze Vorgang abbrechen muss.
+        self.delete_raises: Exception | None = None
 
     def update_user_by_id(self, user_id: str, attrs: dict) -> None:
         self.calls.append((user_id, dict(attrs)))
         if self.raises is not None:
             raise self.raises
+
+    def delete_user(self, user_id: str) -> None:
+        if self.delete_raises is not None:
+            raise self.delete_raises
+        self.geloeschte.append(user_id)
 
     def get_user_by_id(self, user_id: str) -> _AuthUserAntwort:
         return _AuthUserAntwort(_AuthUser(self.anmelde_emails.get(user_id)))
@@ -412,6 +438,76 @@ def test_delete_removes_owner() -> None:
     with pytest.raises(OwnerError) as exc:
         svc.get(_ctx(), owner.id)
     assert exc.value.status_code == 404
+
+
+def test_delete_entfernt_portalzugang_und_portalsicht() -> None:
+    """Mit dem Eigentümer verschwindet sein Login — samt Portal-Sicht.
+
+    Bliebe der Login stehen, hätte das zwei Folgen, beide live aufgetreten
+    (10.08.2026): der gelöschte Eigentümer könnte sich weiter anmelden, und
+    ein später mit derselben Adresse neu angelegter Eigentümer bekäme KEINE
+    Einladungsmail — `_portalzugang_einrichten` würde den übrig gebliebenen
+    Login nur verknüpfen.
+    """
+    db = _DB(
+        {
+            "owners": [
+                {
+                    "id": "o-1",
+                    "tenant_id": "t-1",
+                    "name": "A",
+                    "user_id": "u-1",
+                }
+            ],
+            "owner_properties": [],
+            "properties": [],
+            "users": [{"id": "u-1", "tenant_id": "t-1", "role": "owner"}],
+            "owner_property_assignments": [
+                {"id": "a-1", "tenant_id": "t-1", "user_id": "u-1", "property_id": "p-1"}
+            ],
+            "reservations": [],
+            "owner_email_changes": [],
+        }
+    )
+    svc = OwnersService(service_client=db)
+
+    svc.delete(_ctx(), "o-1")
+
+    assert db.auth.admin.geloeschte == ["u-1"]  # GoTrue-Login weg
+    assert db.tables["users"] == []  # users-Zeile weg
+    assert db.tables["owner_property_assignments"] == []  # Portal-Sicht weg
+    assert db.tables["owners"] == []
+
+
+def test_delete_bricht_ab_wenn_login_nicht_geloescht_werden_kann() -> None:
+    """Scheitert das Löschen des Logins, bleibt der Eigentümer vollständig.
+
+    Fail-closed (Wurzel 5): ein Eigentümer weg und sein Zugang übrig wäre
+    genau der Zustand, den dieser Fix beseitigt. Lieber ein klarer Fehler und
+    ein wiederholbarer zweiter Versuch.
+    """
+    db = _DB(
+        {
+            "owners": [
+                {"id": "o-1", "tenant_id": "t-1", "name": "A", "user_id": "u-1"}
+            ],
+            "owner_properties": [],
+            "properties": [],
+            "users": [{"id": "u-1", "tenant_id": "t-1", "role": "owner"}],
+            "owner_property_assignments": [],
+            "reservations": [],
+            "owner_email_changes": [],
+        }
+    )
+    db.auth.admin.delete_raises = RuntimeError("GoTrue nicht erreichbar")
+    svc = OwnersService(service_client=db)
+
+    with pytest.raises(OwnerError) as exc:
+        svc.delete(_ctx(), "o-1")
+
+    assert exc.value.status_code == 502
+    assert db.tables["owners"] != []  # Eigentümer steht noch
+    assert db.tables["users"] != []  # und sein Login auch
 
 
 # --- Objekt-Zuordnung --------------------------------------------------------
@@ -569,6 +665,11 @@ def test_portalzugang_verknuepft_bestehenden_owner_login() -> None:
     zweiten Nutzer und keine zweite Einladungsmail erzeugen. Weil der
     vorhandene Nutzer wiederverwendet wird, läuft der Mailweg hier gar nicht
     erst an — der Test kommt deshalb ohne SMTP aus.
+
+    Und genau deshalb ist `einladung_versendet` hier FALSE: es ging keine Mail
+    raus. Der Test behauptete früher das Gegenteil und hielt damit einen Bug
+    fest — die Oberfläche meldete „Einladung versendet", der Betrieb wartete
+    auf eine Mail, die es nie gab (live am 10.08.2026).
     """
     svc = _svc(
         {
@@ -587,7 +688,7 @@ def test_portalzugang_verknuepft_bestehenden_owner_login() -> None:
         OwnerCreate(name="A", email="a@example.com", portalzugang=True),
     )
     assert res.user_id == "u-own"
-    assert res.einladung_versendet is True
+    assert res.einladung_versendet is False
 
 
 def test_portalzugang_weist_fremde_rolle_ab() -> None:

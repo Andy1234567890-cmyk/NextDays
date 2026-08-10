@@ -16,6 +16,8 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 from src.features.properties.schemas import types_for_accommodation
 
+from .eigennutzungen import eigennutzungen_entfernen, eigennutzungen_laden
+from .portalzugang import portalzugang_entfernen
 from .schemas import (
     AvailablePropertiesResponse,
     AvailableProperty,
@@ -54,12 +56,26 @@ _OWNER_COLUMNS = (
 
 
 class OwnerError(Exception):
-    """Fachlicher Fehler; vom Router auf HTTP-Status gemappt."""
+    """Fachlicher Fehler; vom Router auf HTTP-Status gemappt.
 
-    def __init__(self, message: str, *, status_code: int = 400) -> None:
+    `details` trägt strukturierte Zusatzangaben, die der Client für seine
+    Reaktion BRAUCHT — etwa die Anzahl der Eigennutzungen, über die das
+    Löschen zurückfragt. Sie stehen bewusst neben der Meldung und nicht darin:
+    der Meldungstext ist übersetzbar, eine Zahl daraus zurückzuparsen wäre eine
+    zweite, brüchige Wahrheit (Wurzel 4).
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int = 400,
+        details: dict | None = None,
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.status_code = status_code
+        self.details = details
 
 
 class OwnersService:
@@ -285,7 +301,7 @@ class OwnersService:
                 return OwnerResponse(
                     **_owner_row(row), properties=self._links(owner_id)
                 )
-            row = self._portalzugang_einrichten(ctx, row)
+            row, eingeladen = self._portalzugang_einrichten(ctx, row)
         except Exception:
             # Bewusst breit: JEDER Fehlschlag zwischen Anlage und fertigem
             # Ergebnis muss die Anlage zurücknehmen, nicht nur die fachlichen
@@ -304,7 +320,7 @@ class OwnersService:
         return OwnerResponse(
             **_owner_row(row),
             properties=self._links(owner_id),
-            einladung_versendet=True,
+            einladung_versendet=eingeladen,
         )
 
     def _anlage_zuruecknehmen(self, tenant_id: str, owner_id: str) -> None:
@@ -501,7 +517,7 @@ class OwnersService:
                 "Für den Portalzugang wird eine E-Mail-Adresse gebraucht.",
                 status_code=422,
             )
-        row = self._portalzugang_einrichten(ctx, row)
+        row, eingeladen = self._portalzugang_einrichten(ctx, row)
         # Der nachträgliche Zugang trifft in aller Regel einen Eigentümer, dem
         # bereits Objekte gehören — genau der Fall, in dem die fehlende
         # Portal-Sicht am meisten weh tut (Zugang da, Portal leer).
@@ -509,7 +525,7 @@ class OwnersService:
         return OwnerResponse(
             **_owner_row(row),
             properties=self._links(owner_id),
-            einladung_versendet=True,
+            einladung_versendet=eingeladen,
         )
 
     def einladung_erneut_senden(self, ctx: AuthContext, owner_id: str) -> None:
@@ -568,8 +584,14 @@ class OwnersService:
             owner_id=owner_id,
         )
 
-    def _portalzugang_einrichten(self, ctx: AuthContext, row: dict) -> dict:
+    def _portalzugang_einrichten(
+        self, ctx: AuthContext, row: dict
+    ) -> tuple[dict, bool]:
         """Login-Nutzer anlegen, einladen und mit dem Eigentümer verknüpfen.
+
+        Gibt die aktualisierte Eigentümer-Zeile zurück UND ob dabei wirklich
+        eine Einladungsmail rausging — im Verknüpfungs-Zweig (bestehender
+        Login) geht keine, und der Aufrufer darf nichts anderes behaupten.
 
         Der Versand läuft NICHT über einen eigenen Mailweg, sondern über
         `AuthService.invite` — denselben, den /konto/nutzer benutzt. Dort sitzt
@@ -599,11 +621,15 @@ class OwnersService:
             # Schon ein Login zu dieser Adresse: nur verknüpfen. Die Rolle muss
             # trotzdem stimmen — `_validate_user_link` weist einen Mitarbeiter-
             # oder Admin-Zugang ab, statt ihn still zum Eigentümer zu machen.
+            #
+            # Hier geht KEINE Mail raus, und das muss der Aufrufer erfahren:
+            # meldete die Oberfläche trotzdem „Einladung versendet", wartete
+            # der Betrieb auf eine Mail, die es nie gab (live am 10.08.2026).
             self._validate_user_link(tenant_id, vorhandener)
-            return self._user_verknuepfen(tenant_id, owner_id, vorhandener)
+            return self._user_verknuepfen(tenant_id, owner_id, vorhandener), False
 
         user_id = self._einladen(ctx, row=row, email=email)
-        return self._user_verknuepfen(tenant_id, owner_id, user_id)
+        return self._user_verknuepfen(tenant_id, owner_id, user_id), True
 
     def _einladen(self, ctx: AuthContext, *, row: dict, email: str) -> str:
         """Login-Nutzer mit Rolle `owner` anlegen und Einladungsmail auslösen.
@@ -1035,8 +1061,59 @@ class OwnersService:
         )
         return email
 
-    def delete(self, ctx: AuthContext, owner_id: str) -> None:
+    def delete(
+        self, ctx: AuthContext, owner_id: str, *, mit_eigennutzungen: bool = False
+    ) -> None:
+        """Eigentümer löschen — mit allem, was nur seinetwegen existiert.
+
+        ZWEI GEGENZUSTÄNDE (Wurzel 1), beide gehören zum Löschen dazu:
+
+        1. EIGENNUTZUNGEN. Ohne `mit_eigennutzungen` ist das ein 409 mit der
+           ANZAHL betroffener Aufenthalte, damit die Oberfläche danach fragen
+           kann. Mit dem Flag werden sie zuerst weggeräumt: aktive laufen durch
+           `ReservationsService.cancel` (die EINE Stelle, die Kalendernächte
+           freigibt), danach fallen alle Zeilen weg — auch die schon
+           stornierten, die den Check-Constraint sonst weiter brechen.
+
+        2. PORTALZUGANG. Login und Portal-Sicht gehen ohne eigene Rückfrage
+           mit: sie existieren ausschließlich, weil es diesen Eigentümer gab.
+           Blieben sie stehen, könnte sich ein gelöschter Eigentümer weiter
+           anmelden — und ein später mit derselben Adresse neu angelegter
+           Eigentümer bekäme KEINE Einladungsmail, weil `_portalzugang_
+           einrichten` den übrig gebliebenen Login nur verknüpft (live
+           aufgetreten, 10.08.2026).
+        """
         tenant_id = self._require_tenant(ctx)
+        row = self._get_row(tenant_id, owner_id)  # Scope + 404 vor Seiteneffekt
+        stays = eigennutzungen_laden(self._db, tenant_id, owner_id)
+        if stays and not mit_eigennutzungen:
+            # Kein Abbruch, sondern eine RÜCKFRAGE: die Oberfläche zeigt die
+            # Zahl und schickt denselben Aufruf mit `mit_eigennutzungen=true`
+            # erneut. Die Zahl steht strukturiert daneben, nicht nur im Text —
+            # sie ist die Grundlage der Frage, nicht bloß Dekoration.
+            raise OwnerError(
+                f"Dieser Eigentümer hat {len(stays)} Eigennutzung(en) im "
+                "Kalender.",
+                status_code=409,
+                details={
+                    "code": "owner_has_stays",
+                    "eigennutzungen": len(stays),
+                },
+            )
+        if stays:
+            eigennutzungen_entfernen(
+                self._db, ctx, tenant_id, owner_id, stays, fehler=OwnerError
+            )
+        # Der Zugang VOR der owners-Zeile: solange sie steht, ist über
+        # `owners.user_id` nachvollziehbar, welcher Login zu räumen ist.
+        # Scheitert das Löschen des Logins, bricht der Vorgang hier ab und der
+        # Eigentümer bleibt vollständig bestehen — wiederholbar, statt ein
+        # Eigentümer weg und sein Zugang übrig (Wurzel 5).
+        user_id = row.get("user_id")
+        if user_id:
+            portalzugang_entfernen(
+                self._db, tenant_id, str(user_id), fehler=OwnerError
+            )
         res = (
             self._db.table("owners")
             .delete()
@@ -1046,7 +1123,13 @@ class OwnersService:
         )
         if not res.data:
             raise OwnerError("Eigentümer nicht gefunden.", status_code=404)
-        log.info("owner_deleted", tenant_id=tenant_id, owner_id=owner_id)
+        log.info(
+            "owner_deleted",
+            tenant_id=tenant_id,
+            owner_id=owner_id,
+            eigennutzungen=len(stays),
+            portalzugang=bool(user_id),
+        )
 
     def available_properties(
         self, ctx: AuthContext, owner_id: str

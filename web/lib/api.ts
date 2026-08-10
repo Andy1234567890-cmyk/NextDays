@@ -7,9 +7,24 @@ const PREFIX = "/api/v1";
 
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  /**
+   * Das rohe `detail` aus der Fehlerantwort, wenn es ein OBJEKT war.
+   *
+   * Manche Endpunkte tragen im Fehlerfall strukturierte Angaben, die der
+   * Aufrufer braucht — etwa die Anzahl der Eigennutzungen, über die das
+   * Löschen eines Eigentümers zurückfragt (409). Die aus dem Meldungstext zu
+   * parsen wäre eine zweite, brüchige Wahrheit: der Text ist übersetzbar, die
+   * Zahl nicht daraus rekonstruierbar.
+   */
+  details?: Record<string, unknown>;
+  constructor(
+    message: string,
+    status: number,
+    details?: Record<string, unknown>,
+  ) {
     super(message);
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -42,10 +57,20 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
 
   if (!res.ok) {
     let detail = `Fehler ${res.status}`;
+    let details: Record<string, unknown> | undefined;
     try {
       const data = await res.json();
       if (typeof data?.detail === "string") {
         detail = data.detail;
+      } else if (
+        data?.detail &&
+        typeof data.detail === "object" &&
+        !Array.isArray(data.detail)
+      ) {
+        // Strukturiertes detail: die Meldung liegt in `message`, alles Weitere
+        // (z. B. Anzahlen für eine Rückfrage) reicht `details` durch.
+        details = data.detail as Record<string, unknown>;
+        if (typeof details.message === "string") detail = details.message;
       } else if (Array.isArray(data?.detail)) {
         // Pydantic-Validierungsfehler: Array aus {loc, msg, …} — die msg-Texte
         // sichtbar machen statt nur „Fehler 422" (der Nutzer muss den Grund sehen).
@@ -60,7 +85,7 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
     } catch {
       // kein JSON-Body — Standardmeldung behalten
     }
-    throw new ApiError(detail, res.status);
+    throw new ApiError(detail, res.status, details);
   }
 
   if (res.status === 204) return undefined as T;

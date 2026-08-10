@@ -202,19 +202,32 @@ function DeleteOwnerDialog({
   const tIrreversible = useTranslations("finance.StornoInvoice");
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  // Anzahl der Eigennutzungen, über die das Backend zurückgefragt hat. Gesetzt
+  // heißt: der Dialog steht in der zweiten Stufe und der nächste Klick löscht
+  // die Aufenthalte mit.
+  const [stays, setStays] = useState<number | null>(null);
 
   async function submit() {
     setBusy(true);
-    const res = await deleteOwner(owner.id);
+    const res = await deleteOwner(owner.id, {
+      mitEigennutzungen: stays !== null,
+    });
     if (res.ok) {
       toast.success(t("deleted"));
       onClose();
       router.refresh();
       return;
     }
-    // Backend-Fehler sichtbar machen (z. B. 404 „nicht gefunden", 403 ohne
-    // Berechtigung) — nicht stumm scheitern. Dialog bleibt offen.
     setBusy(false);
+    if (res.rueckfrage) {
+      // Kein Fehler, sondern die Rückfrage des Backends: der Eigentümer hat
+      // noch Aufenthalte im Kalender. Der Dialog benennt sie und der nächste
+      // Klick storniert und entfernt sie mit.
+      setStays(res.rueckfrage.eigennutzungen);
+      return;
+    }
+    // Echter Backend-Fehler (z. B. 404 „nicht gefunden", 403 ohne
+    // Berechtigung) — nicht stumm scheitern. Dialog bleibt offen.
     toast.error(res.error);
   }
 
@@ -227,6 +240,11 @@ function DeleteOwnerDialog({
             <div className="flex flex-col gap-2">
               <span className="font-semibold text-foreground">{owner.name}</span>
               <span>{t("deleteConfirm")}</span>
+              {stays !== null && (
+                <span className="text-destructive">
+                  {t("deleteStaysWarning", { count: stays })}
+                </span>
+              )}
               <span>{tIrreversible("noticeIrreversible")}</span>
             </div>
           </DialogDescription>
@@ -244,7 +262,7 @@ function DeleteOwnerDialog({
               ) : (
                 <Icon icon="ph:trash" className="size-4" />
               )}
-              {t("delete")}
+              {stays !== null ? t("deleteWithStays") : t("delete")}
             </Button>
           </div>
         </div>

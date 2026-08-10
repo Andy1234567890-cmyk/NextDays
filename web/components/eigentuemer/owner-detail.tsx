@@ -189,9 +189,9 @@ export function OwnerDetail({
     } else toast.error(res.error);
   }
 
-  async function remove() {
-    if (!window.confirm(t("deleteConfirm"))) return;
-    const res = await deleteOwner(owner.id);
+  async function remove(mitEigennutzungen = false) {
+    if (!mitEigennutzungen && !window.confirm(t("deleteConfirm"))) return;
+    const res = await deleteOwner(owner.id, { mitEigennutzungen });
     if (res.ok) {
       toast.success(t("deleted"));
       // `refresh()` VOR dem `push`: die Zielliste liegt im Router-Cache des
@@ -200,7 +200,19 @@ export function OwnerDetail({
       // Realtime-Event, das den Cache von selbst entwerten könnte.
       router.refresh();
       router.push("/eigentuemer");
-    } else toast.error(res.error);
+      return;
+    }
+    if (res.rueckfrage) {
+      // Kein Fehler, sondern die Rückfrage des Backends: der Eigentümer hat
+      // noch Aufenthalte im Kalender. Zweite Bestätigung, die sie ausdrücklich
+      // benennt — dann wird beides zusammen gelöscht.
+      const weiter = window.confirm(
+        t("deleteStaysConfirm", { count: res.rueckfrage.eigennutzungen }),
+      );
+      if (weiter) await remove(true);
+      return;
+    }
+    toast.error(res.error);
   }
 
   /**

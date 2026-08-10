@@ -5,7 +5,7 @@ tenant-gescoped. Eigentümer-Stammdaten + Objekt-Zuordnung mit Anteil/Provision.
 """
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from src.core.security import AuthContext, get_current_user
 from src.features.auth.dependencies import require_permission
@@ -282,11 +282,35 @@ def delete_owner(
     owner_id: str,
     service: OwnersServiceDep,
     ctx: Annotated[AuthContext, Depends(_MANAGE)],
+    mit_eigennutzungen: Annotated[
+        bool,
+        Query(
+            description=(
+                "Eigennutzungen dieses Eigentümers mit stornieren und "
+                "entfernen. Ohne das Flag antwortet der Endpunkt mit 409 und "
+                "nennt die Anzahl, damit die Oberfläche nachfragen kann."
+            )
+        ),
+    ] = False,
 ) -> None:
+    """Eigentümer löschen — auf Wunsch samt seiner Eigennutzungen.
+
+    Die Eigennutzungen können nicht stehenbleiben: `reservations.owner_id` ist
+    ON DELETE SET NULL, und eine Eigennutzung ohne Person verletzt den Check
+    `reservations_owner_stay_person` (der Löschversuch endete live als 500).
+    Der Endpunkt fragt deshalb erst zurück — 409 mit der Anzahl — und räumt
+    sie nur mit gesetztem Flag weg.
+    """
     try:
-        service.delete(ctx, owner_id)
+        service.delete(ctx, owner_id, mit_eigennutzungen=mit_eigennutzungen)
     except OwnerError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        # Trägt der Fehler strukturierte Angaben (hier: die Anzahl der
+        # Eigennutzungen), gehen sie als Objekt raus — die Oberfläche braucht
+        # die Zahl für ihre Rückfrage und soll sie nicht aus dem Text parsen.
+        detail = (
+            {"message": exc.message, **exc.details} if exc.details else exc.message
+        )
+        raise HTTPException(status_code=exc.status_code, detail=detail) from exc
 
 
 @router.get(

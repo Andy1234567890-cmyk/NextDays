@@ -104,7 +104,13 @@ export type OwnerInput = Partial<
 
 type Result<T> =
   | { ok: true; data: T }
-  | { ok: false; error: string; status?: number };
+  | {
+      ok: false;
+      error: string;
+      status?: number;
+      /** Strukturiertes `detail` der Fehlerantwort, sofern der Endpunkt eins schickt. */
+      details?: Record<string, unknown>;
+    };
 
 async function call<T>(
   path: string,
@@ -119,7 +125,8 @@ async function call<T>(
     const error =
       exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
     const status = exc instanceof ApiError ? exc.status : undefined;
-    return { ok: false, error, status };
+    const details = exc instanceof ApiError ? exc.details : undefined;
+    return { ok: false, error, status, details };
   }
 }
 
@@ -273,8 +280,34 @@ export async function resendOwnerEmailConfirmation(
   });
 }
 
-export async function deleteOwner(id: string): Promise<Result<null>> {
-  return call(`/owners/${id}`, { method: "DELETE" });
+/**
+ * Antwort des Löschens, wenn der Eigentümer noch Eigennutzungen im Kalender
+ * hat: kein Fehler, sondern eine RÜCKFRAGE mit der Anzahl. Der Aufrufer zeigt
+ * sie und ruft `deleteOwner(id, { mitEigennutzungen: true })` erneut auf.
+ */
+export type OwnerHatEigennutzungen = {
+  code: "owner_has_stays";
+  eigennutzungen: number;
+};
+
+export async function deleteOwner(
+  id: string,
+  opts: { mitEigennutzungen?: boolean } = {},
+): Promise<Result<null> & { rueckfrage?: OwnerHatEigennutzungen }> {
+  const query = opts.mitEigennutzungen ? "?mit_eigennutzungen=true" : "";
+  const res = await call<null>(`/owners/${id}${query}`, { method: "DELETE" });
+  if (res.ok || res.status !== 409) return res;
+  // Die Anzahl kommt strukturiert aus dem Backend (`detail.eigennutzungen`),
+  // nicht aus dem Meldungstext — der ist übersetzbar, die Zahl nicht daraus
+  // rekonstruierbar.
+  const anzahl = res.details?.eigennutzungen;
+  if (res.details?.code !== "owner_has_stays" || typeof anzahl !== "number") {
+    return res;
+  }
+  return {
+    ...res,
+    rueckfrage: { code: "owner_has_stays", eigennutzungen: anzahl },
+  };
 }
 
 /**
