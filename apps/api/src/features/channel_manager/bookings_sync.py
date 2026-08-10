@@ -1199,7 +1199,10 @@ class BookingsSyncMixin:
                     kind="created",
                     property_id=property_id,
                     gast_vorname=self._gast_name(db, tenant_id, guest_id),
-                    quelle=ota_name or channel,
+                    # Markenname und Enum getrennt — der Markenname geht
+                    # wörtlich hinaus, der Enum wird übersetzt.
+                    quelle=ota_name,
+                    kanal=channel,
                 )
 
         if already_checked_out:

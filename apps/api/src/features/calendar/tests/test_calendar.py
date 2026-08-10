@@ -62,6 +62,7 @@ class _Query:
         self._eq: dict = {}
         self._in: tuple | None = None
         self._op = "select"
+        self._payload: dict | None = None
 
     def select(self, *_a, **_k) -> "_Query":
         return self
@@ -109,6 +110,8 @@ class _Query:
 
     def update(self, payload) -> "_Query":  # noqa: ANN001
         self._store.setdefault("_updates", []).append((self._name, payload))
+        self._op = "update"
+        self._payload = payload
         return self
 
     def upsert(self, payload, **_k) -> "_Query":  # noqa: ANN001
@@ -133,7 +136,39 @@ class _Query:
                 rows.append(dict(eintrag))
         return self
 
+    def _getroffen(self, rows: list) -> list:
+        """Die Zeilen, auf die eq/in_ dieses Query zutreffen.
+
+        Nur auf Spalten filtern, die die Zeilen überhaupt führen — die meisten
+        Tests hinterlegen Kurz-Zeilen ohne tenant_id/status, ein pauschaler
+        Filter machte sie alle leer.
+        """
+        getroffen = rows
+        for col, val in self._eq.items():
+            if any(col in r for r in rows):
+                getroffen = [
+                    r for r in getroffen if str(r.get(col)) == str(val)
+                ]
+        if self._in is not None:
+            col, vals = self._in
+            if any(col in r for r in rows):
+                werte = {str(v) for v in vals}
+                getroffen = [
+                    r for r in getroffen if str(r.get(col)) in werte
+                ]
+        return getroffen
+
     def execute(self) -> _Res:
+        if self._op == "update" and self._payload is not None:
+            # Das Update wirklich ANWENDEN, nicht nur protokollieren: seit der
+            # Freigabe einer Sperre auf `status='open'` updatet statt löscht,
+            # beweist erst der veränderte Store den Gegenzustand (Wurzel 1).
+            # Ein rein protokollierendes Update sähe die Zeile weiter als
+            # 'blocked' — der Test wäre wertlos.
+            rows = self._store.setdefault(self._name, [])
+            for r in self._getroffen(list(rows)):
+                r.update(self._payload)
+            return _Res([])
         if self._op == "delete":
             self._store.setdefault("_deletes", []).append(self._name)
             # Delete-Filter (source) mitschreiben, damit Tests die Unterscheidung
@@ -146,12 +181,7 @@ class _Query:
             # könnte den Gegenzustand nicht beweisen: der Freigabe-Test sähe
             # die gelöschten Zeilen weiter im Store und wäre wertlos.
             rows = list(self._store.get(self._name, []))
-            getroffen = rows
-            for col, val in self._eq.items():
-                if any(col in r for r in rows):
-                    getroffen = [
-                        r for r in getroffen if str(r.get(col)) == str(val)
-                    ]
+            getroffen = self._getroffen(rows)
             # In-place (`[:] =`) statt neu binden: Tests halten oft eine
             # Referenz auf genau diese Liste und sähen sonst den Stand von vor
             # dem Löschen.
@@ -159,15 +189,11 @@ class _Query:
             self._store.setdefault(self._name, [])[:] = uebrig
             return _Res([])
         rows = list(self._store.get(self._name, []))
-        # in_-Filter unterstützen (properties-Tenant-Lookup im bulk_edit).
+        # Der in_-Filter greift beim SELECT auch auf Spalten, die die Zeilen
+        # nicht führen (properties-Tenant-Lookup im bulk_edit erwartet das).
         if self._in is not None:
             col, vals = self._in
             rows = [r for r in rows if r.get(col) in vals]
-        # eq-Filter NUR auf Spalten anwenden, die die Zeilen überhaupt führen.
-        # Die meisten Tests hier hinterlegen Kurz-Zeilen ohne tenant_id/status;
-        # ein pauschaler Filter machte sie alle leer. Für Tests, die den Scope
-        # BEWEISEN wollen (Einheit gehört zum Objekt/Mandanten), zählt genau
-        # diese Prüfung — dort tragen die Zeilen die Spalte.
         for col, val in self._eq.items():
             if any(col in r for r in rows):
                 rows = [r for r in rows if str(r.get(col)) == str(val)]
@@ -515,6 +541,80 @@ def test_unblock_einer_einheit_laesst_die_anderen_gesperrt() -> None:
         if r["status"] == "blocked"
     }
     assert verbleibend == {"u1", "u3"}
+
+
+def test_unblock_setzt_auf_open_statt_zu_loeschen() -> None:
+    """Wurzel 1 — der Gegenzustand einer Sperre ist der OFFENE Tag, nicht die
+    Abwesenheit einer Aussage.
+
+    Das Aufheben LÖSCHTE die Zeile. Für die Portale ist ein Tag ohne Zeile
+    offen, im Belegungsplan aber ein Loch, das einen durchgehenden Sperrbalken
+    in zwei zerreißt — und der nächste Channex-Import legte den Tag als
+    `source='portal'` neu an, womit die eigene Sperre für die Rezeption
+    unsichtbar und für den Nutzer unlöschbar wurde.
+
+    Live gefunden am 10.08.2026 (Rævehulen, Sperre 14.–19.08.): der 15.08.
+    hatte weder eine `availability`- noch eine `stop_sell`-Zeile und war
+    mitten in der Sperre auf allen Portalen buchbar.
+    """
+    store = _mehrfamilien_store()
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": "u1", "date": "2026-05-01",
+         "status": "blocked", "source": "manual", "block_request_id": "b1"}
+    ]
+    svc, _ = _service(**store)
+    svc.unblock(
+        "t1", "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+        unit_id="u1",
+    )
+    # Die Zeile ist NOCH DA und sagt jetzt „offen" — das ist der Unterschied,
+    # den ein reines Zählen der gesperrten Zeilen nicht sehen würde.
+    assert len(store["availability"]) == 1
+    zeile = store["availability"][0]
+    assert zeile["status"] == "open"
+    assert zeile["block_request_id"] is None
+
+
+def test_unblock_hebt_auch_eine_zurueckgespiegelte_sperre_auf() -> None:
+    """Eine Sperre mit `source='portal'` ist UNSERE Sperre, keine fremde.
+
+    Die Zeile entsteht, wenn der Channex-Import unsere eigene Vorgabe
+    zurückspiegelt (availability=0 → status='blocked', source='portal').
+    Unsere Plattform gibt die Vorgabe, Channex reicht sie nur an die OTAs
+    weiter. Solange nur `manual` aufhebbar war, wurde eine Sperre unlöschbar,
+    sobald ein Sync-Lauf sie einmal zurückgeholt hatte.
+    """
+    store = _mehrfamilien_store()
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": "u1", "date": "2026-05-01",
+         "status": "blocked", "source": "portal"}
+    ]
+    svc, _ = _service(**store)
+    svc.unblock(
+        "t1", "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+        unit_id="u1",
+    )
+    assert store["availability"][0]["status"] == "open"
+
+
+def test_unblock_laesst_ical_sperre_stehen() -> None:
+    """Die Gegenprobe: `ical` gehört einem abonnierten Fremdkalender.
+
+    Sie hier zu öffnen wäre ein Scheinerfolg — der nächste Feed-Lauf schriebe
+    sie zurück, während der Nutzer glaubt, der Zeitraum sei frei. Der Weg
+    dorthin führt über das Abo, nicht über den Balken.
+    """
+    store = _mehrfamilien_store()
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": "u1", "date": "2026-05-01",
+         "status": "blocked", "source": "ical"}
+    ]
+    svc, _ = _service(**store)
+    svc.unblock(
+        "t1", "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+        unit_id="u1",
+    )
+    assert store["availability"][0]["status"] == "blocked"
 
 
 def test_unblock_lehnt_fremde_einheit_ab() -> None:

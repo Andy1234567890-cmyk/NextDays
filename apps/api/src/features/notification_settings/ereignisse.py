@@ -38,6 +38,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.mail_sprache import FALLBACK
+from src.core.mail_texte import TEXTE as MAIL_TEXTE
 from src.core.mail_texte import text as mail_text
 
 if TYPE_CHECKING:  # nur fuer die Typannotation — zur Laufzeit waere es ein Zyklus
@@ -231,6 +232,7 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
     property_id: str | None = None,
     gast_vorname: str | None = None,
     quelle: str | None = None,
+    kanal: str | None = None,
 ) -> None:
     """Buchungseingang / Aenderung / Storno an den Eigentuemer des Objekts.
 
@@ -254,7 +256,16 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
             return
         vorname = _nur_vorname(gast_vorname)
         objekt = _objekt_titel(db, tenant_id, property_id)
-        text = " · ".join(t for t in (vorname, quelle) if t)
+        kanal_wert = _kanal_wert(quelle, kanal)
+        # Die Glocke bekommt den fertigen Satz in der Serversprache (sie wird
+        # in der Oberflaeche gelesen, die ihre eigene Sprachwahl hat), die Mail
+        # den Schluessel plus den Kanal als `Katalogwert` — sie geht in der
+        # Sprache des jeweiligen Eigentuemers raus.
+        text = " · ".join(
+            t
+            for t in (vorname, _kanal_text(kanal_wert, _GLOCKEN_SPRACHE))
+            if t
+        )
         dispatcher = _dispatcher(db)
         for user_id in sorted(empfaenger):
             dispatcher.sende(
@@ -271,9 +282,24 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
                 ),
                 betreff_key=_BUCHUNG_BETREFF_KEY[kind],
                 betreff_werte={"objekt": objekt},
-                # Der Rumpf ist reine DATENZEILE (Vorname · Quelle) — nichts
-                # daran ist uebersetzbar, darum kein `text_key`.
+                # Der Rumpf galt frueher als reine Datenzeile und ging roh
+                # hinaus — der Eigentuemer las dadurch „direct" statt
+                # „Direkt", den nackten Enum-Wert der Datenbank. Bei einer
+                # OTA-Buchung fiel es nicht auf, weil dort der Markenname
+                # (`ota_name`) einspringt; nur die Direktbuchung zeigte es.
+                # Jetzt Katalogschluessel + `Katalogwert`, damit der Kanal in
+                # der Sprache des Empfaengers steht (0335-Mechanik).
                 text=text,
+                text_key=(
+                    "benachrichtigung.buchung_rumpf"
+                    if vorname
+                    else "benachrichtigung.buchung_rumpf_ohne_gast"
+                ),
+                text_werte=(
+                    {"gast": vorname, "kanal": kanal_wert}
+                    if vorname
+                    else {"kanal": kanal_wert}
+                ),
                 tenant_id=tenant_id,
                 ziel_pfad=f"/portal/buchungen/{reservation_id}",
                 property_id=property_id,
@@ -399,6 +425,51 @@ def _gehoert_zum_tenant(db: Client, user_id: str, tenant_id: str) -> bool:
         .execute()
     ).data or []
     return bool(rows)
+
+
+def _kanal_wert(quelle: str | None, kanal: str | None) -> object:
+    """Den Kanal der Buchung als uebersetzbaren ODER woertlichen Wert.
+
+    ZWEI HERKUENFTE, die nicht gleich behandelt werden duerfen:
+      * `ota_name` ist der Name, den das PORTAL selbst fuehrt („Airbnb",
+        „Expedia"). Eine Marke uebersetzt man nicht, und der Katalog kennt sie
+        auch gar nicht — sie geht woertlich hinaus.
+      * `channel` ist unser eigener Enum (`ReservationChannel`). Er ist eine
+        Systemvorgabe, kein Datum, und muss in der Sprache des Empfaengers
+        stehen: `Katalogwert` loest ihn erst im Dispatcher auf, wo die Sprache
+        des jeweiligen Eigentuemers feststeht (im Fan-out ueber mehrere
+        Eigentuemer kann sie verschieden sein).
+
+    Ein Enum-Wert ohne Katalogeintrag faellt NICHT roh durch (Wurzel 4): dann
+    lieber gar keine Kanalzeile als „ota_other" im Postfach. Der Test
+    `test_mail_texte` haelt den Katalog vollstaendig; hier steht der Backstop
+    fuer einen neu ergaenzten Enum-Wert, den niemand nachgetragen hat.
+    """
+    from .dispatcher import Katalogwert  # noqa: PLC0415 — Zyklus zur Ladezeit
+
+    if quelle:
+        return quelle
+    if not kanal:
+        return None
+    schluessel = f"kanal.{kanal}"
+    if schluessel not in MAIL_TEXTE:
+        log.warning("buchungs_kanal_ohne_katalogtext", kanal=kanal)
+        return None
+    return Katalogwert(schluessel)
+
+
+def _kanal_text(wert: object, sprache: str) -> str | None:
+    """Denselben Wert fuer die GLOCKE ausschreiben (Serversprache).
+
+    Die Glocke ist eine gespeicherte Zeile in der Oberflaeche und bekommt
+    darum den fertigen Text, nicht den Schluessel — anders als die Mail, die
+    das Haus verlaesst.
+    """
+    from .dispatcher import Katalogwert  # noqa: PLC0415 — Zyklus zur Ladezeit
+
+    if isinstance(wert, Katalogwert):
+        return mail_text(wert.schluessel, sprache)
+    return str(wert) if wert else None
 
 
 def _nur_vorname(name: str | None) -> str | None:

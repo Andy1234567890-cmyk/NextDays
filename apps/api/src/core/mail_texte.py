@@ -1217,6 +1217,97 @@ TEXTE: dict[str, dict[str, str]] = {
         "sl": "Opravljeno: {titel}",
         "sv": "Klart: {titel}",
     },
+    # Der Rumpf der Buchungsmeldung. Er trug bisher gar keinen Schlüssel, weil
+    # er als „reine Datenzeile" galt (Vorname · Kanal) — der Kanal ist aber ein
+    # übersetzbares Wort, kein Datum. Zwei Fassungen, weil der Vorname fehlen
+    # kann (OTA-Import ohne Gästezeile): dann bliebe sonst ein führendes „ · ".
+    "benachrichtigung.buchung_rumpf": {
+        "bg": "{gast} · {kanal}", "cs": "{gast} · {kanal}",
+        "da": "{gast} · {kanal}", "de": "{gast} · {kanal}",
+        "el": "{gast} · {kanal}", "en": "{gast} · {kanal}",
+        "es": "{gast} · {kanal}", "et": "{gast} · {kanal}",
+        "fi": "{gast} · {kanal}", "fr": "{gast} · {kanal}",
+        "ga": "{gast} · {kanal}", "hr": "{gast} · {kanal}",
+        "hu": "{gast} · {kanal}", "it": "{gast} · {kanal}",
+        "lt": "{gast} · {kanal}", "lv": "{gast} · {kanal}",
+        "mt": "{gast} · {kanal}", "nl": "{gast} · {kanal}",
+        "pl": "{gast} · {kanal}", "pt": "{gast} · {kanal}",
+        "ro": "{gast} · {kanal}", "sk": "{gast} · {kanal}",
+        "sl": "{gast} · {kanal}", "sv": "{gast} · {kanal}",
+    },
+    "benachrichtigung.buchung_rumpf_ohne_gast": {
+        "bg": "{kanal}", "cs": "{kanal}", "da": "{kanal}", "de": "{kanal}",
+        "el": "{kanal}", "en": "{kanal}", "es": "{kanal}", "et": "{kanal}",
+        "fi": "{kanal}", "fr": "{kanal}", "ga": "{kanal}", "hr": "{kanal}",
+        "hu": "{kanal}", "it": "{kanal}", "lt": "{kanal}", "lv": "{kanal}",
+        "mt": "{kanal}", "nl": "{kanal}", "pl": "{kanal}", "pt": "{kanal}",
+        "ro": "{kanal}", "sk": "{kanal}", "sl": "{kanal}", "sv": "{kanal}",
+    },
+    # -- Buchungskanäle ------------------------------------------------------
+    # Die Kanalzeile der Buchungsmeldung („Vorname · Kanal") trug den ROHEN
+    # Enum-Wert der Datenbank: der Eigentümer las „direct" statt „Direkt".
+    # Bei OTA-Buchungen fiel das nicht auf, weil dort `ota_name` („Airbnb")
+    # greift — nur der Direktfall zeigte den Enum. Die vier Markennamen
+    # (Booking.com, Airbnb, Vrbo, myBestDays) bleiben in jeder Sprache gleich,
+    # weil eine Marke kein übersetzbares Wort ist; übersetzt werden nur
+    # „Direkt" und „Anderes Portal". Werte = `ReservationChannel`
+    # (reservations/schemas.py); ein neuer Enum-Wert MUSS hier einen Eintrag
+    # bekommen, sonst wirft `text()` (fail-closed, Wurzel 5).
+    "kanal.direct": {
+        "bg": "Директно", "cs": "Přímo", "da": "Direkte", "de": "Direkt",
+        "el": "Απευθείας", "en": "Direct", "es": "Directa", "et": "Otse",
+        "fi": "Suora", "fr": "Direct", "ga": "Díreach", "hr": "Izravno",
+        "hu": "Közvetlen", "it": "Diretta", "lt": "Tiesiogiai",
+        "lv": "Tieši", "mt": "Dirett", "nl": "Direct", "pl": "Bezpośrednio",
+        "pt": "Direta", "ro": "Direct", "sk": "Priamo", "sl": "Neposredno",
+        "sv": "Direkt",
+    },
+    "kanal.ota_other": {
+        "bg": "Друг портал", "cs": "Jiný portál", "da": "Anden portal",
+        "de": "Anderes Portal", "el": "Άλλη πύλη", "en": "Other portal",
+        "es": "Otro portal", "et": "Muu portaal", "fi": "Muu portaali",
+        "fr": "Autre portail", "ga": "Tairseach eile", "hr": "Drugi portal",
+        "hu": "Másik portál", "it": "Altro portale", "lt": "Kitas portalas",
+        "lv": "Cits portāls", "mt": "Portal ieħor", "nl": "Ander portaal",
+        "pl": "Inny portal", "pt": "Outro portal", "ro": "Alt portal",
+        "sk": "Iný portál", "sl": "Drug portal", "sv": "Annan portal",
+    },
+    "kanal.booking": {
+        "bg": "Booking.com", "cs": "Booking.com", "da": "Booking.com",
+        "de": "Booking.com", "el": "Booking.com", "en": "Booking.com",
+        "es": "Booking.com", "et": "Booking.com", "fi": "Booking.com",
+        "fr": "Booking.com", "ga": "Booking.com", "hr": "Booking.com",
+        "hu": "Booking.com", "it": "Booking.com", "lt": "Booking.com",
+        "lv": "Booking.com", "mt": "Booking.com", "nl": "Booking.com",
+        "pl": "Booking.com", "pt": "Booking.com", "ro": "Booking.com",
+        "sk": "Booking.com", "sl": "Booking.com", "sv": "Booking.com",
+    },
+    "kanal.airbnb": {
+        "bg": "Airbnb", "cs": "Airbnb", "da": "Airbnb", "de": "Airbnb",
+        "el": "Airbnb", "en": "Airbnb", "es": "Airbnb", "et": "Airbnb",
+        "fi": "Airbnb", "fr": "Airbnb", "ga": "Airbnb", "hr": "Airbnb",
+        "hu": "Airbnb", "it": "Airbnb", "lt": "Airbnb", "lv": "Airbnb",
+        "mt": "Airbnb", "nl": "Airbnb", "pl": "Airbnb", "pt": "Airbnb",
+        "ro": "Airbnb", "sk": "Airbnb", "sl": "Airbnb", "sv": "Airbnb",
+    },
+    "kanal.vrbo": {
+        "bg": "Vrbo", "cs": "Vrbo", "da": "Vrbo", "de": "Vrbo",
+        "el": "Vrbo", "en": "Vrbo", "es": "Vrbo", "et": "Vrbo",
+        "fi": "Vrbo", "fr": "Vrbo", "ga": "Vrbo", "hr": "Vrbo",
+        "hu": "Vrbo", "it": "Vrbo", "lt": "Vrbo", "lv": "Vrbo",
+        "mt": "Vrbo", "nl": "Vrbo", "pl": "Vrbo", "pt": "Vrbo",
+        "ro": "Vrbo", "sk": "Vrbo", "sl": "Vrbo", "sv": "Vrbo",
+    },
+    "kanal.portal": {
+        "bg": "myBestDays", "cs": "myBestDays", "da": "myBestDays",
+        "de": "myBestDays", "el": "myBestDays", "en": "myBestDays",
+        "es": "myBestDays", "et": "myBestDays", "fi": "myBestDays",
+        "fr": "myBestDays", "ga": "myBestDays", "hr": "myBestDays",
+        "hu": "myBestDays", "it": "myBestDays", "lt": "myBestDays",
+        "lv": "myBestDays", "mt": "myBestDays", "nl": "myBestDays",
+        "pl": "myBestDays", "pt": "myBestDays", "ro": "myBestDays",
+        "sk": "myBestDays", "sl": "myBestDays", "sv": "myBestDays",
+    },
     "benachrichtigung.buchung_neu": {
         "bg": "Нова резервация: {objekt}",
         "cs": "Nová rezervace: {objekt}",

@@ -54,6 +54,27 @@ log = get_logger("nextdays.calendar")
 # eingespielt sein (PostgREST wirft sonst „column does not exist").
 _STOP_SELL_SCOPE_COLS = "scope,channels,rate_plan_id,"
 
+# Sperr-Herkünfte, die der Betrieb aus dem Kalender heraus wieder aufheben darf.
+#
+# `manual` ist die selbst gesetzte Sperre. `portal` sieht nach fremder Herkunft
+# aus, ist aber KEINE: die Zeile entsteht, wenn der Channex-Import unsere eigene
+# Vorgabe zurückspiegelt (`bookings_sync`: availability=0 → status='blocked',
+# source='portal'). Unsere Plattform gibt die Vorgabe, Channex reicht sie nur an
+# die OTAs weiter. Solange nur `manual` aufhebbar war, wurde eine Sperre
+# unlöschbar, sobald ein Sync-Lauf sie einmal zurückgeholt hatte — live gefunden
+# am 10.08.2026 (Rævehulen 14.–19.08.): der Kalender öffnete das Kontextmenü,
+# aber ohne den Punkt „Aufheben", und der Nutzer kam an seine eigene Sperre
+# nicht mehr heran.
+#
+# `ical` bleibt bewusst DRAUSSEN: diese Zeilen gehören einem abonnierten
+# Fremdkalender (external_calendar). Sie hier zu öffnen wäre ein Scheinerfolg —
+# der nächste Feed-Lauf schriebe sie zurück, während der Nutzer glaubt, der
+# Zeitraum sei frei. Der Weg dorthin führt über das Abo, nicht über den Balken.
+_AUFHEBBARE_SPERRQUELLEN = (
+    AvailabilitySource.manual.value,
+    AvailabilitySource.portal.value,
+)
+
 
 def _default_stop_sell_scope(row: dict) -> None:
     """scope/channels auf den Default (all/[]) setzen, wenn die Spalten (noch)
@@ -2216,8 +2237,21 @@ class CalendarService:
         bleiben unberührt). Meldet danach den ECHTEN Kalenderstand an die
         Portale — je Tag die Zahl der freien Einheiten.
 
+        WURZEL 1 — AUF `open` SETZEN, NICHT LÖSCHEN: Ein DELETE hinterliess
+        einen Tag OHNE Zeile. Für die Portale ist das offen (`full_sync`:
+        „Tage ohne Zeile sind offen"), im Belegungsplan aber ein Loch, das
+        einen durchgehenden Sperrbalken in zwei zerreisst. Live gefunden am
+        10.08.2026 (Rævehulen, Sperre 14.–19.08.): der 15.08. hatte weder eine
+        `availability`- noch eine `stop_sell`-Zeile und war mitten in der
+        Sperre auf allen Portalen buchbar — ein Überbuchungsfenster, das wie
+        ein Anzeigefehler aussah. Der Gegenzustand einer Sperre ist der offene
+        Tag, nicht die Abwesenheit einer Aussage; deshalb hier dasselbe
+        `update(status='open')` wie in `_release_nights` und
+        `_free_ota_nights`. `block_request_id` wird mitgeleert, damit der Tag
+        keinem Antrag mehr zugerechnet bleibt.
+
         WURZEL 1 — nur den EIGENEN Gegenzustand aufheben: Mit
-        `block_request_id` wird ausschliesslich gelöscht, was dieser Antrag
+        `block_request_id` wird ausschliesslich freigegeben, was dieser Antrag
         gesperrt hat. Ohne die Einschränkung riss der Widerruf eines
         Eigentümer-Antrags (5.–7.) eine im selben Zeitraum liegende
         AGENTUR-Sperre (1.–20., Handwerker) mit auf — beide tragen
@@ -2242,10 +2276,14 @@ class CalendarService:
         gescopt (`unblock`); dieser interne Weg prüft nicht erneut.
         """
         query = (
-            self._db().table("availability").delete()
+            self._db().table("availability")
+            .update({
+                "status": AvailabilityStatus.open.value,
+                "block_request_id": None,
+            })
             .eq("property_id", property_id)
             .eq("status", "blocked")
-            .eq("source", "manual")
+            .in_("source", _AUFHEBBARE_SPERRQUELLEN)
         )
         if block_request_id is not None:
             query = query.eq("block_request_id", block_request_id)
@@ -2254,7 +2292,7 @@ class CalendarService:
         query.gte("date", rng.start.isoformat()).lt(
             "date", rng.end.isoformat()
         ).execute()
-        # Der DELETE lief VOR diesem Push — der Stand, den `_push_einheiten_stand`
+        # Das UPDATE lief VOR diesem Push — der Stand, den `_push_einheiten_stand`
         # gleich liest, ist also der Zustand NACH der Freigabe. Umgekehrt meldete
         # er die eben freigegebenen Nächte weiter als belegt.
         self._push_einheiten_stand(property_id, rng)

@@ -474,7 +474,13 @@ class ReservationsBase:
                 # schneidet ihn auf den Vornamen zurück (§4.2) — die Maskierung
                 # steht an EINER Stelle, nicht an jedem Aufrufer.
                 gast_vorname=self._gast_name(tenant_id, row.get("guest_id")),
-                quelle=row.get("ota_name") or row.get("channel"),
+                # BEIDE getrennt, nicht vorher zusammengefallen: `ota_name` ist
+                # ein Markenname und geht wörtlich hinaus, `channel` ist unser
+                # Enum und muss übersetzt werden. Das frühere
+                # `ota_name or channel` machte aus beidem denselben Rohtext —
+                # der Eigentümer las bei einer Direktbuchung „direct".
+                quelle=row.get("ota_name"),
+                kanal=row.get("channel"),
             )
         except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt die Buchung nicht
             log.warning(

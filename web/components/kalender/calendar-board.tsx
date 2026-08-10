@@ -2399,6 +2399,16 @@ export function CalendarBoard({
                           ? (ev: React.MouseEvent) => {
                             ev.preventDefault();
                             ev.stopPropagation();
+                            console.log("[BALKEN-MENÜ]", {
+                              objekt: p.title,
+                              status: seg.status,
+                              quelle: seg.source,
+                              stopSellQuelle: seg.stopSell?.source,
+                              hatSperre: hasBlock(seg.status),
+                              hatStopSell: hasStopSell(seg.status),
+                              von: key(addDays(start, seg.start)),
+                              bis: key(addDays(start, seg.start + seg.span)),
+                            });
                             setBarMenu({
                               x: ev.clientX,
                               y: ev.clientY,
@@ -2412,16 +2422,24 @@ export function CalendarBoard({
                             });
                           }
                           : undefined;
-                        // Manuelle Sperre ist per Klick aufhebbar (Popup) — OTA-/
-                        // gebuchte Sperren nicht. Öffnet das Unblock-Popup mit dem
-                        // Zeitraum des Balkens (Spalten → ISO, end exklusiv).
-                        // Bei blocked_stop_sell bleibt der Klick auf der SPERRE:
-                        // sie ist der Zustand, der den Tag wirklich zumacht; der
-                        // Stop-Sell darunter läuft über das Rechtsklick-Menü.
-                        const unblockable =
-                          hasBlock(seg.status) &&
-                          seg.source === "manual" &&
-                          !!start;
+                        // Jede Sperre ist per Klick aufhebbar (Popup) — nur eine
+                        // echte BUCHUNG nicht, die ist kein Sperr-Segment.
+                        // Öffnet das Unblock-Popup mit dem Zeitraum des Balkens
+                        // (Spalten → ISO, end exklusiv). Bei blocked_stop_sell
+                        // bleibt der Klick auf der SPERRE: sie ist der Zustand,
+                        // der den Tag wirklich zumacht; der Stop-Sell darunter
+                        // läuft über das Rechtsklick-Menü.
+                        //
+                        // KEIN Herkunfts-Gate (`source === "manual"`): eine
+                        // Sperre mit `source='portal'` stammt aus dem
+                        // Channex-Import, ist aber trotzdem UNSERE Sperre —
+                        // Channex übergibt die Vorgabe nur an die OTAs, es
+                        // setzt sie nicht. Mit dem Gate war eine
+                        // zurückgespiegelte Sperre im Kalender unlöschbar
+                        // (live: Rævehulen 14.–19.08.2026, Menü öffnete sich
+                        // ohne den Punkt „Aufheben"). Dieselbe Korrektur wie
+                        // beim Stop-Sell.
+                        const unblockable = hasBlock(seg.status) && !!start;
                         if (unblockable) {
                           return (
                             <button
@@ -2573,10 +2591,13 @@ export function CalendarBoard({
             </p>
             <div className="my-1 h-px bg-border" />
 
-            {/* Sperre aufheben — nur bei einer EIGENEN (manuellen) Sperre.
-                Eine vom Portal/aus einer Buchung stammende Sperre gehört uns
-                nicht; dafür gibt es hier keinen Weg. */}
-            {hasBlock(barMenu.status) && barMenu.blockSource === "manual" && (
+            {/* Sperre aufheben — bei JEDER Sperre. Kein Herkunfts-Gate:
+                `source='portal'` heißt nur, dass die Zeile über den
+                Channex-Import zurückkam, nicht dass das Portal sie gesetzt
+                hätte. Unsere Plattform gibt die Vorgabe, Channex reicht sie an
+                die OTAs weiter. Mit dem Gate war eine zurückgespiegelte Sperre
+                aus dem Kalender heraus nicht mehr aufhebbar. */}
+            {hasBlock(barMenu.status) && (
               <button
                 type="button"
                 disabled={saving}
