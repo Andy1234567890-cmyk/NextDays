@@ -1970,7 +1970,11 @@
       "capacitySqm": "Erja (m²)",
       "bfeNumber": "Numru BFE",
       "name": "Isem",
-      "type": "Tip"
+      "type": "Tip",
+      "contractEnd": "Tmiem tal-kuntratt",
+      "contractEndHint": "L-ewwel jum mingħajr kuntratt ta’ kummerċjalizzazzjoni. Minn dak il-jum il-proprjetà tkun imblukkata kullimkien: il-kalendarju tiegħek, myBestDays u l-portali kollha. Vojt ifisser bla terminu.",
+      "contractEndBlocked": "Dawn il-prenotazzjonijiet jaqbżu t-tmiem tal-kuntratt. Ikkanċellahom jew agħżel data aktar tard.",
+      "contractEndNoGuest": "Bla isem tal-mistieden"
     },
     "owner": {
       "heading": "Sid",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Leġġenda",
+      "contractEndLocked": "Dan l-imblukkar ġej mit-tmiem tal-kuntratt. Jista’ jinbidel biss permezz tad-data tat-tmiem fil-fajl tal-proprjetà."
     },
     "wizard": {
       "close": "Agħlaq",
@@ -5993,7 +5999,8 @@
       "manual": "Manwali",
       "ota_other": "Portal ieħor",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Tmiem tal-kuntratt"
     },
     "resStatus": {
       "cancelled": "Ikkanċellata",

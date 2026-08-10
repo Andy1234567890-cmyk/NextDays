@@ -286,7 +286,15 @@ def update_property(
     try:
         return service.update(ctx, property_id, req)
     except PropertyError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        # Strukturierte Details mitschicken, wenn es welche gibt: beim
+        # Vertragsende (0355) sind das die Buchungen, die dem Enddatum im Weg
+        # stehen — die UI listet sie auf, damit der Nutzer weiß, WELCHE er
+        # stornieren müsste. Ohne Details bleibt die Form die bisherige
+        # (`detail` = Meldungstext), damit kein anderer Aufrufer bricht.
+        detail: object = exc.message
+        if exc.details is not None:
+            detail = {"message": exc.message, **exc.details}
+        raise HTTPException(status_code=exc.status_code, detail=detail) from exc
 
 
 @router.delete("/{property_id}", status_code=status.HTTP_204_NO_CONTENT)

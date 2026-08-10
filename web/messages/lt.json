@@ -1970,7 +1970,11 @@
       "capacitySqm": "Plotas (m²)",
       "bfeNumber": "BFE numeris",
       "name": "Pavadinimas",
-      "type": "Tipas"
+      "type": "Tipas",
+      "contractEnd": "Sutarties pabaiga",
+      "contractEndHint": "Pirma diena be prekiavimo sutarties. Nuo tos dienos objektas užblokuotas visur: savas kalendorius, myBestDays ir visi portalai. Tuščia reiškia neribotą laiką.",
+      "contractEndBlocked": "Šie rezervavimai tęsiasi po sutarties pabaigos. Atšaukite juos arba pasirinkite vėlesnę datą.",
+      "contractEndNoGuest": "Be svečio vardo"
     },
     "owner": {
       "heading": "Savininkas",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Legenda",
+      "contractEndLocked": "Ši blokada kyla iš sutarties pabaigos. Ją galima pakeisti tik per pabaigos datą objekto kortelėje."
     },
     "wizard": {
       "close": "Uždaryti",
@@ -5993,7 +5999,8 @@
       "manual": "Rankiniu būdu",
       "ota_other": "Kitas portalas",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Sutarties pabaiga"
     },
     "resStatus": {
       "cancelled": "Atšaukta",

@@ -1970,7 +1970,11 @@
       "capacitySqm": "Površina (m²)",
       "bfeNumber": "Številka BFE",
       "name": "Ime",
-      "type": "Tip"
+      "type": "Tip",
+      "contractEnd": "Konec pogodbe",
+      "contractEndHint": "Prvi dan brez pogodbe o prodaji. Od tega dne je objekt povsod blokiran: lasten koledar, myBestDays in vsi portali. Prazno pomeni za nedoločen čas.",
+      "contractEndBlocked": "Te rezervacije segajo čez konec pogodbe. Prekličite jih ali izberite kasnejši datum.",
+      "contractEndNoGuest": "Brez imena gosta"
     },
     "owner": {
       "heading": "Lastnik",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Legenda",
+      "contractEndLocked": "Ta blokada izhaja iz konca pogodbe. Spremeniti jo je mogoče le prek končnega datuma v kartici objekta."
     },
     "wizard": {
       "close": "Zapri",
@@ -5993,7 +5999,8 @@
       "manual": "Ročno",
       "ota_other": "Drug portal",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Konec pogodbe"
     },
     "resStatus": {
       "cancelled": "Preklicano",

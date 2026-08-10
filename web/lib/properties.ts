@@ -73,6 +73,12 @@ export type Property = {
   // echtes neues Kartei-Feld. Name/Typ/Adresse/Kapazität kommen aus dem Bestand
   // (title, property_type, house_number, max_guests, size_value).
   bfe_number: string | null;
+  // Ende des Vermarktungsvertrags (0355) als ISO-Datum — der ERSTE Tag OHNE
+  // Vertrag (Grenze ausschließlich): "2027-01-02" heißt, die Nacht 01.→02.01.
+  // wird noch verkauft, die Nacht danach nicht mehr. Ab dem Tag ist das Objekt
+  // auf allen Kanälen gesperrt (eigener Kalender, myBestDays, Portale).
+  // null = unbefristet, kein Ersatzdatum (Wurzel 4).
+  contract_end_date: string | null;
   // amenities = Objekt-Ausstattung, room_amenities = Zimmer-Ausstattung.
   // Channex führt dafür zwei Kataloge mit eigenen UUIDs (0243) — nie mischen.
   amenities: string[];
@@ -115,7 +121,16 @@ export type Building = {
 
 type Result<T> =
   | { ok: true; data: T }
-  | { ok: false; error: string; status?: number };
+  // `details` trägt strukturierte Angaben aus einem Fehler weiter, wenn der
+  // Text allein nicht reicht: beim Vertragsende (0355) die Liste der Buchungen,
+  // die dem Enddatum im Weg stehen. Aus dem übersetzbaren Meldungstext wären
+  // sie nicht rekonstruierbar.
+  | {
+      ok: false;
+      error: string;
+      status?: number;
+      details?: Record<string, unknown>;
+    };
 
 async function call<T>(
   path: string,
@@ -130,7 +145,8 @@ async function call<T>(
     const error =
       exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
     const status = exc instanceof ApiError ? exc.status : undefined;
-    return { ok: false, error, status };
+    const details = exc instanceof ApiError ? exc.details : undefined;
+    return { ok: false, error, status, details };
   }
 }
 

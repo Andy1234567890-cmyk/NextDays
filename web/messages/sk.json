@@ -1970,7 +1970,11 @@
       "capacitySqm": "Plocha (m²)",
       "bfeNumber": "Číslo BFE",
       "name": "Názov",
-      "type": "Typ"
+      "type": "Typ",
+      "contractEnd": "Koniec zmluvy",
+      "contractEndHint": "Prvý deň bez zmluvy o predaji. Od tohto dňa je objekt zablokovaný všade: vlastný kalendár, myBestDays a všetky portály. Prázdne znamená na neurčito.",
+      "contractEndBlocked": "Tieto rezervácie zasahujú za koniec zmluvy. Zrušte ich alebo zvoľte neskorší dátum.",
+      "contractEndNoGuest": "Bez mena hosťa"
     },
     "owner": {
       "heading": "Vlastník",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Legenda",
+      "contractEndLocked": "Táto blokácia vyplýva z konca zmluvy. Zmeniť ju možno len cez dátum konca v karte objektu."
     },
     "wizard": {
       "close": "Zavrieť",
@@ -5993,7 +5999,8 @@
       "manual": "Ručne",
       "ota_other": "Iný portál",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Koniec zmluvy"
     },
     "resStatus": {
       "cancelled": "Stornované",

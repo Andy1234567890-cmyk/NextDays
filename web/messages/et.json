@@ -1970,7 +1970,11 @@
       "capacitySqm": "Pindala (m²)",
       "bfeNumber": "BFE-number",
       "name": "Nimi",
-      "type": "Tüüp"
+      "type": "Tüüp",
+      "contractEnd": "Lepingu lõpp",
+      "contractEndHint": "Esimene päev ilma turustuslepingut. Sellest päevast on objekt kõikjal suletud: oma kalender, myBestDays ja kõik portaalid. Tühi tähendab tähtajatut.",
+      "contractEndBlocked": "Need broneeringud ulatuvad lepingu lõpust kaugemale. Tühista need või vali hilisem kuupäev.",
+      "contractEndNoGuest": "Külalise nimeta"
     },
     "owner": {
       "heading": "Omanik",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Legend",
+      "contractEndLocked": "See sulgemine tuleneb lepingu lõpust. Seda saab muuta ainult objekti kaardil oleva lõppkuupäeva kaudu."
     },
     "wizard": {
       "close": "Sulge",
@@ -5993,7 +5999,8 @@
       "manual": "Käsitsi",
       "ota_other": "Muu portaal",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Lepingu lõpp"
     },
     "resStatus": {
       "cancelled": "Tühistatud",

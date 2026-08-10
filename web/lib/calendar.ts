@@ -21,7 +21,11 @@ export type AvailabilitySource =
   | "manual"
   // Sperre aus einem abonnierten Fremdkalender (iCal-Import) — kein
   // Vertriebskanal, nur eine Herkunft der Sperre.
-  | "ical";
+  | "ical"
+  // Sperre, weil der Vermarktungsvertrag zu diesem Objekt endet (0355) — auch
+  // kein Vertriebskanal. Eigener Wert, damit „Sperre aufheben" im Kalender sie
+  // NICHT anfassen kann: sonst wäre ein Objekt ohne Vertrag wieder verkäuflich.
+  | "contract_end";
 
 export type DayAvailability = {
   date: string; // YYYY-MM-DD

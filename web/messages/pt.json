@@ -1970,7 +1970,11 @@
       "capacitySqm": "Área (m²)",
       "bfeNumber": "Número BFE",
       "name": "Nome",
-      "type": "Tipo"
+      "type": "Tipo",
+      "contractEnd": "Fim do contrato",
+      "contractEndHint": "Primeiro dia sem contrato de comercialização. A partir desse dia o imóvel fica bloqueado em todos os canais: o seu calendário, myBestDays e todos os portais. Vazio significa sem prazo.",
+      "contractEndBlocked": "Estas reservas vão além do fim do contrato. Cancele-as ou escolha uma data posterior.",
+      "contractEndNoGuest": "Sem nome de hóspede"
     },
     "owner": {
       "heading": "Proprietário",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Legenda",
+      "contractEndLocked": "Este bloqueio resulta do fim do contrato. Só pode ser alterado através da data de fim na ficha do imóvel."
     },
     "wizard": {
       "close": "Fechar",
@@ -5993,7 +5999,8 @@
       "manual": "Manual",
       "ota_other": "Outro portal",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Fim do contrato"
     },
     "resStatus": {
       "cancelled": "Cancelado",

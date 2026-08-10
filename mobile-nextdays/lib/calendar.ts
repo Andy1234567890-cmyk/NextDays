@@ -15,7 +15,10 @@ export type AvailabilitySource =
   | "ota_other"
   | "manual"
   // Sperre aus einem abonnierten Fremdkalender (iCal-Import).
-  | "ical";
+  | "ical"
+  // Sperre, weil der Vermarktungsvertrag zu diesem Objekt endet (0355). Kein
+  // Vertriebskanal, sondern eine Herkunft wie "manual"/"ical".
+  | "contract_end";
 
 export type DayAvailability = {
   date: string; // YYYY-MM-DD

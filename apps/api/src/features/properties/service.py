@@ -31,9 +31,7 @@ from .errors import PropertyError
 from .gebaeude import GebaeudeMixin
 from .gebuehren import (
     GebuehrenMixin,
-    erlaubte_portale,
     laengenpreise_geaendert,
-    normalize_fees,
     sync_pricing_config,
 )
 from .portalfreigabe import darf_zu_den_portalen
@@ -57,13 +55,14 @@ from .schemas import (
     SliceHealth,
     types_for_accommodation,
 )
-from .steuern import SteuernMixin, normalize_taxes, nur_steuern_geaendert
+from .steuern import SteuernMixin, nur_steuern_geaendert, preisblock_saeubern
 from .verfuegbarkeit_push import (
     max_stay_of,
     push_max_stay,
     tenant_currency,
     verfuegbarkeit_spiegeln,
 )
+from .vertragsende import vertragsende_aus_update, vertragsende_pruefen
 
 log = get_logger("nextdays.properties")
 
@@ -519,32 +518,17 @@ class PropertiesService(
             changes["building_id"] = self._pruefe_gebaeude(
                 tenant_id, property_id, changes["building_id"]
             )
+        # Vertragsende (0355): erst prüfen (409 + Liste), dann unten setzen.
+        vertragsende_pruefen(self._db, property_id, changes)
         if changes.get("status") == PropertyStatus.active.value:
             self._require_property_registered(tenant_id, property_id)
             # Derselbe Kontingent-Riegel wie in publish() — sonst wäre update()
             # der offene Seitenweg, über den beliebig viele Objekte aktiv würden
             # (Wurzel 9: gleicher Scope auf allen Pfaden zum selben Zustand).
             self._require_kontingent(tenant_id, property_id)
-        # Steuern serverseitig prüfen und säubern, BEVOR sie gespeichert werden:
-        # der Client bestimmt weder die USt-Anzahl noch das erlaubte HTML.
-        attrs_in = changes.get("type_attributes")
-        if isinstance(attrs_in, dict) and isinstance(attrs_in.get("pricing"), dict):
-            pricing_in = attrs_in["pricing"]
-            portale = erlaubte_portale(self._db, tenant_id, property_id)
-            # Gebühren ZUERST: sie gehen seit dem Gebühren-Export als
-            # `type: "fee"` an die Portale, damit ist jedes Feld Fremdeingabe —
-            # und die Steuerprüfung braucht die geprüften Gebühren, um eine alte
-            # Bemessungsgrundlage (Gebühren-IDs) auf ihre Kategorie zu heben.
-            if isinstance(pricing_in.get("fees"), list):
-                pricing_in["fees"] = normalize_fees(
-                    pricing_in["fees"], portale=portale
-                )
-            if isinstance(pricing_in.get("taxes"), list):
-                pricing_in["taxes"] = normalize_taxes(
-                    pricing_in["taxes"],
-                    portale=portale,
-                    fees=pricing_in.get("fees") or [],
-                )
+        # Gebühren/Steuern serverseitig prüfen und säubern, BEVOR sie
+        # gespeichert werden (Wurzel 8) — in place auf `changes`.
+        preisblock_saeubern(self._db, tenant_id, property_id, changes)
         # Alt-Stand der type_attributes für den Änderungs-Diff (siehe unten):
         # nur laden, wenn type_attributes überhaupt im Update steckt.
         alte_attrs: dict[str, Any] = {}
@@ -621,6 +605,8 @@ class PropertiesService(
                 self._db, tenant_id, property_id, row, alte_attrs, changes,
                 _PUBLISH_HORIZON_DAYS,
             )
+        # Vertragsende (0355) NACH dem Schreiben: der Helfer meldet den Ist-Stand.
+        vertragsende_aus_update(self._db, tenant_id, property_id, changes)
         # Statuswechsel (active↔draft/inactive) ändert die abrechenbare Objektzahl
         # → Abo-quantity nachziehen (Wurzel 1). Neu berechnet, daher idempotent.
         if "status" in changes:

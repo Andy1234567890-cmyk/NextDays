@@ -1970,7 +1970,11 @@
       "capacitySqm": "Fläche (m²)",
       "bfeNumber": "BFE-Nummer",
       "name": "Name",
-      "type": "Typ"
+      "type": "Typ",
+      "contractEnd": "Vertragsende",
+      "contractEndHint": "Erster Tag ohne Vermarktungsvertrag. Ab diesem Tag ist das Objekt überall gesperrt: eigener Kalender, myBestDays und alle Portale. Leer lassen heißt unbefristet.",
+      "contractEndBlocked": "Diese Buchungen reichen über das Vertragsende hinaus. Storniere sie oder wähle ein späteres Datum.",
+      "contractEndNoGuest": "Ohne Gastnamen"
     },
     "owner": {
       "heading": "Eigentümer",
@@ -5888,7 +5892,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Legende",
+      "contractEndLocked": "Diese Sperre kommt vom Vertragsende. Sie lässt sich nur über das Enddatum in der Objektkartei ändern."
     },
     "wizard": {
       "close": "Schließen",
@@ -6014,7 +6020,8 @@
       "ota_other": "Anderes Portal",
       "portal": "myBestDays",
       "manual": "Manuell",
-      "ical": "Externer Kalender"
+      "ical": "Externer Kalender",
+      "contract_end": "Vertragsende"
     },
     "resStatus": {
       "pending": "Option / vorläufig",

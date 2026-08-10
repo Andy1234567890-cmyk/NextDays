@@ -1970,7 +1970,11 @@
       "capacitySqm": "Powierzchnia (m²)",
       "bfeNumber": "Numer BFE",
       "name": "Nazwa",
-      "type": "Typ"
+      "type": "Typ",
+      "contractEnd": "Koniec umowy",
+      "contractEndHint": "Pierwszy dzień bez umowy o sprzedaż. Od tego dnia obiekt jest zablokowany wszędzie: własny kalendarz, myBestDays i wszystkie portale. Puste oznacza bezterminowo.",
+      "contractEndBlocked": "Te rezerwacje wychodzą poza koniec umowy. Anuluj je lub wybierz późniejszą datę.",
+      "contractEndNoGuest": "Bez nazwy gościa"
     },
     "owner": {
       "heading": "Właściciel",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Legenda",
+      "contractEndLocked": "Ta blokada wynika z końca umowy. Można ją zmienić tylko przez datę końcową w karcie obiektu."
     },
     "wizard": {
       "close": "Zamknij",
@@ -5993,7 +5999,8 @@
       "manual": "Ręcznie",
       "ota_other": "Inny portal",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Koniec umowy"
     },
     "resStatus": {
       "cancelled": "Anulowana",

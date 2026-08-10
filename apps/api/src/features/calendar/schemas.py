@@ -31,6 +31,12 @@ class AvailabilitySource(StrEnum):
     # Vertriebskanal, sondern eine Herkunft wie 'manual' — fehlte hier, womit
     # jede Antwort mit einer iCal-Sperre an der Validierung gescheitert wäre.
     ical = "ical"
+    # Sperre, weil der Vermarktungsvertrag zu diesem Objekt endet (0355,
+    # properties.vertragsende). Wie 'ical'/'manual' kein Vertriebskanal,
+    # sondern eine Herkunft — und wie dort gilt: fehlte der Wert hier, würde
+    # jede Board-Antwort mit einer Vertragssperre an der Validierung scheitern.
+    # Eigener Wert und nicht 'manual', damit `_unblock` sie nicht aufhebt.
+    contract_end = "contract_end"
 
 
 class DateRange(BaseModel):

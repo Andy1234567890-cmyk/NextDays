@@ -1970,7 +1970,11 @@
       "capacitySqm": "Επιφάνεια (m²)",
       "bfeNumber": "Αριθμός BFE",
       "name": "Όνομα",
-      "type": "Τύπος"
+      "type": "Τύπος",
+      "contractEnd": "Λήξη σύμβασης",
+      "contractEndHint": "Πρώτη ημέρα χωρίς σύμβαση διάθεσης. Από την ημέρα αυτή το κατάλυμα είναι κλειστό παντού: δικό σας ημερολόγιο, myBestDays και όλες οι πύλες. Κενό σημαίνει αορίστου χρόνου.",
+      "contractEndBlocked": "Αυτές οι κρατήσεις εκτείνονται μετά τη λήξη της σύμβασης. Ακυρώστε τις ή επιλέξτε μεταγενέστερη ημερομηνία.",
+      "contractEndNoGuest": "Χωρίς όνομα επισκέπτη"
     },
     "owner": {
       "heading": "Ιδιοκτήτης",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Υπόμνημα",
+      "contractEndLocked": "Αυτό το κλείσιμο προέρχεται από τη λήξη της σύμβασης. Αλλάζει μόνο μέσω της ημερομηνίας λήξης στην καρτέλα του καταλύματος."
     },
     "wizard": {
       "close": "Κλείσιμο",
@@ -5993,7 +5999,8 @@
       "manual": "Χειροκίνητα",
       "ota_other": "Άλλη πλατφόρμα",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Λήξη σύμβασης"
     },
     "resStatus": {
       "cancelled": "Ακυρωμένη",

@@ -1970,7 +1970,11 @@
       "capacitySqm": "Terület (m²)",
       "bfeNumber": "BFE-szám",
       "name": "Név",
-      "type": "Típus"
+      "type": "Típus",
+      "contractEnd": "Szerződés vége",
+      "contractEndHint": "Az első nap értékesítési szerződés nélkül. Ettől a naptól az objektum mindenhol zárolt: saját naptár, myBestDays és minden portál. Üresen hagyva határozatlan idejű.",
+      "contractEndBlocked": "Ezek a foglalások túlnyúlnak a szerződés végén. Mondja le őket, vagy válasszon későbbi dátumot.",
+      "contractEndNoGuest": "Vendégnév nélkül"
     },
     "owner": {
       "heading": "Tulajdonos",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Jelmagyarázat",
+      "contractEndLocked": "Ez a zárolás a szerződés végéből ered. Csak az objektum adatlapján lévő záró dátummal módosítható."
     },
     "wizard": {
       "close": "Bezárás",
@@ -5993,7 +5999,8 @@
       "manual": "Manuális",
       "ota_other": "Egyéb portál",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Szerződés vége"
     },
     "resStatus": {
       "cancelled": "Lemondva",

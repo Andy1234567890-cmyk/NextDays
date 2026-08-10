@@ -70,6 +70,14 @@ _STOP_SELL_SCOPE_COLS = "scope,channels,rate_plan_id,"
 # Fremdkalender (external_calendar). Sie hier zu öffnen wäre ein Scheinerfolg —
 # der nächste Feed-Lauf schriebe sie zurück, während der Nutzer glaubt, der
 # Zeitraum sei frei. Der Weg dorthin führt über das Abo, nicht über den Balken.
+#
+# `contract_end` bleibt aus demselben Grund DRAUSSEN, aber mit schwererer Folge
+# (0355): diese Sperre sagt „für dieses Objekt gibt es ab hier keinen
+# Vermarktungsvertrag". Wäre sie per Balken aufhebbar, machte ein Klick das
+# Objekt bei Booking/Airbnb wieder verkäuflich — es käme eine Buchung für einen
+# Zeitraum, für den wir nicht mehr vermarkten dürfen. Der Weg dorthin führt
+# ausschließlich über das Enddatum in der Objektkartei (Wurzel 1: derselbe
+# Schalter setzt und hebt auf).
 _AUFHEBBARE_SPERRQUELLEN = (
     AvailabilitySource.manual.value,
     AvailabilitySource.portal.value,

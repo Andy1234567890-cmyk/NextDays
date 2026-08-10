@@ -1970,7 +1970,11 @@
       "capacitySqm": "Pinta-ala (m²)",
       "bfeNumber": "BFE-numero",
       "name": "Nimi",
-      "type": "Tyyppi"
+      "type": "Tyyppi",
+      "contractEnd": "Sopimuksen päättyminen",
+      "contractEndHint": "Ensimmäinen päivä ilman markkinointisopimusta. Siitä päivästä kohde on suljettu kaikkialla: oma kalenteri, myBestDays ja kaikki portaalit. Tyhjä tarkoittaa toistaiseksi voimassa olevaa.",
+      "contractEndBlocked": "Nämä varaukset ulottuvat sopimuksen päättymisen yli. Peruuta ne tai valitse myöhempi päivä.",
+      "contractEndNoGuest": "Ei vieraan nimeä"
     },
     "owner": {
       "heading": "Omistaja",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Selite",
+      "contractEndLocked": "Tämä sulku johtuu sopimuksen päättymisestä. Sitä voi muuttaa vain kohteen kortin päättymispäivän kautta."
     },
     "wizard": {
       "close": "Sulje",
@@ -5993,7 +5999,8 @@
       "manual": "Manuaalinen",
       "ota_other": "Muu portaali",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Sopimus päättynyt"
     },
     "resStatus": {
       "cancelled": "Peruttu",

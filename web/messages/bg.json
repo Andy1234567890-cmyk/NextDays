@@ -1970,7 +1970,11 @@
       "capacitySqm": "Площ (m²)",
       "bfeNumber": "BFE номер",
       "name": "Име",
-      "type": "Тип"
+      "type": "Тип",
+      "contractEnd": "Край на договора",
+      "contractEndHint": "Първи ден без договор за предлагане. От този ден обектът е блокиран навсякъде: собствен календар, myBestDays и всички портали. Оставете празно за безсрочен.",
+      "contractEndBlocked": "Тези резервации излизат извън края на договора. Отменете ги или изберете по-късна дата.",
+      "contractEndNoGuest": "Без име на гост"
     },
     "owner": {
       "heading": "Собственик",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Легенда",
+      "contractEndLocked": "Тази блокировка идва от края на договора. Може да се промени само чрез крайната дата в картона на обекта."
     },
     "wizard": {
       "close": "Затвори",
@@ -5993,7 +5999,8 @@
       "manual": "Ръчно",
       "ota_other": "Друг портал",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Край на договора"
     },
     "resStatus": {
       "cancelled": "Анулирана",

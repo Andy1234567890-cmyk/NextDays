@@ -1970,7 +1970,11 @@
       "capacitySqm": "Površina (m²)",
       "bfeNumber": "BFE broj",
       "name": "Naziv",
-      "type": "Tip"
+      "type": "Tip",
+      "contractEnd": "Istek ugovora",
+      "contractEndHint": "Prvi dan bez ugovora o posredovanju. Od tog dana objekt je blokiran svugdje: vlastiti kalendar, myBestDays i svi portali. Prazno znači na neodređeno.",
+      "contractEndBlocked": "Ove rezervacije prelaze istek ugovora. Otkažite ih ili odaberite kasniji datum.",
+      "contractEndNoGuest": "Bez imena gosta"
     },
     "owner": {
       "heading": "Vlasnik",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Legenda",
+      "contractEndLocked": "Ova blokada proizlazi iz isteka ugovora. Može se promijeniti samo preko datuma isteka u kartici objekta."
     },
     "wizard": {
       "close": "Zatvori",
@@ -5993,7 +5999,8 @@
       "manual": "Ručno",
       "ota_other": "Drugi portal",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Istek ugovora"
     },
     "resStatus": {
       "cancelled": "Otkazano",

@@ -31,6 +31,7 @@ from supabase import Client
 from src.core.config import get_settings
 from src.core.logging import configure_logging, get_logger
 from src.core.supabase import get_service_client
+from src.features.properties.vertragsende import vertragsenden_nachziehen
 from src.jobs.channex_budget import BudgetDecision, ChannexBudget
 from src.jobs.queue import enqueue, next_run_after, try_enqueue_content_sync
 
@@ -177,6 +178,19 @@ CONTENT_HEAL_TICK_SECONDS = 60 * 60
 # begrenzt, damit ein flächiger Channex-Ausfall nicht das ganze Token-Budget
 # in einem Tick verbrennt (der nächste Durchlauf nimmt den Rest).
 CONTENT_HEAL_BATCH = 50
+# Vertragsende-Sperre nachziehen (0355). `vertragsende_durchsetzen` schreibt
+# die Sperrnächte für einen Horizont AB HEUTE — dieser Tick schiebt ihn Tag für
+# Tag weiter. Ohne ihn wäre die Sperre eines heute gesetzten Enddatums nach
+# zwei Jahren erschöpft: die Tage dahinter hätten keine `availability`-Zeile
+# und gingen damit als OFFEN an die Portale, obwohl der Vertrag längst endete.
+# Täglich genügt exakt — der Horizont wandert um einen Tag pro Tag, und die
+# Reserve zwischen Sperrhorizont (730) und Full-Sync-Horizont (365) deckt auch
+# einen mehrtägigen Ausfall des Workers ab.
+VERTRAGSENDE_TICK_SECONDS = 24 * 60 * 60
+# Höchstens so viele Objekte je Durchlauf — dieselbe Begrenzung wie beim
+# Content-Heal. Ein Betrieb mit hunderten gekündigten Objekten verteilt sich
+# damit über mehrere Läufe, statt einen Tick minutenlang zu blockieren.
+VERTRAGSENDE_BATCH = 50
 # Nächtlicher Full-Sync-Push (Channex-Doku: "daily full update each night per
 # property"): im UTC-Stundenfenster [FULL_SYNC_HOUR_UTC, +1) je aktiver Property
 # EIN full_sync_property-Job pro Tag (dedup je Property+Tag), gestaffelt.
@@ -671,6 +685,7 @@ class Worker:
         self._last_automails_tick = 0.0
         self._last_automail_planung_tick = 0.0
         self._last_content_heal_tick = 0.0
+        self._last_vertragsende_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
         self._budget = budget or ChannexBudget(get_settings())
@@ -983,6 +998,18 @@ class Worker:
             try_enqueue_content_sync(self._db, str(tenant_id), str(property_id))
         if rows:
             log.info("content_sync_heal_enqueued", properties=len(rows))
+
+    async def _vertragsende_tick(self, loop_time: float) -> None:
+        """Täglich den Sperrhorizont gekündigter Objekte nachschieben (0355)."""
+        if loop_time - self._last_vertragsende_tick < VERTRAGSENDE_TICK_SECONDS:
+            return
+        self._last_vertragsende_tick = loop_time
+        try:
+            await asyncio.to_thread(
+                vertragsenden_nachziehen, self._db, VERTRAGSENDE_BATCH
+            )
+        except Exception as exc:  # noqa: BLE001 — Tick darf den Worker nie kippen
+            log.warning("vertragsende_tick_failed", error=str(exc)[:200])
 
     async def _reviews_tick(self, loop_time: float) -> None:
         """Stündlich: verdeckte Bewertungen nach Fristablauf veröffentlichen,
@@ -1398,6 +1425,7 @@ class Worker:
             await self._automails_tick(loop_time)
             await self._automail_planung_tick(loop_time)
             await self._content_heal_tick(loop_time)
+            await self._vertragsende_tick(loop_time)
             await self._deploy_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)
             jobs = await asyncio.to_thread(self._claim, free) if free > 0 else []

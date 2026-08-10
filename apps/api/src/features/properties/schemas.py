@@ -4,6 +4,7 @@ Bildet die „Rental"-Struktur ab: Stammdaten + strukturierte Adresse +
 Ausstattung/Fotos. Sektionen ohne eigene Spalte (Rooms, Sleeping arrangements,
 Rental-Info-Detailfelder) liegen flexibel im jsonb-Feld `type_attributes`.
 """
+from datetime import date
 from enum import StrEnum
 from typing import Any
 
@@ -216,6 +217,13 @@ class PropertyBase(BaseModel):
     # Gebäude (0264): Klammer um Objekte, die sich EINE Portal-Kennung teilen.
     # None = das Objekt steht für sich und bekommt eine eigene Kennung.
     building_id: str | None = None
+
+    # Ende des Vermarktungsvertrags (0355) — ERSTER Tag OHNE Vertrag, Grenze
+    # ausschließlich (wie owner_billing_terms.gueltig_bis und DateRange.end).
+    # Ab diesem Tag ist das Objekt auf allen Kanälen gesperrt; das Setzen legt
+    # die Sperrnächte an (service.vertragsende_durchsetzen). None = unbefristet,
+    # KEIN Ersatzdatum (Wurzel 4).
+    contract_end_date: date | None = None
     # Objektkartei Stufe 1 — OBJEKTINFORMATION (Lastenheft §6). Nur bfe_number
     # (DK-Katasternummer) ist ein echtes neues Kartei-Feld. Bewusst NICHT in
     # _CONTENT_FIELDS (service.py) → kein Channex/OTA-Sync. Name/Typ/Adresse/
@@ -287,6 +295,11 @@ class PropertyUpdate(BaseModel):
     # angefasst. Ein Wechsel wird im Service geprüft — er verschiebt das Objekt
     # bei den Portalen unter eine andere Kennung.
     building_id: str | None = None
+    # Vertragsende (0355) — erster Tag OHNE Vermarktungsvertrag. Gesetzt: die
+    # Sperrnächte werden angelegt; explizit `null` gesendet: die Vertragssperre
+    # wird wieder aufgehoben (Wurzel 1, Gegenzustand am selben Schalter). Nicht
+    # gesendet = unangetastet (`exclude_unset` im Service unterscheidet beides).
+    contract_end_date: date | None = None
     # Objektkartei (Lastenheft §6) — nur bfe_number, kein OTA-Sync (nicht in _CONTENT_FIELDS).
     bfe_number: str | None = None
     amenities: list[str] | None = None

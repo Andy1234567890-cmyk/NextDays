@@ -128,13 +128,50 @@ function Hint({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Eine Buchung, die einem Vertragsende im Weg steht (0355, 409-Details). */
+type Sperrbuchung = { id: string; check_in: string; check_out: string; gast: string };
+
+/** Die `buchungen`-Liste aus dem 409 lesen, ohne ihr zu trauen.
+ *
+ *  Sie kommt als `Record<string, unknown>` aus der Fehlerantwort. Ein `as`-Cast
+ *  würde bei einer geänderten Serverform still ein kaputtes Objekt durchlassen
+ *  und die Liste rendern, als wäre nichts — geprüft ist hier billiger als ein
+ *  Absturz in der Anzeige. */
+function sperrbuchungen(details: Record<string, unknown> | undefined): Sperrbuchung[] {
+  const roh = details?.buchungen;
+  if (!Array.isArray(roh)) return [];
+  return roh.flatMap((e) => {
+    if (typeof e !== "object" || e === null) return [];
+    const r = e as Record<string, unknown>;
+    return [{
+      id: String(r.id ?? ""),
+      check_in: String(r.check_in ?? ""),
+      check_out: String(r.check_out ?? ""),
+      gast: String(r.gast ?? ""),
+    }];
+  });
+}
+
 // --- Stufe 1: Objektinformation + Eigentümer (read-only) -------------------
 function Stufe1({ t, property, owner }: { t: T; property: Property; owner: LinkedOwner | null }) {
   const [bfe, setBfe] = useState(property.bfe_number);
+  // Vertragsende (0355): der erste Tag OHNE Vermarktungsvertrag. Leer =
+  // unbefristet — kein Ersatzdatum (Wurzel 4).
+  const [vertragsende, setVertragsende] = useState(property.contract_end_date);
+  // Buchungen, die dem gewählten Enddatum im Weg stehen (409). Sie stehen
+  // NICHT im Meldungstext, weil der Nutzer wissen muss, WELCHE er stornieren
+  // müsste — eine Zahl allein hilft ihm nicht.
+  const [blockiert, setBlockiert] = useState<Sperrbuchung[]>([]);
 
   async function save(): Promise<true | string> {
-    const r = await updateProperty(property.id, { bfe_number: bfe?.trim() || null });
-    return r.ok ? true : r.error;
+    setBlockiert([]);
+    const r = await updateProperty(property.id, {
+      bfe_number: bfe?.trim() || null,
+      contract_end_date: vertragsende || null,
+    });
+    if (r.ok) return true;
+    setBlockiert(sperrbuchungen(r.details));
+    return r.error;
   }
 
   // Alles außer der DK-Katasternummer kommt read-only aus dem Bestand — Name =
@@ -153,7 +190,31 @@ function Stufe1({ t, property, owner }: { t: T; property: Property; owner: Linke
 
       <Section title={t("step.object_info")}>
         <TextField label={t("objectInfo.bfeNumber")} value={bfe} onChange={setBfe} />
+        <DateField
+          label={t("objectInfo.contractEnd")}
+          value={vertragsende}
+          onChange={setVertragsende}
+        />
       </Section>
+      <Hint>{t("objectInfo.contractEndHint")}</Hint>
+      {blockiert.length > 0 && (
+        <div className="flex flex-col gap-2 rounded-(--radius) border border-destructive/40 bg-destructive/5 p-3">
+          <span className="text-sm font-medium text-destructive">
+            {t("objectInfo.contractEndBlocked")}
+          </span>
+          <ul className="flex flex-col gap-1 text-sm">
+            {blockiert.map((b) => (
+              <li key={b.id} className="flex items-center gap-2">
+                <Icon icon="ph:calendar-x" className="size-4 shrink-0 text-destructive" />
+                <span>{b.gast || t("objectInfo.contractEndNoGuest")}</span>
+                <span className="text-muted-foreground">
+                  {b.check_in} – {b.check_out}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <SaveBar t={t} onSave={save} />
 
       <section className="flex flex-col gap-4 border-t pt-6">

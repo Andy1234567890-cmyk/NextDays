@@ -29,7 +29,9 @@ from .gebuehren import (
     clean_description,
     clean_names,
     clean_portal_scope,
+    erlaubte_portale,
     fee_category,
+    normalize_fees,
 )
 from .schemas import PropertyUpdate
 
@@ -127,6 +129,40 @@ def _clean_taxable_base(
             )
         items.append(item)
     return list(dict.fromkeys(items))
+
+
+def preisblock_saeubern(
+    db: object, tenant_id: str, property_id: str, changes: dict[str, Any]
+) -> None:
+    """Gebühren und Steuern im eingehenden `type_attributes.pricing` prüfen und
+    säubern — IN PLACE, bevor sie gespeichert werden.
+
+    Der Client bestimmt weder die USt-Anzahl noch das erlaubte HTML: jedes Feld
+    hier ist Fremdeingabe und geht als `type: "fee"` bzw. als Steuer an die
+    Portale weiter (Wurzel 8 — Client-Input, der serverseitig weiterverarbeitet
+    wird, ist ein Angriff).
+
+    GEBÜHREN ZUERST: die Steuerprüfung braucht die geprüften Gebühren, um eine
+    alte Bemessungsgrundlage (Gebühren-IDs) auf ihre Kategorie zu heben. In der
+    anderen Reihenfolge sähe `normalize_taxes` unbereinigte IDs.
+
+    Liegt hier und nicht im Objekt-Update, weil beide Prüfungen samt ihrer
+    Reihenfolge-Begründung zu den Steuern/Gebühren gehören — `service.py` läuft
+    sonst über die 1500-Zeilen-Grenze.
+    """
+    attrs_in = changes.get("type_attributes")
+    if not (isinstance(attrs_in, dict) and isinstance(attrs_in.get("pricing"), dict)):
+        return
+    pricing_in = attrs_in["pricing"]
+    portale = erlaubte_portale(db, tenant_id, property_id)  # type: ignore[arg-type]
+    if isinstance(pricing_in.get("fees"), list):
+        pricing_in["fees"] = normalize_fees(pricing_in["fees"], portale=portale)
+    if isinstance(pricing_in.get("taxes"), list):
+        pricing_in["taxes"] = normalize_taxes(
+            pricing_in["taxes"],
+            portale=portale,
+            fees=pricing_in.get("fees") or [],
+        )
 
 
 def normalize_taxes(

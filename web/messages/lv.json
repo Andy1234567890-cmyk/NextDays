@@ -1970,7 +1970,11 @@
       "capacitySqm": "Platība (m²)",
       "bfeNumber": "BFE numurs",
       "name": "Nosaukums",
-      "type": "Tips"
+      "type": "Tips",
+      "contractEnd": "Līguma beigas",
+      "contractEndHint": "Pirmā diena bez tirdzniecības līguma. No šīs dienas objekts ir bloķēts visur: paša kalendārs, myBestDays un visi portāli. Tukšs nozīmē beztermiņa.",
+      "contractEndBlocked": "Šīs rezervācijas pārsniedz līguma beigas. Atceliet tās vai izvēlieties vēlāku datumu.",
+      "contractEndNoGuest": "Bez viesa vārda"
     },
     "owner": {
       "heading": "Īpašnieks",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Apzīmējumi",
+      "contractEndLocked": "Šī bloķēšana izriet no līguma beigām. To var mainīt tikai ar beigu datumu objekta kartītē."
     },
     "wizard": {
       "close": "Aizvērt",
@@ -5993,7 +5999,8 @@
       "manual": "Manuāli",
       "ota_other": "Cits portāls",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Līguma beigas"
     },
     "resStatus": {
       "cancelled": "Atcelts",

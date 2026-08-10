@@ -12,6 +12,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { NativeSelect } from "@nextdays/ui/native-select";
+import { Popover, PopoverContent, PopoverTrigger } from "@nextdays/ui/popover";
 import {
   type ViewOptions,
   CalendarHeader,
@@ -1873,60 +1874,79 @@ export function CalendarBoard({
             <Icon icon="ph:x" className="size-3.5" /> Zurücksetzen
           </Button>
         )}
-      </div>
-
-      {/* Legende: Status + Vertriebskanäle (Herkunft je Farbe/Logo). */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-        {/* Sperre, Stop-Sell und die Überlagerung beider sind drei eigene
-            Einträge — sie sehen im Raster verschieden aus und bedeuten
-            Verschiedenes (Sperre = zu, Stop-Sell = frei, aber nicht verkauft). */}
-        {(["open", "blocked", "stop_sell", "blocked_stop_sell"] as SegStatus[]).map((s) => (
-          <span key={s} className="flex items-center gap-1.5">
-            <span
-              className={`inline-block size-3 rounded-sm border ${s === "open" ? "bg-background" : SEG_STYLE[s]}`}
-            />
-            {statusLabels(t)[s]}
-          </span>
-        ))}
-        {/* Eigentümer-Aufenthalt (0241): belegt, aber kein Kanal und kein Umsatz. */}
-        <span className="flex items-center gap-1.5">
-          <span
-            className={`inline-flex size-4 items-center justify-center rounded-sm ${OWNER_STAY_BAR}`}
-          >
-            <Icon icon={OWNER_STAY_ICON} className="size-2.5" />
-          </span>
-          {t("calendarBoard.ownerStay")}
-        </span>
-        <span className="h-3 w-px bg-border" aria-hidden />
-        {CHANNEL_SOURCES.map((src) => (
-          <span key={src} className="flex items-center gap-1.5">
-            <span
-              className={`inline-flex size-4 items-center justify-center rounded-sm text-white ${CHANNEL_META[src].dotBg}`}
-            >
-              <ChannelLogo source={src} className="size-2.5" />
-            </span>
-            {channelLabel(src)}
-          </span>
-        ))}
-        <span className="h-3 w-px bg-border" aria-hidden />
-        {(["confirmed", "pending", "in_house", "completed", "cancelled"] as const).map(
-          (s) => (
-            <span key={s} className="flex items-center gap-1.5">
-              <span className={`size-2 rounded-full ${STATUS_META[s].dotBg}`} />
-              {statusLabel(s)}
-            </span>
-          ),
+        {/* Legende: Status + Vertriebskanäle (Herkunft je Farbe/Logo). Sie ist
+            Nachschlagewerk, kein Dauerinhalt — im Popover neben den Filtern
+            statt als Textblock über dem Raster. */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-9 gap-1.5 rounded-full">
+              <Icon icon="ph:info" className="size-3.5" />
+              {t("board.legend")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-80 space-y-3 text-xs">
+            {/* Sperre, Stop-Sell und die Überlagerung beider sind drei eigene
+                Einträge — sie sehen im Raster verschieden aus und bedeuten
+                Verschiedenes (Sperre = zu, Stop-Sell = frei, aber nicht verkauft). */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {(["open", "blocked", "stop_sell", "blocked_stop_sell"] as SegStatus[]).map((s) => (
+                <span key={s} className="flex items-center gap-1.5">
+                  <span
+                    className={`inline-block size-3 rounded-sm border ${s === "open" ? "bg-background" : SEG_STYLE[s]}`}
+                  />
+                  {statusLabels(t)[s]}
+                </span>
+              ))}
+              {/* Eigentümer-Aufenthalt (0241): belegt, aber kein Kanal und kein Umsatz. */}
+              <span className="flex items-center gap-1.5">
+                <span
+                  className={`inline-flex size-4 items-center justify-center rounded-sm ${OWNER_STAY_BAR}`}
+                >
+                  <Icon icon={OWNER_STAY_ICON} className="size-2.5" />
+                </span>
+                {t("calendarBoard.ownerStay")}
+              </span>
+            </div>
+            <div className="h-px bg-border" aria-hidden />
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {CHANNEL_SOURCES.map((src) => (
+                <span key={src} className="flex items-center gap-1.5">
+                  <span
+                    className={`inline-flex size-4 items-center justify-center rounded-sm text-white ${CHANNEL_META[src].dotBg}`}
+                  >
+                    <ChannelLogo source={src} className="size-2.5" />
+                  </span>
+                  {channelLabel(src)}
+                </span>
+              ))}
+            </div>
+            <div className="h-px bg-border" aria-hidden />
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {(["confirmed", "pending", "in_house", "completed", "cancelled"] as const).map(
+                (s) => (
+                  <span key={s} className="flex items-center gap-1.5">
+                    <span className={`size-2 rounded-full ${STATUS_META[s].dotBg}`} />
+                    {statusLabel(s)}
+                  </span>
+                ),
+              )}
+            </div>
+            <div className="h-px bg-border" aria-hidden />
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span className="flex items-center gap-1.5">
+                <Icon icon="ph:sign-in" className="size-3.5 text-destructive/80" />
+                {t("board.ctaBlocked")}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Icon icon="ph:sign-out" className="size-3.5 text-destructive/80" />
+                {t("board.ctdBlocked")}
+              </span>
+            </div>
+          </PopoverContent>
+        </Popover>
+        {loading && (
+          <span className="text-xs text-muted-foreground">{t("board.loading")}</span>
         )}
-        <span className="h-3 w-px bg-border" aria-hidden />
-        <span className="flex items-center gap-1.5">
-          <Icon icon="ph:sign-in" className="size-3.5 text-destructive/80" />
-          {t("board.ctaBlocked")}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Icon icon="ph:sign-out" className="size-3.5 text-destructive/80" />
-          {t("board.ctdBlocked")}
-        </span>
-        {loading && <span>{t("board.loading")}</span>}
       </div>
 
       {/* Aktionsmenü am Cursor nach dem Ziehen (eigene Komponente) */}
@@ -2445,7 +2465,19 @@ export function CalendarBoard({
                         // (live: Rævehulen 14.–19.08.2026, Menü öffnete sich
                         // ohne den Punkt „Aufheben"). Dieselbe Korrektur wie
                         // beim Stop-Sell.
-                        const unblockable = hasBlock(seg.status) && !!start;
+                        //
+                        // AUSNAHME `contract_end` (0355): Diese eine Sperre ist
+                        // hier bewusst NICHT aufhebbar — sie sagt, dass es für
+                        // das Objekt ab diesem Tag keinen Vermarktungsvertrag
+                        // gibt. Der Server lehnt ein Aufheben ohnehin ab
+                        // (`_AUFHEBBARE_SPERRQUELLEN`); ohne das Gate hier
+                        // klickte der Nutzer „Aufheben", bekäme keinen Fehler
+                        // und stünde vor einem unverändert gesperrten Balken.
+                        // Der Weg führt über das Enddatum in der Objektkartei.
+                        const unblockable =
+                          hasBlock(seg.status) &&
+                          !!start &&
+                          seg.source !== "contract_end";
                         if (unblockable) {
                           return (
                             <button
@@ -2602,8 +2634,13 @@ export function CalendarBoard({
                 Channex-Import zurückkam, nicht dass das Portal sie gesetzt
                 hätte. Unsere Plattform gibt die Vorgabe, Channex reicht sie an
                 die OTAs weiter. Mit dem Gate war eine zurückgespiegelte Sperre
-                aus dem Kalender heraus nicht mehr aufhebbar. */}
-            {hasBlock(barMenu.status) && (
+                aus dem Kalender heraus nicht mehr aufhebbar.
+
+                EINZIGE Ausnahme `contract_end` (0355): ohne Vermarktungsvertrag
+                darf das Objekt nicht per Klick wieder verkäuflich werden. Der
+                Server lehnt es ab, hier verschwindet der Punkt — statt eines
+                Knopfes, der nichts tut. Stattdessen der Hinweis unten. */}
+            {hasBlock(barMenu.status) && barMenu.blockSource !== "contract_end" && (
               <button
                 type="button"
                 disabled={saving}
@@ -2621,6 +2658,15 @@ export function CalendarBoard({
                 <Icon icon="ph:lock-simple-open" className="size-4 shrink-0 text-muted-foreground" />
                 {t("board.unblock")}
               </button>
+            )}
+
+            {/* Warum hier kein „Aufheben" steht: ein fehlender Menüpunkt ohne
+                Begründung liest sich wie ein Fehler. */}
+            {hasBlock(barMenu.status) && barMenu.blockSource === "contract_end" && (
+              <p className="flex items-start gap-3 px-3 py-2.5 text-xs text-muted-foreground">
+                <Icon icon="ph:file-x" className="mt-0.5 size-4 shrink-0" />
+                {t("board.contractEndLocked")}
+              </p>
             )}
 
             {/* Stop-Sell aufheben — für JEDEN Stopp, unabhängig von der

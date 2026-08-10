@@ -617,6 +617,29 @@ def test_unblock_laesst_ical_sperre_stehen() -> None:
     assert store["availability"][0]["status"] == "blocked"
 
 
+def test_unblock_laesst_die_vertragssperre_stehen() -> None:
+    """Die schwerste Gegenprobe (0355): eine Sperre wegen Vertragsende darf
+    ein Klick auf dem Balken NICHT aufheben.
+
+    Täte er es, wäre das Objekt bei Booking/Airbnb sofort wieder verkäuflich —
+    für einen Zeitraum, für den es keinen Vermarktungsvertrag mehr gibt. Der
+    Weg zurück führt ausschließlich über das Enddatum in der Objektkartei
+    (Wurzel 1: derselbe Schalter setzt und hebt auf).
+    """
+    store = _mehrfamilien_store()
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": "u1", "date": "2027-01-02",
+         "status": "blocked", "source": "contract_end"}
+    ]
+    svc, _ = _service(**store)
+    svc.unblock(
+        "t1", "p1", DateRange(start=date(2027, 1, 2), end=date(2027, 1, 3)),
+        unit_id="u1",
+    )
+    assert store["availability"][0]["status"] == "blocked"
+    assert store["availability"][0]["source"] == "contract_end"
+
+
 def test_unblock_lehnt_fremde_einheit_ab() -> None:
     """Wurzel 3 auch auf dem Freigabe-Weg: eine ungeprüfte `unit_id` gäbe die
     Einheit eines fremden Objekts frei."""

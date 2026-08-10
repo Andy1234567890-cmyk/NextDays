@@ -1970,7 +1970,11 @@
       "capacitySqm": "Oppervlakte (m²)",
       "bfeNumber": "BFE-nummer",
       "name": "Naam",
-      "type": "Type"
+      "type": "Type",
+      "contractEnd": "Einde contract",
+      "contractEndHint": "Eerste dag zonder verkoopovereenkomst. Vanaf die dag is het object overal geblokkeerd: eigen agenda, myBestDays en alle portalen. Leeg betekent onbepaalde tijd.",
+      "contractEndBlocked": "Deze boekingen lopen door na het einde van het contract. Annuleer ze of kies een latere datum.",
+      "contractEndNoGuest": "Zonder gastnaam"
     },
     "owner": {
       "heading": "Eigenaar",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Legenda",
+      "contractEndLocked": "Deze blokkering komt van het einde van het contract. Dit is alleen te wijzigen via de einddatum in het objectdossier."
     },
     "wizard": {
       "close": "Sluiten",
@@ -5993,7 +5999,8 @@
       "manual": "Handmatig",
       "ota_other": "Ander portaal",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Einde contract"
     },
     "resStatus": {
       "cancelled": "Geannuleerd",

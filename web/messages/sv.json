@@ -1970,7 +1970,11 @@
       "capacitySqm": "Yta (m²)",
       "bfeNumber": "BFE-nummer",
       "name": "Namn",
-      "type": "Typ"
+      "type": "Typ",
+      "contractEnd": "Avtalets slut",
+      "contractEndHint": "Första dagen utan förmedlingsavtal. Från den dagen är objektet blockerat överallt: egen kalender, myBestDays och alla portaler. Tomt betyder tills vidare.",
+      "contractEndBlocked": "Dessa bokningar sträcker sig förbi avtalets slut. Avboka dem eller välj ett senare datum.",
+      "contractEndNoGuest": "Utan gästnamn"
     },
     "owner": {
       "heading": "Ägare",
@@ -5867,7 +5871,9 @@
       "stopSellClearing": "Hebe auf…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
       "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar."
+      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "legend": "Teckenförklaring",
+      "contractEndLocked": "Den här blockeringen kommer från avtalets slut. Den kan bara ändras via slutdatumet i objektkortet."
     },
     "wizard": {
       "close": "Stäng",
@@ -5993,7 +5999,8 @@
       "manual": "Manuellt",
       "ota_other": "Annan portal",
       "portal": "myBestDays",
-      "vrbo": "Vrbo"
+      "vrbo": "Vrbo",
+      "contract_end": "Avtalet slut"
     },
     "resStatus": {
       "cancelled": "Avbokad",

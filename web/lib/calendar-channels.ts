@@ -91,6 +91,16 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     dotBg: "bg-neutral-600",
     textFg: "text-foreground",
   },
+  contract_end: {
+    // Vertragsende (0355) — auch kein Vertriebskanal. Eigenes Symbol, weil
+    // „das Objekt gehört uns ab hier nicht mehr" etwas anderes ist als eine
+    // Handsperre: die eine hebt man auf, die andere nur über das Enddatum.
+    logo: { kind: "icon", icon: "ph:file-x-fill" },
+    barBg: "bg-neutral-800",
+    barFg: "text-white",
+    dotBg: "bg-neutral-800",
+    textFg: "text-foreground",
+  },
 };
 
 // Echte Vertriebskanäle (ohne „manual") — für Legende + Kanal-Filter.
