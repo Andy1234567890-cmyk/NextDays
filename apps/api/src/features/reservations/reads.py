@@ -15,6 +15,7 @@ from ._base import (
     ReservationsBase,
     _as_date,
     _require_uuid,
+    anzeigename,
     load_guest_mask,
 )
 from .property_stats import (
@@ -52,7 +53,7 @@ class ReadsMixin(ReservationsBase):
         query = (
             self._db()
             .table("reservations")
-            .select("*, guests(name)")
+            .select("*, guests(name), owners(name)")
             .eq("tenant_id", tenant_id)
         )
         if owner_pids is not None:
@@ -88,7 +89,7 @@ class ReadsMixin(ReservationsBase):
         base_rows = (
             self._db()
             .table("reservations")
-            .select("*, guests(name)")
+            .select("*, guests(name), owners(name)")
             .eq("tenant_id", tenant_id)
         )
         if owner_pids is not None:
@@ -123,8 +124,7 @@ class ReadsMixin(ReservationsBase):
         mask = load_guest_mask(self._client, ctx.user_id)
 
         def entry(r: dict) -> DashboardEntry:
-            guest = r.get("guests") or {}
-            name = guest.get("name", "") if isinstance(guest, dict) else ""
+            name = anzeigename(r)
             return DashboardEntry(
                 reservation_id=r["id"],
                 guest_name=mask.name(name) or "",
@@ -430,7 +430,7 @@ class ReadsMixin(ReservationsBase):
         res = (
             self._db()
             .table("reservations")
-            .select("*, guests(name)")
+            .select("*, guests(name), owners(name)")
             .eq("id", reservation_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -460,8 +460,7 @@ class ReadsMixin(ReservationsBase):
             title = prop_row.get("title") or ""
 
         mask = load_guest_mask(self._client, ctx.user_id)
-        guest = r.get("guests") or {}
-        guest_name = guest.get("name", "") if isinstance(guest, dict) else ""
+        guest_name = anzeigename(r)
         ci, co = _as_date(r["check_in"]), _as_date(r["check_out"])
 
         total = float(r.get("total_amount") or 0)

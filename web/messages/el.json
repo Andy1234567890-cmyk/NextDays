@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Ποιος μένει εκεί",
+      "stayNamePlaceholder": "Όνομα του ατόμου",
+      "stayNameHint": "Αφήστε το κενό για τον ίδιο τον ιδιοκτήτη. Διαφορετικά το όνομα του ατόμου που χρησιμοποιεί την περίοδο — οικογένεια, φίλοι, τεχνίτες.",
+      "stayNoteLabel": "Σημείωση (προαιρετικά)",
+      "stayNotePlaceholder": "π.χ. κλειστό βάσει email της 15.3."
     },
     "slider": {
       "close": "Κλείσιμο",

@@ -62,6 +62,13 @@ export type ReservationInput = {
   // die Gästekartei. Nur zusammen mit `is_owner_stay: true` erlaubt, sonst
   // weist der Server mit 422 ab (schemas.py `_owner_nur_bei_eigennutzung`).
   owner_id?: string;
+  // WER wirklich da wohnt und WARUM (0354). Eine Eigennutzung ist nicht
+  // zwangsläufig der Eigentümer selbst — derselbe Zeitraum geht an seine
+  // Kinder, an Freunde oder an einen Handwerker. `owner_id` bleibt der
+  // vertragliche Bezug, `stay_name` ist die anwesende Person. Nur zusammen
+  // mit `is_owner_stay: true` erlaubt, sonst weist der Server mit 422 ab.
+  stay_name?: string;
+  stay_note?: string;
 };
 
 export type Reservation = {
@@ -86,6 +93,10 @@ export type Reservation = {
   checked_out_at: string | null;
   // Eigentümer-Aufenthalt (0241): eigener Kalenderbalken, kein Umsatz.
   is_owner_stay: boolean;
+  // Freitext zur Eigennutzung (0354) — steht auf dem Balken hinter dem Namen.
+  // Die anwesende Person selbst kommt in `guest_name` (der Server setzt dort
+  // `stay_name`, ersatzweise den Eigentümernamen).
+  stay_note?: string | null;
 };
 
 export type QuoteItem = { label: string; amount: number };

@@ -112,6 +112,14 @@ export function ReservationWizard({
   const [checkOutState, setCheckOutState] = useState(checkOut);
   const [channel, setChannel] = useState<ReservationChannel>("direct");
   const [source, setSource] = useState("");
+  // Wer wohnt da wirklich? Eine Eigennutzung ist NICHT zwangsläufig der
+  // Eigentümer selbst — er sperrt den Zeitraum genauso für seine Kinder, für
+  // Freunde oder für Handwerker. Der Eigentümer ist nur der Vorschlag; steht
+  // hier ein anderer Name, gilt der. Ohne dieses Feld zeigte der Balken bei
+  // jeder Eigennutzung dasselbe „Eigentümer-Aufenthalt", und ein Objekt ohne
+  // hinterlegten Eigentümer liess sich gar nicht belegen.
+  const [aufenthaltName, setAufenthaltName] = useState("");
+  const [aufenthaltNotiz, setAufenthaltNotiz] = useState("");
   const [guests, setGuests] = useState<GuestBreakdown>({
     adults: 1,
     children: 0,
@@ -163,7 +171,13 @@ export function ReservationWizard({
   // entweder einen Gast oder einen Eigentümer (0353, CHECK
   // `reservations_owner_stay_person`). Solange keiner feststeht, geht es nicht
   // weiter — statt den Nutzer erst am Ende in einen 422 laufen zu lassen.
-  const ownerBlockiert = ownerStay && !owner;
+  // Ohne hinterlegten Eigentümer geht es trotzdem, SOFERN ein Name dasteht:
+  // eine Eigennutzung ist nicht zwangsläufig der Eigentümer selbst (Kinder,
+  // Freunde, Handwerker), und ein Objekt ohne gepflegten Eigentümer war sonst
+  // gar nicht belegbar. Ganz ohne Personenbezug bleibt es gesperrt — dann
+  // stünde auf dem Balken wieder nur „Eigentümer-Aufenthalt" (Wurzel 4: kein
+  // erfundener Platzhalter).
+  const ownerBlockiert = ownerStay && !owner && !aufenthaltName.trim();
 
   // Schritt 2 (Preise) — automatisch aus dem zentralen Resolver (Quote). Der
   // Nutzer kann jeden Wert weiterhin manuell überschreiben; `touched` schützt
@@ -266,8 +280,21 @@ export function ReservationWizard({
       contact: ownerStay ? LEERER_KONTAKT : contact,
       total_amount: total,
       status: "confirmed",
-      ...(ownerStay && owner
-        ? { is_owner_stay: true as const, owner_id: owner.id }
+      ...(ownerStay
+        ? {
+          is_owner_stay: true as const,
+          // Der Eigentümer bleibt der VERTRAGLICHE Bezug (Abrechnung,
+          // Kontingent) — auch wenn die anwesende Person eine andere ist.
+          ...(owner ? { owner_id: owner.id } : {}),
+          // WER wirklich da wohnt und WARUM. Leer lassen heisst leer, nicht
+          // „Eigentümer" (Wurzel 4) — der Balken zeigt dann sein Status-Label.
+          ...(aufenthaltName.trim()
+            ? { stay_name: aufenthaltName.trim() }
+            : {}),
+          ...(aufenthaltNotiz.trim()
+            ? { stay_note: aufenthaltNotiz.trim() }
+            : {}),
+        }
         : {}),
       // Aus der Gästekarte: festen Gast verknüpfen (keine Dublette). Bei
       // Eigennutzung nicht — dort ist der Eigentümer die Person.
@@ -508,6 +535,31 @@ export function ReservationWizard({
                       </p>
                     </div>
                   )}
+                  {/* WER wohnt da — und WARUM. Der Eigentümer oben ist der
+                      Vertragspartner, nicht zwingend die anwesende Person:
+                      derselbe Zeitraum geht an seine Kinder, an Freunde oder
+                      an einen Handwerker. Beides steht später auf dem
+                      Kalenderbalken, damit man im Juli noch weiss, warum das
+                      Objekt im August zu ist. */}
+                  <Field label={t("wizard.stayNameLabel")}>
+                    <Input
+                      value={aufenthaltName}
+                      onChange={(e) => setAufenthaltName(e.target.value)}
+                      placeholder={owner?.name ?? t("wizard.stayNamePlaceholder")}
+                      maxLength={120}
+                    />
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      {t("wizard.stayNameHint")}
+                    </p>
+                  </Field>
+                  <Field label={t("wizard.stayNoteLabel")}>
+                    <Input
+                      value={aufenthaltNotiz}
+                      onChange={(e) => setAufenthaltNotiz(e.target.value)}
+                      placeholder={t("wizard.stayNotePlaceholder")}
+                      maxLength={500}
+                    />
+                  </Field>
                 </Section>
               ) : (
                 <Section title={t("wizard.guestContact")}>

@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Qui séjourne",
+      "stayNamePlaceholder": "Nom de la personne",
+      "stayNameHint": "Laisser vide pour le propriétaire. Sinon le nom de la personne qui occupe la période — famille, amis, artisans.",
+      "stayNoteLabel": "Note (facultatif)",
+      "stayNotePlaceholder": "p. ex. bloqué selon l'e-mail du 15.3."
     },
     "slider": {
       "close": "Fermer",

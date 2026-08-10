@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Kdo tam bydlí",
+      "stayNamePlaceholder": "Jméno osoby",
+      "stayNameHint": "Ponechte prázdné pro samotného vlastníka. Jinak jméno osoby, která období využívá — rodina, přátelé, řemeslníci.",
+      "stayNoteLabel": "Poznámka (nepovinné)",
+      "stayNotePlaceholder": "např. blokováno dle e-mailu z 15.3."
     },
     "slider": {
       "close": "Zavřít",

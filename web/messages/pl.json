@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Kto tam mieszka",
+      "stayNamePlaceholder": "Imię i nazwisko osoby",
+      "stayNameHint": "Pozostaw puste dla samego właściciela. W przeciwnym razie imię osoby korzystającej z okresu — rodzina, znajomi, fachowcy.",
+      "stayNoteLabel": "Notatka (opcjonalnie)",
+      "stayNotePlaceholder": "np. zablokowane wg e-maila z 15.3."
     },
     "slider": {
       "close": "Zamknij",

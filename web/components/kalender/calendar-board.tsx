@@ -505,7 +505,13 @@ function segmentLabel(
   // Eigentümer-Aufenthalt: ohne Namen NICHT auf den Kanal zurückfallen — das
   // liest sich sonst wie eine Portalbuchung, obwohl gar keine dahintersteht.
   if (seg.reservation?.is_owner_stay) {
-    return guest || t("calendarBoard.ownerStay");
+    // Name UND Grund, wie bei Lodgify („ejerspærret iflg mail 15.3.26"): wer
+    // im Juli sehen will, warum das Objekt im August zu ist, findet es hier
+    // statt in einer Mail. Fehlt beides, bleibt das Status-Label.
+    const notiz = seg.reservation.stay_note?.trim();
+    return [guest || t("calendarBoard.ownerStay"), notiz]
+      .filter(Boolean)
+      .join(" · ");
   }
   return guest || channelLabelLoose(seg.reservation?.ota_name) || channelLabel(seg.source);
 }

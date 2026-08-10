@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Kuka majoittuu",
+      "stayNamePlaceholder": "Henkilön nimi",
+      "stayNameHint": "Jätä tyhjäksi omistajalle. Muuten sen henkilön nimi, joka käyttää jakson — perhe, ystävät, remonttimiehet.",
+      "stayNoteLabel": "Muistiinpano (valinnainen)",
+      "stayNotePlaceholder": "esim. estetty 15.3. sähköpostin mukaan"
     },
     "slider": {
       "close": "Sulje",

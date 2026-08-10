@@ -1056,6 +1056,54 @@ def test_clear_stop_sell_include_portal_removes_channex() -> None:
     assert filters and all("source" not in f for f in filters)
 
 
+def test_clear_stop_sell_pusht_trotz_plan_genauem_reststopp() -> None:
+    """Wurzel 1 — eine verbliebene Zeile ANDERER Ebene darf den Push nicht
+    unterdrücken.
+
+    `remaining` fragte ohne `rate_plan_id`-Filter: ein plan-genauer Stopp am
+    selben Tag zählte als „bleibt gesperrt", `open_days` wurde leer, und es
+    ging KEIN `stop_sell=false` an Channex. Lokal war der Stopp weg, bei
+    Channex stand er weiter — der nächste Import holte ihn als
+    `source='channex'` zurück, und das in Endlosschleife.
+
+    Live gefunden am 10.08.2026 (FeWo *Stjerneskud*): 13 Zeilen kamen in einer
+    Sekunde als `channex` zurück, obwohl der Nutzer sie gelöscht hatte. Es sah
+    aus, als setze das Portal ununterbrochen neue Stop-Sells — in Wahrheit
+    hallte die eigene, nie zugestellte Löschung nach.
+    """
+    svc, store = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        # Ein plan-genauer Stopp eines ANDEREN Objekts: er überlebt den DELETE
+        # (der filtert auf property_id) und steht damit noch da, wenn
+        # `remaining` fragt. Genau das ist der Live-Fall — dort war es ein
+        # Stopp am selben Objekt, der über `bulk_restrictions` an einem
+        # Rate-Plan hing und den der Objekt-DELETE nicht traf.
+        # Eine plan-genaue Zeile, die der Objekt-DELETE stehen lässt
+        # (`include_rate_plans` ist an, aber der Doppelgänger filtert `is_`
+        # nicht) — im Live-Fall war es genau so: der Stopp hing über
+        # `bulk_restrictions` an einem Rate-Plan und überlebte.
+        stop_sell=[
+            {"date": "2027-06-02", "property_id": "p1", "rate_plan_id": "rp-1"},
+        ],
+    )
+    rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 5))
+    gepusht: list[dict] = []
+    svc._push_channex_stop_sell = (  # noqa: SLF001 — Doppelgänger im Test
+        lambda pid, spans, *, stop_sell, days=None: gepusht.append(
+            {"spans": spans, "stop_sell": stop_sell}
+        )
+    )
+    svc.clear_stop_sell(
+        "t1", "p1", rng, include_portal=True, include_rate_plans=True,
+    )
+    # Der Push MUSS ALLE vier Nächte öffnen — auch den 02.06., an dem die
+    # plan-genaue Zeile hängt. Vorher zerfiel die Spanne dort, der 02.06. blieb
+    # bei Channex gesperrt, und der nächste Import holte ihn zurück.
+    assert gepusht, "kein stop_sell=false an Channex gemeldet"
+    assert gepusht[0]["stop_sell"] is False
+    assert gepusht[0]["spans"] == [(date(2027, 6, 1), date(2027, 6, 4))]
+
+
 def test_reset_all_stop_sell_single_property_deletes_all_sources() -> None:
     # Reset eines Objekts: löscht ALLE zukünftigen Stops (auch Portal). 2099er
     # Datum, damit es sicher in der Zukunft liegt (date.today()-Filter).

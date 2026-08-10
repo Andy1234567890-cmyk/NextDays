@@ -5924,7 +5924,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Wer wohnt dort",
+      "stayNamePlaceholder": "Name der Person",
+      "stayNameHint": "Leer lassen für den Eigentümer selbst. Sonst der Name der Person, die den Zeitraum nutzt — Familie, Freunde, Handwerker.",
+      "stayNoteLabel": "Notiz (optional)",
+      "stayNotePlaceholder": "z. B. gesperrt laut Mail vom 15.3."
     },
     "slider": {
       "close": "Schließen",
@@ -7749,8 +7754,8 @@
     "toLogin": "Zur Anmeldung",
     "genericError": "Das hat gerade nicht geklappt. Bitte später erneut versuchen.",
     "tokenMissing": {
-      "title": "Link unvollständig",
-      "text": "Dieser Link ist nicht vollständig. Bitte den kompletten Link aus der E-Mail verwenden — am besten kopieren und in die Adresszeile einfügen."
+      "title": "Kein Link-Code in der Adresse",
+      "text": "Diese Seite braucht den Code aus deiner E-Mail. Hast du dein Passwort gerade gesetzt, ist alles in Ordnung — der Code gilt nur einmal, und du kannst dich direkt anmelden. Sonst den kompletten Link aus der E-Mail kopieren und in die Adresszeile einfügen."
     },
     "tokenInvalid": {
       "title": "Link nicht mehr gültig",

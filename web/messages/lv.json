@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Kas tur uzturas",
+      "stayNamePlaceholder": "Personas vārds",
+      "stayNameHint": "Atstājiet tukšu pašam īpašniekam. Citādi tās personas vārds, kas izmanto periodu — ģimene, draugi, amatnieki.",
+      "stayNoteLabel": "Piezīme (neobligāti)",
+      "stayNotePlaceholder": "piem. bloķēts saskaņā ar 15.3. e-pastu"
     },
     "slider": {
       "close": "Aizvērt",

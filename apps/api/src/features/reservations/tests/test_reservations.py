@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
+from src.features.reservations._base import anzeigename
 from src.features.reservations.schemas import (
     GuestContact,
     ReservationChannel,
@@ -1251,6 +1252,67 @@ def test_owner_id_ohne_owner_stay_ist_ungueltig() -> None:
             property_id="p1", check_in=date(2026, 5, 1),
             check_out=date(2026, 5, 3), owner_id="own-1",
         )
+
+
+def test_stay_name_ohne_owner_stay_ist_ungueltig() -> None:
+    """Bei einer Gastbuchung steht der Name am GAST (`contact`).
+
+    Ein zweites Namensfeld daneben ergäbe zwei Wahrheiten über dieselbe
+    Person — welche zeigt der Kalenderbalken dann?
+    """
+    with pytest.raises(ValueError, match="stay_name"):
+        ReservationCreate(
+            property_id="p1", check_in=date(2026, 5, 1),
+            check_out=date(2026, 5, 3), stay_name="Tochter Lisa",
+        )
+
+
+def test_anzeigename_bevorzugt_die_benannte_person() -> None:
+    """Eine Eigennutzung ist NICHT zwangsläufig der Eigentümer selbst.
+
+    Er sperrt den Zeitraum genauso für seine Kinder, für Freunde oder für
+    Handwerker. `owner_id` bleibt der vertragliche Bezug, `stay_name` ist die
+    anwesende Person — und die gehört auf den Balken. Vorher zeigte JEDE
+    Eigennutzung dasselbe „Eigentümer-Aufenthalt" (live gesehen am 10.08.2026,
+    FeWo *Stjerneskud*).
+    """
+    zeile = {
+        "is_owner_stay": True,
+        "stay_name": "Tochter Lisa",
+        "owners": {"name": "Andy Staudinger"},
+    }
+    assert anzeigename(zeile) == "Tochter Lisa"
+
+
+def test_anzeigename_faellt_auf_den_eigentuemer_zurueck() -> None:
+    """Ohne benannte Person ist der Eigentümer die beste bekannte Aussage.
+
+    Der Assistent legt bei einer Eigennutzung bewusst KEINEN Gast-Kontakt an
+    (das erzeugte eine Dublette in der Gästekartei), also bleibt `guests.name`
+    leer — der Name muss aus `owners` kommen.
+    """
+    zeile = {"is_owner_stay": True, "owners": {"name": "Andy Staudinger"}}
+    assert anzeigename(zeile) == "Andy Staudinger"
+
+
+def test_anzeigename_erfindet_nichts() -> None:
+    """Wurzel 4: ohne Person bleibt es leer, nie ein Platzhalter.
+
+    Der Balken zeigt dann sein Status-Label („Eigentümer-Aufenthalt") — das
+    ist eine Aussage über die ART, nicht über eine erfundene Person.
+    """
+    assert anzeigename({"is_owner_stay": True}) == ""
+
+
+def test_anzeigename_laesst_die_gastbuchung_unberuehrt() -> None:
+    """Die Gegenprobe: eine normale Buchung nimmt weiter den Gast — auch wenn
+    zufällig ein Eigentümer am selben Objekt hängt."""
+    zeile = {
+        "is_owner_stay": False,
+        "guests": {"name": "Marian van Sloten"},
+        "owners": {"name": "Andy Staudinger"},
+    }
+    assert anzeigename(zeile) == "Marian van Sloten"
 
 
 def test_block_request_id_landet_an_der_reservierung(monkeypatch) -> None:  # noqa: ANN001

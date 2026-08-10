@@ -118,6 +118,38 @@ def _map_booking_conflict(exc: APIError) -> Exception:
 
 
 
+def anzeigename(r: dict) -> str:
+    """Der Name, der zu dieser Reservierung im Kalender steht.
+
+    Bei einer Eigennutzung gibt es KEINEN Gast: der Assistent schickt bewusst
+    einen leeren Kontakt, weil der Personenbezug `owner_id` ist und ein
+    mitgeschickter Kontakt neben dem Eigentümer noch eine Gast-Zeile in der
+    Gästekartei anlegte. Damit blieb `guests.name` leer und der Balken zeigte
+    nur „Eigentümer-Aufenthalt" — wer im Kalender wissen wollte, WER da wohnt,
+    fand es nirgends (live gesehen am 10.08.2026, FeWo *Stjerneskud*).
+
+    Der Name steht die ganze Zeit in `owners` und wird über `owners(name)`
+    mitgeladen. Ein Helfer an EINER Stelle, weil drei Lesepfade (Liste, Detail,
+    Antwort nach dem Anlegen) dieselbe Frage stellen — sonst zeigt der eine
+    den Namen und der andere nicht.
+    """
+    if r.get("is_owner_stay"):
+        # Vorrang hat die AUSDRÜCKLICH benannte Person: „Tochter Lisa" schlägt
+        # den Eigentümer, denn sie ist die, die da wohnt. Ohne Angabe ist der
+        # Eigentümer die beste bekannte Aussage — und ohne beides bleibt es
+        # leer, damit der Balken sein Status-Label zeigt statt eines
+        # erfundenen Platzhalters (Wurzel 4).
+        benannt = (r.get("stay_name") or "").strip()
+        if benannt:
+            return benannt
+        owner = r.get("owners") or {}
+        name = owner.get("name", "") if isinstance(owner, dict) else ""
+        if name:
+            return str(name)
+    guest = r.get("guests") or {}
+    return str(guest.get("name", "") if isinstance(guest, dict) else "")
+
+
 class ReservationsBase:
     """Geteilter Zustand + Helfer für die Reservations-Mixins."""
 
@@ -582,7 +614,7 @@ class ReservationsBase:
         rows = (
             self._db()
             .table("reservations")
-            .select("*, guests(name)")
+            .select("*, guests(name), owners(name)")
             .eq("id", reservation_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -823,8 +855,7 @@ class ReservationsBase:
         )
 
     def _row(self, r: dict, mask: GuestMask) -> ReservationResponse:
-        guest = r.get("guests") or {}
-        guest_name = guest.get("name", "") if isinstance(guest, dict) else ""
+        guest_name = anzeigename(r)
         amount = mask.amount(float(r.get("total_amount") or 0))
         paid = mask.amount(float(r.get("paid_amount") or 0))
         return ReservationResponse(
@@ -853,4 +884,5 @@ class ReservationsBase:
             # Vertrieb und zählte für den Betrachter als Umsatzbuchung, obwohl
             # er per CHECK keinen Betrag tragen kann.
             is_owner_stay=bool(r.get("is_owner_stay")),
+            stay_note=r.get("stay_note"),
         )

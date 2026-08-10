@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Chi soggiorna",
+      "stayNamePlaceholder": "Nome della persona",
+      "stayNameHint": "Lascia vuoto per il proprietario. Altrimenti il nome di chi usa il periodo — famiglia, amici, artigiani.",
+      "stayNoteLabel": "Nota (facoltativo)",
+      "stayNotePlaceholder": "es. bloccato da e-mail del 15.3."
     },
     "slider": {
       "close": "Chiudi",

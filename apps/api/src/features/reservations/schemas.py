@@ -81,6 +81,13 @@ class ReservationCreate(BaseModel):
     # wählt die erste freie (0275). Für den Eigentümer-Aufenthalt aus einem
     # Sperrantrag ist es die im Antrag benannte Einheit.
     unit_id: str | None = None
+    # WER wirklich da wohnt und WARUM (0354) — nur bei `is_owner_stay`.
+    # Eine Eigennutzung ist nicht zwangsläufig der Eigentümer selbst: derselbe
+    # Zeitraum geht an seine Kinder, an Freunde oder an einen Handwerker.
+    # `owner_id` bleibt der VERTRAGLICHE Bezug (Abrechnung, Kontingent),
+    # `stay_name` ist die anwesende Person. Beides steht auf dem Kalenderbalken.
+    stay_name: str | None = Field(default=None, max_length=120)
+    stay_note: str | None = Field(default=None, max_length=500)
 
     @model_validator(mode="after")
     def _check_order(self) -> "ReservationCreate":
@@ -100,6 +107,12 @@ class ReservationCreate(BaseModel):
         """
         if self.owner_id and not self.is_owner_stay:
             msg = "owner_id nur bei is_owner_stay=true"
+            raise ValueError(msg)
+        if (self.stay_name or self.stay_note) and not self.is_owner_stay:
+            # Bei einer Gastbuchung steht der Name am GAST (`contact`) und die
+            # Notiz an `source`. Ein zweites Namensfeld daneben ergäbe zwei
+            # Wahrheiten über dieselbe Person — welche zeigt der Balken dann?
+            msg = "stay_name/stay_note nur bei is_owner_stay=true"
             raise ValueError(msg)
         return self
 
@@ -171,6 +184,10 @@ class ReservationResponse(BaseModel):
     # Eigentümer-Aufenthalt (0241) — die UI kennzeichnet ihn und blendet
     # Geldangaben aus; es gibt dort keine zu zeigen.
     is_owner_stay: bool = False
+    # Freitext zur Eigennutzung (0354). `guest_name` trägt bereits die
+    # anwesende Person (siehe `_base.anzeigename`); hier steht der Grund, den
+    # der Balken hinter dem Namen zeigt.
+    stay_note: str | None = None
 
 
 class QuoteItem(BaseModel):

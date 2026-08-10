@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Wie er verblijft",
+      "stayNamePlaceholder": "Naam van de persoon",
+      "stayNameHint": "Laat leeg voor de eigenaar zelf. Anders de naam van de persoon die de periode gebruikt — familie, vrienden, vaklieden.",
+      "stayNoteLabel": "Notitie (optioneel)",
+      "stayNotePlaceholder": "bijv. geblokkeerd volgens mail van 15.3."
     },
     "slider": {
       "close": "Sluiten",

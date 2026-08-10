@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Кой живее там",
+      "stayNamePlaceholder": "Име на лицето",
+      "stayNameHint": "Оставете празно за самия собственик. В противен случай името на лицето, което ползва периода — семейство, приятели, майстори.",
+      "stayNoteLabel": "Бележка (по избор)",
+      "stayNotePlaceholder": "напр. блокирано съгласно имейл от 15.3."
     },
     "slider": {
       "close": "Затвори",

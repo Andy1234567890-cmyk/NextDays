@@ -922,19 +922,37 @@ class CalendarService:
         # blieb (live beobachtet). Ohne diese Zahl kann die Oberfläche „nichts
         # gefunden" nicht von „aufgehoben" unterscheiden (Wurzel 5).
         geloescht = len(query.execute().data or [])
-        # Verbleibende Stops (z. B. source=channex) dürfen nicht geöffnet werden.
+        # Verbleibende Stops dürfen nicht geöffnet werden — aber NUR die, die
+        # denselben Zuschnitt haben wie der Push.
+        #
+        # WARUM DER FILTER (Wurzel 1): `_push_channex_stop_sell` meldet den
+        # Stand des OBJEKTS. Eine verbliebene Zeile mit `rate_plan_id` sagt
+        # nichts über die Objekt-Ebene aus; sie hier mitzuzählen unterdrückte
+        # den Push für diesen Tag. Und wenn `include_portal` gesetzt ist, hat
+        # der DELETE oben die Portal-Zeilen bereits mitgenommen — was jetzt
+        # noch dasteht, ist ein Stop einer ANDEREN Ebene.
+        #
+        # Live gefunden am 10.08.2026 (FeWo *Stjerneskud*): Am 28.08. lag ein
+        # plan-genauer Stopp. Beim Aufheben zählte er als „bleibt gesperrt",
+        # `open_days` wurde leer, und es ging KEIN einziger `stop_sell=false`
+        # an Channex. Lokal war der Stopp weg, bei Channex stand er weiter —
+        # der nächste Import holte ihn als `source='channex'` zurück. Für den
+        # Nutzer sah es aus, als setze Channex ununterbrochen neue Stop-Sells:
+        # in Wahrheit hallte seine eigene, nie zugestellte Löschung nach.
+        rest_query = (
+            self._db()
+            .table("stop_sell")
+            .select("date")
+            .eq("property_id", property_id)
+            .gte("date", rng.start.isoformat())
+            .lt("date", rng.end.isoformat())
+        )
+        if not include_rate_plans:
+            # Ohne das Flag hat der DELETE die plan-genauen Zeilen bewusst
+            # stehen lassen — dann sind sie echte verbleibende Stopps.
+            rest_query = rest_query.is_("rate_plan_id", "null")
         remaining = {
-            row["date"]
-            for row in (
-                self._db()
-                .table("stop_sell")
-                .select("date")
-                .eq("property_id", property_id)
-                .gte("date", rng.start.isoformat())
-                .lt("date", rng.end.isoformat())
-                .execute()
-            ).data
-            or []
+            row["date"] for row in (rest_query.execute()).data or []
         }
         open_days = [d for d in wanted if d.isoformat() not in remaining]
         # Symmetrisch zu `set_stop_sell` (Wurzel 1): NUR die tatsächlich

@@ -33,6 +33,7 @@ import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
 
+import httpx
 from supabase import Client
 
 from src.core.config import Settings, get_settings
@@ -578,11 +579,35 @@ class EinladungService:
     def _tenant_nutzer(self, email: str) -> dict | None:
         """Der aktive Tenant-Nutzer zu einer Adresse — oder None.
 
-        Quelle ist `public.users` (nicht GoTrue): nur wer dort eine Zeile hat,
-        ist ein Betriebs-Nutzer. Ein reiner Gast (portal_guests) oder ein
-        Backoffice-Zugang hat hier nichts zu suchen und bekommt über diesen Weg
-        keinen Link.
+        ZWEI QUELLEN, in dieser Reihenfolge: `public.users` ist der Spiegel und
+        deckt den Normalfall ab; findet er nichts, entscheidet GoTrue. Denn
+        `public.users.email` wird nur beim Abruf des EIGENEN Kontos nachgezogen
+        (`AccountService._email_nachziehen`) — wer nach einem Adresswechsel
+        noch nicht wieder eingeloggt war, steht dort mit der ALTEN Adresse.
+
+        Live gefunden am 10.08.2026: Nach dem Wechsel der Eigentümer-Adresse
+        auf `a.staudinger32@icloud.com` trug `public.users` weiter
+        `eigentuemer.test@airsmil.dk`. „Passwort vergessen" fand nichts und
+        antwortete trotzdem „E-Mail unterwegs" — die Antwort ist bewusst
+        neutral (User-Enumeration), also sah der Eigentümer einen Erfolg, wo
+        nie eine Mail entstand (Wurzel 5b: die stille Falschaussage, die
+        niemand als Bug erkennt). Ein Konto, dessen Anmeldeadresse gilt, muss
+        über genau diese Adresse zurücksetzbar sein.
+
+        Die Prüfung „ist das ein Betriebs-Nutzer" bleibt unverändert scharf:
+        auch der GoTrue-Weg endet an einer `users`-Zeile MIT `tenant_id`. Ein
+        reiner Gast (portal_guests) oder ein Backoffice-Zugang kommt hier
+        weiterhin nicht durch.
         """
+        zeile = self._nutzer_aus_spiegel(email)
+        if zeile is None:
+            zeile = self._nutzer_ueber_gotrue(email)
+        if zeile is None or not zeile.get("tenant_id"):
+            return None
+        return zeile
+
+    def _nutzer_aus_spiegel(self, email: str) -> dict | None:
+        """`public.users` nach der Adresse fragen."""
         rows = (
             self._db.table("users")
             .select("id, tenant_id, email, full_name, preferred_language")
@@ -591,14 +616,112 @@ class EinladungService:
             .execute()
         ).data or []
         if len(rows) != 1:
-            # Keine Zeile → kein Konto. Mehrere Zeilen → die Adresse ist nicht
-            # eindeutig einem Konto zuzuordnen; dann fail-closed KEINE Mail,
-            # statt zu raten, welches Konto gemeint ist (Wurzel 4).
+            # Keine Zeile → hier nicht gefunden (der Aufrufer fragt GoTrue).
+            # Mehrere Zeilen → die Adresse ist nicht eindeutig einem Konto
+            # zuzuordnen; dann fail-closed KEINE Mail, statt zu raten, welches
+            # Konto gemeint ist (Wurzel 4).
+            return None
+        return rows[0]
+
+    def _nutzer_ueber_gotrue(self, email: str) -> dict | None:
+        """Die Anmeldeadresse bei GoTrue nachschlagen und den Spiegel heilen.
+
+        NUR NACHSCHLAGEN, NICHT SENDEN: Die Mail geht unverändert über unseren
+        eigenen Mailcow (`_reset_mail`, `core.mail`). GoTrue kann in diesem
+        Setup gar nicht senden (0279) — es wird hier ausschliesslich als
+        Wahrheit über die ANMELDEADRESSE befragt, weil `public.users.email` nur
+        ein nachlaufender Spiegel ist.
+
+        Steht dort ein Nutzer, wird seine `users`-Zeile über die ID geladen —
+        und der veraltete Spiegel gleich mitgezogen, damit derselbe Umweg nicht
+        bei jedem weiteren Vorgang nötig ist (Wurzel 1: den Gegenzustand
+        mitpflegen).
+
+        Der `filter`-Parameter der Admin-API sucht serverseitig (live gegen die
+        Staging-Instanz geprüft). Ohne ihn müsste `list_users()` seitenweise
+        durchlaufen werden — bei 50 Nutzern je Seite fände ein Konto auf Seite 3
+        schlicht nicht statt, und der Reset schlüge wieder still fehl.
+
+        Fehler von GoTrue enden in None, nicht in einem 500: der Aufrufer
+        übersetzt jedes None in dieselbe neutrale Antwort, und ein Ausfall des
+        Auth-Dienstes darf keine Adressen preisgeben (fail-closed).
+        """
+        gesucht = email.strip().casefold()
+        try:
+            treffer = self._gotrue_suche(gesucht)
+        except Exception as exc:  # noqa: BLE001 — Aufrufer behandelt None neutral
+            log.warning("reset_gotrue_lookup_fehlgeschlagen", error=str(exc)[:200])
+            return None
+        # Der Filter sucht als Teilstring — auf exakte Gleichheit prüfen, sonst
+        # träfe „a@b.de" auch „xa@b.de" (Wurzel 3: nie dem Suchergebnis trauen).
+        user_id = next(
+            (
+                str(u.get("id"))
+                for u in treffer
+                if (u.get("email") or "").strip().casefold() == gesucht
+            ),
+            None,
+        )
+        if user_id is None:
+            return None
+        rows = (
+            self._db.table("users")
+            .select("id, tenant_id, email, full_name, preferred_language")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            # GoTrue kennt den Login, `public.users` nicht: das ist ein Gast
+            # oder ein Backoffice-Zugang — kein Betriebs-Nutzer.
             return None
         zeile = rows[0]
-        if not zeile.get("tenant_id"):
-            return None
+        if (zeile.get("email") or "").strip().casefold() != gesucht:
+            self._spiegel_heilen(user_id, email)
+            zeile["email"] = email
         return zeile
+
+    def _gotrue_suche(self, gesucht: str) -> list[dict]:
+        """`GET /admin/users?filter=…` — die einzige serverseitige Suche, die
+        GoTrue anbietet.
+
+        Der Python-Client kann es nicht: `list_users(page, per_page)` kennt
+        keinen Filter und liefert Seiten zu 50 Einträgen. Darum hier ein
+        direkter Aufruf mit dem Service-Role-Key. `per_page` bleibt klein — es
+        wird genau ein exakter Treffer erwartet, alles darüber ist Beifang des
+        Teilstring-Filters.
+        """
+        einstellungen = self._settings
+        basis = str(einstellungen.supabase_url).rstrip("/")
+        key = einstellungen.supabase_service_role_key.get_secret_value()
+        antwort = httpx.get(
+            f"{basis}/auth/v1/admin/users",
+            params={"filter": gesucht, "per_page": 10},
+            headers={"Authorization": f"Bearer {key}", "apikey": key},
+            timeout=10.0,
+        )
+        antwort.raise_for_status()
+        daten = antwort.json()
+        return list(daten.get("users") or [])
+
+    def _spiegel_heilen(self, user_id: str, email: str) -> None:
+        """`public.users.email` auf die geltende Anmeldeadresse nachziehen.
+
+        Best-effort (Wurzel 5): schlägt es fehl, ist der Reset trotzdem
+        möglich — die Adresse für Mail und Token steht bereits fest. Nur der
+        nächste Vorgang nähme dann wieder den Umweg über GoTrue.
+        """
+        try:
+            self._db.table("users").update({"email": email}).eq(
+                "id", user_id
+            ).execute()
+            log.info("reset_spiegel_geheilt", user_id=user_id)
+        except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Reset nicht
+            log.warning(
+                "reset_spiegel_heilen_fehlgeschlagen",
+                user_id=user_id,
+                error=str(exc)[:200],
+            )
 
     def _alle_sitzungen_widerrufen(self, user_id: str) -> None:
         """Jede aktive Sitzung des Kontos beenden (RPC aus 0191, keep=None).

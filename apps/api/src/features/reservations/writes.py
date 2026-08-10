@@ -372,6 +372,12 @@ class WritesMixin(ReservationsBase):
             # Personenbezug — ohne ihn wüsste niemand, WER da war.
             "is_owner_stay": req.is_owner_stay,
             **({"owner_id": owner_id} if owner_id else {}),
+            # WER wirklich da wohnt und WARUM (0354). Der Eigentümer ist der
+            # vertragliche Bezug, die anwesende Person kann eine andere sein —
+            # seine Kinder, Freunde, ein Handwerker. Ohne diese Felder zeigte
+            # jeder Eigennutzungs-Balken dasselbe „Eigentümer-Aufenthalt".
+            **({"stay_name": req.stay_name} if req.stay_name else {}),
+            **({"stay_note": req.stay_note} if req.stay_note else {}),
             # Der Sperrantrag, aus dem diese Belegung entstanden ist (0353) —
             # der Anker, an dem der Widerruf genau sie wiederfindet (Wurzel 1).
             **(
@@ -485,7 +491,15 @@ class WritesMixin(ReservationsBase):
         )
 
         mask = load_guest_mask(self._client, ctx.user_id)
-        guest_name = f"{req.contact.first_name} {req.contact.last_name}".strip()
+        # Bei einer Eigennutzung ist der Kontakt leer (kein Gast) — dort trägt
+        # `stay_name` die anwesende Person. Ohne diese Unterscheidung kam die
+        # Antwort nach dem Anlegen mit leerem Namen zurück, und der Balken
+        # zeigte bis zum nächsten Laden „Eigentümer-Aufenthalt".
+        guest_name = (
+            (req.stay_name or "").strip()
+            if req.is_owner_stay
+            else f"{req.contact.first_name} {req.contact.last_name}".strip()
+        )
         return ReservationResponse(
             id=row["id"],
             property_id=row["property_id"],
@@ -504,6 +518,7 @@ class WritesMixin(ReservationsBase):
             # zurück, und die Oberfläche zeichnet ihn bis zum nächsten
             # Vollreload als „Direkt".
             is_owner_stay=bool(row.get("is_owner_stay")),
+            stay_note=row.get("stay_note"),
         )
 
     def _resolve_rate_plan(
@@ -965,7 +980,7 @@ class WritesMixin(ReservationsBase):
         full = (
             self._db()
             .table("reservations")
-            .select("*, guests(name)")
+            .select("*, guests(name), owners(name)")
             .eq("id", reservation_id)
             .limit(1)
             .execute()
@@ -1167,7 +1182,7 @@ class WritesMixin(ReservationsBase):
         full = (
             self._db()
             .table("reservations")
-            .select("*, guests(name)")
+            .select("*, guests(name), owners(name)")
             .eq("id", reservation_id)
             .limit(1)
             .execute()

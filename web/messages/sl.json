@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Kdo tam biva",
+      "stayNamePlaceholder": "Ime osebe",
+      "stayNameHint": "Pustite prazno za lastnika samega. Sicer ime osebe, ki uporablja obdobje — družina, prijatelji, mojstri.",
+      "stayNoteLabel": "Opomba (neobvezno)",
+      "stayNotePlaceholder": "npr. blokirano po e-pošti z dne 15.3."
     },
     "slider": {
       "close": "Zapri",

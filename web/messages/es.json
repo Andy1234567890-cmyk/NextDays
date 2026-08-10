@@ -5903,7 +5903,12 @@
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
       "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer."
+      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "stayNameLabel": "Quién se aloja",
+      "stayNamePlaceholder": "Nombre de la persona",
+      "stayNameHint": "Déjalo vacío para el propietario. Si no, el nombre de quien usa el periodo — familia, amigos, operarios.",
+      "stayNoteLabel": "Nota (opcional)",
+      "stayNotePlaceholder": "p. ej. bloqueado según correo del 15.3."
     },
     "slider": {
       "close": "Cerrar",
