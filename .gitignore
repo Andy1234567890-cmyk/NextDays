@@ -40,3 +40,11 @@ client_secret_*.json
 # Lokale Audit-/Analyse-Notizen (nicht ins Repo)
 AUDIT_MyNextDays.md
 .playwright-mcp/
+
+# Build-Ausgabe eines Prüf-Builds mit relativem NEXT_DIST_DIR. Next.js legt den
+# Pfad unter der App an statt absolut — daraus wurde web/private/ mit tausenden
+# Dateien im git status, und die mitgeschriebenen Scratchpad-Pfade in
+# tsconfig.json/next-env.d.ts liessen den Docker-Build scheitern (der Pfad
+# existiert im Container nicht). Prüf-Builds gehören in ein eigenes Verzeichnis
+# AUSSERHALB des Repos.
+web/private/
