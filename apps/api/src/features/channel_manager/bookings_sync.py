@@ -1618,6 +1618,78 @@ class BookingsSyncMixin:
         log.info("import_ari_done", tenant_id=tenant_id, **result)
         return result
 
+    @staticmethod
+    def _eigene_availability_push_tage(
+        db: Client, property_id: str, cutoff: str
+    ) -> set[str]:
+        """Tage, für die eine EIGENE availability-Push-Absicht offen oder frisch
+        ist (`ari_outbox`). Der Import darf für sie den Channex-Wert nicht
+        spiegeln — er ist dort noch der alte."""
+        tage: set[str] = set()
+        for r in (
+            db.table("ari_outbox")
+            .select("date_from, date_to")
+            .eq("property_id", property_id)
+            .or_(f"created_at.gte.{cutoff},status.eq.pending,status.eq.failed")
+            .execute()
+        ).data or []:
+            if r.get("date_from") and r.get("date_to"):
+                cur = date.fromisoformat(r["date_from"])
+                last = date.fromisoformat(r["date_to"])
+                while cur <= last:
+                    tage.add(cur.isoformat())
+                    cur += timedelta(days=1)
+        return tage
+
+    @staticmethod
+    def _eigene_stop_sell_push_tage(
+        db: Client, property_id: str, cutoff: str
+    ) -> set[str]:
+        """Tage, für die eine EIGENE Stop-Sell-Push-Absicht offen oder frisch ist.
+
+        BEIDE Push-Arten zählen. Der Delta-Pfad schreibt kind='stop_sell' mit
+        payload["spans"] = [[von, bis], …]; der nächtliche Full-Sync schreibt
+        kind='restriction_rows' mit payload["rows"] = [{date_from, date_to,
+        stop_sell, …}, …]. Wer nur auf 'stop_sell'/'spans' sieht, erkennt die
+        Full-Sync-Pushes NICHT als eigenes Echo und importiert sie als echten
+        OTA-Stop zurück (live: Kornblomst 09.-12.08.2026, Rævehulen
+        14.-19.08.2026 — beide aus einer lokalen Handsperre entstanden).
+
+        `cta_ctd` gehört bewusst NICHT dazu: dieser Push-Typ sendet ausschließlich
+        closed_to_arrival/closed_to_departure/min_stay/max_stay/rate, nie
+        stop_sell (`ari_push.push_restrictions_for_property`,
+        `_push_wochentag_feld`). Ihn mitzuzählen würde echte OTA-Stops
+        unterdrücken, statt Echos zu erkennen."""
+        tage: set[str] = set()
+        for r in (
+            db.table("ari_restriction_outbox")
+            .select("payload, kind, status, created_at")
+            .eq("property_id", property_id)
+            .in_("kind", ["stop_sell", "restriction_rows"])
+            .or_(f"created_at.gte.{cutoff},status.eq.pending,status.eq.failed")
+            .execute()
+        ).data or []:
+            payload = r.get("payload") or {}
+            spannen: list[tuple[str, str]] = [
+                (str(a), str(b)) for a, b in (payload.get("spans") or [])
+            ]
+            # Nur Zeilen mit stop_sell=True sind ein Stop-Sell-Echo; eine reine
+            # Preis-/min_stay-Zeile desselben Tages darf einen echten OTA-Stop
+            # nicht verdecken.
+            for row in payload.get("rows") or []:
+                if not (row or {}).get("stop_sell"):
+                    continue
+                von = row.get("date_from") or row.get("date")
+                bis = row.get("date_to") or row.get("date")
+                if von and bis:
+                    spannen.append((str(von), str(bis)))
+            for a, b in spannen:
+                cur, last = date.fromisoformat(a), date.fromisoformat(b)
+                while cur <= last:
+                    tage.add(cur.isoformat())
+                    cur += timedelta(days=1)
+        return tage
+
     def _import_ari_single(
         self,
         db: Client,
@@ -1683,8 +1755,6 @@ class BookingsSyncMixin:
         # Tag frei → Import macht ihn wieder 'blocked' → Full-Sync zementiert 0).
         # DB ist Availability-Master; der Import gleicht nur EXTERN verursachte
         # Änderungen ab.
-        recent_cutoff = (datetime.now(UTC) - timedelta(minutes=30)).isoformat()
-        recent_push_days: set[str] = set()
         # Skip-Kriterium: frisch gepushte Tage (created_at >= cutoff) ODER noch
         # offene Push-Absichten (status=pending, egal wie alt) — bleibt ein Push
         # >30 min pending (Channex-Ausfall), darf der Import den ALTEN Channex-
@@ -1698,22 +1768,13 @@ class BookingsSyncMixin:
         # während des Ausfalls einen Tag frei, machte der Import ihn wieder
         # `blocked`). Der nächste Full-Sync pushte die korrumpierte lokale
         # Wahrheit — der Fehler wurde dauerhaft.
-        for r in (
-            db.table("ari_outbox")
-            .select("date_from, date_to")
-            .eq("property_id", property_id)
-            .or_(
-                f"created_at.gte.{recent_cutoff},"
-                "status.eq.pending,status.eq.failed"
-            )
-            .execute()
-        ).data or []:
-            if r.get("date_from") and r.get("date_to"):
-                cur = date.fromisoformat(r["date_from"])
-                last = date.fromisoformat(r["date_to"])
-                while cur <= last:
-                    recent_push_days.add(cur.isoformat())
-                    cur += timedelta(days=1)
+        #
+        # Das Fenster wird je Chunk NEU bestimmt (nicht einmal vorab): Ein Lauf
+        # über 365 Tage fährt 4-5 Chunks à zwei Channex-Calls und kann unter
+        # Budget-Druck (20 Calls/Minute/Property) deutlich länger als 30 Minuten
+        # dauern. Ein eingefrorener Cutoff hätte alle Pushes, die WÄHREND des
+        # Imports entstehen, für jeden folgenden Chunk als echten OTA-Stand
+        # behandelt — genau der Fall, den der Schutz verhindern soll.
         chunk = 90
         offset = 0
         while offset < days_ahead:
@@ -1722,6 +1783,13 @@ class BookingsSyncMixin:
                 start + timedelta(days=min(offset + chunk, days_ahead) - 1)
             ).isoformat()
             offset += chunk
+            # Frisches Echo-Fenster für DIESEN Chunk (siehe Kommentar oben).
+            recent_cutoff = (
+                datetime.now(UTC) - timedelta(minutes=30)
+            ).isoformat()
+            recent_push_days = self._eigene_availability_push_tage(
+                db, property_id, recent_cutoff
+            )
 
             # Verfügbarkeit (synthetisch: 1 Room-Type/Property → über alle aggregieren)
             try:
@@ -1873,47 +1941,9 @@ class BookingsSyncMixin:
             # eben aufgehobenen Stop sofort wieder an. Für die Setzen-
             # Richtung gibt es dieses Fenster längst (`recent_push_days`
             # über `ari_outbox`) — für Restriktionen fehlte es.
-            # BEIDE Push-Arten zählen. Der Delta-Pfad schreibt kind='stop_sell'
-            # mit payload["spans"] = [[von, bis], …]; der nächtliche Full-Sync
-            # schreibt kind='restriction_rows' mit payload["rows"] = [{date_from,
-            # date_to, stop_sell, …}, …]. Wer nur auf 'stop_sell'/'spans' sieht,
-            # erkennt die Full-Sync-Pushes NICHT als eigenes Echo und importiert
-            # sie als echten OTA-Stop zurück (live: Kornblomst 09.-12.08.2026,
-            # Rævehulen 14.-19.08.2026 — beide aus einer lokalen Handsperre
-            # entstanden). Danach ist der Tag als source='channex' zementiert:
-            # `set_stop_sell` überspringt ihn und `clear_stop_sell` fasst ihn
-            # ohne include_portal nicht an.
-            eigene_push_tage: set[str] = set()
-            for r in (
-                db.table("ari_restriction_outbox")
-                .select("payload, kind, status, created_at")
-                .eq("property_id", property_id)
-                .in_("kind", ["stop_sell", "restriction_rows"])
-                .or_(
-                    f"created_at.gte.{recent_cutoff},"
-                    "status.eq.pending,status.eq.failed"
-                )
-                .execute()
-            ).data or []:
-                payload = r.get("payload") or {}
-                spannen: list[tuple[str, str]] = [
-                    (str(a), str(b)) for a, b in (payload.get("spans") or [])
-                ]
-                # Nur Zeilen mit stop_sell=True sind ein Stop-Sell-Echo; eine
-                # reine Preis-/min_stay-Zeile desselben Tages darf einen echten
-                # OTA-Stop nicht verdecken.
-                for row in payload.get("rows") or []:
-                    if not (row or {}).get("stop_sell"):
-                        continue
-                    von = row.get("date_from") or row.get("date")
-                    bis = row.get("date_to") or row.get("date")
-                    if von and bis:
-                        spannen.append((str(von), str(bis)))
-                for a, b in spannen:
-                    cur, last = date.fromisoformat(a), date.fromisoformat(b)
-                    while cur <= last:
-                        eigene_push_tage.add(cur.isoformat())
-                        cur += timedelta(days=1)
+            eigene_push_tage = self._eigene_stop_sell_push_tage(
+                db, property_id, recent_cutoff
+            )
             if stopped:
                 # Nur die OBJEKT-Ebene zählt als „schon gestoppt" — ein plan-
                 # genauer Hotel-Stopp (rate_plan_id gesetzt, 0152) darf den
