@@ -1007,6 +1007,11 @@
       "email": "nt jaan@example.com"
     },
     "emailLanguageHint": "Selles keeles saab omanik arveldused ja teated — ka ilma oma kontota.",
+    "emailHint": "Kehtib ka sisselogimisel: arveldused, teavitused ja portaali juurdepääs käivad selle aadressi kaudu.",
+    "emailChangePending": "Salvestatud. Kinnitus saadeti aadressile {email}.",
+    "emailChangePendingHint": "Kinnitus saadeti aadressile {email} — kuni kinnitamiseni logib omanik endiselt sisse senise aadressiga.",
+    "emailChangeResend": "Saada kinnitus uuesti",
+    "emailChangeResent": "Kinnitus saadeti uuesti aadressile {email}.",
     "portalAccess": "Seadista portaali juurdepääs",
     "portalAccessHint": "Omanik saab kutse e-postiga ja saab seejärel ise oma arveldusi vaadata.",
     "portalAccessNeedsEmail": "Portaali juurdepääsuks on vaja e-posti aadressi.",

@@ -163,13 +163,47 @@ class _Query:
             return _Result(selected)
         if self._order:
             selected = sorted(selected, key=lambda r: str(r.get(self._order) or ""))
-        return _Result(selected)
+        # KOPIEN zurückgeben, wie PostgREST: dort kommt JSON über die Leitung,
+        # der Aufrufer hält nie eine Referenz auf die gespeicherte Zeile.
+        # Ohne das war ein zuvor geladenes `vorher`-Dict nach einem späteren
+        # `update` still mitgewandert — ein Alt/Neu-Vergleich im Dienst
+        # (Wurzel 1) hätte hier grün gelogen, während er live den Unterschied
+        # sieht.
+        return _Result([dict(r) for r in selected])
+
+
+class _AuthAdmin:
+    """Attrappe der GoTrue-Admin-API — nur `update_user_by_id`.
+
+    Sie zeichnet die Aufrufe AUF, statt sie bloss zu schlucken: die Tests
+    müssen belegen können, dass der Adresswechsel OHNE `email_confirm`
+    rausging (Doppel-Opt-in, Wurzel 7) — ein `email_confirm=True` wäre die
+    sofortige Umstellung, die den Eigentümer bei einem Tippfehler aussperrt.
+    """
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, dict]] = []
+        # Wenn gesetzt, wirft der nächste Aufruf — für den Kollisionsfall
+        # (Adresse in einem ANDEREN Betrieb bereits vergeben; das sieht die
+        # Vorprüfung im Dienst nicht, nur GoTrue).
+        self.raises: Exception | None = None
+
+    def update_user_by_id(self, user_id: str, attrs: dict) -> None:
+        self.calls.append((user_id, dict(attrs)))
+        if self.raises is not None:
+            raise self.raises
+
+
+class _Auth:
+    def __init__(self) -> None:
+        self.admin = _AuthAdmin()
 
 
 class _DB:
     def __init__(self, tables: dict[str, list[dict]] | None = None) -> None:
         self.tables: dict[str, list[dict]] = tables or {}
         self._counter = 0
+        self.auth = _Auth()
 
     def next_id(self) -> int:
         self._counter += 1
@@ -185,6 +219,8 @@ def _svc(tables: dict[str, list[dict]] | None = None) -> OwnersService:
         "owner_properties": [],
         "properties": [{"id": "p-1", "tenant_id": "t-1", "title": "Villa"}],
         "users": [],
+        # Append-only-Protokoll der Adresswechsel (0352).
+        "owner_email_changes": [],
     }
     if tables:
         base.update(tables)
@@ -543,6 +579,200 @@ def test_erneut_senden_ohne_email_422() -> None:
     owner = svc.create(_ctx(), OwnerCreate(name="A", user_id="u-own"))
     with pytest.raises(OwnerError) as exc:
         svc.einladung_erneut_senden(_ctx(), owner.id)
+    assert exc.value.status_code == 422
+
+
+# --- E-Mail-Wechsel (Login + Stammdaten) -------------------------------------
+#
+# Die Adresse ist hier nicht nur Korrespondenzadresse: sie ist zugleich die
+# ANMELDEADRESSE des verknüpften Portalzugangs. Bis 0352 schrieb das Speichern
+# ausschliesslich `owners.email` — der Login lief weiter gegen die alte Adresse
+# in GoTrue, und „Einladung erneut senden" ging dorthin. Diese Tests halten die
+# drei Eigenschaften fest, an denen der neue Weg hängt: der GoTrue-Aufruf ohne
+# `email_confirm`, der sichtbare Zwischenzustand und das Protokoll.
+
+def _mit_login(email: str = "alt@example.com") -> tuple[OwnersService, str]:
+    """Eigentümer MIT verknüpftem Portalzugang — der Normalfall dieser Tests."""
+    svc = _svc(
+        {
+            "users": [
+                {
+                    "id": "u-own",
+                    "tenant_id": "t-1",
+                    "role": "owner",
+                    "email": email,
+                }
+            ]
+        }
+    )
+    owner = svc.create(
+        _ctx(), OwnerCreate(name="A", email=email, user_id="u-own")
+    )
+    return svc, owner.id
+
+
+def test_email_wechsel_stoesst_gotrue_ohne_email_confirm_an() -> None:
+    """Doppel-Opt-in: GoTrue bekommt NUR die neue Adresse, kein `email_confirm`.
+
+    Mit `email_confirm=True` gälte die neue Adresse sofort — ein Tippfehler
+    oder ein fremdes Postfach sperrte den Eigentümer dauerhaft aus und liesse
+    sein Konto per „Passwort vergessen" übernehmen (Wurzel 7). Der Test prüft
+    deshalb den ganzen Payload, nicht nur, DASS gerufen wurde.
+    """
+    svc, owner_id = _mit_login()
+    svc.update(_ctx(), owner_id, OwnerUpdate(email="neu@example.com"))
+    calls = svc._db.auth.admin.calls  # noqa: SLF001  pylint: disable=protected-access
+    assert calls == [("u-own", {"email": "neu@example.com"})]
+
+
+def test_email_wechsel_meldet_den_zwischenzustand() -> None:
+    """Die Antwort NENNT die Adresse, an die die Bestätigung ging.
+
+    Ohne dieses Feld zeigte die Maske nach dem Speichern die neue Adresse und
+    verschwiege, dass die Anmeldung bis zur Bestätigung weiter auf der alten
+    läuft — eine Aussage über den Zustand, die nicht stimmt (Wurzel 5b).
+    """
+    svc, owner_id = _mit_login()
+    res = svc.update(_ctx(), owner_id, OwnerUpdate(email="neu@example.com"))
+    assert res.email_bestaetigung_an == "neu@example.com"
+    assert res.email == "neu@example.com"
+
+
+def test_email_unveraendert_stoesst_keinen_wechsel_an() -> None:
+    """Dieselbe Adresse noch einmal zu speichern ist keine Änderung (Wurzel 2).
+
+    Die Maske schickt beim Speichern IMMER alle Felder mit. Ohne den Vergleich
+    gegen den Bestand löste jede Korrektur einer Telefonnummer einen
+    GoTrue-Adresswechsel samt Bestätigungsmail aus — der Eigentümer bekäme
+    Post, ohne dass sich an seiner Adresse etwas geändert hat.
+    """
+    svc, owner_id = _mit_login()
+    res = svc.update(
+        _ctx(), owner_id, OwnerUpdate(email="alt@example.com", phone="+49 1")
+    )
+    assert svc._db.auth.admin.calls == []  # noqa: SLF001  pylint: disable=protected-access
+    assert res.email_bestaetigung_an is None
+
+
+def test_email_nur_gross_klein_ist_kein_wechsel() -> None:
+    """„Max@…" → „max@…" ist für GoTrue dieselbe Adresse — keine Mail dafür."""
+    svc, owner_id = _mit_login(email="Max@example.com")
+    svc.update(_ctx(), owner_id, OwnerUpdate(email="max@example.com"))
+    assert svc._db.auth.admin.calls == []  # noqa: SLF001  pylint: disable=protected-access
+
+
+def test_email_wechsel_ohne_portalzugang_nur_stammdaten() -> None:
+    """Ohne Login gibt es keine Anmeldeadresse, die mitzuziehen wäre.
+
+    Die Adresse ist dann reine Korrespondenzadresse und sofort gültig — kein
+    GoTrue-Aufruf, kein Zwischenzustand, aber sehr wohl ein Protokolleintrag.
+    """
+    svc = _svc()
+    owner = svc.create(_ctx(), OwnerCreate(name="A", email="alt@example.com"))
+    res = svc.update(_ctx(), owner.id, OwnerUpdate(email="neu@example.com"))
+    assert svc._db.auth.admin.calls == []  # noqa: SLF001  pylint: disable=protected-access
+    assert res.email_bestaetigung_an is None
+    protokoll = svc._db.tables["owner_email_changes"]  # noqa: SLF001  pylint: disable=protected-access
+    assert len(protokoll) == 1
+    assert protokoll[0]["login_wechsel_angestossen"] is False
+
+
+def test_email_wechsel_wird_protokolliert() -> None:
+    """Alt → neu, auslösender Nutzer — sonst steht im Nachhinein nur der
+    Endzustand da und niemand kann rekonstruieren, wer ihn herbeigeführt hat."""
+    svc, owner_id = _mit_login()
+    svc.update(_ctx(), owner_id, OwnerUpdate(email="neu@example.com"))
+    protokoll = svc._db.tables["owner_email_changes"]  # noqa: SLF001  pylint: disable=protected-access
+    assert len(protokoll) == 1
+    eintrag = protokoll[0]
+    assert eintrag["alte_email"] == "alt@example.com"
+    assert eintrag["neue_email"] == "neu@example.com"
+    assert eintrag["actor_user_id"] == "u-1"
+    assert eintrag["tenant_id"] == "t-1"
+    assert eintrag["user_id"] == "u-own"
+    assert eintrag["login_wechsel_angestossen"] is True
+
+
+def test_email_kollision_im_betrieb_gibt_409_ohne_zu_schreiben() -> None:
+    """Adresse schon von einem anderen Zugang belegt → 409 VOR jedem Schreiben.
+
+    Würde erst geschrieben und dann GoTrue gefragt, stünde `owners.email` auf
+    der neuen Adresse und der Login auf der alten — genau die Spaltung, die
+    dieser Weg beseitigt (Wurzel 1/5: kein halber Zustand).
+    """
+    svc = _svc(
+        {
+            "users": [
+                {"id": "u-own", "tenant_id": "t-1", "role": "owner",
+                 "email": "alt@example.com"},
+                {"id": "u-andere", "tenant_id": "t-1", "role": "staff",
+                 "email": "belegt@example.com"},
+            ]
+        }
+    )
+    owner = svc.create(
+        _ctx(),
+        OwnerCreate(name="A", email="alt@example.com", user_id="u-own"),
+    )
+    with pytest.raises(OwnerError) as exc:
+        svc.update(_ctx(), owner.id, OwnerUpdate(email="belegt@example.com"))
+    assert exc.value.status_code == 409
+    # Nichts geschrieben: die Stammdaten tragen weiter die alte Adresse.
+    assert svc.get(_ctx(), owner.id).email == "alt@example.com"
+    assert svc._db.auth.admin.calls == []  # noqa: SLF001  pylint: disable=protected-access
+
+
+def test_email_wechsel_gotrue_ablehnung_gibt_409_statt_500() -> None:
+    """Lehnt GoTrue ab (Adresse in einem FREMDEN Betrieb vergeben), ist das ein
+    Konflikt — kein 500 und kein stiller Erfolg (Wurzel 5)."""
+    svc, owner_id = _mit_login()
+    svc._db.auth.admin.raises = RuntimeError("email exists")  # noqa: SLF001  pylint: disable=protected-access
+    with pytest.raises(OwnerError) as exc:
+        svc.update(_ctx(), owner_id, OwnerUpdate(email="neu@example.com"))
+    assert exc.value.status_code == 409
+
+
+def test_email_bestaetigung_erneut_senden_ruft_gotrue_erneut() -> None:
+    """Der Wiederholungsweg: derselbe Adresswechsel noch einmal anstossen.
+
+    GoTrue kennt keinen eigenen „erneut senden"-Aufruf; `update_user_by_id`
+    mit unverändertem Ziel erneuert den offenen Wechsel. Wichtig ist, dass es
+    bei dem EINEN freigegebenen Aufruf bleibt und kein zweiter Mailweg
+    entsteht (Wurzel 2/4).
+    """
+    svc, owner_id = _mit_login()
+    svc.update(_ctx(), owner_id, OwnerUpdate(email="neu@example.com"))
+    ziel = svc.email_bestaetigung_erneut_senden(_ctx(), owner_id)
+    assert ziel == "neu@example.com"
+    calls = svc._db.auth.admin.calls  # noqa: SLF001  pylint: disable=protected-access
+    assert calls[-1] == ("u-own", {"email": "neu@example.com"})
+    assert len(calls) == 2
+
+
+def test_email_bestaetigung_erneut_senden_ohne_zugang_409() -> None:
+    """Ohne Login gibt es nichts zu bestätigen — die Adresse gilt bereits."""
+    svc = _svc()
+    owner = svc.create(_ctx(), OwnerCreate(name="A", email="a@example.com"))
+    with pytest.raises(OwnerError) as exc:
+        svc.email_bestaetigung_erneut_senden(_ctx(), owner.id)
+    assert exc.value.status_code == 409
+
+
+def test_email_bestaetigung_erneut_senden_fremder_tenant_404() -> None:
+    """Gleicher Scope wie der List-Pfad (Wurzel 9): die `user_id` stammt aus
+    der GESCOPTEN Zeile, nie aus der Anfrage."""
+    svc, owner_id = _mit_login()
+    with pytest.raises(OwnerError) as exc:
+        svc.email_bestaetigung_erneut_senden(_ctx(tenant="t-fremd"), owner_id)
+    assert exc.value.status_code == 404
+
+
+def test_email_bestaetigung_erneut_senden_ohne_email_422() -> None:
+    """Ein Eigentümer ohne Adresse hat kein Ziel für die Bestätigung."""
+    svc = _svc({"users": [{"id": "u-own", "tenant_id": "t-1", "role": "owner"}]})
+    owner = svc.create(_ctx(), OwnerCreate(name="A", user_id="u-own"))
+    with pytest.raises(OwnerError) as exc:
+        svc.email_bestaetigung_erneut_senden(_ctx(), owner.id)
     assert exc.value.status_code == 422
 
 

@@ -1007,6 +1007,11 @@
       "email": "npr. ivan@example.com"
     },
     "emailLanguageHint": "Na tom jeziku vlasnik prima obračune i obavijesti — i bez vlastitog pristupa.",
+    "emailHint": "Vrijedi i za prijavu: obračuni, obavijesti i pristup portalu idu preko ove adrese.",
+    "emailChangePending": "Spremljeno. Potvrda poslana na {email}.",
+    "emailChangePendingHint": "Potvrda poslana na {email} — do potvrde se vlasnik i dalje prijavljuje dosadašnjom adresom.",
+    "emailChangeResend": "Ponovno pošalji potvrdu",
+    "emailChangeResent": "Potvrda ponovno poslana na {email}.",
     "portalAccess": "Postavi pristup portalu",
     "portalAccessHint": "Vlasnik prima pozivnicu e-poštom i nakon toga može sam pregledavati svoje obračune.",
     "portalAccessNeedsEmail": "Za pristup portalu potrebna je adresa e-pošte.",

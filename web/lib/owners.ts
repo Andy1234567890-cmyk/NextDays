@@ -66,6 +66,22 @@ export type Owner = {
   // Einladungsmail zugestellt wurde. Nur eine Rückmeldung auf genau diesen
   // Vorgang, keine Aussage über frühere Einladungen.
   einladung_versendet?: boolean;
+  /**
+   * Gesetzt, wenn der letzte Speichervorgang die E-Mail-Adresse GEÄNDERT hat
+   * und dieser Eigentümer einen Portalzugang besitzt: dann läuft ein
+   * Doppel-Opt-in, die Bestätigung ging an DIESE Adresse, und bis zum Klick
+   * dort meldet sich der Eigentümer weiter mit der BISHERIGEN Adresse an.
+   *
+   * Der Zwischenzustand gehört sichtbar in die Oberfläche. Ohne ihn zeigte
+   * die Maske die neue Adresse und verschwiege, dass die Anmeldung noch auf
+   * der alten läuft — das wäre eine Aussage über den Zustand, die nicht
+   * stimmt.
+   *
+   * null heisst „kein laufender Wechsel": entweder wurde die Adresse nicht
+   * geändert, oder es gibt keinen Login (dann ist sie reine
+   * Korrespondenzadresse und sofort gültig).
+   */
+  email_bestaetigung_an?: string | null;
   properties: OwnerPropertyLink[];
   created_at: string | null;
   updated_at: string | null;
@@ -191,6 +207,27 @@ export async function updateOwner(
   input: OwnerInput,
 ): Promise<Result<Owner>> {
   return call(`/owners/${id}`, { method: "PATCH", body: input });
+}
+
+/**
+ * Die Bestätigung zum Adresswechsel erneut an die NEUE Adresse schicken.
+ *
+ * Die Bestätigung geht an genau die Adresse, die gerade geändert wurde — und
+ * damit an den wunden Punkt des Vorgangs (Tippfehler, Spamfilter, Postfach
+ * noch nicht eingerichtet). Ohne diesen Weg bliebe der Wechsel dauerhaft im
+ * Zwischenzustand: Stammdaten neu, Anmeldung alt.
+ *
+ * Setzt einen Portalzugang voraus (`owner.user_id`); ohne ihn antwortet der
+ * Server mit 409 — dann gibt es keine Anmeldeadresse, die zu bestätigen wäre.
+ *
+ * Die Antwort nennt die Zieladresse, damit die Meldung sie zeigen kann.
+ */
+export async function resendOwnerEmailConfirmation(
+  ownerId: string,
+): Promise<Result<{ email: string }>> {
+  return call(`/owners/${ownerId}/email-bestaetigung/erneut-senden`, {
+    method: "POST",
+  });
 }
 
 export async function deleteOwner(id: string): Promise<Result<null>> {

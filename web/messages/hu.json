@@ -1007,6 +1007,11 @@
       "email": "pl. janos@example.com"
     },
     "emailLanguageHint": "Ezen a nyelven kapja a tulajdonos az elszámolásokat és értesítéseket — saját hozzáférés nélkül is.",
+    "emailHint": "A bejelentkezésre is érvényes: az elszámolások, az értesítések és a portálhozzáférés ezen a címen keresztül futnak.",
+    "emailChangePending": "Mentve. Megerősítés elküldve ide: {email}.",
+    "emailChangePendingHint": "Megerősítés elküldve ide: {email} — a megerősítésig a tulajdonos továbbra is a korábbi címmel jelentkezik be.",
+    "emailChangeResend": "Megerősítés újraküldése",
+    "emailChangeResent": "Megerősítés újraküldve ide: {email}.",
     "portalAccess": "Portálhozzáférés beállítása",
     "portalAccessHint": "A tulajdonos e-mailben kap meghívót, és ezután maga tekintheti meg az elszámolásait.",
     "portalAccessNeedsEmail": "A portálhozzáféréshez e-mail-cím szükséges.",

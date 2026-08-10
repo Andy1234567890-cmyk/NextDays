@@ -1007,6 +1007,11 @@
       "email": "napr. jan@example.com"
     },
     "emailLanguageHint": "V tomto jazyku dostáva vlastník vyúčtovania a upozornenia — aj bez vlastného prístupu.",
+    "emailHint": "Platí aj pre prihlásenie: vyúčtovania, upozornenia a prístup do portálu idú cez túto adresu.",
+    "emailChangePending": "Uložené. Potvrdenie odoslané na {email}.",
+    "emailChangePendingHint": "Potvrdenie odoslané na {email} — do potvrdenia sa vlastník prihlasuje naďalej doterajšou adresou.",
+    "emailChangeResend": "Odoslať potvrdenie znova",
+    "emailChangeResent": "Potvrdenie znova odoslané na {email}.",
     "portalAccess": "Nastaviť prístup k portálu",
     "portalAccessHint": "Vlastník dostane pozvánku e-mailom a potom si môže sám prezerať svoje vyúčtovania.",
     "portalAccessNeedsEmail": "Na prístup k portálu je potrebná e-mailová adresa.",

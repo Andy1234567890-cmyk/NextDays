@@ -1007,6 +1007,11 @@
       "email": "m.sh. sean@example.com"
     },
     "emailLanguageHint": "Sa teanga seo a fhaigheann an t-úinéir ráitis agus fógraí — fiú gan rochtain dá chuid féin.",
+    "emailHint": "Baineann sé leis an logáil isteach freisin: téann ráitis, fógraí agus rochtain ar an tairseach tríd an seoladh seo.",
+    "emailChangePending": "Sábháilte. Deimhniú seolta chuig {email}.",
+    "emailChangePendingHint": "Deimhniú seolta chuig {email} — go dtí go ndeimhnítear é, logálann an t-úinéir isteach leis an seanseoladh fós.",
+    "emailChangeResend": "Seol an deimhniú arís",
+    "emailChangeResent": "Deimhniú seolta arís chuig {email}.",
     "portalAccess": "Socraigh rochtain ar an tairseach",
     "portalAccessHint": "Faigheann an t-úinéir cuireadh ar r-phost agus is féidir leis a ráitis a fheiceáil é féin ina dhiaidh sin.",
     "portalAccessNeedsEmail": "Tá seoladh r-phoist ag teastáil le haghaidh rochtain ar an tairseach.",

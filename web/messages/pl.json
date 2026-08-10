@@ -1007,6 +1007,11 @@
       "email": "np. jan@example.com"
     },
     "emailLanguageHint": "W tym języku właściciel otrzymuje rozliczenia i powiadomienia — także bez własnego dostępu.",
+    "emailHint": "Dotyczy także logowania: rozliczenia, powiadomienia i dostęp do portalu idą przez ten adres.",
+    "emailChangePending": "Zapisano. Potwierdzenie wysłane na {email}.",
+    "emailChangePendingHint": "Potwierdzenie wysłane na {email} — do czasu potwierdzenia właściciel loguje się nadal dotychczasowym adresem.",
+    "emailChangeResend": "Wyślij potwierdzenie ponownie",
+    "emailChangeResent": "Potwierdzenie wysłane ponownie na {email}.",
     "portalAccess": "Skonfiguruj dostęp do portalu",
     "portalAccessHint": "Właściciel otrzyma zaproszenie e-mailem i będzie mógł samodzielnie przeglądać swoje rozliczenia.",
     "portalAccessNeedsEmail": "Do dostępu do portalu wymagany jest adres e-mail.",

@@ -1007,6 +1007,11 @@
       "email": "e.g. john@example.com"
     },
     "emailLanguageHint": "The owner receives statements and notifications in this language — even without their own account.",
+    "emailHint": "Also used for signing in: statements, notifications and portal access all run through this address.",
+    "emailChangePending": "Saved. Confirmation sent to {email}.",
+    "emailChangePendingHint": "Confirmation sent to {email} — until it is confirmed, the owner still signs in with the previous address.",
+    "emailChangeResend": "Send confirmation again",
+    "emailChangeResent": "Confirmation sent to {email} again.",
     "portalAccess": "Set up portal access",
     "portalAccessHint": "The owner receives an invitation by email and can then view their statements themselves.",
     "portalAccessNeedsEmail": "An email address is required for portal access.",

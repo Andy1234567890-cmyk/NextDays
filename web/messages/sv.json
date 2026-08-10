@@ -1007,6 +1007,11 @@
       "email": "t.ex. anna@example.com"
     },
     "emailLanguageHint": "På det här språket får ägaren avräkningar och aviseringar — även utan eget konto.",
+    "emailHint": "Gäller även för inloggning: avräkningar, aviseringar och portalåtkomst går via denna adress.",
+    "emailChangePending": "Sparat. Bekräftelse skickad till {email}.",
+    "emailChangePendingHint": "Bekräftelse skickad till {email} — tills den bekräftas loggar ägaren fortfarande in med den tidigare adressen.",
+    "emailChangeResend": "Skicka bekräftelse igen",
+    "emailChangeResent": "Bekräftelse skickad till {email} igen.",
     "portalAccess": "Skapa portalåtkomst",
     "portalAccessHint": "Ägaren får en inbjudan via e-post och kan därefter själv se sina avräkningar.",
     "portalAccessNeedsEmail": "En e-postadress krävs för portalåtkomst.",

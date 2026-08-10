@@ -1007,6 +1007,11 @@
       "email": "z. B. max@example.com"
     },
     "emailLanguageHint": "In dieser Sprache erhält der Eigentümer Abrechnungen und Benachrichtigungen — auch ohne eigenen Zugang.",
+    "emailHint": "Gilt auch für die Anmeldung: Abrechnungen, Benachrichtigungen und der Portalzugang laufen über diese Adresse.",
+    "emailChangePending": "Gespeichert. Bestätigung an {email} versendet.",
+    "emailChangePendingHint": "Bestätigung an {email} versendet — bis zur Bestätigung meldet sich der Eigentümer weiter mit der bisherigen Adresse an.",
+    "emailChangeResend": "Bestätigung erneut senden",
+    "emailChangeResent": "Bestätigung erneut an {email} versendet.",
     "portalAccess": "Portalzugang einrichten",
     "portalAccessHint": "Der Eigentümer bekommt eine Einladung per E-Mail und kann seine Abrechnungen danach selbst einsehen.",
     "portalAccessNeedsEmail": "Für den Portalzugang wird eine E-Mail-Adresse gebraucht.",

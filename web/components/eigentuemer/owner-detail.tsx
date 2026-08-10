@@ -23,6 +23,7 @@ import {
   assignOwnerProperty,
   deleteOwner,
   inviteOwnerPortal,
+  resendOwnerEmailConfirmation,
   resendOwnerInvite,
   unassignOwnerProperty,
   updateOwner,
@@ -75,6 +76,21 @@ export function OwnerDetail({
   // Er ist zugleich die Doppelklick-Bremse in der Oberfläche — die
   // verbindliche Sperre sitzt serverseitig (Sperrfrist je Konto + Ratelimit).
   const [erneutSendend, setErneutSendend] = useState(false);
+  // Läuft gerade ein Adresswechsel? Der Wert ist die Adresse, an die die
+  // Bestätigung ging. Er kommt aus der Antwort des Speicherns und bleibt
+  // stehen, bis die Seite neu geladen wird — der Vorgang ist damit sichtbar,
+  // solange der Betreiber auf der Maske ist.
+  //
+  // Bewusst NICHT aus `owner` abgeleitet: `owners.email` trägt bereits die
+  // neue Adresse, der Login noch die alte, und aus den Stammdaten allein ist
+  // der laufende Vorgang nicht erkennbar. Ihn zu erraten wäre schlimmer als
+  // ihn zu melden, wenn wir ihn ausgelöst haben.
+  const [bestaetigungAn, setBestaetigungAn] = useState<string | null>(
+    initial.email_bestaetigung_an ?? null,
+  );
+  // Eigener Busy-Zustand für das erneute Senden der ADRESS-Bestätigung —
+  // ein anderer Knopf als die Einladung, in einem anderen Zustand.
+  const [bestaetigungSendend, setBestaetigungSendend] = useState(false);
   // Mehrfachauswahl der nachträglichen Objektzuordnung. Eigener Busy-Zustand,
   // damit sie weder das Speichern der Stammdaten noch die Einladung blockiert.
   const [auswahl, setAuswahl] = useState<string[]>([]);
@@ -164,7 +180,39 @@ export function OwnerDetail({
     setBusy(false);
     if (res.ok) {
       setOwner(res.data);
-      toast.success(t("saved"));
+      // Hat dieser Speichervorgang einen Adresswechsel angestossen, meldet
+      // der Server, an welche Adresse die Bestätigung ging. Sonst kommt null
+      // und ein zuvor angezeigter Hinweis verschwindet — er beschriebe dann
+      // einen Vorgang, den dieses Speichern nicht ausgelöst hat.
+      setBestaetigungAn(res.data.email_bestaetigung_an ?? null);
+      toast.success(
+        res.data.email_bestaetigung_an
+          ? t("emailChangePending", { email: res.data.email_bestaetigung_an })
+          : t("saved"),
+      );
+    } else toast.error(res.error);
+  }
+
+  /**
+   * Die Bestätigung zum Adresswechsel erneut verschicken.
+   *
+   * Die Mail geht an die NEUE Adresse — also an genau den Wert, der beim
+   * Wechsel schiefgehen kann. Ohne diesen Knopf bliebe der Vorgang hängen:
+   * Stammdaten neu, Anmeldung alt, und kein Weg, das aufzulösen.
+   *
+   * Der Fehlschlag wird nicht verschluckt: die Serverantwort geht wörtlich in
+   * den Toast, weil genau die aussagekräftigen Fälle (409 „Adresse bereits
+   * vergeben", 422 „keine Adresse hinterlegt") dem Betreiber sagen, was zu
+   * tun ist.
+   */
+  async function emailBestaetigungErneutSenden() {
+    if (bestaetigungSendend) return;
+    setBestaetigungSendend(true);
+    const res = await resendOwnerEmailConfirmation(owner.id);
+    setBestaetigungSendend(false);
+    if (res.ok) {
+      setBestaetigungAn(res.data.email);
+      toast.success(t("emailChangeResent", { email: res.data.email }));
     } else toast.error(res.error);
   }
 
@@ -308,7 +356,12 @@ export function OwnerDetail({
               onChange={(e) => set("company", e.target.value || null)}
             />
           </Field>
-          <Field label={t("fields.email")}>
+          {/* EIN Feld für alles: diese Adresse gilt für Abrechnungen,
+              Benachrichtigungen UND die Anmeldung. Der Hilfetext sagt das
+              ausdrücklich, weil man es einem E-Mail-Feld in den Stammdaten
+              sonst nicht ansieht — und weil ein Wechsel hier eine
+              Bestätigungsmail an das neue Postfach auslöst. */}
+          <Field label={t("fields.email")} hint={t("emailHint")}>
             <Input
               type="email"
               value={owner.email ?? ""}
@@ -393,6 +446,40 @@ export function OwnerDetail({
         <h2 className="font-display text-lg font-extrabold">
           {t("sections.portalAccess")}
         </h2>
+        {/* Laufender Adresswechsel — der Zwischenzustand, den man sonst nicht
+            sieht: die Stammdaten tragen bereits die neue Adresse, die
+            ANMELDUNG läuft bis zur Bestätigung weiter über die bisherige. Das
+            zu verschweigen wäre eine Falschaussage über einen laufenden
+            Vorgang, kein Widerspruch zur Vorgabe „die neue Adresse gilt für
+            alles" — sie gilt, sobald bestätigt ist.
+            Kein Warnhinweis über dauerhaft abweichende Adressen: der Zustand
+            ist vorübergehend und hat genau einen Ausgang. */}
+        {bestaetigungAn && (
+          <div
+            role="status"
+            className="flex flex-wrap items-center justify-between gap-4 rounded-(--radius) border border-border bg-muted/40 p-4"
+          >
+            <p className="max-w-xl text-sm text-muted-foreground">
+              <Icon
+                icon="ph:envelope-simple-open"
+                className="mr-2 inline size-4 align-text-bottom"
+              />
+              {t("emailChangePendingHint", { email: bestaetigungAn })}
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => void emailBestaetigungErneutSenden()}
+              disabled={bestaetigungSendend}
+            >
+              {bestaetigungSendend ? (
+                <Icon icon="ph:spinner" className="size-4 animate-spin" />
+              ) : (
+                <Icon icon="ph:paper-plane-tilt" className="size-4" />
+              )}
+              {t("emailChangeResend")}
+            </Button>
+          </div>
+        )}
         {owner.user_id ? (
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="max-w-lg">
@@ -695,6 +782,7 @@ function Field({
   className,
   info,
   infoAria,
+  hint,
   children,
 }: {
   label: string;
@@ -703,6 +791,11 @@ function Field({
    *  (Provisions-Override, Eigentumsanteil). */
   info?: string;
   infoAria?: string;
+  /** Dauerhaft sichtbarer Hilfetext UNTER dem Feld — anders als `info` nicht
+   *  hinter einem Symbol versteckt. Für Felder, deren Tragweite man kennen
+   *  muss, BEVOR man tippt (die E-Mail-Adresse ist zugleich die
+   *  Anmeldeadresse). */
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -720,6 +813,7 @@ function Field({
         {info && infoAria && <InfoHinweis text={info} ariaLabel={infoAria} />}
       </span>
       {children}
+      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
     </label>
   );
 }

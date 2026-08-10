@@ -14,6 +14,7 @@ from src.features.auth.permissions import Capability, has_capability
 from .dependencies import OwnersServiceDep
 from .schemas import (
     AvailablePropertiesResponse,
+    EmailBestaetigungResponse,
     OwnerCreate,
     OwnerListResponse,
     OwnerPropertiesAssign,
@@ -179,9 +180,67 @@ def update_owner(
     req: OwnerUpdate,
     service: OwnersServiceDep,
     ctx: Annotated[AuthContext, Depends(_MANAGE)],
+    darf_zugang_vergeben: Annotated[bool, Depends(_hat_manage_staff)],
 ) -> OwnerResponse:
+    """Stammdaten ändern. Ein Adresswechsel verlangt zusätzlich MANAGE_STAFF.
+
+    Die E-Mail-Adresse ist hier nicht nur ein Stammdatenfeld: sie ist zugleich
+    die ANMELDEADRESSE des verknüpften Portalzugangs, und ihr Wechsel stösst
+    eine Bestätigungsmail an ein neues Postfach an. Wer sie ändern darf, greift
+    damit in die Zugangsvergabe ein — dieselbe Befugnis, die schon das
+    Einrichten und das erneute Senden einer Einladung verlangen (Wurzel 9).
+
+    Der Guard hängt am FELD, nicht an der Route, genau wie beim Anlegen: das
+    Pflegen von Bankverbindung, Provision oder Notizen bleibt bei
+    MANAGE_OWNERS. Ohne diese Unterscheidung wäre die ganze Stammdatenpflege
+    für alle gesperrt, die keine Zugänge vergeben dürfen.
+
+    Geprüft wird am `exclude_unset`-Feld, nicht am Wertvergleich: ob die
+    Adresse sich wirklich ÄNDERT, weiss erst der Dienst (er kennt den Bestand).
+    Ein Router-Guard, der eine mitgeschickte, aber unveränderte Adresse
+    durchwinkt, müsste den Bestand hier ein zweites Mal laden — die
+    restriktivere Prüfung ist billiger und sperrt niemanden aus, der das Feld
+    gar nicht anfasst.
+    """
+    if "email" in req.model_dump(exclude_unset=True) and not darf_zugang_vergeben:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "Zum Ändern der E-Mail-Adresse fehlt die Berechtigung — sie "
+                "ist zugleich die Anmeldeadresse."
+            ),
+        )
     try:
         return service.update(ctx, owner_id, req)
+    except OwnerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/{owner_id}/email-bestaetigung/erneut-senden",
+    response_model=EmailBestaetigungResponse,
+)
+def email_bestaetigung_erneut_senden(
+    owner_id: str,
+    service: OwnersServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+    _staff: Annotated[AuthContext, Depends(_MANAGE_STAFF)],
+) -> EmailBestaetigungResponse:
+    """Die Bestätigung zum Adresswechsel erneut an die NEUE Adresse schicken.
+
+    Für den Fall, dass sie nicht ankam — und genau die neue Adresse ist bei
+    einem Adresswechsel der wunde Punkt. Ohne diesen Weg bliebe der Wechsel im
+    Zwischenzustand hängen: Stammdaten neu, Anmeldung alt.
+
+    Dieselben BEIDEN Berechtigungen wie das Ändern selbst: der Aufruf erneuert
+    einen offenen Wechsel der Anmeldeadresse und ist damit Zugangsvergabe, nicht
+    Stammdatenpflege (Wurzel 9). Der Dienst lädt den Eigentümer über denselben
+    Scope-Helfer wie der List-Pfad und antwortet bei fremdem Mandanten mit 404.
+    """
+    try:
+        return EmailBestaetigungResponse(
+            email=service.email_bestaetigung_erneut_senden(ctx, owner_id)
+        )
     except OwnerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

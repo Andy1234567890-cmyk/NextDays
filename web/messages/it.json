@@ -1007,6 +1007,11 @@
       "email": "es. mario@example.com"
     },
     "emailLanguageHint": "In questa lingua il proprietario riceve rendiconti e notifiche, anche senza un proprio accesso.",
+    "emailHint": "Vale anche per l'accesso: rendiconti, notifiche e accesso al portale passano da questo indirizzo.",
+    "emailChangePending": "Salvato. Conferma inviata a {email}.",
+    "emailChangePendingHint": "Conferma inviata a {email}: fino alla conferma il proprietario accede ancora con l'indirizzo precedente.",
+    "emailChangeResend": "Invia di nuovo la conferma",
+    "emailChangeResent": "Conferma inviata di nuovo a {email}.",
     "portalAccess": "Configura l'accesso al portale",
     "portalAccessHint": "Il proprietario riceve un invito via e-mail e può poi consultare autonomamente i suoi rendiconti.",
     "portalAccessNeedsEmail": "Per l'accesso al portale è necessario un indirizzo e-mail.",

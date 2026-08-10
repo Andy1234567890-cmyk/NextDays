@@ -1007,6 +1007,11 @@
       "email": "piem., janis@example.com"
     },
     "emailLanguageHint": "Šajā valodā īpašnieks saņem norēķinus un paziņojumus — arī bez savas piekļuves.",
+    "emailHint": "Attiecas arī uz pieteikšanos: norēķini, paziņojumi un portāla piekļuve notiek caur šo adresi.",
+    "emailChangePending": "Saglabāts. Apstiprinājums nosūtīts uz {email}.",
+    "emailChangePendingHint": "Apstiprinājums nosūtīts uz {email} — līdz apstiprināšanai īpašnieks joprojām piesakās ar iepriekšējo adresi.",
+    "emailChangeResend": "Nosūtīt apstiprinājumu vēlreiz",
+    "emailChangeResent": "Apstiprinājums vēlreiz nosūtīts uz {email}.",
     "portalAccess": "Iestatīt portāla piekļuvi",
     "portalAccessHint": "Īpašnieks saņem uzaicinājumu pa e-pastu un pēc tam var pats apskatīt savus norēķinus.",
     "portalAccessNeedsEmail": "Portāla piekļuvei nepieciešama e-pasta adrese.",

@@ -1007,6 +1007,11 @@
       "email": "p. ex. joao@exemplo.com"
     },
     "emailLanguageHint": "Neste idioma o proprietário recebe acertos de contas e notificações — mesmo sem acesso próprio.",
+    "emailHint": "Vale também para o início de sessão: acertos de contas, notificações e acesso ao portal passam por este endereço.",
+    "emailChangePending": "Guardado. Confirmação enviada para {email}.",
+    "emailChangePendingHint": "Confirmação enviada para {email} — até à confirmação, o proprietário continua a iniciar sessão com o endereço anterior.",
+    "emailChangeResend": "Enviar a confirmação novamente",
+    "emailChangeResent": "Confirmação enviada novamente para {email}.",
     "portalAccess": "Configurar acesso ao portal",
     "portalAccessHint": "O proprietário recebe um convite por e-mail e pode depois consultar os seus acertos de contas.",
     "portalAccessNeedsEmail": "É necessário um endereço de e-mail para o acesso ao portal.",

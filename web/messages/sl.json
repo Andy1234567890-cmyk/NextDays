@@ -1007,6 +1007,11 @@
       "email": "npr. janez@example.com"
     },
     "emailLanguageHint": "V tem jeziku lastnik prejema obračune in obvestila — tudi brez lastnega dostopa.",
+    "emailHint": "Velja tudi za prijavo: obračuni, obvestila in dostop do portala potekajo prek tega naslova.",
+    "emailChangePending": "Shranjeno. Potrditev poslana na {email}.",
+    "emailChangePendingHint": "Potrditev poslana na {email} — do potrditve se lastnik še naprej prijavlja z dosedanjim naslovom.",
+    "emailChangeResend": "Znova pošlji potrditev",
+    "emailChangeResent": "Potrditev znova poslana na {email}.",
     "portalAccess": "Nastavi dostop do portala",
     "portalAccessHint": "Lastnik prejme vabilo po e-pošti in si nato lahko sam ogleduje svoje obračune.",
     "portalAccessNeedsEmail": "Za dostop do portala je potreben e-poštni naslov.",

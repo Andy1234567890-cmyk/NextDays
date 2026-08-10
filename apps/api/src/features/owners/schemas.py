@@ -188,6 +188,21 @@ class OwnerResponse(OwnerBase):
     # über einen späteren, getrennt ausgelösten Versand.
     einladung_versendet: bool = False
 
+    # Gesetzt, wenn dieser Aufruf die E-Mail-Adresse geändert hat UND der
+    # Eigentümer einen Portalzugang hat: dann läuft ein Doppel-Opt-in, die
+    # Bestätigung ging an DIESE Adresse, und bis zum Klick meldet sich der
+    # Eigentümer weiter mit der BISHERIGEN Adresse an.
+    #
+    # Der Zwischenzustand MUSS sichtbar sein (Wurzel 5b): ohne dieses Feld
+    # zeigte die Maske nach dem Speichern die neue Adresse und verschwiege,
+    # dass die Anmeldung noch auf der alten läuft — eine Aussage über den
+    # Zustand, die schlicht nicht stimmt.
+    #
+    # None heisst „kein laufender Wechsel": entweder wurde die Adresse nicht
+    # geändert, oder es gibt keinen Login, dessen Anmeldeadresse mitzuziehen
+    # wäre (dann ist die Adresse reine Korrespondenzadresse und sofort gültig).
+    email_bestaetigung_an: str | None = None
+
 
 class OwnerListItem(OwnerBase):
     """Listen-Eintrag: Stammdaten + Anzahl zugeordneter Objekte (ohne Detail)."""
@@ -242,6 +257,18 @@ class OwnerPropertiesAssign(BaseModel):
         if any(not str(pid).strip() for pid in v):
             raise ValueError("Leere Objekt-ID in der Auswahl.")
         return list(dict.fromkeys(str(pid).strip() for pid in v))
+
+
+class EmailBestaetigungResponse(BaseModel):
+    """Antwort auf „Bestätigung erneut senden": WOHIN sie ging.
+
+    Die Adresse gehört in die Antwort, nicht nur in einen pauschalen Erfolg:
+    der Betreiber soll in der Meldung lesen, an welches Postfach die
+    Bestätigung ging — genau der Wert, an dem sich bei einem Adresswechsel der
+    Tippfehler zeigt.
+    """
+
+    email: str
 
 
 class AvailableProperty(BaseModel):

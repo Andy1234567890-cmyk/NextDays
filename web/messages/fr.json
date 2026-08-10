@@ -1007,6 +1007,11 @@
       "email": "p. ex. jean@example.com"
     },
     "emailLanguageHint": "Dans cette langue, le propriétaire reçoit les décomptes et les notifications, même sans accès personnel.",
+    "emailHint": "Vaut aussi pour la connexion : les décomptes, les notifications et l'accès au portail passent par cette adresse.",
+    "emailChangePending": "Enregistré. Confirmation envoyée à {email}.",
+    "emailChangePendingHint": "Confirmation envoyée à {email} — jusqu'à la confirmation, le propriétaire se connecte toujours avec l'ancienne adresse.",
+    "emailChangeResend": "Renvoyer la confirmation",
+    "emailChangeResent": "Confirmation renvoyée à {email}.",
     "portalAccess": "Configurer l'accès au portail",
     "portalAccessHint": "Le propriétaire reçoit une invitation par e-mail et peut ensuite consulter lui-même ses décomptes.",
     "portalAccessNeedsEmail": "Une adresse e-mail est nécessaire pour l'accès au portail.",

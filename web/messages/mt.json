@@ -1007,6 +1007,11 @@
       "email": "eż. max@example.com"
     },
     "emailLanguageHint": "F'din il-lingwa s-sid jirċievi r-rapporti u n-notifiki — anke mingħajr aċċess tiegħu stess.",
+    "emailHint": "Tgħodd ukoll għall-illogjar: ir-rendikonti, in-notifiki u l-aċċess għall-portal jgħaddu minn dan l-indirizz.",
+    "emailChangePending": "Issejvjat. Konferma mibgħuta lil {email}.",
+    "emailChangePendingHint": "Konferma mibgħuta lil {email} — sakemm tiġi kkonfermata, is-sid xorta jidħol bl-indirizz preċedenti.",
+    "emailChangeResend": "Erġa' ibgħat il-konferma",
+    "emailChangeResent": "Konferma mibgħuta mill-ġdid lil {email}.",
     "portalAccess": "Issettja l-aċċess għall-portal",
     "portalAccessHint": "Is-sid jirċievi stedina bl-email u wara jkun jista' jara r-rendikonti tiegħu huwa stess.",
     "portalAccessNeedsEmail": "Għall-aċċess għall-portal hemm bżonn indirizz tal-email.",

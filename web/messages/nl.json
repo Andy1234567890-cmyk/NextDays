@@ -1007,6 +1007,11 @@
       "email": "bijv. jan@example.com"
     },
     "emailLanguageHint": "In deze taal ontvangt de eigenaar afrekeningen en meldingen — ook zonder eigen toegang.",
+    "emailHint": "Geldt ook voor het inloggen: afrekeningen, meldingen en portaaltoegang lopen via dit adres.",
+    "emailChangePending": "Opgeslagen. Bevestiging verstuurd naar {email}.",
+    "emailChangePendingHint": "Bevestiging verstuurd naar {email} — tot de bevestiging logt de eigenaar nog in met het vorige adres.",
+    "emailChangeResend": "Bevestiging opnieuw versturen",
+    "emailChangeResent": "Bevestiging opnieuw verstuurd naar {email}.",
     "portalAccess": "Portaaltoegang instellen",
     "portalAccessHint": "De eigenaar ontvangt een uitnodiging per e-mail en kan daarna zelf zijn afrekeningen inzien.",
     "portalAccessNeedsEmail": "Voor portaaltoegang is een e-mailadres vereist.",

@@ -1007,6 +1007,11 @@
       "email": "de ex. ion@example.com"
     },
     "emailLanguageHint": "În această limbă proprietarul primește deconturile și notificările — chiar și fără acces propriu.",
+    "emailHint": "Valabilă și pentru autentificare: deconturile, notificările și accesul la portal trec prin această adresă.",
+    "emailChangePending": "Salvat. Confirmare trimisă la {email}.",
+    "emailChangePendingHint": "Confirmare trimisă la {email} — până la confirmare, proprietarul se autentifică în continuare cu adresa anterioară.",
+    "emailChangeResend": "Retrimite confirmarea",
+    "emailChangeResent": "Confirmare retrimisă la {email}.",
     "portalAccess": "Configurează accesul la portal",
     "portalAccessHint": "Proprietarul primește o invitație prin e-mail și își poate consulta apoi singur deconturile.",
     "portalAccessNeedsEmail": "Pentru accesul la portal este necesară o adresă de e-mail.",

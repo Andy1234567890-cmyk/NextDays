@@ -1007,6 +1007,11 @@
       "email": "esim. matti@example.com"
     },
     "emailLanguageHint": "Tällä kielellä omistaja saa tilitykset ja ilmoitukset — myös ilman omaa käyttöoikeutta.",
+    "emailHint": "Koskee myös kirjautumista: tilitykset, ilmoitukset ja portaalin käyttöoikeus kulkevat tämän osoitteen kautta.",
+    "emailChangePending": "Tallennettu. Vahvistus lähetetty osoitteeseen {email}.",
+    "emailChangePendingHint": "Vahvistus lähetetty osoitteeseen {email} — kunnes se on vahvistettu, omistaja kirjautuu edelleen entisellä osoitteella.",
+    "emailChangeResend": "Lähetä vahvistus uudelleen",
+    "emailChangeResent": "Vahvistus lähetetty uudelleen osoitteeseen {email}.",
     "portalAccess": "Luo portaalikäyttöoikeus",
     "portalAccessHint": "Omistaja saa kutsun sähköpostitse ja voi sen jälkeen tarkastella tilityksiään itse.",
     "portalAccessNeedsEmail": "Portaalikäyttöoikeus edellyttää sähköpostiosoitetta.",

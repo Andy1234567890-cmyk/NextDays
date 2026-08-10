@@ -11,7 +11,7 @@ from __future__ import annotations
 from postgrest.exceptions import APIError
 from supabase import Client
 
-from src.core.logging import get_logger
+from src.core.logging import get_logger, mask_email
 from src.core.security import AuthContext
 from src.features.properties.schemas import types_for_accommodation
 
@@ -671,11 +671,41 @@ class OwnersService:
     def update(
         self, ctx: AuthContext, owner_id: str, req: OwnerUpdate
     ) -> OwnerResponse:
+        """Stammdaten ändern — samt Adresswechsel des LOGINS.
+
+        Die E-Mail-Adresse ist der einzige Wert hier, der nicht nur Stammdaten
+        ist: sie ist zugleich die Anmeldeadresse. Bis hierher schrieb dieser Weg
+        ausschliesslich `owners.email`; der Login lief weiter gegen die ALTE
+        Adresse in GoTrue (`auth.users.email`) und `public.users.email` blieb
+        ebenfalls stehen. Folge: die Eigentümer-Maske zeigte die neue Adresse,
+        „Einladung erneut senden" ging an die alte, und niemand sah den
+        Widerspruch. Deshalb stösst der Adresswechsel jetzt zusätzlich den
+        GoTrue-Wechsel an (Doppel-Opt-in, siehe `_email_wechsel_anstossen`).
+        """
         tenant_id = self._require_tenant(ctx)
-        self._get_row(tenant_id, owner_id)  # 404, wenn fremd
+        vorher = self._get_row(tenant_id, owner_id)  # 404, wenn fremd
         changes = req.model_dump(mode="json", exclude_unset=True)
         if "user_id" in changes:
             self._validate_user_link(tenant_id, changes["user_id"])
+        # Der Adresswechsel wird VOR dem Schreiben der Stammdaten entschieden,
+        # aber NACH dem Schreiben ausgeführt: die Reihenfolge muss so sein,
+        # damit ein abgewiesener GoTrue-Wechsel (Adresse schon vergeben) nicht
+        # eine bereits gespeicherte `owners.email` zurücklässt, die zu keinem
+        # Login gehört. Erst prüfen, dann schreiben, dann anstossen — der
+        # Konflikt fliegt aus `_email_wechsel_anstossen` als 409, bevor
+        # irgendetwas geschrieben ist.
+        neue_email = self._geaenderte_email(vorher, changes)
+        # `wechsel` beschreibt NUR den Login-Anteil: er bleibt None, wenn der
+        # Eigentümer keinen Portalzugang hat. `neue_email` ist die Frage
+        # „wurde die Adresse überhaupt geändert" — die beiden fallen
+        # auseinander, und das Protokoll hängt an der zweiten: ein
+        # Adresswechsel ohne Login ist ebenfalls ein Vorgang, den man später
+        # nachvollziehen können muss.
+        wechsel = (
+            self._email_wechsel_pruefen(vorher, neue_email)
+            if neue_email is not None
+            else None
+        )
         if changes:
             res = (
                 self._db.table("owners")
@@ -687,7 +717,267 @@ class OwnersService:
             if not res.data:
                 raise OwnerError("Eigentümer nicht gefunden.", status_code=404)
         log.info("owner_updated", tenant_id=tenant_id, owner_id=owner_id)
-        return self.get(ctx, owner_id)
+        antwort = self.get(ctx, owner_id)
+        if neue_email is not None:
+            antwort.email_bestaetigung_an = self._email_wechsel_anstossen(
+                ctx, vorher, neue_email=neue_email, wechsel=wechsel
+            )
+        return antwort
+
+    @staticmethod
+    def _geaenderte_email(vorher: dict, changes: dict) -> str | None:
+        """Die NEUE Adresse, falls dieser Aufruf sie wirklich ändert — sonst None.
+
+        „Wirklich" heisst: das Feld wurde mitgeschickt UND unterscheidet sich
+        vom Bestand. Die Maske schickt beim Speichern immer alle Felder mit;
+        ohne diesen Vergleich löste jedes Speichern eines Telefonnummern-
+        Tippfehlers einen GoTrue-Adresswechsel samt Bestätigungsmail aus
+        (Wurzel 2: dieselbe Adresse noch einmal zu setzen ist keine Änderung).
+
+        Gross-/Kleinschreibung im lokalen Teil ist bei GoTrue nicht
+        unterscheidend (die Adresse wird beim Anlegen kleingeschrieben
+        abgelegt). Ein Wechsel von „Max@…" auf „max@…" ist deshalb KEIN
+        Wechsel und darf keine Bestätigungsmail auslösen.
+        """
+        if "email" not in changes:
+            return None
+        neu = (changes.get("email") or "").strip()
+        alt = (vorher.get("email") or "").strip()
+        if not neu or neu.casefold() == alt.casefold():
+            return None
+        return neu
+
+    def _email_wechsel_pruefen(self, vorher: dict, neue_email: str) -> dict | None:
+        """Vorprüfung des Adresswechsels — wirft, BEVOR etwas geschrieben wird.
+
+        Gibt den Kontext des Wechsels zurück (oder None, wenn es nur ein
+        Stammdaten-Wechsel ohne Login ist). Ein `None` heisst ausdrücklich
+        NICHT „nichts zu tun": das Protokoll wird auch dann geschrieben, nur
+        eben ohne Login-Bezug.
+
+        Wurzel 2/5 (Kollision): ist die Adresse im selben Betrieb bereits von
+        einem ANDEREN Login belegt, würde GoTrue den Wechsel später ablehnen —
+        dann stünde `owners.email` schon auf der neuen Adresse und der Login
+        auf der alten, also genau der Zustand, den dieser ganze Weg beseitigen
+        soll. Deshalb hier ein sauberer 409 vor jedem Schreibvorgang.
+        """
+        user_id = vorher.get("user_id")
+        if not user_id:
+            # Kein Portalzugang: die Adresse ist reine Korrespondenzadresse,
+            # es gibt keinen Login, dessen Anmeldeadresse mitzuziehen wäre.
+            return None
+        tenant_id = str(vorher["tenant_id"])
+        fremd = (
+            self._db.table("users")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("email", neue_email)
+            .neq("id", str(user_id))
+            .limit(1)
+            .execute()
+        ).data or []
+        if fremd:
+            raise OwnerError(
+                "Diese E-Mail-Adresse wird bereits von einem anderen Zugang "
+                "in diesem Betrieb verwendet. Bitte eine andere Adresse "
+                "eintragen.",
+                status_code=409,
+            )
+        return {"user_id": str(user_id), "neue_email": neue_email}
+
+    def _email_wechsel_anstossen(
+        self,
+        ctx: AuthContext,
+        vorher: dict,
+        *,
+        neue_email: str,
+        wechsel: dict | None,
+    ) -> str | None:
+        """GoTrue-Adresswechsel anstossen und den Vorgang protokollieren.
+
+        DOPPEL-OPT-IN, KEIN `email_confirm` (Wurzel 7): GoTrue verschickt die
+        Bestätigung an die NEUE Adresse und schaltet die Anmeldung erst nach
+        dem Klick dort um. Bis dahin meldet sich der Eigentümer weiter mit der
+        BISHERIGEN Adresse an. Ein `email_confirm=True` würde die Adresse
+        sofort umstellen — wer sich vertippt oder ein fremdes Postfach angibt,
+        sperrt den Eigentümer damit dauerhaft aus und kann sein Konto über
+        „Passwort vergessen" übernehmen. Derselbe Weg und dieselbe Begründung
+        wie beim Selbst-Änderungsweg (`auth.account_service.update_email`).
+
+        `public.users.email` wird bewusst NICHT mitgeschrieben: sie ist der
+        Spiegel von GoTrue und gilt erst, wenn dort umgeschaltet wurde.
+        `AccountService._email_nachziehen` gleicht sie beim nächsten
+        Kontoabruf des Eigentümers an. Ein sofortiges Schreiben hier hiesse,
+        eine Adresse als Login-Adresse auszuweisen, unter der man sich (noch)
+        gar nicht anmelden kann — und liefe bei einem Fehlschlag von GoTrue
+        dauerhaft auseinander (Wurzel 1).
+
+        `wechsel` ist None, wenn der Eigentümer keinen Portalzugang hat: dann
+        ist die Adresse reine Korrespondenzadresse und sofort gültig. Der
+        Vorgang wird trotzdem protokolliert — auch ein Wechsel ohne Login ist
+        einer, den man später nachvollziehen können muss.
+
+        Rückgabe: die Adresse, an die die Bestätigung ging — oder None, wenn
+        es keinen Login gab (reiner Stammdaten-Wechsel). Die Oberfläche macht
+        daraus den Zwischenstand-Hinweis; ohne ihn sähe der Betreiber eine
+        gespeicherte neue Adresse und wüsste nicht, dass die Anmeldung noch
+        auf der alten läuft (Wurzel 5b — den laufenden Vorgang verschweigen
+        wäre eine Falschaussage über den Zustand).
+        """
+        angestossen = False
+        if wechsel is not None:
+            try:
+                self._db.auth.admin.update_user_by_id(
+                    wechsel["user_id"], {"email": wechsel["neue_email"]}
+                )
+            except Exception as exc:
+                # Spezifisch genug: der einzige fachlich erwartbare Fall ist
+                # eine bereits vergebene Adresse (betriebsübergreifend — die
+                # Vorprüfung oben sieht nur den eigenen Mandanten). Als 409
+                # melden statt als 500, und NICHT verschlucken: ein stiller
+                # Fehlschlag hier hinterliesse genau die Adressspaltung, die
+                # dieser Weg beseitigen soll (Wurzel 5).
+                log.warning(
+                    "owner_email_gotrue_wechsel_fehlgeschlagen",
+                    tenant_id=str(vorher["tenant_id"]),
+                    owner_id=str(vorher["id"]),
+                    email=mask_email(wechsel["neue_email"]),
+                    error=str(exc)[:200],
+                )
+                raise OwnerError(
+                    "Die Anmeldeadresse konnte nicht geändert werden — sie "
+                    "ist vermutlich bereits vergeben. Die Stammdaten wurden "
+                    "gespeichert; bitte eine andere Adresse eintragen.",
+                    status_code=409,
+                ) from exc
+            angestossen = True
+        self._email_wechsel_protokollieren(
+            ctx, vorher=vorher, neue_email=neue_email, angestossen=angestossen
+        )
+        return neue_email if angestossen else None
+
+    def _email_wechsel_protokollieren(
+        self,
+        ctx: AuthContext,
+        *,
+        vorher: dict,
+        neue_email: str,
+        angestossen: bool,
+    ) -> None:
+        """Alt → neu, auslösender Nutzer, Zeitpunkt (0352).
+
+        Ein Administrator greift hier in die ANMELDEDATEN einer anderen Person
+        ein. Der Betroffene sieht davon nur eine Bestätigungsmail, und aus
+        `owners.email` allein ist im Nachhinein weder die alte Adresse noch der
+        Auslöser ablesbar — dort steht nur der Endzustand.
+
+        Best-effort (Wurzel 5): der Wechsel selbst ist an dieser Stelle bereits
+        passiert und lässt sich nicht mehr zurücknehmen. Ein Schreibfehler im
+        Protokoll darf den Aufruf deshalb nicht kippen — er würde dem Betreiber
+        einen Fehlschlag melden, den es nicht gab, und ihn zu einem zweiten
+        Versuch verleiten. Der Fehlschlag wird sichtbar geloggt, nie
+        verschluckt.
+        """
+        try:
+            self._db.table("owner_email_changes").insert(
+                {
+                    "tenant_id": str(vorher["tenant_id"]),
+                    "owner_id": str(vorher["id"]),
+                    "user_id": (
+                        str(vorher["user_id"]) if vorher.get("user_id") else None
+                    ),
+                    "alte_email": vorher.get("email") or None,
+                    "neue_email": neue_email,
+                    "login_wechsel_angestossen": angestossen,
+                    "actor_user_id": ctx.user_id,
+                }
+            ).execute()
+        except Exception as exc:  # noqa: BLE001  pylint: disable=broad-exception-caught
+            log.error(
+                "owner_email_protokoll_fehlgeschlagen",
+                tenant_id=str(vorher["tenant_id"]),
+                owner_id=str(vorher["id"]),
+                error=str(exc)[:200],
+            )
+            return
+        log.info(
+            "owner_email_geaendert",
+            tenant_id=str(vorher["tenant_id"]),
+            owner_id=str(vorher["id"]),
+            actor=ctx.user_id,
+            # Maskiert (DSGVO/CWE-532): der Klartext gehört ins Protokoll,
+            # nicht ins Log.
+            alt=mask_email(vorher.get("email")),
+            neu=mask_email(neue_email),
+            login_wechsel_angestossen=angestossen,
+        )
+
+    def email_bestaetigung_erneut_senden(
+        self, ctx: AuthContext, owner_id: str
+    ) -> str:
+        """Die Bestätigungsmail zum Adresswechsel noch einmal anstossen.
+
+        Der Fall ist real und nicht selten: die Bestätigung geht an die NEUE
+        Adresse — und genau die ist gerade der wunde Punkt (Tippfehler im
+        Postfachnamen, Spamfilter, Postfach noch nicht eingerichtet). Ohne
+        diesen Weg bliebe der Wechsel für immer im Zwischenzustand hängen:
+        `owners.email` neu, Login alt, und kein Knopf, der das auflöst.
+
+        GoTrue kennt keinen eigenen „E-Mail-Wechsel erneut senden"-Aufruf.
+        Denselben Adresswechsel noch einmal anzustossen IST der vorgesehene
+        Weg — `update_user_by_id({"email": …})` mit unverändertem Ziel
+        erneuert den offenen Wechsel und verschickt die Bestätigung neu. Das
+        ist genau der EINE freigegebene Aufruf, kein zweiter Mailweg
+        (Wurzel 2/4).
+
+        Voraussetzung ist ein Portalzugang: ohne Login gibt es keine
+        Anmeldeadresse, die zu bestätigen wäre — dann ist die Adresse reine
+        Korrespondenzadresse und schon mit dem Speichern fertig.
+
+        Scope (Wurzel 3/9): derselbe Helfer und derselbe Scope wie der
+        List-Pfad — `_get_row(tenant_id, owner_id)` wirft 404 bei einem
+        fremden Mandanten, und die `user_id` stammt aus der GESCOPTEN Zeile,
+        nie aus der Anfrage.
+        """
+        tenant_id = self._require_tenant(ctx)
+        row = self._get_row(tenant_id, owner_id)
+        email = (row.get("email") or "").strip()
+        if not email:
+            raise OwnerError(
+                "Für die Bestätigung wird eine E-Mail-Adresse gebraucht.",
+                status_code=422,
+            )
+        if not row.get("user_id"):
+            raise OwnerError(
+                "Für diesen Eigentümer gibt es keinen Portalzugang — die "
+                "Adresse gilt bereits ohne Bestätigung.",
+                status_code=409,
+            )
+        try:
+            self._db.auth.admin.update_user_by_id(
+                str(row["user_id"]), {"email": email}
+            )
+        except Exception as exc:
+            log.warning(
+                "owner_email_bestaetigung_erneut_fehlgeschlagen",
+                tenant_id=tenant_id,
+                owner_id=owner_id,
+                email=mask_email(email),
+                error=str(exc)[:200],
+            )
+            raise OwnerError(
+                "Die Bestätigung konnte nicht erneut verschickt werden — die "
+                "Adresse ist vermutlich bereits vergeben.",
+                status_code=409,
+            ) from exc
+        log.info(
+            "owner_email_bestaetigung_erneut_versendet",
+            tenant_id=tenant_id,
+            owner_id=owner_id,
+            actor=ctx.user_id,
+            neu=mask_email(email),
+        )
+        return email
 
     def delete(self, ctx: AuthContext, owner_id: str) -> None:
         tenant_id = self._require_tenant(ctx)

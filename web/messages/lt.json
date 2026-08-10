@@ -1007,6 +1007,11 @@
       "email": "pvz., jonas@example.com"
     },
     "emailLanguageHint": "Šia kalba savininkas gauna ataskaitas ir pranešimus — net ir neturėdamas savo prieigos.",
+    "emailHint": "Galioja ir prisijungimui: atsiskaitymai, pranešimai ir prieiga prie portalo eina per šį adresą.",
+    "emailChangePending": "Išsaugota. Patvirtinimas išsiųstas adresu {email}.",
+    "emailChangePendingHint": "Patvirtinimas išsiųstas adresu {email} — kol nepatvirtinta, savininkas vis dar jungiasi ankstesniu adresu.",
+    "emailChangeResend": "Siųsti patvirtinimą dar kartą",
+    "emailChangeResent": "Patvirtinimas dar kartą išsiųstas adresu {email}.",
     "portalAccess": "Nustatyti prieigą prie portalo",
     "portalAccessHint": "Savininkas gauna kvietimą el. paštu ir vėliau gali pats peržiūrėti savo atsiskaitymus.",
     "portalAccessNeedsEmail": "Prieigai prie portalo reikalingas el. pašto adresas.",

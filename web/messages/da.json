@@ -1007,6 +1007,11 @@
       "email": "f.eks. jens@example.com"
     },
     "emailLanguageHint": "På dette sprog modtager ejeren afregninger og beskeder — også uden egen adgang.",
+    "emailHint": "Gælder også for login: afregninger, notifikationer og portaladgang går via denne adresse.",
+    "emailChangePending": "Gemt. Bekræftelse sendt til {email}.",
+    "emailChangePendingHint": "Bekræftelse sendt til {email} — indtil den er bekræftet, logger ejeren fortsat ind med den hidtidige adresse.",
+    "emailChangeResend": "Send bekræftelse igen",
+    "emailChangeResent": "Bekræftelse sendt til {email} igen.",
     "portalAccess": "Opret portaladgang",
     "portalAccessHint": "Ejeren modtager en invitation på e-mail og kan derefter selv se sine afregninger.",
     "portalAccessNeedsEmail": "Der kræves en e-mailadresse til portaladgang.",

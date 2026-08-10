@@ -1007,6 +1007,11 @@
       "email": "p. ej. juan@example.com"
     },
     "emailLanguageHint": "En este idioma el propietario recibe liquidaciones y notificaciones, incluso sin acceso propio.",
+    "emailHint": "También se usa para iniciar sesión: las liquidaciones, las notificaciones y el acceso al portal pasan por esta dirección.",
+    "emailChangePending": "Guardado. Confirmación enviada a {email}.",
+    "emailChangePendingHint": "Confirmación enviada a {email}: hasta que se confirme, el propietario sigue iniciando sesión con la dirección anterior.",
+    "emailChangeResend": "Reenviar la confirmación",
+    "emailChangeResent": "Confirmación reenviada a {email}.",
     "portalAccess": "Configurar acceso al portal",
     "portalAccessHint": "El propietario recibe una invitación por correo electrónico y luego puede consultar sus liquidaciones por su cuenta.",
     "portalAccessNeedsEmail": "Se necesita una dirección de correo electrónico para el acceso al portal.",
