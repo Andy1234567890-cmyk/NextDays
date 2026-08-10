@@ -41,8 +41,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "next-env.d.ts",
-    "/private/tmp/claude-501/-Users-andystaudinger-NextDays/026343b6-75fe-49b7-88e1-74b49b3c3c20/scratchpad/nb2/types/**/*.ts"
+    "next-env.d.ts"
   ],
   "exclude": [
     "node_modules"

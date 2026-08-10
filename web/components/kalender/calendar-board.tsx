@@ -2069,51 +2069,62 @@ export function CalendarBoard({
           <div style={{ width: `${LABEL + dates.length * COL}rem` }}>
             {/* Monatsband — nennt über den Tagesspalten den Monat, damit ein
                 Drag-Ziel monats-eindeutig ist (die Tageskopfzeile zeigt nur die
-                Tageszahl; ohne dieses Band verwechselt man Okt/Nov an der Grenze). */}
-            <div className="flex border-b bg-secondary/40">
-              <div
-                className="sticky left-0 z-20 shrink-0 border-r bg-secondary/40"
-                style={{ width: `${LABEL}rem` }}
-              />
-              {monthBands.map((b) => (
+                Tageszahl; ohne dieses Band verwechselt man Okt/Nov an der Grenze).
+
+                Monatsband UND Tageskopf stecken zusammen in einem `sticky
+                top-0`-Block: Der Container scrollt auch VERTIKAL, ohne das lief
+                die Datumszeile beim Runterscrollen aus dem Bild und man sah
+                Balken, ohne zu wissen, an welchem Tag sie liegen. Ein
+                gemeinsamer Block statt zweier eigener sticky-Zeilen, weil die
+                zweite sonst einen festen `top`-Wert in rem bräuchte — der wäre
+                an die Höhe der ersten gebunden und bräche bei jeder
+                Schriftgrößen-Änderung. z-30 über den Balken (z-20). */}
+            <div className="sticky top-0 z-30 bg-card">
+              <div className="flex border-b bg-secondary/40">
                 <div
-                  key={b.key}
-                  className="shrink-0 truncate border-r px-3 py-1 text-xs font-semibold text-foreground"
-                  style={{ width: `${b.span * COL}rem` }}
-                >
-                  {b.label}
-                </div>
-              ))}
-            </div>
-            {/* Tageskopf — virtualisiert: Spacer + nur sichtbare Spalten. */}
-            <div className="flex border-b">
-              <div
-                className="sticky left-0 z-20 flex shrink-0 items-center border-r bg-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                style={{ width: `${LABEL}rem` }}
-              >
-                Objekt
+                  className="sticky left-0 z-20 shrink-0 border-r bg-secondary/40"
+                  style={{ width: `${LABEL}rem` }}
+                />
+                {monthBands.map((b) => (
+                  <div
+                    key={b.key}
+                    className="shrink-0 truncate border-r px-3 py-1 text-xs font-semibold text-foreground"
+                    style={{ width: `${b.span * COL}rem` }}
+                  >
+                    {b.label}
+                  </div>
+                ))}
               </div>
-              <div className="flex">
-                {/* Spacer links (alle Spalten vor dem sichtbaren Fenster). */}
-                <div style={{ width: `${visFrom * COL}rem` }} className="shrink-0" />
-                {dates.slice(visFrom, visTo).map((d) => {
-                  const wd = d.getDay();
-                  const isToday = key(d) === todayKey;
-                  return (
-                    <div
-                      key={key(d)}
-                      className="flex shrink-0 flex-col items-center border-r py-2 text-sm"
-                      style={{ width: `${COL}rem` }}
-                    >
-                      <span className="text-xs text-muted-foreground">{weekdayLabels(t)[wd]}</span>
-                      <span className={`mt-1 flex size-8 items-center justify-center rounded-full text-base font-semibold ${isToday ? "bg-accent text-white" : ""}`}>
-                        {d.getDate()}
-                      </span>
-                    </div>
-                  );
-                })}
-                {/* Spacer rechts (alle Spalten nach dem sichtbaren Fenster). */}
-                <div style={{ width: `${(totalDays - visTo) * COL}rem` }} className="shrink-0" />
+              {/* Tageskopf — virtualisiert: Spacer + nur sichtbare Spalten. */}
+              <div className="flex border-b">
+                <div
+                  className="sticky left-0 z-20 flex shrink-0 items-center border-r bg-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  style={{ width: `${LABEL}rem` }}
+                >
+                  Objekt
+                </div>
+                <div className="flex">
+                  {/* Spacer links (alle Spalten vor dem sichtbaren Fenster). */}
+                  <div style={{ width: `${visFrom * COL}rem` }} className="shrink-0" />
+                  {dates.slice(visFrom, visTo).map((d) => {
+                    const wd = d.getDay();
+                    const isToday = key(d) === todayKey;
+                    return (
+                      <div
+                        key={key(d)}
+                        className="flex shrink-0 flex-col items-center border-r py-2 text-sm"
+                        style={{ width: `${COL}rem` }}
+                      >
+                        <span className="text-xs text-muted-foreground">{weekdayLabels(t)[wd]}</span>
+                        <span className={`mt-1 flex size-8 items-center justify-center rounded-full text-base font-semibold ${isToday ? "bg-accent text-white" : ""}`}>
+                          {d.getDate()}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {/* Spacer rechts (alle Spalten nach dem sichtbaren Fenster). */}
+                  <div style={{ width: `${(totalDays - visTo) * COL}rem` }} className="shrink-0" />
+                </div>
               </div>
             </div>
 

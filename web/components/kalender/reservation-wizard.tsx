@@ -247,7 +247,7 @@ export function ReservationWizard({
   if (!open) return null;
 
   const nights = countNights(checkInState, checkOutState);
-  const rangeLabel = `${fmt(checkInState)} – ${fmt(checkOutState)} · ${nights} Nacht${nights > 1 ? "e" : ""}`;
+  const rangeLabel = `${fmt(checkInState)} – ${fmtLetzteNacht(checkOutState)} · ${nights} Nacht${nights > 1 ? "e" : ""}`;
   const datesValid = nights > 0;
 
   async function confirm() {
@@ -431,7 +431,7 @@ export function ReservationWizard({
                 ) : (
                   <Field label="Zeitraum">
                     <div className="rounded-(--radius) border bg-muted/30 px-3 py-2 text-sm">
-                      {fmt(checkInState)} – {fmt(checkOutState)}
+                      {fmt(checkInState)} – {fmtLetzteNacht(checkOutState)}
                     </div>
                   </Field>
                 )}
@@ -651,7 +651,10 @@ export function ReservationWizard({
                   value={ownerStay ? t("wizard.stayKindOwner") : t("wizard.stayKindGuest")}
                 />
                 <SummaryRow label="Objekt" value={properties.find((p) => p.id === propertyId)?.title ?? "—"} />
-                <SummaryRow label="Zeitraum" value={`${fmt(checkInState)} – ${fmt(checkOutState)}`} />
+                <SummaryRow
+                  label="Zeitraum"
+                  value={`${fmt(checkInState)} – ${fmtLetzteNacht(checkOutState)}`}
+                />
                 <SummaryRow label={t("wizard.guests")} value={t("wizard.personsValue", { count: guests.adults + guests.children })} />
                 <SummaryRow
                   label={ownerStay ? t("wizard.ownerLabel") : "Gast"}
@@ -860,5 +863,20 @@ function countNights(checkIn: string, checkOut: string): number {
 
 function fmt(iso: string): string {
   const d = new Date(iso);
+  return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+}
+
+/** Der Abreisetag als LETZTER BELEGTER TAG — also einen Tag zurück.
+ *
+ *  `checkOut` ist die Abreise und damit exklusiv: wer 27.–31.8. im Kalender
+ *  zieht, bekommt checkOut=1.9. Genau so wird gespeichert und an die Portale
+ *  gemeldet — daran ändert sich nichts. Angezeigt gehört aber der Zeitraum,
+ *  den der Nutzer gezogen hat: er markiert fünf Zellen und liest dann
+ *  „27.8. – 1.9.", also ein Datum, das er nie angefasst hat. Das
+ *  Kontextmenü nennt an derselben Auswahl „27.8. – 31.8." — zwei Enddaten
+ *  für dieselbe Sache. Die Anzeige richtet sich nach dem Kalender. */
+function fmtLetzteNacht(isoAbreise: string): string {
+  const d = new Date(isoAbreise);
+  d.setDate(d.getDate() - 1);
   return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
 }
