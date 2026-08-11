@@ -350,6 +350,35 @@ class PropertyListResponse(BaseModel):
     total: int
 
 
+class VertragsendeBuchung(BaseModel):
+    """Eine Buchung, die über das Vertragsende hinausreicht (0355/0359).
+
+    Sie VERHINDERT das Enddatum nicht — eine bestätigte Portal-Buchung
+    verschwindet nicht dadurch, dass der Vertrag endet, sie wird bedient und der
+    Vertrag läuft für sie aus. Der Betrieb muss aber wissen, was noch
+    abzuwickeln ist: ohne diese Liste stünde das Objekt gesperrt im Kalender,
+    mit Gästen darin, und niemand könnte sagen, welche das sind.
+    """
+
+    id: str
+    check_in: str
+    check_out: str
+    gast: str
+    # Ob die Buchung im eigenen Haus stornierbar ist. Eine OTA-Buchung ist es
+    # NICHT (`ReservationsService.cancel` lehnt sie ab, 409): der lokale Storno
+    # gäbe die Nächte frei und meldete sie den Portalen als verfügbar, während
+    # der Gast bei Booking.com weiter gebucht ist — eine Überbuchung. Die UI
+    # muss das sagen können, statt zum Stornieren aufzufordern, wo es nicht geht.
+    lokal_stornierbar: bool
+
+
+class VertragsendeInfo(BaseModel):
+    """Was am Vertragsende eines Objekts noch offen ist."""
+
+    contract_end_date: date | None = None
+    buchungen: list[VertragsendeBuchung] = Field(default_factory=list)
+
+
 # --- Objekt-Taxonomie (property_categories/property_subtypes, Migration 0198) --
 
 

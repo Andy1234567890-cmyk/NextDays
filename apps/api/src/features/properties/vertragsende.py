@@ -20,9 +20,18 @@ Zeile je Tag und Einheit. „Für immer sperren" ist damit nicht schreibbar.
 Gesperrt wird der Horizont, der überhaupt jemand sehen kann: Channex' Full-Sync
 reicht 365 Tage, der Publish-Horizont 500 — 730 Tage deckt beides mit Reserve.
 Der Horizont wächst mit: jeder erneute Lauf (Speichern, nächtlicher Nachzug)
-rechnet ihn ab HEUTE neu und schreibt die dann fehlenden Tage nach. Für die
-Zeit dahinter ist der DB-Trigger aus 0355 der Riegel — er lehnt jede
-Reservierung ab, die über das Enddatum hinausreicht, egal wie weit sie liegt.
+rechnet ihn ab HEUTE neu und schreibt die dann fehlenden Tage nach.
+
+WAS DAS ENDE NICHT TUT — BESTEHENDE BUCHUNGEN ENTWERTEN (0359):
+Eine bestätigte Buchung hinter dem Enddatum bleibt gültig und wird bedient; der
+Vertrag läuft für sie aus. Gesperrt werden die FREIEN Tage. Anders ginge es
+auch gar nicht: `ReservationsService.cancel` lehnt jede OTA-Buchung ab (der
+lokale Storno meldete den Portalen verfügbar, während der Gast dort weiter
+gebucht ist), und ein DB-Trigger gegen solche Reservierungen träfe auch den
+OTA-IMPORT — die Buchung existierte dann bei Booking.com, aber nicht bei uns,
+und der Gast stünde vor der Tür, ohne dass ihn jemand erwartet. Der ursprüngliche
+Trigger aus 0355 ist deshalb in 0359 wieder entfernt. `buchungen_nach_ende`
+liefert die offenen Fälle als HINWEIS an die Oberfläche.
 
 WURZEL 1 — DER GEGENZUSTAND:
 Wird das Enddatum entfernt oder nach hinten verschoben, MÜSSEN die dadurch
@@ -45,7 +54,7 @@ from src.core.einheiten_verfuegbar import freie_einheiten_spannen
 from src.core.logging import get_logger
 from src.jobs.queue import try_enqueue_ari
 
-from .errors import PropertyError
+from .schemas import VertragsendeBuchung, VertragsendeInfo
 
 log = get_logger("nextdays.properties")
 
@@ -92,22 +101,35 @@ def _sperr_fenster(ende: date, *, heute: date) -> tuple[date, date] | None:
 
 def buchungen_nach_ende(
     db: Client, property_id: str, ende: date
-) -> list[dict[str, str]]:
+) -> list[dict[str, object]]:
     """Aktive Reservierungen, die über das Enddatum hinausreichen.
 
-    Wurzel 5: Das Setzen eines Enddatums darf bestehende Buchungen nicht still
-    entwerten. Wer zum 02.01.2027 kündigt, aber eine bestätigte Buchung bis zum
-    10.01. im Kalender hat, muss zuerst entscheiden — stornieren oder ein
-    späteres Datum. Der Aufrufer meldet das als 409 mit dieser Liste zurück.
+    Sie VERHINDERN das Enddatum nicht (0359). Eine bestätigte Portal-Buchung
+    verschwindet nicht dadurch, dass der Vermarktungsvertrag endet — sie wird
+    bedient, der Vertrag läuft für sie aus. Das Enddatum sperrt die FREIEN Tage
+    ab dem Endtag; es entwertet keine Zusage an einen Gast.
+
+    Der Betrieb muss die Liste trotzdem sehen: sonst steht das Objekt gesperrt
+    im Kalender, mit Gästen darin, und niemand kann sagen, welche das sind.
+
+    `lokal_stornierbar` sagt, ob die Buchung im eigenen Haus aufhebbar ist. Eine
+    OTA-Buchung ist es NICHT — `ReservationsService.cancel` lehnt jede Zeile mit
+    `source_channex_booking_id` ab, weil der lokale Storno die Nächte freigäbe
+    und den Portalen als verfügbar meldete, während der Gast bei Booking.com
+    weiter gebucht ist (Überbuchung). Ohne dieses Feld forderte die Oberfläche
+    zum Stornieren auf, wo es gar nicht geht — live waren das 66 von 93
+    künftigen Buchungen.
 
     `check_out` ist die Abreise (ausschließlich): eine Buchung, die AM Endtag
-    abreist, belegt nur Nächte davor und ist gültig. Storniertes zählt nicht.
-    Dieselbe Grenze prüft der DB-Trigger aus 0355 — bewusst doppelt: hier für
-    die sprechende Meldung, dort als Riegel gegen jeden anderen Schreibweg.
+    abreist, belegt nur Nächte davor und steht nicht in der Liste. Storniertes
+    zählt nicht.
     """
     rows = (
         db.table("reservations")
-        .select("id, check_in, check_out, status, guests(name)")
+        .select(
+            "id, check_in, check_out, status, source_channex_booking_id, "
+            "guests(name)"
+        )
         .eq("property_id", property_id)
         .neq("status", "cancelled")
         .gt("check_out", ende.isoformat())
@@ -123,28 +145,68 @@ def buchungen_nach_ende(
                 "check_in": str(r["check_in"]),
                 "check_out": str(r["check_out"]),
                 "gast": str(gast.get("name", "") if isinstance(gast, dict) else ""),
+                "lokal_stornierbar": not r.get("source_channex_booking_id"),
             }
         )
     return treffer
 
 
-FELD = "contract_end_date"
+def vertragsende_info(
+    db: Client, tenant_id: str, property_id: str
+) -> tuple[date | None, list[dict[str, object]]]:
+    """Enddatum + die Buchungen dahinter, für die Anzeige in der Objektkartei.
 
+    Wurzel 3: Das Objekt wird MIT `tenant_id` in derselben Abfrage geladen —
+    der Service läuft mit dem Service-Role-Key und umgeht RLS, ein ungescopter
+    Load per ID gäbe die Vertragsdaten eines fremden Betriebs heraus. Ein
+    fremdes/unbekanntes Objekt wirkt wie „nicht gefunden" (der Aufrufer wirft
+    404), statt zu verraten, dass es existiert.
 
-def vertragsende_pruefen(
-    db: Client, property_id: str, changes: dict[str, object]
-) -> None:
-    """Vor dem Schreiben: steht dem neuen Enddatum eine Buchung im Weg?
-
-    Nimmt den ganzen `changes`-Dict statt eines Datums, damit die
-    „ist das Feld überhaupt im Update?"-Frage und die Umrechnung des
-    JSON-Datums an EINER Stelle stehen — im Objekt-Update wären es zwei
-    zusätzliche Verzweigungen, und wer eine davon vergisst, setzt ein
-    Enddatum ohne Prüfung.
+    Ohne Enddatum gibt es auch nichts abzuwickeln — dann bleibt die Liste leer,
+    statt alle künftigen Buchungen des Objekts zu melden.
     """
-    if FELD not in changes:
-        return
-    _pruefen(db, property_id, als_datum(changes[FELD]))
+    rows = (
+        db.table("properties")
+        .select("contract_end_date")
+        .eq("id", property_id)
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    if not rows:
+        return (None, [])
+    ende = als_datum(rows[0].get("contract_end_date"))
+    if ende is None:
+        return (None, [])
+    return (ende, buchungen_nach_ende(db, property_id, ende))
+
+
+def vertragsende_antwort(
+    db: Client, tenant_id: str, property_id: str
+) -> VertragsendeInfo:
+    """`vertragsende_info` als Antwort-Schema — die Form, die der Router liefert.
+
+    Getrennt von `vertragsende_info`, weil die Tests dort auf die rohen Werte
+    schauen (Tupel) und ein Pydantic-Modell dazwischen nur verdecken würde, was
+    die Abfrage wirklich liefert.
+    """
+    ende, buchungen = vertragsende_info(db, tenant_id, property_id)
+    return VertragsendeInfo(
+        contract_end_date=ende,
+        buchungen=[
+            VertragsendeBuchung(
+                id=str(b["id"]),
+                check_in=str(b["check_in"]),
+                check_out=str(b["check_out"]),
+                gast=str(b["gast"]),
+                lokal_stornierbar=bool(b["lokal_stornierbar"]),
+            )
+            for b in buchungen
+        ],
+    )
+
+
+FELD = "contract_end_date"
 
 
 def vertragsende_aus_update(
@@ -152,45 +214,13 @@ def vertragsende_aus_update(
 ) -> None:
     """Nach dem Schreiben: Sperre setzen bzw. Gegenzustand aufheben.
 
-    Gegenstück zu `vertragsende_pruefen` auf demselben `changes`-Dict — beide
-    Hälften prüfen dieselbe Bedingung, damit die eine nicht ohne die andere
-    laufen kann (Wurzel 1).
+    Nimmt den ganzen `changes`-Dict statt eines Datums, damit die „ist das Feld
+    überhaupt im Update?"-Frage und die Umrechnung des JSON-Datums an EINER
+    Stelle stehen — im Objekt-Update wären es zwei zusätzliche Verzweigungen.
     """
     if FELD not in changes:
         return
     vertragsende_durchsetzen(db, tenant_id, property_id, als_datum(changes[FELD]))
-
-
-def _pruefen(db: Client, property_id: str, ende: date | None) -> None:
-    """Ein neues Vertragsende darf keine bestehende Buchung entwerten.
-
-    Wurzel 5: Wer zum 02.01.2027 kündigt, aber eine bestätigte Buchung bis zum
-    10.01. im Kalender hat, muss zuerst entscheiden — stornieren oder ein
-    späteres Datum. Das Datum stillschweigend zu setzen und den Gast im Regen
-    stehen zu lassen, ist keine Option.
-
-    WARUM HIER UND NICHT NUR IM DB-TRIGGER (0355): Der Trigger schützt die
-    Daten, aber er kann nur „geht nicht" sagen. Diese Prüfung gibt dem Nutzer
-    die LISTE der betroffenen Buchungen — ohne sie müsste er raten, welche
-    Reservierung im Weg steht.
-
-    Getrennt von `vertragsende_durchsetzen`, damit ein maschineller Nachzug des
-    Horizonts NICHT an einer Bestandsbuchung scheitert: dort ist die Buchung
-    eine Tatsache, hier eine Entscheidung des Nutzers.
-
-    Das Entfernen (`None`) braucht keine Prüfung — mehr Vertrag steht keiner
-    Buchung im Weg.
-    """
-    if ende is None:
-        return
-    offen = buchungen_nach_ende(db, property_id, ende)
-    if offen:
-        raise PropertyError(
-            "Es gibt Buchungen, die über das Vertragsende hinausreichen. "
-            "Storniere sie oder wähle ein späteres Datum.",
-            status_code=409,
-            details={"buchungen": offen},
-        )
 
 
 def vertragsende_durchsetzen(

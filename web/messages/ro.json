@@ -1972,9 +1972,10 @@
       "name": "Nume",
       "type": "Tip",
       "contractEnd": "Sfârșitul contractului",
-      "contractEndHint": "Prima zi fără contract de comercializare. Din acea zi proprietatea este blocată peste tot: calendarul propriu, myBestDays și toate portalurile. Necompletat înseamnă pe durată nedeterminată.",
-      "contractEndBlocked": "Aceste rezervări depășesc sfârșitul contractului. Anulați-le sau alegeți o dată ulterioară.",
-      "contractEndNoGuest": "Fără nume de oaspete"
+      "contractEndHint": "Prima zi fără contract de comercializare. Din acea zi zilele libere sunt blocate peste tot: calendarul propriu, myBestDays și toate portalurile. Rezervările existente rămân valabile. Necompletat înseamnă pe durată nedeterminată.",
+      "contractEndNoGuest": "Fără nume de oaspete",
+      "contractEndOpenBookings": "Aceste rezervări depășesc sfârșitul contractului. Rămân valabile și vor fi onorate — contractul expiră pentru ele.",
+      "contractEndPortalOnly": "anulare doar în portal"
     },
     "owner": {
       "heading": "Proprietar",

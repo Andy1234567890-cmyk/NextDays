@@ -1972,9 +1972,10 @@
       "name": "Naziv",
       "type": "Tip",
       "contractEnd": "Istek ugovora",
-      "contractEndHint": "Prvi dan bez ugovora o posredovanju. Od tog dana objekt je blokiran svugdje: vlastiti kalendar, myBestDays i svi portali. Prazno znači na neodređeno.",
-      "contractEndBlocked": "Ove rezervacije prelaze istek ugovora. Otkažite ih ili odaberite kasniji datum.",
-      "contractEndNoGuest": "Bez imena gosta"
+      "contractEndHint": "Prvi dan bez ugovora o posredovanju. Od tog dana slobodni su dani blokirani svugdje: vlastiti kalendar, myBestDays i svi portali. Postojeće rezervacije ostaju na snazi. Prazno znači na neodređeno.",
+      "contractEndNoGuest": "Bez imena gosta",
+      "contractEndOpenBookings": "Ove rezervacije prelaze istek ugovora. Ostaju na snazi i bit će ispunjene — ugovor za njih istječe.",
+      "contractEndPortalOnly": "otkazivanje samo na portalu"
     },
     "owner": {
       "heading": "Vlasnik",

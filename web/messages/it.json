@@ -1972,9 +1972,10 @@
       "name": "Nome",
       "type": "Tipo",
       "contractEnd": "Fine del contratto",
-      "contractEndHint": "Primo giorno senza contratto di commercializzazione. Da quel giorno la struttura è bloccata dappertutto: il tuo calendario, myBestDays e tutti i portali. Vuoto significa a tempo indeterminato.",
-      "contractEndBlocked": "Queste prenotazioni superano la fine del contratto. Annullale o scegli una data successiva.",
-      "contractEndNoGuest": "Senza nome ospite"
+      "contractEndHint": "Primo giorno senza contratto di commercializzazione. Da quel giorno i giorni liberi sono bloccati dappertutto: il tuo calendario, myBestDays e tutti i portali. Le prenotazioni esistenti restano valide. Vuoto significa a tempo indeterminato.",
+      "contractEndNoGuest": "Senza nome ospite",
+      "contractEndOpenBookings": "Queste prenotazioni superano la fine del contratto. Restano valide e verranno onorate: il contratto si esaurisce per loro.",
+      "contractEndPortalOnly": "annullabile solo nel portale"
     },
     "owner": {
       "heading": "Proprietario",

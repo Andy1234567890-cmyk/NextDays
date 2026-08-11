@@ -160,6 +160,41 @@ export async function getProperty(id: string): Promise<Result<Property>> {
   return call(`/properties/${id}`);
 }
 
+/** Eine Buchung, die über das Vertragsende hinausreicht (0355/0359).
+ *
+ *  Sie verhindert das Enddatum NICHT — eine bestätigte Portal-Buchung
+ *  verschwindet nicht dadurch, dass der Vertrag endet; sie wird bedient und der
+ *  Vertrag läuft für sie aus. Der Betrieb muss aber wissen, was noch
+ *  abzuwickeln ist. */
+export type VertragsendeBuchung = {
+  id: string;
+  check_in: string;
+  /** Abreise (ausschließlich) — die letzte belegte Nacht ist der Tag davor. */
+  check_out: string;
+  gast: string;
+  /** false bei OTA-Buchungen: der lokale Storno würde den Portalen verfügbar
+   *  melden, während der Gast dort weiter gebucht ist (Überbuchung) — deshalb
+   *  lehnt der Server ihn ab. Die Oberfläche darf dann nicht zum Stornieren
+   *  auffordern, sondern muss auf das Portal verweisen. */
+  lokal_stornierbar: boolean;
+};
+
+export type VertragsendeInfo = {
+  contract_end_date: string | null;
+  buchungen: VertragsendeBuchung[];
+};
+
+/** Vertragsende eines Objekts + die Buchungen, die darüber hinausreichen.
+ *
+ *  Eigener Endpunkt und nicht Teil von `getProperty`: die Liste ist eine
+ *  Abfrage über `reservations` und liefe sonst bei jedem Objekt-Abruf mit,
+ *  auch in der Objektliste. */
+export async function getVertragsende(
+  id: string,
+): Promise<Result<VertragsendeInfo>> {
+  return call(`/properties/${id}/vertragsende`);
+}
+
 export async function createProperty(
   input: PropertyInput,
 ): Promise<Result<Property>> {

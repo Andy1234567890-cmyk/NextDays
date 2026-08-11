@@ -1972,9 +1972,10 @@
       "name": "Nom",
       "type": "Type",
       "contractEnd": "Fin du contrat",
-      "contractEndHint": "Premier jour sans contrat de commercialisation. À partir de ce jour, le bien est bloqué partout : votre calendrier, myBestDays et tous les portails. Vide signifie sans échéance.",
-      "contractEndBlocked": "Ces réservations dépassent la fin du contrat. Annulez-les ou choisissez une date plus tardive.",
-      "contractEndNoGuest": "Sans nom de client"
+      "contractEndHint": "Premier jour sans contrat de commercialisation. À partir de ce jour, les jours libres sont bloqués partout : votre calendrier, myBestDays et tous les portails. Les réservations existantes restent valables. Vide signifie sans échéance.",
+      "contractEndNoGuest": "Sans nom de client",
+      "contractEndOpenBookings": "Ces réservations dépassent la fin du contrat. Elles restent valables et seront honorées — le contrat expire pour elles.",
+      "contractEndPortalOnly": "annulation via le portail uniquement"
     },
     "owner": {
       "heading": "Propriétaire",

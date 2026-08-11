@@ -1972,9 +1972,10 @@
       "name": "Név",
       "type": "Típus",
       "contractEnd": "Szerződés vége",
-      "contractEndHint": "Az első nap értékesítési szerződés nélkül. Ettől a naptól az objektum mindenhol zárolt: saját naptár, myBestDays és minden portál. Üresen hagyva határozatlan idejű.",
-      "contractEndBlocked": "Ezek a foglalások túlnyúlnak a szerződés végén. Mondja le őket, vagy válasszon későbbi dátumot.",
-      "contractEndNoGuest": "Vendégnév nélkül"
+      "contractEndHint": "Az első nap értékesítési szerződés nélkül. Ettől a naptól a szabad napok mindenhol zárolva vannak: saját naptár, myBestDays és minden portál. A meglévő foglalások érvényben maradnak. Üresen hagyva határozatlan idejű.",
+      "contractEndNoGuest": "Vendégnév nélkül",
+      "contractEndOpenBookings": "Ezek a foglalások túlnyúlnak a szerződés végén. Érvényben maradnak és teljesülnek — a szerződés kifut rájuk.",
+      "contractEndPortalOnly": "csak a portálon mondható le"
     },
     "owner": {
       "heading": "Tulajdonos",

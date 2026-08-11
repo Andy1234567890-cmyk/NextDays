@@ -1972,9 +1972,10 @@
       "name": "Nombre",
       "type": "Tipo",
       "contractEnd": "Fin del contrato",
-      "contractEndHint": "Primer día sin contrato de comercialización. Desde ese día el alojamiento queda bloqueado en todas partes: tu calendario, myBestDays y todos los portales. Vacío significa indefinido.",
-      "contractEndBlocked": "Estas reservas van más allá del fin del contrato. Cancélalas o elige una fecha posterior.",
-      "contractEndNoGuest": "Sin nombre de huésped"
+      "contractEndHint": "Primer día sin contrato de comercialización. Desde ese día los días libres quedan bloqueados en todas partes: tu calendario, myBestDays y todos los portales. Las reservas existentes siguen siendo válidas. Vacío significa indefinido.",
+      "contractEndNoGuest": "Sin nombre de huésped",
+      "contractEndOpenBookings": "Estas reservas van más allá del fin del contrato. Siguen siendo válidas y se atenderán: el contrato se agota para ellas.",
+      "contractEndPortalOnly": "cancelar solo en el portal"
     },
     "owner": {
       "heading": "Propietario",

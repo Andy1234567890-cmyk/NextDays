@@ -1972,9 +1972,10 @@
       "name": "Namn",
       "type": "Typ",
       "contractEnd": "Avtalets slut",
-      "contractEndHint": "Första dagen utan förmedlingsavtal. Från den dagen är objektet blockerat överallt: egen kalender, myBestDays och alla portaler. Tomt betyder tills vidare.",
-      "contractEndBlocked": "Dessa bokningar sträcker sig förbi avtalets slut. Avboka dem eller välj ett senare datum.",
-      "contractEndNoGuest": "Utan gästnamn"
+      "contractEndHint": "Första dagen utan förmedlingsavtal. Från den dagen blockeras de lediga dagarna överallt: egen kalender, myBestDays och alla portaler. Befintliga bokningar gäller fortfarande. Tomt betyder tills vidare.",
+      "contractEndNoGuest": "Utan gästnamn",
+      "contractEndOpenBookings": "Dessa bokningar sträcker sig förbi avtalets slut. De gäller fortfarande och genomförs — avtalet löper ut för dem.",
+      "contractEndPortalOnly": "avbokas endast i portalen"
     },
     "owner": {
       "heading": "Ägare",

@@ -1972,9 +1972,10 @@
       "name": "Naam",
       "type": "Type",
       "contractEnd": "Einde contract",
-      "contractEndHint": "Eerste dag zonder verkoopovereenkomst. Vanaf die dag is het object overal geblokkeerd: eigen agenda, myBestDays en alle portalen. Leeg betekent onbepaalde tijd.",
-      "contractEndBlocked": "Deze boekingen lopen door na het einde van het contract. Annuleer ze of kies een latere datum.",
-      "contractEndNoGuest": "Zonder gastnaam"
+      "contractEndHint": "Eerste dag zonder verkoopovereenkomst. Vanaf die dag worden de vrije dagen overal geblokkeerd: eigen agenda, myBestDays en alle portalen. Bestaande boekingen blijven geldig. Leeg betekent onbepaalde tijd.",
+      "contractEndNoGuest": "Zonder gastnaam",
+      "contractEndOpenBookings": "Deze boekingen lopen door na het einde van het contract. Ze blijven geldig en worden nagekomen — het contract loopt voor hen af.",
+      "contractEndPortalOnly": "alleen via portaal te annuleren"
     },
     "owner": {
       "heading": "Eigenaar",

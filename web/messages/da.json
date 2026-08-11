@@ -1972,9 +1972,10 @@
       "name": "Navn",
       "type": "Type",
       "contractEnd": "Kontraktudløb",
-      "contractEndHint": "Første dag uden formidlingsaftale. Fra den dag er objektet blokeret overalt: egen kalender, myBestDays og alle portaler. Tomt betyder uden tidsbegrænsning.",
-      "contractEndBlocked": "Disse bookinger rækker ud over kontraktudløbet. Aflys dem, eller vælg en senere dato.",
-      "contractEndNoGuest": "Uden gæstenavn"
+      "contractEndHint": "Første dag uden formidlingsaftale. Fra den dag blokeres de ledige dage overalt: egen kalender, myBestDays og alle portaler. Eksisterende bookinger er fortsat gyldige. Tomt betyder uden tidsbegrænsning.",
+      "contractEndNoGuest": "Uden gæstenavn",
+      "contractEndOpenBookings": "Disse bookinger rækker ud over kontraktudløbet. De er fortsat gyldige og bliver gennemført — kontrakten løber ud for dem.",
+      "contractEndPortalOnly": "kan kun aflyses i portalen"
     },
     "owner": {
       "heading": "Ejer",

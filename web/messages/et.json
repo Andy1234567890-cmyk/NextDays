@@ -1972,9 +1972,10 @@
       "name": "Nimi",
       "type": "Tüüp",
       "contractEnd": "Lepingu lõpp",
-      "contractEndHint": "Esimene päev ilma turustuslepingut. Sellest päevast on objekt kõikjal suletud: oma kalender, myBestDays ja kõik portaalid. Tühi tähendab tähtajatut.",
-      "contractEndBlocked": "Need broneeringud ulatuvad lepingu lõpust kaugemale. Tühista need või vali hilisem kuupäev.",
-      "contractEndNoGuest": "Külalise nimeta"
+      "contractEndHint": "Esimene päev ilma turustuslepingut. Sellest päevast on vabad päevad kõikjal suletud: oma kalender, myBestDays ja kõik portaalid. Olemasolevad broneeringud jäävad kehtima. Tühi tähendab tähtajatut.",
+      "contractEndNoGuest": "Külalise nimeta",
+      "contractEndOpenBookings": "Need broneeringud ulatuvad lepingu lõpust kaugemale. Need jäävad kehtima ja täidetakse — leping lõpeb nende jaoks.",
+      "contractEndPortalOnly": "tühistatav ainult portaalis"
     },
     "owner": {
       "heading": "Omanik",

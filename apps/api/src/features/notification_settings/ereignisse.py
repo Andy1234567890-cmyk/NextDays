@@ -159,7 +159,20 @@ def melde_aufgaben_zuweisung(
             # Kein zusaetzlicher Fliesstext: der Titel IST die Meldung.
             text="",
             tenant_id=tenant_id,
-            ziel_pfad=f"/aufgaben/{task_id}",
+            # ZIEL: die persönliche Aufgabenliste des Empfängers.
+            #
+            # Vorher stand hier `/aufgaben/{task_id}` — diese Route gibt es
+            # NICHT. Aufgaben liegen unter `/reservierungen/aufgaben/…`, und
+            # eine Detailseite je Aufgabe existiert dort nicht (`[id]` gibt es
+            # nur für Pläne und Vorlagen). Jeder Klick auf diese
+            # Benachrichtigung landete deshalb im 404 (live 10.08.2026).
+            #
+            # `meine` ist das fachlich richtige Ziel: die Meldung sagt „dir
+            # wurde eine Aufgabe zugewiesen", und das Lastenheft (§4.3) nennt
+            # als operative Ansicht des Mitarbeiters genau den persönlichen
+            # Aufgabenkalender — keine Einzelseite je Aufgabe. Die Liste ist
+            # live (Realtime auf `tasks`), die neue Aufgabe steht also da.
+            ziel_pfad="/reservierungen/aufgaben/meine",
             property_id=property_id,
             dedup_key=f"aufgabe_zugewiesen:{task_id}:{assignee_id}",
         )
@@ -301,7 +314,14 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
                     else {"kanal": kanal_wert}
                 ),
                 tenant_id=tenant_id,
-                ziel_pfad=f"/portal/buchungen/{reservation_id}",
+                # `/portal/buchungen/{id}` gab es in KEINER App — derselbe
+                # 404 wie bei der Aufgaben-Meldung oben. Empfänger sind
+                # Eigentümer des Mandanten (`eigentuemer_nutzer_ids`), also
+                # Nutzer des PMS mit Owner-Rolle; deren Buchungsdetail ist
+                # `/reservierungen/{id}` (der Rollen-Datensplit §4.2 greift
+                # dort serverseitig, die Seite zeigt dem Owner nur, was er
+                # sehen darf).
+                ziel_pfad=f"/reservierungen/{reservation_id}",
                 property_id=property_id,
                 # Wurzel 2: Der Schluessel beschreibt das EREIGNIS, nicht den
                 # Versandzeitpunkt. Webhook-Redelivery und Re-Sync erzeugen

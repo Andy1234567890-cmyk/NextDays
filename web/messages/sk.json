@@ -1972,9 +1972,10 @@
       "name": "Názov",
       "type": "Typ",
       "contractEnd": "Koniec zmluvy",
-      "contractEndHint": "Prvý deň bez zmluvy o predaji. Od tohto dňa je objekt zablokovaný všade: vlastný kalendár, myBestDays a všetky portály. Prázdne znamená na neurčito.",
-      "contractEndBlocked": "Tieto rezervácie zasahujú za koniec zmluvy. Zrušte ich alebo zvoľte neskorší dátum.",
-      "contractEndNoGuest": "Bez mena hosťa"
+      "contractEndHint": "Prvý deň bez zmluvy o predaji. Od tohto dňa sú voľné dni zablokované všade: vlastný kalendár, myBestDays a všetky portály. Existujúce rezervácie zostávajú v platnosti. Prázdne znamená na neurčito.",
+      "contractEndNoGuest": "Bez mena hosťa",
+      "contractEndOpenBookings": "Tieto rezervácie zasahujú za koniec zmluvy. Zostávajú v platnosti a budú vybavené — zmluva pre ne dobieha.",
+      "contractEndPortalOnly": "zrušenie len v portáli"
     },
     "owner": {
       "heading": "Vlastník",

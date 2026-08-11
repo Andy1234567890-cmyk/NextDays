@@ -1972,9 +1972,10 @@
       "name": "Nosaukums",
       "type": "Tips",
       "contractEnd": "Līguma beigas",
-      "contractEndHint": "Pirmā diena bez tirdzniecības līguma. No šīs dienas objekts ir bloķēts visur: paša kalendārs, myBestDays un visi portāli. Tukšs nozīmē beztermiņa.",
-      "contractEndBlocked": "Šīs rezervācijas pārsniedz līguma beigas. Atceliet tās vai izvēlieties vēlāku datumu.",
-      "contractEndNoGuest": "Bez viesa vārda"
+      "contractEndHint": "Pirmā diena bez tirdzniecības līguma. No šīs dienas brīvās dienas ir bloķētas visur: paša kalendārs, myBestDays un visi portāli. Esošās rezervācijas paliek spēkā. Tukšs nozīmē beztermiņa.",
+      "contractEndNoGuest": "Bez viesa vārda",
+      "contractEndOpenBookings": "Šīs rezervācijas pārsniedz līguma beigas. Tās paliek spēkā un tiks izpildītas — līgums tām izbeidzas.",
+      "contractEndPortalOnly": "atceļams tikai portālā"
     },
     "owner": {
       "heading": "Īpašnieks",

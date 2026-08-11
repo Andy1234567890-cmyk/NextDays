@@ -1972,9 +1972,10 @@
       "name": "Ainm",
       "type": "Cineál",
       "contractEnd": "Deireadh an chonartha",
-      "contractEndHint": "An chéad lá gan chonradh margaíochta. Ón lá sin tá an mhaoin faoi bhac i ngach áit: do fhéilire féin, myBestDays agus na tairseacha go léir. Fág folamh le haghaidh gan teorainn.",
-      "contractEndBlocked": "Sroicheann na háirithintí seo thar dheireadh an chonartha. Cealaigh iad nó roghnaigh dáta níos déanaí.",
-      "contractEndNoGuest": "Gan ainm aoi"
+      "contractEndHint": "An chéad lá gan chonradh margaíochta. Ón lá sin cuirtear bac ar na laethanta saor i ngach áit: do fhéilire féin, myBestDays agus na tairseacha go léir. Fanann áirithintí atá ann bailí. Fág folamh le haghaidh gan teorainn.",
+      "contractEndNoGuest": "Gan ainm aoi",
+      "contractEndOpenBookings": "Sroicheann na háirithintí seo thar dheireadh an chonartha. Fanann siad bailí agus déanfar freastal orthu — téann an conradh in éag dóibh.",
+      "contractEndPortalOnly": "cealú ar an tairseach amháin"
     },
     "owner": {
       "heading": "Úinéir",

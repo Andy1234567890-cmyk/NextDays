@@ -1972,9 +1972,10 @@
       "name": "Pavadinimas",
       "type": "Tipas",
       "contractEnd": "Sutarties pabaiga",
-      "contractEndHint": "Pirma diena be prekiavimo sutarties. Nuo tos dienos objektas užblokuotas visur: savas kalendorius, myBestDays ir visi portalai. Tuščia reiškia neribotą laiką.",
-      "contractEndBlocked": "Šie rezervavimai tęsiasi po sutarties pabaigos. Atšaukite juos arba pasirinkite vėlesnę datą.",
-      "contractEndNoGuest": "Be svečio vardo"
+      "contractEndHint": "Pirma diena be prekiavimo sutarties. Nuo tos dienos laisvos dienos užblokuotos visur: savas kalendorius, myBestDays ir visi portalai. Esami rezervavimai lieka galioti. Tuščia reiškia neribotą laiką.",
+      "contractEndNoGuest": "Be svečio vardo",
+      "contractEndOpenBookings": "Šie rezervavimai tęsiasi po sutarties pabaigos. Jie lieka galioti ir bus įvykdyti — sutartis jiems išsisemia.",
+      "contractEndPortalOnly": "atšaukiama tik portale"
     },
     "owner": {
       "heading": "Savininkas",

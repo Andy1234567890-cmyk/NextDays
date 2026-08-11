@@ -38,6 +38,7 @@ from .schemas import (
     TaxApplyRequest,
     TaxApplyResponse,
     UnitCountRequest,
+    VertragsendeInfo,
 )
 from .service import PropertyError
 
@@ -274,6 +275,25 @@ def get_property(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get("/{property_id}/vertragsende", response_model=VertragsendeInfo)
+def get_vertragsende(
+    property_id: str, ctx: CurrentUser, service: PropertiesServiceDep
+) -> VertragsendeInfo:
+    """Enddatum des Vermarktungsvertrags + die Buchungen, die darüber
+    hinausreichen.
+
+    Eigener Endpunkt statt eines Felds an `PropertyResponse`: die Liste ist
+    eine Abfrage über `reservations` und würde sonst bei JEDEM Objekt-Abruf
+    mitlaufen — auch in der Objektliste, wo sie niemand braucht. Hier holt sie
+    nur die Kartei, und zwar beim ÖFFNEN: der Betrieb muss sehen, was nach dem
+    Vertragsende noch abzuwickeln ist, ohne erst speichern zu müssen.
+    """
+    try:
+        return service.vertragsende_info(ctx, property_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.patch("/{property_id}", response_model=PropertyResponse)
 def update_property(
     property_id: str,
@@ -286,11 +306,9 @@ def update_property(
     try:
         return service.update(ctx, property_id, req)
     except PropertyError as exc:
-        # Strukturierte Details mitschicken, wenn es welche gibt: beim
-        # Vertragsende (0355) sind das die Buchungen, die dem Enddatum im Weg
-        # stehen — die UI listet sie auf, damit der Nutzer weiß, WELCHE er
-        # stornieren müsste. Ohne Details bleibt die Form die bisherige
-        # (`detail` = Meldungstext), damit kein anderer Aufrufer bricht.
+        # Strukturierte Details mitschicken, wenn es welche gibt — der Aufrufer
+        # bekommt dann {message, …} statt nur den Text. Ohne Details bleibt die
+        # Form die bisherige, damit kein anderer Aufrufer bricht.
         detail: object = exc.message
         if exc.details is not None:
             detail = {"message": exc.message, **exc.details}

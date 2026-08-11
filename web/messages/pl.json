@@ -1972,9 +1972,10 @@
       "name": "Nazwa",
       "type": "Typ",
       "contractEnd": "Koniec umowy",
-      "contractEndHint": "Pierwszy dzień bez umowy o sprzedaż. Od tego dnia obiekt jest zablokowany wszędzie: własny kalendarz, myBestDays i wszystkie portale. Puste oznacza bezterminowo.",
-      "contractEndBlocked": "Te rezerwacje wychodzą poza koniec umowy. Anuluj je lub wybierz późniejszą datę.",
-      "contractEndNoGuest": "Bez nazwy gościa"
+      "contractEndHint": "Pierwszy dzień bez umowy o sprzedaż. Od tego dnia wolne dni są zablokowane wszędzie: własny kalendarz, myBestDays i wszystkie portale. Istniejące rezerwacje pozostają ważne. Puste oznacza bezterminowo.",
+      "contractEndNoGuest": "Bez nazwy gościa",
+      "contractEndOpenBookings": "Te rezerwacje wychodzą poza koniec umowy. Pozostają ważne i zostaną zrealizowane — umowa dla nich wygasa.",
+      "contractEndPortalOnly": "anulowanie tylko w portalu"
     },
     "owner": {
       "heading": "Właściciel",

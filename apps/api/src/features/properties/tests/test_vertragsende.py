@@ -24,7 +24,7 @@ from src.features.properties.vertragsende import (
     buchungen_nach_ende,
     vertragsende_aus_update,
     vertragsende_durchsetzen,
-    vertragsende_pruefen,
+    vertragsende_info,
     vertragsenden_nachziehen,
 )
 
@@ -478,55 +478,99 @@ def test_fremdes_objekt_zaehlt_nicht(  # Wurzel 3: Scope auf property_id
     assert buchungen_nach_ende(store, "p-1", ENDE) == []
 
 
-def test_pruefen_wirft_409_mit_der_liste() -> None:
-    """Der 409 muss sagen WELCHE Buchungen — „geht nicht" allein lässt den
-    Nutzer ratlos zurück (Wurzel 5)."""
+def test_ota_buchung_ist_nicht_lokal_stornierbar() -> None:
+    """Der Grund, warum das Enddatum NICHT blockiert (0359).
+
+    `ReservationsService.cancel` lehnt jede Buchung mit
+    `source_channex_booking_id` ab (409): der lokale Storno gäbe die Nächte frei
+    und meldete sie den Portalen als verfügbar, während der Gast bei
+    Booking.com weiter gebucht ist — eine Überbuchung. Forderte die Oberfläche
+    hier zum Stornieren auf, schickte sie den Nutzer in eine Sackgasse (live
+    waren 66 von 93 künftigen Buchungen genau solche).
+    """
     store = _store(
         reservations=[
             {
                 "id": "r-1", "property_id": "p-1", "status": "confirmed",
-                "check_in": "2026-12-28", "check_out": "2027-01-10",
-                "guests": {"name": "Ursula Ecclesia"},
+                "check_in": "2027-06-02", "check_out": "2027-06-04",
+                "source_channex_booking_id": "94fb69a9-1ee6-42c2-a3ef-c47b68bdb530",
+                "guests": {"name": "Klaus Froeber"},
             }
         ]
     )
-    with pytest.raises(PropertyError) as exc:
-        vertragsende_pruefen(store, "p-1", {"contract_end_date": ENDE.isoformat()})
-    assert exc.value.status_code == 409
-    assert exc.value.details is not None
-    assert exc.value.details["buchungen"][0]["id"] == "r-1"
+    treffer = buchungen_nach_ende(store, "p-1", ENDE)
+    assert treffer[0]["lokal_stornierbar"] is False
 
 
-def test_pruefen_laesst_das_entfernen_durch() -> None:
-    """Mehr Vertrag steht keiner Buchung im Weg — `None` braucht keine Prüfung."""
+def test_eigene_buchung_ist_lokal_stornierbar() -> None:
+    """Eine Direktbuchung kann der Betrieb selbst aufheben — die Oberfläche
+    darf das anbieten."""
     store = _store(
         reservations=[
             {
                 "id": "r-1", "property_id": "p-1", "status": "confirmed",
-                "check_in": "2027-02-01", "check_out": "2027-02-08",
-                "guests": {"name": "Egal"},
+                "check_in": "2027-06-02", "check_out": "2027-06-04",
+                "source_channex_booking_id": None,
+                "guests": {"name": "Direktgast"},
             }
         ]
     )
-    vertragsende_pruefen(store, "p-1", {"contract_end_date": None})
+    treffer = buchungen_nach_ende(store, "p-1", ENDE)
+    assert treffer[0]["lokal_stornierbar"] is True
 
 
-def test_pruefen_laesst_ein_freies_datum_durch() -> None:
-    vertragsende_pruefen(_store(), "p-1", {"contract_end_date": ENDE.isoformat()})
+def test_buchung_dahinter_verhindert_die_sperre_nicht() -> None:
+    """Kern von 0359: Das Enddatum wird gesetzt, auch wenn eine Buchung
+    dahinter liegt.
+
+    Eine bestätigte Portal-Buchung verschwindet nicht dadurch, dass der Vertrag
+    endet — sie wird bedient, der Vertrag läuft für sie aus. Gesperrt werden die
+    FREIEN Tage. Vorher scheiterte das Setzen mit 409 und der Aufforderung,
+    etwas zu stornieren, was gar nicht stornierbar war.
+    """
+    store = _store(
+        reservations=[
+            {
+                "id": "r-1", "property_id": "p-1", "status": "confirmed",
+                "check_in": "2027-06-02", "check_out": "2027-06-04",
+                "source_channex_booking_id": "x",
+                "guests": {"name": "Klaus Froeber"},
+            }
+        ]
+    )
+    vertragsende_aus_update(
+        store, "t-1", "p-1", {"contract_end_date": ENDE.isoformat()}
+    )
+    assert _sperrtage(store), "Das Enddatum muss die freien Tage sperren."
+
+
+def test_gebuchte_naechte_dahinter_bleiben_gebucht() -> None:
+    """Die Sperre darf die Nächte der Buchung nicht übernehmen — sonst verlöre
+    der Gast seine Kalenderspur, obwohl seine Buchung gilt."""
+    tag = date(2027, 6, 2).isoformat()
+    store = _store(
+        availability=[
+            {
+                "property_id": "p-1", "unit_id": "u-1", "date": tag,
+                "status": "booked", "source": "booking",
+            }
+        ]
+    )
+    vertragsende_durchsetzen(store, "t-1", "p-1", ENDE, heute=HEUTE)
+    zeile = next(r for r in store.tabellen["availability"] if r["date"] == tag)
+    assert zeile["status"] == "booked"
 
 
 def test_update_ohne_das_feld_ruehrt_die_sperre_nicht_an() -> None:
     """Ein Titel-Update darf die Vertragssperre weder setzen noch aufheben.
 
-    Beide Hälften hängen an derselben Bedingung (`contract_end_date in
-    changes`). Prüfte nur die eine sie, würde ein beliebiges Speichern die
-    Sperre wegräumen — das Objekt wäre ohne Vertrag verkäuflich.
+    Sonst würde ein beliebiges Speichern die Sperre wegräumen — das Objekt wäre
+    ohne Vertrag verkäuflich.
     """
     store = _store()
     vertragsende_durchsetzen(store, "t-1", "p-1", ENDE, heute=HEUTE)
     vorher = _sperrtage(store)
 
-    vertragsende_pruefen(store, "p-1", {"title": "Neuer Name"})
     vertragsende_aus_update(store, "t-1", "p-1", {"title": "Neuer Name"})
     assert _sperrtage(store) == vorher
 
@@ -619,6 +663,58 @@ def test_nachzug_holt_nur_objekte_mit_enddatum_aus_der_db() -> None:
     assert any(
         ("contract_end_date", "notnull", "null") in f for f in gesehen
     ), "Der Wartungslauf muss serverseitig auf gesetzte Enddaten filtern."
+
+
+def test_info_ist_tenant_gescopt() -> None:
+    """Wurzel 3: Der Service umgeht RLS. Ein ungescopter Load per ID gäbe die
+    Vertragsdaten eines FREMDEN Betriebs heraus."""
+    store = _store()
+    store.tabellen["properties"] = [
+        {"id": "p-1", "tenant_id": "t-FREMD", "contract_end_date": ENDE.isoformat()}
+    ]
+    ende, buchungen = vertragsende_info(store, "t-1", "p-1")
+    assert ende is None
+    assert buchungen == []
+
+
+def test_info_liefert_ende_und_offene_buchungen() -> None:
+    store = _store(
+        reservations=[
+            {
+                "id": "r-1", "property_id": "p-1", "status": "confirmed",
+                "check_in": "2027-06-02", "check_out": "2027-06-04",
+                "source_channex_booking_id": "x",
+                "guests": {"name": "Klaus Froeber"},
+            }
+        ]
+    )
+    store.tabellen["properties"] = [
+        {"id": "p-1", "tenant_id": "t-1", "contract_end_date": ENDE.isoformat()}
+    ]
+    ende, buchungen = vertragsende_info(store, "t-1", "p-1")
+    assert ende == ENDE
+    assert len(buchungen) == 1
+    assert buchungen[0]["gast"] == "Klaus Froeber"
+
+
+def test_info_ohne_enddatum_meldet_keine_buchungen() -> None:
+    """Ohne Vertragsende gibt es nichts abzuwickeln — die Liste bleibt leer,
+    statt ALLE künftigen Buchungen des Objekts zu melden."""
+    store = _store(
+        reservations=[
+            {
+                "id": "r-1", "property_id": "p-1", "status": "confirmed",
+                "check_in": "2027-06-02", "check_out": "2027-06-04",
+                "guests": {"name": "Egal"},
+            }
+        ]
+    )
+    store.tabellen["properties"] = [
+        {"id": "p-1", "tenant_id": "t-1", "contract_end_date": None}
+    ]
+    ende, buchungen = vertragsende_info(store, "t-1", "p-1")
+    assert ende is None
+    assert buchungen == []
 
 
 def test_als_datum_nimmt_iso_und_date_und_none() -> None:

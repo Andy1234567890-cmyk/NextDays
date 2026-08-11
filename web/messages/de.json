@@ -1972,9 +1972,10 @@
       "name": "Name",
       "type": "Typ",
       "contractEnd": "Vertragsende",
-      "contractEndHint": "Erster Tag ohne Vermarktungsvertrag. Ab diesem Tag ist das Objekt überall gesperrt: eigener Kalender, myBestDays und alle Portale. Leer lassen heißt unbefristet.",
-      "contractEndBlocked": "Diese Buchungen reichen über das Vertragsende hinaus. Storniere sie oder wähle ein späteres Datum.",
-      "contractEndNoGuest": "Ohne Gastnamen"
+      "contractEndHint": "Erster Tag ohne Vermarktungsvertrag. Ab diesem Tag werden die freien Tage überall gesperrt: eigener Kalender, myBestDays und alle Portale. Bestehende Buchungen bleiben gültig. Leer lassen heißt unbefristet.",
+      "contractEndNoGuest": "Ohne Gastnamen",
+      "contractEndOpenBookings": "Diese Buchungen reichen über das Vertragsende hinaus. Sie bleiben gültig und werden bedient — der Vertrag läuft für sie aus.",
+      "contractEndPortalOnly": "nur im Portal stornierbar"
     },
     "owner": {
       "heading": "Eigentümer",

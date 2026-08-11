@@ -34,6 +34,7 @@ from .gebuehren import (
     laengenpreise_geaendert,
     sync_pricing_config,
 )
+from .objektwaehrung import waehrung_auf_rate_plans
 from .portalfreigabe import darf_zu_den_portalen
 from .preise_kopieren import PreiseKopierenMixin
 from .rooms import RoomsMixin
@@ -53,6 +54,7 @@ from .schemas import (
     PropertyType,
     PropertyUpdate,
     SliceHealth,
+    VertragsendeInfo,
     types_for_accommodation,
 )
 from .steuern import SteuernMixin, nur_steuern_geaendert, preisblock_saeubern
@@ -62,7 +64,7 @@ from .verfuegbarkeit_push import (
     tenant_currency,
     verfuegbarkeit_spiegeln,
 )
-from .vertragsende import vertragsende_aus_update, vertragsende_pruefen
+from .vertragsende import vertragsende_antwort, vertragsende_aus_update
 
 log = get_logger("nextdays.properties")
 
@@ -295,16 +297,24 @@ class PropertiesService(
                 out[pid] = ChannelState.paused
         return out
 
-    def get(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
+    def _lesbares_objekt(self, ctx: AuthContext, property_id: str) -> str:
+        """Tenant-ID, wenn dieser Nutzer das Objekt per ID lesen darf.
+
+        Owner-Scope (§4.2) und Staff-Scope (§4.3) an EINER Stelle: ein
+        Eigentümer sieht nur SEINE Objekte, ein Mitarbeiter nur ein ihm
+        freigegebenes (defense-in-depth zur RLS 0136). Ein fremdes Objekt wirkt
+        wie „nicht gefunden" — sonst verrät die Antwort, dass es existiert.
+        Jeder neue `{id}`-Leseweg geht hier durch (Wurzel 9).
+        """
         tenant_id = self._require_tenant(ctx)
-        # Owner-Scope (§4.2): ein Eigentümer darf nur SEINE Objekte per ID lesen —
-        # ein fremdes Objekt wirkt wie „nicht gefunden" (keine Stammdaten-Leaks).
         if is_owner(ctx) and property_id not in owner_property_ids(self._db, ctx):
             raise PropertyError("Objekt nicht gefunden.", status_code=404)
-        # Staff-Scope (§4.3): ein Mitarbeiter/Dienstleister darf nur ein ihm
-        # freigegebenes Objekt per ID lesen (defense-in-depth zur RLS 0136).
         if is_staff(ctx) and property_id not in staff_property_ids(self._db, ctx):
             raise PropertyError("Objekt nicht gefunden.", status_code=404)
+        return tenant_id
+
+    def get(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
+        tenant_id = self._lesbares_objekt(ctx, property_id)
         res = (
             self._db.table("properties")
             .select("*")
@@ -319,6 +329,13 @@ class PropertiesService(
             tenant_id, [str(row["id"])]
         ).get(str(row["id"]))
         return PropertyResponse(**_row(row), channels=_derive_channels(row, portals))
+
+    def vertragsende_info(
+        self, ctx: AuthContext, property_id: str
+    ) -> VertragsendeInfo:
+        """Vertragsende + offene Buchungen dahinter (0355/0359)."""
+        tenant_id = self._lesbares_objekt(ctx, property_id)
+        return vertragsende_antwort(self._db, tenant_id, property_id)
 
     def _require_payments_ready(self, tenant_id: str) -> None:
         """Wirft, wenn der Tenant keinen von Stripe bestätigten Connected Account
@@ -518,8 +535,6 @@ class PropertiesService(
             changes["building_id"] = self._pruefe_gebaeude(
                 tenant_id, property_id, changes["building_id"]
             )
-        # Vertragsende (0355): erst prüfen (409 + Liste), dann unten setzen.
-        vertragsende_pruefen(self._db, property_id, changes)
         if changes.get("status") == PropertyStatus.active.value:
             self._require_property_registered(tenant_id, property_id)
             # Derselbe Kontingent-Riegel wie in publish() — sonst wäre update()
@@ -568,8 +583,8 @@ class PropertiesService(
         # Pläne unverändert. Danach Content-Resync, damit die Portale die neue
         # Währung erhalten.
         if "currency" in changes and changes.get("currency"):
-            self._apply_currency_to_rate_plans(
-                tenant_id, property_id, changes["currency"]
+            waehrung_auf_rate_plans(
+                self._db, tenant_id, property_id, changes["currency"]
             )
         if (_CONTENT_FIELDS & changes.keys()) or (
             "currency" in changes and changes.get("currency")
@@ -613,28 +628,6 @@ class PropertiesService(
             self._sync_subscription_quantity(tenant_id)
         log.info("property_updated", tenant_id=tenant_id, property_id=property_id)
         return PropertyResponse(**_row(row))
-
-    def _apply_currency_to_rate_plans(
-        self, tenant_id: str, property_id: str, currency: str
-    ) -> None:
-        """Objektwährung auf alle Rate-Plans des Objekts durchschreiben (Wurzel 1).
-
-        Die Objektwährung (properties.currency) ist die Wahrheit; ein Rate-Plan
-        darf keine abweichende Währung tragen. Scope über property_id +
-        tenant-eigenes Objekt (der Aufrufer hat das Objekt bereits tenant-gescopt
-        aktualisiert). Best-effort im Sinne von Wurzel 5: schlägt das Nachziehen
-        fehl, bleibt die Objektwährung gesetzt und ein erneutes Speichern greift
-        wieder — es darf den Objekt-Update-Hauptpfad nicht kippen."""
-        try:
-            self._db.table("rate_plans").update({"currency": currency}).eq(
-                "property_id", property_id
-            ).neq("currency", currency).execute()
-        except Exception:  # noqa: BLE001 — best-effort, kippt das Speichern nicht
-            log.warning(
-                "rate_plan_currency_sync_failed",
-                tenant_id=tenant_id,
-                property_id=property_id,
-            )
 
     def _push_max_stay(self, tenant_id: str, property_id: str, max_stay: int) -> None:
         """Maximalaufenthalt als ARI-Push-Job einreihen (Phase 2)."""

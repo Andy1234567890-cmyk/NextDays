@@ -7,7 +7,7 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { DossierPdfButton } from "@/components/objekte/kartei/dossier-pdf-button";
 import { CheckboxField, DateField, NumberField, SelectField, TextField, nulled } from "@/components/objekte/kartei/fields";
@@ -41,7 +41,12 @@ import {
   updateServiceAgreement,
   updateTradesperson,
 } from "@/lib/property-dossier";
-import { type Property, updateProperty } from "@/lib/properties";
+import {
+  type Property,
+  type VertragsendeBuchung,
+  getVertragsende,
+  updateProperty,
+} from "@/lib/properties";
 
 const STEP_KEYS = [
   "object_info", "process", "access", "service_agreements",
@@ -86,6 +91,11 @@ export function DossierStepper({ property, initial }: { property: Property; init
   );
 }
 
+/** Speichern-Leiste mit Rückmeldung.
+ *
+ *  `onSave` gibt `true` (gespeichert) oder den Fehlertext zurück. Ein leerer
+ *  Text wird nicht angezeigt — so kann ein Aufrufer den Grund selbst darstellen,
+ *  ohne dass dieselbe Aussage zweimal untereinander steht. */
 function SaveBar({ t, onSave }: { t: T; onSave: () => Promise<true | string> }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -98,7 +108,7 @@ function SaveBar({ t, onSave }: { t: T; onSave: () => Promise<true | string> }) 
   }
   return (
     <div className="mt-6 flex items-center justify-end gap-3 border-t pt-4">
-      {msg && (
+      {msg && msg.text && (
         <span className={`mr-auto text-sm ${msg.ok ? "text-emerald-600" : "text-destructive"}`}>
           {msg.text}
         </span>
@@ -128,50 +138,40 @@ function Hint({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Eine Buchung, die einem Vertragsende im Weg steht (0355, 409-Details). */
-type Sperrbuchung = { id: string; check_in: string; check_out: string; gast: string };
-
-/** Die `buchungen`-Liste aus dem 409 lesen, ohne ihr zu trauen.
- *
- *  Sie kommt als `Record<string, unknown>` aus der Fehlerantwort. Ein `as`-Cast
- *  würde bei einer geänderten Serverform still ein kaputtes Objekt durchlassen
- *  und die Liste rendern, als wäre nichts — geprüft ist hier billiger als ein
- *  Absturz in der Anzeige. */
-function sperrbuchungen(details: Record<string, unknown> | undefined): Sperrbuchung[] {
-  const roh = details?.buchungen;
-  if (!Array.isArray(roh)) return [];
-  return roh.flatMap((e) => {
-    if (typeof e !== "object" || e === null) return [];
-    const r = e as Record<string, unknown>;
-    return [{
-      id: String(r.id ?? ""),
-      check_in: String(r.check_in ?? ""),
-      check_out: String(r.check_out ?? ""),
-      gast: String(r.gast ?? ""),
-    }];
-  });
-}
-
 // --- Stufe 1: Objektinformation + Eigentümer (read-only) -------------------
 function Stufe1({ t, property, owner }: { t: T; property: Property; owner: LinkedOwner | null }) {
   const [bfe, setBfe] = useState(property.bfe_number);
   // Vertragsende (0355): der erste Tag OHNE Vermarktungsvertrag. Leer =
   // unbefristet — kein Ersatzdatum (Wurzel 4).
   const [vertragsende, setVertragsende] = useState(property.contract_end_date);
-  // Buchungen, die dem gewählten Enddatum im Weg stehen (409). Sie stehen
-  // NICHT im Meldungstext, weil der Nutzer wissen muss, WELCHE er stornieren
-  // müsste — eine Zahl allein hilft ihm nicht.
-  const [blockiert, setBlockiert] = useState<Sperrbuchung[]>([]);
+  // Buchungen, die über das Vertragsende hinausreichen. Sie VERHINDERN es nicht
+  // (0359) — eine bestätigte Portal-Buchung verschwindet nicht dadurch, dass
+  // der Vertrag endet; sie wird bedient und der Vertrag läuft für sie aus.
+  // Angezeigt werden sie trotzdem: sonst steht das Objekt gesperrt im Kalender,
+  // mit Gästen darin, und niemand kann sagen, welche das sind.
+  const [offen, setOffen] = useState<VertragsendeBuchung[]>([]);
+
+  // Beim Öffnen laden, nicht erst nach dem Speichern: der Betrieb muss sehen,
+  // was noch abzuwickeln ist, ohne dafür etwas ändern zu müssen.
+  const laden = useCallback(async () => {
+    const r = await getVertragsende(property.id);
+    setOffen(r.ok ? r.data.buchungen : []);
+  }, [property.id]);
+
+  useEffect(() => {
+    void laden();
+  }, [laden]);
 
   async function save(): Promise<true | string> {
-    setBlockiert([]);
     const r = await updateProperty(property.id, {
       bfe_number: bfe?.trim() || null,
       contract_end_date: vertragsende || null,
     });
-    if (r.ok) return true;
-    setBlockiert(sperrbuchungen(r.details));
-    return r.error;
+    // In BEIDEN Fällen neu laden: nach dem Speichern hat sich die Liste
+    // geändert, und bei einem Fehler soll die Anzeige nicht auf einem Stand
+    // stehen bleiben, der nicht mehr gilt.
+    await laden();
+    return r.ok ? true : r.error;
   }
 
   // Alles außer der DK-Katasternummer kommt read-only aus dem Bestand — Name =
@@ -197,19 +197,28 @@ function Stufe1({ t, property, owner }: { t: T; property: Property; owner: Linke
         />
       </Section>
       <Hint>{t("objectInfo.contractEndHint")}</Hint>
-      {blockiert.length > 0 && (
-        <div className="flex flex-col gap-2 rounded-(--radius) border border-destructive/40 bg-destructive/5 p-3">
-          <span className="text-sm font-medium text-destructive">
-            {t("objectInfo.contractEndBlocked")}
+      {offen.length > 0 && (
+        <div className="flex flex-col gap-2 rounded-(--radius) border bg-secondary/40 p-3">
+          <span className="text-sm font-medium">
+            {t("objectInfo.contractEndOpenBookings")}
           </span>
           <ul className="flex flex-col gap-1 text-sm">
-            {blockiert.map((b) => (
-              <li key={b.id} className="flex items-center gap-2">
-                <Icon icon="ph:calendar-x" className="size-4 shrink-0 text-destructive" />
+            {offen.map((b) => (
+              <li key={b.id} className="flex flex-wrap items-center gap-2">
+                <Icon icon="ph:calendar-check" className="size-4 shrink-0 text-muted-foreground" />
                 <span>{b.gast || t("objectInfo.contractEndNoGuest")}</span>
                 <span className="text-muted-foreground">
                   {b.check_in} – {b.check_out}
                 </span>
+                {/* Bei einer Portal-Buchung sagen, dass sie nur DORT storniert
+                    werden kann — der lokale Storno wird abgelehnt, weil er den
+                    Portalen verfügbar meldete, während der Gast dort gebucht
+                    bleibt (Überbuchung). */}
+                {!b.lokal_stornierbar && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                    {t("objectInfo.contractEndPortalOnly")}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

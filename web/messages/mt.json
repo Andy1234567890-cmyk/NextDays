@@ -1972,9 +1972,10 @@
       "name": "Isem",
       "type": "Tip",
       "contractEnd": "Tmiem tal-kuntratt",
-      "contractEndHint": "L-ewwel jum mingħajr kuntratt ta’ kummerċjalizzazzjoni. Minn dak il-jum il-proprjetà tkun imblukkata kullimkien: il-kalendarju tiegħek, myBestDays u l-portali kollha. Vojt ifisser bla terminu.",
-      "contractEndBlocked": "Dawn il-prenotazzjonijiet jaqbżu t-tmiem tal-kuntratt. Ikkanċellahom jew agħżel data aktar tard.",
-      "contractEndNoGuest": "Bla isem tal-mistieden"
+      "contractEndHint": "L-ewwel jum mingħajr kuntratt ta’ kummerċjalizzazzjoni. Minn dak il-jum il-jiem liberi jkunu mblukkati kullimkien: il-kalendarju tiegħek, myBestDays u l-portali kollha. Il-prenotazzjonijiet eżistenti jibqgħu validi. Vojt ifisser bla terminu.",
+      "contractEndNoGuest": "Bla isem tal-mistieden",
+      "contractEndOpenBookings": "Dawn il-prenotazzjonijiet jaqbżu t-tmiem tal-kuntratt. Jibqgħu validi u jiġu onorati — il-kuntratt jiskadi għalihom.",
+      "contractEndPortalOnly": "jitħassar biss fil-portal"
     },
     "owner": {
       "heading": "Sid",
