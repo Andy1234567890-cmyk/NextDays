@@ -54,7 +54,7 @@ from .schemas import (
 )
 
 # Der Nachrichten-Spiegel (`portal_messages`): lesen, nachtragen, Signal setzen.
-from .spiegel import SpiegelMixin, sichere_anhaenge
+from .spiegel import LEERER_STAND, SpiegelMixin, ThreadStand, sichere_anhaenge
 from .vorlagen import VorlagenMixin
 
 if TYPE_CHECKING:
@@ -213,12 +213,10 @@ class InboxService(
         # Vorschau der letzten Nachricht je Thread — beide Vorbilder zeigen sie
         # in der Liste; ohne sie muss man jeden Thread öffnen, um zu sehen,
         # worum es geht.
-        letzte = self._last_messages(db, tenant_id, [r["id"] for r in rows])
-        # Wann kam zuletzt eine GAST-Nachricht? Daraus wird der Lesestand
-        # abgeleitet (s. `_ist_gelesen`).
-        letzte_gast = self._letzte_gastnachricht(
-            db, tenant_id, [r["id"] for r in rows]
-        )
+        # Derselbe Zug liefert die Zeitpunkte der jüngsten Gast- und der
+        # jüngsten eigenen Nachricht — daraus entsteht der Lesestand
+        # (s. `_ist_gelesen`).
+        stand = self._spiegel_stand(db, tenant_id, [r["id"] for r in rows])
         # Profilbilder in EINEM Query für die ganze Liste (0295) — nicht je
         # Zeile, sonst wären es 200 Abfragen für 200 Threads.
         bilder = self._gast_bilder(
@@ -228,6 +226,7 @@ class InboxService(
         items: list[InboxThread] = []
         for r in rows:
             customer = self._customer_of(r)
+            spiegel = stand.get(r["id"], LEERER_STAND)
             cbid = r.get("channex_booking_id")
             uid = r.get("assigned_user_id")
             prop = prop_by_map.get(r.get("property_map_id")) if r.get("property_map_id") else None
@@ -248,16 +247,16 @@ class InboxService(
                     status=r.get("status"),
                     arrival_date=r.get("arrival_date"),
                     departure_date=r.get("departure_date"),
-                    last_message=(letzte.get(r["id"]) or ("", "", ""))[0] or None,
+                    last_message=spiegel.body or None,
                     # Wer zuletzt geschrieben hat: „guest" = der Gast wartet auf
                     # Antwort, „property" = wir haben zuletzt geschrieben.
-                    last_sender=(letzte.get(r["id"]) or ("", "", ""))[1] or None,
+                    last_sender=spiegel.sender or None,
                     booked_at=r.get("booked_at"),
                     letzte_aktivitaet=self._letzte_aktivitaet(
-                        r.get("booked_at"), (letzte.get(r["id"]) or ("", "", ""))[2]
+                        r.get("booked_at"), spiegel.sent_at
                     ),
                     updated_at=r.get("updated_at"),
-                    is_read=self._ist_gelesen(r, letzte_gast.get(r["id"])),
+                    is_read=self._ist_gelesen(r, spiegel),
                     is_starred=bool(r.get("is_starred")),
                     is_archived=bool(r.get("is_archived")),
                     inbox_status=r.get("inbox_status") or "active",
@@ -298,7 +297,7 @@ class InboxService(
         return max(kandidaten, key=_als_zeitpunkt)
 
     @staticmethod
-    def _ist_gelesen(row: dict, letzte_gastnachricht: str | None) -> bool:
+    def _ist_gelesen(row: dict, spiegel: ThreadStand) -> bool:
         """Ist dieser Thread gelesen?
 
         `is_read` allein reicht NICHT: es ist ein Handflag, das beim Öffnen
@@ -310,21 +309,39 @@ class InboxService(
         `StatusBadge`) — beides zusammen ergab eine Anzeige, die nichts
         unterschied.
 
-        Regel: gelesen = Flag gesetzt UND seither keine neue Gastnachricht.
-        Unsere eigenen Antworten zählen nicht (`sender = 'property'`), sonst
-        machte jede gesendete Nachricht den Thread wieder ungelesen.
+        Regel: gelesen = seit der jüngsten Gastnachricht ist etwas passiert,
+        das nur passiert, wenn jemand sie gesehen hat —
+        * der Thread wurde markiert (`read_at`), ODER
+        * WIR haben danach geantwortet.
 
-        Fehlt der Vergleichszeitpunkt (`read_at` nie gesetzt, etwa bei
-        Altbestand), gilt das Flag unverändert — kein erfundener Zustand
-        (Wurzel 4).
+        Die eigene Antwort gehört ausdrücklich dazu: niemand antwortet auf eine
+        Nachricht, die er nicht gelesen hat. Ohne sie trugen live vier von neun
+        „ungelesenen" Threads eine EIGENE Nachricht als letzte — der Betrieb
+        hatte längst geantwortet und wurde weiter zur Arbeit aufgefordert. Das
+        greift auch für Wege, die `read_at` nie berühren: die
+        Abwesenheitsantwort des Schedulers und eine Antwort, die direkt in der
+        Portal-App geschrieben wurde.
+
+        Verglichen werden ZEITPUNKTE, nicht Zeichenketten: dieselbe Sekunde
+        kommt in zwei Schreibweisen an („…+00:00" aus PostgREST, „…Z" aus
+        `ota_zeitstempel_utc`), und im Zeichenvergleich ist „Z" > „+" — genau
+        der Fehler, den `_letzte_aktivitaet` daneben schon beschreibt.
+
+        Gibt es keine Gastnachricht, gilt das Flag unverändert — kein
+        erfundener Zustand (Wurzel 4).
         """
-        flag = bool(row.get("is_read", True))
-        if not flag or not letzte_gastnachricht:
-            return flag
+        gast = spiegel.letzte_gast
+        if not gast:
+            return bool(row.get("is_read", True))
+        wann_gast = _als_zeitpunkt(gast)
+        if spiegel.letzte_eigene and _als_zeitpunkt(spiegel.letzte_eigene) >= wann_gast:
+            return True
         seit = row.get("read_at")
         if not seit:
-            return flag
-        return str(letzte_gastnachricht) <= str(seit)
+            # Kein Lesezeitpunkt bekannt (Altbestand vor 0302): dann bleibt nur
+            # das Flag.
+            return bool(row.get("is_read", True))
+        return wann_gast <= _als_zeitpunkt(str(seit))
 
     @staticmethod
     def _gast_bilder(
@@ -991,7 +1008,16 @@ class InboxService(
             raise InboxError(exc.message, status_code=exc.status_code) from exc
         data = res.get("data") or {}
         if data:
-            return self.zu_nachricht(data)
+            gesendet = self.zu_nachricht(data)
+            # Die eigene Antwort SOFORT spiegeln, nicht erst wenn der Eingangspfad
+            # sie zurückbringt. Zwei Dinge hängen daran: die Vorschau der
+            # Thread-Liste (sonst steht dort weiter die Gastnachricht, als hätte
+            # niemand geantwortet) und der Lesestand — eine eigene Antwort nach
+            # der letzten Gastnachricht heißt „erledigt" (`_ist_gelesen`).
+            # Nur mit echter ID und echtem Zeitpunkt vom Portal: für den Fall
+            # ohne Echo unten wird nichts erfunden (Wurzel 4/5b).
+            self._spiegel_schreiben(db, tenant_id, thread_id, cbid, [gesendet])
+            return gesendet
         # Channex bestätigt teils ohne Echo — dann die gesendete Nachricht zurück.
         return InboxMessage(message=text, sender="property")
 

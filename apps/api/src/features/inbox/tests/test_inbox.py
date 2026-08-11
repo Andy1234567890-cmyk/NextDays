@@ -167,7 +167,7 @@ class _FakeQuery:
         return self
 
     def order(self, col=None, *, desc=False, **_k):  # noqa: ANN001, ANN003, ANN201
-        # Echt sortieren statt durchreichen: `_last_messages` verlässt sich
+        # Echt sortieren statt durchreichen: `_spiegel_stand` verlässt sich
         # darauf, dass der ERSTE Treffer je Thread der jüngste ist. Ein
         # no-op-`order` täuschte das nur vor.
         if col:
@@ -181,13 +181,19 @@ class _FakeQuery:
         self._eq.setdefault("__lte__", (col, val))
         return self
 
+    def or_(self, ausdruck):  # noqa: ANN001, ANN201
+        # Nicht ausgewertet, nur festgehalten: die Massenaktualisierung filtert
+        # darüber auf die letzte Aktivität, und der Test prüft den Ausdruck.
+        self._eq.setdefault("__or__", ausdruck)
+        return self
+
     def _filtered(self):  # noqa: ANN202
         rows = self._rows
         if self._in:
             col, vals = self._in
             rows = [r for r in rows if r.get(col) in vals]
         for col, val in self._eq.items():
-            if col == "__lte__":
+            if col in ("__lte__", "__or__"):
                 continue
             rows = [r for r in rows if r.get(col) == val]
         for col, desc in reversed(self._sort):
@@ -1400,6 +1406,99 @@ def test_gemischte_zonenschreibweisen_sortieren_richtig() -> None:
         channex=_FakeChannex(),
     )
     assert svc.list_threads(_CTX).items[0].letzte_aktivitaet == "2026-08-06T21:00:00+00:00"
+
+
+def test_liste_zeigt_beantworteten_thread_als_gelesen() -> None:
+    """Live am 11.08.2026: vier von neun „ungelesenen" Threads trugen eine
+    EIGENE Nachricht als letzte — beantwortet und trotzdem als Arbeit markiert.
+
+    `is_read = False` stammt hier vom Eingangspfad; entscheidend ist, dass
+    unsere Antwort NACH der Gastnachricht liegt.
+    """
+    row = {**_booking_row(), "is_read": False, "read_at": None}
+    nachrichten = [
+        {
+            "tenant_id": "t1", "thread_ref": row["id"], "sender": "guest",
+            "body": "Hvornår sender i adressen?", "sent_at": "2026-08-11T05:42:58+00:00",
+        },
+        {
+            "tenant_id": "t1", "thread_ref": row["id"], "sender": "property",
+            "body": "Hej Kevin, alle Infos …", "sent_at": "2026-08-11T06:25:33+00:00",
+        },
+    ]
+    svc = InboxService(
+        service_client=_FakeDB([row], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    th = svc.list_threads(_CTX).items[0]
+    assert th.is_read is True
+    assert th.last_sender == "property"  # Vorschau zeigt die jüngste Nachricht
+
+
+def test_liste_zeigt_offene_gastfrage_als_ungelesen() -> None:
+    """Die Gegenprobe: der Gast hat NACH unserer Antwort geschrieben."""
+    row = {**_booking_row(), "is_read": False, "read_at": None}
+    nachrichten = [
+        {
+            "tenant_id": "t1", "thread_ref": row["id"], "sender": "property",
+            "body": "Hej", "sent_at": "2026-08-10T06:47:16+00:00",
+        },
+        {
+            "tenant_id": "t1", "thread_ref": row["id"], "sender": "guest",
+            "body": "Noch eine Frage", "sent_at": "2026-08-11T09:26:22+00:00",
+        },
+    ]
+    svc = InboxService(
+        service_client=_FakeDB([row], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    assert svc.list_threads(_CTX).items[0].is_read is False
+
+
+def test_massenaktualisierung_gelesen_schreibt_den_lesezeitpunkt() -> None:
+    """Ohne `read_at` hängt der Lesestand an einem nackten Flag (Wurzel 1).
+
+    Und gefiltert wird über die letzte AKTIVITÄT (Fremdereignis), nicht über
+    `updated_at` — unsere Schreibzeit setzt der Journal-Tick laufend auf jetzt,
+    damit traf „alles vor dem 01.08." live keinen einzigen Thread (Wurzel 5b).
+    """
+    updates: list = []
+    svc = InboxService(
+        service_client=_FakeDB([_booking_row()], [], updates=updates),
+        channex=_FakeChannex(),
+    )
+    svc.bulk_update(_CTX, "read", "2026-08-01")
+
+    (_tabelle, patch, _rows) = updates[0]
+    assert patch["is_read"] is True
+    assert patch["read_at"], "der Lesezeitpunkt gehört mit in den Patch"
+
+
+def test_massenaktualisierung_filtert_letzte_aktivitaet_und_nur_aktive() -> None:
+    """Der Filter steht im Ausdruck, nicht in `updated_at` — und Papierkorb/
+    Archiv bleiben unberührt (sonst holte „archivieren" Threads aus dem
+    Papierkorb zurück)."""
+    db = _FakeDB([_booking_row()], [])
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    letzte = {}
+
+    original = db.table
+
+    def merkend(name):  # noqa: ANN001, ANN202
+        q = original(name)
+        if name == "channex_booking":
+            letzte["q"] = q
+        return q
+
+    db.table = merkend  # type: ignore[method-assign]
+    svc.bulk_update(_CTX, "archived", "2026-08-01")
+
+    filt = letzte["q"]._eq  # noqa: SLF001 — Testdoppel
+    ausdruck = filt["__or__"]
+    assert "last_message_at.lte.2026-08-01T23:59:59Z" in ausdruck
+    assert "booked_at.lte.2026-08-01T23:59:59Z" in ausdruck
+    assert "updated_at" not in ausdruck
+    assert filt["inbox_status"] == "active"
 
 
 def test_ohne_nachricht_bleibt_es_der_buchungszeitpunkt() -> None:

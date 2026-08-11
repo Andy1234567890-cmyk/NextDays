@@ -21,6 +21,32 @@ Der Posteingang filtert client-seitig nach Kanal, Unterkunft (durchsuchbares
 Multiselect — skaliert für 100+ Objekte), Reservierungsstatus, gelesen/ungelesen
 und Anreise-Zeitraum.
 
+### Was „ungelesen" heißt (`_ist_gelesen`, `spiegel._spiegel_stand`)
+
+Der ausgelieferte `is_read` ist ABGELEITET, nicht die Spalte. Drei Werte
+entscheiden, alle drei stehen im Spiegel (`portal_messages`) bzw. am Thread:
+
+| Wert | Bedeutung |
+| --- | --- |
+| jüngste GAST-Nachricht | Ohne sie gilt schlicht das Flag `is_read`. |
+| jüngste EIGENE Nachricht | Liegt sie danach, ist der Thread erledigt — niemand antwortet auf etwas, das er nicht gelesen hat. Deckt Scheduler-Antworten und Antworten ab, die direkt in der Portal-App geschrieben wurden. |
+| `read_at` (0302) | Der Lesezeitpunkt. Liegt die Gastnachricht davor, wurde sie mitgelesen. Fehlt er (Altbestand), gilt das Flag. |
+
+Verglichen werden **Zeitpunkte**, nie Zeichenketten: `…+00:00` (PostgREST) und
+`…Z` (`ota_zeitstempel_utc`) meinen dasselbe, im Zeichenvergleich ist „Z" > „+".
+
+Die Gegenseite dazu steht im Eingangspfad
+(`channel_manager.nachrichten_eingang`): `is_read = false` setzt **nur eine
+wirklich neue** Gastnachricht. Der Journal-Tick spiegelt jedes Ereignis seines
+Fensters bei jedem Lauf erneut (Idempotenz am UNIQUE-Index); ein unbedingtes
+Zurücksetzen machte deshalb alle fünf Minuten jeden Thread mit Gastnachricht im
+Fenster wieder ungelesen — Lesen war wirkungslos (live 11.08.2026, neun
+Threads).
+
+`POST /bulk-update` filtert über die letzte **Aktivität**
+(`last_message_at`, sonst `booked_at`) und nur in der aktiven Ansicht; `read`
+schreibt `read_at` mit.
+
 ## Automails (planbare Auto-Nachrichten) — Migration 0072
 
 Regelbasierte Nachrichten (Buchungsbestätigung, Anreise-/Check-out-Info) mit

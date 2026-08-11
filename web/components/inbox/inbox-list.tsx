@@ -19,6 +19,7 @@ import { Icon } from "@iconify/react";
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -121,6 +122,10 @@ export function InboxList({
   // Sortierung der Thread-Liste (Hostaway-Muster: Schlüssel + Richtung).
   const [sortKey, setSortKey] = useState<"recent" | "arrival" | "name">("recent");
   const [sortDesc, setSortDesc] = useState(true);
+  // Threads, die der Nutzer AUSDRÜCKLICH auf ungelesen gestellt hat. Sie sind
+  // die einzige Ausnahme vom „offen = gelesen" unten: sonst würde der Effekt
+  // die Markierung im selben Moment wieder wegnehmen, in dem sie gesetzt wird.
+  const ungelesenGewollt = useRef<Set<string>>(new Set());
   const current = rows.find((x) => x.id === active) ?? null;
 
   // Threads je Ansicht laden — auch für Realtime-Reload. WhatsApp-Konversationen
@@ -147,6 +152,19 @@ export function InboxList({
   useEffect(() => {
     reloadThreads();
   }, [reloadThreads]);
+  // Der GEÖFFNETE Thread ist gelesen — und zwar auf BEIDEN Wegen dorthin.
+  // Vorher hing das allein am Klick (`selectThread`), die Liste schlägt den
+  // ersten Thread aber selbst auf (`reloadThreads`/Erstzustand). Genau der stand
+  // dann offen und lesbar auf dem Bildschirm und trug weiter „Ungelesen" —
+  // live im Screenshot vom 11.08.2026 der oberste Eintrag.
+  useEffect(() => {
+    if (!current || current.is_read || ungelesenGewollt.current.has(current.id)) return;
+    setRows((prev) =>
+      prev.map((r) => (r.id === current.id ? { ...r, is_read: true } : r)),
+    );
+    // WhatsApp-Threads laufen nicht über den inbox-Slice — nur lokal spiegeln.
+    if (!isWhatsApp(current.id)) void updateThreadFlags(current.id, { is_read: true });
+  }, [current]);
   // KEIN Realtime-Abo mehr auf `channex_booking` und `whatsapp_conversation`:
   // beide Tabellen sind seit Migration 0337 für `authenticated` gesperrt
   // (Wurzel 6 — sie tragen Klartext-Nachrichten und die Gast-Stammdaten aus
@@ -254,8 +272,11 @@ export function InboxList({
     await setInboxStatus(id, status);
   }
 
-  // Aktion: als ungelesen markieren.
+  // Aktion: als ungelesen markieren. Der Wunsch wird gemerkt, damit „offen =
+  // gelesen" ihn nicht sofort überschreibt; beim nächsten bewussten Öffnen des
+  // Threads gilt wieder die Regel.
   async function markUnread(id: string) {
+    ungelesenGewollt.current.add(id);
     await updateThreadFlags(id, { is_read: false });
     patchThread(id, { is_read: false });
   }
@@ -317,17 +338,14 @@ export function InboxList({
     setShowNewWa(false);
   }
 
-  // Thread öffnen → automatisch als gelesen markieren. WhatsApp-Threads laufen
-  // nicht über den inbox-Slice; nur lokal als gelesen spiegeln (kein OTA-Call).
+  // Thread öffnen. Als gelesen markiert ihn der Effekt oben — für den Klick und
+  // für das automatische Aufschlagen mit derselben Regel.
   function selectThread(id: string) {
     setActive(id);
     // Der eingeblendete WhatsApp-Verlauf gehört zum vorherigen Gast.
     setWaUnterChat(null);
-    const th = rows.find((r) => r.id === id);
-    if (th && !th.is_read) {
-      patchThread(id, { is_read: true });
-      if (!isWhatsApp(id)) updateThreadFlags(id, { is_read: true });
-    }
+    // Bewusstes Öffnen hebt ein früheres „als ungelesen markieren" auf.
+    ungelesenGewollt.current.delete(id);
   }
 
   // Konfigurations-Tabs (Vorlagen/Automationen/KI/Verwalten) nur mit
@@ -396,16 +414,14 @@ export function InboxList({
       {showBulk && (
         <BulkUpdateDialog
           onClose={() => setShowBulk(false)}
-          onDone={(action) => {
+          onDone={() => {
             setShowBulk(false);
-            // Lokal spiegeln: betroffene Threads als gelesen/archiviert.
-            setRows((prev) =>
-              prev.map((r) =>
-                action === "archived"
-                  ? { ...r, is_archived: true }
-                  : { ...r, is_read: true },
-              ),
-            );
+            // Frisch laden statt lokal raten. Der lokale Spiegel setzte vorher
+            // JEDE geladene Zeile auf gelesen/archiviert — unabhängig vom
+            // gewählten Datum, nach dem der Server gefiltert hat. Und
+            // „archiviert" blieb dabei in der Ansicht „Aktiv" stehen, weil nur
+            // `is_archived` gesetzt wurde, nicht `inbox_status`.
+            void reloadThreads();
           }}
         />
       )}

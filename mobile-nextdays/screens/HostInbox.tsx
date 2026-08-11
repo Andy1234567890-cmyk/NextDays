@@ -28,6 +28,7 @@ import { portalLabel } from "@/lib/portal-logos";
 import {
   getInboxMessages,
   listInboxThreads,
+  markInboxThreadRead,
   NUR_ANHANG_TEXT,
   sendInboxMessage,
   type InboxMessage,
@@ -379,6 +380,16 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   useEffect(() => {
     load();
   }, [load]);
+
+  // Geöffnet heißt gelesen — dasselbe Verhalten wie im Web
+  // (`web/components/inbox/inbox-list.tsx`). Die App zeigte den Verlauf und
+  // ließ den Thread ungelesen: der Ungelesen-Zähler blieb stehen, obwohl die
+  // Nachricht auf dem Bildschirm stand. Die Liste holt sich den neuen Stand
+  // beim Zurückgehen selbst (sie wird dabei neu aufgebaut).
+  useEffect(() => {
+    if (thread.is_read) return;
+    void markInboxThreadRead(thread.id);
+  }, [thread.id, thread.is_read]);
 
   // Ein Chat wird von unten gelesen: die neueste Nachricht ist die, um die es
   // geht. Die `ScrollView` startet oben — bei einem langen Thread landete man

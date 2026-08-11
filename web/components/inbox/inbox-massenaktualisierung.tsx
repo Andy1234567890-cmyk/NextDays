@@ -16,7 +16,9 @@ export function BulkUpdateDialog({
   onDone,
 }: {
   onClose: () => void;
-  onDone: (action: "read" | "archived") => void;
+  /** Der Server hat geschrieben — die Liste gehört neu geladen (welche Threads
+   *  getroffen wurden, entscheidet allein er anhand des Datums). */
+  onDone: () => void;
 }) {
   const t = useTranslations("inbox");
   const [action, setAction] = useState<"read" | "archived">("read");
@@ -32,7 +34,7 @@ export function BulkUpdateDialog({
     setError(null);
     startBusy(async () => {
       const res = await bulkUpdate(action, before);
-      if (res.ok) onDone(action);
+      if (res.ok) onDone();
       else setError(res.error);
     });
   }

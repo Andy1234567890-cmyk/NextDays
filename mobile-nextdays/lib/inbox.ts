@@ -69,6 +69,24 @@ export async function getInboxMessages(
   return call(`/inbox/${encodeURIComponent(threadId)}/messages`);
 }
 
+/**
+ * Konversation als gelesen markieren.
+ *
+ * Gehört zum ÖFFNEN, nicht zu einer eigenen Aktion: die App zeigte den Verlauf
+ * an und ließ den Thread trotzdem ungelesen — der Zähler blieb stehen, bis
+ * jemand am Rechner denselben Thread aufmachte. Der Server hängt daran zwei
+ * Dinge: `is_read` und `read_at`, und nur beide zusammen tragen den Lesestand
+ * (`inbox.service._ist_gelesen`).
+ */
+export async function markInboxThreadRead(
+  threadId: string,
+): Promise<Result<void>> {
+  return call(`/inbox/${encodeURIComponent(threadId)}/flags`, {
+    method: "PUT",
+    body: { is_read: true },
+  });
+}
+
 /** Antwort an den Gast senden (zurück an die OTA). */
 export async function sendInboxMessage(
   threadId: string,

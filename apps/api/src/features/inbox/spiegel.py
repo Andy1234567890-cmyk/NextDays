@@ -13,7 +13,7 @@ anfällt.
 """
 from __future__ import annotations
 
-from typing import Final
+from typing import Final, NamedTuple
 from urllib.parse import urlparse, urlunparse
 
 from supabase import Client
@@ -47,6 +47,39 @@ _ANHANG_HOSTS: Final[frozenset[str]] = frozenset({"app.channex.io"})
 # Mehr Bilder hängt niemand an eine Chat-Nachricht; die Zahl deckelt eine
 # Antwort, die sonst allein von der Gegenseite bestimmt wäre (Wurzel 8).
 _MAX_ANHAENGE: Final = 20
+
+# Wie viele Spiegel-Zeilen die Thread-Liste in EINEM Zug liest. Der Deckel ist
+# nötig (Wurzel 8), aber er gilt über ALLE Threads zusammen — ein „letzte
+# Nachricht je Thread" lässt sich per PostgREST nicht anfragen. Wird er
+# erreicht, verlieren die ÄLTESTEN Threads Vorschau und Lesestand-Vergleich,
+# also wird das geloggt statt still abgeschnitten (Wurzel 5).
+_MAX_SPIEGEL_ZEILEN: Final = 2000
+
+
+class ThreadStand(NamedTuple):
+    """Was der Spiegel über EINEN Thread weiß.
+
+    Alles aus einer einzigen Abfrage: Vorschau, Absender und die beiden
+    Zeitpunkte, aus denen der Lesestand entsteht. Vorher waren das zwei
+    Abfragen über dieselben Zeilen, und die jüngste EIGENE Nachricht fehlte
+    ganz — deshalb galt ein Thread als ungelesen, in dem wir längst geantwortet
+    hatten (`InboxService._ist_gelesen`).
+    """
+
+    body: str
+    """Vorschautext der jüngsten Nachricht (leer = keine)."""
+    sender: str
+    """Absender der jüngsten Nachricht: guest | property | system."""
+    sent_at: str
+    """Zeitpunkt der jüngsten Nachricht (leer = unbekannt)."""
+    letzte_gast: str
+    """Zeitpunkt der jüngsten GAST-Nachricht (leer = keine)."""
+    letzte_eigene: str
+    """Zeitpunkt der jüngsten EIGENEN Nachricht (leer = keine)."""
+
+
+LEERER_STAND = ThreadStand("", "", "", "", "")
+"""Ein Thread, über den der Spiegel nichts weiß (noch keine Nachricht)."""
 
 
 def sichere_anhaenge(wert: object) -> list[str]:
@@ -250,60 +283,31 @@ class SpiegelMixin:
         ]
 
     @staticmethod
-    def _letzte_gastnachricht(
+    def _spiegel_stand(
         db: Client, tenant_id: str, thread_ids: list[str]
-    ) -> dict[str, str]:
-        """Zeitpunkt der jüngsten GAST-Nachricht je Thread (aus dem Spiegel).
+    ) -> dict[str, ThreadStand]:
+        """Der Stand des Spiegels je Thread — EIN Query für die ganze Liste.
 
-        EIN Query für die ganze Liste, wie bei der Vorschau. Nur `sender =
-        'guest'`: unsere eigenen Antworten dürfen einen Thread nicht ungelesen
-        machen.
-        """
-        if not thread_ids:
-            return {}
-        try:
-            res = (
-                db.table("portal_messages")
-                .select("thread_ref, sent_at")
-                .eq("tenant_id", tenant_id)
-                .eq("sender", "guest")
-                .in_("thread_ref", thread_ids)
-                .order("sent_at", desc=True)
-                .limit(2000)
-                .execute()
-            )
-        except Exception as exc:  # noqa: BLE001 — Spiegel kippt die Liste nicht
-            # Diese Methode läuft im HAUPTPFAD von `list_threads`. Ohne das
-            # Fangen führte ein Spiegel-Fehler zu einer 500er-Posteingangsseite
-            # — obwohl nur die Ungelesen-Markierung betroffen ist.
-            log.warning(
-                "inbox_letzte_gastnachricht_fehlgeschlagen",
-                tenant_id=tenant_id, error=str(exc)[:200],
-            )
-            return {}
-        out: dict[str, str] = {}
-        for m in res.data or []:
-            # Absteigend sortiert → der erste Treffer je Thread ist der jüngste.
-            out.setdefault(m["thread_ref"], str(m.get("sent_at") or ""))
-        return out
+        Quelle ist der lokale Spiegel `portal_messages` (0293). Direkt beim
+        Portal wäre es ein Request PRO Thread; bei 200 Einträgen ist das keine
+        Liste mehr, die jemand öffnet.
 
-    @staticmethod
-    def _last_messages(
-        db: Client, tenant_id: str, thread_ids: list[str]
-    ) -> dict[str, tuple[str, str, str]]:
-        """Letzte Nachricht je Thread: (Vorschautext, Absender, Zeitpunkt).
+        Was daraus entsteht, beantwortet zwei verschiedene Fragen, deshalb
+        stehen beide Zeitpunkte in `ThreadStand`:
+        * „Worum geht es, und habe ich geantwortet?" → Vorschau + Absender der
+          jüngsten Nachricht. Ohne den Absender sieht ein Thread, in dem der
+          Gast wartet, genauso aus wie ein erledigter.
+        * „Ist hier noch etwas offen?" → jüngste Gast- UND jüngste eigene
+          Nachricht (`InboxService._ist_gelesen`).
 
-        Quelle ist der lokale Spiegel `portal_messages` (0293) — EIN Query für
-        die ganze Liste. Direkt beim Portal wäre es ein Request PRO Thread; bei
-        200 Einträgen ist das keine Liste mehr, die jemand öffnet.
+        Der Zeitpunkt der jüngsten Nachricht ist der ECHTE Wert hinter „letzte
+        Aktivität" — der Buchungszeitpunkt ist er ausdrücklich nicht
+        (s. `list_threads`).
 
-        Der Absender gehört dazu, weil er die Frage beantwortet, die man vor
-        einer langen Liste wirklich hat: „habe ich schon geantwortet?". Ohne
-        ihn sieht ein Thread, in dem der Gast wartet, genauso aus wie einer,
-        der erledigt ist.
-
-        Der Zeitpunkt ist der ECHTE Wert hinter „letzte Aktivität" — der
-        Buchungszeitpunkt ist er ausdrücklich nicht (s. `list_threads`).
+        Best effort wie der ganze Spiegel: diese Methode läuft im HAUPTPFAD von
+        `list_threads`. Ohne das Fangen führte ein Spiegel-Fehler zu einer
+        500er-Posteingangsseite, obwohl nur Vorschau und Lesestand betroffen
+        sind — und ohne Liste ist der Posteingang unbenutzbar.
         """
         if not thread_ids:
             return {}
@@ -314,26 +318,39 @@ class SpiegelMixin:
                 .eq("tenant_id", tenant_id)
                 .in_("thread_ref", thread_ids)
                 .order("sent_at", desc=True)
-                .limit(2000)
+                .limit(_MAX_SPIEGEL_ZEILEN)
                 .execute()
             )
         except Exception as exc:  # noqa: BLE001 — Spiegel kippt die Liste nicht
-            # Wie oben: Hauptpfad von `list_threads`. Ohne Vorschautext ist die
-            # Liste unvollständig, ohne Liste ist sie unbenutzbar.
             log.warning(
-                "inbox_vorschau_fehlgeschlagen",
+                "inbox_spiegel_stand_fehlgeschlagen",
                 tenant_id=tenant_id, error=str(exc)[:200],
             )
             return {}
-        out: dict[str, tuple[str, str, str]] = {}
-        for m in res.data or []:
-            # Absteigend sortiert → der erste Treffer je Thread ist der jüngste.
-            out.setdefault(
-                m["thread_ref"],
-                (
-                    (m.get("body") or "").strip(),
-                    str(m.get("sender") or "guest"),
-                    str(m.get("sent_at") or ""),
-                ),
+        zeilen = res.data or []
+        if len(zeilen) >= _MAX_SPIEGEL_ZEILEN:
+            # Kein stilles Kappen: die ältesten Threads dieser Liste stehen
+            # jetzt ohne Vorschau und ohne Lesestand-Vergleich da.
+            log.warning(
+                "inbox_spiegel_deckel_erreicht",
+                tenant_id=tenant_id, threads=len(thread_ids),
+                grenze=_MAX_SPIEGEL_ZEILEN,
             )
+        out: dict[str, ThreadStand] = {}
+        for m in zeilen:
+            ref = str(m["thread_ref"])
+            sender = str(m.get("sender") or "guest")
+            wann = str(m.get("sent_at") or "")
+            vorhanden = out.get(ref)
+            if vorhanden is None:
+                # Absteigend sortiert → der erste Treffer je Thread ist der
+                # jüngste und trägt damit Vorschau und Absender.
+                vorhanden = ThreadStand(
+                    (m.get("body") or "").strip(), sender, wann, "", ""
+                )
+            if sender == "guest" and not vorhanden.letzte_gast:
+                vorhanden = vorhanden._replace(letzte_gast=wann)
+            elif sender == "property" and not vorhanden.letzte_eigene:
+                vorhanden = vorhanden._replace(letzte_eigene=wann)
+            out[ref] = vorhanden
         return out

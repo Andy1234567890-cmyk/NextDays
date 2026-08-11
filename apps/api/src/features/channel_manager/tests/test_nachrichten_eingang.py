@@ -78,16 +78,22 @@ class _FakeQuery:
 
 
 class _FakeDB:
-    def __init__(self, *, buchung_bekannt: bool = True) -> None:
+    def __init__(
+        self, *, buchung_bekannt: bool = True, nachricht_bekannt: bool = False
+    ) -> None:
         self.protokoll: list = []
         self._buchung_bekannt = buchung_bekannt
+        # `nachricht_bekannt=True` heißt: diese Nachricht liegt schon im Spiegel
+        # — der Normalfall bei jedem Journal-Tick.
+        self._nachricht_bekannt = nachricht_bekannt
 
     def table(self, name: str) -> _FakeQuery:
-        treffer = (
-            [{"id": THREAD}]
-            if name == "channex_booking" and self._buchung_bekannt
-            else []
-        )
+        if name == "channex_booking":
+            treffer = [{"id": THREAD}] if self._buchung_bekannt else []
+        elif name == "portal_messages":
+            treffer = [{"id": "pm1"}] if self._nachricht_bekannt else []
+        else:
+            treffer = []
         return _FakeQuery(name, self.protokoll, treffer)
 
 
@@ -233,6 +239,30 @@ def test_gastnachricht_setzt_signal_und_ungelesen() -> None:
     assert filt["id"] == THREAD
     # Jeder Schreibvorgang ist tenant-gescopt, auch der zweite.
     assert all(f["tenant_id"] == TENANT for _, f in updates(db))
+
+
+def test_bekannte_gastnachricht_macht_thread_nicht_wieder_ungelesen() -> None:
+    """Der Bug vom 11.08.2026 — und der Grund für die Neu-Prüfung (Wurzel 2).
+
+    Der Journal-Tick spiegelt bewusst bei JEDEM Lauf alle Ereignisse des
+    Fensters erneut; die Idempotenz sitzt am UNIQUE-Index von
+    `portal_messages`. Für die Tabelle stimmte das, für den Lesestand nicht:
+    alle fünf Minuten stand jeder Thread mit irgendeiner Gastnachricht im
+    Fenster wieder auf ungelesen. Live gemessen: `read_at 11:16:14`, um
+    `11:33:13` — dem nächsten Tick — waren neun Threads in derselben Sekunde
+    zurückgesetzt.
+
+    Der Zeitstempel darf weiter nachgezogen werden: er ist monoton und
+    beschreibt nur, wann zuletzt etwas passiert ist.
+    """
+    db = _FakeDB(nachricht_bekannt=True)
+    thread = _Dienst(db).nachricht_spiegeln(TENANT, payload())
+
+    assert thread == THREAD
+    assert upserts(db), "die Nachricht wird trotzdem gespiegelt"
+    patches = [p for p, _ in signale(db)]
+    assert {"last_message_at": "2026-08-07T07:53:44.000000Z"} in patches
+    assert all("is_read" not in p for p in patches)
 
 
 def test_eigene_antwort_macht_thread_nicht_ungelesen() -> None:

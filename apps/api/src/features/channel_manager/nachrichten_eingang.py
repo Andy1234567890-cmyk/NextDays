@@ -208,6 +208,11 @@ class NachrichtenEingangMixin:
         thread_id = (
             self._thread_zu_buchung(tenant_id, booking_ref) if booking_ref else None
         )
+        # VOR dem Upsert fragen, ob wir diese Nachricht schon kennen — danach
+        # lässt sich das nicht mehr unterscheiden (der Upsert quittiert den
+        # Neuzugang genauso wie die Wiederholung). Nur ein echter Neuzugang darf
+        # den Thread ungelesen machen; siehe `_eingang_signalisieren`.
+        neu = self._nachricht_unbekannt(tenant_id, felder["message_ref"])
 
         # `thread_ref` ist NOT NULL und meint die lokale Buchungszeile. Fehlt
         # sie (Support-Nachricht, Anfrage vor der Buchung), tritt der
@@ -244,9 +249,41 @@ class NachrichtenEingangMixin:
             if portal_thread:
                 self._vorgeschichte_nachziehen(tenant_id, portal_thread, thread_id)
             self._eingang_signalisieren(
-                tenant_id, thread_id, felder["sender"], felder["sent_at"]
+                tenant_id, thread_id, felder["sender"], felder["sent_at"], neu=neu
             )
         return thread_id
+
+    def _nachricht_unbekannt(self, tenant_id: str, message_ref: str) -> bool:
+        """Ist diese Nachricht für uns NEU (noch nicht gespiegelt)?
+
+        Der Unterschied zwischen „neu eingetroffen" und „schon wieder gesehen"
+        ist die einzige Grundlage, auf der ein Eingang einen Thread ungelesen
+        machen darf (Wurzel 2). Der Upsert selbst trägt die Antwort nicht: er
+        behandelt beide Fälle gleich, und `created_at` bleibt bei einem Konflikt
+        unverändert stehen.
+
+        Im Zweifel FALSE (also „kennen wir schon"): scheitert die Abfrage, ist
+        ein nicht gesetzter Ungelesen-Zustand der harmlosere Ausgang — die
+        Nachricht selbst wird trotzdem gespiegelt und ist sichtbar.
+        """
+        if self._db is None:
+            return False
+        try:
+            treffer = (
+                self._db.table("portal_messages")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("message_ref", message_ref)
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — Prüfung kippt den Eingang nicht
+            log.warning(
+                "nachricht_bekannt_pruefung_fehlgeschlagen",
+                message_ref=message_ref, error=str(exc)[:200],
+            )
+            return False
+        return not treffer
 
     def nachrichten_nachholen(
         self, tenant_id: str, channex_property_id: str
@@ -429,7 +466,8 @@ class NachrichtenEingangMixin:
         return str(treffer[0]["id"]) if treffer else None
 
     def _eingang_signalisieren(
-        self, tenant_id: str, thread_id: str, sender: str, sent_at: str
+        self, tenant_id: str, thread_id: str, sender: str, sent_at: str,
+        *, neu: bool = True,
     ) -> None:
         """Das Realtime-Signal setzen (`channex_booking.last_message_at`, 0305).
 
@@ -445,14 +483,29 @@ class NachrichtenEingangMixin:
         * `last_message_at` darf nie ZURÜCK. Das Journal garantiert keine
           Reihenfolge (deshalb ist es ein Trigger, kein Datenlieferant); eine
           nachgereichte ältere Nachricht dürfte den Thread nicht zurückdatieren.
-        * `is_read = false` gilt IMMER, wenn der Gast geschrieben hat — auch
-          wenn die Nachricht ein Nachzügler ist. Lägen beide im selben Patch,
-          würde der Zeitstempel-Guard die Ungelesen-Markierung mit abweisen: der
-          Gast hätte geschrieben, und der Thread sähe gelesen aus.
+        * `is_read = false` gilt für JEDE neu eingegangene Gastnachricht — auch
+          wenn sie ein Nachzügler ist und älter als der Lesestand. Lägen beide
+          im selben Patch, würde der Zeitstempel-Guard die Ungelesen-Markierung
+          mit abweisen: der Gast hätte geschrieben, und der Thread sähe gelesen
+          aus.
 
         Unsere eigene Antwort setzt `is_read` ausdrücklich nicht — sonst
         markiert sich ein Thread beim Antworten selbst als ungelesen (Wurzel 1:
         der Gegenzustand gehört zum Eingang, nicht zum Senden).
+
+        `neu=False` heißt: DIESE Nachricht lag schon im Spiegel, wir sehen sie
+        nur wieder. Dann bleibt `is_read` unberührt — und das ist der Kern des
+        Ganzen (Wurzel 2): der Journal-Tick spiegelt bewusst bei JEDEM Lauf alle
+        Ereignisse des Fensters erneut (`live_feed_sync._journal_ereignis_spiegeln`
+        ruft VOR dem Dedup-Check), weil die Idempotenz am UNIQUE-Index von
+        `portal_messages` hängt. Für die Tabelle stimmte das, für den Lesestand
+        nicht: ein unbedingtes `is_read = false` machte alle fünf Minuten jeden
+        Thread mit irgendeiner Gastnachricht im Journal-Fenster wieder ungelesen.
+        Live gemessen am 11.08.2026: `read_at 11:16:14`, um `11:33:13` — dem
+        Zeitpunkt des nächsten Ticks — stand derselbe Thread wieder auf
+        ungelesen, zusammen mit acht weiteren in derselben Sekunde. Lesen war
+        damit wirkungslos, und die Zahl am Reiter „Aktiv" zählte nicht die
+        offene Arbeit, sondern die Nachrichten im Journal-Fenster.
         """
         if self._db is None:
             return
@@ -465,7 +518,7 @@ class NachrichtenEingangMixin:
                 .or_(f"last_message_at.is.null,last_message_at.lt.{sent_at}")
                 .execute()
             )
-            if sender == "guest":
+            if sender == "guest" and neu:
                 (
                     self._db.table("channex_booking")
                     .update({"is_read": False})

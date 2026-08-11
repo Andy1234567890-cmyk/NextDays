@@ -161,11 +161,33 @@ class PlanungMixin:
     def bulk_update(
         self, ctx: AuthContext, action: str, before: str
     ) -> BulkUpdateResult:
-        """Threads mit letzter Aktivität ≤ `before` als gelesen/archiviert."""
+        """Threads mit letzter Aktivität ≤ `before` als gelesen/archiviert.
+
+        „Letzte Aktivität" ist ein FREMDereignis (Wurzel 5b): die jüngste
+        Nachricht beim Portal (`last_message_at`), sonst der Buchungszeitpunkt
+        (`booked_at`) — genau die beiden Werte, aus denen `list_threads` die
+        angezeigte Zeit baut. Gefiltert wurde hier vorher `updated_at`, also
+        UNSERE Schreibzeit. Das war nicht nur die falsche Bedeutung, es machte
+        die Funktion wirkungslos: der Journal-Tick schreibt `channex_booking`
+        laufend, live standen deshalb alle neun offenen Threads auf
+        `updated_at = heute` und „alles vor dem 01.08. als gelesen" traf keinen
+        einzigen davon.
+
+        Ein Thread ohne beide Zeitpunkte bleibt unberührt — ohne Aktivität gibt
+        es kein „vor diesem Tag", und ein geratenes Datum wäre ein erfundener
+        Wert (Wurzel 4).
+
+        Gilt nur für die AKTIVE Ansicht: eine Massenaktion ist zum Aufräumen des
+        Posteingangs da. Ohne diese Grenze hätte `archived` Threads aus dem
+        Papierkorb ins Archiv zurückgeholt.
+        """
         db, tenant_id = self._require(ctx)
         access = self.access(ctx)
         if action == "read":
-            patch = {"is_read": True}
+            # `read_at` gehört ZWINGEND dazu (Wurzel 1): ohne den Zeitpunkt hat
+            # der abgeleitete Lesestand keinen Vergleichswert, und der Thread
+            # hängt an einem nackten Flag (s. `_ist_gelesen`).
+            patch = {"is_read": True, "read_at": datetime.now(UTC).isoformat()}
         elif action == "archived":
             patch = {"is_archived": True, "inbox_status": "archived"}
         else:
@@ -178,7 +200,11 @@ class PlanungMixin:
             db.table("channex_booking")
             .update(patch)
             .eq("tenant_id", tenant_id)
-            .lte("updated_at", upper)
+            .eq("inbox_status", "active")
+            .or_(
+                f"last_message_at.lte.{upper},"
+                f"and(last_message_at.is.null,booked_at.lte.{upper})"
+            )
         )
         # Scope: assigned-only-Nutzer dürfen nur ihre eigenen Threads massen-ändern.
         if access.scope == "assigned":

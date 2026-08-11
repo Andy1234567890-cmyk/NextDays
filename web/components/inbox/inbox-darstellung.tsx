@@ -216,21 +216,31 @@ export function UngelesenBadge() {
 }
 
 /**
- * „vor 5 Min." / „Gestern" / „1. Aug." — kurze Zeitangabe rechts in der
- * Thread-Zeile. Beide Vorbilder zeigen das Alter der letzten Aktivität; ohne
- * das lässt sich nicht erkennen, was frisch ist.
+ * „vor 5 Min." / „Gestern" / „1. Aug." / „3. Sept. 2025" — kurze Zeitangabe
+ * rechts in der Thread-Zeile. Beide Vorbilder zeigen das Alter der letzten
+ * Aktivität; ohne das lässt sich nicht erkennen, was frisch ist.
+ *
+ * Das JAHR steht dabei, sobald es nicht das laufende ist. Ohne diese
+ * Unterscheidung sah eine Nachricht vom 3. September 2025 aus wie eine vom
+ * 3. September dieses Jahres — live betraf das vier Threads am Listenende, die
+ * damit ein Jahr zu frisch aussahen.
  */
 export function kurzeZeit(iso: string | null, locale: string): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  const min = Math.round((Date.now() - d.getTime()) / 60_000);
+  const jetzt = new Date();
+  const min = Math.round((jetzt.getTime() - d.getTime()) / 60_000);
   const rel = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style: "narrow" });
   if (min < 1) return rel.format(0, "minute");
   if (min < 60) return rel.format(-min, "minute");
   if (min < 60 * 24) return rel.format(-Math.round(min / 60), "hour");
   if (min < 60 * 24 * 7) return rel.format(-Math.round(min / (60 * 24)), "day");
-  return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
+  return d.toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+    ...(d.getFullYear() === jetzt.getFullYear() ? {} : { year: "numeric" }),
+  });
 }
 
 /**
