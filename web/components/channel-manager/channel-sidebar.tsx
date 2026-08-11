@@ -62,6 +62,7 @@ function ChannelRow({
   active,
   connectedLabel,
   notConnectedLabel,
+  wartetLabel,
 }: {
   href: string;
   logo: { src?: string; icon?: string };
@@ -70,6 +71,10 @@ function ChannelRow({
   active: boolean;
   connectedLabel: string;
   notConnectedLabel: string;
+  // Eigener Marktplatz: gelistet, aber die Freigabe des Betreibers fehlt noch.
+  // Nur auswerten, wenn `connected` false ist — „nicht verbunden" wäre hier
+  // falsch, der Betrieb hat alles getan.
+  wartetLabel?: string;
 }) {
   return (
     <Link
@@ -93,10 +98,14 @@ function ChannelRow({
         <span
           className={
             "text-xs " +
-            (connected ? "text-emerald-600" : "text-muted-foreground")
+            (connected
+              ? "text-emerald-600"
+              : wartetLabel
+                ? "text-amber-600"
+                : "text-muted-foreground")
           }
         >
-          {connected ? connectedLabel : notConnectedLabel}
+          {connected ? connectedLabel : (wartetLabel ?? notConnectedLabel)}
         </span>
       </div>
     </Link>
@@ -122,6 +131,7 @@ export function ChannelSidebar({
     allChannels: string;
     categoryOta: string;
     categoryMarketplace: string;
+    marketplaceWaiting: string;
     categoryIcal: string;
     connected: string;
     notConnected: string;
@@ -242,10 +252,17 @@ export function ChannelSidebar({
         href="/objekte"
         logo={{ src: "/marketing/brand/mybestdays-logo.png" }}
         label={overview.marketplace.label}
+        // Grün nur bei WIRKLICH sichtbaren (freigegebenen) Objekten; wartende
+        // Freigaben sind ein eigener Zustand, kein „nicht verbunden".
         connected={overview.marketplace.listed_count > 0}
         active={false}
         connectedLabel={labels.connected}
         notConnectedLabel={labels.notConnected}
+        wartetLabel={
+          overview.marketplace.pending_count > 0
+            ? labels.marketplaceWaiting
+            : undefined
+        }
       />
 
       {/* iCal-Kalender-Sync */}

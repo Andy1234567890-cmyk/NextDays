@@ -101,6 +101,7 @@ export default async function ChannelDetailPage({
                 allChannels: t("allChannels"),
                 categoryOta: t("categoryOta"),
                 categoryMarketplace: t("categoryMarketplace"),
+                marketplaceWaiting: t("marketplaceWaiting"),
                 categoryIcal: t("categoryIcal"),
                 connected: t("connectedStatus"),
                 notConnected: t("notConnectedStatus"),

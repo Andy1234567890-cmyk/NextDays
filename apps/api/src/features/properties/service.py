@@ -1440,16 +1440,33 @@ def _local_channel_state(status: str | None, flag: bool | None) -> ChannelState:
     return ChannelState.paused
 
 
+def _marketplace_channel_state(
+    status: str | None, flag: bool | None, moderation: str | None
+) -> ChannelState:
+    """Zustand des EIGENEN Marktplatzes (myBestDays). Hängt zusätzlich an der
+    Freigabe des Betreibers (`moderation_status='approved'`, 0203) — dieselbe
+    Bedingung wie im öffentlichen `booking_engine.list_listings`. Ohne Freigabe
+    `pending`, nie `active`: das Objekt steht dort nicht. Live 11.08.2026: 17
+    gelistete Objekte trugen den grünen Punkt, der Marktplatz zeigte sie nie."""
+    if status != "active" or not bool(flag):
+        return ChannelState.paused
+    if moderation != "approved":
+        return ChannelState.pending
+    return ChannelState.active
+
+
 def _derive_channels(
     r: dict, portals: ChannelState | None
 ) -> PropertyChannels:
-    """Kanal-Zustände (Ebene B) für die drei Chips ableiten. Website/Plattform
-    aus den lokalen Flags, Portale aus dem vorberechneten Channex/OTA-Aggregat
-    (None → not_connected: kein Kanal eingerichtet, kein erfundener Wert)."""
+    """Kanal-Zustände (Ebene B) für die drei Chips: Website aus dem lokalen Flag,
+    Plattform zusätzlich über die Marktplatz-Freigabe (0203), Portale aus dem
+    Channex/OTA-Aggregat (None → not_connected, kein erfundener Wert)."""
     status = r.get("status")
     return PropertyChannels(
         website=_local_channel_state(status, r.get("listed_on_website")),
-        marketplace=_local_channel_state(status, r.get("listed_on_marketplace")),
+        marketplace=_marketplace_channel_state(
+            status, r.get("listed_on_marketplace"), r.get("moderation_status")
+        ),
         portals=portals or ChannelState.not_connected,
     )
 

@@ -1,6 +1,7 @@
 // Daten-Layer der Builder-App: lädt die vom Tenant komponierte Seite (Block-Baum
-// + Branding) vom öffentlichen Resolver (/api/v1/site/page) über den eigenen
-// Origin-Proxy. Muster wie lib/inserate.ts: kurzes Zeitbudget, resilient.
+// + Branding) vom öffentlichen Resolver (/api/v1/site/page) — serverseitig direkt
+// an FastAPI. Muster wie lib/inserate.ts: kurzes Zeitbudget, resilient.
+import { backendBasis } from "./backend-basis";
 import type { SiteBranding } from "./site-context";
 
 export type BlockType =
@@ -40,7 +41,7 @@ export type SitePage = {
 const FETCH_TIMEOUT_MS = 8000;
 
 function base(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  return backendBasis();
 }
 
 /** Veröffentlichte Seite eines Hosts laden (Home bei slug=""/undefined).

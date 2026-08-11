@@ -92,11 +92,20 @@ export type Property = {
   // vom Backend berechnet, nicht persistiert (0162). Optional, weil nur Listen-/
   // Detail-Wege ihn liefern.
   channels?: PropertyChannels;
+  // Freigabe-Stand für den eigenen Marktplatz (draft/pending/approved/rejected).
+  moderation_status?: string | null;
 };
 
 // Zustand eines Objekts PRO Vertriebskanal (Guesty/Cloudbeds/SiteMinder-Modell):
-// aktiv, pausiert (Nutzer-Wille, kein Alarm), nicht eingerichtet, Fehler.
-export type ChannelState = "active" | "paused" | "not_connected" | "error";
+// aktiv, pausiert (Nutzer-Wille, kein Alarm), nicht eingerichtet, Fehler —
+// plus `pending` NUR beim eigenen Marktplatz: alles vom Betrieb erledigt, die
+// Freigabe des Marktplatz-Betreibers fehlt noch (moderation_status).
+export type ChannelState =
+  | "active"
+  | "paused"
+  | "not_connected"
+  | "error"
+  | "pending";
 
 export type PropertyChannels = {
   website: ChannelState;

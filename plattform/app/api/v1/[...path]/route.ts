@@ -7,13 +7,12 @@
 // Session-Token via currentToken() als Bearer injiziert.
 import { type NextRequest, NextResponse } from "next/server";
 
+import { backendBasis } from "@/lib/backend-basis";
 import { currentToken } from "@/lib/session-token";
-
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function forward(req: NextRequest, path: string[]): Promise<NextResponse> {
   const search = req.nextUrl.search;
-  const target = `${BACKEND}/api/v1/${path.join("/")}${search}`;
+  const target = `${backendBasis()}/api/v1/${path.join("/")}${search}`;
 
   const headers: Record<string, string> = {};
   const contentType = req.headers.get("content-type");

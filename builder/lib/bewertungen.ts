@@ -1,10 +1,12 @@
 // Öffentliche Bewertungen für den Bewertungs-Block der white-label Website.
 // Quelle ist der guest_reviews-Slice (maskiert: Vorname statt Name, keine
-// E-Mail, keine Gast-ID). Muster wie lib/inserate.ts: Same-Origin-Proxy, kurzes
-// Zeitbudget, bei Ausfall null — der Block entfällt dann einfach.
+// E-Mail, keine Gast-ID). Muster wie lib/inserate.ts: serverseitig direkt an
+// FastAPI (backendBasis), kurzes Zeitbudget, bei Ausfall null — der Block
+// entfällt dann einfach.
 //
 // Nur eigene, verifizierte myBestDays-Bewertungen; Portal-Bewertungen erscheinen
 // hier bewusst nicht.
+import { backendBasis } from "./backend-basis";
 
 /** Die 6 Kategorien (Booking-Modell, je 1..5). null = nicht bewertet. */
 export type KategorieNoten = {
@@ -49,7 +51,7 @@ export async function ladeBewertungen(
   ziel: { tenantId: string; propertyId: string | null },
   limit = 6,
 ): Promise<ObjektBewertungen | null> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const base = backendBasis();
   const pfad = ziel.propertyId
     ? `property/${encodeURIComponent(ziel.propertyId)}`
     : `tenant/${encodeURIComponent(ziel.tenantId)}`;

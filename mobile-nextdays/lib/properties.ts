@@ -6,8 +6,15 @@ import { call, type Result } from "@/lib/api";
 export type PropertyStatus = "draft" | "active" | "inactive";
 
 // Zustand eines Objekts PRO Vertriebskanal (Spiegel von web/lib/properties.ts):
-// aktiv, pausiert (Nutzer-Wille, kein Alarm), nicht eingerichtet, Fehler.
-export type ChannelState = "active" | "paused" | "not_connected" | "error";
+// aktiv, pausiert (Nutzer-Wille, kein Alarm), nicht eingerichtet, Fehler —
+// plus `pending` NUR beim eigenen Marktplatz: gelistet, aber die Freigabe des
+// Marktplatz-Betreibers fehlt noch (dort also nicht sichtbar).
+export type ChannelState =
+  | "active"
+  | "paused"
+  | "not_connected"
+  | "error"
+  | "pending";
 
 export type PropertyChannels = {
   website: ChannelState;

@@ -32,14 +32,20 @@ import {
 import { useRealtime } from "@/lib/use-realtime";
 
 // Status-Punkt-Farben (semantische Tokens, keine arbitrary Hex). Pausiert/
-// nicht-verbunden neutral (kein Alarm), nur Fehler rot.
-function StatusDot({ tone }: { tone: "active" | "paused" | "error" | "off" }) {
+// nicht-verbunden neutral (kein Alarm), „wartet" amber, nur Fehler rot.
+function StatusDot({
+  tone,
+}: {
+  tone: "active" | "paused" | "error" | "pending" | "off";
+}) {
   const cls =
     tone === "active"
       ? "bg-emerald-500"
       : tone === "error"
         ? "bg-destructive"
-        : "bg-muted-foreground/40";
+        : tone === "pending"
+          ? "bg-amber-500"
+          : "bg-muted-foreground/40";
   return <span className={`size-2 rounded-full ${cls}`} aria-hidden />;
 }
 
@@ -114,6 +120,12 @@ export function PropertyChannels({
   // Seitenaufruf.
 
   const isActive = p.status === "active";
+  // Eigener Marktplatz: der Schalter allein macht ein Objekt dort NICHT sichtbar
+  // — myBestDays tritt als Anbieter auf und gibt jedes Inserat erst frei (0203).
+  // Ohne Freigabe stand hier ein grüner Punkt, während das Objekt auf dem
+  // Marktplatz fehlte (live 11.08.2026, 17 Objekte).
+  const marktFreigegeben = p.moderation_status === "approved";
+  const marktWartet = isActive && p.listed_on_marketplace && !marktFreigegeben;
 
   async function toggleFlag(
     field: "listed_on_website" | "listed_on_marketplace",
@@ -208,9 +220,18 @@ export function PropertyChannels({
           {t("channelsTab.groupPlatform")}
         </h2>
         <ChannelRow icon="ph:storefront" name={t("channelChips.platform")}>
+          {marktWartet && (
+            <span className="text-xs font-medium text-amber-600">
+              {t("channelsTab.marketplaceReview")}
+            </span>
+          )}
           <StatusDot
             tone={
-              isActive && p.listed_on_marketplace ? "active" : "paused"
+              !isActive || !p.listed_on_marketplace
+                ? "paused"
+                : marktWartet
+                  ? "pending"
+                  : "active"
             }
           />
           <Switch
@@ -219,6 +240,12 @@ export function PropertyChannels({
             onCheckedChange={(c) => toggleFlag("listed_on_marketplace", c)}
           />
         </ChannelRow>
+        {marktWartet && (
+          <Card className="flex items-center gap-2 bg-muted/40 p-3 text-sm text-muted-foreground">
+            <Icon icon="ph:hourglass-medium" className="size-4 shrink-0" />
+            {t("channelsTab.marketplaceReviewHint")}
+          </Card>
+        )}
       </section>
 
       {/* Gruppe 3 — Portale (Channex → OTAs) */}

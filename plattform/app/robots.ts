@@ -9,7 +9,11 @@
 // Meta-Tag die Indexierung pro Objekt fein.
 import type { MetadataRoute } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3100";
+import { envUrl } from "@/lib/backend-basis";
+
+// envUrl statt `?? …`: ein Build-Arg ohne Wert ist "" und würde relative
+// sitemap-/host-Angaben erzeugen (siehe lib/backend-basis.ts).
+const SITE_URL = envUrl(process.env.NEXT_PUBLIC_SITE_URL, "http://localhost:3100");
 
 // Eingeloggte/transaktionale Pfade — nie crawlen lassen.
 const PRIVAT = [

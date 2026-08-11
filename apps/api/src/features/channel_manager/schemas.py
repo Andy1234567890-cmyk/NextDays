@@ -777,7 +777,12 @@ class MarketplaceChannelOverview(BaseModel):
     kind: str = "marketplace"
     code: str = "myBestDays"
     label: str
+    # Auf dem Marktplatz WIRKLICH sichtbar (active + gelistet + freigegeben).
     listed_count: int
+    # Gelistet, aber ohne Freigabe des Betreibers (0203) → noch nicht sichtbar.
+    # Zweite Achse wie `linked_count` bei den OTAs: „eingerichtet" ist nicht
+    # dasselbe wie „läuft".
+    pending_count: int = 0
 
 
 class IcalChannelOverview(BaseModel):

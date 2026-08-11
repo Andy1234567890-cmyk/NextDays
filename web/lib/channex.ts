@@ -315,7 +315,10 @@ export type MarketplaceChannelOverview = {
   kind: "marketplace";
   code: string;
   label: string;
+  // Auf dem Marktplatz WIRKLICH sichtbar (aktiv + gelistet + freigegeben).
   listed_count: number;
+  // Gelistet, aber noch ohne Freigabe des Betreibers → dort nicht sichtbar.
+  pending_count: number;
 };
 export type IcalChannelOverview = {
   kind: "ical";

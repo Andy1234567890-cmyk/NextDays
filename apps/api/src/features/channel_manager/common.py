@@ -957,6 +957,33 @@ def ota_uhrzeit(wert: object) -> str | None:
 _UHRZEIT: Final = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d")
 
 
+def kanal_plan_id(eintrag: dict[str, Any]) -> str | None:
+    """Kanal-ID, falls dieser Channex-Rate-Plan ein KANALRATE ist — sonst None.
+
+    Channex' Inventar hat drei Ebenen: Zimmertyp → Zimmerpreis → **Kanalrate**.
+    Die dritte legt Channex SELBST an, je Eintrag im Kanal-Mapping, als Kind
+    unseres Plans (`relationships.parent_rate_plan`) mit eigener Kanal-Bindung
+    (`relationships.channel`) und `rate_mode: derived`. Sie ist kein Bestand des
+    Betriebs: Channex' eigene Oberfläche blendet sie in „Rooms & Rates" aus.
+
+    Woran das erkennbar ist, steht AUSSCHLIESSLICH in `relationships` — die
+    Attribute kennen weder `channel_id` noch `parent_rate_plan_id` (live geprüft
+    11.08.2026 an 19 Properties). Genau deshalb hielten Import und Titel-Suche
+    diese Klone für fremden Portalbestand:
+      - der Import spiegelte 32 davon als lokale `rate_plans` mit Preis 0,00
+        (der Eigenwert einer abgeleiteten Rate ist immer 0 — sie erbt ja),
+      - `sync_content` schrieb sie danach mit `rate_mode: manual` zurück und
+        zerstörte damit die Ableitung vom echten Grundpreis-Plan,
+      - in der Preise-Seite machten sie `multiPlan` wahr und nahmen dem Objekt
+        die Grundpreis-Eingabe.
+    Wer eine Channex-Rate-Plan-Liste verarbeitet, prüft das hier — an EINER
+    Stelle, nicht je Aufrufer.
+    """
+    bezug = (eintrag.get("relationships") or {}).get("channel") or {}
+    kennung = (bezug.get("data") or {}).get("id")
+    return str(kennung) if kennung else None
+
+
 # Feldnamen, unter denen die Portale den ECHTEN Buchungszeitpunkt liefern.
 # Reihenfolge = Verlässlichkeit. Airbnb: `booked_at`. Booking.com liefert keins
 # davon — dort steht der Zeitpunkt nur in der Originalmeldung (`raw_message`),

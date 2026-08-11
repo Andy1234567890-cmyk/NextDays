@@ -1,7 +1,9 @@
-// Domänen-Modul „Inserate" — Backend-Anbindung nach NextDays-Muster (wie
-// apps/web/lib/<domäne>.ts: ruft den eigenen Origin-Proxy /api/v1/..., der
-// server-seitig an FastAPI weiterleitet). Quelle ist der öffentliche
+// Domänen-Modul „Inserate" — Backend-Anbindung nach NextDays-Muster
+// (lib/<domäne>.ts). Diese Loader laufen ausschließlich SERVERSEITIG und rufen
+// FastAPI direkt; der Same-Origin-Proxy /api/v1 bleibt für die Client-Inseln
+// (lib/buchung.ts) zuständig. Quelle ist der öffentliche
 // booking_engine-Slice (nur status='active'); KEINE Demo-Daten mehr.
+import { backendBasis } from "./backend-basis";
 import { type Listing, type Reihe, hueAusId } from "./listings";
 
 // --- API-Form (booking_engine PublicListing/PublicListingDetail) ------------
@@ -32,16 +34,16 @@ type ApiListingDetail = ApiListing & {
 
 type ApiListResponse = { items: ApiListing[]; total: number };
 
-// Server-Component-Fetch über den Same-Origin-Proxy. Absolute URL aus der
-// Request-Herkunft ableiten ist hier nicht nötig: Next leitet relative Pfade in
-// Server-Components an den eigenen Origin; der Proxy spricht dann FastAPI an.
+// Server-Component-Fetch DIREKT an FastAPI (nicht über den Same-Origin-Proxy):
+// eine Server-Component kennt ihren eigenen Origin nicht, und eine relative URL
+// ist für `fetch` ungültig — siehe lib/backend-basis.ts.
 // Kurzes Zeitbudget: hängt das Backend (z. B. 504/Gateway-Timeout), darf der
 // SSR-Render nicht mitblockieren — nach Ablauf bricht der Fetch ab und der
 // Aufrufer (ladeReihen) zeigt den Leerzustand statt abzustürzen.
 const FETCH_TIMEOUT_MS = 8000;
 
 async function get<T>(path: string): Promise<T> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const base = backendBasis();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {

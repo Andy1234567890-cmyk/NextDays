@@ -2324,46 +2324,50 @@ Portal"). Gemessen ist der Ist-Stand:
 | `channel.settings.derived_option` | **`{}`** (leer) |
 | Mapping-Modifikator-Felder | **keine vorhanden** |
 
-### DER DEFEKT: `rate_mode: derived` ohne Elternplan
+### Die Kanalrate — Channex' dritte Ebene, und wie wir sie kaputt gemacht haben
 
-Gemessen am Kanal-Rate-Plan `8cbafcb5…` („Grundpreis (von Airbnb) - AirBNB
-Airbnb"):
-
-```
-rate_mode:            "derived"     <-- soll ableiten
-parent_rate_plan_id:  null          <-- von NICHTS
-auto_rate_settings:   null
-options[0].rate:      "0.00"        <-- Folge: Preis 0
-options[0].derived_option: {}       <-- kein Modifikator
-```
-
-Und die Erb-Schalter sind gemischt gesetzt:
+**Korrektur vom 11.08.2026.** Hier stand vorher „DER DEFEKT: `rate_mode:
+derived` ohne Elternplan". Das war eine Fehllesung der Antwort: **einen
+Attributschlüssel `parent_rate_plan_id` gibt es nicht** — `.get()` lieferte
+darum immer `null`. Der Elternplan steht in `relationships`. Nachgemessen an
+allen 19 Properties:
 
 ```
-inherit_closed_to_arrival:    true
-inherit_closed_to_departure:  true
-inherit_max_stay:             true
-inherit_availability_offset:  false
-inherit_max_availability:     false
+GET /rate_plans/<kanalrate>
+  attributes.rate_mode          "derived"
+  attributes.options[0].rate    "0.00"     <-- Eigenwert einer Ableitung: sie erbt
+  attributes.options[0].inherit_rate  true
+  relationships.channel         → 9a46827b…   (AirBNB-Kanal)
+  relationships.parent_rate_plan → 12d0e499…   (unser Grundpreis-Plan)
 ```
 
-**Ein abgeleiteter Plan ohne `parent_rate_plan_id` kann nichts erben.** Der
-Preis am Kanal-Plan steht auf `0.00`. Dass über `/restrictions` trotzdem
-`504.00` ankommt (Abschnitt 12), heißt: der Tagespreis wird direkt gepusht und
-überschreibt die kaputte Ableitung. Der Plan funktioniert also nur, WEIL wir
-jeden Tag einzeln pushen.
+Die Kanalrate ist also **intakt** und genau die dritte Ebene aus dem Schaubild
+oben. Channex legt sie SELBST an, je Eintrag im Kanal-Mapping, und blendet sie
+in „Rooms & Rates" aus (Odden-hygge-mygdal: UI zeigt 2 Pläne, API 4). Zwei
+Kanalraten gleichen Titels bedeuten zwei Raten-Codes im Extranet auf denselben
+Plan gemappt — Booking.com z. B. `rate_plan_code` 65900767 + 65900673, beide auf
+`12d0e499…`. Airbnb erlaubt nur ein Mapping, deshalb dort nie eine Dublette.
 
-Zum Vergleich der Basisplan `b358bacf…`: `rate_mode: manual`,
-`options[0].rate: "504.00"` — sauber.
+**Der echte Defekt war unserer.** Der Import hielt die Kanalraten für fremden
+Portalbestand und spiegelte 32 davon als lokale `rate_plans` mit Preis 0;
+`sync_content` schrieb sie danach mit `rate_mode: manual` zurück. Der Beweis
+ist die exakte Korrelation:
 
-Der Fehlerhinweis dazu steht wörtlich in Channex' eigenem Client:
-`"parent_rate_plan_is_not_defined"` (Bundle-Fund, Abschnitt 19). Genau dieser
-Zustand liegt hier vor.
+| Kanalraten | `rate_mode` | lokal gespiegelt? |
+|---|---|---|
+| 32 | `manual`, Eigenpreis 0.00 | ja (13 Objekte) |
+| 12 | `derived`, Elternplan gesetzt | nein (4 Objekte) |
 
-**Das ist ein Befund für die Preise-Seite, nicht nur Kosmetik:** stoppt der
-ARI-Push (Rate-Limit, Budget, Fehler), fällt der Kanal auf `0.00` zurück statt
-auf den Basispreis. Ein manueller Plan mit `offset_percent` oder ein korrekt
-gesetzter `parent_rate_plan_id` wäre fehlertolerant.
+Kein Objekt ohne Spiegel ist betroffen. Falsche Preise gingen dadurch nicht
+hinaus — `0` filtern beide Push-Wege (`full_sync` `cents > 0`, `ari_push`
+`if cents <= 0: continue`), und Klon wie Elternplan liefern für jeden geprüften
+Tag denselben Wert. Verloren ist die **Rückfallebene**: fällt der tägliche Push
+aus, hat die Kanalrate seither keinen Elternwert mehr, auf den sie zurückfällt.
+
+Geschlossen über `common.kanal_plan_id` (erkennt die Kanal-Beziehung) an den
+drei Stellen, die eine Rate-Plan-Liste verarbeiten: Import, Titel-Suche und
+Prune. Altbestand: Migration `0361`. Das Zurückdrehen der 32 Kanalraten auf
+`derived` wäre ein SCHREIBAUFRUF gegen Channex und steht aus.
 
 ### Channex' Warnung an PMS-verbundene Objekte
 

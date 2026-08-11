@@ -26,6 +26,7 @@ from .common import (
     _channex_type_from_subtype,
     _timezone_for_country,
     ist_demo_mapping,
+    kanal_plan_id,
     log,
 )
 
@@ -958,7 +959,7 @@ class ContentSyncMixin:
             tenant_id=tenant_id, property_id=property_id, step="rate_plan_prune"
         )
         self._prune_orphan_rate_plans(
-            db, tenant_id, room_type_map_id,
+            db, tenant_id, room_type_map_id, channex_property_id,
             local_ids={rp["id"] for rp in rate_plans if rp.get("id")},
         )
         return channex_room_type_id, channex_rate_plan_ids
@@ -1284,6 +1285,21 @@ class ContentSyncMixin:
         ).execute()
         return channex_rate_plan_id
 
+    def _kanalraten_ids(self, channex_property_id: str) -> frozenset[str]:
+        """Alle Channex-Rate-Plan-IDs dieser Property, die einem Kanal gehören.
+
+        Ein Aufruf für die ganze Property statt einer Abfrage je Kandidat.
+        Fail-CLOSED über den Aufrufer: ist die Liste nicht lesbar, kommt eine
+        Ausnahme statt einer leeren Menge — eine leere Menge würde bedeuten
+        „keine Kanalrate", und der Prune löschte genau die Pläne, die er
+        schützen soll.
+        """
+        antwort = self._channex.get_rate_plans(channex_property_id)
+        return frozenset(
+            str(e["id"]) for e in antwort.get("data") or []
+            if e.get("id") and kanal_plan_id(e)
+        )
+
     def _channex_rate_plan_nach_titel(
         self, channex_property_id: str, channex_room_type_id: str, title: str
     ) -> str | None:
@@ -1312,6 +1328,12 @@ class ContentSyncMixin:
             attrs = eintrag.get("attributes") or {}
             if attrs.get("title") != title:
                 continue
+            # Kanalraten tragen denselben Titel-Stamm wie ihr Elternplan
+            # („… - AirBNB Airbnb") und hängen am selben Room-Type — als Treffer
+            # übernommen, hätte der folgende PUT Channex' Ableitung auf `manual`
+            # gekippt. Sie gehören Channex, nicht uns (`kanal_plan_id`).
+            if kanal_plan_id(eintrag):
+                continue
             bezug = (eintrag.get("relationships") or {}).get("room_type") or {}
             gehoert_zu = str(((bezug.get("data") or {}).get("id")) or "")
             if gehoert_zu != channex_room_type_id:
@@ -1323,7 +1345,7 @@ class ContentSyncMixin:
 
     def _prune_orphan_rate_plans(
         self, db: Client, tenant_id: str, room_type_map_id: str,
-        local_ids: set[str],
+        channex_property_id: str, local_ids: set[str],
     ) -> None:
         """Channex-Rate-Plans löschen, deren lokaler Preisplan entfernt wurde.
 
@@ -1332,7 +1354,20 @@ class ContentSyncMixin:
         bestehen und der Konflikt wird geloggt (erst Kanal-Mapping lösen, dann
         verschwindet der Plan beim nächsten Sync). Erfolgreich gelöschte Pläne
         werden im Mapping soft-deleted (deleted_at), damit ARI-Pushes sie nicht
-        mehr ansprechen (Wurzel 1: Gegenzustand pflegen)."""
+        mehr ansprechen (Wurzel 1: Gegenzustand pflegen).
+
+        Channex' eigene Kanalraten sind davon ausgenommen: sie SIND das
+        Kanal-Mapping des Portals, ein Löschen nähme dem Objekt den Kanal. Alte
+        Map-Zeilen darauf (aus der Zeit, als der Import sie spiegelte) landen
+        hier zwangsläufig, weil ihr lokaler Plan entfernt wurde."""
+        try:
+            kanalraten = self._kanalraten_ids(channex_property_id)
+        except ChannexError as exc:
+            # Ohne diese Liste ist nicht entscheidbar, was gelöscht werden darf
+            # — dann lieber gar nicht aufräumen (Wurzel 5: fail-closed). Der
+            # Content-Sync selbst ist zu diesem Zeitpunkt fertig und bleibt es.
+            log.warning("channex_rate_plan_prune_uebersprungen", error=exc.message)
+            return
         rows = (
             db.table("channex_rate_plan_map")
             .select("id, local_rate_plan_id, channex_rate_plan_id")
@@ -1346,6 +1381,12 @@ class ContentSyncMixin:
             if local_id and local_id in local_ids:
                 continue  # lokal noch vorhanden → nichts zu tun
             channex_id = row.get("channex_rate_plan_id")
+            if channex_id in kanalraten:
+                log.info(
+                    "channex_rate_plan_prune_kanalrate",
+                    channex_rate_plan_id=channex_id,
+                )
+                continue
             try:
                 if channex_id:
                     self._channex.delete_rate_plan(channex_id)

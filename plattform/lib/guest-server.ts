@@ -5,13 +5,14 @@
 // Server-Components keinen absoluten Origin kennt) — analog zu lib/auth.getMe.
 import { cookies } from "next/headers";
 
+import { backendBasis } from "./backend-basis";
+
 import type { GuestMe } from "./guest-auth";
 import type { BookingListItem } from "./guest-bookings";
 import type { MessageThread } from "./guest-messages";
 import type { MyReview } from "./guest-reviews";
 import type { WishlistSummary } from "./guest-wishlist";
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const ACCESS = "nd_access";
 
 async function backendGet<T>(path: string): Promise<T | null> {
@@ -19,7 +20,7 @@ async function backendGet<T>(path: string): Promise<T | null> {
   const token = jar.get(ACCESS)?.value;
   if (!token) return null;
   try {
-    const res = await fetch(`${BACKEND}/api/v1${path}`, {
+    const res = await fetch(`${backendBasis()}/api/v1${path}`, {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       cache: "no-store",
     });
@@ -70,7 +71,7 @@ async function backendPost<T>(
   const token = jar.get(ACCESS)?.value;
   if (!token) return null;
   try {
-    const res = await fetch(`${BACKEND}/api/v1${path}`, {
+    const res = await fetch(`${backendBasis()}/api/v1${path}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

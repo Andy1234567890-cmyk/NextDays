@@ -470,18 +470,21 @@ function Kanalzeile({
 }) {
   const t = useTheme();
   // paused/not_connected sind neutral (Nutzer-Wille bzw. nicht eingerichtet),
-  // nur error ist rot — bewusst getrennt, wie in der Objektliste.
+  // pending wartet (amber: Marktplatz-Freigabe offen), nur error ist rot —
+  // bewusst getrennt, wie in der Objektliste.
   const farbe: Record<ChannelState, string> = {
     active: "#10B981",
     paused: t.palette.soft,
     not_connected: t.palette.faint,
     error: "#DC2626",
+    pending: "#F59E0B",
   };
   const text: Record<ChannelState, string> = {
     active: "Aktiv",
     paused: "Pausiert",
     not_connected: "Nicht eingerichtet",
     error: "Fehler",
+    pending: "In Prüfung",
   };
   return (
     <View>

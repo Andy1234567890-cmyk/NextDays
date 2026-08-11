@@ -164,7 +164,8 @@ export default function Listings({ navigation }: { navigation: any }) {
 }
 
 // Ampel je Kanal. paused/not_connected sind neutral (kein Alarm, Nutzer-Wille
-// bzw. schlicht nicht eingerichtet), nur error ist rot — bewusst getrennt.
+// bzw. schlicht nicht eingerichtet), pending wartet auf die Marktplatz-Freigabe,
+// nur error ist rot — bewusst getrennt.
 function ChannelDot({ label, state }: { label: string; state: ChannelState }) {
   const t = useTheme();
   const farbe: Record<ChannelState, string> = {
@@ -172,6 +173,7 @@ function ChannelDot({ label, state }: { label: string; state: ChannelState }) {
     paused: t.palette.soft,
     not_connected: t.palette.faint,
     error: "#DC2626",
+    pending: "#F59E0B",
   };
   return (
     <Row gap={4} style={{ alignItems: "center" }}>

@@ -1858,8 +1858,10 @@ class ChannelsMixin:
 
         - OTA-Portale (Katalog): je Portal, an wie vielen Objekten es verbunden
           und aktiv ist. `connected` = mind. eine aktive Verbindung.
-        - Eigener Marktplatz (/plattform): Zahl der aktiv gelisteten Objekte
-          (status='active' AND listed_on_marketplace).
+        - Eigener Marktplatz (/plattform): Zahl der dort WIRKLICH sichtbaren
+          Objekte (status='active' AND listed_on_marketplace AND
+          moderation_status='approved') plus `pending_count` für die, die noch
+          auf die Freigabe des Betreibers warten.
         - iCal: Zahl der Objekte mit mindestens einem aktiven externen Kalender.
 
         Keine erfundenen Zahlen — fehlt eine Quelle, ist der Count 0."""
@@ -1913,17 +1915,25 @@ class ChannelsMixin:
             for p in self._portal_catalog()
         ]
 
-        # Eigener Marktplatz: aktiv gelistete Objekte (0159).
-        marketplace_count = len(
-            (
-                db.table("properties")
-                .select("id")
-                .eq("tenant_id", tenant_id)
-                .eq("status", "active")
-                .eq("listed_on_marketplace", True)
-                .execute()
-            ).data or []
+        # Eigener Marktplatz: aktiv gelistete Objekte (0159) — getrennt nach
+        # WIRKLICH auf myBestDays sichtbar (Freigabe erteilt, 0203) und „warten
+        # auf Freigabe". Genau dieselbe Bedingung wie der öffentliche Marktplatz
+        # (booking_engine.list_listings): active + listed + approved. Ohne diese
+        # Trennung meldete die Karte „18 Objekte gelistet", während der Marktplatz
+        # leer war (live 11.08.2026) — eine Falschaussage, die niemand als Bug
+        # erkennt, weil sie plausibel aussieht.
+        gelistet = (
+            db.table("properties")
+            .select("id, moderation_status")
+            .eq("tenant_id", tenant_id)
+            .eq("status", "active")
+            .eq("listed_on_marketplace", True)
+            .execute()
+        ).data or []
+        marketplace_count = sum(
+            1 for r in gelistet if r.get("moderation_status") == "approved"
         )
+        marketplace_pending = len(gelistet) - marketplace_count
 
         # iCal: Objekte mit mind. einem aktiven externen Kalender.
         ical_props = {
@@ -1944,6 +1954,7 @@ class ChannelsMixin:
                 "code": "mybestdays",
                 "label": "myBestDays Marktplatz",
                 "listed_count": marketplace_count,
+                "pending_count": marketplace_pending,
             },
             "ical": {
                 "kind": "ical",

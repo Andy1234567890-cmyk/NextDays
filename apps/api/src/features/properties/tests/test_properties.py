@@ -726,18 +726,39 @@ def test_max_stay_of_defaults_zero_when_missing_or_invalid() -> None:
 
 # --- Kanal-Zustands-Ableitung (Ebene B, 0162) ---------------------------------
 def test_derive_channels_active_object_all_flags_on() -> None:
+    # Marktplatz zusätzlich freigegeben (0203) → wirklich sichtbar.
     row = {"status": "active", "listed_on_website": True,
-           "listed_on_marketplace": True}
+           "listed_on_marketplace": True, "moderation_status": "approved"}
     ch = _derive_channels(row, ChannelState.active)
     assert ch.website == ChannelState.active
     assert ch.marketplace == ChannelState.active
     assert ch.portals == ChannelState.active
 
 
+def test_derive_channels_marketplace_without_approval_is_pending() -> None:
+    """Gelistet, aber ohne Freigabe des Betreibers: der Marktplatz zeigt das
+    Objekt NICHT — also `pending`, nie `active`. Genau hier log die Oberfläche
+    (live 11.08.2026: 17 grüne Plattform-Punkte, leerer Marktplatz)."""
+    for moderation in ("pending", "draft", "rejected", None):
+        row = {"status": "active", "listed_on_website": True,
+               "listed_on_marketplace": True, "moderation_status": moderation}
+        ch = _derive_channels(row, None)
+        assert ch.marketplace == ChannelState.pending, moderation
+        # Die Website hängt NICHT an der Marktplatz-Freigabe.
+        assert ch.website == ChannelState.active, moderation
+
+
+def test_derive_channels_marketplace_flag_off_beats_approval() -> None:
+    """Schalter aus → paused, auch wenn die Freigabe vorliegt (Nutzer-Wille)."""
+    row = {"status": "active", "listed_on_website": True,
+           "listed_on_marketplace": False, "moderation_status": "approved"}
+    assert _derive_channels(row, None).marketplace == ChannelState.paused
+
+
 def test_derive_channels_flag_off_is_paused_not_error() -> None:
     # Kanal-Flag aus → paused (Nutzer-Wille), NIE error.
     row = {"status": "active", "listed_on_website": False,
-           "listed_on_marketplace": True}
+           "listed_on_marketplace": True, "moderation_status": "approved"}
     ch = _derive_channels(row, None)
     assert ch.website == ChannelState.paused
     assert ch.marketplace == ChannelState.active

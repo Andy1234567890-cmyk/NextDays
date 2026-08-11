@@ -6,9 +6,9 @@
 // stören.
 import { readToken } from "@nextdays/auth/server";
 
-import { COOKIE_NAME } from "./cookie";
+import { backendBasis } from "@/lib/backend-basis";
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+import { COOKIE_NAME } from "./cookie";
 
 /**
  * Läuft für dieses Konto gerade eine Diagnose-Freigabe?
@@ -23,7 +23,7 @@ export async function GET() {
   if (!token) return Response.json({ aktiv: false });
 
   try {
-    const res = await fetch(`${BACKEND}/api/v1/diagnostics/debug`, {
+    const res = await fetch(`${backendBasis()}/api/v1/diagnostics/debug`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.text();
-    const res = await fetch(`${BACKEND}/api/v1/diagnostics/events`, {
+    const res = await fetch(`${backendBasis()}/api/v1/diagnostics/events`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

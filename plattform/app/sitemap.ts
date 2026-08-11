@@ -4,9 +4,11 @@
 // gar nicht erst — sie tauchen hier also nie auf.
 import type { MetadataRoute } from "next";
 
+import { envUrl } from "@/lib/backend-basis";
 import { ladeSitemapInserate } from "@/lib/inserate";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3100";
+// envUrl statt `?? …`: ein leeres Build-Arg ergäbe URLs ohne Host.
+const SITE_URL = envUrl(process.env.NEXT_PUBLIC_SITE_URL, "http://localhost:3100");
 
 // Öffentliche statische Seiten (immer indexierbar).
 const STATISCH = ["", "/agb"];

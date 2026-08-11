@@ -33,6 +33,7 @@ from .common import (
     ChannelManagerError,
     gastfelder_uebernehmen,
     ist_bestandsimport,
+    kanal_plan_id,
     log,
     ota_buchungszeitpunkt,
     ota_zeitstempel_utc,
@@ -2207,6 +2208,18 @@ class BookingsSyncMixin:
             cx_rp_id = rp.get("id")
             attrs = rp.get("attributes") or {}
             if not cx_rp_id:
+                continue
+            # Kanalraten sind KEIN fremder Bestand, sondern Channex' eigene
+            # Kinder unserer Pläne (`kanal_plan_id`) — spiegeln würde eine
+            # Nullpreis-Zeile je Kanal-Mapping erzeugen und den Plan über den
+            # nächsten sync_content auf `manual` kippen.
+            kanal = kanal_plan_id(rp)
+            if kanal:
+                log.info(
+                    "import_rate_plan_kanalrate_uebersprungen",
+                    channex_rate_plan_id=cx_rp_id, channel_id=kanal,
+                    titel=attrs.get("title"),
+                )
                 continue
             # Zu welchem Zimmertyp gehört dieser Preis? Die Zuordnung steht in
             # `relationships.room_type`, NICHT in den Attributen.

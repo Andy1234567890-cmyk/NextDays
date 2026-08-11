@@ -283,6 +283,21 @@ export function ChannelGrid({ overview }: { overview: ChannelOverview | null }) 
   );
   const hiddenOtas = overview.ota.filter((c) => !shownOtas.includes(c));
 
+  // Marktplatz-Beschriftung: „x gelistet" ist nur die halbe Wahrheit, solange
+  // Objekte auf die Freigabe warten. Beides steht deshalb auf der Karte, sobald
+  // beides zutrifft — der Betrieb sieht sonst grün und findet auf myBestDays
+  // trotzdem nur einen Teil seiner Objekte.
+  const marktGelistet = t("listedCount", {
+    count: overview.marketplace.listed_count,
+  });
+  const marktWartet = t("marketplacePending", {
+    count: overview.marketplace.pending_count,
+  });
+  const marktBadge =
+    overview.marketplace.pending_count > 0
+      ? `${marktGelistet} · ${marktWartet}`
+      : marktGelistet;
+
   return (
     <div className="flex flex-col gap-8">
       {/* Buchungsportale */}
@@ -325,10 +340,14 @@ export function ChannelGrid({ overview }: { overview: ChannelOverview | null }) 
               srcDark: "/marketing/brand/mybestdays-logo-light.png",
             }}
             alt={overview.marketplace.label}
+            // Grün nur, wenn wirklich etwas auf myBestDays steht (freigegeben).
+            // Gelistet-aber-in-Prüfung ist der amber Zwischenzustand — sonst
+            // meldete die Karte „18 Objekte gelistet", während der Marktplatz
+            // leer war (live 11.08.2026).
             connected={overview.marketplace.listed_count > 0}
-            badge={t("listedCount", {
-              count: overview.marketplace.listed_count,
-            })}
+            linked={overview.marketplace.pending_count > 0}
+            badge={marktBadge}
+            linkedLabel={marktWartet}
             href="/objekte"
             connectLabel={t("connect")}
           />

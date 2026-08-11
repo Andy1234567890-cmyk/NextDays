@@ -6,7 +6,9 @@
 // Ebene B (pro-Kanal-Sichtbarkeit), getrennt vom Lebenszyklus-Badge (status).
 // Zustandsmodell branchen-recherchiert (Guesty/Cloudbeds/SiteMinder): active
 // (grün), paused (grau, Nutzer-Wille), not_connected (neutral/gestrichelt),
-// error (rot, nur Portale möglich). Pausiert ≠ Fehler — bewusst getrennte Farben.
+// error (rot, nur Portale möglich), pending (amber, nur Plattform: Freigabe des
+// Marktplatz-Betreibers offen). Pausiert ≠ Fehler ≠ Wartet — bewusst getrennte
+// Farben, damit der grüne Punkt nur steht, wenn das Objekt WIRKLICH verkauft.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 
@@ -21,12 +23,14 @@ const CHANNEL_META: Record<ChannelKey, { icon: string; labelKey: string }> = {
 };
 
 // Ampel-Kodierung je Zustand (Tailwind-Tokens, keine arbitrary Hex). paused/
-// not_connected sind neutral (kein Alarm), nur error ist rot.
+// not_connected sind neutral (kein Alarm), pending wartet (amber, wie „verbunden,
+// Zuordnung offen" im Kanalmanager), nur error ist rot.
 const STATE_DOT: Record<ChannelState, string> = {
   active: "bg-emerald-500",
   paused: "bg-muted-foreground/40",
   not_connected: "bg-muted-foreground/25 ring-1 ring-dashed ring-muted-foreground/40",
   error: "bg-destructive",
+  pending: "bg-amber-500",
 };
 
 function Chip({

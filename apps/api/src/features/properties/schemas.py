@@ -323,6 +323,11 @@ class ChannelState(StrEnum):
     paused = "paused"          # verbunden/aktivierbar, aber Kanal-Flag aus
     not_connected = "not_connected"  # Kanal nicht eingerichtet (Portale ohne Map)
     error = "error"            # Sync-/Verbindungsfehler (nur Portale möglich)
+    # Alles vom Betrieb erledigt, es fehlt die Freigabe des Marktplatz-Betreibers
+    # (moderation_status != 'approved', 0203). NUR beim eigenen Marktplatz
+    # möglich. Eigener Zustand, weil „active" hier eine Falschaussage wäre: das
+    # Objekt steht auf myBestDays noch NICHT und ist dort nicht buchbar.
+    pending = "pending"
 
 
 class PropertyChannels(BaseModel):
@@ -340,6 +345,10 @@ class PropertyResponse(PropertyBase):
     tenant_id: str
     created_at: str | None = None
     updated_at: str | None = None
+    # Freigabe-Stand des eigenen Marktplatzes (0203): draft/pending/approved/
+    # rejected. Gehört in die Antwort, weil der Betrieb sonst nicht erfährt,
+    # warum sein aktiv gelistetes Objekt auf myBestDays nicht erscheint.
+    moderation_status: str | None = None
     # Abgeleiteter Kanal-Zustand (Ebene B) für die Kanal-Chips. Optional, weil
     # nur die Listen-/Detail-Wege ihn befüllen; None = nicht berechnet.
     channels: PropertyChannels | None = None
