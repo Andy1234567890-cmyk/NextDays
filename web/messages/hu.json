@@ -3769,7 +3769,8 @@
       "statusCancelled": "Megszakítva",
       "applyRules": "Szabályok alkalmazása",
       "rulesApplied": "{count} feladat a szabályokból.",
-      "noRuleMatched": "Egyetlen szabály sem vonatkozik erre a foglalásra."
+      "noRuleMatched": "Egyetlen szabály sem vonatkozik erre a foglalásra.",
+      "statusAccepted": "Elfogadva"
     },
     "propertyWarnings": {
       "title": "Figyelmeztetések",
@@ -3878,7 +3879,8 @@
       "saving": "Mentés…",
       "completeButton": "Lezárás",
       "inBooking": "A(z) {ref} foglaláshoz",
-      "assignedTo": "{name} részére"
+      "assignedTo": "{name} részére",
+      "doneBy": "Kipipálta: {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Hogyan fizet a vendég?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Feladataim megnyitása",
       "notFoundTitle": "A feladat nem érhető el",
       "notFoundHint": "Ez a feladat már nem létezik, vagy nincs Önhöz rendelve."
+    },
+    "taskStatus": {
+      "open": "Nyitott",
+      "accepted": "Elfogadva",
+      "in_progress": "Folyamatban",
+      "done": "Kész",
+      "cancelled": "Törölve"
+    },
+    "taskStatusAction": {
+      "open": "Visszatesz",
+      "accepted": "Elfogad",
+      "in_progress": "Elkezd",
+      "done": "Lezár"
+    },
+    "taskStatusChanged": {
+      "open": "Visszatéve.",
+      "accepted": "Elfogadva.",
+      "in_progress": "Elkezdve.",
+      "done": "Lezárva."
+    },
+    "taskCosts": {
+      "title": "Kiadások",
+      "amount": "Összeg",
+      "note": "Mire",
+      "notePlaceholder": "Mire? (pl. vécépapír)",
+      "add": "Hozzáadás",
+      "remove": "Eltávolítás",
+      "saved": "Kiadás rögzítve.",
+      "removed": "Kiadás eltávolítva.",
+      "invalidAmount": "Adjon meg érvényes összeget.",
+      "noCurrency": "Ehhez a szálláshoz nincs pénznem beállítva — a kiadások utána rögzíthetők."
+    },
+    "taskResolution": {
+      "title": "Visszajelzés",
+      "placeholder": "Hogy ment?",
+      "save": "Mentés",
+      "saved": "Visszajelzés mentve.",
+      "score": "Értékelés",
+      "giveScore": "Értékelés {score} az 5-ből"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Ellenőrzés alatt"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Portál csatlakoztatása",
-      "noPortals": "Ehhez a szálláshelyhez még nincs portál (Booking, Airbnb stb.) csatlakoztatva."
+      "noPortals": "Ehhez a szálláshelyhez még nincs portál (Booking, Airbnb stb.) csatlakoztatva.",
+      "marketplaceReview": "Ellenőrzés alatt",
+      "marketplaceReviewHint": "A myBestDays még ellenőrzi ezt a hirdetést. A jóváhagyás után megjelenik a piactéren. A portálokat és a saját weboldalt ez nem érinti."
     },
     "IdLayout": {
       "loadError": "Az objektumot nem sikerült betölteni: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Fiók csatlakoztatása",
     "accountsCheckPortalHint": "Ellenőrizze a portálfiók beállításaiban, hogy nincs-e más alkalmazás megadva kapcsolatszolgáltatóként.",
     "accountsLogoutHint": "Jelentkezzen ki a portálról a böngészőben, mielőtt másik fiókot csatlakoztat.",
-    "accountConnectCredentialHint": "További {portal}-hozzáférést az objektum összekapcsolásakor, a szálloda-azonosítóval kell megadni – nem itt."
+    "accountConnectCredentialHint": "További {portal}-hozzáférést az objektum összekapcsolásakor, a szálloda-azonosítóval kell megadni – nem itt.",
+    "marketplacePending": "{count} ellenőrzés alatt",
+    "marketplaceWaiting": "Ellenőrzés alatt"
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",

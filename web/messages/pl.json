@@ -3769,7 +3769,8 @@
       "statusCancelled": "Anulowane",
       "applyRules": "Zastosuj reguły",
       "rulesApplied": "Zadań z reguł: {count}.",
-      "noRuleMatched": "Żadna reguła nie dotyczy tej rezerwacji."
+      "noRuleMatched": "Żadna reguła nie dotyczy tej rezerwacji.",
+      "statusAccepted": "Przyjęte"
     },
     "propertyWarnings": {
       "title": "Ostrzeżenia",
@@ -3878,7 +3879,8 @@
       "saving": "Zapisywanie…",
       "completeButton": "Zakończ",
       "inBooking": "Do rezerwacji {ref}",
-      "assignedTo": "Dla {name}"
+      "assignedTo": "Dla {name}",
+      "doneBy": "Odhaczone przez {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Jak płaci gość?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Otwórz moje zadania",
       "notFoundTitle": "Zadanie niedostępne",
       "notFoundHint": "To zadanie już nie istnieje albo nie jest do Ciebie przypisane."
+    },
+    "taskStatus": {
+      "open": "Otwarte",
+      "accepted": "Przyjęte",
+      "in_progress": "W toku",
+      "done": "Gotowe",
+      "cancelled": "Anulowane"
+    },
+    "taskStatusAction": {
+      "open": "Odłóż",
+      "accepted": "Przyjmij",
+      "in_progress": "Zacznij",
+      "done": "Zakończ"
+    },
+    "taskStatusChanged": {
+      "open": "Odłożone.",
+      "accepted": "Przyjęte.",
+      "in_progress": "Rozpoczęte.",
+      "done": "Zakończone."
+    },
+    "taskCosts": {
+      "title": "Wydatki",
+      "amount": "Kwota",
+      "note": "Na co",
+      "notePlaceholder": "Na co? (np. papier toaletowy)",
+      "add": "Dodaj",
+      "remove": "Usuń",
+      "saved": "Wydatek zapisany.",
+      "removed": "Wydatek usunięty.",
+      "invalidAmount": "Podaj prawidłową kwotę.",
+      "noCurrency": "Dla tego obiektu nie ustawiono waluty — wydatki będzie można zapisać później."
+    },
+    "taskResolution": {
+      "title": "Podsumowanie",
+      "placeholder": "Jak poszło?",
+      "save": "Zapisz",
+      "saved": "Podsumowanie zapisane.",
+      "score": "Ocena",
+      "giveScore": "Oceń {score} na 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "W weryfikacji"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Marketplace",
       "groupPortals": "Portale",
       "connectPortal": "Połącz portal",
-      "noPortals": "Do tego obiektu nie podłączono jeszcze żadnego portalu (Booking, Airbnb i inne)."
+      "noPortals": "Do tego obiektu nie podłączono jeszcze żadnego portalu (Booking, Airbnb i inne).",
+      "marketplaceReview": "W weryfikacji",
+      "marketplaceReviewHint": "myBestDays wciąż weryfikuje tę ofertę. Pojawi się na rynku po zatwierdzeniu. Portale i własna strona internetowa nie są tym objęte."
     },
     "IdLayout": {
       "loadError": "Nie udało się załadować obiektu: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Połącz konto",
     "accountsCheckPortalHint": "Sprawdź w ustawieniach konta portalu, czy żadna inna aplikacja nie jest ustawiona jako dostawca połączenia.",
     "accountsLogoutHint": "Wyloguj się z portalu w przeglądarce, zanim połączysz inne konto.",
-    "accountConnectCredentialHint": "Kolejny dostęp {portal} dodaje się wraz z identyfikatorem hotelu podczas łączenia obiektu, nie tutaj."
+    "accountConnectCredentialHint": "Kolejny dostęp {portal} dodaje się wraz z identyfikatorem hotelu podczas łączenia obiektu, nie tutaj.",
+    "marketplacePending": "{count} w weryfikacji",
+    "marketplaceWaiting": "W weryfikacji"
   },
   "calendarSync": {
     "title": "Importuj/eksportuj kalendarz",

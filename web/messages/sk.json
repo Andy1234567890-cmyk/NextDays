@@ -3769,7 +3769,8 @@
       "statusCancelled": "Zrušené",
       "applyRules": "Použiť pravidlá",
       "rulesApplied": "Úloh z pravidiel: {count}.",
-      "noRuleMatched": "Na túto rezerváciu sa nevzťahuje žiadne pravidlo."
+      "noRuleMatched": "Na túto rezerváciu sa nevzťahuje žiadne pravidlo.",
+      "statusAccepted": "Prijatá"
     },
     "propertyWarnings": {
       "title": "Upozornenia",
@@ -3878,7 +3879,8 @@
       "saving": "Ukladá sa…",
       "completeButton": "Dokončiť",
       "inBooking": "Na rezerváciu {ref}",
-      "assignedTo": "Pre {name}"
+      "assignedTo": "Pre {name}",
+      "doneBy": "Odškrtol(a) {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Ako hosť platí?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Otvoriť moje úlohy",
       "notFoundTitle": "Úloha nie je dostupná",
       "notFoundHint": "Táto úloha už neexistuje alebo vám nie je pridelená."
+    },
+    "taskStatus": {
+      "open": "Otvorená",
+      "accepted": "Prijatá",
+      "in_progress": "Prebieha",
+      "done": "Hotovo",
+      "cancelled": "Zrušená"
+    },
+    "taskStatusAction": {
+      "open": "Vrátiť",
+      "accepted": "Prijať",
+      "in_progress": "Začať",
+      "done": "Dokončiť"
+    },
+    "taskStatusChanged": {
+      "open": "Vrátená.",
+      "accepted": "Prijatá.",
+      "in_progress": "Začatá.",
+      "done": "Dokončená."
+    },
+    "taskCosts": {
+      "title": "Výdavky",
+      "amount": "Suma",
+      "note": "Na čo",
+      "notePlaceholder": "Na čo? (napr. toaletný papier)",
+      "add": "Pridať",
+      "remove": "Odobrať",
+      "saved": "Výdavok zaznamenaný.",
+      "removed": "Výdavok odobratý.",
+      "invalidAmount": "Zadajte platnú sumu.",
+      "noCurrency": "Pre tento objekt nie je nastavená mena — výdavky sa dajú zaznamenať potom."
+    },
+    "taskResolution": {
+      "title": "Spätná väzba",
+      "placeholder": "Ako to šlo?",
+      "save": "Uložiť",
+      "saved": "Spätná väzba uložená.",
+      "score": "Hodnotenie",
+      "giveScore": "Ohodnotiť {score} z 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Na kontrole"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Pripojiť portál",
-      "noPortals": "K tomuto objektu zatiaľ nie je pripojený žiadny portál (Booking, Airbnb a ďalšie)."
+      "noPortals": "K tomuto objektu zatiaľ nie je pripojený žiadny portál (Booking, Airbnb a ďalšie).",
+      "marketplaceReview": "Na kontrole",
+      "marketplaceReviewHint": "myBestDays túto ponuku ešte kontroluje. Na marketplace sa zobrazí po schválení. Portály a vlastnú webovú stránku to neovplyvní."
     },
     "IdLayout": {
       "loadError": "Objekt sa nepodarilo načítať: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Pripojiť účet",
     "accountsCheckPortalHint": "V nastaveniach účtu portálu overte, že ako poskytovateľ pripojenia nie je nastavená iná aplikácia.",
     "accountsLogoutHint": "Skôr než pripojíte iný účet, odhláste sa v prehliadači z portálu.",
-    "accountConnectCredentialHint": "Ďalší prístup k {portal} sa zadáva s ID hotela pri pripájaní objektu, nie tu."
+    "accountConnectCredentialHint": "Ďalší prístup k {portal} sa zadáva s ID hotela pri pripájaní objektu, nie tu.",
+    "marketplacePending": "{count} na kontrole",
+    "marketplaceWaiting": "Na kontrole"
   },
   "calendarSync": {
     "title": "Import/export kalendára",

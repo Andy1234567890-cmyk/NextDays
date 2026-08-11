@@ -3769,7 +3769,8 @@
       "statusCancelled": "Ακυρωμένη",
       "applyRules": "Εφαρμογή κανόνων",
       "rulesApplied": "{count} εργασίες από τους κανόνες.",
-      "noRuleMatched": "Κανένας κανόνας δεν ισχύει για αυτή την κράτηση."
+      "noRuleMatched": "Κανένας κανόνας δεν ισχύει για αυτή την κράτηση.",
+      "statusAccepted": "Αποδεκτή"
     },
     "propertyWarnings": {
       "title": "Προειδοποιήσεις",
@@ -3878,7 +3879,8 @@
       "saving": "Αποθήκευση…",
       "completeButton": "Ολοκλήρωση",
       "inBooking": "Στην κράτηση {ref}",
-      "assignedTo": "Για {name}"
+      "assignedTo": "Για {name}",
+      "doneBy": "Σημειώθηκε από {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Πώς πληρώνει ο επισκέπτης;",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Άνοιγμα των εργασιών μου",
       "notFoundTitle": "Η εργασία δεν είναι διαθέσιμη",
       "notFoundHint": "Αυτή η εργασία δεν υπάρχει πλέον ή δεν σας έχει ανατεθεί."
+    },
+    "taskStatus": {
+      "open": "Ανοιχτή",
+      "accepted": "Αποδεκτή",
+      "in_progress": "Σε εξέλιξη",
+      "done": "Ολοκληρώθηκε",
+      "cancelled": "Ακυρώθηκε"
+    },
+    "taskStatusAction": {
+      "open": "Επιστροφή",
+      "accepted": "Αποδοχή",
+      "in_progress": "Έναρξη",
+      "done": "Ολοκλήρωση"
+    },
+    "taskStatusChanged": {
+      "open": "Επιστράφηκε.",
+      "accepted": "Έγινε αποδεκτή.",
+      "in_progress": "Ξεκίνησε.",
+      "done": "Ολοκληρώθηκε."
+    },
+    "taskCosts": {
+      "title": "Έξοδα",
+      "amount": "Ποσό",
+      "note": "Για τι",
+      "notePlaceholder": "Για τι; (π.χ. χαρτί υγείας)",
+      "add": "Προσθήκη",
+      "remove": "Αφαίρεση",
+      "saved": "Το έξοδο καταχωρήθηκε.",
+      "removed": "Το έξοδο αφαιρέθηκε.",
+      "invalidAmount": "Εισαγάγετε έγκυρο ποσό.",
+      "noCurrency": "Για αυτό το κατάλυμα δεν έχει οριστεί νόμισμα — τα έξοδα μπορούν να καταχωρηθούν μετά."
+    },
+    "taskResolution": {
+      "title": "Ανατροφοδότηση",
+      "placeholder": "Πώς πήγε;",
+      "save": "Αποθήκευση",
+      "saved": "Η ανατροφοδότηση αποθηκεύτηκε.",
+      "score": "Βαθμολογία",
+      "giveScore": "Βαθμολόγηση {score} στα 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Σε έλεγχο"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Σύνδεση πύλης",
-      "noPortals": "Δεν έχει συνδεθεί ακόμη πύλη (Booking, Airbnb κ.ά.) για αυτό το κατάλυμα."
+      "noPortals": "Δεν έχει συνδεθεί ακόμη πύλη (Booking, Airbnb κ.ά.) για αυτό το κατάλυμα.",
+      "marketplaceReview": "Σε έλεγχο",
+      "marketplaceReviewHint": "Το myBestDays ελέγχει ακόμη αυτή την καταχώριση. Θα εμφανιστεί στην αγορά μόλις εγκριθεί. Οι πύλες και ο δικός σας ιστότοπος δεν επηρεάζονται."
     },
     "IdLayout": {
       "loadError": "Δεν ήταν δυνατή η φόρτωση του καταλύματος: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Σύνδεση λογαριασμού",
     "accountsCheckPortalHint": "Ελέγξτε στις ρυθμίσεις του λογαριασμού σας στην πύλη ότι καμία άλλη εφαρμογή δεν έχει οριστεί ως πάροχος σύνδεσης.",
     "accountsLogoutHint": "Αποσυνδεθείτε από την πύλη στο πρόγραμμα περιήγησης πριν συνδέσετε άλλον λογαριασμό.",
-    "accountConnectCredentialHint": "Μια επιπλέον πρόσβαση {portal} καταχωρείται με το αναγνωριστικό ξενοδοχείου κατά τη σύνδεση ενός καταλύματος — όχι εδώ."
+    "accountConnectCredentialHint": "Μια επιπλέον πρόσβαση {portal} καταχωρείται με το αναγνωριστικό ξενοδοχείου κατά τη σύνδεση ενός καταλύματος — όχι εδώ.",
+    "marketplacePending": "{count} σε έλεγχο",
+    "marketplaceWaiting": "Σε έλεγχο"
   },
   "calendarSync": {
     "title": "Εισαγωγή/εξαγωγή ημερολογίου",

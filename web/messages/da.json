@@ -3769,7 +3769,8 @@
       "statusCancelled": "Afbrudt",
       "applyRules": "Anvend regler",
       "rulesApplied": "{count} opgaver fra reglerne.",
-      "noRuleMatched": "Ingen regel passer til denne reservation."
+      "noRuleMatched": "Ingen regel passer til denne reservation.",
+      "statusAccepted": "Accepteret"
     },
     "propertyWarnings": {
       "title": "Advarsler",
@@ -3878,7 +3879,8 @@
       "saving": "Gemmer…",
       "completeButton": "Afslut",
       "inBooking": "Til reservation {ref}",
-      "assignedTo": "Til {name}"
+      "assignedTo": "Til {name}",
+      "doneBy": "Afkrydset af {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Hvordan betaler gæsten?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Åbn mine opgaver",
       "notFoundTitle": "Opgaven er ikke tilgængelig",
       "notFoundHint": "Denne opgave findes ikke længere, eller den er ikke tildelt dig."
+    },
+    "taskStatus": {
+      "open": "Åben",
+      "accepted": "Accepteret",
+      "in_progress": "I gang",
+      "done": "Færdig",
+      "cancelled": "Aflyst"
+    },
+    "taskStatusAction": {
+      "open": "Læg tilbage",
+      "accepted": "Accepter",
+      "in_progress": "Start",
+      "done": "Afslut"
+    },
+    "taskStatusChanged": {
+      "open": "Lagt tilbage.",
+      "accepted": "Accepteret.",
+      "in_progress": "Startet.",
+      "done": "Afsluttet."
+    },
+    "taskCosts": {
+      "title": "Udlæg",
+      "amount": "Beløb",
+      "note": "Til hvad",
+      "notePlaceholder": "Til hvad? (f.eks. toiletpapir)",
+      "add": "Tilføj",
+      "remove": "Fjern",
+      "saved": "Udlæg registreret.",
+      "removed": "Udlæg fjernet.",
+      "invalidAmount": "Indtast et gyldigt beløb.",
+      "noCurrency": "Der er ikke angivet en valuta for denne bolig — udlæg kan registreres bagefter."
+    },
+    "taskResolution": {
+      "title": "Tilbagemelding",
+      "placeholder": "Hvordan gik det?",
+      "save": "Gem",
+      "saved": "Tilbagemelding gemt.",
+      "score": "Vurdering",
+      "giveScore": "Bedøm {score} ud af 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Under gennemgang"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Forbind portal",
-      "noPortals": "Der er endnu ikke forbundet nogen portal (Booking, Airbnb m.fl.) til denne bolig."
+      "noPortals": "Der er endnu ikke forbundet nogen portal (Booking, Airbnb m.fl.) til denne bolig.",
+      "marketplaceReview": "Under gennemgang",
+      "marketplaceReviewHint": "myBestDays gennemgår stadig denne annonce. Den vises på markedspladsen, når den er godkendt. Portaler og din egen hjemmeside påvirkes ikke."
     },
     "IdLayout": {
       "loadError": "Objektet kunne ikke indlæses: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Forbind konto",
     "accountsCheckPortalHint": "Kontrollér i indstillingerne for din portalkonto, at ingen anden app er angivet som forbindelsesudbyder.",
     "accountsLogoutHint": "Log ud af portalen i din browser, før du forbinder en anden konto.",
-    "accountConnectCredentialHint": "En yderligere {portal}-adgang oprettes med hotel-id'et, når du forbinder et objekt — ikke her."
+    "accountConnectCredentialHint": "En yderligere {portal}-adgang oprettes med hotel-id'et, når du forbinder et objekt — ikke her.",
+    "marketplacePending": "{count} under gennemgang",
+    "marketplaceWaiting": "Under gennemgang"
   },
   "calendarSync": {
     "title": "Importér/eksportér kalender",

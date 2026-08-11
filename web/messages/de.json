@@ -3769,7 +3769,8 @@
       "statusCancelled": "Abgebrochen",
       "applyRules": "Regeln anwenden",
       "rulesApplied": "{count} Aufgaben aus den Regeln.",
-      "noRuleMatched": "Keine Regel trifft auf diese Buchung zu."
+      "noRuleMatched": "Keine Regel trifft auf diese Buchung zu.",
+      "statusAccepted": "Angenommen"
     },
     "propertyWarnings": {
       "title": "Warnungen",
@@ -3878,7 +3879,8 @@
       "saving": "Speichert…",
       "completeButton": "Abschließen",
       "inBooking": "Zur Buchung {ref}",
-      "assignedTo": "Für {name}"
+      "assignedTo": "Für {name}",
+      "doneBy": "Abgehakt von {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Wie bezahlt der Gast?",
@@ -4554,6 +4556,45 @@
       "toMyTasks": "Meine Aufgaben öffnen",
       "notFoundTitle": "Aufgabe nicht verfügbar",
       "notFoundHint": "Diese Aufgabe gibt es nicht mehr oder sie ist dir nicht zugeteilt."
+    },
+    "taskStatus": {
+      "open": "Offen",
+      "accepted": "Angenommen",
+      "in_progress": "In Arbeit",
+      "done": "Erledigt",
+      "cancelled": "Abgesagt"
+    },
+    "taskStatusAction": {
+      "open": "Zurücklegen",
+      "accepted": "Annehmen",
+      "in_progress": "Anfangen",
+      "done": "Abschließen"
+    },
+    "taskStatusChanged": {
+      "open": "Zurückgelegt.",
+      "accepted": "Angenommen.",
+      "in_progress": "Gestartet.",
+      "done": "Abgeschlossen."
+    },
+    "taskCosts": {
+      "title": "Auslagen",
+      "amount": "Betrag",
+      "note": "Wofür",
+      "notePlaceholder": "Wofür? (z. B. Klopapier)",
+      "add": "Hinzufügen",
+      "remove": "Entfernen",
+      "saved": "Auslage erfasst.",
+      "removed": "Auslage entfernt.",
+      "invalidAmount": "Bitte einen gültigen Betrag eingeben.",
+      "noCurrency": "Für dieses Objekt ist keine Währung hinterlegt — Auslagen lassen sich erst danach erfassen."
+    },
+    "taskResolution": {
+      "title": "Rückmeldung",
+      "placeholder": "Wie ist es gelaufen?",
+      "save": "Speichern",
+      "saved": "Rückmeldung gespeichert.",
+      "score": "Bewertung",
+      "giveScore": "{score} von 5 bewerten"
     }
   },
   "objects": {
@@ -4565,7 +4606,8 @@
         "active": "Aktiv",
         "paused": "Pausiert",
         "not_connected": "Nicht eingerichtet",
-        "error": "Fehler"
+        "error": "Fehler",
+        "pending": "In Prüfung"
       }
     },
     "channelsTab": {
@@ -4578,7 +4620,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Portal verbinden",
-      "noPortals": "Noch kein Portal (Booking, Airbnb & Co.) für dieses Objekt verbunden."
+      "noPortals": "Noch kein Portal (Booking, Airbnb & Co.) für dieses Objekt verbunden.",
+      "marketplaceReview": "In Prüfung",
+      "marketplaceReviewHint": "myBestDays prüft dieses Inserat noch. Sobald es freigegeben ist, erscheint es auf dem Marktplatz. Portale und eigene Website sind davon nicht betroffen."
     },
     "IdLayout": {
       "loadError": "Objekt konnte nicht geladen werden: {error}"
@@ -6229,7 +6273,9 @@
     "accountConnect": "Konto verbinden",
     "accountsCheckPortalHint": "Prüfe in den Einstellungen deines Portal-Kontos, dass keine andere Anwendung als Verbindungsanbieter eingetragen ist.",
     "accountsLogoutHint": "Melde dich im Browser vom Portal ab, bevor du ein anderes Konto verbindest.",
-    "accountConnectCredentialHint": "Ein weiterer {portal}-Zugang wird beim Verbinden eines Objekts mit der Hotel-ID eingetragen — nicht hier."
+    "accountConnectCredentialHint": "Ein weiterer {portal}-Zugang wird beim Verbinden eines Objekts mit der Hotel-ID eingetragen — nicht hier.",
+    "marketplacePending": "{count} in Prüfung",
+    "marketplaceWaiting": "In Prüfung"
   },
   "calendarSync": {
     "title": "Kalender importieren/exportieren",

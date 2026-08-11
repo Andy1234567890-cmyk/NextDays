@@ -3769,7 +3769,8 @@
       "statusCancelled": "Cancelada",
       "applyRules": "Aplicar regras",
       "rulesApplied": "{count} tarefas a partir das regras.",
-      "noRuleMatched": "Nenhuma regra se aplica a esta reserva."
+      "noRuleMatched": "Nenhuma regra se aplica a esta reserva.",
+      "statusAccepted": "Aceite"
     },
     "propertyWarnings": {
       "title": "Avisos",
@@ -3878,7 +3879,8 @@
       "saving": "A guardar…",
       "completeButton": "Concluir",
       "inBooking": "Para a reserva {ref}",
-      "assignedTo": "Para {name}"
+      "assignedTo": "Para {name}",
+      "doneBy": "Assinalado por {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Como paga o hóspede?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Abrir as minhas tarefas",
       "notFoundTitle": "Tarefa indisponível",
       "notFoundHint": "Esta tarefa já não existe ou não lhe está atribuída."
+    },
+    "taskStatus": {
+      "open": "Aberta",
+      "accepted": "Aceite",
+      "in_progress": "Em curso",
+      "done": "Concluída",
+      "cancelled": "Cancelada"
+    },
+    "taskStatusAction": {
+      "open": "Devolver",
+      "accepted": "Aceitar",
+      "in_progress": "Começar",
+      "done": "Concluir"
+    },
+    "taskStatusChanged": {
+      "open": "Devolvida.",
+      "accepted": "Aceite.",
+      "in_progress": "Iniciada.",
+      "done": "Concluída."
+    },
+    "taskCosts": {
+      "title": "Despesas",
+      "amount": "Valor",
+      "note": "Para quê",
+      "notePlaceholder": "Para quê? (p. ex. papel higiénico)",
+      "add": "Adicionar",
+      "remove": "Remover",
+      "saved": "Despesa registada.",
+      "removed": "Despesa removida.",
+      "invalidAmount": "Introduza um valor válido.",
+      "noCurrency": "Este alojamento não tem moeda definida — as despesas poderão ser registadas depois."
+    },
+    "taskResolution": {
+      "title": "Retorno",
+      "placeholder": "Como correu?",
+      "save": "Guardar",
+      "saved": "Retorno guardado.",
+      "score": "Avaliação",
+      "giveScore": "Avaliar {score} em 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Em análise"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Marketplace",
       "groupPortals": "Portais",
       "connectPortal": "Ligar portal",
-      "noPortals": "Ainda não há nenhum portal (Booking, Airbnb & Co.) ligado a este alojamento."
+      "noPortals": "Ainda não há nenhum portal (Booking, Airbnb & Co.) ligado a este alojamento.",
+      "marketplaceReview": "Em análise",
+      "marketplaceReviewHint": "O myBestDays ainda está a analisar este anúncio. Aparecerá no marketplace assim que for aprovado. Os portais e o seu próprio site não são afetados."
     },
     "IdLayout": {
       "loadError": "Não foi possível carregar o objeto: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Ligar conta",
     "accountsCheckPortalHint": "Verifique nas definições da sua conta do portal que nenhuma outra aplicação está definida como fornecedor da ligação.",
     "accountsLogoutHint": "Termine sessão no portal no seu navegador antes de ligar outra conta.",
-    "accountConnectCredentialHint": "Um acesso {portal} adicional é adicionado com o ID do hotel ao ligar um alojamento, não aqui."
+    "accountConnectCredentialHint": "Um acesso {portal} adicional é adicionado com o ID do hotel ao ligar um alojamento, não aqui.",
+    "marketplacePending": "{count} em análise",
+    "marketplaceWaiting": "Em análise"
   },
   "calendarSync": {
     "title": "Importar/exportar calendário",

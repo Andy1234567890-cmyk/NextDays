@@ -3769,7 +3769,8 @@
       "statusCancelled": "Atšaukta",
       "applyRules": "Taikyti taisykles",
       "rulesApplied": "Iš taisyklių: {count} užduotys.",
-      "noRuleMatched": "Šiam užsakymui netaikoma jokia taisyklė."
+      "noRuleMatched": "Šiam užsakymui netaikoma jokia taisyklė.",
+      "statusAccepted": "Priimta"
     },
     "propertyWarnings": {
       "title": "Įspėjimai",
@@ -3878,7 +3879,8 @@
       "saving": "Išsaugoma…",
       "completeButton": "Užbaigti",
       "inBooking": "Į užsakymą {ref}",
-      "assignedTo": "Skirta {name}"
+      "assignedTo": "Skirta {name}",
+      "doneBy": "Pažymėjo {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Kaip svečias moka?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Atverti mano užduotis",
       "notFoundTitle": "Užduotis nepasiekiama",
       "notFoundHint": "Šios užduoties nebėra arba ji jums nepriskirta."
+    },
+    "taskStatus": {
+      "open": "Atvira",
+      "accepted": "Priimta",
+      "in_progress": "Vykdoma",
+      "done": "Atlikta",
+      "cancelled": "Atšaukta"
+    },
+    "taskStatusAction": {
+      "open": "Grąžinti",
+      "accepted": "Priimti",
+      "in_progress": "Pradėti",
+      "done": "Užbaigti"
+    },
+    "taskStatusChanged": {
+      "open": "Grąžinta.",
+      "accepted": "Priimta.",
+      "in_progress": "Pradėta.",
+      "done": "Užbaigta."
+    },
+    "taskCosts": {
+      "title": "Išlaidos",
+      "amount": "Suma",
+      "note": "Kam",
+      "notePlaceholder": "Kam? (pvz., tualetinis popierius)",
+      "add": "Pridėti",
+      "remove": "Pašalinti",
+      "saved": "Išlaidos užfiksuotos.",
+      "removed": "Išlaidos pašalintos.",
+      "invalidAmount": "Įveskite tinkamą sumą.",
+      "noCurrency": "Šiam objektui nenustatyta valiuta — išlaidas bus galima fiksuoti po to."
+    },
+    "taskResolution": {
+      "title": "Atsiliepimas",
+      "placeholder": "Kaip sekėsi?",
+      "save": "Išsaugoti",
+      "saved": "Atsiliepimas išsaugotas.",
+      "score": "Įvertinimas",
+      "giveScore": "Įvertinti {score} iš 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Tikrinama"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Prijungti portalą",
-      "noPortals": "Prie šio objekto dar neprijungtas joks portalas (Booking, Airbnb ir kt.)."
+      "noPortals": "Prie šio objekto dar neprijungtas joks portalas (Booking, Airbnb ir kt.).",
+      "marketplaceReview": "Tikrinama",
+      "marketplaceReviewHint": "myBestDays dar tikrina šį skelbimą. Patvirtinus jis atsiras prekyvietėje. Portalams ir savo svetainei tai neturi įtakos."
     },
     "IdLayout": {
       "loadError": "Objekto nepavyko įkelti: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Prijungti paskyrą",
     "accountsCheckPortalHint": "Portalo paskyros nustatymuose patikrinkite, ar jokia kita programa nenurodyta kaip ryšio teikėja.",
     "accountsLogoutHint": "Prieš prijungdami kitą paskyrą, naršyklėje atsijunkite nuo portalo.",
-    "accountConnectCredentialHint": "Papildoma {portal} prieiga įrašoma su viešbučio ID prijungiant objektą, ne čia."
+    "accountConnectCredentialHint": "Papildoma {portal} prieiga įrašoma su viešbučio ID prijungiant objektą, ne čia.",
+    "marketplacePending": "{count} tikrinama",
+    "marketplaceWaiting": "Tikrinama"
   },
   "calendarSync": {
     "title": "Kalendoriaus importas / eksportas",

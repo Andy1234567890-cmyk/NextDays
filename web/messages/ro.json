@@ -3769,7 +3769,8 @@
       "statusCancelled": "Anulată",
       "applyRules": "Aplică regulile",
       "rulesApplied": "{count} sarcini din reguli.",
-      "noRuleMatched": "Nicio regulă nu se aplică acestei rezervări."
+      "noRuleMatched": "Nicio regulă nu se aplică acestei rezervări.",
+      "statusAccepted": "Acceptată"
     },
     "propertyWarnings": {
       "title": "Avertismente",
@@ -3878,7 +3879,8 @@
       "saving": "Se salvează…",
       "completeButton": "Finalizează",
       "inBooking": "Către rezervarea {ref}",
-      "assignedTo": "Pentru {name}"
+      "assignedTo": "Pentru {name}",
+      "doneBy": "Bifat de {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Cum plătește oaspetele?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Deschide sarcinile mele",
       "notFoundTitle": "Sarcină indisponibilă",
       "notFoundHint": "Această sarcină nu mai există sau nu vă este alocată."
+    },
+    "taskStatus": {
+      "open": "Deschisă",
+      "accepted": "Acceptată",
+      "in_progress": "În lucru",
+      "done": "Finalizată",
+      "cancelled": "Anulată"
+    },
+    "taskStatusAction": {
+      "open": "Pune înapoi",
+      "accepted": "Acceptă",
+      "in_progress": "Începe",
+      "done": "Finalizează"
+    },
+    "taskStatusChanged": {
+      "open": "Pusă înapoi.",
+      "accepted": "Acceptată.",
+      "in_progress": "Începută.",
+      "done": "Finalizată."
+    },
+    "taskCosts": {
+      "title": "Cheltuieli",
+      "amount": "Sumă",
+      "note": "Pentru ce",
+      "notePlaceholder": "Pentru ce? (ex. hârtie igienică)",
+      "add": "Adaugă",
+      "remove": "Elimină",
+      "saved": "Cheltuială înregistrată.",
+      "removed": "Cheltuială eliminată.",
+      "invalidAmount": "Introduceți o sumă validă.",
+      "noCurrency": "Pentru această proprietate nu este setată o monedă — cheltuielile se pot înregistra după aceea."
+    },
+    "taskResolution": {
+      "title": "Feedback",
+      "placeholder": "Cum a mers?",
+      "save": "Salvează",
+      "saved": "Feedback salvat.",
+      "score": "Notă",
+      "giveScore": "Acordă {score} din 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "În verificare"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Conectează portal",
-      "noPortals": "Pentru această proprietate nu este conectat încă niciun portal (Booking, Airbnb etc.)."
+      "noPortals": "Pentru această proprietate nu este conectat încă niciun portal (Booking, Airbnb etc.).",
+      "marketplaceReview": "În verificare",
+      "marketplaceReviewHint": "myBestDays verifică încă acest anunț. Va apărea în marketplace după aprobare. Portalurile și site-ul propriu nu sunt afectate."
     },
     "IdLayout": {
       "loadError": "Obiectul nu a putut fi încărcat: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Conectează cont",
     "accountsCheckPortalHint": "Verifică în setările contului de portal că nicio altă aplicație nu este setată ca furnizor al conexiunii.",
     "accountsLogoutHint": "Deconectează-te de la portal în browser înainte de a conecta alt cont.",
-    "accountConnectCredentialHint": "Un acces {portal} suplimentar se adaugă cu ID-ul hotelului la conectarea unei proprietăți, nu aici."
+    "accountConnectCredentialHint": "Un acces {portal} suplimentar se adaugă cu ID-ul hotelului la conectarea unei proprietăți, nu aici.",
+    "marketplacePending": "{count} în verificare",
+    "marketplaceWaiting": "În verificare"
   },
   "calendarSync": {
     "title": "Import/export calendar",

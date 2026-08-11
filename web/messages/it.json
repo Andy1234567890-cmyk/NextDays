@@ -3769,7 +3769,8 @@
       "statusCancelled": "Annullata",
       "applyRules": "Applica regole",
       "rulesApplied": "{count} attività dalle regole.",
-      "noRuleMatched": "Nessuna regola si applica a questa prenotazione."
+      "noRuleMatched": "Nessuna regola si applica a questa prenotazione.",
+      "statusAccepted": "Accettata"
     },
     "propertyWarnings": {
       "title": "Avvisi",
@@ -3878,7 +3879,8 @@
       "saving": "Salvataggio…",
       "completeButton": "Concludi",
       "inBooking": "Alla prenotazione {ref}",
-      "assignedTo": "Per {name}"
+      "assignedTo": "Per {name}",
+      "doneBy": "Spuntato da {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Come paga l'ospite?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Apri le mie attività",
       "notFoundTitle": "Attività non disponibile",
       "notFoundHint": "Questa attività non esiste più oppure non è assegnata a te."
+    },
+    "taskStatus": {
+      "open": "Aperta",
+      "accepted": "Accettata",
+      "in_progress": "In corso",
+      "done": "Conclusa",
+      "cancelled": "Annullata"
+    },
+    "taskStatusAction": {
+      "open": "Rimettere",
+      "accepted": "Accetta",
+      "in_progress": "Inizia",
+      "done": "Concludi"
+    },
+    "taskStatusChanged": {
+      "open": "Rimessa.",
+      "accepted": "Accettata.",
+      "in_progress": "Iniziata.",
+      "done": "Conclusa."
+    },
+    "taskCosts": {
+      "title": "Spese",
+      "amount": "Importo",
+      "note": "Per cosa",
+      "notePlaceholder": "Per cosa? (es. carta igienica)",
+      "add": "Aggiungi",
+      "remove": "Rimuovi",
+      "saved": "Spesa registrata.",
+      "removed": "Spesa rimossa.",
+      "invalidAmount": "Inserisci un importo valido.",
+      "noCurrency": "Per questo alloggio non è impostata una valuta — le spese si potranno registrare dopo."
+    },
+    "taskResolution": {
+      "title": "Riscontro",
+      "placeholder": "Com'è andata?",
+      "save": "Salva",
+      "saved": "Riscontro salvato.",
+      "score": "Valutazione",
+      "giveScore": "Valuta {score} su 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "In verifica"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Marketplace",
       "groupPortals": "Portali",
       "connectPortal": "Collega un portale",
-      "noPortals": "Ancora nessun portale (Booking, Airbnb & Co.) collegato a questa struttura."
+      "noPortals": "Ancora nessun portale (Booking, Airbnb & Co.) collegato a questa struttura.",
+      "marketplaceReview": "In verifica",
+      "marketplaceReviewHint": "myBestDays sta ancora verificando questo annuncio. Comparirà nel marketplace una volta approvato. Portali e sito web proprio non sono interessati."
     },
     "IdLayout": {
       "loadError": "Impossibile caricare l'alloggio: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Collega account",
     "accountsCheckPortalHint": "Verifica nelle impostazioni del tuo account del portale che nessun'altra app sia impostata come fornitore della connessione.",
     "accountsLogoutHint": "Esci dal portale nel browser prima di collegare un altro account.",
-    "accountConnectCredentialHint": "Un ulteriore accesso {portal} si aggiunge con l’ID dell’hotel durante il collegamento di un alloggio, non qui."
+    "accountConnectCredentialHint": "Un ulteriore accesso {portal} si aggiunge con l’ID dell’hotel durante il collegamento di un alloggio, non qui.",
+    "marketplacePending": "{count} in verifica",
+    "marketplaceWaiting": "In verifica"
   },
   "calendarSync": {
     "title": "Importa/esporta calendario",

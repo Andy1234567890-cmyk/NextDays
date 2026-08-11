@@ -1616,10 +1616,14 @@ aufgesetzt, ergänzt durch Migration 0123 (Inspektion + PM-Metadaten + Realtime)
 | `POST`   | `/api/v1/tasks`                     | `manage_tasks`       | Aufgabe anlegen                                                                                                               |
 | `GET`    | `/api/v1/tasks/mine`                | `view_own_tasks`     | eigene Aufgaben                                                                                                               |
 | `GET`    | `/api/v1/tasks/by-reservation/{id}` | `view_calendar`      | Aufgaben zu einer Buchung (PM-Detailseite)                                                                                    |
-| `PATCH`  | `/api/v1/tasks/{id}/status`         | `manage_tasks`       | Aufgaben-Status setzen (offen/in Arbeit/erledigt/abgebrochen)                                                                 |
+| `PATCH`  | `/api/v1/tasks/{id}/status`         | `view_own_tasks`     | Arbeitszustand setzen: `open` → `accepted` → `in_progress` → `done` (+ `cancelled`). **DER eine Weg** — das Ziel `done` läuft intern über `complete` samt Foto-Pflicht; ein fachlich unmöglicher Sprung ergibt 422. Seit 0360 `view_own_tasks` statt `manage_tasks`: den Zustand der eigenen Arbeit meldet, wer sie tut |
 | `POST`   | `/api/v1/tasks/from-booking`        | `manage_tasks`       | aus Buchung: Anreise-Check + Endreinigung                                                                                     |
 | `POST`   | `/api/v1/tasks/checklist/item`      | `view_own_tasks`     | Checklisten-Punkt                                                                                                             |
 | `POST`   | `/api/v1/tasks/checklist/photo`     | `view_own_tasks`     | Foto-Nachweis (unbegrenzt/Raum)                                                                                               |
+| `PATCH`  | `/api/v1/tasks/checklist/item/{id}` | `view_own_tasks`     | Punkt abhaken / Häkchen zurücknehmen (`{"done": true|false}`, 0360). Schreibt `done_at`/`done_by` mit; Scope hängt an der AUFGABE, nicht an der item_id |
+| `POST`   | `/api/v1/tasks/{id}/costs`          | `view_own_tasks`     | Auslage erfassen (0360). **Keine Währung im Request** — sie kommt aus Objekt- bzw. Betriebswährung; fehlt beides → 422 statt eines erfundenen Euro |
+| `DELETE` | `/api/v1/tasks/costs/{id}`          | `view_own_tasks`     | Auslage zurücknehmen. staff/cleaner nur die eigenen (sonst 404)                                                                |
+| `PUT`    | `/api/v1/tasks/{id}/resolution`     | `view_own_tasks`     | Abschluss-Rückmeldung (Text + Note 1–5, genau eine je Aufgabe). Den TEXT darf die zuständige Person schreiben, die NOTE nur `manage_tasks` → sonst 403 |
 | `POST`   | `/api/v1/tasks/substitution`        | `request_substitute` | Vertretung anfragen (§4.3)                                                                                                    |
 | `POST`   | `/api/v1/tasks/inventory`           | `manage_inventory`   | Inventar (property_id null = zentraler Pool)                                                                                  |
 | `GET`    | `/api/v1/tasks/team`                | `manage_tasks`       | Teamaufgaben (Assignee + Objekt-Namen; `status_bucket`-Filter). KEINE Gast-PII/Beträge (§4.3)                                 |
@@ -1638,7 +1642,20 @@ aufgesetzt, ergänzt durch Migration 0123 (Inspektion + PM-Metadaten + Realtime)
 
 Frontend: `(dashboard)/reservierungen/aufgaben/*` — 7 Reiter (Kalender,
 Meine, Team, Inspektion, Vorlagen, Planmäßig, Regelmäßig), alle live über
-`useRealtime` (`tasks`, `task_rules`).
+`useRealtime` (`tasks`, `task_rules`). Eine einzelne Aufgabe öffnet als Overlay
+über der jeweiligen Ansicht; `(dashboard)/aufgaben/<id>` ist dieselbe Ansicht
+als Seite für den Deep-Link aus der Benachrichtigungs-Mail. Beide bedienen
+`TaskDetailInhalt` — eine Aufgabe, ein Aufbau.
+
+**Auslagen und Bewertung liegen NICHT an `tasks` (Wurzel 6, 0360).** `tasks` und
+`checklist_items` tragen ein pauschales `select`-GRANT für `authenticated`
+(nötig für die Realtime-Abos) — ein eingeloggter Zugang liest sie per PostgREST
+direkt. Kosten sind Finanzdaten (§4.3 gibt staff/cleaner keinen Finanzeinblick),
+eine Bewertung ist ein Personendatum über die zuständige Person; beides läge
+dort tenant-weit offen. Sie stehen deshalb in `task_costs` und
+`task_resolutions` — eigene Tabellen **ohne jedes Grant**, erreichbar nur über
+den Service-Key. Die zuständige Person sieht ihre eigenen Auslagen, die
+Konto-Führung alle.
 
 ---
 

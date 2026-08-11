@@ -7,7 +7,14 @@
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
-export type TaskStatus = "open" | "in_progress" | "done" | "cancelled";
+// `accepted` (0360, Hostaway-Gleichzug) sitzt zwischen „liegt da" und „ich bin
+// dran": jemand hat die Aufgabe ANGENOMMEN, aber noch nicht angefangen.
+export type TaskStatus =
+  | "open"
+  | "accepted"
+  | "in_progress"
+  | "done"
+  | "cancelled";
 export type InspectionState = "to_review" | "reviewed";
 export type TaskSource = "manual" | "auto" | "recurring";
 export type RuleKind = "template" | "auto" | "recurring";
@@ -47,9 +54,48 @@ export type ChecklistItem = {
   requires_photo: boolean;
   sort_order: number;
   photos: string[];
+  /** Spur hinter dem Haken (0360): wann und von wem. Altbestand trägt beides
+   *  `null` — vor 0360 gab es keinen Weg zum Abhaken. */
+  done_at: string | null;
+  done_by: string | null;
+  done_by_name: string | null;
 };
 
-export type TaskDetail = TaskListItem & { checklist: ChecklistItem[] };
+/** Eine Auslage zu einer Aufgabe. Die Reinigungskraft sieht NUR ihre eigenen
+ *  (§4.3) — der Server filtert, nicht die Oberfläche. */
+export type TaskCost = {
+  id: string;
+  task_id: string;
+  /** Als String vom Server (Dezimal), damit unterwegs nichts gerundet wird. */
+  amount: string;
+  currency: string;
+  note: string | null;
+  created_by: string | null;
+  created_by_name: string | null;
+  created_at: string | null;
+};
+
+/** Abschluss-Rückmeldung: genau eine je Aufgabe. Die Note vergibt nur die
+ *  Konto-Führung — eine Selbstbenotung sagt über die Leistung nichts. */
+export type TaskResolution = {
+  task_id: string;
+  note: string | null;
+  score: number | null;
+  created_by: string | null;
+  created_by_name: string | null;
+  updated_at: string | null;
+};
+
+export type TaskDetail = TaskListItem & {
+  checklist: ChecklistItem[];
+  costs: TaskCost[];
+  /** Währung, in der eine NEUE Auslage gebucht würde (Objekt-, sonst
+   *  Betriebswährung). `null` heißt „keine hinterlegt" — dann bietet die
+   *  Oberfläche das Kostenfeld gar nicht erst an, statt ein Feld zu zeigen,
+   *  dessen Speichern mit 422 endet (Wurzel 4). */
+  cost_currency: string | null;
+  resolution: TaskResolution | null;
+};
 
 export type CalendarBooking = {
   id: string;
@@ -266,10 +312,66 @@ export async function listMyTasks(filter?: {
 export async function setTaskStatus(
   taskId: string,
   status: TaskStatus,
-): Promise<Result<Task>> {
+): Promise<Result<TaskDetail>> {
   return call(`/tasks/${encodeURIComponent(taskId)}/status`, {
     method: "PATCH",
     body: { status },
+  });
+}
+
+/**
+ * Einen Checklisten-Punkt abhaken oder das Häkchen zurücknehmen (0360).
+ *
+ * Bewusst mit explizitem `done` statt eines Umschalters: zwei Geräte, die
+ * denselben Punkt gleichzeitig antippen, würden sich sonst gegenseitig
+ * zurücksetzen. So gewinnt der zuletzt gesendete ZUSTAND.
+ */
+export async function toggleChecklistItem(
+  itemId: string,
+  done: boolean,
+): Promise<Result<TaskDetail>> {
+  return call(`/tasks/checklist/item/${encodeURIComponent(itemId)}`, {
+    method: "PATCH",
+    body: { done },
+  });
+}
+
+/**
+ * Auslage zu einer Aufgabe erfassen. KEINE Währung im Aufruf — die kommt
+ * serverseitig aus dem Objekt (sonst dem Betrieb). Fehlt sie dort, antwortet
+ * der Server mit 422 statt ein Euro zu erfinden.
+ */
+export async function addTaskCost(
+  taskId: string,
+  input: { amount: string; note?: string | null },
+): Promise<Result<TaskDetail>> {
+  return call(`/tasks/${encodeURIComponent(taskId)}/costs`, {
+    method: "POST",
+    body: input,
+  });
+}
+
+/** Auslage zurücknehmen (eigene immer, fremde nur mit Aufgaben-Verwaltung). */
+export async function deleteTaskCost(
+  costId: string,
+): Promise<Result<TaskDetail>> {
+  return call(`/tasks/costs/${encodeURIComponent(costId)}`, {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Abschluss-Rückmeldung setzen (genau eine je Aufgabe). Der Text darf die
+ * zuständige Person schreiben, die BEWERTUNG nur die Konto-Führung — ein Score
+ * ohne diese Berechtigung ergibt 403.
+ */
+export async function setTaskResolution(
+  taskId: string,
+  input: { note?: string | null; score?: number | null },
+): Promise<Result<TaskDetail>> {
+  return call(`/tasks/${encodeURIComponent(taskId)}/resolution`, {
+    method: "PUT",
+    body: input,
   });
 }
 

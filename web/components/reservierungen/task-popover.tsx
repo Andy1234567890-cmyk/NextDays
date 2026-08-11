@@ -9,21 +9,14 @@ import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
-import { deleteTask, type TaskListItem } from "@/lib/tasks";
+import { deleteTask, type TaskListItem, type TaskStatus } from "@/lib/tasks";
+import { AUFGABEN_STATUS } from "@/lib/aufgaben-status";
 
+// Beschriftung aus der geteilten Zuordnung (lib/aufgaben-status). Vorher stand
+// hier eine eigene switch-Kopie, die den vierten Zustand nicht gekannt hätte.
 function statusLabel(t: ReturnType<typeof useTranslations>, status: string) {
-  switch (status) {
-    case "open":
-      return t("taskPopover.statusOpen");
-    case "in_progress":
-      return t("taskPopover.statusInProgress");
-    case "done":
-      return t("taskPopover.statusDone");
-    case "cancelled":
-      return t("taskPopover.statusCancelled");
-    default:
-      return status;
-  }
+  const d = AUFGABEN_STATUS[status as TaskStatus];
+  return d ? t(`taskStatus.${d.key}`) : status;
 }
 
 export function TaskPopover({

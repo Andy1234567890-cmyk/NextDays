@@ -3769,7 +3769,8 @@
       "statusCancelled": "Atcelts",
       "applyRules": "Piemērot noteikumus",
       "rulesApplied": "{count} uzdevumi no noteikumiem.",
-      "noRuleMatched": "Šai rezervācijai neattiecas neviens noteikums."
+      "noRuleMatched": "Šai rezervācijai neattiecas neviens noteikums.",
+      "statusAccepted": "Pieņemts"
     },
     "propertyWarnings": {
       "title": "Brīdinājumi",
@@ -3878,7 +3879,8 @@
       "saving": "Saglabā…",
       "completeButton": "Pabeigt",
       "inBooking": "Uz rezervāciju {ref}",
-      "assignedTo": "Priekš {name}"
+      "assignedTo": "Priekš {name}",
+      "doneBy": "Atzīmēja {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Kā viesis maksā?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Atvērt manus uzdevumus",
       "notFoundTitle": "Uzdevums nav pieejams",
       "notFoundHint": "Šī uzdevuma vairs nav vai tas nav jums piešķirts."
+    },
+    "taskStatus": {
+      "open": "Atvērts",
+      "accepted": "Pieņemts",
+      "in_progress": "Norisinās",
+      "done": "Pabeigts",
+      "cancelled": "Atcelts"
+    },
+    "taskStatusAction": {
+      "open": "Nolikt atpakaļ",
+      "accepted": "Pieņemt",
+      "in_progress": "Sākt",
+      "done": "Pabeigt"
+    },
+    "taskStatusChanged": {
+      "open": "Nolikts atpakaļ.",
+      "accepted": "Pieņemts.",
+      "in_progress": "Sākts.",
+      "done": "Pabeigts."
+    },
+    "taskCosts": {
+      "title": "Izdevumi",
+      "amount": "Summa",
+      "note": "Par ko",
+      "notePlaceholder": "Par ko? (piem., tualetes papīrs)",
+      "add": "Pievienot",
+      "remove": "Noņemt",
+      "saved": "Izdevums reģistrēts.",
+      "removed": "Izdevums noņemts.",
+      "invalidAmount": "Ievadiet derīgu summu.",
+      "noCurrency": "Šim objektam nav iestatīta valūta — izdevumus varēs reģistrēt pēc tam."
+    },
+    "taskResolution": {
+      "title": "Atgriezeniskā saite",
+      "placeholder": "Kā gāja?",
+      "save": "Saglabāt",
+      "saved": "Atgriezeniskā saite saglabāta.",
+      "score": "Vērtējums",
+      "giveScore": "Novērtēt {score} no 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Pārbaudē"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Savienot portālu",
-      "noPortals": "Šim objektam vēl nav savienots neviens portāls (Booking, Airbnb u. c.)."
+      "noPortals": "Šim objektam vēl nav savienots neviens portāls (Booking, Airbnb u. c.).",
+      "marketplaceReview": "Pārbaudē",
+      "marketplaceReviewHint": "myBestDays vēl pārbauda šo sludinājumu. Tas parādīsies tirdzniecības vietā pēc apstiprināšanas. Portālus un savu vietni tas neietekmē."
     },
     "IdLayout": {
       "loadError": "Objektu neizdevās ielādēt: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Pievienot kontu",
     "accountsCheckPortalHint": "Portāla konta iestatījumos pārbaudi, ka neviena cita lietotne nav norādīta kā savienojuma nodrošinātājs.",
     "accountsLogoutHint": "Pirms cita konta pievienošanas pārlūkā izrakstieties no portāla.",
-    "accountConnectCredentialHint": "Papildu {portal} piekļuvi pievieno ar viesnīcas ID, savienojot objektu, nevis šeit."
+    "accountConnectCredentialHint": "Papildu {portal} piekļuvi pievieno ar viesnīcas ID, savienojot objektu, nevis šeit.",
+    "marketplacePending": "{count} pārbaudē",
+    "marketplaceWaiting": "Pārbaudē"
   },
   "calendarSync": {
     "title": "Kalendāra imports/eksports",

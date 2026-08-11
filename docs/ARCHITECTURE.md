@@ -500,6 +500,20 @@ der Link ersatzweise auf die Liste) und ist per Test in
 Objekt-Freigabe — alles andere ist ein 404, und gelöscht/fremd/nicht-freigegeben
 sehen für den Aufrufer gleich aus (Wurzel 9).
 
+**Aufgaben-Lebenszyklus, Auslagen und Bewertung (0360).** Vier Arbeitszustände
+statt zwei (`open → accepted → in_progress → done`, dazu `cancelled`) — der
+angenommene Zustand beantwortet die Frage, ob sich schon jemand gekümmert hat.
+`TasksService.set_status` ist seither **der eine Weg** für jeden Wechsel: das
+Ziel `done` delegiert an `complete_task`, damit die Foto-Pflicht nicht mehr
+umgangen werden kann (vorher schrieb der Status-Endpunkt blind jeden Wert und
+war damit die Tür daran vorbei). Checklisten-Punkte lassen sich abhaken —
+`done` gab es als Spalte immer, einen Weg dorthin nie; `done_at`/`done_by`
+halten fest, wer den Haken gesetzt hat. Auslagen (`task_costs`, n je Aufgabe,
+Währung IMMER aus Objekt/Betrieb, nie erfunden) und die Abschluss-Rückmeldung
+(`task_resolutions`, Text + Note 1–5, genau eine je Aufgabe) liegen in eigenen
+Tabellen **ohne Grants** — die Begründung steht in `docs/API.md` unter tasks.
+Text darf die zuständige Person schreiben, die Note nur die Konto-Führung.
+
 **Zugang sperren statt löschen (0356).** `users.deactivated_at`/`deactivated_by`
 + GoTrue-`ban_duration` + der Riegel `auth/aktiv_gate.py` in
 `core.security.get_current_user`. Drei Stellen, weil keine allein reicht: das

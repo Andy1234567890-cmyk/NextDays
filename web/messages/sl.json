@@ -3769,7 +3769,8 @@
       "statusCancelled": "Preklicano",
       "applyRules": "Uporabi pravila",
       "rulesApplied": "Nalog iz pravil: {count}.",
-      "noRuleMatched": "Za to rezervacijo ne velja nobeno pravilo."
+      "noRuleMatched": "Za to rezervacijo ne velja nobeno pravilo.",
+      "statusAccepted": "Sprejeta"
     },
     "propertyWarnings": {
       "title": "Opozorila",
@@ -3878,7 +3879,8 @@
       "saving": "Shranjevanje …",
       "completeButton": "Zaključi",
       "inBooking": "Na rezervacijo {ref}",
-      "assignedTo": "Za {name}"
+      "assignedTo": "Za {name}",
+      "doneBy": "Odkljukal(a) {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Kako gost plača?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Odpri moje naloge",
       "notFoundTitle": "Naloga ni na voljo",
       "notFoundHint": "Te naloge ni več ali pa vam ni dodeljena."
+    },
+    "taskStatus": {
+      "open": "Odprta",
+      "accepted": "Sprejeta",
+      "in_progress": "V teku",
+      "done": "Končana",
+      "cancelled": "Preklicana"
+    },
+    "taskStatusAction": {
+      "open": "Vrni",
+      "accepted": "Sprejmi",
+      "in_progress": "Začni",
+      "done": "Zaključi"
+    },
+    "taskStatusChanged": {
+      "open": "Vrnjena.",
+      "accepted": "Sprejeta.",
+      "in_progress": "Začeta.",
+      "done": "Zaključena."
+    },
+    "taskCosts": {
+      "title": "Stroški",
+      "amount": "Znesek",
+      "note": "Za kaj",
+      "notePlaceholder": "Za kaj? (npr. toaletni papir)",
+      "add": "Dodaj",
+      "remove": "Odstrani",
+      "saved": "Strošek zabeležen.",
+      "removed": "Strošek odstranjen.",
+      "invalidAmount": "Vnesite veljaven znesek.",
+      "noCurrency": "Za to nastanitev ni določena valuta — stroške bo mogoče zabeležiti pozneje."
+    },
+    "taskResolution": {
+      "title": "Povratna informacija",
+      "placeholder": "Kako je šlo?",
+      "save": "Shrani",
+      "saved": "Povratna informacija shranjena.",
+      "score": "Ocena",
+      "giveScore": "Oceni {score} od 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "V pregledu"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Poveži portal",
-      "noPortals": "Za ta objekt še ni povezan noben portal (Booking, Airbnb in drugi)."
+      "noPortals": "Za ta objekt še ni povezan noben portal (Booking, Airbnb in drugi).",
+      "marketplaceReview": "V pregledu",
+      "marketplaceReviewHint": "myBestDays ta oglas še pregleduje. Na tržnici se prikaže po odobritvi. Portali in lastna spletna stran s tem niso prizadeti."
     },
     "IdLayout": {
       "loadError": "Objekta ni bilo mogoče naložiti: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Poveži račun",
     "accountsCheckPortalHint": "V nastavitvah računa portala preverite, da nobena druga aplikacija ni nastavljena kot ponudnik povezave.",
     "accountsLogoutHint": "Pred povezavo drugega računa se v brskalniku odjavite s portala.",
-    "accountConnectCredentialHint": "Dodaten dostop do {portal} vnesete z ID-jem hotela pri povezovanju nastanitve, ne tukaj."
+    "accountConnectCredentialHint": "Dodaten dostop do {portal} vnesete z ID-jem hotela pri povezovanju nastanitve, ne tukaj.",
+    "marketplacePending": "{count} v pregledu",
+    "marketplaceWaiting": "V pregledu"
   },
   "calendarSync": {
     "title": "Uvoz/izvoz koledarja",

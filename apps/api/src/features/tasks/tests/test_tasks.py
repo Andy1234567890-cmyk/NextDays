@@ -148,26 +148,6 @@ def test_list_by_reservation_scopes_tenant_and_reservation() -> None:
     assert ("reservation_id", RES_ID) in second_eq
 
 
-def test_set_status_updates_scoped_and_returns_task() -> None:
-    svc, m = _svc()
-    (
-        m.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
-    ).data = [
-        {"id": "t1", "tenant_id": "T", "title": "X", "status": "done",
-         "reservation_id": "r1"},
-    ]
-    t = svc.set_status("T", "t1", TaskStatus.done)
-    assert t.status == TaskStatus.done
-
-
-def test_set_status_missing_task_raises_404() -> None:
-    svc, m = _svc()
-    (
-        m.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
-    ).data = []
-    with pytest.raises(TaskError) as exc:
-        svc.set_status("T", "missing", TaskStatus.done)
-    assert exc.value.status_code == 404
 
 
 # --- ohne Client: sauberer Fehler ---
@@ -458,3 +438,309 @@ def test_by_reservation_non_uuid_is_404_not_500() -> None:
     with pytest.raises(TaskError) as exc:
         svc.list_by_reservation("T", "not-a-uuid", _owner_task_ctx())
     assert exc.value.status_code == 404
+
+
+# --- 0360: vierter Status, Abhaken, Kosten, Rückmeldung --------------------
+#
+# Diese Tests laufen gegen ein zustandsbehaftetes DB-Doppel statt gegen
+# MagicMock-Ketten: `get_detail` liest sechs Tabellen, und eine Kette je Pfad
+# zu stellen sagt am Ende mehr über die Mocks als über den Dienst.
+
+
+class _FakeQuery:
+    def __init__(self, db: "_FakeDB", table: str) -> None:
+        self._db = db
+        self._table = table
+        self._filters: list[tuple[str, object]] = []
+        self._patch: dict | None = None
+        self._delete = False
+        self._insert: dict | None = None
+        self._upsert: dict | None = None
+
+    def select(self, *_a: object, **_k: object) -> "_FakeQuery":
+        return self
+
+    def eq(self, col: str, val: object) -> "_FakeQuery":
+        self._filters.append((col, val))
+        return self
+
+    def in_(self, col: str, vals: list) -> "_FakeQuery":
+        self._filters.append((col, ("__in__", tuple(str(v) for v in vals))))
+        return self
+
+    def order(self, *_a: object, **_k: object) -> "_FakeQuery":
+        return self
+
+    def limit(self, _n: int) -> "_FakeQuery":
+        return self
+
+    def update(self, patch: dict) -> "_FakeQuery":
+        self._patch = patch
+        return self
+
+    def insert(self, row: dict) -> "_FakeQuery":
+        self._insert = row
+        return self
+
+    def upsert(self, row: dict, **_k: object) -> "_FakeQuery":
+        self._upsert = row
+        return self
+
+    def delete(self) -> "_FakeQuery":
+        self._delete = True
+        return self
+
+    def _passt(self, row: dict) -> bool:
+        for col, val in self._filters:
+            if isinstance(val, tuple) and val and val[0] == "__in__":
+                if str(row.get(col)) not in val[1]:
+                    return False
+            elif str(row.get(col)) != str(val):
+                return False
+        return True
+
+    def execute(self) -> MagicMock:
+        rows = self._db.tables.setdefault(self._table, [])
+        treffer = [r for r in rows if self._passt(r)]
+        if self._patch is not None:
+            for r in treffer:
+                r.update(self._patch)
+            return MagicMock(data=list(treffer))
+        if self._delete:
+            self._db.tables[self._table] = [r for r in rows if r not in treffer]
+            return MagicMock(data=list(treffer))
+        if self._insert is not None:
+            neu = {"id": f"neu-{len(rows) + 1}", **self._insert}
+            rows.append(neu)
+            return MagicMock(data=[neu])
+        if self._upsert is not None:
+            schluessel = "task_id"
+            vorhanden = [
+                r for r in rows if r.get(schluessel) == self._upsert.get(schluessel)
+            ]
+            if vorhanden:
+                vorhanden[0].update(self._upsert)
+                return MagicMock(data=[vorhanden[0]])
+            rows.append(dict(self._upsert))
+            return MagicMock(data=[rows[-1]])
+        return MagicMock(data=list(treffer))
+
+
+class _FakeDB:
+    def __init__(self, tables: dict[str, list[dict]]) -> None:
+        self.tables = tables
+
+    def table(self, name: str) -> _FakeQuery:
+        return _FakeQuery(self, name)
+
+
+def _tables(**extra: list[dict]) -> dict[str, list[dict]]:
+    basis: dict[str, list[dict]] = {
+        "tasks": [
+            {
+                "id": "t1", "tenant_id": "T", "title": "Endreinigung",
+                "status": "open", "property_id": "p1", "assignee_id": "u1",
+            }
+        ],
+        "properties": [{"id": "p1", "tenant_id": "T", "title": "Haus", "currency": "DKK"}],
+        "tenants": [{"id": "T", "currency": "EUR"}],
+        "users": [{"id": "u1", "tenant_id": "T", "full_name": "Reinigung"}],
+        "checklist_items": [],
+        "checklist_photos": [],
+        "task_costs": [],
+        "task_resolutions": [],
+        "reservations": [],
+        # Der cleaner arbeitet NUR an freigegebenen Objekten (§4.3). Ohne diese
+        # Zeile ist er fail-closed ausgesperrt — genau richtig, aber dann
+        # prüfen die Tests unten den Scope statt der neuen Funktionen.
+        "staff_property_assignments": [
+            {"tenant_id": "T", "user_id": "u1", "property_id": "p1"}
+        ],
+    }
+    basis.update(extra)
+    return basis
+
+
+def _admin() -> AuthContext:
+    return AuthContext(user_id="a1", tenant_id="T", role="admin")
+
+
+def _cleaner() -> AuthContext:
+    return AuthContext(user_id="u1", tenant_id="T", role="cleaner")
+
+
+def test_status_annehmen_und_anfangen() -> None:
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    d = svc.set_status("T", "t1", TaskStatus.accepted, _admin())
+    assert d.status == TaskStatus.accepted
+    d = svc.set_status("T", "t1", TaskStatus.in_progress, _admin())
+    assert d.status == TaskStatus.in_progress
+
+
+def test_status_gleicher_wert_ist_idempotent() -> None:
+    """Wurzel 2: Doppeltipp auf dem Telefon ist kein Fehler."""
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    svc.set_status("T", "t1", TaskStatus.accepted, _admin())
+    d = svc.set_status("T", "t1", TaskStatus.accepted, _admin())
+    assert d.status == TaskStatus.accepted
+
+
+def test_status_unmoeglicher_sprung_wird_abgelehnt() -> None:
+    db = _FakeDB(_tables(tasks=[
+        {"id": "t1", "tenant_id": "T", "title": "X", "status": "done",
+         "property_id": "p1"},
+    ]))
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.set_status("T", "t1", TaskStatus.in_progress, _admin())
+    assert exc.value.status_code == 422
+
+
+def test_status_done_erzwingt_die_fotopflicht() -> None:
+    """Der Statuswechsel war bis 0360 der Weg AM Foto-Zwang vorbei."""
+    db = _FakeDB(_tables(checklist_items=[
+        {"id": "c1", "task_id": "t1", "label": "Bad", "done": False,
+         "requires_photo": True, "sort_order": 0},
+    ]))
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.set_status("T", "t1", TaskStatus.done, _admin())
+    assert exc.value.status_code == 422
+
+
+def test_status_zuruecknehmen_raeumt_den_abschluss_ab() -> None:
+    """Wurzel 1: wer den Haken zurücknimmt, nimmt auch Zeitpunkt und Urheber
+    zurück — sonst trägt eine offene Aufgabe ein „abgeschlossen am …"."""
+    db = _FakeDB(_tables(tasks=[
+        {"id": "t1", "tenant_id": "T", "title": "X", "status": "done",
+         "property_id": "p1", "completed_at": "2026-08-01T10:00:00+00:00",
+         "completed_by": "u1", "inspection_state": "to_review"},
+    ]))
+    svc = TasksService(client=db)
+    svc.set_status("T", "t1", TaskStatus.open, _admin())
+    zeile = db.tables["tasks"][0]
+    assert zeile["completed_at"] is None
+    assert zeile["completed_by"] is None
+    assert zeile["inspection_state"] is None
+
+
+def test_checklisten_punkt_abhaken_haelt_die_spur_fest() -> None:
+    db = _FakeDB(_tables(checklist_items=[
+        {"id": "c1", "task_id": "t1", "label": "Bad", "done": False,
+         "requires_photo": False, "sort_order": 0},
+    ]))
+    svc = TasksService(client=db)
+    d = svc.toggle_checklist_item("T", "c1", True, _cleaner())
+    assert d.checklist[0].done is True
+    assert db.tables["checklist_items"][0]["done_by"] == "u1"
+    assert db.tables["checklist_items"][0]["done_at"]
+
+
+def test_checklisten_punkt_zuruecknehmen_loescht_die_spur() -> None:
+    db = _FakeDB(_tables(checklist_items=[
+        {"id": "c1", "task_id": "t1", "label": "Bad", "done": True,
+         "requires_photo": False, "sort_order": 0,
+         "done_at": "2026-08-01T10:00:00+00:00", "done_by": "u1"},
+    ]))
+    svc = TasksService(client=db)
+    svc.toggle_checklist_item("T", "c1", False, _cleaner())
+    zeile = db.tables["checklist_items"][0]
+    assert zeile["done"] is False
+    assert zeile["done_at"] is None
+    assert zeile["done_by"] is None
+
+
+def test_checklisten_punkt_fremder_mandant_ist_404() -> None:
+    """Der Scope hängt an der Aufgabe, nicht an der item_id (Wurzel 9)."""
+    db = _FakeDB(_tables(checklist_items=[
+        {"id": "c9", "task_id": "fremd", "label": "X", "done": False,
+         "requires_photo": False, "sort_order": 0},
+    ]))
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.toggle_checklist_item("T", "c9", True, _admin())
+    assert exc.value.status_code == 404
+
+
+def test_kosten_nehmen_die_objektwaehrung() -> None:
+    from src.features.tasks.schemas import TaskCostCreate
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    d = svc.add_cost("T", "t1", TaskCostCreate(amount="12.50", note=" Klopapier "), _cleaner())
+    assert d.costs[0].currency == "DKK"      # Objektwährung, nicht Betriebs-EUR
+    assert d.costs[0].note == "Klopapier"
+    assert d.cost_currency == "DKK"
+
+
+def test_kosten_ohne_waehrung_werden_abgelehnt() -> None:
+    """Wurzel 4: lieber 422 als ein erfundenes Euro in einer Abrechnung."""
+    from src.features.tasks.schemas import TaskCostCreate
+    db = _FakeDB(_tables(
+        properties=[{"id": "p1", "tenant_id": "T", "title": "Haus", "currency": None}],
+        tenants=[{"id": "T", "currency": None}],
+    ))
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.add_cost("T", "t1", TaskCostCreate(amount="5.00"), _cleaner())
+    assert exc.value.status_code == 422
+
+
+def test_cleaner_sieht_nur_die_eigenen_auslagen() -> None:
+    """§4.3: die eigene Auslage eintragen ≠ die Auslagen des Betriebs lesen."""
+    db = _FakeDB(_tables(task_costs=[
+        {"id": "k1", "tenant_id": "T", "task_id": "t1", "amount": "10.00",
+         "currency": "DKK", "created_by": "u1"},
+        {"id": "k2", "tenant_id": "T", "task_id": "t1", "amount": "99.00",
+         "currency": "DKK", "created_by": "chef"},
+    ]))
+    svc = TasksService(client=db)
+    assert len(svc.get_detail("T", "t1", _cleaner()).costs) == 1
+    assert len(svc.get_detail("T", "t1", _admin()).costs) == 2
+
+
+def test_cleaner_kann_fremde_auslage_nicht_loeschen() -> None:
+    db = _FakeDB(_tables(task_costs=[
+        {"id": "k2", "tenant_id": "T", "task_id": "t1", "amount": "99.00",
+         "currency": "DKK", "created_by": "chef"},
+    ]))
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.delete_cost("T", "k2", _cleaner())
+    assert exc.value.status_code == 404
+
+
+def test_rueckmeldung_ohne_berechtigung_darf_nicht_benoten() -> None:
+    from src.features.tasks.schemas import TaskResolutionUpsert
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.set_resolution(
+            "T", "t1", TaskResolutionUpsert(score=5), _cleaner(), darf_benoten=False
+        )
+    assert exc.value.status_code == 403
+
+
+def test_rueckmeldung_text_darf_die_zustaendige_person() -> None:
+    from src.features.tasks.schemas import TaskResolutionUpsert
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    d = svc.set_resolution(
+        "T", "t1", TaskResolutionUpsert(note="Schlüssel klemmt"), _cleaner(),
+        darf_benoten=False,
+    )
+    assert d.resolution is not None
+    assert d.resolution.note == "Schlüssel klemmt"
+    assert d.resolution.score is None
+
+
+def test_rueckmeldung_ganz_leer_wird_abgelehnt() -> None:
+    from src.features.tasks.schemas import TaskResolutionUpsert
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.set_resolution(
+            "T", "t1", TaskResolutionUpsert(note="   "), _admin(), darf_benoten=True
+        )
+    assert exc.value.status_code == 422

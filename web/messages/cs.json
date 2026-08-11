@@ -3769,7 +3769,8 @@
       "statusCancelled": "Zrušeno",
       "applyRules": "Použít pravidla",
       "rulesApplied": "Z pravidel vzniklo úkolů: {count}.",
-      "noRuleMatched": "Na tuto rezervaci se nevztahuje žádné pravidlo."
+      "noRuleMatched": "Na tuto rezervaci se nevztahuje žádné pravidlo.",
+      "statusAccepted": "Přijatý"
     },
     "propertyWarnings": {
       "title": "Upozornění",
@@ -3878,7 +3879,8 @@
       "saving": "Ukládání…",
       "completeButton": "Dokončit",
       "inBooking": "K rezervaci {ref}",
-      "assignedTo": "Pro {name}"
+      "assignedTo": "Pro {name}",
+      "doneBy": "Odškrtl(a) {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Jak host platí?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Otevřít mé úkoly",
       "notFoundTitle": "Úkol není dostupný",
       "notFoundHint": "Tento úkol už neexistuje nebo vám není přidělen."
+    },
+    "taskStatus": {
+      "open": "Otevřený",
+      "accepted": "Přijatý",
+      "in_progress": "Probíhá",
+      "done": "Hotovo",
+      "cancelled": "Zrušeno"
+    },
+    "taskStatusAction": {
+      "open": "Vrátit",
+      "accepted": "Přijmout",
+      "in_progress": "Začít",
+      "done": "Dokončit"
+    },
+    "taskStatusChanged": {
+      "open": "Vráceno.",
+      "accepted": "Přijato.",
+      "in_progress": "Zahájeno.",
+      "done": "Dokončeno."
+    },
+    "taskCosts": {
+      "title": "Výdaje",
+      "amount": "Částka",
+      "note": "Na co",
+      "notePlaceholder": "Na co? (např. toaletní papír)",
+      "add": "Přidat",
+      "remove": "Odebrat",
+      "saved": "Výdaj zaznamenán.",
+      "removed": "Výdaj odebrán.",
+      "invalidAmount": "Zadejte platnou částku.",
+      "noCurrency": "Pro tento objekt není nastavena měna — výdaje půjde zaznamenat poté."
+    },
+    "taskResolution": {
+      "title": "Zpětná vazba",
+      "placeholder": "Jak to šlo?",
+      "save": "Uložit",
+      "saved": "Zpětná vazba uložena.",
+      "score": "Hodnocení",
+      "giveScore": "Ohodnotit {score} z 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Ke kontrole"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Tržiště",
       "groupPortals": "Portály",
       "connectPortal": "Připojit portál",
-      "noPortals": "K tomuto objektu zatím není připojen žádný portál (Booking, Airbnb a další)."
+      "noPortals": "K tomuto objektu zatím není připojen žádný portál (Booking, Airbnb a další).",
+      "marketplaceReview": "Ke kontrole",
+      "marketplaceReviewHint": "myBestDays tuto nabídku stále kontroluje. Na marketplace se objeví po schválení. Portály a vlastní web to neovlivní."
     },
     "IdLayout": {
       "loadError": "Objekt se nepodařilo načíst: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Připojit účet",
     "accountsCheckPortalHint": "V nastavení účtu portálu ověřte, že jako poskytovatel připojení není nastavena jiná aplikace.",
     "accountsLogoutHint": "Než připojíte jiný účet, odhlaste se v prohlížeči z portálu.",
-    "accountConnectCredentialHint": "Další přístup k {portal} se zadává s ID hotelu při připojování objektu — nikoli zde."
+    "accountConnectCredentialHint": "Další přístup k {portal} se zadává s ID hotelu při připojování objektu — nikoli zde.",
+    "marketplacePending": "{count} ke kontrole",
+    "marketplaceWaiting": "Ke kontrole"
   },
   "calendarSync": {
     "title": "Import/export kalendáře",

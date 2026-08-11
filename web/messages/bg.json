@@ -3769,7 +3769,8 @@
       "statusCancelled": "Прекратена",
       "applyRules": "Прилагане на правилата",
       "rulesApplied": "{count} задачи от правилата.",
-      "noRuleMatched": "Няма правило за тази резервация."
+      "noRuleMatched": "Няма правило за тази резервация.",
+      "statusAccepted": "Приета"
     },
     "propertyWarnings": {
       "title": "Предупреждения",
@@ -3878,7 +3879,8 @@
       "saving": "Запазва се…",
       "completeButton": "Завърши",
       "inBooking": "Към резервация {ref}",
-      "assignedTo": "За {name}"
+      "assignedTo": "За {name}",
+      "doneBy": "Отметнато от {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Как плаща гостът?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Отваряне на моите задачи",
       "notFoundTitle": "Задачата не е налична",
       "notFoundHint": "Тази задача вече не съществува или не е възложена на вас."
+    },
+    "taskStatus": {
+      "open": "Отворена",
+      "accepted": "Приета",
+      "in_progress": "В процес",
+      "done": "Готова",
+      "cancelled": "Отменена"
+    },
+    "taskStatusAction": {
+      "open": "Върни",
+      "accepted": "Приеми",
+      "in_progress": "Започни",
+      "done": "Приключи"
+    },
+    "taskStatusChanged": {
+      "open": "Върната.",
+      "accepted": "Приета.",
+      "in_progress": "Започната.",
+      "done": "Приключена."
+    },
+    "taskCosts": {
+      "title": "Разходи",
+      "amount": "Сума",
+      "note": "За какво",
+      "notePlaceholder": "За какво? (напр. тоалетна хартия)",
+      "add": "Добави",
+      "remove": "Премахни",
+      "saved": "Разходът е записан.",
+      "removed": "Разходът е премахнат.",
+      "invalidAmount": "Въведете валидна сума.",
+      "noCurrency": "За този обект не е зададена валута — разходите могат да се запишат след това."
+    },
+    "taskResolution": {
+      "title": "Обратна връзка",
+      "placeholder": "Как мина?",
+      "save": "Запази",
+      "saved": "Обратната връзка е запазена.",
+      "score": "Оценка",
+      "giveScore": "Оцени {score} от 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "В проверка"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Свързване на портал",
-      "noPortals": "Към този обект още не е свързан портал (Booking, Airbnb и др.)."
+      "noPortals": "Към този обект още не е свързан портал (Booking, Airbnb и др.).",
+      "marketplaceReview": "В проверка",
+      "marketplaceReviewHint": "myBestDays все още проверява тази обява. Ще се появи на пазара след одобрение. Порталите и собственият сайт не са засегнати."
     },
     "IdLayout": {
       "loadError": "Обектът не можа да бъде зареден: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Свързване на акаунт",
     "accountsCheckPortalHint": "Проверете в настройките на акаунта си в портала, че никое друго приложение не е зададено като доставчик на връзката.",
     "accountsLogoutHint": "Излезте от портала в браузъра си, преди да свържете друг акаунт.",
-    "accountConnectCredentialHint": "Допълнителен достъп до {portal} се добавя с хотелския идентификатор при свързване на обект — не тук."
+    "accountConnectCredentialHint": "Допълнителен достъп до {portal} се добавя с хотелския идентификатор при свързване на обект — не тук.",
+    "marketplacePending": "{count} в проверка",
+    "marketplaceWaiting": "В проверка"
   },
   "calendarSync": {
     "title": "Импорт/експорт на календар",

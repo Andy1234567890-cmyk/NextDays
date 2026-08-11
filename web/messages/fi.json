@@ -3769,7 +3769,8 @@
       "statusCancelled": "Peruttu",
       "applyRules": "Käytä sääntöjä",
       "rulesApplied": "{count} tehtävää säännöistä.",
-      "noRuleMatched": "Mikään sääntö ei koske tätä varausta."
+      "noRuleMatched": "Mikään sääntö ei koske tätä varausta.",
+      "statusAccepted": "Hyväksytty"
     },
     "propertyWarnings": {
       "title": "Varoitukset",
@@ -3878,7 +3879,8 @@
       "saving": "Tallennetaan…",
       "completeButton": "Merkitse valmiiksi",
       "inBooking": "Varaukseen {ref}",
-      "assignedTo": "Henkilölle {name}"
+      "assignedTo": "Henkilölle {name}",
+      "doneBy": "Kuittasi {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Miten vieras maksaa?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Avaa omat tehtävät",
       "notFoundTitle": "Tehtävä ei ole käytettävissä",
       "notFoundHint": "Tätä tehtävää ei enää ole tai sitä ei ole osoitettu sinulle."
+    },
+    "taskStatus": {
+      "open": "Avoin",
+      "accepted": "Hyväksytty",
+      "in_progress": "Käynnissä",
+      "done": "Valmis",
+      "cancelled": "Peruttu"
+    },
+    "taskStatusAction": {
+      "open": "Palauta",
+      "accepted": "Ota vastaan",
+      "in_progress": "Aloita",
+      "done": "Päätä"
+    },
+    "taskStatusChanged": {
+      "open": "Palautettu.",
+      "accepted": "Otettu vastaan.",
+      "in_progress": "Aloitettu.",
+      "done": "Päätetty."
+    },
+    "taskCosts": {
+      "title": "Kulut",
+      "amount": "Summa",
+      "note": "Mihin",
+      "notePlaceholder": "Mihin? (esim. wc-paperi)",
+      "add": "Lisää",
+      "remove": "Poista",
+      "saved": "Kulu kirjattu.",
+      "removed": "Kulu poistettu.",
+      "invalidAmount": "Anna kelvollinen summa.",
+      "noCurrency": "Tälle kohteelle ei ole asetettu valuuttaa — kuluja voi kirjata sen jälkeen."
+    },
+    "taskResolution": {
+      "title": "Palaute",
+      "placeholder": "Miten meni?",
+      "save": "Tallenna",
+      "saved": "Palaute tallennettu.",
+      "score": "Arvosana",
+      "giveScore": "Arvioi {score}/5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Tarkistuksessa"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Yhdistä portaali",
-      "noPortals": "Tähän kohteeseen ei ole vielä yhdistetty portaalia (Booking, Airbnb ym.)."
+      "noPortals": "Tähän kohteeseen ei ole vielä yhdistetty portaalia (Booking, Airbnb ym.).",
+      "marketplaceReview": "Tarkistuksessa",
+      "marketplaceReviewHint": "myBestDays tarkistaa vielä tätä ilmoitusta. Se näkyy markkinapaikalla heti kun se on hyväksytty. Portaalit ja oma verkkosivusto eivät muutu."
     },
     "IdLayout": {
       "loadError": "Kohdetta ei voitu ladata: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Yhdistä tili",
     "accountsCheckPortalHint": "Tarkista portaalitilisi asetuksista, ettei mikään muu sovellus ole asetettu yhteyden tarjoajaksi.",
     "accountsLogoutHint": "Kirjaudu ulos portaalista selaimessa ennen kuin yhdistät toisen tilin.",
-    "accountConnectCredentialHint": "Uusi {portal}-tunnus lisätään hotellitunnuksella kohteen yhdistämisen yhteydessä, ei täällä."
+    "accountConnectCredentialHint": "Uusi {portal}-tunnus lisätään hotellitunnuksella kohteen yhdistämisen yhteydessä, ei täällä.",
+    "marketplacePending": "{count} tarkistuksessa",
+    "marketplaceWaiting": "Tarkistuksessa"
   },
   "calendarSync": {
     "title": "Tuo/vie kalenteri",

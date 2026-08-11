@@ -12,14 +12,19 @@ from fastapi import (
     UploadFile,
 )
 
-from src.core.security import AuthContext, require_internal_cron_secret
+from src.core.security import (
+    AuthContext,
+    get_current_user,
+    require_internal_cron_secret,
+)
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import require_permission
-from src.features.auth.permissions import Capability
+from src.features.auth.permissions import Capability, has_capability
 
 from .schemas import (
     BulkTaskRequest,
     ChecklistItemCreate,
+    ChecklistItemToggle,
     ChecklistPhotoCreate,
     InspectionDecision,
     InspectionItem,
@@ -32,9 +37,11 @@ from .schemas import (
     SubstitutionRequest,
     Task,
     TaskCalendarResponse,
+    TaskCostCreate,
     TaskCreate,
     TaskDetail,
     TaskListItem,
+    TaskResolutionUpsert,
     TaskRuleKind,
     TaskStatusUpdate,
 )
@@ -124,15 +131,27 @@ def delete_task(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.patch("/{task_id}/status", response_model=Task)
+@router.patch("/{task_id}/status", response_model=TaskDetail)
 def update_task_status(
     task_id: str,
     req: TaskStatusUpdate,
     service: TasksServiceDep,
-    ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_TASKS))],
-) -> Task:
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.VIEW_OWN_TASKS))
+    ],
+) -> TaskDetail:
+    """Arbeitszustand setzen: annehmen, anfangen, zurücklegen, abschließen.
+
+    Die Fähigkeit ist seit 0360 `VIEW_OWN_TASKS` statt `MANAGE_TASKS`: den
+    Zustand der eigenen Arbeit meldet die Person, die sie tut — eine
+    Reinigungskraft, die „ich bin dran" nicht sagen kann, hat den vierten
+    Zustand nicht. Der Objekt-Scope kommt weiterhin aus dem Service (`ctx`),
+    fremde Aufgaben sind ein 404 (Wurzel 9).
+
+    Das Ziel `done` läuft intern über `complete_task` — samt Foto-Pflicht.
+    """
     try:
-        return service.set_status(_tenant(ctx), task_id, req.status)
+        return service.set_status(_tenant(ctx), task_id, req.status, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -308,6 +327,20 @@ def _own() -> object:
     return require_permission(Capability.VIEW_OWN_TASKS)
 
 
+def _darf_benoten(
+    ctx: Annotated[AuthContext, Depends(get_current_user)],
+) -> bool:
+    """MANAGE_TASKS vorhanden? — als Auskunft, nicht als Sperre.
+
+    Die Rückmeldung zum Ergebnis darf JEDE zuständige Person schreiben (sie
+    weiß, wie es lief). Die BEWERTUNG darf nur die Konto-Führung setzen — eine
+    Selbstbenotung sagt über die Leistung nichts. Ein `require_permission` an
+    der Route würde deshalb zu viel sperren: die Reinigungskraft käme dann gar
+    nicht mehr an ihre eigene Rückmeldung.
+    """
+    return has_capability(ctx.role, Capability.MANAGE_TASKS)
+
+
 @router.get("/team", response_model=list[TaskListItem])
 def team_tasks(
     service: TasksServiceDep,
@@ -394,6 +427,79 @@ def complete_task(
 ) -> TaskDetail:
     try:
         return service.complete_task(_tenant(ctx), task_id, ctx.user_id, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/checklist/item/{item_id}", response_model=TaskDetail)
+def toggle_checklist_item(
+    item_id: str,
+    req: ChecklistItemToggle,
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(_own())],
+) -> TaskDetail:
+    """Einen Checklisten-Punkt abhaken oder das Häkchen zurücknehmen (0360).
+
+    Die Spalte `done` gab es seit jeher, aber keinen Weg, sie zu setzen: die
+    Punkte standen in der Oberfläche und ließen sich nicht anfassen. Der Scope
+    hängt an der AUFGABE, nicht an der item_id — sonst wäre jeder fremde Punkt
+    abhakbar (Wurzel 9)."""
+    try:
+        return service.toggle_checklist_item(_tenant(ctx), item_id, req.done, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/{task_id}/costs", response_model=TaskDetail, status_code=201)
+def add_task_cost(
+    task_id: str,
+    req: TaskCostCreate,
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(_own())],
+) -> TaskDetail:
+    """Auslage zu einer Aufgabe erfassen (0360, Hostaway-Gleichzug).
+
+    Die zuständige Person darf das: sie hat das Geld ausgelegt. Die WÄHRUNG
+    kommt aus den Daten (Objekt-, sonst Betriebswährung), nie aus dem Request —
+    sonst ließe sich in einer Währung buchen, die zum Objekt nicht passt.
+    Fehlt sie an beiden Stellen, gibt es 422 statt eines erfundenen Euro."""
+    try:
+        return service.add_cost(_tenant(ctx), task_id, req, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/costs/{cost_id}", response_model=TaskDetail)
+def delete_task_cost(
+    cost_id: str,
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(_own())],
+) -> TaskDetail:
+    """Auslage zurücknehmen. staff/cleaner nur die eigenen — sonst wäre der
+    Lese-Filter in `_load_costs` wertlos."""
+    try:
+        return service.delete_cost(_tenant(ctx), cost_id, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/{task_id}/resolution", response_model=TaskDetail)
+def set_task_resolution(
+    task_id: str,
+    req: TaskResolutionUpsert,
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(_own())],
+    darf_benoten: Annotated[bool, Depends(_darf_benoten)],
+) -> TaskDetail:
+    """Abschluss-Rückmeldung setzen (genau eine je Aufgabe, 0360).
+
+    Text darf die zuständige Person schreiben („wie ist es gelaufen"), die
+    BEWERTUNG nur die Konto-Führung — eine Selbstbenotung sagt über die
+    Leistung nichts. Ein Score ohne diese Berechtigung ergibt 403."""
+    try:
+        return service.set_resolution(
+            _tenant(ctx), task_id, req, ctx, darf_benoten=darf_benoten
+        )
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

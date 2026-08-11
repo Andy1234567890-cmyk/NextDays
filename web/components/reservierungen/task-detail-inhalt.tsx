@@ -27,13 +27,23 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { Textarea } from "@nextdays/ui/textarea";
 import {
   type TaskDetail,
+  type TaskStatus,
+  addTaskCost,
   completeTask,
+  deleteTaskCost,
   getTaskDetail,
+  setTaskResolution,
+  setTaskStatus,
+  toggleChecklistItem,
   uploadChecklistPhoto,
   uploadTaskPhoto,
 } from "@/lib/tasks";
+import { AUFGABEN_STATUS, naechsteZustaende } from "@/lib/aufgaben-status";
+import { formatCurrency } from "@/lib/currency";
 
 export function TaskDetailInhalt({
   taskId,
@@ -76,11 +86,84 @@ export function TaskDetailInhalt({
     void load();
   }, [load]);
 
+  const [betrag, setBetrag] = useState("");
+  const [kostenNotiz, setKostenNotiz] = useState("");
+  const [rueckmeldung, setRueckmeldung] = useState("");
+  const [note, setNote] = useState<number | null>(null);
+
   const missingPhotos =
     detail?.checklist.filter((i) => i.requires_photo && i.photos.length === 0) ??
     [];
   const canComplete =
     detail !== null && detail.status !== "done" && missingPhotos.length === 0;
+
+  /** Jede schreibende Aktion liefert die Aufgabe frisch zurück — der Zustand
+   *  kommt vom Server, nicht aus einer lokalen Annahme darüber, was passiert
+   *  sein müsste. */
+  const uebernehmen = (
+    res: Awaited<ReturnType<typeof setTaskStatus>>,
+    erfolg?: string,
+  ) => {
+    if (!res.ok) {
+      toast.error(res.error);
+      return false;
+    }
+    setDetail(res.data);
+    onChanged?.();
+    if (erfolg) toast.success(erfolg);
+    return true;
+  };
+
+  const statusSetzen = async (next: TaskStatus) => {
+    setSaving(true);
+    const res = await setTaskStatus(taskId, next);
+    setSaving(false);
+    uebernehmen(res, t(`taskStatusChanged.${next}`));
+  };
+
+  const punktUmschalten = async (itemId: string, done: boolean) => {
+    setUploadingItem(itemId);
+    const res = await toggleChecklistItem(itemId, done);
+    setUploadingItem(null);
+    uebernehmen(res);
+  };
+
+  const kostenErfassen = async () => {
+    // Komma ODER Punkt: auf dem Telefon tippt niemand nach Gebietsschema.
+    const wert = betrag.replace(",", ".").trim();
+    const zahl = Number(wert);
+    if (!wert || Number.isNaN(zahl) || zahl < 0) {
+      toast.error(t("taskCosts.invalidAmount"));
+      return;
+    }
+    setSaving(true);
+    const res = await addTaskCost(taskId, {
+      amount: zahl.toFixed(2),
+      note: kostenNotiz.trim() || null,
+    });
+    setSaving(false);
+    if (uebernehmen(res, t("taskCosts.saved"))) {
+      setBetrag("");
+      setKostenNotiz("");
+    }
+  };
+
+  const kostenLoeschen = async (costId: string) => {
+    setSaving(true);
+    const res = await deleteTaskCost(costId);
+    setSaving(false);
+    uebernehmen(res, t("taskCosts.removed"));
+  };
+
+  const rueckmeldungSpeichern = async () => {
+    setSaving(true);
+    const res = await setTaskResolution(taskId, {
+      note: rueckmeldung.trim() || null,
+      score: note,
+    });
+    setSaving(false);
+    uebernehmen(res, t("taskResolution.saved"));
+  };
 
   const complete = async () => {
     setSaving(true);
@@ -202,6 +285,41 @@ export function TaskDetailInhalt({
         )}
       </div>
 
+      {/* Statusleiste: annehmen · anfangen · zurücklegen. Der Abschluss hat
+          seinen eigenen Knopf unten, weil an ihm die Foto-Pflicht hängt. */}
+      {detail.status !== "cancelled" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 text-sm ${
+              AUFGABEN_STATUS[detail.status].farbe
+            }`}
+          >
+            <Icon
+              icon={AUFGABEN_STATUS[detail.status].icon}
+              className="size-4"
+            />
+            {t(`taskStatus.${detail.status}`)}
+          </span>
+          <span className="flex flex-wrap gap-1.5">
+            {naechsteZustaende(detail.status)
+              // „Erledigt" fehlt hier bewusst: der Abschluss läuft über den
+              // Knopf unten, damit die Foto-Pflicht davor steht.
+              .filter((s) => s !== "done")
+              .map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void statusSetzen(s)}
+                  className="rounded-full border border-border px-2.5 py-1 text-xs transition-colors hover:bg-secondary disabled:opacity-50"
+                >
+                  {t(`taskStatusAction.${s}`)}
+                </button>
+              ))}
+          </span>
+        </div>
+      )}
+
       {detail.checklist.length > 0 && (
         <ul className="flex flex-col gap-1.5">
           {detail.checklist.map((item) => {
@@ -213,16 +331,42 @@ export function TaskDetailInhalt({
                   needsPhoto ? "border-amber-500" : ""
                 }`}
               >
-                <Icon
-                  icon={item.done ? "ph:check-circle-fill" : "ph:circle"}
-                  className={`size-5 shrink-0 ${
-                    item.done ? "text-emerald-500" : "text-muted-foreground"
-                  }`}
-                />
+                {/* Anklickbar seit 0360. Die Spalte `done` gab es vorher schon,
+                    aber keinen Weg dorthin — die Punkte standen da und ließen
+                    sich nicht anfassen. */}
+                <button
+                  type="button"
+                  disabled={uploadingItem !== null}
+                  aria-pressed={item.done}
+                  aria-label={item.label}
+                  onClick={() => void punktUmschalten(item.id, !item.done)}
+                  className="shrink-0 disabled:opacity-50"
+                >
+                  <Icon
+                    icon={item.done ? "ph:check-circle-fill" : "ph:circle"}
+                    className={`size-5 ${
+                      item.done ? "text-emerald-500" : "text-muted-foreground"
+                    }`}
+                  />
+                </button>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm">{item.label}</p>
+                  <p
+                    className={`truncate text-sm ${
+                      item.done ? "text-muted-foreground line-through" : ""
+                    }`}
+                  >
+                    {item.label}
+                  </p>
                   {item.room && (
                     <p className="text-xs text-muted-foreground">{item.room}</p>
+                  )}
+                  {/* Wer abgehakt hat — beim Reinigungsnachweis ist genau das
+                      die Frage. Fehlt der Name (Altbestand), steht nichts da
+                      statt einer erfundenen Person. */}
+                  {item.done && item.done_by_name && (
+                    <p className="text-xs text-muted-foreground">
+                      {t("taskDetailModal.doneBy", { name: item.done_by_name })}
+                    </p>
                   )}
                 </div>
                 {item.requires_photo && (
@@ -288,6 +432,143 @@ export function TaskDetailInhalt({
           onChange={(e) => uploadTask(e.target.files?.[0])}
         />
       </label>
+
+      {/* --- Auslagen ---------------------------------------------------
+          Hostaway-Gleichzug: wer die Aufgabe macht, kauft manchmal etwas ein.
+          Die WÄHRUNG kommt vom Server (Objekt-, sonst Betriebswährung); fehlt
+          sie, gibt es hier gar kein Eingabefeld statt eines, dessen Speichern
+          in 422 endet (Wurzel 4). Eine Reinigungskraft sieht nur ihre eigenen
+          Auslagen — der Server filtert (§4.3). */}
+      <section className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
+        <h3 className="text-sm font-medium">{t("taskCosts.title")}</h3>
+        {detail.costs.length > 0 && (
+          <ul className="flex flex-col divide-y divide-border">
+            {detail.costs.map((k) => (
+              <li key={k.id} className="flex items-center gap-2 py-1.5">
+                <span className="tabular-nums text-sm">
+                  {formatCurrency(Number(k.amount), k.currency, locale)}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                  {[k.note, k.created_by_name].filter(Boolean).join(" · ")}
+                </span>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void kostenLoeschen(k.id)}
+                  aria-label={t("taskCosts.remove")}
+                  className="shrink-0 text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
+                >
+                  <Icon icon="ph:trash" className="size-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {detail.cost_currency ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              // inputMode="decimal" statt type="number": auf dem Telefon
+              // erscheint der Ziffernblock, ohne dass der Browser Komma-
+              // Eingaben verwirft.
+              inputMode="decimal"
+              value={betrag}
+              onChange={(e) => setBetrag(e.target.value)}
+              placeholder={detail.cost_currency}
+              className="w-28"
+              aria-label={t("taskCosts.amount")}
+            />
+            <Input
+              value={kostenNotiz}
+              onChange={(e) => setKostenNotiz(e.target.value)}
+              placeholder={t("taskCosts.notePlaceholder")}
+              className="min-w-40 flex-1"
+              aria-label={t("taskCosts.note")}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={saving || !betrag.trim()}
+              onClick={() => void kostenErfassen()}
+            >
+              {t("taskCosts.add")}
+            </Button>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {t("taskCosts.noCurrency")}
+          </p>
+        )}
+      </section>
+
+      {/* --- Rückmeldung zum Ergebnis -------------------------------------
+          Text darf die zuständige Person schreiben, die BEWERTUNG nur die
+          Konto-Führung — der Server lehnt einen Score ohne diese Berechtigung
+          mit 403 ab. Die Sterne stehen trotzdem für alle sichtbar: die
+          Rückmeldung ist AN die zuständige Person gerichtet. */}
+      <section className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
+        <h3 className="text-sm font-medium">{t("taskResolution.title")}</h3>
+        {detail.resolution && (
+          <div className="flex flex-col gap-1">
+            {detail.resolution.score !== null && (
+              <span className="flex items-center gap-0.5" aria-label={t("taskResolution.score")}>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <Icon
+                    key={n}
+                    icon={
+                      n <= (detail.resolution?.score ?? 0)
+                        ? "ph:star-fill"
+                        : "ph:star"
+                    }
+                    className="size-4 text-amber-500"
+                  />
+                ))}
+              </span>
+            )}
+            {detail.resolution.note && (
+              <p className="text-sm">{detail.resolution.note}</p>
+            )}
+            {detail.resolution.created_by_name && (
+              <p className="text-xs text-muted-foreground">
+                {detail.resolution.created_by_name}
+              </p>
+            )}
+          </div>
+        )}
+        <Textarea
+          rows={2}
+          value={rueckmeldung}
+          onChange={(e) => setRueckmeldung(e.target.value)}
+          placeholder={t("taskResolution.placeholder")}
+          aria-label={t("taskResolution.title")}
+        />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setNote(note === n ? null : n)}
+                aria-label={t("taskResolution.giveScore", { score: n })}
+                aria-pressed={note === n}
+                className="text-amber-500 transition-transform hover:scale-110"
+              >
+                <Icon
+                  icon={note !== null && n <= note ? "ph:star-fill" : "ph:star"}
+                  className="size-5"
+                />
+              </button>
+            ))}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={saving || (!rueckmeldung.trim() && note === null)}
+            onClick={() => void rueckmeldungSpeichern()}
+          >
+            {t("taskResolution.save")}
+          </Button>
+        </div>
+      </section>
 
       <div className="flex justify-end gap-2">
         {detail.status === "done" ? (

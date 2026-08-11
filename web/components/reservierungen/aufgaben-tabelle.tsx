@@ -14,6 +14,7 @@ import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { Card } from "@nextdays/ui/card";
+import { AUFGABEN_STATUS } from "@/lib/aufgaben-status";
 import type { TaskListItem } from "@/lib/tasks";
 
 export type TabellenAktion = {
@@ -227,30 +228,21 @@ function StatusChip({
   ueberfaellig: boolean;
 }) {
   const t = useTranslations("reservations");
-  if (status === "done") {
-    return (
-      <span className="inline-flex items-center gap-1 text-success">
-        <Icon icon="ph:check-square-fill" className="size-4" />
-        {t("aufgabenTabelle.statusDone")}
-      </span>
-    );
-  }
-  if (status === "cancelled") {
-    return (
-      <span className="inline-flex items-center gap-1 text-muted-foreground">
-        <Icon icon="ph:prohibit" className="size-4" />
-        {t("aufgabenTabelle.statusCancelled")}
-      </span>
-    );
-  }
+  const d = AUFGABEN_STATUS[status];
+  // Überfällig färbt NUR die noch offenen Zustände rot. Eine erledigte oder
+  // abgesagte Aufgabe ist nicht überfällig — sie ist fertig bzw. weg.
+  const offen = status !== "done" && status !== "cancelled";
   return (
     <span
       className={`inline-flex items-center gap-1 ${
-        ueberfaellig ? "text-destructive" : "text-muted-foreground"
+        ueberfaellig && offen ? "text-destructive" : d.farbe
       }`}
     >
-      <Icon icon="ph:warning-circle" className="size-4" />
-      {t("aufgabenTabelle.statusOpen")}
+      <Icon
+        icon={ueberfaellig && offen ? "ph:warning-circle" : d.icon}
+        className="size-4"
+      />
+      {t(`taskStatus.${d.key}`)}
     </span>
   );
 }

@@ -3769,7 +3769,8 @@
       "statusCancelled": "Cealaithe",
       "applyRules": "Cuir na rialacha i bhfeidhm",
       "rulesApplied": "{count} tasc ó na rialacha.",
-      "noRuleMatched": "Ní bhaineann aon riail leis an áirithint seo."
+      "noRuleMatched": "Ní bhaineann aon riail leis an áirithint seo.",
+      "statusAccepted": "Glactha"
     },
     "propertyWarnings": {
       "title": "Rabhaidh",
@@ -3878,7 +3879,8 @@
       "saving": "Á shábháil…",
       "completeButton": "Críochnaigh",
       "inBooking": "Chuig áirithint {ref}",
-      "assignedTo": "Do {name}"
+      "assignedTo": "Do {name}",
+      "doneBy": "Ticeáilte ag {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Conas a íocann an t-aoi?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Oscail mo thascanna",
       "notFoundTitle": "Níl an tasc ar fáil",
       "notFoundHint": "Níl an tasc seo ann a thuilleadh nó níl sé sannta duitse."
+    },
+    "taskStatus": {
+      "open": "Oscailte",
+      "accepted": "Glactha",
+      "in_progress": "Ar siúl",
+      "done": "Déanta",
+      "cancelled": "Curtha ar ceal"
+    },
+    "taskStatusAction": {
+      "open": "Cuir ar ais",
+      "accepted": "Glac leis",
+      "in_progress": "Tosaigh",
+      "done": "Críochnaigh"
+    },
+    "taskStatusChanged": {
+      "open": "Curtha ar ais.",
+      "accepted": "Glactha.",
+      "in_progress": "Tosaithe.",
+      "done": "Críochnaithe."
+    },
+    "taskCosts": {
+      "title": "Costais",
+      "amount": "Méid",
+      "note": "Cad chuige",
+      "notePlaceholder": "Cad chuige? (m.sh. páipéar leithris)",
+      "add": "Cuir leis",
+      "remove": "Bain",
+      "saved": "Costas taifeadta.",
+      "removed": "Costas bainte.",
+      "invalidAmount": "Cuir méid bailí isteach.",
+      "noCurrency": "Níl airgeadra socraithe don áit seo — is féidir costais a thaifeadadh ina dhiaidh sin."
+    },
+    "taskResolution": {
+      "title": "Aiseolas",
+      "placeholder": "Conas a chuaigh sé?",
+      "save": "Sábháil",
+      "saved": "Aiseolas sábháilte.",
+      "score": "Scór",
+      "giveScore": "Tabhair {score} as 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Á athbhreithniú"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Nasc tairseach",
-      "noPortals": "Níl aon tairseach (Booking, Airbnb srl.) nasctha leis an áit seo fós."
+      "noPortals": "Níl aon tairseach (Booking, Airbnb srl.) nasctha leis an áit seo fós.",
+      "marketplaceReview": "Á athbhreithniú",
+      "marketplaceReviewHint": "Tá myBestDays fós ag athbhreithniú an liostáil seo. Taispeánfar í ar an margad chomh luath agus a cheadaítear í. Ní chuirtear isteach ar na tairseacha ná ar do shuíomh gréasáin féin."
     },
     "IdLayout": {
       "loadError": "Níorbh fhéidir an réadmhaoin a lódáil: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Nasc cuntas",
     "accountsCheckPortalHint": "Seiceáil i socruithe do chuntais tairsí nach bhfuil aon aip eile socraithe mar sholáthraí an naisc.",
     "accountsLogoutHint": "Logáil amach as an tairseach i do bhrabhsálaí sula nascann tú cuntas eile.",
-    "accountConnectCredentialHint": "Cuirtear rochtain {portal} bhreise leis le haitheantas an óstáin nuair a nascann tú maoin — ní hé seo an áit."
+    "accountConnectCredentialHint": "Cuirtear rochtain {portal} bhreise leis le haitheantas an óstáin nuair a nascann tú maoin — ní hé seo an áit.",
+    "marketplacePending": "{count} á athbhreithniú",
+    "marketplaceWaiting": "Á athbhreithniú"
   },
   "calendarSync": {
     "title": "Iompórtáil/easpórtáil féilire",

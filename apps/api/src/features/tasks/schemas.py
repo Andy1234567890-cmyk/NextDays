@@ -4,13 +4,24 @@ Bildet das Datenmodell aus Migration 0012 (tasks, checklist, inventory) und 0019
 (task_substitutions, staff_property_assignments) ab.
 """
 from datetime import date, datetime, time
+from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 
 class TaskStatus(StrEnum):
+    """Die Arbeitszustände einer Aufgabe, in der Reihenfolge der Arbeit.
+
+    ``accepted`` (0360, Hostaway-Gleichzug) füllt die Lücke zwischen „liegt da"
+    und „ich bin dran": jemand hat die Aufgabe ANGENOMMEN, aber noch nicht
+    angefangen. Ohne ihn kann der Betrieb nicht unterscheiden, ob sich schon
+    jemand gekümmert hat — die Aufgabe stünde entweder unberührt da oder als
+    „in Arbeit", obwohl niemand vor Ort ist.
+    """
+
     open = "open"
+    accepted = "accepted"
     in_progress = "in_progress"
     done = "done"
     cancelled = "cancelled"
@@ -157,11 +168,78 @@ class ChecklistItem(BaseModel):
     requires_photo: bool = False
     sort_order: int = 0
     photos: list[str] = Field(default_factory=list)
+    # Spur hinter dem Haken (0360): WANN und von WEM. Beim Reinigungsnachweis
+    # ist genau das die Frage — vor Ort abgehakt oder nachträglich im Büro.
+    # Altbestand trägt beides `None`: vor 0360 gab es keinen Weg zum Abhaken.
+    done_at: datetime | None = None
+    done_by: str | None = None
+    done_by_name: str | None = None
+
+
+class ChecklistItemToggle(BaseModel):
+    """Einen Checklisten-Punkt abhaken oder das Häkchen zurücknehmen.
+
+    Bewusst mit explizitem `done` statt eines Umschalters: zwei Geräte, die
+    denselben Punkt gleichzeitig antippen, würden sich sonst gegenseitig
+    zurücksetzen (Wurzel 2). So gewinnt der zuletzt gesendete ZUSTAND, und ein
+    Retry desselben Aufrufs ändert nichts.
+    """
+
+    done: bool
 
 
 class ChecklistPhotoCreate(BaseModel):
     item_id: str
     storage_path: str = Field(min_length=1)  # Supabase Storage Key (unbegrenzt/Raum)
+
+
+# --- Kosten & Abschluss-Rückmeldung (0360, Hostaway-Gleichzug) --------------
+
+
+class TaskCostCreate(BaseModel):
+    """Eine Auslage zu einer Aufgabe.
+
+    KEINE Währung im Request: sie kommt aus den Daten (Objektwährung, sonst
+    Betriebswährung). Der Client könnte sie sonst frei setzen und damit eine
+    Auslage in einer Währung buchen, die zum Objekt nicht passt — die spätere
+    Summe wäre eine Zahl ohne Bedeutung (Wurzel 4).
+    """
+
+    amount: Decimal = Field(ge=0, le=Decimal("999999.99"), decimal_places=2)
+    note: str | None = Field(default=None, max_length=500)
+
+
+class TaskCost(BaseModel):
+    id: str
+    task_id: str
+    amount: Decimal
+    currency: str
+    note: str | None = None
+    created_by: str | None = None
+    created_by_name: str | None = None
+    created_at: datetime | None = None
+
+
+class TaskResolutionUpsert(BaseModel):
+    """Abschluss-Rückmeldung: „wie ist es gelaufen" plus optionale Note.
+
+    Beides optional, aber nicht beides leer — eine Rückmeldung ohne Inhalt
+    behauptet, es gäbe eine Einschätzung (die DB hält dagegen ebenfalls einen
+    CHECK). Die NOTE darf nur die Konto-Führung setzen: eine Selbstbenotung der
+    zuständigen Person wäre wertlos.
+    """
+
+    note: str | None = Field(default=None, max_length=2000)
+    score: int | None = Field(default=None, ge=1, le=5)
+
+
+class TaskResolution(BaseModel):
+    task_id: str
+    note: str | None = None
+    score: int | None = None
+    created_by: str | None = None
+    created_by_name: str | None = None
+    updated_at: datetime | None = None
 
 
 # --- Vertretungs-Feature (§4.3) ---
@@ -215,6 +293,16 @@ class TaskDetail(Task):
     property_title: str | None = None
     assignee_name: str | None = None
     checklist: list[ChecklistItem] = Field(default_factory=list)
+    # Auslagen (0360). Für staff/cleaner NUR die selbst erfassten: seine eigene
+    # Auslage einzutragen ist etwas anderes, als die Auslagen des Betriebs zu
+    # lesen (§4.3). Der Dienst filtert, nicht die Oberfläche.
+    costs: list[TaskCost] = Field(default_factory=list)
+    # Währung, in der eine NEUE Auslage gebucht würde (Objekt-, sonst
+    # Betriebswährung). `None` heißt ehrlich „für dieses Objekt ist keine
+    # Währung hinterlegt" — die Oberfläche blendet das Kostenfeld dann aus,
+    # statt ein Feld anzubieten, dessen Speichern mit 422 endet (Wurzel 4).
+    cost_currency: str | None = None
+    resolution: TaskResolution | None = None
 
 
 class TaskTrigger(StrEnum):

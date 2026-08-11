@@ -3,7 +3,19 @@
 Aufgaben-CRUD, auto-Generierung bei Buchung (Anreise-Check + Endreinigung),
 Checklisten mit Foto-Nachweisen, Vertretungs-Feature, Inventar (auch
 unterkunftslos). Supabase-Client injiziert → mockbar.
+
+Auslagen und Abschluss-Rückmeldung (0360) liegen in `kosten_rueckmeldung.py` —
+eigene Tabellen, eigene Sichtbarkeitsregeln, keine Berührung mit dem
+Aufgaben-Lebenszyklus. Der Dienst delegiert dorthin.
 """
+# pylint: disable=too-many-lines
+#
+# Wie payments/channel_manager: der Aufgaben-Lebenszyklus (anlegen, planen,
+# zuweisen, abhaken, abschliessen, inspizieren) plus die Regel-/Vorlagen-
+# Verwaltung sind EIN Zusammenhang. Ihn allein der Zeilenzahl wegen auf zwei
+# Dateien zu verteilen, die sich gegenseitig aufrufen, macht ihn nicht
+# lesbarer — es verteilt ihn nur. Was ein eigenes Thema IST, ist bereits
+# ausgelagert (engine, schedule_label, kosten_rueckmeldung).
 import secrets
 from datetime import UTC, date, datetime
 from uuid import UUID
@@ -21,6 +33,15 @@ from src.features.notification_settings.ereignisse import (
 )
 
 from .engine import materialize_recurring, sync_for_reservation
+from .kosten_rueckmeldung import (
+    kosten_einfuegen,
+    kosten_entfernen,
+    kosten_laden,
+    kosten_zeile,
+    rueckmeldung_laden,
+    rueckmeldung_schreiben,
+    waehrung_fuer_aufgabe,
+)
 from .schedule_label import schedule_label
 from .schemas import (
     CalendarBooking,
@@ -44,9 +65,13 @@ from .schemas import (
     Task,
     TaskCalendarResponse,
     TaskCalendarRow,
+    TaskCost,
+    TaskCostCreate,
     TaskCreate,
     TaskDetail,
     TaskListItem,
+    TaskResolution,
+    TaskResolutionUpsert,
     TaskRuleKind,
     TaskSource,
     TaskStatus,
@@ -219,19 +244,6 @@ class TasksService:
         )
         if not res.data:
             raise TaskError("Aufgabe nicht gefunden.", status_code=404)
-
-    def set_status(self, tenant_id: str, task_id: str, status: TaskStatus) -> Task:
-        res = (
-            self._db()
-            .table("tasks")
-            .update({"status": status.value})
-            .eq("id", task_id)
-            .eq("tenant_id", tenant_id)
-            .execute()
-        )
-        if not res.data:
-            raise TaskError("Aufgabe nicht gefunden.", status_code=404)
-        return self._to_task(res.data[0])
 
     # --- Auto-Generierung bei Buchung (§2.5) ---
     #
@@ -866,13 +878,240 @@ class TasksService:
                 raise TaskError("Aufgabe nicht gefunden.", status_code=404)
         task = self._to_task(row[0])
         enriched = self._enrich(tenant_id, [task])[0]
-        checklist = self._load_checklist(task_id)
+        checklist = self._load_checklist(tenant_id, task_id)
         return TaskDetail(
             **enriched.model_dump(),
             checklist=checklist,
+            costs=self._load_costs(tenant_id, task_id, ctx),
+            cost_currency=self._kosten_waehrung(tenant_id, task.property_id),
+            resolution=self._load_resolution(tenant_id, task_id),
         )
 
-    def _load_checklist(self, task_id: str) -> list[ChecklistItem]:
+    # --- Vierter Arbeitszustand: annehmen / anfangen (0360) ----------------
+
+    # Erlaubte Wechsel. Aus `done` führt genau EIN Weg zurück (open) — das ist
+    # das Zurücknehmen eines Abschlusses. Aus `cancelled` ebenso.
+    _STATUS_WECHSEL: dict[str, frozenset[str]] = {
+        TaskStatus.open.value: frozenset(
+            {
+                TaskStatus.accepted.value,
+                TaskStatus.in_progress.value,
+                TaskStatus.done.value,
+                TaskStatus.cancelled.value,
+            }
+        ),
+        TaskStatus.accepted.value: frozenset(
+            {
+                TaskStatus.open.value,
+                TaskStatus.in_progress.value,
+                TaskStatus.done.value,
+                TaskStatus.cancelled.value,
+            }
+        ),
+        TaskStatus.in_progress.value: frozenset(
+            {
+                TaskStatus.open.value,
+                TaskStatus.accepted.value,
+                TaskStatus.done.value,
+                TaskStatus.cancelled.value,
+            }
+        ),
+        TaskStatus.done.value: frozenset({TaskStatus.open.value}),
+        TaskStatus.cancelled.value: frozenset({TaskStatus.open.value}),
+    }
+
+    def set_status(
+        self,
+        tenant_id: str,
+        task_id: str,
+        status: TaskStatus,
+        ctx: AuthContext | None = None,
+    ) -> TaskDetail:
+        """Arbeitszustand setzen — DER eine Weg für jeden Statuswechsel.
+
+        Bis 0360 gab es hier ein blindes `update`: es schrieb jeden Wert, auch
+        `done`. Damit lief der Abschluss am Foto-Zwang und an der Inspektions-
+        Folge vorbei, die in `complete_task` hängen — die Foto-Pflicht war über
+        diesen Endpunkt eine Empfehlung (Wurzel 5). Jetzt delegiert das Ziel
+        `done` an genau diesen Pfad; es gibt keinen zweiten Abschluss mehr.
+
+        Scope wie `get_detail` (Wurzel 9). Ein fachlich unmöglicher Sprung wird
+        abgelehnt statt still geschrieben — sonst stünde in der Historie ein
+        Zustand, den nie jemand erreichen konnte.
+        """
+        detail = self.get_detail(tenant_id, task_id, ctx)
+        aktuell = detail.status.value
+        if aktuell == status.value:
+            # Idempotent (Wurzel 2): Doppeltipp auf dem Telefon ist kein Fehler.
+            return detail
+        erlaubt = self._STATUS_WECHSEL.get(aktuell, frozenset())
+        if status.value not in erlaubt:
+            raise TaskError(
+                f"Wechsel von '{aktuell}' nach '{status.value}' ist nicht vorgesehen.",
+                status_code=422,
+            )
+        if status is TaskStatus.done:
+            nutzer = ctx.user_id if ctx else (detail.assignee_id or "")
+            return self.complete_task(tenant_id, task_id, nutzer, ctx)
+        patch: dict[str, object] = {"status": status.value}
+        if aktuell == TaskStatus.done.value:
+            # Gegenzustand zum Abschluss (Wurzel 1): wer den Haken zurücknimmt,
+            # nimmt auch Zeitpunkt und Urheber zurück. Sonst trüge eine offene
+            # Aufgabe weiter ein „abgeschlossen am …" mit sich herum.
+            patch["completed_at"] = None
+            patch["completed_by"] = None
+            patch["inspection_state"] = None
+        self._db().table("tasks").update(patch).eq("id", task_id).eq(
+            "tenant_id", tenant_id
+        ).execute()
+        log.info(
+            "task_status_gesetzt",
+            tenant_id=tenant_id, task_id=task_id, von=aktuell, nach=status.value,
+        )
+        return self.get_detail(tenant_id, task_id, ctx)
+
+    # --- Checklisten-Punkt abhaken (0360) ---------------------------------
+
+    def toggle_checklist_item(
+        self,
+        tenant_id: str,
+        item_id: str,
+        done: bool,
+        ctx: AuthContext | None = None,
+    ) -> TaskDetail:
+        """Einen Punkt abhaken oder das Häkchen zurücknehmen.
+
+        Der Punkt hängt an einer Aufgabe, und die Aufgabe trägt den Scope:
+        erst wird sie über `get_detail` geladen (Tenant + Objekt-Freigabe,
+        Wurzel 9), dann erst geschrieben. Ohne diesen Umweg wäre die item_id
+        allein der Schlüssel — und damit jeder fremde Punkt abhakbar.
+
+        `done_at`/`done_by` schreiben mit: ein Haken ohne Absender ist beim
+        Reinigungsnachweis wertlos. Beim Zurücknehmen werden sie geleert, damit
+        keine Spur von einem Abhaken stehen bleibt, das zurückgenommen wurde
+        (Wurzel 1).
+        """
+        rows = (
+            self._db()
+            .table("checklist_items")
+            .select("id, task_id")
+            .eq("id", item_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise TaskError("Punkt nicht gefunden.", status_code=404)
+        task_id = rows[0]["task_id"]
+        # Wirft 404, wenn die Aufgabe nicht zum Mandanten gehört oder außerhalb
+        # der Objekt-Freigabe liegt.
+        self.get_detail(tenant_id, task_id, ctx)
+        patch: dict[str, object] = {"done": done}
+        patch["done_at"] = datetime.now(UTC).isoformat() if done else None
+        patch["done_by"] = (ctx.user_id if ctx else None) if done else None
+        self._db().table("checklist_items").update(patch).eq(
+            "id", item_id
+        ).execute()
+        return self.get_detail(tenant_id, task_id, ctx)
+
+    # --- Kosten (0360) ----------------------------------------------------
+
+    def _kosten_waehrung(
+        self, tenant_id: str, property_id: str | None
+    ) -> str | None:
+        return waehrung_fuer_aufgabe(self._db(), tenant_id, property_id)
+
+    def _load_costs(
+        self, tenant_id: str, task_id: str, ctx: AuthContext | None
+    ) -> list[TaskCost]:
+        return kosten_laden(
+            self._db(), tenant_id, task_id, ctx, self._user_names
+        )
+
+    def add_cost(
+        self,
+        tenant_id: str,
+        task_id: str,
+        req: TaskCostCreate,
+        ctx: AuthContext,
+    ) -> TaskDetail:
+        """Eine Auslage erfassen. Währung kommt aus den Daten, nie vom Client."""
+        detail = self.get_detail(tenant_id, task_id, ctx)
+        waehrung = self._kosten_waehrung(tenant_id, detail.property_id)
+        if not waehrung:
+            raise TaskError(
+                "Für dieses Objekt ist keine Währung hinterlegt — Auslagen "
+                "lassen sich erst danach erfassen.",
+                status_code=422,
+            )
+        kosten_einfuegen(self._db(), tenant_id, task_id, req, ctx, waehrung)
+        log.info("task_kosten_erfasst", tenant_id=tenant_id, task_id=task_id)
+        return self.get_detail(tenant_id, task_id, ctx)
+
+    def delete_cost(
+        self, tenant_id: str, cost_id: str, ctx: AuthContext
+    ) -> TaskDetail:
+        """Auslage entfernen.
+
+        Wer sie erfasst hat, darf sie zurücknehmen; die Konto-Führung darf jede.
+        Ein Mitarbeiter, der fremde Auslagen löschen könnte, wäre die Kehrseite
+        des Lese-Filters — dann hätte der Filter nichts geschützt.
+        """
+        zeile = kosten_zeile(self._db(), tenant_id, cost_id)
+        if not zeile:
+            raise TaskError("Auslage nicht gefunden.", status_code=404)
+        if is_staff(ctx) and zeile.get("created_by") != ctx.user_id:
+            raise TaskError("Auslage nicht gefunden.", status_code=404)
+        task_id = zeile["task_id"]
+        self.get_detail(tenant_id, task_id, ctx)
+        kosten_entfernen(self._db(), tenant_id, cost_id)
+        return self.get_detail(tenant_id, task_id, ctx)
+
+    # --- Abschluss-Rückmeldung (0360) -------------------------------------
+
+    def _load_resolution(
+        self, tenant_id: str, task_id: str
+    ) -> TaskResolution | None:
+        return rueckmeldung_laden(
+            self._db(), tenant_id, task_id, self._user_names
+        )
+
+    def set_resolution(
+        self,
+        tenant_id: str,
+        task_id: str,
+        req: TaskResolutionUpsert,
+        ctx: AuthContext,
+        *,
+        darf_benoten: bool,
+    ) -> TaskDetail:
+        """Rückmeldung zum Ergebnis setzen (genau eine je Aufgabe).
+
+        ``darf_benoten`` trennt zwei Rollen sauber: die zuständige Person darf
+        BERICHTEN, wie es gelaufen ist (Hostaway: „get feedback from the task
+        assignee"), aber nicht sich selbst benoten — eine Selbstbenotung sagt
+        über die Leistung nichts. Die Note setzt die Konto-Führung.
+        """
+        self.get_detail(tenant_id, task_id, ctx)
+        notiz = (req.note or "").strip() or None
+        if req.score is not None and not darf_benoten:
+            raise TaskError(
+                "Die Bewertung vergibt die Konto-Führung.", status_code=403
+            )
+        if notiz is None and req.score is None:
+            raise TaskError(
+                "Eine Rückmeldung braucht einen Text oder eine Bewertung.",
+                status_code=422,
+            )
+        rueckmeldung_schreiben(self._db(), tenant_id, task_id, req, ctx, notiz)
+        log.info(
+            "task_rueckmeldung_gesetzt",
+            tenant_id=tenant_id, task_id=task_id, mit_note=req.score is not None,
+        )
+        return self.get_detail(tenant_id, task_id, ctx)
+
+    def _load_checklist(
+        self, tenant_id: str, task_id: str
+    ) -> list[ChecklistItem]:
         items = (
             self._db()
             .table("checklist_items")
@@ -882,6 +1121,11 @@ class TasksService:
             .execute()
         ).data or []
         photos = self._photos_by_item({r["id"] for r in items})
+        # Wer abgehakt hat, steht als Name daneben (0360) — eine user_id sagt
+        # der Person vor Ort nichts.
+        namen = self._user_names(
+            tenant_id, {r.get("done_by") for r in items if r.get("done_by")}
+        )
         return [
             ChecklistItem(
                 id=r["id"],
@@ -892,6 +1136,9 @@ class TasksService:
                 requires_photo=bool(r.get("requires_photo")),
                 sort_order=int(r.get("sort_order") or 0),
                 photos=photos.get(r["id"], []),
+                done_at=r.get("done_at"),
+                done_by=r.get("done_by"),
+                done_by_name=namen.get(r.get("done_by") or ""),
             )
             for r in items
         ]
@@ -984,7 +1231,7 @@ class TasksService:
         # Inspektion ohne sichtbaren Nachweis prüft nichts.
         out: list[InspectionItem] = []
         for item in enriched:
-            checklist = self._load_checklist(item.id)
+            checklist = self._load_checklist(tenant_id, item.id)
             urls = [
                 url
                 for c in checklist

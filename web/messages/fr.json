@@ -3769,7 +3769,8 @@
       "statusCancelled": "Annulée",
       "applyRules": "Appliquer les règles",
       "rulesApplied": "{count} tâches issues des règles.",
-      "noRuleMatched": "Aucune règle ne s'applique à cette réservation."
+      "noRuleMatched": "Aucune règle ne s'applique à cette réservation.",
+      "statusAccepted": "Acceptée"
     },
     "propertyWarnings": {
       "title": "Alertes",
@@ -3878,7 +3879,8 @@
       "saving": "Enregistrement…",
       "completeButton": "Terminer",
       "inBooking": "Vers la réservation {ref}",
-      "assignedTo": "Pour {name}"
+      "assignedTo": "Pour {name}",
+      "doneBy": "Coché par {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Comment le client paie-t-il ?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Ouvrir mes tâches",
       "notFoundTitle": "Tâche indisponible",
       "notFoundHint": "Cette tâche n'existe plus ou ne vous est pas attribuée."
+    },
+    "taskStatus": {
+      "open": "Ouverte",
+      "accepted": "Acceptée",
+      "in_progress": "En cours",
+      "done": "Terminée",
+      "cancelled": "Annulée"
+    },
+    "taskStatusAction": {
+      "open": "Remettre",
+      "accepted": "Accepter",
+      "in_progress": "Commencer",
+      "done": "Terminer"
+    },
+    "taskStatusChanged": {
+      "open": "Remise.",
+      "accepted": "Acceptée.",
+      "in_progress": "Commencée.",
+      "done": "Terminée."
+    },
+    "taskCosts": {
+      "title": "Frais",
+      "amount": "Montant",
+      "note": "Pour quoi",
+      "notePlaceholder": "Pour quoi ? (p. ex. papier toilette)",
+      "add": "Ajouter",
+      "remove": "Supprimer",
+      "saved": "Frais enregistrés.",
+      "removed": "Frais supprimés.",
+      "invalidAmount": "Veuillez saisir un montant valide.",
+      "noCurrency": "Aucune devise n'est définie pour ce logement — les frais pourront être saisis ensuite."
+    },
+    "taskResolution": {
+      "title": "Compte rendu",
+      "placeholder": "Comment cela s'est-il passé ?",
+      "save": "Enregistrer",
+      "saved": "Compte rendu enregistré.",
+      "score": "Note",
+      "giveScore": "Noter {score} sur 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "En cours d’examen"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Place de marché",
       "groupPortals": "Portails",
       "connectPortal": "Connecter un portail",
-      "noPortals": "Aucun portail (Booking, Airbnb & Co.) connecté pour cet hébergement."
+      "noPortals": "Aucun portail (Booking, Airbnb & Co.) connecté pour cet hébergement.",
+      "marketplaceReview": "En cours d’examen",
+      "marketplaceReviewHint": "myBestDays examine encore cette annonce. Elle apparaîtra sur la place de marché dès son approbation. Les portails et votre propre site web ne sont pas concernés."
     },
     "IdLayout": {
       "loadError": "Impossible de charger le logement : {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Connecter un compte",
     "accountsCheckPortalHint": "Vérifiez dans les paramètres de votre compte portail qu'aucune autre application n'est définie comme fournisseur de connexion.",
     "accountsLogoutHint": "Déconnectez-vous du portail dans votre navigateur avant de connecter un autre compte.",
-    "accountConnectCredentialHint": "Un accès {portal} supplémentaire s’ajoute avec l’identifiant de l’hôtel lors de la connexion d’un logement, pas ici."
+    "accountConnectCredentialHint": "Un accès {portal} supplémentaire s’ajoute avec l’identifiant de l’hôtel lors de la connexion d’un logement, pas ici.",
+    "marketplacePending": "{count} en cours d’examen",
+    "marketplaceWaiting": "En cours d’examen"
   },
   "calendarSync": {
     "title": "Importer/exporter le calendrier",

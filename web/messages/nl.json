@@ -3769,7 +3769,8 @@
       "statusCancelled": "Geannuleerd",
       "applyRules": "Regels toepassen",
       "rulesApplied": "{count} taken uit de regels.",
-      "noRuleMatched": "Geen enkele regel is van toepassing op deze boeking."
+      "noRuleMatched": "Geen enkele regel is van toepassing op deze boeking.",
+      "statusAccepted": "Geaccepteerd"
     },
     "propertyWarnings": {
       "title": "Waarschuwingen",
@@ -3878,7 +3879,8 @@
       "saving": "Opslaan…",
       "completeButton": "Afronden",
       "inBooking": "Naar boeking {ref}",
-      "assignedTo": "Voor {name}"
+      "assignedTo": "Voor {name}",
+      "doneBy": "Afgevinkt door {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Hoe betaalt de gast?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Mijn taken openen",
       "notFoundTitle": "Taak niet beschikbaar",
       "notFoundHint": "Deze taak bestaat niet meer of is niet aan jou toegewezen."
+    },
+    "taskStatus": {
+      "open": "Open",
+      "accepted": "Geaccepteerd",
+      "in_progress": "Bezig",
+      "done": "Klaar",
+      "cancelled": "Geannuleerd"
+    },
+    "taskStatusAction": {
+      "open": "Terugleggen",
+      "accepted": "Accepteren",
+      "in_progress": "Starten",
+      "done": "Afronden"
+    },
+    "taskStatusChanged": {
+      "open": "Teruggelegd.",
+      "accepted": "Geaccepteerd.",
+      "in_progress": "Gestart.",
+      "done": "Afgerond."
+    },
+    "taskCosts": {
+      "title": "Onkosten",
+      "amount": "Bedrag",
+      "note": "Waarvoor",
+      "notePlaceholder": "Waarvoor? (bijv. toiletpapier)",
+      "add": "Toevoegen",
+      "remove": "Verwijderen",
+      "saved": "Onkosten vastgelegd.",
+      "removed": "Onkosten verwijderd.",
+      "invalidAmount": "Voer een geldig bedrag in.",
+      "noCurrency": "Voor deze accommodatie is geen valuta ingesteld — onkosten kunnen daarna worden vastgelegd."
+    },
+    "taskResolution": {
+      "title": "Terugkoppeling",
+      "placeholder": "Hoe is het gegaan?",
+      "save": "Opslaan",
+      "saved": "Terugkoppeling opgeslagen.",
+      "score": "Beoordeling",
+      "giveScore": "Beoordeel {score} van 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "In beoordeling"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Marktplaats",
       "groupPortals": "Portalen",
       "connectPortal": "Portaal verbinden",
-      "noPortals": "Nog geen portaal (Booking, Airbnb & Co.) voor deze accommodatie verbonden."
+      "noPortals": "Nog geen portaal (Booking, Airbnb & Co.) voor deze accommodatie verbonden.",
+      "marketplaceReview": "In beoordeling",
+      "marketplaceReviewHint": "myBestDays beoordeelt deze advertentie nog. Zodra deze is goedgekeurd, verschijnt hij op de marktplaats. Portalen en je eigen website worden niet beïnvloed."
     },
     "IdLayout": {
       "loadError": "Object kon niet worden geladen: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Account verbinden",
     "accountsCheckPortalHint": "Controleer in de instellingen van je portaalaccount dat er geen andere app als verbindingsaanbieder is ingesteld.",
     "accountsLogoutHint": "Log in je browser uit bij het portaal voordat je een ander account verbindt.",
-    "accountConnectCredentialHint": "Een extra {portal}-account voeg je toe met de hotel-ID bij het verbinden van een object, niet hier."
+    "accountConnectCredentialHint": "Een extra {portal}-account voeg je toe met de hotel-ID bij het verbinden van een object, niet hier.",
+    "marketplacePending": "{count} in beoordeling",
+    "marketplaceWaiting": "In beoordeling"
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",

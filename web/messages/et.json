@@ -3769,7 +3769,8 @@
       "statusCancelled": "Katkestatud",
       "applyRules": "Rakenda reeglid",
       "rulesApplied": "{count} ülesannet reeglitest.",
-      "noRuleMatched": "Ükski reegel ei kehti sellele broningule."
+      "noRuleMatched": "Ükski reegel ei kehti sellele broningule.",
+      "statusAccepted": "Vastu võetud"
     },
     "propertyWarnings": {
       "title": "Hoiatused",
@@ -3878,7 +3879,8 @@
       "saving": "Salvestab…",
       "completeButton": "Lõpeta",
       "inBooking": "Broningule {ref}",
-      "assignedTo": "Kasutajale {name}"
+      "assignedTo": "Kasutajale {name}",
+      "doneBy": "Märkis {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Kuidas külaline tasub?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Ava minu ülesanded",
       "notFoundTitle": "Ülesanne pole saadaval",
       "notFoundHint": "Seda ülesannet enam ei ole või pole see teile määratud."
+    },
+    "taskStatus": {
+      "open": "Avatud",
+      "accepted": "Vastu võetud",
+      "in_progress": "Käimas",
+      "done": "Tehtud",
+      "cancelled": "Tühistatud"
+    },
+    "taskStatusAction": {
+      "open": "Pane tagasi",
+      "accepted": "Võta vastu",
+      "in_progress": "Alusta",
+      "done": "Lõpeta"
+    },
+    "taskStatusChanged": {
+      "open": "Tagasi pandud.",
+      "accepted": "Vastu võetud.",
+      "in_progress": "Alustatud.",
+      "done": "Lõpetatud."
+    },
+    "taskCosts": {
+      "title": "Kulud",
+      "amount": "Summa",
+      "note": "Mille eest",
+      "notePlaceholder": "Mille eest? (nt tualettpaber)",
+      "add": "Lisa",
+      "remove": "Eemalda",
+      "saved": "Kulu salvestatud.",
+      "removed": "Kulu eemaldatud.",
+      "invalidAmount": "Sisestage kehtiv summa.",
+      "noCurrency": "Sellele objektile pole valuutat määratud — kulusid saab pärast seda kirjendada."
+    },
+    "taskResolution": {
+      "title": "Tagasiside",
+      "placeholder": "Kuidas läks?",
+      "save": "Salvesta",
+      "saved": "Tagasiside salvestatud.",
+      "score": "Hinne",
+      "giveScore": "Hinda {score} viiest"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Ülevaatamisel"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Ühenda portaal",
-      "noPortals": "Selle objektiga pole veel ühtegi portaali (Booking, Airbnb jt) ühendatud."
+      "noPortals": "Selle objektiga pole veel ühtegi portaali (Booking, Airbnb jt) ühendatud.",
+      "marketplaceReview": "Ülevaatamisel",
+      "marketplaceReviewHint": "myBestDays kontrollib seda kuulutust veel. See ilmub turuplatsile pärast kinnitamist. Portaale ja oma veebisaiti see ei mõjuta."
     },
     "IdLayout": {
       "loadError": "Objekti ei õnnestunud laadida: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Ühenda konto",
     "accountsCheckPortalHint": "Kontrolli portaalikonto seadetes, et ükski teine rakendus poleks määratud ühenduse pakkujaks.",
     "accountsLogoutHint": "Logi brauseris portaalist välja, enne kui ühendad teise konto.",
-    "accountConnectCredentialHint": "Täiendav {portal}-i juurdepääs lisatakse hotelli ID-ga objekti ühendamisel, mitte siin."
+    "accountConnectCredentialHint": "Täiendav {portal}-i juurdepääs lisatakse hotelli ID-ga objekti ühendamisel, mitte siin.",
+    "marketplacePending": "{count} ülevaatamisel",
+    "marketplaceWaiting": "Ülevaatamisel"
   },
   "calendarSync": {
     "title": "Kalendri import/eksport",

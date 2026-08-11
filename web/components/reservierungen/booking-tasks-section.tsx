@@ -29,6 +29,7 @@ function useStatusLabels(): Record<TaskStatus, string> {
   const t = useTranslations("reservations");
   return {
     open: t("bookingTasksSection.statusOpen"),
+    accepted: t("bookingTasksSection.statusAccepted"),
     in_progress: t("bookingTasksSection.statusInProgress"),
     done: t("bookingTasksSection.statusDone"),
     cancelled: t("bookingTasksSection.statusCancelled"),

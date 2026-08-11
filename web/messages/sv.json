@@ -3769,7 +3769,8 @@
       "statusCancelled": "Avbruten",
       "applyRules": "Tillämpa regler",
       "rulesApplied": "{count} uppgifter från reglerna.",
-      "noRuleMatched": "Ingen regel gäller för denna bokning."
+      "noRuleMatched": "Ingen regel gäller för denna bokning.",
+      "statusAccepted": "Accepterad"
     },
     "propertyWarnings": {
       "title": "Varningar",
@@ -3878,7 +3879,8 @@
       "saving": "Sparar…",
       "completeButton": "Avsluta",
       "inBooking": "Till bokning {ref}",
-      "assignedTo": "För {name}"
+      "assignedTo": "För {name}",
+      "doneBy": "Avbockad av {name}"
     },
     "checkoutPaymentDialog": {
       "title": "Hur betalar gästen?",
@@ -4533,6 +4535,45 @@
       "toMyTasks": "Öppna mina uppgifter",
       "notFoundTitle": "Uppgiften är inte tillgänglig",
       "notFoundHint": "Den här uppgiften finns inte längre, eller så är den inte tilldelad dig."
+    },
+    "taskStatus": {
+      "open": "Öppen",
+      "accepted": "Accepterad",
+      "in_progress": "Pågår",
+      "done": "Klar",
+      "cancelled": "Avbruten"
+    },
+    "taskStatusAction": {
+      "open": "Lägg tillbaka",
+      "accepted": "Acceptera",
+      "in_progress": "Starta",
+      "done": "Slutför"
+    },
+    "taskStatusChanged": {
+      "open": "Tillbakalagd.",
+      "accepted": "Accepterad.",
+      "in_progress": "Startad.",
+      "done": "Slutförd."
+    },
+    "taskCosts": {
+      "title": "Utlägg",
+      "amount": "Belopp",
+      "note": "Till vad",
+      "notePlaceholder": "Till vad? (t.ex. toalettpapper)",
+      "add": "Lägg till",
+      "remove": "Ta bort",
+      "saved": "Utlägg registrerat.",
+      "removed": "Utlägg borttaget.",
+      "invalidAmount": "Ange ett giltigt belopp.",
+      "noCurrency": "Ingen valuta är angiven för det här boendet — utlägg kan registreras därefter."
+    },
+    "taskResolution": {
+      "title": "Återkoppling",
+      "placeholder": "Hur gick det?",
+      "save": "Spara",
+      "saved": "Återkoppling sparad.",
+      "score": "Betyg",
+      "giveScore": "Betygsätt {score} av 5"
     }
   },
   "objects": {
@@ -4544,7 +4585,8 @@
         "active": "Active",
         "paused": "Paused",
         "not_connected": "Not set up",
-        "error": "Error"
+        "error": "Error",
+        "pending": "Under granskning"
       }
     },
     "channelsTab": {
@@ -4557,7 +4599,9 @@
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Anslut portal",
-      "noPortals": "Ingen portal (Booking, Airbnb m.fl.) är ännu ansluten till det här objektet."
+      "noPortals": "Ingen portal (Booking, Airbnb m.fl.) är ännu ansluten till det här objektet.",
+      "marketplaceReview": "Under granskning",
+      "marketplaceReviewHint": "myBestDays granskar fortfarande denna annons. Den visas på marknadsplatsen så snart den godkänts. Portaler och din egen webbplats påverkas inte."
     },
     "IdLayout": {
       "loadError": "Objektet kunde inte läsas in: {error}"
@@ -6208,7 +6252,9 @@
     "accountConnect": "Anslut konto",
     "accountsCheckPortalHint": "Kontrollera i portalkontots inställningar att ingen annan app är angiven som anslutningsleverantör.",
     "accountsLogoutHint": "Logga ut från portalen i webbläsaren innan du ansluter ett annat konto.",
-    "accountConnectCredentialHint": "Ytterligare ett {portal}-konto läggs till med hotell-ID:t när du kopplar ett objekt — inte här."
+    "accountConnectCredentialHint": "Ytterligare ett {portal}-konto läggs till med hotell-ID:t när du kopplar ett objekt — inte här.",
+    "marketplacePending": "{count} under granskning",
+    "marketplaceWaiting": "Under granskning"
   },
   "calendarSync": {
     "title": "Importera/exportera kalender",
