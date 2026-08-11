@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Pá",
       "weekdaySatShort": "So",
       "weekdaySunShort": "Ne"
+    },
+    "taskPage": {
+      "backToMyTasks": "Na mé úkoly",
+      "toMyTasks": "Otevřít mé úkoly",
+      "notFoundTitle": "Úkol není dostupný",
+      "notFoundHint": "Tento úkol už neexistuje nebo vám není přidělen."
     }
   },
   "objects": {

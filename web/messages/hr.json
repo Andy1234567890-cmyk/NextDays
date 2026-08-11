@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Pet",
       "weekdaySatShort": "Sub",
       "weekdaySunShort": "Ned"
+    },
+    "taskPage": {
+      "backToMyTasks": "Na moje zadatke",
+      "toMyTasks": "Otvori moje zadatke",
+      "notFoundTitle": "Zadatak nije dostupan",
+      "notFoundHint": "Ovaj zadatak više ne postoji ili vam nije dodijeljen."
     }
   },
   "objects": {

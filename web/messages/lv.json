@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Pk",
       "weekdaySatShort": "S",
       "weekdaySunShort": "Sv"
+    },
+    "taskPage": {
+      "backToMyTasks": "Uz maniem uzdevumiem",
+      "toMyTasks": "Atvērt manus uzdevumus",
+      "notFoundTitle": "Uzdevums nav pieejams",
+      "notFoundHint": "Šī uzdevuma vairs nav vai tas nav jums piešķirts."
     }
   },
   "objects": {

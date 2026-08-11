@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "R",
       "weekdaySatShort": "L",
       "weekdaySunShort": "P"
+    },
+    "taskPage": {
+      "backToMyTasks": "Minu ülesannete juurde",
+      "toMyTasks": "Ava minu ülesanded",
+      "notFoundTitle": "Ülesanne pole saadaval",
+      "notFoundHint": "Seda ülesannet enam ei ole või pole see teile määratud."
     }
   },
   "objects": {

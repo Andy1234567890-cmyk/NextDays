@@ -4548,6 +4548,12 @@
       "weekdayFriShort": "Fr",
       "weekdaySatShort": "Sa",
       "weekdaySunShort": "So"
+    },
+    "taskPage": {
+      "backToMyTasks": "Zu meinen Aufgaben",
+      "toMyTasks": "Meine Aufgaben öffnen",
+      "notFoundTitle": "Aufgabe nicht verfügbar",
+      "notFoundHint": "Diese Aufgabe gibt es nicht mehr oder sie ist dir nicht zugeteilt."
     }
   },
   "objects": {

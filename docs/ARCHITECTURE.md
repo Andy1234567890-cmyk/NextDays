@@ -484,6 +484,22 @@ lautlos. Kein neues Grant: `users` bleibt für `anon`/`authenticated` gesperrt
 deshalb serverseitig und aktualisiert per `router.refresh()`, statt ein stummes
 Abo vorzutäuschen.
 
+**Aufgaben: Overlay im Alltag, Seite für den Deep-Link.** Eine Aufgabe öffnet
+aus Kalender/Team-/Meine-Liste als Overlay (`TaskDetailModal`) — so macht es
+Lodgify im PM-Modul, und die Ansicht (Filter, Scrollposition) bleibt stehen.
+Zusätzlich gibt es `/aufgaben/<task_id>` als echte Seite, weil unsere
+Benachrichtigungs-Mail einen Link auf die einzelne Aufgabe verschickt
+(Hostaway-Weg) und ein Overlay nicht verlinkbar ist. Lodgify verschickt genau
+deshalb keine Aufgaben-Links: dort hat eine Aufgabe keine Adresse. **Beide
+Rahmen bedienen dieselbe Komponente `TaskDetailInhalt`** — kein zweiter Aufbau
+derselben Aufgabe. Die Pfadform `/aufgaben/<id>` liegt fest, weil sie in bereits
+zugestellten Mails steht; sie lief zweimal ins 404 (Route fehlte, danach zeigte
+der Link ersatzweise auf die Liste) und ist per Test in
+`test_ereignisse.py` festgenagelt. Sichtbarkeit entscheidet der Server
+(`GET /tasks/detail/<id>`): eigener Mandant, für staff/cleaner nur innerhalb der
+Objekt-Freigabe — alles andere ist ein 404, und gelöscht/fremd/nicht-freigegeben
+sehen für den Aufrufer gleich aus (Wurzel 9).
+
 **Zugang sperren statt löschen (0356).** `users.deactivated_at`/`deactivated_by`
 + GoTrue-`ban_duration` + der Riegel `auth/aktiv_gate.py` in
 `core.security.get_current_user`. Drei Stellen, weil keine allein reicht: das

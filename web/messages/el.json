@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Πα",
       "weekdaySatShort": "Σά",
       "weekdaySunShort": "Κυ"
+    },
+    "taskPage": {
+      "backToMyTasks": "Στις εργασίες μου",
+      "toMyTasks": "Άνοιγμα των εργασιών μου",
+      "notFoundTitle": "Η εργασία δεν είναι διαθέσιμη",
+      "notFoundHint": "Αυτή η εργασία δεν υπάρχει πλέον ή δεν σας έχει ανατεθεί."
     }
   },
   "objects": {

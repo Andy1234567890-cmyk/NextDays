@@ -147,7 +147,13 @@ export type RuleInput = RuleSchedule & {
   items: RuleItem[];
 };
 
-type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+// `status` trägt den HTTP-Status des Fehlers durch. Gebraucht wird er, um „gibt
+// es nicht (mehr)" (404) von „ging gerade schief" zu unterscheiden: die
+// Deep-Link-Seite /aufgaben/<id> zeigt beim 404 die eigene Nicht-gefunden-Seite
+// statt einer roten Meldung über einer leeren Fläche.
+type Result<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string; status?: number };
 
 async function call<T>(
   path: string,
@@ -160,7 +166,8 @@ async function call<T>(
     return { ok: true, data };
   } catch (exc) {
     const error = exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
-    return { ok: false, error };
+    const status = exc instanceof ApiError ? exc.status : undefined;
+    return { ok: false, error, status };
   }
 }
 

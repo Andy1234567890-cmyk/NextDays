@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Ven",
       "weekdaySatShort": "Sab",
       "weekdaySunShort": "Dom"
+    },
+    "taskPage": {
+      "backToMyTasks": "Alle mie attività",
+      "toMyTasks": "Apri le mie attività",
+      "notFoundTitle": "Attività non disponibile",
+      "notFoundHint": "Questa attività non esiste più oppure non è assegnata a te."
     }
   },
   "objects": {

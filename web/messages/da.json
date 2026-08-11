@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Fre",
       "weekdaySatShort": "Lør",
       "weekdaySunShort": "Søn"
+    },
+    "taskPage": {
+      "backToMyTasks": "Til mine opgaver",
+      "toMyTasks": "Åbn mine opgaver",
+      "notFoundTitle": "Opgaven er ikke tilgængelig",
+      "notFoundHint": "Denne opgave findes ikke længere, eller den er ikke tildelt dig."
     }
   },
   "objects": {

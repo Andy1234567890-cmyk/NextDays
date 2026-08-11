@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Pe",
       "weekdaySatShort": "La",
       "weekdaySunShort": "Su"
+    },
+    "taskPage": {
+      "backToMyTasks": "Omiin tehtäviin",
+      "toMyTasks": "Avaa omat tehtävät",
+      "notFoundTitle": "Tehtävä ei ole käytettävissä",
+      "notFoundHint": "Tätä tehtävää ei enää ole tai sitä ei ole osoitettu sinulle."
     }
   },
   "objects": {

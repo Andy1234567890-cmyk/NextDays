@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Pią",
       "weekdaySatShort": "Sob",
       "weekdaySunShort": "Nie"
+    },
+    "taskPage": {
+      "backToMyTasks": "Do moich zadań",
+      "toMyTasks": "Otwórz moje zadania",
+      "notFoundTitle": "Zadanie niedostępne",
+      "notFoundHint": "To zadanie już nie istnieje albo nie jest do Ciebie przypisane."
     }
   },
   "objects": {

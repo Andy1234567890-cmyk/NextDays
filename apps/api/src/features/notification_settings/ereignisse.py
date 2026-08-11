@@ -159,20 +159,20 @@ def melde_aufgaben_zuweisung(
             # Kein zusaetzlicher Fliesstext: der Titel IST die Meldung.
             text="",
             tenant_id=tenant_id,
-            # ZIEL: die persönliche Aufgabenliste des Empfängers.
+            # ZIEL: GENAU die Aufgabe, um die es in der Meldung geht.
             #
-            # Vorher stand hier `/aufgaben/{task_id}` — diese Route gibt es
-            # NICHT. Aufgaben liegen unter `/reservierungen/aufgaben/…`, und
-            # eine Detailseite je Aufgabe existiert dort nicht (`[id]` gibt es
-            # nur für Pläne und Vorlagen). Jeder Klick auf diese
-            # Benachrichtigung landete deshalb im 404 (live 10.08.2026).
+            # Diese Adresse gab es lange nicht — jeder Klick lief ins 404 (live
+            # 10./11.08.2026, auch aus bereits zugestellten Mails). Der
+            # Zwischenschritt „auf die Liste umbiegen" war nur das kleinere
+            # Übel: die Meldung nennt EINE Aufgabe, und der Empfänger musste
+            # sie in seiner Liste wiederfinden. Seit die Seite existiert
+            # (`web/app/(dashboard)/aufgaben/[taskId]`), führt der Link wieder
+            # dorthin, wo die Meldung hinzeigt.
             #
-            # `meine` ist das fachlich richtige Ziel: die Meldung sagt „dir
-            # wurde eine Aufgabe zugewiesen", und das Lastenheft (§4.3) nennt
-            # als operative Ansicht des Mitarbeiters genau den persönlichen
-            # Aufgabenkalender — keine Einzelseite je Aufgabe. Die Liste ist
-            # live (Realtime auf `tasks`), die neue Aufgabe steht also da.
-            ziel_pfad="/reservierungen/aufgaben/meine",
+            # Die Form ist bewusst UNVERÄNDERT `/aufgaben/{task_id}`: genau so
+            # steht sie in den Mails, die längst in Postfächern liegen. Eine
+            # schönere Adresse würde die alten Links endgültig brechen.
+            ziel_pfad=f"/aufgaben/{task_id}",
             property_id=property_id,
             dedup_key=f"aufgabe_zugewiesen:{task_id}:{assignee_id}",
         )

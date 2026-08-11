@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Aoine",
       "weekdaySatShort": "Sath",
       "weekdaySunShort": "Domh"
+    },
+    "taskPage": {
+      "backToMyTasks": "Ar ais chuig mo thascanna",
+      "toMyTasks": "Oscail mo thascanna",
+      "notFoundTitle": "Níl an tasc ar fáil",
+      "notFoundHint": "Níl an tasc seo ann a thuilleadh nó níl sé sannta duitse."
     }
   },
   "objects": {

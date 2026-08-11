@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Pi",
       "weekdaySatShort": "So",
       "weekdaySunShort": "Ne"
+    },
+    "taskPage": {
+      "backToMyTasks": "Na moje úlohy",
+      "toMyTasks": "Otvoriť moje úlohy",
+      "notFoundTitle": "Úloha nie je dostupná",
+      "notFoundHint": "Táto úloha už neexistuje alebo vám nie je pridelená."
     }
   },
   "objects": {

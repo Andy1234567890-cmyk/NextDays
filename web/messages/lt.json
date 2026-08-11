@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Pn",
       "weekdaySatShort": "Št",
       "weekdaySunShort": "Sk"
+    },
+    "taskPage": {
+      "backToMyTasks": "Į mano užduotis",
+      "toMyTasks": "Atverti mano užduotis",
+      "notFoundTitle": "Užduotis nepasiekiama",
+      "notFoundHint": "Šios užduoties nebėra arba ji jums nepriskirta."
     }
   },
   "objects": {

@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Ven",
       "weekdaySatShort": "Sam",
       "weekdaySunShort": "Dim"
+    },
+    "taskPage": {
+      "backToMyTasks": "Vers mes tâches",
+      "toMyTasks": "Ouvrir mes tâches",
+      "notFoundTitle": "Tâche indisponible",
+      "notFoundHint": "Cette tâche n'existe plus ou ne vous est pas attribuée."
     }
   },
   "objects": {

@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Pet",
       "weekdaySatShort": "Sob",
       "weekdaySunShort": "Ned"
+    },
+    "taskPage": {
+      "backToMyTasks": "Na moje naloge",
+      "toMyTasks": "Odpri moje naloge",
+      "notFoundTitle": "Naloga ni na voljo",
+      "notFoundHint": "Te naloge ni več ali pa vam ni dodeljena."
     }
   },
   "objects": {

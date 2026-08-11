@@ -4548,6 +4548,12 @@
       "weekdayFriShort": "Fri",
       "weekdaySatShort": "Sat",
       "weekdaySunShort": "Sun"
+    },
+    "taskPage": {
+      "backToMyTasks": "Back to my tasks",
+      "toMyTasks": "Open my tasks",
+      "notFoundTitle": "Task not available",
+      "notFoundHint": "This task no longer exists or it is not assigned to you."
     }
   },
   "objects": {

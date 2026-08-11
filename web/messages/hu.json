@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "P",
       "weekdaySatShort": "Szo",
       "weekdaySunShort": "V"
+    },
+    "taskPage": {
+      "backToMyTasks": "A feladataimhoz",
+      "toMyTasks": "Feladataim megnyitása",
+      "notFoundTitle": "A feladat nem érhető el",
+      "notFoundHint": "Ez a feladat már nem létezik, vagy nincs Önhöz rendelve."
     }
   },
   "objects": {

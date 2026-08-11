@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Vie",
       "weekdaySatShort": "Sáb",
       "weekdaySunShort": "Dom"
+    },
+    "taskPage": {
+      "backToMyTasks": "A mis tareas",
+      "toMyTasks": "Abrir mis tareas",
+      "notFoundTitle": "Tarea no disponible",
+      "notFoundHint": "Esta tarea ya no existe o no está asignada a ti."
     }
   },
   "objects": {

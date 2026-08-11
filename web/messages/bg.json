@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Пт",
       "weekdaySatShort": "Сб",
       "weekdaySunShort": "Нд"
+    },
+    "taskPage": {
+      "backToMyTasks": "Към моите задачи",
+      "toMyTasks": "Отваряне на моите задачи",
+      "notFoundTitle": "Задачата не е налична",
+      "notFoundHint": "Тази задача вече не съществува или не е възложена на вас."
     }
   },
   "objects": {

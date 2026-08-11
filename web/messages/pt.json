@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Sex",
       "weekdaySatShort": "Sáb",
       "weekdaySunShort": "Dom"
+    },
+    "taskPage": {
+      "backToMyTasks": "Para as minhas tarefas",
+      "toMyTasks": "Abrir as minhas tarefas",
+      "notFoundTitle": "Tarefa indisponível",
+      "notFoundHint": "Esta tarefa já não existe ou não lhe está atribuída."
     }
   },
   "objects": {

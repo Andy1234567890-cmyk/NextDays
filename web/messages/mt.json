@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Ġim",
       "weekdaySatShort": "Sib",
       "weekdaySunShort": "Ħad"
+    },
+    "taskPage": {
+      "backToMyTasks": "Lura għall-kompiti tiegħi",
+      "toMyTasks": "Iftaħ il-kompiti tiegħi",
+      "notFoundTitle": "Il-kompitu mhux disponibbli",
+      "notFoundHint": "Dan il-kompitu ma għadux jeżisti jew mhux assenjat lilek."
     }
   },
   "objects": {

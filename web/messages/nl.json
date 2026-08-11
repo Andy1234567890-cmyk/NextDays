@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Vr",
       "weekdaySatShort": "Za",
       "weekdaySunShort": "Zo"
+    },
+    "taskPage": {
+      "backToMyTasks": "Naar mijn taken",
+      "toMyTasks": "Mijn taken openen",
+      "notFoundTitle": "Taak niet beschikbaar",
+      "notFoundHint": "Deze taak bestaat niet meer of is niet aan jou toegewezen."
     }
   },
   "objects": {

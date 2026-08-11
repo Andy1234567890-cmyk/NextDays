@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Vi",
       "weekdaySatShort": "Sâ",
       "weekdaySunShort": "Du"
+    },
+    "taskPage": {
+      "backToMyTasks": "La sarcinile mele",
+      "toMyTasks": "Deschide sarcinile mele",
+      "notFoundTitle": "Sarcină indisponibilă",
+      "notFoundHint": "Această sarcină nu mai există sau nu vă este alocată."
     }
   },
   "objects": {

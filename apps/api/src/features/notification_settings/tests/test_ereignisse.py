@@ -126,6 +126,21 @@ def test_zuweisung_meldet_an_den_zugewiesenen(dispatcher: _Dispatcher) -> None:
     assert ruf["dedup_key"] == "aufgabe_zugewiesen:task-1:staff-1"
 
 
+def test_zuweisung_verlinkt_die_aufgabe_selbst(dispatcher: _Dispatcher) -> None:
+    """Der Link der Meldung zeigt auf GENAU die Aufgabe.
+
+    Diese Adresse ist zweimal live ins 404 gelaufen (10./11.08.2026), einmal
+    weil es die Route nicht gab, einmal weil sie ersatzweise auf die Liste
+    zeigte. Die Form ist festgeschrieben: sie steht so in bereits zugestellten
+    Mails, ein Umbenennen bräche die.
+    """
+    ereignisse.melde_aufgaben_zuweisung(
+        _DB(_tables()), tenant_id="t-1", task_id="task-1",
+        assignee_id="staff-1", titel="endreinigung",
+    )
+    assert dispatcher.aufrufe[0]["ziel_pfad"] == "/aufgaben/task-1"
+
+
 def test_ohne_zugewiesenen_passiert_nichts(dispatcher: _Dispatcher) -> None:
     """Wurzel 4: eine unzugewiesene Aufgabe hat keinen Empfaenger — und „an
     alle" waere geraten."""

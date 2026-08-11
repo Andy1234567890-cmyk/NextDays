@@ -4527,6 +4527,12 @@
       "weekdayFriShort": "Fre",
       "weekdaySatShort": "Lör",
       "weekdaySunShort": "Sön"
+    },
+    "taskPage": {
+      "backToMyTasks": "Till mina uppgifter",
+      "toMyTasks": "Öppna mina uppgifter",
+      "notFoundTitle": "Uppgiften är inte tillgänglig",
+      "notFoundHint": "Den här uppgiften finns inte längre, eller så är den inte tilldelad dig."
     }
   },
   "objects": {
