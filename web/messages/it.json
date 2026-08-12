@@ -578,6 +578,7 @@
     "deleteForever": "Elimina definitivamente",
     "deleteConfirm": "Eliminare definitivamente questa conversazione dalla posta in arrivo? La prenotazione viene mantenuta.",
     "readOnlyHint": "Accesso in sola lettura – non puoi rispondere a questa conversazione.",
+    "uebernahmeHint": "Corrispondenza importata dal sistema precedente: qui non è possibile rispondere.",
     "filterAssignedOnly": "Vedi solo le conversazioni assegnate a te.",
     "autoSchedule": "Pianificazione",
     "autoBefore": "prima",

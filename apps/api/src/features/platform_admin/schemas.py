@@ -4,6 +4,11 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
+# Echter Import (kein TYPE_CHECKING): Pydantic löst die Annotationen zur
+# Laufzeit auf, ein reiner Typprüf-Import wäre hier ein NameError beim Bauen des
+# Modells.
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -751,6 +756,13 @@ class WorkerEreignis(BaseModel):
     dauer_ms: int | None = None
     fehler_text: str | None = None
     versuche: int | None = None
+    # WAS der Vorgang getan hat — der Satz für die Tabelle: „Reinigungsgebühr ·
+    # 795,00 DKK · pro Buchung" bzw. „12 geholt · 3 gespeichert". Stammt aus dem
+    # echten Request-Body bzw. der echten Handler-Rückgabe; `None`, wenn der
+    # Vorgang nichts berichtet hat (0381).
+    zusammenfassung: str | None = None
+    # Dieselben Angaben maschinenlesbar, für Filter/Auswertung ohne Textparsen.
+    kennzahlen: dict[str, Any] | None = None
     # UNSERE Uhr. Bei richtung=empfangen der Eingang bei uns, nicht der
     # Zeitpunkt beim Portal (Wurzel 5b).
     erfasst_at: str

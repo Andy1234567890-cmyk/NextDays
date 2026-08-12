@@ -578,6 +578,7 @@
     "deleteForever": "Endgültig löschen",
     "deleteConfirm": "Diese Konversation endgültig aus dem Posteingang löschen? Die Buchung bleibt erhalten.",
     "readOnlyHint": "Nur-Lese-Zugriff – du darfst auf diese Konversation nicht antworten.",
+    "uebernahmeHint": "Übernommene Korrespondenz aus dem früheren System — hier kann nicht geantwortet werden.",
     "filterAssignedOnly": "Du siehst nur dir zugewiesene Konversationen.",
     "autoSchedule": "Zeitplan",
     "autoBefore": "vor",

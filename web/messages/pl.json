@@ -578,6 +578,7 @@
     "deleteForever": "Usuń trwale",
     "deleteConfirm": "Trwale usunąć tę konwersację ze skrzynki odbiorczej? Rezerwacja zostanie zachowana.",
     "readOnlyHint": "Dostęp tylko do odczytu – nie możesz odpowiadać w tej konwersacji.",
+    "uebernahmeHint": "Korespondencja przeniesiona z poprzedniego systemu — nie można tu odpowiedzieć.",
     "filterAssignedOnly": "Widzisz tylko konwersacje przypisane do Ciebie.",
     "autoSchedule": "Harmonogram",
     "autoBefore": "przed",

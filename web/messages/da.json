@@ -578,6 +578,7 @@
     "deleteForever": "Slet permanent",
     "deleteConfirm": "Slet denne samtale permanent fra indbakken? Bookingen bevares.",
     "readOnlyHint": "Skrivebeskyttet adgang – du kan ikke svare på denne samtale.",
+    "uebernahmeHint": "Overtaget korrespondance fra det tidligere system — her kan der ikke svares.",
     "filterAssignedOnly": "Du ser kun samtaler, der er tildelt dig.",
     "autoSchedule": "Tidsplan",
     "autoBefore": "før",

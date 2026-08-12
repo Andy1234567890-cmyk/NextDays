@@ -156,6 +156,9 @@ export function WorkerTabelle({
                 <th className="py-2 pr-4 font-medium">Zeit</th>
                 <th className="py-2 pr-4 font-medium">Richtung</th>
                 <th className="py-2 pr-4 font-medium">Vorgang</th>
+                {/* Die wichtigste Spalte: WAS gesendet/getan wurde. Ohne sie
+                    stand hier nur, DASS etwas lief. */}
+                <th className="py-2 pr-4 font-medium">Was</th>
                 <th className="py-2 pr-4 font-medium">Objekt</th>
                 <th className="py-2 pr-4 font-medium">HTTP</th>
                 <th className="py-2 pr-4 text-right font-medium">ms</th>
@@ -171,6 +174,65 @@ export function WorkerTabelle({
         </div>
       )}
     </div>
+  );
+}
+
+// Was genau an das Portal ging, und was zurückkam — getrennt statt als ein
+// JSON-Klumpen. Der Request ist die Frage „was haben WIR gesendet", die
+// Response die Antwort des Portals; sie zusammen in einen Block zu werfen macht
+// genau die Unterscheidung kaputt, um die es bei der Fehlersuche geht.
+function QuelleAnsicht({
+  tabelle,
+  quelle,
+}: {
+  tabelle: string | null;
+  quelle: Record<string, unknown>;
+}) {
+  // Namen wie in der Quelltabelle (channex_debug_log / jobs). Absichtlich nicht
+  // übersetzt: sie sollen gegen die Channex-Doku haltbar sein.
+  const bloecke: { titel: string; wert: unknown }[] = [];
+  for (const [schluessel, titel] of [
+    ["request_body", "Gesendet (Request)"],
+    ["response_body", "Antwort des Portals (Response)"],
+    ["payload", "Job-Nutzlast"],
+  ] as const) {
+    if (quelle[schluessel] !== undefined && quelle[schluessel] !== null) {
+      bloecke.push({ titel, wert: quelle[schluessel] });
+    }
+  }
+  // Alles Übrige als Rest-Block, damit nichts verschwindet, was der Server
+  // liefert — die Route ist bewusst vollständig.
+  const rest = Object.fromEntries(
+    Object.entries(quelle).filter(
+      ([k]) => !["request_body", "response_body", "payload"].includes(k),
+    ),
+  );
+
+  return (
+    <>
+      {bloecke.map((b) => (
+        <div key={b.titel} className="mb-3">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {b.titel}
+          </p>
+          {/* Ungekürzt: genau dafür gibt es die Detail-Route. Ein
+              abgeschnittener Body wäre in der Fehlersuche wertlos. */}
+          <pre className="max-h-[32rem] overflow-auto rounded-xl bg-card p-3 text-xs whitespace-pre-wrap">
+            {JSON.stringify(b.wert, null, 2)}
+          </pre>
+        </div>
+      ))}
+      {Object.keys(rest).length > 0 ? (
+        <div>
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {tabelle ?? "Quelle"}
+          </p>
+          <pre className="max-h-[32rem] overflow-auto rounded-xl bg-card p-3 text-xs whitespace-pre-wrap">
+            {JSON.stringify(rest, null, 2)}
+          </pre>
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -217,6 +279,14 @@ function Zeile({ ereignis: e }: { ereignis: WorkerEreignis }) {
         </td>
         <td className="py-2 pr-4 text-muted-foreground">{e.richtung}</td>
         <td className="py-2 pr-4 font-mono text-xs">{e.vorgang}</td>
+        {/* Was gesendet/getan wurde. Nicht abgeschnitten: „Reinigungsgebühr ·
+            795,00 DKK · pro Buchung" muss ganz lesbar sein, sonst ist genau
+            der Betrag weg, den man sehen wollte. */}
+        <td className="py-2 pr-4 min-w-[20rem]">
+          {e.zusammenfassung ?? (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </td>
         <td className="py-2 pr-4">{e.objekt ?? "—"}</td>
         <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs text-muted-foreground">
           {e.http_methode ? (
@@ -246,7 +316,7 @@ function Zeile({ ereignis: e }: { ereignis: WorkerEreignis }) {
 
       {offen ? (
         <tr className="border-b border-border/50 bg-muted/30">
-          <td colSpan={7} className="px-4 py-4">
+          <td colSpan={8} className="px-4 py-4">
             {e.http_pfad ? (
               <p className="mb-2 font-mono text-xs break-all text-muted-foreground">
                 {e.http_methode} {e.http_pfad}
@@ -262,16 +332,7 @@ function Zeile({ ereignis: e }: { ereignis: WorkerEreignis }) {
             ) : detailFehler ? (
               <p className="text-xs text-muted-foreground">{detailFehler}</p>
             ) : quelle ? (
-              <>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {e.quelle_tabelle}
-                </p>
-                {/* Ungekürzt: genau dafür gibt es die Detail-Route. Ein
-                    abgeschnittener Body wäre in der Fehlersuche wertlos. */}
-                <pre className="max-h-[32rem] overflow-auto rounded-xl bg-card p-3 text-xs whitespace-pre-wrap">
-                  {JSON.stringify(quelle, null, 2)}
-                </pre>
-              </>
+              <QuelleAnsicht tabelle={e.quelle_tabelle} quelle={quelle} />
             ) : null}
           </td>
         </tr>

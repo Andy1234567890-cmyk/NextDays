@@ -769,6 +769,14 @@ export interface WorkerEreignis {
   dauer_ms: number | null;
   fehler_text: string | null;
   versuche: number | null;
+  /**
+   * WAS der Vorgang getan hat — „Reinigungsgebühr · 795,00 DKK · pro Buchung"
+   * bzw. „12 geholt · 3 gespeichert". Aus dem echten Request-Body bzw. der
+   * echten Handler-Rückgabe; `null`, wenn der Vorgang nichts berichtet hat.
+   */
+  zusammenfassung: string | null;
+  /** Dieselben Angaben maschinenlesbar (Filter/Auswertung ohne Textparsen). */
+  kennzahlen: Record<string, unknown> | null;
   /** UNSERE Uhr. Bei richtung=empfangen der Eingang bei uns (Wurzel 5b). */
   erfasst_at: string;
 }

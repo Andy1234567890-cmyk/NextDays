@@ -17,6 +17,7 @@ import {
 } from "react";
 
 import { ComposerEditor } from "@/components/inbox/composer-editor";
+import { istUebernahme } from "@/components/inbox/inbox-uebernahme-threads";
 import {
   sprachName,
   uebersetzbar,
@@ -861,8 +862,17 @@ export function Conversation({
         </p>
       )}
 
-      {/* Antwortfeld — nur mit INBOX_REPLY; sonst Read-Only-Hinweis */}
-      {!access.canReply ? (
+      {/* Übernommener Verlauf: eingefrorenes Archiv aus einem fremden PMS. Der
+          Kanal, über den er lief, gehört uns nicht mehr — es gibt keinen Weg,
+          auf dem eine Antwort den Gast erreichen würde. Deshalb gar kein
+          Eingabefeld statt eines Sendeknopfes, der 422 zurückgibt. */}
+      {istUebernahme(thread.id) ? (
+        <div className="flex items-center gap-2 border-t border-border p-4 text-sm text-muted-foreground">
+          <Icon icon="ph:archive" className="size-4" />
+          {t("uebernahmeHint")}
+        </div>
+      ) : /* Antwortfeld — nur mit INBOX_REPLY; sonst Read-Only-Hinweis */
+      !access.canReply ? (
         <div className="flex items-center gap-2 border-t border-border p-4 text-sm text-muted-foreground">
           <Icon icon="ph:lock-simple" className="size-4" />
           {t("readOnlyHint")}

@@ -578,6 +578,7 @@
     "deleteForever": "Definitief verwijderen",
     "deleteConfirm": "Dit gesprek definitief uit de inbox verwijderen? De boeking blijft behouden.",
     "readOnlyHint": "Alleen-lezen toegang – je mag niet op dit gesprek antwoorden.",
+    "uebernahmeHint": "Overgenomen correspondentie uit het vorige systeem — hier kun je niet antwoorden.",
     "filterAssignedOnly": "Je ziet alleen gesprekken die aan jou zijn toegewezen.",
     "autoSchedule": "Planning",
     "autoBefore": "voor",

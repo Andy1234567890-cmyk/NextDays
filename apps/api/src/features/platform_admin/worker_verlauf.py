@@ -74,6 +74,8 @@ def _zeile(row: dict[str, Any], titel: dict[str, str]) -> WorkerEreignis:
         dauer_ms=row.get("dauer_ms"),
         fehler_text=row.get("fehler_text"),
         versuche=row.get("versuche"),
+        zusammenfassung=row.get("zusammenfassung"),
+        kennzahlen=row.get("kennzahlen"),
         erfasst_at=str(row.get("erfasst_at")),
     )
 

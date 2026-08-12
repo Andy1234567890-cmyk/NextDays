@@ -578,6 +578,7 @@
     "deleteForever": "Kustuta jäädavalt",
     "deleteConfirm": "Kas kustutada see vestlus jäädavalt postkastist? Broneering säilib.",
     "readOnlyHint": "Ainult lugemisõigus – sa ei saa sellele vestlusele vastata.",
+    "uebernahmeHint": "Eelmisest süsteemist üle toodud kirjavahetus — siin ei saa vastata.",
     "filterAssignedOnly": "Näed ainult sulle määratud vestlusi.",
     "autoSchedule": "Ajakava",
     "autoBefore": "enne",

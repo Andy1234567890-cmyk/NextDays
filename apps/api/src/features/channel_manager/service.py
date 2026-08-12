@@ -15,7 +15,7 @@ from __future__ import annotations
 from supabase import Client
 
 from src.core.security import AuthContext
-from src.jobs import worker_verlauf
+from src.jobs import verlauf_texte, worker_verlauf
 
 from .abgaben_status import AbgabenStatusMixin
 from .airbnb_aktionen import AirbnbAktionenMixin
@@ -283,23 +283,36 @@ class ChannelManagerService(
         tenant_id = self._trace_ctx.get("tenant_id")
         if not tenant_id or self._db is None:
             return
+        # Die ID der Debug-Zeile ist der Weg zu den vollständigen Bodies: der
+        # Verlauf verweist über `quelle_id` darauf, das Backoffice lädt sie beim
+        # Aufklappen nach. Ohne sie bleibt jede `gesendet`-Zeile stumm — live so
+        # gewesen (12.08.2026): alle Zeilen mit `quelle_tabelle` gesetzt,
+        # `quelle_id` NULL, Detail-Antwort deshalb immer `quelle: null`.
+        debug_id: str | None = None
         try:
-            self._db.table("channex_debug_log").insert(
-                {
-                    "tenant_id": tenant_id,
-                    "property_id": self._trace_ctx.get("property_id"),
-                    "step": self._trace_ctx.get("step") or "call",
-                    "channex_method": trace.method,
-                    "channex_path": trace.path,
-                    "request_body": trace.request_body,
-                    "response_body": trace.response_body,
-                    "channex_id": trace.channex_id,
-                    "http_status": trace.http_status,
-                    "duration_ms": trace.duration_ms,
-                    "ok": trace.ok,
-                    "error": trace.error,
-                }
-            ).execute()
+            res = (
+                self._db.table("channex_debug_log")
+                .insert(
+                    {
+                        "tenant_id": tenant_id,
+                        "property_id": self._trace_ctx.get("property_id"),
+                        "step": self._trace_ctx.get("step") or "call",
+                        "channex_method": trace.method,
+                        "channex_path": trace.path,
+                        "request_body": trace.request_body,
+                        "response_body": trace.response_body,
+                        "channex_id": trace.channex_id,
+                        "http_status": trace.http_status,
+                        "duration_ms": trace.duration_ms,
+                        "ok": trace.ok,
+                        "error": trace.error,
+                    }
+                )
+                .execute()
+            )
+            zeilen = res.data or []
+            if zeilen and zeilen[0].get("id"):
+                debug_id = str(zeilen[0]["id"])
         except Exception as exc:  # noqa: BLE001 - Trace nie den Hauptpfad kippen
             log.warning("channex_debug_log_insert_failed", error=str(exc))
 
@@ -320,11 +333,19 @@ class ChannelManagerService(
                 else None
             ),
             quelle_tabelle="channex_debug_log",
+            quelle_id=debug_id,
             http_methode=trace.method,
             http_pfad=trace.path,
             http_status=trace.http_status,
             dauer_ms=trace.duration_ms,
             fehler_text=trace.error,
+            # WAS gesendet wurde — aus dem echten Request-Body, der rausging
+            # (nicht aus dem lokalen Zustand: der Verlauf belegt, was das Portal
+            # bekommen HAT). Damit steht „Reinigungsgebühr · 795,00 DKK · pro
+            # Buchung" in der Tabelle, statt nur „taxes · POST · ok".
+            zusammenfassung=verlauf_texte.beschreiben(
+                trace.path, trace.request_body
+            ),
         )
 
     def list_debug_trace(

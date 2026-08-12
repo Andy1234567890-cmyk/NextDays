@@ -578,6 +578,7 @@
     "deleteForever": "Pašalinti visam laikui",
     "deleteConfirm": "Ar visam laikui pašalinti šį pokalbį iš gautųjų? Rezervacija bus išsaugota.",
     "readOnlyHint": "Prieiga tik skaitymui – į šį pokalbį atsakyti negalite.",
+    "uebernahmeHint": "Perkelta korespondencija iš ankstesnės sistemos — čia atsakyti negalima.",
     "filterAssignedOnly": "Matote tik jums priskirtus pokalbius.",
     "autoSchedule": "Tvarkaraštis",
     "autoBefore": "prieš",

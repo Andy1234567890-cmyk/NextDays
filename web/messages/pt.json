@@ -578,6 +578,7 @@
     "deleteForever": "Eliminar definitivamente",
     "deleteConfirm": "Eliminar definitivamente esta conversa da caixa de entrada? A reserva é mantida.",
     "readOnlyHint": "Acesso só de leitura – não pode responder a esta conversa.",
+    "uebernahmeHint": "Correspondência transferida do sistema anterior — não é possível responder aqui.",
     "filterAssignedOnly": "Só vê as conversas que lhe foram atribuídas.",
     "autoSchedule": "Agenda",
     "autoBefore": "antes",

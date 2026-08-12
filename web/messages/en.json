@@ -578,6 +578,7 @@
     "deleteForever": "Delete permanently",
     "deleteConfirm": "Delete this conversation from the inbox for good? The booking is kept.",
     "readOnlyHint": "Read-only access – you cannot reply to this conversation.",
+    "uebernahmeHint": "Correspondence carried over from the previous system — you cannot reply here.",
     "filterAssignedOnly": "You only see conversations assigned to you.",
     "autoSchedule": "Schedule",
     "autoBefore": "before",

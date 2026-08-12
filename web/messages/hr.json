@@ -578,6 +578,7 @@
     "deleteForever": "Trajno izbriši",
     "deleteConfirm": "Trajno izbrisati ovaj razgovor iz pristigle pošte? Rezervacija ostaje sačuvana.",
     "readOnlyHint": "Pristup samo za čitanje – na ovaj razgovor ne možete odgovoriti.",
+    "uebernahmeHint": "Prenesena korespondencija iz prethodnog sustava — ovdje nije moguće odgovoriti.",
     "filterAssignedOnly": "Vidite samo razgovore dodijeljene vama.",
     "autoSchedule": "Raspored",
     "autoBefore": "prije",

@@ -578,6 +578,7 @@
     "deleteForever": "Ħassar b'mod permanenti",
     "deleteConfirm": "Tħassar din il-konversazzjoni b'mod permanenti mill-inbox? Il-prenotazzjoni tinżamm.",
     "readOnlyHint": "Aċċess ta' qari biss – ma tistax twieġeb għal din il-konversazzjoni.",
+    "uebernahmeHint": "Korrispondenza meħuda mis-sistema preċedenti — ma tistax twieġeb hawn.",
     "filterAssignedOnly": "Tara biss il-konversazzjonijiet assenjati lilek.",
     "autoSchedule": "Skeda",
     "autoBefore": "qabel",

@@ -33,6 +33,8 @@ from supabase import Client
 
 from src.core.logging import get_logger
 
+from . import verlauf_jobs
+
 log = get_logger("nextdays.worker.verlauf")
 
 # Wie viel Fehlertext im Verlauf steht. Großzügig: die Ansicht soll den Grund
@@ -73,6 +75,8 @@ def merken(  # noqa: PLR0913 — jedes Feld ist eine eigene Achse der Ansicht
     dauer_ms: int | None = None,
     fehler_text: str | None = None,
     versuche: int | None = None,
+    zusammenfassung: str | None = None,
+    kennzahlen: dict[str, Any] | None = None,
 ) -> None:
     """Eine Verlaufszeile schreiben. Fehler hier kippen den Aufrufer nie.
 
@@ -95,6 +99,13 @@ def merken(  # noqa: PLR0913 — jedes Feld ist eine eigene Achse der Ansicht
         "dauer_ms": dauer_ms,
         "fehler_text": fehler_text[:_FEHLER_MAX] if fehler_text else None,
         "versuche": versuche,
+        # Der Satz für die Tabelle. Gedeckelt wie der Fehlertext: er soll eine
+        # Zeile beschreiben, nicht einen Body ersetzen (der liegt beim
+        # Aufklappen ungekürzt daneben).
+        "zusammenfassung": (
+            zusammenfassung[:_FEHLER_MAX] if zusammenfassung else None
+        ),
+        "kennzahlen": kennzahlen or None,
     }
     try:
         db.table("worker_ereignis").insert(zeile).execute()
@@ -113,13 +124,14 @@ def merken(  # noqa: PLR0913 — jedes Feld ist eine eigene Achse der Ansicht
         )
 
 
-def job_beendet(
+def job_beendet(  # noqa: PLR0913 — jedes Feld ist eine eigene Achse der Ansicht
     db: Client,
     job: dict[str, Any],
     *,
     status: str,
     fehler: str | None = None,
     dauer_ms: int | None = None,
+    ergebnis: verlauf_jobs.JobErgebnis = None,
 ) -> None:
     """Abschluss eines Jobs in den Verlauf schreiben.
 
@@ -137,11 +149,14 @@ def job_beendet(
     echte Fehler ginge darin unter (Wurzel 5).
     """
     payload = job.get("payload") or {}
+    satz, kennzahlen = verlauf_jobs.beschreiben(ergebnis)
     merken(
         db,
         richtung="job",
         vorgang=str(job.get("job_type") or "?"),
         ergebnis="fehler" if status in {"dead", "queued"} else "ok",
+        zusammenfassung=satz,
+        kennzahlen=kennzahlen,
         tenant_id=_uuid(job.get("tenant_id")) or _uuid(payload.get("tenant_id")),
         property_id=_uuid(payload.get("property_id")),
         quelle_tabelle="jobs",
@@ -165,7 +180,7 @@ def _uuid(wert: object) -> str | None:
     return text or None
 
 
-def job_ausgang(
+def job_ausgang(  # noqa: PLR0913 — jedes Feld ist eine eigene Achse der Ansicht
     db: Client,
     job: dict[str, Any],
     uhr: Stoppuhr,
@@ -173,6 +188,7 @@ def job_ausgang(
     ausgang: str,
     fehler: str | None = None,
     retry_after: int | None = None,
+    ergebnis: verlauf_jobs.JobErgebnis = None,
 ) -> None:
     """DER eine Eingang für den Worker — er meldet nur den Ausgang.
 
@@ -190,7 +206,9 @@ def job_ausgang(
     elif ausgang == "fehler":
         job_fehlgeschlagen(db, job, fehler=fehler or "", dauer_ms=uhr.ms())
     else:
-        job_beendet(db, job, status="done", dauer_ms=uhr.ms())
+        job_beendet(
+            db, job, status="done", dauer_ms=uhr.ms(), ergebnis=ergebnis
+        )
 
 
 def job_aufgeschoben(

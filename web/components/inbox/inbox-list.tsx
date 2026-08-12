@@ -49,6 +49,7 @@ import {
   whatsAppDraftThread,
   whatsAppToThread,
 } from "@/components/inbox/inbox-whatsapp-threads";
+import { istUebernahme } from "@/components/inbox/inbox-uebernahme-threads";
 import { WhatsAppChat } from "@/components/inbox/whatsapp-panel";
 import { Button } from "@nextdays/ui/button";
 import { DatePicker } from "@nextdays/ui/date-picker";
@@ -163,7 +164,12 @@ export function InboxList({
       prev.map((r) => (r.id === current.id ? { ...r, is_read: true } : r)),
     );
     // WhatsApp-Threads laufen nicht über den inbox-Slice — nur lokal spiegeln.
-    if (!isWhatsApp(current.id)) void updateThreadFlags(current.id, { is_read: true });
+    // Übernommene Verläufe (`ue:`) ebenso wenig: sie haben keine Zeile in
+    // `channex_booking`, gegen die die Flags geschrieben würden — der Aufruf
+    // liefe ins Leere (404). Ein eingefrorenes Archiv gilt ohnehin als gelesen.
+    if (!isWhatsApp(current.id) && !istUebernahme(current.id)) {
+      void updateThreadFlags(current.id, { is_read: true });
+    }
   }, [current]);
   // KEIN Realtime-Abo mehr auf `channex_booking` und `whatsapp_conversation`:
   // beide Tabellen sind seit Migration 0337 für `authenticated` gesperrt

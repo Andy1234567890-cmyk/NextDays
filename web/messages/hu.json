@@ -578,6 +578,7 @@
     "deleteForever": "Végleges törlés",
     "deleteConfirm": "Véglegesen törli ezt a beszélgetést a beérkező üzenetek közül? A foglalás megmarad.",
     "readOnlyHint": "Csak olvasási hozzáférés – erre a beszélgetésre nem válaszolhat.",
+    "uebernahmeHint": "A korábbi rendszerből átvett levelezés — itt nem lehet válaszolni.",
     "filterAssignedOnly": "Csak az Önhöz rendelt beszélgetéseket látja.",
     "autoSchedule": "Ütemezés",
     "autoBefore": "előtt",

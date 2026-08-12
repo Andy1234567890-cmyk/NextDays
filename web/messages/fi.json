@@ -578,6 +578,7 @@
     "deleteForever": "Poista lopullisesti",
     "deleteConfirm": "Poistetaanko tämä keskustelu lopullisesti saapuneista? Varaus säilyy.",
     "readOnlyHint": "Vain luku -oikeus – et voi vastata tähän keskusteluun.",
+    "uebernahmeHint": "Aiemmasta järjestelmästä siirretty viestihistoria — tähän ei voi vastata.",
     "filterAssignedOnly": "Näet vain sinulle määritetyt keskustelut.",
     "autoSchedule": "Aikataulu",
     "autoBefore": "ennen",

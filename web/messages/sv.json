@@ -578,6 +578,7 @@
     "deleteForever": "Ta bort permanent",
     "deleteConfirm": "Ta bort den här konversationen permanent från inkorgen? Bokningen behålls.",
     "readOnlyHint": "Skrivskyddad åtkomst – du kan inte svara i den här konversationen.",
+    "uebernahmeHint": "Överförd korrespondens från det tidigare systemet — det går inte att svara här.",
     "filterAssignedOnly": "Du ser bara konversationer som tilldelats dig.",
     "autoSchedule": "Tidsplan",
     "autoBefore": "före",

@@ -578,6 +578,7 @@
     "deleteForever": "Dzēst neatgriezeniski",
     "deleteConfirm": "Vai neatgriezeniski dzēst šo sarunu no iesūtnes? Rezervācija tiks saglabāta.",
     "readOnlyHint": "Piekļuve tikai lasīšanai – uz šo sarunu nevarat atbildēt.",
+    "uebernahmeHint": "Pārņemta sarakste no iepriekšējās sistēmas — šeit nevar atbildēt.",
     "filterAssignedOnly": "Jūs redzat tikai sev piešķirtās sarunas.",
     "autoSchedule": "Grafiks",
     "autoBefore": "pirms",

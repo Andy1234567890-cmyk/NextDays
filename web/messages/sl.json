@@ -578,6 +578,7 @@
     "deleteForever": "Dokončno izbriši",
     "deleteConfirm": "Ali naj se ta pogovor dokončno izbriše iz prejete pošte? Rezervacija ostane.",
     "readOnlyHint": "Dostop samo za branje – na ta pogovor ne morete odgovoriti.",
+    "uebernahmeHint": "Prevzeta korespondenca iz prejšnjega sistema — tu ni mogoče odgovoriti.",
     "filterAssignedOnly": "Vidite samo pogovore, ki so dodeljeni vam.",
     "autoSchedule": "Urnik",
     "autoBefore": "pred",

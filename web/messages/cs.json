@@ -578,6 +578,7 @@
     "deleteForever": "Trvale smazat",
     "deleteConfirm": "Odstranit tuto konverzaci trvale ze schránky? Rezervace zůstane zachována.",
     "readOnlyHint": "Přístup jen pro čtení – na tuto konverzaci nemůžete odpovídat.",
+    "uebernahmeHint": "Převzatá korespondence z předchozího systému — zde nelze odpovídat.",
     "filterAssignedOnly": "Vidíte pouze konverzace přiřazené vám.",
     "autoSchedule": "Časový plán",
     "autoBefore": "před",

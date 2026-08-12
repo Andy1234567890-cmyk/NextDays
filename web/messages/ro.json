@@ -578,6 +578,7 @@
     "deleteForever": "Șterge definitiv",
     "deleteConfirm": "Ștergeți definitiv această conversație din inbox? Rezervarea se păstrează.",
     "readOnlyHint": "Acces doar pentru citire – nu puteți răspunde la această conversație.",
+    "uebernahmeHint": "Corespondență preluată din sistemul anterior — aici nu se poate răspunde.",
     "filterAssignedOnly": "Vedeți doar conversațiile atribuite dvs.",
     "autoSchedule": "Program",
     "autoBefore": "înainte",

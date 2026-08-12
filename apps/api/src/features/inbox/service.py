@@ -27,6 +27,8 @@ from src.features.guests.identity import (
     resolve_or_create_guest,
 )
 
+# Der Nachrichten-Spiegel (`portal_messages`): lesen, nachtragen, Signal setzen.
+from . import uebernahme
 from .anhaenge import AnhangWissenMixin
 from .ausloeser import ALLE_TRIGGER
 from .automation_mapping import (
@@ -52,8 +54,6 @@ from .schemas import (
     TeamMember,
     TeamMemberList,
 )
-
-# Der Nachrichten-Spiegel (`portal_messages`): lesen, nachtragen, Signal setzen.
 from .spiegel import LEERER_STAND, SpiegelMixin, ThreadStand, sichere_anhaenge
 from .sprachen import (
     SprachenMixin,
@@ -274,6 +274,23 @@ class InboxService(
                     assigned_user_name=names.get(uid) if uid else None,
                 )
             )
+        # Übernommene Verläufe aus einem fremden PMS (0382) sind gleichwertige
+        # Threads — sie liegen nur in einer eigenen Tabelle, weil sie nie über
+        # Channex liefen (dort ist `channex_booking_id` NOT NULL + unique).
+        # Sie werden GELESEN und hier eingemischt; es wandert nichts.
+        #
+        # Nur in der aktiven Ansicht: ein eingefrorenes Archiv kennt weder
+        # „archiviert" noch „Papierkorb", und in diesen Ansichten hätte es
+        # nichts zu suchen.
+        #
+        # Und nur bei scope="all" (Wurzel 9, fail-closed): „assigned" heißt
+        # „nur die MIR zugewiesenen Threads". Ein übernommener Verlauf kennt
+        # keine Zuweisung — ihn trotzdem zu zeigen, gäbe einem Mitarbeiter mit
+        # eingeschränktem Posteingang Gastkorrespondenz zu sehen, die er im
+        # OTA-Pfad nicht bekäme. Im Zweifel lieber nicht anzeigen.
+        if status == "active" and access.scope == "all":
+            items.extend(uebernahme.threads_lesen(db, tenant_id))
+
         # „Letzte Aktivität" heißt: was zuletzt passiert ist — eine Nachricht
         # von gestern schlägt eine Buchung von letztem Monat. Threads ganz ohne
         # Zeitpunkt fallen ans Ende (`_URZEIT`), statt die Liste anzuführen.
@@ -546,6 +563,15 @@ class InboxService(
         return db, tenant_id, row, access
 
     def get_messages(self, ctx: AuthContext, thread_id: str) -> InboxMessagesResponse:
+        # Übernommener Verlauf (0382): liegt in einer eigenen Tabelle und hat
+        # keine Zeile in `channex_booking` — der normale Ladepfad fände ihn
+        # nicht. Eigener Zweig, bevor `_load_thread_scoped` greift.
+        if uebernahme.ist_uebernahme(thread_id):
+            db, tenant_id = self._require(ctx)
+            return uebernahme.verlauf_antwort(
+                db, tenant_id, thread_id, scope=self.access(ctx).scope
+            )
+
         db, tenant_id, row, _access = self._load_thread_scoped(ctx, thread_id)
         # Lesestand des Gastes (0297) — an JEDER Rueckgabe, auch an den
         # Fehlerpfaden: dass der Portal-Chat gerade klemmt, macht ein frueher
@@ -986,6 +1012,15 @@ class InboxService(
         text = (message or "").strip()
         if not text:
             raise InboxError("Nachricht darf nicht leer sein.", status_code=422)
+        # Ein übernommener Verlauf ist ein eingefrorenes Archiv: der Kanal, über
+        # den er lief, gehört uns nicht mehr. `_load_thread` würde ihn ohnehin
+        # nicht finden (404) — hier steht die Absicht ausdrücklich, mit einer
+        # Meldung, die den Grund nennt, statt „nicht gefunden" zu behaupten.
+        if uebernahme.ist_uebernahme(thread_id):
+            raise InboxError(
+                "Übernommener Verlauf — hier kann nicht geantwortet werden.",
+                status_code=422,
+            )
         if enforce_reply:
             db, tenant_id, row, _access = self._load_thread_scoped(ctx, thread_id)
             if not _access.can_reply:

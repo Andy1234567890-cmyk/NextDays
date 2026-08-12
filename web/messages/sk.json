@@ -578,6 +578,7 @@
     "deleteForever": "Natrvalo odstrániť",
     "deleteConfirm": "Odstrániť túto konverzáciu natrvalo z doručenej pošty? Rezervácia zostane zachovaná.",
     "readOnlyHint": "Prístup len na čítanie – na túto konverzáciu nemôžete odpovedať.",
+    "uebernahmeHint": "Prevzatá korešpondencia z predchádzajúceho systému — tu nie je možné odpovedať.",
     "filterAssignedOnly": "Vidíte len konverzácie priradené vám.",
     "autoSchedule": "Rozvrh",
     "autoBefore": "pred",

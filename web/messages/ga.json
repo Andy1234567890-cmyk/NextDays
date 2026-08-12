@@ -578,6 +578,7 @@
     "deleteForever": "Scrios go buan",
     "deleteConfirm": "An bhfuil tú cinnte gur mhaith leat an comhrá seo a scriosadh go buan ón mbosca isteach? Coinnítear an áirithint.",
     "readOnlyHint": "Rochtain léitheoireachta amháin – ní féidir leat freagra a thabhairt ar an gcomhrá seo.",
+    "uebernahmeHint": "Comhfhreagras a tugadh anall ón gcóras roimhe seo — ní féidir freagra a thabhairt anseo.",
     "filterAssignedOnly": "Ní fheiceann tú ach comhráite atá sannta duit.",
     "autoSchedule": "Sceideal",
     "autoBefore": "roimh",

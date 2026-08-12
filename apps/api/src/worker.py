@@ -32,7 +32,7 @@ from src.core.config import get_settings
 from src.core.logging import configure_logging, get_logger
 from src.core.supabase import get_service_client
 from src.features.properties.vertragsende import vertragsenden_nachziehen
-from src.jobs import worker_verlauf
+from src.jobs import feed_nachpflege, worker_verlauf
 from src.jobs.channex_budget import BudgetDecision, ChannexBudget
 from src.jobs.queue import enqueue, next_run_after, try_enqueue_content_sync
 
@@ -361,31 +361,31 @@ def _handle_sync_airbnb_zimmer(
 
 def _handle_reconcile_tenant(
     db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
-) -> None:
-    _svc(db, budget).reconcile_properties_for_tenant(payload["tenant_id"])
+) -> dict[str, int]:
+    return _svc(db, budget).reconcile_properties_for_tenant(payload["tenant_id"])
 
 
 def _handle_process_ari_outbox(
     db: Client, _payload: dict[str, Any], budget: ChannexBudget | None = None
-) -> None:
+) -> dict[str, int]:
     """Offene ari_outbox-Zeilen (ausgehende ARI-Pushes) erneut an Channex pushen.
     Ersetzt den finalen process_ari_outbox()-Schritt des alten Host-Crons: die
     per-Tenant-reconcile_tenant-Jobs spiegeln nur Channex→DB, arbeiten die outbox
     aber NICHT ab. Tenant-übergreifend (die outbox ist nicht tenant-gefiltert),
     darum einmal je Tick als eigener Job statt pro Tenant."""
-    _svc(db, budget).process_ari_outbox()
+    return _svc(db, budget).process_ari_outbox()
 
 
 def _handle_process_restriction_outbox(
     db: Client, _payload: dict[str, Any], budget: ChannexBudget | None = None
-) -> None:
+) -> dict[str, int]:
     """Offene ari_restriction_outbox-Zeilen (Stop-Sell/Rate/Min-Stay/Max-Stay/
     CTA-CTD) erneut an Channex pushen — der dauerhafte Backstop für Restriktions-
     Pushes (analog process_ari_outbox für Availability). Baut je Zeile die values
     aus dem persistierten kind+payload neu auf und löst das Rate-Plan-Mapping
     frisch auf (Selbstheilung, sobald der Rate-Plan-Import gelaufen ist). Tenant-
     übergreifend, darum einmal je Tick als eigener Job statt pro Tenant."""
-    _svc(db, budget).process_restriction_outbox()
+    return _svc(db, budget).process_restriction_outbox()
 
 
 def _handle_reconcile_rate_plan_prices(
@@ -508,6 +508,14 @@ def _handle_push_ari(
         raise RuntimeError(
             f"ARI-Push ({kind}) an Channex fehlgeschlagen — Job wird erneut versucht."
         )
+    # Fürs Verlaufs-Feld: WAS gepusht wurde und über welchen Zeitraum. Der Text
+    # steht so in der Tabelle („availability · 13.08.2026–12.08.2027"), die
+    # gesendeten Werte je Channex-Call daneben als eigene `gesendet`-Zeilen.
+    return {
+        "art": kind,
+        "von": payload.get("date_from"),
+        "bis": payload.get("date_to"),
+    }
 
 
 def _handle_airbnb_historie_import(
@@ -528,7 +536,7 @@ def _handle_airbnb_historie_import(
 
 def _handle_sync_bookings_feed(
     db: Client, _payload: dict[str, Any], budget: ChannexBudget | None = None
-) -> None:
+) -> dict[str, Any]:
     """Kontoweiten Booking-Revisions-Feed ziehen, je Revision dem Tenant zuordnen,
     speichern/projizieren und erst danach acken. Getriggert vom Channex-Webhook
     (booking_*) und vom 5-min-Backstop-Tick. Revision-Fehler sind im Ergebnis
@@ -542,58 +550,27 @@ def _handle_sync_bookings_feed(
         log.warning("sync_bookings_feed_partial", errors=result.errors[:5],
                     saved=result.saved, skipped=result.skipped)
 
-    # Im SELBEN Lauf: fehlende Buchungszeitpunkte beim Portal nachholen
-    # (0291/0292). Der Feed liefert nur seinen eigenen Eingang — ohne diesen
-    # Schritt zeigte der Posteingang eine Buchung vom März als „heute", und
-    # zwar dauerhaft, nicht nur einmal. Hier angehängt statt als eigener Tick,
-    # weil genau hier die Zeilen ohne Zeitpunkt entstehen.
-    # Best effort: eine unerreichbare Portal-API darf den Feed nicht kippen
-    # (die Buchungen sind das Wichtigere, der Zeitpunkt kommt beim nächsten
-    # Lauf) — deshalb breit gefangen und nur geloggt.
-    try:
-        geheilt = dienst.buchungszeitpunkte_heilen()
-        if geheilt.get("gesetzt"):
-            log.info("buchungszeitpunkte_nachgezogen", **geheilt)
-    except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Feed nie
-        log.warning("buchungszeitpunkte_heilung_fehlgeschlagen",
-                    error=str(exc)[:200])
+    # Im SELBEN Lauf die Lücken schliessen, die der Feed hinterlässt
+    # (Buchungszeitpunkt, Profilbild, Anreisezeit, Lesestand). Warum sie hier
+    # hängen und nicht an eigenen Ticks: siehe `feed_nachpflege`.
+    nachgepflegt = feed_nachpflege.ausfuehren(dienst)
 
-    # Ebenso die Profilbilder der Gäste (0295). Aus demselben Grund hier und
-    # nicht als eigener Tick: Der Feed legt die Gäste an, und er kennt die
-    # Nutzer-Ressource des Portals nicht — jeder neue Gast käme ohne Bild
-    # herein. Eine Einmal-Reparatur würde den Bestand füllen und ab der
-    # nächsten Buchung wieder einen Initialen-Kreis stehen lassen.
-    try:
-        bilder = dienst.profilbilder_heilen()
-        if bilder.get("gesetzt"):
-            log.info("profilbilder_nachgezogen", **bilder)
-    except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Feed nie
-        log.warning("profilbild_heilung_fehlgeschlagen", error=str(exc)[:200])
-
-    # Und die An-/Abreisezeiten. Channex reicht Airbnbs `check_in_datetime`
-    # nicht durch, deshalb blieb `reservations.checkin_time` leer und jede
-    # Anreise-Vorlage meldete „Feld ohne Wert: checkin_time".
-    try:
-        zeiten = dienst.anreisezeiten_heilen()
-        if zeiten.get("gesetzt"):
-            log.info("anreisezeiten_nachgezogen", **zeiten)
-    except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Feed nie
-        log.warning("anreisezeit_heilung_fehlgeschlagen", error=str(exc)[:200])
-
-    # Lesestand des Gastes (0297). Anders als die Heilungen darüber füllt das
-    # keine Lücke, sondern hält einen Wert AKTUELL — ein Häkchen, das einmal
-    # gesetzt und nie wieder geprüft wird, ist schlimmer als keins.
-    try:
-        gelesen = dienst.lesestaende_aktualisieren()
-        if gelesen.get("gesetzt"):
-            log.info("lesestaende_nachgezogen", **gelesen)
-    except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Feed nie
-        log.warning("lesestand_fehlgeschlagen", error=str(exc)[:200])
+    # Fürs Verlaufs-Feld: was dieser Lauf bewirkt hat. `errors` kommt mit, damit
+    # ein Teilfehler in der Zeile steht und nicht als glatter Durchlauf erscheint
+    # (die betroffenen Revisionen hängen un-acked im 30-Minuten-Fenster).
+    return {
+        "fetched": result.fetched,
+        "saved": result.saved,
+        "acknowledged": result.acknowledged,
+        "skipped": result.skipped,
+        "errors": result.errors,
+        **nachgepflegt,
+    }
 
 
 def _handle_sync_live_feed(
     db: Client, _payload: dict[str, Any], budget: ChannexBudget | None = None
-) -> None:
+) -> dict[str, Any]:
     """Airbnbs Ereignis-Journal nachziehen (`GET live_feed`).
 
     Backstop für ALLES, was keine Buchung ist. Idempotent über die
@@ -602,6 +579,7 @@ def _handle_sync_live_feed(
     ergebnis = _svc(db, budget).live_feed_nachziehen()
     if ergebnis.get("neu"):
         log.info("sync_live_feed_neu", **ergebnis)
+    return ergebnis
 
 
 def _handle_import_ari_property(
@@ -656,8 +634,13 @@ class _ProgressBudget:
         return decision
 
 
+# Ein Handler DARF ein Ergebnis zurückgeben (`dict` mit Zählern) — dann steht im
+# Verlauf, was er bewirkt hat. `None` ist weiterhin erlaubt und heisst „nichts zu
+# berichten"; die Verlaufszeile bleibt dann ohne Zusammenfassung, statt eine
+# Tätigkeit zu behaupten (Wurzel 4).
 HANDLERS: dict[
-    str, Callable[[Client, dict[str, Any], ChannexBudget | None], None]
+    str,
+    Callable[[Client, dict[str, Any], ChannexBudget | None], dict[str, Any] | None],
 ] = {
     "sync_property_content": _handle_sync_property_content,
     "sync_property_taxes": _handle_sync_property_taxes,
@@ -865,9 +848,11 @@ class Worker:
         )
         uhr = worker_verlauf.Stoppuhr()
         try:
-            handler(self._db, job.get("payload") or {}, budget)
+            ergebnis = handler(self._db, job.get("payload") or {}, budget)
             self._finish(job["id"], "done")
-            worker_verlauf.job_ausgang(self._db, job, uhr, ausgang="done")
+            worker_verlauf.job_ausgang(
+                self._db, job, uhr, ausgang="done", ergebnis=ergebnis
+            )
         except ChannexBudgetExhausted as exc:
             # Budget mitten im Job erschöpft → verzögern statt Retry verbrennen.
             progressed = budget is not None and budget.granted > 0

@@ -578,6 +578,7 @@
     "deleteForever": "Supprimer définitivement",
     "deleteConfirm": "Supprimer définitivement cette conversation de la boîte de réception ? La réservation est conservée.",
     "readOnlyHint": "Accès en lecture seule – vous ne pouvez pas répondre à cette conversation.",
+    "uebernahmeHint": "Correspondance reprise de l'ancien système — impossible de répondre ici.",
     "filterAssignedOnly": "Vous ne voyez que les conversations qui vous sont attribuées.",
     "autoSchedule": "Planification",
     "autoBefore": "avant",
