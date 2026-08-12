@@ -52,6 +52,7 @@ nichts verändern.
 """
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
@@ -79,6 +80,13 @@ MAX_SEITEN_JE_ETAPPE: Final = 60  # 3000 Buchungen in EINER Etappe
 MAX_JAHRE: Final = 30
 
 _TIMEOUT: Final = httpx.Timeout(60.0)
+
+# Versuche je Seite. Zwei, nicht fünf: der Abbruch war live sporadisch (1–2 von 24
+# Etappen) und beim zweiten Versuch weg. Mehr Versuche würden im echten Störfall
+# nur die Wartezeit vervielfachen, statt die Lücke zu schliessen.
+_VERSUCHE_JE_SEITE: Final = 2
+# Kurze Pause, damit ein abgerissener Keep-alive nicht sofort wieder aufschlägt.
+_PAUSE_VOR_WIEDERHOLUNG: Final = 1.0
 
 
 @dataclass
@@ -173,6 +181,37 @@ class AirbnbHistorieMixin:
         Kein `return None` bei Fehlern wie im lesenden Stammdaten-Pfad: hier
         würde ein verschluckter Fehler als „keine Buchungen in dieser Etappe"
         durchgehen und eine Lücke erzeugen, die niemand sieht (Wurzel 5).
+
+        EIN WIEDERHOLUNGSVERSUCH BEI VERBINDUNGSABBRUCH (12.08.2026, live
+        gemessen): Airbnb legt beim Bestandsabruf sporadisch mitten in der Antwort
+        auf — `Server disconnected without sending a response` bzw.
+        `[SSL: UNEXPECTED_EOF_WHILE_READING]`. Pro Nachpflege-Lauf traf das 1–2
+        der 24 Etappen. Die Etappe brach dann KOMPLETT ab (die Schleife oben fängt
+        sie und macht mit der nächsten weiter), und ihre Buchungen fehlten:
+        `vollstaendig=False`, 431 statt 462 Buchungen. Genau die Zeilen, die in
+        einer verlorenen Etappe lagen, konnte die Nachpflege dann nicht heilen und
+        suchte sie beim nächsten Tick erneut — der Fehler hielt sich selbst am
+        Leben.
+
+        Wiederholt werden die drei live beobachteten Abbruch-Formen — sie sind
+        dasselbe Ereignis in drei Verkleidungen, je nachdem, wo die Verbindung
+        gerissen ist:
+
+            RemoteProtocolError   „Server disconnected without sending a response"
+            ReadError             „[SSL: UNEXPECTED_EOF_WHILE_READING]"
+            ConnectTimeout        „_ssl.c:993: The handshake operation timed out"
+
+        Der Handshake-Timeout gehörte zunächst NICHT dazu, mit der Begründung
+        „wenn Airbnb nicht erreichbar ist, hilft kein zweiter Versuch". Die
+        Messung widerlegte das: er trifft eine einzelne Etappe, während die 23
+        anderen im selben Lauf normal antworten — die Gegenstelle ist also
+        erreichbar, nur dieser Handshake ist gescheitert.
+
+        NICHT wiederholt wird eine Fehlerantwort: ein 401 oder 429 wird durch
+        Wiederholen nicht besser, sondern verdoppelt nur die Last (ein 429 zu
+        wiederholen ist der Weg in die Sperre). Ebenso bleibt `ConnectError`
+        draussen — kein Verbindungsaufbau möglich heisst, dass auch der zweite
+        Versuch keinen findet.
         """
         params: dict[str, str] = {
             "_limit": str(SEITEN_GROESSE),
@@ -180,12 +219,26 @@ class AirbnbHistorieMixin:
         }
         if cursor:
             params["_cursor"] = cursor
-        with httpx.Client(timeout=_TIMEOUT) as client:
-            antwort = client.get(
-                f"{AIRBNB_API}/v2/reservations",
-                headers={"X-Airbnb-OAuth-Token": token, "Accept": "application/json"},
-                params=params,
-            )
+        kopf = {"X-Airbnb-OAuth-Token": token, "Accept": "application/json"}
+        for versuch in range(1, _VERSUCHE_JE_SEITE + 1):
+            try:
+                with httpx.Client(timeout=_TIMEOUT) as client:
+                    antwort = client.get(
+                        f"{AIRBNB_API}/v2/reservations", headers=kopf, params=params
+                    )
+                break
+            except (
+                httpx.RemoteProtocolError,
+                httpx.ReadError,
+                httpx.ConnectTimeout,
+            ) as exc:
+                if versuch == _VERSUCHE_JE_SEITE:
+                    raise
+                log.warning(
+                    "airbnb_seite_abgebrochen_wiederholung",
+                    start_date=start_date, versuch=versuch, error=str(exc)[:120],
+                )
+                time.sleep(_PAUSE_VOR_WIEDERHOLUNG)
         if antwort.status_code != 200:
             raise ChannelManagerError(
                 f"Airbnb antwortete {antwort.status_code} beim Lesen der "

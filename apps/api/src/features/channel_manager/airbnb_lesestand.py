@@ -26,7 +26,7 @@ bestätigt.
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Any, Final
 
 from supabase import Client
@@ -36,6 +36,18 @@ from .common import ChannelManagerError, log, ota_zeitstempel_utc
 
 # Obergrenze je Lauf: ein Thread-Abruf pro Buchung, das summiert sich.
 _GRENZE_JE_LAUF: Final = 50
+
+# Wie lange nach der Abreise ein Thread noch beobachtet wird. 30 Tage deckt die
+# Nachkorrespondenz ab (Airbnbs Bewertungsfrist sind 14 Tage); danach ändert sich
+# der Lesestand nicht mehr und ein weiterer Abruf wäre sichere Verschwendung.
+_NACHLAUF_TAGE: Final = 30
+
+# Wie weit VOR der Anreise ein Thread beobachtet wird. 90 Tage: die
+# Gastkorrespondenz (Anreisezeit, Schlüssel, Fragen) läuft in den Wochen vor der
+# Ankunft, nicht ein Jahr davor. Grosszügig gewählt, weil ein zu enges Fenster
+# einen echten Lesestand übersehen würde — und das Häkchen im Posteingang ist
+# genau dann falsch, wenn es fehlt.
+_VORLAUF_TAGE: Final = 90
 
 
 def gast_lesestand(thread: dict[str, Any]) -> tuple[str | None, str | None]:
@@ -116,11 +128,58 @@ class AirbnbLesestandMixin:
     def _juengste_threads(
         db: Client, grenze: int
     ) -> dict[str, list[dict[str, Any]]]:
-        """Die jüngsten Airbnb-Threads je Tenant (nach echtem Buchungszeitpunkt)."""
+        """Die Airbnb-Threads je Tenant, deren Lesestand sich noch ändern kann.
+
+        WARUM NICHT EINFACH „DIE JÜNGSTEN" (12.08.2026, live gemessen): Vorher
+        stand hier nur `eq("ota_name", "AirBNB")` — ohne jede weitere Einschränkung
+        wurden alle 22 Airbnb-Buchungen des Betriebs bei JEDEM Tick abgerufen, ein
+        `GET v2/threads/{id}` pro Zeile, alle fünf Minuten. Das Log zeigte über 15
+        Läufe in Folge `{"geprueft": 22, "gesetzt": 0}`.
+
+        Der Vergleich `guest_read_message_ref == ref` weiter unten spart nur den
+        SCHREIBaufruf — der HTTP-Aufruf ist da längst passiert. Gefiltert werden
+        muss also HIER, vor dem Abruf.
+
+        Das Fenster hat ZWEI Ränder, beide live gemessen (5,0 s je Thread-Abruf):
+
+          hinten  `_NACHLAUF_TAGE` nach der Abreise. Danach schreibt und liest im
+                  Thread praktisch niemand mehr; ein Lesestand von damals bleibt
+                  für immer, wie er ist.
+          vorne   `_VORLAUF_TAGE` vor der Anreise. Von den 22 Threads des
+                  Beta-Betriebs reisten 8 erst im Folgejahr an (bis 15.07.2027) —
+                  deren Lesestand alle fünf Minuten abzufragen kostete 40 s je
+                  Tick für eine Auskunft, die sich Monate lang nicht ändert.
+
+        Buchungen ohne Datumsangabe bleiben drin — eine fehlende Angabe darf nicht
+        dazu führen, dass etwas nie geprüft wird (Wurzel 4: keine Annahme an der
+        Stelle einer fehlenden Angabe).
+        """
+        heute = date.today()
+        nachlauf = (heute - timedelta(days=_NACHLAUF_TAGE)).isoformat()
+        vorlauf = (heute + timedelta(days=_VORLAUF_TAGE)).isoformat()
+        # `check_out`/`check_in` stehen an der Reservierung, nicht an der Buchung.
+        # Ein Join geht über PostgREST nicht ohne Fremdschlüssel-Einbettung,
+        # deshalb zwei Schritte: erst die relevanten Referenzen, dann die
+        # Buchungen dazu.
+        frisch = (
+            db.table("reservations")
+            .select("external_ref")
+            .eq("channel", "airbnb")
+            .gte("check_out", nachlauf)
+            .lte("check_in", vorlauf)
+            .not_.is_("external_ref", "null")
+            .limit(grenze * 50)
+            .execute()
+        ).data or []
+        codes = [str(r["external_ref"]) for r in frisch if r.get("external_ref")]
+        if not codes:
+            return {}
+
         zeilen = (
             db.table("channex_booking")
             .select("id, tenant_id, ota_reservation_code, guest_read_message_ref")
             .eq("ota_name", "AirBNB")
+            .in_("ota_reservation_code", codes)
             .order("booked_at", desc=True, nullsfirst=False)
             .limit(grenze * 50)
             .execute()
@@ -157,7 +216,7 @@ class AirbnbLesestandMixin:
 
         # Bestätigungscode → Airbnb-Thread-ID. Ein Bestandsabruf statt eines
         # Aufrufs je Buchung; die Reservierung führt `thread_id` mit.
-        threads = self._thread_ids_des_kontos(token)
+        threads = self._thread_ids_des_kontos(db, token)
 
         gesetzt = 0
         for zeile in zeilen:
@@ -183,7 +242,7 @@ class AirbnbLesestandMixin:
             gesetzt += 1
         return gesetzt
 
-    def _thread_ids_des_kontos(self, token: str) -> dict[str, str]:
+    def _thread_ids_des_kontos(self, db: Client, token: str) -> dict[str, str]:
         """Bestätigungscode → Airbnb-Thread-ID, für den ganzen Bestand.
 
         Channex reicht die Airbnb-Thread-ID nicht durch (`raw` führt sie nicht),
@@ -191,11 +250,9 @@ class AirbnbLesestandMixin:
         (live geprüft: `relationships.message_thread` = null). Bei Airbnb steht
         sie an der Reservierung.
         """
-        heute = date.today()
-        gelesen = self.airbnb_historie_lesen(  # type: ignore[attr-defined]
-            token, listing_id="", von=date(heute.year - 6, 1, 1),
-            bis=date(heute.year + 2, 12, 31), alle_listings=True,
-        )
+        gelesen = self.nachpflege_bestand(db, token)  # type: ignore[attr-defined]
+        if gelesen is None:
+            return {}
         ids: dict[str, str] = {}
         for buchung in gelesen.buchungen:
             code = str(buchung.get("confirmation_code") or "")

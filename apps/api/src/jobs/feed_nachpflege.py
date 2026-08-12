@@ -32,6 +32,7 @@ from __future__ import annotations
 from typing import Any, Protocol
 
 from src.core.logging import get_logger
+from src.features.channel_manager import airbnb_bestand_cache
 
 log = get_logger("nextdays.jobs.feed_nachpflege")
 
@@ -59,18 +60,23 @@ def ausfuehren(dienst: _Dienst) -> dict[str, int]:
     Warnung steht im Log.
     """
     gesetzt: dict[str, int] = {}
-    for name, schritt in (
-        ("buchungszeitpunkte", dienst.buchungszeitpunkte_heilen),
-        ("profilbilder", dienst.profilbilder_heilen),
-        ("anreisezeiten", dienst.anreisezeiten_heilen),
-        ("lesestaende", dienst.lesestaende_aktualisieren),
-    ):
-        try:
-            ergebnis = schritt()
-        except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Feed nie
-            log.warning(f"{name}_nachpflege_fehlgeschlagen", error=str(exc)[:200])
-            continue
-        if ergebnis.get("gesetzt"):
-            log.info(f"{name}_nachgezogen", **ergebnis)
-            gesetzt[name] = int(ergebnis["gesetzt"])
+    # Alle vier brauchen denselben Kontobestand von Airbnb. Diese Klammer sorgt
+    # dafür, dass er EINMAL geholt wird und nicht viermal: vorher stand die Zeile
+    # `{"etappen": 36, "buchungen": 462}` viermal pro Tick im Log, und
+    # `sync_bookings_feed` brauchte ⌀78 s, um „nichts zu tun" zu melden.
+    with airbnb_bestand_cache.fuer_tick():
+        for name, schritt in (
+            ("buchungszeitpunkte", dienst.buchungszeitpunkte_heilen),
+            ("profilbilder", dienst.profilbilder_heilen),
+            ("anreisezeiten", dienst.anreisezeiten_heilen),
+            ("lesestaende", dienst.lesestaende_aktualisieren),
+        ):
+            try:
+                ergebnis = schritt()
+            except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Feed nie
+                log.warning(f"{name}_nachpflege_fehlgeschlagen", error=str(exc)[:200])
+                continue
+            if ergebnis.get("gesetzt"):
+                log.info(f"{name}_nachgezogen", **ergebnis)
+                gesetzt[name] = int(ergebnis["gesetzt"])
     return gesetzt

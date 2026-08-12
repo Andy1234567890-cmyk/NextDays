@@ -32,7 +32,6 @@ gespeichertes personenbezogenes Foto, das beim nächsten Profilwechsel veraltet.
 """
 from __future__ import annotations
 
-from datetime import date
 from typing import Any, Final
 
 from supabase import Client
@@ -193,11 +192,11 @@ class AirbnbProfilbilderMixin:
             return 0
         token = zugang[0]
 
-        # Die Nutzer-IDs in EINEM Durchgang holen: ein Abruf über den vollen
+        # Die Nutzer-IDs in EINEM Durchgang holen: ein Abruf über den
         # Bestandszeitraum liefert alle Reservierungen des Kontos samt
         # `guest_id`. Die Alternative wäre ein Abruf je Buchung — bei 22 offenen
         # Gästen 22 zusätzliche Rundreisen für dieselbe Auskunft.
-        nutzer_je_code = self._nutzer_ids_des_kontos(token)
+        nutzer_je_code = self._nutzer_ids_des_kontos(db, token)
 
         gesetzt = 0
         for zeile in zeilen:
@@ -219,7 +218,7 @@ class AirbnbProfilbilderMixin:
             gesetzt += 1
         return gesetzt
 
-    def _nutzer_ids_des_kontos(self, token: str) -> dict[str, str]:
+    def _nutzer_ids_des_kontos(self, db: Client, token: str) -> dict[str, str]:
         """Bestätigungscode → Airbnb-Nutzer-ID, für den ganzen Bestand.
 
         WARUM NICHT AUS UNSERER DB: Channex reicht die Airbnb-Nutzer-ID NICHT
@@ -233,11 +232,9 @@ class AirbnbProfilbilderMixin:
         zwischen beiden Welten — derselbe Weg, über den auch die
         Buchungszeitpunkte geheilt werden.
         """
-        heute = date.today()
-        gelesen = self.airbnb_historie_lesen(  # type: ignore[attr-defined]
-            token, listing_id="", von=date(heute.year - 6, 1, 1),
-            bis=date(heute.year + 2, 12, 31), alle_listings=True,
-        )
+        gelesen = self.nachpflege_bestand(db, token)  # type: ignore[attr-defined]
+        if gelesen is None:
+            return {}
         ids: dict[str, str] = {}
         for buchung in gelesen.buchungen:
             code = str(buchung.get("confirmation_code") or "")

@@ -29,7 +29,9 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 from src.jobs.queue import enqueue
 
-from .airbnb_historie import EtappenErgebnis, etappen_planen
+from . import airbnb_bestand_cache
+from .airbnb_bestand_zeitraum import bestandszeitraum
+from .airbnb_historie import EtappenErgebnis, HistorieErgebnis, etappen_planen
 from .airbnb_konten import kontoweise
 from .common import ChannelManagerError, log, ota_buchungszeitpunkt, ota_uhrzeit
 
@@ -40,6 +42,36 @@ from .common import ChannelManagerError, log, ota_buchungszeitpunkt, ota_uhrzeit
 
 class AirbnbHistorieDienstMixin:
     """Vorschau und Import der Airbnb-Historie eines Objekts."""
+
+    def nachpflege_bestand(
+        self, db: Client, token: str
+    ) -> HistorieErgebnis | None:
+        """Der Kontobestand für die Nachpflege — geteilt und datengetrieben.
+
+        Die EINE Stelle, über die alle vier Nachpflege-Schritte ihren Bestand
+        holen. Sie bündelt die zwei Sparmaßnahmen vom 12.08.2026, damit sie nicht
+        an vier Stellen kopiert leben und dort einzeln verfallen:
+
+          * `airbnb_bestand_cache` — je Tick wird EINMAL abgerufen, nicht je
+            Schritt. Vorher stand dieselbe Abrufzeile viermal pro Tick im Log.
+          * `bestandszeitraum` — der Zeitraum kommt aus dem eigenen Bestand statt
+            aus `heute.year - 6 … + 2`. Beim Beta-Betrieb waren davon vier von
+            acht Jahren garantiert leer.
+
+        `None` heisst: kein Airbnb-Bestand, also nichts zu heilen. Der Aufrufer
+        hört dann auf — ein Abruf „für alle Fälle" wäre der teuerste Weg zu
+        derselben Auskunft.
+        """
+        zeitraum = bestandszeitraum(db)
+        if zeitraum is None:
+            return None
+        von, bis = zeitraum
+        return airbnb_bestand_cache.bestand(
+            token,
+            lambda t: self.airbnb_historie_lesen(  # type: ignore[attr-defined]
+                t, listing_id="", von=von, bis=bis, alle_listings=True,
+            ),
+        )
 
     def _historie_kontext(
         self, ctx: AuthContext, property_id: str
@@ -403,11 +435,9 @@ class AirbnbHistorieDienstMixin:
         if not zugang:
             return 0
 
-        heute = date.today()
-        gelesen = self.airbnb_historie_lesen(  # type: ignore[attr-defined]
-            zugang[0], listing_id="", von=date(heute.year - 6, 1, 1),
-            bis=date(heute.year + 2, 12, 31), alle_listings=True,
-        )
+        gelesen = self.nachpflege_bestand(db, zugang[0])
+        if gelesen is None:
+            return 0
         zeiten = {
             str(b.get("confirmation_code") or ""): (
                 ota_uhrzeit(b.get("check_in_datetime")),
@@ -448,14 +478,12 @@ class AirbnbHistorieDienstMixin:
             return 0
         token = zugang[0]
 
-        # Ein Abruf über den vollen Bestandszeitraum liefert die Zeitpunkte
-        # aller Inserate DIESES Kontos auf einmal. Das einzelne Listing ist
-        # dabei egal — zugeordnet wird über den Bestätigungscode.
-        heute = date.today()
-        gelesen = self.airbnb_historie_lesen(  # type: ignore[attr-defined]
-            token, listing_id="", von=date(heute.year - 6, 1, 1),
-            bis=date(heute.year + 2, 12, 31), alle_listings=True,
-        )
+        # Ein Abruf über den Bestandszeitraum liefert die Zeitpunkte aller
+        # Inserate DIESES Kontos auf einmal. Das einzelne Listing ist dabei egal
+        # — zugeordnet wird über den Bestätigungscode.
+        gelesen = self.nachpflege_bestand(db, token)
+        if gelesen is None:
+            return 0
         zeitpunkt = {
             str(b.get("confirmation_code") or ""): ota_buchungszeitpunkt(b)
             for b in gelesen.buchungen
