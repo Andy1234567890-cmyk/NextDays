@@ -15,11 +15,14 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { useRealtime } from "@/lib/use-realtime";
+import type { WebhookEreignis } from "@/lib/backoffice";
+// Über Server Actions, NICHT direkt aus `lib/backoffice`: dessen `api()` liest
+// den Bearer aus einem httpOnly-Cookie und ist aus dem Browser nicht
+// erreichbar — der Direktaufruf lief in 401 („Details nicht ladbar.").
 import {
-  getWebhookDetail,
-  getWebhookEreignisse,
-  type WebhookEreignis,
-} from "@/lib/backoffice";
+  webhookDetailHolen,
+  webhookEreignisseHolen,
+} from "@/lib/monitor-actions";
 
 // Die live wirklich vorkommenden Typen (12.08.2026, 7 Tage). Kein erfundener
 // Katalog: ein Filter auf einen Wert, den es nicht gibt, sieht wie ein Defekt
@@ -59,7 +62,7 @@ export function WebhookTabelle({
   const laden = useCallback(
     (neuerOffset = offset) => {
       starteLaden(async () => {
-        const antwort = await getWebhookEreignisse({
+        const antwort = await webhookEreignisseHolen({
           limit: SEITE,
           offset: neuerOffset,
           event: event || undefined,
@@ -78,7 +81,7 @@ export function WebhookTabelle({
   // wäre je nach Trefferzahl leer, und das sähe aus wie „keine Eingänge".
   useEffect(() => {
     starteLaden(async () => {
-      const antwort = await getWebhookEreignisse({
+      const antwort = await webhookEreignisseHolen({
         limit: SEITE,
         offset: 0,
         event: event || undefined,
@@ -212,7 +215,7 @@ function Zeile({ ereignis: e }: { ereignis: WebhookEreignis }) {
     if (neu && payload === null && detailFehler === null) {
       starteHolen(async () => {
         try {
-          const antwort = await getWebhookDetail(e.id);
+          const antwort = await webhookDetailHolen(e.id);
           if (antwort.payload === null) {
             setDetailFehler("Dieser Eingang trug keine Payload.");
           } else {

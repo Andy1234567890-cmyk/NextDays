@@ -15,11 +15,14 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { useRealtime } from "@/lib/use-realtime";
+import type { WorkerEreignis } from "@/lib/backoffice";
+// Über Server Actions, NICHT direkt aus `lib/backoffice`: dessen `api()` liest
+// den Bearer aus einem httpOnly-Cookie und ist aus dem Browser nicht
+// erreichbar — der Direktaufruf lief in 401 („Details nicht ladbar.").
 import {
-  getWorkerDetail,
-  getWorkerEreignisse,
-  type WorkerEreignis,
-} from "@/lib/backoffice";
+  workerDetailHolen,
+  workerEreignisseHolen,
+} from "@/lib/monitor-actions";
 
 const RICHTUNGEN = [
   { wert: "", label: "Alle Richtungen" },
@@ -51,7 +54,7 @@ export function WorkerTabelle({
   const laden = useCallback(
     (neuerOffset = offset) => {
       starteLaden(async () => {
-        const antwort = await getWorkerEreignisse({
+        const antwort = await workerEreignisseHolen({
           limit: SEITE,
           offset: neuerOffset,
           richtung: richtung || undefined,
@@ -69,7 +72,7 @@ export function WorkerTabelle({
   // wäre je nach Trefferzahl leer, und das sähe aus wie „keine Vorgänge".
   useEffect(() => {
     starteLaden(async () => {
-      const antwort = await getWorkerEreignisse({
+      const antwort = await workerEreignisseHolen({
         limit: SEITE,
         offset: 0,
         richtung: richtung || undefined,
@@ -250,7 +253,7 @@ function Zeile({ ereignis: e }: { ereignis: WorkerEreignis }) {
     if (neu && quelle === null && detailFehler === null) {
       starteHolen(async () => {
         try {
-          const antwort = await getWorkerDetail(e.id);
+          const antwort = await workerDetailHolen(e.id);
           if (antwort.quelle === null) {
             setDetailFehler(
               "Keine Quellzeile — der Vorgang trug keine oder sie wurde aufgeräumt.",
