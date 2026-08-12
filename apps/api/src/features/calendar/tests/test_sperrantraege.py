@@ -316,11 +316,25 @@ def _tables(*, einheiten: int = 1, mit_eigentuemer: bool = True) -> dict[str, li
         )
     ]
     return {
+        # `full_name`, NICHT `name`: eine `users.name` gibt es nicht. Der Fake
+        # trug hier lange `name` und deckte damit genau den Fehler zu, der live
+        # als `42703 column users.name does not exist` einen 500 auf
+        # `GET /calendar/block-requests` warf (12.08.2026). Ein Fake, der die DB
+        # falsch nachbildet, ist schlimmer als keiner — er macht den Test grün.
         "users": [
-            {"id": "admin-1", "tenant_id": "t-1", "role": "admin", "name": "Chefin"},
-            {"id": "owner-1", "tenant_id": "t-1", "role": "owner", "name": "Herr Ohm"},
+            {
+                "id": "admin-1", "tenant_id": "t-1", "role": "admin",
+                "full_name": "Chefin",
+            },
+            {
+                "id": "owner-1", "tenant_id": "t-1", "role": "owner",
+                "full_name": "Herr Ohm",
+            },
             # Reinigungskraft: KEIN APPROVE_BLOCK → bekommt keine Meldung.
-            {"id": "clean-1", "tenant_id": "t-1", "role": "cleaner", "name": "Putz"},
+            {
+                "id": "clean-1", "tenant_id": "t-1", "role": "cleaner",
+                "full_name": "Putz",
+            },
         ],
         "properties": [
             {"id": OBJEKT, "tenant_id": "t-1", "title": "Villa"},

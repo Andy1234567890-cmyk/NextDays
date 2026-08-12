@@ -145,37 +145,48 @@ class SperrantragService:
         # Offene zuerst bearbeiten: älteste oben (der partielle Index aus 0332
         # bedient genau diese Sortierung).
         rows = query.order("created_at", desc=False).execute().data or []
-        titel = self._titel({str(r["property_id"]) for r in rows})
-        namen = self._namen({str(r["requested_by"]) for r in rows if r.get("requested_by")})
+        titel = self._titel(tenant_id, {str(r["property_id"]) for r in rows})
+        namen = self._namen(
+            tenant_id,
+            {str(r["requested_by"]) for r in rows if r.get("requested_by")},
+        )
         einheiten = self._einheiten_namen(
+            tenant_id,
             {str(r["unit_id"]) for r in rows if r.get("unit_id")}
         )
         items = [_item(r, titel, namen, einheiten) for r in rows]
         return SperrantragListe(items=items, total=len(items))
 
-    def _titel(self, property_ids: set[str]) -> dict[str, str]:
+    def _titel(self, tenant_id: str, property_ids: set[str]) -> dict[str, str]:
+        """Objekttitel. `tenant_id` ist Pflicht — siehe `_namen` (Wurzel 3)."""
         if not property_ids:
             return {}
         rows = (
             self._db.table("properties")
             .select("id, title")
+            .eq("tenant_id", tenant_id)
             .in_("id", sorted(property_ids))
             .execute()
         ).data or []
         return {str(r["id"]): r.get("title") or "" for r in rows}
 
-    def _einheiten_namen(self, unit_ids: set[str]) -> dict[str, str]:
+    def _einheiten_namen(
+        self, tenant_id: str, unit_ids: set[str]
+    ) -> dict[str, str]:
         """Anzeigenamen der beantragten Einheiten („Studio 3").
 
         Ohne sie stünde in der Warteschlange eine nackte UUID, und die Agentur
         könnte nicht erkennen, WELCHE der fünf identischen Einheiten der
         Eigentümer meint — die Entscheidung hinge an einer unlesbaren Angabe.
+
+        `tenant_id` ist Pflicht — siehe `_namen` (Wurzel 3).
         """
         if not unit_ids:
             return {}
         rows = (
             self._db.table("property_units")
             .select("id, name")
+            .eq("tenant_id", tenant_id)
             .in_("id", sorted(unit_ids))
             .execute()
         ).data or []
@@ -190,28 +201,44 @@ class SperrantragService:
         bleibt hier bewusst weg: die Entscheiderin hat ihn gerade vor sich, und
         ein weiterer users-Lookup je Klick trüge nichts bei.
         """
+        tenant_id = str(antrag["tenant_id"])
         return _item(
             antrag,
-            self._titel({str(antrag["property_id"])}),
+            self._titel(tenant_id, {str(antrag["property_id"])}),
             {},
             self._einheiten_namen(
-                {str(antrag["unit_id"])} if antrag.get("unit_id") else set()
+                tenant_id,
+                {str(antrag["unit_id"])} if antrag.get("unit_id") else set(),
             ),
         )
 
-    def _namen(self, user_ids: set[str]) -> dict[str, str]:
+    def _namen(self, tenant_id: str, user_ids: set[str]) -> dict[str, str]:
         """Namen der Antragsteller. Bewusst OHNE E-Mail/Telefon (Wurzel 9):
         die Entscheidungsliste braucht sie nicht, und ausgelieferte Kontakt-
-        daten wären Recon-Material."""
+        daten wären Recon-Material.
+
+        Die Spalte heißt `full_name`, NICHT `name` — es gab nie eine
+        `users.name`. Der falsche Name warf `42703 column users.name does not
+        exist` und damit einen 500 auf `GET /calendar/block-requests`; die Liste
+        war unbenutzbar (live 12.08.2026). Muster wie in `tasks.service` und
+        `reservations.reads`.
+
+        `tenant_id` ist Pflicht, nicht Kosmetik: der Service-Role-Client umgeht
+        RLS, ein Filter allein auf `id` würde also auch Nutzer FREMDER Mandanten
+        auflösen (Wurzel 3). Die IDs stammen zwar aus tenant-gefilterten
+        Anträgen, aber der Scope gehört an den Load — nicht in die Annahme, dass
+        der Aufrufer schon richtig gefiltert hat.
+        """
         if not user_ids:
             return {}
         rows = (
             self._db.table("users")
-            .select("id, name")
+            .select("id, full_name")
+            .eq("tenant_id", tenant_id)
             .in_("id", sorted(user_ids))
             .execute()
         ).data or []
-        return {str(r["id"]): r.get("name") or "" for r in rows}
+        return {str(r["id"]): r.get("full_name") or "" for r in rows}
 
     # --- Entscheiden ---------------------------------------------------------
 
@@ -662,7 +689,9 @@ class SperrantragService:
         if not empfaenger:
             return
         betreff_key, rumpf_key = _ENTSCHEIDUNGS_TEXTE[entscheidung]
-        titel = self._titel({str(antrag["property_id"])}).get(
+        titel = self._titel(
+            str(antrag["tenant_id"]), {str(antrag["property_id"])}
+        ).get(
             str(antrag["property_id"]), ""
         ) or str(antrag["property_id"])[:8]
         zeitraum = f"{antrag['start_date']} – {antrag['end_date']}"
