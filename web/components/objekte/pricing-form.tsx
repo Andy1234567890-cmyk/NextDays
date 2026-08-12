@@ -64,7 +64,6 @@ import { EinschraenkungenEditor } from "@/components/objekte/pricing/einschraenk
 import { ExtraEditor } from "@/components/objekte/pricing/extra-editor";
 import { GebuehrAuswahl } from "@/components/objekte/pricing/gebuehr-auswahl";
 import { GebuehrEditor } from "@/components/objekte/pricing/gebuehren-editor";
-import { GebuehrenZuordnung } from "@/components/objekte/pricing/gebuehren-zuordnung";
 import {
   PortalReichweite,
   PortalReichweiteChip,
@@ -111,6 +110,7 @@ import {
   getAbgabenStatus,
   listChannelConnections,
   setPortalPriceAdjustment,
+  type AbgabeLiveStand,
   type AbgabePostenStatus,
   type StoredChannelConnection,
 } from "@/lib/channex";
@@ -173,11 +173,6 @@ type Section =
 
 export function PricingForm({ initial }: { initial: Property }) {
   const t = useTranslations("objects");
-  // Eigener Namensraum: die Gebühren-Zuordnung gehört fachlich zur
-  // Abrechnungs-Konfiguration (owner_billing) und wird an zwei Orten
-  // verwendet — hier und im Eigentümer-Slide-over. Ein zweiter Satz Texte
-  // unter `objects` würde beim ersten Wortlaut-Wechsel auseinanderlaufen.
-  const tBilling = useTranslations("ownerBilling");
   const locale = useLocale();
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
@@ -288,6 +283,17 @@ export function PricingForm({ initial }: { initial: Property }) {
     return abgaben?.items.find((x) => x.key === key)?.manual_portals ?? [];
   }
 
+  /** Was beim Portal WIRKLICH steht (zurückgelesen, siehe PortalStandChip). */
+  function portalStand(key: string): AbgabeLiveStand[] {
+    return abgaben?.items.find((x) => x.key === key)?.live ?? [];
+  }
+
+  // KEIN „Beim Portal prüfen"-Knopf mehr. Der zurückgelesene Stand (`live`,
+  // oben) bleibt und speist weiter den Chip an der Zeile — er kommt aus
+  // `ota_gebuehren_stand`, gefüllt vom Hintergrund-Job. Ein Knopf, der die
+  // Prüfung von Hand auslöst, gehört nicht in diese Maske: der Aggregator
+  // reicht asynchron weiter (15–45 Minuten bei Airbnb gemessen), ein Klick
+  // konnte also nur denselben alten Stand erneut bestätigen.
   /** Warum ein Posten dort von Hand gepflegt werden muss — gesetzt bei Aktionen
    *  UND bei Preisen nach Aufenthaltsdauer (Gebühren/Steuern erklärt der Chip
    *  über das Portal selbst). Der Grund kommt als SCHLÜSSEL vom Server und wird
@@ -647,6 +653,7 @@ export function PricingForm({ initial }: { initial: Property }) {
                 : undefined
             }
             manualPortals={manualPortals(f.id)}
+            live={portalStand(f.id)}
             onEdit={() => setSection({ fee: f.id })}
             onRestrict={() => setSection({ restrict: "fee", id: f.id })}
             onDelete={() => save({ ...pr, fees: pr.fees.filter((x) => x.id !== f.id) })}
@@ -662,17 +669,22 @@ export function PricingForm({ initial }: { initial: Property }) {
         }
       />
 
-      {/* Wem gehört welche Gebühr? Steht direkt unter der Gebührenliste, weil
-          es dieselben Posten betrifft — die Zuordnung gilt aber für den
-          GESAMTEN Betrieb (je Gebührenart), nicht nur für dieses Objekt.
-          Deshalb der eigene Abschnitt statt eines Feldes je Gebühr: 19
-          gleichartige Reinigungsgebühren brauchen EINE Entscheidung. */}
-      <PreisAbschnitt
-        title={tBilling("classifyTitle")}
-        hint={tBilling("classifyScopeHint")}
-      >
-        <GebuehrenZuordnung />
-      </PreisAbschnitt>
+      {/* HIER STAND „Wem gehören die Gebühren?" — ein reiner Verweis auf
+          „Buchhaltung → Abrechnungsregeln", bestehend aus einem Satz und einem
+          Knopf. Am 12.08.2026 entfernt: die Zuordnung gilt betriebsweit
+          (`cleaning_fee` kommt im Live-Bestand an 18 Objekten von 16
+          Eigentümern vor — EINE Entscheidung, nicht 18), sie gehört also nicht
+          an das einzelne Objekt, und ein Wegweiser an dieser Stelle kostet nur
+          Höhe in einer Maske, in der der Betrieb Beträge pflegt.
+
+          Die ZUORDNUNG selbst ist unberührt (`fee_classification`, gepflegt
+          unter „Abrechnungsregeln") — die Abrechnung braucht sie weiter, und ohne
+          sie verweigert `gebuehren_zuordnen` die Rechnung, statt zu raten.
+
+          Die i18n-Schlüssel `ownerBilling.classifyMovedHint`/`…MovedLink` sind
+          damit unbenutzt und in allen 24 Sprachdateien gelöscht.
+          `classifyTitle` BLEIBT — er trägt weiter die Überschrift auf der
+          Abrechnungsregeln-Seite und in den Reporting-Einstellungen. */}
 
       {/* Was bei Airbnb schon hinterlegt ist, muss der Betrieb nicht abtippen.
           Rendert nichts, wenn das Objekt nicht bei Airbnb hängt oder dort
@@ -1037,6 +1049,7 @@ function ListSection<T>({
   render,
   localOnly,
   footer,
+  extraAction,
 }: {
   title: string;
   hint: string;
@@ -1047,6 +1060,10 @@ function ListSection<T>({
   localOnly?: boolean;
   /** Hinweis UNTER der Liste (gilt für die Liste als Ganzes, nicht je Zeile). */
   footer?: React.ReactNode;
+  /** Zusätzliche Aktion LINKS neben „Hinzufügen" (z. B. „Beim Portal prüfen").
+   *  Sie gehört zum Abschnitt, nicht zur Zeile: geprüft wird immer das ganze
+   *  Objekt auf einmal, ein Knopf je Gebühr wären N Portal-Anfragen. */
+  extraAction?: React.ReactNode;
 }) {
   const t = useTranslations("objects");
   return (
@@ -1056,7 +1073,12 @@ function ListSection<T>({
       badge={
         localOnly ? <PreisBadge>{t("pricingForm.directBookingsOnly")}</PreisBadge> : undefined
       }
-      action={<PreisHinzufuegen label={t("pricingForm.add")} onClick={onAdd} />}
+      action={
+        <div className="flex items-center gap-2">
+          {extraAction}
+          <PreisHinzufuegen label={t("pricingForm.add")} onClick={onAdd} />
+        </div>
+      }
     >
       {items.length === 0 ? <PreisLeer>{empty}</PreisLeer> : items.map(render)}
       {footer}
@@ -1212,6 +1234,7 @@ function ListRow({
   badgeTone,
   manualPortals,
   manualReason,
+  live,
   onEdit,
   onDelete,
   onRestrict,
@@ -1231,6 +1254,8 @@ function ListRow({
    *  den Grund liest sich der Chip als „geht dort nicht" ohne Hinweis darauf,
    *  was daran zu ändern wäre. */
   manualReason?: string;
+  /** Zurückgelesener Stand beim Portal (leer = noch nie geprüft). */
+  live?: AbgabeLiveStand[];
   onEdit: () => void;
   onDelete: () => void;
   /** Gesetzt bei Gebühren/Steuern: die Kanal-Einschränkung ist ein EIGENER
@@ -1293,9 +1318,56 @@ function ListRow({
     >
       <PreisChip>{pill}</PreisChip>
       <ManuellerSyncChip portale={manualPortals ?? []} grund={manualReason} />
+      <PortalStandChip stand={live ?? []} />
     </PreisKarte>
   );
 }
+
+/** Was beim Portal WIRKLICH steht — zurückgelesen, nicht behauptet.
+ *
+ *  Der Chip daneben („Manuelle Synchronisierung") sagt, wohin ein Posten NICHT
+ *  geht. Dieser sagt, was am Inserat steht: derselbe Betrag (grün), ein anderer
+ *  (dann mit BEIDEN Zahlen — ohne die fremde müsste der Betrieb im Extranet
+ *  nachsehen, was gemeint ist) oder gar keiner.
+ *
+ *  Warum das eine eigene Aussage ist: am 11.08.2026 stand am Airbnb-Inserat
+ *  eine Reinigungsgebühr von 1.590 DKK, bei uns 795 — und die Seite zeigte
+ *  beide Seiten als in Ordnung. Ein „gesendet" ist kein „angekommen". */
+function PortalStandChip({ stand }: { stand: AbgabeLiveStand[] }) {
+  const t = useTranslations("objects");
+  const locale = useLocale();
+  if (stand.length === 0) return null;
+  return (
+    <>
+      {stand.map((s) => (
+        <PreisChip key={`${s.portal}-${s.status}`} tone={TON_JE_STAND[s.status]}>
+          {t(`pricingForm.portalStand.${s.status}`)}
+          <span className="inline-flex flex-wrap items-center gap-2">
+            <PortalMarke code={s.portal} name={channelLabel(s.portal)} nurLogo />
+          </span>
+          {/* Der fremde Betrag gehört in den Chip, nicht in einen Tooltip: er
+              IST der Befund. Fehlt die Währung, rendert `fmtPrice` symbollos
+              statt einen Euro zu erfinden (Wurzel 4). */}
+          {s.status === "abweichend" && s.amount !== null && (
+            <span className="border-l border-border pl-2">
+              {t("pricingForm.portalStandAbweichung", {
+                dort: fmtPrice(s.amount, (s.currency ?? "") as Currency | "", locale),
+              })}
+            </span>
+          )}
+        </PreisChip>
+      ))}
+    </>
+  );
+}
+
+/** Farbton je Stand. „fehlt" ist kein Fehler des Betriebs, sondern ein offener
+ *  Punkt — deshalb neutral-warnend, nicht rot wie ein falscher Betrag. */
+const TON_JE_STAND: Record<AbgabeLiveStand["status"], "ok" | "warn" | "muted"> = {
+  online: "ok",
+  abweichend: "warn",
+  fehlt: "muted",
+};
 
 /** „Manuelle Synchronisierung" mit den Logos der betroffenen Portale — genau so
  *  führt es der Branchenstandard direkt am Posten. Der Chip erscheint NUR, wenn

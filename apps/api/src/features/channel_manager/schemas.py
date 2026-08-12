@@ -785,6 +785,40 @@ class MarketplaceChannelOverview(BaseModel):
     pending_count: int = 0
 
 
+class MarketplacePropertyRow(BaseModel):
+    """Eine Zeile der Marktplatz-Objekttabelle (Pendant zur OTA-Zuordnung)."""
+
+    property_id: str
+    title: str
+    city: str | None = None
+    country: str | None = None
+    status: str | None = None
+    # Kanal-Schalter des Betriebs (`listed_on_marketplace`).
+    listed: bool
+    # Freigabe des Betreibers: draft/pending/approved/rejected (0203).
+    moderation_status: str | None = None
+    # Abgeleitet: active (sichtbar) · pending (Freigabe offen) · paused (aus).
+    state: str
+    # Öffentliche Inserat-Seite — nur gesetzt, wenn das Objekt dort WIRKLICH
+    # steht und die Marktplatz-Adresse konfiguriert ist (keine geratene URL).
+    listing_url: str | None = None
+    photo: str | None = None
+    bookings_count: int = 0
+
+
+class MarketplaceDetailResponse(BaseModel):
+    """Detailfläche des eigenen Marktplatzes (/channels/mybestdays)."""
+
+    code: str
+    label: str
+    # "" = keine Marktplatz-Adresse konfiguriert → die Oberfläche zeigt keinen
+    # Link, statt auf eine erfundene Domain zu verweisen.
+    marketplace_url: str
+    listed_count: int
+    pending_count: int
+    items: list[MarketplacePropertyRow]
+
+
 class IcalChannelOverview(BaseModel):
     """iCal-Kalender-Sync als Kanal (nur Import)."""
 
@@ -946,3 +980,60 @@ class AirbnbFotoRaumRequest(BaseModel):
     """
 
     airbnb_room_id: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+class VerkaufPortalErgebnis(BaseModel):
+    """Was an EINEM Portal passiert ist (oder warum nicht).
+
+    Bewusst getrennte Felder statt eines Freitexts: die Oberfläche unterscheidet
+    „abgeschaltet", „übersprungen, war schon aus" und „fehlgeschlagen" — drei
+    verschiedene Aussagen, die als ein Satz nicht auswertbar wären.
+
+    `war_aktiv` ist der gesicherte Vorzustand und damit der Grund, warum der
+    Rückweg WIEDERHERSTELLT statt alles anzuschalten (Wurzel 1).
+    """
+
+    portal_code: str
+    portal: str
+    hebel: str | None = None
+    channel_id: str | None = None
+    mapping_id: str | None = None
+    war_aktiv: bool | None = None
+    ist_aktiv: bool | None = None
+    objekte_am_kanal: int | None = None
+    abgeschaltet: bool | None = None
+    wiederhergestellt: bool | None = None
+    # Grund, warum nichts geschaltet wurde, obwohl kein Fehler auftrat
+    # (z. B. „war bereits abgeschaltet").
+    uebersprungen: str | None = None
+    fehler: str | None = None
+
+
+class ObjektVerkaufResponse(BaseModel):
+    """Ergebnis von „bei allen Portalen abschalten" bzw. „zurückholen".
+
+    `pausiert` ist die EHRLICHE Gesamtaussage: sie ist nur `true`, wenn kein
+    Portal fehlgeschlagen ist. Bleibt ein Portal aktiv, bleibt auch
+    `properties.status` unverändert — ein „inaktiv" bei uns, während ein Portal
+    weiterverkauft, ist der fail-open-Zustand, den dieser Weg verhindert
+    (Wurzel 5).
+    """
+
+    property_id: str
+    status: str | None = None
+    pausiert: bool = False
+    portale: list[VerkaufPortalErgebnis] = Field(default_factory=list)
+
+
+class ObjektVerkaufStandResponse(BaseModel):
+    """Live-Ist-Stand bei den Portalen — rein lesende Diagnose.
+
+    Für den Test: nach dem Schalten sehen, was bei Channex WIRKLICH steht.
+    Abweichungen zwischen unserer Sicht und dem Portal werden hier sichtbar,
+    statt unentdeckt zu bleiben (ein Channex-200 ist kein Beweis).
+    """
+
+    property_id: str
+    titel: str | None = None
+    status: str | None = None
+    portale: list[dict[str, Any]] = Field(default_factory=list)

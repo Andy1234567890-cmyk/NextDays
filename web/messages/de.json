@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Dashboard konnte nicht geladen werden",
     "reviews": "Bewertungen",
     "extensions": "Erweiterungen",
-    "announcements": "Neuerungen"
+    "announcements": "Neuerungen",
+    "billingRules": "Abrechnungsregeln",
+    "ownerReporting": "Eigentümer-Reporting"
   },
   "exemption": {
     "labelNamed": "Steuerbefreit ({scheme}) — keine USt-ID nötig",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Foto vom Gast",
     "translate": "Übersetzen",
     "showOriginal": "Original anzeigen",
-    "translatedFrom": "Aus {sprache} übersetzt"
+    "translatedFrom": "Aus {sprache} übersetzt",
+    "formatStrike": "Durchgestrichen",
+    "fieldsButton": "{{Platzhalter}}",
+    "langBase": "Grundfassung",
+    "langBaseHint": "Geht an jeden Gast, dessen Sprache keine eigene Fassung hat.",
+    "subjectLabel": "Betreff",
+    "subjectHint": "Die Betreffzeile wird nur für E-Mails verwendet.",
+    "langAdd": "Neue Sprache hinzufügen",
+    "langDefault": "Standard",
+    "langSetDefault": "Als Standard setzen",
+    "langRemove": "Sprache entfernen",
+    "langEmpty": "Noch keine Sprache gepflegt — bis dahin geht die Grundfassung an alle Gäste.",
+    "autoEditContent": "Inhalt bearbeiten",
+    "autoPanelCreate": "Erstellen",
+    "quickEmpty": "Noch keine Schnellantwort angelegt.",
+    "autoTextRequired": "Ein Text ist nötig."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Kam die E-Mail nicht an oder ist der Link abgelaufen, kann die Einladung erneut verschickt werden. Der neue Link gilt 7 Tage und führt auf diese Umgebung; der zuvor verschickte Link wird ungültig.",
     "portalAccessResent": "Einladung erneut verschickt.",
     "commissionNotAgreed": "nicht vereinbart",
+    "commissionContractWins": "Aktuell wird der Abrechnungsvertrag angewendet: {pct} % seit {ab}. Dieses Feld dient nur als Rückfall, falls kein Vertrag gilt.",
+    "commissionNoneAnywhere": "Noch kein Satz vereinbart — weder hier noch als Vertrag. Solange bleibt die Auszahlung im Eigentümer-Portal leer.",
+    "commissionContractObject": "Eigener Vertrag für dieses Objekt: {pct} % seit {ab}.",
+    "commissionContractOwnerWide": "Abrechnungsvertrag des Eigentümers: {pct} % seit {ab}.",
     "assignableCount": "{count} von {total} zum Hinzufügen ausgewählt",
     "assignedHeading": "{count, plural, one {# zugeordnetes Objekt} other {# zugeordnete Objekte}}",
     "info": {
       "aria": "Erklärung zu {feld}",
       "share": "Der Eigentumsanteil an diesem Objekt. Bei 100 % wird die volle Auszahlung diesem Eigentümer zugerechnet, bei weniger entsprechend anteilig.",
-      "commission": "Der Standard-Provisionssatz für diesen Eigentümer. Bleibt das Feld leer, ist noch kein Satz vereinbart — die Auszahlung wird dann nicht berechnet, sondern als Gedankenstrich ausgewiesen.",
-      "commissionOverride": "Gilt nur für dieses eine Objekt und überschreibt den Standardsatz des Eigentümers. Bleibt das Feld leer, gilt der Standardsatz."
+      "commission": "Rückfall-Satz, falls für ein Objekt kein Abrechnungsvertrag gilt. Der Vertrag weiter unten hat Vorrang — er ist die eigentliche Vereinbarung und kennt zusätzlich Zeitraum, Pauschale und Mindestprovision. Bleibt beides leer, wird keine Auszahlung berechnet, sondern ein Gedankenstrich ausgewiesen.",
+      "commissionOverride": "Rückfall-Satz nur für dieses Objekt; überschreibt den Standardsatz des Eigentümers. Ein Abrechnungsvertrag hat auch hier Vorrang. Bleibt das Feld leer, gilt der Standardsatz."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Gesamt-Auszahlung",
       "ownerPayout": "Eigentümer-Auszahlung",
       "pmPayout": "Verwaltungs-Auszahlung",
-      "commissionMissing": "Für mindestens ein Objekt ist kein Provisionssatz hinterlegt. Die Auszahlungen lassen sich deshalb nicht berechnen — trage den Satz in den Stammdaten des Eigentümers oder am Objekt ein."
+      "commissionMissing": "Für mindestens ein Objekt ist kein Provisionssatz hinterlegt. Die Auszahlungen lassen sich deshalb nicht berechnen — trage den Satz in den Stammdaten des Eigentümers oder am Objekt ein.",
+      "payoutUnknown": "Für mindestens eine Buchung fehlt eine Angabe, ohne die sich die Auszahlung nicht berechnen lässt. Die betroffenen Zeilen zeigen „—“ statt einer Zahl.",
+      "commissionInvalid": "Ein hinterlegter Provisionssatz liegt außerhalb von 0–100 %. Bitte den Satz beim Eigentümer oder am Objekt korrigieren.",
+      "portalRateMissing": "Für mindestens einen Buchungskanal ist kein Abzugssatz hinterlegt, und das Portal hat seinen Abzug nicht mitgemeldet. Bitte unter Buchhaltung → Abrechnungsregeln eintragen, was das Portal je Buchung einbehält.",
+      "portalRateInvalid": "Ein hinterlegter Portal-Abzugssatz liegt außerhalb von 0–100 %. Bitte unter Buchhaltung → Abrechnungsregeln korrigieren.",
+      "feeUnassigned": "Mindestens eine Gebührenart ist noch nicht zugeordnet. Ohne Zuordnung ist nicht bestimmbar, wem der Betrag gehört und ob Provision darauf anfällt — bitte unter Buchhaltung → Abrechnungsregeln festlegen.",
+      "feeNotComputable": "Eine Gebühr lässt sich nicht als Betrag verrechnen (prozentual hinterlegt oder ohne Betrag). Bitte die Gebühr am Objekt prüfen.",
+      "contractCurrency": "Eine Pauschale oder Mindestprovision lautet auf eine andere Währung als die Buchung. Beträge verschiedener Währungen werden nicht verrechnet — bitte den Abrechnungsvertrag prüfen."
     },
     "rental": {
       "perReservation": "Pro Reservierung",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Gesamtpreis",
       "totalPayout": "Gesamt-Auszahlung",
       "totals": "Summen",
-      "empty": "Keine Reservierungen im Zeitraum."
+      "empty": "Keine Reservierungen im Zeitraum.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Hinzufügen",
@@ -1297,7 +1333,7 @@
       "nach_provision": "nach der Provision"
     },
     "classifyTitle": "Wem gehören die Gebühren?",
-    "classifyScopeHint": "Gilt je Gebührenart für den gesamten Betrieb, nicht nur für dieses Objekt.",
+    "classifyScopeHint": "Gilt je Gebührenart für den gesamten Betrieb. Die Beträge selbst pflegen Sie weiterhin am Objekt.",
     "classifyHint": "Jede Gebührenart braucht zwei Angaben: wem der Betrag gehört und ob er in die Provisionsbemessung einfließt. Beides ist unabhängig — Nebenkosten gehören dem Eigentümer und sind trotzdem provisionsfrei.",
     "classifyOpen": "{count, plural, one {# Gebührenart ist noch nicht zugeordnet} other {# Gebührenarten sind noch nicht zugeordnet}}. Ohne Zuordnung lässt sich nicht bestimmen, wem der Betrag gehört.",
     "classifyEmpty": "Für dieses Konto sind noch keine Gebühren hinterlegt.",
@@ -1315,7 +1351,9 @@
     "commissionable": "Provisionspflichtig",
     "commissionableYes": "Ja — fließt in die Provision ein",
     "commissionableNo": "Nein — provisionsfrei",
-    "infoAria": "Erklärung zu {feld}"
+    "infoAria": "Erklärung zu {feld}",
+    "rulesPageTitle": "Abrechnungsregeln",
+    "rulesPageIntro": "Was die Portale je Buchung einbehalten und wem die Gebühren gehören. Beides bestimmt, welcher Betrag am Ende in die Provisionsabrechnung Ihrer Eigentümer fließt."
   },
   "portal": {
     "title": "Mein Portal",
@@ -1432,6 +1470,16 @@
         "blocked": "Gesperrt"
       },
       "payoutPerNight": "Netto-Auszahlung/Nacht",
+      "payoutPerNightShort": "netto/Nacht",
+      "payoutUnknown": {
+        "short": "k. A.",
+        "label": "Nicht ausweisbar",
+        "provision": "Für dieses Objekt ist kein Provisionssatz hinterlegt — die Verwaltung muss ihn ergänzen.",
+        "provisionUngueltig": "Der hinterlegte Provisionssatz liegt außerhalb von 0–100 %.",
+        "betrag": "Zu dieser Buchung fehlt der Gesamtbetrag.",
+        "naechte": "Die Zeitraumangabe dieser Buchung ist fehlerhaft.",
+        "waehrungVertrag": "Die vereinbarte Pauschale lautet auf eine andere Währung als diese Buchung — Beträge werden nicht umgerechnet."
+      },
       "guest": "Gast",
       "channel": "Buchungsquelle",
       "blockHint": "Einen Zeitraum sperren lassen? Stelle einen Antrag — die Verwaltung entscheidet.",
@@ -4065,6 +4113,11 @@
       "maintenancePhonePlaceholder": "Für technische Notfälle",
       "wifiTitle": "WLAN",
       "wifiDescription": "Netzwerkname, Passwort und Verbindungshinweis — erscheint auch als Baustein {placeholder} in automatischen Nachrichten.",
+      "wifiSsidLabel": "Netzwerkname (SSID)",
+      "wifiSsidPlaceholder": "z. B. Ferienhaus-WLAN",
+      "wifiPasswordLabel": "WLAN-Passwort",
+      "wifiPasswordPlaceholder": "z. B. sommer2026",
+      "wifiFieldsHint": "Diese beiden Werte füllen die Platzhalter {ssid} und {password} in Nachrichten-Vorlagen und den WLAN-QR-Code im Gastportal. Bleiben sie leer, wird eine Vorlage mit diesen Platzhaltern nicht gesendet.",
       "wifiFieldPlaceholder": "WLAN-Name & -Passwort eingeben …",
       "selfCheckinTitle": "Self-Check-in",
       "selfCheckinDescription": "Gäste checken selbstständig ein (Türcode/Schlüsselbox).",
@@ -4678,7 +4731,9 @@
       "duplicateOk": "Objekt kopiert.",
       "duplicateErr": "Kopieren fehlgeschlagen.",
       "unlistOk": "Website-Verbindung aufgehoben.",
-      "unlistErr": "Aufheben fehlgeschlagen."
+      "unlistErr": "Aufheben fehlgeschlagen.",
+      "menuVerkaufAus": "Bei allen Portalen abschalten",
+      "menuVerkaufAn": "Wieder bei allen Portalen anbieten"
     },
     "messagingForm": {
       "title": "Nachrichten-Platzhalter",
@@ -5362,7 +5417,13 @@
       "copyPricingSkipExtras": "Extras — sie hängen an eigenen Fotos und Übersetzungen.",
       "copyPricingSkipAvailability": "Verfügbarkeit, Belegung und Richtlinien.",
       "copyPricingOverwriteWarning": "Die Preise dieses Objekts werden dabei vollständig überschrieben. Beträge werden nur bei gleicher Währung übernommen.",
-      "copyPricingDone": "Preise übernommen."
+      "copyPricingDone": "Preise übernommen.",
+      "portalStandAbweichung": "dort {dort}",
+      "portalStand": {
+        "online": "Beim Portal hinterlegt",
+        "abweichend": "Weicht ab",
+        "fehlt": "Beim Portal nicht hinterlegt"
+      }
     },
     "policiesForm": {
       "title": "Buchungskonditionen",
@@ -5646,7 +5707,10 @@
       "hinweis": "Du kannst sie übernehmen, statt sie neu anzulegen. Bestehende Gebühren bleiben unverändert.",
       "uebernehmen": "Gebühren übernehmen",
       "laeuft": "Wird übernommen …",
-      "uebernommen": "{anzahl} Gebühren übernommen."
+      "uebernommen": "{anzahl} Gebühren übernommen.",
+      "verwerfen": "Nicht übernehmen",
+      "verworfen": "Angebot beendet — deine Gebühren bleiben, wie sie sind.",
+      "einmalig": "Einmalige Starthilfe: danach gilt allein, was hier steht — das schicken wir an die Portale."
     },
     "veroeffentlichen": {
       "titel": "Objekt veröffentlichen",
@@ -5676,6 +5740,26 @@
       },
       "statusHinweis": "Wird über „Veröffentlichen“ oben festgelegt.",
       "immerDabei": "Immer dabei — unser eigener Marktplatz, ohne Portal-Provision."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Objekt aus dem Verkauf nehmen?",
+      "fragenAusText": "„{titel}\" wird inaktiv geschaltet und der Buchungskalender bei allen verbundenen Portalen abgeschaltet. Bestehende Buchungen bleiben unberührt. Der Zustand jedes Portals wird gesichert, damit das Zurückholen ihn wiederherstellt.",
+      "fragenAnTitel": "Objekt wieder anbieten?",
+      "fragenAnText": "„{titel}\" wird wieder aktiv geschaltet. Jedes Portal bekommt den Zustand zurück, den es vor dem Abschalten hatte — Portale, die schon vorher aus waren, bleiben aus. Danach werden Preise und Verfügbarkeit neu übertragen.",
+      "jetztAus": "Jetzt abschalten",
+      "jetztAn": "Jetzt anbieten",
+      "laeuft": "Wird geschaltet…",
+      "abbrechen": "Abbrechen",
+      "schliessen": "Schließen",
+      "ergebnisAusTitel": "Objekt ist abgeschaltet",
+      "ergebnisAusText": "Bei allen Portalen abgeschaltet.",
+      "ergebnisAnTitel": "Objekt ist wieder aktiv",
+      "ergebnisAnText": "Bei allen Portalen wieder angeboten.",
+      "ergebnisTeilweiseTitel": "Nicht überall erfolgreich",
+      "ergebnisTeilweiseText": "{anzahl} Portal(e) konnten nicht geschaltet werden. Dort läuft der Verkauf weiter — der Objekt-Status wurde deshalb nicht geändert.",
+      "zeileAbgeschaltet": "Abgeschaltet",
+      "zeileWiederhergestellt": "Wieder aktiv",
+      "zeileObjekteAmKanal": "Dieser Kanal trägt {anzahl} Objekte — es wurde nichts geändert, damit die anderen nicht mit abgeschaltet werden."
     }
   },
   "calendar": {
@@ -6275,7 +6359,32 @@
     "accountsLogoutHint": "Melde dich im Browser vom Portal ab, bevor du ein anderes Konto verbindest.",
     "accountConnectCredentialHint": "Ein weiterer {portal}-Zugang wird beim Verbinden eines Objekts mit der Hotel-ID eingetragen — nicht hier.",
     "marketplacePending": "{count} in Prüfung",
-    "marketplaceWaiting": "In Prüfung"
+    "marketplaceWaiting": "In Prüfung",
+    "marketplace": {
+      "intro": "myBestDays ist unser eigener Marktplatz — ein Buchungskanal wie Booking oder Airbnb, nur ohne Portal-Verbindung. Sichtbar wird ein Objekt, wenn es aktiv ist, hier gelistet ist und freigegeben wurde.",
+      "openMarketplace": "Marktplatz öffnen",
+      "propertiesHeading": "Objekte auf dem Marktplatz",
+      "noProperties": "Noch keine Objekte angelegt.",
+      "columnProperty": "Objekt",
+      "columnVisibility": "Sichtbarkeit",
+      "columnApproval": "Freigabe",
+      "columnBookings": "Buchungen",
+      "stateActive": "Sichtbar",
+      "statePending": "In Prüfung",
+      "stateNotListed": "Nicht gelistet",
+      "stateInactiveProperty": "Objekt nicht aktiv",
+      "viewListing": "Inserat ansehen",
+      "reviewHint": "Objekte in Prüfung erscheinen noch nicht auf myBestDays. Wir prüfen jedes Inserat, weil myBestDays dort als Anbieter auftritt — Portale und die eigene Website sind davon nicht betroffen.",
+      "summaryVisible": "{count} sichtbar",
+      "summaryWaiting": "{count} in Prüfung",
+      "summaryOff": "{count} nicht gelistet",
+      "moderation": {
+        "draft": "Entwurf",
+        "pending": "In Prüfung",
+        "approved": "Freigegeben",
+        "rejected": "Abgelehnt"
+      }
+    }
   },
   "calendarSync": {
     "title": "Kalender importieren/exportieren",
@@ -8022,5 +8131,544 @@
     "mfaSubmit": "Bestätigen",
     "mfaChecking": "Prüfe…",
     "mfaBack": "Zurück zur Anmeldung"
+  },
+  "portalSaetze": {
+    "add": "Satz hinzufügen",
+    "breakdown": "{provision} % Provision + {fee} % Zahlungsgebühr",
+    "breakdownNoFee": "{provision} % Provision, keine Zahlungsgebühr",
+    "cancel": "Abbrechen",
+    "channel": "Portal",
+    "channelLocked": "Das Portal eines bestehenden Satzes lässt sich nicht wechseln. Für ein anderes Portal einen neuen Satz anlegen.",
+    "create": "Satz anlegen",
+    "created": "Satz angelegt",
+    "current": "gilt heute",
+    "delete": "Satz löschen",
+    "deleted": "Satz gelöscht",
+    "edit": "Satz bearbeiten",
+    "empty": "Noch kein Satz hinterlegt. Ohne Satz kann eine Auszahlung nur berechnet werden, wenn das Portal seinen Abzug mitmeldet.",
+    "errorProvisionRequired": "Bitte einen Provisionssatz eintragen.",
+    "intro": "Was jedes Portal je Buchung einbehält. Diese Sätze greifen dort, wo das Portal seinen Abzug nicht selbst mitmeldet — meldet es einen Betrag, gilt immer der gemeldete.",
+    "loading": "Wird geladen …",
+    "note": "Notiz",
+    "notePlaceholder": "Woher der Satz stammt, z. B. Portal-Vertrag oder Abrechnung",
+    "payoutFee": "Zahlungsgebühr",
+    "payoutFeeInfo": "Das Entgelt dafür, dass das Portal das Geld einzieht und weiterleitet. Sie fällt nur an, wenn das Portal kassiert — zahlt der Gast direkt an Sie, entfällt sie.",
+    "payoutFeeNone": "erhebt keine",
+    "period": "{von} bis {bis}",
+    "periodOpen": "seit {von}",
+    "provision": "Provision",
+    "provisionInfo": "Der Vermittlungsanteil, den das Portal für die Buchung behält. Bezugsgröße ist der Gesamtpreis des Gastes inklusive Gebühren.",
+    "save": "Änderungen speichern",
+    "saved": "Satz gespeichert",
+    "title": "Portal-Abzugssätze",
+    "total": "{pct} % gesamt",
+    "validFrom": "Gültig ab",
+    "validTo": "Gültig bis",
+    "validToInfo": "Leer lassen, solange der Satz gilt. Ändert das Portal seinen Satz, legen Sie einen neuen ab dem Änderungstag an — der alte bleibt für frühere Abrechnungen erhalten.",
+    "validToOpen": "läuft weiter"
+  },
+  "ownerReporting": {
+    "nav": {
+      "groups": {
+        "reports": "Berichte",
+        "setup": "Einrichten"
+      },
+      "items": {
+        "reports": "Berichte",
+        "payments": "Zahlungen",
+        "statistics": "Statistiken",
+        "recipients": "Empfänger",
+        "schedules": "Geplante Berichte",
+        "settings": "Erweiterte Einstellungen"
+      }
+    },
+    "sections": {
+      "unterkunftspreis": "Unterkunftspreis",
+      "gebuehren": "Gebühren",
+      "steuern": "Steuern",
+      "ausgaben": "Ausgaben",
+      "andere": "Andere"
+    },
+    "reports": {
+      "title": "Reporting für Eigentümer",
+      "subtitle": "Berichte über einen Zeitraum und eine Objektauswahl — daraus entstehen die Auszahlungen.",
+      "new": "Neuer Bericht",
+      "between": "{from} bis {to}",
+      "autoYes": "Automatisch",
+      "autoNo": "Manuell",
+      "details": "Details",
+      "delete": "Löschen",
+      "deleteConfirm": "Der Bericht wird entfernt. Bereits erzeugte Zahlungen bleiben bestehen und müssen zuerst gelöscht werden.",
+      "deleted": "Bericht gelöscht.",
+      "cancel": "Abbrechen",
+      "emptyTitle": "Noch kein Bericht",
+      "emptyHint": "Ein Bericht wertet einen Zeitraum über die gewählten Objekte aus. Daraus erzeugst du je Eigentümer eine Auszahlung.",
+      "cols": {
+        "name": "Name",
+        "currency": "Währung",
+        "period": "Zeitraum",
+        "properties": "Objekte",
+        "payments": "Zahlungen",
+        "auto": "Erzeugt",
+        "actions": "Aktionen"
+      }
+    },
+    "reportForm": {
+      "newTitle": "Neuer Bericht",
+      "editTitle": "Bericht bearbeiten",
+      "create": "Bericht erstellen",
+      "update": "Aktualisieren",
+      "cancel": "Abbrechen",
+      "created": "Bericht erstellt.",
+      "updated": "Bericht aktualisiert.",
+      "fields": {
+        "name": "Name des Berichts",
+        "from": "Von",
+        "to": "Bis",
+        "basis": "Zeitraum bezieht sich auf",
+        "currency": "Währung für den Bericht",
+        "statuses": "Buchungsstatus",
+        "properties": "Objekte im Bericht"
+      },
+      "placeholders": {
+        "name": "2026-07 Hansen"
+      },
+      "hints": {
+        "name": "Eine sprechende Bezeichnung, z. B. „2026-07 Hansen“ — sie steht später auf der Auszahlung.",
+        "currency": "Buchungen in anderer Währung werden mit dem EZB-Tageskurs am Check-out umgerechnet.",
+        "statuses": "Ohne Auswahl zählen alle Status. Anfragen sind keine Einnahme und stehen deshalb nicht zur Wahl.",
+        "properties": "Mindestens ein Objekt. Objekte ohne Buchung im Zeitraum erscheinen im Bericht mit „—“."
+      },
+      "basis": {
+        "check_in": "Anreise im Zeitraum",
+        "check_out": "Abreise im Zeitraum",
+        "booked": "Buchungszeitpunkt im Zeitraum"
+      },
+      "basisHint": {
+        "check_in": "Die Buchung zählt zum Monat der Anreise — der Normalfall einer Abrechnung.",
+        "check_out": "Die Buchung zählt zum Monat der Abreise.",
+        "booked": "Der Zeitpunkt kommt aus der Quelle des Portals. Buchungen ohne diesen Wert bleiben außen vor — unser Eingangsdatum ist nicht der Buchungszeitpunkt."
+      },
+      "statuses": {
+        "confirmed": "Bestätigt",
+        "completed": "Abgeschlossen",
+        "cancelled": "Storniert"
+      },
+      "errors": {
+        "range": "„Bis“ darf nicht vor „Von“ liegen.",
+        "noCurrency": "An keinem Objekt ist eine Währung gepflegt. Trage sie im Objekt nach — ein Standardwert würde falsche Beträge erzeugen.",
+        "noProperties": "Keine Objekte vorhanden."
+      }
+    },
+    "reportDetail": {
+      "back": "Berichte",
+      "scope": "{from} bis {to} · {count} Objekte",
+      "total": "Gesamt",
+      "warningsTitle": "{count} Buchungen konnten nicht gerechnet werden",
+      "basis": {
+        "check_in": "nach Anreise",
+        "check_out": "nach Abreise",
+        "booked": "nach Buchungszeitpunkt"
+      },
+      "kpi": {
+        "income": "Einnahmen",
+        "rent": "Mietpreis",
+        "fees": "Gebühren",
+        "addons": "Zusatzleistungen",
+        "taxes": "Steuern",
+        "channel": "Portal-Provision"
+      },
+      "actions": {
+        "byBooking": "Aufschlüsselung nach Buchung",
+        "edit": "Bearbeiten",
+        "createPayment": "Zahlung erstellen"
+      },
+      "payments": {
+        "title": "Zusammenfassung der Zahlungen",
+        "viewAll": "Zahlungen ansehen",
+        "payout": "Ausgezahlt",
+        "rent": "Unterkunftspreis",
+        "fees": "Gebühren",
+        "taxes": "Steuern",
+        "expenses": "Ausgaben"
+      },
+      "rent": {
+        "title": "Aufschlüsselung der Mieten",
+        "empty": "Im Zeitraum liegen keine Buchungen.",
+        "cols": {
+          "property": "Objekt",
+          "bookings": "Buchungen",
+          "nights": "Nächte",
+          "guests": "Gäste",
+          "rent": "Mietpreis",
+          "fees": "Gebühren",
+          "addons": "Zusatz",
+          "taxes": "Steuern",
+          "channel": "Portal",
+          "income": "Einnahmen"
+        }
+      },
+      "fees": {
+        "title": "Aufschlüsselung der Gebühren",
+        "empty": "Im Zeitraum fielen keine Gebühren an.",
+        "cols": {
+          "fee": "Gebühr",
+          "count": "Anzahl",
+          "average": "Durchschnitt",
+          "total": "Summe"
+        }
+      },
+      "commission": {
+        "title": "Aufschlüsselung der Portal-Provisionen",
+        "empty": "Kein Portal hat etwas einbehalten.",
+        "cols": {
+          "channel": "Kanal",
+          "amount": "Provisionsbetrag"
+        }
+      },
+      "methods": {
+        "title": "Zahlungswege des Gastes",
+        "empty": "Es liegen keine Zahlungen des Gastes vor.",
+        "paidByGuest": "Vom Gast gezahlt",
+        "cols": {
+          "method": "Weg",
+          "total": "Summe"
+        }
+      },
+      "net": {
+        "title": "Nettoeinnahmen nach Kanälen",
+        "empty": "Im Zeitraum liegen keine Buchungen.",
+        "cols": {
+          "channel": "Kanal",
+          "outstanding": "Ausstehend",
+          "income": "Einnahmen"
+        }
+      },
+      "createPayment": {
+        "title": "Zahlung erstellen",
+        "hint": "Wer erhält das Geld? Die Zahlung wird für genau diesen Empfänger erzeugt und als Snapshot festgehalten.",
+        "noRecipients": "Es gibt noch keine Eigentümer. Lege sie unter „Eigentümer“ an.",
+        "noTerms": "Für diesen Empfänger gilt kein Abrechnungsvertrag — ohne ihn ist die Auszahlung nicht berechenbar.",
+        "submit": "Erstellen",
+        "cancel": "Abbrechen"
+      },
+      "noCommissionRate": {
+        "title": "Für {channels} ist kein Provisionssatz hinterlegt",
+        "body": "Ohne Satz steht nicht fest, was das Portal je Buchung einbehält. Mietpreis, Gebühren und Steuern stehen trotzdem im Bericht; Portal-Provision und Einnahmen bleiben leer, bis der Satz eingetragen ist.",
+        "action": "Provisionssatz eintragen"
+      },
+      "noBookings": {
+        "title": "Im Zeitraum liegen keine Buchungen",
+        "body": "Gezählt wurde {basis} vom {from} bis {to}. Prüfe Zeitraum, Bezug und Buchungsstatus — Anfragen und Eigennutzung zählen nie mit.",
+        "action": "Zeitraum ändern"
+      }
+    },
+    "bookings": {
+      "title": "Aufschlüsselung nach Buchung",
+      "count": "{count} Buchungen",
+      "empty": "Im Zeitraum liegen keine Buchungen.",
+      "warnings": "{count} Buchungen konnten nicht gerechnet werden",
+      "stay": "{from} bis {to}",
+      "openBooking": "Buchung ansehen",
+      "guestCount": "{count} Gäste",
+      "nightCount": "{count} Nächte",
+      "gross": "Endpreis",
+      "commission": "Portal-Provision",
+      "income": "Einnahmen",
+      "info": {
+        "reference": "Referenz",
+        "source": "Quelle",
+        "guests": "Gäste",
+        "nights": "Nächte",
+        "guest": "Kunde"
+      },
+      "cols": {
+        "concept": "Konzept",
+        "description": "Beschreibung",
+        "amount": "Summe"
+      },
+      "kind": {
+        "lodging": "Mietpreis",
+        "fee": "Gebühr",
+        "addon": "Zusatzleistung",
+        "tax": "Steuer"
+      },
+      "noCommissionRate": "Für {channels} ist kein Provisionssatz hinterlegt — Provision und Einkommen bleiben leer.",
+      "openSettings": "Erweiterte Einstellungen öffnen"
+    },
+    "payments": {
+      "title": "Zahlungen",
+      "subtitle": "Alle Auszahlungen über alle Berichte hinweg.",
+      "onlyUnpaid": "Nur unbezahlte anzeigen",
+      "search": "Zahlungen suchen …",
+      "empty": "Es wurde noch keine Zahlung erzeugt.",
+      "noMatch": "Keine Zahlung passt zur Suche.",
+      "markPaid": "Als bezahlt markieren",
+      "markedPaid": "Als bezahlt markiert.",
+      "details": "Details",
+      "invoiceYes": "Ja",
+      "invoiceNo": "Nein",
+      "cols": {
+        "report": "Bericht",
+        "recipient": "Empfänger",
+        "amount": "Wert",
+        "paidPct": "Bezahlt",
+        "invoice": "Rechnung",
+        "actions": "Aktionen"
+      }
+    },
+    "paymentDetail": {
+      "back": "Zahlungen",
+      "period": "Zeitraum {from} bis {to}",
+      "total": "Gesamt",
+      "grandTotal": "Zusammenfassung",
+      "note": "Notiz",
+      "notePlaceholder": "Referenz der Überweisung, Absprache …",
+      "saveNote": "Notiz speichern",
+      "noteSaved": "Notiz gespeichert.",
+      "markedPaid": "Als bezahlt markiert.",
+      "partDeleted": "Teilzahlung entfernt.",
+      "deleted": "Zahlung gelöscht.",
+      "deleteConfirm": "Die Zahlung und ihre Teilzahlungen werden entfernt. Der Bericht bleibt bestehen.",
+      "kpi": {
+        "value": "Zahlungswert",
+        "paidPct": "{pct} % bezahlt",
+        "rent": "Unterkunftspreis",
+        "feesTaxes": "Gebühren / Steuern",
+        "expenses": "Ausgaben"
+      },
+      "blocks": {
+        "legal": "Bankverbindung",
+        "terms": "Konditionen des Empfängers",
+        "footer": "Rechnungs-Fußzeile",
+        "emptyLegal": "Keine Bankverbindung gepflegt — im Eigentümer nachtragen.",
+        "emptyTerms": "Keine Konditionen hinterlegt.",
+        "emptyFooter": "Keine Angaben für die Fußzeile hinterlegt."
+      },
+      "actions": {
+        "markPaid": "Als bezahlt markieren",
+        "addPart": "Teilzahlung hinzufügen",
+        "recipient": "Empfänger",
+        "delete": "Löschen"
+      },
+      "parts": {
+        "title": "Teilzahlungen",
+        "empty": "Noch keine Teilzahlung erfasst.",
+        "newTitle": "Teilzahlung hinzufügen",
+        "openAmount": "Offen: {amount}",
+        "amount": "Betrag",
+        "date": "Bezahlt am",
+        "note": "Notiz",
+        "tooMuch": "Mehr als der offene Betrag lässt sich nicht erfassen.",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "added": "Teilzahlung erfasst.",
+        "delete": "Teilzahlung entfernen"
+      },
+      "sections": {
+        "unterkunftspreis": "Unterkunftspreis",
+        "gebuehren": "Gebühren",
+        "steuern": "Steuern",
+        "ausgaben": "Ausgaben",
+        "andere": "Andere"
+      }
+    },
+    "recipients": {
+      "title": "Empfänger",
+      "subtitle": "Die Eigentümer, an die ausgezahlt wird. Stammdaten und Vertrag werden unter „Eigentümer“ gepflegt.",
+      "manageOwners": "Eigentümer verwalten",
+      "details": "Details",
+      "termsYes": "Vertrag gültig",
+      "termsNo": "Kein Vertrag",
+      "emptyTitle": "Noch keine Eigentümer",
+      "emptyHint": "Ein Empfänger ist ein Eigentümer mit zugeordneten Objekten.",
+      "cols": {
+        "name": "Name",
+        "email": "E-Mail",
+        "properties": "Objekte",
+        "payments": "Zahlungen",
+        "volume": "Volumen",
+        "terms": "Abrechnungsvertrag",
+        "actions": "Aktionen"
+      }
+    },
+    "recipientDetail": {
+      "back": "Empfänger",
+      "noEmail": "Keine E-Mail-Adresse hinterlegt",
+      "masterData": "Stammdaten & Vertrag",
+      "noTerms": "Für diesen Empfänger gilt heute kein Abrechnungsvertrag — ohne ihn ist keine Auszahlung berechenbar.",
+      "addTerms": "Vertrag hinterlegen",
+      "sections": {
+        "unterkunftspreis": "Unterkunftspreis",
+        "gebuehren": "Gebühren",
+        "steuern": "Steuern",
+        "ausgaben": "Ausgaben",
+        "andere": "Andere"
+      },
+      "modes": {
+        "je_buchung": "Je Buchung",
+        "je_nacht": "Je Nacht",
+        "je_zeitraum": "Je Zeitraum"
+      },
+      "kpi": {
+        "properties": "Objekte",
+        "payments": "Zahlungen",
+        "volume": "Bisher ausgezahlt"
+      },
+      "recurring": {
+        "title": "Wiederkehrende Posten",
+        "hint": "Feste Posten, die in jede Zahlung dieses Empfängers einfließen — unabhängig vom Buchungsbetrag.",
+        "new": "Posten",
+        "newTitle": "Wiederkehrender Posten",
+        "newHint": "Der Betrag ist immer positiv. Ob er zu- oder abschlägt, entscheidet der Abschnitt: „Ausgaben“ mindert die Auszahlung.",
+        "empty": "Keine wiederkehrenden Posten.",
+        "labelPlaceholder": "Willkommensgebühr",
+        "currency": "Währung",
+        "currencyHint": "Muss der Währung des Berichts entsprechen — Beträge verschiedener Währungen werden nicht verrechnet.",
+        "noCurrency": "An den Objekten dieses Eigentümers ist keine Währung gepflegt.",
+        "expenseHint": "Ausgaben mindern die Auszahlung. Der Betrag bleibt positiv, das Vorzeichen ergibt sich aus dem Abschnitt.",
+        "allProperties": "Alle Objekte",
+        "activate": "Aktivieren",
+        "deactivate": "Deaktivieren",
+        "delete": "Löschen",
+        "deleted": "Posten entfernt.",
+        "created": "Posten angelegt.",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "cols": {
+          "label": "Bezeichnung",
+          "section": "Abschnitt",
+          "mode": "Bezug",
+          "property": "Objekt",
+          "amount": "Betrag",
+          "actions": "Aktionen"
+        }
+      },
+      "payments": {
+        "title": "Zahlungen",
+        "empty": "Noch keine Zahlung."
+      }
+    },
+    "schedules": {
+      "title": "Geplante Berichte",
+      "subtitle": "Berichte, die automatisch entstehen — samt Zahlungen für die ausgewählten Empfänger.",
+      "new": "Neuer Plan",
+      "details": "Bearbeiten",
+      "delete": "Löschen",
+      "deleted": "Plan entfernt.",
+      "activeYes": "Aktiv",
+      "activeNo": "Pausiert",
+      "emptyTitle": "Noch kein Plan",
+      "emptyHint": "Ein Plan erzeugt zum gewählten Termin einen Bericht über die vergangene Periode.",
+      "frequency": {
+        "woche": "Wöchentlich",
+        "monat": "Monatlich",
+        "quartal": "Vierteljährlich",
+        "jahr": "Jährlich"
+      },
+      "cols": {
+        "name": "Name",
+        "frequency": "Häufigkeit",
+        "currency": "Währung",
+        "properties": "Objekte",
+        "recipients": "Empfänger",
+        "active": "Status",
+        "lastRun": "Letzte Periode",
+        "actions": "Aktionen"
+      }
+    },
+    "scheduleForm": {
+      "newTitle": "Neuer geplanter Bericht",
+      "editTitle": "Geplanten Bericht bearbeiten",
+      "create": "Plan erstellen",
+      "update": "Aktualisieren",
+      "cancel": "Abbrechen",
+      "created": "Plan erstellt.",
+      "updated": "Plan aktualisiert.",
+      "noTerms": "Kein Abrechnungsvertrag — für diesen Empfänger entsteht keine Zahlung.",
+      "fields": {
+        "active": "Plan läuft",
+        "name": "Name des Plans",
+        "nameWithDate": "Periode in den Namen aufnehmen",
+        "frequency": "Häufigkeit",
+        "onDay": "Am Tag",
+        "period": "Ausgewerteter Zeitraum",
+        "currency": "Währung",
+        "basis": "Zeitraum bezieht sich auf",
+        "properties": "Objekte",
+        "recipients": "Empfänger, für die Zahlungen entstehen"
+      },
+      "placeholders": {
+        "name": "Monatsabrechnung"
+      },
+      "hints": {
+        "active": "Pausiert erzeugt der Plan keine Berichte — die bestehenden bleiben.",
+        "nameWithDate": "Der erzeugte Bericht heißt dann z. B. „2026-07 Monatsabrechnung“.",
+        "recipients": "Ohne Empfänger entsteht nur der Bericht, keine Zahlung."
+      },
+      "frequency": {
+        "woche": "Wöchentlich",
+        "monat": "Monatlich",
+        "quartal": "Vierteljährlich",
+        "jahr": "Jährlich"
+      },
+      "onDay": {
+        "erste": "Erster Tag der Periode",
+        "letzte": "Letzter Tag der Periode"
+      },
+      "period": {
+        "vergangener": "Vergangene Periode",
+        "laufender": "Laufende Periode"
+      },
+      "periodHint": {
+        "vergangener": "Der Normalfall: am Ersten wird der abgeschlossene Vormonat abgerechnet.",
+        "laufender": "Zwischenstand über die noch offene Periode — die Zahlen ändern sich bis zu ihrem Ende."
+      },
+      "basis": {
+        "check_in": "Anreise im Zeitraum",
+        "check_out": "Abreise im Zeitraum",
+        "booked": "Buchungszeitpunkt im Zeitraum"
+      },
+      "errors": {
+        "noCurrency": "An keinem Objekt ist eine Währung gepflegt.",
+        "noProperties": "Keine Objekte vorhanden.",
+        "noRecipients": "Es gibt noch keine Eigentümer."
+      }
+    },
+    "statistics": {
+      "title": "Bilanzstatistik",
+      "subtitle": "Tatsächlich geflossenes Geld — gerechnet über die erfassten Teilzahlungen, nicht über offene Forderungen.",
+      "emptyTitle": "Noch keine Zahlung erfasst",
+      "emptyHint": "Sobald eine Teilzahlung erfasst ist, erscheint sie hier im Verlauf.",
+      "otherCurrencies": "Weitere Währungen im Zeitraum:",
+      "noBaseline": "Keine Vorperiode zum Vergleich",
+      "filter": {
+        "from": "Von",
+        "to": "Bis",
+        "currency": "Währung",
+        "auto": "Automatisch"
+      },
+      "charts": {
+        "overTime": "Im Laufe der Zeit gezahltes Geld",
+        "byCategory": "Aufschlüsselung nach Kategorien",
+        "paid": "Gezahlt",
+        "noCategories": "Keine Anteile im Zeitraum.",
+        "categories": "Aufschlüsselung nach Kategorien"
+      },
+      "sections": {
+        "unterkunftspreis": "Unterkunftspreis",
+        "gebuehren": "Gebühren",
+        "steuern": "Steuern",
+        "ausgaben": "Ausgaben",
+        "andere": "Andere"
+      },
+      "from": "Von",
+      "to": "Bis",
+      "noPrevious": "Keine Vorperiode zum Vergleich"
+    },
+    "settings": {
+      "title": "Erweiterte Einstellungen",
+      "subtitle": "Was die Portale einbehalten und wem die Gebühren gehören. Beides entscheidet, welcher Betrag beim Eigentümer ankommt — dieselbe Konfiguration wie unter „Buchhaltung → Abrechnungsregeln“."
+    }
   }
 }

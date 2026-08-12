@@ -81,6 +81,7 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
 from . import airbnb_listing_import as ali
+from . import airbnb_zugang
 from .airbnb_verfuegbarkeit import VORLAUF_ZU_OPTION
 from .channex_client import ChannexError
 from .common import (
@@ -92,10 +93,21 @@ from .common import (
 from .content_builder import locale_order_for_country
 from .ota_abgaben import AIRBNB
 
-# Name des Preisplans, den der Abruf anlegt. Bewusst sprechend: der Kunde soll in
-# der Preisliste sehen, woher der Plan kommt, und ihn nicht für einen eigenen
-# halten.
-PLAN_NAME = "Grundpreis (von Airbnb)"
+# Name des Preisplans, den der Abruf anlegt.
+#
+# NENNT AUSDRÜCKLICH KEIN PORTAL. Der Name hieß bis 11.08.2026 „Grundpreis (von
+# Airbnb)", damit der Betrieb die Herkunft sieht — die Absicht war richtig, der
+# Ort falsch: der Plan ist der Grundpreis des OBJEKTS und gilt für alle Kanäle.
+# Von ihm werden Kanalpläne abgeleitet, deren Name den Elternnamen erbt und das
+# eigene Portal anhängt. Live standen dadurch 18 Zeilen „Grundpreis (von Airbnb)
+# · BookingCom" in der DB, und ein Booking-Gast las in seiner Bestätigung „von
+# Airbnb" — ein anderes Portal namentlich in der eigenen Buchung.
+#
+# Die Herkunft ist damit nicht verloren: sie steht an der Zuordnung
+# (`channex_rate_plan_map`), also dort, wo sie hingehört, und wird in der
+# Preisliste als Kennzeichen angezeigt statt in den Namen geschrieben. Ein Name
+# ist Kundentext, kein Ablageort für Metadaten.
+PLAN_NAME = "Grundpreis"
 
 # Airbnbs Mindestpreis, aus dem Kanal-Katalog gelesen
 # (`channel_restrictions: {"currency": "USD", "min_price": 1000}`). Der Wert ist
@@ -611,7 +623,9 @@ class AirbnbObjektAbrufMixin:
         self._details_interner_name(listing, alt, neu, gesetzt)
         self._details_kapazitaet(listing, alt, neu, gesetzt)
         self._details_regeln(listing, alt, neu, gesetzt)
-        self._details_zugang(listing, alt, neu, gesetzt)
+        airbnb_zugang.zugang_uebernehmen(
+            db, property_id, listing, alt, neu, gesetzt
+        )
         self._details_texte(channel_id, listing_id, alt, neu, gesetzt)
         # Die Registrierungsnummer (DK: BFE) steht in einem EIGENEN Endpunkt
         # (`v2/listing_permits`) — nicht im Listing. Sie fehlte deshalb, obwohl
@@ -1230,38 +1244,6 @@ class AirbnbObjektAbrufMixin:
         policies["rentalAgreement"] = vertrag
         neu["policies"] = policies
         gesetzt.append("rentalAgreement")
-
-    @staticmethod
-    def _details_zugang(
-        listing: dict[str, Any], alt: dict[str, Any],
-        neu: dict[str, Any], gesetzt: list[str],
-    ) -> None:
-        """WLAN, Anfahrt, Check-in-Art — die Anreise-Infos für den Gast."""
-        zugang = ali.zugangsdaten_uebernehmen(listing)
-        if not zugang:
-            return
-        messaging = dict(alt.get("messaging") or {})
-        vorher = dict(messaging)
-        for quelle, ziel in (
-            ("wlanName", "wifiName"),
-            ("wlanPasswort", "wifiPassword"),
-            ("anfahrt", "directions"),
-            ("checkInHinweis", "checkIn"),
-        ):
-            wert = zugang.get(quelle)
-            if wert and not messaging.get(ziel):
-                messaging[ziel] = wert
-        if messaging != vorher:
-            neu["messaging"] = messaging
-            gesetzt.append("messaging")
-        for quelle, ziel in (
-            ("checkInArt", "checkInArt"),
-            ("wohnungszusatz", "apt"),
-        ):
-            wert = zugang.get(quelle)
-            if wert and not alt.get(ziel):
-                neu[ziel] = wert
-                gesetzt.append(ziel)
 
     def _weitere_felder_uebernehmen(
         self, db: Client, property_id: str, preisteil: dict[str, Any],

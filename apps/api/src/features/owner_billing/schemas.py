@@ -322,6 +322,106 @@ class OwnerBillingTermsListResponse(BaseModel):
     items: list[OwnerBillingTermsResponse]
 
 
+# --------------------------------------------------------------------------
+# Portal-Abzugssätze (0364)
+# --------------------------------------------------------------------------
+
+
+class PortalAbzugssatzBase(BaseModel):
+    """Was ein Vertriebsportal je Buchung einbehält.
+
+    ZWEI Sätze, weil zwei verschiedene Abzüge: Booking.com nimmt 15 %
+    Vermittlungsprovision UND 1,5 % Zahlungsgebühr; Airbnb nimmt 15,5 %
+    Provision und keine Zahlungsgebühr. Ein zusammengefasster Satz wäre in der
+    Abrechnung nicht nachvollziehbar — der Betrieb sieht in seiner
+    Portal-Abrechnung beide Posten getrennt.
+    """
+
+    # Kanal wie in `reservations.channel` (`booking`, `airbnb`, …), damit die
+    # Rechenkette ohne Übersetzungstabelle zuordnet.
+    kanal: str = Field(min_length=2, max_length=40)
+    # Kein Default: ohne Satz hat die Zeile keinen Zweck. Ein `= 15` wäre ein
+    # erfundener Wert, der in der Maske wie eine Vereinbarung aussähe.
+    provision_pct: float = Field(ge=0, le=100)
+    # None = dieses Portal erhebt KEINE Zahlungsgebühr (Airbnb). Das ist ein
+    # echter Zustand, keine 0-Vereinbarung — darum nullable statt Default 0.
+    zahlungsgebuehr_pct: float | None = Field(default=None, ge=0, le=100)
+
+    gueltig_ab: date
+    # None = unbefristet.
+    gueltig_bis: date | None = None
+    notiz: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("kanal")
+    @classmethod
+    def _kanal(cls, value: str) -> str:
+        """Klein und ohne Rand — sonst gälte `Booking` als anderer Kanal."""
+        norm = (value or "").strip().lower()
+        if not norm:
+            raise ValueError("Kanal fehlt.")
+        return norm
+
+    @model_validator(mode="after")
+    def _pruefe_zeitraum(self) -> PortalAbzugssatzBase:
+        if self.gueltig_bis is not None and self.gueltig_bis <= self.gueltig_ab:
+            raise ValueError(
+                "„Gültig bis“ muss nach „Gültig ab“ liegen. Der Zeitraum ist "
+                "halb offen: der Endtag gehört bereits zum Folgesatz."
+            )
+        return self
+
+
+class PortalAbzugssatzCreate(PortalAbzugssatzBase):
+    """Einen Satz anlegen. ``None`` = gilt für alle Objekte des Betriebs."""
+
+    property_id: str | None = None
+
+
+class PortalAbzugssatzUpdate(BaseModel):
+    """Einen Satz korrigieren — für den Tippfehler.
+
+    Eine ÄNDERUNG der Vereinbarung ist ein NEUER Satz ab Datum X, kein
+    Überschreiben: sonst wäre sie rückwirkend und eine alte Abrechnung nicht
+    mehr nachvollziehbar.
+    """
+
+    provision_pct: float | None = Field(default=None, ge=0, le=100)
+    zahlungsgebuehr_pct: float | None = Field(default=None, ge=0, le=100)
+    # Ausdrücklich „keine Zahlungsgebühr mehr" — ohne dieses Flag wäre ein
+    # weggelassenes Feld nicht von „nicht ändern" zu unterscheiden.
+    ohne_zahlungsgebuehr: bool = False
+    gueltig_ab: date | None = None
+    gueltig_bis: date | None = None
+    ohne_gueltig_bis: bool = False
+    notiz: str | None = Field(default=None, max_length=2000)
+
+
+class PortalAbzugssatzResponse(BaseModel):
+    id: str
+    kanal: str
+    property_id: str | None = None
+    provision_pct: float
+    zahlungsgebuehr_pct: float | None = None
+    gueltig_ab: date
+    gueltig_bis: date | None = None
+    notiz: str | None = None
+    created_at: str
+    updated_at: str
+    # Vom Server berechnet: „heute" ist die Server-Uhr, zwei Clients in
+    # verschiedenen Zeitzonen kämen sonst zu verschiedenen Aussagen.
+    aktuell: bool
+    # Summe beider Sätze — die Zahl, mit der die Buchhaltung rechnet (16,5 %).
+    # Bewusst berechnet ausgeliefert, damit die Oberfläche sie nicht selbst
+    # addiert und dabei die Zahlungsgebühr vergisst.
+    gesamt_pct: float
+
+
+class PortalAbzugssatzListResponse(BaseModel):
+    """Die Historie je Kanal, nicht nur der aktuelle Satz."""
+
+    items: list[PortalAbzugssatzResponse]
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

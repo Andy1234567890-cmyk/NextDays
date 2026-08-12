@@ -970,6 +970,7 @@ export function Conversation({
                 bold: t("formatBold"),
                 italic: t("formatItalic"),
                 underline: t("formatUnderline"),
+                strike: t("formatStrike"),
                 bulletList: t("formatBulletList"),
                 orderedList: t("formatOrderedList"),
                 link: t("formatLink"),

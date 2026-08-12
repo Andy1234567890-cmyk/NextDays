@@ -309,11 +309,71 @@ export async function getAiReply(
  *  Versandquelle: die Portale übertragen im Gast-Chat keinen Rich-Text.
  *  `body_html === ""` heißt „noch nie formatiert" (Bestandsvorlage); der
  *  Editor baut seinen Inhalt dann aus `body` auf. */
+// --- Sprachen des Betriebs (0363) -------------------------------------------
+/** Eine Sprache, in der der Betrieb seine Nachrichten pflegt. Genau eine ist
+ *  `is_default` — sie greift, wenn die Sprache des Gastes keine Fassung hat.
+ *  Eine LEERE Liste ist gültig: dann gibt es nur die Grundfassung. */
+export type MessageLanguage = { code: string; is_default: boolean };
+
+/** Auswählbare Sprache für „Sprache hinzufügen". Der Name kommt vom Server
+ *  (eine Quelle: `core.languages`), nicht aus den Sprachdateien. */
+export type LanguageOption = { code: string; name: string };
+
+export async function listMessageLanguages(): Promise<
+  Result<{ items: MessageLanguage[] }>
+> {
+  return call<{ items: MessageLanguage[] }>("/languages");
+}
+
+export async function listAvailableLanguages(): Promise<
+  Result<{ items: LanguageOption[] }>
+> {
+  return call<{ items: LanguageOption[] }>("/languages/available");
+}
+
+export async function addMessageLanguage(
+  code: string,
+): Promise<Result<{ items: MessageLanguage[] }>> {
+  return call<{ items: MessageLanguage[] }>("/languages", {
+    method: "POST",
+    body: { code },
+  });
+}
+
+export async function setDefaultMessageLanguage(
+  code: string,
+): Promise<Result<{ items: MessageLanguage[] }>> {
+  return call<{ items: MessageLanguage[] }>(`/languages/${code}/default`, {
+    method: "PUT",
+  });
+}
+
+export async function removeMessageLanguage(
+  code: string,
+): Promise<Result<{ items: MessageLanguage[] }>> {
+  return call<{ items: MessageLanguage[] }>(`/languages/${code}`, {
+    method: "DELETE",
+  });
+}
+
+/** Sprachfassung einer Vorlage. `body` ist der abgeleitete Klartext (Ausgabe),
+ *  geschickt wird nur `body_html` — dieselbe Regel wie bei der Grundfassung. */
+export type TemplateText = {
+  lang: string;
+  subject: string;
+  body: string;
+  body_html: string;
+};
+
 export type MessageTemplate = {
   id: string;
   title: string;
   body: string;
   body_html: string;
+  /** Betreff der Grundfassung. Gilt nur für E-Mail (der Gast-Chat der Portale
+   *  überträgt keinen Betreff). */
+  subject: string;
+  texts: TemplateText[];
 };
 
 export async function listTemplates(): Promise<
@@ -326,16 +386,31 @@ export async function listTemplates(): Promise<
  *  der Server ohnehin — er leitet den Klartext selbst ab, damit es genau EINE
  *  Umwandlung gibt (`felder.html_zu_text`) und nicht zwei, die auseinander
  *  laufen. */
-export async function createTemplate(input: {
+/** Was der Editor je Sprache schickt (kein `body` — s. Kommentar oben). */
+export type TemplateTextInput = {
+  lang: string;
+  subject: string;
+  body_html: string;
+};
+
+/** `texts` weglassen heißt „Sprachfassungen unangetastet lassen"; eine leere
+ *  Liste heißt ausdrücklich „alle entfernen". */
+export type TemplateInput = {
   title: string;
   body_html: string;
-}): Promise<Result<MessageTemplate>> {
+  subject?: string;
+  texts?: TemplateTextInput[];
+};
+
+export async function createTemplate(
+  input: TemplateInput,
+): Promise<Result<MessageTemplate>> {
   return call<MessageTemplate>("/templates", { method: "POST", body: input });
 }
 
 export async function updateTemplate(
   id: string,
-  input: { title: string; body_html: string },
+  input: TemplateInput,
 ): Promise<Result<MessageTemplate>> {
   return call<MessageTemplate>(`/templates/${id}`, { method: "PUT", body: input });
 }
@@ -420,7 +495,14 @@ export type Automation = {
    *  Mitternacht (22:00–06:00). Beide oder keines. */
   window_from: string | null;
   window_to: string | null;
+  /** Betreff der Grundfassung (nur E-Mail). */
+  subject?: string;
+  /** Sprachfassungen des Freitexts (0363). Nur Klartext — der Gast-Chat der
+   *  Portale überträgt kein HTML. */
+  texts?: AutomationText[];
 };
+
+export type AutomationText = { lang: string; subject: string; message: string };
 
 export type AutomationInput = Omit<Automation, "id">;
 

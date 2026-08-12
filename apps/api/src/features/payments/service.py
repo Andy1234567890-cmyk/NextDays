@@ -18,7 +18,7 @@ an Stripe (``int(round(amount * 100))``). PayPal (Multiparty) läuft parallel ü
 from __future__ import annotations
 
 from contextlib import contextmanager
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from functools import lru_cache
 from typing import Any
 
@@ -29,6 +29,11 @@ from supabase import Client
 from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.booking_conditions.plan import (
+    erste_zahlung,
+    kondition_fuer,
+    restzahlung_faellig_am,
+)
 from src.features.cohosts.payout_service import PayoutService as CohostPayoutService
 from src.features.cohosts.payouts import BeteiligungFehler
 from src.features.donations.berechnung import Spende as DonationShare
@@ -1063,53 +1068,31 @@ class PaymentsService:
     # --- Buchungs-Konditionen: Anzahlung + automatische Restzahlung ----------
 
     def _resolve_condition(self, db: Client, res: dict) -> dict | None:
-        """Die für eine Reservierung geltende Kondition ermitteln: zuerst über den
-        Rate-Plan (rate_plans.booking_condition_id), sonst die Standard-Kondition
-        des Tenants (is_default). None, wenn keine existiert → dann gilt die volle
-        Zahlung sofort (bestehendes Verhalten)."""
-        tenant_id = res["tenant_id"]
-        rate_plan_id = res.get("rate_plan_id")
-        condition_id: str | None = None
-        if rate_plan_id:
-            rp = (
-                db.table("rate_plans")
-                .select("booking_condition_id")
-                .eq("id", rate_plan_id)
-                .limit(1)
-                .execute()
-            ).data
-            if rp:
-                condition_id = rp[0].get("booking_condition_id")
-        query = (
-            db.table("booking_conditions")
-            .select("*")
-            .eq("tenant_id", tenant_id)
+        """Die für eine Reservierung geltende Kondition (Rate-Plan, sonst
+        Standard des Betriebs). None → volle Zahlung sofort.
+
+        Die Auflösung liegt in `booking_conditions.plan`, weil der Gast-Checkout
+        denselben Plan ANZEIGT, den dieser Pfad EINZIEHT — zwei Kopien wären die
+        Stelle, an der Anzeige und Abbuchung auseinanderlaufen."""
+        return kondition_fuer(
+            db,
+            tenant_id=res["tenant_id"],
+            rate_plan_id=res.get("rate_plan_id"),
         )
-        if condition_id:
-            rows = query.eq("id", condition_id).limit(1).execute().data
-        else:
-            rows = query.eq("is_default", True).limit(1).execute().data
-        return rows[0] if rows else None
 
     @staticmethod
     def _first_payment_amount(condition: dict, total: float) -> float:
-        """Höhe der ersten Zahlung (Anzahlung) aus der Kondition. Ohne Split
-        (installments=1) ODER ohne gesetzten Prozentsatz = voller Betrag."""
-        if int(condition.get("installments") or 1) <= 1:
-            return total
-        pct = condition.get("first_payment_percent")
-        if pct is None:
-            return total
-        return round(total * float(pct) / 100.0, 2)
+        """Höhe der ersten Zahlung (Anzahlung) — geteilte Regel, siehe plan.py."""
+        return erste_zahlung(condition, total)
 
     @staticmethod
     def _balance_due_at(condition: dict, check_in: date) -> datetime | None:
-        """Fälligkeit der Restzahlung: X Tage vor Anreise (aus der Kondition).
-        None, wenn keine Restzahlung geplant ist."""
-        days = condition.get("balance_days_before_arrival")
-        if days is None:
+        """Fälligkeit der Restzahlung als Zeitpunkt (UTC-Mitternacht). Das Datum
+        selbst kommt aus der geteilten Regel; hier wird nur die Zeitzone
+        angeheftet, weil die Zahlungszeile einen Zeitstempel trägt."""
+        due_date = restzahlung_faellig_am(condition, check_in)
+        if due_date is None:
             return None
-        due_date = check_in - timedelta(days=int(days))
         return datetime(due_date.year, due_date.month, due_date.day, tzinfo=UTC)
 
     def create_booking_payment_scheduled(

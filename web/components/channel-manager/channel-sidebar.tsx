@@ -249,7 +249,7 @@ export function ChannelSidebar({
       {/* Eigene Plattform (Marktplatz) — dritter prominenter Kanal */}
       <Category>{labels.categoryMarketplace}</Category>
       <ChannelRow
-        href="/objekte"
+        href="/channels/mybestdays"
         logo={{ src: "/marketing/brand/mybestdays-logo.png" }}
         label={overview.marketplace.label}
         // Grün nur bei WIRKLICH sichtbaren (freigegebenen) Objekten; wartende

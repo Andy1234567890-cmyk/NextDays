@@ -181,12 +181,59 @@ class PublicQuoteLine(BaseModel):
     kind: str | None = None
 
 
+class PublicPaymentPlan(BaseModel):
+    """Wann der Gast zahlt — aus der Buchungskondition des Betriebs
+    (`booking_conditions`), NICHT geschätzt. Dieselbe Rechnung, die der
+    Zahlungspfad später einzieht (`booking_conditions.plan`).
+
+    Ohne Ratenzahlung ist `due_now` der Gesamtbetrag und `due_later` 0; der
+    Checkout zeigt dann nur „jetzt vollständig bezahlen".
+    """
+
+    installments: int = 1
+    due_now: float
+    due_later: float = 0
+    # Fälligkeit der Restzahlung (ISO-Datum). None = keine Restzahlung.
+    balance_due_date: date | None = None
+
+
+class PublicRefundRule(BaseModel):
+    """Eine Stufe der Storno-Staffel: bis X Tage vor Anreise Y % zurück."""
+
+    days_before_arrival: int
+    refund_percent: float
+
+
+class PublicCancellation(BaseModel):
+    """Stornobedingungen des Objekts. `mode` ist der Modus des Betriebs
+    (z. B. flexibel/moderat/streng), `rules` die gepflegte Staffel — leer, wenn
+    der Betrieb keine hinterlegt hat (dann behauptet die Strecke keine)."""
+
+    mode: str | None = None
+    rules: list[PublicRefundRule] = []
+
+
+class PublicDeposit(BaseModel):
+    """Kaution, wenn der Betrieb eine verlangt. Betrag in `currency`; bei
+    prozentualer Kaution schon auf den Aufenthalt umgerechnet."""
+
+    amount: float
+    method: str | None = None
+    currency: str | None = None
+
+
 class PublicQuoteResponse(BaseModel):
     property_id: str
     nights: int
     currency: str
     lines: list[PublicQuoteLine] = []
     total: float
+    # Zahlungszeitpunkt/Storno/Kaution der geltenden Buchungskondition. Alle drei
+    # sind None, wenn der Betrieb keine Kondition gepflegt hat — dann ist alles
+    # sofort fällig und der Checkout lässt die Blöcke weg (keine Attrappe).
+    payment_plan: PublicPaymentPlan | None = None
+    cancellation: PublicCancellation | None = None
+    deposit: PublicDeposit | None = None
     # Hat der eingegebene Code WIRKLICH eine Aktion ausgelöst? False bei leerem
     # oder unbekanntem Code — die Strecke sagt dann „Code ungültig", auch wenn
     # eine automatische Aktion greift und ein Rabatt in den Zeilen steht.

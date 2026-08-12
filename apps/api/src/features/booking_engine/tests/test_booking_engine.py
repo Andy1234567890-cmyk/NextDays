@@ -709,6 +709,9 @@ def test_public_quote_lehnt_tiere_ohne_erlaubnis_ab(monkeypatch) -> None:  # noq
         },
     )
     monkeypatch.setattr(svc, "_bookable_addon_selections", lambda *_a: [])
+    # Buchungskondition ist hier nicht der Prüfgegenstand (eigener Test unten):
+    # ohne diesen Patch liefe der Konditions-Lesepfad gegen die MagicMock-DB.
+    monkeypatch.setattr(svc, "_konditionen_fuer_gast", lambda **_k: (None, None, None))
     monkeypatch.setattr(
         resolver_mod.PricingResolver,
         "quote",
@@ -756,6 +759,9 @@ def test_public_quote_reicht_tiere_an_den_resolver(monkeypatch) -> None:  # noqa
         },
     )
     monkeypatch.setattr(svc, "_bookable_addon_selections", lambda *_a: [])
+    # Buchungskondition ist hier nicht der Prüfgegenstand (eigener Test unten):
+    # ohne diesen Patch liefe der Konditions-Lesepfad gegen die MagicMock-DB.
+    monkeypatch.setattr(svc, "_konditionen_fuer_gast", lambda **_k: (None, None, None))
     gesehen: dict[str, int] = {}
 
     def _quote(_self, req):  # noqa: ANN001, ANN202
@@ -877,3 +883,108 @@ def test_public_booking_lehnt_zu_langen_aufenthalt_ab(monkeypatch) -> None:  # n
         )
     assert exc.value.status_code == 422
     db.rpc.assert_not_called()
+
+
+# --- Buchungskondition im Gast-Quote (Zahlungsplan · Storno · Kaution) --------
+#
+# Der Checkout ZEIGT, was der Zahlungspfad EINZIEHT. Beide rechnen über
+# `booking_conditions.plan` — dieser Test hält fest, dass der Gast-Quote genau
+# die gepflegten Werte ausliefert und nichts erfindet.
+
+
+def _quote_service(conditions: list[dict], regeln: list[dict]) -> BookingEngineService:
+    return BookingEngineService(
+        service_client=_DB(
+            {
+                "properties": _PROPERTIES,
+                "booking_conditions": conditions,
+                "booking_condition_refund_rules": regeln,
+                "rate_plans": [],
+            }
+        )
+    )
+
+
+def _konditionen(svc: BookingEngineService, total: float = 1000.0):  # noqa: ANN202
+    from datetime import date as _date
+
+    return svc._konditionen_fuer_gast(  # noqa: SLF001
+        tenant_id="t1", total=total, check_in=_date(2026, 9, 20), priceless=False
+    )
+
+
+def test_quote_ohne_kondition_verspricht_nichts() -> None:
+    """Kein gepflegter Datensatz → kein Plan, kein Storno, keine Kaution. Die
+    Strecke sagt dann „alles jetzt" statt eine Regel zu erfinden (Wurzel 4)."""
+    plan, storno, deposit = _konditionen(_quote_service([], []))
+    assert plan is None and storno is None and deposit is None
+
+
+def test_quote_anzahlung_und_restzahlung_aus_der_kondition() -> None:
+    kond = {
+        "id": "bc-1", "tenant_id": "t1", "is_default": True, "installments": 2,
+        "first_payment_percent": 30, "balance_days_before_arrival": 30,
+        "cancellation_mode": "moderate", "deposit_required": False,
+    }
+    plan, storno, deposit = _konditionen(_quote_service([kond], []))
+    assert plan is not None
+    assert plan.installments == 2
+    assert plan.due_now == 300.0
+    assert plan.due_later == 700.0
+    # 20.09.2026 minus 30 Tage.
+    assert plan.balance_due_date.isoformat() == "2026-08-21"
+    assert storno is not None and storno.mode == "moderate"
+    assert storno.rules == []
+    assert deposit is None
+
+
+def test_quote_storno_staffel_kommt_sortiert() -> None:
+    kond = {
+        "id": "bc-2", "tenant_id": "t1", "is_default": True, "installments": 1,
+        "cancellation_mode": "flexible", "deposit_required": False,
+    }
+    regeln = [
+        {"condition_id": "bc-2", "days_before_arrival": 7, "refund_percent": 50},
+        {"condition_id": "bc-2", "days_before_arrival": 30, "refund_percent": 100},
+    ]
+    _plan, storno, _deposit = _konditionen(_quote_service([kond], regeln))
+    assert storno is not None
+    # Weit vor Anreise zuerst — so liest der Gast die Staffel.
+    assert [(r.days_before_arrival, r.refund_percent) for r in storno.rules] == [
+        (30, 100.0),
+        (7, 50.0),
+    ]
+
+
+def test_quote_ohne_split_ist_alles_sofort_faellig() -> None:
+    kond = {
+        "id": "bc-3", "tenant_id": "t1", "is_default": True, "installments": 1,
+        "first_payment_percent": 30, "balance_days_before_arrival": 30,
+        "deposit_required": False,
+    }
+    plan, _storno, _deposit = _konditionen(_quote_service([kond], []))
+    assert plan is not None
+    # installments=1 schlägt den Prozentsatz: keine Restzahlung, kein Datum.
+    assert (plan.due_now, plan.due_later, plan.balance_due_date) == (1000.0, 0.0, None)
+
+
+def test_quote_prozentuale_kaution_wird_zur_zahl() -> None:
+    kond = {
+        "id": "bc-4", "tenant_id": "t1", "is_default": True, "installments": 1,
+        "deposit_required": True, "deposit_amount": 10,
+        "deposit_amount_type": "percent", "deposit_method": "preauth",
+        "deposit_currency": "EUR",
+    }
+    _plan, _storno, deposit = _konditionen(_quote_service([kond], []))
+    assert deposit is not None
+    assert deposit.amount == 100.0  # 10 % von 1000
+    assert (deposit.method, deposit.currency) == ("preauth", "EUR")
+
+
+def test_quote_kaution_ohne_betrag_wird_nicht_geraten() -> None:
+    kond = {
+        "id": "bc-5", "tenant_id": "t1", "is_default": True, "installments": 1,
+        "deposit_required": True, "deposit_amount": None,
+    }
+    _plan, _storno, deposit = _konditionen(_quote_service([kond], []))
+    assert deposit is None

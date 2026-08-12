@@ -336,6 +336,39 @@ export async function channelOverview(): Promise<Result<ChannelOverview>> {
   return call<ChannelOverview>("/overview");
 }
 
+// Detailfläche des EIGENEN Marktplatzes (/channels/mybestdays). Pendant zur
+// OTA-Kanalseite, aber ohne Channex: Sichtbarkeit ist der lokale Schalter
+// (`listed_on_marketplace`) UND die Freigabe des Betreibers (moderation_status).
+export type MarketplacePropertyRow = {
+  property_id: string;
+  title: string;
+  city: string | null;
+  country: string | null;
+  status: string | null;
+  listed: boolean;
+  moderation_status: string | null;
+  /** active = auf myBestDays sichtbar · pending = Freigabe offen · paused = aus. */
+  state: "active" | "pending" | "paused";
+  /** Öffentliche Inserat-Seite; null, solange es dort keine gibt. */
+  listing_url: string | null;
+  photo: string | null;
+  bookings_count: number;
+};
+
+export type MarketplaceDetail = {
+  code: string;
+  label: string;
+  /** "" = Marktplatz-Adresse nicht konfiguriert → kein Link anzeigen. */
+  marketplace_url: string;
+  listed_count: number;
+  pending_count: number;
+  items: MarketplacePropertyRow[];
+};
+
+export async function marketplaceDetail(): Promise<Result<MarketplaceDetail>> {
+  return call<MarketplaceDetail>("/marketplace");
+}
+
 // Detailfläche eines Kanals: je verbundenem Objekt eine Zuordnungszeile
 // (Objekt ↔ OTA-Hotel-ID ↔ Sync-Status) — die Mapping-Tabelle der Kanal-
 // Detailseite. Nur echte, tenant-eigene Verbindungen dieses Portals.
@@ -1046,6 +1079,33 @@ export type AbgabePostenStatus = {
    *  Rabattregel bekommt. Getrennt, weil es ein anderer Weg mit anderen Grenzen
    *  ist — ein gemeinsamer Grund wäre für ein Portal immer falsch. */
   airbnb_reason?: string | null;
+  /** ZURÜCKGELESENER Stand beim Portal — was dort wirklich steht, nicht was
+   *  gesendet wird. Getrenntes Feld, weil es eine Aussage anderer Art ist:
+   *  `manual_portals` sagt „geht dorthin gar nicht", `live` sagt „dort steht
+   *  gerade dieser Betrag". Leer = noch nie geprüft (heute nur Airbnb hat
+   *  einen Leseweg für Gebühren). */
+  live?: AbgabeLiveStand[];
+  /** Portale, die diese Gebührenart in einer ECHTEN Buchung dem Gast berechnet
+   *  haben. Die stärkste der Aussagen — kein Regelschluss, sondern ein
+   *  Zahlungsvorgang. Nur bei `kind: "fee"` gefüllt; Steuern haben keine
+   *  Gebührenart, an der ein Beleg hängen könnte.
+   *
+   *  Leer heißt „kein Beleg", NICHT „liegt dort nicht": ein Objekt ohne
+   *  Buchungen kann keinen haben. Die Oberfläche muss beides unterscheiden,
+   *  sonst behauptet sie für ein neues Inserat, dort läge nichts. */
+  belegt_bei_portalen?: string[];
+};
+
+/** Ein zurückgelesener Portal-Stand eines Postens (`ota_gebuehren_stand`). */
+export type AbgabeLiveStand = {
+  portal: string;
+  /** online = dort steht unser Betrag · abweichend = ein anderer · fehlt = keiner */
+  status: "online" | "abweichend" | "fehlt";
+  /** Betrag, den das Portal trägt. null bei `fehlt` (kein 0-Ersatz). */
+  amount: number | null;
+  expected: number | null;
+  currency: string | null;
+  checked_at: string | null;
 };
 
 /** Welche Abgabe kommt bei welchem verbundenen Portal wirklich an?
@@ -1062,6 +1122,12 @@ export async function getAbgabenStatus(propertyId: string): Promise<
 > {
   return call(`/properties/${propertyId}/abgaben-status`);
 }
+
+/* Kein `pruefeGebuehrenStand` mehr: der Knopf „Beim Portal prüfen" ist am
+   12.08.2026 aus der Preise-Maske entfernt worden, mit ihm die Route. Der
+   Ist-Stand kommt weiter aus `getAbgabenStatus` (Feld `live` je Posten) und wird
+   vom Hintergrund-Job gepflegt — Channex reicht asynchron weiter, ein Klick
+   konnte darum nur den alten Stand erneut bestätigen. */
 
 /** Ein Tarifplan dieses Objekts, wie er ans Portal geht (Lodgify: „Aktive
  *  Tarifpläne"): Kondition, Name/Typ, Preisänderung. offset_* nur bei

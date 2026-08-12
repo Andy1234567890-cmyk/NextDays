@@ -29,6 +29,8 @@ from typing import Any
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from src.jobs.queue import try_enqueue_gebuehren_pruefung
+
 from .channex_client import ChannexError
 from .common import ChannelManagerError, ist_demo_mapping, log
 from .ota_abgaben import (
@@ -148,6 +150,12 @@ class TaxSyncMixin(TaxRegimeMixin):
             posten=anzahl_posten,
             tax_sets=len(gesetzte_set_ids),
         )
+        # Gesendet ist nicht angekommen. Der Push an Channex ist hier fertig;
+        # ob das PORTAL den Betrag trägt, sagt erst der Rückleseaufruf — und der
+        # muss warten, weil Channex asynchron weiterreicht (siehe
+        # GEBUEHREN_PRUEFUNG_VERZOEGERUNG). Best-effort: ein nicht eingereihter
+        # Beleg darf den Sync nicht kippen.
+        try_enqueue_gebuehren_pruefung(db, tenant_id, property_id)
 
     def _airbnb_steuern_erlaubt(
         self, db: Client, tenant_id: str, property_id: str
@@ -240,7 +248,33 @@ class TaxSyncMixin(TaxRegimeMixin):
         ):
             gebraucht.discard(AIRBNB)
 
-        plan_ids = list(dict.fromkeys(channex_rate_plan_ids))
+        # ALLE bei Channex gemappten Pläne des Objekts, nicht nur die
+        # übergebenen. `channex_rate_plan_ids` kommt aus der KANAL-Auswahl
+        # (`_selected_rate_plan_ids`, gefiltert nach `send_to_portals` und
+        # `portal_scope`) — ein Plan, der dort herausfällt, existiert bei Channex
+        # trotzdem und kann bebucht werden.
+        #
+        # Live belegt am 11.08.2026 an FeWo *Stjerneskud*: das Tax Set „Standard"
+        # (Reinigung 795 „Per booking", Resort 25 „Per night", beide Exclusive)
+        # hing nur an zwei Plänen. Eine Buchung über den dritten Plan
+        # (Booking-Rate-Code 47588687, „Wochenrate – single occupancy") bekam
+        # deshalb KEIN Tax Set und kam ohne jede Gebühr an: Channex meldete
+        # 4.625,81 statt 5.420,81, die 795 DKK Reinigung fehlten in der
+        # Auszahlungsrechnung des Eigentümers. Die UI von Channex bietet dafür
+        # „Select All Rates" an; hier ist das Gegenstück — der Sync verknüpft von
+        # sich aus alle, damit niemand pro Objekt daran denken muss.
+        alle_plaene = self._alle_channex_plaene(db, tenant_id, property_id)
+        plan_ids = list(dict.fromkeys([*channex_rate_plan_ids, *alle_plaene]))
+        nur_ueber_map = [
+            p for p in alle_plaene if p not in set(channex_rate_plan_ids)
+        ]
+        if nur_ueber_map:
+            log.info(
+                "tax_set_zusatzplaene_verknuepft",
+                property_id=property_id,
+                aus_kanalauswahl=len(channex_rate_plan_ids),
+                zusaetzlich=nur_ueber_map,
+            )
         scope_je_plan = self._portal_scope_je_channex_plan(
             db, tenant_id, property_id
         )
@@ -473,6 +507,50 @@ class TaxSyncMixin(TaxRegimeMixin):
                 property_id=property_id,
                 pruned=len(entfernt),
             )
+
+    @staticmethod
+    def _alle_channex_plaene(
+        db: Client, tenant_id: str, property_id: str
+    ) -> list[str]:
+        """JEDE bei Channex gemappte Rate-Plan-ID dieses Objekts.
+
+        Das Gegenstück zu „Select All Rates" in der Channex-Oberfläche. Ein Tax
+        Set wirkt nur auf die Pläne, die daran hängen — wer nur die aktuell an
+        einen Kanal gesendeten verknüpft, lässt jeden anderen Plan ohne
+        Gebühren, obwohl über ihn gebucht werden kann (siehe `_sync_ziele`).
+
+        Sortiert nach `created_at`, damit die Reihenfolge über Läufe hinweg
+        gleich bleibt: `associated_rate_plan_ids` geht so als stabile Liste an
+        Channex und ein unveränderter Zustand erzeugt kein Schein-Update.
+        """
+        maps = (
+            db.table("channex_rate_plan_map")
+            .select("channex_rate_plan_id, local_rate_plan_id, created_at")
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+            .order("created_at")
+            .execute()
+        ).data or []
+        if not maps:
+            return []
+        lokale = {
+            str(r["id"])
+            for r in (
+                db.table("rate_plans")
+                .select("id")
+                .eq("property_id", property_id)
+                .execute()
+            ).data
+            or []
+        }
+        return list(
+            dict.fromkeys(
+                str(m["channex_rate_plan_id"])
+                for m in maps
+                if m.get("channex_rate_plan_id")
+                and str(m.get("local_rate_plan_id") or "") in lokale
+            )
+        )
 
     @staticmethod
     def _portal_scope_je_channex_plan(

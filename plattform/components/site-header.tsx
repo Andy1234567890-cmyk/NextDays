@@ -2,7 +2,9 @@
 // schlanke Leiste mit Logo-Wortmarke, Such-Pille und Konto-Aktion.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+
 import { Logo } from "./logo";
+import { SprachWaehrungModal } from "./sprach-waehrung-modal";
 
 // Ziel des "myBestDays für Gastgeber"-Buttons: die Marketing-/Gastgeber-Seite.
 const GASTGEBER_URL =
@@ -44,6 +46,11 @@ export function SiteHeader({
         )}
 
         <div className="flex items-center gap-2">
+          {/* Sprachwahl gehört auf JEDE Seite: die Inserat- und Checkout-Seiten
+              nutzen diese Kopfzeile, und dort hatte der Gast bisher keinen Weg,
+              die Sprache zu wechseln (das Globus-Menü hing nur an der
+              Startseiten-Navigation). */}
+          <SprachWaehrungModal />
           <Link
             href={GASTGEBER_URL}
             className="hidden rounded-full px-4 py-2 text-sm font-medium hover:bg-secondary sm:block"

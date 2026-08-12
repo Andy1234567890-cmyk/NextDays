@@ -26,6 +26,10 @@ from .schemas import (
     OwnerBillingTermsListResponse,
     OwnerBillingTermsResponse,
     OwnerBillingTermsUpdate,
+    PortalAbzugssatzCreate,
+    PortalAbzugssatzListResponse,
+    PortalAbzugssatzResponse,
+    PortalAbzugssatzUpdate,
     SliceHealth,
 )
 from .service import BillingError
@@ -172,5 +176,75 @@ def terms_loeschen(
     """Einen versehentlich angelegten Vertrag entfernen."""
     try:
         service.vertrag_loeschen(ctx, terms_id)
+    except BillingError as exc:
+        raise _http(exc) from exc
+
+
+# ----------------------------------------------------------------------
+# Portal-Abzugssätze (0364)
+# ----------------------------------------------------------------------
+# Dieselbe Capability wie die Verträge: beides sind Abrechnungs-Konditionen des
+# Betriebs, und zwei Rechte für dasselbe Aufgabengebiet liefen mit der Zeit
+# auseinander. Der Satz bestimmt echtes Geld — er darf nicht an einer Route mit
+# bloßer Authentifizierung hängen (Wurzel 9).
+
+
+@router.get("/portal-saetze", response_model=PortalAbzugssatzListResponse)
+def saetze_liste(
+    service: OwnerBillingServiceDep,
+    ctx: OwnersCtx,
+) -> PortalAbzugssatzListResponse:
+    """Alle Portal-Abzugssätze des Betriebs samt Historie."""
+    try:
+        return service.saetze_liste(ctx)
+    except BillingError as exc:
+        raise _http(exc) from exc
+
+
+@router.post(
+    "/portal-saetze",
+    response_model=PortalAbzugssatzResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def satz_anlegen(
+    req: PortalAbzugssatzCreate,
+    service: OwnerBillingServiceDep,
+    ctx: OwnersCtx,
+) -> PortalAbzugssatzResponse:
+    """Einen Satz anlegen. Eine Satzänderung des Portals ist ein NEUER Satz ab
+    Datum X, kein Überschreiben — sonst wirkte sie rückwirkend."""
+    try:
+        return service.satz_anlegen(ctx, req)
+    except BillingError as exc:
+        raise _http(exc) from exc
+
+
+@router.patch(
+    "/portal-saetze/{satz_id}", response_model=PortalAbzugssatzResponse
+)
+def satz_aendern(
+    satz_id: str,
+    req: PortalAbzugssatzUpdate,
+    service: OwnerBillingServiceDep,
+    ctx: OwnersCtx,
+) -> PortalAbzugssatzResponse:
+    """Einen Satz korrigieren (Tippfehler, nachgetragene Befristung)."""
+    try:
+        return service.satz_aendern(ctx, satz_id, req)
+    except BillingError as exc:
+        raise _http(exc) from exc
+
+
+@router.delete(
+    "/portal-saetze/{satz_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+def satz_loeschen(
+    satz_id: str,
+    service: OwnerBillingServiceDep,
+    ctx: OwnersCtx,
+) -> None:
+    """Einen versehentlich angelegten Satz entfernen."""
+    try:
+        service.satz_loeschen(ctx, satz_id)
     except BillingError as exc:
         raise _http(exc) from exc

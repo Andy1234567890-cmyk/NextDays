@@ -6,8 +6,9 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useRef } from "react";
+import { useTranslations } from "next-intl";
 
-import { type Reihe } from "@/lib/listings";
+import { type Reihe, type ReihenTitel } from "@/lib/listings";
 
 import { ListingCard } from "./listing-card";
 import { PhotoPlaceholder } from "./photo-placeholder";
@@ -29,6 +30,20 @@ const KARTE = [
   "2xl:w-[calc((100%-7.5rem)/7)]",
 ].join(" ");
 
+/** Überschrift einer Reihe in der Gast-Sprache. Objekttypen haben eigene
+ *  Labels; ein unbekannter Typ (neuer Enum-Wert ohne Label) zeigt „Unterkünfte"
+ *  statt des rohen Enum-Werts — der fehlende Key ist ein Datenfehler, keine
+ *  Anzeige für den Gast. */
+function useReihenTitel(): (titel: ReihenTitel) => string {
+  const t = useTranslations("suche");
+  return (titel) => {
+    if (titel.art === "beliebt") return t("reiheBeliebt");
+    if (titel.art === "stadt") return t("reiheStadt", { stadt: titel.stadt });
+    const key = `objekttyp.${titel.typ}`;
+    return t.has(key) ? t(key) : t("objekttypAllgemein");
+  };
+}
+
 export function ListingReihe({
   reihe,
   eingeloggt = false,
@@ -36,6 +51,7 @@ export function ListingReihe({
   reihe: Reihe;
   eingeloggt?: boolean;
 }) {
+  const reihenTitel = useReihenTitel();
   const bandRef = useRef<HTMLDivElement>(null);
   // Foto-Stack der "Alle anzeigen"-Karte zeigt die ersten 3 Inserate der Reihe.
   const stapel = reihe.listings.slice(0, 3);
@@ -50,7 +66,7 @@ export function ListingReihe({
     <section className="group/reihe py-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-display text-xl font-semibold tracking-tight">
-          {reihe.titel}
+          {reihenTitel(reihe.titel)}
         </h2>
         <div className="flex items-center gap-3">
           {/* Pfeil-Buttons (erscheinen beim Hover über der Reihe) */}

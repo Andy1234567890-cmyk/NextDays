@@ -1884,3 +1884,325 @@ def test_host_sanitize_verklebt_absaetze_nicht_mehr() -> None:
     # Wirklich leer bleibt ein 422.
     with pytest.raises(HostMessagesError):
         _sanitize("<p></p>")
+
+
+
+# --- Sprachfassungen (0363) --------------------------------------------------
+class _SprachDB:
+    """Fake-DB nur für die Sprach-/Fassungslogik.
+
+    Führt echte Zeilenlisten je Tabelle, damit Löschen und Upsert PRÜFBAR sind:
+    genau dort sitzt der Gegenzustand (Wurzel 1) — eine im Editor entfernte
+    Fassung muss verschwinden, nicht nur unsichtbar werden.
+    """
+
+    def __init__(self, tabellen: dict | None = None) -> None:
+        self.tabellen: dict[str, list[dict]] = {
+            "users": [{
+                "id": "u", "full_name": "T", "email": "t@x.de",
+                "role": "admin", "permissions": _PERMS_FULL,
+            }],
+        }
+        self.tabellen.update(tabellen or {})
+
+    def table(self, name):  # noqa: ANN001, ANN201
+        return _SprachQuery(self.tabellen.setdefault(name, []))
+
+
+class _SprachQuery:
+    def __init__(self, rows: list[dict]) -> None:
+        self._rows = rows
+        self._eq: dict = {}
+        self._in: tuple | None = None
+        self._patch: dict | None = None
+        self._insert = None
+        self._upsert = None
+        self._delete = False
+
+    def select(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
+    def eq(self, col, val):  # noqa: ANN001, ANN201
+        self._eq[col] = val
+        return self
+
+    def in_(self, col, vals):  # noqa: ANN001, ANN201
+        self._in = (col, list(vals))
+        return self
+
+    def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
+    def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
+    def update(self, patch):  # noqa: ANN001, ANN201
+        self._patch = patch
+        return self
+
+    def insert(self, payload):  # noqa: ANN001, ANN201
+        self._insert = payload
+        return self
+
+    def upsert(self, payload, **_k):  # noqa: ANN001, ANN003, ANN201
+        self._upsert = payload
+        return self
+
+    def delete(self):  # noqa: ANN201
+        self._delete = True
+        return self
+
+    def _treffer(self) -> list[dict]:
+        rows = list(self._rows)
+        if self._in:
+            col, vals = self._in
+            rows = [r for r in rows if str(r.get(col)) in [str(v) for v in vals]]
+        for col, val in self._eq.items():
+            rows = [r for r in rows if r.get(col) == val]
+        return rows
+
+    def execute(self):  # noqa: ANN201
+        if self._delete:
+            weg = self._treffer()
+            for r in weg:
+                self._rows.remove(r)
+            return _Res(weg)
+        if self._patch is not None:
+            treffer = self._treffer()
+            for r in treffer:
+                r.update(self._patch)
+            return _Res(treffer)
+        if self._insert is not None:
+            neu = dict(self._insert)
+            neu.setdefault("id", f"row-{len(self._rows) + 1}")
+            self._rows.append(neu)
+            return _Res([neu])
+        if self._upsert is not None:
+            payload = (
+                self._upsert if isinstance(self._upsert, list) else [self._upsert]
+            )
+            for eintrag in payload:
+                schluessel = {
+                    k: eintrag.get(k)
+                    for k in ("template_id", "automation_id", "lang", "tenant_id")
+                    if k in eintrag
+                }
+                bestand = next(
+                    (
+                        r
+                        for r in self._rows
+                        if all(r.get(k) == v for k, v in schluessel.items())
+                    ),
+                    None,
+                )
+                if bestand:
+                    bestand.update(eintrag)
+                else:
+                    self._rows.append(dict(eintrag))
+            return _Res(payload)
+        return _Res(self._treffer())
+
+
+def test_erste_sprache_wird_standard_und_zweite_nicht() -> None:
+    """Ohne Standardsprache gäbe es keinen Rückfall — die erste MUSS es sein."""
+    db = _SprachDB()
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    svc.add_message_language(_CTX, "de")
+    liste = svc.add_message_language(_CTX, "da")
+    nach_code = {s.code: s.is_default for s in liste.items}
+    assert nach_code == {"de": True, "da": False}
+
+
+def test_sprache_hinzufuegen_ist_idempotent() -> None:
+    """Doppelklick darf die Standardsprache nicht verschieben (Wurzel 2)."""
+    db = _SprachDB()
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    svc.add_message_language(_CTX, "de")
+    svc.add_message_language(_CTX, "en")
+    svc.set_default_message_language(_CTX, "en")
+    liste = svc.add_message_language(_CTX, "de")   # zweiter Aufruf
+    nach_code = {s.code: s.is_default for s in liste.items}
+    assert nach_code == {"de": False, "en": True}
+    assert len(db.tabellen["tenant_message_language"]) == 2
+
+
+def test_regionale_variante_wird_auf_basissprache_normiert() -> None:
+    """„de-AT" ist die Sprache „de" — sonst legt der Betrieb zwei Reiter an."""
+    db = _SprachDB()
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    svc.add_message_language(_CTX, "de-AT")
+    liste = svc.list_message_languages(_CTX)
+    assert [s.code for s in liste.items] == ["de"]
+
+
+def test_unbekannte_sprache_wird_abgewiesen() -> None:
+    svc = InboxService(service_client=_SprachDB(), channex=_FakeChannex())
+    with pytest.raises(InboxError) as exc:
+        svc.add_message_language(_CTX, "xx")
+    assert exc.value.status_code == 422
+
+
+def test_standardsprache_nicht_loeschbar_solange_andere_daneben_stehen() -> None:
+    db = _SprachDB()
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    svc.add_message_language(_CTX, "de")
+    svc.add_message_language(_CTX, "da")
+    with pytest.raises(InboxError) as exc:
+        svc.remove_message_language(_CTX, "de")
+    assert exc.value.status_code == 422
+    # Die letzte Sprache darf weg — dann gilt wieder nur die Grundfassung.
+    svc.remove_message_language(_CTX, "da")
+    assert svc.remove_message_language(_CTX, "de").items == []
+
+
+def test_sprache_entfernen_nimmt_ihre_fassungen_mit() -> None:
+    """Sonst ginge ein in der Oberfläche gelöschter Text weiter an Gäste raus."""
+    db = _SprachDB({
+        "message_template_text": [
+            {"template_id": "tpl", "tenant_id": "t1", "lang": "da",
+             "subject": "", "body": "Hej", "body_html": "<p>Hej</p>"},
+            {"template_id": "tpl", "tenant_id": "t1", "lang": "de",
+             "subject": "", "body": "Hallo", "body_html": "<p>Hallo</p>"},
+        ],
+        "message_automation_text": [
+            {"automation_id": "a1", "tenant_id": "t1", "lang": "da",
+             "subject": "", "message": "Hej"},
+        ],
+    })
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    svc.add_message_language(_CTX, "de")
+    svc.add_message_language(_CTX, "da")
+    svc.remove_message_language(_CTX, "da")
+    assert [r["lang"] for r in db.tabellen["message_template_text"]] == ["de"]
+    assert db.tabellen["message_automation_text"] == []
+
+
+def test_vorlage_speichert_sprachfassungen_und_leitet_klartext_ab() -> None:
+    """Auch je Sprache gilt: `body` kommt aus dem HTML, nie vom Client."""
+    from src.features.inbox.schemas import TemplateTextUpsert, TemplateUpsert
+
+    db = _SprachDB()
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    out = svc.create_template(
+        _CTX,
+        TemplateUpsert(
+            title="Anreise",
+            body_html="<p>Grundfassung</p>",
+            subject="Anreise",
+            texts=[
+                TemplateTextUpsert(
+                    lang="da", subject="Ankomst", body_html="<p>Hej {{guest_first_name}}</p>"
+                ),
+                # Leerer Reiter: darf NICHT als Fassung gespeichert werden,
+                # sonst verdrängt er die Grundfassung durch eine leere Nachricht.
+                TemplateTextUpsert(lang="en", subject="", body_html="<p></p>"),
+            ],
+        ),
+    )
+    assert [t.lang for t in out.texts] == ["da"]
+    assert out.texts[0].body == "Hej {{guest_first_name}}"
+    assert out.subject == "Anreise"
+
+
+def test_vorlage_entfernt_nicht_mehr_geschickte_sprachfassung() -> None:
+    """Die Liste ist der vollständige Sollzustand (Wurzel 1)."""
+    from src.features.inbox.schemas import TemplateTextUpsert, TemplateUpsert
+
+    db = _SprachDB({
+        "message_template": [{
+            "id": "tpl", "tenant_id": "t1", "title": "A", "body": "x",
+            "body_html": "<p>x</p>", "subject": "",
+        }],
+        "message_template_text": [
+            {"template_id": "tpl", "tenant_id": "t1", "lang": "da",
+             "subject": "", "body": "Hej", "body_html": "<p>Hej</p>"},
+            {"template_id": "tpl", "tenant_id": "t1", "lang": "de",
+             "subject": "", "body": "Hallo", "body_html": "<p>Hallo</p>"},
+        ],
+    })
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    out = svc.update_template(
+        _CTX,
+        "tpl",
+        TemplateUpsert(
+            title="A",
+            body_html="<p>x</p>",
+            texts=[TemplateTextUpsert(lang="de", body_html="<p>Hallo neu</p>")],
+        ),
+    )
+    assert [t.lang for t in out.texts] == ["de"]
+    assert [r["lang"] for r in db.tabellen["message_template_text"]] == ["de"]
+    assert db.tabellen["message_template_text"][0]["body"] == "Hallo neu"
+
+
+def test_vorlage_ohne_texts_feld_laesst_fassungen_stehen() -> None:
+    """`texts=None` heißt „nicht mitgeschickt" — eine ältere Oberfläche darf
+    nicht still alle Übersetzungen löschen."""
+    from src.features.inbox.schemas import TemplateUpsert
+
+    db = _SprachDB({
+        "message_template": [{
+            "id": "tpl", "tenant_id": "t1", "title": "A", "body": "x",
+            "body_html": "<p>x</p>", "subject": "",
+        }],
+        "message_template_text": [
+            {"template_id": "tpl", "tenant_id": "t1", "lang": "da",
+             "subject": "", "body": "Hej", "body_html": "<p>Hej</p>"},
+        ],
+    })
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    out = svc.update_template(_CTX, "tpl", TemplateUpsert(title="A", body_html="<p>x</p>"))
+    assert [t.lang for t in out.texts] == ["da"]
+
+
+def test_fassung_waehlen_reihenfolge() -> None:
+    """Gastsprache → Standardsprache → Grundfassung, und leer gilt als fehlend."""
+    from src.features.inbox.sprachen import fassung_waehlen
+
+    fassungen = {"da": "Hej", "de": "Hallo", "en": "   "}
+    assert fassung_waehlen(
+        fassungen, "Grund", gastsprache="da-DK", standard="de"
+    ) == ("Hej", "da")
+    # Gastsprache nicht gepflegt → Standardsprache.
+    assert fassung_waehlen(
+        fassungen, "Grund", gastsprache="fr", standard="de"
+    ) == ("Hallo", "de")
+    # Angelegte, aber leere Fassung zählt nicht → Standardsprache.
+    assert fassung_waehlen(
+        fassungen, "Grund", gastsprache="en", standard="de"
+    ) == ("Hallo", "de")
+    # Keine Sprachen gepflegt → Grundfassung, und KEINE behauptete Sprache.
+    assert fassung_waehlen({}, "Grund", gastsprache="da", standard=None) == ("Grund", None)
+    # Nichts da → nichts senden (kein erfundener Text).
+    assert fassung_waehlen({}, "   ", gastsprache="da", standard="de") == (None, None)
+
+
+def test_automail_nimmt_die_fassung_der_gastsprache() -> None:
+    """Der Weg, auf den es ankommt: geplant wird der Text für DIESEN Gast."""
+    db = _SprachDB({
+        "tenant_message_language": [
+            {"tenant_id": "t1", "code": "de", "is_default": True},
+            {"tenant_id": "t1", "code": "da", "is_default": False},
+        ],
+        "message_automation_text": [
+            {"automation_id": "a1", "tenant_id": "t1", "lang": "da",
+             "subject": "", "message": "Hej fra os"},
+            {"automation_id": "a1", "tenant_id": "t1", "lang": "de",
+             "subject": "", "message": "Hallo von uns"},
+        ],
+    })
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    regel = {"id": "a1", "message": "Grundfassung", "template_id": None}
+    assert svc._automation_body(db, "t1", regel, gastsprache="da") == "Hej fra os"
+    # Unbekannte Gastsprache → Standardsprache des Betriebs.
+    assert svc._automation_body(db, "t1", regel, gastsprache="fr") == "Hallo von uns"
+    # Gar keine Sprache am Gast → ebenfalls Standardsprache.
+    assert svc._automation_body(db, "t1", regel, gastsprache=None) == "Hallo von uns"
+
+
+def test_gastsprache_kommt_aus_spalte_und_roher_payload() -> None:
+    """Beide Wege, mit Vorrang für die Spalte — sonst ist die Sprache oft leer."""
+    svc = InboxService(service_client=_SprachDB(), channex=_FakeChannex())
+    assert svc._gastsprache({"gast_sprache": "da", "gast_sprache_raw": "de"}) == "da"
+    assert svc._gastsprache({"gast_sprache": None, "gast_sprache_raw": "de"}) == "de"
+    assert svc._gastsprache({}) is None

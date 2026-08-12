@@ -8,7 +8,12 @@
 // obwohl sie schon existieren.
 //
 // Die Gegenrichtung (unsere Gebühren → Portale) läuft NICHT hier, sondern über
-// den Abgaben-Sync für alle Portale gemeinsam (tax_sync/ota_abgaben).
+// den Abgaben-Sync für alle Portale gemeinsam (tax_sync/ota_abgaben). Sie ist
+// der Normalfall: unsere Plattform gibt an, was rausgeht.
+//
+// Dieser Import ist deshalb EINMALIG — Starthilfe beim Onboarding. `uebernehmbar`
+// nennt nur Gebühren-ARTEN, die bei uns gar nicht existieren, und
+// `import_erledigt` beendet das Angebot nach dem ersten Lauf.
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
@@ -35,11 +40,25 @@ export type AirbnbGebuehrenVergleich = {
   stand_bekannt: boolean;
   waehrung?: string | null;
   airbnb: AirbnbGebuehr[];
-  /** Bei Airbnb hinterlegt, bei uns nicht — das Angebot zum Übernehmen. */
+  /** Signatur-Vergleich (Art + Betrag): bei Airbnb so hinterlegt, bei uns nicht.
+   *  Für die Diagnose — NICHT das Übernahme-Angebot (ein anderer Betrag ist
+   *  keine fehlende Gebühr). */
   nur_airbnb: AirbnbGebuehr[];
   /** Nur bei uns: neu angelegt oder eine Art, die Airbnb nicht kennt. */
   nur_wir: AirbnbGebuehr[];
   gleich: AirbnbGebuehr[];
+  /** Das Übernahme-Angebot: Gebühren-ARTEN, die bei uns fehlen. */
+  uebernehmbar: AirbnbGebuehr[];
+  /** true = der einmalige Start-Import ist gelaufen (oder wurde verworfen) →
+   *  das Angebot erscheint nie wieder. */
+  import_erledigt: boolean;
+};
+
+/** Antwort der beiden Import-Aktionen: die vollständige neue Gebührenliste. */
+export type ImportErgebnis = {
+  uebernommen: number;
+  fees: AirbnbGebuehr[];
+  import_erledigt: boolean;
 };
 
 type Ergebnis<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -74,7 +93,7 @@ export async function getAirbnbGebuehren(
  */
 export async function airbnbGebuehrenUebernehmen(
   propertyId: string,
-): Promise<Ergebnis<{ uebernommen: number; fees: AirbnbGebuehr[] }>> {
+): Promise<Ergebnis<ImportErgebnis>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
   try {
@@ -83,8 +102,35 @@ export async function airbnbGebuehrenUebernehmen(
       // `fees` ist die VOLLSTÄNDIGE neue Liste, wie der Server sie führt —
       // nicht nur die übernommenen. Die Seite setzt sie direkt, statt das
       // Objekt neu zu laden.
-      data: await api<{ uebernommen: number; fees: AirbnbGebuehr[] }>(
+      data: await api<ImportErgebnis>(
         `/channel-manager/properties/${propertyId}/airbnb-gebuehren/uebernehmen`,
+        { token, method: "POST" },
+      ),
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof ApiError ? e.message : "Backend nicht erreichbar.",
+    };
+  }
+}
+
+/**
+ * Das einmalige Angebot beenden, ohne etwas zu übernehmen.
+ *
+ * Der Betrieb pflegt seine Gebühren bei uns — dann soll der Kasten weg sein und
+ * nicht bei jeder Preisänderung erneut zum Duplikat verleiten.
+ */
+export async function airbnbGebuehrenVerwerfen(
+  propertyId: string,
+): Promise<Ergebnis<ImportErgebnis>> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: "Nicht angemeldet." };
+  try {
+    return {
+      ok: true,
+      data: await api<ImportErgebnis>(
+        `/channel-manager/properties/${propertyId}/airbnb-gebuehren/verwerfen`,
         { token, method: "POST" },
       ),
     };

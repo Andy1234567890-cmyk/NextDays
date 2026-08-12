@@ -62,6 +62,46 @@ _SPRACHEN: Final[dict[str, tuple[str, str]]] = {
 _ALIASSE: Final[dict[str, str]] = {"nb": "no", "nn": "no"}
 
 
+def basis_sprache(code: str | None) -> str | None:
+    """Rohwert eines Portals → zweistelliger Basiscode („de-AT" → „de").
+
+    Dieselbe Normierung, die `sprach_name` intern schon macht — hier einzeln
+    verfügbar, weil sie auch ohne Anzeige gebraucht wird: die Sprachfassungen
+    einer Vorlage werden über diesen Code VERGLICHEN (`inbox.sprachen`). Ohne
+    Normierung trifft „de-AT" keine „de"-Fassung, und der Gast bekommt still
+    die Standardfassung — ein Fehler, den niemand an der Nachricht ansieht.
+
+    Unbekannte/leere Werte → None; die Prüfung, ob es die Sprache überhaupt
+    gibt, macht `ist_bekannte_sprache` (getrennt, weil ein Portal auch Codes
+    schickt, die wir nicht führen — die dürfen den Aufrufer nicht sprengen).
+    """
+    roh = (code or "").strip().lower()
+    if not roh:
+        return None
+    basis = roh.replace("_", "-").split("-", 1)[0]
+    if len(basis) != 2 or not basis.isalpha():
+        return None
+    return _ALIASSE.get(basis, basis)
+
+
+def ist_bekannte_sprache(code: str | None) -> bool:
+    """Führen wir diese Sprache? (Grundlage für die Auswahlliste im Frontend.)"""
+    basis = basis_sprache(code)
+    return bool(basis and basis in _SPRACHEN)
+
+
+def alle_sprachen(*, sprache: str = "de") -> list[tuple[str, str]]:
+    """(Code, Name) aller geführten Sprachen, nach NAMEN sortiert.
+
+    Nach Namen, nicht nach Code: die Liste wird gelesen, nicht gerechnet — nach
+    Code sortiert stünde „Dänisch" (da) vor „Deutsch" (de) vor „Griechisch"
+    (el), was in einer Auswahlliste wie eine zufällige Reihenfolge wirkt.
+    """
+    index = 0 if sprache == "de" else 1
+    paare = [(code, namen[index]) for code, namen in _SPRACHEN.items()]
+    return sorted(paare, key=lambda p: p[1])
+
+
 def sprach_name(code: str | None, *, sprache: str = "de") -> str | None:
     """„de" → „Deutsch" (bzw. „German"). Unbekannt/leer → None.
 
@@ -71,11 +111,9 @@ def sprach_name(code: str | None, *, sprache: str = "de") -> str | None:
     der Gästekarte zu „Sprache: de-AT", was denselben Rohwert-Eindruck macht wie
     vorher „de".
     """
-    roh = (code or "").strip().lower()
-    if not roh:
+    basis = basis_sprache(code)
+    if not basis:
         return None
-    basis = roh.replace("_", "-").split("-", 1)[0]
-    basis = _ALIASSE.get(basis, basis)
     treffer = _SPRACHEN.get(basis)
     if not treffer:
         return None

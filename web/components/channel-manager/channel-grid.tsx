@@ -348,7 +348,9 @@ export function ChannelGrid({ overview }: { overview: ChannelOverview | null }) 
             linked={overview.marketplace.pending_count > 0}
             badge={marktBadge}
             linkedLabel={marktWartet}
-            href="/objekte"
+            // Eigene Kanalseite wie bei den Portalen (vorher sprang die Karte
+            // auf /objekte — dort ist die Marktplatz-Freigabe nicht zu sehen).
+            href="/channels/mybestdays"
             connectLabel={t("connect")}
           />
         </div>

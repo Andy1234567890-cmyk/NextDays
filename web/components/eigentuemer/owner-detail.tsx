@@ -5,7 +5,7 @@
 // useState-Formular + Server-Actions (Muster wie objekte/location-form).
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,6 +18,8 @@ import { Textarea } from "@nextdays/ui/textarea";
 import { COUNTRIES, vatIdLabel } from "@nextdays/ui/countries";
 import { ObjektMehrfachauswahl } from "@/components/objekt-mehrfachauswahl";
 import { SprachAuswahl } from "@/components/sprache-auswahl";
+import type { OwnerBillingTerms } from "@/lib/owner-billing";
+import { formatDate } from "@/lib/utils";
 import {
   assignOwnerProperties,
   assignOwnerProperty,
@@ -33,18 +35,57 @@ import {
 
 type PropOption = FreieObjektOption;
 
+/**
+ * Welcher Vertrag gilt für DIESES Objekt — Objekt-Vertrag schlägt Eigentümer-
+ * Vertrag.
+ *
+ * Dieselbe Rangfolge wie `OwnerBillingService.vertrag_aufloesen` im Backend.
+ * Sie steht hier nur für die ANZEIGE („was überstimmt dieses Feld?"); gerechnet
+ * wird ausschließlich serverseitig. Wichtig ist, dass die Anzeige dieselbe
+ * Antwort gibt wie die Rechnung — eine abweichende Reihenfolge wäre schlimmer
+ * als kein Hinweis, weil sie einen falschen Satz plausibel darstellt.
+ *
+ * `undefined` heißt: für dieses Objekt gilt heute kein Vertrag, also zählt die
+ * Stammdaten-Angabe.
+ */
+function vertragFuerObjekt(
+  vertraege: OwnerBillingTerms[],
+  propertyId: string,
+): OwnerBillingTerms | undefined {
+  return (
+    vertraege.find((v) => v.property_id === propertyId) ??
+    vertraege.find((v) => v.property_id == null)
+  );
+}
+
 export function OwnerDetail({
   initial,
   properties,
   embedded = false,
+  geltendeVertraege = [],
 }: {
   initial: Owner;
   properties: PropOption[];
   embedded?: boolean;
+  /** Die HEUTE geltenden Abrechnungsverträge (vom Elternteil, der sie von der
+   *  Vertrags-Karte bekommt).
+   *
+   *  Sie werden hier nur GELESEN, um an den Provisionsfeldern zu zeigen, ob
+   *  der Vertrag sie überstimmt. Vorher standen auf derselben Seite zwei
+   *  Provisionsangaben ohne Rangfolge: das Stammdaten-Feld sah aus wie „der"
+   *  Satz, obwohl der Vertrag darunter längst gilt — und ein leeres Feld sah
+   *  aus wie „kein Satz vereinbart", obwohl 20 % im Vertrag standen. Genau
+   *  dieser Widerspruch war für Kunden nicht auflösbar. */
+  geltendeVertraege?: OwnerBillingTerms[];
 }) {
   const t = useTranslations("owners");
   const tCountry = useTranslations("countries");
+  const locale = useLocale();
   const router = useRouter();
+  // Der Vertrag, der OHNE Objekt-Ausnahme gilt (`property_id = null`) — das ist
+  // der, den das Stammdaten-Feld überstimmt bekommt. Objektbezogene Verträge
+  // stehen an ihrer eigenen Zeile in der Objektliste.
+  const ownerVertrag = geltendeVertraege.find((v) => v.property_id == null);
   const [owner, setOwner] = useState<Owner>(initial);
   // Frische Server-Props übernehmen. `useState(initial)` liest den Wert NUR
   // beim ersten Mount: nach `router.refresh()` (eigene Zuordnung) oder einer
@@ -561,6 +602,27 @@ export function OwnerDetail({
                 )
               }
             />
+            {/* Der Kern der Verständnis-Korrektur: gibt es einen geltenden
+                Vertrag, sagt das Feld SELBST, dass gerade er zählt — mit dem
+                Satz, der wirklich abgerechnet wird. Ohne diesen Satz las die
+                Agentur ein leeres Feld als „nichts vereinbart", während die
+                Abrechnung mit 20 % aus dem Vertrag rechnete. */}
+            {ownerVertrag ? (
+              <p className="text-xs text-muted-foreground">
+                {t("commissionContractWins", {
+                  pct: ownerVertrag.provisions_pct,
+                  // `gueltig_ab` ist in der DB `not null` — der
+                  // „heute"-Rückfall von `formatDate` kann hier nicht greifen.
+                  ab: formatDate(ownerVertrag.gueltig_ab, locale),
+                })}
+              </p>
+            ) : (
+              owner.default_commission_pct == null && (
+                <p className="text-xs text-muted-foreground">
+                  {t("commissionNoneAnywhere")}
+                </p>
+              )
+            )}
           </Field>
           <Field label={t("fields.payoutMethod")}>
             <Input
@@ -732,6 +794,30 @@ export function OwnerDetail({
                       )
                     }
                   />
+                  {/* Auch je Objekt: welcher Satz WIRKLICH abgerechnet wird.
+                      Ein Objekt-Vertrag schlägt den Eigentümer-Vertrag, und
+                      beide schlagen diesen Override — ohne den Hinweis war das
+                      Feld eine Zahl ohne erkennbare Wirkung. */}
+                  {(() => {
+                    const v = vertragFuerObjekt(
+                      geltendeVertraege,
+                      link.property_id,
+                    );
+                    if (!v) return null;
+                    return (
+                      <p className="text-xs text-muted-foreground">
+                        {t(
+                          v.property_id
+                            ? "commissionContractObject"
+                            : "commissionContractOwnerWide",
+                          {
+                            pct: v.provisions_pct,
+                            ab: formatDate(v.gueltig_ab, locale),
+                          },
+                        )}
+                      </p>
+                    );
+                  })()}
                 </Field>
                 <Button
                   variant="ghost"

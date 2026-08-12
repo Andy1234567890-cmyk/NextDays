@@ -67,6 +67,25 @@ def test_get_masks_code_without_permission() -> None:
     assert out.enabled is True
 
 
+def test_get_returns_wifi_with_permission() -> None:
+    """WLAN-Zugang kommt durch. Die Spalten gab es seit 0296, aber kein Feld im
+    Schema — `{{wifi_ssid}}`/`{{wifi_password}}` konnten deshalb nie gefüllt
+    werden und ließen jede Anreise-Automail an „Feld ohne Wert" scheitern."""
+    svc = _svc([{"wifi_ssid": "Bastlund_24GHz", "wifi_password": "QIvervej13"}])
+    out = svc.get(CTX, PID, can_see_code=True)
+    assert out.wifi_ssid == "Bastlund_24GHz"
+    assert out.wifi_password == "QIvervej13"
+
+
+def test_get_masks_wifi_password_without_permission() -> None:
+    """Das WLAN-Passwort ist ein Geheimnis wie der Türcode (0314) — der Netzname
+    bleibt sichtbar, das Passwort nicht."""
+    svc = _svc([{"wifi_ssid": "Netz", "wifi_password": "geheim"}])
+    out = svc.get(CTX, PID, can_see_code=False)
+    assert out.wifi_ssid == "Netz"
+    assert out.wifi_password is None
+
+
 def test_get_foreign_property_404() -> None:
     svc = _svc([], owns=False)
     with pytest.raises(PropertyPortalError) as exc:

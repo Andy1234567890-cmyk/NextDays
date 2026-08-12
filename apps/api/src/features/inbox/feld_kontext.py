@@ -18,68 +18,81 @@ from src.core.languages import sprach_name
 
 from .felder import Kontext, html_zu_text
 
+# Objekt-Anweisungen (`/objekte/{id}/nachrichten`, mehrsprachig in
+# `properties.type_attributes.messaging`) → Platzhalter-Schlüssel. Das ist die
+# EINE Pflegestelle dieser Texte; die strukturierten Werte (Türcode, WLAN-Netz,
+# WLAN-Passwort) liegen daneben in `property_guest_portal`.
+MESSAGING_FELDER = {
+    "checkIn": "checkin_instructions",
+    "checkOut": "checkout_instructions",
+    "directions": "directions",
+    "doorInstructions": "door_instructions",
+    "rules": "house_rules",
+    "wifi": "wifi_text",
+    "localGuide": "local_guide",
+    "emergency": "emergency_contact",
+}
+
+
+def messaging_texte(prop: dict | None, sprache: str | None) -> dict[str, str]:
+    """Die gepflegten Objekt-Texte IN DER SPRACHE DES GASTES.
+
+    Der Betrieb pflegt jeden Block mehrsprachig (de/en/da). Welcher davon
+    in die Nachricht gehört, entscheidet die Sprache des GASTES — sie steht
+    an der Buchung (`customer.language`, bei Airbnb z. B. „da").
+
+    Reihenfolge: die Gastsprache, dann Englisch, dann Deutsch, dann die
+    erste überhaupt gepflegte. Ein Gast, der Dänisch spricht, liest lieber
+    den englischen Text als gar keinen — und lieber irgendeinen als
+    „{{RentalRules}}" im Klartext. Ist NICHTS gepflegt, bleibt das Feld
+    leer, und der Versand meldet „Feld ohne Wert" (Wurzel 4).
+
+    Modulebene, nicht Methode: `feld_deckung` prüft mit derselben Auflösung, ob
+    ein Objekt-Platzhalter überhaupt gepflegt ist. Zwei Kopien derselben Regel
+    hießen, dass die Vorwarnung und der Versand verschiedener Meinung sind.
+    """
+    attrs = prop.get("type_attributes") if prop else None
+    messaging = attrs.get("messaging") if isinstance(attrs, dict) else None
+    if not isinstance(messaging, dict):
+        return {}
+    basis = (sprache or "").strip().lower().replace("_", "-").split("-")[0]
+    reihenfolge = [s for s in (basis, "en", "de") if s]
+
+    out: dict[str, str] = {}
+    for quelle, ziel in MESSAGING_FELDER.items():
+        werte = messaging.get(quelle)
+        if not isinstance(werte, dict):
+            continue
+        text = next(
+            (
+                str(werte[s]).strip()
+                for s in reihenfolge
+                if isinstance(werte.get(s), str) and werte[s].strip()
+            ),
+            "",
+        ) or next(
+            (
+                str(v).strip()
+                for v in werte.values()
+                if isinstance(v, str) and v.strip()
+            ),
+            "",
+        )
+        # Der Editor liefert Rich-Text; ein Portal-Chat überträgt nur
+        # Klartext. Ohne Umwandlung läse der Gast „<p><strong>…".
+        klartext = html_zu_text(text)
+        if klartext:
+            out[ziel] = klartext
+    return out
+
 
 class FeldKontextMixin:
     """Baut den :class:`Kontext` eines Threads — Teil von `InboxService`."""
 
-    _MESSAGING_FELDER = {
-        "checkIn": "checkin_instructions",
-        "checkOut": "checkout_instructions",
-        "directions": "directions",
-        "doorInstructions": "door_instructions",
-        "rules": "house_rules",
-        "wifi": "wifi_text",
-        "localGuide": "local_guide",
-        "emergency": "emergency_contact",
-    }
-
-    @staticmethod
-    def _messaging_texte(prop: dict | None, sprache: str | None) -> dict[str, str]:
-        """Die gepflegten Objekt-Texte IN DER SPRACHE DES GASTES.
-
-        Der Betrieb pflegt jeden Block mehrsprachig (de/en/da). Welcher davon
-        in die Nachricht gehört, entscheidet die Sprache des GASTES — sie steht
-        an der Buchung (`customer.language`, bei Airbnb z. B. „da").
-
-        Reihenfolge: die Gastsprache, dann Englisch, dann Deutsch, dann die
-        erste überhaupt gepflegte. Ein Gast, der Dänisch spricht, liest lieber
-        den englischen Text als gar keinen — und lieber irgendeinen als
-        „{{RentalRules}}" im Klartext. Ist NICHTS gepflegt, bleibt das Feld
-        leer, und der Versand meldet „Feld ohne Wert" (Wurzel 4).
-        """
-        attrs = prop.get("type_attributes") if prop else None
-        messaging = attrs.get("messaging") if isinstance(attrs, dict) else None
-        if not isinstance(messaging, dict):
-            return {}
-        basis = (sprache or "").strip().lower().replace("_", "-").split("-")[0]
-        reihenfolge = [s for s in (basis, "en", "de") if s]
-
-        out: dict[str, str] = {}
-        for quelle, ziel in FeldKontextMixin._MESSAGING_FELDER.items():
-            werte = messaging.get(quelle)
-            if not isinstance(werte, dict):
-                continue
-            text = next(
-                (
-                    str(werte[s]).strip()
-                    for s in reihenfolge
-                    if isinstance(werte.get(s), str) and werte[s].strip()
-                ),
-                "",
-            ) or next(
-                (
-                    str(v).strip()
-                    for v in werte.values()
-                    if isinstance(v, str) and v.strip()
-                ),
-                "",
-            )
-            # Der Editor liefert Rich-Text; ein Portal-Chat überträgt nur
-            # Klartext. Ohne Umwandlung läse der Gast „<p><strong>…".
-            klartext = html_zu_text(text)
-            if klartext:
-                out[ziel] = klartext
-        return out
+    # Aufrufstellen (Service, Tests) bleiben unverändert; die Regel selbst steht
+    # einmal auf Modulebene.
+    _MESSAGING_FELDER = MESSAGING_FELDER
+    _messaging_texte = staticmethod(messaging_texte)
 
     @staticmethod
     def _reservierung_zeiten(db: Client, tenant_id: str, row: dict) -> dict:

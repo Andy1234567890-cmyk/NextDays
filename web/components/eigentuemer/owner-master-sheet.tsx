@@ -18,7 +18,9 @@ import {
   SheetTitle,
 } from "@nextdays/ui/sheet";
 import { useTranslations } from "next-intl";
+import { useCallback, useState } from "react";
 
+import type { OwnerBillingTerms } from "@/lib/owner-billing";
 import type { Owner } from "@/lib/owners";
 
 type PropOption = { id: string; title: string };
@@ -43,6 +45,13 @@ export function OwnerMasterSheet({
     id: l.property_id,
     title: titelById.get(l.property_id) ?? l.property_id,
   }));
+  // Die heute geltenden Verträge, gemeldet von der Vertrags-Karte unten. Sie
+  // liegen HIER, damit die Stammdaten-Maske darüber dieselbe Wahrheit zeigt —
+  // eine zweite Abfrage in `OwnerDetail` könnte einen anderen Stand haben.
+  const [geltend, setGeltend] = useState<OwnerBillingTerms[]>([]);
+  // Stabil, damit der melde-`useEffect` in der Vertrags-Karte nicht bei jedem
+  // Render der Karte erneut feuert.
+  const merken = useCallback((v: OwnerBillingTerms[]) => setGeltend(v), []);
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="flex w-full flex-col gap-4 overflow-y-auto sm:max-w-2xl">
@@ -50,13 +59,22 @@ export function OwnerMasterSheet({
           <SheetTitle>{t("masterData")}</SheetTitle>
           <SheetDescription>{owner.name}</SheetDescription>
         </SheetHeader>
-        <OwnerDetail initial={owner} properties={properties} embedded />
+        <OwnerDetail
+          initial={owner}
+          properties={properties}
+          embedded
+          geltendeVertraege={geltend}
+        />
         {/* Der Vertrag bekommt NUR die zugeordneten Objekte, die
             Zuordnungs-Maske darüber die volle zuordenbare Liste. `properties`
             ist „frei ODER seins" — ein Provisionssatz auf einem gerade
             herrenlosen fremden Objekt wäre eine Vereinbarung über etwas, das
             diesem Eigentümer nicht gehört (Wurzel 3/9). */}
-        <Abrechnungsvertrag ownerId={owner.id} properties={eigeneObjekte} />
+        <Abrechnungsvertrag
+          ownerId={owner.id}
+          properties={eigeneObjekte}
+          onGeltendeVertraege={merken}
+        />
       </SheetContent>
     </Sheet>
   );

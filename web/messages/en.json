@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "The dashboard could not be loaded",
     "reviews": "Reviews",
     "extensions": "Extensions",
-    "announcements": "What's new"
+    "announcements": "What's new",
+    "billingRules": "Billing rules",
+    "ownerReporting": "Owner reporting"
   },
   "exemption": {
     "labelNamed": "Tax-exempt ({scheme}) — no VAT ID required",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Photo from the guest",
     "translate": "Translate",
     "showOriginal": "Show original",
-    "translatedFrom": "Translated from {sprache}"
+    "translatedFrom": "Translated from {sprache}",
+    "formatStrike": "Strikethrough",
+    "fieldsButton": "{{Placeholders}}",
+    "langBase": "Base version",
+    "langBaseHint": "Sent to every guest whose language has no version of its own.",
+    "subjectLabel": "Subject",
+    "subjectHint": "The subject line is used for emails only.",
+    "langAdd": "Add a new language",
+    "langDefault": "Default",
+    "langSetDefault": "Set as default",
+    "langRemove": "Remove language",
+    "langEmpty": "No language set up yet — until then the base version goes to every guest.",
+    "autoEditContent": "Edit content",
+    "autoPanelCreate": "Create",
+    "quickEmpty": "No quick reply yet.",
+    "autoTextRequired": "A message text is required."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "If the email did not arrive or the link has expired, the invitation can be sent again. The new link is valid for 7 days and points to this environment; the previously sent link stops working.",
     "portalAccessResent": "Invitation sent again.",
     "commissionNotAgreed": "not agreed",
+    "commissionContractWins": "The billing agreement is currently applied: {pct}% since {ab}. This field only serves as a fallback if no agreement applies.",
+    "commissionNoneAnywhere": "No rate agreed yet — neither here nor as an agreement. Until then, the payout stays empty in the owner portal.",
+    "commissionContractObject": "Separate agreement for this property: {pct}% since {ab}.",
+    "commissionContractOwnerWide": "Owner's billing agreement: {pct}% since {ab}.",
     "assignableCount": "{count} of {total} selected to add",
     "assignedHeading": "{count, plural, one {# assigned property} other {# assigned properties}}",
     "info": {
       "aria": "Explanation of {feld}",
       "share": "The ownership share in this property. At 100 % the full payout is attributed to this owner, at less than that it is apportioned accordingly.",
-      "commission": "The default commission rate for this owner. If the field is left empty, no rate has been agreed yet — the payout is then not calculated but shown as a dash.",
-      "commissionOverride": "Applies to this one property only and overrides the owner's default rate. If the field is left empty, the default rate applies."
+      "commission": "Fallback rate if no billing agreement applies to a property. The agreement below takes precedence — it is the actual arrangement and also covers period, flat fee and minimum commission. If both stay empty, no payout is calculated and a dash is shown instead.",
+      "commissionOverride": "Fallback rate for this property only; overrides the owner's standard rate. A billing agreement takes precedence here too. If left empty, the standard rate applies."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Total Payout",
       "ownerPayout": "Owner Payout",
       "pmPayout": "Property Manager Payout",
-      "commissionMissing": "No commission rate is set for at least one property. The payouts cannot be calculated — enter the rate in the owner's master data or on the property."
+      "commissionMissing": "No commission rate is set for at least one property. The payouts cannot be calculated — enter the rate in the owner's master data or on the property.",
+      "payoutUnknown": "At least one booking is missing information needed to calculate the payout. The affected rows show “—” instead of a figure.",
+      "commissionInvalid": "A stored commission rate is outside 0–100 %. Please correct it on the owner or the property.",
+      "portalRateMissing": "No deduction rate is set for at least one booking channel, and the portal did not report its deduction. Please enter what the portal keeps per booking under Accounting → Billing rules.",
+      "portalRateInvalid": "A stored portal deduction rate is outside 0–100 %. Please correct it under Accounting → Billing rules.",
+      "feeUnassigned": "At least one fee type is not assigned yet. Without an assignment it cannot be determined who the amount belongs to or whether commission applies — please set it under Accounting → Billing rules.",
+      "feeNotComputable": "A fee cannot be settled as an amount (stored as a percentage or without an amount). Please check the fee on the property.",
+      "contractCurrency": "A flat fee or minimum commission is denominated in a different currency than the booking. Amounts in different currencies are not converted — please check the billing contract."
     },
     "rental": {
       "perReservation": "Per reservation",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Total Price",
       "totalPayout": "Total Payout",
       "totals": "Totals",
-      "empty": "No reservations in this period."
+      "empty": "No reservations in this period.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Add",
@@ -1297,7 +1333,7 @@
       "nach_provision": "after commission"
     },
     "classifyTitle": "Who do the fees belong to?",
-    "classifyScopeHint": "Applies per fee type across the whole business, not just for this property.",
+    "classifyScopeHint": "Applies per fee type across the whole business. The amounts themselves are still maintained on each property.",
     "classifyHint": "Every fee type needs two details: who the amount belongs to and whether it counts towards the commission base. The two are independent — utilities belong to the owner and are still commission-free.",
     "classifyOpen": "{count, plural, one {# fee type is not yet assigned} other {# fee types are not yet assigned}}. Without an assignment there is no way to determine who the amount belongs to.",
     "classifyEmpty": "No fees have been set up for this account yet.",
@@ -1315,7 +1351,9 @@
     "commissionable": "Commissionable",
     "commissionableYes": "Yes — counts towards the commission",
     "commissionableNo": "No — commission-free",
-    "infoAria": "Explanation of {feld}"
+    "infoAria": "Explanation of {feld}",
+    "rulesPageTitle": "Billing rules",
+    "rulesPageIntro": "What the portals keep per booking, and who the fees belong to. Together these determine the amount that reaches your owners' commission statement."
   },
   "portal": {
     "title": "My portal",
@@ -1432,6 +1470,16 @@
         "blocked": "Blocked"
       },
       "payoutPerNight": "Net payout/night",
+      "payoutPerNightShort": "net/night",
+      "payoutUnknown": {
+        "short": "n/a",
+        "label": "Not available",
+        "provision": "No commission rate is set for this property — your management company needs to add it.",
+        "provisionUngueltig": "The commission rate on file is outside the 0–100% range.",
+        "betrag": "This booking has no total amount.",
+        "naechte": "This booking's date range is invalid.",
+        "waehrungVertrag": "The agreed flat fee is in a different currency than this booking — amounts are not converted."
+      },
       "guest": "Guest",
       "channel": "Booking source",
       "blockHint": "Want a period blocked? Submit a request — the management decides.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Only show the door code once the stay is paid",
       "hideCodeUntilCheckin": "Hide the door code until check-in",
       "codeVisibleFromLabel": "The door code is shown from the check-in day at …",
-      "codeVisibleFromUnset": "— not set —"
+      "codeVisibleFromUnset": "— not set —",
+      "wifiSsidLabel": "Network name (SSID)",
+      "wifiSsidPlaceholder": "e.g. Holiday-Home-WiFi",
+      "wifiPasswordLabel": "Wi-Fi password",
+      "wifiPasswordPlaceholder": "e.g. summer2026",
+      "wifiFieldsHint": "These two values fill the {ssid} and {password} placeholders in message templates and the Wi-Fi QR code in the guest portal. If they stay empty, a template using these placeholders is not sent."
     },
     "taskCreatePopup": {
       "title": "Create task",
@@ -4678,7 +4731,9 @@
       "duplicateOk": "Object duplicated.",
       "duplicateErr": "Duplicate failed.",
       "unlistOk": "Website link removed.",
-      "unlistErr": "Unlink failed."
+      "unlistErr": "Unlink failed.",
+      "menuVerkaufAus": "Switch off on all portals",
+      "menuVerkaufAn": "Offer on all portals again"
     },
     "messagingForm": {
       "title": "Message placeholders",
@@ -5362,7 +5417,13 @@
       "copyPricingSkipExtras": "Extras — they depend on their own photos and translations.",
       "copyPricingSkipAvailability": "Availability, occupancy and policies.",
       "copyPricingOverwriteWarning": "The pricing of this property will be overwritten completely. Amounts are only copied when the currency matches.",
-      "copyPricingDone": "Pricing copied."
+      "copyPricingDone": "Pricing copied.",
+      "portalStandAbweichung": "there {dort}",
+      "portalStand": {
+        "online": "Live at the channel",
+        "abweichend": "Differs",
+        "fehlt": "Not set at the channel"
+      }
     },
     "policiesForm": {
       "title": "Policies",
@@ -5646,7 +5707,10 @@
       "hinweis": "You can import them instead of creating them again. Existing fees stay unchanged.",
       "uebernehmen": "Import fees",
       "laeuft": "Importing …",
-      "uebernommen": "{anzahl} fees imported."
+      "uebernommen": "{anzahl} fees imported.",
+      "verwerfen": "Don't import",
+      "verworfen": "Offer closed — your fees stay as they are.",
+      "einmalig": "One-time head start: from now on only what's here counts — that's what we send to the portals."
     },
     "veroeffentlichen": {
       "titel": "Publish property",
@@ -5676,6 +5740,26 @@
       },
       "statusHinweis": "Set via “Publish” at the top.",
       "immerDabei": "Always included — our own marketplace, no portal commission."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Take property off sale?",
+      "fragenAusText": "“{titel}” will be set to inactive and its booking calendar switched off on all connected portals. Existing bookings are unaffected. Each portal's state is saved so that restoring puts it back.",
+      "fragenAnTitel": "Offer property again?",
+      "fragenAnText": "“{titel}” will be set to active again. Each portal gets back the state it had before being switched off — portals that were already off stay off. Rates and availability are then re-sent.",
+      "jetztAus": "Switch off now",
+      "jetztAn": "Offer now",
+      "laeuft": "Switching…",
+      "abbrechen": "Cancel",
+      "schliessen": "Close",
+      "ergebnisAusTitel": "Property is switched off",
+      "ergebnisAusText": "Switched off on all portals.",
+      "ergebnisAnTitel": "Property is active again",
+      "ergebnisAnText": "Offered on all portals again.",
+      "ergebnisTeilweiseTitel": "Not successful everywhere",
+      "ergebnisTeilweiseText": "{anzahl} portal(s) could not be switched. Sales continue there — the property status was therefore left unchanged.",
+      "zeileAbgeschaltet": "Switched off",
+      "zeileWiederhergestellt": "Active again",
+      "zeileObjekteAmKanal": "This channel carries {anzahl} properties — nothing was changed so the others are not switched off too."
     }
   },
   "calendar": {
@@ -6275,7 +6359,32 @@
     "accountsLogoutHint": "Sign out of the portal in your browser before connecting a different account.",
     "accountConnectCredentialHint": "An additional {portal} account is added with its hotel ID while connecting a property — not here.",
     "marketplacePending": "{count} in review",
-    "marketplaceWaiting": "In review"
+    "marketplaceWaiting": "In review",
+    "marketplace": {
+      "intro": "myBestDays is our own marketplace — a booking channel like Booking or Airbnb, just without a portal connection. A property becomes visible when it is active, listed here and approved.",
+      "openMarketplace": "Open marketplace",
+      "propertiesHeading": "Properties on the marketplace",
+      "noProperties": "No properties yet.",
+      "columnProperty": "Property",
+      "columnVisibility": "Visibility",
+      "columnApproval": "Approval",
+      "columnBookings": "Bookings",
+      "stateActive": "Visible",
+      "statePending": "In review",
+      "stateNotListed": "Not listed",
+      "stateInactiveProperty": "Property not active",
+      "viewListing": "View listing",
+      "reviewHint": "Properties in review do not appear on myBestDays yet. We review every listing because myBestDays acts as the provider there — portals and your own website are not affected.",
+      "summaryVisible": "{count} visible",
+      "summaryWaiting": "{count} in review",
+      "summaryOff": "{count} not listed",
+      "moderation": {
+        "draft": "Draft",
+        "pending": "In review",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
+    }
   },
   "calendarSync": {
     "title": "Import/export calendar",
@@ -8022,5 +8131,40 @@
     "mfaSubmit": "Confirm",
     "mfaChecking": "Checking…",
     "mfaBack": "Back to sign in"
+  },
+  "portalSaetze": {
+    "add": "Add rate",
+    "breakdown": "{provision} % commission + {fee} % payment fee",
+    "breakdownNoFee": "{provision} % commission, no payment fee",
+    "cancel": "Cancel",
+    "channel": "Portal",
+    "channelLocked": "The portal of an existing rate cannot be changed. Create a new rate for a different portal.",
+    "create": "Create rate",
+    "created": "Rate created",
+    "current": "applies today",
+    "delete": "Delete rate",
+    "deleted": "Rate deleted",
+    "edit": "Edit rate",
+    "empty": "No rate set yet. Without a rate, a payout can only be calculated when the portal reports its deduction.",
+    "errorProvisionRequired": "Please enter a commission rate.",
+    "intro": "What each portal keeps per booking. These rates apply where the portal does not report its own deduction — when it reports an amount, the reported one always wins.",
+    "loading": "Loading …",
+    "note": "Note",
+    "notePlaceholder": "Where the rate comes from, e.g. portal contract or statement",
+    "payoutFee": "Payment fee",
+    "payoutFeeInfo": "The charge for the portal collecting the money and passing it on. It only applies when the portal collects — if the guest pays you directly, there is none.",
+    "payoutFeeNone": "charges none",
+    "period": "{von} to {bis}",
+    "periodOpen": "since {von}",
+    "provision": "Commission",
+    "provisionInfo": "The booking commission the portal keeps. It is calculated on the guest's total price including fees.",
+    "save": "Save changes",
+    "saved": "Rate saved",
+    "title": "Portal deduction rates",
+    "total": "{pct} % total",
+    "validFrom": "Valid from",
+    "validTo": "Valid until",
+    "validToInfo": "Leave empty while the rate applies. If the portal changes its rate, add a new one starting on the day of the change — the old one stays for earlier statements.",
+    "validToOpen": "still running"
   }
 }

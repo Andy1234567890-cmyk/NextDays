@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 
+from src.core.languages import alle_sprachen
 from src.core.security import AuthContext, get_current_user, require_internal_cron_secret
 from src.core.supabase import get_service_client
 from src.core.uploads import read_upload
@@ -29,8 +30,12 @@ from .schemas import (
     KnowledgeFact,
     KnowledgeFactList,
     KnowledgeFactUpsert,
+    LanguageOption,
+    LanguageOptionList,
     LinkGuestRequest,
     LinkGuestResponse,
+    MessageLanguageAdd,
+    MessageLanguageList,
     MessageTemplate,
     MessageTemplateList,
     NoteCreate,
@@ -420,6 +425,71 @@ def delete_automation(
     ctx, _access = bundle
     try:
         service.delete_automation(ctx, automation_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Sprachen des Betriebs (0363) --------------------------------------------
+# Die Sprachen entscheiden, welcher Wortlaut an einen Gast geht. Lesen darf das
+# jeder mit Posteingang-Zugriff (die Reiter im Editor brauchen die Liste),
+# ÄNDERN nur die Posteingang-Konfiguration (_ConfigDep) — eine umgestellte
+# Standardsprache wirkt auf jede künftige Nachricht des Betriebs.
+@router.get("/languages", response_model=MessageLanguageList)
+def list_message_languages(
+    service: InboxServiceDep, bundle: _AccessDep
+) -> MessageLanguageList:
+    ctx, _access = bundle
+    try:
+        return service.list_message_languages(ctx)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/languages/available", response_model=LanguageOptionList)
+def available_languages(bundle: _AccessDep) -> LanguageOptionList:
+    """Auswahlliste für „Neue Sprache hinzufügen" — der Katalog des Servers.
+
+    Anders als beim Platzhalter-Katalog kommt der NAME hier mit: welche Sprachen
+    wir führen, ist eine Datenaussage. Er steht in der Sprache der Oberfläche des
+    Betriebs? Nein — bewusst deutsch/englisch aus `core.languages`, der einen
+    Quelle; eine dritte Liste von Sprachnamen in 24 Sprachdateien zu pflegen wäre
+    genau die Vervielfachung, die CLAUDE.md verbietet.
+    """
+    _ctx, _access = bundle
+    return LanguageOptionList(
+        items=[LanguageOption(code=c, name=n) for c, n in alle_sprachen()]
+    )
+
+
+@router.post("/languages", response_model=MessageLanguageList)
+def add_message_language(
+    req: MessageLanguageAdd, service: InboxServiceDep, bundle: _ConfigDep
+) -> MessageLanguageList:
+    ctx, _access = bundle
+    try:
+        return service.add_message_language(ctx, req.code)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/languages/{code}/default", response_model=MessageLanguageList)
+def set_default_message_language(
+    code: str, service: InboxServiceDep, bundle: _ConfigDep
+) -> MessageLanguageList:
+    ctx, _access = bundle
+    try:
+        return service.set_default_message_language(ctx, code)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/languages/{code}", response_model=MessageLanguageList)
+def remove_message_language(
+    code: str, service: InboxServiceDep, bundle: _ConfigDep
+) -> MessageLanguageList:
+    ctx, _access = bundle
+    try:
+        return service.remove_message_language(ctx, code)
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

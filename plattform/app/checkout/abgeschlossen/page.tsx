@@ -7,11 +7,13 @@
 import { Icon } from "@iconify/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { useTranslations } from "next-intl";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
 function Result() {
+  const t = useTranslations("zahlung");
   const params = useSearchParams();
   const status = params.get("redirect_status");
 
@@ -29,17 +31,17 @@ function Result() {
       />
       <h1 className="font-display text-2xl font-semibold tracking-tight">
         {ok
-          ? "Zahlung erhalten"
+          ? t("rueckkehrOkTitel")
           : pending
-            ? "Zahlung wird verarbeitet"
-            : "Zahlung nicht abgeschlossen"}
+            ? t("rueckkehrOffenTitel")
+            : t("rueckkehrFehlerTitel")}
       </h1>
       <p className="text-muted-foreground">
         {ok
-          ? "Deine Buchung wird bestätigt. Du erhältst eine E-Mail."
+          ? t("rueckkehrOkText")
           : pending
-            ? "Deine Zahlung wird noch verarbeitet. Sobald sie bestätigt ist, erhältst du eine E-Mail."
-            : "Die Zahlung wurde nicht abgeschlossen. Bitte versuche es erneut."}
+            ? t("rueckkehrOffenText")
+            : t("rueckkehrFehlerText")}
       </p>
     </main>
   );

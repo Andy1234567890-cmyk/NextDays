@@ -28,7 +28,22 @@ export type Listing = {
 };
 
 // Themen-Reihe für die Startseite (horizontale Kategorie).
-export type Reihe = { titel: string; listings: Listing[] };
+// Eine Themen-Reihe der Startseite. Der Titel ist NICHT ausformuliert, sondern
+// benannt: „beliebt", ein Objekttyp oder eine Stadt. Übersetzt wird in der
+// Komponente (die Serverfunktion `ladeReihen` kennt die Gast-Sprache nicht und
+// hätte sonst deutsche Titel in jede Sprache geschrieben).
+export type ReihenTitel =
+  | { art: "beliebt" }
+  | { art: "typ"; typ: string }
+  | { art: "stadt"; stadt: string };
+
+export type Reihe = { titel: ReihenTitel; listings: Listing[] };
+
+/** Stabiler React-Key einer Reihe (der Titel selbst ist jetzt ein Objekt). */
+export function reihenSchluessel(titel: ReihenTitel): string {
+  if (titel.art === "beliebt") return "beliebt";
+  return titel.art === "typ" ? `typ:${titel.typ}` : `stadt:${titel.stadt}`;
+}
 
 // Stabiler Farbton aus der ID (deterministisch) — für den Bild-Platzhalter,
 // wenn ein Objekt (noch) keine Fotos hat. Kein Zufall (SSR-stabil).

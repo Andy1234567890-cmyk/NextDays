@@ -29,8 +29,10 @@ verifizierten JWT). Beträge nie als float gerechnet — float nur an der API-Gr
 from __future__ import annotations
 
 import secrets
+from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Any
 
 from supabase import Client
 
@@ -43,6 +45,7 @@ from . import common
 from .common import PayoutUnbekannt, buchungs_payout, effektive_provision_pct
 from .currencies import currency_for_country
 from .fx import FxError, FxService
+from .gebuehren_quelle import gebuehren_der_buchung, klassifikation_laden
 from .schemas import (
     AutoStatementRunResponse,
     CurrencyAmount,
@@ -132,6 +135,25 @@ def _d(value: object) -> Decimal:
 def _money(value: Decimal) -> float:
     """Kaufmännisch auf 2 Nachkommastellen runden, als float für die API."""
     return float(value.quantize(_CENT, rounding=ROUND_HALF_UP))
+
+
+def _erster_grund(rows: list[RentalRow]) -> str:
+    """Der Grund der ersten Zeile ohne ausweisbare Auszahlung.
+
+    Die Zusammenfassung nennt EINEN Grund, weil ihre Meldung zum Handeln
+    auffordert („trage X ein") und eine Liste von drei Handgriffen niemand
+    abarbeitet. Sind mehrere Dinge offen, erscheint der nächste Grund nach dem
+    ersten Handgriff — die Meldung führt den Betrieb also Schritt für Schritt.
+
+    Der Rückfall ``"provision"`` ist der historische Grund: bis 11.08.2026 war er
+    der einzige, den es geben konnte. Er greift nur, wenn eine Zeile ohne
+    Auszahlung auch keinen Grund trägt — das wäre ein Programmierfehler und keine
+    Datenlage, aber ein leerer Grund liesse die Maske ohne Erklärung zurück.
+    """
+    for r in rows:
+        if r.owner_payout is None and r.payout_unbekannt:
+            return r.payout_unbekannt
+    return "provision"
 
 
 def _kommission_anzeige(
@@ -247,6 +269,19 @@ class StatementError(Exception):
         self.status_code = status_code
 
 
+@dataclass(frozen=True, slots=True)
+class _GebuehrenKontext:
+    """Die je Abrechnung EINMAL geladenen Bezugsdaten der Gebührenrechnung.
+
+    `stammdaten` ist je `property_id` abgelegt, weil eine Abrechnung mehrere
+    Objekte umfasst — im Portal-Kalender ist es genau eines.
+    """
+
+    klassifikation: dict[tuple[str, str | None], tuple[str, bool]]
+    stammdaten: dict[str, dict[str, Any]]
+    payloads: dict[str, Any]
+
+
 class OwnerStatementsService:
     slice_name = "owner_statements"
 
@@ -334,6 +369,247 @@ class OwnerStatementsService:
             .execute()
         ).data or []
         return [str(r["property_id"]) for r in rows]
+
+    def _gebuehren_kontext(
+        self, tenant_id: str, reservations: list[dict]
+    ) -> _GebuehrenKontext:
+        """Zuordnungen, Objekt-Gebühren und OTA-Payloads für DIESE Abrechnung.
+
+        Anders als im Portal-Kalender umfasst eine Abrechnung MEHRERE Objekte,
+        darum sind die Gebühren-Stammdaten je `property_id` abgelegt.
+        """
+        property_ids = sorted(
+            {str(r["property_id"]) for r in reservations if r.get("property_id")}
+        )
+        stammdaten: dict[str, dict[str, Any]] = {}
+        if property_ids:
+            for row in (
+                self._db.table("properties")
+                .select("id, type_attributes")
+                .eq("tenant_id", tenant_id)
+                .in_("id", property_ids)
+                .execute()
+            ).data or []:
+                stammdaten[str(row["id"])] = row.get("type_attributes") or {}
+        codes = sorted(
+            {
+                str(r["source_channex_booking_id"])
+                for r in reservations
+                if r.get("source_channex_booking_id")
+            }
+        )
+        payloads: dict[str, Any] = {}
+        if codes:
+            for row in fetch_all_rows(
+                self._db.table("channex_booking")
+                .select("channex_booking_id, raw")
+                .eq("tenant_id", tenant_id)
+                .in_("channex_booking_id", codes)
+                .order("channex_booking_id")
+            ):
+                code = str(row.get("channex_booking_id") or "")
+                if code:
+                    payloads[code] = row.get("raw")
+        return _GebuehrenKontext(
+            klassifikation=klassifikation_laden(self._db, tenant_id),
+            stammdaten=stammdaten,
+            payloads=payloads,
+        )
+
+    def _portal_saetze_je_buchung(
+        self, tenant_id: str, reservations: list[dict]
+    ) -> dict[str, dict[str, Any]]:
+        """Der geltende Portal-Abzugssatz je Buchung (0364).
+
+        Stichtag ist der Check-out — dieselbe Zeitachse wie beim
+        Abrechnungsvertrag und derselbe Stichtag, den `_rental_rows` schon für
+        den Währungskurs benutzt.
+        """
+        from src.features.owner_billing.service import (  # noqa: PLC0415
+            OwnerBillingService,
+        )
+
+        billing = OwnerBillingService(service_client=self._db)
+        gecacht: dict[tuple[str, str, str], dict[str, Any] | None] = {}
+        out: dict[str, dict[str, Any]] = {}
+        for r in reservations:
+            kanal = str(r.get("channel") or "").strip().lower()
+            pid = str(r.get("property_id") or "")
+            checkout = str(r.get("check_out") or "")
+            if not (kanal and pid and checkout):
+                continue
+            schluessel = (kanal, pid, checkout)
+            if schluessel not in gecacht:
+                try:
+                    stichtag = date.fromisoformat(checkout)
+                except (ValueError, TypeError):
+                    continue
+                gecacht[schluessel] = billing.portal_satz_aufloesen(
+                    tenant_id, kanal, pid, stichtag
+                )
+            satz = gecacht[schluessel]
+            if satz is not None:
+                out[str(r["id"])] = satz
+        return out
+
+    @staticmethod
+    def _gebuehren_herkunft(
+        r: dict, kontext: _GebuehrenKontext
+    ) -> tuple[str | None, str | None]:
+        """``(quelle, grund)`` der Gebühren dieser Buchung — nur zur AUSKUNFT.
+
+        Beantwortet die häufigste Rückfrage der Buchhaltung: „warum steht bei
+        dieser Buchung keine Reinigung?" Am 11.08.2026 kostete genau die einen
+        halben Tag Suche beim Mapping, beim Tax Set und im Rechencode — die
+        Antwort lag im Eingangsweg der Buchung (Channex-Import ohne Aufstellung).
+
+        Bewusst OHNE Klassifikation und ohne Rechnung: die Herkunft steht schon
+        am Payload fest, und eine fehlende Gebühren-Zuordnung darf hier nicht
+        werfen. Die Auskunft „Portal hat nichts geliefert" muss auch dann noch
+        erscheinen, wenn die Zeile ihre Auszahlung nicht rechnen kann — sonst
+        fehlt genau in dem Fall der Hinweis, der ihn erklärt.
+        """
+        raw = kontext.payloads.get(str(r.get("source_channex_booking_id") or ""))
+        try:
+            befund = gebuehren_der_buchung(
+                raw=raw,
+                type_attributes=None,
+                naechte=0,
+                klassifikation={},
+                property_id=str(r.get("property_id") or ""),
+                reservierung=r,
+            )
+        except PayoutUnbekannt:
+            return None, None
+        return befund.quelle, befund.grund
+
+    def _auszahlung_einer_buchung(
+        self,
+        r: dict,
+        *,
+        regeln: common.Vertragsregeln,
+        addon_total: Decimal,
+        kontext: _GebuehrenKontext,
+        portal_saetze: dict[str, dict[str, Any]],
+        currency: str,
+    ) -> common.Auszahlung:
+        """Die volle Kette für EINE Abrechnungszeile.
+
+        Bewusst dieselbe Reihenfolge und dieselben Quellen wie
+        `PublicPortalService._auszahlung_einer_buchung`; die Rechnung selbst
+        liegt in `common`, damit beide Slices sie nicht auseinanderlaufen
+        lassen können.
+        """
+        pid = str(r["property_id"])
+        naechte = self._nights(r.get("check_in"), r.get("check_out"))
+        befund = gebuehren_der_buchung(
+            raw=kontext.payloads.get(
+                str(r.get("source_channex_booking_id") or "")
+            ),
+            type_attributes=kontext.stammdaten.get(pid),
+            naechte=naechte,
+            klassifikation=kontext.klassifikation,
+            property_id=pid,
+            reservierung=r,
+        )
+        basis = befund.basisbetrag(r.get("total_amount"))
+        gast_brutto = common.gastpreis(
+            uebernachtung=basis,
+            gebuehren=befund.gebuehren,
+            gebuehren_im_betrag=befund.im_gesamtpreis,
+            addon_total=addon_total,
+        )
+        satz = portal_saetze.get(str(r["id"])) or {}
+        abzug = common.portal_abzug(
+            brutto=gast_brutto,
+            gemeldete_provision=r.get("ota_commission"),
+            provision_pct=satz.get("provision_pct"),
+            zahlungsgebuehr_pct=satz.get("zahlungsgebuehr_pct"),
+            zieht_portal_ein=common.portal_zieht_ein(
+                r.get("channel"), r.get("payment_collect")
+            ),
+        )
+        return common.auszahlung_berechnen(
+            uebernachtung=basis,
+            gebuehren=befund.gebuehren,
+            gebuehren_im_betrag=befund.im_gesamtpreis,
+            addon_total=addon_total,
+            abzug=abzug,
+            regeln=regeln,
+            naechte=naechte,
+            currency=currency,
+        )
+
+    def _vertraege_je_buchung(
+        self, tenant_id: str, reservations: list[dict]
+    ) -> dict[str, common.Vertragsregeln]:
+        """Der geltende Abrechnungsvertrag JE BUCHUNG (0343, Umstiegsschritt 1).
+
+        Stichtag ist der Check-out der Buchung — derselbe Stichtag, den
+        ``_rental_rows`` schon für den Währungskurs benutzt. Ein im September
+        erzeugtes Juli-Statement rechnet damit mit dem Juli-Vertrag; über
+        ``date.today()`` ergäbe dieselbe Abrechnung je Erzeugungstag eine andere
+        Zahl.
+
+        Buchungen mit gleichem (Objekt, Check-out) teilen sich die Auflösung.
+        Objekte ohne Eigentümer-Datensatz oder ohne Vertrag am Stichtag fehlen
+        in der Karte; der Aufrufer fällt dann auf die Altspalten zurück.
+        """
+        if not reservations:
+            return {}
+        property_ids = sorted(
+            {str(r["property_id"]) for r in reservations if r.get("property_id")}
+        )
+        owner_je_objekt: dict[str, str] = {}
+        for row in (
+            self._db.table("owner_properties")
+            .select("owner_id, property_id")
+            .in_("property_id", property_ids)
+            .execute()
+        ).data or []:
+            owner_je_objekt[str(row["property_id"])] = str(row["owner_id"])
+
+        from src.features.owner_billing.service import (  # noqa: PLC0415
+            OwnerBillingService,
+        )
+
+        billing = OwnerBillingService(service_client=self._db)
+        gecacht: dict[tuple[str, str], common.Vertragsregeln | None] = {}
+        out: dict[str, common.Vertragsregeln] = {}
+        for r in reservations:
+            pid = str(r.get("property_id") or "")
+            owner_id = owner_je_objekt.get(pid)
+            checkout = str(r.get("check_out") or "")
+            if not (owner_id and checkout):
+                continue
+            schluessel = (pid, checkout)
+            if schluessel not in gecacht:
+                try:
+                    stichtag = date.fromisoformat(checkout)
+                except (ValueError, TypeError):
+                    continue
+                zeile = billing.vertrag_aufloesen(
+                    tenant_id, owner_id, pid, stichtag
+                )
+                try:
+                    gecacht[schluessel] = (
+                        common.vertragsregeln_aus_zeile(zeile) if zeile else None
+                    )
+                except PayoutUnbekannt as exc:
+                    # Ein ungültiger Satz IM VERTRAG ist ein echter
+                    # Eingabefehler und bleibt ein harter 422 — anders als im
+                    # Kalender, der nur eine Zelle leer lässt. Eine Abrechnung
+                    # ist ein Dokument über Geld; sie darf nicht mit einem
+                    # stillschweigend ignorierten Vertrag entstehen.
+                    raise StatementError(
+                        f"Ungültiger Abrechnungsvertrag für Objekt {pid}: "
+                        f"{exc.message}",
+                        status_code=422,
+                    ) from exc
+            regeln = gecacht[schluessel]
+            if regeln is not None:
+                out[str(r["id"])] = regeln
+        return out
 
     def _commission_map(self, owner: dict) -> dict[str, Decimal]:
         """Effektive Provision je Objekt aus den Stammdaten.
@@ -533,7 +809,12 @@ class OwnerStatementsService:
             self._db.table("reservations")
             .select(
                 "id, property_id, guest_id, channel, check_in, check_out, "
-                "status, total_amount, channel_fee, currency"
+                "status, total_amount, channel_fee, currency, "
+                # Für die Gebühren-/Portal-Kette (0364): der Payload-Schlüssel,
+                # der gemeldete Portal-Abzug und wer das Geld eingezogen hat.
+                "source_channex_booking_id, ota_commission, payment_collect, "
+                # `pets` entscheidet, ob die Haustiergebühr des Objekts anfiel.
+                "pets"
             )
             .eq("tenant_id", tenant_id)
             # Eigentümer-Aufenthalte (0241) gehören NICHT in die Abrechnung: der
@@ -610,8 +891,9 @@ class OwnerStatementsService:
             sums[rid] = sums.get(rid, Decimal("0")) + _d(a.get("total"))
         return sums
 
-    def _rental_rows(
+    def _rental_rows(  # noqa: PLR0913 — Bezugsdaten einer Abrechnungszeile
         self,
+        tenant_id: str,
         reservations: list[dict],
         titles: dict[str, str],
         owner_currency: str,
@@ -636,6 +918,14 @@ class OwnerStatementsService:
         )
         addon_sums = self._addon_sums([str(r["id"]) for r in reservations])
         cmap = commission_map or {}
+        # Abrechnungsvertrag (0343) je Buchung, Stichtag = Check-out. Er schlägt
+        # die Altspalten, aber NICHT den manuellen Editor-Override: wer in der
+        # Maske einen Satz einträgt, korrigiert bewusst diese eine Abrechnung.
+        vertraege = self._vertraege_je_buchung(tenant_id, reservations)
+        # Gebühren-Bezugsdaten und Portal-Sätze EINMAL je Abrechnung laden —
+        # dieselben Quellen wie im Eigentümer-Portal (0364).
+        kontext = self._gebuehren_kontext(tenant_id, reservations)
+        portal_saetze = self._portal_saetze_je_buchung(tenant_id, reservations)
         rows: list[RentalRow] = []
         for r in reservations:
             listing_id = str(r["property_id"])
@@ -660,10 +950,70 @@ class OwnerStatementsService:
             # `Decimal("0")` ein und machte daraus „Eigentümer bekommt alles,
             # Betrieb nichts" (Wurzel 4). Ein manueller Override sticht den
             # fehlenden Stammdatensatz weiterhin — dann ist der Satz ja gesetzt.
+            # Vorrang: Editor-Override → Vertrag → Altspalten. Der Override
+            # steht ganz vorn, weil er eine bewusste Einzelfall-Korrektur der
+            # Agentur ist; der Vertrag ist die Regel, die Altspalte der Rest.
+            regeln = vertraege.get(str(r["id"]))
             pct = override if override is not None else cmap.get(listing_id)
-            owner_payout = (
-                common.owner_payout(payout, pct) if pct is not None else None
-            )
+            # Warum eine Zeile ihre Auszahlung nicht ausweisen kann — als
+            # maschinenlesbarer Grund, den die UI benennt.
+            grund: str | None = None
+            if override is None and regeln is not None:
+                # VOLLE Kette wie im Eigentümer-Portal (0364): Gebühren in den
+                # Gastpreis, Portal-Abzug, provisionsfreie Gebühren aus der
+                # Bemessung, die des Eigentümers zu 100 % zurück. Rechnete die
+                # Abrechnung hier anders als der Kalender, stritten sich zwei
+                # Zahlen über dasselbe Geld — genau was `common` verhindert.
+                #
+                # EINE UNBERECHENBARE ZEILE DARF DIE ABRECHNUNG NICHT KIPPEN
+                # (Wurzel 5): fehlt der Portal-Satz für einen Kanal oder ist eine
+                # Gebührenart nicht zugeordnet, warf die Kette bis hierher durch
+                # bis in den Router — `POST /owner-statements/preview` antwortete
+                # mit 500, und der Betrieb sah eine kaputte Seite statt der
+                # Auskunft, welche Einstellung fehlt. Live am 11.08.2026
+                # ausgelöst, weil `portal_abzugssaetze` noch leer ist.
+                #
+                # Die Zeile bleibt deshalb mit allem drin, was FESTSTEHT (Nächte,
+                # Gastpreis, Kanal); nur die abhängige Auszahlung wird `None` und
+                # trägt ihren Grund. Dasselbe Verhalten wie im Bericht
+                # (`owner_reporting.auswertung`), damit nicht zwei Ansichten
+                # denselben Datenmangel verschieden behandeln. Eine 0 stünde für
+                # „der Eigentümer bekommt nichts", die Zeile weglassen ergäbe
+                # eine zu niedrige, aber unverdächtige Summe (Wurzel 4).
+                try:
+                    ergebnis = self._auszahlung_einer_buchung(
+                        r,
+                        regeln=regeln,
+                        addon_total=addon_total,
+                        kontext=kontext,
+                        portal_saetze=portal_saetze,
+                        currency=src_currency,
+                    )
+                except PayoutUnbekannt as exc:
+                    grund = exc.grund
+                    owner_payout = None
+                    log.warning(
+                        "abrechnung_zeile_unbestimmt",
+                        reservation_id=str(r["id"]),
+                        grund=exc.grund,
+                        detail=exc.message,
+                    )
+                else:
+                    owner_payout = ergebnis.netto
+                    # Der GASTPREIS ist jetzt der Bruttoumsatz inkl. Gebühren —
+                    # vorher stand hier nur Übernachtung + Extras, also weniger
+                    # als der Gast gezahlt hat.
+                    price = ergebnis.brutto
+                    # Für die ANZEIGE (`commission_pct`) bleibt der Satz des
+                    # Vertrags maßgeblich — sonst behauptete die Abrechnung einen
+                    # Satz aus einer Spalte, mit der sie nicht gerechnet hat.
+                    pct = regeln.provisions_pct
+            else:
+                owner_payout = (
+                    common.owner_payout(payout, pct) if pct is not None else None
+                )
+                if owner_payout is None:
+                    grund = "provision"
 
             # Buchungssatz in Owner-Währung umrechnen (Stichtag = Check-out).
             checkout = r.get("check_out")
@@ -684,6 +1034,7 @@ class OwnerStatementsService:
             owner_payout_conv = (
                 owner_payout * rate if owner_payout is not None else None
             )
+            herkunft = self._gebuehren_herkunft(r, kontext)
 
             rows.append(
                 RentalRow(
@@ -713,7 +1064,19 @@ class OwnerStatementsService:
                     ),
                     fx_rate=float(rate),
                     fx_date=fx_date,
-                    payout_unbekannt=None if owner_payout is not None else "provision",
+                    # Der ECHTE Grund, nicht pauschal „provision": ein fehlender
+                    # Portal-Satz (`portal_abzug`) und eine nicht zugeordnete
+                    # Gebührenart (`gebuehr_nicht_zugeordnet`) verlangen ganz
+                    # verschiedene Handgriffe. Beides „Provision fehlt" zu nennen
+                    # schickte den Betrieb an die falsche Maske.
+                    payout_unbekannt=(
+                        None if owner_payout is not None else (grund or "provision")
+                    ),
+                    # Nur AUSKUNFT, keine Rechnung: woher die Gebühren dieser
+                    # Zeile kommen. Steht auch dann noch da, wenn die Auszahlung
+                    # nicht berechenbar war — dort ist der Hinweis am nötigsten.
+                    gebuehren_quelle=herkunft[0],
+                    gebuehren_grund=herkunft[1],
                 )
             )
         return rows
@@ -992,9 +1355,17 @@ class OwnerStatementsService:
             totals_by_currency=tot_by_list,
             # Der Grund, warum Auszahlungs-Zahlen fehlen. Ohne ihn stünde in
             # der Maske ein „—" ohne Erklärung, und der Betreiber wüsste nicht,
-            # dass ein Provisionssatz fehlt (Wurzel 5: ein Fehlschlag muss
-            # sagen, was zu tun ist).
-            payout_unbekannt="provision" if provision_offen else None,
+            # welche Einstellung fehlt (Wurzel 5: ein Fehlschlag muss sagen, was
+            # zu tun ist).
+            #
+            # Der ECHTE Grund der ersten betroffenen Zeile, nicht pauschal
+            # „provision": ein fehlender Portal-Abzugssatz und eine nicht
+            # zugeordnete Gebührenart werden woanders gepflegt als ein fehlender
+            # Provisionssatz. Beides „Provision fehlt" zu nennen schickte den
+            # Betrieb an die falsche Maske. Die ERSTE genügt, weil die Meldung zum
+            # Handeln auffordert — sind mehrere Dinge offen, erscheint der nächste
+            # Grund nach dem ersten Handgriff.
+            payout_unbekannt=_erster_grund(rental_rows) if provision_offen else None,
         )
 
     # --- Erzeugen / Lesen / Aktualisieren -----------------------------------
@@ -1029,8 +1400,8 @@ class OwnerStatementsService:
             req.reservation_statuses,
         )
         rental_rows = self._rental_rows(
-            reservations, titles, owner_currency, override, commission_map,
-            load_guest_mask(self._db, ctx.user_id),
+            tenant_id, reservations, titles, owner_currency, override,
+            commission_map, load_guest_mask(self._db, ctx.user_id),
         )
         listing_rows = self._listing_rows(rental_rows, titles)
         # Nicht an eine Abrechnung gebundene Owner-Ausgaben im Zeitraum einbeziehen.
@@ -1210,7 +1581,7 @@ class OwnerStatementsService:
             list(row.get("reservation_statuses") or []),
         )
         rental_rows = self._rental_rows(
-            reservations, titles, owner_currency, override, cmap, mask
+            tenant_id, reservations, titles, owner_currency, override, cmap, mask
         )
         listing_rows = self._listing_rows(rental_rows, titles)
         return rental_rows, listing_rows, titles

@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Az irányítópultot nem sikerült betölteni",
     "reviews": "Értékelések",
     "extensions": "Kiegészítők",
-    "announcements": "Újdonságok"
+    "announcements": "Újdonságok",
+    "billingRules": "Elszámolási szabályok",
+    "ownerReporting": "Tulajdonosi jelentések"
   },
   "exemption": {
     "labelNamed": "Adómentes ({scheme}) — nincs szükség adószámra",
@@ -789,7 +791,22 @@
     "attachmentAlt": "A vendég fényképe",
     "translate": "Fordítás",
     "showOriginal": "Eredeti megjelenítése",
-    "translatedFrom": "Fordítva erről: {sprache}"
+    "translatedFrom": "Fordítva erről: {sprache}",
+    "formatStrike": "Áthúzott",
+    "fieldsButton": "{{Helyőrzők}}",
+    "langBase": "Alapváltozat",
+    "langBaseHint": "Minden olyan vendégnek elmegy, akinek a nyelvéhez nincs saját változat.",
+    "subjectLabel": "Tárgy",
+    "subjectHint": "A tárgy csak e-mailekhez használatos.",
+    "langAdd": "Új nyelv hozzáadása",
+    "langDefault": "Alapértelmezett",
+    "langSetDefault": "Beállítás alapértelmezettként",
+    "langRemove": "Nyelv eltávolítása",
+    "langEmpty": "Még nincs nyelv — addig az alapváltozat megy minden vendégnek.",
+    "autoEditContent": "Tartalom szerkesztése",
+    "autoPanelCreate": "Létrehozás",
+    "quickEmpty": "Még nincs gyors válasz.",
+    "autoTextRequired": "Szöveg megadása kötelező."
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Ha az e-mail nem érkezett meg vagy a hivatkozás lejárt, a meghívó újraküldhető. Az új hivatkozás 7 napig érvényes és erre a környezetre mutat; a korábban küldött hivatkozás érvénytelenné válik.",
     "portalAccessResent": "A meghívót újraküldtük.",
     "commissionNotAgreed": "nincs megállapodva",
+    "commissionContractWins": "Jelenleg az elszámolási szerződés érvényes: {pct} % {ab} óta. Ez a mező csak tartalékként szolgál, ha nincs érvényes szerződés.",
+    "commissionNoneAnywhere": "Még nincs megállapodott kulcs — sem itt, sem szerződésként. Addig a kifizetés üresen marad a tulajdonosi portálon.",
+    "commissionContractObject": "Külön szerződés erre az ingatlanra: {pct} % {ab} óta.",
+    "commissionContractOwnerWide": "A tulajdonos elszámolási szerződése: {pct} % {ab} óta.",
     "assignableCount": "{count} / {total} kiválasztva hozzáadásra",
     "assignedHeading": "{count, plural, one {# hozzárendelt ingatlan} other {# hozzárendelt ingatlan}}",
     "info": {
       "aria": "Magyarázat ehhez: {feld}",
       "share": "A tulajdoni hányad ezen az ingatlanon. 100 %-nál a teljes kifizetés ehhez a tulajdonoshoz kerül, ennél kevesebbnél arányosan.",
-      "commission": "Az alapértelmezett jutalékkulcs ehhez a tulajdonoshoz. Ha a mező üresen marad, még nincs megállapodott kulcs — a kifizetés ekkor nem kerül kiszámításra, hanem gondolatjelként jelenik meg.",
-      "commissionOverride": "Csak erre az egy ingatlanra érvényes, és felülírja a tulajdonos alapértelmezett kulcsát. Ha a mező üresen marad, az alapértelmezett kulcs érvényes."
+      "commission": "Tartalékkulcs, ha egy ingatlanra nem érvényes elszámolási szerződés. Az alábbi szerződés elsőbbséget élvez — az a tényleges megállapodás, és kiterjed az időszakra, a díjra és a minimális jutalékra is. Ha mindkettő üres marad, nem számolunk kifizetést, hanem gondolatjel jelenik meg.",
+      "commissionOverride": "Tartalékkulcs csak erre az ingatlanra; felülírja a tulajdonos alapkulcsát. Az elszámolási szerződés itt is elsőbbséget élvez. Ha a mező üres marad, az alapkulcs érvényes."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Teljes kifizetés",
       "ownerPayout": "Tulajdonosi kifizetés",
       "pmPayout": "Kezelési kifizetés",
-      "commissionMissing": "Legalább egy ingatlanhoz nincs megadva jutalékkulcs. A kifizetések ezért nem számíthatók ki — add meg a kulcsot a tulajdonos törzsadatainál vagy az ingatlannál."
+      "commissionMissing": "Legalább egy ingatlanhoz nincs megadva jutalékkulcs. A kifizetések ezért nem számíthatók ki — add meg a kulcsot a tulajdonos törzsadatainál vagy az ingatlannál.",
+      "payoutUnknown": "Legalább egy foglalásnál hiányzik egy adat, amely nélkül a kifizetés nem számítható ki. Az érintett sorokban összeg helyett „—” látható.",
+      "commissionInvalid": "Egy rögzített jutalékkulcs a 0–100% tartományon kívül esik. Javítsa a kulcsot a tulajdonosnál vagy az ingatlanon.",
+      "portalRateMissing": "Legalább egy foglalási csatornához nincs rögzítve levonási kulcs, és a portál sem jelentette a levonását. Adja meg a Könyvelés → Elszámolási szabályok menüpontban, hogy a portál foglalásonként mennyit tart vissza.",
+      "portalRateInvalid": "Egy rögzített portál-levonási kulcs a 0–100% tartományon kívül esik. Javítsa a Könyvelés → Elszámolási szabályok menüpontban.",
+      "feeUnassigned": "Legalább egy díjtípus még nincs hozzárendelve. Hozzárendelés nélkül nem állapítható meg, hogy kit illet az összeg, és hogy jutalék terheli-e — állítsa be a Könyvelés → Elszámolási szabályok menüpontban.",
+      "feeNotComputable": "Egy díj nem számolható el összegként (százalékosan vagy összeg nélkül van rögzítve). Ellenőrizze a díjat az ingatlannál.",
+      "contractCurrency": "Egy fix díj vagy minimumjutalék a foglalástól eltérő valutában szerepel. A különböző valutákban megadott összegeket a rendszer nem váltja át — ellenőrizze az elszámolási szerződést."
     },
     "rental": {
       "perReservation": "Foglalásonként",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Teljes ár",
       "totalPayout": "Teljes kifizetés",
       "totals": "Összesen",
-      "empty": "Nincs foglalás az időszakban."
+      "empty": "Nincs foglalás az időszakban.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Hozzáadás",
@@ -1315,7 +1351,9 @@
     "commissionable": "Jutalékköteles",
     "commissionableYes": "Igen — beleszámít a jutalékba",
     "commissionableNo": "Nem — jutalékmentes",
-    "infoAria": "Magyarázat ehhez: {feld}"
+    "infoAria": "Magyarázat ehhez: {feld}",
+    "rulesPageTitle": "Elszámolási szabályok",
+    "rulesPageIntro": "Mennyit tartanak vissza a portálok foglalásonként, és kit illetnek a díjak. A kettő együtt határozza meg, hogy végül mekkora összeg kerül a tulajdonosai jutalékelszámolásába."
   },
   "portal": {
     "title": "Portálom",
@@ -1432,6 +1470,16 @@
         "blocked": "Zárolt"
       },
       "payoutPerNight": "Nettó kifizetés/éjszaka",
+      "payoutPerNightShort": "nettó/éj",
+      "payoutUnknown": {
+        "short": "n. a.",
+        "label": "Nem meghatározható",
+        "provision": "Ehhez az ingatlanhoz nincs jutalékkulcs megadva — a kezelőnek pótolnia kell.",
+        "provisionUngueltig": "A megadott jutalékkulcs a 0–100 % határon kívül van.",
+        "betrag": "Ebből a foglalásból hiányzik a teljes összeg.",
+        "naechte": "A foglalás időszaka hibás.",
+        "waehrungVertrag": "A megállapodott díj más valutában szerepel, mint ez a foglalás — az összegeket nem számítjuk át."
+      },
       "guest": "Vendég",
       "channel": "Foglalás forrása",
       "blockHint": "Zároltatnál egy időszakot? Nyújts be kérelmet — a döntés az üzemeltetőé.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Ajtókód megjelenítése csak akkor, ha a tartózkodás ki van fizetve",
       "hideCodeUntilCheckin": "Ajtókód elrejtése bejelentkezésig",
       "codeVisibleFromLabel": "Az ajtókód a check-in napján ettől az időponttól jelenik meg: …",
-      "codeVisibleFromUnset": "— nincs megadva —"
+      "codeVisibleFromUnset": "— nincs megadva —",
+      "wifiSsidLabel": "Hálózat neve (SSID)",
+      "wifiSsidPlaceholder": "pl. Nyaralo-WiFi",
+      "wifiPasswordLabel": "Wi-Fi jelszó",
+      "wifiPasswordPlaceholder": "pl. nyar2026",
+      "wifiFieldsHint": "Ez a két érték töltí ki a {ssid} és {password} helyőrzőket az üzenetsablonokban, valamint a vendégportál Wi-Fi QR-kódját. Ha üresen maradnak, az ezeket a helyőrzőket használó sablon nem kerül elküldésre."
     },
     "taskCreatePopup": {
       "title": "Feladat létrehozása",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "A szálláshely másolva.",
       "duplicateErr": "A másolás nem sikerült.",
       "unlistOk": "A weboldallal való kapcsolat megszüntetve.",
-      "unlistErr": "A megszüntetés nem sikerült."
+      "unlistErr": "A megszüntetés nem sikerült.",
+      "menuVerkaufAus": "Kikapcsolás minden portálon",
+      "menuVerkaufAn": "Újra kínálás minden portálon"
     },
     "messagingForm": {
       "title": "Üzenet-helyőrzők",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Extrák — saját fotókhoz és fordításokhoz kötődnek.",
       "copyPricingSkipAvailability": "Elérhetőség, kihasználtság és szabályok.",
       "copyPricingOverwriteWarning": "Ennek az objektumnak az árai teljesen felülíródnak. Az összegek csak azonos valuta esetén kerülnek átvételre.",
-      "copyPricingDone": "Árak átvéve."
+      "copyPricingDone": "Árak átvéve.",
+      "portalStandAbweichung": "ott {dort}",
+      "portalStand": {
+        "online": "Rögzítve a portálon",
+        "abweichend": "Eltér",
+        "fehlt": "A portálon nincs rögzítve"
+      }
     },
     "policiesForm": {
       "title": "Irányelvek",
@@ -5625,7 +5686,10 @@
       "hinweis": "Átveheted őket, helyette hogy újra létrehoznád. A meglévő díjak változatlanok maradnak.",
       "uebernehmen": "Díjak átvétele",
       "laeuft": "Átvétel folyamatban …",
-      "uebernommen": "{anzahl} díj átvéve."
+      "uebernommen": "{anzahl} díj átvéve.",
+      "verwerfen": "Nem veszem át",
+      "verworfen": "Az ajánlat lezárva — a díjaid változatlanok maradnak.",
+      "einmalig": "Egyszeri indulási segítség: ezután csak az számít, ami itt van — azt küldjük a portáloknak."
     },
     "veroeffentlichen": {
       "titel": "Szálláshely közzététele",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "A fenti „Közzététel” gombbal állítható be.",
       "immerDabei": "Mindig benne van – a saját piacterünk, portáljutalék nélkül."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Kivonja az ingatlant az eladásból?",
+      "fragenAusText": "A(z) „{titel}” inaktív állapotba kerül, és a foglalási naptár kikapcsol az összes kapcsolt portálon. A meglévő foglalások érintetlenek maradnak. Minden portál állapota mentésre kerül, hogy a visszaállítás helyreállítsa.",
+      "fragenAnTitel": "Újra kínálja az ingatlant?",
+      "fragenAnText": "A(z) „{titel}” ismét aktív állapotba kerül. Minden portál visszakapja azt az állapotot, amely a kikapcsolás előtt volt — a már korábban kikapcsolt portálok kikapcsolva maradnak. Ezután az árak és az elérhetőség újra elküldésre kerül.",
+      "jetztAus": "Kikapcsolás most",
+      "jetztAn": "Kínálás most",
+      "laeuft": "Átváltás…",
+      "abbrechen": "Mégse",
+      "schliessen": "Bezárás",
+      "ergebnisAusTitel": "Az ingatlan ki van kapcsolva",
+      "ergebnisAusText": "Kikapcsolva minden portálon.",
+      "ergebnisAnTitel": "Az ingatlan újra aktív",
+      "ergebnisAnText": "Újra kínálva minden portálon.",
+      "ergebnisTeilweiseTitel": "Nem mindenhol sikerült",
+      "ergebnisTeilweiseText": "{anzahl} portált nem lehetett átváltani. Ott az eladás folytatódik — ezért az ingatlan állapota nem változott.",
+      "zeileAbgeschaltet": "Kikapcsolva",
+      "zeileWiederhergestellt": "Újra aktív",
+      "zeileObjekteAmKanal": "Ez a csatorna {anzahl} ingatlant hordoz — semmi nem változott, hogy a többi ne kapcsolódjon ki szintén."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Jelentkezzen ki a portálról a böngészőben, mielőtt másik fiókot csatlakoztat.",
     "accountConnectCredentialHint": "További {portal}-hozzáférést az objektum összekapcsolásakor, a szálloda-azonosítóval kell megadni – nem itt.",
     "marketplacePending": "{count} ellenőrzés alatt",
-    "marketplaceWaiting": "Ellenőrzés alatt"
+    "marketplaceWaiting": "Ellenőrzés alatt",
+    "marketplace": {
+      "intro": "A myBestDays a saját piacterünk — foglalási csatorna, mint a Booking vagy az Airbnb, csak portálkapcsolat nélkül. Egy objektum akkor válik láthatóvá, ha aktív, itt szerepel és jóváhagyták.",
+      "openMarketplace": "Piactér megnyitása",
+      "propertiesHeading": "Objektumok a piactéren",
+      "noProperties": "Még nincs létrehozott objektum.",
+      "columnProperty": "Objektum",
+      "columnVisibility": "Láthatóság",
+      "columnApproval": "Jóváhagyás",
+      "columnBookings": "Foglalások",
+      "stateActive": "Látható",
+      "statePending": "Ellenőrzés alatt",
+      "stateNotListed": "Nincs meghirdetve",
+      "stateInactiveProperty": "Az objektum nem aktív",
+      "viewListing": "Hirdetés megtekintése",
+      "reviewHint": "Az ellenőrzés alatt álló objektumok még nem jelennek meg a myBestDays-en. Minden hirdetést ellenőrzünk, mert ott a myBestDays a szolgáltató — a portálokat és a saját weboldalt ez nem érinti.",
+      "summaryVisible": "{count} látható",
+      "summaryWaiting": "{count} ellenőrzés alatt",
+      "summaryOff": "{count} nincs meghirdetve",
+      "moderation": {
+        "draft": "Vázlat",
+        "pending": "Ellenőrzés alatt",
+        "approved": "Jóváhagyva",
+        "rejected": "Elutasítva"
+      }
+    }
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Megerősítés",
     "mfaChecking": "Ellenőrzés…",
     "mfaBack": "Vissza a bejelentkezéshez"
+  },
+  "portalSaetze": {
+    "add": "Kulcs hozzáadása",
+    "breakdown": "{provision} % jutalék + {fee} % fizetési díj",
+    "breakdownNoFee": "{provision} % jutalék, fizetési díj nélkül",
+    "cancel": "Mégse",
+    "channel": "Portál",
+    "channelLocked": "Meglévő kulcs portálja nem módosítható. Másik portálhoz hozzon létre új kulcsot.",
+    "create": "Kulcs létrehozása",
+    "created": "Kulcs létrehozva",
+    "current": "ma érvényes",
+    "delete": "Kulcs törlése",
+    "deleted": "Kulcs törölve",
+    "edit": "Kulcs szerkesztése",
+    "empty": "Még nincs rögzített kulcs. Kulcs nélkül a kifizetés csak akkor számolható ki, ha a portál maga jelenti a levonását.",
+    "errorProvisionRequired": "Adjon meg egy jutalékkulcsot.",
+    "intro": "Amit az egyes portálok foglalásonként visszatartanak. Ezek a kulcsok ott érvényesek, ahol a portál nem jelenti a saját levonását — ha összeget jelent, mindig a jelentett érvényes.",
+    "loading": "Betöltés …",
+    "note": "Megjegyzés",
+    "notePlaceholder": "Honnan származik a kulcs, pl. portálszerződés vagy elszámolás",
+    "payoutFee": "Fizetési díj",
+    "payoutFeeInfo": "A díj azért, hogy a portál beszedi és továbbítja a pénzt. Csak akkor merül fel, ha a portál szedi be — ha a vendég közvetlenül Önnek fizet, nincs ilyen díj.",
+    "payoutFeeNone": "nem számol fel",
+    "period": "{von} – {bis}",
+    "periodOpen": "{von} óta",
+    "provision": "Jutalék",
+    "provisionInfo": "A közvetítési rész, amelyet a portál a foglalásért megtart. Az alap a vendég teljes ára a díjakkal együtt.",
+    "save": "Módosítások mentése",
+    "saved": "Kulcs elmentve",
+    "title": "Portálok levonási kulcsai",
+    "total": "összesen {pct} %",
+    "validFrom": "Érvényes ettől",
+    "validTo": "Érvényes eddig",
+    "validToInfo": "Hagyja üresen, amíg a kulcs érvényes. Ha a portál módosítja a kulcsát, hozzon létre egy újat a módosítás napjától — a régi megmarad a korábbi elszámolásokhoz.",
+    "validToOpen": "továbbra is érvényes"
   }
 }

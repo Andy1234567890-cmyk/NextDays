@@ -14,6 +14,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { ladeZahlungsIntent } from "@/lib/buchung";
 
@@ -42,6 +43,7 @@ export function StripeCheckout({
   depositHint?: string | null;
   onPaid?: () => void;
 }) {
+  const t = useTranslations("zahlung");
   const [phase, setPhase] = useState<Phase>({ kind: "loading" });
 
   useEffect(() => {
@@ -68,7 +70,7 @@ export function StripeCheckout({
     return (
       <div className="flex items-center gap-2 py-6 text-muted-foreground">
         <Icon icon="ph:spinner" className="size-5 animate-spin" />
-        Zahlung wird vorbereitet…
+        {t("vorbereiten")}
       </div>
     );
   }
@@ -85,7 +87,7 @@ export function StripeCheckout({
   if (!phase.publishableKey) {
     return (
       <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-        Zahlung derzeit nicht möglich (Konfiguration unvollständig).
+        {t("nichtKonfiguriert")}
       </div>
     );
   }
@@ -113,6 +115,7 @@ function PayForm({
   depositHint?: string | null;
   onPaid?: () => void;
 }) {
+  const t = useTranslations("zahlung");
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -136,7 +139,7 @@ function PayForm({
     });
     setSubmitting(false);
     if (err) {
-      setError(err.message ?? "Zahlung fehlgeschlagen.");
+      setError(err.message ?? t("fehlgeschlagen"));
       return;
     }
     // Bestätigung ok — der endgültige „bezahlt"-Status kommt per Webhook.
@@ -148,7 +151,7 @@ function PayForm({
     return (
       <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
         <Icon icon="ph:check-circle" className="mr-1 inline size-4" />
-        Zahlung erhalten — deine Buchung wird bestätigt. Du erhältst eine E-Mail.
+        {t("erhalten")}
       </div>
     );
   }
@@ -178,7 +181,7 @@ function PayForm({
         ) : (
           <Icon icon="ph:lock-simple" className="size-5" />
         )}
-        Jetzt bezahlen
+        {t("jetztBezahlen")}
       </button>
     </div>
   );

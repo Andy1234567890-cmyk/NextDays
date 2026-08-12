@@ -152,6 +152,7 @@ flowchart TB
             BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht) + Firmenprofil/Logo; Nummernkreise (next_document_number)"]
             OWN["owners — Eigentümer-Stammdaten, Objekt-Zuweisung (Anteil + Provisions-Override je Objekt)"]
             OWNST["owner_statements — Auszahlungs-Abrechnung (Provision je Objekt, EU-Steuer/Reverse-Charge, Storno, Mehrwährung via ECB-Tageskurs)"]
+            OWNRP["owner_reporting — Reporting für Eigentümer (0365): Bericht (Zeitraum × Objektauswahl × Währung) → Zahlung je Empfänger (5 Abschnitte, Snapshot) → Teilzahlung; geplante Berichte (Cron), wiederkehrende Posten, Bilanzstatistik. Rechnet AUSSCHLIESSLICH über owner_statements/common.py"]
             INBOXL["inbox — Threads (OTA + eigene Plattform), Versand, Vorlagen/KI + Wissensdatenbank, Platzhalter, Anhänge, geplante Nachrichten + planbare Automails (Zeit/Objekt-Zeitzone + Zuweisung Haus/Kanal + Auslöser Nachricht empfangen)"]
             ADDON["addons — Zusatzleistungen/Upsells je Objekt (Medien, Basis, appears_in, wann-anzeigen); Verkauf via booking_engine + Gäste-Portal, Extra-Umsatz in Owner-Statement, Task-Trigger addon_purchased, Payment-gegatet"]
             PROP["properties — Objekt-Stammdaten, Fotos, Typ-Attribute, Adress-Split, Owner-Scope (RLS); zentrale Objektwährung (currency, 0161); pro-Kanal-Sichtbarkeit als eigene Achsen: Website (listed_on_website, 0162) + Plattform/Marktplatz (listed_on_marketplace, 0159), getrennt vom Lebenszyklus status; Portale-Zustand aus channex_property_map. PropertyResponse.channels = abgeleitete 3-Kanal-Chips (Website·Plattform·Portale, je active/paused/not_connected/error). Kanal-Steuerung auf ZWEI Ebenen (Lodgify-Muster): zentral /channels + pro Objekt /objekte/[id]/kanaele (property-channels.tsx: Website/Plattform-Toggles via PATCH, Portale-Zeilen togglen die OTA-Verbindung, Connect-Wizard mit presetPropertyId; Markup = Phase 2); dazu die Nachschlag-Ebene /objekte/[id]/synchronisierung (alle Portale eines Objekts mit den Extranet-Kennungen hotel_id | room_code) und /objekte/[id]/synchronisierung/[portal] (ein Portal: Kennungen, Verkaufsschalter, letzter Abgleich)"]
@@ -888,6 +889,105 @@ source`; Tageskurs stabil/reproduzierbar, GoBD). **Kein Fallback** — fehlt ein
 - **Live (`0071`):** `owners`, `owner_properties`, `owner_expenses`,
   `owner_statements` sind in der Realtime-Publication — die Eigentümer-Seite
   aktualisiert sich vollständig per WebSocket (s. § Echtzeit).
+
+**Reporting für Eigentümer (`owner_reporting`, Migration `0365`):** Die Ebene
+ÜBER der einzelnen Abrechnung — die Auswertung eines Zeitraums über eine
+**Objektauswahl**, aus der je Empfänger eine Auszahlung entsteht. Branchenstand
+(Lodgify „Reporting für Eigentümer", Hostaway „Owner Statements", Guesty „Owner
+Revenue Reports"): erst der Bericht über den Bestand, dann die Zahlungen daraus.
+
+```mermaid
+erDiagram
+    owner_report_schedules ||--o{ owner_reports : "erzeugt (Cron)"
+    owner_report_schedules ||--o{ owner_report_schedule_properties : "Objekte"
+    owner_report_schedules ||--o{ owner_report_schedule_recipients : "Empfänger"
+    owner_reports ||--o{ owner_report_properties : "Scope"
+    owner_reports ||--o{ owner_report_payments : "je Empfänger"
+    owner_report_payments ||--o{ owner_report_payment_items : "5 Abschnitte"
+    owner_report_payments ||--o{ owner_report_payment_parts : "Teilzahlungen"
+    owner_report_payments }o--|| owners : "Empfänger"
+    owner_report_payments }o--o| owner_statements : "Rechnung (statement_id)"
+    owners ||--o{ owner_recurring_items : "Dauervereinbarung"
+    owner_reports {
+        text name
+        text currency "not null, kein Default"
+        date period_from
+        date period_to
+        text basis "check_in|check_out|booked"
+        uuid schedule_id "NULL = von Hand angelegt"
+    }
+    owner_report_payments {
+        numeric summe_unterkunftspreis
+        numeric summe_gebuehren
+        numeric summe_steuern
+        numeric summe_ausgaben "CHECK <= 0"
+        numeric summe_andere
+        numeric betrag
+        date bezahlt_am "NULL = offen"
+    }
+    owner_recurring_items {
+        text abschnitt "kein steuern"
+        text modus "je_buchung|je_nacht|je_zeitraum"
+        numeric betrag "immer positiv"
+        uuid property_id "NULL = alle Objekte"
+    }
+```
+
+Was **berechnet** und was **gespeichert** wird, ist bewusst getrennt:
+
+```mermaid
+flowchart LR
+    RES[reservations im Scope] --> AUS[auswertung.py]
+    FEE[fee_classification 0343] --> AUS
+    SATZ[portal_abzugssaetze 0364] --> AUS
+    VERTR[owner_billing_terms 0343] --> AUS
+    FX[fx_rates ECB] --> AUS
+    AUS --> COMMON[owner_statements/common.py<br/>DIE Auszahlungsformel]
+    COMMON --> BER[Bericht-Aufschlüsselungen<br/>LIVE, nie gespeichert]
+    COMMON --> ZAHL[Zahlung = SNAPSHOT<br/>owner_report_payment_items]
+    EXP[owner_expenses 0064/0344] --> ZAHL
+    WIED[owner_recurring_items 0365] --> ZAHL
+    ZAHL --> TEIL[Teilzahlungen] --> STAT[Bilanzstatistik<br/>gezahltes Geld]
+```
+
+- **Bericht = Scope, live gerechnet.** Eine nachgetragene Buchung im Zeitraum
+  MUSS sich zeigen, sonst wäre der Bericht stumm veraltet.
+- **Zahlung = Snapshot.** Sie ist eine Forderung und darf sich nicht ändern,
+  weil jemand später eine Gebühr am Objekt korrigiert. Dieselbe Trennung wie
+  zwischen Vorschau und finalisierter Rechnung in `owner_statements`.
+- **Fünf Abschnitte:** `unterkunftspreis` · `gebuehren` · `steuern` ·
+  `ausgaben` · `andere`. `ausgaben` ist der EINZIGE mit negativen Beträgen
+  (DB-CHECK) — ohne diese Regel würde aus einem Vorzeichenfehler eine Zahlung
+  statt eines Abzugs.
+- **Keine zweite Formel.** Jede Zahl über Geld entsteht in
+  `owner_statements/common.py`. Eine eigene Rechnung hier hieße: Abrechnung und
+  Bericht zeigen über denselben Zeitraum verschiedene Beträge.
+- **Warnungen statt stiller Lücken (Wurzel 5).** Fehlender Provisionssatz,
+  nicht zugeordnete Gebührenart, fehlender Kurs → die Buchung erscheint in
+  `ReportDetail.warnungen`. Beim ERZEUGEN einer Zahlung sind Warnungen ein
+  harter 422: eine Zahlung, in der zwei von zwölf Aufenthalten fehlen, sieht
+  vollständig aus.
+- **Mehrwährung.** Ein Bericht hat GENAU EINE Währung; Fremdwährung wird mit dem
+  ECB-Tageskurs am Check-out umgerechnet (derselbe Stichtag wie die Abrechnung).
+  Wiederkehrende Posten und Vertrags-Pauschalen werden NICHT umgerechnet — 50 DKK
+  sind 50 DKK, ein stiller Kurs 1,0 wäre plausibel aussehender Unsinn.
+- **Idempotenz (Wurzel 2).** `POST /reports/{id}/payments` gibt eine vorhandene
+  Zahlung zurück statt einer zweiten Forderung (UNIQUE `(report_id, owner_id)`).
+  Der Cron-Lauf ist über `zuletzt_erzeugt_fuer` + UNIQUE
+  `(schedule_id, period_from, period_to)` gegen Doppelzustellung gesichert.
+- **Gegenzustand (Wurzel 1).** „Als bezahlt markieren" legt die fehlende
+  Restsumme als Teilzahlung an (kein reines Flag — sonst zeigte die Liste 100 %
+  und die Teilzahlungen 30 %); das Löschen einer Teilzahlung nimmt `bezahlt_am`
+  zurück, sonst zählte die Statistik Geld, das niemand bekommen hat.
+- **Wurzel 6.** Alle neun Tabellen: `enable rls` + tenant-Policy **plus**
+  `revoke all … from anon, authenticated`; die drei n:m-Tabellen ohne eigene
+  `tenant_id` prüfen über ihren Elternsatz. **Keine** Realtime-Publikation — ohne
+  SELECT-Grant wäre ein Abo eine stumme Attrappe (wie `owner_statements`/`0337`).
+- **Abgrenzung:** „Empfänger" ist der **Eigentümer** (`owners`, `/eigentuemer`) —
+  nicht dupliziert, nur ausgewertet. Die „Strategie" ist der Abrechnungsvertrag
+  (`owner_billing_terms`) plus die Gebühren-Zuordnung (`fee_classification`); die
+  Kanalprovision sind die `portal_abzugssaetze` (`0364`). Reporting-Einstellungen
+  und `/buchhaltung/abrechnungsregeln` sind zwei Einstiege in DIESELBE Maske.
 
 ### Zusatzleistungen / Add-ons (`0074`/`0075`)
 
@@ -1926,6 +2026,43 @@ Realtime-Publication. Kanäle sind OTAs **und** der eigene Marktplatz „myBestD
 Beide neuen Tabellen sind für `anon`/`authenticated` gesperrt (`revoke all` +
 `as restrictive for all using (false)`, Wurzel 6) und haben bewusst **kein**
 Realtime-Abo — ein Abo darauf wäre eine stumme Attrappe.
+
+**Nachrichten in mehreren Sprachen (Migration `0363`):** Eine Vorlage und eine
+Automail-Regel haben ab hier **eine Grundfassung plus beliebig viele
+Sprachfassungen**. Grundfassung = die vorhandenen Spalten
+(`message_template.body`/`body_html`, `message_automation.message`) plus der neue
+`subject`; Sprachfassungen liegen in `message_template_text` bzw.
+`message_automation_text` (PK `(…_id, lang)`, `lang` = ISO-639-1 per CHECK).
+Welche Sprachen ein Betrieb pflegt, steht in `tenant_message_language` mit genau
+einer Standardsprache (partieller Unique-Index auf `is_default`).
+
+Die Auswahl beim Versand macht `inbox/sprachen.fassung_waehlen` in dieser
+Reihenfolge: **Gastsprache → Standardsprache → Grundfassung**; leere Fassungen
+gelten als nicht vorhanden, und fehlt alles, wird nicht gesendet (kein erfundener
+Text). Die Gastsprache kommt aus der Buchung (`customer.language`, sonst
+`raw.customer.language`) und wird als JSON-Pfad im `select` geholt (`THREAD_COLS`)
+— `raw` mitzuziehen wären bei 2000 Threads einer Neuplanung zweistellige MB für
+zwei Zeichen. Verglichen wird immer die Basissprache (`core.languages.basis_sprache`:
+„de-AT" → „de", Airbnbs „nb" → „no"), sonst trifft keine Fassung.
+
+**Kein Sprach-Backfill, und das ist Absicht (Wurzel 4):** Die Sprache der
+Bestandstexte wurde nie erfasst und ist nicht ableitbar (`tenants.default_language`
+ist live überall leer). Ein geratenes `lang='de'` hätte eine fehlende Fassung als
+vorhanden ausgegeben — ein dänischer Text wäre als „deutsche Fassung" an deutsche
+Gäste gegangen, ohne dass es je auffällt. `tenant_message_language` startet
+deshalb leer; ohne gepflegte Sprache verhält sich der Versand exakt wie vorher.
+
+Der **Betreff** (`subject`, je Fassung) ist Vorarbeit für den E-Mail-Versand: der
+Gast-Chat der Portale überträgt keinen Betreff, und kein Versandpfad liest die
+Spalte heute. Die Oberfläche schreibt das ans Feld („gilt nur für E-Mails").
+
+Alle drei neuen Tabellen sind für `anon`/`authenticated` vollständig gesperrt
+(`revoke select,insert,update,delete` + permissive Mandanten-Policy + RESTRICTIVE
+`for all`-Riegel, Wurzel 6) und **nicht** in der Realtime-Publication; gelesen
+wird ausschließlich über die FastAPI. Endpunkte: `GET/POST /inbox/languages`,
+`GET /inbox/languages/available` (Katalog mit Namen aus `core.languages` — EINE
+Quelle, keine 31 Sprachnamen in 24 Sprachdateien), `PUT /inbox/languages/{code}/default`,
+`DELETE /inbox/languages/{code}` (nimmt die Fassungen dieser Sprache mit, Wurzel 1).
 
 **Bewertungen über alle Kanäle (Migrationen `0262`/`0263`/`0266`/`0267`):**
 

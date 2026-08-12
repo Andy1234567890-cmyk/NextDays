@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Panoul nu a putut fi încărcat",
     "reviews": "Recenzii",
     "extensions": "Extensii",
-    "announcements": "Noutăți"
+    "announcements": "Noutăți",
+    "ownerReporting": "Rapoarte pentru proprietari",
+    "billingRules": "Reguli de decontare"
   },
   "exemption": {
     "labelNamed": "Scutit de impozit ({scheme}) — nu este necesar cod TVA",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Fotografie de la oaspete",
     "translate": "Traducere",
     "showOriginal": "Afișează originalul",
-    "translatedFrom": "Tradus din {sprache}"
+    "translatedFrom": "Tradus din {sprache}",
+    "formatStrike": "Tăiat",
+    "fieldsButton": "{{Substituenți}}",
+    "langBase": "Versiune de bază",
+    "langBaseHint": "Se trimite fiecărui oaspete a cărui limbă nu are versiune proprie.",
+    "subjectLabel": "Subiect",
+    "subjectHint": "Subiectul este folosit doar pentru e-mailuri.",
+    "langAdd": "Adaugă o limbă nouă",
+    "langDefault": "Implicit",
+    "langSetDefault": "Setează ca implicit",
+    "langRemove": "Elimină limba",
+    "langEmpty": "Nicio limbă încă — până atunci versiunea de bază merge la toți oaspeții.",
+    "autoEditContent": "Editează conținutul",
+    "autoPanelCreate": "Creează",
+    "quickEmpty": "Încă niciun răspuns rapid.",
+    "autoTextRequired": "Este necesar un text."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Dacă e-mailul nu a ajuns sau linkul a expirat, invitația poate fi trimisă din nou. Noul link este valabil 7 zile și duce către acest mediu; linkul trimis anterior încetează să funcționeze.",
     "portalAccessResent": "Invitația a fost retrimisă.",
     "commissionNotAgreed": "neconvenit",
+    "commissionContractWins": "În prezent se aplică contractul de decontare: {pct} % din {ab}. Acest câmp servește doar ca rezervă dacă nu se aplică niciun contract.",
+    "commissionNoneAnywhere": "Încă nu s-a convenit niciun procent — nici aici, nici ca contract. Până atunci, plata rămâne necompletată în portalul proprietarului.",
+    "commissionContractObject": "Contract propriu pentru această proprietate: {pct} % din {ab}.",
+    "commissionContractOwnerWide": "Contractul de decontare al proprietarului: {pct} % din {ab}.",
     "assignableCount": "{count} din {total} selectate pentru adăugare",
     "assignedHeading": "{count, plural, one {# proprietate alocată} few {# proprietăți alocate} other {# de proprietăți alocate}}",
     "info": {
       "aria": "Explicație pentru: {feld}",
       "share": "Cota de proprietate asupra acestei proprietăți. La 100 % întreaga plată este atribuită acestui proprietar, la mai puțin — proporțional.",
-      "commission": "Comisionul standard pentru acest proprietar. Dacă rămâne gol, comisionul nu este încă convenit — plata nu va fi calculată, ci afișată ca linie de pauză.",
-      "commissionOverride": "Se aplică doar acestei proprietăți și înlocuiește comisionul standard al proprietarului. Dacă rămâne gol, se aplică comisionul standard."
+      "commission": "Procent de rezervă dacă pentru o proprietate nu se aplică un contract de decontare. Contractul de mai jos are prioritate — este acordul efectiv și acoperă și perioada, tariful fix și comisionul minim. Dacă ambele rămân necompletate, nu se calculează nicio plată, ci se afișează o liniuță.",
+      "commissionOverride": "Procent de rezervă doar pentru această proprietate; înlocuiește procentul standard al proprietarului. Un contract de decontare are prioritate și aici. Dacă câmpul rămâne necompletat, se aplică procentul standard."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Plată totală",
       "ownerPayout": "Plată proprietar",
       "pmPayout": "Plată administrator",
-      "commissionMissing": "Pentru cel puțin o proprietate nu este setat un comision. Plățile nu pot fi calculate — introdu comisionul în datele proprietarului sau la proprietate."
+      "commissionMissing": "Pentru cel puțin o proprietate nu este setat un comision. Plățile nu pot fi calculate — introdu comisionul în datele proprietarului sau la proprietate.",
+      "payoutUnknown": "Pentru cel puțin o rezervare lipsește o informație fără care plata către proprietar nu poate fi calculată. Rândurile afectate afișează „—” în locul unei sume.",
+      "commissionInvalid": "Un procent de comision înregistrat se află în afara intervalului 0–100 %. Vă rugăm să corectați procentul la proprietar sau la unitate.",
+      "portalRateMissing": "Pentru cel puțin un canal de rezervare nu este înregistrat niciun procent de reținere, iar portalul nu a raportat reținerea sa. Vă rugăm să introduceți la Contabilitate → Reguli de decontare cât reține portalul pentru fiecare rezervare.",
+      "portalRateInvalid": "Un procent de reținere al portalului înregistrat se află în afara intervalului 0–100 %. Vă rugăm să îl corectați la Contabilitate → Reguli de decontare.",
+      "feeUnassigned": "Cel puțin un tip de taxă nu este încă alocat. Fără alocare nu se poate stabili cui aparține suma și dacă se aplică comision — vă rugăm să stabiliți acest lucru la Contabilitate → Reguli de decontare.",
+      "feeNotComputable": "O taxă nu poate fi decontată ca sumă (este înregistrată procentual sau fără sumă). Vă rugăm să verificați taxa la unitate.",
+      "contractCurrency": "O sumă forfetară sau un comision minim este exprimat într-o altă monedă decât rezervarea. Sumele în monede diferite nu se compensează — vă rugăm să verificați contractul de decontare."
     },
     "rental": {
       "perReservation": "Pe rezervare",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Preț total",
       "totalPayout": "Plată totală",
       "totals": "Totaluri",
-      "empty": "Nicio rezervare în această perioadă."
+      "empty": "Nicio rezervare în această perioadă.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Adaugă",
@@ -1315,7 +1351,9 @@
     "commissionable": "Supus comisionului",
     "commissionableYes": "Da — intră în calculul comisionului",
     "commissionableNo": "Nu — fără comision",
-    "infoAria": "Explicație pentru: {feld}"
+    "infoAria": "Explicație pentru: {feld}",
+    "rulesPageTitle": "Reguli de decontare",
+    "rulesPageIntro": "Ce rețin portalurile pentru fiecare rezervare și cui aparțin taxele. Ambele determină suma care ajunge în final în decontul de comision al proprietarilor dumneavoastră."
   },
   "portal": {
     "title": "Portalul meu",
@@ -1432,6 +1470,16 @@
         "blocked": "Blocat"
       },
       "payoutPerNight": "Plată netă/noapte",
+      "payoutPerNightShort": "net/noapte",
+      "payoutUnknown": {
+        "short": "indisp.",
+        "label": "Nu se poate stabili",
+        "provision": "Pentru această proprietate nu este stabilit un comision — administrația trebuie să îl completeze.",
+        "provisionUngueltig": "Comisionul înregistrat este în afara intervalului 0–100 %.",
+        "betrag": "Acestei rezervări îi lipsește suma totală.",
+        "naechte": "Perioada acestei rezervări este invalidă.",
+        "waehrungVertrag": "Tariful fix convenit este în altă monedă decât această rezervare — sumele nu se convertesc."
+      },
       "guest": "Oaspete",
       "channel": "Sursa rezervării",
       "blockHint": "Vrei să blochezi o perioadă? Trimite o cerere — administrația decide.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Afișează codul ușii doar dacă șederea este plătită",
       "hideCodeUntilCheckin": "Ascunde codul ușii până la check-in",
       "codeVisibleFromLabel": "Codul ușii este afișat din ziua de check-in, ora …",
-      "codeVisibleFromUnset": "— nesetat —"
+      "codeVisibleFromUnset": "— nesetat —",
+      "wifiSsidLabel": "Numele rețelei (SSID)",
+      "wifiSsidPlaceholder": "de ex. WiFi-Casa-de-vacanță",
+      "wifiPasswordLabel": "Parolă Wi-Fi",
+      "wifiPasswordPlaceholder": "de ex. vara2026",
+      "wifiFieldsHint": "Aceste două valori completează substituenții {ssid} și {password} din șabloanele de mesaje și codul QR Wi-Fi din portalul oaspeților. Dacă rămân goale, un șablon care le folosește nu este trimis."
     },
     "taskCreatePopup": {
       "title": "Creează sarcină",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Proprietate copiată.",
       "duplicateErr": "Copierea a eșuat.",
       "unlistOk": "Conexiunea cu site-ul a fost anulată.",
-      "unlistErr": "Deconectarea a eșuat."
+      "unlistErr": "Deconectarea a eșuat.",
+      "menuVerkaufAus": "Dezactivează pe toate portalurile",
+      "menuVerkaufAn": "Oferă din nou pe toate portalurile"
     },
     "messagingForm": {
       "title": "Substituenți de mesaje",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Extraopțiunile — depind de fotografii și traduceri proprii.",
       "copyPricingSkipAvailability": "Disponibilitate, ocupare și politici.",
       "copyPricingOverwriteWarning": "Prețurile acestui obiect vor fi suprascrise complet. Sumele se preiau doar la aceeași monedă.",
-      "copyPricingDone": "Prețuri preluate."
+      "copyPricingDone": "Prețuri preluate.",
+      "portalStandAbweichung": "acolo {dort}",
+      "portalStand": {
+        "online": "Înregistrată la portal",
+        "abweichend": "Diferă",
+        "fehlt": "Neînregistrată la portal"
+      }
     },
     "policiesForm": {
       "title": "Politici",
@@ -5625,7 +5686,10 @@
       "hinweis": "Le poți importa în loc să le creezi din nou. Taxele existente rămân neschimbate.",
       "uebernehmen": "Importă taxele",
       "laeuft": "Se importă …",
-      "uebernommen": "{anzahl} taxe importate."
+      "uebernommen": "{anzahl} taxe importate.",
+      "verwerfen": "Nu preia",
+      "verworfen": "Oferta s-a încheiat — taxele tale rămân neschimbate.",
+      "einmalig": "Ajutor unic la start: apoi contează doar ce este aici — asta trimitem către portaluri."
     },
     "veroeffentlichen": {
       "titel": "Publică proprietatea",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Se stabilește prin „Publică” de sus.",
       "immerDabei": "Întotdeauna inclus — propriul nostru marketplace, fără comision de portal."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Retrageți proprietatea de la vânzare?",
+      "fragenAusText": "„{titel}” va fi setată ca inactivă, iar calendarul de rezervări va fi dezactivat pe toate portalurile conectate. Rezervările existente nu sunt afectate. Starea fiecărui portal este salvată, astfel încât restaurarea să o readucă.",
+      "fragenAnTitel": "Oferiți din nou proprietatea?",
+      "fragenAnText": "„{titel}” va fi setată din nou ca activă. Fiecare portal primește înapoi starea pe care o avea înainte de dezactivare — portalurile deja dezactivate rămân dezactivate. Apoi tarifele și disponibilitatea sunt retrimise.",
+      "jetztAus": "Dezactivează acum",
+      "jetztAn": "Oferă acum",
+      "laeuft": "Se comută…",
+      "abbrechen": "Anulează",
+      "schliessen": "Închide",
+      "ergebnisAusTitel": "Proprietatea este dezactivată",
+      "ergebnisAusText": "Dezactivată pe toate portalurile.",
+      "ergebnisAnTitel": "Proprietatea este din nou activă",
+      "ergebnisAnText": "Oferită din nou pe toate portalurile.",
+      "ergebnisTeilweiseTitel": "Nu a reușit peste tot",
+      "ergebnisTeilweiseText": "{anzahl} portal(uri) nu au putut fi comutate. Acolo vânzarea continuă — de aceea starea proprietății nu a fost modificată.",
+      "zeileAbgeschaltet": "Dezactivată",
+      "zeileWiederhergestellt": "Din nou activă",
+      "zeileObjekteAmKanal": "Acest canal poartă {anzahl} proprietăți — nu s-a schimbat nimic pentru ca celelalte să nu fie dezactivate și ele."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Deconectează-te de la portal în browser înainte de a conecta alt cont.",
     "accountConnectCredentialHint": "Un acces {portal} suplimentar se adaugă cu ID-ul hotelului la conectarea unei proprietăți, nu aici.",
     "marketplacePending": "{count} în verificare",
-    "marketplaceWaiting": "În verificare"
+    "marketplaceWaiting": "În verificare",
+    "marketplace": {
+      "intro": "myBestDays este propriul nostru marketplace — un canal de rezervări ca Booking sau Airbnb, doar fără conexiune la portal. Un obiect devine vizibil când este activ, listat aici și aprobat.",
+      "openMarketplace": "Deschide marketplace",
+      "propertiesHeading": "Obiecte în marketplace",
+      "noProperties": "Încă nu există obiecte.",
+      "columnProperty": "Obiect",
+      "columnVisibility": "Vizibilitate",
+      "columnApproval": "Aprobare",
+      "columnBookings": "Rezervări",
+      "stateActive": "Vizibil",
+      "statePending": "În verificare",
+      "stateNotListed": "Nelistat",
+      "stateInactiveProperty": "Obiectul nu este activ",
+      "viewListing": "Vezi anunțul",
+      "reviewHint": "Obiectele în verificare nu apar încă în myBestDays. Verificăm fiecare anunț deoarece myBestDays acționează acolo ca furnizor — portalurile și site-ul propriu nu sunt afectate.",
+      "summaryVisible": "{count} vizibile",
+      "summaryWaiting": "{count} în verificare",
+      "summaryOff": "{count} nelistate",
+      "moderation": {
+        "draft": "Ciornă",
+        "pending": "În verificare",
+        "approved": "Aprobat",
+        "rejected": "Respins"
+      }
+    }
   },
   "calendarSync": {
     "title": "Import/export calendar",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Confirmă",
     "mfaChecking": "Se verifică…",
     "mfaBack": "Înapoi la autentificare"
+  },
+  "portalSaetze": {
+    "add": "Adaugă cotă",
+    "breakdown": "{provision} % comision + {fee} % taxă de plată",
+    "breakdownNoFee": "{provision} % comision, fără taxă de plată",
+    "cancel": "Anulează",
+    "channel": "Portal",
+    "channelLocked": "Portalul unei cote existente nu poate fi schimbat. Pentru un alt portal, creează o cotă nouă.",
+    "create": "Creează cotă",
+    "created": "Cotă creată",
+    "current": "valabilă azi",
+    "delete": "Șterge cota",
+    "deleted": "Cotă ștearsă",
+    "edit": "Editează cota",
+    "empty": "Nu este încă înregistrată nicio cotă. Fără o cotă, o plată poate fi calculată doar dacă portalul își raportează singur reținerea.",
+    "errorProvisionRequired": "Introduceți o cotă de comision.",
+    "intro": "Cât reține fiecare portal la fiecare rezervare. Aceste cote se aplică acolo unde portalul nu își raportează singur reținerea — dacă raportează o sumă, se aplică întotdeauna suma raportată.",
+    "loading": "Se încarcă …",
+    "note": "Notă",
+    "notePlaceholder": "De unde provine cota, de ex. contractul cu portalul sau decontul",
+    "payoutFee": "Taxă de plată",
+    "payoutFeeInfo": "Taxa pentru faptul că portalul încasează banii și îi transferă mai departe. Se aplică doar dacă încasează portalul — dacă oaspetele vă plătește direct, nu se aplică.",
+    "payoutFeeNone": "nu percepe",
+    "period": "{von} până la {bis}",
+    "periodOpen": "din {von}",
+    "provision": "Comision",
+    "provisionInfo": "Partea de intermediere pe care portalul o reține pentru rezervare. Baza de calcul este prețul total al oaspetelui, inclusiv taxele.",
+    "save": "Salvează modificările",
+    "saved": "Cotă salvată",
+    "title": "Cotele de reținere ale portalurilor",
+    "total": "{pct} % în total",
+    "validFrom": "Valabilă de la",
+    "validTo": "Valabilă până la",
+    "validToInfo": "Lăsați necompletat atât timp cât cota este valabilă. Dacă portalul își schimbă cota, adăugați una nouă începând din ziua modificării — cea veche rămâne pentru deconturile anterioare.",
+    "validToOpen": "rămâne în vigoare"
   }
 }

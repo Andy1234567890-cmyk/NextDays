@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Nepavyko įkelti skydelio",
     "reviews": "Atsiliepimai",
     "extensions": "Papildymai",
-    "announcements": "Naujienos"
+    "announcements": "Naujienos",
+    "ownerReporting": "Savininkų ataskaitos",
+    "billingRules": "Atsiskaitymo taisyklės"
   },
   "exemption": {
     "labelNamed": "Atleista nuo mokesčio ({scheme}) — PVM kodas nereikalingas",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Svečio nuotrauka",
     "translate": "Išversti",
     "showOriginal": "Rodyti originalą",
-    "translatedFrom": "Išversta iš {sprache}"
+    "translatedFrom": "Išversta iš {sprache}",
+    "formatStrike": "Perbrauktas",
+    "fieldsButton": "{{Vietaženkliai}}",
+    "langBase": "Pagrindinė versija",
+    "langBaseHint": "Išsiunčiama kiekvienam svečiui, kurio kalba neturi savo versijos.",
+    "subjectLabel": "Tema",
+    "subjectHint": "Temos laukas naudojamas tik el. laiškams.",
+    "langAdd": "Pridėti naują kalbą",
+    "langDefault": "Numatytoji",
+    "langSetDefault": "Nustatyti kaip numatytąją",
+    "langRemove": "Pašalinti kalbą",
+    "langEmpty": "Kalbų dar nėra — kol kas visi svečiai gauna pagrindinę versiją.",
+    "autoEditContent": "Redaguoti turinį",
+    "autoPanelCreate": "Sukurti",
+    "quickEmpty": "Greitų atsakymų dar nėra.",
+    "autoTextRequired": "Reikalingas tekstas."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Jei el. laiškas nepasiekė arba nuoroda nebegalioja, kvietimą galima išsiųsti dar kartą. Nauja nuoroda galioja 7 dienas ir veda į šią aplinką; anksčiau išsiųsta nuoroda nebegalioja.",
     "portalAccessResent": "Kvietimas išsiųstas iš naujo.",
     "commissionNotAgreed": "nesutarta",
+    "commissionContractWins": "Šiuo metu taikoma atsiskaitymo sutartis: {pct} % nuo {ab}. Šis laukas naudojamas tik kaip atsarga, jei jokia sutartis netaikoma.",
+    "commissionNoneAnywhere": "Tarifas dar nesutartas — nei čia, nei kaip sutartis. Iki tol išmoka savininko portale lieka tuščia.",
+    "commissionContractObject": "Atskira sutartis šiam objektui: {pct} % nuo {ab}.",
+    "commissionContractOwnerWide": "Savininko atsiskaitymo sutartis: {pct} % nuo {ab}.",
     "assignableCount": "Pridėti pasirinkta {count} iš {total}",
     "assignedHeading": "{count, plural, one {# priskirtas objektas} few {# priskirti objektai} many {# priskirto objekto} other {# priskirtų objektų}}",
     "info": {
       "aria": "Lauko {feld} paaiškinimas",
       "share": "Nuosavybės dalis šiame objekte. Esant 100 % visa išmoka priskiriama šiam savininkui, esant mažiau — atitinkamai proporcingai.",
-      "commission": "Numatytasis šio savininko komisinio dydis. Jei laukas lieka tuščias, dydis dar nesutartas — tada išmoka neskaičiuojama, o rodoma brūkšniu.",
-      "commissionOverride": "Galioja tik šiam vienam objektui ir pakeičia numatytąjį savininko dydį. Jei laukas lieka tuščias, galioja numatytasis dydis."
+      "commission": "Atsarginis tarifas, jei objektui netaikoma atsiskaitymo sutartis. Toliau esanti sutartis turi viršenybę — tai tikrasis susitarimas, apimantis ir laikotarpį, fiksuotą mokestį bei minimalų komisinį. Jei abu lieka tušti, išmoka neskaičiuojama, o rodomas brūkšnys.",
+      "commissionOverride": "Atsarginis tarifas tik šiam objektui; pakeičia savininko standartinį tarifą. Atsiskaitymo sutartis turi viršenybę ir čia. Jei laukas lieka tuščias, taikomas standartinis tarifas."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Bendra išmoka",
       "ownerPayout": "Savininko išmoka",
       "pmPayout": "Valdytojo išmoka",
-      "commissionMissing": "Bent vienam objektui nenustatytas komisinio dydis. Todėl išmokų apskaičiuoti negalima — įveskite dydį savininko pagrindiniuose duomenyse arba prie objekto."
+      "commissionMissing": "Bent vienam objektui nenustatytas komisinio dydis. Todėl išmokų apskaičiuoti negalima — įveskite dydį savininko pagrindiniuose duomenyse arba prie objekto.",
+      "payoutUnknown": "Bent vienai rezervacijai trūksta duomenų, be kurių išmokos apskaičiuoti neįmanoma. Atitinkamose eilutėse vietoje sumos rodoma „—“.",
+      "commissionInvalid": "Įrašytas komisinių tarifas yra už intervalo 0–100 % ribų. Pataisykite tarifą prie savininko arba prie objekto.",
+      "portalRateMissing": "Bent vienam rezervavimo kanalui nėra įrašytas išskaitymo tarifas, o portalas savo išskaitymo nepateikė. Skyriuje Apskaita → Atsiskaitymo taisyklės nurodykite, kiek portalas išskaito nuo kiekvienos rezervacijos.",
+      "portalRateInvalid": "Įrašytas portalo išskaitymo tarifas yra už intervalo 0–100 % ribų. Pataisykite jį skyriuje Apskaita → Atsiskaitymo taisyklės.",
+      "feeUnassigned": "Bent vienas mokesčio tipas dar nepriskirtas. Be priskyrimo neįmanoma nustatyti, kam suma priklauso ir ar nuo jos skaičiuojami komisiniai — nustatykite tai skyriuje Apskaita → Atsiskaitymo taisyklės.",
+      "feeNotComputable": "Mokesčio negalima apskaityti kaip sumos (jis įrašytas procentais arba be sumos). Patikrinkite mokestį prie objekto.",
+      "contractCurrency": "Fiksuotas mokestis arba minimalūs komisiniai nurodyti kita valiuta nei rezervacija. Skirtingų valiutų sumos nėra tarpusavyje užskaitomos — patikrinkite atsiskaitymo sutartį."
     },
     "rental": {
       "perReservation": "Pagal rezervaciją",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Bendra kaina",
       "totalPayout": "Bendra išmoka",
       "totals": "Sumos",
-      "empty": "Šiuo laikotarpiu rezervacijų nėra."
+      "empty": "Šiuo laikotarpiu rezervacijų nėra.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Pridėti",
@@ -1315,7 +1351,9 @@
     "commissionable": "Apmokestinama komisiniais",
     "commissionableYes": "Taip — įskaičiuojama į komisinius",
     "commissionableNo": "Ne — be komisinių",
-    "infoAria": "Lauko {feld} paaiškinimas"
+    "infoAria": "Lauko {feld} paaiškinimas",
+    "rulesPageTitle": "Atsiskaitymo taisyklės",
+    "rulesPageIntro": "Ką portalai išskaito nuo kiekvienos rezervacijos ir kam priklauso mokesčiai. Abu dalykai nulemia, kokia suma galiausiai atsiranda jūsų savininkų komisinių apyskaitoje."
   },
   "portal": {
     "title": "Mano portalas",
@@ -1432,6 +1470,16 @@
         "blocked": "Užblokuota"
       },
       "payoutPerNight": "Grynasis išmokėjimas/naktis",
+      "payoutPerNightShort": "neto/naktis",
+      "payoutUnknown": {
+        "short": "nėra duomenų",
+        "label": "Neįmanoma nustatyti",
+        "provision": "Šiam objektui nenustatytas komisinis tarifas — administracija turi jį įrašyti.",
+        "provisionUngueltig": "Nustatytas komisinis tarifas yra už 0–100 % ribų.",
+        "betrag": "Šiai rezervacijai nenurodyta bendra suma.",
+        "naechte": "Šios rezervacijos laikotarpis netinkamas.",
+        "waehrungVertrag": "Sutartas fiksuotas mokestis yra kita valiuta nei ši rezervacija — sumos neperskaičiuojamos."
+      },
       "guest": "Svečias",
       "channel": "Užsakymo šaltinis",
       "blockHint": "Norite užblokuoti laikotarpį? Pateikite prašymą — sprendžia administracija.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Rodyti durų kodą tik jei viešnagė apmokėta",
       "hideCodeUntilCheckin": "Slėpti durų kodą iki įsiregistravimo",
       "codeVisibleFromLabel": "Durų kodas bus rodomas nuo įsiregistravimo dienos …",
-      "codeVisibleFromUnset": "— nenustatyta —"
+      "codeVisibleFromUnset": "— nenustatyta —",
+      "wifiSsidLabel": "Tinklo pavadinimas (SSID)",
+      "wifiSsidPlaceholder": "pvz., Vasarnamio-WiFi",
+      "wifiPasswordLabel": "Wi-Fi slaptažodis",
+      "wifiPasswordPlaceholder": "pvz., vasara2026",
+      "wifiFieldsHint": "Šios dvi reikšmės užpildo vietos rezervavimo ženklus {ssid} ir {password} pranešimų šablonuose bei Wi-Fi QR kodą svečių portale. Jei jos liks tuščios, šablonas su šiais ženklais nebus išsiųstas."
     },
     "taskCreatePopup": {
       "title": "Sukurti užduotį",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Objektas nukopijuotas.",
       "duplicateErr": "Nepavyko nukopijuoti.",
       "unlistOk": "Ryšys su svetaine panaikintas.",
-      "unlistErr": "Nepavyko atsieti."
+      "unlistErr": "Nepavyko atsieti.",
+      "menuVerkaufAus": "Išjungti visuose portaluose",
+      "menuVerkaufAn": "Vėl siūlyti visuose portaluose"
     },
     "messagingForm": {
       "title": "Pranešimų šablonai",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Papildomos paslaugos — jos susijusios su savomis nuotraukomis ir vertimais.",
       "copyPricingSkipAvailability": "Prieinamumas, užimtumas ir taisyklės.",
       "copyPricingOverwriteWarning": "Šio objekto kainos bus visiškai perrašytos. Sumos perimamos tik esant tai pačiai valiutai.",
-      "copyPricingDone": "Kainos perimtos."
+      "copyPricingDone": "Kainos perimtos.",
+      "portalStandAbweichung": "ten {dort}",
+      "portalStand": {
+        "online": "Įrašyta portale",
+        "abweichend": "Skiriasi",
+        "fehlt": "Portale neįrašyta"
+      }
     },
     "policiesForm": {
       "title": "Taisyklės",
@@ -5625,7 +5686,10 @@
       "hinweis": "Gali juos perimti, o ne kurti iš naujo. Esami mokesčiai išlieka nepakitę.",
       "uebernehmen": "Perimti mokesčius",
       "laeuft": "Perimama …",
-      "uebernommen": "Perimta {anzahl} mokesčių."
+      "uebernommen": "Perimta {anzahl} mokesčių.",
+      "verwerfen": "Neperkelti",
+      "verworfen": "Pasiūlymas baigtas — tavo mokesčiai lieka tokie, kokie yra.",
+      "einmalig": "Vienkartinė pagalba startui: toliau galioja tik tai, kas yra čia — tai siunčiame portalams."
     },
     "veroeffentlichen": {
       "titel": "Paskelbti objektą",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Nustatoma per „Paskelbti“ viršuje.",
       "immerDabei": "Visada įtraukta — mūsų pačių prekyvietė, be portalo komisinio."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Ar išimti objektą iš pardavimo?",
+      "fragenAusText": "„{titel}“ bus nustatytas kaip neaktyvus, o rezervacijų kalendorius bus išjungtas visuose prijungtuose portaluose. Esamos rezervacijos nepaliestos. Kiekvieno portalo būsena išsaugoma, kad atkūrimas ją grąžintų.",
+      "fragenAnTitel": "Ar vėl siūlyti objektą?",
+      "fragenAnText": "„{titel}“ bus vėl nustatytas kaip aktyvus. Kiekvienas portalas atgauna būseną, kurią turėjo prieš išjungimą — portalai, kurie jau buvo išjungti, tokie ir liks. Po to kainos ir prieinamumas išsiunčiami iš naujo.",
+      "jetztAus": "Išjungti dabar",
+      "jetztAn": "Siūlyti dabar",
+      "laeuft": "Perjungiama…",
+      "abbrechen": "Atšaukti",
+      "schliessen": "Uždaryti",
+      "ergebnisAusTitel": "Objektas išjungtas",
+      "ergebnisAusText": "Išjungta visuose portaluose.",
+      "ergebnisAnTitel": "Objektas vėl aktyvus",
+      "ergebnisAnText": "Vėl siūlomas visuose portaluose.",
+      "ergebnisTeilweiseTitel": "Ne visur pavyko",
+      "ergebnisTeilweiseText": "{anzahl} portalo (-ų) nepavyko perjungti. Ten pardavimas tęsiasi — todėl objekto būsena nebuvo pakeista.",
+      "zeileAbgeschaltet": "Išjungta",
+      "zeileWiederhergestellt": "Vėl aktyvus",
+      "zeileObjekteAmKanal": "Šis kanalas apima {anzahl} objektų — niekas nebuvo pakeista, kad nebūtų išjungti ir kiti."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Prieš prijungdami kitą paskyrą, naršyklėje atsijunkite nuo portalo.",
     "accountConnectCredentialHint": "Papildoma {portal} prieiga įrašoma su viešbučio ID prijungiant objektą, ne čia.",
     "marketplacePending": "{count} tikrinama",
-    "marketplaceWaiting": "Tikrinama"
+    "marketplaceWaiting": "Tikrinama",
+    "marketplace": {
+      "intro": "myBestDays yra mūsų sava prekyvietė — rezervavimo kanalas kaip Booking ar Airbnb, tik be portalo ryšio. Objektas tampa matomas, kai jis aktyvus, čia įtrauktas ir patvirtintas.",
+      "openMarketplace": "Atidaryti prekyvietę",
+      "propertiesHeading": "Objektai prekyvietėje",
+      "noProperties": "Objektų dar nesukurta.",
+      "columnProperty": "Objektas",
+      "columnVisibility": "Matomumas",
+      "columnApproval": "Patvirtinimas",
+      "columnBookings": "Rezervacijos",
+      "stateActive": "Matomas",
+      "statePending": "Tikrinama",
+      "stateNotListed": "Neįtrauktas",
+      "stateInactiveProperty": "Objektas neaktyvus",
+      "viewListing": "Peržiūrėti skelbimą",
+      "reviewHint": "Tikrinami objektai myBestDays dar nerodomi. Tikriname kiekvieną skelbimą, nes ten myBestDays veikia kaip teikėjas — portalams ir savo svetainei tai neturi įtakos.",
+      "summaryVisible": "{count} matomi",
+      "summaryWaiting": "{count} tikrinama",
+      "summaryOff": "{count} neįtraukti",
+      "moderation": {
+        "draft": "Juodraštis",
+        "pending": "Tikrinama",
+        "approved": "Patvirtinta",
+        "rejected": "Atmesta"
+      }
+    }
   },
   "calendarSync": {
     "title": "Kalendoriaus importas / eksportas",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Patvirtinti",
     "mfaChecking": "Tikrinama…",
     "mfaBack": "Atgal į prisijungimą"
+  },
+  "portalSaetze": {
+    "add": "Pridėti tarifą",
+    "breakdown": "{provision} % komisinis atlygis + {fee} % mokėjimo rinkliava",
+    "breakdownNoFee": "{provision} % komisinis atlygis, mokėjimo rinkliavos nėra",
+    "cancel": "Atšaukti",
+    "channel": "Portalas",
+    "channelLocked": "Esamo tarifo portalo pakeisti negalima. Kitam portalui sukurkite naują tarifą.",
+    "create": "Sukurti tarifą",
+    "created": "Tarifas sukurtas",
+    "current": "taikomas šiandien",
+    "delete": "Ištrinti tarifą",
+    "deleted": "Tarifas ištrintas",
+    "edit": "Redaguoti tarifą",
+    "empty": "Tarifas dar nenustatytas. Be tarifo išmoką galima apskaičiuoti tik tada, kai portalas pats nurodo savo atskaitymą.",
+    "errorProvisionRequired": "Įveskite komisinio atlygio tarifą.",
+    "intro": "Kiek kiekvienas portalas pasilieka už kiekvieną rezervaciją. Šie tarifai taikomi tais atvejais, kai portalas pats nenurodo savo atskaitymo — jei jis nurodo sumą, visada taikoma nurodytoji.",
+    "loading": "Įkeliama …",
+    "note": "Pastaba",
+    "notePlaceholder": "Iš kur tarifas paimtas, pvz., portalo sutartis arba atsiskaitymas",
+    "payoutFee": "Mokėjimo rinkliava",
+    "payoutFeeInfo": "Rinkliava už tai, kad portalas surenka pinigus ir juos perveda. Ji taikoma tik tada, kai pinigus surenka portalas — jei svečias moka tiesiogiai jums, jos nėra.",
+    "payoutFeeNone": "netaiko",
+    "period": "nuo {von} iki {bis}",
+    "periodOpen": "nuo {von}",
+    "provision": "Komisinis atlygis",
+    "provisionInfo": "Tarpininkavimo dalis, kurią portalas pasilieka už rezervaciją. Skaičiuojama nuo bendros svečio kainos su visomis rinkliavomis.",
+    "save": "Išsaugoti pakeitimus",
+    "saved": "Tarifas išsaugotas",
+    "title": "Portalų atskaitymų tarifai",
+    "total": "{pct} % iš viso",
+    "validFrom": "Galioja nuo",
+    "validTo": "Galioja iki",
+    "validToInfo": "Palikite tuščią, kol tarifas galioja. Jei portalas pakeičia savo tarifą, sukurkite naują nuo pakeitimo dienos — senasis lieka ankstesniems atsiskaitymams.",
+    "validToOpen": "tęsiasi toliau"
   }
 }

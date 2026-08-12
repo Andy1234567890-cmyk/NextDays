@@ -217,3 +217,86 @@ export async function deleteOwnerBillingTerms(
 ): Promise<Result<void>> {
   return call(`/owner-billing/terms/${termsId}`, { method: "DELETE" });
 }
+
+// -- Portal-Abzugssätze (0364) ----------------------------------------------
+
+/**
+ * Was ein Vertriebsportal je Buchung einbehält.
+ *
+ * ZWEI Sätze, weil zwei verschiedene Abzüge: Booking.com nimmt 15 %
+ * Vermittlungsprovision UND 1,5 % Zahlungsgebühr (zusammen die 16,5 %, mit
+ * denen die Buchhaltung rechnet); Airbnb nimmt 15,5 % und keine
+ * Zahlungsgebühr. `zahlungsgebuehr_pct: null` heißt „erhebt keine" — etwas
+ * anderes als eine vereinbarte 0.
+ */
+export type PortalAbzugssatz = {
+  id: string;
+  kanal: string;
+  /** null = gilt für alle Objekte des Betriebs. */
+  property_id: string | null;
+  provision_pct: number;
+  zahlungsgebuehr_pct: number | null;
+  gueltig_ab: string;
+  /** null = unbefristet. Echter Zustand, kein fehlender Wert. */
+  gueltig_bis: string | null;
+  notiz: string | null;
+  created_at: string;
+  updated_at: string;
+  /** Gilt heute? Vom Server berechnet, nicht aus den Daten abgeleitet. */
+  aktuell: boolean;
+  /** provision + zahlungsgebuehr — vom Server addiert, damit die Oberfläche
+   *  die Zahlungsgebühr nicht vergisst. */
+  gesamt_pct: number;
+};
+
+export type PortalAbzugssatzInput = {
+  kanal: string;
+  provision_pct: number;
+  zahlungsgebuehr_pct?: number | null;
+  gueltig_ab: string;
+  gueltig_bis?: string | null;
+  property_id?: string | null;
+  notiz?: string | null;
+};
+
+export type PortalAbzugssatzUpdate = {
+  provision_pct?: number;
+  zahlungsgebuehr_pct?: number;
+  /** Ausdrücklich „erhebt keine Zahlungsgebühr mehr" — ohne dieses Flag wäre
+   *  ein weggelassenes Feld nicht von „nicht ändern" zu unterscheiden. */
+  ohne_zahlungsgebuehr?: boolean;
+  gueltig_ab?: string;
+  gueltig_bis?: string;
+  ohne_gueltig_bis?: boolean;
+  notiz?: string | null;
+};
+
+/** Alle Sätze des Betriebs MIT Historie — eine alte Abrechnung ist sonst
+ *  nicht nachvollziehbar. */
+export async function listPortalAbzugssaetze(): Promise<
+  Result<{ items: PortalAbzugssatz[] }>
+> {
+  return call("/owner-billing/portal-saetze");
+}
+
+export async function createPortalAbzugssatz(
+  input: PortalAbzugssatzInput,
+): Promise<Result<PortalAbzugssatz>> {
+  return call("/owner-billing/portal-saetze", { method: "POST", body: input });
+}
+
+export async function updatePortalAbzugssatz(
+  satzId: string,
+  input: PortalAbzugssatzUpdate,
+): Promise<Result<PortalAbzugssatz>> {
+  return call(`/owner-billing/portal-saetze/${satzId}`, {
+    method: "PATCH",
+    body: input,
+  });
+}
+
+export async function deletePortalAbzugssatz(
+  satzId: string,
+): Promise<Result<void>> {
+  return call(`/owner-billing/portal-saetze/${satzId}`, { method: "DELETE" });
+}

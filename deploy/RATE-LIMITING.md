@@ -16,15 +16,36 @@ Worker getrennt zählen → effektives Limit unvorhersehbar. Redis ist die gemei
 Wahrheit (atomares Lua-Fixed-Window, ein Roundtrip, race-frei).
 
 ### Gestaffelte Limits (Env, Default-Werte)
-| Bucket | Env | Default | Gilt für |
-|---|---|---|---|
-| Default/IP | `RATE_LIMIT_DEFAULT` | `300/60` | alles übrige (Exzess-/Scraper-Schutz) |
-| Auth | `RATE_LIMIT_AUTH` | `10/60` | `/auth/login`, `/auth/register` (Brute-Force) |
-| Payments | `RATE_LIMIT_PAYMENTS` | `30/60` | `/payments/*` (teuer/sensibel) |
-| Listings | `RATE_LIMIT_LISTINGS` | `60/60` | `/booking-engine/listings`, `/availability`, `/calendar` |
-| Tenant | `RATE_LIMIT_TENANT` | `600/60` | pro eingeloggtem Tenant (Fairness) |
+Quelle der Wahrheit ist `apps/api/src/core/config.py` (Felder `rate_limit_*`);
+die Zuordnung Pfad → Bucket steht in `_BUCKET_REGELN`
+(`apps/api/src/core/ratelimit_middleware.py`). Diese Tabelle listet ALLE Buckets —
+eine unvollständige Tabelle war hier lange der Grund, dass niemand wusste, welches
+Limit einen Pfad trifft.
+
+| Bucket | Env | Default | Keying | Gilt für |
+|---|---|---|---|---|
+| Default | `RATE_LIMIT_DEFAULT` | `300/60` | IP | alles übrige (Exzess-/Scraper-Schutz) |
+| Auth | `RATE_LIMIT_AUTH` | `10/60` | IP | `/auth/login`, `/auth/register`, `/oauth/token` (Brute-Force) |
+| Auth öffentlich | `RATE_LIMIT_AUTH_PUBLIC` | `5/60` | IP | Einladungs-/Passwort-Reset-Pfade (Mail-Bomber, Token-Raten) |
+| Refresh | `RATE_LIMIT_REFRESH` | `60/60` | **Sitzung** | `/auth/refresh` — pro Sitzung, weil die Frontends BFFs sind (eine Container-IP = alle Nutzer) |
+| MFA | `RATE_LIMIT_MFA` | `5/60` | IP | `/auth/mfa/*` — prüft Geheimnisse (TOTP, Wiederherstellungscodes) |
+| MFA-Status | `RATE_LIMIT_MFA_STATUS` | `60/60` | **Nutzer** | nur `/auth/mfa/status` — liest den eigenen 2FA-Zustand, prüft kein Geheimnis. Pro Nutzer, weil der Aufruf `"use server"` ist |
+| Einladung erneut | `RATE_LIMIT_EINLADUNG_RESEND` | `10/60` | IP | „Einladung erneut senden" (jeder Aufruf schickt eine Mail) |
+| Payments | `RATE_LIMIT_PAYMENTS` | `30/60` | IP | `/payments/*` (teuer/sensibel); Webhooks sind bewusst nicht sensibel |
+| Listings | `RATE_LIMIT_LISTINGS` | `240/60` | IP | öffentliche Such-/Kalender-Endpunkte (Scraper-Schutz) |
+| Listings eingeloggt | `RATE_LIMIT_LISTINGS_TENANT` | `1200/60` | Tenant+IP | dieselben Pfade mit Login — Büro-NAT sperrt sich sonst selbst aus |
+| AI | `RATE_LIMIT_AI` | `20/60` | IP | KI-/Report-Endpunkte (eigener Bucket wegen Fremdkosten) |
+| Support öffentlich | `RATE_LIMIT_PUBLIC_SUPPORT` | `20/60` | IP | Support-Chat und Newsletter der Marketing-Seite (ohne Login) |
+| Tenant (Fairness) | `RATE_LIMIT_TENANT` | `600/60` | Tenant+IP | zusätzliches Dach für eingeloggte Requests |
 
 Schema `"<max>/<fenster-sek>"`. Schalter: `RATE_LIMIT_ENABLED` (Default true).
+
+**Reihenfolge zählt:** `_BUCKET_REGELN` wird von oben nach unten geprüft, der
+erste Treffer gewinnt, und gematcht wird per Teilstring. Ein Muster mit `$` am
+Ende verlangt ein exaktes Pfadende — nötig, wo ein Muster ein LOCKERERES Limit
+vergibt als die Regel darunter (`/auth/mfa/status$` vor `/auth/mfa/`), damit ein
+künftiger Endpunkt mit demselben Namensanfang das lockere Limit nicht still
+erbt. Gesichert durch `src/core/tests/test_ratelimit.py`.
 
 ### Echte Client-IP hinter Traefik
 `RATE_LIMIT_TRUSTED_PROXY_HOPS` (Default `0`): Anzahl vertrauenswürdiger Proxys

@@ -99,6 +99,9 @@ const HOTEL_FINANCE: readonly NavItem[] = [
   { key: "closingDates", href: "/stop-sell", icon: "ph:calendar-x", req: "owner_reporting" },
   { key: "cashBook", href: "/buchhaltung/kassenbuch", icon: "ph:wallet", req: "owner_reporting" },
   { key: "statistics", href: "/buchhaltung/statistik", icon: "ph:chart-bar", req: "owner_reporting" },
+  // Portal-Abzüge + Gebühren-Zuordnung. In BEIDEN Sätzen, weil jeder Betrieb
+  // über Portale verkauft — ein Hotel genauso wie eine Ferienvermietung.
+  { key: "billingRules", href: "/buchhaltung/abrechnungsregeln", icon: "ph:sliders-horizontal", req: "owner_reporting" },
 ];
 
 const VR_FINANCE: readonly NavItem[] = [
@@ -113,6 +116,9 @@ const VR_FINANCE: readonly NavItem[] = [
   { key: "datev", href: "/buchhaltung/datev", icon: "ph:export", req: "owner_reporting" },
   { key: "bank", href: "/buchhaltung/bank", icon: "ph:bank", req: "owner_reporting" },
   { key: "reports", href: "/buchhaltung/berichte", icon: "ph:chart-line", req: "owner_reporting" },
+  // Siehe HOTEL_FINANCE: in beiden Sätzen, weil jeder Betrieb über Portale
+  // verkauft.
+  { key: "billingRules", href: "/buchhaltung/abrechnungsregeln", icon: "ph:sliders-horizontal", req: "owner_reporting" },
 ];
 
 // Betriebs-Gruppe „Hotel" (exakt das Casona-„Hotel"-Menü).
@@ -132,6 +138,17 @@ const VR_GROUP: NavGroup = {
   icon: "ph:house-line",
   items: [
     { key: "owners", href: "/eigentuemer", icon: "ph:user-circle-gear", req: "manage_owners" },
+    // Reporting für Eigentümer (0365): Berichte über Zeitraum × Objektauswahl
+    // und die Auszahlungen daraus. Eigener Punkt und kein Reiter unter
+    // /eigentuemer — dort stehen die STAMMDATEN eines Eigentümers, hier die
+    // Auswertung über den ganzen Bestand. `req` spiegelt den Guard am
+    // Endpunkt (OWNER_REPORTING) und das notFound() des Layouts.
+    {
+      key: "ownerReporting",
+      href: "/eigentuemer/reporting",
+      icon: "ph:chart-line-up",
+      req: "owner_reporting",
+    },
     ...VR_FINANCE,
     { key: "settings", href: "/einstellungen", icon: "ph:gear", req: "manage_property_conditions" },
   ],
@@ -334,8 +351,28 @@ export function AppSidebar({
   const t = useTranslations("nav");
   const supportChat = useSupportChat();
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  // Ein Punkt ist aktiv, wenn der Pfad unter ihm liegt UND kein ANDERER Punkt
+  // ein längerer Treffer ist.
+  //
+  // Der reine `startsWith` allein reicht nicht, sobald zwei Punkte in derselben
+  // Pfad-Familie liegen: auf `/eigentuemer/reporting` traf er auch
+  // `/eigentuemer`, und beide Punkte standen gleichzeitig hervorgehoben da —
+  // die Navigation behauptete, man sei an zwei Stellen. Der längste Treffer
+  // gewinnt, weil er der spezifischste ist.
+  const alleHrefs = [
+    ...MAIN.map((i) => i.href),
+    ...buildGroups(accommodationType).flatMap((g) => g.items.map((i) => i.href)),
+  ];
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    if (!pathname.startsWith(href)) return false;
+    return !alleHrefs.some(
+      (other) =>
+        other !== "/" &&
+        other.length > href.length &&
+        pathname.startsWith(other),
+    );
+  };
 
   // Sichtbarkeit eines Menüpunkts: Admin sieht alles; sonst muss die ggf.
   // geforderte Berechtigung vorhanden sein. `req` kann eine feingranulare

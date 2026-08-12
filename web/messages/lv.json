@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Neizdevās ielādēt paneli",
     "reviews": "Atsauksmes",
     "extensions": "Paplašinājumi",
-    "announcements": "Jaunumi"
+    "announcements": "Jaunumi",
+    "ownerReporting": "Īpašnieku pārskati",
+    "billingRules": "Norēķinu noteikumi"
   },
   "exemption": {
     "labelNamed": "Atbrīvots no nodokļa ({scheme}) — PVN nr. nav vajadzīgs",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Viesa fotoattēls",
     "translate": "Tulkot",
     "showOriginal": "Rādīt oriģinālu",
-    "translatedFrom": "Tulkots no {sprache}"
+    "translatedFrom": "Tulkots no {sprache}",
+    "formatStrike": "Pārsvītrots",
+    "fieldsButton": "{{Vietturi}}",
+    "langBase": "Pamatversija",
+    "langBaseHint": "Tiek nosūtīta katram viesim, kura valodai nav savas versijas.",
+    "subjectLabel": "Temats",
+    "subjectHint": "Temata rindu izmanto tikai e-pastiem.",
+    "langAdd": "Pievienot jaunu valodu",
+    "langDefault": "Noklusējums",
+    "langSetDefault": "Iestatīt kā noklusējumu",
+    "langRemove": "Noņemt valodu",
+    "langEmpty": "Vēl nav valodu — līdz tam visiem viesiem tiek sūtīta pamatversija.",
+    "autoEditContent": "Rediģēt saturu",
+    "autoPanelCreate": "Izveidot",
+    "quickEmpty": "Vēl nav ātro atbilžu.",
+    "autoTextRequired": "Nepieciešams teksts."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Ja e-pasts nav pienācis vai saite ir beigusies, uzaicinājumu var nosūtīt vēlreiz. Jaunā saite ir derīga 7 dienas un ved uz šo vidi; iepriekš nosūtītā saite kļūst nederīga.",
     "portalAccessResent": "Uzaicinājums nosūtīts vēlreiz.",
     "commissionNotAgreed": "nav norunāts",
+    "commissionContractWins": "Pašlaik tiek piemērots norēķinu līgums: {pct} % no {ab}. Šis lauks kalpo tikai kā rezerve, ja neviens līgums nav spēkā.",
+    "commissionNoneAnywhere": "Likme vēl nav saskaņota — ne šeit, ne kā līgums. Līdz tam izmaksa īpašnieka portālā paliek tukša.",
+    "commissionContractObject": "Atsevišķs līgums šim objektam: {pct} % no {ab}.",
+    "commissionContractOwnerWide": "Īpašnieka norēķinu līgums: {pct} % no {ab}.",
     "assignableCount": "Pievienošanai atlasīti {count} no {total}",
     "assignedHeading": "{count, plural, zero {# piešķirtu objektu} one {# piešķirts objekts} other {# piešķirti objekti}}",
     "info": {
       "aria": "Skaidrojums par lauku {feld}",
       "share": "Īpašuma daļa šajā objektā. Ja tie ir 100 %, visa izmaksa tiek attiecināta uz šo īpašnieku, ja mazāk — attiecīgi proporcionāli.",
-      "commission": "Šī īpašnieka noklusējuma komisijas likme. Ja lauks paliek tukšs, likme vēl nav norunāta — izmaksa tad netiek aprēķināta, bet tiek parādīta kā domuzīme.",
-      "commissionOverride": "Attiecas tikai uz šo vienu objektu un aizstāj īpašnieka noklusējuma likmi. Ja lauks paliek tukšs, spēkā ir noklusējuma likme."
+      "commission": "Rezerves likme, ja objektam nav spēkā norēķinu līgums. Zemāk esošajam līgumam ir prioritāte — tā ir faktiskā vienošanās, kas ietver arī periodu, fiksēto maksu un minimālo komisiju. Ja abi paliek tukši, izmaksa netiek aprēķināta, bet tiek parādīta domuzīme.",
+      "commissionOverride": "Rezerves likme tikai šim objektam; aizstāj īpašnieka standarta likmi. Norēķinu līgumam arī šeit ir prioritāte. Ja lauks paliek tukšs, ir spēkā standarta likme."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Kopējā izmaksa",
       "ownerPayout": "Īpašnieka izmaksa",
       "pmPayout": "Pārvaldnieka izmaksa",
-      "commissionMissing": "Vismaz vienam objektam nav norādīta komisijas likme. Tāpēc izmaksas nevar aprēķināt — ievadiet likmi īpašnieka pamatdatos vai pie objekta."
+      "commissionMissing": "Vismaz vienam objektam nav norādīta komisijas likme. Tāpēc izmaksas nevar aprēķināt — ievadiet likmi īpašnieka pamatdatos vai pie objekta.",
+      "payoutUnknown": "Vismaz vienai rezervācijai trūkst informācijas, bez kuras izmaksu nevar aprēķināt. Attiecīgajās rindās skaitļa vietā tiek parādīts „—“.",
+      "commissionInvalid": "Saglabātā komisijas maksas likme ir ārpus diapazona 0–100 %. Lūdzu, izlabojiet likmi pie īpašnieka vai objekta.",
+      "portalRateMissing": "Vismaz vienam rezervācijas kanālam nav saglabāta ieturējuma likme, un portāls nav paziņojis savu ieturējumu. Lūdzu, sadaļā Grāmatvedība → Norēķinu noteikumi ievadiet, cik portāls ietur par katru rezervāciju.",
+      "portalRateInvalid": "Saglabātā portāla ieturējuma likme ir ārpus diapazona 0–100 %. Lūdzu, izlabojiet to sadaļā Grāmatvedība → Norēķinu noteikumi.",
+      "feeUnassigned": "Vismaz viens maksas veids vēl nav piesaistīts. Bez piesaistes nav iespējams noteikt, kam pieder summa un vai par to tiek aprēķināta komisijas maksa — lūdzu, nosakiet to sadaļā Grāmatvedība → Norēķinu noteikumi.",
+      "feeNotComputable": "Maksu nevar norēķināt kā summu (tā ir saglabāta procentos vai bez summas). Lūdzu, pārbaudiet maksu pie objekta.",
+      "contractCurrency": "Fiksētā maksa vai minimālā komisijas maksa ir noteikta citā valūtā, nevis rezervācijas valūtā. Summas dažādās valūtās netiek savstarpēji ieskaitītas — lūdzu, pārbaudiet norēķinu līgumu."
     },
     "rental": {
       "perReservation": "Par katru rezervāciju",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Kopējā cena",
       "totalPayout": "Kopējā izmaksa",
       "totals": "Summas",
-      "empty": "Periodā nav rezervāciju."
+      "empty": "Periodā nav rezervāciju.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Pievienot",
@@ -1315,7 +1351,9 @@
     "commissionable": "Apliekams ar komisiju",
     "commissionableYes": "Jā — tiek ieskaitīts komisijā",
     "commissionableNo": "Nē — bez komisijas",
-    "infoAria": "Skaidrojums par lauku {feld}"
+    "infoAria": "Skaidrojums par lauku {feld}",
+    "rulesPageTitle": "Norēķinu noteikumi",
+    "rulesPageIntro": "Ko portāli ietur par katru rezervāciju un kam pieder maksas. Abi nosaka, kāda summa galu galā nonāk jūsu īpašnieku komisijas maksas aprēķinā."
   },
   "portal": {
     "title": "Mans portāls",
@@ -1432,6 +1470,16 @@
         "blocked": "Bloķēts"
       },
       "payoutPerNight": "Neto izmaksa/nakts",
+      "payoutPerNightShort": "neto/nakts",
+      "payoutUnknown": {
+        "short": "nav datu",
+        "label": "Nav nosakāms",
+        "provision": "Šim objektam nav noteikta komisijas maksa — pārvaldībai tā jāpapildina.",
+        "provisionUngueltig": "Noteiktā komisijas maksa ir ārpus diapazona 0–100 %.",
+        "betrag": "Šai rezervācijai nav kopsummas.",
+        "naechte": "Šīs rezervācijas periods nav derīgs.",
+        "waehrungVertrag": "Nolīgtā fiksētā maksa ir citā valūtā, nekā šī rezervācija — summas netiek pārrēķinātas."
+      },
       "guest": "Viesis",
       "channel": "Rezervācijas avots",
       "blockHint": "Vēlaties bloķēt periodu? Iesniedziet pieprasījumu — lēmumu pieņem pārvaldība.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Rādīt durvju kodu tikai tad, ja uzturēšanās ir apmaksāta",
       "hideCodeUntilCheckin": "Slēpt durvju kodu līdz reģistrēšanās brīdim",
       "codeVisibleFromLabel": "Durvju kods tiek rādīts no reģistrēšanās dienas plkst. …",
-      "codeVisibleFromUnset": "— nav norādīts —"
+      "codeVisibleFromUnset": "— nav norādīts —",
+      "wifiSsidLabel": "Tīkla nosaukums (SSID)",
+      "wifiSsidPlaceholder": "piem., Brīvdienu-māja-WiFi",
+      "wifiPasswordLabel": "Wi-Fi parole",
+      "wifiPasswordPlaceholder": "piem., vasara2026",
+      "wifiFieldsHint": "Šīs divas vērtības aizpilda vietturus {ssid} un {password} ziņojumu veidnēs un Wi-Fi QR kodu viesu portālā. Ja tās paliek tukšas, veidne ar šiem vietturiem netiek nosūtīta."
     },
     "taskCreatePopup": {
       "title": "Izveidot uzdevumu",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Objekts nokopēts.",
       "duplicateErr": "Kopēšana neizdevās.",
       "unlistOk": "Saite ar tīmekļa vietni noņemta.",
-      "unlistErr": "Atsaistīšana neizdevās."
+      "unlistErr": "Atsaistīšana neizdevās.",
+      "menuVerkaufAus": "Izslēgt visos portālos",
+      "menuVerkaufAn": "Atkal piedāvāt visos portālos"
     },
     "messagingForm": {
       "title": "Ziņu vietturi",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Papildpakalpojumi — tie ir saistīti ar saviem fotoattēliem un tulkojumiem.",
       "copyPricingSkipAvailability": "Pieejamība, noslogojums un noteikumi.",
       "copyPricingOverwriteWarning": "Šī objekta cenas tiks pilnībā pārrakstītas. Summas tiek pārņemtas tikai pie vienādas valūtas.",
-      "copyPricingDone": "Cenas pārņemtas."
+      "copyPricingDone": "Cenas pārņemtas.",
+      "portalStandAbweichung": "tur {dort}",
+      "portalStand": {
+        "online": "Reģistrēts portālā",
+        "abweichend": "Atšķiras",
+        "fehlt": "Portālā nav reģistrēts"
+      }
     },
     "policiesForm": {
       "title": "Noteikumi",
@@ -5625,7 +5686,10 @@
       "hinweis": "Vari tās pārņemt, tā vietā, lai izveidotu no jauna. Esošās maksas netiek mainītas.",
       "uebernehmen": "Pārņemt maksas",
       "laeuft": "Notiek pārņemšana …",
-      "uebernommen": "Pārņemtas {anzahl} maksas."
+      "uebernommen": "Pārņemtas {anzahl} maksas.",
+      "verwerfen": "Nepārņemt",
+      "verworfen": "Piedāvājums pabeigts — tavas maksas paliek nemainīgas.",
+      "einmalig": "Vienreizējs sākuma atbalsts: turpmāk ir spēkā tikai tas, kas ir šeit — to mēs sūtām portāliem."
     },
     "veroeffentlichen": {
       "titel": "Publicēt objektu",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Tiek iestatīts, izmantojot „Publicēt” augšā.",
       "immerDabei": "Vienmēr iekļauts — mūsu pašu tirdzniecības vietne, bez portāla komisijas."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Vai izņemt objektu no pārdošanas?",
+      "fragenAusText": "“{titel}” tiks iestatīts kā neaktīvs, un rezervāciju kalendārs tiks izslēgts visos savienotajos portālos. Esošās rezervācijas netiek ietekmētas. Katra portāla stāvoklis tiek saglabāts, lai atjaunošana to atgrieztu.",
+      "fragenAnTitel": "Vai atkal piedāvāt objektu?",
+      "fragenAnText": "“{titel}” tiks atkal iestatīts kā aktīvs. Katrs portāls saņem atpakaļ stāvokli, kas tam bija pirms izslēgšanas — portāli, kas jau bija izslēgti, paliek izslēgti. Pēc tam cenas un pieejamība tiek nosūtītas atkārtoti.",
+      "jetztAus": "Izslēgt tagad",
+      "jetztAn": "Piedāvāt tagad",
+      "laeuft": "Pārslēdzas…",
+      "abbrechen": "Atcelt",
+      "schliessen": "Aizvērt",
+      "ergebnisAusTitel": "Objekts ir izslēgts",
+      "ergebnisAusText": "Izslēgts visos portālos.",
+      "ergebnisAnTitel": "Objekts atkal ir aktīvs",
+      "ergebnisAnText": "Atkal tiek piedāvāts visos portālos.",
+      "ergebnisTeilweiseTitel": "Ne visur izdevās",
+      "ergebnisTeilweiseText": "{anzahl} portālu(s) nevarēja pārslēgt. Tur pārdošana turpinās — tāpēc objekta statuss netika mainīts.",
+      "zeileAbgeschaltet": "Izslēgts",
+      "zeileWiederhergestellt": "Atkal aktīvs",
+      "zeileObjekteAmKanal": "Šis kanāls nes {anzahl} objektus — nekas netika mainīts, lai arī citi netiktu izslēgti."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Pirms cita konta pievienošanas pārlūkā izrakstieties no portāla.",
     "accountConnectCredentialHint": "Papildu {portal} piekļuvi pievieno ar viesnīcas ID, savienojot objektu, nevis šeit.",
     "marketplacePending": "{count} pārbaudē",
-    "marketplaceWaiting": "Pārbaudē"
+    "marketplaceWaiting": "Pārbaudē",
+    "marketplace": {
+      "intro": "myBestDays ir mūsu pašu tirdzniecības vieta — rezervāciju kanāls kā Booking vai Airbnb, tikai bez portāla savienojuma. Objekts kļūst redzams, kad tas ir aktīvs, šeit iekļauts un apstiprināts.",
+      "openMarketplace": "Atvērt tirdzniecības vietu",
+      "propertiesHeading": "Objekti tirdzniecības vietā",
+      "noProperties": "Vēl nav izveidots neviens objekts.",
+      "columnProperty": "Objekts",
+      "columnVisibility": "Redzamība",
+      "columnApproval": "Apstiprinājums",
+      "columnBookings": "Rezervācijas",
+      "stateActive": "Redzams",
+      "statePending": "Pārbaudē",
+      "stateNotListed": "Nav iekļauts",
+      "stateInactiveProperty": "Objekts nav aktīvs",
+      "viewListing": "Skatīt sludinājumu",
+      "reviewHint": "Pārbaudē esošie objekti myBestDays vēl neparādās. Mēs pārbaudām katru sludinājumu, jo tur myBestDays ir pakalpojuma sniedzējs — portālus un savu vietni tas neietekmē.",
+      "summaryVisible": "{count} redzami",
+      "summaryWaiting": "{count} pārbaudē",
+      "summaryOff": "{count} nav iekļauti",
+      "moderation": {
+        "draft": "Melnraksts",
+        "pending": "Pārbaudē",
+        "approved": "Apstiprināts",
+        "rejected": "Atteikts"
+      }
+    }
   },
   "calendarSync": {
     "title": "Kalendāra imports/eksports",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Apstiprināt",
     "mfaChecking": "Notiek pārbaude…",
     "mfaBack": "Atpakaļ uz pieteikšanos"
+  },
+  "portalSaetze": {
+    "add": "Pievienot likmi",
+    "breakdown": "{provision} % komisijas maksa + {fee} % maksājuma maksa",
+    "breakdownNoFee": "{provision} % komisijas maksa, bez maksājuma maksas",
+    "cancel": "Atcelt",
+    "channel": "Portāls",
+    "channelLocked": "Esošas likmes portālu nevar nomainīt. Citam portālam izveidojiet jaunu likmi.",
+    "create": "Izveidot likmi",
+    "created": "Likme izveidota",
+    "current": "spēkā šodien",
+    "delete": "Dzēst likmi",
+    "deleted": "Likme dzēsta",
+    "edit": "Rediģēt likmi",
+    "empty": "Likme vēl nav norādīta. Bez likmes izmaksu var aprēķināt tikai tad, ja portāls pats paziņo savu atskaitījumu.",
+    "errorProvisionRequired": "Lūdzu, ievadiet komisijas maksas likmi.",
+    "intro": "Cik katrs portāls patur no katras rezervācijas. Šīs likmes tiek piemērotas tur, kur portāls pats nepaziņo savu atskaitījumu — ja tas paziņo summu, vienmēr ir spēkā paziņotā summa.",
+    "loading": "Notiek ielāde …",
+    "note": "Piezīme",
+    "notePlaceholder": "No kurienes likme nāk, piemēram, portāla līgums vai norēķins",
+    "payoutFee": "Maksājuma maksa",
+    "payoutFeeInfo": "Maksa par to, ka portāls iekasē naudu un pārskaita to tālāk. Tā tiek piemērota tikai tad, ja portāls iekasē maksājumu — ja viesis maksā tieši jums, tās nav.",
+    "payoutFeeNone": "neiekasē",
+    "period": "no {von} līdz {bis}",
+    "periodOpen": "kopš {von}",
+    "provision": "Komisijas maksa",
+    "provisionInfo": "Starpniecības daļa, ko portāls patur par rezervāciju. Aprēķina bāze ir viesa kopējā cena, ieskaitot maksas.",
+    "save": "Saglabāt izmaiņas",
+    "saved": "Likme saglabāta",
+    "title": "Portālu atskaitījumu likmes",
+    "total": "{pct} % kopā",
+    "validFrom": "Spēkā no",
+    "validTo": "Spēkā līdz",
+    "validToInfo": "Atstājiet tukšu, kamēr likme ir spēkā. Ja portāls maina savu likmi, izveidojiet jaunu likmi no izmaiņu dienas — vecā paliek spēkā iepriekšējiem norēķiniem.",
+    "validToOpen": "turpina darboties"
   }
 }

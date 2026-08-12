@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Kojelautaa ei voitu ladata",
     "reviews": "Arvostelut",
     "extensions": "Laajennukset",
-    "announcements": "Uutuudet"
+    "announcements": "Uutuudet",
+    "ownerReporting": "Omistajaraportointi",
+    "billingRules": "Laskutussäännöt"
   },
   "exemption": {
     "labelNamed": "Verovapaa ({scheme}) — ALV-numeroa ei tarvita",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Vieraan lähettämä kuva",
     "translate": "Käännä",
     "showOriginal": "Näytä alkuperäinen",
-    "translatedFrom": "Käännetty kielestä {sprache}"
+    "translatedFrom": "Käännetty kielestä {sprache}",
+    "formatStrike": "Yliviivaus",
+    "fieldsButton": "{{Paikkamerkit}}",
+    "langBase": "Perusversio",
+    "langBaseHint": "Lähetetään kaikille vieraille, joiden kielellä ei ole omaa versiota.",
+    "subjectLabel": "Aihe",
+    "subjectHint": "Aiheriviä käytetään vain sähköposteissa.",
+    "langAdd": "Lisää uusi kieli",
+    "langDefault": "Oletus",
+    "langSetDefault": "Aseta oletukseksi",
+    "langRemove": "Poista kieli",
+    "langEmpty": "Kieliä ei ole vielä lisätty — siihen asti perusversio menee kaikille vieraille.",
+    "autoEditContent": "Muokkaa sisältöä",
+    "autoPanelCreate": "Luo",
+    "quickEmpty": "Ei vielä pikavastauksia.",
+    "autoTextRequired": "Teksti on pakollinen."
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Jos sähköposti ei tullut perille tai linkki on vanhentunut, kutsun voi lähettää uudelleen. Uusi linkki on voimassa 7 päivää ja johtaa tähän ympäristöön; aiemmin lähetetty linkki lakkaa toimimasta.",
     "portalAccessResent": "Kutsu lähetettiin uudelleen.",
     "commissionNotAgreed": "ei sovittu",
+    "commissionContractWins": "Tilityssopimusta sovelletaan tällä hetkellä: {pct} % alkaen {ab}. Tämä kenttä toimii vain varana, jos sopimusta ei ole.",
+    "commissionNoneAnywhere": "Prosenttia ei ole vielä sovittu — ei tässä eikä sopimuksena. Siihen asti maksu jää tyhjäksi omistajaportaalissa.",
+    "commissionContractObject": "Oma sopimus tälle kohteelle: {pct} % alkaen {ab}.",
+    "commissionContractOwnerWide": "Omistajan tilityssopimus: {pct} % alkaen {ab}.",
     "assignableCount": "{count} / {total} valittu lisättäväksi",
     "assignedHeading": "{count, plural, one {# määritetty kohde} other {# määritettyä kohdetta}}",
     "info": {
       "aria": "Selitys kohtaan {feld}",
       "share": "Omistusosuus tästä kohteesta. Sadan prosentin osuudella koko maksu kohdistetaan tälle omistajalle, pienemmällä osuudella vastaavassa suhteessa.",
-      "commission": "Tämän omistajan oletusprovisioprosentti. Jos kenttä jää tyhjäksi, prosentista ei ole vielä sovittu — maksua ei tällöin lasketa, vaan se näytetään ajatusviivana.",
-      "commissionOverride": "Koskee vain tätä yhtä kohdetta ja ohittaa omistajan oletusprosentin. Jos kenttä jää tyhjäksi, käytetään oletusprosenttia."
+      "commission": "Varaprosentti, jos kohteelle ei päde tilityssopimus. Alla oleva sopimus on etusijalla — se on varsinainen sopimus ja kattaa myös kauden, kiinteän maksun ja vähimmäispalkkion. Jos molemmat jäävät tyhjiksi, maksua ei lasketa vaan näytetään viiva.",
+      "commissionOverride": "Varaprosentti vain tälle kohteelle; ohittaa omistajan vakioprosentin. Tilityssopimus on etusijalla myös tässä. Jos kenttä jää tyhjäksi, käytetään vakioprosenttia."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Kokonaismaksu",
       "ownerPayout": "Omistajan maksu",
       "pmPayout": "Kiinteistönhoitajan maksu",
-      "commissionMissing": "Vähintään yhdelle kohteelle ei ole asetettu provisioprosenttia. Maksuja ei voida laskea — syötä prosentti omistajan perustietoihin tai kohteelle."
+      "commissionMissing": "Vähintään yhdelle kohteelle ei ole asetettu provisioprosenttia. Maksuja ei voida laskea — syötä prosentti omistajan perustietoihin tai kohteelle.",
+      "payoutUnknown": "Vähintään yhdeltä varaukselta puuttuu tieto, jota ilman maksettavaa osuutta ei voi laskea. Kyseisillä riveillä näkyy luvun sijasta ”—”.",
+      "commissionInvalid": "Tallennettu provisioprosentti on välin 0–100 % ulkopuolella. Korjaa prosentti omistajan tai kohteen tiedoissa.",
+      "portalRateMissing": "Vähintään yhdelle varauskanavalle ei ole tallennettu vähennysprosenttia, eikä portaali ilmoittanut omaa vähennystään. Kirjaa kohdassa Kirjanpito → Laskutussäännöt, kuinka paljon portaali pidättää varausta kohden.",
+      "portalRateInvalid": "Tallennettu portaalin vähennysprosentti on välin 0–100 % ulkopuolella. Korjaa se kohdassa Kirjanpito → Laskutussäännöt.",
+      "feeUnassigned": "Vähintään yhtä maksutyyppiä ei ole vielä kohdennettu. Ilman kohdennusta ei voida määrittää, kenelle summa kuuluu ja peritäänkö siitä provisio — määritä se kohdassa Kirjanpito → Laskutussäännöt.",
+      "feeNotComputable": "Maksua ei voi tilittää summana (se on tallennettu prosentteina tai ilman summaa). Tarkista maksu kohteen tiedoista.",
+      "contractCurrency": "Kiinteä maksu tai vähimmäisprovisio on eri valuutassa kuin varaus. Eri valuutoissa olevia summia ei muunneta — tarkista tilityssopimus."
     },
     "rental": {
       "perReservation": "Varausta kohden",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Kokonaishinta",
       "totalPayout": "Kokonaismaksu",
       "totals": "Summat",
-      "empty": "Ei varauksia ajanjaksolla."
+      "empty": "Ei varauksia ajanjaksolla.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Lisää",
@@ -1315,7 +1351,9 @@
     "commissionable": "Provisionalainen",
     "commissionableYes": "Kyllä — lasketaan provisioon",
     "commissionableNo": "Ei — provisiovapaa",
-    "infoAria": "Selitys kohtaan {feld}"
+    "infoAria": "Selitys kohtaan {feld}",
+    "rulesPageTitle": "Laskutussäännöt",
+    "rulesPageIntro": "Mitä portaalit pidättävät varausta kohden ja kenelle maksut kuuluvat. Molemmat määrittävät, mikä summa lopulta päätyy omistajienne provisiolaskelmaan."
   },
   "portal": {
     "title": "Oma portaali",
@@ -1432,6 +1470,16 @@
         "blocked": "Estetty"
       },
       "payoutPerNight": "Nettotilitys/yö",
+      "payoutPerNightShort": "netto/yö",
+      "payoutUnknown": {
+        "short": "ei tietoa",
+        "label": "Ei ilmoitettavissa",
+        "provision": "Tälle kohteelle ei ole määritetty välityspalkkiota — isännöinnin on lisättävä se.",
+        "provisionUngueltig": "Määritetty välityspalkkio on välin 0–100 % ulkopuolella.",
+        "betrag": "Tästä varauksesta puuttuu kokonaissumma.",
+        "naechte": "Tämän varauksen päivämäärät ovat virheellisiä.",
+        "waehrungVertrag": "Sovittu kiinteä maksu on eri valuutassa kuin tämä varaus — summia ei muunneta."
+      },
       "guest": "Vieras",
       "channel": "Varauslähde",
       "blockHint": "Haluatko estää ajanjakson? Lähetä pyyntö — hallinto päättää.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Näytä ovikoodi vain, jos oleskelu on maksettu",
       "hideCodeUntilCheckin": "Piilota ovikoodi sisäänkirjautumiseen asti",
       "codeVisibleFromLabel": "Ovikoodi näytetään sisäänkirjautumispäivänä klo …",
-      "codeVisibleFromUnset": "— ei asetettu —"
+      "codeVisibleFromUnset": "— ei asetettu —",
+      "wifiSsidLabel": "Verkon nimi (SSID)",
+      "wifiSsidPlaceholder": "esim. Mokki-WiFi",
+      "wifiPasswordLabel": "Wi-Fi-salasana",
+      "wifiPasswordPlaceholder": "esim. kesa2026",
+      "wifiFieldsHint": "Nämä kaksi arvoa täyttävät paikkamerkit {ssid} ja {password} viestipohjissa sekä vierasportaalin Wi-Fi-QR-koodin. Jos ne jäävät tyhjiksi, näitä paikkamerkkejä käyttävää pohjaa ei lähetetä."
     },
     "taskCreatePopup": {
       "title": "Luo tehtävä",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Kohde kopioitu.",
       "duplicateErr": "Kopiointi epäonnistui.",
       "unlistOk": "Yhteys verkkosivustoon poistettu.",
-      "unlistErr": "Yhteyden poisto epäonnistui."
+      "unlistErr": "Yhteyden poisto epäonnistui.",
+      "menuVerkaufAus": "Kytke pois kaikista portaaleista",
+      "menuVerkaufAn": "Tarjoa uudelleen kaikissa portaaleissa"
     },
     "messagingForm": {
       "title": "Viestien sijaintimerkit",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Lisäpalvelut — ne liittyvät omiin kuviin ja käännöksiin.",
       "copyPricingSkipAvailability": "Saatavuus, käyttöaste ja käytännöt.",
       "copyPricingOverwriteWarning": "Tämän kohteen hinnat korvataan kokonaan. Summat kopioidaan vain samalla valuutalla.",
-      "copyPricingDone": "Hinnat kopioitu."
+      "copyPricingDone": "Hinnat kopioitu.",
+      "portalStandAbweichung": "siellä {dort}",
+      "portalStand": {
+        "online": "Tallennettu portaaliin",
+        "abweichend": "Poikkeaa",
+        "fehlt": "Ei tallennettu portaaliin"
+      }
     },
     "policiesForm": {
       "title": "Käytännöt",
@@ -5625,7 +5686,10 @@
       "hinweis": "Voit tuoda ne sen sijaan, että luot ne uudelleen. Olemassa olevat maksut pysyvät muuttumattomina.",
       "uebernehmen": "Tuo maksut",
       "laeuft": "Tuodaan …",
-      "uebernommen": "{anzahl} maksua tuotu."
+      "uebernommen": "{anzahl} maksua tuotu.",
+      "verwerfen": "Älä tuo",
+      "verworfen": "Tarjous päättyi — maksusi pysyvät ennallaan.",
+      "einmalig": "Kertaluonteinen alkuapu: tämän jälkeen pätee vain se, mikä on tässä — sen lähetämme portaaleihin."
     },
     "veroeffentlichen": {
       "titel": "Julkaise kohde",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Määritetään ylhäällä kohdasta ”Julkaise”.",
       "immerDabei": "Aina mukana — oma markkinapaikkamme, ilman portaalikomissiota."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Poistetaanko kohde myynnistä?",
+      "fragenAusText": "”{titel}” asetetaan epäaktiiviseksi ja varauskalenteri kytketään pois kaikista yhdistetyistä portaaleista. Olemassa olevat varaukset eivät muutu. Kunkin portaalin tila tallennetaan, jotta palautus asettaa sen takaisin.",
+      "fragenAnTitel": "Tarjotaanko kohdetta uudelleen?",
+      "fragenAnText": "”{titel}” asetetaan taas aktiiviseksi. Jokainen portaali saa takaisin tilan, joka sillä oli ennen poiskytkentää — jo aiemmin pois kytketyt portaalit pysyvät pois. Sen jälkeen hinnat ja saatavuus lähetetään uudelleen.",
+      "jetztAus": "Kytke pois nyt",
+      "jetztAn": "Tarjoa nyt",
+      "laeuft": "Vaihdetaan…",
+      "abbrechen": "Peruuta",
+      "schliessen": "Sulje",
+      "ergebnisAusTitel": "Kohde on kytketty pois",
+      "ergebnisAusText": "Kytketty pois kaikista portaaleista.",
+      "ergebnisAnTitel": "Kohde on taas aktiivinen",
+      "ergebnisAnText": "Tarjotaan uudelleen kaikissa portaaleissa.",
+      "ergebnisTeilweiseTitel": "Ei onnistunut kaikkialla",
+      "ergebnisTeilweiseText": "{anzahl} portaalia ei voitu vaihtaa. Siellä myynti jatkuu — siksi kohteen tilaa ei muutettu.",
+      "zeileAbgeschaltet": "Kytketty pois",
+      "zeileWiederhergestellt": "Taas aktiivinen",
+      "zeileObjekteAmKanal": "Tämä kanava kantaa {anzahl} kohdetta — mitään ei muutettu, jotta muita ei kytketä myös pois."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Kirjaudu ulos portaalista selaimessa ennen kuin yhdistät toisen tilin.",
     "accountConnectCredentialHint": "Uusi {portal}-tunnus lisätään hotellitunnuksella kohteen yhdistämisen yhteydessä, ei täällä.",
     "marketplacePending": "{count} tarkistuksessa",
-    "marketplaceWaiting": "Tarkistuksessa"
+    "marketplaceWaiting": "Tarkistuksessa",
+    "marketplace": {
+      "intro": "myBestDays on oma markkinapaikkamme — varauskanava kuten Booking tai Airbnb, mutta ilman portaaliyhteyttä. Kohde näkyy, kun se on aktiivinen, listattu tässä ja hyväksytty.",
+      "openMarketplace": "Avaa markkinapaikka",
+      "propertiesHeading": "Kohteet markkinapaikalla",
+      "noProperties": "Kohteita ei ole vielä luotu.",
+      "columnProperty": "Kohde",
+      "columnVisibility": "Näkyvyys",
+      "columnApproval": "Hyväksyntä",
+      "columnBookings": "Varaukset",
+      "stateActive": "Näkyvissä",
+      "statePending": "Tarkistuksessa",
+      "stateNotListed": "Ei listattu",
+      "stateInactiveProperty": "Kohde ei ole aktiivinen",
+      "viewListing": "Näytä ilmoitus",
+      "reviewHint": "Tarkistuksessa olevat kohteet eivät vielä näy myBestDaysissa. Tarkistamme jokaisen ilmoituksen, koska myBestDays toimii siellä tarjoajana — portaalit ja oma verkkosivusto eivät muutu.",
+      "summaryVisible": "{count} näkyvissä",
+      "summaryWaiting": "{count} tarkistuksessa",
+      "summaryOff": "{count} ei listattu",
+      "moderation": {
+        "draft": "Luonnos",
+        "pending": "Tarkistuksessa",
+        "approved": "Hyväksytty",
+        "rejected": "Hylätty"
+      }
+    }
   },
   "calendarSync": {
     "title": "Tuo/vie kalenteri",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Vahvista",
     "mfaChecking": "Tarkistetaan…",
     "mfaBack": "Takaisin kirjautumiseen"
+  },
+  "portalSaetze": {
+    "add": "Lisää prosentti",
+    "breakdown": "{provision} % provisio + {fee} % maksupalkkio",
+    "breakdownNoFee": "{provision} % provisio, ei maksupalkkiota",
+    "cancel": "Peruuta",
+    "channel": "Portaali",
+    "channelLocked": "Olemassa olevan prosentin portaalia ei voi vaihtaa. Luo toiselle portaalille uusi prosentti.",
+    "create": "Luo prosentti",
+    "created": "Prosentti luotu",
+    "current": "voimassa tänään",
+    "delete": "Poista prosentti",
+    "deleted": "Prosentti poistettu",
+    "edit": "Muokkaa prosenttia",
+    "empty": "Prosenttia ei ole vielä määritetty. Ilman prosenttia maksatus voidaan laskea vain, jos portaali ilmoittaa vähennyksensä itse.",
+    "errorProvisionRequired": "Anna provisioprosentti.",
+    "intro": "Mitä kukin portaali pidättää itsellään varausta kohden. Näitä prosentteja käytetään silloin, kun portaali ei ilmoita vähennystään itse — jos se ilmoittaa summan, ilmoitettu summa on aina voimassa.",
+    "loading": "Ladataan …",
+    "note": "Muistiinpano",
+    "notePlaceholder": "Mistä prosentti on peräisin, esim. portaalin sopimus tai tilitys",
+    "payoutFee": "Maksupalkkio",
+    "payoutFeeInfo": "Palkkio siitä, että portaali perii rahat ja välittää ne edelleen. Se peritään vain, kun portaali perii maksun — jos vieras maksaa suoraan sinulle, palkkiota ei ole.",
+    "payoutFeeNone": "ei peri palkkiota",
+    "period": "{von}–{bis}",
+    "periodOpen": "alkaen {von}",
+    "provision": "Provisio",
+    "provisionInfo": "Välitysosuus, jonka portaali pitää itsellään varauksesta. Laskentaperusteena on vieraan kokonaishinta palkkioineen.",
+    "save": "Tallenna muutokset",
+    "saved": "Prosentti tallennettu",
+    "title": "Portaalien vähennysprosentit",
+    "total": "{pct} % yhteensä",
+    "validFrom": "Voimassa alkaen",
+    "validTo": "Voimassa asti",
+    "validToInfo": "Jätä tyhjäksi niin kauan kuin prosentti on voimassa. Jos portaali muuttaa prosenttiaan, luo uusi prosentti muutospäivästä alkaen — vanha säilyy aiempia tilityksiä varten.",
+    "validToOpen": "jatkuu edelleen"
   }
 }

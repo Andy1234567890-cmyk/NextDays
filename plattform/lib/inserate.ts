@@ -163,25 +163,16 @@ export async function ladeInserat(
   }
 }
 
-// Deutsche Labels der property_type-Enum (für Themen-Reihen-Titel).
-const TYP_LABEL: Record<string, string> = {
-  ferienhaus: "Ferienhäuser",
-  appartement: "Appartements",
-  glamping: "Glamping",
-  tiny_house: "Tiny Houses",
-  stellplatz: "Stellplätze",
-  hausboot: "Hausboote",
-};
-
 /** Themen-Reihen aus echten Inseraten ableiten: erst „alle", dann je
- *  property_type und je Stadt — leere Reihen entfallen. Keine Demo. */
+ *  property_type und je Stadt — leere Reihen entfallen. Keine Demo.
+ *  Die Titel sind SCHLÜSSEL, nicht Text (siehe `ReihenTitel`): diese Funktion
+ *  läuft serverseitig ohne Sprachkontext und schrieb vorher deutsche
+ *  Überschriften in jede Sprache. */
 export async function ladeReihen(params: SuchParams = {}): Promise<Reihe[]> {
   const alle = await ladeInserate(params);
   if (alle.length === 0) return [];
 
-  const reihen: Reihe[] = [
-    { titel: "Beliebte Unterkünfte", listings: alle },
-  ];
+  const reihen: Reihe[] = [{ titel: { art: "beliebt" }, listings: alle }];
 
   // Nach property_type gruppieren (nur Reihen mit mind. 1 Treffer).
   const typen = new Map<string, Listing[]>();
@@ -200,10 +191,10 @@ export async function ladeReihen(params: SuchParams = {}): Promise<Reihe[]> {
     }
   }
   for (const [typ, listings] of typen) {
-    reihen.push({ titel: TYP_LABEL[typ] ?? typ, listings });
+    reihen.push({ titel: { art: "typ", typ }, listings });
   }
   for (const [stadt, listings] of staedte) {
-    reihen.push({ titel: `Unterkünfte in ${stadt}`, listings });
+    reihen.push({ titel: { art: "stadt", stadt }, listings });
   }
   return reihen;
 }

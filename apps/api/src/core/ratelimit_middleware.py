@@ -59,6 +59,7 @@ class _Buckets:
         self.tenant = parse_limit(settings.rate_limit_tenant)
         self.ai = parse_limit(settings.rate_limit_ai)
         self.mfa = parse_limit(settings.rate_limit_mfa)
+        self.mfa_status = parse_limit(settings.rate_limit_mfa_status)
         self.public_support = parse_limit(settings.rate_limit_public_support)
         self.einladung_resend = parse_limit(settings.rate_limit_einladung_resend)
 
@@ -111,6 +112,30 @@ _AUTH_PATHS = (
 # Code-Versuch als ein ungezaehlter.
 _MFA_PATHS = (
     "/auth/mfa/",
+)
+
+# AUSNAHME davon, und sie muss VOR `_MFA_PATHS` stehen (erster Treffer gewinnt):
+# `GET /auth/mfa/status` prueft KEIN Geheimnis. Es liest nur den eigenen
+# 2FA-Zustand — Nutzer ausschliesslich aus dem Token, es gibt bewusst keinen
+# `user_id`-Parameter (siehe auth/router.mfa_status). Es gibt dort also nichts
+# zu erraten und nichts aufzuzaehlen, was ein strenges Limit schuetzen wuerde.
+#
+# Der Schaden war real (12.08.2026): Der Status wird im Dashboard-Layout bei
+# jedem Seitenaufbau abgefragt. Der MFA-Bucket erlaubt 5/60 — nach wenigen
+# `router.refresh()` in Folge antwortete `/auth/mfa/status` mit 429, ohne dass
+# ein Angriff vorlag. Verschaerfend: der Aufruf ist `"use server"`, kommt also
+# aus EINEM Next-Container ohne X-Forwarded-For, sodass ein IP-Zaehler fuer alle
+# Nutzer aller Betriebe gemeinsam gilt. Dieser Bucket keyt deshalb pro NUTZER
+# (siehe `_nutzer_aus_bearer` und das Keying im Guard).
+#
+# Bleibt `sensibel=True`, obwohl der Pfad nur liest: bei Redis-Ausfall lieber
+# abweisen als ungezaehlt durchlassen — die Antwort verraet den 2FA-Zustand des
+# eigenen Kontos, und fail-open ist bei /auth/* nie die richtige Richtung
+# (Wurzel 5). Nur das LIMIT wird gelockert, nicht die Fehlerhaltung.
+# `$` = exaktes Pfadende (siehe `_select_bucket`): ein künftiges
+# `/auth/mfa/statusXY` soll dieses lockere Limit NICHT still erben.
+_MFA_STATUS_PATHS = (
+    "/auth/mfa/status$",
 )
 
 _AUTH_PUBLIC_PATHS = (
@@ -212,6 +237,13 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("refresh", _REFRESH_PATHS, "refresh", False),
     # VOR "auth": diese Pfade beginnen alle mit /auth/ und würden sonst im
     # laxeren Login-Bucket landen. Der erste Treffer gewinnt.
+    # VOR "mfa": `/auth/mfa/status` ist ein Teilstring von `/auth/mfa/` und
+    # landete sonst im strengsten Bucket (5/60), obwohl er nur den eigenen
+    # 2FA-Zustand LIEST und kein Geheimnis prueft. Genau daran scheiterte die
+    # Oberflaeche am 12.08.2026 mit 429 ohne Angriff (siehe _MFA_STATUS_PATHS).
+    # Bleibt sensibel=True: nur das Limit ist gelockert, die fail-closed-Haltung
+    # bei Redis-Ausfall nicht.
+    ("mfa_status", _MFA_STATUS_PATHS, "mfa_status", True),
     # VOR "auth": /auth/mfa/* beginnt mit /auth/ und wuerde sonst im laxeren
     # Login-Bucket landen. Der erste Treffer gewinnt.
     ("mfa", _MFA_PATHS, "mfa", True),
@@ -229,10 +261,23 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
 
 
 def _select_bucket(path: str, buckets: _Buckets) -> tuple[str, Limit, bool]:
-    """Pfad → (Bucket-Name, Limit, sensibel?). Sensibel = Kandidat für fail-closed."""
+    """Pfad → (Bucket-Name, Limit, sensibel?). Sensibel = Kandidat für fail-closed.
+
+    Muster matchen per Teilstring. EIN Muster mit `$` am Ende verlangt ein
+    EXAKTES Pfadende — nötig, wo ein Muster ein LOCKERERES Limit vergibt als die
+    Regel darunter: `/auth/mfa/status` liegt bei 120/60, `/auth/mfa/` bei 5/60.
+    Per Teilstring erbte ein künftiger Endpunkt `/auth/mfa/statusXY` oder
+    `/auth/mfa/status/reset` still das lockere Limit, ohne dass es jemandem
+    auffällt. Bei den übrigen Regeln ist Teilstring richtig: sie verschärfen.
+    """
     for name, pfade, attribut, sensibel in _BUCKET_REGELN:
-        if any(p in path for p in pfade):
-            return name, getattr(buckets, attribut), sensibel
+        for muster in pfade:
+            treffer = (
+                path.endswith(muster[:-1]) if muster.endswith("$")
+                else muster in path
+            )
+            if treffer:
+                return name, getattr(buckets, attribut), sensibel
     return "default", buckets.default, False
 
 
@@ -311,6 +356,29 @@ def _tenant_from_bearer(auth_header: str | None) -> str | None:
     meta = claims.get("app_metadata") if isinstance(claims, dict) else None
     tenant = meta.get("tenant_id") if isinstance(meta, dict) else None
     return tenant if isinstance(tenant, str) and tenant else None
+
+
+def _nutzer_aus_bearer(auth_header: str | None) -> str | None:
+    """Best-effort: ``sub`` aus dem JWT lesen, OHNE Signaturprüfung.
+
+    Wie `_tenant_from_bearer` nur fürs Keying — die echte Auth prüft die Route.
+    Gefälschter `sub` schadet nicht: der Angreifer füllt damit den Zähler eines
+    fremden Nutzers, aber der Schlüssel enthält zusätzlich die IP (siehe
+    `_mfa_status_key`), also trifft es dessen echte Sitzungen nicht.
+    """
+    if not auth_header or not auth_header.lower().startswith("bearer "):
+        return None
+    token = auth_header.split(" ", 1)[1]
+    parts = token.split(".")
+    if len(parts) != 3:
+        return None
+    try:
+        padded = parts[1] + "=" * (-len(parts[1]) % 4)
+        claims = json.loads(urlsafe_b64decode(padded))
+    except (ValueError, json.JSONDecodeError):
+        return None
+    sub = claims.get("sub") if isinstance(claims, dict) else None
+    return sub if isinstance(sub, str) and sub else None
 
 
 class RateLimitMiddleware:
@@ -463,6 +531,25 @@ class RateLimitMiddleware:
             primary_key = f"listings:tenant:{tenant}:ip:{ip or 'unknown'}"
             limit = self._buckets.listings_tenant
             primary_scope = "listings-tenant"
+        elif bucket_name == "mfa_status" and (nutzer := _nutzer_aus_bearer(
+            request.headers.get("authorization")
+        )):
+            # PRO NUTZER, nicht pro IP — dieselbe Lehre wie beim refresh-Bucket:
+            # `web/lib/mfa.ts` ist `"use server"`, der Aufruf kommt also
+            # server-zu-server aus EINEM Next-Container und setzt kein
+            # X-Forwarded-For. Die Peer-IP ist die Container-IP, ein IP-Zähler
+            # wäre für ALLE Nutzer ALLER Betriebe gemeinsam. Der Aufruf sitzt im
+            # Dashboard-Layout und feuert pro Navigation; `realtime-refresh.tsx`
+            # löst ihn über sechs Hooks mit hook-lokalem Debounce aus, die nicht
+            # koaleszieren. Ein einzelner Nutzer mit offener Kalenderseite konnte
+            # damit das gemeinsame Fenster erschöpfen und alle anderen aussperren.
+            #
+            # IP bleibt im Schlüssel (wie beim Tenant-Fairness-Limit): der `sub`
+            # stammt aus einem NICHT signaturgeprüften JWT. Ohne die IP ließe
+            # sich der Zähler eines echten Nutzers mit gefälschtem `sub` von
+            # außen vollschreiben und ihn aussperren.
+            primary_key = f"mfa_status:sub:{nutzer}:ip:{ip or 'unknown'}"
+            primary_scope = "nutzer"
         else:
             primary_key = f"{bucket_name}:ip:{ip or 'unknown'}"
             primary_scope = "ip"

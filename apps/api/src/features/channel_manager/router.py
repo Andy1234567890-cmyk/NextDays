@@ -5,6 +5,9 @@ sind tenant-scoped (tenant_id aus dem JWT) und erfordern MANAGE_PROPERTY_SETTING
 Der Webhook-Endpoint ist bewusst ohne JWT (Channex ruft ihn auf) und wird über
 ein geteiltes Secret im Header abgesichert.
 """
+# pylint: disable=too-many-lines  # EIN Router für EINEN Slice: die Endpunkte
+# gehören zusammen und werden über die Service-Mixins domänenweise getrennt.
+# Aufzuteilen hieße, den Slice-Zuschnitt in der HTTP-Schicht zu duplizieren.
 from typing import Annotated, Any
 
 from fastapi import (
@@ -61,11 +64,14 @@ from .schemas import (
     GuestReviewRequest,
     LodgifyImportRequest,
     LodgifyPreviewResponse,
+    MarketplaceDetailResponse,
     NoShowReportRequest,
     OAuthBeginRequest,
     OAuthBeginResponse,
     OAuthFinalizeRequest,
     OAuthStatusResponse,
+    ObjektVerkaufResponse,
+    ObjektVerkaufStandResponse,
     OtaAccountList,
     OtaAccountOut,
     OtaAccountRename,
@@ -307,6 +313,18 @@ def channel_overview(
     OTA-Portale, eigener Marktplatz, iCal — tenant-lokal aus der DB aggregiert."""
     try:
         return ChannelOverviewResponse(**service.channel_overview(ctx))
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/marketplace", response_model=MarketplaceDetailResponse)
+def marketplace_detail(
+    ctx: _read, service: ChannelManagerServiceDep
+) -> MarketplaceDetailResponse:
+    """Detailfläche des eigenen Marktplatzes: je Objekt Sichtbarkeit, Freigabe-
+    Stand und Marktplatz-Buchungen. Pendant zur OTA-Kanalseite, ohne Channex."""
+    try:
+        return MarketplaceDetailResponse(**service.marketplace_detail(ctx))
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -1527,6 +1545,24 @@ def airbnb_gebuehren_uebernehmen(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/properties/{property_id}/airbnb-gebuehren/verwerfen")
+def airbnb_gebuehren_verwerfen(
+    property_id: str, ctx: _write, service: ChannelManagerServiceDep
+) -> dict[str, Any]:
+    """Das einmalige Übernahme-Angebot beenden, ohne etwas zu übernehmen."""
+    try:
+        return service.airbnb_gebuehren_import_verwerfen(ctx, property_id=property_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# Kein Endpunkt „gebuehren-stand/pruefen" mehr: der Knopf „Beim Portal prüfen"
+# ist aus der Preise-Maske entfernt (12.08.2026). Der Ist-Stand wird weiter
+# gepflegt, aber vom Hintergrund-Job (`pruefe_ota_gebuehren` →
+# `gebuehren_stand_pruefen`) — der Aggregator reicht asynchron weiter, ein Klick
+# konnte darum nur denselben alten Stand erneut bestätigen.
+
+
 @router.get("/properties/{property_id}/airbnb-zimmer-rest")
 def airbnb_zimmer_rest(
     property_id: str, ctx: _read, service: ChannelManagerServiceDep
@@ -1567,6 +1603,94 @@ def airbnb_foto_umhaengen(
         return service.airbnb_foto_umhaengen(
             ctx, property_id=property_id, photo_id=photo_id,
             room_id=payload.airbnb_room_id,
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Objekt bei ALLEN Portalen aus dem Verkauf nehmen ------------------------
+# Drei Routen, weil es drei verschiedene Vorgänge sind: abschalten, zurückholen
+# und NACHSEHEN. Der Stand-Endpunkt ist rein lesend und zeigt, was bei Channex
+# wirklich steht — der Weg, eine Abweichung zwischen unserer Sicht und dem Portal
+# zu finden, statt sie unentdeckt zu lassen.
+#
+# ABGRENZUNG zu den Nachbarn im selben Router:
+#   PATCH …/connections/{portal}  = EIN Portal pausieren (Kanal-Ebene)
+#   DELETE …/connections/{portal} = EIN Portal trennen (Zuordnung lösen)
+#   POST  …/verkauf/pausieren     = ALLE Portale + unser Status, mit Rückweg
+# Stop-Sell ist etwas anderes und liegt nicht hier: das sperrt TAGE im Kalender.
+
+
+@router.post(
+    "/properties/{property_id}/verkauf/pausieren",
+    response_model=ObjektVerkaufResponse,
+)
+def objekt_verkauf_pausieren(
+    property_id: str, ctx: _write, service: ChannelManagerServiceDep
+) -> ObjektVerkaufResponse:
+    """Objekt inaktiv schalten UND den Buchungskalender bei allen OTAs abschalten.
+
+    Airbnb über die Listing-Aktion `unpublish` (objekt-genau, auch am geteilten
+    Kanal mit 18 Objekten), Booking.com über den Kanal — nach Zählung, ob er
+    wirklich nur dieses Objekt trägt. Der Vorzustand wird je Portal gesichert
+    (0375), damit das Zurückholen WIEDERHERSTELLT statt alles anzuschalten.
+
+    Antwortet 200 auch dann, wenn ein Portal fehlgeschlagen ist: welche, steht in
+    `portale[].fehler`, und `pausiert` ist dann `false`. Ein 500 wäre hier die
+    schlechtere Antwort — der Betrieb muss sehen, WAS geschaltet wurde und was
+    nicht, statt nur „Fehler".
+    """
+    try:
+        return ObjektVerkaufResponse(
+            **service.objekt_verkauf_pausieren(ctx, property_id=property_id)
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/properties/{property_id}/verkauf/fortsetzen",
+    response_model=ObjektVerkaufResponse,
+)
+def objekt_verkauf_fortsetzen(
+    property_id: str, ctx: _write, service: ChannelManagerServiceDep
+) -> ObjektVerkaufResponse:
+    """Objekt zurückholen — den gesicherten Portal-Zustand wiederherstellen.
+
+    Stellt nur wieder her, was WIR abgeschaltet haben: ein Portal, das schon vor
+    der Pause aus war, bleibt aus. Danach EIN ARI-Push für das Objekt (500 Tage
+    Verfügbarkeit + Raten), damit die Portale nicht mit dem Stand von vor der
+    Pause verkaufen.
+
+    409, wenn für das Objekt keine Pause gespeichert ist — dann wurde es nicht
+    über diesen Weg abgeschaltet, und „zurückholen" hätte keinen definierten
+    Zielzustand (Wurzel 4: kein erfundener Ersatzwert).
+    """
+    try:
+        return ObjektVerkaufResponse(
+            **service.objekt_verkauf_fortsetzen(ctx, property_id=property_id)
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/properties/{property_id}/verkauf/stand",
+    response_model=ObjektVerkaufStandResponse,
+)
+def objekt_verkauf_stand(
+    property_id: str, ctx: _read, service: ChannelManagerServiceDep
+) -> ObjektVerkaufStandResponse:
+    """Live-Ist-Stand bei den Portalen — rein lesend, ändert nichts.
+
+    Zeigt je Portal den Hebel, den LIVE bei Channex gelesenen Wert
+    (`published` bzw. `is_active`), die Zahl der Objekte am Kanal und ob eine
+    Pause gespeichert ist. Der Weg, um nach dem Schalten zu prüfen, ob das
+    Portal es wirklich übernommen hat.
+    """
+    try:
+        return ObjektVerkaufStandResponse(
+            **service.objekt_verkauf_stand(ctx, property_id=property_id)
         )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

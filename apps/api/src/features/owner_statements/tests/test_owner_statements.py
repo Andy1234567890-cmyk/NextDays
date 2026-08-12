@@ -732,6 +732,27 @@ def test_rental_rows_and_listing_aggregation() -> None:
     assert st.listing_rows[0].nights == 5
 
 
+def test_rental_row_nennt_die_herkunft_der_gebuehren() -> None:
+    """Jede Zeile sagt, WOHER ihre Gebühren kommen.
+
+    Die häufigste Rückfrage der Buchhaltung ist „warum steht bei dieser Buchung
+    keine Reinigung?". Am 11.08.2026 kostete sie einen halben Tag Suche — beim
+    Channex-Mapping, beim Tax Set, im eigenen Rechencode — und die Antwort lag
+    im Eingangsweg der Buchung: ein Channex-Import liefert laut Channex-Doku
+    „not include extras and cleaning fees". Ohne diese Angabe an der Zeile sieht
+    eine fehlende Gebühr wie ein Rechenfehler aus.
+
+    Die Testbuchungen haben keinen Channex-Payload (Direktbuchungen), also gilt
+    `stammdaten` — dort sind die Objekt-Gebühren die richtige Quelle.
+    """
+    st = _gen(_svc())
+    for zeile in st.rental_rows:
+        assert zeile.gebuehren_quelle == "stammdaten"
+        # `grund` gibt es nur bei `ota_ohne_aufstellung` — eine Direktbuchung
+        # braucht keine Erklärung, warum das Portal nichts geliefert hat.
+        assert zeile.gebuehren_grund is None
+
+
 # --- Status / Lifecycle ------------------------------------------------------
 
 def test_finalize_freezes_summary() -> None:
@@ -1345,3 +1366,99 @@ def test_owner_liste_ohne_verwaltungsanteil() -> None:
     assert res.items[0].pm_payout is None
     # Die Agentur bekommt ihn weiterhin.
     assert svc.list(_ctx()).items[0].pm_payout is not None
+
+
+# ----------------------------------------------------------------------
+# Fehlende Einstellung kippt die Abrechnung nicht (Wurzel 5)
+# ----------------------------------------------------------------------
+
+
+def _tables_mit_vertrag_ohne_portalsatz() -> dict[str, list[dict]]:
+    """Der LIVE aufgetretene Zustand vom 11.08.2026.
+
+    Der Eigentümer hat einen Abrechnungsvertrag (die volle Kette greift also),
+    aber `portal_abzugssaetze` ist leer und das Portal hat keine Provision
+    gemeldet. Damit ist der Portal-Abzug nicht bestimmbar.
+    """
+    tables = _base_tables()
+    tables["owner_billing_terms"] = [
+        {
+            "id": "obt-1",
+            "tenant_id": "t-1",
+            "owner_id": "o-1",
+            "property_id": None,
+            "gueltig_ab": "2024-01-01",
+            "gueltig_bis": None,
+            "provisions_pct": 20,
+        }
+    ]
+    tables["portal_abzugssaetze"] = []
+    tables["fee_classification"] = []
+    return tables
+
+
+def test_fehlender_portalsatz_kippt_die_abrechnung_nicht() -> None:
+    """Die Kette warf bis in den ASGI-Stack durch — `POST /preview` gab 500.
+
+    Der Betrieb sah eine kaputte Seite statt der Auskunft, welche Einstellung
+    fehlt. Die Zeile muss stehen bleiben mit allem, was FESTSTEHT; nur die
+    abhängige Auszahlung ist unbekannt und trägt ihren Grund.
+    """
+    svc = OwnerStatementsService(
+        service_client=_DB(_tables_mit_vertrag_ohne_portalsatz())
+    )
+    sicht = svc.preview(
+        _ctx(),
+        StatementGenerateRequest(
+            owner_id="o-1",
+            period_from=date(2026, 1, 1),
+            period_to=date(2026, 1, 31),
+            reservation_statuses=["confirmed", "completed"],
+        ),
+    )
+
+    assert sicht.rental_rows, "die Buchungen müssen im Ergebnis bleiben"
+    offen = [r for r in sicht.rental_rows if r.owner_payout is None]
+    assert offen, "ohne Portal-Satz kann keine Auszahlung ausgewiesen werden"
+    # Kein erfundener Ersatzwert (Wurzel 4) …
+    assert all(r.owner_payout is None for r in offen)
+    # … und der Grund ist der ECHTE, nicht pauschal „provision": ein fehlender
+    # Portal-Satz verlangt einen anderen Handgriff als ein fehlender
+    # Provisionssatz.
+    assert {r.payout_unbekannt for r in offen} <= {
+        "portal_abzug",
+        "gebuehr_nicht_zugeordnet",
+    }
+    # Was feststeht, steht auch da.
+    assert all(r.nights > 0 for r in sicht.rental_rows)
+    # Und die Zusammenfassung nennt DENSELBEN Grund, nicht pauschal
+    # „provision" — sonst schickte die Maske den Betrieb an die falsche Stelle.
+    assert sicht.summary.payout_unbekannt == offen[0].payout_unbekannt
+
+
+def test_preview_antwortet_422_statt_500_bei_fehlender_einstellung() -> None:
+    """Die Route selbst: ein Datenmangel ist ein 422 mit Hinweis, kein 500.
+
+    Gegenprobe zum Live-Traceback vom 11.08.2026
+    (`PayoutUnbekannt` → ASGI → 500 Internal Server Error).
+    """
+    from src.features.owner_statements.common import PayoutUnbekannt
+    from src.features.owner_statements.router import _payout_fehler
+
+    fehler = _payout_fehler(
+        PayoutUnbekannt("portal_abzug", "Kein Satz hinterlegt.")
+    )
+    assert fehler.status_code == 422
+    # Die Meldung sagt, WO die Einstellung sitzt — der rohe Grund allein ist
+    # keine Auskunft für einen Menschen.
+    assert "Abrechnungsregeln" in fehler.detail
+
+
+def test_unbekannte_gruende_bleiben_verstaendlich() -> None:
+    """Ein Grund ohne Hinweistext darf keinen leeren Satz erzeugen."""
+    from src.features.owner_statements.common import PayoutUnbekannt
+    from src.features.owner_statements.router import _payout_fehler
+
+    fehler = _payout_fehler(PayoutUnbekannt("waehrung_vertrag", "Währung passt nicht."))
+    assert fehler.status_code == 422
+    assert fehler.detail == "Währung passt nicht."

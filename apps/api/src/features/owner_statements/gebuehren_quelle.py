@@ -1,0 +1,1016 @@
+"""Die Gebühren EINER Buchung samt Zuordnung — die eine Quelle dafür.
+
+Drei Verbraucher brauchen dieselbe Liste: der Eigentümer-Kalender, die
+Einnahmen-Übersicht und die Abrechnung. Läge die Ableitung dreimal im Code,
+zeigte jede Ansicht über kurz oder lang eine andere Zahl für dasselbe Geld —
+genau der Fehler, den ``common.py`` für die Provisionsformel verhindert.
+
+WARUM DIE GEBÜHREN AUS DEM OTA-PAYLOAD KOMMEN, WO ES IHN GIBT:
+Live belegt am 11.08.2026 — Airbnb rechnet bei Buchung HM94QD5Y3X eine
+Reinigung von 1.075,00 DKK ab, am Objekt sind 795,00 DKK gepflegt. Wer mit den
+Stammdaten rechnet, weist dem Eigentümer eine Auszahlung aus, die nicht zu dem
+passt, was der Gast wirklich gezahlt hat. Der Payload ist die TATSACHE, die
+Stammdaten sind die Absicht.
+
+DIE PAYLOAD-KARTE — WELCHES PORTAL MELDET WO, live über 77 Buchungen geprüft
+(11.08.2026). Sie ist der Grund, warum die Reihenfolge in
+``gebuehren_der_buchung`` festgelegt ist und nicht beliebig:
+
+===================================== ========= ============== ==============
+Stelle im ``raw``                     Airbnb    Booking direkt Booking-Import
+                                      (22)      (4)            (51)
+===================================== ========= ============== ==============
+``raw_message`` → ``reservation``
+``.standard_fees_details``            22/22     —              —
+``rooms[].taxes``                     leer!     3/4            leer
+``rooms[].meta.price_details``        —         3/4            —
+``rooms[].meta.charge_periods``       —         3/4            —
+``raw_message`` → ``RoomStays``
+``…PriceDetails``                     —         3/4 (Kopie)    —
+===================================== ========= ============== ==============
+
+Drei Dinge stecken darin, die man leicht falsch annimmt:
+
+1. **``raw_message`` liegt bei ALLEN 77 Buchungen**, nicht nur bei Airbnb. Die
+   Kanäle trennt der INHALT: Airbnb schickt ``reservation.*``, Booking sein
+   OTA-XML mit ``RoomStays``. Eine Erkennung „hat ``raw_message`` → Airbnb"
+   wäre falsch.
+2. **``rooms[].taxes`` ist bei Airbnb vorhanden und LEER.** Wer es als
+   Erstleser nimmt, liest dort „keine Gebühren angefallen" und bringt jede
+   Airbnb-Buchung um ihre Reinigung. Darum fragt ``gebuehren_der_buchung``
+   Airbnb ZUERST, und ``booking_aufgeloeste_posten`` verlangt bei leerer Liste
+   zusätzlich ``meta.price_details`` daneben.
+3. **``RoomStays…PriceDetails`` ist eine wörtliche Kopie** von
+   ``meta.price_details`` — eine Ebene tiefer im XML, inhaltlich identisch. Sie
+   wird nicht gelesen; sie trägt nichts Neues.
+
+Die beiden Portale meinen mit ``total_amount`` außerdem Verschiedenes:
+
+* **Airbnb** — schon NETTO (Basis + Gebühren − Provision, an 22/22 nachgerechnet).
+* **Booking.com** — BRUTTO: Nächtesumme + Gebühren (10.795 + 225 + 1.075 =
+  12.095, exakt aufgegangen).
+
+Das ist der Grund für ``GebuehrenBefund.im_gesamtpreis``. Ohne die
+Unterscheidung addiert die Kette die Gebühren bei Booking ZWEIMAL — einmal, weil
+sie im Gesamtbetrag schon stecken, und einmal als eigener Posten. Bei einer
+9-Nächte-Buchung wären das 1.300 DKK zu viel, in einer Auszahlung, die plausibel
+aussieht.
+
+WAS DAS PORTAL NICHT MELDET, GIBT ES NICHT: Die 51 Altimporte tragen keine
+Aufstellung, und Channex kann sie nicht nachliefern. Bis 11.08.2026 sprangen dort
+die Objekt-Stammdaten ein — und erzeugten über den Bestand 191 Reinigungs-, 151
+Resort- und 73 Haustier-Posten (zusammen 218.020 DKK), von denen kein einziger
+belegt war. Sie flossen als Ertrag in die Eigentümer-Auszahlung. Seitdem gilt:
+bei einer Portal-Buchung ohne Aufstellung bleibt die Liste LEER
+(``quelle='ota_ohne_aufstellung'``) und die Buchung wird als solche ausgewiesen.
+Stammdaten gelten nur, wo es nie einen Payload gab (eigene Website, Telefon).
+
+WARUM ``fee_classification`` PFLICHT IST: ohne Zuordnung ist nicht bestimmbar,
+wem der Betrag gehört und ob er in die Provisionsbemessung fließt. Ein Default
+(„gehört wohl dem Eigentümer, ist wohl provisionspflichtig") schlüge das Geld
+der falschen Partei zu — bei der Reinigung wären das 795 DKK je Buchung
+(Wurzel 4). Fehlt die Zuordnung, wird der Betrag NICHT geraten.
+"""
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from decimal import Decimal
+from typing import Any
+
+from supabase import Client
+
+from .common import Gebuehr, PayoutUnbekannt, zu_decimal
+
+# Airbnbs Gebührenarten (``standard_fees_details.fee_type``) auf unsere
+# ``fee_classification.fee_type``-Werte. Die Zuordnung ist bewusst explizit und
+# NICHT per String-Manipulation geraten: ein unbekannter Airbnb-Typ soll als
+# unbekannt auffallen, statt still auf eine falsche Klassifikation zu fallen.
+_AIRBNB_ARTEN = {
+    "PASS_THROUGH_CLEANING_FEE": "cleaning_fee",
+    "PASS_THROUGH_RESORT_FEE": "resort",
+    "PASS_THROUGH_PET_FEE": "pet_fee",
+    "PASS_THROUGH_MANAGEMENT_FEE": "management_fee",
+    "PASS_THROUGH_COMMUNITY_FEE": "community_fee",
+    "PASS_THROUGH_LINEN_FEE": "linen_fee",
+}
+
+# Booking.com meldet die Gebührenart NUR als freien Text in
+# ``tax_description`` — live geprüft: „Reinigungsgebühr", „Resortgebühr",
+# „Haustiergebühr". Das ``code``-Feld taugt NICHT zur Unterscheidung: Reinigung
+# und Resort tragen beide ``code: "14"``, bei der Haustiergebühr steht der
+# deutsche Text sogar selbst im Code-Feld. Darum wird der Text abgebildet, und
+# zwar explizit statt per Teilstring-Suche — „Reinigungsgebühr" und
+# „Endreinigungsgebühr" wären sonst dieselbe Art, obwohl der Betrieb sie
+# getrennt vereinbart haben kann.
+#
+# Der Schlüssel ist kleingeschrieben und getrimmt, weil Booking denselben Text
+# in verschiedener Schreibweise liefern kann; der Text selbst ist SPRACHABHÄNGIG
+# (er kommt in der Sprache des Inserats). Ein unbekannter Text wirft darum mit
+# einem Grund, der die Art nennt — der Betrieb trägt sie dann hier nach, statt
+# dass ein geratener Betrag in eine Auszahlung läuft.
+_BOOKING_ARTEN = {
+    "reinigungsgebühr": "cleaning_fee",
+    "cleaning fee": "cleaning_fee",
+    "resortgebühr": "resort",
+    "resort fee": "resort",
+    "haustiergebühr": "pet_fee",
+    "pet fee": "pet_fee",
+    "wäschegebühr": "linen_fee",
+    "linen fee": "linen_fee",
+}
+
+
+@dataclass(frozen=True, slots=True)
+class GebuehrenBefund:
+    """Die Gebühren einer Buchung PLUS die Aussage, WAS ``total_amount`` ist.
+
+    Der Grund, warum dieser Typ existiert statt einer nackten Liste: die beiden
+    Portale legen in dasselbe Feld ``total_amount`` zwei völlig verschiedene
+    Beträge, und beide sehen plausibel aus.
+
+    ``uebernachtung`` ist der REINE Übernachtungsbetrag der Buchung, aus der
+    Quelle abgeleitet — oder ``None``, wenn der Payload ihn nicht hergibt und
+    ``total_amount`` der Buchung selbst zu nehmen ist. Das ist der Kern:
+
+    * **Airbnb** — ``total_amount`` ist ``payout_amount``, also die Auszahlung
+      NACH Abzug der 15,5 % Portal-Provision. An 22/22 Live-Buchungen
+      nachgerechnet: ``base_price + standard_fees_details − host_fee_base =
+      payout_amount``, ausnahmslos, mit konstant 15,50 %. Wer diesen Betrag als
+      Übernachtungspreis liest, zieht die Portal-Provision ein ZWEITES Mal ab.
+      Darum wird hier ``base_price`` als Übernachtung gemeldet.
+    * **Booking.com** — ``total_amount`` ist der GASTPREIS brutto (Nächtesumme +
+      Gebühren, an 3/3 Buchungen exakt aufgegangen, u. a. 10.795 + 225 + 1.075 =
+      12.095). Die Provision ist darin NICHT abgezogen; sie steht separat und
+      ist konstant 15,00 % dieses Betrags.
+    * **Altimport ohne Aufstellung** — der Payload sagt nichts, ``uebernachtung``
+      bleibt ``None`` und ``total_amount`` gilt als Übernachtungsbetrag. Das ist
+      die einzige verfügbare Deutung; sie ist gekennzeichnet, damit sie nicht mit
+      einem belegten Wert verwechselt wird.
+
+    ``im_gesamtpreis`` sagt, ob der maßgebliche Betrag die Gebühren schon
+    enthält — bei Booking ja, bei Airbnb (``base_price``) und den Stammdaten
+    nein.
+
+    ``quelle`` benennt, woher die Liste kommt — bei einer Rückfrage zur
+    Abrechnung ist das die erste Frage:
+
+    * ``ota`` — das Portal hat die Gebühren gemeldet. Tatsache.
+    * ``ota_ohne_aufstellung`` — Portal-Buchung, aber ohne Aufstellung im
+      Payload. Die Liste ist LEER, und das ist eine Aussage: nicht gemeldet
+      heißt nicht gezahlt. ``grund`` sagt, warum nichts kam. Diese Buchungen
+      werden in der Abrechnung ausgewiesen, statt mit Stammdaten überdeckt.
+    * ``stammdaten`` — keine Portal-Buchung (eigene Website, Telefon). Dann gibt
+      es keinen Payload, und die gepflegten Gebühren des Objekts sind die
+      richtige Quelle: sie sind das, was der Betrieb selbst berechnet hat.
+    """
+
+    gebuehren: list[Gebuehr]
+    im_gesamtpreis: bool
+    quelle: str
+    uebernachtung: Decimal | None = None
+    # Der Originaltext des Portals je Gebührenart, wo es einen liefert (Booking
+    # meldet die Art NUR als freien, sprachabhängigen Text). Aufbewahrt, weil
+    # bei einer unbekannten Art genau dieser Text die Frage beantwortet, was der
+    # Betrieb zuordnen muss — mit unserem internen Schlüssel allein liesse sich
+    # das nicht nachvollziehen.
+    bezeichnungen: dict[str, str] = field(default_factory=dict)
+    # Bei ``quelle='stammdaten'``: WARUM das Portal nichts geliefert hat
+    # (``channex_import`` | ``portal_meldet_keine`` | ``kein_payload``). Siehe
+    # ``_stammdaten_grund`` — ohne diesen Wert ist an der Buchung nicht
+    # erkennbar, ob eine Lücke behebbar ist oder in der Natur des Eingangswegs
+    # liegt.
+    grund: str | None = None
+
+    def basisbetrag(self, total_amount: object) -> object:
+        """Der Betrag, mit dem die Kette rechnen MUSS.
+
+        Der Payload-Wert schlägt ``total_amount`` — diese Regel steht hier
+        EINMAL, damit sie nicht in jedem der drei Verbraucher eigenständig
+        nachgebildet (und irgendwann vergessen) wird. Genau so entstand der
+        doppelte Provisionsabzug bei Airbnb.
+        """
+        return self.uebernachtung if self.uebernachtung is not None else total_amount
+
+
+def _fee_betrag(fee: dict[str, Any], naechte: int) -> Decimal:
+    """Den auf DIESE Buchung entfallenden Betrag einer Objekt-Gebühr.
+
+    ``per_night`` × Nächte, ``per_stay`` unverändert. Prozentuale Gebühren
+    (``mode='percent'``) kommen im Bestand nicht vor und werden hier NICHT
+    stillschweigend als Betrag gelesen — das wäre aus 8 % plötzlich 8,00 DKK.
+    """
+    if str(fee.get("mode") or "amount") != "amount":
+        raise PayoutUnbekannt(
+            "gebuehr_nicht_berechenbar",
+            f"Gebühr „{fee.get('name') or fee.get('feeType')}“ ist prozentual "
+            "hinterlegt; die Auszahlung kann sie nicht als Betrag verrechnen.",
+        )
+    betrag = zu_decimal(fee.get("amount"))
+    if betrag is None:
+        raise PayoutUnbekannt(
+            "gebuehr_nicht_berechenbar",
+            f"Gebühr „{fee.get('name') or fee.get('feeType')}“ ohne Betrag.",
+        )
+    basis = str(fee.get("basis") or "per_stay")
+    if basis == "per_night":
+        if naechte <= 0:
+            raise PayoutUnbekannt(
+                "naechte",
+                "Gebühr je Nacht ohne Nächte nicht berechenbar.",
+            )
+        return betrag * naechte
+    return betrag
+
+
+# DIE STAMMDATEN BELEGEN NUR, DASS EINE GEBÜHR ERHOBEN WÜRDE — NICHT, DASS SIE
+# ERHOBEN WURDE. Was der Gast wirklich gezahlt hat, steht in der Buchung. Darum
+# sind die Stammdaten seit 11.08.2026 NUR noch die Quelle für Buchungen ohne
+# Portal (eigene Website, Telefon, Rezeption); dort sind sie die richtige, denn
+# dort hat der Betrieb selbst nach ihnen abgerechnet.
+#
+# Was der alte Portal-Rückfall angerichtet hat, live gemessen am 11.08.2026:
+#   * ``cleaning_fee`` — 191 Posten (186.120 DKK)
+#   * ``resort``       — 151 Posten  (20.950 DKK), während die Abrechnung des
+#     Betriebs dieselben Buchungen mit 0,00 ausweist
+#   * ``pet_fee``      —  73 Posten  (10.950 DKK) bei nur 18 Buchungen mit Tier
+# Alles floss als Ertrag in die Eigentümer-Auszahlung und verschob sie gegenüber
+# der Abrechnung, mit der der Betrieb wirklich rechnet.
+#
+# Für anlassgebundene Arten steht der Anlass an der Reservierung. Ist das Feld
+# gefüllt, gilt die Gebühr als gebucht.
+_ANLASS_GEBUEHREN: dict[str, str] = {
+    "pet_fee": "pets",
+}
+
+
+def objekt_gebuehren(
+    type_attributes: dict[str, Any] | None,
+    naechte: int,
+    *,
+    anlass: dict[str, Any] | None = None,
+) -> list[tuple[str, Decimal]]:
+    """Die gepflegten Gebühren eines Objekts als ``(art, betrag)``.
+
+    Liest dieselbe Stelle wie ``properties.gebuehren._fees_von``
+    (``type_attributes.pricing.fees``) — nicht die Kopie in
+    ``property_pricing_config``, damit es EINE Quelle bleibt.
+
+    ``anlass`` ist die Reservierungszeile. Ohne sie werden anlassgebundene
+    Gebühren (siehe ``_ANLASS_GEBUEHREN``) NICHT angesetzt — nicht „vermutlich
+    schon", denn das erfände Geld, das der Gast nie gezahlt hat (Wurzel 4).
+    """
+    pricing = ((type_attributes or {}).get("pricing") or {})
+    out: list[tuple[str, Decimal]] = []
+    for fee in pricing.get("fees") or []:
+        if not isinstance(fee, dict):
+            continue
+        art = str(fee.get("feeType") or "").strip()
+        if not art:
+            # Ohne Art gibt es keine Zuordnung und damit keine Verrechnung.
+            # Sie zu erfinden hieße, den Betrag einer geratenen Partei
+            # zuzuschlagen.
+            raise PayoutUnbekannt(
+                "gebuehr_nicht_zugeordnet",
+                f"Gebühr „{fee.get('name') or '?'}“ hat keine Gebührenart.",
+            )
+        feld = _ANLASS_GEBUEHREN.get(art)
+        if feld is not None and (zu_decimal((anlass or {}).get(feld)) or 0) <= 0:
+            continue
+        out.append((art, _fee_betrag(fee, naechte)))
+    return out
+
+
+def _airbnb_reservierung(raw: object) -> dict[str, Any] | None:
+    """Airbnbs Original-Reservierung aus dem Payload schälen.
+
+    Eigene Funktion, weil das AUSPACKEN (mehrere Ebenen, teils als JSON-String
+    eingebettet) nichts mit der fachlichen Bewertung zu tun hat. Jede Ebene, die
+    fehlt oder anders aussieht als erwartet, ergibt ``None`` — „dieser Payload
+    ist kein Airbnb-Feed", nicht „es gab keine Werte".
+    """
+    if not isinstance(raw, dict):
+        return None
+    nachricht = raw.get("raw_message")
+    if not nachricht:
+        return None
+    if isinstance(nachricht, str):
+        try:
+            nachricht = json.loads(nachricht)
+        except (ValueError, TypeError):
+            return None
+    if not isinstance(nachricht, dict):
+        return None
+    reservierung = nachricht.get("reservation")
+    return reservierung if isinstance(reservierung, dict) else None
+
+
+def _gebuehren_posten(raw: object) -> list[object] | None:
+    """Airbnbs ``standard_fees_details`` aus dem Payload schälen."""
+    reservierung = _airbnb_reservierung(raw)
+    if reservierung is None:
+        return None
+    posten = reservierung.get("standard_fees_details")
+    return posten if isinstance(posten, list) else None
+
+
+def airbnb_uebernachtung(raw: object) -> Decimal | None:
+    """Airbnbs REINEN Übernachtungsbetrag (``base_price`` + Zusatzgast).
+
+    DER WICHTIGSTE WERT DIESES MODULS, und der am leichtesten zu verwechselnde:
+    ``total_amount`` einer Airbnb-Buchung ist ``payout_amount`` — die Auszahlung
+    NACH Abzug der Portal-Provision. Wer ihn als Übernachtungspreis liest, zieht
+    die 15,5 % ein zweites Mal ab und weist dem Eigentümer eine zu kleine
+    Auszahlung aus, die plausibel aussieht.
+
+    An 22/22 Live-Buchungen des Beta-Betriebs nachgerechnet (11.08.2026),
+    ausnahmslos und ohne einen Cent Abweichung::
+
+        base_price + extra_guest_fee + standard_fees_details
+          − host_fee_base = payout_amount = total_amount
+
+    Der so gebildete Bruttopreis ergibt zugleich die Provision als konstant
+    15,50 % — dieselbe Zahl an allen 22 Buchungen. Auf ``payout_amount`` bezogen
+    streute derselbe Abzug scheinbar zwischen 12,34 % und 17,02 %; genau diese
+    Streuung war das Symptom des falschen Bezugs.
+
+    ``extra_guest_fee`` gehört zum Übernachtungspreis und NICHT zu den
+    ``standard_fees_details``: er ist ein Aufschlag auf die Unterkunft, keine
+    separat vereinbarte Gebühr, und ist deshalb voll provisionspflichtig. Im
+    Bestand ist er durchgehend 0,00 — er wird trotzdem addiert, weil eine
+    Buchung mit Zusatzgast sonst still zu niedrig ausgewiesen würde.
+
+    ``None`` heißt „kein Airbnb-Feed-Payload" — dann gilt ``total_amount``.
+    """
+    reservierung = _airbnb_reservierung(raw)
+    if reservierung is None:
+        return None
+    basis = zu_decimal(reservierung.get("base_price"))
+    if basis is None:
+        # Ein Airbnb-Payload OHNE base_price wäre ein unbekanntes Format. Auf
+        # `total_amount` zurückzufallen wäre hier besonders gefährlich, weil das
+        # bei Airbnb nachweislich der Netto-Payout ist — die Provision würde
+        # doppelt abgezogen, ohne dass es auffällt.
+        raise PayoutUnbekannt(
+            "betrag",
+            "Airbnb-Buchung ohne „base_price“ — der Übernachtungsbetrag ist "
+            "damit unbekannt, und der Gesamtbetrag ist bei Airbnb bereits die "
+            "Auszahlung nach Provision.",
+        )
+    return basis + (zu_decimal(reservierung.get("extra_guest_fee")) or Decimal("0"))
+
+
+def ota_gebuehren(raw: object) -> list[tuple[str, Decimal]] | None:
+    """Die vom PORTAL gemeldeten Gebühren, oder ``None`` wenn es keine meldet.
+
+    ``None`` und „leere Liste" sind verschiedene Aussagen: ``None`` heißt „das
+    Portal meldet keine Gebühren, nimm die Stammdaten" (Booking.com), eine leere
+    Liste heißt „das Portal hat gemeldet, dass keine anfielen". Nur so bleibt
+    unterscheidbar, ob die Stammdaten einspringen dürfen.
+
+    Gelesen wird Airbnbs ``standard_fees_details`` aus der Original-Nachricht.
+    Ein unbekannter Gebührentyp wirft — er stillschweigend zu überspringen
+    verlöre einen Betrag, den der Gast bezahlt hat.
+    """
+    posten = _gebuehren_posten(raw)
+    if posten is None:
+        return None
+    out: list[tuple[str, Decimal]] = []
+    for p in posten:
+        if not isinstance(p, dict):
+            continue
+        roh_art = str(p.get("fee_type") or "").strip()
+        art = _AIRBNB_ARTEN.get(roh_art)
+        if art is None:
+            raise PayoutUnbekannt(
+                "gebuehr_nicht_zugeordnet",
+                f"Unbekannte Gebührenart „{roh_art}“ aus dem Portal-Feed.",
+            )
+        betrag = zu_decimal(p.get("amount"))
+        if betrag is None:
+            raise PayoutUnbekannt(
+                "gebuehr_nicht_berechenbar",
+                f"Portal-Gebühr „{roh_art}“ ohne Betrag.",
+            )
+        out.append((art, betrag))
+    return out
+
+
+def _minor_betrag(posten: dict[str, Any], art: str) -> Decimal:
+    """Bookings Minor-Units-Betrag in einen echten Betrag wandeln.
+
+    Booking liefert ``amount`` als Ganzzahl-String plus ``decimal_places``:
+    ``{"amount": "107500", "decimal_places": 2}`` sind 1.075,00 DKK. Ohne die
+    Division wären es das Hundertfache — eine Reinigungsgebühr von 107.500 DKK,
+    die jede Auszahlung ins Negative zieht. Derselbe Faktor-Fehler wie bei
+    Airbnbs Mikro-Einheiten, nur an einem anderen Portal.
+
+    ``decimal_places`` wird NICHT auf 2 defaulted: fehlt es, ist die Skala des
+    Betrags unbekannt, und eine geratene Skala verschiebt das Komma (Wurzel 4).
+    Währungen ohne Nachkomma (JPY, ISK) liefern hier legitim 0.
+    """
+    roh = posten.get("amount")
+    stellen = posten.get("decimal_places")
+    if roh is None or stellen is None:
+        raise PayoutUnbekannt(
+            "gebuehr_nicht_berechenbar",
+            f"Portal-Gebühr „{art}“ ohne Betrag oder ohne Nachkommastellen — "
+            "die Größenordnung des Betrags ist damit unbestimmt.",
+        )
+    try:
+        skala = int(stellen)
+    except (TypeError, ValueError) as exc:
+        raise PayoutUnbekannt(
+            "gebuehr_nicht_berechenbar",
+            f"Portal-Gebühr „{art}“ mit unlesbaren Nachkommastellen "
+            f"„{stellen}“.",
+        ) from exc
+    if skala < 0:
+        raise PayoutUnbekannt(
+            "gebuehr_nicht_berechenbar",
+            f"Portal-Gebühr „{art}“ mit negativen Nachkommastellen {skala}.",
+        )
+    betrag = zu_decimal(roh)
+    if betrag is None:
+        raise PayoutUnbekannt(
+            "gebuehr_nicht_berechenbar",
+            f"Portal-Gebühr „{art}“ ohne Betrag.",
+        )
+    return betrag / (Decimal(10) ** skala)
+
+
+def booking_aufgeloeste_posten(raw: object) -> list[tuple[str, Decimal]] | None:
+    """Bookings Gebühren aus ``rooms[].taxes`` — der AUFGELÖSTEN Aufstellung.
+
+    DIE BESSERE VON ZWEI STELLEN, und sie lag von Anfang an im gespeicherten
+    Payload. Channex liefert dieselben Gebühren zweimal, und wir lasen bis
+    11.08.2026 die schlechtere Fassung::
+
+        rooms[].meta.price_details.guest_view.taxes   (was wir lasen)
+          {"amount": "22500", "decimal_places": 2, "charge_frequency": 19,
+           "tax_description": "Resortgebühr", "type": "Inclusive"}
+
+        rooms[].taxes                                 (was daneben lag)
+          {"total_price": "225.00", "price_per_unit": "25.00",
+           "price_mode": "Per night", "nights": 9, "persons": 2,
+           "name": "Resortgebühr", "is_inclusive": false}
+
+    Drei Rateschritte fallen damit weg: die Minor-Units-Division, das Ableiten
+    der Berechnungsart aus ``charge_frequency`` (19/12 als Zahlencode), und die
+    Frage, ob der Posten im Gesamtbetrag steckt — ``is_inclusive`` sagt es
+    direkt, während ``type: "Inclusive"`` an derselben Gebühr das GEGENTEIL
+    suggeriert (beide Posten sind laut ``charge_periods`` ``excluded``, und die
+    Summen gehen nur auf, wenn man sie addiert).
+
+    ``price_mode``/``price_per_unit``/``nights`` werden NICHT zum Rechnen
+    benutzt: ``total_price`` ist der fertige Betrag für den Aufenthalt (an
+    beiden Live-Buchungen geprüft, 25,00 × 9 = 225,00). Sie sind der Beleg, wie
+    das Portal auf die Summe kam — deshalb wandert ``price_mode`` in die
+    Bezeichnungen, statt verworfen zu werden.
+
+    ACHTUNG, DIE FALLE: ``rooms[].taxes`` ist bei AIRBNB ebenfalls vorhanden,
+    dort aber immer LEER (22/22 geprüft) — Airbnbs Gebühren stehen einzig in
+    ``raw_message.reservation.standard_fees_details``. Als blinder Erstleser
+    verstünde diese Funktion die leere Liste als „keine Gebühren angefallen" und
+    brächte jede Airbnb-Buchung um ihre Reinigung. Darum zwei Vorkehrungen:
+    ``gebuehren_der_buchung`` fragt Airbnb ZUERST, und eine leere Liste gilt hier
+    nur dann als Aussage, wenn ``meta.price_details`` daneben liegt (das trägt
+    ausschließlich Booking).
+
+    ``None`` heißt „diese Stelle ist nicht die Quelle dieser Buchung".
+    """
+    if not isinstance(raw, dict):
+        return None
+    zimmer = raw.get("rooms")
+    if not isinstance(zimmer, list):
+        return None
+
+    out: list[tuple[str, Decimal]] = []
+    gefunden = False
+    for z in zimmer:
+        if not isinstance(z, dict):
+            continue
+        posten = z.get("taxes")
+        if not isinstance(posten, list):
+            continue
+        if not posten and not _hat_booking_preisdetails(z):
+            # Leer UND ohne Booking-Preisdetails daneben: das ist der
+            # Airbnb-Fall. Die Stelle existiert, ist aber nicht die Quelle.
+            continue
+        gefunden = True
+        for p in posten:
+            if not isinstance(p, dict):
+                continue
+            text = str(p.get("name") or "").strip()
+            art = _BOOKING_ARTEN.get(text.casefold())
+            if art is None:
+                raise PayoutUnbekannt(
+                    "gebuehr_nicht_zugeordnet",
+                    f"Unbekannte Gebührenart „{text or '?'}“ aus der "
+                    "Booking.com-Preisaufstellung.",
+                )
+            betrag = zu_decimal(p.get("total_price"))
+            if betrag is None:
+                raise PayoutUnbekannt(
+                    "gebuehr_nicht_berechenbar",
+                    f"Portal-Gebühr „{text}“ ohne Gesamtbetrag.",
+                )
+            out.append((art, betrag))
+    return out if gefunden else None
+
+
+def portal_posten(
+    raw: object,
+) -> tuple[list[tuple[str, Decimal]], dict[str, str]] | None:
+    """Die vom Portal gemeldeten Gebühren — DIE EINE Leser-Reihenfolge.
+
+    Drei Stellen im Code brauchten dieselbe Kette und hatten sie dreimal
+    nachgebaut (Auszahlung, Gebühren-Nachweis, Quote-Positionen). Als
+    ``rooms[].taxes`` als neue erste Stelle dazukam, hätte man sie an drei Orten
+    einfügen müssen — und eine übersehen. Genau so entstehen zwei Zahlen für
+    dasselbe Geld.
+
+    Reihenfolge und ihre Begründung stehen in der Payload-Karte oben im Modul:
+    Airbnb ZUERST (weil ``rooms[].taxes`` bei Airbnb existiert und leer ist),
+    dann Bookings aufgelöste Aufstellung, dann Bookings Minor-Units-Fassung.
+
+    Rückgabe ``(posten, bezeichnungen)`` oder ``None``, wenn keine Stelle die
+    Quelle dieser Buchung ist. ``None`` und ``([], {})`` sind verschiedene
+    Aussagen — siehe ``ota_gebuehren``.
+    """
+    posten = ota_gebuehren(raw)
+    if posten is not None:
+        return posten, {}
+    posten = booking_aufgeloeste_posten(raw)
+    if posten is not None:
+        return posten, booking_aufgeloeste_bezeichnungen(raw)
+    posten = booking_gebuehren(raw)
+    if posten is not None:
+        return posten, booking_bezeichnungen(raw)
+    return None
+
+
+def _hat_booking_preisdetails(zimmer: dict[str, Any]) -> bool:
+    """Trägt DIESES Zimmer Bookings Preisdetails?
+
+    Das Unterscheidungsmerkmal zwischen „leere Gebührenliste = keine Gebühren"
+    (Booking) und „leere Gebührenliste = falsche Stelle" (Airbnb). Live geprüft:
+    ``meta.price_details`` gibt es ausschließlich bei Booking-Buchungen mit
+    Aufstellung, bei keiner der 22 Airbnb-Buchungen.
+    """
+    meta = zimmer.get("meta")
+    if not isinstance(meta, dict):
+        return False
+    return isinstance(meta.get("price_details"), dict)
+
+
+def booking_aufgeloeste_bezeichnungen(raw: object) -> dict[str, str]:
+    """Originaltext PLUS Berechnungsart je Gebührenart, aus ``rooms[].taxes``.
+
+    ``„Resortgebühr (Per night)"`` statt nur ``„Resortgebühr"``: bei einer
+    Rückfrage zur Abrechnung ist die zweite Frage immer, wie das Portal auf die
+    Summe kam. Die Angabe steht im Payload und wäre sonst verworfen.
+    """
+    if not isinstance(raw, dict):
+        return {}
+    zimmer = raw.get("rooms")
+    if not isinstance(zimmer, list):
+        return {}
+    out: dict[str, str] = {}
+    for z in zimmer:
+        if not isinstance(z, dict):
+            continue
+        posten = z.get("taxes")
+        if not isinstance(posten, list):
+            continue
+        for p in posten:
+            if not isinstance(p, dict):
+                continue
+            text = str(p.get("name") or "").strip()
+            art = _BOOKING_ARTEN.get(text.casefold())
+            if not art or not text:
+                continue
+            modus = str(p.get("price_mode") or "").strip()
+            out[art] = f"{text} ({modus})" if modus else text
+    return out
+
+
+def _booking_posten(raw: object) -> list[object] | None:
+    """Bookings Gebührenposten aus ``meta.price_details`` — die ZWEITE Stelle.
+
+    Fallback hinter ``booking_aufgeloeste_posten``. Sie bleibt, weil sie in
+    Bookings XML-Nachricht ein zweites Mal auftaucht (``RoomStays…PriceDetails``,
+    inhaltlich identisch) und damit belegt das Format der Aggregators; fiele
+    ``rooms[].taxes`` einmal aus, wäre die Aufstellung sonst verloren.
+
+    ALLE Zimmer, nicht nur das erste: eine Buchung kann mehrere Zimmer eines
+    Typs enthalten, und jedes trägt seine eigene Aufstellung. Nur ``rooms[0]``
+    zu lesen verlöre die Gebühren der übrigen — ein Fehler, der bei den heutigen
+    Einzelzimmer-Buchungen unsichtbar bliebe und erst bei der ersten
+    Mehrzimmer-Buchung Geld verschiebt.
+
+    ``None`` heißt „dieser Payload trägt keine Aufstellung" (die 51 Altimporte),
+    nicht „es gab keine Gebühren".
+    """
+    if not isinstance(raw, dict):
+        return None
+    zimmer = raw.get("rooms")
+    if not isinstance(zimmer, list):
+        return None
+    gefunden = False
+    out: list[object] = []
+    for z in zimmer:
+        if not isinstance(z, dict):
+            continue
+        details = ((z.get("meta") or {}) if isinstance(z.get("meta"), dict) else {}).get(
+            "price_details"
+        )
+        if not isinstance(details, dict):
+            continue
+        sicht = details.get("guest_view")
+        if not isinstance(sicht, dict):
+            continue
+        posten = sicht.get("taxes")
+        if not isinstance(posten, list):
+            continue
+        # Ab hier steht fest: der Payload TRÄGT eine Aufstellung. Eine leere
+        # Liste ist dann die Aussage „keine Gebühren angefallen" und darf nicht
+        # als „keine Aufstellung" gelesen werden — sonst sprängen die
+        # Stammdaten ein und erfänden Gebühren, die der Gast nie gezahlt hat.
+        gefunden = True
+        out.extend(posten)
+    return out if gefunden else None
+
+
+def booking_naechte_summe(raw: object) -> Decimal | None:
+    """Die Summe der Tagespreise aus Bookings ``rooms[].days``.
+
+    Der REINE Übernachtungsbetrag einer Booking-Buchung. Er ist nötig, weil
+    ``total_amount`` dort der Gastpreis inklusive Gebühren ist — die Aufteilung
+    „Übernachtung / Gebühren" ist ohne diese Summe nicht darstellbar, und die
+    Abrechnung weist beide Zeilen getrennt aus.
+
+    Live bei allen 55 Booking-Buchungen vorhanden. Sie geht mit den Gebühren
+    exakt auf den Gesamtbetrag auf (3/3 mit Aufstellung: 10.795 + 1.300 = 12.095,
+    2.082,50 + 1.125 = 3.207,50, 1.150 + 150 = 1.300) und bei den 51 Altimporten
+    ohne Gebühren direkt auf ``total_amount`` — die eine Ausnahme ist eine
+    stornierte Buchung, deren Betrag auf 0,00 gesetzt wurde, während die
+    Tagespreise stehen blieben.
+
+    ALLE Zimmer, aus demselben Grund wie in ``_booking_posten``.
+    """
+    if not isinstance(raw, dict):
+        return None
+    zimmer = raw.get("rooms")
+    if not isinstance(zimmer, list):
+        return None
+    gefunden = False
+    summe = Decimal("0")
+    for z in zimmer:
+        if not isinstance(z, dict):
+            continue
+        tage = z.get("days")
+        if not isinstance(tage, dict):
+            continue
+        for wert in tage.values():
+            betrag = zu_decimal(wert)
+            if betrag is None:
+                # Ein unlesbarer Tagespreis macht die SUMME unbrauchbar — sie
+                # wäre zu niedrig, und eine zu niedrige Übernachtung schöbe den
+                # Rest still in die Gebühren.
+                return None
+            summe += betrag
+            gefunden = True
+    return summe if gefunden else None
+
+
+def booking_gebuehren(raw: object) -> list[tuple[str, Decimal]] | None:
+    """Die von Booking.com gemeldeten Gebühren, oder ``None`` ohne Aufstellung.
+
+    Der Betrag steht im Payload schon FERTIG SUMMIERT für den Aufenthalt — die
+    Resortgebühr erscheint bei 2 Nächten als 50,00 und bei 9 Nächten als 225,00
+    (25,00/Nacht, live an beiden Buchungen geprüft). ``charge_frequency`` (19 =
+    je Nacht, 12 = je Aufenthalt) ist deshalb nur eine Auskunft und wird hier
+    NICHT zum Multiplizieren benutzt: das würde den Betrag ein zweites Mal mit
+    den Nächten hochrechnen.
+
+    ``type: "Inclusive"`` steht an allen Posten, heißt hier aber nicht „im
+    Tagespreis enthalten": ``charge_periods`` markiert beide Gebühren als
+    ``excluded: true``, und die Summen gehen nur auf, wenn man sie zu den
+    Tagespreisen ADDIERT (10.795 + 225 + 1.075 = 12.095 = Gesamtbetrag). Der
+    Gesamtbetrag der Buchung enthält sie also, die Tagespreise nicht.
+    """
+    posten = _booking_posten(raw)
+    if posten is None:
+        return None
+    out: list[tuple[str, Decimal]] = []
+    for p in posten:
+        if not isinstance(p, dict):
+            continue
+        text = str(p.get("tax_description") or "").strip()
+        art = _BOOKING_ARTEN.get(text.casefold())
+        if art is None:
+            raise PayoutUnbekannt(
+                "gebuehr_nicht_zugeordnet",
+                f"Unbekannte Gebührenart „{text or '?'}“ aus der "
+                "Booking.com-Preisaufstellung.",
+            )
+        out.append((art, _minor_betrag(p, text)))
+    return out
+
+
+def booking_bezeichnungen(raw: object) -> dict[str, str]:
+    """Der Originaltext des Portals je erkannter Gebührenart.
+
+    Getrennt von ``booking_gebuehren``, damit die Betragsermittlung nicht mit dem
+    Aufbewahren der Herkunft vermischt wird. Ein Text ohne bekannte Art
+    erscheint hier nicht — er hat die Betragsermittlung bereits abgebrochen.
+    """
+    posten = _booking_posten(raw)
+    if posten is None:
+        return {}
+    out: dict[str, str] = {}
+    for p in posten:
+        if not isinstance(p, dict):
+            continue
+        text = str(p.get("tax_description") or "").strip()
+        art = _BOOKING_ARTEN.get(text.casefold())
+        if art and text:
+            out[art] = text
+    return out
+
+
+# Bookings interne Gebührenschlüssel in ``meta.charge_periods`` auf unsere Arten.
+# Anders als ``tax_description`` ist dieser Schlüssel NICHT sprachabhängig — er
+# ist deshalb die verlässlichere Kennung, taucht aber nur in den Zeiträumen auf,
+# nicht an den Posten selbst.
+_BOOKING_ZEITRAUM_ARTEN = {
+    "CLEANINGFEE": "cleaning_fee",
+    "RESORTFEE": "resort",
+    "PETFEE": "pet_fee",
+    "LINENFEE": "linen_fee",
+}
+
+
+def booking_gebuehren_zeitraeume(raw: object) -> dict[str, list[dict[str, Any]]]:
+    """AB WANN eine Gebühr am Inserat gilt — aus ``meta.charge_periods``.
+
+    Der Payload sagt es selbst, und wir haben es ein halbes Jahr nicht gelesen::
+
+        "charge_periods": {
+          "CLEANINGFEE": [{"excluded": true, "from": "2026-08-04", "to": null}],
+          "RESORTFEE":   [{"excluded": true, "from": "2026-08-04", "to": null}]
+        }
+
+    Damit ist belegbar, was vorher nur zu vermuten war: eine Gebühr, die am
+    Objekt gepflegt ist, gilt beim Portal erst ab einem Datum. Eine Buchung von
+    vorher hat sie nicht bezahlt — und darf sie in der Abrechnung nicht tragen.
+    Genau diese Frage kostete am 11.08.2026 eine halbe Sitzung: 151 Resort-Posten
+    über 20.950 DKK waren aus Objekt-Stammdaten erzeugt, obwohl das Portal sie an
+    den betroffenen Buchungen nie erhoben hatte.
+
+    ``excluded: true`` heißt „nicht im Zimmerpreis enthalten", also ein eigener
+    Posten — passend zu ``is_inclusive: false`` an der Gebühr selbst.
+
+    Die Angabe wird hier nur AUSGELESEN, nicht gegen den Buchungszeitraum
+    geprüft: welche Gebühr angefallen ist, sagt die Buchung selbst (``taxes``).
+    Der Zeitraum ist der Beleg dafür, WARUM sie an einer älteren Buchung fehlt —
+    und beantwortet damit die Rückfrage, die sonst als Rechenfehler gilt.
+
+    Rückgabe: unsere Gebührenart → Liste der Zeiträume. Unbekannte Schlüssel
+    werden übersprungen (sie kosten kein Geld, ihr Fehlen bricht nichts).
+    """
+    if not isinstance(raw, dict):
+        return {}
+    zimmer = raw.get("rooms")
+    if not isinstance(zimmer, list):
+        return {}
+    out: dict[str, list[dict[str, Any]]] = {}
+    for z in zimmer:
+        if not isinstance(z, dict):
+            continue
+        meta = z.get("meta")
+        if not isinstance(meta, dict):
+            continue
+        perioden = meta.get("charge_periods")
+        if not isinstance(perioden, dict):
+            continue
+        for schluessel, spannen in perioden.items():
+            art = _BOOKING_ZEITRAUM_ARTEN.get(str(schluessel).strip().upper())
+            if art is None or not isinstance(spannen, list):
+                continue
+            for s in spannen:
+                if isinstance(s, dict):
+                    out.setdefault(art, []).append(s)
+    return out
+
+
+def klassifikation_laden(
+    db: Client, tenant_id: str
+) -> dict[tuple[str, str | None], tuple[str, bool]]:
+    """Die Gebühren-Zuordnungen des Betriebs als Nachschlagekarte.
+
+    Schlüssel ``(fee_type, property_id | None)`` — ``None`` ist die
+    Betriebsregel, ein gesetztes Objekt die Ausnahme. Einmal je Auswertung
+    geladen, nicht je Buchung: bei 30 Kalendertagen wären das sonst 30
+    identische Abfragen.
+    """
+    rows = (
+        db.table("fee_classification")
+        .select("fee_type, property_id, gehoert_zu, provisionspflichtig")
+        .eq("tenant_id", tenant_id)
+        .execute()
+    ).data or []
+    out: dict[tuple[str, str | None], tuple[str, bool]] = {}
+    for r in rows:
+        art = str(r.get("fee_type") or "")
+        pid = str(r["property_id"]) if r.get("property_id") else None
+        out[(art, pid)] = (
+            str(r.get("gehoert_zu") or ""),
+            bool(r.get("provisionspflichtig")),
+        )
+    return out
+
+
+def gebuehren_der_buchung(
+    *,
+    raw: object,
+    type_attributes: dict[str, Any] | None,
+    naechte: int,
+    klassifikation: dict[tuple[str, str | None], tuple[str, bool]],
+    property_id: str,
+    reservierung: dict[str, Any] | None = None,
+) -> GebuehrenBefund:
+    """Die Gebühren EINER Buchung — Portal-Meldung vor Objekt-Stammdaten.
+
+    Der eine Eingang für alle drei Verbraucher. Reihenfolge der Quellen ist
+    nicht beliebig: was das Portal gemeldet hat, wurde dem Gast wirklich
+    berechnet; die Stammdaten sagen nur, was berechnet werden SOLLTE.
+
+    ``reservierung`` ist die Buchungszeile. Sie wird NUR im Stammdaten-Rückfall
+    gebraucht, dort aber zwingend: sie entscheidet, welche der gepflegten
+    Gebühren bei DIESER Buchung überhaupt anfiel (siehe ``objekt_gebuehren``).
+    Ohne sie fallen Zusatzleistungen weg — das ist die vorsichtige Richtung, die
+    kein Geld erfindet.
+
+    Die drei Fälle werden AM PAYLOAD erkannt, nicht am Kanalnamen. Das ist
+    absichtlich: der Kanalname sagt nichts darüber, ob eine Buchung aus dem
+    Live-Feed kam oder ein Altimport ist — beide tragen ``BookingCom``, aber nur
+    der Feed liefert die Aufstellung. Eine Regel „Kanal == Booking → brutto"
+    rechnete die 51 Altimporte falsch.
+
+    Reihenfolge der Prüfung: Airbnb, dann Booking, dann Stammdaten. Die ersten
+    zwei schließen sich in den Echtdaten aus (kein Payload trägt beides), die
+    Reihenfolge ist also nur eine Festlegung für den hypothetischen Fall, dass
+    ein Portal eines Tages beides mitschickt — dann gilt die spezifischere
+    Airbnb-Struktur.
+    """
+    airbnb_posten = ota_gebuehren(raw)
+    if airbnb_posten is not None:
+        return GebuehrenBefund(
+            gebuehren=gebuehren_zuordnen(
+                airbnb_posten, klassifikation, property_id
+            ),
+            im_gesamtpreis=False,
+            quelle="ota",
+            # Der Kern: bei Airbnb ist `total_amount` der Netto-Payout, nicht
+            # der Übernachtungsbetrag. Siehe `airbnb_uebernachtung`.
+            uebernachtung=airbnb_uebernachtung(raw),
+        )
+    # Booking: aufgelöste Aufstellung, dann Minor-Units-Fassung. Die Reihenfolge
+    # steht in `portal_posten`, damit sie nicht an jeder Stelle neu entschieden
+    # wird.
+    gefunden = portal_posten(raw)
+    if gefunden is not None:
+        posten, bezeichnungen = gefunden
+        return GebuehrenBefund(
+            gebuehren=gebuehren_zuordnen(posten, klassifikation, property_id),
+            im_gesamtpreis=True,
+            quelle="ota",
+            bezeichnungen=bezeichnungen,
+        )
+    if _ist_portalbuchung(raw):
+        # KEIN Stammdaten-Ersatz für eine Portal-Buchung. Was das Portal nicht
+        # gemeldet hat, hat der Gast nicht gezahlt — und was es gemeldet hat,
+        # steht oben. Bis 11.08.2026 sprangen hier die Objekt-Stammdaten ein und
+        # erzeugten über den Bestand 191 Reinigungs-, 151 Resort- und 73
+        # Haustier-Posten (zusammen 218.020 DKK), von denen kein einziger belegt
+        # war. Das floss als Ertrag in die Eigentümer-Auszahlung und verschob sie
+        # gegenüber der Abrechnung, mit der der Betrieb wirklich rechnet.
+        #
+        # Die leere Liste ist hier eine AUSSAGE, kein Ausfall: `grund` benennt,
+        # warum das Portal nichts geliefert hat, und die Abrechnung weist die
+        # Buchung als „Portal-Aufstellung fehlt" aus, statt eine Zahl zu zeigen,
+        # die niemand nachrechnen kann.
+        return GebuehrenBefund(
+            gebuehren=[],
+            im_gesamtpreis=False,
+            quelle="ota_ohne_aufstellung",
+            grund=_stammdaten_grund(raw),
+        )
+    # Keine Portal-Buchung (eigene Website, Telefon, Rezeption): hier gibt es
+    # gar keinen Payload, und die Objekt-Stammdaten sind die einzige — und
+    # richtige — Quelle. Sie sind ja das, was der Betrieb selbst berechnet hat.
+    return GebuehrenBefund(
+        gebuehren=gebuehren_zuordnen(
+            objekt_gebuehren(type_attributes, naechte, anlass=reservierung),
+            klassifikation,
+            property_id,
+        ),
+        im_gesamtpreis=False,
+        quelle="stammdaten",
+    )
+
+
+def _ist_portalbuchung(raw: object) -> bool:
+    """Kam diese Buchung über ein Portal — hatte sie also eine Chance auf eine
+    Aufstellung?
+
+    Am PAYLOAD entschieden, nicht am Kanalnamen: der Kanalname einer
+    Direktbuchung ließe sich setzen, ohne dass je ein Aggregator beteiligt war.
+    Vorhanden ist der Payload genau dann, wenn Channex die Buchung geliefert hat
+    — erkennbar an den Feldern, die nur von dort kommen (``ota_name`` neben
+    ``rooms``/``raw_message``). Live tragen alle 77 Channex-Buchungen mindestens
+    zwei davon, keine Direktbuchung eines.
+    """
+    if not isinstance(raw, dict):
+        return False
+    return bool(raw.get("ota_name")) and bool(
+        raw.get("rooms") or raw.get("raw_message")
+    )
+
+
+def _stammdaten_grund(raw: object) -> str:
+    """WARUM das Portal keine Aufstellung geliefert hat — maschinenlesbar.
+
+    Der Wert landet als ``GebuehrenBefund.grund`` an der Buchung und ist die
+    Antwort auf die Rückfrage „warum stehen bei dieser Buchung keine Gebühren?".
+    Ohne ihn sieht eine leere Liste wie ein Rechenfehler aus.
+
+    Der wichtigste Fall ist der Channex-IMPORT. Beim Verbinden eines Kanals holt
+    Channex die bestehenden Buchungen aus dem Portal nachträglich herein und
+    markiert sie mit ``meta.is_imported``. Seine Hilfe sagt dazu ausdrücklich:
+    „The data you get from imported bookings could lack some details compared to
+    normal booking, it will **not include extras and cleaning fees**."
+
+    Live nachgewiesen am 11.08.2026 an 55 Booking.com-Buchungen — die Trennung
+    ist vollständig, ohne eine einzige Ausnahme:
+
+    * ``is_imported=True`` (52 Buchungen, Eingang bis 10.08. 19:15, dem Tag des
+      Kanal-Anschlusses) → ``rooms[].taxes`` LEER;
+    * ohne die Markierung (3 Buchungen, Eingang ab 11.08. 06:11) → Gebühren
+      vollständig dabei.
+
+    Vier Objekte mit IDENTISCHER Channex-Konfiguration (Tax Set „Standard",
+    dieselbe Anzahl verknüpfter Rate-Plans, Reinigung als ``per_booking`` /
+    ``fee`` / ``exclusive``) verhielten sich unterschiedlich — allein nach
+    Eingangsweg. Ohne diesen Grund im Befund sucht die nächste Fehlersuche wieder
+    beim Mapping, beim Tax Set oder beim eigenen Auswertungscode; dort ist nichts
+    zu finden, und die Suche kostete am 11.08.2026 einen halben Tag.
+    """
+    if not isinstance(raw, dict):
+        return "kein_payload"
+    if (raw.get("meta") or {}).get("is_imported"):
+        return "channex_import"
+    if raw.get("rooms"):
+        # Normale Buchung, aber ohne Aufstellung: dann führt das Portal die
+        # Gebühr nicht als eigene Position (bei Booking.com hängt das an der
+        # Extranet-Konfiguration, siehe docs/EIGENTUEMER-PREIS-KETTE.md).
+        return "portal_meldet_keine"
+    return "kein_payload"
+
+
+def gebuehren_zuordnen(
+    posten: list[tuple[str, Decimal]],
+    klassifikation: dict[tuple[str, str | None], tuple[str, bool]],
+    property_id: str,
+) -> list[Gebuehr]:
+    """``(art, betrag)`` mit der Zuordnung zu ``Gebuehr`` verbinden.
+
+    Vorrang: Objekt-Ausnahme vor Betriebsregel — dasselbe Prinzip wie überall
+    sonst. Fehlt die Zuordnung, wirft es: der Betrieb muss die Gebührenart
+    EINMAL zuordnen (``/objekte/<id>/preise``, Abschnitt „Wem gehören die
+    Gebühren?"), danach gilt sie für alle Objekte.
+    """
+    out: list[Gebuehr] = []
+    for art, betrag in posten:
+        treffer = klassifikation.get((art, property_id)) or klassifikation.get(
+            (art, None)
+        )
+        if treffer is None:
+            raise PayoutUnbekannt(
+                "gebuehr_nicht_zugeordnet",
+                f"Die Gebührenart „{art}“ ist nicht zugeordnet. Ohne "
+                "Zuordnung ist nicht bestimmbar, wem der Betrag gehört und ob "
+                "er provisionspflichtig ist.",
+            )
+        gehoert_zu, provisionspflichtig = treffer
+        out.append(
+            Gebuehr(
+                art=art,
+                betrag=betrag,
+                gehoert_zu=gehoert_zu,
+                provisionspflichtig=provisionspflichtig,
+            )
+        )
+    return out

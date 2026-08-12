@@ -229,7 +229,23 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
   Oberfläche war reihenweise tot, ohne dass am Code etwas falsch war.
   Wer während einer laufenden Sitzung bauen MUSS, baut in einem eigenen
   Verzeichnis (`--distDir`) oder in einem eigenen Worktree, nie in das `.next`
-  des Nutzers hinein. Einzelne Agenten prüfen mit `tsc --noEmit` + `bun run
+  des Nutzers hinein.
+  **`--distDir` MUSS ein ABSOLUTER Pfad sein.** Next.js löst einen relativen
+  Pfad gegen das App-Verzeichnis auf, nicht gegen die Wurzel: aus
+  `--distDir private/tmp/…/next-build` wurde `web/private/tmp/…` — 1,6 GB
+  fremder Build-Ausgabe MITTEN im Quellcode (12.08.2026). Der Ordner ist
+  git-ignoriert, tauchte also in `git status` nie auf und wuchs mit jedem Bau.
+  Der Schaden war nicht der Platz, sondern das QUALITÄTSGATE: `bun run lint`
+  meldete **57 813 Fehler** und `tsc` dutzende `TS2307` aus diesem Fremdcode —
+  jeder echte Befund war darin unsichtbar, und die Fehler wurden zweimal per
+  `grep -v` weggefiltert statt als kaputtes Gate gemeldet. Zusätzlich schrieb
+  der Build seine absoluten Scratchpad-Pfade in die eingecheckte
+  `web/tsconfig.json` (`include`), womit der Docker-Build scheiterte: dort gibt
+  es diese Pfade nicht. Nach einem Prüf-Build deshalb IMMER `git diff` auf
+  `tsconfig.json`/`next-env.d.ts` ansehen. Gegen den Wiederholungsfall gesperrt:
+  `"private"` in `web/tsconfig.json` (`exclude`) und `**/private/**` in
+  `packages/eslint-config` (`IGNORES`), das jetzt auch die Wurzel-`.gitignore`
+  liest. Einzelne Agenten prüfen mit `tsc --noEmit` + `bun run
   lint`; den Build fährt EIN Durchlauf am Ende.
 - Kanal/Enum berührt? `node scripts/i18n/kanal-enums-pruefen.mjs` — hält
   DB-Enum → Pydantic → Frontend-Unions → Kanal-Meta → `calendar.channel.*`

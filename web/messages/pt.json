@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Não foi possível carregar o painel",
     "reviews": "Avaliações",
     "extensions": "Extensões",
-    "announcements": "Novidades"
+    "announcements": "Novidades",
+    "billingRules": "Regras de acerto de contas",
+    "ownerReporting": "Relatórios para proprietários"
   },
   "exemption": {
     "labelNamed": "Isento de imposto ({scheme}) — sem NIF/IVA necessário",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Foto do hóspede",
     "translate": "Traduzir",
     "showOriginal": "Ver original",
-    "translatedFrom": "Traduzido do {sprache}"
+    "translatedFrom": "Traduzido do {sprache}",
+    "formatStrike": "Riscado",
+    "fieldsButton": "{{Marcadores}}",
+    "langBase": "Versão base",
+    "langBaseHint": "Enviada a cada hóspede cujo idioma não tem versão própria.",
+    "subjectLabel": "Assunto",
+    "subjectHint": "A linha de assunto é usada apenas para e-mails.",
+    "langAdd": "Adicionar idioma",
+    "langDefault": "Predefinido",
+    "langSetDefault": "Definir como predefinido",
+    "langRemove": "Remover idioma",
+    "langEmpty": "Ainda sem idiomas — até então a versão base vai para todos os hóspedes.",
+    "autoEditContent": "Editar conteúdo",
+    "autoPanelCreate": "Criar",
+    "quickEmpty": "Ainda sem respostas rápidas.",
+    "autoTextRequired": "É necessário um texto."
   },
   "whatsapp": {
     "notConfigured": "O WhatsApp ainda não está ligado. Introduza as credenciais (Meta Cloud API) nas definições do servidor para ativar o envio.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Se o e-mail não chegou ou o link expirou, o convite pode ser enviado novamente. O novo link é válido por 7 dias e leva a este ambiente; o link enviado anteriormente deixa de funcionar.",
     "portalAccessResent": "Convite reenviado.",
     "commissionNotAgreed": "não acordado",
+    "commissionContractWins": "Atualmente aplica-se o contrato de acerto: {pct} % desde {ab}. Este campo serve apenas como alternativa se nenhum contrato se aplicar.",
+    "commissionNoneAnywhere": "Ainda não foi acordada nenhuma taxa — nem aqui nem como contrato. Até lá, o pagamento fica vazio no portal do proprietário.",
+    "commissionContractObject": "Contrato próprio para este imóvel: {pct} % desde {ab}.",
+    "commissionContractOwnerWide": "Contrato de acerto do proprietário: {pct} % desde {ab}.",
     "assignableCount": "{count} de {total} selecionados para adicionar",
     "assignedHeading": "{count, plural, one {# objeto atribuído} other {# objetos atribuídos}}",
     "info": {
       "aria": "Explicação de {feld}",
       "share": "A quota de propriedade neste objeto. Com 100 %, o pagamento integral é atribuído a este proprietário; com menos, na proporção correspondente.",
-      "commission": "A taxa de comissão padrão para este proprietário. Se o campo ficar vazio, ainda não há nenhuma taxa acordada — o pagamento não é então calculado, mas apresentado como um travessão.",
-      "commissionOverride": "Aplica-se apenas a este objeto e substitui a taxa padrão do proprietário. Se o campo ficar vazio, aplica-se a taxa padrão."
+      "commission": "Taxa alternativa se nenhum contrato de acerto se aplicar a um imóvel. O contrato abaixo tem prioridade — é o acordo efetivo e abrange também período, taxa fixa e comissão mínima. Se ambos ficarem vazios, não é calculado nenhum pagamento e é mostrado um travessão.",
+      "commissionOverride": "Taxa alternativa apenas para este imóvel; substitui a taxa padrão do proprietário. Um contrato de acerto também tem prioridade aqui. Se o campo ficar vazio, aplica-se a taxa padrão."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Pagamento total",
       "ownerPayout": "Pagamento ao proprietário",
       "pmPayout": "Pagamento à administração",
-      "commissionMissing": "Não está definida uma taxa de comissão para pelo menos um imóvel. Por isso, os pagamentos não podem ser calculados — introduza a taxa nos dados do proprietário ou no imóvel."
+      "commissionMissing": "Não está definida uma taxa de comissão para pelo menos um imóvel. Por isso, os pagamentos não podem ser calculados — introduza a taxa nos dados do proprietário ou no imóvel.",
+      "payoutUnknown": "Falta em pelo menos uma reserva a informação necessária para calcular o pagamento ao proprietário. As linhas afetadas mostram «—» em vez de um valor.",
+      "commissionInvalid": "Uma taxa de comissão registada está fora de 0–100 %. Corrija a taxa no proprietário ou no imóvel.",
+      "portalRateMissing": "Não está registada qualquer taxa de retenção para pelo menos um canal de reserva e o portal não comunicou a sua retenção. Indique em Contabilidade → Regras de acerto de contas o que o portal retém por reserva.",
+      "portalRateInvalid": "Uma taxa de retenção de portal registada está fora de 0–100 %. Corrija-a em Contabilidade → Regras de acerto de contas.",
+      "feeUnassigned": "Pelo menos um tipo de encargo ainda não está atribuído. Sem atribuição não é possível determinar a quem pertence o valor nem se incide comissão sobre ele — defina-o em Contabilidade → Regras de acerto de contas.",
+      "feeNotComputable": "Um encargo não pode ser acertado como valor (registado em percentagem ou sem valor). Verifique o encargo no imóvel.",
+      "contractCurrency": "Um valor fixo ou uma comissão mínima está expresso numa moeda diferente da reserva. Valores em moedas diferentes não são convertidos — verifique o contrato de acerto de contas."
     },
     "rental": {
       "perReservation": "Por reserva",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Preço total",
       "totalPayout": "Pagamento total",
       "totals": "Totais",
-      "empty": "Nenhuma reserva no período."
+      "empty": "Nenhuma reserva no período.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Adicionar",
@@ -1315,7 +1351,9 @@
     "commissionable": "Sujeito a comissão",
     "commissionableYes": "Sim — entra no cálculo da comissão",
     "commissionableNo": "Não — isento de comissão",
-    "infoAria": "Explicação de {feld}"
+    "infoAria": "Explicação de {feld}",
+    "rulesPageTitle": "Regras de acerto de contas",
+    "rulesPageIntro": "O que os portais retêm por reserva e a quem pertencem os encargos. Em conjunto, determinam o valor que chega ao acerto de comissões dos seus proprietários."
   },
   "portal": {
     "title": "O meu portal",
@@ -1432,6 +1470,16 @@
         "blocked": "Bloqueado"
       },
       "payoutPerNight": "Pagamento líquido/noite",
+      "payoutPerNightShort": "líquido/noite",
+      "payoutUnknown": {
+        "short": "n/d",
+        "label": "Não determinável",
+        "provision": "Não há taxa de comissão definida para este imóvel — a gestão precisa de a adicionar.",
+        "provisionUngueltig": "A taxa de comissão registada está fora do intervalo 0–100 %.",
+        "betrag": "Falta o valor total desta reserva.",
+        "naechte": "O período desta reserva é inválido.",
+        "waehrungVertrag": "A taxa fixa acordada está numa moeda diferente desta reserva — os valores não são convertidos."
+      },
       "guest": "Hóspede",
       "channel": "Fonte da reserva",
       "blockHint": "Quer bloquear um período? Envie um pedido — a gestão decide.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Mostrar o código da porta apenas se a estadia estiver paga",
       "hideCodeUntilCheckin": "Ocultar o código da porta até ao check-in",
       "codeVisibleFromLabel": "O código da porta é apresentado a partir do dia do check-in às …",
-      "codeVisibleFromUnset": "— não definido —"
+      "codeVisibleFromUnset": "— não definido —",
+      "wifiSsidLabel": "Nome da rede (SSID)",
+      "wifiSsidPlaceholder": "p. ex. WiFi-Casa-de-Férias",
+      "wifiPasswordLabel": "Palavra-passe do Wi-Fi",
+      "wifiPasswordPlaceholder": "p. ex. verao2026",
+      "wifiFieldsHint": "Estes dois valores preenchem os marcadores {ssid} e {password} nos modelos de mensagem e o código QR do Wi-Fi no portal do hóspede. Se ficarem vazios, um modelo que os utilize não é enviado."
     },
     "taskCreatePopup": {
       "title": "Criar tarefa",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Alojamento copiado.",
       "duplicateErr": "Não foi possível copiar.",
       "unlistOk": "Ligação ao site removida.",
-      "unlistErr": "Não foi possível desassociar."
+      "unlistErr": "Não foi possível desassociar.",
+      "menuVerkaufAus": "Desativar em todos os portais",
+      "menuVerkaufAn": "Oferecer novamente em todos os portais"
     },
     "messagingForm": {
       "title": "Marcadores de mensagens",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Os extras — dependem de fotos e traduções próprias.",
       "copyPricingSkipAvailability": "Disponibilidade, ocupação e políticas.",
       "copyPricingOverwriteWarning": "Os preços deste alojamento são totalmente substituídos. Os valores só são retomados com a mesma moeda.",
-      "copyPricingDone": "Preços retomados."
+      "copyPricingDone": "Preços retomados.",
+      "portalStandAbweichung": "ali {dort}",
+      "portalStand": {
+        "online": "Registada no portal",
+        "abweichend": "Diverge",
+        "fehlt": "Não registada no portal"
+      }
     },
     "policiesForm": {
       "title": "Políticas",
@@ -5625,7 +5686,10 @@
       "hinweis": "Podes importá-las em vez de as criares novamente. As taxas existentes permanecem inalteradas.",
       "uebernehmen": "Importar taxas",
       "laeuft": "A importar …",
-      "uebernommen": "{anzahl} taxas importadas."
+      "uebernommen": "{anzahl} taxas importadas.",
+      "verwerfen": "Não importar",
+      "verworfen": "Proposta encerrada — as suas taxas ficam como estão.",
+      "einmalig": "Ajuda inicial única: depois vale só o que está aqui — é isso que enviamos aos portais."
     },
     "veroeffentlichen": {
       "titel": "Publicar propriedade",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Definido através de “Publicar” no topo.",
       "immerDabei": "Sempre incluído — o nosso próprio marketplace, sem comissão de portal."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Retirar o alojamento de venda?",
+      "fragenAusText": "«{titel}» será definido como inativo e o calendário de reservas será desativado em todos os portais ligados. As reservas existentes não são afetadas. O estado de cada portal é guardado para que a reposição o restaure.",
+      "fragenAnTitel": "Oferecer novamente o alojamento?",
+      "fragenAnText": "«{titel}» será novamente ativado. Cada portal recupera o estado que tinha antes da desativação — os portais que já estavam desativados continuam assim. Depois, os preços e a disponibilidade são reenviados.",
+      "jetztAus": "Desativar agora",
+      "jetztAn": "Oferecer agora",
+      "laeuft": "A comutar…",
+      "abbrechen": "Cancelar",
+      "schliessen": "Fechar",
+      "ergebnisAusTitel": "O alojamento está desativado",
+      "ergebnisAusText": "Desativado em todos os portais.",
+      "ergebnisAnTitel": "O alojamento está novamente ativo",
+      "ergebnisAnText": "Novamente oferecido em todos os portais.",
+      "ergebnisTeilweiseTitel": "Não bem-sucedido em todos",
+      "ergebnisTeilweiseText": "Não foi possível comutar {anzahl} portal(is). Aí a venda continua — por isso o estado do alojamento não foi alterado.",
+      "zeileAbgeschaltet": "Desativado",
+      "zeileWiederhergestellt": "Novamente ativo",
+      "zeileObjekteAmKanal": "Este canal contém {anzahl} alojamentos — nada foi alterado para que os outros não sejam também desativados."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Termine sessão no portal no seu navegador antes de ligar outra conta.",
     "accountConnectCredentialHint": "Um acesso {portal} adicional é adicionado com o ID do hotel ao ligar um alojamento, não aqui.",
     "marketplacePending": "{count} em análise",
-    "marketplaceWaiting": "Em análise"
+    "marketplaceWaiting": "Em análise",
+    "marketplace": {
+      "intro": "O myBestDays é o nosso próprio marketplace — um canal de reservas como o Booking ou o Airbnb, apenas sem ligação ao portal. Um alojamento fica visível quando está ativo, listado aqui e aprovado.",
+      "openMarketplace": "Abrir marketplace",
+      "propertiesHeading": "Alojamentos no marketplace",
+      "noProperties": "Ainda não existem alojamentos.",
+      "columnProperty": "Alojamento",
+      "columnVisibility": "Visibilidade",
+      "columnApproval": "Aprovação",
+      "columnBookings": "Reservas",
+      "stateActive": "Visível",
+      "statePending": "Em análise",
+      "stateNotListed": "Não listado",
+      "stateInactiveProperty": "Alojamento não ativo",
+      "viewListing": "Ver anúncio",
+      "reviewHint": "Os alojamentos em análise ainda não aparecem no myBestDays. Analisamos cada anúncio porque aí o myBestDays atua como fornecedor — os portais e o seu próprio site não são afetados.",
+      "summaryVisible": "{count} visíveis",
+      "summaryWaiting": "{count} em análise",
+      "summaryOff": "{count} não listados",
+      "moderation": {
+        "draft": "Rascunho",
+        "pending": "Em análise",
+        "approved": "Aprovado",
+        "rejected": "Rejeitado"
+      }
+    }
   },
   "calendarSync": {
     "title": "Importar/exportar calendário",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Confirmar",
     "mfaChecking": "A verificar…",
     "mfaBack": "Voltar ao início de sessão"
+  },
+  "portalSaetze": {
+    "add": "Adicionar taxa",
+    "breakdown": "{provision} % de comissão + {fee} % de taxa de pagamento",
+    "breakdownNoFee": "{provision} % de comissão, sem taxa de pagamento",
+    "cancel": "Cancelar",
+    "channel": "Portal",
+    "channelLocked": "O portal de uma taxa existente não pode ser alterado. Para outro portal, crie uma nova taxa.",
+    "create": "Criar taxa",
+    "created": "Taxa criada",
+    "current": "válida hoje",
+    "delete": "Eliminar taxa",
+    "deleted": "Taxa eliminada",
+    "edit": "Editar taxa",
+    "empty": "Ainda não há nenhuma taxa definida. Sem uma taxa, um pagamento só pode ser calculado se o portal comunicar a sua dedução.",
+    "errorProvisionRequired": "Introduza uma taxa de comissão.",
+    "intro": "O que cada portal retém por reserva. Estas taxas aplicam-se onde o portal não comunica a sua própria dedução — se comunicar um valor, vale sempre o valor comunicado.",
+    "loading": "A carregar …",
+    "note": "Nota",
+    "notePlaceholder": "De onde vem a taxa, p. ex. contrato do portal ou extrato",
+    "payoutFee": "Taxa de pagamento",
+    "payoutFeeInfo": "O encargo por o portal cobrar o dinheiro e encaminhá-lo. Só se aplica quando o portal cobra — se o hóspede lhe pagar diretamente, não há.",
+    "payoutFeeNone": "não cobra",
+    "period": "{von} até {bis}",
+    "periodOpen": "desde {von}",
+    "provision": "Comissão",
+    "provisionInfo": "A parte de intermediação que o portal retém pela reserva. A base de cálculo é o preço total do hóspede, incluindo taxas.",
+    "save": "Guardar alterações",
+    "saved": "Taxa guardada",
+    "title": "Taxas de dedução dos portais",
+    "total": "{pct} % no total",
+    "validFrom": "Válida a partir de",
+    "validTo": "Válida até",
+    "validToInfo": "Deixe em branco enquanto a taxa for válida. Se o portal alterar a sua taxa, crie uma nova a partir do dia da alteração — a antiga mantém-se para extratos anteriores.",
+    "validToOpen": "continua em vigor"
   }
 }

@@ -52,12 +52,38 @@ export async function ladeVerfuegbarkeit(
 /** Eine Zeile der Preisaufschlüsselung, wie sie der Gast sieht. */
 export type AngebotsZeile = { label: string; amount: number; kind?: string | null };
 
+/** Wann der Gast zahlt — aus der Buchungskondition des Betriebs. Dieselbe
+ *  Rechnung, die der Zahlungspfad einzieht (booking_conditions.plan). */
+export type Zahlungsplan = {
+  installments: number;
+  due_now: number;
+  due_later: number;
+  /** ISO-Datum der Restzahlung; null = keine Restzahlung. */
+  balance_due_date: string | null;
+};
+
+export type StornoRegel = { days_before_arrival: number; refund_percent: number };
+
+export type Storno = { mode: string | null; rules: StornoRegel[] };
+
+export type Kaution = {
+  amount: number;
+  method: string | null;
+  currency: string | null;
+};
+
 export type Angebot = {
   property_id: string;
   nights: number;
   currency: string;
   lines: AngebotsZeile[];
   total: number;
+  /** Alle drei null, wenn der Betrieb keine Buchungskondition gepflegt hat —
+   *  dann ist alles sofort fällig und der Checkout verspricht keine Storno-Regel
+   *  (Wurzel 4: keine erfundene Zusage). */
+  payment_plan: Zahlungsplan | null;
+  cancellation: Storno | null;
+  deposit: Kaution | null;
   /** Hat der eingegebene Aktionscode WIRKLICH eine Aktion ausgelöst? False bei
    *  unbekanntem Code — auch dann kann ein Rabatt in den Zeilen stehen (eine
    *  automatische Aktion), er gehört aber nicht zum Code. Ohne diese Unterscheidung

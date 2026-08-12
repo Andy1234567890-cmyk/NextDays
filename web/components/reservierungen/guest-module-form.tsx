@@ -38,6 +38,8 @@ const EMPTY_SETTINGS: GuestPortalSettings = {
   contact_phone: null,
   self_checkin: false,
   door_code: null,
+  wifi_ssid: null,
+  wifi_password: null,
   show_code_only_if_paid: false,
   hide_code_until_checkin: false,
   code_visible_from: null,
@@ -182,11 +184,41 @@ export function GuestModuleForm({ property: initial }: { property: Property }) {
         </Field>
       </Card>
 
-      {/* WLAN — Text lebt in messaging.wifi (eine Wahrheit mit Nachrichten) */}
+      {/* WLAN — zwei Ebenen, bewusst beide:
+          • Netz + Passwort STRUKTURIERT (property_guest_portal, 0296) — das ist
+            die Heimat von {{wifi_ssid}}/{{wifi_password}} und die Quelle des
+            QR-Codes im Gastportal. Beide Spalten gab es seit 0296, hatten aber
+            nirgends ein Eingabefeld: eine Vorlage mit diesen Platzhaltern
+            konnte deshalb nie gefüllt werden und scheiterte bei JEDER Anreise
+            mit „Feld ohne Wert" (live 09.–11.08.2026, 6 Automails in Folge).
+          • Der FREITEXT (messaging.wifi, {{WifiInformation}}) daneben für den
+            ganzen Satz („Router steht im Flur"). */}
       <Card className="flex flex-col gap-3 p-5">
         <h2 className="font-display text-lg font-bold">{t("guestModuleForm.wifiTitle")}</h2>
         <p className="text-sm text-muted-foreground">
           {t("guestModuleForm.wifiDescription", { placeholder: "{{WifiInformation}}" })}
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label={t("guestModuleForm.wifiSsidLabel")}>
+            <Input
+              value={settings.wifi_ssid ?? ""}
+              onChange={(e) => set("wifi_ssid", e.target.value || null)}
+              placeholder={t("guestModuleForm.wifiSsidPlaceholder")}
+            />
+          </Field>
+          <Field label={t("guestModuleForm.wifiPasswordLabel")}>
+            <Input
+              value={settings.wifi_password ?? ""}
+              onChange={(e) => set("wifi_password", e.target.value || null)}
+              placeholder={t("guestModuleForm.wifiPasswordPlaceholder")}
+            />
+          </Field>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t("guestModuleForm.wifiFieldsHint", {
+            ssid: "{{wifi_ssid}}",
+            password: "{{wifi_password}}",
+          })}
         </p>
         <LocalizedTextEditor
           value={messaging.wifi}

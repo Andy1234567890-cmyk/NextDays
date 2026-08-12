@@ -55,6 +55,11 @@ from .schemas import (
 
 # Der Nachrichten-Spiegel (`portal_messages`): lesen, nachtragen, Signal setzen.
 from .spiegel import LEERER_STAND, SpiegelMixin, ThreadStand, sichere_anhaenge
+from .sprachen import (
+    SprachenMixin,
+    automation_texte,
+    automation_texte_schreiben,
+)
 from .vorlagen import VorlagenMixin
 
 if TYPE_CHECKING:
@@ -101,7 +106,12 @@ def _chronologisch(m: InboxMessage) -> tuple[int, datetime]:
 
 
 class InboxService(
-    PlanungMixin, VorlagenMixin, AnhangWissenMixin, FeldKontextMixin, SpiegelMixin
+    PlanungMixin,
+    VorlagenMixin,
+    SprachenMixin,
+    AnhangWissenMixin,
+    FeldKontextMixin,
+    SpiegelMixin,
 ):
     slice_name = "inbox"
 
@@ -1374,6 +1384,13 @@ class InboxService(
                 status_code=422,
             )
         self._felder_pruefen(req.message)
+        self._felder_pruefen(req.subject)
+        for t in req.texts or []:
+            lang = (t.lang or "").strip().lower()
+            if len(lang) != 2 or not lang.isalpha():
+                raise InboxError(f"Ungültiger Sprachcode: {t.lang}", status_code=422)
+            self._felder_pruefen(t.message)
+            self._felder_pruefen(t.subject)
 
     def list_automations(self, ctx: AuthContext) -> AutomationList:
         db, tenant_id = self._require(ctx)
@@ -1384,7 +1401,9 @@ class InboxService(
             .order("created_at")
             .execute()
         )
-        items = [self._automation_row(r) for r in (res.data or [])]
+        rows = res.data or []
+        texte = automation_texte(db, tenant_id, [str(r["id"]) for r in rows])
+        items = [self._automation_row(r, texte.get(str(r["id"]))) for r in rows]
         return AutomationList(items=items, total=len(items))
 
     def create_automation(
@@ -1399,12 +1418,18 @@ class InboxService(
             .insert({"tenant_id": tenant_id, **self._automation_payload(req)})
             .execute()
         ).data
+        row = ins[0]
+        # VOR der Neuplanung: die Planung materialisiert den Text je Buchung und
+        # wählt dabei die Fassung nach Gastsprache. Erst danach zu schreiben
+        # hieße, die erste Planung nimmt die Grundfassung, obwohl Fassungen
+        # mitgeschickt wurden.
+        texte = automation_texte_schreiben(db, tenant_id, str(row["id"]), req.texts)
         # Sofort für die BESTEHENDEN Buchungen einplanen. Ohne diesen Schritt
         # wirkte eine neue Regel erst bei der nächsten Buchung — live standen
         # deshalb zwei frisch angelegte Regeln mit null geplanten Nachrichten da,
         # obwohl 30 künftige Aufenthalte in der Liste lagen.
         self.replan_tenant(tenant_id)
-        return self._automation_row(ins[0])
+        return self._automation_row(row, texte)
 
     def update_automation(
         self, ctx: AuthContext, automation_id: str, req: AutomationUpsert
@@ -1420,12 +1445,15 @@ class InboxService(
         ).data
         if not upd:
             raise InboxError("Automatisierung nicht gefunden.", status_code=404)
+        # Erst nach dem 404-Riegel (Wurzel 3) und VOR der Neuplanung: die
+        # Neuplanung schreibt den gewählten Text in die geplanten Nachrichten.
+        texte = automation_texte_schreiben(db, tenant_id, automation_id, req.texts)
         # Wurzel 1: die bereits eingeplanten Nachrichten sind der Gegenzustand
         # dieser Änderung. Ohne Neuplanung blieben sie auf dem alten Zeitpunkt
         # stehen — live stand „Anreisetag, 06:00" als −3 Tage/09:00 eingeplant,
         # weil die Regel nach dem Import geändert wurde.
         self.replan_tenant(tenant_id)
-        return self._automation_row(upd[0])
+        return self._automation_row(upd[0], texte)
 
     def delete_automation(self, ctx: AuthContext, automation_id: str) -> None:
         db, tenant_id = self._require(ctx)

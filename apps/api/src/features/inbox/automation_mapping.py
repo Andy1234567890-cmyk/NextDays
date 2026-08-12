@@ -6,19 +6,19 @@ Spalte ergänzt, sieht hier sofort, dass sie in BEIDE Richtungen gehört.
 """
 
 from .ausloeser import anker_von, versatz_normieren
-from .schemas import Automation, AutomationUpsert
+from .schemas import Automation, AutomationText, AutomationUpsert
 
 # Spalten, die beide Leser (Service und Planung) brauchen. Eine hier fehlende
 # Spalte kommt nie an — die Regel liefe dann still mit dem Vorgabewert.
 AUTOMATION_COLS = (
     "id, name, trigger, anchor, offset_days, offset_unit, offset_value, "
-    "send_time, property_ids, channels, template_id, message, is_active, "
-    "use_property_timezone, only_first_message, window_days, window_from, "
-    "window_to"
+    "send_time, property_ids, channels, template_id, message, subject, "
+    "is_active, use_property_timezone, only_first_message, window_days, "
+    "window_from, window_to"
 )
 
 
-def automation_row(r: dict) -> Automation:
+def automation_row(r: dict, texts: list[AutomationText] | None = None) -> Automation:
     """DB-Zeile → Automation: NULL-Arrays zu [], Zeiten auf HH:MM kürzen."""
     st = r.get("send_time")
     roh_wert = r.get("offset_value")
@@ -40,6 +40,10 @@ def automation_row(r: dict) -> Automation:
         channels=list(r.get("channels") or []),
         template_id=str(r["template_id"]) if r.get("template_id") else None,
         message=r.get("message"),
+        subject=r.get("subject") or "",
+        # Sprachfassungen holt der Aufrufer (eine Abfrage für alle Regeln) und
+        # gibt sie hier herein — `automation_row` selbst sieht keine DB.
+        texts=texts or [],
         is_active=bool(r.get("is_active", True)),
         use_property_timezone=bool(r.get("use_property_timezone")),
         only_first_message=bool(r.get("only_first_message")),
@@ -72,6 +76,7 @@ def automation_payload(req: AutomationUpsert) -> dict:
         "channels": req.channels or None,
         "template_id": req.template_id,
         "message": req.message,
+        "subject": req.subject,
         "is_active": req.is_active,
         "use_property_timezone": req.use_property_timezone,
         "only_first_message": req.only_first_message,

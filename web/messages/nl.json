@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Het dashboard kon niet worden geladen",
     "reviews": "Beoordelingen",
     "extensions": "Uitbreidingen",
-    "announcements": "Nieuws"
+    "announcements": "Nieuws",
+    "billingRules": "Afrekenregels",
+    "ownerReporting": "Eigenaarsrapportage"
   },
   "exemption": {
     "labelNamed": "Vrijgesteld van belasting ({scheme}) — geen btw-nummer nodig",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Foto van de gast",
     "translate": "Vertalen",
     "showOriginal": "Origineel tonen",
-    "translatedFrom": "Vertaald uit het {sprache}"
+    "translatedFrom": "Vertaald uit het {sprache}",
+    "formatStrike": "Doorgehaald",
+    "fieldsButton": "{{Plaatsaanduidingen}}",
+    "langBase": "Basisversie",
+    "langBaseHint": "Gaat naar elke gast wiens taal geen eigen versie heeft.",
+    "subjectLabel": "Onderwerp",
+    "subjectHint": "De onderwerpregel wordt alleen voor e-mails gebruikt.",
+    "langAdd": "Nieuwe taal toevoegen",
+    "langDefault": "Standaard",
+    "langSetDefault": "Als standaard instellen",
+    "langRemove": "Taal verwijderen",
+    "langEmpty": "Nog geen taal ingesteld — tot dan gaat de basisversie naar elke gast.",
+    "autoEditContent": "Inhoud bewerken",
+    "autoPanelCreate": "Aanmaken",
+    "quickEmpty": "Nog geen snel antwoord.",
+    "autoTextRequired": "Er is een tekst nodig."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is nog niet verbonden. Voer de inloggegevens (Meta Cloud API) in de serverinstellingen in, dan is verzending actief.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Als de e-mail niet is aangekomen of de link is verlopen, kan de uitnodiging opnieuw worden verstuurd. De nieuwe link is 7 dagen geldig en verwijst naar deze omgeving; de eerder verstuurde link werkt niet meer.",
     "portalAccessResent": "Uitnodiging opnieuw verstuurd.",
     "commissionNotAgreed": "niet afgesproken",
+    "commissionContractWins": "De afrekeningsovereenkomst wordt momenteel toegepast: {pct} % sinds {ab}. Dit veld dient alleen als terugval als er geen overeenkomst geldt.",
+    "commissionNoneAnywhere": "Nog geen tarief afgesproken — noch hier, noch als overeenkomst. Tot dan blijft de uitbetaling leeg in het eigenaarsportaal.",
+    "commissionContractObject": "Eigen overeenkomst voor dit object: {pct} % sinds {ab}.",
+    "commissionContractOwnerWide": "Afrekeningsovereenkomst van de eigenaar: {pct} % sinds {ab}.",
     "assignableCount": "{count} van {total} geselecteerd om toe te voegen",
     "assignedHeading": "{count, plural, one {# toegewezen object} other {# toegewezen objecten}}",
     "info": {
       "aria": "Uitleg bij {feld}",
       "share": "Het eigendomsaandeel in dit object. Bij 100 % wordt de volledige uitbetaling aan deze eigenaar toegerekend, bij minder naar rato.",
-      "commission": "Het standaard commissiepercentage voor deze eigenaar. Blijft het veld leeg, dan is er nog geen percentage afgesproken — de uitbetaling wordt dan niet berekend, maar als streepje weergegeven.",
-      "commissionOverride": "Geldt alleen voor dit ene object en overschrijft het standaardpercentage van de eigenaar. Blijft het veld leeg, dan geldt het standaardpercentage."
+      "commission": "Terugvaltarief als voor een object geen afrekeningsovereenkomst geldt. De overeenkomst hieronder heeft voorrang — dat is de eigenlijke afspraak en omvat ook periode, vast bedrag en minimumcommissie. Blijven beide leeg, wordt geen uitbetaling berekend maar een streepje getoond.",
+      "commissionOverride": "Terugvaltarief alleen voor dit object; overschrijft het standaardtarief van de eigenaar. Een afrekeningsovereenkomst heeft ook hier voorrang. Blijft het veld leeg, geldt het standaardtarief."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Totale uitbetaling",
       "ownerPayout": "Uitbetaling eigenaar",
       "pmPayout": "Uitbetaling beheer",
-      "commissionMissing": "Voor minstens één object is geen commissiepercentage vastgelegd. De uitbetalingen kunnen daarom niet worden berekend — voer het percentage in bij de stamgegevens van de eigenaar of bij het object."
+      "commissionMissing": "Voor minstens één object is geen commissiepercentage vastgelegd. De uitbetalingen kunnen daarom niet worden berekend — voer het percentage in bij de stamgegevens van de eigenaar of bij het object.",
+      "payoutUnknown": "Bij minstens één boeking ontbreken gegevens die nodig zijn om de uitbetaling te berekenen. De betreffende regels tonen „—” in plaats van een bedrag.",
+      "commissionInvalid": "Een vastgelegd commissiepercentage ligt buiten 0–100 %. Corrigeer het percentage bij de eigenaar of bij het object.",
+      "portalRateMissing": "Voor minstens één boekingskanaal is geen inhoudingspercentage vastgelegd en het portaal heeft zijn inhouding niet meegeleverd. Voer onder Boekhouding → Afrekenregels in wat het portaal per boeking inhoudt.",
+      "portalRateInvalid": "Een vastgelegd inhoudingspercentage van een portaal ligt buiten 0–100 %. Corrigeer dit onder Boekhouding → Afrekenregels.",
+      "feeUnassigned": "Minstens één kostensoort is nog niet toegewezen. Zonder toewijzing is niet vast te stellen aan wie het bedrag toekomt en of er commissie over wordt berekend — stel dit in onder Boekhouding → Afrekenregels.",
+      "feeNotComputable": "Een kostenpost kan niet als bedrag worden verrekend (vastgelegd als percentage of zonder bedrag). Controleer de kostenpost bij het object.",
+      "contractCurrency": "Een vast bedrag of minimumcommissie staat in een andere valuta dan de boeking. Bedragen in verschillende valuta's worden niet omgerekend — controleer het afrekencontract."
     },
     "rental": {
       "perReservation": "Per reservering",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Totaalprijs",
       "totalPayout": "Totale uitbetaling",
       "totals": "Totalen",
-      "empty": "Geen reserveringen in de periode."
+      "empty": "Geen reserveringen in de periode.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Toevoegen",
@@ -1315,7 +1351,9 @@
     "commissionable": "Commissieplichtig",
     "commissionableYes": "Ja — telt mee in de commissie",
     "commissionableNo": "Nee — commissievrij",
-    "infoAria": "Uitleg bij {feld}"
+    "infoAria": "Uitleg bij {feld}",
+    "rulesPageTitle": "Afrekenregels",
+    "rulesPageIntro": "Wat de portalen per boeking inhouden en aan wie de kosten toekomen. Samen bepalen ze welk bedrag uiteindelijk in de commissieafrekening van uw eigenaren terechtkomt."
   },
   "portal": {
     "title": "Mijn portaal",
@@ -1432,6 +1470,16 @@
         "blocked": "Geblokkeerd"
       },
       "payoutPerNight": "Netto-uitbetaling/nacht",
+      "payoutPerNightShort": "netto/nacht",
+      "payoutUnknown": {
+        "short": "n.v.t.",
+        "label": "Niet te bepalen",
+        "provision": "Voor dit object is geen commissiepercentage vastgelegd — het beheer moet dit aanvullen.",
+        "provisionUngueltig": "Het vastgelegde commissiepercentage ligt buiten 0–100 %.",
+        "betrag": "Bij deze boeking ontbreekt het totaalbedrag.",
+        "naechte": "De periode van deze boeking is onjuist.",
+        "waehrungVertrag": "De afgesproken vaste vergoeding staat in een andere valuta dan deze boeking — bedragen worden niet omgerekend."
+      },
       "guest": "Gast",
       "channel": "Boekingsbron",
       "blockHint": "Wil je een periode laten blokkeren? Dien een aanvraag in — de beheerder beslist.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Deurcode alleen tonen als het verblijf is betaald",
       "hideCodeUntilCheckin": "Deurcode verbergen tot het inchecken",
       "codeVisibleFromLabel": "De deurcode wordt vanaf de check-indag om … getoond",
-      "codeVisibleFromUnset": "— niet ingesteld —"
+      "codeVisibleFromUnset": "— niet ingesteld —",
+      "wifiSsidLabel": "Netwerknaam (SSID)",
+      "wifiSsidPlaceholder": "bijv. Vakantiehuis-WiFi",
+      "wifiPasswordLabel": "Wifi-wachtwoord",
+      "wifiPasswordPlaceholder": "bijv. zomer2026",
+      "wifiFieldsHint": "Deze twee waarden vullen de tijdelijke aanduidingen {ssid} en {password} in berichtsjablonen en de wifi-QR-code in het gastenportaal. Blijven ze leeg, dan wordt een sjabloon met deze aanduidingen niet verzonden."
     },
     "taskCreatePopup": {
       "title": "Taak aanmaken",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Accommodatie gekopieerd.",
       "duplicateErr": "Kopiëren mislukt.",
       "unlistOk": "Koppeling met website opgeheven.",
-      "unlistErr": "Opheffen mislukt."
+      "unlistErr": "Opheffen mislukt.",
+      "menuVerkaufAus": "Uitschakelen op alle portalen",
+      "menuVerkaufAn": "Weer aanbieden op alle portalen"
     },
     "messagingForm": {
       "title": "Berichtplaceholders",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Extra's — die hangen aan eigen foto's en vertalingen.",
       "copyPricingSkipAvailability": "Beschikbaarheid, bezetting en voorwaarden.",
       "copyPricingOverwriteWarning": "De prijzen van dit object worden volledig overschreven. Bedragen worden alleen bij dezelfde valuta overgenomen.",
-      "copyPricingDone": "Prijzen overgenomen."
+      "copyPricingDone": "Prijzen overgenomen.",
+      "portalStandAbweichung": "daar {dort}",
+      "portalStand": {
+        "online": "Vastgelegd bij het portaal",
+        "abweichend": "Wijkt af",
+        "fehlt": "Niet vastgelegd bij het portaal"
+      }
     },
     "policiesForm": {
       "title": "Beleid",
@@ -5625,7 +5686,10 @@
       "hinweis": "Je kunt ze overnemen in plaats van ze opnieuw aan te maken. Bestaande kosten blijven ongewijzigd.",
       "uebernehmen": "Kosten overnemen",
       "laeuft": "Wordt overgenomen …",
-      "uebernommen": "{anzahl} kosten overgenomen."
+      "uebernommen": "{anzahl} kosten overgenomen.",
+      "verwerfen": "Niet overnemen",
+      "verworfen": "Aanbod afgesloten — je kosten blijven zoals ze zijn.",
+      "einmalig": "Eenmalige start: daarna geldt alleen wat hier staat — dat sturen we naar de portalen."
     },
     "veroeffentlichen": {
       "titel": "Object publiceren",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Wordt bovenaan via “Publiceren” ingesteld.",
       "immerDabei": "Altijd inbegrepen — onze eigen marktplaats, zonder portaalcommissie."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Object uit de verkoop halen?",
+      "fragenAusText": "„{titel}” wordt op inactief gezet en de boekingskalender wordt uitgeschakeld op alle verbonden portalen. Bestaande boekingen blijven ongemoeid. De staat van elk portaal wordt opgeslagen, zodat het terugzetten die herstelt.",
+      "fragenAnTitel": "Object weer aanbieden?",
+      "fragenAnText": "„{titel}” wordt weer op actief gezet. Elk portaal krijgt de staat terug die het had vóór het uitschakelen — portalen die al uit waren, blijven uit. Daarna worden prijzen en beschikbaarheid opnieuw verzonden.",
+      "jetztAus": "Nu uitschakelen",
+      "jetztAn": "Nu aanbieden",
+      "laeuft": "Wordt geschakeld…",
+      "abbrechen": "Annuleren",
+      "schliessen": "Sluiten",
+      "ergebnisAusTitel": "Object is uitgeschakeld",
+      "ergebnisAusText": "Uitgeschakeld op alle portalen.",
+      "ergebnisAnTitel": "Object is weer actief",
+      "ergebnisAnText": "Weer aangeboden op alle portalen.",
+      "ergebnisTeilweiseTitel": "Niet overal gelukt",
+      "ergebnisTeilweiseText": "{anzahl} portaal/portalen kon(den) niet worden geschakeld. Daar loopt de verkoop door — de objectstatus is daarom niet gewijzigd.",
+      "zeileAbgeschaltet": "Uitgeschakeld",
+      "zeileWiederhergestellt": "Weer actief",
+      "zeileObjekteAmKanal": "Dit kanaal draagt {anzahl} objecten — er is niets gewijzigd zodat de andere niet ook worden uitgeschakeld."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Log in je browser uit bij het portaal voordat je een ander account verbindt.",
     "accountConnectCredentialHint": "Een extra {portal}-account voeg je toe met de hotel-ID bij het verbinden van een object, niet hier.",
     "marketplacePending": "{count} in beoordeling",
-    "marketplaceWaiting": "In beoordeling"
+    "marketplaceWaiting": "In beoordeling",
+    "marketplace": {
+      "intro": "myBestDays is onze eigen marktplaats — een boekingskanaal zoals Booking of Airbnb, alleen zonder portaalkoppeling. Een object wordt zichtbaar als het actief is, hier vermeld staat en is goedgekeurd.",
+      "openMarketplace": "Marktplaats openen",
+      "propertiesHeading": "Objecten op de marktplaats",
+      "noProperties": "Nog geen objecten aangemaakt.",
+      "columnProperty": "Object",
+      "columnVisibility": "Zichtbaarheid",
+      "columnApproval": "Goedkeuring",
+      "columnBookings": "Boekingen",
+      "stateActive": "Zichtbaar",
+      "statePending": "In beoordeling",
+      "stateNotListed": "Niet vermeld",
+      "stateInactiveProperty": "Object niet actief",
+      "viewListing": "Advertentie bekijken",
+      "reviewHint": "Objecten in beoordeling staan nog niet op myBestDays. We beoordelen elke advertentie omdat myBestDays daar als aanbieder optreedt — portalen en je eigen website worden niet beïnvloed.",
+      "summaryVisible": "{count} zichtbaar",
+      "summaryWaiting": "{count} in beoordeling",
+      "summaryOff": "{count} niet vermeld",
+      "moderation": {
+        "draft": "Concept",
+        "pending": "In beoordeling",
+        "approved": "Goedgekeurd",
+        "rejected": "Afgewezen"
+      }
+    }
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Bevestigen",
     "mfaChecking": "Controleren…",
     "mfaBack": "Terug naar inloggen"
+  },
+  "portalSaetze": {
+    "add": "Tarief toevoegen",
+    "breakdown": "{provision} % commissie + {fee} % betaalkosten",
+    "breakdownNoFee": "{provision} % commissie, geen betaalkosten",
+    "cancel": "Annuleren",
+    "channel": "Portal",
+    "channelLocked": "De portal van een bestaand tarief kan niet worden gewijzigd. Maak voor een andere portal een nieuw tarief aan.",
+    "create": "Tarief aanmaken",
+    "created": "Tarief aangemaakt",
+    "current": "geldt vandaag",
+    "delete": "Tarief verwijderen",
+    "deleted": "Tarief verwijderd",
+    "edit": "Tarief bewerken",
+    "empty": "Nog geen tarief vastgelegd. Zonder tarief kan een uitbetaling alleen worden berekend als de portal zijn inhouding zelf doorgeeft.",
+    "errorProvisionRequired": "Voer een commissiepercentage in.",
+    "intro": "Wat elke portal per boeking inhoudt. Deze tarieven gelden daar waar de portal zijn inhouding niet zelf doorgeeft — geeft hij een bedrag door, dan geldt altijd het doorgegeven bedrag.",
+    "loading": "Wordt geladen …",
+    "note": "Notitie",
+    "notePlaceholder": "Waar het tarief vandaan komt, bijv. portalcontract of afrekening",
+    "payoutFee": "Betaalkosten",
+    "payoutFeeInfo": "De vergoeding voor het innen en doorbetalen van het geld door de portal. Die geldt alleen als de portal int — betaalt de gast direct aan u, dan vervalt ze.",
+    "payoutFeeNone": "rekent er geen",
+    "period": "{von} tot {bis}",
+    "periodOpen": "sinds {von}",
+    "provision": "Commissie",
+    "provisionInfo": "Het bemiddelingsdeel dat de portal voor de boeking houdt. Grondslag is de totaalprijs van de gast inclusief kosten.",
+    "save": "Wijzigingen opslaan",
+    "saved": "Tarief opgeslagen",
+    "title": "Inhoudingstarieven van portals",
+    "total": "{pct} % totaal",
+    "validFrom": "Geldig vanaf",
+    "validTo": "Geldig tot",
+    "validToInfo": "Laat leeg zolang het tarief geldt. Wijzigt de portal zijn tarief, maak dan een nieuw tarief aan vanaf de dag van wijziging — het oude blijft bewaard voor eerdere afrekeningen.",
+    "validToOpen": "loopt door"
   }
 }

@@ -157,6 +157,22 @@ class RentalRow(BaseModel):
     # "provision"; der Name folgt `PayoutUnbekannt.grund`, damit neue Gründe
     # ohne zweite Namenswelt dazukommen können.
     payout_unbekannt: str | None = None
+    # WOHER die Gebühren dieser Zeile kommen: "ota" (das Portal hat sie
+    # gemeldet — Tatsache), "ota_ohne_aufstellung" (Portal-Buchung, deren
+    # Payload keine Aufstellung trägt: es werden KEINE Gebühren angesetzt) oder
+    # "stammdaten" (keine Portal-Buchung, die gepflegten Objekt-Gebühren gelten).
+    #
+    # Ohne diese Angabe ist die häufigste Rückfrage der Buchhaltung nicht
+    # beantwortbar: „warum steht bei dieser Buchung keine Reinigung?" Am
+    # 11.08.2026 kostete genau diese Frage einen halben Tag Fehlersuche — beim
+    # Mapping, beim Tax Set, im eigenen Rechencode — und die Antwort lag im
+    # Eingangsweg der Buchung. Die Zeile sagt es künftig selbst.
+    gebuehren_quelle: str | None = None
+    # Bei "ota_ohne_aufstellung": der Grund (`channex_import` |
+    # `portal_meldet_keine` | `kein_payload`). Siehe
+    # `gebuehren_quelle._stammdaten_grund` — nur `portal_meldet_keine` ist
+    # überhaupt behebbar, die Channex-Importe sind es nicht.
+    gebuehren_grund: str | None = None
 
 
 class ListingRow(BaseModel):

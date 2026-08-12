@@ -38,6 +38,10 @@ from .schemas import (
     OwnerBillingTermsListResponse,
     OwnerBillingTermsResponse,
     OwnerBillingTermsUpdate,
+    PortalAbzugssatzCreate,
+    PortalAbzugssatzListResponse,
+    PortalAbzugssatzResponse,
+    PortalAbzugssatzUpdate,
     SliceHealth,
 )
 
@@ -58,6 +62,12 @@ _TERMS_COLUMNS = (
     "provisions_pct, min_provision_betrag, min_provision_currency, "
     "pauschale_betrag, pauschale_currency, pauschale_basis, "
     "pauschale_zeitpunkt, notiz, erstellt_von, created_at, updated_at"
+)
+
+_SAETZE_COLUMNS = (
+    "id, tenant_id, kanal, property_id, gueltig_ab, gueltig_bis, "
+    "provision_pct, zahlungsgebuehr_pct, notiz, erstellt_von, "
+    "created_at, updated_at"
 )
 
 _CLASS_COLUMNS = (
@@ -873,3 +883,242 @@ class OwnerBillingService:
             elif property_id and zeilen_property == property_id:
                 objekt_treffer = row
         return objekt_treffer or owner_treffer
+
+    # ==================================================================
+    # C) Portal-Abzugssätze (0364)
+    # ==================================================================
+
+    @staticmethod
+    def _satz_row(
+        row: dict[str, Any], *, heute: date
+    ) -> PortalAbzugssatzResponse:
+        ab = date.fromisoformat(str(row["gueltig_ab"]))
+        bis_roh = row.get("gueltig_bis")
+        bis = date.fromisoformat(str(bis_roh)) if bis_roh else None
+        provision = float(row["provision_pct"])
+        gebuehr = _float(row.get("zahlungsgebuehr_pct"))
+        return PortalAbzugssatzResponse(
+            id=str(row["id"]),
+            kanal=str(row["kanal"]),
+            property_id=(
+                str(row["property_id"]) if row.get("property_id") else None
+            ),
+            provision_pct=provision,
+            zahlungsgebuehr_pct=gebuehr,
+            gueltig_ab=ab,
+            gueltig_bis=bis,
+            notiz=row.get("notiz"),
+            created_at=_iso(row.get("created_at")),
+            updated_at=_iso(row.get("updated_at")),
+            # Halb offenes Intervall [ab, bis): der Endtag gehört schon zum
+            # Folgesatz.
+            aktuell=ab <= heute and (bis is None or heute < bis),
+            gesamt_pct=provision + (gebuehr or 0.0),
+        )
+
+    def saetze_liste(self, ctx: AuthContext) -> PortalAbzugssatzListResponse:
+        """Alle Portal-Abzugssätze des Betriebs — mit Historie.
+
+        Die Historie gehört dazu: eine Abrechnung aus dem Juli ist nicht
+        nachvollziehbar, wenn im September ein anderer Satz gilt und der alte
+        nicht mehr sichtbar ist.
+        """
+        tenant_id = self._require_tenant(ctx)
+        rows = (
+            self._db.table("portal_abzugssaetze")
+            .select(_SAETZE_COLUMNS)
+            .eq("tenant_id", tenant_id)
+            .order("kanal")
+            .order("gueltig_ab", desc=True)
+            .execute()
+        ).data or []
+        heute = date.today()
+        return PortalAbzugssatzListResponse(
+            items=[self._satz_row(r, heute=heute) for r in rows]
+        )
+
+    def _require_own_satz(
+        self, tenant_id: str, satz_id: str
+    ) -> dict[str, Any]:
+        """Einen Satz tenant-gescoped laden (Wurzel 3/9).
+
+        Derselbe Scope wie im List-Pfad — ohne ihn könnte ein Nutzer mit
+        gültigem Token den Satz eines fremden Betriebs ändern, wenn er die ID
+        kennt. Ein geänderter Satz verschiebt echte Auszahlungen.
+        """
+        res = (
+            self._db.table("portal_abzugssaetze")
+            .select(_SAETZE_COLUMNS)
+            .eq("tenant_id", tenant_id)
+            .eq("id", satz_id)
+            .limit(1)
+            .execute()
+        )
+        if not res.data:
+            raise BillingError("Portal-Satz nicht gefunden.", status_code=404)
+        return res.data[0]
+
+    def satz_anlegen(
+        self, ctx: AuthContext, req: PortalAbzugssatzCreate
+    ) -> PortalAbzugssatzResponse:
+        """Einen Portal-Abzugssatz anlegen.
+
+        Eine Satzänderung des Portals ist ein NEUER Satz ab Datum X, kein
+        Überschreiben — sonst rechnete eine Juli-Abrechnung rückwirkend mit dem
+        September-Satz.
+        """
+        tenant_id = self._require_tenant(ctx)
+        if req.property_id:
+            self._require_own_property(tenant_id, req.property_id)
+        zeile = {
+            "tenant_id": tenant_id,
+            "kanal": req.kanal,
+            "property_id": req.property_id,
+            "gueltig_ab": req.gueltig_ab.isoformat(),
+            "gueltig_bis": (
+                req.gueltig_bis.isoformat() if req.gueltig_bis else None
+            ),
+            "provision_pct": req.provision_pct,
+            "zahlungsgebuehr_pct": req.zahlungsgebuehr_pct,
+            "notiz": req.notiz,
+            "erstellt_von": ctx.user_id,
+        }
+        try:
+            res = (
+                self._db.table("portal_abzugssaetze").insert(zeile).execute()
+            )
+        except APIError as exc:
+            if exc.code == _EXCLUSION_VERLETZUNG:
+                raise BillingError(
+                    f"Für „{req.kanal}“ gilt in diesem Zeitraum schon ein "
+                    "anderer Satz. Befriste den alten oder wähle ein späteres "
+                    "Startdatum.",
+                    status_code=409,
+                ) from exc
+            raise
+        return self._satz_row(res.data[0], heute=date.today())
+
+    def satz_aendern(
+        self, ctx: AuthContext, satz_id: str, req: PortalAbzugssatzUpdate
+    ) -> PortalAbzugssatzResponse:
+        """Einen Satz korrigieren — für den Tippfehler, nicht für die Ablösung."""
+        tenant_id = self._require_tenant(ctx)
+        alt = self._require_own_satz(tenant_id, satz_id)
+        aenderung: dict[str, Any] = {}
+        if req.provision_pct is not None:
+            aenderung["provision_pct"] = req.provision_pct
+        if req.ohne_zahlungsgebuehr:
+            # Ausdrücklich „erhebt keine" — nicht 0, das wäre eine vereinbarte
+            # Null-Gebühr und damit eine andere Aussage.
+            aenderung["zahlungsgebuehr_pct"] = None
+        elif req.zahlungsgebuehr_pct is not None:
+            aenderung["zahlungsgebuehr_pct"] = req.zahlungsgebuehr_pct
+        if req.gueltig_ab is not None:
+            aenderung["gueltig_ab"] = req.gueltig_ab.isoformat()
+        if req.ohne_gueltig_bis:
+            aenderung["gueltig_bis"] = None
+        elif req.gueltig_bis is not None:
+            aenderung["gueltig_bis"] = req.gueltig_bis.isoformat()
+        if req.notiz is not None:
+            aenderung["notiz"] = req.notiz
+        if not aenderung:
+            return self._satz_row(alt, heute=date.today())
+
+        # Zeitraum nach der Zusammenführung prüfen: ein PATCH, der nur
+        # `gueltig_ab` schickt, könnte es hinter das bestehende `gueltig_bis`
+        # schieben. Der DB-CHECK fängt das ab, aber mit Constraint-Namen statt
+        # einer Meldung, die jemand versteht.
+        neu_ab = date.fromisoformat(
+            str(aenderung.get("gueltig_ab", alt["gueltig_ab"]))
+        )
+        bis_wert = (
+            aenderung["gueltig_bis"]
+            if "gueltig_bis" in aenderung
+            else alt.get("gueltig_bis")
+        )
+        neu_bis = date.fromisoformat(str(bis_wert)) if bis_wert else None
+        if neu_bis is not None and neu_bis <= neu_ab:
+            raise BillingError(
+                "„Gültig bis“ muss nach „Gültig ab“ liegen.", status_code=422
+            )
+        aenderung["updated_at"] = "now()"
+        try:
+            res = (
+                self._db.table("portal_abzugssaetze")
+                .update(aenderung)
+                .eq("tenant_id", tenant_id)
+                .eq("id", satz_id)
+                .execute()
+            )
+        except APIError as exc:
+            if exc.code == _EXCLUSION_VERLETZUNG:
+                raise BillingError(
+                    "Der geänderte Zeitraum überschneidet sich mit einem "
+                    "anderen Satz dieses Kanals.",
+                    status_code=409,
+                ) from exc
+            raise
+        if not res.data:
+            raise BillingError("Portal-Satz nicht gefunden.", status_code=404)
+        return self._satz_row(res.data[0], heute=date.today())
+
+    def satz_loeschen(self, ctx: AuthContext, satz_id: str) -> None:
+        """Einen versehentlich angelegten Satz entfernen.
+
+        Einen ABGELAUFENEN Satz sollte man nicht löschen — er begründet die
+        Zahlen alter Abrechnungen. Das Löschen ist für den Fehleintrag.
+        """
+        tenant_id = self._require_tenant(ctx)
+        self._require_own_satz(tenant_id, satz_id)
+        self._db.table("portal_abzugssaetze").delete().eq(
+            "tenant_id", tenant_id
+        ).eq("id", satz_id).execute()
+
+    def portal_satz_aufloesen(
+        self,
+        tenant_id: str,
+        kanal: str,
+        property_id: str | None,
+        stichtag: date,
+    ) -> dict[str, Any] | None:
+        """Welcher Portal-Abzugssatz galt am Stichtag — Objekt schlägt Betrieb.
+
+        Dieselbe Vorrang- und Zeitachsen-Logik wie ``vertrag_aufloesen`` (0364
+        ist bewusst nach demselben Muster gebaut): halb offenes Intervall
+        ``[ab, bis)``, Stichtag vom AUFRUFER (Check-out der Buchung), nie
+        ``date.today()``.
+
+        ``None`` heißt: für diesen Kanal ist am Stichtag kein Satz hinterlegt.
+        Das ist KEIN „0 % Abzug" — die Rechenkette wirft dann
+        ``PayoutUnbekannt("portal_abzug")``, sofern das Portal auch keinen
+        Betrag mitgemeldet hat.
+        """
+        kanal_norm = (kanal or "").strip().lower()
+        if not kanal_norm:
+            return None
+        rows = (
+            self._db.table("portal_abzugssaetze")
+            .select(
+                "kanal, property_id, gueltig_ab, gueltig_bis, "
+                "provision_pct, zahlungsgebuehr_pct"
+            )
+            .eq("tenant_id", tenant_id)
+            .eq("kanal", kanal_norm)
+            .lte("gueltig_ab", stichtag.isoformat())
+            .execute()
+        ).data or []
+
+        objekt_treffer: dict[str, Any] | None = None
+        betrieb_treffer: dict[str, Any] | None = None
+        for row in rows:
+            bis_roh = row.get("gueltig_bis")
+            if bis_roh and date.fromisoformat(str(bis_roh)) <= stichtag:
+                continue
+            zeilen_property = (
+                str(row["property_id"]) if row.get("property_id") else None
+            )
+            if zeilen_property is None:
+                betrieb_treffer = row
+            elif property_id and zeilen_property == property_id:
+                objekt_treffer = row
+        return objekt_treffer or betrieb_treffer

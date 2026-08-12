@@ -13,6 +13,7 @@ from src.features.channel_manager.airbnb_gebuehren_import import (
     AIRBNB_FEE_AUF_ART,
     KATEGORIE_AUF_AIRBNB,
     airbnb_fee_signatur,
+    betrag_aus_airbnb,
     fee_aus_airbnb,
     fees_aus_airbnb,
 )
@@ -63,6 +64,65 @@ def test_betrag_wird_nicht_durch_hundert_geteilt() -> None:
     )
     assert fee is not None
     assert fee["amount"] == 1150.0
+
+
+def test_mikro_betrag_wird_zurueckgerechnet() -> None:
+    """Was CHANNEX geschrieben hat, kommt in Mikro-Einheiten zurück.
+
+    Live gemessen (11.08.2026, Konto AirSmil): dasselbe Feld am selben Konto in
+    zwei Größenordnungen — 1150.0 an einem vom Betrieb gepflegten Inserat,
+    795000000 an dem, das unser Sync bespielt (Listing 54087677; im Airbnb-Host
+    steht dort 795 kr). Ohne Rückrechnung meldete unser eigener Vergleich jede
+    synchronisierte Gebühr als „795 Millionen" und damit als abweichend.
+    """
+    fee = fee_aus_airbnb(
+        {"fee_type": "PASS_THROUGH_CLEANING_FEE", "amount": 795000000,
+         "amount_type": "flat", "charge_period": "PER_BOOKING",
+         "charge_type": "PER_GROUP"}
+    )
+    assert fee is not None
+    assert fee["amount"] == 795.0
+    assert betrag_aus_airbnb(
+        {"amount": 25000000, "amount_type": "flat"}
+    ) == 25.0
+
+
+def test_prozentwert_wird_nie_zurueckgerechnet() -> None:
+    """Prozent ist laut Spec eine Zahl zwischen 0 und 100 — nie Mikro."""
+    assert betrag_aus_airbnb({"amount": 12.5, "amount_type": "percent"}) == 12.5
+
+
+def test_mikro_erkennung_haengt_am_wert_nicht_am_json_typ() -> None:
+    """795000000 ist 795,00 DKK — egal ob int, float oder String.
+
+    Airbnb liefert heute `int` (live geprüft 11.08.2026). Bis dahin hing die
+    Erkennung an `isinstance(wert, int)`: derselbe Betrag als `795000000.0`
+    oder `"795000000"` lief unumgerechnet durch und schrieb 795 Millionen
+    Kronen ins Inserat — genau der Fehler, den die Umrechnung verhindern soll.
+    Ein Feed, der den Wert als Float oder String schickt, meint ihn nicht
+    anders.
+    """
+    for wert in (795000000, 795000000.0, "795000000"):
+        assert betrag_aus_airbnb({"amount": wert, "amount_type": "flat"}) == 795.0
+    for wert in (25000000, 25000000.0, "25000000"):
+        assert betrag_aus_airbnb({"amount": wert, "amount_type": "flat"}) == 25.0
+
+
+def test_krummer_millionenbetrag_ist_keine_mikroeinheit() -> None:
+    """Mikro-Einheiten sind immer ganzzahlig.
+
+    1.500.000,75 ist damit ein echter (wenn auch unwahrscheinlicher) Betrag und
+    darf nicht auf 1,50 heruntergerechnet werden — das wäre eine erfundene
+    Zahl in der anderen Richtung.
+    """
+    assert betrag_aus_airbnb(
+        {"amount": 1500000.75, "amount_type": "flat"}
+    ) == 1500000.75
+
+
+def test_wahrheitswert_ist_kein_betrag() -> None:
+    """`True` ergäbe über `float()` 1,00 DKK — eine Gebühr aus einem Flag."""
+    assert betrag_aus_airbnb({"amount": True, "amount_type": "flat"}) is None
 
 
 def test_nullbetrag_wird_verworfen() -> None:
@@ -198,3 +258,79 @@ def test_signatur_trennt_verschiedene_betraege() -> None:
          "amount": 795.0}
     b = {**a, "amount": 1150.0}
     assert airbnb_fee_signatur(a) != airbnb_fee_signatur(b)
+
+
+# --- Der Import ist EINMALIG (11.08.2026) ------------------------------------
+#
+# Unsere Plattform ist die Quelle für die Portale: was am Objekt steht, geht
+# raus. Airbnbs Gebühren dürfen deshalb genau EINMAL als Starthilfe hereinkommen
+# — danach ist das Angebot beendet.
+#
+# DER ANLASS: der Kasten „Bei Airbnb sind N weitere Gebühren hinterlegt" stand
+# dauerhaft über der Preisseite und verglich BETRÄGE. Unser Objekt hatte 795 DKK
+# Reinigung, Airbnb 1.590 DKK → Airbnbs galt als „fehlt uns", ein Klick legte
+# eine ZWEITE Reinigungsgebühr an, und der Gast zahlte im Checkout beide.
+
+
+def _airbnb_reinigung(betrag: float) -> dict:
+    return {"feeType": "cleaning_fee", "mode": "amount", "basis": "per_stay",
+            "amount": betrag, "name": "", "optional": False, "id": "a-1"}
+
+
+def test_gleiche_art_mit_anderem_betrag_ist_nicht_uebernehmbar() -> None:
+    from src.features.channel_manager.airbnb_gebuehren import _fehlende_arten
+
+    unsere = [{"feeType": "cleaning_fee", "mode": "amount", "basis": "per_stay",
+               "amount": 795.0, "name": "Reinigungsgebühr"}]
+    # Airbnb führt dieselbe ART mit anderem Betrag → KEIN Vorschlag.
+    assert _fehlende_arten([_airbnb_reinigung(1590.0)], unsere) == []
+
+
+def test_fehlende_art_wird_vorgeschlagen() -> None:
+    from src.features.channel_manager.airbnb_gebuehren import _fehlende_arten
+
+    unsere = [{"feeType": "cleaning_fee", "amount": 795.0}]
+    airbnb = [
+        _airbnb_reinigung(1590.0),
+        {"feeType": "pet_fee", "mode": "amount", "basis": "per_pet_stay",
+         "amount": 150.0, "name": "", "optional": False, "id": "a-2"},
+    ]
+    vorschlag = _fehlende_arten(airbnb, unsere)
+    assert [f["feeType"] for f in vorschlag] == ["pet_fee"]
+
+
+def test_zwei_airbnb_eintraege_derselben_art_ergeben_einen_vorschlag() -> None:
+    """Eine Art kommt an einem Objekt einmal vor — sonst legte ein Klick zwei
+    Reinigungsgebühren an, nur weil Airbnb zwei Einträge führt."""
+    from src.features.channel_manager.airbnb_gebuehren import _fehlende_arten
+
+    airbnb = [_airbnb_reinigung(795.0), _airbnb_reinigung(1590.0)]
+    vorschlag = _fehlende_arten(airbnb, [])
+    assert len(vorschlag) == 1
+    assert vorschlag[0]["amount"] == 795.0  # der erste gewinnt, nicht der größte
+
+
+def test_art_ohne_kennung_wird_nicht_vorgeschlagen() -> None:
+    """Ohne `feeType` ist nicht entscheidbar, ob wir sie schon haben →
+    fail-closed, kein Vorschlag (Wurzel 5)."""
+    from src.features.channel_manager.airbnb_gebuehren import _fehlende_arten
+
+    assert _fehlende_arten([{"feeType": "", "amount": 10.0}], []) == []
+
+
+def test_import_merker_erkennt_den_abgeschlossenen_lauf() -> None:
+    from src.features.channel_manager.airbnb_gebuehren import (
+        IMPORT_MERKER,
+        _import_erledigt,
+    )
+
+    assert _import_erledigt({"type_attributes": {}}) is False
+    # Ein leeres Merker-Objekt zählt NICHT als erledigt (unvollständig
+    # geschrieben ist nicht dasselbe wie gelaufen).
+    assert _import_erledigt({"type_attributes": {IMPORT_MERKER: {}}}) is False
+    assert (
+        _import_erledigt(
+            {"type_attributes": {IMPORT_MERKER: {"erledigt_am": "2026-08-11T09:00:00Z"}}}
+        )
+        is True
+    )

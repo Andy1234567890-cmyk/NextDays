@@ -1,6 +1,13 @@
 "use client";
 
 // Vorlagen-Tab: Nachrichten-Vorlagen anlegen, bearbeiten, löschen.
+//
+// Seit 0363 hat eine Vorlage MEHRERE Fassungen: eine Grundfassung ohne
+// Sprachangabe und je verwalteter Sprache eine eigene (Betreff + Text). Welche
+// beim Gast ankommt, entscheidet der Server nach dessen Sprache — hier wird nur
+// gepflegt. Die Reiter erscheinen erst, wenn der Betrieb Sprachen verwaltet
+// (Posteingang → Automatisieren → Sprachen verwalten); vorher sieht die Maske
+// aus wie bisher, mit genau einem Text.
 import { Icon } from "@iconify/react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
@@ -8,60 +15,106 @@ import { useTranslations } from "next-intl";
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import {
-  ComposerEditor,
   htmlIstLeer,
   textZuHtml,
   type ComposerGriff,
 } from "@/components/inbox/composer-editor";
-import { FeldPicker } from "@/components/inbox/feld-picker";
 import {
+  FassungFelder,
+  GRUNDFASSUNG,
+  SprachReiter,
+  type Fassungen,
+} from "@/components/inbox/sprach-fassungen";
+import {
+  type MessageLanguage,
   type MessageTemplate,
+  type TemplateTextInput,
   createTemplate,
   deleteTemplate,
+  listAvailableLanguages,
+  listMessageLanguages,
   listTemplates,
   updateTemplate,
 } from "@/lib/inbox";
 
+/** Leere Fassung — eine Konstante, damit „neu" und „Reiter noch nie berührt"
+ *  denselben Startwert benutzen. */
+const LEER = { subject: "", body: "" };
+
 export function TemplatesTab() {
   const t = useTranslations("inbox");
   const [items, setItems] = useState<MessageTemplate[]>([]);
+  const [sprachen, setSprachen] = useState<MessageLanguage[]>([]);
+  // Sprachcode → Name. Kommt vom Server (EINE Quelle, `core.languages`), damit
+  // nicht 31 Sprachnamen in 24 Sprachdateien gepflegt werden müssen.
+  const [namen, setNamen] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<MessageTemplate | null>(null);
   const [title, setTitle] = useState("");
-  // Das AUTORENFORMAT der Vorlage ist HTML (`body_html`). Den Klartext für den
-  // Versand (`body`) leitet der Server daraus ab — er ist die Versandquelle,
-  // wird hier aber nie geschrieben; ein mitgeschicktes `body` ignoriert die API.
-  const [bodyHtml, setBodyHtml] = useState("");
+  // Alle Fassungen im Editor, Schlüssel = Sprachcode bzw. GRUNDFASSUNG. Das
+  // AUTORENFORMAT ist HTML (`body_html`); den Klartext für den Versand leitet
+  // der Server daraus ab — er wird hier nie geschrieben.
+  const [fassungen, setFassungen] = useState<Fassungen>({ [GRUNDFASSUNG]: LEER });
+  const [aktiv, setAktiv] = useState<string>(GRUNDFASSUNG);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const editorGriff = useRef<ComposerGriff | null>(null);
 
   async function load() {
-    const res = await listTemplates();
+    const [res, spr, kat] = await Promise.all([
+      listTemplates(),
+      listMessageLanguages(),
+      listAvailableLanguages(),
+    ]);
     if (res.ok) setItems(res.data.items);
+    if (spr.ok) setSprachen(spr.data.items);
+    if (kat.ok) {
+      setNamen(Object.fromEntries(kat.data.items.map((o) => [o.code, o.name])));
+    }
   }
   useEffect(() => {
     load();
   }, []);
 
+  const aktuelleFassung = fassungen[aktiv] ?? LEER;
+
   function reset() {
     setEditing(null);
     setTitle("");
-    setBodyHtml("");
+    setFassungen({ [GRUNDFASSUNG]: LEER });
+    setAktiv(GRUNDFASSUNG);
     setError(null);
   }
 
+  /** Sprachfassungen für die API. Leere Reiter fallen weg — der Server würde sie
+   *  ohnehin verwerfen, und eine leere Fassung darf die Grundfassung nicht
+   *  verdrängen. */
+  function texteFuerApi(): TemplateTextInput[] {
+    return sprachen
+      .map((s) => ({ lang: s.code, ...(fassungen[s.code] ?? LEER) }))
+      .filter((f) => !htmlIstLeer(f.body) || f.subject.trim())
+      .map((f) => ({ lang: f.lang, subject: f.subject, body_html: f.body }));
+  }
+
   function save() {
+    const grund = fassungen[GRUNDFASSUNG] ?? LEER;
     // Leer-Prüfung auf den INHALT, nicht auf die Zeichenkette: ein leerer
     // Editor liefert „<p></p>" — das ist als String nicht leer, als Nachricht
-    // schon.
-    if (!title.trim() || htmlIstLeer(bodyHtml)) {
+    // schon. Geprüft wird die GRUNDFASSUNG: sie ist der Rückfall für jede
+    // Sprache ohne eigene Fassung, also darf sie nicht fehlen.
+    if (!title.trim() || htmlIstLeer(grund.body)) {
       setError(t("templateRequired"));
       return;
     }
+    const eingabe = {
+      title,
+      body_html: grund.body,
+      subject: grund.subject,
+      texts: texteFuerApi(),
+    };
     start(async () => {
       const res = editing
-        ? await updateTemplate(editing.id, { title, body_html: bodyHtml })
-        : await createTemplate({ title, body_html: bodyHtml });
+        ? await updateTemplate(editing.id, eingabe)
+        : await createTemplate(eingabe);
       if (res.ok) {
         reset();
         await load();
@@ -78,7 +131,23 @@ export function TemplatesTab() {
     // baut `textZuHtml` den Editor-Inhalt aus dem vorhandenen Klartext auf —
     // Aufzählungen und Absätze werden dabei wieder zu echten Knoten, sodass
     // sich die Vorlage sofort weiterschreiben lässt.
-    setBodyHtml(tpl.body_html || textZuHtml(tpl.body));
+    const geladen: Fassungen = {
+      [GRUNDFASSUNG]: {
+        subject: tpl.subject,
+        body: tpl.body_html || textZuHtml(tpl.body),
+      },
+    };
+    for (const s of sprachen) {
+      const fassung = tpl.texts.find((x) => x.lang === s.code);
+      geladen[s.code] = fassung
+        ? {
+            subject: fassung.subject,
+            body: fassung.body_html || textZuHtml(fassung.body),
+          }
+        : LEER;
+    }
+    setFassungen(geladen);
+    setAktiv(GRUNDFASSUNG);
     setError(null);
   }
 
@@ -114,6 +183,20 @@ export function TemplatesTab() {
                   <span className="line-clamp-2 text-sm text-muted-foreground">
                     {tpl.body}
                   </span>
+                  {/* Welche Sprachen gepflegt sind, ohne die Vorlage zu öffnen —
+                      sonst sieht man eine halb übersetzte Vorlage nicht. */}
+                  {tpl.texts.length > 0 && (
+                    <span className="mt-1.5 flex flex-wrap gap-1">
+                      {tpl.texts.map((x) => (
+                        <span
+                          key={x.lang}
+                          className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                        >
+                          {x.lang.toUpperCase()}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                 </div>
                 <Button type="button" variant="outline" size="icon" onClick={() => edit(tpl)}>
                   <Icon icon="ph:pencil-simple" className="size-4" />
@@ -142,36 +225,31 @@ export function TemplatesTab() {
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t("templateTitle")}
         />
-        {/* Derselbe Editor wie im Chat — eine Vorlage wird schließlich zu
-            einer Nachricht. Eigener Speicherplatz für die Höhe: hier
-            schreibt man lange Texte, im Chat kurze.
-            `format="html"`: hier ist HTML das Autorenformat (siehe
-            Kopfkommentar von `composer-editor`), im Chat bleibt es Klartext. */}
-        <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
-          <ComposerEditor
-            wert={bodyHtml}
-            onChange={setBodyHtml}
-            format="html"
-            platzhalter={t("templateBody")}
-            griff={editorGriff}
-            hoeheSchluessel="inbox.vorlage.hoehe"
-            griffSeite="unten"
-            leisteSeite="unten"
-            testId="inbox-template-textarea"
-            etiketten={{
-              bold: t("formatBold"),
-              italic: t("formatItalic"),
-              underline: t("formatUnderline"),
-              bulletList: t("formatBulletList"),
-              orderedList: t("formatOrderedList"),
-              link: t("formatLink"),
-              code: t("formatCode"),
-              linkPrompt: t("formatLinkPrompt"),
-              resize: t("formatResize"),
-            }}
-          />
-        </div>
-        <FeldPicker onInsert={(p) => editorGriff.current?.einfuegen(p)} />
+        <SprachReiter
+          sprachen={sprachen}
+          aktiv={aktiv}
+          onAktiv={setAktiv}
+          fassungen={fassungen}
+          namen={namen}
+        />
+        {aktiv === GRUNDFASSUNG && sprachen.length > 0 && (
+          <p className="text-xs text-muted-foreground">{t("langBaseHint")}</p>
+        )}
+        <FassungFelder
+          // Beim Reiterwechsel MUSS der Editor neu aufgebaut werden: TipTap
+          // führt sein Dokument selbst und übernimmt einen von außen gesetzten
+          // Wert nur, wenn er sich vom zuletzt Herausgegebenen unterscheidet.
+          // Zwei Fassungen mit identischem Text (etwa beide leer) sähen für ihn
+          // nach „unverändert" aus, und der Reiter zeigte weiter den Text der
+          // vorigen Sprache.
+          key={aktiv}
+          fassung={aktuelleFassung}
+          onChange={(f) => setFassungen((prev) => ({ ...prev, [aktiv]: f }))}
+          griff={editorGriff}
+          hoeheSchluessel="inbox.vorlage.hoehe"
+          testId="inbox-template-textarea"
+          platzhalter={t("templateBody")}
+        />
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">
           {editing && (

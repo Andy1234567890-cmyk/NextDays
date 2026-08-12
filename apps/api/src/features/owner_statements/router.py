@@ -15,6 +15,7 @@ from src.core.uploads import read_upload_named
 from src.features.auth.dependencies import require_granular_permission
 from src.features.auth.granular_permissions import Permission
 
+from .common import PayoutUnbekannt
 from .dependencies import OwnerStatementsServiceDep
 from .schemas import (
     AutoStatementRunResponse,
@@ -35,6 +36,45 @@ router = APIRouter(prefix="/owner-statements", tags=["owner_statements"])
 _REPORTING = require_granular_permission(  # noqa: N816  pylint: disable=invalid-name
     Permission.OWNER_REPORTING
 )
+
+# Welche fehlende Einstellung hinter einem `PayoutUnbekannt`-Grund steckt — als
+# Satz, der sagt, WO der Betrieb sie pflegt. Der rohe Grund („portal_abzug") ist
+# maschinenlesbar, aber keine Auskunft für einen Menschen.
+_GRUND_HINWEIS = {
+    "portal_abzug": (
+        "Für einen der Buchungskanäle ist kein Abzugssatz hinterlegt. "
+        "Bitte unter Buchhaltung → Abrechnungsregeln eintragen, was das Portal "
+        "je Buchung einbehält."
+    ),
+    "gebuehr_nicht_zugeordnet": (
+        "Eine Gebührenart ist noch nicht zugeordnet. Bitte unter Buchhaltung → "
+        "Abrechnungsregeln festlegen, wem die Gebühr gehört und ob Provision "
+        "darauf anfällt."
+    ),
+    "provision": (
+        "Für ein Objekt ist kein Provisionssatz hinterlegt — weder ein "
+        "Abrechnungsvertrag noch ein Satz beim Eigentümer."
+    ),
+}
+
+
+def _payout_fehler(exc: PayoutUnbekannt) -> HTTPException:
+    """Ein Datenmangel ist ein 422, kein 500 (Wurzel 5).
+
+    Bis 11.08.2026 lief `PayoutUnbekannt` aus der Rechenkette bis in den ASGI-Stack
+    durch: `POST /owner-statements/preview` antwortete mit **500**, und der Betrieb
+    sah eine kaputte Seite statt der Auskunft, welche Einstellung fehlt. Ausgelöst
+    live, weil `portal_abzugssaetze` noch leer war.
+
+    Die Einzelzeilen fangen ihren Grund inzwischen selbst ab und weisen ihn aus;
+    dieser Handler ist das NETZ für die Pfade, die ohne Zeile rechnen (Summen,
+    Finalisierung) — er nennt den Grund und sagt, wo die Einstellung sitzt.
+    """
+    hinweis = _GRUND_HINWEIS.get(exc.grund)
+    return HTTPException(
+        status_code=422,
+        detail=f"{exc.message} {hinweis}" if hinweis else exc.message,
+    )
 
 
 @router.get("/health", response_model=SliceHealth)
@@ -62,6 +102,8 @@ def generate_statement(
 ) -> StatementResponse:
     try:
         return service.generate(ctx, req)
+    except PayoutUnbekannt as exc:
+        raise _payout_fehler(exc) from exc
     except StatementError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -76,6 +118,8 @@ def preview_statement(
     zu speichern. Für den Überblick auf der Owner-Seite."""
     try:
         return service.preview(ctx, req)
+    except PayoutUnbekannt as exc:
+        raise _payout_fehler(exc) from exc
     except StatementError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -113,6 +157,8 @@ def finalize_statement(
 ) -> StatementResponse:
     try:
         return service.finalize(ctx, statement_id)
+    except PayoutUnbekannt as exc:
+        raise _payout_fehler(exc) from exc
     except StatementError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

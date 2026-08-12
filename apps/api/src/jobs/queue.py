@@ -125,6 +125,39 @@ def try_enqueue_tax_sync(db: Client, tenant_id: str, property_id: str) -> None:
                     error=str(exc)[:200])
 
 
+# Wartezeit vor der Rücklese-Prüfung. Channex überträgt Gebühren an Airbnb
+# ASYNCHRON: live gemessen am 11.08.2026 lagen zwischen unserem Steuer-Sync
+# (07:02) und dem neuen Betrag am Inserat 15–45 Minuten. Sofort nachzusehen
+# hieße, jede frische Änderung als „steht dort nicht" zu melden — genau die
+# Falschaussage, die der Stand verhindern soll.
+GEBUEHREN_PRUEFUNG_VERZOEGERUNG = 1800
+
+
+def try_enqueue_gebuehren_pruefung(
+    db: Client,
+    tenant_id: str,
+    property_id: str,
+    *,
+    delay_seconds: int = GEBUEHREN_PRUEFUNG_VERZOEGERUNG,
+) -> None:
+    """Nach dem Push nachsehen, ob der Betrag beim Portal angekommen ist.
+
+    Coalescing über den Objekt-Schlüssel ist richtig: der Job liest immer den
+    vollen Ist-Stand des Objekts, mehrere Änderungen kurz nacheinander brauchen
+    nur eine Prüfung.
+    """
+    try:
+        enqueue(
+            db, "pruefe_ota_gebuehren", tenant_id=tenant_id,
+            payload={"tenant_id": tenant_id, "property_id": property_id},
+            dedup_key=dedup_key(tenant_id, property_id, "pruefe_ota_gebuehren"),
+            delay_seconds=delay_seconds,
+        )
+    except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+        log.warning("enqueue_gebuehren_pruefung_failed", property_id=property_id,
+                    error=str(exc)[:200])
+
+
 def try_enqueue_airbnb_aktionen(
     db: Client, tenant_id: str, property_id: str
 ) -> None:

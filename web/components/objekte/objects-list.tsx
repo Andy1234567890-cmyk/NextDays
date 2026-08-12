@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { ChannelChips } from "@/components/objekte/channel-chips";
+import { VerkaufPauseDialog } from "@/components/objekte/verkauf-pause-dialog";
 import { Card } from "@nextdays/ui/card";
 import {
   DropdownMenu,
@@ -28,6 +29,11 @@ import {
   unlistPropertyWebsite,
   type Property,
 } from "@/lib/properties";
+import {
+  verkaufFortsetzen,
+  verkaufPausieren,
+  type ObjektVerkaufErgebnis,
+} from "@/lib/objekt-verkauf";
 import {
 } from "@/lib/property-meta";
 
@@ -48,6 +54,17 @@ export function ObjectsList({
   const [status, setStatus] = useState("");
   const [sort, setSort] = useState<"default" | "az" | "za">("default");
   const [busyId, setBusyId] = useState<string | null>(null);
+  // „Bei allen Portalen abschalten" / „zurückholen". Der Dialog fragt erst nach
+  // und zeigt danach das Ergebnis je Portal — deshalb bleibt er nach dem
+  // Vorgang offen und trägt sowohl das Ziel-Objekt als auch das Resultat.
+  const [verkaufZiel, setVerkaufZiel] = useState<Property | null>(null);
+  const [verkaufRichtung, setVerkaufRichtung] = useState<
+    "pausieren" | "fortsetzen"
+  >("pausieren");
+  const [verkaufErgebnis, setVerkaufErgebnis] =
+    useState<ObjektVerkaufErgebnis | null>(null);
+  const [verkaufFehler, setVerkaufFehler] = useState<string | null>(null);
+  const [verkaufLaeuft, setVerkaufLaeuft] = useState(false);
 
   async function handleDelete(p: Property) {
     if (!window.confirm(t("objektePage.deleteConfirm", { title: p.title }))) {
@@ -86,6 +103,41 @@ export function ObjectsList({
     } else {
       toast.error(t("objektePage.unlistErr"));
     }
+  }
+
+  /**
+   * Objekt bei allen Portalen abschalten bzw. zurückholen.
+   *
+   * Kein `router.refresh()` im Erfolgsfall an dieser Stelle: der Dialog bleibt
+   * offen und zeigt das Ergebnis je Portal. Aktualisiert wird erst beim
+   * Schließen — sonst würde die Liste unter dem geöffneten Dialog neu rendern
+   * und das Ergebnis wäre weg, bevor es gelesen ist.
+   */
+  async function handleVerkauf() {
+    const ziel = verkaufZiel;
+    if (!ziel) return;
+    setVerkaufLaeuft(true);
+    setVerkaufFehler(null);
+    const res =
+      verkaufRichtung === "pausieren"
+        ? await verkaufPausieren(ziel.id)
+        : await verkaufFortsetzen(ziel.id);
+    setVerkaufLaeuft(false);
+    if ("fehler" in res) {
+      setVerkaufFehler(res.fehler);
+      return;
+    }
+    setVerkaufErgebnis(res);
+  }
+
+  function verkaufDialogSchliessen() {
+    const hatteErgebnis = verkaufErgebnis !== null;
+    setVerkaufZiel(null);
+    setVerkaufErgebnis(null);
+    setVerkaufFehler(null);
+    // Nur wenn wirklich geschaltet wurde: Status/Kanal-Chips der Karte haben
+    // sich geändert. Nach einem Abbruch gibt es nichts nachzuladen.
+    if (hatteErgebnis) router.refresh();
   }
 
   const typeOptions = typeOptionsFor(accommodationType);
@@ -242,6 +294,39 @@ export function ObjectsList({
                           {t("objektePage.menuDuplicate")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        {/* Aktiv/Inaktiv samt Buchungskalender bei allen
+                            Portalen. Nicht mit „Website-Verbindung aufheben"
+                            oben verwechseln: das schaltet NUR die eigene
+                            Website. Und es ist kein Stop-Sell — hier wird das
+                            Inserat geschaltet, nicht einzelne Tage gesperrt. */}
+                        {p.status === "active" ? (
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault();
+                              setVerkaufRichtung("pausieren");
+                              setVerkaufErgebnis(null);
+                              setVerkaufFehler(null);
+                              setVerkaufZiel(p);
+                            }}
+                          >
+                            <Icon icon="ph:pause-circle" className="size-4" />
+                            {t("objektePage.menuVerkaufAus")}
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault();
+                              setVerkaufRichtung("fortsetzen");
+                              setVerkaufErgebnis(null);
+                              setVerkaufFehler(null);
+                              setVerkaufZiel(p);
+                            }}
+                          >
+                            <Icon icon="ph:play-circle" className="size-4" />
+                            {t("objektePage.menuVerkaufAn")}
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
                           onSelect={(e) => {
@@ -281,6 +366,17 @@ export function ObjectsList({
           ))}
         </div>
       )}
+
+      <VerkaufPauseDialog
+        open={verkaufZiel !== null}
+        onClose={verkaufDialogSchliessen}
+        onBestaetigen={handleVerkauf}
+        busy={verkaufLaeuft}
+        titel={verkaufZiel?.title ?? null}
+        richtung={verkaufRichtung}
+        ergebnis={verkaufErgebnis}
+        fehler={verkaufFehler}
+      />
     </div>
   );
 }

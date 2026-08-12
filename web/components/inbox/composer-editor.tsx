@@ -255,6 +255,7 @@ export function ComposerEditor({
   griffSeite = "oben",
   leisteSeite = "oben",
   testId = "inbox-composer-textarea",
+  leisteZusatz,
 }: {
   wert: string;
   onChange: (text: string) => void;
@@ -277,10 +278,18 @@ export function ComposerEditor({
    *  auch die übrigen Bedienelemente des Formulars liegen. */
   leisteSeite?: "oben" | "unten";
   testId?: string;
+  /** Zusätzliche Bedienelemente am ENDE der Werkzeugleiste — dort sitzt bei
+   *  Lodgify der Platzhalter-Knopf (`{{Nachrichtenplatzhalter}}`).
+   *
+   *  Warum als Slot und nicht fest eingebaut: der Platzhalter-Katalog kommt vom
+   *  Server und gilt nur für Vorlagen/Regeln. Im Chat-Composer wäre er ein
+   *  Knopf, der Felder einer Buchung anbietet, die dort schon aufgelöst sind. */
+  leisteZusatz?: React.ReactNode;
   etiketten: {
     bold: string;
     italic: string;
     underline: string;
+    strike: string;
     bulletList: string;
     orderedList: string;
     link: string;
@@ -538,6 +547,16 @@ export function ComposerEditor({
           aktiv={editor.isActive("underline")}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
         />
+        {/* Durchgestrichen steht in der nh3-Allowlist (`s`) und verhält sich
+            damit wie fett/kursiv: im Editor eine Schreibhilfe, im Portal-Chat
+            fällt es sauber weg. Bild/Datei/Ausrichten bleiben absichtlich
+            draußen — siehe Kopfkommentar. */}
+        <LeistenKnopf
+          icon="ph:text-strikethrough"
+          label={etiketten.strike}
+          aktiv={editor.isActive("strike")}
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+        />
         <Trenner />
         <LeistenKnopf
           icon="ph:list-bullets"
@@ -564,6 +583,12 @@ export function ComposerEditor({
         aktiv={quelltext}
         onClick={() => setQuelltext((v) => !v)}
       />
+      {leisteZusatz ? (
+        <>
+          <Trenner />
+          {leisteZusatz}
+        </>
+      ) : null}
     </div>
   );
 

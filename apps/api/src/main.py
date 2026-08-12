@@ -59,6 +59,7 @@ from .features.notification_settings.router import (
 )
 from .features.ocr.router import router as ocr_router
 from .features.owner_billing.router import router as owner_billing_router
+from .features.owner_reporting.router import router as owner_reporting_router
 from .features.owner_statements.router import router as owner_statements_router
 from .features.owners.router import router as owners_router
 from .features.payments.router import router as payments_router
@@ -97,6 +98,9 @@ _SLICE_ROUTERS = [
     owners_router,
     owner_statements_router,
     owner_billing_router,
+    # Reporting für Eigentümer (0365): Bericht → Zahlung → Teilzahlung, Pläne,
+    # Bilanzstatistik. Baut auf owner_billing (Vertrag/Portal-Sätze) auf.
+    owner_reporting_router,
     addons_router,
     rates_router,
     pricing_router,

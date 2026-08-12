@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Instrumentpanelen kunde inte läsas in",
     "reviews": "Omdömen",
     "extensions": "Tillägg",
-    "announcements": "Nyheter"
+    "announcements": "Nyheter",
+    "billingRules": "Avräkningsregler",
+    "ownerReporting": "Ägarrapportering"
   },
   "exemption": {
     "labelNamed": "Skattebefriad ({scheme}) — inget momsreg.nr krävs",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Foto från gästen",
     "translate": "Översätt",
     "showOriginal": "Visa originalet",
-    "translatedFrom": "Översatt från {sprache}"
+    "translatedFrom": "Översatt från {sprache}",
+    "formatStrike": "Genomstruken",
+    "fieldsButton": "{{Platshållare}}",
+    "langBase": "Grundversion",
+    "langBaseHint": "Skickas till alla gäster vars språk saknar egen version.",
+    "subjectLabel": "Ämne",
+    "subjectHint": "Ämnesraden används bara för e-post.",
+    "langAdd": "Lägg till nytt språk",
+    "langDefault": "Standard",
+    "langSetDefault": "Ange som standard",
+    "langRemove": "Ta bort språk",
+    "langEmpty": "Inget språk är inlagt än — till dess skickas grundversionen till alla gäster.",
+    "autoEditContent": "Redigera innehåll",
+    "autoPanelCreate": "Skapa",
+    "quickEmpty": "Inga snabbsvar än.",
+    "autoTextRequired": "En text krävs."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Om e-postmeddelandet inte kom fram eller länken har gått ut kan inbjudan skickas igen. Den nya länken gäller i 7 dagar och leder till den här miljön; den tidigare skickade länken slutar fungera.",
     "portalAccessResent": "Inbjudan har skickats igen.",
     "commissionNotAgreed": "ej avtalat",
+    "commissionContractWins": "Avräkningsavtalet tillämpas just nu: {pct} % sedan {ab}. Detta fält används endast som reserv om inget avtal gäller.",
+    "commissionNoneAnywhere": "Ingen sats avtalad än — varken här eller som avtal. Till dess står utbetalningen tom i ägarportalen.",
+    "commissionContractObject": "Eget avtal för detta objekt: {pct} % sedan {ab}.",
+    "commissionContractOwnerWide": "Ägarens avräkningsavtal: {pct} % sedan {ab}.",
     "assignableCount": "{count} av {total} valda att lägga till",
     "assignedHeading": "{count, plural, one {# tilldelat objekt} other {# tilldelade objekt}}",
     "info": {
       "aria": "Förklaring till {feld}",
       "share": "Ägarandelen i detta objekt. Vid 100 % tillskrivs hela utbetalningen denna ägare, vid mindre i motsvarande proportion.",
-      "commission": "Standardprovisionssatsen för denna ägare. Om fältet lämnas tomt är ingen sats avtalad ännu — utbetalningen beräknas då inte, utan visas som ett tankstreck.",
-      "commissionOverride": "Gäller endast för detta enda objekt och åsidosätter ägarens standardsats. Om fältet lämnas tomt gäller standardsatsen."
+      "commission": "Reservsats om inget avräkningsavtal gäller för ett objekt. Avtalet nedan har företräde — det är den egentliga överenskommelsen och omfattar även period, avgift och minimiprovision. Om båda är tomma beräknas ingen utbetalning utan ett tankstreck visas.",
+      "commissionOverride": "Reservsats endast för detta objekt; ersätter ägarens standardsats. Ett avräkningsavtal har företräde även här. Om fältet är tomt gäller standardsatsen."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Total utbetalning",
       "ownerPayout": "Ägarutbetalning",
       "pmPayout": "Förvaltningsutbetalning",
-      "commissionMissing": "Ingen provisionssats är angiven för minst ett objekt. Utbetalningarna kan därför inte beräknas — ange satsen i ägarens stamdata eller på objektet."
+      "commissionMissing": "Ingen provisionssats är angiven för minst ett objekt. Utbetalningarna kan därför inte beräknas — ange satsen i ägarens stamdata eller på objektet.",
+      "payoutUnknown": "För minst en bokning saknas uppgifter som behövs för att beräkna utbetalningen. De berörda raderna visar ”—” i stället för ett belopp.",
+      "commissionInvalid": "En sparad provisionssats ligger utanför 0–100 %. Korrigera satsen på ägaren eller på objektet.",
+      "portalRateMissing": "För minst en bokningskanal saknas avdragssats, och portalen har inte rapporterat sitt avdrag. Ange under Bokföring → Avräkningsregler vad portalen behåller per bokning.",
+      "portalRateInvalid": "En sparad avdragssats för en portal ligger utanför 0–100 %. Korrigera den under Bokföring → Avräkningsregler.",
+      "feeUnassigned": "Minst en avgiftstyp är ännu inte tilldelad. Utan tilldelning går det inte att avgöra vem beloppet tillhör eller om provision tas ut på det — ange det under Bokföring → Avräkningsregler.",
+      "feeNotComputable": "En avgift kan inte avräknas som ett belopp (sparad som procent eller utan belopp). Kontrollera avgiften på objektet.",
+      "contractCurrency": "Ett fast arvode eller en minimiprovision anges i en annan valuta än bokningen. Belopp i olika valutor räknas inte om — kontrollera avräkningsavtalet."
     },
     "rental": {
       "perReservation": "Per bokning",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Totalpris",
       "totalPayout": "Total utbetalning",
       "totals": "Summor",
-      "empty": "Inga bokningar under perioden."
+      "empty": "Inga bokningar under perioden.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Lägg till",
@@ -1315,7 +1351,9 @@
     "commissionable": "Provisionsgrundande",
     "commissionableYes": "Ja — ingår i provisionen",
     "commissionableNo": "Nej — provisionsfri",
-    "infoAria": "Förklaring till {feld}"
+    "infoAria": "Förklaring till {feld}",
+    "rulesPageTitle": "Avräkningsregler",
+    "rulesPageIntro": "Vad portalerna behåller per bokning och vem avgifterna tillhör. Tillsammans avgör de vilket belopp som till slut hamnar i dina ägares provisionsavräkning."
   },
   "portal": {
     "title": "Min portal",
@@ -1432,6 +1470,16 @@
         "blocked": "Spärrad"
       },
       "payoutPerNight": "Nettoutbetalning/natt",
+      "payoutPerNightShort": "netto/natt",
+      "payoutUnknown": {
+        "short": "saknas",
+        "label": "Kan inte redovisas",
+        "provision": "Ingen provisionssats är angiven för detta objekt — förvaltningen måste lägga till den.",
+        "provisionUngueltig": "Den angivna provisionssatsen ligger utanför 0–100 %.",
+        "betrag": "Denna bokning saknar totalbelopp.",
+        "naechte": "Bokningens datumintervall är felaktigt.",
+        "waehrungVertrag": "Den avtalade avgiften är i en annan valuta än denna bokning — belopp räknas inte om."
+      },
       "guest": "Gäst",
       "channel": "Bokningskälla",
       "blockHint": "Vill du spärra en period? Skicka en förfrågan — förvaltningen beslutar.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Visa endast dörrkoden om vistelsen är betald",
       "hideCodeUntilCheckin": "Dölj dörrkoden fram till incheckning",
       "codeVisibleFromLabel": "Dörrkoden visas från och med incheckningsdagen kl. …",
-      "codeVisibleFromUnset": "— ej angivet —"
+      "codeVisibleFromUnset": "— ej angivet —",
+      "wifiSsidLabel": "Nätverksnamn (SSID)",
+      "wifiSsidPlaceholder": "t.ex. Fritidshus-WiFi",
+      "wifiPasswordLabel": "Wi-Fi-lösenord",
+      "wifiPasswordPlaceholder": "t.ex. sommar2026",
+      "wifiFieldsHint": "Dessa två värden fyller platshållarna {ssid} och {password} i meddelandemallar och Wi-Fi-QR-koden i gästportalen. Om de lämnas tomma skickas inte en mall med dessa platshållare."
     },
     "taskCreatePopup": {
       "title": "Skapa uppgift",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Boende kopierat.",
       "duplicateErr": "Det gick inte att kopiera.",
       "unlistOk": "Kopplingen till webbplatsen är borttagen.",
-      "unlistErr": "Det gick inte att koppla bort."
+      "unlistErr": "Det gick inte att koppla bort.",
+      "menuVerkaufAus": "Stäng av på alla portaler",
+      "menuVerkaufAn": "Erbjud igen på alla portaler"
     },
     "messagingForm": {
       "title": "Meddelandeplatshållare",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Tillägg — de hänger på egna foton och översättningar.",
       "copyPricingSkipAvailability": "Tillgänglighet, belastning och villkor.",
       "copyPricingOverwriteWarning": "Objektets priser skrivs över helt. Belopp tas bara över vid samma valuta.",
-      "copyPricingDone": "Priser övertagna."
+      "copyPricingDone": "Priser övertagna.",
+      "portalStandAbweichung": "där {dort}",
+      "portalStand": {
+        "online": "Registrerad hos portalen",
+        "abweichend": "Avviker",
+        "fehlt": "Inte registrerad hos portalen"
+      }
     },
     "policiesForm": {
       "title": "Villkor",
@@ -5625,7 +5686,10 @@
       "hinweis": "Du kan ta över dem istället för att skapa dem på nytt. Befintliga avgifter förblir oförändrade.",
       "uebernehmen": "Ta över avgifter",
       "laeuft": "Tar över …",
-      "uebernommen": "{anzahl} avgifter övertagna."
+      "uebernommen": "{anzahl} avgifter övertagna.",
+      "verwerfen": "Importera inte",
+      "verworfen": "Erbjudandet avslutat — dina avgifter förblir som de är.",
+      "einmalig": "Engångshjälp vid start: därefter gäller bara det som står här — det skickar vi till portalerna."
     },
     "veroeffentlichen": {
       "titel": "Publicera objekt",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Ställs in via ”Publicera” högst upp.",
       "immerDabei": "Alltid med — vår egen marknadsplats, utan portalprovision."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Ta objektet ur försäljning?",
+      "fragenAusText": "”{titel}” sätts som inaktivt och bokningskalendern stängs av på alla anslutna portaler. Befintliga bokningar påverkas inte. Varje portals tillstånd sparas så att återställningen sätter tillbaka det.",
+      "fragenAnTitel": "Erbjuda objektet igen?",
+      "fragenAnText": "”{titel}” sätts som aktivt igen. Varje portal får tillbaka det tillstånd den hade innan avstängningen — portaler som redan var avstängda förblir avstängda. Därefter skickas priser och tillgänglighet igen.",
+      "jetztAus": "Stäng av nu",
+      "jetztAn": "Erbjud nu",
+      "laeuft": "Växlar…",
+      "abbrechen": "Avbryt",
+      "schliessen": "Stäng",
+      "ergebnisAusTitel": "Objektet är avstängt",
+      "ergebnisAusText": "Avstängt på alla portaler.",
+      "ergebnisAnTitel": "Objektet är aktivt igen",
+      "ergebnisAnText": "Erbjuds igen på alla portaler.",
+      "ergebnisTeilweiseTitel": "Inte lyckat överallt",
+      "ergebnisTeilweiseText": "{anzahl} portal(er) kunde inte växlas. Försäljningen fortsätter där — objektets status ändrades därför inte.",
+      "zeileAbgeschaltet": "Avstängt",
+      "zeileWiederhergestellt": "Aktivt igen",
+      "zeileObjekteAmKanal": "Den här kanalen bär {anzahl} objekt — inget ändrades så att de andra inte också stängs av."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Logga ut från portalen i webbläsaren innan du ansluter ett annat konto.",
     "accountConnectCredentialHint": "Ytterligare ett {portal}-konto läggs till med hotell-ID:t när du kopplar ett objekt — inte här.",
     "marketplacePending": "{count} under granskning",
-    "marketplaceWaiting": "Under granskning"
+    "marketplaceWaiting": "Under granskning",
+    "marketplace": {
+      "intro": "myBestDays är vår egen marknadsplats — en bokningskanal som Booking eller Airbnb, bara utan portalanslutning. Ett objekt blir synligt när det är aktivt, listat här och godkänt.",
+      "openMarketplace": "Öppna marknadsplatsen",
+      "propertiesHeading": "Objekt på marknadsplatsen",
+      "noProperties": "Inga objekt skapade ännu.",
+      "columnProperty": "Objekt",
+      "columnVisibility": "Synlighet",
+      "columnApproval": "Godkännande",
+      "columnBookings": "Bokningar",
+      "stateActive": "Synligt",
+      "statePending": "Under granskning",
+      "stateNotListed": "Inte listat",
+      "stateInactiveProperty": "Objektet är inte aktivt",
+      "viewListing": "Visa annons",
+      "reviewHint": "Objekt under granskning visas ännu inte på myBestDays. Vi granskar varje annons eftersom myBestDays uppträder som leverantör där — portaler och din egen webbplats påverkas inte.",
+      "summaryVisible": "{count} synliga",
+      "summaryWaiting": "{count} under granskning",
+      "summaryOff": "{count} inte listade",
+      "moderation": {
+        "draft": "Utkast",
+        "pending": "Under granskning",
+        "approved": "Godkänt",
+        "rejected": "Avvisat"
+      }
+    }
   },
   "calendarSync": {
     "title": "Importera/exportera kalender",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Bekräfta",
     "mfaChecking": "Kontrollerar…",
     "mfaBack": "Tillbaka till inloggningen"
+  },
+  "portalSaetze": {
+    "add": "Lägg till sats",
+    "breakdown": "{provision} % provision + {fee} % betalningsavgift",
+    "breakdownNoFee": "{provision} % provision, ingen betalningsavgift",
+    "cancel": "Avbryt",
+    "channel": "Portal",
+    "channelLocked": "Portalen för en befintlig sats kan inte ändras. Skapa en ny sats för en annan portal.",
+    "create": "Skapa sats",
+    "created": "Sats skapad",
+    "current": "gäller i dag",
+    "delete": "Ta bort sats",
+    "deleted": "Sats borttagen",
+    "edit": "Redigera sats",
+    "empty": "Ingen sats är angiven ännu. Utan en sats kan en utbetalning bara beräknas om portalen själv rapporterar sitt avdrag.",
+    "errorProvisionRequired": "Ange en provisionssats.",
+    "intro": "Vad varje portal behåller per bokning. Dessa satser gäller där portalen inte själv rapporterar sitt avdrag — rapporterar den ett belopp gäller alltid det rapporterade.",
+    "loading": "Läser in …",
+    "note": "Anteckning",
+    "notePlaceholder": "Var satsen kommer från, t.ex. portalavtal eller avräkning",
+    "payoutFee": "Betalningsavgift",
+    "payoutFeeInfo": "Avgiften för att portalen tar in pengarna och vidarebefordrar dem. Den uppstår bara när portalen tar betalt — betalar gästen direkt till dig utgår den inte.",
+    "payoutFeeNone": "tar ingen",
+    "period": "{von} till {bis}",
+    "periodOpen": "sedan {von}",
+    "provision": "Provision",
+    "provisionInfo": "Den förmedlingsandel som portalen behåller för bokningen. Beräkningsgrunden är gästens totalpris inklusive avgifter.",
+    "save": "Spara ändringar",
+    "saved": "Sats sparad",
+    "title": "Portalernas avdragssatser",
+    "total": "{pct} % totalt",
+    "validFrom": "Gäller från",
+    "validTo": "Gäller till",
+    "validToInfo": "Lämna tomt så länge satsen gäller. Ändrar portalen sin sats lägger du till en ny från ändringsdagen — den gamla behålls för tidigare avräkningar.",
+    "validToOpen": "fortsätter gälla"
   }
 }

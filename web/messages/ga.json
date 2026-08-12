@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Níorbh fhéidir an painéal a lódáil",
     "reviews": "Léirmheasanna",
     "extensions": "Breiseáin",
-    "announcements": "Nuacht"
+    "announcements": "Nuacht",
+    "ownerReporting": "Tuairisciú d'úinéirí",
+    "billingRules": "Rialacha socraíochta"
   },
   "exemption": {
     "labelNamed": "Díolúine cánach ({scheme}) — níl uimhir CBL ag teastáil",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Grianghraf ón aoi",
     "translate": "Aistrigh",
     "showOriginal": "Taispeáin an bunleagan",
-    "translatedFrom": "Aistrithe ó {sprache}"
+    "translatedFrom": "Aistrithe ó {sprache}",
+    "formatStrike": "Líne tríd",
+    "fieldsButton": "{{Ionadchoinneálaithe}}",
+    "langBase": "Bunleagan",
+    "langBaseHint": "Seoltar chuig gach aoi nach bhfuil leagan dá theanga féin ann.",
+    "subjectLabel": "Ábhar",
+    "subjectHint": "Ní úsáidtear líne an ábhair ach le ríomhphoist.",
+    "langAdd": "Cuir teanga nua leis",
+    "langDefault": "Réamhshocrú",
+    "langSetDefault": "Socraigh mar réamhshocrú",
+    "langRemove": "Bain an teanga",
+    "langEmpty": "Níl teanga ar bith fós — go dtí sin téann an bunleagan chuig gach aoi.",
+    "autoEditContent": "Cuir an t-ábhar in eagar",
+    "autoPanelCreate": "Cruthaigh",
+    "quickEmpty": "Níl freagra tapa ar bith fós.",
+    "autoTextRequired": "Tá téacs riachtanach."
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Mura bhfuair an ríomhphost nó má tá an nasc imithe in éag, is féidir an cuireadh a sheoladh arís. Tá an nasc nua bailí ar feadh 7 lá agus téann sé chuig an timpeallacht seo; scoireann an nasc a seoladh roimhe seo d'obair.",
     "portalAccessResent": "Seoladh an cuireadh arís.",
     "commissionNotAgreed": "gan chomhaontú",
+    "commissionContractWins": "Cuirtear an conradh socraíochta i bhfeidhm faoi láthair: {pct} % ó {ab}. Ní fheidhmíonn an réimse seo ach mar chúltaca mura bhfuil conradh i bhfeidhm.",
+    "commissionNoneAnywhere": "Níor comhaontaíodh ráta go fóill — ná anseo ná mar chonradh. Go dtí sin fanann an íocaíocht folamh i tairseach an úinéara.",
+    "commissionContractObject": "Conradh ar leith don mhaoin seo: {pct} % ó {ab}.",
+    "commissionContractOwnerWide": "Conradh socraíochta an úinéara: {pct} % ó {ab}.",
     "assignableCount": "{count} as {total} roghnaithe le cur leis",
     "assignedHeading": "{count, plural, one {# réadmhaoin sannta} two {# réadmhaoin shannta} few {# réadmhaoin shannta} many {# réadmhaoin shannta} other {# réadmhaoin sannta}}",
     "info": {
       "aria": "Míniú ar {feld}",
       "share": "An sciar úinéireachta sa réadmhaoin seo. Ag 100 % cuirtear an íocaíocht iomlán chun sochair don úinéir seo, agus faoina bhun sin go comhréireach.",
-      "commission": "An ráta coimisiúin réamhshocraithe don úinéir seo. Má fhágtar an réimse folamh, níl aon ráta comhaontaithe fós — ní ríomhtar an íocaíocht ansin, ach taispeántar dais ina hionad.",
-      "commissionOverride": "Ní bhaineann sé ach leis an réadmhaoin aonair seo agus sáraíonn sé ráta réamhshocraithe an úinéara. Má fhágtar an réimse folamh, is é an ráta réamhshocraithe a bheidh i bhfeidhm."
+      "commission": "Ráta cúltaca mura bhfuil conradh socraíochta i bhfeidhm do mhaoin. Tá tosaíocht ag an gconradh thíos — is é an socrú iarbhír é agus clúdaíonn sé tréimhse, táille sheasta agus coimisiún íosta freisin. Má fhanann an dá cheann folamh, ní ríomhtar aon íocaíocht ach taispeántar dais.",
+      "commissionOverride": "Ráta cúltaca don mhaoin seo amháin; sáraíonn sé ráta caighdeánach an úinéara. Tá tosaíocht ag conradh socraíochta anseo freisin. Má fhanann an réimse folamh, feidhmíonn an ráta caighdeánach."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Iomlán na híocaíochta",
       "ownerPayout": "Íocaíocht an úinéara",
       "pmPayout": "Íocaíocht na bainistíochta",
-      "commissionMissing": "Níl ráta coimisiúin socraithe do mhaoin amháin ar a laghad. Ní féidir na híocaíochtaí a ríomh dá bhrí sin — cuir an ráta isteach i mbunsonraí an úinéara nó ag an maoin."
+      "commissionMissing": "Níl ráta coimisiúin socraithe do mhaoin amháin ar a laghad. Ní féidir na híocaíochtaí a ríomh dá bhrí sin — cuir an ráta isteach i mbunsonraí an úinéara nó ag an maoin.",
+      "payoutUnknown": "Tá eolas ar iarraidh ar áirithint amháin ar a laghad, agus ní féidir an íocaíocht a ríomh gan é. Taispeánann na línte lena mbaineann „—“ in ionad figiúra.",
+      "commissionInvalid": "Tá ráta coimisiúin atá stóráilte lasmuigh de 0–100 %. Ceartaigh an ráta ag an úinéir nó ag an maoin.",
+      "portalRateMissing": "Níl aon ráta asbhainte stóráilte le haghaidh cainéal áirithinte amháin ar a laghad, agus níor thuairiscigh an tairseach a asbhaint féin. Cuir isteach faoi Cuntasaíocht → Rialacha socraíochta an méid a choinníonn an tairseach in aghaidh gach áirithinte.",
+      "portalRateInvalid": "Tá ráta asbhainte tairsí atá stóráilte lasmuigh de 0–100 %. Ceartaigh é faoi Cuntasaíocht → Rialacha socraíochta.",
+      "feeUnassigned": "Níl cineál táille amháin ar a laghad sannta go fóill. Gan sannadh ní féidir a chinneadh cé leis an tsuim agus cé acu a ghearrtar coimisiún air — socraigh é faoi Cuntasaíocht → Rialacha socraíochta.",
+      "feeNotComputable": "Ní féidir táille a shocrú mar shuim (tá sí stóráilte mar chéatadán nó gan suim). Seiceáil an táille ag an maoin.",
+      "contractCurrency": "Tá táille chomhréidh nó coimisiún íosta ainmnithe in airgeadra eile seachas airgeadra na háirithinte. Ní chomhfhritháirítear suimeanna in airgeadraí éagsúla — seiceáil an conradh socraíochta."
     },
     "rental": {
       "perReservation": "In aghaidh na háirithinte",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Iomlán an phraghais",
       "totalPayout": "Iomlán na híocaíochta",
       "totals": "Suimeanna",
-      "empty": "Níl aon áirithint sa tréimhse seo."
+      "empty": "Níl aon áirithint sa tréimhse seo.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Cuir leis",
@@ -1315,7 +1351,9 @@
     "commissionable": "Faoi réir coimisiúin",
     "commissionableYes": "Tá — cuirtear san áireamh sa choimisiún é",
     "commissionableNo": "Níl — saor ó choimisiún",
-    "infoAria": "Míniú ar {feld}"
+    "infoAria": "Míniú ar {feld}",
+    "rulesPageTitle": "Rialacha socraíochta",
+    "rulesPageIntro": "An méid a choinníonn na tairseacha in aghaidh gach áirithinte agus cé leis na táillí. Socraíonn an dá rud le chéile cén tsuim a shroicheann ráiteas coimisiúin do shealbhóirí ar deireadh."
   },
   "portal": {
     "title": "Mo thairseach",
@@ -1432,6 +1470,16 @@
         "blocked": "Bactha"
       },
       "payoutPerNight": "Íocaíocht ghlan/oíche",
+      "payoutPerNightShort": "glan/oíche",
+      "payoutUnknown": {
+        "short": "n/bh",
+        "label": "Ní féidir a áireamh",
+        "provision": "Níl ráta coimisiúin socraithe don mhaoin seo — ní mór don lucht bainistíochta é a chur leis.",
+        "provisionUngueltig": "Tá an ráta coimisiúin atá socraithe taobh amuigh de 0–100 %.",
+        "betrag": "Tá an tsuim iomlán in easnamh ar an áirithint seo.",
+        "naechte": "Tá tréimhse na háirithinte seo neamhbhailí.",
+        "waehrungVertrag": "Tá an táille sheasta ar comhaontaíodh i n-airgeadra difriúil ón áirithint seo — ní thiontaítear méideanna."
+      },
       "guest": "Aoi",
       "channel": "Foinse na háirithinte",
       "blockHint": "Ar mhaith leat tréimhse a bhacadh? Cuir isteach iarratas — is í an bhainistíocht a chinneann.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Ná taispeáin an cód dorais ach amháin nuair atá an fanacht íoctha",
       "hideCodeUntilCheckin": "Ceil an cód dorais go dtí an seiceáil isteach",
       "codeVisibleFromLabel": "Taispeántar an cód dorais ón lá seiceála isteach ó …",
-      "codeVisibleFromUnset": "— gan socrú —"
+      "codeVisibleFromUnset": "— gan socrú —",
+      "wifiSsidLabel": "Ainm an líonra (SSID)",
+      "wifiSsidPlaceholder": "m.sh. WiFi-Teach-Saoire",
+      "wifiPasswordLabel": "Pasfhocal Wi-Fi",
+      "wifiPasswordPlaceholder": "m.sh. samhradh2026",
+      "wifiFieldsHint": "Líonann an dá luach seo na sealbhóirí {ssid} agus {password} i dteimpléid teachtaireachtaí agus cód QR an Wi-Fi i tairseach na n-aíonna. Má fhanann siad folamh, ní sheoltar teimpléad a bhaineann úsáid astu."
     },
     "taskCreatePopup": {
       "title": "Cruthaigh tasc",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Áit cóipeáilte.",
       "duplicateErr": "Theip ar an gcóipeáil.",
       "unlistOk": "Baineadh an nasc leis an suíomh gréasáin.",
-      "unlistErr": "Theip ar an dínascadh."
+      "unlistErr": "Theip ar an dínascadh.",
+      "menuVerkaufAus": "Múch ar gach tairseach",
+      "menuVerkaufAn": "Tairg arís ar gach tairseach"
     },
     "messagingForm": {
       "title": "Sealbhóirí áite teachtaireachtaí",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Breiseáin — bíonn grianghraif agus aistriúcháin dá gcuid féin ag baint leo.",
       "copyPricingSkipAvailability": "Infhaighteacht, líonadh agus beartais.",
       "copyPricingOverwriteWarning": "Forscríobhfar praghsanna na réadmhaoine seo go hiomlán. Ní ghlactar suimeanna ach nuair a bhíonn an airgeadra mar an gcéanna.",
-      "copyPricingDone": "Praghsanna glactha."
+      "copyPricingDone": "Praghsanna glactha.",
+      "portalStandAbweichung": "ansin {dort}",
+      "portalStand": {
+        "online": "Taifeadta ar an tairseach",
+        "abweichend": "Difriúil",
+        "fehlt": "Gan taifeadadh ar an tairseach"
+      }
     },
     "policiesForm": {
       "title": "Polasaithe",
@@ -5625,7 +5686,10 @@
       "hinweis": "Is féidir leat iad a iompórtáil in ionad iad a chruthú arís. Fanann táillí atá ann cheana gan athrú.",
       "uebernehmen": "Iompórtáil táillí",
       "laeuft": "Ag iompórtáil …",
-      "uebernommen": "{anzahl} táille iompórtáilte."
+      "uebernommen": "{anzahl} táille iompórtáilte.",
+      "verwerfen": "Ná hiompórtáil",
+      "verworfen": "Tairiscint dúnta — fanann do tháillí mar atá.",
+      "einmalig": "Cabhair tosaigh aon uaire: ina dhiaidh sin ní bhaineann ach an méid atá anseo — sin a sheolaimid chuig na tairseacha."
     },
     "veroeffentlichen": {
       "titel": "Foilsigh an réadmhaoin",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Socraithe trí „Foilsigh“ thuas.",
       "immerDabei": "I gcónaí san áireamh — ár margadh féin, gan coimisiún tairsí."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "An maoin a bhaint den díolachán?",
+      "fragenAusText": "Socrófar „{titel}” mar neamhghníomhach agus múchfar an féilire áirithinte ar gach tairseach nasctha. Ní chuirtear isteach ar áirithintí atá ann cheana. Sábháiltear staid gach tairsí ionas go gcuirfidh an athchóiriú ar ais é.",
+      "fragenAnTitel": "An maoin a thairiscint arís?",
+      "fragenAnText": "Socrófar „{titel}” mar ghníomhach arís. Faigheann gach tairseach an staid a bhí aici sular múchadh í — fanann tairseacha a bhí múchta cheana múchta. Ansin seoltar rátaí agus infhaighteacht arís.",
+      "jetztAus": "Múch anois",
+      "jetztAn": "Tairg anois",
+      "laeuft": "Ag athrú…",
+      "abbrechen": "Cealaigh",
+      "schliessen": "Dún",
+      "ergebnisAusTitel": "Tá an mhaoin múchta",
+      "ergebnisAusText": "Múchta ar gach tairseach.",
+      "ergebnisAnTitel": "Tá an mhaoin gníomhach arís",
+      "ergebnisAnText": "Á tairiscint arís ar gach tairseach.",
+      "ergebnisTeilweiseTitel": "Níor éirigh leis i ngach áit",
+      "ergebnisTeilweiseText": "Níorbh fhéidir {anzahl} tairseach a athrú. Leanann an díolachán ar aghaidh ansin — mar sin níor athraíodh stádas na maoine.",
+      "zeileAbgeschaltet": "Múchta",
+      "zeileWiederhergestellt": "Gníomhach arís",
+      "zeileObjekteAmKanal": "Tá {anzahl} maoin ar an gcainéal seo — níor athraíodh aon rud ionas nach múchfar na cinn eile freisin."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Logáil amach as an tairseach i do bhrabhsálaí sula nascann tú cuntas eile.",
     "accountConnectCredentialHint": "Cuirtear rochtain {portal} bhreise leis le haitheantas an óstáin nuair a nascann tú maoin — ní hé seo an áit.",
     "marketplacePending": "{count} á athbhreithniú",
-    "marketplaceWaiting": "Á athbhreithniú"
+    "marketplaceWaiting": "Á athbhreithniú",
+    "marketplace": {
+      "intro": "Is é myBestDays ár margad féin — cainéal áirithinte cosúil le Booking nó Airbnb, gan nasc tairsí. Bíonn áitíocht le feiceáil nuair a bhíonn sí gníomhach, liostaithe anseo agus ceadaithe.",
+      "openMarketplace": "Oscail an margad",
+      "propertiesHeading": "Áitíochtaí ar an margad",
+      "noProperties": "Níl aon áitíocht cruthaithe go fóill.",
+      "columnProperty": "Áitíocht",
+      "columnVisibility": "Infheictheacht",
+      "columnApproval": "Ceadú",
+      "columnBookings": "Áirithintí",
+      "stateActive": "Le feiceáil",
+      "statePending": "Á athbhreithniú",
+      "stateNotListed": "Nach bhfuil liostaithe",
+      "stateInactiveProperty": "Níl an áitíocht gníomhach",
+      "viewListing": "Féach ar an liostáil",
+      "reviewHint": "Ní thaispeántar áitíochtaí atá á n-athbhreithniú ar myBestDays go fóill. Déanaimid athbhreithniú ar gach liostáil mar gurb é myBestDays an soláthraí ansin — ní chuirtear isteach ar na tairseacha ná ar do shuíomh gréasáin féin.",
+      "summaryVisible": "{count} le feiceáil",
+      "summaryWaiting": "{count} á athbhreithniú",
+      "summaryOff": "{count} nach bhfuil liostaithe",
+      "moderation": {
+        "draft": "Dréacht",
+        "pending": "Á athbhreithniú",
+        "approved": "Ceadaithe",
+        "rejected": "Diúltaithe"
+      }
+    }
   },
   "calendarSync": {
     "title": "Iompórtáil/easpórtáil féilire",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Deimhnigh",
     "mfaChecking": "Á sheiceáil…",
     "mfaBack": "Ar ais chuig an síniú isteach"
+  },
+  "portalSaetze": {
+    "add": "Cuir ráta leis",
+    "breakdown": "{provision} % coimisiúin + {fee} % táille íocaíochta",
+    "breakdownNoFee": "{provision} % coimisiúin, gan táille íocaíochta",
+    "cancel": "Cealaigh",
+    "channel": "Tairseach",
+    "channelLocked": "Ní féidir tairseach ráta atá ann cheana a athrú. Cruthaigh ráta nua le haghaidh tairsí eile.",
+    "create": "Cruthaigh ráta",
+    "created": "Ráta cruthaithe",
+    "current": "i bhfeidhm inniu",
+    "delete": "Scrios an ráta",
+    "deleted": "Ráta scriosta",
+    "edit": "Cuir an ráta in eagar",
+    "empty": "Níl aon ráta socraithe go fóill. Gan ráta, ní féidir íocaíocht amach a ríomh ach nuair a thuairiscíonn an tairseach a asbhaint féin.",
+    "errorProvisionRequired": "Cuir ráta coimisiúin isteach, le do thoil.",
+    "intro": "An méid a choinníonn gach tairseach in aghaidh gach áirithinte. Baineann na rátaí seo leis na cásanna nach dtuairiscíonn an tairseach a asbhaint féin — má thuairiscíonn sí méid, is é an méid tuairiscithe a bhíonn i bhfeidhm i gcónaí.",
+    "loading": "Á lódáil …",
+    "note": "Nóta",
+    "notePlaceholder": "Cad as a dtagann an ráta, m.sh. conradh na tairsí nó ráiteas",
+    "payoutFee": "Táille íocaíochta",
+    "payoutFeeInfo": "An táille as an airgead a bhailiú agus a chur ar aghaidh ag an tairseach. Ní ghearrtar í ach nuair a bhailíonn an tairseach — má íocann an t-aoi go díreach leat, níl aon táille ann.",
+    "payoutFeeNone": "ní ghearrann aon cheann",
+    "period": "{von} go {bis}",
+    "periodOpen": "ó {von}",
+    "provision": "Coimisiún",
+    "provisionInfo": "An sciar idirghabhála a choinníonn an tairseach as an áirithint. Is praghas iomlán an aoi, táillí san áireamh, an bonn ríofa.",
+    "save": "Sábháil na hathruithe",
+    "saved": "Ráta sábháilte",
+    "title": "Rátaí asbhainte na dtairseach",
+    "total": "{pct} % san iomlán",
+    "validFrom": "Bailí ó",
+    "validTo": "Bailí go",
+    "validToInfo": "Fág folamh fad a bhíonn an ráta i bhfeidhm. Má athraíonn an tairseach a ráta, cuir ceann nua leis ón lá a athraítear é — fanann an seancheann do ráitis níos luaithe.",
+    "validToOpen": "ar siúl fós"
   }
 }

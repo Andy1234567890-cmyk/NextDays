@@ -1,6 +1,11 @@
 import path from "node:path";
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 import { securityHeaders } from "@nextdays/security-headers";
+
+// Sprache kommt aus dem Cookie (kein URL-Präfix) — Muster wie im
+// Gastgeber-Dashboard, damit geteilte Inserat-Links unverändert bleiben.
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 // Eigenständige Plattform-App — bewusst entkoppelt von apps/web (eigenes
 // Deployment, kein Backend-Coupling, vgl. ADR-0002 für marketing/).
@@ -33,4 +38,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

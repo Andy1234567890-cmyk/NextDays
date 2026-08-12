@@ -16,6 +16,10 @@ export type GuestPortalSettings = {
   self_checkin: boolean;
   // Türcode: null ohne MANAGE_PROPERTIES (Backend maskiert).
   door_code: string | null;
+  // WLAN strukturiert (0296) — Heimat von {{wifi_ssid}}/{{wifi_password}}.
+  // wifi_password ist wie der Türcode ein Geheimnis: null ohne MANAGE_PROPERTIES.
+  wifi_ssid: string | null;
+  wifi_password: string | null;
   show_code_only_if_paid: boolean;
   hide_code_until_checkin: boolean;
   code_visible_from: string | null; // „HH:MM"

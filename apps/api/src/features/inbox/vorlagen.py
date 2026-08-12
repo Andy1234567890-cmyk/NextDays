@@ -18,6 +18,8 @@ from .schemas import (
     InboxMessage,
     MessageTemplate,
     MessageTemplateList,
+    TemplateText,
+    TemplateTextUpsert,
     TemplateUpsert,
 )
 
@@ -93,26 +95,125 @@ class VorlagenMixin:
         return req.body
 
     @staticmethod
-    def _als_vorlage(r: dict) -> MessageTemplate:
+    def _als_vorlage(r: dict, texte: list[TemplateText] | None = None) -> MessageTemplate:
         """DB-Zeile → Antwort. `body_html` fehlt bei Altbestand → leer."""
         return MessageTemplate(
             id=r["id"],
             title=r["title"],
             body=r["body"] or "",
             body_html=r.get("body_html") or "",
+            subject=r.get("subject") or "",
+            texts=texte or [],
         )
+
+    def _vorlagen_texte(
+        self, db: Client, tenant_id: str, template_ids: list[str]
+    ) -> dict[str, list[TemplateText]]:
+        """Sprachfassungen zu mehreren Vorlagen in EINER Abfrage.
+
+        Ein Aufruf je Vorlage wäre bei 17 Vorlagen × 3 Sprachen dieselbe Antwort
+        in 17 Runden — die Liste öffnet der Betrieb bei jedem Blick in die
+        Vorlagen.
+        """
+        if not template_ids:
+            return {}
+        rows = (
+            db.table("message_template_text")
+            .select("template_id, lang, subject, body, body_html")
+            .eq("tenant_id", tenant_id)
+            .in_("template_id", template_ids)
+            .order("lang")
+            .execute()
+        ).data or []
+        nach_id: dict[str, list[TemplateText]] = {}
+        for r in rows:
+            nach_id.setdefault(str(r["template_id"]), []).append(
+                TemplateText(
+                    lang=r["lang"],
+                    subject=r.get("subject") or "",
+                    body=r.get("body") or "",
+                    body_html=r.get("body_html") or "",
+                )
+            )
+        return nach_id
 
     def list_templates(self, ctx: AuthContext) -> MessageTemplateList:
         db, tenant_id = self._require(ctx)
         res = (
             db.table("message_template")
-            .select("id, title, body, body_html")
+            .select("id, title, body, body_html, subject")
             .eq("tenant_id", tenant_id)
             .order("title")
             .execute()
         )
-        items = [self._als_vorlage(r) for r in (res.data or [])]
+        rows = res.data or []
+        texte = self._vorlagen_texte(db, tenant_id, [str(r["id"]) for r in rows])
+        items = [self._als_vorlage(r, texte.get(str(r["id"]))) for r in rows]
         return MessageTemplateList(items=items, total=len(items))
+
+    def _sprachfassungen_schreiben(
+        self,
+        db: Client,
+        tenant_id: str,
+        template_id: str,
+        texte: list[TemplateTextUpsert] | None,
+    ) -> list[TemplateText]:
+        """Sprachfassungen einer Vorlage setzen (Alt/Neu-Diff, Wurzel 1).
+
+        `None` heißt „nicht mitgeschickt" → unangetastet. Eine Liste beschreibt
+        den VOLLSTÄNDIGEN Sollzustand: Sprachen, die darin fehlen, werden
+        entfernt. Ohne diesen Gegenzustand bliebe eine im Editor gelöschte
+        dänische Fassung in der DB stehen und ginge weiter an dänische Gäste
+        hinaus — die Oberfläche zeigte sie nicht mehr, der Versand nahm sie.
+
+        Eine Fassung ohne Text UND ohne Betreff wird nicht gespeichert, sondern
+        entfernt: ein leerer Reiter ist keine Fassung, und stünde er als Zeile
+        da, hielte `fassung_waehlen` ihn für gepflegt.
+        """
+        if texte is None:
+            return self._vorlagen_texte(db, tenant_id, [template_id]).get(
+                template_id, []
+            )
+        soll: dict[str, dict] = {}
+        for t in texte:
+            lang = (t.lang or "").strip().lower()
+            if len(lang) != 2 or not lang.isalpha():
+                raise InboxError(f"Ungültiger Sprachcode: {t.lang}", status_code=422)
+            body = html_zu_text(t.body_html) if t.body_html.strip() else ""
+            if not body.strip() and not t.subject.strip():
+                continue
+            self._felder_pruefen(body)
+            self._felder_pruefen(t.subject)
+            soll[lang] = {
+                "template_id": template_id,
+                "tenant_id": tenant_id,
+                "lang": lang,
+                "subject": t.subject,
+                "body": body,
+                "body_html": t.body_html,
+            }
+        # Erst der Gegenzustand (weg, was nicht mehr im Soll steht), dann das Soll.
+        weg = [
+            r["lang"]
+            for r in (
+                db.table("message_template_text")
+                .select("lang")
+                .eq("tenant_id", tenant_id)
+                .eq("template_id", template_id)
+                .execute()
+            ).data
+            or []
+            if r["lang"] not in soll
+        ]
+        for lang in weg:
+            db.table("message_template_text").delete().eq(
+                "tenant_id", tenant_id
+            ).eq("template_id", template_id).eq("lang", lang).execute()
+        if soll:
+            db.table("message_template_text").upsert(
+                list(soll.values()), on_conflict="template_id,lang"
+            ).execute()
+        return self._vorlagen_texte(db, tenant_id, [template_id]).get(template_id, [])
 
     def create_template(self, ctx: AuthContext, req: TemplateUpsert) -> MessageTemplate:
         db, tenant_id = self._require(ctx)
@@ -123,6 +224,7 @@ class VorlagenMixin:
         if not req.title.strip() or not body.strip():
             raise InboxError("Titel und Text sind nötig.", status_code=422)
         self._felder_pruefen(body)
+        self._felder_pruefen(req.subject)
         ins = (
             db.table("message_template")
             .insert(
@@ -131,11 +233,16 @@ class VorlagenMixin:
                     "title": req.title,
                     "body": body,
                     "body_html": req.body_html,
+                    "subject": req.subject,
                 }
             )
             .execute()
         ).data
-        return self._als_vorlage(ins[0])
+        row = ins[0]
+        texte = self._sprachfassungen_schreiben(
+            db, tenant_id, str(row["id"]), req.texts
+        )
+        return self._als_vorlage(row, texte)
 
     def update_template(
         self, ctx: AuthContext, template_id: str, req: TemplateUpsert
@@ -143,16 +250,28 @@ class VorlagenMixin:
         db, tenant_id = self._require(ctx)
         body = self._klartext_ableiten(req)
         self._felder_pruefen(body)
+        self._felder_pruefen(req.subject)
         upd = (
             db.table("message_template")
-            .update({"title": req.title, "body": body, "body_html": req.body_html})
+            .update(
+                {
+                    "title": req.title,
+                    "body": body,
+                    "body_html": req.body_html,
+                    "subject": req.subject,
+                }
+            )
             .eq("tenant_id", tenant_id)
             .eq("id", template_id)
             .execute()
         ).data
         if not upd:
             raise InboxError("Vorlage nicht gefunden.", status_code=404)
-        return self._als_vorlage(upd[0])
+        # Erst NACH dem 404-Riegel: sonst schriebe eine fremde/ungültige ID
+        # Sprachfassungen an eine Vorlage, die dieser Betrieb nicht besitzt
+        # (Wurzel 3 — der Scope entscheidet, nicht die mitgeschickte ID).
+        texte = self._sprachfassungen_schreiben(db, tenant_id, template_id, req.texts)
+        return self._als_vorlage(upd[0], texte)
 
     def delete_template(self, ctx: AuthContext, template_id: str) -> None:
         db, tenant_id = self._require(ctx)

@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Impossibile caricare la dashboard",
     "reviews": "Recensioni",
     "extensions": "Estensioni",
-    "announcements": "Novità"
+    "announcements": "Novità",
+    "billingRules": "Regole di rendiconto",
+    "ownerReporting": "Report per proprietari"
   },
   "exemption": {
     "labelNamed": "Esente da imposta ({scheme}) — nessuna P.IVA richiesta",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Foto dell'ospite",
     "translate": "Traduci",
     "showOriginal": "Mostra originale",
-    "translatedFrom": "Tradotto dal {sprache}"
+    "translatedFrom": "Tradotto dal {sprache}",
+    "formatStrike": "Barrato",
+    "fieldsButton": "{{Segnaposto}}",
+    "langBase": "Versione base",
+    "langBaseHint": "Inviata a ogni ospite la cui lingua non ha una versione propria.",
+    "subjectLabel": "Oggetto",
+    "subjectHint": "L'oggetto viene usato solo per le e-mail.",
+    "langAdd": "Aggiungi lingua",
+    "langDefault": "Predefinita",
+    "langSetDefault": "Imposta come predefinita",
+    "langRemove": "Rimuovi lingua",
+    "langEmpty": "Nessuna lingua impostata — fino ad allora la versione base va a tutti gli ospiti.",
+    "autoEditContent": "Modifica contenuto",
+    "autoPanelCreate": "Crea",
+    "quickEmpty": "Nessuna risposta rapida.",
+    "autoTextRequired": "È necessario un testo."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp non è ancora collegato. Inserisci le credenziali (Meta Cloud API) nelle impostazioni del server per attivare l'invio.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Se l'e-mail non è arrivata o il link è scaduto, l'invito può essere inviato di nuovo. Il nuovo link è valido 7 giorni e porta a questo ambiente; il link inviato in precedenza smette di funzionare.",
     "portalAccessResent": "Invito inviato di nuovo.",
     "commissionNotAgreed": "non concordato",
+    "commissionContractWins": "Attualmente si applica il contratto di rendiconto: {pct} % dal {ab}. Questo campo funge solo da ripiego se non vale alcun contratto.",
+    "commissionNoneAnywhere": "Nessuna aliquota concordata finora — né qui né come contratto. Fino ad allora il pagamento resta vuoto nel portale del proprietario.",
+    "commissionContractObject": "Contratto specifico per questo immobile: {pct} % dal {ab}.",
+    "commissionContractOwnerWide": "Contratto di rendiconto del proprietario: {pct} % dal {ab}.",
     "assignableCount": "{count} di {total} selezionati da aggiungere",
     "assignedHeading": "{count, plural, one {# struttura assegnata} other {# strutture assegnate}}",
     "info": {
       "aria": "Spiegazione di {feld}",
       "share": "La quota di proprietà su questo alloggio. Al 100 % l'intero pagamento viene attribuito a questo proprietario, con un valore inferiore in misura proporzionale.",
-      "commission": "La percentuale di commissione standard per questo proprietario. Se il campo resta vuoto, non è ancora stata concordata alcuna percentuale — il pagamento non viene quindi calcolato, ma indicato con una lineetta.",
-      "commissionOverride": "Vale solo per questo alloggio e sostituisce la percentuale standard del proprietario. Se il campo resta vuoto, si applica la percentuale standard."
+      "commission": "Aliquota di ripiego se per un immobile non vale alcun contratto di rendiconto. Il contratto qui sotto ha la precedenza: è l'accordo effettivo e comprende anche periodo, forfait e commissione minima. Se entrambi restano vuoti, non viene calcolato alcun pagamento e si mostra un trattino.",
+      "commissionOverride": "Aliquota di ripiego solo per questo immobile; sostituisce l'aliquota standard del proprietario. Anche qui un contratto di rendiconto ha la precedenza. Se il campo resta vuoto, vale l'aliquota standard."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Pagamento totale",
       "ownerPayout": "Pagamento proprietario",
       "pmPayout": "Pagamento gestione",
-      "commissionMissing": "Per almeno un immobile non è impostata una percentuale di commissione. I pagamenti non possono quindi essere calcolati — inserisci la percentuale nei dati anagrafici del proprietario o sull'immobile."
+      "commissionMissing": "Per almeno un immobile non è impostata una percentuale di commissione. I pagamenti non possono quindi essere calcolati — inserisci la percentuale nei dati anagrafici del proprietario o sull'immobile.",
+      "payoutUnknown": "Per almeno una prenotazione mancano i dati necessari per calcolare il pagamento al proprietario. Le righe interessate mostrano «—» invece di un importo.",
+      "commissionInvalid": "Una percentuale di commissione registrata è fuori dall'intervallo 0–100 %. Correggere la percentuale sul proprietario o sulla struttura.",
+      "portalRateMissing": "Per almeno un canale di prenotazione non è registrata alcuna percentuale di trattenuta e il portale non ha comunicato la propria trattenuta. Indicare in Contabilità → Regole di rendiconto quanto trattiene il portale per prenotazione.",
+      "portalRateInvalid": "Una percentuale di trattenuta del portale registrata è fuori dall'intervallo 0–100 %. Correggerla in Contabilità → Regole di rendiconto.",
+      "feeUnassigned": "Almeno un tipo di supplemento non è ancora assegnato. Senza assegnazione non è possibile stabilire a chi spetta l'importo né se su di esso maturi commissione — definirlo in Contabilità → Regole di rendiconto.",
+      "feeNotComputable": "Un supplemento non può essere conteggiato come importo (registrato in percentuale o senza importo). Verificare il supplemento sulla struttura.",
+      "contractCurrency": "Un forfait o una commissione minima è espresso in una valuta diversa da quella della prenotazione. Gli importi in valute diverse non vengono convertiti — verificare il contratto di rendiconto."
     },
     "rental": {
       "perReservation": "Per prenotazione",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Prezzo totale",
       "totalPayout": "Pagamento totale",
       "totals": "Totali",
-      "empty": "Nessuna prenotazione nel periodo."
+      "empty": "Nessuna prenotazione nel periodo.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Aggiungi",
@@ -1315,7 +1351,9 @@
     "commissionable": "Soggetto a commissione",
     "commissionableYes": "Sì — rientra nel calcolo della commissione",
     "commissionableNo": "No — esente da commissione",
-    "infoAria": "Spiegazione di {feld}"
+    "infoAria": "Spiegazione di {feld}",
+    "rulesPageTitle": "Regole di rendiconto",
+    "rulesPageIntro": "Quanto trattengono i portali per prenotazione e a chi spettano i supplementi. Insieme determinano l'importo che alla fine finisce nel rendiconto delle provvigioni dei suoi proprietari."
   },
   "portal": {
     "title": "Il mio portale",
@@ -1432,6 +1470,16 @@
         "blocked": "Bloccato"
       },
       "payoutPerNight": "Pagamento netto/notte",
+      "payoutPerNightShort": "netto/notte",
+      "payoutUnknown": {
+        "short": "n.d.",
+        "label": "Non determinabile",
+        "provision": "Per questo immobile non è impostata alcuna commissione — la gestione deve inserirla.",
+        "provisionUngueltig": "La commissione registrata è fuori dall'intervallo 0–100 %.",
+        "betrag": "A questa prenotazione manca l'importo totale.",
+        "naechte": "Il periodo di questa prenotazione non è valido.",
+        "waehrungVertrag": "Il forfait concordato è in una valuta diversa da questa prenotazione — gli importi non vengono convertiti."
+      },
       "guest": "Ospite",
       "channel": "Fonte prenotazione",
       "blockHint": "Vuoi far bloccare un periodo? Invia una richiesta: decide la gestione.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Mostra il codice porta solo se il soggiorno è pagato",
       "hideCodeUntilCheckin": "Nascondi il codice porta fino al check-in",
       "codeVisibleFromLabel": "Il codice porta viene mostrato a partire dal giorno del check-in alle ore …",
-      "codeVisibleFromUnset": "— non impostato —"
+      "codeVisibleFromUnset": "— non impostato —",
+      "wifiSsidLabel": "Nome della rete (SSID)",
+      "wifiSsidPlaceholder": "es. WiFi-Casa-Vacanze",
+      "wifiPasswordLabel": "Password Wi-Fi",
+      "wifiPasswordPlaceholder": "es. estate2026",
+      "wifiFieldsHint": "Questi due valori riempiono i segnaposto {ssid} e {password} nei modelli di messaggio e il codice QR Wi-Fi nel portale ospiti. Se restano vuoti, un modello che li usa non viene inviato."
     },
     "taskCreatePopup": {
       "title": "Crea attività",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Alloggio copiato.",
       "duplicateErr": "Copia non riuscita.",
       "unlistOk": "Collegamento con il sito web rimosso.",
-      "unlistErr": "Scollegamento non riuscito."
+      "unlistErr": "Scollegamento non riuscito.",
+      "menuVerkaufAus": "Disattiva su tutti i portali",
+      "menuVerkaufAn": "Offri di nuovo su tutti i portali"
     },
     "messagingForm": {
       "title": "Segnaposto messaggi",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Gli extra: dipendono da foto e traduzioni proprie.",
       "copyPricingSkipAvailability": "Disponibilità, occupazione e condizioni.",
       "copyPricingOverwriteWarning": "I prezzi di questo alloggio vengono sovrascritti completamente. Gli importi vengono ripresi solo con la stessa valuta.",
-      "copyPricingDone": "Prezzi ripresi."
+      "copyPricingDone": "Prezzi ripresi.",
+      "portalStandAbweichung": "lì {dort}",
+      "portalStand": {
+        "online": "Registrato sul portale",
+        "abweichend": "Diverge",
+        "fehlt": "Non registrato sul portale"
+      }
     },
     "policiesForm": {
       "title": "Policy",
@@ -5625,7 +5686,10 @@
       "hinweis": "Puoi importarle invece di crearle di nuovo. Le commissioni esistenti restano invariate.",
       "uebernehmen": "Importa commissioni",
       "laeuft": "Importazione in corso …",
-      "uebernommen": "{anzahl} commissioni importate."
+      "uebernommen": "{anzahl} commissioni importate.",
+      "verwerfen": "Non importare",
+      "verworfen": "Proposta chiusa — i tuoi costi restano come sono.",
+      "einmalig": "Aiuto iniziale una sola volta: poi vale solo ciò che c'è qui — è quello che inviamo ai portali."
     },
     "veroeffentlichen": {
       "titel": "Pubblica struttura",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Si imposta tramite “Pubblica” in alto.",
       "immerDabei": "Sempre incluso — il nostro marketplace, senza commissione di portale."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Ritirare l'alloggio dalla vendita?",
+      "fragenAusText": "«{titel}» verrà impostato come inattivo e il calendario di prenotazione verrà disattivato su tutti i portali collegati. Le prenotazioni esistenti non sono interessate. Lo stato di ogni portale viene salvato, così il ripristino lo riporta.",
+      "fragenAnTitel": "Offrire di nuovo l'alloggio?",
+      "fragenAnText": "«{titel}» verrà impostato di nuovo come attivo. Ogni portale riceve lo stato che aveva prima della disattivazione: i portali già disattivati restano tali. Successivamente vengono inviati di nuovo prezzi e disponibilità.",
+      "jetztAus": "Disattiva ora",
+      "jetztAn": "Offri ora",
+      "laeuft": "Commutazione…",
+      "abbrechen": "Annulla",
+      "schliessen": "Chiudi",
+      "ergebnisAusTitel": "L'alloggio è disattivato",
+      "ergebnisAusText": "Disattivato su tutti i portali.",
+      "ergebnisAnTitel": "L'alloggio è di nuovo attivo",
+      "ergebnisAnText": "Offerto di nuovo su tutti i portali.",
+      "ergebnisTeilweiseTitel": "Non riuscito su tutti",
+      "ergebnisTeilweiseText": "{anzahl} portale/i non è stato possibile commutare. Lì la vendita continua, quindi lo stato dell'alloggio non è stato modificato.",
+      "zeileAbgeschaltet": "Disattivato",
+      "zeileWiederhergestellt": "Di nuovo attivo",
+      "zeileObjekteAmKanal": "Questo canale contiene {anzahl} alloggi: non è stato modificato nulla per non disattivare anche gli altri."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Esci dal portale nel browser prima di collegare un altro account.",
     "accountConnectCredentialHint": "Un ulteriore accesso {portal} si aggiunge con l’ID dell’hotel durante il collegamento di un alloggio, non qui.",
     "marketplacePending": "{count} in verifica",
-    "marketplaceWaiting": "In verifica"
+    "marketplaceWaiting": "In verifica",
+    "marketplace": {
+      "intro": "myBestDays è il nostro marketplace — un canale di prenotazione come Booking o Airbnb, solo senza collegamento al portale. Un alloggio diventa visibile se è attivo, elencato qui e approvato.",
+      "openMarketplace": "Apri marketplace",
+      "propertiesHeading": "Alloggi nel marketplace",
+      "noProperties": "Nessun alloggio ancora creato.",
+      "columnProperty": "Alloggio",
+      "columnVisibility": "Visibilità",
+      "columnApproval": "Approvazione",
+      "columnBookings": "Prenotazioni",
+      "stateActive": "Visibile",
+      "statePending": "In verifica",
+      "stateNotListed": "Non elencato",
+      "stateInactiveProperty": "Alloggio non attivo",
+      "viewListing": "Vedi annuncio",
+      "reviewHint": "Gli alloggi in verifica non compaiono ancora su myBestDays. Verifichiamo ogni annuncio perché lì myBestDays agisce come fornitore — portali e sito web proprio non sono interessati.",
+      "summaryVisible": "{count} visibili",
+      "summaryWaiting": "{count} in verifica",
+      "summaryOff": "{count} non elencati",
+      "moderation": {
+        "draft": "Bozza",
+        "pending": "In verifica",
+        "approved": "Approvato",
+        "rejected": "Rifiutato"
+      }
+    }
   },
   "calendarSync": {
     "title": "Importa/esporta calendario",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Conferma",
     "mfaChecking": "Verifica…",
     "mfaBack": "Torna all'accesso"
+  },
+  "portalSaetze": {
+    "add": "Aggiungi aliquota",
+    "breakdown": "{provision} % di commissione + {fee} % di spese di pagamento",
+    "breakdownNoFee": "{provision} % di commissione, nessuna spesa di pagamento",
+    "cancel": "Annulla",
+    "channel": "Portale",
+    "channelLocked": "Il portale di un’aliquota esistente non può essere cambiato. Crea una nuova aliquota per un altro portale.",
+    "create": "Crea aliquota",
+    "created": "Aliquota creata",
+    "current": "vale oggi",
+    "delete": "Elimina aliquota",
+    "deleted": "Aliquota eliminata",
+    "edit": "Modifica aliquota",
+    "empty": "Nessuna aliquota registrata finora. Senza un’aliquota un pagamento può essere calcolato solo se il portale comunica la propria trattenuta.",
+    "errorProvisionRequired": "Inserisci una percentuale di commissione.",
+    "intro": "Quanto trattiene ogni portale per prenotazione. Queste aliquote valgono dove il portale non comunica la propria trattenuta — se comunica un importo, vale sempre quello comunicato.",
+    "loading": "Caricamento …",
+    "note": "Nota",
+    "notePlaceholder": "Da dove proviene l’aliquota, ad es. contratto del portale o rendiconto",
+    "payoutFee": "Spese di pagamento",
+    "payoutFeeInfo": "Il compenso per l’incasso e il trasferimento del denaro da parte del portale. Si applica solo se incassa il portale — se l’ospite paga direttamente a te, non è dovuto.",
+    "payoutFeeNone": "non ne applica",
+    "period": "dal {von} al {bis}",
+    "periodOpen": "dal {von}",
+    "provision": "Commissione",
+    "provisionInfo": "La quota di intermediazione che il portale trattiene per la prenotazione. La base di calcolo è il prezzo totale dell’ospite, spese incluse.",
+    "save": "Salva modifiche",
+    "saved": "Aliquota salvata",
+    "title": "Aliquote di trattenuta dei portali",
+    "total": "{pct} % in totale",
+    "validFrom": "Valida dal",
+    "validTo": "Valida fino al",
+    "validToInfo": "Lascia vuoto finché l’aliquota è in vigore. Se il portale cambia la sua aliquota, creane una nuova a partire dal giorno della modifica — quella vecchia resta per i rendiconti precedenti.",
+    "validToOpen": "ancora in corso"
   }
 }

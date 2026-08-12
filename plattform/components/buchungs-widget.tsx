@@ -1,21 +1,26 @@
 "use client";
 
-// Buchungs-Widget der Inserat-Seite — Datumswahl, Reisende, echte
-// Verfügbarkeitsprüfung und Gastbuchung gegen den booking_engine-Slice. Der
-// Buchungskalender im Backend ist die oberste Wahrheit: belegte Zeiträume werden
-// mit 409 abgelehnt, eine erfolgreiche Buchung sperrt sofort alle Plattformen
-// (Doppelbuchungsschutz).
+// Buchungs-Widget der Inserat-Seite — Zeitraum, Reisende, echter Serverpreis und
+// der Sprung in den Checkout. Airbnb-Fluss (live abgelesen 11.08.2026):
 //
-// Der Preis wird NICHT hier gerechnet. Vorher stand „Grundpreis × Nächte" im
-// Widget — das verschwieg Reinigung, Haustiergebühr und Kurtaxe, die der Server
-// beim Buchen sehr wohl berechnet. Jetzt liefert `POST /booking-engine/quote`
-// dieselbe Aufschlüsselung, die auch die Buchung verwendet.
+//   Inserat: Zeitraum + Gäste + Gesamtpreis → „Reservieren" → „Du musst noch
+//   nichts bezahlen." → Checkout-Seite: bezahlen und bestätigen.
+//
+// Vorher standen Vorname/Nachname/E-Mail MITTEN im Widget und die Reservierung
+// entstand schon hier — der Gast hatte die Buchung, bevor er die Bedingungen
+// gesehen hatte. Kontaktdaten und Zahlung gehören in den Checkout; hier wird
+// nichts angelegt.
+//
+// Der Preis wird NICHT im Browser gerechnet: `POST /booking-engine/quote` liefert
+// dieselbe Aufschlüsselung, die auch die Buchung verwendet (Reinigung,
+// Haustiergebühr, Kurtaxe).
 import { Icon } from "@iconify/react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
-import { type Angebot, bucheGast, ladeAngebot, ladeVerfuegbarkeit } from "@/lib/buchung";
+import { type Angebot, ladeAngebot, ladeVerfuegbarkeit } from "@/lib/buchung";
 import { type Listing, formatCurrency } from "@/lib/listings";
-import { StripeCheckout } from "@/components/stripe-checkout";
 
 function naechte(checkIn: string, checkOut: string): number {
   if (!checkIn || !checkOut) return 0;
@@ -32,6 +37,8 @@ function Zaehler({
   wert,
   min,
   max,
+  verringern,
+  erhoehen,
   onChange,
 }: {
   titel: string;
@@ -39,6 +46,8 @@ function Zaehler({
   wert: number;
   min: number;
   max: number;
+  verringern: string;
+  erhoehen: string;
   onChange: (n: number) => void;
 }) {
   return (
@@ -50,7 +59,7 @@ function Zaehler({
       <div className="flex items-center gap-3">
         <button
           type="button"
-          aria-label={`${titel} verringern`}
+          aria-label={verringern}
           disabled={wert <= min}
           onClick={() => onChange(Math.max(min, wert - 1))}
           className="flex size-8 items-center justify-center rounded-full border border-border text-lg leading-none disabled:opacity-40"
@@ -60,7 +69,7 @@ function Zaehler({
         <span className="min-w-6 text-center text-sm tabular-nums">{wert}</span>
         <button
           type="button"
-          aria-label={`${titel} erhöhen`}
+          aria-label={erhoehen}
           disabled={wert >= max}
           onClick={() => onChange(Math.min(max, wert + 1))}
           className="flex size-8 items-center justify-center rounded-full border border-border text-lg leading-none disabled:opacity-40"
@@ -77,25 +86,24 @@ function Zaehler({
 const MAX_TIERE = 4;
 
 export function BuchungsWidget({ listing }: { listing: Listing }) {
+  const t = useTranslations("widget");
+  const router = useRouter();
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [gaeste, setGaeste] = useState(1);
   const [tiere, setTiere] = useState(0);
-  const [vorname, setVorname] = useState("");
-  const [nachname, setNachname] = useState("");
-  const [email, setEmail] = useState("");
-  // Aktionscode des Gastes („Rabattcode einlösen"). `code` ist das Eingabefeld,
-  // `codeAktiv` der EINGELÖSTE Code — erst beim Einlösen wird neu gerechnet,
-  // sonst schickte jeder Tastendruck eine Anfrage.
+  // Aktionscode des Gastes. `code` ist das Eingabefeld, `codeAktiv` der
+  // EINGELÖSTE Code — erst beim Einlösen wird neu gerechnet, sonst schickte
+  // jeder Tastendruck eine Anfrage.
   const [code, setCode] = useState("");
   const [codeAktiv, setCodeAktiv] = useState("");
   const [angebot, setAngebot] = useState<Angebot | null>(null);
   const [rechnet, setRechnet] = useState(false);
-  const [status, setStatus] = useState<{
-    kind: "idle" | "loading" | "error" | "done";
-    msg?: string;
-    reservationId?: string;
-  }>({ kind: "idle" });
+  // Belegt/gesperrt? Der Buchungskalender des Servers entscheidet, nicht das
+  // Widget. Airbnb zeigt in diesem Fall rote Datumsfelder + „Zeitraum nicht
+  // verfügbar" und macht aus „Reservieren" ein „Reisedaten ändern".
+  const [belegt, setBelegt] = useState(false);
+  const [fehler, setFehler] = useState<string | null>(null);
 
   const n = naechte(checkIn, checkOut);
   const preis = listing.preisProNacht; // null = Preis auf Anfrage
@@ -121,8 +129,7 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
       if (abgebrochen) return;
       setRechnet(false);
       // Fehler hier NICHT als Buchungsfehler zeigen: der Gast hat noch nichts
-      // ausgelöst. Ohne Angebot bleibt der Preisblock leer, das Buchen prüft
-      // ohnehin erneut.
+      // ausgelöst. Ohne Angebot bleibt der Preisblock leer.
       setAngebot(res.ok ? res.data : null);
     });
     return () => {
@@ -130,84 +137,86 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
     };
   }, [listing.id, checkIn, checkOut, gaeste, tiere, n, codeAktiv]);
 
+  // Verfügbarkeit prüfen, sobald ein Zeitraum steht — nicht erst beim Klick.
+  // Sonst füllt der Gast alles aus und erfährt am Ende, dass die Tage weg sind.
+  useEffect(() => {
+    if (n <= 0) {
+      setBelegt(false);
+      return;
+    }
+    let abgebrochen = false;
+    void ladeVerfuegbarkeit(listing.id, checkIn, checkOut).then((res) => {
+      if (abgebrochen) return;
+      setBelegt(res.ok ? res.data.days.some((d) => !d.available) : false);
+    });
+    return () => {
+      abgebrochen = true;
+    };
+  }, [listing.id, checkIn, checkOut, n]);
+
   // Tiere zurücksetzen, sobald das Objekt sie nicht (mehr) erlaubt — sonst
   // stünde eine Zahl im Zustand, die der Server mit 422 ablehnt.
   useEffect(() => {
     if (!listing.haustiereErlaubt && tiere !== 0) setTiere(0);
   }, [listing.haustiereErlaubt, tiere]);
 
-  const buchbar = angebot != null && !angebot.priceless;
+  const buchbar = n > 0 && !belegt && angebot != null && !angebot.priceless;
+  const waehrung = angebot?.currency || listing.currency;
 
-  async function reservieren() {
+  function weiterZumCheckout() {
     if (n <= 0) {
-      setStatus({ kind: "error", msg: "Bitte gültigen Zeitraum wählen." });
+      setFehler(t("fehlerZeitraum"));
       return;
     }
-    if (!vorname || !nachname || !email) {
-      setStatus({ kind: "error", msg: "Bitte Kontaktdaten ausfüllen." });
+    if (!buchbar) {
+      setFehler(belegt ? t("nichtVerfuegbar") : t("keinPreis"));
       return;
     }
-    if (!buchbar || angebot == null) {
-      // Wurzel 4: kein 0-Fallback. Ohne serverseitig ermittelten Preis wird
-      // keine Buchung angelegt.
-      setStatus({
-        kind: "error",
-        msg: "Für diesen Zeitraum ist kein Preis hinterlegt — bitte den Gastgeber anfragen.",
-      });
-      return;
-    }
-    setStatus({ kind: "loading" });
-    // Erst Verfügbarkeit prüfen (Buchungskalender = Wahrheit).
-    const av = await ladeVerfuegbarkeit(listing.id, checkIn, checkOut);
-    if (!av.ok) {
-      setStatus({ kind: "error", msg: av.error });
-      return;
-    }
-    if (av.data.days.some((d) => !d.available)) {
-      setStatus({ kind: "error", msg: "Dieser Zeitraum ist nicht mehr verfügbar." });
-      return;
-    }
-    const res = await bucheGast({
-      property_id: listing.id,
+    setFehler(null);
+    const qs = new URLSearchParams({
       check_in: checkIn,
       check_out: checkOut,
-      contact: { first_name: vorname, last_name: nachname, email },
-      total_amount: angebot.total,
-      guests: gaeste,
-      pets: tiere,
-      // Derselbe Code wie im Angebot — der Server rechnet den Preis erneut.
-      promo_code: codeAktiv || undefined,
+      guests: String(gaeste),
+      pets: String(tiere),
     });
-    if (res.ok) {
-      // Reservierung steht — weiter zum Bezahlschritt (Stripe Payment Element).
-      setStatus({ kind: "done", reservationId: res.data.id });
-    } else {
-      setStatus({ kind: "error", msg: res.error });
-    }
+    if (codeAktiv) qs.set("promo", codeAktiv);
+    router.push(`/checkout/${listing.id}?${qs.toString()}`);
   }
-
-  const waehrung = angebot?.currency || listing.currency;
 
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+      {/* Kopf: mit gewähltem Zeitraum der GESAMTPREIS (so macht es Airbnb), ohne
+          Zeitraum der Nachtpreis als „ab"-Angabe. */}
       <p className="mb-4">
-        {preis != null ? (
+        {angebot && !angebot.priceless ? (
+          <>
+            <span className="text-xl font-semibold">
+              {formatCurrency(angebot.total, waehrung)}
+            </span>{" "}
+            <span className="text-muted-foreground">{t("gesamtpreis")}</span>
+          </>
+        ) : preis != null ? (
           <>
             <span className="text-xl font-semibold">
               {formatCurrency(preis, listing.currency)}
             </span>{" "}
-            <span className="text-muted-foreground">Nacht</span>
+            <span className="text-muted-foreground">{t("proNacht")}</span>
           </>
         ) : (
-          <span className="text-muted-foreground">Preis auf Anfrage</span>
+          <span className="text-muted-foreground">{t("preisAufAnfrage")}</span>
         )}
       </p>
 
-      <div className="overflow-hidden rounded-xl border border-border">
+      <div
+        className={
+          "overflow-hidden rounded-xl border " +
+          (belegt ? "border-destructive" : "border-border")
+        }
+      >
         <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
           <label className="p-3">
             <span className="block text-[0.625rem] font-semibold uppercase tracking-wide">
-              Check-in
+              {t("checkIn")}
             </span>
             <input
               type="date"
@@ -218,94 +227,84 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
           </label>
           <label className="p-3">
             <span className="block text-[0.625rem] font-semibold uppercase tracking-wide">
-              Check-out
+              {t("checkOut")}
             </span>
             <input
               type="date"
               value={checkOut}
+              min={checkIn || undefined}
               onChange={(e) => setCheckOut(e.target.value)}
               className="w-full bg-transparent text-sm text-foreground outline-none"
             />
           </label>
         </div>
 
-        <div className="border-b border-border px-3 py-1">
+        <div className="border-b border-border px-3 py-1 last:border-0">
           <span className="block pt-2 text-[0.625rem] font-semibold uppercase tracking-wide">
-            Reisende
+            {t("reisende")}
           </span>
           <Zaehler
-            titel="Gäste"
-            hinweis={`max. ${maxGaeste}`}
+            titel={t("gaeste")}
+            hinweis={t("maxGaeste", { count: maxGaeste })}
             wert={gaeste}
             min={1}
             max={maxGaeste}
+            verringern={t("verringern")}
+            erhoehen={t("erhoehen")}
             onChange={setGaeste}
           />
           {listing.haustiereErlaubt && (
             <Zaehler
-              titel="Haustiere"
-              hinweis="Gebühren können anfallen"
+              titel={t("haustiere")}
+              hinweis={t("haustiereHinweis")}
               wert={tiere}
               min={0}
               max={MAX_TIERE}
+              verringern={t("verringern")}
+              erhoehen={t("erhoehen")}
               onChange={setTiere}
             />
           )}
         </div>
-
-        <div className="grid grid-cols-1 gap-2 p-3">
-          <input
-            placeholder="Vorname"
-            value={vorname}
-            onChange={(e) => setVorname(e.target.value)}
-            className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
-          />
-          <input
-            placeholder="Nachname"
-            value={nachname}
-            onChange={(e) => setNachname(e.target.value)}
-            className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
-          />
-          <input
-            type="email"
-            placeholder="E-Mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
-          />
-        </div>
       </div>
 
-      {/* Schritt 2: Bezahlen (Stripe Payment Element) — erscheint, sobald die
-          Reservierung angelegt ist. */}
-      {status.kind === "done" && status.reservationId ? (
-        <div className="mt-4">
-          <StripeCheckout reservationId={status.reservationId} />
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={reservieren}
-          disabled={status.kind === "loading"}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
-          {status.kind === "loading" ? (
-            <Icon icon="ph:spinner" className="size-4 animate-spin" />
-          ) : null}
-          Reservieren &amp; bezahlen
-        </button>
+      {/* Belegter Zeitraum wird BENANNT und der Knopf ändert seine Aufgabe —
+          „Reservieren" auf gesperrte Tage wäre ein Klick in den 409. */}
+      {belegt && (
+        <p className="mt-3 flex items-center gap-1.5 text-sm text-destructive">
+          <Icon icon="ph:warning-circle" className="size-4 shrink-0" />
+          {t("nichtVerfuegbar")}
+        </p>
       )}
 
-      {status.msg && status.kind === "error" && (
-        <p className="mt-3 text-center text-sm text-red-600">{status.msg}</p>
+      <button
+        type="button"
+        onClick={weiterZumCheckout}
+        disabled={belegt || rechnet}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+      >
+        {rechnet && <Icon icon="ph:spinner" className="size-4 animate-spin" />}
+        {n > 0 ? t("reservieren") : t("zeitraumWaehlen")}
+      </button>
+
+      {buchbar && (
+        <p className="mt-3 text-center text-sm text-muted-foreground">
+          {t("nichtsBezahlen")}
+        </p>
+      )}
+
+      {fehler && (
+        <p className="mt-3 text-center text-sm text-destructive">{fehler}</p>
       )}
 
       {/* Aufschlüsselung des Servers: Übernachtung, Gebühren, Abgaben — Zeile
           für Zeile so, wie sie auch berechnet werden. */}
-      {n > 0 && status.kind !== "done" && (
+      {n > 0 && (
         <div className="mt-6 flex flex-col gap-3 text-sm">
           {rechnet && !angebot && (
-            <p className="text-center text-muted-foreground">Preis wird berechnet …</p>
+            <p className="text-center text-muted-foreground">
+              {t("preisWirdBerechnet")}
+            </p>
           )}
           {angebot && !angebot.priceless && (
             <>
@@ -320,14 +319,14 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
                 </div>
               ))}
               {/* Aktionscode — Branchenstandard: der Gast löst ihn beim Buchen
-                  ein, der Rabatt erscheint als eigene Zeile in der Übersicht.
-                  Gerechnet wird ausschließlich serverseitig. */}
+                  ein, der Rabatt erscheint als eigene Zeile. Gerechnet wird
+                  ausschließlich serverseitig. */}
               <div className="mt-2 flex flex-col gap-2 border-t border-border pt-3">
                 <label className="flex items-center gap-2">
                   <input
                     value={code}
                     maxLength={15}
-                    placeholder="Aktionscode"
+                    placeholder={t("aktionscode")}
                     onChange={(e) => setCode(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -343,7 +342,7 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
                     onClick={() => setCodeAktiv(code.trim())}
                     className="h-10 shrink-0 rounded-full border border-border px-4 text-sm font-medium disabled:opacity-40"
                   >
-                    Einlösen
+                    {t("einloesen")}
                   </button>
                 </label>
                 {/* Nur nach einem Einlöse-Versuch etwas sagen — und zwar die
@@ -359,21 +358,19 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
                     }
                   >
                     {angebot.promo_code_applied
-                      ? "Aktionscode angewendet."
-                      : "Dieser Aktionscode gilt für diese Buchung nicht."}
+                      ? t("codeAngewendet")
+                      : t("codeUngueltig")}
                   </p>
                 )}
               </div>
               <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
-                <span>Gesamt</span>
+                <span>{t("gesamt")}</span>
                 <span>{formatCurrency(angebot.total, waehrung)}</span>
               </div>
             </>
           )}
           {angebot?.priceless && (
-            <p className="text-center text-muted-foreground">
-              Für diesen Zeitraum ist kein Preis hinterlegt.
-            </p>
+            <p className="text-center text-muted-foreground">{t("keinPreis")}</p>
           )}
         </div>
       )}

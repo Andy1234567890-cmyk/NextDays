@@ -236,7 +236,73 @@ class AiReplyResponse(BaseModel):
     sources: list[str] = []
 
 
+# --- Sprachen des Betriebs (0363) -------------------------------------------
+class MessageLanguage(BaseModel):
+    """Eine Sprache, in der der Betrieb seine Nachrichten pflegt.
+
+    Genau eine trägt `is_default = True`; sie ist der Rückfall, wenn die Sprache
+    des Gastes keine Fassung hat. Es kann auch GAR KEINE Sprache gepflegt sein —
+    dann gibt es nur die Grundfassung, und die Oberfläche zeigt keine Reiter.
+    """
+
+    code: str            # ISO-639-1, zweistellig, klein
+    is_default: bool = False
+
+
+class MessageLanguageList(BaseModel):
+    items: list[MessageLanguage] = []
+
+
+class MessageLanguageAdd(BaseModel):
+    code: str
+
+
+class LanguageOption(BaseModel):
+    """Auswählbare Sprache für „Neue Sprache hinzufügen" (Katalog des Servers).
+
+    Der Name kommt vom Server, nicht aus den Frontend-Übersetzungen: die Liste
+    ist eine Datenaussage (welche Sprachen führen wir?), keine Beschriftung.
+    """
+
+    code: str
+    name: str
+
+
+class LanguageOptionList(BaseModel):
+    items: list[LanguageOption] = []
+
+
 # --- Vorlagen ---------------------------------------------------------------
+class TemplateText(BaseModel):
+    """Sprachfassung einer Vorlage (Betreff + Inhalt in EINER Sprache).
+
+    `subject` gilt nur für E-Mail — der Gast-Chat der Portale überträgt keinen
+    Betreff. Leer heißt „nicht gepflegt", nicht „leerer Betreff".
+    """
+
+    lang: str
+    subject: str = ""
+    body: str = ""
+    body_html: str = ""
+
+
+class TemplateTextUpsert(BaseModel):
+    """Was der Editor je Sprache schickt. Maßgeblich ist `body_html`.
+
+    `body` fehlt hier absichtlich: der Klartext wird serverseitig aus dem
+    gesäuberten HTML abgeleitet (Wurzel 3, wie bei `TemplateUpsert`).
+    """
+
+    lang: str
+    subject: str = ""
+    body_html: str = ""
+
+    @field_validator("body_html")
+    @classmethod
+    def _html_saeubern(cls, wert: str) -> str:
+        return sanitize_vorlagen_html(wert)
+
+
 class MessageTemplate(BaseModel):
     """Eine Vorlage in BEIDEN Formen.
 
@@ -245,12 +311,18 @@ class MessageTemplate(BaseModel):
     übertragen im Gast-Chat nur Text. Leeres `body_html` heißt „noch nie
     formatiert": das Frontend baut sich daraus per `textZuHtml` einen
     Editor-Inhalt aus dem Klartext (kein Backfill nötig).
+
+    `body`/`body_html`/`subject` sind die GRUNDFASSUNG (ohne Sprachangabe),
+    `texts` die Sprachfassungen (0363). Welche davon an einen Gast geht,
+    entscheidet `sprachen.fassung_waehlen`.
     """
 
     id: str
     title: str
     body: str
     body_html: str = ""
+    subject: str = ""
+    texts: list[TemplateText] = []
 
 
 class MessageTemplateList(BaseModel):
@@ -270,6 +342,12 @@ class TemplateUpsert(BaseModel):
     title: str
     body: str = ""
     body_html: str = ""
+    subject: str = ""
+    # Sprachfassungen. Fehlt das Feld in der Anfrage, bleiben die vorhandenen
+    # Fassungen unangetastet (`None`) — eine leere LISTE dagegen heißt
+    # ausdrücklich „alle Sprachfassungen entfernen". Ohne diese Unterscheidung
+    # löschte jeder Aufruf einer älteren Oberfläche still alle Übersetzungen.
+    texts: list[TemplateTextUpsert] | None = None
 
     @field_validator("body_html")
     @classmethod
@@ -346,8 +424,23 @@ class AutomationBase(BaseModel):
     window_to: str | None = None       # darf über Mitternacht gehen (22:00–06:00)
 
 
+class AutomationText(BaseModel):
+    """Sprachfassung des Freitexts einer Regel.
+
+    Nur Klartext (`message`), kein HTML: dieser Text geht an derselben Stelle in
+    den Versand wie die Grundfassung `message_automation.message` und wird als
+    KLARTEXT verschickt. Markup stünde wörtlich beim Gast.
+    """
+
+    lang: str
+    subject: str = ""
+    message: str = ""
+
+
 class Automation(AutomationBase):
     id: str
+    subject: str = ""
+    texts: list[AutomationText] = []
 
 
 class AutomationList(BaseModel):
@@ -356,7 +449,9 @@ class AutomationList(BaseModel):
 
 
 class AutomationUpsert(AutomationBase):
-    pass
+    subject: str = ""
+    # Wie bei `TemplateUpsert`: None = unangetastet, [] = alle entfernen.
+    texts: list[AutomationText] | None = None
 
 
 # --- Zuweisung --------------------------------------------------------------

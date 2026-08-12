@@ -6,6 +6,8 @@ sensiblen Endpunkten. Kein echtes Redis nötig — ein In-Memory-Fake bildet die
 Fixed-Window-Semantik der Lua-Auswertung nach.
 """
 import asyncio
+import json
+from base64 import urlsafe_b64encode
 
 import pytest
 import redis.asyncio as aioredis
@@ -21,6 +23,7 @@ from src.core.ratelimit import (
 )
 from src.core.ratelimit_middleware import (
     RateLimitMiddleware,
+    _Buckets,
     _select_bucket,
     _tenant_from_bearer,
 )
@@ -255,6 +258,17 @@ def _app_with_limiter(redis_client, settings: Settings) -> FastAPI:
 
     @app.get("/api/v1/auth/login")
     def login() -> dict[str, str]:
+        return {"ok": "yes"}
+
+    # Die beiden MFA-Pfade, die in VERSCHIEDENE Buckets gehören müssen:
+    # `status` liest nur (locker, pro Nutzer), `verify` prüft ein Geheimnis
+    # (streng, pro IP).
+    @app.get("/api/v1/auth/mfa/status")
+    def mfa_status() -> dict[str, str]:
+        return {"ok": "yes"}
+
+    @app.post("/api/v1/auth/mfa/verify")
+    def mfa_verify() -> dict[str, str]:
         return {"ok": "yes"}
 
     # Der Refresh-Bucket liest den Request-Body. Die Route gibt das gelesene
@@ -508,3 +522,96 @@ def test_refresh_ist_fail_open_bei_redis_ausfall() -> None:
     client = TestClient(_app_with_limiter(_FakeRedis(fail=True), settings))
     r = client.post("/api/v1/auth/refresh", json={"refresh_token": "tok"})
     assert r.status_code == 200
+
+
+# --- /auth/mfa/status: eigener Bucket, eigenes Keying -------------------------
+# Diese Tests sichern GENAU das, wovon die Ausnahme lebt und was sonst still
+# kaputtgehen kann: (a) die Reihenfolge in `_BUCKET_REGELN` — würde die
+# `mfa`-Regel vor die `mfa_status`-Regel rutschen, fiele der Statuspfad
+# unbemerkt auf 5/60 zurück; (b) das exakte Pfadende, damit ein künftiges
+# `/auth/mfa/statusXY` das lockere Limit nicht erbt; (c) das Keying pro Nutzer,
+# ohne das ein einzelner Nutzer alle anderen aussperrt (der Aufruf ist
+# `"use server"`, alle teilen die Container-IP).
+
+
+def _sub_token(sub: str) -> str:
+    """Minimales JWT-artiges Token — nur der `sub`-Claim zählt fürs Keying."""
+    claims = urlsafe_b64encode(json.dumps({"sub": sub}).encode()).decode().rstrip("=")
+    return f"header.{claims}.signatur"
+
+
+def test_mfa_status_hat_eigenen_lockeren_bucket() -> None:
+    """`status` liest nur — es darf nicht am 5/60-Bucket der Code-Prüfung hängen."""
+    settings = Settings(rate_limit_mfa="2/60", rate_limit_mfa_status="5/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    h = {
+        "X-Forwarded-For": "1.2.3.4",
+        "Authorization": f"Bearer {_sub_token('nutzer-a')}",
+    }
+    # Über dem strengen Limit (2), unter dem eigenen (5).
+    for _ in range(5):
+        assert client.get("/api/v1/auth/mfa/status", headers=h).status_code == 200
+    assert client.get("/api/v1/auth/mfa/status", headers=h).status_code == 429
+
+
+def test_mfa_verify_bleibt_streng() -> None:
+    """Der geheimnisprüfende Pfad darf vom lockeren Limit NICHT profitieren."""
+    settings = Settings(rate_limit_mfa="2/60", rate_limit_mfa_status="50/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    h = {"X-Forwarded-For": "1.2.3.4"}
+    assert client.post("/api/v1/auth/mfa/verify", headers=h).status_code == 200
+    assert client.post("/api/v1/auth/mfa/verify", headers=h).status_code == 200
+    assert client.post("/api/v1/auth/mfa/verify", headers=h).status_code == 429
+
+
+def test_mfa_status_praefix_erbt_das_lockere_limit_nicht() -> None:
+    """`/auth/mfa/status...` als PRÄFIX fällt in den strengen Bucket.
+
+    Sonst würde ein künftiger Endpunkt mit diesem Namensanfang das lockere Limit
+    stillschweigend erben — die Regel matcht deshalb auf exaktes Pfadende (`$`).
+    """
+    settings = Settings(rate_limit_mfa="2/60", rate_limit_mfa_status="50/60")
+    buckets = _Buckets(settings)
+    for pfad in ("/api/v1/auth/mfa/statusXY", "/api/v1/auth/mfa/status/reset"):
+        name, limit, _ = _select_bucket(pfad, buckets)
+        assert name == "mfa", pfad
+        assert limit.max == 2, pfad
+    name, limit, sensibel = _select_bucket("/api/v1/auth/mfa/status", buckets)
+    assert (name, limit.max, sensibel) == ("mfa_status", 50, True)
+
+
+def test_mfa_status_keyt_pro_nutzer_nicht_pro_ip() -> None:
+    """Zwei Nutzer HINTER DERSELBEN IP haben getrennte Budgets.
+
+    Der reale Fall: `web/lib/mfa.ts` ist `"use server"`, alle Aufrufe kommen aus
+    einem Next-Container ohne X-Forwarded-For. Mit IP-Keying teilten sich ALLE
+    Nutzer aller Betriebe ein Fenster — ein einzelner Nutzer mit offener
+    Kalenderseite konnte damit alle anderen aussperren.
+    """
+    settings = Settings(rate_limit_mfa_status="1/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    ip = "10.0.0.7"
+    a = {"X-Forwarded-For": ip, "Authorization": f"Bearer {_sub_token('nutzer-a')}"}
+    b = {"X-Forwarded-For": ip, "Authorization": f"Bearer {_sub_token('nutzer-b')}"}
+    assert client.get("/api/v1/auth/mfa/status", headers=a).status_code == 200
+    # A ist am Limit …
+    assert client.get("/api/v1/auth/mfa/status", headers=a).status_code == 429
+    # … B aber nicht, obwohl gleiche IP.
+    assert client.get("/api/v1/auth/mfa/status", headers=b).status_code == 200
+
+
+def test_mfa_status_ohne_token_faellt_auf_ip_keying_zurueck() -> None:
+    """Ohne Bearer-Token gibt es keinen `sub` → IP-Keying, kein Absturz."""
+    settings = Settings(rate_limit_mfa_status="1/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    h = {"X-Forwarded-For": "9.9.9.9"}
+    assert client.get("/api/v1/auth/mfa/status", headers=h).status_code == 200
+    assert client.get("/api/v1/auth/mfa/status", headers=h).status_code == 429
+
+
+def test_mfa_status_bleibt_fail_closed_bei_redis_ausfall() -> None:
+    """Gelockert ist nur das LIMIT, nicht die Fehlerhaltung (Wurzel 5)."""
+    settings = Settings(rate_limit_fail_closed_sensitive=True)
+    client = TestClient(_app_with_limiter(_FakeRedis(fail=True), settings))
+    h = {"Authorization": f"Bearer {_sub_token('nutzer-a')}"}
+    assert client.get("/api/v1/auth/mfa/status", headers=h).status_code == 503

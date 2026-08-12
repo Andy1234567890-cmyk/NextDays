@@ -368,6 +368,14 @@ class BookingsSyncMixin:
 
         amount = attrs.get("amount")
         amount_cents = self._to_cents(amount)
+        # EINE Auflösung für beide Objekt-Spalten (map_id + property_id).
+        map_id, lokale_property_id = self._objekt_zuordnung(
+            db,
+            tenant_id,
+            attrs.get("property_id"),
+            rooms=attrs.get("rooms"),
+            buchung=str(attrs.get("ota_reservation_code") or channex_booking_id),
+        )
         row = {
             "tenant_id": tenant_id,
             "channex_booking_id": channex_booking_id,
@@ -398,9 +406,12 @@ class BookingsSyncMixin:
             # `{{property_name}}` scheiterte mit „Feld ohne Wert" (live an allen
             # 22 Buchungen). Die Information lag die ganze Zeit vor — sie landete
             # nur in `raw` und nirgends sonst.
-            "property_map_id": self._property_map_id(
-                db, tenant_id, attrs.get("property_id"), rooms=attrs.get("rooms")
-            ),
+            "property_map_id": map_id,
+            # DIESELBE Auflösung füllt auch `property_id`. Beide Spalten
+            # bezeichnen dasselbe Objekt; sie getrennt zu befüllen (oder eine
+            # davon zu vergessen) erzeugt Buchungen, die je nach Join-Spalte
+            # sichtbar oder unsichtbar sind.
+            "property_id": lokale_property_id,
             "raw": attrs,
         }
         upserted = (
@@ -508,15 +519,123 @@ class BookingsSyncMixin:
         return "ota_other"
 
 
-    def _property_map_id(
+    def _rate_plan_der_buchung(
+        self, db: Client, tenant_id: str, attrs: dict[str, Any]
+    ) -> str | None:
+        """Der LOKALE Preisplan, zu dem diese Buchung zustande kam.
+
+        Channex meldet zwei Dinge je Zimmer, und beide sind brauchbar:
+
+        * ``rate_plan_id`` — die von Channex bereits AUFGELÖSTE Kennung. Sie ist
+          gesetzt, wenn Channex den Rate-Plan der Buchung einem seiner Pläne
+          zuordnen konnte.
+        * ``meta.rate_plan_code`` — der Code des PORTALS (z. B. Booking
+          „47588687"). Nur Booking schickt ihn, dort aber immer — auch wenn
+          Channex ihn nicht auflösen kann („Unmapped Rate").
+
+        DIE ZWEI FELDER SIND UNABHÄNGIG, und das ist der leicht zu ziehende
+        Fehlschluss. Live über 77 Buchungen gezählt (11.08.2026)::
+
+            ota_name    Buchungen   rate_plan_id   meta.rate_plan_code
+            AirBNB             22             16                     0
+            BookingCom         55             52                    55
+
+        Airbnb meldet also keinen eigenen Rate-Plan-CODE, liefert aber in 16 von
+        22 Buchungen eine aufgelöste ``rate_plan_id``. Wer daraus „Airbnb kennt
+        keine Rate-Plans" ableitet, hält 16 belegte Zuordnungen für erfunden —
+        ein Irrtum, der hier schon einmal fast zu einer Rücknahme-Migration
+        geführt hat. Und umgekehrt: ein fehlender Code ist bei Airbnb kein
+        „Unmapped Rate", sondern der Normalfall.
+
+        Aufgelöst wird AUSSCHLIESSLICH über den Payload. Die Mapping-Tabelle
+        eines Objekts gilt kanalübergreifend — sie als Einstieg zu nehmen
+        (statt zum Nachschlagen der im Payload genannten Kennung) schiebt einer
+        Buchung den Plan eines fremden Kanals unter.
+
+        Der zweite Weg ist bewusst kein Rateversuch: der Code identifiziert den
+        Plan beim Portal eindeutig. Nur können WIR ihn nur zuordnen, wenn er in
+        `channex_rate_plan_map` steht — dort steht die Channex-Kennung, nicht der
+        Portal-Code. Findet sich nichts, bleibt es bei ``None`` (Wurzel 4: kein
+        „irgendein Plan") und die Lücke wird geloggt, statt still zu bleiben.
+
+        Bis 11.08.2026 wurde die Information komplett verworfen: alle 226
+        projizierten Reservierungen trugen ``rate_plan_id = NULL``. Damit war
+        nicht nachvollziehbar, zu welchem Preis verkauft wurde — und der genaue
+        Hotel-Stopp (0152), der auf ``rate_plan_id`` prüft, konnte für
+        OTA-Buchungen nie greifen.
+        """
+        rooms = attrs.get("rooms")
+        if not isinstance(rooms, list) or not rooms:
+            return None
+        erstes = next((r for r in rooms if isinstance(r, dict)), None)
+        if erstes is None:
+            return None
+
+        cx_rp_id = erstes.get("rate_plan_id")
+        if cx_rp_id:
+            treffer = (
+                db.table("channex_rate_plan_map")
+                .select("local_rate_plan_id")
+                .eq("tenant_id", tenant_id)
+                .eq("channex_rate_plan_id", str(cx_rp_id))
+                .is_("deleted_at", "null")
+                .limit(1)
+                .execute()
+            ).data or []
+            if treffer and treffer[0].get("local_rate_plan_id"):
+                return str(treffer[0]["local_rate_plan_id"])
+            log.warning(
+                "channex_rate_plan_nicht_in_map",
+                buchung=attrs.get("ota_reservation_code"),
+                channex_rate_plan_id=str(cx_rp_id),
+            )
+            return None
+
+        # Kein aufgelöster Plan. Bei AIRBNB ist das der Normalfall (das Portal
+        # meldet keinen) — dann ist hier nichts zu berichten. Nur bei Kanälen,
+        # die einen Portal-Code mitschicken, ist es eine echte Lücke: „Unmapped
+        # Rate" in Channex, zu sehen im Live-Feed. Sie betrifft Verfügbarkeit und
+        # Restriktionen (Channex nennt sie selbst eine Überbuchungsgefahr) —
+        # NICHT die Gebühren: dass bei den Alt-Buchungen die Aufstellung fehlt,
+        # liegt am Import-Eingangsweg, nicht am Mapping (an vier Objekten mit
+        # identischer Channex-Konfiguration gegengeprüft).
+        portal_code = (erstes.get("meta") or {}).get("rate_plan_code")
+        if portal_code:
+            log.warning(
+                "channex_buchung_unmapped_rate",
+                buchung=attrs.get("ota_reservation_code"),
+                ota_name=attrs.get("ota_name"),
+                portal_rate_code=portal_code,
+                portal_room_code=(erstes.get("meta") or {}).get("room_type_code"),
+                hinweis=(
+                    "Portal-Rate in Channex zuordnen (Channels -> Mapping); "
+                    "ohne Zuordnung sind Verfuegbarkeit und Restriktionen "
+                    "dieser Rate nicht gesteuert."
+                ),
+            )
+        return None
+
+    def _objekt_zuordnung(
         self, db: Client, tenant_id: str, channex_property_id: str | None,
         rooms: list[dict[str, Any]] | None = None,
-    ) -> str | None:
-        """channex_property_id (+ room_type der Buchung) → ID der Objekt-Zuordnung.
+        *, buchung: str | None = None,
+    ) -> tuple[str | None, str | None]:
+        """channex_property_id (+ room_type) → (property_map_id, property_id).
 
-        Anders als `_resolve_local_property` (liefert die lokale property_id für
-        die Reservierung) gibt das hier die ID der MAP-Zeile zurück — genau das,
-        was `channex_booking.property_map_id` erwartet.
+        Gibt BEIDE Kennungen zurück, weil `channex_booking` beide Spalten hat und
+        sie dasselbe Objekt bezeichnen. Vorher lieferte diese Funktion nur die
+        Map-ID und warf die lokale `property_id`, die sie intern längst
+        aufgelöst hatte, weg — mit der Folge, dass `channex_booking.property_id`
+        bei Buchungen leer blieb, obwohl die Zuordnung vorlag (live an 2
+        Booking-Buchungen: `property_map_id` gesetzt, `property_id` NULL). Jede
+        Auswertung, die über `property_id` joint, verlor diese Buchungen
+        stillschweigend — genau die Art Lücke, die niemand als Bug erkennt.
+
+        Wer nur die Map-ID braucht, nimmt `[0]`; die Reservierung braucht `[1]`.
+
+        Anders als `_resolve_local_property` (liefert nur die lokale
+        property_id) gibt das hier zusätzlich die ID der MAP-Zeile zurück — genau
+        das, was `channex_booking.property_map_id` erwartet.
 
         Der ROOM-TYPE entscheidet, welches Objekt gemeint ist. Bei einer
         geteilten Channex-Property (Hotel, 0158) hängen mehrere Zimmertypen
@@ -539,7 +658,12 @@ class BookingsSyncMixin:
         reproduzierbar.
         """
         if not channex_property_id:
-            return None
+            log.warning(
+                "channex_buchung_ohne_property_id",
+                buchung=buchung,
+                tenant_id=tenant_id,
+            )
+            return None, None
         # Das Objekt bestimmt der Room-Type; daraus dann SEINE Map-Zeile.
         property_id = self._resolve_local_property(
             db, tenant_id, str(channex_property_id), rooms=rooms
@@ -547,7 +671,7 @@ class BookingsSyncMixin:
         if property_id:
             eigene = (
                 db.table("channex_property_map")
-                .select("id")
+                .select("id, property_id")
                 .eq("tenant_id", tenant_id)
                 .eq("channex_property_id", str(channex_property_id))
                 .eq("property_id", str(property_id))
@@ -557,12 +681,13 @@ class BookingsSyncMixin:
                 .execute()
             ).data
             if eigene:
-                return eigene[0]["id"]
+                return eigene[0]["id"], str(property_id)
         # Kein Room-Type in der Nutzlast (Ferienobjekt) oder Zimmer nicht
-        # gemappt: älteste aktive Zeile.
+        # gemappt: älteste aktive Zeile. Deren `property_id` mitnehmen — sie
+        # bezeichnet dasselbe Objekt und wäre sonst wieder verloren.
         treffer = (
             db.table("channex_property_map")
-            .select("id")
+            .select("id, property_id")
             .eq("tenant_id", tenant_id)
             .eq("channex_property_id", str(channex_property_id))
             .is_("deleted_at", "null")
@@ -570,7 +695,32 @@ class BookingsSyncMixin:
             .limit(1)
             .execute()
         ).data
-        return treffer[0]["id"] if treffer else None
+        if not treffer:
+            # Kein gemapptes Objekt: die Buchung wird trotzdem gespeichert
+            # (sonst blieben die Nächte frei → Überbuchung), aber das muss
+            # SICHTBAR sein statt still im Datenbestand zu liegen.
+            log.warning(
+                "channex_buchung_ohne_objekt_zuordnung",
+                buchung=buchung,
+                tenant_id=tenant_id,
+                channex_property_id=str(channex_property_id),
+                room_types=[
+                    r.get("room_type_id")
+                    for r in (rooms or [])
+                    if isinstance(r, dict)
+                ],
+            )
+            return None, None
+        if not treffer[0].get("property_id"):
+            log.warning(
+                "channex_property_map_ohne_property_id",
+                buchung=buchung,
+                map_id=treffer[0]["id"],
+                channex_property_id=str(channex_property_id),
+            )
+        return treffer[0]["id"], (
+            str(treffer[0]["property_id"]) if treffer[0].get("property_id") else None
+        )
 
     def _resolve_local_property(
         self, db: Client, tenant_id: str, channex_property_id: str,
@@ -1183,6 +1333,11 @@ class BookingsSyncMixin:
             "ota_withheld_taxes": self._withheld_taxes(attrs),
             # Zugewiesene Einheit (0265) — einmal bestimmt, siehe oben.
             "unit_id": einheit,
+            # ZU WELCHEM PREIS die Buchung zustande kam. Channex liefert das
+            # mit, wir haben es bis 11.08.2026 verworfen: live trugen 0 von 226
+            # projizierten Reservierungen einen `rate_plan_id`, obwohl Channex
+            # bei 67 von 77 Buchungen die aufgelöste ID mitschickte.
+            "rate_plan_id": self._rate_plan_der_buchung(db, tenant_id, attrs),
         }
         # Portal-kassiert (payment_collect='ota' = „guest already pay at OTA")
         # als bezahlt führen — kein Portal liefert ein eigenes Bezahlt-Feld,
@@ -1338,18 +1493,43 @@ class BookingsSyncMixin:
                         db, tenant_id, property_id, channel, freed_nights,
                         unit_id=alte_einheit,
                     )
+        # Die Portal-Zerlegung dieser Buchung festhalten (0366). Sie liefert
+        # zugleich den GASTPREIS — die Bezugsgröße für unsere eigene Provision.
+        # Best-effort: ein Datenloch in der Zerlegung (unzugeordnete Gebührenart,
+        # fehlender Portal-Satz) darf den Buchungs-Import nicht kippen; die
+        # Buchung selbst ist dann korrekt importiert, nur ihre Aufschlüsselung
+        # fehlt und wird beim nächsten Lauf nachgeholt.
+        gastpreis = None
+        if reservation_id:
+            gastpreis = self._record_portal_finanzen_safe(
+                db,
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                property_id=property_id,
+                row=row,
+                attrs=attrs,
+                channel=channel,
+            )
         # Externe Provision (0,5 %) für diese OTA-Buchung erfassen. Best-effort
         # — der Buchungs-Import darf nie an der Provision scheitern (Wurzel 5).
         # Idempotent über reservation_id (Wurzel 2).
         if reservation_id:
+            # BEZUGSGRÖSSE ist der GASTPREIS, nicht `total_amount`: bei Airbnb
+            # ist Letzteres der Netto-Payout nach Abzug der 15,5 %
+            # Portal-Provision (0366). Auf ihn gerechnet fiel unsere eigene
+            # Provision rund 13 % zu niedrig aus — bei der Live-Buchung
+            # HMTH2N8PPM 7.106,45 statt 8.410,00 als Basis. Fehlt die Zerlegung
+            # (Datenloch), bleibt `total_amount` die einzige verfügbare Größe;
+            # das ist dann sichtbar zu niedrig statt gar keine Provision.
+            basis = gastpreis if gastpreis is not None else total_amount
             self._record_commission_safe(
-                db, tenant_id, reservation_id, channel, total_amount, row["currency"]
+                db, tenant_id, reservation_id, channel, basis, row["currency"]
             )
             # Dynamische Preise 0,5 %: gilt kanalunabhängig für JEDE Buchung des
             # Objekts (anders als die Provision, die nur externe Kanäle trifft) —
             # die Engine hat den Preis gesetzt, egal wo verkauft wurde.
             self._record_dynpricing_safe(
-                db, tenant_id, reservation_id, total_amount, row["currency"]
+                db, tenant_id, reservation_id, basis, row["currency"]
             )
         # Neue/geänderte OTA-Buchung ändert Auslastung + Orphan-Lücken →
         # Dynamic Pricing neu rechnen (coalesced je Objekt, best-effort) —
@@ -1359,6 +1539,122 @@ class BookingsSyncMixin:
         if existing and old_property_id and old_property_id != property_id:
             try_enqueue_recompute(db, tenant_id, old_property_id)
         return True
+
+    def _record_portal_finanzen_safe(  # noqa: PLR0913 — benannte Eingänge
+        self,
+        db: Client,
+        *,
+        tenant_id: str,
+        reservation_id: str,
+        property_id: str,
+        row: dict[str, Any],
+        attrs: dict[str, Any],
+        channel: str,
+    ) -> float | None:
+        """Die Portal-Zerlegung festhalten und den GASTPREIS zurückgeben (0366).
+
+        Warum hier und nicht in einer Ansicht: `total_amount` bedeutet je Portal
+        etwas anderes (bei Airbnb der Netto-Payout, bei Booking der Gastpreis),
+        und das je Seitenaufruf neu abzuleiten hat zwei echte Rechenfehler
+        erzeugt. Die Zerlegung wird deshalb EINMAL beim Import bestimmt und
+        gespeichert.
+
+        Gespeichert wird nur der PORTAL-Teil — was das Portal gemeldet oder
+        einbehalten hat. Das ist Tatsache. Die Verwaltungsprovision hängt am
+        Abrechnungsvertrag und bleibt Laufzeitrechnung, damit eine
+        Vertragskorrektur sofort überall gilt.
+
+        Best-effort (Wurzel 5): ein Datenloch — eine unzugeordnete Gebührenart,
+        ein fehlender Portal-Satz — darf den Buchungs-Import nicht kippen. Die
+        Buchung ist dann korrekt importiert, nur ihre Aufschlüsselung fehlt und
+        wird beim nächsten Lauf nachgeholt. `PayoutUnbekannt` wird SPEZIFISCH
+        gefangen und geloggt, nicht per breitem `except` verschluckt: der Grund
+        sagt dem Betrieb, was er pflegen muss.
+
+        Rückgabe: der Gastpreis als float, oder `None`, wenn die Zerlegung nicht
+        bestimmbar war.
+        """
+        from src.features.owner_billing.service import OwnerBillingService
+        from src.features.owner_statements.common import PayoutUnbekannt
+        from src.features.owner_statements.gebuehren_quelle import (
+            klassifikation_laden,
+        )
+        from src.features.owner_statements.portal_finanzen import (
+            zerlegung_ermitteln,
+            zerlegung_speichern,
+        )
+
+        try:
+            stichtag = self._als_datum(row.get("check_out"))
+            satz = OwnerBillingService(service_client=db).portal_satz_aufloesen(
+                tenant_id, channel, property_id, stichtag
+            ) if stichtag else None
+            stammdaten = (
+                db.table("properties")
+                .select("type_attributes")
+                .eq("id", property_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            naechte = len(
+                self._date_range_nights(
+                    str(row.get("check_in") or ""), str(row.get("check_out") or "")
+                )
+            )
+            finanzen = zerlegung_ermitteln(
+                reservation={
+                    "id": reservation_id,
+                    "tenant_id": tenant_id,
+                    "property_id": property_id,
+                    "total_amount": row.get("total_amount"),
+                    "currency": row.get("currency"),
+                    "ota_commission": row.get("ota_commission"),
+                    "payment_collect": row.get("payment_collect"),
+                },
+                raw=attrs,
+                type_attributes=(
+                    stammdaten[0].get("type_attributes") if stammdaten else None
+                ),
+                klassifikation=klassifikation_laden(db, tenant_id),
+                naechte=naechte,
+                satz=satz,
+            )
+            zerlegung_speichern(db, finanzen)
+            return float(finanzen.brutto)
+        except PayoutUnbekannt as exc:
+            log.warning(
+                "portal_finanzen_unbestimmt",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                grund=exc.grund,
+                detail=exc.message,
+            )
+            return None
+        except Exception as exc:  # noqa: BLE001 — Import nie kippen (Wurzel 5)
+            log.warning(
+                "portal_finanzen_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                error=str(exc),
+            )
+            return None
+
+    @staticmethod
+    def _als_datum(wert: object) -> date | None:
+        """Ein Datumsfeld aus der Zeile als `date` — ohne Ersatzwert.
+
+        Fehlt oder ist es unlesbar, gibt es KEIN „heute" als Stichtag: der
+        Portal-Satz gilt zeitabhängig, und ein geratener Stichtag zöge
+        stillschweigend den falschen Satz (Wurzel 4).
+        """
+        if isinstance(wert, date):
+            return wert
+        if not wert:
+            return None
+        try:
+            return date.fromisoformat(str(wert))
+        except ValueError:
+            return None
 
     def _record_commission_safe(
         self,
@@ -1532,29 +1828,83 @@ class BookingsSyncMixin:
     def _booking_quote_items(self, attrs: dict[str, Any]) -> list[dict[str, Any]]:
         """Preisaufschlüsselung [{label, amount, kind}] aus einem Channex-Booking.
 
-        Channex liefert Positionen je nach OTA unter `rooms` (Zimmerpreis) und
-        `services` (Reinigung/Steuern/Gebühren). Wir übernehmen nur, was wirklich
-        da ist (Label + Betrag) — fehlt die Struktur, bleibt die Liste leer
-        (keine erfundenen Posten). `kind` klassifiziert für die Rechnungs-
-        erstellung (rooms→lodging, services→fee); USt-Feinheiten je OTA-Gebühr
-        kennt Channex nicht — dokumentierte Modellgrenze."""
+        DIESE POSITIONEN LANDEN AUF DER RECHNUNG — deshalb müssen sie dieselben
+        Beträge tragen wie die Zerlegung (`portal_finanzen`), sonst nennt die
+        Rechnung eine andere Zahl als die Abrechnung.
+
+        Zwei Fehler waren live nachweisbar (11.08.2026, alle 22 Airbnb-Buchungen):
+
+        1. `rooms[].amount` ist bei Airbnb der ``payout_amount`` — die Auszahlung
+           NACH Abzug der 15,5 % Portal-Provision. Als „Zimmerpreis" ausgewiesen
+           stand auf der Rechnung ein Betrag, den der Gast nie gezahlt hat (bei
+           Buchung HMTH2N8PPM 7.106,45 statt der echten Übernachtung 7.010,00).
+        2. `services` ist bei BEIDEN Portalen leer (0 von 77 Buchungen), die
+           Gebühren stehen woanders — es gab also überhaupt keine Gebührenzeile,
+           obwohl der Gast 1.400,00 an Reinigung, Resort und Haustier gezahlt hat.
+
+        Gelesen wird deshalb über denselben Leser wie die Zerlegung
+        (``owner_statements.gebuehren_quelle``): eine eigene Auslegung derselben
+        Payloads hier wäre die zweite Wahrheit, die auseinanderläuft, sobald ein
+        Portal sein Format ändert.
+
+        Das LABEL ist der Gebührentext des Portals, wo es einen liefert, sonst
+        unsere Art — NIE der Rate-Plan-Name: der trug bis 0367 „Grundpreis (von
+        Airbnb)", und ein Booking-Gast las damit ein fremdes Portal in seiner
+        eigenen Bestätigung.
+
+        Fehlt die Struktur ganz, bleibt die Liste leer — keine erfundenen Posten
+        (Wurzel 4).
+        """
+        from src.features.owner_statements.common import PayoutUnbekannt
+        from src.features.owner_statements.gebuehren_quelle import (
+            airbnb_uebernachtung,
+            booking_naechte_summe,
+            portal_posten,
+        )
+        from src.features.properties.gebuehren import FEE_TYPE_LABEL
+
         items: list[dict[str, Any]] = []
-        for room in attrs.get("rooms") or []:
-            if not isinstance(room, dict):
-                continue
-            amount = self._to_float(room.get("amount") or room.get("total_price"))
-            if amount is None:
-                continue
-            label = room.get("title") or room.get("room_type_name") or "Zimmerpreis"
-            items.append({"label": str(label), "amount": amount, "kind": "lodging"})
-        for svc in attrs.get("services") or []:
-            if not isinstance(svc, dict):
-                continue
-            amount = self._to_float(svc.get("total_price") or svc.get("amount"))
-            if amount is None:
-                continue
-            label = svc.get("name") or svc.get("title") or "Gebühr"
-            items.append({"label": str(label), "amount": amount, "kind": "fee"})
+        try:
+            # Die Übernachtung aus der Quelle, die sie WIRKLICH nennt: Airbnbs
+            # `base_price` bzw. Bookings Tagespreis-Summe.
+            uebernachtung = airbnb_uebernachtung(attrs)
+            if uebernachtung is None:
+                uebernachtung = booking_naechte_summe(attrs)
+            # Dieselbe Leser-Reihenfolge wie die Auszahlung (`portal_posten`) —
+            # sonst zeigt die Rechnung andere Posten als die Abrechnung.
+            gefunden = portal_posten(attrs)
+            gebuehren = None if gefunden is None else gefunden[0]
+            bezeichnungen: dict[str, str] = {} if gefunden is None else gefunden[1]
+        except PayoutUnbekannt as exc:
+            # Ein unbekanntes Format ergibt KEINE Positionen. Eine halbe
+            # Aufstellung auf einer Rechnung wäre schlimmer als keine: die Summe
+            # der Zeilen ginge nicht auf, und niemand könnte sagen, was fehlt.
+            log.warning("quote_items_unbestimmt", grund=exc.grund)
+            return []
+
+        if uebernachtung is not None:
+            items.append(
+                {
+                    "label": "Übernachtung",
+                    "amount": float(uebernachtung),
+                    "kind": "lodging",
+                }
+            )
+        for art, betrag in gebuehren or []:
+            items.append(
+                {
+                    # Vorrang für den Text des PORTALS: er steht so in der
+                    # Bestätigung, die der Gast schon hat, und eine Rechnung, die
+                    # dieselbe Gebühr anders benennt, erzeugt eine Rückfrage.
+                    # Liefert das Portal keinen (Airbnb meldet nur Codes wie
+                    # `PASS_THROUGH_PET_FEE`), gilt unsere Bezeichnung aus dem
+                    # Gebühren-Katalog — nie der rohe Schlüssel, „pet_fee" ist
+                    # kein Kundentext.
+                    "label": bezeichnungen.get(art) or FEE_TYPE_LABEL.get(art, art),
+                    "amount": float(betrag),
+                    "kind": "fee",
+                }
+            )
         return items
 
     @staticmethod

@@ -1,25 +1,33 @@
-"""Gebühren-Abgleich mit Airbnb: lesen, vergleichen, übernehmen.
+"""Gebühren-Abgleich mit Airbnb: lesen, EINMALIG übernehmen, danach Ruhe.
 
 DIE RICHTUNGEN SIND NICHT SYMMETRISCH, und das hat einen Grund:
 
   * RAUS (wir → Airbnb) läuft über `tax_sync`/`ota_abgaben` als Channex-`taxes`
     mit `type: "fee"`. Das ist gebaut, geprüft und für ALLE Portale zuständig —
-    hier wird nichts dupliziert.
-  * REIN (Airbnb → wir) gab es nicht. Der alte Weg
-    (`airbnb_listing_import.gebuehren_uebernehmen` über
-    `v2/pricing_settings/{listing_id}`) ist TOT: Airbnb antwortet dort 403
-    „Endpoint is no longer supported in this version". Das Ergebnis landete in
-    `type_attributes.airbnbGebuehren` und wurde von nichts gelesen.
+    hier wird nichts dupliziert. **Unsere Plattform ist die Quelle:** was am
+    Objekt steht, geht an die Portale.
+  * REIN (Airbnb → wir) ist eine EINMALIGE Starthilfe. Beim Onboarding kommen
+    über den Aggregator nur acht Felder; die Reinigungs-, Resort- und
+    Haustiergebühr hat der Betrieb bei Airbnb längst gepflegt und müsste sie
+    hier abtippen. Genau dafür — und nur dafür — ist dieser Weg da.
 
-Der lebende Weg ist `channels/{cid}/mappings/{mid}/pricing_settings` — live
-verifiziert an 18 Listings mit 43 Gebühren (05.08.2026).
+DESHALB IST DER IMPORT ABGESCHLOSSEN, SOBALD ER EINMAL LIEF. Vorher stand der
+Kasten „Bei Airbnb sind N weitere Gebühren hinterlegt" dauerhaft über der
+Preisseite und verglich BETRÄGE: unser Objekt hatte eine Reinigungsgebühr von
+795 DKK, Airbnb eine von 1.590 DKK — also galt Airbnbs als „fehlt uns", und ein
+Klick legte eine ZWEITE Reinigungsgebühr an. Live am 11.08.2026 zahlte der Gast
+im Checkout beide (795 + 1.590). Ein Dauer-Angebot, das aus einer geänderten
+Zahl eine neue Gebühr macht, ist kein Abgleich, sondern eine Duplikat-Fabrik.
 
-ÜBERNOMMEN WIRD NUR AUF ANSAGE. Ein automatischer Import würde beim ersten
-Abruf die Preisgestaltung des Betriebs überschreiben; der Vergleich zeigt den
-Unterschied, die Übernahme ist ein eigener Klick.
+Zwei Konsequenzen:
+  1. Übernommen wird nur eine Gebühren-ART, die bei uns GAR NICHT existiert
+     (`feeType`), nie eine mit abweichendem Betrag.
+  2. Nach dem Import (oder nach „nicht übernehmen") verschwindet das Angebot
+     endgültig — Merker `type_attributes.airbnbGebuehrenImport`.
 """
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 from supabase import Client
@@ -36,18 +44,24 @@ from .common import ChannelManagerError, log
 # Datenfehler, und dürfen keine 30 Gebühren in unser Objekt schreiben.
 _MAX_GEBUEHREN = 30
 
+# Merker im Objekt: der Start-Import ist gelaufen. Steht auf oberster Ebene der
+# `type_attributes` (nicht im Preis-Blob) — er beschreibt einen Vorgang, keine
+# Preisangabe, und darf beim Bearbeiten der Gebühren nicht verloren gehen.
+IMPORT_MERKER = "airbnbGebuehrenImport"
+
 
 class AirbnbGebuehrenMixin:
-    """Airbnbs Gebühren lesen und mit unseren vergleichen."""
+    """Airbnbs Gebühren lesen und einmalig übernehmen."""
 
     def airbnb_gebuehren_vergleich(
         self, ctx: AuthContext, *, property_id: str
     ) -> dict[str, Any]:
         """Was bei Airbnb steht, was bei uns steht, und was sich unterscheidet.
 
-        Der Vergleich läuft über die Signatur (Art, Rechenart, Basis, Betrag),
-        nicht über den Namen: Airbnb liefert überhaupt keinen Namen, und
-        derselbe Betrag unter anderem Namen ist dieselbe Gebühr.
+        Der Vergleich läuft über die Signatur (Art, Rechenart, Basis, Betrag) —
+        gut für die Diagnose („weicht ab"). Was ÜBERNOMMEN werden kann, ist eine
+        andere Frage und steht in `uebernehmbar`: nur Arten, die bei uns gar
+        nicht existieren. `import_erledigt` sagt, ob das Angebot noch gilt.
         """
         tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
         db = self._require_db()  # type: ignore[attr-defined]
@@ -56,6 +70,7 @@ class AirbnbGebuehrenMixin:
             columns="id, type_attributes, currency",
             not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
         )
+        erledigt = _import_erledigt(objekt)
         airbnb = self._airbnb_gebuehren_lesen(db, tenant_id, property_id)
         if airbnb is None:
             # Nicht lesbar heißt NICHT „keine Gebühren" — sonst sähe die
@@ -63,16 +78,19 @@ class AirbnbGebuehrenMixin:
             return {
                 "verbunden": False, "stand_bekannt": False,
                 "airbnb": [], "nur_airbnb": [], "nur_wir": [], "gleich": [],
+                "uebernehmbar": [], "import_erledigt": erledigt,
             }
 
         unsere = _unsere_fees(objekt)
         sig_airbnb = {airbnb_fee_signatur(f): f for f in airbnb}
         sig_unsere = {airbnb_fee_signatur(f): f for f in unsere}
         gemeinsam = set(sig_airbnb) & set(sig_unsere)
+        uebernehmbar = _fehlende_arten(airbnb, unsere)
         log.info(
             "airbnb_gebuehren_vergleich",
             property_id=property_id, airbnb=len(airbnb), unsere=len(unsere),
-            gleich=len(gemeinsam),
+            gleich=len(gemeinsam), uebernehmbar=len(uebernehmbar),
+            import_erledigt=erledigt,
         )
         return {
             "verbunden": True,
@@ -84,21 +102,22 @@ class AirbnbGebuehrenMixin:
             # Art, die Airbnb gar nicht kennt (`misc_charges`).
             "nur_wir": [f for s, f in sig_unsere.items() if s not in gemeinsam],
             "gleich": [sig_unsere[s] for s in gemeinsam],
+            # Das Angebot: Arten, die bei uns FEHLEN (nicht: abweichen).
+            "uebernehmbar": uebernehmbar,
+            "import_erledigt": erledigt,
         }
 
     def airbnb_gebuehren_uebernehmen(
         self, ctx: AuthContext, *, property_id: str
     ) -> dict[str, Any]:
-        """Airbnbs Gebühren als unsere anlegen — nur die, die uns fehlen.
+        """Airbnbs Gebühren als unsere anlegen — nur fehlende ARTEN, einmalig.
 
         Wurzel 1: die Aktion hat einen Gegenzustand. Bestehende Gebühren werden
-        NICHT angefasst und nicht gelöscht; übernommen wird ausschliesslich, was
-        bei Airbnb steht und bei uns fehlt. Alles andere wäre ein stiller
-        Eingriff in die Preisgestaltung.
+        NICHT angefasst und nicht gelöscht.
 
-        Wurzel 2: zweimal geklickt darf nicht zwei Gebühren anlegen. Der
-        Signatur-Abgleich macht den Aufruf idempotent — beim zweiten Mal ist
-        nichts mehr „nur bei Airbnb".
+        Wurzel 2: zweimal geklickt legt nichts doppelt an — nach dem ersten Lauf
+        steht der Merker, und der Abgleich über die Gebühren-ART lässt eine
+        zweite Reinigungsgebühr ohnehin nicht zu.
         """
         tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
         db = self._require_db()  # type: ignore[attr-defined]
@@ -107,6 +126,11 @@ class AirbnbGebuehrenMixin:
             columns="id, type_attributes",
             not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
         )
+        unsere = _unsere_fees(objekt)
+        if _import_erledigt(objekt):
+            # Kein Fehler: der Vorgang ist einfach vorbei. Die Oberfläche zeigt
+            # das Angebot dann nicht mehr, ein zweiter Aufruf ist ein No-op.
+            return {"uebernommen": 0, "fees": unsere, "import_erledigt": True}
         airbnb = self._airbnb_gebuehren_lesen(db, tenant_id, property_id)
         if airbnb is None:
             raise ChannelManagerError(
@@ -114,11 +138,7 @@ class AirbnbGebuehrenMixin:
                 "erneut versuchen.",
                 status_code=502,
             )
-        unsere = _unsere_fees(objekt)
-        bekannt = {airbnb_fee_signatur(f) for f in unsere}
-        neu = [f for f in airbnb if airbnb_fee_signatur(f) not in bekannt]
-        if not neu:
-            return {"uebernommen": 0, "fees": unsere}
+        neu = _fehlende_arten(airbnb, unsere)
         if len(unsere) + len(neu) > _MAX_GEBUEHREN:
             raise ChannelManagerError(
                 f"Das wären mehr als {_MAX_GEBUEHREN} Gebühren an einem Objekt. "
@@ -126,21 +146,61 @@ class AirbnbGebuehrenMixin:
                 status_code=422,
             )
 
-        attrs = dict(objekt.get("type_attributes") or {})
-        pricing = dict(attrs.get("pricing") or {})
-        pricing["fees"] = [*unsere, *neu]
-        attrs["pricing"] = pricing
-        # Über den regulären Update-Weg, NICHT per direktem DB-Schreiben: dort
-        # hängen Validierung (`normalize_fees`), die Spiegelung nach
-        # `property_pricing_config` und der Abgaben-Sync-Anstoß. Ein Direkt-
-        # schreiben umginge alle drei.
-        self._properties_update(ctx, property_id, attrs)
+        fees = [*unsere, *neu]
+        self._gebuehren_schreiben(ctx, objekt, property_id, fees, len(neu))
         log.info(
             "airbnb_gebuehren_uebernommen",
             property_id=property_id, uebernommen=len(neu),
             arten=[f.get("feeType") for f in neu],
         )
-        return {"uebernommen": len(neu), "fees": pricing["fees"]}
+        return {"uebernommen": len(neu), "fees": fees, "import_erledigt": True}
+
+    def airbnb_gebuehren_import_verwerfen(
+        self, ctx: AuthContext, *, property_id: str
+    ) -> dict[str, Any]:
+        """Das Übernahme-Angebot ohne Import beenden.
+
+        Der Betrieb pflegt seine Gebühren bei uns und will Airbnbs Stand nicht
+        haben. Ohne diesen Weg bliebe der Kasten für immer stehen und würde bei
+        jeder Preisänderung erneut zum Duplikat verleiten.
+        """
+        tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
+        db = self._require_db()  # type: ignore[attr-defined]
+        objekt = load_scoped(
+            db, "properties", property_id, tenant_id,
+            columns="id, type_attributes",
+            not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
+        )
+        fees = _unsere_fees(objekt)
+        if not _import_erledigt(objekt):
+            self._gebuehren_schreiben(ctx, objekt, property_id, fees, 0)
+            log.info("airbnb_gebuehren_import_verworfen", property_id=property_id)
+        return {"uebernommen": 0, "fees": fees, "import_erledigt": True}
+
+    def _gebuehren_schreiben(
+        self,
+        ctx: AuthContext,
+        objekt: dict[str, Any],
+        property_id: str,
+        fees: list[dict[str, Any]],
+        uebernommen: int,
+    ) -> None:
+        """Gebührenliste + Import-Merker in einem Update speichern."""
+        attrs = dict(objekt.get("type_attributes") or {})
+        pricing = dict(attrs.get("pricing") or {})
+        pricing["fees"] = fees
+        attrs["pricing"] = pricing
+        attrs[IMPORT_MERKER] = {
+            # Unsere Uhr beschreibt hier UNSEREN Vorgang (den Import), nicht ein
+            # fremdes Ereignis — an dieser Stelle ist sie die richtige Quelle.
+            "erledigt_am": datetime.now(UTC).isoformat(),
+            "uebernommen": uebernommen,
+        }
+        # Über den regulären Update-Weg, NICHT per direktem DB-Schreiben: dort
+        # hängen Validierung (`normalize_fees`), die Spiegelung nach
+        # `property_pricing_config` und der Abgaben-Sync-Anstoß. Ein Direkt-
+        # schreiben umginge alle drei.
+        self._properties_update(ctx, property_id, attrs)
 
     def _properties_update(
         self, ctx: AuthContext, property_id: str, attrs: dict[str, Any]
@@ -193,7 +253,8 @@ class AirbnbGebuehrenMixin:
         Kontos (live: 18 an einem Kanal). Ohne diesen Abgleich läse man die
         Gebühren eines fremden Objekts (Wurzel 3).
         """
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
+        kanal_suchen = self._airbnb_kanal_des_betriebs  # type: ignore[attr-defined]
+        channel_id = kanal_suchen(db, tenant_id, property_id)
         if not channel_id:
             return None
         mapping_id = self._airbnb_mapping_id(db, tenant_id, property_id, channel_id)
@@ -250,3 +311,33 @@ def _unsere_fees(objekt: dict[str, Any]) -> list[dict[str, Any]]:
     if not isinstance(fees, list):
         return []
     return [f for f in fees if isinstance(f, dict)]
+
+
+def _import_erledigt(objekt: dict[str, Any]) -> bool:
+    """Lief der einmalige Gebühren-Import an diesem Objekt schon?"""
+    attrs = objekt.get("type_attributes") or {}
+    merker = attrs.get(IMPORT_MERKER)
+    return isinstance(merker, dict) and bool(merker.get("erledigt_am"))
+
+
+def _fehlende_arten(
+    airbnb: list[dict[str, Any]], unsere: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Airbnb-Gebühren, deren ART bei uns gar nicht vorkommt.
+
+    Der BETRAG spielt hier bewusst keine Rolle: eine Reinigungsgebühr mit
+    anderem Betrag ist dieselbe Gebühr mit anderem Preis, keine zweite. Unsere
+    Zahl gewinnt — wir schicken sie an die Portale, nicht umgekehrt.
+
+    Mehrere Airbnb-Einträge derselben Art ergeben genau einen Vorschlag: eine
+    Art kommt an einem Objekt einmal vor.
+    """
+    vorhanden = {str(f.get("feeType") or "") for f in unsere}
+    raus: list[dict[str, Any]] = []
+    for fee in airbnb:
+        art = str(fee.get("feeType") or "")
+        if not art or art in vorhanden:
+            continue
+        vorhanden.add(art)
+        raus.append(fee)
+    return raus

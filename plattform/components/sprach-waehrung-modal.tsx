@@ -1,51 +1,36 @@
-// Globus-Menü der Kopfzeile (wie Airbnb): öffnet ein Modal mit zwei Tabs —
-// „Sprache und Region" und „Währung". Auswahl wird lokal gehalten (Anzeige-
-// Präferenz); die echte Objektwährung bleibt immer die des Objekts (Wurzel 4).
 "use client";
 
+// Globus-Menü der Kopfzeile (wie Airbnb): Sprachwahl des Gastes.
+//
+// Die Auswahl WIRKT: sie schreibt das Sprach-Cookie (`nd_gast_locale`), das
+// `i18n/request.ts` liest, und lädt die Server-Komponenten neu. Vorher hielt das
+// Modal die Auswahl nur in lokalem State — der Gast klickte „Français" und die
+// Seite blieb deutsch. Genau diese Sorte Attrappe schaffen wir ab.
+//
+// Kein Währungs-Tab: Preise stehen in der Währung der Unterkunft (Wurzel 4 —
+// eine Objektwährung, keine Umrechnung ohne echte Kurse). Statt einer Auswahl,
+// die nichts umrechnet, steht dort ein Satz, der das erklärt.
 import { Icon } from "@iconify/react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
-type Sprache = { name: string; region: string; locale: string };
+import {
+  LOCALES,
+  LOCALE_COOKIE,
+  LOCALE_LABELS,
+  LOCALE_REGIONS,
+  type Locale,
+} from "@/i18n/locales";
 
-const SPRACHEN: Sprache[] = [
-  { name: "Deutsch", region: "Deutschland", locale: "de-DE" },
-  { name: "Deutsch", region: "Österreich", locale: "de-AT" },
-  { name: "Deutsch", region: "Schweiz", locale: "de-CH" },
-  { name: "English", region: "United States", locale: "en-US" },
-  { name: "English", region: "United Kingdom", locale: "en-GB" },
-  { name: "Français", region: "France", locale: "fr-FR" },
-  { name: "Español", region: "España", locale: "es-ES" },
-  { name: "Italiano", region: "Italia", locale: "it-IT" },
-  { name: "Nederlands", region: "Nederland", locale: "nl-NL" },
-  { name: "Dansk", region: "Danmark", locale: "da-DK" },
-  { name: "Polski", region: "Polska", locale: "pl-PL" },
-  { name: "Čeština", region: "Česká republika", locale: "cs-CZ" },
-];
-
-// ISO-4217-Code + Symbol. Reine Anzeige-Präferenz.
-type Waehrung = { code: string; name: string; symbol: string };
-
-const WAEHRUNGEN: Waehrung[] = [
-  { code: "EUR", name: "Euro", symbol: "€" },
-  { code: "CHF", name: "Schweizer Franken", symbol: "CHF" },
-  { code: "GBP", name: "Pfund Sterling", symbol: "£" },
-  { code: "USD", name: "US-Dollar", symbol: "$" },
-  { code: "DKK", name: "Dänische Krone", symbol: "kr" },
-  { code: "SEK", name: "Schwedische Krone", symbol: "kr" },
-  { code: "NOK", name: "Norwegische Krone", symbol: "kr" },
-  { code: "PLN", name: "Polnischer Złoty", symbol: "zł" },
-  { code: "CZK", name: "Tschechische Krone", symbol: "Kč" },
-  { code: "HUF", name: "Ungarischer Forint", symbol: "Ft" },
-  { code: "RON", name: "Rumänischer Leu", symbol: "lei" },
-  { code: "BGN", name: "Bulgarischer Lew", symbol: "лв." },
-];
+// Ein Jahr — dieselbe Lebensdauer wie im Gastgeber-Dashboard.
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export function SprachWaehrungModal() {
+  const t = useTranslations("sprache");
+  const router = useRouter();
+  const aktiv = useLocale();
   const [offen, setOffen] = useState(false);
-  const [tab, setTab] = useState<"sprache" | "waehrung">("sprache");
-  const [locale, setLocale] = useState("de-DE");
-  const [waehrung, setWaehrung] = useState("EUR");
 
   // ESC schließt das Modal; Body-Scroll sperren solange offen.
   useEffect(() => {
@@ -61,11 +46,18 @@ export function SprachWaehrungModal() {
     };
   }, [offen]);
 
+  function waehle(locale: Locale) {
+    document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
+    setOffen(false);
+    // Server-Komponenten neu rendern — die Sprache steckt in ihrer Antwort.
+    router.refresh();
+  }
+
   return (
     <>
       <button
         type="button"
-        aria-label="Sprache und Währung"
+        aria-label={t("waehlen")}
         onClick={() => setOffen(true)}
         className="flex size-10 items-center justify-center rounded-full transition-colors hover:bg-secondary"
       >
@@ -77,91 +69,50 @@ export function SprachWaehrungModal() {
           {/* Klick auf den Backdrop schließt */}
           <button
             type="button"
-            aria-label="Schließen"
+            aria-label={t("schliessen")}
             onClick={() => setOffen(false)}
             className="fixed inset-0 -z-10 cursor-default"
           />
           <div className="relative w-full max-w-4xl rounded-3xl bg-card p-6 shadow-2xl sm:p-8">
             <button
               type="button"
-              aria-label="Schließen"
+              aria-label={t("schliessen")}
               onClick={() => setOffen(false)}
               className="absolute left-5 top-5 flex size-8 items-center justify-center rounded-full hover:bg-secondary"
             >
               <Icon icon="ph:x" className="size-5" />
             </button>
 
-            {/* Tabs */}
-            <div className="mb-8 flex justify-center gap-8 border-b border-border pt-2">
-              {([
-                { key: "sprache", label: "Sprache und Region" },
-                { key: "waehrung", label: "Währung" },
-              ] as const).map((t) => (
+            <h3 className="mb-6 mt-6 font-display text-xl font-semibold sm:mt-2">
+              {t("titel")}
+            </h3>
+
+            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {LOCALES.map((locale) => (
                 <button
-                  key={t.key}
+                  key={locale}
                   type="button"
-                  onClick={() => setTab(t.key)}
+                  onClick={() => waehle(locale)}
+                  aria-current={locale === aktiv}
                   className={
-                    "border-b-2 pb-3 text-sm font-medium transition-colors " +
-                    (tab === t.key
-                      ? "border-foreground text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground")
+                    "rounded-xl border px-4 py-3 text-left transition-colors hover:bg-secondary " +
+                    (locale === aktiv ? "border-foreground" : "border-transparent")
                   }
                 >
-                  {t.label}
+                  <span className="block text-sm font-medium">
+                    {LOCALE_LABELS[locale]}
+                  </span>
+                  <span className="block text-sm text-muted-foreground">
+                    {LOCALE_REGIONS[locale]}
+                  </span>
                 </button>
               ))}
             </div>
 
-            {tab === "sprache" ? (
-              <>
-                <h3 className="mb-4 font-display text-xl font-semibold">
-                  Sprache und Region wählen
-                </h3>
-                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                  {SPRACHEN.map((s) => (
-                    <button
-                      key={s.locale}
-                      type="button"
-                      onClick={() => setLocale(s.locale)}
-                      className={
-                        "rounded-xl border px-4 py-3 text-left transition-colors hover:bg-secondary " +
-                        (locale === s.locale ? "border-foreground" : "border-transparent")
-                      }
-                    >
-                      <span className="block text-sm font-medium">{s.name}</span>
-                      <span className="block text-sm text-muted-foreground">
-                        {s.region}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <>
-                <h3 className="mb-4 font-display text-xl font-semibold">
-                  Währung wählen
-                </h3>
-                <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                  {WAEHRUNGEN.map((w) => (
-                    <button
-                      key={w.code}
-                      type="button"
-                      onClick={() => setWaehrung(w.code)}
-                      className={
-                        "rounded-xl border px-4 py-3 text-left transition-colors hover:bg-secondary " +
-                        (waehrung === w.code ? "border-foreground" : "border-transparent")
-                      }
-                    >
-                      <span className="block text-sm font-medium">{w.name}</span>
-                      <span className="block text-sm text-muted-foreground">
-                        {w.code} – {w.symbol}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+            <p className="mt-6 border-t border-border pt-4 text-sm text-muted-foreground">
+              <Icon icon="ph:info" className="mr-1 inline size-4" />
+              {t("waehrungHinweis")}
+            </p>
           </div>
         </div>
       )}

@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Dashboardet kunne ikke indlæses",
     "reviews": "Anmeldelser",
     "extensions": "Udvidelser",
-    "announcements": "Nyheder"
+    "announcements": "Nyheder",
+    "billingRules": "Afregningsregler",
+    "ownerReporting": "Rapportering til ejere"
   },
   "exemption": {
     "labelNamed": "Momsfritaget ({scheme}) — intet momsnr. nødvendigt",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Billede fra gæsten",
     "translate": "Oversæt",
     "showOriginal": "Vis original",
-    "translatedFrom": "Oversat fra {sprache}"
+    "translatedFrom": "Oversat fra {sprache}",
+    "formatStrike": "Gennemstreget",
+    "fieldsButton": "{{Pladsholdere}}",
+    "langBase": "Grundversion",
+    "langBaseHint": "Sendes til alle gæster, hvis sprog ikke har sin egen version.",
+    "subjectLabel": "Emne",
+    "subjectHint": "Emnelinjen bruges kun til e-mails.",
+    "langAdd": "Tilføj nyt sprog",
+    "langDefault": "Standard",
+    "langSetDefault": "Sæt som standard",
+    "langRemove": "Fjern sprog",
+    "langEmpty": "Endnu intet sprog oprettet — indtil da sendes grundversionen til alle gæster.",
+    "autoEditContent": "Rediger indhold",
+    "autoPanelCreate": "Opret",
+    "quickEmpty": "Endnu ingen hurtigsvar.",
+    "autoTextRequired": "Der skal være en tekst."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Hvis e-mailen ikke kom frem, eller linket er udløbet, kan invitationen sendes igen. Det nye link gælder i 7 dage og fører til dette miljø; det tidligere sendte link bliver ugyldigt.",
     "portalAccessResent": "Invitationen er sendt igen.",
     "commissionNotAgreed": "ikke aftalt",
+    "commissionContractWins": "Afregningsaftalen anvendes aktuelt: {pct} % siden {ab}. Dette felt bruges kun som reserve, hvis ingen aftale gælder.",
+    "commissionNoneAnywhere": "Ingen sats aftalt endnu — hverken her eller som aftale. Indtil da står udbetalingen tom i ejerportalen.",
+    "commissionContractObject": "Særskilt aftale for denne bolig: {pct} % siden {ab}.",
+    "commissionContractOwnerWide": "Ejerens afregningsaftale: {pct} % siden {ab}.",
     "assignableCount": "{count} af {total} valgt til tilføjelse",
     "assignedHeading": "{count, plural, one {# tildelt objekt} other {# tildelte objekter}}",
     "info": {
       "aria": "Forklaring til {feld}",
       "share": "Ejerandelen i dette objekt. Ved 100 % henføres hele udbetalingen til denne ejer, ved mindre tilsvarende forholdsmæssigt.",
-      "commission": "Standardprovisionssatsen for denne ejer. Hvis feltet står tomt, er der endnu ikke aftalt nogen sats — udbetalingen beregnes så ikke, men vises som en tankestreg.",
-      "commissionOverride": "Gælder kun for dette ene objekt og tilsidesætter ejerens standardsats. Hvis feltet står tomt, gælder standardsatsen."
+      "commission": "Reservesats, hvis der ikke gælder en afregningsaftale for en bolig. Aftalen nedenfor har forrang — den er den egentlige aftale og omfatter også periode, gebyr og minimumsprovision. Er begge tomme, beregnes ingen udbetaling; der vises en tankestreg.",
+      "commissionOverride": "Reservesats kun for denne bolig; overskriver ejerens standardsats. En afregningsaftale har også her forrang. Er feltet tomt, gælder standardsatsen."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Samlet udbetaling",
       "ownerPayout": "Ejerudbetaling",
       "pmPayout": "Administrationsudbetaling",
-      "commissionMissing": "Der er ikke angivet en provisionssats for mindst én ejendom. Udbetalingerne kan derfor ikke beregnes — angiv satsen i ejerens stamdata eller på ejendommen."
+      "commissionMissing": "Der er ikke angivet en provisionssats for mindst én ejendom. Udbetalingerne kan derfor ikke beregnes — angiv satsen i ejerens stamdata eller på ejendommen.",
+      "payoutUnknown": "Der mangler oplysninger på mindst én booking, som er nødvendige for at beregne udbetalingen. De berørte linjer viser „—“ i stedet for et beløb.",
+      "commissionInvalid": "En gemt provisionssats ligger uden for 0–100 %. Ret satsen på ejeren eller på boligen.",
+      "portalRateMissing": "Der er ikke angivet nogen fradragssats for mindst én bookingkanal, og portalen har ikke oplyst sit fradrag. Angiv under Bogføring → Afregningsregler, hvad portalen beholder pr. booking.",
+      "portalRateInvalid": "En gemt fradragssats for en portal ligger uden for 0–100 %. Ret den under Bogføring → Afregningsregler.",
+      "feeUnassigned": "Mindst én gebyrtype er endnu ikke tilknyttet. Uden tilknytning kan det ikke afgøres, hvem beløbet tilhører, og om der beregnes provision af det — angiv det under Bogføring → Afregningsregler.",
+      "feeNotComputable": "Et gebyr kan ikke afregnes som et beløb (gemt som procent eller uden beløb). Kontrollér gebyret på boligen.",
+      "contractCurrency": "Et fast honorar eller en minimumsprovision er angivet i en anden valuta end bookingen. Beløb i forskellige valutaer bliver ikke omregnet — kontrollér afregningsaftalen."
     },
     "rental": {
       "perReservation": "Pr. reservation",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Samlet pris",
       "totalPayout": "Samlet udbetaling",
       "totals": "Summer",
-      "empty": "Ingen reservationer i perioden."
+      "empty": "Ingen reservationer i perioden.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Tilføj",
@@ -1315,7 +1351,9 @@
     "commissionable": "Provisionspligtigt",
     "commissionableYes": "Ja — indgår i provisionen",
     "commissionableNo": "Nej — provisionsfrit",
-    "infoAria": "Forklaring til {feld}"
+    "infoAria": "Forklaring til {feld}",
+    "rulesPageTitle": "Afregningsregler",
+    "rulesPageIntro": "Hvad portalerne beholder pr. booking, og hvem gebyrerne tilhører. Tilsammen bestemmer de, hvilket beløb der til sidst havner i dine ejeres provisionsafregning."
   },
   "portal": {
     "title": "Min portal",
@@ -1432,6 +1470,16 @@
         "blocked": "Blokeret"
       },
       "payoutPerNight": "Nettoudbetaling/nat",
+      "payoutPerNightShort": "netto/nat",
+      "payoutUnknown": {
+        "short": "ikke oplyst",
+        "label": "Kan ikke opgøres",
+        "provision": "Der er ikke angivet en provisionssats for denne bolig — administrationen skal tilføje den.",
+        "provisionUngueltig": "Den angivne provisionssats ligger uden for 0–100 %.",
+        "betrag": "Denne booking mangler et samlet beløb.",
+        "naechte": "Denne bookings datointerval er ugyldigt.",
+        "waehrungVertrag": "Det aftalte gebyr er i en anden valuta end denne booking — beløb omregnes ikke."
+      },
       "guest": "Gæst",
       "channel": "Bookingkilde",
       "blockHint": "Vil du have en periode blokeret? Indsend en anmodning — det er udlejer, der beslutter.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Vis kun dørkoden, hvis opholdet er betalt",
       "hideCodeUntilCheckin": "Skjul dørkoden indtil check-in",
       "codeVisibleFromLabel": "Dørkoden vises fra check-in-dagen kl. …",
-      "codeVisibleFromUnset": "— ikke fastsat —"
+      "codeVisibleFromUnset": "— ikke fastsat —",
+      "wifiSsidLabel": "Netværksnavn (SSID)",
+      "wifiSsidPlaceholder": "f.eks. Feriehus-WiFi",
+      "wifiPasswordLabel": "Wi-Fi-adgangskode",
+      "wifiPasswordPlaceholder": "f.eks. sommer2026",
+      "wifiFieldsHint": "Disse to værdier udfylder pladsholderne {ssid} og {password} i beskedskabeloner og Wi-Fi-QR-koden i gæsteportalen. Hvis de er tomme, sendes en skabelon med disse pladsholdere ikke."
     },
     "taskCreatePopup": {
       "title": "Opret opgave",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Bolig kopieret.",
       "duplicateErr": "Kopieringen mislykkedes.",
       "unlistOk": "Forbindelsen til websitet er fjernet.",
-      "unlistErr": "Handlingen mislykkedes."
+      "unlistErr": "Handlingen mislykkedes.",
+      "menuVerkaufAus": "Slå fra på alle portaler",
+      "menuVerkaufAn": "Udbyd igen på alle portaler"
     },
     "messagingForm": {
       "title": "Beskedplaceholdere",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Ekstra — de hænger sammen med egne fotos og oversættelser.",
       "copyPricingSkipAvailability": "Tilgængelighed, belægning og politikker.",
       "copyPricingOverwriteWarning": "Dette objekts priser overskrives helt. Beløb overføres kun ved samme valuta.",
-      "copyPricingDone": "Priser overført."
+      "copyPricingDone": "Priser overført.",
+      "portalStandAbweichung": "der {dort}",
+      "portalStand": {
+        "online": "Registreret hos portalen",
+        "abweichend": "Afviger",
+        "fehlt": "Ikke registreret hos portalen"
+      }
     },
     "policiesForm": {
       "title": "Retningslinjer",
@@ -5625,7 +5686,10 @@
       "hinweis": "Du kan overtage dem i stedet for at oprette dem igen. Eksisterende gebyrer forbliver uændrede.",
       "uebernehmen": "Overtag gebyrer",
       "laeuft": "Overtager …",
-      "uebernommen": "{anzahl} gebyrer overtaget."
+      "uebernommen": "{anzahl} gebyrer overtaget.",
+      "verwerfen": "Importér ikke",
+      "verworfen": "Tilbuddet er afsluttet — dine gebyrer forbliver som de er.",
+      "einmalig": "Engangs starthjælp: herefter gælder kun det, der står her — det sender vi til portalerne."
     },
     "veroeffentlichen": {
       "titel": "Udgiv objekt",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Fastlægges via „Udgiv“ øverst.",
       "immerDabei": "Altid med — vores eget marketplace, uden portalprovision."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Tag boligen ud af salg?",
+      "fragenAusText": "„{titel}\" sættes til inaktiv, og bookingkalenderen slås fra på alle forbundne portaler. Eksisterende bookinger berøres ikke. Hver portals tilstand gemmes, så gendannelsen sætter den tilbage.",
+      "fragenAnTitel": "Udbyd boligen igen?",
+      "fragenAnText": "„{titel}\" sættes aktiv igen. Hver portal får den tilstand tilbage, den havde før frakoblingen — portaler, der allerede var slået fra, forbliver slået fra. Derefter sendes priser og tilgængelighed igen.",
+      "jetztAus": "Slå fra nu",
+      "jetztAn": "Udbyd nu",
+      "laeuft": "Skifter…",
+      "abbrechen": "Annuller",
+      "schliessen": "Luk",
+      "ergebnisAusTitel": "Boligen er slået fra",
+      "ergebnisAusText": "Slået fra på alle portaler.",
+      "ergebnisAnTitel": "Boligen er aktiv igen",
+      "ergebnisAnText": "Udbydes igen på alle portaler.",
+      "ergebnisTeilweiseTitel": "Ikke lykkedes overalt",
+      "ergebnisTeilweiseText": "{anzahl} portal(er) kunne ikke skiftes. Salget fortsætter der — boligens status blev derfor ikke ændret.",
+      "zeileAbgeschaltet": "Slået fra",
+      "zeileWiederhergestellt": "Aktiv igen",
+      "zeileObjekteAmKanal": "Denne kanal bærer {anzahl} boliger — der blev ikke ændret noget, så de andre ikke også slås fra."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Log ud af portalen i din browser, før du forbinder en anden konto.",
     "accountConnectCredentialHint": "En yderligere {portal}-adgang oprettes med hotel-id'et, når du forbinder et objekt — ikke her.",
     "marketplacePending": "{count} under gennemgang",
-    "marketplaceWaiting": "Under gennemgang"
+    "marketplaceWaiting": "Under gennemgang",
+    "marketplace": {
+      "intro": "myBestDays er vores egen markedsplads — en bookingkanal som Booking eller Airbnb, blot uden portalforbindelse. Et objekt bliver synligt, når det er aktivt, listet her og godkendt.",
+      "openMarketplace": "Åbn markedsplads",
+      "propertiesHeading": "Objekter på markedspladsen",
+      "noProperties": "Ingen objekter oprettet endnu.",
+      "columnProperty": "Objekt",
+      "columnVisibility": "Synlighed",
+      "columnApproval": "Godkendelse",
+      "columnBookings": "Bookinger",
+      "stateActive": "Synlig",
+      "statePending": "Under gennemgang",
+      "stateNotListed": "Ikke listet",
+      "stateInactiveProperty": "Objekt ikke aktivt",
+      "viewListing": "Se annonce",
+      "reviewHint": "Objekter under gennemgang vises endnu ikke på myBestDays. Vi gennemgår hver annonce, fordi myBestDays optræder som udbyder der — portaler og din egen hjemmeside påvirkes ikke.",
+      "summaryVisible": "{count} synlige",
+      "summaryWaiting": "{count} under gennemgang",
+      "summaryOff": "{count} ikke listet",
+      "moderation": {
+        "draft": "Kladde",
+        "pending": "Under gennemgang",
+        "approved": "Godkendt",
+        "rejected": "Afvist"
+      }
+    }
   },
   "calendarSync": {
     "title": "Importér/eksportér kalender",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Bekræft",
     "mfaChecking": "Kontrollerer…",
     "mfaBack": "Tilbage til login"
+  },
+  "portalSaetze": {
+    "add": "Tilføj sats",
+    "breakdown": "{provision} % provision + {fee} % betalingsgebyr",
+    "breakdownNoFee": "{provision} % provision, intet betalingsgebyr",
+    "cancel": "Annuller",
+    "channel": "Portal",
+    "channelLocked": "Portalen for en eksisterende sats kan ikke ændres. Opret en ny sats til en anden portal.",
+    "create": "Opret sats",
+    "created": "Sats oprettet",
+    "current": "gælder i dag",
+    "delete": "Slet sats",
+    "deleted": "Sats slettet",
+    "edit": "Rediger sats",
+    "empty": "Der er endnu ikke angivet en sats. Uden en sats kan en udbetaling kun beregnes, hvis portalen selv oplyser sit fradrag.",
+    "errorProvisionRequired": "Angiv en provisionssats.",
+    "intro": "Hvad hver portal beholder pr. booking. Disse satser gælder der, hvor portalen ikke selv oplyser sit fradrag — oplyser den et beløb, gælder altid det oplyste.",
+    "loading": "Indlæser …",
+    "note": "Note",
+    "notePlaceholder": "Hvor satsen kommer fra, f.eks. portalaftale eller afregning",
+    "payoutFee": "Betalingsgebyr",
+    "payoutFeeInfo": "Gebyret for, at portalen opkræver pengene og videresender dem. Det opstår kun, når portalen opkræver — betaler gæsten direkte til dig, bortfalder det.",
+    "payoutFeeNone": "opkræver ingen",
+    "period": "{von} til {bis}",
+    "periodOpen": "siden {von}",
+    "provision": "Provision",
+    "provisionInfo": "Den formidlingsandel, portalen beholder for bookingen. Beregningsgrundlaget er gæstens samlede pris inklusive gebyrer.",
+    "save": "Gem ændringer",
+    "saved": "Sats gemt",
+    "title": "Portalernes fradragssatser",
+    "total": "{pct} % i alt",
+    "validFrom": "Gyldig fra",
+    "validTo": "Gyldig til",
+    "validToInfo": "Lad feltet stå tomt, så længe satsen gælder. Ændrer portalen sin sats, opretter du en ny fra ændringsdagen — den gamle bevares til tidligere afregninger.",
+    "validToOpen": "løber videre"
   }
 }

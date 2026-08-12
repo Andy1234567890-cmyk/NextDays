@@ -48,6 +48,9 @@ log = get_logger("nextdays.worker")
 # Retry-Versuch zu verbrennen.
 _CHANNEX_JOB_TYPES = frozenset(
     {"sync_property_content", "sync_property_taxes",
+     # Rücklese-Prüfung der Gebühren (GET pricing_settings je Mapping) — ein
+     # echter Channex-Call, zählt also gegen das kontoweite Budget.
+     "pruefe_ota_gebuehren",
      # Airbnb-Rabattregeln je Listing (GET+PUT pricing_settings pro Mapping).
      "sync_airbnb_aktionen",
      # Ausstattung an Airbnbs eigene API. Der Schreibaufruf selbst geht NICHT an
@@ -267,6 +270,20 @@ def _handle_sync_property_taxes(
     if not svc.is_channex_configured:
         return
     svc.sync_taxes_only(payload["tenant_id"], payload["property_id"])
+
+
+def _handle_pruefe_ota_gebuehren(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Nachsehen, welchen Betrag die Gebühren beim Portal WIRKLICH tragen.
+
+    Liest bei Airbnb (`pricing_settings`) und schreibt nur unseren eigenen
+    Stand. Ein Fehler kippt den Job auf Retry: lieber später eine echte
+    Prüfung als jetzt ein stiller „done"-Vermerk ohne Ergebnis (Wurzel 5)."""
+    svc = _svc(db, budget)
+    if not svc.is_channex_configured:
+        return
+    svc.gebuehren_stand_pruefen(payload["tenant_id"], payload["property_id"])
 
 
 def _handle_sync_airbnb_aktionen(
@@ -643,6 +660,7 @@ HANDLERS: dict[
 ] = {
     "sync_property_content": _handle_sync_property_content,
     "sync_property_taxes": _handle_sync_property_taxes,
+    "pruefe_ota_gebuehren": _handle_pruefe_ota_gebuehren,
     "sync_airbnb_aktionen": _handle_sync_airbnb_aktionen,
     "sync_airbnb_verfuegbarkeit": _handle_sync_airbnb_verfuegbarkeit,
     "sync_airbnb_ausstattung": _handle_sync_airbnb_ausstattung,

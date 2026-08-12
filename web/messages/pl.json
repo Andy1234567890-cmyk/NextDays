@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Nie udało się wczytać pulpitu",
     "reviews": "Opinie",
     "extensions": "Rozszerzenia",
-    "announcements": "Nowości"
+    "announcements": "Nowości",
+    "billingRules": "Zasady rozliczeń",
+    "ownerReporting": "Raporty dla właścicieli"
   },
   "exemption": {
     "labelNamed": "Zwolniony z podatku ({scheme}) — NIP niepotrzebny",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Zdjęcie od gościa",
     "translate": "Przetłumacz",
     "showOriginal": "Pokaż oryginał",
-    "translatedFrom": "Przetłumaczono z języka {sprache}"
+    "translatedFrom": "Przetłumaczono z języka {sprache}",
+    "formatStrike": "Przekreślenie",
+    "fieldsButton": "{{Symbole}}",
+    "langBase": "Wersja podstawowa",
+    "langBaseHint": "Trafia do każdego gościa, którego język nie ma własnej wersji.",
+    "subjectLabel": "Temat",
+    "subjectHint": "Temat jest używany tylko w e-mailach.",
+    "langAdd": "Dodaj nowy język",
+    "langDefault": "Domyślny",
+    "langSetDefault": "Ustaw jako domyślny",
+    "langRemove": "Usuń język",
+    "langEmpty": "Brak języków — do tego czasu wersja podstawowa trafia do wszystkich gości.",
+    "autoEditContent": "Edytuj treść",
+    "autoPanelCreate": "Utwórz",
+    "quickEmpty": "Brak szybkich odpowiedzi.",
+    "autoTextRequired": "Treść jest wymagana."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nie jest jeszcze połączony. Wprowadź dane dostępowe (Meta Cloud API) w ustawieniach serwera, aby aktywować wysyłkę.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Jeśli e-mail nie dotarł lub link wygasł, zaproszenie można wysłać ponownie. Nowy link jest ważny 7 dni i prowadzi do tego środowiska; wcześniej wysłany link przestaje działać.",
     "portalAccessResent": "Zaproszenie wysłano ponownie.",
     "commissionNotAgreed": "nieustalone",
+    "commissionContractWins": "Obecnie stosowana jest umowa rozliczeniowa: {pct} % od {ab}. To pole służy tylko jako rezerwa, jeśli żadna umowa nie obowiązuje.",
+    "commissionNoneAnywhere": "Nie ustalono jeszcze stawki — ani tutaj, ani jako umowa. Do tego czasu wypłata pozostaje pusta w portalu właściciela.",
+    "commissionContractObject": "Odrębna umowa dla tego obiektu: {pct} % od {ab}.",
+    "commissionContractOwnerWide": "Umowa rozliczeniowa właściciela: {pct} % od {ab}.",
     "assignableCount": "Wybrano {count} z {total} do dodania",
     "assignedHeading": "{count, plural, one {# przypisany obiekt} few {# przypisane obiekty} many {# przypisanych obiektów} other {# przypisanego obiektu}}",
     "info": {
       "aria": "Objaśnienie do: {feld}",
       "share": "Udział własnościowy w tym obiekcie. Przy 100 % cała wypłata jest przypisywana temu właścicielowi, przy mniejszym udziale — proporcjonalnie.",
-      "commission": "Standardowa stawka prowizji dla tego właściciela. Jeśli pole pozostanie puste, stawka nie jest jeszcze ustalona — wypłata nie zostanie wtedy obliczona, lecz pokazana jako myślnik.",
-      "commissionOverride": "Obowiązuje tylko dla tego jednego obiektu i zastępuje standardową stawkę właściciela. Jeśli pole pozostanie puste, obowiązuje stawka standardowa."
+      "commission": "Stawka rezerwowa, jeśli dla obiektu nie obowiązuje umowa rozliczeniowa. Umowa poniżej ma pierwszeństwo — to właściwe ustalenie, obejmujące także okres, opłatę stałą i prowizję minimalną. Jeśli oba pozostaną puste, wypłata nie jest obliczana, a wyświetla się kreska.",
+      "commissionOverride": "Stawka rezerwowa tylko dla tego obiektu; nadpisuje stawkę standardową właściciela. Umowa rozliczeniowa ma pierwszeństwo również tutaj. Jeśli pole pozostanie puste, obowiązuje stawka standardowa."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Wypłata całkowita",
       "ownerPayout": "Wypłata dla właściciela",
       "pmPayout": "Wypłata dla zarządcy",
-      "commissionMissing": "Dla co najmniej jednego obiektu nie ustawiono stawki prowizji. Wypłat nie można obliczyć — wprowadź stawkę w danych podstawowych właściciela lub przy obiekcie."
+      "commissionMissing": "Dla co najmniej jednego obiektu nie ustawiono stawki prowizji. Wypłat nie można obliczyć — wprowadź stawkę w danych podstawowych właściciela lub przy obiekcie.",
+      "payoutUnknown": "W co najmniej jednej rezerwacji brakuje danych niezbędnych do obliczenia wypłaty. W odpowiednich wierszach zamiast kwoty widnieje „—”.",
+      "commissionInvalid": "Zapisana stawka prowizji wykracza poza zakres 0–100%. Popraw stawkę u właściciela lub w obiekcie.",
+      "portalRateMissing": "Dla co najmniej jednego kanału rezerwacji nie zapisano stawki potrącenia, a portal nie przekazał informacji o swoim potrąceniu. Wprowadź w Księgowość → Zasady rozliczeń, ile portal zatrzymuje z każdej rezerwacji.",
+      "portalRateInvalid": "Zapisana stawka potrącenia portalu wykracza poza zakres 0–100%. Popraw ją w Księgowość → Zasady rozliczeń.",
+      "feeUnassigned": "Co najmniej jeden rodzaj opłaty nie został jeszcze przypisany. Bez przypisania nie da się ustalić, komu należy się dana kwota ani czy jest od niej pobierana prowizja — określ to w Księgowość → Zasady rozliczeń.",
+      "feeNotComputable": "Opłaty nie można rozliczyć jako kwoty (zapisana procentowo lub bez kwoty). Sprawdź opłatę w obiekcie.",
+      "contractCurrency": "Opłata stała lub prowizja minimalna jest wyrażona w innej walucie niż rezerwacja. Kwoty w różnych walutach nie są przeliczane — sprawdź umowę rozliczeniową."
     },
     "rental": {
       "perReservation": "Za rezerwację",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Cena całkowita",
       "totalPayout": "Wypłata całkowita",
       "totals": "Sumy",
-      "empty": "Brak rezerwacji w tym okresie."
+      "empty": "Brak rezerwacji w tym okresie.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Dodaj",
@@ -1315,7 +1351,9 @@
     "commissionable": "Podlega prowizji",
     "commissionableYes": "Tak — wliczane do prowizji",
     "commissionableNo": "Nie — zwolnione z prowizji",
-    "infoAria": "Objaśnienie do: {feld}"
+    "infoAria": "Objaśnienie do: {feld}",
+    "rulesPageTitle": "Zasady rozliczeń",
+    "rulesPageIntro": "Ile portale zatrzymują z każdej rezerwacji i komu należą się opłaty. Oba ustawienia decydują o kwocie, która ostatecznie trafia do rozliczenia prowizji Twoich właścicieli."
   },
   "portal": {
     "title": "Mój portal",
@@ -1432,6 +1470,16 @@
         "blocked": "Zablokowane"
       },
       "payoutPerNight": "Wypłata netto/noc",
+      "payoutPerNightShort": "netto/noc",
+      "payoutUnknown": {
+        "short": "b.d.",
+        "label": "Nie do ustalenia",
+        "provision": "Dla tego obiektu nie ustalono stawki prowizji — zarząd musi ją uzupełnić.",
+        "provisionUngueltig": "Zapisana stawka prowizji jest poza zakresem 0–100 %.",
+        "betrag": "W tej rezerwacji brakuje kwoty całkowitej.",
+        "naechte": "Zakres dat tej rezerwacji jest nieprawidłowy.",
+        "waehrungVertrag": "Ustalona opłata stała jest w innej walucie niż ta rezerwacja — kwoty nie są przeliczane."
+      },
       "guest": "Gość",
       "channel": "Źródło rezerwacji",
       "blockHint": "Chcesz zablokować okres? Złóż wniosek — decyduje zarządca.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Pokazuj kod do drzwi tylko wtedy, gdy pobyt jest opłacony",
       "hideCodeUntilCheckin": "Ukryj kod do drzwi do momentu zameldowania",
       "codeVisibleFromLabel": "Kod do drzwi jest widoczny od dnia zameldowania od godziny …",
-      "codeVisibleFromUnset": "— nie ustawiono —"
+      "codeVisibleFromUnset": "— nie ustawiono —",
+      "wifiSsidLabel": "Nazwa sieci (SSID)",
+      "wifiSsidPlaceholder": "np. WiFi-Domek",
+      "wifiPasswordLabel": "Hasło Wi-Fi",
+      "wifiPasswordPlaceholder": "np. lato2026",
+      "wifiFieldsHint": "Te dwie wartości wypełniają symbole {ssid} i {password} w szablonach wiadomości oraz kod QR Wi-Fi w portalu gościa. Jeśli pozostaną puste, szablon z tymi symbolami nie zostanie wysłany."
     },
     "taskCreatePopup": {
       "title": "Utwórz zadanie",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Obiekt skopiowany.",
       "duplicateErr": "Nie udało się skopiować.",
       "unlistOk": "Połączenie ze stroną internetową usunięte.",
-      "unlistErr": "Nie udało się odłączyć."
+      "unlistErr": "Nie udało się odłączyć.",
+      "menuVerkaufAus": "Wyłącz we wszystkich portalach",
+      "menuVerkaufAn": "Ponownie oferuj we wszystkich portalach"
     },
     "messagingForm": {
       "title": "Zastępniki wiadomości",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Dodatki — są powiązane z własnymi zdjęciami i tłumaczeniami.",
       "copyPricingSkipAvailability": "Dostępność, obłożenie i zasady.",
       "copyPricingOverwriteWarning": "Ceny tego obiektu zostaną całkowicie nadpisane. Kwoty są przejmowane tylko przy tej samej walucie.",
-      "copyPricingDone": "Ceny przejęte."
+      "copyPricingDone": "Ceny przejęte.",
+      "portalStandAbweichung": "tam {dort}",
+      "portalStand": {
+        "online": "Zapisane w portalu",
+        "abweichend": "Różni się",
+        "fehlt": "Nie zapisano w portalu"
+      }
     },
     "policiesForm": {
       "title": "Zasady",
@@ -5625,7 +5686,10 @@
       "hinweis": "Możesz je przejąć, zamiast tworzyć je od nowa. Istniejące opłaty pozostają niezmienione.",
       "uebernehmen": "Przejmij opłaty",
       "laeuft": "Przejmowanie …",
-      "uebernommen": "Przejęto {anzahl} opłat."
+      "uebernommen": "Przejęto {anzahl} opłat.",
+      "verwerfen": "Nie przenoś",
+      "verworfen": "Propozycja zamknięta — Twoje opłaty pozostają bez zmian.",
+      "einmalig": "Jednorazowa pomoc na start: potem liczy się tylko to, co jest tutaj — to wysyłamy do portali."
     },
     "veroeffentlichen": {
       "titel": "Opublikuj obiekt",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Ustawiane przez „Publikuj” u góry.",
       "immerDabei": "Zawsze włączone — nasz własny marketplace, bez prowizji portalu."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Wycofać obiekt ze sprzedaży?",
+      "fragenAusText": "„{titel}” zostanie ustawiony jako nieaktywny, a kalendarz rezerwacji zostanie wyłączony we wszystkich połączonych portalach. Istniejące rezerwacje pozostają nietknięte. Stan każdego portalu jest zapisywany, aby przywrócenie go odtworzyło.",
+      "fragenAnTitel": "Ponownie oferować obiekt?",
+      "fragenAnText": "„{titel}” zostanie ponownie ustawiony jako aktywny. Każdy portal odzyska stan, jaki miał przed wyłączeniem — portale już wyłączone pozostaną wyłączone. Następnie ceny i dostępność zostaną wysłane ponownie.",
+      "jetztAus": "Wyłącz teraz",
+      "jetztAn": "Oferuj teraz",
+      "laeuft": "Przełączanie…",
+      "abbrechen": "Anuluj",
+      "schliessen": "Zamknij",
+      "ergebnisAusTitel": "Obiekt jest wyłączony",
+      "ergebnisAusText": "Wyłączony we wszystkich portalach.",
+      "ergebnisAnTitel": "Obiekt jest ponownie aktywny",
+      "ergebnisAnText": "Ponownie oferowany we wszystkich portalach.",
+      "ergebnisTeilweiseTitel": "Nie wszędzie się udało",
+      "ergebnisTeilweiseText": "Nie udało się przełączyć {anzahl} portalu/i. Tam sprzedaż trwa dalej — dlatego status obiektu nie został zmieniony.",
+      "zeileAbgeschaltet": "Wyłączony",
+      "zeileWiederhergestellt": "Ponownie aktywny",
+      "zeileObjekteAmKanal": "Ten kanał obejmuje {anzahl} obiektów — nic nie zmieniono, aby nie wyłączyć także pozostałych."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Wyloguj się z portalu w przeglądarce, zanim połączysz inne konto.",
     "accountConnectCredentialHint": "Kolejny dostęp {portal} dodaje się wraz z identyfikatorem hotelu podczas łączenia obiektu, nie tutaj.",
     "marketplacePending": "{count} w weryfikacji",
-    "marketplaceWaiting": "W weryfikacji"
+    "marketplaceWaiting": "W weryfikacji",
+    "marketplace": {
+      "intro": "myBestDays to nasz własny rynek — kanał rezerwacji jak Booking czy Airbnb, tylko bez połączenia z portalem. Obiekt staje się widoczny, gdy jest aktywny, wystawiony tutaj i zatwierdzony.",
+      "openMarketplace": "Otwórz rynek",
+      "propertiesHeading": "Obiekty na rynku",
+      "noProperties": "Nie utworzono jeszcze żadnych obiektów.",
+      "columnProperty": "Obiekt",
+      "columnVisibility": "Widoczność",
+      "columnApproval": "Zatwierdzenie",
+      "columnBookings": "Rezerwacje",
+      "stateActive": "Widoczny",
+      "statePending": "W weryfikacji",
+      "stateNotListed": "Nie wystawiony",
+      "stateInactiveProperty": "Obiekt nieaktywny",
+      "viewListing": "Zobacz ofertę",
+      "reviewHint": "Obiekty w weryfikacji nie pojawiają się jeszcze na myBestDays. Weryfikujemy każdą ofertę, ponieważ myBestDays występuje tam jako dostawca — portale i własna strona internetowa nie są tym objęte.",
+      "summaryVisible": "{count} widocznych",
+      "summaryWaiting": "{count} w weryfikacji",
+      "summaryOff": "{count} nie wystawionych",
+      "moderation": {
+        "draft": "Szkic",
+        "pending": "W weryfikacji",
+        "approved": "Zatwierdzony",
+        "rejected": "Odrzucony"
+      }
+    }
   },
   "calendarSync": {
     "title": "Importuj/eksportuj kalendarz",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Potwierdź",
     "mfaChecking": "Sprawdzanie…",
     "mfaBack": "Powrót do logowania"
+  },
+  "portalSaetze": {
+    "add": "Dodaj stawkę",
+    "breakdown": "{provision} % prowizji + {fee} % opłaty za płatność",
+    "breakdownNoFee": "{provision} % prowizji, bez opłaty za płatność",
+    "cancel": "Anuluj",
+    "channel": "Portal",
+    "channelLocked": "Portalu istniejącej stawki nie można zmienić. Dla innego portalu utwórz nową stawkę.",
+    "create": "Utwórz stawkę",
+    "created": "Stawka utworzona",
+    "current": "obowiązuje dziś",
+    "delete": "Usuń stawkę",
+    "deleted": "Stawka usunięta",
+    "edit": "Edytuj stawkę",
+    "empty": "Nie zapisano jeszcze żadnej stawki. Bez stawki wypłatę można obliczyć tylko wtedy, gdy portal sam zgłosi swoje potrącenie.",
+    "errorProvisionRequired": "Podaj stawkę prowizji.",
+    "intro": "Ile każdy portal zatrzymuje z każdej rezerwacji. Te stawki obowiązują tam, gdzie portal nie zgłasza własnego potrącenia — jeśli zgłosi kwotę, zawsze obowiązuje kwota zgłoszona.",
+    "loading": "Ładowanie …",
+    "note": "Notatka",
+    "notePlaceholder": "Skąd pochodzi stawka, np. umowa z portalem lub rozliczenie",
+    "payoutFee": "Opłata za płatność",
+    "payoutFeeInfo": "Opłata za to, że portal pobiera pieniądze i przekazuje je dalej. Naliczana jest tylko wtedy, gdy portal pobiera płatność — jeśli gość płaci bezpośrednio Tobie, nie występuje.",
+    "payoutFeeNone": "nie pobiera",
+    "period": "{von} do {bis}",
+    "periodOpen": "od {von}",
+    "provision": "Prowizja",
+    "provisionInfo": "Część pośrednictwa, którą portal zatrzymuje za rezerwację. Podstawą jest cena całkowita gościa wraz z opłatami.",
+    "save": "Zapisz zmiany",
+    "saved": "Stawka zapisana",
+    "title": "Stawki potrąceń portali",
+    "total": "{pct} % łącznie",
+    "validFrom": "Obowiązuje od",
+    "validTo": "Obowiązuje do",
+    "validToInfo": "Pozostaw puste, dopóki stawka obowiązuje. Jeśli portal zmieni swoją stawkę, dodaj nową od dnia zmiany — stara pozostanie dla wcześniejszych rozliczeń.",
+    "validToOpen": "nadal obowiązuje"
   }
 }

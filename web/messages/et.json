@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Töölauda ei õnnestunud laadida",
     "reviews": "Arvustused",
     "extensions": "Laiendused",
-    "announcements": "Uudised"
+    "announcements": "Uudised",
+    "ownerReporting": "Omanike aruandlus",
+    "billingRules": "Arveldusreeglid"
   },
   "exemption": {
     "labelNamed": "Maksuvaba ({scheme}) — KMKR-numbrit pole vaja",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Külalise foto",
     "translate": "Tõlgi",
     "showOriginal": "Näita originaali",
-    "translatedFrom": "Tõlgitud keelest {sprache}"
+    "translatedFrom": "Tõlgitud keelest {sprache}",
+    "formatStrike": "Läbikriipsutatud",
+    "fieldsButton": "{{Kohatäited}}",
+    "langBase": "Põhiversioon",
+    "langBaseHint": "Saadetakse igale külalisele, kelle keeles pole eraldi versiooni.",
+    "subjectLabel": "Teema",
+    "subjectHint": "Teemarida kasutatakse ainult e-kirjade puhul.",
+    "langAdd": "Lisa uus keel",
+    "langDefault": "Vaikimisi",
+    "langSetDefault": "Määra vaikimisi",
+    "langRemove": "Eemalda keel",
+    "langEmpty": "Keeli pole veel — seni läheb kõigile külalistele põhiversioon.",
+    "autoEditContent": "Muuda sisu",
+    "autoPanelCreate": "Loo",
+    "quickEmpty": "Kiirvastuseid veel pole.",
+    "autoTextRequired": "Tekst on kohustuslik."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Kui e-kiri ei jõudnud kohale või link on aegunud, saab kutse uuesti saata. Uus link kehtib 7 päeva ja viib sellesse keskkonda; varem saadetud link muutub kehtetuks.",
     "portalAccessResent": "Kutse saadeti uuesti.",
     "commissionNotAgreed": "kokku leppimata",
+    "commissionContractWins": "Praegu kohaldatakse arvelduslepingut: {pct} % alates {ab}. See väli on vaid varuvariant, kui ükski leping ei kehti.",
+    "commissionNoneAnywhere": "Määra pole veel kokku lepitud — ei siin ega lepinguna. Seni jääb väljamakse omanikuportaalis tühjaks.",
+    "commissionContractObject": "Eraldi leping selle objekti kohta: {pct} % alates {ab}.",
+    "commissionContractOwnerWide": "Omaniku arveldusleping: {pct} % alates {ab}.",
     "assignableCount": "{count} / {total} valitud lisamiseks",
     "assignedHeading": "{count, plural, one {# määratud objekt} other {# määratud objekti}}",
     "info": {
       "aria": "Selgitus välja {feld} kohta",
       "share": "Omandiosa selles objektis. 100% puhul arvestatakse kogu väljamakse sellele omanikule, väiksema osa puhul vastavalt proportsioonile.",
-      "commission": "Selle omaniku vaikimisi komisjonitasu määr. Kui väli jääb tühjaks, ei ole määra veel kokku lepitud — väljamakset siis ei arvutata, vaid näidatakse mõttekriipsuna.",
-      "commissionOverride": "Kehtib ainult selle ühe objekti kohta ja tühistab omaniku vaikimisi määra. Kui väli jääb tühjaks, kehtib vaikimisi määr."
+      "commission": "Varumäär, kui objektile ei kehti arveldusleping. Allpool olev leping on ülimuslik — see on tegelik kokkulepe ja hõlmab ka perioodi, püsitasu ja miinimumkomisjoni. Kui mõlemad jäävad tühjaks, väljamakset ei arvutata, vaid näidatakse mõttekriipsu.",
+      "commissionOverride": "Varumäär ainult selle objekti kohta; asendab omaniku standardmäära. Arveldusleping on ka siin ülimuslik. Kui väli jääb tühjaks, kehtib standardmäär."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Kogu väljamakse",
       "ownerPayout": "Omaniku väljamakse",
       "pmPayout": "Halduri väljamakse",
-      "commissionMissing": "Vähemalt ühel objektil pole komisjonitasu määra määratud. Väljamakseid ei saa seetõttu arvutada — sisesta määr omaniku põhiandmetesse või objektile."
+      "commissionMissing": "Vähemalt ühel objektil pole komisjonitasu määra määratud. Väljamakseid ei saa seetõttu arvutada — sisesta määr omaniku põhiandmetesse või objektile.",
+      "payoutUnknown": "Vähemalt ühe broneeringu puhul on puudu andmed, ilma milleta väljamakset arvutada ei saa. Vastavatel ridadel kuvatakse arvu asemel „—“.",
+      "commissionInvalid": "Salvestatud komisjonimäär jääb vahemikust 0–100 % välja. Palun parandage määr omaniku või objekti juures.",
+      "portalRateMissing": "Vähemalt ühe broneerimiskanali kohta ei ole mahaarvamise määra salvestatud ja portaal ei edastanud oma mahaarvamist. Palun sisestage jaotises Raamatupidamine → Arveldusreeglid, kui palju portaal iga broneeringu pealt kinni peab.",
+      "portalRateInvalid": "Salvestatud portaali mahaarvamise määr jääb vahemikust 0–100 % välja. Palun parandage see jaotises Raamatupidamine → Arveldusreeglid.",
+      "feeUnassigned": "Vähemalt üht tasuliiki ei ole veel määratud. Ilma määramiseta ei saa kindlaks teha, kellele summa kuulub ja kas sellelt arvestatakse komisjonitasu — palun määrake see jaotises Raamatupidamine → Arveldusreeglid.",
+      "feeNotComputable": "Tasu ei saa summana arvestada (see on salvestatud protsendina või ilma summata). Palun kontrollige tasu objekti juures.",
+      "contractCurrency": "Püsitasu või minimaalne komisjonitasu on määratud broneeringust erinevas valuutas. Erinevates valuutades olevaid summasid ei arvestata kokku — palun kontrollige arvelduslepingut."
     },
     "rental": {
       "perReservation": "Broneeringu kohta",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Kogusumma",
       "totalPayout": "Kogu väljamakse",
       "totals": "Summad",
-      "empty": "Perioodil broneeringuid pole."
+      "empty": "Perioodil broneeringuid pole.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Lisa",
@@ -1315,7 +1351,9 @@
     "commissionable": "Komisjonitasu alune",
     "commissionableYes": "Jah — arvestatakse komisjonitasu sisse",
     "commissionableNo": "Ei — komisjonivaba",
-    "infoAria": "Selgitus välja {feld} kohta"
+    "infoAria": "Selgitus välja {feld} kohta",
+    "rulesPageTitle": "Arveldusreeglid",
+    "rulesPageIntro": "Mida portaalid iga broneeringu pealt kinni peavad ja kellele tasud kuuluvad. Mõlemad määravad, milline summa jõuab lõpuks teie omanike komisjonitasu arvestusse."
   },
   "portal": {
     "title": "Minu portaal",
@@ -1432,6 +1470,16 @@
         "blocked": "Blokeeritud"
       },
       "payoutPerNight": "Netoväljamakse/öö",
+      "payoutPerNightShort": "neto/öö",
+      "payoutUnknown": {
+        "short": "puudub",
+        "label": "Ei ole määratav",
+        "provision": "Sellele objektile pole komisjonimäära määratud — haldus peab selle lisama.",
+        "provisionUngueltig": "Määratud komisjonimäär on väljaspool vahemikku 0–100 %.",
+        "betrag": "Sellel broneeringul puudub kogusumma.",
+        "naechte": "Selle broneeringu ajavahemik on vigane.",
+        "waehrungVertrag": "Kokkulepitud püsitasu on teises valuutas kui see broneering — summasid ei teisendata."
+      },
       "guest": "Külaline",
       "channel": "Broneeringu allikas",
       "blockHint": "Soovid perioodi blokeerida? Esita taotlus — otsustab haldus.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Näita uksekoodi ainult siis, kui viibimine on tasutud",
       "hideCodeUntilCheckin": "Peida uksekood kuni sisseregistreerimiseni",
       "codeVisibleFromLabel": "Uksekood kuvatakse alates sisseregistreerimise päevast kell …",
-      "codeVisibleFromUnset": "— pole määratud —"
+      "codeVisibleFromUnset": "— pole määratud —",
+      "wifiSsidLabel": "Võrgu nimi (SSID)",
+      "wifiSsidPlaceholder": "nt Suvila-WiFi",
+      "wifiPasswordLabel": "Wi-Fi parool",
+      "wifiPasswordPlaceholder": "nt suvi2026",
+      "wifiFieldsHint": "Need kaks väärtust täidavad kohahoidjad {ssid} ja {password} sõnumimallides ning külalisportaali Wi-Fi QR-koodi. Kui need jäävad tühjaks, ei saadeta neid kohahoidjaid kasutavat malli."
     },
     "taskCreatePopup": {
       "title": "Loo ülesanne",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Objekt kopeeritud.",
       "duplicateErr": "Kopeerimine ebaõnnestus.",
       "unlistOk": "Seos veebilehega eemaldatud.",
-      "unlistErr": "Eemaldamine ebaõnnestus."
+      "unlistErr": "Eemaldamine ebaõnnestus.",
+      "menuVerkaufAus": "Lülita välja kõigis portaalides",
+      "menuVerkaufAn": "Paku uuesti kõigis portaalides"
     },
     "messagingForm": {
       "title": "Sõnumite kohatäitjad",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Lisad — need sõltuvad oma fotodest ja tõlgetest.",
       "copyPricingSkipAvailability": "Saadavus, täituvus ja reeglid.",
       "copyPricingOverwriteWarning": "Selle objekti hinnad kirjutatakse täielikult üle. Summad võetakse üle ainult sama valuuta korral.",
-      "copyPricingDone": "Hinnad üle võetud."
+      "copyPricingDone": "Hinnad üle võetud.",
+      "portalStandAbweichung": "seal {dort}",
+      "portalStand": {
+        "online": "Portaalis salvestatud",
+        "abweichend": "Erineb",
+        "fehlt": "Portaalis puudub"
+      }
     },
     "policiesForm": {
       "title": "Reeglid",
@@ -5625,7 +5686,10 @@
       "hinweis": "Saad need üle võtta, selle asemel et need uuesti luua. Olemasolevad tasud jäävad muutmata.",
       "uebernehmen": "Võta tasud üle",
       "laeuft": "Ülevõtmine …",
-      "uebernommen": "{anzahl} tasu üle võetud."
+      "uebernommen": "{anzahl} tasu üle võetud.",
+      "verwerfen": "Ära impordi",
+      "verworfen": "Pakkumine lõpetatud — sinu tasud jäävad samaks.",
+      "einmalig": "Ühekordne alustusabi: edaspidi kehtib ainult see, mis siin on — selle saadame portaalidesse."
     },
     "veroeffentlichen": {
       "titel": "Avalda objekt",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Määratakse ülal nupuga „Avalda“.",
       "immerDabei": "Alati kaasas — meie enda turuplats, ilma portaali vahendustasuta."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Kas võtta objekt müügilt maha?",
+      "fragenAusText": "„{titel}“ seatakse mitteaktiivseks ja broneerimiskalender lülitatakse välja kõigis ühendatud portaalides. Olemasolevad broneeringud jäävad puutumata. Iga portaali olek salvestatakse, et taastamine selle tagasi seaks.",
+      "fragenAnTitel": "Kas pakkuda objekti uuesti?",
+      "fragenAnText": "„{titel}“ seatakse uuesti aktiivseks. Iga portaal saab tagasi oleku, mis tal oli enne väljalülitamist — portaalid, mis olid juba väljas, jäävad välja. Seejärel saadetakse hinnad ja saadavus uuesti.",
+      "jetztAus": "Lülita nüüd välja",
+      "jetztAn": "Paku nüüd",
+      "laeuft": "Lülitamine…",
+      "abbrechen": "Tühista",
+      "schliessen": "Sulge",
+      "ergebnisAusTitel": "Objekt on välja lülitatud",
+      "ergebnisAusText": "Välja lülitatud kõigis portaalides.",
+      "ergebnisAnTitel": "Objekt on uuesti aktiivne",
+      "ergebnisAnText": "Pakutakse uuesti kõigis portaalides.",
+      "ergebnisTeilweiseTitel": "Ei õnnestunud kõikjal",
+      "ergebnisTeilweiseText": "{anzahl} portaali ei õnnestunud lülitada. Seal müük jätkub — seetõttu objekti olekut ei muudetud.",
+      "zeileAbgeschaltet": "Välja lülitatud",
+      "zeileWiederhergestellt": "Uuesti aktiivne",
+      "zeileObjekteAmKanal": "See kanal kannab {anzahl} objekti — midagi ei muudetud, et teisi samuti välja ei lülitataks."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Logi brauseris portaalist välja, enne kui ühendad teise konto.",
     "accountConnectCredentialHint": "Täiendav {portal}-i juurdepääs lisatakse hotelli ID-ga objekti ühendamisel, mitte siin.",
     "marketplacePending": "{count} ülevaatamisel",
-    "marketplaceWaiting": "Ülevaatamisel"
+    "marketplaceWaiting": "Ülevaatamisel",
+    "marketplace": {
+      "intro": "myBestDays on meie oma turuplats — broneerimiskanal nagu Booking või Airbnb, ainult ilma portaaliühenduseta. Objekt muutub nähtavaks, kui see on aktiivne, siin loetletud ja kinnitatud.",
+      "openMarketplace": "Ava turuplats",
+      "propertiesHeading": "Objektid turuplatsil",
+      "noProperties": "Objekte pole veel loodud.",
+      "columnProperty": "Objekt",
+      "columnVisibility": "Nähtavus",
+      "columnApproval": "Kinnitus",
+      "columnBookings": "Broneeringud",
+      "stateActive": "Nähtav",
+      "statePending": "Ülevaatamisel",
+      "stateNotListed": "Pole loetletud",
+      "stateInactiveProperty": "Objekt pole aktiivne",
+      "viewListing": "Vaata kuulutust",
+      "reviewHint": "Ülevaatamisel olevad objektid ei ilmu veel myBestDaysis. Kontrollime iga kuulutust, sest myBestDays esineb seal pakkujana — portaale ja oma veebisaiti see ei mõjuta.",
+      "summaryVisible": "{count} nähtavat",
+      "summaryWaiting": "{count} ülevaatamisel",
+      "summaryOff": "{count} pole loetletud",
+      "moderation": {
+        "draft": "Mustand",
+        "pending": "Ülevaatamisel",
+        "approved": "Kinnitatud",
+        "rejected": "Tagasi lükatud"
+      }
+    }
   },
   "calendarSync": {
     "title": "Kalendri import/eksport",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Kinnita",
     "mfaChecking": "Kontrollin…",
     "mfaBack": "Tagasi sisselogimisse"
+  },
+  "portalSaetze": {
+    "add": "Lisa määr",
+    "breakdown": "{provision} % vahendustasu + {fee} % maksetasu",
+    "breakdownNoFee": "{provision} % vahendustasu, maksetasu puudub",
+    "cancel": "Loobu",
+    "channel": "Portaal",
+    "channelLocked": "Olemasoleva määra portaali ei saa muuta. Teise portaali jaoks looge uus määr.",
+    "create": "Loo määr",
+    "created": "Määr loodud",
+    "current": "kehtib täna",
+    "delete": "Kustuta määr",
+    "deleted": "Määr kustutatud",
+    "edit": "Muuda määra",
+    "empty": "Määra pole veel salvestatud. Ilma määrata saab väljamakset arvutada ainult siis, kui portaal teatab oma mahaarvamise ise.",
+    "errorProvisionRequired": "Palun sisestage vahendustasu määr.",
+    "intro": "Mida iga portaal iga broneeringu pealt endale jätab. Need määrad kehtivad seal, kus portaal ei teata oma mahaarvamist ise — kui ta teatab summa, kehtib alati teatatud summa.",
+    "loading": "Laadimine …",
+    "note": "Märkus",
+    "notePlaceholder": "Kust määr pärineb, nt portaali leping või arveldus",
+    "payoutFee": "Maksetasu",
+    "payoutFeeInfo": "Tasu selle eest, et portaal kogub raha ja kannab selle edasi. See kohaldub ainult siis, kui portaal raha kogub — kui külaline maksab otse teile, seda ei ole.",
+    "payoutFeeNone": "ei võta tasu",
+    "period": "{von} kuni {bis}",
+    "periodOpen": "alates {von}",
+    "provision": "Vahendustasu",
+    "provisionInfo": "Vahendusosa, mille portaal broneeringu eest endale jätab. Arvestusaluseks on külalise koguhind koos tasudega.",
+    "save": "Salvesta muudatused",
+    "saved": "Määr salvestatud",
+    "title": "Portaalide mahaarvamise määrad",
+    "total": "{pct} % kokku",
+    "validFrom": "Kehtib alates",
+    "validTo": "Kehtib kuni",
+    "validToInfo": "Jätke tühjaks, kuni määr kehtib. Kui portaal muudab oma määra, looge uus määr alates muutmise päevast — vana jääb varasemate arvelduste jaoks alles.",
+    "validToOpen": "kehtib edasi"
   }
 }

@@ -933,7 +933,9 @@ class PricingResolver:
 
         lines: list[QuoteLine] = []
         if nightly_total > 0 or not priceless:
-            label = f"Übernachtung ({n} Nacht{'e' if n != 1 else ''})"
+            # „Nächte" mit Umlaut — der Plural von „Nacht" ist nicht „Nachte".
+            # Diese Zeile steht im Gast-Checkout und auf jeder Rechnung.
+            label = f"Übernachtung ({n} {'Nächte' if n != 1 else 'Nacht'})"
             lines.append(
                 QuoteLine(label=label, amount=round(nightly_total, 2), kind="lodging")
             )

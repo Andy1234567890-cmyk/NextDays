@@ -26,11 +26,13 @@ import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import { MultiSelect } from "@nextdays/ui/multi-select";
 import { NativeSelect } from "@nextdays/ui/native-select";
+import { type ComposerGriff } from "@/components/inbox/composer-editor";
 import {
-  ComposerEditor,
-  type ComposerGriff,
-} from "@/components/inbox/composer-editor";
-import { FeldPicker } from "@/components/inbox/feld-picker";
+  FassungFelder,
+  GRUNDFASSUNG,
+  SprachReiter,
+  type Fassungen,
+} from "@/components/inbox/sprach-fassungen";
 import {
   AUSLOESER_REIHENFOLGE,
   AUTOMATION_KANAELE,
@@ -40,11 +42,15 @@ import {
 import {
   type Automation,
   type AutomationOffsetUnit,
+  type AutomationText,
   type AutomationTrigger,
+  type MessageLanguage,
   type MessageTemplate,
   createAutomation,
   deleteAutomation,
   listAutomations,
+  listAvailableLanguages,
+  listMessageLanguages,
   listTemplates,
   updateAutomation,
 } from "@/lib/inbox";
@@ -59,6 +65,9 @@ const EINHEITEN: AutomationOffsetUnit[] = ["minutes", "hours", "days"];
 const CHANNELS = AUTOMATION_KANAELE;
 
 type Prop = { id: string; title: string };
+
+/** Leere Fassung (Betreff + Text) — wie im Vorlagen-Tab. */
+const LEER = { subject: "", body: "" };
 
 export function AutomationsTab() {
   const t = useTranslations("inbox");
@@ -77,12 +86,25 @@ export function AutomationsTab() {
   const [propertyIds, setPropertyIds] = useState<string[]>([]);
   const [channels, setChannels] = useState<string[]>([]);
   const [templateId, setTemplateId] = useState("");
-  const [message, setMessage] = useState("");
+  // Freitext je Sprache (0363): Grundfassung + je verwalteter Sprache eine
+  // Fassung. `body` ist hier KLARTEXT, nicht HTML — die Regel hat keine
+  // HTML-Spalte (Begründung am Editor unten).
+  const [fassungen, setFassungen] = useState<Fassungen>({ [GRUNDFASSUNG]: LEER });
+  const [aktiveSprache, setAktiveSprache] = useState<string>(GRUNDFASSUNG);
+  const [sprachen, setSprachen] = useState<MessageLanguage[]>([]);
+  const [sprachNamen, setSprachNamen] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   // Sendezeit in Ortszeit des Objekts statt UTC. Ohne hinterlegte Zeitzone
   // plant der Server für dieses Objekt bewusst NICHT (kein stilles UTC).
-  const [ortszeit, setOrtszeit] = useState(false);
+  //
+  // VORGABE AN: „06:00" meint für einen Betrieb sechs Uhr morgens vor Ort, nicht
+  // 06:00 UTC. Mit der alten Vorgabe (aus) ging die Anreise-Automail des
+  // dänischen Beta-Betriebs um 08:00 Ortszeit raus, und die Liste zeigte
+  // unverändert „06:00" — der Fehler war an der Oberfläche nicht zu sehen.
+  // Fehlt am Objekt die Zeitzone, wird nicht geplant; das ist der sichtbare
+  // Fehler und damit besser als eine stille Verschiebung um den UTC-Offset.
+  const [ortszeit, setOrtszeit] = useState(true);
   // Nur „Nachricht empfangen":
   const [nurErste, setNurErste] = useState(false);
   const [fensterTage, setFensterTage] = useState<number[]>([]);
@@ -96,14 +118,22 @@ export function AutomationsTab() {
   const beiNachricht = trigger === "message_received";
 
   async function load() {
-    const [a, tpl, p] = await Promise.all([
+    const [a, tpl, p, spr, kat] = await Promise.all([
       listAutomations(),
       listTemplates(),
       listProperties(),
+      listMessageLanguages(),
+      listAvailableLanguages(),
     ]);
     if (a.ok) setItems(a.data.items);
     if (tpl.ok) setTemplates(tpl.data.items);
     if (p.ok) setProps(p.data.items.map((x) => ({ id: x.id, title: x.title })));
+    if (spr.ok) setSprachen(spr.data.items);
+    if (kat.ok) {
+      setSprachNamen(
+        Object.fromEntries(kat.data.items.map((o) => [o.code, o.name])),
+      );
+    }
   }
   useEffect(() => {
     load();
@@ -133,8 +163,9 @@ export function AutomationsTab() {
     setPropertyIds([]);
     setChannels([]);
     setTemplateId("");
-    setMessage("");
-    setOrtszeit(false);
+    setFassungen({ [GRUNDFASSUNG]: LEER });
+    setAktiveSprache(GRUNDFASSUNG);
+    setOrtszeit(true);
     setNurErste(false);
     setFensterTage([]);
     setFensterVon("");
@@ -157,7 +188,17 @@ export function AutomationsTab() {
     setPropertyIds(a.property_ids);
     setChannels(a.channels);
     setTemplateId(a.template_id ?? "");
-    setMessage(a.message ?? "");
+    const geladen: Fassungen = {
+      [GRUNDFASSUNG]: { subject: a.subject ?? "", body: a.message ?? "" },
+    };
+    for (const s of sprachen) {
+      const fassung = (a.texts ?? []).find((x) => x.lang === s.code);
+      geladen[s.code] = fassung
+        ? { subject: fassung.subject, body: fassung.message }
+        : LEER;
+    }
+    setFassungen(geladen);
+    setAktiveSprache(GRUNDFASSUNG);
     setOrtszeit(a.use_property_timezone);
     setNurErste(a.only_first_message);
     setFensterTage(a.window_days);
@@ -165,6 +206,17 @@ export function AutomationsTab() {
     setFensterBis(a.window_to ?? "");
     setError(null);
     formularRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  const grundfassung = fassungen[GRUNDFASSUNG] ?? LEER;
+
+  /** Sprachfassungen für die API. Leere Reiter fallen weg — eine leere Fassung
+   *  darf die Grundfassung nicht verdrängen (der Server verwirft sie ohnehin). */
+  function sprachfassungen(): AutomationText[] {
+    return sprachen
+      .map((s) => ({ lang: s.code, ...(fassungen[s.code] ?? LEER) }))
+      .filter((f) => f.body.trim() || f.subject.trim())
+      .map((f) => ({ lang: f.lang, subject: f.subject, message: f.body }));
   }
 
   function speichern() {
@@ -200,7 +252,11 @@ export function AutomationsTab() {
       property_ids: propertyIds,
       channels,
       template_id: templateId || null,
-      message: message || null,
+      message: grundfassung.body || null,
+      subject: grundfassung.subject,
+      // Vollständiger Sollzustand: was hier fehlt, entfernt der Server (sonst
+      // ginge eine gelöschte Fassung weiter an Gäste dieser Sprache raus).
+      texts: sprachfassungen(),
       is_active: bestand?.is_active ?? true,
       use_property_timezone: ortszeit,
       // Die Fenster-Felder gelten nur für „Nachricht empfangen"; bei den
@@ -258,11 +314,32 @@ export function AutomationsTab() {
     const abs = Math.abs(versatz);
     const dir = versatz < 0 ? t("autoBefore") : t("autoAfter");
     const anchorLabel = t(`autoAnchor_${a.anchor}` as never) ?? a.anchor;
-    const zone = a.use_property_timezone ? ` (${t("autoLocalTime")})` : "";
+    // Ohne Haken gilt UTC — das MUSS dastehen. „06:00" ohne Zusatz liest jeder
+    // als sechs Uhr vor Ort; für den dänischen Beta-Betrieb war es 08:00
+    // Ortszeit, und niemand konnte das an der Zeile ablesen (Wurzel 4: kein
+    // stiller Ersatzwert, hier keine stille Ersatz-Zeitzone).
+    const zone = ` (${a.use_property_timezone ? t("autoLocalTime") : "UTC"})`;
     const time = a.send_time ? ` · ${a.send_time}${zone}` : "";
-    if (abs === 0) return `${anchorLabel}${time}`;
+    // Versatz 0 heißt „am Tag des Ankers" — nicht davor. Der nackte Ankername
+    // ergab zusammen mit dem Auslöser-Etikett davor die widersprüchliche Zeile
+    // „Vor Anreise · Anreise · 06:00"; der Betrieb las daraus, die Nachricht
+    // gehe VOR dem Anreisetag raus, und meldete das als Fehler.
+    if (abs === 0) return `${t("autoOnDayOf", { anchor: anchorLabel })}${time}`;
     const einheitLabel = t(`autoUnit_${a.offset_unit ?? "days"}` as never);
     return `${abs} ${einheitLabel} ${dir} ${anchorLabel}${time}`;
+  }
+
+  /** Die ganze Zeile unter dem Namen: Auslöser · Zeitplan.
+   *
+   *  Bei Versatz 0 steht das Auslöser-Etikett NICHT davor: „Vor Anreise" und
+   *  „Am Tag der Anreise" widersprechen sich im selben Satz. Der Zeitplan sagt
+   *  dort schon alles. */
+  function ausloeserUndZeitplan(a: Automation): string {
+    const zeitplan = scheduleLabel(a);
+    const versatz = a.offset_value ?? a.offset_days ?? 0;
+    if (a.trigger !== "message_received" && versatz === 0) return zeitplan;
+    const ausloeser = t(`autoTrigger_${a.trigger}` as never) ?? a.trigger;
+    return `${ausloeser} · ${zeitplan}`;
   }
 
   function assignLabel(a: Automation): string {
@@ -288,15 +365,14 @@ export function AutomationsTab() {
               <li
                 key={a.id}
                 className={
-                  "flex items-center gap-3 rounded-2xl border p-3 " +
+                  "flex flex-wrap items-center gap-3 rounded-2xl border p-3 " +
                   (bearbeitetId === a.id ? "border-accent" : "border-border")
                 }
               >
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="font-medium">{a.name}</span>
                   <span className="text-sm text-muted-foreground">
-                    {t(`autoTrigger_${a.trigger}` as never) ?? a.trigger} ·{" "}
-                    {scheduleLabel(a)}
+                    {ausloeserUndZeitplan(a)}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {assignLabel(a)}
@@ -529,37 +605,44 @@ export function AutomationsTab() {
             {/* Derselbe Editor wie in Chat und Vorlagen — eine Automation
                 verschickt dieselbe Art Nachricht an denselben Gast.
 
-                BEWUSST OHNE `format="html"`. Anders als die Vorlage hat dieser
+                BEWUSST `format="text"`. Anders als die Vorlage hat dieser
                 Freitext KEINE HTML-Spalte: `message_automation.message` fließt
                 in `planung._automation_body` an genau derselben Stelle in den
                 Versand wie `message_template.body` — als KLARTEXT. Stellte man
                 den Editor hier auf HTML um, stünde das Markup wörtlich in der
                 Nachricht beim Gast. Wer das ändern will, braucht zuerst eine
-                eigene `message_html`-Spalte samt Ableitung im Backend. */}
-            <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
-              <ComposerEditor
-                wert={message}
-                onChange={setMessage}
-                platzhalter={t("autoMessage")}
-                griff={editorGriff}
-                hoeheSchluessel="inbox.automation.hoehe"
-                griffSeite="unten"
-                leisteSeite="unten"
-                testId="inbox-automation-textarea"
-                etiketten={{
-                  bold: t("formatBold"),
-                  italic: t("formatItalic"),
-                  underline: t("formatUnderline"),
-                  bulletList: t("formatBulletList"),
-                  orderedList: t("formatOrderedList"),
-                  link: t("formatLink"),
-                  code: t("formatCode"),
-                  linkPrompt: t("formatLinkPrompt"),
-                  resize: t("formatResize"),
-                }}
-              />
-            </div>
-            <FeldPicker onInsert={(p) => editorGriff.current?.einfuegen(p)} />
+                eigene `message_html`-Spalte samt Ableitung im Backend.
+
+                OHNE BETREFF: der Betreff gilt nur für E-Mail, und eine Regel
+                ohne Vorlage geht heute ausschließlich in den Portal-Chat. Ein
+                Feld, das nichts bewirkt, gehört nicht in die Maske — der
+                Betreff der Vorlage steht im Vorlagen-Editor. */}
+            <SprachReiter
+              sprachen={sprachen}
+              aktiv={aktiveSprache}
+              onAktiv={setAktiveSprache}
+              fassungen={fassungen}
+              namen={sprachNamen}
+            />
+            {aktiveSprache === GRUNDFASSUNG && sprachen.length > 0 && (
+              <p className="text-xs text-muted-foreground">{t("langBaseHint")}</p>
+            )}
+            <FassungFelder
+              // Neu aufbauen beim Reiterwechsel — sonst zeigte der Editor
+              // weiter den Text der vorigen Sprache (TipTap führt sein
+              // Dokument selbst; s. Vorlagen-Tab).
+              key={aktiveSprache}
+              format="text"
+              mitBetreff={false}
+              fassung={fassungen[aktiveSprache] ?? LEER}
+              onChange={(f) =>
+                setFassungen((prev) => ({ ...prev, [aktiveSprache]: f }))
+              }
+              griff={editorGriff}
+              hoeheSchluessel="inbox.automation.hoehe"
+              testId="inbox-automation-textarea"
+              platzhalter={t("autoMessage")}
+            />
           </>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}

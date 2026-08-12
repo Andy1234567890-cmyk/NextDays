@@ -19,6 +19,10 @@ Eckdaten (aus der Channex-Doku):
 Beträge: Channex akzeptiert Cent-Integer (20000 = 200,00) ODER Dezimal-String
 ("200.00"). Wir nutzen durchgängig Cent-Integer (eindeutig, keine Rundungsfehler).
 """
+# pylint: disable=too-many-lines  # EIN Client für EINE fremde API. Die Länge
+# kommt fast vollständig aus den Fundstellen-Kommentaren: welcher Pfad live
+# verifiziert wurde, welcher 404/403 antwortet und wo Channex ein 200 auf eine
+# verworfene Nutzlast gibt. Dieses Wissen am Aufruf zu halten ist der Zweck.
 from __future__ import annotations
 
 import time
@@ -1090,6 +1094,29 @@ class ChannexClient(AirbnbActionsMixin, ListingSettingsMixin):
             json={"mapping": {"rate_plan_id": rate_plan_id, "settings": settings}},
         )
 
+    # KEIN `update_channel_mapping` — bewusst nicht vorhanden.
+    #
+    # `PUT channels/{id}/mappings/{mapping_id}` existiert (der Pfad steht als
+    # `updateMapping` im ausgelieferten Channex-Client), nimmt aber KEIN
+    # Teil-Update an. Live gemessen am 12.08.2026 (Vorgang 4ab4a87f…), Airbnb-
+    # Kanal 21ec5429…, Mapping 9218322c…:
+    #
+    #     PUT  …/mappings/9218322c…   {"mapping":{"settings":{"published":false}}}
+    #     422  {"mapping": ["rate_plan_id must be specified"]}
+    #
+    # Channex erwartet dort also den VOLLSTÄNDIGEN Eintrag, nicht die geänderten
+    # Felder. Genau das macht den Pfad für einen einzelnen Schalter unbrauchbar:
+    # wer den ganzen Eintrag zurückschreibt, schreibt auch die 20 Airbnb-Felder
+    # (`pricing_setting`, `availability_rule`, `booking_setting`, `promotions`)
+    # auf einem ALTEN Stand zurück, den Airbnb zwischenzeitlich geändert haben
+    # kann.
+    #
+    # Der bewiesene Weg für `published` ist stattdessen
+    # `VeroeffentlichenMixin.airbnb_sichtbarkeit_setzen`: `PUT channels/{id}` mit
+    # dem kompletten `rate_plans`-Array, in dem GENAU EIN Mapping geändert und
+    # alle übrigen unverändert übernommen werden — nötig, weil dieser PUT das
+    # Array ersetzt und ein Airbnb-Kanal live 18 Objekte trägt.
+
     def delete_channel_mapping(
         self, channel_id: str, mapping_id: str
     ) -> dict[str, Any]:
@@ -1151,6 +1178,47 @@ class ChannexClient(AirbnbActionsMixin, ListingSettingsMixin):
         return self.get(
             f"channels/{channel_id}/execute/{aktion}",
             params={"listing_id": listing_id},
+        )
+
+    def set_listing_published(
+        self, channel_id: str, listing_id: str, *, published: bool
+    ) -> dict[str, Any]:
+        """Ein Airbnb-Listing veröffentlichen / zurückziehen.
+
+        `publish` / `unpublish` sind ZWEI der vier Aktionsnamen, die Channex'
+        eigene Library (`ChannexIO/Channex-BL`) belegt — neben
+        `update_pricing_setting` und `update_availability_rule`. In der
+        Channex-Oberfläche ist das der Schalter, den die Doku als „Published /
+        Unpublished — You can click on it to change the status" beschreibt.
+
+        WARUM NICHT ÜBER DIE MAPPING-SETTINGS, beide Wege live widerlegt
+        (12.08.2026, Airbnb-Kanal 21ec5429…, Listing 54087677):
+          * `PUT channels/{id}/mappings/{mid}` mit
+            `{"settings":{"published":false}}` → **422**
+            `{"mapping": ["rate_plan_id must be specified"]}` (Vorgang 4ab4a87f…)
+          * `PUT channels/{id}` mit dem kompletten `rate_plans`-Array, in dem
+            `settings.published` auf `false` steht → **200**, danach steht
+            `published` beim Rücklesen weiter auf `true` (Vorgang 75379514…).
+            Channex nimmt beim Kanal-PUT die Mapping-`settings` bestehender
+            Einträge also NICHT an — der PUT ist für das ANHÄNGEN von Mappings
+            verifiziert (`_attach_room_to_channel`), nicht für das Ändern ihrer
+            Einstellungen. Genau daran ist der Bestandsweg
+            `airbnb_sichtbarkeit_setzen` gescheitert, ohne dass es je auffiel:
+            er meldet den Fehlschlag korrekt, wurde aber offenbar nie erfolgreich
+            durchlaufen.
+
+        `published` ist demnach ein Zustand des LISTINGS, den Channex über eine
+        Aktion schaltet, und kein Feld, das man im Kanal-Objekt mitschreibt.
+
+        DIE ANTWORT BEWEIST NICHTS: der `execute`-Namensraum quittiert JEDEN
+        Namen mit 200 `{"meta":{"message":"Success"}}`, auch erfundene (kontrolliert
+        gemessen). Der Aufrufer MUSS über `get_channel` zurücklesen — das tut
+        `objekt_verkauf._published_schalten`.
+        """
+        return self.post(
+            f"channels/{channel_id}/execute/"
+            f"{'publish' if published else 'unpublish'}",
+            json={"listing_id": listing_id},
         )
 
     def update_listing_pricing_settings(

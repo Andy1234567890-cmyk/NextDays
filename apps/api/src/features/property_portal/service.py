@@ -4,8 +4,8 @@ GET/PUT der Portal-Schalter (property_guest_portal, Migration 0121). Der Service
 läuft mit Service-Role (RLS umgangen) → JEDER Zugriff scopet EXPLIZIT über die
 property→tenant-Beziehung (Wurzel 3): das Objekt muss dem Tenant gehören, sonst
 404. Zusätzlich gilt der Objekt-Scope der Rolle (§4.2 owner, §4.3 staff) — der
-Tenant allein trennt nur Betriebe, nicht die Rollen darin. Der Türcode ist
-sensibel und wird ohne MANAGE_PROPERTIES maskiert.
+Tenant allein trennt nur Betriebe, nicht die Rollen darin. Türcode und
+WLAN-Passwort sind sensibel und werden ohne MANAGE_PROPERTIES maskiert.
 """
 from __future__ import annotations
 
@@ -28,6 +28,8 @@ _FIELDS = (
     "contact_phone",
     "self_checkin",
     "door_code",
+    "wifi_ssid",
+    "wifi_password",
     "show_code_only_if_paid",
     "hide_code_until_checkin",
     "code_visible_from",
@@ -103,7 +105,8 @@ class PropertyPortalService:
     ) -> GuestPortalSettings:
         """Portal-Einstellungen des Objekts. Fehlt der Datensatz, liefern wir die
         Default-Einstellungen (alles aus) — das Objekt hat schlicht noch kein
-        Gastmodul konfiguriert. Türcode ohne MANAGE_PROPERTIES maskiert (None)."""
+        Gastmodul konfiguriert. Türcode UND WLAN-Passwort ohne MANAGE_PROPERTIES
+        maskiert (None) — beides sind Geheimnisse derselben Art (0314)."""
         tenant_id = self._require_tenant(ctx)
         self._require_own_property(tenant_id, property_id, ctx)
         rows = (
@@ -123,6 +126,7 @@ class PropertyPortalService:
         data = {k: row[k] for k in _FIELDS if row.get(k) is not None}
         if not can_see_code:
             data.pop("door_code", None)
+            data.pop("wifi_password", None)
         return GuestPortalSettings(**data)
 
     def put(

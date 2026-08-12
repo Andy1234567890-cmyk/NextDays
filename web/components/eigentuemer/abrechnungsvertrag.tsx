@@ -87,9 +87,18 @@ function ausVertrag(v: OwnerBillingTerms): FormState {
 export function Abrechnungsvertrag({
   ownerId,
   properties,
+  onGeltendeVertraege,
 }: {
   ownerId: string;
   properties: PropOption[];
+  /** Meldet die HEUTE geltenden Verträge nach oben.
+   *
+   *  Damit können die Stammdaten-Felder darüber anzeigen, dass ihr Satz
+   *  gerade überstimmt wird. Ohne diese Rückmeldung stünden auf einer Seite
+   *  zwei Provisionsangaben ohne erkennbare Rangfolge — genau der
+   *  Widerspruch, an dem Kunden die Seite nicht verstanden haben. Der
+   *  Vertrag bleibt die einzige Quelle: die Stammdaten LESEN ihn nur. */
+  onGeltendeVertraege?: (vertraege: OwnerBillingTerms[]) => void;
 }) {
   const t = useTranslations("ownerBilling");
   const [items, setItems] = useState<OwnerBillingTerms[]>([]);
@@ -118,6 +127,13 @@ export function Abrechnungsvertrag({
   useEffect(() => {
     void laden();
   }, [laden]);
+
+  // Die geltenden Verträge nach oben melden — nach JEDEM Laden, also auch nach
+  // Anlegen/Bearbeiten/Löschen (alle rufen `laden()`). Sonst behauptete der
+  // Hinweis an den Stammdaten weiter einen Vertrag, den es nicht mehr gibt.
+  useEffect(() => {
+    onGeltendeVertraege?.(items.filter((v) => v.aktuell));
+  }, [items, onGeltendeVertraege]);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => (f ? { ...f, [key]: value } : f));

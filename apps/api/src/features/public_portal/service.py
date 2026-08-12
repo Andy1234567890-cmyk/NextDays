@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Any
 
 from supabase import Client
 
@@ -19,11 +20,23 @@ from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows
 from src.features.auth.guest_masking import GuestMask, load_guest_mask
 from src.features.owner_statements.common import (
+    Auszahlung,
     PayoutUnbekannt,
+    Vertragsregeln,
+    auszahlung_berechnen,
     buchungs_payout,
     effektive_provision_pct,
+    gastpreis,
     naechte_payout_map,
     owner_payout,
+    payout_je_nacht,
+    portal_abzug,
+    portal_zieht_ein,
+    vertragsregeln_aus_zeile,
+)
+from src.features.owner_statements.gebuehren_quelle import (
+    gebuehren_der_buchung,
+    klassifikation_laden,
 )
 
 from .schemas import (
@@ -75,6 +88,20 @@ class _Belegung:
     grund: str | None
     gast: str | None
     quelle: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class _GebuehrenKontext:
+    """Die je Auswertung EINMAL geladenen Bezugsdaten der Gebührenrechnung.
+
+    Gebündelt statt als vier weitere Parameter durch `_verteile` geschleift:
+    die Methode trägt schon die Bezugsdaten einer Buchung, und jeder zusätzliche
+    Einzelparameter macht die Aufrufstelle unleserlicher als die Sache ist.
+    """
+
+    klassifikation: dict[tuple[str, str | None], tuple[str, bool]]
+    type_attributes: dict[str, Any] | None
+    payloads: dict[str, Any]
 
 
 @dataclass(slots=True)
@@ -321,6 +348,13 @@ class PublicPortalService:
         Stünde sie hier noch einmal, zeigte der Kalender über kurz oder lang
         eine andere Zahl als das Statement über denselben Zeitraum.
 
+        PROVISIONSQUELLE (0343, Umstieg Schritt 1): Vorrang hat der
+        Abrechnungsvertrag `owner_billing_terms`, aufgelöst JE BUCHUNG mit dem
+        Check-out als Stichtag. Erst wenn für diesen Tag kein Vertrag gilt,
+        greifen die Altspalten. Der Stichtag darf nicht der angezeigte Monat
+        und schon gar nicht `date.today()` sein: sonst zeigte derselbe Kalender
+        je Aufrufzeitpunkt andere Zahlen, sobald ein Vertrag abgelöst wird.
+
         Wurzel 4: Fehlt eine Grundlage (Provision, Betrag, Nächte, Währung),
         wird kein Ersatzwert gesetzt — die Nacht bekommt `betrag=None` und den
         maschinenlesbaren Grund, damit die UI „nicht ausweisbar" zeigen kann
@@ -339,7 +373,15 @@ class PublicPortalService:
             self._db.table("reservations")
             .select(
                 "id, property_id, unit_id, guest_id, channel, ota_name, "
-                "check_in, check_out, status, total_amount, channel_fee, currency"
+                "check_in, check_out, status, total_amount, channel_fee, "
+                # `ota_reservation_code` verbindet die Reservierung mit dem
+                # Original-Payload (`channex_booking`), aus dem die vom Portal
+                # WIRKLICH abgerechneten Gebühren kommen. `ota_commission` ist
+                # der gemeldete Portal-Abzug, `payment_collect` entscheidet, ob
+                # zusätzlich eine Zahlungsgebühr anfällt (0364).
+                "currency, source_channex_booking_id, ota_commission, "
+                # `pets` entscheidet, ob die Haustiergebühr des Objekts anfiel.
+                "payment_collect, pets"
             )
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
@@ -355,6 +397,9 @@ class PublicPortalService:
         if not reservations:
             return {}
         provisionen = self._provision_map(tenant_id, property_id)
+        vertraege = self._vertrag_je_buchung(
+            tenant_id, property_id, reservations
+        )
         namen = self._gast_namen(
             [str(r["guest_id"]) for r in reservations if r.get("guest_id")]
         )
@@ -365,10 +410,241 @@ class PublicPortalService:
         # denselben Zeitraum — genau der Fehler, den der geteilte Helfer
         # verhindern soll. Sichtbar wird er erst, sobald ein Extra verkauft ist.
         addons = self._addon_summen([str(r["id"]) for r in reservations])
+        kontext = self._gebuehren_kontext(tenant_id, property_id, reservations)
+        portal_saetze = self._portal_saetze_je_buchung(
+            tenant_id, property_id, reservations
+        )
         out: dict[str, _NachtInfo] = {}
         for r in reservations:
-            self._verteile(r, provisionen, namen, addons, mask, start, end, out)
+            self._verteile(
+                r,
+                provisionen,
+                vertraege,
+                namen,
+                addons,
+                mask,
+                start,
+                end,
+                out,
+                kontext=kontext,
+                portal_saetze=portal_saetze,
+            )
         return out
+
+    def _vertrag_je_buchung(
+        self, tenant_id: str, property_id: str, reservations: list[dict]
+    ) -> dict[str, Vertragsregeln]:
+        """Den geltenden Abrechnungsvertrag JE BUCHUNG auflösen (0343).
+
+        Der Stichtag ist der Check-out der jeweiligen Buchung — nicht der
+        angezeigte Monat. Damit trägt jede Nacht den Satz, der zum Zeitpunkt
+        ihres Aufenthalts vereinbart war; eine Vertragsablösung mitten im Jahr
+        rechnet also nicht rückwirkend um. Buchungen mit demselben Check-out
+        teilen sich die Auflösung, damit ein Monat nicht 30 gleiche Abfragen
+        auslöst.
+
+        Die Auflösung selbst (Objekt-Vertrag schlägt Eigentümer-Vertrag,
+        halb offenes Intervall) liegt in `OwnerBillingService.vertrag_aufloesen`
+        und wird NICHT hier kopiert — sie ist ausdrücklich als die Auflösung
+        gebaut, „die die Rechenkette beim späteren Umstieg aufruft".
+
+        Ein Objekt ohne Eigentümer-Datensatz hat keinen Vertrag; dann bleibt die
+        Karte leer und der Aufrufer fällt auf die Altspalten zurück.
+        """
+        owner_id = self._owner_id_von_objekt(property_id)
+        if not owner_id:
+            return {}
+        # Lokal importiert wie `PricingResolver`/`sperrantraege` in diesem Slice:
+        # ein Modul-Import verschränkte zwei Slices dauerhaft, obwohl die
+        # Auflösung nur auf diesem einen Pfad gebraucht wird.
+        from src.features.owner_billing.service import (  # noqa: PLC0415
+            OwnerBillingService,
+        )
+
+        billing = OwnerBillingService(service_client=self._db)
+        je_stichtag: dict[str, Vertragsregeln | None] = {}
+        out: dict[str, Vertragsregeln] = {}
+        for r in reservations:
+            checkout = _als_datum(r.get("check_out"))
+            if checkout is None:
+                continue
+            schluessel = checkout.isoformat()
+            if schluessel not in je_stichtag:
+                zeile = billing.vertrag_aufloesen(
+                    tenant_id, owner_id, property_id, checkout
+                )
+                try:
+                    je_stichtag[schluessel] = (
+                        vertragsregeln_aus_zeile(zeile) if zeile else None
+                    )
+                except PayoutUnbekannt as exc:
+                    # Ein ungültiger Vertragssatz darf den Kalender nicht
+                    # abreißen (wie beim ungültigen Altspalten-Satz): die
+                    # betroffene Nacht bekommt später einen `grund`.
+                    log.warning(
+                        "portal_vertrag_ungueltig",
+                        property_id=property_id,
+                        stichtag=schluessel,
+                        fehler=exc.message,
+                    )
+                    je_stichtag[schluessel] = None
+            regeln = je_stichtag[schluessel]
+            if regeln is not None:
+                out[str(r["id"])] = regeln
+        return out
+
+    def _gebuehren_kontext(
+        self, tenant_id: str, property_id: str, reservations: list[dict]
+    ) -> _GebuehrenKontext:
+        """Alles, was die Gebühren- und Portal-Rechnung je Buchung braucht.
+
+        EINMAL geladen, nicht je Buchung: bei einem Monat mit 30 Tagen wären es
+        sonst dutzende identische Abfragen. Drei Bestandteile:
+
+        * die Zuordnungen (`fee_classification`) des Betriebs,
+        * die Gebühren-Stammdaten des Objekts (`type_attributes`),
+        * die Original-Payloads der OTA-Buchungen (`channex_booking.raw`) —
+          denn dort stehen die Gebühren, die das Portal WIRKLICH abgerechnet
+          hat (Airbnb: Reinigung mal 795, mal 1.075, mal 1.275 DKK bei
+          identischen Stammdaten von 795).
+        """
+        objekt = (
+            self._db.table("properties")
+            .select("type_attributes")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        # `reservations.source_channex_booking_id` trägt Channex' EIGENE
+        # Buchungs-ID (`channex_booking.channex_booking_id`), nicht unsere
+        # Zeilen-ID — live geprüft: über `channex_booking_id` treffen alle 76
+        # Feed-Buchungen, über `id` keine einzige.
+        codes = sorted(
+            {
+                str(r["source_channex_booking_id"])
+                for r in reservations
+                if r.get("source_channex_booking_id")
+            }
+        )
+        payloads: dict[str, Any] = {}
+        if codes:
+            for row in fetch_all_rows(
+                self._db.table("channex_booking")
+                .select("channex_booking_id, raw")
+                .eq("tenant_id", tenant_id)
+                .in_("channex_booking_id", codes)
+                .order("channex_booking_id")
+            ):
+                code = str(row.get("channex_booking_id") or "")
+                if code:
+                    payloads[code] = row.get("raw")
+        return _GebuehrenKontext(
+            klassifikation=klassifikation_laden(self._db, tenant_id),
+            type_attributes=(objekt[0].get("type_attributes") if objekt else None),
+            payloads=payloads,
+        )
+
+    def _portal_saetze_je_buchung(
+        self, tenant_id: str, property_id: str, reservations: list[dict]
+    ) -> dict[str, dict[str, Any]]:
+        """Den geltenden Portal-Abzugssatz je Buchung auflösen (0364).
+
+        Stichtag ist der Check-out — dieselbe Zeitachse wie beim
+        Abrechnungsvertrag. Buchungen mit gleichem (Kanal, Check-out) teilen
+        sich die Auflösung.
+        """
+        from src.features.owner_billing.service import (  # noqa: PLC0415
+            OwnerBillingService,
+        )
+
+        billing = OwnerBillingService(service_client=self._db)
+        gecacht: dict[tuple[str, str], dict[str, Any] | None] = {}
+        out: dict[str, dict[str, Any]] = {}
+        for r in reservations:
+            kanal = str(r.get("channel") or "").strip().lower()
+            checkout = _als_datum(r.get("check_out"))
+            if not kanal or checkout is None:
+                continue
+            schluessel = (kanal, checkout.isoformat())
+            if schluessel not in gecacht:
+                gecacht[schluessel] = billing.portal_satz_aufloesen(
+                    tenant_id, kanal, property_id, checkout
+                )
+            satz = gecacht[schluessel]
+            if satz is not None:
+                out[str(r["id"])] = satz
+        return out
+
+    def _auszahlung_einer_buchung(
+        self,
+        r: dict,
+        *,
+        regeln: Vertragsregeln,
+        addon_total: Decimal | None,
+        kontext: _GebuehrenKontext,
+        portal_saetze: dict[str, dict[str, Any]],
+    ) -> Auszahlung:
+        """Die volle Kette für EINE Buchung — der eine Weg für beide Ansichten.
+
+        Kalender und Einnahmen-Übersicht riefen die Kette bis 11.08.2026 mit je
+        eigenem Code auf; jede Abweichung darin wäre eine zweite Zahl für
+        dasselbe Geld gewesen. Hier steht sie einmal.
+        """
+        naechte = self._nights(r.get("check_in"), r.get("check_out"))
+        currency = (r.get("currency") or "").strip()
+        befund = gebuehren_der_buchung(
+            raw=kontext.payloads.get(
+                str(r.get("source_channex_booking_id") or "")
+            ),
+            type_attributes=kontext.type_attributes,
+            naechte=naechte,
+            klassifikation=kontext.klassifikation,
+            property_id=str(r["property_id"]),
+            reservierung=r,
+        )
+        basis = befund.basisbetrag(r.get("total_amount"))
+        gast_brutto = gastpreis(
+            uebernachtung=basis,
+            gebuehren=befund.gebuehren,
+            gebuehren_im_betrag=befund.im_gesamtpreis,
+            addon_total=addon_total,
+        )
+        satz = portal_saetze.get(str(r["id"])) or {}
+        abzug = portal_abzug(
+            brutto=gast_brutto,
+            gemeldete_provision=r.get("ota_commission"),
+            provision_pct=satz.get("provision_pct"),
+            zahlungsgebuehr_pct=satz.get("zahlungsgebuehr_pct"),
+            # Die Zahlungsgebühr ist das Entgelt für die GELDWEITERLEITUNG —
+            # nur wenn das Portal einzieht, fällt sie an. Ein LEERES
+            # `payment_collect` heißt dabei nicht „nein": siehe
+            # `portal_zieht_ein`.
+            zieht_portal_ein=portal_zieht_ein(
+                r.get("channel"), r.get("payment_collect")
+            ),
+        )
+        return auszahlung_berechnen(
+            uebernachtung=basis,
+            gebuehren=befund.gebuehren,
+            gebuehren_im_betrag=befund.im_gesamtpreis,
+            addon_total=addon_total,
+            abzug=abzug,
+            regeln=regeln,
+            naechte=naechte,
+            currency=currency,
+        )
+
+    def _owner_id_von_objekt(self, property_id: str) -> str | None:
+        """Der Eigentümer dieses Objekts (genau einer, unique 0073)."""
+        rows = (
+            self._db.table("owner_properties")
+            .select("owner_id")
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        return str(rows[0]["owner_id"]) if rows else None
 
     def _addon_summen(self, reservation_ids: list[str]) -> dict[str, Decimal]:
         """Verkaufte Zusatzleistungen je Reservierung.
@@ -403,12 +679,16 @@ class PublicPortalService:
         self,
         r: dict,
         provisionen: dict[str, Decimal] | None,
+        vertraege: dict[str, Vertragsregeln],
         namen: dict[str, str],
         addons: dict[str, Decimal],
         mask: GuestMask,
         start: date,
         end: date,
         out: dict[str, _NachtInfo],
+        *,
+        kontext: _GebuehrenKontext,
+        portal_saetze: dict[str, dict[str, Any]],
     ) -> None:
         """Eine Reservierung auf ihre Nächte im Fenster verteilen."""
         check_in = _als_datum(r.get("check_in"))
@@ -425,19 +705,41 @@ class PublicPortalService:
         betraege: list[Decimal] = []
         currency = (r.get("currency") or "").strip()
         try:
-            pct = _provision_pflicht(provisionen, str(r["property_id"]))
+            # Vertrag (0343) schlägt Altspalten. Nur wenn für den Stichtag
+            # dieser Buchung kein Vertrag gilt, muss überhaupt ein Altsatz da
+            # sein — darum wird `_provision_pflicht` erst dann befragt und
+            # wirft nicht mehr für Objekte, die längst einen Vertrag haben.
+            regeln = vertraege.get(str(r["id"]))
             naechte = (check_out - check_in).days if check_in and check_out else 0
-            nacht_werte = naechte_payout_map(
-                total_amount=r.get("total_amount"),
-                channel_fee=r.get("channel_fee"),
-                # Extras gehören in den Payout (siehe `_addon_summen`) — ohne
-                # sie wich der Kalender vom Statement ab.
-                addon_total=addons.get(str(r["id"])),
-                provision_pct=pct,
-                naechte=naechte,
-                currency=currency,
-            )
-            betraege = [n.payout for n in nacht_werte]
+            if regeln is not None:
+                # VOLLE Kette: Gebühren in den Gastpreis, Portal-Abzug,
+                # provisionsfreie Gebühren aus der Bemessung und die des
+                # Eigentümers zu 100 % zurück (0364). Derselbe Weg wie in der
+                # Einnahmen-Übersicht — eine zweite Rechnung hier wäre eine
+                # zweite Zahl für dasselbe Geld.
+                ergebnis = self._auszahlung_einer_buchung(
+                    r,
+                    regeln=regeln,
+                    addon_total=addons.get(str(r["id"])),
+                    kontext=kontext,
+                    portal_saetze=portal_saetze,
+                )
+                betraege = payout_je_nacht(ergebnis.netto, naechte)
+            else:
+                # Ohne Vertrag bleibt der Altweg: die Altspalten kennen weder
+                # Gebühren-Zuordnung noch Portal-Sätze, also wäre jede
+                # Gebührenrechnung darauf eine Erfindung.
+                nacht_werte = naechte_payout_map(
+                    total_amount=r.get("total_amount"),
+                    channel_fee=r.get("channel_fee"),
+                    addon_total=addons.get(str(r["id"])),
+                    provision_pct=_provision_pflicht(
+                        provisionen, str(r["property_id"])
+                    ),
+                    naechte=naechte,
+                    currency=currency,
+                )
+                betraege = [n.payout for n in nacht_werte]
         except PayoutUnbekannt as exc:
             # Kein Ersatzwert (Wurzel 4) — der Grund wird ausgewiesen. Nicht
             # verschluckt: er steht im Log UND in der Antwort.
@@ -596,7 +898,14 @@ class PublicPortalService:
         # dem Owner im Portal zu niedrige Summen anzeigen.
         reservations = fetch_all_rows(
             self._db.table("reservations")
-            .select("id, property_id, check_in, check_out, total_amount, channel_fee")
+            # `currency` gehört dazu, seit der Vertrag (0343) Pauschale und
+            # Mindestprovision in EIGENER Währung tragen kann: ohne die
+            # Buchungswährung ist nicht prüfbar, ob sie zusammenpassen.
+            .select(
+                "id, property_id, check_in, check_out, total_amount, "
+                "channel_fee, currency, channel, source_channex_booking_id, "
+                "ota_commission, payment_collect"
+            )
             .eq("tenant_id", tenant_id)
             .in_("property_id", ids)
             .gte("check_in", period_from.isoformat())
@@ -612,6 +921,30 @@ class PublicPortalService:
         # dem Eigentümer mehr aus, als er je bekommt.
         addons = self._addon_summen([str(r["id"]) for r in reservations])
         provisionen = self._provision_map_fuer(tenant_id, ids)
+        # Auch die Einnahmen-Übersicht folgt dem Vertrag (0343). Ohne das wäre
+        # sie erneut eine dritte Zahl: der Kalender rechnete 20 % aus dem
+        # Vertrag, diese Liste fiele auf die leere Altspalte zurück und zeigte
+        # „—" — für denselben Zeitraum, dasselbe Geld.
+        je_objekt = {
+            pid: [r for r in reservations if str(r["property_id"]) == pid]
+            for pid in ids
+        }
+        vertraege_je_objekt = {
+            pid: self._vertrag_je_buchung(tenant_id, pid, zeilen)
+            for pid, zeilen in je_objekt.items()
+        }
+        # Gebühren und Portal-Sätze ebenfalls je Objekt — dieselbe Kette wie im
+        # Kalender. Ohne sie fehlten dem Gastpreis die Gebühren und dem
+        # Eigentümer seine Nebenkosten, und die Übersicht wiche wieder von der
+        # Kalenderansicht ab.
+        kontext_je_objekt = {
+            pid: self._gebuehren_kontext(tenant_id, pid, zeilen)
+            for pid, zeilen in je_objekt.items()
+        }
+        portal_je_objekt = {
+            pid: self._portal_saetze_je_buchung(tenant_id, pid, zeilen)
+            for pid, zeilen in je_objekt.items()
+        }
 
         agg: dict[str, dict] = {
             pid: {
@@ -639,15 +972,24 @@ class PublicPortalService:
             a["nights"] += self._nights(r.get("check_in"), r.get("check_out"))
             a["reservations"] += 1
             try:
-                pct = _provision_pflicht(provisionen, pid)
-                a["payout"] += owner_payout(
-                    buchungs_payout(
-                        r.get("total_amount"),
-                        r.get("channel_fee"),
-                        addons.get(str(r["id"])),
-                    ),
-                    pct,
-                )
+                regeln = vertraege_je_objekt.get(pid, {}).get(str(r["id"]))
+                if regeln is not None:
+                    a["payout"] += self._auszahlung_einer_buchung(
+                        r,
+                        regeln=regeln,
+                        addon_total=addons.get(str(r["id"])),
+                        kontext=kontext_je_objekt[pid],
+                        portal_saetze=portal_je_objekt.get(pid, {}),
+                    ).netto
+                else:
+                    a["payout"] += owner_payout(
+                        buchungs_payout(
+                            r.get("total_amount"),
+                            r.get("channel_fee"),
+                            addons.get(str(r["id"])),
+                        ),
+                        _provision_pflicht(provisionen, pid),
+                    )
             except PayoutUnbekannt as exc:
                 # Kein Ersatzwert: `total_amount or 0` hätte eine Buchung ohne
                 # Betrag stillschweigend als 0-€-Buchung verbucht und die

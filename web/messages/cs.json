@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Nástěnku se nepodařilo načíst",
     "reviews": "Hodnocení",
     "extensions": "Rozšíření",
-    "announcements": "Novinky"
+    "announcements": "Novinky",
+    "billingRules": "Pravidla vyúčtování",
+    "ownerReporting": "Reporting pro vlastníky"
   },
   "exemption": {
     "labelNamed": "Osvobozeno od daně ({scheme}) — DIČ není nutné",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Fotografie od hosta",
     "translate": "Přeložit",
     "showOriginal": "Zobrazit originál",
-    "translatedFrom": "Přeloženo z jazyka {sprache}"
+    "translatedFrom": "Přeloženo z jazyka {sprache}",
+    "formatStrike": "Přeškrtnuté",
+    "fieldsButton": "{{Zástupné symboly}}",
+    "langBase": "Základní verze",
+    "langBaseHint": "Odejde každému hostovi, jehož jazyk nemá vlastní verzi.",
+    "subjectLabel": "Předmět",
+    "subjectHint": "Předmět se používá jen u e-mailů.",
+    "langAdd": "Přidat nový jazyk",
+    "langDefault": "Výchozí",
+    "langSetDefault": "Nastavit jako výchozí",
+    "langRemove": "Odebrat jazyk",
+    "langEmpty": "Zatím žádný jazyk — do té doby jde všem hostům základní verze.",
+    "autoEditContent": "Upravit obsah",
+    "autoPanelCreate": "Vytvořit",
+    "quickEmpty": "Zatím žádná rychlá odpověď.",
+    "autoTextRequired": "Text je povinný."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatím není propojen. Zadejte přístupové údaje (Meta Cloud API) v nastavení serveru, poté bude odesílání aktivní.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Pokud e-mail nedorazil nebo odkaz vypršel, lze pozvánku odeslat znovu. Nový odkaz platí 7 dní a vede do tohoto prostředí; dříve odeslaný odkaz přestane platit.",
     "portalAccessResent": "Pozvánka byla odeslána znovu.",
     "commissionNotAgreed": "nesjednáno",
+    "commissionContractWins": "Aktuálně se uplatňuje zúčtovací smlouva: {pct} % od {ab}. Toto pole slouží jen jako záloha, pokud žádná smlouva neplatí.",
+    "commissionNoneAnywhere": "Sazba dosud nebyla sjednána — ani zde, ani jako smlouva. Do té doby zůstává výplata v portálu vlastníka prázdná.",
+    "commissionContractObject": "Vlastní smlouva pro tento objekt: {pct} % od {ab}.",
+    "commissionContractOwnerWide": "Zúčtovací smlouva vlastníka: {pct} % od {ab}.",
     "assignableCount": "Vybráno {count} z {total} k přidání",
     "assignedHeading": "{count, plural, one {# přiřazený objekt} few {# přiřazené objekty} other {# přiřazených objektů}}",
     "info": {
       "aria": "Vysvětlení k: {feld}",
       "share": "Vlastnický podíl na tomto objektu. Při 100 % se celá výplata připíše tomuto vlastníkovi, při nižším podílu poměrně.",
-      "commission": "Standardní sazba provize pro tohoto vlastníka. Zůstane-li pole prázdné, není sazba dosud sjednána — výplata se pak nevypočítá, ale zobrazí se jako pomlčka.",
-      "commissionOverride": "Platí pouze pro tento jeden objekt a přepisuje standardní sazbu vlastníka. Zůstane-li pole prázdné, platí standardní sazba."
+      "commission": "Záložní sazba, pokud pro objekt neplatí zúčtovací smlouva. Smlouva níže má přednost — je to skutečná dohoda a zahrnuje i období, paušál a minimální provizi. Zůstanou-li obě prázdné, výplata se nepočítá a zobrazí se pomlčka.",
+      "commissionOverride": "Záložní sazba jen pro tento objekt; přepisuje standardní sazbu vlastníka. Zúčtovací smlouva má přednost i zde. Zůstane-li pole prázdné, platí standardní sazba."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Celková výplata",
       "ownerPayout": "Výplata vlastníkovi",
       "pmPayout": "Výplata správci",
-      "commissionMissing": "U nejméně jedné nemovitosti není nastavena sazba provize. Výplaty proto nelze vypočítat — zadejte sazbu v kmenových datech vlastníka nebo u nemovitosti."
+      "commissionMissing": "U nejméně jedné nemovitosti není nastavena sazba provize. Výplaty proto nelze vypočítat — zadejte sazbu v kmenových datech vlastníka nebo u nemovitosti.",
+      "payoutUnknown": "U alespoň jedné rezervace chybí údaj, bez kterého nelze vypočítat výplatu. Dotčené řádky zobrazují místo částky „—“.",
+      "commissionInvalid": "Uložená sazba provize je mimo rozsah 0–100 %. Opravte sazbu u vlastníka nebo u objektu.",
+      "portalRateMissing": "U alespoň jednoho rezervačního kanálu není uložena sazba srážky a portál svou srážku nenahlásil. Zadejte v Účetnictví → Pravidla vyúčtování, kolik si portál ponechává z každé rezervace.",
+      "portalRateInvalid": "Uložená sazba srážky portálu je mimo rozsah 0–100 %. Opravte ji v Účetnictví → Pravidla vyúčtování.",
+      "feeUnassigned": "Alespoň jeden druh poplatku dosud není přiřazen. Bez přiřazení nelze určit, komu částka patří a zda se z ní počítá provize — nastavte to v Účetnictví → Pravidla vyúčtování.",
+      "feeNotComputable": "Poplatek nelze vyúčtovat jako částku (uložen procentem nebo bez částky). Zkontrolujte poplatek u objektu.",
+      "contractCurrency": "Paušál nebo minimální provize je uvedena v jiné valutě než rezervace. Částky v různých valutách se nepřepočítávají — zkontrolujte smlouvu o vyúčtování."
     },
     "rental": {
       "perReservation": "Za rezervaci",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Celková cena",
       "totalPayout": "Celková výplata",
       "totals": "Součty",
-      "empty": "V období nejsou žádné rezervace."
+      "empty": "V období nejsou žádné rezervace.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Přidat",
@@ -1315,7 +1351,9 @@
     "commissionable": "Podléhá provizi",
     "commissionableYes": "Ano — vstupuje do provize",
     "commissionableNo": "Ne — bez provize",
-    "infoAria": "Vysvětlení k: {feld}"
+    "infoAria": "Vysvětlení k: {feld}",
+    "rulesPageTitle": "Pravidla vyúčtování",
+    "rulesPageIntro": "Kolik si portály ponechávají z každé rezervace a komu patří poplatky. Obojí určuje částku, která nakonec vstoupí do vyúčtování provizí vašich vlastníků."
   },
   "portal": {
     "title": "Můj portál",
@@ -1432,6 +1470,16 @@
         "blocked": "Blokováno"
       },
       "payoutPerNight": "Čistá výplata/noc",
+      "payoutPerNightShort": "netto/noc",
+      "payoutUnknown": {
+        "short": "neuvedeno",
+        "label": "Nelze vyčíslit",
+        "provision": "Pro tento objekt není nastavena provize — správa ji musí doplnit.",
+        "provisionUngueltig": "Nastavená provize je mimo rozsah 0–100 %.",
+        "betrag": "U této rezervace chybí celková částka.",
+        "naechte": "Období této rezervace je neplatné.",
+        "waehrungVertrag": "Sjednaný paušál je v jiné valutě než tato rezervace — částky se nepřepočítávají."
+      },
       "guest": "Host",
       "channel": "Zdroj rezervace",
       "blockHint": "Chceš nechat blokovat období? Podej žádost — rozhoduje správa.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Zobrazit dveřní kód pouze v případě, že je pobyt zaplacen",
       "hideCodeUntilCheckin": "Skrýt dveřní kód až do check-inu",
       "codeVisibleFromLabel": "Dveřní kód se zobrazí v den check-inu od …",
-      "codeVisibleFromUnset": "— nenastaveno —"
+      "codeVisibleFromUnset": "— nenastaveno —",
+      "wifiSsidLabel": "Název sítě (SSID)",
+      "wifiSsidPlaceholder": "např. WiFi-Chata",
+      "wifiPasswordLabel": "Heslo Wi-Fi",
+      "wifiPasswordPlaceholder": "např. leto2026",
+      "wifiFieldsHint": "Tyto dvě hodnoty doplňují zástupné symboly {ssid} a {password} v šablonách zpráv a QR kód Wi-Fi v portálu pro hosty. Pokud zůstanou prázdné, šablona s těmito symboly se neodešle."
     },
     "taskCreatePopup": {
       "title": "Vytvořit úkol",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Objekt zkopírován.",
       "duplicateErr": "Kopírování se nezdařilo.",
       "unlistOk": "Propojení s webem zrušeno.",
-      "unlistErr": "Zrušení se nezdařilo."
+      "unlistErr": "Zrušení se nezdařilo.",
+      "menuVerkaufAus": "Vypnout na všech portálech",
+      "menuVerkaufAn": "Znovu nabízet na všech portálech"
     },
     "messagingForm": {
       "title": "Zástupné symboly zpráv",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Doplňky — váží se na vlastní fotografie a překlady.",
       "copyPricingSkipAvailability": "Dostupnost, obsazenost a podmínky.",
       "copyPricingOverwriteWarning": "Ceny tohoto objektu budou zcela přepsány. Částky se převezmou jen při stejné valutě.",
-      "copyPricingDone": "Ceny převzaty."
+      "copyPricingDone": "Ceny převzaty.",
+      "portalStandAbweichung": "tam {dort}",
+      "portalStand": {
+        "online": "Uloženo u portálu",
+        "abweichend": "Liší se",
+        "fehlt": "U portálu není uloženo"
+      }
     },
     "policiesForm": {
       "title": "Zásady",
@@ -5625,7 +5686,10 @@
       "hinweis": "Můžeš je převzít, místo abys je vytvářel znovu. Stávající poplatky zůstanou nezměněny.",
       "uebernehmen": "Převzít poplatky",
       "laeuft": "Převádí se …",
-      "uebernommen": "Převzato {anzahl} poplatků."
+      "uebernommen": "Převzato {anzahl} poplatků.",
+      "verwerfen": "Nepřevzít",
+      "verworfen": "Nabídka ukončena — vaše poplatky zůstávají, jak jsou.",
+      "einmalig": "Jednorázová pomoc na start: dál platí jen to, co je tady — to posíláme portálům."
     },
     "veroeffentlichen": {
       "titel": "Publikovat objekt",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Nastavuje se přes „Publikovat“ nahoře.",
       "immerDabei": "Vždy zahrnuto — náš vlastní marketplace, bez provize portálu."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Stáhnout objekt z prodeje?",
+      "fragenAusText": "„{titel}“ bude nastaven jako neaktivní a rezervační kalendář se vypne na všech připojených portálech. Existující rezervace zůstanou nedotčeny. Stav každého portálu se uloží, aby jej obnovení vrátilo.",
+      "fragenAnTitel": "Znovu nabízet objekt?",
+      "fragenAnText": "„{titel}“ bude znovu nastaven jako aktivní. Každý portál dostane zpět stav, který měl před vypnutím — portály, které byly už vypnuté, zůstanou vypnuté. Poté se znovu odešlou ceny a dostupnost.",
+      "jetztAus": "Vypnout nyní",
+      "jetztAn": "Nabízet nyní",
+      "laeuft": "Přepínání…",
+      "abbrechen": "Zrušit",
+      "schliessen": "Zavřít",
+      "ergebnisAusTitel": "Objekt je vypnutý",
+      "ergebnisAusText": "Vypnuto na všech portálech.",
+      "ergebnisAnTitel": "Objekt je znovu aktivní",
+      "ergebnisAnText": "Znovu nabízeno na všech portálech.",
+      "ergebnisTeilweiseTitel": "Nepovedlo se všude",
+      "ergebnisTeilweiseText": "{anzahl} portál(y) nebylo možné přepnout. Tam prodej pokračuje — stav objektu proto nebyl změněn.",
+      "zeileAbgeschaltet": "Vypnuto",
+      "zeileWiederhergestellt": "Znovu aktivní",
+      "zeileObjekteAmKanal": "Tento kanál nese {anzahl} objektů — nic se nezměnilo, aby se nevypnuly i ostatní."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Než připojíte jiný účet, odhlaste se v prohlížeči z portálu.",
     "accountConnectCredentialHint": "Další přístup k {portal} se zadává s ID hotelu při připojování objektu — nikoli zde.",
     "marketplacePending": "{count} ke kontrole",
-    "marketplaceWaiting": "Ke kontrole"
+    "marketplaceWaiting": "Ke kontrole",
+    "marketplace": {
+      "intro": "myBestDays je náš vlastní marketplace — rezervační kanál jako Booking nebo Airbnb, jen bez připojení k portálu. Objekt se zobrazí, když je aktivní, zde nabízený a schválený.",
+      "openMarketplace": "Otevřít marketplace",
+      "propertiesHeading": "Objekty na marketplace",
+      "noProperties": "Zatím nejsou vytvořeny žádné objekty.",
+      "columnProperty": "Objekt",
+      "columnVisibility": "Viditelnost",
+      "columnApproval": "Schválení",
+      "columnBookings": "Rezervace",
+      "stateActive": "Viditelný",
+      "statePending": "Ke kontrole",
+      "stateNotListed": "Není nabízen",
+      "stateInactiveProperty": "Objekt není aktivní",
+      "viewListing": "Zobrazit nabídku",
+      "reviewHint": "Objekty ke kontrole se na myBestDays ještě neobjeví. Každou nabídku kontrolujeme, protože myBestDays tam vystupuje jako poskytovatel — portály a vlastní web to neovlivní.",
+      "summaryVisible": "{count} viditelných",
+      "summaryWaiting": "{count} ke kontrole",
+      "summaryOff": "{count} nenabízených",
+      "moderation": {
+        "draft": "Koncept",
+        "pending": "Ke kontrole",
+        "approved": "Schváleno",
+        "rejected": "Zamítnuto"
+      }
+    }
   },
   "calendarSync": {
     "title": "Import/export kalendáře",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Potvrdit",
     "mfaChecking": "Ověřuji…",
     "mfaBack": "Zpět na přihlášení"
+  },
+  "portalSaetze": {
+    "add": "Přidat sazbu",
+    "breakdown": "{provision} % provize + {fee} % platebního poplatku",
+    "breakdownNoFee": "{provision} % provize, bez platebního poplatku",
+    "cancel": "Zrušit",
+    "channel": "Portál",
+    "channelLocked": "Portál u existující sazby nelze změnit. Pro jiný portál vytvořte novou sazbu.",
+    "create": "Vytvořit sazbu",
+    "created": "Sazba vytvořena",
+    "current": "platí dnes",
+    "delete": "Smazat sazbu",
+    "deleted": "Sazba smazána",
+    "edit": "Upravit sazbu",
+    "empty": "Zatím není uložena žádná sazba. Bez sazby lze výplatu vypočítat jen tehdy, když portál svou srážku sám nahlásí.",
+    "errorProvisionRequired": "Zadejte prosím sazbu provize.",
+    "intro": "Co si každý portál nechává z každé rezervace. Tyto sazby platí tam, kde portál svou srážku sám nenahlásí — pokud nahlásí částku, platí vždy ta nahlášená.",
+    "loading": "Načítání …",
+    "note": "Poznámka",
+    "notePlaceholder": "Odkud sazba pochází, např. smlouva s portálem nebo vyúčtování",
+    "payoutFee": "Platební poplatek",
+    "payoutFeeInfo": "Poplatek za to, že portál peníze inkasuje a předává dál. Účtuje se pouze tehdy, když inkasuje portál — pokud host platí přímo vám, nevzniká.",
+    "payoutFeeNone": "neúčtuje žádný",
+    "period": "{von} až {bis}",
+    "periodOpen": "od {von}",
+    "provision": "Provize",
+    "provisionInfo": "Podíl za zprostředkování, který si portál za rezervaci nechává. Základem je celková cena hosta včetně poplatků.",
+    "save": "Uložit změny",
+    "saved": "Sazba uložena",
+    "title": "Sazby srážek portálů",
+    "total": "{pct} % celkem",
+    "validFrom": "Platí od",
+    "validTo": "Platí do",
+    "validToInfo": "Ponechte prázdné, dokud sazba platí. Pokud portál svou sazbu změní, vytvořte novou ode dne změny — stará zůstane pro dřívější vyúčtování.",
+    "validToOpen": "stále platí"
   }
 }

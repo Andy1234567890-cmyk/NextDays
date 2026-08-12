@@ -23,6 +23,8 @@ from src.features.owner_billing.schemas import (
     FeeClassificationUpsert,
     OwnerBillingTermsCreate,
     OwnerBillingTermsUpdate,
+    PortalAbzugssatzCreate,
+    PortalAbzugssatzUpdate,
 )
 from src.features.owner_billing.service import (
     BillingError,
@@ -158,6 +160,7 @@ def _svc(tables: dict[str, list[dict]] | None = None) -> OwnerBillingService:
         "property_pricing_config": [],
         "fee_classification": [],
         "owner_billing_terms": [],
+        "portal_abzugssaetze": [],
     }
     if tables:
         base.update(tables)
@@ -902,3 +905,139 @@ def test_fremder_vertrag_ist_nicht_loeschbar() -> None:
         svc.vertrag_loeschen(_ctx(), "v-fremd")
     assert exc.value.status_code == 404
     assert len(svc._db.tables["owner_billing_terms"]) == 1  # noqa: SLF001
+
+
+# ----------------------------------------------------------------------
+# C) Portal-Abzugssätze (0364)
+# ----------------------------------------------------------------------
+
+
+def _satz(
+    svc: OwnerBillingService,
+    *,
+    kanal: str = "booking",
+    ab: date,
+    bis: date | None = None,
+    provision: float = 15,
+    gebuehr: float | None = 1.5,
+    property_id: str | None = None,
+) -> str:
+    res = svc.satz_anlegen(
+        _ctx(),
+        PortalAbzugssatzCreate(
+            kanal=kanal,
+            gueltig_ab=ab,
+            gueltig_bis=bis,
+            provision_pct=provision,
+            zahlungsgebuehr_pct=gebuehr,
+            property_id=property_id,
+        ),
+    )
+    return res.id
+
+
+def test_gesamt_pct_addiert_beide_saetze() -> None:
+    """Die Zahl, mit der die Buchhaltung rechnet: 15 % + 1,5 % = 16,5 %.
+
+    Sie kommt BERECHNET vom Server, damit die Oberfläche sie nicht selbst
+    addiert und dabei die Zahlungsgebühr vergisst.
+    """
+    svc = _svc()
+    _satz(svc, ab=date(2026, 1, 1), provision=15, gebuehr=1.5)
+    satz = svc.saetze_liste(_ctx()).items[0]
+    assert satz.gesamt_pct == 16.5
+
+
+def test_ohne_zahlungsgebuehr_bleibt_none_nicht_null() -> None:
+    """Airbnb erhebt keine — „keine" ist etwas anderes als „0 % vereinbart"."""
+    svc = _svc()
+    _satz(svc, kanal="airbnb", ab=date(2026, 1, 1), provision=15.5, gebuehr=None)
+    satz = svc.saetze_liste(_ctx()).items[0]
+    assert satz.zahlungsgebuehr_pct is None
+    assert satz.gesamt_pct == 15.5
+
+
+def test_kanal_wird_normalisiert() -> None:
+    """`Booking ` und `booking` sind DERSELBE Kanal, nicht zwei."""
+    svc = _svc()
+    _satz(svc, kanal="  BooKing  ", ab=date(2026, 1, 1))
+    assert svc.saetze_liste(_ctx()).items[0].kanal == "booking"
+
+
+def test_satz_zeitachse_waehlt_nach_stichtag() -> None:
+    """Ein Juli-Abzug rechnet mit dem Juli-Satz, egal wann die Abrechnung entsteht."""
+    svc = _svc()
+    _satz(svc, ab=date(2026, 1, 1), bis=date(2026, 7, 1), provision=15)
+    _satz(svc, ab=date(2026, 7, 1), provision=17)
+    juni = svc.portal_satz_aufloesen("t-1", "booking", None, date(2026, 6, 15))
+    juli = svc.portal_satz_aufloesen("t-1", "booking", None, date(2026, 7, 15))
+    assert juni is not None and float(juni["provision_pct"]) == 15
+    assert juli is not None and float(juli["provision_pct"]) == 17
+
+
+def test_satz_objekt_schlaegt_betrieb() -> None:
+    """Ein je Objekt verhandelter Satz (Preferred-Zuschlag) gewinnt."""
+    svc = _svc()
+    _satz(svc, ab=date(2026, 1, 1), provision=15)
+    _satz(svc, ab=date(2026, 1, 1), provision=18, property_id="p-1")
+    betrieb = svc.portal_satz_aufloesen("t-1", "booking", None, date(2026, 3, 1))
+    objekt = svc.portal_satz_aufloesen("t-1", "booking", "p-1", date(2026, 3, 1))
+    assert betrieb is not None and float(betrieb["provision_pct"]) == 15
+    assert objekt is not None and float(objekt["provision_pct"]) == 18
+
+
+def test_anderer_kanal_greift_nicht() -> None:
+    """Kein Portal erbt den Satz eines anderen (7 OTAs, 7 Vereinbarungen)."""
+    svc = _svc()
+    _satz(svc, kanal="booking", ab=date(2026, 1, 1))
+    assert svc.portal_satz_aufloesen("t-1", "airbnb", None, date(2026, 3, 1)) is None
+
+
+def test_ohne_satz_gibt_es_keinen_ersatzwert() -> None:
+    """Kein Satz heißt `None` — nicht 0 % Abzug (Wurzel 4)."""
+    svc = _svc()
+    assert svc.portal_satz_aufloesen("t-1", "booking", None, date(2026, 3, 1)) is None
+
+
+def test_satz_zeitraum_rueckwaerts_wird_abgelehnt() -> None:
+    svc = _svc()
+    satz_id = _satz(svc, ab=date(2026, 5, 1))
+    with pytest.raises(BillingError) as exc:
+        svc.satz_aendern(
+            _ctx(), satz_id, PortalAbzugssatzUpdate(gueltig_bis=date(2026, 4, 1))
+        )
+    assert exc.value.status_code == 422
+
+
+def test_zahlungsgebuehr_ausdruecklich_entfernen() -> None:
+    """`ohne_zahlungsgebuehr` unterscheidet „entfernen" von „nicht ändern"."""
+    svc = _svc()
+    satz_id = _satz(svc, ab=date(2026, 1, 1), gebuehr=1.5)
+    geaendert = svc.satz_aendern(
+        _ctx(), satz_id, PortalAbzugssatzUpdate(ohne_zahlungsgebuehr=True)
+    )
+    assert geaendert.zahlungsgebuehr_pct is None
+    assert geaendert.gesamt_pct == geaendert.provision_pct
+
+
+def test_fremder_satz_ist_nicht_aenderbar() -> None:
+    """Wurzel 3/9: ein Satz bestimmt Geld — fremder Tenant ergibt 404."""
+    svc = _svc(
+        {
+            "portal_abzugssaetze": [
+                {
+                    "id": "s-fremd",
+                    "tenant_id": "t-FREMD",
+                    "kanal": "booking",
+                    "gueltig_ab": "2026-01-01",
+                    "provision_pct": 15,
+                }
+            ]
+        }
+    )
+    with pytest.raises(BillingError) as exc:
+        svc.satz_aendern(
+            _ctx(), "s-fremd", PortalAbzugssatzUpdate(provision_pct=99)
+        )
+    assert exc.value.status_code == 404
+    assert svc._db.tables["portal_abzugssaetze"][0]["provision_pct"] == 15  # noqa: SLF001

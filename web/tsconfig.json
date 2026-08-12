@@ -40,11 +40,28 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    ".next-gate/types/**/*.ts",
     ".next/types/**/*.ts",
-    "next-env.d.ts",
-    "/private/tmp/claude-501/-Users-andystaudinger-NextDays/1b03af2f-61d1-4b2c-b76b-0a05e2e2a1b7/scratchpad/next-build/types/**/*.ts"
+    "next-env.d.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    // Ein Prüf-Build mit RELATIVEM `--distDir` legt sein Verzeichnis unter der
+    // App an, nicht am absoluten Pfad: aus `--distDir private/tmp/…` wurde
+    // `web/private/tmp/…` — 1,6 GB fremder Build-Ausgabe MITTEN im Quellcode,
+    // und weil `.gitignore` sie versteckt, unsichtbar in `git status`.
+    //
+    // Was daran nicht Kosmetik ist: `tsc --noEmit` und `bun run lint` sind das
+    // Qualitätsgate dieses Projekts. Mit diesem Ordner im Baum meldete ESLint
+    // 57.813 Fehler und tsc dutzende `TS2307` — aus FREMDEM Code. Jeder echte
+    // Fehler wäre darin untergegangen, und genau das ist am 12.08.2026
+    // passiert: die Fehler wurden zweimal per `grep -v` weggefiltert, statt das
+    // kaputte Gate zu melden.
+    //
+    // Der Ausschluss ist die Sperre, nicht der `.gitignore`-Eintrag: der
+    // versteckt den Ordner nur, während dieser hier verhindert, dass er die
+    // Prüfung überhaupt erreicht. Prüf-Builds gehören mit ABSOLUTEM `--distDir`
+    // ausserhalb des Repos.
+    "private"
   ]
 }

@@ -25,10 +25,55 @@ import type { AbgabePostenStatus } from "@/lib/channex";
  *  immer links („Gilt für") und tauchen rechts nie auf. */
 const EIGENE = ["direct", "portal"] as const;
 
-/** Nur die Portale, die diesen Posten bekommen — als Logo-Reihe für einen Chip
- *  auf der Seite („kr 450 [Airbnb][Booking.com]", genau so im Standard). Die
- *  eigenen Strecken stehen hier NICHT mit: sie bekommen alles, ihr Logo in jeder
- *  Zeile wäre Rauschen. Ohne ladbaren Stand bleibt die Reihe leer. */
+/**
+ * Liegt dieser Posten bei diesem Portal? Die EINE Regel dafür.
+ *
+ * Sie steht hier einmal, weil zwei Darstellungen sie brauchen (der Chip am
+ * Betrag und die Kopfzeile „Gilt für") und eine zweite Auslegung genau die Sorte
+ * Widerspruch erzeugt, bei der ein Chip „liegt dort" sagt und die Zeile darüber
+ * „nicht unterstützt von".
+ *
+ * Reihenfolge nach Beweiskraft:
+ *   1. Ein Gast hat sie bezahlt (`belegt_bei_portalen`) — stärkster Nachweis.
+ *   2. Sie steht im Inserat (`live`, zurückgelesen) — gilt auch ohne Buchung.
+ *   3. Unser Sync überträgt sie (nicht in `manual_portals`/`restricted_portals`).
+ *
+ * `internal_only` schlägt alles: ein intern gedachter Posten (optionale Gebühr,
+ * Kaution) geht an kein Portal, und ein Beleg dafür wäre ein Datenfehler.
+ */
+function liegtBeimPortal(posten: AbgabePostenStatus, code: string): boolean {
+  if (posten.internal_only) return false;
+  if (posten.belegt_bei_portalen?.includes(code)) return true;
+  if (posten.live?.some((l) => l.portal === code)) return true;
+  return (
+    !posten.restricted_portals.includes(code) &&
+    !posten.manual_portals.includes(code)
+  );
+}
+
+/** WO die Gebühr liegt — als Logo-Reihe für einen Chip am Betrag („kr 450
+ *  [Airbnb][Booking.com]", genau so im Standard).
+ *
+ *  DIE AUSSAGE WAR VORHER UMGEKEHRT und dadurch falsch zu lesen: der Chip zeigte
+ *  die Portale, die den Posten per Sync BEKOMMEN, und blendete jedes aus, dem
+ *  unser Sync ihn nicht überträgt (`manual_portals`). Der Betrieb liest daran
+ *  aber ab, wo die Gebühr steht — und für eine im Extranet gepflegte Gebühr sagte
+ *  der Chip weiterhin nichts. Live am 11.08.2026: die Reinigungsgebühr stand bei
+ *  Airbnb UND Booking.com, der Chip zeigte sie bei keinem von beiden.
+ *
+ *  Ein Portal ist jetzt aktiv, wenn die Gebühr dort NACHWEISLICH liegt:
+ *    1. `belegt_bei_portalen` — eine echte Buchung dieses Portals hat die Art dem
+ *       Gast berechnet. Das ist ein Zahlungsvorgang, kein Regelschluss.
+ *    2. `live` — der zurückgelesene Stand des Inserats. Gilt auch ohne Buchung
+ *       und ist damit die einzige Quelle für ein neu gepflegtes Objekt.
+ *    3. unser Sync überträgt sie dorthin — dann steht sie dort, sobald gesendet
+ *       wurde.
+ *  Die drei ergänzen sich; jede allein hätte eine Lücke (Beleg braucht eine
+ *  Buchung, Rücklesen gibt es nur für Airbnb, Sync deckt die Extranet-Pflege
+ *  nicht ab).
+ *
+ *  Die eigenen Strecken stehen hier NICHT mit: sie bekommen alles, ihr Logo in
+ *  jeder Zeile wäre Rauschen. Ohne ladbaren Stand bleibt die Reihe leer. */
 export function PortalReichweiteChip({
   schluessel,
   status,
@@ -39,12 +84,8 @@ export function PortalReichweiteChip({
   portale: string[];
 }) {
   const posten = status?.find((x) => x.key === schluessel);
-  if (!posten || posten.internal_only) return null;
-  const ausgeschlossen = new Set([
-    ...posten.restricted_portals,
-    ...posten.manual_portals,
-  ]);
-  const codes = portale.filter((code) => !ausgeschlossen.has(code));
+  if (!posten) return null;
+  const codes = portale.filter((code) => liegtBeimPortal(posten, code));
   if (codes.length === 0) return null;
   // Eigene Gruppe mit Trennstrich und größerem Abstand: die echten Logos sind
   // Wortmarken unterschiedlicher Breite (Booking.com breit, Airbnb schmal) und
@@ -78,20 +119,13 @@ export function PortalReichweite({
   const posten = status?.find((x) => x.key === schluessel);
   if (!posten) return null;
 
-  // Drei Zustände, wie der Server sie trennt:
-  //   internal_only    → kein Portal, nur die eigenen Strecken.
-  //   restricted       → der Betrieb hat den Posten selbst ausgeschlossen.
-  //   manual_portals   → das Portal nimmt ihn nicht (Extranet-Pflege).
-  const ausgeschlossen = new Set([
-    ...posten.restricted_portals,
-    ...posten.manual_portals,
-  ]);
-  const gilt = posten.internal_only
-    ? []
-    : portale.filter((p) => !ausgeschlossen.has(p));
-  const nicht = posten.internal_only
-    ? portale
-    : portale.filter((p) => ausgeschlossen.has(p));
+  // Dieselbe Regel wie am Chip (`liegtBeimPortal`) — sonst behauptete die
+  // Kopfzeile „nicht unterstützt von Airbnb", während der Chip darunter das
+  // Airbnb-Logo aktiv zeigt. Ein Posten, der dort NACHWEISLICH liegt, ist
+  // unterstützt; auf welchem Weg er hingekommen ist (Sync oder Extranet-Pflege),
+  // ist für diese Zeile nicht die Frage.
+  const gilt = portale.filter((p) => liegtBeimPortal(posten, p));
+  const nicht = portale.filter((p) => !liegtBeimPortal(posten, p));
 
   // Zwei Blöcke („gilt für" / „gilt nicht für"), jeder mit seiner eigenen
   // Marken-Reihe. Vorher lagen Beschriftung und Logos in EINER Flex-Reihe mit

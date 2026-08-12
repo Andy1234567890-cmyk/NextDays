@@ -15,13 +15,11 @@ WAS DIE 18 LISTINGS WIRKLICH LIEFERN (43 Gebühren, alle DKK):
     PASS_THROUGH_RESORT_FEE     15×   0 / 25     flat  PER_NIGHT   PER_GROUP
     PASS_THROUGH_PET_FEE        10×   0 / 150    flat  PER_BOOKING PER_GROUP
 
-DER BETRAG IST KEINE CENT-ZAHL. Die Spezifikation
-(`docs/OTA/Airbnb/Airbnb.ListingSettings.PricingSettings.yaml`, `Models.
-StandardFee.amount`) sagt „in cents of the listing currency"; geliefert wird
-aber die ganze Währungseinheit — 1150.0 für eine Reinigungsgebühr, die im
-Extranet als „1.150 kr DKK" steht (Listing 1654285285861524234, Screenshot des
-Betriebs). Würde man durch 100 teilen, stünden hier 11,50 kr. Deshalb wird der
-Wert unverändert übernommen und NICHT umgerechnet.
+DER BETRAG KOMMT IN ZWEI GRÖSSENORDNUNGEN — siehe `betrag_aus_airbnb`. Die
+Spezifikation (`docs/OTA/Airbnb/Airbnb.ListingSettings.PricingSettings.yaml`,
+`Models.StandardFee.amount`) sagt „in cents of the listing currency"; geliefert
+wird je nach Schreiber die ganze Währungseinheit ODER Mikro-Einheiten. Beides
+live am SELBEN Konto gemessen (11.08.2026, AirSmil).
 
 DIE ABBILDUNG IST NICHT VERLUSTFREI, UND DAS IST BEABSICHTIGT:
 Airbnb kennt 13 Gebührenarten, wir 49. Mehrere unserer Arten fallen auf
@@ -110,6 +108,60 @@ AIRBNB_TYP = {"per_stay": "PER_GROUP", "per_night": "PER_GROUP",
               "per_pet_stay": "PER_PET"}
 
 
+# Mikro-Einheiten: 795000000 = 795,00 DKK.
+#
+# WARUM ES DIESE UMRECHNUNG BRAUCHT (live gemessen 11.08.2026, Konto AirSmil,
+# dasselbe Feld `standard_fees[].amount` am selben Konto):
+#
+#   Inserat 1654285285861524234 (vom Betrieb bei Airbnb gepflegt) → 1150.0
+#   Inserat 54087677           (von Channex geschrieben)          → 795000000
+#
+# Der Betrieb hat im Airbnb-Host bestätigt, dass dort 795 kr steht — die zweite
+# Form ist also nicht falsch, sondern die Schreibweise des Aggregators. Ohne
+# Umrechnung läse unser Vergleich am eigenen, gerade erst gesendeten Betrag
+# „795 Millionen" und meldete jede synchronisierte Gebühr als abweichend.
+#
+# Erkennung ohne Raten (Wurzel 4): Mikro-Einheiten kommen als GANZE Zahl und
+# sind mindestens 1.000.000. Eine echte Festgebühr von einer Million Kronen ist
+# kein Betriebsfall — und im Zweifel ist die kleinere Deutung die, die niemandem
+# eine Millionenrechnung ins Inserat schreibt.
+AIRBNB_MIKRO = 1_000_000
+
+
+def betrag_aus_airbnb(roh: dict[str, Any]) -> float | None:
+    """Betrag einer Airbnb-Gebühr in ganzen Währungseinheiten. None = unlesbar.
+
+    Prozentwerte kommen immer als Zahl zwischen 0 und 100 und werden nie
+    umgerechnet (Spec: „If amount_type is `percent`, this is a float between 0
+    and 100").
+    """
+    wert = roh.get("amount")
+    if isinstance(wert, bool):
+        # `True` wäre sonst 1,00 DKK — ein Wahrheitswert ist kein Betrag.
+        return None
+    try:
+        betrag = float(wert or 0)
+    except (TypeError, ValueError):
+        return None
+    if str(roh.get("amount_type") or "flat").lower() == "percent":
+        return betrag
+    # Die Erkennung hängt am WERT, nicht am JSON-Typ. Vorher stand hier
+    # `isinstance(wert, int)`: Airbnb liefert heute `int` (live geprüft
+    # 11.08.2026: 795000000), aber `795000000.0` oder `"795000000"` wären
+    # durchgelaufen und hätten 795 Millionen Kronen ins Inserat geschrieben —
+    # genau der Betrag, den die Umrechnung verhindern soll. Ein Feed, der
+    # denselben Wert als Float oder String schickt, meint ihn nicht anders.
+    #
+    # Die Grenze bleibt der ganze Millionenbetrag: eine echte Festgebühr von
+    # 1.000.000 Kronen ist kein Betriebsfall, und im Zweifel ist die kleinere
+    # Deutung die, die niemandem eine Millionenrechnung ins Inserat schreibt.
+    # Ein KRUMMER Millionenbetrag (1.500.000,75) ist dagegen keine
+    # Mikro-Einheit — Mikros sind immer ganzzahlig.
+    if betrag >= AIRBNB_MIKRO and betrag.is_integer():
+        return betrag / AIRBNB_MIKRO
+    return betrag
+
+
 def fee_aus_airbnb(roh: dict[str, Any]) -> dict[str, Any] | None:
     """Eine Airbnb-Gebühr in unsere Form. None = nicht übernehmbar.
 
@@ -126,11 +178,8 @@ def fee_aus_airbnb(roh: dict[str, Any]) -> dict[str, Any] | None:
         return None
     if roh.get("offline") is True:
         return None
-    try:
-        betrag = float(roh.get("amount") or 0)
-    except (TypeError, ValueError):
-        return None
-    if betrag <= 0:
+    betrag = betrag_aus_airbnb(roh)
+    if betrag is None or betrag <= 0:
         return None
 
     prozent = str(roh.get("amount_type") or "flat").lower() == "percent"

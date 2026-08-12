@@ -317,7 +317,9 @@
     "dashboardLoadFailed": "Nadzorne plošče ni bilo mogoče naložiti",
     "reviews": "Ocene",
     "extensions": "Razširitve",
-    "announcements": "Novosti"
+    "announcements": "Novosti",
+    "ownerReporting": "Poročila za lastnike",
+    "billingRules": "Pravila obračuna"
   },
   "exemption": {
     "labelNamed": "Oproščeno davka ({scheme}) — ID za DDV ni potreben",
@@ -789,7 +791,22 @@
     "attachmentAlt": "Fotografija gosta",
     "translate": "Prevedi",
     "showOriginal": "Pokaži izvirnik",
-    "translatedFrom": "Prevedeno iz jezika {sprache}"
+    "translatedFrom": "Prevedeno iz jezika {sprache}",
+    "formatStrike": "Prečrtano",
+    "fieldsButton": "{{Označbe}}",
+    "langBase": "Osnovna različica",
+    "langBaseHint": "Pošlje se vsakemu gostu, katerega jezik nima svoje različice.",
+    "subjectLabel": "Zadeva",
+    "subjectHint": "Zadeva se uporablja samo za e-pošto.",
+    "langAdd": "Dodaj nov jezik",
+    "langDefault": "Privzeto",
+    "langSetDefault": "Nastavi kot privzeto",
+    "langRemove": "Odstrani jezik",
+    "langEmpty": "Še ni nastavljenega jezika — do takrat gre vsem gostom osnovna različica.",
+    "autoEditContent": "Uredi vsebino",
+    "autoPanelCreate": "Ustvari",
+    "quickEmpty": "Še ni hitrih odgovorov.",
+    "autoTextRequired": "Besedilo je obvezno."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp še ni povezan. Vnesite dostopne podatke (Meta Cloud API) v nastavitvah strežnika, nato bo pošiljanje aktivno.",
@@ -1030,13 +1047,17 @@
     "portalAccessResendHint": "Če e-pošta ni prispela ali je povezava potekla, lahko vabilo pošljete znova. Nova povezava velja 7 dni in vodi v to okolje; prej poslana povezava preneha veljati.",
     "portalAccessResent": "Vabilo je bilo znova poslano.",
     "commissionNotAgreed": "ni dogovorjeno",
+    "commissionContractWins": "Trenutno se uporablja pogodba o obračunu: {pct} % od {ab}. To polje služi le kot rezerva, če nobena pogodba ne velja.",
+    "commissionNoneAnywhere": "Stopnja še ni dogovorjena — niti tu niti kot pogodba. Do takrat izplačilo v portalu lastnika ostane prazno.",
+    "commissionContractObject": "Lastna pogodba za ta objekt: {pct} % od {ab}.",
+    "commissionContractOwnerWide": "Pogodba o obračunu lastnika: {pct} % od {ab}.",
     "assignableCount": "Izbranih {count} od {total} za dodajanje",
     "assignedHeading": "{count, plural, one {# dodeljen objekt} two {# dodeljena objekta} few {# dodeljeni objekti} other {# dodeljenih objektov}}",
     "info": {
       "aria": "Pojasnilo za: {feld}",
       "share": "Lastniški delež na tem objektu. Pri 100 % se celotno izplačilo pripiše temu lastniku, pri manjšem deležu sorazmerno.",
-      "commission": "Standardna stopnja provizije za tega lastnika. Če polje ostane prazno, stopnja še ni dogovorjena — izplačilo se takrat ne izračuna, temveč se prikaže kot pomišljaj.",
-      "commissionOverride": "Velja samo za ta en objekt in prepiše standardno stopnjo lastnika. Če polje ostane prazno, velja standardna stopnja."
+      "commission": "Rezervna stopnja, če za objekt ne velja pogodba o obračunu. Pogodba spodaj ima prednost — je dejanski dogovor in zajema tudi obdobje, pavšal in najnižjo provizijo. Če ostaneta oba prazna, se izplačilo ne izračuna, prikaže se pomišljaj.",
+      "commissionOverride": "Rezervna stopnja samo za ta objekt; nadomesti standardno stopnjo lastnika. Pogodba o obračunu ima prednost tudi tu. Če polje ostane prazno, velja standardna stopnja."
     }
   },
   "ownerStatements": {
@@ -1140,7 +1161,14 @@
       "totalPayout": "Skupno izplačilo",
       "ownerPayout": "Izplačilo lastniku",
       "pmPayout": "Izplačilo upravljalcu",
-      "commissionMissing": "Za vsaj eno nepremičnino ni določena stopnja provizije. Izplačil zato ni mogoče izračunati — vnesite stopnjo v matične podatke lastnika ali pri nepremičnini."
+      "commissionMissing": "Za vsaj eno nepremičnino ni določena stopnja provizije. Izplačil zato ni mogoče izračunati — vnesite stopnjo v matične podatke lastnika ali pri nepremičnini.",
+      "payoutUnknown": "Za vsaj eno rezervacijo manjka podatek, brez katerega izplačila ni mogoče izračunati. V ustreznih vrsticah je namesto števila prikazano „—“.",
+      "commissionInvalid": "Shranjena provizijska stopnja je zunaj območja 0–100 %. Popravite stopnjo pri lastniku ali pri objektu.",
+      "portalRateMissing": "Za vsaj en rezervacijski kanal ni shranjene stopnje odbitka, portal pa svojega odbitka ni sporočil. V razdelku Knjigovodstvo → Pravila obračuna vnesite, koliko portal zadrži na rezervacijo.",
+      "portalRateInvalid": "Shranjena stopnja odbitka portala je zunaj območja 0–100 %. Popravite jo v razdelku Knjigovodstvo → Pravila obračuna.",
+      "feeUnassigned": "Vsaj ena vrsta pristojbine še ni dodeljena. Brez dodelitve ni mogoče ugotoviti, komu znesek pripada in ali se od njega obračuna provizija — določite to v razdelku Knjigovodstvo → Pravila obračuna.",
+      "feeNotComputable": "Pristojbine ni mogoče obračunati kot znesek (shranjena je odstotkovno ali brez zneska). Preverite pristojbino pri objektu.",
+      "contractCurrency": "Pavšal ali minimalna provizija je izražena v drugi valuti kot rezervacija. Zneski v različnih valutah se med seboj ne obračunavajo — preverite pogodbo o obračunu."
     },
     "rental": {
       "perReservation": "Na rezervacijo",
@@ -1153,7 +1181,15 @@
       "totalPrice": "Skupna cena",
       "totalPayout": "Skupno izplačilo",
       "totals": "Vsote",
-      "empty": "V tem obdobju ni rezervacij."
+      "empty": "V tem obdobju ni rezervacij.",
+      "feeSource": {
+        "title": "Portal hat keine Gebühren gemeldet",
+        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
+        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
+        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
+        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
+        "unknownReason": "Der Grund ist nicht bestimmbar."
+      }
     },
     "expenses": {
       "add": "Dodaj",
@@ -1315,7 +1351,9 @@
     "commissionable": "Zavezano proviziji",
     "commissionableYes": "Da — všteva se v provizijo",
     "commissionableNo": "Ne — brez provizije",
-    "infoAria": "Pojasnilo za: {feld}"
+    "infoAria": "Pojasnilo za: {feld}",
+    "rulesPageTitle": "Pravila obračuna",
+    "rulesPageIntro": "Kaj portali zadržijo na rezervacijo in komu pripadajo pristojbine. Oboje določa, kateri znesek na koncu pride v obračun provizije vaših lastnikov."
   },
   "portal": {
     "title": "Moj portal",
@@ -1432,6 +1470,16 @@
         "blocked": "Blokirano"
       },
       "payoutPerNight": "Neto izplačilo/noč",
+      "payoutPerNightShort": "neto/noč",
+      "payoutUnknown": {
+        "short": "ni podatka",
+        "label": "Ni mogoče izkazati",
+        "provision": "Za ta objekt ni določene provizije — upravljanje jo mora dodati.",
+        "provisionUngueltig": "Določena provizija je zunaj obsega 0–100 %.",
+        "betrag": "Tej rezervaciji manjka skupni znesek.",
+        "naechte": "Obdobje te rezervacije ni veljavno.",
+        "waehrungVertrag": "Dogovorjeni pavšal je v drugi valuti kot ta rezervacija — zneski se ne pretvarjajo."
+      },
       "guest": "Gost",
       "channel": "Vir rezervacije",
       "blockHint": "Želite blokirati obdobje? Oddajte zahtevo — odloča upravljanje.",
@@ -4075,7 +4123,12 @@
       "showCodeOnlyIfPaid": "Kodo vrat prikaži samo, če je bivanje plačano",
       "hideCodeUntilCheckin": "Skrij kodo vrat do prijave",
       "codeVisibleFromLabel": "Koda vrat je prikazana od dneva prihoda ob …",
-      "codeVisibleFromUnset": "— ni določeno —"
+      "codeVisibleFromUnset": "— ni določeno —",
+      "wifiSsidLabel": "Ime omrežja (SSID)",
+      "wifiSsidPlaceholder": "npr. WiFi-Počitniška-hiša",
+      "wifiPasswordLabel": "Geslo za Wi-Fi",
+      "wifiPasswordPlaceholder": "npr. poletje2026",
+      "wifiFieldsHint": "Ti dve vrednosti zapolnita nadomestni oznaki {ssid} in {password} v predlogah sporočil ter QR kodo Wi-Fi v portalu za goste. Če ostaneta prazni, se predloga s tema oznakama ne pošlje."
     },
     "taskCreatePopup": {
       "title": "Ustvari nalogo",
@@ -4657,7 +4710,9 @@
       "duplicateOk": "Nastanitev kopirana.",
       "duplicateErr": "Kopiranje ni uspelo.",
       "unlistOk": "Povezava s spletno stranjo prekinjena.",
-      "unlistErr": "Prekinitev ni uspela."
+      "unlistErr": "Prekinitev ni uspela.",
+      "menuVerkaufAus": "Izklopi na vseh portalih",
+      "menuVerkaufAn": "Znova ponudi na vseh portalih"
     },
     "messagingForm": {
       "title": "Nadomestna besedila za sporočila",
@@ -5341,7 +5396,13 @@
       "copyPricingSkipExtras": "Dodatki — vezani so na lastne fotografije in prevode.",
       "copyPricingSkipAvailability": "Razpoložljivost, zasedenost in pravila.",
       "copyPricingOverwriteWarning": "Cene tega objekta bodo popolnoma prepisane. Zneski se prevzamejo le pri isti valuti.",
-      "copyPricingDone": "Cene prevzete."
+      "copyPricingDone": "Cene prevzete.",
+      "portalStandAbweichung": "tam {dort}",
+      "portalStand": {
+        "online": "Zabeleženo na portalu",
+        "abweichend": "Se razlikuje",
+        "fehlt": "Na portalu ni zabeleženo"
+      }
     },
     "policiesForm": {
       "title": "Pravilniki",
@@ -5625,7 +5686,10 @@
       "hinweis": "Lahko jih prevzameš, namesto da jih ustvariš znova. Obstoječe pristojbine ostanejo nespremenjene.",
       "uebernehmen": "Prevzemi pristojbine",
       "laeuft": "Prevzemanje …",
-      "uebernommen": "Prevzetih {anzahl} pristojbin."
+      "uebernommen": "Prevzetih {anzahl} pristojbin.",
+      "verwerfen": "Ne prevzemi",
+      "verworfen": "Ponudba je zaključena — tvoje pristojbine ostanejo take, kot so.",
+      "einmalig": "Enkratna pomoč ob začetku: nato velja samo to, kar je tukaj — to pošiljamo portalom."
     },
     "veroeffentlichen": {
       "titel": "Objavi nastanitev",
@@ -5655,6 +5719,26 @@
       },
       "statusHinweis": "Določi se prek „Objavi“ zgoraj.",
       "immerDabei": "Vedno vključeno — naša lastna tržnica, brez provizije portala."
+    },
+    "verkaufPause": {
+      "fragenAusTitel": "Umakniti objekt iz prodaje?",
+      "fragenAusText": "»{titel}« bo nastavljen kot neaktiven, koledar rezervacij pa bo izklopljen na vseh povezanih portalih. Obstoječe rezervacije ostanejo nespremenjene. Stanje vsakega portala se shrani, da ga obnovitev vrne.",
+      "fragenAnTitel": "Znova ponuditi objekt?",
+      "fragenAnText": "»{titel}« bo znova nastavljen kot aktiven. Vsak portal dobi nazaj stanje, ki ga je imel pred izklopom — portali, ki so bili že izklopljeni, ostanejo izklopljeni. Nato se cene in razpoložljivost znova pošljejo.",
+      "jetztAus": "Izklopi zdaj",
+      "jetztAn": "Ponudi zdaj",
+      "laeuft": "Preklapljanje…",
+      "abbrechen": "Prekliči",
+      "schliessen": "Zapri",
+      "ergebnisAusTitel": "Objekt je izklopljen",
+      "ergebnisAusText": "Izklopljen na vseh portalih.",
+      "ergebnisAnTitel": "Objekt je znova aktiven",
+      "ergebnisAnText": "Znova ponujen na vseh portalih.",
+      "ergebnisTeilweiseTitel": "Ni uspelo povsod",
+      "ergebnisTeilweiseText": "{anzahl} portala ni bilo mogoče preklopiti. Tam se prodaja nadaljuje — zato status objekta ni bil spremenjen.",
+      "zeileAbgeschaltet": "Izklopljen",
+      "zeileWiederhergestellt": "Znova aktiven",
+      "zeileObjekteAmKanal": "Ta kanal nosi {anzahl} objektov — nič ni bilo spremenjeno, da se ne izklopijo tudi drugi."
     }
   },
   "calendar": {
@@ -6254,7 +6338,32 @@
     "accountsLogoutHint": "Pred povezavo drugega računa se v brskalniku odjavite s portala.",
     "accountConnectCredentialHint": "Dodaten dostop do {portal} vnesete z ID-jem hotela pri povezovanju nastanitve, ne tukaj.",
     "marketplacePending": "{count} v pregledu",
-    "marketplaceWaiting": "V pregledu"
+    "marketplaceWaiting": "V pregledu",
+    "marketplace": {
+      "intro": "myBestDays je naša lastna tržnica — rezervacijski kanal kot Booking ali Airbnb, le brez povezave s portalom. Objekt postane viden, ko je aktiven, tu uvrščen in odobren.",
+      "openMarketplace": "Odpri tržnico",
+      "propertiesHeading": "Objekti na tržnici",
+      "noProperties": "Objektov še ni.",
+      "columnProperty": "Objekt",
+      "columnVisibility": "Vidnost",
+      "columnApproval": "Odobritev",
+      "columnBookings": "Rezervacije",
+      "stateActive": "Viden",
+      "statePending": "V pregledu",
+      "stateNotListed": "Ni uvrščen",
+      "stateInactiveProperty": "Objekt ni aktiven",
+      "viewListing": "Ogled oglasa",
+      "reviewHint": "Objekti v pregledu se na myBestDays še ne prikažejo. Vsak oglas pregledamo, ker myBestDays tam nastopa kot ponudnik — portali in lastna spletna stran s tem niso prizadeti.",
+      "summaryVisible": "{count} vidnih",
+      "summaryWaiting": "{count} v pregledu",
+      "summaryOff": "{count} ni uvrščenih",
+      "moderation": {
+        "draft": "Osnutek",
+        "pending": "V pregledu",
+        "approved": "Odobreno",
+        "rejected": "Zavrnjeno"
+      }
+    }
   },
   "calendarSync": {
     "title": "Uvoz/izvoz koledarja",
@@ -8001,5 +8110,40 @@
     "mfaSubmit": "Potrdi",
     "mfaChecking": "Preverjanje…",
     "mfaBack": "Nazaj na prijavo"
+  },
+  "portalSaetze": {
+    "add": "Dodaj stopnjo",
+    "breakdown": "{provision} % provizije + {fee} % stroškov plačila",
+    "breakdownNoFee": "{provision} % provizije, brez stroškov plačila",
+    "cancel": "Prekliči",
+    "channel": "Portal",
+    "channelLocked": "Portala obstoječe stopnje ni mogoče zamenjati. Za drug portal dodajte novo stopnjo.",
+    "create": "Dodaj stopnjo",
+    "created": "Stopnja je dodana",
+    "current": "velja danes",
+    "delete": "Izbriši stopnjo",
+    "deleted": "Stopnja je izbrisana",
+    "edit": "Uredi stopnjo",
+    "empty": "Stopnja še ni vnesena. Brez stopnje je izplačilo mogoče izračunati le, če portal sam sporoči svoj odbitek.",
+    "errorProvisionRequired": "Vnesite stopnjo provizije.",
+    "intro": "Kar posamezni portal obdrži pri vsaki rezervaciji. Te stopnje veljajo tam, kjer portal svojega odbitka ne sporoči sam — če sporoči znesek, vedno velja sporočeni.",
+    "loading": "Nalaganje …",
+    "note": "Opomba",
+    "notePlaceholder": "Od kod izhaja stopnja, npr. iz pogodbe s portalom ali obračuna",
+    "payoutFee": "Stroški plačila",
+    "payoutFeeInfo": "Nadomestilo za to, da portal pobere denar in ga posreduje naprej. Zaračuna se le, kadar pobira portal — če gost plača neposredno vam, ga ni.",
+    "payoutFeeNone": "jih ne zaračuna",
+    "period": "{von} do {bis}",
+    "periodOpen": "od {von}",
+    "provision": "Provizija",
+    "provisionInfo": "Posredniški delež, ki ga portal obdrži za rezervacijo. Osnova je skupna cena za gosta, vključno s stroški.",
+    "save": "Shrani spremembe",
+    "saved": "Stopnja je shranjena",
+    "title": "Stopnje odbitkov portalov",
+    "total": "{pct} % skupaj",
+    "validFrom": "Velja od",
+    "validTo": "Velja do",
+    "validToInfo": "Pustite prazno, dokler stopnja velja. Če portal spremeni svojo stopnjo, dodajte novo z dnem spremembe — stara ostane za prejšnje obračune.",
+    "validToOpen": "še velja"
   }
 }

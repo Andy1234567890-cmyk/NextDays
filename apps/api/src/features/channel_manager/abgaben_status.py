@@ -17,13 +17,30 @@ Drei Zustände je Posten × Portal, bewusst getrennt:
 * `manual_portals` — verbunden, nicht ausgeschlossen, aber die Regeln des
   Portals lassen den Posten nicht durch (Booking.com nimmt keine festen Beträge,
   Airbnbs Export-Matrix kennt die Kombination nicht, Expedia nimmt gar nichts).
-  Das ist der Chip.
 * `restricted_portals` — der Betrieb hat den Posten selbst auf andere Kanäle
   eingeschränkt (`portalScope`). Kein Mangel, sondern die Absicht; dafür trägt
   die Zeile schon das Kennzeichen „eingeschränkt".
 * `internal_only` — der Posten geht an KEIN Portal, weil er intern gedacht ist
   (optionale Gebühr: der Gast könnte sie beim Portal nicht abwählen). Auch das
   ist Absicht und kein fehlender Sync.
+
+DAZU ZWEI AUSSAGEN ANDERER ART — sie sagen nicht „was senden wir", sondern „was
+ist dort":
+
+* `belegt_bei_portalen` (`gebuehren_beleg`) — Portale, die diese Gebührenart in
+  einer echten Buchung dem Gast berechnet haben. Kein Regelschluss, sondern ein
+  Zahlungsvorgang, und damit die STÄRKSTE der Aussagen. Sie ist der Grund, warum
+  der Chip umgebaut wurde: er zeigte die Portale, die den Posten nicht per Sync
+  bekommen, und wurde als „liegt dort nicht" gelesen. Live am 11.08.2026 stand
+  die Reinigungsgebühr bei Airbnb UND Booking.com im Extranet — der alte Chip
+  zeigte sie bei keinem von beiden.
+* `live` (`ota_gebuehren_stand`) — der zurückgelesene Stand des Inserats. Er gilt
+  auch ohne Buchung und ist damit die einzige Quelle für ein neues Inserat; es
+  gibt ihn nur für Airbnb, weil Channex für Booking keinen Rückleseweg hat.
+
+Die fünf werden NIE in ein Feld verrechnet. „Liegt dort, aber unser Sync
+überträgt es nicht" ist ein echter Zustand — zusammengelegt liesse er sich nicht
+von „liegt nirgends" unterscheiden.
 """
 from __future__ import annotations
 
@@ -37,6 +54,7 @@ from src.features.properties.gebuehren import fee_category
 
 from .airbnb_aktionen import DISCOUNT_TYPE_LOS, regel_fuer_airbnb
 from .common import ChannelManagerError, log
+from .gebuehren_beleg import belege_je_gebuehrenart
 from .ota_abgaben import AIRBNB, NICHT_EXPORTIERBAR, Abgabe, abgaben_je_portal
 from .ota_aktionen import per_tagespreis_uebertragbar
 from .tax_regime import STANDARD
@@ -161,6 +179,20 @@ def preisblock_status() -> list[dict[str, Any]]:
     ] + [_block(key, kind="block", intern=True) for key in BLOECKE_NUR_EIGENE]
 
 
+def _live_fuer(
+    schluessel: str,
+    kategorie: str | None,
+    live: dict[str, list[dict[str, Any]]] | None,
+) -> list[dict[str, Any]]:
+    """Zurückgelesener Stand dieses Postens — direkt oder über die Kategorie."""
+    if not live or not schluessel:
+        return []
+    eigener = live.get(schluessel)
+    if eigener:
+        return eigener
+    return live.get(f"cat:{kategorie}", []) if kategorie else []
+
+
 def _exportiert(posten: list[Abgabe], *, schluessel: str, kategorie: str | None) -> bool:
     """Steckt der Posten in dem, was dieses Portal bekommt?
 
@@ -203,6 +235,13 @@ class AbgabenStatusMixin:
         currency = str(prop.get("currency") or "").upper()
 
         portale = self._verbundene_portale(db, tenant_id, property_id)
+        # Zurückgelesener Ist-Stand beim Portal (gespeichert, kein Live-Call —
+        # sonst hinge jeder Seitenaufbau an einer Channex-Anfrage).
+        live = self.gebuehren_stand_lesen(db, tenant_id, property_id)  # type: ignore[attr-defined]
+        # Der Buchungs-Nachweis: welche Gebührenart hat welches Portal einem Gast
+        # WIRKLICH berechnet. Stärkste der drei Aussagen, weil sie ein
+        # Zahlungsvorgang ist und kein Regelschluss.
+        belege = belege_je_gebuehrenart(db, tenant_id, property_id)
         antwort: dict[str, Any] = {
             # Ohne Objektwährung überträgt der Steuer-Sync überhaupt nichts (er
             # wirft 422). Das ist EIN Befund über das Objekt, nicht 20 Chips an
@@ -213,7 +252,10 @@ class AbgabenStatusMixin:
         }
         if not portale or not currency:
             antwort["items"] = [
-                self._posten_status(eintrag, kind, portale=[], nicht_gesendet={})
+                self._posten_status(
+                    eintrag, kind, portale=[], nicht_gesendet={},
+                    live=live, belege=belege,
+                )
                 for kind, liste in (("fee", fees), ("tax", taxes))
                 for eintrag in liste
             ] + preisblock_status() + [laengenpreis_mechanik([])] + richtlinien_status([])
@@ -252,7 +294,8 @@ class AbgabenStatusMixin:
 
         antwort["items"] = [
             self._posten_status(
-                eintrag, kind, portale=portale, nicht_gesendet=nicht_gesendet
+                eintrag, kind, portale=portale,
+                nicht_gesendet=nicht_gesendet, live=live, belege=belege,
             )
             for kind, liste in (("fee", fees), ("tax", taxes))
             for eintrag in liste
@@ -372,14 +415,37 @@ class AbgabenStatusMixin:
         return out
 
     @staticmethod
-    def _posten_status(
+    def _posten_status(  # noqa: PLR0913 — benannte Eingänge je Aussage
         eintrag: dict[str, Any],
         kind: str,
         *,
         portale: list[str],
         nicht_gesendet: dict[str, set[str]],
+        live: dict[str, list[dict[str, Any]]] | None = None,
+        belege: dict[str, list[str]] | None = None,
     ) -> dict[str, Any]:
-        """Ein Posten, in die drei getrennten Zustände aufgeteilt."""
+        """Ein Posten, in die getrennten Zustände aufgeteilt.
+
+        `live` ist der ZURÜCKGELESENE Stand (`ota_gebuehren_stand`) und damit
+        eine Aussage anderer Art als die drei Zustände: die sagen, was gesendet
+        WIRD, `live` sagt, was beim Portal STEHT. Beides gehört an denselben
+        Posten, aber nie in dasselbe Feld — sonst überschriebe eine veraltete
+        Prüfung die Regelaussage.
+
+        `belege` ist die dritte Art von Aussage und die STÄRKSTE:
+        `belegt_bei_portalen` nennt die Portale, die diese Gebührenart in einer
+        echten Buchung dem Gast berechnet haben (`gebuehren_beleg`). Das ist kein
+        Regelschluss und keine Prüfung, sondern ein Zahlungsvorgang.
+
+        Warum das als EIGENES Feld steht und nicht `manual_portals` korrigiert:
+        die beiden sagen Verschiedenes. `manual_portals` heißt „unser Sync
+        überträgt es nicht", `belegt_bei_portalen` heißt „es liegt dort". Beides
+        ist gleichzeitig wahr, sobald der Betrieb die Gebühr im Extranet gepflegt
+        hat — genau der Live-Fall, in dem der alte Chip an Airbnb und Booking
+        fehlte, obwohl die Gebühr bei beiden stand. Zusammengelegt liesse sich
+        „liegt dort, aber wir senden es nicht" nicht mehr von „liegt nirgends"
+        unterscheiden.
+        """
         schluessel = str(eintrag.get("id") or "")
         scope = {str(x) for x in (eintrag.get("portalScope") or [])}
         # Nur eine Gebühr kann „intern gedacht" sein: `optional` heißt, der Gast
@@ -408,6 +474,29 @@ class AbgabenStatusMixin:
             "manual_portals": manual,
             "restricted_portals": restricted,
             "internal_only": internal_only,
+            # Mehrere gleichartige Gebühren gehen als EINE summierte Gebühr an
+            # Airbnb (`cat:<kategorie>`); der zurückgelesene Stand hängt dann an
+            # diesem Schlüssel und gilt für jede Zeile der Gruppe.
+            "live": _live_fuer(schluessel, fee_category(eintrag), live),
+            # Portale, die diese Gebührenart nachweislich berechnet haben. Der
+            # Nachweis hängt an der ART (`feeType`), nicht an der Zeile: das
+            # Portal meldet in der Buchung eine Reinigungsgebühr, nicht „die
+            # Reinigungsgebühr mit unserer id". Steuern haben keine solche Art
+            # und bekommen deshalb eine leere Liste — kein geratener Beleg.
+            "belegt_bei_portalen": (
+                sorted(
+                    p
+                    for p in (belege or {}).get(
+                        str(eintrag.get("feeType") or ""), []
+                    )
+                    # Nur VERBUNDENE Portale: ein Beleg aus einer alten Buchung
+                    # eines inzwischen getrennten Kanals sagt nichts über den
+                    # heutigen Zustand.
+                    if not portale or p in portale
+                )
+                if kind == "fee"
+                else []
+            ),
         }
 
     @staticmethod

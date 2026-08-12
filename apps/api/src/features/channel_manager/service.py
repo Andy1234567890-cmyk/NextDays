@@ -47,11 +47,14 @@ from .common import (
 from .content_sync import ContentSyncMixin
 from .csv_import import CsvImportMixin
 from .full_sync import FullSyncMixin
+from .gebuehren_stand import GebuehrenStandMixin
 from .live_feed_sync import LiveFeedSyncMixin
 from .lodgify_import import LodgifyImportMixin
+from .marktplatz import MarktplatzMixin
 from .nachrichten_eingang import NachrichtenEingangMixin
 from .oauth_channels import OAuthChannelsMixin
 from .objekt_kanal import ObjektKanalMixin
+from .objekt_verkauf import ObjektVerkaufMixin
 from .ota_extras import OtaExtrasMixin
 from .property_mapping import PropertyMappingMixin
 from .reviews_sync import ReviewsSyncMixin
@@ -83,6 +86,10 @@ class ChannelManagerService(
     # entstanden sind.
     NachrichtenEingangMixin,
     ChannelsMixin,
+    # Nach ChannelsMixin: die Marktplatz-Detailfläche nutzt dessen
+    # `_require_tenant`/`_require_db` und beantwortet dieselbe Frage wie eine
+    # OTA-Kanalseite — nur ohne Channex (Sichtbarkeit ist lokal + Freigabe).
+    MarktplatzMixin,
     OAuthChannelsMixin,
     # Nach OAuthChannelsMixin/PropertyMappingMixin: die Übernahme ruft deren
     # begin_channel_oauth bzw. _ensure_default_unit auf, statt einen zweiten Weg
@@ -113,6 +120,10 @@ class ChannelManagerService(
     # `standard_fees` über das Mapping des Objekts. Der alte Weg
     # (`v2/pricing_settings/{listing_id}`) ist von Airbnb abgeschaltet (403).
     AirbnbGebuehrenMixin,
+    # Nach AirbnbGebuehrenMixin: nutzt dessen `_airbnb_pricing_settings`, um
+    # zurückzulesen, welchen Betrag das Inserat WIRKLICH trägt. Der Push selbst
+    # läuft über TaxSyncMixin; hier steht ausschliesslich der Beleg.
+    GebuehrenStandMixin,
     # Nach AirbnbGebuehrenMixin: nutzt dessen `_airbnb_mapping_id`, um die
     # Verfügbarkeitsregeln zu schreiben, für die Channex kein ARI-Feld hat
     # (Vorbereitungszeit, Buchungsfenster, Vorlaufzeit).
@@ -144,6 +155,20 @@ class ChannelManagerService(
     # sie nicht durch (0297).
     AirbnbLesestandMixin,
     ObjektKanalMixin,
+    # Nach ObjektKanalMixin UND VeroeffentlichenMixin — beides zwingend:
+    #   * ObjektKanalMixin liefert `_channex_rate_plan_ids`, um am geteilten
+    #     Airbnb-Kanal (live 18 Objekte) die eigene Zuordnung von 17 fremden zu
+    #     unterscheiden.
+    #   * VeroeffentlichenMixin liefert `airbnb_sichtbarkeit_setzen` — den
+    #     BEWIESENEN Weg, `published` EINES Listings zu schalten (PUT
+    #     channels/{id} mit vollem rate_plans-Array). Der naheliegende
+    #     `PUT …/mappings/{id}` antwortet 422 „rate_plan_id must be specified"
+    #     (live 12.08.2026); ein zweiter eigener Weg dorthin war der Fehler.
+    # Schaltet ein Objekt bei ALLEN Portalen aus dem Verkauf: Airbnb über
+    # `published`, Booking.com über den Kanal, myBestDays über die eigene Achse.
+    # Nicht mit VeroeffentlichenMixin verwechseln: das schaltet je Kanal beim
+    # Veröffentlichen, hier geht es um den Gesamt-Aus-Schalter samt Rückweg.
+    ObjektVerkaufMixin,
     BookingsSyncMixin,
     LiveFeedSyncMixin,
     OtaExtrasMixin,

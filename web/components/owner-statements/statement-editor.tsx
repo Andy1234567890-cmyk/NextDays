@@ -19,6 +19,37 @@ import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
 import { formatCurrency } from "@/lib/currency";
 
+/** Backend-Grund (`payout_unbekannt`) → i18n-Key mit dem passenden Handgriff.
+ *
+ *  Explizite Karte und kein `t(\`…${grund}\`)`: ein neuer Backend-Grund würde
+ *  sonst als `MISSING_MESSAGE` in der Oberfläche landen. Fehlt ein Grund hier,
+ *  greift der allgemeine Satz — sichtbar unvollständig, aber nie kaputt.
+ *
+ *  Je Grund ein EIGENER Satz, weil jeder einen anderen Handgriff verlangt: ein
+ *  fehlender Portal-Abzugssatz und eine nicht zugeordnete Gebührenart werden
+ *  beide unter „Buchhaltung → Abrechnungsregeln" gepflegt, ein fehlender
+ *  Provisionssatz aber beim Eigentümer. Bis 11.08.2026 prüfte die Oberfläche nur
+ *  auf `provision` — die anderen Gründe blieben stumm und die Zelle zeigte „—"
+ *  ohne jede Erklärung. */
+const GRUND_KEYS: Record<string, string> = {
+  provision: "summary.commissionMissing",
+  provision_ungueltig: "summary.commissionInvalid",
+  portal_abzug: "summary.portalRateMissing",
+  portal_abzug_ungueltig: "summary.portalRateInvalid",
+  gebuehr_nicht_zugeordnet: "summary.feeUnassigned",
+  gebuehr_nicht_berechenbar: "summary.feeNotComputable",
+  waehrung_vertrag: "summary.contractCurrency",
+};
+
+/** Backend-Grund (`gebuehren_grund`) → i18n-Key. Dieselbe explizite Karte wie
+ *  `GRUND_KEYS` und aus demselben Grund: ein neuer Backend-Wert soll den Satz
+ *  nicht zu `MISSING_MESSAGE` machen. */
+const GEBUEHREN_GRUND_KEYS: Record<string, string> = {
+  channex_import: "rental.feeSource.channexImport",
+  portal_meldet_keine: "rental.feeSource.portalReportsNone",
+  kein_payload: "rental.feeSource.noPayload",
+};
+
 /** Betrag ODER „—", wenn er maskiert ist.
  *
  *  `null` heisst hier NICHT „null Euro", sondern „dieser Nutzer darf die Zahl
@@ -47,6 +78,7 @@ import {
   uploadExpenseReceipt,
   type Expense,
   type ExpenseDirection,
+  type RentalRow,
   type Statement,
   type StatementHeader,
   type StatementListItem,
@@ -555,13 +587,18 @@ export function StatementEditor({
         </p>
         {/* Ein „—" allein sagt nur, DASS etwas fehlt. Diese Zeile sagt, WAS zu
             tun ist (Wurzel 5) — sonst sucht der Betreiber die Ursache einer
-            leeren Auszahlung in den Buchungen statt in den Stammdaten. */}
-        {st.summary.payout_unbekannt === "provision" && (
+            leeren Auszahlung in den Buchungen statt in den Stammdaten.
+            Je GRUND ein eigener Satz: ein fehlender Portal-Abzugssatz verlangt
+            einen anderen Handgriff als ein fehlender Provisionssatz, und beides
+            „Provision fehlt" zu nennen schickte den Betrieb an die falsche
+            Maske. Bis 11.08.2026 wurde nur `provision` erkannt — die neuen
+            Gründe blieben stumm, und die Zelle zeigte „—" ohne Erklärung. */}
+        {st.summary.payout_unbekannt && (
           <p
             role="alert"
             className="mb-3 rounded-(--radius) border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
           >
-            {t("summary.commissionMissing")}
+            {t(GRUND_KEYS[st.summary.payout_unbekannt] ?? "summary.payoutUnknown")}
           </p>
         )}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -842,7 +879,12 @@ function RentalActivity({
                         {r.channel}
                       </span>
                     </td>
-                    <td className="py-2 pr-4 text-right">{betragOderStrich(r.total_price, currency)}</td>
+                    <td className="py-2 pr-4 text-right">
+                      <span className="inline-flex items-center justify-end gap-1.5">
+                        {betragOderStrich(r.total_price, currency)}
+                        <GebuehrenHerkunft zeile={r} />
+                      </span>
+                    </td>
                     <td className="py-2 text-right">{formatCurrency(r.total_payout, currency)}</td>
                   </tr>
                 ))
@@ -1525,6 +1567,38 @@ function SummaryCell({
       </span>
       <span className="font-display text-2xl font-extrabold">{value}</span>
     </div>
+  );
+}
+
+/** Hinweis an einer Zeile, deren Gebühren das Portal nicht gemeldet hat.
+ *
+ *  WARUM DAS AN DIE ZEILE GEHÖRT: Bei einer solchen Buchung setzt die
+ *  Abrechnung KEINE Gebühren an — nicht gemeldet heißt nicht gezahlt. Der
+ *  Gastpreis liegt damit unter dem, was der Betrieb erwartet, und ohne
+ *  Erklärung sieht das wie ein Rechenfehler aus. Am 11.08.2026 kostete genau
+ *  diese Frage („warum steht bei dieser Buchung keine Reinigung?") einen halben
+ *  Tag Suche beim Channex-Mapping, beim Tax Set und im Rechencode; die Antwort
+ *  lag im Eingangsweg der Buchung.
+ *
+ *  Nur bei `ota_ohne_aufstellung` sichtbar: `ota` ist der Normalfall und
+ *  `stammdaten` bei einer Direktbuchung ebenfalls richtig — ein Hinweis an jeder
+ *  Zeile wäre Rauschen, das den echten Fall verdeckt. */
+function GebuehrenHerkunft({ zeile }: { zeile: RentalRow }) {
+  const t = useTranslations("ownerStatements");
+  if (zeile.gebuehren_quelle !== "ota_ohne_aufstellung") return null;
+  const grundKey = zeile.gebuehren_grund
+    ? GEBUEHREN_GRUND_KEYS[zeile.gebuehren_grund]
+    : undefined;
+  return (
+    <InfoHinweis
+      titel={t("rental.feeSource.title")}
+      text={[
+        t("rental.feeSource.what"),
+        t(grundKey ?? "rental.feeSource.unknownReason"),
+      ]}
+      ariaLabel={t("info.aria", { feld: t("rental.feeSource.title") })}
+      className="text-warning"
+    />
   );
 }
 

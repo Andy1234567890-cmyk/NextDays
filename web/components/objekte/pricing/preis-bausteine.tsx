@@ -123,9 +123,25 @@ export function PreisKarte({
 }
 
 /** Wert-Chip in einer Karte (13px, flacher Radius, gedeckte Fläche). */
-export function PreisChip({ children }: { children: React.ReactNode }) {
+export function PreisChip({
+  tone = "muted",
+  children,
+}: {
+  /** `muted` = neutrale Angabe (Standard), `ok` = beim Portal bestätigt,
+   *  `warn` = dort steht etwas anderes. Der Ton ist die einzige Stelle, an der
+   *  ein Chip überhaupt Farbe trägt — er unterscheidet „Angabe" von „Befund". */
+  tone?: "muted" | "ok" | "warn";
+  children: React.ReactNode;
+}) {
   return (
-    <span className="inline-flex w-fit items-center gap-1 rounded-[0.25rem] bg-muted px-[0.4rem] py-[0.125rem] text-[0.8125rem] leading-5 text-muted-foreground">
+    <span
+      className={cn(
+        "inline-flex w-fit items-center gap-1 rounded-[0.25rem] px-[0.4rem] py-[0.125rem] text-[0.8125rem] leading-5",
+        tone === "ok" && "bg-emerald-50 text-emerald-800",
+        tone === "warn" && "bg-amber-50 text-amber-900",
+        tone === "muted" && "bg-muted text-muted-foreground",
+      )}
+    >
       {children}
     </span>
   );

@@ -450,11 +450,22 @@ ihn ab sofort lösen (keine Frist).
 Plattform-Admin-Reset. Der letzte Faktor lässt sich nur entfernen, wenn noch
 Wiederherstellungscodes übrig sind — sonst `409`.
 
-**Rate-Limit.** Eigener strenger Bucket `mfa` (Wurzel 8) für alle
-Verifikations-/Einlöse-Pfade, getrennt vom `auth`-Bucket. Zusätzlich am GoTrue
-selbst `GOTRUE_MFA_RATE_LIMIT_CHALLENGE_AND_VERIFY=10` — der App-Bucket schützt
-nur die FastAPI-Routen, der Direktweg `/auth/v1/factors/*` braucht sein eigenes
-Limit (Wurzel 7).
+**Rate-Limit.** Eigener strenger Bucket `mfa` (5/60 pro IP, Wurzel 8) für alle
+Verifikations-/Einlöse-Pfade, getrennt vom `auth`-Bucket.
+
+**Ausnahme `GET /auth/mfa/status`:** eigener Bucket `mfa_status` (60/60 **pro
+Nutzer**). Der Pfad liest nur den eigenen 2FA-Zustand und prüft kein Geheimnis —
+es gibt dort nichts zu erraten, das ein strenges Limit schützen würde. Pro Nutzer
+statt pro IP, weil der Aufruf aus dem Next-Frontend server-zu-server kommt
+(`"use server"`, kein `X-Forwarded-For`): mit IP-Keying teilten sich alle Nutzer
+aller Betriebe ein Fenster, und ein einzelner Nutzer mit offener Kalenderseite
+konnte während eines Imports alle anderen aussperren (live am 12.08.2026: 429 auf
+`/auth/mfa/status` ohne Angriff). `sensibel` bleibt gesetzt — gelockert ist nur
+das Limit, nicht die fail-closed-Haltung bei Redis-Ausfall.
+
+Zusätzlich am GoTrue selbst `GOTRUE_MFA_RATE_LIMIT_CHALLENGE_AND_VERIFY=10` — der
+App-Bucket schützt nur die FastAPI-Routen, der Direktweg `/auth/v1/factors/*`
+braucht sein eigenes Limit (Wurzel 7).
 
 **Bekannte Grenze: TOTP-Replay innerhalb des 30-s-Fensters.** GoTrue v2.189.0
 merkt sich den verbrauchten Zeitschritt NICHT (`verifyTOTPFactor` ruft
@@ -1189,7 +1200,11 @@ liefert nur Nutzer mit Posteingang-Zugriff; jede Zuweisung setzt `assigned_by`/
 | `DELETE`   | `/api/v1/inbox/scheduled/{sid}`                     | Geplante Nachricht abbrechen                                                                                                   |
 | `POST`     | `/api/v1/inbox/bulk-update`                         | Massenaktion: `{action: read\|archived, before: YYYY-MM-DD}`. `before` misst die letzte **Aktivität** (`last_message_at`, sonst `booked_at` — Fremdereignis, nicht `updated_at`), wirkt nur in der aktiven Ansicht; `read` schreibt `read_at` mit |
 | `POST`     | `/api/v1/inbox/{id}/ai-reply`                       | KI-Antwortvorschlag (Groq)                                                                                                     |
-| `…`        | `/api/v1/inbox/templates\|ai-settings\|automations` | Vorlagen / KI-Einstellungen / Automatisierungen                                                                                |
+| `…`        | `/api/v1/inbox/templates\|ai-settings\|automations` | Vorlagen / KI-Einstellungen / Automatisierungen. Vorlage und Regel tragen `subject` (Grundfassung, nur E-Mail) und `texts[]` = Sprachfassungen (0363). `texts` weglassen = unangetastet, `[]` = alle entfernen |
+| `GET/POST` | `/api/v1/inbox/languages`                           | Sprachen des Betriebs lesen / hinzufügen (`{code}`; die erste wird Standard, idempotent). Lesen = Posteingang-Zugriff, Ändern = INBOX_MANAGE_CONFIG |
+| `GET`      | `/api/v1/inbox/languages/available`                  | Auswählbare Sprachen (Code + Name aus `core.languages`) für „Neue Sprache hinzufügen"                                            |
+| `PUT`      | `/api/v1/inbox/languages/{code}/default`             | Standardsprache setzen (Rückfall, wenn die Gastsprache keine Fassung hat)                                                        |
+| `DELETE`   | `/api/v1/inbox/languages/{code}`                     | Sprache entfernen — samt ihrer Fassungen in allen Vorlagen und Regeln. Die Standardsprache ist gesperrt, solange andere daneben stehen (422) |
 | `GET`      | `/api/v1/inbox/fields`                              | Katalog der Platzhalter (22 Felder, Gruppen guest/reservation/property/company) für den Feld-Picker                            |
 | `POST`     | `/api/v1/inbox/{id}/render`                         | Platzhalter gegen diesen Thread auflösen (Editor-Vorschau); fehlender Wert → 422 mit Feldliste, nie ein Ersatzwert             |
 | `GET/POST` | `/api/v1/inbox/{id}/attachments`                    | Anhänge auflisten / hochladen (multipart, `?filename=&message=`). Typ per Magic Bytes, max. 10 MB, privater Bucket + signierte URL |
@@ -1748,6 +1763,82 @@ und auf 2 MB HTML gedeckelt (Wurzel 8). Ein zweiter, serverseitiger Renderer
 wäre eine Dublette mit eigenem SSRF-Vektor; den Scope trägt der Datenpfad:
 `GET /api/v1/owner-statements/{id}` gibt einem Eigentümer nur die EIGENE
 Abrechnung (`_require_statement_visible`, sonst 404).
+
+---
+
+## owner_reporting (Reporting für Eigentümer — implementiert)
+
+Die Ebene ÜBER der einzelnen Abrechnung: **Bericht** (Zeitraum × Objektauswahl ×
+Währung) → **Zahlung** je Empfänger (fünf Abschnitte, Snapshot) → **Teilzahlung**.
+Dazu geplante Berichte (Cron), wiederkehrende Posten und die Bilanzstatistik.
+Alle Routen `OWNER_REPORTING`-geschützt und tenant-gescoped; der Item-Pfad prüft
+denselben Scope wie der List-Pfad (Wurzel 9).
+
+Die Auszahlungsformel wird NICHT neu erfunden — jede Zahl über Geld entsteht in
+`owner_statements/common.py` (Portal-Abzug → provisionsfreie Gebühren raus →
+Verwaltungsprovision → Pauschale → Eigentümer-Gebühren zurück).
+
+| Methode  | Pfad                                                  | Beschreibung                                                     |
+| -------- | ----------------------------------------------------- | ---------------------------------------------------------------- |
+| `GET`    | `/api/v1/owner-reporting/reports`                     | Berichte auflisten (inkl. „automatisch generiert")               |
+| `POST`   | `/api/v1/owner-reporting/reports`                     | Bericht anlegen (Zeitraum ≤ 1100 Tage, ≥ 1 Objekt) → `201`       |
+| `GET`    | `/api/v1/owner-reporting/reports/{id}`                | Detail: KPI + 5 Aufschlüsselungen, LIVE gerechnet                |
+| `PATCH`  | `/api/v1/owner-reporting/reports/{id}`                | Kopf/Scope ändern                                                |
+| `DELETE` | `/api/v1/owner-reporting/reports/{id}`                | Löschen — `409`, solange Zahlungen bestehen                      |
+| `GET`    | `/api/v1/owner-reporting/reports/{id}/bookings`       | Aufschlüsselung nach Buchung (Referenz, Quelle, Posten)          |
+| `POST`   | `/api/v1/owner-reporting/reports/{id}/payments`       | Zahlung je Empfänger erzeugen — **idempotent** → `201`           |
+| `GET`    | `/api/v1/owner-reporting/payments`                    | Zahlungen (`?nur_offene=`, `?owner_id=`)                         |
+| `GET`    | `/api/v1/owner-reporting/payments/{id}`               | Detail: Posten je Abschnitt + Teilzahlungen                      |
+| `PATCH`  | `/api/v1/owner-reporting/payments/{id}`               | Notiz ändern                                                     |
+| `POST`   | `/api/v1/owner-reporting/payments/{id}/mark-paid`     | Als bezahlt markieren (legt den Restbetrag als Teilzahlung an)   |
+| `POST`   | `/api/v1/owner-reporting/payments/{id}/parts`         | Teilzahlung erfassen → `201`                                     |
+| `DELETE` | `/api/v1/owner-reporting/parts/{id}`                  | Teilzahlung entfernen (nimmt `bezahlt_am` zurück)                |
+| `DELETE` | `/api/v1/owner-reporting/payments/{id}`               | Zahlung löschen — `409`, wenn eine Rechnung daran hängt          |
+| `GET`    | `/api/v1/owner-reporting/recipients`                  | Empfänger-Übersicht (Volumen je Währung, Vertragsstand)          |
+| `GET`    | `/api/v1/owner-reporting/recipients/{id}/recurring`   | Wiederkehrende Posten eines Empfängers                           |
+| `POST`   | `/api/v1/owner-reporting/recipients/{id}/recurring`   | Posten anlegen → `201`                                           |
+| `PATCH`  | `/api/v1/owner-reporting/recurring/{id}`              | Posten ändern (`fuer_alle_objekte` hebt die Objektbindung auf)   |
+| `DELETE` | `/api/v1/owner-reporting/recurring/{id}`              | Posten löschen → `204`                                           |
+| `GET`    | `/api/v1/owner-reporting/schedules`                   | Geplante Berichte                                                |
+| `POST`   | `/api/v1/owner-reporting/schedules`                   | Plan anlegen → `201`                                             |
+| `GET`    | `/api/v1/owner-reporting/schedules/{id}`              | Plan-Detail                                                      |
+| `PATCH`  | `/api/v1/owner-reporting/schedules/{id}`              | Plan ändern                                                      |
+| `DELETE` | `/api/v1/owner-reporting/schedules/{id}`              | Plan löschen → `204`                                             |
+| `GET`    | `/api/v1/owner-reporting/statistics`                  | Bilanzstatistik (`von`, `bis` ≤ 5 Jahre, `currency`, `owner_id`) |
+| `POST`   | `/api/v1/owner-reporting/schedules/run`               | Interner Cron (Secret-Header, nicht im Schema)                   |
+
+**Was live gerechnet und was gespeichert wird.** Der Bericht speichert nur seinen
+SCOPE; seine Aufschlüsselungen (Mieten je Objekt, Gebühren je Art, Provisionen je
+Kanal, Zahlungsarten, Nettoeinkommen je Kanal) entstehen bei jedem Abruf neu —
+eine nachgetragene Buchung muss sich zeigen. Die Zahlung dagegen ist ein
+Snapshot: sie ist eine Forderung und darf sich nicht ändern, weil später eine
+Gebühr am Objekt korrigiert wird.
+
+**Fünf Abschnitte.** `unterkunftspreis` · `gebuehren` · `steuern` · `ausgaben` ·
+`andere`. `ausgaben` ist der EINZIGE mit negativen Beträgen (DB-CHECK
+`summe_ausgaben <= 0`).
+
+**Warnungen sind kein stiller Ausschluss (Wurzel 5).** Fehlender Provisionssatz,
+nicht zugeordnete Gebührenart oder fehlender Kurs → die Buchung erscheint in
+`ReportDetail.warnungen`. Beim Erzeugen einer Zahlung sind Warnungen ein harter
+`422`: eine Zahlung, in der zwei von zwölf Aufenthalten fehlen, sieht vollständig
+aus.
+
+**Mehrwährung.** Ein Bericht hat GENAU EINE Währung; Fremdwährung wird mit dem
+ECB-Tageskurs am **Check-out** umgerechnet (derselbe Stichtag wie in
+`owner_statements`, sonst stünde auf Bericht und Beleg eine andere Zahl). Fehlt
+der Kurs → Warnung, NIE Kurs 1,0. Wiederkehrende Posten müssen auf die
+Berichtswährung lauten, sonst `422`.
+
+**Idempotenz (Wurzel 2).** `POST /reports/{id}/payments` liefert eine vorhandene
+Zahlung zurück (UNIQUE `(report_id, owner_id)`). Der Cron ist über
+`zuletzt_erzeugt_fuer` + UNIQUE `(schedule_id, period_from, period_to)` gegen
+Doppelzustellung gesichert; `heute` ist ein Parameter, damit ein Lauf
+nachstellbar bleibt.
+
+**Abgrenzung.** „Empfänger" ist der Eigentümer (`/owners`) — nicht dupliziert.
+„Strategie" = `owner_billing_terms` + `fee_classification` (0343), Kanalprovision
+= `portal_abzugssaetze` (0364), beide über `/owner-billing`.
 
 ---
 

@@ -15,7 +15,7 @@
 // dem Posteingang; als Panel legt es sich darüber und man ist mit einem Klick
 // zurück.
 import { Icon } from "@iconify/react";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
@@ -34,12 +34,24 @@ import {
   phaseVon,
   zeitachse,
 } from "@/lib/automation-phasen";
+import { type ComposerGriff } from "@/components/inbox/composer-editor";
+import { SchnellantwortenAnsicht } from "@/components/inbox/schnellantworten-panel";
+import {
+  FassungFelder,
+  GRUNDFASSUNG,
+  SprachReiter,
+  type Fassungen,
+} from "@/components/inbox/sprach-fassungen";
+import { SprachenAnsicht } from "@/components/inbox/sprachen-panel";
 import { channelLogoLoose } from "@/lib/channel-logos";
 import {
   type Automation,
+  type MessageLanguage,
   type MessageTemplate,
   deleteAutomation,
   listAutomations,
+  listAvailableLanguages,
+  listMessageLanguages,
   listTemplates,
   updateAutomation,
 } from "@/lib/inbox";
@@ -53,7 +65,12 @@ const SOFORT_SICHTBAR = 4;
 /** Objekt für die Zuweisungsliste: Titel + erstes Foto (wie bei Lodgify). */
 export type PanelObjekt = { id: string; title: string; photo: string | null };
 
-type Ansicht = "menu" | "liste" | { regel: Automation };
+type Ansicht =
+  | "menu"
+  | "liste"
+  | "schnellantworten"
+  | "sprachen"
+  | { regel: Automation };
 
 export function AutomatisierenPanel({
   offen,
@@ -64,6 +81,10 @@ export function AutomatisierenPanel({
 }) {
   const t = useTranslations("inbox");
   const [ansicht, setAnsicht] = useState<Ansicht>("menu");
+  // Titel im Panelkopf, wenn eine Unteransicht ihn selbst bestimmt (der Name
+  // der geöffneten Schnellantwort). Ohne das stünde dort weiter „Schnell-
+  // antworten", während man einen einzelnen Text bearbeitet.
+  const [unterTitel, setUnterTitel] = useState<string | null>(null);
   const [items, setItems] = useState<Automation[]>([]);
   const [objekte, setObjekte] = useState<PanelObjekt[]>([]);
   // Vorlagen MIT Text: die meisten Regeln haben keinen eigenen Text, sondern
@@ -117,7 +138,11 @@ export function AutomatisierenPanel({
   const titel =
     ansicht === "menu"
       ? t("autoPanelTitle")
-      : ansicht === "liste"
+      : ansicht === "schnellantworten"
+        ? (unterTitel ?? t("autoQuickTitle"))
+        : ansicht === "sprachen"
+          ? t("autoLanguagesTitle")
+          : ansicht === "liste"
         ? t("autoScheduledTitle")
         : "";
 
@@ -128,7 +153,16 @@ export function AutomatisierenPanel({
           {ansicht !== "menu" && (
             <button
               type="button"
-              onClick={() => setAnsicht(ansicht === "liste" ? "menu" : "liste")}
+              onClick={() => {
+                setUnterTitel(null);
+                setAnsicht(
+                  ansicht === "liste" ||
+                    ansicht === "schnellantworten" ||
+                    ansicht === "sprachen"
+                    ? "menu"
+                    : "liste",
+                );
+              }}
               aria-label={t("autoBack")}
               className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
             >
@@ -139,7 +173,15 @@ export function AutomatisierenPanel({
         </SheetHeader>
 
         {ansicht === "menu" ? (
-          <MenuAnsicht onGeplante={() => setAnsicht("liste")} />
+          <MenuAnsicht
+            onGeplante={() => setAnsicht("liste")}
+            onSchnellantworten={() => setAnsicht("schnellantworten")}
+            onSprachen={() => setAnsicht("sprachen")}
+          />
+        ) : ansicht === "schnellantworten" ? (
+          <SchnellantwortenAnsicht onTitel={setUnterTitel} />
+        ) : ansicht === "sprachen" ? (
+          <SprachenAnsicht />
         ) : ansicht === "liste" ? (
           <ListenAnsicht
             items={items}
@@ -172,7 +214,15 @@ export function AutomatisierenPanel({
 }
 
 /** Stufe 1 — die drei Einstiege. */
-function MenuAnsicht({ onGeplante }: { onGeplante: () => void }) {
+function MenuAnsicht({
+  onGeplante,
+  onSchnellantworten,
+  onSprachen,
+}: {
+  onGeplante: () => void;
+  onSchnellantworten: () => void;
+  onSprachen: () => void;
+}) {
   const t = useTranslations("inbox");
   const eintraege = [
     {
@@ -185,33 +235,34 @@ function MenuAnsicht({ onGeplante }: { onGeplante: () => void }) {
       icon: "ph:lightning",
       titel: t("autoQuickTitle"),
       text: t("autoQuickHint"),
-      onClick: null,
+      onClick: onSchnellantworten,
     },
     {
       icon: "ph:translate",
       titel: t("autoLanguagesTitle"),
       text: t("autoLanguagesHint"),
-      onClick: null,
+      onClick: onSprachen,
     },
   ];
   return (
     <ul className="flex flex-col gap-1 overflow-y-auto p-4">
       {eintraege.map((e) => (
         <li key={e.titel}>
+          {/* Alle drei Einstiege führen irgendwohin (seit 0363 auch
+              Schnellantworten und Sprachen) — deshalb kein deaktivierter
+              Zustand mehr: ein Menüpunkt, der sich anklicken lässt und nichts
+              tut, ist schlimmer als keiner. */}
           <button
             type="button"
-            onClick={e.onClick ?? undefined}
-            disabled={!e.onClick}
-            className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-muted disabled:opacity-50 disabled:hover:bg-transparent"
+            onClick={e.onClick}
+            className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-muted"
           >
             <Icon icon={e.icon} className="size-6 shrink-0 text-muted-foreground" />
             <span className="min-w-0 flex-1">
               <span className="block font-semibold">{e.titel}</span>
               <span className="block text-sm text-muted-foreground">{e.text}</span>
             </span>
-            {e.onClick && (
-              <Icon icon="ph:caret-right" className="size-4 shrink-0 text-muted-foreground" />
-            )}
+            <Icon icon="ph:caret-right" className="size-4 shrink-0 text-muted-foreground" />
           </button>
         </li>
       ))}
@@ -381,6 +432,8 @@ function DetailAnsicht({
   const [pending, start] = useTransition();
   // Welcher Auswahl-Dialog ist offen? (Kanäle bzw. Unterkünfte)
   const [wahl, setWahl] = useState<"channels" | "houses" | null>(null);
+  // Inhalt bearbeiten (der Stift am Abschnitt „Inhalt").
+  const [inhaltOffen, setInhaltOffen] = useState(false);
 
   // Der Text, der wirklich rausgeht: eigener Text der Regel, sonst der Text
   // der verknüpften Vorlage. Nur „stammt aus einer Vorlage" anzuzeigen, ohne
@@ -443,7 +496,15 @@ function DetailAnsicht({
           </label>
         </article>
 
-        <Abschnitt titel={t("autoSectionContent")} offenAnfangs>
+        {/* Der Stift erscheint nur bei EIGENEM Text. Hängt die Regel an einer
+            Vorlage, gehört der Text dorthin — ihn hier zu ändern hieße, die
+            Vorlage aller anderen Regeln mitzuändern, ohne dass das dastünde.
+            Dann führt die Karte stattdessen zu den Schnellantworten. */}
+        <Abschnitt
+          titel={t("autoSectionContent")}
+          offenAnfangs
+          onBearbeiten={regel.template_id ? undefined : () => setInhaltOffen(true)}
+        >
           {inhalt ? (
             <p className="whitespace-pre-wrap break-words text-sm">{inhalt}</p>
           ) : (
@@ -531,6 +592,17 @@ function DetailAnsicht({
         />
       )}
 
+      {inhaltOffen && (
+        <InhaltBearbeiten
+          regel={regel}
+          onFertig={() => {
+            setInhaltOffen(false);
+            onGeaendert();
+          }}
+          onAbbrechen={() => setInhaltOffen(false)}
+        />
+      )}
+
       <div className="flex justify-between gap-2 border-t border-border p-4">
         <Button type="button" variant="outline" disabled>
           <Icon icon="ph:paper-plane-tilt" className="size-4" />
@@ -539,6 +611,127 @@ function DetailAnsicht({
         <Button type="button" variant="outline" onClick={loeschen} disabled={pending}>
           <Icon icon="ph:trash" className="size-4" />
           {t("autoDelete")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * „Inhalt bearbeiten" — Betreff/Text je Sprache über der Detailansicht (0363).
+ *
+ * Legt sich mit `absolute inset-0` über den Detailbereich, wie der Auswahl-
+ * Dialog: man bleibt in der Regel, statt in eine andere Maske zu wechseln.
+ *
+ * GESPEICHERT WIRD DIE GANZE REGEL (`updateAutomation` nimmt den vollen
+ * Datensatz), aber verändert werden hier nur Text und Betreff — alle übrigen
+ * Felder gehen unverändert mit. Nur den Text zu schicken hieße, Zeitplan,
+ * Kanäle und Zuweisung auf die Vorgabewerte zurückzusetzen (Wurzel 1: der
+ * Gegenzustand gehört zur Änderung).
+ */
+function InhaltBearbeiten({
+  regel,
+  onFertig,
+  onAbbrechen,
+}: {
+  regel: Automation;
+  onFertig: () => void;
+  onAbbrechen: () => void;
+}) {
+  const t = useTranslations("inbox");
+  const [sprachen, setSprachen] = useState<MessageLanguage[]>([]);
+  const [namen, setNamen] = useState<Record<string, string>>({});
+  const [fassungen, setFassungen] = useState<Fassungen>({
+    [GRUNDFASSUNG]: { subject: regel.subject ?? "", body: regel.message ?? "" },
+  });
+  const [aktiv, setAktiv] = useState<string>(GRUNDFASSUNG);
+  const [fehler, setFehler] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const griff = useRef<ComposerGriff | null>(null);
+
+  useEffect(() => {
+    void Promise.all([listMessageLanguages(), listAvailableLanguages()]).then(
+      ([spr, kat]) => {
+        if (!spr.ok) return;
+        setSprachen(spr.data.items);
+        if (kat.ok) {
+          setNamen(Object.fromEntries(kat.data.items.map((o) => [o.code, o.name])));
+        }
+        // Fassungen erst hier auffüllen: welche Reiter es gibt, weiß man erst
+        // mit den Sprachen. Die Grundfassung steht schon im Anfangszustand,
+        // damit sie beim ersten Render nicht leer aussieht.
+        setFassungen((prev) => {
+          const naechste: Fassungen = { ...prev };
+          for (const s of spr.data.items) {
+            const f = (regel.texts ?? []).find((x) => x.lang === s.code);
+            naechste[s.code] = f
+              ? { subject: f.subject, body: f.message }
+              : { subject: "", body: "" };
+          }
+          return naechste;
+        });
+      },
+    );
+  }, [regel]);
+
+  function speichern() {
+    const grund = fassungen[GRUNDFASSUNG] ?? { subject: "", body: "" };
+    if (!grund.body.trim()) {
+      setFehler(t("autoTextRequired"));
+      return;
+    }
+    setFehler(null);
+    const texts = sprachen
+      .map((s) => ({ lang: s.code, ...(fassungen[s.code] ?? { subject: "", body: "" }) }))
+      .filter((f) => f.body.trim() || f.subject.trim())
+      .map((f) => ({ lang: f.lang, subject: f.subject, message: f.body }));
+    start(async () => {
+      const res = await updateAutomation(regel.id, {
+        ...regel,
+        message: grund.body,
+        subject: grund.subject,
+        texts,
+      });
+      if (res.ok) onFertig();
+      else setFehler(res.error);
+    });
+  }
+
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col bg-background">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
+        <h2 className="font-semibold">{t("autoEditContent")}</h2>
+        <SprachReiter
+          sprachen={sprachen}
+          aktiv={aktiv}
+          onAktiv={setAktiv}
+          fassungen={fassungen}
+          namen={namen}
+        />
+        {aktiv === GRUNDFASSUNG && sprachen.length > 0 && (
+          <p className="text-xs text-muted-foreground">{t("langBaseHint")}</p>
+        )}
+        <FassungFelder
+          // Neu aufbauen beim Reiterwechsel — TipTap führt sein Dokument selbst
+          // und hielte zwei gleich aussehende Fassungen für „unverändert".
+          key={aktiv}
+          format="text"
+          mitBetreff={false}
+          fassung={fassungen[aktiv] ?? { subject: "", body: "" }}
+          onChange={(f) => setFassungen((prev) => ({ ...prev, [aktiv]: f }))}
+          griff={griff}
+          hoeheSchluessel="inbox.automation.hoehe"
+          testId="inbox-automation-panel-textarea"
+          platzhalter={t("autoMessage")}
+        />
+        {fehler && <p className="text-sm text-destructive">{fehler}</p>}
+      </div>
+      <div className="flex justify-end gap-2 border-t border-border p-4">
+        <Button type="button" variant="outline" onClick={onAbbrechen} disabled={pending}>
+          {t("autoCancel")}
+        </Button>
+        <Button type="button" onClick={speichern} disabled={pending}>
+          {t("autoSave")}
         </Button>
       </div>
     </div>
@@ -719,7 +912,11 @@ function zeitplanText(
   const versatz = a.offset_value ?? a.offset_days ?? 0;
   const abs = Math.abs(versatz);
   const anker = t(`autoAnchor_${a.anchor}`);
-  const zeit = a.send_time ? ` · ${a.send_time}` : "";
+  // Zeitzone dazuschreiben, in BEIDEN Fällen: ohne Haken gilt UTC, und „06:00"
+  // ohne Zusatz liest jeder als sechs Uhr vor Ort (für Dänemark sind das zwei
+  // Stunden Unterschied). Gleiche Regel wie im Automatisierungen-Tab.
+  const zone = a.use_property_timezone ? t("autoLocalTime") : "UTC";
+  const zeit = a.send_time ? ` · ${a.send_time} (${zone})` : "";
   if (abs === 0) return `${t("autoOnDayOf", { anchor: anker })}${zeit}`;
   const richtung = versatz < 0 ? t("autoBefore") : t("autoAfter");
   return `${abs} ${t(`autoUnit_${einheit}`)} ${richtung} ${anker}${zeit}`;

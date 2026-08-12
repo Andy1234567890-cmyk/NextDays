@@ -33,6 +33,21 @@ export const IGNORES = [
   "**/next-env.d.ts",
   "**/public/**",
   "**/*.min.js",
+  // Ein Prüf-Build mit RELATIVEM `--distDir` legt sein Verzeichnis unter der App
+  // an statt am absoluten Pfad: aus `--distDir private/tmp/…` wurde
+  // `web/private/tmp/…` — 1,6 GB fremder Build-Ausgabe mitten im Quellcode.
+  //
+  // Warum das das Qualitätsgate zerstört und nicht nur Platz kostet: `bun run
+  // lint` meldete damit **57 813 Fehler** aus FREMDEM Code. Jeder echte Befund
+  // war darin unsichtbar. Am 12.08.2026 wurden die Fehler zweimal per `grep -v`
+  // weggefiltert, statt das kaputte Gate zu melden — genau die Art Pflaster, die
+  // hier nicht vorkommen soll.
+  //
+  // Der `.gitignore`-Eintrag `web/private/` allein half NICHT: er steht in der
+  // Wurzel, und diese Config las bis 12.08.2026 nur die `.gitignore` der App
+  // (siehe `nextConfig`). Darum steht die Sperre hier — sie gilt für alle sechs
+  // Frontends, ohne dass jede ihre eigene Ignore-Datei pflegen muss.
+  "**/private/**",
 ];
 
 /**
@@ -46,10 +61,20 @@ export function nextConfig(opts = {}) {
   // Was git nicht versioniert, ist Build-Ausgabe und wird nicht geprüft —
   // sonst lintet man fremde Bundles (storybook/protected: 26 000 Befunde aus
   // mermaid, axe & Co.). ESLint 9+ liest .gitignore nicht mehr von selbst.
-  const gitignore =
-    opts.tsconfigRootDir && existsSync(join(opts.tsconfigRootDir, ".gitignore"))
-      ? [includeIgnoreFile(join(opts.tsconfigRootDir, ".gitignore"))]
-      : [];
+  //
+  // BEIDE Ebenen, und das ist der Punkt: bis 12.08.2026 wurde nur die
+  // `.gitignore` der App gelesen. Der Eintrag, der 1,6 GB verirrte Build-Ausgabe
+  // ausschloss (`web/private/`), steht aber in der WURZEL — er griff also nie,
+  // und `bun run lint` meldete 57 813 Fremdfehler. Eine Ignore-Regel, die git
+  // beachtet und der Linter nicht, ist eine Falle: sie versteckt den Ordner in
+  // `git status` und lässt ihn gleichzeitig das Qualitätsgate blenden.
+  const gitignore = [
+    opts.tsconfigRootDir && join(opts.tsconfigRootDir, ".gitignore"),
+    // Wurzel des Monorepos — eine Ebene über der App.
+    opts.tsconfigRootDir && join(opts.tsconfigRootDir, "..", ".gitignore"),
+  ]
+    .filter((pfad) => pfad && existsSync(pfad))
+    .map((pfad) => includeIgnoreFile(pfad));
 
   return [
     { ignores: IGNORES },

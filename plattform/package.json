@@ -12,19 +12,20 @@
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
+    "@nextdays/auth": "workspace:*",
+    "@nextdays/currency": "workspace:*",
+    "@nextdays/diagnostics": "workspace:*",
+    "@nextdays/laender": "workspace:*",
+    "@nextdays/security-headers": "workspace:*",
     "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.8.0",
     "@supabase/supabase-js": "2.108.2",
     "motion": "^12.40.0",
     "next": "^15.5.0",
+    "next-intl": "4.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "stripe": "^22.3.0",
-    "@nextdays/laender": "workspace:*",
-    "@nextdays/currency": "workspace:*",
-    "@nextdays/auth": "workspace:*",
-    "@nextdays/security-headers": "workspace:*",
-    "@nextdays/diagnostics": "workspace:*"
+    "stripe": "^22.3.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",

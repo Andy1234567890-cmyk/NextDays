@@ -94,6 +94,24 @@ export type RentalRow = {
   fx_date: string | null;
   /** Grund für eine fehlende Auszahlung dieser Zeile — heute `"provision"`. */
   payout_unbekannt: string | null;
+  /** WOHER die Gebühren dieser Zeile kommen:
+   *  - `"ota"` — das Portal hat sie gemeldet. Tatsache.
+   *  - `"ota_ohne_aufstellung"` — Portal-Buchung, deren Payload keine
+   *    Aufstellung trägt (Channex-Importe). Es werden KEINE Gebühren angesetzt:
+   *    nicht gemeldet heißt nicht gezahlt. Die Auszahlung liegt darum unter der
+   *    erwarteten, und die Zeile muss das sagen — sonst sieht es wie ein
+   *    Rechenfehler aus.
+   *  - `"stammdaten"` — keine Portal-Buchung (eigene Website, Telefon); die
+   *    gepflegten Objekt-Gebühren gelten, und das ist hier richtig. */
+  gebuehren_quelle: "ota" | "ota_ohne_aufstellung" | "stammdaten" | null;
+  /** Bei `"ota_ohne_aufstellung"`: warum nichts kam. `"channex_import"` ist
+   *  NICHT behebbar (Channex liefert bei nachgeholten Buchungen keine Extras),
+   *  `"portal_meldet_keine"` hängt an der Extranet-Konfiguration. */
+  gebuehren_grund:
+    | "channex_import"
+    | "portal_meldet_keine"
+    | "kein_payload"
+    | null;
 };
 
 export type ListingRow = {

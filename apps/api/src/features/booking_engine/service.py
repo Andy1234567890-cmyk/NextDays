@@ -19,6 +19,13 @@ from src.core.sales_channels import (
     stop_sell_blocks_channel,
 )
 from src.core.supabase import fetch_all_rows
+from src.features.booking_conditions.plan import (
+    erste_zahlung,
+    kaution,
+    kondition_fuer,
+    restzahlung_faellig_am,
+    storno_regeln,
+)
 from src.features.guest_blocks.service import GuestBlockService
 
 from .schemas import (
@@ -28,13 +35,17 @@ from .schemas import (
     PublicAvailabilityResponse,
     PublicBookingRequest,
     PublicBookingResponse,
+    PublicCancellation,
     PublicDay,
+    PublicDeposit,
     PublicListing,
     PublicListingDetail,
     PublicListingListResponse,
+    PublicPaymentPlan,
     PublicQuoteLine,
     PublicQuoteRequest,
     PublicQuoteResponse,
+    PublicRefundRule,
     PurchasedAddon,
     ReservationAddonsView,
     SliceHealth,
@@ -711,6 +722,12 @@ class BookingEngineService:
                 ],
             )
         )
+        plan, storno, deposit = self._konditionen_fuer_gast(
+            tenant_id=str(prop["tenant_id"]),
+            total=quote.total,
+            check_in=req.check_in,
+            priceless=quote.priceless,
+        )
         return PublicQuoteResponse(
             property_id=req.property_id,
             nights=len(_nights(req.check_in, req.check_out)),
@@ -724,6 +741,52 @@ class BookingEngineService:
             priceless=quote.priceless,
             pets_allowed=pets_allowed,
             max_guests=max_guests,
+            payment_plan=plan,
+            cancellation=storno,
+            deposit=deposit,
+        )
+
+    def _konditionen_fuer_gast(
+        self, *, tenant_id: str, total: float, check_in: date, priceless: bool
+    ) -> tuple[PublicPaymentPlan | None, PublicCancellation | None, PublicDeposit | None]:
+        """Zahlungsplan, Storno-Staffel und Kaution für den Checkout.
+
+        Quelle ist `booking_conditions` über den geteilten Helfer
+        `booking_conditions.plan` — dieselbe Rechnung, die `payments` beim Einzug
+        anwendet. Ohne gepflegte Kondition kommt überall None zurück: der
+        Checkout zeigt dann „vollständig jetzt" und KEINE Storno-Zusage, statt
+        eine zu erfinden (Wurzel 4).
+
+        Rate-Plan: der Gast-Quote kennt keinen (FeWo hat genau einen, Hotel wählt
+        ihn erst in der Buchung) → es gilt die Standard-Kondition des Betriebs,
+        genau wie im Zahlungspfad für eine Buchung ohne `rate_plan_id`.
+        """
+        if priceless:
+            return None, None, None
+        db = self._db()
+        condition = kondition_fuer(db, tenant_id=tenant_id)
+        if condition is None:
+            return None, None, None
+        jetzt = erste_zahlung(condition, total)
+        rest = round(total - jetzt, 2)
+        plan = PublicPaymentPlan(
+            installments=int(condition.get("installments") or 1),
+            due_now=jetzt,
+            due_later=max(rest, 0.0),
+            balance_due_date=(
+                restzahlung_faellig_am(condition, check_in) if rest > 0 else None
+            ),
+        )
+        regeln = storno_regeln(db, str(condition["id"]))
+        storno = PublicCancellation(
+            mode=condition.get("cancellation_mode"),
+            rules=[PublicRefundRule(**r) for r in regeln],
+        )
+        kaution_daten = kaution(condition, total)
+        return (
+            plan,
+            storno,
+            PublicDeposit(**kaution_daten) if kaution_daten else None,
         )
 
     def create_public_booking(

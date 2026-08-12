@@ -21,6 +21,7 @@ from src.core.security import AuthContext
 from .ausloeser import DATUMS_TRIGGER, anker_von, versatz_normieren
 from .errors import InboxError
 from .schemas import BulkUpdateResult, ScheduledMessage, ScheduledMessageList
+from .sprachen import fassung_waehlen, standardsprache
 from .zeit import zeitzone as _zeitzone
 
 log = get_logger("nextdays.inbox")
@@ -46,9 +47,25 @@ NEUPLANUNG_MAX_THREADS = 2000
 
 # Spalten, die eine Planung vom Thread braucht. `status` entscheidet, ob
 # überhaupt geplant wird (storniert = nein), `booked_at` ist der Anker „Buchung".
+# Die beiden `gast_sprache*`-Spalten sind keine Gästekarte, sondern der Grund,
+# warum eine Regel überhaupt eine SPRACHFASSUNG wählen kann (0363,
+# `_gastsprache`). Ohne sie wäre die Sprache immer unbekannt und jeder Gast
+# bekäme die Standardfassung — ein Fehler, den man an der versendeten Nachricht
+# nicht erkennt.
+#
+# ZWEI Pfade, weil die Sprache an zwei Stellen liegen kann: der Import legt in
+# der Spalte `customer` nur Name/Nachname ab, Sprache/Mail/Telefon stehen in der
+# rohen OTA-Payload (`raw.customer`) — dieselbe Doppelquelle wie in
+# `service._customer_of`.
+#
+# BEWUSST der JSON-Pfad statt der ganzen Spalte: `raw` ist die vollständige
+# OTA-Payload (bei Airbnb zweistellige KB je Buchung). Eine Neuplanung liest bis
+# zu NEUPLANUNG_MAX_THREADS = 2000 Threads — `raw` mitzuziehen hieße, für zwei
+# Zeichen Sprachcode ein zweistelliges Megabyte durch die Leitung zu holen.
 THREAD_COLS = (
     "id, tenant_id, property_map_id, property_id, ota_name, arrival_date, "
-    "departure_date, booked_at, status"
+    "departure_date, booked_at, status, "
+    "gast_sprache:customer->>language, gast_sprache_raw:raw->customer->>language"
 )
 
 # Zustände einer geplanten Automail, die eine Neuplanung überschreiben DARF.
@@ -290,18 +307,65 @@ class PlanungMixin:
     # versand). Der Cron (dispatch_due_automations) versendet später die fälligen.
 
     @staticmethod
-    def _automation_body(db: Client, tenant_id: str, automation: dict) -> str | None:
-        """Text der Automail: Inline-message, sonst Vorlage (template_id).
+    def _gastsprache(th: dict) -> str | None:
+        """Sprache des Gastes aus der Buchung (Rohwert des Portals) oder None.
+
+        Die Spalte gewinnt, wo sie etwas hat, sonst die rohe OTA-Payload —
+        dieselbe Rangfolge wie in `service._customer_of`. Geholt werden beide
+        Werte als JSON-Pfad im `select` (siehe THREAD_COLS), damit die
+        Neuplanung nicht die ganze `raw`-Payload jeder Buchung lädt.
+
+        Rückgabe ist der ROHWERT („da", „de-AT", „nb"); normiert wird erst beim
+        Vergleich in `sprachen.fassung_waehlen`. Diese Funktion normiert
+        absichtlich NICHT: dann stünde die Normierung an zwei Stellen, und die
+        eine nachzuziehen würde man vergessen.
+        """
+        for wert in (th.get("gast_sprache"), th.get("gast_sprache_raw")):
+            if wert:
+                return str(wert)
+        return None
+
+    def _automation_body(
+        self,
+        db: Client,
+        tenant_id: str,
+        automation: dict,
+        *,
+        gastsprache: str | None = None,
+    ) -> str | None:
+        """Text der Automail für DIESEN Gast: Inline-message, sonst Vorlage.
+
+        In beiden Fällen entscheidet die Sprache des Gastes, welche Fassung
+        genommen wird (0363): Fassung in der Gastsprache → Fassung in der
+        Standardsprache des Betriebs → Grundfassung. Fehlt jede Fassung, ist das
+        Ergebnis None und die Regel wird für diesen Thread stillgelegt (der
+        Aufrufer protokolliert `automation_ohne_text`) — es wird KEIN Text
+        erfunden und keine leere Nachricht verschickt.
 
         Die Vorlage wird explizit nach tenant_id gefiltert — der Service-Role-Key
         umgeht RLS, sonst ließe sich über eine manipulierte template_id die Vorlage
         eines fremden Tenants laden."""
-        msg = (automation.get("message") or "").strip()
-        if msg:
-            return msg
+        standard = standardsprache(db, tenant_id)
         tid = automation.get("template_id")
         if not tid:
-            return None
+            fassungen = {
+                r["lang"]: (r.get("message") or "")
+                for r in (
+                    db.table("message_automation_text")
+                    .select("lang, message")
+                    .eq("tenant_id", tenant_id)
+                    .eq("automation_id", automation["id"])
+                    .execute()
+                ).data
+                or []
+            }
+            text, _lang = fassung_waehlen(
+                fassungen,
+                automation.get("message"),
+                gastsprache=gastsprache,
+                standard=standard,
+            )
+            return text
         tpl = (
             db.table("message_template")
             .select("body")
@@ -310,8 +374,26 @@ class PlanungMixin:
             .limit(1)
             .execute()
         ).data or []
-        body = (tpl[0].get("body") if tpl else "") or ""
-        return body.strip() or None
+        if not tpl:
+            return None
+        fassungen = {
+            r["lang"]: (r.get("body") or "")
+            for r in (
+                db.table("message_template_text")
+                .select("lang, body")
+                .eq("tenant_id", tenant_id)
+                .eq("template_id", tid)
+                .execute()
+            ).data
+            or []
+        }
+        text, _lang = fassung_waehlen(
+            fassungen,
+            tpl[0].get("body"),
+            gastsprache=gastsprache,
+            standard=standard,
+        )
+        return text
 
     @staticmethod
     def _ankerzeit(
@@ -745,7 +827,9 @@ class PlanungMixin:
                 self._stilllegen(db, tenant_id, a, thread_id)
                 geplant.add(str(a["id"]))
                 continue
-            body = self._automation_body(db, tenant_id, a)
+            body = self._automation_body(
+                db, tenant_id, a, gastsprache=self._gastsprache(th)
+            )
             if not body:
                 # Vorlage geleert/gelöscht: Text fehlt, die Zuweisung gilt weiter.
                 log.warning(
@@ -1094,7 +1178,9 @@ class PlanungMixin:
                 continue
             if not self._im_zeitfenster(a, jetzt_lokal):
                 continue
-            body = self._automation_body(db, tenant_id, a)
+            body = self._automation_body(
+                db, tenant_id, a, gastsprache=self._gastsprache(th)
+            )
             if not body:
                 continue
             self._einplanen(db, tenant_id, a, thread_id, body, jetzt_utc)

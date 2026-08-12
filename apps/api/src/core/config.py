@@ -106,6 +106,31 @@ class Settings(BaseSettings):
     # 5/60 reicht fuer jeden echten Nutzer bequem (man tippt einen Code einmal
     # ab, notfalls mit einem Vertipper) und macht Bruteforce sinnlos.
     rate_limit_mfa: str = "5/60"
+    # AUSNAHME: `GET /auth/mfa/status` liest nur den EIGENEN 2FA-Zustand und
+    # prueft kein Geheimnis (Nutzer kommt aus dem Token, es gibt keinen
+    # `user_id`-Parameter). Ein strenges Limit schuetzt dort nichts — es gibt
+    # nichts zu erraten und nichts aufzuzaehlen.
+    #
+    # Der Schaden war real (12.08.2026): Sicherheitsseite und Kopfbereich fragen
+    # den Status bei jedem Seitenaufbau ab. Mit 5/60 PRO IP antwortete der Pfad
+    # nach wenigen `router.refresh()` in Folge mit 429, ohne Angriff — und bei
+    # Buero-NAT teilen sich alle Mitarbeiter dieselben fuenf Anfragen. Dasselbe
+    # Muster wie beim `refresh`-Bucket, dessen Kommentar es beschreibt: „der
+    # elfte bekam 429, ausgeloest durch die Aktivitaet FREMDER Nutzer".
+    #
+    # GEKEYT PRO NUTZER (sub-Claim + IP), nicht pro IP allein — dieselbe Lehre
+    # wie beim refresh-Bucket: `web/lib/mfa.ts` ist `"use server"`, der Aufruf
+    # kommt server-zu-server aus EINEM Next-Container und setzt kein
+    # X-Forwarded-For. Ein IP-Zaehler waere fuer ALLE Nutzer ALLER Betriebe
+    # gemeinsam; ein einzelner Nutzer mit offener Kalenderseite haette waehrend
+    # eines Imports alle anderen aussperren koennen (der Aufruf sitzt im
+    # Dashboard-Layout, `realtime-refresh.tsx` loest ihn ueber sechs Hooks aus,
+    # deren Debounce hook-lokal ist und nicht koalesziert).
+    #
+    # 60/60 je Nutzer: reichlich fuer jede Navigation samt Realtime-Bursts, und
+    # deutlich unter dem Default (300/60) — ein /auth/*-Pfad bekommt kein
+    # 300er-Limit, nur weil er harmlos liest.
+    rate_limit_mfa_status: str = "60/60"
     # „Einladung erneut senden" (Mitarbeiter unter /konto/nutzer, Eigentümer
     # unter /eigentuemer). Eingeloggt, aber jeder Aufruf schickt eine Mail an
     # eine FREMDE Adresse — der Default-Bucket (300/60) ist dafür kein Dach

@@ -171,9 +171,33 @@ type Aufenthalt = {
   maxProNacht: number | null;
   /** Mindestens eine Nacht ohne bestimmbaren Wert → die Spanne ist unvollständig. */
   luecke: boolean;
+  /** WARUM kein Betrag ausweisbar ist (`provision` | `betrag` | `naechte`), aus
+   *  `payout_unknown_reason` der Buchung. Ohne diesen Grund stand im Chip nur
+   *  ein „—", und der Eigentümer konnte nicht unterscheiden zwischen „diese
+   *  Nacht bringt nichts" und „bei uns fehlt eine Stammdatenangabe" — der
+   *  Betrag wurde berechnet, verworfen und nie erklärt. */
+  grund: string | null;
   currency: string | null;
   gast: string | null;
   quelle: string | null;
+};
+
+/**
+ * Übersetzt den maschinenlesbaren Grund in Klartext.
+ *
+ * Ein unbekannter Grund fällt bewusst auf das allgemeine Label zurück statt auf
+ * den rohen Slug: ein neuer Backend-Grund darf in der Oberfläche nie als
+ * `provision_ungueltig` erscheinen. Er bekommt dann kein `MISSING_MESSAGE`,
+ * sondern die ehrliche Kurzaussage „nicht ausweisbar".
+ */
+const GRUND_KEYS: Record<string, string> = {
+  provision: "calendar.payoutUnknown.provision",
+  provision_ungueltig: "calendar.payoutUnknown.provisionUngueltig",
+  betrag: "calendar.payoutUnknown.betrag",
+  naechte: "calendar.payoutUnknown.naechte",
+  // Pauschale/Mindestprovision des Vertrags lauten auf eine andere Währung als
+  // die Buchung (0343). Bewusst kein Umrechnen, darum ein eigener Grund.
+  waehrung_vertrag: "calendar.payoutUnknown.waehrungVertrag",
 };
 
 /**
@@ -206,6 +230,7 @@ function aufenthalteBilden(tage: PortalCalendarDay[]): Aufenthalt[] {
           minProNacht: wert,
           maxProNacht: wert,
           luecke: wert == null,
+          grund: wert == null ? b.payout_unknown_reason : null,
           currency: b.currency,
           gast: b.guest_first_name?.trim() || null,
           quelle: b.booking_source?.trim() || null,
@@ -218,6 +243,11 @@ function aufenthalteBilden(tage: PortalCalendarDay[]): Aufenthalt[] {
       // Nur die Spanne wächst mit — sie speist den Tooltip bei Saisonwechsel.
       if (wert == null) {
         vorhanden.luecke = true;
+        // Der ERSTE auftretende Grund bleibt stehen. Tragen die Nächte eines
+        // Aufenthalts verschiedene Gründe, ist der erste der aussagekräftigste
+        // (die Ursachen `provision`/`betrag` gelten ohnehin der ganzen Buchung);
+        // ein Überschreiben ließe den Text je Monatswechsel springen.
+        vorhanden.grund = vorhanden.grund ?? b.payout_unknown_reason;
       } else {
         vorhanden.minProNacht =
           vorhanden.minProNacht == null ? wert : Math.min(vorhanden.minProNacht, wert);
@@ -231,6 +261,12 @@ function aufenthalteBilden(tage: PortalCalendarDay[]): Aufenthalt[] {
         vorhanden.proNacht = null;
         vorhanden.minProNacht = null;
         vorhanden.maxProNacht = null;
+        // Auch dieser Zweig muss einen Grund setzen: er verwirft gerade einen
+        // Betrag, der vom Server SEHR WOHL kam. Ohne ihn entstünde hier erneut
+        // ein stummes „—". `betrag` ist der zutreffende Grund — die Beträge
+        // dieser Buchung sind zueinander nicht summierbar.
+        vorhanden.luecke = true;
+        vorhanden.grund = vorhanden.grund ?? "betrag";
       }
     }
   }
@@ -859,7 +895,10 @@ type Bahn = { segment: Segment; bahn: number };
  */
 function bahnenVerteilen(segmente: Segment[]): {
   sichtbar: Bahn[];
-  ueberlauf: Map<number, { anzahl: number; summe: number | null; currency: string | null }>;
+  ueberlauf: Map<
+    number,
+    { anzahl: number; summe: number | null; currency: string | null; grund: string | null }
+  >;
 } {
   // Genau MAX_BAHNEN Bahnen, fest angelegt: es wird bewusst KEINE weitere
   // erzeugt. Was in keine davon passt, geht in den „+n"-Chip.
@@ -867,7 +906,7 @@ function bahnenVerteilen(segmente: Segment[]): {
   const sichtbar: Bahn[] = [];
   const ueberlauf = new Map<
     number,
-    { anzahl: number; summe: number | null; currency: string | null }
+    { anzahl: number; summe: number | null; currency: string | null; grund: string | null }
   >();
   // Stabil: früherer Beginn zuerst, dann längerer Aufenthalt.
   const sortiert = [...segmente].sort(
@@ -888,6 +927,7 @@ function bahnenVerteilen(segmente: Segment[]): {
             anzahl: 1,
             summe: seg.aufenthalt.proNacht,
             currency: seg.aufenthalt.currency,
+            grund: seg.aufenthalt.proNacht == null ? seg.aufenthalt.grund : null,
           });
           continue;
         }
@@ -898,9 +938,15 @@ function bahnenVerteilen(segmente: Segment[]): {
           vorhanden.summe == null || seg.aufenthalt.proNacht == null
             ? null
             : vorhanden.summe + seg.aufenthalt.proNacht;
+        // Der Grund der ersten unbestimmten Position trägt die Erklärung — auch
+        // hier darf kein wortloses „—" entstehen.
+        if (seg.aufenthalt.proNacht == null) {
+          vorhanden.grund = vorhanden.grund ?? seg.aufenthalt.grund;
+        }
         if (vorhanden.currency !== seg.aufenthalt.currency) {
           vorhanden.currency = null;
           vorhanden.summe = null;
+          vorhanden.grund = vorhanden.grund ?? "betrag";
         }
       }
       continue;
@@ -975,6 +1021,7 @@ function Wochenzeile({
             anzahl={rest.anzahl}
             summe={rest.summe}
             currency={rest.currency}
+            grund={rest.grund}
             bahn={MAX_BAHNEN}
             locale={locale}
             label={t("calendar.moreUnits", { count: rest.anzahl })}
@@ -1045,12 +1092,21 @@ function AufenthaltChip({
         )}`
       : null;
 
+  // Kurzform für den Chip und Klartext für den Tooltip. Beide kommen aus
+  // `payoutUnknown` — vorher stand an beiden Stellen ein „—", das nichts sagte.
+  const kurz = t("calendar.payoutUnknown.short");
+  const grundText =
+    a.grund && GRUND_KEYS[a.grund]
+      ? t(GRUND_KEYS[a.grund])
+      : t("calendar.payoutUnknown.label");
+
   const titel = [
     `${a.von} – ${a.bis}`,
     t("calendar.nights", { count: a.naechte }),
     a.gast ? `${t("calendar.guest")}: ${a.gast}` : null,
     kanalLabel ? `${t("calendar.channel")}: ${kanalLabel}` : null,
-    `${t("calendar.payoutPerNight")}: ${spanne ?? betrag ?? "—"}`,
+    // Fehlt der Betrag, nennt der Tooltip den GRUND statt eines Gedankenstrichs.
+    `${t("calendar.payoutPerNight")}: ${spanne ?? betrag ?? grundText}`,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -1108,7 +1164,25 @@ function AufenthaltChip({
           statt wie ein Nachtwert. Das echte Ende trägt ihn, weil dort auch die
           runde Abschlusskante sitzt. */}
       {segment.echtesEnde && (
-        <span className="ml-auto shrink-0 font-semibold">{betrag ?? "—"}</span>
+        // Der Betrag wird BENANNT: „netto/Nacht 578 DKK". Ohne die Benennung
+        // stand dort eine nackte Zahl, die sich genauso als Gesamtpreis des
+        // Aufenthalts oder als Gastpreis lesen ließ — beides falsch. Das Label
+        // weicht als ERSTES, wenn der Chip zu schmal wird (`truncate`), der
+        // Betrag bleibt vollständig (`shrink-0`).
+        <span className="ml-auto flex min-w-0 shrink-0 items-baseline gap-1">
+          <span className="min-w-0 truncate text-[0.625rem] font-normal opacity-75">
+            {t("calendar.payoutPerNightShort")}
+          </span>
+          {/* Ohne Betrag steht hier die Kurzform („k. A.") statt eines
+              Gedankenstrichs. Den Grund liefert der Tooltip (`titel`). */}
+          <span
+            className={
+              betrag ? "shrink-0 font-semibold" : "shrink-0 font-normal italic opacity-90"
+            }
+          >
+            {betrag ?? kurz}
+          </span>
+        </span>
       )}
     </div>
   );
@@ -1120,6 +1194,7 @@ function SammelChip({
   anzahl,
   summe,
   currency,
+  grund,
   bahn,
   locale,
   label,
@@ -1128,6 +1203,7 @@ function SammelChip({
   anzahl: number;
   summe: number | null;
   currency: string | null;
+  grund: string | null;
   bahn: number;
   locale: string;
   label: string;
@@ -1136,9 +1212,14 @@ function SammelChip({
   // Ebenfalls der Nachtwert (Summe der Nachtwerte der zusammengefassten
   // Einheiten für DIESEN Tag) — nicht deren Aufenthaltssummen.
   const betrag = summe == null ? null : formatCurrency(summe, currency, locale, 0);
+  const kurz = t("calendar.payoutUnknown.short");
+  const grundText =
+    grund && GRUND_KEYS[grund]
+      ? t(GRUND_KEYS[grund])
+      : t("calendar.payoutUnknown.label");
   return (
     <div
-      title={`${label} · ${t("calendar.payoutPerNight")}: ${betrag ?? "—"}`}
+      title={`${label} · ${t("calendar.payoutPerNight")}: ${betrag ?? grundText}`}
       className="pointer-events-auto absolute flex -translate-y-1/2 items-center justify-between gap-1 rounded-full bg-secondary px-2 text-[0.6875rem] font-medium text-secondary-foreground ring-1 ring-background"
       style={{
         left: `calc(${spalte * SPALTE}% + 0.125rem)`,
@@ -1148,7 +1229,20 @@ function SammelChip({
       }}
     >
       <span className="shrink-0">+{anzahl}</span>
-      <span className="shrink-0 font-semibold">{betrag ?? "—"}</span>
+      {/* Auch hier benannt — im „+n"-Chip ist die Summe der zusammengefassten
+          Einheiten gemeint, ebenfalls je Nacht. */}
+      <span className="flex min-w-0 items-baseline gap-1">
+        <span className="min-w-0 truncate text-[0.625rem] font-normal opacity-75">
+          {t("calendar.payoutPerNightShort")}
+        </span>
+        <span
+          className={
+            betrag ? "shrink-0 font-semibold" : "shrink-0 font-normal italic opacity-90"
+          }
+        >
+          {betrag ?? kurz}
+        </span>
+      </span>
     </div>
   );
 }
@@ -1184,7 +1278,25 @@ function Tageszelle({
         })
       : null;
 
-  const titel = [datum, statusLabel, saison ? saison.name : null, einheiten]
+  // Ist die Nacht belegt, aber kein Betrag ausweisbar, nennt auch die ZELLE den
+  // Grund. Der Chip liegt über der Zelle, deckt sie aber nicht vollständig ab —
+  // wer den freien Rand trifft, bekam sonst einen Tooltip ohne jeden Hinweis
+  // darauf, dass hier Geld fehlt.
+  const grund =
+    info && info.status === "booked" && info.owner_payout_per_night == null
+      ? (info.owner_payout_unknown_reason &&
+        GRUND_KEYS[info.owner_payout_unknown_reason]
+          ? t(GRUND_KEYS[info.owner_payout_unknown_reason])
+          : t("calendar.payoutUnknown.label"))
+      : null;
+
+  const titel = [
+    datum,
+    statusLabel,
+    saison ? saison.name : null,
+    einheiten,
+    grund ? `${t("calendar.payoutPerNight")}: ${grund}` : null,
+  ]
     .filter(Boolean)
     .join(" · ");
 
